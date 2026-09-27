@@ -1,0 +1,18 @@
+# Valid Piglet source scaffold, not a published batteries-included composition.
+# Add curated, pinned resources only after owner review. Do not invent defaults.
+name: pig-with-batteries
+description: "The planned official batteries-included Piglet: default PiG with curated extensions. Protocol bridges are planned for later."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64]
+packages: {}
+# Empty build fixture only: PiG rejects Binary builds with zero extensions.
+extensions:
+  - name: seed-check
+    origins: [local:./extensions/seed-check]
+    tools: []
+skills: []
+discovery:
+  extensions: []
+  skills: []

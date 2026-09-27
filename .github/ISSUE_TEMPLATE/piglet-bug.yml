@@ -1,0 +1,51 @@
+name: Piglet bug
+description: Report a problem with a Pigpen composition, its resources, documentation, or catalog.
+title: '[Piglet bug]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Piglet issues belong in **MichaelKinsy/pigpen**. Core PiG runtime, CLI,
+        extension-host, and monorepo publish/pull/update issues belong in
+        [MichaelKinsy/PiG](https://github.com/MichaelKinsy/PiG/issues).
+        This repository currently contains a **planned scaffold**, not an installable release.
+        Do not post secrets or security-sensitive findings here; read
+        [SECURITY.md](https://github.com/MichaelKinsy/pigpen/blob/main/SECURITY.md).
+  - type: input
+    id: piglet
+    attributes:
+      label: Piglet and source commit
+      description: Name the Piglet (or catalog/docs) and the commit you inspected.
+      placeholder: pig-with-batteries at a full commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: PiG version and platform
+      description: Include the PiG version and OS/architecture, or say this is a documentation-only issue.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Give minimal steps and say whether this reproduces without the Piglet. Redact private data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+      description: Include only relevant, redacted output. Do not attach unredacted sessions or signing keys.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the planned status and RELEASE-BLOCKERS.md, and this report concerns Pigpen rather than a core PiG feature.
+          required: true
+        - label: I removed credentials, private paths, signing keys, and private session data.
+          required: true

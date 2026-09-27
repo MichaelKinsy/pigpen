@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Core PiG bug or feature
+    url: https://github.com/MichaelKinsy/PiG/issues
+    about: Core runtime, CLI, extension-host, and monorepo-release support belong in PiG. Piglet composition issues use the templates above.
+  - name: Security-sensitive report
+    url: https://github.com/MichaelKinsy/pigpen/blob/main/SECURITY.md
+    about: Follow the private reporting guidance. Do not post secrets or vulnerability details in public issues.

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-26",
+  "entries": [
+    {
+      "id": "pig-with-batteries",
+      "kind": "piglet",
+      "name": "pig-with-batteries",
+      "description": "The planned official batteries-included Piglet: default PiG with curated extensions. Protocol bridges are planned for later.",
+      "maintainer": "MichaelKinsy",
+      "official": true,
+      "featured": true,
+      "status": "planned",
+      "languages": [],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
+      },
+      "manifestSha256": "7f72b8677de6f592d7b429425fa636522423cc1dc380d4671d8b1e1453545461",
+      "releases": [],
+      "notes": [
+        "This is a source scaffold, not the finished batteries-included composition. It selects only an empty build-pipeline fixture; curated extensions and other resources are pending owner review.",
+        "The manifest's 0.1.0 and Linux build target are development defaults, not a published release or supported-platform claim.",
+        "Source installation from a monorepo subdirectory and per-Piglet release tags need PiG support. No installation command is offered yet."
+      ]
+    }
+  ]
+}

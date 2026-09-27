@@ -1,0 +1,406 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "$ref": "#/definitions/url"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/entry"
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "updatedAt",
+    "entries"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pi-in-go.dev/catalog.schema.json",
+  "title": "PiG catalog",
+  "definitions": {
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://[^\\s]+$",
+      "maxLength": 1000
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "npm",
+            "git"
+          ]
+        },
+        "spec": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "url": {
+          "$ref": "#/definitions/url"
+        }
+      },
+      "required": [
+        "type",
+        "spec",
+        "url"
+      ]
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "passed"
+        },
+        "pigVersion": {
+          "$ref": "#/definitions/version"
+        },
+        "pigCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "piVersion": {
+          "$ref": "#/definitions/version"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1500
+          },
+          "uniqueItems": true,
+          "minItems": 0
+        },
+        "evidence": {
+          "$ref": "#/definitions/url"
+        }
+      },
+      "required": [
+        "status",
+        "pigVersion",
+        "pigCommit",
+        "piVersion",
+        "date",
+        "scope",
+        "notes",
+        "evidence"
+      ]
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/version"
+        },
+        "signed": {
+          "const": true
+        },
+        "indexUrl": {
+          "$ref": "#/definitions/url"
+        },
+        "pullCommand": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "linux/amd64",
+              "linux/arm64",
+              "darwin/amd64",
+              "darwin/arm64",
+              "windows/amd64",
+              "windows/arm64"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "verificationKey": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^ed25519:[0-9a-f]{32}$"
+            },
+            "publicKeyUrl": {
+              "$ref": "#/definitions/url"
+            }
+          },
+          "required": [
+            "id",
+            "publicKeyUrl"
+          ]
+        }
+      },
+      "required": [
+        "version",
+        "signed",
+        "indexUrl",
+        "pullCommand",
+        "platforms",
+        "verificationKey"
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$",
+          "maxLength": 160
+        },
+        "kind": {
+          "enum": [
+            "package",
+            "piglet"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "maintainer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "official": {
+          "type": "boolean"
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "planned"
+          ]
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "uniqueItems": true,
+          "minItems": 0
+        },
+        "repository": {
+          "$ref": "#/definitions/url"
+        },
+        "source": {
+          "$ref": "#/definitions/source"
+        },
+        "version": {
+          "$ref": "#/definitions/version"
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "extension",
+              "skill",
+              "prompt",
+              "theme",
+              "hook",
+              "mcp",
+              "agent-environment"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0
+        },
+        "installCommand": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "piCompatibility": {
+          "enum": [
+            "tested",
+            "not-tested",
+            "not-applicable"
+          ]
+        },
+        "verification": {
+          "$ref": "#/definitions/verification"
+        },
+        "addCommand": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "releases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/release"
+          },
+          "uniqueItems": true,
+          "minItems": 0
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1500
+          },
+          "uniqueItems": true,
+          "minItems": 0
+        },
+        "manifestSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "description",
+        "maintainer",
+        "official",
+        "featured",
+        "status",
+        "languages",
+        "source",
+        "notes"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "package"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "version",
+              "license",
+              "resources",
+              "installCommand",
+              "piCompatibility"
+            ],
+            "properties": {
+              "status": {
+                "const": "available"
+              },
+              "addCommand": false,
+              "releases": false
+            }
+          },
+          "else": {
+            "required": [
+              "releases",
+              "repository"
+            ],
+            "properties": {
+              "installCommand": false,
+              "resources": false,
+              "piCompatibility": false,
+              "verification": false
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "piCompatibility"
+            ],
+            "properties": {
+              "piCompatibility": {
+                "const": "tested"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "verification"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "verification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "piCompatibility": {
+                "const": "tested"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "planned"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "releases": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

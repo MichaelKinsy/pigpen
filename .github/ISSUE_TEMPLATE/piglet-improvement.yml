@@ -1,0 +1,38 @@
+name: Piglet improvement
+description: Propose a composition, resource selection, documentation, or catalog improvement.
+title: '[Piglet request]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Requests about Piglets belong in **MichaelKinsy/pigpen**. Core PiG
+        runtime, CLI, extension-host, or monorepo-release features belong in
+        [MichaelKinsy/PiG](https://github.com/MichaelKinsy/PiG/issues).
+        Official resource selections need maintainer review. This is not a
+        community registry, and the current Piglet is a planned scaffold.
+  - type: input
+    id: piglet
+    attributes:
+      label: Piglet or area
+      description: Name the affected Piglet, or describe the proposed composition or documentation area.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and proposed improvement
+      description: Explain the user need, proposed behavior, and alternatives considered.
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Resources and requirements
+      description: If suggesting resources, link their source, license, version, runtime requirements, and any verification evidence. Do not include private material.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This concerns a Pigpen Piglet or its catalog/docs, not a core PiG runtime or release-support feature.
+          required: true

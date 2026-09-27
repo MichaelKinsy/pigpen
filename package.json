@@ -1,0 +1,13 @@
+{
+  "name": "pigpen",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": { "node": ">=22.13.0" },
+  "scripts": {
+    "generate": "node scripts/generate-index.mjs",
+    "check": "node scripts/generate-index.mjs --check",
+    "validate": "node scripts/validate-manifests.mjs"
+  },
+  "devDependencies": { "ajv": "8.17.1", "ajv-formats": "3.0.1", "yaml": "2.8.1" }
+}

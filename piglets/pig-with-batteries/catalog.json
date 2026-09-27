@@ -1,0 +1,11 @@
+{
+  "status": "planned",
+  "featured": true,
+  "updatedAt": "2026-09-26",
+  "languages": [],
+  "notes": [
+    "This is a source scaffold, not the finished batteries-included composition. It selects only an empty build-pipeline fixture; curated extensions and other resources are pending owner review.",
+    "The manifest's 0.1.0 and Linux build target are development defaults, not a published release or supported-platform claim.",
+    "Source installation from a monorepo subdirectory and per-Piglet release tags need PiG support. No installation command is offered yet."
+  ]
+}
