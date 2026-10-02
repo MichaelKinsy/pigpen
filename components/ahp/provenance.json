@@ -1,0 +1,28 @@
+{
+  "origin": "ported",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-ahp",
+      "authors": ["Bang Lee"],
+      "url": "https://github.com/Qusic/pi-ahp",
+      "revision": "4065e98309b03c1d2d916300856c3c21a9c10674",
+      "path": "proof/oracle",
+      "license": "MIT",
+      "licenseFile": "proof/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "Agent Host Protocol",
+      "authors": ["Microsoft Corporation"],
+      "url": "https://github.com/microsoft/agent-host-protocol",
+      "revision": "296b25e7b698a4a84a0ee5a28d9573e70048a0bf",
+      "path": "extensions/ahp/third_party/agent-host-protocol-go",
+      "license": "MIT",
+      "licenseFile": "extensions/ahp/third_party/agent-host-protocol-go/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

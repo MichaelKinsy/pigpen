@@ -1,0 +1,10 @@
+{
+  "name": "decline",
+  "description": "Dirty repository, new session, the user picks 'No, let me commit first': the switch is cancelled and a warning is shown.",
+  "files": {"a.txt": "one\n"},
+  "setup": [["git","init","-q"],["git","add","a.txt"],["git","commit","-q","-m","init"],["sh","-c","echo two > b.txt && echo three >> a.txt"]],
+  "commands": {"git": {"mode": "real"}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "ui": [{"value": "No, let me commit first"}]}
+  ]
+}

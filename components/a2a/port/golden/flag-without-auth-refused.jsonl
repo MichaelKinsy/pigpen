@@ -1,0 +1,5 @@
+{"kind":"header","scenario":"flag-without-auth-refused","lane":"pig-go-self","host":"pig 0.3.0+0.87.1","extension":"sha256:9f54965d38614dd8cf116f7ded74054e2a18e689a627e9f6621aa9a8cc9f0ffb","normalizer":"v2"}
+{"step":"00-startup","ch":"ui","data":{"message":"a2a: a listener needs at least one entry in tokens (or insecureNoAuth on a loopback address)","method":"notify","notifyType":"error"}}
+{"step":"01-status","ch":"ui","data":{"message":"a2a: listener off (a2a: a listener needs at least one entry in tokens (or insecureNoAuth on a loopback address))","method":"notify","notifyType":"info"}}
+{"step":"01-status","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

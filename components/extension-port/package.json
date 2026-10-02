@@ -1,0 +1,25 @@
+{
+  "name": "pigpen-extension-port",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Test-first, proof-checked procedure for porting Pi TypeScript extensions to native Go PiG extensions",
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": [
+    "skills",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "skills": [
+      "skills/pigpen-pi-extension-port"
+    ]
+  },
+  "keywords": [
+    "pig-package",
+    "extension-porting",
+    "skill"
+  ]
+}

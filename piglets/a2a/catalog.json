@@ -1,0 +1,13 @@
+{
+  "status": "planned",
+  "featured": false,
+  "updatedAt": "2026-09-29",
+  "languages": ["go"],
+  "notes": [
+    "Source only: no Piglet Binary is published and no remote installation command is offered yet. See the root RELEASE-BLOCKERS.md.",
+    "The A2A listener is off unless a2a.json, PIG_A2A_LISTEN or --a2a-listen configures it, and it refuses to start without authentication tokens.",
+    "The extension is Go and fuses into the Piglet Binary; it depends on the upstream a2a-go v2.6.0 (Apache-2.0).",
+    "Also selected by pig-with-batteries; the listener is off there too until configured.",
+    "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+  ]
+}

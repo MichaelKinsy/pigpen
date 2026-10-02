@@ -1,18 +1,87 @@
-# Valid Piglet source scaffold, not a published batteries-included composition.
-# Add curated, pinned resources only after owner review. Do not invent defaults.
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# Not a published batteries-included composition yet. Batteries stay explicit: a reporter that is
+# silent outside herdr, a tool the model calls on demand, slash commands that answer only when typed,
+# games and a snake that start only on their command, the pig-doctor command, jev, an A2A Package whose
+# listener is off until configured, and the websearch first slice. Add further resources only after owner review.
 name: pig-with-batteries
-description: "The planned official batteries-included Piglet: default PiG with curated extensions. Protocol bridges are planned for later."
+description: "The batteries-included Piglet: default PiG with curated extensions. Today: the herdr agent-state reporter, the read_session tool, the /context, /tools, /cost and /prompts inspection commands, PiG Runner (/runner) and Angry Pigs (/angry-pigs), the Pig Snake game (/pig-snake), which start only on their command, the pig-doctor /doctor command (nothing runs unless you invoke it), Jev, a typed judge for tool calls that is off until you run /jev on, the a2a Package (A2A tools; its listener stays off until you configure it), and the websearch first slice (search, fetch, retained sources). Protocol bridges and more capability ports are planned."
 release:
   version: 0.1.0
 build:
-  targets: [linux/amd64]
-packages: {}
-# Empty build fixture only: PiG rejects Binary builds with zero extensions.
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+packages:
+  herdr: local:../../components/herdr
+  # The games' shared Go library: not a member, but staged so the games' go.work resolves it.
+  pig-play: local:../../components/pig-play
+  pig-runner: local:../../components/pig-runner
+  angry-pigs: local:../../components/angry-pigs
+  pig-snake: local:../../components/pig-snake
+  session-ingest: local:../../components/session-ingest
+  context-info: local:../../components/context-info
+  pig-doctor: local:../../components/pig-doctor
+  # typesafe is a Go library Package, not a member: jev imports it through its go.work.
+  typesafe: local:../../components/typesafe
+  jev: local:../../components/jev
+  a2a: local:../../components/a2a
+  websearch: local:../../components/websearch
 extensions:
+  # Reports idle, working and blocked to herdr and releases the pane on quit.
+  # Does nothing outside a herdr pane. Same selection as piglets/herdr.
+  - name: herdr
+    origins: [package:herdr]
+    tools: []
+  # /runner and /pig-runner. Registers commands only, no event handler: bundled, not activated.
+  - name: pigrunner
+    origins: [package:pig-runner]
+    tools: []
+  # /angry-pigs. Registers commands only, no event handler: bundled, not activated.
+  - name: angrypigs
+    origins: [package:angry-pigs]
+    tools: []
+  # A snake game whose every apple adds a pig to the herd. Bundling is not
+  # activating: it registers /pig-snake and /snake and nothing else (no event
+  # handler, tool or flag), so nothing runs until the user types the command.
+  - name: pig-snake
+    origins: [package:pig-snake]
+    tools: []
+  # read_session: lets the model query Pi and PiG session transcripts in bounded pages.
+  # Adds one tool; nothing runs until the model calls it.
+  - name: session-ingest
+    origins: [package:session-ingest]
+  # /context, /tools, /cost, /prompts and Ctrl+Shift+I answer when used. The status footer
+  # that would replace PiG's footer is off unless started with --context-footer.
+  - name: context-info
+    origins: [package:context-info]
+  # /doctor command only: find and fix cruft in a PiG setup. Registers no event
+  # handlers, so nothing runs unless you invoke it; fixes need /doctor fix with a
+  # confirmation per group. The read-only pig_doctor tool is not enabled here.
+  - name: pig-doctor
+    origins: [package:pig-doctor]
+    tools: []
+  # Jev, a typed judge for tool calls and output. Selectable and OFF by default: it judges
+  # nothing and sends nothing until the user runs /jev on (which shows what leaves the machine)
+  # or sets "enabled": true in their own pi-jev.json. Fails open.
+  - name: jev
+    origins: [package:jev]
+    # jev_ask is registered once Jev is on (/jev on or "enabled": true); an empty
+    # list would scope it out.
+    tools: [jev_ask]
+  # a2a_agents, a2a_send, a2a_task and /a2a. No listener opens unless a2a.json, PIG_A2A_LISTEN or
+  # --a2a-listen configures one, and a listener refuses to start without authentication tokens.
+  - name: a2a
+    origins: [package:a2a]
+  # Web search, fetch, retained sources and bounded retrieval (Go port of pi-web-access, first
+  # slice: see components/websearch/port/PORT.md for what is deferred). Tools stay dormant until
+  # the model calls web_enable. Same selection as the Package.
+  - name: websearch
+    origins: [package:websearch]
+  # Empty build-pipeline fixture: PiG rejects Binary builds with zero extensions.
   - name: seed-check
     origins: [local:./extensions/seed-check]
     tools: []
 skills: []
+# Empty discovery keeps a maintainer's ambient extensions and skills out of the
+# composition; the herdr extension comes from its Package, not from discovery.
 discovery:
   extensions: []
   skills: []

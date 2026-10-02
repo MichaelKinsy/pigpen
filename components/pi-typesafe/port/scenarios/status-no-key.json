@@ -1,0 +1,3 @@
+{"name":"status-no-key","description":"No key configured: status says judgments are skipped without a key and shows the disclosure; setup reports the missing key and, with UI, would start login (not asserted here).","steps":[
+ {"name":"status","rpc":{"type":"prompt","message":"/typesafe status"}},
+ {"name":"usage","rpc":{"type":"prompt","message":"/typesafe bogus"}}]}

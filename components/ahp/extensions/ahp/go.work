@@ -1,0 +1,8 @@
+go 1.26
+
+// Lists the vendored Microsoft AHP module so a fused Piglet Binary build (which does not honour
+// replace directives of the extension's go.mod) resolves it locally. See third_party/.../NOTICE-PIGPEN.md.
+use (
+	.
+	./third_party/agent-host-protocol-go
+)

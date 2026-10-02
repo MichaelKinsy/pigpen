@@ -1,0 +1,91 @@
+{
+ "mode": "probabilities",
+ "structured": false,
+ "state": "doc",
+ "questions": {
+  "one": {
+   "type": "noul",
+   "instructions": {
+    "ask": "is it?",
+    "hints": [
+     "a",
+     "b"
+    ]
+   },
+   "criteria": {
+    "true": {
+     "meaning": "yes",
+     "examples": [
+      "x"
+     ]
+    }
+   }
+  },
+  "two": {
+   "type": "noul",
+   "criteria": {
+    "false": "only no"
+   }
+  },
+  "three": {
+   "type": "noul",
+   "instructions": null,
+   "criteria": null
+  },
+  "four": {
+   "type": "choice",
+   "instructions": [
+    "pick",
+    null
+   ],
+   "criteria": {
+    "a": null,
+    "b": {
+     "detail": "rich",
+     "n": [
+      1,
+      2
+     ]
+    },
+    "c": [
+     "x",
+     null
+    ]
+   }
+  },
+  "five": {
+   "type": "score",
+   "instructions": null,
+   "criteria": [
+    "nothing",
+    {
+     "x": "y"
+    },
+    [
+     "top",
+     "level"
+    ]
+   ]
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "one": 0.1,
+    "two": 0.2,
+    "three": 0.3,
+    "four": {
+     "a": 0.2,
+     "b": 0.3,
+     "c": 0.5
+    },
+    "five": {
+     "0": 0.5,
+     "1": 0.25,
+     "2": 0.25
+    }
+   }
+  }
+ ],
+ "name": "rich-descriptions"
+}

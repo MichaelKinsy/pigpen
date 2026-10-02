@@ -1,0 +1,35 @@
+{
+ "name": "tool-names-renamed",
+ "description": "toolNames opts into alternate public names; the renamed tool runs and the old name is gone.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"toolNames\": {\"getSearchContent\": \"open_content\"}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "open_content",
+     "arguments": {
+      "responseId": "missing-id"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "args": [
+  "--tools",
+  "read,bash,edit,write,web_search,source_check,fetch_content,open_content"
+ ]
+}

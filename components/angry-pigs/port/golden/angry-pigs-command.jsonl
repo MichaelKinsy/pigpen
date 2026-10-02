@@ -1,0 +1,4 @@
+{"kind":"header","scenario":"angry-pigs-command","lane":"pig-go-upstream","host":"pig 0.3.0+0.87.1","extension":"sha256:8acc181eb76f780a08a9affca33313b4f6d4334b04b7a66fe91df27365432389","normalizer":"v2"}
+{"step":"01-angry-pigs","ch":"host","data":{"error":"no_ui: ui.custom requires an interactive TUI","event":"command","type":"extension_error"}}
+{"step":"01-angry-pigs","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

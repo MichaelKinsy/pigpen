@@ -1,5 +1,5 @@
 # Validation only. No Piglet Binary build, signing, artifact upload or publishing.
-# Prefixed release tags fail CLOSED until PiG supports monorepo releases.
+# Prefixed release tags fail CLOSED until Pigpen release qualification is complete.
 name: Validate Pigpen
 on:
   pull_request:
@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: '24'
       - run: npm ci --ignore-scripts
+      - run: npm test
       - run: npm run check
       - name: Validate target metadata and refuse unsupported release tags
         run: node scripts/build-matrix.mjs
@@ -46,3 +47,5 @@ jobs:
           go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
           export PIG_BIN="$PWD/.pig-bin/pig"
           npm run validate
+          # npm run test:porter is not run here: the pinned validator predates the
+          # Package Skill expansion and print tool-scope fixes it asserts (see RELEASE-BLOCKERS.md).

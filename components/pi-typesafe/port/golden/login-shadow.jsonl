@@ -1,0 +1,4 @@
+{"kind":"header","scenario":"login-shadow","lane":"pi-ts","host":"pi 0.87.1","extension":"sha256:2dbf2078e91fc7fface683f6ff536e10e8218b387b768a473d7d11f296272329","normalizer":"v2"}
+{"step":"01-login","ch":"ui","data":{"message":"TYPESAFE_API_KEY is set in the environment and takes precedence over a stored key. Unset it before using /typesafe login.","method":"notify","notifyType":"warning"}}
+{"step":"01-login","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

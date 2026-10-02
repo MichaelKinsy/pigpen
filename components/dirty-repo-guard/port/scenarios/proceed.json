@@ -1,0 +1,10 @@
+{
+  "name": "proceed",
+  "description": "Dirty repository, the user picks 'Yes, proceed anyway': the switch is not cancelled and no warning appears.",
+  "files": {"a.txt": "one\n"},
+  "setup": [["git","init","-q"],["git","add","a.txt"],["git","commit","-q","-m","init"],["sh","-c","echo two > b.txt && echo three >> a.txt"]],
+  "commands": {"git": {"mode": "real"}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "ui": [{"value": "Yes, proceed anyway"}]}
+  ]
+}

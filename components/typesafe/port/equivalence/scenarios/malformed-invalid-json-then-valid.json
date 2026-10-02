@@ -1,0 +1,22 @@
+{
+ "mode": "discrete",
+ "structured": false,
+ "malformedRetries": 2,
+ "state": "doc",
+ "questions": {
+  "q": {
+   "type": "noul",
+   "instructions": "?"
+  }
+ },
+ "responses": [
+  "{\"answers\": {\"q\": nope}}",
+  "{\"answers\":",
+  {
+   "answers": {
+    "q": true
+   }
+  }
+ ],
+ "name": "malformed-invalid-json-then-valid"
+}

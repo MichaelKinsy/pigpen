@@ -1,0 +1,10 @@
+{
+  "name": "clean-repo",
+  "description": "Clean repository: git status prints nothing, so no dialog and no cancellation.",
+  "files": {"a.txt": "one\n"},
+  "setup": [["git","init","-q"],["git","add","a.txt"],["git","commit","-q","-m","init"]],
+  "commands": {"git": {"mode": "real"}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "settleMs": 500}
+  ]
+}

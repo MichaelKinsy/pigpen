@@ -1,0 +1,3 @@
+{
+  "exec:pi": "scripts/dev-pi.mjs is the upstream repository's development launcher: it is not in package.json `files` and Pi never loads it; the extension starts no process"
+}

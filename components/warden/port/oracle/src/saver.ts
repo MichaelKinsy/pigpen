@@ -1,0 +1,187 @@
+/**
+ * Session accounting for the context saver, so its value can be measured instead of assumed:
+ * how often large outputs appear, how many were compressed, dropped as duplicates, or cut as repeated runs, how much was removed, how many
+ * turns that removal was spared from (token-turns), and how often the agent went back for the full text. A recall means
+ * the excerpt was not enough; a whole-file recall also undoes the saving, a scoped one keeps it. Deterministic; no requests.
+ */
+export interface ContextLedgerSnapshot {
+  /** Single-text-block outputs at or above tailMinChars, i.e. candidates for compression. */
+  large: number;
+  compressed: number;
+  /** Results replaced by a duplicate note because an identical result already exists in this session. */
+  duplicates: number;
+  /** Results and messages whose repeated runs were replaced by pointers because the same text is already in context; one stored copy each. */
+  repeats: number;
+  bytesSaved: number;
+  /** Assistant turns completed since the session started. */
+  turns: number;
+  /** Sum over turns of the bytes that were no longer in context on that turn, in rough tokens (bytes / 4). */
+  tokenTurnsSaved: number;
+  /** Times the agent went back to a stored full output after compression, by kind of access. */
+  recalls: number;
+  recallsFull: number;
+  /** Head/diagnostic/tail excerpts and context-filter outputs, kept apart so the filter trial can be judged against the excerpt. */
+  excerpt: CompressionCounts;
+  filter: CompressionCounts & FilterCounts;
+}
+
+export interface CompressionCounts {
+  count: number;
+  recalls: number;
+  recallsFull: number;
+}
+
+export interface FilterCounts {
+  /** Characters of the original output the filtered outputs kept. */
+  keptChars: number;
+  /** Requests and wall-clock time the filter spent, fallbacks included. */
+  requests: number;
+  ms: number;
+  /** Outputs that got the excerpt instead, by reason. */
+  fallbacks: Record<string, number>;
+}
+
+export type RecallKind = "full" | "scoped";
+/** Which excerpt replaced the output; a parser excerpt and a duplicate or repeat are neither kind. */
+export type CompressionKind = "excerpt" | "filtered" | "parser";
+
+/** Serialized tool input escapes backslashes, so a Windows path must also match in its JSON form. */
+function mentions(text: string, path: string): boolean {
+  return text.includes(path) || text.includes(JSON.stringify(path).slice(1, -1));
+}
+
+export class ContextLedger {
+  private large = 0;
+  private compressed = 0;
+  private duplicates = 0;
+  private repeats = 0;
+  private bytesSaved = 0;
+  /** `bytesSaved` minus the savings of outputs a whole-file recall put back into context. */
+  private bytesAbsent = 0;
+  private turns = 0;
+  private tokenTurnsSaved = 0;
+  private recalls = 0;
+  private recallsFull = 0;
+  private excerpt: CompressionCounts = { count: 0, recalls: 0, recallsFull: 0 };
+  private filter: CompressionCounts & FilterCounts = { count: 0, recalls: 0, recallsFull: 0, keptChars: 0, requests: 0, ms: 0, fallbacks: {} };
+  private readonly stored = new Map<string, { recalled: boolean; restored: boolean; saved: number; tool: string | undefined; bytes: number | undefined; kind?: CompressionKind | undefined }>();
+  /** Every sizeable text result seen this session, by content key, with the tool that produced it and its stored copy if any. */
+  private readonly seen = new Map<string, { tool: string; path?: string }>();
+
+  candidate(): void {
+    this.large++;
+  }
+
+  /** `source` is the tool that produced the output and the full output's size in bytes; optional for callers that do not know them. */
+  record(path: string, bytesSaved: number, source?: { tool: string; bytes: number; kind?: CompressionKind; keptChars?: number }): void {
+    this.compressed++;
+    this.bytesSaved += bytesSaved;
+    this.bytesAbsent += bytesSaved;
+    if (source?.kind === "excerpt") this.excerpt.count++;
+    if (source?.kind === "filtered") { this.filter.count++; this.filter.keptChars += source.keptChars ?? 0; }
+    this.stored.set(path, { recalled: false, restored: false, saved: bytesSaved, tool: source?.tool, bytes: source?.bytes, kind: source?.kind });
+  }
+
+  /** What one filter attempt cost, and why it fell back to the excerpt when it did. */
+  filterSpent(requests: number, ms: number, fallback?: string): void {
+    this.filter.requests += requests;
+    this.filter.ms += ms;
+    if (fallback) this.filter.fallbacks[fallback] = (this.filter.fallbacks[fallback] ?? 0) + 1;
+  }
+
+  /** Remember a result's identity so a later identical result can be dropped. `path` is set when a full copy exists. */
+  remember(key: string, tool: string, path?: string): void {
+    const existing = this.seen.get(key);
+    if (existing && existing.path && !path) return;
+    this.seen.set(key, path ? { tool, path } : { tool });
+  }
+
+  duplicateOf(key: string): { tool: string; path?: string } | undefined {
+    return this.seen.get(key);
+  }
+
+  duplicate(bytesSaved: number): void {
+    this.duplicates++;
+    this.bytesSaved += bytesSaved;
+    this.bytesAbsent += bytesSaved;
+  }
+
+  /** Repeated runs of one text were replaced by pointer lines; `path` holds the full text, so reading it back is a recall. */
+  repeat(path: string, bytesSaved: number, source: { tool: string; bytes: number }): void {
+    this.repeats++;
+    this.bytesSaved += bytesSaved;
+    this.bytesAbsent += bytesSaved;
+    this.stored.set(path, { recalled: false, restored: false, saved: bytesSaved, tool: source.tool, bytes: source.bytes });
+  }
+
+  /** One LLM turn finished: everything removed so far was absent from this turn's prompt. */
+  turnEnd(): void {
+    this.turns++;
+    this.tokenTurnsSaved += Math.round(this.bytesAbsent / 4);
+  }
+
+  /** The stored path that `text` (a path, command, or serialized input) mentions, if any. */
+  storedPathIn(text: string): string | undefined {
+    for (const path of this.stored.keys()) if (mentions(text, path)) return path;
+    for (const entry of this.seen.values()) if (entry.path && mentions(text, entry.path)) return entry.path;
+    return undefined;
+  }
+
+  /** Counts the first access to a compressed output; later accesses and duplicate-only copies are not new recalls.
+   *  A whole-file access, first or not, puts the output back into context, so its savings stop counting toward token-turns. */
+  noteAccess(text: string, kind: RecallKind = "full"): string | undefined {
+    for (const [path, state] of this.stored) {
+      if (!mentions(text, path)) continue;
+      if (!state.recalled) {
+        state.recalled = true;
+        this.recalls++;
+        if (kind === "full") this.recallsFull++;
+        const counts = state.kind === "excerpt" ? this.excerpt : state.kind === "filtered" ? this.filter : undefined;
+        if (counts) { counts.recalls++; if (kind === "full") counts.recallsFull++; }
+      }
+      if (kind === "full" && !state.restored) { state.restored = true; this.bytesAbsent -= state.saved; }
+      return path;
+    }
+    return undefined;
+  }
+
+  snapshot(): ContextLedgerSnapshot {
+    return { large: this.large, compressed: this.compressed, duplicates: this.duplicates, repeats: this.repeats, bytesSaved: this.bytesSaved, turns: this.turns, tokenTurnsSaved: this.tokenTurnsSaved, recalls: this.recalls, recallsFull: this.recallsFull, excerpt: { ...this.excerpt }, filter: { ...this.filter, fallbacks: { ...this.filter.fallbacks } } };
+  }
+
+  /** Paths to temp files for cleanup at session start. Internal only — paths never leave the machine. */
+  storedPaths(): string[] {
+    return [...this.stored.keys()];
+  }
+
+  /** Stored full outputs, oldest first, with the tool that produced each and its size when recorded. Local only, like `storedPaths`. */
+  storedOutputs(): Array<{ tool: string | undefined; path: string; bytes: number | undefined }> {
+    return [...this.stored].map(([path, entry]) => ({ tool: entry.tool, path, bytes: entry.bytes }));
+  }
+
+  reset(): void {
+    this.large = 0; this.compressed = 0; this.duplicates = 0; this.repeats = 0; this.bytesSaved = 0; this.bytesAbsent = 0; this.turns = 0; this.tokenTurnsSaved = 0; this.recalls = 0; this.recallsFull = 0;
+    this.excerpt = { count: 0, recalls: 0, recallsFull: 0 };
+    this.filter = { count: 0, recalls: 0, recallsFull: 0, keptChars: 0, requests: 0, ms: 0, fallbacks: {} };
+    this.stored.clear();
+    this.seen.clear();
+  }
+}
+
+/** One line for /warden status. Says when there is nothing to report instead of printing zeros. */
+export function formatLedger(snapshot: ContextLedgerSnapshot): string {
+  if (snapshot.large === 0 && snapshot.duplicates === 0 && snapshot.repeats === 0) return "Context saver: no tool output large enough to consider this session.";
+  const kb = (snapshot.bytesSaved / 1024).toFixed(1);
+  const stored = snapshot.compressed + snapshot.repeats;
+  const recallRate = stored ? Math.round((snapshot.recalls / stored) * 100) : 0;
+  const scoped = snapshot.recalls - snapshot.recallsFull;
+  return `Context saver: ${snapshot.large} large outputs, ${snapshot.compressed} compressed, ${snapshot.duplicates} duplicate${snapshot.duplicates === 1 ? "" : "s"} dropped, ${snapshot.repeats ? `${snapshot.repeats} repeat${snapshot.repeats === 1 ? "" : "s"} cut, ` : ""}${kb} KB removed (~${Math.round(snapshot.bytesSaved / 4)} tokens), ~${snapshot.tokenTurnsSaved} token-turns spared over ${snapshot.turns} turns, ${snapshot.recalls} recall${snapshot.recalls === 1 ? "" : "s"} of the full output (${recallRate}%; ${snapshot.recallsFull} whole-file, ${scoped} scoped).`;
+}
+
+/** One line for /warden status while the context filter is on or has run: filtered outputs beside excerpt outputs, for the trial. */
+export function formatFilterLedger(snapshot: ContextLedgerSnapshot): string {
+  const { excerpt, filter } = snapshot;
+  const rate = (counts: CompressionCounts) => counts.count ? `${Math.round((counts.recalls / counts.count) * 100)}%` : "n/a";
+  const fallbacks = Object.entries(filter.fallbacks).map(([reason, count]) => `${reason} ${count}`).join(", ");
+  return `Context filter (beta): ${filter.count} filtered (${filter.keptChars} characters kept), ${filter.recalls} recalled (${rate(filter)}; ${filter.recallsFull} whole-file, ${filter.recalls - filter.recallsFull} scoped); ${excerpt.count} excerpts, ${excerpt.recalls} recalled (${rate(excerpt)}; ${excerpt.recallsFull} whole-file, ${excerpt.recalls - excerpt.recallsFull} scoped); ${filter.requests} request${filter.requests === 1 ? "" : "s"}, ${filter.ms} ms; fallbacks: ${fallbacks || "none"}.`;
+}

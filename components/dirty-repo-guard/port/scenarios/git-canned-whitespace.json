@@ -1,0 +1,9 @@
+{
+  "name": "git-canned-whitespace",
+  "description": "git prints only whitespace (including U+00A0 and U+FEFF, which JavaScript trim() removes): no changes, no dialog.",
+  "files": {"a.txt": "one\n"},
+  "commands": {"git": {"mode": "canned", "stdout": " \u00a0\ufeff\n\t\n", "exit": 0}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "settleMs": 500}
+  ]
+}

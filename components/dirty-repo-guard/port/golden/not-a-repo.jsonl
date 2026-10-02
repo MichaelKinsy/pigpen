@@ -1,0 +1,5 @@
+{"kind":"header","scenario":"not-a-repo","lane":"pi-ts","host":"pi 0.87.1","extension":"sha256:0037a69abdf4cf98181db799bef5bdee8981861315eb82ddab78126c2b0f13c4","normalizer":"v2"}
+{"step":"01-new-session","ch":"exec","data":{"args":["status","--porcelain"],"cmd":"git","cwd":"<cwd>"}}
+{"step":"01-new-session","ch":"exec_end","data":{"cmd":"git","exit":128}}
+{"step":"01-new-session","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

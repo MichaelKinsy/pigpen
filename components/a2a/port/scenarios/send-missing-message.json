@@ -1,0 +1,11 @@
+{
+  "name": "send-missing-message",
+  "description": "a2a_send without a message is rejected before any remote is contacted.",
+  "llm": [
+    {"toolCalls": [{"name": "a2a_send", "arguments": {"agent": "peer"}}]},
+    {"text": "done"}
+  ],
+  "steps": [
+    {"name": "prompt", "rpc": {"type": "prompt", "message": "ask the peer"}}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "status": "planned",
+  "featured": false,
+  "updatedAt": "2026-09-29",
+  "languages": ["go"],
+  "notes": [
+    "Source only, Go only. Two pixel-art games, PiG Runner (/runner, /pig-runner) and Angry Pigs (/angry-pigs), moved from PiG Standard (Michael Kinsy, MIT). They draw the pig chosen with PiG's built-in /sprite (PiG 0.4.0 and later), so the Piglet bundles no login of its own. Run npm run stage before using its generated manifest under dist/staged.",
+    "Nothing starts by itself. The games register only their commands and no event handler (PIG_GAMES_MCP=1 adds a session_start handler for the opt-in agent server; /runner mcp on and /angry-pigs mcp on serve a game to an agent on 127.0.0.1 behind a random token, off by default). Both Packages (pig-runner, angry-pigs) also install on their own from a Pigpen checkout; each needs the pig-play sprite library beside it (../pig-play).",
+    "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+  ]
+}

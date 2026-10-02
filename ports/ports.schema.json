@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/MichaelKinsy/pigpen/ports/ports.schema.json",
+  "title": "Pigpen ports list",
+  "description": "The dispatch list for every Pigpen port. One row per port or move. scripts/ports.mjs validates it (npm run quality) and generates ports/README.md from it (npm run generate).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "updatedAt", "ports"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "updatedAt": { "type": "string", "format": "date" },
+    "ports": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/port" } }
+  },
+  "definitions": {
+    "text": { "type": "string", "pattern": "\\S" },
+    "kebab": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "target": { "type": "string", "pattern": "^(components|piglets)/[a-z0-9]+(-[a-z0-9]+)*$" },
+    "upstream": {
+      "description": "One upstream repository, pinned to a full commit. author is the person or organisation that wrote it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "url", "commit", "license", "author"],
+      "properties": {
+        "name": { "$ref": "#/definitions/text" },
+        "url": { "type": "string", "pattern": "^https://[^/@\\s]+/[^\\s]*$" },
+        "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "license": { "type": "string", "pattern": "\\S", "not": { "pattern": "^(UNLICENSED|NOASSERTION|UNKNOWN)$" } },
+        "author": { "$ref": "#/definitions/text" },
+        "path": { "type": "string", "pattern": "^(?!/)(?!.*(^|/)\\.\\.(/|$))\\S+$", "description": "Where the ported source lives inside the upstream repository (a monorepo package, an app directory)." }
+      }
+    },
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "summary", "targetPackage", "lane", "status", "credit"],
+      "properties": {
+        "id": { "$ref": "#/definitions/kebab", "description": "The argument of the porting Skill: `port row <id>`." },
+        "name": { "$ref": "#/definitions/text" },
+        "kind": {
+          "enum": ["port", "adapter", "move", "original"],
+          "description": "port: translation of an upstream program. adapter: original code built on an upstream SDK or protocol. move: existing code moved in from another repository. original: new code (an upstream asset may still be credited)."
+        },
+        "summary": { "$ref": "#/definitions/text" },
+        "upstream": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/upstream" }], "description": "The primary upstream. Required unless kind is original." },
+        "additionalUpstreams": { "type": "array", "items": { "$ref": "#/definitions/upstream" }, "description": "Further pinned upstreams (a protocol schema, a second source)." },
+        "targetPackage": { "$ref": "#/definitions/target", "description": "The Package the port ships as: components/<name> (or piglets/<name>)." },
+        "otherTargets": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/target" }, "description": "Other directories this row owns (a Piglet, a shared library)." },
+        "lane": { "$ref": "#/definitions/kebab", "description": "The port lane. For a queued row, the name the lane will take." },
+        "status": { "enum": ["queued", "porting", "review", "done"] },
+        "priority": { "type": "integer", "minimum": 1, "description": "Queue order for queued rows (1 is next)." },
+        "credit": { "$ref": "#/definitions/text", "description": "The credit text shipped in CREDITS.md. Names the upstream, its URL and its author." },
+        "notes": { "$ref": "#/definitions/text" }
+      }
+    }
+  }
+}

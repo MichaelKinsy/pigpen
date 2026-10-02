@@ -1,0 +1,4 @@
+{
+  "pig": "0.3.1",
+  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs)."
+}

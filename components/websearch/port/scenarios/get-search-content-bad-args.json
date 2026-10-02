@@ -1,0 +1,36 @@
+{
+ "name": "get-search-content-bad-args",
+ "description": "get_search_content rejects a request without responseId or a valid query selector.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "get_search_content",
+     "arguments": {
+      "responseId": "x",
+      "offset": -1
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "args": [
+  "--tools",
+  "read,bash,edit,write,web_search,source_check,fetch_content,get_search_content"
+ ]
+}

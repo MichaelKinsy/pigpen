@@ -1,0 +1,153 @@
+/**
+ * Test harness: a live host over a real WebSocket, driven by the official
+ * `@microsoft/agent-host-protocol` client.
+ *
+ * Using the published client rather than hand-written frames exercises the
+ * complete transport and reducer path without duplicating protocol machinery
+ * in the tests.
+ */
+
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { AgentInfo } from "@microsoft/agent-host-protocol";
+import { AhpClient } from "@microsoft/agent-host-protocol/client";
+import { WebSocketTransport } from "@microsoft/agent-host-protocol/ws";
+import { installRootChannel } from "../src/channels/root.ts";
+import { AhpHost } from "../src/core/host.ts";
+import { PI_PROVIDER } from "../src/pi/provider.ts";
+import { PiSessionCatalogue } from "../src/pi/session-catalogue.ts";
+import { SessionHydrator } from "../src/pi/session-hydrator.ts";
+import { type BackendFactory, type SessionFileDeletionResult, SessionRegistry } from "../src/pi/session-registry.ts";
+import { type RunningServer, serveWebSocket } from "../src/transport/websocket.ts";
+import { persistentSessionManagerFactory } from "./support/session-storage.ts";
+
+export const TEST_AGENT: AgentInfo = {
+	provider: PI_PROVIDER,
+	displayName: "pi",
+	description: "pi coding agent",
+	models: [{ id: "test-model", provider: PI_PROVIDER, name: "Test Model" }],
+};
+
+export interface Harness {
+	readonly host: AhpHost;
+	readonly server: RunningServer;
+	readonly url: string;
+	/** Present when the harness was started with `sessions: true`. */
+	readonly sessions?: SessionRegistry;
+	/** Files disposal asked to delete, so tests can assert without touching disk. */
+	readonly deletedFiles: string[];
+	/** Opens a connected, not-yet-initialized client. */
+	connect(): Promise<AhpClient>;
+	/** Connects with an explicit query string, for token-parameter tests. */
+	connectWith(query: string): Promise<AhpClient>;
+	dispose(): Promise<void>;
+}
+
+export async function startHarness(
+	options: {
+		agents?: AgentInfo[];
+		connectionToken?: string;
+		replayBufferCapacity?: number;
+		/** Wire the session lifecycle handler and catalogue. */
+		sessions?: boolean;
+		/** Working directory for sessions created without one. */
+		workingDirectory?: string;
+		/** Backend for live session tests; omitted for storage-only sessions. */
+		createBackend?: BackendFactory;
+		/** Durable deletion boundary. */
+		deleteFile?: (path: string) => SessionFileDeletionResult | Promise<SessionFileDeletionResult>;
+		/** Durable session root; defaults to a fixture-owned temporary directory. */
+		sessionRoot?: string;
+	} = {},
+): Promise<Harness> {
+	const host = new AhpHost({
+		serverInfo: { name: "pi-ahp", version: "0.0.1-test" },
+		...(options.replayBufferCapacity !== undefined ? { replayBufferCapacity: options.replayBufferCapacity } : {}),
+	});
+	installRootChannel(host, options.agents ?? [TEST_AGENT]);
+
+	const deletedFiles: string[] = [];
+	let sessions: SessionRegistry | undefined;
+	let ownedSessionRoot: string | undefined;
+	if (options.sessions) {
+		const sessionRoot = options.sessionRoot ?? mkdtempSync(join(tmpdir(), "pi-ahp-harness-"));
+		if (!options.sessionRoot) ownedSessionRoot = sessionRoot;
+		const catalogue = new PiSessionCatalogue(sessionRoot);
+		const registry = new SessionRegistry({
+			host,
+			defaultWorkingDirectory: options.workingDirectory ?? process.cwd(),
+			createSessionManager: persistentSessionManagerFactory(sessionRoot),
+			...(options.createBackend ? { createBackend: options.createBackend } : {}),
+			deleteFile:
+				options.deleteFile ??
+				((path) => {
+					deletedFiles.push(path);
+					return { ok: true };
+				}),
+			findSessionFile: (id) => catalogue.findSessionFile(id),
+		});
+		sessions = registry;
+		host.serve({
+			catalogue: {
+				list: (limit, cursor) => catalogue.list(limit, cursor, () => registry.catalogueOverrides()),
+			},
+			hydrator: new SessionHydrator({
+				host,
+				catalogue,
+				isLive: (session) => registry.has(session),
+				isDisposing: (session) => registry.isDisposing(session),
+				adopt: (session) => void registry.adopt(session),
+			}),
+			sessions: {
+				create: (params) => registry.create(params),
+				dispose: (channel) => registry.dispose(channel),
+			},
+		});
+	}
+
+	const server = await serveWebSocket(host, {
+		host: "127.0.0.1",
+		port: 0,
+		...(options.connectionToken ? { connectionToken: options.connectionToken } : {}),
+	});
+	const base = `ws://127.0.0.1:${server.port}`;
+	const url = options.connectionToken ? `${base}?token=${options.connectionToken}` : base;
+	const clients: AhpClient[] = [];
+
+	return {
+		host,
+		server,
+		url,
+		...(sessions ? { sessions } : {}),
+		deletedFiles,
+		async connectWith(query: string) {
+			const client = new AhpClient(await WebSocketTransport.connect(`${base}${query}`));
+			client.connect();
+			clients.push(client);
+			return client;
+		},
+		async connect() {
+			// The supported Node runtime supplies the global `WebSocket` used by
+			// `WebSocketTransport.connect`, so the client needs no `ws` shim.
+			const client = new AhpClient(await WebSocketTransport.connect(url));
+			client.connect();
+			clients.push(client);
+			return client;
+		},
+		async dispose() {
+			try {
+				await Promise.allSettled(clients.map((client) => client.shutdown()));
+				await server.close();
+			} finally {
+				if (ownedSessionRoot) rmSync(ownedSessionRoot, { recursive: true, force: true });
+			}
+		},
+	};
+}
+
+let clientCounter = 0;
+
+export function nextClientId(): string {
+	return `test-client-${++clientCounter}`;
+}

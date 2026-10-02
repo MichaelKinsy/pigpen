@@ -1,0 +1,239 @@
+package ahp
+
+import (
+	"sync"
+
+	"github.com/microsoft/agent-host-protocol/clients/go/ahptypes"
+)
+
+// HostedResourceKey identifies a resource on a particular host.
+// Used by [MultiHostStateMirror] as the lookup key.
+type HostedResourceKey struct {
+	HostID string
+	URI    ahptypes.URI
+}
+
+// MultiHostStateMirror is a thread-safe map of (host, URI) → state
+// snapshot. It deliberately exposes only the bare minimum needed to
+// drive a UI that observes multiple hosts simultaneously: write
+// snapshots in, read them back, drop them when the host or resource
+// disappears.
+//
+// The mirror has no opinion about how snapshots are kept in sync with
+// the server — that's the consumer's job, typically by feeding action
+// envelopes from a [HostSubscriptionEvent] stream through the matching
+// [ApplyActionToRoot] / [ApplyActionToSession] / [ApplyActionToChat] /
+// [ApplyActionToTerminal] reducer and re-storing the result.
+type MultiHostStateMirror struct {
+	mu            sync.RWMutex
+	roots         map[string]ahptypes.RootState
+	session       map[HostedResourceKey]ahptypes.SessionState
+	chat          map[HostedResourceKey]ahptypes.ChatState
+	term          map[HostedResourceKey]ahptypes.TerminalState
+	changes       map[HostedResourceKey]ahptypes.ChangesetState
+	automationCat map[string]ahptypes.AutomationState
+	automation    map[HostedResourceKey]ahptypes.AutomationEntry
+	automationRun map[HostedResourceKey]ahptypes.AutomationRunState
+}
+
+// NewMultiHostStateMirror returns an empty mirror.
+func NewMultiHostStateMirror() *MultiHostStateMirror {
+	return &MultiHostStateMirror{
+		roots:         make(map[string]ahptypes.RootState),
+		session:       make(map[HostedResourceKey]ahptypes.SessionState),
+		chat:          make(map[HostedResourceKey]ahptypes.ChatState),
+		term:          make(map[HostedResourceKey]ahptypes.TerminalState),
+		changes:       make(map[HostedResourceKey]ahptypes.ChangesetState),
+		automationCat: make(map[string]ahptypes.AutomationState),
+		automation:    make(map[HostedResourceKey]ahptypes.AutomationEntry),
+		automationRun: make(map[HostedResourceKey]ahptypes.AutomationRunState),
+	}
+}
+
+// PutRoot stores host's root snapshot.
+func (m *MultiHostStateMirror) PutRoot(hostID string, root ahptypes.RootState) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.roots[hostID] = root
+}
+
+// Root returns the root snapshot for hostID, or (zero, false) if
+// none is recorded.
+func (m *MultiHostStateMirror) Root(hostID string) (ahptypes.RootState, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.roots[hostID]
+	return v, ok
+}
+
+// PutSession stores a session snapshot under (hostID, uri).
+func (m *MultiHostStateMirror) PutSession(hostID string, uri ahptypes.URI, s ahptypes.SessionState) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.session[HostedResourceKey{hostID, uri}] = s
+}
+
+// Session returns the session snapshot at (hostID, uri), or
+// (zero, false) if none is recorded.
+func (m *MultiHostStateMirror) Session(hostID string, uri ahptypes.URI) (ahptypes.SessionState, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.session[HostedResourceKey{hostID, uri}]
+	return v, ok
+}
+
+// PutChat stores a chat snapshot under (hostID, uri).
+func (m *MultiHostStateMirror) PutChat(hostID string, uri ahptypes.URI, c ahptypes.ChatState) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.chat[HostedResourceKey{hostID, uri}] = c
+}
+
+// Chat returns the chat snapshot at (hostID, uri), or
+// (zero, false) if none is recorded.
+func (m *MultiHostStateMirror) Chat(hostID string, uri ahptypes.URI) (ahptypes.ChatState, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.chat[HostedResourceKey{hostID, uri}]
+	return v, ok
+}
+
+// PutTerminal stores a terminal snapshot under (hostID, uri).
+func (m *MultiHostStateMirror) PutTerminal(hostID string, uri ahptypes.URI, t ahptypes.TerminalState) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.term[HostedResourceKey{hostID, uri}] = t
+}
+
+// Terminal returns the terminal snapshot at (hostID, uri), or
+// (zero, false) if none is recorded.
+func (m *MultiHostStateMirror) Terminal(hostID string, uri ahptypes.URI) (ahptypes.TerminalState, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.term[HostedResourceKey{hostID, uri}]
+	return v, ok
+}
+
+// PutChangeset stores a changeset snapshot under (hostID, uri).
+func (m *MultiHostStateMirror) PutChangeset(hostID string, uri ahptypes.URI, c ahptypes.ChangesetState) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.changes[HostedResourceKey{hostID, uri}] = c
+}
+
+// Changeset returns the changeset snapshot at (hostID, uri), or
+// (zero, false) if none is recorded.
+func (m *MultiHostStateMirror) Changeset(hostID string, uri ahptypes.URI) (ahptypes.ChangesetState, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.changes[HostedResourceKey{hostID, uri}]
+	return v, ok
+}
+
+// PutAutomationCatalog stores a host's automation catalogue snapshot and
+// refreshes the per-automation lookup.
+func (m *MultiHostStateMirror) PutAutomationCatalog(hostID string, catalog ahptypes.AutomationState) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.automationCat[hostID] = catalog
+	for key := range m.automation {
+		if key.HostID == hostID {
+			delete(m.automation, key)
+		}
+	}
+	for _, automation := range catalog.Entries {
+		m.automation[HostedResourceKey{hostID, automation.Resource}] = automation
+	}
+}
+
+// AutomationCatalog returns the automation catalogue for hostID.
+func (m *MultiHostStateMirror) AutomationCatalog(hostID string) (ahptypes.AutomationState, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.automationCat[hostID]
+	return v, ok
+}
+
+// Automation returns the automation snapshot at (hostID, uri).
+func (m *MultiHostStateMirror) Automation(hostID string, uri ahptypes.URI) (ahptypes.AutomationEntry, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.automation[HostedResourceKey{hostID, uri}]
+	return v, ok
+}
+
+// PutAutomationRun stores an automation-run snapshot under (hostID, uri).
+func (m *MultiHostStateMirror) PutAutomationRun(hostID string, uri ahptypes.URI, run ahptypes.AutomationRunState) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.automationRun[HostedResourceKey{hostID, uri}] = run
+}
+
+// AutomationRun returns the automation-run snapshot at (hostID, uri).
+func (m *MultiHostStateMirror) AutomationRun(hostID string, uri ahptypes.URI) (ahptypes.AutomationRunState, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.automationRun[HostedResourceKey{hostID, uri}]
+	return v, ok
+}
+
+// DropHost removes every snapshot belonging to hostID. Use when a
+// host is removed from the multi-host registry.
+func (m *MultiHostStateMirror) DropHost(hostID string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.roots, hostID)
+	delete(m.automationCat, hostID)
+	for k := range m.session {
+		if k.HostID == hostID {
+			delete(m.session, k)
+		}
+	}
+	for k := range m.chat {
+		if k.HostID == hostID {
+			delete(m.chat, k)
+		}
+	}
+	for k := range m.term {
+		if k.HostID == hostID {
+			delete(m.term, k)
+		}
+	}
+	for k := range m.changes {
+		if k.HostID == hostID {
+			delete(m.changes, k)
+		}
+	}
+	for k := range m.automation {
+		if k.HostID == hostID {
+			delete(m.automation, k)
+		}
+	}
+	for k := range m.automationRun {
+		if k.HostID == hostID {
+			delete(m.automationRun, k)
+		}
+	}
+}
+
+// DropResource removes the snapshot at (hostID, uri) across every
+// resource kind. No-op if no snapshot exists.
+func (m *MultiHostStateMirror) DropResource(hostID string, uri ahptypes.URI) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	k := HostedResourceKey{hostID, uri}
+	if uri == "ahp-automations://" {
+		delete(m.automationCat, hostID)
+		for key := range m.automation {
+			if key.HostID == hostID {
+				delete(m.automation, key)
+			}
+		}
+	}
+	delete(m.session, k)
+	delete(m.chat, k)
+	delete(m.term, k)
+	delete(m.changes, k)
+	delete(m.automation, k)
+	delete(m.automationRun, k)
+}

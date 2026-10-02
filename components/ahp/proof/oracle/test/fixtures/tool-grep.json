@@ -1,0 +1,2783 @@
+{
+	"name": "tool-grep",
+	"description": "A `grep` call — match counts and line truncation live in its details.",
+	"prompt": "Use the grep tool to search for BEACON here. Reply with the matching file names only.",
+	"partials": [
+		{
+			"role": "assistant",
+			"content": [
+				{
+					"type": "thinking",
+					"thinking": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!",
+					"thinkingSignature": ""
+				},
+				{
+					"type": "toolCall",
+					"id": "toolcall_0",
+					"name": "grep",
+					"arguments": {
+						"pattern": "BEACON",
+						"path": ".",
+						"glob": "**/*",
+						"ignoreCase": false,
+						"literal": true,
+						"context": 0,
+						"limit": 100
+					}
+				}
+			],
+			"api": "openai-responses",
+			"provider": "github-copilot",
+			"model": "gpt-5.4",
+			"usage": {
+				"input": 1569,
+				"output": 86,
+				"cacheRead": 0,
+				"cacheWrite": 0,
+				"reasoning": 38,
+				"totalTokens": 1655,
+				"cost": {
+					"input": 0.003922500000000001,
+					"output": 0.0012900000000000001,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"total": 0.005212500000000001
+				}
+			},
+			"stopReason": "toolUse",
+			"timestamp": 0,
+			"responseId": ""
+		},
+		{
+			"role": "assistant",
+			"content": [
+				{
+					"type": "text",
+					"text": "three.txt\none.txt",
+					"textSignature": ""
+				}
+			],
+			"api": "openai-responses",
+			"provider": "github-copilot",
+			"model": "gpt-5.4",
+			"usage": {
+				"input": 1685,
+				"output": 9,
+				"cacheRead": 0,
+				"cacheWrite": 0,
+				"reasoning": 0,
+				"totalTokens": 1694,
+				"cost": {
+					"input": 0.0042125,
+					"output": 0.000135,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"total": 0.0043475
+				}
+			},
+			"stopReason": "stop",
+			"timestamp": 0,
+			"responseId": ""
+		}
+	],
+	"turns": [
+		[
+			{
+				"type": "start",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_start",
+				"contentIndex": 0,
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "**Adjusting grep tool usage**\n\nI",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " need",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " to",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " use",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " the",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " grep",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " tool",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " instead",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " of",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " bash",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " for",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " this",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " task",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ".",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " It",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " seems",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " there",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " might",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " be",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " many",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " matches",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ",",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " so",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " I",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " should",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " return",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " only",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " the",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " matching",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " file",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " names",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ".",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " I",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " think",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " I",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " can",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " use",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " grep",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " in",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " a",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " literal",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " way",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ",",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " and",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " the",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " default",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " will",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " be",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " case",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "-sensitive",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ",",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " which",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " is",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " fine",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ".",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " The",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " search",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " will",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " be",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " conducted",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " in",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " the",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " current",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " directory",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ".",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " Let's",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " ensure",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " I'm",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " getting",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " that",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " right",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " to",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " avoid",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " any",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " issues",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " later",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "!",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "\n\n",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_end",
+				"contentIndex": 0,
+				"content": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_start",
+				"contentIndex": 1,
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "{\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "pattern",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "BE",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "AC",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "ON",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\",\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "path",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\".",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\",\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "glob",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "**",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "/*",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\",\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "ignore",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "Case",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "false",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ",\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "literal",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "true",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ",\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "context",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "0",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ",\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "limit",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "100",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "}",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_end",
+				"contentIndex": 1,
+				"toolCall": {
+					"type": "toolCall",
+					"id": "toolcall_0",
+					"name": "grep",
+					"arguments": {
+						"pattern": "BEACON",
+						"path": ".",
+						"glob": "**/*",
+						"ignoreCase": false,
+						"literal": true,
+						"context": 0,
+						"limit": 100
+					}
+				},
+				"partialRef": 0
+			},
+			{
+				"type": "done",
+				"reason": "toolUse",
+				"message": {
+					"role": "assistant",
+					"content": [
+						{
+							"type": "thinking",
+							"thinking": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!",
+							"thinkingSignature": ""
+						},
+						{
+							"type": "toolCall",
+							"id": "toolcall_0",
+							"name": "grep",
+							"arguments": {
+								"pattern": "BEACON",
+								"path": ".",
+								"glob": "**/*",
+								"ignoreCase": false,
+								"literal": true,
+								"context": 0,
+								"limit": 100
+							}
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1569,
+						"output": 86,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 38,
+						"totalTokens": 1655,
+						"cost": {
+							"input": 0.003922500000000001,
+							"output": 0.0012900000000000001,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.005212500000000001
+						}
+					},
+					"stopReason": "toolUse",
+					"timestamp": 0,
+					"responseId": ""
+				}
+			}
+		],
+		[
+			{
+				"type": "start",
+				"partialRef": 1
+			},
+			{
+				"type": "text_start",
+				"contentIndex": 0,
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "three",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": ".txt",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "\n",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "one",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": ".txt",
+				"partialRef": 1
+			},
+			{
+				"type": "text_end",
+				"contentIndex": 0,
+				"content": "three.txt\none.txt",
+				"partialRef": 1
+			},
+			{
+				"type": "done",
+				"reason": "stop",
+				"message": {
+					"role": "assistant",
+					"content": [
+						{
+							"type": "text",
+							"text": "three.txt\none.txt",
+							"textSignature": ""
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1685,
+						"output": 9,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 0,
+						"totalTokens": 1694,
+						"cost": {
+							"input": 0.0042125,
+							"output": 0.000135,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.0043475
+						}
+					},
+					"stopReason": "stop",
+					"timestamp": 0,
+					"responseId": ""
+				}
+			}
+		]
+	],
+	"events": [
+		{
+			"type": "agent_start"
+		},
+		{
+			"type": "turn_start"
+		},
+		{
+			"type": "message_start",
+			"message": {
+				"role": "user",
+				"content": [
+					{
+						"type": "text",
+						"text": "Use the grep tool to search for BEACON here. Reply with the matching file names only."
+					}
+				],
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_end",
+			"message": {
+				"role": "user",
+				"content": [
+					{
+						"type": "text",
+						"text": "Use the grep tool to search for BEACON here. Reply with the matching file names only."
+					}
+				],
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_start",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "thinking",
+						"thinking": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!",
+						"thinkingSignature": ""
+					},
+					{
+						"type": "toolCall",
+						"id": "toolcall_0",
+						"name": "grep",
+						"arguments": {
+							"pattern": "BEACON",
+							"path": ".",
+							"glob": "**/*",
+							"ignoreCase": false,
+							"literal": true,
+							"context": 0,
+							"limit": 100
+						}
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 0,
+					"output": 0,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"totalTokens": 0,
+					"cost": {
+						"input": 0,
+						"output": 0,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0
+					}
+				},
+				"stopReason": "stop",
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_start",
+				"contentIndex": 0
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "**Adjusting grep tool usage**\n\nI"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " need"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " to"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " use"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " the"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " grep"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " tool"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " instead"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " of"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " bash"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " for"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " this"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " task"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "."
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " It"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " seems"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " there"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " might"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " be"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " many"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " matches"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ","
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " so"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " I"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " should"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " return"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " only"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " the"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " matching"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " file"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " names"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "."
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " I"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " think"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " I"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " can"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " use"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " grep"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " in"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " a"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " literal"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " way"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ","
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " and"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " the"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " default"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " will"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " be"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " case"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "-sensitive"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": ","
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " which"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " is"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " fine"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "."
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " The"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " search"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " will"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " be"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " conducted"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " in"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " the"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " current"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " directory"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "."
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " Let's"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " ensure"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " I'm"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " getting"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " that"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " right"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " to"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " avoid"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " any"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " issues"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": " later"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "!"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_delta",
+				"contentIndex": 0,
+				"delta": "\n\n"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_end",
+				"contentIndex": 0,
+				"content": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_start",
+				"contentIndex": 1,
+				"partial": {
+					"role": "assistant",
+					"content": [
+						{
+							"type": "thinking",
+							"thinking": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!",
+							"thinkingSignature": ""
+						},
+						{
+							"type": "toolCall",
+							"id": "toolcall_0",
+							"name": "grep",
+							"arguments": {
+								"pattern": "BEACON",
+								"path": ".",
+								"glob": "**/*",
+								"ignoreCase": false,
+								"literal": true,
+								"context": 0,
+								"limit": 100
+							}
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1569,
+						"output": 86,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 38,
+						"totalTokens": 1655,
+						"cost": {
+							"input": 0.003922500000000001,
+							"output": 0.0012900000000000001,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.005212500000000001
+						}
+					},
+					"stopReason": "toolUse",
+					"timestamp": 0,
+					"responseId": ""
+				}
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "{\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "pattern"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "BE"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "AC"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "ON"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\",\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "path"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\"."
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\",\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "glob"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "**"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "/*"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\",\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "ignore"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "Case"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "false"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ",\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "literal"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "true"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ",\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "context"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "0"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ",\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "limit"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "100"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "}"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_end",
+				"contentIndex": 1,
+				"toolCall": {
+					"type": "toolCall",
+					"id": "toolcall_0",
+					"name": "grep",
+					"arguments": {
+						"pattern": "BEACON",
+						"path": ".",
+						"glob": "**/*",
+						"ignoreCase": false,
+						"literal": true,
+						"context": 0,
+						"limit": 100
+					}
+				}
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_end",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "thinking",
+						"thinking": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!",
+						"thinkingSignature": ""
+					},
+					{
+						"type": "toolCall",
+						"id": "toolcall_0",
+						"name": "grep",
+						"arguments": {
+							"pattern": "BEACON",
+							"path": ".",
+							"glob": "**/*",
+							"ignoreCase": false,
+							"literal": true,
+							"context": 0,
+							"limit": 100
+						}
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 1569,
+					"output": 86,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"reasoning": 38,
+					"totalTokens": 1655,
+					"cost": {
+						"input": 0.003922500000000001,
+						"output": 0.0012900000000000001,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0.005212500000000001
+					}
+				},
+				"stopReason": "toolUse",
+				"timestamp": 0,
+				"responseId": ""
+			}
+		},
+		{
+			"type": "tool_execution_start",
+			"toolCallId": "toolcall_0",
+			"toolName": "grep",
+			"args": {
+				"pattern": "BEACON",
+				"path": ".",
+				"glob": "**/*",
+				"ignoreCase": false,
+				"literal": true,
+				"context": 0,
+				"limit": 100
+			}
+		},
+		{
+			"type": "tool_execution_end",
+			"toolCallId": "toolcall_0",
+			"toolName": "grep",
+			"result": {
+				"content": [
+					{
+						"type": "text",
+						"text": "three.txt:1: BEACON again\none.txt:2: BEACON here"
+					}
+				]
+			},
+			"isError": false
+		},
+		{
+			"type": "message_start",
+			"message": {
+				"role": "toolResult",
+				"toolCallId": "toolcall_0",
+				"toolName": "grep",
+				"content": [
+					{
+						"type": "text",
+						"text": "three.txt:1: BEACON again\none.txt:2: BEACON here"
+					}
+				],
+				"isError": false,
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_end",
+			"message": {
+				"role": "toolResult",
+				"toolCallId": "toolcall_0",
+				"toolName": "grep",
+				"content": [
+					{
+						"type": "text",
+						"text": "three.txt:1: BEACON again\none.txt:2: BEACON here"
+					}
+				],
+				"isError": false,
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "turn_end",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "thinking",
+						"thinking": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!",
+						"thinkingSignature": ""
+					},
+					{
+						"type": "toolCall",
+						"id": "toolcall_0",
+						"name": "grep",
+						"arguments": {
+							"pattern": "BEACON",
+							"path": ".",
+							"glob": "**/*",
+							"ignoreCase": false,
+							"literal": true,
+							"context": 0,
+							"limit": 100
+						}
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 1569,
+					"output": 86,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"reasoning": 38,
+					"totalTokens": 1655,
+					"cost": {
+						"input": 0.003922500000000001,
+						"output": 0.0012900000000000001,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0.005212500000000001
+					}
+				},
+				"stopReason": "toolUse",
+				"timestamp": 0,
+				"responseId": ""
+			},
+			"toolResults": [
+				{
+					"role": "toolResult",
+					"toolCallId": "toolcall_0",
+					"toolName": "grep",
+					"content": [
+						{
+							"type": "text",
+							"text": "three.txt:1: BEACON again\none.txt:2: BEACON here"
+						}
+					],
+					"isError": false,
+					"timestamp": 0
+				}
+			]
+		},
+		{
+			"type": "turn_start"
+		},
+		{
+			"type": "message_start",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "text",
+						"text": "three.txt\none.txt",
+						"textSignature": ""
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 0,
+					"output": 0,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"totalTokens": 0,
+					"cost": {
+						"input": 0,
+						"output": 0,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0
+					}
+				},
+				"stopReason": "stop",
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_start",
+				"contentIndex": 0
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "three"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": ".txt"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "\n"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "one"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": ".txt"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_end",
+				"contentIndex": 0,
+				"content": "three.txt\none.txt"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_end",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "text",
+						"text": "three.txt\none.txt",
+						"textSignature": ""
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 1685,
+					"output": 9,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"reasoning": 0,
+					"totalTokens": 1694,
+					"cost": {
+						"input": 0.0042125,
+						"output": 0.000135,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0.0043475
+					}
+				},
+				"stopReason": "stop",
+				"timestamp": 0,
+				"responseId": ""
+			}
+		},
+		{
+			"type": "turn_end",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "text",
+						"text": "three.txt\none.txt",
+						"textSignature": ""
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 1685,
+					"output": 9,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"reasoning": 0,
+					"totalTokens": 1694,
+					"cost": {
+						"input": 0.0042125,
+						"output": 0.000135,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0.0043475
+					}
+				},
+				"stopReason": "stop",
+				"timestamp": 0,
+				"responseId": ""
+			},
+			"toolResults": []
+		},
+		{
+			"type": "agent_end",
+			"messages": [
+				{
+					"role": "user",
+					"content": [
+						{
+							"type": "text",
+							"text": "Use the grep tool to search for BEACON here. Reply with the matching file names only."
+						}
+					],
+					"timestamp": 0
+				},
+				{
+					"role": "assistant",
+					"content": [
+						{
+							"type": "thinking",
+							"thinking": "**Adjusting grep tool usage**\n\nI need to use the grep tool instead of bash for this task. It seems there might be many matches, so I should return only the matching file names. I think I can use grep in a literal way, and the default will be case-sensitive, which is fine. The search will be conducted in the current directory. Let's ensure I'm getting that right to avoid any issues later!",
+							"thinkingSignature": ""
+						},
+						{
+							"type": "toolCall",
+							"id": "toolcall_0",
+							"name": "grep",
+							"arguments": {
+								"pattern": "BEACON",
+								"path": ".",
+								"glob": "**/*",
+								"ignoreCase": false,
+								"literal": true,
+								"context": 0,
+								"limit": 100
+							}
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1569,
+						"output": 86,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 38,
+						"totalTokens": 1655,
+						"cost": {
+							"input": 0.003922500000000001,
+							"output": 0.0012900000000000001,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.005212500000000001
+						}
+					},
+					"stopReason": "toolUse",
+					"timestamp": 0,
+					"responseId": ""
+				},
+				{
+					"role": "toolResult",
+					"toolCallId": "toolcall_0",
+					"toolName": "grep",
+					"content": [
+						{
+							"type": "text",
+							"text": "three.txt:1: BEACON again\none.txt:2: BEACON here"
+						}
+					],
+					"isError": false,
+					"timestamp": 0
+				},
+				{
+					"role": "assistant",
+					"content": [
+						{
+							"type": "text",
+							"text": "three.txt\none.txt",
+							"textSignature": ""
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1685,
+						"output": 9,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 0,
+						"totalTokens": 1694,
+						"cost": {
+							"input": 0.0042125,
+							"output": 0.000135,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.0043475
+						}
+					},
+					"stopReason": "stop",
+					"timestamp": 0,
+					"responseId": ""
+				}
+			],
+			"willRetry": false
+		},
+		{
+			"type": "agent_settled"
+		}
+	]
+}

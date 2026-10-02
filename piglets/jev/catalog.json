@@ -1,0 +1,13 @@
+{
+  "status": "planned",
+  "featured": true,
+  "updatedAt": "2026-09-30",
+  "languages": ["go"],
+  "notes": [
+    "Optional: the judge is the standalone extension Package components/jev, which works on its own in plain PiG without this Piglet.",
+    "Off by default. Nothing is judged and nothing is sent until you run /jev on (which shows what leaves the machine and where) or set \"enabled\": true in your own pi-jev.json. A key in the environment or a file in a repository never turns it on.",
+    "The judge is the model PiG is configured with (default) or the TypeSafe API, through the shared Go client Package components/typesafe. Content goes to that provider; /jev names it.",
+    "Fails open: when the judge is unavailable, tool calls run unjudged. A judgment is probabilistic advice, not a sandbox.",
+    "Source only: no Piglet Binary is published and no remote installation command is offered yet. See the root RELEASE-BLOCKERS.md. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+  ]
+}

@@ -1,0 +1,2 @@
+{"name":"enable-missing-key","description":"enable without any key asks for login first and never opens the consent dialog.","steps":[
+ {"name":"enable","rpc":{"type":"prompt","message":"/typesafe enable"}}]}

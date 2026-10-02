@@ -1,0 +1,7 @@
+{
+  "name": "listener-off",
+  "description": "No configuration: the extension loads, opens no listener and /a2a says so.",
+  "steps": [
+    {"name": "status", "rpc": {"type": "prompt", "message": "/a2a"}}
+  ]
+}

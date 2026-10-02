@@ -1,0 +1,33 @@
+{
+ "mode": "discrete",
+ "structured": false,
+ "state": [
+  null,
+  {
+   "messages": [
+    "hello"
+   ]
+  },
+  "x"
+ ],
+ "questions": {
+  "q": {
+   "type": "noul",
+   "instructions": [
+    "Is",
+    {
+     "it": "good"
+    },
+    null
+   ]
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "q": false
+   }
+  }
+ ],
+ "name": "state-array"
+}

@@ -1,0 +1,4 @@
+{"kind":"header","scenario":"listener-off","lane":"pig-go-self","host":"pig 0.3.0+0.87.1","extension":"sha256:9f54965d38614dd8cf116f7ded74054e2a18e689a627e9f6621aa9a8cc9f0ffb","normalizer":"v2"}
+{"step":"01-status","ch":"ui","data":{"message":"a2a: listener off (set listen in a2a.json, PIG_A2A_LISTEN or --a2a-listen to serve tasks)","method":"notify","notifyType":"info"}}
+{"step":"01-status","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

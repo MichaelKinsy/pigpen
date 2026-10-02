@@ -1,0 +1,433 @@
+import { createHash } from "node:crypto";
+import { ask, noul, score } from "pi-typesafe";
+import type { IntegrationErrorCode, Judge } from "pi-typesafe";
+import type { StuckGuardConfig } from "./config.js";
+import { buildStuckEvidence, editDiff } from "./evidence.js";
+import type { StuckEvidence } from "./evidence.js";
+import { redact } from "./redact.js";
+import { isReadOnlyCommand } from "./guard.js";
+import { commandOf, outputReportsFailure } from "./tools.js";
+import { DEFAULT_TEMPLATES, renderTemplate, stuckTokens } from "./widget.js";
+
+/** One remembered tool result. `key` identifies the exact call; `call` is the redacted view that may leave the machine. */
+export interface Attempt {
+  tool: string;
+  key: string;
+  /** Hash of the normalised output, so identical failures can be told from a changed error. */
+  outputKey: string;
+  call: string;
+  failed: boolean;
+  /** Tail of the tool output, redacted, where the error usually is. */
+  output: string;
+  /** The call may have changed files or state: every call that is not provably read-only, failed or not. */
+  changes: boolean;
+  /** A `read`, or a shell command that `isReadOnlyCommand` accepts. */
+  readOnly: boolean;
+  /** Polling or waiting: the call is expected to run again with the same output. */
+  poll: boolean;
+  /**
+   * The whole result text, so the evidence builder can parse the failing test out of it. It never leaves the machine
+   * as it is: every string in `evidence` passes through redact(), and `output` stays the field that is sent verbatim.
+   */
+  text: string;
+  /** For an `edit` or `write`: the path and the capped diff of the change, both redacted. */
+  change?: AttemptChange;
+}
+
+/** The change an `edit` or `write` made, as the stuck evidence reports it. */
+export interface AttemptChange {
+  path: string;
+  added: number;
+  removed: number;
+  diff: string;
+}
+
+/** The 2nd identical call with nothing changed since the 1st, decided without Jev. */
+export interface QuickRepeat {
+  attempt: Attempt;
+  /** Tool results between the two calls, the latest included. */
+  callsAgo: number;
+}
+
+export interface StuckJudgment {
+  sameStrategy: number;
+  /** 0 identical … 2 meaningfully different. */
+  approachChange: number;
+  progress: number;
+  model: string;
+  elapsedMs: number;
+}
+
+export interface StuckVerdict {
+  stuck: boolean;
+  source: "repeat" | "typesafe" | "error";
+  failures: number;
+  reasons: string[];
+  /** True when the repeat that fired was a successful call printing the same output, not a failure loop. */
+  successRepeat?: boolean;
+  /** True when the repeat that fired was repeated calls to the same target with changing output. */
+  churn?: boolean;
+  judgment?: StuckJudgment;
+  error?: string;
+  errorCode?: IntegrationErrorCode;
+}
+
+const CALL_LIMIT = 300;
+const OUTPUT_LIMIT = 400;
+
+function head(text: string, limit: number): string {
+  return text.length <= limit ? text : `${text.slice(0, limit)}… [${text.length - limit} more chars]`;
+}
+function tail(text: string, limit: number): string {
+  return text.length <= limit ? text : `[${text.length - limit} earlier chars] …${text.slice(-limit)}`;
+}
+
+/** Text content of a tool result, without images. */
+export function resultText(content: ReadonlyArray<{ type: string; text?: string }>): string {
+  return content.filter(part => part.type === "text" && typeof part.text === "string").map(part => part.text as string).join("\n");
+}
+
+/** Non-zero exit codes count as failures even when the tool did not flag an error; context-mode reports them in the text. */
+export function resultFailed(isError: boolean, details: unknown, content: ReadonlyArray<{ type: string; text?: string }> = []): boolean {
+  if (isError) return true;
+  const exitCode = details && typeof details === "object" ? (details as { exitCode?: unknown }).exitCode : undefined;
+  if (typeof exitCode === "number" && exitCode !== 0) return true;
+  return outputReportsFailure(resultText(content));
+}
+
+/** Durations, timestamps, PIDs, and addresses change between identical runs; counts and line numbers stay. */
+function normaliseOutput(text: string): string {
+  return text
+    .replace(/\b\d+(?:\.\d+)?\s*(?:ms|s|m|h|µs|us|ns)\b/g, "#t")
+    .replace(/0x[0-9a-fA-F]+/g, "0x#")
+    .replace(/\d{5,}/g, "#")
+    .replace(/\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z?/g, "#date");
+}
+
+/** Waiting, watching, and status checks print the same thing until something outside the agent changes. */
+/** Pi's built-in tools that only read files. */
+const READ_TOOLS = new Set(["read", "grep", "find", "ls"]);
+
+const POLL_COMMAND = /\b(?:sleep|watch|wait)\b|\bgh\s+(?:run|pr)\s+(?:watch|checks|view|list)\b|\bgit\s+status\b|\btail\s+-[fF]\b|\b(?:ps|pgrep)\b/;
+
+/** The stuck tools that change a file, and the tools whose change the evidence reports. */
+const EDIT_TOOLS = new Set(["edit", "write"]);
+
+/** The redacted path and capped diff of an `edit`/`write`, ready to be kept on the attempt. */
+function redactedChange(tool: string, input: Record<string, unknown>): AttemptChange {
+  const diff = editDiff(tool, input);
+  return { path: redact(diff.path), added: diff.added, removed: diff.removed, diff: redact(diff.diff) };
+}
+
+export function makeAttempt(tool: string, input: Record<string, unknown>, content: ReadonlyArray<{ type: string; text?: string }>, failed: boolean): Attempt {
+  const view = commandOf(tool, input);
+  const command = view?.command;
+  const readOnlyCommand = view !== undefined && view.shell && isReadOnlyCommand(view.command);
+  const call = command !== undefined ? command
+    : typeof input.path === "string" ? `${tool} ${input.path}`
+    : JSON.stringify(input);
+  const text = resultText(content).trim();
+  const change = EDIT_TOOLS.has(tool) ? redactedChange(tool, input) : undefined;
+  return {
+    tool,
+    key: createHash("sha1").update(tool).update("\0").update(JSON.stringify(input)).digest("hex"),
+    outputKey: createHash("sha1").update(normaliseOutput(text)).digest("hex"),
+    call: redact(head(call, CALL_LIMIT)),
+    failed,
+    text,
+    ...(change ? { change } : {}),
+    output: redact(tail(text, OUTPUT_LIMIT)),
+    // MCP tools, scripts, and unknown tools can change state that the next call reads.
+    changes: !READ_TOOLS.has(tool) && !readOnlyCommand,
+    readOnly: tool === "read" || readOnlyCommand,
+    poll: command !== undefined && POLL_COMMAND.test(command),
+  };
+}
+
+/** Rolling memory of tool results for the current user prompt. */
+export class AttemptWindow {
+  readonly attempts: Attempt[] = [];
+  private sinceJudgment = Number.MAX_SAFE_INTEGER;
+  /** Call keys that already got a quick-repeat steer in this window. */
+  private readonly quickRepeated = new Set<string>();
+
+  constructor(private readonly limit: number) {}
+
+  push(attempt: Attempt): void {
+    this.attempts.push(attempt);
+    if (this.attempts.length > this.limit) this.attempts.splice(0, this.attempts.length - this.limit);
+    if (this.sinceJudgment !== Number.MAX_SAFE_INTEGER) this.sinceJudgment++;
+  }
+
+  reset(): void {
+    this.attempts.length = 0;
+    this.sinceJudgment = Number.MAX_SAFE_INTEGER;
+    this.quickRepeated.clear();
+  }
+
+  markJudged(): void {
+    this.sinceJudgment = 0;
+  }
+
+  failures(): number {
+    return this.attempts.filter(attempt => attempt.failed).length;
+  }
+
+  /** How many failed attempts repeat the latest attempt's exact call with the same output. A changed error is progress, not a repeat. */
+  exactRepeats(): number {
+    const latest = this.attempts.at(-1);
+    if (!latest?.failed) return 0;
+    return this.attempts.filter(attempt => attempt.failed && attempt.key === latest.key && attempt.outputKey === latest.outputKey).length;
+  }
+
+  /** How many successful attempts repeat the latest attempt's exact call with the same normalised output. A poll that
+   * prints the answer it already printed carries no new information: the model is re-running instead of reading. */
+  successRepeats(): number {
+    const latest = this.attempts.at(-1);
+    if (!latest || latest.failed) return 0;
+    return this.attempts.filter(attempt => !attempt.failed && attempt.key === latest.key && attempt.outputKey === latest.outputKey).length;
+  }
+
+  /** How many attempts (regardless of outcome) target the same call key. When this count is high the output changes
+   * each time (otherwise it would be an exact or success repeat), but the model is not making progress — it is
+   * polling or cycling through slight variations of the same command. */
+  churnCount(): number {
+    const latest = this.attempts.at(-1);
+    if (!latest) return 0;
+    return this.attempts.filter(attempt => attempt.key === latest.key).length;
+  }
+
+  /**
+   * The latest call repeats the previous call with the same key, nothing that can change state ran between them, and
+   * it either failed again with the same output or re-read an output the agent already has. Fires once per key per
+   * window, so a 3rd identical failure goes to the regular stuck check instead of a second quick steer.
+   */
+  quickRepeat(): QuickRepeat | undefined {
+    const latest = this.attempts.at(-1);
+    if (!latest || latest.poll || this.quickRepeated.has(latest.key)) return undefined;
+    let index = this.attempts.length - 2;
+    while (index >= 0 && this.attempts[index]!.key !== latest.key) index--;
+    if (index < 0) return undefined;
+    const previous = this.attempts[index]!;
+    if (previous.outputKey !== latest.outputKey || previous.failed !== latest.failed) return undefined;
+    if (!latest.failed && !latest.readOnly) return undefined;
+    if (this.attempts.slice(index + 1, -1).some(attempt => attempt.changes)) return undefined;
+    this.quickRepeated.add(latest.key);
+    return { attempt: latest, callsAgo: this.attempts.length - 1 - index };
+  }
+
+  /** Latest result failed with enough failures behind it, succeeded but repeats itself, or is churning on the same
+   * target, and the cool-down has passed. */
+  shouldJudge(config: StuckGuardConfig): boolean {
+    const latest = this.attempts.at(-1);
+    if (!latest) return false;
+    if (latest.failed) return this.failures() >= config.minFailures && this.sinceJudgment >= config.cooldown;
+    if (this.successRepeats() >= config.minFailures) return this.sinceJudgment >= config.cooldown;
+    if (this.churnCount() >= config.churnThreshold) return this.sinceJudgment >= config.cooldown;
+    return false;
+  }
+}
+
+export const stuckQuestions = {
+  same_strategy: noul(
+    "Do the failed entries in `attempts` repeat the same strategy with only superficial variation, instead of trying a different approach to the failure?",
+    {
+      true: "Yes: the same command or edit is retried, or only flags, paths, names, or wording change while the underlying idea stays the same.",
+      false: "No: later attempts use a different tool, test a new hypothesis, gather new information first, or act on what the earlier output said.",
+    },
+  ),
+  approach_change: score("How much did the approach change across `attempts`?", [
+    "Identical or near-identical retries",
+    "Cosmetic changes: different flags, paths, or wording, same underlying idea",
+    "Meaningfully different: a new hypothesis, tool, or information-gathering step",
+  ]),
+  progress: noul("Do the later entries in `attempts` show progress toward resolving the failure seen in the earlier ones, such as a different error, a partial success, or new information?"),
+};
+
+export type StuckRequestState = {
+  task: string;
+  attempts: Array<{ n: number; tool: string; call: string; outcome: string; output: string }>;
+  /** The parsed failures, edit diffs and digest; absent when `stuck.evidence` is off. */
+  evidence?: StuckEvidence;
+};
+
+export type StuckRequestOptions = {
+  /** Send the structured `evidence` section (config `stuck.evidence`, default on). */
+  evidence?: boolean;
+};
+
+/** One Jev request state for the stuck guard: today's fields, plus the evidence section when it is on. */
+export function buildStuckRequest(attempts: readonly Attempt[], task: string | undefined, options: StuckRequestOptions = {}) {
+  const state: StuckRequestState = {
+    task: task?.trim() ? head(task.trim(), 1500) : "(no user request recorded in this session)",
+    attempts: attempts.map((attempt, index) => ({ n: index + 1, tool: attempt.tool, call: attempt.call, outcome: attempt.failed ? "failed" : "ok", output: attempt.output })),
+  };
+  if (options.evidence !== false) state.evidence = buildStuckEvidence(attempts);
+  return { state, questions: stuckQuestions };
+}
+
+export interface StuckOptions {
+  config: StuckGuardConfig;
+  judge?: Judge | undefined;
+  timeoutMs: number;
+  signal?: AbortSignal | undefined;
+}
+
+/** Exact repeats are decided in code; otherwise one Jev request judges the sequence. */
+export async function evaluateStuck(window: AttemptWindow, task: string | undefined, options: StuckOptions): Promise<StuckVerdict> {
+  const failures = window.failures();
+  const repeats = window.exactRepeats();
+  if (repeats >= options.config.minFailures) {
+    return { stuck: true, source: "repeat", failures, reasons: [`the same call failed ${repeats} times with the same output`] };
+  }
+  const successRepeats = window.successRepeats();
+  if (successRepeats >= options.config.minFailures) {
+    return { stuck: true, source: "repeat", failures, reasons: [`the same call succeeded ${successRepeats} times with the same output`], successRepeat: true };
+  }
+  const churn = window.churnCount();
+  if (churn >= options.config.churnThreshold) {
+    return { stuck: true, source: "repeat", failures, reasons: [`the same target was called ${churn} times with changing output`], churn: true };
+  }
+  if (!options.judge) return { stuck: false, source: "repeat", failures, reasons: [] };
+  window.markJudged();
+  const result = await ask(options.judge, buildStuckRequest(window.attempts, task, { evidence: options.config.evidence }), { timeoutMs: options.timeoutMs, ...(options.signal ? { signal: options.signal } : {}) });
+  if (!result.ok) return { stuck: false, source: "error", failures, reasons: [], error: result.error, ...(result.errorCode ? { errorCode: result.errorCode } : {}) };
+  const judgment: StuckJudgment = {
+    sameStrategy: result.answers.same_strategy.noul,
+    approachChange: result.answers.approach_change.score,
+    progress: result.answers.progress.noul,
+    model: result.model,
+    elapsedMs: result.elapsedMs,
+  };
+  const stuck = judgment.sameStrategy >= options.config.sameStrategy;
+  const reasons = stuck
+    ? [`${failures} failures with the same strategy (${judgment.sameStrategy.toFixed(2)}), approach change ${judgment.approachChange.toFixed(1)}/2, progress ${judgment.progress.toFixed(2)}`]
+    : [];
+  return { stuck, source: "typesafe", failures, reasons, judgment };
+}
+
+/** Steering text for the agent. Names the pattern and asks for a change of method, not another retry. A successful
+ * repeat is a different disease than a failure loop: the model already has the answer, so it should use it. */
+export function stuckNudge(verdict: StuckVerdict): string {
+  if (verdict.successRepeat) {
+    return `pi-warden: ${verdict.reasons.join("; ")}. Stop re-running it: the answer is already in the last output. Act on that result, move to the next step, or tell the user why the same call has to run again.`;
+  }
+  if (verdict.churn) {
+    return `pi-warden: ${verdict.reasons.join("; ")}. The output keeps changing but the target stays the same. Either act on the latest result and move on, or try a different command entirely.`;
+  }
+  return `pi-warden: ${verdict.reasons.join("; ")}. Stop retrying. Re-read the last error output carefully, state a new hypothesis about the cause, and either gather the missing information (read the relevant file, check versions or paths) or try a different method. If two different methods have failed, report the blocker to the user with the exact error instead of trying again.`;
+}
+
+const STEER_CALL_LIMIT = 120;
+const STEER_LINE_LIMIT = 160;
+
+/** The line of a failed output that names the error, else its last line. */
+function errorLine(output: string): string {
+  const lines = output.split("\n").map(line => line.trim()).filter(line => line && !/^\[\d+ earlier chars\]/.test(line));
+  const line = lines.find(candidate => /error|fail|denied|not found|no such|enoent|cannot|invalid/i.test(candidate)) ?? lines.at(-1) ?? "(no output)";
+  return head(line, STEER_LINE_LIMIT);
+}
+
+/** Steering text for a quick repeat: names the call and what the agent already has, asks for a change first. */
+export function quickRepeatNudge(repeat: QuickRepeat): string {
+  const call = head(repeat.attempt.call, STEER_CALL_LIMIT);
+  if (repeat.attempt.failed) {
+    return `pi-warden: you already ran \`${call}\`; it failed the same way: ${errorLine(repeat.attempt.output)}. Change something before running it again.`;
+  }
+  const ago = repeat.callsAgo === 1 ? "1 call ago" : `${repeat.callsAgo} calls ago`;
+  return `pi-warden: you already have this output from \`${call}\` (${ago}); nothing changed since. Use that output instead of running the call again.`;
+}
+
+/** LCS-based line diff between two outputs, capped at diffLimit characters. Both inputs must be pre-redacted. */
+function lineDiff(previous: string, current: string, diffLimit: number): string {
+  const prevLines = previous.split("\n");
+  const currLines = current.split("\n");
+  const m = prevLines.length;
+  const n = currLines.length;
+  // Longest common subsequence.
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i]![j] = prevLines[i - 1] === currLines[j - 1] ? dp[i - 1]![j - 1]! + 1 : Math.max(dp[i - 1]![j]!, dp[i]![j - 1]!);
+    }
+  }
+  // Backtrack to build unified diff.
+  let i = m;
+  let j = n;
+  const ops: Array<[string, string]> = [];
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && prevLines[i - 1] === currLines[j - 1]) {
+      ops.push([" ", prevLines[i - 1]!]);
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i]![j - 1]! >= dp[i - 1]![j]!)) {
+      ops.push(["+", currLines[j - 1]!]);
+      j--;
+    } else {
+      ops.push(["-", prevLines[i - 1]!]);
+      i--;
+    }
+  }
+  ops.reverse();
+  // Identify indices of changed ops (+ or -).
+  const changedIndices: number[] = [];
+  for (let k = 0; k < ops.length; k++) {
+    if (ops[k]![0] !== " ") changedIndices.push(k);
+  }
+  if (changedIndices.length === 0) return "";
+  // Merge nearby changes: expand each changed index by 3 lines of context on each side,
+  // then merge overlapping ranges.
+  const CONTEXT = 3;
+  const ranges: Array<[number, number]> = [];
+  for (const idx of changedIndices) {
+    const start = Math.max(0, idx - CONTEXT);
+    const end = Math.min(ops.length - 1, idx + CONTEXT);
+    if (ranges.length > 0 && start <= ranges[ranges.length - 1]![1]! + 1) {
+      ranges[ranges.length - 1]![1] = end;
+    } else {
+      ranges.push([start, end]);
+    }
+  }
+  // Emit hunks.
+  const hunks: string[] = [];
+  for (const [rangeStart, rangeEnd] of ranges) {
+    let prevPos = 0;
+    for (let k = 0; k < rangeStart; k++) {
+      const op = ops[k]![0];
+      if (op === " " || op === "-") prevPos++;
+    }
+    // Count lines in the range for each file.
+    let prevCount = 0;
+    let currCount = 0;
+    const lines: string[] = [];
+    for (let k = rangeStart; k <= rangeEnd; k++) {
+      const [op, line] = ops[k]!;
+      lines.push(`${op} ${line}`);
+      if (op === " ") { prevCount++; currCount++; }
+      else if (op === "-") { prevCount++; }
+      else { currCount++; }
+    }
+    hunks.push(`@@ -${prevPos + 1},${prevCount} +${prevPos + 1},${currCount} @@`);
+    hunks.push(...lines);
+  }
+  const text = hunks.join("\n");
+  return text.length <= diffLimit ? text : `${text.slice(0, diffLimit)}\n… [diff truncated]`;
+}
+
+/**
+ * Short note for a stuck-loop repeated failure: header, capped unified diff against the previous output,
+ * tail of the current output, and the path of the full copy. All inputs must be pre-redacted.
+ */
+export function stuckDiff(previous: string, current: string, options: { diffLimit: number; tailLimit: number; fullPath: string }): string {
+  const header = `pi-warden: stuck-loop diff; this output repeated a failure (previous: ${previous.length} chars, current: ${current.length} chars).`;
+  if (previous === current) {
+    return `${header}\nOutputs are byte-identical; see the full output at ${options.fullPath}.`;
+  }
+  const diff = lineDiff(previous, current, options.diffLimit);
+  const tail = current.length <= options.tailLimit ? current : `… [${current.length - options.tailLimit} earlier chars omitted]\n${current.slice(-options.tailLimit)}`;
+  return `${header}\n${diff}\n${tail}\n\nFull output: ${options.fullPath}`;
+}
+
+export function formatStuck(verdict: StuckVerdict, template: string = DEFAULT_TEMPLATES.stuck): string {
+  return renderTemplate(template, stuckTokens(verdict));
+}

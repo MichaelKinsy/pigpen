@@ -1,0 +1,37 @@
+{
+ "name": "fetch-mode-disabled",
+ "description": "fetch.allowedModes limits fetch_content: a disabled mode is refused before any work.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"fetch\": {\"allowedModes\": [\"raw\"], \"defaultMode\": \"raw\"}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://example.com/",
+      "mode": "answer",
+      "prompt": "q"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "args": [
+  "--tools",
+  "read,bash,edit,write,web_search,source_check,fetch_content,get_search_content"
+ ]
+}

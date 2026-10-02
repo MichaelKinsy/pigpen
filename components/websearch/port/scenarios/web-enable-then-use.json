@@ -1,0 +1,39 @@
+{
+ "name": "web-enable-then-use",
+ "description": "Dynamic activation: web_enable activates the web tools, then get_search_content (dormant before) runs on the next request.",
+ "agentFiles": {
+  "web-search.json": "{}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_enable",
+     "arguments": {}
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "get_search_content",
+     "arguments": {
+      "responseId": "missing-id"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ]
+}

@@ -1,0 +1,2 @@
+{"name":"playground-cancel","description":"The playground editor is dismissed: nothing happens.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"steps":[
+ {"name":"playground","rpc":{"type":"prompt","message":"/typesafe playground"},"ui":[{"cancelled":true}]}]}

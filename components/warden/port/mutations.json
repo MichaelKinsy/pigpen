@@ -1,0 +1,98 @@
+[
+ {
+  "name": "held-reason-prefix",
+  "file": "guard.go",
+  "find": "\"pi-warden held this \"",
+  "replace": "\"warden held this \""
+ },
+ {
+  "name": "held-reason-tone",
+  "file": "guard.go",
+  "find": "Do not retry it unchanged.",
+  "replace": "Retry it."
+ },
+ {
+  "name": "hold-does-not-block",
+  "file": "toolcall.go",
+  "find": "\"block\": true",
+  "replace": "\"block\": false"
+ },
+ {
+  "name": "force-push-flag-f-missed",
+  "file": "patterns.go",
+  "find": "(?:-f|--force)(?:[^-\\w]|$)",
+  "replace": "(?:--force)(?:[^-\\w]|$)"
+ },
+ {
+  "name": "chmod-777-denies-instead-of-holds",
+  "file": "patterns.go",
+  "find": "{\"chmod-777\", SeverityDestructive, \"chmod -R 777\"",
+  "replace": "{\"chmod-777\", SeverityDeny, \"chmod -R 777\""
+ },
+ {
+  "name": "sql-drop-label",
+  "file": "patterns.go",
+  "find": "\"SQL DROP\"",
+  "replace": "\"SQL drop\""
+ },
+ {
+  "name": "remote-script-not-held",
+  "file": "patterns.go",
+  "find": "\"pipe remote script into a shell\"",
+  "replace": "\"pipe remote script into shell\""
+ },
+ {
+  "name": "dangerous-rm-not-destructive",
+  "file": "patterns.go",
+  "find": "ID: \"rm-recursive-dangerous-target\", Severity: SeverityDestructive",
+  "replace": "ID: \"rm-recursive-dangerous-target\", Severity: SeverityRisky"
+ },
+ {
+  "name": "approval-word-list",
+  "file": "guard.go",
+  "find": "yes|yep|yeah|go ahead|do it",
+  "replace": "yep|yeah|do it"
+ },
+ {
+  "name": "approval-ignored",
+  "file": "action_guard.go",
+  "find": "retryAfterHold := g.holdPending && g.lastHoldPrompt != conv.Task",
+  "replace": "retryAfterHold := false"
+ },
+ {
+  "name": "steer-custom-type",
+  "file": "extension.go",
+  "find": "steerType  = \"pi-warden-steer\"",
+  "replace": "steerType  = \"warden-steer\""
+ },
+ {
+  "name": "stuck-steer-wording",
+  "file": "stuck.go",
+  "find": "Change something before running it again.",
+  "replace": "Try again."
+ },
+ {
+  "name": "quick-repeat-fires-on-success-without-readonly",
+  "file": "stuck.go",
+  "find": "if !l.Failed && !l.ReadOnly {",
+  "replace": "if false {"
+ },
+ {
+  "name": "quick-repeat-ignores-changes",
+  "file": "stuck.go",
+  "find": "\t\tif a.Changes {\n\t\t\treturn nil\n\t\t}",
+  "replace": "\t\tif false && a.Changes {\n\t\t\treturn nil\n\t\t}"
+ },
+ {
+  "name": "quick-repeat-once-per-key",
+  "file": "stuck.go",
+  "find": "w.quickRepeated[l.Key] = true\n\treturn &QuickRepeat",
+  "replace": "\treturn &QuickRepeat"
+ },
+ {
+  "name": "differing-output-still-repeat",
+  "file": "stuck.go",
+  "find": "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {",
+  "replace": "if prev.Failed != l.Failed {"
+ }
+]

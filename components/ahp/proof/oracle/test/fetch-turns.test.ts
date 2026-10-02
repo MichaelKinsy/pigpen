@@ -1,0 +1,207 @@
+/**
+ * Paging older turns into a chat.
+ *
+ * A hydrated chat shows the window pi itself renders — back to the most recent
+ * compaction. Everything before that is on disk but was unreachable, so a long,
+ * repeatedly-compacted session looked like it only ever had its last few
+ * exchanges.
+ */
+
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { after, before, describe, it } from "node:test";
+import { type ChatState, JsonRpcErrorCodes, SUPPORTED_PROTOCOL_VERSIONS } from "@microsoft/agent-host-protocol";
+import { AhpClient, RpcError } from "@microsoft/agent-host-protocol/client";
+import { WebSocketTransport } from "@microsoft/agent-host-protocol/ws";
+import { installRootChannel } from "../src/channels/root.ts";
+import { chatUri, sessionUri } from "../src/core/channels.ts";
+import { AhpHost } from "../src/core/host.ts";
+import { PiSessionCatalogue } from "../src/pi/session-catalogue.ts";
+import { SessionHydrator } from "../src/pi/session-hydrator.ts";
+import { SessionRegistry } from "../src/pi/session-registry.ts";
+import { type RunningServer, serveWebSocket } from "../src/transport/websocket.ts";
+import { must } from "./support/assertions.ts";
+import { assertValid } from "./support/schema.ts";
+import { fixtureSessionDirectory } from "./support/session-files.ts";
+import { persistentSessionManagerFactory } from "./support/session-storage.ts";
+
+/**
+ * Writes a session with `before` exchanges, then a compaction, then `after`.
+ *
+ * The compaction is what makes the earlier turns invisible to the default
+ * window, which is exactly the case paging exists for.
+ */
+function writeCompactedSession(root: string, id: string, cwd: string, before: number, after: number): void {
+	const directory = fixtureSessionDirectory(root, cwd);
+	const at = "2026-01-01T00:00:00.000Z";
+	const lines = [JSON.stringify({ type: "session", id, parentId: null, timestamp: at, version: 3, cwd })];
+	let parentId: string | null = null;
+	const push = (entry: Record<string, unknown>): string => {
+		const entryId = randomUUID();
+		lines.push(JSON.stringify({ ...entry, id: entryId, parentId, timestamp: at }));
+		parentId = entryId;
+		return entryId;
+	};
+	const exchange = (n: number): string => {
+		const userId = push({ type: "message", message: { role: "user", content: `question ${n}`, timestamp: 0 } });
+		push({
+			type: "message",
+			message: { role: "assistant", content: [{ type: "text", text: `answer ${n}` }], timestamp: 0 },
+		});
+		return userId;
+	};
+
+	for (let i = 0; i < before; i++) {
+		exchange(i);
+	}
+	// The compaction keeps nothing before itself: `firstKeptEntryId` points at
+	// the entry that follows it, so the window starts here.
+	push({ type: "compaction", summary: "earlier work", firstKeptEntryId: "none", tokensBefore: 1000 });
+	for (let i = 0; i < after; i++) {
+		exchange(before + i);
+	}
+	writeFileSync(join(directory, `2026-01-01T00-00-00-000Z_${id}.jsonl`), `${lines.join("\n")}\n`);
+}
+
+interface Fixture {
+	host: AhpHost;
+	client: AhpClient;
+	server: RunningServer;
+	sessionId: string;
+	close(): Promise<void>;
+}
+
+async function startFixture(before: number, after: number): Promise<Fixture> {
+	const root = mkdtempSync(join(tmpdir(), "pi-ahp-paging-"));
+	const workspace = mkdtempSync(join(tmpdir(), "pi-ahp-paging-cwd-"));
+	const sessionId = randomUUID();
+	writeCompactedSession(root, sessionId, workspace, before, after);
+
+	const host = new AhpHost();
+	installRootChannel(host, []);
+	const catalogue = new PiSessionCatalogue(root);
+	host.serve({ catalogue });
+	const sessions = new SessionRegistry({
+		host,
+		defaultWorkingDirectory: workspace,
+		createSessionManager: persistentSessionManagerFactory(root),
+	});
+	host.serve({
+		hydrator: new SessionHydrator({
+			host,
+			catalogue,
+			isLive: (uri) => sessions.has(uri),
+			isDisposing: (uri) => sessions.isDisposing(uri),
+			adopt: (session) => void sessions.adopt(session),
+		}),
+	});
+	host.serve({
+		turnPaging: {
+			async fetchTurns(params) {
+				await sessions.fetchTurns(params.channel, params.cursor);
+				return {};
+			},
+		},
+	});
+
+	const server = await serveWebSocket(host, { host: "127.0.0.1", port: 0 });
+	const client = new AhpClient(await WebSocketTransport.connect(`ws://127.0.0.1:${server.port}`));
+	client.connect();
+	await client.initialize({ clientId: "paging-client", protocolVersions: SUPPORTED_PROTOCOL_VERSIONS });
+
+	return {
+		host,
+		client,
+		server,
+		sessionId,
+		async close() {
+			await client.shutdown();
+			await server.close();
+			rmSync(root, { recursive: true, force: true });
+			rmSync(workspace, { recursive: true, force: true });
+		},
+	};
+}
+
+const state = (fixture: Fixture): ChatState => fixture.host.store.get(chatUri(fixture.sessionId)) as ChatState;
+
+describe("fetchTurns", () => {
+	let fixture: Fixture;
+
+	before(async () => {
+		// 25 pre-compaction exchanges, so a 20-turn page leaves a second one.
+		fixture = await startFixture(25, 2);
+		await fixture.client.subscribe(chatUri(fixture.sessionId));
+	});
+
+	after(async () => {
+		await fixture.close();
+	});
+
+	it("pages backward while preserving a complete oldest-first transcript", async () => {
+		const channel = chatUri(fixture.sessionId);
+		const initial = state(fixture);
+
+		// Its presence is the protocol's signal that `turns` is a tail window.
+		assert.ok(initial.turnsNextCursor, "a compacted session must offer more history");
+		assertValid("state", "ChatState", initial);
+		const newestTurn = initial.turns.at(-1)?.id;
+		const initialCount = initial.turns.length;
+
+		await fixture.client.request("fetchTurns", { channel, cursor: initial.turnsNextCursor });
+		let current = state(fixture);
+		assert.ok(current.turns.length > initialCount);
+		assert.equal(current.turns.at(-1)?.id, newestTurn, "paging must preserve the visible tail");
+		assert.match(must(current.turns[0]).message.text, /question \d+/);
+
+		while (current.turnsNextCursor) {
+			await fixture.client.request("fetchTurns", { channel, cursor: current.turnsNextCursor });
+			current = state(fixture);
+		}
+
+		const numbered = current.turns
+			.map((turn) => /question (\d+)/.exec(turn.message.text)?.[1])
+			.filter((value): value is string => value !== undefined)
+			.map(Number);
+		assert.deepEqual(
+			numbered,
+			[...numbered].sort((a, b) => a - b),
+		);
+		// Without this the client would keep asking for pages that do not exist.
+		assert.equal(current.turnsNextCursor, undefined);
+	});
+
+	it("rejects a session channel for this chat-scoped command", async () => {
+		await assert.rejects(
+			fixture.client.request("fetchTurns", { channel: sessionUri(fixture.sessionId) }),
+			(error: unknown) => error instanceof RpcError && error.code === JsonRpcErrorCodes.InvalidParams,
+		);
+	});
+
+	it("rejects a cursor it did not issue", async () => {
+		const error = await fixture.client
+			.request("fetchTurns", { channel: chatUri(fixture.sessionId), cursor: "made-up" })
+			.then(
+				() => undefined,
+				(reason: unknown) => reason,
+			);
+
+		assert.ok(error instanceof RpcError);
+		assert.equal(error.code, -32602);
+	});
+});
+
+describe("fetchTurns — nothing older", () => {
+	it("offers no cursor for a session that was never compacted", async () => {
+		const fixture = await startFixture(0, 3);
+		try {
+			const { result } = await fixture.client.subscribe(chatUri(fixture.sessionId));
+			assert.equal((must(result.snapshot).state as ChatState).turnsNextCursor, undefined);
+		} finally {
+			await fixture.close();
+		}
+	});
+});

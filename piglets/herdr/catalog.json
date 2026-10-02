@@ -1,0 +1,14 @@
+{
+  "status": "planned",
+  "featured": false,
+  "updatedAt": "2026-09-30",
+  "languages": ["go"],
+  "notes": [
+    "Optional: the reporter is the standalone extension Package components/herdr, which works on its own in plain PiG without this Piglet.",
+    "Source only: no Piglet Binary is published and no remote installation command is offered yet. See the root RELEASE-BLOCKERS.md.",
+    "The extension does nothing unless PiG runs inside a herdr pane (HERDR_ENV=1 with HERDR_PANE_ID, HERDR_BIN_PATH and HERDR_SOCKET_PATH set), as herdr's published integration guide (https://herdr.dev/docs/add-herdr-support/) requires.",
+    "With herdr 0.9.2 or later it also reports the resume command `pig --session <session file>`, so herdr restores the pig session in its pane after a server restart. The restore runs plain `pig` (no Piglet or launch flags), and an in-memory session reports no command. Older herdr keeps the state reports and the release; the resume command is left out.",
+    "It is a Go extension on PiG's public SDK: building the Piglet needs a Go toolchain, not Node.js. It does not honor the Pi-only herdr:blocked event, because the Go SDK has no pi.events bridge.",
+    "A local Piglet Binary builds with the reviewed PiG and reports to a fake herdr, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+  ]
+}

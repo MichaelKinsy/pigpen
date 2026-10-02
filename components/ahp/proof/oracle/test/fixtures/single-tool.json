@@ -1,0 +1,1128 @@
+{
+	"name": "single-tool",
+	"description": "One tool call, then an answer derived from its result.",
+	"prompt": "Read note.txt and reply with its exact contents only.",
+	"partials": [
+		{
+			"role": "assistant",
+			"content": [
+				{
+					"type": "thinking",
+					"thinking": "",
+					"thinkingSignature": ""
+				},
+				{
+					"type": "toolCall",
+					"id": "toolcall_0",
+					"name": "read",
+					"arguments": {
+						"path": "note.txt",
+						"offset": 1,
+						"limit": 2000
+					}
+				}
+			],
+			"api": "openai-responses",
+			"provider": "github-copilot",
+			"model": "gpt-5.4",
+			"usage": {
+				"input": 1559,
+				"output": 67,
+				"cacheRead": 0,
+				"cacheWrite": 0,
+				"reasoning": 38,
+				"totalTokens": 1626,
+				"cost": {
+					"input": 0.0038975000000000004,
+					"output": 0.001005,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"total": 0.004902500000000001
+				}
+			},
+			"stopReason": "toolUse",
+			"timestamp": 0,
+			"responseId": ""
+		},
+		{
+			"role": "assistant",
+			"content": [
+				{
+					"type": "text",
+					"text": "ALPHA BETA GAMMA",
+					"textSignature": ""
+				}
+			],
+			"api": "openai-responses",
+			"provider": "github-copilot",
+			"model": "gpt-5.4",
+			"usage": {
+				"input": 1643,
+				"output": 10,
+				"cacheRead": 0,
+				"cacheWrite": 0,
+				"reasoning": 0,
+				"totalTokens": 1653,
+				"cost": {
+					"input": 0.0041075,
+					"output": 0.00015000000000000001,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"total": 0.0042575
+				}
+			},
+			"stopReason": "stop",
+			"timestamp": 0,
+			"responseId": ""
+		}
+	],
+	"turns": [
+		[
+			{
+				"type": "start",
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_start",
+				"contentIndex": 0,
+				"partialRef": 0
+			},
+			{
+				"type": "thinking_end",
+				"contentIndex": 0,
+				"content": "",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_start",
+				"contentIndex": 1,
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "{\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "path",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "note",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ".txt",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\",\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "offset",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "1",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ",\"",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "limit",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "200",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "0",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "}",
+				"partialRef": 0
+			},
+			{
+				"type": "toolcall_end",
+				"contentIndex": 1,
+				"toolCall": {
+					"type": "toolCall",
+					"id": "toolcall_0",
+					"name": "read",
+					"arguments": {
+						"path": "note.txt",
+						"offset": 1,
+						"limit": 2000
+					}
+				},
+				"partialRef": 0
+			},
+			{
+				"type": "done",
+				"reason": "toolUse",
+				"message": {
+					"role": "assistant",
+					"content": [
+						{
+							"type": "thinking",
+							"thinking": "",
+							"thinkingSignature": ""
+						},
+						{
+							"type": "toolCall",
+							"id": "toolcall_0",
+							"name": "read",
+							"arguments": {
+								"path": "note.txt",
+								"offset": 1,
+								"limit": 2000
+							}
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1559,
+						"output": 67,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 38,
+						"totalTokens": 1626,
+						"cost": {
+							"input": 0.0038975000000000004,
+							"output": 0.001005,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.004902500000000001
+						}
+					},
+					"stopReason": "toolUse",
+					"timestamp": 0,
+					"responseId": ""
+				}
+			}
+		],
+		[
+			{
+				"type": "start",
+				"partialRef": 1
+			},
+			{
+				"type": "text_start",
+				"contentIndex": 0,
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "AL",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "PHA",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": " B",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "ETA",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": " GAM",
+				"partialRef": 1
+			},
+			{
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "MA",
+				"partialRef": 1
+			},
+			{
+				"type": "text_end",
+				"contentIndex": 0,
+				"content": "ALPHA BETA GAMMA",
+				"partialRef": 1
+			},
+			{
+				"type": "done",
+				"reason": "stop",
+				"message": {
+					"role": "assistant",
+					"content": [
+						{
+							"type": "text",
+							"text": "ALPHA BETA GAMMA",
+							"textSignature": ""
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1643,
+						"output": 10,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 0,
+						"totalTokens": 1653,
+						"cost": {
+							"input": 0.0041075,
+							"output": 0.00015000000000000001,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.0042575
+						}
+					},
+					"stopReason": "stop",
+					"timestamp": 0,
+					"responseId": ""
+				}
+			}
+		]
+	],
+	"events": [
+		{
+			"type": "agent_start"
+		},
+		{
+			"type": "turn_start"
+		},
+		{
+			"type": "message_start",
+			"message": {
+				"role": "user",
+				"content": [
+					{
+						"type": "text",
+						"text": "Read note.txt and reply with its exact contents only."
+					}
+				],
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_end",
+			"message": {
+				"role": "user",
+				"content": [
+					{
+						"type": "text",
+						"text": "Read note.txt and reply with its exact contents only."
+					}
+				],
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_start",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "thinking",
+						"thinking": "",
+						"thinkingSignature": ""
+					},
+					{
+						"type": "toolCall",
+						"id": "toolcall_0",
+						"name": "read",
+						"arguments": {
+							"path": "note.txt",
+							"offset": 1,
+							"limit": 2000
+						}
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 0,
+					"output": 0,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"totalTokens": 0,
+					"cost": {
+						"input": 0,
+						"output": 0,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0
+					}
+				},
+				"stopReason": "stop",
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_start",
+				"contentIndex": 0
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "thinking_end",
+				"contentIndex": 0,
+				"content": ""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_start",
+				"contentIndex": 1,
+				"partial": {
+					"role": "assistant",
+					"content": [
+						{
+							"type": "thinking",
+							"thinking": "",
+							"thinkingSignature": ""
+						},
+						{
+							"type": "toolCall",
+							"id": "toolcall_0",
+							"name": "read",
+							"arguments": {
+								"path": "note.txt",
+								"offset": 1,
+								"limit": 2000
+							}
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1559,
+						"output": 67,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 38,
+						"totalTokens": 1626,
+						"cost": {
+							"input": 0.0038975000000000004,
+							"output": 0.001005,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.004902500000000001
+						}
+					},
+					"stopReason": "toolUse",
+					"timestamp": 0,
+					"responseId": ""
+				}
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "{\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "path"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "note"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ".txt"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\",\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "offset"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "1"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": ",\""
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "limit"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "\":"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "200"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "0"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_delta",
+				"contentIndex": 1,
+				"delta": "}"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "toolcall_end",
+				"contentIndex": 1,
+				"toolCall": {
+					"type": "toolCall",
+					"id": "toolcall_0",
+					"name": "read",
+					"arguments": {
+						"path": "note.txt",
+						"offset": 1,
+						"limit": 2000
+					}
+				}
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_end",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "thinking",
+						"thinking": "",
+						"thinkingSignature": ""
+					},
+					{
+						"type": "toolCall",
+						"id": "toolcall_0",
+						"name": "read",
+						"arguments": {
+							"path": "note.txt",
+							"offset": 1,
+							"limit": 2000
+						}
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 1559,
+					"output": 67,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"reasoning": 38,
+					"totalTokens": 1626,
+					"cost": {
+						"input": 0.0038975000000000004,
+						"output": 0.001005,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0.004902500000000001
+					}
+				},
+				"stopReason": "toolUse",
+				"timestamp": 0,
+				"responseId": ""
+			}
+		},
+		{
+			"type": "tool_execution_start",
+			"toolCallId": "toolcall_0",
+			"toolName": "read",
+			"args": {
+				"path": "note.txt",
+				"offset": 1,
+				"limit": 2000
+			}
+		},
+		{
+			"type": "tool_execution_end",
+			"toolCallId": "toolcall_0",
+			"toolName": "read",
+			"result": {
+				"content": [
+					{
+						"type": "text",
+						"text": "ALPHA BETA GAMMA\n"
+					}
+				]
+			},
+			"isError": false
+		},
+		{
+			"type": "message_start",
+			"message": {
+				"role": "toolResult",
+				"toolCallId": "toolcall_0",
+				"toolName": "read",
+				"content": [
+					{
+						"type": "text",
+						"text": "ALPHA BETA GAMMA\n"
+					}
+				],
+				"isError": false,
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_end",
+			"message": {
+				"role": "toolResult",
+				"toolCallId": "toolcall_0",
+				"toolName": "read",
+				"content": [
+					{
+						"type": "text",
+						"text": "ALPHA BETA GAMMA\n"
+					}
+				],
+				"isError": false,
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "turn_end",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "thinking",
+						"thinking": "",
+						"thinkingSignature": ""
+					},
+					{
+						"type": "toolCall",
+						"id": "toolcall_0",
+						"name": "read",
+						"arguments": {
+							"path": "note.txt",
+							"offset": 1,
+							"limit": 2000
+						}
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 1559,
+					"output": 67,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"reasoning": 38,
+					"totalTokens": 1626,
+					"cost": {
+						"input": 0.0038975000000000004,
+						"output": 0.001005,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0.004902500000000001
+					}
+				},
+				"stopReason": "toolUse",
+				"timestamp": 0,
+				"responseId": ""
+			},
+			"toolResults": [
+				{
+					"role": "toolResult",
+					"toolCallId": "toolcall_0",
+					"toolName": "read",
+					"content": [
+						{
+							"type": "text",
+							"text": "ALPHA BETA GAMMA\n"
+						}
+					],
+					"isError": false,
+					"timestamp": 0
+				}
+			]
+		},
+		{
+			"type": "turn_start"
+		},
+		{
+			"type": "message_start",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "text",
+						"text": "ALPHA BETA GAMMA",
+						"textSignature": ""
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 0,
+					"output": 0,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"totalTokens": 0,
+					"cost": {
+						"input": 0,
+						"output": 0,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0
+					}
+				},
+				"stopReason": "stop",
+				"timestamp": 0
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_start",
+				"contentIndex": 0
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "AL"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "PHA"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": " B"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "ETA"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": " GAM"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_delta",
+				"contentIndex": 0,
+				"delta": "MA"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_update",
+			"assistantMessageEvent": {
+				"type": "text_end",
+				"contentIndex": 0,
+				"content": "ALPHA BETA GAMMA"
+			},
+			"message": {
+				"role": "assistant"
+			}
+		},
+		{
+			"type": "message_end",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "text",
+						"text": "ALPHA BETA GAMMA",
+						"textSignature": ""
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 1643,
+					"output": 10,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"reasoning": 0,
+					"totalTokens": 1653,
+					"cost": {
+						"input": 0.0041075,
+						"output": 0.00015000000000000001,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0.0042575
+					}
+				},
+				"stopReason": "stop",
+				"timestamp": 0,
+				"responseId": ""
+			}
+		},
+		{
+			"type": "turn_end",
+			"message": {
+				"role": "assistant",
+				"content": [
+					{
+						"type": "text",
+						"text": "ALPHA BETA GAMMA",
+						"textSignature": ""
+					}
+				],
+				"api": "openai-responses",
+				"provider": "github-copilot",
+				"model": "gpt-5.4",
+				"usage": {
+					"input": 1643,
+					"output": 10,
+					"cacheRead": 0,
+					"cacheWrite": 0,
+					"reasoning": 0,
+					"totalTokens": 1653,
+					"cost": {
+						"input": 0.0041075,
+						"output": 0.00015000000000000001,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"total": 0.0042575
+					}
+				},
+				"stopReason": "stop",
+				"timestamp": 0,
+				"responseId": ""
+			},
+			"toolResults": []
+		},
+		{
+			"type": "agent_end",
+			"messages": [
+				{
+					"role": "user",
+					"content": [
+						{
+							"type": "text",
+							"text": "Read note.txt and reply with its exact contents only."
+						}
+					],
+					"timestamp": 0
+				},
+				{
+					"role": "assistant",
+					"content": [
+						{
+							"type": "thinking",
+							"thinking": "",
+							"thinkingSignature": ""
+						},
+						{
+							"type": "toolCall",
+							"id": "toolcall_0",
+							"name": "read",
+							"arguments": {
+								"path": "note.txt",
+								"offset": 1,
+								"limit": 2000
+							}
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1559,
+						"output": 67,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 38,
+						"totalTokens": 1626,
+						"cost": {
+							"input": 0.0038975000000000004,
+							"output": 0.001005,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.004902500000000001
+						}
+					},
+					"stopReason": "toolUse",
+					"timestamp": 0,
+					"responseId": ""
+				},
+				{
+					"role": "toolResult",
+					"toolCallId": "toolcall_0",
+					"toolName": "read",
+					"content": [
+						{
+							"type": "text",
+							"text": "ALPHA BETA GAMMA\n"
+						}
+					],
+					"isError": false,
+					"timestamp": 0
+				},
+				{
+					"role": "assistant",
+					"content": [
+						{
+							"type": "text",
+							"text": "ALPHA BETA GAMMA",
+							"textSignature": ""
+						}
+					],
+					"api": "openai-responses",
+					"provider": "github-copilot",
+					"model": "gpt-5.4",
+					"usage": {
+						"input": 1643,
+						"output": 10,
+						"cacheRead": 0,
+						"cacheWrite": 0,
+						"reasoning": 0,
+						"totalTokens": 1653,
+						"cost": {
+							"input": 0.0041075,
+							"output": 0.00015000000000000001,
+							"cacheRead": 0,
+							"cacheWrite": 0,
+							"total": 0.0042575
+						}
+					},
+					"stopReason": "stop",
+					"timestamp": 0,
+					"responseId": ""
+				}
+			],
+			"willRetry": false
+		},
+		{
+			"type": "agent_settled"
+		}
+	]
+}

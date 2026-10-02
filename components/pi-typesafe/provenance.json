@@ -1,0 +1,18 @@
+{
+  "origin": "ported",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-typesafe",
+      "authors": ["Ryan Gapac"],
+      "url": "https://github.com/DevMortimer/pi-typesafe",
+      "revision": "ed439f834665ad6fc652787f5ba7c23852566d49",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

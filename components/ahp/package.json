@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-ahp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go port of pi-ahp: serves the running PiG session to remote Microsoft Agent Host Protocol clients over WebSocket, with reconnect and auth. No listener unless you ask; no remote filesystem or terminal unless you opt in",
+  "keywords": ["pig-package", "ahp", "agent-host-protocol", "remote", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "proof", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/ahp"]
+  }
+}

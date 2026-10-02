@@ -1,0 +1,2447 @@
+// Generated from types/*.ts — do not edit.
+//
+// Regenerate with: npm run generate:go
+
+package ahptypes
+
+import (
+	"encoding/json"
+)
+
+// Reference the encoding/json import to keep gofmt -d from
+// stripping it when a generated file has no struct that mentions
+// json.RawMessage directly (rare but possible). Compiled out.
+var _ = json.RawMessage(nil)
+
+// ─── ActionType ──────────────────────────────────────────────────────
+
+// Discriminant values for all state actions.
+type ActionType string
+
+const (
+	ActionTypeRootAgentsChanged                   ActionType = "root/agentsChanged"
+	ActionTypeRootActiveSessionsChanged           ActionType = "root/activeSessionsChanged"
+	ActionTypeSessionReady                        ActionType = "session/ready"
+	ActionTypeSessionCreationFailed               ActionType = "session/creationFailed"
+	ActionTypeSessionChatAdded                    ActionType = "session/chatAdded"
+	ActionTypeSessionChatRemoved                  ActionType = "session/chatRemoved"
+	ActionTypeSessionChatUpdated                  ActionType = "session/chatUpdated"
+	ActionTypeSessionDefaultChatChanged           ActionType = "session/defaultChatChanged"
+	ActionTypeChatTurnStarted                     ActionType = "chat/turnStarted"
+	ActionTypeChatDelta                           ActionType = "chat/delta"
+	ActionTypeChatResponsePart                    ActionType = "chat/responsePart"
+	ActionTypeChatToolCallStart                   ActionType = "chat/toolCallStart"
+	ActionTypeChatToolCallDelta                   ActionType = "chat/toolCallDelta"
+	ActionTypeChatToolCallReady                   ActionType = "chat/toolCallReady"
+	ActionTypeChatToolCallConfirmed               ActionType = "chat/toolCallConfirmed"
+	ActionTypeChatToolCallComplete                ActionType = "chat/toolCallComplete"
+	ActionTypeChatToolCallResultConfirmed         ActionType = "chat/toolCallResultConfirmed"
+	ActionTypeChatToolCallContentChanged          ActionType = "chat/toolCallContentChanged"
+	ActionTypeChatToolCallAuthRequired            ActionType = "chat/toolCallAuthRequired"
+	ActionTypeChatToolCallAuthResolved            ActionType = "chat/toolCallAuthResolved"
+	ActionTypeChatTurnComplete                    ActionType = "chat/turnComplete"
+	ActionTypeChatTurnCancelled                   ActionType = "chat/turnCancelled"
+	ActionTypeChatError                           ActionType = "chat/error"
+	ActionTypeChatTurnResume                      ActionType = "chat/turnResume"
+	ActionTypeChatActivityChanged                 ActionType = "chat/activityChanged"
+	ActionTypeChatChangesetsChanged               ActionType = "chat/changesetsChanged"
+	ActionTypeChatWorkingDirectorySet             ActionType = "chat/workingDirectorySet"
+	ActionTypeChatWorkingDirectoryRemoved         ActionType = "chat/workingDirectoryRemoved"
+	ActionTypeSessionTitleChanged                 ActionType = "session/titleChanged"
+	ActionTypeChatUsage                           ActionType = "chat/usage"
+	ActionTypeChatReasoning                       ActionType = "chat/reasoning"
+	ActionTypeSessionServerToolsChanged           ActionType = "session/serverToolsChanged"
+	ActionTypeSessionActiveClientSet              ActionType = "session/activeClientSet"
+	ActionTypeSessionActiveClientRemoved          ActionType = "session/activeClientRemoved"
+	ActionTypeSessionWorkingDirectorySet          ActionType = "session/workingDirectorySet"
+	ActionTypeSessionWorkingDirectoryRemoved      ActionType = "session/workingDirectoryRemoved"
+	ActionTypeSessionWorkingDirectoryReplaced     ActionType = "session/workingDirectoryReplaced"
+	ActionTypeSessionInputNeededSet               ActionType = "session/inputNeededSet"
+	ActionTypeSessionInputNeededRemoved           ActionType = "session/inputNeededRemoved"
+	ActionTypeChatPendingMessageSet               ActionType = "chat/pendingMessageSet"
+	ActionTypeChatPendingMessageRemoved           ActionType = "chat/pendingMessageRemoved"
+	ActionTypeChatQueuedMessagesReordered         ActionType = "chat/queuedMessagesReordered"
+	ActionTypeChatDraftChanged                    ActionType = "chat/draftChanged"
+	ActionTypeChatIsArchivedChanged               ActionType = "chat/isArchivedChanged"
+	ActionTypeChatInputRequested                  ActionType = "chat/inputRequested"
+	ActionTypeChatInputAnswerChanged              ActionType = "chat/inputAnswerChanged"
+	ActionTypeChatInputCompleted                  ActionType = "chat/inputCompleted"
+	ActionTypeSessionCustomizationsChanged        ActionType = "session/customizationsChanged"
+	ActionTypeSessionCustomizationToggled         ActionType = "session/customizationToggled"
+	ActionTypeSessionCustomizationUpdated         ActionType = "session/customizationUpdated"
+	ActionTypeSessionCustomizationRemoved         ActionType = "session/customizationRemoved"
+	ActionTypeSessionMcpServerStateChanged        ActionType = "session/mcpServerStateChanged"
+	ActionTypeSessionMcpServerStartRequested      ActionType = "session/mcpServerStartRequested"
+	ActionTypeSessionMcpServerStopRequested       ActionType = "session/mcpServerStopRequested"
+	ActionTypeSessionMcpServerBackgroundRequested ActionType = "session/mcpServerBackgroundRequested"
+	ActionTypeChatTruncated                       ActionType = "chat/truncated"
+	ActionTypeChatTurnsLoaded                     ActionType = "chat/turnsLoaded"
+	ActionTypeSessionIsReadChanged                ActionType = "session/isReadChanged"
+	ActionTypeSessionIsArchivedChanged            ActionType = "session/isArchivedChanged"
+	ActionTypeSessionActivityChanged              ActionType = "session/activityChanged"
+	ActionTypeSessionChangesetsChanged            ActionType = "session/changesetsChanged"
+	ActionTypeSessionConfigChanged                ActionType = "session/configChanged"
+	ActionTypeSessionMetaChanged                  ActionType = "session/metaChanged"
+	ActionTypeChangesetStatusChanged              ActionType = "changeset/statusChanged"
+	ActionTypeChangesetFileSet                    ActionType = "changeset/fileSet"
+	ActionTypeChangesetFileRemoved                ActionType = "changeset/fileRemoved"
+	ActionTypeChangesetFilesReviewChanged         ActionType = "changeset/filesReviewChanged"
+	ActionTypeChangesetContentChanged             ActionType = "changeset/contentChanged"
+	ActionTypeChangesetOperationsChanged          ActionType = "changeset/operationsChanged"
+	ActionTypeChangesetOperationStatusChanged     ActionType = "changeset/operationStatusChanged"
+	ActionTypeChangesetCleared                    ActionType = "changeset/cleared"
+	ActionTypeAnnotationsSet                      ActionType = "annotations/set"
+	ActionTypeAnnotationsUpdated                  ActionType = "annotations/updated"
+	ActionTypeAnnotationsRemoved                  ActionType = "annotations/removed"
+	ActionTypeAnnotationsEntrySet                 ActionType = "annotations/entrySet"
+	ActionTypeAnnotationsEntryRemoved             ActionType = "annotations/entryRemoved"
+	ActionTypeRootTerminalsChanged                ActionType = "root/terminalsChanged"
+	ActionTypeRootConfigChanged                   ActionType = "root/configChanged"
+	ActionTypeTerminalData                        ActionType = "terminal/data"
+	ActionTypeTerminalInput                       ActionType = "terminal/input"
+	ActionTypeTerminalResized                     ActionType = "terminal/resized"
+	ActionTypeTerminalClaimed                     ActionType = "terminal/claimed"
+	ActionTypeTerminalTitleChanged                ActionType = "terminal/titleChanged"
+	ActionTypeTerminalCwdChanged                  ActionType = "terminal/cwdChanged"
+	ActionTypeTerminalExited                      ActionType = "terminal/exited"
+	ActionTypeTerminalCleared                     ActionType = "terminal/cleared"
+	ActionTypeTerminalCommandDetectionAvailable   ActionType = "terminal/commandDetectionAvailable"
+	ActionTypeTerminalCommandExecuted             ActionType = "terminal/commandExecuted"
+	ActionTypeTerminalCommandFinished             ActionType = "terminal/commandFinished"
+	ActionTypeResourceWatchChanged                ActionType = "resourceWatch/changed"
+	ActionTypeAutomationCreateRequested           ActionType = "automation/createRequested"
+	ActionTypeAutomationUpdateRequested           ActionType = "automation/updateRequested"
+	ActionTypeAutomationSet                       ActionType = "automation/set"
+	ActionTypeAutomationRemoved                   ActionType = "automation/removed"
+	ActionTypeAutomationRunLifecycleChanged       ActionType = "automationRun/lifecycleChanged"
+	ActionTypeAutomationRunSessionSet             ActionType = "automationRun/sessionSet"
+	ActionTypeAutomationRunSessionRemoved         ActionType = "automationRun/sessionRemoved"
+	ActionTypeAutomationRunPrimarySessionChanged  ActionType = "automationRun/primarySessionChanged"
+	ActionTypeAutomationRunCancelRequested        ActionType = "automationRun/cancelRequested"
+)
+
+// ─── Action Envelope ─────────────────────────────────────────────────
+
+// Identifies the client that originally dispatched an action.
+type ActionOrigin struct {
+	ClientId  string `json:"clientId"`
+	ClientSeq int64  `json:"clientSeq"`
+}
+
+// ActionEnvelope wraps every action with the channel URI it
+// belongs to, the server-assigned monotonic sequence number, and an
+// optional origin record.
+type ActionEnvelope struct {
+	Channel         URI           `json:"channel"`
+	Action          StateAction   `json:"action"`
+	ServerSeq       int64         `json:"serverSeq"`
+	Origin          *ActionOrigin `json:"origin,omitempty"`
+	RejectionReason *string       `json:"rejectionReason,omitempty"`
+}
+
+// ─── Action Payloads ─────────────────────────────────────────────────
+
+// Fired when available agent backends or their models change.
+type RootAgentsChangedAction struct {
+	Type ActionType `json:"type"`
+	// Updated agent list
+	Agents []AgentInfo `json:"agents"`
+}
+
+// Fired when the number of active sessions changes.
+type RootActiveSessionsChangedAction struct {
+	Type ActionType `json:"type"`
+	// Current count of active sessions
+	ActiveSessions int64 `json:"activeSessions"`
+}
+
+// Fired when agent-host configuration values change.
+//
+// By default, the reducer merges the new values into `state.config.values`.
+// Set `replace` to `true` to replace all values instead of merging.
+type RootConfigChangedAction struct {
+	Type ActionType `json:"type"`
+	// Updated config values
+	Config map[string]json.RawMessage `json:"config"`
+	// When `true`, replaces all config values instead of merging
+	Replace *bool `json:"replace,omitempty"`
+}
+
+// Session backend initialized successfully.
+type SessionReadyAction struct {
+	Type ActionType `json:"type"`
+}
+
+// Session backend failed to initialize.
+type SessionCreationFailedAction struct {
+	Type ActionType `json:"type"`
+	// Error details
+	Error ErrorInfo `json:"error"`
+}
+
+// A chat was added to this session's catalog. Upsert semantics: if a chat
+// with the same `summary.resource` already exists, the existing entry is
+// replaced.
+//
+// Mirrors the root-channel `root/sessionAdded` notification.
+type SessionChatAddedAction struct {
+	Type ActionType `json:"type"`
+	// The full summary of the newly added (or upserted) chat.
+	Summary ChatSummary `json:"summary"`
+}
+
+// A chat was removed from this session's catalog. No-op when no entry matches.
+//
+// Mirrors the root-channel `root/sessionRemoved` notification.
+type SessionChatRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The URI of the chat to remove.
+	Chat URI `json:"chat"`
+}
+
+// One existing chat's summary fields changed.
+//
+// Partial-update semantics: only fields present in `changes` are written;
+// omitted fields are preserved. Identity fields (`resource`) MUST NOT be
+// carried in `changes`. No-op when no entry with `chat` exists — clients
+// SHOULD then wait for a {@link SessionChatAddedAction | `session/chatAdded`}.
+//
+// Mirrors the root-channel `root/sessionSummaryChanged` notification.
+type SessionChatUpdatedAction struct {
+	Type ActionType `json:"type"`
+	// The URI of the chat whose summary changed.
+	Chat URI `json:"chat"`
+	// Mutable summary fields that changed; omitted fields are unchanged.
+	//
+	// Identity fields (`resource`) never change and MUST be omitted by
+	// senders; receivers SHOULD ignore them if present.
+	Changes PartialChatSummary `json:"changes"`
+}
+
+// The default chat input-routing hint for this session changed.
+type SessionDefaultChatChangedAction struct {
+	Type ActionType `json:"type"`
+	// New default chat URI, or `undefined` to clear the hint.
+	DefaultChat *URI `json:"defaultChat,omitempty"`
+}
+
+// A new message has been sent to the agent, and a new turn starts.
+//
+// A client is only allowed to send {@link MessageKind.User} messages.
+type ChatTurnStartedAction struct {
+	Type ActionType `json:"type"`
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// ISO 8601 timestamp when this turn started.
+	StartedAt string `json:"startedAt"`
+	// The new message
+	Message Message `json:"message"`
+	// If this turn was auto-started from a queued message, the ID of that message
+	QueuedMessageId *string `json:"queuedMessageId,omitempty"`
+	// Additional provider-specific metadata for this action.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI, and
+	// agent hosts MAY use it to carry per-event context that does not fit any
+	// other field — for example, attributing the event to a specific agent
+	// (such as a sub-agent acting within the turn). Mirrors the MCP `_meta`
+	// convention.
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// Streaming text chunk from the assistant, appended to a specific response part.
+//
+// The server MUST first emit a `chat/responsePart` to create the target
+// markdown part, then use this action to append text to it.
+type ChatDeltaAction struct {
+	Type ActionType `json:"type"`
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Identifier of the response part to append to
+	PartId string `json:"partId"`
+	// Text chunk
+	Content string `json:"content"`
+	// Additional provider-specific metadata for this action.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI, and
+	// agent hosts MAY use it to carry per-event context that does not fit any
+	// other field — for example, attributing the event to a specific agent
+	// (such as a sub-agent acting within the turn). Mirrors the MCP `_meta`
+	// convention.
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// Structured content appended to the response.
+//
+// An {@link ErrorResponsePart} MUST be appended with {@link ChatErrorAction}
+// instead so adding the part and ending the turn are one atomic transition.
+type ChatResponsePartAction struct {
+	Type ActionType `json:"type"`
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Response part to append; error parts are ignored.
+	Part ResponsePart `json:"part"`
+	// Additional provider-specific metadata for this action.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI, and
+	// agent hosts MAY use it to carry per-event context that does not fit any
+	// other field — for example, attributing the event to a specific agent
+	// (such as a sub-agent acting within the turn). Mirrors the MCP `_meta`
+	// convention.
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// A tool call begins — parameters are streaming from the LM.
+//
+// The server sets {@link ToolCallContributor | `contributor`} to identify
+// the origin of the tool. For client-provided tools, the named client is
+// responsible for executing the tool once it reaches the `running` state
+// and dispatching `chat/toolCallComplete`. For MCP-served tools, the
+// server executes the call against the named `McpServerCustomization`.
+type ChatToolCallStartAction struct {
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Tool call identifier
+	ToolCallId string `json:"toolCallId"`
+	// Additional provider-specific metadata for this tool call.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI.
+	// For example, a `ptyTerminal` key with `{ input: string; output: string }`
+	// indicates the tool operated on a terminal (both `input` and `output` may
+	// contain escape sequences).
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+	Type ActionType                 `json:"type"`
+	// Internal tool name (for debugging/logging)
+	ToolName string `json:"toolName"`
+	// Human-readable tool name
+	DisplayName string `json:"displayName"`
+	// Human-readable description of what the tool invocation intends to do
+	Intention *string `json:"intention,omitempty"`
+	// Reference to the contributor of the tool being called. Absent for
+	// server-side tools that are not contributed by a client or MCP server.
+	Contributor *ToolCallContributor `json:"contributor,omitempty"`
+}
+
+// Streaming partial parameters for a tool call.
+type ChatToolCallDeltaAction struct {
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Tool call identifier
+	ToolCallId string `json:"toolCallId"`
+	// Additional provider-specific metadata for this tool call.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI.
+	// For example, a `ptyTerminal` key with `{ input: string; output: string }`
+	// indicates the tool operated on a terminal (both `input` and `output` may
+	// contain escape sequences).
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+	Type ActionType                 `json:"type"`
+	// Partial parameter content to append, if provided by the host.
+	Content *string `json:"content,omitempty"`
+	// Updated progress message
+	InvocationMessage *StringOrMarkdown `json:"invocationMessage,omitempty"`
+}
+
+// Tool call parameters are complete, or a running tool requires re-confirmation.
+//
+// When dispatched for a `streaming` tool call, transitions to `pending-confirmation`
+// or directly to `running` if `confirmed` is set.
+//
+// When dispatched for a `running` tool call (e.g. mid-execution permission needed),
+// transitions back to `pending-confirmation`. The `invocationMessage` and `_meta`
+// SHOULD be updated to describe the specific confirmation needed. Clients use the
+// standard `chat/toolCallConfirmed` flow to approve or deny.
+//
+// For client-provided tools, the server typically sets `confirmed` to
+// `'not-needed'` so the tool transitions directly to `running`, where the
+// owning client can begin execution immediately.
+type ChatToolCallReadyAction struct {
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Tool call identifier
+	ToolCallId string `json:"toolCallId"`
+	// Additional provider-specific metadata for this tool call.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI.
+	// For example, a `ptyTerminal` key with `{ input: string; output: string }`
+	// indicates the tool operated on a terminal (both `input` and `output` may
+	// contain escape sequences).
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+	Type ActionType                 `json:"type"`
+	// Final contributor metadata. MUST NOT change execution ownership established
+	// at `chat/toolCallStart`; a client contributor must keep the same `clientId`.
+	Contributor *ToolCallContributor `json:"contributor,omitempty"`
+	// Final human-readable description of what the tool invocation intends to do.
+	// When present, replaces the provisional intention from `chat/toolCallStart`.
+	Intention *string `json:"intention,omitempty"`
+	// Message describing what the tool will do or what confirmation is needed
+	InvocationMessage StringOrMarkdown `json:"invocationMessage"`
+	// Final tool input
+	ToolInput *ToolInput `json:"toolInput,omitempty"`
+	// Short title for the confirmation prompt (e.g. `"Run in terminal"`, `"Write file"`)
+	ConfirmationTitle *StringOrMarkdown `json:"confirmationTitle,omitempty"`
+	// Risk assessment that informed the confirmation requirement.
+	RiskAssessment *ToolCallRiskAssessment `json:"riskAssessment,omitempty"`
+	// File edits that this tool call will perform, for preview before confirmation
+	Edits *FileEditCollection `json:"edits,omitempty"`
+	// Whether the agent host allows the client to edit the tool's input parameters before confirming
+	Editable *bool `json:"editable,omitempty"`
+	// If set, the tool was auto-confirmed and transitions directly to `running`
+	Confirmed *ToolCallConfirmationReason `json:"confirmed,omitempty"`
+	// Options the server offers for this confirmation. When present, the client
+	// SHOULD render these instead of a plain approve/deny UI. Each option
+	// belongs to a {@link ConfirmationOptionGroup} so the client can still
+	// categorise the choices.
+	Options []ConfirmationOption `json:"options,omitempty"`
+}
+
+// ChatToolCallConfirmedAction is the client approves or denies a
+// pending tool call (merged approved + denied variants on the wire).
+type ChatToolCallConfirmedAction struct {
+	Type             ActionType                  `json:"type"`
+	TurnId           string                      `json:"turnId"`
+	ToolCallId       string                      `json:"toolCallId"`
+	Meta             map[string]json.RawMessage  `json:"_meta,omitempty"`
+	Approved         bool                        `json:"approved"`
+	Confirmed        *ToolCallConfirmationReason `json:"confirmed,omitempty"`
+	Reason           *ToolCallCancellationReason `json:"reason,omitempty"`
+	EditedToolInput  *string                     `json:"editedToolInput,omitempty"`
+	UserSuggestion   *Message                    `json:"userSuggestion,omitempty"`
+	ReasonMessage    *StringOrMarkdown           `json:"reasonMessage,omitempty"`
+	SelectedOptionId *string                     `json:"selectedOptionId,omitempty"`
+}
+
+// Tool execution finished. Transitions to `completed` or `pending-result-confirmation`
+// if `requiresResultConfirmation` is `true`.
+//
+// For client-provided tools (whose tool call state carries a client
+// `ToolCallContributor` with a `clientId`), the owning client dispatches this
+// action with the execution result. The server SHOULD reject this action if the
+// dispatching client does not match the contributor's `clientId`.
+//
+// Servers waiting on a client tool call MAY time out after a reasonable duration
+// if the implementing client disconnects or becomes unresponsive, and dispatch
+// this action with `result.success = false` and an appropriate error.
+//
+// A client MAY also dispatch this action with a **failed** result (
+// `result.success: false`) for a tool call currently in `auth-required`
+// status, to cancel that invocation without completing the pending MCP
+// authentication challenge. This always transitions the tool call straight
+// to `completed`, preserving the fields it had before pausing for auth;
+// `requiresResultConfirmation` is ignored for this transition; the
+// cancellation can never enter `pending-result-confirmation`, since there is
+// no real result to review.
+//
+// A **successful** result (`result.success: true`) is invalid for a tool
+// call in `auth-required` status — execution never resumed after the
+// challenge, so there's nothing that could have produced it. The reducer
+// MUST reject/ignore it as a no-op, leaving the tool call in
+// `auth-required`. The client must resolve the auth challenge
+// (`chat/toolCallAuthResolved`) before completing successfully.
+type ChatToolCallCompleteAction struct {
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Tool call identifier
+	ToolCallId string `json:"toolCallId"`
+	// Additional provider-specific metadata for this tool call.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI.
+	// For example, a `ptyTerminal` key with `{ input: string; output: string }`
+	// indicates the tool operated on a terminal (both `input` and `output` may
+	// contain escape sequences).
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+	Type ActionType                 `json:"type"`
+	// Execution result
+	Result ToolCallResult `json:"result"`
+	// If true, the result requires client approval before finalizing
+	RequiresResultConfirmation *bool `json:"requiresResultConfirmation,omitempty"`
+}
+
+// Client approves or denies a tool's result.
+//
+// If `approved` is `false`, the tool transitions to `cancelled` with reason `result-denied`.
+type ChatToolCallResultConfirmedAction struct {
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Tool call identifier
+	ToolCallId string `json:"toolCallId"`
+	// Additional provider-specific metadata for this tool call.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI.
+	// For example, a `ptyTerminal` key with `{ input: string; output: string }`
+	// indicates the tool operated on a terminal (both `input` and `output` may
+	// contain escape sequences).
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+	Type ActionType                 `json:"type"`
+	// Whether the result was approved
+	Approved bool `json:"approved"`
+}
+
+// Partial content produced while a tool is still executing.
+//
+// Replaces the `content` array on the running tool call state. Clients can
+// use this to display live feedback (e.g. a terminal reference) before the
+// tool completes.
+//
+// For client-provided tools (whose tool call state carries a client
+// `ToolCallContributor` with a `clientId`), the owning client dispatches this
+// action to stream intermediate content while executing. The server SHOULD
+// reject this action if the dispatching client does not match the contributor's
+// `clientId`.
+type ChatToolCallContentChangedAction struct {
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Tool call identifier
+	ToolCallId string `json:"toolCallId"`
+	// Additional provider-specific metadata for this tool call.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI.
+	// For example, a `ptyTerminal` key with `{ input: string; output: string }`
+	// indicates the tool operated on a terminal (both `input` and `output` may
+	// contain escape sequences).
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+	Type ActionType                 `json:"type"`
+	// The current partial content for the running tool call
+	Content []ToolResultContent `json:"content"`
+}
+
+// A running tool call is paused pending MCP authentication. Transitions the
+// tool call from `running` to `auth-required`.
+//
+// The server dispatches this when the MCP server backing the call responds
+// with a 401/403 challenge mid-execution (see
+// {@link McpAuthRequirement.reason | `insufficientScope`}). The host SHOULD
+// pair this with `session/inputNeededSet` (kind `toolAuthentication`) so the
+// block is visible at the session-summary level, mirroring
+// {@link McpServerAuthRequiredState}'s own `InputNeeded` guidance.
+//
+// Only valid for tool calls contributed by an MCP server — the reducer is a
+// no-op if the tool call's `contributor` is not
+// {@link ToolCallContributorKind.MCP | MCP-kind}.
+type ChatToolCallAuthRequiredAction struct {
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Tool call identifier
+	ToolCallId string `json:"toolCallId"`
+	// Additional provider-specific metadata for this tool call.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI.
+	// For example, a `ptyTerminal` key with `{ input: string; output: string }`
+	// indicates the tool operated on a terminal (both `input` and `output` may
+	// contain escape sequences).
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+	Type ActionType                 `json:"type"`
+	// The authentication challenge blocking this invocation.
+	Auth McpAuthRequirement `json:"auth"`
+}
+
+// The authentication challenge blocking a tool call has been resolved (the
+// client pushed a token via `authenticate` and the host validated it).
+// Transitions the tool call from `auth-required` back to `running`,
+// preserving the fields it had before pausing.
+//
+// The host SHOULD remove the corresponding `session/inputNeededSet` entry
+// (kind `toolAuthentication`) once this is dispatched.
+type ChatToolCallAuthResolvedAction struct {
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Tool call identifier
+	ToolCallId string `json:"toolCallId"`
+	// Additional provider-specific metadata for this tool call.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI.
+	// For example, a `ptyTerminal` key with `{ input: string; output: string }`
+	// indicates the tool operated on a terminal (both `input` and `output` may
+	// contain escape sequences).
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+	Type ActionType                 `json:"type"`
+}
+
+// Turn finished — the assistant is idle.
+type ChatTurnCompleteAction struct {
+	Type ActionType `json:"type"`
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Elapsed turn duration in milliseconds, measured by the producer's own
+	// clock. Clients MUST NOT derive this by subtracting timestamps — cross-
+	// client clocks may differ — and MUST treat it as opaque, producer-supplied
+	// data.
+	Duration int64 `json:"duration"`
+	// Additional provider-specific metadata for this action.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI, and
+	// agent hosts MAY use it to carry per-event context that does not fit any
+	// other field — for example, attributing the event to a specific agent
+	// (such as a sub-agent acting within the turn). Mirrors the MCP `_meta`
+	// convention.
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// Turn was aborted; server stops processing.
+type ChatTurnCancelledAction struct {
+	Type ActionType `json:"type"`
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Elapsed turn duration in milliseconds, measured by the producer's own
+	// clock. Clients MUST NOT derive this by subtracting timestamps — cross-
+	// client clocks may differ — and MUST treat it as opaque, producer-supplied
+	// data.
+	Duration int64 `json:"duration"`
+	// Additional provider-specific metadata for this action.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI, and
+	// agent hosts MAY use it to carry per-event context that does not fit any
+	// other field — for example, attributing the event to a specific agent
+	// (such as a sub-agent acting within the turn). Mirrors the MCP `_meta`
+	// convention.
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// Error during turn processing.
+type ChatErrorAction struct {
+	Type ActionType `json:"type"`
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Elapsed turn duration in milliseconds, measured by the producer's own
+	// clock. Clients MUST NOT derive this by subtracting timestamps — cross-
+	// client clocks may differ — and MUST treat it as opaque, producer-supplied
+	// data.
+	Duration int64 `json:"duration"`
+	// Error part to append to the response stream before finalizing the turn.
+	// Its optional `resumable` flag indicates whether the turn can be resumed.
+	Part ErrorResponsePart `json:"part"`
+	// Additional provider-specific metadata for this action.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI, and
+	// agent hosts MAY use it to carry per-event context that does not fit any
+	// other field — for example, attributing the event to a specific agent
+	// (such as a sub-agent acting within the turn). Mirrors the MCP `_meta`
+	// convention.
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// Resumes the latest errored turn without adding another message.
+//
+// The turn MUST be the latest turn, its state MUST be `error`, and its final
+// response part MUST be a resumable error. The reducer reopens the same turn
+// with its existing message, response parts, and usage intact. The host then
+// resumes the provider's execution for that turn.
+type ChatTurnResumeAction struct {
+	Type ActionType `json:"type"`
+	// Identifier of the errored turn.
+	TurnId string `json:"turnId"`
+}
+
+// The activity description of this chat changed.
+//
+// Dispatched by the server to indicate what the chat is currently doing
+// (e.g. running a tool, thinking). Clear activity by omitting it or setting it
+// to `undefined`.
+// Producers SHOULD also update the parent session's chat catalog with
+// `session/chatUpdated` so `ChatSummary.activity` stays in sync.
+type ChatActivityChangedAction struct {
+	Type ActionType `json:"type"`
+	// Human-readable description of current activity; omit or set `undefined` to clear
+	Activity *string `json:"activity,omitempty"`
+}
+
+// The {@link Changeset | catalogue of changesets} the agent host advertises
+// for this chat changed. Replaces
+// {@link ChatState.changesets | `state.changesets`} entirely
+// (full-replacement semantics) — set to `undefined` to clear the catalogue.
+//
+// Entries SHOULD describe Branch, Uncommitted Changes, or other views scoped
+// to the chat's effective {@link ChatState.workingDirectories | working
+// directories}. Clients subscribe to each advertised changeset URI for
+// file-level updates through the existing `changeset/*` action stream.
+type ChatChangesetsChangedAction struct {
+	Type ActionType `json:"type"`
+	// New catalogue, or `undefined` to clear it.
+	Changesets []Changeset `json:"changesets,omitempty"`
+}
+
+// Session title updated. Fired by the server when the title is auto-generated
+// from conversation, or dispatched by a client to rename a session.
+type SessionTitleChangedAction struct {
+	Type ActionType `json:"type"`
+	// New title
+	Title string `json:"title"`
+}
+
+// Token usage report for a turn.
+type ChatUsageAction struct {
+	Type ActionType `json:"type"`
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Token usage data
+	Usage UsageInfo `json:"usage"`
+	// Additional provider-specific metadata for this action.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI, and
+	// agent hosts MAY use it to carry per-event context that does not fit any
+	// other field — for example, attributing the event to a specific agent
+	// (such as a sub-agent acting within the turn). Mirrors the MCP `_meta`
+	// convention.
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// Reasoning/thinking text from the model, appended to a specific reasoning response part.
+//
+// The server MUST first emit a `chat/responsePart` to create the target
+// reasoning part, then use this action to append text to it.
+type ChatReasoningAction struct {
+	Type ActionType `json:"type"`
+	// Turn identifier
+	TurnId string `json:"turnId"`
+	// Identifier of the reasoning response part to append to
+	PartId string `json:"partId"`
+	// Reasoning text chunk
+	Content string `json:"content"`
+	// Additional provider-specific metadata for this action.
+	//
+	// Clients MAY look for well-known keys here to provide enhanced UI, and
+	// agent hosts MAY use it to carry per-event context that does not fit any
+	// other field — for example, attributing the event to a specific agent
+	// (such as a sub-agent acting within the turn). Mirrors the MCP `_meta`
+	// convention.
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// A pending message was set (upsert semantics: creates or replaces).
+//
+// For steering messages, this always replaces the single steering message.
+// For queued messages, if a message with the given `id` already exists it is
+// updated in place; otherwise it is appended to the queue. If the chat is
+// idle when a queued message is set, the server SHOULD immediately consume it
+// and start a new turn.
+//
+// A client is only allowed to send {@link MessageKind.User} messages.
+type ChatPendingMessageSetAction struct {
+	Type ActionType `json:"type"`
+	// Whether this is a steering or queued message
+	Kind PendingMessageKind `json:"kind"`
+	// Unique identifier for this pending message
+	Id string `json:"id"`
+	// The message content
+	Message Message `json:"message"`
+}
+
+// A pending message was removed (steering or queued).
+//
+// Dispatched by clients to cancel a pending message, or by the server when
+// it consumes a message (e.g. starting a turn from a queued message or
+// injecting a steering message into the current turn).
+type ChatPendingMessageRemovedAction struct {
+	Type ActionType `json:"type"`
+	// Whether this is a steering or queued message
+	Kind PendingMessageKind `json:"kind"`
+	// Identifier of the pending message to remove
+	Id string `json:"id"`
+}
+
+// Reorder the queued messages.
+//
+// The `order` array contains the IDs of queued messages in their new
+// desired order. IDs not present in the current queue are ignored.
+// Queued messages whose IDs are absent from `order` are appended at
+// the end in their original relative order (so a client with a stale
+// view of the queue never silently drops messages).
+type ChatQueuedMessagesReorderedAction struct {
+	Type ActionType `json:"type"`
+	// Queued message IDs in the desired order
+	Order []string `json:"order"`
+}
+
+// The chat's draft input changed.
+//
+// Clients MAY periodically sync their local input state — the message the user
+// is composing, including its {@link Message.model | model} /
+// {@link Message.agent | agent} selection and attachments — into the chat's
+// {@link ChatState.draft | `draft`} so it survives reloads and is visible to
+// other clients viewing the same chat. Eager syncing is **not** required;
+// clients SHOULD debounce and MAY sync only at convenient points. Set `draft`
+// to `undefined` to clear it (e.g. once the message is sent).
+//
+// A client is only allowed to draft {@link MessageKind.User} messages.
+type ChatDraftChangedAction struct {
+	Type ActionType `json:"type"`
+	// New draft message, or `undefined` to clear it
+	Draft *Message `json:"draft,omitempty"`
+}
+
+// The archived state of the chat changed.
+//
+// Dispatched by a client to archive a chat independently of its owning
+// session or to restore it. Archiving the session's default chat is equivalent
+// to archiving the session and SHOULD use `session/isArchivedChanged` instead.
+type ChatIsArchivedChangedAction struct {
+	Type ActionType `json:"type"`
+	// Whether the chat is archived
+	IsArchived bool `json:"isArchived"`
+}
+
+// A session requested input from the user.
+//
+// Creates an unresolved {@link InputRequestResponsePart} in the active turn,
+// or replaces the unresolved part with the same request `id`. Answer drafts
+// are preserved unless `request.answers` is provided.
+type ChatInputRequestedAction struct {
+	Type ActionType `json:"type"`
+	// Input request to create or replace
+	Request ChatInputRequest `json:"request"`
+}
+
+// A client updated, submitted, skipped, or removed a single in-progress answer.
+//
+// Dispatching with `answer: undefined` removes that question's answer draft.
+type ChatInputAnswerChangedAction struct {
+	Type ActionType `json:"type"`
+	// Input request identifier
+	RequestId string `json:"requestId"`
+	// Question identifier within the input request
+	QuestionId string `json:"questionId"`
+	// Updated answer, or `undefined` to clear an answer draft
+	Answer *ChatInputAnswer `json:"answer,omitempty"`
+}
+
+// A client submitted an accept, decline, or cancel response to an input request.
+//
+// If accepted, the server uses `answers` (when provided) plus the request's
+// synced answer state to resume the blocked operation. The reducer records the
+// response and final answers on the existing {@link InputRequestResponsePart}.
+type ChatInputCompletedAction struct {
+	Type ActionType `json:"type"`
+	// Input request identifier
+	RequestId string `json:"requestId"`
+	// Completion outcome
+	Response ChatInputResponseKind `json:"response"`
+	// Optional final answer replacement, keyed by question ID
+	Answers map[string]ChatInputAnswer `json:"answers,omitempty"`
+}
+
+// Truncates a session's history. If `turnId` is provided, all turns after that
+// turn are removed and the specified turn is kept. If `turnId` is omitted, all
+// turns are removed.
+//
+// If there is an active turn it is silently dropped and the chat status
+// returns to `idle`.
+//
+// Common use-case: truncate old data then dispatch a new
+// `chat/turnStarted` with an edited message.
+type ChatTruncatedAction struct {
+	Type ActionType `json:"type"`
+	// Keep turns up to and including this turn. Omit to clear all turns.
+	TurnId *string `json:"turnId,omitempty"`
+}
+
+// Loads older completed turns into this chat's state.
+//
+// Hosts dispatch this before responding to `fetchTurns`, and before applying
+// any operation that references a turn older than the currently loaded window.
+// `turns` is ordered oldest-first and is prepended to the current `turns`
+// window. `turnsNextCursor` replaces the state's cursor; omit it when all
+// retained turns are now loaded.
+type ChatTurnsLoadedAction struct {
+	Type ActionType `json:"type"`
+	// Older completed turns loaded into the state, ordered oldest-first.
+	Turns []Turn `json:"turns"`
+	// Opaque cursor for loading the next older page, if one remains.
+	TurnsNextCursor *string `json:"turnsNextCursor,omitempty"`
+}
+
+// The read state of the session changed.
+//
+// Dispatched by a client to mark a session as read (e.g. after viewing it)
+// or unread (e.g. after new activity since the client last looked at it).
+type SessionIsReadChangedAction struct {
+	Type ActionType `json:"type"`
+	// Whether the session has been read
+	IsRead bool `json:"isRead"`
+}
+
+// The archived state of the session changed.
+//
+// Dispatched by a client to archive a session (e.g. the task is
+// complete) or to unarchive it.
+type SessionIsArchivedChangedAction struct {
+	Type ActionType `json:"type"`
+	// Whether the session is archived
+	IsArchived bool `json:"isArchived"`
+}
+
+// The activity description of the session changed.
+//
+// Dispatched by the server to indicate what the session is currently doing
+// (e.g. running a tool, thinking). Clear activity by setting it to `undefined`.
+type SessionActivityChangedAction struct {
+	Type ActionType `json:"type"`
+	// Human-readable description of current activity, or `undefined` to clear
+	Activity *string `json:"activity,omitempty"`
+}
+
+// The {@link Changeset | catalogue of changesets} the agent host
+// advertises for this session changed. Replaces
+// {@link SessionState.changesets | `state.changesets`} entirely
+// (full-replacement semantics) — set to `undefined` to clear the
+// catalogue.
+//
+// Producers dispatch this whenever entries are added or removed. The
+// fan-out happens through this action so observers see catalogue
+// mutations in the same {@link ChangesetAction | per-changeset} action
+// stream they already follow for file-level updates.
+type SessionChangesetsChangedAction struct {
+	Type ActionType `json:"type"`
+	// New catalogue, or `undefined` to clear it
+	Changesets []Changeset `json:"changesets,omitempty"`
+}
+
+// Server tools for this session have changed.
+//
+// Full-replacement semantics: the `tools` array replaces the previous `serverTools` entirely.
+type SessionServerToolsChangedAction struct {
+	Type ActionType `json:"type"`
+	// Updated server tools list (full replacement)
+	Tools []ToolDefinition `json:"tools"`
+}
+
+// An active client for this session was added or updated.
+//
+// Upsert semantics keyed by {@link SessionActiveClient.clientId | `clientId`}:
+// a client dispatches this action with its own `SessionActiveClient` to join
+// the session's active clients or refresh its entry, replacing any existing
+// entry that has the same `clientId`. Multiple clients may be active at once.
+// This is also how a client updates its published tools or customizations —
+// re-dispatch with the full, updated entry. Use
+// {@link SessionActiveClientRemovedAction | `session/activeClientRemoved`} to
+// leave. The server SHOULD automatically dispatch that removal when an active
+// client disconnects.
+type SessionActiveClientSetAction struct {
+	Type ActionType `json:"type"`
+	// The active client to add or update, matched by `clientId`.
+	ActiveClient SessionActiveClient `json:"activeClient"`
+}
+
+// An active client was removed from this session.
+//
+// Removes the entry for the client identified by `clientId` from
+// {@link SessionState.activeClients}; a no-op when no entry matches.
+//
+// The host SHOULD dispatch this automatically when a client stops participating
+// in the session — for example when it unsubscribes from the session channel,
+// when it disconnects and does not reconnect within a host-defined grace
+// period, or when a `reconnect` command's `subscriptions` omit a session the
+// client was still active in. When removing a client, the host SHOULD also
+// cancel that client's in-flight tool calls — those whose tool call state
+// carries a client `ToolCallContributor` with the matching `clientId` — by
+// dispatching `chat/toolCallComplete` with `result.success = false`. (There is
+// no per-tool-call server cancel; a failed completion is the cancellation
+// mechanism, and the call ends in `completed` status with a failed result.)
+type SessionActiveClientRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The `clientId` of the active client to remove.
+	ClientId string `json:"clientId"`
+}
+
+// A working directory was added to the session's
+// {@link SessionState.workingDirectories} set.
+//
+// Membership semantics keyed by the directory URI: the reducer appends
+// `directory` when the set does not already contain it (creating the set if
+// absent) and is a no-op when it is already present. Only valid when the agent
+// advertises {@link AgentCapabilities.multipleWorkingDirectories}.
+type SessionWorkingDirectorySetAction struct {
+	Type ActionType `json:"type"`
+	// The working directory to grant the session's agent tool access to.
+	Directory URI `json:"directory"`
+}
+
+// A working directory was removed from the session's
+// {@link SessionState.workingDirectories} set.
+//
+// Removes `directory` from the set; a no-op when it is not present. There is no
+// atomic backend "remove one" primitive — a host reconfigures its agent to the
+// reduced set — so this action is safe to model as idempotent. A host MAY
+// decline to apply the removal (e.g. an immutable primary directory, see
+// {@link MultipleWorkingDirectoriesCapability.immutablePrimary}); it then leaves
+// the set unchanged. When the agent advertises
+// {@link MultipleWorkingDirectoriesCapability.primaryReplacement}, clients MUST
+// NOT use this generic membership action to remove index `0`; the host MUST
+// reject such a removal, leaving the protected slot intact.
+type SessionWorkingDirectoryRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The working directory to revoke the session's agent tool access to.
+	Directory URI `json:"directory"`
+}
+
+// Atomically replaces one of the session's working directories.
+//
+// This is a targeted compare-and-swap: the reducer is a no-op when
+// {@link SessionState.workingDirectories} does not contain `directory`.
+// Otherwise it replaces that entry with `replacement` and deduplicates the
+// result, preserving every other directory's relative order. When
+// `replacement` occurs after the target, it moves to the target's position;
+// for example, `[A, B, C]` with `B → C` becomes `[A, C]`. When it occurs
+// before the target, it retains its earlier position and the target is removed;
+// `[A, B, C]` with `C → A` becomes `[A, B]`.
+//
+// Only valid when the agent advertises
+// {@link AgentCapabilities.multipleWorkingDirectories}. Replacing index `0`
+// additionally requires
+// {@link MultipleWorkingDirectoriesCapability.primaryReplacement}; clients
+// MUST NOT target an immutable primary. The host MUST validate and apply its
+// backend side effect before broadcasting an accepted action, or reject it.
+type SessionWorkingDirectoryReplacedAction struct {
+	Type ActionType `json:"type"`
+	// URI of the existing entry to replace.
+	Directory URI `json:"directory"`
+	// URI to place in the replaced entry's position.
+	Replacement URI `json:"replacement"`
+}
+
+// A working directory was added to this chat's
+// {@link ChatState.workingDirectories} subset.
+//
+// Membership semantics keyed by the directory URI: the reducer appends
+// `directory` when the chat's subset does not already contain it (creating the
+// subset if absent) and is a no-op when it is already present. `directory` MUST
+// be one of the owning session's {@link SessionState.workingDirectories}; a host
+// MUST reject a directory that is not. Only valid when the agent advertises
+// {@link AgentCapabilities.multipleWorkingDirectories}.
+type ChatWorkingDirectorySetAction struct {
+	Type ActionType `json:"type"`
+	// The working directory to add to this chat's subset.
+	Directory URI `json:"directory"`
+}
+
+// A working directory was removed from this chat's
+// {@link ChatState.workingDirectories} subset.
+//
+// Removes `directory` from the chat's subset; a no-op when it is not present.
+// Idempotent, mirroring `session/workingDirectoryRemoved`. Only affects the
+// chat's subset — the directory remains in the session's set.
+type ChatWorkingDirectoryRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The working directory to remove from this chat's subset.
+	Directory URI `json:"directory"`
+}
+
+// A session-level input request was added or updated.
+//
+// Upsert semantics keyed by {@link SessionInputRequest.id | `request.id`}: the
+// host dispatches this with the full {@link SessionInputRequest} to append a new
+// entry to {@link SessionState.inputNeeded} or replace the existing entry with
+// the same `id`.
+//
+// Server-originated: the host mirrors chat-level requests (elicitations, tool
+// confirmations, client-tool executions) into the session aggregate so clients
+// subscribed only to the session channel can discover them. Clients respond by
+// dispatching the ordinary `chat/*` action to the entry's `chat` channel — see
+// {@link SessionInputRequest}.
+type SessionInputNeededSetAction struct {
+	Type ActionType `json:"type"`
+	// The input request to add or update, matched by `id`.
+	Request SessionInputRequest `json:"request"`
+}
+
+// A session-level input request was removed.
+//
+// Removes the entry identified by `id` from
+// {@link SessionState.inputNeeded}; a no-op when no entry matches.
+//
+// Server-originated: the host dispatches this once the underlying request
+// resolves (the user answers, the tool call is confirmed, or the client
+// reports its result).
+type SessionInputNeededRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The `id` of the input request to remove.
+	Id string `json:"id"`
+}
+
+// The session's customizations have changed.
+//
+// Full-replacement semantics: the `customizations` array replaces the
+// previous `customizations` entirely.
+type SessionCustomizationsChangedAction struct {
+	Type ActionType `json:"type"`
+	// Updated customization list (full replacement).
+	Customizations []Customization `json:"customizations"`
+}
+
+// A client updated a customization's enablement decisions.
+//
+// Matches `id` against every top-level customization first — a plugin or
+// directory container, or a bare top-level MCP server — then against the
+// children inside each container (a skill, agent, or other entry). Plugins
+// and MCP servers retain the matched entry's explicit decisions; other
+// entries update their `enabled` flag. Disabling a plugin still disables all
+// of its children — the effective state of a plugin child is the plugin's
+// derived enabled value and `(child.enabled ?? true)` — so toggling a child
+// only matters while its plugin is enabled. Is a no-op when no
+// customization has the given `id`.
+//
+// The `enablement` array completely replaces all explicit decisions. A caller
+// changing one scope must include every decision it intends to preserve.
+type SessionCustomizationToggledAction struct {
+	Type ActionType `json:"type"`
+	// The id of the container or child to update.
+	Id string `json:"id"`
+	// Explicit enablement decisions, replacing the previous list entirely.
+	Enablement []CustomizationEnablement `json:"enablement"`
+}
+
+// Upserts a top-level customization (plugin or directory).
+//
+// The reducer locates the existing entry by `customization.id`:
+//
+//   - If found, the entry is replaced entirely with `customization`,
+//     including its `children` array. To preserve existing children, the
+//     host must include them on the payload.
+//   - If not found, the entry is appended.
+type SessionCustomizationUpdatedAction struct {
+	Type ActionType `json:"type"`
+	// The customization to upsert (matched by `customization.id`).
+	Customization Customization `json:"customization"`
+}
+
+// Removes a customization by id.
+//
+// Searches every container and its children for the entry. If the entry
+// is a container, its children are removed with it. Is a no-op when no
+// matching id is found.
+type SessionCustomizationRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The id of the customization to remove.
+	Id string `json:"id"`
+}
+
+// Updates the runtime fields of an existing
+// {@link McpServerCustomization} — narrow alternative to
+// {@link SessionCustomizationUpdatedAction} for the high-frequency
+// `starting` ↔ `ready` ↔ `authRequired` transitions.
+//
+// Locates the target entry by `id`, searching both the top-level
+// customization list and the `children` array of every container.
+// Replaces the entry's {@link McpServerCustomization.state | `state`}
+// and {@link McpServerCustomization.channel | `channel`}
+// (full-replacement semantics: omit `channel` to clear an existing
+// channel URI). Other fields of the customization are preserved.
+//
+// Is a no-op when no matching `McpServerCustomization` is found. To
+// update any other field (name, icons, `mcpApp` capabilities, etc.) use
+// {@link SessionCustomizationUpdatedAction} instead.
+//
+// When the transition is to {@link McpServerStatus.AuthRequired}
+// because of a request issued mid-turn, the host SHOULD also raise
+// {@link SessionStatus.InputNeeded} on the session — see
+// {@link McpServerAuthRequiredState} for the rationale.
+type SessionMcpServerStateChangedAction struct {
+	Type ActionType `json:"type"`
+	// The id of the {@link McpServerCustomization} to update.
+	Id string `json:"id"`
+	// The new lifecycle state.
+	State McpServerState `json:"state"`
+	// Updated `mcp://` side-channel URI. Full-replacement: omit to clear
+	// an existing channel (typical when leaving
+	// {@link McpServerStatus.Ready | `Ready`}).
+	Channel *URI `json:"channel,omitempty"`
+}
+
+// Requests that the host start or restart an existing
+// {@link McpServerCustomization}.
+//
+// Locates the target entry by `id`, searching both the top-level
+// customization list and the `children` array of every container. The
+// reducer optimistically moves the server to
+// {@link McpServerStatus.Starting | `starting`} and clears any previous
+// {@link McpServerCustomization.channel | `channel`}; the host remains
+// authoritative and SHOULD follow with
+// {@link SessionMcpServerStateChangedAction | `session/mcpServerStateChanged`}
+// once the server becomes ready, needs authentication, fails, or is
+// rejected. Is a no-op when no matching `McpServerCustomization` is found.
+type SessionMcpServerStartRequestedAction struct {
+	Type ActionType `json:"type"`
+	// The id of the {@link McpServerCustomization} to start.
+	Id string `json:"id"`
+}
+
+// Requests that the host stop an existing {@link McpServerCustomization}.
+//
+// Locates the target entry by `id`, searching both the top-level
+// customization list and the `children` array of every container. The
+// reducer optimistically moves the server to
+// {@link McpServerStatus.Stopped | `stopped`} and clears any previous
+// {@link McpServerCustomization.channel | `channel`}. Replacing an
+// {@link McpServerStatus.AuthRequired | `authRequired`} lifecycle state with
+// `stopped` unblocks the server from waiting on authentication. If the host
+// also raised session-level input-needed state solely for that MCP server, it
+// SHOULD remove that input-needed entry when accepting the stop.
+//
+// The host remains authoritative and MAY reject the action or follow with
+// {@link SessionMcpServerStateChangedAction | `session/mcpServerStateChanged`}
+// if the final lifecycle state differs. Is a no-op when no matching
+// `McpServerCustomization` is found.
+type SessionMcpServerStopRequestedAction struct {
+	Type ActionType `json:"type"`
+	// The id of the {@link McpServerCustomization} to stop.
+	Id string `json:"id"`
+}
+
+// Requests that the host background the startup of an existing
+// {@link McpServerCustomization} that is currently blocking message
+// processing (see {@link McpServerStartingState.blocking}), so that new
+// messages can be processed without waiting for the server to finish
+// starting.
+//
+// The server keeps starting in the background; backgrounding only stops the
+// host from holding message processing on it.
+//
+// Locates the target entry by `id`, searching both the top-level
+// customization list and the `children` array of every container. When the
+// server is {@link McpServerStatus.Starting | `starting`} with
+// `blocking: true`, the reducer optimistically sets `blocking` to `false`,
+// preserving the rest of the entry. Is a no-op otherwise (no matching
+// `McpServerCustomization`, a different lifecycle state, or not blocking).
+// The host remains authoritative and MAY reject the request by following with
+// {@link SessionMcpServerStateChangedAction | `session/mcpServerStateChanged`}
+// restoring `blocking: true`.
+type SessionMcpServerBackgroundRequestedAction struct {
+	Type ActionType `json:"type"`
+	// The id of the {@link McpServerCustomization} to background.
+	Id string `json:"id"`
+}
+
+// Client changed a mutable config value mid-session.
+//
+// Only properties with `sessionMutable: true` in the config schema may be
+// changed. The server validates and broadcasts the action; the reducer merges
+// the new values into `state.config.values`.
+type SessionConfigChangedAction struct {
+	Type ActionType `json:"type"`
+	// Updated config values
+	Config map[string]json.RawMessage `json:"config"`
+	// When `true`, replaces all config values instead of merging
+	Replace *bool `json:"replace,omitempty"`
+}
+
+// The session's `_meta` side-channel changed. Replaces `state._meta`
+// entirely (full-replacement semantics). Producers SHOULD merge any
+// keys they wish to preserve into the new value before dispatching.
+type SessionMetaChangedAction struct {
+	Type ActionType `json:"type"`
+	// New `_meta` payload, or `undefined` to clear it
+	Meta map[string]json.RawMessage `json:"_meta,omitempty"`
+}
+
+// The {@link ChangesetState.status} for this changeset transitioned (e.g.
+// `computing → ready` or `recomputing → ready`). The error payload is set
+// together with `status` whenever it transitions to
+// {@link ChangesetStatus.Error | Error}.
+type ChangesetStatusChangedAction struct {
+	Type ActionType `json:"type"`
+	// New computation lifecycle status.
+	Status ChangesetStatus `json:"status"`
+	// Cause when `status === ChangesetStatus.Error`; otherwise omitted.
+	Error *ErrorInfo `json:"error,omitempty"`
+}
+
+// Upsert a {@link ChangesetFile} in the changeset — adds a new entry, or
+// replaces an existing one identified by {@link ChangesetFile.id}.
+type ChangesetFileSetAction struct {
+	Type ActionType `json:"type"`
+	// The new or replacement file entry.
+	File ChangesetFile `json:"file"`
+}
+
+// Remove a {@link ChangesetFile} from the changeset by its id.
+//
+// Typically dispatched when a file is reverted, staged out, or otherwise
+// no longer in scope (e.g. a renamed file is replaced by a new entry).
+type ChangesetFileRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The {@link ChangesetFile.id} of the file to remove.
+	FileId string `json:"fileId"`
+}
+
+// Set the {@link ChangesetFile.reviewed} flag for one or more files — the
+// GitHub-style "Viewed" toggle, applied in a single batch.
+//
+// Targets files by their {@link ChangesetFile.id}. Ids in {@link files} that
+// do not match a file currently present in the changeset are ignored; if none
+// match, the action is a no-op. Only the {@link ChangesetFile.reviewed} field
+// of each matched file is affected; the files' {@link ChangesetFile.edit | edit}
+// and {@link ChangesetFile._meta | _meta} are left untouched.
+//
+// Only meaningful on a changeset that advertises
+// {@link ChangesetCapabilities.review}. Unlike every other `changeset/*` action
+// this one is **client-dispatchable**: a reviewer toggles review state directly,
+// applying it optimistically through the write-ahead reducer and letting the
+// server echo it back on the normal `action` envelope stream. The server MAY
+// also originate it (e.g. an agent marking its own output reviewed).
+//
+// There is no protocol-level content version, so review is not reset
+// automatically when a file's contents change under a stable id. The server,
+// which is the authority on what changed, resets review explicitly — either by
+// re-emitting the file without `reviewed: true`, or by dispatching this action
+// with `reviewed: false`.
+type ChangesetFilesReviewChangedAction struct {
+	Type ActionType `json:"type"`
+	// The {@link ChangesetFile.id | ids} of the files whose review state changed.
+	Files []string `json:"files"`
+	// New review state applied to every listed file: `true` once reviewed, `false` to clear it.
+	Reviewed bool `json:"reviewed"`
+}
+
+// The changeset's full content changed. Full replacement semantics: `files`
+// replaces the previous file list, and `operations`, when present, replaces
+// the previous operation list.
+//
+// Producers SHOULD use this action for initial snapshots and bulk refreshes;
+// use {@link ChangesetFileSetAction}, {@link ChangesetFileRemovedAction}, and
+// {@link ChangesetOperationsChangedAction} for incremental updates.
+type ChangesetContentChangedAction struct {
+	Type ActionType `json:"type"`
+	// Full replacement file list.
+	Files []ChangesetFile `json:"files"`
+	// Full replacement operation list. Omit when operations are unchanged.
+	Operations []ChangesetOperation `json:"operations,omitempty"`
+}
+
+// The set of operations available on this changeset changed. Full
+// replacement semantics: `operations` replaces the previous list (or
+// removes it entirely when `operations` is `undefined`).
+type ChangesetOperationsChangedAction struct {
+	Type ActionType `json:"type"`
+	// Updated operation list. Pass `undefined` to clear all operations.
+	Operations []ChangesetOperation `json:"operations,omitempty"`
+}
+
+// The {@link ChangesetOperation.status} for a single operation transitioned
+// (e.g. `idle → running → idle`, or `running → error`). The error payload
+// is set together with `status` whenever it transitions to
+// {@link ChangesetOperationStatus.Error | Error}, and cleared on any other
+// transition.
+//
+// Targets one operation by its {@link ChangesetOperation.id}. If no
+// operation with that id is currently present in the changeset, the action
+// is a no-op. Use {@link ChangesetOperationsChangedAction} to add, remove,
+// or otherwise replace the operation list itself.
+type ChangesetOperationStatusChangedAction struct {
+	Type ActionType `json:"type"`
+	// The {@link ChangesetOperation.id} whose status changed.
+	OperationId string `json:"operationId"`
+	// New execution status.
+	Status ChangesetOperationStatus `json:"status"`
+	// Cause when `status === ChangesetOperationStatus.Error`; otherwise omitted.
+	Error *ErrorInfo `json:"error,omitempty"`
+}
+
+// Drop every file from the changeset.
+//
+// Two cases use this:
+//  1. The underlying source moved (branch switched, fork point invalidated,
+//     …) and the server is recomputing from scratch — subsequent
+//     {@link ChangesetFileSetAction} entries will repopulate it.
+//  2. The owning session has ended and the URI is becoming
+//     un-subscribable — the server will unsubscribe all clients shortly
+//     after dispatching this action.
+//
+// Clients SHOULD release any references on receipt and SHOULD NOT
+// distinguish the two cases from the action alone — instead, react to
+// the corresponding session-level lifecycle signal (e.g.
+// `root/sessionRemoved`) for the "going away" case.
+type ChangesetClearedAction struct {
+	Type ActionType `json:"type"`
+}
+
+// Upsert an {@link Annotation} in the annotations channel — adds a new
+// annotation, or replaces an existing one identified by
+// {@link Annotation.id}.
+//
+// Dispatched by a client to create an annotation (together with its
+// mandatory first entry) or to re-anchor / resolve an existing one; the
+// dispatching client assigns the {@link Annotation.id} and the id of any
+// new entry. When replacing, the full annotation payload (including its
+// {@link Annotation.entries | entries} list) is substituted; producers
+// SHOULD prefer {@link AnnotationsEntrySetAction} for per-entry edits, and
+// {@link AnnotationsUpdatedAction} to resolve / re-anchor an existing
+// annotation, to keep wire updates small.
+type AnnotationsSetAction struct {
+	Type ActionType `json:"type"`
+	// The new or replacement annotation. MUST contain at least one entry.
+	Annotation Annotation `json:"annotation"`
+}
+
+// Partially update an existing {@link Annotation}'s own properties — a narrow
+// alternative to {@link AnnotationsSetAction} for the common case of resolving
+// / re-opening or re-anchoring an annotation without resending its
+// {@link Annotation.entries | entries}.
+//
+// Targets one annotation by its {@link annotationId}. Only the fields present
+// on the action are written; omitted fields leave the corresponding
+// {@link Annotation} property unchanged. The annotation's
+// {@link Annotation.entries | entries}, {@link Annotation.id | id}, and
+// {@link Annotation._meta | _meta} are never touched — dispatch
+// {@link AnnotationsSetAction} to replace those, to clear {@link range}
+// (re-anchor to the whole file), or {@link AnnotationsEntrySetAction} /
+// {@link AnnotationsEntryRemovedAction} to edit individual entries.
+//
+// If {@link annotationId} does not match any current annotation the action is
+// a no-op.
+type AnnotationsUpdatedAction struct {
+	Type ActionType `json:"type"`
+	// The {@link Annotation.id} of the annotation to update.
+	AnnotationId string `json:"annotationId"`
+	// Replaces the annotation's provenance. Omit to leave it unchanged.
+	Origin *AnnotationOrigin `json:"origin,omitempty"`
+	// Re-anchors the annotation to this file. Omit to leave the current
+	// {@link Annotation.resource} unchanged.
+	Resource *URI `json:"resource,omitempty"`
+	// Narrows the annotation to this range within {@link resource}. Omit to
+	// leave the current {@link Annotation.range} unchanged; this action cannot
+	// clear an existing range — dispatch {@link AnnotationsSetAction} to
+	// re-anchor to the whole file.
+	Range *TextRange `json:"range,omitempty"`
+	// Marks the annotation resolved (`true`) or re-opens it (`false`). Omit to
+	// leave the current {@link Annotation.resolved} state unchanged.
+	Resolved *bool `json:"resolved,omitempty"`
+}
+
+// Remove an {@link Annotation} from the channel by its id.
+//
+// Dispatched to delete an entire annotation and every entry it contains.
+// Because the protocol forbids empty annotations, a client that wants to
+// remove the last remaining entry dispatches this action — collapsing the
+// annotation — rather than {@link AnnotationsEntryRemovedAction}.
+type AnnotationsRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The {@link Annotation.id} of the annotation to remove.
+	AnnotationId string `json:"annotationId"`
+}
+
+// Upsert an {@link AnnotationEntry} within an existing annotation — adds a
+// new entry, or replaces one identified by {@link AnnotationEntry.id}. The
+// dispatching client assigns the {@link AnnotationEntry.id} of a new entry.
+// If {@link annotationId} does not match any current annotation the action
+// is a no-op.
+type AnnotationsEntrySetAction struct {
+	Type ActionType `json:"type"`
+	// The {@link Annotation.id} the entry belongs to.
+	AnnotationId string `json:"annotationId"`
+	// The new or replacement entry.
+	Entry AnnotationEntry `json:"entry"`
+}
+
+// Remove a single {@link AnnotationEntry} from an annotation without
+// collapsing the annotation itself. Used when more than one entry remains —
+// to remove the last entry a client dispatches {@link AnnotationsRemovedAction}
+// instead, since the protocol forbids empty annotations.
+//
+// If either {@link annotationId} or {@link entryId} does not match the
+// current state the action is a no-op.
+type AnnotationsEntryRemovedAction struct {
+	Type ActionType `json:"type"`
+	// The {@link Annotation.id} the entry belongs to.
+	AnnotationId string `json:"annotationId"`
+	// The {@link AnnotationEntry.id} to remove.
+	EntryId string `json:"entryId"`
+}
+
+// Fired when the list of known terminals changes.
+//
+// Full-replacement semantics: the `terminals` array replaces the previous
+// `terminals` entirely.
+type RootTerminalsChangedAction struct {
+	Type ActionType `json:"type"`
+	// Updated terminal list (full replacement)
+	Terminals []TerminalInfo `json:"terminals"`
+}
+
+// Terminal output data (pty → client direction).
+//
+// Appends `data` to the terminal's `content` in the reducer.
+//
+// `terminal/data` and `terminal/input` are intentionally separate actions
+// because standard write-ahead reconciliation is not safe for terminal I/O.
+// A pty is a stateful, mutable process — optimistically applying input or
+// predicting output would produce incorrect state. Instead, `terminal/input`
+// is a side-effect-only action (client → server → pty), and `terminal/data`
+// is server-authoritative output (pty → server → client).
+type TerminalDataAction struct {
+	Type ActionType `json:"type"`
+	// Output data (may contain ANSI escape sequences)
+	Data string `json:"data"`
+}
+
+// Keyboard input sent to the terminal process (client → pty direction).
+//
+// This is a side-effect-only action: the server forwards the data to the
+// terminal's pty. The reducer treats this as a no-op since `terminal/data`
+// actions will reflect any resulting output.
+//
+// See `terminal/data` for why these two actions are kept separate.
+type TerminalInputAction struct {
+	Type ActionType `json:"type"`
+	// Input data to send to the pty
+	Data string `json:"data"`
+}
+
+// Terminal dimensions changed.
+//
+// Dispatchable by clients to request a resize, or by the server to inform
+// clients of the actual terminal dimensions.
+type TerminalResizedAction struct {
+	Type ActionType `json:"type"`
+	// Terminal width in columns
+	Cols int64 `json:"cols"`
+	// Terminal height in rows
+	Rows int64 `json:"rows"`
+}
+
+// Terminal claim changed. A client or session transfers ownership of the terminal.
+//
+// The server SHOULD reject if the dispatching client does not currently hold
+// the claim.
+type TerminalClaimedAction struct {
+	Type ActionType `json:"type"`
+	// The new claim
+	Claim TerminalClaim `json:"claim"`
+}
+
+// Terminal title changed.
+//
+// Fired by the server when the terminal process updates its title (e.g. via
+// escape sequences), or dispatched by a client to rename a terminal.
+type TerminalTitleChangedAction struct {
+	Type ActionType `json:"type"`
+	// New terminal title
+	Title string `json:"title"`
+}
+
+// Terminal working directory changed.
+type TerminalCwdChangedAction struct {
+	Type ActionType `json:"type"`
+	// New working directory
+	Cwd URI `json:"cwd"`
+}
+
+// Terminal process exited.
+type TerminalExitedAction struct {
+	Type ActionType `json:"type"`
+	// Process exit code. `undefined` if the process was killed without an exit code.
+	ExitCode *int64 `json:"exitCode,omitempty"`
+}
+
+// Terminal scrollback buffer cleared.
+type TerminalClearedAction struct {
+	Type ActionType `json:"type"`
+}
+
+// Shell integration has loaded and the terminal now supports command
+// detection. The server dispatches this when shell integration becomes
+// available (which may happen asynchronously after the terminal is created).
+//
+// Clients MUST NOT assume command detection is available until this action
+// (or `terminal/commandExecuted`) has been received.
+type TerminalCommandDetectionAvailableAction struct {
+	Type ActionType `json:"type"`
+}
+
+// A command has been submitted to the shell and is now executing.
+// All subsequent `terminal/data` actions (until the matching
+// `terminal/commandFinished`) constitute this command's output.
+type TerminalCommandExecutedAction struct {
+	Type ActionType `json:"type"`
+	// Stable identifier for this command, scoped to the terminal URI.
+	// Allows correlating `commandExecuted` → `commandFinished` pairs.
+	CommandId string `json:"commandId"`
+	// The command line text that was submitted
+	CommandLine string `json:"commandLine"`
+	// Unix timestamp (ms) of when the command started executing, as measured
+	// on the server.
+	Timestamp int64 `json:"timestamp"`
+}
+
+// A command has finished executing.
+//
+// The sequence of `terminal/data` actions between the preceding
+// `terminal/commandExecuted` (same `commandId`) and this action constitutes
+// the complete output of the command.
+type TerminalCommandFinishedAction struct {
+	Type ActionType `json:"type"`
+	// Matches the `commandId` from the corresponding `commandExecuted`
+	CommandId string `json:"commandId"`
+	// Shell exit code. `undefined` if the shell did not report one.
+	ExitCode *int64 `json:"exitCode,omitempty"`
+	// Wall-clock duration of the command in milliseconds, as measured by the
+	// shell integration script on the server side.
+	DurationMs *int64 `json:"durationMs,omitempty"`
+}
+
+// A batch of resource changes observed by the watcher.
+//
+// Watch events are coalesced into batches by the server to keep the
+// action stream tractable; an empty `changes.items` list MUST NOT be
+// dispatched. The reducer does not retain change history — these
+// actions exist purely to deliver events to subscribers, who consume
+// them directly off the action stream and apply their own logic.
+type ResourceWatchChangedAction struct {
+	Type ActionType `json:"type"`
+	// The set of changes in this batch, wrapped for forward compatibility.
+	Changes json.RawMessage `json:"changes"`
+}
+
+// Ask the host to create a durable automation at a client-chosen resource.
+//
+// Clients may dispatch this action only when the host advertises its `create`
+// automation capability. {@link AutomationCreateRequestedAction.resource |
+// `resource`} MUST use the `ahp-automation:` scheme and MUST NOT already
+// identify an unrelated automation.
+//
+// This side-effect request leaves optimistic catalogue state unchanged. The
+// host validates trigger ids and configuration, normalizes event-trigger
+// titles and descriptions, persists the definition, then publishes the
+// authoritative result with {@link AutomationSetAction | `automation/set`}.
+// Rejections leave the catalogue unchanged.
+type AutomationCreateRequestedAction struct {
+	Type ActionType `json:"type"`
+	// Client-chosen `ahp-automation:` URI that becomes {@link AutomationEntry.resource}.
+	Resource URI `json:"resource"`
+	// Complete initial {@link AutomationEntry.definition}.
+	Definition AutomationDefinition `json:"definition"`
+}
+
+// Ask the host to update editable fields of an existing automation.
+//
+// Clients may dispatch this action only while the target advertises
+// {@link AutomationOperation.Update}. The host revalidates that operation and
+// the client's authorization.
+//
+// This side-effect request leaves optimistic catalogue state unchanged. The
+// host applies accepted patches to its current authoritative definition in
+// action order, revalidates and normalizes affected event triggers, then
+// publishes the result with
+// {@link AutomationSetAction | `automation/set`}. Omitted fields remain
+// unchanged; when accepted actions replace the same field, the later action in
+// server order wins.
+type AutomationUpdateRequestedAction struct {
+	Type ActionType `json:"type"`
+	// Target {@link AutomationEntry.resource}.
+	Resource URI `json:"resource"`
+	// Editable {@link AutomationDefinition} fields to replace.
+	Changes AutomationDefinitionPatch `json:"changes"`
+}
+
+// Add or replace one full automation state in
+// {@link AutomationState.entries}.
+//
+// Existing entries are matched by {@link AutomationEntry.resource} and
+// replaced in place. A previously unseen resource is appended.
+type AutomationSetAction struct {
+	Type ActionType `json:"type"`
+	// Full new or replacement automation state.
+	Automation AutomationEntry `json:"automation"`
+}
+
+// Remove one automation from {@link AutomationState.entries}.
+//
+// Clients may dispatch this action only while the target advertises
+// {@link AutomationOperation.Remove}. The host revalidates that operation
+// before permanently deleting the automation. A rejected action leaves the
+// authoritative catalogue and durable definition unchanged.
+//
+// Removing an unknown resource is a no-op.
+type AutomationRemovedAction struct {
+	Type ActionType `json:"type"`
+	// {@link AutomationEntry.resource} to remove.
+	Resource URI `json:"resource"`
+}
+
+// Replace the run lifecycle.
+//
+// The host dispatches this action for every lifecycle transition.
+type AutomationRunLifecycleChangedAction struct {
+	Type ActionType `json:"type"`
+	// Complete replacement {@link AutomationRunState.lifecycle}.
+	Lifecycle AutomationRunLifecycle `json:"lifecycle"`
+}
+
+// Add a session to {@link AutomationRunState.sessions}.
+//
+// Session URIs are unique. Setting an existing URI is a no-op.
+type AutomationRunSessionSetAction struct {
+	Type ActionType `json:"type"`
+	// Session URI to append to {@link AutomationRunState.sessions} when not already linked.
+	Session URI `json:"session"`
+}
+
+// Remove a linked session from the run.
+//
+// Removing the current primary session also clears
+// {@link AutomationRunState.primarySession}. An unknown URI is a no-op.
+type AutomationRunSessionRemovedAction struct {
+	Type ActionType `json:"type"`
+	// Entry in {@link AutomationRunState.sessions} to remove.
+	Session URI `json:"session"`
+}
+
+// Select or clear the session clients should open first for this run.
+type AutomationRunPrimarySessionChangedAction struct {
+	Type ActionType `json:"type"`
+	// New {@link AutomationRunState.primarySession}, or omitted to clear the selection.
+	PrimarySession *URI `json:"primarySession,omitempty"`
+}
+
+// Ask the host to cancel this run.
+//
+// This is the only client-dispatchable automation-run action. It is a
+// side-effect request and deliberately leaves optimistic state unchanged. The
+// client may dispatch it only when the host advertises its `runCancellation`
+// capability and the current lifecycle is `pending` or `running`. The host
+// revalidates that the run is non-terminal. The authoritative outcome arrives
+// later through
+// {@link AutomationRunLifecycleChangedAction}: cancellation may transition to
+// `cancelled`, or the run may complete or fail before cancellation takes
+// effect.
+type AutomationRunCancelRequestedAction struct {
+	Type ActionType `json:"type"`
+}
+
+// ─── StateAction Union ───────────────────────────────────────────────
+
+// StateAction is the discriminated union of every state action.
+type StateAction struct {
+	Value isStateAction
+}
+
+// isStateAction is the marker interface implemented by every
+// concrete variant of StateAction.
+type isStateAction interface{ isStateAction() }
+
+func (*RootAgentsChangedAction) isStateAction()                   {}
+func (*RootActiveSessionsChangedAction) isStateAction()           {}
+func (*RootConfigChangedAction) isStateAction()                   {}
+func (*SessionReadyAction) isStateAction()                        {}
+func (*SessionCreationFailedAction) isStateAction()               {}
+func (*SessionChatAddedAction) isStateAction()                    {}
+func (*SessionChatRemovedAction) isStateAction()                  {}
+func (*SessionChatUpdatedAction) isStateAction()                  {}
+func (*SessionDefaultChatChangedAction) isStateAction()           {}
+func (*ChatTurnStartedAction) isStateAction()                     {}
+func (*ChatDeltaAction) isStateAction()                           {}
+func (*ChatResponsePartAction) isStateAction()                    {}
+func (*ChatToolCallStartAction) isStateAction()                   {}
+func (*ChatToolCallDeltaAction) isStateAction()                   {}
+func (*ChatToolCallReadyAction) isStateAction()                   {}
+func (*ChatToolCallConfirmedAction) isStateAction()               {}
+func (*ChatToolCallCompleteAction) isStateAction()                {}
+func (*ChatToolCallResultConfirmedAction) isStateAction()         {}
+func (*ChatToolCallContentChangedAction) isStateAction()          {}
+func (*ChatToolCallAuthRequiredAction) isStateAction()            {}
+func (*ChatToolCallAuthResolvedAction) isStateAction()            {}
+func (*ChatTurnCompleteAction) isStateAction()                    {}
+func (*ChatTurnCancelledAction) isStateAction()                   {}
+func (*ChatErrorAction) isStateAction()                           {}
+func (*ChatTurnResumeAction) isStateAction()                      {}
+func (*ChatActivityChangedAction) isStateAction()                 {}
+func (*ChatChangesetsChangedAction) isStateAction()               {}
+func (*SessionTitleChangedAction) isStateAction()                 {}
+func (*ChatUsageAction) isStateAction()                           {}
+func (*ChatReasoningAction) isStateAction()                       {}
+func (*ChatPendingMessageSetAction) isStateAction()               {}
+func (*ChatPendingMessageRemovedAction) isStateAction()           {}
+func (*ChatQueuedMessagesReorderedAction) isStateAction()         {}
+func (*ChatDraftChangedAction) isStateAction()                    {}
+func (*ChatIsArchivedChangedAction) isStateAction()               {}
+func (*ChatInputRequestedAction) isStateAction()                  {}
+func (*ChatInputAnswerChangedAction) isStateAction()              {}
+func (*ChatInputCompletedAction) isStateAction()                  {}
+func (*ChatTruncatedAction) isStateAction()                       {}
+func (*ChatTurnsLoadedAction) isStateAction()                     {}
+func (*SessionIsReadChangedAction) isStateAction()                {}
+func (*SessionIsArchivedChangedAction) isStateAction()            {}
+func (*SessionActivityChangedAction) isStateAction()              {}
+func (*SessionChangesetsChangedAction) isStateAction()            {}
+func (*SessionServerToolsChangedAction) isStateAction()           {}
+func (*SessionActiveClientSetAction) isStateAction()              {}
+func (*SessionActiveClientRemovedAction) isStateAction()          {}
+func (*SessionWorkingDirectorySetAction) isStateAction()          {}
+func (*SessionWorkingDirectoryRemovedAction) isStateAction()      {}
+func (*SessionWorkingDirectoryReplacedAction) isStateAction()     {}
+func (*ChatWorkingDirectorySetAction) isStateAction()             {}
+func (*ChatWorkingDirectoryRemovedAction) isStateAction()         {}
+func (*SessionInputNeededSetAction) isStateAction()               {}
+func (*SessionInputNeededRemovedAction) isStateAction()           {}
+func (*SessionCustomizationsChangedAction) isStateAction()        {}
+func (*SessionCustomizationToggledAction) isStateAction()         {}
+func (*SessionCustomizationUpdatedAction) isStateAction()         {}
+func (*SessionCustomizationRemovedAction) isStateAction()         {}
+func (*SessionMcpServerStateChangedAction) isStateAction()        {}
+func (*SessionMcpServerStartRequestedAction) isStateAction()      {}
+func (*SessionMcpServerStopRequestedAction) isStateAction()       {}
+func (*SessionMcpServerBackgroundRequestedAction) isStateAction() {}
+func (*SessionConfigChangedAction) isStateAction()                {}
+func (*SessionMetaChangedAction) isStateAction()                  {}
+func (*ChangesetStatusChangedAction) isStateAction()              {}
+func (*ChangesetFileSetAction) isStateAction()                    {}
+func (*ChangesetFileRemovedAction) isStateAction()                {}
+func (*ChangesetFilesReviewChangedAction) isStateAction()         {}
+func (*ChangesetContentChangedAction) isStateAction()             {}
+func (*ChangesetOperationsChangedAction) isStateAction()          {}
+func (*ChangesetOperationStatusChangedAction) isStateAction()     {}
+func (*ChangesetClearedAction) isStateAction()                    {}
+func (*AnnotationsSetAction) isStateAction()                      {}
+func (*AnnotationsUpdatedAction) isStateAction()                  {}
+func (*AnnotationsRemovedAction) isStateAction()                  {}
+func (*AnnotationsEntrySetAction) isStateAction()                 {}
+func (*AnnotationsEntryRemovedAction) isStateAction()             {}
+func (*RootTerminalsChangedAction) isStateAction()                {}
+func (*TerminalDataAction) isStateAction()                        {}
+func (*TerminalInputAction) isStateAction()                       {}
+func (*TerminalResizedAction) isStateAction()                     {}
+func (*TerminalClaimedAction) isStateAction()                     {}
+func (*TerminalTitleChangedAction) isStateAction()                {}
+func (*TerminalCwdChangedAction) isStateAction()                  {}
+func (*TerminalExitedAction) isStateAction()                      {}
+func (*TerminalClearedAction) isStateAction()                     {}
+func (*TerminalCommandDetectionAvailableAction) isStateAction()   {}
+func (*TerminalCommandExecutedAction) isStateAction()             {}
+func (*TerminalCommandFinishedAction) isStateAction()             {}
+func (*ResourceWatchChangedAction) isStateAction()                {}
+func (*AutomationCreateRequestedAction) isStateAction()           {}
+func (*AutomationUpdateRequestedAction) isStateAction()           {}
+func (*AutomationSetAction) isStateAction()                       {}
+func (*AutomationRemovedAction) isStateAction()                   {}
+func (*AutomationRunLifecycleChangedAction) isStateAction()       {}
+func (*AutomationRunSessionSetAction) isStateAction()             {}
+func (*AutomationRunSessionRemovedAction) isStateAction()         {}
+func (*AutomationRunPrimarySessionChangedAction) isStateAction()  {}
+func (*AutomationRunCancelRequestedAction) isStateAction()        {}
+
+// StateActionUnknown carries an unrecognized StateAction variant — typically a discriminator value introduced by a newer protocol version. The original JSON object is preserved verbatim so that re-encoding round-trips faithfully.
+type StateActionUnknown struct {
+	Raw json.RawMessage
+}
+
+func (*StateActionUnknown) isStateAction() {}
+
+// UnmarshalJSON decodes the variant indicated by the "type" discriminator.
+func (u *StateAction) UnmarshalJSON(data []byte) error {
+	disc, _, err := readDiscriminator(data, "type")
+	if err != nil {
+		return err
+	}
+	switch disc {
+	case "root/agentsChanged":
+		var value RootAgentsChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "root/activeSessionsChanged":
+		var value RootActiveSessionsChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "root/configChanged":
+		var value RootConfigChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/ready":
+		var value SessionReadyAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/creationFailed":
+		var value SessionCreationFailedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/chatAdded":
+		var value SessionChatAddedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/chatRemoved":
+		var value SessionChatRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/chatUpdated":
+		var value SessionChatUpdatedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/defaultChatChanged":
+		var value SessionDefaultChatChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/turnStarted":
+		var value ChatTurnStartedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/delta":
+		var value ChatDeltaAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/responsePart":
+		var value ChatResponsePartAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallStart":
+		var value ChatToolCallStartAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallDelta":
+		var value ChatToolCallDeltaAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallReady":
+		var value ChatToolCallReadyAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallConfirmed":
+		var value ChatToolCallConfirmedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallComplete":
+		var value ChatToolCallCompleteAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallResultConfirmed":
+		var value ChatToolCallResultConfirmedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallContentChanged":
+		var value ChatToolCallContentChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallAuthRequired":
+		var value ChatToolCallAuthRequiredAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/toolCallAuthResolved":
+		var value ChatToolCallAuthResolvedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/turnComplete":
+		var value ChatTurnCompleteAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/turnCancelled":
+		var value ChatTurnCancelledAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/error":
+		var value ChatErrorAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/turnResume":
+		var value ChatTurnResumeAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/activityChanged":
+		var value ChatActivityChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/changesetsChanged":
+		var value ChatChangesetsChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/titleChanged":
+		var value SessionTitleChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/usage":
+		var value ChatUsageAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/reasoning":
+		var value ChatReasoningAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/pendingMessageSet":
+		var value ChatPendingMessageSetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/pendingMessageRemoved":
+		var value ChatPendingMessageRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/queuedMessagesReordered":
+		var value ChatQueuedMessagesReorderedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/draftChanged":
+		var value ChatDraftChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/isArchivedChanged":
+		var value ChatIsArchivedChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/inputRequested":
+		var value ChatInputRequestedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/inputAnswerChanged":
+		var value ChatInputAnswerChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/inputCompleted":
+		var value ChatInputCompletedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/truncated":
+		var value ChatTruncatedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/turnsLoaded":
+		var value ChatTurnsLoadedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/isReadChanged":
+		var value SessionIsReadChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/isArchivedChanged":
+		var value SessionIsArchivedChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/activityChanged":
+		var value SessionActivityChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/changesetsChanged":
+		var value SessionChangesetsChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/serverToolsChanged":
+		var value SessionServerToolsChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/activeClientSet":
+		var value SessionActiveClientSetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/activeClientRemoved":
+		var value SessionActiveClientRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/workingDirectorySet":
+		var value SessionWorkingDirectorySetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/workingDirectoryRemoved":
+		var value SessionWorkingDirectoryRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/workingDirectoryReplaced":
+		var value SessionWorkingDirectoryReplacedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/workingDirectorySet":
+		var value ChatWorkingDirectorySetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "chat/workingDirectoryRemoved":
+		var value ChatWorkingDirectoryRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/inputNeededSet":
+		var value SessionInputNeededSetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/inputNeededRemoved":
+		var value SessionInputNeededRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/customizationsChanged":
+		var value SessionCustomizationsChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/customizationToggled":
+		var value SessionCustomizationToggledAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/customizationUpdated":
+		var value SessionCustomizationUpdatedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/customizationRemoved":
+		var value SessionCustomizationRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/mcpServerStateChanged":
+		var value SessionMcpServerStateChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/mcpServerStartRequested":
+		var value SessionMcpServerStartRequestedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/mcpServerStopRequested":
+		var value SessionMcpServerStopRequestedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/mcpServerBackgroundRequested":
+		var value SessionMcpServerBackgroundRequestedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/configChanged":
+		var value SessionConfigChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "session/metaChanged":
+		var value SessionMetaChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "changeset/statusChanged":
+		var value ChangesetStatusChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "changeset/fileSet":
+		var value ChangesetFileSetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "changeset/fileRemoved":
+		var value ChangesetFileRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "changeset/filesReviewChanged":
+		var value ChangesetFilesReviewChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "changeset/contentChanged":
+		var value ChangesetContentChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "changeset/operationsChanged":
+		var value ChangesetOperationsChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "changeset/operationStatusChanged":
+		var value ChangesetOperationStatusChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "changeset/cleared":
+		var value ChangesetClearedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "annotations/set":
+		var value AnnotationsSetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "annotations/updated":
+		var value AnnotationsUpdatedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "annotations/removed":
+		var value AnnotationsRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "annotations/entrySet":
+		var value AnnotationsEntrySetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "annotations/entryRemoved":
+		var value AnnotationsEntryRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "root/terminalsChanged":
+		var value RootTerminalsChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/data":
+		var value TerminalDataAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/input":
+		var value TerminalInputAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/resized":
+		var value TerminalResizedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/claimed":
+		var value TerminalClaimedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/titleChanged":
+		var value TerminalTitleChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/cwdChanged":
+		var value TerminalCwdChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/exited":
+		var value TerminalExitedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/cleared":
+		var value TerminalClearedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/commandDetectionAvailable":
+		var value TerminalCommandDetectionAvailableAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/commandExecuted":
+		var value TerminalCommandExecutedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "terminal/commandFinished":
+		var value TerminalCommandFinishedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "resourceWatch/changed":
+		var value ResourceWatchChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automation/createRequested":
+		var value AutomationCreateRequestedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automation/updateRequested":
+		var value AutomationUpdateRequestedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automation/set":
+		var value AutomationSetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automation/removed":
+		var value AutomationRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automationRun/lifecycleChanged":
+		var value AutomationRunLifecycleChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automationRun/sessionSet":
+		var value AutomationRunSessionSetAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automationRun/sessionRemoved":
+		var value AutomationRunSessionRemovedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automationRun/primarySessionChanged":
+		var value AutomationRunPrimarySessionChangedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	case "automationRun/cancelRequested":
+		var value AutomationRunCancelRequestedAction
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		u.Value = &value
+	default:
+		raw := make(json.RawMessage, len(data))
+		copy(raw, data)
+		u.Value = &StateActionUnknown{Raw: raw}
+	}
+	return nil
+}
+
+// MarshalJSON encodes the active variant back to JSON.
+func (u StateAction) MarshalJSON() ([]byte, error) {
+	if unk, ok := u.Value.(*StateActionUnknown); ok {
+		if len(unk.Raw) == 0 {
+			return []byte("null"), nil
+		}
+		return unk.Raw, nil
+	}
+	if u.Value == nil {
+		return []byte("null"), nil
+	}
+	return json.Marshal(u.Value)
+}

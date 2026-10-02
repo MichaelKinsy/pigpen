@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-a2a",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A2A (Agent2Agent) for PiG: serve PiG tasks to A2A agents and call remote A2A agents, on the upstream Go SDK a2a-go. The listener is off unless configured.",
+  "keywords": ["pig-package", "a2a", "agent2agent", "protocol", "kagent", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/a2a"]
+  }
+}

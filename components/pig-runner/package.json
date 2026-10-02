@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-pig-runner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PiG Runner: the pixel-art pig obstacle runner, opened with /runner or /pig-runner (Go). Nothing runs until you type the command.",
+  "keywords": ["pig-package", "game", "pixel-art", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/pigrunner"]
+  }
+}

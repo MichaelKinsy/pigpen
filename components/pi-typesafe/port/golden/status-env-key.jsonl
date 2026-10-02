@@ -1,0 +1,6 @@
+{"kind":"header","scenario":"status-env-key","lane":"pi-ts","host":"pi 0.87.1","extension":"sha256:2dbf2078e91fc7fface683f6ff536e10e8218b387b768a473d7d11f296272329","normalizer":"v2"}
+{"step":"01-status","ch":"ui","data":{"message":"TypeSafe: disabled. TypeSafe key: TYPESAFE_API_KEY (not verified yet — the first request proves it). Session 0/20 attempts; no client yet in this session.  Model: jev-latest. Session limits reset on session start/reload; daily counters persist and caps come from client options or PI_TYPESAFE_MAX_* environment variables. Submitted state and questions will be sent to api.typesafe.ai and may incur charges. Do not include secrets. The extension does not collect files or conversation history. Results are model judgments, not proof or authorization.","method":"notify","notifyType":"info"}}
+{"step":"01-status","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"02-setup","ch":"ui","data":{"message":"Key configured via TYPESAFE_API_KEY. Run /typesafe test for one sample request or /typesafe enable to allow agent tool calls.","method":"notify","notifyType":"info"}}
+{"step":"02-setup","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

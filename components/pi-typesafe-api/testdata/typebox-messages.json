@@ -1,0 +1,285 @@
+[
+ {
+  "request": {
+   "state": "s"
+  },
+  "message": "Invalid evaluation request at request: must have required properties questions.",
+  "compared": true
+ },
+ {
+  "request": {
+   "questions": {}
+  },
+  "message": "Invalid evaluation request at request: must have required properties state; questions: must not have fewer than 1 properties.",
+  "compared": true
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {}
+  },
+  "message": "Invalid evaluation request at questions: must not have fewer than 1 properties.",
+  "compared": true
+ },
+ {
+  "request": {
+   "state": 5,
+   "questions": {
+    "q": {
+     "type": "noul"
+    }
+   }
+  },
+  "message": "Invalid evaluation request at state: must be string; state: must be null; state: must be array.",
+  "compared": true
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": []
+  },
+  "message": "Invalid evaluation request at questions: must be object.",
+  "compared": true
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": "x"
+   }
+  },
+  "message": "Invalid evaluation request at questions.q: must be object; questions.q: must be object; questions.q: must be object.",
+  "compared": true
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "bad"
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.type: must be equal to constant; questions.q: must have required properties criteria; questions.q.type: must be equal to constant.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "instructions": "x"
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q: must have required properties type; questions.q: must have required properties type, criteria; questions.q: must have required properties type, criteria.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "noul",
+     "extra": 1
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.extra: schema is false; questions.q: must not have additional properties; questions.q: must have required properties criteria.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "noul",
+     "criteria": "x"
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.criteria: must be null; questions.q.criteria: must be object; questions.q.criteria: must match a schema in anyOf.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "noul",
+     "criteria": {
+      "maybe": "x"
+     }
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.criteria: must be null; questions.q.criteria.maybe: schema is false; questions.q.criteria: must not have additional properties.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "noul",
+     "instructions": 5
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.instructions: must be string; questions.q.instructions: must be null; questions.q.instructions: must be array.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "choice"
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.type: must be equal to constant; questions.q: must have required properties criteria; questions.q: must have required properties criteria.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "choice",
+     "criteria": {}
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.type: must be equal to constant; questions.q.criteria: must not have fewer than 1 properties; questions.q.type: must be equal to constant.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "choice",
+     "criteria": [
+      "a"
+     ]
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.type: must be equal to constant; questions.q.criteria: must be null; questions.q.criteria: must be object.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "choice",
+     "criteria": {
+      "a": 5
+     }
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.type: must be equal to constant; questions.q.criteria: must be null; questions.q.criteria.a: schema is false.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "score",
+     "criteria": [
+      "a"
+     ]
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.type: must be equal to constant; questions.q.criteria: must be null; questions.q.criteria: must be object.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "score",
+     "criteria": "x"
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.type: must be equal to constant; questions.q.criteria: must be null; questions.q.criteria: must be object.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "score",
+     "criteria": [
+      "a",
+      5
+     ]
+    }
+   }
+  },
+  "message": "Invalid evaluation request at questions.q.type: must be equal to constant; questions.q.criteria: must be null; questions.q.criteria: must be object.",
+  "compared": false
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "noul"
+    }
+   },
+   "model": ""
+  },
+  "message": "Invalid evaluation request at model: must not have fewer than 1 characters.",
+  "compared": true
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "noul"
+    }
+   },
+   "model": 5
+  },
+  "message": "Invalid evaluation request at model: must be string.",
+  "compared": true
+ },
+ {
+  "request": {
+   "state": "s",
+   "questions": {
+    "q": {
+     "type": "noul"
+    }
+   },
+   "extra": 1
+  },
+  "message": "Invalid evaluation request at extra: schema is false; request: must not have additional properties.",
+  "compared": true
+ },
+ {
+  "request": [],
+  "message": "Invalid evaluation request at request: must be object.",
+  "compared": true
+ },
+ {
+  "request": "x",
+  "message": "Invalid evaluation request at request: must be object.",
+  "compared": true
+ },
+ {
+  "request": null,
+  "message": "Invalid evaluation request at request: must be object.",
+  "compared": true
+ }
+]

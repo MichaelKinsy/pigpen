@@ -1,0 +1,5 @@
+{"name":"enable-confirm","description":"The consent dialog is accepted; status then reports enabled and the session cap.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"steps":[
+ {"name":"enable","rpc":{"type":"prompt","message":"/typesafe enable"},"ui":[{"confirmed":true}]},
+ {"name":"status","rpc":{"type":"prompt","message":"/typesafe status"}},
+ {"name":"disable","rpc":{"type":"prompt","message":"/typesafe disable"}},
+ {"name":"status-after","rpc":{"type":"prompt","message":"/typesafe status"}}]}

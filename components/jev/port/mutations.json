@@ -1,0 +1,578 @@
+[
+ {
+  "name": "default-on",
+  "file": "extension.go",
+  "find": "x.on = l.Config.Enabled",
+  "replace": "x.on = true"
+ },
+ {
+  "name": "no-opt-in-return",
+  "file": "extension.go",
+  "find": "if !l.Config.Enabled {\n\t\treturn\n\t}",
+  "replace": "if false {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "project-can-consent",
+  "file": "config.go",
+  "find": "if project {\n\t\t\tignored = append(ignored, k)\n\t\t\treturn false\n\t\t}",
+  "replace": "if false {\n\t\t\treturn false\n\t\t}"
+ },
+ {
+  "name": "project-widens-argument-chars",
+  "file": "config.go",
+  "find": "(!project || n < c.Gate.ArgumentChars)",
+  "replace": "true"
+ },
+ {
+  "name": "project-widens-output-chars",
+  "file": "config.go",
+  "find": "(!project || n < c.Output.OutputChars)",
+  "replace": "true"
+ },
+ {
+  "name": "project-widens-state-cap",
+  "file": "config.go",
+  "find": "(!project || n < c.MaxStateChars)",
+  "replace": "true"
+ },
+ {
+  "name": "project-widens-tools",
+  "file": "config.go",
+  "find": "if !project {\n\t\treturn names\n\t}",
+  "replace": "if true {\n\t\treturn names\n\t}"
+ },
+ {
+  "name": "env-key-ignored",
+  "file": "config.go",
+  "find": "os.Getenv(apiKeyEnv)",
+  "replace": "\"\""
+ },
+ {
+  "name": "remote-http-accepted",
+  "file": "config.go",
+  "find": "return ip != nil && ip.IsLoopback()",
+  "replace": "return ip != nil || host != \"\""
+ },
+ {
+  "name": "plain-http-anywhere",
+  "file": "config.go",
+  "find": "if loopback(u.Hostname()) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "endpoint-suffix-kept",
+  "file": "backend.go",
+  "find": "strings.TrimSuffix(raw, \"/v1/systemone\")",
+  "replace": "raw"
+ },
+ {
+  "name": "no-endpoint-check",
+  "file": "backend.go",
+  "find": "if c.Endpoint == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "destructive-exclusive",
+  "file": "gate.go",
+  "find": "v.Destructive >= t.Destructive",
+  "replace": "v.Destructive > t.Destructive"
+ },
+ {
+  "name": "exfiltration-exclusive",
+  "file": "gate.go",
+  "find": "v.Exfiltration >= t.Exfiltration",
+  "replace": "v.Exfiltration > t.Exfiltration"
+ },
+ {
+  "name": "beyond-scope-exclusive",
+  "file": "gate.go",
+  "find": "v.BeyondScope >= t.BeyondScope",
+  "replace": "v.BeyondScope > t.BeyondScope"
+ },
+ {
+  "name": "impact-exclusive",
+  "file": "gate.go",
+  "find": "v.Impact >= t.Impact &&",
+  "replace": "v.Impact > t.Impact &&"
+ },
+ {
+  "name": "impact-confidence-exclusive",
+  "file": "gate.go",
+  "find": "imp.Confidence >= c.Gate.MinConfidence",
+  "replace": "imp.Confidence > c.Gate.MinConfidence"
+ },
+ {
+  "name": "impact-ignores-confidence",
+  "file": "gate.go",
+  "find": "(!imp.HasConfidence || imp.Confidence >= c.Gate.MinConfidence)",
+  "replace": "true"
+ },
+ {
+  "name": "state-cap-dropped",
+  "file": "gate.go",
+  "find": "for utf16Len(string(out)) > maxState && (argChars > 8 || userChars > 8) {",
+  "replace": "for false {"
+ },
+ {
+  "name": "user-request-1000",
+  "file": "gate.go",
+  "find": "const userRequestChars = 1200",
+  "replace": "const userRequestChars = 1000"
+ },
+ {
+  "name": "question-text-changed",
+  "file": "gate.go",
+  "find": "\"Is this action destructive?\"",
+  "replace": "\"Is this destructive?\""
+ },
+ {
+  "name": "reason-format",
+  "file": "gate.go",
+  "find": "s := fmt.Sprintf(\"impact %s/3\", toFixed2(v.Impact))",
+  "replace": "s := fmt.Sprintf(\"impact %s\", toFixed2(v.Impact))"
+ },
+ {
+  "name": "deep-strings-leak",
+  "file": "text.go",
+  "find": "if depth > maxNesting {\n\t\treturn \"…[nested value elided]\"\n\t}",
+  "replace": "if depth > 4 {\n\t\treturn v\n\t}"
+ },
+ {
+  "name": "elide-count-total",
+  "file": "text.go",
+  "find": "total-max)",
+  "replace": "total)"
+ },
+ {
+  "name": "utf16-as-runes",
+  "file": "text.go",
+  "find": "if r >= 0x10000 {\n\t\t\tw = 2\n\t\t}",
+  "replace": "if r >= 0x10000 && false {\n\t\t\tw = 2\n\t\t}"
+ },
+ {
+  "name": "tofixed-ties-down",
+  "file": "text.go",
+  "find": "r.Add(r, big.NewRat(1, 2))",
+  "replace": "r.Add(r, big.NewRat(0, 2))"
+ },
+ {
+  "name": "elide-marker",
+  "file": "text.go",
+  "find": "\"%s…[%d chars elided]\"",
+  "replace": "\"%s...[%d chars elided]\""
+ },
+ {
+  "name": "cache-ignores-user-request",
+  "file": "extension.go",
+  "find": ", truncateText(user, userRequestChars)}",
+  "replace": "}"
+ },
+ {
+  "name": "cache-window-zero",
+  "file": "extension.go",
+  "find": "time.Duration(s.cfg.Gate.CacheSeconds)*time.Second",
+  "replace": "0"
+ },
+ {
+  "name": "output-cache-by-time",
+  "file": "extension.go",
+  "find": "key := tool + \"\\x00\" + out",
+  "replace": "key := tool + \"\\x00\" + out + time.Now().String()"
+ },
+ {
+  "name": "status-stays-clear-on-error",
+  "file": "extension.go",
+  "find": "x.setStatus(ctx, \"✗\", \"unavailable (failing open)\")",
+  "replace": ""
+ },
+ {
+  "name": "error-every-time",
+  "file": "extension.go",
+  "find": "quiet := x.now().Sub(x.lastErrorAt) < errorNotifyInterval",
+  "replace": "quiet := false"
+ },
+ {
+  "name": "fail-closed",
+  "file": "extension.go",
+  "find": "x.failOpen(ctx, err)\n\t\treturn nil, nil\n\t}\n\tv := evaluateGate",
+  "replace": "x.failOpen(ctx, err)\n\t\treturn map[string]any{\"block\": true, \"reason\": \"unavailable\"}, nil\n\t}\n\tv := evaluateGate"
+ },
+ {
+  "name": "shadow-blocks",
+  "file": "extension.go",
+  "find": "ctx.Notify(x.shadowNote(tool, v, s.cfg), \"warning\")\n\t\treturn nil, nil",
+  "replace": "ctx.Notify(x.shadowNote(tool, v, s.cfg), \"warning\")\n\t\treturn map[string]any{\"block\": true, \"reason\": reason}, nil"
+ },
+ {
+  "name": "headless-blocks-by-default",
+  "file": "extension.go",
+  "find": "if s.cfg.Gate.BlockWithoutUI {",
+  "replace": "if true {"
+ },
+ {
+  "name": "headless-asks",
+  "file": "extension.go",
+  "find": "if !ctx.HasUI() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "decline-reason",
+  "file": "extension.go",
+  "find": "reason + \" (declined)\"",
+  "replace": "reason"
+ },
+ {
+  "name": "gate-judges-every-tool",
+  "file": "extension.go",
+  "find": "|| !slices.Contains(s.cfg.Gate.Tools, tool) {",
+  "replace": "{"
+ },
+ {
+  "name": "output-judges-every-tool",
+  "file": "extension.go",
+  "find": "|| !slices.Contains(s.cfg.Output.Tools, tool) {",
+  "replace": "{"
+ },
+ {
+  "name": "output-judges-empty",
+  "file": "extension.go",
+  "find": "if strings.TrimSpace(out) == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "output-blocks-joined",
+  "file": "extension.go",
+  "find": "strings.Join(parts, \"\\n\")",
+  "replace": "strings.Join(parts, \"\")"
+ },
+ {
+  "name": "notice-prefix",
+  "file": "extension.go",
+  "find": "\"[pi-jev] \" + v.Notice",
+  "replace": "v.Notice"
+ },
+ {
+  "name": "leak-not-notified",
+  "file": "extension.go",
+  "find": "ctx.Notify(x.leakNote(tool, v.LeaksSecret, s.cfg), \"warning\")",
+  "replace": ""
+ },
+ {
+  "name": "user-request-untrimmed",
+  "file": "extension.go",
+  "find": "if t := strings.TrimSpace(branch[i].Content); t != \"\" {",
+  "replace": "if t := branch[i].Content; t != \"\" {"
+ },
+ {
+  "name": "user-request-first",
+  "file": "extension.go",
+  "find": "for i := len(branch) - 1; i >= 0; i-- {",
+  "replace": "for i := 0; i < len(branch); i++ {"
+ },
+ {
+  "name": "leak-exclusive",
+  "file": "output.go",
+  "find": "v.LeaksSecret >= c.Output.LeakThreshold",
+  "replace": "v.LeaksSecret > c.Output.LeakThreshold"
+ },
+ {
+  "name": "class-confidence-exclusive",
+  "file": "output.go",
+  "find": "v.ClassConfidence >= c.Output.MinConfidence",
+  "replace": "v.ClassConfidence > c.Output.MinConfidence"
+ },
+ {
+  "name": "no-failure-advice",
+  "file": "output.go",
+  "find": "classAdvice[v.FailureClass] != \"\" &&",
+  "replace": "true &&"
+ },
+ {
+  "name": "advice-text",
+  "file": "output.go",
+  "find": "\"retrying the same command unchanged is reasonable\"",
+  "replace": "\"retry\""
+ },
+ {
+  "name": "advice-sentence",
+  "file": "output.go",
+  "find": "(confidence %s): %s.\"",
+  "replace": "(confidence %s): %s\""
+ },
+ {
+  "name": "leak-text",
+  "file": "output.go",
+  "find": "refer to it by name instead.",
+  "replace": "refer to it by name."
+ },
+ {
+  "name": "noul-range-unchecked",
+  "file": "types.go",
+  "find": "if !inRatio(t.Noul) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "answer-type-unchecked",
+  "file": "types.go",
+  "find": "string(raw.AnswerType()) != q.Type",
+  "replace": "false"
+ },
+ {
+  "name": "missing-answer-unchecked",
+  "file": "types.go",
+  "find": "if !present {",
+  "replace": "if !present && false {"
+ },
+ {
+  "name": "choice-any-option",
+  "file": "types.go",
+  "find": "found = found || o.Name == t.Choice",
+  "replace": "found = found || o.Name == t.Choice || true"
+ },
+ {
+  "name": "score-range-unchecked",
+  "file": "types.go",
+  "find": "t.Score > float64(len(q.Levels)-1)",
+  "replace": "false"
+ },
+ {
+  "name": "choice-confidence-unchecked",
+  "file": "types.go",
+  "find": "case typesafe.ChoiceAnswer:\n\t\tif !inRatio(t.Confidence) {",
+  "replace": "case typesafe.ChoiceAnswer:\n\t\tif false {"
+ },
+ {
+  "name": "score-legend-levels",
+  "file": "types.go",
+  "find": "levels := len(a.Legend) - 1",
+  "replace": "levels := len(a.Legend)"
+ },
+ {
+  "name": "choice-order",
+  "file": "types.go",
+  "find": "ranked[i].Value > ranked[j].Value",
+  "replace": "ranked[i].Value < ranked[j].Value"
+ },
+ {
+  "name": "duplicate-ids-allowed",
+  "file": "types.go",
+  "find": "if seen[q.ID] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "blank-instructions-allowed",
+  "file": "types.go",
+  "find": "if strings.TrimSpace(q.Instructions) == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "no-inflight-sharing",
+  "file": "memo.go",
+  "find": "if f, ok := m.flights[key]; ok {",
+  "replace": "if f, ok := m.flights[key]; ok && false {"
+ },
+ {
+  "name": "errors-cached",
+  "file": "memo.go",
+  "find": "if f.err == nil && ttl > 0 {",
+  "replace": "if ttl > 0 {"
+ },
+ {
+  "name": "cache-unbounded",
+  "file": "memo.go",
+  "find": "const memoLimit = 64",
+  "replace": "const memoLimit = 1 << 20"
+ },
+ {
+  "name": "cache-never-expires",
+  "file": "memo.go",
+  "find": "ttl > 0 && now().Sub(e.at) <= ttl",
+  "replace": "ttl > 0"
+ },
+ {
+  "name": "off-keeps-ask",
+  "file": "command.go",
+  "find": "x.on, x.gateOn, x.outputOn = false, false, false",
+  "replace": "x.gateOn, x.outputOn = false, false"
+ },
+ {
+  "name": "on-without-consent",
+  "file": "command.go",
+  "find": "if !s.cfg.Enabled && !s.on {",
+  "replace": "if false {"
+ },
+ {
+  "name": "check-while-off",
+  "file": "command.go",
+  "find": "if s.be == nil || !s.on {",
+  "replace": "if s.be == nil {"
+ },
+ {
+  "name": "mode-accepts-anything",
+  "file": "command.go",
+  "find": "if value != \"shadow\" && value != \"enforce\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "output-verdict-kind",
+  "file": "command.go",
+  "find": "%s - %s | leak %s | class %s at %s\"",
+  "replace": "%s %s | leak %s | class %s at %s\""
+ },
+ {
+  "name": "status-key-source",
+  "file": "command.go",
+  "find": "keySource = \"missing (\" + apiKeyEnv + \")\"",
+  "replace": "keySource = \"apiKey (inline)\""
+ },
+ {
+  "name": "shadow-wording",
+  "file": "render.go",
+  "find": "\"jev shadow: %s - %s\"",
+  "replace": "\"jev shadow: %s: %s\""
+ },
+ {
+  "name": "confirm-plain",
+  "file": "render.go",
+  "find": "\"%s\\n%s\\n\\nRun it anyway?\"",
+  "replace": "\"%s %s\\n\\nRun it anyway?\""
+ },
+ {
+  "name": "headless-wording",
+  "file": "render.go",
+  "find": "tail := \"(headless: not blocking; set gate.blockWithoutUI to block)\"",
+  "replace": "tail := \"(headless)\""
+ },
+ {
+  "name": "status-plain",
+  "file": "render.go",
+  "find": "return \"jev: \" + rest",
+  "replace": "return \"jev \" + rest"
+ },
+ {
+  "name": "leak-note-plain",
+  "file": "render.go",
+  "find": "\"jev: %s output may carry a secret (%s)\"",
+  "replace": "\"jev: %s output may carry a secret %s\""
+ },
+ {
+  "name": "failure-note-plain",
+  "file": "render.go",
+  "find": "\"pi-jev: %s (failing open)\"",
+  "replace": "\"pi-jev: %s\""
+ },
+ {
+  "name": "disclosure-omits-destination",
+  "file": "render.go",
+  "find": "fmt.Fprintf(&b, \"Destination: %s\\n\", dest)",
+  "replace": ""
+ },
+ {
+  "name": "disclosure-omits-fail-open",
+  "file": "render.go",
+  "find": "If the judge is unavailable, tool calls run unjudged (it fails open). ",
+  "replace": ""
+ },
+ {
+  "name": "ask-off-allowed",
+  "file": "ask.go",
+  "find": "if !s.on || s.be == nil {",
+  "replace": "if s.be == nil {"
+ },
+ {
+  "name": "ask-state-uncapped",
+  "file": "ask.go",
+  "find": "elide(state, s.cfg.MaxStateChars)",
+  "replace": "state"
+ },
+ {
+  "name": "review-confirm-failure-fails-open",
+  "file": "extension.go",
+  "find": "return map[string]any{\"block\": true, \"reason\": fmt.Sprintf(\"%s (not confirmed: %s)\", reason, x.redact(cerr.Error()))}, nil",
+  "replace": "return nil, nil"
+ },
+ {
+  "name": "review-model-select-ignored",
+  "file": "extension.go",
+  "find": "if cfg.Backend != backendModel || cfg.Model != \"\" {\n\t\treturn\n\t}\n\tbe, err := newBackend(cfg, ctx)",
+  "replace": "if true {\n\t\treturn\n\t}\n\tbe, err := newBackend(cfg, ctx)"
+ },
+ {
+  "name": "review-model-select-overrides-configured-model",
+  "file": "extension.go",
+  "find": "if cfg.Backend != backendModel || cfg.Model != \"\" {\n\t\treturn\n\t}\n\tbe, err := newBackend(cfg, ctx)",
+  "replace": "if cfg.Backend != backendModel {\n\t\treturn\n\t}\n\tcfg.Model = \"\"\n\tbe, err := newBackend(cfg, ctx)"
+ },
+ {
+  "name": "review-model-select-no-ask-registration",
+  "file": "extension.go",
+  "find": "\tx.baseStatus(ctx)\n\tx.registerAsk(ctx)\n\tctx.Notify(\"pi-jev: now judging with \"",
+  "replace": "\tx.baseStatus(ctx)\n\tctx.Notify(\"pi-jev: now judging with \""
+ },
+ {
+  "name": "review-disclosure-omits-jev-ask",
+  "file": "render.go",
+  "find": "fmt.Fprintf(&b, \"Also sent: text the model passes to jev_ask (up to %d characters) and text you pass to /jev check.\\n\", c.MaxStateChars)\n",
+  "replace": ""
+ },
+ {
+  "name": "review-relaxations-silent",
+  "file": "config.go",
+  "find": "if relaxed := relaxations(before, c); len(relaxed) > 0 {",
+  "replace": "if relaxed := relaxations(before, c); false && len(relaxed) > 0 {"
+ },
+ {
+  "name": "review-relaxation-mode-unreported",
+  "file": "config.go",
+  "find": "if user.Gate.Mode == \"enforce\" && merged.Gate.Mode != \"enforce\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "review-relaxation-threshold-direction",
+  "file": "config.go",
+  "find": "if t.is > t.was {",
+  "replace": "if t.is != t.was {"
+ },
+ {
+  "name": "review-project-keyfile",
+  "file": "config.go",
+  "find": "\tif key(\"apiKeyFile\") {",
+  "replace": "\tif _, ok := m[\"apiKeyFile\"]; ok {"
+ },
+ {
+  "name": "review-project-backend",
+  "file": "config.go",
+  "find": "\tif key(\"backend\") {",
+  "replace": "\tif _, ok := m[\"backend\"]; ok {"
+ },
+ {
+  "name": "review-project-model",
+  "file": "config.go",
+  "find": "\tif key(\"model\") {",
+  "replace": "\tif _, ok := m[\"model\"]; ok {"
+ },
+ {
+  "name": "review-project-ack",
+  "file": "config.go",
+  "find": "\tif key(\"acknowledged\") {",
+  "replace": "\tif _, ok := m[\"acknowledged\"]; ok {"
+ },
+ {
+  "name": "review-loopback-any",
+  "file": "config.go",
+  "find": "return ip != nil && ip.IsLoopback()",
+  "replace": "return ip != nil"
+ },
+ {
+  "name": "review-output-key-no-tool",
+  "file": "extension.go",
+  "find": "key := tool + \"\\x00\" + out",
+  "replace": "key := out"
+ },
+ {
+  "name": "review-drop-user-before-args",
+  "file": "gate.go",
+  "find": "\t\tout = build(argChars, userChars, true, false)\n",
+  "replace": "\t\tout = build(argChars, userChars, false, true)\n"
+ }
+]

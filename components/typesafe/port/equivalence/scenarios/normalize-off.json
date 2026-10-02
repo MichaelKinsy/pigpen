@@ -1,0 +1,44 @@
+{
+ "mode": "probabilities",
+ "structured": true,
+ "normalize": false,
+ "state": "s",
+ "questions": {
+  "positive": {
+   "type": "noul",
+   "instructions": "The review is positive."
+  },
+  "stars": {
+   "type": "score",
+   "instructions": "Rating.",
+   "criteria": [
+    "Bad.",
+    "Good."
+   ]
+  },
+  "genre": {
+   "type": "choice",
+   "instructions": "Genre.",
+   "criteria": {
+    "fiction": "A story.",
+    "nonfiction": "Facts."
+   }
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "positive": 0.5,
+    "stars": {
+     "0": 0.2,
+     "1": 0.2
+    },
+    "genre": {
+     "fiction": 0.2,
+     "nonfiction": 0.2
+    }
+   }
+  }
+ ],
+ "name": "normalize-off"
+}

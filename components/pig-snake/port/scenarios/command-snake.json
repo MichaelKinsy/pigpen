@@ -1,0 +1,7 @@
+{
+  "name": "command-snake",
+  "description": "The short alias /snake behaves like /pig-snake.",
+  "steps": [
+    {"name": "play", "rpc": {"type": "prompt", "message": "/snake"}}
+  ]
+}

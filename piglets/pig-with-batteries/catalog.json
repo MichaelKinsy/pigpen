@@ -1,11 +1,14 @@
 {
   "status": "planned",
   "featured": true,
-  "updatedAt": "2026-09-26",
-  "languages": [],
+  "updatedAt": "2026-09-29",
+  "languages": ["go"],
   "notes": [
-    "This is a source scaffold, not the finished batteries-included composition. It selects only an empty build-pipeline fixture; curated extensions and other resources are pending owner review.",
-    "The manifest's 0.1.0 and Linux build target are development defaults, not a published release or supported-platform claim.",
-    "Source installation from a monorepo subdirectory and per-Piglet release tags need PiG support. No installation command is offered yet."
+    "Source only, not the finished batteries-included composition. It selects the herdr agent-state reporter (Package components/herdr, Go), PiG Runner and Angry Pigs (Packages pig-runner, angry-pigs, Go, moved from PiG Standard; they draw the pig chosen with PiG's built-in /sprite), the Pig Snake game (Package components/pig-snake, Go, starts only on /pig-snake), the read_session tool (Package components/session-ingest, Go), the /context, /tools, /cost and /prompts commands (Package components/context-info, Go; its footer is opt-in), the pig-doctor /doctor command (Package components/pig-doctor, Go; command only, nothing runs automatically), the a2a Package (Package components/a2a, Go: A2A tools, listener off until configured), the websearch first slice (Package components/websearch, Go: web_search, fetch_content, get_search_content, source_check, web_enable; the rest of pi-web-access is deferred and named in its PORT.md), plus an empty build-pipeline fixture (seed-check, Go). The roadmap is approved; capability ports are pending implementation.",
+    "The games start only on their command (/runner, /pig-runner, /angry-pigs, /pig-snake). Bundling is not activating. The sprite login and /sprite are PiG's own (built in since 0.4.0); this Piglet no longer bundles one.",
+    "It also selects Jev (components/jev), a typed judge for tool calls and output. Selectable and off by default: nothing is judged or sent until you run /jev on, which shows what leaves the machine and where. It fails open. The standalone jev Piglet and this one both build a Binary locally.",
+    "The herdr reporter does nothing unless PiG runs inside a herdr pane. Every extension in this Piglet is Go, so it needs no Node.js.",
+    "A local Piglet Binary builds with the reviewed PiG, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; the targets and the 0.1.0 version are not a support or release claim.",
+    "Newer PiG builds support subdirectory source add and per-Piglet release tags, but this composition is not published and no installation command is offered yet. See RELEASE-BLOCKERS.md."
   ]
 }

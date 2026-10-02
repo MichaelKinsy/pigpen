@@ -1,0 +1,6 @@
+{"kind":"header","scenario":"runner-command","lane":"pig-go-upstream","host":"pig 0.3.0+0.87.1","extension":"sha256:7d1a450a585657c7b9678d20d777ab11a3136f5c1a8544ab66b12cdb1569a87b","normalizer":"v2"}
+{"step":"01-runner","ch":"host","data":{"error":"no_ui: ui.custom requires an interactive TUI","event":"command","type":"extension_error"}}
+{"step":"01-runner","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"02-pig-runner","ch":"host","data":{"error":"no_ui: ui.custom requires an interactive TUI","event":"command","type":"extension_error"}}
+{"step":"02-pig-runner","ch":"response","data":{"command":"prompt","success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

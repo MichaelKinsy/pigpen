@@ -1,0 +1,75 @@
+# pigeq mutate, PiG pig: 0.3.0, 2026-09-30
+
+## With the layer-1 tests (--unit): each mutant runs the port's go tests and the shared library's, then the scenarios
+KILLED   overlay-title
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.01s)
+KILLED   score-notification-text
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.01s)
+KILLED   score-notification-level
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.01s)
+KILLED   high-score-not-kept
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.01s)
+KILLED   high-score-not-saved
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.00s)
+KILLED   alias-command-dropped
+         unit test: --- FAIL: TestExtensionRegistersRunnerCommandsOnly (0.01s)
+KILLED   stored-high-score-ignored
+         unit test: --- FAIL: TestCommandKeepsTheStoredHighScoreWhenTheOverlayReturnsNothing (0.00s)
+KILLED   component-not-disposed
+         unit test: --- FAIL: TestCommandLeavesNoTickerRunning (0.01s)
+KILLED   command-description
+         unit test: --- FAIL: TestCommandDescriptions (0.00s)
+KILLED   jump-velocity
+         unit test: --- FAIL: TestJumpVelocityFollowsSpeed (0.00s)
+KILLED   speed-cap
+         unit test: --- FAIL: TestSpeedIsMonotonicAndReachesTheCap (0.00s)
+KILLED   duck-in-air-does-not-drop
+         unit test: --- FAIL: TestDuckInTheAirDropsOnce (0.00s)
+KILLED   jump-while-airborne
+         unit test: --- FAIL: TestOnlyOneJumpAtATime (0.00s)
+KILLED   pause-toggle-inverted
+         unit test: --- FAIL: TestTogglePause (0.00s)
+KILLED   shared-termgame-escape
+         unit test: --- FAIL: TestComponentHandleInput_KittyAndLegacy (0.00s)
+KILLED   shared-sprite-palette
+         unit test: --- FAIL: TestVariantPaletteMatchesLoginSelection (0.00s)
+KILLED   game-listens-to-tool-results
+         unit test: --- FAIL: TestLoadingTheExtensionActivatesNothing (0.00s)
+17 mutation(s), 0 not killed
+
+## Scenarios only (no --unit): RPC traces cannot see terminal cells, so most defects need layer 1
+SURVIVED overlay-title
+
+SURVIVED score-notification-text
+
+SURVIVED score-notification-level
+
+SURVIVED high-score-not-kept
+
+SURVIVED high-score-not-saved
+
+KILLED   alias-command-dropped
+         runner-command: pig-go differs from pig-go-upstream: first difference at event 2
+SURVIVED stored-high-score-ignored
+
+SURVIVED component-not-disposed
+
+SURVIVED command-description
+
+SURVIVED jump-velocity
+
+SURVIVED speed-cap
+
+SURVIVED duck-in-air-does-not-drop
+
+SURVIVED jump-while-airborne
+
+SURVIVED pause-toggle-inverted
+
+SURVIVED shared-termgame-escape
+
+SURVIVED shared-sprite-palette
+
+SURVIVED game-listens-to-tool-results
+
+17 mutation(s), 16 not killed

@@ -1,0 +1,53 @@
+{
+  "name": "edit-then-done-claim-offline-stays-quiet",
+  "description": "Without a judge the done-check has nothing to score: an unverified done claim after a file change ends the run without a nudge, exactly like the original.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "src.txt",
+            "content": "changed\n"
+          }
+        }
+      ]
+    },
+    {
+      "text": "All done, everything works."
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "change src.txt"
+      }
+    }
+  ]
+}

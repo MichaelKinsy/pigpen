@@ -1,0 +1,503 @@
+{
+  "$schema": "./ports.schema.json",
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-30",
+  "ports": [
+    {
+      "id": "extension-porter",
+      "name": "Extension porter (pig-porter, pig-extension-porter)",
+      "kind": "move",
+      "summary": "The strict porting Skill, the equivalence harness (pigeq) and the two Piglets that carry them. This is the workflow every other row is ported with.",
+      "upstream": {
+        "name": "PiG",
+        "url": "https://github.com/MichaelKinsy/PiG",
+        "commit": "d86eb93f217e64b655e9ee6f48c93a9afd107697",
+        "license": "MIT",
+        "author": "Michael Kinsy",
+        "path": "piglets/porter/skills/pig-porter"
+      },
+      "targetPackage": "components/extension-port",
+      "otherTargets": [
+        "components/extension-equivalence",
+        "piglets/pig-extension-porter",
+        "piglets/pig-porter"
+      ],
+      "lane": "pigpen-extension-porter",
+      "status": "done",
+      "credit": "The pigpen-pi-extension-port Skill adapts the PiG Porter procedure and TypeScript-to-Go porting rules from PiG, https://github.com/MichaelKinsy/PiG, by Michael Kinsy (MIT), at commit d86eb93f217e64b655e9ee6f48c93a9afd107697.",
+      "notes": "Reviewed (ACCEPT-WITH-FIXES). Lane pigpen-porter-driver keeps tuning the Skill and harness from every port below. Reviewed and merged for the first release."
+    },
+    {
+      "id": "dirty-repo-guard",
+      "name": "dirty-repo-guard",
+      "kind": "port",
+      "summary": "Pi example extension that refuses a session switch or fork while the git tree is dirty. The first port made with the porter.",
+      "upstream": {
+        "name": "Pi",
+        "url": "https://github.com/earendil-works/pi",
+        "commit": "f07218c4d4bbc12bef056a7058c3dd49dfe41abe",
+        "license": "MIT",
+        "author": "Mario Zechner",
+        "path": "packages/coding-agent/examples/extensions/dirty-repo-guard.ts"
+      },
+      "targetPackage": "components/dirty-repo-guard",
+      "lane": "pigpen-extension-porter",
+      "status": "done",
+      "credit": "Go port of the dirty-repo-guard.ts example of Pi, https://github.com/earendil-works/pi, by Mario Zechner (MIT, v0.87.1, commit f07218c4d4bbc12bef056a7058c3dd49dfe41abe).",
+      "notes": "11/11 scenarios identical to Pi, 17/17 mutations killed."
+    },
+    {
+      "id": "herdr",
+      "name": "herdr agent-state reporter",
+      "kind": "original",
+      "summary": "Reports PiG idle, working and blocked to herdr through its documented pane report-agent contract.",
+      "upstream": null,
+      "targetPackage": "components/herdr",
+      "otherTargets": [
+        "piglets/herdr"
+      ],
+      "lane": "pigpen-herdr-go",
+      "status": "done",
+      "credit": "Original work by Michael Kinsy (MIT). Implements herdr's documented agent-state contract; no herdr code is copied.",
+      "notes": "Go port on the public SDK (it replaced the earlier Node extension). Reviewed and merged for the first release."
+    },
+    {
+      "id": "web-search",
+      "name": "Web search and fetch (pi-web-access)",
+      "kind": "port",
+      "summary": "Search, fetch, retain sources and retrieve bounded content: providers, routing, cache, extraction. Delivered in reviewed slices.",
+      "upstream": {
+        "name": "pi-web-access",
+        "url": "https://github.com/nicobailon/pi-web-access",
+        "commit": "9a734ed195da2f4cccc2fb5e7128f6774a380f47",
+        "license": "MIT",
+        "author": "Nico Bailon"
+      },
+      "targetPackage": "components/websearch",
+      "lane": "pigpen-websearch",
+      "status": "done",
+      "credit": "Go port of pi-web-access 0.33.0, https://github.com/nicobailon/pi-web-access, by Nico Bailon (MIT), at commit 9a734ed195da2f4cccc2fb5e7128f6774a380f47.",
+      "notes": "npm 483,117 in 30 days, 1,562 stars (2026-09-29). No browser-cookie access by default; no paid fallback without configuration. Reviewed and merged for the first release."
+    },
+    {
+      "id": "acp",
+      "name": "ACP: editors drive a PiG agent (pi-acp)",
+      "kind": "port",
+      "summary": "stdio Agent Client Protocol adapter over the PiG agent, with declared capability limits. A standalone bridge, not an extension.",
+      "upstream": {
+        "name": "pi-acp",
+        "url": "https://github.com/svkozak/pi-acp",
+        "commit": "b0581c9c1d675e634234674484247008b03d69b4",
+        "license": "MIT",
+        "author": "Sergii Kozak"
+      },
+      "additionalUpstreams": [
+        {
+          "name": "Agent Client Protocol",
+          "url": "https://github.com/agentclientprotocol/typescript-sdk",
+          "commit": "73bc30649b650de320340c782733bf69a545bd28",
+          "license": "Apache-2.0",
+          "author": "Zed Industries",
+          "path": "schema/schema.json"
+        }
+      ],
+      "targetPackage": "components/acp",
+      "otherTargets": [
+        "piglets/acp"
+      ],
+      "lane": "pigpen-acp",
+      "status": "done",
+      "credit": "Go port of pi-acp 0.0.34, https://github.com/svkozak/pi-acp, by Sergii Kozak (MIT), at commit b0581c9c1d675e634234674484247008b03d69b4. The protocol schema is from Agent Client Protocol, https://github.com/agentclientprotocol/typescript-sdk, by Zed Industries (Apache-2.0), commit 73bc30649b650de320340c782733bf69a545bd28.",
+      "notes": "npm 300,748 in 30 days. Port from the ACP spec, not from pi-acp's unmerged pull requests. Reviewed and merged for the first release."
+    },
+    {
+      "id": "ahp",
+      "name": "AHP: multi-client session host (pi-ahp)",
+      "kind": "port",
+      "summary": "Host extension serving Microsoft's Agent Host Protocol over WebSocket: reconnect, reconciliation, auth. No listener unless configured.",
+      "upstream": {
+        "name": "pi-ahp",
+        "url": "https://github.com/Qusic/pi-ahp",
+        "commit": "4065e98309b03c1d2d916300856c3c21a9c10674",
+        "license": "MIT",
+        "author": "Bang Lee (Qusic)"
+      },
+      "additionalUpstreams": [
+        {
+          "name": "Agent Host Protocol",
+          "url": "https://github.com/microsoft/agent-host-protocol",
+          "commit": "296b25e7b698a4a84a0ee5a28d9573e70048a0bf",
+          "license": "MIT",
+          "author": "Microsoft Corporation",
+          "path": "clients/go"
+        }
+      ],
+      "targetPackage": "components/ahp",
+      "lane": "pigpen-ahp",
+      "status": "done",
+      "credit": "Go port of pi-ahp, https://github.com/Qusic/pi-ahp, by Bang Lee (Qusic) (MIT), at commit 4065e98309b03c1d2d916300856c3c21a9c10674. The protocol types and reducers are from Agent Host Protocol, https://github.com/microsoft/agent-host-protocol, by Microsoft Corporation (MIT), commit 296b25e7b698a4a84a0ee5a28d9573e70048a0bf.",
+      "notes": "Lowest demand of the protocol rows (1,206 npm downloads in 30 days); the protocol is Microsoft's and VS Code uses it. Reviewed and merged for the first release."
+    },
+    {
+      "id": "a2a",
+      "name": "A2A: serve PiG tasks, call remote agents",
+      "kind": "adapter",
+      "summary": "Original adapter on a2a-go: an A2A server for PiG tasks and a client for remote agents, interoperating with kagent. Listener off unless configured.",
+      "upstream": {
+        "name": "a2a-go",
+        "url": "https://github.com/a2aproject/a2a-go",
+        "commit": "ebf17c56ef7e63c72883a45454a538bbc0df66b8",
+        "license": "Apache-2.0",
+        "author": "The A2A Authors, Linux Foundation"
+      },
+      "targetPackage": "components/a2a",
+      "lane": "pigpen-a2a",
+      "status": "done",
+      "credit": "Original adapter built on a2a-go v2.6.0, https://github.com/a2aproject/a2a-go, by The A2A Authors, Linux Foundation (Apache-2.0), commit ebf17c56ef7e63c72883a45454a538bbc0df66b8.",
+      "notes": "No popular Pi A2A extension exists; @bacnh85/pi-a2a is a behaviour reference only. Reviewed and merged for the first release."
+    },
+    {
+      "id": "jev",
+      "name": "Jev: typed judgments and gates (y0usaf/pi-jev)",
+      "kind": "port",
+      "summary": "Tool-call gate, output judge and jev_ask, with the roadmap's defect corrections. Opt-in; discloses that content leaves the machine.",
+      "upstream": {
+        "name": "pi-jev",
+        "url": "https://github.com/y0usaf/pi-jev",
+        "commit": "88e5fb3888948e7065110d47cdf6ac57abb71ba4",
+        "license": "MIT",
+        "author": "y0usaf"
+      },
+      "targetPackage": "components/jev",
+      "lane": "pigpen-jev",
+      "status": "done",
+      "credit": "Go port of pi-jev, https://github.com/y0usaf/pi-jev, by y0usaf (MIT), at commit 88e5fb3888948e7065110d47cdf6ac57abb71ba4.",
+      "notes": "Owner-approved foundation. Small ecosystem (605 npm downloads in 30 days); pi-warden and pi-typesafe are the more installed Jev packages. Reviewed and merged for the first release."
+    },
+    {
+      "id": "typesafe-client",
+      "name": "TypeSafe client (typesafe-sdk-js, system-one-adapter-python)",
+      "kind": "port",
+      "summary": "Shared Go client for the TypeSafe API, plus a backend that answers the same typed questions with the model PiG is configured with. Used by jev, pi-typesafe and pi-warden.",
+      "upstream": {
+        "name": "typesafe-sdk-js",
+        "url": "https://github.com/typesafe-ai/typesafe-sdk-js",
+        "commit": "66880ccded6cb642dc1809620c2b108c33730214",
+        "license": "MIT",
+        "author": "TypeSafe AI"
+      },
+      "additionalUpstreams": [
+        {
+          "name": "system-one-adapter-python",
+          "url": "https://github.com/typesafe-ai/system-one-adapter-python",
+          "commit": "e1d4cc938204b22fc5a3c3aca7044072fe3f712d",
+          "license": "MIT",
+          "author": "TypeSafe AI"
+        },
+        {
+          "name": "WorkflowEvals",
+          "url": "https://github.com/typesafe-ai/WorkflowEvals",
+          "commit": "0ac3b8ad845429f0d8e064ecfb2430a47c5a25cb",
+          "license": "Apache-2.0",
+          "author": "TypeSafe AI"
+        }
+      ],
+      "targetPackage": "components/typesafe",
+      "lane": "pigpen-typesafe-client",
+      "status": "done",
+      "credit": "Go port of the TypeSafe SDK (typesafe-sdk-js, https://github.com/typesafe-ai/typesafe-sdk-js, v0.6.0) and of system-one-adapter-python, https://github.com/typesafe-ai/system-one-adapter-python (v0.2.1), both by TypeSafe AI (MIT). Cross-checks use WorkflowEvals, https://github.com/typesafe-ai/WorkflowEvals, by TypeSafe AI (Apache-2.0), commit 0ac3b8ad845429f0d8e064ecfb2430a47c5a25cb.",
+      "notes": "Tests use a fake TypeSafe server; no real API call without an owner-supplied TYPESAFE_API_KEY. The Go contract is committed first so the three extension lanes can build against it. Reviewed and merged for the first release."
+    },
+    {
+      "id": "pi-typesafe",
+      "name": "pi-typesafe (DevMortimer)",
+      "kind": "port",
+      "summary": "The batched typesafe_evaluate tool and the typed API for extension authors, on the shared Go client. Off by default.",
+      "upstream": {
+        "name": "pi-typesafe",
+        "url": "https://github.com/DevMortimer/pi-typesafe",
+        "commit": "ed439f834665ad6fc652787f5ba7c23852566d49",
+        "license": "MIT",
+        "author": "Ryan Gapac (DevMortimer)"
+      },
+      "targetPackage": "components/pi-typesafe",
+      "lane": "pigpen-typesafe",
+      "status": "done",
+      "credit": "Go port of pi-typesafe 0.8.0, https://github.com/DevMortimer/pi-typesafe, by Ryan Gapac (DevMortimer) (MIT), at commit ed439f834665ad6fc652787f5ba7c23852566d49.",
+      "notes": "npm 7,453 in 30 days (2026-09-29). Depends on the typesafe-client row. Discloses that content goes to the TypeSafe API unless the own-model backend is selected. Reviewed and merged for the first release."
+    },
+    {
+      "id": "pi-warden",
+      "name": "pi-warden (DevMortimer)",
+      "kind": "port",
+      "summary": "Guardrails that steer instead of interrupt: irreversible calls, off-task calls, stuck loops, unverified done claims. Opt-in, on the shared Go client.",
+      "upstream": {
+        "name": "pi-warden",
+        "url": "https://github.com/DevMortimer/pi-warden",
+        "commit": "a12b2703b2c7ac32401fe13f4ce037d673a5f113",
+        "license": "MIT",
+        "author": "Ryan Gapac (DevMortimer)"
+      },
+      "targetPackage": "components/warden",
+      "lane": "pigpen-warden",
+      "status": "done",
+      "credit": "Go port of pi-warden 0.74.1, https://github.com/DevMortimer/pi-warden, by Ryan Gapac (DevMortimer) (MIT), at commit a12b2703b2c7ac32401fe13f4ce037d673a5f113. It also uses pi-typesafe, https://github.com/DevMortimer/pi-typesafe, by Ryan Gapac (DevMortimer) (MIT), at commit ed439f834665ad6fc652787f5ba7c23852566d49, through the shared TypeSafe client.",
+      "notes": "npm 7,030 in 30 days, 154 stars (2026-09-29). Depends on the typesafe-client row. A launch-video demo feature; the own-model backend must work. Re-pinned at the warden merge from 0f11867 (the listing-time head) to a12b2703, the commit the port was made against (components/warden/provenance.json); the pi-typesafe upstream is its second one. Reviewed and merged for the first release.",
+      "additionalUpstreams": [
+        {
+          "name": "pi-typesafe",
+          "url": "https://github.com/DevMortimer/pi-typesafe",
+          "commit": "ed439f834665ad6fc652787f5ba7c23852566d49",
+          "license": "MIT",
+          "author": "Ryan Gapac (DevMortimer)"
+        }
+      ]
+    },
+    {
+      "id": "pig-play",
+      "name": "pig-play: shared pig sprite and terminal game library",
+      "kind": "move",
+      "summary": "The canonical pixel pig, palette, half-block rasteriser and terminal game plumbing that every pig game builds on.",
+      "upstream": {
+        "name": "PiG",
+        "url": "https://github.com/MichaelKinsy/PiG",
+        "commit": "d86eb93f217e64b655e9ee6f48c93a9afd107697",
+        "license": "MIT",
+        "author": "Michael Kinsy",
+        "path": "piglets/standard"
+      },
+      "targetPackage": "components/pig-play",
+      "otherTargets": [
+        "piglets/pig-games"
+      ],
+      "lane": "pigpen-games",
+      "status": "done",
+      "credit": "Sprite, pixel rasteriser, arcade scenery and terminal game plumbing moved from PiG, https://github.com/MichaelKinsy/PiG, by Michael Kinsy (MIT), at commit d86eb93f217e64b655e9ee6f48c93a9afd107697.",
+      "notes": "Reviewed and merged for the first release."
+    },
+    {
+      "id": "pig-runner",
+      "name": "PiG Runner",
+      "kind": "move",
+      "summary": "Obstacle runner starring the pig; starts only on an explicit command.",
+      "upstream": {
+        "name": "PiG",
+        "url": "https://github.com/MichaelKinsy/PiG",
+        "commit": "d86eb93f217e64b655e9ee6f48c93a9afd107697",
+        "license": "MIT",
+        "author": "Michael Kinsy",
+        "path": "piglets/standard/extensions/pigrunner"
+      },
+      "targetPackage": "components/pig-runner",
+      "lane": "pigpen-games",
+      "status": "done",
+      "credit": "The pigrunner extension moved from PiG, https://github.com/MichaelKinsy/PiG, by Michael Kinsy (MIT), at commit d86eb93f217e64b655e9ee6f48c93a9afd107697.",
+      "notes": "Reviewed and merged for the first release."
+    },
+    {
+      "id": "angry-pigs",
+      "name": "Angry Pigs",
+      "kind": "move",
+      "summary": "Pig slingshot puzzle game; starts only on an explicit command.",
+      "upstream": {
+        "name": "PiG",
+        "url": "https://github.com/MichaelKinsy/PiG",
+        "commit": "d86eb93f217e64b655e9ee6f48c93a9afd107697",
+        "license": "MIT",
+        "author": "Michael Kinsy",
+        "path": "piglets/standard/extensions/angrypigs"
+      },
+      "targetPackage": "components/angry-pigs",
+      "lane": "pigpen-games",
+      "status": "done",
+      "credit": "The angrypigs extension moved from PiG, https://github.com/MichaelKinsy/PiG, by Michael Kinsy (MIT), at commit d86eb93f217e64b655e9ee6f48c93a9afd107697.",
+      "notes": "Reviewed and merged for the first release."
+    },
+    {
+      "id": "pig-snake",
+      "name": "Pig Snake",
+      "kind": "original",
+      "summary": "New snake game where every apple adds another pig head, so a herd forms behind the leader. Explicit command only.",
+      "upstream": {
+        "name": "PiG",
+        "url": "https://github.com/MichaelKinsy/PiG",
+        "commit": "d86eb93f217e64b655e9ee6f48c93a9afd107697",
+        "license": "MIT",
+        "author": "Michael Kinsy",
+        "path": "piglets/standard/extensions/angrypigs"
+      },
+      "targetPackage": "components/pig-snake",
+      "lane": "pigpen-pig-snake",
+      "status": "done",
+      "credit": "Original game by Michael Kinsy (MIT). The pig sprite art is from PiG, https://github.com/MichaelKinsy/PiG, by Michael Kinsy (MIT), commit d86eb93f217e64b655e9ee6f48c93a9afd107697.",
+      "notes": "Sprite access sits behind one interface so it can switch to the shared pig-play library. Reviewed and merged for the first release."
+    },
+    {
+      "id": "session-ingest",
+      "name": "session-ingest (read_session)",
+      "kind": "original",
+      "summary": "Read another PiG session: turn, tools and stats modes. Moved from the owner's own extensions to the public PiG Go SDK.",
+      "upstream": null,
+      "targetPackage": "components/session-ingest",
+      "lane": "pigpen-pig-stuff",
+      "status": "done",
+      "credit": "Original work by Michael Kinsy (MIT), moved from the owner's own extensions.",
+      "notes": "No popular equivalent exists. Reviewed and merged for the first release."
+    },
+    {
+      "id": "context-info",
+      "name": "context-info (/context, /tools, /cost, /prompts)",
+      "kind": "original",
+      "summary": "Context, tools, cost and prompt inspection commands with an opt-in footer widget. Moved from the owner's own extensions to the public PiG Go SDK.",
+      "upstream": null,
+      "targetPackage": "components/context-info",
+      "lane": "pigpen-pig-stuff",
+      "status": "done",
+      "credit": "Original work by Michael Kinsy (MIT), moved from the owner's own extensions.",
+      "notes": "Moved unless a far more popular Pi extension covers the same job; the lane reports if one does. Reviewed and merged for the first release."
+    },
+    {
+      "id": "skills",
+      "name": "General development Skills (dev-skills)",
+      "kind": "port",
+      "summary": "Eight general development Skills (tdd, diagnosing-bugs, handoff, research, grilling, prototype, code-review, commit) adapted from public Skills, as one Skills Package. Not in batteries.",
+      "upstream": {
+        "name": "mattpocock/skills",
+        "url": "https://github.com/mattpocock/skills",
+        "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+        "license": "MIT",
+        "author": "Matt Pocock"
+      },
+      "additionalUpstreams": [
+        {
+          "name": "mitsuhiko/agent-stuff",
+          "url": "https://github.com/mitsuhiko/agent-stuff",
+          "commit": "0865c849befd2021490679f96a8dee58c84ac857",
+          "license": "Apache-2.0",
+          "author": "Armin Ronacher"
+        }
+      ],
+      "targetPackage": "components/dev-skills",
+      "lane": "pigpen-pig-stuff",
+      "status": "done",
+      "credit": "Skills adapted from mattpocock/skills, https://github.com/mattpocock/skills, by Matt Pocock (MIT), at commit d81f3a183412e71a5b1e84ca21bc1a35eea03a60, and from mitsuhiko/agent-stuff, https://github.com/mitsuhiko/agent-stuff, by Armin Ronacher (Apache-2.0), at commit 0865c849befd2021490679f96a8dee58c84ac857. Adaptation by Michael Kinsy (MIT).",
+      "notes": "Names take the pigpen- prefix the Skill gate requires. The adaptations were made from an earlier upstream revision whose commit was not recorded (see the Package CREDITS.md). Reviewed and merged for the first release."
+    },
+    {
+      "id": "rpiv-todo",
+      "name": "rpiv-todo",
+      "kind": "port",
+      "summary": "Model-facing todo list shown as a live overlay that survives reload and compaction.",
+      "upstream": {
+        "name": "rpiv-mono",
+        "url": "https://github.com/juicesharp/rpiv-mono",
+        "commit": "61904e69e1a50e12585bdf15f0310e633a62ba36",
+        "license": "MIT",
+        "author": "juicesharp",
+        "path": "packages/rpiv-todo"
+      },
+      "targetPackage": "components/todo",
+      "lane": "pigpen-rpiv-todo",
+      "status": "queued",
+      "priority": 1,
+      "credit": "Go port of @juicesharp/rpiv-todo 2.11.0 from rpiv-mono, https://github.com/juicesharp/rpiv-mono, by juicesharp (MIT), at commit 61904e69e1a50e12585bdf15f0310e633a62ba36.",
+      "notes": "npm 200,994 in 30 days. Size S, 3-5 days. The overlay is widget lines (Go SDK stand-in)."
+    },
+    {
+      "id": "rpiv-ask-user-question",
+      "name": "rpiv-ask-user-question",
+      "kind": "port",
+      "summary": "Structured multi-question questionnaire the model calls instead of guessing, with an RPC fallback and locales.",
+      "upstream": {
+        "name": "rpiv-mono",
+        "url": "https://github.com/juicesharp/rpiv-mono",
+        "commit": "61904e69e1a50e12585bdf15f0310e633a62ba36",
+        "license": "MIT",
+        "author": "juicesharp",
+        "path": "packages/rpiv-ask-user-question"
+      },
+      "targetPackage": "components/ask-user-question",
+      "lane": "pigpen-ask-user-question",
+      "status": "queued",
+      "priority": 2,
+      "credit": "Go port of @juicesharp/rpiv-ask-user-question 2.11.0 from rpiv-mono, https://github.com/juicesharp/rpiv-mono, by juicesharp (MIT), at commit 61904e69e1a50e12585bdf15f0310e633a62ba36.",
+      "notes": "npm 274,750 in 30 days. Size M, 6-10 days. The owner's Go ask extension is the base. Known gap: pi.events (named skipped tests)."
+    },
+    {
+      "id": "plannotator",
+      "name": "Plannotator",
+      "kind": "port",
+      "summary": "Plan mode with a browser review UI, code and PR diff review, and annotate-last-message. The flagship demo.",
+      "upstream": {
+        "name": "plannotator",
+        "url": "https://github.com/backnotprop/plannotator",
+        "commit": "3c9d79b36dbfbfcb7a180a52a9b7c60fc7d315df",
+        "license": "MIT OR Apache-2.0",
+        "author": "backnotprop",
+        "path": "apps/pi-extension"
+      },
+      "targetPackage": "components/plannotator",
+      "lane": "pigpen-plannotator",
+      "status": "queued",
+      "priority": 3,
+      "credit": "Go port of @plannotator/pi-extension 0.27.22 from plannotator, https://github.com/backnotprop/plannotator, by backnotprop (MIT OR Apache-2.0), at commit 3c9d79b36dbfbfcb7a180a52a9b7c60fc7d315df.",
+      "notes": "npm 105,444 in 30 days, 9,065 stars (cross-agent). Size L, 15-25 days: net/http plus the embedded prebuilt UI bundle, not a rewrite of the React UI. Start early; version 0.27 churns, so keep the pin."
+    },
+    {
+      "id": "ponytail",
+      "name": "Ponytail",
+      "kind": "port",
+      "summary": "The \"lazy senior dev\" mode: /ponytail modes, review, audit, gain and debt commands, plus six skills.",
+      "upstream": {
+        "name": "ponytail",
+        "url": "https://github.com/DietrichGebert/ponytail",
+        "commit": "1d95ff7d39de12d87014ea40d4e22201bddc501b",
+        "license": "MIT",
+        "author": "Dietrich Gebert"
+      },
+      "targetPackage": "components/ponytail",
+      "lane": "pigpen-ponytail",
+      "status": "queued",
+      "priority": 4,
+      "credit": "Go port of @dietrichgebert/ponytail 4.10.0, https://github.com/DietrichGebert/ponytail, by Dietrich Gebert (MIT), at commit 1d95ff7d39de12d87014ea40d4e22201bddc501b.",
+      "notes": "npm 69,188 in 30 days, 148,287 stars (marketing signal). Size XS, 1-3 days. Do not repeat the author's own 54% claim as ours."
+    },
+    {
+      "id": "langfuse-observability",
+      "name": "Langfuse observability",
+      "kind": "port",
+      "summary": "Traces prompts, turns, generations and tool calls to Langfuse. Opt-in; prompts leave the machine.",
+      "upstream": {
+        "name": "pi-observability-plugin",
+        "url": "https://github.com/langfuse/pi-observability-plugin",
+        "commit": "801108fac709ee5e72aa57b5a03ab4bfb1d2195b",
+        "license": "MIT",
+        "author": "Langfuse GmbH"
+      },
+      "targetPackage": "components/observability",
+      "lane": "pigpen-langfuse",
+      "status": "queued",
+      "priority": 5,
+      "credit": "Go port of @langfuse/pi-observability-plugin 0.1.2, https://github.com/langfuse/pi-observability-plugin, by Langfuse GmbH (MIT), at commit 801108fac709ee5e72aa57b5a03ab4bfb1d2195b.",
+      "notes": "npm 249,668 in 30 days but 11 stars: the count looks partly automated. Size S, 4-7 days. Pairs with LangSmith (@langchain/langsmith-pi-extension) as one observability battery. No default telemetry in batteries."
+    },
+    {
+      "id": "pi-subagents",
+      "name": "pi-subagents (Nico Bailon)",
+      "kind": "port",
+      "summary": "Delegation to child sessions: single, parallel, chains, fleet and status views, council mode, worktree isolation.",
+      "upstream": {
+        "name": "pi-subagents",
+        "url": "https://github.com/nicobailon/pi-subagents",
+        "commit": "8a403efba6975988cc0488ec8bb941db5ef1a19e",
+        "license": "MIT",
+        "author": "Nico Bailon"
+      },
+      "targetPackage": "components/subagents",
+      "lane": "pigpen-subagents",
+      "status": "queued",
+      "credit": "Go port of pi-subagents 0.73.1, https://github.com/nicobailon/pi-subagents, by Nico Bailon (MIT), at commit 8a403efba6975988cc0488ec8bb941db5ef1a19e.",
+      "notes": "Deferred to its own long lane (size XL, 25-45 days). npm 506,599 in 30 days. Needs an owner decision on the JavaScript workflow runtime (no Node dependency is approved). The owner's Go subagent is the base."
+    }
+  ]
+}

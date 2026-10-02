@@ -1,0 +1,8 @@
+{
+  "name": "tools-visible-to-model",
+  "description": "The three A2A tools are offered to the model; nothing else is added.",
+  "llm": [{"text": "ok"}],
+  "steps": [
+    {"name": "prompt", "rpc": {"type": "prompt", "message": "hello"}}
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "origin": "ported",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "mattpocock/skills",
+      "authors": ["Matt Pocock"],
+      "url": "https://github.com/mattpocock/skills",
+      "revision": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "path": "upstream/mattpocock-skills",
+      "license": "MIT",
+      "licenseFile": "upstream/mattpocock-skills/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "mitsuhiko/agent-stuff",
+      "authors": ["Armin Ronacher"],
+      "url": "https://github.com/mitsuhiko/agent-stuff",
+      "revision": "0865c849befd2021490679f96a8dee58c84ac857",
+      "path": "upstream/mitsuhiko-agent-stuff",
+      "license": "Apache-2.0",
+      "licenseFile": "upstream/mitsuhiko-agent-stuff/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

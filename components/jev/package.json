@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-jev",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jev for PiG: a typed judge for tool calls and tool output, plus a jev_ask tool. Opt-in, tells you what leaves the machine, and judges with the model PiG is configured with or the TypeSafe API. Go port of y0usaf/pi-jev.",
+  "keywords": ["pig-package", "jev", "typesafe", "guardrails", "safety", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/jev"]
+  }
+}

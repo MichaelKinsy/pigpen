@@ -43,7 +43,7 @@ export function generateIndex(directory = root, repository = config.repository) 
   const index = { schemaVersion: 1, updatedAt: manifests.map(m => m.metadata.updatedAt).sort().at(-1),
     entries: manifests.map(({ manifest, metadata, raw }) => ({
       id: manifest.name, kind: 'piglet', name: manifest.name, description: manifest.description,
-      maintainer: repository.split('/')[0], official: true, featured: metadata.featured,
+      maintainer: repository.split('/')[0], official: false, featured: metadata.featured,
       status: metadata.status, languages: metadata.languages, repository: 'https://github.com/' + repository,
       source: { type: 'git', spec: 'git:https://github.com/' + repository + '.git',
         url: `https://github.com/${repository}/tree/${config.ref}/piglets/${manifest.name}` },

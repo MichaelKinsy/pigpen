@@ -1,0 +1,52 @@
+{
+ "name": "fetch-text-page",
+ "description": "fetch_content returns a plain-text page from a fake server and records the request.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/page"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/page",
+     "headers": {
+      "content-type": "text/plain"
+     },
+     "body": "Plain page served by the fake web server.\n"
+    },
+    {
+     "path": "/gone",
+     "status": 404,
+     "headers": {
+      "content-type": "text/html"
+     },
+     "body": "<html>exact raw body</html>"
+    }
+   ]
+  }
+ }
+}

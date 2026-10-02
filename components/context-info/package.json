@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-context-info",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Context-window and cost inspection for PiG: /context, /tools, /cost, /prompts, and an optional two-line status footer",
+  "keywords": ["pig-package", "context", "cost", "tokens", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/context-info"]
+  }
+}

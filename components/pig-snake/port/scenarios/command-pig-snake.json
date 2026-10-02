@@ -1,0 +1,7 @@
+{
+  "name": "command-pig-snake",
+  "description": "/pig-snake in a host with a UI opens the game overlay (ui.custom) and, when it closes, reports the score.",
+  "steps": [
+    {"name": "play", "rpc": {"type": "prompt", "message": "/pig-snake"}}
+  ]
+}

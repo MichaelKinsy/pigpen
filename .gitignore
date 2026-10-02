@@ -3,3 +3,4 @@ node_modules/
 .pig-bin/
 dist/
 *.key
+.upstream

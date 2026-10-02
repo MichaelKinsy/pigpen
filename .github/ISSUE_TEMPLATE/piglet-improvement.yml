@@ -8,7 +8,7 @@ body:
         Requests about Piglets belong in **MichaelKinsy/pigpen**. Core PiG
         runtime, CLI, extension-host, or monorepo-release features belong in
         [MichaelKinsy/PiG](https://github.com/MichaelKinsy/PiG/issues).
-        Official resource selections need maintainer review. This is not a
+        Resource selections need maintainer review. This is not a
         community registry, and the current Piglet is a planned scaffold.
   - type: input
     id: piglet

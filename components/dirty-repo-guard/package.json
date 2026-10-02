@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-dirty-repo-guard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go port of Pi's dirty-repo-guard example: blocks a session switch or fork while the git tree has uncommitted changes unless you allow it",
+  "keywords": ["pig-package", "git", "safety", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/dirty-repo-guard"]
+  }
+}

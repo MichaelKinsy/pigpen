@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-angry-pigs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Angry Pigs: a pixel-art slingshot game with towers, birds and physics, opened with /angry-pigs (Go). Nothing runs until you type the command.",
+  "keywords": ["pig-package", "game", "pixel-art", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/angrypigs"]
+  }
+}

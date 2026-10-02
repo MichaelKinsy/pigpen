@@ -1,0 +1,1912 @@
+[
+ {
+  "name": "noul-minimal",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "hi",
+    "questions": {
+     "q": {
+      "type": "noul",
+      "instructions": "Is it?"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "all-three-types",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": {
+     "doc": "text <with> & 'chars' é  ",
+     "n": [
+      1,
+      2.5,
+      null,
+      true
+     ]
+    },
+    "questions": {
+     "a": {
+      "type": "noul",
+      "instructions": "A?",
+      "criteria": {
+       "true": "yes it is",
+       "false": "no it is not"
+      }
+     },
+     "b": {
+      "type": "choice",
+      "instructions": {
+       "k": [
+        1,
+        2,
+        {
+         "z": null
+        }
+       ]
+      },
+      "criteria": {
+       "x": "first",
+       "y": null
+      }
+     },
+     "c": {
+      "type": "score",
+      "instructions": null,
+      "criteria": [
+       "bad",
+       null,
+       {
+        "level": "good"
+       },
+       [
+        "a",
+        "b"
+       ]
+      ]
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "headers": {
+     "x-typesafe-request-id": "req_123"
+    },
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "a": {
+       "type": "noul",
+       "noul": 0.5
+      },
+      "b": {
+       "type": "choice",
+       "choice": "x",
+       "confidence": 0.8,
+       "probabilities": {
+        "x": 0.9,
+        "y": 0.1
+       }
+      },
+      "c": {
+       "type": "score",
+       "score": 2.4,
+       "confidence": 0.6,
+       "probabilities": {
+        "0": 0.1,
+        "1": 0.2,
+        "2": 0.7
+       },
+       "legend": {
+        "0": "bad",
+        "1": "ok",
+        "2": "good"
+       }
+      }
+     },
+     "usage": {
+      "input_tokens": 100,
+      "output_tokens": 20
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "model-override-and-extra",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul",
+      "instructions": "?"
+     }
+    },
+    "model": "custom-1",
+    "trace_id": "t1",
+    "flag": null,
+    "nested": {
+     "a": [
+      1
+     ]
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "state-null",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": null,
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "state-array",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": [
+     1,
+     "two",
+     {
+      "three": 3
+     }
+    ],
+    "questions": {
+     "q": {
+      "type": "noul",
+      "instructions": null,
+      "criteria": null
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "noul-null-criteria-and-unicode",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "日本語 😀",
+    "questions": {
+     "q": {
+      "type": "noul",
+      "instructions": "Sí?",
+      "criteria": null
+     },
+     "r": {
+      "type": "noul",
+      "instructions": "x",
+      "criteria": {
+       "true": null,
+       "false": "f"
+      }
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "headers-default-and-per-call",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   },
+   "defaultHeaders": {
+    "X-Default": "d",
+    "X-Other": "o"
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {
+    "headers": {
+     "X-Call": "1",
+     "x-default": "override"
+    }
+   }
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "per-call-header-cannot-replace-authorization",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {
+    "headers": {
+     "Authorization": "Bearer evil",
+     "Content-Type": "text/evil",
+     "X-TypeSafe-SDK": "evil"
+    }
+   }
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "base-url-trailing-slash",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   },
+   "baseURLSuffix": "///"
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "unknown-answer-type-and-extra-usage",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "model": "m",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 1,
+       "extra": "kept?"
+      },
+      "z": {
+       "type": "future",
+       "v": 1
+      }
+     },
+     "usage": {
+      "input_tokens": 1,
+      "output_tokens": 2,
+      "cost": 0.5
+     },
+     "warnings": [
+      "w"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "empty-questions-client-side-error",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {}
+   },
+   "options": {}
+  },
+  "responses": []
+ },
+ {
+  "name": "score-one-criterion-client-side-error",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "score",
+      "instructions": "x",
+      "criteria": [
+       "only"
+      ]
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": []
+ },
+ {
+  "name": "score-map-criteria-client-side-error",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "score",
+      "instructions": "x",
+      "criteria": {
+       "0": "a",
+       "1": "b"
+      }
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": []
+ },
+ {
+  "name": "400-json-message",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 400,
+    "headers": {
+     "x-typesafe-request-id": "req_400"
+    },
+    "body": {
+     "error": {
+      "message": "bad state",
+      "type": "invalid_request"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "400-top-level-message",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 400,
+    "body": {
+     "message": "plain top"
+    }
+   }
+  ]
+ },
+ {
+  "name": "401",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 401,
+    "body": {
+     "error": "invalid api key"
+    }
+   }
+  ]
+ },
+ {
+  "name": "403",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 403,
+    "body": {
+     "detail": "forbidden"
+    }
+   }
+  ]
+ },
+ {
+  "name": "404-text",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 404,
+    "bodyText": "not found here"
+   }
+  ]
+ },
+ {
+  "name": "422-detail-list",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 422,
+    "body": {
+     "detail": [
+      {
+       "loc": [
+        "body",
+        "questions",
+        "q"
+       ],
+       "msg": "field required",
+       "type": "missing"
+      },
+      {
+       "loc": [
+        "body",
+        "state"
+       ],
+       "msg": "bad"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "422-detail-string",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 422,
+    "body": {
+     "detail": "just a string"
+    }
+   }
+  ]
+ },
+ {
+  "name": "429-retry-after-then-ok",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 429,
+    "headers": {
+     "retry-after-ms": "3"
+    },
+    "body": {
+     "error": "slow down"
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "429-retry-after-seconds-too-long-uses-backoff",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 429,
+    "headers": {
+     "retry-after": "120"
+    },
+    "body": {
+     "error": "slow"
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "429-exhausted",
+  "note": "3 attempts, then RateLimitError",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 429,
+    "headers": {
+     "retry-after-ms": "1"
+    },
+    "body": {
+     "error": "slow"
+    }
+   },
+   {
+    "status": 429,
+    "headers": {
+     "retry-after-ms": "1"
+    },
+    "body": {
+     "error": "slow"
+    }
+   },
+   {
+    "status": 429,
+    "headers": {
+     "retry-after-ms": "1"
+    },
+    "body": {
+     "error": "slow"
+    }
+   }
+  ]
+ },
+ {
+  "name": "500-then-200",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": {
+     "error": "boom"
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "500-exhausted-max-retries-1",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 1,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": {
+     "error": "boom"
+    }
+   },
+   {
+    "status": 500,
+    "body": {
+     "error": "boom2"
+    }
+   }
+  ]
+ },
+ {
+  "name": "503-no-retries",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 0,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 503,
+    "bodyText": "unavailable"
+   }
+  ]
+ },
+ {
+  "name": "408-retried",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 408,
+    "body": {
+     "error": "timeout"
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "400-not-retried",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 400,
+    "body": {
+     "error": "no"
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "502-html-body",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 0,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 502,
+    "bodyText": "<html><body>Bad Gateway</body></html>"
+   }
+  ]
+ },
+ {
+  "name": "500-empty-body",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 0,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 500
+   }
+  ]
+ },
+ {
+  "name": "custom-http-statuses",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {
+    "retry": {
+     "httpStatuses": [
+      418
+     ]
+    }
+   }
+  },
+  "responses": [
+   {
+    "status": 418,
+    "body": {
+     "error": "teapot"
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "per-call-max-retries-0",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {
+    "retry": {
+     "maxRetries": 0
+    }
+   }
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": {
+     "error": "x"
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "connection-reset-then-ok",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "action": "destroy"
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "connection-reset-no-retry",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 0,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "action": "destroy"
+   }
+  ]
+ },
+ {
+  "name": "connection-error-retry-disabled",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {
+    "retry": {
+     "apiConnectionError": false
+    }
+   }
+  },
+  "responses": [
+   {
+    "action": "destroy"
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "timeout-then-ok",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   },
+   "timeoutMs": 100
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "delayMs": 400,
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "timeout-no-retry",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 0,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   },
+   "timeoutMs": 100
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "delayMs": 400,
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "timeout-retry-disabled",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   },
+   "timeoutMs": 100
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {
+    "retry": {
+     "apiTimeoutError": false
+    }
+   }
+  },
+  "responses": [
+   {
+    "delayMs": 400,
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "per-call-timeout",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 0,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {
+    "timeoutMs": 100
+   }
+  },
+  "responses": [
+   {
+    "delayMs": 400,
+    "status": 200,
+    "body": {
+     "model": "jev-latest",
+     "answers": {
+      "q": {
+       "type": "noul",
+       "noul": 0.75
+      }
+     },
+     "usage": {
+      "input_tokens": 10,
+      "output_tokens": 2
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "200-invalid-json",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 0,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "bodyText": "not json{"
+   }
+  ]
+ },
+ {
+  "name": "200-empty-body",
+  "note": "result of an empty 200 body",
+  "config": {
+   "retry": {
+    "maxRetries": 0,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "systemOne",
+   "request": {
+    "state": "s",
+    "questions": {
+     "q": {
+      "type": "noul"
+     }
+    }
+   },
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "bodyText": ""
+   }
+  ]
+ },
+ {
+  "name": "models-list",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "modelsList",
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "models": [
+      {
+       "name": "jev-latest",
+       "description": "d",
+       "release_date": "2026-01-01"
+      },
+      {
+       "name": "jev-mini",
+       "description": "",
+       "release_date": ""
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "models-list-wrong-shape",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "modelsList",
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "data": []
+    }
+   }
+  ]
+ },
+ {
+  "name": "models-list-401",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "modelsList",
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 401,
+    "body": {
+     "error": "no"
+    }
+   }
+  ]
+ },
+ {
+  "name": "models-list-retry-header",
+  "note": "",
+  "config": {
+   "retry": {
+    "maxRetries": 2,
+    "backoffInitialMs": 1,
+    "backoffMaxMs": 2,
+    "backoffJitter": 0
+   }
+  },
+  "call": {
+   "kind": "modelsList",
+   "options": {}
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": {
+     "error": "x"
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "models": []
+    }
+   }
+  ]
+ }
+]

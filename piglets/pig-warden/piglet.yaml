@@ -1,0 +1,24 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG with warden: guardrails that steer instead of interrupt. Opt-in: off until /warden enable.
+name: pig-warden
+description: "PiG with warden: irreversible calls held before they run, off-task calls flagged, stuck loops and unverified done claims called out. Off until /warden enable; it shows what leaves the machine before anything does; judged by TypeSafe Jev or your own session model."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  # typesafe is a Go library Package, not a member: warden imports it through the go.work beside the extension,
+  # which resolves to packages/typesafe in the staged Piglet.
+  typesafe: local:../../components/typesafe
+  warden: local:../../components/warden
+extensions:
+  # /warden and the tool_call, tool_result and agent_end guards. Registers no tool. Does nothing until enabled.
+  - name: warden
+    origins: [package:warden]
+    tools: []
+skills: []
+# Warden adds no behavior beyond the guards, so the user's own extensions and skills stay available beside it.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

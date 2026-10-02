@@ -1,0 +1,23 @@
+{
+ "mode": "probabilities",
+ "structured": false,
+ "malformedRetries": 1,
+ "state": "doc",
+ "questions": {
+  "q": {
+   "type": "noul",
+   "instructions": "?"
+  }
+ },
+ "responses": [
+  {
+   "answers": {}
+  },
+  {
+   "answers": {
+    "q": 0.75
+   }
+  }
+ ],
+ "name": "malformed-then-valid"
+}
