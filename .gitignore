@@ -3,3 +3,6 @@ node_modules/
 .pig-bin/
 dist/
 *.key
+
+# Piglet Binary output written next to a manifest by `pig piglet build --out`.
+piglets/*/pig-*
