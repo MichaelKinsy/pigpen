@@ -1,0 +1,42 @@
+[
+  {
+    "id": "goal-created",
+    "desc": "The sisyphus goal is created.",
+    "kind": "tool-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "a-txt",
+    "desc": "a.txt exists with 'a'.",
+    "kind": "sandbox-file-contains",
+    "path": "a.txt",
+    "pattern": "^a$"
+  },
+  {
+    "id": "b-txt",
+    "desc": "b.txt exists with 'b'.",
+    "kind": "sandbox-file-contains",
+    "path": "b.txt",
+    "pattern": "^b$"
+  },
+  {
+    "id": "c-txt",
+    "desc": "c.txt exists with 'c'.",
+    "kind": "sandbox-file-contains",
+    "path": "c.txt",
+    "pattern": "^c$"
+  },
+  {
+    "id": "completed",
+    "desc": "update_goal(complete) is called.",
+    "kind": "tool-args-jq",
+    "tool": "update_goal",
+    "jq": ".status == \"complete\""
+  },
+  {
+    "id": "no-complete-tool",
+    "desc": "complete_goal is removed.",
+    "kind": "tool-not-called",
+    "tool": "complete_goal"
+  }
+]

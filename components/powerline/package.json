@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-powerline-footer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go port of pi-powerline-footer: a powerline-style status bar of configurable segments (model, path, git, tokens, cost, context, time) with presets, separators and /powerline (partial: the bar, not the custom editor)",
+  "keywords": ["pig-package", "statusline", "powerline", "footer", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/powerline-footer"]
+  }
+}

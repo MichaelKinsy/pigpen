@@ -1,0 +1,11 @@
+{
+  "name": "task-unknown-action",
+  "description": "a2a_task with an action outside get, cancel and list is an error the model sees.",
+  "llm": [
+    {"toolCalls": [{"name": "a2a_task", "arguments": {"agent": "peer", "action": "explode", "taskId": "t"}}]},
+    {"text": "done"}
+  ],
+  "steps": [
+    {"name": "prompt", "rpc": {"type": "prompt", "message": "poke the peer"}}
+  ]
+}

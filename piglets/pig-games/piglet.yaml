@@ -1,0 +1,32 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# The pig games and nothing else. Games start only on their command. The sprite login and /sprite
+# are PiG's own (built in since 0.4.0); the games draw the pig chosen there.
+# Letting an agent play them over MCP is opt-in too: `/runner mcp on`, `/angry-pigs mcp on` or PIG_GAMES_MCP=1.
+name: pig-games
+description: "PiG with two pixel-art games, PiG Runner (/runner) and Angry Pigs (/angry-pigs), starring the pig you chose with PiG's /sprite. Nothing starts until you type a command."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  # pig-play is a Go library Package, not a member: the two below import it through the
+  # go.work in each extension directory (../../../pig-play is packages/pig-play when staged).
+  pig-play: local:../../components/pig-play
+  pig-runner: local:../../components/pig-runner
+  angry-pigs: local:../../components/angry-pigs
+extensions:
+  # /runner and /pig-runner. Registers no event handler (PIG_GAMES_MCP=1 adds one, for the opt-in agent server).
+  - name: pigrunner
+    origins: [package:pig-runner]
+    tools: []
+  # /angry-pigs. Registers no event handler (PIG_GAMES_MCP=1 adds one, for the opt-in agent server).
+  - name: angrypigs
+    origins: [package:angry-pigs]
+    tools: []
+skills: []
+# The composition adds no behavior beyond the commands, so the user's own
+# extensions and skills stay available beside it.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

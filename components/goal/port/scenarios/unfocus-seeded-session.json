@@ -1,0 +1,34 @@
+{
+  "name": "unfocus-seeded-session",
+  "description": "A new session after a goal exists starts unfocused (the default does not auto-select).",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-direct Created here"
+      }
+    },
+    {
+      "name": "new",
+      "rpc": {
+        "type": "new_session"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-pause"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

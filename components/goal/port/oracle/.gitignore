@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+.pi/
+*.tgz
+experiments/cases/*/runs/
+experiments/runs/
+.pi-subagents/

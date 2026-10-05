@@ -1,0 +1,2 @@
+{"name":"tool-disabled","description":"The model calls the tool while it is disabled: the call fails with the operator instruction and nothing is submitted.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"llm":[{"toolCalls":[{"name":"typesafe_evaluate","arguments":{"state":"s","questions":{"yes":{"type":"noul","instructions":"?"}}}}]},{"text":"done"}],"steps":[
+ {"name":"call","rpc":{"type":"prompt","message":"judge it"}}]}

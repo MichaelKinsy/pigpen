@@ -1,0 +1,10 @@
+{"kind":"header","scenario":"pool-startup","lane":"pi-ts","host":"pi 1.0.0","extension":"sha256:a1b1badfb1de3f1d8f403cca4142913ea577427f75f0cf9f4a2ef5413b29e41c","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"goal"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"goal"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"goal","statusText":"goal: unfocused [2 open] - /goal-focus"}}
+{"step":"01-cmd","ch":"ui","data":{"message":"Open goals: 2\n\n  seed-a — running · goal · 1h02m05s · 13K\n  First goal\n  .pi/goals/active_goal_20260102030405_seed-a.md\n  seed-b — sisyphus running · sisyphus\n  Second goal\n  .pi/goals/active_goal_20260103000000_seed-b.md","method":"notify","notifyType":"info"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setStatus","statusKey":"goal","statusText":"goal: unfocused [2 open] - /goal-focus"}}
+{"step":"01-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"ui","data":{"method":"setStatus","statusKey":"goal"}}
+{"step":"99-shutdown","ch":"ui","data":{"method":"setWidget","widgetKey":"goal"}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

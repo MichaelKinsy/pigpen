@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "@gotgenes/pi-permission-system",
+      "authors": [
+        "MasuRii and Christopher D. Lasher"
+      ],
+      "url": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system",
+      "revision": "c5bc74712cd2fe808d70246d93d26a092f736676",
+      "path": "port/oracle/packages/pi-permission-system",
+      "license": "MIT",
+      "licenseFile": "port/oracle/packages/pi-permission-system/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

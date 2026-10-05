@@ -1,0 +1,18 @@
+{
+ "name": "cmd-unknown",
+ "description": "An unknown argument lists the presets.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/powerline wat"
+   }
+  }
+ ]
+}

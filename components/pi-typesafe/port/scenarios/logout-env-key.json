@@ -1,0 +1,3 @@
+{"name":"logout-env-key","description":"logout with no stored key says so and that the environment key remains.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"steps":[
+ {"name":"logout","rpc":{"type":"prompt","message":"/typesafe logout"}},
+ {"name":"status","rpc":{"type":"prompt","message":"/typesafe status"}}]}

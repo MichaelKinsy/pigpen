@@ -1,0 +1,3 @@
+[{"toolCalls":[{"name":"todo","arguments":{"action":"create","subject":"Write tests","activeForm":"writing tests"}},{"name":"todo","arguments":{"action":"create","subject":"Implement"}},{"name":"todo","arguments":{"action":"create","subject":"Release"}}]},
+ {"toolCalls":[{"name":"todo","arguments":{"action":"update","id":1,"status":"completed"}},{"name":"todo","arguments":{"action":"update","id":2,"status":"in_progress","activeForm":"implementing"}}]},
+ {"text":"Plan recorded."}]

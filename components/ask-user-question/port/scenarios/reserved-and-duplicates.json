@@ -1,0 +1,157 @@
+{
+  "name": "reserved-and-duplicates",
+  "description": "Rejected before any dialog: reserved labels, duplicate question text, duplicate option labels.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Reserved other?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "Other",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "X",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Reserved row?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "Type something.",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "X",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Reserved next?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "Next",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "X",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Same?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              },
+              {
+                "question": "Same?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Dup labels?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      }
+    }
+  ]
+}

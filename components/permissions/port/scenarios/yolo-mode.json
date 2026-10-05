@@ -1,0 +1,54 @@
+{
+  "name": "yolo-mode",
+  "description": "yoloMode turns asks into allows and shows the status; denies stay.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo hello"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "rm x"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "a.txt"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "do the work"
+      }
+    }
+  ],
+  "files": {
+    "a.txt": "hello\n"
+  },
+  "agentFiles": {
+    "extensions/pi-permission-system/config.json": "{\n  \"yoloMode\": true,\n  \"permission\": {\n    \"path\": \"allow\",\n    \"external_directory\": \"allow\",\n    \"*\": \"ask\",\n    \"bash\": {\n      \"*\": \"ask\",\n      \"rm *\": {\n        \"action\": \"deny\",\n        \"reason\": \"no deletes\"\n      }\n    }\n  }\n}"
+  }
+}

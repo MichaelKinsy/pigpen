@@ -1,0 +1,53 @@
+{
+ "mode": "discrete",
+ "structured": true,
+ "state": "doc",
+ "questions": {
+  "one": {
+   "type": "noul",
+   "instructions": {
+    "ask": "is it?"
+   },
+   "criteria": {
+    "true": "T",
+    "false": "F"
+   }
+  },
+  "four": {
+   "type": "choice",
+   "instructions": [
+    "pick",
+    null
+   ],
+   "criteria": {
+    "a": null,
+    "b": {
+     "detail": "rich"
+    }
+   }
+  },
+  "five": {
+   "type": "score",
+   "criteria": [
+    "nothing",
+    {
+     "x": "y"
+    },
+    [
+     "top",
+     "level"
+    ]
+   ]
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "one": true,
+    "four": "b",
+    "five": 2
+   }
+  }
+ ],
+ "name": "rich-descriptions-discrete"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-acp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Client Protocol (ACP) for PiG: pig-acp lets an editor such as Zed drive a PiG agent over stdio JSON-RPC. A Go port of pi-acp.",
+  "keywords": ["pig-package", "acp", "agent-client-protocol", "editor", "zed", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/acp"]
+  }
+}

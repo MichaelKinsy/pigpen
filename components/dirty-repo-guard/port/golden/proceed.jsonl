@@ -1,0 +1,6 @@
+{"kind":"header","scenario":"proceed","lane":"pi-ts","host":"pi 1.0.1","extension":"sha256:0037a69abdf4cf98181db799bef5bdee8981861315eb82ddab78126c2b0f13c4","normalizer":"v3"}
+{"step":"01-new-session","ch":"exec","data":{"args":["status","--porcelain"],"cmd":"git","cwd":"<cwd>"}}
+{"step":"01-new-session","ch":"exec_end","data":{"cmd":"git","exit":0}}
+{"step":"01-new-session","ch":"ui","data":{"method":"select","options":["Yes, proceed anyway","No, let me commit first"],"title":"You have 2 uncommitted file(s). new session anyway?"}}
+{"step":"01-new-session","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

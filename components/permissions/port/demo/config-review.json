@@ -1,0 +1,8 @@
+{
+  // the review's demo: bash is allowed, except deletes; a wrapper is asked about, as in the original
+  "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": { "*": "allow", "rm *": { "action": "deny", "reason": "deleting files is not allowed here" } }
+  }
+}

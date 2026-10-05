@@ -1,0 +1,36 @@
+ todo + Implement
+ ○ pending
+
+
+
+ todo + Release
+ ○ pending
+
+
+
+ todo → Write tests
+ ● completed
+
+
+
+ todo → Implement
+ ◐ in progress
+
+
+ Plan recorded.
+
+ 1/3 completed · 1 in progress · 1 pending
+ ── Pending ──
+   ○ #3 Release
+ ── In Progress ──
+   ◐ #2 Implement (implementing)
+ ── Completed ──
+   ✓ #1 Write tests
+
+ ● Todos (1/3)
+ └─ alt+o to expand
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<run>/work
+↑3 ↓3 0.0%/100k (auto)                                                                                    eq-1

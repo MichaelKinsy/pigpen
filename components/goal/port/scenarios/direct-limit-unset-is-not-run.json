@@ -1,0 +1,21 @@
+{
+  "name": "direct-limit-unset-is-not-run",
+  "description": "Settings with an unknown key: the original rejects the whole file; direct goals still work.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-direct Odd settings"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0, \"nonsense\": 1}"
+  }
+}

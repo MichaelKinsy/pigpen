@@ -1,0 +1,27 @@
+[
+  {
+    "id": "create-goal-called",
+    "desc": "create_goal is called with the full objective.",
+    "kind": "tool-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "readme-created",
+    "desc": "README.md exists with 'Test C11'.",
+    "kind": "sandbox-file-contains",
+    "path": "README.md",
+    "pattern": "^Test C11$"
+  },
+  {
+    "id": "no-draft-tools",
+    "desc": "Drafting tools are removed.",
+    "kind": "tool-not-called",
+    "tool": "propose_goal_draft"
+  },
+  {
+    "id": "no-question-tools",
+    "desc": "Question tools are removed.",
+    "kind": "tool-not-called",
+    "tool": "goal_questionnaire"
+  }
+]

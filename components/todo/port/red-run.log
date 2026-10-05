@@ -1,0 +1,505 @@
+--- FAIL: TestGetMaxWidgetLines (0.00s)
+    --- FAIL: TestGetMaxWidgetLines/returns_the_default_when_no_config_is_present (0.00s)
+        config_test.go:36: lines: got 0, want 12
+    --- FAIL: TestGetMaxWidgetLines/returns_the_default_when_the_field_is_absent (0.00s)
+        config_test.go:41: lines: got 0, want 12
+    --- FAIL: TestGetMaxWidgetLines/returns_the_default_for_non-number_values (0.00s)
+        config_test.go:46: lines: got 0, want 12
+    --- FAIL: TestGetMaxWidgetLines/returns_the_default_for_values_below_the_floor_(2,_1,_0,_-5) (0.00s)
+        config_test.go:52: lines for 2: got 0, want 12
+    --- FAIL: TestGetMaxWidgetLines/returns_the_configured_value_at_the_floor_(3)_and_above_—_no_ceiling (0.00s)
+        config_test.go:59: lines: got 0, want 3
+--- FAIL: TestLoadConfigCollapseKey (0.00s)
+    --- FAIL: TestLoadConfigCollapseKey/surfaces_a_user-set_collapseKey_unchanged_(validation_happens_in_resolveCollapseKey,_not_at_load) (0.00s)
+        config_test.go:70: collapseKey: got <nil>, want "alt+o"
+    --- FAIL: TestLoadConfigCollapseKey/passes_invalid_specs_through_verbatim_—_the_resolver,_not_the_loader,_decides_validity (0.00s)
+        config_test.go:75: collapseKey: got <nil>, want "ctr+t"
+--- FAIL: TestResolveCollapseKey (0.01s)
+    --- FAIL: TestResolveCollapseKey/returns_the_default_(ctrl+shift+t)_when_no_config_is_present (0.00s)
+        config_test.go:82: key: got "", want "ctrl+shift+t"
+    --- FAIL: TestResolveCollapseKey/returns_the_default_when_the_field_is_absent (0.00s)
+        config_test.go:87: key: got "", want "ctrl+shift+t"
+    --- FAIL: TestResolveCollapseKey/returns_the_default_when_the_field_is_empty_or_blank (0.01s)
+        config_test.go:92: empty: got "", want "ctrl+shift+t"
+    --- FAIL: TestResolveCollapseKey/returns_COLLAPSE_KEY_OFF_when_set_to_the_sentinel (0.00s)
+        config_test.go:99: key: got "", want "off"
+    --- FAIL: TestResolveCollapseKey/returns_the_lowercased_validated_spec_when_valid (0.00s)
+        config_test.go:104: key: got "", want "alt+o"
+    --- FAIL: TestResolveCollapseKey/returns_the_default_when_the_spec_is_invalid (0.00s)
+        config_test.go:109: key: got "", want "ctrl+shift+t"
+    --- FAIL: TestResolveCollapseKey/returns_the_default_for_non-string_values (0.00s)
+        config_test.go:115: key for 123: got "", want "ctrl+shift+t"
+    --- FAIL: TestResolveCollapseKey/is_arg-less_and_reads_config_fresh_on_every_call_(no_caching,_parity_with_getMaxWidgetLines) (0.00s)
+        config_test.go:120: no config: got "", want "ctrl+shift+t"
+--- FAIL: TestIsValidCollapseKeySpec (0.00s)
+    --- FAIL: TestIsValidCollapseKeySpec/rejects_empty_spec (0.00s)
+        config_test.go:134: empty: got true, want false
+    --- FAIL: TestIsValidCollapseKeySpec/rejects_leading,_trailing,_and_double_'+' (0.00s)
+        config_test.go:137: +: got true, want false
+    --- FAIL: TestIsValidCollapseKeySpec/rejects_unknown_modifiers (0.00s)
+        config_test.go:140: win+t: got true, want false
+    --- FAIL: TestIsValidCollapseKeySpec/rejects_duplicate_modifiers (0.00s)
+        config_test.go:141: ctrl+ctrl+t: got true, want false
+    --- FAIL: TestIsValidCollapseKeySpec/rejects_typo_bases_(multi-char_non-special) (0.00s)
+        config_test.go:142: ctr+t: got true, want false
+--- FAIL: TestConfigRobustness (0.00s)
+    --- FAIL: TestConfigRobustness/XDG_CONFIG_HOME_wins_when_absolute,_a_relative_one_falls_back_to_~/.config (0.00s)
+        config_test.go:157: absolute XDG_CONFIG_HOME: got 0, want 7
+    --- FAIL: TestConfigRobustness/the_legacy_~/.config_file_is_the_fallback_when_the_XDG_file_is_missing (0.00s)
+        config_test.go:165: legacy fallback: got 0, want 9
+    --- FAIL: TestConfigRobustness/invalid_JSON_and_non-object_JSON_read_as_an_empty_config (0.00s)
+        config_test.go:171: {nope: got 0, want 12
+--- FAIL: TestValidateGuidanceFields (0.00s)
+    --- FAIL: TestValidateGuidanceFields/keeps_valid_fields_and_drops_invalid_ones (0.00s)
+        config_test.go:179: valid: got rpiv_todo.guidanceFields{PromptSnippet:"", PromptGuidelines:[]string(nil), Description:""}, want rpiv_todo.guidanceFields{PromptSnippet:"s", PromptGuidelines:[]string{"a", "b"}, Description:"d"}
+--- FAIL: TestFormatContent (0.00s)
+    --- FAIL: TestFormatContent/create_—_'Created_#id:_subject_(pending)' (0.00s)
+        envelope_test.go:9: text: got "", want "Created #1: alpha (pending)"
+    --- FAIL: TestFormatContent/update_—_emits_transition_tuple_when_statuses_differ (0.00s)
+        envelope_test.go:13: text: got "", want "Updated #1 (pending → in_progress)"
+    --- FAIL: TestFormatContent/update_—_omits_transition_when_from_===_to_but_fields_changed_(e.g._blockedBy-only_update) (0.00s)
+        envelope_test.go:16: text: got "", want "Updated #1"
+    --- FAIL: TestFormatContent/update_—_reports_'No_change'_when_changed_is_false_(no-effect_update) (0.00s)
+        envelope_test.go:19: text: got "", want "No change: #1 already matches the requested values (status: pending)"
+    --- FAIL: TestFormatContent/delete_—_'Deleted_#id:_subject' (0.00s)
+        envelope_test.go:23: text: got "", want "Deleted #1: ship"
+    --- FAIL: TestFormatContent/clear_—_emits_prior_count (0.00s)
+        envelope_test.go:26: text: got "", want "Cleared 4 tasks"
+    --- FAIL: TestFormatContent/list_—_'No_tasks'_when_filtered_view_is_empty (0.00s)
+        envelope_test.go:29: text: got "", want "No tasks"
+    --- FAIL: TestFormatContent/list_—_joins_per-task_'[status]_#id_subject'_lines (0.00s)
+        envelope_test.go:33: text: got "", want "[pending] #1 a\n[in_progress] #2 b (Building)"
+    --- FAIL: TestFormatContent/get_—_multi-line_task_block_with_description/blockedBy/owner (0.00s)
+        envelope_test.go:37: text: got "", want "#2 [pending] leaf\n  description: details\n  blockedBy: #1\n  owner: Sergii"
+    --- FAIL: TestFormatContent/get_—_emits_'blocks:_#id,…'_reverse-edge_line_when_other_tasks_block_on_it (0.00s)
+        envelope_test.go:41: text: got "", want "#2 [pending] test\n  blocks: #1"
+    --- FAIL: TestFormatContent/get_—_emits_activeForm_line_for_in_progress_task (0.00s)
+        envelope_test.go:45: text: got "", want "#1 [in_progress] build\n  activeForm: Building"
+    --- FAIL: TestFormatContent/list_—_statusFilter_narrows_to_a_single_status (0.00s)
+        envelope_test.go:49: text: got "", want "[in_progress] #2 b (Working)"
+    --- FAIL: TestFormatContent/list_—_includeDeleted=true_surfaces_tombstoned_rows (0.00s)
+        envelope_test.go:52: text: got "", want "[deleted] #1 x"
+    --- FAIL: TestFormatContent/list_—_'⛓_#id,…'_suffix_appears_when_task_has_blockedBy (0.00s)
+        envelope_test.go:56: text: got "", want "[pending] #1 leaf\n[pending] #2 task ⛓ #1"
+    --- FAIL: TestFormatContent/create_—_defensive_fallback_when_op.taskId_is_unknown_to_state (0.00s)
+        envelope_test.go:59: text: got "", want "Created #999"
+    --- FAIL: TestFormatContent/error_—_'Error:_<message>' (0.00s)
+        envelope_test.go:62: text: got "", want "Error: subject required for create"
+--- FAIL: TestBuildToolResult (0.00s)
+    --- FAIL: TestBuildToolResult/envelope.details_mirrors_the_canonical_TaskDetails_shape_on_success (0.00s)
+        envelope_test.go:70: envelope: got rpiv_todo.toolEnvelope{Text:"", Details:rpiv_todo.taskDetails{Action:"", Params:map[string]interface {}(nil), Tasks:[]rpiv_todo.task(nil), NextID:0, Error:""}}, want rpiv_todo.toolEnvelope{Text:"Created #1: alpha (pending)", Details:rpiv_todo.taskDetails{Action:"create", Params:map[string]interface {}{"subject":"alpha"}, Tasks:[]rpiv_todo.task{rpiv_todo.task{ID:1, Subject:"alpha", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"pending", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}}, NextID:2, Error:""}}
+    --- FAIL: TestBuildToolResult/envelope.details_carries_error_message_on_op.kind_===_'error' (0.00s)
+        envelope_test.go:74: details.error: got "", want "subject required for create"
+--- FAIL: TestFormatContentControlCharacters (0.00s)
+    --- FAIL: TestFormatContentControlCharacters/get_—_strips_escape_sequences_from_subject,_description,_and_owner (0.00s)
+        envelope_test.go:82: text: got "", want "#1 [pending] safesubject\n  description: line1 line2\n  owner: whoami"
+    --- FAIL: TestFormatContentControlCharacters/create/list_—_strips_escape_sequences_from_the_echoed_subject_and_activeForm (0.00s)
+        envelope_test.go:86: create: got "", want "Created #1: evil (pending)"
+--- FAIL: TestToolResultDetailsJSON (0.00s)
+    envelope_test.go:99: details JSON: got "", want "{\"action\":\"create\",\"params\":{\"action\":\"create\",\"subject\":\"a\"},\"tasks\":[{\"id\":1,\"subject\":\"a\",\"description\":\"d\",\"status\":\"pending\",\"blockedBy\":[2]}],\"nextId\":2}"
+--- FAIL: TestSanitizeTerminalText (0.00s)
+    --- FAIL: TestSanitizeTerminalText/drops_complete_ANSI/C1_escape_sequences_without_printable_remnants (0.00s)
+        envelope_test.go:108: text: got "safe\x1b[31mred\x1b[0m\u009b2J", want "safered"
+    --- FAIL: TestSanitizeTerminalText/drops_OSC_sequences_including_their_payload (0.00s)
+        envelope_test.go:111: text: got "a\x1b]0;evil title\ab\x1b]8;;http://x\x1b\\c", want "abc"
+    --- FAIL: TestSanitizeTerminalText/keeps_task_fields_on_one_terminal_line (0.00s)
+        envelope_test.go:114: controls: got "one\ntwo\tthree\r", want "one two three "
+    --- FAIL: TestSanitizeTerminalText/removes_bare_control_characters_and_bidi_overrides (0.00s)
+        envelope_test.go:118: text: got "a\ab\x7fc\u202egfedcba\u202c", want "abcgfedcba"
+--- FAIL: TestFormatOverlayTaskLine (0.00s)
+    --- FAIL: TestFormatOverlayTaskLine/keeps_pending_subjects_primary_while_rendering_IDs_quietly (0.00s)
+        format_test.go:20: line: got "", want "<dim>○</dim> <dim>#1</dim> <text>quiet task</text>"
+    --- FAIL: TestFormatOverlayTaskLine/emphasizes_the_current_task_while_muting_its_supporting_metadata (0.00s)
+        format_test.go:24: line: got "", want "<warning>◐</warning> <dim>#1</dim> <accent>quiet task</accent> <muted>(Working)</muted> <muted>⛓ #2,#3</muted>"
+    --- FAIL: TestFormatOverlayTaskLine/mutes_and_strikes_completed_subjects (0.00s)
+        format_test.go:27: line: got "", want "<success>✓</success> <strike><muted>quiet task</muted></strike>"
+    --- FAIL: TestFormatOverlayTaskLine/strips_escape_sequences_from_subject_and_activeForm_before_theming (0.00s)
+        format_test.go:31: line: got "", want "<warning>◐</warning> <accent>quiettask</accent> <muted>(Working)</muted>"
+--- FAIL: TestViewStatusPresentation (0.00s)
+    format_test.go:36: deleted overlay glyph: got "", want "<error>✗</error>"
+--- FAIL: TestRenderTodoCallAndResult (0.00s)
+    --- FAIL: TestRenderTodoCallAndResult/create (0.00s)
+        format_test.go:59: call: got "", want "<toolTitle><bold>todo </bold></toolTitle><muted>+</muted> <dim>new thing</dim>"
+    --- FAIL: TestRenderTodoCallAndResult/update_unregistered_id (0.00s)
+        format_test.go:59: call: got "", want "<toolTitle><bold>todo </bold></toolTitle><muted>→</muted> <accent>#9</accent>"
+    --- FAIL: TestRenderTodoCallAndResult/update_seeded (0.00s)
+        format_test.go:59: call: got "", want "<toolTitle><bold>todo </bold></toolTitle><muted>→</muted> <accent>seeded</accent>"
+    --- FAIL: TestRenderTodoCallAndResult/list_filtered (0.00s)
+        format_test.go:59: call: got "", want "<toolTitle><bold>todo </bold></toolTitle><muted>☰</muted> <muted>in progress</muted>"
+    --- FAIL: TestRenderTodoCallAndResult/clear (0.00s)
+        format_test.go:59: call: got "", want "<toolTitle><bold>todo </bold></toolTitle><muted>∅</muted>"
+    --- FAIL: TestRenderTodoCallAndResult/get (0.00s)
+        format_test.go:59: call: got "", want "<toolTitle><bold>todo </bold></toolTitle><muted>›</muted> <accent>seeded</accent>"
+    --- FAIL: TestRenderTodoCallAndResult/delete (0.00s)
+        format_test.go:59: call: got "", want "<toolTitle><bold>todo </bold></toolTitle><muted>×</muted> <accent>seeded</accent>"
+    --- FAIL: TestRenderTodoCallAndResult/result_create (0.00s)
+        format_test.go:79: result: got "", want "<dim>○ pending</dim>"
+    --- FAIL: TestRenderTodoCallAndResult/result_update_to_in_progress (0.00s)
+        format_test.go:79: result: got "", want "<warning>◐ in progress</warning>"
+    --- FAIL: TestRenderTodoCallAndResult/result_update_without_status_takes_the_task's (0.00s)
+        format_test.go:79: result: got "", want "<success>● completed</success>"
+    --- FAIL: TestRenderTodoCallAndResult/result_delete (0.00s)
+        format_test.go:79: result: got "", want "<muted>⊘ deleted</muted>"
+    --- FAIL: TestRenderTodoCallAndResult/result_list (0.00s)
+        format_test.go:79: result: got "", want "<success>✓</success>"
+    --- FAIL: TestRenderTodoCallAndResult/result_get (0.00s)
+        format_test.go:79: result: got "", want "<success>✓</success>"
+    --- FAIL: TestRenderTodoCallAndResult/result_clear (0.00s)
+        format_test.go:79: result: got "", want "<success>✓</success>"
+    --- FAIL: TestRenderTodoCallAndResult/result_missing_details (0.00s)
+        format_test.go:79: result: got "", want "<success>✓</success>"
+--- FAIL: TestOverlayRenderHeading (0.00s)
+    --- FAIL: TestOverlayRenderHeading/includes_'Todos_(completed/total)'_count (0.00s)
+        overlay_test.go:103: "" does not contain "Todos (1/3)"
+    --- FAIL: TestOverlayRenderHeading/uses_filled_icon_'●'_when_any_task_is_active_(pending/in_progress) (0.00s)
+        overlay_test.go:106: "" does not contain "●"
+    --- FAIL: TestOverlayRenderHeading/uses_hollow_icon_'○'_when_all_tasks_are_completed (0.00s)
+        overlay_test.go:109: "" does not contain "○"
+    --- FAIL: TestOverlayRenderHeading/renders_one_line_per_visible_task_plus_heading,_last_row_uses_'└─' (0.00s)
+        overlay_test.go:113: heading + 3 tasks + trailing spacer: got 0, want 5
+    --- FAIL: TestOverlayRenderHeading/omits_deleted_tasks_from_the_rendered_output (0.00s)
+        overlay_test.go:122: "" does not contain "t2"
+--- FAIL: TestOverlayRenderRows (0.00s)
+    --- FAIL: TestOverlayRenderRows/pending_task_uses_'○'_glyph (0.00s)
+        overlay_test.go:128: "" does not contain "○"
+    --- FAIL: TestOverlayRenderRows/in_progress_task_uses_'◐'_glyph_and_appends_(activeForm) (0.00s)
+        overlay_test.go:132: "" does not contain "◐"
+    --- FAIL: TestOverlayRenderRows/completed_task_stays_visible_until_the_next_agent_turn_starts (0.00s)
+        overlay_test.go:139: "" does not contain "✓"
+    --- FAIL: TestOverlayRenderRows/shows_#id_prefix_and_'⛓'_dep_suffix_when_any_task_has_blockedBy (0.00s)
+        overlay_test.go:153: "" does not contain "#1"
+--- FAIL: TestOverlayRenderOverflow (0.00s)
+    --- FAIL: TestOverlayRenderOverflow/drops_completed_first_when_dropping_is_enough (0.00s)
+        overlay_test.go:164: heading + 10 visible + 1 summary + trailing spacer: got 0, want 13
+    --- FAIL: TestOverlayRenderOverflow/truncates_pending_tail_when_dropping_all_completed_isn't_enough (0.00s)
+        overlay_test.go:177: lines: got 0, want 13
+    --- FAIL: TestOverlayRenderOverflow/summary_contains_both_'completed'_and_'pending'_when_mixed_overflow (0.00s)
+        overlay_test.go:188: "" does not contain "+5 more"
+    --- FAIL: TestOverlayRenderOverflow/hides_overflowed_completed_tasks_on_the_next_agent_turn_too (0.00s)
+        overlay_test.go:195: "" does not contain "Todos (5/16)"
+    --- FAIL: TestOverlayRenderOverflow/does_not_engage_overflow_at_exactly_11_visible_tasks (0.00s)
+        overlay_test.go:206: lines: got 0, want 13
+    --- FAIL: TestOverlayRenderOverflow/follows_Pi's_tool-output_expansion_mode_and_renders_every_task (0.00s)
+        overlay_test.go:214: "" does not contain "+7 more"
+    --- FAIL: TestOverlayRenderOverflow/keeps_the_configured_budget_when_the_host_has_no_expansion-state_API (0.00s)
+        overlay_test.go:223: "" does not contain "+7 more"
+--- FAIL: TestOverlayRenderCollapse (0.00s)
+    --- FAIL: TestOverlayRenderCollapse/collapsed_view_returns_exactly_three_lines:_heading_with_(completed/total),_expand_hint,_trailing_spacer (0.00s)
+        overlay_test.go:232: lines: got 0, want 3
+    --- FAIL: TestOverlayRenderCollapse/uncollapsed_(default)_yields_the_unchanged_full_render_(regression-safe) (0.00s)
+        overlay_test.go:240: heading + 2 tasks + trailing spacer: got 0, want 4
+    --- FAIL: TestOverlayRenderCollapse/collapsed_render_short-circuits_before_completed-display_tracking_(no_task_queued_for_hide_while_collapsed) (0.00s)
+        overlay_test.go:249: "" does not contain "done"
+    --- FAIL: TestOverlayRenderCollapse/renders_the_configured_key_in_the_collapsed_hint_(alt+o) (0.00s)
+        overlay_test.go:258: "" does not contain "alt+o to expand"
+    --- FAIL: TestOverlayRenderCollapse/renders_the_default_key_in_the_collapsed_hint_when_config_is_missing (0.00s)
+        overlay_test.go:267: "" does not contain "ctrl+shift+t to expand"
+    --- FAIL: TestOverlayRenderCollapse/renders_the_default_key_when_the_configured_spec_is_invalid (0.00s)
+        overlay_test.go:275: "" does not contain "ctrl+shift+t to expand"
+    --- FAIL: TestOverlayRenderCollapse/renders_a_static_collapsed_label_—_not_the_sentinel_—_when_the_key_resolves_to_off (0.00s)
+        overlay_test.go:283: "" does not contain "collapsed"
+--- FAIL: TestOverlayRenderWidth (0.00s)
+    --- FAIL: TestOverlayRenderWidth/drops_completed_tasks_from_counts_after_the_next_agent_turn_starts (0.00s)
+        overlay_test.go:301: "" does not contain "Todos (1/2)"
+    --- FAIL: TestOverlayRenderWidth/re-renders_reflect_live_state_changes_without_re-registering (0.00s)
+        overlay_test.go:314: "" does not contain "first1"
+--- FAIL: TestOverlayRowCap (0.00s)
+    overlay_test.go:331: "" does not contain "more"
+--- FAIL: TestOverlayLifecycle (0.00s)
+    --- FAIL: TestOverlayLifecycle/first_update()_with_non-empty_todos_registers_the_widget_exactly_once (0.00s)
+        overlay_test.go:354: widget calls: got 0, want 1
+    --- FAIL: TestOverlayLifecycle/transition_non-empty_→_empty_unregisters_the_widget (0.00s)
+        overlay_test.go:364: last call = rpiv_todo.sinkCall{Key:"", Lines:[]string(nil)}, want a clear of rpiv-todos
+    --- FAIL: TestOverlayLifecycle/empty_→_non-empty_after_empty_transition_re-registers (0.00s)
+        overlay_test.go:375: the widget was not pushed again
+    --- FAIL: TestOverlayLifecycle/setUICtx(different_ctx)_resets_cached_registration;_next_update_re-registers_under_the_new_ctx (0.00s)
+        overlay_test.go:386: re-registered: got 0, want 1
+    --- FAIL: TestOverlayLifecycle/dispose()_unregisters_the_widget_and_clears_ctx;_later_update()_without_setUICtx_is_a_no-op (0.00s)
+        overlay_test.go:392: last call = rpiv_todo.sinkCall{Key:"", Lines:[]string(nil)}, want a clear
+    --- FAIL: TestOverlayLifecycle/uses_the_current_UI_theme_after_invalidation_without_re-registering (0.00s)
+        overlay_test.go:401: "" does not contain "<accent>"
+    --- FAIL: TestOverlayLifecycle/resetCompletedDisplayState()_lets_replayed_completed_tasks_be_shown_once_again (0.00s)
+        overlay_test.go:412: "" does not contain "done"
+    --- FAIL: TestOverlayLifecycle/a_new_TodoOverlay_starts_with_collapsed_=_false_(renders_the_full_view,_not_the_3-line_collapsed_shape) (0.00s)
+        overlay_test.go:425: lines: got 0, want 5
+    --- FAIL: TestOverlayLifecycle/toggleCollapse()_flips_collapsed_and_calls_requestRender(true)_(forced,_distinct_from_the_non-forced_requestRender()) (0.00s)
+        overlay_test.go:431: collapsed: got 0, want 3
+    --- FAIL: TestOverlayLifecycle/isRegistered()_reflects_the_widget_registration_state (0.00s)
+        overlay_test.go:447: after: got false, want true
+    --- FAIL: TestOverlayLifecycle/resetCompletedDisplayState()_does_NOT_reset_collapsed (0.00s)
+        overlay_test.go:455: still collapsed: got 0, want 3
+--- FAIL: TestUpdateAfterRegistrationRepushesRows (0.00s)
+    overlay_test.go:463: pushes: got 0, want 2
+--- FAIL: TestCompletedTaskTrackingFollowsTheStore (0.00s)
+    overlay_test.go:482: "" does not contain "x"
+--- FAIL: TestApplyTaskMutationCreate (0.00s)
+    --- FAIL: TestApplyTaskMutationCreate/rejects_empty_subject (0.00s)
+        reducer_test.go:10: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"subject required for create"}
+    --- FAIL: TestApplyTaskMutationCreate/rejects_dangling_blockedBy (0.00s)
+        reducer_test.go:16: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"blockedBy: #99 not found"}
+    --- FAIL: TestApplyTaskMutationCreate/rejects_deleted_blockedBy (0.00s)
+        reducer_test.go:22: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"blockedBy: #1 is deleted"}
+    --- FAIL: TestApplyTaskMutationCreate/creates_with_next_id_and_preserves_immutability (0.00s)
+        reducer_test.go:27: tasks: got 0, want 1
+--- FAIL: TestApplyTaskMutationUpdate (0.00s)
+    --- FAIL: TestApplyTaskMutationUpdate/rejects_id-only_update (0.00s)
+        reducer_test.go:40: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"update requires at least one mutable field: subject, description, activeForm, status, owner, metadata, addBlockedBy, or removeBlockedBy"}
+    --- FAIL: TestApplyTaskMutationUpdate/rejects_illegal_transition_completed_→_in_progress (0.00s)
+        reducer_test.go:44: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"illegal transition completed → in_progress"}
+    --- FAIL: TestApplyTaskMutationUpdate/allows_completed_→_deleted_transition (0.00s)
+        reducer_test.go:48: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"update", TaskID:0, ID:1, FromStatus:"completed", ToStatus:"deleted", Changed:true, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+    --- FAIL: TestApplyTaskMutationUpdate/flags_a_no-effect_status_update_(status_set_to_its_current_value)_as_changed:false (0.00s)
+        reducer_test.go:53: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"update", TaskID:0, ID:1, FromStatus:"pending", ToStatus:"pending", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+    --- FAIL: TestApplyTaskMutationUpdate/flags_a_re-sent_identical_field_as_changed:false (0.00s)
+        reducer_test.go:58: op = rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+    --- FAIL: TestApplyTaskMutationUpdate/flags_a_blockedBy-only_update_as_changed:true_even_when_status_is_unchanged (0.00s)
+        reducer_test.go:63: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"update", TaskID:0, ID:1, FromStatus:"pending", ToStatus:"pending", Changed:true, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+    --- FAIL: TestApplyTaskMutationUpdate/flags_a_subject-only_update_on_a_task_with_existing_deps_as_changed:true_(blockedBy_unchanged) (0.00s)
+        reducer_test.go:67: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"update", TaskID:0, ID:1, FromStatus:"pending", ToStatus:"pending", Changed:true, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+    --- FAIL: TestApplyTaskMutationUpdate/flags_swapping_one_dependency_for_another_(same_length)_as_changed:true (0.00s)
+        reducer_test.go:73: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"update", TaskID:0, ID:1, FromStatus:"pending", ToStatus:"pending", Changed:true, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+    --- FAIL: TestApplyTaskMutationUpdate/rejects_self-block_via_addBlockedBy (0.00s)
+        reducer_test.go:78: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"cannot block #1 on itself"}
+    --- FAIL: TestApplyTaskMutationUpdate/rejects_cycle_in_blockedBy_graph (0.00s)
+        reducer_test.go:82: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"addBlockedBy would create a cycle in the blockedBy graph"}
+    --- FAIL: TestApplyTaskMutationUpdate/drops_metadata_key_when_value_is_null (0.00s)
+        reducer_test.go:92: metadata: got map[string]interface {}(nil), want map[string]interface {}{"b":2}
+    --- FAIL: TestApplyTaskMutationUpdate/sets_and_overwrites_metadata_keys_when_value_is_non-null (0.00s)
+        reducer_test.go:96: metadata: got map[string]interface {}(nil), want map[string]interface {}{"a":99, "b":2, "c":3}
+--- FAIL: TestApplyTaskMutationListGetDeleteClear (0.00s)
+    --- FAIL: TestApplyTaskMutationListGetDeleteClear/list_emits_Op_with_includeDeleted_flag_and_optional_statusFilter (0.00s)
+        reducer_test.go:110: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"list", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"deleted", IncludeDeleted:true, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+    --- FAIL: TestApplyTaskMutationListGetDeleteClear/delete_on_already-deleted_task_errors (0.00s)
+        reducer_test.go:115: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"#1 is already deleted"}
+    --- FAIL: TestApplyTaskMutationListGetDeleteClear/delete_emits_Op_with_id_+_subject (0.00s)
+        reducer_test.go:119: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"delete", TaskID:0, ID:1, FromStatus:"", ToStatus:"", Changed:false, Subject:"x", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+    --- FAIL: TestApplyTaskMutationListGetDeleteClear/clear_emits_Op_with_prior_count_and_resets_nextId_to_1 (0.00s)
+        reducer_test.go:124: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"clear", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:1, Message:""}
+    --- FAIL: TestApplyTaskMutationListGetDeleteClear/get_emits_Op_with_the_resolved_task (0.00s)
+        reducer_test.go:131: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"get", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:1, Subject:"alpha", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"pending", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}
+--- FAIL: TestIsTransitionValid (0.00s)
+    --- FAIL: TestIsTransitionValid/is_idempotent_on_same→same (0.00s)
+        reducer_test.go:136: completed→completed: got false, want true
+    --- FAIL: TestIsTransitionValid/allows_completed_→_deleted (0.00s)
+        reducer_test.go:140: completed→deleted: got false, want true
+--- FAIL: TestApplyTaskMutationBranches (0.00s)
+    --- FAIL: TestApplyTaskMutationBranches/update_and_get_and_delete_need_an_id (0.00s)
+        reducer_test.go:147: update: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"id required for update"}
+    --- FAIL: TestApplyTaskMutationBranches/an_unknown_or_non-integral_id_is_not_found,_formatted_like_JavaScript (0.00s)
+        reducer_test.go:151: 9: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"#9 not found"}
+    --- FAIL: TestApplyTaskMutationBranches/a_whitespace-only_subject_is_empty_(JavaScript_trim) (0.00s)
+        reducer_test.go:155: op: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"subject required for create"}
+    --- FAIL: TestApplyTaskMutationBranches/create_keeps_only_the_fields_given,_copies_blockedBy_and_metadata (0.00s)
+        reducer_test.go:161: task = rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)} (empty description and blockedBy are dropped, an empty metadata object is kept)
+    --- FAIL: TestApplyTaskMutationBranches/an_empty_string_on_update_is_kept (0.00s)
+        reducer_test.go:167: description = <nil>, want empty string kept
+    --- FAIL: TestApplyTaskMutationBranches/addBlockedBy_not_found_and_deleted (0.00s)
+        reducer_test.go:172: not found: got rpiv_todo.op{Kind:"", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:""}, want rpiv_todo.op{Kind:"error", TaskID:0, ID:0, FromStatus:"", ToStatus:"", Changed:false, Subject:"", StatusFilter:"", IncludeDeleted:false, Task:rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, Count:0, Message:"addBlockedBy: #8 not found"}
+    --- FAIL: TestApplyTaskMutationBranches/a_failed_update_leaves_the_state_untouched (0.00s)
+        reducer_test.go:177: state: got rpiv_todo.taskState{Tasks:[]rpiv_todo.task(nil), NextID:0}, want rpiv_todo.taskState{Tasks:[]rpiv_todo.task{rpiv_todo.task{ID:1, Subject:"a", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"pending", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}}, NextID:2}
+--- FAIL: TestTaskGraph (0.00s)
+    --- FAIL: TestTaskGraph/detects_direct_cycle (0.00s)
+        reducer_test.go:186: cycle: got false, want true
+    --- FAIL: TestTaskGraph/inverts_blockedBy_into_a_blocks_map (0.00s)
+        reducer_test.go:197: blocks of 1: got []int(nil), want []int{2, 3}
+--- FAIL: TestToolRegistration (0.00s)
+    --- FAIL: TestToolRegistration/registers_under_the_tool_name_'todo'_with_the_expected_label_and_guidelines (0.00s)
+        register_test.go:14: name: got "", want "todo"
+    --- FAIL: TestToolRegistration/exposes_a_typebox_parameters_schema_declaring_the_six_actions (0.00s)
+        register_test.go:25: actions: got <nil>, want []interface {}{"create", "update", "list", "get", "delete", "clear"}
+--- FAIL: TestToolRenderers (0.00s)
+    --- FAIL: TestToolRenderers/create_action_emits_'todo_+'_and_includes_the_subject (0.00s)
+        register_test.go:44: "" does not contain "todo +"
+    --- FAIL: TestToolRenderers/update_action_renders_'#id'_when_the_task_has_not_been_registered_yet (0.00s)
+        register_test.go:48: "" does not contain "#7"
+    --- FAIL: TestToolRenderers/update_action_renders_the_task_subject_when_seeded (0.00s)
+        register_test.go:52: "" does not contain "seeded subject"
+    --- FAIL: TestToolRenderers/list_action_with_a_status_filter_renders_the_humanized_status_label (0.00s)
+        register_test.go:56: "" does not contain "in progress"
+    --- FAIL: TestToolRenderers/clear_action_renders_only_the_base_prefix_+_glyph (0.00s)
+        register_test.go:59: text: got "", want "todo ∅"
+    --- FAIL: TestToolRenderers/create_renders_the_new_task's_status_label_(pending) (0.00s)
+        register_test.go:65: "" does not contain "pending"
+    --- FAIL: TestToolRenderers/update_renders_the_transitioned_status_(in_progress) (0.00s)
+        register_test.go:68: "" does not contain "in progress"
+    --- FAIL: TestToolRenderers/delete_renders_the_deleted-tombstone_label (0.00s)
+        register_test.go:71: "" does not contain "deleted"
+    --- FAIL: TestToolRenderers/list_renders_the_plain_'✓'_fallback_(no_status_leakage) (0.00s)
+        register_test.go:74: text: got "", want "✓"
+    --- FAIL: TestToolRenderers/get_renders_the_plain_'✓'_fallback (0.00s)
+        register_test.go:76: text: got "", want "✓"
+    --- FAIL: TestToolRenderers/clear_renders_the_plain_'✓'_fallback (0.00s)
+        register_test.go:77: text: got "", want "✓"
+    --- FAIL: TestToolRenderers/missing_details_falls_back_to_plain_'✓' (0.00s)
+        register_test.go:78: text: got "", want "✓"
+--- FAIL: TestGuidance (0.00s)
+    --- FAIL: TestGuidance/uses_built-in_defaults_when_no_config_file_exists (0.00s)
+        register_test.go:94: guidelines: got []string(nil), want []string{}
+    --- FAIL: TestGuidance/uses_built-in_defaults_when_config_has_no_guidance_field (0.00s)
+        register_test.go:100: guidelines: got []string(nil), want []string{}
+    --- FAIL: TestGuidance/overrides_promptSnippet_with_valid_value (0.00s)
+        register_test.go:106: snippet: got "", want "Custom snippet"
+    --- FAIL: TestGuidance/overrides_promptGuidelines_with_valid_value (0.00s)
+        register_test.go:114: guidelines: got []string(nil), want []string{"one", "two"}
+    --- FAIL: TestGuidance/overrides_both_promptSnippet_and_promptGuidelines (0.00s)
+        register_test.go:120: snippet: got "", want "S"
+    --- FAIL: TestGuidance/falls_back_to_defaults_on_empty_promptSnippet (0.00s)
+        register_test.go:127: guidelines: got []string(nil), want []string{}
+    --- FAIL: TestGuidance/falls_back_to_defaults_on_wrong_types (0.00s)
+        register_test.go:133: guidelines: got []string(nil), want []string{}
+    --- FAIL: TestGuidance/falls_back_to_defaults_on_promptGuidelines_with_empty_string_item (0.00s)
+        register_test.go:139: guidelines: got []string(nil), want []string{}
+--- FAIL: TestI18nBridgeAndRuntimeMechanics (0.00s)
+    --- FAIL: TestI18nBridgeAndRuntimeMechanics/returns_English_when_no_locale_is_active (0.00s)
+        register_test.go:145: label: got "", want "in progress"
+    --- FAIL: TestI18nBridgeAndRuntimeMechanics/`t`_falls_back_to_the_inline_English_literal_for_unknown_keys (0.00s)
+        register_test.go:148: t: got "", want "fallback"
+    --- FAIL: TestI18nBridgeAndRuntimeMechanics/namespace_constant_is_the_canonical_package_name (0.00s)
+        register_test.go:149: namespace: got "", want "@juicesharp/rpiv-todo"
+--- FAIL: TestIsTaskDetails (0.00s)
+    --- FAIL: TestIsTaskDetails/rejects_null_and_undefined (0.00s)
+        replay_test.go:31: nil: got true, want false
+    --- FAIL: TestIsTaskDetails/rejects_primitives_(string,_number,_boolean) (0.00s)
+        replay_test.go:34: string: got true, want false
+    --- FAIL: TestIsTaskDetails/rejects_objects_missing_tasks[]_or_nextId (0.00s)
+        replay_test.go:39: {}: got true, want false
+--- FAIL: TestReplayFromBranch (0.00s)
+    --- FAIL: TestReplayFromBranch/returns_empty_TaskState_when_branch_has_no_todo_toolResults (0.00s)
+        replay_test.go:53: nextId: got 0, want 1
+    --- FAIL: TestReplayFromBranch/replays_the_last_snapshot_(last-write-wins) (0.00s)
+        replay_test.go:57: tasks: got 0, want 2
+    --- FAIL: TestReplayFromBranch/clones_tasks_so_mutating_the_fixture_does_not_mutate_replayed_state (0.00s)
+        replay_test.go:64: subject: got "", want "original"
+    --- FAIL: TestReplayFromBranch/skips_non-message_entries_in_the_branch_(defensive_type_guard) (0.00s)
+        replay_test.go:69: tasks: got 0, want 1
+    --- FAIL: TestReplayFromBranch/skips_toolResult_entries_whose_details_fail_isTaskDetails_(corrupt-snapshot_guard) (0.00s)
+        replay_test.go:76: tasks: got 0, want 1
+    --- FAIL: TestReplayFromBranch/returns_a_fresh_empty_TaskState_when_called_with_an_empty_branch (0.00s)
+        replay_test.go:80: first: got 0, want 2
+--- FAIL: TestReplayDecodesEveryTaskField (0.00s)
+    replay_test.go:91: task = rpiv_todo.task{ID:0, Subject:"", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}
+--- FAIL: TestStoreAccessors (0.00s)
+    --- FAIL: TestStoreAccessors/__resetState()_restores_EMPTY_STATE_shape_(independent_of_EMPTY_STATE.tasks_identity) (0.00s)
+        store_test.go:15: nextId: got 0, want 1
+    --- FAIL: TestStoreAccessors/getTodos(sid)_returns_the_live_tasks_reference_(read-only_typed) (0.00s)
+        store_test.go:27: getTodos did not return the committed slice: []rpiv_todo.task(nil)
+    --- FAIL: TestStoreAccessors/getNextId(sid)_reflects_the_current_slot_value (0.00s)
+        store_test.go:33: nextId: got 0, want 42
+    --- FAIL: TestStoreAccessors/getState(sid)_returns_the_same_slot_that_getTodos/getNextId_read_from (0.00s)
+        store_test.go:40: state: got rpiv_todo.taskState{Tasks:[]rpiv_todo.task(nil), NextID:0}, want rpiv_todo.taskState{Tasks:[]rpiv_todo.task{rpiv_todo.task{ID:7, Subject:"lucky", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"pending", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}}, NextID:8}
+    --- FAIL: TestStoreAccessors/replaceState(sid,_next)_publishes_a_new_slot_wholesale_(replay_seam) (0.00s)
+        store_test.go:48: state: got rpiv_todo.taskState{Tasks:[]rpiv_todo.task(nil), NextID:0}, want rpiv_todo.taskState{Tasks:[]rpiv_todo.task{rpiv_todo.task{ID:10, Subject:"from-branch", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"pending", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}, rpiv_todo.task{ID:11, Subject:"from-branch-2", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"pending", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}}, NextID:12}
+    --- FAIL: TestStoreAccessors/commitState()_and_replaceState()_are_interchangeable_seams_over_the_same_slot (0.00s)
+        store_test.go:54: after commit: got 0, want 2
+    --- FAIL: TestStoreAccessors/__resetState()_after_a_commit_clears_the_slot_(test-isolation_contract) (0.00s)
+        store_test.go:64: nextId: got 0, want 1
+--- FAIL: TestStorePerSessionIsolation (0.00s)
+    --- FAIL: TestStorePerSessionIsolation/commitState/replaceState_to_one_session_never_affects_another_session's_slot (0.00s)
+        store_test.go:75: s1: got rpiv_todo.taskState{Tasks:[]rpiv_todo.task(nil), NextID:0}, want rpiv_todo.taskState{Tasks:[]rpiv_todo.task{rpiv_todo.task{ID:1, Subject:"s1-task", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"pending", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}}, NextID:2}
+    --- FAIL: TestStorePerSessionIsolation/a_missing_slot_returns_a_fresh_EMPTY_STATE_copy,_never_aliasing_EMPTY_STATE.tasks (0.00s)
+        store_test.go:88: nextId: got 0, want 1
+--- FAIL: TestStoreEvictSession (0.00s)
+    --- FAIL: TestStoreEvictSession/evictSession(sid)_frees_the_slot;_a_later_read_returns_a_fresh_EMPTY_STATE_copy (0.00s)
+        store_test.go:100: before: got 0, want 1
+--- FAIL: TestStoreRenderPointer (0.00s)
+    --- FAIL: TestStoreRenderPointer/getRenderState()_returns_a_fresh_EMPTY_STATE_copy_before_any_pointer_is_set (0.00s)
+        store_test.go:118: nextId: got 0, want 1
+    --- FAIL: TestStoreRenderPointer/setActiveRenderSession(sid)_makes_getRenderState()_read_that_session's_slot (0.00s)
+        store_test.go:125: tasks: got []rpiv_todo.task(nil), want []rpiv_todo.task{rpiv_todo.task{ID:3, Subject:"shown", Description:(*string)(nil), ActiveForm:(*string)(nil), Status:"pending", BlockedBy:[]float64(nil), Owner:(*string)(nil), Metadata:map[string]interface {}(nil)}}
+    --- FAIL: TestStoreRenderPointer/setActiveRenderSession_re-points_the_render_slot_to_a_different_session (0.00s)
+        store_test.go:133: a: got "", want "a"
+    --- FAIL: TestStoreRenderPointer/__resetState()_clears_BOTH_the_Map_and_the_render_pointer (0.00s)
+        store_test.go:141: before: got 0, want 1
+--- FAIL: TestStoreSid (0.00s)
+    --- FAIL: TestStoreSid/sid(ctx)_returns_ctx.sessionManager.getSessionId() (0.00s)
+        store_test.go:159: sid = "unset", <nil>
+--- FAIL: TestSidOfAnEmptyIDAndAHostError (0.00s)
+    store_test.go:168: sid = "unset", <nil>, want empty and no error
+--- FAIL: TestStoreForegroundPointer (0.00s)
+    --- FAIL: TestStoreForegroundPointer/getActiveRenderSession()_returns_the_session_set_by_setActiveRenderSession() (0.00s)
+        store_test.go:179: pointer: got "x", want "s1"
+    --- FAIL: TestStoreForegroundPointer/clearActiveRenderSession()_resets_the_pointer;_getRenderState()_returns_a_fresh_EMPTY_STATE (0.00s)
+        store_test.go:186: before: got 0, want 1
+    --- FAIL: TestStoreForegroundPointer/__resetState()_clears_the_foreground_pointer (0.00s)
+        store_test.go:197: pointer: got "x", want ""
+--- FAIL: TestCommand (0.01s)
+    --- FAIL: TestCommand/registers_a_command_named_'todos'_with_a_description (0.00s)
+        extension_test.go:68: command "todos" is not registered
+    --- FAIL: TestCommand/notifies_an_error_when_the_session_has_no_UI (0.00s)
+        extension_test.go:74: command "todos" is not registered
+    --- FAIL: TestCommand/notifies_an_info_message_when_there_are_no_visible_tasks (0.00s)
+        extension_test.go:81: command "todos" is not registered
+    --- FAIL: TestCommand/treats_all-deleted_tasks_as_empty_(info_notify,_not_group_render) (0.00s)
+        extension_test.go:86: tool "todo" is not registered
+    --- FAIL: TestCommand/renders_'Pending'_group_with_○_glyph_and_task_id (0.00s)
+        extension_test.go:94: tool "todo" is not registered
+    --- FAIL: TestCommand/renders_'In_Progress'_group_with_◐_glyph_and_activeForm_suffix (0.00s)
+        extension_test.go:94: tool "todo" is not registered
+    --- FAIL: TestCommand/renders_'Completed'_group_with_✓_glyph_and_'N/M_completed'_header (0.00s)
+        extension_test.go:94: tool "todo" is not registered
+    --- FAIL: TestCommand/emits_the_header_parts_in_'completed_·_in_progress_·_pending'_order (0.00s)
+        extension_test.go:94: tool "todo" is not registered
+    --- FAIL: TestCommand/appends_'⛓_#deps'_suffix_for_tasks_with_blockedBy (0.00s)
+        extension_test.go:94: tool "todo" is not registered
+    --- FAIL: TestCommand/omits_deleted_tombstones_from_the_grouped_output (0.00s)
+        extension_test.go:94: tool "todo" is not registered
+--- FAIL: TestRegisteredTool (0.00s)
+    --- FAIL: TestRegisteredTool/create_→_list_returns_the_seeded_row (0.00s)
+        extension_test.go:145: tool "todo" is not registered
+    --- FAIL: TestRegisteredTool/clear_resets_module_state_and_nextId (0.00s)
+        extension_test.go:152: tool "todo" is not registered
+--- FAIL: TestSessionIsolation (0.01s)
+    --- FAIL: TestSessionIsolation/a_child_session_start_(empty_branch)_leaves_the_parent's_committed_task_intact (0.00s)
+        extension_test.go:169: tool "todo" is not registered
+    --- FAIL: TestSessionIsolation/a_child_todo_call_mutates_only_the_child's_slot;_the_parent's_/todos_still_shows_only_the_parent's_task (0.00s)
+        extension_test.go:178: tool "todo" is not registered
+    --- FAIL: TestSessionIsolation/the_render_pointer_stays_on_the_parent_slot_even_after_a_child_creates_tasks_(creator-ownership) (0.00s)
+        extension_test.go:192: tool "todo" is not registered
+    --- FAIL: TestSessionIsolation/session_shutdown_evicts_the_shutting-down_session's_own_slot_(fresh_EMPTY_STATE_copy) (0.00s)
+        extension_test.go:201: tool "todo" is not registered
+    --- FAIL: TestSessionIsolation/first_hasUI_session_start_claims_the_foreground_and_renders_its_slot (0.00s)
+        extension_test.go:210: no widget call
+    --- FAIL: TestSessionIsolation/a_child_todo_call_writes_the_child's_slot;_the_overlay_still_shows_the_parent's_todos (0.00s)
+        extension_test.go:227: tool "todo" is not registered
+    --- FAIL: TestSessionIsolation/the_foreground's_own_session_shutdown_disposes_the_overlay_and_clears_foreground (0.00s)
+        extension_test.go:249: key: got <nil>, want "rpiv-todos"
+    --- FAIL: TestSessionIsolation/foreground_shutdown_still_clears_the_pointer_+_evicts_the_slot_when_dispose()_throws_(try/finally) (0.00s)
+        extension_test.go:262: no handler registered for session_shutdown
+    --- FAIL: TestSessionIsolation/a_headless_launcher_(hasUI:false)_never_constructs_an_overlay,_nor_does_a_headless_child (0.00s)
+        extension_test.go:277: tool "todo" is not registered
+--- FAIL: TestSessionLifecycleReplay (0.00s)
+    --- FAIL: TestSessionLifecycleReplay/session_start,_session_compact_and_session_tree_replay_the_branch (0.00s)
+        extension_test.go:295: tool "todo" is not registered
+    --- FAIL: TestSessionLifecycleReplay/a_compact_refreshes_the_overlay_of_the_foreground (0.00s)
+        extension_test.go:310: no widget call
+    --- FAIL: TestSessionLifecycleReplay/agent_start_hides_the_completed_tasks_of_the_previous_turn (0.00s)
+        extension_test.go:323: tool "todo" is not registered
+    --- FAIL: TestSessionLifecycleReplay/rpc_mode_shows_no_overlay,_like_Pi_(a_component_widget_is_not_available_there) (0.00s)
+        extension_test.go:337: tool "todo" is not registered
+--- FAIL: TestShortcut (0.01s)
+    --- FAIL: TestShortcut/registers_'ctrl+shift+t'_with_a_description_at_factory_scope (0.00s)
+        extension_test.go:356: registered: got false, want true
+    --- FAIL: TestShortcut/handler_is_a_no-op_in_headless_mode_(!ctx.hasUI) (0.00s)
+        extension_test.go:362: registered: got false, want true
+    --- FAIL: TestShortcut/handler_is_a_no-op_before_any_session_start_created_the_overlay_(!todoOverlay) (0.00s)
+        extension_test.go:370: failure: got "unknown shortcut: ctrl+shift+t", want ""
+    --- FAIL: TestShortcut/handler_is_a_no-op_when_an_empty_session_has_not_loaded_the_overlay (0.00s)
+        extension_test.go:378: failure: got "unknown shortcut: ctrl+shift+t", want ""
+    --- FAIL: TestShortcut/handler_toggles_the_overlay_when_it_is_registered_(render_shape_flips_to_the_collapsed_hint) (0.00s)
+        extension_test.go:387: failure: got "unknown shortcut: ctrl+shift+t", want ""
+    --- FAIL: TestShortcut/registers_the_configured_key_(collapseKey:_'alt+o')_instead_of_the_default (0.00s)
+        extension_test.go:396: alt+o: got false, want true
+    --- FAIL: TestShortcut/falls_back_to_the_default_key_when_collapseKey_is_invalid (0.00s)
+        extension_test.go:411: default key: got false, want true
+    --- FAIL: TestShortcut/default_config_registers_the_default_key_(ctrl+shift+t) (0.00s)
+        extension_test.go:416: default key: got false, want true
+--- FAIL: TestStaleContext (0.00s)
+    --- FAIL: TestStaleContext/keeps_current_state_on_a_stale_ctx_(replacement_session_replays) (0.00s)
+        extension_test.go:423: tool "todo" is not registered
+    --- FAIL: TestStaleContext/propagates_a_non-stale_replay_error (0.00s)
+        extension_test.go:437: no handler registered for session_compact
+--- FAIL: TestOverlayPushFailureDoesNotFailTheTool (0.00s)
+    extension_test.go:449: no handler registered for tool_execution_end
+FAIL
+FAIL	github.com/MichaelKinsy/pigpen/rpiv-todo	0.063s
+FAIL

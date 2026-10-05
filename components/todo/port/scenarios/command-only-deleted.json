@@ -1,0 +1,47 @@
+{
+  "name": "command-only-deleted",
+  "description": "/todos when every task is a tombstone.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "gone"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "delete",
+            "id": 1
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    },
+    {
+      "name": "todos",
+      "rpc": {
+        "type": "prompt",
+        "message": "/todos"
+      }
+    }
+  ]
+}

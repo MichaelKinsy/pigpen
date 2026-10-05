@@ -1,0 +1,4 @@
+{"kind":"header","scenario":"command-empty","lane":"pi-ts","host":"pi 1.0.0","extension":"sha256:27e4c8f9003683a410fdc7b14122683cd8b189fe53be3d889b8a61856816fa46","normalizer":"v3"}
+{"step":"01-empty","ch":"ui","data":{"message":"No todos yet. Ask the agent to add some!","method":"notify","notifyType":"info"}}
+{"step":"01-empty","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

@@ -1,0 +1,7 @@
+{
+  "name": "angry-pigs-command",
+  "description": "/angry-pigs in an RPC host (no terminal overlay): the same host calls and result.",
+  "steps": [
+    {"name": "angry-pigs", "rpc": {"type": "prompt", "message": "/angry-pigs"}}
+  ]
+}

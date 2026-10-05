@@ -1,0 +1,225 @@
+{
+  "name": "schema-rejections",
+  "description": "Arguments the schema rejects: no questions, five questions, one option, five options, long label, long header.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": []
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Q0?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              },
+              {
+                "question": "Q1?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              },
+              {
+                "question": "Q2?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              },
+              {
+                "question": "Q3?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              },
+              {
+                "question": "Q4?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "One?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Five?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "c",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "d",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "e",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Label?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Header?",
+                "header": "hhhhhhhhhhhhhhhhh",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      }
+    }
+  ]
+}

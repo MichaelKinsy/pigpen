@@ -1,0 +1,744 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, mkdirSync, readFileSync, utimesSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { matchesStashShortcutInput } from "../shortcuts.ts";
+import fs from "node:fs";
+import { syncBuiltinESMExports } from "node:module";
+import { PowerlineQueueStore } from "../queue/store.ts";
+import childProcess from "node:child_process";
+import type { ReadonlyFooterDataProvider } from "@earendil-works/pi-coding-agent";
+import { waitForGitUpdates } from "../git-status.ts";
+import { NERD_ICONS } from "../icons.ts";
+
+const source = readFileSync(new URL("../index.ts", import.meta.url), "utf-8");
+
+function projectSessionsPath(agentDir: string, cwd: string): string {
+  const projectKey = cwd
+    .replace(/^[/\\]+|[/\\]+$/g, "")
+    .replace(/[/\\]+/g, "-");
+  return join(agentDir, "sessions", `--${projectKey}--`);
+}
+
+function writeAgentSettings(agentDir: string): void {
+  mkdirSync(agentDir, { recursive: true });
+  writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ powerline: { welcome: false } }));
+}
+
+function writeStashHistory(agentDir: string, history: string[]): void {
+  mkdirSync(join(agentDir, "powerline-footer"), { recursive: true });
+  writeFileSync(join(agentDir, "powerline-footer", "stash-history.json"), JSON.stringify({ version: 1, history }));
+}
+
+function sessionLine(text: string, timestamp: number): string {
+  return JSON.stringify({
+    type: "message",
+    message: { role: "user", content: text, timestamp },
+    timestamp: new Date(timestamp).toISOString(),
+  });
+}
+
+type FakeTheme = ReturnType<typeof fakeTheme>;
+interface FakeComponent {
+  render(width: number): string[];
+  handleInput(data: string): void;
+}
+interface FakeRenderable {
+  dispose(): void;
+  render(width: number): string[];
+}
+type CustomFactory = (
+  tui: { requestRender(): void },
+  theme: FakeTheme,
+  keybindings: Record<string, never>,
+  done: (result: unknown) => void,
+) => FakeComponent;
+interface FakeCtx {
+  cwd: string;
+  sessionManager?: { getCwd(): string; getSessionId(): string };
+  mode: "tui" | "rpc";
+  hasUI: boolean;
+  model: { name: string; provider: string };
+  modelRegistry: Record<string, never>;
+  ui: {
+    getEditorText(): string;
+    setEditorText(next: string): void;
+    setStatus(key: string, value: string | undefined): void;
+    notify(message: string, level?: string): void;
+    setWorkingMessage(): void;
+    onTerminalInput(handler: (data: string) => unknown): () => void;
+    custom(factory: CustomFactory): Promise<unknown>;
+    select(): Promise<string>;
+    setWidget(name: string, factory: ((tui: { requestRender(): void }, theme: FakeTheme) => { render(width: number): string[] }) | undefined, options?: { placement?: string }): void;
+    setFooter(factory?: (tui: { requestRender(): void }, theme: FakeTheme, provider: ReadonlyFooterDataProvider) => FakeRenderable): void;
+    setHeader(): void;
+    setEditorComponent(): void;
+    getEditorComponent(): undefined;
+  };
+}
+type TestHandler = (event: unknown, ctx: FakeCtx) => Promise<void> | void;
+type TestCommand = { handler: (args: string, ctx: FakeCtx) => Promise<void> | void };
+interface TestPi {
+  on(name: string, handler: TestHandler): void;
+  registerCommand(name: string, command: TestCommand): void;
+  sendUserMessage(): void;
+}
+
+async function loadPowerline(agentDir: string) {
+  const previousAgentDir = process.env.PI_CODING_AGENT_DIR;
+  process.env.PI_CODING_AGENT_DIR = agentDir;
+  const moduleUrl = new URL("../index.ts", import.meta.url);
+  const mod = await import(`${moduleUrl.href}?stashTest=${Date.now()}-${Math.random()}`);
+  return {
+    extension: mod.default as (pi: TestPi) => void,
+    restoreEnv: () => {
+      if (previousAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR;
+      else process.env.PI_CODING_AGENT_DIR = previousAgentDir;
+    },
+  };
+}
+
+function fakeTheme() {
+  return {
+    fg: (_color: string, text: string) => text,
+    bold: (text: string) => text,
+  };
+}
+
+function createFakePi() {
+  const handlers = new Map<string, TestHandler>();
+  const commands = new Map<string, TestCommand>();
+  return {
+    handlers,
+    commands,
+    pi: {
+      on(name: string, handler: TestHandler) {
+        handlers.set(name, handler);
+      },
+      registerCommand(name: string, command: TestCommand) {
+        commands.set(name, command);
+      },
+      sendUserMessage() {},
+    },
+  };
+}
+
+let fakeSessionSequence = 0;
+
+function createCtx(options: { cwd: string; mode?: "tui" | "rpc"; sessionId?: string; text?: string; customInputs?: string[][]; footerData?: ReadonlyFooterDataProvider; theme?: FakeTheme } = { cwd: process.cwd() }) {
+  let text = options.text ?? "";
+  const sessionId = options.sessionId ?? `fake-session-${++fakeSessionSequence}`;
+  let terminalInput: ((data: string) => unknown) | null = null;
+  const setEditorTextCalls: string[] = [];
+  const notifications: { message: string; level?: string }[] = [];
+  const statuses: Array<[string, string | undefined]> = [];
+  const customTitles: string[] = [];
+  const customInputs = [...(options.customInputs ?? [])];
+  const widgets = new Map<string, { render(width: number): string[] }>();
+  const widgetPlacements = new Map<string, string | undefined>();
+  let footer: FakeRenderable | undefined;
+
+  const ctx: FakeCtx = {
+    cwd: options.cwd,
+    sessionManager: {
+      getCwd: () => options.cwd,
+      getSessionId: () => sessionId,
+    },
+    mode: options.mode ?? "tui",
+    hasUI: true,
+    model: { name: "test", provider: "test" },
+    modelRegistry: {},
+    ui: {
+      getEditorText: () => text,
+      setEditorText: (next: string) => {
+        setEditorTextCalls.push(next);
+        text = next;
+      },
+      setStatus: (key: string, value: string | undefined) => statuses.push([key, value]),
+      notify: (message: string, level?: string) => notifications.push({ message, level }),
+      setWorkingMessage() {},
+      onTerminalInput: (handler: (data: string) => unknown) => {
+        terminalInput = handler;
+        return () => { terminalInput = null; };
+      },
+      custom: async (factory: CustomFactory) => new Promise((resolve) => {
+        const done = (result: unknown) => resolve(result);
+        const component = factory({ requestRender() {} }, fakeTheme(), {}, done);
+        const rendered = component.render(80).join("\n");
+        const title = rendered.includes("Stashed prompts") && rendered.includes("Recent project prompts")
+          ? "Prompt history"
+          : rendered.includes("Stash history")
+            ? "Stash history"
+            : rendered.includes("Recent project prompts")
+              ? "Recent project prompts"
+              : "unknown";
+        customTitles.push(title);
+        for (const input of customInputs.shift() ?? ["\r"]) {
+          component.handleInput(input);
+        }
+      }),
+      select: async () => "Insert",
+      setWidget(name, factory, widgetOptions) {
+        if (factory) {
+          widgets.set(name, factory({ requestRender() {} }, options.theme ?? fakeTheme()));
+          widgetPlacements.set(name, widgetOptions?.placement);
+        } else {
+          widgets.delete(name);
+          widgetPlacements.delete(name);
+        }
+      },
+      setFooter(factory) {
+        footer?.dispose();
+        footer = factory && options.footerData ? factory({ requestRender() {} }, options.theme ?? fakeTheme(), options.footerData) : undefined;
+      },
+      setHeader() {},
+      setEditorComponent() {},
+      getEditorComponent: () => undefined,
+    },
+  };
+
+  return {
+    ctx,
+    widgets,
+    widgetPlacements,
+    get footer() { return footer; },
+    disposeFooter: () => ctx.ui.setFooter(undefined),
+    get text() { return text; },
+    setEditorTextCalls,
+    notifications,
+    statuses,
+    customTitles,
+    sendTerminalInput: (data: string) => {
+      assert.ok(terminalInput, "expected terminal input handler to be installed");
+      return terminalInput(data);
+    },
+  };
+}
+
+test("responsive secondary content is owned exclusively by the footer", async () => {
+  const root = mkdtempSync(join(tmpdir(), "powerline-secondary-footer-"));
+  writeFileSync(join(root, "settings.json"), JSON.stringify({
+    powerline: {
+      welcome: false,
+      placement: "below",
+      layout: { left: ["model"], right: [], secondary: ["custom:review"] },
+      customItems: [{ id: "review", statusKey: "review", position: "secondary", prefix: "review" }],
+    },
+  }));
+  const footerData: ReadonlyFooterDataProvider = {
+    getGitBranch: () => null,
+    getExtensionStatuses: () => new Map([["review", "ready"]]),
+    getAvailableProviderCount: () => 0,
+    onBranchChange: () => () => {},
+  };
+  const { extension, restoreEnv } = await loadPowerline(root);
+  const fake = createFakePi();
+  const runtime = createCtx({ cwd: root, footerData });
+
+  try {
+    extension(fake.pi);
+    await fake.handlers.get("session_start")?.({ reason: "resume" }, runtime.ctx);
+
+    assert.equal(runtime.widgets.has("powerline-secondary"), false);
+    assert.equal(runtime.widgetPlacements.get("powerline-top"), "belowEditor");
+    assert.ok(runtime.footer, "custom footer is installed");
+
+    const narrowPrimary = runtime.widgets.get("powerline-top")!.render(16).join("\n");
+    const narrowFooter = runtime.footer!.render(16).join("\n");
+    assert.match(narrowPrimary, /test/);
+    assert.doesNotMatch(narrowPrimary, /ready/);
+    assert.match(narrowFooter, /review.*ready/);
+    assert.doesNotMatch(narrowFooter, /test/);
+
+    const widePrimary = runtime.widgets.get("powerline-top")!.render(200).join("\n");
+    assert.equal(runtime.footer!.render(200).length, 0, "footer returns no fabricated blank line without overflow");
+    assert.equal(widePrimary.match(/review.*ready/g)?.length, 1);
+
+    await fake.commands.get("powerline")!.handler("placement above", runtime.ctx);
+    assert.equal(runtime.widgetPlacements.get("powerline-top"), "aboveEditor");
+    assert.equal(runtime.widgets.has("powerline-secondary"), false);
+    assert.match(runtime.footer!.render(16).join("\n"), /review.*ready/);
+
+    await fake.commands.get("powerline")!.handler("", runtime.ctx);
+    assert.equal(runtime.footer, undefined, "disable restores Pi's footer");
+    assert.equal(runtime.widgets.size, 0);
+    await fake.commands.get("powerline")!.handler("", runtime.ctx);
+    assert.ok(runtime.footer, "re-enable reinstalls the custom footer");
+    assert.equal(runtime.widgets.has("powerline-secondary"), false);
+    assert.match(runtime.footer!.render(16).join("\n"), /review.*ready/);
+  } finally {
+    await fake.handlers.get("session_shutdown")?.({}, runtime.ctx);
+    restoreEnv();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("web frontends outside the TUI receive only the primary bar widget", async () => {
+  const root = mkdtempSync(join(tmpdir(), "powerline-rpc-widgets-"));
+  writeFileSync(join(root, "settings.json"), JSON.stringify({
+    powerline: { welcome: false, layout: { left: ["model"], right: [], secondary: [] } },
+  }));
+  const { extension, restoreEnv } = await loadPowerline(root);
+  const fake = createFakePi();
+  const runtime = createCtx({ cwd: root, mode: "rpc" });
+
+  try {
+    extension(fake.pi);
+    await fake.handlers.get("session_start")?.({ reason: "resume" }, runtime.ctx);
+
+    assert.deepEqual([...runtime.widgets.keys()], ["powerline-top"]);
+    assert.match(runtime.widgets.get("powerline-top")!.render(120).join("\n"), /test/);
+  } finally {
+    await fake.handlers.get("session_shutdown")?.({}, runtime.ctx);
+    restoreEnv();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+async function createStashGeneration(agentDir: string, cwd: string, sessionId: string, text = "") {
+  const loaded = await loadPowerline(agentDir);
+  const fake = createFakePi();
+  loaded.extension(fake.pi);
+  const runtime = createCtx({ cwd, sessionId, text });
+  return {
+    runtime,
+    start: (reason: string) => fake.handlers.get("session_start")?.({ reason }, runtime.ctx),
+    shutdown: (reason: string) => fake.handlers.get("session_shutdown")?.({ reason }, runtime.ctx),
+    togglePowerline: () => fake.commands.get("powerline")!.handler("", runtime.ctx),
+    restoreEnv: loaded.restoreEnv,
+  };
+}
+
+test("Git rendering reuses the cwd-owned provider only on demand and refreshes across sessions", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "powerline-git-display-"));
+  const repoA = join(root, "repo-a");
+  const repoB = join(root, "repo-b");
+  for (const [cwd, branch, host] of [[repoA, "branch-a", "github.com"], [repoB, "branch-b", "gitlab.com"]]) {
+    mkdirSync(cwd);
+    childProcess.execFileSync("git", ["init", "-q", "-b", branch], { cwd });
+    childProcess.execFileSync("git", ["remote", "add", "origin", `https://${host}/owner/repo`], { cwd });
+  }
+  writeFileSync(join(repoA, "dirty"), "untracked");
+  const oldFonts = process.env.POWERLINE_NERD_FONTS;
+  process.env.POWERLINE_NERD_FONTS = "1";
+  const { extension, restoreEnv } = await loadPowerline(root);
+  const fake = createFakePi();
+  let providerCwd = repoA;
+  let allowBranchRead = false;
+  const listeners = new Set<() => void>();
+  const footerData: ReadonlyFooterDataProvider = {
+    getGitBranch() {
+      assert.ok(allowBranchRead, "unused Git must not read Pi's branch getter");
+      return readFileSync(join(providerCwd, ".git", "HEAD"), "utf8").trim().replace("ref: refs/heads/", "");
+    },
+    getExtensionStatuses: () => new Map(),
+    getAvailableProviderCount: () => 0,
+    onBranchChange(callback) { listeners.add(callback); return () => { listeners.delete(callback); }; },
+  };
+  const spawn = childProcess.spawn;
+  const calls: Parameters<typeof spawn>[] = [];
+  t.mock.method(childProcess, "spawn", (...args: Parameters<typeof spawn>) => {
+    calls.push(args);
+    return spawn(...args);
+  });
+  syncBuiltinESMExports();
+  let runtime: ReturnType<typeof createCtx> | undefined;
+  const layout = { left: ["git"], right: [], secondary: [] };
+  const hiddenCounts = { showStaged: false, showUnstaged: false, showUntracked: false };
+  const start = async (powerline: Record<string, unknown>, cwd = repoA) => {
+    runtime?.disposeFooter();
+    // Mirror Pi's applyRuntimeSettings -> bindExtensions -> session_start ordering.
+    providerCwd = cwd;
+    writeFileSync(join(root, "settings.json"), JSON.stringify({ powerline: { welcome: false, layout, ...powerline } }));
+    runtime = createCtx({ cwd, footerData, theme: { ...fakeTheme(), fg: (color, text) => `<${color}>${text}</${color}>` } });
+    await fake.handlers.get("session_start")?.({ reason: "resume" }, runtime.ctx);
+    calls.length = 0;
+  };
+  const render = () => runtime!.widgets.get("powerline-top")!.render(240).join("\n");
+  try {
+    extension(fake.pi);
+    for (const settings of [
+      { preset: "full", layout: undefined, disabledSegments: ["git"] },
+      { layout: { left: ["model"], right: [], secondary: [] } },
+      { git: { ...hiddenCounts, showBranch: false, hostIcon: true } },
+    ]) {
+      await start(settings);
+      render();
+      await waitForGitUpdates();
+      assert.deepEqual(calls, [], "no Git process for absent, disabled, or wholly hidden Git");
+    }
+    t.diagnostic("Unused Git: provider getter forbidden; no Git subprocesses in disabled/omitted/hidden layouts");
+    allowBranchRead = true;
+    for (const polling of ["off", "branch", "full"]) {
+      await start({ git: { ...hiddenCounts, polling } });
+      assert.match(render(), /branch-a/);
+      await waitForGitUpdates();
+      assert.deepEqual(calls.map(([, args]) => args), polling === "full" ? [["status", "--porcelain"]] : []);
+      t.diagnostic(`Attached ${polling}: ${calls.map(([, args]) => args?.join(" ")).join(", ") || "no subprocesses"}`);
+    }
+    assert.match(render(), /<warning>[^<]*branch-a<\/warning>/, "full mode keeps dirty coloring with hidden counts");
+    fs.unlinkSync(join(repoA, "dirty"));
+    for (const notify of listeners) notify();
+    assert.match(render(), /<warning>[^<]*branch-a<\/warning>/, "same-cwd refresh serves stale counts");
+    await waitForGitUpdates();
+    assert.match(render(), /<success>[^<]*branch-a<\/success>/);
+
+    writeFileSync(join(repoA, "dirty"), "untracked again");
+    await start({ git: { hostIcon: true } });
+    render();
+    await waitForGitUpdates();
+    assert.ok(render().includes(NERD_ICONS.github));
+    assert.match(render(), /<warning>/);
+    await start({ git: { hostIcon: true } }, repoB);
+    const immediate = render();
+    assert.match(immediate, /branch-b/);
+    assert.doesNotMatch(immediate, /branch-a|<warning>/);
+    assert.ok(!immediate.includes(NERD_ICONS.github));
+    await waitForGitUpdates();
+    assert.ok(render().includes(NERD_ICONS.gitlab));
+    assert.ok(calls.every(([, , options]) => options?.cwd === repoB), "status and host reads use ctx.cwd, not ambient cwd");
+    runtime!.disposeFooter();
+    assert.equal(listeners.size, 0, "footer disposal unsubscribes branch notifications");
+  } finally {
+    await waitForGitUpdates();
+    runtime?.disposeFooter();
+    if (runtime) await fake.handlers.get("session_shutdown")?.({}, runtime.ctx);
+    t.mock.restoreAll();
+    syncBuiltinESMExports();
+    if (oldFonts === undefined) delete process.env.POWERLINE_NERD_FONTS;
+    else process.env.POWERLINE_NERD_FONTS = oldFonts;
+    restoreEnv();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("footer queue demand follows resolved layout while preview and picker stay independent", async () => {
+  for (const powerline of [
+    { preset: "full", disabledSegments: ["queue"] },
+    { layout: { left: ["model"], right: [], secondary: [] } },
+    { layout: { left: [], right: [], secondary: ["queue"] } },
+  ]) {
+    const root = mkdtempSync(join(tmpdir(), "powerline-queue-display-"));
+    writeFileSync(join(root, "settings.json"), JSON.stringify({ powerline: { welcome: false, ...powerline } }));
+    const inbox = join(root, "powerline-footer", "inbox.jsonl");
+    const store = new PowerlineQueueStore(inbox, join(root, "projects.json"));
+    store.add({ text: "independent preview", source: { cwd: root }, target: { kind: "global" }, intent: "follow-up" });
+    const { extension, restoreEnv } = await loadPowerline(root);
+    const fake = createFakePi();
+    const runtime = createCtx({ cwd: root, customInputs: [["\x1b"]] });
+    const originalRead = fs.readFileSync;
+    try {
+      extension(fake.pi);
+      await fake.handlers.get("session_start")?.({ reason: "resume" }, runtime.ctx);
+      const denied = Object.assign(new Error("inbox denied"), { code: "EACCES" });
+      fs.readFileSync = ((path, ...args) => {
+        if (path === inbox) throw denied;
+        return Reflect.apply(originalRead, fs, [path, ...args]);
+      }) as typeof fs.readFileSync;
+      syncBuiltinESMExports();
+      const renderFooter = () => runtime.widgets.get("powerline-top")!.render(120);
+      if (powerline.layout?.secondary.includes("queue")) assert.throws(renderFooter, denied);
+      else assert.doesNotThrow(renderFooter);
+      assert.throws(() => runtime.widgets.get("powerline-queue-preview")!.render(120), denied);
+      fs.readFileSync = originalRead;
+      syncBuiltinESMExports();
+      assert.match(runtime.widgets.get("powerline-queue-preview")!.render(120).join("\n"), /queued: independent preview/);
+      await fake.commands.get("queue")!.handler("", runtime.ctx);
+      assert.equal(runtime.customTitles.length, 1, "queue picker opens independently of footer layout");
+    } finally {
+      fs.readFileSync = originalRead;
+      syncBuiltinESMExports();
+      await fake.handlers.get("session_shutdown")?.({}, runtime.ctx);
+      await waitForGitUpdates();
+      restoreEnv();
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+});
+
+test("stash shortcut matches Alt+S encodings without consuming literal sharp-S by default", () => {
+  assert.equal(matchesStashShortcutInput("ß"), false);
+  assert.equal(matchesStashShortcutInput("ß", { includePrintableSharpS: true }), true);
+
+  for (const data of [
+    "\x1bs",
+    "\x1bS",
+    "\x1b[115;3u",
+    "\x1b[83;3u",
+    "\x1b[27;3;115~",
+    "\x1b[27;3;83~",
+  ]) {
+    assert.equal(matchesStashShortcutInput(data), true, data);
+  }
+
+  assert.equal(matchesStashShortcutInput("s"), false);
+  assert.equal(matchesStashShortcutInput("\x1b[115;5u"), false);
+});
+
+test("stash shortcut stays in terminal/editor fallback routing", () => {
+  assert.doesNotMatch(source, /pi\.registerShortcut\("alt\+s"/);
+  assert.match(source, /matchesStashShortcutInput\(data, \{ includePrintableSharpS: config\.stashSharpSShortcut \}\)/);
+  assert.match(source, /ctx\.ui\.onTerminalInput\(\(data: string\) =>/);
+  assert.match(source, /if \(isStashShortcutInput\(data\)\)/);
+  assert.match(source, /function stashOrRestoreEditorText\(ctx: any\): void/);
+  assert.match(source, /function isPromptHistoryShortcutInput\(data: string\): boolean/);
+  assert.match(source, /matchesConfiguredShortcut\(data, resolvedShortcuts\.stashHistory\)/);
+  assert.doesNotMatch(source, /data === "\\x1b\\b"/);
+  assert.doesNotMatch(source, /data === "\\x1b\\x7f"/);
+});
+
+test("Ctrl+S toggles the stash only from the focused editor", async () => {
+  const agentDir = mkdtempSync(join(tmpdir(), "powerline-stash-ctrl-s-"));
+  writeAgentSettings(agentDir);
+  const { extension, restoreEnv } = await loadPowerline(agentDir);
+  const { KeybindingsManager } = await import(new URL("../node_modules/@earendil-works/pi-coding-agent/dist/core/keybindings.js", import.meta.url).href);
+  const fake = createFakePi();
+  const runtime = createCtx({ cwd: agentDir, text: "draft" });
+  let editor: { handleInput(data: string): void } | undefined;
+  Object.assign(runtime.ctx.ui, {
+    setEditorComponent(factory?: (tui: object, theme: object, keys: object) => { handleInput(data: string): void }) {
+      if (factory) editor = factory({ requestRender() {}, terminal: { columns: 80, rows: 24 } }, {}, KeybindingsManager.create());
+    },
+  });
+
+  try {
+    extension(fake.pi);
+    await fake.handlers.get("session_start")?.({ reason: "resume" }, runtime.ctx);
+
+    // The global terminal hook must leave Ctrl+S to whatever has focus, such as Pi's selectors.
+    assert.equal(runtime.sendTerminalInput("\x13"), undefined);
+    assert.equal(runtime.text, "draft");
+
+    editor!.handleInput("\x13");
+    assert.equal(runtime.text, "");
+    assert.deepEqual(runtime.statuses.at(-1), ["stash", "stash"]);
+
+    editor!.handleInput("\x13");
+    assert.equal(runtime.text, "draft");
+    assert.deepEqual(runtime.statuses.at(-1), ["stash", undefined]);
+  } finally {
+    await fake.handlers.get("session_shutdown")?.({ reason: "quit" }, runtime.ctx);
+    restoreEnv();
+    fs.rmSync(agentDir, { recursive: true, force: true });
+  }
+});
+
+test("agent_end leaves an active stash untouched until explicit restore", async () => {
+  const agentDir = mkdtempSync(join(tmpdir(), "powerline-stash-agent-end-"));
+  const cwd = mkdtempSync(join(tmpdir(), "powerline-stash-cwd-"));
+  writeAgentSettings(agentDir);
+  const { extension, restoreEnv } = await loadPowerline(agentDir);
+
+  try {
+    const fake = createFakePi();
+    extension(fake.pi);
+    const runtime = createCtx({ cwd, text: "draft to keep" });
+    await fake.handlers.get("session_start")?.({ reason: "resume" }, runtime.ctx);
+
+    runtime.sendTerminalInput("\x1bs");
+    assert.equal(runtime.text, "");
+    assert.deepEqual(runtime.statuses.at(-1), ["stash", "stash"]);
+
+    runtime.setEditorTextCalls.length = 0;
+    await fake.handlers.get("agent_end")?.({}, runtime.ctx);
+    assert.deepEqual(runtime.setEditorTextCalls, []);
+    assert.equal(runtime.text, "");
+    assert.deepEqual(runtime.statuses.at(-1), ["stash", "stash"]);
+    assert.equal(runtime.notifications.some((entry) => entry.message === "Stash restored"), false);
+
+    runtime.sendTerminalInput("\x1bs");
+    assert.equal(runtime.text, "draft to keep");
+    assert.deepEqual(runtime.statuses.at(-1), ["stash", undefined]);
+    assert.equal(runtime.notifications.some((entry) => entry.message === "Stash restored"), true);
+  } finally {
+    restoreEnv();
+  }
+});
+
+test("reload transfers an active stash to the next extension generation", async () => {
+  const agentDir = mkdtempSync(join(tmpdir(), "powerline-stash-reload-"));
+  const cwd = mkdtempSync(join(tmpdir(), "powerline-stash-reload-cwd-"));
+  const sessionId = `reload-${Date.now()}-${Math.random()}`;
+  writeAgentSettings(agentDir);
+  const oldGeneration = await createStashGeneration(agentDir, cwd, sessionId, "draft across reload");
+  const newGeneration = await createStashGeneration(agentDir, cwd, sessionId);
+
+  try {
+    await oldGeneration.start("startup");
+    oldGeneration.runtime.sendTerminalInput("\x1bs");
+    await oldGeneration.shutdown("reload");
+    await newGeneration.start("reload");
+
+    assert.deepEqual(newGeneration.runtime.statuses.at(-1), ["stash", "stash"]);
+    newGeneration.runtime.sendTerminalInput("\x1bs");
+    assert.equal(newGeneration.runtime.text, "draft across reload");
+    assert.deepEqual(newGeneration.runtime.statuses.at(-1), ["stash", undefined]);
+  } finally {
+    await newGeneration.shutdown("quit");
+    newGeneration.restoreEnv();
+    oldGeneration.restoreEnv();
+    fs.rmSync(agentDir, { recursive: true, force: true });
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("reload stash handoff does not leak to a different session", async () => {
+  const agentDir = mkdtempSync(join(tmpdir(), "powerline-stash-isolation-"));
+  const cwd = mkdtempSync(join(tmpdir(), "powerline-stash-isolation-cwd-"));
+  const sourceId = `source-${Date.now()}-${Math.random()}`;
+  writeAgentSettings(agentDir);
+  const source = await createStashGeneration(agentDir, cwd, sourceId, "private draft");
+  const other = await createStashGeneration(agentDir, cwd, `other-${Date.now()}-${Math.random()}`);
+  const receiver = await createStashGeneration(agentDir, cwd, sourceId);
+
+  try {
+    await source.start("startup");
+    source.runtime.sendTerminalInput("\x1bs");
+    await source.shutdown("reload");
+    await other.start("reload");
+
+    assert.deepEqual(other.runtime.statuses.at(-1), ["stash", undefined]);
+    other.runtime.sendTerminalInput("\x1bs");
+    assert.equal(other.runtime.notifications.at(-1)?.message, "Nothing to stash");
+    await receiver.start("reload");
+    receiver.runtime.sendTerminalInput("\x1bs");
+    assert.equal(receiver.runtime.text, "private draft");
+  } finally {
+    await other.shutdown("quit");
+    await receiver.shutdown("quit");
+    receiver.restoreEnv();
+    other.restoreEnv();
+    source.restoreEnv();
+    fs.rmSync(agentDir, { recursive: true, force: true });
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("quit and Powerline disable clear active stash reload state", async () => {
+  const agentDir = mkdtempSync(join(tmpdir(), "powerline-stash-quit-"));
+  const cwd = mkdtempSync(join(tmpdir(), "powerline-stash-quit-cwd-"));
+  const sessionId = `quit-${Date.now()}-${Math.random()}`;
+  writeAgentSettings(agentDir);
+  const oldGeneration = await createStashGeneration(agentDir, cwd, sessionId, "discard on quit");
+  const newGeneration = await createStashGeneration(agentDir, cwd, sessionId);
+  const disabled = await createStashGeneration(agentDir, cwd, `${sessionId}-disabled`, "discard on disable");
+  const afterDisable = await createStashGeneration(agentDir, cwd, `${sessionId}-disabled`);
+
+  try {
+    await oldGeneration.start("startup");
+    oldGeneration.runtime.sendTerminalInput("\x1bs");
+    await oldGeneration.shutdown("quit");
+    await newGeneration.start("reload");
+    newGeneration.runtime.sendTerminalInput("\x1bs");
+
+    assert.equal(newGeneration.runtime.notifications.at(-1)?.message, "Nothing to stash");
+
+    await disabled.start("startup");
+    disabled.runtime.sendTerminalInput("\x1bs");
+    await disabled.togglePowerline();
+    await disabled.shutdown("reload");
+    await afterDisable.start("reload");
+    afterDisable.runtime.sendTerminalInput("\x1bs");
+    assert.equal(afterDisable.runtime.notifications.at(-1)?.message, "Nothing to stash");
+  } finally {
+    await newGeneration.shutdown("quit");
+    await afterDisable.shutdown("quit");
+    afterDisable.restoreEnv();
+    disabled.restoreEnv();
+    newGeneration.restoreEnv();
+    oldGeneration.restoreEnv();
+    fs.rmSync(agentDir, { recursive: true, force: true });
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("reload stash handoff is consumed only once", async () => {
+  const agentDir = mkdtempSync(join(tmpdir(), "powerline-stash-one-shot-"));
+  const cwd = mkdtempSync(join(tmpdir(), "powerline-stash-one-shot-cwd-"));
+  const sessionId = `one-shot-${Date.now()}-${Math.random()}`;
+  writeAgentSettings(agentDir);
+  const oldGeneration = await createStashGeneration(agentDir, cwd, sessionId, "consume once");
+  const receiver = await createStashGeneration(agentDir, cwd, sessionId);
+  const extra = await createStashGeneration(agentDir, cwd, sessionId);
+
+  try {
+    await oldGeneration.start("startup");
+    oldGeneration.runtime.sendTerminalInput("\x1bs");
+    await oldGeneration.shutdown("reload");
+    await receiver.start("reload");
+    await extra.start("reload");
+
+    extra.runtime.sendTerminalInput("\x1bs");
+    assert.equal(extra.runtime.notifications.at(-1)?.message, "Nothing to stash");
+    receiver.runtime.sendTerminalInput("\x1bs");
+    assert.equal(receiver.runtime.text, "consume once");
+  } finally {
+    await extra.shutdown("quit");
+    await receiver.shutdown("quit");
+    extra.restoreEnv();
+    receiver.restoreEnv();
+    oldGeneration.restoreEnv();
+    fs.rmSync(agentDir, { recursive: true, force: true });
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("stash history can open stashed prompts without reading project JSONL", async () => {
+  const agentDir = mkdtempSync(join(tmpdir(), "powerline-stash-history-fast-"));
+  const cwd = "/tmp/powerline-stash-history-cwd";
+  writeAgentSettings(agentDir);
+  writeStashHistory(agentDir, ["saved stash"]);
+  const sessionsPath = projectSessionsPath(agentDir, cwd);
+  mkdirSync(sessionsPath, { recursive: true });
+  writeFileSync(join(sessionsPath, "broken.jsonl"), '{"type":"message","message":{"role":"user",');
+  const { extension, restoreEnv } = await loadPowerline(agentDir);
+
+  try {
+    const fake = createFakePi();
+    extension(fake.pi);
+    const runtime = createCtx({ cwd, customInputs: [["\r"], ["\r"]] });
+    await fake.commands.get("stash-history")?.handler("", runtime.ctx);
+
+    assert.deepEqual(runtime.customTitles, ["Prompt history", "Stash history"]);
+    assert.equal(runtime.text, "saved stash");
+    assert.equal(runtime.notifications.some((entry) => entry.level === "warning"), false);
+  } finally {
+    restoreEnv();
+  }
+});
+
+test("stash history loads project prompts on demand from bounded newest files", async () => {
+  const agentDir = mkdtempSync(join(tmpdir(), "powerline-project-history-"));
+  const cwd = "/tmp/powerline-project-history-cwd";
+  writeAgentSettings(agentDir);
+  writeStashHistory(agentDir, ["saved stash"]);
+  const sessionsPath = projectSessionsPath(agentDir, cwd);
+  mkdirSync(sessionsPath, { recursive: true });
+
+  const now = Date.now();
+  for (let i = 0; i < 50; i += 1) {
+    const filePath = join(sessionsPath, `recent-${String(i).padStart(2, "0")}.jsonl`);
+    writeFileSync(filePath, `${sessionLine(`project prompt ${i}`, now - i)}\n`);
+    const mtime = new Date(now - i * 1000);
+    utimesSync(filePath, mtime, mtime);
+  }
+  const oldBrokenPath = join(sessionsPath, "old-broken.jsonl");
+  writeFileSync(oldBrokenPath, '{"type":"message","message":{"role":"user",');
+  const oldTime = new Date(now - 100_000);
+  utimesSync(oldBrokenPath, oldTime, oldTime);
+
+  const { extension, restoreEnv } = await loadPowerline(agentDir);
+
+  try {
+    const fake = createFakePi();
+    extension(fake.pi);
+    const runtime = createCtx({ cwd, customInputs: [["\x1b[B", "\r"], ["\r"]] });
+    await fake.commands.get("stash-history")?.handler("", runtime.ctx);
+
+    assert.deepEqual(runtime.customTitles, ["Prompt history", "Recent project prompts"]);
+    assert.equal(runtime.text, "project prompt 0");
+    assert.equal(runtime.notifications.some((entry) => entry.level === "warning"), false);
+  } finally {
+    restoreEnv();
+  }
+});

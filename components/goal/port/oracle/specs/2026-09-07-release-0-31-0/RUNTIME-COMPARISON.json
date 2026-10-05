@@ -1,0 +1,30 @@
+{
+  "baseline": "v0.30.5 (59826ec)",
+  "candidate": "18323b8",
+  "method": "Mean of two per-run medians; alternating before/after/after/before; real SDK 0.84.1; Node v26.7.0",
+  "rows": [
+    {
+      "operation": "prompt.warm.large",
+      "beforeMs": 0.00029458000000005314,
+      "afterMs": 0.008280835000000052,
+      "speedup": 0.03557370724088226
+    },
+    {
+      "operation": "render.expanded.120",
+      "beforeMs": 1.7060562549999998,
+      "afterMs": 0.2844647899999996,
+      "speedup": 5.997425041601818
+    },
+    {
+      "operation": "activity.100000",
+      "beforeMs": 11.883997899999986,
+      "afterMs": 0.0028916999999978542,
+      "speedup": 4109.692533806689
+    }
+  ],
+  "notes": [
+    "The unchanged-input prompt microbenchmark increases from 0.000295 to 0.008281 ms (about 8 microseconds): current cache validation checks task content and appends current usage, while v0.30.5 trusts its revision/time-based key. This is below the existing 0.015 ms short-path allowance; no release-level prompt speedup is claimed.",
+    "Activity measurement includes the warm ledger/index lookup and latest-five item formatting; full ledger parsing and initial indexing occur before timing.",
+    "Expanded dashboard uses 50 long tasks, a long objective and width 120; text metrics/wrapping use the real SDK."
+  ]
+}

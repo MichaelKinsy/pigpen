@@ -1,0 +1,61 @@
+{
+  "name": "output-low-confidence",
+  "description": "The failure class is below output.minConfidence: the result is left alone.",
+  "agentFiles": {
+    "pi-jev.json": "{\"enabled\": true, \"acknowledged\": true, \"display\": \"plain\", \"backend\": \"typesafe\", \"endpoint\": \"{{server:jev}}/v1/systemone\", \"model\": \"jev-eq\", \"retries\": 0, \"timeoutMs\": 5000}"
+  },
+  "env": {
+    "TYPESAFE_API_KEY": "tsk-eq-key-0123456789"
+  },
+  "servers": {
+    "jev": {
+      "recordHeaders": [
+        "authorization"
+      ],
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "body": "{\"model\": \"jev-eq\", \"answers\": {\"destructive\": {\"type\": \"noul\", \"noul\": 0.03}, \"exfiltration\": {\"type\": \"noul\", \"noul\": 0.04}, \"beyond_scope\": {\"type\": \"noul\", \"noul\": 0.4}, \"impact\": {\"type\": \"score\", \"score\": 0.02, \"confidence\": 0.9, \"legend\": {\"0\": \"None, it only reads\", \"1\": \"Small\", \"2\": \"Large\", \"3\": \"Severe\"}, \"probabilities\": {\"0\": 0.05, \"1\": 0.1, \"2\": 0.15, \"3\": 0.7}}}, \"usage\": {\"input_tokens\": 100, \"output_tokens\": 4}}",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "times": 1
+        },
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "body": "{\"model\": \"jev-eq\", \"answers\": {\"leaks_secret\": {\"type\": \"noul\", \"noul\": 0.01}, \"failure_class\": {\"type\": \"choice\", \"choice\": \"environment\", \"confidence\": 0.42, \"probabilities\": {\"environment\": 0.42}}}}",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "times": 1
+        }
+      ]
+    }
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo odd; exit 2"
+          }
+        }
+      ]
+    },
+    {
+      "text": "hm"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "run it"
+      }
+    }
+  ]
+}

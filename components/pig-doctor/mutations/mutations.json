@@ -1,0 +1,492 @@
+[
+ {
+  "id": "read-guard-models",
+  "file": "doctor/fsx.go",
+  "find": "if strings.HasPrefix(b, \"models\") {\n\t\treturn true",
+  "replace": "if strings.HasPrefix(b, \"models\") {\n\t\treturn false",
+  "why": "models files stop being protected names"
+ },
+ {
+  "id": "read-guard-off",
+  "file": "doctor/fsx.go",
+  "find": "func readFileGuarded(path string) ([]byte, error) {\n\tif protectedName(",
+  "replace": "func readFileGuarded(path string) ([]byte, error) {\n\tif false && protectedName(",
+  "why": "credential files can be read"
+ },
+ {
+  "id": "copy-guard-off",
+  "file": "doctor/fsx.go",
+  "find": "case info.Mode().IsRegular():\n\t\tif protectedName(filepath.Base(src)) {",
+  "replace": "case info.Mode().IsRegular():\n\t\tif false && protectedName(filepath.Base(src)) {",
+  "why": "the cross-device copy reads a credential"
+ },
+ {
+  "id": "symlink-below-home",
+  "file": "doctor/fsx.go",
+  "find": "if isSymlink(info) {\n\t\t\treturn fmt.Errorf(\"%s is a symlink; symlinks are never followed\", cur)",
+  "replace": "if false && isSymlink(info) {\n\t\t\treturn fmt.Errorf(\"%s is a symlink; symlinks are never followed\", cur)",
+  "why": "operations follow symlinks"
+ },
+ {
+  "id": "guard-agent-dir",
+  "file": "doctor/apply.go",
+  "find": "if within(inv.agent, p) {",
+  "replace": "if false && within(inv.agent, p) {",
+  "why": "the agent directory can be modified"
+ },
+ {
+  "id": "guard-protected-names",
+  "file": "doctor/apply.go",
+  "find": "if protectedName(base) && !(op.Kind == OpDelete && credentialName(base)) {",
+  "replace": "if false && protectedName(base) && !(op.Kind == OpDelete && credentialName(base)) {",
+  "why": "auth.json, trust.json, models files can be operated on"
+ },
+ {
+  "id": "guard-outside-home",
+  "file": "doctor/apply.go",
+  "find": "if !strictlyWithin(inv.home, p) {",
+  "replace": "if false && !strictlyWithin(inv.home, p) {",
+  "why": "paths outside the PiG home are accepted"
+ },
+ {
+  "id": "guard-sessions",
+  "file": "doctor/apply.go",
+  "find": "if sessionsSegments[seg] {",
+  "replace": "if false && sessionsSegments[seg] {",
+  "why": "sessions, skills and prompts can be deleted"
+ },
+ {
+  "id": "guard-candidate-lookup",
+  "file": "doctor/apply.go",
+  "find": "if op.Kind != OpRemovePackage && inv.lookup(op.Kind, op.Path) == nil {",
+  "replace": "if false && op.Kind != OpRemovePackage && inv.lookup(op.Kind, op.Path) == nil {",
+  "why": "an operation the doctor would not offer is accepted (unknown items)"
+ },
+ {
+  "id": "stale-plan",
+  "file": "doctor/apply.go",
+  "find": "if it.c.Class != \"cache\" {",
+  "replace": "if false {",
+  "why": "a plan for a directory that is no longer an orphan is applied"
+ },
+ {
+  "id": "lock-settings",
+  "why": "settings.json is edited while another process holds its lock",
+  "edits": [
+   {
+    "file": "doctor/apply.go",
+    "find": "if needSettings {\n\t\tif held, err :=",
+    "replace": "if false && needSettings {\n\t\tif held, err :="
+   },
+   {
+    "file": "doctor/apply.go",
+    "find": "if needSettings {\n\t\trelease, err := acquireLock(inv.settingsLock())",
+    "replace": "if false && needSettings {\n\t\trelease, err := acquireLock(inv.settingsLock())"
+   }
+  ]
+ },
+ {
+  "id": "lock-cache-gc",
+  "why": "caches are pruned while PiG holds the GC lock",
+  "edits": [
+   {
+    "file": "doctor/apply.go",
+    "find": "if needGC {\n\t\tif l, held :=",
+    "replace": "if false && needGC {\n\t\tif l, held :="
+   },
+   {
+    "file": "doctor/apply.go",
+    "find": "if needGC {\n\t\tif err := os.MkdirAll(",
+    "replace": "if false && needGC {\n\t\tif err := os.MkdirAll("
+   }
+  ]
+ },
+ {
+  "id": "lock-inside-dir",
+  "why": "a directory with a held lock is moved",
+  "edits": [
+   {
+    "file": "doctor/apply.go",
+    "find": "if l, held := heldAny(inv, it.c.Locks); held {",
+    "replace": "if l, held := heldAny(inv, it.c.Locks); held && false {"
+   },
+   {
+    "file": "doctor/orphans.go",
+    "find": "if h, err := lockHeld(l, inv.now); h || err != nil {\n\t\t\t\tos_.Reason",
+    "replace": "if h, err := lockHeld(l, inv.now); (h || err != nil) && false {\n\t\t\t\tos_.Reason"
+   }
+  ]
+ },
+ {
+  "id": "lock-entry-at-delete",
+  "why": "a cache entry leased after check is deleted",
+  "edits": [
+   {
+    "file": "doctor/apply.go",
+    "find": "if l, held := heldAny(inv, usageLocks(it.op.Path)); held {",
+    "replace": "if l, held := heldAny(inv, usageLocks(it.op.Path)); held && false {"
+   },
+   {
+    "file": "doctor/caches.go",
+    "find": "if held || err != nil {\n\t\t\te.InUse",
+    "replace": "if (held || err != nil) && false {\n\t\t\te.InUse"
+   }
+  ]
+ },
+ {
+  "id": "lock-probe",
+  "file": "doctor/locks_unix.go",
+  "find": "if errors.Is(err, syscall.EWOULDBLOCK) {\n\t\treturn true, nil",
+  "replace": "if errors.Is(err, syscall.EWOULDBLOCK) {\n\t\treturn false, nil",
+  "why": "a held flock is reported as free"
+ },
+ {
+  "id": "cache-in-use",
+  "file": "doctor/caches.go",
+  "find": "if held || err != nil {\n\t\t\te.InUse",
+  "replace": "if (held || err != nil) && false {\n\t\t\te.InUse",
+  "why": "cache entries with a usage lease are pruned"
+ },
+ {
+  "id": "cache-retention",
+  "file": "doctor/caches.go",
+  "find": "case age >= day(inv.o.CacheDays):",
+  "replace": "case true:",
+  "why": "recent cache entries are pruned"
+ },
+ {
+  "id": "cache-building",
+  "file": "doctor/caches.go",
+  "find": "case readyErr != nil && age >= crashGrace:",
+  "replace": "case readyErr != nil:",
+  "why": "an entry that may be building is pruned"
+ },
+ {
+  "id": "orphan-age",
+  "file": "doctor/orphans.go",
+  "find": "age < day(inv.o.OrphanDays) {",
+  "replace": "false && age < day(inv.o.OrphanDays) {",
+  "why": "young agent directories are called orphans"
+ },
+ {
+  "id": "orphan-process",
+  "file": "doctor/orphans.go",
+  "find": "if p, ok := inv.procUses(path); ok {\n\t\t\tos_.Reason",
+  "replace": "if p, ok := inv.procUses(path); ok && false {\n\t\t\tos_.Reason",
+  "why": "a directory a running pig uses is an orphan"
+ },
+ {
+  "id": "orphan-referenced",
+  "file": "doctor/orphans.go",
+  "find": "case inv.referenced(path):",
+  "replace": "case false && inv.referenced(path):",
+  "why": "a directory settings.json points at is an orphan"
+ },
+ {
+  "id": "orphan-active-agent",
+  "file": "doctor/orphans.go",
+  "find": "case path == inv.agent || within(path, inv.agent):",
+  "replace": "case false:",
+  "why": "the active agent directory is an orphan"
+ },
+ {
+  "id": "orphan-sessions-safe",
+  "file": "doctor/orphans.go",
+  "find": "case st.Sessions:",
+  "replace": "case false:",
+  "why": "directories with sessions are auto-fixed"
+ },
+ {
+  "id": "agent-shape",
+  "file": "doctor/orphans.go",
+  "find": "\t}\n\treturn false\n}\n\nfunc collectStrings",
+  "replace": "\t}\n\treturn true\n}\n\nfunc collectStrings",
+  "why": "any directory named like an agent dir is treated as one"
+ },
+ {
+  "id": "unknown-classified",
+  "file": "doctor/orphans.go",
+  "find": "default:\n\t\t\tinv.unknown = append(inv.unknown, name)",
+  "replace": "default:\n\t\t\tinv.unknown = append(inv.unknown, name)\n\t\t\tif info.IsDir() {\n\t\t\t\tinv.automationDir(path, name)\n\t\t\t}",
+  "why": "unknown directories are offered for removal"
+ },
+ {
+  "id": "top-level-stat-follows",
+  "file": "doctor/orphans.go",
+  "find": "path := filepath.Join(inv.home, name)\n\t\tinfo, err := os.Lstat(path)",
+  "replace": "path := filepath.Join(inv.home, name)\n\t\tinfo, err := os.Stat(path)",
+  "why": "top-level symlinks are followed"
+ },
+ {
+  "id": "settings-rewrite",
+  "file": "doctor/apply.go",
+  "find": "out, err := removeArrayElements(raw, \"packages\", idx)",
+  "replace": "out, err := func() ([]byte, error) {\n\t\t\tvar m map[string]any\n\t\t\t_ = json.Unmarshal(raw, &m)\n\t\t\tm[\"packages\"] = []any{}\n\t\t\treturn json.MarshalIndent(m, \"\", \"  \")\n\t\t}()",
+  "why": "settings.json is re-serialized instead of edited in place"
+ },
+ {
+  "id": "settings-verify",
+  "file": "doctor/apply.go",
+  "find": "if w, ok := b[k]; !ok || string(v) != string(w) {",
+  "replace": "if w, ok := b[k]; (!ok || string(v) != string(w)) && false {",
+  "why": "the post-edit verification no longer compares the other settings keys"
+ },
+ {
+  "id": "credential-backed-up",
+  "file": "doctor/apply.go",
+  "find": "if err := os.Remove(op.Path); err != nil {",
+  "replace": "if err := b.move(op); err != nil {",
+  "why": "a credential copy is moved into the backup"
+ },
+ {
+  "id": "credential-move-preflight",
+  "file": "doctor/apply.go",
+  "find": "if !deletes[filepath.Join(op.Path, rel)] {",
+  "replace": "if false {",
+  "why": "a directory holding credentials is moved into the backup"
+ },
+ {
+  "id": "backup-in-home",
+  "file": "doctor/apply.go",
+  "find": "if within(b.inv.home, b.o.BackupRoot) {",
+  "replace": "if false {",
+  "why": "the backup may live inside the PiG home"
+ },
+ {
+  "id": "manifest-move",
+  "file": "doctor/apply.go",
+  "find": "return b.record(manifestEntry{Kind: \"move\",",
+  "replace": "return nil; return b.record(manifestEntry{Kind: \"move\",",
+  "why": "moves are not recorded, so they cannot be restored"
+ },
+ {
+  "id": "group-safety",
+  "file": "doctor/plan.go",
+  "find": "if safetyRank(f.Safety) > safetyRank(g.Safety) {",
+  "replace": "if false {",
+  "why": "a group of confirm-level fixes counts as safe"
+ },
+ {
+  "id": "dup-folder-safe",
+  "file": "doctor/packages.go",
+  "find": "r.Reason = \"matched by folder name only (the sources cannot be read): confirm they are the same Package\"",
+  "replace": "r.Safety, r.Reason = SafeAuto, \"matched by folder name only\"",
+  "why": "packages matched by folder name alone are removed automatically"
+ },
+ {
+  "id": "yes-covers-confirm",
+  "file": "doctor/cli.go",
+  "find": "return strings.EqualFold(ask(fmt.Sprintf(\"  Apply group %s? [y/N] \", g.ID)), \"y\"), nil",
+  "replace": "if yes {\n\t\t\treturn true, nil\n\t\t}\n\t\treturn strings.EqualFold(ask(fmt.Sprintf(\"  Apply group %s? [y/N] \", g.ID)), \"y\"), nil",
+  "why": "--yes applies confirm-level groups"
+ },
+ {
+  "id": "yes-covers-credentials",
+  "file": "doctor/cli.go",
+  "find": "if yes && confirmCreds {",
+  "replace": "if yes {",
+  "why": "--yes deletes credential copies"
+ },
+ {
+  "id": "dry-run-applies",
+  "file": "doctor/cli.go",
+  "find": "\tif dry {\n",
+  "replace": "\tif false {\n",
+  "why": "--dry-run does not stop before applying"
+ },
+ {
+  "id": "restore-overwrite",
+  "file": "doctor/restore.go",
+  "find": "if _, err := os.Lstat(e.Original); err == nil {\n\t\t\t\tres.Conflict",
+  "replace": "if _, err := os.Lstat(e.Original); false && err == nil {\n\t\t\t\tres.Conflict",
+  "why": "restore replaces existing data"
+ },
+ {
+  "id": "restore-edited-settings",
+  "file": "doctor/restore.go",
+  "find": "if err == nil && sha(cur) != e.SHAAfter && !force {",
+  "replace": "if err == nil && sha(cur) != e.SHAAfter && !force && false {",
+  "why": "restore overwrites a settings.json edited after the fix"
+ },
+ {
+  "id": "restore-timestamp",
+  "file": "doctor/restore.go",
+  "find": "if !tsRe.MatchString(ts) {",
+  "replace": "if false {",
+  "why": "restore accepts a path as the timestamp"
+ },
+ {
+  "id": "extension-fix-without-ui",
+  "file": "extension.go",
+  "find": "if !ctx.HasUI() {\n\t\tif err := say(ctx, \"DRY RUN",
+  "replace": "if false && !ctx.HasUI() {\n\t\tif err := say(ctx, \"DRY RUN",
+  "why": "/doctor fix runs without an interactive session"
+ },
+ {
+  "id": "extension-fix-mode-in-tool",
+  "file": "extension.go",
+  "find": "case \"backups\":\n\t\t\t\treturn backupsText(o)",
+  "replace": "case \"backups\":\n\t\t\t\treturn backupsText(o)\n\t\t\tcase \"fix\":\n\t\t\t\tr, _ := doctor.Check(o)\n\t\t\t\tp, _ := doctor.BuildPlan(r, doctor.Selection{})\n\t\t\t\t_, err := doctor.Apply(o, p, func(doctor.Group) (bool, error) { return true, nil })\n\t\t\t\treturn \"done\", err",
+  "why": "the model-callable tool can change files"
+ },
+ {
+  "id": "review-restore-protected",
+  "edits": [
+   {
+    "file": "doctor/restore.go",
+    "find": "if protectedName(filepath.Base(e.Original)) {\n\t\t\tres.Conflict",
+    "replace": "if false && protectedName(filepath.Base(e.Original)) {\n\t\t\tres.Conflict"
+   },
+   {
+    "file": "doctor/restore.go",
+    "find": "cur, err := readFileGuarded(e.Original)",
+    "replace": "cur, err := os.ReadFile(e.Original)"
+   }
+  ],
+  "why": "restore writes a protected file named in the manifest (both layers: the name check and the guarded read)"
+ },
+ {
+  "id": "review-restore-non-regular",
+  "edits": [
+   {
+    "file": "doctor/restore.go",
+    "find": "err == nil && !info.Mode().IsRegular() {",
+    "replace": "err == nil && info == nil {"
+   },
+   {
+    "file": "doctor/restore.go",
+    "find": "cur, err := readFileGuarded(e.Original)",
+    "replace": "cur, err := os.ReadFile(e.Original)"
+   }
+  ],
+  "why": "restore replaces a symlinked settings.json (both layers: the Lstat check and the guarded read)"
+ },
+ {
+  "id": "review-restore-agent-outside-home",
+  "file": "doctor/restore.go",
+  "find": "\t\t\troot = o.AgentDir\n",
+  "replace": "\t\t\troot = o.Home\n",
+  "why": "a settings.json edit outside the PiG home cannot be restored"
+ },
+ {
+  "id": "review-keep-still-present",
+  "file": "doctor/apply.go",
+  "find": "} else if !kept {",
+  "replace": "} else if !kept && false {",
+  "why": "a duplicate is removed after the entry it duplicates is gone"
+ },
+ {
+  "id": "review-any-process-in-use",
+  "file": "doctor/inventory.go",
+  "find": "for _, p := range inv.running {",
+  "replace": "for _, p := range inv.procs {",
+  "why": "only processes named pig count as using a directory"
+ },
+ {
+  "id": "review-proc-env-tilde",
+  "file": "doctor/inventory.go",
+  "find": "if v = expandTilde(v, home); filepath.IsAbs(v)",
+  "replace": "if _ = home; filepath.IsAbs(v)",
+  "why": "a ~ in a process's PIG_CODING_AGENT_DIR is not recognised"
+ },
+ {
+  "id": "review-proc-args-hidden",
+  "file": "doctor/inventory.go",
+  "find": "\tif len(p.Args) > 0 {\n\t\treturn p.Args[0]",
+  "replace": "\tif len(p.Args) > 0 {\n\t\treturn strings.Join(p.Args, \" \")",
+  "why": "process arguments (secrets) reach the report"
+ },
+ {
+  "id": "review-bang-includes",
+  "edits": [
+   {
+    "file": "doctor/jsonedit.go",
+    "find": "\t\t\tcase '-':\n\t\t\t\tnegated = true",
+    "replace": "\t\t\tcase '-', '!':\n\t\t\t\tnegated = true"
+   },
+   {
+    "file": "doctor/jsonedit.go",
+    "find": "\t\t\tcase '+', '!':",
+    "replace": "\t\t\tcase '+':"
+   }
+  ],
+  "why": "\"!\" read as an exclusion, unlike PiG"
+ },
+ {
+  "id": "review-bang-uncertain",
+  "file": "doctor/packages.go",
+  "find": "p.Exact == survivor.Exact && !p.Uncertain && !survivor.Uncertain && covers(survivor, p)",
+  "replace": "p.Exact == survivor.Exact && covers(survivor, p)",
+  "why": "a duplicate with a \"!\" filter is removed without confirmation"
+ },
+ {
+  "id": "review-usage-metadata",
+  "file": "doctor/caches.go",
+  "find": "\tcase !usageOK:",
+  "replace": "\tcase !usageOK && false:",
+  "why": "a cache entry without usage metadata is pruned (PiG keeps it)"
+ },
+ {
+  "id": "review-broken-toolchain",
+  "file": "doctor/caches.go",
+  "find": "\t\tif inv.toolchainBroken {",
+  "replace": "\t\tif false {",
+  "why": "caches are pruned by --yes while nothing can be rebuilt"
+ },
+ {
+  "id": "review-agent-toml",
+  "file": "doctor/orphans.go",
+  "find": "\t\tif within(inv.agent, p) {\n\t\t\t// The agent directory",
+  "replace": "\t\tif false {\n\t\t\t// The agent directory",
+  "why": "the agent's extensions.toml is planned and the guard refuses the whole fix"
+ },
+ {
+  "id": "review-host-pig",
+  "file": "extension.go",
+  "find": "\t\to.SelfPID = 0\n",
+  "replace": "",
+  "why": "the host pig is hidden from the running processes"
+ },
+ {
+  "id": "review-neutral-dir",
+  "file": "doctor/procs.go",
+  "find": "\tcmd.Dir = string(filepath.Separator)\n",
+  "replace": "",
+  "why": "probes run in the caller's directory (a go.mod there can switch toolchains)"
+ },
+ {
+  "id": "review-partial-backup-named",
+  "file": "doctor/cli.go",
+  "find": "\t\tif res != nil && res.Backup != \"\" {",
+  "replace": "\t\tif false {",
+  "why": "a partial fix does not name its backup"
+ },
+ {
+  "id": "review-proc-env-filter",
+  "file": "doctor/procs.go",
+  "find": "strings.Cut(kv, \"=\"); ok && procEnvKeys[k] {",
+  "replace": "strings.Cut(kv, \"=\"); ok {",
+  "why": "other processes' secrets are kept in memory"
+ },
+ {
+  "id": "review-orphan-settings-unreadable",
+  "file": "doctor/orphans.go",
+  "find": "\tcase !inv.settingsOK:\n",
+  "replace": "\tcase false:\n",
+  "why": "an agent directory is an orphan although settings.json could not be checked for references"
+ },
+ {
+  "id": "review-partial-move-recorded",
+  "file": "doctor/apply.go",
+  "find": "\t\tif errors.Is(err, errSourceRemains) {\n",
+  "replace": "\t\tif false && errors.Is(err, errSourceRemains) {\n",
+  "why": "a complete backup copy is left out of the manifest"
+ },
+ {
+  "id": "review-orphan-tilde-reference",
+  "file": "doctor/orphans.go",
+  "find": "\t\tforms = append(forms, \"~/\"+filepath.ToSlash(rel)) // PiG expands a leading ~\n",
+  "replace": "\t\t_ = rel\n",
+  "why": "a ~ reference in settings.json is not seen"
+ }
+]

@@ -1,0 +1,102 @@
+{
+  "package": "pi-goal-x",
+  "source": "https://pi.dev/packages?type=extension",
+  "observations": [
+    {
+      "release": "v0.31.2",
+      "date": "2026-09-08",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 7,
+      "extensions": 3216,
+      "downloads": 57237
+    },
+    {
+      "release": "v0.31.3",
+      "date": "2026-09-14",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 7,
+      "extensions": 3200,
+      "downloads": 68685
+    },
+    {
+      "release": "v0.31.4",
+      "date": "2026-09-14",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 7,
+      "extensions": 3196,
+      "downloads": 68685
+    },
+    {
+      "release": "v0.31.5",
+      "date": "2026-09-16",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 7,
+      "extensions": 3352,
+      "downloads": 68685
+    },
+    {
+      "release": "v0.31.6",
+      "date": "2026-09-17",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 7,
+      "extensions": 3318,
+      "downloads": 68685
+    },
+    {
+      "release": "v0.31.7",
+      "date": "2026-09-22",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 7,
+      "extensions": 3275,
+      "downloads": 90034
+    },
+    {
+      "release": "v0.31.8",
+      "date": "2026-09-22",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 7,
+      "extensions": 3279,
+      "downloads": 90034
+    },
+    {
+      "release": "v0.31.9",
+      "date": "2026-09-24",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 8,
+      "extensions": 3277,
+      "downloads": 90034
+    },
+    {
+      "release": "v0.32.0",
+      "date": "2026-10-01",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 6,
+      "extensions": 3258,
+      "downloads": 145600
+    },
+    {
+      "release": "v0.32.1",
+      "date": "2026-10-02",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 6,
+      "extensions": 3177,
+      "downloads": 145600
+    },
+    {
+      "release": "v0.32.2",
+      "date": "2026-10-02",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 6,
+      "extensions": 3179,
+      "downloads": 146825
+    },
+    {
+      "release": "v0.32.3",
+      "date": "2026-10-02",
+      "source": "https://pi.dev/packages?type=extension",
+      "rank": 6,
+      "extensions": 3178,
+      "downloads": 146825
+    }
+  ]
+}

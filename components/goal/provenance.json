@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-goal-x",
+      "authors": [
+        "Lucas (tmonk)"
+      ],
+      "url": "https://github.com/tmonk/pi-goal-x",
+      "revision": "64c5ace87f3400c0b55ef87f2d2912167f53dbaa",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

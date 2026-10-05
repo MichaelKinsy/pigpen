@@ -1,0 +1,18 @@
+{
+  "origin": "ported",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-web-access",
+      "authors": ["Nico Bailon"],
+      "url": "https://github.com/nicobailon/pi-web-access",
+      "revision": "9a734ed195da2f4cccc2fb5e7128f6774a380f47",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "payloadType": "application/vnd.pig.piglet-release+json",
+  "payload": "eyJwaWdsZXQiOiJoZXJkciIsInZlcnNpb24iOiIwLjEuMCIsInBpZ1ZlcnNpb24iOiIwLjQuMCIsInNvdXJjZVJlZiI6ImdpdDpnaXRodWIuY29tL01pY2hhZWxLaW5zeS9waWdwZW5AYmEwNTdhMmNmMTA2MmZlZTRhMWJlOGI4NmVjMzkxZjM2NjhkZDhiZiIsImdpdGh1YiI6eyJyZXBvc2l0b3J5IjoiTWljaGFlbEtpbnN5L3BpZ3BlbiIsInRhZ1ByZWZpeCI6ImhlcmRyLyJ9LCJzaWduZXIiOnsia2V5SWQiOiJlZDI1NTE5OjE5ZmQ5NjEwODhlMThmOWYwODY1ZTZmMWU1MTYyN2RkIiwicHVibGljS2V5IjoidWsyeDgvRmF2UDNNby9sZFphNk05UlF5K2pFbjNmOWJ2MG5uZXMxV09GWT0ifSwiYmluYXJpZXMiOnsibGludXgvYW1kNjQiOnsidXJsIjoicGlnLWhlcmRyLWxpbnV4LWFtZDY0Iiwic2hhMjU2IjoiZDRiYjk0ODA1N2RhNjMxNzQ2OWNjYzVhMWRhYjAyMzIwMGUyZjY4ZGFmYjA1MTg1NzU1MTZlMGYwYjBiMDViZiIsInNpemUiOjYzNzM5NTcwfX19",
+  "signatures": [
+    {
+      "keyid": "ed25519:19fd961088e18f9f0865e6f1e51627dd",
+      "sig": "/HMUDw3J9uyVFYMNT762Bb++AI7JOzF/z8UzBthhy0jZl/qFSbzPuVTY/vLs8ZLy1qwTklkFSeC4xUBoSNMFDA=="
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+ERROR: [youtube] kkkkkkkkkkk: Sign in to confirm you are not a bot. Use --cookies-from-browser or --cookies for the authentication.

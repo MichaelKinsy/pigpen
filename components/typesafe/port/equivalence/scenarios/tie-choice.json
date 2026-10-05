@@ -1,0 +1,27 @@
+{
+ "mode": "probabilities",
+ "structured": true,
+ "state": "doc",
+ "questions": {
+  "c": {
+   "type": "choice",
+   "criteria": {
+    "first": null,
+    "second": null,
+    "third": null
+   }
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "c": {
+     "first": 0.4,
+     "second": 0.4,
+     "third": 0.2
+    }
+   }
+  }
+ ],
+ "name": "tie-choice"
+}

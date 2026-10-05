@@ -1,0 +1,17 @@
+# Keep GitHub Actions and npm dependencies up to date.
+# Weekly cadence; auto-rebase PRs. Runtime (peer) ranges are reviewed
+# deliberately — see specs/2026-08-09-reliability-engineering-contract.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: "auto"
+    allow:
+      - dependency-type: "production"
+      - dependency-type: "development"

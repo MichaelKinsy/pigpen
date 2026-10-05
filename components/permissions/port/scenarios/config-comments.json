@@ -1,0 +1,42 @@
+{
+  "name": "config-comments",
+  "description": "The config file may carry // and /* */ comments (config-loader.ts stripJsonComments); the rules still apply.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "rm -f x"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "touch y"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "do the work"
+      }
+    }
+  ],
+  "files": {},
+  "agentFiles": {
+    "extensions/pi-permission-system/config.json": "{\n  // comment\n  \"permission\": {\"path\": \"allow\", \"external_directory\": \"allow\", \"*\": \"allow\",\n    \"bash\": {\"*\": \"allow\", \"rm *\": \"deny\"}} /* end */\n}"
+  }
+}

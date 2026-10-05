@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="54" viewBox="0 0 480 54" role="img" aria-label="TOP 0.2% of Pi coding agent extensions: #6 of 3,177 by downloads · Oct 2, 2026 (best recorded rank)">
+  <!-- Dark mode -->
+  <style>
+    .frame { fill: #14181f; stroke: #2a3040; stroke-width: 1; }
+    .rank { font: 700 15px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.04em; fill: #d4a656; }
+    .label { font: 400 13px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; fill: #e8e6df; }
+    .meta { font: 400 11px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; fill: #7d8494; }
+    .divider { stroke: #2a3040; stroke-width: 1; }
+    .link { text-decoration: none; }
+  </style>
+  <a class="link" href="https://pi.dev/packages?type=extension" target="_blank" rel="noopener noreferrer">
+    <rect class="frame" x="0.5" y="0.5" width="479" height="53" rx="6"/>
+    <text class="rank" x="18" y="34">TOP 0.2%</text>
+    <line class="divider" x1="128" y1="13" x2="128" y2="41"/>
+    <text class="label" x="143" y="25">of Pi coding agent extensions</text>
+    <text class="meta" x="143" y="41">#6 of 3,177 by downloads · Oct 2, 2026</text>
+  </a>
+</svg>

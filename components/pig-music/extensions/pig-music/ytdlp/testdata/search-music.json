@@ -1,0 +1,17 @@
+{
+  "id": "mock-search-id",
+  "title": "Search results for \"night drive\"",
+  "_type": "playlist",
+  "entries": [
+    {"_type": "url", "ie_key": "Youtube", "id": "aaaaaaaaaaa", "url": "https://www.youtube.com/watch?v=aaaaaaaaaaa", "title": "Night Drive", "duration": 215.0, "channel": "Example Artist", "uploader": "Example Artist",
+     "thumbnails": [{"url": "https://i.ytimg.com/vi/aaaaaaaaaaa/small.jpg", "width": 120, "height": 90}, {"url": "https://i.ytimg.com/vi/aaaaaaaaaaa/large.jpg", "width": 480, "height": 360}]},
+    {"_type": "url", "ie_key": "Youtube", "id": "bbbbbbbbbbb", "url": "https://www.youtube.com/watch?v=bbbbbbbbbbb", "title": "Night Drive (Live)", "duration": 301, "channel": "Second Artist - Topic"},
+    {"_type": "url", "ie_key": "YoutubeTab", "id": "PLmockplaylist000000000000000000000", "url": "https://www.youtube.com/playlist?list=PLmockplaylist000000000000000000000", "title": "Night Drive mix", "duration": null},
+    {"_type": "url", "ie_key": "YoutubeTab", "id": "UCmockchannel0000000000", "url": "https://www.youtube.com/channel/UCmockchannel0000000000", "title": "Night Drive Channel"},
+    {"_type": "url", "ie_key": "Youtube", "id": "ccccccccccc", "url": "https://www.youtube.com/watch?v=ccccccccccc", "title": "[Private video]", "duration": null},
+    {"_type": "url", "ie_key": "Youtube", "id": "aaaaaaaaaaa", "url": "https://www.youtube.com/watch?v=aaaaaaaaaaa", "title": "Night Drive", "duration": 215.0},
+    {"_type": "url", "ie_key": "Youtube", "id": "ddddddddddd", "url": "https://www.youtube.com/watch?v=ddddddddddd", "title": "Night Drive - extended", "duration": null, "uploader": "Third Uploader"},
+    {"_type": "url", "ie_key": "Youtube", "id": "short", "url": "https://www.youtube.com/watch?v=short", "title": "Not a real ID"},
+    {"_type": "url", "ie_key": "Youtube", "id": "eeeeeeeeeee", "url": "https://www.youtube.com/watch?v=eeeeeeeeeee", "title": "Ünïcode Títle ♪ 夜", "duration": 180.5, "channel": "Björk Fan"}
+  ]
+}

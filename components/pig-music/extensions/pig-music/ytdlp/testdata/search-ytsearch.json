@@ -1,0 +1,11 @@
+{
+  "id": "night drive",
+  "title": "night drive",
+  "_type": "playlist",
+  "extractor": "youtube:search",
+  "extractor_key": "YoutubeSearch",
+  "entries": [
+    {"_type": "url", "ie_key": "Youtube", "id": "fffffffffff", "url": "https://www.youtube.com/watch?v=fffffffffff", "title": "Night Drive - Full Album", "duration": 2400, "channel": "Some Band - Topic", "uploader": "Some Band - Topic"},
+    {"_type": "url", "ie_key": "Youtube", "id": "ggggggggggg", "url": "https://www.youtube.com/watch?v=ggggggggggg", "title": "Night Drive Lofi", "duration": 3600.0, "channel": "Lofi Channel"}
+  ]
+}

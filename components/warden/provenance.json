@@ -1,0 +1,34 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-warden",
+      "authors": [
+        "Ryan Gapac"
+      ],
+      "url": "https://github.com/DevMortimer/pi-warden",
+      "revision": "a12b2703b2c7ac32401fe13f4ce037d673a5f113",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "pi-typesafe",
+      "authors": [
+        "Ryan Gapac"
+      ],
+      "url": "https://github.com/DevMortimer/pi-typesafe",
+      "revision": "ed439f834665ad6fc652787f5ba7c23852566d49",
+      "license": "MIT",
+      "attributionFile": "CREDITS.md",
+      "path": "port/oracle-pi-typesafe",
+      "licenseFile": "port/oracle-pi-typesafe/LICENSE"
+    }
+  ]
+}

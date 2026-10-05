@@ -1,0 +1,22 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# Focused porter for Pi TypeScript extensions. Go only: its one extension is a fused Go factory.
+name: pig-extension-porter
+description: "Port a Pi TypeScript extension to a Go PiG extension: SDK gap check, tests first, differential equivalence against the original, mutation check, binary build and a Package with provenance."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  extension-port: local:../../components/extension-port
+  extension-equivalence: local:../../components/extension-equivalence
+extensions:
+  # equivalence_gaps, equivalence_run and equivalence_diff: the porting Skill's proof tools.
+  - name: extension-equivalence
+    origins: [package:extension-equivalence]
+skills:
+  - name: pigpen-pi-extension-port
+    origins: [package:extension-port]
+discovery:
+  extensions: []
+  skills: []

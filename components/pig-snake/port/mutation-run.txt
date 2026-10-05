@@ -1,0 +1,173 @@
+pigeq mutate --scenarios port/scenarios --golden port/golden --go extensions/pig-snake --mutations port/mutations.json --unit --sdk-dir $SDK
+Final tree, porter-driver pigeq build (refuses to run without a passing unmutated baseline), PiG 0.3.0+0.87.1, go1.27.1.
+Every kill below is a real '--- FAIL' line of the layer-1 Go tests (checked). The RPC scenarios cannot reach the game overlay, so they kill none.
+
+KILLED   reverse-into-herd-allowed
+         unit test: --- FAIL: TestReverseIsIgnoredOnceThereIsAHerdButAllowedForALoneLeader (0.00s)
+KILLED   solo-leader-cannot-reverse
+         unit test: --- FAIL: TestSteeringKeysArrowsWasdAndVi (0.00s)
+KILLED   turn-queue-of-three
+         unit test: --- FAIL: TestTheTurnQueueHoldsAtMostTwo (0.00s)
+KILLED   turn-queue-of-one
+         unit test: --- FAIL: TestTwoQuickTurnsBothApplyOnSuccessiveSteps (0.00s)
+KILLED   walls-wrap-and-wrap-dies
+         unit test: --- FAIL: TestGameOverStopsStepsAndOnlyRetryAndQuitWork (0.00s)
+KILLED   wrap-x-off-by-one
+         unit test: --- FAIL: TestBotPlaythroughBuildsALongHerdAndKeepsItInLine (0.01s)
+KILLED   wrap-y-not-wrapped
+         unit test: --- FAIL: TestBotPlaythroughBuildsALongHerdAndKeepsItInLine (0.02s)
+KILLED   tail-cell-always-solid
+         unit test: --- FAIL: TestBotPlaythroughBuildsALongHerdAndKeepsItInLine (0.02s)
+KILLED   tail-cell-free-when-eating
+         unit test: --- FAIL: TestTheTailCellIsNotFreeWhenEating (0.00s)
+KILLED   eating-does-not-score
+         unit test: --- FAIL: TestAdvanceStepsOncePerIntervalAndEatsForwardFood (0.00s)
+KILLED   eating-adds-no-pig
+         unit test: --- FAIL: TestAdvanceStepsOncePerIntervalAndEatsForwardFood (0.00s)
+KILLED   high-score-not-tracked
+         unit test: --- FAIL: TestBotPlaythroughBuildsALongHerdAndKeepsItInLine (0.03s)
+KILLED   full-board-not-won
+         unit test: --- FAIL: TestFillingTheBoardWins (0.00s)
+KILLED   food-may-land-on-herd
+         unit test: --- FAIL: TestBotPlaythroughBuildsALongHerdAndKeepsItInLine (0.00s)
+KILLED   food-ignores-random-choice
+         unit test: --- FAIL: TestFoodNeverLandsOnTheHerdAndPicksTheNthFreeCell (0.00s)
+KILLED   paused-game-steps
+         unit test: --- FAIL: TestStepDoesNothingUnlessPlaying (0.00s)
+KILLED   interval-clamp-60ms
+         unit test: --- FAIL: TestIntervalSpeedsUpWithTheHerdAndClamps (0.00s)
+KILLED   interval-step-4ms
+         unit test: --- FAIL: TestIntervalSpeedsUpWithTheHerdAndClamps (0.00s)
+KILLED   leader-starts-off-centre
+         unit test: --- FAIL: TestSnakeTitleAndGameOverScreens (0.10s)
+KILLED   retry-leaves-waiting
+         unit test: --- FAIL: TestSnakeRestartKeepsHighScoreModeAndSprite (0.00s)
+KILLED   resize-while-running
+         unit test: --- FAIL: TestResizeOnlyWhileWaitingAndKeepsTheHighScore (0.00s)
+KILLED   mode-change-while-running
+         unit test: --- FAIL: TestModeSwitchesOnlyBeforeTheFirstStep (0.00s)
+KILLED   start-facing-ignores-heading
+         unit test: --- FAIL: TestSpaceOrEnterStartsAndAnyDirectionStartsAndSteers (0.00s)
+KILLED   opposite-is-perpendicular
+         unit test: --- FAIL: TestBotPlaythroughBuildsALongHerdAndKeepsItInLine (0.41s)
+KILLED   up-is-down
+         unit test: --- FAIL: TestBotPlaythroughBuildsALongHerdAndKeepsItInLine (0.08s)
+KILLED   escape-does-not-quit
+         unit test: --- FAIL: TestEscapeAndQuitLeaveFromEveryState (0.00s)
+KILLED   a-key-does-not-steer
+         unit test: --- FAIL: TestSpaceOrEnterStartsAndAnyDirectionStartsAndSteers (0.00s)
+KILLED   k-key-does-not-steer
+         unit test: --- FAIL: TestSteeringKeysArrowsWasdAndVi (0.00s)
+KILLED   space-does-not-start
+         unit test: --- FAIL: TestSpaceOrEnterStartsAndAnyDirectionStartsAndSteers (0.00s)
+KILLED   mode-switch-keeps-old-high
+         unit test: --- FAIL: TestModeKeyTogglesWallsAndWrapBeforeStartAndSwapsTheHighScore (0.00s)
+KILLED   pause-key-dead
+         unit test: --- FAIL: TestSnakeComponentControlsAndQuit (0.00s)
+KILLED   resume-key-dead
+         unit test: --- FAIL: TestSnakeComponentControlsAndQuit (0.00s)
+KILLED   retry-key-dead
+         unit test: --- FAIL: TestSnakeRestartKeepsHighScoreModeAndSprite (0.00s)
+KILLED   catch-up-unbounded
+         unit test: --- FAIL: TestAStalledClockDoesNotFastForwardTheGame (0.00s)
+KILLED   advances-when-paused
+         unit test: --- FAIL: TestAPausedGameDoesNotBankTimeToSpendAfterResume (0.00s)
+KILLED   waiting-board-ignores-terminal
+         unit test: --- FAIL: TestBoardFollowsTheTerminalWhileWaitingAndIsFixedOnceRunning (0.00s)
+KILLED   height-change-not-redrawn
+         unit test: --- FAIL: TestTimerInvalidatesWhenTheTerminalHeightChanges (1.06s)
+KILLED   title-screen-ticks
+         unit test: --- FAIL: TestDisposeIsIdempotentAndTheWaitingGameNeverTicks (0.01s)
+KILLED   finished-not-reported
+         unit test: --- FAIL: TestGameOverStopsStepsAndOnlyRetryAndQuitWork (0.00s)
+KILLED   dispose-does-not-wait
+         unit test: --- FAIL: TestDisposeWaitsForAFrameRequestInFlight (0.01s)
+KILLED   result-notice-is-a-warning
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayReportsAndSavesTheScores (0.00s)
+KILLED   rpc-tries-to-play
+         unit test: --- FAIL: TestOnlyTheInteractiveTUICanPlay (0.00s)
+KILLED   no-ui-tries-to-play
+         unit test: --- FAIL: TestATUIHostWithoutAUIStillDoesNotPlay (0.00s)
+KILLED   alias-not-registered
+         unit test: --- FAIL: TestExtensionRegistersSnakeCommandsOnly (0.01s)
+KILLED   wrap-not-named
+         unit test: --- FAIL: TestWrapModeIsNamedInTheNotification (0.00s)
+KILLED   scores-not-saved
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayReportsAndSavesTheScores (0.01s)
+KILLED   scores-saved-swapped
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayReportsAndSavesTheScores (0.07s)
+KILLED   chosen-sprite-ignored
+         unit test: --- FAIL: TestTheLeaderWearsTheSpriteChosenWithSprite (0.00s)
+KILLED   state-file-world-readable
+         unit test: --- FAIL: TestSnakeHighScoreStateIsStrictAndProtected (0.01s)
+KILLED   state-dir-world-readable
+         unit test: --- FAIL: TestSnakeHighScoreStateIsStrictAndProtected (0.05s)
+KILLED   state-size-unbounded
+         unit test: --- FAIL: TestSnakeStateLivesUnderTheConfigHomeAndRejectsBadFiles (0.00s)
+KILLED   state-unknown-fields-accepted
+         unit test: --- FAIL: TestSnakeHighScoreStateIsStrictAndProtected (0.06s)
+KILLED   state-negative-high-accepted
+         unit test: --- FAIL: TestSnakeStateLivesUnderTheConfigHomeAndRejectsBadFiles (0.00s)
+KILLED   state-trailing-data-accepted
+         unit test: --- FAIL: TestSnakeStateLivesUnderTheConfigHomeAndRejectsBadFiles (0.00s)
+KILLED   state-in-wrong-directory
+         unit test: --- FAIL: TestSnakeStateLivesUnderTheConfigHomeAndRejectsBadFiles (0.00s)
+KILLED   wire-negative-accepted
+         unit test: --- FAIL: TestSnakeResultStateReadsEveryWireFieldAndRejectsBadOnes (0.00s)
+KILLED   wire-herd-not-inferred
+         unit test: --- FAIL: TestSnakeResultStateReadsEveryWireFieldAndRejectsBadOnes (0.00s)
+KILLED   wire-wrap-high-not-raised
+         unit test: --- FAIL: TestSnakeResultStateReadsEveryWireFieldAndRejectsBadOnes (0.00s)
+KILLED   comfort-board-of-nine
+         unit test: --- FAIL: TestGridForPicksTheLargestComfortableHead (0.00s)
+KILLED   board-cap-41
+         unit test: --- FAIL: TestGridForPicksTheLargestComfortableHead (0.00s)
+KILLED   fit-is-strict
+         unit test: --- FAIL: TestFitKeepsTheBoardAndShrinksTheHeadsWhenTheViewShrinks (0.00s)
+KILLED   min-view-forgets-hud
+         unit test: --- FAIL: TestMinViewIsTheSmallestPlayableBoardPlusHUD (0.00s)
+KILLED   board-hugs-the-top
+         unit test: --- FAIL: TestBoardOriginCentersTheBoard (0.00s)
+KILLED   apple-not-drawn
+         unit test: --- FAIL: TestTheAppleIsDrawnWhereTheFoodIs (0.00s)
+KILLED   crashed-leader-not-tinted
+         unit test: --- FAIL: TestGameOverTintsTheLeaderRed (0.00s)
+KILLED   palette-cache-never-resets
+         unit test: --- FAIL: TestRenderSwitchesSourceWithoutStalePalettes (0.00s)
+KILLED   every-member-wears-the-leaders-colors
+         unit test: --- FAIL: TestEveryHerdMemberIsDrawnAsItsOwnPigHead (0.00s)
+KILLED   hud-cache-ignores-score
+         unit test: --- FAIL: TestTheHUDFollowsTheGameBetweenFrames (0.00s)
+KILLED   too-small-hides-the-box
+         unit test: --- FAIL: TestRenderShowsTheBoardWhenItFitsAndTheHintWhenItDoesNot (0.00s)
+KILLED   paused-card-missing
+         unit test: --- FAIL: TestCardPixels (0.00s)
+KILLED   won-card-missing
+         unit test: --- FAIL: TestCardPixels (0.00s)
+KILLED   over-card-missing
+         unit test: --- FAIL: TestCardPixels (0.00s)
+KILLED   title-card-missing
+         unit test: --- FAIL: TestCardPixels (0.00s)
+KILLED   unknown-sprite-picks-another
+         unit test: --- FAIL: TestUnknownVariantFallsBackToTheDefaultGreenPig (0.00s)
+KILLED   login-state-path
+         unit test: --- FAIL: TestTheLeaderWearsTheSpriteChosenWithSprite (0.00s)
+KILLED   eight-pixel-pig-altered
+         unit test: --- FAIL: TestTheEightPixelHeadIsTheAngryPigsPigVerbatim (0.00s)
+KILLED   followers-include-the-leader
+         unit test: --- FAIL: TestEverySymbolInEveryHeadHasAColor (0.00s)
+KILLED   viewport-forgets-the-box
+         unit test: --- FAIL: TestRenderHandlesEveryNarrowWidth (0.00s)
+KILLED   key-release-taken-as-press
+         unit test: --- FAIL: TestParseKeyDecodesLegacyApplicationAndKitty (0.00s)
+KILLED   overlay-half-height
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayReportsAndSavesTheScores (0.00s)
+KILLED   colors-emitted-every-cell
+         unit test: --- FAIL: TestEncodePairsRowsIntoExactWidthHalfBlocks (0.01s)
+KILLED   24bit-not-recognised
+         unit test: --- FAIL: TestSupportsTrueColorReadsTheEnvironment (0.00s)
+KILLED   too-small-does-not-pause
+         unit test: --- FAIL: TestATooSmallTerminalPausesTheGameAndItResumesOnlyWhenTheUserSaysSo (0.00s)
+KILLED   too-small-toggles-pause-every-frame
+         unit test: --- FAIL: TestATooSmallTerminalPausesTheGameAndItResumesOnlyWhenTheUserSaysSo (0.00s)
+84 mutation(s), 0 not killed

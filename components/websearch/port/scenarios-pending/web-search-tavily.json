@@ -1,0 +1,60 @@
+{
+ "name": "web-search-tavily",
+ "description": "web_search through a fake Tavily server: request body and the rendered answer.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"tavily\", \"tavilyApiKey\": \"tvly-test-key\", \"tavilyBaseUrl\": \"{{server:tavily}}\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "hello world",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "tavily": {
+   "recordHeaders": [
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/search",
+     "json": {
+      "answer": "Tavily says hello.",
+      "results": [
+       {
+        "title": "Source one",
+        "url": "https://example.com/one",
+        "content": "First source."
+       },
+       {
+        "title": "Source two",
+        "url": "https://example.com/two",
+        "content": "Second source."
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

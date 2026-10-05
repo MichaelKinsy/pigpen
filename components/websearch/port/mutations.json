@@ -1,0 +1,152 @@
+[
+ {
+  "name": "fetch-mode-gate-message",
+  "file": "tool_fetch.go",
+  "find": "is disabled by fetch.allowedModes.",
+  "replace": "is not allowed."
+ },
+ {
+  "name": "enable-unavailable-wording",
+  "file": "tool_enable.go",
+  "find": "Cannot enable unavailable tools: ",
+  "replace": "Missing tools: "
+ },
+ {
+  "name": "offset-validation-message",
+  "file": "tool_content.go",
+  "find": "offset must be a non-negative integer",
+  "replace": "offset must be an integer"
+ },
+ {
+  "name": "redirect-limit-raised",
+  "file": "ssrf.go",
+  "find": "const defaultMaxRedirects = 5",
+  "replace": "const defaultMaxRedirects = 500"
+ },
+ {
+  "name": "tavily-stops-retrying-quota",
+  "file": "tavily.go",
+  "find": "401: true, 402: true, 403: true, 429: true, 432: true",
+  "replace": "401: true, 403: true, 429: true, 432: true"
+ },
+ {
+  "name": "page-size-cap-raised",
+  "file": "extract.go",
+  "find": "pageMaxBytes      = 5 * 1024 * 1024",
+  "replace": "pageMaxBytes      = 500 * 1024 * 1024"
+ },
+ {
+  "name": "data-uri-header-limit",
+  "file": "datauri.go",
+  "find": "maxDataURIHeaderChars = 1024",
+  "replace": "maxDataURIHeaderChars = 1024000"
+ },
+ {
+  "name": "data-uri-sanitizer-off",
+  "file": "extract.go",
+  "find": "if text, omissions := SanitizeInlineDataURIs(r.Content,",
+  "replace": "if text, omissions := SanitizeInlineDataURIs(\"\","
+ },
+ {
+  "name": "search-command-delete-noop",
+  "file": "command.go",
+  "find": "DeleteResult(selected.ID)",
+  "replace": "_ = selected"
+ },
+ {
+  "name": "background-fetch-no-trigger",
+  "file": "extension.go",
+  "find": "TriggerTurn: &triggerTurn",
+  "replace": "TriggerTurn: nil"
+ },
+ {
+  "name": "restore-ignores-entries",
+  "file": "extension.go",
+  "find": "entry[\"customType\"] != \"web-search-results\"",
+  "replace": "false"
+ },
+ {
+  "name": "loader-always-selected",
+  "file": "tool_enable.go",
+  "find": "loaderSelected := declared == nil || declared[loaderName]",
+  "replace": "loaderSelected := true"
+ },
+ {
+  "name": "web-enable-description",
+  "file": "tool_enable.go",
+  "find": "Does not search or fetch.",
+  "replace": "Searches."
+ },
+ {
+  "name": "retrieval-description",
+  "file": "tool_specs.go",
+  "find": "Retrieve bounded pages of full stored search results",
+  "replace": "Retrieve pages of stored search results"
+ },
+ {
+  "name": "web-enable-snippet",
+  "file": "tool_enable.go",
+  "find": "the tools appear on the next model request",
+  "replace": "the tools appear soon"
+ },
+ {
+  "name": "image-pixel-budget-off",
+  "file": "imageproc.go",
+  "find": "if int64(cfg.Width)*int64(cfg.Height) > maxDecodePixels {",
+  "replace": "if false {"
+ },
+ {
+  "name": "dial-time-check-off",
+  "file": "transport.go",
+  "find": "return assertPublicAddress(host, u.Hostname(), ranges)",
+  "replace": "_ = host\n\t\t\treturn nil"
+ },
+ {
+  "name": "nat64-embedded-v4-allowed",
+  "file": "ssrf.go",
+  "find": "if first == 0x64 && groups[1] == 0xff9b",
+  "replace": "if false && first == 0x64 && groups[1] == 0xff9b"
+ },
+ {
+  "name": "6to4-embedded-v4-allowed",
+  "file": "ssrf.go",
+  "find": "if first == 0x2002 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cgnat-allowed",
+  "file": "ssrf.go",
+  "find": "(a == 100 && b >= 64 && b <= 127) ||",
+  "replace": "(a == 100 && b >= 64 && b <= 63) ||"
+ },
+ {
+  "name": "streamed-body-uncapped",
+  "file": "extract.go",
+  "find": "if int64(len(data)) > max {",
+  "replace": "if false {"
+ },
+ {
+  "name": "env-proxy-used-without-trust",
+  "file": "transport.go",
+  "find": "case o.TrustEnvProxy && !hasScopedProxyDecision(ctx):",
+  "replace": "case true:"
+ },
+ {
+  "name": "fallback-guidance-unported",
+  "file": "extract.go",
+  "find": "\"  • none in this port: the other fetch providers of pi-web-access are not ported yet\"",
+  "replace": "\"  • Set firecrawlBaseUrl to a self-hosted Firecrawl instance\""
+ },
+ {
+  "name": "kagi-limit-key",
+  "file": "kagi.go",
+  "find": "\"query\": query, \"limit\": numResults",
+  "replace": "\"query\": query, \"count\": numResults"
+ },
+ {
+  "name": "kagi-auth-scheme",
+  "file": "kagi.go",
+  "find": "{\"Bearer \" + apiKey}",
+  "replace": "{\"Bot \" + apiKey}"
+ }
+]

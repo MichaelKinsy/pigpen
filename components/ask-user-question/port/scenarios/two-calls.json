@@ -1,0 +1,72 @@
+{
+  "name": "two-calls",
+  "description": "Two questionnaires in one turn run one after the other.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "First?",
+                "header": "First",
+                "options": [
+                  {
+                    "label": "a",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "b",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Second?",
+                "header": "Second",
+                "options": [
+                  {
+                    "label": "c",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "d",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "value": "1. a \u2014 A choice"
+        },
+        {
+          "value": "2. d \u2014 A choice"
+        }
+      ]
+    }
+  ]
+}

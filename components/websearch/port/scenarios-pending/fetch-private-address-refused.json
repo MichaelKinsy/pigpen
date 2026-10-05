@@ -1,0 +1,31 @@
+{
+ "name": "fetch-private-address-refused",
+ "description": "fetch_content refuses a private address before any request.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "http://10.255.255.1/secret"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ]
+}

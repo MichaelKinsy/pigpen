@@ -1,0 +1,103 @@
+{
+  "name": "multi-select-variants",
+  "description": "Four multi-select questions: empty answer, free text, an out-of-range number, number zero.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Features A?",
+                "header": "A",
+                "options": [
+                  {
+                    "label": "A1",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "A2",
+                    "description": "A choice"
+                  }
+                ],
+                "multiSelect": true
+              },
+              {
+                "question": "Features B?",
+                "header": "B",
+                "options": [
+                  {
+                    "label": "B1",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "B2",
+                    "description": "A choice"
+                  }
+                ],
+                "multiSelect": true
+              },
+              {
+                "question": "Features C?",
+                "header": "C",
+                "options": [
+                  {
+                    "label": "C1",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "C2",
+                    "description": "A choice"
+                  }
+                ],
+                "multiSelect": true
+              },
+              {
+                "question": "Features D?",
+                "header": "D",
+                "options": [
+                  {
+                    "label": "D1",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "D2",
+                    "description": "A choice"
+                  }
+                ],
+                "multiSelect": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "value": "   "
+        },
+        {
+          "value": "something else entirely"
+        },
+        {
+          "value": "1,9"
+        },
+        {
+          "value": "0"
+        }
+      ]
+    }
+  ]
+}

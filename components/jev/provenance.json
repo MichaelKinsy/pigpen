@@ -1,0 +1,18 @@
+{
+  "origin": "ported",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-jev",
+      "authors": ["y0usaf"],
+      "url": "https://github.com/y0usaf/pi-jev",
+      "revision": "88e5fb3888948e7065110d47cdf6ac57abb71ba4",
+      "path": "port/oracle/src",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{"kind":"header","scenario":"command-pig-snake","lane":"pig-go-self","host":"pig 0.3.1+1.0.1","extension":"sha256:cb11d7fe5ffb9a8510bfdf9d0e22f0dfbf0c6cd0ad9f2ca04e152f5242c5a205","normalizer":"v3"}
+{"step":"01-play","ch":"ui","data":{"message":"Pig Snake needs an interactive terminal.","method":"notify","notifyType":"warning"}}
+{"step":"01-play","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

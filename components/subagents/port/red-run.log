@@ -1,0 +1,7 @@
+=== RUN   TestChainSerializer
+=== RUN   TestChainSerializer/round-trips_step_outputMode
+--- FAIL: TestChainSerializer (0.00s)
+panic: not implemented [recovered, repanicked]
+panic({0x6f1808?, 0x57f010?})
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.009s
+FAIL

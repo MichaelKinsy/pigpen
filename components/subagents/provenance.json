@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-subagents",
+      "authors": [
+        "Nico Bailon"
+      ],
+      "url": "https://github.com/nicobailon/pi-subagents",
+      "revision": "8a403efba6975988cc0488ec8bb941db5ef1a19e",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

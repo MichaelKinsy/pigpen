@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-powerline-footer",
+      "authors": [
+        "Nico Bailon"
+      ],
+      "url": "https://github.com/nicobailon/pi-powerline-footer",
+      "revision": "859dee671b633fb533b07ceba3e6c1ab1c43360a",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

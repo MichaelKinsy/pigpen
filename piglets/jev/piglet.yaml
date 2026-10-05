@@ -1,0 +1,27 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG with Jev: a typed judge for tool calls and tool output. Opt-in: nothing is judged until /jev on.
+name: jev
+description: "PiG with Jev, a typed judge for tool calls and tool output (destructive? leaks data? beyond scope? secret in the output?). Off until you run /jev on, which shows what leaves the machine first; it fails open."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  # typesafe is a Go library Package, not a member: the extension imports it through a
+  # go.work that resolves to packages/typesafe in the staged Piglet.
+  typesafe: local:../../components/typesafe
+  jev: local:../../components/jev
+extensions:
+  # Judges nothing until the user opts in (/jev on, or "enabled": true in their own pi-jev.json).
+  - name: jev
+    origins: [package:jev]
+    # jev_ask is registered once Jev is on (/jev on or "enabled": true); an empty
+    # list would scope it out.
+    tools: [jev_ask]
+skills: []
+# The composition adds no behavior of its own until opted in, so the user's own
+# extensions and skills stay available beside it.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

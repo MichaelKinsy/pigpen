@@ -1,0 +1,72 @@
+{
+  "name": "bash-reason-last-match",
+  "description": "A later allow overrides an earlier deny with a reason; a later deny wins again.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "rm x"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "rm -i x"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "rm -i -r x"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo a b"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "do the work"
+      }
+    }
+  ],
+  "files": {},
+  "agentFiles": {
+    "extensions/pi-permission-system/config.json": "{\n  \"permission\": {\n    \"path\": \"allow\",\n    \"external_directory\": \"allow\",\n    \"bash\": {\n      \"*\": \"ask\",\n      \"rm *\": {\n        \"action\": \"deny\",\n        \"reason\": \"no deletes\"\n      },\n      \"rm -i *\": \"allow\",\n      \"rm -i -r *\": {\n        \"action\": \"deny\",\n        \"reason\": \"never recursive\"\n      },\n      \"echo *\": \"allow\"\n    }\n  }\n}"
+  }
+}

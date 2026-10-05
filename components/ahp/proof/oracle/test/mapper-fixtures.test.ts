@@ -1,0 +1,293 @@
+/**
+ * Replays recorded pi event streams through the mapper, offline.
+ *
+ * These fixtures were captured from a real model (`scripts/capture-fixtures.ts`)
+ * and scrubbed of machine- and tenant-specific values. They cover provider
+ * event shapes that synthetic mapper fixtures may omit.
+ *
+ * The assertions are deliberately structural rather than exact-output: the model
+ * is free to phrase things differently on a re-capture, but the *shape* of the
+ * turn must hold.
+ */
+
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import {
+	ActionType,
+	type ChatState,
+	chatReducer,
+	ResponsePartKind,
+	type StateAction,
+	ToolCallStatus,
+	TurnState,
+} from "@microsoft/agent-host-protocol";
+import { initialChatState } from "../src/channels/chat.ts";
+import { TurnMapper, userTurnStarted } from "../src/pi/event-mapper.ts";
+import { must } from "./support/assertions.ts";
+import { loadRecordedFixtures, type RecordedFixture } from "./support/recorded-fixtures.ts";
+import { assertValid } from "./support/schema.ts";
+
+const CHAT_URI = "ahp-chat:/replay";
+const TURN_ID = "replay-turn";
+
+interface Replayed {
+	readonly fixture: RecordedFixture;
+	readonly actions: StateAction[];
+	readonly state: ChatState;
+}
+
+function replay(fixture: RecordedFixture): Replayed {
+	const mapper = new TurnMapper(TURN_ID, 0);
+	const actions: StateAction[] = [userTurnStarted(TURN_ID, fixture.prompt, "1970-01-01T00:00:00.000Z")];
+	for (const event of fixture.events) {
+		actions.push(...mapper.handle(event));
+	}
+
+	let state = initialChatState(CHAT_URI, "Replay");
+	for (const action of actions) {
+		state = chatReducer(state, action as never);
+	}
+	return { fixture, actions, state };
+}
+
+const fixtures = loadRecordedFixtures().map(({ fixture }) => fixture);
+const fixturesByName = new Map(fixtures.map((fixture) => [fixture.name, fixture]));
+const replayedByName = new Map<string, Replayed>();
+
+function get(name: string): Replayed {
+	const fixture = fixturesByName.get(name);
+	assert.ok(fixture, `unknown recorded fixture: ${name}`);
+	let replayed = replayedByName.get(name);
+	if (!replayed) {
+		replayed = replay(fixture);
+		replayedByName.set(name, replayed);
+	}
+	return replayed;
+}
+
+function allReplayed(): Replayed[] {
+	return fixtures.map((fixture) => get(fixture.name));
+}
+
+function markdownText(state: ChatState): string {
+	const turn = state.turns[0] ?? state.activeTurn;
+	return (turn?.responseParts ?? [])
+		.filter((part) => part.kind === ResponsePartKind.Markdown)
+		.map((part) => (part as { content: string }).content)
+		.join("");
+}
+
+interface ReplayedToolCall {
+	readonly status: string;
+	readonly toolName: string;
+	readonly success?: boolean;
+	readonly displayName?: string;
+	readonly invocationMessage?: string;
+	readonly pastTenseMessage?: string;
+	readonly toolInput?: string;
+	readonly content?: readonly { readonly type: string; readonly text?: string }[];
+	readonly error?: { readonly message?: string };
+}
+
+function toolCalls(state: ChatState): ReplayedToolCall[] {
+	const turn = state.turns[0] ?? state.activeTurn;
+	return (turn?.responseParts ?? [])
+		.filter((part) => part.kind === ResponsePartKind.ToolCall)
+		.map((part) => (part as { toolCall: ReplayedToolCall }).toolCall);
+}
+
+/** The text a tool reported, as the client would concatenate it. */
+function toolResultText(call: ReplayedToolCall): string {
+	return (call.content ?? [])
+		.filter((block) => block.type === "text")
+		.map((block) => block.text ?? "")
+		.join("");
+}
+
+function assertReplayInvariants({ fixture, actions, state }: Replayed): void {
+	const opened = actions.filter((action) => action.type === ActionType.ChatTurnStarted).length;
+	const terminators = actions.filter(
+		(action) =>
+			action.type === ActionType.ChatTurnComplete ||
+			action.type === ActionType.ChatTurnCancelled ||
+			action.type === ActionType.ChatError,
+	);
+
+	// More than one turn means pi injected a message mid-run; each still has to
+	// terminate exactly once.
+	assert.equal(terminators.length, opened, `${fixture.name}: every opened turn must terminate once`);
+	assert.equal(state.activeTurn, undefined, `${fixture.name}: active turn remained after replay`);
+	assert.equal(state.turns.length, opened, `${fixture.name}: reduced turn count differs from opened turns`);
+
+	for (const action of actions) {
+		assertValid("actions", "StateAction", action, `${fixture.name}: non-conforming ${action.type}`);
+	}
+	for (const call of toolCalls(state)) {
+		assert.ok(
+			call.status === ToolCallStatus.Completed || call.status === ToolCallStatus.Cancelled,
+			`${fixture.name}: ${call.toolName} ended in ${call.status}`,
+		);
+	}
+
+	// A delta naming an unknown partId is a silent reducer no-op, so validate
+	// creation order as well as uniqueness.
+	const created = new Set<string>();
+	const ids: Array<string | undefined> = [];
+	for (const action of actions) {
+		if (action.type === ActionType.ChatResponsePart) {
+			const id = "id" in action.part ? action.part.id : undefined;
+			ids.push(id);
+			if (id) created.add(id);
+		}
+		if (action.type === ActionType.ChatDelta || action.type === ActionType.ChatReasoning) {
+			assert.ok(created.has(action.partId), `${fixture.name}: delta targets unknown part ${action.partId}`);
+		}
+	}
+	assert.equal(new Set(ids).size, ids.length, `${fixture.name}: response part ids collided within a turn`);
+}
+
+describe("recorded stream replay — invariants", () => {
+	for (const fixture of fixtures) {
+		it(`${fixture.name} — ${fixture.description}`, () => {
+			assertReplayInvariants(get(fixture.name));
+		});
+	}
+});
+
+describe("recorded stream replay — per scenario", () => {
+	it("plain-text: answers with no tool calls", () => {
+		const { state } = get("plain-text");
+		assert.equal(state.turns[0]?.state, TurnState.Complete);
+		assert.equal(toolCalls(state).length, 0);
+		assert.match(markdownText(state), /PONG/i);
+	});
+
+	it("describes a tool call in terms a user can act on", () => {
+		// These three fields are what a client renders around a tool call: a
+		// heading, a line while it runs, and a line once it has. pi knows which
+		// file was read or which command ran, and a message that only repeats the
+		// tool's name spends all three on saying `read` three times.
+		for (const { fixture, state } of allReplayed()) {
+			for (const call of toolCalls(state)) {
+				if (!call.toolInput || call.toolInput === "{}") {
+					continue;
+				}
+				assert.notEqual(
+					call.invocationMessage,
+					call.toolName,
+					`${fixture.name}: ${call.toolName} announces itself with nothing but its own name`,
+				);
+				// The two lines sit next to each other in a transcript, one for a
+				// call in flight and one for a call that finished. Identical text
+				// leaves a completed call still claiming to be running.
+				assert.notEqual(
+					call.pastTenseMessage,
+					call.invocationMessage,
+					`${fixture.name}: ${call.toolName} still says it is ${call.invocationMessage} after it finished`,
+				);
+			}
+		}
+	});
+
+	it("shows a tool's subject rather than its arguments as JSON", () => {
+		// `toolInput` is what a client renders for the call itself, and the
+		// protocol carries no structured parameters beside it, so serialising the
+		// argument object spends the field on quoting and braces. Each of pi's
+		// tools has one argument that says what the call is about.
+		for (const { fixture, state } of allReplayed()) {
+			for (const call of toolCalls(state)) {
+				if (call.toolInput === undefined) {
+					continue;
+				}
+				assert.ok(
+					!call.toolInput.startsWith("{"),
+					`${fixture.name}: ${call.toolName} shows its arguments as JSON: ${call.toolInput.slice(0, 60)}`,
+				);
+			}
+		}
+	});
+
+	it("tool-edit: hands the client the patch, not a count of edited blocks", () => {
+		// pi computes a unified diff for every edit and reports only how many
+		// blocks it replaced. The patch is the part a client can render — the
+		// same monospace, syntax-highlighted block a shell command gets.
+		const { state } = get("tool-edit");
+		const edits = toolCalls(state).filter((call) => call.toolName === "edit");
+		assert.ok(edits.length >= 1, "expected an edit call");
+		for (const call of edits) {
+			const shown = toolResultText(call);
+			assert.match(shown, /^--- |\n--- /, `edit result carries no patch: ${shown.slice(0, 80)}`);
+			assert.match(shown, /^\+.*$/m, "a patch with no added lines is not a patch");
+		}
+	});
+
+	it("single-tool: runs one tool and answers from its result", () => {
+		const { state } = get("single-tool");
+		assert.equal(state.turns[0]?.state, TurnState.Complete);
+		assert.ok(toolCalls(state).length >= 1);
+		assert.match(markdownText(state), /ALPHA BETA GAMMA/);
+	});
+
+	it("parallel-tools: keeps several tool calls in one message distinct", () => {
+		const { state } = get("parallel-tools");
+		const calls = toolCalls(state);
+		assert.ok(calls.length >= 2, `expected multiple tool calls, got ${calls.length}`);
+		assert.match(markdownText(state), /FIRST/);
+		assert.match(markdownText(state), /SECOND/);
+	});
+
+	it("tool-loop: spans several assistant messages without part collisions", () => {
+		const { fixture, state } = get("tool-loop");
+		const assistantMessages = fixture.events.filter(
+			(event) =>
+				event.type === "message_start" && (event as { message?: { role?: string } }).message?.role === "assistant",
+		).length;
+
+		// The scenario exists to produce more than one assistant message, which
+		// is where pi's contentIndex restarts at 0.
+		assert.ok(assistantMessages >= 2, `expected multiple assistant messages, got ${assistantMessages}`);
+		assert.equal(state.turns[0]?.state, TurnState.Complete);
+		assert.match(markdownText(state), /42/);
+	});
+
+	it("tool-error: surfaces a failed tool without failing the turn", () => {
+		const { state } = get("tool-error");
+		const failed = toolCalls(state).filter((call) => call.success === false);
+		assert.ok(failed.length >= 1, "expected a failed tool call");
+
+		// What the client shows for a failure is `error.message`. pi says why —
+		// here an ENOENT naming the missing path — and a message that only
+		// repeats the tool's name tells the user nothing they did not know.
+		for (const call of failed) {
+			const reported = toolResultText(call);
+			assert.ok(reported.length > 0, `${call.toolName}: no failure text to show`);
+			assert.equal(
+				call.error?.message,
+				reported,
+				`${call.toolName}: error.message should carry what pi reported, not a restatement of the tool name`,
+			);
+		}
+		// The agent recovers and answers, so the turn itself still completes.
+		assert.equal(state.turns[0]?.state, TurnState.Complete);
+	});
+
+	it("abort: ends the turn as cancelled", () => {
+		const { state } = get("abort");
+		assert.equal(state.turns[0]?.state, TurnState.Cancelled);
+	});
+
+	it("steering: the injected message becomes its own turn", () => {
+		const { fixture, state } = get("steering");
+		const injectedUserMessages = fixture.events.filter(
+			(event) => event.type === "message_start" && (event as { message?: { role?: string } }).message?.role === "user",
+		).length;
+		assert.ok(injectedUserMessages >= 2, "expected the steering message to appear mid-run");
+
+		// pi stores an injected message as an ordinary user message, with
+		// nothing marking it as steering — so a rebuild from disk necessarily
+		// makes it a turn. The live path matches, or the same conversation would
+		// render differently before and after a reload.
+		assert.equal(state.turns.length, injectedUserMessages);
+		assert.match(must(state.turns.at(-1)).message.text, /Stop counting/);
+	});
+});

@@ -1,0 +1,3 @@
+{"name":"enable-decline","description":"The consent dialog is declined: the tool stays disabled.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"llm":[{"toolCalls":[{"name":"typesafe_evaluate","arguments":{"state":"s","questions":{"yes":{"type":"noul","instructions":"?"}}}}]},{"text":"done"}],"steps":[
+ {"name":"enable","rpc":{"type":"prompt","message":"/typesafe enable"},"ui":[{"confirmed":false}]},
+ {"name":"call","rpc":{"type":"prompt","message":"judge it"}}]}

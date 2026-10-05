@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-rpiv-todo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go port of @juicesharp/rpiv-todo: a todo tool for the model, the /todos command and a live overlay that survives reload and compaction",
+  "keywords": ["pig-package", "todo", "tasks", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/rpiv-todo"]
+  }
+}

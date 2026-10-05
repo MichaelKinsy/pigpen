@@ -1,0 +1,132 @@
+import type { DoneVerdict } from "./done.js";
+import type { Verdict } from "./guard.js";
+import type { ProseVerdict } from "./prose.js";
+import type { RulesVerdict } from "./rules.js";
+import type { RunawayVerdict } from "./runaway.js";
+import type { Attempt, StuckVerdict } from "./stuck.js";
+
+export type GuardName = "action" | "stuck" | "done" | "prose" | "security" | "context" | "runaway" | "rules" | "subagent" | "conscience" | "waste";
+
+export interface TraceEntry {
+  at: number;
+  guard: GuardName;
+  /** The widget line for this event. */
+  line: string;
+  /** Redacted details: what was inspected, what Jev answered, what the agent was told. */
+  details: string[];
+  /** Raw tokens for re-rendering in live mode with sentence templates. */
+  tokens?: Record<string, string | undefined> | undefined;
+}
+
+/** What changed, for a listener that keeps its own record (the trace file); the widget and the panel re-read entries(). */
+export type TraceEvent =
+  | { kind: "push"; entry: TraceEntry }
+  | { kind: "amend"; entry: TraceEntry; line: string }
+  | { kind: "clear" };
+
+/** Session memory of guard decisions; the widget shows the latest line per guard, the panel shows the history. */
+export class Trace {
+  private readonly items: TraceEntry[] = [];
+  private readonly listeners = new Set<(event: TraceEvent) => void>();
+
+  constructor(private readonly limit = 100) {}
+
+  push(entry: TraceEntry): void {
+    this.items.push(entry);
+    if (this.items.length > this.limit) this.items.splice(0, this.items.length - this.limit);
+    for (const listener of this.listeners) listener({ kind: "push", entry });
+  }
+
+  /** Appends a detail line to an entry that is still in the trace, for an outcome that lands after the event. */
+  amend(entry: TraceEntry, line: string): boolean {
+    if (!this.items.includes(entry)) return false;
+    entry.details.push(line);
+    for (const listener of this.listeners) listener({ kind: "amend", entry, line });
+    return true;
+  }
+
+  entries(): readonly TraceEntry[] {
+    return this.items;
+  }
+
+  clear(): void {
+    this.items.length = 0;
+    for (const listener of this.listeners) listener({ kind: "clear" });
+  }
+
+  subscribe(listener: (event: TraceEvent) => void): () => void {
+    this.listeners.add(listener);
+    return () => { this.listeners.delete(listener); };
+  }
+}
+
+const clip = (text: string, limit: number) => (text.length <= limit ? text : `${text.slice(0, limit)}…`);
+const percent = (value: number) => value.toFixed(2);
+
+export function actionDetails(verdict: Verdict, extra: { mode?: string; told?: string } = {}): string[] {
+  const { summary, judgment } = verdict;
+  const lines: string[] = [];
+  if (summary.command !== undefined) lines.push(`ran: ${clip(summary.command.replace(/\s+/g, " "), 300)}`);
+  if (summary.path !== undefined) lines.push(`${summary.tool} ${summary.path}${summary.location === "outside_project" ? " (outside the project)" : ""}${summary.exists === false ? " (new file)" : ""}${summary.bytes !== undefined ? ` · ${summary.bytes} bytes` : ""}${summary.editCount !== undefined ? ` · ${summary.editCount} edit${summary.editCount === 1 ? "" : "s"}` : ""}`);
+  if (summary.input !== undefined) lines.push(`input: ${clip(summary.input, 300)}`);
+  if (verdict.plan !== undefined) lines.push(`plan: ${clip(verdict.plan.replace(/\s+/g, " "), 300)}`);
+  if (verdict.patterns.length) lines.push(`patterns: ${verdict.patterns.map(hit => `${hit.id} (${hit.severity})`).join(", ")}`);
+  if (judgment) {
+    lines.push(`jev: irreversible ${percent(judgment.irreversible)} · off-task ${percent(judgment.offTask)} · ${judgment.scope.replace(/_/g, " ")} (${percent(judgment.scopeConfidence)})${judgment.approved !== undefined ? ` · approved ${percent(judgment.approved)}` : ""}${judgment.mutates !== undefined ? ` · mutates ${percent(judgment.mutates)}` : ""}${judgment.visible !== undefined ? ` · visible ${percent(judgment.visible)}` : ""}${judgment.largeOutput !== undefined ? ` · large-output ${percent(judgment.largeOutput)}` : ""}${judgment.intentMismatch !== undefined ? ` · intent mismatch ${percent(judgment.intentMismatch)}` : ""}${judgment.regretted !== undefined ? ` · regret of last turn ${percent(judgment.regretted)}` : ""} · ${judgment.model} · ${judgment.elapsedMs} ms`);
+  }
+  if (judgment?.securityRisk !== undefined) lines.push(`security risk: ${percent(judgment.securityRisk)}`);
+  if (verdict.slop) lines.push(`slop: stub ${percent(verdict.slop.stub)} · comments ${percent(verdict.slop.comments)} · dead ${percent(verdict.slop.dead)} · hedging ${percent(verdict.slop.hedging)}${verdict.slopReasons?.length ? ` → ${verdict.slopReasons.join("; ")}` : ""}`);
+  if (verdict.reasons.length) lines.push(`why: ${verdict.reasons.join("; ")}`);
+  if (verdict.error) lines.push(`typesafe: ${verdict.error}`);
+  if (extra.mode && verdict.level === "confirm") lines.push(`mode: ${extra.mode}`);
+  if (extra.told) lines.push(`agent told: ${clip(extra.told, 400)}`);
+  return lines;
+}
+
+export function stuckDetails(verdict: StuckVerdict, attempts: readonly Attempt[], told?: string): string[] {
+  const lines = attempts.map((attempt, index) => `${index + 1}. ${attempt.failed ? "✗" : "✓"} ${clip(attempt.call.replace(/\s+/g, " "), 120)}${attempt.failed && attempt.output ? ` → ${clip(attempt.output.replace(/\s+/g, " "), 120)}` : ""}`);
+  if (verdict.judgment) lines.push(`jev: same strategy ${percent(verdict.judgment.sameStrategy)} · approach change ${verdict.judgment.approachChange.toFixed(2)}/2 · progress ${percent(verdict.judgment.progress)} · ${verdict.judgment.model} · ${verdict.judgment.elapsedMs} ms`);
+  if (verdict.reasons.length) lines.push(`why: ${verdict.reasons.join("; ")}`);
+  if (verdict.error) lines.push(`typesafe: ${verdict.error}`);
+  if (told) lines.push(`agent told: ${clip(told, 400)}`);
+  return lines;
+}
+
+export function doneDetails(verdict: DoneVerdict, finalMessage: string, told?: string): string[] {
+  const lines = [`final message: ${clip(finalMessage.replace(/\s+/g, " "), 300)}`];
+  lines.push(`evidence: ${verdict.evidence.mutations} code change${verdict.evidence.mutations === 1 ? "" : "s"}${verdict.evidence.checks.length ? `; checks: ${verdict.evidence.checks.map(check => `${clip(check.call, 60)} → ${check.passed ? "passed" : "failed"}`).join(", ")}` : "; no checks ran"}`);
+  if (verdict.judgment) lines.push(`jev: claims done ${percent(verdict.judgment.claimsDone)} · claims verified ${percent(verdict.judgment.claimsVerified)} · checks apply ${percent(verdict.judgment.verificationApplies)} · ${verdict.judgment.outcome} · ${verdict.judgment.model} · ${verdict.judgment.elapsedMs} ms`);
+  if (verdict.reasons.length) lines.push(`why: ${verdict.reasons.join("; ")}`);
+  if (verdict.error) lines.push(`typesafe: ${verdict.error}`);
+  if (told) lines.push(`agent told: ${clip(told, 400)}`);
+  return lines;
+}
+
+export function runawayDetails(verdict: RunawayVerdict, told: string | undefined, recovering: boolean): string[] {
+  const lines = [
+    `repeated: ${clip(verdict.block, 200)}`,
+    `${verdict.count} times in ${verdict.chars} chars of ${verdict.kind}; signal: ${verdict.signal === "block" ? "identical paragraph" : "recurring trailing phrase"}`,
+    recovering ? "run stopped; one follow-up turn started" : "run stopped; not restarted",
+  ];
+  if (told) lines.push(`agent told: ${clip(told, 400)}`);
+  return lines;
+}
+
+export function proseDetails(verdict: ProseVerdict, reply: string, audience: string, told?: string): string[] {
+  const lines = [`reply: ${clip(reply.replace(/\s+/g, " "), 300)}`, `audience: ${audience}`];
+  if (verdict.scores) lines.push(`jev: wordy ${percent(verdict.scores.wordy)} · clichés ${percent(verdict.scores.cliches)} · jargon ${percent(verdict.scores.jargon)}${verdict.model ? ` · ${verdict.model} · ${verdict.elapsedMs} ms` : ""}`);
+  if (verdict.flagged.length) lines.push(`flagged: ${verdict.flagged.join(", ")}`);
+  if (verdict.error) lines.push(`typesafe: ${verdict.error}`);
+  if (told) lines.push(`agent told: ${clip(told, 400)}`);
+  return lines;
+}
+
+export function rulesDetails(verdict: RulesVerdict, told?: string): string[] {
+  const lines = [`${verdict.tool} ${verdict.path}; rules from ${verdict.sources.join(", ") || "nowhere"}${verdict.aggregate ? " (judged as one document)" : ""}; ${verdict.asked} question${verdict.asked === 1 ? "" : "s"}${verdict.dropped ? `; ${verdict.dropped} past the question cap from ${verdict.firstDropped}` : ""}`];
+  if (verdict.scores?.length) lines.push(`jev: ${verdict.scores.map(score => `${score.name} ${score.outcome.replace(/_/g, " ")} ${percent(score.violation)}`).join(" · ")}${verdict.model ? ` · ${verdict.model} · ${verdict.elapsedMs} ms` : ""}`);
+  if (verdict.findings.length) lines.push(`violations: ${verdict.findings.map(finding => `${finding.name} (${percent(finding.violation)})`).join("; ")}${verdict.editId ? ` in ${verdict.editId.replace("_", " ")}` : ""}`);
+  if (verdict.skippedReason) lines.push(`skipped: ${verdict.skippedReason}`);
+  if (verdict.error) lines.push(`typesafe: ${verdict.error}`);
+  if (told) lines.push(`agent told: ${clip(told, 400)}`);
+  return lines;
+}

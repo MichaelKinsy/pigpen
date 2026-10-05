@@ -1,0 +1,105 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { ContextLedger, formatFilterLedger, formatLedger } from "../src/saver.js";
+
+const noSplit = { excerpt: { count: 0, recalls: 0, recallsFull: 0 }, filter: { count: 0, recalls: 0, recallsFull: 0, keptChars: 0, requests: 0, ms: 0, fallbacks: {} } };
+
+test("the ledger counts candidates, compressions, token-turns, and first recalls only", () => {
+  const ledger = new ContextLedger();
+  assert.match(formatLedger(ledger.snapshot()), /no tool output large enough/);
+  ledger.candidate();
+  ledger.candidate();
+  ledger.record("/tmp/pi-warden-output-a/output.txt", 40_000, { tool: "bash", bytes: 50_000 });
+  ledger.turnEnd();
+  ledger.turnEnd();
+  ledger.record("/tmp/pi-warden-output-b/output.txt", 8_000, { tool: "bash", bytes: 50_000 });
+  ledger.turnEnd();
+  assert.equal(ledger.noteAccess(JSON.stringify({ path: "/tmp/pi-warden-output-a/output.txt" })), "/tmp/pi-warden-output-a/output.txt");
+  assert.equal(ledger.noteAccess("cat /tmp/pi-warden-output-a/output.txt | tail", "scoped"), "/tmp/pi-warden-output-a/output.txt", "a second access is reported but not counted twice");
+  assert.equal(ledger.noteAccess(JSON.stringify({ path: "/tmp/unrelated.txt" })), undefined);
+  const snapshot = ledger.snapshot();
+  assert.deepEqual(snapshot, { large: 2, compressed: 2, duplicates: 0, repeats: 0, bytesSaved: 48_000, turns: 3, tokenTurnsSaved: 10_000 + 10_000 + 12_000, recalls: 1, recallsFull: 1, ...noSplit });
+  assert.match(formatLedger(snapshot), /2 large outputs, 2 compressed, 0 duplicates dropped, 46\.9 KB removed \(~12000 tokens\), ~32000 token-turns spared over 3 turns, 1 recall of the full output \(50%; 1 whole-file, 0 scoped\)/);
+  ledger.reset();
+  assert.deepEqual(ledger.snapshot(), { large: 0, compressed: 0, duplicates: 0, repeats: 0, bytesSaved: 0, turns: 0, tokenTurnsSaved: 0, recalls: 0, recallsFull: 0, ...noSplit });
+});
+
+test("token-turns are removed tokens times the turns the removal has been in effect", () => {
+  const ledger = new ContextLedger();
+  ledger.record("/tmp/pi-warden-output-e/output.txt", 4_000);
+  ledger.turnEnd();
+  ledger.turnEnd();
+  ledger.turnEnd();
+  assert.equal(ledger.snapshot().tokenTurnsSaved, 3_000);
+});
+
+test("a whole-file recall puts the output back in context, so its bytes stop counting toward token-turns; a scoped recall does not", () => {
+  for (const [kind, expected] of [["full", 1_000], ["scoped", 3_000]] as const) {
+    const ledger = new ContextLedger();
+    ledger.record("/tmp/pi-warden-output-f/output.txt", 4_000);
+    ledger.turnEnd();
+    ledger.noteAccess("cat /tmp/pi-warden-output-f/output.txt", kind);
+    ledger.turnEnd();
+    ledger.turnEnd();
+    assert.equal(ledger.snapshot().tokenTurnsSaved, expected, kind);
+  }
+});
+
+test("duplicates are remembered by content key, keep the first stored copy, and count separately from compressions", () => {
+  const ledger = new ContextLedger();
+  assert.equal(ledger.duplicateOf("k1"), undefined);
+  ledger.remember("k1", "bash");
+  assert.deepEqual(ledger.duplicateOf("k1"), { tool: "bash" });
+  ledger.remember("k1", "bash", "/tmp/pi-warden-output-c/output.txt");
+  ledger.remember("k1", "read", undefined);
+  assert.deepEqual(ledger.duplicateOf("k1"), { tool: "bash", path: "/tmp/pi-warden-output-c/output.txt" }, "a later copy without a file does not discard the stored path");
+  ledger.duplicate(30_000);
+  assert.equal(ledger.storedPathIn("rg -n 'x' /tmp/pi-warden-output-c/output.txt"), "/tmp/pi-warden-output-c/output.txt");
+  assert.equal(ledger.noteAccess("rg -n 'x' /tmp/pi-warden-output-c/output.txt", "scoped"), undefined, "a duplicate-only copy is not a compression recall");
+  ledger.noteAccess("anything", "scoped");
+  const snapshot = ledger.snapshot();
+  assert.equal(snapshot.duplicates, 1);
+  assert.equal(snapshot.compressed, 0);
+  assert.equal(snapshot.bytesSaved, 30_000);
+  assert.match(formatLedger(snapshot), /0 large outputs, 0 compressed, 1 duplicate dropped, 29\.3 KB removed/);
+  ledger.record("C:\\Temp\\pi-warden-output-d\\output.txt", 1_000, { tool: "bash", bytes: 50_000 });
+  assert.equal(ledger.storedPathIn(JSON.stringify({ path: "C:\\Temp\\pi-warden-output-d\\output.txt" })), "C:\\Temp\\pi-warden-output-d\\output.txt", "a Windows path matches in its JSON form");
+  ledger.noteAccess(JSON.stringify({ command: "findstr /n /c:\"x\" C:\\Temp\\pi-warden-output-d\\output.txt" }), "scoped");
+  assert.deepEqual([ledger.snapshot().recalls, ledger.snapshot().recallsFull], [1, 0]);
+  assert.match(formatLedger(ledger.snapshot()), /1 recall of the full output \(100%; 0 whole-file, 1 scoped\)/);
+});
+
+test("repeated runs count in the ledger, earn token-turns, and a read of their stored copy is a recall", () => {
+  const ledger = new ContextLedger();
+  ledger.repeat("/tmp/pi-warden-output-r/output.txt", 8_000, { tool: "subagent-report message", bytes: 10_000 });
+  ledger.turnEnd();
+  ledger.turnEnd();
+  const snapshot = ledger.snapshot();
+  assert.deepEqual([snapshot.repeats, snapshot.bytesSaved, snapshot.tokenTurnsSaved], [1, 8_000, 4_000]);
+  assert.match(formatLedger(snapshot), /0 large outputs, 0 compressed, 0 duplicates dropped, 1 repeat cut, 7\.8 KB removed/);
+  assert.equal(ledger.noteAccess(JSON.stringify({ path: "/tmp/pi-warden-output-r/output.txt" })), "/tmp/pi-warden-output-r/output.txt");
+  ledger.turnEnd();
+  assert.equal(ledger.snapshot().tokenTurnsSaved, 4_000, "a whole-file recall puts the text back, so it stops counting");
+  assert.match(formatLedger(ledger.snapshot()), /1 recall of the full output \(100%; 1 whole-file, 0 scoped\)/);
+});
+
+test("filtered and excerpt outputs are counted apart: count, recalls by kind, kept characters, requests, time, fallbacks", () => {
+  const ledger = new ContextLedger();
+  ledger.record("/tmp/pi-warden-output-f/output.txt", 9_000, { tool: "bash", bytes: 16_000, kind: "filtered", keptChars: 5_200 });
+  ledger.filterSpent(1, 850);
+  ledger.record("/tmp/pi-warden-output-x/output.txt", 10_000, { tool: "bash", bytes: 16_000, kind: "excerpt" });
+  ledger.filterSpent(2, 4_000, "timeout");
+  ledger.record("/tmp/pi-warden-output-y/output.txt", 10_000, { tool: "bash", bytes: 16_000, kind: "excerpt" });
+  ledger.filterSpent(0, 0, "no_consent");
+  ledger.record("/tmp/pi-warden-output-p/output.txt", 10_000, { tool: "bash", bytes: 16_000, kind: "parser" });
+  ledger.noteAccess("rg error /tmp/pi-warden-output-f/output.txt", "scoped");
+  ledger.noteAccess(JSON.stringify({ path: "/tmp/pi-warden-output-x/output.txt" }), "full");
+  ledger.noteAccess(JSON.stringify({ path: "/tmp/pi-warden-output-p/output.txt" }), "full");
+  const snapshot = ledger.snapshot();
+  assert.equal(snapshot.compressed, 4, "every kind still counts as compressed");
+  assert.deepEqual(snapshot.filter, { count: 1, recalls: 1, recallsFull: 0, keptChars: 5_200, requests: 3, ms: 4_850, fallbacks: { timeout: 1, no_consent: 1 } });
+  assert.deepEqual(snapshot.excerpt, { count: 2, recalls: 1, recallsFull: 1 }, "a parser excerpt is neither kind");
+  assert.equal(formatFilterLedger(snapshot), "Context filter (beta): 1 filtered (5200 characters kept), 1 recalled (100%; 0 whole-file, 1 scoped); 2 excerpts, 1 recalled (50%; 1 whole-file, 0 scoped); 3 requests, 4850 ms; fallbacks: timeout 1, no_consent 1.");
+  ledger.reset();
+  assert.deepEqual(ledger.snapshot().filter.fallbacks, {});
+});

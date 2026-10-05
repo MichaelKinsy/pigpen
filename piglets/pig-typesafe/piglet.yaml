@@ -1,0 +1,22 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# TypeSafe judgments for the agent. The tool is OFF until the operator runs /typesafe enable.
+# Go only: its one extension is a fused Go factory.
+name: pig-typesafe
+description: "The typesafe_evaluate tool and /typesafe command (Go port of pi-typesafe). Off until enabled; content goes to api.typesafe.ai unless the own-model backend (the model PiG is configured with) is selected."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  pi-typesafe: local:../../components/pi-typesafe
+  # Library Packages the extension imports; found through the extension's go.work.
+  pi-typesafe-api: local:../../components/pi-typesafe-api
+  typesafe: local:../../components/typesafe
+extensions:
+  - name: pi-typesafe
+    origins: [package:pi-typesafe]
+skills: []
+discovery:
+  extensions: []
+  skills: []

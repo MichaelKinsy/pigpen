@@ -1,0 +1,224 @@
+/** Pre-creation session configuration and per-message model selection. */
+
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { after, before, describe, it } from "node:test";
+import type { AgentSessionEvent } from "@earendil-works/pi-coding-agent";
+import {
+	ActionType,
+	type ChatState,
+	MessageKind,
+	type ModelSelection,
+	SUPPORTED_PROTOCOL_VERSIONS,
+} from "@microsoft/agent-host-protocol";
+import { AhpClient } from "@microsoft/agent-host-protocol/client";
+import { WebSocketTransport } from "@microsoft/agent-host-protocol/ws";
+import { installRootChannel } from "../src/channels/root.ts";
+import { chatUri, sessionUri } from "../src/core/channels.ts";
+import { AhpHost } from "../src/core/host.ts";
+import type { PiBackend } from "../src/pi/chat-driver.ts";
+import { THINKING_CONFIG_KEY } from "../src/pi/models.ts";
+import { PROJECT_TRUST_KEY, SessionConfigService } from "../src/pi/session-config.ts";
+import { SessionRegistry } from "../src/pi/session-registry.ts";
+import { type RunningServer, serveWebSocket } from "../src/transport/websocket.ts";
+import { must } from "./support/assertions.ts";
+import { eventually } from "./support/async.ts";
+import { assertValid } from "./support/schema.ts";
+import { inMemorySessionManagerFactory } from "./support/session-storage.ts";
+
+describe("resolveSessionConfig", () => {
+	let bare: string;
+	let withResources: string;
+	let service: SessionConfigService;
+
+	before(() => {
+		bare = mkdtempSync(join(tmpdir(), "pi-ahp-cfg-bare-"));
+		withResources = mkdtempSync(join(tmpdir(), "pi-ahp-cfg-proj-"));
+		mkdirSync(join(withResources, ".pi", "extensions"), { recursive: true });
+		writeFileSync(join(withResources, ".pi", "extensions", "ext.ts"), "export default () => {};\n");
+		service = new SessionConfigService({ defaultWorkingDirectory: bare });
+	});
+
+	after(() => {
+		rmSync(bare, { recursive: true, force: true });
+		rmSync(withResources, { recursive: true, force: true });
+	});
+
+	it("returns a schema-conforming result", () => {
+		const result = service.resolve({ channel: "ahp-root://" });
+		assertValid("commands", "ResolveSessionConfigResult", result);
+	});
+
+	it("reports what a directory with no project resources would do", () => {
+		const result = service.resolve({ channel: "ahp-root://", workingDirectory: `file://${bare}` });
+		assert.equal(result.values[PROJECT_TRUST_KEY], true);
+		assert.equal(must(result.schema.properties[PROJECT_TRUST_KEY]).readOnly, true);
+	});
+
+	it("re-resolves against whatever directory the client is asking about", () => {
+		// The exchange is iterative: the answer changes as the user picks a
+		// directory, which is the whole reason the command exists.
+		const bareResult = service.resolve({ channel: "ahp-root://", workingDirectory: `file://${bare}` });
+		const projectResult = service.resolve({ channel: "ahp-root://", workingDirectory: `file://${withResources}` });
+		assert.notEqual(
+			must(projectResult.schema.properties[PROJECT_TRUST_KEY]).description,
+			must(bareResult.schema.properties[PROJECT_TRUST_KEY]).description,
+		);
+	});
+
+	it("offers no dynamic completions", () => {
+		const result = service.completions({ channel: "ahp-root://", property: PROJECT_TRUST_KEY });
+		assert.deepEqual(result.items, []);
+	});
+});
+
+/** A backend that records the model selection each turn ran with. */
+class SelectionRecordingBackend implements PiBackend {
+	readonly selections: ModelSelection[] = [];
+	readonly prompts: string[] = [];
+	current: ModelSelection = { id: "default-model", config: { [THINKING_CONFIG_KEY]: "medium" } };
+
+	#listeners = new Set<(event: AgentSessionEvent) => void>();
+
+	subscribe(listener: (event: AgentSessionEvent) => void): () => void {
+		this.#listeners.add(listener);
+		return () => this.#listeners.delete(listener);
+	}
+
+	async prompt(text: string): Promise<void> {
+		this.prompts.push(text);
+		await Promise.resolve();
+		for (const event of [{ type: "agent_start" }, { type: "agent_settled" }]) {
+			for (const listener of this.#listeners) {
+				listener(event as unknown as AgentSessionEvent);
+			}
+		}
+	}
+
+	async steer(): Promise<void> {}
+	async abort(): Promise<void> {}
+
+	async selectModel(selection: ModelSelection): Promise<void> {
+		this.selections.push(selection);
+		this.current = selection;
+	}
+
+	currentSelection(): ModelSelection {
+		return this.current;
+	}
+}
+
+describe("model selection", () => {
+	let host: AhpHost;
+	let client: AhpClient;
+	let server: RunningServer;
+	let backend: SelectionRecordingBackend;
+	let chat: string;
+
+	before(async () => {
+		host = new AhpHost();
+		installRootChannel(host, []);
+		backend = new SelectionRecordingBackend();
+		const sessions = new SessionRegistry({
+			host,
+			createBackend: () => backend,
+			createSessionManager: inMemorySessionManagerFactory,
+			// The backend is authoritative once it starts, including config values.
+			defaultSelection: () => ({ id: "default-model", config: { [THINKING_CONFIG_KEY]: "low" } }),
+		});
+		host.serve({
+			sessions: {
+				create: (params) => sessions.create(params),
+				dispose: (channel) => sessions.dispose(channel),
+			},
+		});
+
+		server = await serveWebSocket(host, { host: "127.0.0.1", port: 0 });
+		client = new AhpClient(await WebSocketTransport.connect(`ws://127.0.0.1:${server.port}`));
+		client.connect();
+		await client.initialize({ clientId: "model-client", protocolVersions: SUPPORTED_PROTOCOL_VERSIONS });
+
+		const id = randomUUID();
+		chat = chatUri(id);
+		await client.request("createSession", { channel: sessionUri(id) });
+		await client.subscribe(chat);
+		await eventually(
+			"the backend model to reach the chat draft",
+			() => (host.store.get(chat) as ChatState).draft?.model?.id === "default-model",
+		);
+	});
+
+	after(async () => {
+		await client.shutdown();
+		await server.close();
+	});
+
+	it("has a model selected before the agent has even started", () => {
+		// Starting an agent takes seconds. A client that subscribes in the
+		// meantime would otherwise find an empty picker and be unable to send.
+		const host2 = new AhpHost();
+		installRootChannel(host2, []);
+		const registry = new SessionRegistry({
+			host: host2,
+			createSessionManager: inMemorySessionManagerFactory,
+			defaultSelection: () => ({ id: "seeded-model", config: { [THINKING_CONFIG_KEY]: "medium" } }),
+		});
+		const id = randomUUID();
+		registry.create({ channel: sessionUri(id) });
+
+		const state = host2.store.get(chatUri(id)) as ChatState;
+		assert.equal(state.draft?.model?.id, "seeded-model");
+	});
+
+	it("publishes the model and config actually in effect as the chat draft", () => {
+		// There is no protocol field for "the default model"; a client
+		// initialises its input from `draft`, so this is how a host answers. The
+		// backend must also correct a stale config for the same model id.
+		const state = host.store.get(chat) as ChatState;
+		assert.equal(state.draft?.model?.id, "default-model");
+		assert.equal(state.draft?.model?.config?.[THINKING_CONFIG_KEY], "medium");
+	});
+
+	it("applies the model a client picked, before the prompt runs", async () => {
+		const promptsBefore = backend.prompts.length;
+		const selectionsBefore = backend.selections.length;
+		client.dispatch(chat, {
+			type: ActionType.ChatTurnStarted,
+			turnId: "t-model",
+			startedAt: new Date().toISOString(),
+			message: {
+				text: "hi",
+				origin: { kind: MessageKind.User },
+				model: { id: "picked-model", config: { [THINKING_CONFIG_KEY]: "high" } },
+			},
+		});
+		await eventually("the prompt to reach the backend", () => backend.prompts.length === promptsBefore + 1);
+
+		assert.equal(backend.selections.length, selectionsBefore + 1);
+		assert.deepEqual(backend.selections.at(-1), {
+			id: "picked-model",
+			config: { [THINKING_CONFIG_KEY]: "high" },
+		});
+		// Ordering matters: selecting after the prompt would run the turn on
+		// whatever the previous one used.
+		assert.equal(backend.prompts.length, promptsBefore + 1);
+	});
+
+	it("runs on the current model when the message carries no selection", async () => {
+		const selectionsBefore = backend.selections.length;
+		const promptsBefore = backend.prompts.length;
+		client.dispatch(chat, {
+			type: ActionType.ChatTurnStarted,
+			turnId: "t-plain",
+			startedAt: new Date().toISOString(),
+			message: { text: "again", origin: { kind: MessageKind.User } },
+		});
+		await eventually("the prompt to reach the backend", () => backend.prompts.length === promptsBefore + 1);
+
+		assert.equal(backend.selections.length, selectionsBefore, "no selection means no switch");
+		assert.equal(backend.prompts.length, promptsBefore + 1);
+	});
+});

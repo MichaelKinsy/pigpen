@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-ollama-native",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PiG model provider (Go extension) for Ollama's native /api/chat, with the model list read from the server",
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "contributors": ["Peder Munksgaard"],
+  "files": ["extensions", "README.md", "CREDITS.md", "LICENSE", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/ollama-native"]
+  }
+}

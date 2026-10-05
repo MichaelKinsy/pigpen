@@ -1,0 +1,14 @@
+{
+  "name": "pi-goal-x",
+  "version": "0.31.0",
+  "filename": "pi-goal-x-0.31.0.tgz",
+  "size": 246066,
+  "unpackedSize": 900542,
+  "shasum": "1a54e0f5e51359746d51656f865dd827b9ad3255",
+  "integrity": "sha512-7v7Xl0GzuuGwqCXe7vj0AQbBuF93rFBc/qD3WQlbPKOekWglTw+inaK9Mzv2cYz9HgqsIFca4+44X3y3/UmZ7w==",
+  "entryCount": 61,
+  "productionModules": 51,
+  "allProductionBytesMatch": true,
+  "realSdkImport": true,
+  "recoveryCliHelp": true
+}

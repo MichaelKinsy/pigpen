@@ -1,0 +1,85 @@
+red run against stubs: fail 84, pass 7 (no-op cases), skip 27 (named)
+--- FAIL: TestConfig
+    --- FAIL: TestConfig/parsePowerlineConfig_supports_object_config_with_custom_items
+    --- FAIL: TestConfig/parsePowerlineConfig_accepts_self-colored_custom_items
+    --- FAIL: TestConfig/parsePowerlineConfig_supports_disabled_segments
+    --- FAIL: TestConfig/parsePowerlineConfig_supports_partial_explicit_layout_rows
+    --- FAIL: TestConfig/parsePowerlineConfig_preserves_reporter_layout_groups
+    --- FAIL: TestConfig/parsePowerlineConfig_supports_separator_overrides
+    --- FAIL: TestConfig/configured_separators_resolve_independently_of_presets
+    --- FAIL: TestConfig/${style}_separator_leaves_padding_to_the_footer_renderer
+    --- FAIL: TestConfig/parsePowerlineConfig_validates_primary_powerline_placement
+    --- FAIL: TestConfig/parsePowerlineConfig_supports_queue_compact_prompt_mode
+    --- FAIL: TestConfig/parsePowerlineConfig_supports_welcome_and_legacy_sharp-S_settings
+    --- FAIL: TestConfig/parsePowerlineConfig_extracts_supported_segment_options
+    --- FAIL: TestConfig/parsePowerlineConfig_accepts_working-vibe_theme_colors_and_hex_colors
+    --- FAIL: TestConfig/mergeSegmentOptions_lets_user_config_override_preset_segment_defaults
+    --- FAIL: TestConfig/mergeSegmentsWithCustomItems_appends_custom_segment_ids_by_position
+    --- FAIL: TestConfig/mergeSegmentsWithCustomItems_filters_disabled_segment_ids
+    --- FAIL: TestConfig/mergeSegmentsWithCustomItems_applies_partial_layout_rows_before_disabled_filtering
+    --- FAIL: TestConfig/collectHiddenExtensionStatusKeys_includes_default_custom_status_keys
+    --- FAIL: TestConfig/normalizeCompactExtensionStatus_strips_baked-in_trailing_separators
+    --- FAIL: TestConfig/normalizeExtensionStatusValue_keeps_notification-style_statuses_renderable_for_custom_items
+    --- FAIL: TestConfig/getNotificationExtensionStatuses_skips_promoted_hidden_status_keys
+--- FAIL: TestIcons
+    --- FAIL: TestIcons/hasNerdFonts_uses_TERM_only_when_TERM_PROGRAM_is_unset_and_preserves_overrides
+--- FAIL: TestPaths
+    --- FAIL: TestPaths/agent_dir_uses_non-empty_PI_CODING_AGENT_DIR
+    --- FAIL: TestPaths/agent_dir_falls_back_to_HOME_.pi/agent_for_empty_env_values
+    --- FAIL: TestPaths/agent_dir_normalizes_tilde_and_file_URL_env_values_like_Pi
+    --- FAIL: TestPaths/agent_sessions_include_legacy_~/.pi/sessions_only_when_it_exists
+--- FAIL: TestThinkingLevel
+    --- FAIL: TestThinkingLevel/thinking-level_selection_prefers_the_live_event_over_stale_context
+    --- FAIL: TestThinkingLevel/thinking-level_selection_falls_back_to_context_when_the_event_has_no_level
+--- FAIL: TestRemainingRegressions
+    --- FAIL: TestRemainingRegressions/session_segment_shows_the_current_display_name_when_available
+    --- FAIL: TestRemainingRegressions/session_segment_falls_back_to_the_short_ID_or_new_when_unnamed
+    --- FAIL: TestRemainingRegressions/model_segment_can_show_provider-qualified_ids
+    --- FAIL: TestRemainingRegressions/self-colored_custom_items_preserve_ANSI_resets_and_skip_configured_color
+    --- FAIL: TestRemainingRegressions/extension_statuses_use_one_padded_dot_separator
+    --- FAIL: TestRemainingRegressions/extension_statuses_isolate_colors_from_separators_and_subsequent_statuses
+    --- FAIL: TestRemainingRegressions/cost_segment_supports_subscription_display_modes_and_converted_currencies
+    --- FAIL: TestRemainingRegressions/context_segment_shows_used_tokens,_maximum,_and_percentage
+--- FAIL: TestContextUsage
+    --- FAIL: TestContextUsage/readCoreContextUsage_returns_Pi_context_estimates_for_branch_summaries
+    --- FAIL: TestContextUsage/readCoreContextUsage_computes_percent_when_Pi_returns_only_token_totals
+    --- FAIL: TestContextUsage/readCoreContextUsage_preserves_Pi's_post-compaction_unknown_state
+    --- FAIL: TestContextUsage/readCoreContextUsage_ignores_unknown_or_unusable_estimates
+    --- FAIL: TestContextUsage/core_context_usage_cache_reuses_a_leaf_and_supports_explicit_invalidation
+    --- FAIL: TestContextUsage/resolveDisplayContextUsage_preserves_unknown_core_usage_over_assistant_fallback_usage
+    --- FAIL: TestContextUsage/resolveDisplayContextUsage_uses_the_approximate_estimate_for_unknown_core_usage
+    --- FAIL: TestContextUsage/resolveDisplayContextUsage_computes_assistant_fallback_usage_when_Pi_has_no_current_estimate
+    --- FAIL: TestContextUsage/estimateInitialContextTokens_uses_Pi's_conservative_character_estimate
+--- FAIL: TestGit
+    --- FAIL: TestGit/detectGitHost_recognizes_known_hosts_over_SSH_and_HTTPS
+    --- FAIL: TestGit/detectGitHost_normalizes_www_and_sub-domains
+    --- FAIL: TestGit/detectGitHost_treats_unknown_or_self-hosted_remotes_as_a_generic_host
+    --- FAIL: TestGit/detectGitHost_returns_null_when_there_is_no_remote
+    --- FAIL: TestGit/read-only_git_commands_opt_out_of_git's_optional_index_lock
+    --- FAIL: TestGit/readOnlyGitEnv_overrides_an_inherited_GIT_OPTIONAL_LOCKS=1
+    --- FAIL: TestGit/the_git_process_the_footer_spawns_receives_GIT_OPTIONAL_LOCKS=0
+--- FAIL: TestRenderGolden
+--- FAIL: TestThinkingSegment
+    --- FAIL: TestThinkingSegment/thinking_segment_uses_per-level_colors_for_off_through_medium
+    --- FAIL: TestThinkingSegment/thinking_segment_uses_rainbow_styling_for_high_through_max_by_default
+    --- FAIL: TestThinkingSegment/thinking_segment_honors_per-level_colors_for_high_through_max
+--- FAIL: TestUsageDisplay
+    --- FAIL: TestUsageDisplay/context_pct_defaults_to_the_full_tokens/window_rendering
+    --- FAIL: TestUsageDisplay/context_pct_percent_format_renders_a_bare_rounded_percentage
+    --- FAIL: TestUsageDisplay/context_pct_renders_unknown_usage_after_compaction
+    --- FAIL: TestUsageDisplay/context_pct_marks_context_estimates_as_approximate
+    --- FAIL: TestUsageDisplay/context_pct_percent_format_keeps_threshold_colors_and_drops_icons
+    --- FAIL: TestUsageDisplay/cache_read_defaults_to_raw_token_count
+    --- FAIL: TestUsageDisplay/cache_read_percent_format_renders_the_cache_hit_rate
+    --- FAIL: TestUsageDisplay/cache_read_both_format_renders_raw_token_count_and_cache_hit_rate
+    --- FAIL: TestUsageDisplay/cache_read_percent_and_both_formats_handle_zero_input_without_NaN
+    --- FAIL: TestUsageDisplay/queue_segment_hides_when_empty
+    --- FAIL: TestUsageDisplay/queue_segment_summarizes_queued_and_blocked_items
+    --- FAIL: TestUsageDisplay/queue_segment_highlights_compaction-held_prompts
+    --- FAIL: TestUsageDisplay/parsePowerlineConfig_accepts_context_and_cache_read_formats
+    --- FAIL: TestUsageDisplay/mergeSegmentOptions_merges_context_and_cache_read_per_key
+--- FAIL: TestTokenStats
+    --- FAIL: TestTokenStats/session_branch_cache_reuses_a_leaf_path_and_refreshes_when_the_leaf_changes
+    --- FAIL: TestTokenStats/computeSessionTokenStats_aggregates_usage_and_tracks_thinking_level
+    --- FAIL: TestTokenStats/computeSessionTokenStats_sums_subagent_child_run_cost_from_tool_results_and_slash_results
+    --- FAIL: TestTokenStats/computeSessionTokenStats_ignores_assistant_messages_without_tokens_for_lastAssistant

@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-permissions",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go port of pi-permission-system: allow, ask and deny rules for tool calls, with last-match-wins wildcard patterns and a tool_call gate (partial: the rule engine and tool-name gating, not the approval dialog, bash parsing or path rules)",
+  "keywords": ["pig-package", "permissions", "policy", "security", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/pi-permission-system"]
+  }
+}

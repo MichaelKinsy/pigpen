@@ -1,0 +1,1 @@
+A real `piglet-release.json` as `pig piglet publish` (PiG v0.4.0) wrote it in scripts/rehearse-release.mjs, with a stub `gh`, for herdr 0.1.0 and a throwaway key generated for that run. Only the public key is here; the private key was deleted with the run. It is a test fixture for scripts/receipts.test.mjs, never a release.

@@ -1,0 +1,104 @@
+[
+ {
+  "name": "overlay-title",
+  "file": "extension.go",
+  "find": "termgame.Overlay(\"Angry Pigs\")",
+  "replace": "termgame.Overlay(\"Angry\")"
+ },
+ {
+  "name": "score-notification-text",
+  "file": "extension.go",
+  "find": "Angry Pigs score %d · high %d",
+  "replace": "Angry score %d · high %d"
+ },
+ {
+  "name": "score-notification-level",
+  "file": "extension.go",
+  "find": "\"info\")",
+  "replace": "\"warning\")"
+ },
+ {
+  "name": "high-score-not-kept",
+  "file": "extension.go",
+  "find": "return score, max(highScore, score)",
+  "replace": "return score, score"
+ },
+ {
+  "name": "high-score-not-saved",
+  "file": "extension.go",
+  "find": "saveHighScore(ctx.ConfigHome(), highScore)",
+  "replace": "error(nil)"
+ },
+ {
+  "name": "stored-high-score-ignored",
+  "file": "extension.go",
+  "find": "highScore := loadHighScore(ctx.ConfigHome())",
+  "replace": "highScore := 0"
+ },
+ {
+  "name": "component-not-disposed",
+  "file": "extension.go",
+  "find": "defer game.Dispose()",
+  "replace": ""
+ },
+ {
+  "name": "command-description",
+  "file": "extension.go",
+  "find": "Play Angry Pigs: launch pigs at the birds.",
+  "replace": "Play Angry Pigs."
+ },
+ {
+  "name": "gravity",
+  "file": "game.go",
+  "find": "gravity  = 120.0",
+  "replace": "gravity  = 60.0"
+ },
+ {
+  "name": "max-speed",
+  "file": "game.go",
+  "find": "maxSpeed = 165.0",
+  "replace": "maxSpeed = 200.0"
+ },
+ {
+  "name": "angle-clamp-low",
+  "file": "game.go",
+  "find": "g.angle = min(max(g.angle+deltaAngle, 5), 85)",
+  "replace": "g.angle = min(max(g.angle+deltaAngle, 0), 85)"
+ },
+ {
+  "name": "aim-while-flying",
+  "file": "game.go",
+  "find": "func (g *game) aim(deltaAngle, deltaPower int) {\n\tif g.flying {\n\t\treturn\n\t}",
+  "replace": "func (g *game) aim(deltaAngle, deltaPower int) {"
+ },
+ {
+  "name": "launch-costs-no-pig",
+  "file": "game.go",
+  "find": "\tg.pigsLeft--\n\tg.flying = true",
+  "replace": "\tg.flying = true"
+ },
+ {
+  "name": "bird-points",
+  "file": "game.go",
+  "find": "birdPoints  = 500",
+  "replace": "birdPoints  = 400"
+ },
+ {
+  "name": "ice-toughness",
+  "file": "game.go",
+  "find": "cellIce: 1, cellBird: 1}",
+  "replace": "cellIce: 2, cellBird: 1}"
+ },
+ {
+  "name": "shared-mouse-release",
+  "file": "../../../pig-play/libraries/termgame/termgame.go",
+  "find": "Release: final == 'm',",
+  "replace": "Release: false,"
+ },
+ {
+  "name": "game-listens-to-tool-results",
+  "file": "extension.go",
+  "find": "\text.Command(\"angry-pigs\", \"Play Angry Pigs: launch pigs at the birds.\", run)\n",
+  "replace": "\text.Command(\"angry-pigs\", \"Play Angry Pigs: launch pigs at the birds.\", run)\n\text.OnToolResult(func(sdk.Context, map[string]any) (any, error) { return nil, nil })\n"
+ }
+]

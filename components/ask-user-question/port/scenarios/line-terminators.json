@@ -1,0 +1,48 @@
+{
+  "name": "line-terminators",
+  "description": "CRLF and lone CR in the model's text are normalised before the dialog and the envelope.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Line one\r\nline two\rend?",
+                "header": "H\r\n",
+                "options": [
+                  {
+                    "label": "A\r\nB",
+                    "description": "desc\r\nmore"
+                  },
+                  {
+                    "label": "C",
+                    "description": "d"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "value": "1. A\nB \u2014 desc\nmore"
+        }
+      ]
+    }
+  ]
+}

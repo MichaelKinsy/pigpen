@@ -1,0 +1,13 @@
+{
+  "id": "kkkkkkkkkkk",
+  "title": "Artist Three - Full Title (Official Audio)",
+  "track": "Full Title",
+  "artist": "Artist Three, Guest Artist",
+  "artists": ["Artist Three", "Guest Artist"],
+  "album": "The Album",
+  "duration": 187.0,
+  "thumbnail": "https://i.ytimg.com/vi/kkkkkkkkkkk/maxresdefault.jpg",
+  "channel": "Artist Three - Topic",
+  "webpage_url": "https://www.youtube.com/watch?v=kkkkkkkkkkk",
+  "extractor": "youtube"
+}

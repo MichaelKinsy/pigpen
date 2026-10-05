@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-pi-typesafe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go port of pi-typesafe's extension: the batched typesafe_evaluate tool, the /typesafe command (login, consent, usage, sample test, playground) and result renderers. Off until the operator enables it. Content goes to api.typesafe.ai unless the own-model backend (the model PiG is configured with) is selected.",
+  "keywords": ["pig-package", "pig-extension", "typesafe", "jev", "structured-decisions"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/pi-typesafe"]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-websearch",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go port of pi-web-access (first slice): web_search, fetch_content, get_search_content and source_check with SSRF-guarded fetching and retained sources",
+  "keywords": ["pig-package", "web-search", "fetch", "research", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/websearch"]
+  }
+}

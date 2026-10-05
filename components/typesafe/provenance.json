@@ -1,0 +1,49 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "typesafe-sdk-js",
+      "authors": [
+        "TypeSafe",
+        "evinism"
+      ],
+      "url": "https://github.com/typesafe-ai/typesafe-sdk-js",
+      "revision": "66880ccded6cb642dc1809620c2b108c33730214",
+      "path": "port/oracle/typesafe-sdk-js",
+      "license": "MIT",
+      "licenseFile": "port/oracle/typesafe-sdk-js/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "system-one-adapter-python",
+      "authors": [
+        "TypeSafe AI",
+        "Erik Gafni",
+        "Daniel Gafni"
+      ],
+      "url": "https://github.com/typesafe-ai/system-one-adapter-python",
+      "revision": "e1d4cc938204b22fc5a3c3aca7044072fe3f712d",
+      "path": "port/oracle/system-one-adapter-python",
+      "license": "MIT",
+      "licenseFile": "port/oracle/system-one-adapter-python/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "WorkflowEvals",
+      "authors": [
+        "Sam"
+      ],
+      "url": "https://github.com/typesafe-ai/WorkflowEvals",
+      "revision": "0ac3b8ad845429f0d8e064ecfb2430a47c5a25cb",
+      "path": "port/oracle/WorkflowEvals",
+      "license": "Apache-2.0",
+      "licenseFile": "port/oracle/WorkflowEvals/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

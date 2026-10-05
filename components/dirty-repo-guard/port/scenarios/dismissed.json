@@ -1,0 +1,10 @@
+{
+  "name": "dismissed",
+  "description": "Dirty repository, the dialog is dismissed (no choice): treated like a refusal.",
+  "files": {"a.txt": "one\n"},
+  "setup": [["git","init","-q"],["git","add","a.txt"],["git","commit","-q","-m","init"],["sh","-c","echo two > b.txt && echo three >> a.txt"]],
+  "commands": {"git": {"mode": "real"}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "ui": [{"cancelled": true}]}
+  ]
+}

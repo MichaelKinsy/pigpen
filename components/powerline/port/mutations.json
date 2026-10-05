@@ -1,0 +1,914 @@
+[
+ {
+  "name": "tokens-1k-boundary",
+  "file": "segments.go",
+  "find": "case n < 1000:\n\t\treturn jsNumber(n)",
+  "replace": "case n <= 1000:\n\t\treturn jsNumber(n)"
+ },
+ {
+  "name": "tokens-10k-fixed",
+  "file": "segments.go",
+  "find": "case n < 10000:\n\t\treturn jsToFixed(n/1000, 1) + \"k\"",
+  "replace": "case n < 10000:\n\t\treturn jsNumber(jsRound(n/1000)) + \"k\""
+ },
+ {
+  "name": "tokens-round-to-floor",
+  "file": "segments.go",
+  "find": "return jsNumber(jsRound(n/1000)) + \"k\"\n\tcase n < 10000000",
+  "replace": "return jsNumber(math.Floor(n/1000)) + \"k\"\n\tcase n < 10000000"
+ },
+ {
+  "name": "tokens-million-fixed",
+  "file": "segments.go",
+  "find": "case n < 10000000:\n\t\treturn jsToFixed(n/1000000, 1) + \"M\"",
+  "replace": "case n < 10000000:\n\t\treturn jsNumber(jsRound(n/1000000)) + \"M\""
+ },
+ {
+  "name": "duration-hours",
+  "file": "segments.go",
+  "find": "return jsNumber(hours) + \"h\" + jsNumber(math.Mod(minutes, 60)) + \"m\"",
+  "replace": "return jsNumber(hours) + \"h\" + jsNumber(minutes) + \"m\""
+ },
+ {
+  "name": "duration-minutes",
+  "file": "segments.go",
+  "find": "return jsNumber(minutes) + \"m\" + jsNumber(math.Mod(seconds, 60)) + \"s\"",
+  "replace": "return jsNumber(minutes) + \"m\" + jsNumber(seconds) + \"s\""
+ },
+ {
+  "name": "model-claude-prefix",
+  "file": "segments.go",
+  "find": "strings.CutPrefix(name, \"Claude \")",
+  "replace": "strings.CutPrefix(name, \"Claude\")"
+ },
+ {
+  "name": "model-qualified-prefix-check",
+  "file": "segments.go",
+  "find": "!strings.HasPrefix(ctx.Model.ID, provider+\"/\")",
+  "replace": "true"
+ },
+ {
+  "name": "model-thinking-needs-reasoning",
+  "file": "segments.go",
+  "find": "ctx.Model != nil && ctx.Model.Reasoning {\n\t\tlevel",
+  "replace": "ctx.Model != nil {\n\t\tlevel"
+ },
+ {
+  "name": "model-no-model-text",
+  "file": "segments.go",
+  "find": "name := \"no-model\"",
+  "replace": "name := \"none\""
+ },
+ {
+  "name": "path-home-tilde",
+  "file": "segments.go",
+  "find": "pwd = \"~\" + pwd[len(home):]",
+  "replace": "pwd = pwd[len(home):]"
+ },
+ {
+  "name": "path-work-prefix",
+  "file": "segments.go",
+  "find": "pwd = pwd[6:]",
+  "replace": "pwd = pwd[5:]"
+ },
+ {
+  "name": "path-abbrev-default-max",
+  "file": "segments.go",
+  "find": "maxLen := 40",
+  "replace": "maxLen := 30"
+ },
+ {
+  "name": "path-abbrev-ellipsis",
+  "file": "segments.go",
+  "find": "pwd = \"…\" + utf16Tail(pwd, maxLen-1)",
+  "replace": "pwd = \"…\" + utf16Tail(pwd, maxLen)"
+ },
+ {
+  "name": "path-abbrev-only",
+  "file": "segments.go",
+  "find": "if mode == \"abbreviated\" {",
+  "replace": "if mode != \"basename\" {"
+ },
+ {
+  "name": "git-dirty-color",
+  "file": "segments.go",
+  "find": "branchColor = \"gitDirty\"",
+  "replace": "branchColor = \"gitClean\""
+ },
+ {
+  "name": "git-unstaged-sign",
+  "file": "segments.go",
+  "find": "applyColor(ctx.Theme, \"warning\", \"*\"",
+  "replace": "applyColor(ctx.Theme, \"warning\", \"+\""
+ },
+ {
+  "name": "git-staged-sign",
+  "file": "segments.go",
+  "find": "applyColor(ctx.Theme, \"success\", \"+\"",
+  "replace": "applyColor(ctx.Theme, \"success\", \"*\""
+ },
+ {
+  "name": "git-untracked-sign",
+  "file": "segments.go",
+  "find": "applyColor(ctx.Theme, \"muted\", \"?\"",
+  "replace": "applyColor(ctx.Theme, \"muted\", \"!\""
+ },
+ {
+  "name": "git-host-icon-ignored",
+  "file": "segments.go",
+  "find": "if opts.HostIcon != nil && *opts.HostIcon {",
+  "replace": "if false {"
+ },
+ {
+  "name": "git-hidden-branch-icon",
+  "file": "segments.go",
+  "find": "content = segColor(ctx, branchColor, prefix) + text",
+  "replace": "content = prefix + text"
+ },
+ {
+  "name": "git-no-branch-no-dirty",
+  "file": "segments.go",
+  "find": "if branch == \"\" && !dirty {",
+  "replace": "if branch == \"\" {"
+ },
+ {
+  "name": "thinking-high-color",
+  "file": "segments.go",
+  "find": "case \"high\":\n\t\tsemantic = \"thinkingHigh\"",
+  "replace": "case \"high\":\n\t\tsemantic = \"thinkingXhigh\""
+ },
+ {
+  "name": "thinking-label-medium",
+  "file": "segments.go",
+  "find": "\"medium\": \"med\"",
+  "replace": "\"medium\": \"medium\""
+ },
+ {
+  "name": "queue-compacting-text",
+  "file": "segments.go",
+  "find": "\"compact q \"",
+  "replace": "\"compacting q \""
+ },
+ {
+  "name": "queue-blocked-text",
+  "file": "segments.go",
+  "find": "\"blocked \"+",
+  "replace": "\"block \"+"
+ },
+ {
+  "name": "token-total-includes-cache",
+  "file": "segments.go",
+  "find": "ctx.Usage.Input+ctx.Usage.Output+ctx.Usage.CacheRead+ctx.Usage.CacheWrite, icons().Tokens",
+  "replace": "ctx.Usage.Input+ctx.Usage.Output, icons().Tokens"
+ },
+ {
+  "name": "cost-subagent-added",
+  "file": "segments.go",
+  "find": "cost := ctx.Usage.Cost + ctx.Usage.SubagentCost",
+  "replace": "cost := ctx.Usage.Cost"
+ },
+ {
+  "name": "cost-sub-text",
+  "file": "segments.go",
+  "find": "return renderedSegment{segColor(ctx, \"cost\", \"(sub)\"), true}",
+  "replace": "return renderedSegment{segColor(ctx, \"cost\", \"(subscription)\"), true}"
+ },
+ {
+  "name": "cost-both-text",
+  "file": "segments.go",
+  "find": "reported+\" (sub)\"",
+  "replace": "reported+\" sub\""
+ },
+ {
+  "name": "cost-hidden-zero",
+  "file": "segments.go",
+  "find": "if cost == 0 && !sub {",
+  "replace": "if cost == 0 {"
+ },
+ {
+  "name": "context-error-threshold",
+  "file": "segments.go",
+  "find": "*ctx.ContextPercent > 90",
+  "replace": "*ctx.ContextPercent > 95"
+ },
+ {
+  "name": "context-warn-threshold",
+  "file": "segments.go",
+  "find": "*ctx.ContextPercent > 70",
+  "replace": "*ctx.ContextPercent > 75"
+ },
+ {
+  "name": "context-approx-mark",
+  "file": "segments.go",
+  "find": "approx = \"~\"",
+  "replace": "approx = \"≈\""
+ },
+ {
+  "name": "context-auto-icon",
+  "file": "segments.go",
+  "find": "if ctx.AutoCompactEnabled && icons.Auto != \"\" {",
+  "replace": "if icons.Auto != \"\" {"
+ },
+ {
+  "name": "context-percent-decimals",
+  "file": "segments.go",
+  "find": "jsToFixed(*ctx.ContextPercent, 1)",
+  "replace": "jsToFixed(*ctx.ContextPercent, 0)"
+ },
+ {
+  "name": "context-custom-compaction",
+  "file": "segments.go",
+  "find": "func contextPctSegment(ctx *segmentContext) renderedSegment {\n\tif ctx.CustomCompactionEnabled {",
+  "replace": "func contextPctSegment(ctx *segmentContext) renderedSegment {\n\tif false {"
+ },
+ {
+  "name": "context-total-window",
+  "file": "segments.go",
+  "find": "if ctx.CustomCompactionEnabled || ctx.ContextWindow == 0 {",
+  "replace": "if ctx.CustomCompactionEnabled {"
+ },
+ {
+  "name": "time-spent-threshold",
+  "file": "segments.go",
+  "find": "if elapsed < 1000 {",
+  "replace": "if elapsed < 2000 {"
+ },
+ {
+  "name": "time-12h-noon",
+  "file": "segments.go",
+  "find": "hours %= 12\n\t\tif hours == 0 {",
+  "replace": "hours %= 12\n\t\tif false {"
+ },
+ {
+  "name": "time-pm",
+  "file": "segments.go",
+  "find": "if hours >= 12 {\n\t\t\tsuffix = \"pm\"",
+  "replace": "if hours > 12 {\n\t\t\tsuffix = \"pm\""
+ },
+ {
+  "name": "time-seconds",
+  "file": "segments.go",
+  "find": "str += \":\" + pad2(now.Second())",
+  "replace": "str += \":\" + jsNumber(float64(now.Second()))"
+ },
+ {
+  "name": "session-short-id",
+  "file": "segments.go",
+  "find": "if len(u) > 8 {\n\t\t\t\tu = u[:8]",
+  "replace": "if len(u) > 7 {\n\t\t\t\tu = u[:7]"
+ },
+ {
+  "name": "session-name-trim",
+  "file": "segments.go",
+  "find": "if jsTrim(display) == \"\" {",
+  "replace": "if display == \"\" {"
+ },
+ {
+  "name": "hostname-split",
+  "file": "segments.go",
+  "find": "name, _, _ := strings.Cut(hostnameFn(), \".\")",
+  "replace": "name := hostnameFn()"
+ },
+ {
+  "name": "cache-read-hit-rate",
+  "file": "segments.go",
+  "find": "hit = jsToFixed(cr/(in+cr)*100, 0)",
+  "replace": "hit = jsToFixed(cr/in*100, 0)"
+ },
+ {
+  "name": "cache-read-zero-input",
+  "file": "segments.go",
+  "find": "if in+cr > 0 {",
+  "replace": "if in > 0 {"
+ },
+ {
+  "name": "cache-write-hidden",
+  "file": "segments.go",
+  "find": "if ctx.Usage.CacheWrite == 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ext-status-isolation",
+  "file": "segments.go",
+  "find": "parts[i] = \"\\x1b[0m\" + p + \"\\x1b[0m\"",
+  "replace": "parts[i] = p"
+ },
+ {
+  "name": "ext-status-hidden-keys",
+  "file": "segments.go",
+  "find": "if ctx.HiddenStatusKeys[e.Key] {\n\t\t\tcontinue",
+  "replace": "if false {\n\t\t\tcontinue"
+ },
+ {
+  "name": "custom-prefix-separator",
+  "file": "segments.go",
+  "find": "content = custom.Prefix + sepDot + content",
+  "replace": "content = custom.Prefix + \" \" + content"
+ },
+ {
+  "name": "custom-self-colorize",
+  "file": "segments.go",
+  "find": "if custom.Color != \"\" && !custom.SelfColorize {",
+  "replace": "if custom.Color != \"\" {"
+ },
+ {
+  "name": "custom-missing-prefix",
+  "file": "segments.go",
+  "find": "return renderedSegment{orStr(custom.Prefix, custom.ID), true}",
+  "replace": "return renderedSegment{custom.ID, true}"
+ },
+ {
+  "name": "shell-mode-visible",
+  "file": "segments.go",
+  "find": "return notVisible() // the bash-mode editor",
+  "replace": "return renderedSegment{\"shell\", true} // the bash-mode editor"
+ },
+ {
+  "name": "hex-regex",
+  "file": "theme.go",
+  "find": "`^#[0-9a-fA-F]{6}$`",
+  "replace": "`^#[0-9a-f]{6}$`"
+ },
+ {
+  "name": "rainbow-skip-colon",
+  "file": "theme.go",
+  "find": "if ch == ' ' || ch == ':' {",
+  "replace": "if ch == ' ' {"
+ },
+ {
+  "name": "rainbow-index",
+  "file": "theme.go",
+  "find": "rainbowColors[i%len(rainbowColors)]",
+  "replace": "rainbowColors[i%(len(rainbowColors)-1)]"
+ },
+ {
+  "name": "color-fallback-text",
+  "file": "theme.go",
+  "find": "out, _ := th.Fg(\"text\", text)",
+  "replace": "out, _ := th.Fg(\"dim\", text)"
+ },
+ {
+  "name": "user-theme-priority",
+  "file": "theme.go",
+  "find": "if c, ok := userThemeColors()[semantic]; ok {",
+  "replace": "if c, ok := userThemeColors()[semantic]; ok && false {"
+ },
+ {
+  "name": "user-theme-trim",
+  "file": "theme.go",
+  "find": "if c := jsTrim(raw); c != \"\" {",
+  "replace": "if c := raw; c != \"\" {"
+ },
+ {
+  "name": "icon-override",
+  "file": "theme.go",
+  "find": "*icons.field(k) = v",
+  "replace": "_ = v"
+ },
+ {
+  "name": "separator-chevron",
+  "file": "theme.go",
+  "find": "return separatorDef{\"›\", \"‹\"}",
+  "replace": "return separatorDef{\"‹\", \"›\"}"
+ },
+ {
+  "name": "thinking-text-nerd",
+  "file": "theme.go",
+  "find": "table := thinkingTextUnicode\n\tif hasNerdFonts() {",
+  "replace": "table := thinkingTextUnicode\n\tif false {"
+ },
+ {
+  "name": "nerd-explicit-off",
+  "file": "env.go",
+  "find": "case \"0\":\n\t\treturn false",
+  "replace": "case \"0\":\n\t\treturn true"
+ },
+ {
+  "name": "nerd-ghostty",
+  "file": "env.go",
+  "find": "if os.Getenv(\"GHOSTTY_RESOURCES_DIR\") != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "nerd-term-program-set",
+  "file": "env.go",
+  "find": "term, ok := os.LookupEnv(\"TERM_PROGRAM\")\n\tif !ok {",
+  "replace": "term := os.Getenv(\"TERM_PROGRAM\")\n\tif term == \"\" {"
+ },
+ {
+  "name": "agent-dir-trim",
+  "file": "env.go",
+  "find": "jsTrim(configured) != \"\"",
+  "replace": "configured != \"\""
+ },
+ {
+  "name": "agent-dir-tilde",
+  "file": "env.go",
+  "find": "strings.HasPrefix(trimmed, \"~/\"):",
+  "replace": "strings.HasPrefix(trimmed, \"~\"):"
+ },
+ {
+  "name": "agent-sessions-legacy",
+  "file": "env.go",
+  "find": "legacy != primary {",
+  "replace": "true {"
+ },
+ {
+  "name": "thinking-selection",
+  "file": "env.go",
+  "find": "if s, ok := eventLevel.(string); ok {",
+  "replace": "if s, ok := contextLevel.(string); ok {"
+ },
+ {
+  "name": "config-placement-case",
+  "file": "config.go",
+  "find": "n = strings.ToLower(jsTrim(s))\n\t}\n\tif n == \"above\"",
+  "replace": "n = jsTrim(s)\n\t}\n\tif n == \"above\""
+ },
+ {
+  "name": "config-custom-id-chars",
+  "file": "config.go",
+  "find": "`^[a-zA-Z0-9_-]+$`",
+  "replace": "`^[a-zA-Z0-9_]+$`"
+ },
+ {
+  "name": "config-custom-default-position",
+  "file": "config.go",
+  "find": "position := \"right\"",
+  "replace": "position := \"left\""
+ },
+ {
+  "name": "config-hide-default",
+  "file": "config.go",
+  "find": "HideWhenMissing:     !hasHide || hide,",
+  "replace": "HideWhenMissing:     hasHide && hide,"
+ },
+ {
+  "name": "config-exclude-default",
+  "file": "config.go",
+  "find": "ExcludeFromStatuses: !hasExclude || exclude,",
+  "replace": "ExcludeFromStatuses: hasExclude && exclude,"
+ },
+ {
+  "name": "config-custom-dedupe",
+  "file": "config.go",
+  "find": "out[i] = it\n\t\t\tcontinue",
+  "replace": "_ = i\n\t\t\tcontinue"
+ },
+ {
+  "name": "config-layout-global-placement",
+  "file": "config.go",
+  "find": "if placed[id] {\n\t\t\t\t\tinvalid = append",
+  "replace": "if false {\n\t\t\t\t\tinvalid = append"
+ },
+ {
+  "name": "config-layout-row-dedupe",
+  "file": "config.go",
+  "find": "case !seen[id]:\n\t\t\t\tseen[id] = true",
+  "replace": "case true:\n\t\t\t\tseen[id] = true"
+ },
+ {
+  "name": "config-disabled-dedupe",
+  "file": "config.go",
+  "find": "} else if !seen[id] {\n\t\t\tseen[id] = true\n\t\t\tdisabled",
+  "replace": "} else if true {\n\t\t\tseen[id] = true\n\t\t\tdisabled"
+ },
+ {
+  "name": "config-max-length-floor",
+  "file": "config.go",
+  "find": "p.MaxLength = ptr(int(math.Floor(n)))",
+  "replace": "p.MaxLength = ptr(int(math.Ceil(n)))"
+ },
+ {
+  "name": "config-max-length-positive",
+  "file": "config.go",
+  "find": "!math.IsNaN(n) && n > 0 {\n\t\t\tp.MaxLength",
+  "replace": "!math.IsNaN(n) {\n\t\t\tp.MaxLength"
+ },
+ {
+  "name": "config-welcome-default",
+  "file": "config.go",
+  "find": "Welcome: o.vals[\"welcome\"] != false,",
+  "replace": "Welcome: o.vals[\"welcome\"] == true,"
+ },
+ {
+  "name": "config-merge-override",
+  "file": "config.go",
+  "find": "func pick[T any](d, o *T) *T {\n\tif o != nil {",
+  "replace": "func pick[T any](d, o *T) *T {\n\tif o == nil {"
+ },
+ {
+  "name": "config-merge-layout-placed",
+  "file": "config.go",
+  "find": "if !placed[id] {\n\t\t\t\t\tsegments = append(segments, id)",
+  "replace": "if true {\n\t\t\t\t\tsegments = append(segments, id)"
+ },
+ {
+  "name": "config-merge-disabled",
+  "file": "config.go",
+  "find": "if !off[id] {\n\t\t\t\tout = append(out, id)",
+  "replace": "if true {\n\t\t\t\tout = append(out, id)"
+ },
+ {
+  "name": "config-notification-prefix",
+  "file": "config.go",
+  "find": "strings.HasPrefix(strings.TrimLeftFunc(value, isJSSpace), \"[\")",
+  "replace": "strings.HasPrefix(value, \"[\")"
+ },
+ {
+  "name": "config-status-trailing",
+  "file": "config.go",
+  "find": "`(\\x1b\\[[0-9;]*m|\\s|·|[|])+$`",
+  "replace": "`(\\s|·|[|])+$`"
+ },
+ {
+  "name": "config-setting-preset-object",
+  "file": "config.go",
+  "find": "next := o.clone()\n\tnext.set(\"preset\", preset)",
+  "replace": "next := newObject()\n\tnext.set(\"preset\", preset)"
+ },
+ {
+  "name": "core-project-settings-win",
+  "file": "core.go",
+  "find": "merged.set(k, mergeSettings(bo, oo))",
+  "replace": "merged.set(k, mergeSettings(oo, bo))"
+ },
+ {
+  "name": "core-write-to-project",
+  "file": "core.go",
+  "find": "if _, has := ps.vals[\"powerline\"]; has {",
+  "replace": "if false {"
+ },
+ {
+  "name": "core-write-indent",
+  "file": "core.go",
+  "find": "marshalJSON(settings, \"  \")+\"\\n\"",
+  "replace": "marshalJSON(settings, \"\")+\"\\n\""
+ },
+ {
+  "name": "core-refuse-malformed",
+  "file": "core.go",
+  "find": "if gs == nil || ps == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "core-warn-plural",
+  "file": "core.go",
+  "find": "if n == 1 {\n\t\t\treturn \"\"",
+  "replace": "if n == 2 {\n\t\t\treturn \"\""
+ },
+ {
+  "name": "core-warn-needs-ui",
+  "file": "core.go",
+  "find": "if p.h.HasUI() {\n\t\tp.h.Notify(message, \"warning\")",
+  "replace": "if true {\n\t\tp.h.Notify(message, \"warning\")"
+ },
+ {
+  "name": "core-stash-clear",
+  "file": "core.go",
+  "find": "if p.h.HasUI() {\n\t\tp.h.SetStatus(statusStash, nil)\n\t}",
+  "replace": "if false {\n\t\tp.h.SetStatus(statusStash, nil)\n\t}"
+ },
+ {
+  "name": "core-thinking-session-start",
+  "file": "core.go",
+  "find": "p.currentThinking = p.h.ThinkingLevel()",
+  "replace": "p.currentThinking = nil"
+ },
+ {
+  "name": "core-status-widget-tui-only",
+  "file": "core.go",
+  "find": "if p.h.Mode() == \"tui\" {\n\t\tp.ui.Widgets[widgetStatus]",
+  "replace": "if true {\n\t\tp.ui.Widgets[widgetStatus]"
+ },
+ {
+  "name": "core-placement-below",
+  "file": "core.go",
+  "find": "if p.config.Placement == \"below\" {\n\t\tplacement = \"belowEditor\"",
+  "replace": "if p.config.Placement == \"above\" {\n\t\tplacement = \"belowEditor\""
+ },
+ {
+  "name": "core-clear-before-install",
+  "file": "core.go",
+  "find": "for _, key := range widgetKeys {\n\t\tp.h.ClearWidget(key)\n\t}\n\tp.ui = installedUI{Footer: true",
+  "replace": "p.ui = installedUI{Footer: true"
+ },
+ {
+  "name": "core-toggle-notify",
+  "file": "core.go",
+  "find": "p.h.Notify(\"Powerline disabled\", \"info\")",
+  "replace": "p.h.Notify(\"Powerline off\", \"info\")"
+ },
+ {
+  "name": "core-preset-case",
+  "file": "core.go",
+  "find": "n := strings.ToLower(jsTrim(value))\n\tif slices.Contains(presetNames, n) {",
+  "replace": "n := jsTrim(value)\n\tif slices.Contains(presetNames, n) {"
+ },
+ {
+  "name": "core-placement-toggle",
+  "file": "core.go",
+  "find": "case p.config.Placement == \"above\":\n\t\t\t\tp.config.Placement = \"below\"",
+  "replace": "case p.config.Placement == \"below\":\n\t\t\t\tp.config.Placement = \"below\""
+ },
+ {
+  "name": "core-layout-overhead",
+  "file": "core.go",
+  "find": "const overhead = 2",
+  "replace": "const overhead = 1"
+ },
+ {
+  "name": "core-layout-sep-width",
+  "file": "core.go",
+  "find": "sepWidth := visibleWidth(getSeparator(style).Left) + 2",
+  "replace": "sepWidth := visibleWidth(getSeparator(style).Left) + 1"
+ },
+ {
+  "name": "core-layout-fit",
+  "file": "core.go",
+  "find": "if !over && cur+need <= available {",
+  "replace": "if !over && cur+need < available {"
+ },
+ {
+  "name": "core-layout-overflow-sticky",
+  "file": "core.go",
+  "find": "if !over && cur+need <= available {",
+  "replace": "if (!over || true) && cur+need <= available {"
+ },
+ {
+  "name": "core-layout-secondary-break",
+  "file": "core.go",
+  "find": "\t\t} else {\n\t\t\tbreak\n\t\t}\n\t}\n\treturn buildContentFromParts",
+  "replace": "\t\t} else {\n\t\t\tcontinue\n\t\t}\n\t}\n\treturn buildContentFromParts"
+ },
+ {
+  "name": "core-separator-color",
+  "file": "core.go",
+  "find": "strings.Join(parts, \" \"+separatorAnsi+sep+ansiReset+\" \")",
+  "replace": "strings.Join(parts, \" \"+sep+\" \")"
+ },
+ {
+  "name": "core-config-separator",
+  "file": "core.go",
+  "find": "style := p.config.Separator\n\tif style == \"\" {",
+  "replace": "style := \"\"\n\tif style == \"\" {"
+ },
+ {
+  "name": "core-status-width",
+  "file": "core.go",
+  "find": "if visibleWidth(line) <= width {",
+  "replace": "if true {"
+ },
+ {
+  "name": "core-notification-only",
+  "file": "core.go",
+  "find": "getNotificationExtensionStatuses(statuses, hidden)",
+  "replace": "getNotificationExtensionStatuses(nil, hidden)"
+ },
+ {
+  "name": "core-streaming-usage",
+  "file": "core.go",
+  "find": "if p.isStreaming && p.liveUsage != nil {\n\t\tlatest = p.liveUsage",
+  "replace": "if false {\n\t\tlatest = p.liveUsage"
+ },
+ {
+  "name": "core-oauth",
+  "file": "core.go",
+  "find": "UsingSubscription: model != nil && p.h.UsingOAuth(),",
+  "replace": "UsingSubscription: false,"
+ },
+ {
+  "name": "core-git-visible",
+  "file": "core.go",
+  "find": "showGit := slices.Contains(all, \"git\")",
+  "replace": "showGit := true"
+ },
+ {
+  "name": "core-git-polling-default",
+  "file": "core.go",
+  "find": "polling := \"full\"\n\t\tif gitOpts.Polling != nil {",
+  "replace": "polling := \"off\"\n\t\tif gitOpts.Polling != nil {"
+ },
+ {
+  "name": "core-custom-compaction-status",
+  "file": "core.go",
+  "find": "if e.Key == \"compact-policy\" {",
+  "replace": "if e.Key == \"compact\" {"
+ },
+ {
+  "name": "core-thinking-from-session",
+  "file": "core.go",
+  "find": "case stats.ThinkingLevelFromSession != nil:",
+  "replace": "case false:"
+ },
+ {
+  "name": "core-bash-git-patterns",
+  "file": "core.go",
+  "find": "checkout|switch|branch\\s+-[dDmM]|merge|rebase|pull|reset|worktree",
+  "replace": "checkout|switch|merge|rebase|pull|reset|worktree"
+ },
+ {
+  "name": "stats-skip-error",
+  "file": "tokenstats.go",
+  "find": "if sr := message[\"stopReason\"]; sr == \"error\" || sr == \"aborted\" {",
+  "replace": "if sr := message[\"stopReason\"]; sr == \"error\" {"
+ },
+ {
+  "name": "stats-last-assistant-tokens",
+  "file": "tokenstats.go",
+  "find": "if usageTokenTotal(u) > 0 {\n\t\t\tst.LastAssistant",
+  "replace": "if true {\n\t\t\tst.LastAssistant"
+ },
+ {
+  "name": "stats-total-tokens",
+  "file": "tokenstats.go",
+  "find": "if t, ok := fnum(u, \"totalTokens\"); ok && t != 0 {",
+  "replace": "if t, ok := fnum(u, \"totalTokens\"); ok && t != 0 && false {"
+ },
+ {
+  "name": "stats-subagent-slash",
+  "file": "tokenstats.go",
+  "find": "e[\"customType\"] == \"subagent-slash-result\"",
+  "replace": "e[\"customType\"] == \"subagent-slash\""
+ },
+ {
+  "name": "stats-subagent-tool-name",
+  "file": "tokenstats.go",
+  "find": "msg[\"toolName\"] == \"subagent\"",
+  "replace": "msg[\"toolName\"] != \"\""
+ },
+ {
+  "name": "stats-branch-cache-leaf",
+  "file": "tokenstats.go",
+  "find": "|| !sameString(c.leaf, leaf) {\n\t\tbranch",
+  "replace": "|| false {\n\t\tbranch"
+ },
+ {
+  "name": "usage-percent-computed",
+  "file": "contextusage.go",
+  "find": "percent := tokens / window * 100",
+  "replace": "percent := tokens / window"
+ },
+ {
+  "name": "usage-window-positive",
+  "file": "contextusage.go",
+  "find": "!finite(window) || window <= 0",
+  "replace": "!finite(window)"
+ },
+ {
+  "name": "usage-unknown-fallback",
+  "file": "contextusage.go",
+  "find": "if core != nil && core.Tokens == nil && unknownFallback != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "usage-initial-estimate",
+  "file": "contextusage.go",
+  "find": "n := (utf16Len(*systemPrompt) + 3) / 4",
+  "replace": "n := utf16Len(*systemPrompt) / 4"
+ },
+ {
+  "name": "git-locks-env",
+  "file": "git.go",
+  "find": "out[\"GIT_OPTIONAL_LOCKS\"] = \"0\"",
+  "replace": "out[\"GIT_OPTIONAL_LOCKS\"] = \"1\""
+ },
+ {
+  "name": "git-host-subdomain",
+  "file": "git.go",
+  "find": "host == h[0] || strings.HasSuffix(host, \".\"+h[0])",
+  "replace": "host == h[0]"
+ },
+ {
+  "name": "git-polling-branch",
+  "file": "git.go",
+  "find": "if polling != \"full\" {\n\t\treturn gitStatus{Branch: branch}",
+  "replace": "if polling == \"off\" {\n\t\treturn gitStatus{Branch: branch}"
+ },
+ {
+  "name": "git-provider-detached",
+  "file": "git.go",
+  "find": "*provider != \"detached\"",
+  "replace": "true"
+ },
+ {
+  "name": "currency-decimals",
+  "file": "currency.go",
+  "find": "if currency == \"JPY\" || currency == \"KRW\" {",
+  "replace": "if currency == \"JPY\" {"
+ },
+ {
+  "name": "currency-missing-rate",
+  "file": "currency.go",
+  "find": "return \"-- \" + currency",
+  "replace": "return \"$0.00\""
+ },
+ {
+  "name": "currency-symbol",
+  "file": "currency.go",
+  "find": "\"CNY\": \"¥\"",
+  "replace": "\"CNY\": \"RMB\""
+ },
+ {
+  "name": "tofixed-tie",
+  "file": "jsutil.go",
+  "find": "if len(frac) > d && frac[d] >= '5' {",
+  "replace": "if len(frac) > d && frac[d] > '5' {"
+ },
+ {
+  "name": "round-half-up",
+  "file": "jsutil.go",
+  "find": "if x-r >= 0.5 {",
+  "replace": "if x-r > 0.5 {"
+ },
+ {
+  "name": "json-key-order",
+  "file": "jsjson.go",
+  "find": "return append(idx, rest...)",
+  "replace": "return append(rest, idx...)"
+ },
+ {
+  "name": "json-empty-array",
+  "file": "jsjson.go",
+  "find": "if len(x) == 0 {\n\t\t\tb.WriteString(\"[]\")",
+  "replace": "if len(x) == 100 {\n\t\t\tb.WriteString(\"[]\")"
+ },
+ {
+  "name": "adapter-model-window",
+  "file": "extension.go",
+  "find": "ContextWindow: float64(m.ContextWindow)}",
+  "replace": "ContextWindow: 0}"
+ },
+ {
+  "name": "adapter-autocompact-default",
+  "file": "extension.go",
+  "find": "\t\t}\n\t}\n\treturn true\n}",
+  "replace": "\t\t}\n\t}\n\treturn false\n}"
+ },
+ {
+  "name": "adapter-oauth-provider",
+  "file": "extension.go",
+  "find": "map[string]any{\"id\": m.ID, \"provider\": m.Provider}",
+  "replace": "map[string]any{\"id\": m.ID}"
+ },
+ {
+  "name": "adapter-session-name-error",
+  "file": "extension.go",
+  "find": "if err != nil || n == nil {\n\t\treturn \"\"",
+  "replace": "if err == nil || n == nil {\n\t\treturn \"\""
+ },
+ {
+  "name": "adapter-strict-theme",
+  "file": "extension.go",
+  "find": "if !slices.Contains(piThemeTokens, token) {",
+  "replace": "if !slices.Contains(piThemeTokens, token) && false {"
+ },
+ {
+  "name": "adapter-top-placement",
+  "file": "extension.go",
+  "find": "if placement, ok := ui.Widgets[widgetTop]; ok {\n\t\t_ = h.ctx.SetWidget(widgetTop, h.pl.renderTop(width), sdk.WidgetOptions{\"placement\": placement})",
+  "replace": "if _, ok := ui.Widgets[widgetTop]; ok {\n\t\t_ = h.ctx.SetWidget(widgetTop, h.pl.renderTop(width), sdk.WidgetOptions{\"placement\": \"aboveEditor\"})"
+ },
+ {
+  "name": "frame-not-published",
+  "file": "core.go",
+  "find": "p.frame.Store(&footerFrame{ctx: c, ids: all, style: p.separatorStyle()})",
+  "replace": "_ = c"
+ },
+ {
+  "name": "frame-style-default",
+  "file": "core.go",
+  "find": "ids: all, style: p.separatorStyle()})",
+  "replace": "ids: all, style: \"powerline\"})"
+ },
+ {
+  "name": "width-tab",
+  "file": "text.go",
+  "find": "case r == '\\t':\n\t\treturn 3",
+  "replace": "case r == '\\t':\n\t\treturn 1"
+ },
+ {
+  "name": "width-control",
+  "file": "text.go",
+  "find": "case unicode.Is(unicode.Cc, r) || unicode.Is(unicode.Cf, r) ||",
+  "replace": "case unicode.Is(unicode.Cf, r) ||"
+ },
+ {
+  "name": "width-csi-any-final",
+  "file": "text.go",
+  "find": "case 'm', 'G', 'K', 'H', 'J':",
+  "replace": "case 'm', 'G', 'K', 'H', 'J', 'A', 'l':"
+ },
+ {
+  "name": "width-apc",
+  "file": "text.go",
+  "find": "case ']', '_':",
+  "replace": "case ']':"
+ },
+ {
+  "name": "width-osc-st",
+  "file": "text.go",
+  "find": "if s[j] == 0x1b && j+1 < len(s) && s[j+1] == '\\\\' {",
+  "replace": "if false {"
+ }
+]

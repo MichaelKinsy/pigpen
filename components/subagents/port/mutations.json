@@ -1,0 +1,698 @@
+[
+ {
+  "name": "fm-fold-blank",
+  "file": "frontmatter.go",
+  "find": "n := blank\n\t\t\t\tif previousMore || currentMore {\n\t\t\t\t\tn++\n\t\t\t\t}",
+  "replace": "n := blank"
+ },
+ {
+  "name": "fm-fold-more-indented",
+  "file": "frontmatter.go",
+  "find": "} else if previousMore || currentMore {\n\t\t\t\tfolded.WriteString(\"\\n\")",
+  "replace": "} else if false {\n\t\t\t\tfolded.WriteString(\"\\n\")"
+ },
+ {
+  "name": "fm-fold-space",
+  "file": "frontmatter.go",
+  "find": "folded.WriteString(\" \")",
+  "replace": "folded.WriteString(\"\\n\")"
+ },
+ {
+  "name": "fm-quoted",
+  "file": "frontmatter.go",
+  "find": "quoted := len(rawValue) >= 1 &&",
+  "replace": "quoted := false &&"
+ },
+ {
+  "name": "fm-literal",
+  "file": "frontmatter.go",
+  "find": "isLiteral := !quoted && (rawValue == \"|\" || rawValue == \"|-\")",
+  "replace": "isLiteral := false"
+ },
+ {
+  "name": "fm-block-blank-lines",
+  "file": "frontmatter.go",
+  "find": "((folded || literal) && trimmed == \"\")",
+  "replace": "((folded || literal) && trimmed == \"\" && false)"
+ },
+ {
+  "name": "fm-end-marker",
+  "file": "frontmatter.go",
+  "find": "strings.Index(normalized[3:], \"\\n---\")",
+  "replace": "strings.Index(normalized[3:], \"\\n--\")"
+ },
+ {
+  "name": "fm-crlf",
+  "file": "frontmatter.go",
+  "find": "strings.ReplaceAll(content, \"\\r\\n\", \"\\n\")",
+  "replace": "content"
+ },
+ {
+  "name": "fm-list-dash",
+  "file": "frontmatter.go",
+  "find": "if strings.HasPrefix(value, \"-\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "fm-list-comma",
+  "file": "frontmatter.go",
+  "find": "strings.Split(value, \",\")",
+  "replace": "strings.Split(value, \";\")"
+ },
+ {
+  "name": "chain-budget-soft",
+  "file": "chain.go",
+  "find": "soft.(float64) > hard.(float64)",
+  "replace": "soft.(float64) >= hard.(float64)"
+ },
+ {
+  "name": "chain-budget-hard",
+  "file": "chain.go",
+  "find": "if !isInt(hard, 1) {",
+  "replace": "if !isInt(hard, 0) {"
+ },
+ {
+  "name": "chain-inline-schema",
+  "file": "chain.go",
+  "find": "strings.HasPrefix(raw, \"{\") || strings.HasPrefix(raw, \"[\")",
+  "replace": "strings.HasPrefix(raw, \"{\")"
+ },
+ {
+  "name": "chain-output-false",
+  "file": "chain.go",
+  "find": "if raw == \"false\" {\n\t\t\t\tstep.Output",
+  "replace": "if raw == \"none\" {\n\t\t\t\tstep.Output"
+ },
+ {
+  "name": "chain-outputmode",
+  "file": "chain.go",
+  "find": "raw == \"inline\" || raw == \"file-only\"",
+  "replace": "raw == \"inline\""
+ },
+ {
+  "name": "chain-task-trim",
+  "file": "chain.go",
+  "find": "task = jsTrim(strings.Join(lines[blank+1:], \"\\n\"))",
+  "replace": "task = strings.Join(lines[blank+1:], \"\\n\")"
+ },
+ {
+  "name": "chain-needs-name",
+  "file": "chain.go",
+  "find": "fm.Get(\"name\") == \"\" || fm.Get(\"description\") == \"\"",
+  "replace": "fm.Get(\"name\") == \"\""
+ },
+ {
+  "name": "chain-extra-fields",
+  "file": "chain.go",
+  "find": "if k == \"name\" || k == \"package\" || k == \"description\" {",
+  "replace": "if k == \"name\" || k == \"description\" {"
+ },
+ {
+  "name": "chain-serialize-package",
+  "file": "chain.go",
+  "find": "if c.PackageName != \"\" {\n\t\tlines = append(lines, \"package: \"",
+  "replace": "if false {\n\t\tlines = append(lines, \"package: \""
+ },
+ {
+  "name": "chain-serialize-reads",
+  "file": "chain.go",
+  "find": "lines = append(lines, \"reads: \"+strings.Join(s.Reads.Items, \", \"))",
+  "replace": "lines = append(lines, \"reads: \"+strings.Join(s.Reads.Items, \",\"))"
+ },
+ {
+  "name": "chain-heading-trailing",
+  "file": "chain.go",
+  "find": "return jsTrim(body[e:eol]), k, true\n\t\t}\n\t\tif k == eol",
+  "replace": "return body[e:eol], k, true\n\t\t}\n\t\tif k == eol"
+ },
+ {
+  "name": "pkg-lower",
+  "file": "identity.go",
+  "find": "strings.ToLower(v)",
+  "replace": "v"
+ },
+ {
+  "name": "pkg-edges",
+  "file": "identity.go",
+  "find": "return packageEdges.ReplaceAllString(s, \"\")",
+  "replace": "return s"
+ },
+ {
+  "name": "pkg-pattern",
+  "file": "identity.go",
+  "find": "!identifierPattern.MatchString(name)",
+  "replace": "false"
+ },
+ {
+  "name": "pkg-local-name",
+  "file": "identity.go",
+  "find": "if pkg != \"\" && strings.HasPrefix(name, pkg+\".\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "scope-default",
+  "file": "scope.go",
+  "find": "return ScopeBoth\n}\n\n// MergeAgentsForScope",
+  "replace": "return ScopeProject\n}\n\n// MergeAgentsForScope"
+ },
+ {
+  "name": "merge-user-before-project",
+  "file": "scope.go",
+  "find": "put(user)\n\t\tput(project)",
+  "replace": "put(project)\n\t\tput(user)"
+ },
+ {
+  "name": "merge-package",
+  "file": "scope.go",
+  "find": "put(builtin)\n\tput(pkg)",
+  "replace": "put(pkg)\n\tput(builtin)"
+ },
+ {
+  "name": "resolve-canonical",
+  "file": "scope.go",
+  "find": "a.Name == raw }, \"agent name\")",
+  "replace": "false }, \"agent name\")"
+ },
+ {
+  "name": "resolve-rank",
+  "file": "scope.go",
+  "find": "sourceRank[m.Source] > sourceRank[best.Source]",
+  "replace": "sourceRank[m.Source] < sourceRank[best.Source]"
+ },
+ {
+  "name": "resolve-local-guard",
+  "file": "scope.go",
+  "find": "a.LocalName != \"\" && a.LocalName == raw",
+  "replace": "a.LocalName == raw"
+ },
+ {
+  "name": "disc-home-stop",
+  "file": "discovery.go",
+  "find": "if r := realDir(cur); r != \"\" && homes[r] {\n\t\t\treturn roots",
+  "replace": "if r := realDir(cur); r != \"\" && !homes[r] {\n\t\t\treturn roots"
+ },
+ {
+  "name": "disc-legacy-skills",
+  "file": "discovery.go",
+  "find": "if isLegacySkillPath(dir, p) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "disc-chain-md",
+  "file": "discovery.go",
+  "find": "!strings.HasSuffix(n, \".chain.md\") }",
+  "replace": "true }"
+ },
+ {
+  "name": "disc-prune-git",
+  "file": "discovery.go",
+  "find": "if _, err := os.Stat(filepath.Join(dir, \".git\")); err == nil {\n\t\treturn true",
+  "replace": "if false {\n\t\treturn true"
+ },
+ {
+  "name": "disc-preferred-last",
+  "file": "discovery.go",
+  "find": "[]string{legacy, preferred}",
+  "replace": "[]string{preferred, legacy}"
+ },
+ {
+  "name": "disc-user-new",
+  "file": "discovery.go",
+  "find": "append(extraUserAgentDirs(), userOld, userNew)",
+  "replace": "append(extraUserAgentDirs(), userOld)"
+ },
+ {
+  "name": "disc-git-root",
+  "file": "discovery.go",
+  "find": "case \"git-root\":\n\t\t\tpolicyIdx = i",
+  "replace": "case \"git-root\":\n\t\t\tpolicyIdx = -(i + 1)"
+ },
+ {
+  "name": "disc-user-chains",
+  "file": "discovery.go",
+  "find": "chains, cd := loadChains(r.UserChainDir, SourceUser)",
+  "replace": "chains, cd := loadChains(r.UserChainDir+\"x\", SourceUser)"
+ },
+ {
+  "name": "agents-needs-description",
+  "file": "agents.go",
+  "find": "fm.Get(\"name\") == \"\" || fm.Get(\"description\") == \"\"",
+  "replace": "fm.Get(\"name\") == \"\""
+ },
+ {
+  "name": "agents-thinking-false",
+  "file": "agents.go",
+  "find": "if fm.Get(\"thinking\") == \"false\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "agents-delegate-append",
+  "file": "agents.go",
+  "find": "if name == \"delegate\" {\n\t\treturn \"append\"",
+  "replace": "if name == \"nobody\" {\n\t\treturn \"append\""
+ },
+ {
+  "name": "agents-alias-self",
+  "file": "agents.go",
+  "find": "seen[a] || a == agentName",
+  "replace": "seen[a]"
+ },
+ {
+  "name": "agents-mcp-split",
+  "file": "agents.go",
+  "find": "strings.HasPrefix(t, \"mcp:\")",
+  "replace": "strings.HasPrefix(t, \"mcp-\")"
+ },
+ {
+  "name": "agents-runner-type",
+  "file": "agents.go",
+  "find": "case \"external-cli\":\n\t\tif jsTrim",
+  "replace": "case \"external-clx\":\n\t\tif jsTrim"
+ },
+ {
+  "name": "agents-async",
+  "file": "agents.go",
+  "find": "case \"true\", \"false\":\n\t\t\tb := fm.Get(\"async\") == \"true\"",
+  "replace": "case \"true\":\n\t\t\tb := fm.Get(\"async\") == \"true\""
+ },
+ {
+  "name": "list-section-order",
+  "file": "management.go",
+  "find": "{SourceUser, \"User agents\"}, {SourceProject, \"Project agents\"}",
+  "replace": "{SourceProject, \"Project agents\"}, {SourceUser, \"User agents\"}"
+ },
+ {
+  "name": "list-sort",
+  "file": "management.go",
+  "find": "sort.SliceStable(agents, func(i, j int) bool { return localeLess(agents[i].Name, agents[j].Name) })",
+  "replace": ""
+ },
+ {
+  "name": "list-aliases",
+  "file": "management.go",
+  "find": "parts = append(parts, \"aliases: \"+strings.Join(a.Aliases, \", \"))",
+  "replace": "parts = append(parts, \"alias: \"+strings.Join(a.Aliases, \", \"))"
+ },
+ {
+  "name": "list-diagnostics",
+  "file": "management.go",
+  "find": "lines = append(lines, diagnosticLines(d.Diagnostics)...)",
+  "replace": ""
+ },
+ {
+  "name": "get-blocking",
+  "file": "management.go",
+  "find": "if len(agents) == 0 || (match != nil && sourceRank[match.Source] > best) {",
+  "replace": "if len(agents) == 0 {"
+ },
+ {
+  "name": "get-detail-prompt",
+  "file": "management.go",
+  "find": "if jsTrim(a.SystemPrompt) != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "get-scope-diagnostics",
+  "file": "management.go",
+  "find": "excluded := SourceProject\n\tif scope == ScopeProject {",
+  "replace": "excluded := SourceUser\n\tif scope == ScopeProject {"
+ },
+ {
+  "name": "run-model-inherit",
+  "file": "run.go",
+  "find": "model == \"\" && a.Model != \"\" && a.Model != \"inherit\"",
+  "replace": "model == \"\" && a.Model != \"\""
+ },
+ {
+  "name": "run-model-override",
+  "file": "run.go",
+  "find": "model := modelOverride\n\tif model == \"\" &&",
+  "replace": "model := \"\"\n\tif model == \"\" &&"
+ },
+ {
+  "name": "run-replace-flag",
+  "file": "run.go",
+  "find": "if a.SystemPromptMode == \"append\" {",
+  "replace": "if a.SystemPromptMode == \"replace\" {"
+ },
+ {
+  "name": "run-thinking-off",
+  "file": "run.go",
+  "find": "args = append(args, \"--thinking\", \"off\")",
+  "replace": "args = append(args, \"--thinking\", \"low\")"
+ },
+ {
+  "name": "run-no-extensions",
+  "file": "run.go",
+  "find": "args := []string{\"--no-extensions\", \"--print\"}",
+  "replace": "args := []string{\"--print\"}"
+ },
+ {
+  "name": "chain-default-first",
+  "file": "run.go",
+  "find": "if i == 0 {\n\t\t\tt = \"{task}\"",
+  "replace": "if i == 1 {\n\t\t\tt = \"{task}\""
+ },
+ {
+  "name": "chain-previous",
+  "file": "run.go",
+  "find": "\"{task}\", request, \"{previous}\", previous",
+  "replace": "\"{task}\", request, \"{previous}\", request"
+ },
+ {
+  "name": "chain-resolve-first",
+  "file": "run.go",
+  "find": "resolved := make([]*AgentConfig, len(c.Steps))\n\tfor i, s := range c.Steps {",
+  "replace": "resolved := make([]*AgentConfig, len(c.Steps))\n\tfor i, s := range c.Steps[:0] {"
+ },
+ {
+  "name": "chain-stop",
+  "file": "run.go",
+  "find": "\t\t\tvar ce *childExit\n",
+  "replace": "\t\t\tcontinue\n\t\t\tvar ce *childExit\n"
+ },
+ {
+  "name": "run-exit",
+  "file": "run.go",
+  "find": "case res.Exit != 0:",
+  "replace": "case res.Exit < 0:"
+ },
+ {
+  "name": "run-env-role",
+  "file": "run.go",
+  "find": "\"PIG_AGENT_ROLE=\"+role)",
+  "replace": "\"PIG_AGENT_ROLE=\")"
+ },
+ {
+  "name": "run-task-argv",
+  "file": "run.go",
+  "find": "Args: buildChildArgs(a, model), Stdin: childPrompt(task)",
+  "replace": "Args: append(buildChildArgs(a, model), task), Stdin: childPrompt(task)"
+ },
+ {
+  "name": "run-prompt-prefix",
+  "file": "run.go",
+  "find": "return \"Task: \" + task",
+  "replace": "return task"
+ },
+ {
+  "name": "run-suffix-wins",
+  "file": "run.go",
+  "find": "if !hasThinkingSuffix(modelOverride) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "run-suffix-level",
+  "file": "run.go",
+  "find": "return i >= 0 && thinkingLevels[model[i+1:]]",
+  "replace": "return i >= 0"
+ },
+ {
+  "name": "run-env-ext",
+  "file": "run.go",
+  "find": "strings.HasPrefix(k, \"PIG_EXT_\"), ",
+  "replace": ""
+ },
+ {
+  "name": "run-env-harness",
+  "file": "run.go",
+  "find": "strings.HasPrefix(k, \"PIG_HARNESS_\"), ",
+  "replace": ""
+ },
+ {
+  "name": "run-env-depth",
+  "file": "run.go",
+  "find": "\"PIG_SUBAGENT_DEPTH=\"+strconv.Itoa(depth+1)",
+  "replace": "\"PIG_SUBAGENT_DEPTH=\"+strconv.Itoa(depth)"
+ },
+ {
+  "name": "run-env-exact",
+  "file": "run.go",
+  "find": "\tcmd.Env = req.Env\n",
+  "replace": "\tcmd.Env = append(os.Environ(), req.Env...)\n"
+ },
+ {
+  "name": "run-dir",
+  "file": "run.go",
+  "find": "\tcmd.Dir = req.Cwd\n",
+  "replace": ""
+ },
+ {
+  "name": "run-stdin",
+  "file": "run.go",
+  "find": "\tcmd.Stdin = strings.NewReader(req.Stdin)\n",
+  "replace": ""
+ },
+ {
+  "name": "run-stderr-apart",
+  "file": "run.go",
+  "find": "cmd.Stdout, cmd.Stderr = stdout, stderr",
+  "replace": "cmd.Stdout, cmd.Stderr = stdout, stdout"
+ },
+ {
+  "name": "run-exit-code",
+  "file": "run.go",
+  "find": "res.Exit = ee.ExitCode()",
+  "replace": "res.Exit = 0"
+ },
+ {
+  "name": "run-cancel",
+  "file": "run.go",
+  "find": "\tcase <-done:\n\t\tcancelled = true",
+  "replace": "\tcase <-make(chan struct{}):\n\t\tcancelled = true"
+ },
+ {
+  "name": "run-cancel-term",
+  "file": "run.go",
+  "find": "\t\tterminate(cmd.Process)\n",
+  "replace": ""
+ },
+ {
+  "name": "run-cancel-kill",
+  "file": "run.go",
+  "find": "\t\t\t_ = cmd.Process.Kill()\n",
+  "replace": ""
+ },
+ {
+  "name": "run-cancel-error",
+  "file": "run.go",
+  "find": "\tif cancelled {\n\t\treturn res, errCancelled",
+  "replace": "\tif cancelled && false {\n\t\treturn res, errCancelled"
+ },
+ {
+  "name": "run-out-bytes",
+  "file": "run.go",
+  "find": "if w.total <= w.max && lines <= outputMaxLines {",
+  "replace": "if lines <= outputMaxLines {"
+ },
+ {
+  "name": "run-out-lines",
+  "file": "run.go",
+  "find": "kept = strings.Join(parts[:outputMaxLines], \"\\n\")",
+  "replace": "_ = parts"
+ },
+ {
+  "name": "run-out-rune",
+  "file": "run.go",
+  "find": "\t\tkept = kept[:len(kept)-1]\n",
+  "replace": "\t\tbreak\n"
+ },
+ {
+  "name": "run-out-marker",
+  "file": "run.go",
+  "find": "strings.Count(kept, \"\\n\")+1, lines,",
+  "replace": "strings.Count(kept, \"\\n\"), lines,"
+ },
+ {
+  "name": "run-stderr-tail",
+  "file": "run.go",
+  "find": "if len(w.buf) > w.max {",
+  "replace": "if false {"
+ },
+ {
+  "name": "run-harness-bin",
+  "file": "run.go",
+  "find": "\"PIG_SUBAGENT_PIG_BINARY\", \"PIG_HARNESS_BINARY\"",
+  "replace": "\"PIG_SUBAGENT_PIG_BINARY\""
+ },
+ {
+  "name": "run-depth-env",
+  "file": "run.go",
+  "find": "if n, ok := nonNegativeInt(getenv(\"PIG_SUBAGENT_DEPTH\")); ok {",
+  "replace": "if n, ok := nonNegativeInt(\"\"); ok {"
+ },
+ {
+  "name": "run-depth-flag",
+  "file": "run.go",
+  "find": "} else if getenv(\"PIG_SUBAGENT\") != \"\" {\n\t\tdepth = 1",
+  "replace": "} else if false {\n\t\tdepth = 1"
+ },
+ {
+  "name": "run-depth-max",
+  "file": "run.go",
+  "find": "if n, ok := nonNegativeInt(getenv(\"PI_SUBAGENT_MAX_DEPTH\")); ok {",
+  "replace": "if n, ok := nonNegativeInt(\"\"); ok {"
+ },
+ {
+  "name": "run-depth-negative",
+  "file": "run.go",
+  "find": "return n, err == nil && n >= 0",
+  "replace": "return n, err == nil"
+ },
+ {
+  "name": "run-depth-compare",
+  "file": "run.go",
+  "find": "if depth < max {",
+  "replace": "if depth <= max {"
+ },
+ {
+  "name": "run-cap",
+  "file": "run.go",
+  "find": "case childSlots <- struct{}{}:",
+  "replace": "default:"
+ },
+ {
+  "name": "run-cap-cancel",
+  "file": "run.go",
+  "find": "\tcase <-done:\n\t\treturn \"\", fmt.Errorf(\"%s was cancelled\", a.Name)",
+  "replace": "\tcase <-make(chan struct{}):\n\t\treturn \"\", fmt.Errorf(\"%s was cancelled\", a.Name)"
+ },
+ {
+  "name": "run-fail-stderr",
+  "file": "run.go",
+  "find": "\t\tdetail := res.Stderr\n",
+  "replace": "\t\tdetail := \"\"\n"
+ },
+ {
+  "name": "run-cwd-relative",
+  "file": "run.go",
+  "find": "effective = filepath.Join(base, requested)",
+  "replace": "effective = requested"
+ },
+ {
+  "name": "run-cwd-missing",
+  "file": "run.go",
+  "find": "case errors.Is(err, fs.ErrNotExist):",
+  "replace": "case errors.Is(err, fs.ErrNotExist) && false:"
+ },
+ {
+  "name": "run-cwd-file",
+  "file": "run.go",
+  "find": "case !st.IsDir():",
+  "replace": "case !st.IsDir() && false:"
+ },
+ {
+  "name": "run-cwd-resolution",
+  "file": "run.go",
+  "find": "if requested != effective {",
+  "replace": "if false {"
+ },
+ {
+  "name": "run-either-b",
+  "file": "run.go",
+  "find": "\t\tcase <-b:\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-widget-clear",
+  "file": "extension.go",
+  "find": "_ = ctx.SetWidget(asyncWidget, nil)\n\t\treturn nil, nil\n\t})\n\te.OnEvent(sdk.EventBeforeAgentStart",
+  "replace": "return nil, nil\n\t})\n\te.OnEvent(sdk.EventBeforeAgentStart"
+ },
+ {
+  "name": "ext-git-probe",
+  "file": "extension.go",
+  "find": "\"rev-parse\", \"--show-toplevel\"",
+  "replace": "\"rev-parse\", \"--git-dir\""
+ },
+ {
+  "name": "ext-deselect",
+  "file": "extension.go",
+  "find": "_ = setSelection(ctx, false)\n\t\t// The original asks git",
+  "replace": "// The original asks git"
+ },
+ {
+  "name": "ext-enable-append",
+  "file": "extension.go",
+  "find": "if include {\n\t\tnext = append(next, subagentName)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-loader-active",
+  "file": "extension.go",
+  "find": "if !has {\n\t\tnext = append(next, loaderName)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-dedupe",
+  "file": "extension.go",
+  "find": "if !seen[n] {\n\t\t\tseen[n] = true\n\t\t\tuniq = append(uniq, n)\n\t\t}",
+  "replace": "seen[n] = true\n\t\tuniq = append(uniq, n)"
+ },
+ {
+  "name": "ext-details",
+  "file": "extension.go",
+  "find": "\"mode\": \"management\", \"results\": []any{}",
+  "replace": "\"mode\": \"management\""
+ },
+ {
+  "name": "ext-refuse",
+  "file": "extension.go",
+  "find": "return nil, sdk.NewToolError(r.text)",
+  "replace": "return textResult(r.text, true), nil"
+ },
+ {
+  "name": "ext-single-needs-task",
+  "file": "extension.go",
+  "find": "return name, task, name != \"\" && task != \"\"",
+  "replace": "return name, task, name != \"\""
+ },
+ {
+  "name": "ext-run-depth",
+  "file": "extension.go",
+  "find": "\tif msg := nestedBlocked(os.Getenv); msg != \"\" {\n\t\treturn nil, sdk.NewToolError(msg)",
+  "replace": "\tif msg := nestedBlocked(os.Getenv); false {\n\t\treturn nil, sdk.NewToolError(msg)"
+ },
+ {
+  "name": "ext-chain-depth",
+  "file": "extension.go",
+  "find": "\tif msg := nestedBlocked(os.Getenv); msg != \"\" {\n\t\tctx.Notify(msg, \"error\")",
+  "replace": "\tif msg := nestedBlocked(os.Getenv); false {\n\t\tctx.Notify(msg, \"error\")"
+ },
+ {
+  "name": "ext-run-cwd",
+  "file": "extension.go",
+  "find": "cwd, err := resolveRunCwd(ctx.Cwd(), requested)",
+  "replace": "cwd, err := resolveRunCwd(ctx.Cwd(), requested[:0])"
+ },
+ {
+  "name": "ext-run-scope",
+  "file": "extension.go",
+  "find": "scope := ResolveExecutionAgentScope(params[\"agentScope\"])",
+  "replace": "scope := ResolveExecutionAgentScope(nil)"
+ },
+ {
+  "name": "ext-run-model",
+  "file": "extension.go",
+  "find": "out, err := runAgent(done, cwd, a, task, model)",
+  "replace": "out, err := runAgent(done, cwd, a, task, \"\")\n\t_ = model"
+ },
+ {
+  "name": "ext-chain-task",
+  "file": "extension.go",
+  "find": "agents, jsTrim(fields[1]), func",
+  "replace": "agents, fields[1], func"
+ },
+ {
+  "name": "ext-chain-answer",
+  "file": "extension.go",
+  "find": "\tctx.Notify(out, \"info\")\n",
+  "replace": "\tctx.Notify(out[:0], \"info\")\n"
+ },
+ {
+  "name": "ext-chain-last-wins",
+  "file": "extension.go",
+  "find": "\t\t\tfound = &chains[i]\n",
+  "replace": "\t\t\tif found == nil {\n\t\t\t\tfound = &chains[i]\n\t\t\t}\n"
+ }
+]

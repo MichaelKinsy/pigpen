@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-subagents",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go port of pi-subagents: agent and chain definitions, their discovery, the subagent tool's list and get actions, and single-agent and chain runs through a child pig process (partial: no parallel, async, workflow, worktree or fleet features)",
+  "keywords": ["pig-package", "subagents", "delegation", "agents", "chains", "extension"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/pi-subagents"]
+  }
+}

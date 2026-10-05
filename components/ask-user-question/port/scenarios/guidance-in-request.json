@@ -1,0 +1,18 @@
+{
+  "name": "guidance-in-request",
+  "description": "The tool definition and its prompt guidance reach the model unchanged.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}

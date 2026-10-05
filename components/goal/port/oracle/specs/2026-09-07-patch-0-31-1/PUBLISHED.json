@@ -1,0 +1,47 @@
+{
+  "verifiedAt": "2026-09-08T02:22:53.517695+00:00",
+  "releaseCommit": "cb282e2979b38bd7ce9dc566d7602d5d1d99933f",
+  "npm": {
+    "version": "0.31.1",
+    "dist": {
+      "integrity": "sha512-mci7k+TX50YR1FcLCcL28NrMvXjTL6S2IzwtfPMFz+FFies3sgBG+GcScZRH7EK2a0ZnkDtwbWtoQKMjurccKA==",
+      "shasum": "7dcee53d8add117a0dcbfb36f8adf5b7b89cbd1c",
+      "tarball": "https://registry.npmjs.org/pi-goal-x/-/pi-goal-x-0.31.1.tgz",
+      "fileCount": 62,
+      "unpackedSize": 909866,
+      "signatures": [
+        {
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+          "sig": "MEUCICFmGhK2JaphcgT31NUMV+dR2WB/9NeXrijlE65oawzGAiEA/scNMbrw/K26s2wR+SgsMFqv2zgLoV+SWd28yX5I6C4="
+        }
+      ]
+    },
+    "dist-tags": {
+      "latest": "0.31.1"
+    }
+  },
+  "github": {
+    "assets": [
+      {
+        "apiUrl": "https://api.github.com/repos/tmonk/pi-goal-x/releases/assets/549519165",
+        "contentType": "application/x-gtar",
+        "createdAt": "2026-09-07T23:22:56Z",
+        "digest": "sha256:3a4dfef7fcf4ee6db80ec9e112435b83cb8f54dfcced1c88d7723b5ae980ba2c",
+        "downloadCount": 0,
+        "id": "RA_kwDOSdMRIM4gwP89",
+        "label": "",
+        "name": "pi-goal-x-0.31.1.tgz",
+        "size": 248650,
+        "state": "uploaded",
+        "updatedAt": "2026-09-07T23:22:57Z",
+        "url": "https://github.com/tmonk/pi-goal-x/releases/download/v0.31.1/pi-goal-x-0.31.1.tgz"
+      }
+    ],
+    "isDraft": false,
+    "isPrerelease": false,
+    "publishedAt": "2026-09-08T02:22:24Z",
+    "tagName": "v0.31.1",
+    "url": "https://github.com/tmonk/pi-goal-x/releases/tag/v0.31.1"
+  },
+  "releaseCommitCI": "https://github.com/tmonk/pi-goal-x/actions/runs/34169616964"
+}

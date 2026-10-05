@@ -1,0 +1,37 @@
+{
+ "mode": "discrete",
+ "structured": true,
+ "state": "This book was a delight to read.",
+ "questions": {
+  "positive": {
+   "type": "noul",
+   "instructions": "The review is positive."
+  },
+  "stars": {
+   "type": "score",
+   "instructions": "Rating.",
+   "criteria": [
+    "Bad.",
+    "Good."
+   ]
+  },
+  "genre": {
+   "type": "choice",
+   "instructions": "Genre.",
+   "criteria": {
+    "fiction": "A story.",
+    "nonfiction": "Facts."
+   }
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "positive": true,
+    "stars": 1,
+    "genre": "fiction"
+   }
+  }
+ ],
+ "name": "discrete-native"
+}

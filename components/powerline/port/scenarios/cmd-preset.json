@@ -1,0 +1,25 @@
+{
+ "name": "cmd-preset",
+ "description": "/powerline <preset>: case and white space are normalised; the setting is persisted.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/powerline  NERD "
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/powerline minimal"
+   }
+  }
+ ]
+}

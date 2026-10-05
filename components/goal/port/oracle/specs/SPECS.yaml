@@ -1,0 +1,67 @@
+version: 1
+focused: 2026-08-04-goal-runtime-follow-up
+status_vocabulary:
+  - draft
+  - ready_for_review
+  - implementing
+  - validating
+  - audit_running
+  - audit_failed
+  - completed
+  - archived
+commands:
+  focus: /spec-focus <spec-id-or-path>
+  unfocus: /spec-unfocus
+  status: /spec-status [spec-id-or-path]
+  finish: /spec-finish [spec-id-or-path]
+  settings: /specs-settings
+specs:
+  - id: 2026-05-13-drafting-runtime-simplification
+    path: specs/2026-05-13-drafting-runtime-simplification
+    title: Simplify goal drafting while hardening runtime execution and audit
+    status: completed
+    focused: false
+    last_audit: null
+    updated: 2026-05-13
+  - id: 2026-05-17-drafting-prompt-normalization
+    path: specs/2026-05-17-drafting-prompt-normalization
+    title: Drafting prompt normalization
+    status: completed
+    focused: false
+    last_audit: null
+    updated: 2026-05-17
+  - id: 2026-08-03-codex-inspired-goal-interface
+    path: specs/2026-08-03-codex-inspired-goal-interface
+    title: Codex-inspired goal interface simplification
+    status: completed
+    focused: false
+    last_audit: 2026-08-04
+    updated: 2026-08-03
+  - id: 2026-08-04-goal-simplification-hardening
+    path: specs/2026-08-04-goal-simplification-hardening
+    title: Goal simplification hardening
+    status: completed
+    focused: false
+    last_audit: 2026-08-05
+    updated: 2026-08-05
+  - id: 2026-08-04-goal-runtime-follow-up
+    path: specs/2026-08-04-goal-runtime-follow-up
+    title: Goal runtime follow-up
+    status: completed
+    focused: true
+    last_audit: null
+    updated: 2026-08-04
+  - id: 2026-10-02-dashboard-keyboard-navigation
+    path: specs/2026-10-02-dashboard-keyboard-navigation
+    title: Dashboard keyboard navigation and single-press handling
+    status: completed
+    focused: false
+    last_audit: null
+    updated: 2026-10-02
+  - id: 2026-10-02-network-protocol-error-retry
+    path: specs/2026-10-02-network-protocol-error-retry
+    title: Network recovery for HTTP/2 PROTOCOL_ERROR
+    status: completed
+    focused: false
+    last_audit: null
+    updated: 2026-10-02

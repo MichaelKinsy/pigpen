@@ -1,0 +1,83 @@
+{
+  "name": "jev-ask",
+  "description": "The model calls jev_ask with a noul, a choice and a score question.",
+  "agentFiles": {
+    "pi-jev.json": "{\"enabled\": true, \"acknowledged\": true, \"display\": \"plain\", \"backend\": \"typesafe\", \"endpoint\": \"{{server:jev}}/v1/systemone\", \"model\": \"jev-eq\", \"retries\": 0, \"timeoutMs\": 5000}"
+  },
+  "env": {
+    "TYPESAFE_API_KEY": "tsk-eq-key-0123456789"
+  },
+  "servers": {
+    "jev": {
+      "recordHeaders": [
+        "authorization"
+      ],
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "body": "{\"model\": \"jev-eq\", \"usage\": {\"input_tokens\": 12, \"output_tokens\": 3}, \"answers\": {\"relevant\": {\"type\": \"noul\", \"noul\": 0.93}, \"label\": {\"type\": \"choice\", \"choice\": \"bug\", \"confidence\": 0.9, \"probabilities\": {\"feature\": 0.1, \"bug\": 0.9}}, \"quality\": {\"type\": \"score\", \"score\": 1.75, \"confidence\": 0.8, \"legend\": {\"0\": \"None, it only reads\", \"1\": \"Small\", \"2\": \"Large\", \"3\": \"Severe\"}, \"probabilities\": {\"0\": 0.05, \"1\": 0.1, \"2\": 0.15, \"3\": 0.7}}}}",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "times": 1
+        }
+      ]
+    }
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "jev_ask",
+          "arguments": {
+            "state": "the diff",
+            "questions": [
+              {
+                "id": "relevant",
+                "type": "noul",
+                "instructions": "Is this relevant?"
+              },
+              {
+                "id": "label",
+                "type": "choice",
+                "instructions": "Which bucket?",
+                "options": [
+                  {
+                    "name": "bug",
+                    "description": "Defect"
+                  },
+                  {
+                    "name": "feature"
+                  }
+                ]
+              },
+              {
+                "id": "quality",
+                "type": "score",
+                "instructions": "How thorough?",
+                "levels": [
+                  "Superficial",
+                  "Adequate",
+                  "Thorough"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "asked"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "ask jev about the diff"
+      }
+    }
+  ]
+}

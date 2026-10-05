@@ -1,0 +1,15 @@
+{
+ "mode": "probabilities",
+ "structured": false,
+ "state": "doc",
+ "questions": {
+  "q": {
+   "type": "noul",
+   "instructions": "?"
+  }
+ },
+ "responses": [
+  "```\n{\"answers\":{\"q\":0.5}}```"
+ ],
+ "name": "fenced-plain"
+}

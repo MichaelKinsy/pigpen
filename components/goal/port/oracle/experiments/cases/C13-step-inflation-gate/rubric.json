@@ -1,0 +1,43 @@
+[
+  {
+    "id": "create-goal-called",
+    "desc": "create_goal is called.",
+    "kind": "tool-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "sisyphus-mode",
+    "desc": "create_goal mode must be sisyphus.",
+    "kind": "tool-args-jq",
+    "tool": "create_goal",
+    "jq": ".mode == \"sisyphus\""
+  },
+  {
+    "id": "two-steps-preserved",
+    "desc": "The objective must contain step 1) and step 2).",
+    "kind": "tool-args-jq",
+    "tool": "create_goal",
+    "jq": "(.objective | contains(\"1)\")) and (.objective | contains(\"2)\"))"
+  },
+  {
+    "id": "no-step-zero",
+    "desc": "The objective must NOT contain an invented step 0).",
+    "kind": "tool-args-jq-none",
+    "tool": "create_goal",
+    "jq": ".objective | contains(\"0)\")"
+  },
+  {
+    "id": "a-txt",
+    "desc": "a.txt exists with 'alpha'.",
+    "kind": "sandbox-file-contains",
+    "path": "a.txt",
+    "pattern": "^alpha$"
+  },
+  {
+    "id": "b-txt",
+    "desc": "b.txt exists with 'beta'.",
+    "kind": "sandbox-file-contains",
+    "path": "b.txt",
+    "pattern": "^beta$"
+  }
+]

@@ -1,0 +1,302 @@
+[
+ {
+  "name": "enabled-by-default",
+  "file": "extension.go",
+  "find": "s.enabled = os.Getenv(envEnabled) == \"1\"\n\ts.backend = backendFromEnv()\n\ts.registerTool()",
+  "replace": "s.enabled = true\n\ts.backend = backendFromEnv()\n\ts.registerTool()"
+ },
+ {
+  "name": "session-start-keeps-optin",
+  "file": "extension.go",
+  "find": "\ts.enabled = os.Getenv(envEnabled) == \"1\"\n\tif backend := backendFromEnv(); backend != s.backend {",
+  "replace": "\tif backend := backendFromEnv(); backend != s.backend {"
+ },
+ {
+  "name": "session-start-callout-always",
+  "file": "extension.go",
+  "find": "if err == nil && s.isEnabled() && report.Level == pitypesafe.LevelError",
+  "replace": "if err == nil && report.Level == pitypesafe.LevelError"
+ },
+ {
+  "name": "session-start-callout-dropped",
+  "file": "extension.go",
+  "find": "s.callOut(ctx, \"start:\"+string(report.Level), \"TypeSafe is enabled but judgments are skipped. \"+report.Text)",
+  "replace": "_ = report"
+ },
+ {
+  "name": "callout-not-deduplicated",
+  "file": "extension.go",
+  "find": "if s.calledOut == key {",
+  "replace": "if false {"
+ },
+ {
+  "name": "callout-headless-notify",
+  "file": "extension.go",
+  "find": "\tif ctx.HasUI() {\n\t\tctx.Notify(text, \"warning\")\n\t\treturn\n\t}",
+  "replace": "\tctx.Notify(text, \"warning\")\n\treturn"
+ },
+ {
+  "name": "callout-warning-level",
+  "file": "extension.go",
+  "find": "ctx.Notify(text, \"warning\")",
+  "replace": "ctx.Notify(text, \"error\")"
+ },
+ {
+  "name": "disabled-message",
+  "file": "tool.go",
+  "find": "TypeSafe is disabled. Ask the operator to run /typesafe enable; do not enable it by editing configuration or environment files.",
+  "replace": "TypeSafe is disabled."
+ },
+ {
+  "name": "disabled-check-removed",
+  "file": "tool.go",
+  "find": "\tenabled, consent := s.admit()\n\tif !enabled {",
+  "replace": "\t_, consent := s.admit()\n\tif false {"
+ },
+ {
+  "name": "auth-callout-only-401",
+  "file": "tool.go",
+  "find": "rejected := safe.Code == pitypesafe.CodeHTTP && (safe.Status == 401 || safe.Status == 403)",
+  "replace": "rejected := false"
+ },
+ {
+  "name": "auth-callout-403-missed",
+  "file": "tool.go",
+  "find": "(safe.Status == 401 || safe.Status == 403)",
+  "replace": "(safe.Status == 401)"
+ },
+ {
+  "name": "auth-callout-text",
+  "file": "tool.go",
+  "find": "TypeSafe is not authenticated (",
+  "replace": "TypeSafe auth problem ("
+ },
+ {
+  "name": "tool-result-details-dropped",
+  "file": "tool.go",
+  "find": "Details: json.RawMessage(details)",
+  "replace": "Details: json.RawMessage(details[:0])"
+ },
+ {
+  "name": "tool-content-not-json",
+  "file": "tool.go",
+  "find": "sdk.ToolResult{Content: string(content)",
+  "replace": "sdk.ToolResult{Content: string(content[:0])"
+ },
+ {
+  "name": "logout-keeps-enabled",
+  "file": "command.go",
+  "find": "\t\ts.resetClient()\n\t\ts.setEnabled(false)\n\t\tif removed {",
+  "replace": "\t\ts.resetClient()\n\t\tif removed {"
+ },
+ {
+  "name": "logout-keeps-auth-state",
+  "file": "command.go",
+  "find": "\t\tpitypesafe.ClearAuthState()\n\t\ts.resetClient()",
+  "replace": "\t\ts.resetClient()"
+ },
+ {
+  "name": "logout-env-note-dropped",
+  "file": "command.go",
+  "find": "text += \" TYPESAFE_API_KEY is still set in the environment.\"",
+  "replace": "_ = text"
+ },
+ {
+  "name": "logout-message",
+  "file": "command.go",
+  "find": "\"No stored key to remove.\"",
+  "replace": "\"Nothing to remove.\""
+ },
+ {
+  "name": "disable-keeps-enabled",
+  "file": "command.go",
+  "find": "\tcase \"disable\":\n\t\ts.setEnabled(false)",
+  "replace": "\tcase \"disable\":\n\t\t_ = 0"
+ },
+ {
+  "name": "disable-message",
+  "file": "command.go",
+  "find": "TypeSafe disabled for future agent calls. In-flight requests are not cancelled.",
+  "replace": "Disabled."
+ },
+ {
+  "name": "usage-text",
+  "file": "command.go",
+  "find": "\"Usage: /typesafe \"+strings.Join(actions, \" | \")",
+  "replace": "\"Usage: /typesafe\""
+ },
+ {
+  "name": "usage-level",
+  "file": "command.go",
+  "find": "strings.Join(actions, \" | \"), \"warning\")",
+  "replace": "strings.Join(actions, \" | \"), \"info\")"
+ },
+ {
+  "name": "headless-message",
+  "file": "command.go",
+  "find": "This command needs interactive Pi. For headless tool use, explicitly set PI_TYPESAFE_ENABLED=1 and TYPESAFE_API_KEY before launching Pi.",
+  "replace": "Needs UI."
+ },
+ {
+  "name": "login-shadow-check-removed",
+  "file": "command.go",
+  "find": "if pitypesafe.EnvKeySet() {\n\t\t\treport(\"TYPESAFE_API_KEY is set in the environment and takes precedence",
+  "replace": "if false {\n\t\t\treport(\"TYPESAFE_API_KEY is set in the environment and takes precedence"
+ },
+ {
+  "name": "login-cancel-message",
+  "file": "command.go",
+  "find": "Login cancelled; nothing was saved.",
+  "replace": "Cancelled."
+ },
+ {
+  "name": "enable-missing-key-check-removed",
+  "file": "command.go",
+  "find": "\t\tcase pitypesafe.KeyMissing:\n\t\t\treport(\"Run /typesafe login first",
+  "replace": "\t\tcase pitypesafe.KeyNotRequired:\n\t\t\treport(\"Run /typesafe login first"
+ },
+ {
+  "name": "enable-unusable-message",
+  "file": "command.go",
+  "find": "The stored key cannot be used. ",
+  "replace": ""
+ },
+ {
+  "name": "enable-confirm-ignored",
+  "file": "command.go",
+  "find": "\t\tif ok {\n\t\t\ts.setEnabled(true)",
+  "replace": "\t\tif ok || true {\n\t\t\ts.setEnabled(true)"
+ },
+ {
+  "name": "enable-never-confirms",
+  "file": "command.go",
+  "find": "ok, err := ctx.Confirm(\"Enable TypeSafe for this session?\", disclosure(backend))",
+  "replace": "ok, err := true, error(nil)"
+ },
+ {
+  "name": "enable-title",
+  "file": "command.go",
+  "find": "\"Enable TypeSafe for this session?\"",
+  "replace": "\"Enable?\""
+ },
+ {
+  "name": "setup-current-label",
+  "file": "command.go",
+  "find": "current = \"configured via \" + pitypesafe.KeySourceLabel(situation)",
+  "replace": "current = \"configured\""
+ },
+ {
+  "name": "playground-invalid-json-message",
+  "file": "command.go",
+  "find": "Invalid JSON. Keep quoted strings on one line; nothing was sent.",
+  "replace": "Invalid JSON."
+ },
+ {
+  "name": "playground-confirm-before-validate",
+  "file": "command.go",
+  "find": "\tvalidated, err := pitypesafe.PrepareEvaluationRequest(request, pitypesafe.PrepareOptions{})\n\tif err != nil {\n\t\treturn err\n\t}\n\tconsent := s.consentNow()\n\tok, err := ctx.Confirm(\"Send this TypeSafe request?\", disclosure(s.currentBackend()))\n\tif err != nil || !ok {\n\t\treturn err\n\t}",
+  "replace": "\tconsent := s.consentNow()\n\tok, err := ctx.Confirm(\"Send this TypeSafe request?\", disclosure(s.currentBackend()))\n\tif err != nil || !ok {\n\t\treturn err\n\t}\n\tvalidated, err := pitypesafe.PrepareEvaluationRequest(request, pitypesafe.PrepareOptions{})\n\tif err != nil {\n\t\treturn err\n\t}"
+ },
+ {
+  "name": "test-confirm-title",
+  "file": "command.go",
+  "find": "\"Send this TypeSafe request?\"",
+  "replace": "\"Send?\""
+ },
+ {
+  "name": "status-model-name",
+  "file": "command.go",
+  "find": "model := pitypesafe.DefaultModelID(pitypesafe.DefaultBackend)",
+  "replace": "model := \"jev\""
+ },
+ {
+  "name": "status-warning-level",
+  "file": "command.go",
+  "find": "if auth.Level == pitypesafe.LevelError && enabled {",
+  "replace": "if auth.Level == pitypesafe.LevelError {"
+ },
+ {
+  "name": "status-session-cap",
+  "file": "command.go",
+  "find": "\"Session %d/%d attempts, %d successful",
+  "replace": "\"Session %d/%d tries, %d successful"
+ },
+ {
+  "name": "result-not-appended",
+  "file": "command.go",
+  "find": "return ctx.AppendEntry(entryType, json.RawMessage(details))",
+  "replace": "_ = details\n\treturn nil"
+ },
+ {
+  "name": "entry-type",
+  "file": "extension.go",
+  "find": "entryType   = \"typesafe-result\"",
+  "replace": "entryType   = \"typesafe-results\""
+ },
+ {
+  "name": "backend-switch-keeps-consent",
+  "file": "command.go",
+  "find": "\ts.consent++\n\ts.enabled = false",
+  "replace": "\ts.consent++"
+ },
+ {
+  "name": "ownmodel-disclosure-typesafe",
+  "file": "tool.go",
+  "find": "if backend == pitypesafe.BackendOwnModel {\n\t\treturn ownModelMsg",
+  "replace": "if false {\n\t\treturn ownModelMsg"
+ },
+ {
+  "name": "format-noul",
+  "file": "format.go",
+  "find": "\"%s: P(yes) = %s\"",
+  "replace": "\"%s: p = %s\""
+ },
+ {
+  "name": "format-choice",
+  "file": "format.go",
+  "find": "%s: %s \u00b7 confidence %s\", label, jsonString(choice)",
+  "replace": "%s: %s (confidence %s)\", label, jsonString(choice)"
+ },
+ {
+  "name": "format-expanded-ignored",
+  "file": "format.go",
+  "find": "if expanded && answer[\"type\"] != \"noul\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "render-partial",
+  "file": "tool.go",
+  "find": "\"TypeSafe \u00b7 waiting for response\"",
+  "replace": "\"waiting\""
+ },
+ {
+  "name": "render-call-count",
+  "file": "tool.go",
+  "find": "len(questions), where)",
+  "replace": "len(questions)+1, where)"
+ },
+ {
+  "name": "consent-generation-ignored",
+  "file": "extension.go",
+  "find": "\tif s.consent != consent {\n\t\treturn nil, errDestinationChanged",
+  "replace": "\tif false {\n\t\treturn nil, errDestinationChanged"
+ },
+ {
+  "name": "backend-switch-keeps-generation",
+  "file": "command.go",
+  "find": "\ts.backend = choice\n\ts.consent++",
+  "replace": "\ts.backend = choice"
+ },
+ {
+  "name": "trailing-words-are-an-action",
+  "file": "command.go",
+  "find": "\taction := text\n\tif action == \"\" {",
+  "replace": "\taction := text\n\tif len(fields) > 0 {\n\t\taction = fields[0]\n\t}\n\tif action == \"\" {"
+ },
+ {
+  "name": "ownmodel-callout-blames-key",
+  "file": "tool.go",
+  "find": "\t\tif s.currentBackend() == pitypesafe.BackendOwnModel {\n\t\t\t// The own-model",
+  "replace": "\t\tif false {\n\t\t\t// The own-model"
+ }
+]

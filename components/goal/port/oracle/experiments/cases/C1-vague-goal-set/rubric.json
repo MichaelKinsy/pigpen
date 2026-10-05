@@ -1,0 +1,26 @@
+[
+  {
+    "id": "no-create-goal",
+    "desc": "create_goal must not be called without a concrete explicit objective.",
+    "kind": "tool-not-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "no-active-goal",
+    "desc": "No goal file may be created.",
+    "kind": "sandbox-glob-not-exists",
+    "glob": ".pi/goals/active_goal_*.md"
+  },
+  {
+    "id": "no-draft-tools",
+    "desc": "Drafting tools are removed.",
+    "kind": "tool-not-called",
+    "tool": "propose_goal_draft"
+  },
+  {
+    "id": "no-work-tools",
+    "desc": "No execution work may start from a vague request.",
+    "kind": "tool-not-called",
+    "tool": "bash"
+  }
+]

@@ -1,0 +1,119 @@
+{
+  "name": "commands",
+  "description": "/jev mode, last, output, check, off and on.",
+  "agentFiles": {
+    "pi-jev.json": "{\"enabled\": true, \"acknowledged\": true, \"display\": \"plain\", \"backend\": \"typesafe\", \"endpoint\": \"{{server:jev}}/v1/systemone\", \"model\": \"jev-eq\", \"retries\": 0, \"timeoutMs\": 5000}"
+  },
+  "env": {
+    "TYPESAFE_API_KEY": "tsk-eq-key-0123456789"
+  },
+  "servers": {
+    "jev": {
+      "recordHeaders": [
+        "authorization"
+      ],
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "body": "{\"model\": \"jev-eq\", \"answers\": {\"destructive\": {\"type\": \"noul\", \"noul\": 0.99}, \"exfiltration\": {\"type\": \"noul\", \"noul\": 0.79}, \"beyond_scope\": {\"type\": \"noul\", \"noul\": 0.98}, \"impact\": {\"type\": \"score\", \"score\": 3.0, \"confidence\": 0.91, \"legend\": {\"0\": \"None, it only reads\", \"1\": \"Small\", \"2\": \"Large\", \"3\": \"Severe\"}, \"probabilities\": {\"0\": 0.05, \"1\": 0.1, \"2\": 0.15, \"3\": 0.7}}}, \"usage\": {\"input_tokens\": 100, \"output_tokens\": 4}}",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "times": 1
+        },
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "body": "{\"model\": \"jev-eq\", \"answers\": {\"leaks_secret\": {\"type\": \"noul\", \"noul\": 0.94}, \"failure_class\": {\"type\": \"choice\", \"choice\": \"transient\", \"confidence\": 0.8, \"probabilities\": {\"transient\": 0.8}}}}",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "times": 1
+        },
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "body": "{\"model\": \"jev-eq\", \"answers\": {\"destructive\": {\"type\": \"noul\", \"noul\": 0.99}, \"exfiltration\": {\"type\": \"noul\", \"noul\": 0.1}, \"beyond_scope\": {\"type\": \"noul\", \"noul\": 0.1}, \"impact\": {\"type\": \"score\", \"score\": 1.0, \"confidence\": 0.9, \"legend\": {\"0\": \"None, it only reads\", \"1\": \"Small\", \"2\": \"Large\", \"3\": \"Severe\"}, \"probabilities\": {\"0\": 0.05, \"1\": 0.1, \"2\": 0.15, \"3\": 0.7}}}, \"usage\": {\"input_tokens\": 100, \"output_tokens\": 4}}",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "times": 1
+        }
+      ]
+    }
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo hi"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "please run echo hi"
+      }
+    },
+    {
+      "name": "last",
+      "rpc": {
+        "type": "prompt",
+        "message": "/jev last"
+      }
+    },
+    {
+      "name": "output",
+      "rpc": {
+        "type": "prompt",
+        "message": "/jev output"
+      }
+    },
+    {
+      "name": "mode-enforce",
+      "rpc": {
+        "type": "prompt",
+        "message": "/jev mode enforce"
+      }
+    },
+    {
+      "name": "mode-bogus",
+      "rpc": {
+        "type": "prompt",
+        "message": "/jev mode bogus"
+      }
+    },
+    {
+      "name": "check",
+      "rpc": {
+        "type": "prompt",
+        "message": "/jev check Rm -RF /tmp/Build"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/jev off"
+      }
+    },
+    {
+      "name": "on",
+      "rpc": {
+        "type": "prompt",
+        "message": "/jev on"
+      }
+    }
+  ]
+}

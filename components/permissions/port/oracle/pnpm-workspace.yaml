@@ -1,0 +1,78 @@
+packages:
+  - "packages/*"
+
+# pi-subagents-* extension packages consume their siblings from the npm registry
+# (the published tarball ships the bundled dist/public.d.ts), not via workspace
+# symlinks — a symlinked sibling would resolve exports.types to the gitignored,
+# unbuilt dist on a fresh checkout. Cross-package links must opt in explicitly
+# with the workspace: protocol.
+linkWorkspacePackages: false
+
+# Centralize version management across all packages.
+# In each package.json, use "catalog:" as the version specifier
+# to pull from here (e.g. "vitest": "catalog:").
+catalog:
+  "@biomejs/biome": "^2.5.11"
+  "eslint": "^10.9.1"
+  "globals": "^17.12.0"
+  "typescript-eslint": "^8.69.0"
+  # Pinned exactly, not caret-ranged: 0.2.45 regressed MD013's sentence-per-line
+  # reflow so that a bold lead-in ending `.**` followed by a line opening with a
+  # code span is counted as one sentence, and `rumdl fmt` joins the two lines --
+  # inverting the mode we configure in .rumdl.toml. On this repo's corpus 0.2.62
+  # reports 767 such findings across 333 files. 0.2.24 is the newest release that
+  # is clean on all 1086 files. Upstream: https://github.com/rvben/rumdl/issues/811
+  # Keep prek.toml's rumdl-pre-commit rev in lockstep with this pin.
+  "rumdl": "0.2.24"
+  "typescript": "^6.0.3"
+  "vitest": "^4.1.11"
+  # Istanbul coverage for `fallow health --coverage`, which needs Istanbul
+  # format (not v8/c8 native). Root-only: a coverage run is `pnpm --filter
+  # <pkg> exec vitest run --coverage`, so no package manifest references it.
+  "@vitest/coverage-istanbul": "^4.1.11"
+  "@types/node": "^22.15.3"
+  fallow: "^3.22.0"
+  rollup: "^4.63.1"
+  "rollup-plugin-dts": "^6.5.1"
+
+allowBuilds:
+  "@google/genai": true
+  esbuild: false
+  fallow: true
+  koffi: true
+  protobufjs: true
+  tree-sitter-bash: true
+
+minimumReleaseAgeExclude:
+  - '@fallow-cli/darwin-arm64@3.22.0'
+  - '@fallow-cli/darwin-x64@3.22.0'
+  - '@fallow-cli/linux-arm64-gnu@3.22.0'
+  - '@fallow-cli/linux-arm64-musl@3.22.0'
+  - '@fallow-cli/linux-x64-gnu@3.22.0'
+  - '@fallow-cli/linux-x64-musl@3.22.0'
+  - '@fallow-cli/win32-arm64-msvc@3.22.0'
+  - '@fallow-cli/win32-x64-msvc@3.22.0'
+  - fallow@3.22.0
+  - '@gotgenes/pi-permission-system@27.0.0'
+  - '@earendil-works/pi-agent-core@0.84.4 || 1.0.0'
+  - '@earendil-works/pi-ai@0.84.4 || 1.0.0'
+  - '@earendil-works/pi-client@0.84.4'
+  - '@earendil-works/pi-coding-agent@0.84.4 || 1.0.0'
+  - '@earendil-works/pi-protocol@0.84.4'
+  - '@earendil-works/pi-telemetry@0.84.4 || 1.0.0'
+  - '@earendil-works/pi-tui@0.84.4 || 1.0.0'
+  - globals@17.12.0
+  - fallow-type-aware@3.22.0
+  - '@earendil-works/chord@1.0.0'
+  - '@earendil-works/pi-codemode@1.0.0'
+  - '@earendil-works/pi-mcp@1.0.0'
+
+# A freshly-published first-party sibling (e.g. a same-day @gotgenes/* release a
+# dependent package bumps to) cannot be unblocked via minimumReleaseAgeExclude:
+# that list is honored during dependency resolution but NOT during pnpm's
+# lockfile supply-chain verification pass, which re-applies minimumReleaseAge to
+# every pinned lockfile entry and fails CI's frozen install. trustLockfile
+# treats the committed, PR-reviewed lockfile as trusted and skips that
+# re-verification, so a same-day sibling release installs immediately; the age
+# delay still applies to fresh `pnpm add`/`update` resolutions.
+trustLockfile: true

@@ -1,0 +1,45 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG with popular Pi extensions, ported to Go. Each member is a Package under components/ and a row in ports/ports.json.
+name: pig-popular
+description: "PiG with Go ports of popular Pi extensions: the rpiv-todo task list (tool, /todos, live overlay), the ask_user_question tool (dialog walker; the tabbed questionnaire is not ported), the powerline status bar (no custom editor), pi-goal-x's goal files and direct commands (no scheduler or drafting), a permission gate (rules for tool calls: no approval dialog, full bash parsing or path rules) and subagents (agent and chain definitions, list and get, single-agent and chain runs through a child pig; no parallel, async or workflow runs)."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  todo: local:../../components/todo
+  ask-user-question: local:../../components/ask-user-question
+  powerline: local:../../components/powerline
+  goal: local:../../components/goal
+  permissions: local:../../components/permissions
+  subagents: local:../../components/subagents
+extensions:
+  # The todo tool, /todos, the overlay and the collapse shortcut (juicesharp, @juicesharp/rpiv-todo 2.11.0, MIT).
+  - name: rpiv-todo
+    origins: [package:todo]
+    tools: [todo]
+  # The ask_user_question tool (juicesharp, @juicesharp/rpiv-ask-user-question 2.11.0, MIT); slice A: the dialog walker.
+  - name: rpiv-ask-user-question
+    origins: [package:ask-user-question]
+    tools: [ask_user_question]
+  # The powerline status bar and /powerline (Nico Bailon, pi-powerline-footer 0.19.1, MIT as declared in its package.json); partial.
+  - name: powerline-footer
+    origins: [package:powerline]
+    tools: []
+  # Durable goals as files under .pi/goals and /goal-direct, /goal-list, /goal-pause, /goal-unfocus, /goal-clear (tmonk, pi-goal-x 0.32.3, MIT); partial: no scheduler, drafting or auditor.
+  - name: pi-goal-x
+    origins: [package:goal]
+    tools: []
+  # Allow, ask and deny rules for tool calls and the tool_call gate (MasuRii and Christopher D. Lasher, @gotgenes/pi-permission-system 39.0.3, MIT); partial: no approval dialog, bash parsing or path rules.
+  - name: pi-permission-system
+    origins: [package:permissions]
+    tools: []
+  # Delegation to specialist agents: definitions and discovery, subagent list and get, single-agent and chain runs (Nico Bailon, pi-subagents 0.73.1, MIT); partial.
+  - name: pi-subagents
+    origins: [package:subagents]
+    tools: [bg_wait, subagent, subagent_supervisor, subagents_enable]
+skills: []
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

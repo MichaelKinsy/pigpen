@@ -1,0 +1,3833 @@
+[
+ {
+  "file": "active-turn-reconnect",
+  "serial": false,
+  "suite": [
+   "active-turn reconnect"
+  ],
+  "title": "replays offline output and accepts steering and cancellation after reconnect",
+  "ok": true
+ },
+ {
+  "file": "active-turn-reconnect",
+  "serial": false,
+  "suite": [
+   "active-turn reconnect"
+  ],
+  "title": "replays a turn that completed while its client was offline",
+  "ok": true
+ },
+ {
+  "file": "active-turn-reconnect",
+  "serial": false,
+  "suite": [
+   "active-turn reconnect"
+  ],
+  "title": "falls back to an active-turn snapshot and continues streaming",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity descriptions"
+  ],
+  "title": "names the file a read touches",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity descriptions"
+  ],
+  "title": "renders paths relative to the workspace",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity descriptions"
+  ],
+  "title": "shows the command a bash call runs",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity descriptions"
+  ],
+  "title": "shortens the middle, keeping both informative ends",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity descriptions"
+  ],
+  "title": "falls back to the tool's own name",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity descriptions"
+  ],
+  "title": "copes with missing arguments",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity over a turn"
+  ],
+  "title": "tracks thinking, tools, and responding in order",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity over a turn"
+  ],
+  "title": "clears the description when the turn ends",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity over a turn"
+  ],
+  "title": "clears it on a cancelled turn too",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity over a turn"
+  ],
+  "title": "does not re-send an unchanged description",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity over a turn"
+  ],
+  "title": "emits schema-conforming actions",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity over a turn",
+   "toolInputFor"
+  ],
+  "title": "shows the one argument a call is about",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity over a turn",
+   "toolInputFor"
+  ],
+  "title": "keeps a search's scope, and drops the defaults models restate",
+  "ok": true
+ },
+ {
+  "file": "activity",
+  "serial": false,
+  "suite": [
+   "activity over a turn",
+   "toolInputFor"
+  ],
+  "title": "falls back to the arguments for a tool it does not know",
+  "ok": true
+ },
+ {
+  "file": "changeset-lifecycle",
+  "serial": true,
+  "suite": [],
+  "title": "observes changes during the initial scan and rebuilds changed ignore rules",
+  "ok": true
+ },
+ {
+  "file": "changeset-lifecycle",
+  "serial": true,
+  "suite": [],
+  "title": "refreshes file changes while a turn is still active",
+  "ok": true
+ },
+ {
+  "file": "changeset-lifecycle",
+  "serial": true,
+  "suite": [],
+  "title": "does not recursively watch when ignored paths cannot be determined",
+  "ok": true
+ },
+ {
+  "file": "changeset-lifecycle",
+  "serial": true,
+  "suite": [],
+  "title": "publishes an explicit error when Git cannot compute the changeset",
+  "ok": true
+ },
+ {
+  "file": "changeset-lifecycle",
+  "serial": true,
+  "suite": [],
+  "title": "drains an in-flight scan before deleting its channel",
+  "ok": true
+ },
+ {
+  "file": "changeset-uri",
+  "serial": false,
+  "suite": [
+   "pi changeset URIs"
+  ],
+  "title": "builds stable static catalogue channels",
+  "ok": true
+ },
+ {
+  "file": "changeset-uri",
+  "serial": false,
+  "suite": [
+   "pi changeset URIs"
+  ],
+  "title": "rejects channels the host did not advertise",
+  "ok": true
+ },
+ {
+  "file": "changeset",
+  "serial": true,
+  "suite": [
+   "Git changesets"
+  ],
+  "title": "keeps the latest commit separate from uncommitted work and refreshes it",
+  "ok": true
+ },
+ {
+  "file": "changeset",
+  "serial": true,
+  "suite": [
+   "Git changesets"
+  ],
+  "title": "limits changes to the session working-directory subtree",
+  "ok": true
+ },
+ {
+  "file": "changeset",
+  "serial": true,
+  "suite": [
+   "Git changesets"
+  ],
+  "title": "ignores ambient Git repository overrides",
+  "ok": true
+ },
+ {
+  "file": "changeset",
+  "serial": true,
+  "suite": [
+   "Git changesets"
+  ],
+  "title": "omits changesets when Git is unavailable",
+  "ok": true
+ },
+ {
+  "file": "changeset",
+  "serial": true,
+  "suite": [
+   "Git changesets"
+  ],
+  "title": "omits changesets outside Git workspaces",
+  "ok": true
+ },
+ {
+  "file": "changeset",
+  "serial": true,
+  "suite": [
+   "Git changesets"
+  ],
+  "title": "omits Latest Commit before the repository has a commit",
+  "ok": true
+ },
+ {
+  "file": "changeset",
+  "serial": true,
+  "suite": [],
+  "title": "resumes changeset updates when durable session deletion fails",
+  "ok": true
+ },
+ {
+  "file": "changeset",
+  "serial": true,
+  "suite": [],
+  "title": "hydrates the parent session when its changeset is subscribed directly",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "creates the session's default chat and points defaultChat at it",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "runs a client turn through the backend and streams the reply back",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "adapts supported attachments into pi prompt text",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "keeps the session catalog's chat summary in step",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "forwards steering text and images to the active backend",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "consumes a queued message as its own turn once the chat goes idle",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "holds a queued message until the active turn settles",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "does not start a prompt cancelled during model selection",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "does not run a prompt cancelled during backend preflight",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver"
+  ],
+  "title": "anchors a cancelled turn before resuming queued work",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver \u2014 backend failure"
+  ],
+  "title": "marks the session failed when the backend cannot start",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "chat driver \u2014 backend failure"
+  ],
+  "title": "closes the turn when prompt() rejects before any agent event",
+  "ok": true
+ },
+ {
+  "file": "chat-driver",
+  "serial": false,
+  "suite": [
+   "steering message lifetime"
+  ],
+  "title": "clears the pending message once pi consumes it",
+  "ok": true
+ },
+ {
+  "file": "client-actions",
+  "serial": false,
+  "suite": [
+   "pi client-action policy"
+  ],
+  "title": "accounts for every client action on channels this host serves",
+  "ok": true
+ },
+ {
+  "file": "client-actions",
+  "serial": false,
+  "suite": [
+   "pi client-action policy"
+  ],
+  "title": "rejects actions addressed to the wrong channel kind",
+  "ok": true
+ },
+ {
+  "file": "client-actions",
+  "serial": false,
+  "suite": [
+   "pi client-action policy"
+  ],
+  "title": "rejects capabilities pi does not implement",
+  "ok": true
+ },
+ {
+  "file": "client-actions",
+  "serial": false,
+  "suite": [
+   "pi client-action policy"
+  ],
+  "title": "rejects malformed supported actions without mutating state",
+  "ok": true
+ },
+ {
+  "file": "client-actions",
+  "serial": false,
+  "suite": [
+   "pi client-action policy"
+  ],
+  "title": "validates turn and user-message invariants",
+  "ok": true
+ },
+ {
+  "file": "client-actions",
+  "serial": false,
+  "suite": [
+   "pi client-action policy"
+  ],
+  "title": "keeps state-only draft and queued-message actions",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "client URI dialects over the wire"
+  ],
+  "title": "answers VS Code at the URIs it computes for itself",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "client URI dialects over the wire"
+  ],
+  "title": "applies the VS Code dialect to initialize-time subscriptions",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "client URI dialects over the wire"
+  ],
+  "title": "applies the unnamed provider-alias client dialect to initialize-time subscriptions",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "VS Code session disposal workaround"
+  ],
+  "title": "protects a durable session that this connection did not create",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "VS Code session disposal workaround"
+  ],
+  "title": "still disposes an empty session created by this VS Code connection",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "VS Code session disposal workaround"
+  ],
+  "title": "restores an empty session after disposal fails so VS Code can retry",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "VS Code session disposal workaround"
+  ],
+  "title": "protects a session after its first turn starts",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "session URI classification"
+  ],
+  "title": "recognises only canonical or explicitly allowed session schemes",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "session URI classification"
+  ],
+  "title": "does not infer sessions from other channel schemes",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "session URI classification"
+  ],
+  "title": "retargets VS Code's chat-addressed rename to the owning session",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "session URI classification"
+  ],
+  "title": "rewrites URI-bearing action and catalogue fields for VS Code",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "session URI classification"
+  ],
+  "title": "leaves VS Code's client-chosen terminal URI outside session translation",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "session URI classification"
+  ],
+  "title": "does not hydrate or dispose a durable session through VS Code's terminal URI",
+  "ok": true
+ },
+ {
+  "file": "client-workarounds",
+  "serial": false,
+  "suite": [
+   "session URI classification"
+  ],
+  "title": "accepts the provider scheme but rejects an undeclared session scheme",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "mention parsing"
+  ],
+  "title": "finds a mention the cursor sits in",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "mention parsing"
+  ],
+  "title": "finds a bare mention at the start of the text",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "mention parsing"
+  ],
+  "title": "ignores an `@` that is not preceded by whitespace",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "mention parsing"
+  ],
+  "title": "ignores a cursor that is past the end of the mention",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "mention parsing"
+  ],
+  "title": "returns the empty query for a lone trigger",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "offers files matching the typed prefix",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "attaches the resource each item refers to",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "marks the range the client should replace",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "returns nested files instead of directory navigation items",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "matches a typed relative-path prefix",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "matches a nested file by basename",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "keeps the temporary directory skip list narrow",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "does not interpret a query as path traversal",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "returns nothing for a completion kind it does not implement",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "returns nothing when the cursor is not in a mention",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "returns nothing for a chat it has no directory for",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions"
+  ],
+  "title": "caps how many items it returns",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions over the wire"
+  ],
+  "title": "advertises only the trigger it can answer",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions over the wire"
+  ],
+  "title": "serves a schema-conforming result",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions over the wire"
+  ],
+  "title": "rejects non-chat completion targets",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions over the wire"
+  ],
+  "title": "maps provider-alias completion targets onto the default chat",
+  "ok": true
+ },
+ {
+  "file": "completions",
+  "serial": false,
+  "suite": [
+   "completions without a handler"
+  ],
+  "title": "answers with an empty list rather than MethodNotFound",
+  "ok": true
+ },
+ {
+  "file": "delete-session",
+  "serial": false,
+  "suite": [
+   "session file deletion"
+  ],
+  "title": "treats an already-missing file as success",
+  "ok": true
+ },
+ {
+  "file": "delete-session",
+  "serial": false,
+  "suite": [
+   "session file deletion"
+  ],
+  "title": "prefers trash and guards a path that looks like an option",
+  "ok": true
+ },
+ {
+  "file": "delete-session",
+  "serial": false,
+  "suite": [
+   "session file deletion"
+  ],
+  "title": "falls back to unlink when trash exits successfully but leaves the file",
+  "ok": true
+ },
+ {
+  "file": "delete-session",
+  "serial": false,
+  "suite": [
+   "session file deletion"
+  ],
+  "title": "recognizes trash success even when the command exits nonzero",
+  "ok": true
+ },
+ {
+  "file": "delete-session",
+  "serial": false,
+  "suite": [
+   "session file deletion"
+  ],
+  "title": "falls back to unlink when trash is unavailable or fails",
+  "ok": true
+ },
+ {
+  "file": "delete-session",
+  "serial": false,
+  "suite": [
+   "session file deletion"
+  ],
+  "title": "returns an unlink error instead of claiming deletion",
+  "ok": true
+ },
+ {
+  "file": "direct-settings",
+  "serial": false,
+  "suite": [
+   "direct listener settings"
+  ],
+  "title": "creates a private, reusable endpoint configuration on first use",
+  "ok": true
+ },
+ {
+  "file": "direct-settings",
+  "serial": false,
+  "suite": [
+   "direct listener settings"
+  ],
+  "title": "takes an existing file literally and defaults only optional fields",
+  "ok": true
+ },
+ {
+  "file": "direct-settings",
+  "serial": false,
+  "suite": [
+   "direct listener settings"
+  ],
+  "title": "rejects malformed or incomplete files instead of inventing replacements",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 turn boundary"
+  ],
+  "title": "spans several agent runs in a single turn",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 turn boundary"
+  ],
+  "title": "only closes the turn on agent_settled",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 turn boundary"
+  ],
+  "title": "reports an aborted run as cancelled, not complete",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 turn boundary"
+  ],
+  "title": "reports a failed run as an error and marks the chat",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 turn boundary"
+  ],
+  "title": "ignores events after the turn has closed",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 turn boundary"
+  ],
+  "title": "can be closed without agent_settled",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 part identity"
+  ],
+  "title": "keeps contentIndex collisions across messages apart",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 part identity"
+  ],
+  "title": "appends consecutive deltas into one part",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 part identity"
+  ],
+  "title": "routes thinking into a reasoning part, separate from markdown",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 part identity"
+  ],
+  "title": "creates parts in arrival order so interleaving survives",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 part identity"
+  ],
+  "title": "recovers a block a provider never streamed",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 part identity"
+  ],
+  "title": "does not duplicate a block that was streamed",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 part identity"
+  ],
+  "title": "emits no part for an empty delta",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 tool calls"
+  ],
+  "title": "drives a tool call from streaming to completed without confirmation",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 tool calls"
+  ],
+  "title": "publishes partial output while a tool is still running",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 tool calls"
+  ],
+  "title": "never enters pending-confirmation",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 tool calls"
+  ],
+  "title": "marks a failed tool call as unsuccessful",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 tool calls"
+  ],
+  "title": "force-cancels a tool call still running when the turn ends",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 tool calls"
+  ],
+  "title": "ignores tool events for a call it never saw",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 usage and schema"
+  ],
+  "title": "carries token usage onto the turn",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 usage and schema"
+  ],
+  "title": "keeps the usage fields the protocol has no slot for",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 usage and schema"
+  ],
+  "title": "emits only schema-conforming actions",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 outcome from stopReason"
+  ],
+  "title": "treats an aborted assistant message as a cancelled turn",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 outcome from stopReason"
+  ],
+  "title": "treats a failed assistant message as an error turn",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 injected messages"
+  ],
+  "title": "gives an injected user message its own turn",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 injected messages"
+  ],
+  "title": "does not split on the run's own opening prompt",
+  "ok": true
+ },
+ {
+  "file": "event-mapper",
+  "serial": false,
+  "suite": [
+   "event mapper \u2014 injected messages"
+  ],
+  "title": "keeps part ids unique across a split",
+  "ok": true
+ },
+ {
+  "file": "fetch-turns",
+  "serial": false,
+  "suite": [
+   "fetchTurns"
+  ],
+  "title": "pages backward while preserving a complete oldest-first transcript",
+  "ok": true
+ },
+ {
+  "file": "fetch-turns",
+  "serial": false,
+  "suite": [
+   "fetchTurns"
+  ],
+  "title": "rejects a session channel for this chat-scoped command",
+  "ok": true
+ },
+ {
+  "file": "fetch-turns",
+  "serial": false,
+  "suite": [
+   "fetchTurns"
+  ],
+  "title": "rejects a cursor it did not issue",
+  "ok": true
+ },
+ {
+  "file": "fetch-turns",
+  "serial": false,
+  "suite": [
+   "fetchTurns \u2014 nothing older"
+  ],
+  "title": "offers no cursor for a session that was never compacted",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "negotiates the client's most-preferred supported version",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "does not advertise deferred host capabilities",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "ignores versions it does not know before the current one",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "rejects an older wire model with UnsupportedProtocolVersion",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "returns a snapshot for each initialSubscription in the same round-trip",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "skips unknown initialSubscriptions instead of failing the handshake",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "rejects an initialize without a clientId",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "rejects malformed initialize descriptors",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "answers ping before initialize",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "ignores notifications before initialize or reconnect",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "requires initialize or reconnect before other requests",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "rejects a second handshake without changing client compatibility mode",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "rejects malformed reconnect state without binding the connection",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "handshake"
+  ],
+  "title": "rejects malformed subscription lists without binding or poisoning the connection",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "connection token"
+  ],
+  "title": "accepts the token as `token`",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "connection token"
+  ],
+  "title": "accepts the token as `tkn`",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "connection token"
+  ],
+  "title": "rejects a wrong token",
+  "ok": true
+ },
+ {
+  "file": "handshake",
+  "serial": false,
+  "suite": [
+   "connection token"
+  ],
+  "title": "ignores a VS Code tkn when the listener requires no token",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "read state after hydration"
+  ],
+  "title": "reports every catalogue entry as read",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "read state after hydration"
+  ],
+  "title": "reports a hydrated session as read",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "read state after hydration"
+  ],
+  "title": "keeps session-owned read state when a starting turn marks the chat unread",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "disposing a hydrated session"
+  ],
+  "title": "removes it from the catalogue and deletes the file",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "disposing a hydrated session"
+  ],
+  "title": "prevents an unloaded session from being recreated or hydrated during deletion",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "resuming a hydrated session"
+  ],
+  "title": "starts an agent on the first turn and prompts it",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "resuming a hydrated session"
+  ],
+  "title": "resumes onto the existing transcript rather than a fresh one",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "model selection on a hydrated session"
+  ],
+  "title": "seeds the picker from the model the session was using",
+  "ok": true
+ },
+ {
+  "file": "hydrated-session-lifecycle",
+  "serial": false,
+  "suite": [
+   "renaming a hydrated session"
+  ],
+  "title": "persists the name into the session file",
+  "ok": true
+ },
+ {
+  "file": "image-input",
+  "serial": false,
+  "suite": [
+   "pi image input"
+  ],
+  "title": "converts an unsupported image type even when auto-resize is disabled",
+  "ok": true
+ },
+ {
+  "file": "image-input",
+  "serial": false,
+  "suite": [
+   "pi image input"
+  ],
+  "title": "fails when image bytes cannot be prepared",
+  "ok": true
+ },
+ {
+  "file": "image-session",
+  "serial": false,
+  "suite": [],
+  "title": "passes and persists images while honouring preflight cancellation",
+  "ok": true
+ },
+ {
+  "file": "live-turn",
+  "serial": false,
+  "suite": [],
+  "title": "live turn # SKIP needs a real model \u2014 set PI_AHP_LIVE_SETTINGS and PI_AHP_LIVE_AUTH",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "plain-text \u2014 A reply with no tool calls \u2014 the simplest possible turn.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "single-tool \u2014 One tool call, then an answer derived from its result.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "parallel-tools \u2014 Several tool calls in one assistant message \u2014 exercises contentIndex fan-out.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "tool-loop \u2014 Two or more assistant messages in one turn \u2014 the case where contentIndex restarts and partIds must not collide.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "tool-error \u2014 A failing tool call the agent has to recover from.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "abort \u2014 A turn cancelled while it is running.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "steering \u2014 A steering message injected into a running turn.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "tool-edit \u2014 An `edit` call \u2014 the one tool whose result carries a diff and a patch.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "tool-write \u2014 A `write` call \u2014 a whole new file rather than an edit to one.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "tool-bash \u2014 A `bash` call \u2014 stdout, exit status, and pi's truncation metadata.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "tool-ls \u2014 An `ls` call \u2014 a directory listing, which reports its own entry limit.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "tool-grep \u2014 A `grep` call \u2014 match counts and line truncation live in its details.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "tool-find \u2014 A `find` call \u2014 path globbing, with its own result limit.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "compaction \u2014 A manual compaction \u2014 `buildContextEntries` starts from the newest one, so this is the boundary history rebuilding and turn paging are built around.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 invariants"
+  ],
+  "title": "bash-long-output \u2014 A bash call whose output is large enough for pi to stream updates and report truncation.",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "plain-text: answers with no tool calls",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "describes a tool call in terms a user can act on",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "shows a tool's subject rather than its arguments as JSON",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "tool-edit: hands the client the patch, not a count of edited blocks",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "single-tool: runs one tool and answers from its result",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "parallel-tools: keeps several tool calls in one message distinct",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "tool-loop: spans several assistant messages without part collisions",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "tool-error: surfaces a failed tool without failing the turn",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "abort: ends the turn as cancelled",
+  "ok": true
+ },
+ {
+  "file": "mapper-fixtures",
+  "serial": false,
+  "suite": [
+   "recorded stream replay \u2014 per scenario"
+  ],
+  "title": "steering: the injected message becomes its own turn",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "appends a file resource as a path with its selection",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "appends attachment representations in order",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "preserves resource URIs whose schemes may carry their own routing",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "preserves a VS Code-wrapped resource without guessing which host owns it",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "requires client-created simple attachments to carry a model representation",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "separates embedded images from the text prompt",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "rejects an empty embedded image",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "appends UTF-8 embedded text without interpreting its MIME type",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "keeps embedded payload under its original 1-based selection marker",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "rejects malformed or non-text embedded payloads",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "rejects malformed message and selection shapes without throwing",
+  "ok": true
+ },
+ {
+  "file": "message-input",
+  "serial": false,
+  "suite": [
+   "pi message input"
+  ],
+  "title": "rejects annotations and chat attachments",
+  "ok": true
+ },
+ {
+  "file": "model-discovery",
+  "serial": false,
+  "suite": [],
+  "title": "advertises extension models and uses pi's configured default",
+  "ok": true
+ },
+ {
+  "file": "model-discovery",
+  "serial": false,
+  "suite": [],
+  "title": "resolves stale and provider-qualified model selections safely",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "offers the standard thinking levels when no extended levels are declared",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "offers only `off` for a model without reasoning",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "drops unsupported levels and opts into extended levels exactly as pi does",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "uses pi's provider-qualified model ids on the wire",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "resolves qualified ids without confusing providers",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "accepts an unambiguous legacy bare model id",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "exposes thinking level as a model configSchema",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "maps pi input modalities onto the vision capability",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "omits the configSchema when there is nothing to choose",
+  "ok": true
+ },
+ {
+  "file": "models",
+  "serial": false,
+  "suite": [
+   "model mapping"
+  ],
+  "title": "produces a schema-conforming AgentInfo",
+  "ok": true
+ },
+ {
+  "file": "pi-host",
+  "serial": false,
+  "suite": [],
+  "title": "wires product services through createPiHost",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "plain-text",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "single-tool",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "parallel-tools",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "tool-loop",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "tool-error",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "abort",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "steering",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "tool-edit",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "tool-write",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "tool-bash",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "tool-ls",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "tool-grep",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "tool-find",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "compaction",
+  "ok": true
+ },
+ {
+  "file": "pi-replay",
+  "serial": false,
+  "suite": [
+   "recorded provider streams preserve AHP-visible behavior"
+  ],
+  "title": "bash-long-output",
+  "ok": true
+ },
+ {
+  "file": "project-trust",
+  "serial": false,
+  "suite": [
+   "project trust"
+  ],
+  "title": "trusts by default, matching raw pi SDK construction",
+  "ok": true
+ },
+ {
+  "file": "project-trust",
+  "serial": false,
+  "suite": [
+   "project trust"
+  ],
+  "title": "trusts a directory with nothing to gate",
+  "ok": true
+ },
+ {
+  "file": "project-trust",
+  "serial": false,
+  "suite": [
+   "project trust"
+  ],
+  "title": "declines a project nobody has approved, under `inherit`",
+  "ok": true
+ },
+ {
+  "file": "project-trust",
+  "serial": false,
+  "suite": [
+   "project trust"
+  ],
+  "title": "inherits a decision the user made with pi's CLI",
+  "ok": true
+ },
+ {
+  "file": "project-trust",
+  "serial": false,
+  "suite": [
+   "project trust"
+  ],
+  "title": "honours an explicit distrust from pi's CLI",
+  "ok": true
+ },
+ {
+  "file": "project-trust",
+  "serial": false,
+  "suite": [
+   "project trust"
+  ],
+  "title": "the `never` policy overrides a stored trust decision",
+  "ok": true
+ },
+ {
+  "file": "project-trust",
+  "serial": false,
+  "suite": [
+   "project trust"
+  ],
+  "title": "applies the decision before pi loads project extensions",
+  "ok": true
+ },
+ {
+  "file": "protocol-surface",
+  "serial": false,
+  "suite": [
+   "AHP command surface"
+  ],
+  "title": "returns MethodNotFound for every deliberately unsupported command",
+  "ok": true
+ },
+ {
+  "file": "protocol-surface",
+  "serial": false,
+  "suite": [
+   "AHP command surface"
+  ],
+  "title": "requires the root routing channel on every connection-level command",
+  "ok": true
+ },
+ {
+  "file": "pty",
+  "serial": false,
+  "suite": [],
+  "title": "round-trips input through a resized TTY",
+  "ok": true
+ },
+ {
+  "file": "pty",
+  "serial": false,
+  "suite": [],
+  "title": "delivers Ctrl-C to the foreground job without killing the shell",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "keeps non-VS Code and explicitly misrouted reconnects strict",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "replays only the actions the client missed",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "falls back to snapshots when the gap predates the replay buffer",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "reports subscriptions it cannot resume as missing",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "returns an empty replay for a client that is already current",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "replaces a half-open connection that reuses a clientId",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "retains clientInfo when a replacement initialize omits it",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "infers the provider URI dialect without clientInfo",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect"
+  ],
+  "title": "retains VS Code's URI dialect across connections",
+  "ok": true
+ },
+ {
+  "file": "reconnect",
+  "serial": false,
+  "suite": [
+   "reconnect after host restart"
+  ],
+  "title": "repairs VS Code's channel-less reconnect and restores a durable session",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch path scope and filters"
+  ],
+  "title": "normalizes descendants and rejects siblings and prefix lookalikes",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch path scope and filters"
+  ],
+  "title": "keeps the watched root visible regardless of filters",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch path scope and filters"
+  ],
+  "title": "applies include alternatives and exclude precedence to every path",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch path scope and filters"
+  ],
+  "title": "does not prune a directory just because its children alone match the include filter",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch batch transitions"
+  ],
+  "title": "coalesces empty followed by each native event type",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch batch transitions"
+  ],
+  "title": "coalesces added followed by each native event type",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch batch transitions"
+  ],
+  "title": "coalesces updated followed by each native event type",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch batch transitions"
+  ],
+  "title": "coalesces deleted followed by each native event type",
+  "ok": true
+ },
+ {
+  "file": "resource-watch-policy",
+  "serial": false,
+  "suite": [
+   "watch batch transitions"
+  ],
+  "title": "handles replacement and transient paths across longer sequences",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "returns a watch channel whose state describes what is watched",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "classifies newly created paths as added",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "classifies changes to existing paths as updated",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "watches a single file at its actual URI",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "reports deletion and recreation of the watched file",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "keeps a single-file watch attached across an atomic replacement",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "keeps a directory watch attached across deletion and recreation",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "reports both sides of a rename without assuming batch boundaries",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "does not lose paths from a burst",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "reports direct children with recursive=false",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "reports grandchildren with recursive=true",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "wires includes into native watch delivery",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "wires excludes into native watch delivery",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "rejects watching something that does not exist",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "rejects a recursive watch on a file",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch"
+  ],
+  "title": "rejects malformed filter parameters",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 roots"
+  ],
+  "title": "maps a permitted directory symlink back to the requested URI",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 roots"
+  ],
+  "title": "uses the same root and symlink policy as resource operations",
+  "ok": true
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "waits for the last subscriber before scheduling release",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "cancels grace on subscribe and grants a full window after the next unsubscribe",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "cancels grace on initialize and grants a full window after the next unsubscribe",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "cancels grace on reconnect and grants a full window after the next unsubscribe",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "releases a watch when the client disconnects without unsubscribing",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "releases a watch nobody ever subscribed to",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "disposes every watch and returns the same shutdown promise",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "waits for a blocked creation to settle before completing shutdown",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "closes a native watcher if shutdown wins at its ready boundary",
+  "ok": false
+ },
+ {
+  "file": "resource-watch",
+  "serial": true,
+  "suite": [
+   "resource watch \u2014 lifetime"
+  ],
+  "title": "drains in-flight creations and rejects new ones after shutdown",
+  "ok": false
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "reads a text file as utf-8 with a content type",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "detects valid UTF-8 independently of the extension and reports known MIME types",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "falls back to base64 when content is not valid UTF-8",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "honours an explicitly requested encoding",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "lists a directory with directories first",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "resolves files and symlinks with canonical metadata",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "writes, then reads back what it wrote",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "reports a missing parent directory instead of creating it implicitly",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "appends without clobbering",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "refuses to overwrite when createOnly is set",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "applies byte positions for truncate, append, and insert",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "rejects invalid write modes and positions",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "enforces ifMatch and serializes competing conditional writes",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "makes directories with mkdir -p semantics",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "copies and moves files",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "fails a copy onto an existing destination when asked to",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "deletes files, and directories only when recursion is requested",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "reports a missing file as NotFound",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "rejects a non-file scheme",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource operations"
+  ],
+  "title": "grants resourceRequest without tracking a ledger",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource roots"
+  ],
+  "title": "allows paths inside a configured root after canonicalization",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource roots"
+  ],
+  "title": "denies paths outside the configured roots, including prefix lookalikes",
+  "ok": true
+ },
+ {
+  "file": "resource",
+  "serial": false,
+  "suite": [
+   "resource roots \u2014 symlink escape"
+  ],
+  "title": "resolves symlinks before checking the allowlist",
+  "ok": true
+ },
+ {
+  "file": "schema",
+  "serial": false,
+  "suite": [
+   "wire schema"
+  ],
+  "title": "emits a conforming InitializeResult",
+  "ok": true
+ },
+ {
+  "file": "schema",
+  "serial": false,
+  "suite": [
+   "wire schema"
+  ],
+  "title": "emits a conforming RootState snapshot",
+  "ok": true
+ },
+ {
+  "file": "schema",
+  "serial": false,
+  "suite": [
+   "wire schema"
+  ],
+  "title": "emits conforming ActionEnvelopes",
+  "ok": true
+ },
+ {
+  "file": "schema",
+  "serial": false,
+  "suite": [
+   "wire schema"
+  ],
+  "title": "fails validation for a structurally wrong action",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "session catalogue"
+  ],
+  "title": "returns most-recently-modified first, across working directories",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "session catalogue"
+  ],
+  "title": "paginates with an opaque cursor and stops at the end",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "session catalogue"
+  ],
+  "title": "rejects a malformed cursor with InvalidParams",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "session catalogue"
+  ],
+  "title": "titles a session by its name, falling back to the first user message",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "session catalogue"
+  ],
+  "title": "skips files that are not readable pi sessions",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "session catalogue"
+  ],
+  "title": "returns an empty catalogue when nothing exists yet",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "session catalogue"
+  ],
+  "title": "does not return a cached path after its session file is removed",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "live session catalogue overlays"
+  ],
+  "title": "reads live status after disk discovery rather than freezing request-start state",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "live session catalogue overlays"
+  ],
+  "title": "keeps a live entry stable as its file appears, without caching a nonexistent file",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "live session catalogue overlays"
+  ],
+  "title": "orders and paginates live summaries without duplicating their files",
+  "ok": true
+ },
+ {
+  "file": "session-catalogue",
+  "serial": false,
+  "suite": [
+   "listSessions over the wire"
+  ],
+  "title": "serves a schema-conforming page",
+  "ok": true
+ },
+ {
+  "file": "session-config",
+  "serial": false,
+  "suite": [
+   "resolveSessionConfig"
+  ],
+  "title": "returns a schema-conforming result",
+  "ok": true
+ },
+ {
+  "file": "session-config",
+  "serial": false,
+  "suite": [
+   "resolveSessionConfig"
+  ],
+  "title": "reports what a directory with no project resources would do",
+  "ok": true
+ },
+ {
+  "file": "session-config",
+  "serial": false,
+  "suite": [
+   "resolveSessionConfig"
+  ],
+  "title": "re-resolves against whatever directory the client is asking about",
+  "ok": true
+ },
+ {
+  "file": "session-config",
+  "serial": false,
+  "suite": [
+   "resolveSessionConfig"
+  ],
+  "title": "offers no dynamic completions",
+  "ok": true
+ },
+ {
+  "file": "session-config",
+  "serial": false,
+  "suite": [
+   "model selection"
+  ],
+  "title": "has a model selected before the agent has even started",
+  "ok": true
+ },
+ {
+  "file": "session-config",
+  "serial": false,
+  "suite": [
+   "model selection"
+  ],
+  "title": "publishes the model and config actually in effect as the chat draft",
+  "ok": true
+ },
+ {
+  "file": "session-config",
+  "serial": false,
+  "suite": [
+   "model selection"
+  ],
+  "title": "applies the model a client picked, before the prompt runs",
+  "ok": true
+ },
+ {
+  "file": "session-config",
+  "serial": false,
+  "suite": [
+   "model selection"
+  ],
+  "title": "runs on the current model when the message carries no selection",
+  "ok": true
+ },
+ {
+  "file": "session-disposal",
+  "serial": false,
+  "suite": [
+   "session disposal"
+  ],
+  "title": "keeps the session usable when durable deletion fails",
+  "ok": true
+ },
+ {
+  "file": "session-disposal",
+  "serial": false,
+  "suite": [
+   "session disposal"
+  ],
+  "title": "coalesces concurrent requests and rejects new work until deletion settles",
+  "ok": true
+ },
+ {
+  "file": "session-disposal",
+  "serial": false,
+  "suite": [
+   "session disposal"
+  ],
+  "title": "quiesces an active backend and commits removal despite cleanup failure",
+  "ok": true
+ },
+ {
+  "file": "session-disposal",
+  "serial": false,
+  "suite": [
+   "session disposal"
+  ],
+  "title": "resumes queued work when backend quiescence fails",
+  "ok": true
+ },
+ {
+  "file": "session-disposal",
+  "serial": false,
+  "suite": [
+   "session disposal"
+  ],
+  "title": "drains an in-flight model selection before deleting",
+  "ok": true
+ },
+ {
+  "file": "session-disposal",
+  "serial": false,
+  "suite": [
+   "session disposal"
+  ],
+  "title": "disposes a backend that finishes starting after removal",
+  "ok": true
+ },
+ {
+  "file": "session-hydration",
+  "serial": false,
+  "suite": [
+   "opening a session from the catalogue"
+  ],
+  "title": "hydrates a catalogued session and counts it as active",
+  "ok": true
+ },
+ {
+  "file": "session-hydration",
+  "serial": false,
+  "suite": [
+   "opening a session from the catalogue"
+  ],
+  "title": "rebuilds the transcript onto the chat channel",
+  "ok": true
+ },
+ {
+  "file": "session-hydration",
+  "serial": false,
+  "suite": [
+   "opening a session from the catalogue"
+  ],
+  "title": "pairs each tool call with the result that followed it",
+  "ok": true
+ },
+ {
+  "file": "session-hydration",
+  "serial": false,
+  "suite": [
+   "opening a session from the catalogue"
+  ],
+  "title": "still answers NotFound for a session that really does not exist",
+  "ok": true
+ },
+ {
+  "file": "session-hydration",
+  "serial": false,
+  "suite": [
+   "opening a session from the catalogue"
+  ],
+  "title": "restores images stored in pi user messages",
+  "ok": true
+ },
+ {
+  "file": "session-hydration",
+  "serial": false,
+  "suite": [
+   "opening a session from the catalogue"
+  ],
+  "title": "hydrates from either half of the pair",
+  "ok": true
+ },
+ {
+  "file": "session-hydration",
+  "serial": false,
+  "suite": [
+   "opening a session from the catalogue"
+  ],
+  "title": "coalesces concurrent session and chat hydration",
+  "ok": true
+ },
+ {
+  "file": "session-hydration",
+  "serial": false,
+  "suite": [],
+  "title": "preserves catalogue modifiedAt when a disk session becomes a live overlay",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "creates a session at the client-chosen URI and reports it ready",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "uses the first user message as an unnamed session's display title",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "uses pi's session id as the URI's uuid",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "announces the new session on the root channel",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "rejects a duplicate session URI with SessionAlreadyExists",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "rejects an unknown provider with ProviderNotFound",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "honours a client-supplied working directory",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "tracks the active session count in root state",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "disposes a session, drops its channel, and announces the removal",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "does not let session disposal target another channel kind",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "rejects disposing a session that does not exist",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "accepts session/titleChanged from a client",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "applies VS Code's chat-addressed rename to the owning session",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "session lifecycle"
+  ],
+  "title": "declines VS Code's active client without blocking session creation",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "renaming a session"
+  ],
+  "title": "records the new name on the session",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "renaming a session"
+  ],
+  "title": "does not create a file for a session that never got a reply",
+  "ok": true
+ },
+ {
+  "file": "session-lifecycle",
+  "serial": false,
+  "suite": [
+   "renaming a session"
+  ],
+  "title": "mirrors the name onto the chat and the catalogue entry",
+  "ok": true
+ },
+ {
+  "file": "session-storage",
+  "serial": true,
+  "suite": [],
+  "title": "keeps the default catalogue and Pi session writer on the same isolated profile",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session chat aggregation"
+  ],
+  "title": "passes through single-chat activity but preserves session-owned and unknown flags",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session chat aggregation"
+  ],
+  "title": "uses default chat activity but the latest timestamp, comparing instants rather than strings",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session chat aggregation"
+  ],
+  "title": "promotes Error and InputNeeded, preferring the most recent blocker of the winning kind",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session chat aggregation"
+  ],
+  "title": "handles an empty catalogue and chooses stable ties and valid timestamps",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "projects an active turn closed by backend startup failure",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "publishes exact start deltas and lists an unpersisted session for new clients",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "clears activity through a full upsert and sends no redundant root updates or delta projections",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "projects complete and ignores rejected/no-op actions",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "projects cancel and ignores rejected/no-op actions",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "projects error and ignores rejected/no-op actions",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "projects truncate and ignores rejected/no-op actions",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "replays running session projections to the same state as snapshot fallback",
+  "ok": true
+ },
+ {
+  "file": "session-summary",
+  "serial": false,
+  "suite": [
+   "session summary over the wire"
+  ],
+  "title": "replays completed session projections to the same state as snapshot fallback",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "subscriptions"
+  ],
+  "title": "returns the current state as a snapshot",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "subscriptions"
+  ],
+  "title": "rejects a channel scheme the host does not serve",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "subscriptions"
+  ],
+  "title": "rejects a well-formed URI for a channel that does not exist",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "action dispatch"
+  ],
+  "title": "echoes a client-dispatchable action with its origin",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "action dispatch"
+  ],
+  "title": "rejects an action that is not client-dispatchable",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "action dispatch"
+  ],
+  "title": "silently ignores an action for a channel that does not exist",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "action dispatch"
+  ],
+  "title": "broadcasts to every subscriber and allocates one seq per action",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "action dispatch"
+  ],
+  "title": "treats root/configChanged as a no-op until the host declares a config schema",
+  "ok": true
+ },
+ {
+  "file": "subscriptions",
+  "serial": false,
+  "suite": [
+   "action dispatch"
+  ],
+  "title": "stops delivering after unsubscribe",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "creates a client-owned terminal and publishes its authoritative state",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "forwards output, input, resize, title, and clear without interpreting VT data",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "batches burst output and flushes pending data before exit",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "restricts interaction and claim transfer without preventing cleanup",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "spawns only once when duplicate creates race",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "rejects unsupported claims and invalid creation parameters before spawning",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "reserves the provider session scheme from terminal creation",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "does not let terminal disposal target another channel kind",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "records natural exit and disposes exited or running terminals",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "keeps the PTY attached across a same-host reconnect",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "falls back to a live terminal snapshot after replay eviction",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "bounds snapshot scrollback while retaining the newest VT stream",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [
+   "terminal service"
+  ],
+  "title": "kills running PTYs during service shutdown",
+  "ok": true
+ },
+ {
+  "file": "terminal-service",
+  "serial": false,
+  "suite": [],
+  "title": "returns MethodNotFound when terminal support is not wired",
+  "ok": true
+ },
+ {
+  "file": "truncate",
+  "serial": false,
+  "suite": [
+   "truncation anchors"
+  ],
+  "title": "anchors a turn on its last entry, not its first",
+  "ok": true
+ },
+ {
+  "file": "truncate",
+  "serial": false,
+  "suite": [
+   "truncation anchors"
+  ],
+  "title": "anchors 'clear everything' on the first user entry",
+  "ok": true
+ },
+ {
+  "file": "truncate",
+  "serial": false,
+  "suite": [
+   "chat/truncated"
+  ],
+  "title": "moves pi's leaf to the named turn, not just the client's view",
+  "ok": true
+ },
+ {
+  "file": "truncate",
+  "serial": false,
+  "suite": [
+   "chat/truncated"
+  ],
+  "title": "maps 'clear everything' onto the first entry",
+  "ok": true
+ },
+ {
+  "file": "truncate",
+  "serial": false,
+  "suite": [
+   "chat/truncated"
+  ],
+  "title": "refuses a turn it cannot anchor, instead of diverging",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "tunnel discovery contract"
+  ],
+  "title": "uses the shared discovery labels and port",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "tunnel discovery contract"
+  ],
+  "title": "keeps the identity label out of the display name",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "tunnel discovery contract"
+  ],
+  "title": "folds a name the way VS Code does",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "reports when the CLI is not installed",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "requires a logged-in account",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "reports account inspection failures",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "finds this host's first labelled tunnel",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "returns no tunnel for a successful empty listing",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "reports tunnel listing failures and malformed responses",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "creates a tunnel with identity, protocol, launcher, and display labels",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "rejects failed or malformed tunnel creation",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "renames a tunnel without disturbing reserved labels",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel account and catalogue"
+  ],
+  "title": "reports a failed rename",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel port"
+  ],
+  "title": "creates port 31546 when a successful listing is empty",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel port"
+  ],
+  "title": "keeps an existing HTTP port",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel port"
+  ],
+  "title": "replaces an old HTTPS port with an HTTP port",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel port"
+  ],
+  "title": "does not discard port-specific access control while migrating",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel port"
+  ],
+  "title": "uses current port details when the protocol changes during inspection",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel port"
+  ],
+  "title": "rejects malformed port inspection output",
+  "ok": true
+ },
+ {
+  "file": "tunnel",
+  "serial": false,
+  "suite": [
+   "devtunnel port"
+  ],
+  "title": "reports listing, inspection, deletion, and creation failures",
+  "ok": true
+ },
+ {
+  "file": "upstream-workarounds",
+  "serial": false,
+  "suite": [
+   "upstream workarounds"
+  ],
+  "title": "still needs the dangling-$ref strip",
+  "ok": true
+ },
+ {
+  "file": "upstream-workarounds",
+  "serial": false,
+  "suite": [
+   "upstream workarounds"
+  ],
+  "title": "still needs every KNOWN_BITSET_ENUMS entry",
+  "ok": true
+ },
+ {
+  "file": "uri",
+  "serial": false,
+  "suite": [
+   "file URI conversion"
+  ],
+  "title": "decodes percent-escapes",
+  "ok": true
+ },
+ {
+  "file": "uri",
+  "serial": false,
+  "suite": [
+   "file URI conversion"
+  ],
+  "title": "round-trips a path",
+  "ok": true
+ },
+ {
+  "file": "uri",
+  "serial": false,
+  "suite": [
+   "file URI conversion"
+  ],
+  "title": "passes a bare path through",
+  "ok": true
+ },
+ {
+  "file": "uri",
+  "serial": false,
+  "suite": [
+   "file URI conversion"
+  ],
+  "title": "refuses a URI naming a remote host",
+  "ok": true
+ },
+ {
+  "file": "watch-events",
+  "serial": false,
+  "suite": [],
+  "title": "watch assertions share a reader and retain the entire batch, even after a match",
+  "ok": true
+ },
+ {
+  "file": "watch-events",
+  "serial": false,
+  "suite": [],
+  "title": "a timed-out assertion neither steals the next batch nor accepts events before its checkpoint",
+  "ok": true
+ },
+ {
+  "file": "watch-events",
+  "serial": false,
+  "suite": [],
+  "title": "reports a reader failure during cleanup even without a waiting assertion",
+  "ok": true
+ },
+ {
+  "file": "watch-events",
+  "serial": false,
+  "suite": [],
+  "title": "closing the journal settles pending assertions and the sole subscription reader",
+  "ok": true
+ }
+]

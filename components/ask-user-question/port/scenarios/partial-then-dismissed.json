@@ -1,0 +1,69 @@
+{
+  "name": "partial-then-dismissed",
+  "description": "The second question is dismissed: the answers so far stay in the details.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Which database?",
+                "header": "Database",
+                "options": [
+                  {
+                    "label": "Postgres",
+                    "description": "Relational"
+                  },
+                  {
+                    "label": "SQLite",
+                    "description": "Embedded"
+                  },
+                  {
+                    "label": "Redis",
+                    "description": "In memory"
+                  }
+                ]
+              },
+              {
+                "question": "Which region?",
+                "header": "Region",
+                "options": [
+                  {
+                    "label": "eu",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "us",
+                    "description": "A choice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "value": "3. Redis \u2014 In memory"
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ]
+}

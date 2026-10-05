@@ -1,0 +1,64 @@
+{
+  "name": "bad-input",
+  "description": "An ESC before a line break, and ids no task can have, formatted as JavaScript formats numbers.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "a\u001b\nb\u001b\rc"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get",
+            "id": 1e-07
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get",
+            "id": 1e-06
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get",
+            "id": 1.5
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "addBlockedBy": [
+              1.5e-07
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    }
+  ]
+}

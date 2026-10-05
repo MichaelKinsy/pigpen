@@ -1,0 +1,21 @@
+{
+ "name": "invalid-settings",
+ "description": "Unknown segment ids and placement in settings.json are reported as warnings.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "prompt",
+   "rpc": {
+    "type": "prompt",
+    "message": "hello"
+   }
+  }
+ ],
+ "agentFiles": {
+  "settings.json": "{\"powerline\": {\"disabledSegments\": [\"nope\"], \"layout\": {\"left\": [\"zzz\", \"model\"]}, \"placement\": \"up\"}}"
+ }
+}

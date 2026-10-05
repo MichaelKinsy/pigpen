@@ -1,0 +1,55 @@
+[
+  {
+    "id": "goal-created",
+    "desc": "The goal is created via create_goal.",
+    "kind": "tool-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "task-list-set",
+    "desc": "set_goal_tasks is called.",
+    "kind": "tool-called",
+    "tool": "set_goal_tasks"
+  },
+  {
+    "id": "task-updates",
+    "desc": "update_goal_task is called at least twice.",
+    "kind": "tool-call-count",
+    "tool": "update_goal_task",
+    "op": "ge",
+    "count": 2
+  },
+  {
+    "id": "completed",
+    "desc": "update_goal(complete) is called.",
+    "kind": "tool-args-jq",
+    "tool": "update_goal",
+    "jq": ".status == \"complete\""
+  },
+  {
+    "id": "alpha-txt",
+    "desc": "alpha.txt exists with content 'one'.",
+    "kind": "sandbox-file-contains",
+    "path": "alpha.txt",
+    "pattern": "^one$"
+  },
+  {
+    "id": "beta-txt",
+    "desc": "beta.txt exists with content 'two'.",
+    "kind": "sandbox-file-contains",
+    "path": "beta.txt",
+    "pattern": "^two$"
+  },
+  {
+    "id": "no-legacy-task-tools",
+    "desc": "Legacy task tools are removed.",
+    "kind": "tool-not-called",
+    "tool": "propose_task_list"
+  },
+  {
+    "id": "no-complete-tool",
+    "desc": "complete_goal is removed.",
+    "kind": "tool-not-called",
+    "tool": "complete_goal"
+  }
+]

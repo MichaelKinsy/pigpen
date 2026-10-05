@@ -1,0 +1,387 @@
+[
+ {
+  "name": "retry-off-by-one",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "p.MaxRetries-attempt <= 0",
+  "replace": "p.MaxRetries-attempt < 0"
+ },
+ {
+  "name": "retry-any-status",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "return p.RetriesStatus(api.Status)",
+  "replace": "return true"
+ },
+ {
+  "name": "timeout-flag-swapped",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "return p.APITimeoutError",
+  "replace": "return p.APIConnectionError"
+ },
+ {
+  "name": "default-statuses-drop-408",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "statuses := []int{408, 429}",
+  "replace": "statuses := []int{429}"
+ },
+ {
+  "name": "backoff-uncapped",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "exponential := math.Min(initial*math.Pow(2, float64(attempt)), maxMs)",
+  "replace": "exponential := math.Min(initial*math.Pow(2, float64(attempt)), maxMs+1e18)"
+ },
+ {
+  "name": "jitter-added",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "(1-random()*p.BackoffJitter)",
+  "replace": "(1+random()*p.BackoffJitter)"
+ },
+ {
+  "name": "retry-after-limit-ignored",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "ok && ra <= p.MaxRetryAfter",
+  "replace": "ok"
+ },
+ {
+  "name": "retry-after-seconds-as-ms",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "msToDuration(seconds * 1000)",
+  "replace": "msToDuration(seconds)"
+ },
+ {
+  "name": "retry-after-ms-ignored",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "if vals := h.Values(\"retry-after-ms\"); len(vals) > 0 {",
+  "replace": "if vals := h.Values(\"retry-after-ms\"); len(vals) > 100 {"
+ },
+ {
+  "name": "abort-not-terminal",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "\tif errors.As(err, &abort) {\n\t\treturn false\n\t}",
+  "replace": "\tif errors.As(err, &abort) {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "abort-during-wait-lost",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "return zero, newAbortError(werr)",
+  "replace": "return zero, werr"
+ },
+ {
+  "name": "base-url-one-slash",
+  "pkg": "typesafe",
+  "file": "client.go",
+  "find": "strings.TrimRight(baseURL, \"/\")",
+  "replace": "strings.TrimSuffix(baseURL, \"/\")"
+ },
+ {
+  "name": "only-200-is-success",
+  "pkg": "typesafe",
+  "file": "client.go",
+  "find": "raw.Status >= 200 && raw.Status < 300",
+  "replace": "raw.Status == 200"
+ },
+ {
+  "name": "retry-count-off-by-one",
+  "pkg": "typesafe",
+  "file": "client.go",
+  "find": "fmt.Sprint(attempt)})",
+  "replace": "fmt.Sprint(attempt + 1)})"
+ },
+ {
+  "name": "accept-header-changed",
+  "pkg": "typesafe",
+  "file": "client.go",
+  "find": "{name: \"Accept\", value: \"application/json\"}",
+  "replace": "{name: \"Accept\", value: \"text/json\"}"
+ },
+ {
+  "name": "user-headers-override-auth",
+  "pkg": "typesafe",
+  "file": "client.go",
+  "find": "mergeHeaders(editsOf(c.defaultHeaders), editsOf(opts.Headers), protected)",
+  "replace": "mergeHeaders(protected, editsOf(c.defaultHeaders), editsOf(opts.Headers))"
+ },
+ {
+  "name": "timeout-classified-as-connection",
+  "pkg": "typesafe",
+  "file": "client.go",
+  "find": "if errors.Is(actx.Err(), context.DeadlineExceeded) {",
+  "replace": "if errors.Is(actx.Err(), context.DeadlineExceeded) && false {"
+ },
+ {
+  "name": "caller-abort-classified-as-connection",
+  "pkg": "typesafe",
+  "file": "client.go",
+  "find": "\t\tif ctx.Err() != nil {\n\t\t\tc.logger.Info(fmt.Sprintf(\"%s aborted by caller after %s\"",
+  "replace": "\t\tif false {\n\t\t\tc.logger.Info(fmt.Sprintf(\"%s aborted by caller after %s\""
+ },
+ {
+  "name": "html-escaped-body",
+  "pkg": "typesafe",
+  "file": "entry.go",
+  "find": "enc.SetEscapeHTML(false)",
+  "replace": "enc.SetEscapeHTML(true)"
+ },
+ {
+  "name": "429-mapped-to-generic",
+  "pkg": "typesafe",
+  "file": "errors.go",
+  "find": "case status == 429:",
+  "replace": "case status == 428:"
+ },
+ {
+  "name": "5xx-excludes-500",
+  "pkg": "typesafe",
+  "file": "errors.go",
+  "find": "case status >= 500:",
+  "replace": "case status > 500:"
+ },
+ {
+  "name": "request-id-dropped",
+  "pkg": "typesafe",
+  "file": "errors.go",
+  "find": "RequestID:     header.Get(requestIDHeader),",
+  "replace": "RequestID:     \"\","
+ },
+ {
+  "name": "empty-questions-allowed",
+  "pkg": "typesafe",
+  "file": "questions.go",
+  "find": "if len(qs) == 0 {",
+  "replace": "if len(qs) < 0 {"
+ },
+ {
+  "name": "one-score-criterion-allowed",
+  "pkg": "typesafe",
+  "file": "questions.go",
+  "find": "len(s.Criteria) < 2",
+  "replace": "len(s.Criteria) < 1"
+ },
+ {
+  "name": "batch-default-concurrency-one",
+  "pkg": "typesafe",
+  "file": "batch.go",
+  "find": "concurrency = DefaultBatchConcurrency",
+  "replace": "concurrency = 1"
+ },
+ {
+  "name": "batch-panic-not-recovered",
+  "pkg": "typesafe",
+  "file": "batch.go",
+  "find": "if r := recover(); r != nil {",
+  "replace": "if r := recover(); false {"
+ },
+ {
+  "name": "prompt-wording",
+  "pkg": "ownmodel",
+  "file": "run.go",
+  "find": "Preserve genuine uncertainty.",
+  "replace": "Preserve genuine uncertainty!"
+ },
+ {
+  "name": "document-gt-not-escaped",
+  "pkg": "ownmodel",
+  "file": "run.go",
+  "find": "strings.ReplaceAll(strings.ReplaceAll(text, \"<\", `\\u003c`), \">\", `\\u003e`)",
+  "replace": "strings.ReplaceAll(text, \"<\", `\\u003c`)"
+ },
+ {
+  "name": "correction-wording",
+  "pkg": "ownmodel",
+  "file": "run.go",
+  "find": "The previous response did not match the required schema: ",
+  "replace": "The previous response was invalid: "
+ },
+ {
+  "name": "malformed-retries-off-by-one",
+  "pkg": "ownmodel",
+  "file": "run.go",
+  "find": "corrective == b.opts.MalformedRetries {",
+  "replace": "corrective == b.opts.MalformedRetries+1 {"
+ },
+ {
+  "name": "default-transient-retries-2",
+  "pkg": "ownmodel",
+  "file": "ownmodel.go",
+  "find": "base.MaxRetries = 0",
+  "replace": "base.MaxRetries = 2"
+ },
+ {
+  "name": "cancel-not-classified",
+  "pkg": "ownmodel",
+  "file": "run.go",
+  "find": "\t\tcase ctx.Err() != nil:\n",
+  "replace": "\t\tcase false:\n"
+ },
+ {
+  "name": "token-total-ignores-unknown",
+  "pkg": "ownmodel",
+  "file": "run.go",
+  "find": "if *total == nil || n == nil {",
+  "replace": "if *total == nil {"
+ },
+ {
+  "name": "schema-always-in-prompt",
+  "pkg": "ownmodel",
+  "file": "run.go",
+  "find": "if !b.opts.StructuredOutputs {",
+  "replace": "if true {"
+ },
+ {
+  "name": "null-state-allowed",
+  "pkg": "ownmodel",
+  "file": "run.go",
+  "find": "req.State.IsOmitted() || req.State.IsNull()",
+  "replace": "req.State.IsOmitted()"
+ },
+ {
+  "name": "answers-not-required",
+  "pkg": "ownmodel",
+  "file": "plan.go",
+  "find": "{\"required\", required},",
+  "replace": "{\"required\", []string{}},"
+ },
+ {
+  "name": "probability-zero-rejected",
+  "pkg": "ownmodel",
+  "file": "plan.go",
+  "find": "case f < 0:",
+  "replace": "case f <= 0:"
+ },
+ {
+  "name": "probability-one-rejected",
+  "pkg": "ownmodel",
+  "file": "plan.go",
+  "find": "case f > 1:",
+  "replace": "case f >= 1:"
+ },
+ {
+  "name": "score-level-bound",
+  "pkg": "ownmodel",
+  "file": "plan.go",
+  "find": "case level >= len(q.labels):",
+  "replace": "case level > len(q.labels):"
+ },
+ {
+  "name": "fence-not-stripped",
+  "pkg": "ownmodel",
+  "file": "plan.go",
+  "find": "strings.EqualFold(text[:4], \"json\")",
+  "replace": "false"
+ },
+ {
+  "name": "trailing-text-accepted",
+  "pkg": "ownmodel",
+  "file": "plan.go",
+  "find": "if _, err := dec.Token(); err != io.EOF {",
+  "replace": "if _, err := dec.Token(); err != io.EOF && false {"
+ },
+ {
+  "name": "extra-top-level-key-accepted",
+  "pkg": "ownmodel",
+  "file": "plan.go",
+  "find": "bad(k, \"Extra inputs are not permitted\")",
+  "replace": "_ = k"
+ },
+ {
+  "name": "choice-tie-last",
+  "pkg": "ownmodel",
+  "file": "convert.go",
+  "find": "if n.Probabilities[label] > n.Probabilities[q.labels[best]] {",
+  "replace": "if n.Probabilities[label] >= n.Probabilities[q.labels[best]] {"
+ },
+ {
+  "name": "score-one-based",
+  "pkg": "ownmodel",
+  "file": "convert.go",
+  "find": "score += float64(j) * dist[label]",
+  "replace": "score += float64(j+1) * dist[label]"
+ },
+ {
+  "name": "choice-confidence-raw-peak",
+  "pkg": "ownmodel",
+  "file": "convert.go",
+  "find": "return (peak - uniform) / (1 - uniform)",
+  "replace": "return (peak-uniform*0)/(1-uniform*0)"
+ },
+ {
+  "name": "normalization-disabled",
+  "pkg": "ownmodel",
+  "file": "convert.go",
+  "find": "if !enabled || errAmount <= probabilityTolerance {",
+  "replace": "if true {"
+ },
+ {
+  "name": "tolerance-loosened",
+  "pkg": "ownmodel",
+  "file": "convert.go",
+  "find": "const probabilityTolerance = 1e-6",
+  "replace": "const probabilityTolerance = 1e-1"
+ },
+ {
+  "name": "http-status-500-only",
+  "pkg": "pigmodel",
+  "file": "pigmodel.go",
+  "find": "status >= 400 {",
+  "replace": "status >= 500 {"
+ },
+ {
+  "name": "structured-accepted",
+  "pkg": "pigmodel",
+  "file": "pigmodel.go",
+  "find": "if req.Structured {",
+  "replace": "if false {"
+ },
+ {
+  "name": "system-prompts-joined-by-space",
+  "pkg": "pigmodel",
+  "file": "pigmodel.go",
+  "find": "strings.Join(system, \"\\n\\n\")",
+  "replace": "strings.Join(system, \" \")"
+ },
+ {
+  "name": "api-key-not-forwarded",
+  "pkg": "pigmodel",
+  "file": "pigmodel.go",
+  "find": "options[\"apiKey\"] = key",
+  "replace": "_ = key"
+ },
+ {
+  "name": "assistant-turn-sent-as-user",
+  "pkg": "pigmodel",
+  "file": "pigmodel.go",
+  "find": "\"role\": \"assistant\", \"content\": textBlocks(msg.Content),",
+  "replace": "\"role\": \"user\", \"content\": textBlocks(msg.Content),"
+ },
+ {
+  "name": "aborted-as-error",
+  "pkg": "pigmodel",
+  "file": "pigmodel.go",
+  "find": "case \"aborted\":",
+  "replace": "case \"abortedX\":"
+ },
+ {
+  "name": "length-treated-as-answer",
+  "pkg": "pigmodel",
+  "file": "pigmodel.go",
+  "find": "case \"length\":",
+  "replace": "case \"lengthX\":"
+ },
+ {
+  "name": "retry-after-wraps-negative",
+  "pkg": "typesafe",
+  "file": "retry.go",
+  "find": "\tif ns >= math.MaxInt64 {\n\t\treturn time.Duration(math.MaxInt64)\n\t}\n",
+  "replace": ""
+ }
+]

@@ -1,0 +1,49 @@
+{
+  "name": "multi-select-dismissed",
+  "description": "The multi-select input is dismissed.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Which features?",
+                "header": "Features",
+                "options": [
+                  {
+                    "label": "Auth",
+                    "description": "A choice"
+                  },
+                  {
+                    "label": "Cache",
+                    "description": "A choice"
+                  }
+                ],
+                "multiSelect": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ]
+}

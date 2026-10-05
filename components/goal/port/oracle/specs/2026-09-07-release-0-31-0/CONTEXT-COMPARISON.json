@@ -1,0 +1,82 @@
+{
+  "baseline": "v0.30.5 (59826ec)",
+  "candidate": "18323b8",
+  "unit": "serialized characters; token estimates are a proxy, not provider token counts",
+  "sourceBefore": "../2026-09-07-runtime-token-optimization/CONTEXT-BEFORE.json",
+  "sourceAfter": "../2026-09-07-comprehensive-optimization/CONTEXT-AFTER.json",
+  "fixtures": [
+    {
+      "fixture": "active-regular-10-tasks",
+      "beforeChars": 10114,
+      "afterChars": 6881
+    },
+    {
+      "fixture": "active-regular-50-tasks",
+      "beforeChars": 10486,
+      "afterChars": 6736
+    },
+    {
+      "fixture": "active-regular-no-tasks",
+      "beforeChars": 9494,
+      "afterChars": 5007
+    },
+    {
+      "fixture": "current-contracted-task",
+      "beforeChars": 10456,
+      "afterChars": 7124
+    },
+    {
+      "fixture": "get-goal-default-and-verbose",
+      "beforeChars": 11696,
+      "afterChars": 8431
+    },
+    {
+      "fixture": "half-complete-tree",
+      "beforeChars": 10034,
+      "afterChars": 6903
+    },
+    {
+      "fixture": "long-objective",
+      "beforeChars": 12510,
+      "afterChars": 6587
+    },
+    {
+      "fixture": "nested-tasks",
+      "beforeChars": 10647,
+      "afterChars": 6823
+    },
+    {
+      "fixture": "oracle-consultation",
+      "beforeChars": 15558,
+      "afterChars": 9540
+    },
+    {
+      "fixture": "post-compaction-turn",
+      "beforeChars": 9682,
+      "afterChars": 6574
+    },
+    {
+      "fixture": "sisyphus-ordered-objective",
+      "beforeChars": 10106,
+      "afterChars": 5534
+    },
+    {
+      "fixture": "tasks-disabled",
+      "beforeChars": 5226,
+      "afterChars": 3702
+    },
+    {
+      "fixture": "token-budget-seventy-five-percent",
+      "beforeChars": 9570,
+      "afterChars": 5083
+    },
+    {
+      "fixture": "token-budget-zero-percent",
+      "beforeChars": 9555,
+      "afterChars": 5068
+    }
+  ],
+  "beforeChars": 145134,
+  "afterChars": 89993,
+  "reductionPercent": 37.99316493723042
+}

@@ -1,0 +1,9 @@
+{
+  "name": "not-a-repo",
+  "description": "Not a git repository: git status exits non-zero, so the switch is allowed silently.",
+  "files": {"a.txt": "one\n"},
+  "commands": {"git": {"mode": "real"}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "settleMs": 500}
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "name": "unlisted-choice",
+  "description": "The select answer matches no option line (a custom client): the questionnaire is declined.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Which database?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "Postgres",
+                    "description": "Relational"
+                  },
+                  {
+                    "label": "SQLite",
+                    "description": "Embedded"
+                  },
+                  {
+                    "label": "Redis",
+                    "description": "In memory"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "value": "Postgres"
+        }
+      ]
+    }
+  ]
+}

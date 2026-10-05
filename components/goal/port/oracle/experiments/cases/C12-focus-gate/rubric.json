@@ -1,0 +1,29 @@
+[
+  {
+    "id": "create-goal-called",
+    "desc": "create_goal is called.",
+    "kind": "tool-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "not-sisyphus",
+    "desc": "create_goal mode must not be sisyphus (regular focus).",
+    "kind": "tool-args-jq-none",
+    "tool": "create_goal",
+    "jq": "(.mode // \"regular\") == \"sisyphus\""
+  },
+  {
+    "id": "file1-txt",
+    "desc": "file1.txt exists with 'one'.",
+    "kind": "sandbox-file-contains",
+    "path": "file1.txt",
+    "pattern": "^one$"
+  },
+  {
+    "id": "file2-txt",
+    "desc": "file2.txt exists with 'two'.",
+    "kind": "sandbox-file-contains",
+    "path": "file2.txt",
+    "pattern": "^two$"
+  }
+]

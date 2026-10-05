@@ -1,0 +1,11 @@
+{
+  "name": "send-without-remotes",
+  "description": "The model calls a2a_send with no remotes configured: a tool error that says how to configure one, no network.",
+  "llm": [
+    {"toolCalls": [{"name": "a2a_send", "arguments": {"agent": "peer", "message": "hello peer"}}]},
+    {"text": "done"}
+  ],
+  "steps": [
+    {"name": "prompt", "rpc": {"type": "prompt", "message": "ask the peer"}}
+  ]
+}

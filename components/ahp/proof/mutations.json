@@ -1,0 +1,152 @@
+[
+ {
+  "name": "ws-token-check-dropped",
+  "file": "internal/ws/ws.go",
+  "find": "if !ok || subtle.ConstantTimeCompare([]byte(presented), []byte(s.opts.Token)) != 1 {",
+  "replace": "if false && (!ok || subtle.ConstantTimeCompare([]byte(presented), []byte(s.opts.Token)) != 1) {"
+ },
+ {
+  "name": "ws-token-any-accepted",
+  "file": "internal/ws/ws.go",
+  "find": "subtle.ConstantTimeCompare([]byte(presented), []byte(s.opts.Token)) != 1",
+  "replace": "subtle.ConstantTimeCompare([]byte(presented), []byte(presented)) != 1"
+ },
+ {
+  "name": "ws-origin-not-enforced",
+  "file": "internal/ws/ws.go",
+  "find": "origin != \"\" && !s.originAllowed(origin)",
+  "replace": "origin != \"\" && false"
+ },
+ {
+  "name": "ws-origin-allowlist-inverted",
+  "file": "internal/ws/ws.go",
+  "find": "if strings.EqualFold(allowed, origin) {\n\t\t\treturn true",
+  "replace": "if !strings.EqualFold(allowed, origin) {\n\t\t\treturn true"
+ },
+ {
+  "name": "paths-prefix-check-loose",
+  "file": "internal/svc/paths.go",
+  "find": "if candidate == root || strings.HasPrefix(candidate, prefix) {",
+  "replace": "if candidate == root || strings.HasPrefix(candidate, strings.TrimSuffix(prefix, string(filepath.Separator))) {"
+ },
+ {
+  "name": "paths-roots-ignored",
+  "file": "internal/svc/paths.go",
+  "find": "\tif len(p.roots) == 0 {\n\t\treturn path, nil\n\t}",
+  "replace": "\tif true {\n\t\treturn path, nil\n\t}"
+ },
+ {
+  "name": "resource-ifmatch-ignored",
+  "file": "internal/svc/resource.go",
+  "find": "if !exists || *p.IfMatch != current {",
+  "replace": "if !exists || (false && *p.IfMatch != current) {"
+ },
+ {
+  "name": "terminal-claim-not-checked",
+  "file": "internal/svc/terminal.go",
+  "find": "if !ok || claim.ClientId != clientID {\n\t\treturn \"This terminal is claimed by another client\"",
+  "replace": "if !ok || (false && claim.ClientId != clientID) {\n\t\treturn \"This terminal is claimed by another client\""
+ },
+ {
+  "name": "terminal-claim-must-match-initialized-client",
+  "file": "internal/svc/terminal.go",
+  "find": "if clientID == \"\" || claim.ClientId != clientID {",
+  "replace": "if clientID == \"\" || (false && claim.ClientId != clientID) {"
+ },
+ {
+  "name": "compose-unrestricted-implied",
+  "file": "internal/compose/compose.go",
+  "find": "if len(fs.Roots) == 0 && !fs.Unrestricted {",
+  "replace": "if false {"
+ },
+ {
+  "name": "compose-roots-dropped",
+  "file": "internal/compose/compose.go",
+  "find": "\t\tif !fs.Unrestricted {\n\t\t\troots = fs.Roots\n\t\t}",
+  "replace": "\t\tif false {\n\t\t\troots = fs.Roots\n\t\t}"
+ },
+ {
+  "name": "driver-foreign-turn-while-cancelling",
+  "file": "internal/pi/chatdriver.go",
+  "find": "\tif d.quiesced || d.cancellation != nil || d.mapper != nil {\n\t\td.mu.Unlock()\n\t\treturn nil\n\t}",
+  "replace": "\tif d.quiesced || d.mapper != nil {\n\t\td.mu.Unlock()\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "driver-foreign-turn-any-role",
+  "file": "internal/pi/chatdriver.go",
+  "find": "if message == nil || message[\"role\"] != \"user\" {",
+  "replace": "if message == nil {"
+ },
+ {
+  "name": "host-replay-window-off-by-one",
+  "file": "internal/host/host.go",
+  "find": "return len(h.buf) > 0 && h.buf[0].ServerSeq <= lastSeen+1",
+  "replace": "return len(h.buf) > 0 && h.buf[0].ServerSeq <= lastSeen+2"
+ },
+ {
+  "name": "host-replay-always",
+  "file": "internal/host/host.go",
+  "find": "\tif lastSeen >= h.seq {\n\t\treturn true\n\t}\n\treturn len(h.buf) > 0 && h.buf[0].ServerSeq <= lastSeen+1",
+  "replace": "\treturn true"
+ },
+ {
+  "name": "store-update-without-lock",
+  "file": "internal/host/store.go",
+  "find": "func (s *Store) UpdateChat(uri string, fn func(*ahptypes.ChatState) bool) bool {\n\ts.mu.Lock()\n\tdefer s.mu.Unlock()",
+  "replace": "func (s *Store) UpdateChat(uri string, fn func(*ahptypes.ChatState) bool) bool {"
+ },
+ {
+  "name": "watch-racy-hash-off",
+  "file": "internal/svc/watch.go",
+  "find": "if recent || (seen && old.hash != \"\" && old.sig == entry.sig) {",
+  "replace": "if false && (recent || (seen && old.hash != \"\" && old.sig == entry.sig)) {"
+ },
+ {
+  "name": "delete-refused-unless-allowed",
+  "file": "runtime.go",
+  "find": "if !allow {",
+  "replace": "if false {"
+ },
+ {
+  "name": "delete-live-file-allowed",
+  "file": "runtime.go",
+  "find": "filepath.Clean(live) == filepath.Clean(path)",
+  "replace": "false && filepath.Clean(live) == filepath.Clean(path)"
+ },
+ {
+  "name": "nonloopback-without-token-allowed",
+  "file": "runtime.go",
+  "find": "if !isLoopback(host) && token == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "loopback-localhost-only",
+  "file": "runtime.go",
+  "find": "if host == \"localhost\" {\n\t\treturn true\n\t}",
+  "replace": "if host == \"localhost\" {\n\t\treturn false\n\t}"
+ },
+ {
+  "name": "runtime-default-root-widened",
+  "file": "runtime.go",
+  "find": "roots = []string{cwd}",
+  "replace": "roots = []string{filepath.Dir(cwd)}"
+ },
+ {
+  "name": "runtime-terminals-always",
+  "file": "runtime.go",
+  "find": "if access.Terminals.Enabled {",
+  "replace": "if true || access.Terminals.Enabled {"
+ },
+ {
+  "name": "runtime-filesystem-always",
+  "file": "runtime.go",
+  "find": "if access.Filesystem.Enabled {",
+  "replace": "if true || access.Filesystem.Enabled {"
+ },
+ {
+  "name": "runtime-replacement-silent",
+  "file": "runtime.go",
+  "find": "if !running || restarts || reason == \"quit\" {",
+  "replace": "if true || !running || restarts || reason == \"quit\" {"
+ }
+]

@@ -1,0 +1,47 @@
+--- FAIL: TestRestrictiveness (0.00s)
+    --- FAIL: TestRestrictiveness/returns_undefined_for_an_empty_list (0.00s)
+panic: not ported yet [recovered, repanicked]
+
+goroutine 9 [running]:
+testing.tRunner.func1.2({0x707a20, 0x589eb0})
+	<go>/src/testing/testing.go:2123 +0x232
+testing.tRunner.func1()
+	<go>/src/testing/testing.go:2126 +0x329
+panic({0x707a20?, 0x589eb0?})
+	<go>/src/runtime/panic.go:859 +0x125
+github.com/MichaelKinsy/pigpen/pi-permission-system.PickMostRestrictive(...)
+	<repo>/components/permissions/extensions/pi-permission-system/policy.go:74
+github.com/MichaelKinsy/pigpen/pi-permission-system.TestRestrictiveness.func3(0xe156c854488?)
+	<repo>/components/permissions/extensions/pi-permission-system/merge_test.go:15 +0x25
+testing.tRunner(0xe156c854488, 0x72eb08)
+	<go>/src/testing/testing.go:2193 +0xea
+created by testing.(*T).Run in goroutine 8
+	<go>/src/testing/testing.go:2258 +0x4d4
+
+goroutine 1 [chan receive]:
+testing.(*T).Run(0xe156c854008, {0x57b408?, 0xe156c805aa0?}, 0x72e9c0)
+	<go>/src/testing/testing.go:2266 +0x4f2
+testing.runTests.func1(0xe156c854008)
+	<go>/src/testing/testing.go:2742 +0x37
+testing.tRunner(0xe156c854008, 0xe156c805bc8)
+	<go>/src/testing/testing.go:2193 +0xea
+testing.runTests({0x584f98, 0x33}, {0x584f98, 0x33}, 0xe156c4a6138, {0x74ee80, 0x8, 0x8}, {0xc2a8dfdaec0e7c41, 0x8bb2ccc94b, ...})
+	<go>/src/testing/testing.go:2740 +0x510
+testing.(*M).Run(0xe156c82e320)
+	<go>/src/testing/testing.go:2600 +0x6af
+main.main()
+	_testmain.go:62 +0x9b
+
+goroutine 8 [chan receive]:
+testing.(*T).Run(0xe156c854248, {0x580b1e?, 0x4f6300?}, 0x72eb08)
+	<go>/src/testing/testing.go:2266 +0x4f2
+github.com/MichaelKinsy/pigpen/pi-permission-system.tw(0xe156c854248, {0x0?, 0xe156c7ef750?}, {0x580b1e, 0x23}, 0x72eb08)
+	<repo>/components/permissions/extensions/pi-permission-system/twin_test.go:21 +0x45
+github.com/MichaelKinsy/pigpen/pi-permission-system.TestRestrictiveness(0xe156c854248)
+	<repo>/components/permissions/extensions/pi-permission-system/merge_test.go:14 +0x3b
+testing.tRunner(0xe156c854248, 0x72e9c0)
+	<go>/src/testing/testing.go:2193 +0xea
+created by testing.(*T).Run in goroutine 1
+	<go>/src/testing/testing.go:2258 +0x4d4
+FAIL	github.com/MichaelKinsy/pigpen/pi-permission-system	0.008s
+FAIL

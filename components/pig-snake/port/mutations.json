@@ -1,0 +1,542 @@
+[
+ {
+  "name": "reverse-into-herd-allowed",
+  "file": "internal/snake/snake.go",
+  "find": "d == last || len(g.Body) > 1 && d == last.Opposite()",
+  "replace": "d == last"
+ },
+ {
+  "name": "solo-leader-cannot-reverse",
+  "file": "internal/snake/snake.go",
+  "find": "len(g.Body) > 1 && d == last.Opposite()",
+  "replace": "d == last.Opposite()"
+ },
+ {
+  "name": "turn-queue-of-three",
+  "file": "internal/snake/snake.go",
+  "find": "maxQueuedTurns = 2",
+  "replace": "maxQueuedTurns = 3"
+ },
+ {
+  "name": "turn-queue-of-one",
+  "file": "internal/snake/snake.go",
+  "find": "maxQueuedTurns = 2",
+  "replace": "maxQueuedTurns = 1"
+ },
+ {
+  "name": "walls-wrap-and-wrap-dies",
+  "file": "internal/snake/snake.go",
+  "find": "if g.Mode == Walls {",
+  "replace": "if g.Mode == Wrap {"
+ },
+ {
+  "name": "wrap-x-off-by-one",
+  "file": "internal/snake/snake.go",
+  "find": "next.X = (next.X + g.W) % g.W",
+  "replace": "next.X = (next.X + g.W - 1) % g.W"
+ },
+ {
+  "name": "wrap-y-not-wrapped",
+  "file": "internal/snake/snake.go",
+  "find": "next.Y = (next.Y + g.H) % g.H",
+  "replace": "next.Y = next.Y % g.H"
+ },
+ {
+  "name": "tail-cell-always-solid",
+  "file": "internal/snake/snake.go",
+  "find": "solid = g.Body[:len(g.Body)-1]",
+  "replace": "solid = g.Body"
+ },
+ {
+  "name": "tail-cell-free-when-eating",
+  "file": "internal/snake/snake.go",
+  "find": "if !ate {\n\t\tsolid",
+  "replace": "if true {\n\t\tsolid"
+ },
+ {
+  "name": "eating-does-not-score",
+  "file": "internal/snake/snake.go",
+  "find": "g.Score++",
+  "replace": "g.Score += 0"
+ },
+ {
+  "name": "eating-adds-no-pig",
+  "file": "internal/snake/snake.go",
+  "find": "g.Body = append([]Point{next}, g.Body...)",
+  "replace": "copy(g.Body[1:], g.Body)\n\t\tg.Body[0] = next"
+ },
+ {
+  "name": "high-score-not-tracked",
+  "file": "internal/snake/snake.go",
+  "find": "g.High = max(g.High, g.Score)",
+  "replace": "_ = g.High"
+ },
+ {
+  "name": "full-board-not-won",
+  "file": "internal/snake/snake.go",
+  "find": "if len(g.Body) == g.W*g.H {",
+  "replace": "if len(g.Body) == g.W*g.H+1 {"
+ },
+ {
+  "name": "food-may-land-on-herd",
+  "file": "internal/snake/snake.go",
+  "find": "taken[p.Y*g.W+p.X] = true",
+  "replace": "taken[p.Y*g.W+p.X] = false"
+ },
+ {
+  "name": "food-ignores-random-choice",
+  "file": "internal/snake/snake.go",
+  "find": "n := g.rng.Intn(free)",
+  "replace": "n := 0"
+ },
+ {
+  "name": "paused-game-steps",
+  "file": "internal/snake/snake.go",
+  "find": "if g.Status != Playing {\n\t\treturn Result{}",
+  "replace": "if g.Status == Over {\n\t\treturn Result{}"
+ },
+ {
+  "name": "interval-clamp-60ms",
+  "file": "internal/snake/snake.go",
+  "find": ", 70*time.Millisecond)",
+  "replace": ", 60*time.Millisecond)"
+ },
+ {
+  "name": "interval-step-4ms",
+  "file": "internal/snake/snake.go",
+  "find": "Duration(score)*5*",
+  "replace": "Duration(score)*4*"
+ },
+ {
+  "name": "leader-starts-off-centre",
+  "file": "internal/snake/snake.go",
+  "find": "g.Body = []Point{{g.W / 2, g.H / 2}}",
+  "replace": "g.Body = []Point{{g.W / 2, g.H/2 + 1}}"
+ },
+ {
+  "name": "retry-leaves-waiting",
+  "file": "internal/snake/snake.go",
+  "find": "g.reset()\n\tg.Status = Playing",
+  "replace": "g.reset()\n\tg.Status = Waiting"
+ },
+ {
+  "name": "resize-while-running",
+  "file": "internal/snake/snake.go",
+  "find": "if g.Status != Waiting {\n\t\treturn false\n\t}\n\tg.W, g.H = w, h",
+  "replace": "if false {\n\t\treturn false\n\t}\n\tg.W, g.H = w, h"
+ },
+ {
+  "name": "mode-change-while-running",
+  "file": "internal/snake/snake.go",
+  "find": "if g.Status != Waiting {\n\t\treturn false\n\t}\n\tg.Mode = m",
+  "replace": "if false {\n\t\treturn false\n\t}\n\tg.Mode = m"
+ },
+ {
+  "name": "start-facing-ignores-heading",
+  "file": "internal/snake/snake.go",
+  "find": "g.Status, g.Dir = Playing, d",
+  "replace": "g.Status = Playing"
+ },
+ {
+  "name": "opposite-is-perpendicular",
+  "file": "internal/snake/snake.go",
+  "find": "(d + 2) % 4",
+  "replace": "(d + 1) % 4"
+ },
+ {
+  "name": "up-is-down",
+  "file": "internal/snake/snake.go",
+  "find": "return Point{0, -1}",
+  "replace": "return Point{0, 1}"
+ },
+ {
+  "name": "escape-does-not-quit",
+  "file": "component.go",
+  "find": "key == termgame.KeyEscape || letter == 'q'",
+  "replace": "letter == 'q'"
+ },
+ {
+  "name": "a-key-does-not-steer",
+  "file": "component.go",
+  "find": "letter == 'a' || letter == 'h'",
+  "replace": "letter == 'h'"
+ },
+ {
+  "name": "k-key-does-not-steer",
+  "file": "component.go",
+  "find": "letter == 'w' || letter == 'k'",
+  "replace": "letter == 'w'"
+ },
+ {
+  "name": "space-does-not-start",
+  "file": "component.go",
+  "find": "case key == termgame.KeyEnter || letter == ' ':",
+  "replace": "case key == termgame.KeyEnter:"
+ },
+ {
+  "name": "mode-switch-keeps-old-high",
+  "file": "component.go",
+  "find": "g.High = c.highForLocked(g.Mode)",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "pause-key-dead",
+  "file": "component.go",
+  "find": "case letter == 'p':",
+  "replace": "case letter == 'o':"
+ },
+ {
+  "name": "resume-key-dead",
+  "file": "component.go",
+  "find": "if letter == 'p' {",
+  "replace": "if false {"
+ },
+ {
+  "name": "retry-key-dead",
+  "file": "component.go",
+  "find": "if letter == 'r' {",
+  "replace": "if letter == 'R' {"
+ },
+ {
+  "name": "catch-up-unbounded",
+  "file": "component.go",
+  "find": "c.carry = min(c.carry+elapsed, maxCatchUp*interval)",
+  "replace": "c.carry += elapsed"
+ },
+ {
+  "name": "advances-when-paused",
+  "file": "component.go",
+  "find": "if c.game.Status != snake.Playing {\n\t\tc.carry = 0",
+  "replace": "if c.game.Status == snake.Over {\n\t\tc.carry = 0"
+ },
+ {
+  "name": "waiting-board-ignores-terminal",
+  "file": "component.go",
+  "find": "if c.game.Status == snake.Waiting {\n\t\tif cols",
+  "replace": "if false {\n\t\tif cols"
+ },
+ {
+  "name": "height-change-not-redrawn",
+  "file": "component.go",
+  "find": "changed := c.advanceLocked(elapsed) || height != c.lastHeight",
+  "replace": "changed := c.advanceLocked(elapsed)"
+ },
+ {
+  "name": "title-screen-ticks",
+  "file": "component.go",
+  "find": "lastHeight: height(),",
+  "replace": "lastHeight: 0,"
+ },
+ {
+  "name": "finished-not-reported",
+  "file": "component.go",
+  "find": "GameOver:  g.Status == snake.Over || g.Status == snake.Won,",
+  "replace": "GameOver:  false,"
+ },
+ {
+  "name": "dispose-does-not-wait",
+  "file": "component.go",
+  "find": "<-c.stopped\n}",
+  "replace": "_ = 0\n}"
+ },
+ {
+  "name": "result-notice-is-a-warning",
+  "file": "extension.go",
+  "find": "\"info\")",
+  "replace": "\"warning\")"
+ },
+ {
+  "name": "rpc-tries-to-play",
+  "file": "extension.go",
+  "find": "if !ctx.HasUI() || ctx.Mode() != \"tui\" {",
+  "replace": "if !ctx.HasUI() {"
+ },
+ {
+  "name": "no-ui-tries-to-play",
+  "file": "extension.go",
+  "find": "if !ctx.HasUI() || ctx.Mode() != \"tui\" {",
+  "replace": "if ctx.Mode() != \"tui\" {"
+ },
+ {
+  "name": "alias-not-registered",
+  "file": "extension.go",
+  "find": "ext.Command(\"snake\", \"Play Pig Snake: every apple adds a pig to the herd.\", run)",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "wrap-not-named",
+  "file": "extension.go",
+  "find": "name += \" (wrap)\"",
+  "replace": "name += \"\""
+ },
+ {
+  "name": "scores-not-saved",
+  "file": "extension.go",
+  "find": "if err := saveHighScores(configHome, highScores{High: final.HighScore, WrapHigh: final.WrapHigh}); err != nil {",
+  "replace": "if err := error(nil); err != nil {"
+ },
+ {
+  "name": "scores-saved-swapped",
+  "file": "extension.go",
+  "find": "highScores{High: final.HighScore, WrapHigh: final.WrapHigh}",
+  "replace": "highScores{High: final.WrapHigh, WrapHigh: final.HighScore}"
+ },
+ {
+  "name": "chosen-sprite-ignored",
+  "file": "extension.go",
+  "find": "sprites.Builtin(sprites.LoadVariantID(configHome))",
+  "replace": "sprites.Builtin(\"\")"
+ },
+ {
+  "name": "state-file-world-readable",
+  "file": "state.go",
+  "find": "temporary.Chmod(0o600)",
+  "replace": "temporary.Chmod(0o644)"
+ },
+ {
+  "name": "state-dir-world-readable",
+  "file": "state.go",
+  "find": "os.MkdirAll(dir, 0o700)",
+  "replace": "os.MkdirAll(dir, 0o755)"
+ },
+ {
+  "name": "state-size-unbounded",
+  "file": "state.go",
+  "find": "info.Size() > 4096",
+  "replace": "info.Size() > 4096000"
+ },
+ {
+  "name": "state-unknown-fields-accepted",
+  "file": "state.go",
+  "find": "decoder.DisallowUnknownFields()",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "state-negative-high-accepted",
+  "file": "state.go",
+  "find": "state.HighScore < 0 ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "state-trailing-data-accepted",
+  "file": "state.go",
+  "find": "decoder.Decode(&trailing) != io.EOF",
+  "replace": "decoder.Decode(&trailing) == io.ErrUnexpectedEOF"
+ },
+ {
+  "name": "state-in-wrong-directory",
+  "file": "state.go",
+  "find": "\"state\", \"pigpen\", \"pig-snake.json\"",
+  "replace": "\"state\", \"pig-snake.json\""
+ },
+ {
+  "name": "wire-negative-accepted",
+  "file": "state.go",
+  "find": "return int(value), ok && value >= 0",
+  "replace": "return int(value), ok"
+ },
+ {
+  "name": "wire-herd-not-inferred",
+  "file": "state.go",
+  "find": "state.Herd = state.Score + 1",
+  "replace": "state.Herd = state.Score"
+ },
+ {
+  "name": "wire-wrap-high-not-raised",
+  "file": "state.go",
+  "find": "state.WrapHigh = max(state.WrapHigh, state.Score)",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "comfort-board-of-nine",
+  "file": "internal/scene/scene.go",
+  "find": "comfortCols = 10",
+  "replace": "comfortCols = 9"
+ },
+ {
+  "name": "board-cap-41",
+  "file": "internal/scene/scene.go",
+  "find": "MaxCols = 40",
+  "replace": "MaxCols = 41"
+ },
+ {
+  "name": "fit-is-strict",
+  "file": "internal/scene/scene.go",
+  "find": "cols*s <= viewW",
+  "replace": "cols*s < viewW"
+ },
+ {
+  "name": "min-view-forgets-hud",
+  "file": "internal/scene/scene.go",
+  "find": "(rows*small+1)/2 + HUDLines",
+  "replace": "(rows*small+1)/2"
+ },
+ {
+  "name": "board-hugs-the-top",
+  "file": "internal/scene/scene.go",
+  "find": "(canvasH - rows*size) / 2",
+  "replace": "0"
+ },
+ {
+  "name": "apple-not-drawn",
+  "file": "internal/scene/scene.go",
+  "find": "if g.Food.X >= 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "crashed-leader-not-tinted",
+  "file": "internal/scene/scene.go",
+  "find": "if member == 0 && g.Status == snake.Over {",
+  "replace": "if false {"
+ },
+ {
+  "name": "palette-cache-never-resets",
+  "file": "internal/scene/scene.go",
+  "find": "if p.src != src {",
+  "replace": "if false {"
+ },
+ {
+  "name": "every-member-wears-the-leaders-colors",
+  "file": "internal/scene/scene.go",
+  "find": "pixel.NewPalette(src.Palette(member))",
+  "replace": "pixel.NewPalette(src.Palette(0))"
+ },
+ {
+  "name": "hud-cache-ignores-score",
+  "file": "internal/scene/scene.go",
+  "find": "key := hudKey{g.Score, g.High,",
+  "replace": "key := hudKey{0, g.High,"
+ },
+ {
+  "name": "too-small-hides-the-box",
+  "file": "internal/scene/scene.go",
+  "find": "needW+2, needH+2, viewW+2, viewH+2",
+  "replace": "needW, needH, viewW, viewH"
+ },
+ {
+  "name": "paused-card-missing",
+  "file": "internal/scene/scene.go",
+  "find": "card(c, ox, oy, g, size, \"PAUSED\", \"P RESUME\")",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "won-card-missing",
+  "file": "internal/scene/scene.go",
+  "find": "card(c, ox, oy, g, size, \"HERD FULL\", \"R RETRY\")",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "over-card-missing",
+  "file": "internal/scene/scene.go",
+  "find": "card(c, ox, oy, g, size, \"GAME OVER\", \"R RETRY\")",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "title-card-missing",
+  "file": "internal/scene/scene.go",
+  "find": "card(c, ox, oy, g, size, \"PIG SNAKE\", \"SPACE START\")",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "unknown-sprite-picks-another",
+  "file": "internal/sprites/sprites.go",
+  "find": "return 0\n}\n\n// The pig heads",
+  "replace": "return 1\n}\n\n// The pig heads"
+ },
+ {
+  "name": "login-state-path",
+  "file": "internal/sprites/sprites.go",
+  "find": "\"pig-standard\", \"login.json\"",
+  "replace": "\"pig-standard\", \"state.json\""
+ },
+ {
+  "name": "eight-pixel-pig-altered",
+  "file": "internal/sprites/sprites.go",
+  "find": "\"OWKPPKWO\",",
+  "replace": "\"OWKPPKKO\","
+ },
+ {
+  "name": "followers-include-the-leader",
+  "file": "internal/sprites/sprites.go",
+  "find": "i := (member - 1) % (len(variants) - 1)",
+  "replace": "i := (member - 1) % len(variants)"
+ },
+ {
+  "name": "viewport-forgets-the-box",
+  "file": "internal/termgame/termgame.go",
+  "find": "max(termWidth-2, 1)",
+  "replace": "max(termWidth-1, 1)"
+ },
+ {
+  "name": "key-release-taken-as-press",
+  "file": "internal/termgame/termgame.go",
+  "find": "strings.Contains(params, \":3\")",
+  "replace": "strings.Contains(params, \":9\")"
+ },
+ {
+  "name": "overlay-half-height",
+  "file": "internal/termgame/termgame.go",
+  "find": "HeightFraction: 1",
+  "replace": "HeightFraction: 0.5"
+ },
+ {
+  "name": "colors-emitted-every-cell",
+  "file": "internal/pixel/pixel.go",
+  "find": "if !fgSet || top != lastFG {",
+  "replace": "if !fgSet || top != lastFG || true {"
+ },
+ {
+  "name": "24bit-not-recognised",
+  "file": "internal/pixel/pixel.go",
+  "find": "case \"truecolor\", \"24bit\":",
+  "replace": "case \"truecolor\":"
+ },
+ {
+  "name": "too-small-does-not-pause",
+  "file": "component.go",
+  "find": "!fits && c.game.Status == snake.Playing",
+  "replace": "!fits && c.game.Status == snake.Playing && false"
+ },
+ {
+  "name": "too-small-toggles-pause-every-frame",
+  "file": "component.go",
+  "find": "!fits && c.game.Status == snake.Playing",
+  "replace": "!fits"
+ },
+ {
+  "name": "review-hint-names-the-min-board",
+  "file": "internal/scene/scene.go",
+  "find": "if g.Status != snake.Waiting {\n\t\t\tneedW, needH = BoardView(src.Sizes(), g.W, g.H)",
+  "replace": "if false {\n\t\t\tneedW, needH = BoardView(src.Sizes(), g.W, g.H)"
+ },
+ {
+  "name": "review-waiting-hint-names-the-old-board",
+  "file": "internal/scene/scene.go",
+  "find": "if g.Status != snake.Waiting {\n\t\t\tneedW, needH",
+  "replace": "if true {\n\t\t\tneedW, needH"
+ },
+ {
+  "name": "review-win-one-apple-early",
+  "file": "internal/snake/snake.go",
+  "find": "if len(g.Body) == g.W*g.H {",
+  "replace": "if len(g.Body) >= g.W*g.H-1 {"
+ },
+ {
+  "name": "review-apple-on-the-first-free-cells",
+  "file": "internal/snake/snake.go",
+  "find": "n := g.rng.Intn(free)",
+  "replace": "n := g.rng.Intn(free) % 2"
+ },
+ {
+  "name": "review-restart-keeps-the-turn-queue",
+  "file": "internal/snake/snake.go",
+  "find": "g.queue = g.queue[:0]\n\tg.placeFood()",
+  "replace": "g.placeFood()"
+ },
+ {
+  "name": "review-wrap-frame-is-a-wall",
+  "file": "internal/scene/scene.go",
+  "find": "frame = dimStar",
+  "replace": "frame = accent"
+ }
+]

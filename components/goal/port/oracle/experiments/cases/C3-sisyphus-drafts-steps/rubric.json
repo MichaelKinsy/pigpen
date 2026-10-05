@@ -1,0 +1,49 @@
+[
+  {
+    "id": "create-goal-called",
+    "desc": "create_goal is called.",
+    "kind": "tool-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "sisyphus-mode",
+    "desc": "create_goal mode must be sisyphus.",
+    "kind": "tool-args-jq",
+    "tool": "create_goal",
+    "jq": ".mode == \"sisyphus\""
+  },
+  {
+    "id": "numbered-steps",
+    "desc": "The objective must contain numbered steps 1. 2. 3.",
+    "kind": "tool-args-jq",
+    "tool": "create_goal",
+    "jq": "(.objective | contains(\"1.\")) and (.objective | contains(\"2.\")) and (.objective | contains(\"3.\"))"
+  },
+  {
+    "id": "a-txt",
+    "desc": "a.txt exists with 'a'.",
+    "kind": "sandbox-file-contains",
+    "path": "a.txt",
+    "pattern": "^a$"
+  },
+  {
+    "id": "b-txt",
+    "desc": "b.txt exists with 'b'.",
+    "kind": "sandbox-file-contains",
+    "path": "b.txt",
+    "pattern": "^b$"
+  },
+  {
+    "id": "c-txt",
+    "desc": "c.txt exists with 'a\\nb' (two lines).",
+    "kind": "sandbox-file-contains",
+    "path": "c.txt",
+    "pattern": "^a\\nb$"
+  },
+  {
+    "id": "no-step-tool",
+    "desc": "step_complete is removed.",
+    "kind": "tool-not-called",
+    "tool": "step_complete"
+  }
+]

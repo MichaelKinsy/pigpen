@@ -1,0 +1,14 @@
+{
+  "version": "0.31.1",
+  "integrity": "sha512-mci7k+TX50YR1FcLCcL28NrMvXjTL6S2IzwtfPMFz+FFies3sgBG+GcScZRH7EK2a0ZnkDtwbWtoQKMjurccKA==",
+  "shasum": "7dcee53d8add117a0dcbfb36f8adf5b7b89cbd1c",
+  "size": 248650,
+  "unpackedSize": 909866,
+  "filesByteMatch": 62,
+  "extensionModules": 52,
+  "tarball": "pi-goal-x-0.31.1.tgz",
+  "realSdkPackageLoader": true,
+  "cleanInstalledPeerSDK": "0.84.4",
+  "recoveryCliHelp": true,
+  "releaseCommit": "cb282e2979b38bd7ce9dc566d7602d5d1d99933f"
+}

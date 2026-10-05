@@ -1,0 +1,29 @@
+[
+  {
+    "id": "one-create-max",
+    "desc": "At most one create_goal call.",
+    "kind": "tool-call-count",
+    "tool": "create_goal",
+    "op": "le",
+    "count": 1
+  },
+  {
+    "id": "objective-tweaked",
+    "desc": "The goal file on disk must contain the tweaked objective (extra.txt).",
+    "kind": "sandbox-glob-contains",
+    "glob": ".pi/goals/active_goal_*.md",
+    "pattern": "extra.txt"
+  },
+  {
+    "id": "no-execute",
+    "desc": "extra.txt must NOT be created (objective update only).",
+    "kind": "sandbox-glob-not-exists",
+    "glob": "extra.txt"
+  },
+  {
+    "id": "no-tweak-tool",
+    "desc": "propose_goal_tweak is removed; /goal-tweak is a user command.",
+    "kind": "tool-not-called",
+    "tool": "propose_goal_tweak"
+  }
+]

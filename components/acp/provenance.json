@@ -1,0 +1,28 @@
+{
+  "origin": "ported",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-acp",
+      "authors": ["Sergii Kozak"],
+      "url": "https://github.com/svkozak/pi-acp",
+      "revision": "b0581c9c1d675e634234674484247008b03d69b4",
+      "path": "port/oracle/pi-acp",
+      "license": "MIT",
+      "licenseFile": "port/oracle/pi-acp/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "Agent Client Protocol",
+      "authors": ["Zed Industries"],
+      "url": "https://github.com/agentclientprotocol/typescript-sdk",
+      "revision": "73bc30649b650de320340c782733bf69a545bd28",
+      "path": "port/schema/schema.json",
+      "license": "Apache-2.0",
+      "licenseFile": "port/schema/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

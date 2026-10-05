@@ -1,0 +1,32 @@
+package sdkargs
+
+import (
+	"encoding/json"
+	"testing"
+
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+)
+
+// Pi 0.87.1 writes a toolCall block's `arguments` as a JSON object (pi-ai types.d.ts:261-265).
+// context.go:1022 declares it `string`, so json.Unmarshal of the whole block array fails and
+// BranchEntry.UnmarshalJSON (context.go:1013-1016 `if json.Unmarshal(msg.Content, &blocks) == nil`)
+// silently leaves Content and ToolCalls empty.
+func TestBranchEntryToolCallArgumentsAsObject(t *testing.T) {
+	raw := `{"id":"e1","type":"message","message":{"role":"assistant","content":[` +
+		`{"type":"text","text":"Let me remove build/."},` +
+		`{"type":"toolCall","id":"call-1","name":"bash","arguments":{"command":"rm -rf build"}}]}}`
+	var e sdk.BranchEntry
+	if err := json.Unmarshal([]byte(raw), &e); err != nil {
+		t.Fatal(err)
+	}
+	if e.Content != "Let me remove build/." {
+		t.Errorf("text block lost: Content = %q", e.Content)
+	}
+	if len(e.ToolCalls) != 1 || e.ToolCalls[0].ID != "call-1" || e.ToolCalls[0].Name != "bash" {
+		t.Fatalf("tool call lost: %+v", e.ToolCalls)
+	}
+	var args map[string]any
+	if err := json.Unmarshal([]byte(e.ToolCalls[0].Args), &args); err != nil || args["command"] != "rm -rf build" {
+		t.Errorf("Args = %q (%v)", e.ToolCalls[0].Args, err)
+	}
+}

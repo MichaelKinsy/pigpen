@@ -1,0 +1,89 @@
+{
+  "name": "pi-typesafe",
+  "version": "0.8.0",
+  "description": "TypeSafe AI (Jev) decisions for Pi: batched Choice/Score/Noul evaluation tool, terminal playground, and a typed API other extensions build on.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Ryan Gapac",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevMortimer/pi-typesafe.git"
+  },
+  "homepage": "https://github.com/DevMortimer/pi-typesafe#readme",
+  "bugs": "https://github.com/DevMortimer/pi-typesafe/issues",
+  "funding": "https://github.com/sponsors/DevMortimer",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "typesafe",
+    "jev",
+    "structured-decisions"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./extension": {
+      "types": "./dist/extension.d.ts",
+      "import": "./dist/extension.js"
+    },
+    "./ui": {
+      "types": "./dist/ui.d.ts",
+      "import": "./dist/ui.js"
+    },
+    "./calibrate": {
+      "types": "./dist/calibrate.d.ts",
+      "import": "./dist/calibrate.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "extensions",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/index.js"
+    ],
+    "image": "https://raw.githubusercontent.com/DevMortimer/pi-typesafe/main/docs/preview.png"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:live": "node --env-file=.env scripts/live-smoke.mjs",
+    "dev:pi": "node scripts/dev-pi.mjs",
+    "check": "npm run build && npm run typecheck && npm test",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0",
+    "typebox": "^1.3.31"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=0.85.1 <1",
+    "@earendil-works/pi-tui": ">=0.85.1 <1"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "@earendil-works/pi-tui": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.86.1",
+    "@earendil-works/pi-tui": "^0.86.1",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}

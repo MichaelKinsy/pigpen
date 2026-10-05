@@ -1,0 +1,107 @@
+{
+  "baselineCommit": "5e16557",
+  "sourceSha256": "ffb7c9c3980ef4e91f51c92ab2d500ba852ea2aaf00b7e7efe8a68bfeb53660a",
+  "node": "v26.7.0",
+  "checks": [
+    {
+      "check": "TypeScript",
+      "passed": true,
+      "tail": [
+        "> pi-goal-x@0.30.5 check",
+        "> tsc --noEmit"
+      ]
+    },
+    {
+      "check": "ESLint",
+      "passed": true,
+      "tail": [
+        "> pi-goal-x@0.30.5 lint",
+        "> eslint ."
+      ]
+    },
+    {
+      "check": "Full suite",
+      "passed": true,
+      "tests": 923,
+      "tail": [
+        "\u2139 duration_ms 32892.068625",
+        "[runner] 72 test file(s) discovered; suite finished in 33042 ms.",
+        "[runner] Timings are evidence on this machine, not machine-independent performance promises."
+      ]
+    },
+    {
+      "check": "SDK 0.84.1 serial tests",
+      "passed": true,
+      "tests": 888,
+      "tail": [
+        "\u2139 skipped 0",
+        "\u2139 todo 0",
+        "\u2139 duration_ms 41494.09125"
+      ]
+    },
+    {
+      "check": "SDK 0.83.0 TypeScript",
+      "passed": true,
+      "tail": [
+        "> pi-goal-x@0.30.5 check",
+        "> tsc --noEmit"
+      ]
+    },
+    {
+      "check": "SDK 0.83.0 serial tests",
+      "passed": true,
+      "tests": 888,
+      "tail": [
+        "\u2139 skipped 0",
+        "\u2139 todo 0",
+        "\u2139 duration_ms 42465.305083"
+      ]
+    },
+    {
+      "check": "Context gate",
+      "passed": true,
+      "tail": [
+        "",
+        "[context:gate] re-measured 24 fixtures against baseline-main.json (24 rows)",
+        "[context:gate] PASS"
+      ]
+    },
+    {
+      "check": "SDK 0.84.1 provider payloads",
+      "passed": true,
+      "tail": [
+        "> node --experimental-strip-types experiments/context/provider-crosscheck.mjs",
+        "",
+        "[provider-crosscheck] PASS: 6 real SDK payloads; no network requests sent"
+      ]
+    },
+    {
+      "check": "SDK 0.83.0 provider payloads",
+      "passed": true,
+      "tail": [
+        "[provider-crosscheck] PASS: 6 real SDK payloads; no network requests sent"
+      ]
+    },
+    {
+      "check": "Fresh 94-case performance matrix gate",
+      "passed": true
+    },
+    {
+      "check": "Comprehensive real-SDK/CPU/alternating runtime/context gate",
+      "passed": true
+    },
+    {
+      "check": "DeepSeek artifact-graded auditor pair",
+      "passed": true,
+      "cases": 4,
+      "requests": 11
+    },
+    {
+      "check": "Isolated runtime-only stage before model-facing changes",
+      "passed": true,
+      "tests": 922,
+      "typescript": true,
+      "contextFixtures": 24
+    }
+  ]
+}

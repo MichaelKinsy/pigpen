@@ -1,0 +1,88 @@
+[project]
+name = "system-one-adapter"
+version = "0.2.1"
+description = "Drop-in TypeSafeClient replacement backed by LLM APIs"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "TypeSafe AI", email = "support@typesafe.ai" }
+]
+maintainers = [
+    { name = "Erik Gafni", email = "erik@typesafe.ai" },
+    { name = "Daniel Gafni", email = "daniel@typesafe.ai" }
+]
+requires-python = ">=3.10"
+keywords = ["typesafe", "llm", "openai", "anthropic", "gemini", "ai"]
+classifiers = [
+    "Typing :: Typed",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "pydantic>=2.12.0",
+    "pydantic-core>=2.41.1",
+    "tenacity>=8.0.0",
+    "typesafe-sdk>=0.7.0",
+    "typing-extensions>=4.0.0",
+]
+
+[project.urls]
+Repository = "https://github.com/typesafe-ai/system-one-adapter-python"
+Issues = "https://github.com/typesafe-ai/system-one-adapter-python/issues"
+Changelog = "https://github.com/typesafe-ai/system-one-adapter-python/blob/main/docs/changelog.md"
+
+[project.optional-dependencies]
+openai = [
+    "openai>=2.53.0",
+]
+anthropic = [
+    "anthropic>=0.121.0",
+]
+gemini = [
+    "google-genai>=2.24.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pyrefly>=1.2.0",
+    "pytest>=9.0.2",
+    "pytest-recording>=0.13.4",
+    "ruff>=0.16.6",
+    "tach>=0.35.0",
+    "vcrpy>=8.3.0",
+]
+
+[tool.uv.build-backend]
+module-name = "system_one_adapter"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Fail rather than silently making a live call when a cassette is missing. Passing
+# --record-mode (anything but "none") lifts this for cassette-backed tests. The tach
+# pytest plugin is disabled; boundaries are checked by `tach check`, not at test time.
+addopts = "--block-network -p no:tach"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13"]
+build-backend = "uv_build"

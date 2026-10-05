@@ -1,0 +1,212 @@
+{
+  "name": "errors",
+  "description": "Every rejected call: missing fields, unknown ids, illegal transition, self block, cycle, double delete.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "  "
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 9,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get",
+            "id": 9
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "delete"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "delete",
+            "id": 9
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "a"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "b"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "c",
+            "blockedBy": [
+              7
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "in_progress"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "addBlockedBy": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "addBlockedBy": [
+              8
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "addBlockedBy": [
+              2
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 2,
+            "addBlockedBy": [
+              1
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "delete",
+            "id": 2
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "delete",
+            "id": 2
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "addBlockedBy": [
+              2
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "d",
+            "blockedBy": [
+              2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    }
+  ]
+}
