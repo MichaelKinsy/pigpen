@@ -1,0 +1,16 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# Default PiG drawn natively in Tern. The frontend member changes how the interactive
+# mode is drawn, not what PiG does: outside Tern it declines and PiG draws as usual.
+name: pig-tern
+description: "PiG drawn natively in Tern: the transcript, tool cards, diffs and the input editor become Tern Surface Protocol nodes. Outside Tern, PiG draws as usual."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  frontend: ./frontend
+skills: []
+# The frontend adds no behavior of its own, so the user's own extensions and
+# skills stay available beside it.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]
