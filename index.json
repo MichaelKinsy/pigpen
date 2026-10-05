@@ -307,6 +307,864 @@
         "A local Piglet Binary builds with the reviewed PiG, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; the targets and the 0.1.0 version are not a support or release claim.",
         "Newer PiG builds support subdirectory source add and per-Piglet release tags, but this composition is not published and no installation command is offered yet. See RELEASE-BLOCKERS.md."
       ]
+    },
+    {
+      "id": "pigpen-a2a",
+      "kind": "package",
+      "name": "pigpen-a2a",
+      "description": "A2A (Agent2Agent) for PiG: serve PiG tasks to A2A agents and call remote A2A agents, on the upstream Go SDK a2a-go. The listener is off unless configured.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/a2a/v0.1.0#subdirectory=components%2Fa2a",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/a2a/v0.1.0/components/a2a"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/a2a/v0.1.0#subdirectory=components%2Fa2a'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/a2a/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-acp",
+      "kind": "package",
+      "name": "pigpen-acp",
+      "description": "Agent Client Protocol (ACP) for PiG: pig-acp lets an editor such as Zed drive a PiG agent over stdio JSON-RPC. A Go port of pi-acp.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/acp/v0.1.0#subdirectory=components%2Facp",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/acp/v0.1.0/components/acp"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/acp/v0.1.0#subdirectory=components%2Facp'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/acp/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-ahp",
+      "kind": "package",
+      "name": "pigpen-ahp",
+      "description": "Go port of pi-ahp: serves the running PiG session to remote Microsoft Agent Host Protocol clients over WebSocket, with reconnect and auth. No listener unless you ask; no remote filesystem or terminal unless you opt in",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/ahp/v0.1.0#subdirectory=components%2Fahp",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/ahp/v0.1.0/components/ahp"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/ahp/v0.1.0#subdirectory=components%2Fahp'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/ahp/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-angry-pigs",
+      "kind": "package",
+      "name": "pigpen-angry-pigs",
+      "description": "Angry Pigs: a pixel-art slingshot game with towers, birds and physics, opened with /angry-pigs (Go). Nothing runs until you type the command.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/angry-pigs/v0.1.0#subdirectory=components%2Fangry-pigs",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/angry-pigs/v0.1.0/components/angry-pigs"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/angry-pigs/v0.1.0#subdirectory=components%2Fangry-pigs'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/angry-pigs/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-rpiv-ask-user-question",
+      "kind": "package",
+      "name": "pigpen-rpiv-ask-user-question",
+      "description": "Go port of @juicesharp/rpiv-ask-user-question: a structured questionnaire the model can put to you, with typed options instead of free-form replies (partial: the dialog walker; the interactive questionnaire is not ported yet)",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/ask-user-question/v0.1.0#subdirectory=components%2Fask-user-question",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/ask-user-question/v0.1.0/components/ask-user-question"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/ask-user-question/v0.1.0#subdirectory=components%2Fask-user-question'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/ask-user-question/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-context-info",
+      "kind": "package",
+      "name": "pigpen-context-info",
+      "description": "Context-window and cost inspection for PiG: /context, /tools, /cost, /prompts, and an optional two-line status footer",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/context-info/v0.1.0#subdirectory=components%2Fcontext-info",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/context-info/v0.1.0/components/context-info"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/context-info/v0.1.0#subdirectory=components%2Fcontext-info'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/context-info/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-dev-skills",
+      "kind": "package",
+      "name": "pigpen-dev-skills",
+      "description": "General software-development Skills adapted from public sources: TDD with a mutation gate, diagnosing bugs, handoff, research, grilling, prototyping, code review and commit messages",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/dev-skills/v0.1.0#subdirectory=components%2Fdev-skills",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/dev-skills/v0.1.0/components/dev-skills"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "skill"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/dev-skills/v0.1.0#subdirectory=components%2Fdev-skills'",
+      "piCompatibility": "not-tested",
+      "notes": [
+        "Installs from the tag components/dev-skills/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag."
+      ]
+    },
+    {
+      "id": "pigpen-dirty-repo-guard",
+      "kind": "package",
+      "name": "pigpen-dirty-repo-guard",
+      "description": "Go port of Pi's dirty-repo-guard example: blocks a session switch or fork while the git tree has uncommitted changes unless you allow it",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/dirty-repo-guard/v0.1.0#subdirectory=components%2Fdirty-repo-guard",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/dirty-repo-guard/v0.1.0/components/dirty-repo-guard"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/dirty-repo-guard/v0.1.0#subdirectory=components%2Fdirty-repo-guard'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/dirty-repo-guard/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-extension-equivalence",
+      "kind": "package",
+      "name": "pigpen-extension-equivalence",
+      "description": "Differential harness that proves a Go port of a Pi extension behaves like the TypeScript original, plus a static check for Pi APIs the Go SDK lacks",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/extension-equivalence/v0.1.0#subdirectory=components%2Fextension-equivalence",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/extension-equivalence/v0.1.0/components/extension-equivalence"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/extension-equivalence/v0.1.0#subdirectory=components%2Fextension-equivalence'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/extension-equivalence/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-extension-port",
+      "kind": "package",
+      "name": "pigpen-extension-port",
+      "description": "Test-first, proof-checked procedure for porting Pi TypeScript extensions to native Go PiG extensions",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/extension-port/v0.1.0#subdirectory=components%2Fextension-port",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/extension-port/v0.1.0/components/extension-port"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "skill"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/extension-port/v0.1.0#subdirectory=components%2Fextension-port'",
+      "piCompatibility": "not-tested",
+      "notes": [
+        "Installs from the tag components/extension-port/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag."
+      ]
+    },
+    {
+      "id": "pigpen-goal",
+      "kind": "package",
+      "name": "pigpen-goal",
+      "description": "Go port of pi-goal-x: durable goals kept as files under .pi/goals (/goal-direct, /sisyphus-direct, /goal-list, /goal-pause, /goal-clear, /goal-unfocus) (partial: storage and the direct lifecycle, not the scheduler, drafting or auditor)",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/goal/v0.1.0#subdirectory=components%2Fgoal",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/goal/v0.1.0/components/goal"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/goal/v0.1.0#subdirectory=components%2Fgoal'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/goal/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-herdr",
+      "kind": "package",
+      "name": "pigpen-herdr",
+      "description": "PiG agent-state reporter (Go extension) for the herdr terminal workspace manager",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/herdr/v0.1.0#subdirectory=components%2Fherdr",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/herdr/v0.1.0/components/herdr"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/herdr/v0.1.0#subdirectory=components%2Fherdr'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/herdr/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-jev",
+      "kind": "package",
+      "name": "pigpen-jev",
+      "description": "Jev for PiG: a typed judge for tool calls and tool output, plus a jev_ask tool. Opt-in, tells you what leaves the machine, and judges with the model PiG is configured with or the TypeSafe API. Go port of y0usaf/pi-jev.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/jev/v0.1.0#subdirectory=components%2Fjev",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/jev/v0.1.0/components/jev"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/jev/v0.1.0#subdirectory=components%2Fjev'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/jev/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-ollama-native",
+      "kind": "package",
+      "name": "pigpen-ollama-native",
+      "description": "PiG model provider (Go extension) for Ollama's native /api/chat, with the model list read from the server",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/ollama-native/v0.1.0#subdirectory=components%2Follama-native",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/ollama-native/v0.1.0/components/ollama-native"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/ollama-native/v0.1.0#subdirectory=components%2Follama-native'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/ollama-native/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-permissions",
+      "kind": "package",
+      "name": "pigpen-permissions",
+      "description": "Go port of pi-permission-system: allow, ask and deny rules for tool calls, with last-match-wins wildcard patterns and a tool_call gate (partial: the rule engine and tool-name gating, not the approval dialog, bash parsing or path rules)",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/permissions/v0.1.0#subdirectory=components%2Fpermissions",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/permissions/v0.1.0/components/permissions"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/permissions/v0.1.0#subdirectory=components%2Fpermissions'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/permissions/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-pi-typesafe-api",
+      "kind": "package",
+      "name": "pigpen-pi-typesafe-api",
+      "description": "Typed Go API for extension authors, a port of pi-typesafe's library half: one admission rule, request and spend caps, key store and auth state, judgment backends (TypeSafe, OpenRouter, Command Code, custom endpoint, own model), Ask, batching, calibration. Libraries only, no extension of its own.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/pi-typesafe-api/v0.1.0#subdirectory=components%2Fpi-typesafe-api",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/pi-typesafe-api/v0.1.0/components/pi-typesafe-api"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/pi-typesafe-api/v0.1.0#subdirectory=components%2Fpi-typesafe-api'",
+      "piCompatibility": "not-tested",
+      "notes": [
+        "Installs from the tag components/pi-typesafe-api/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "A library: a Go module that other Packages and Piglets build against. Installing it adds no Resource."
+      ]
+    },
+    {
+      "id": "pigpen-pi-typesafe",
+      "kind": "package",
+      "name": "pigpen-pi-typesafe",
+      "description": "Go port of pi-typesafe's extension: the batched typesafe_evaluate tool, the /typesafe command (login, consent, usage, sample test, playground) and result renderers. Off until the operator enables it. Content goes to api.typesafe.ai unless the own-model backend (the model PiG is configured with) is selected.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/pi-typesafe/v0.1.0#subdirectory=components%2Fpi-typesafe",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/pi-typesafe/v0.1.0/components/pi-typesafe"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/pi-typesafe/v0.1.0#subdirectory=components%2Fpi-typesafe'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/pi-typesafe/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-pig-doctor",
+      "kind": "package",
+      "name": "pigpen-pig-doctor",
+      "description": "Finds and safely fixes cruft in a PiG setup: duplicate or broken extensions, unpruned caches, orphaned agent directories, legacy files. Read-only by default; every removal is backed up and restorable",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/pig-doctor/v0.1.0#subdirectory=components%2Fpig-doctor",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/pig-doctor/v0.1.0/components/pig-doctor"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/pig-doctor/v0.1.0#subdirectory=components%2Fpig-doctor'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/pig-doctor/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-pig-music",
+      "kind": "package",
+      "name": "pigpen-pig-music",
+      "description": "Pig Music: a full-screen music player for PiG that keeps playing while it is hidden. /music opens the player (YouTube Music through yt-dlp, played by mpv); /music setup and /music doctor check the machine. Explicit /music command only.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/pig-music/v0.1.0#subdirectory=components%2Fpig-music",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/pig-music/v0.1.0/components/pig-music"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/pig-music/v0.1.0#subdirectory=components%2Fpig-music'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/pig-music/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-pig-play",
+      "kind": "package",
+      "name": "pigpen-pig-play",
+      "description": "The shared pig sprite catalogue, half-block pixel rasterizer, arcade scenery and terminal game plumbing that Pigpen's pig games build on (Go libraries and licensed art, no extension of its own)",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/pig-play/v0.1.0#subdirectory=components%2Fpig-play",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/pig-play/v0.1.0/components/pig-play"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/pig-play/v0.1.0#subdirectory=components%2Fpig-play'",
+      "piCompatibility": "not-tested",
+      "notes": [
+        "Installs from the tag components/pig-play/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "A library: a Go module that other Packages and Piglets build against. Installing it adds no Resource."
+      ]
+    },
+    {
+      "id": "pigpen-pig-runner",
+      "kind": "package",
+      "name": "pigpen-pig-runner",
+      "description": "PiG Runner: the pixel-art pig obstacle runner, opened with /runner or /pig-runner (Go). Nothing runs until you type the command.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/pig-runner/v0.1.0#subdirectory=components%2Fpig-runner",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/pig-runner/v0.1.0/components/pig-runner"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/pig-runner/v0.1.0#subdirectory=components%2Fpig-runner'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/pig-runner/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-pig-snake",
+      "kind": "package",
+      "name": "pigpen-pig-snake",
+      "description": "Pig Snake: a snake game whose head is the PiG pig and whose every eaten apple adds another pig to the line, so a herd forms behind the leader. Explicit /pig-snake command only.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/pig-snake/v0.1.0#subdirectory=components%2Fpig-snake",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/pig-snake/v0.1.0/components/pig-snake"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/pig-snake/v0.1.0#subdirectory=components%2Fpig-snake'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/pig-snake/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-powerline-footer",
+      "kind": "package",
+      "name": "pigpen-powerline-footer",
+      "description": "Go port of pi-powerline-footer: a powerline-style status bar of configurable segments (model, path, git, tokens, cost, context, time) with presets, separators and /powerline (partial: the bar, not the custom editor)",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/powerline/v0.1.0#subdirectory=components%2Fpowerline",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/powerline/v0.1.0/components/powerline"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/powerline/v0.1.0#subdirectory=components%2Fpowerline'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/powerline/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-session-ingest",
+      "kind": "package",
+      "name": "pigpen-session-ingest",
+      "description": "read_session: a token-safe tool that lets the model query Pi and PiG JSONL session transcripts (contents, search, single turns, tool usage, stats)",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/session-ingest/v0.1.0#subdirectory=components%2Fsession-ingest",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/session-ingest/v0.1.0/components/session-ingest"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/session-ingest/v0.1.0#subdirectory=components%2Fsession-ingest'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/session-ingest/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-subagents",
+      "kind": "package",
+      "name": "pigpen-subagents",
+      "description": "Go port of pi-subagents: agent and chain definitions, their discovery, the subagent tool's list and get actions, and single-agent and chain runs through a child pig process (partial: no parallel, async, workflow, worktree or fleet features)",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/subagents/v0.1.0#subdirectory=components%2Fsubagents",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/subagents/v0.1.0/components/subagents"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/subagents/v0.1.0#subdirectory=components%2Fsubagents'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/subagents/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-rpiv-todo",
+      "kind": "package",
+      "name": "pigpen-rpiv-todo",
+      "description": "Go port of @juicesharp/rpiv-todo: a todo tool for the model, the /todos command and a live overlay that survives reload and compaction",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/todo/v0.1.0#subdirectory=components%2Ftodo",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/todo/v0.1.0/components/todo"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/todo/v0.1.0#subdirectory=components%2Ftodo'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/todo/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-typesafe",
+      "kind": "package",
+      "name": "pigpen-typesafe",
+      "description": "Shared Go client for the TypeSafe AI API (a port of the official TypeScript SDK) with an own-model backend that answers the same typed questions with the model PiG is configured with. Libraries only, no extension of its own.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/typesafe/v0.1.0#subdirectory=components%2Ftypesafe",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/typesafe/v0.1.0/components/typesafe"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/typesafe/v0.1.0#subdirectory=components%2Ftypesafe'",
+      "piCompatibility": "not-tested",
+      "notes": [
+        "Installs from the tag components/typesafe/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "A library: a Go module that other Packages and Piglets build against. Installing it adds no Resource."
+      ]
+    },
+    {
+      "id": "pigpen-warden",
+      "kind": "package",
+      "name": "pigpen-warden",
+      "description": "Go port of DevMortimer's pi-warden: guardrails that steer instead of interrupt. Holds irreversible tool calls, flags off-task and off-plan calls, breaks stuck loops and asks for verification of unverified done claims. Opt-in, discloses what leaves the machine, and judges with TypeSafe or the session's own model.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/warden/v0.1.0#subdirectory=components%2Fwarden",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/warden/v0.1.0/components/warden"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/warden/v0.1.0#subdirectory=components%2Fwarden'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/warden/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
+    },
+    {
+      "id": "pigpen-websearch",
+      "kind": "package",
+      "name": "pigpen-websearch",
+      "description": "Go port of pi-web-access (first slice): web_search, fetch_content, get_search_content and source_check with SSRF-guarded fetching and retained sources",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "available",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git@components/websearch/v0.1.0#subdirectory=components%2Fwebsearch",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/components/websearch/v0.1.0/components/websearch"
+      },
+      "version": "0.1.0",
+      "license": "MIT",
+      "resources": [
+        "extension"
+      ],
+      "installCommand": "pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/websearch/v0.1.0#subdirectory=components%2Fwebsearch'",
+      "piCompatibility": "not-applicable",
+      "notes": [
+        "Installs from the tag components/websearch/v0.1.0 of the Pigpen repository with the command above; `pig update` keeps that tag. A later release is a new tag.",
+        "The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary."
+      ]
     }
   ]
 }
