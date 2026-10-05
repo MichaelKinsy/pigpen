@@ -18,7 +18,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
       },
-      "manifestSha256": "7f72b8677de6f592d7b429425fa636522423cc1dc380d4671d8b1e1453545461",
+      "manifestSha256": "7245edcea12a8bb3125fcf0d0a5003c1ecea0db1c0c07f12993c6a72f565eee2",
       "releases": [],
       "notes": [
         "This is a source scaffold, not the finished batteries-included composition. It selects only an empty build-pipeline fixture; curated extensions and other resources are pending owner review.",

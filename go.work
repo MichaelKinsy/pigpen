@@ -1,0 +1,7 @@
+go 1.26
+
+use (
+    ./piglets/pig-with-batteries/extensions/ollama-native
+    ./piglets/pig-with-batteries/extensions/seed-check
+    ../PiG/extensions/sdk
+)
