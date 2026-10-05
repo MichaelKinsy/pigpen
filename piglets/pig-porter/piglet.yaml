@@ -1,0 +1,14 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# The umbrella porter. Today it is exactly the focused extension porter: it derives from
+# pig-extension-porter (PiG's `extends`), so there is one Skill and one Go extension, not two copies.
+# Further porting Skills (providers, themes, Package conversion) would be added here.
+name: pig-porter
+description: "Port Pi work to native PiG. Today that is Pi TypeScript extensions to Go, through the pig-extension-porter composition it extends."
+extends:
+  source: local:../pig-extension-porter/piglet.yaml
+  version: "^0.1.0"
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused

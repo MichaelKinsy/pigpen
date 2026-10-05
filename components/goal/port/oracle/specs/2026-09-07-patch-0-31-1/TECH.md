@@ -1,0 +1,13 @@
+# Implementation and release
+
+1. On codex/pr-46-drafting, merge current main into the contributor history, then harden the shared questionnaire fallback. Route RPC directly to primitives; guard TUI capabilities before invoking terminal methods; fall back on missing/undefined custom UI. Use unambiguous display-label mappings, recommended options, direct free-text input, sequential cancellation, and auditor selection before confirmation. Propagate unavailable results and format thrown errors in drafting tools. Validate, update PR #46, push its contributor branch, and merge its checked head using gh.
+2. On codex/release-0.31.1, queue audit transcript events with session identity. Flush only at idle agent_settled; clear at session boundaries. Preserve the ledger and live progress widget. Remove goal audit custom messages from provider context before checkpoint compaction/SDK conversion, including historical entries.
+3. Detect PI_SUBAGENT_CHILD=1 or finite positive PI_SUBAGENT_DEPTH before creating GoalCore. Register only a child context filter for goal checkpoints and audit events; do not install any goal runtime/tools/commands. Preserve unrelated history and ordinary parent behavior.
+4. Add handler, subprocess and real-SDK provider serialization regression tests. Refresh discovery manifest and context baselines only with explicit evidence. Validate SDK 0.83.0, 0.84.1 and 0.84.4 in isolated dependency installations with local providers. Run TypeScript, lint, full suite, self-check, context/provider checks, CI benchmark gate, production audit and packed-artifact smoke checks.
+5. Update README/changelog and root package/lock metadata to 0.31.1 without dependency-range changes. Push changes, verify exact-commit CI, pack once and verify contents, tag, publish that tarball, create GitHub release via gh, verify integrity/tag/latest and close resolved issues with evidence.
+
+Additive interfaces: GoalQuestionnaireResult.unavailable and proposal-result unavailable; internal session-scoped audit queue. No public tool schema or persisted format changes.
+
+## GitHub fork permission fallback
+
+GitHub reports maintainerCanModify=true but rejects HTTPS and SSH pushes to VincentHanxiaoDu/pi-goal as tmonk (403/permission denied). Carry the checked amendments on a maintainer release PR retaining both contributor commits. Validate that combined head, merge original #46 with its exact unchanged head, then merge main into the release branch and integrate the amendments plus remaining fixes. Require exact final-head CI before tagging/publishing. Update #46 with a link to the companion and explain the restriction. No contributor history is rewritten.

@@ -1,0 +1,8 @@
+{
+  "name": "idle-bundled",
+  "description": "Bundling is not activating: an ordinary agent turn with the extension loaded produces no game UI, dialog or notification.",
+  "llm": [{"text": "hello"}],
+  "steps": [
+    {"name": "prompt", "rpc": {"type": "prompt", "message": "hi"}}
+  ]
+}

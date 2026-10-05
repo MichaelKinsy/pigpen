@@ -1,0 +1,1 @@
+{"details":{"family":"qwen3","parameter_size":"8.2B"},"model_info":{"general.architecture":"qwen3","qwen3.context_length":40960},"capabilities":["completion","tools","thinking","vision"]}

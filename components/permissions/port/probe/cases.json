@@ -1,0 +1,8160 @@
+{
+ "bash": [
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "git status"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo ok"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "rm x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "npm install"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "git push origin main"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo  ok"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": " git status "
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "wc -l"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "nice touch a"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "env touch b"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "sudo ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "eval touch c"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "rush touch c"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "find . -name x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "xargs rm"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "watch ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "doas ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "parallel rm"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "time touch a"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "nice echo d"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "env echo b"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "command ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "su root"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "source x.sh"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "git status; ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls &"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls;"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "git status\t"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "cat < f"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": ""
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "   "
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo é"
+  },
+  {
+   "config": "bash-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "git status"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo ok"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "rm x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "npm install"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "git push origin main"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo  ok"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": " git status "
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "wc -l"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "nice touch a"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "env touch b"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "sudo ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "eval touch c"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "rush touch c"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "find . -name x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "xargs rm"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "watch ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "doas ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "parallel rm"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "time touch a"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "nice echo d"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "env echo b"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "command ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "su root"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "source x.sh"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "git status; ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls &"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls;"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "git status\t"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "cat < f"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": ""
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "   "
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "echo é"
+  },
+  {
+   "config": "universal-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "allow"
+   },
+   "yolo": false,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git status"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo ok"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "rm x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "npm install"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git push origin main"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo  ok"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": " git status "
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "wc -l"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "nice touch a"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "env touch b"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "sudo ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "eval touch c"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "rush touch c"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "find . -name x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "xargs rm"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "watch ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "doas ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "parallel rm"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "time touch a"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "nice echo d"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "env echo b"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "command ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "su root"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "source x.sh"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git status; ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls &"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls;"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git status\t"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "cat < f"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": ""
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "   "
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "echo é"
+  },
+  {
+   "config": "patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": "deny",
+     "git push *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo ok"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "rm x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "npm install"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git push origin main"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo  ok"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": " git status "
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "wc -l"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "nice touch a"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "env touch b"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "sudo ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "eval touch c"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "rush touch c"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "find . -name x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "xargs rm"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "watch ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "doas ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "parallel rm"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "time touch a"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "nice echo d"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "env echo b"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "command ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "su root"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "source x.sh"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status; ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls &"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls;"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status\t"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "cat < f"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": ""
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "   "
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo é"
+  },
+  {
+   "config": "deny-default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "deny",
+     "git status": "allow",
+     "npm *": {
+      "action": "deny",
+      "reason": "Use pnpm instead"
+     },
+     "echo *": "allow",
+     "sudo *": "allow",
+     "nice *": "allow",
+     "ls": "allow",
+     "wc *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "git status"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo ok"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "rm x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "npm install"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "git push origin main"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo  ok"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": " git status "
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "wc -l"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "nice touch a"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "env touch b"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "sudo ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "eval touch c"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "rush touch c"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "find . -name x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "xargs rm"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "watch ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "doas ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "parallel rm"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "time touch a"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "nice echo d"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "env echo b"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "command ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "su root"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "source x.sh"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "git status; ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls &"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls;"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "git status\t"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "cat < f"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": ""
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "   "
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "echo é"
+  },
+  {
+   "config": "bash-ask",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "ask"
+   },
+   "yolo": false,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo ok"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "rm x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "npm install"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git push origin main"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo  ok"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": " git status "
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "wc -l"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "nice touch a"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "env touch b"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "sudo ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "eval touch c"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "rush touch c"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "find . -name x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "xargs rm"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "watch ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "doas ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "parallel rm"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "time touch a"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "nice echo d"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "env echo b"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "command ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "su root"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "source x.sh"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status; ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls &"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls;"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "git status\t"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "cat < f"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": ""
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "   "
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "echo é"
+  },
+  {
+   "config": "universal-deny",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "*": "deny",
+    "bash": {
+     "echo *": "allow"
+    }
+   },
+   "yolo": false,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "git status"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo ok"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "rm x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "npm install"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "git push origin main"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo  ok"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": " git status "
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "wc -l"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "nice touch a"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "env touch b"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "sudo ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "eval touch c"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "rush touch c"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "find . -name x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "xargs rm"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "watch ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "doas ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "parallel rm"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "time touch a"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "nice echo d"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "env echo b"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "command ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "su root"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "source x.sh"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "git status; ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls &"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls;"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "git status\t"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "cat < f"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": ""
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "   "
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "echo é"
+  },
+  {
+   "config": "yolo-allow",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": "allow"
+   },
+   "yolo": true,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "git status"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo ok"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "rm x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "npm install"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "git push origin main"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo  ok"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": " git status "
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "wc -l"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "nice touch a"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "env touch b"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "sudo ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "eval touch c"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "rush touch c"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "find . -name x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "xargs rm"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "watch ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "doas ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "parallel rm"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "time touch a"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "nice echo d"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "env echo b"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "command ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "su root"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "source x.sh"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "git status; ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls &"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls;"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "git status\t"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "cat < f"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": ""
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "   "
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "echo é"
+  },
+  {
+   "config": "yolo-patterns",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "ask",
+     "rm *": "deny"
+    }
+   },
+   "yolo": true,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "git status"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo ok"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "rm x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "npm install"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "git push origin main"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo  ok"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": " git status "
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "wc -l"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "nice touch a"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "env touch b"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "/usr/bin/env touch b"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "sudo rm x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "sudo ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "eval touch c"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "sh -c ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "/bin/sh -c ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "bash -ec ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "zsh -xc ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "flock out.lock touch a"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "rush touch c"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "rust-parallel touch d"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "fd -x rm"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "fd --exec-batch rm"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "find . -execdir rm x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "find . -name x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "timeout 5 touch z"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "xargs rm"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "watch ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "setsid touch x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "doas ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "stdbuf -oL touch x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "nohup touch x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "parallel rm"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "time touch a"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "nice echo d"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "env echo b"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "timeout 5 wc -l"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "xargs grep foo"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ssh host ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "command ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "bash script.sh"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "bash -- -c"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "su root"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "source x.sh"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls | wc -l; rm x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo x && nice touch y"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "git status && rm x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "git status; ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "git status || echo no"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls\nrm x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls|wc -l"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo a&&echo b"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "git status && sudo ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls && ssh host ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls &"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls & rm x"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls;"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo $(ls)"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo 'a'"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "A=1 ls"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "git status\t"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "cat < f"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo hi > out.txt"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "rm -rf /tmp/y; echo hi > out.txt"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": ""
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "   "
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo \u001b]0;x\u0007"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo {a,b}"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "echo é"
+  },
+  {
+   "config": "default",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow"
+   },
+   "yolo": false,
+   "command": "ls ;; rm x"
+  },
+  {
+   "config": "two-denies",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": {
+      "action": "deny",
+      "reason": "no rm"
+     },
+     "mv *": {
+      "action": "deny",
+      "reason": "no mv"
+     },
+     "git push *": "ask",
+     "git pull *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "rm x; mv y"
+  },
+  {
+   "config": "two-denies",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": {
+      "action": "deny",
+      "reason": "no rm"
+     },
+     "mv *": {
+      "action": "deny",
+      "reason": "no mv"
+     },
+     "git push *": "ask",
+     "git pull *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "mv y && rm x"
+  },
+  {
+   "config": "two-denies",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": {
+      "action": "deny",
+      "reason": "no rm"
+     },
+     "mv *": {
+      "action": "deny",
+      "reason": "no mv"
+     },
+     "git push *": "ask",
+     "git pull *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git push a; git pull b"
+  },
+  {
+   "config": "two-denies",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": {
+      "action": "deny",
+      "reason": "no rm"
+     },
+     "mv *": {
+      "action": "deny",
+      "reason": "no mv"
+     },
+     "git push *": "ask",
+     "git pull *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "git push a; rm x"
+  },
+  {
+   "config": "two-denies",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "bash": {
+     "*": "allow",
+     "rm *": {
+      "action": "deny",
+      "reason": "no rm"
+     },
+     "mv *": {
+      "action": "deny",
+      "reason": "no mv"
+     },
+     "git push *": "ask",
+     "git pull *": "ask"
+    }
+   },
+   "yolo": false,
+   "command": "ls | mv a b | rm c"
+  },
+  {
+   "config": "surface-order",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "b*": "deny",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "ls"
+  },
+  {
+   "config": "surface-order",
+   "permission": {
+    "path": "allow",
+    "external_directory": "allow",
+    "b*": "deny",
+    "bash": "allow"
+   },
+   "yolo": false,
+   "command": "echo hi"
+  }
+ ],
+ "config": [
+  "[1]",
+  "\"x\"",
+  "null",
+  "{}",
+  "{\"permission\":[1]}",
+  "{\"permission\":{\"bash\":\"dney\"}}",
+  "{\"permission\":{\"bash\":{\"rm *\":\"dney\"}}}",
+  "{\"yoloMod\":true}",
+  "{\"yoloMode\":\"yes\"}",
+  "{\"permission\":{\"\":\"allow\"}}",
+  "{\"permission\":{\"path_raed\":\"allow\"}}",
+  "{\"permission\":{\"bash\":{\"\":\"allow\"}}}",
+  "{\"permission\":{\"bash\":{\"x\":{\"action\":\"allow\"}}}}",
+  "{\"permission\":{\"bash\":{\"x\":{\"action\":\"deny\",\"reason\":5}}}}",
+  "{\"permission\": {\"bash\": {\"x\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}}}}",
+  "{\"permission\": {\"bash\": {\"x\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}}}}",
+  "{\"permission\":{\"bash\":{\"x\":{\"action\":\"deny\",\"extra\":1}}}}",
+  "{\"debugLog\":1}",
+  "{\"forwardingTimeoutMs\":0}",
+  "{\"forwardingTimeoutMs\":1.5}",
+  "{\"promptNotifications\":[\"bell\",\"x\"]}",
+  "{\"permissionDialogKeys\":{\"approve\":\"1\",\"bogus\":\"2\"}}",
+  "{\"shellTools\":{\"exec\":{\"commandArgument\":\"cmd\"}}}",
+  "{\"shellTools\":{\"exec\":{\"commandArgument\":\"\"}}}",
+  "{\"piInfrastructureReadPaths\":[\"\"]}",
+  "{\"authorizerChain\":[\"a\"]}",
+  "{\"$schema\":\"x\",\"permission\":{\"*\":\"allow\"}}",
+  "{\"a\":1,\"b\":2,\"yoloMode\":\"x\"}",
+  "{\n // c\n \"permission\": {\"*\": \"allow\"} /* x */\n}",
+  "{\"permission\":{\"path_read\":{\"*\":\"allow\"},\"external_directory_write\":\"deny\"}}",
+  "{\"permission\":{\"mcp__a__b\":\"deny\"}}",
+  "{\"permission\":{\"bash\":null}}",
+  "{\"permission\":null}",
+  "{\"yoloMode\":null}",
+  "{\"permission\":{\"bash\":{\"x\":null}}}",
+  "{\"permission\":{\"*\":{\"*\":\"allow\"}}}",
+  "{\"toolInputPreviewMaxLength\":5}",
+  "{\"promptMaxRows\":1e400}",
+  "{\"permission\":{\"path_\":\"allow\",\"external_directory_x\":\"allow\"}}",
+  "{\"permission\":{\"bash\":\"dney\",\"read\":\"x\"},\"yoloMod\":1}",
+  "{\"permission\":",
+  "{\"permission\":{\"bash\":{\"x\":{\"action\":\"deny\",\"reason\":\"\\ud83d\\ude00rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}}}}",
+  "{\"permission\":{\"bash\":{\"x\":{\"action\":\"deny\",\"reason\":\"\"}}}}",
+  "{\"shellTools\":{\"exec\":{\"commandArgument\":\"cmd\",\"x\":1}}}",
+  "{\"shellTools\":[]}",
+  "{\"permissionDialogKeys\":{\"approve\":5}}",
+  "{\"promptNotifications\":\"bell\"}",
+  "{\"debugLog\":true,\"permissionReviewLog\":false,\"doublePressToConfirm\":true,\"promptFieldMaxWidth\":3,\"reviewLogFieldMaxWidth\":4,\"toolTextSummaryMaxLength\":2}",
+  "{\"promptMaxRows\":0.5}",
+  "{\"promptMaxRows\":-1}",
+  "{\"promptMaxRows\":\"5\"}",
+  "{\"promptMaxRows\":true}",
+  "{\"shellTools\":{\"\":{\"commandArgument\":\"c\"}}}",
+  "{\"shellTools\":{\"e\":{}}}",
+  "{\"shellTools\":{\"e\":{\"commandArgument\":\"c\",\"workdirArgument\":\"\"}}}",
+  "{\"shellTools\":{\"e\":\"x\"}}",
+  "{\"shellTools\":{\"e\":{\"commandArgument\":5}}}",
+  "{\"permission\": {\"bash\": {\"x\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}, \"y\": \"dney\"}}}",
+  "{\"permission\": {\"bash\": {\"x\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}, \"y\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}}, \"read\": {\"a\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}}}}",
+  "{\"permission\": {\"bash\": {\"x\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}}, \"path_x\": \"allow\", \"\": \"deny\"}}",
+  "{\"permission\": {\"zzz\": \"dney\", \"bash\": \"dney\", \"*\": \"x\"}}",
+  "{\"permission\": {\"bash\": {\"x\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\", \"z\": 1}}}}",
+  "{\"permission\": {\"bash\": {\"\": {\"action\": \"deny\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}}}}",
+  "{\"permission\":{\"\":\"dney\"}}",
+  "{\"permission\":{\"1\":\"x\",\"a\":\"x\",\"0\":\"y\"}}",
+  "{\"b\":1,\"2\":1,\"a\":1}",
+  "{\"permissionDialogKeys\":[]}",
+  "{\"permissionDialogKeys\":{\"approve\":\"1\"},\"x\":{\"y\":1}}",
+  "{\"authorizerChain\":[1,\"\"]}",
+  "{\"promptNotifications\":[1]}",
+  "{\"$schema\":5}",
+  "{\"permission\":{\"bash\":{\"x\":{\"reason\":\"r\"}}}}",
+  "{\"permission\":{\"bash\":{\"x\":{\"action\":\"deny\",\"reason\":null}}}}",
+  "{\"permission\":{\"bash\":[]}}",
+  "{\"permission\":{\"bash\":[\"allow\"]}}",
+  "{\"permission\":\"allow\"}",
+  "{\"yoloMode\":true,\"yoloMode\":\"x\"}",
+  "{\"permission\":{\"bash\":\"allow\",\"bash\":\"dney\"}}",
+  "{\"permission\": {\"__proto__\": \"allow\"}}",
+  "﻿{}",
+  "{} // trailing",
+  "{'a':1}",
+  "{\"permission\":{\"bash\":\"allow\"}} /* unterminated",
+  "{\"shellTools\":{\"exec_command\":{\"commandArgument\":\"cmd\",\"workdirArgument\":\"workdir\"}},\"permission\":{\"bash\":\"deny\"}}",
+  "{\"permission\":{\"bash\":{\"a\":\"allow\"}},\"yoloMode\":true}",
+  "{\"permission\":{\"bash\":{\"curl https://x/*\":\"deny\",\"echo \\\"//\\\" *\":\"allow\"}}} // a URL is not a comment",
+  "{\"permission\":{\"bash\":{\"a/*b*/c\":\"allow\"}}, /* \"yoloMode\": true, */ \"$schema\":\"https://x//y\"}",
+  "{\"permission\":{\"bash\":\"allow\"}, \"x\":\"\\\\\"} // after an escaped backslash",
+  "{\"permission\":{\"b*\":\"deny\",\"bash\":\"allow\",\"*\":\"ask\",\"zz\":\"allow\",\"1\":\"deny\",\"path\":\"allow\"}}",
+  "{\"permission\":{\"bash\":{\"__proto__\":\"deny\",\"*\":\"allow\"}}}",
+  "{\"permission\":{\"bash\":{\"__proto__\":{\"action\":\"deny\"},\"*\":\"allow\"}}}"
+ ],
+ "wrapper": [
+  "eval rm",
+  "bash -c rm",
+  "sh -c rm",
+  "dash -c rm",
+  "zsh -c rm",
+  "ksh -c rm",
+  "bash -ec rm",
+  "bash -xc rm",
+  "/bin/bash -c rm",
+  "bash script.sh",
+  "bash -- -c",
+  "sudo aws s3 ls",
+  "env FOO=bar aws",
+  "xargs grep foo",
+  "timeout 10 grep foo",
+  "nice -n 5 make",
+  "doas ls",
+  "flock /tmp/lock ls",
+  "find . -exec grep foo {} ;",
+  "find . -execdir rm {} ;",
+  "fd -x rm",
+  "fd --exec-batch rm",
+  "find . -name x",
+  "ls -la",
+  "grep -c foo file",
+  "git status",
+  "",
+  "./sudo ls",
+  "sudo",
+  "bash -c",
+  "bash --c x",
+  "rush x",
+  "rust-parallel x",
+  "setsid x",
+  "stdbuf x",
+  "watch x",
+  "parallel x",
+  "time x",
+  "nohup x",
+  "/usr/bin/xargs rm",
+  "fd -X rm",
+  "fd --exec rm",
+  "find . -ok rm",
+  "find . -okdir rm",
+  "find -exec",
+  "sh -n -c x",
+  "sh -cx x",
+  "sh x -c y"
+ ]
+}

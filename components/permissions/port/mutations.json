@@ -1,0 +1,1028 @@
+[
+ {
+  "name": "home-slash",
+  "file": "wildcard.go",
+  "find": "strings.HasPrefix(rest, \"/\")",
+  "replace": "strings.HasPrefix(rest, \"//\")"
+ },
+ {
+  "name": "home-backslash",
+  "file": "wildcard.go",
+  "find": "strings.HasPrefix(rest, `\\`)",
+  "replace": "false"
+ },
+ {
+  "name": "home-bare",
+  "file": "wildcard.go",
+  "find": "if rest == \"\" {\n\t\treturn homeDir()",
+  "replace": "if rest == \"\" {\n\t\treturn \"\""
+ },
+ {
+  "name": "fold-separators",
+  "file": "wildcard.go",
+  "find": "strings.ReplaceAll(v, \"/\", `\\`)",
+  "replace": "strings.ReplaceAll(v, \"/\", \"/\")"
+ },
+ {
+  "name": "tail-suffix",
+  "file": "wildcard.go",
+  "find": "strings.HasSuffix(expanded, \" *\")",
+  "replace": "strings.HasSuffix(expanded, \" ?\")"
+ },
+ {
+  "name": "tail-match",
+  "file": "wildcard.go",
+  "find": "if c.tail {",
+  "replace": "if false {"
+ },
+ {
+  "name": "question-mark",
+  "file": "wildcard.go",
+  "find": "case '?':",
+  "replace": "case '!':"
+ },
+ {
+  "name": "star",
+  "file": "wildcard.go",
+  "find": "case '*':\n\t\t\tc.toks",
+  "replace": "case '+':\n\t\t\tc.toks"
+ },
+ {
+  "name": "canonical-ascii",
+  "file": "wildcard.go",
+  "find": "up > 0xFFFF || (u >= 128 && up < 128)",
+  "replace": "up > 0xFFFF"
+ },
+ {
+  "name": "case-insensitive",
+  "file": "wildcard.go",
+  "find": "ci := c.opts != nil && c.opts.CaseInsensitive",
+  "replace": "ci := false"
+ },
+ {
+  "name": "last-match",
+  "file": "wildcard.go",
+  "find": "for i := len(patterns) - 1; i >= 0; i-- {",
+  "replace": "for i := 0; i < len(patterns); i++ {"
+ },
+ {
+  "name": "names-trim",
+  "file": "wildcard.go",
+  "find": "n = jsTrim(n)",
+  "replace": "_ = jsTrim(n)"
+ },
+ {
+  "name": "names-skip-empty",
+  "file": "wildcard.go",
+  "find": "if n == \"\" {\n\t\t\tcontinue",
+  "replace": "if false {\n\t\t\tcontinue"
+ },
+ {
+  "name": "glob-tail-star",
+  "file": "wildcard.go",
+  "find": "for p < len(toks) && toks[p].kind == tokStar {\n\t\tp++\n\t}\n\treturn p == len(toks)",
+  "replace": "return p == len(toks)"
+ },
+ {
+  "name": "matches-fold-value",
+  "file": "wildcard.go",
+  "find": "v := utf16.Encode([]rune(foldSeparators(value, c.opts)))",
+  "replace": "v := utf16.Encode([]rune(value))"
+ },
+ {
+  "name": "pattern-utf16",
+  "file": "wildcard.go",
+  "find": "for _, u := range utf16.Encode([]rune(expanded)) {",
+  "replace": "for _, u := range []uint16(nil) {"
+ },
+ {
+  "name": "surface-path",
+  "file": "rule.go",
+  "find": "\"path\": true, \"external_directory\": true,\n\t\"path_read\"",
+  "replace": "\"external_directory\": true,\n\t\"path_read\""
+ },
+ {
+  "name": "surface-options-only-path",
+  "file": "rule.go",
+  "find": "if pathSurfaces[surface] {\n\t\treturn f.MatchOptions",
+  "replace": "if !pathSurfaces[surface] {\n\t\treturn f.MatchOptions"
+ },
+ {
+  "name": "rule-surface-match",
+  "file": "rule.go",
+  "find": "return WildcardMatch(r.Surface, surface, nil) && WildcardMatch(r.Pattern",
+  "replace": "return WildcardMatch(r.Surface, surface, nil) || WildcardMatch(r.Pattern"
+ },
+ {
+  "name": "yolo-rewrite",
+  "file": "rule.go",
+  "find": "if r.Action == \"ask\" {\n\t\t\tr.Action, r.Origin = \"allow\", \"yolo\"",
+  "replace": "if r.Action != \"ask\" {\n\t\t\tr.Action, r.Origin = \"allow\", \"yolo\""
+ },
+ {
+  "name": "yolo-origin",
+  "file": "rule.go",
+  "find": "r.Action, r.Origin = \"allow\", \"yolo\"",
+  "replace": "r.Action, r.Origin = \"allow\", \"builtin\""
+ },
+ {
+  "name": "floor-rewrite",
+  "file": "rule.go",
+  "find": "if r.Action == \"allow\" {\n\t\t\tr.Action, r.Origin = \"ask\", \"fail-closed\"",
+  "replace": "if r.Action != \"allow\" {\n\t\t\tr.Action, r.Origin = \"ask\", \"fail-closed\""
+ },
+ {
+  "name": "evaluate-default",
+  "file": "rule.go",
+  "find": "defaultAction = \"ask\"",
+  "replace": "defaultAction = \"deny\""
+ },
+ {
+  "name": "evaluate-default-origin",
+  "file": "rule.go",
+  "find": "Action: defaultAction, Origin: \"builtin\"}",
+  "replace": "Action: defaultAction, Origin: \"config\"}"
+ },
+ {
+  "name": "evaluate-last",
+  "file": "rule.go",
+  "find": "for i := len(rules) - 1; i >= 0; i-- {\n\t\tif pred(rules[i]) {",
+  "replace": "for i := 0; i < len(rules); i++ {\n\t\tif pred(rules[i]) {"
+ },
+ {
+  "name": "denied-catchall-probe",
+  "file": "rule.go",
+  "find": "probes := []string{\"*\"}",
+  "replace": "probes := []string{}"
+ },
+ {
+  "name": "denied-home-probe",
+  "file": "rule.go",
+  "find": "p := expandHomePath(r.Pattern)",
+  "replace": "p := r.Pattern"
+ },
+ {
+  "name": "denied-test",
+  "file": "rule.go",
+  "find": "if Evaluate(surface, v, rules, f, \"\").Action != \"deny\" {",
+  "replace": "if Evaluate(surface, v, rules, f, \"\").Action == \"deny\" {"
+ },
+ {
+  "name": "restrictive-deny-short",
+  "file": "rule.go",
+  "find": "if r.Action == \"deny\" {\n\t\t\treturn &Found{r, v}",
+  "replace": "if r.Action == \"denyx\" {\n\t\t\treturn &Found{r, v}"
+ },
+ {
+  "name": "restrictive-ask-first",
+  "file": "rule.go",
+  "find": "worst.Rule.Action != \"ask\"",
+  "replace": "worst.Rule.Action == \"ask\""
+ },
+ {
+  "name": "any-fallback",
+  "file": "rule.go",
+  "find": "fallback := \"*\"",
+  "replace": "fallback := \"\""
+ },
+ {
+  "name": "any-first-value",
+  "file": "rule.go",
+  "find": "fallback = values[0]",
+  "replace": "fallback = \"*\""
+ },
+ {
+  "name": "any-reported-value",
+  "file": "rule.go",
+  "find": "\t\tfor _, v := range values {\n\t\t\tif ruleMatches(r, surface, v, f) {\n\t\t\t\treturn Found{r, v}",
+  "replace": "\t\tfor _, v := range values[:0] {\n\t\t\tif ruleMatches(r, surface, v, f) {\n\t\t\t\treturn Found{r, v}"
+ },
+ {
+  "name": "restrictiveness-rank",
+  "file": "rule.go",
+  "find": "\"deny\": 2}",
+  "replace": "\"deny\": 1}"
+ },
+ {
+  "name": "restrictive-tie",
+  "file": "rule.go",
+  "find": "if restrictiveness[r.State] > restrictiveness[worst.State] {",
+  "replace": "if restrictiveness[r.State] >= restrictiveness[worst.State] {"
+ },
+ {
+  "name": "pick-empty",
+  "file": "rule.go",
+  "find": "if len(results) == 0 {\n\t\treturn nil",
+  "replace": "if len(results) == 1 {\n\t\treturn nil"
+ },
+ {
+  "name": "merge-both-objects",
+  "file": "rule.go",
+  "find": "if bok && vok {",
+  "replace": "if bok || vok {"
+ },
+ {
+  "name": "merge-replace",
+  "file": "rule.go",
+  "find": "\t\t} else {\n\t\t\tmerged.set(k, v)\n\t\t}",
+  "replace": "\t\t} else {\n\t\t\tmerged.set(k, merged.vals[k])\n\t\t}"
+ },
+ {
+  "name": "scope-skip",
+  "file": "rule.go",
+  "find": "if sc.Permission == nil {\n\t\t\tcontinue",
+  "replace": "if sc.Permission != nil {\n\t\t\tcontinue"
+ },
+ {
+  "name": "scope-string-origin",
+  "file": "rule.go",
+  "find": "so[\"*\"] = sc.Name",
+  "replace": "so[\"*\"] = \"x\""
+ },
+ {
+  "name": "scope-object-origin",
+  "file": "rule.go",
+  "find": "so[p] = sc.Name",
+  "replace": "so[p] = \"x\""
+ },
+ {
+  "name": "scope-merged-origin",
+  "file": "rule.go",
+  "find": "origins[surface][p] = sc.Name",
+  "replace": "origins[surface][p] = \"x\""
+ },
+ {
+  "name": "scope-sugar",
+  "file": "rule.go",
+  "find": "permission := ExpandDirectionalSugar(sc.Permission)",
+  "replace": "permission := sc.Permission"
+ },
+ {
+  "name": "sugar-family",
+  "file": "rule.go",
+  "find": "map[string]bool{\"path\": true, \"external_directory\": true}",
+  "replace": "map[string]bool{\"path\": true}"
+ },
+ {
+  "name": "sugar-explicit-after",
+  "file": "rule.go",
+  "find": "if _, has := ep.vals[k]; !has {\n\t\t\tout.set(k, sp.vals[k])",
+  "replace": "if _, has := ep.vals[k]; has {\n\t\t\tout.set(k, sp.vals[k])"
+ },
+ {
+  "name": "sugar-undefined",
+  "file": "rule.go",
+  "find": "if _, u := value.(undef); u {\n\t\t\tcontinue\n\t\t}\n\t\tif !directionalFamilies",
+  "replace": "if _, u := value.(undef); !u {\n\t\t\tcontinue\n\t\t}\n\t\tif !directionalFamilies"
+ },
+ {
+  "name": "sugar-copy",
+  "file": "rule.go",
+  "find": "return o.clone()\n\t\t}\n\t\treturn sugar",
+  "replace": "return o\n\t\t}\n\t\treturn sugar"
+ },
+ {
+  "name": "state-deny",
+  "file": "rule.go",
+  "find": "s == \"allow\" || s == \"deny\" || s == \"ask\")",
+  "replace": "s == \"allow\" || s == \"ask\")"
+ },
+ {
+  "name": "deny-reason-action",
+  "file": "rule.go",
+  "find": "if a, _ := o.vals[\"action\"].(string); a != \"deny\" {",
+  "replace": "if a, _ := o.vals[\"action\"].(string); a == \"deny\" {"
+ },
+ {
+  "name": "deny-reason-type",
+  "file": "rule.go",
+  "find": "s, isStr := r.(string)\n\tif !isStr {\n\t\treturn nil, false",
+  "replace": "s, isStr := r.(string)\n\tif !isStr {\n\t\treturn nil, true"
+ },
+ {
+  "name": "normalize-array",
+  "file": "rule.go",
+  "find": "Pattern: itoa(i)",
+  "replace": "Pattern: itoa(i + 1)"
+ },
+ {
+  "name": "mcp-name-sep",
+  "file": "rule.go",
+  "find": "return sep > 0 && sep+2 < len(rest)",
+  "replace": "return sep >= 0 && sep+2 < len(rest)"
+ },
+ {
+  "name": "mcp-name-tool",
+  "file": "rule.go",
+  "find": "return sep > 0 && sep+2 < len(rest)",
+  "replace": "return sep > 0 && sep+2 <= len(rest)"
+ },
+ {
+  "name": "mcp-wildcard-key",
+  "file": "rule.go",
+  "find": "strings.ContainsAny(key, \"*?\")",
+  "replace": "strings.ContainsAny(key, \"*\")"
+ },
+ {
+  "name": "relocate-catchall",
+  "file": "rule.go",
+  "find": "if r.Pattern == \"*\" && canNamePiMcpTool(r.Surface) {",
+  "replace": "if canNamePiMcpTool(r.Surface) {"
+ },
+ {
+  "name": "yolo-flag",
+  "file": "config.go",
+  "find": "c.Yolo, _ = root.vals[\"yoloMode\"].(bool)",
+  "replace": "c.Yolo = false"
+ },
+ {
+  "name": "config-permission-object",
+  "file": "config.go",
+  "find": "if perm := root.obj(\"permission\"); perm != nil {",
+  "replace": "if perm := root.obj(\"permissionx\"); perm != nil {"
+ },
+ {
+  "name": "config-issue",
+  "file": "config.go",
+  "find": "return Config{Issue: \"Failed to read config at '\" + path + \"': \" + err.Error()}\n\t}\n\tif issues",
+  "replace": "return Config{}\n\t}\n\tif issues"
+ },
+ {
+  "name": "permissive-value",
+  "file": "config.go",
+  "find": "s, _ := permission.vals[\"*\"].(string); s != \"allow\"",
+  "replace": "s, _ := permission.vals[\"*\"].(string); s != \"ask\""
+ },
+ {
+  "name": "permissive-string",
+  "file": "config.go",
+  "find": "case string:\n\t\treturn \"\"\n\tcase *jsObject:",
+  "replace": "case *jsObject:"
+ },
+ {
+  "name": "permissive-star-key",
+  "file": "config.go",
+  "find": "if _, has := bash.vals[\"*\"]; has {",
+  "replace": "if _, has := bash.vals[\"*x\"]; has {"
+ },
+ {
+  "name": "universal-fallback",
+  "file": "config.go",
+  "find": "universal = s",
+  "replace": "universal = map[string]string{\"allow\": \"deny\", \"deny\": \"allow\", \"ask\": \"ask\"}[s]"
+ },
+ {
+  "name": "universal-excluded",
+  "file": "config.go",
+  "find": "if k != \"*\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "config-layer",
+  "file": "config.go",
+  "find": "r.Layer, r.Origin = \"config\", \"global\"",
+  "replace": "r.Layer, r.Origin = \"default\", \"global\""
+ },
+ {
+  "name": "universal-origin",
+  "file": "config.go",
+  "find": "Layer: \"default\", Origin: originOf(permission)}}",
+  "replace": "Layer: \"default\", Origin: \"builtin\"}}"
+ },
+ {
+  "name": "yolo-policy",
+  "file": "config.go",
+  "find": "if c.Yolo {\n\t\trules = RewriteAsksToYolo(rules)",
+  "replace": "if false {\n\t\trules = RewriteAsksToYolo(rules)"
+ },
+ {
+  "name": "simple-assignment",
+  "file": "config.go",
+  "find": "return !strings.Contains(first, \"=\")",
+  "replace": "return !strings.Contains(first, \"==\")"
+ },
+ {
+  "name": "simple-leading-space",
+  "file": "config.go",
+  "find": "strings.HasPrefix(cmd, \" \") || strings.HasSuffix(cmd, \" \")",
+  "replace": "strings.HasSuffix(cmd, \" \")"
+ },
+ {
+  "name": "simple-trailing-space",
+  "file": "config.go",
+  "find": "strings.HasPrefix(cmd, \" \") || strings.HasSuffix(cmd, \" \")",
+  "replace": "strings.HasPrefix(cmd, \" \")"
+ },
+ {
+  "name": "simple-chars",
+  "file": "config.go",
+  "find": "strings.ContainsRune(\"_./:=@%+,- \", r)",
+  "replace": "strings.ContainsRune(\"_./:=@%+,- |\", r)"
+ },
+ {
+  "name": "outcome-rule-clause",
+  "file": "config.go",
+  "find": "if r.Layer == \"config\" || r.Layer == \"session\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "outcome-reason",
+  "file": "config.go",
+  "find": "if r.Reason != nil && *r.Reason != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "outcome-ask",
+  "file": "config.go",
+  "find": "case \"ask\":\n\t\treturn asked(surface)",
+  "replace": "case \"ask\":\n\t\treturn Verdict{}"
+ },
+ {
+  "name": "path-family-write",
+  "file": "config.go",
+  "find": "\"external_directory_read\", \"external_directory_write\"}",
+  "replace": "\"external_directory_read\"}"
+ },
+ {
+  "name": "path-family-patterns",
+  "file": "config.go",
+  "find": "if p.valuePatterns(s) {\n\t\t\treturn false",
+  "replace": "if false {\n\t\t\treturn false"
+ },
+ {
+  "name": "path-family-constant",
+  "file": "config.go",
+  "find": "if p.constant(s).Action != \"allow\" {",
+  "replace": "if p.constant(s).Action == \"deny\" {"
+ },
+ {
+  "name": "bash-needs-path-family",
+  "file": "config.go",
+  "find": "\t\tif ok, why := p.pathFamilyAllows(name); !ok {\n\t\t\treturn unsupported(name, why)\n\t\t}\n\t\treturn p.decideBash(cmd)",
+  "replace": "\t\treturn p.decideBash(cmd)"
+ },
+ {
+  "name": "bash-patterns-constant",
+  "file": "bash.go",
+  "find": "if patterns {\n\t\t\tr = Evaluate",
+  "replace": "if !patterns {\n\t\t\tr = Evaluate"
+ },
+ {
+  "name": "skill-surface",
+  "file": "config.go",
+  "find": "case name == \"mcp\", name == \"skill\", isPiMcpToolName(name):",
+  "replace": "case name == \"mcp\", isPiMcpToolName(name):"
+ },
+ {
+  "name": "mcp-surface",
+  "file": "config.go",
+  "find": "case name == \"mcp\", name == \"skill\", isPiMcpToolName(name):",
+  "replace": "case name == \"skill\", isPiMcpToolName(name):"
+ },
+ {
+  "name": "path-tool-patterns",
+  "file": "config.go",
+  "find": "if p.valuePatterns(name) {\n\t\t\treturn unsupported(name, \"the rules for it",
+  "replace": "if false {\n\t\t\treturn unsupported(name, \"the rules for it"
+ },
+ {
+  "name": "path-tool-family",
+  "file": "config.go",
+  "find": "\t\tif ok, why := p.pathFamilyAllows(name); !ok {\n\t\t\treturn unsupported(name, why)\n\t\t}\n\t\treturn p.outcome(name, p.constant(name))",
+  "replace": "\t\treturn p.outcome(name, p.constant(name))"
+ },
+ {
+  "name": "tool-trim",
+  "file": "config.go",
+  "find": "name := jsTrim(tool)\n\tswitch {",
+  "replace": "name := tool\n\tswitch {"
+ },
+ {
+  "name": "denied-mcp",
+  "file": "config.go",
+  "find": "if isPiMcpToolName(name) {\n\t\treturn false",
+  "replace": "if false {\n\t\treturn false"
+ },
+ {
+  "name": "denied-trim",
+  "file": "config.go",
+  "find": "name := jsTrim(tool)\n\tif isPiMcpToolName(name) {",
+  "replace": "name := tool\n\tif isPiMcpToolName(name) {"
+ },
+ {
+  "name": "agent-dir-abs",
+  "file": "config.go",
+  "find": "return filepath.Clean(o)",
+  "replace": "return filepath.Join(homeDir(), o)"
+ },
+ {
+  "name": "agent-dir-default",
+  "file": "config.go",
+  "find": "filepath.Join(homeDir(), \".pi\", \"agent\")",
+  "replace": "filepath.Join(homeDir(), \".pi\")"
+ },
+ {
+  "name": "config-path",
+  "file": "config.go",
+  "find": "\"extensions\", extensionID, \"config.json\"",
+  "replace": "\"extensions\", \"config.json\""
+ },
+ {
+  "name": "expose-keep-withheld",
+  "file": "exposure.go",
+  "find": "if isActive[n] || (b.withheld[n] && registered[n]) {",
+  "replace": "if isActive[n] {"
+ },
+ {
+  "name": "expose-registered",
+  "file": "exposure.go",
+  "find": "if isActive[n] || (b.withheld[n] && registered[n]) {",
+  "replace": "if isActive[n] || b.withheld[n] {"
+ },
+ {
+  "name": "expose-adopt",
+  "file": "exposure.go",
+  "find": "\t\tif !known[n] {\n\t\t\tknown[n] = true",
+  "replace": "\t\tif known[n] {\n\t\t\tknown[n] = true"
+ },
+ {
+  "name": "expose-restored",
+  "file": "exposure.go",
+  "find": "if b.withheld[n] {\n\t\t\tr.restored",
+  "replace": "if !b.withheld[n] {\n\t\t\tr.restored"
+ },
+ {
+  "name": "expose-changed-size",
+  "file": "exposure.go",
+  "find": "r.changed = len(b.withheld) != len(r.withheld)",
+  "replace": "r.changed = false"
+ },
+ {
+  "name": "expose-changed-new",
+  "file": "exposure.go",
+  "find": "if !b.withheld[n] {\n\t\t\tr.changed = true",
+  "replace": "if b.withheld[n] {\n\t\t\tr.changed = true"
+ },
+ {
+  "name": "expose-split",
+  "file": "exposure.go",
+  "find": "if isExposed(n) {\n\t\t\tr.exposed",
+  "replace": "if !isExposed(n) {\n\t\t\tr.exposed"
+ },
+ {
+  "name": "expose-remember",
+  "file": "exposure.go",
+  "find": "b.baseline = base\n",
+  "replace": "b.baseline = nil\n"
+ },
+ {
+  "name": "status-yolo",
+  "file": "extension.go",
+  "find": "ctx.SetStatus(extensionID, \"yolo\")",
+  "replace": "ctx.SetStatus(extensionID, \"YOLO\")"
+ },
+ {
+  "name": "status-clear",
+  "file": "extension.go",
+  "find": "\tctx.SetStatus(extensionID, \"\")\n}",
+  "replace": "\tctx.SetStatus(extensionID, \"x\")\n}"
+ },
+ {
+  "name": "start-issue",
+  "file": "extension.go",
+  "find": "if st.config.Issue != \"\" {",
+  "replace": "if st.config.Issue == \"\" {"
+ },
+ {
+  "name": "start-permissive",
+  "file": "extension.go",
+  "find": "if msg := detectPermissiveBashFallback(st.config.Permission); msg != \"\" {",
+  "replace": "if msg := \"\"; msg != \"\" {"
+ },
+ {
+  "name": "shutdown-status",
+  "file": "extension.go",
+  "find": "ctx.SetStatus(extensionID, \"\")\n\t\treturn nil, nil\n\t})\n\te.OnEvent(sdk.EventToolCall",
+  "replace": "return nil, nil\n\t})\n\te.OnEvent(sdk.EventToolCall"
+ },
+ {
+  "name": "tool-call-name",
+  "file": "extension.go",
+  "find": "name, _ := data[\"toolName\"].(string)",
+  "replace": "name, _ := data[\"name\"].(string)"
+ },
+ {
+  "name": "tool-call-input",
+  "file": "extension.go",
+  "find": "input, _ := data[\"input\"].(map[string]any)",
+  "replace": "var input map[string]any"
+ },
+ {
+  "name": "tool-call-block",
+  "file": "extension.go",
+  "find": "return map[string]any{\"block\": true, \"reason\": v.Reason}, nil",
+  "replace": "return nil, nil"
+ },
+ {
+  "name": "agent-start-active",
+  "file": "extension.go",
+  "find": "ctx.SetActiveTools(res.exposed)",
+  "replace": "_ = res"
+ },
+ {
+  "name": "agent-start-denied",
+  "file": "extension.go",
+  "find": "return !p.IsToolFullyDenied(n)",
+  "replace": "return true"
+ },
+ {
+  "name": "agent-start-reload",
+  "file": "extension.go",
+  "find": "p := st.reload()\n\t\tsyncStatus(ctx, p)\n\t\t// The skills",
+  "replace": "p := st.current()\n\t\tsyncStatus(ctx, p)\n\t\t// The skills"
+ },
+ {
+  "name": "wrap-basename",
+  "file": "bash.go",
+  "find": "name, args := commandBasename(words[0]), words[1:]",
+  "replace": "name, args := words[0], words[1:]"
+ },
+ {
+  "name": "wrap-eval",
+  "file": "bash.go",
+  "find": "case name == \"eval\":",
+  "replace": "case name == \"evil\":"
+ },
+ {
+  "name": "wrap-shell-c",
+  "file": "bash.go",
+  "find": "case shellWrapperNames[name] && shortFlagCIndex(args) != -1:",
+  "replace": "case shellWrapperNames[name]:"
+ },
+ {
+  "name": "wrap-dashdash",
+  "file": "bash.go",
+  "find": "if a == \"--\" {\n\t\t\treturn -1",
+  "replace": "if false {\n\t\t\treturn -1"
+ },
+ {
+  "name": "wrap-longflag",
+  "file": "bash.go",
+  "find": "&& !strings.HasPrefix(a, \"--\") &&",
+  "replace": "&&"
+ },
+ {
+  "name": "wrap-indirection",
+  "file": "bash.go",
+  "find": "case indirectionWrapperNames[name]:",
+  "replace": "case false:"
+ },
+ {
+  "name": "wrap-flock",
+  "file": "bash.go",
+  "find": "\"flock\": true,",
+  "replace": "\"flockx\": true,"
+ },
+ {
+  "name": "wrap-exec-cond",
+  "file": "bash.go",
+  "find": "if flags[a] {",
+  "replace": "if flags[a+\"x\"] {"
+ },
+ {
+  "name": "wrap-fd",
+  "file": "bash.go",
+  "find": "\"fd\":   {\"-x\": true",
+  "replace": "\"fdx\":  {\"-x\": true"
+ },
+ {
+  "name": "units-double",
+  "file": "bash.go",
+  "find": "case (c == '&' || c == '|') && i+1 < len(cmd) && cmd[i+1] == c:",
+  "replace": "case false:"
+ },
+ {
+  "name": "units-newline",
+  "file": "bash.go",
+  "find": "case c == '|' || c == ';' || c == '\\n':",
+  "replace": "case c == '|' || c == ';':"
+ },
+ {
+  "name": "units-trim",
+  "file": "bash.go",
+  "find": "u := strings.Trim(cmd[start:end], \" \")",
+  "replace": "u := cmd[start:end]"
+ },
+ {
+  "name": "units-last",
+  "file": "bash.go",
+  "find": "if !cut(len(cmd)) {",
+  "replace": "if false && !cut(len(cmd)) {"
+ },
+ {
+  "name": "decide-trim",
+  "file": "bash.go",
+  "find": "cmd := jsTrim(command)",
+  "replace": "cmd := command"
+ },
+ {
+  "name": "unreadable-allow",
+  "file": "bash.go",
+  "find": "if c := p.constant(\"bash\"); c.Action != \"allow\" || p.yolo || cmd == \"\" {",
+  "replace": "if c := p.constant(\"bash\"); true {"
+ },
+ {
+  "name": "unreadable-yolo",
+  "file": "bash.go",
+  "find": "|| p.yolo || cmd == \"\" {",
+  "replace": "|| cmd == \"\" {"
+ },
+ {
+  "name": "unreadable-empty",
+  "file": "bash.go",
+  "find": "|| p.yolo || cmd == \"\" {",
+  "replace": "|| p.yolo {"
+ },
+ {
+  "name": "rank-deny",
+  "file": "bash.go",
+  "find": "case \"deny\":\n\t\t\tk = 3",
+  "replace": "case \"deny\":\n\t\t\tk = 0"
+ },
+ {
+  "name": "rank-first",
+  "file": "bash.go",
+  "find": "if k > rank {",
+  "replace": "if k >= rank {"
+ },
+ {
+  "name": "floor-yolo",
+  "file": "bash.go",
+  "find": "if p.yolo {\n\t\t\t\t\tcontinue",
+  "replace": "if false {\n\t\t\t\t\tcontinue"
+ },
+ {
+  "name": "floor",
+  "file": "bash.go",
+  "find": "case classifyWrapperWords(words) != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "guard",
+  "file": "bash.go",
+  "find": "case portGuardWords[commandBasename(words[0])]:",
+  "replace": "case false:"
+ },
+ {
+  "name": "guard-ssh",
+  "file": "bash.go",
+  "find": "\"unbuffer\": true, \"ssh\": true,",
+  "replace": "\"unbuffer\": true,"
+ },
+ {
+  "name": "strip-block",
+  "file": "schema.go",
+  "find": "i += 2 + n + 2",
+  "replace": "i += 2 + n"
+ },
+ {
+  "name": "strip-string",
+  "file": "schema.go",
+  "find": "case s[i] == '\"' || s[i] == '\\'':",
+  "replace": "case s[i] == '\\'':"
+ },
+ {
+  "name": "strip-escape",
+  "file": "schema.go",
+  "find": "if c == '\\\\' {\n\t\t\t\t\tescaping = true",
+  "replace": "if false {\n\t\t\t\t\tescaping = true"
+ },
+ {
+  "name": "schema-unrecognized",
+  "file": "schema.go",
+  "find": "s.unrecognized(extra)",
+  "replace": "_ = extra"
+ },
+ {
+  "name": "schema-bool",
+  "file": "schema.go",
+  "find": "s.boolean(path, x)",
+  "replace": "_ = x"
+ },
+ {
+  "name": "schema-int-inf",
+  "file": "schema.go",
+  "find": "case !ok, math.IsInf(f, 0):",
+  "replace": "case !ok:"
+ },
+ {
+  "name": "schema-int",
+  "file": "schema.go",
+  "find": "case f != math.Trunc(f):",
+  "replace": "case false:"
+ },
+ {
+  "name": "schema-int-min",
+  "file": "schema.go",
+  "find": "case f < 1:",
+  "replace": "case f < 0:"
+ },
+ {
+  "name": "schema-reason-len",
+  "file": "schema.go",
+  "find": "> 500 {",
+  "replace": "> 501 {"
+ },
+ {
+  "name": "schema-aborted",
+  "file": "schema.go",
+  "find": "if aborted {\n\t\treturn\n\t}",
+  "replace": "if aborted && false {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "schema-shape-order",
+  "file": "schema.go",
+  "find": "for _, k := range permissionShapeKeys {\n\t\tinShape[k] = true\n\t\tif _, has",
+  "replace": "for _, k := range []string{} {\n\t\tinShape[k] = true\n\t\tif _, has"
+ },
+ {
+  "name": "schema-directional",
+  "file": "schema.go",
+  "find": "&& !directionalSurfaceKeys[k]:",
+  "replace": "&& false:"
+ },
+ {
+  "name": "schema-empty-key",
+  "file": "schema.go",
+  "find": "case k == \"\":\n\t\t\ts.at(sub(path, k), \"A surface key",
+  "replace": "case false:\n\t\t\ts.at(sub(path, k), \"A surface key"
+ },
+ {
+  "name": "schema-deny-keys",
+  "file": "schema.go",
+  "find": "if k != \"action\" && k != \"reason\" {",
+  "replace": "if k != \"action\" && k != \"reason\" && false {"
+ },
+ {
+  "name": "schema-action",
+  "file": "schema.go",
+  "find": "a != \"deny\" {",
+  "replace": "a == \"\" {"
+ },
+ {
+  "name": "schema-record-key",
+  "file": "schema.go",
+  "find": "if k == \"\" {\n\t\t\ts.at(sub(path, k), \"Invalid key in record\")",
+  "replace": "if false {\n\t\t\ts.at(sub(path, k), \"Invalid key in record\")"
+ },
+ {
+  "name": "schema-required",
+  "file": "schema.go",
+  "find": "} else if required[f] {",
+  "replace": "} else if false {"
+ },
+ {
+  "name": "schema-issues-used",
+  "file": "config.go",
+  "find": "if issues := validateUnifiedConfig(v); len(issues) > 0 {",
+  "replace": "if issues := validateUnifiedConfig(v); false && len(issues) > 0 {"
+ },
+ {
+  "name": "config-comments",
+  "file": "config.go",
+  "find": "parseJSON([]byte(stripJSONComments(string(data))))",
+  "replace": "parseJSON(data)"
+ },
+ {
+  "name": "shelltools-read",
+  "file": "config.go",
+  "find": "c.ShellTools = tools.order()",
+  "replace": "_ = tools"
+ },
+ {
+  "name": "shelltools-decide",
+  "file": "config.go",
+  "find": "case p.shellTools[name]:",
+  "replace": "case false:"
+ },
+ {
+  "name": "jsjson-range",
+  "file": "jsjson.go",
+  "find": "if errors.Is(err, strconv.ErrRange) {\n\t\t\terr = nil",
+  "replace": "if false {\n\t\t\terr = nil"
+ },
+ {
+  "name": "schema-order",
+  "file": "config.go",
+  "find": "c.Permission = schemaPermission(perm)",
+  "replace": "c.Permission = perm"
+ },
+ {
+  "name": "schema-proto",
+  "file": "schema.go",
+  "find": "if !inShape[k] && k != \"__proto__\" {",
+  "replace": "if !inShape[k] {"
+ },
+ {
+  "name": "schema-proto-map",
+  "file": "schema.go",
+  "find": "if !ok || !m.has(\"__proto__\") {",
+  "replace": "if !ok || true {"
+ },
+ {
+  "name": "load-unreadable",
+  "file": "config.go",
+  "find": "if errors.Is(err, fs.ErrNotExist) {\n\t\t\treturn Config{}",
+  "replace": "if err != nil || errors.Is(err, fs.ErrNotExist) {\n\t\t\treturn Config{}"
+ },
+ {
+  "name": "skill-deny-filter",
+  "file": "skills.go",
+  "find": "if state == \"deny\" {\n\t\t\t\tcontinue",
+  "replace": "if false {\n\t\t\t\tcontinue"
+ },
+ {
+  "name": "skill-longest",
+  "file": "skills.go",
+  "find": "len(entries[i].baseDir) > len(best.baseDir)",
+  "replace": "len(entries[i].baseDir) < len(best.baseDir)"
+ },
+ {
+  "name": "skill-within",
+  "file": "skills.go",
+  "find": "!strings.HasPrefix(rel, \"../\")",
+  "replace": "true"
+ },
+ {
+  "name": "skill-tool",
+  "file": "skills.go",
+  "find": "if tool != \"read\" || len(entries) == 0 {",
+  "replace": "if len(entries) == 0 {"
+ },
+ {
+  "name": "skill-allow",
+  "file": "skills.go",
+  "find": "if m == nil || m.state == \"allow\" {",
+  "replace": "if m == nil {"
+ },
+ {
+  "name": "skill-at",
+  "file": "skills.go",
+  "find": "expandHomePath(strings.TrimPrefix(t, \"@\"))",
+  "replace": "expandHomePath(t)"
+ },
+ {
+  "name": "skill-home",
+  "file": "skills.go",
+  "find": "t = expandHomePath(strings.TrimPrefix(t, \"@\"))",
+  "replace": "t = strings.TrimPrefix(t, \"@\")"
+ },
+ {
+  "name": "skill-quote",
+  "file": "skills.go",
+  "find": "wrappingQuote.ReplaceAllString(jsTrim(value), \"\")",
+  "replace": "jsTrim(value)"
+ },
+ {
+  "name": "skill-xml",
+  "file": "skills.go",
+  "find": "return strings.ReplaceAll(xmlEntities.Replace(s), \"&amp;\", \"&\")",
+  "replace": "return s"
+ },
+ {
+  "name": "skill-desc-required",
+  "file": "skills.go",
+  "find": "if name == nil || description == nil || location == nil {",
+  "replace": "if name == nil || location == nil {"
+ },
+ {
+  "name": "skill-empty-name",
+  "file": "skills.go",
+  "find": "if e.name == \"\" || e.location == \"\" {",
+  "replace": "if e.location == \"\" {"
+ },
+ {
+  "name": "skill-prompt-list",
+  "file": "skills.go",
+  "find": "return strings.Join(parts, \"\\n\")",
+  "replace": "return \"\""
+ },
+ {
+  "name": "skill-reset",
+  "file": "extension.go",
+  "find": "st.skills = nil\n",
+  "replace": "\n"
+ },
+ {
+  "name": "skill-gate",
+  "file": "extension.go",
+  "find": "v = skillRead(name, input, st.skills, st.cwd)",
+  "replace": "_ = skillRead"
+ },
+ {
+  "name": "skill-cwd",
+  "file": "extension.go",
+  "find": "st.skills, st.cwd = skills, ctx.Cwd()",
+  "replace": "st.skills, st.cwd = skills, \"/\""
+ }
+]

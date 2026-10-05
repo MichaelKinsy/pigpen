@@ -1,0 +1,11 @@
+go 1.26
+
+// PiG's extension resolver reads this file (extension/source: goWorkspaceModuleRoots) to
+// find the shared library modules, and adds the require and replace itself when it fuses
+// or builds. The relative paths are the same in the repository and in a staged Piglet
+// (packages/<package>/extensions/<name> -> packages/pi-typesafe-api, packages/typesafe).
+use (
+	.
+	../../../pi-typesafe-api
+	../../../typesafe
+)

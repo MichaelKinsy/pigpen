@@ -1,0 +1,36 @@
+
+    ▄▄▄▄  ▄▄▄▄    v0.4.0+1.0.0
+   ▄▀▀▀▀▄▄▀▀▀▀▄   escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o more
+  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀  Press ctrl+o to show full startup help and loaded resources.
+  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀  PiG can explain its own features and look up its docs. Ask it how to use or extend PiG.
+  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+    ▀▀▀▀▀▀▀▀▀▀
+
+[Extensions]
+  pi-goal-x
+
+
+ ● Goal running
+ ├─ ⟡ Write the release notes
+ └─ auto-continue on
+ Budget: none
+
+ Warning: pi-goal-x (Go port): automatic continuation is not ported, so this goal is stored and ready but
+ will not start by itself. Set maxAutonomousRuns to 0 to silence this notice.
+
+ Goal paused.
+
+
+
+
+
+
+
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<run>/work
+0.0%/100k (auto)                                                                                          eq-1
+goal: paused - Write the release notes

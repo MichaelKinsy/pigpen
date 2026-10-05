@@ -1,0 +1,9 @@
+{
+  "featured": false,
+  "updatedAt": "2026-10-05",
+  "languages": ["go"],
+  "notes": [
+    "Go only. Go ports of popular Pi extensions, made with the extension porting Skill: today rpiv-todo and rpiv-ask-user-question (juicesharp, MIT), powerline-footer (Nico Bailon, MIT as declared in its package.json), pi-goal-x (tmonk, \"Copyright (c) 2026 Lucas\", MIT), pi-permission-system (MasuRii and Christopher D. Lasher, MIT) and pi-subagents (Nico Bailon, MIT); rpiv-ask-user-question, powerline-footer, pi-goal-x, pi-permission-system and pi-subagents are partial ports (see each PORT.md). Each port keeps the original, the recorded Pi traces and its mutation list under components/<name>/port. Run npm run stage before using its generated manifest under dist/staged.",
+    "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default; only linux/amd64 has been built and run, and the other targets are listed in the manifest and not compile-checked."
+  ]
+}

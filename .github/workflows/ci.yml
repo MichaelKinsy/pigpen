@@ -1,40 +1,63 @@
-# Validation only. No Piglet Binary build, signing, artifact upload or publishing.
-# Prefixed release tags fail CLOSED until PiG supports monorepo releases.
+# Validation and platform builds. No signing, no publishing, no secrets. Releases are release.yml (a Piglet tag) and
+# release-package.yml (a Package tag); a tag never starts this workflow.
+#
+# Tiers:
+#   validate        every run: tests, checks, the PiG validator over every manifest, and ONE linux/amd64 build + smoke of
+#                   pig-with-batteries.
+#   platform-matrix every push to main, merge group, manual run, the weekly schedule, and a pull request labelled
+#                   `full-ci`: one job per OS on a native runner builds ALL eleven Piglets for that OS and smokes every Binary.
+#   android-cross   with platform-matrix: compile + vet every module for android/arm64 (Termux), CGO_ENABLED=0.
+#   ci-result       the one required check. Green when validate passed and each other tier passed or was skipped.
 name: Validate Pigpen
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches: [main]
-    tags: ['*/v*']
+  merge_group:
   workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * 1' # Mondays, 04:23 UTC: catches runner-image and toolchain drift on an idle main
 permissions:
   contents: read
+concurrency:
+  # A new push or label on a pull request cancels the run it replaces. Every other run is its own group, so no push to
+  # main or merge group is ever skipped. Any label re-runs the pull request's checks: a run that skipped them would still
+  # report a green `CI result` for the same commit, and the newest check of that name is the one a required check reads.
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  # The PiG release these jobs target is scripts/pig-requirement.json (`release`); a test keeps this commit equal to it.
+  PIG_COMMIT: '3ee745c8cda3c1a9a8d71112c140790c4d64d78d' # PiG v0.4.1
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          # The index check verifies each Package release record against its tag and commit (releases/packages).
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '24'
       - run: npm ci --ignore-scripts
+      - run: npm test
       - run: npm run check
-      - name: Validate target metadata and refuse unsupported release tags
+      - name: Validate target metadata
         run: node scripts/build-matrix.mjs
       - name: Check out the reviewed PiG validator source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           repository: MichaelKinsy/PiG
-          ref: '35280defec22d384545be37a7f297e1a98f1ace1'
+          ref: ${{ env.PIG_COMMIT }}
           path: .pig-src
           persist-credentials: false
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .pig-src/go.mod
-          cache-dependency-path: .pig-src/go.sum
+          cache-dependency-path: '**/go.sum'
       - name: Build the PiG validator and validate every manifest
         shell: bash
         env:
@@ -46,3 +69,116 @@ jobs:
           go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
           export PIG_BIN="$PWD/.pig-bin/pig"
           npm run validate
+          node scripts/platform-smoke.mjs --only pig-with-batteries --no-stage
+          npm run test:porter
+          npm run test:tool-scope
+          npm run test:moved
+          npm run test:packages
+          # The release workflow's own steps against a throwaway local repository, stub gh and throwaway key.
+          node scripts/rehearse-release.mjs --pig-src .pig-src
+          npm run test:go-ports
+
+  platform-matrix:
+    name: Platform ${{ matrix.target }}
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: linux/amd64, runner: ubuntu-24.04, artifact: linux-amd64 }
+          - { target: linux/arm64, runner: ubuntu-24.04-arm, artifact: linux-arm64 }
+          - { target: darwin/arm64, runner: macos-15, artifact: darwin-arm64 }
+          - { target: darwin/amd64, runner: macos-15-intel, artifact: darwin-amd64 }
+          - { target: windows/amd64, runner: windows-2025, artifact: windows-amd64 }
+    steps:
+      - name: Keep line endings as committed
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Check out the PiG source the Piglet builds need
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/go.mod
+          cache-dependency-path: '**/go.sum'
+      - name: Download the pinned PiG release for ${{ matrix.target }} and verify its checksum
+        run: node scripts/fetch-pig.mjs --target '${{ matrix.target }}' --out "$RUNNER_TEMP/pig" --github-env
+      - name: Build all Piglets for ${{ matrix.target }} and smoke every Binary
+        env:
+          PIG_HOME: ${{ runner.temp }}/pig-home
+          PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
+        run: node scripts/platform-smoke.mjs --out dist/bin
+      - name: Keep the Binaries for three days
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: piglets-${{ matrix.artifact }}
+          path: dist/bin
+          retention-days: 3
+          if-no-files-found: error
+
+  android-cross:
+    name: Compile for android/arm64
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Check out the PiG SDK the modules build against
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/go.mod
+          cache-dependency-path: '**/go.sum'
+      - name: go build and go vet every module for android/arm64 with cgo off
+        env:
+          PIG_SDK_DIR: ${{ github.workspace }}/.pig-src/extensions/sdk
+        run: node scripts/cross-check.mjs android/arm64
+
+  ci-result:
+    name: CI result
+    if: ${{ always() }}
+    needs: [validate, platform-matrix, android-cross]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require validate, and every other tier that ran
+        env:
+          VALIDATE: ${{ needs.validate.result }}
+          PLATFORM_MATRIX: ${{ needs.platform-matrix.result }}
+          ANDROID_CROSS: ${{ needs.android-cross.result }}
+        run: |
+          echo "validate=$VALIDATE platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS"
+          [ "$VALIDATE" = success ] || { echo "validate did not pass"; exit 1; }
+          for result in "$PLATFORM_MATRIX" "$ANDROID_CROSS"; do
+            case "$result" in
+              success | skipped) ;;
+              *) echo "a platform tier did not pass ($result)"; exit 1 ;;
+            esac
+          done

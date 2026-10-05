@@ -1,0 +1,96 @@
+{
+  "name": "command-groups",
+  "description": "/todos groups by status, with the counts header, ids, activeForm and dependency marks.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "alpha"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "beta",
+            "blockedBy": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "gamma",
+            "activeForm": "gamma-ing"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "delta"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "epsilon"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 3,
+            "status": "in_progress",
+            "activeForm": "gamma-ing"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 4,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "delete",
+            "id": 5
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    },
+    {
+      "name": "todos",
+      "rpc": {
+        "type": "prompt",
+        "message": "/todos"
+      }
+    }
+  ]
+}

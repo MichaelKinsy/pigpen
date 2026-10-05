@@ -1,0 +1,18 @@
+{
+  "origin": "ported",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "PiG",
+      "authors": ["Michael Kinsy"],
+      "url": "https://github.com/MichaelKinsy/PiG",
+      "revision": "d86eb93f217e64b655e9ee6f48c93a9afd107697",
+      "path": "port/upstream",
+      "license": "MIT",
+      "licenseFile": "port/upstream/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

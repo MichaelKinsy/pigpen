@@ -1,0 +1,55 @@
+{
+  "name": "single-other-typed",
+  "description": "The user picks the appended 'Type something.' row and types an answer.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Which database?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "Postgres",
+                    "description": "Relational"
+                  },
+                  {
+                    "label": "SQLite",
+                    "description": "Embedded"
+                  },
+                  {
+                    "label": "Redis",
+                    "description": "In memory"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "value": "4. Type something."
+        },
+        {
+          "value": "DuckDB"
+        }
+      ]
+    }
+  ]
+}

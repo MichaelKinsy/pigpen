@@ -1,0 +1,43 @@
+{
+ "mode": "probabilities",
+ "structured": true,
+ "state": "This book was a delight to read.",
+ "questions": {
+  "positive": {
+   "type": "noul",
+   "instructions": "The review is positive."
+  },
+  "stars": {
+   "type": "score",
+   "instructions": "Rating.",
+   "criteria": [
+    "Bad.",
+    "Good."
+   ]
+  },
+  "genre": {
+   "type": "choice",
+   "instructions": "Genre.",
+   "criteria": {
+    "fiction": "A story.",
+    "nonfiction": "Facts."
+   }
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "positive": 0.8,
+    "stars": {
+     "0": 0.25,
+     "1": 0.75
+    },
+    "genre": {
+     "fiction": 0.9,
+     "nonfiction": 0.1
+    }
+   }
+  }
+ ],
+ "name": "probabilities-native"
+}

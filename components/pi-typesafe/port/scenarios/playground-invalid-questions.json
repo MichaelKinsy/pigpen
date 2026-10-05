@@ -1,0 +1,2 @@
+{"name":"playground-invalid-questions","description":"Valid JSON with no questions is refused before any consent dialog.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"steps":[
+ {"name":"playground","rpc":{"type":"prompt","message":"/typesafe playground"},"ui":[{"value":"{\"state\":\"example\",\"questions\":{}}"}]}]}

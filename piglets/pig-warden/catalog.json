@@ -1,0 +1,10 @@
+{
+  "featured": false,
+  "updatedAt": "2026-09-29",
+  "languages": ["go"],
+  "notes": [
+    "Go only. Warden, a Go port of DevMortimer's pi-warden (Ryan Gapac, MIT): irreversible tool calls held before they run, off-task calls flagged, stuck loops and unverified done claims called out. Run npm run stage before using its generated manifest under dist/staged.",
+    "Opt-in: it does nothing until /warden enable, which shows what would leave the machine and asks which judge to use: TypeSafe Jev, your own session model, or offline patterns only. The warden Package also installs on its own with pig install and shares the typesafe client library Package.",
+    "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+  ]
+}

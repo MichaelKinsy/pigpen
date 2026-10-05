@@ -1,0 +1,2 @@
+{"name":"login-shadow","description":"login refuses to shadow an environment key.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"steps":[
+ {"name":"login","rpc":{"type":"prompt","message":"/typesafe login"}}]}

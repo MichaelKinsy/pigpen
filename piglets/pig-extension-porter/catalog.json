@@ -1,0 +1,10 @@
+{
+  "featured": false,
+  "updatedAt": "2026-09-29",
+  "languages": ["go"],
+  "notes": [
+    "Go only. The focused porter for Pi TypeScript extensions: the strict porting Skill plus the equivalence harness as a fused Go extension. Run npm run stage before using its generated manifest under dist/staged.",
+    "Most users who port extensions want this Piglet rather than pig-porter, which extends it. Its Packages (extension-port, extension-equivalence) also install on their own with pig install.",
+    "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+  ]
+}

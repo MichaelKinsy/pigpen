@@ -1,0 +1,7 @@
+{
+  "kind": "go-relocation",
+  "upstream": "https://github.com/MichaelKinsy/PiG",
+  "revision": "d86eb93f217e64b655e9ee6f48c93a9afd107697",
+  "oracle": "piglets/standard/extensions/angrypigs",
+  "note": "golden traces are the unmodified upstream extension under PiG (pigeq record --go-oracle): first under PiG 0.3.0, re-recorded under the PiG 0.4.1 content; see PORT.md"
+}

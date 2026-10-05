@@ -1,0 +1,18 @@
+{
+  "origin": "ported",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "Pi",
+      "authors": ["Mario Zechner"],
+      "url": "https://github.com/earendil-works/pi",
+      "revision": "f07218c4d4bbc12bef056a7058c3dd49dfe41abe",
+      "path": "port/oracle/dirty-repo-guard.ts",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

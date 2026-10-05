@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "activeFixtures": 14,
+  "beforeExtensionChars": 145134,
+  "afterExtensionChars": 89993,
+  "contextReductionPercent": 37.99316493723042,
+  "activitySpeedup": 1200.2352709316283,
+  "failures": []
+}

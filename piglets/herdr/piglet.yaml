@@ -1,0 +1,20 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG that reports its state to herdr. The extension does nothing outside a herdr pane.
+name: herdr
+description: "PiG with the herdr agent-state reporter: idle, working and blocked in herdr's sidebar, notifications and `herdr agent wait`."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+packages:
+  herdr: local:../../components/herdr
+extensions:
+  - name: herdr
+    origins: [package:herdr]
+    tools: []
+skills: []
+# The reporter adds no behavior of its own, so the user's own extensions and
+# skills stay available beside it.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

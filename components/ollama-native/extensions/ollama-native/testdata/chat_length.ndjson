@@ -1,0 +1,2 @@
+{"model":"granite4.1:3b","created_at":"2026-10-05T20:46:01.001Z","message":{"role":"assistant","content":"Long answer"},"done":false}
+{"model":"granite4.1:3b","created_at":"2026-10-05T20:46:01.031Z","message":{"role":"assistant","content":""},"done_reason":"length","done":true,"prompt_eval_count":8,"eval_count":2}

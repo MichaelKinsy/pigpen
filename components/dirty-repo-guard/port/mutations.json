@@ -1,0 +1,158 @@
+[
+ {
+  "name": "allow-option-inverted",
+  "file": "extension.go",
+  "find": "!ok || choice != allowOption",
+  "replace": "!ok || choice == allowOption"
+ },
+ {
+  "name": "any-choice-allows",
+  "file": "extension.go",
+  "find": "!ok || choice != allowOption",
+  "replace": "!ok || choice == \"\""
+ },
+ {
+  "name": "warning-dropped",
+  "file": "extension.go",
+  "find": "ctx.Notify(\"Commit your changes first\", \"warning\")",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "warning-level-info",
+  "file": "extension.go",
+  "find": "\"Commit your changes first\", \"warning\"",
+  "replace": "\"Commit your changes first\", \"info\""
+ },
+ {
+  "name": "switch-wording-for-new",
+  "file": "extension.go",
+  "find": "action = \"new session\"",
+  "replace": "action = \"switch session\""
+ },
+ {
+  "name": "fork-wording",
+  "file": "extension.go",
+  "find": "checkDirtyRepo(ctx, \"fork\")",
+  "replace": "checkDirtyRepo(ctx, \"fork session\")"
+ },
+ {
+  "name": "git-args",
+  "file": "extension.go",
+  "find": "[]string{\"status\", \"--porcelain\"}",
+  "replace": "[]string{\"status\", \"--short\"}"
+ },
+ {
+  "name": "nonzero-exit-not-allowed",
+  "file": "guard.go",
+  "find": "code != 0 || len(jsTrim(stdout)) == 0",
+  "replace": "len(jsTrim(stdout)) == 0"
+ },
+ {
+  "name": "clean-tree-asks",
+  "file": "guard.go",
+  "find": "code != 0 || len(jsTrim(stdout)) == 0",
+  "replace": "code != 0"
+ },
+ {
+  "name": "blank-lines-counted",
+  "file": "guard.go",
+  "find": "if line != \"\" {",
+  "replace": "if line != \"\" || true {"
+ },
+ {
+  "name": "trim-is-go-trim",
+  "file": "guard.go",
+  "find": "func jsTrim(s string) string { return strings.TrimFunc(s, isJSSpace) }",
+  "replace": "func jsTrim(s string) string { return strings.TrimSpace(s) }"
+ },
+ {
+  "name": "count-untrimmed",
+  "file": "guard.go",
+  "find": "strings.Split(jsTrim(stdout), \"\\n\")",
+  "replace": "strings.Split(stdout, \"\\n\")"
+ },
+ {
+  "name": "no-ui-asks-anyway",
+  "file": "guard.go",
+  "find": "if !hasUI {\n\t\treturn cancel, 0\n\t}",
+  "replace": "if !hasUI {\n\t\treturn ask, countChangedFiles(stdout)\n\t}"
+ },
+ {
+  "name": "no-ui-allows",
+  "file": "guard.go",
+  "find": "return cancel, 0",
+  "replace": "return allow, 0"
+ },
+ {
+  "name": "allow-returns-cancel",
+  "file": "extension.go",
+  "find": "\tcase allow:\n\t\treturn nil, nil",
+  "replace": "\tcase allow:\n\t\treturn map[string]any{\"cancel\": true}, nil"
+ },
+ {
+  "name": "switch-handler-missing",
+  "file": "extension.go",
+  "find": "e.OnEvent(sdk.EventSessionBeforeSwitch",
+  "replace": "e.OnEvent(sdk.EventSessionBeforeSwitch+\"_x\""
+ },
+ {
+  "name": "fork-handler-missing",
+  "file": "extension.go",
+  "find": "e.OnEvent(sdk.EventSessionBeforeFork",
+  "replace": "e.OnEvent(sdk.EventSessionBeforeFork+\"_x\""
+ },
+ {
+  "name": "order-notify-before-select",
+  "file": "extension.go",
+  "find": "\tchoice, ok, err := ctx.Select(",
+  "replace": "\tctx.Notify(\"Commit your changes first\", \"warning\")\n\tchoice, ok, err := ctx.Select("
+ },
+ {
+  "name": "notify-text-changed",
+  "file": "extension.go",
+  "find": "ctx.Notify(\"Commit your changes first\", \"warning\")",
+  "replace": "ctx.Notify(\"Commit your changes first.\", \"warning\")"
+ },
+ {
+  "name": "extra-ui-call-on-allow",
+  "file": "extension.go",
+  "find": "\tcase allow:\n\t\treturn nil, nil",
+  "replace": "\tcase allow:\n\t\tctx.SetStatus(\"guard\", \"ok\")\n\t\treturn nil, nil"
+ },
+ {
+  "name": "option-text-changed",
+  "file": "extension.go",
+  "find": "refuseOption = \"No, let me commit first\"",
+  "replace": "refuseOption = \"No, let me commit first \""
+ },
+ {
+  "name": "title-count-off-by-one",
+  "file": "extension.go",
+  "find": "uncommitted file(s). %s anyway?\", changed, action",
+  "replace": "uncommitted file(s). %s anyway?\", changed+1, action"
+ },
+ {
+  "name": "error-instead-of-cancel",
+  "file": "extension.go",
+  "find": "\t\tctx.Notify(\"Commit your changes first\", \"warning\")\n\t\treturn map[string]any{\"cancel\": true}, nil",
+  "replace": "\t\tctx.Notify(\"Commit your changes first\", \"warning\")\n\t\treturn nil, fmt.Errorf(\"Commit your changes first\")"
+ },
+ {
+  "name": "extra-git-call",
+  "file": "extension.go",
+  "find": "\tres, err := ctx.Exec(\"git\", []string{\"status\", \"--porcelain\"})",
+  "replace": "\t_, _ = ctx.Exec(\"git\", []string{\"rev-parse\"})\n\tres, err := ctx.Exec(\"git\", []string{\"status\", \"--porcelain\"})"
+ },
+ {
+  "name": "absolute-git-path",
+  "file": "extension.go",
+  "find": "\tres, err := ctx.Exec(\"git\", []string{\"status\", \"--porcelain\"})",
+  "replace": "\tres, err := ctx.Exec(\"/usr/bin/git\", []string{\"status\", \"--porcelain\"})"
+ },
+ {
+  "name": "undeclared-command",
+  "file": "extension.go",
+  "find": "\tres, err := ctx.Exec(\"git\", []string{\"status\", \"--porcelain\"})",
+  "replace": "\t_, _ = ctx.Exec(\"touch\", []string{\".guard-checked\"})\n\tres, err := ctx.Exec(\"git\", []string{\"status\", \"--porcelain\"})"
+ }
+]

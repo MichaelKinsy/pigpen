@@ -1,0 +1,96 @@
+{
+  "name": "blocked-by",
+  "description": "Dependencies: create with blockedBy, add and remove, the get blocks line and the list chain suffix.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "root"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "mid",
+            "blockedBy": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "leaf"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 3,
+            "addBlockedBy": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get",
+            "id": 1
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get",
+            "id": 3
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 3,
+            "removeBlockedBy": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    }
+  ]
+}

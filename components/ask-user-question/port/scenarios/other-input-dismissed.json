@@ -1,0 +1,55 @@
+{
+  "name": "other-input-dismissed",
+  "description": "The user picks 'Type something.' and then dismisses the input.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Which database?",
+                "header": "Choice",
+                "options": [
+                  {
+                    "label": "Postgres",
+                    "description": "Relational"
+                  },
+                  {
+                    "label": "SQLite",
+                    "description": "Embedded"
+                  },
+                  {
+                    "label": "Redis",
+                    "description": "In memory"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "value": "4. Type something."
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ]
+}

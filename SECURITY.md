@@ -2,8 +2,9 @@
 
 ## Scope and current status
 
-Pigpen holds official Piglet source compositions and generated catalog metadata.
-It currently contains a planned scaffold, not a published Piglet Binary release.
+Pigpen holds Piglet compositions, reusable components, and generated catalog
+metadata. The extension porter is source-only and batteries (currently the herdr reporter plus a build fixture) remain source only.
+No Piglet Binary release is published.
 There is no supported binary-version range or release signing key to advertise
 at this stage. This policy does not claim a security audit or guaranteed response
 time.

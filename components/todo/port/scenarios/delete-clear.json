@@ -1,0 +1,129 @@
+{
+  "name": "delete-clear",
+  "description": "Tombstones, includeDeleted, the deleted filter, and clear resetting the ids.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "one"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "two"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "three"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "delete",
+            "id": 2
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list",
+            "includeDeleted": true
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list",
+            "status": "deleted",
+            "includeDeleted": true
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list",
+            "status": "deleted"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "deleted"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "clear"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "fresh"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+[{"toolCalls":[{"name":"subagents_enable","arguments":{}}]},{"toolCalls":[{"name":"subagent","arguments":{"agent":"helper","task":"- say hello\n- then stop"}}]},{"text":"hello from the child agent"},{"text":"The helper answered."}]

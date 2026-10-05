@@ -1,0 +1,15 @@
+{
+  "verifiedAt": "2026-09-07T22:43:19.928651+00:00",
+  "version": "0.31.0",
+  "npmUrl": "https://www.npmjs.com/package/pi-goal-x/v/0.31.0",
+  "distTags": {
+    "latest": "0.31.0"
+  },
+  "tarball": "https://registry.npmjs.org/pi-goal-x/-/pi-goal-x-0.31.0.tgz",
+  "integrity": "sha512-7v7Xl0GzuuGwqCXe7vj0AQbBuF93rFBc/qD3WQlbPKOekWglTw+inaK9Mzv2cYz9HgqsIFca4+44X3y3/UmZ7w==",
+  "shasum": "1a54e0f5e51359746d51656f865dd827b9ad3255",
+  "githubRelease": "https://github.com/tmonk/pi-goal-x/releases/tag/v0.31.0",
+  "releaseCommit": "c3f282d7eccfd3e5b960fb4351701943fe6ab2e2",
+  "releaseCi": "https://github.com/tmonk/pi-goal-x/actions/runs/34166666567",
+  "matchesValidatedTarball": true
+}

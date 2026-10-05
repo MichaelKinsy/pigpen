@@ -1,0 +1,43 @@
+{
+ "mode": "probabilities",
+ "structured": true,
+ "normalize": true,
+ "state": "s",
+ "questions": {
+  "positive": {
+   "type": "noul"
+  },
+  "stars": {
+   "type": "score",
+   "criteria": [
+    "a",
+    "b",
+    "c"
+   ]
+  },
+  "genre": {
+   "type": "choice",
+   "criteria": {
+    "a": null,
+    "b": null
+   }
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "positive": 0.0,
+    "stars": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0
+    },
+    "genre": {
+     "a": 0.0,
+     "b": 0.0
+    }
+   }
+  }
+ ],
+ "name": "zero-total-normalize"
+}

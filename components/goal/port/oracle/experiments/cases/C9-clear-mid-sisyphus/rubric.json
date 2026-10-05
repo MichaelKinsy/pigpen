@@ -1,0 +1,20 @@
+[
+  {
+    "id": "no-active-goal-left",
+    "desc": "After clear, no active goal file remains.",
+    "kind": "sandbox-glob-not-exists",
+    "glob": ".pi/goals/active_goal_*.md"
+  },
+  {
+    "id": "no-abort-goal",
+    "desc": "abort_goal is removed.",
+    "kind": "tool-not-called",
+    "tool": "abort_goal"
+  },
+  {
+    "id": "no-missing-fabrication",
+    "desc": "missing.txt must not be fabricated.",
+    "kind": "sandbox-glob-not-exists",
+    "glob": "missing.txt"
+  }
+]

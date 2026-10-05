@@ -1,0 +1,232 @@
+name: Publish npm
+run-name: Publish ${{ inputs.tag || github.ref_name }}${{ inputs.dry_run && ' (dry run)' || '' }}
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable release tag (vX.Y.Z) on main history
+        required: true
+        type: string
+      dry_run:
+        description: Validate and pack without publishing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    needs: ranking
+    if: github.repository == 'tmonk/pi-goal-x'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+    steps:
+      - name: Validate requested tag
+        shell: bash
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || exit 1
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check release metadata and main ancestry
+        shell: bash
+        run: |
+          git merge-base --is-ancestor HEAD origin/main
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const pkg = JSON.parse(fs.readFileSync('package.json'));
+          const lock = JSON.parse(fs.readFileSync('package-lock.json'));
+          assert.equal(pkg.name, 'pi-goal-x');
+          assert.equal(`v${pkg.version}`, process.env.RELEASE_TAG);
+          assert.equal(lock.version, pkg.version);
+          assert.equal(lock.packages[''].version, pkg.version);
+          NODE
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Use verified OIDC-capable npm
+        run: npm install --global npm@11.19.0
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lint
+      - run: npm run test:all
+      - run: npm run test:selfcheck
+      - run: npm run context:gate
+      - run: npm run context:provider-check
+      - run: npm audit --omit=dev
+      - run: npm run bench:gate:naf
+      - name: Download release ranking
+        if: env.DRY_RUN != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.ranking.outputs.artifact_id }}
+          path: assets
+          merge-multiple: true
+      - name: Apply release ranking to package
+        if: env.DRY_RUN != 'true'
+        run: python3 scripts/update-ranking.py --release "$RELEASE_TAG"
+      - name: Pack once and smoke-test recovery CLI
+        run: |
+          mkdir -p "$RUNNER_TEMP/release"
+          npm pack --json --pack-destination "$RUNNER_TEMP/release" > "$RUNNER_TEMP/release/pack.json"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const [pkg] = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/release/pack.json`));
+          fs.appendFileSync(process.env.GITHUB_ENV, `TARBALL=${path.join(process.env.RUNNER_TEMP, 'release', pkg.filename)}\n`);
+          NODE
+          mkdir -p "$RUNNER_TEMP/package-smoke"
+          tar -xzf "$RUNNER_TEMP/release/pi-goal-x-${RELEASE_TAG#v}.tgz" -C "$RUNNER_TEMP/package-smoke"
+          node "$RUNNER_TEMP/package-smoke/package/scripts/recover-session-checkpoints.mjs" --help
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-${{ env.RELEASE_TAG }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/release/
+          if-no-files-found: error
+      - name: Rehearse publication
+        if: env.DRY_RUN == 'true'
+        # --force skips npm's existing-version check only in this non-writing rehearsal.
+        run: npm publish "$TARBALL" --dry-run --force --access public --tag latest
+      - name: Publish exact tarball with OIDC and verify registry
+        if: env.DRY_RUN != 'true'
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          const [pkg] = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/release/pack.json`));
+          const url = `https://registry.npmjs.org/${pkg.name}/${pkg.version}`;
+          const response = await fetch(url);
+          const isNewVersion = response.status === 404;
+          if (isNewVersion) {
+            const latestResponse = await fetch(`https://registry.npmjs.org/${pkg.name}/latest`);
+            if (!latestResponse.ok) throw new Error(`Cannot read latest: ${latestResponse.status}`);
+            const latest = (await latestResponse.json()).version;
+            const nextParts = pkg.version.split('.').map(Number);
+            const oldParts = latest.split('.').map(Number);
+            const firstDifferent = nextParts.findIndex((value, i) => value !== oldParts[i]);
+            assert(firstDifferent >= 0 && nextParts[firstDifferent] > oldParts[firstDifferent], 'Refusing to move latest backwards');
+            execFileSync('npm', ['publish', process.env.TARBALL, '--access', 'public', '--tag', 'latest', '--provenance'], { stdio: 'inherit' });
+          } else {
+            if (!response.ok) throw new Error(`Registry lookup failed: ${response.status}`);
+            assert.equal((await response.json()).dist.integrity, pkg.integrity, 'Published version differs from this tarball');
+            console.log('Identical version already published; verifying without republishing.');
+          }
+          let verified = false;
+          for (let attempt = 0; attempt < 60; attempt++) {
+            const published = await fetch(url);
+            if (published.ok) {
+              const metadata = await published.json();
+              assert.equal(metadata.dist.integrity, pkg.integrity);
+              assert.equal(metadata.dist.shasum, pkg.shasum);
+              fs.writeFileSync(`${process.env.RUNNER_TEMP}/release/registry.json`, JSON.stringify(metadata, null, 2));
+              verified = true;
+              break;
+            }
+            if (attempt % 12 === 0) console.log(`Waiting for published metadata (${attempt * 5}s elapsed)...`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          }
+          assert(verified, 'Published metadata did not become available within five minutes; retry verification before attempting another publish');
+          if (isNewVersion) {
+            let latestVerified = false;
+            for (let attempt = 0; attempt < 60; attempt++) {
+              const latest = await fetch(`https://registry.npmjs.org/${pkg.name}/latest`);
+              if (latest.ok && (await latest.json()).version === pkg.version) {
+                latestVerified = true;
+                break;
+              }
+              if (attempt % 12 === 0) console.log(`Waiting for latest (${attempt * 5}s elapsed)...`);
+              await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+            assert(latestVerified, 'latest did not become available within five minutes for this release');
+          }
+          NODE
+      - name: Create GitHub release after registry verification
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            echo 'GitHub release already exists; leaving its notes and assets intact.'
+          else
+            gh release create "$RELEASE_TAG" "$TARBALL" --verify-tag --generate-notes --title "$RELEASE_TAG"
+          fi
+      - name: Save registry receipt
+        if: env.DRY_RUN != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-${{ env.RELEASE_TAG }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/release/registry.json
+          if-no-files-found: error
+
+  ranking:
+    name: Prepare release ranking
+    outputs:
+      artifact_id: ${{ steps.ranking_artifact.outputs.artifact-id }}
+    if: github.repository == 'tmonk/pi-goal-x'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Validate release before updating ranking
+        shell: bash
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || exit 1
+          git merge-base --is-ancestor "refs/tags/$RELEASE_TAG" origin/main
+          git show "refs/tags/$RELEASE_TAG:package.json" > "$RUNNER_TEMP/release-package.json"
+          node -e 'const p = require(process.env.RUNNER_TEMP + "/release-package.json"); if (p.name !== "pi-goal-x" || "v" + p.version !== process.env.RELEASE_TAG) process.exit(1)'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test ranking updater
+        run: python3 -B scripts/test-update-ranking.py
+      - name: Update badges and release observation
+        if: env.DRY_RUN != 'true'
+        run: python scripts/update-ranking.py --release "$RELEASE_TAG" --record-release
+      - name: Commit ranking update
+        if: env.DRY_RUN != 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md assets/badge-light.svg assets/badge-dark.svg assets/ranking.json
+          if git diff --cached --quiet; then
+            echo 'Ranking already recorded for this release.'
+            exit 0
+          fi
+          git commit -m "docs: update Pi ranking for $RELEASE_TAG"
+          git push origin HEAD:main
+      - name: Save release ranking for package
+        id: ranking_artifact
+        if: env.DRY_RUN != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ranking-${{ env.RELEASE_TAG }}-${{ github.run_attempt }}
+          path: assets/ranking.json
+          if-no-files-found: error

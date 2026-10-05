@@ -1,0 +1,53 @@
+{
+ "name": "fetch-raw-404",
+ "description": "fetch_content in raw mode returns the exact body of a 404 answer.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/gone",
+      "mode": "raw"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/page",
+     "headers": {
+      "content-type": "text/plain"
+     },
+     "body": "Plain page served by the fake web server.\n"
+    },
+    {
+     "path": "/gone",
+     "status": 404,
+     "headers": {
+      "content-type": "text/html"
+     },
+     "body": "<html>exact raw body</html>"
+    }
+   ]
+  }
+ }
+}

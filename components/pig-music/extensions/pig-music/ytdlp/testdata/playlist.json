@@ -1,0 +1,11 @@
+{
+  "id": "PLmockplaylist000000000000000000000",
+  "title": "Mock Playlist",
+  "_type": "playlist",
+  "playlist_count": 3,
+  "entries": [
+    {"_type": "url", "ie_key": "Youtube", "id": "hhhhhhhhhhh", "url": "https://www.youtube.com/watch?v=hhhhhhhhhhh", "title": "First Song", "duration": 200, "channel": "Artist One"},
+    {"_type": "url", "ie_key": "Youtube", "id": "iiiiiiiiiii", "url": "https://www.youtube.com/watch?v=iiiiiiiiiii", "title": "Second Song", "duration": 240, "channel": "Artist Two"},
+    {"_type": "url", "ie_key": "Youtube", "id": "jjjjjjjjjjj", "url": "https://www.youtube.com/watch?v=jjjjjjjjjjj", "title": "[Deleted video]", "duration": null}
+  ]
+}

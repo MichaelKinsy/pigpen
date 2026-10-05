@@ -1,0 +1,190 @@
+# every case of @typesafe-ai/sdk 0.6.0 at 66880cc: "<test file> | <full test name>" (vitest run --reporter=json; 189 cases)
+api-promise.test.ts | APIPromise is returned from client methods and is a real Promise
+api-promise.test.ts | APIPromise awaits to the parsed data
+api-promise.test.ts | APIPromise withResponse() returns data, response, and requestId
+api-promise.test.ts | APIPromise withResponse() has undefined requestId when the header is absent
+api-promise.test.ts | APIPromise asResponse() returns the raw Response with an unconsumed body
+api-promise.test.ts | APIPromise parses the body only once across multiple consumers
+api-promise.test.ts | APIPromise rejects with APIError on every path
+api-promise.test.ts | APIPromise map() transforms the data while sharing the response and parsing once
+api-promise.test.ts | APIPromise supports then/catch/finally chaining
+api-promise.test.ts | APIPromise does not issue the request until constructed, but does not require awaiting to send
+client.test.ts | TypeSafeClient configuration falls back to defaults when neither config nor env is set
+client.test.ts | TypeSafeClient configuration reads every setting from the environment
+client.test.ts | TypeSafeClient configuration prefers config over the environment
+client.test.ts | TypeSafeClient configuration keeps the API key off the instance so logging the client cannot leak it
+client.test.ts | TypeSafeClient configuration treats empty and whitespace-only env values as unset
+client.test.ts | TypeSafeClient configuration throws a TypeSafeError naming the env var when no API key is available
+client.test.ts | TypeSafeClient configuration strips trailing slashes from baseURL from either source
+client.test.ts | TypeSafeClient configuration accepts log level debug
+client.test.ts | TypeSafeClient configuration accepts log level info
+client.test.ts | TypeSafeClient configuration accepts log level warn
+client.test.ts | TypeSafeClient configuration accepts log level error
+client.test.ts | TypeSafeClient configuration accepts log level off
+client.test.ts | TypeSafeClient configuration rejects an invalid log level and names where it came from
+client.test.ts | requests sends auth and identifying headers
+client.test.ts | requests merges defaultHeaders and per-call headers, per-call winning, never clobbering auth
+client.test.ts | requests models.list() unwraps the documented response: {"cards":[]}
+client.test.ts | requests models.list() unwraps the documented response: {"cards":[{"name":"m","description":"d","release_date":"2026"}]}
+client.test.ts | requests models.list() fails clearly on an unrecognized shape: {"wire":null}
+client.test.ts | requests models.list() fails clearly on an unrecognized shape: {"wire":[]}
+client.test.ts | requests models.list() fails clearly on an unrecognized shape: {"wire":{"models":{"models":[]}}}
+client.test.ts | requests models.list() fails clearly on an unrecognized shape: {"wire":{"models":null}}
+client.test.ts | requests models.list() fails clearly on an unrecognized shape: {"wire":{"models":"bad"}}
+client.test.ts | requests models.list() fails clearly on an unrecognized shape: {"wire":{"ok":true}}
+client.test.ts | requests preserves employee-only model fields through raw access
+client.test.ts | requests posts the systemOne payload with the default model
+client.test.ts | requests sends the request object as the payload, filling in the default model
+client.test.ts | requests honors per-call model and client defaultModel
+client.test.ts | requests aborting the caller's signal aborts the signal handed to fetch, and wraps the error
+client.test.ts | requests wraps network failures in APIConnectionError with the cause
+client.test.ts | question builders choice accepts a criteria object as-is
+client.test.ts | question builders choice rejects the removed label-list shorthand in JavaScript too
+client.test.ts | question builders noul allows describing one side, both, or neither
+client.test.ts | question builders descriptions can be JSON objects, not only strings
+client.test.ts | question builders choice answers carry the winning label
+client.test.ts | question builders score keeps the list it was given and rejects maps
+client.test.ts | wire format preserves null state, instructions, and criteria values
+client.test.ts | wire format allows omitted instructions and preserves JSON arrays
+client.test.ts | wire format sends choice criteria without rewriting
+client.test.ts | wire format sends a score list untouched
+client.test.ts | wire format rejects non-list score criteria, fewer than two criteria, and empty question sets before sending
+client.test.ts | 1.0 primitive contract uses a ten-second default and keeps raw metadata access
+client.test.ts | 1.0 primitive contract forwards extra fields and null
+errors.test.ts | APIError.fromResponse maps 400 to [Function BadRequestError]
+errors.test.ts | APIError.fromResponse maps 401 to [Function AuthenticationError]
+errors.test.ts | APIError.fromResponse maps 403 to [Function PermissionDeniedError]
+errors.test.ts | APIError.fromResponse maps 404 to [Function NotFoundError]
+errors.test.ts | APIError.fromResponse maps 422 to [Function UnprocessableEntityError]
+errors.test.ts | APIError.fromResponse maps 429 to [Function RateLimitError]
+errors.test.ts | APIError.fromResponse maps 500 to [Function InternalServerError]
+errors.test.ts | APIError.fromResponse maps 503 to [Function InternalServerError]
+errors.test.ts | APIError.fromResponse maps 418 to [Function APIError]
+errors.test.ts | error messages and bodies uses error.message from a JSON body and exposes the request id
+errors.test.ts | error messages and bodies extracts a message from { error: 'plain string' }
+errors.test.ts | error messages and bodies extracts a message from { message: 'top-level message' }
+errors.test.ts | error messages and bodies extracts a message from { detail: 'fastapi style' }
+errors.test.ts | error messages and bodies extracts a message from { detail: { error_type: 'api_usage_error', message: 'Unknown model: x' } }
+errors.test.ts | error messages and bodies extracts a message from { detail: [ { type: 'list_type', loc: [ 'body', 'questions', 'q', 'score', 'criteria' ], msg: 'Input should be a valid list' }, { type: 'too_short', loc: [ 'body', 'questions' ], msg: 'Dictionary should have at least 1 item' } ] }
+errors.test.ts | error messages and bodies falls back to the raw body when no message can be extracted, truncated
+errors.test.ts | error messages and bodies keeps non-JSON bodies as text
+errors.test.ts | error messages and bodies handles empty bodies
+errors.test.ts | error messages and bodies parses JSON even when content-type is missing
+logging.test.ts | default console logger is silent at the default level for a successful request
+logging.test.ts | default console logger writes prefixed lines to console at debug level
+logging.test.ts | default console logger routes each level to the matching console method
+logging.test.ts | custom logger and level filtering exposes the level-filtered logger on the client
+logging.test.ts | custom logger and level filtering drops everything at level off
+logging.test.ts | custom logger and level filtering logs a one-line summary at info and nothing at debug
+logging.test.ts | custom logger and level filtering logs request headers, request body, and response body at debug
+logging.test.ts | custom logger and level filtering never logs the raw API key
+logging.test.ts | custom logger and level filtering numbers requests so concurrent calls can be told apart
+logging.test.ts | custom logger and level filtering logs error responses as a summary plus the body at debug, without a warn
+logging.test.ts | custom logger and level filtering logs connection failures with the underlying error
+logging.test.ts | custom logger and level filtering logs caller aborts
+logging.test.ts | redactHeaders masks credentials, keeps the scheme and the last four characters
+logging.test.ts | redactHeaders does not leak a tail from short secrets
+logging.test.ts | redactHeaders does not mutate its input
+native-transport.test.ts | native response transport sends one authorization, content type and overriding custom header on the wire
+native-transport.test.ts | native response transport times out a stalled 200 body on parsed, withResponse and raw paths
+native-transport.test.ts | native response transport times out a stalled 503 body on parsed, withResponse and raw paths
+native-transport.test.ts | native response transport honors caller cancellation after 200 headers and never retries
+native-transport.test.ts | native response transport honors caller cancellation after 503 headers and never retries
+native-transport.test.ts | native response transport retries a broken 200 body and exposes the successful response metadata
+native-transport.test.ts | native response transport retries a broken 503 body and exposes the successful response metadata
+native-transport.test.ts | native response transport buffers delayed chunks before raw handoff and preserves a readable body after cancellation
+release-regressions.test.ts | release regressions replaces mixed-case defaults and protects every SDK header on every attempt
+release-regressions.test.ts | release regressions does not send a caller-supplied content type or retry count on GET
+release-regressions.test.ts | release regressions preserves own __proto__ questions without mutation
+release-regressions.test.ts | release regressions times out a stalled 200 body even with a custom fetch ignoring signals
+release-regressions.test.ts | release regressions times out a stalled 503 body even with a custom fetch ignoring signals
+release-regressions.test.ts | release regressions wraps 200 body failures with their cause and honors disabled connection retries
+release-regressions.test.ts | release regressions wraps 503 body failures with their cause and honors disabled connection retries
+release-regressions.test.ts | release regressions cancels a body when the signal was aborted just before fetch returned headers
+release-regressions.test.ts | release regressions returns a null-body response without trying to read a stream
+reliability.test.ts | retries retries a 429 and then succeeds, honoring Retry-After
+reliability.test.ts | retries uses exponential backoff when there is no Retry-After
+reliability.test.ts | retries gives up after maxRetries and throws the last error
+reliability.test.ts | retries does not retry non-retryable statuses
+reliability.test.ts | retries retries connection errors
+reliability.test.ts | retries never retries a caller abort
+reliability.test.ts | retries aborting during the backoff wait throws APIUserAbortError
+reliability.test.ts | retries per-call maxRetries overrides the client, and 0 disables retries
+reliability.test.ts | retries tells the server which retry this is
+reliability.test.ts | retries rejects invalid maxRetries from config or per call
+reliability.test.ts | retry policy defaults to the SDK policy and exposes the resolved policy on the client
+reliability.test.ts | retry policy isolates the policy and status set between default clients
+reliability.test.ts | retry policy copies caller-owned status sets when constructing a client
+reliability.test.ts | retry policy snapshots the client policy for an in-flight request
+reliability.test.ts | retry policy snapshots the call policy for an in-flight request
+reliability.test.ts | retry policy can extend the default statuses by spreading the client's policy
+reliability.test.ts | retry policy retries only the statuses in httpStatuses
+reliability.test.ts | retry policy can stop retrying connection errors while still retrying timeouts
+reliability.test.ts | retry policy can stop retrying timeouts while still retrying connection errors
+reliability.test.ts | retry policy backs off from the configured initial delay and cap
+reliability.test.ts | retry policy can ignore Retry-After, and caps how long a Retry-After may be
+reliability.test.ts | retry policy per-call retry overrides field by field and leaves the client's policy alone
+reliability.test.ts | retry policy validates every numeric field and names it
+reliability.test.ts | timeouts throws APITimeoutError, which is an APIConnectionError
+reliability.test.ts | timeouts fires at exactly the configured timeout
+reliability.test.ts | timeouts retries after a timeout, each attempt getting its own timeout
+reliability.test.ts | timeouts per-call timeout overrides the client
+reliability.test.ts | timeouts a caller abort during a hung request is reported as an abort, not a timeout
+reliability.test.ts | timeouts clears its timer after a fast response
+reliability.test.ts | timeouts rejects invalid timeouts from config or per call
+reliability.test.ts | RateLimitError exposes the parsed Retry-After in milliseconds
+reliability.test.ts | RateLimitError is undefined when the server sent no Retry-After
+reliability.test.ts | browsers refuses to construct in a browser by default
+reliability.test.ts | browsers constructs in a browser when explicitly allowed
+reliability.test.ts | browsers does not mistake Node for a browser
+reliability.test.ts | browsers calls the global fetch with a receiver it accepts
+reliability.test.ts | browsers fails clearly when no fetch exists and none was provided
+retry.test.ts | DEFAULT_RETRY_POLICY uses the SDK retry defaults
+retry.test.ts | isRetryableStatus retries 408 by default
+retry.test.ts | isRetryableStatus retries 429 by default
+retry.test.ts | isRetryableStatus retries 500 by default
+retry.test.ts | isRetryableStatus retries 502 by default
+retry.test.ts | isRetryableStatus retries 503 by default
+retry.test.ts | isRetryableStatus retries 504 by default
+retry.test.ts | isRetryableStatus retries 529 by default
+retry.test.ts | isRetryableStatus retries 599 by default
+retry.test.ts | isRetryableStatus does not retry 200 by default
+retry.test.ts | isRetryableStatus does not retry 400 by default
+retry.test.ts | isRetryableStatus does not retry 401 by default
+retry.test.ts | isRetryableStatus does not retry 403 by default
+retry.test.ts | isRetryableStatus does not retry 404 by default
+retry.test.ts | isRetryableStatus does not retry 409 by default
+retry.test.ts | isRetryableStatus does not retry 422 by default
+retry.test.ts | isRetryableStatus does not retry 600 by default
+retry.test.ts | isRetryableStatus consults the policy's status set
+retry.test.ts | parseRetryAfter reads Retry-After in seconds
+retry.test.ts | parseRetryAfter prefers retry-after-ms when present
+retry.test.ts | parseRetryAfter reads an HTTP date relative to now
+retry.test.ts | parseRetryAfter returns undefined for missing or garbage values
+retry.test.ts | retryDelayMs grows exponentially from 500ms and caps at 5s
+retry.test.ts | retryDelayMs shaves off at most 25% as jitter
+retry.test.ts | retryDelayMs honors Retry-After exactly, with no jitter
+retry.test.ts | retryDelayMs falls back to backoff when Retry-After exceeds one minute
+retry.test.ts | retryDelayMs uses the policy's initial delay, cap, and jitter
+retry.test.ts | retryDelayMs can ignore Retry-After entirely
+retry.test.ts | retryDelayMs uses the policy's Retry-After ceiling
+retry.test.ts | sleep rejects with the signal's reason when aborted mid-sleep
+retry.test.ts | sleep rejects immediately if the signal is already aborted
+runtime.test.ts | describeRuntime reports node with platform and arch here
+runtime.test.ts | describeRuntime prefers Bun over node when both are present
+runtime.test.ts | describeRuntime recognizes Deno
+runtime.test.ts | describeRuntime recognizes edge runtimes by their markers
+runtime.test.ts | describeRuntime falls back to browser, then unknown
+types.test-d.ts | test/types.test-d.ts systemOne result inference maps each question to its response type with literal criteria keys
+types.test-d.ts | test/types.test-d.ts systemOne result inference types score lists by index, with the legend keyed by score
+types.test-d.ts | test/types.test-d.ts systemOne result inference degrades to numeric indexing for non-literal score lists
+types.test-d.ts | test/types.test-d.ts systemOne result inference results are readonly
+types.test-d.ts | test/types.test-d.ts systemOne result inference client settings are readonly
+types.test-d.ts | test/types.test-d.ts systemOne result inference accepts a partial retry policy on the client and per call
+types.test-d.ts | test/types.test-d.ts criteria shapes rejects label-list shorthand for choice
+types.test-d.ts | test/types.test-d.ts criteria shapes rejects numeric-keyed maps for score
+types.test-d.ts | test/types.test-d.ts question helpers constrains descriptions while allowing null for every question type
+types.test-d.ts | test/types.test-d.ts question helpers preserves result inference with nulls, arrays, and omitted instructions
+types.test-d.ts | test/types.test-d.ts question helpers are all assignable to Question
+types.test-d.ts | test/types.test-d.ts APIPromise client methods return APIPromise
+types.test-d.ts | test/types.test-d.ts APIPromise awaiting yields the plain result

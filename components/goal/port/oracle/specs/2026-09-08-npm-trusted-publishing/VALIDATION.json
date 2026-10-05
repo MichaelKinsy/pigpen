@@ -1,0 +1,25 @@
+{
+  "implementationCommit": "30a062eda61c47f9296f3c4eb10d86ddc25c81e2",
+  "pullRequest": "https://github.com/tmonk/pi-goal-x/pull/51",
+  "actionlint": "1.7.12: passed",
+  "tagAndMetadataCases": 9,
+  "registryAndIdempotencyCases": 4,
+  "mainCI": "https://github.com/tmonk/pi-goal-x/actions/runs/34180572174",
+  "rehearsal": "https://github.com/tmonk/pi-goal-x/actions/runs/34180571692",
+  "rehearsalTag": "v0.31.1",
+  "rehearsalResult": "success",
+  "npmTrust": "configured: npm trust command confirmed successful creation",
+  "realOidcPublishTested": false,
+  "note": "No extra package version published; next release will exercise the real OIDC exchange.",
+  "trustedPublisher": {
+    "id": "e139ac83-dc67-43f3-80ea-cb63f7bc882f",
+    "type": "github",
+    "repository": "tmonk/pi-goal-x",
+    "file": "publish.yml",
+    "permissions": [
+      "publish",
+      "stage publish"
+    ],
+    "confirmedAt": "2026-09-08T10:12:32.200240+00:00"
+  }
+}

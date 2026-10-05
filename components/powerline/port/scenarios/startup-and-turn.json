@@ -1,0 +1,23 @@
+{
+ "name": "startup-and-turn",
+ "description": "Session start under RPC (no widget rows reach the host, only clears) and one ordinary turn. git is declared because the footer's git segment runs it in a TUI.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "prompt",
+   "rpc": {
+    "type": "prompt",
+    "message": "hello"
+   }
+  }
+ ],
+ "commands": {
+  "git": {
+   "mode": "real"
+  }
+ }
+}

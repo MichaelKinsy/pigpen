@@ -1,0 +1,230 @@
+import { isMode } from "./config.js";
+import type { WardenConfig } from "./config.js";
+import { resolveJudgmentBackend } from "./backend.js";
+import { redact } from "./redact.js";
+import { DEFAULT_TEMPLATES } from "./widget.js";
+
+/** The config layout this extension build expects; compared with the loaded config module's CONFIG_SCHEMA. */
+export const EXPECTED_SCHEMA = 11;
+
+export interface ShapeResult {
+  config: WardenConfig;
+  /** Sections that were absent from the loaded config and are now disabled. Empty when the config was complete. */
+  missing: string[];
+}
+
+const off = { enabled: false };
+// Duplicated from defaultConfig(): this file must work when the config module is stale and lacks the key.
+const coreTools = () => ["read", "bash", "edit", "write", "grep", "find", "ls"];
+const proseOff = () => ({ ...off, audience: "technical", threshold: 1, trend: 3, minChars: 1 });
+// A stale config module hands back either its own resolution or a raw value; both end up resolved here.
+const resolveSetting = (source: Partial<WardenConfig>) => source.backendRefusal !== undefined
+  ? { typesafeBackend: source.typesafeBackend, backendRefusal: source.backendRefusal }
+  : resolveJudgmentBackend(source.typesafeBackend);
+
+/**
+ * `loadConfig()` always returns a complete object, yet live sessions crashed at `config.slop.prose.enabled` after a package
+ * update. A partially updated module graph (extension from one version, config from another) is the only known way to get
+ * there. Whatever the cause, a missing section disables that guard and is reported instead of throwing inside Pi's event loop.
+ */
+export function completeConfig(loaded: Partial<WardenConfig> | undefined): ShapeResult {
+  const source = (loaded ?? {}) as Partial<WardenConfig>;
+  const missing: string[] = [];
+  const section = <K extends keyof WardenConfig>(key: K, fallback: WardenConfig[K]): WardenConfig[K] => {
+    const value = source[key];
+    if (value !== undefined && value !== null && typeof value === "object") return value as WardenConfig[K];
+    missing.push(key);
+    return fallback;
+  };
+  const backend = resolveSetting(source);
+  const config: WardenConfig = {
+    enabled: source.enabled ?? true,
+    typesafe: source.typesafe ?? false,
+    typesafeBackend: backend.typesafeBackend,
+    backendRefusal: backend.backendRefusal,
+    mode: isMode(source.mode) ? source.mode : "steer",
+    timeoutMs: source.timeoutMs ?? 5000,
+    maxRequests: source.maxRequests ?? 500,
+    steerVisible: source.steerVisible ?? false,
+    notices: source.notices ?? false,
+    steerBudget: typeof source.steerBudget === "number" && source.steerBudget >= 0 ? source.steerBudget : 3,
+    action: section("action", { ...off, tools: [], failOpen: true, timeoutMs: 5000, irreversible: { warn: 1, confirm: 1 }, offTask: { warn: 1, steer: 1 }, intentMismatch: 1, visibleMismatch: 1, intentTraceOnly: "all", shouldProceed: { threshold: 0.6, steer: false }, feedbackLog: false, commandRules: [], commandDenyRules: [], exemptRules: [], pathRules: [], armingRules: [], escalationThreshold: 0.85, floor: "evidence" }),
+    stuck: section("stuck", { ...off, window: 12, minFailures: 3, cooldown: 3, sameStrategy: 1, churnThreshold: 5, nudge: false, repeatSteer: false, evidence: false, diffLimit: 3000, tailLimit: 1000 }),
+    done: section("done", { ...off, claimsDone: 1, nudge: false, uiProof: false, uiFiles: [], visualTools: { commands: [], commandWords: [], tools: [], images: [] } }),
+    slop: section("slop", { ...off, threshold: 1, prose: proseOff() }),
+    security: section("security", { ...off, threshold: 1, maskOutput: false }),
+    rules: section("rules", { ...off, threshold: 1, softThreshold: 0, files: [], fallback: false, maxChars: 500, exclude: [], skip: [], sensitivePaths: {} }),
+    context: section("context", { ...off, tailMinChars: 1, confidence: 1, duplicateMinChars: Number.MAX_SAFE_INTEGER, recallTool: "none", formatConfidence: 1, compactAppendix: true, dedupeRuns: false, dedupeMessages: false, largeOutput: { ...off, threshold: 1 }, filter: { ...off, chunkChars: 2000, minScore: 1.5, maxKeptChars: 6000, timeoutMs: 4000 } }),
+    runaway: section("runaway", { ...off, repeats: Number.MAX_SAFE_INTEGER, thinkingRepeats: Number.MAX_SAFE_INTEGER, minChars: Number.MAX_SAFE_INTEGER, recover: false }),
+    notify: section("notify", { ...off, cooldownMs: 0, command: [] }),
+    // A stale config module leaves the judge trusted: never pausing is today's behaviour, not a new failure mode.
+    judge: section("judge", { failuresBeforeCooldown: Number.MAX_SAFE_INTEGER, cooldownMs: 0 }),
+    subagent: section("subagent", { ...off, wake: false, threshold: 1, cooldownMs: 0 }),
+    widget: section("widget", { ...off, placement: "aboveEditor", barMode: "live", shortcut: "", panelWidth: "40%", action: "", stuck: "", done: "", prose: "", security: "", context: "", runaway: "", rules: "", subagent: "" }),
+    // A missing section turns adaptation off: every steer is sent, as before the section existed.
+    steers: section("steers", { adaptive: false, minSteers: 30, minFollowed: 0.2, maxDisputed: 0.4, recheckEvery: 30, probeEvery: 5 }),
+    // A missing section turns the notes off: the guard is new, so nothing it says was expected.
+    waste: section("waste", { ...off, tip: false, every: 20, sleep: false, paging: false, search: false, recheck: false }),
+    learning: section("learning", { patternAnalysis: true, retentionDays: 365 }),
+    prefs: section("prefs", { enabled: false, inject: false }),
+    // A missing section keeps Pi's own compaction summary, as before the section existed.
+    compaction: section("compaction", { ...off, keepThreshold: 1, maxSummaryTokens: 1000, timeoutMs: 1, maxRequests: 1, skipProviders: [] }),
+    // An older config module collects no warnings.
+    warnings: Array.isArray(source.warnings) ? source.warnings : [],
+    conscience: section("conscience", { enabled: false, skills: { mode: "recommend", exclude: [] }, tools: { enabled: true, exclude: [] }, skipTools: coreTools(), timeoutMs: 3000, maxAssessments: 3, maxNudges: 2, maxSkillBytes: 32768, maxLoadedBytes: 65536, recommendThreshold: 0.80, advanceThreshold: 0.70 }),
+  };
+  // A missing/invalid runtime section falls back to disabled conscience, no loads, and the existing update warning.
+  if (typeof config.conscience !== "object" || config.conscience === null) {
+    missing.push("conscience");
+    config.conscience = { enabled: false, skills: { mode: "recommend", exclude: [] }, tools: { enabled: true, exclude: [] }, skipTools: coreTools(), timeoutMs: 3000, maxAssessments: 3, maxNudges: 2, maxSkillBytes: 32768, maxLoadedBytes: 65536, recommendThreshold: 0.80, advanceThreshold: 0.70 };
+  }
+  if (typeof config.conscience.skills !== "object" || config.conscience.skills === null) {
+    config.conscience = { ...config.conscience, skills: { mode: "recommend", exclude: [] } };
+  }
+  if (typeof config.conscience.tools !== "object" || config.conscience.tools === null) {
+    config.conscience = { ...config.conscience, tools: { enabled: true, exclude: [] } };
+  }
+  if (!Array.isArray(config.conscience.skipTools)) {
+    config.conscience = { ...config.conscience, skipTools: coreTools() };
+  }
+  if (typeof config.slop.prose !== "object" || config.slop.prose === null) {
+    missing.push("slop.prose");
+    config.slop = { ...config.slop, prose: proseOff() };
+  }
+  // 0.7 added fields inside the context section; an older config module leaves them undefined.
+  if (typeof config.context.duplicateMinChars !== "number" || typeof config.context.formatConfidence !== "number" || typeof config.context.recallTool !== "string") {
+    missing.push("context.saver");
+    config.context = { ...config.context, duplicateMinChars: Number.MAX_SAFE_INTEGER, recallTool: "none", formatConfidence: 1 };
+  }
+  // The stuck evidence section was added inside the stuck section later than the section itself; an older config
+  // module leaves it undefined, and the shipped default (on) applies.
+  if (typeof config.stuck.evidence !== "boolean") config.stuck = { ...config.stuck, evidence: true };
+  // The large-output question was added inside the context section later than the section itself; an older config module leaves it undefined and the question is not asked.
+  if (typeof config.context.largeOutput !== "object" || config.context.largeOutput === null) config.context = { ...config.context, largeOutput: { ...off, threshold: 1 } };
+  // Run deduplication was added inside the context section later than the section itself; an older config module leaves it undefined and nothing is cut.
+  if (typeof config.context.dedupeRuns !== "boolean") config.context = { ...config.context, dedupeRuns: false };
+  if (typeof config.context.dedupeMessages !== "boolean") config.context = { ...config.context, dedupeMessages: false };
+  // The context filter was added inside the context section later than the section itself; an older config module leaves it undefined and the filter stays off.
+  if (typeof config.context.filter !== "object" || config.context.filter === null) config.context = { ...config.context, filter: { ...off, chunkChars: 2000, minScore: 1.5, maxKeptChars: 6000, timeoutMs: 4000 } };
+  if (typeof config.widget.panelWidth !== "string" && typeof config.widget.panelWidth !== "number") config.widget = { ...config.widget, panelWidth: "40%" };
+  // The feedback log flag was added inside the action section later than the section itself; an older config module leaves it undefined and the log stays on.
+  if (typeof config.action.feedbackLog !== "boolean") config.action = { ...config.action, feedbackLog: true };
+  if (typeof config.action.intentMismatch !== "number") config.action = { ...config.action, intentMismatch: 0.9 };
+  if (typeof config.action.visibleMismatch !== "number") config.action = { ...config.action, visibleMismatch: 0.8 };
+  if (config.action.intentTraceOnly !== "invisible" && config.action.intentTraceOnly !== "all" && config.action.intentTraceOnly !== "none") config.action = { ...config.action, intentTraceOnly: "all" };
+  if (typeof config.action.shouldProceed !== "object" || config.action.shouldProceed === null) config.action = { ...config.action, shouldProceed: { threshold: 0.6, steer: false } };
+  // 1.0 renamed shouldProceed.hold to shouldProceed.threshold; an older config module still delivers `hold`.
+  if (typeof config.action.shouldProceed.threshold !== "number") {
+    const hold = (config.action.shouldProceed as { hold?: unknown }).hold;
+    config.action = { ...config.action, shouldProceed: { threshold: typeof hold === "number" ? hold : 0.6, steer: config.action.shouldProceed.steer } };
+  }
+  if (typeof config.action.shouldProceed.steer !== "boolean") config.action = { ...config.action, shouldProceed: { ...config.action.shouldProceed, steer: false } };
+  if (typeof config.action.escalationThreshold !== "number") config.action = { ...config.action, escalationThreshold: 0.85 };
+  if (config.action.floor !== "level" && config.action.floor !== "evidence") config.action = { ...config.action, floor: "evidence" };
+  // The soft rules tier was added inside the rules section later than the section itself; an older config module leaves it undefined and the tier stays off.
+  if (typeof config.rules.softThreshold !== "number") config.rules = { ...config.rules, softThreshold: 0 };
+  // The command rules were added inside the action section later than the section itself; an older config module leaves them undefined.
+  if (!Array.isArray(config.action.commandRules)) config.action = { ...config.action, commandRules: [] };
+  if (!Array.isArray(config.action.commandDenyRules)) config.action = { ...config.action, commandDenyRules: [] };
+  if (!Array.isArray(config.action.exemptRules)) config.action = { ...config.action, exemptRules: [] };
+  if (!Array.isArray(config.action.pathRules)) config.action = { ...config.action, pathRules: [] };
+  if (!Array.isArray(config.action.armingRules)) config.action = { ...config.action, armingRules: [] };
+  // 0.12 renamed offTask.confirm to offTask.steer; an older config module still delivers `confirm`.
+  if (typeof config.action.offTask?.steer !== "number") config.action = { ...config.action, offTask: { warn: config.action.offTask?.warn ?? 1, steer: (config.action.offTask as { confirm?: number } | undefined)?.confirm ?? 1 } };
+  // The runaway guard added its template later than the other sections; an older widget section renders the default line.
+  if (typeof config.widget.runaway !== "string") config.widget = { ...config.widget, runaway: DEFAULT_TEMPLATES.runaway };
+  if (typeof config.widget.rules !== "string") config.widget = { ...config.widget, rules: DEFAULT_TEMPLATES.rules };
+  if (typeof config.widget.subagent !== "string") config.widget = { ...config.widget, subagent: DEFAULT_TEMPLATES.subagent };
+  return { config, missing };
+}
+
+export function shapeWarning(missing: readonly string[], loadedSchema: number | undefined): string {
+  return `warden: config sections ${missing.join(", ")} are missing (config module schema ${loadedSchema ?? "pre-3"}, extension expects ${EXPECTED_SCHEMA}); those guards are off. This happens when pi-warden was updated while Pi was running: restart Pi (a /reload is not enough).`;
+}
+
+/* ─── Task spine ────────────────────────────────────────────────────── */
+
+/**
+ * The task spine the action guard and the conscience both judge with: the thread's first user turn (`goal`),
+ * the latest user turn (`task`), and up to four earlier user turns (`history`, newest first). A follow-up
+ * like "now the tests" is judged against the goal it belongs to, not on its words alone.
+ */
+export interface TaskSpine {
+  /** The first user turn of the thread, earlier than `task`; the goal the latest turn belongs to. */
+  goal: string;
+  /** The latest user turn, raw and unclipped: the request state already carries it as `task` (redacted, bounded) and approval reads only that field. */
+  task: string;
+  /** Earlier user turns between goal and task, newest first; empty when the goal is the turn just before task. */
+  history: string[];
+}
+
+/** Whole-spine character budget. `task_history` is clipped first, then `goal`; `task` is never clipped here. */
+export const SPINE_CAP = 1200;
+/** Earlier turns the spine keeps, between goal and task. */
+export const SPINE_HISTORY_TURNS = 4;
+/** Per-field limits the request paths apply to a spine they receive, whoever built it. */
+export const SPINE_GOAL_LIMIT = 1200;
+export const SPINE_HISTORY_LIMIT = 750;
+
+/** The slice of a Pi session entry the spine reads; structural, so shape.ts needs no host types. */
+export interface BranchMessageEntry {
+  type: string;
+  message?: { role: string; content?: string | ReadonlyArray<{ type: string; text?: string }> } | undefined;
+}
+
+/** User-turn texts in branch order: text parts joined with newlines, non-text parts skipped, blank turns dropped. */
+export function userTurnTexts(entries: readonly (BranchMessageEntry | undefined | null)[] | undefined): string[] {
+  const turns: string[] = [];
+  for (const entry of entries ?? []) {
+    if (!entry || entry.type !== "message") continue;
+    const message = entry.message;
+    if (!message || message.role !== "user") continue;
+    const content = message.content;
+    if (content === undefined) continue;
+    const text = typeof content === "string"
+      ? content
+      : content.filter(part => part.type === "text").map(part => part.text ?? "").join("\n");
+    if (text.trim()) turns.push(text.trim());
+  }
+  return turns;
+}
+
+/**
+ * The task spine over the branch entries: goal, task, and up to four earlier turns, newest first. Pure.
+ * The whole spine fits SPINE_CAP characters — `history` is clipped first (newest turns keep their text,
+ * the oldest give way), then `goal`; `task` is never clipped, because approval is judged from the request's
+ * `task` field and a clipped task would judge a request the user did not write. `goal` and `history` are
+ * redacted here; `task` stays raw because both request paths redact and bound it themselves. `latest`
+ * supplies the latest turn when the branch does not carry it yet (the conscience passes the prompt it is
+ * about to send); when the branch already carries it, that copy is dropped from `history`. No user turn at
+ * all, or the latest turn is the first: no spine, so the budget is not spent on a copy of `task`. Only
+ * `message` entries count, so a compaction entry and its summary never become the goal; Pi's getBranch
+ * still returns the entries a compaction summarized. Scope context only — the spine never authorizes an action.
+ */
+export function taskSpine(entries: readonly (BranchMessageEntry | undefined | null)[] | undefined, latest?: string): TaskSpine | undefined {
+  const turns = userTurnTexts(entries);
+  const supplied = latest?.trim();
+  const last = turns.at(-1);
+  const task = supplied || last || "";
+  if (!task) return undefined;
+  const earlier = supplied
+    ? (last === task ? turns.slice(0, -1) : turns)
+    : turns.slice(0, -1);
+  if (!earlier.length) return undefined;
+  let goal = redact(earlier[0]!);
+  let history = earlier.slice(1).slice(-SPINE_HISTORY_TURNS).reverse().map(redact);
+  let budget = SPINE_CAP - goal.length - task.length;
+  const kept: string[] = [];
+  for (const turn of history) { // newest first: the oldest give way first
+    if (budget <= 0) break;
+    const take = turn.slice(0, Math.max(0, budget));
+    kept.push(take);
+    budget -= take.length;
+  }
+  history = kept;
+  const historyLength = history.reduce((n, turn) => n + turn.length, 0);
+  if (goal.length + task.length + historyLength > SPINE_CAP) {
+    goal = goal.slice(0, Math.max(0, SPINE_CAP - task.length - historyLength));
+  }
+  return { goal, task, history };
+}

@@ -1,0 +1,25 @@
+{
+ "name": "cmd-toggle",
+ "description": "/powerline toggles the bar off, then on.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/powerline"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/powerline"
+   }
+  }
+ ]
+}

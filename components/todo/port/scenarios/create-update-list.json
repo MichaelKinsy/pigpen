@@ -1,0 +1,92 @@
+{
+  "name": "create-update-list",
+  "description": "Create, start, complete, list and get a task.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "Write tests",
+            "description": "red first",
+            "activeForm": "writing tests"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "Implement",
+            "owner": "porter",
+            "metadata": {
+              "area": "core",
+              "size": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "in_progress",
+            "activeForm": "writing tests"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "completed"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list",
+            "status": "pending"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get",
+            "id": 2
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    }
+  ]
+}

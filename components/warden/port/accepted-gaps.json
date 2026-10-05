@@ -1,0 +1,9 @@
+{
+  "exec:PRAGMA": "SQL statements passed to node:sqlite's exec() in learning.ts and sqlite-adapter.ts, not process starts",
+  "exec:ALTER": "SQL statements passed to node:sqlite's exec() in learning.ts and sqlite-adapter.ts, not process starts",
+  "exec:CREATE": "SQL statements passed to node:sqlite's exec() in learning.ts and sqlite-adapter.ts, not process starts",
+  "exec:VACUUM": "SQL statements passed to node:sqlite's exec() in learning.ts and sqlite-adapter.ts, not process starts",
+  "exec:node": "started only by the original's own test files (eval-weak.test.ts, extension.test.ts, host-dirs.test.ts, turn-rules.test.ts), never by the extension",
+  "exec:sh": "started only by the original's own test files (eval-weak.test.ts, extension.test.ts, host-dirs.test.ts, turn-rules.test.ts), never by the extension",
+  "exec:sed": "started only by the original's own test files (eval-weak.test.ts, extension.test.ts, host-dirs.test.ts, turn-rules.test.ts), never by the extension"
+}

@@ -1,0 +1,5 @@
+{"name":"trailing-words","description":"The whole argument text is the action: an action followed by more words gets the usage text and nothing runs (enable opens no dialog, logout removes nothing).","env":{"TYPESAFE_API_KEY":"offline-test-key"},"steps":[
+ {"name":"status-now","rpc":{"type":"prompt","message":"/typesafe status now"}},
+ {"name":"enable-yes","rpc":{"type":"prompt","message":"/typesafe enable yes"}},
+ {"name":"logout-please","rpc":{"type":"prompt","message":"/typesafe logout please"}},
+ {"name":"status","rpc":{"type":"prompt","message":"/typesafe  status "}}]}

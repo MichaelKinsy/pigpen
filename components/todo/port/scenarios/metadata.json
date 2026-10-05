@@ -1,0 +1,79 @@
+{
+  "name": "metadata",
+  "description": "Metadata merges: set, overwrite, add, null deletes a key, the last null drops the field.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "m",
+            "metadata": {
+              "a": 1,
+              "b": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "metadata": {
+              "a": 99,
+              "c": 3
+            }
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "metadata": {
+              "a": null
+            }
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "metadata": {
+              "b": null,
+              "c": null
+            }
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "metadata": {
+              "b": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    }
+  ]
+}

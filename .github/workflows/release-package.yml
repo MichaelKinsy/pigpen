@@ -1,0 +1,73 @@
+# Releases one Package. A pushed tag `components/<name>/v<version>` is the release: Packages install from a Git tag, so
+# there is nothing to build, sign or upload and this workflow holds no secret and no write permission. It proves the tag
+# before anyone is told about it:
+#   - the tag names a component whose package.json has that version, on a commit of main;
+#   - the Package passes `pig package validate`;
+#   - the exact command the index shows, `pig install 'git:https://github.com/<repo>.git@<tag>#subdirectory=components%2F<name>'`,
+#     installs it from GitHub, its Go extensions build and register under the pinned pig, and it removes cleanly.
+# Afterwards a maintainer records the release (`npm run record -- package <name> <version>`, OWNER-ACTIONS.md) and the
+# generated index lists the Package as available. A Piglet tag (`<name>/v<version>`) never starts this workflow.
+name: Release a Package
+
+on:
+  push:
+    tags: ['components/*/v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-package-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # The PiG release this job builds with: scripts/pig-requirement.json (`release`); scripts/check-workflows.mjs keeps it equal.
+  PIG_COMMIT: '3ee745c8cda3c1a9a8d71112c140790c4d64d78d' # PiG v0.4.1
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: The tagged commit must be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - run: npm ci --ignore-scripts
+      - name: The tag must be components/<name>/v<manifest version>
+        id: tag
+        run: node scripts/package-tag.mjs
+      - name: Check out PiG
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/go.mod
+          cache-dependency-path: .pig-src/go.sum
+      - name: Build PiG
+        env:
+          PIG_HOME: ${{ runner.temp }}/pig-home
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          echo "PIG_BIN=$PWD/.pig-bin/pig" >> "$GITHUB_ENV"
+      - name: Validate the Package
+        env:
+          NAME: ${{ steps.tag.outputs.name }}
+          PIG_HOME: ${{ runner.temp }}/pig-home
+        run: '"$PIG_BIN" package validate "components/$NAME"'
+      - name: Install it from the tag, as a user does
+        env:
+          NAME: ${{ steps.tag.outputs.name }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: node scripts/package-smoke.mjs "$NAME" "$VERSION"

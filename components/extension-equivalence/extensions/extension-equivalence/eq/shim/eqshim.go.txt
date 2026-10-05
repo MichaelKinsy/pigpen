@@ -1,0 +1,73 @@
+// Command eqshim stands in for a child process an extension starts. It reports
+// the call to the harness over a Unix socket, then runs the real tool or plays
+// a canned result, so the harness sees every exec call and its order.
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"net"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+func fail(format string, args ...any) {
+	fmt.Fprintf(os.Stderr, "eqshim: "+format+"\n", args...)
+	os.Exit(125)
+}
+
+func main() {
+	name := strings.TrimSuffix(filepath.Base(os.Args[0]), ".exe")
+	conn, err := net.Dial("unix", os.Getenv("EQ_SHIM_SOCK"))
+	if err != nil {
+		fail("dial harness: %v", err)
+	}
+	defer conn.Close()
+	cwd, _ := os.Getwd()
+	send := func(v any) {
+		b, _ := json.Marshal(v)
+		if _, err := conn.Write(append(b, '\n')); err != nil {
+			fail("write harness: %v", err)
+		}
+	}
+	rd := bufio.NewReader(conn)
+	send(map[string]any{"op": "start", "cmd": name, "args": os.Args[1:], "cwd": cwd})
+	line, err := rd.ReadBytes('\n')
+	if err != nil {
+		fail("read harness: %v", err)
+	}
+	var reply struct {
+		Mode   string `json:"mode"`
+		Path   string `json:"path"`
+		Stdout string `json:"stdout"`
+		Stderr string `json:"stderr"`
+		Exit   int    `json:"exit"`
+	}
+	if err := json.Unmarshal(line, &reply); err != nil {
+		fail("decode harness reply: %v", err)
+	}
+	code := reply.Exit
+	if reply.Mode == "canned" {
+		fmt.Fprint(os.Stdout, reply.Stdout)
+		fmt.Fprint(os.Stderr, reply.Stderr)
+	} else {
+		cmd := exec.Command(reply.Path, os.Args[1:]...)
+		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+		code = 0
+		if err := cmd.Run(); err != nil {
+			if ee, ok := err.(*exec.ExitError); ok {
+				code = ee.ExitCode()
+			} else {
+				fail("run %s: %v", reply.Path, err)
+			}
+		}
+	}
+	send(map[string]any{"op": "end", "cmd": name, "exit": code})
+	_ = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	_, _ = rd.ReadBytes('\n') // the harness acknowledges once it has recorded the end
+	os.Exit(code)
+}

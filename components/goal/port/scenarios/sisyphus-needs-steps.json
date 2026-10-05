@@ -1,0 +1,28 @@
+{
+  "name": "sisyphus-needs-steps",
+  "description": "A Sisyphus objective must carry ordered steps.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/sisyphus-direct tidy up"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/sisyphus-direct 1) read the code. 2) write the fix."
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

@@ -1,0 +1,36 @@
+
+
+
+ $ nice rm important.txt
+
+ [pi-permission-system] (Go port) this 'bash' call requires approval, but the approval dialog is not ported.
+ It was blocked.
+
+ Took 0.0s
+
+
+
+ $ ls && /bin/sh -c 'rm important.txt'
+
+ [pi-permission-system] (Go port) cannot evaluate this 'bash' call: bash command analysis is not ported, so
+ only simple commands (joined by &&, ||, ;, | or newlines) are matched against bash patterns. It was blocked
+ (fail-closed).
+
+ Took 0.0s
+
+
+
+ $ ls | wc -l
+
+ 1
+
+ Took 0.0s
+
+
+ The file is still there.
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<run>/work
+↑6 ↓6 0.0%/100k (auto)                                                                                    eq-1

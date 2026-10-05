@@ -1,0 +1,63 @@
+[
+  {
+    "id": "goal-created",
+    "desc": "The sisyphus goal is created.",
+    "kind": "tool-called",
+    "tool": "create_goal"
+  },
+  {
+    "id": "task-list-set",
+    "desc": "set_goal_tasks is called.",
+    "kind": "tool-called",
+    "tool": "set_goal_tasks"
+  },
+  {
+    "id": "three-task-updates",
+    "desc": "update_goal_task is called at least three times.",
+    "kind": "tool-call-count",
+    "tool": "update_goal_task",
+    "op": "ge",
+    "count": 3
+  },
+  {
+    "id": "evidence-provided",
+    "desc": "At least one update_goal_task call carries evidence.",
+    "kind": "tool-args-jq-none",
+    "tool": "update_goal_task",
+    "jq": "has(\"evidence\") and ((.evidence // \"\") | length > 0)"
+  },
+  {
+    "id": "alpha-txt",
+    "desc": "alpha.txt exists with 'hello'.",
+    "kind": "sandbox-file-contains",
+    "path": "alpha.txt",
+    "pattern": "^hello$"
+  },
+  {
+    "id": "beta-txt",
+    "desc": "beta.txt exists with 'world'.",
+    "kind": "sandbox-file-contains",
+    "path": "beta.txt",
+    "pattern": "^world$"
+  },
+  {
+    "id": "gamma-txt",
+    "desc": "gamma.txt exists with 'hello world'.",
+    "kind": "sandbox-file-contains",
+    "path": "gamma.txt",
+    "pattern": "^hello world$"
+  },
+  {
+    "id": "completed",
+    "desc": "update_goal(complete) is called.",
+    "kind": "tool-args-jq",
+    "tool": "update_goal",
+    "jq": ".status == \"complete\""
+  },
+  {
+    "id": "no-step-tool",
+    "desc": "step_complete is removed.",
+    "kind": "tool-not-called",
+    "tool": "step_complete"
+  }
+]

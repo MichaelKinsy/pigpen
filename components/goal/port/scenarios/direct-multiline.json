@@ -1,0 +1,21 @@
+{
+  "name": "direct-multiline",
+  "description": "The notification shows the first meaningful line of a structured objective.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-direct === Goal ===\nObjective: Reduce latency\nSuccess criteria: p99 under 200ms"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

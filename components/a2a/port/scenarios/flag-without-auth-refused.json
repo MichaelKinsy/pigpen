@@ -1,0 +1,8 @@
+{
+  "name": "flag-without-auth-refused",
+  "description": "--a2a-listen alone does not start an unauthenticated server: the user is told why and /a2a reports the listener off.",
+  "args": ["--a2a-listen", "127.0.0.1:0"],
+  "steps": [
+    {"name": "status", "rpc": {"type": "prompt", "message": "/a2a"}}
+  ]
+}

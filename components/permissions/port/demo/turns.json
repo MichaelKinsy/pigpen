@@ -1,0 +1,1 @@
+[{"toolCalls":[{"name":"bash","arguments":{"command":"echo hello"}}]},{"toolCalls":[{"name":"bash","arguments":{"command":"rm important.txt"}}]},{"text":"The delete was refused by policy."}]

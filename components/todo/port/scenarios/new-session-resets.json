@@ -1,0 +1,43 @@
+{
+  "name": "new-session-resets",
+  "description": "A new session replays an empty branch: the previous list is gone (session_start replay).",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "old one"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    },
+    {
+      "name": "new",
+      "rpc": {
+        "type": "prompt",
+        "message": "/eq-new"
+      }
+    },
+    {
+      "name": "todos",
+      "rpc": {
+        "type": "prompt",
+        "message": "/todos"
+      }
+    }
+  ]
+}

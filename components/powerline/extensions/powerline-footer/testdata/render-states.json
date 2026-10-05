@@ -1,0 +1,6758 @@
+[
+ {
+  "settings": {
+   "powerline": "default"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "medium",
+  "contextUsage": {
+   "tokens": 18000,
+   "contextWindow": 200000,
+   "percent": 9.0
+  },
+  "elapsedMs": 125000,
+  "gitBranch": "main",
+  "name": "preset-default",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "minimal"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "medium",
+  "contextUsage": {
+   "tokens": 18000,
+   "contextWindow": 200000,
+   "percent": 9.0
+  },
+  "elapsedMs": 125000,
+  "gitBranch": "main",
+  "name": "preset-minimal",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "compact"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "medium",
+  "contextUsage": {
+   "tokens": 18000,
+   "contextWindow": 200000,
+   "percent": 9.0
+  },
+  "elapsedMs": 125000,
+  "gitBranch": "main",
+  "name": "preset-compact",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "full"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "medium",
+  "contextUsage": {
+   "tokens": 18000,
+   "contextWindow": 200000,
+   "percent": 9.0
+  },
+  "elapsedMs": 125000,
+  "gitBranch": "main",
+  "name": "preset-full",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "nerd"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "medium",
+  "contextUsage": {
+   "tokens": 18000,
+   "contextWindow": 200000,
+   "percent": 9.0
+  },
+  "elapsedMs": 125000,
+  "gitBranch": "main",
+  "name": "preset-nerd",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "ascii"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "medium",
+  "contextUsage": {
+   "tokens": 18000,
+   "contextWindow": 200000,
+   "percent": 9.0
+  },
+  "elapsedMs": 125000,
+  "gitBranch": "main",
+  "name": "preset-ascii",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "default"
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "high",
+  "contextUsage": {
+   "tokens": 150000,
+   "contextWindow": 200000,
+   "percent": 75.0
+  },
+  "elapsedMs": 3700000,
+  "gitBranch": "main",
+  "name": "preset-default-nerd-fonts",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "full"
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "high",
+  "contextUsage": {
+   "tokens": 150000,
+   "contextWindow": 200000,
+   "percent": 75.0
+  },
+  "elapsedMs": 3700000,
+  "gitBranch": "main",
+  "name": "preset-full-nerd-fonts",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "nerd"
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "thinkingLevel": "high",
+  "contextUsage": {
+   "tokens": 150000,
+   "contextWindow": 200000,
+   "percent": 75.0
+  },
+  "elapsedMs": 3700000,
+  "gitBranch": "main",
+  "name": "preset-nerd-nerd-fonts",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "bogus"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "unknown-preset",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [],
+  "name": "no-settings",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "model": {
+     "display": "qualified",
+     "showThinkingLevel": true
+    }
+   }
+  },
+  "thinkingLevel": "low",
+  "name": "model-qualified",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "model": {
+   "id": "gpt-5",
+   "name": "GPT-5",
+   "provider": "openai",
+   "reasoning": false,
+   "contextWindow": 400000
+  },
+  "thinkingLevel": "high",
+  "name": "model-plain-no-reasoning",
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "model": null,
+  "name": "no-model",
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "thinkingLevel": "off",
+  "name": "thinking-off",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "thinkingLevel": "minimal",
+  "name": "thinking-minimal",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "thinkingLevel": "low",
+  "name": "thinking-low",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "thinkingLevel": "medium",
+  "name": "thinking-medium",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "thinkingLevel": "high",
+  "name": "thinking-high",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "thinkingLevel": "xhigh",
+  "name": "thinking-xhigh",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "thinkingLevel": "max",
+  "name": "thinking-max",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "thinkingLevel": "weird",
+  "name": "thinking-weird",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "ascii"
+   }
+  },
+  "thinkingLevel": "xhigh",
+  "name": "thinking-in-model-ascii",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "thinking_level_change",
+    "thinkingLevel": "minimal"
+   }
+  ],
+  "thinkingLevel": "high",
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "thinking-from-session",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 100,
+      "output": 10,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.0
+      }
+     },
+     "stopReason": "error"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 7,
+      "output": 3,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.5
+      }
+     },
+     "stopReason": "aborted"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 11,
+      "output": 5,
+      "cacheRead": 2,
+      "cacheWrite": 1,
+      "cost": {
+       "total": 0.02
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "errored-turns-ignored",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 10,
+      "output": 5,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.1
+      }
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "toolResult",
+     "toolName": "subagent",
+     "details": {
+      "results": [
+       {
+        "usage": {
+         "cost": 0.25
+        }
+       },
+       {
+        "usage": {
+         "cost": "x"
+        }
+       },
+       3
+      ]
+     }
+    }
+   },
+   {
+    "type": "custom_message",
+    "customType": "subagent-slash-result",
+    "details": {
+     "result": {
+      "details": {
+       "results": [
+        {
+         "usage": {
+          "cost": 0.5
+         }
+        }
+       ]
+      }
+     }
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "subagent-cost",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": {
+   "tokens": 1000,
+   "contextWindow": 200000,
+   "percent": 0.5
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "context-known-low",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": {
+   "tokens": 1000,
+   "contextWindow": 200000,
+   "percent": 0.5
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "context": {
+     "format": "percent"
+    }
+   }
+  },
+  "name": "context-known-low-percent",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": {
+   "tokens": 150000,
+   "contextWindow": 200000,
+   "percent": 75
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "context-warn",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": {
+   "tokens": 150000,
+   "contextWindow": 200000,
+   "percent": 75
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "context": {
+     "format": "percent"
+    }
+   }
+  },
+  "name": "context-warn-percent",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": {
+   "tokens": 190000,
+   "contextWindow": 200000,
+   "percent": 95
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "context-error",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": {
+   "tokens": 190000,
+   "contextWindow": 200000,
+   "percent": 95
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "context": {
+     "format": "percent"
+    }
+   }
+  },
+  "name": "context-error-percent",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": {
+   "tokens": null,
+   "contextWindow": 200000,
+   "percent": null
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "context-unknown",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": {
+   "tokens": null,
+   "contextWindow": 200000,
+   "percent": null
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "context": {
+     "format": "percent"
+    }
+   }
+  },
+  "name": "context-unknown-percent",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "contextUsage": null,
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "context-fallback-from-usage",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "model": {
+   "id": "x",
+   "name": "X"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "nerd"
+   }
+  },
+  "name": "context-no-window",
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "autoCompact": false,
+  "contextUsage": {
+   "tokens": 5,
+   "contextWindow": 100,
+   "percent": 5
+  },
+  "name": "auto-compact-off",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "usingOAuth": true,
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "name": "cost-subscription",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "usingOAuth": true,
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "subscriptionDisplay": "subscription"
+    }
+   }
+  },
+  "name": "cost-sub-subscription",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "usingOAuth": true,
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "subscriptionDisplay": "reported-cost"
+    }
+   }
+  },
+  "name": "cost-sub-reported-cost",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "usingOAuth": true,
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "subscriptionDisplay": "both"
+    }
+   }
+  },
+  "name": "cost-sub-both",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "usingOAuth": true,
+  "branch": [],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "subscriptionDisplay": "both"
+    }
+   }
+  },
+  "name": "cost-sub-no-cost",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "currency": "JPY"
+    }
+   }
+  },
+  "name": "cost-jpy-no-rates",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "currency": "xyz"
+    }
+   }
+  },
+  "name": "cost-bad-currency",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full",
+    "cache_read": {
+     "format": "tokens"
+    }
+   }
+  },
+  "name": "cache-read-tokens",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full",
+    "cache_read": {
+     "format": "percent"
+    }
+   }
+  },
+  "name": "cache-read-percent",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full",
+    "cache_read": {
+     "format": "both"
+    }
+   }
+  },
+  "name": "cache-read-both",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "cache_write",
+      "token_total"
+     ]
+    }
+   }
+  },
+  "name": "cache-write",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "/work/team/some/very/deep/project/directory/name",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "path": {
+     "mode": "basename",
+     "maxLength": 20
+    }
+   }
+  },
+  "name": "path-basename",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "/work/team/some/very/deep/project/directory/name",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "path": {
+     "mode": "abbreviated",
+     "maxLength": 20
+    }
+   }
+  },
+  "name": "path-abbreviated",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "/work/team/some/very/deep/project/directory/name",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "path": {
+     "mode": "full",
+     "maxLength": 20
+    }
+   }
+  },
+  "name": "path-full",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "{HOME}/code/app",
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "path-home",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "/work/proj",
+  "settings": {
+   "powerline": {
+    "preset": "nerd"
+   }
+  },
+  "name": "path-work-prefix",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "gitBranch": "feat/x",
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "env": {},
+  "statuses": {},
+  "name": "git-provider-only",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "gitBranch": "main",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "showBranch": false,
+     "showStaged": false,
+     "showUnstaged": false,
+     "showUntracked": false
+    }
+   }
+  },
+  "name": "git-hidden",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "gitBranch": "main",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "showBranch": false
+    }
+   }
+  },
+  "name": "git-branch-hidden",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "time"
+     ]
+    },
+    "time": {
+     "format": "12h",
+     "showSeconds": true
+    }
+   }
+  },
+  "start": "2026-03-04T15:06:07Z",
+  "name": "time-12h",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "time",
+      "time_spent"
+     ]
+    }
+   }
+  },
+  "start": "2026-03-04T00:06:07Z",
+  "elapsedMs": 65000,
+  "name": "time-24h",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "time_spent"
+     ]
+    }
+   }
+  },
+  "elapsedMs": 900,
+  "name": "time-spent-short",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "time_spent"
+     ]
+    }
+   }
+  },
+  "elapsedMs": 7384000,
+  "name": "time-spent-hours",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "sessionName": "  my session ",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "session",
+      "model"
+     ]
+    }
+   }
+  },
+  "name": "session-name",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "sessionName": "   ",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "session"
+     ]
+    }
+   }
+  },
+  "name": "session-blank-name",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "sessionId": null,
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "session"
+     ]
+    }
+   }
+  },
+  "name": "session-new",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "hostname",
+      "model"
+     ]
+    }
+   }
+  },
+  "name": "hostname",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "powerline"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-powerline",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "powerline-thin"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-powerline-thin",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "slash"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-slash",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "pipe"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-pipe",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "block"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-block",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "none"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-none",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "ascii"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-ascii",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "dot"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-dot",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "chevron"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-chevron",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "star"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-star",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "separator": "nope"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-nope",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "separator": "powerline"
+   }
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "separator-nerd-powerline",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "placement": "above"
+   }
+  },
+  "name": "placement-above",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "placement": "below"
+   }
+  },
+  "name": "placement-below",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "placement": "sideways"
+   }
+  },
+  "name": "placement-bad",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "nope",
+      "path"
+     ],
+     "right": [
+      "session"
+     ],
+     "secondary": [
+      "time_spent"
+     ]
+    }
+   }
+  },
+  "elapsedMs": 5000,
+  "name": "layout-custom",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full",
+    "disabledSegments": [
+     "hostname",
+     "time",
+     "bogus",
+     "git"
+    ]
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "gitBranch": "main",
+  "name": "disabled-segments",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "statuses": {
+   "lsp": "ok 3",
+   "empty": "",
+   "notif": "[reminder] do the thing",
+   "ansi": "\u001b[31m\u001b[0m",
+   "styled": "\u001b[32mgreen\u001b[0m done"
+  },
+  "name": "ext-statuses",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "statuses": {
+   "lsp": "ok 3",
+   "b": "two\nlines"
+  },
+  "name": "ext-statuses-full",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "customItems": [
+     {
+      "id": "lsp",
+      "statusKey": "lsp",
+      "position": "left",
+      "prefix": "LSP",
+      "color": "accent"
+     }
+    ],
+    "preset": "default"
+   }
+  },
+  "statuses": {
+   "lsp": "ready",
+   "other": "x"
+  },
+  "name": "custom-item",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "customItems": [
+     {
+      "id": "lsp",
+      "statusKey": "lsp",
+      "position": "right",
+      "hideWhenMissing": false,
+      "prefix": "LSP"
+     },
+     {
+      "id": "gone",
+      "statusKey": "gone",
+      "position": "secondary"
+     }
+    ]
+   }
+  },
+  "name": "custom-item-missing",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "customItems": {
+     "fmt": {
+      "statusKey": "fmt",
+      "selfColorize": true,
+      "color": "error",
+      "position": "left"
+     }
+    }
+   }
+  },
+  "statuses": {
+   "fmt": "\u001b[33mwarn\u001b[0m!"
+  },
+  "name": "custom-item-self-colorize",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "customItems": [
+     {
+      "id": "h",
+      "statusKey": "h",
+      "color": "#ff8800",
+      "position": "left"
+     }
+    ]
+   }
+  },
+  "statuses": {
+   "h": "v"
+  },
+  "name": "custom-item-hex-color",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "customItems": [
+     {
+      "id": "lsp",
+      "statusKey": "lsp"
+     }
+    ],
+    "layout": {
+     "left": [
+      "model",
+      "custom:lsp",
+      "custom:missing"
+     ]
+    }
+   }
+  },
+  "statuses": {
+   "lsp": "up"
+  },
+  "name": "custom-in-layout",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "themeJson": {
+   "colors": {
+    "model": "#112233",
+    "path": "warning",
+    "bogus": "x",
+    "cost": "  ",
+    "tokens": 5
+   },
+   "icons": {
+    "folder": "D:",
+    "model": "M",
+    "pi": 1
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "theme-json-colors",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "themeJson": {
+   "colors": {
+    "model": "notAThemeColor"
+   }
+  },
+  "name": "theme-bad-token",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "disabledSegments": [
+     "nope",
+     "x"
+    ],
+    "layout": {
+     "left": [
+      "zzz",
+      "model"
+     ]
+    },
+    "placement": "up"
+   }
+  },
+  "name": "invalid-segments-warn",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "mode": "rpc",
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "rpc-mode",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "command": "powerline",
+    "args": ""
+   },
+   {
+    "command": "powerline",
+    "args": ""
+   }
+  ],
+  "name": "cmd-toggle",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "command": "powerline",
+    "args": ""
+   }
+  ],
+  "name": "cmd-toggle-off",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "nerd"
+   }
+  ],
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1200,
+      "output": 340,
+      "cacheRead": 800,
+      "cacheWrite": 50,
+      "cost": {
+       "total": 0.0123
+      },
+      "totalTokens": 2390
+     },
+     "stopReason": "stop"
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 15000,
+      "output": 2500,
+      "cacheRead": 12000,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.35
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "name": "cmd-preset",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "  MINIMAL "
+   }
+  ],
+  "name": "cmd-preset-case",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "wat"
+   }
+  ],
+  "name": "cmd-unknown",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "placement below"
+   },
+   {
+    "command": "powerline",
+    "args": "placement"
+   },
+   {
+    "command": "powerline",
+    "args": "placement toggle"
+   },
+   {
+    "command": "powerline",
+    "args": "placement above"
+   }
+  ],
+  "name": "cmd-placement",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "event": "model_select",
+    "data": {
+     "model": {
+      "id": "gpt-5",
+      "name": "GPT-5",
+      "provider": "openai",
+      "reasoning": false,
+      "contextWindow": 400000
+     }
+    }
+   }
+  ],
+  "name": "event-model-select",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "event": "thinking_level_select",
+    "data": {
+     "level": "xhigh"
+    }
+   }
+  ],
+  "thinkingLevel": "low",
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "event-thinking-level",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "status": {
+     "late": "arrived"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "name": "status-update-after-start",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "repo": {
+   "branch": "feat/x",
+   "staged": 1,
+   "unstaged": 2,
+   "untracked": 3
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "name": "git-dirty",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main"
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "name": "git-clean",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "remote": "https://github.com/o/r"
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "hostIcon": true
+    }
+   }
+  },
+  "name": "git-host-github",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "remote": "git@gitlab.com:o/r.git"
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "hostIcon": true
+    }
+   }
+  },
+  "name": "git-host-gitlab",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "remote": "https://u@bitbucket.org/o/r.git"
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "hostIcon": true
+    }
+   }
+  },
+  "name": "git-host-bitbucket",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "remote": "https://git.example.com/o/r"
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "hostIcon": true
+    }
+   }
+  },
+  "name": "git-host-other",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main"
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "hostIcon": true
+    }
+   }
+  },
+  "name": "git-host-no-remote",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "detached": true
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "name": "git-detached",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main"
+  },
+  "gitBranch": "detached",
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "name": "git-detached-provider",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "other",
+   "staged": 1
+  },
+  "gitBranch": "main",
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "name": "git-provider-branch",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "feat",
+   "staged": 1,
+   "unstaged": 1,
+   "untracked": 1
+  },
+  "gitBranch": "provided",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "polling": "branch"
+    }
+   }
+  },
+  "name": "git-polling-branch",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "feat",
+   "staged": 1,
+   "unstaged": 1,
+   "untracked": 1
+  },
+  "gitBranch": "provided",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "polling": "off"
+    }
+   }
+  },
+  "name": "git-polling-off",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "staged": 1,
+   "unstaged": 2,
+   "untracked": 1
+  },
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "showBranch": false
+    }
+   }
+  },
+  "name": "git-branch-hidden-dirty",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "staged": 1,
+   "unstaged": 2,
+   "untracked": 1
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "showStaged": false,
+     "showUntracked": false
+    }
+   }
+  },
+  "name": "git-only-unstaged",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "staged": 1,
+   "unstaged": 2,
+   "untracked": 1
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "showUnstaged": false
+    }
+   }
+  },
+  "name": "git-only-staged",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "repo": {
+   "branch": "main",
+   "staged": 1
+  },
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "git": {
+     "showBranch": false,
+     "showStaged": false,
+     "showUnstaged": false,
+     "showUntracked": false
+    }
+   }
+  },
+  "name": "git-all-hidden-dirty",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "isolate": true
+ },
+ {
+  "model": {
+   "id": "gpt-5",
+   "name": "GPT-5",
+   "provider": "openai",
+   "reasoning": false,
+   "contextWindow": 400000
+  },
+  "thinkingLevel": "high",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "model": {
+     "showThinkingLevel": true
+    }
+   }
+  },
+  "name": "model-thinking-no-reasoning",
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "thinkingLevel": "off",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "model": {
+     "showThinkingLevel": true
+    }
+   }
+  },
+  "name": "model-thinking-off",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "thinkingLevel": "high",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "model": {
+     "showThinkingLevel": true
+    }
+   }
+  },
+  "name": "model-thinking-shown",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "thinkingLevel": "medium",
+  "env": {
+   "POWERLINE_NERD_FONTS": "1"
+  },
+  "settings": {
+   "powerline": {
+    "preset": "ascii"
+   }
+  },
+  "name": "model-thinking-nerd",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "{HOME}/aaaaaaaaaa/bbbbbbbbbb/cccccccccc/dddddddddd/eeeeeeeeee/ffffffffff",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "path": {
+     "mode": "abbreviated"
+    }
+   }
+  },
+  "name": "path-abbrev-default",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "{HOME}/aaaaaaaaaa/bbbbbbbbbb/cccccccccc",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "path": {
+     "mode": "abbreviated",
+     "maxLength": 20.7
+    }
+   }
+  },
+  "name": "path-abbrev-limit",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "{HOME}/aaaaaaaaaa/bbbbbbbbbb/cccccccccc/dddddddddd/eeeeeeeeee/ffffffffff",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "path": {
+     "mode": "abbreviated",
+     "maxLength": 0
+    }
+   }
+  },
+  "name": "path-maxlen-0",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "cwd": "{HOME}/aaaaaaaaaa/bbbbbbbbbb/cccccccccc/dddddddddd/eeeeeeeeee/ffffffffff",
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "path": {
+     "mode": "abbreviated",
+     "maxLength": -5
+    }
+   }
+  },
+  "name": "path-maxlen-5",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1234567,
+      "output": 25000000,
+      "cacheRead": 999999,
+      "cacheWrite": 9999999,
+      "cost": {
+       "total": 1.5
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "token_in",
+      "token_out",
+      "token_total",
+      "cache_read",
+      "cache_write"
+     ]
+    }
+   }
+  },
+  "name": "tokens-large",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 999,
+      "output": 1000,
+      "cacheRead": 9999,
+      "cacheWrite": 10000,
+      "cost": {
+       "total": 0.0
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "token_in",
+      "token_out",
+      "cache_read",
+      "cache_write"
+     ]
+    }
+   }
+  },
+  "name": "tokens-boundaries",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "elapsedMs": 1500,
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "time_spent"
+     ]
+    }
+   }
+  },
+  "name": "time-spent-1500",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "start": "2026-03-04T12:30:00Z",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "time"
+     ]
+    },
+    "time": {
+     "format": "12h"
+    }
+   }
+  },
+  "name": "time-12h-noon",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "start": "2026-03-04T00:15:00Z",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "time"
+     ]
+    },
+    "time": {
+     "format": "12h"
+    }
+   }
+  },
+  "name": "time-12h-midnight",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "start": "2026-03-04T13:05:09Z",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "time"
+     ]
+    },
+    "time": {
+     "format": "12h",
+     "showSeconds": true
+    }
+   }
+  },
+  "name": "time-12h-pm",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "customItems": [
+     {
+      "id": "h",
+      "statusKey": "h",
+      "color": "#FF8800",
+      "position": "left"
+     }
+    ]
+   }
+  },
+  "statuses": {
+   "h": "v"
+  },
+  "name": "custom-hex-upper",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "themeJson": {
+   "colors": {
+    "model": "  #112233  "
+   }
+  },
+  "name": "theme-json-padded",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "placement": " BELOW "
+   }
+  },
+  "name": "config-placement-upper",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "customItems": [
+     {
+      "id": "my-item",
+      "statusKey": "k",
+      "position": "left"
+     }
+    ]
+   }
+  },
+  "statuses": {
+   "k": "v"
+  },
+  "name": "config-custom-id-hyphen",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "customItems": [
+     {
+      "id": "a",
+      "statusKey": "k1",
+      "position": "left",
+      "prefix": "ONE"
+     },
+     {
+      "id": "a",
+      "statusKey": "k2",
+      "position": "right",
+      "prefix": "TWO"
+     }
+    ]
+   }
+  },
+  "statuses": {
+   "k1": "x",
+   "k2": "y"
+  },
+  "name": "config-custom-duplicate-ids",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "statuses": {
+   "n": "  [lead] note"
+  },
+  "name": "status-notification-padded",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default"
+   }
+  },
+  "statuses": {
+   "n": "[a notification that is much wider than the narrowest terminal]"
+  },
+  "widths": [
+   140,
+   70,
+   30
+  ],
+  "name": "status-notification-wide",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "hasUI": false,
+  "settings": {
+   "powerline": {
+    "disabledSegments": [
+     "nope"
+    ]
+   }
+  },
+  "name": "no-ui",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "statuses": {
+   "compact-policy": "on"
+  },
+  "contextUsage": {
+   "tokens": 10,
+   "contextWindow": 100,
+   "percent": 10
+  },
+  "name": "compact-policy-status",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": null,
+  "steps": [
+   {
+    "event": "agent_start"
+   },
+   {
+    "event": "message_update",
+    "data": {
+     "message": {
+      "role": "assistant",
+      "content": [],
+      "usage": {
+       "input": 500,
+       "output": 100,
+       "cacheRead": 0,
+       "cacheWrite": 0,
+       "cost": {
+        "total": 0.01
+       },
+       "totalTokens": 600
+      },
+      "stopReason": "streaming"
+     }
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "model": {
+   "id": "m",
+   "name": "M",
+   "contextWindow": 1000
+  },
+  "name": "streaming-usage",
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": null,
+  "steps": [
+   {
+    "event": "agent_start"
+   },
+   {
+    "event": "message_update",
+    "data": {
+     "message": {
+      "role": "assistant",
+      "content": [],
+      "usage": {
+       "input": 500,
+       "output": 100,
+       "cacheRead": 0,
+       "cacheWrite": 0,
+       "cost": {
+        "total": 0.01
+       },
+       "totalTokens": 600
+      },
+      "stopReason": "streaming"
+     }
+    }
+   },
+   {
+    "event": "agent_end"
+   }
+  ],
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 40,
+      "output": 10,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.001
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "model": {
+   "id": "m",
+   "name": "M",
+   "contextWindow": 1000
+  },
+  "name": "streaming-usage-after-end",
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "thinking_level_change",
+    "thinkingLevel": "minimal"
+   }
+  ],
+  "thinkingLevel": "high",
+  "steps": [
+   {
+    "event": "session_tree"
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "thinking-from-session-after-tree",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "thinkingLevel": "high",
+  "steps": [
+   {
+    "event": "session_tree"
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "thinking-unset-after-tree",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "toolResult",
+     "toolName": "bash",
+     "details": {
+      "results": [
+       {
+        "usage": {
+         "cost": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 10,
+      "output": 5,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.1
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "name": "subagent-other-tool",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "projectSettings": {
+   "powerline": {
+    "preset": "minimal"
+   },
+   "other": 1
+  },
+  "settings": {
+   "powerline": {
+    "preset": "full",
+    "placement": "below"
+   }
+  },
+  "name": "project-settings-override",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "projectSettings": {
+   "powerline": {
+    "separator": "pipe"
+   }
+  },
+  "settings": {
+   "powerline": {
+    "preset": "compact",
+    "placement": "below"
+   }
+  },
+  "name": "project-settings-merge",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "projectSettings": {
+   "powerline": {
+    "preset": "minimal"
+   }
+  },
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "nerd"
+   }
+  ],
+  "name": "cmd-writes-project",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "projectSettings": {
+   "powerline": "compact"
+  },
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "placement below"
+   }
+  ],
+  "name": "cmd-writes-project-placement",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "customItems": [
+     {
+      "id": "ci"
+     }
+    ],
+    "placement": "below"
+   }
+  },
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "full"
+   }
+  ],
+  "name": "cmd-preset-keeps-object",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "rawSettings": "{not json",
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "nerd"
+   },
+   {
+    "command": "powerline",
+    "args": "placement below"
+   }
+  ],
+  "name": "cmd-malformed-global",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "rawSettings": "[1, 2]",
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "nerd"
+   }
+  ],
+  "name": "cmd-array-settings",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "settings": {
+   "powerline": "compact"
+  },
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "placement below"
+   }
+  ],
+  "name": "cmd-preset-from-string-settings",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "placement   BELOW"
+   },
+   {
+    "command": "powerline",
+    "args": "placement sideways"
+   },
+   {
+    "command": "powerline",
+    "args": "placementx"
+   }
+  ],
+  "name": "cmd-placement-spacing",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "rawSettings": "{\"z\":1,\"10\":2,\"2\":3,\"powerline\":{\"preset\":\"default\"},\"a\":4}",
+  "steps": [
+   {
+    "command": "powerline",
+    "args": "nerd"
+   }
+  ],
+  "name": "cmd-settings-key-order",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "isolate": true,
+  "currencyRates": {
+   "krw": 1300,
+   "cny": 7.2
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1,
+      "output": 1,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 1.234
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "currency": "krw"
+    }
+   }
+  },
+  "name": "cost-krw",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "isolate": true,
+  "currencyRates": {
+   "cny": 7.2
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1,
+      "output": 1,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 1.0
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "currency": "CNY"
+    }
+   }
+  },
+  "name": "cost-cny-cached",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "isolate": true,
+  "currencyRates": {
+   "cny": 7.2
+  },
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 1,
+      "output": 1,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 1.0
+      }
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "default",
+    "cost": {
+     "currency": "EUR"
+    }
+   }
+  },
+  "name": "cost-eur-missing-rate",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "contextUsage": null,
+  "branch": [
+   {
+    "type": "message",
+    "message": {
+     "role": "assistant",
+     "content": [],
+     "usage": {
+      "input": 100,
+      "output": 50,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "cost": {
+       "total": 0.01
+      },
+      "totalTokens": 5000
+     },
+     "stopReason": "stop"
+    }
+   }
+  ],
+  "settings": {
+   "powerline": {
+    "preset": "full"
+   }
+  },
+  "model": {
+   "id": "m",
+   "name": "M",
+   "contextWindow": 10000
+  },
+  "name": "context-fallback-total-tokens",
+  "sessionId": "0123456789abcdef",
+  "widths": [
+   140,
+   70,
+   30
+  ]
+ },
+ {
+  "sessionName": "a\tb\tc",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-tab",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "x\u001b]0;PWNED\u0007y",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-osc-title",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "x\u001b]0;PWNED\u001b\\y",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-osc-st",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "\u001b[2Jcls",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-csi-clear",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "up\u001b[2Ax",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-csi-up",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "bell\u0007",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-bell",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "apc\u001b_hidden\u001b\\x",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-apc",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "esc\u001bz",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-lone-esc",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "line1\r\nline2",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-cr-lf",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "n\u0000ul",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-nul-del",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "c1z",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-c1",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "ééé",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-combining",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "soft­hy",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-soft-hyphen",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": "漢字名前",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-cjk",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "sessionName": " 　",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   44,
+   40,
+   36,
+   30
+  ],
+  "name": "bad-session-nbsp-only",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "cwd": "{HOME}/work/pr\toj",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   40,
+   30
+  ],
+  "name": "bad-cwd-tab",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "cwd": "{HOME}/work/pr\u001b]0;T\u0007oj",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   40,
+   30
+  ],
+  "name": "bad-cwd-osc",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "cwd": "{HOME}/work/pr\u001b[31moj",
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   40,
+   30
+  ],
+  "name": "bad-cwd-esc",
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Claude Sonnet 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "sessionId": "0123456789abcdef"
+ },
+ {
+  "model": {
+   "id": "claude-sonnet-4-5",
+   "name": "Son\tnet\u001b]0;X\u0007 4.5",
+   "provider": "anthropic",
+   "reasoning": true,
+   "contextWindow": 200000
+  },
+  "settings": {
+   "powerline": {
+    "layout": {
+     "left": [
+      "model",
+      "session",
+      "path",
+      "time_spent",
+      "context_pct"
+     ]
+    }
+   }
+  },
+  "widths": [
+   140,
+   60,
+   40,
+   30
+  ],
+  "name": "bad-model-name",
+  "sessionId": "0123456789abcdef"
+ }
+]

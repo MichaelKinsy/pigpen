@@ -1,0 +1,203 @@
+{
+  "node": "v26.7.0",
+  "method": "30 timing samples; 1KB V8 allocation sampling in a separate pass; explicit GC before/after retained heap observation",
+  "growth": [
+    {
+      "events": 1000,
+      "ledgerBytes": 116890,
+      "checkpointBytes": 20988
+    },
+    {
+      "events": 10000,
+      "ledgerBytes": 1178890,
+      "checkpointBytes": 21142
+    },
+    {
+      "events": 100000,
+      "ledgerBytes": 11888890,
+      "checkpointBytes": 21296
+    }
+  ],
+  "rows": [
+    {
+      "id": "cold_history.1000",
+      "n": 30,
+      "fsOps": 26,
+      "p50": 2.10529200000002,
+      "p95": 3.0130419999999845,
+      "heapDeltaBytes": 485944,
+      "sampledAllocationBytesPerOp": 899136.8
+    },
+    {
+      "id": "activity.1000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.021875000000022737,
+      "p95": 0.03458299999999781,
+      "heapDeltaBytes": -5160,
+      "sampledAllocationBytesPerOp": 26589.6
+    },
+    {
+      "id": "dashboard.1000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.024165999999979704,
+      "p95": 0.03716700000001083,
+      "heapDeltaBytes": 21112,
+      "sampledAllocationBytesPerOp": 29086.4
+    },
+    {
+      "id": "before_agent_start.1000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.02858400000002348,
+      "p95": 0.07504199999999628,
+      "heapDeltaBytes": 12360,
+      "sampledAllocationBytesPerOp": 38022.4
+    },
+    {
+      "id": "append.1000",
+      "n": 30,
+      "fsOps": 1,
+      "p50": 0.03100000000000591,
+      "p95": 0.12891700000000128,
+      "heapDeltaBytes": 13320,
+      "sampledAllocationBytesPerOp": 3823.2
+    },
+    {
+      "id": "cold_history.10000",
+      "n": 30,
+      "fsOps": 26,
+      "p50": 7.582832999999937,
+      "p95": 14.617208000000005,
+      "heapDeltaBytes": -144544,
+      "sampledAllocationBytesPerOp": 3147079.2
+    },
+    {
+      "id": "activity.10000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.010125000000016371,
+      "p95": 0.0126669999999649,
+      "heapDeltaBytes": 4464,
+      "sampledAllocationBytesPerOp": 28196
+    },
+    {
+      "id": "dashboard.10000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.011333000000036009,
+      "p95": 0.014000000000010004,
+      "heapDeltaBytes": 816,
+      "sampledAllocationBytesPerOp": 28830.4
+    },
+    {
+      "id": "before_agent_start.10000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.0272499999999809,
+      "p95": 0.044458999999960724,
+      "heapDeltaBytes": 1848,
+      "sampledAllocationBytesPerOp": 41184.8
+    },
+    {
+      "id": "append.10000",
+      "n": 30,
+      "fsOps": 1,
+      "p50": 0.02583300000003419,
+      "p95": 0.21825000000001182,
+      "heapDeltaBytes": -1344,
+      "sampledAllocationBytesPerOp": 5265.6
+    },
+    {
+      "id": "cold_history.100000",
+      "n": 30,
+      "fsOps": 26,
+      "p50": 64.95858399999997,
+      "p95": 82.11837500000001,
+      "heapDeltaBytes": -8368,
+      "sampledAllocationBytesPerOp": 28542557.6
+    },
+    {
+      "id": "activity.100000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.010167000000365078,
+      "p95": 0.011417000000619737,
+      "heapDeltaBytes": 1632,
+      "sampledAllocationBytesPerOp": 28068.8
+    },
+    {
+      "id": "dashboard.100000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.01133399999980611,
+      "p95": 0.013167000000066764,
+      "heapDeltaBytes": 1888,
+      "sampledAllocationBytesPerOp": 30041.6
+    },
+    {
+      "id": "before_agent_start.100000",
+      "n": 30,
+      "fsOps": 0,
+      "p50": 0.026707999999416643,
+      "p95": 0.03945800000019517,
+      "heapDeltaBytes": 2480,
+      "sampledAllocationBytesPerOp": 40756
+    },
+    {
+      "id": "append.100000",
+      "n": 30,
+      "fsOps": 1,
+      "p50": 0.032374999999774445,
+      "p95": 0.32383300000037707,
+      "heapDeltaBytes": -496,
+      "sampledAllocationBytesPerOp": 5264
+    },
+    {
+      "id": "task_batch.10",
+      "n": 30,
+      "fsOps": 20,
+      "p50": 0.8644590000003518,
+      "p95": 1.2690000000002328,
+      "heapDeltaBytes": 87688,
+      "sampledAllocationBytesPerOp": 294296.8
+    },
+    {
+      "id": "task_batch.100",
+      "n": 30,
+      "fsOps": 22,
+      "p50": 2.1304159999999683,
+      "p95": 2.55212500000016,
+      "heapDeltaBytes": 115536,
+      "sampledAllocationBytesPerOp": 1555515.2
+    },
+    {
+      "id": "startup.1",
+      "n": 30,
+      "fsOps": 22,
+      "p50": 0.952541999999994,
+      "p95": 1.2453330000007554,
+      "heapDeltaBytes": -80704,
+      "sampledAllocationBytesPerOp": 357849.6
+    },
+    {
+      "id": "startup.10",
+      "n": 30,
+      "fsOps": 22,
+      "p50": 0.9554580000003625,
+      "p95": 1.3589579999998023,
+      "heapDeltaBytes": -1264,
+      "sampledAllocationBytesPerOp": 358552.8
+    },
+    {
+      "id": "startup.50",
+      "n": 30,
+      "fsOps": 22,
+      "p50": 1.0281250000007276,
+      "p95": 1.679707999999664,
+      "heapDeltaBytes": 29112,
+      "sampledAllocationBytesPerOp": 542072
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{"kind":"header","scenario":"trailing-words","lane":"pi-ts","host":"pi 1.0.1","extension":"sha256:2dbf2078e91fc7fface683f6ff536e10e8218b387b768a473d7d11f296272329","normalizer":"v3"}
+{"step":"01-status-now","ch":"ui","data":{"message":"Usage: /typesafe login | logout | setup | status | enable | disable | test | playground","method":"notify","notifyType":"warning"}}
+{"step":"01-status-now","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-enable-yes","ch":"ui","data":{"message":"Usage: /typesafe login | logout | setup | status | enable | disable | test | playground","method":"notify","notifyType":"warning"}}
+{"step":"02-enable-yes","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-logout-please","ch":"ui","data":{"message":"Usage: /typesafe login | logout | setup | status | enable | disable | test | playground","method":"notify","notifyType":"warning"}}
+{"step":"03-logout-please","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"04-status","ch":"ui","data":{"message":"TypeSafe: disabled. TypeSafe key: TYPESAFE_API_KEY (not verified yet — the first request proves it). Session 0/20 attempts; no client yet in this session.  Model: jev-latest. Session limits reset on session start/reload; daily counters persist and caps come from client options or PI_TYPESAFE_MAX_* environment variables. Submitted state and questions will be sent to api.typesafe.ai and may incur charges. Do not include secrets. The extension does not collect files or conversation history. Results are model judgments, not proof or authorization.","method":"notify","notifyType":"info"}}
+{"step":"04-status","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

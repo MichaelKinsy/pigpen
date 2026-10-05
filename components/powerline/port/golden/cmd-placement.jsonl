@@ -1,0 +1,46 @@
+{"kind":"header","scenario":"cmd-placement","lane":"pi-ts","host":"pi 1.0.0","extension":"sha256:3b662d47982308fdead2f86c98861c50d7b3eb18f685cd8ad6a2aaacdf5382c2","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"stash"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"01-cmd","ch":"ui","data":{"message":"Powerline placement set to: below","method":"notify","notifyType":"info"}}
+{"step":"01-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"02-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"02-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"02-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"02-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"02-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"02-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"02-cmd","ch":"ui","data":{"message":"Powerline placement set to: above","method":"notify","notifyType":"info"}}
+{"step":"02-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"03-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"03-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"03-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"03-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"03-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"03-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"03-cmd","ch":"ui","data":{"message":"Powerline placement set to: below","method":"notify","notifyType":"info"}}
+{"step":"03-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"04-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"04-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"04-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"04-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"04-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"04-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"04-cmd","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"04-cmd","ch":"ui","data":{"message":"Powerline placement set to: above","method":"notify","notifyType":"info"}}
+{"step":"04-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

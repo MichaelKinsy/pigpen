@@ -1,0 +1,1262 @@
+[
+ {
+  "name": "safeid-astral",
+  "file": "record.go",
+  "find": "b.WriteString(\"__\")",
+  "replace": "b.WriteString(\"_\")"
+ },
+ {
+  "name": "safeid-empty",
+  "file": "record.go",
+  "find": "return \"goal\"\n\t}\n\treturn s",
+  "replace": "return \"_\"\n\t}\n\treturn s"
+ },
+ {
+  "name": "usage-floor",
+  "file": "record.go",
+  "find": "return math.Max(0, math.Floor(f))",
+  "replace": "return math.Max(0, math.Round(f))"
+ },
+ {
+  "name": "normalize-trim",
+  "file": "record.go",
+  "find": "obj = jsTrim(obj)\n\tif obj",
+  "replace": "if obj"
+ },
+ {
+  "name": "normalize-autocontinue-default",
+  "file": "record.go",
+  "find": "auto := true\n\tif b, ok",
+  "replace": "auto := false\n\tif b, ok"
+ },
+ {
+  "name": "normalize-status-blocked",
+  "file": "record.go",
+  "find": "\"budget_limited\": true, \"blocked\": true}",
+  "replace": "\"budget_limited\": true}"
+ },
+ {
+  "name": "task-status-skipped",
+  "file": "record.go",
+  "find": "s == \"complete\" || s == \"skipped\" {",
+  "replace": "s == \"complete\" {"
+ },
+ {
+  "name": "task-empty-title",
+  "file": "record.go",
+  "find": "if id == \"\" || title == \"\" {",
+  "replace": "if id == \"\" {"
+ },
+ {
+  "name": "tasklist-empty",
+  "file": "record.go",
+  "find": "if len(tasks) == 0 {\n\t\treturn nil\n\t}\n\tl := newObject()",
+  "replace": "if len(tasks) < 0 {\n\t\treturn nil\n\t}\n\tl := newObject()"
+ },
+ {
+  "name": "tokenbudget-zero",
+  "file": "record.go",
+  "find": "isSafeInteger(f) && f >= 1 {",
+  "replace": "isSafeInteger(f) && f >= 0 {"
+ },
+ {
+  "name": "stopreason-user",
+  "file": "record.go",
+  "find": "s == \"agent\" || s == \"user\" {",
+  "replace": "s == \"agent\" {"
+ },
+ {
+  "name": "current-task-pending",
+  "file": "record.go",
+  "find": "return s == \"pending\"",
+  "replace": "return s == \"pending\" || true"
+ },
+ {
+  "name": "focus-reason-default",
+  "file": "record.go",
+  "find": "e := &focusEntry{reason: \"selected\"}",
+  "replace": "e := &focusEntry{reason: \"created\"}"
+ },
+ {
+  "name": "focus-id-safe",
+  "file": "record.go",
+  "find": "s := safeIdPart(id)\n\t\te.goalID = &s",
+  "replace": "s := id\n\t\te.goalID = &s"
+ },
+ {
+  "name": "clone-tasks-deep",
+  "file": "record.go",
+  "find": "n.set(\"tasks\", tasks)\n\t\tc.set(\"taskList\", n)",
+  "replace": "_, _ = n, tasks\n\t\tc.set(\"taskList\", tl)"
+ },
+ {
+  "name": "clone-usage-deep",
+  "file": "record.go",
+  "find": "c.set(\"usage\", u.clone())",
+  "replace": "c.set(\"usage\", u)"
+ },
+ {
+  "name": "scheduler-phase-interrupted",
+  "file": "record.go",
+  "find": "\"running\", \"interrupted\") {",
+  "replace": "\"running\") {"
+ },
+ {
+  "name": "scheduler-invalid-used",
+  "file": "record.go",
+  "find": "s.set(\"used\", 9007199254740991.0)",
+  "replace": "s.set(\"used\", 0.0)"
+ },
+ {
+  "name": "scheduler-next-action",
+  "file": "record.go",
+  "find": "delete(d.vals, \"nextAction\")\n\t\t\td.keys = removeKey(d.keys, \"nextAction\")",
+  "replace": "_ = d.keys"
+ },
+ {
+  "name": "scheduler-text-limit",
+  "file": "record.go",
+  "find": "utf16Len(s) <= 2000",
+  "replace": "utf16Len(s) < 2000"
+ },
+ {
+  "name": "scheduler-ready-decision",
+  "file": "record.go",
+  "find": "if phase == \"ready\" && kind != \"ready\" {",
+  "replace": "if phase == \"ready\" && kind == \"\" {"
+ },
+ {
+  "name": "scheduler-waiting-wait",
+  "file": "record.go",
+  "find": "if phase == \"waiting\" && (!(s.has(\"wait\")",
+  "replace": "if phase == \"waiting\" && false && (!(s.has(\"wait\")"
+ },
+ {
+  "name": "scheduler-claimed-dispatch",
+  "file": "record.go",
+  "find": "if (phase == \"claimed\" || phase == \"running\") &&",
+  "replace": "if (phase == \"claimed\") &&"
+ },
+ {
+  "name": "scheduler-wait-interval",
+  "file": "record.go",
+  "find": "f < 1000 ||",
+  "replace": "f < 100 ||"
+ },
+ {
+  "name": "scheduler-version",
+  "file": "record.go",
+  "find": "if ver != 1 ||",
+  "replace": "if ver > 1 ||"
+ },
+ {
+  "name": "scheduler-decision-purpose",
+  "file": "record.go",
+  "find": "\"ready\", \"repair\", \"kickoff\", \"recovery\")) {",
+  "replace": "\"ready\", \"repair\", \"kickoff\")) {"
+ },
+ {
+  "name": "scheduler-dispatch-kind",
+  "file": "record.go",
+  "find": "!inList(kind, \"ready\", \"check\", \"wake\", \"repair\", \"kickoff\", \"recovery\") {",
+  "replace": "!inList(kind, \"ready\", \"check\", \"wake\", \"repair\", \"kickoff\") {"
+ },
+ {
+  "name": "new-scheduler-owner",
+  "file": "record.go",
+  "find": "s.set(\"owner\", owner)",
+  "replace": "s.set(\"owner\", \"x\")"
+ },
+ {
+  "name": "truncate-cut",
+  "file": "format.go",
+  "find": "utf16Prefix(one, max-3) + \"...\"",
+  "replace": "utf16Prefix(one, max-2) + \"...\""
+ },
+ {
+  "name": "truncate-limit",
+  "file": "format.go",
+  "find": "if utf16Len(one) > max {",
+  "replace": "if utf16Len(one) >= max {"
+ },
+ {
+  "name": "title-banner",
+  "file": "format.go",
+  "find": "if titleBanner.MatchString(jsFoldSafe(line)) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "title-section",
+  "file": "format.go",
+  "find": "if titleSection.MatchString(jsFoldSafe(line)) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "title-fallback",
+  "file": "format.go",
+  "find": "return truncateText(objective, 120)\n}",
+  "replace": "return objective\n}"
+ },
+ {
+  "name": "token-billion",
+  "file": "format.go",
+  "find": "case f >= 1e9:",
+  "replace": "case f > 1e9:"
+ },
+ {
+  "name": "token-trim-zero",
+  "file": "format.go",
+  "find": "return strings.TrimSuffix(s, \".0\") }",
+  "replace": "return s }"
+ },
+ {
+  "name": "token-grouping",
+  "file": "format.go",
+  "find": "(len(s)-i)%3 == 0 {",
+  "replace": "(len(s)-i)%3 == 1 {"
+ },
+ {
+  "name": "token-negative",
+  "file": "format.go",
+  "find": "safe = 0\n\t}\n\tn := int64(safe)",
+  "replace": "safe = 1\n\t}\n\tn := int64(safe)"
+ },
+ {
+  "name": "token-million-digits",
+  "file": "format.go",
+  "find": "if f >= 1e7 {\n\t\t\td = 0",
+  "replace": "if f >= 1e8 {\n\t\t\td = 0"
+ },
+ {
+  "name": "duration-hours",
+  "file": "format.go",
+  "find": "\"%dh%02dm%02ds\"",
+  "replace": "\"%dh%dm%02ds\""
+ },
+ {
+  "name": "duration-minutes",
+  "file": "format.go",
+  "find": "\"%dm%02ds\"",
+  "replace": "\"%dm%ds\""
+ },
+ {
+  "name": "status-running",
+  "file": "format.go",
+  "find": "case status == \"active\" && gflag(g, \"autoContinue\"):",
+  "replace": "case status == \"active\":"
+ },
+ {
+  "name": "status-agent",
+  "file": "format.go",
+  "find": "gstr(g, \"stopReason\") == \"agent\":",
+  "replace": "gstr(g, \"stopReason\") != \"agent\":"
+ },
+ {
+  "name": "status-sisyphus",
+  "file": "format.go",
+  "find": "prefix = \"sisyphus \"",
+  "replace": "prefix = \"\""
+ },
+ {
+  "name": "status-budget",
+  "file": "format.go",
+  "find": "return prefix + \"budget limited\"",
+  "replace": "return prefix + \"budget_limited\""
+ },
+ {
+  "name": "oneline-tail",
+  "file": "format.go",
+  "find": "if tokens > 0 {\n\t\ttail =",
+  "replace": "if tokens > 1000 {\n\t\ttail ="
+ },
+ {
+  "name": "tasks-skipped",
+  "file": "format.go",
+  "find": "if c.skipped > 0 {",
+  "replace": "if c.skipped > 1 {"
+ },
+ {
+  "name": "tasks-none",
+  "file": "format.go",
+  "find": "return \"No tasks\"",
+  "replace": "return \"no tasks\""
+ },
+ {
+  "name": "detailed-empty",
+  "file": "format.go",
+  "find": "\"No goal is set. Use /goal <objective> or /sisyphus <objective> to start immediately.\"\n\t}\n\ttokens",
+  "replace": "\"No goal.\"\n\t}\n\ttokens"
+ },
+ {
+  "name": "open-sort-id",
+  "file": "format.go",
+  "find": "gstr(out[j], \"id\")) < 0",
+  "replace": "gstr(out[j], \"id\")) > 0"
+ },
+ {
+  "name": "open-sort-created",
+  "file": "format.go",
+  "find": "return c < 0\n\t\t}",
+  "replace": "return c > 0\n\t\t}"
+ },
+ {
+  "name": "other-open-focused",
+  "file": "format.go",
+  "find": "gstr(g, \"status\") != \"complete\" && (focused == nil || gstr(g, \"id\") != *focused) {",
+  "replace": "gstr(g, \"status\") != \"complete\" {"
+ },
+ {
+  "name": "label-marker",
+  "file": "format.go",
+  "find": "marker = \"*\"\n\t}\n\tmode := \"goal\"\n\tif gflag(g, \"sisyphus\") {\n\t\tmode = \"sisyphus\"\n\t}\n\tpath :=",
+  "replace": "marker = \"+\"\n\t}\n\tmode := \"goal\"\n\tif gflag(g, \"sisyphus\") {\n\t\tmode = \"sisyphus\"\n\t}\n\tpath :="
+ },
+ {
+  "name": "list-usage",
+  "file": "format.go",
+  "find": "tokens > 0 || seconds > 0 {",
+  "replace": "tokens > 0 && seconds > 0 {"
+ },
+ {
+  "name": "list-empty",
+  "file": "format.go",
+  "find": "\"No open goals. Use /goal <objective> or /sisyphus <objective> to start immediately.\"",
+  "replace": "\"No open goals.\""
+ },
+ {
+  "name": "unfocused-plural",
+  "file": "format.go",
+  "find": "if n == 1 {\n\t\ts = \"\"",
+  "replace": "if n == 2 {\n\t\ts = \"\""
+ },
+ {
+  "name": "clear-message",
+  "file": "format.go",
+  "find": "return \"Goal cleared and archived.\"",
+  "replace": "return \"Goal cleared.\""
+ },
+ {
+  "name": "notify-icon",
+  "file": "format.go",
+  "find": "icon, mode = \"◆\", \"Sisyphus\"",
+  "replace": "icon, mode = \"●\", \"Sisyphus\""
+ },
+ {
+  "name": "notify-drive",
+  "file": "format.go",
+  "find": "drive := \"manual mode\"\n\tif autoContinue {\n\t\tdrive = \"auto-continue on\"",
+  "replace": "drive := \"auto-continue on\"\n\tif autoContinue {\n\t\tdrive = \"manual mode\""
+ },
+ {
+  "name": "notify-title-limit",
+  "file": "format.go",
+  "find": "truncateText(displayObjectiveTitle(objective), 92)",
+  "replace": "truncateText(displayObjectiveTitle(objective), 90)"
+ },
+ {
+  "name": "contract-cr",
+  "file": "format.go",
+  "find": "for _, line := range strings.Split(strings.ReplaceAll(objective, \"\\r\", \"\"), \"\\n\") {\n\t\tif m := contractRE",
+  "replace": "for _, line := range strings.Split(objective, \"\\n\") {\n\t\tif m := contractRE"
+ },
+ {
+  "name": "contract-last-wins",
+  "file": "format.go",
+  "find": "contract = jsTrim(m[1])\n",
+  "replace": "if contract == \"\" {\n\t\t\t\tcontract = jsTrim(m[1])\n\t\t\t}\n"
+ },
+ {
+  "name": "sisyphus-digits",
+  "file": "format.go",
+  "find": "(?i)\\b\\d{1,2}",
+  "replace": "(?i)\\b\\d{2}"
+ },
+ {
+  "name": "selector-truncate",
+  "file": "format.go",
+  "find": "displayObjectiveTitle(gstr(g, \"objective\")), 72)",
+  "replace": "displayObjectiveTitle(gstr(g, \"objective\")), 60)"
+ },
+ {
+  "name": "path-escape",
+  "file": "storage.go",
+  "find": "if inside == \"..\" || strings.HasPrefix(inside, \"..\"+string(filepath.Separator)) || filepath.IsAbs(inside) {",
+  "replace": "if inside == \"..\" {"
+ },
+ {
+  "name": "safe-parent",
+  "file": "storage.go",
+  "find": "if normalizeRelPath(path.Dir(norm)) != normalizeRelPath(rootRel) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "active-name",
+  "file": "storage.go",
+  "find": "`^active_goal_.*\\.md$`)\n\tarchivedNameRE",
+  "replace": "`^active_goal_.*`)\n\tarchivedNameRE"
+ },
+ {
+  "name": "archived-name",
+  "file": "storage.go",
+  "find": "`^goal_.*\\.md$`)",
+  "replace": "`^goal_.*`)"
+ },
+ {
+  "name": "active-path-time",
+  "file": "storage.go",
+  "find": "timestampForFile(gstr(g, \"createdAt\")), safeIdPart(gstr(g, \"id\")))\n}\n\nfunc makeArchivedGoalPath",
+  "replace": "timestampForFile(gstr(g, \"updatedAt\")), safeIdPart(gstr(g, \"id\")))\n}\n\nfunc makeArchivedGoalPath"
+ },
+ {
+  "name": "archived-path-time",
+  "file": "storage.go",
+  "find": "timestampForFile(gstr(g, \"updatedAt\")), safeIdPart(gstr(g, \"id\")))\n}\n\nfunc activePathForGoal",
+  "replace": "timestampForFile(gstr(g, \"createdAt\")), safeIdPart(gstr(g, \"id\")))\n}\n\nfunc activePathForGoal"
+ },
+ {
+  "name": "timestamp-hundredths",
+  "file": "storage.go",
+  "find": "t.Nanosecond()/1e6/10)",
+  "replace": "t.Nanosecond()/1e7*0+t.Nanosecond()/1e6)"
+ },
+ {
+  "name": "timestamp-month",
+  "file": "storage.go",
+  "find": "int(t.Month()), t.Day()",
+  "replace": "int(t.Month())-1, t.Day()"
+ },
+ {
+  "name": "task-evidence",
+  "file": "storage.go",
+  "find": "\"evidence: \"+",
+  "replace": "\"evidence:\"+"
+ },
+ {
+  "name": "task-skip-reason",
+  "file": "storage.go",
+  "find": "\"skipped: \"+",
+  "replace": "\"skip: \"+"
+ },
+ {
+  "name": "task-contract",
+  "file": "storage.go",
+  "find": "\"contract: \"+",
+  "replace": "\"contract:\"+"
+ },
+ {
+  "name": "task-pending-only",
+  "file": "storage.go",
+  "find": "if status == \"pending\" && truthy(t.vals[\"verificationContract\"]) {",
+  "replace": "if status != \"complete\" && truthy(t.vals[\"verificationContract\"]) {"
+ },
+ {
+  "name": "task-box-skipped",
+  "file": "storage.go",
+  "find": "return \"~\"",
+  "replace": "return \"x\""
+ },
+ {
+  "name": "task-block",
+  "file": "storage.go",
+  "find": "<!-- blockCompletion: %v -->",
+  "replace": "<!-- blockcompletion: %v -->"
+ },
+ {
+  "name": "contract-line-trim",
+  "file": "storage.go",
+  "find": "c := jsTrim(strOrEmpty(g, \"verificationContract\")); c != \"\"",
+  "replace": "c := strOrEmpty(g, \"verificationContract\"); c != \"\""
+ },
+ {
+  "name": "pause-reason-line",
+  "file": "storage.go",
+  "find": "\"- Agent pause reason: \"",
+  "replace": "\"- Pause reason: \""
+ },
+ {
+  "name": "suggest-line",
+  "file": "storage.go",
+  "find": "\"- Agent suggests: \"",
+  "replace": "\"- Suggests: \""
+ },
+ {
+  "name": "serialize-version",
+  "file": "storage.go",
+  "find": "head.set(\"version\", 3.0)",
+  "replace": "head.set(\"version\", 2.0)"
+ },
+ {
+  "name": "json-escape",
+  "file": "storage.go",
+  "find": "} else if c == '\\\\' {",
+  "replace": "} else if c == '/' {"
+ },
+ {
+  "name": "json-string",
+  "file": "storage.go",
+  "find": "} else if c == '\"' {\n\t\t\t\tinString = false",
+  "replace": "} else if c == '\\'' {\n\t\t\t\tinString = false"
+ },
+ {
+  "name": "body-edit",
+  "file": "storage.go",
+  "find": "merged.set(\"objective\", obj)",
+  "replace": "_ = obj"
+ },
+ {
+  "name": "body-progress",
+  "file": "storage.go",
+  "find": "if jsTrim(lines[i]) == \"## Progress\" {",
+  "replace": "if jsTrim(lines[i]) == \"## Progress \" {"
+ },
+ {
+  "name": "write-updated-at",
+  "file": "storage.go",
+  "find": "n.set(\"activePath\", active)\n\tn.set(\"updatedAt\", nowIso())",
+  "replace": "n.set(\"activePath\", active)"
+ },
+ {
+  "name": "archive-removes-active",
+  "file": "storage.go",
+  "find": "delete(next.vals, \"activePath\")\n\tnext.keys = removeKey(next.keys, \"activePath\")",
+  "replace": "_ = next.keys"
+ },
+ {
+  "name": "archive-unlink",
+  "file": "storage.go",
+  "find": "_ = s.safeUnlink(goalsDir, p)",
+  "replace": "_ = p"
+ },
+ {
+  "name": "scan-complete",
+  "file": "storage.go",
+  "find": "if g == nil || gstr(g, \"status\") == \"complete\" {",
+  "replace": "if g == nil {"
+ },
+ {
+  "name": "scan-activepath",
+  "file": "storage.go",
+  "find": "n.set(\"activePath\", rel)\n\t\tout = append",
+  "replace": "out = append"
+ },
+ {
+  "name": "snapshot-names",
+  "file": "storage.go",
+  "find": "if !remaining[name] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "snapshot-leftover",
+  "file": "storage.go",
+  "find": "return len(remaining) == 0",
+  "replace": "return true"
+ },
+ {
+  "name": "snapshot-complete",
+  "file": "storage.go",
+  "find": "if !ok || gstr(g, \"status\") == \"complete\" {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "snapshot-legacy",
+  "file": "storage.go",
+  "find": "return tryParseSnapshot(filepath.Join(s.root(), snapshotLegacy))",
+  "replace": "return nil"
+ },
+ {
+  "name": "snapshot-mtime",
+  "file": "storage.go",
+  "find": "match := sn.dirMtime == mtimeMs(fi)",
+  "replace": "match := true"
+ },
+ {
+  "name": "snapshot-update",
+  "file": "storage.go",
+  "find": "\t\tdelete(poolCache, s.root())\n\t\t_ = rootDir",
+  "replace": "\t\t_ = rootDir"
+ },
+ {
+  "name": "unlink-invalidates",
+  "file": "storage.go",
+  "find": "\t\ts.invalidateDir()\n\t\tif rootRel == goalsDir {",
+  "replace": "\t\tif rootRel == goalsDir {"
+ },
+ {
+  "name": "ledger-newline",
+  "file": "storage.go",
+  "find": "\t\tb.WriteString(\"\\n\")\n\t}\n\tf, err := os.OpenFile(file, os.O_WRONLY|os.O_APPEND",
+  "replace": "\t}\n\tf, err := os.OpenFile(file, os.O_WRONLY|os.O_APPEND"
+ },
+ {
+  "name": "lock-attempts",
+  "file": "storage.go",
+  "find": "attempts, retryMs = 8, 1",
+  "replace": "attempts, retryMs = 0, 1"
+ },
+ {
+  "name": "focus-takes-ledger",
+  "file": "core.go",
+  "find": "if recordLedger && c.focused != nil {",
+  "replace": "if false && c.focused != nil {"
+ },
+ {
+  "name": "unfocus-ledger",
+  "file": "core.go",
+  "find": "} else if recordLedger && prev != nil {",
+  "replace": "} else if prev != nil {"
+ },
+ {
+  "name": "resolve-legacy-complete",
+  "file": "core.go",
+  "find": "if legacy != nil && gstr(legacy, \"status\") != \"complete\" {\n\t\tid := gstr(legacy, \"id\")",
+  "replace": "if legacy != nil {\n\t\tid := gstr(legacy, \"id\")"
+ },
+ {
+  "name": "resolve-entry-null",
+  "file": "core.go",
+  "find": "\tif entry != nil {\n\t\treturn nil\n\t}\n\tif legacy",
+  "replace": "\tif legacy"
+ },
+ {
+  "name": "resolve-autoselect",
+  "file": "core.go",
+  "find": "if autoSelect {\n\t\tif open",
+  "replace": "if !autoSelect {\n\t\tif open"
+ },
+ {
+  "name": "load-focus-entry-migrated",
+  "file": "core.go",
+  "find": "reason = \"migrated\"",
+  "replace": "reason = \"selected\""
+ },
+ {
+  "name": "load-focus-entry-written",
+  "file": "core.go",
+  "find": "if entry == nil && c.focused != nil {",
+  "replace": "if entry == nil && c.focused != nil && false {"
+ },
+ {
+  "name": "load-legacy-sanitize",
+  "file": "core.go",
+  "find": "legacy = sanitizeGoalPaths(c.st, c.st.mergeGoalPromptFromDisk(legacy))",
+  "replace": "legacy = c.st.mergeGoalPromptFromDisk(legacy)"
+ },
+ {
+  "name": "reconcile-lost-notify-ui",
+  "file": "core.go",
+  "find": "c.assignFocused(nil)\n\t\tc.updateUI()\n\t\treturn false",
+  "replace": "c.assignFocused(nil)\n\t\treturn false"
+ },
+ {
+  "name": "apply-revision",
+  "file": "core.go",
+  "find": "diskRev != captured {",
+  "replace": "diskRev < captured {"
+ },
+ {
+  "name": "apply-revision-bump",
+  "file": "core.go",
+  "find": "mutated.set(\"revision\", captured+1)",
+  "replace": "mutated.set(\"revision\", captured)"
+ },
+ {
+  "name": "apply-fresh-missing",
+  "file": "core.go",
+  "find": "if fresh == nil {",
+  "replace": "if fresh == nil && false {"
+ },
+ {
+  "name": "apply-commit",
+  "file": "core.go",
+  "find": "if !spec.noCommitFocused {",
+  "replace": "if spec.noCommitFocused {"
+ },
+ {
+  "name": "apply-ledger",
+  "file": "core.go",
+  "find": "if spec.ledger != nil {\n\t\tc.appendEvents(spec.ledger(written)...)",
+  "replace": "if spec.ledger != nil && false {\n\t\tc.appendEvents(spec.ledger(written)...)"
+ },
+ {
+  "name": "scheduler-stop-notice",
+  "file": "core.go",
+  "find": "func (c *core) schedulerSafe(fn func() error) {\n\tif err := fn(); err != nil {\n\t\tc.h.Notify(\"Goal scheduling stopped: \"+err.Error(), \"warning\")",
+  "replace": "func (c *core) schedulerSafe(fn func() error) {\n\tif err := fn(); err != nil {\n\t\tc.h.Notify(\"Goal scheduling stopped\", \"warning\")"
+ },
+ {
+  "name": "takeover-owner",
+  "file": "core.go",
+  "find": "owner, _ := s.str(\"owner\"); owner != c.h.SessionID() {\n\t\treturn\n\t}",
+  "replace": "owner, _ := s.str(\"owner\"); owner == \"\" {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "takeover-generation",
+  "file": "core.go",
+  "find": "s.set(\"generation\", newUUID())\n\t\t\ts.set(\"phase\", \"idle\")",
+  "replace": "s.set(\"phase\", \"idle\")"
+ },
+ {
+  "name": "takeover-repair",
+  "file": "core.go",
+  "find": "s.set(\"repairUsed\", false)\n\t\t})",
+  "replace": "})"
+ },
+ {
+  "name": "takeover-on-change",
+  "file": "core.go",
+  "find": "if (prev == nil) != (id == nil) || (prev != nil && *prev != *id) {\n\t\tc.takeover()",
+  "replace": "if false {\n\t\tc.takeover()"
+ },
+ {
+  "name": "allowance-text",
+  "file": "core.go",
+  "find": "\"Automatic continuation disabled by maxAutonomousRuns=0. Change the setting in /goal-settings, then use /goal-resume.\"",
+  "replace": "\"Automatic continuation disabled.\""
+ },
+ {
+  "name": "kickoff-limit",
+  "file": "core.go",
+  "find": "if limit != nil && *limit == 0 {\n\t\t\tif err := c.schedulerUpdate(func(*jsObject) {}); err != nil {",
+  "replace": "if limit != nil && *limit <= 1 {\n\t\t\tif err := c.schedulerUpdate(func(*jsObject) {}); err != nil {"
+ },
+ {
+  "name": "kickoff-noop-write",
+  "file": "core.go",
+  "find": "if err := c.schedulerUpdate(func(*jsObject) {}); err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t\tc.h.Notify(allowanceReason(limit), \"info\")",
+  "replace": "c.h.Notify(allowanceReason(limit), \"info\")"
+ },
+ {
+  "name": "kickoff-ready-phase",
+  "file": "core.go",
+  "find": "s.set(\"phase\", \"ready\")\n\t\t\td := newObject()",
+  "replace": "s.set(\"phase\", \"idle\")\n\t\t\td := newObject()"
+ },
+ {
+  "name": "kickoff-ready-purpose",
+  "file": "core.go",
+  "find": "d.set(\"purpose\", \"kickoff\")",
+  "replace": "d.set(\"purpose\", \"ready\")"
+ },
+ {
+  "name": "replace-scheduler",
+  "file": "core.go",
+  "find": "goal.set(\"scheduler\", newGoalScheduler(c.h.SessionID()))",
+  "replace": "_ = goal"
+ },
+ {
+  "name": "replace-contract",
+  "file": "core.go",
+  "find": "if contract != \"\" {\n\t\tgoal.set(\"verificationContract\", contract)",
+  "replace": "if contract == \"\" {\n\t\tgoal.set(\"verificationContract\", contract)"
+ },
+ {
+  "name": "replace-ledger-auto",
+  "file": "core.go",
+  "find": "\"sisyphus\", sisyphus, \"autoContinue\", true, \"at\"",
+  "replace": "\"sisyphus\", sisyphus, \"autoContinue\", false, \"at\""
+ },
+ {
+  "name": "replace-focus-entry",
+  "file": "core.go",
+  "find": "if res.focusChanged {\n\t\tc.appendFocusEntry(strp(gstr(res.goal, \"id\")), \"created\")",
+  "replace": "if !res.focusChanged {\n\t\tc.appendFocusEntry(strp(gstr(res.goal, \"id\")), \"created\")"
+ },
+ {
+  "name": "replace-budget",
+  "file": "core.go",
+  "find": "+\"\\nBudget: none\"",
+  "replace": "+\"\\nBudget: unlimited\""
+ },
+ {
+  "name": "create-focus-changed",
+  "file": "core.go",
+  "find": "focusChanged: prev == nil || gstr(prev, \"id\") != gstr(written, \"id\")",
+  "replace": "focusChanged: prev == nil"
+ },
+ {
+  "name": "pause-autocontinue",
+  "file": "core.go",
+  "find": "next.set(\"autoContinue\", false)",
+  "replace": "next.set(\"autoContinue\", true)"
+ },
+ {
+  "name": "pause-reason-cleared",
+  "file": "core.go",
+  "find": "next.set(\"pauseReason\", undef{})\n\tnext.set(\"pauseSuggestedAction\", undef{})",
+  "replace": "next.set(\"pauseSuggestedAction\", undef{})"
+ },
+ {
+  "name": "pause-stop-reason",
+  "file": "core.go",
+  "find": "n.set(\"stopReason\", \"user\")\n\t\tn.set(\"updatedAt\", nowIso())",
+  "replace": "n.set(\"stopReason\", \"agent\")\n\t\tn.set(\"updatedAt\", nowIso())"
+ },
+ {
+  "name": "pause-status",
+  "file": "core.go",
+  "find": "n.set(\"status\", \"paused\")\n\t\tn.set(\"stopReason\", \"user\")",
+  "replace": "n.set(\"status\", \"blocked\")\n\t\tn.set(\"stopReason\", \"user\")"
+ },
+ {
+  "name": "pause-ledger-reason",
+  "file": "core.go",
+  "find": "\"reason\", \"user\", \"suggestedAction\"",
+  "replace": "\"reason\", \"agent\", \"suggestedAction\""
+ },
+ {
+  "name": "pause-notify",
+  "file": "core.go",
+  "find": "c.h.Notify(\"Goal paused.\", \"info\")",
+  "replace": "c.h.Notify(\"Goal paused\", \"info\")"
+ },
+ {
+  "name": "pause-only-active",
+  "file": "core.go",
+  "find": "if g == nil || gstr(g, \"status\") != \"active\" {\n\t\treturn\n\t}\n\tnext",
+  "replace": "if g == nil {\n\t\treturn\n\t}\n\tnext"
+ },
+ {
+  "name": "pause-ui",
+  "file": "core.go",
+  "find": "if res != nil {\n\t\tc.updateUI()\n\t}",
+  "replace": "_ = res"
+ },
+ {
+  "name": "archive-status",
+  "file": "core.go",
+  "find": "status := \"paused\"\n\t\tif gstr(g, \"status\") == \"complete\" {",
+  "replace": "status := \"active\"\n\t\tif gstr(g, \"status\") == \"complete\" {"
+ },
+ {
+  "name": "archive-stop",
+  "file": "core.go",
+  "find": "n.set(\"stopReason\", reason)\n\t\treturn n, nil",
+  "replace": "return n, nil"
+ },
+ {
+  "name": "choose-single",
+  "file": "core.go",
+  "find": "if len(open) == 1 {\n\t\tc.setFocusedGoalID",
+  "replace": "if len(open) == 2 {\n\t\tc.setFocusedGoalID"
+ },
+ {
+  "name": "choose-headless",
+  "file": "core.go",
+  "find": "if !c.h.HasUI() {\n\t\tc.h.Notify(buildUnfocusedOpenGoalsSummary(len(open)), \"warning\")",
+  "replace": "if false {\n\t\tc.h.Notify(buildUnfocusedOpenGoalsSummary(len(open)), \"warning\")"
+ },
+ {
+  "name": "choose-unchanged",
+  "file": "core.go",
+  "find": "\"Goal focus unchanged.\"",
+  "replace": "\"Focus unchanged.\""
+ },
+ {
+  "name": "direct-empty",
+  "file": "core.go",
+  "find": "cmd := \"/goal <objective>\"",
+  "replace": "cmd := \"/goal\""
+ },
+ {
+  "name": "direct-sisyphus-text",
+  "file": "core.go",
+  "find": "\"/sisyphus <objective>\"\n\t\t}",
+  "replace": "\"/goal <objective>\"\n\t\t}"
+ },
+ {
+  "name": "direct-sisyphus-check",
+  "file": "core.go",
+  "find": "if sisyphus && !sisyphusObjectiveSufficient(raw) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "direct-contracts-setting",
+  "file": "core.go",
+  "find": "if !loadGoalSettings(c.h.Cwd()).disableContracts {",
+  "replace": "if true {"
+ },
+ {
+  "name": "list-reconcile",
+  "file": "core.go",
+  "find": "func (c *core) list() {\n\tc.reconcileFocused()",
+  "replace": "func (c *core) list() {"
+ },
+ {
+  "name": "pause-none-open",
+  "file": "core.go",
+  "find": "c.h.Notify(\"No goal is set.\", \"warning\")\n\t\t\treturn",
+  "replace": "c.h.Notify(\"No goal set.\", \"warning\")\n\t\t\treturn"
+ },
+ {
+  "name": "pause-paused-text",
+  "file": "core.go",
+  "find": "\"Goal is already paused. Use /goal-resume to continue.\"",
+  "replace": "\"Goal already paused.\""
+ },
+ {
+  "name": "pause-flush",
+  "file": "core.go",
+  "find": "c.flush() // the original awaits here, which lets the queued UI update run\n\t\t\tif picked == nil {",
+  "replace": "if picked == nil {"
+ },
+ {
+  "name": "clear-headless",
+  "file": "core.go",
+  "find": "if !c.h.HasUI() {\n\t\tc.h.Notify(\"Run /goal-clear",
+  "replace": "if false {\n\t\tc.h.Notify(\"Run /goal-clear"
+ },
+ {
+  "name": "clear-cancel-text",
+  "file": "core.go",
+  "find": "\"Goal clear cancelled.\"",
+  "replace": "\"Cancelled.\""
+ },
+ {
+  "name": "clear-token",
+  "file": "core.go",
+  "find": "c.focusRev != rev ||",
+  "replace": "c.focusRev != rev && false ||"
+ },
+ {
+  "name": "clear-cleared-entry",
+  "file": "core.go",
+  "find": "if prev != nil && c.focused == nil {\n\t\tc.appendFocusEntry(nil, reason)",
+  "replace": "if prev != nil && c.focused != nil {\n\t\tc.appendFocusEntry(nil, reason)"
+ },
+ {
+  "name": "clear-level",
+  "file": "core.go",
+  "find": "level := \"info\"\n\tif archived == nil {",
+  "replace": "level := \"warning\"\n\tif archived == nil {"
+ },
+ {
+  "name": "unfocus-text",
+  "file": "core.go",
+  "find": "\"Goal unfocused for this session. It remains open in .pi/goals: \"",
+  "replace": "\"Goal unfocused. It remains open in .pi/goals: \""
+ },
+ {
+  "name": "unfocus-open-summary",
+  "file": "core.go",
+  "find": "if n := otherOpenGoalCount(c.goals, nil); n > 0 {",
+  "replace": "if n := otherOpenGoalCount(c.goals, nil); n > 1 {"
+ },
+ {
+  "name": "unfocus-reconcile",
+  "file": "core.go",
+  "find": "c.reconcileFocused()\n\tcurrent = c.state()\n\tdetached",
+  "replace": "current = c.state()\n\tdetached"
+ },
+ {
+  "name": "unfocus-abort",
+  "file": "core.go",
+  "find": "if detached != \"\" && busy {",
+  "replace": "if detached != \"\" && !busy {"
+ },
+ {
+  "name": "persist-revision",
+  "file": "core.go",
+  "find": "gnum(fresh, \"revision\") != captured {",
+  "replace": "false {"
+ },
+ {
+  "name": "persist-bump",
+  "file": "core.go",
+  "find": "n.set(\"revision\", captured+1)\n\tmerged",
+  "replace": "n.set(\"revision\", captured)\n\tmerged"
+ },
+ {
+  "name": "shutdown-persist",
+  "file": "core.go",
+  "find": "func (c *core) shutdown() {\n\tc.persist()",
+  "replace": "func (c *core) shutdown() {"
+ },
+ {
+  "name": "render-unfocused",
+  "file": "core.go",
+  "find": "fmt.Sprintf(\"goal: unfocused [%d open] - /goal-focus\", totalOpen)",
+  "replace": "fmt.Sprintf(\"goal: unfocused [%d open]\", totalOpen)"
+ },
+ {
+  "name": "render-clear",
+  "file": "core.go",
+  "find": "if g == nil && totalOpen == 0 {\n\t\tc.clearGoalWidget()",
+  "replace": "if g == nil && totalOpen == 0 {\n\t\tc.h.SetStatus(widgetKey, \"\")"
+ },
+ {
+  "name": "clear-widget-ui",
+  "file": "core.go",
+  "find": "if c.h.HasUI() {\n\t\tc.h.SetStatus(widgetKey, \"\")\n\t\tc.h.ClearWidget(widgetKey)",
+  "replace": "if c.h.HasUI() {\n\t\tc.h.ClearWidget(widgetKey)"
+ },
+ {
+  "name": "flush-once",
+  "file": "core.go",
+  "find": "c.uiPending = false\n\tc.renderUI()",
+  "replace": "c.renderUI()"
+ },
+ {
+  "name": "footer-sisyphus",
+  "file": "core.go",
+  "find": "prefix = \"goal✊\"",
+  "replace": "prefix = \"goal\""
+ },
+ {
+  "name": "restore-other-owner",
+  "file": "core.go",
+  "find": "owner != c.h.SessionID() {\n\t\t\tc.h.Notify(\"Goal owned by another session",
+  "replace": "owner == \"\" {\n\t\t\tc.h.Notify(\"Goal owned by another session"
+ },
+ {
+  "name": "restore-interrupted",
+  "file": "core.go",
+  "find": "inList(phase, \"claimed\", \"running\", \"interrupted\")",
+  "replace": "inList(phase, \"claimed\", \"running\")"
+ },
+ {
+  "name": "restore-no-scheduler",
+  "file": "core.go",
+  "find": "gstr(g, \"status\") != \"active\" || !gflag(g, \"autoContinue\") || !g.has(\"scheduler\") {\n\t\t\treturn nil\n\t\t}\n\t\ts := g.obj(\"scheduler\")",
+  "replace": "gstr(g, \"status\") != \"active\" || !gflag(g, \"autoContinue\") {\n\t\t\treturn nil\n\t\t}\n\t\ts := g.obj(\"scheduler\")"
+ },
+ {
+  "name": "schedule-phase",
+  "file": "core.go",
+  "find": "phase != \"ready\" && phase != \"waiting\" {",
+  "replace": "phase != \"ready\" {"
+ },
+ {
+  "name": "budget-reached",
+  "file": "core.go",
+  "find": "return b > 0 && tokens >= b",
+  "replace": "return b > 0 && tokens > b"
+ },
+ {
+  "name": "budget-skipped",
+  "file": "core.go",
+  "find": "\tif budgetReached(g) {\n\t\tc.schedulerPause",
+  "replace": "\tif false {\n\t\tc.schedulerPause"
+ },
+ {
+  "name": "allowance-used",
+  "file": "core.go",
+  "find": "if limit != nil && used >= *limit {",
+  "replace": "if limit != nil && used > *limit {"
+ },
+ {
+  "name": "wait-deadline",
+  "file": "core.go",
+  "find": "c.schedulerPause(\"Wait deadline reached.\")",
+  "replace": "c.schedulerPause(\"Wait deadline.\")"
+ },
+ {
+  "name": "pause-source",
+  "file": "core.go",
+  "find": "\"reason\", r, \"source\", \"agent\", \"at\", nowIso())}\n\t}})\n\tif err != nil {\n\t\tc.h.Notify(\"Goal scheduling stopped",
+  "replace": "\"reason\", r, \"source\", \"user\", \"at\", nowIso())}\n\t}})\n\tif err != nil {\n\t\tc.h.Notify(\"Goal scheduling stopped"
+ },
+ {
+  "name": "pause-generation",
+  "file": "core.go",
+  "find": "ns.set(\"generation\", newUUID())",
+  "replace": "_ = ns"
+ },
+ {
+  "name": "write-ledger-paused",
+  "file": "core.go",
+  "find": "if gstr(w, \"status\") != \"paused\" {\n\t\t\treturn nil",
+  "replace": "if gstr(w, \"status\") != \"paused\" || true {\n\t\t\treturn nil"
+ },
+ {
+  "name": "load-flush",
+  "file": "core.go",
+  "find": "c.loadState()\n\tc.flush()\n\tc.restore()",
+  "replace": "c.loadState()\n\tc.restore()"
+ },
+ {
+  "name": "settings-project-wins",
+  "file": "settings.go",
+  "find": "case project.maxRuns != nil:\n\t\ts.maxAutonomousRuns = project.maxRuns\n\tcase global.maxRuns != nil:\n\t\ts.maxAutonomousRuns = global.maxRuns",
+  "replace": "case global.maxRuns != nil:\n\t\ts.maxAutonomousRuns = global.maxRuns\n\tcase project.maxRuns != nil:\n\t\ts.maxAutonomousRuns = project.maxRuns"
+ },
+ {
+  "name": "settings-env-first",
+  "file": "settings.go",
+  "find": "case envv != nil:\n\t\ts.disableContracts = *envv\n\tcase project.disableContracts != nil:\n\t\ts.disableContracts = *project.disableContracts",
+  "replace": "case project.disableContracts != nil:\n\t\ts.disableContracts = *project.disableContracts\n\tcase envv != nil:\n\t\ts.disableContracts = *envv"
+ },
+ {
+  "name": "settings-bool-string",
+  "file": "settings.go",
+  "find": "if x == \"true\" || x == \"false\" {\n\t\t\tb := x == \"true\"",
+  "replace": "if x == \"true\" || x == \"false\" || x == \"1\" {\n\t\t\tb := x == \"true\" || x == \"1\""
+ },
+ {
+  "name": "settings-digits",
+  "file": "settings.go",
+  "find": "if s := jsTrim(t); digitsOnly.MatchString(s) {",
+  "replace": "if s := t; digitsOnly.MatchString(s) {"
+ },
+ {
+  "name": "settings-env-file",
+  "file": "settings.go",
+  "find": "if o := nonEmpty(getenv(\"PI_GOAL_SETTINGS_FILE\")); o != \"\" {",
+  "replace": "if o := \"\"; o != \"\" {"
+ },
+ {
+  "name": "settings-agentdir",
+  "file": "settings.go",
+  "find": "if o := nonEmpty(getenv(\"PI_CODING_AGENT_DIR\")); o != \"\" {",
+  "replace": "if o := \"\"; o != \"\" {"
+ },
+ {
+  "name": "settings-autoselect",
+  "file": "settings.go",
+  "find": "l.autoSelect = asBool(o.vals[\"autoSelectSingleGoal\"])",
+  "replace": ""
+ },
+ {
+  "name": "json-undef-skipped",
+  "file": "jsjson.go",
+  "find": "if _, u := vals[k].(undef); !u {",
+  "replace": "if true {"
+ },
+ {
+  "name": "json-order",
+  "file": "jsjson.go",
+  "find": "return append(idx, rest...)",
+  "replace": "return append(rest, idx...)"
+ },
+ {
+  "name": "adapter-session-id",
+  "file": "extension.go",
+  "find": "\tid, _ := h.ctx.GetSessionID()\n\treturn id",
+  "replace": "\t_, _ = h.ctx.GetSessionID()\n\treturn \"\""
+ },
+ {
+  "name": "adapter-rich-rpc",
+  "file": "extension.go",
+  "find": "h.ctx.HasUI() && h.ctx.Mode() != \"rpc\"",
+  "replace": "h.ctx.HasUI()"
+ },
+ {
+  "name": "adapter-rich-none",
+  "file": "extension.go",
+  "find": "func (h sdkHost) Rich() bool            { return h.ctx.HasUI() && h.ctx.Mode() != \"rpc\" }",
+  "replace": "func (h sdkHost) Rich() bool            { return false }"
+ },
+ {
+  "name": "adapter-idle-error",
+  "file": "extension.go",
+  "find": "return err != nil || idle",
+  "replace": "return err == nil && idle"
+ },
+ {
+  "name": "adapter-idle-ignored",
+  "file": "extension.go",
+  "find": "\treturn err != nil || idle\n",
+  "replace": "\treturn err != nil || idle || true\n"
+ },
+ {
+  "name": "adapter-confirm-yes",
+  "file": "extension.go",
+  "find": "\tok, _ := h.ctx.Confirm(t, m)\n\treturn ok",
+  "replace": "\t_, _ = h.ctx.Confirm(t, m)\n\treturn true"
+ },
+ {
+  "name": "adapter-branch-empty",
+  "file": "extension.go",
+  "find": "\traw, err := h.ctx.SessionManager().GetBranch(nil)\n",
+  "replace": "\traw, err := h.ctx.SessionManager().GetBranch(nil)\n\traw = nil\n"
+ },
+ {
+  "name": "adapter-no-entries",
+  "file": "extension.go",
+  "find": "_ = h.ctx.AppendEntry(t, d)",
+  "replace": "_, _ = t, d"
+ },
+ {
+  "name": "adapter-no-shutdown",
+  "file": "extension.go",
+  "find": "a.with(ctx, func(c *core) { c.shutdown() })",
+  "replace": "_ = ctx"
+ },
+ {
+  "name": "adapter-hasui",
+  "file": "extension.go",
+  "find": "func (h sdkHost) HasUI() bool           { return h.ctx.HasUI() }",
+  "replace": "func (h sdkHost) HasUI() bool           { return true }"
+ },
+ {
+  "name": "adapter-no-abort",
+  "file": "extension.go",
+  "find": "func (h sdkHost) Abort() { h.ctx.Abort() }",
+  "replace": "func (h sdkHost) Abort() {}"
+ },
+ {
+  "name": "wait-deadline-now",
+  "file": "core.go",
+  "find": "float64(clockMs()) >= dl",
+  "replace": "float64(clockMs()) > dl"
+ },
+ {
+  "name": "entry-root",
+  "file": "core.go",
+  "find": "if entryRoot != root {",
+  "replace": "if false && entryRoot != root {"
+ },
+ {
+  "name": "snapshot-legacy-kept",
+  "file": "storage.go",
+  "find": "\t_ = os.Remove(filepath.Join(s.root(), snapshotLegacy))",
+  "replace": ""
+ },
+ {
+  "name": "snapshot-mtime-recorded",
+  "file": "storage.go",
+  "find": "\thead.set(\"dirMtimeMs\", mt)",
+  "replace": "\thead.set(\"dirMtimeMs\", 0.0)"
+ },
+ {
+  "name": "fold-safe",
+  "file": "format.go",
+  "find": "strings.NewReplacer(\"\\u017f\", \"\\ufffd\", \"\\u212a\", \"\\ufffd\")",
+  "replace": "strings.NewReplacer(\"\\u017f\", \"\\u017f\")"
+ },
+ {
+  "name": "json-range",
+  "file": "jsjson.go",
+  "find": "if errors.Is(err, strconv.ErrRange) {\n\t\t\terr = nil",
+  "replace": "if false {\n\t\t\terr = nil"
+ },
+ {
+  "name": "json-nonfinite-null",
+  "file": "jsjson.go",
+  "find": "if math.IsNaN(x) || math.IsInf(x, 0) {\n\t\t\tb.WriteString(\"null\")",
+  "replace": "if math.IsNaN(x) && false {\n\t\t\tb.WriteString(\"null\")"
+ },
+ {
+  "name": "implicit-ready",
+  "file": "core.go",
+  "find": "phase == \"ready\" && repairPending(s) && !c.strict(s) {",
+  "replace": "phase == \"ready\" && repairPending(s) && false {"
+ },
+ {
+  "name": "implicit-ready-strict",
+  "file": "core.go",
+  "find": "return loadGoalSettings(c.h.Cwd()).strictExecutionContract || (s.has",
+  "replace": "return false || (s.has"
+ },
+ {
+  "name": "implicit-ready-purpose",
+  "file": "core.go",
+  "find": "return kind == \"ready\" && purpose == \"repair\"",
+  "replace": "return kind == \"ready\" && (purpose == \"repair\" || true)"
+ },
+ {
+  "name": "settings-strict",
+  "file": "settings.go",
+  "find": "l.strict = asBool(o.vals[\"strictExecutionContract\"])",
+  "replace": ""
+ }
+]

@@ -1,0 +1,2 @@
+{"name":"playground-invalid-json","description":"The playground editor returns broken JSON: an error notice and nothing is sent.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"steps":[
+ {"name":"playground","rpc":{"type":"prompt","message":"/typesafe playground"},"ui":[{"value":"{\"broken\":"}]}]}

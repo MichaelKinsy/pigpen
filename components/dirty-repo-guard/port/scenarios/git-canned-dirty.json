@@ -1,0 +1,9 @@
+{
+  "name": "git-canned-dirty",
+  "description": "Canned git output: blank lines and surrounding whitespace do not count as changed files (trim, split on newline, drop empty lines).",
+  "files": {"a.txt": "one\n"},
+  "commands": {"git": {"mode": "canned", "stdout": "\n  \n M a.txt\n\n?? b.txt\n\n\n?? c d.txt\n  \n", "exit": 0}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "ui": [{"value": "Yes, proceed anyway"}]}
+  ]
+}

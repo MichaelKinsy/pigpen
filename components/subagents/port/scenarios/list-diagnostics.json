@@ -1,0 +1,73 @@
+{
+  "name": "list-diagnostics",
+  "description": "A malformed definition is reported, a packaged one gets its runtime name.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "subagents_enable",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "delegate the work"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agents/broken.md": "---\nname: broken\ndescription: Broken one\nrunner:\n  type: unknown\n---\nBody\n",
+    ".pi/agents/scout.md": "---\nname: scout\npackage: Code Analysis\ndescription: Packaged scout\n---\n\nScout.\n",
+    ".pi/agents/helper.md": "---\nname: helper\ndescription: Helps with things\nmodel: claude-x\ntools: read, grep\n---\n\nYou help.\n"
+  },
+  "commands": {
+    "git": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "npm": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "ps": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "gh": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "powershell.exe": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    }
+  }
+}

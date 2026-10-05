@@ -1,0 +1,18 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG with the a2a Package: A2A tools for calling remote agents, and an A2A listener that stays off until you configure it.
+name: a2a
+description: "PiG that speaks A2A (Agent2Agent): call remote A2A agents from tools, and serve PiG tasks to A2A agents when you configure a listener. Off until configured."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  a2a: local:../../components/a2a
+extensions:
+  # a2a_agents, a2a_send and a2a_task; the listener opens only when a2a.json, PIG_A2A_LISTEN or --a2a-listen configures it.
+  - name: a2a
+    origins: [package:a2a]
+discovery:
+  extensions: []
+  skills: []

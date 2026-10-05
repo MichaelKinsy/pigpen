@@ -1,0 +1,99 @@
+{
+  "name": "no-change",
+  "description": "Updates that change nothing say so; a dependency-only update is a change.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "x",
+            "description": "d"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "y"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "pending"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "subject": "x",
+            "description": "d"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 2,
+            "addBlockedBy": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 2,
+            "addBlockedBy": [
+              1
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 2,
+            "subject": "y2"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 2,
+            "status": "in_progress",
+            "activeForm": "y-ing"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    }
+  ]
+}

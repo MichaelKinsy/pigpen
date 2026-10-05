@@ -1,0 +1,10 @@
+{
+  "name": "pigpen-pig-play",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The shared pig sprite catalogue, half-block pixel rasterizer, arcade scenery and terminal game plumbing that Pigpen's pig games build on (Go libraries and licensed art, no extension of its own)",
+  "keywords": ["pig-package", "sprite", "pixel-art", "games", "library"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["libraries", "assets", "port", "go.mod", "README.md", "LICENSE", "CREDITS.md", "provenance.json"]
+}

@@ -1,0 +1,214 @@
+{
+  "node": "v26.7.0",
+  "sdk": "stub",
+  "method": "21 repeated samples, per-operation ms, explicit GC retained-heap observation; filesystem counts only in stub adapter mode",
+  "rows": [
+    {
+      "id": "settings.warm",
+      "iterations": 1000,
+      "samples": 21,
+      "p50": 0.0035890840000001845,
+      "p95": 0.0039867079999999075,
+      "fsOps": 0,
+      "retainedBytes": 110000
+    },
+    {
+      "id": "auditor.stream.tail.10000",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.010559160000000248,
+      "p95": 0.012811250000002019,
+      "fsOps": 0,
+      "retainedBytes": 16840
+    },
+    {
+      "id": "auditor.stream.tail.1000000",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 1.174575,
+      "p95": 1.4565316699999995,
+      "fsOps": 0,
+      "retainedBytes": -79488
+    },
+    {
+      "id": "tasks.index.50",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.10081083000000035,
+      "p95": 0.1414329100000032,
+      "fsOps": 0,
+      "retainedBytes": 1776
+    },
+    {
+      "id": "prompt.warm.large",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.42463834000000134,
+      "p95": 0.593807910000005,
+      "fsOps": 0,
+      "retainedBytes": 19232
+    },
+    {
+      "id": "detail.tasks.50",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.2598079199999938,
+      "p95": 0.3600879200000054,
+      "fsOps": 0,
+      "retainedBytes": 89592
+    },
+    {
+      "id": "detail.objective.large",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.16131666999999653,
+      "p95": 0.17435333999999783,
+      "fsOps": 0,
+      "retainedBytes": 1688
+    },
+    {
+      "id": "render.compact.40",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.08465291999999863,
+      "p95": 0.1137750000000051,
+      "fsOps": 0,
+      "retainedBytes": 186848
+    },
+    {
+      "id": "render.expanded.40",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 1.3257037499999933,
+      "p95": 1.5098449999999957,
+      "fsOps": 0,
+      "retainedBytes": 147968
+    },
+    {
+      "id": "render.compact.120",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.26106916000000635,
+      "p95": 0.4221620799999982,
+      "fsOps": 0,
+      "retainedBytes": 40024
+    },
+    {
+      "id": "render.expanded.120",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 1.9003833300000041,
+      "p95": 2.117712499999998,
+      "fsOps": 0,
+      "retainedBytes": 35200
+    },
+    {
+      "id": "detail.history.next.1000",
+      "iterations": 1,
+      "samples": 21,
+      "p50": 0.9891250000000582,
+      "p95": 1.1272079999998823,
+      "fsOps": 0,
+      "retainedBytes": -1176
+    },
+    {
+      "id": "activity.tail.1000",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.0125,
+      "p95": 0.01390333000001192,
+      "fsOps": 0,
+      "retainedBytes": 18328
+    },
+    {
+      "id": "context.checkpoints.1000",
+      "iterations": 3,
+      "samples": 21,
+      "p50": 0.026153000000097865,
+      "p95": 0.09537499999957315,
+      "fsOps": 0,
+      "retainedBytes": 4064
+    },
+    {
+      "id": "session.health.1000",
+      "iterations": 1,
+      "samples": 21,
+      "p50": 0.36270799999874725,
+      "p95": 0.41745799999989686,
+      "fsOps": 1,
+      "retainedBytes": 25816
+    },
+    {
+      "id": "detail.history.next.10000",
+      "iterations": 1,
+      "samples": 21,
+      "p50": 7.865041000000929,
+      "p95": 8.321791999998823,
+      "fsOps": 0,
+      "retainedBytes": -12680
+    },
+    {
+      "id": "activity.tail.10000",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.011038749999988795,
+      "p95": 0.014101249999985157,
+      "fsOps": 0,
+      "retainedBytes": -2376
+    },
+    {
+      "id": "context.checkpoints.10000",
+      "iterations": 3,
+      "samples": 21,
+      "p50": 0.15752799999972922,
+      "p95": 0.21431933333284783,
+      "fsOps": 0,
+      "retainedBytes": 3880
+    },
+    {
+      "id": "session.health.10000",
+      "iterations": 1,
+      "samples": 21,
+      "p50": 3.7975830000013957,
+      "p95": 4.528582999999344,
+      "fsOps": 1,
+      "retainedBytes": -7464
+    },
+    {
+      "id": "detail.history.next.100000",
+      "iterations": 1,
+      "samples": 21,
+      "p50": 109.47495799999888,
+      "p95": 153.35970799999996,
+      "fsOps": 0,
+      "retainedBytes": -4589648
+    },
+    {
+      "id": "activity.tail.100000",
+      "iterations": 100,
+      "samples": 21,
+      "p50": 0.011147089999976743,
+      "p95": 0.017261249999974096,
+      "fsOps": 0,
+      "retainedBytes": 360
+    },
+    {
+      "id": "context.checkpoints.100000",
+      "iterations": 3,
+      "samples": 21,
+      "p50": 1.321735999999267,
+      "p95": 1.63156933333327,
+      "fsOps": 0,
+      "retainedBytes": 16048
+    },
+    {
+      "id": "session.health.100000",
+      "iterations": 1,
+      "samples": 21,
+      "p50": 40.89604200000031,
+      "p95": 51.543916999999055,
+      "fsOps": 1,
+      "retainedBytes": -227736
+    }
+  ]
+}

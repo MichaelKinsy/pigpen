@@ -1,0 +1,201 @@
+{
+ "component/agent-steering-followup-modes": [
+  "PiAcpAgent: /steering reports current steeringMode",
+  "PiAcpAgent: /steering sets steering mode",
+  "PiAcpAgent: /steering rejects invalid value",
+  "PiAcpAgent: /follow-up reports current followUpMode",
+  "PiAcpAgent: /follow-up sets follow-up mode",
+  "PiAcpAgent: /follow-up rejects invalid value"
+ ],
+ "component/session-diff": [
+  "PiAcpSession: emits ACP diff content for edit tool from actual before/after file contents",
+  "PiAcpSession: does not turn requested edit args into finalized ACP diffs at tool start",
+  "PiAcpSession: edit diff uses realized fuzzy-match file contents instead of requested args",
+  "PiAcpSession: emits write diff content from actual before/after file contents on completion",
+  "PiAcpSession: emits write diff content for new files on completion"
+ ],
+ "component/session-events": [
+  "PiAcpSession: emits agent_message_chunk for text_delta",
+  "PiAcpSession: emits agent_thought_chunk for thinking_delta",
+  "PiAcpSession: emits tool_call + tool_call_update + completes",
+  "PiAcpSession: emits tool locations from pi path args",
+  "PiAcpSession: handles extension select via ACP permission request",
+  "PiAcpSession: handles extension confirm via ACP permission request",
+  "PiAcpSession: sends cancelled response when ACP confirm is cancelled",
+  "PiAcpSession: cancels unsupported input and editor extension UI requests with visible fallback",
+  "PiAcpSession: emits agent_message_chunk for auto_retry_start with attempt/maxAttempts and rounded delay",
+  "PiAcpSession: formats a positive sub-second auto_retry_start delay as waiting 1s",
+  "PiAcpSession: falls back to a generic retry message when auto_retry_start fields are missing or malformed",
+  "PiAcpSession: omits raw errorMessage content from surfaced auto_retry_start status text",
+  "PiAcpSession: emits agent_message_chunk for auto_retry_end",
+  "PiAcpSession: emits agent_message_chunk for auto_compaction_start",
+  "PiAcpSession: emits agent_message_chunk for auto_compaction_end",
+  "PiAcpSession: preserves ordering when auto_retry_start is interleaved with text_delta events",
+  "PiAcpSession: emits streamed tool locations from pi path args",
+  "PiAcpSession: emits edit tool line when oldText matches uniquely",
+  "PiAcpSession: emits edit tool line from edits array when oldText matches uniquely",
+  "PiAcpSession: emits edit tool line from stringified edits array",
+  "PiAcpSession: omits edit tool line when oldText matches multiple times",
+  "PiAcpSession: prompt stays open through retry runs until agent_settled",
+  "PiAcpSession: does not re-emit startup info on first prompt after it was already sent",
+  "PiAcpSession: cancel flips stopReason to cancelled",
+  "PiAcpSession: queues concurrent prompt and starts it after agent_settled",
+  "PiAcpSession: cancel clears queued prompts",
+  "PiAcpSession: expands /command before sending to pi",
+  "PiAcpSession: tags extension notify chunks with severity in _meta",
+  "PiAcpSession: defaults notify severity to info when notifyType is absent",
+  "PiAcpSession: emits usage_update from contextUsage before resolving prompt on agent_settled",
+  "PiAcpSession: skips usage_update when contextUsage tokens are null",
+  "PiAcpSession: skips usage_update for invalid contextUsage values",
+  "PiAcpSession: get_session_stats rejection does not break the prompt",
+  "PiAcpSession: get_session_stats timeout does not block the prompt",
+  "PiAcpSession: cancelled turn still reports cancelled after usage publish"
+ ],
+ "component/session-list-and-load": [
+  "PiAcpAgent: listSessions lists pi sessions and loadSession replays history"
+ ],
+ "component/session-list-custom-session-dir": [
+  "listPiSessions: respects sessionDir from pi settings.json"
+ ],
+ "component/session-list-scoped": [
+  "PiAcpAgent: listSessions defaults to lastSessionCwd when cwd param is omitted"
+ ],
+ "component/session-load-toolresult": [
+  "PiAcpAgent: loadSession replays toolResult as tool_call + tool_call_update"
+ ],
+ "component/session-queue-cancel": [
+  "PiAcpSession: cancel clears queued prompts"
+ ],
+ "component/session-slash-commands": [
+  "PiAcpSession: expands /command before sending to pi"
+ ],
+ "component/session-thinking-modes": [
+  "PiAcpAgent: setSessionMode maps to pi setThinkingLevel + emits current_mode_update"
+ ],
+ "component/session-title-long-session": [
+  "listPiSessions: finds session_info.name even when it is outside the tail window"
+ ],
+ "component/session-updatedAt-message-only": [
+  "listPiSessions: updatedAt prefers last message timestamp over later non-message entries"
+ ],
+ "unit/auth-methods-terminal-auth-meta": [
+  "getAuthMethods: includes Zed terminal-auth metadata when enabled",
+  "getAuthMethods: omits Zed terminal-auth metadata when disabled"
+ ],
+ "unit/builtin-commands": [
+  "PiAcpAgent: /steering is handled adapter-side",
+  "PiAcpAgent: /name sets session display name adapter-side"
+ ],
+ "unit/context-usage": [
+  "PiAcpSession: context usage request specifies the auxiliary timeout",
+  "PiAcpAgent: newSession publishes context usage only after the response is returned",
+  "PiAcpAgent: newSession tolerates a failing get_session_stats",
+  "PiAcpAgent: switching the model config option refreshes context usage",
+  "PiAcpAgent: unstable_setSessionModel refreshes context usage",
+  "PiAcpAgent: switching the thinking level does not publish context usage"
+ ],
+ "unit/merge-commands": [
+  "mergeCommands: preserves order and de-dupes (first wins)"
+ ],
+ "unit/model-thinking-levels": [
+  "${legacy ? 'legacy' : 'config'} reasoning setter reports actual max for ${requested}",
+  "${legacy ? 'legacy' : 'config'} reasoning setter reports an opaque applied level",
+  "${legacy ? 'legacy' : 'config'} model setter refreshes model-specific levels and current mode",
+  "${legacy ? 'legacy' : 'config'} reasoning setter emits no success on ${failure} read failure",
+  "invalid configuration and legacy mode requests do not mutate Pi",
+  "${load ? 'load' : 'new'} session advertises exact ${levels} levels",
+  "load configuration ${failure} failure closes restored child and preserves history for retry"
+ ],
+ "unit/new-session-auth-required-when-no-models": [
+  "PiAcpAgent: newSession throws AUTH_REQUIRED when pi reports zero available models"
+ ],
+ "unit/new-session-pi-not-found": [
+  "PiAcpAgent: newSession returns a helpful Internal error when pi is not installed"
+ ],
+ "unit/new-session-runtime-startup-errors": [
+  "PiAcpAgent: newSession returns AUTH_REQUIRED when pi reports an auth error after spawn",
+  "PiAcpAgent: newSession returns Internal error on non-auth model probe failures after spawn",
+  "PiAcpAgent: cleans up only the new session after ${failure} configuration failure"
+ ],
+ "unit/pi-command": [
+  "defaultPiCommand: uses pi.cmd on Windows and pi elsewhere",
+  "shouldUseShellForPiCommand: enables shell for Windows cmd launchers only",
+  "shouldUseShellForPiCommand: keeps shell disabled on non-Windows"
+ ],
+ "unit/pi-commands": [
+  "toAvailableCommandsFromPiGetCommands: hides extension commands by default and filters skill commands"
+ ],
+ "unit/pi-enable-embed-context-flag": [
+  "PI_ACP_ENABLE_EMBEDDED_CONTEXT: defaults embeddedContext to false when undefined",
+  "PI_ACP_ENABLE_EMBEDDED_CONTEXT: 'false' keeps embeddedContext disabled",
+  "PI_ACP_ENABLE_EMBEDDED_CONTEXT: 'true' enables embeddedContext"
+ ],
+ "unit/pi-messages": [
+  "normalizePiMessageText: supports string",
+  "normalizePiMessageText: joins text blocks",
+  "normalizePiAssistantText: joins only text blocks"
+ ],
+ "unit/pi-rpc-request-timeout": [
+  "PiRpcProcess: auxiliary context usage has a one-second timeout",
+  "PiRpcProcess: getSessionStats without a timeout accepts a response after one second",
+  "PiRpcProcess: request timeout rejects, clears pending, and swallows the late response",
+  "PiRpcProcess: response before the timeout resolves and clears pending",
+  "PiRpcProcess: responses with unknown ids are dropped while real events are delivered"
+ ],
+ "unit/pi-rpc-session-path": [
+  "PiRpcProcess passes distinct session paths intact to the pi launcher",
+  "PiRpcProcess keeps a simulated Windows cmd session path intact"
+ ],
+ "unit/pi-tools": [
+  "toolResultToText: extracts text from content blocks",
+  "toolResultToText: prefers details.diff when present",
+  "toolResultToText: falls back to JSON",
+  "toolResultToText: extracts bash stdout/stderr from details"
+ ],
+ "unit/prompt-to-pi-message": [
+  "promptToPiMessage: concatenates text and resource links",
+  "promptToPiMessage: includes embedded resource text as marker",
+  "promptToPiMessage: includes embedded resource blob as marker",
+  "promptToPiMessage: includes audio as marker",
+  "promptToPiMessage: maps image to pi image content"
+ ],
+ "unit/session-config-options": [
+  "PiAcpAgent: newSession returns configOptions for model and thinking selectors",
+  "PiAcpAgent: setSessionConfigOption maps model changes to pi and emits config_option_update",
+  "PiAcpAgent: setSessionConfigOption maps thought level changes to pi and emits sync updates"
+ ],
+ "unit/session-delete": [
+  "PiAcpAgent: deleteSession removes stored session and session file",
+  "PiAcpAgent: deleteSession finds session via pi discovery when SessionStore misses",
+  "PiAcpAgent: deleteSession succeeds idempotently for unknown sessionId",
+  "PiAcpAgent: deleteSession survives missing session file"
+ ],
+ "unit/session-restore": [
+  "PiAcpAgent: prompt auto-restores a missing session from SessionStore",
+  "PiAcpAgent: setSessionConfigOption auto-restores via pi session discovery when SessionStore misses",
+  "PiAcpAgent: cancel ignores stale session IDs without spawning a restore process"
+ ],
+ "unit/slash-commands": [
+  "parseCommandArgs: handles quotes",
+  "substituteArgs: replaces $1.. and $@",
+  "expandSlashCommand: expands known command",
+  "toAvailableCommands: de-dupes by name (first wins)"
+ ],
+ "unit/startup-info-env": [
+  "PiAcpAgent: quietStartup=true disables startup info generation/emission"
+ ],
+ "unit/startup-info-load-session": [
+  "PiAcpAgent: does not emit startup info on loadSession"
+ ],
+ "unit/startup-info-project-packages": [
+  "PiAcpAgent: startup info includes project-level packages from .pi/settings.json"
+ ],
+ "unit/stdout-destroyed-does-not-crash": [
+  "stdout writer: resolves even if stdout is destroyed"
+ ],
+ "unit/thinking-level-rpc": [
+  "thinking RPC preserves returned levels ${levels}",
+  "thinking RPC rejects malformed payload ${JSON.stringify(data)}",
+  "thinking RPC propagates unsuccessful responses and transport rejection"
+ ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "write-elision",
+  "description": "A write call with a long body: the gate's request carries the first 400 characters and an elision marker, never the body.",
+  "agentFiles": {
+    "pi-jev.json": "{\"enabled\": true, \"acknowledged\": true, \"display\": \"plain\", \"backend\": \"typesafe\", \"endpoint\": \"{{server:jev}}/v1/systemone\", \"model\": \"jev-eq\", \"retries\": 0, \"timeoutMs\": 5000}"
+  },
+  "env": {
+    "TYPESAFE_API_KEY": "tsk-eq-key-0123456789"
+  },
+  "servers": {
+    "jev": {
+      "recordHeaders": [
+        "authorization"
+      ],
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "body": "{\"model\": \"jev-eq\", \"answers\": {\"destructive\": {\"type\": \"noul\", \"noul\": 0.03}, \"exfiltration\": {\"type\": \"noul\", \"noul\": 0.04}, \"beyond_scope\": {\"type\": \"noul\", \"noul\": 0.4}, \"impact\": {\"type\": \"score\", \"score\": 0.02, \"confidence\": 0.9, \"legend\": {\"0\": \"None, it only reads\", \"1\": \"Small\", \"2\": \"Large\", \"3\": \"Severe\"}, \"probabilities\": {\"0\": 0.05, \"1\": 0.1, \"2\": 0.15, \"3\": 0.7}}}, \"usage\": {\"input_tokens\": 100, \"output_tokens\": 4}}",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "times": 1
+        }
+      ]
+    }
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "big.txt",
+            "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ]
+    },
+    {
+      "text": "written"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "write the file"
+      }
+    }
+  ]
+}

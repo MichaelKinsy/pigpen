@@ -1,0 +1,170 @@
+{
+ "mode": "probabilities",
+ "structured": true,
+ "state": "doc",
+ "questions": {
+  "q0": {
+   "type": "choice",
+   "instructions": "Question 0?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q1": {
+   "type": "choice",
+   "instructions": "Question 1?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q2": {
+   "type": "choice",
+   "instructions": "Question 2?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q3": {
+   "type": "choice",
+   "instructions": "Question 3?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q4": {
+   "type": "choice",
+   "instructions": "Question 4?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q5": {
+   "type": "choice",
+   "instructions": "Question 5?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q6": {
+   "type": "choice",
+   "instructions": "Question 6?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q7": {
+   "type": "choice",
+   "instructions": "Question 7?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q8": {
+   "type": "choice",
+   "instructions": "Question 8?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q9": {
+   "type": "choice",
+   "instructions": "Question 9?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q10": {
+   "type": "choice",
+   "instructions": "Question 10?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "q11": {
+   "type": "choice",
+   "instructions": "Question 11?",
+   "criteria": {
+    "x": "first",
+    "y": "second"
+   }
+  },
+  "with space é": {
+   "type": "score",
+   "instructions": "Weird name",
+   "criteria": [
+    "lo",
+    "hi"
+   ]
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "q0": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q1": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q2": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q3": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q4": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q5": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q6": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q7": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q8": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q9": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q10": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "q11": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "with space é": {
+     "0": 0.1,
+     "1": 0.9
+    }
+   }
+  }
+ ],
+ "name": "many-questions"
+}

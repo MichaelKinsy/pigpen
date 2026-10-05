@@ -1,0 +1,3 @@
+{"name":"status-env-key","description":"An environment key: status and setup name the variable, never the value.","env":{"TYPESAFE_API_KEY":"offline-test-key"},"steps":[
+ {"name":"status","rpc":{"type":"prompt","message":"/typesafe status"}},
+ {"name":"setup","rpc":{"type":"prompt","message":"/typesafe setup"}}]}

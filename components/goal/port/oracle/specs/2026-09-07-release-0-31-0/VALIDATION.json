@@ -1,0 +1,92 @@
+{
+  "version": "0.31.0",
+  "productionSourceCommit": "18323b8",
+  "productionTree": "cc38cb11969901057a070abf81c3583b1ac2a102",
+  "productionUnchanged": true,
+  "sdkCompatibilityEvidence": "../2026-09-07-comprehensive-optimization/VALIDATION.json",
+  "checks": [
+    {
+      "check": "TypeScript",
+      "passed": true,
+      "tail": [
+        "",
+        "> pi-goal-x@0.31.0 check",
+        "> tsc --noEmit",
+        ""
+      ]
+    },
+    {
+      "check": "ESLint",
+      "passed": true,
+      "tail": [
+        "",
+        "> pi-goal-x@0.31.0 lint",
+        "> eslint .",
+        ""
+      ]
+    },
+    {
+      "check": "Full suite (923/923)",
+      "passed": true,
+      "tail": [
+        "\u2139 pass 923",
+        "\u2139 fail 0",
+        "\u2139 cancelled 0",
+        "\u2139 skipped 0",
+        "\u2139 todo 0",
+        "\u2139 duration_ms 25825.785083",
+        "[runner] 72 test file(s) discovered; suite finished in 25927 ms.",
+        "[runner] Timings are evidence on this machine, not machine-independent performance promises."
+      ]
+    },
+    {
+      "check": "Context gate (24 fixtures)",
+      "passed": true,
+      "tail": [
+        "",
+        "> pi-goal-x@0.31.0 context:gate",
+        "> node experiments/context/run-gate.mjs",
+        "",
+        "[context:gate] re-measured 24 fixtures against baseline-main.json (24 rows)",
+        "[context:gate] PASS"
+      ]
+    },
+    {
+      "check": "Comprehensive performance gate",
+      "passed": true,
+      "tail": [
+        "",
+        "> pi-goal-x@0.31.0 bench:gate:comprehensive",
+        "> node experiments/bench/comprehensive-gate.mjs",
+        "",
+        "PASS: repeated CPU/real-SDK targets, alternating runtime comparison, filesystem counts and context sizes."
+      ]
+    },
+    {
+      "check": "NAF performance gate",
+      "passed": true,
+      "tail": [
+        "",
+        "> pi-goal-x@0.31.0 bench:gate:naf",
+        "> node --experimental-strip-types ./experiments/bench/b6-gate.mjs naf",
+        "",
+        "[B6] campaign=naf: gating 105 after rows against 95 before rows",
+        "[B6] PASS: no regressions, all claim-specific invariants hold."
+      ]
+    },
+    {
+      "check": "Test discovery self-check and unit suite",
+      "passed": true,
+      "tests": 888
+    },
+    {
+      "check": "Production dependency audit",
+      "passed": true,
+      "vulnerabilities": 0
+    },
+    {
+      "check": "Packed module byte comparison, real SDK import and recovery CLI help",
+      "passed": true
+    }
+  ]
+}

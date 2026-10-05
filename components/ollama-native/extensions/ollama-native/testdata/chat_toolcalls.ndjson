@@ -1,0 +1,4 @@
+{"model":"granite4.1:3b","created_at":"2026-10-05T20:43:11.001Z","message":{"role":"assistant","content":"Checking."},"done":false}
+{"model":"granite4.1:3b","created_at":"2026-10-05T20:43:11.031Z","message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"read","arguments":{"path":"README.md"}}}]},"done":false}
+{"model":"granite4.1:3b","created_at":"2026-10-05T20:43:11.061Z","message":{"role":"assistant","content":"","tool_calls":[{"id":"call_server7","function":{"index":1,"name":"bash","arguments":{"command":"ls -la","timeout":10}}}]},"done":false}
+{"model":"granite4.1:3b","created_at":"2026-10-05T20:43:11.091Z","message":{"role":"assistant","content":""},"done_reason":"stop","done":true,"prompt_eval_count":210,"eval_count":44}

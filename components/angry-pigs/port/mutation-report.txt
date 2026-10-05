@@ -1,0 +1,75 @@
+# pigeq mutate, PiG pig: 0.3.0, 2026-09-30
+
+## With the layer-1 tests (--unit): each mutant runs the port's go tests and the shared library's, then the scenarios
+KILLED   overlay-title
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.00s)
+KILLED   score-notification-text
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.01s)
+KILLED   score-notification-level
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.01s)
+KILLED   high-score-not-kept
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.00s)
+KILLED   high-score-not-saved
+         unit test: --- FAIL: TestCommandOpensAFullTerminalOverlayAndReportsTheScore (0.00s)
+KILLED   stored-high-score-ignored
+         unit test: --- FAIL: TestCommandKeepsTheStoredHighScoreWhenTheOverlayReturnsNothing (0.00s)
+KILLED   component-not-disposed
+         unit test: --- FAIL: TestCommandLeavesNoTickerRunning (0.01s)
+KILLED   command-description
+         unit test: --- FAIL: TestCommandDescription (0.00s)
+KILLED   gravity
+         unit test: --- FAIL: TestGameplayValuesAreThoseOfTheOriginal (0.00s)
+KILLED   max-speed
+         unit test: --- FAIL: TestGameplayValuesAreThoseOfTheOriginal (0.00s)
+KILLED   angle-clamp-low
+         unit test: --- FAIL: TestAimStaysInBoundsAndFreezesDuringFlight (0.00s)
+KILLED   aim-while-flying
+         unit test: --- FAIL: TestAimStaysInBoundsAndFreezesDuringFlight (0.00s)
+KILLED   launch-costs-no-pig
+         unit test: --- FAIL: TestLaunchSpendsAPigOnlyWhenReady (0.00s)
+KILLED   bird-points
+         unit test: --- FAIL: TestGameplayValuesAreThoseOfTheOriginal (0.00s)
+KILLED   ice-toughness
+         unit test: --- FAIL: TestIceShattersOnAnyHit (0.01s)
+KILLED   shared-mouse-release
+         unit test: --- FAIL: TestMouseDragPullsAndReleaseFires (0.00s)
+KILLED   game-listens-to-tool-results
+         unit test: --- FAIL: TestLoadingTheExtensionActivatesNothing (0.00s)
+17 mutation(s), 0 not killed
+
+## Scenarios only (no --unit): RPC traces cannot see terminal cells, so most defects need layer 1
+SURVIVED overlay-title
+
+SURVIVED score-notification-text
+
+SURVIVED score-notification-level
+
+SURVIVED high-score-not-kept
+
+SURVIVED high-score-not-saved
+
+SURVIVED stored-high-score-ignored
+
+SURVIVED component-not-disposed
+
+SURVIVED command-description
+
+SURVIVED gravity
+
+SURVIVED max-speed
+
+SURVIVED angle-clamp-low
+
+SURVIVED aim-while-flying
+
+SURVIVED launch-costs-no-pig
+
+SURVIVED bird-points
+
+SURVIVED ice-toughness
+
+SURVIVED shared-mouse-release
+
+SURVIVED game-listens-to-tool-results
+
+17 mutation(s), 17 not killed

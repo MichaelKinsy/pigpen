@@ -1,0 +1,10 @@
+{"kind":"header","scenario":"pool-states","lane":"pi-ts","host":"pi 1.0.0","extension":"sha256:a1b1badfb1de3f1d8f403cca4142913ea577427f75f0cf9f4a2ef5413b29e41c","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"goal"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"goal"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"goal","statusText":"goal: unfocused [4 open] - /goal-focus"}}
+{"step":"01-cmd","ch":"ui","data":{"message":"Open goals: 4\n\n  seed-p — paused · goal\n  Paused by user\n  .pi/goals/active_goal_20260102030405_seed-p.md\n  seed-q — paused (agent) · goal\n  Paused by agent\n  .pi/goals/active_goal_20260102030406_seed-q.md\n  seed-r — blocked · goal\n  Blocked\n  .pi/goals/active_goal_20260102030407_seed-r.md\n  seed-s — budget limited · goal\n  Over budget\n  .pi/goals/active_goal_20260102030408_seed-s.md","method":"notify","notifyType":"info"}}
+{"step":"01-cmd","ch":"ui","data":{"method":"setStatus","statusKey":"goal","statusText":"goal: unfocused [4 open] - /goal-focus"}}
+{"step":"01-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"ui","data":{"method":"setStatus","statusKey":"goal"}}
+{"step":"99-shutdown","ch":"ui","data":{"method":"setWidget","widgetKey":"goal"}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

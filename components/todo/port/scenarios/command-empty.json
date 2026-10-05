@@ -1,0 +1,18 @@
+{
+  "name": "command-empty",
+  "description": "/todos with nothing to show.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "empty",
+      "rpc": {
+        "type": "prompt",
+        "message": "/todos"
+      }
+    }
+  ]
+}

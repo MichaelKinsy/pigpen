@@ -1,0 +1,183 @@
+go test -v at the red commit (stubs return zero values): pass 40, fail 118, skip 24
+--- PASS: TestFormatKeySpecForDisplay
+    --- PASS: TestFormatKeySpecForDisplay/capitalizes_each_+-part_of_a_resolved_spec
+    --- PASS: TestFormatKeySpecForDisplay/handles_named_special_keys_and_bare_keys
+    --- PASS: TestFormatKeySpecForDisplay/cases_compound-word_named_keys_conventionally
+    --- PASS: TestFormatKeySpecForDisplay/round-trips_the_default_key_to_the_historical_hint_casing
+--- PASS: TestResolveCollapseKey
+    --- PASS: TestResolveCollapseKey/returns_the_default_when_config_has_no_collapseKey
+    --- PASS: TestResolveCollapseKey/returns_the_default_when_collapseKey_is_empty_or_whitespace
+    --- PASS: TestResolveCollapseKey/normalizes_the_spec_(trim_+_lowercase)
+    --- PASS: TestResolveCollapseKey/returns_the_off_sentinel_unchanged_(case-insensitive)
+    --- PASS: TestResolveCollapseKey/falls_back_to_the_default_for_malformed_specs
+    --- PASS: TestResolveCollapseKey/falls_back_to_the_default_for_typo'd_modifiers_and_unknown_key_names
+    --- PASS: TestResolveCollapseKey/accepts_named_special_keys_and_bare_base_keys
+--- PASS: TestLoadConfig
+    --- PASS: TestLoadConfig/returns_an_empty_config_when_no_file_is_present
+    --- PASS: TestLoadConfig/reads_a_valid_JSON_config
+--- PASS: TestConfigRobustness
+--- PASS: TestValidateGuidanceFields
+--- FAIL: TestEnvelope
+    --- FAIL: TestEnvelope/null_result_→_decline_envelope_+_empty_answers_+_cancelled_true
+    --- FAIL: TestEnvelope/cancelled_result_preserves_partial_answers_in_details_(not_in_content)
+    --- FAIL: TestEnvelope/single_answered_question_→_CC_envelope_wrapper_with_question_text_and_answer
+    --- PASS: TestEnvelope/envelope_uses_question_text_not_header_(no_Q1_prefix)
+    --- FAIL: TestEnvelope/two_answered_questions_render_as_separate_sentences_inside_one_envelope
+    --- FAIL: TestEnvelope/multiSelect_answer_renders_as_comma-joined_labels_in_<A>_position
+    --- FAIL: TestEnvelope/custom_typed_answer_renders_raw_text_(no_'User_answered:'_prefix)
+    --- FAIL: TestEnvelope/empty_custom_answer_renders_as_(no_input)_in_<A>_position
+    --- FAIL: TestEnvelope/notes_are_echoed_as_'user_notes:_<text>'_AND_preserved_in_details
+    --- FAIL: TestEnvelope/multiSelect_answer_with_notes_renders_'user_notes:'_suffix_and_NO_'selected_preview:'_suffix_(FR-7)
+    --- FAIL: TestEnvelope/cancelled:_false_with_no_matching_answers_still_returns_DECLINE_MESSAGE_text
+    --- FAIL: TestEnvelope/success_+_note:_exact_envelope_bytes_with_the_trailing_'global_note:_<note>.'_segment_(raw_multiline_echo)
+    --- FAIL: TestEnvelope/the_global-note_segment_is_anchored_by_the_envelope_suffix
+    --- FAIL: TestEnvelope/zero_answers_+_note_is_NOT_a_decline_—_answered_envelope_with_details_by_reference
+    --- FAIL: TestEnvelope/cancelled_+_note:_DECLINE_MESSAGE_text,_answers_forwarded_AND_globalNote_preserved_in_details
+    --- FAIL: TestEnvelope/zero_answers_+_no_note_still_declines_(fresh_details_literal_carries_no_globalNote_key)
+    --- FAIL: TestEnvelope/formats_2_answered_questions_as_comma-period-separated_segments_inside_one_envelope
+    --- FAIL: TestEnvelope/formats_3_questions_with_mixed_answer_types_in_single-line_envelope
+    --- FAIL: TestEnvelope/skips_unanswered_questions_(omits_their_segment_from_envelope)
+    --- FAIL: TestEnvelope/preserves_notes_in_details_AND_echoes_them_across_multiple_questions
+    --- FAIL: TestEnvelope/echoes_preview_text_in_envelope_when_single-select_answer_matches_a_preview-bearing_option
+    --- PASS: TestEnvelope/omits_'selected_preview:'_fragment_when_answer_has_no_preview
+    --- PASS: TestEnvelope/omits_'user_notes:'_fragment_when_answer_has_no_notes
+    --- FAIL: TestEnvelope/envelope_wraps_with_CC_prefix_and_suffix_sentences
+    --- FAIL: TestEnvelope/locks_the_envelope_shape
+    --- SKIP: TestEnvelope/passes_details_by_reference_(no_clone)
+    --- FAIL: TestEnvelope/accepts_error_field_in_envelope
+--- FAIL: TestEnvelopeDetailsEqualTheInput
+--- FAIL: TestAnswerSegmentOrdersPreviewBeforeNotes
+--- FAIL: TestFormatAnswerScalar
+--- FAIL: TestBuildItemsForQuestion
+    --- FAIL: TestBuildItemsForQuestion/appends_the_Type-something_sentinel
+    --- FAIL: TestBuildItemsForQuestion/appends_'Type_something.'_+_Next_sentinels_when_multiSelect_is_true
+    --- FAIL: TestBuildItemsForQuestion/appends_the_sentinel_when_multiSelect_is_false
+    --- FAIL: TestBuildItemsForQuestion/appends_the_sentinel_when_multiSelect_is_undefined_(default_single-select)
+    --- FAIL: TestBuildItemsForQuestion/appends_the_Type-something_sentinel_even_when_a_single-select_option_carries_a_preview
+    --- FAIL: TestBuildItemsForQuestion/appends_the_Type-something_sentinel_for_single-select_regardless_of_preview_content
+    --- FAIL: TestBuildItemsForQuestion/appends_'Type_something.'_+_Next_for_multiSelect_even_if_an_option_has_a_preview_(preview_is_dropped)
+--- FAIL: TestNormalizeParams
+    --- FAIL: TestNormalizeParams/deletes_a_lone_CR_without_introducing_a_phantom_space_(#192_sample_1)
+    --- FAIL: TestNormalizeParams/deletes_runs_of_CRs_and_keeps_the_real_space_that_follows_them_(#192_sample_2)
+    --- FAIL: TestNormalizeParams/maps_CRLF_to_LF_so_genuine_multi-line_content_survives
+    --- FAIL: TestNormalizeParams/leaves_LF-only_and_CR-free_text_byte-identical
+    --- FAIL: TestNormalizeParams/normalizes_question,_header,_label,_description,_and_preview
+    --- PASS: TestNormalizeParams/does_not_mutate_the_input
+    --- PASS: TestNormalizeParams/keeps_omitted_optional_fields_omitted
+    --- SKIP: TestNormalizeParams/tolerates_non-string_values_in_string_slots_(malformed_params_reach_the_validator,_not_a_throw)
+--- FAIL: TestParamsFromArgsToleratesWrongTypes
+--- FAIL: TestParamsFromArgsReadsAFullQuestion
+--- FAIL: TestToolSchema
+--- FAIL: TestSchemaConstantsAndDescriptions
+    --- FAIL: TestSchemaConstantsAndDescriptions/exports_the_new_schema_constants_with_expected_values
+    --- FAIL: TestSchemaConstantsAndDescriptions/RESERVED_LABELS_includes_the_Pi_sentinels_+_CC's_'Other'
+--- FAIL: TestDecodeResult
+    --- FAIL: TestDecodeResult/accepts_a_valid_result
+    --- FAIL: TestDecodeResult/accepts_a_result_with_error_field
+    --- FAIL: TestDecodeResult/accepts_a_result_with_the_new_error_variants
+    --- FAIL: TestDecodeResult/accepts_a_result_carrying_a_globalNote_(Submit-tab_global_note)
+    --- FAIL: TestDecodeResult/accepts_a_result_with_populated_answers
+    --- FAIL: TestDecodeResult/accepts_an_answer_with_notes_populated
+    --- FAIL: TestDecodeResult/accepts_an_answer_with_selected[]_(multi-select)_and_no_answer_scalar
+    --- FAIL: TestDecodeResult/accepts_an_answer_with_preview_populated_(single-select_with_matched_preview-bearing_option)
+    --- FAIL: TestDecodeResult/supports_all_three_variant_kinds
+    --- PASS: TestDecodeResult/rejects_null_/_undefined
+    --- PASS: TestDecodeResult/rejects_primitives
+    --- PASS: TestDecodeResult/rejects_an_array
+    --- PASS: TestDecodeResult/rejects_missing_fields
+--- FAIL: TestValidateQuestionnaire
+    --- FAIL: TestValidateQuestionnaire/returns_ERROR_NO_QUESTIONS_text_when_questions_array_is_empty
+    --- FAIL: TestValidateQuestionnaire/returns_error:_too_many_questions_when_questions_exceed_MAX_QUESTIONS
+    --- FAIL: TestValidateQuestionnaire/returns_cancelled_result_when_any_question_has_empty_options
+    --- FAIL: TestValidateQuestionnaire/widens_empty_options_check_to_<_MIN_OPTIONS_(single-option_rejected)
+    --- FAIL: TestValidateQuestionnaire/returns_error:_duplicate_question_when_two_questions_share_text
+    --- FAIL: TestValidateQuestionnaire/returns_error:_duplicate_option_label_when_two_options_in_a_question_share_label
+    --- FAIL: TestValidateQuestionnaire/returns_error:_reserved_label_when_an_option_uses_'Other'_/_'Type_something.'
+    --- FAIL: TestValidateQuestionnaire/rejects_'Type_something.'_as_a_reserved_label_even_on_multiSelect_questions_(Decision_9)
+--- FAIL: TestValidateAcceptsAValidQuestionnaireAndChecksInOrder
+--- FAIL: TestNormalizedLabelsAreValidated
+    --- FAIL: TestNormalizedLabelsAreValidated/rejects_a_reserved_label_that_only_differed_by_a_trailing_CR
+    --- FAIL: TestNormalizedLabelsAreValidated/rejects_duplicate_labels_that_only_differed_by_a_CR
+--- FAIL: TestExecute
+    --- FAIL: TestExecute/returns_cancelled_result_+_ERROR_NO_UI_when_!hasUI
+    --- SKIP: TestExecute/writes_exactly_one_BEL_after_blocked=true_and_immediately_before_the_TUI_wait
+    --- SKIP: TestExecute/does_not_write_BEL_for_non-TTY,_no-UI,_or_invalid_requests
+    --- SKIP: TestExecute/swallows_a_synchronous_write_failure_and_still_clears_blocked_state
+    --- SKIP: TestExecute/swallows_a_failing_TTY_lookup_and_still_opens_the_questionnaire
+    --- FAIL: TestExecute/registers_a_typebox_schema_with_a_top-level_questions_array
+    --- FAIL: TestExecute/emits_ASK_USER_PROMPT_event_via_pi.events.emit_before_showing_dialog
+    --- FAIL: TestExecute/clears_ask-user_blocked_lifecycle_after_cancellation_and_UI_rejection
+    --- FAIL: TestExecute/does_NOT_emit_event_when_UI_is_unavailable
+    --- FAIL: TestExecute/does_NOT_emit_event_when_validation_fails
+    --- FAIL: TestExecute/emits_payload_with_all_questions_in_order_when_multiple_questions
+--- FAIL: TestBlockedStateClearsAfterADialogFailure
+--- FAIL: TestValidationEnvelopesThroughTheTool
+--- FAIL: TestGuidance
+    --- FAIL: TestGuidance/describes_the_Type_something_row_as_appended_to_every_question_without_stale_fallback_terms
+    --- FAIL: TestGuidance/describes_the_all-question_custom-answer_contract_in_the_registered_tool
+    --- PASS: TestGuidance/uses_built-in_defaults_when_no_config_file_exists
+    --- PASS: TestGuidance/uses_built-in_defaults_when_config_has_no_guidance_field
+    --- FAIL: TestGuidance/overrides_promptSnippet_with_valid_value
+    --- FAIL: TestGuidance/overrides_promptGuidelines_with_valid_value
+    --- FAIL: TestGuidance/overrides_both_promptSnippet_and_promptGuidelines
+    --- PASS: TestGuidance/falls_back_to_defaults_on_empty_promptSnippet
+    --- PASS: TestGuidance/falls_back_to_defaults_on_wrong_types
+    --- PASS: TestGuidance/falls_back_to_defaults_on_promptGuidelines_with_empty_string_item
+    --- FAIL: TestGuidance/overrides_tool_description_with_valid_value
+    --- PASS: TestGuidance/uses_the_built-in_tool_description_when_no_config_file_exists
+    --- PASS: TestGuidance/falls_back_to_the_built-in_tool_description_on_empty_description
+    --- PASS: TestGuidance/falls_back_to_the_built-in_tool_description_on_non-string_description
+--- FAIL: TestDefaultCopyStatesTheLimits
+--- FAIL: TestReconcile
+    --- FAIL: TestReconcile/strips_ask_user_question_when_!hasUI_and_the_tool_is_active
+    --- PASS: TestReconcile/no-ops_when_!hasUI_and_the_tool_is_already_absent
+    --- FAIL: TestReconcile/restores_ask_user_question_when_hasUI_and_the_tool_is_absent
+    --- PASS: TestReconcile/no-ops_when_hasUI_and_the_tool_is_already_active
+    --- FAIL: TestReconcile/does_not_clobber_sibling_tools_on_strip_—_['ask_user_question','other']_+_!hasUI_→_['other']
+    --- FAIL: TestReconcile/does_not_clobber_sibling_tools_on_restore_—_['other']_+_hasUI_→_['other','ask_user_question']
+    --- FAIL: TestReconcile/strip→restore_round-trips_back_to_present
+    --- FAIL: TestReconcile/is_idempotent_—_two_stripped-mode_calls_make_one_setActiveTools_and_leave_the_set_stable
+    --- PASS: TestReconcile/is_idempotent_—_two_restored-mode_calls_(already_correct)_make_zero_setActiveTools_and_leave_the_set_stable
+    --- PASS: TestReconcile/keeps_ask_user_question_active_in_RPC_mode_(dialog-walker_fallback_renders_it)
+    --- FAIL: TestReconcile/restores_ask_user_question_in_RPC_mode_when_the_tool_is_absent
+    --- FAIL: TestReconcile/restores_ask_user_question_in_TUI_mode_(mode:_'interactive'_+_hasUI)
+    --- FAIL: TestReconcile/registers_exactly_one_before_agent_start_handler
+    --- FAIL: TestReconcile/invoking_the_handler_with_!hasUI_strips_the_tool
+    --- FAIL: TestReconcile/invoking_the_handler_with_hasUI_restores_the_tool
+    --- FAIL: TestReconcile/wires_both_registerAskUserQuestionTool_and_registerAskUserQuestionReconciler
+--- FAIL: TestRPCDialogWalker
+    --- SKIP: TestRPCDialogWalker/requires_both_select_and_input_to_be_functions
+    --- FAIL: TestRPCDialogWalker/single-select_uses_ctx.ui.select_and_returns_the_chosen_label_in_the_envelope
+    --- FAIL: TestRPCDialogWalker/does_NOT_call_ctx.ui.custom_in_RPC_mode
+    --- FAIL: TestRPCDialogWalker/emits_rpiv:ask-user:blocked_around_the_RPC_dialog_walker_and_clears_it_afterward
+    --- SKIP: TestRPCDialogWalker/writes_exactly_one_BEL_after_blocked=true_and_before_the_first_RPC_dialog
+    --- SKIP: TestRPCDialogWalker/does_not_write_BEL_when_RPC_stdout_is_not_a_TTY
+    --- FAIL: TestRPCDialogWalker/appends_the_'Type_something.'_sentinel_row_sourced_from_ROW_INTENT_META
+    --- FAIL: TestRPCDialogWalker/'Type_something.'_sentinel_follows_up_with_ctx.ui.input_for_custom_text
+    --- FAIL: TestRPCDialogWalker/folds_option_previews_into_the_select_title_and_echoes_the_selected_preview
+    --- FAIL: TestRPCDialogWalker/multi-select_uses_ctx.ui.input_and_parses_comma-separated_indices_into_labels
+    --- FAIL: TestRPCDialogWalker/multi-select_treats_non-index_input_as_a_typed_custom_answer,_not_a_silent_drop
+    --- FAIL: TestRPCDialogWalker/multi-select_empty_input_commits_an_empty_selection_(Next_with_nothing_toggled)
+    --- FAIL: TestRPCDialogWalker/dismiss_(select_resolves_undefined)_→_decline_envelope
+    --- FAIL: TestRPCDialogWalker/walks_multiple_questions_sequentially,_one_dialog_each
+    --- SKIP: TestRPCDialogWalker/falls_back_to_the_dialog_walker_when_ctx.mode_is_unset_and_custom()_resolves_undefined
+    --- SKIP: TestRPCDialogWalker/stays_on_the_custom()_path_when_ctx.mode_is_unset_and_custom()_renders_(TUI)
+--- FAIL: TestRPCHeaderlessQuestionHasNoPrefix
+--- FAIL: TestRPCPreviewIsCutAtSixHundredCharacters
+--- FAIL: TestRPCMultiSelectIndexParsing
+--- FAIL: TestRPCDismissedInputsDecline
+--- FAIL: TestRPCPartialAnswersStayInTheDetails
+--- PASS: TestNamedSkips
+    --- SKIP: TestNamedSkips/returns_error:_session_load_failed_(not_a_throw)_when_the_lazy_import_rejects
+    --- SKIP: TestNamedSkips/returns_error:_stale_module_cache_when_the_namespace_resolves_without_a_constructable_class
+    --- SKIP: TestNamedSkips/loads_the_real_session_graph_and_reaches_ctx.ui.custom_when_the_module_is_healthy
+    --- SKIP: TestNamedSkips/schedules_a_background_import_of_the_session_graph_PREWARM_DELAY_MS_after_registration
+    --- SKIP: TestNamedSkips/swallows_a_pre-warm_failure_so_registration-time_churn_never_crashes_the_extension
+    --- SKIP: TestNamedSkips/no_production_source_references_the_pre-1.0.3_boolean_flags
+    --- SKIP: TestNamedSkips/`package.json`_`files`_array_covers_every_production_.ts_module_across_the_tree
+    --- SKIP: TestNamedSkips/en.json_defines_both_templated_hint_keys_(English_is_the_fallback_base_for_every_locale)
+    --- SKIP: TestNamedSkips/User_cancels_(cancelled:_true)_→_decline_envelope
+    --- SKIP: TestNamedSkips/Normal_selection_→_CC_envelope_wrapper_with_quoted_question_and_answer
+    --- SKIP: TestNamedSkips/Custom_typed_answer_sets_kind:'custom'
+    --- SKIP: TestNamedSkips/multi-select_free-text_yields_kind:'custom'_(not_'multi')
+    --- SKIP: TestNamedSkips/returns_error:_no_custom_ui_(not_a_decline)_when_custom_resolves_undefined_and_no_dialog_primitives_exist

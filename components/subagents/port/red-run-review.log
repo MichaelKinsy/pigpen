@@ -1,0 +1,44 @@
+PASS TestGetBuiltinMatchesOriginal
+PASS TestChainSerializer
+PASS TestChainPackages
+PASS TestDiscovery
+PASS TestDiscoveryDefaults
+PASS TestFrontmatterEdges
+PASS TestChainEdges
+PASS TestPackageNames
+PASS TestResolveEdges
+PASS TestDiscoveryEdges
+PASS TestGitRootResolution
+PASS TestAgentFields
+PASS TestManagementEdges
+PASS TestToolSelection
+PASS TestRunRequestAndChainLookup
+FAIL TestChildEnvironment: panic: runtime error: slice bounds out of range [-1:] [recovered, repanicked]
+PASS TestFrontmatterBlocks
+PASS TestResolveAgentName
+PASS TestFindConfiguredProjectRoot
+FAIL TestCancelStopsTheChild: panic: not implemented
+FAIL TestCancelKillsAStubbornChild: panic: not implemented
+FAIL TestTaskTravelsOnStdin: run_safety_test.go:97: stdin: got "", want "Task: --version"
+FAIL TestThinkingSuffixOfModelOverrideWins: run_safety_test.go:110: suffix overrides: got []string{"--no-extensions", "--print", "--model", "prov/m:low", "--thinking", "high"}, want []string{"--
+FAIL TestChildEnvironmentDropsTheParentsInternals: panic: not implemented [recovered, repanicked]
+FAIL TestPigBinaryOrder: run_safety_test.go:127: then the pig that runs this extension: got "<home>/.local/bin/pig", want "/opt/harness/pig"
+FAIL TestNestingDepth: panic: not implemented [recovered, repanicked]
+FAIL TestAtMostFourChildrenAtOnce: run_safety_test.go:179: peak concurrent children (the original's MAX_CONCURRENCY): got 10, want 4
+FAIL TestCancelWhileWaitingForASlot: run_safety_test.go:206: a cancelled call kept waiting for a slot
+FAIL TestRealChildAnswerIsStdout: panic: not implemented [recovered, repanicked]
+FAIL TestRealChildRunsWhereAndWithWhatItIsGiven: panic: not implemented [recovered, repanicked]
+FAIL TestRealChildOutputIsBounded: panic: not implemented [recovered, repanicked]
+FAIL TestRunAgentReportsStderrOnFailure: run_safety_test.go:296: error "a exited with code 1: half an answer" does not contain "a exited with code 1: Error: no model"
+FAIL TestRunCwd: panic: not implemented [recovered, repanicked]
+FAIL TestEitherDone: panic: not implemented [recovered, repanicked]
+PASS TestBuildChildArgs
+PASS TestChainTask
+FAIL TestRunChainThreadsOutput: run_test.go:57: step 1 (a) exited with code could not start a: unexpected task 
+FAIL TestRunChainStopsOnFailureAndChecksAgentsFirst: run_test.go:74: error "step 1 (a) exited with code could not start a: unexpected task " does not contain "step 1 (a) exited with code 3: boom"
+FAIL TestRunAgentReportsExit: run_test.go:82: out "" err could not start a: unexpected task 
+PASS TestResolveExecutionAgentScope
+PASS TestMergeAgentsForScope
+FAIL TestNestedCallsAreBlockedBeforeAnyChild: run_host_test.go:53: tool: ""
+FAIL TestSingleRunThroughTheTool: run_host_test.go:75: result {"content":"ok","details":{"agent":"helper","mode":"single"},"is_error":false}
+FAIL TestChainThroughTheCommand: run_host_test.go:105: first step: got "", want "Task: the request"

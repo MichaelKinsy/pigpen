@@ -1,0 +1,21 @@
+{
+  "name": "contract-extracted",
+  "description": "A 'Verification contract:' line is split off the objective.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-direct Migrate the schema\nVerification contract: the migration test passes"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "name": "sanitize",
+  "description": "Terminal control characters in model-controlled text never reach the result.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "evil\u001b[31mred\u001b[0m\u009b2J",
+            "description": "line1\nline2",
+            "owner": "who\u009b31mami",
+            "activeForm": "clear\u001b[2Jing\u202e"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "tab\there sep"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "osc\u001b]0;title\u0007ok"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "in_progress"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "get",
+            "id": 1
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    }
+  ]
+}

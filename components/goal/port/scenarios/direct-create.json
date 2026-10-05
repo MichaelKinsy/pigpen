@@ -1,0 +1,21 @@
+{
+  "name": "direct-create",
+  "description": "/goal-direct creates and focuses a goal; with no autonomous runs allowed nothing is started.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-direct Ship the refactor"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

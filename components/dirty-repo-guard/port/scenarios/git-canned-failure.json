@@ -1,0 +1,9 @@
+{
+  "name": "git-canned-failure",
+  "description": "git exits 128 with output on stdout: a non-zero exit allows the switch regardless of the output.",
+  "files": {"a.txt": "one\n"},
+  "commands": {"git": {"mode": "canned", "stdout": " M a.txt\n", "stderr": "fatal: boom\n", "exit": 128}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "settleMs": 500}
+  ]
+}

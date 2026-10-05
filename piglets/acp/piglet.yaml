@@ -1,0 +1,22 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG as an agent for editors that speak the Agent Client Protocol (Zed and others). The Piglet
+# carries the in-session `/acp` command; the ACP entrypoint itself is the companion executable
+# `pig-acp` (components/acp/extensions/acp/cmd/pig-acp), which starts this agent in RPC mode.
+name: acp
+description: "PiG for editors: an agent that an Agent Client Protocol client such as Zed drives through the pig-acp companion, with /acp to show how to configure it."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  acp: local:../../components/acp
+extensions:
+  - name: acp
+    origins: [package:acp]
+    tools: []
+skills: []
+# The editor session should keep the user's own extensions, skills and prompt templates.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

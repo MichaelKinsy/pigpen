@@ -1,0 +1,8 @@
+{
+  "name": "runner-command",
+  "description": "/runner and /pig-runner in an RPC host (no terminal overlay): the same host calls and result on both commands.",
+  "steps": [
+    {"name": "runner", "rpc": {"type": "prompt", "message": "/runner"}},
+    {"name": "pig-runner", "rpc": {"type": "prompt", "message": "/pig-runner"}}
+  ]
+}

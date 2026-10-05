@@ -1,0 +1,20 @@
+{
+ "mode": "probabilities",
+ "structured": false,
+ "malformedRetries": 1,
+ "state": "doc",
+ "questions": {
+  "q": {
+   "type": "noul",
+   "instructions": "?"
+  }
+ },
+ "responses": [
+  {
+   "answers": {
+    "q": 1.5
+   }
+  }
+ ],
+ "name": "malformed-exhausted"
+}

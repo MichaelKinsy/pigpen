@@ -1,0 +1,632 @@
+[
+ {
+  "name": "subject-trim-is-go",
+  "file": "reducer.go",
+  "find": "if jsTrim(subject) == \"\" {",
+  "replace": "if subject == \"\" {"
+ },
+ {
+  "name": "create-error-text",
+  "file": "reducer.go",
+  "find": "\"subject required for create\"",
+  "replace": "\"subject required for creat\""
+ },
+ {
+  "name": "dangling-blockedby-text",
+  "file": "reducer.go",
+  "find": "\"blockedBy: #%s not found\"",
+  "replace": "\"blockedBy: #%s missing\""
+ },
+ {
+  "name": "deleted-blockedby-text",
+  "file": "reducer.go",
+  "find": "\"blockedBy: #%s is deleted\"",
+  "replace": "\"blockedBy: #%s deleted\""
+ },
+ {
+  "name": "next-id-not-advanced",
+  "file": "reducer.go",
+  "find": "NextID: state.NextID + 1}",
+  "replace": "NextID: state.NextID}"
+ },
+ {
+  "name": "created-status",
+  "file": "reducer.go",
+  "find": "Subject: subject, Status: statusPending}",
+  "replace": "Subject: subject, Status: statusInProgress}"
+ },
+ {
+  "name": "create-keeps-empty-description",
+  "file": "reducer.go",
+  "find": "truthyString(p, \"description\"); ok {",
+  "replace": "text(p, \"description\"); ok {"
+ },
+ {
+  "name": "update-needs-id-text",
+  "file": "reducer.go",
+  "find": "\"id required for update\"",
+  "replace": "\"id required for updat\""
+ },
+ {
+  "name": "owner-is-not-a-mutation",
+  "file": "reducer.go",
+  "find": "present(p, \"status\") || present(p, \"owner\") ||",
+  "replace": "present(p, \"status\") ||"
+ },
+ {
+  "name": "transition-unchecked",
+  "file": "reducer.go",
+  "find": "if !isTransitionValid(current.Status, to) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "self-block-allowed",
+  "file": "reducer.go",
+  "find": "if dep == float64(current.ID) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cycle-unchecked",
+  "file": "reducer.go",
+  "find": "if detectCycle(state.Tasks, current.ID, newBlockedBy) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "changed-ignores-subject",
+  "file": "reducer.go",
+  "find": "before.Subject != after.Subject ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "changed-ignores-blockedby",
+  "file": "reducer.go",
+  "find": "!sameNumberList(before.BlockedBy, after.BlockedBy) ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "changed-ignores-metadata",
+  "file": "reducer.go",
+  "find": "!sameRecord(before.Metadata, after.Metadata)",
+  "replace": "false"
+ },
+ {
+  "name": "double-delete-allowed",
+  "file": "reducer.go",
+  "find": "if current.Status == statusDeleted {",
+  "replace": "if false {"
+ },
+ {
+  "name": "clear-keeps-next-id",
+  "file": "reducer.go",
+  "find": "taskState{Tasks: []task{}, NextID: 1}, Op: op{Kind: \"clear\"",
+  "replace": "taskState{Tasks: []task{}, NextID: state.NextID}, Op: op{Kind: \"clear\""
+ },
+ {
+  "name": "metadata-null-keeps-key",
+  "file": "reducer.go",
+  "find": "delete(merged, k)",
+  "replace": "merged[k] = v"
+ },
+ {
+  "name": "metadata-empty-kept",
+  "file": "reducer.go",
+  "find": "if len(merged) > 0 {",
+  "replace": "if true {"
+ },
+ {
+  "name": "completed-may-restart",
+  "file": "reducer.go",
+  "find": "statusCompleted:  {statusDeleted},",
+  "replace": "statusCompleted:  {statusDeleted, statusInProgress},"
+ },
+ {
+  "name": "same-status-invalid",
+  "file": "reducer.go",
+  "find": "if from == to {\n\t\treturn true",
+  "replace": "if false {\n\t\treturn true"
+ },
+ {
+  "name": "cycle-merge-ignores-new",
+  "file": "reducer.go",
+  "find": "if !slices.Contains(merged, d) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "blocks-inverted-wrong",
+  "file": "reducer.go",
+  "find": "blocks[int(dep)] = append(blocks[int(dep)], t.ID)",
+  "replace": "blocks[int(dep)] = append(blocks[int(dep)], int(dep))"
+ },
+ {
+  "name": "list-ignores-include-deleted",
+  "file": "reducer.go",
+  "find": "IncludeDeleted: p[\"includeDeleted\"] == true",
+  "replace": "IncludeDeleted: false"
+ },
+ {
+  "name": "remove-before-add-lost",
+  "file": "reducer.go",
+  "find": "newBlockedBy = slices.DeleteFunc(newBlockedBy, func(dep float64) bool { return slices.Contains(remove, dep) })",
+  "replace": "newBlockedBy = slices.Clone(newBlockedBy)"
+ },
+ {
+  "name": "js-number-exponent",
+  "file": "jsutil.go",
+  "find": "return strconv.FormatFloat(f, 'f', -1, 64)",
+  "replace": "return strconv.FormatFloat(f, 'e', -1, 64)"
+ },
+ {
+  "name": "js-number-zero-padded-exponent",
+  "file": "jsutil.go",
+  "find": "return mantissa + \"e\" + exp[:1] + strings.TrimLeft(exp[1:], \"0\")",
+  "replace": "return mantissa + \"e\" + exp"
+ },
+ {
+  "name": "js-number-fixed-floor",
+  "file": "jsutil.go",
+  "find": "a >= 1e-6 && a < 1e21",
+  "replace": "a >= 1e-7 && a < 1e21"
+ },
+ {
+  "name": "js-number-negative-zero",
+  "file": "jsutil.go",
+  "find": "case f == 0:",
+  "replace": "case f == 0 && !math.Signbit(f):"
+ },
+ {
+  "name": "js-trim-is-go",
+  "file": "jsutil.go",
+  "find": "func jsTrim(s string) string { return strings.TrimFunc(s, isJSSpace) }",
+  "replace": "func jsTrim(s string) string { return strings.TrimSpace(s) }"
+ },
+ {
+  "name": "created-text",
+  "file": "envelope.go",
+  "find": "\"Created #%d: %s (pending)\"",
+  "replace": "\"Created #%d: %s\""
+ },
+ {
+  "name": "transition-arrow",
+  "file": "envelope.go",
+  "find": "\" (%s → %s)\"",
+  "replace": "\" (%s -> %s)\""
+ },
+ {
+  "name": "no-change-text",
+  "file": "envelope.go",
+  "find": "already matches the requested values (status: %s)\"",
+  "replace": "already matches the requested value (status: %s)\""
+ },
+ {
+  "name": "cleared-text",
+  "file": "envelope.go",
+  "find": "\"Cleared %d tasks\"",
+  "replace": "\"Cleared %d task\""
+ },
+ {
+  "name": "no-tasks-text",
+  "file": "envelope.go",
+  "find": "return \"No tasks\"",
+  "replace": "return \"No task\""
+ },
+ {
+  "name": "blocks-line-text",
+  "file": "envelope.go",
+  "find": "\"  blocks: \"",
+  "replace": "\"  blocks:\""
+ },
+ {
+  "name": "list-chain-suffix",
+  "file": "envelope.go",
+  "find": "block = \" ⛓ \" + idList(t.BlockedBy, \",\")",
+  "replace": "block = \" ⛓\" + idList(t.BlockedBy, \",\")"
+ },
+ {
+  "name": "error-not-in-details",
+  "file": "envelope.go",
+  "find": "d.Error = o.Message",
+  "replace": "_ = o.Message"
+ },
+ {
+  "name": "active-form-line",
+  "file": "envelope.go",
+  "find": "\"  activeForm: \"",
+  "replace": "\"  active: \""
+ },
+ {
+  "name": "list-subject-unsanitised",
+  "file": "envelope.go",
+  "find": "sanitizeTerminalText(t.Subject), form, block)",
+  "replace": "t.Subject, form, block)"
+ },
+ {
+  "name": "details-field-name",
+  "file": "envelope.go",
+  "find": "\"nextId\":%d",
+  "replace": "\"nextid\":%d"
+ },
+ {
+  "name": "details-error-key",
+  "file": "envelope.go",
+  "find": ",\"error\":%s",
+  "replace": ",\"err\":%s"
+ },
+ {
+  "name": "task-json-order",
+  "file": "envelope.go",
+  "find": "field(\"subject\", t.Subject)\n\tif t.Description != nil {",
+  "replace": "if t.Description != nil {\n\t\tfield(\"description\", *t.Description)\n\t}\n\tfield(\"subject\", t.Subject)\n\tif false {"
+ },
+ {
+  "name": "get-description-line",
+  "file": "envelope.go",
+  "find": "\"  description: \"",
+  "replace": "\"  desc: \""
+ },
+ {
+  "name": "c1-csi-kept",
+  "file": "sanitize.go",
+  "find": "\"(?:\\u001b\\\\[|\\u009b)[0-?]*[ -/]*[@-~]\"",
+  "replace": "\"(?:\\u001b\\\\[)[0-?]*[ -/]*[@-~]\""
+ },
+ {
+  "name": "bidi-overrides-kept",
+  "file": "sanitize.go",
+  "find": "\"[\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069]\"",
+  "replace": "\"[\\u200e\\u200f]\""
+ },
+ {
+  "name": "tab-removed",
+  "file": "sanitize.go",
+  "find": "if c == \"\\n\" || c == \"\\r\" || c == \"\\t\" {",
+  "replace": "if c == \"\\n\" || c == \"\\r\" {"
+ },
+ {
+  "name": "separators-kept",
+  "file": "sanitize.go",
+  "find": "value = separatorPattern.ReplaceAllString(value, \" \")",
+  "replace": "_ = separatorPattern"
+ },
+ {
+  "name": "esc-eats-line-terminator",
+  "file": "sanitize.go",
+  "find": "\"\\u001b[^\\n\\r\\u2028\\u2029]\"",
+  "replace": "\"(?s)\\u001b.\""
+ },
+ {
+  "name": "replay-any-tool",
+  "file": "replay.go",
+  "find": "msg[\"role\"] != \"toolResult\" || msg[\"toolName\"] != toolName {",
+  "replace": "msg[\"role\"] != \"toolResult\" {"
+ },
+ {
+  "name": "evict-keeps-slot",
+  "file": "store.go",
+  "find": "delete(s.sessions, sessionID)",
+  "replace": "_ = sessionID"
+ },
+ {
+  "name": "replay-first-wins",
+  "file": "replay.go",
+  "find": "result = taskState{Tasks: tasks, NextID: int(next)}",
+  "replace": "if len(result.Tasks) == 0 {\n\t\t\tresult = taskState{Tasks: tasks, NextID: int(next)}\n\t\t}"
+ },
+ {
+  "name": "replay-corrupt-accepted",
+  "file": "replay.go",
+  "find": "_, tasksOK := m[\"tasks\"].([]any)",
+  "replace": "tasksOK := true"
+ },
+ {
+  "name": "floor-is-two",
+  "file": "config.go",
+  "find": "ok && n >= 3 {",
+  "replace": "ok && n >= 2 {"
+ },
+ {
+  "name": "default-key",
+  "file": "config.go",
+  "find": "defaultCollapseKey = \"ctrl+shift+t\"",
+  "replace": "defaultCollapseKey = \"ctrl+shift+y\""
+ },
+ {
+  "name": "key-not-lowercased",
+  "file": "config.go",
+  "find": "raw = strings.ToLower(jsTrim(raw))",
+  "replace": "raw = jsTrim(raw)"
+ },
+ {
+  "name": "duplicate-modifier-ok",
+  "file": "config.go",
+  "find": "if seen[m] || !modifierKeys[m] {",
+  "replace": "if !modifierKeys[m] {"
+ },
+ {
+  "name": "xdg-relative-accepted",
+  "file": "config.go",
+  "find": "if filepath.IsAbs(xdg) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "legacy-wins",
+  "file": "config.go",
+  "find": "if fileExists(xdgPath) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "create-glyph",
+  "file": "view.go",
+  "find": "\"create\": \"+\"",
+  "replace": "\"create\": \"*\""
+ },
+ {
+  "name": "id-colour",
+  "file": "view.go",
+  "find": "theme.Fg(\"dim\", \"#\"+strconv.Itoa(t.ID))",
+  "replace": "theme.Fg(\"muted\", \"#\"+strconv.Itoa(t.ID))"
+ },
+ {
+  "name": "deleted-glyph",
+  "file": "view.go",
+  "find": "statusDeleted: \"⊘\"}",
+  "replace": "statusDeleted: \"x\"}"
+ },
+ {
+  "name": "update-result-status-param",
+  "file": "view.go",
+  "find": "if s, ok := text(details.Params, \"status\"); ok && s != \"\" {",
+  "replace": "if s, ok := text(details.Params, \"status\"); ok && s == \"zzz\" {"
+ },
+ {
+  "name": "completed-not-struck",
+  "file": "view.go",
+  "find": "if t.Status == statusCompleted || t.Status == statusDeleted {\n\t\tsubject = theme.Strikethrough(subject)",
+  "replace": "if t.Status == statusDeleted {\n\t\tsubject = theme.Strikethrough(subject)"
+ },
+ {
+  "name": "command-line-blocked-by",
+  "file": "view.go",
+  "find": "block = \"    ⛓ \" + idList(t.BlockedBy, \",\")",
+  "replace": "block = \"  ⛓ \" + idList(t.BlockedBy, \",\")"
+ },
+ {
+  "name": "last-row-glyph",
+  "file": "overlay.go",
+  "find": "strings.Replace(lines[last], \"├─\", \"└─\", 1)",
+  "replace": "strings.Replace(lines[last], \"├─\", \"└─\", 0)"
+ },
+ {
+  "name": "hide-never-hides",
+  "file": "overlay.go",
+  "find": "o.hidden[id] = true",
+  "replace": "_ = id"
+ },
+ {
+  "name": "expand-hint-text",
+  "file": "overlay.go",
+  "find": "\"{key} to expand\"",
+  "replace": "\"{key} to open\""
+ },
+ {
+  "name": "overflow-summary-brackets",
+  "file": "overlay.go",
+  "find": "\"+%d %s (%s)\"",
+  "replace": "\"+%d %s [%s]\""
+ },
+ {
+  "name": "collapse-ignored",
+  "file": "overlay.go",
+  "find": "if o.collapsed {\n\t\thint",
+  "replace": "if false {\n\t\thint"
+ },
+ {
+  "name": "no-trailing-spacer",
+  "file": "overlay.go",
+  "find": "return append(lines, \"\")",
+  "replace": "return lines"
+ },
+ {
+  "name": "heading-counts-pending",
+  "file": "overlay.go",
+  "find": "counts.Completed, counts.Total)",
+  "replace": "counts.Pending, counts.Total)"
+ },
+ {
+  "name": "budget-off-by-one",
+  "file": "overlay.go",
+  "find": "budget := maxLines - 1",
+  "replace": "budget := maxLines"
+ },
+ {
+  "name": "expanded-ignored",
+  "file": "overlay.go",
+  "find": "if env.toolsExpanded {",
+  "replace": "if false {"
+ },
+ {
+  "name": "empty-render-kept",
+  "file": "overlay.go",
+  "find": "if len(lines) == 0 {\n\t\tlines = nil\n\t}",
+  "replace": "if len(lines) == 0 {\n\t\tlines = []string{}\n\t}"
+ },
+ {
+  "name": "nextid-reset-lost",
+  "file": "overlay.go",
+  "find": "if o.lastNextIDKnown && state.NextID < o.lastNextID {",
+  "replace": "if false {"
+ },
+ {
+  "name": "collapse-spacer-lost",
+  "file": "overlay.go",
+  "find": "return withTrailingSpacer([]string{heading, truncate(theme.Fg(\"dim\", \"└─\") + \" \" + theme.Fg(\"dim\", hint))})",
+  "replace": "return []string{heading, truncate(theme.Fg(\"dim\", \"└─\") + \" \" + theme.Fg(\"dim\", hint))}"
+ },
+ {
+  "name": "truncate-no-reset",
+  "file": "text.go",
+  "find": "return result.String() + reset + ellipsis + reset",
+  "replace": "return result.String() + ellipsis"
+ },
+ {
+  "name": "width-counts-ansi",
+  "file": "text.go",
+  "find": "if n := ansiAt(s, i); n > 0 {\n\t\t\ti += n\n\t\t\tcontinue\n\t\t}\n\t\tr, size := utf8.DecodeRuneInString(s[i:])\n\t\tw += runeWidth(r)",
+  "replace": "r, size := utf8.DecodeRuneInString(s[i:])\n\t\tw += runeWidth(r)"
+ },
+ {
+  "name": "tool-name",
+  "file": "extension.go",
+  "find": "name != toolName {",
+  "replace": "name == toolName {"
+ },
+ {
+  "name": "tool-error-refreshes",
+  "file": "extension.go",
+  "find": "if isErr, _ := data[\"isError\"].(bool); isErr {",
+  "replace": "if false {"
+ },
+ {
+  "name": "commit-order-lost",
+  "file": "extension.go",
+  "find": "\twait()\n\tr := applyTaskMutation",
+  "replace": "\t_ = wait\n\tr := applyTaskMutation"
+ },
+ {
+  "name": "end-order-lost",
+  "file": "extension.go",
+  "find": "a.hold(callID, release)",
+  "replace": "_ = callID"
+ },
+ {
+  "name": "end-order-released-at-return",
+  "file": "extension.go",
+  "find": "a.hold(callID, release)",
+  "replace": "release()"
+ },
+ {
+  "name": "shutdown-keeps-slot",
+  "file": "extension.go",
+  "find": "a.st.evictSession(id)",
+  "replace": "_ = id"
+ },
+ {
+  "name": "foreground-never-disposed",
+  "file": "extension.go",
+  "find": "if id != \"\" && id != a.st.getActiveRenderSession() {",
+  "replace": "if id != \"\" {"
+ },
+ {
+  "name": "child-claims-foreground",
+  "file": "extension.go",
+  "find": "if a.st.getActiveRenderSession() == \"\" {\n\t\ta.st.setActiveRenderSession(id)",
+  "replace": "if true {\n\t\ta.st.setActiveRenderSession(id)"
+ },
+ {
+  "name": "child-rebinds-overlay",
+  "file": "extension.go",
+  "find": "if id != a.st.getActiveRenderSession() {\n\t\treturn nil, nil",
+  "replace": "if false {\n\t\treturn nil, nil"
+ },
+ {
+  "name": "pointer-kept-after-shutdown",
+  "file": "extension.go",
+  "find": "a.st.clearActiveRenderSession()\n\treturn nil, derr",
+  "replace": "return nil, derr"
+ },
+ {
+  "name": "dispose-error-lost",
+  "file": "extension.go",
+  "find": "return nil, derr",
+  "replace": "_ = derr\n\treturn nil, nil"
+ },
+ {
+  "name": "rpc-draws-widget",
+  "file": "extension.go",
+  "find": "if lines != nil {\n\t\treturn nil\n\t}",
+  "replace": "if false {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "stale-error-text",
+  "file": "extension.go",
+  "find": "\"stale after session replacement\"",
+  "replace": "\"zzz after session replacement\""
+ },
+ {
+  "name": "agent-start-no-hide",
+  "file": "extension.go",
+  "find": "ov.hideCompletedTasksFromPreviousTurn(envFor(ctx))",
+  "replace": "_ = ov"
+ },
+ {
+  "name": "command-error-level",
+  "file": "extension.go",
+  "find": "errRequiresInteractive), \"error\")",
+  "replace": "errRequiresInteractive), \"warning\")"
+ },
+ {
+  "name": "command-header-separator",
+  "file": "extension.go",
+  "find": "strings.Join(header, \" · \")",
+  "replace": "strings.Join(header, \" - \")"
+ },
+ {
+  "name": "shortcut-always",
+  "file": "extension.go",
+  "find": "key != collapseKeyOff {",
+  "replace": "true {"
+ },
+ {
+  "name": "guideline-char",
+  "file": "extension.go",
+  "find": "Skip it for single trivial tasks",
+  "replace": "Skip it for single trivial task"
+ },
+ {
+  "name": "description-char",
+  "file": "extension.go",
+  "find": "Use this to plan and track multi-step work",
+  "replace": "Use this to plan and track multi-step wor"
+ },
+ {
+  "name": "snippet-char",
+  "file": "extension.go",
+  "find": "\"Manage a task list to track multi-step progress\"",
+  "replace": "\"Manage a task list to track multi step progress\""
+ },
+ {
+  "name": "action-not-required",
+  "file": "extension.go",
+  "find": "\"required\": []any{\"action\"},",
+  "replace": "\"required\": []any{},"
+ },
+ {
+  "name": "widget-placement",
+  "file": "extension.go",
+  "find": "\"placement\": \"aboveEditor\"",
+  "replace": "\"placement\": \"belowEditor\""
+ },
+ {
+  "name": "metadata-schema",
+  "file": "extension.go",
+  "find": "\"patternProperties\": map[string]any{\"^.*$\": map[string]any{}},",
+  "replace": "\"additionalProperties\": true,"
+ },
+ {
+  "name": "sid-error-swallowed",
+  "file": "extension.go",
+  "find": "id, err := sid(ctx.SessionManager())\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\taction",
+  "replace": "id, _ := sid(ctx.SessionManager())\n\taction"
+ },
+ {
+  "name": "rowcap-lost",
+  "file": "extension.go",
+  "find": "a.ov = newOverlay(a.st, hostWidgetRows-1)",
+  "replace": "a.ov = newOverlay(a.st, 0)"
+ },
+ {
+  "name": "compact-replay-lost",
+  "file": "extension.go",
+  "find": "e.OnEvent(sdk.EventSessionCompact, a.replayAndRefresh)",
+  "replace": "_ = a.replayAndRefresh"
+ }
+]

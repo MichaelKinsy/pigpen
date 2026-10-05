@@ -1,0 +1,264 @@
+{
+ "type": "object",
+ "required": [
+  "state",
+  "questions"
+ ],
+ "properties": {
+  "state": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    },
+    {
+     "type": "array",
+     "items": {}
+    },
+    {
+     "type": "object",
+     "patternProperties": {
+      "^.*$": {}
+     }
+    }
+   ],
+   "description": "What to judge: text, or an object whose fields the questions name."
+  },
+  "questions": {
+   "type": "object",
+   "patternProperties": {
+    "^.*$": {
+     "anyOf": [
+      {
+       "type": "object",
+       "required": [
+        "type"
+       ],
+       "properties": {
+        "type": {
+         "type": "string",
+         "const": "noul",
+         "description": "Yes or no: the probability the instructions hold."
+        },
+        "instructions": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "null"
+          },
+          {
+           "type": "array",
+           "items": {}
+          },
+          {
+           "type": "object",
+           "patternProperties": {
+            "^.*$": {}
+           }
+          }
+         ],
+         "description": "One judgment about the whole state, phrased as a question or a statement."
+        },
+        "criteria": {
+         "anyOf": [
+          {
+           "type": "null"
+          },
+          {
+           "type": "object",
+           "properties": {
+            "true": {
+             "anyOf": [
+              {
+               "type": "string"
+              },
+              {
+               "type": "null"
+              },
+              {
+               "type": "array",
+               "items": {}
+              },
+              {
+               "type": "object",
+               "patternProperties": {
+                "^.*$": {}
+               }
+              }
+             ]
+            },
+            "false": {
+             "anyOf": [
+              {
+               "type": "string"
+              },
+              {
+               "type": "null"
+              },
+              {
+               "type": "array",
+               "items": {}
+              },
+              {
+               "type": "object",
+               "patternProperties": {
+                "^.*$": {}
+               }
+              }
+             ]
+            }
+           },
+           "additionalProperties": false
+          }
+         ],
+         "description": "Optional: what counts as yes and what counts as no, { true, false }."
+        }
+       },
+       "additionalProperties": false
+      },
+      {
+       "type": "object",
+       "required": [
+        "type",
+        "criteria"
+       ],
+       "properties": {
+        "type": {
+         "type": "string",
+         "const": "choice",
+         "description": "Pick one criteria label."
+        },
+        "instructions": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "null"
+          },
+          {
+           "type": "array",
+           "items": {}
+          },
+          {
+           "type": "object",
+           "patternProperties": {
+            "^.*$": {}
+           }
+          }
+         ],
+         "description": "One judgment about the whole state, phrased as a question or a statement."
+        },
+        "criteria": {
+         "type": "object",
+         "patternProperties": {
+          "^.*$": {
+           "anyOf": [
+            {
+             "type": "string"
+            },
+            {
+             "type": "null"
+            },
+            {
+             "type": "array",
+             "items": {}
+            },
+            {
+             "type": "object",
+             "patternProperties": {
+              "^.*$": {}
+             }
+            }
+           ]
+          }
+         },
+         "minProperties": 1,
+         "maxProperties": 64,
+         "description": "The options as a map from label to when it applies: { billing: \"Charges and payments\", other: null }. 1–64 entries."
+        }
+       },
+       "additionalProperties": false
+      },
+      {
+       "type": "object",
+       "required": [
+        "type",
+        "criteria"
+       ],
+       "properties": {
+        "type": {
+         "type": "string",
+         "const": "score",
+         "description": "Rate against the ordered criteria levels."
+        },
+        "instructions": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "null"
+          },
+          {
+           "type": "array",
+           "items": {}
+          },
+          {
+           "type": "object",
+           "patternProperties": {
+            "^.*$": {}
+           }
+          }
+         ],
+         "description": "One judgment about the whole state, phrased as a question or a statement."
+        },
+        "criteria": {
+         "type": "array",
+         "items": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           },
+           {
+            "type": "array",
+            "items": {}
+           },
+           {
+            "type": "object",
+            "patternProperties": {
+             "^.*$": {}
+            }
+           }
+          ]
+         },
+         "minItems": 2,
+         "maxItems": 32,
+         "description": "Ordered rubric levels, lowest first: [\"neutral\", \"angry\"]. 2–32 levels."
+        }
+       },
+       "additionalProperties": false
+      }
+     ]
+    }
+   },
+   "minProperties": 1,
+   "maxProperties": 32,
+   "description": "Questions keyed by a short id, as an object map, not an array: { \"urgent\": { type: \"noul\", instructions: ... } }."
+  },
+  "model": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 100,
+   "description": "Jev model id, e.g. jev-latest. Omit for the default."
+  }
+ },
+ "additionalProperties": false
+}

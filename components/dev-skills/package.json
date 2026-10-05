@@ -1,0 +1,22 @@
+{
+  "name": "pigpen-dev-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "General software-development Skills adapted from public sources: TDD with a mutation gate, diagnosing bugs, handoff, research, grilling, prototyping, code review and commit messages",
+  "keywords": ["pig-package", "skills", "tdd", "debugging", "code-review"],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["skills", "upstream", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "pi": {
+    "skills": [
+      "skills/pigpen-code-review",
+      "skills/pigpen-commit",
+      "skills/pigpen-diagnosing-bugs",
+      "skills/pigpen-grilling",
+      "skills/pigpen-handoff",
+      "skills/pigpen-prototype",
+      "skills/pigpen-research",
+      "skills/pigpen-tdd"
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "universal-allow",
+  "description": "The universal fallback decides tools without a rule of their own (and the config warns about bash).",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "a.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo hello"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "do the work"
+      }
+    }
+  ],
+  "files": {
+    "a.txt": "hello\n"
+  },
+  "agentFiles": {
+    "extensions/pi-permission-system/config.json": "{\n  \"permission\": {\n    \"path\": \"allow\",\n    \"external_directory\": \"allow\",\n    \"*\": \"allow\"\n  }\n}"
+  }
+}

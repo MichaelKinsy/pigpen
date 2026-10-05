@@ -1,0 +1,222 @@
+# review re-run (rev-pigpen-a2a): every mutant in mutations.json applied to a copy of extensions/a2a, go test -count=1 (unit and fake-host;
+# e2e, Binary and kagent tests skipped), 8 jobs, 109 mutants, 2026-09-30, pig 0.3.0+0.87.1. Runner: exact find/replace, one occurrence each.
+# result: 109 killed, 0 survived
+KILLED   listener-starts-without-config
+         first failing test: TestWorkerChildNeverListens
+KILLED   worker-child-may-listen
+         first failing test: TestWorkerProcessDoesNotOpenAListener
+KILLED   flag-not-highest-precedence
+         first failing test: TestPrecedenceFlagOverEnvOverFile
+KILLED   env-not-over-file
+         first failing test: TestPrecedenceFlagOverEnvOverFile
+KILLED   unknown-keys-and-inline-secrets-accepted
+         first failing test: TestInlineSecretsAreRejected
+KILLED   listener-without-tokens-allowed
+         first failing test: TestListenerNeedsAuthentication
+KILLED   insecure-no-auth-off-loopback
+         first failing test: TestInsecureNoAuthOnlyOnLoopback
+KILLED   insecure-and-tokens-both
+         first failing test: TestInsecureNoAuthWithTokensIsAmbiguous
+KILLED   short-tokens-allowed
+         first failing test: TestTokenConfigValidation
+KILLED   duplicate-token-values-allowed
+         first failing test: TestTwoVariablesWithOneValueAreRejected
+KILLED   duplicate-token-names-allowed
+         first failing test: TestTokenConfigValidation
+KILLED   tenant-not-validated
+         first failing test: TestTokenConfigValidation
+KILLED   missing-token-env-allowed
+         first failing test: TestTokenEnvNotSetIsSaidPlainly
+KILLED   listen-not-host-port
+         first failing test: TestMalformedListenAddressSaysHostPort
+KILLED   worker-gets-pig-default-tools
+         first failing test: TestReview_WorkerHasNoToolsUnlessConfigured
+KILLED   remote-url-scheme-unchecked
+         first failing test: TestRemoteDefaultsAndValidation
+KILLED   remote-name-unchecked
+         first failing test: TestRemoteDefaultsAndValidation
+KILLED   basic-scheme-accepted
+         first failing test: TestAuthenticateRejects
+KILLED   extra-fields-accepted
+         first failing test: TestAuthenticateRejects
+KILLED   token-comparison-inverted
+         first failing test: TestAuthenticateBearer
+KILLED   insecure-flag-ignored
+         first failing test: TestInsecureNoAuthGivesOneAnonymousPrincipal
+KILLED   tenant-key-uses-token-name
+         first failing test: TestPrincipalKeysIsolate
+KILLED   key-namespaces-collide
+         first failing test: TestPrincipalKeysIsolate
+KILLED   everything-public
+         first failing test: TestWrapRejectsWith401AndChallenge
+KILLED   no-bearer-challenge
+         first failing test: TestWrapRejectsWith401AndChallenge
+KILLED   empty-authenticator-allowed
+         first failing test: TestNoTokensNoInsecureFlagIsAnError
+KILLED   file-parts-dropped
+         first failing test: TestTextPlusFilePartIsRefusedNotTrimmed
+KILLED   empty-prompt-accepted
+         first failing test: TestEmptyMessageIsRejected
+KILLED   prompt-size-unbounded
+         first failing test: TestOversizedPromptIsRefusedBelowTheBodyLimit
+KILLED   timeout-never-fires
+         first failing test: TestTaskTimeoutFailsTheTask
+KILLED   worker-error-detail-leaks
+         first failing test: TestWorkerErrorDetailIsNotSentToThePeer
+KILLED   context-not-serialised
+         first failing test: TestCancelBeforeTheWorkerStartsBehindTheSameContext
+KILLED   concurrency-limit-ignored
+         first failing test: TestCancelBeforeTheWorkerStartsBehindTheConcurrencyLimit
+KILLED   cancel-does-not-stop-worker
+         first failing test: TestCancelBeforeTheWorkerStartsBehindTheConcurrencyLimit
+KILLED   failure-reason-dropped
+         first failing test: TestWorkerFailureBecomesAFailedTask
+KILLED   principal-not-checked
+         first failing test: TestExecutorRefusesAForgedUser
+KILLED   version-not-enforced
+         first failing test: TestProtocolVersionIsPinned
+KILLED   absent-version-accepted
+         first failing test: TestProtocolVersionIsPinned
+KILLED   minor-versions-accepted
+         first failing test: TestCardWithoutAProtocol10InterfaceIsRefused
+KILLED   mixed-version-values-accepted
+         first failing test: TestMixedVersionHeaderIsRefused
+KILLED   tenant-not-enforced
+         first failing test: TestRequestTenantMustMatchTheTokensTenant
+KILLED   user-not-attached
+         first failing test: TestCancelBeforeTheWorkerStartsBehindTheConcurrencyLimit
+KILLED   body-size-unbounded
+         first failing test: TestBodyLimitAppliesEvenWithASmallPrompt
+KILLED   card-requires-auth
+         first failing test: TestAgentCardIsPublicAndPinnedToProtocol10
+KILLED   card-drops-streaming
+         first failing test: TestAgentCardIsPublicAndPinnedToProtocol10
+KILLED   card-claims-push
+         first failing test: TestAgentCardIsPublicAndPinnedToProtocol10
+KILLED   card-ignores-external-url
+         first failing test: TestAgentCardAdvertisesExternalURL
+KILLED   card-without-security-requirement
+         first failing test: TestAgentCardIsPublicAndPinnedToProtocol10
+KILLED   plain-http-on-tls
+         first failing test: TestTLSListener
+KILLED   second-start-allowed
+         first failing test: TestSecondStartIsAnError
+KILLED   worker-keeps-extensions
+         first failing test: TestWorkerPassesFlagsSessionAndCwd
+KILLED   worker-not-marked
+         first failing test: TestWorkerEnvironmentIsAllowlisted
+KILLED   worker-inherits-secrets
+         first failing test: TestWorkerEnvironmentIsAllowlisted
+KILLED   passenv-ignored
+         first failing test: TestReview_WorkerKillsWhatATurnLeftBehind
+KILLED   session-id-ignores-principal
+         first failing test: TestSessionIDIsStableScopedAndSafe
+KILLED   session-id-ignores-context
+         first failing test: TestSessionIDIsStableScopedAndSafe
+KILLED   session-dir-shared
+         first failing test: TestWorkerPassesFlagsSessionAndCwd
+KILLED   worker-cwd-not-set
+         first failing test: TestWorkerPassesFlagsSessionAndCwd
+KILLED   tools-allowlist-dropped
+         first failing test: TestReview_WorkerHasNoToolsUnlessConfigured
+KILLED   session-not-kept
+         first failing test: TestWorkerPassesFlagsSessionAndCwd
+KILLED   abort-not-sent
+         first failing test: TestWorkerCancelAbortsThenReaps
+KILLED   no-kill-after-grace
+         first failing test: TestWorkerEscalatesToKillWhenTermIsIgnored
+KILLED   no-terminate
+         first failing test: TestWorkerAsksForTermBeforeKill
+KILLED   model-error-text-copied
+         first failing test: TestModelFailureMessageIsExactlyGeneric
+KILLED   model-error-not-a-failure
+         first failing test: TestModelFailureMessageIsExactlyGeneric
+KILLED   streamed-and-final-text-duplicated
+         first failing test: TestWorkerPassesFlagsSessionAndCwd
+KILLED   empty-prompt-sent
+         first failing test: TestWorkerRefusesEmptyPrompt
+KILLED   tool-updates-dropped
+         first failing test: TestWorkerStreamsUpdatesAndFinalText
+KILLED   ui-request-hangs
+         first failing test: TestWorkerFailsATurnThatNeedsInteractiveInput
+KILLED   rejected-prompt-ignored
+         first failing test: TestWorkerReportsARejectedPromptWithoutTheReason
+KILLED   any-protocol-version-accepted
+         first failing test: TestCardWithoutAProtocol10InterfaceIsRefused
+KILLED   credentials-follow-the-card
+         first failing test: TestCredentialsAreNotSentToAHostTheCardNamed
+KILLED   transport-host-not-checked
+         first failing test: TestCredentialTransportRefusesAnotherHost
+KILLED   redirects-followed-with-credentials
+         first failing test: TestRemoteRedirectsAreNotFollowed
+KILLED   bearer-not-sent
+         first failing test: TestBearerAndCustomHeadersComeFromEnvironment
+KILLED   missing-bearer-env-tolerated
+         first failing test: TestMissingTokenEnvironmentIsAnErrorBeforeAnyRequest
+KILLED   custom-headers-dropped
+         first failing test: TestBearerAndCustomHeadersComeFromEnvironment
+KILLED   remote-not-cancelled-on-abort
+         first failing test: TestCancellingTheCallCancelsTheRemoteTask
+KILLED   timeout-ignored
+         first failing test: undefined
+KILLED   unknown-agent-unnamed
+         first failing test: TestUnknownAgentNamesTheKnownOnes
+KILLED   names-unsorted
+         first failing test: TestRemotesNamesAreSorted
+KILLED   empty-message-sent
+         first failing test: TestSendRefusesAnEmptyMessageBeforeAnyRequest
+KILLED   input-required-called-terminal
+         first failing test: TestSummaryOfAnInputRequiredTaskIsNotTerminal
+KILLED   failure-text-hidden
+         first failing test: TestFailedAndInputRequiredStates
+KILLED   auth-error-shows-token-context
+         first failing test: TestAuthFailureIsExplainedWithoutTheToken
+KILLED   switch-drops-listener
+         first failing test: TestSessionSwitchKeepsTheListenerReloadRestartsIt
+KILLED   shutdown-keeps-listener
+         first failing test: TestConfiguredListenerServesAndShutdownStopsIt
+KILLED   config-error-silent
+         first failing test: TestInvalidConfigurationIsReportedNotFatal
+KILLED   start-failure-silent
+         first failing test: TestListenFailureIsReportedToTheUser
+KILLED   flag-not-read
+         first failing test: TestFlagOverridesTheConfigurationFile
+KILLED   agent-dir-ignored
+         first failing test: TestConfigIsReadFromTheAgentDirectory
+KILLED   stop-does-not-reload-config
+         first failing test: TestToolAfterShutdownUsesTheRewrittenConfiguration
+KILLED   status-hides-remotes
+         first failing test: TestReloadAppliesChangedConfiguration
+KILLED   tool-required-not-enforced
+         first failing test: TestToolsRejectBadArguments
+KILLED   tool-empty-message-allowed
+         first failing test: TestToolsRejectBadArguments
+KILLED   tool-errors-not-errors
+         first failing test: TestToolsWithoutRemotesSayWhy
+KILLED   unfinished-task-not-flagged
+         first failing test: TestSummaryOfAnInputRequiredTaskIsNotTerminal
+KILLED   task-action-unchecked
+         first failing test: TestToolsRejectBadArguments
+KILLED   send-drops-context
+         first failing test: TestSendToolPassesTheContextIDThrough
+KILLED   tls-load-failure-ignored
+         first failing test: TestUnreadableTLSKeyPairFailsStart
+KILLED   subscribe-ownership-unchecked
+         first failing test: TestSubscribeToALiveTaskDeliversTheRest
+KILLED   queued-cancel-ignored-at-slot
+         first failing test: TestCancelBeforeTheWorkerStartsBehindTheConcurrencyLimit
+KILLED   queued-cancel-ignored-at-context-lock
+         first failing test: TestCancelBeforeTheWorkerStartsBehindTheSameContext
+KILLED   shutdown-does-not-close-the-port
+         first failing test: TestShutdownClosesThePortEvenRightAfterStart
+KILLED   insecure-host-unchecked
+         first failing test: TestReview_InsecureLoopbackListenerRefusesAForeignHostHeader
+KILLED   transport-scheme-not-checked
+         first failing test: TestReview_CredentialsAreNotDowngradedToPlainHTTP
+KILLED   card-scheme-downgrade-accepted
+         first failing test: TestReview_CredentialsAreNotDowngradedToPlainHTTP
+KILLED   context-lock-shared-across-tenants
+         first failing test: TestReview_SameContextIDInTwoTenantsRunsConcurrently
+KILLED   left-behind-child-survives
+         first failing test: TestReview_WorkerKillsWhatATurnLeftBehind
+109 mutation(s), 0 not killed

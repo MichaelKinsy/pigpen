@@ -1,0 +1,656 @@
+[
+ {
+  "name": "listener-starts-without-config",
+  "file": "extension.go",
+  "find": "\tif !cfg.Enabled() {\n\t\treturn\n\t}",
+  "replace": "\tif false {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "worker-child-may-listen",
+  "file": "config.go",
+  "find": "\t\tcfg.Listen = \"\"\n\t}\n\tif cfg.StateDir",
+  "replace": "\t\t_ = 0\n\t}\n\tif cfg.StateDir"
+ },
+ {
+  "name": "flag-not-highest-precedence",
+  "file": "config.go",
+  "find": "\tif o.FlagListen != \"\" {\n\t\tcfg.Listen = o.FlagListen\n\t}",
+  "replace": "\tif o.FlagListen != \"\" && cfg.Listen == \"\" {\n\t\tcfg.Listen = o.FlagListen\n\t}"
+ },
+ {
+  "name": "env-not-over-file",
+  "file": "config.go",
+  "find": "\tif v := getenv(\"PIG_A2A_LISTEN\"); v != \"\" {",
+  "replace": "\tif v := getenv(\"PIG_A2A_LISTEN\"); v != \"\" && cfg.Listen == \"\" {"
+ },
+ {
+  "name": "unknown-keys-and-inline-secrets-accepted",
+  "file": "config.go",
+  "find": "\t\t\tdec.DisallowUnknownFields()\n",
+  "replace": ""
+ },
+ {
+  "name": "listener-without-tokens-allowed",
+  "file": "config.go",
+  "find": "\t\tcase !c.InsecureNoAuth && len(c.Tokens) == 0:",
+  "replace": "\t\tcase false:"
+ },
+ {
+  "name": "insecure-no-auth-off-loopback",
+  "file": "config.go",
+  "find": "\t\tcase c.InsecureNoAuth && !isLoopbackHost(host):",
+  "replace": "\t\tcase false:"
+ },
+ {
+  "name": "insecure-and-tokens-both",
+  "file": "config.go",
+  "find": "\t\tcase c.InsecureNoAuth && len(c.Tokens) > 0:",
+  "replace": "\t\tcase false:"
+ },
+ {
+  "name": "short-tokens-allowed",
+  "file": "config.go",
+  "find": "\t\tif len(v) < minTokenLength {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "duplicate-token-values-allowed",
+  "file": "config.go",
+  "find": "\t\tif values[v] {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "duplicate-token-names-allowed",
+  "file": "config.go",
+  "find": "\t\tif names[t.Name] || envs[t.TokenEnv] {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "tenant-not-validated",
+  "file": "config.go",
+  "find": "\t\tif t.Tenant != \"\" && !identRE.MatchString(t.Tenant) {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "missing-token-env-allowed",
+  "file": "config.go",
+  "find": "\t\tif v == \"\" {\n\t\t\treturn fmt.Errorf(\"a2a: token %q: environment variable %s is not set\", t.Name, t.TokenEnv)",
+  "replace": "\t\tif false {\n\t\t\treturn fmt.Errorf(\"a2a: token %q: environment variable %s is not set\", t.Name, t.TokenEnv)"
+ },
+ {
+  "name": "listen-not-host-port",
+  "file": "config.go",
+  "find": "\t\tif err != nil {\n\t\t\treturn fmt.Errorf(\"a2a: listen %q is not host:port: %w\", c.Listen, err)\n\t\t}",
+  "replace": "\t\t_ = err"
+ },
+ {
+  "name": "worker-gets-pig-default-tools",
+  "file": "worker.go",
+  "find": "\t} else {\n\t\t// PiG's file tools are not confined to the working directory, so a worker gets no tools unless named.\n\t\targs = append(args, \"--no-tools\")\n\t}",
+  "replace": "\t}"
+ },
+ {
+  "name": "remote-url-scheme-unchecked",
+  "file": "config.go",
+  "find": "\tif err != nil || u.Host == \"\" || (u.Scheme != \"http\" && u.Scheme != \"https\") {",
+  "replace": "\tif err != nil || u.Host == \"\" {"
+ },
+ {
+  "name": "remote-name-unchecked",
+  "file": "config.go",
+  "find": "\t\tif !identRE.MatchString(name) {\n\t\t\treturn fmt.Errorf(\"a2a: remote name",
+  "replace": "\t\tif false {\n\t\t\treturn fmt.Errorf(\"a2a: remote name"
+ },
+ {
+  "name": "basic-scheme-accepted",
+  "file": "auth.go",
+  "find": "!strings.EqualFold(fields[0], \"bearer\")",
+  "replace": "false"
+ },
+ {
+  "name": "extra-fields-accepted",
+  "file": "auth.go",
+  "find": "len(fields) != 2 ||",
+  "replace": "len(fields) < 2 ||"
+ },
+ {
+  "name": "token-comparison-inverted",
+  "file": "auth.go",
+  "find": "subtle.ConstantTimeCompare(digest[:], e.digest[:]) == 1",
+  "replace": "subtle.ConstantTimeCompare(digest[:], e.digest[:]) != 1"
+ },
+ {
+  "name": "insecure-flag-ignored",
+  "file": "auth.go",
+  "find": "\tif a.insecure {\n\t\treturn Principal{Name: \"anonymous\"}, true\n\t}\n\tfields",
+  "replace": "\tfields"
+ },
+ {
+  "name": "tenant-key-uses-token-name",
+  "file": "auth.go",
+  "find": "\t\treturn \"tenant:\" + p.Tenant",
+  "replace": "\t\treturn \"tenant:\" + p.Name"
+ },
+ {
+  "name": "key-namespaces-collide",
+  "file": "auth.go",
+  "find": "\treturn \"token:\" + p.Name",
+  "replace": "\treturn \"tenant:\" + p.Name"
+ },
+ {
+  "name": "everything-public",
+  "file": "auth.go",
+  "find": "\t\tif isPublic != nil && isPublic(r) {",
+  "replace": "\t\tif true {"
+ },
+ {
+  "name": "no-bearer-challenge",
+  "file": "auth.go",
+  "find": "\t\t\tw.Header().Set(\"WWW-Authenticate\", \"Bearer\")\n",
+  "replace": ""
+ },
+ {
+  "name": "empty-authenticator-allowed",
+  "file": "auth.go",
+  "find": "\tif len(tokens) == 0 {\n\t\treturn nil, errors.New",
+  "replace": "\tif false {\n\t\treturn nil, errors.New"
+ },
+ {
+  "name": "file-parts-dropped",
+  "file": "executor.go",
+  "find": "\t\tif _, ok := p.Content.(a2a.Text); !ok {",
+  "replace": "\t\tif _, ok := p.Content.(a2a.Text); false && !ok {"
+ },
+ {
+  "name": "empty-prompt-accepted",
+  "file": "executor.go",
+  "find": "\tif strings.TrimSpace(prompt) == \"\" {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "prompt-size-unbounded",
+  "file": "executor.go",
+  "find": "\tif len(prompt) > maxPromptBytes {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "timeout-never-fires",
+  "file": "executor.go",
+  "find": "timeoutTimer := time.AfterFunc(e.timeout, func() {",
+  "replace": "timeoutTimer := time.AfterFunc(24*time.Hour, func() {"
+ },
+ {
+  "name": "worker-error-detail-leaks",
+  "file": "executor.go",
+  "find": "yield(e.status(ec, a2a.TaskStateFailed, \"PiG could not complete the task.\"), nil)",
+  "replace": "yield(e.status(ec, a2a.TaskStateFailed, \"PiG could not complete the task: \"+ev.err.Error()), nil)"
+ },
+ {
+  "name": "context-not-serialised",
+  "file": "executor.go",
+  "find": "\t\tunlock, err := e.lockContext(runCtx, principal.Key()+\"\\x00\"+ec.ContextID)",
+  "replace": "\t\tunlock, err := e.lockContext(runCtx, string(ec.TaskID))"
+ },
+ {
+  "name": "concurrency-limit-ignored",
+  "file": "executor.go",
+  "find": "\t\tcase e.sem <- struct{}{}:\n\t\t\tdefer func() { <-e.sem }()",
+  "replace": "\t\tcase e.sem <- struct{}{}:\n\t\t\t<-e.sem"
+ },
+ {
+  "name": "cancel-does-not-stop-worker",
+  "file": "executor.go",
+  "find": "\t\t\tr.reason.CompareAndSwap(int32(stopNone), int32(stopCanceled))\n\t\t\tr.cancel()",
+  "replace": "\t\t\tr.reason.CompareAndSwap(int32(stopNone), int32(stopCanceled))"
+ },
+ {
+  "name": "failure-reason-dropped",
+  "file": "executor.go",
+  "find": "\"PiG could not complete the task: \"+ev.result.Failure",
+  "replace": "\"PiG could not complete the task.\""
+ },
+ {
+  "name": "principal-not-checked",
+  "file": "executor.go",
+  "find": "\tif p.Key() != ec.User.Name {\n\t\treturn Principal{}, a2a.ErrUnauthenticated\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "version-not-enforced",
+  "file": "server.go",
+  "find": "!ok || !versionsOK(v)",
+  "replace": "false && (!ok || !versionsOK(v))"
+ },
+ {
+  "name": "absent-version-accepted",
+  "file": "server.go",
+  "find": "if v, ok := callCtx.ServiceParams().Get(a2a.SvcParamVersion); !ok || !versionsOK(v) {",
+  "replace": "if v, ok := callCtx.ServiceParams().Get(a2a.SvcParamVersion); ok && !versionsOK(v) {"
+ },
+ {
+  "name": "minor-versions-accepted",
+  "file": "server.go",
+  "find": "return v == string(ProtocolVersion) || strings.HasPrefix(v, string(ProtocolVersion)+\".\")",
+  "replace": "return strings.HasPrefix(v, \"1\") || strings.HasPrefix(v, \"0\")"
+ },
+ {
+  "name": "mixed-version-values-accepted",
+  "file": "server.go",
+  "find": "\t\t\tif !versionOK(strings.TrimSpace(one)) {\n\t\t\t\treturn false\n\t\t\t}",
+  "replace": "\t\t\tif !versionOK(strings.TrimSpace(one)) {\n\t\t\t\tcontinue\n\t\t\t}"
+ },
+ {
+  "name": "tenant-not-enforced",
+  "file": "server.go",
+  "find": "t != \"\" && t != p.Tenant",
+  "replace": "false && t != \"\" && t != p.Tenant"
+ },
+ {
+  "name": "user-not-attached",
+  "file": "server.go",
+  "find": "\tcallCtx.User = a2asrv.NewAuthenticatedUser(p.Key(), map[string]any{\"name\": p.Name, \"tenant\": p.Tenant})\n",
+  "replace": ""
+ },
+ {
+  "name": "body-size-unbounded",
+  "file": "server.go",
+  "find": "http.MaxBytesHandler(a2asrv.NewJSONRPCHandler(handler), maxBodyBytes)",
+  "replace": "a2asrv.NewJSONRPCHandler(handler)"
+ },
+ {
+  "name": "card-requires-auth",
+  "file": "server.go",
+  "find": "func(r *http.Request) bool { return r.URL.Path == a2asrv.WellKnownAgentCardPath }",
+  "replace": "func(r *http.Request) bool { return false }"
+ },
+ {
+  "name": "card-drops-streaming",
+  "file": "server.go",
+  "find": "Capabilities:        a2a.AgentCapabilities{Streaming: true},",
+  "replace": "Capabilities:        a2a.AgentCapabilities{Streaming: false},"
+ },
+ {
+  "name": "card-claims-push",
+  "file": "server.go",
+  "find": "Capabilities:        a2a.AgentCapabilities{Streaming: true},",
+  "replace": "Capabilities:        a2a.AgentCapabilities{Streaming: true, PushNotifications: true},"
+ },
+ {
+  "name": "card-ignores-external-url",
+  "file": "server.go",
+  "find": "\tif s.cfg.ExternalURL != \"\" {\n\t\treturn strings.TrimRight(s.cfg.ExternalURL, \"/\")\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "card-without-security-requirement",
+  "file": "server.go",
+  "find": "\t\t\ta2a.SecurityRequirements{\"bearer\": a2a.SecuritySchemeScopes{}},\n",
+  "replace": ""
+ },
+ {
+  "name": "plain-http-on-tls",
+  "file": "server.go",
+  "find": "\t\tln = tls.NewListener(ln, srv.TLSConfig)\n",
+  "replace": ""
+ },
+ {
+  "name": "second-start-allowed",
+  "file": "server.go",
+  "find": "\tif s.srv != nil {\n\t\treturn errors.New(\"a2a: server already started\")\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "worker-keeps-extensions",
+  "file": "worker.go",
+  "find": "\"--no-extensions\", ",
+  "replace": ""
+ },
+ {
+  "name": "worker-not-marked",
+  "file": "worker.go",
+  "find": "\treturn append(env, \"PIG_A2A_WORKER=1\", \"PI_SKIP_VERSION_CHECK=1\")",
+  "replace": "\treturn append(env, \"PI_SKIP_VERSION_CHECK=1\")"
+ },
+ {
+  "name": "worker-inherits-secrets",
+  "file": "worker.go",
+  "find": "\t\"PATH\", \"HOME\", \"USER\",",
+  "replace": "\t\"TOKEN_A\", \"PATH\", \"HOME\", \"USER\","
+ },
+ {
+  "name": "passenv-ignored",
+  "file": "worker.go",
+  "find": "\tfor _, name := range append(append([]string{}, baseEnv...), w.cfg.PassEnv...) {",
+  "replace": "\tfor _, name := range append([]string{}, baseEnv...) {"
+ },
+ {
+  "name": "session-id-ignores-principal",
+  "file": "worker.go",
+  "find": "\treturn keyDigest(\"a2a-session\\x00\" + p.Key() + \"\\x00\" + contextID)[:32]",
+  "replace": "\treturn keyDigest(\"a2a-session\\x00\" + contextID)[:32]"
+ },
+ {
+  "name": "session-id-ignores-context",
+  "file": "worker.go",
+  "find": "\treturn keyDigest(\"a2a-session\\x00\" + p.Key() + \"\\x00\" + contextID)[:32]",
+  "replace": "\treturn keyDigest(\"a2a-session\\x00\" + p.Key())[:32]"
+ },
+ {
+  "name": "session-dir-shared",
+  "file": "worker.go",
+  "find": "keyDigest(\"a2a-dir\\x00\" + p.Key())[:16])\n}\n\nfunc (w *ProcessWorker) cwd",
+  "replace": "\"shared\")\n}\n\nfunc (w *ProcessWorker) cwd"
+ },
+ {
+  "name": "worker-cwd-not-set",
+  "file": "worker.go",
+  "find": "\tcmd.Dir, cmd.Env = w.cwd(t.Principal), w.env()",
+  "replace": "\tcmd.Env = w.env()"
+ },
+ {
+  "name": "tools-allowlist-dropped",
+  "file": "worker.go",
+  "find": "\t\targs = append(args, \"--tools\", strings.Join(w.cfg.Tools, \",\"))",
+  "replace": "\t\t_ = args"
+ },
+ {
+  "name": "session-not-kept",
+  "file": "worker.go",
+  "find": "\targs = append(args, \"--session-dir\", w.sessionDir(t.Principal), \"--session-id\", SessionID(t.Principal, t.ContextID))",
+  "replace": "\targs = append(args, \"--no-session\")"
+ },
+ {
+  "name": "abort-not-sent",
+  "file": "worker.go",
+  "find": "\t\t\t_ = write(map[string]any{\"id\": \"abort\", \"type\": \"abort\"})",
+  "replace": "\t\t\t_ = 0"
+ },
+ {
+  "name": "no-kill-after-grace",
+  "file": "worker.go",
+  "find": "\t\t\t\t_ = killTree(cmd.Process)\n\t\t\t\t<-exited",
+  "replace": "\t\t\t\t<-exited"
+ },
+ {
+  "name": "no-terminate",
+  "file": "worker.go",
+  "find": "\t\t\t_ = terminateTree(cmd.Process)\n",
+  "replace": ""
+ },
+ {
+  "name": "model-error-text-copied",
+  "file": "worker.go",
+  "find": "return Result{Text: text.String(), Failure: \"the model call failed\"}, nil",
+  "replace": "return Result{Text: text.String(), Failure: \"the model call failed\" + lastStop}, nil"
+ },
+ {
+  "name": "model-error-not-a-failure",
+  "file": "worker.go",
+  "find": "\t\t\t\tcase \"error\":\n\t\t\t\t\treturn Result{Text: text.String(), Failure: \"the model call failed\"}, nil",
+  "replace": "\t\t\t\tcase \"error\":\n\t\t\t\t\treturn Result{Text: text.String()}, nil"
+ },
+ {
+  "name": "streamed-and-final-text-duplicated",
+  "file": "worker.go",
+  "find": "if f := final.String(); len(f) > len(msgText) && strings.HasPrefix(f, msgText) {\n\t\t\t\t\t\temit(f[len(msgText):])",
+  "replace": "if f := final.String(); len(f) > 0 {\n\t\t\t\t\t\temit(f)"
+ },
+ {
+  "name": "empty-prompt-sent",
+  "file": "worker.go",
+  "find": "\tif strings.TrimSpace(t.Prompt) == \"\" {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "tool-updates-dropped",
+  "file": "worker.go",
+  "find": "\t\t\t\tif !aborting && ev.ToolName != \"\" {\n\t\t\t\t\tonUpdate(Update{Tool: ev.ToolName})",
+  "replace": "\t\t\t\tif false {\n\t\t\t\t\tonUpdate(Update{Tool: ev.ToolName})"
+ },
+ {
+  "name": "ui-request-hangs",
+  "file": "worker.go",
+  "find": "\t\t\tcase \"extension_ui_request\":\n\t\t\t\tresult.Failure = \"PiG asked for interactive input, which an A2A task cannot provide\"\n\t\t\t\treturn result, runErr",
+  "replace": "\t\t\tcase \"extension_ui_request\":"
+ },
+ {
+  "name": "rejected-prompt-ignored",
+  "file": "worker.go",
+  "find": "\t\t\t\t\tif !ev.Success {\n\t\t\t\t\t\treturn Result{Failure: \"PiG rejected the prompt\"}, nil\n\t\t\t\t\t}",
+  "replace": "\t\t\t\t\t_ = ev.Success"
+ },
+ {
+  "name": "any-protocol-version-accepted",
+  "file": "client.go",
+  "find": "if i.ProtocolBinding != a2a.TransportProtocolJSONRPC || !versionOK(string(i.ProtocolVersion)) {",
+  "replace": "if i.ProtocolBinding != a2a.TransportProtocolJSONRPC {"
+ },
+ {
+  "name": "credentials-follow-the-card",
+  "file": "client.go",
+  "find": "if ra.hasCredentials() && originOf(i.URL) != originOf(ra.URL) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "transport-host-not-checked",
+  "file": "client.go",
+  "find": "\tif req.URL.Host != t.host {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "redirects-followed-with-credentials",
+  "file": "client.go",
+  "find": "CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }",
+  "replace": "CheckRedirect: nil"
+ },
+ {
+  "name": "bearer-not-sent",
+  "file": "client.go",
+  "find": "\t\th.Set(\"Authorization\", \"Bearer \"+v)",
+  "replace": "\t\t_ = v"
+ },
+ {
+  "name": "missing-bearer-env-tolerated",
+  "file": "client.go",
+  "find": "\t\tif v == \"\" {\n\t\t\treturn nil, fmt.Errorf(\"a2a: remote %q needs the environment variable %s (bearerTokenEnv), which is not set\", name, ra.BearerTokenEnv)\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "custom-headers-dropped",
+  "file": "client.go",
+  "find": "\t\th.Set(header, v)",
+  "replace": "\t\t_ = v"
+ },
+ {
+  "name": "remote-not-cancelled-on-abort",
+  "file": "client.go",
+  "find": "if sum.TaskID != \"\" && (caller.Err() != nil || call.Err() != nil) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "timeout-ignored",
+  "file": "client.go",
+  "find": "\treturn context.WithTimeout(ctx, time.Duration(ra.TimeoutSeconds)*time.Second)",
+  "replace": "\treturn context.WithCancel(ctx)"
+ },
+ {
+  "name": "unknown-agent-unnamed",
+  "file": "client.go",
+  "find": "return RemoteAgent{}, fmt.Errorf(\"a2a: unknown agent %q; configured remotes: %s\", name, strings.Join(r.Names(), \", \"))",
+  "replace": "return RemoteAgent{}, fmt.Errorf(\"a2a: unknown agent %q\", name)"
+ },
+ {
+  "name": "names-unsorted",
+  "file": "client.go",
+  "find": "\tsort.Strings(names)\n",
+  "replace": "\t_ = sort.Strings\n"
+ },
+ {
+  "name": "empty-message-sent",
+  "file": "client.go",
+  "find": "\tif strings.TrimSpace(args.Message) == \"\" {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "input-required-called-terminal",
+  "file": "client.go",
+  "find": "Terminal: t.Status.State.Terminal()},",
+  "replace": "Terminal: true},"
+ },
+ {
+  "name": "failure-text-hidden",
+  "file": "client.go",
+  "find": "\tif statusText != \"\" && state != a2a.TaskStateCompleted {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "auth-error-shows-token-context",
+  "file": "client.go",
+  "find": "\tcase strings.Contains(err.Error(), \"401\"):",
+  "replace": "\tcase false:"
+ },
+ {
+  "name": "switch-drops-listener",
+  "file": "extension.go",
+  "find": "\t\tcase \"new\", \"resume\", \"fork\":",
+  "replace": "\t\tcase \"resume\", \"fork\":"
+ },
+ {
+  "name": "shutdown-keeps-listener",
+  "file": "extension.go",
+  "find": "\t\tm.stop()\n\t\treturn nil, nil\n\t})",
+  "replace": "\t\treturn nil, nil\n\t})"
+ },
+ {
+  "name": "config-error-silent",
+  "file": "extension.go",
+  "find": "\tcfg, err := m.load(ctx)\n\tif err != nil {\n\t\tctx.Notify(err.Error(), \"error\")\n\t\treturn\n\t}",
+  "replace": "\tcfg, err := m.load(ctx)\n\tif err != nil {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "start-failure-silent",
+  "file": "extension.go",
+  "find": "\tif err != nil {\n\t\tctx.Notify(err.Error(), \"error\")\n\t\treturn\n\t}\n\tm.mu.Lock()\n\tm.server = srv",
+  "replace": "\tif err != nil {\n\t\treturn\n\t}\n\tm.mu.Lock()\n\tm.server = srv"
+ },
+ {
+  "name": "flag-not-read",
+  "file": "extension.go",
+  "find": "\tif v, err := ctx.GetFlag(\"a2a-listen\"); err == nil {",
+  "replace": "\tif v, err := ctx.GetFlag(\"a2a-listen\"); false && err == nil {"
+ },
+ {
+  "name": "agent-dir-ignored",
+  "file": "extension.go",
+  "find": "\tif d := m.getenv(\"PIG_CODING_AGENT_DIR\"); d != \"\" {\n\t\treturn d\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "stop-does-not-reload-config",
+  "file": "extension.go",
+  "find": "\tm.remotes, m.cfgErr = nil, nil // the next use reloads the configuration",
+  "replace": "\t_ = 0"
+ },
+ {
+  "name": "status-hides-remotes",
+  "file": "extension.go",
+  "find": "\t\t\tfmt.Fprintf(&b, \"\\nremotes: %s\", strings.Join(names, \", \"))",
+  "replace": "\t\t\t_ = names"
+ },
+ {
+  "name": "tool-required-not-enforced",
+  "file": "extension.go",
+  "find": "\t\tif required {\n\t\t\treturn \"\", sdk.NewToolError(fmt.Sprintf(\"a2a: %s is required\", name))\n\t\t}",
+  "replace": "\t\t_ = required"
+ },
+ {
+  "name": "tool-empty-message-allowed",
+  "file": "extension.go",
+  "find": "\tif required && strings.TrimSpace(s) == \"\" {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "tool-errors-not-errors",
+  "file": "extension.go",
+  "find": "\t\treturn nil, sdk.NewToolError(\"a2a: no remotes are configured; add a \\\"remotes\\\" object to a2a.json\")",
+  "replace": "\t\treturn nil, nil"
+ },
+ {
+  "name": "unfinished-task-not-flagged",
+  "file": "extension.go",
+  "find": "\tif !s.Terminal {\n\t\tb.WriteString",
+  "replace": "\tif false {\n\t\tb.WriteString"
+ },
+ {
+  "name": "task-action-unchecked",
+  "file": "extension.go",
+  "find": "\treturn nil, sdk.NewToolError(fmt.Sprintf(\"a2a: unknown action %q (get, cancel or list)\", action))",
+  "replace": "\treturn \"ok\", nil"
+ },
+ {
+  "name": "send-drops-context",
+  "file": "extension.go",
+  "find": "SendArgs{Agent: agent, Message: message, ContextID: contextID, TaskID: taskID}",
+  "replace": "SendArgs{Agent: agent, Message: message, ContextID: contextID[:0], TaskID: taskID}"
+ },
+ {
+  "name": "tls-load-failure-ignored",
+  "file": "server.go",
+  "find": "\t\tcert, err := tls.LoadX509KeyPair(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile)\n\t\tif err != nil {\n\t\t\t_ = ln.Close()\n\t\t\treturn fmt.Errorf(\"a2a: load TLS key pair: %w\", err)\n\t\t}",
+  "replace": "\t\tcert, err := tls.LoadX509KeyPair(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile)\n\t\tif err != nil {\n\t\t\t_ = ln.Close()\n\t\t\treturn nil\n\t\t}"
+ },
+ {
+  "name": "subscribe-ownership-unchecked",
+  "file": "server.go",
+  "find": "\t\tif _, err := g.store.Get(ctx, sub.ID); err != nil {",
+  "replace": "\t\tif _, err := g.store.Get(ctx, sub.ID); false && err != nil {"
+ },
+ {
+  "name": "queued-cancel-ignored-at-slot",
+  "file": "executor.go",
+  "find": "\t\tcase <-runCtx.Done():\n\t\t\te.finishStopped(ec, r, yield, runCtx)\n\t\t\treturn\n\t\t}\n\t\tunlock, err",
+  "replace": "\t\tcase <-time.After(24 * time.Hour):\n\t\t\te.finishStopped(ec, r, yield, runCtx)\n\t\t\treturn\n\t\t}\n\t\tunlock, err"
+ },
+ {
+  "name": "queued-cancel-ignored-at-context-lock",
+  "file": "executor.go",
+  "find": "\tcase <-ctx.Done():\n\t\trelease()\n\t\treturn nil, ctx.Err()",
+  "replace": "\tcase <-time.After(24 * time.Hour):\n\t\trelease()\n\t\treturn nil, ctx.Err()"
+ },
+ {
+  "name": "shutdown-does-not-close-the-port",
+  "file": "server.go",
+  "find": "\t\t_ = ln.Close()\n\t\t<-served\n",
+  "replace": "\t\t_, _ = ln, served\n"
+ },
+ {
+  "name": "insecure-host-unchecked",
+  "file": "auth.go",
+  "find": "\t\tif a.insecure && !loopbackHostHeader(r.Host) {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "transport-scheme-not-checked",
+  "file": "client.go",
+  "find": "\tif req.URL.Scheme != t.scheme {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "card-scheme-downgrade-accepted",
+  "file": "client.go",
+  "find": "if ra.hasCredentials() && originOf(i.URL) != originOf(ra.URL) {",
+  "replace": "if ra.hasCredentials() && hostOf(i.URL) != hostOf(ra.URL) {"
+ },
+ {
+  "name": "context-lock-shared-across-tenants",
+  "file": "executor.go",
+  "find": "e.lockContext(runCtx, principal.Key()+\"\\x00\"+ec.ContextID)",
+  "replace": "e.lockContext(runCtx, ec.ContextID)"
+ },
+ {
+  "name": "left-behind-child-survives",
+  "file": "worker.go",
+  "find": "\t\t// A tool the worker started can outlive it.\n\t\t_ = killTree(cmd.Process)\n",
+  "replace": ""
+ }
+]

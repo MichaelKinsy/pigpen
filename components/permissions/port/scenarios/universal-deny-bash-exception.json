@@ -1,0 +1,42 @@
+{
+  "name": "universal-deny-bash-exception",
+  "description": "A universal deny with one bash exception: bash stays exposed.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo hello"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo bye"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "do the work"
+      }
+    }
+  ],
+  "files": {},
+  "agentFiles": {
+    "extensions/pi-permission-system/config.json": "{\n  \"permission\": {\n    \"path\": \"allow\",\n    \"external_directory\": \"allow\",\n    \"*\": \"deny\",\n    \"bash\": {\n      \"echo hello\": \"allow\"\n    }\n  }\n}"
+  }
+}

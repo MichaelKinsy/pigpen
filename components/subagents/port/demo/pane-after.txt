@@ -1,0 +1,36 @@
+ capabilities. Some providers, such as bridges to another agent SDK, fix the tool list for a whole prompt.
+ With those, subagent appears only after the next user prompt, so do not retry it in this one. The operator
+ can start Pi with --exclude-tools subagents_enable to keep subagent always available.
+
+
+
+ subagent action="list" agentScope="project"
+ Executable agents:
+ Project agents
+ - helper (project): Helps with things
+
+ Builtin agents
+ - claude-code (builtin, external-cli:claude): Read-only Claude Code CLI analysis; requires local
+ authentication and trusted user settings/hooks
+ - claude-code-writer (builtin, external-cli:claude): Explicit file-writing Claude Code CLI mode; requires
+ local authentication and trusted user settings/hooks
+ - codex-exec (builtin, external-cli:codex): Read-only one-shot analysis through the installed Codex CLI
+ - codex-exec-writer (builtin, external-cli:codex): Explicit workspace-writing one-shot execution through the
+ installed Codex CLI
+ - cursor-agent (builtin, external-cli:cursor-agent): Read-only one-shot analysis through the installed
+ Cursor CLI
+ ... (8 more lines, ctrl+o to expand)
+
+
+
+ subagent agent="helper" task="say hello"
+ hello from the child agent
+
+
+ The helper answered.
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<run>/work
+↑4 ↓4 0.0%/100k (auto)                                                                                    eq-1

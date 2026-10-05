@@ -399,6 +399,30 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "piglet"
+              },
+              "status": {
+                "const": "available"
+              }
+            },
+            "required": [
+              "kind",
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "releases": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
         }
       ]
     }

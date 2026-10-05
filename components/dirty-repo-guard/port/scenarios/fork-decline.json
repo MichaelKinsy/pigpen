@@ -1,0 +1,12 @@
+{
+  "name": "fork-decline",
+  "description": "session_before_fork: after one exchange with the model, forking with a dirty repository asks 'fork anyway?' and a refusal cancels the fork.",
+  "files": {"a.txt": "one\n"},
+  "setup": [["git","init","-q"],["git","add","a.txt"],["git","commit","-q","-m","init"],["sh","-c","echo two > b.txt && echo three >> a.txt"]],
+  "commands": {"git": {"mode": "real"}},
+  "llm": [{"text": "hello"}],
+  "steps": [
+    {"name": "prompt", "rpc": {"type": "prompt", "message": "say hello"}},
+    {"name": "fork", "rpc": {"type": "prompt", "message": "/eq-fork"}, "ui": [{"value": "No, let me commit first"}]}
+  ]
+}

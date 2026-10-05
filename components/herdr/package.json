@@ -1,0 +1,12 @@
+{
+  "name": "pigpen-herdr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PiG agent-state reporter (Go extension) for the herdr terminal workspace manager",
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "files": ["extensions", "README.md", "LICENSE", "provenance.json"],
+  "pi": {
+    "extensions": ["extensions/herdr"]
+  }
+}

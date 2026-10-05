@@ -1,0 +1,178 @@
+{
+  "name": "many-tasks",
+  "description": "More tasks than the overlay shows; the tool output and /todos list all of them.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 1"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 2"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 3"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 4"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 5"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 6"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 7"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 8"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 9"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 10"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 11"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 12"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 13"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 14"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 15"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 2,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 3,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 4,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 5,
+            "status": "completed"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    },
+    {
+      "name": "todos",
+      "rpc": {
+        "type": "prompt",
+        "message": "/todos"
+      }
+    }
+  ]
+}

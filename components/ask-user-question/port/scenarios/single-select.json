@@ -1,0 +1,52 @@
+{
+  "name": "single-select",
+  "description": "One single-select question: the user picks the second option.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "ask_user_question",
+          "arguments": {
+            "questions": [
+              {
+                "question": "Which database?",
+                "header": "Database",
+                "options": [
+                  {
+                    "label": "Postgres",
+                    "description": "Relational"
+                  },
+                  {
+                    "label": "SQLite",
+                    "description": "Embedded"
+                  },
+                  {
+                    "label": "Redis",
+                    "description": "In memory"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "decide for me"
+      },
+      "ui": [
+        {
+          "value": "2. SQLite \u2014 Embedded"
+        }
+      ]
+    }
+  ]
+}

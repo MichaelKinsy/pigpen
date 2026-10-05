@@ -1,0 +1,4 @@
+[{"toolCalls":[{"name":"ask_user_question","arguments":{"questions":[
+  {"question":"Which database?","header":"Database","options":[{"label":"Postgres","description":"Relational"},{"label":"SQLite","description":"Embedded"}]},
+  {"question":"Which features?","header":"Features","multiSelect":true,"options":[{"label":"Auth","description":"Login"},{"label":"Cache","description":"Speed"},{"label":"Queue","description":"Jobs"}]}]}}]},
+ {"text":"Got your answers."}]

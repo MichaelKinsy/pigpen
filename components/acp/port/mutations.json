@@ -1,0 +1,748 @@
+[
+ {
+  "name": "embedded-context-default-on",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "envFlag(\"PIG_ACP_ENABLE_EMBEDDED_CONTEXT\", \"PI_ACP_ENABLE_EMBEDDED_CONTEXT\") == \"true\"",
+  "replace": "envFlag(\"PIG_ACP_ENABLE_EMBEDDED_CONTEXT\", \"PI_ACP_ENABLE_EMBEDDED_CONTEXT\") != \"true\"",
+  "why": "no-op case on the red stub: embeddedContext defaults to false"
+ },
+ {
+  "name": "embedded-context-false-string-enables",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "envFlag(\"PIG_ACP_ENABLE_EMBEDDED_CONTEXT\", \"PI_ACP_ENABLE_EMBEDDED_CONTEXT\") == \"true\"",
+  "replace": "envFlag(\"PIG_ACP_ENABLE_EMBEDDED_CONTEXT\", \"PI_ACP_ENABLE_EMBEDDED_CONTEXT\") != \"\"",
+  "why": "no-op case on the red stub: 'false' keeps embeddedContext off"
+ },
+ {
+  "name": "protocol-version-2",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "ProtocolVersion: ProtocolVersion,",
+  "replace": "ProtocolVersion: 2,"
+ },
+ {
+  "name": "load-session-not-advertised",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "LoadSession:     true,",
+  "replace": "LoadSession:     false,"
+ },
+ {
+  "name": "audio-advertised",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "Image: true, Audio: false,",
+  "replace": "Image: true, Audio: true,"
+ },
+ {
+  "name": "mcp-http-advertised",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "McpCapabilities{HTTP: false, SSE: false}",
+  "replace": "McpCapabilities{HTTP: true, SSE: false}"
+ },
+ {
+  "name": "relative-cwd-accepted-new",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if !filepath.IsAbs(req.Cwd) {\n\t\treturn NewSessionResponse{}",
+  "replace": "if false {\n\t\treturn NewSessionResponse{}"
+ },
+ {
+  "name": "relative-cwd-accepted-load",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if !filepath.IsAbs(req.Cwd) {\n\t\treturn LoadSessionResponse{}",
+  "replace": "if false {\n\t\treturn LoadSessionResponse{}"
+ },
+ {
+  "name": "new-session-keeps-old-children",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "\ta.sessions.CloseAllExcept(sess.ID())\n\n\tvar startup any",
+  "replace": "\tvar startup any"
+ },
+ {
+  "name": "zero-models-not-auth-required",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "len(raw) == 0 {\n\t\ta.cleanupFailedNewSession",
+  "replace": "len(raw) == -1 {\n\t\ta.cleanupFailedNewSession"
+ },
+ {
+  "name": "state-auth-error-ignored",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "stateErr != nil && MaybeAuthRequiredError(stateErr) != nil",
+  "replace": "false",
+  "equivalent": "the same credentials error is caught again by the configuration branch below it (both are upstream code); the mutant changes no observable result"
+ },
+ {
+  "name": "quiet-startup-ignored",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if !GetQuietStartup(req.Cwd) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "startup-sent-before-response",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "a.defer_(sess.SendStartupInfoIfPending)",
+  "replace": "sess.SendStartupInfoIfPending()"
+ },
+ {
+  "name": "cancel-restores-stale-session",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "s := a.sessions.MaybeGet(sessionID)\n\tif s == nil {\n\t\treturn nil\n\t}",
+  "replace": "s, err := a.restoreSession(sessionID, \"\", nil)\n\tif err != nil {\n\t\treturn err\n\t}",
+  "why": "no-op case on the red stub: cancel of an unknown session does nothing"
+ },
+ {
+  "name": "delete-unknown-is-error",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if stored == nil && ps == nil {\n\t\treturn map[string]any{}, nil\n\t}",
+  "replace": "if stored == nil && ps == nil {\n\t\treturn nil, ErrInvalidParams(nil, \"unknown\")\n\t}",
+  "why": "no-op case on the red stub: session/delete of an unknown id succeeds"
+ },
+ {
+  "name": "delete-keeps-file",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "_ = os.Remove(file) // best effort\n\t}\n\ta.store.Delete(req.SessionID)",
+  "replace": "_ = file\n\t}\n\ta.store.Delete(req.SessionID)"
+ },
+ {
+  "name": "delete-keeps-map-entry",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "\ta.store.Delete(req.SessionID)\n\treturn map[string]any{}, nil",
+  "replace": "\treturn map[string]any{}, nil"
+ },
+ {
+  "name": "list-page-size",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "listPageSize         = 50",
+  "replace": "listPageSize         = 51"
+ },
+ {
+  "name": "list-ignores-last-cwd",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "cwd := a.getLastCwd()",
+  "replace": "cwd := \"\""
+ },
+ {
+  "name": "list-explicit-cwd-ignored",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if req.Cwd != nil {\n\t\tcwd = *req.Cwd\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "list-cursor-ignored",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if n, ok := parseIntPrefix(*req.Cursor); ok && n > 0 {",
+  "replace": "if n, ok := parseIntPrefix(*req.Cursor); ok && n > 1000000 {"
+ },
+ {
+  "name": "model-lookup-without-provider-skipped",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if provider == \"\" || modelID == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "model-change-no-usage-refresh",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if modelChanged {\n\t\tsess.PublishContextUsage()",
+  "replace": "if modelChanged && false {\n\t\tsess.PublishContextUsage()"
+ },
+ {
+  "name": "thinking-change-refreshes-usage",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if modelChanged {\n\t\tsess.PublishContextUsage()",
+  "replace": "if modelChanged || true {\n\t\tsess.PublishContextUsage()",
+  "why": "no-op case on the red stub: a thinking-level change publishes no usage update"
+ },
+ {
+  "name": "empty-mode-accepted",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "if !ok || mode == \"\" {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "unknown-config-option-accepted",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "default:\n\t\treturn SetSessionConfigOptionResponse{}, ErrInvalidParams(nil, \"Unknown config option: \"+req.ConfigID)",
+  "replace": "default:"
+ },
+ {
+  "name": "load-does-not-close-live-copy",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "\ta.sessions.Close(req.SessionID)\n\ta.setLastCwd(req.Cwd)",
+  "replace": "\ta.setLastCwd(req.Cwd)"
+ },
+ {
+  "name": "load-failure-keeps-child",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "\t\ta.sessions.Close(sess.ID())\n\t\treturn LoadSessionResponse{}, err",
+  "replace": "\t\treturn LoadSessionResponse{}, err"
+ },
+ {
+  "name": "load-does-not-refresh-map",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "\ta.store.Upsert(StoredSession{SessionID: req.SessionID, Cwd: req.Cwd, SessionFile: stored.sessionFile})\n\n\tdata, err",
+  "replace": "\n\tdata, err"
+ },
+ {
+  "name": "restore-uses-no-session-file",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "SpawnParams{Cwd: cwd, SessionPath: stored.sessionFile, PiCommand: a.pigCommand()}",
+  "replace": "SpawnParams{Cwd: cwd, PiCommand: a.pigCommand()}"
+ },
+ {
+  "name": "tool-history-not-replayed-as-error",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "status := \"completed\"\n\t\tif isError {\n\t\t\tstatus = \"failed\"\n\t\t}\n\t\tif IsBashTool(toolName)",
+  "replace": "status := \"completed\"\n\t\tif IsBashTool(toolName)"
+ },
+ {
+  "name": "slash-with-image-handled-locally",
+  "module": "cmd",
+  "file": "internal/acp/agent_prompt.go",
+  "find": "if len(images) == 0 && strings.HasPrefix",
+  "replace": "if strings.HasPrefix"
+ },
+ {
+  "name": "autocompact-toggle-not-inverted",
+  "module": "cmd",
+  "file": "internal/acp/agent_prompt.go",
+  "find": "enabled = !truthy(state[\"autoCompactionEnabled\"])",
+  "replace": "enabled = truthy(state[\"autoCompactionEnabled\"])"
+ },
+ {
+  "name": "steering-any-mode-accepted",
+  "module": "cmd",
+  "file": "internal/acp/agent_prompt.go",
+  "find": "if mode != \"all\" && mode != \"one-at-a-time\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "name-empty-accepted",
+  "module": "cmd",
+  "file": "internal/acp/agent_prompt.go",
+  "find": "if name == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "export-empty-session-exported",
+  "module": "cmd",
+  "file": "internal/acp/agent_prompt.go",
+  "find": "if file == \"\" || count == 0 || !exists {",
+  "replace": "if file == \"\" || count < 0 || !exists {"
+ },
+ {
+  "name": "error-turn-reported-as-error",
+  "module": "cmd",
+  "file": "internal/acp/agent_prompt.go",
+  "find": "if reason == StopError {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cancelled-error-turn-is-end-turn",
+  "module": "cmd",
+  "file": "internal/acp/agent_prompt.go",
+  "find": "if sess.WasCancelRequested() {\n\t\t\treason = StopCancelled",
+  "replace": "if false {\n\t\t\treason = StopCancelled"
+ },
+ {
+  "name": "changelog-not-truncated",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "maxChangelogChars    = 20000",
+  "replace": "maxChangelogChars    = 20001"
+ },
+ {
+  "name": "idle-notice-not-flushed-before-response",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "\t\ts.emit(queueInfo(0, false))\n\t\ts.flushEmits()",
+  "replace": "\t\ts.emit(queueInfo(0, false))"
+ },
+ {
+  "name": "cancel-flag-leaks-into-next-turn",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "\ts.cancelRequested = false\n\ts.inAgentLoop = false\n\ts.pending = t",
+  "replace": "\ts.inAgentLoop = false\n\ts.pending = t"
+ },
+ {
+  "name": "cancelled-turn-reports-end-turn",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if s.cancelRequested {\n\t\treason = StopCancelled",
+  "replace": "if false {\n\t\treason = StopCancelled"
+ },
+ {
+  "name": "prompt-auth-error-swallowed",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if authErr := MaybeAuthRequiredError(err); authErr != nil {",
+  "replace": "if authErr := MaybeAuthRequiredError(err); false && authErr != nil {"
+ },
+ {
+  "name": "prompt-error-after-cancel-is-error",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "} else if cancelled {",
+  "replace": "} else if cancelled && false {"
+ },
+ {
+  "name": "queue-not-cleared-on-cancel",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "queued := s.queue\n\ts.queue = nil",
+  "replace": "queued := []*queuedTurn{}"
+ },
+ {
+  "name": "startup-info-sent-twice",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "\ts.startupSent = true\n\ttext := *s.startupInfo",
+  "replace": "\ttext := *s.startupInfo"
+ },
+ {
+  "name": "tool-status-downgraded",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "\tstatus := \"pending\"\n\tif has {\n\t\tstatus = existing\n\t}",
+  "replace": "\tstatus := \"pending\"\n\t_ = existing"
+ },
+ {
+  "name": "select-index-leading-zero-accepted",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if err != nil || n < 0 || strconv.Itoa(n) != raw {",
+  "replace": "if err != nil || n < 0 {"
+ },
+ {
+  "name": "select-out-of-range-index-panics",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "ok && idx < len(options)",
+  "replace": "ok"
+ },
+ {
+  "name": "confirm-no-is-yes",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "\"confirmed\": resp.Outcome.OptionID == \"yes\"",
+  "replace": "\"confirmed\": resp.Outcome.OptionID != \"yes\""
+ },
+ {
+  "name": "confirm-cancel-is-no",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if resp.Outcome.Outcome == \"cancelled\" {\n\t\ts.sendUI(map[string]any{\"id\": id, \"cancelled\": true})\n\t\treturn\n\t}\n\ts.sendUI(map[string]any{\"id\": id, \"confirmed\"",
+  "replace": "if false {\n\t\treturn\n\t}\n\ts.sendUI(map[string]any{\"id\": id, \"confirmed\""
+ },
+ {
+  "name": "permission-error-not-cancelled",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if err != nil {\n\t\ts.sendUI(map[string]any{\"id\": id, \"cancelled\": true})\n\t\treturn PermissionResponse{}, false",
+  "replace": "if err != nil {\n\t\treturn PermissionResponse{}, false"
+ },
+ {
+  "name": "input-dialog-answered-with-value",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "s.emit(textChunk(\"agent_message_chunk\", fmt.Sprintf(\"Pi %s UI request is not supported in ACP yet; cancelling it.\", method)))\n\t\tcancel()",
+  "replace": "s.emit(textChunk(\"agent_message_chunk\", fmt.Sprintf(\"Pi %s UI request is not supported in ACP yet; cancelling it.\", method)))\n\t\ts.ackQ.do(func() { s.sendUI(map[string]any{\"id\": id, \"value\": \"\"}) })"
+ },
+ {
+  "name": "notify-level-default",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "level := \"info\"",
+  "replace": "level := \"warning\""
+ },
+ {
+  "name": "usage-empty-window-accepted",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "!ok2 || size <= 0",
+  "replace": "!ok2"
+ },
+ {
+  "name": "usage-negative-tokens-accepted",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "!ok1 || used < 0",
+  "replace": "!ok1"
+ },
+ {
+  "name": "usage-null-tokens-accepted",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "f, ok := asNumber(v)\n\tif !ok ||",
+  "replace": "f, ok := asNumber(v)\n\tif ok &&"
+ },
+ {
+  "name": "retry-subsecond-rounds-to-zero",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if delayMs > 0 && secs == 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "edit-duplicate-match-gets-a-line",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if strings.Contains(text[first+len(needle):], needle) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "write-new-file-not-a-diff",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if snap.oldText == nil || newText != *snap.oldText {",
+  "replace": "if snap.oldText != nil && newText != *snap.oldText {"
+ },
+ {
+  "name": "failed-tool-gets-a-diff",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "if !isError && hasSnap {",
+  "replace": "if hasSnap {"
+ },
+ {
+  "name": "manager-double-dispose",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "\tif ok {\n\t\ts.proc.Dispose()\n\t}",
+  "replace": "\tif ok || !ok {\n\t\ts.proc.Dispose()\n\t}"
+ },
+ {
+  "name": "manager-does-not-record-file",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "m.store.Upsert(StoredSession{SessionID: id, Cwd: p.Cwd, SessionFile: file})",
+  "replace": "_ = file"
+ },
+ {
+  "name": "unknown-session-id-not-invalid-params",
+  "module": "cmd",
+  "file": "internal/acp/session.go",
+  "find": "return nil, ErrInvalidParams(nil, \"Unknown sessionId: \"+id)",
+  "replace": "return nil, ErrInternal(nil, \"Unknown sessionId: \"+id)"
+ },
+ {
+  "name": "base64-length-padding",
+  "module": "cmd",
+  "file": "internal/acp/translate.go",
+  "find": "pad = 2",
+  "replace": "pad = 1"
+ },
+ {
+  "name": "bash-exit-code-error-default",
+  "module": "cmd",
+  "file": "internal/acp/translate.go",
+  "find": "if isError {\n\t\treturn 1\n\t}\n\treturn 0",
+  "replace": "return 0"
+ },
+ {
+  "name": "bash-delta-always-full",
+  "module": "cmd",
+  "file": "internal/acp/translate.go",
+  "find": "if strings.HasPrefix(next, previous) {\n\t\treturn next[len(previous):]\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tool-diff-preferred-over-content",
+  "module": "cmd",
+  "file": "internal/acp/translate.go",
+  "find": "if diff, ok := details[\"diff\"].(string); ok && jsTrim(diff) != \"\" {",
+  "replace": "if diff, ok := details[\"diff\"].(string); ok && false {"
+ },
+ {
+  "name": "image-marker-dropped",
+  "module": "cmd",
+  "file": "internal/acp/translate.go",
+  "find": "images = append(images, Image{\"type\": \"image\", \"mimeType\": b[\"mimeType\"], \"data\": b[\"data\"]})",
+  "replace": ""
+ },
+ {
+  "name": "slash-first-arg-wins-dedupe",
+  "module": "cmd",
+  "file": "internal/acp/slash.go",
+  "find": "if seen[c.Name] {\n\t\t\tcontinue\n\t\t}\n\t\tseen[c.Name] = true\n\t\tout = append(out, AvailableCommand{Name: c.Name, Description: c.Description})",
+  "replace": "seen[c.Name] = true\n\t\tout = append(out, AvailableCommand{Name: c.Name, Description: c.Description})"
+ },
+ {
+  "name": "extension-commands-advertised",
+  "module": "cmd",
+  "file": "internal/acp/slash.go",
+  "find": "!opts.IncludeExtensionCommands && src == \"extension\"",
+  "replace": "false && src == \"extension\""
+ },
+ {
+  "name": "store-wrong-version",
+  "module": "cmd",
+  "file": "internal/acp/store.go",
+  "find": "f.Version != 1",
+  "replace": "f.Version != 2"
+ },
+ {
+  "name": "sessions-oldest-first",
+  "module": "cmd",
+  "file": "internal/acp/pisessions.go",
+  "find": "return key(items[i].UpdatedAt) > key(items[j].UpdatedAt)",
+  "replace": "return key(items[i].UpdatedAt) < key(items[j].UpdatedAt)"
+ },
+ {
+  "name": "shared-dirs-any-value",
+  "module": "cmd",
+  "file": "internal/acp/paths.go",
+  "find": "os.Getenv(\"PIG_USE_PI_DIRS\") == \"1\"",
+  "replace": "os.Getenv(\"PIG_USE_PI_DIRS\") != \"\""
+ },
+ {
+  "name": "quiet-start-legacy-ignored",
+  "module": "cmd",
+  "file": "internal/acp/settings.go",
+  "find": "if b, ok := m[\"quietStart\"].(bool); ok {",
+  "replace": "if b, ok := m[\"quietStartX\"].(bool); ok {"
+ },
+ {
+  "name": "auth-403-not-detected",
+  "module": "cmd",
+  "file": "internal/acp/auth.go",
+  "find": "\"forbidden\", \"401\", \"403\"}",
+  "replace": "\"forbidden\", \"401\"}"
+ },
+ {
+  "name": "unknown-method-succeeds",
+  "module": "cmd",
+  "file": "internal/acp/server.go",
+  "find": "return nil, ErrMethodNotFound(req.Method)",
+  "replace": "return map[string]any{}, nil"
+ },
+ {
+  "name": "initialize-without-version-accepted",
+  "module": "cmd",
+  "file": "internal/acp/server.go",
+  "find": "need(p.ProtocolVersion != nil, \"protocolVersion is required\")",
+  "replace": "need(true, \"\")"
+ },
+ {
+  "name": "cancel-as-request-unanswered-null",
+  "module": "cmd",
+  "file": "internal/acp/server.go",
+  "find": "if err := a.Cancel(*p.SessionID); err != nil {\n\t\t\treturn nil, err\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "deferred-work-not-after-response",
+  "module": "cmd",
+  "file": "internal/acp/server.go",
+  "find": "a := base.Scoped(req.AfterResponse)",
+  "replace": "a := base.Scoped(func(fn func()) { fn() })"
+ },
+ {
+  "name": "internal-error-code",
+  "module": "cmd",
+  "file": "internal/jsonrpc/jsonrpc.go",
+  "find": "Code: -32603, Message: \"Internal error\"",
+  "replace": "Code: -32602, Message: \"Internal error\""
+ },
+ {
+  "name": "notification-answered",
+  "module": "cmd",
+  "file": "internal/jsonrpc/jsonrpc.go",
+  "find": "\tif notification {\n\t\treturn\n\t}\n\tresp :=",
+  "replace": "\tresp :="
+ },
+ {
+  "name": "after-response-hook-dropped",
+  "module": "cmd",
+  "file": "internal/jsonrpc/jsonrpc.go",
+  "find": "\tfor _, fn := range req.after {\n\t\tfn()\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "bad-line-stops-reading",
+  "module": "cmd",
+  "file": "internal/jsonrpc/jsonrpc.go",
+  "find": "if json.Unmarshal(line, &m) == nil {\n\t\t\t\tc.dispatch(m)\n\t\t\t}",
+  "replace": "if json.Unmarshal(line, &m) != nil {\n\t\t\t\tc.closeDone()\n\t\t\t\treturn\n\t\t\t}\n\t\t\tc.dispatch(m)"
+ },
+ {
+  "name": "failed-write-does-not-end-connection",
+  "module": "cmd",
+  "file": "internal/jsonrpc/jsonrpc.go",
+  "find": "\t\t\tc.queue = nil\n\t\t\tc.mu.Unlock()\n\t\t\tc.closeDone()",
+  "replace": "\t\t\tc.queue = nil\n\t\t\tc.mu.Unlock()"
+ },
+ {
+  "name": "rpc-failure-is-success",
+  "module": "cmd",
+  "file": "internal/pirpc/process.go",
+  "find": "if !res.Success {\n\t\treturn res, fmt.Errorf(\"pi %v failed",
+  "replace": "if false {\n\t\treturn res, fmt.Errorf(\"pi %v failed"
+ },
+ {
+  "name": "thinking-levels-any-accepted",
+  "module": "cmd",
+  "file": "internal/pirpc/process.go",
+  "find": "if !ok || s == \"\" {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "late-response-broadcast-as-event",
+  "module": "cmd",
+  "file": "internal/pirpc/process.go",
+  "find": "if c == nil {\n\t\t\treturn\n\t\t}\n\t\tvar w wireResponse",
+  "replace": "if c == nil {\n\t\t\tfor _, h := range p.handlers {\n\t\t\t\th(msg)\n\t\t\t}\n\t\t\treturn\n\t\t}\n\t\tvar w wireResponse"
+ },
+ {
+  "name": "windows-default-launcher",
+  "module": "cmd",
+  "file": "internal/pirpc/process.go",
+  "find": "if goos == \"windows\" {\n\t\treturn \"pig.cmd\"\n\t}",
+  "replace": "if goos == \"windows\" {\n\t\treturn \"pig\"\n\t}"
+ },
+ {
+  "name": "shell-for-exe",
+  "module": "cmd",
+  "file": "internal/pirpc/process.go",
+  "find": "strings.HasSuffix(l, \".cmd\") || strings.HasSuffix(l, \".bat\")",
+  "replace": "strings.HasSuffix(l, \".cmd\") || strings.HasSuffix(l, \".exe\")"
+ },
+ {
+  "name": "session-flag-dropped",
+  "module": "cmd",
+  "file": "internal/pirpc/process.go",
+  "find": "args = append(args, \"--session\", sessionPath)",
+  "replace": "_ = sessionPath"
+ },
+ {
+  "name": "unknown-flag-exits-1",
+  "module": "cmd",
+  "file": "main.go",
+  "find": "fmt.Fprintf(errw, \"pig-acp: %s\\n\\n%s\", msg, usage)\n\t\treturn 2",
+  "replace": "fmt.Fprintf(errw, \"pig-acp: %s\\n\\n%s\", msg, usage)\n\t\treturn 1"
+ },
+ {
+  "name": "env-precedence-swapped",
+  "module": "cmd",
+  "file": "main.go",
+  "find": "[]string{\"PIG_ACP_PIG_COMMAND\", \"PI_ACP_PI_COMMAND\"}",
+  "replace": "[]string{\"PI_ACP_PI_COMMAND\", \"PIG_ACP_PIG_COMMAND\"}"
+ },
+ {
+  "name": "terminal-login-exit-code-lost",
+  "module": "cmd",
+  "file": "main.go",
+  "find": "\t\t\tif code := exitErr.ExitCode(); code >= 0 {\n\t\t\t\treturn code\n\t\t\t}",
+  "replace": "\t\t\tif code := exitErr.ExitCode(); code >= 0 {\n\t\t\t\treturn 1\n\t\t\t}"
+ },
+ {
+  "name": "piglet-flag-dropped",
+  "module": "cmd",
+  "file": "main.go",
+  "find": "extra = append([]string{\"--piglet\", piglet}, extra...)",
+  "replace": "_ = piglet"
+ },
+ {
+  "name": "version-lacks-protocol",
+  "module": "cmd",
+  "file": "main.go",
+  "find": "fmt.Fprintf(out, \"pig-acp %s (ACP protocol version %d)\\n\", version, acp.ProtocolVersion)",
+  "replace": "fmt.Fprintf(out, \"pig-acp %s\\n\", version)"
+ },
+ {
+  "name": "acp-usage-warning-level",
+  "module": "ext",
+  "file": "extension.go",
+  "find": "ctx.Notify(\"Usage: /acp [zed]\", \"warning\")",
+  "replace": "ctx.Notify(\"Usage: /acp [zed]\", \"info\")"
+ },
+ {
+  "name": "acp-zed-arg-shows-limits",
+  "module": "ext",
+  "file": "extension.go",
+  "find": "ctx.Notify(zedSnippet(), \"info\")\n\t\tdefault:",
+  "replace": "ctx.Notify(zedSnippet()+\"\\n\\n\"+limits(), \"info\")\n\t\tdefault:"
+ },
+ {
+  "name": "acp-limits-dropped",
+  "module": "ext",
+  "file": "extension.go",
+  "find": "ctx.Notify(zedSnippet()+\"\\n\\n\"+limits(), \"info\")\n\t\tcase \"zed\":",
+  "replace": "ctx.Notify(zedSnippet(), \"info\")\n\t\tcase \"zed\":"
+ },
+ {
+  "name": "acp-names-wrong-executable",
+  "module": "ext",
+  "file": "extension.go",
+  "find": "\"args\": []string{\"--pig\", Executable()}",
+  "replace": "\"args\": []string{\"--pig\", \"pig\"}"
+ },
+ {
+  "name": "review-harness-binary-ignored",
+  "module": "ext",
+  "file": "extension.go",
+  "find": "\tif host := os.Getenv(\"PIG_HARNESS_BINARY\"); host != \"\" {\n\t\treturn host\n\t}\n",
+  "replace": "",
+  "why": "review: installed as a Package, /acp must name the agent, not the extension cell runner"
+ },
+ {
+  "name": "review-login-drops-piglet",
+  "module": "cmd",
+  "file": "main.go",
+  "find": "\tif piglet != \"\" {\n\t\tlogin = append(login, \"--piglet\", piglet)\n\t}\n",
+  "replace": "",
+  "why": "review: the terminal auth method must start the agent the sessions use"
+ },
+ {
+  "name": "review-shared-map-under-pi",
+  "module": "cmd",
+  "file": "internal/acp/paths.go",
+  "find": "\tif x := os.Getenv(\"XDG_CONFIG_HOME\"); x != \"\" {\n\t\treturn filepath.Join(expandTilde(x), \"pig\")\n\t}",
+  "replace": "\tif sharedPiDirs() {\n\t\treturn filepath.Join(userHome(), \".pi\")\n\t}\n\tif x := os.Getenv(\"XDG_CONFIG_HOME\"); x != \"\" {\n\t\treturn filepath.Join(expandTilde(x), \"pig\")\n\t}",
+  "why": "review: PiG state stays under PiG config root in shared mode"
+ },
+ {
+  "name": "review-session-dir-env-no-tilde",
+  "module": "cmd",
+  "file": "internal/acp/pisessions.go",
+  "find": "\tif d := os.Getenv(env); d != \"\" {\n\t\treturn expandTilde(d)\n\t}",
+  "replace": "\tif d := os.Getenv(env); d != \"\" {\n\t\treturn d\n\t}",
+  "why": "review: pig expands ~ in the session directory variable"
+ },
+ {
+  "name": "review-shared-session-dir-env-ignored",
+  "module": "cmd",
+  "file": "internal/acp/pisessions.go",
+  "find": "\t\tenv = \"PI_CODING_AGENT_SESSION_DIR\"",
+  "replace": "\t\tenv = \"PIG_CODING_AGENT_SESSION_DIR\"",
+  "why": "review: shared mode reads PI_CODING_AGENT_SESSION_DIR"
+ }
+]

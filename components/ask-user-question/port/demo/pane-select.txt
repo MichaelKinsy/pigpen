@@ -1,0 +1,36 @@
+
+    ▄▄▄▄  ▄▄▄▄    v0.4.0+1.0.0
+   ▄▀▀▀▀▄▄▀▀▀▀▄   escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o more
+  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀  Press ctrl+o to show full startup help and loaded resources.
+  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀  PiG can explain its own features and look up its docs. Ask it how to use or extend PiG.
+  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+    ▀▀▀▀▀▀▀▀▀▀
+
+[Extensions]
+  rpiv-ask-user-question
+
+
+ ask me
+
+
+
+ ask_user_question
+ questions=[{"header":"Database","options":[{"description":"Relational","label":"Postgres"},{"desc...
+
+
+
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+ [Database] Which database?
+
+ → 1. Postgres — Relational
+   2. SQLite — Embedded
+   3. Type something.
+
+ ↑↓ navigate  enter select  escape/ctrl+c cancel
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<run>/work
+↑1 ↓1 0.0%/100k (auto)                                                                                    eq-1

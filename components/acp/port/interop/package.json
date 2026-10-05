@@ -1,0 +1,13 @@
+{
+  "name": "pigpen-acp-interop",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Interop proof for pig-acp: the ACP reference client (@agentclientprotocol/sdk 0.26.0) drives a real pig-acp, and every message is checked against the pinned schema.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": { "test": "node run.mjs" },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "0.26.0",
+    "ajv": "8.17.1"
+  }
+}

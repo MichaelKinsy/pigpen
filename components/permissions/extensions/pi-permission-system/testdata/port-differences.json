@@ -1,0 +1,742 @@
+[
+ {
+  "config": "bash-allow",
+  "command": "sudo ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "bash-allow",
+  "command": "watch ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "bash-allow",
+  "command": "doas ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "bash-allow",
+  "command": "nice echo d",
+  "kind": "stricter"
+ },
+ {
+  "config": "bash-allow",
+  "command": "env echo b",
+  "kind": "stricter"
+ },
+ {
+  "config": "bash-allow",
+  "command": "timeout 5 wc -l",
+  "kind": "stricter"
+ },
+ {
+  "config": "bash-allow",
+  "command": "xargs grep foo",
+  "kind": "stricter"
+ },
+ {
+  "config": "bash-allow",
+  "command": "ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "command ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "bash script.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "bash -- -c",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "su root",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "source x.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "git status \u0026\u0026 sudo ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "bash-allow",
+  "command": "ls \u0026\u0026 ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "ls \u0026",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "ls \u0026 rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "ls;",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "echo $(ls)",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "echo 'a'",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "A=1 ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "cat \u003c f",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "rm -rf /tmp/y; echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "echo \u001b]0;x\u0007",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "echo {a,b}",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "echo é",
+  "kind": "unsupported"
+ },
+ {
+  "config": "bash-allow",
+  "command": "ls ;; rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "sudo ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "universal-allow",
+  "command": "watch ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "universal-allow",
+  "command": "doas ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "universal-allow",
+  "command": "nice echo d",
+  "kind": "stricter"
+ },
+ {
+  "config": "universal-allow",
+  "command": "env echo b",
+  "kind": "stricter"
+ },
+ {
+  "config": "universal-allow",
+  "command": "timeout 5 wc -l",
+  "kind": "stricter"
+ },
+ {
+  "config": "universal-allow",
+  "command": "xargs grep foo",
+  "kind": "stricter"
+ },
+ {
+  "config": "universal-allow",
+  "command": "ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "command ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "bash script.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "bash -- -c",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "su root",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "source x.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "git status \u0026\u0026 sudo ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "universal-allow",
+  "command": "ls \u0026\u0026 ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "ls \u0026",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "ls \u0026 rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "ls;",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "echo $(ls)",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "echo 'a'",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "A=1 ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "cat \u003c f",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "rm -rf /tmp/y; echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "echo \u001b]0;x\u0007",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "echo {a,b}",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "echo é",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-allow",
+  "command": "ls ;; rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "sudo ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "patterns",
+  "command": "watch ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "patterns",
+  "command": "doas ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "patterns",
+  "command": "nice echo d",
+  "kind": "stricter"
+ },
+ {
+  "config": "patterns",
+  "command": "env echo b",
+  "kind": "stricter"
+ },
+ {
+  "config": "patterns",
+  "command": "timeout 5 wc -l",
+  "kind": "stricter"
+ },
+ {
+  "config": "patterns",
+  "command": "xargs grep foo",
+  "kind": "stricter"
+ },
+ {
+  "config": "patterns",
+  "command": "ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "command ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "bash script.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "bash -- -c",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "su root",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "source x.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "git status \u0026\u0026 sudo ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "patterns",
+  "command": "ls \u0026\u0026 ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "ls \u0026",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "ls \u0026 rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "ls;",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "echo $(ls)",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "echo 'a'",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "A=1 ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "cat \u003c f",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "rm -rf /tmp/y; echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "   ",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "echo \u001b]0;x\u0007",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "echo {a,b}",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "echo é",
+  "kind": "unsupported"
+ },
+ {
+  "config": "patterns",
+  "command": "ls ;; rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "sudo ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "deny-default",
+  "command": "nice echo d",
+  "kind": "stricter"
+ },
+ {
+  "config": "deny-default",
+  "command": "git status \u0026\u0026 sudo ls",
+  "kind": "stricter"
+ },
+ {
+  "config": "deny-default",
+  "command": "ls \u0026",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "ls \u0026 rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "ls;",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "echo $(ls)",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "echo 'a'",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "A=1 ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "cat \u003c f",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "rm -rf /tmp/y; echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "   ",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "echo \u001b]0;x\u0007",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "echo {a,b}",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "echo é",
+  "kind": "unsupported"
+ },
+ {
+  "config": "deny-default",
+  "command": "ls ;; rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "ls \u0026",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "ls \u0026 rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "ls;",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "echo $(ls)",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "echo 'a'",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "A=1 ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "cat \u003c f",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "rm -rf /tmp/y; echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "   ",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "echo \u001b]0;x\u0007",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "echo {a,b}",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "echo é",
+  "kind": "unsupported"
+ },
+ {
+  "config": "universal-deny",
+  "command": "ls ;; rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-allow",
+  "command": "ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-allow",
+  "command": "command ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-allow",
+  "command": "bash script.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-allow",
+  "command": "bash -- -c",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-allow",
+  "command": "su root",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-allow",
+  "command": "source x.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-allow",
+  "command": "ls \u0026\u0026 ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "command ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "bash script.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "bash -- -c",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "su root",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "source x.sh",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "ls \u0026\u0026 ssh host ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "ls \u0026",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "ls \u0026 rm x",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "ls;",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "echo $(ls)",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "echo 'a'",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "A=1 ls",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "cat \u003c f",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "rm -rf /tmp/y; echo hi \u003e out.txt",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "   ",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "echo \u001b]0;x\u0007",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "echo {a,b}",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "echo é",
+  "kind": "unsupported"
+ },
+ {
+  "config": "yolo-patterns",
+  "command": "ls ;; rm x",
+  "kind": "unsupported"
+ }
+]

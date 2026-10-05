@@ -1,0 +1,9 @@
+{
+  "name": "git-missing",
+  "description": "git is not installed. Pi's exec resolves with code 1 when the spawn fails, so the extension allows the switch.",
+  "files": {"a.txt": "one\n"},
+  "commands": {"git": {"mode": "missing"}},
+  "steps": [
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "settleMs": 500}
+  ]
+}
