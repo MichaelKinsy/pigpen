@@ -7,6 +7,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseDocument } from 'yaml';
 import { requirePig } from './pig-bin.mjs';
 
 const scratchDirs = new Set();
@@ -21,7 +22,20 @@ export function scratchDir(prefix) {
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 
-/** Every Go module: a component's own root go.mod (a shared library Package), and each components/<name>/extensions/<dir> and piglets/<name>/extensions/<dir>. */
+/** The directory of a Piglet's frontend member (build.frontend in its piglet.yaml) when it holds go.mod, else undefined. */
+export function frontendMember(piglet) {
+  const manifest = join(piglet, 'piglet.yaml');
+  if (!existsSync(manifest)) return undefined;
+  const frontend = parseDocument(readFileSync(manifest, 'utf8'), { uniqueKeys: true }).toJS({ maxAliasCount: 0 })?.build?.frontend;
+  if (typeof frontend !== 'string' || !frontend) return undefined;
+  const dir = resolve(piglet, frontend);
+  return existsSync(join(dir, 'go.mod')) ? dir : undefined;
+}
+
+/**
+ * Every Go module: a component's own root go.mod (a shared library Package), each components/<name>/extensions/<dir>
+ * and piglets/<name>/extensions/<dir>, and a Piglet's frontend member (piglet.yaml build.frontend).
+ */
 export function goModules(directory = root) {
   const found = [];
   for (const kind of ['components', 'piglets']) {
@@ -31,6 +45,10 @@ export function goModules(directory = root) {
       if (!owner.isDirectory()) continue;
       // A component may be a shared Go library module rooted at its Package directory (libraries/*, assets).
       if (existsSync(join(base, owner.name, 'go.mod'))) found.push(join(base, owner.name));
+      if (kind === 'piglets') {
+        const frontend = frontendMember(join(base, owner.name));
+        if (frontend) found.push(frontend);
+      }
       const extensions = join(base, owner.name, 'extensions');
       if (!existsSync(extensions)) continue;
       for (const entry of readdirSync(extensions, { withFileTypes: true })) {
