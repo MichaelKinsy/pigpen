@@ -3,8 +3,7 @@
 # Pigpen
 
 [Pigpen](https://github.com/MichaelKinsy/pigpen) is a monorepo of
-[PiG](https://github.com/MichaelKinsy/PiG) Piglets and reusable components maintained
-by Michael Kinsy. Piglets compose named agents. Component Packages can also be
+[PiG](https://github.com/MichaelKinsy/PiG) Piglets and reusable components. Piglets compose named agents. Component Packages can also be
 installed independently. Planned catalog entries are not published releases.
 The [herdr reporter](components/herdr/README.md) is a standalone extension Package
 that reports PiG's state to herdr. It works on its own with `pig install`; the
