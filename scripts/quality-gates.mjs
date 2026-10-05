@@ -1,6 +1,9 @@
 import { createHash } from 'node:crypto';
 import { closeSync, existsSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync, statSync } from 'node:fs';
-import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative as nativeRelative, resolve, sep } from 'node:path';
+
+// Paths are compared with forward slashes on every OS (Windows runners give backslashes).
+const relative = (from, to) => nativeRelative(from, to).split(sep).join('/');
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import { isMap, parseDocument } from 'yaml';
