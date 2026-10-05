@@ -77,32 +77,48 @@ Two gates keep a headless session silent, matching herdr's Pi integration:
 - run mode `tui`, because RPC, JSON and print modes have no pane to display and
   RPC still reports `hasUI=true`.
 
-### Not reported here: `blocked`
+### Not reported here: `blocked`, by design
 
-herdr's protocol has a third state, `blocked`, for a pane waiting on the user,
-with a message explaining the wait. Two things are needed for it, and this
-repository's PiG has neither.
+PiG has no blocked state to report. That is a deliberate property of the agent,
+not a gap this extension failed to close, and it is worth being precise about
+why.
 
-A producer. herdr's own integrations only *listen* for the notification; the
-producer is a second file, a Claude Code style command-hook file, whose matchers
-map `PreToolUse` on an `AskUserQuestion` tool to `blocked`. PiG rejects that
-declaration outright: `coding/hookconfig/hookconfig.go` fails
-`parse <path>: PreToolUse is not supported by Pig`, and its supported hook events
-are exactly `SessionStart`, `PostToolUse`, `Stop` and `SessionEnd`. There is no
-`AskUserQuestion` tool either - PiG's builtin set is bash, content, edit, fd,
-find, grep, ls, read, rg, ripgrep, write - so the matcher has nothing to match.
+PiG has no ask-the-user step and no tool-approval gate. Its builtin tools are
+bash, content, edit, fd, find, grep, ls, read, rg, ripgrep and write; there is no
+question-asking tool, no `PermissionRequest`, and nothing in a turn that pauses
+for a human decision. An agent that wants input uses ordinary text and waits for
+the next user turn, which herdr already renders as `idle`. So herdr's `blocked`
+has no counterpart to map from, on any PiG revision, and inventing one would mean
+guessing at an interactive step the agent does not have.
 
-A channel. The listener needs the `pi.events` bus. PiG main has it
-(`Extension.Events()`), but the PiG revision this repository's CI pins does not,
-neither in its SDK nor in its host, and that SDK's `callHost` is unexported, so a
-Go extension built against it cannot reach `events.on` or `events.emit` even by
-hand.
+The Claude Code style hook path that other agents use for this is refused by
+design rather than unimplemented: PiG parses hook files to a supported subset and
+rejects the rest instead of ignoring them -
+`coding/hookconfig/hookconfig.go` fails
+`parse <path>: PreToolUse is not supported by Pig`, with the comment "Pig
+rejects unsupported declarations instead of silently dropping them at runtime",
+and the supported events are exactly `SessionStart`, `PostToolUse`, `Stop` and
+`SessionEnd`. PiG's documentation states the same intent: "Hooks are external
+Resources ... Stock Pig does not interpret cross-harness hook files by itself.",
+and a composition that needs one selects a bridge extension that translates it
+into Pig events.
 
-So this build reports `idle` and `working` only. Nothing is lost quietly: herdr
-keeps treating those normally, and restoring `blocked` needs two upstream changes
-rather than one, namely `PreToolUse` hook support or an equivalent agent-side
-signal, and a PiG revision whose SDK exposes the event bus. Until then the honest
-mapping is the one used here.
+herdr's own Pi integration reflects this too. Its reporter only listens on the
+`herdr:blocked` event-bus channel, while the producer is a second file, a hook
+file matching `PreToolUse` on an `AskUserQuestion` tool; herdr installs a hook
+file for agents that support hooks and, for Pi, installs only the reporter.
+
+The channel would be the second half of the gap. PiG main has the `pi.events`
+bus (`Extension.Events()`), but the PiG revision this repository's CI pins does
+not, in its SDK or its host, and that SDK's `callHost` is unexported, so a Go
+extension built against it cannot subscribe even by hand.
+
+This build therefore reports `idle` and `working` only. herdr treats both
+normally, `herdr agent wait --until idle` works, and a pane that needs a human
+reads as ready for input, which is what it is. If PiG ever adds an interactive
+question or approval step, this extension gains `blocked` with the listener
+already designed for it: count nested notifications, report the label, clear on
+the answer.
 
 ## Delivery
 
@@ -129,7 +145,8 @@ Deliberate differences from the TypeScript original:
 
 - `source` and `agent` are PiG's own identity, not herdr's `herdr:pi` / `pi`
   (see the table above).
-- `blocked` is not reported, for the reason given above.
+- `blocked` is not reported, because PiG has no blocked state: no ask-the-user
+  step and no tool-approval gate, by design. See the section above.
 - Delivery is owned, cancellable and drained work rather than fire-and-forget
   promises, as PiG's extension contract requires; the TypeScript version could
   race its `reportSession()` against the first state report after `agent_start`,
