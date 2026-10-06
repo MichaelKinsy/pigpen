@@ -21,7 +21,26 @@
 | **3 (done)** | `web-tools.ts registerWebSearchConfigCommand` + `formatShowConfigMessage` — the picker, the two prompt flows, the legacy-key migration and the `--show` report | `index` | **8 exact twins** |
 | **4 (done)** | the ten provider `search()` arms + `providers/fetch-helpers.ts` (the HTML pipeline, the content-type guards, the generic HTTP path) | `index` | **2 exact twins** |
 | **5 (done)** | `web-tools.ts` fetch guard (`parseAndAssertHttpUrl`, `isPrivateOrLoopbackHostname`) + the four native fetch arms (tavily, exa, jina, firecrawl) + the generic path the other three delegate to | `index` | **27 exact twins** |
-| 6 | `providers/interceptors/` — the GitHub interceptor and the chain | `(planned)` | 0 |
+| **6a (done)** | `providers/interceptors/github.ts` — `parseGitHubUrl`, `resolveGitHubOptions`, `readUserGitHubConfig`, the non-code segments and the token env var | `providers/interceptors/github` | **22 exact twins** |
+| 6b | `providers/interceptors/github.ts` — the clone and API paths (gh, git, size and timeout limits, tree and README rendering) + `interceptors/chain.ts` | `(planned)` | 0 |
+
+## Slice 6a: what is ported
+
+The GitHub interceptor’s two pure halves: what a URL is, and whether the interceptor is on.
+
+- **`parseGitHubUrl`** — the host check (github.com and www only), the two-segment minimum, the `.git` suffix, the
+  non-code segment list that hands issues/pulls/actions/wiki and the rest back to the chain, the blob/tree action
+  check with its ref segment, the full-SHA test that decides between the clone and API paths, percent-decoded path
+  segments, and a segment that will not decode staying as it arrived instead of failing the whole URL.
+- **`resolveGitHubOptions`** — the two-tier opt-in: an explicit user `false` beats a consumer `true`, the object form
+  implies opt-in, an `enabled: false` inside an object is honored, and every default (350 MB, 30 s, a temp clone
+  directory) is filled in from the object when it sets it.
+- **`readUserGitHubConfig`** — reads the stanza off the canonical config through the slice 1 reader, so the
+  orchestrator and the interceptor see the same parsed object.
+- **The token variable** — `GITHUB_TOKEN`.
+
+The clone and API halves that follow these need `gh`, `git` and the GitHub API, so they are slice 6b with the
+chain; nothing in 6a touches the network or the disk.
 
 ## Slice 5: what is ported
 
