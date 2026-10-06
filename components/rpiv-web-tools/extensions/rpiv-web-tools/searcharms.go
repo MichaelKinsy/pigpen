@@ -81,8 +81,8 @@ const (
 	searxngSearchPath     = "/search"
 	searxngFormatJSON     = "json"
 	searxngSafesearchOff  = "0"
-	ollamaLocalSearchPath = "/api/search"
-	ollamaCloudSearchPath = "/v1/web/search"
+	ollamaLocalSearchPath = "/api/experimental/web_search"
+	ollamaCloudSearchPath = "/api/web_search"
 )
 
 // exaMaxSnippetCharacters is the snippet cap. upstream: exa.ts EXA_MAX_SNIPPET_CHARACTERS, with its reasoning: the
