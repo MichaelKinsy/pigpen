@@ -578,9 +578,9 @@
       },
       "targetPackage": "components/rpiv-web-tools",
       "lane": "pigpen-rpiv-web-tools",
-      "status": "porting",
+      "status": "review",
       "credit": "Go port of @juicesharp/rpiv-web-tools 2.12.0, https://github.com/juicesharp/rpiv-mono, by juicesharp (MIT), at commit 7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f.",
-      "notes": "Reviewed scope per slice in components/rpiv-web-tools/port/PORT.md. Slice 1 ports providers/config.ts (the typed config reader and writer for ~/.config/rpiv-web-tools/config.json): fail-soft read, per-field schema salvage with array widening, and additionalProperties pass-through. 20 exact twins and 1 named skip of the 21 upstream providers/config titles; pigeq twins check is the judge. The oracle is the unmodified original (36 files, every one verified by git blob hash). Not ported yet: the provider contract and factory, web_search, web_fetch, the GitHub interceptor chain, and the /web-tools command and its guidance."
+      "notes": "Reviewed scope per slice in components/rpiv-web-tools/port/PORT.md. Slice 1 ports providers/config.ts (the typed config reader and writer for ~/.config/rpiv-web-tools/config.json): fail-soft read, per-field schema salvage with array widening, and additionalProperties pass-through. 20 exact twins and 1 named skip of the 21 upstream providers/config titles; pigeq twins check is the judge. The oracle is the unmodified original (36 files, every one verified by git blob hash). Ported in full: 272 exact twins and 2 named skips of the 274 upstream titles, with no missing case. The per-slice scope, the deliberate differences and what the twins do and do not prove are in components/rpiv-web-tools/port/PORT.md. What is not carried yet is the PiG registration layer, so the port is review-ready rather than runnable inside a host."
     }
   ]
 }

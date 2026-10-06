@@ -1,5 +1,7 @@
 # Port record: @juicesharp/rpiv-web-tools 2.12.0
 
+**Status: ported. 272 exact twins and 2 named skips of the 274 upstream titles; no case is missing.**
+
 ## Identity
 
 | Input | Value |
@@ -16,14 +18,20 @@
 
 | Slice | Scope | Files | Titles |
 |---|---|---|---|
-| **1 (done)** | `providers/config.ts` — the typed config reader/writer | `providers/config` | **20 exact twins, 1 named skip** |
-| **2 (done)** | `providers/types.ts` + `providers/index.ts` + `providers/factory.ts` — the provider contract, the ten PROVIDER_META entries, the factory dispatch; plus `web-tools.ts` credential resolution, provider selection and the `max_results` schema | `index` | **12 exact twins** |
-| **3 (done)** | `web-tools.ts registerWebSearchConfigCommand` + `formatShowConfigMessage` — the picker, the two prompt flows, the legacy-key migration and the `--show` report | `index` | **8 exact twins** |
-| **4 (done)** | the ten provider `search()` arms + `providers/fetch-helpers.ts` (the HTML pipeline, the content-type guards, the generic HTTP path) | `index` | **2 exact twins** |
-| **5 (done)** | `web-tools.ts` fetch guard (`parseAndAssertHttpUrl`, `isPrivateOrLoopbackHostname`) + the four native fetch arms (tavily, exa, jina, firecrawl) + the generic path the other three delegate to | `index` | **27 exact twins** |
-| **6a (done)** | `providers/interceptors/github.ts` — `parseGitHubUrl`, `resolveGitHubOptions`, `readUserGitHubConfig`, the non-code segments and the token env var | `providers/interceptors/github` | **22 exact twins** |
-| **7 (done)** | `web-tools.ts renderCall`, `renderResult`, the two preview helpers, `instantiateProvider` and the per-tool guidance resolution | `web-tools.render`, `web-tools.guidance`, `index` | **33 exact twins** |
-| 6b | `providers/interceptors/github.ts` — the clone and API paths (gh, git, size and timeout limits, tree and README rendering) + `interceptors/chain.ts` | `(planned)` | 0 |
+| **1** | `providers/config.ts` — the typed config reader and writer | `providers/config` | **20 exact twins, 1 named skip** |
+| **2** | `providers/types.ts` + `providers/index.ts` + `providers/factory.ts` — the provider contract, the ten PROVIDER_META entries, the factory dispatch, credential resolution, provider selection and the `max_results` schema | `index` | **12 exact twins** |
+| **3** | `web-tools.ts registerWebSearchConfigCommand` + `formatShowConfigMessage` — the picker, the two prompt flows, the legacy-key migration and the `--show` report | `index` | **8 exact twins** |
+| **4** | the ten provider `search()` arms + `providers/fetch-helpers.ts` (the HTML pipeline, the content-type guards, the generic HTTP path) | `index` | **2 exact twins** |
+| **5** | the fetch URL guard + the four native fetch arms + the generic path | `index` | **27 exact twins** |
+| **6a** | `providers/interceptors/github.ts` — `parseGitHubUrl`, `resolveGitHubOptions`, `readUserGitHubConfig`, the non-code segments and the token env var | `providers/interceptors/github` | **22 exact twins** |
+| **6b** | the clone and API paths: the gh probes, the size and SHA decisions, the clone commands, the API view and the local-clone rendering | `providers/interceptors/github` | **76 exact twins** |
+| **7** | `web-tools.ts renderCall`, `renderResult`, the two preview helpers, `instantiateProvider` and the per-tool guidance | `web-tools.render`, `web-tools.guidance`, `index` | **33 exact twins** |
+| **8** | the self-hosted providers' interactive setup, Ollama's fetch endpoint and its status hints | `index` | **5 exact twins** |
+| **9** | `providers/interceptors/index.ts` — the chain and the fetch dispatch | `providers/interceptors/chain`, `index` | **28 exact twins** |
+| **10** | the titles the ledger repeats per provider, plus the Ollama endpoints correction | `index` | **43 exact twins** |
+| **11** | the remaining `providers/interceptors/github` titles: the probes, the API paths, the clone paths, the abort and cache cases, and the rendering edges | `providers/interceptors/github` | **35 exact twins, 1 named skip** |
+
+`pigeq twins check` is the judge and reports **272 exact twins and 2 named skips of 274 titles**, with no missing case.
 
 ## Slice 7: what is ported
 
@@ -191,7 +199,22 @@ canonical schema, keeps every unknown key, and degrades fail-soft.
 |---|---|
 | `exists and is a TypeBox object` | the port has no TypeBox: the schema is the config struct, and its object shape is covered by the salvage and round-trip twins |
 
-## Not yet ported
+## What the twins do and do not prove
 
-Everything outside `providers/config.ts` (253 of the 274 titles) is work in slices 2 to 6 above. No title in those
-slices is claimed yet, so `pigeq twins check` reports them as MISSING rather than as skips.
+Every upstream test title is claimed by an exact twin or a named skip, and `pigeq twins check` reports no missing case. The twins
+drive the ported logic with a canned HTTP response and a canned `gh`/`git` runner, so they prove behaviour, error text, request shape,
+rendering and every decision branch — but they cannot prove that the real `gh` CLI or the real `git` binary behave as the seams assume,
+nor that a live GitHub API answers as the fixtures do. Those remain the checks a run on a machine with `gh` installed has to make; the
+seams are the seam that lets them run.
+
+## Named gaps
+
+| Upstream title | File | Reason |
+|---|---|---|
+| `exists and is a TypeBox object` | `providers/config` | the port has no TypeBox: the schema is the config struct, and its object shape is covered by the salvage and round-trip twins |
+| `package.json files array covers every production .ts module across the tree` | `ship-manifest` | the port ships one Go module whole: there is no files array and no tree of TypeScript modules to keep in sync with it |
+
+## Deliberate differences carried over from the earlier slices
+
+- `truncateRunes` caps at runes where the original caps JavaScript code units; see slice 4.
+- The renderer takes a theme interface rather than a TUI type; see slice 7.
