@@ -2,6 +2,11 @@
 
 package rpiv_web_tools
 
+import (
+	"fmt"
+	"os"
+)
+
 // The interceptor chain and the fetch dispatch. upstream: providers/interceptors/index.ts buildInterceptors,
 // getInterceptors, getActiveGitHubInterceptor, and the fetch dispatch in web-tools.ts registerWebFetchTool.
 //
@@ -30,12 +35,24 @@ func (r *interceptorRegistry) build(user userGitHubConfig, consumerDefault bool)
 	resolved := resolveGitHubOptions(user, consumerDefault)
 	r.gitHub = nil
 	if resolved.Enabled {
-		r.gitHub = &gitHubInterceptor{options: resolved}
+		r.gitHub = newGitHubInterceptor(resolved)
 		r.active = []urlInterceptor{r.gitHub}
 	} else {
 		r.active = []urlInterceptor{}
 	}
 	return r.active
+}
+
+// newGitHubInterceptor is the production interceptor: the exec runner, the clone renderer and the stderr hint. upstream:
+// the GitHubInterceptor construction in buildInterceptors.
+func newGitHubInterceptor(options resolvedGitHubOptions) *gitHubInterceptor {
+	return &gitHubInterceptor{
+		options:    options,
+		runner:     execRunner{},
+		cloneCache: map[string]cachedClone{},
+		generate:   generateCloneContent,
+		warn:       func(message string) { fmt.Fprintln(os.Stderr, message) },
+	}
 }
 
 // interceptors is the installed chain. upstream: providers/interceptors/index.ts getInterceptors.
@@ -52,39 +69,42 @@ func (r *interceptorRegistry) reset() {
 	r.active = nil
 }
 
-// gitHubInterceptor owns github.com code URLs. The clone and API halves land with slice 6b; until then it answers
-// nil for everything, which is exactly what the chain contract asks of an interceptor that does not own the URL.
+// gitHubInterceptor owns github.com code URLs: it decides ownership, then either clones the repository or answers from
+// the API. upstream: providers/interceptors/github.ts GitHubInterceptor.
 type gitHubInterceptor struct {
 	options resolvedGitHubOptions
-	// owned reports whether the interceptor claims a URL at all, which the slice 6b paths fill in.
-	owned map[string]bool
+	// runner is the seam for gh and git, so the decision path is testable without either tool installed.
+	runner githubRunner
+	// cloneCache holds the finished or in-flight clones, keyed by owner, repo and ref. upstream: the cloneCache map.
+	cloneCache map[string]cachedClone
+	// ghProbed and ghPresent cache the one-time gh probe; ghHintShown keeps the install hint to one line per process.
+	ghProbed, ghPresent, ghHintShown bool
+	// forceClone skips the size check, and aborted short-circuits every branch, both standing in for the caller's
+	// request state.
+	forceClone, aborted bool
+	// generate renders a clone; the field keeps the rendering seam explicit and stubbable.
+	generate func(localPath string, info gitHubURLInfo) string
+	// warn receives the one-time gh hint.
+	warn func(string)
 }
 
 func (g *gitHubInterceptor) name() string { return "github" }
 
 // intercept claims the URL when the interceptor is enabled, the host is github.com and the path is code rather than
-// one of the site's own pages. The response body comes with slice 6b; what is decided here is ownership, which is what
-// the chain and the --show lines already depend on. upstream: providers/interceptors/github.ts GitHubInterceptor.intercept.
-func (g *gitHubInterceptor) intercept(target string, _ bool) (fetchResponse, bool, error) {
-	if !g.options.Enabled {
-		return fetchResponse{}, false, nil
-	}
-	if _, ok := parseGitHubURL(target); !ok {
-		return fetchResponse{}, false, nil
-	}
-	if g.owned == nil {
-		return fetchResponse{}, false, nil
-	}
-	if !g.owned[target] {
-		return fetchResponse{}, false, nil
-	}
-	return fetchResponse{}, false, errNotYetPorted
+// one of the site's own pages, then answers it from the clone or the API. upstream: GitHubInterceptor.intercept.
+func (g *gitHubInterceptor) intercept(target string, raw bool) (fetchResponse, bool, error) {
+	return g.interceptFetch(target, nil)
 }
 
-// errNotYetPorted is what the GitHub interceptor answers once a URL is claimed: the clone and API halves arrive with
-// slice 6b. It is loud on purpose, so a claimed URL never falls through to a provider that would fetch the HTML page
-// instead of the code.
-var errNotYetPorted error = &unknownProviderError{Name: "github interceptor (clone and API paths, slice 6b)", Valid: nil}
+// reset clears the clone cache, removes the cloned directories and forgets the gh probe, so the next intercept
+// re-checks. upstream: GitHubInterceptor.reset.
+func (g *gitHubInterceptor) reset() {
+	for _, entry := range g.cloneCache {
+		_ = removeAll(entry.localPath)
+	}
+	g.cloneCache = nil
+	g.ghProbed, g.ghPresent, g.ghHintShown = false, false, false
+}
 
 // fetchDispatch is the three-stage resolution: the interceptor chain, then the provider's own fetch(), then the generic
 // HTML path. providerFetch is nil for a search-only provider. upstream: the interceptor loop and the two fallbacks in
