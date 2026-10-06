@@ -1,7 +1,7 @@
 {
   "$schema": "./ports.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-10-05",
+  "updatedAt": "2026-10-06",
   "ports": [
     {
       "id": "extension-porter",
@@ -562,6 +562,25 @@
       "status": "review",
       "credit": "Go port of @gotgenes/pi-permission-system 39.0.3, https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system, by MasuRii and Christopher D. Lasher (MIT), at commit c5bc74712cd2fe808d70246d93d26a092f736676.",
       "notes": "Partial: the wildcard matcher, rule evaluation and merging, the global config (schema-checked as the original checks it), and the tool_call gate for bash (simple commands and chains of them, with the original's wrapper floors) and tools decided by name, the skill-read gate, and withholding of denied tools. Not ported: the approval dialog, bash parsing, path rules, MCP and skill gates, project and agent scopes. 229 twins, 646 bash decisions and 91 config files recorded from the original, 8 Pi-recorded scenarios, 171 of 171 mutations killed."
+    },
+    {
+      "id": "rpiv-web-tools",
+      "name": "rpiv-web-tools (juicesharp)",
+      "kind": "port",
+      "summary": "Web search and fetch for the model with pluggable providers: web_search and web_fetch over Brave, Tavily, Serper, Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG and Ollama, plus the /web-tools command (slice 1: the config reader and writer).",
+      "upstream": {
+        "name": "@juicesharp/rpiv-web-tools",
+        "url": "https://github.com/juicesharp/rpiv-mono",
+        "commit": "7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f",
+        "license": "MIT",
+        "author": "juicesharp",
+        "path": "packages/rpiv-web-tools"
+      },
+      "targetPackage": "components/rpiv-web-tools",
+      "lane": "pigpen-rpiv-web-tools",
+      "status": "porting",
+      "credit": "Go port of @juicesharp/rpiv-web-tools 2.12.0, https://github.com/juicesharp/rpiv-mono, by juicesharp (MIT), at commit 7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f.",
+      "notes": "Reviewed scope per slice in components/rpiv-web-tools/port/PORT.md. Slice 1 ports providers/config.ts (the typed config reader and writer for ~/.config/rpiv-web-tools/config.json): fail-soft read, per-field schema salvage with array widening, and additionalProperties pass-through. 20 exact twins and 1 named skip of the 21 upstream providers/config titles; pigeq twins check is the judge. The oracle is the unmodified original (36 files, every one verified by git blob hash). Not ported yet: the provider contract and factory, web_search, web_fetch, the GitHub interceptor chain, and the /web-tools command and its guidance."
     }
   ]
 }

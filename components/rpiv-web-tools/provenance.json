@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "rpiv-mono",
+      "authors": [
+        "juicesharp"
+      ],
+      "url": "https://github.com/juicesharp/rpiv-mono",
+      "revision": "7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "name": "@pi-in-go/pigpen-rpiv-web-tools",
+  "version": "0.1.0",
+  "description": "Go port of @juicesharp/rpiv-web-tools: web search and fetch for the model with pluggable providers",
+  "keywords": [
+    "pig-package",
+    "web-search",
+    "web-fetch",
+    "search",
+    "fetch",
+    "providers",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/rpiv-web-tools"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/rpiv-web-tools#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/rpiv-web-tools"
+    ]
+  }
+}
