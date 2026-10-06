@@ -367,8 +367,9 @@ restaging, and path safety. It does not measure an LLM's ability to follow the S
 The scenario also checks that an explicit `tools: []` reaches the provider with
 no tools; it passes on PiG 0.4.1 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
 `test:tool-scope`, `test:moved` and `test:go-ports` with the pig it builds from PiG's `v0.4.1` commit. No hosted CI pass is
-claimed yet (these steps were run locally with that pig, not on GitHub). CI also runs `test:packages` and the release
-rehearsal. CI does not sign Piglet Binaries or publish releases (`release.yml` does, on a Piglet tag); it uploads the
+claimed yet (these steps were run locally with that pig, not on GitHub). CI also runs `test:packages`, `test:npm-packages`,
+`test:npm-piglets` and the release rehearsal, each in its own parallel `slow-checks` job (one serial job ran past its 45-minute
+timeout). CI does not sign Piglet Binaries or publish releases (`release.yml` does, on a Piglet tag); it uploads the
 Binaries it builds as short-lived artifacts for inspection.
 
 ### Platform build matrix
@@ -378,9 +379,10 @@ Binaries it builds as short-lived artifacts for inspection.
 | Tier | Runs on | What it does |
 | --- | --- | --- |
 | `validate` | every run | tests, checks, the PiG validator over every manifest, and **one** linux/amd64 build and smoke of `pig-with-batteries` |
+| `slow-checks` | every run, in parallel with `validate` | one job each for `test:packages`, `test:npm-packages`, `test:npm-piglets` and the release rehearsal, each with its own timeout |
 | `platform-matrix` | push to `main`, merge group, manual run, the weekly schedule, and a pull request labelled `full-ci` | one job per OS on a native runner: `linux/amd64` (`ubuntu-24.04`), `linux/arm64` (`ubuntu-24.04-arm`), `darwin/arm64` (`macos-15`), `darwin/amd64` (`macos-15-intel`), `windows/amd64` (`windows-2025`). Each downloads the pinned PiG release for its OS, checks its SHA-256, builds **all ten Piglets** for its own target and smokes each Binary. Binaries are kept as artifacts for three days |
 | `android-cross` | with `platform-matrix` | `go build` and `go vet` of every module for `android/arm64` (Termux) with `CGO_ENABLED=0`. A compile check, not a Binary: pig's builder builds only the machine it runs on |
-| `ci-result` | always | the one required check: green when `validate` passed and the other tiers passed or were skipped |
+| `ci-result` | always | the one required check: green when `validate` and every `slow-checks` job passed and the other tiers passed or were skipped |
 
 The smoke runs each Binary in a throwaway home with `PIG_TEST_FAUX=1` (no network, model or credentials): `--version` must match the
 pinned pig, and `-p "reply with exactly: ok" --model test-faux/faux-1 --no-session` must exit 0, answer `ok` and print no

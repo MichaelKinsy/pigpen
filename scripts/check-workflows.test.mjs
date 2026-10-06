@@ -52,6 +52,14 @@ describe('hardeningProblems', () => {
     assert.match(hardeningProblems('ci.yml', good.replace('persist-credentials: false', 'fetch-depth: 0')).join('\n'), /persist-credentials: false/);
     assert.match(hardeningProblems('ci.yml', good.replace('    timeout-minutes: 10\n', '')).join('\n'), /job build has no timeout-minutes/);
   });
+
+  it('accepts a matrix timeout only when every entry sets a positive number', () => {
+    const matrix = (include) => good.replace('    timeout-minutes: 10\n', `    timeout-minutes: \${{ matrix.timeout }}\n    strategy:\n      matrix:\n        include: ${include}\n`);
+    assert.deepEqual(hardeningProblems('ci.yml', matrix('[{ name: a, timeout: 5 }, { name: b, timeout: 20 }]')), []);
+    assert.match(hardeningProblems('ci.yml', matrix('[{ name: a, timeout: 5 }, { name: b }]')).join('\n'), /job build has no timeout-minutes/);
+    assert.match(hardeningProblems('ci.yml', matrix('[{ name: a, timeout: 0 }]')).join('\n'), /job build has no timeout-minutes/);
+    assert.match(hardeningProblems('ci.yml', matrix('[{ name: a, timeout: "20" }]')).join('\n'), /job build has no timeout-minutes/);
+  });
 });
 
 describe('pinProblems', () => {
