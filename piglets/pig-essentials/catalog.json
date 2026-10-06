@@ -1,0 +1,9 @@
+{
+  "featured": false,
+  "updatedAt": "2026-10-06",
+  "languages": ["go"],
+  "notes": [
+    "Go only, no Node. Members: the rpiv-web-tools search and fetch tools (juicesharp, MIT), @tintinweb/pi-subagents (tintinweb, MIT, partial: see its PORT.md), @tintinweb/pi-tasks (tintinweb, MIT), rpiv-ask-user-question (juicesharp, MIT, partial), ponytail (Dietrich Gebert, MIT) and the fifteen Superpowers skills (Jesse Vincent, MIT). Each port keeps the original, the recorded Pi traces and its mutation list under components/<name>/port. Run npm run stage before using its generated manifest under dist/staged.",
+    "No release is published; version 0.1.0 is a development default. Nothing starts at start-up: no network call, no process."
+  ]
+}

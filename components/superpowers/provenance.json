@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "superpowers",
+      "authors": [
+        "Jesse Vincent"
+      ],
+      "url": "https://github.com/obra/superpowers",
+      "revision": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

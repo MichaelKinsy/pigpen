@@ -1,0 +1,52 @@
+{
+  "name": "task-execute-unavailable",
+  "description": "TaskExecute without pi-subagents loaded refuses with the explanation; the task stays pending.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Agent job",
+            "description": "d",
+            "agentType": "general-purpose"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskExecute",
+          "arguments": {
+            "task_ids": [
+              "1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskGet",
+          "arguments": {
+            "taskId": "1"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    }
+  ]
+}

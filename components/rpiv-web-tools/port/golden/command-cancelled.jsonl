@@ -1,0 +1,13 @@
+{"kind":"header","scenario":"command-cancelled","lane":"pi-ts","host":"pi 1.0.3","extension":"sha256:f7ec4a1ce15ad83978fb37905844588356af9b014a4355a8cb4f71bff009b302","normalizer":"v3"}
+{"step":"01-cancel-pick","ch":"ui","data":{"method":"select","options":["Brave ✓","Tavily","Serper","Exa","You.com","Jina","Firecrawl","Perplexity","SearXNG","Ollama"],"title":"Search provider"}}
+{"step":"01-cancel-pick","ch":"ui","data":{"message":"Web search config unchanged","method":"notify","notifyType":"info"}}
+{"step":"01-cancel-pick","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-cancel-key","ch":"ui","data":{"method":"select","options":["Brave ✓","Tavily","Serper","Exa","You.com","Jina","Firecrawl","Perplexity","SearXNG","Ollama"],"title":"Search provider"}}
+{"step":"02-cancel-key","ch":"ui","data":{"method":"input","placeholder":"...","title":"Brave API key"}}
+{"step":"02-cancel-key","ch":"ui","data":{"message":"Web search config unchanged","method":"notify","notifyType":"info"}}
+{"step":"02-cancel-key","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-empty-key","ch":"ui","data":{"method":"select","options":["Brave ✓","Tavily","Serper","Exa","You.com","Jina","Firecrawl","Perplexity","SearXNG","Ollama"],"title":"Search provider"}}
+{"step":"03-empty-key","ch":"ui","data":{"method":"input","placeholder":"...","title":"Brave API key"}}
+{"step":"03-empty-key","ch":"ui","data":{"message":"Web search config unchanged","method":"notify","notifyType":"info"}}
+{"step":"03-empty-key","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

@@ -1,0 +1,416 @@
+[
+ {
+  "name": "normalize-keeps-case",
+  "file": "config.go",
+  "find": "func normalizeMode(mode string) string {\n\tn := strings.ToLower(jsTrim(mode))",
+  "replace": "func normalizeMode(mode string) string {\n\tn := jsTrim(mode)"
+ },
+ {
+  "name": "normalize-config-no-review",
+  "file": "config.go",
+  "find": "validModes   = []string{\"off\", \"lite\", \"full\", \"ultra\", \"review\"}",
+  "replace": "validModes   = []string{\"off\", \"lite\", \"full\", \"ultra\"}"
+ },
+ {
+  "name": "review-is-runtime",
+  "file": "config.go",
+  "find": "runtimeModes = []string{\"off\", \"lite\", \"full\", \"ultra\"}",
+  "replace": "runtimeModes = []string{\"off\", \"lite\", \"full\", \"ultra\", \"review\"}"
+ },
+ {
+  "name": "persisted-ignores-config-modes",
+  "file": "config.go",
+  "find": "return normalizeConfigMode(mode)\n}",
+  "replace": "return \"\"\n}"
+ },
+ {
+  "name": "js-space-bom",
+  "file": "config.go",
+  "find": "return unicode.IsSpace(r) || r == '\\ufeff'",
+  "replace": "return unicode.IsSpace(r)"
+ },
+ {
+  "name": "deactivation-substring",
+  "file": "config.go",
+  "find": "return t == \"stop ponytail\" || t == \"normal mode\"",
+  "replace": "return strings.Contains(t, \"stop ponytail\") || strings.Contains(t, \"normal mode\")"
+ },
+ {
+  "name": "deactivation-punctuation",
+  "file": "config.go",
+  "find": "return r == '.' || r == '!' || r == '?' || isJSSpace(r) })",
+  "replace": "return r == '.' || isJSSpace(r) })"
+ },
+ {
+  "name": "deactivation-case",
+  "file": "config.go",
+  "find": "t := strings.ToLower(jsTrim(text))\n\tt = strings.TrimRightFunc",
+  "replace": "t := jsTrim(text)\n\tt = strings.TrimRightFunc"
+ },
+ {
+  "name": "config-dir-xdg-ignored",
+  "file": "config.go",
+  "find": "if x := os.Getenv(\"XDG_CONFIG_HOME\"); x != \"\" {",
+  "replace": "if x := os.Getenv(\"XDG_CONFIG_HOME\"); x != \"\" && false {"
+ },
+ {
+  "name": "config-dir-fallback",
+  "file": "config.go",
+  "find": "return filepath.Join(home, \".config\", \"ponytail\")",
+  "replace": "return filepath.Join(home, \"ponytail\")"
+ },
+ {
+  "name": "config-bom-kept",
+  "file": "config.go",
+  "find": "if json.Unmarshal(bytes.TrimPrefix(data, []byte(\"\\xef\\xbb\\xbf\")), &cfg) != nil {",
+  "replace": "if json.Unmarshal(data, &cfg) != nil {"
+ },
+ {
+  "name": "default-env-first",
+  "file": "config.go",
+  "find": "if env := os.Getenv(\"PONYTAIL_DEFAULT_MODE\"); env != \"\" && slices.Contains",
+  "replace": "if env := os.Getenv(\"PONYTAIL_DEFAULT_MODE\"); env != \"\" && false && slices.Contains"
+ },
+ {
+  "name": "default-env-case",
+  "file": "config.go",
+  "find": "return strings.ToLower(env)\n\t}",
+  "replace": "return env\n\t}"
+ },
+ {
+  "name": "default-config-case",
+  "file": "config.go",
+  "find": "return strings.ToLower(s)\n\t\t}",
+  "replace": "return s\n\t\t}"
+ },
+ {
+  "name": "default-config-review",
+  "file": "config.go",
+  "find": "isStr && slices.Contains(runtimeModes, strings.ToLower(s))",
+  "replace": "isStr && slices.Contains(validModes, strings.ToLower(s))"
+ },
+ {
+  "name": "flag-env-ignored",
+  "file": "config.go",
+  "find": "if v, set := os.LookupEnv(env); set {",
+  "replace": "if v, set := os.LookupEnv(env); set && false {"
+ },
+ {
+  "name": "flag-no-word",
+  "file": "config.go",
+  "find": "case \"\", \"0\", \"false\", \"no\":",
+  "replace": "case \"\", \"0\", \"false\":"
+ },
+ {
+  "name": "flag-config-truthy",
+  "file": "config.go",
+  "find": "return cfg[field] == true",
+  "replace": "return cfg[field] != nil && cfg[field] != false"
+ },
+ {
+  "name": "flag-env-untrimmed",
+  "file": "config.go",
+  "find": "switch strings.ToLower(jsTrim(v)) {",
+  "replace": "switch strings.ToLower(v) {"
+ },
+ {
+  "name": "write-review-allowed",
+  "file": "config.go",
+  "find": "n := normalizeMode(mode)\n\tif n == \"\" {\n\t\treturn \"\", nil\n\t}",
+  "replace": "n := normalizePersistedMode(mode)\n\tif n == \"\" {\n\t\treturn \"\", nil\n\t}"
+ },
+ {
+  "name": "write-no-mkdir",
+  "file": "config.go",
+  "find": "if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {",
+  "replace": "if err := error(nil); err != nil {"
+ },
+ {
+  "name": "write-sorts-existing-key-last",
+  "file": "config.go",
+  "find": "if _, has := vals[\"defaultMode\"]; !has {\n\t\tkeys = append(keys, \"defaultMode\")\n\t}",
+  "replace": "keys = append(slices.DeleteFunc(keys, func(k string) bool { return k == \"defaultMode\" }), \"defaultMode\")"
+ },
+ {
+  "name": "write-duplicate-first-wins",
+  "file": "config.go",
+  "find": "vals[k] = raw // a duplicate",
+  "replace": "if _, dup := vals[k]; !dup {\n\t\t\tvals[k] = raw\n\t\t} // a duplicate"
+ },
+ {
+  "name": "write-indent",
+  "file": "config.go",
+  "find": "json.Indent(&out, b.Bytes(), \"\", \"  \")",
+  "replace": "json.Indent(&out, b.Bytes(), \"\", \"    \")"
+ },
+ {
+  "name": "write-bom-kept",
+  "file": "config.go",
+  "find": "keys, vals = orderedObject(bytes.TrimPrefix(data, []byte(\"\\xef\\xbb\\xbf\")))",
+  "replace": "keys, vals = orderedObject(data)"
+ },
+ {
+  "name": "write-not-object-kept",
+  "file": "config.go",
+  "find": "if t, err := dec.Token(); err != nil || t != json.Delim('{') {",
+  "replace": "if t, err := dec.Token(); err != nil || (t != json.Delim('{') && false) {"
+ },
+ {
+  "name": "frontmatter-kept",
+  "file": "instructions.go",
+  "find": "body = frontmatterRe.ReplaceAllString(body, \"\")",
+  "replace": ""
+ },
+ {
+  "name": "frontmatter-greedy",
+  "file": "instructions.go",
+  "find": "`(?s)^---.*?---`",
+  "replace": "`(?s)^---.*---`"
+ },
+ {
+  "name": "table-rows-all-kept",
+  "file": "instructions.go",
+  "find": "if lm := normalizeMode(jsTrim(m[1])); lm != \"\" && lm != effective {\n\t\t\t\tcontinue\n\t\t\t} else if",
+  "replace": "if lm := normalizeMode(jsTrim(m[1])); lm != \"\" && lm != effective && false {\n\t\t\t\tcontinue\n\t\t\t} else if"
+ },
+ {
+  "name": "examples-all-kept",
+  "file": "instructions.go",
+  "find": "if lm := normalizeMode(jsTrim(m[1])); lm != \"\" && lm != effective {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t}\n\t\tkept",
+  "replace": "if lm := normalizeMode(jsTrim(m[1])); lm != \"\" && lm != effective && false {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t}\n\t\tkept"
+ },
+ {
+  "name": "unquoted-example-dropped",
+  "file": "instructions.go",
+  "find": "`^-` + jsSpace + `*([^:]+):` + jsSpace + `*\"`",
+  "replace": "`^-` + jsSpace + `*([^:]+):`"
+ },
+ {
+  "name": "crlf-not-split",
+  "file": "instructions.go",
+  "find": "`\\r?\\n`",
+  "replace": "`\\n`"
+ },
+ {
+  "name": "filter-default-mode",
+  "file": "instructions.go",
+  "find": "if effective == \"\" {\n\t\teffective = defaultMode\n\t}\n\tbody =",
+  "replace": "if effective == \"\" {\n\t\teffective = \"lite\"\n\t}\n\tbody ="
+ },
+ {
+  "name": "review-pointer",
+  "file": "instructions.go",
+  "find": "Behavior defined by /ponytail-review skill.\"",
+  "replace": "Behavior defined by /ponytail-review.\""
+ },
+ {
+  "name": "instructions-default-mode",
+  "file": "instructions.go",
+  "find": "if configured == \"\" {\n\t\tconfigured = defaultMode\n\t}",
+  "replace": "if configured == \"\" {\n\t\tconfigured = \"ultra\"\n\t}"
+ },
+ {
+  "name": "instructions-header",
+  "file": "instructions.go",
+  "find": "\"PONYTAIL MODE ACTIVE — level: \" + effective + \"\\n\\n\"",
+  "replace": "\"PONYTAIL MODE ACTIVE — level: \" + effective + \"\\n\""
+ },
+ {
+  "name": "parse-bare-off",
+  "file": "extension.go",
+  "find": "if fallback == \"off\" {\n\t\t\tfallback = \"full\"\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "parse-fallback-default",
+  "file": "extension.go",
+  "find": "if fallback == \"\" {\n\t\tfallback = defaultMode\n\t}\n\twords",
+  "replace": "if fallback == \"\" {\n\t\tfallback = \"lite\"\n\t}\n\twords"
+ },
+ {
+  "name": "parse-default-review",
+  "file": "extension.go",
+  "find": "if m := normalizeMode(second); m != \"\" {",
+  "replace": "if m := normalizePersistedMode(second); m != \"\" {"
+ },
+ {
+  "name": "parse-status-prefix",
+  "file": "extension.go",
+  "find": "case \"status\":\n\t\treturn command{Type: \"status\"}",
+  "replace": "case \"status\":\n\t\treturn command{Type: \"invalid\"}"
+ },
+ {
+  "name": "parse-invalid-mode-name",
+  "file": "extension.go",
+  "find": "return command{Type: \"invalid\", Reason: \"invalid-mode\", Mode: words[0]}",
+  "replace": "return command{Type: \"invalid\", Reason: \"invalid-mode\"}"
+ },
+ {
+  "name": "session-first-entry-wins",
+  "file": "extension.go",
+  "find": "for i := len(list) - 1; i >= 0; i-- {",
+  "replace": "for i := 0; i < len(list); i++ {"
+ },
+ {
+  "name": "session-any-custom-type",
+  "file": "extension.go",
+  "find": "e[\"type\"] != \"custom\" || e[\"customType\"] != \"ponytail-mode\"",
+  "replace": "e[\"customType\"] != \"ponytail-mode\""
+ },
+ {
+  "name": "session-invalid-entry-stops",
+  "file": "extension.go",
+  "find": "if m := normalizePersistedMode(mode); m != \"\" {\n\t\t\treturn m\n\t\t}\n\t}\n\treturn fallback",
+  "replace": "return normalizePersistedMode(mode)\n\t}\n\treturn fallback"
+ },
+ {
+  "name": "session-fallback-default",
+  "file": "extension.go",
+  "find": "if fallback == \"\" {\n\t\tfallback = defaultMode\n\t}\n\tvar list",
+  "replace": "if fallback == \"\" {\n\t\tfallback = \"lite\"\n\t}\n\tvar list"
+ },
+ {
+  "name": "status-dot-inverted",
+  "file": "extension.go",
+  "find": "dot := \"○\"\n\tif active {\n\t\tdot = \"●\"\n\t}",
+  "replace": "dot := \"●\"\n\tif active {\n\t\tdot = \"○\"\n\t}"
+ },
+ {
+  "name": "status-off-not-cleared",
+  "file": "extension.go",
+  "find": "if mode == \"off\" {\n\t\tctx.SetStatus(\"ponytail\", \"\")\n\t\treturn\n\t}",
+  "replace": "if mode == \"off\" {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "status-hide-ignored",
+  "file": "extension.go",
+  "find": "if hide || ctx == nil {",
+  "replace": "if (hide && false) || ctx == nil {"
+ },
+ {
+  "name": "status-icon",
+  "file": "extension.go",
+  "find": "\"full\": \"⚡\"",
+  "replace": "\"full\": \"🔥\""
+ },
+ {
+  "name": "setmode-no-entry",
+  "file": "extension.go",
+  "find": "if ctx != nil {\n\t\t_ = ctx.AppendEntry(\"ponytail-mode\", map[string]any{\"mode\": n})\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "setmode-notice-text",
+  "file": "extension.go",
+  "find": "\"Ponytail mode set to %s.\"",
+  "replace": "\"Ponytail mode is %s.\""
+ },
+ {
+  "name": "deactivation-notifies",
+  "file": "extension.go",
+  "find": "a.setMode(\"off\", &ctx, false)",
+  "replace": "a.setMode(\"off\", &ctx, true)"
+ },
+ {
+  "name": "alias-never-queues",
+  "file": "extension.go",
+  "find": "if idle, err := ctx.IsIdle(); err == nil && !idle {",
+  "replace": "if idle, err := ctx.IsIdle(); err == nil && !idle && false {"
+ },
+ {
+  "name": "alias-skill-name",
+  "file": "extension.go",
+  "find": "e.Command(\"ponytail-\"+n, \"Run /skill:pigpen-ponytail-\"+n, a.alias(\"pigpen-ponytail-\"+n))",
+  "replace": "e.Command(\"ponytail-\"+n, \"Run /skill:pigpen-ponytail-\"+n, a.alias(\"ponytail-\"+n))"
+ },
+ {
+  "name": "input-extension-source",
+  "file": "extension.go",
+  "find": "if data[\"source\"] == \"extension\" {",
+  "replace": "if data[\"source\"] == \"never\" {"
+ },
+ {
+  "name": "input-when-off",
+  "file": "extension.go",
+  "find": "if on && isDeactivationCommand(text) {",
+  "replace": "if (on || true) && isDeactivationCommand(text) {"
+ },
+ {
+  "name": "start-default-stale",
+  "file": "extension.go",
+  "find": "a.dflt = getDefaultMode()\n\t\ta.hideStatus",
+  "replace": "a.hideStatus"
+ },
+ {
+  "name": "start-quiet-ignored",
+  "file": "extension.go",
+  "find": "if !getQuietStartup() {",
+  "replace": "if true {"
+ },
+ {
+  "name": "start-notice-text",
+  "file": "extension.go",
+  "find": "\"Ponytail loaded: \"+mode",
+  "replace": "\"Ponytail: \"+mode"
+ },
+ {
+  "name": "agent-active-inverted",
+  "file": "extension.go",
+  "find": "for event, active := range map[string]bool{sdk.EventAgentStart: true, sdk.EventAgentEnd: false} {",
+  "replace": "for event, active := range map[string]bool{sdk.EventAgentStart: false, sdk.EventAgentEnd: true} {"
+ },
+ {
+  "name": "prompt-off-injected",
+  "file": "extension.go",
+  "find": "if mode == \"\" || mode == \"off\" {",
+  "replace": "if mode == \"\" {"
+ },
+ {
+  "name": "prompt-base-dropped",
+  "file": "extension.go",
+  "find": "base = s + \"\\n\\n\"",
+  "replace": "base = \"\""
+ },
+ {
+  "name": "prompt-base-separator",
+  "file": "extension.go",
+  "find": "base = s + \"\\n\\n\"",
+  "replace": "base = s + \"\\n\""
+ },
+ {
+  "name": "status-text",
+  "file": "extension.go",
+  "find": "ctx.Notify(fmt.Sprintf(\"Ponytail: current %s • default %s\", mode, dflt), \"info\")",
+  "replace": "ctx.Notify(fmt.Sprintf(\"Ponytail: %s • default %s\", mode, dflt), \"info\")"
+ },
+ {
+  "name": "save-failure-silent",
+  "file": "extension.go",
+  "find": "ctx.Notify(\"Failed to save default mode: \"+err.Error(), \"error\")",
+  "replace": ""
+ },
+ {
+  "name": "default-override-notice",
+  "file": "extension.go",
+  "find": "if now == written {",
+  "replace": "if true {"
+ },
+ {
+  "name": "invalid-notice-level",
+  "file": "extension.go",
+  "find": "\"Unknown or unsupported /ponytail mode.\", \"warning\"",
+  "replace": "\"Unknown or unsupported /ponytail mode.\", \"info\""
+ },
+ {
+  "name": "default-not-refreshed",
+  "file": "extension.go",
+  "find": "now := getDefaultMode()\n\t\t\t\ta.mu.Lock()\n\t\t\t\ta.dflt = now\n\t\t\t\ta.mu.Unlock()",
+  "replace": "now := getDefaultMode()"
+ },
+ {
+  "name": "description-modes",
+  "file": "extension.go",
+  "find": "return \"Set mode: \" + strings.Join(runtimeModes, \"|\")",
+  "replace": "return \"Set mode: \" + strings.Join(validModes, \"|\")"
+ }
+]

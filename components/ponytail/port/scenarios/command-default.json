@@ -1,0 +1,28 @@
+{
+  "name": "command-default",
+  "description": "/ponytail default <level> saves the default and the next status shows it.",
+  "llm": [],
+  "steps": [
+    {
+      "name": "save",
+      "rpc": {
+        "type": "prompt",
+        "message": "/ponytail default lite"
+      }
+    },
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/ponytail status"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/ponytail\" && printf '%s' '{\"hideStatus\": true}' > \"$HOME/.config/ponytail/config.json\""
+    ]
+  ]
+}

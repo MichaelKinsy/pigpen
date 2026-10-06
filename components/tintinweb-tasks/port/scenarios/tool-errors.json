@@ -1,0 +1,115 @@
+{
+  "name": "tool-errors",
+  "description": "TaskOutput, TaskStop and TaskExecute error paths, and a TaskGet of an escaped newline.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Manual",
+            "description": "line one\\nline two"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskGet",
+          "arguments": {
+            "taskId": "1"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskOutput",
+          "arguments": {
+            "task_id": "99",
+            "block": false,
+            "timeout": 1000
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskOutput",
+          "arguments": {
+            "task_id": "",
+            "block": false,
+            "timeout": 1000
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskOutput",
+          "arguments": {
+            "task_id": "1",
+            "block": false,
+            "timeout": 1000
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskStop",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskStop",
+          "arguments": {
+            "task_id": "1"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskStop",
+          "arguments": {
+            "shell_id": "99"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskExecute",
+          "arguments": {
+            "task_ids": [
+              "1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    }
+  ]
+}

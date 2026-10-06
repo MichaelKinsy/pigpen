@@ -1,0 +1,25 @@
+{
+  "name": "config-default-ultra",
+  "description": "A default level in the config file is the starting level.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "hello",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/ponytail\" && printf '%s' '{\"defaultMode\": \"ultra\", \"other\": [1, 2], \"hideStatus\": true}' > \"$HOME/.config/ponytail/config.json\""
+    ]
+  ]
+}

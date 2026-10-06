@@ -1,0 +1,5 @@
+{
+ "providers/interceptors/github": "slice 2: the GitHub URL interceptor (opt-in; clones with gh or git) is not ported; see PORT.md",
+ "providers/interceptors/chain": "slice 2: the interceptor chain is part of the same deferred slice",
+ "index": "the remaining cases of index.test.ts (the per-provider matrix, SearXNG and Ollama, You.com, the per-call override and the WEB_SEARCH_PROVIDER precedence, the --show variants, the GitHub intercept) are covered by this port's own layer-1 cases (tools_test.go, command_test.go) and the Pi-recorded scenarios, and are not twinned one by one"
+}

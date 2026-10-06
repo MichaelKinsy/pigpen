@@ -1,0 +1,85 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# A fast, single-binary PiG with the essentials and no Node: web search and fetch, Claude Code-style sub-agents and
+# task tracking, structured questions, and the Superpowers skills. Every member is a Go Package of components/.
+name: pig-essentials
+description: "A fast single-binary PiG with the essentials, no Node: web search and fetch (rpiv-web-tools), sub-agents (tintinweb pi-subagents, a tested slice), Claude Code-style task tracking (tintinweb pi-tasks), structured questions (rpiv-ask-user-question), the ponytail mode, and the Superpowers skills. Everything stays quiet until used: no network call and no process at start-up."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  tasks: local:../../components/tintinweb-tasks
+  ask-user-question: local:../../components/ask-user-question
+  superpowers: local:../../components/superpowers
+  web-tools: local:../../components/rpiv-web-tools
+  subagents: local:../../components/tintinweb-subagents
+  ponytail: local:../../components/ponytail
+extensions:
+  # Task tracking (tintinweb, @tintinweb/pi-tasks 0.9.0, MIT): TaskCreate, TaskList, TaskGet, TaskUpdate, TaskOutput, TaskStop, TaskExecute and /tasks.
+  - name: tintinweb-tasks
+    origins: [package:tasks]
+    tools: [TaskCreate, TaskExecute, TaskGet, TaskList, TaskOutput, TaskStop, TaskUpdate]
+  # The ask_user_question tool (juicesharp, @juicesharp/rpiv-ask-user-question 2.11.0, MIT); slice A: the dialog walker.
+  - name: rpiv-ask-user-question
+    origins: [package:ask-user-question]
+    tools: [ask_user_question]
+  # Live web (juicesharp, @juicesharp/rpiv-web-tools 2.12.0, MIT): web_search over ten providers, web_fetch and /web-tools. No GitHub interceptor.
+  - name: rpiv-web-tools
+    origins: [package:web-tools]
+    tools: [web_fetch, web_search]
+  # Sub-agents (tintinweb, @tintinweb/pi-subagents 0.19.0, MIT), a tested slice: Agent, get_subagent_result, steer_subagent and /agents. Each agent is a child pig process.
+  - name: tintinweb-subagents
+    origins: [package:subagents]
+    tools: [Agent, get_subagent_result, steer_subagent]
+  # The ponytail mode (Dietrich Gebert, @dietrichgebert/ponytail 4.10.0, MIT): /ponytail and the review, audit, gain, debt and help commands.
+  - name: ponytail
+    origins: [package:ponytail]
+skills:
+  # The ponytail Skills (Dietrich Gebert, MIT); names prefixed pigpen-.
+  - name: pigpen-ponytail
+    origins: [package:ponytail]
+  - name: pigpen-ponytail-audit
+    origins: [package:ponytail]
+  - name: pigpen-ponytail-debt
+    origins: [package:ponytail]
+  - name: pigpen-ponytail-gain
+    origins: [package:ponytail]
+  - name: pigpen-ponytail-help
+    origins: [package:ponytail]
+  - name: pigpen-ponytail-review
+    origins: [package:ponytail]
+  # The Superpowers skills (Jesse Vincent, obra/superpowers v6.4.2, MIT); names prefixed pigpen-superpowers-.
+  - name: pigpen-superpowers-brainstorming
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-diagnosing-superpowers
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-dispatching-parallel-agents
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-executing-plans
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-finishing-a-development-branch
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-receiving-code-review
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-requesting-code-review
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-subagent-driven-development
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-systematic-debugging
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-test-driven-development
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-using-git-worktrees
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-using-superpowers
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-verification-before-completion
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-writing-plans
+    origins: [package:superpowers]
+  - name: pigpen-superpowers-writing-skills
+    origins: [package:superpowers]
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

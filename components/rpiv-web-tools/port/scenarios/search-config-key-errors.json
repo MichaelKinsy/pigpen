@@ -1,0 +1,64 @@
+{
+  "name": "search-config-key-errors",
+  "description": "A configured provider without its key, and a legacy empty key, still says the key is not set.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "q"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "q",
+            "provider": "serper"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://example.com/p"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/rpiv-web-tools\" && printf '%s' '{\"provider\": \"tavily\", \"apiKey\": \"   \"}' > \"$HOME/.config/rpiv-web-tools/config.json\""
+    ]
+  ],
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

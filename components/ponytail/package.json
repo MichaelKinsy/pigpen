@@ -1,0 +1,52 @@
+{
+  "name": "@pi-in-go/pigpen-ponytail",
+  "version": "0.1.0",
+  "description": "Go port of @dietrichgebert/ponytail for PiG: the lazy-senior-dev ruleset (lite, full, ultra), /ponytail and its review, audit, gain, debt and help commands, and six Skills",
+  "keywords": [
+    "pig-package",
+    "ponytail",
+    "minimal",
+    "yagni",
+    "skills",
+    "code-review",
+    "extension",
+    "pigpen",
+    "skill"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/ponytail"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/ponytail#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "skills",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/ponytail"
+    ],
+    "skills": [
+      "skills/pigpen-ponytail",
+      "skills/pigpen-ponytail-audit",
+      "skills/pigpen-ponytail-debt",
+      "skills/pigpen-ponytail-gain",
+      "skills/pigpen-ponytail-help",
+      "skills/pigpen-ponytail-review"
+    ]
+  }
+}

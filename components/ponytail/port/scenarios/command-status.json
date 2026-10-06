@@ -1,0 +1,21 @@
+{
+  "name": "command-status",
+  "description": "/ponytail status reports the current and the default level.",
+  "llm": [],
+  "steps": [
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/ponytail status"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/ponytail\" && printf '%s' '{\"hideStatus\": true}' > \"$HOME/.config/ponytail/config.json\""
+    ]
+  ]
+}

@@ -1,0 +1,7 @@
+{"kind":"header","scenario":"config-default-written","lane":"pi-ts","host":"pi 1.0.3","extension":"sha256:67f12660b2279922adcefd6c112b851830dc1d9b2c9f240b190c849d33e837b3","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"message":"Ponytail loaded: full","method":"notify","notifyType":"info"}}
+{"step":"01-save","ch":"ui","data":{"message":"Default Ponytail mode set to full.","method":"notify","notifyType":"info"}}
+{"step":"01-save","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-status","ch":"ui","data":{"message":"Ponytail: current full • default full","method":"notify","notifyType":"info"}}
+{"step":"02-status","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

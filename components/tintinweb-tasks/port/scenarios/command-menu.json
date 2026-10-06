@@ -1,0 +1,88 @@
+{
+  "name": "command-menu",
+  "description": "/tasks: the menu with counts, viewing the list, starting, completing and deleting a task.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "First",
+            "description": "the first"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Second",
+            "description": "the second"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    },
+    {
+      "name": "tasks",
+      "rpc": {
+        "type": "prompt",
+        "message": "/tasks"
+      },
+      "ui": [
+        {
+          "value": "View all tasks (2)"
+        },
+        {
+          "value": "◻ #1 [pending] First"
+        },
+        {
+          "value": "▸ Start (in_progress)"
+        },
+        {
+          "value": "◼ #1 [in_progress] First"
+        },
+        {
+          "value": "✓ Complete"
+        },
+        {
+          "value": "✔ #1 [completed] First"
+        },
+        {
+          "value": "✗ Delete"
+        },
+        {
+          "cancelled": true
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    },
+    {
+      "name": "tasks-again",
+      "rpc": {
+        "type": "prompt",
+        "message": "/tasks"
+      },
+      "ui": [
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ]
+}

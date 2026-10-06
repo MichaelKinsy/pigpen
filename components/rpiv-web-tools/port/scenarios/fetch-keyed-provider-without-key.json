@@ -1,0 +1,39 @@
+{
+  "name": "fetch-keyed-provider-without-key",
+  "description": "web_fetch with the Tavily provider selected by the environment but no key: the provider's own error.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://example.com/page"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "env": {
+    "WEB_SEARCH_PROVIDER": "tavily"
+  },
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

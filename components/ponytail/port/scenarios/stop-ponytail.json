@@ -1,0 +1,35 @@
+{
+  "name": "stop-ponytail",
+  "description": "'Stop ponytail.' (case and punctuation aside) turns the ruleset off.",
+  "llm": [
+    {
+      "text": "done"
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "Stop ponytail."
+      }
+    },
+    {
+      "name": "after",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/ponytail\" && printf '%s' '{\"hideStatus\": true}' > \"$HOME/.config/ponytail/config.json\""
+    ]
+  ]
+}

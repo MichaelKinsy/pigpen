@@ -333,8 +333,8 @@ test('the real ports list', async (t) => {
   });
   await t.test('the queued rows follow the top-installs order; MCP is not listed', () => {
     const queued = data.ports.filter((p) => p.status === 'queued' && p.priority).sort((a, b) => a.priority - b.priority).map((p) => p.id);
-    // rpiv-todo and rpiv-ask-user-question (priorities 1 and 2) left the queue for review.
-    assert.deepEqual(queued, ['plannotator', 'ponytail', 'langfuse-observability']);
+    // rpiv-todo, rpiv-ask-user-question and ponytail left the queue for review.
+    assert.deepEqual(queued, ['plannotator', 'langfuse-observability']);
     assert.ok(![...ids].some((id) => /mcp/.test(id)), 'MCP is built into PiG');
   });
   await t.test('pins the pieces the running lanes already fixed', () => {

@@ -18,9 +18,12 @@ describe('fake host template', () => {
     if (!existsSync(copy)) continue;
     it(`${module.slice(root.length)} uses the template unchanged`, () => {
       const text = readFileSync(copy, 'utf8');
-      const name = /^package (\w+)_test$/m.exec(text)?.[1];
-      assert.ok(name, 'copy needs a package clause');
-      assert.equal(text, template.replaceAll('PORTPKG', name));
+      const clause = /^package (\w+?)(_test)?$/m.exec(text);
+      assert.ok(clause, 'copy needs a package clause');
+      // An external test package (X_test) is the template as it is; a port whose fake-host tests drive unexported
+      // seams (a manager, a registry) keeps the harness in its internal package (X), the clause being the only change.
+      const expected = clause[2] ? template : template.replace('package PORTPKG_test', 'package PORTPKG');
+      assert.equal(text, expected.replaceAll('PORTPKG', clause[1]));
     });
   }
 });

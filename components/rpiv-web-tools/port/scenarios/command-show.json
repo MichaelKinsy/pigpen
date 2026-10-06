@@ -1,0 +1,26 @@
+{
+  "name": "command-show",
+  "description": "/web-tools --show with nothing configured.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "show-empty",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools --show"
+      }
+    }
+  ],
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

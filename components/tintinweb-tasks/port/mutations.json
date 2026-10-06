@@ -1,0 +1,704 @@
+[
+ {
+  "name": "next-id-not-advanced",
+  "file": "store.go",
+  "find": "s.nextID++\n",
+  "replace": ""
+ },
+ {
+  "name": "create-status-not-pending",
+  "file": "store.go",
+  "find": "Status: statusPending,\n\t\t\tActiveForm",
+  "replace": "Status: statusInProgress,\n\t\t\tActiveForm"
+ },
+ {
+  "name": "blocks-edge-not-bidirectional",
+  "file": "store.go",
+  "find": "other.BlockedBy = append(other.BlockedBy, id)",
+  "replace": "_ = other"
+ },
+ {
+  "name": "blockedby-edge-not-bidirectional",
+  "file": "store.go",
+  "find": "other.Blocks = append(other.Blocks, id)",
+  "replace": "_ = other"
+ },
+ {
+  "name": "cycle-warning-text-blocks",
+  "file": "store.go",
+  "find": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(other.Blocks, id):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")",
+  "replace": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(other.Blocks, id):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block\")"
+ },
+ {
+  "name": "self-warning-text-blocks",
+  "file": "store.go",
+  "find": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(other.Blocks, id):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")",
+  "replace": "warnings = append(warnings, \"#\"+id+\" blocks itself.\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(other.Blocks, id):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")"
+ },
+ {
+  "name": "dangling-warning-text-blocks",
+  "file": "store.go",
+  "find": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(other.Blocks, id):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")",
+  "replace": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" missing\")\n\t\t\t\tcase slices.Contains(other.Blocks, id):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")"
+ },
+ {
+  "name": "cycle-warning-text-blockedby",
+  "file": "store.go",
+  "find": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(t.Blocks, target):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")",
+  "replace": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(t.Blocks, target):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block\")"
+ },
+ {
+  "name": "self-warning-text-blockedby",
+  "file": "store.go",
+  "find": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(t.Blocks, target):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")",
+  "replace": "warnings = append(warnings, \"#\"+id+\" blocks itself.\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(t.Blocks, target):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")"
+ },
+ {
+  "name": "dangling-warning-text-blockedby",
+  "file": "store.go",
+  "find": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" does not exist\")\n\t\t\t\tcase slices.Contains(t.Blocks, target):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")",
+  "replace": "warnings = append(warnings, \"#\"+id+\" blocks itself\")\n\t\t\t\tcase other == nil:\n\t\t\t\t\twarnings = append(warnings, \"#\"+target+\" missing\")\n\t\t\t\tcase slices.Contains(t.Blocks, target):\n\t\t\t\t\twarnings = append(warnings, \"cycle: #\"+id+\" and #\"+target+\" block each other\")"
+ },
+ {
+  "name": "duplicate-edges-allowed",
+  "file": "store.go",
+  "find": "if !slices.Contains(t.Blocks, target) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "delete-keeps-edges",
+  "file": "store.go",
+  "find": "s.remove(id)\n\t\t\ts.dropEdgesTo(id)\n\t\t\treturn updateResult{ChangedFields: []string{\"deleted\"}",
+  "replace": "s.remove(id)\n\t\t\treturn updateResult{ChangedFields: []string{\"deleted\"}"
+ },
+ {
+  "name": "metadata-null-sets",
+  "file": "store.go",
+  "find": "if value == nil {\n\t\t\t\t\tdelete(t.Metadata, key)\n\t\t\t\t} else {\n\t\t\t\t\tt.Metadata[key] = value\n\t\t\t\t}",
+  "replace": "t.Metadata[key] = value"
+ },
+ {
+  "name": "clear-completed-keeps-edges",
+  "file": "store.go",
+  "find": "t.Blocks = slices.DeleteFunc(t.Blocks, func(b string) bool { return s.tasks[b] == nil })",
+  "replace": "_ = t"
+ },
+ {
+  "name": "update-not-found-has-fields",
+  "file": "store.go",
+  "find": "return updateResult{ChangedFields: changed, Warnings: warnings}\n\t\t}\n\t\tif f.Status",
+  "replace": "return updateResult{ChangedFields: []string{\"status\"}, Warnings: warnings}\n\t\t}\n\t\tif f.Status"
+ },
+ {
+  "name": "load-nextid-ignored",
+  "file": "store.go",
+  "find": "n > maxID {\n\t\ts.nextID = int(n)",
+  "replace": "n > maxID && false {\n\t\ts.nextID = int(n)"
+ },
+ {
+  "name": "load-no-recompute-max",
+  "file": "store.go",
+  "find": "s.nextID = int(maxID) + 1",
+  "replace": "s.nextID = 1"
+ },
+ {
+  "name": "load-keeps-non-task-entries",
+  "file": "store.go",
+  "find": "id, ok := m[\"id\"].(string)\n\t\tif !ok {\n\t\t\tcontinue\n\t\t}",
+  "replace": "id, _ := m[\"id\"].(string)"
+ },
+ {
+  "name": "lock-token-not-checked",
+  "file": "store.go",
+  "find": "string(data) == token",
+  "replace": "len(data) >= 0"
+ },
+ {
+  "name": "lock-garbage-never-stale",
+  "file": "store.go",
+  "find": "stale := i >= 2",
+  "replace": "stale := false"
+ },
+ {
+  "name": "lock-live-pid-reclaimed",
+  "file": "store.go",
+  "find": "stale = !isProcessRunning(pid)",
+  "replace": "stale = true"
+ },
+ {
+  "name": "save-not-atomic",
+  "file": "store.go",
+  "find": "return os.Rename(tmp, s.filePath)",
+  "replace": "return os.WriteFile(s.filePath, bytes.TrimRight(buf.Bytes(), \"\\n\"), 0o644)"
+ },
+ {
+  "name": "list-no-reload",
+  "file": "store.go",
+  "find": "func (s *taskStore) list(order any) []*task {\n\ts.load()",
+  "replace": "func (s *taskStore) list(order any) []*task {"
+ },
+ {
+  "name": "seed-not-noop",
+  "file": "store.go",
+  "find": "if len(s.tasks) > 0 {\n\t\treturn\n\t}\n\twithLock(s, func() struct{}",
+  "replace": "if false {\n\t\treturn\n\t}\n\twithLock(s, func() struct{}"
+ },
+ {
+  "name": "sort-status-default-rank",
+  "file": "sort.go",
+  "find": "\"status\": {{field: \"status\", rank: defaultStatusRank}, {field: \"id\"}},",
+  "replace": "\"status\": {{field: \"status\", rank: []string{statusPending, statusInProgress, statusCompleted}}, {field: \"id\"}},"
+ },
+ {
+  "name": "sort-desc-ignored",
+  "file": "sort.go",
+  "find": "if k.direction == \"desc\" {\n\t\t\t\t\tdelta = -delta",
+  "replace": "if false {\n\t\t\t\t\tdelta = -delta"
+ },
+ {
+  "name": "sort-unranked-first",
+  "file": "sort.go",
+  "find": "return len(rank)\n}",
+  "replace": "return -1\n}"
+ },
+ {
+  "name": "sort-spec-partially-valid",
+  "file": "sort.go",
+  "find": "if !ok {\n\t\t\t\t\treturn sortPresets[\"id\"]\n\t\t\t\t}",
+  "replace": "if !ok {\n\t\t\t\t\tcontinue\n\t\t\t\t}"
+ },
+ {
+  "name": "glyph-control-allowed",
+  "file": "glyphs.go",
+  "find": "|| unsafeGlyph.MatchString(s)",
+  "replace": ""
+ },
+ {
+  "name": "glyph-summary-literal",
+  "file": "glyphs.go",
+  "find": "g.CompletedSummary = glyph(\"completedSummary\", g.Completed)",
+  "replace": "g.CompletedSummary = glyph(\"completedSummary\", \"✔\")"
+ },
+ {
+  "name": "spinner-partial",
+  "file": "glyphs.go",
+  "find": "if !ok {\n\t\t\t\tspinner = nil\n\t\t\t\tbreak\n\t\t\t}",
+  "replace": "if !ok {\n\t\t\t\tcontinue\n\t\t\t}"
+ },
+ {
+  "name": "config-project-not-merged",
+  "file": "config.go",
+  "find": "for k, v := range project {\n\t\tmerged[k] = v\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "config-glyphs-replaced",
+  "file": "config.go",
+  "find": "if _, g := global[\"glyphs\"]; g || project[\"glyphs\"] != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "config-save-everything",
+  "file": "config.go",
+  "find": "if differs(g, present, value) {\n\t\t\toverrides[key] = value",
+  "replace": "if differs(g, present, value) || true {\n\t\t\toverrides[key] = value"
+ },
+ {
+  "name": "path-session-global-ignores-workspace",
+  "file": "paths.go",
+  "find": "if _, err := os.Stat(inWorkspace); err == nil {\n\t\treturn inWorkspace\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "path-key-keeps-colon",
+  "file": "paths.go",
+  "find": "`[/\\\\:]`",
+  "replace": "`[/\\\\]`"
+ },
+ {
+  "name": "autoclear-delay-off-by-one",
+  "file": "autoclear.go",
+  "find": "currentTurn-turn >= m.delay",
+  "replace": "currentTurn-turn > m.delay"
+ },
+ {
+  "name": "autoclear-batch-delay-off-by-one",
+  "file": "autoclear.go",
+  "find": "currentTurn-*m.allCompletedAtTurn >= m.delay",
+  "replace": "currentTurn-*m.allCompletedAtTurn > m.delay"
+ },
+ {
+  "name": "autoclear-never-cleared",
+  "file": "autoclear.go",
+  "find": "if !afterFinishedRun || m.getMode() == \"never\" {",
+  "replace": "if !afterFinishedRun {"
+ },
+ {
+  "name": "autoclear-run-boundary-ignored",
+  "file": "autoclear.go",
+  "find": "if !afterFinishedRun ||",
+  "replace": "if (!afterFinishedRun && false) ||"
+ },
+ {
+  "name": "autoclear-stale-entry-kept",
+  "file": "autoclear.go",
+  "find": "case t == nil || t.Status != statusCompleted:",
+  "replace": "case t == nil:"
+ },
+ {
+  "name": "autoclear-reset-forgets-run",
+  "file": "autoclear.go",
+  "find": "m.allCompletedAtTurn = nil\n\tm.runEnded = false\n}",
+  "replace": "m.allCompletedAtTurn = nil\n}"
+ },
+ {
+  "name": "autoclear-countdown-restarts",
+  "file": "autoclear.go",
+  "find": "if m.allCompletedAtTurn == nil {\n\t\t\tm.allCompletedAtTurn = &currentTurn",
+  "replace": "if true {\n\t\t\tm.allCompletedAtTurn = &currentTurn"
+ },
+ {
+  "name": "cadence-no-guard-injected",
+  "file": "cadence.go",
+  "find": "if s.ReminderInjectedThisCycle {\n\t\treturn false\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "cadence-no-tasks-still-due",
+  "file": "cadence.go",
+  "find": "if !hasTasks {\n\t\treturn false\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "cadence-drain-repeats",
+  "file": "cadence.go",
+  "find": "s.ReminderDue = false\n\ts.ReminderInjectedThisCycle = true",
+  "replace": "s.ReminderInjectedThisCycle = true"
+ },
+ {
+  "name": "widget-spinner-advances-on-update",
+  "file": "widget.go",
+  "find": "w.frame++\n\t\t\tw.updateLocked()",
+  "replace": "w.frame++\n\t\t\tw.updateLocked()\n\t\t\tw.frame++"
+ },
+ {
+  "name": "widget-overflow-top-bottom-swapped",
+  "file": "widget.go",
+  "find": "visible = listed[len(listed)-limit:]",
+  "replace": "visible = listed[:limit]"
+ },
+ {
+  "name": "widget-collapse-counts-all",
+  "file": "widget.go",
+  "find": "listed = nil\n\t\tfor _, t := range tasks {\n\t\t\tif t.Status != statusCompleted {\n\t\t\t\tlisted = append(listed, t)\n\t\t\t}\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "widget-blocked-shows-completed",
+  "file": "widget.go",
+  "find": "b != nil && b.Status != statusCompleted",
+  "replace": "b != nil"
+ },
+ {
+  "name": "widget-duration-hours",
+  "file": "widget.go",
+  "find": "return fmt.Sprintf(\"%dh %dm\", hr, remMin)",
+  "replace": "return fmt.Sprintf(\"%dh%dm\", hr, remMin)"
+ },
+ {
+  "name": "widget-tokens-keep-zero",
+  "file": "widget.go",
+  "find": "strings.TrimSuffix(s, \".0\") + \"k\"",
+  "replace": "s + \"k\""
+ },
+ {
+  "name": "widget-timer-not-stopped",
+  "file": "widget.go",
+  "find": "} else {\n\t\tw.stopTimer()\n\t}\n\tw.registered = true",
+  "replace": "}\n\tw.registered = true"
+ },
+ {
+  "name": "widget-empty-not-cleared",
+  "file": "widget.go",
+  "find": "w.ui.setWidget(\"tasks\", nil)\n\t\t\tw.registered = false\n\t\t}\n\t\tw.stopTimer()",
+  "replace": "w.registered = false\n\t\t}\n\t\tw.stopTimer()"
+ },
+ {
+  "name": "reminder-interval",
+  "file": "extension.go",
+  "find": "reminderInterval = 4",
+  "replace": "reminderInterval = 5"
+ },
+ {
+  "name": "reminder-active-interval",
+  "file": "extension.go",
+  "find": "activeReminderInterval = 2",
+  "replace": "activeReminderInterval = 3"
+ },
+ {
+  "name": "reminder-cap",
+  "file": "extension.go",
+  "find": "reminderMaxTasks = 10",
+  "replace": "reminderMaxTasks = 9"
+ },
+ {
+  "name": "reminder-overflow-text",
+  "file": "extension.go",
+  "find": "not shown — use TaskList for the full list.",
+  "replace": "not shown - use TaskList for the full list."
+ },
+ {
+  "name": "reminder-tag-not-stripped",
+  "file": "extension.go",
+  "find": "strings.Trim(reminderTagRe.ReplaceAllString(collapsed, \"\"), jsWhitespaceRe)",
+  "replace": "strings.Trim(collapsed, jsWhitespaceRe)"
+ },
+ {
+  "name": "reminder-newline-kept",
+  "file": "extension.go",
+  "find": "collapsed := collapseNewlines(value)",
+  "replace": "collapsed := value"
+ },
+ {
+  "name": "reminder-truncated-claims-full",
+  "file": "extension.go",
+  "find": "header = prefix + \" Here are your most relevant tasks (list truncated):\"",
+  "replace": "header = prefix + \" Here are the latest contents of your task list:\""
+ },
+ {
+  "name": "reminder-completed-first",
+  "file": "extension.go",
+  "find": "case statusInProgress:\n\t\t\t\treturn 0\n\t\t\tcase statusPending:\n\t\t\t\treturn 1\n\t\t\t}\n\t\t\treturn 2",
+  "replace": "case statusInProgress:\n\t\t\t\treturn 2\n\t\t\tcase statusPending:\n\t\t\t\treturn 1\n\t\t\t}\n\t\t\treturn 0"
+ },
+ {
+  "name": "reminder-empty-text",
+  "file": "extension.go",
+  "find": "your task list is currently empty",
+  "replace": "your task list is empty"
+ },
+ {
+  "name": "reminder-persisted-in-tool-result",
+  "file": "extension.go",
+  "find": "if taskToolNames[name] {\n\t\tevaluateToolResult(a.cadence, name, false, cfg)\n\t\treturn map[string]any{}, nil\n\t}",
+  "replace": "if false {\n\t\treturn map[string]any{}, nil\n\t}"
+ },
+ {
+  "name": "stale-detection-off",
+  "file": "extension.go",
+  "find": "if gap >= activeReminderInterval {",
+  "replace": "if gap >= activeReminderInterval && false {"
+ },
+ {
+  "name": "settled-no-run-boundary",
+  "file": "extension.go",
+  "find": "a.autoClear.onRunEnded()\n\treturn nil, nil\n}\n\n// onTurnEnd",
+  "replace": "return nil, nil\n}\n\n// onTurnEnd"
+ },
+ {
+  "name": "resume-keeps-run-open",
+  "file": "extension.go",
+  "find": "if keepsTasks {\n\t\ta.autoClear.onRunEnded()\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "fork-not-seeded",
+  "file": "extension.go",
+  "find": "a.store.seed(*forkSeed)",
+  "replace": "_ = forkSeed"
+ },
+ {
+  "name": "new-memory-not-cleared",
+  "file": "extension.go",
+  "find": "if reason == \"new\" && a.taskScope == \"memory\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "switch-keeps-agent-map",
+  "file": "extension.go",
+  "find": "a.agents.clear()\n\t\tresetCadenceState",
+  "replace": "resetCadenceState"
+ },
+ {
+  "name": "no-session-file-persists",
+  "file": "extension.go",
+  "find": "if file, err := ctx.SessionManager().GetSessionFile(); err == nil && file != nil && *file != \"\" {",
+  "replace": "if _, err := ctx.SessionManager().GetSessionFile(); err == nil {"
+ },
+ {
+  "name": "session-start-no-reload-config",
+  "file": "extension.go",
+  "find": "if reloadConfig || !a.configured || a.configuredCwd != cwd {",
+  "replace": "if !a.configured {"
+ },
+ {
+  "name": "startup-keeps-completed-list",
+  "file": "extension.go",
+  "find": "if !isResume && allCompleted(tasks) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "reattach-all-statuses",
+  "file": "extension.go",
+  "find": "ok && id != \"\" && t.Status == statusInProgress",
+  "replace": "ok && id != \"\""
+ },
+ {
+  "name": "completed-result-kept-when-absent",
+  "file": "extension.go",
+  "find": "var result any = data[\"result\"] // absent: the key is dropped, as `result: undefined` is",
+  "replace": "var result any = data[\"result\"]\n\tif result == nil {\n\t\tresult = t.Metadata[\"result\"]\n\t}"
+ },
+ {
+  "name": "failed-keeps-old-result",
+  "file": "extension.go",
+  "find": "withMeta(t.Metadata, \"result\", nil, \"lastError\", lastError)",
+  "replace": "withMeta(t.Metadata, \"lastError\", lastError)"
+ },
+ {
+  "name": "failed-reverts-to-in-progress",
+  "file": "extension.go",
+  "find": "Status: strPtr(statusPending), Metadata: withMeta(t.Metadata, \"result\", nil, \"lastError\", lastError)",
+  "replace": "Status: strPtr(statusInProgress), Metadata: withMeta(t.Metadata, \"result\", nil, \"lastError\", lastError)"
+ },
+ {
+  "name": "stopped-drops-result",
+  "file": "extension.go",
+  "find": "var keep any = t.Metadata[\"result\"]\n\t\tif result != \"\" {",
+  "replace": "var keep any = t.Metadata[\"result\"]\n\t\tif false {"
+ },
+ {
+  "name": "cascade-ignores-other-blockers",
+  "file": "extension.go",
+  "find": "if d := a.store.get(dep); d == nil || d.Status != statusCompleted {",
+  "replace": "if d := a.store.get(dep); (d == nil || d.Status != statusCompleted) && false {"
+ },
+ {
+  "name": "cascade-without-config",
+  "file": "extension.go",
+  "find": "a.cfg.flag(\"autoCascade\") && a.cascade != nil && a.latest != nil",
+  "replace": "a.cfg.flag(\"autoCascade\") && a.latest != nil && false"
+ },
+ {
+  "name": "cascade-drops-model",
+  "file": "extension.go",
+  "find": "options[\"model\"] = a.cascade.model",
+  "replace": "_ = options"
+ },
+ {
+  "name": "prompt-truncation-limit",
+  "file": "extension.go",
+  "find": "if jsLength(res) > 4000 {",
+  "replace": "if jsLength(res) > 5000 {"
+ },
+ {
+  "name": "prompt-truncation-marker",
+  "file": "extension.go",
+  "find": "[... truncated — use TaskGet for full output]",
+  "replace": "[... truncated]"
+ },
+ {
+  "name": "version-compare",
+  "file": "extension.go",
+  "find": "case *version > protocolVersion:\n\t\ta.pendingWarning = fmt.Sprintf(\"@tintinweb/pi-tasks is outdated",
+  "replace": "case *version < protocolVersion:\n\t\ta.pendingWarning = fmt.Sprintf(\"@tintinweb/pi-tasks is outdated"
+ },
+ {
+  "name": "rpc-reply-listener-leaks",
+  "file": "extension.go",
+  "find": "defer unsub()\n\t\tpayload",
+  "replace": "_ = unsub\n\t\tpayload"
+ },
+ {
+  "name": "warning-repeats",
+  "file": "extension.go",
+  "find": "ctx.Notify(a.pendingWarning, \"warning\")\n\t\ta.pendingWarning = \"\"",
+  "replace": "ctx.Notify(a.pendingWarning, \"warning\")"
+ },
+ {
+  "name": "rpc-widget-rows-sent",
+  "file": "extension.go",
+  "find": "if u.ctx.Mode() == \"rpc\" {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "shutdown-clears-widget",
+  "file": "extension.go",
+  "find": "a.registerTools(e)",
+  "replace": "e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) { a.widget.dispose(); return nil, nil })\n\ta.registerTools(e)"
+ },
+ {
+  "name": "tasklist-order-by-id",
+  "file": "tools.go",
+  "find": "if d := order[x.Status] - order[y.Status]; d != 0 {\n\t\t\treturn d\n\t\t}",
+  "replace": "if d := order[x.Status] - order[y.Status]; d != 0 && false {\n\t\t\treturn d\n\t\t}"
+ },
+ {
+  "name": "tasklist-shows-completed-blockers",
+  "file": "tools.go",
+  "find": "// Only non-completed blockers are shown.\n\t\tif open := a.openBlockers(t, false); len(open) > 0 {",
+  "replace": "// Only non-completed blockers are shown.\n\t\tif open := append([]string{}, t.BlockedBy...); len(open) > 0 {\n\t\t\tfor i := range open {\n\t\t\t\topen[i] = \"#\" + open[i]\n\t\t\t}"
+ },
+ {
+  "name": "taskget-no-unescape",
+  "file": "tools.go",
+  "find": "strings.ReplaceAll(t.Description, `\\n`, \"\\n\")",
+  "replace": "t.Description"
+ },
+ {
+  "name": "taskget-metadata-hidden",
+  "file": "tools.go",
+  "find": "if len(t.Metadata) > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "taskupdate-not-found-text",
+  "file": "tools.go",
+  "find": "\"Task #%s not found\"",
+  "replace": "\"Task %s not found\""
+ },
+ {
+  "name": "taskupdate-warning-format",
+  "file": "tools.go",
+  "find": "msg += \" (warning: \" + strings.Join(res.Warnings, \"; \") + \")\"",
+  "replace": "msg += \" (warning: \" + strings.Join(res.Warnings, \", \") + \")\""
+ },
+ {
+  "name": "taskupdate-no-batch-reset",
+  "file": "tools.go",
+  "find": "case statusPending:\n\t\ta.autoClear.resetBatchCountdown()",
+  "replace": "case statusPending:"
+ },
+ {
+  "name": "taskcreate-no-new-batch",
+  "file": "tools.go",
+  "find": "a.autoClear.startNewBatch()\n\tmeta",
+  "replace": "meta"
+ },
+ {
+  "name": "taskcreate-agenttype-lost",
+  "file": "tools.go",
+  "find": "meta[\"agentType\"] = at",
+  "replace": "_ = at"
+ },
+ {
+  "name": "taskoutput-empty-id-accepted",
+  "file": "tools.go",
+  "find": "if taskID == \"\" {\n\t\treturn \"\", errors.New(\"task_id is required\")\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "taskoutput-error-text",
+  "file": "tools.go",
+  "find": "\"Error: \" + le",
+  "replace": "\"Error \" + le"
+ },
+ {
+  "name": "taskoutput-consumes-running",
+  "file": "tools.go",
+  "find": "if !a.agents.has(agentID) && updated.Status != statusInProgress {",
+  "replace": "if true {"
+ },
+ {
+  "name": "taskoutput-stale-snapshot",
+  "file": "tools.go",
+  "find": "updated := a.store.get(resolved)\n\tif updated == nil {\n\t\tupdated = t\n\t}",
+  "replace": "updated := t"
+ },
+ {
+  "name": "taskoutput-prefix-match-lost",
+  "file": "extension.go",
+  "find": "if k == id || strings.HasPrefix(k, id) {",
+  "replace": "if k == id {"
+ },
+ {
+  "name": "taskstop-stale-id",
+  "file": "tools.go",
+  "find": "a.store.update(resolved, updateFields{Status: strPtr(statusCompleted)})",
+  "replace": "a.store.update(taskID, updateFields{Status: strPtr(statusCompleted)})"
+ },
+ {
+  "name": "taskstop-completed-restopped",
+  "file": "tools.go",
+  "find": "if t != nil && t.Status == statusInProgress {\n\t\t\tif agentID",
+  "replace": "if t != nil {\n\t\t\tif agentID"
+ },
+ {
+  "name": "taskstop-shell-id-ignored",
+  "file": "tools.go",
+  "find": "taskID, ok = strParam(p, \"shell_id\")",
+  "replace": ""
+ },
+ {
+  "name": "taskexecute-no-blocker-check",
+  "file": "tools.go",
+  "find": "if open := a.openBlockers(t, true); len(open) > 0 {\n\t\t\tresults",
+  "replace": "if open := a.openBlockers(t, false); len(open) > 0 {\n\t\t\tresults"
+ },
+ {
+  "name": "taskexecute-pending-check",
+  "file": "tools.go",
+  "find": "if t.Status != statusPending {",
+  "replace": "if t.Status == statusCompleted {"
+ },
+ {
+  "name": "taskexecute-launch-text",
+  "file": "tools.go",
+  "find": "Do not spawn additional agents for these tasks.",
+  "replace": "Do not spawn more agents for these tasks."
+ },
+ {
+  "name": "named-list-under-home",
+  "file": "store.go",
+  "find": "path = filepath.Join(agentDir(), \"tasks\", listIDOrPath+\".json\")",
+  "replace": "path = filepath.Join(os.Getenv(\"HOME\"), \".pi\", \"tasks\", listIDOrPath+\".json\")"
+ },
+ {
+  "name": "ping-while-loading",
+  "file": "extension.go",
+  "find": "a.pingOnce.Do(func() { go a.ping(ctx.Events()) })",
+  "replace": "go a.ping(ctx.Events())"
+ },
+ {
+  "name": "taskexecute-no-reping",
+  "file": "tools.go",
+  "find": "a.unlocked(func() { a.ping(ctx.Events()) })",
+  "replace": ""
+ },
+ {
+  "name": "taskexecute-owner-not-set",
+  "file": "tools.go",
+  "find": "a.store.update(taskID, updateFields{Owner: strPtr(agentID), Metadata: withMeta(t.Metadata, \"agentId\", agentID)})",
+  "replace": "a.store.update(taskID, updateFields{Metadata: withMeta(t.Metadata, \"agentId\", agentID)})"
+ },
+ {
+  "name": "command-clear-all-keeps-file",
+  "file": "command.go",
+  "find": "a.store.clearAll()\n\t\t\t\tif a.isSessionScope() {\n\t\t\t\t\ta.deleteSessionFileIfEmpty()\n\t\t\t\t}",
+  "replace": "a.store.clearAll()"
+ },
+ {
+  "name": "command-row-parsed-from-label",
+  "file": "command.go",
+  "find": "if i := slices.Index(choices, selected); i >= 0 && i < len(tasks) {\n\t\t\treturn viewTaskDetail(tasks[i].ID)\n\t\t}",
+  "replace": "for k := 0; k < len(selected); k++ {\n\t\t\tif selected[k] == '#' {\n\t\t\t\te := k + 1\n\t\t\t\tfor e < len(selected) && selected[e] >= '0' && selected[e] <= '9' {\n\t\t\t\t\te++\n\t\t\t\t}\n\t\t\t\treturn viewTaskDetail(selected[k+1 : e])\n\t\t\t}\n\t\t}"
+ },
+ {
+  "name": "command-complete-no-track",
+  "file": "command.go",
+  "find": "a.store.update(taskID, updateFields{Status: strPtr(statusCompleted)})\n\t\t\t\t\ta.autoClear.trackCompletion(taskID, a.cadence.CurrentTurn)",
+  "replace": "a.store.update(taskID, updateFields{Status: strPtr(statusCompleted)})"
+ },
+ {
+  "name": "command-menu-no-clear-completed",
+  "file": "command.go",
+  "find": "if completed > 0 {\n\t\t\tchoices",
+  "replace": "if false {\n\t\t\tchoices"
+ },
+ {
+  "name": "command-back-option",
+  "file": "command.go",
+  "find": "actions = append(actions, \"✗ Delete\", \"← Back\")",
+  "replace": "actions = append(actions, \"✗ Delete\")"
+ }
+]
