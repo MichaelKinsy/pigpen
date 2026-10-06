@@ -333,8 +333,13 @@ func (a *app) executeFetch(ctx sdk.Context, params map[string]any) (any, error) 
 	return sdk.ToolResult{Content: text, Details: details}, nil
 }
 
-// runFetch is the three-stage fetch dispatch. upstream: the interceptor loop, the provider fetch and the generic path.
+// runFetch is the three-stage fetch dispatch, and the one place a network request is initiated, so the URL guard
+// lives here rather than only at the tool entry: a second caller cannot skip it. upstream: the interceptor loop, the
+// provider fetch and the generic path, behind parseAndAssertHttpUrl.
 func (a *app) runFetch(target string, raw bool) (fetchResponse, error) {
+	if _, err := parseAndAssertHTTPURL(target); err != nil {
+		return fetchResponse{}, err
+	}
 	cfg := a.config()
 	var providerFetch func(string, bool) (fetchResponse, error)
 	if meta, ok := providerMetaByName(resolveActiveProviderName(cfg, envReader).Name); ok && hasRole(meta, roleFetch) {

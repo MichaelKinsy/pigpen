@@ -84,3 +84,51 @@ func liveFetchURL() string { return liveFetchURLValue() }
 
 // liveFetchURLValue reads the override the caller may set.
 func liveFetchURLValue() string { return os.Getenv("LIVE_FETCH_URL") }
+
+// The installed tool's own body, driven without a model: the same runFetch the web_fetch tool calls, over the real
+// network and through the same client. This is the work the model would trigger.
+
+func TestLiveToolBody(t *testing.T) {
+	configHome(t)
+	app := newApp()
+
+	t.Run("web_fetch's body reads and converts a real page", func(t *testing.T) {
+		target := "https://example.com"
+		if url := liveFetchURL(); url != "" {
+			target = url
+		}
+		res, err := app.runFetch(target, false)
+		if err != nil {
+			t.Skipf("no network: %v", err)
+		}
+		if res.Text == "" {
+			t.Fatal("the body must survive the conversion")
+		}
+		t.Logf("fetch returned %d bytes, title %q, content-type %q", len(res.Text), res.Title, res.ContentType)
+	})
+	t.Run("web_fetch's body refuses a private address", func(t *testing.T) {
+		_, err := app.runFetch("http://127.0.0.1:1/x", false)
+		if err == nil {
+			t.Fatal("a loopback address must be refused before any request")
+		}
+		if !strings.Contains(err.Error(), "Refusing to fetch private/loopback address") {
+			t.Fatalf("the guard must refuse it by name, got %q", err.Error())
+		}
+		t.Logf("guard error: %v", err)
+	})
+	t.Run("the truncation budget applies to a real body", func(t *testing.T) {
+		target := "https://example.com"
+		if url := liveFetchURL(); url != "" {
+			target = url
+		}
+		res, err := app.runFetch(target, true)
+		if err != nil {
+			t.Skipf("no network: %v", err)
+		}
+		_, truncation, err := truncateBody(res.Text, maxFetchBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("body of %d bytes: truncated=%v lines=%d", len(res.Text), truncation.Truncated, truncation.OutputLines)
+	})
+}
