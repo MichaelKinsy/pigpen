@@ -1,0 +1,311 @@
+{
+ "htmlToText": [
+  {
+   "name": "plain paragraphs",
+   "got": "a & b\n c"
+  },
+  {
+   "name": "script and style removed",
+   "got": "kept"
+  },
+  {
+   "name": "noscript removed",
+   "got": "before\n after"
+  },
+  {
+   "name": "block closers become newlines",
+   "got": "one\n a\n b\n head"
+  },
+  {
+   "name": "self closing br",
+   "got": "a\nb\nc"
+  },
+  {
+   "name": "nested tags become spaces",
+   "got": "bold text"
+  },
+  {
+   "name": "numeric entities",
+   "got": "a&b A &#x263A;"
+  },
+  {
+   "name": "named entities",
+   "got": "& < > \" ' end"
+  },
+  {
+   "name": "whitespace collapsed",
+   "got": "a b c\n \n \n d"
+  },
+  {
+   "name": "blank line runs collapse",
+   "got": "a\n\n b"
+  },
+  {
+   "name": "title stays inline",
+   "got": "My Page Hello"
+  },
+  {
+   "name": "empty body",
+   "got": ""
+  },
+  {
+   "name": "only markup",
+   "got": ""
+  },
+  {
+   "name": "preformatted block",
+   "got": "indented\n lines"
+  },
+  {
+   "name": "table row and cell",
+   "got": "a b"
+  },
+  {
+   "name": "attributes with angle brackets",
+   "got": "link"
+  },
+  {
+   "name": "uppercase tags",
+   "got": "upper"
+  },
+  {
+   "name": "unclosed tag",
+   "got": "text bold"
+  },
+  {
+   "name": "multiline script",
+   "got": "after"
+  },
+  {
+   "name": "cdata like content",
+   "got": "if (a d) { }"
+  },
+  {
+   "name": "many blank lines",
+   "got": "a\n\nb"
+  },
+  {
+   "name": "nbsp runs",
+   "got": "a b"
+  },
+  {
+   "name": "entity producing a tag",
+   "got": "<script>alert(1)</script>"
+  },
+  {
+   "name": "deep nesting",
+   "got": "x"
+  },
+  {
+   "name": "trailing whitespace only",
+   "got": ""
+  },
+  {
+   "name": "crlf line endings",
+   "got": "a\n\r\n b"
+  },
+  {
+   "name": "lone cr",
+   "got": "a\n\r b"
+  },
+  {
+   "name": "non breaking space entity",
+   "got": "x y"
+  },
+  {
+   "name": "numeric entity above ascii",
+   "got": "☃"
+  },
+  {
+   "name": "script with attributes",
+   "got": "kept"
+  },
+  {
+   "name": "style with media query",
+   "got": "kept"
+  }
+ ],
+ "extractTitle": [
+  {
+   "name": "plain paragraphs",
+   "got": null
+  },
+  {
+   "name": "script and style removed",
+   "got": null
+  },
+  {
+   "name": "noscript removed",
+   "got": null
+  },
+  {
+   "name": "block closers become newlines",
+   "got": null
+  },
+  {
+   "name": "self closing br",
+   "got": null
+  },
+  {
+   "name": "nested tags become spaces",
+   "got": null
+  },
+  {
+   "name": "numeric entities",
+   "got": null
+  },
+  {
+   "name": "named entities",
+   "got": null
+  },
+  {
+   "name": "whitespace collapsed",
+   "got": null
+  },
+  {
+   "name": "blank line runs collapse",
+   "got": null
+  },
+  {
+   "name": "title stays inline",
+   "got": "My Page"
+  },
+  {
+   "name": "empty body",
+   "got": null
+  },
+  {
+   "name": "only markup",
+   "got": null
+  },
+  {
+   "name": "preformatted block",
+   "got": null
+  },
+  {
+   "name": "table row and cell",
+   "got": null
+  },
+  {
+   "name": "attributes with angle brackets",
+   "got": null
+  },
+  {
+   "name": "uppercase tags",
+   "got": null
+  },
+  {
+   "name": "unclosed tag",
+   "got": null
+  },
+  {
+   "name": "multiline script",
+   "got": null
+  },
+  {
+   "name": "cdata like content",
+   "got": null
+  },
+  {
+   "name": "many blank lines",
+   "got": null
+  },
+  {
+   "name": "nbsp runs",
+   "got": null
+  },
+  {
+   "name": "entity producing a tag",
+   "got": null
+  },
+  {
+   "name": "deep nesting",
+   "got": null
+  },
+  {
+   "name": "trailing whitespace only",
+   "got": null
+  },
+  {
+   "name": "crlf line endings",
+   "got": null
+  },
+  {
+   "name": "lone cr",
+   "got": null
+  },
+  {
+   "name": "non breaking space entity",
+   "got": null
+  },
+  {
+   "name": "numeric entity above ascii",
+   "got": null
+  },
+  {
+   "name": "script with attributes",
+   "got": null
+  },
+  {
+   "name": "style with media query",
+   "got": null
+  }
+ ],
+ "contentTypes": [
+  {
+   "name": "text/html",
+   "got": null,
+   "isHtml": true
+  },
+  {
+   "name": "text/html; charset=utf-8",
+   "got": null,
+   "isHtml": true
+  },
+  {
+   "name": "application/json",
+   "got": null,
+   "isHtml": false
+  },
+  {
+   "name": "text/plain",
+   "got": null,
+   "isHtml": false
+  },
+  {
+   "name": "image/png",
+   "got": "Unsupported content type: image/png. web_fetch supports text pages only.",
+   "isHtml": false
+  },
+  {
+   "name": "video/mp4",
+   "got": "Unsupported content type: video/mp4. web_fetch supports text pages only.",
+   "isHtml": false
+  },
+  {
+   "name": "audio/mpeg",
+   "got": "Unsupported content type: audio/mpeg. web_fetch supports text pages only.",
+   "isHtml": false
+  },
+  {
+   "name": "application/pdf",
+   "got": null,
+   "isHtml": false
+  },
+  {
+   "name": "image/svg+xml",
+   "got": "Unsupported content type: image/svg+xml. web_fetch supports text pages only.",
+   "isHtml": false
+  },
+  {
+   "name": "text/plain; charset=iso-8859-1",
+   "got": null,
+   "isHtml": false
+  },
+  {
+   "name": "",
+   "got": null,
+   "isHtml": false
+  }
+ ]
+}

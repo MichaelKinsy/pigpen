@@ -103,12 +103,16 @@ func decodeHTMLEntities(text string) string {
 	for _, r := range replacements {
 		text = strings.ReplaceAll(text, r[0], r[1])
 	}
+	// The original decodes with String.fromCharCode, which takes a UTF-16 CODE UNIT, not a code point: an entity
+	// above U+FFFF is truncated to its low 16 bits and becomes a lone surrogate (&#128512; yields U+F600, not the
+	// emoji). That is an upstream quirk rather than a port bug, and an exact port has to reproduce it, so the value
+	// is masked rather than taken as a rune.
 	return numericEntityRegex.ReplaceAllStringFunc(text, func(m string) string {
 		code, err := strconv.Atoi(numericEntityRegex.FindStringSubmatch(m)[1])
 		if err != nil {
 			return m
 		}
-		return string(rune(code))
+		return string(rune(code & 0xFFFF))
 	})
 }
 
