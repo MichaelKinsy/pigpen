@@ -6,7 +6,7 @@
 name: pig-with-batteries
 description: "The batteries-included Piglet: default PiG with curated extensions. Today: the herdr agent-state reporter, the read_session tool, the /context, /tools, /cost and /prompts inspection commands, PiG Runner (/runner) and Angry Pigs (/angry-pigs), the Pig Snake game (/pig-snake), which start only on their command, the pig-doctor /doctor command (nothing runs unless you invoke it), Jev, a typed judge for tool calls that is off until you run /jev on, the a2a Package (A2A tools; its listener stays off until you configure it), the websearch first slice (search, fetch, retained sources), and pig-music (/music, a music player that does nothing until you type /music). Protocol bridges and more capability ports are planned."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
 packages:

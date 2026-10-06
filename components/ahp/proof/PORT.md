@@ -96,7 +96,9 @@ session. The equivalence method is therefore three layers, not the scenario harn
    service refuses to start there. A signalled child reports `128+signal`.
 9. **Images.** Pi's `convertToPng`/`resizeImage` are not in the SDK: PNG, JPEG, GIF decode with the
    standard library, BMP with a small decoder, resizing is a box filter, WebP passes through unvalidated
-   beyond its header.
+   beyond its header. PNG, JPEG and GIF declaring more than 64 megapixels are refused from their header,
+   before decoding (Go's decoders allocate the whole image from the header). A
+   panic while a prompt or steering message is handed to the agent fails that turn or message.
 10. **MIME table** is the subset of the `mime` package that matters for source trees.
 11. **Async side effects.** Registry and driver effects run on goroutines where upstream runs them in
     the same tick; a few twins wait for the backend call before the next step. `host.drain` defers

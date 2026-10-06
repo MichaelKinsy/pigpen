@@ -24,6 +24,11 @@ import (
 const (
 	maxImageDimension = 2000
 	maxImageBytes     = 4_500_000
+	// maxDecodePixels bounds what a client image may declare before it is decoded: the decoders
+	// allocate the whole pixel buffer from the header, so 420 KiB of PNG can ask for 20000×20000
+	// pixels (hundreds of MiB, seconds of CPU). Same value and name as websearch's imageproc.go
+	// (a separate module; websearch's TestDecodePixelCapMatchesAHP keeps them equal).
+	maxDecodePixels = 1 << 26
 )
 
 var supportedInlineTypes = map[string]bool{"image/png": true, "image/jpeg": true, "image/gif": true, "image/webp": true}
@@ -68,7 +73,25 @@ func prepareImage(img mapper.Image, autoResize bool, index int) (mapper.Image, e
 	return mapper.Image{Type: "image", Data: resized, MimeType: resizedType}, nil
 }
 
+// checkDecodeSize reads only the header and refuses images declaring more than maxDecodePixels.
+func checkDecodeSize(raw []byte) error {
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+	if err != nil {
+		return err
+	}
+	if cfg.Width <= 0 || cfg.Height <= 0 || int64(cfg.Width)*int64(cfg.Height) > maxDecodePixels {
+		return fmt.Errorf("image too large to process (%d×%d pixels; the limit is %d megapixels)", cfg.Width, cfg.Height, maxDecodePixels/(1<<20))
+	}
+	return nil
+}
+
 func decodeAny(raw []byte, mimeType string) (image.Image, error) {
+	switch mimeType {
+	case "image/png", "image/jpeg", "image/gif":
+		if err := checkDecodeSize(raw); err != nil {
+			return nil, err
+		}
+	}
 	switch mimeType {
 	case "image/png":
 		return png.Decode(bytes.NewReader(raw))

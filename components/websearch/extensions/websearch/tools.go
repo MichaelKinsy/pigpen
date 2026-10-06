@@ -295,7 +295,8 @@ func normalizeRecency(v any) string {
 }
 
 // runSearchQueries runs at most three queries at once and keeps input order.
-func runSearchQueries[T any](queries []string, run func(query string, index int) T) []T {
+// A panic in run becomes fail(query, err) for that query; the others carry on.
+func runSearchQueries[T any](queries []string, run func(query string, index int) T, fail func(query string, err error) T) []T {
 	out := make([]T, len(queries))
 	sem := make(chan struct{}, 3)
 	var wg sync.WaitGroup
@@ -305,6 +306,7 @@ func runSearchQueries[T any](queries []string, run func(query string, index int)
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
+			defer recoverInto("Search", func(err error) { out[i] = fail(q, err) })
 			out[i] = run(q, i)
 		}(i, q)
 	}

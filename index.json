@@ -295,7 +295,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
       },
-      "manifestSha256": "b7640f8a00ef76603419d1a9c269b182ed0b8ffd06b76b19d448e4b2cdb06514",
+      "manifestSha256": "5b53152fa8c475878058e3ad9ee4dc60b7623c6f9c8edb101b895ada4000bbd6",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -304,7 +304,7 @@
         "It also selects Jev (components/jev), a typed judge for tool calls and output. Selectable and off by default: nothing is judged or sent until you run /jev on, which shows what leaves the machine and where. It fails open. The standalone jev Piglet and this one both build a Binary locally.",
         "pig-music is a full-screen YouTube Music player. Nothing starts or runs until you type `/music` (or a /music subcommand or alt+m): no mpv or yt-dlp process, no network, no cookie access, no footer or widget and no timer; at startup it only reads its settings and looks for its own mpv socket, and follows an mpv from an earlier session that is already playing (footer only). It needs mpv and yt-dlp with a JS runtime on the machine: /music always plays through mpv (the native engine is used only by the separate pigmusic command). The first /music checks the machine and /music setup offers a consent-gated download of yt-dlp and Deno; the library tab reads a browser's cookies only after a one-time consent per browser.",
         "The herdr reporter does nothing unless PiG runs inside a herdr pane. Every extension in this Piglet is Go, so it needs no Node.js.",
-        "A local Piglet Binary builds with the reviewed PiG, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; the targets and the 0.1.0 version are not a support or release claim.",
+        "A local Piglet Binary builds with the reviewed PiG, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; the targets and the 0.1.1 version are not a support or release claim.",
         "Newer PiG builds support subdirectory source add and per-Piglet release tags, but this composition is not published and no installation command is offered yet. See RELEASE-BLOCKERS.md."
       ]
     },

@@ -95,7 +95,10 @@ func (d *ChatDriver) dispatchAll(actions []ahptypes.StateAction) {
 	}
 }
 
-// track runs fn as an in-flight operation that Quiesce waits for.
+// track runs fn as an in-flight operation that Quiesce waits for. These goroutines carry client
+// input into the backend (prompt and steering text and images, decoded there), outside the
+// host's request recover, so a panic is logged here instead of ending the host process; the
+// prompt and steering paths turn it into their usual error first (callBackend).
 func (d *ChatDriver) track(fn func()) {
 	d.mu.Lock()
 	d.inflight++
@@ -107,8 +110,24 @@ func (d *ChatDriver) track(fn func()) {
 			d.idle.Broadcast()
 			d.mu.Unlock()
 		}()
+		defer func() {
+			if p := recover(); p != nil {
+				d.logf("chat operation failed: %v", p)
+			}
+		}()
 		fn()
 	}()
+}
+
+// callBackend runs one backend call and returns a panic in it as an error, so a client message
+// that breaks the backend (a hostile image in its decoders) fails like a rejected prompt.
+func callBackend(fn func() error) (err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			err = fmt.Errorf("internal error: %v", p)
+		}
+	}()
+	return fn()
 }
 
 func (d *ChatDriver) drainInFlight() {
@@ -222,10 +241,13 @@ func (d *ChatDriver) steer(ctx context.Context, message ahptypes.Message) {
 	if ctx.Err() != nil {
 		return
 	}
-	input, err := messageInput(message)
-	if err == nil {
-		err = d.opts.Backend.Steer(ctx, input.Text, input.Images)
-	}
+	err := callBackend(func() error {
+		input, err := messageInput(message)
+		if err != nil {
+			return err
+		}
+		return d.opts.Backend.Steer(ctx, input.Text, input.Images)
+	})
 	if err != nil {
 		d.logf("steer failed: %v", err)
 		d.clearPendingSteering()
@@ -277,10 +299,13 @@ func (d *ChatDriver) runPrompt(m *mapper.TurnMapper, message ahptypes.Message, l
 		if !d.stillCurrent(m, ctx) {
 			return
 		}
-		input, err := messageInput(message)
-		if err == nil {
-			err = d.opts.Backend.Prompt(ctx, input.Text, input.Images)
-		}
+		err := callBackend(func() error {
+			input, err := messageInput(message)
+			if err != nil {
+				return err
+			}
+			return d.opts.Backend.Prompt(ctx, input.Text, input.Images)
+		})
 		if err != nil {
 			d.mu.Lock()
 			current := d.mapper == m

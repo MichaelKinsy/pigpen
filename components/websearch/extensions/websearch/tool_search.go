@@ -142,9 +142,13 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 		if ctx.Err() != nil {
 			return queryResponse{abort: ctx.Err()}
 		}
-		progressMu.Lock()
-		report(fmt.Sprintf(`Searching "%s" (%d/%d complete)...`, query, completed, len(queries)), "search", float64(completed)/float64(len(queries)), query)
-		progressMu.Unlock()
+		func() {
+			// Unlocked by defer: runSearchQueries recovers a panic in this query, and a lock left
+			// held would block the sibling queries forever.
+			progressMu.Lock()
+			defer progressMu.Unlock()
+			report(fmt.Sprintf(`Searching "%s" (%d/%d complete)...`, query, completed, len(queries)), "search", float64(completed)/float64(len(queries)), query)
+		}()
 		resp, err := Search(ctx, query, FullSearchOptions{SearchOptions: opts, Provider: provider})
 		defer func() {
 			// Reported under the lock so updates reach the host in order.
@@ -174,6 +178,9 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 			results = []SearchResult{}
 		}
 		return queryResponse{result: QueryResultData{Query: query, Answer: resp.Answer, Results: results, Provider: resp.Provider, Providers: providers}, inline: resp.InlineContent}
+	}, func(query string, err error) queryResponse {
+		msg := err.Error()
+		return queryResponse{result: QueryResultData{Query: query, Results: []SearchResult{}, Error: &msg, Provider: curatorProvider(provider)}}
 	})
 	var results []QueryResultData
 	var urls []string
@@ -402,6 +409,19 @@ func (r *Runtime) startBackgroundFetch(urls []string, proxy *string) string {
 	go func() {
 		defer r.wg.Done()
 		defer cancel()
+		// This goroutine outlives the tool call, so the SDK's request recover does not cover it,
+		// and it handles fetched content beyond FetchAllContent's per-URL boundary (data: URI
+		// sanitizing, storing, reporting). A panic is reported like a failed fetch.
+		defer recoverInto("Fetch", func(err error) {
+			r.mu.Lock()
+			delete(r.pending, id)
+			active := r.sessionActive
+			r.mu.Unlock()
+			if active {
+				defer func() { _ = recover() }() // the host call may be what panicked
+				r.host.SendMessage("web-search-error", fmt.Sprintf("Content fetch failed [%s]: %s", id, err.Error()), false)
+			}
+		})
 		fetched, err := r.fetchInBackground(ctx, urls, proxy)
 		r.mu.Lock()
 		_, still := r.pending[id]

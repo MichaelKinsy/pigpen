@@ -196,6 +196,27 @@ Nothing below has been run. On each machine build natively, with `PIG_SOURCE_ROO
 
 If any of them fails, the target is not shipped until it does not.
 
+## Changes since the release candidate
+
+- **`websearch` 0.1.1** (security): `golang.org/x/image` is bumped from v0.41.0 to v0.46.0, which closes GO-2026-5061 (VP8
+  alpha size mismatch panic) and GO-2026-6222 (VP8L allocation), both reachable from `fetch_content` on a hostile WebP, and
+  GO-2026-4961 (a WebP panic on 32-bit platforms, none of which Pigpen ships); `govulncheck` now reports no vulnerabilities.
+  The fetch, multi-query search and all-provider search fan-out goroutines and the background prefetch of `web_search` each
+  have a panic boundary (`recoverInto`), so a panic on a hostile page or provider response comes back as that URL's, query's,
+  provider's or prefetch's error instead of ending the agent process. A decoded image whose pixels disagree with its header
+  is refused, and full image decodes run one at a time (one image under the 64-megapixel cap can still cost about 1 GiB to
+  decode).
+- **`ahp` 0.1.1** (security): client images are checked with `image.DecodeConfig` and refused above 64 megapixels before they
+  are decoded (a 420 KiB 20000×20000 PNG used to allocate 459 MiB and take 8 s of CPU). The cap is the same value as
+  `websearch`'s `maxDecodePixels`; a `websearch` test keeps the two equal. A panic while the chat driver hands a client's
+  prompt or steering message (and its images) to the agent now fails that turn or message instead of ending the host.
+- **To re-release:** the `pig-with-batteries` Piglet as **0.1.1** (it fuses `websearch` into its Binary; the existing
+  `pig-with-batteries/v0.1.0` tag carries x/image v0.41.0), and the `websearch` and `ahp` Packages as **0.1.1** (tags
+  `components/websearch/v0.1.1` and `components/ahp/v0.1.1`, and npm, where `@pi-in-go/pigpen-ahp@0.1.0` is already
+  published). An installed Package keeps its tag (`pig update` does not move it), so Package users reinstall from the 0.1.1
+  tag. No other Piglet selects `websearch` or `ahp`, and no other Package imports either. Anyone running a `pig-with-batteries` Binary built before this change should
+  rebuild or pull 0.1.1.
+
 ## Not verified
 
 - Anything published: no release Binary, signature, tag, catalog or remote install command exists.
