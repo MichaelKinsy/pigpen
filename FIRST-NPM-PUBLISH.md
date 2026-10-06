@@ -10,12 +10,12 @@ From a clean checkout of `main` (merged, up to date), on macOS or Linux, with No
 
 ```bash
 npm login                          # an account that can publish to the @pi-in-go scope
-scripts/first-npm-publish.sh --dry-run    # checks everything, runs `npm publish --dry-run` on all 40, publishes nothing
+scripts/first-npm-publish.sh --dry-run    # checks everything, runs `npm publish --dry-run` on all 41, publishes nothing
 scripts/first-npm-publish.sh              # the real thing
 ```
 
 The script refuses a dirty tree or a commit that is not on `origin/main`, requires `npm whoami`, runs `npm ci --ignore-scripts`
-and `npm run check` (the npm manifest contract, the quality gates, the index), then publishes the 29 Packages and after them
+and `npm run check` (the npm manifest contract, the quality gates, the index), then publishes the 30 Packages and after them
 the 11 Piglet sources, skipping any name@version already on npm, and stops at the first failure so no Piglet is published
 after a failed Package. Run it again after an interruption. If your npm account asks for a one-time password on writes,
 npm will ask at each publish.
@@ -57,7 +57,7 @@ If you use the tag ruleset from OWNER-ACTIONS.md, add `refs/tags/npm/v*` to it.
 ## What was proven, and what was not
 
 Proven here with PiG 0.4.1, against a local registry that serves the packed tarballs: `pig install npm:@pi-in-go/pigpen-<dir>`
-for all 29 Packages (validate, Go extensions build and register, remove), `pig piglet add npm:...` and `pig piglet validate`
+for all 30 Packages (validate, Go extensions build and register, remove), `pig piglet add npm:...` and `pig piglet validate`
 for all 11 Piglet sources, and a fused `pig-games` Binary built from the registered source. `npm publish --dry-run` ran for all
 40, and `scripts/first-npm-publish.sh --dry-run` ran end to end in a clean clone. Not proven: a real `npm publish`, the scope
 permissions of your npm account, trusted publishing and provenance on GitHub (no hosted run), and the pi-in-go.dev catalog's

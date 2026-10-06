@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 3 · porting: 0 · review: 6 · done: 19
+Status: queued: 3 · porting: 0 · review: 7 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -38,6 +38,7 @@ Status: queued: 3 · porting: 0 · review: 6 · done: 19
 | `pi-powerline-footer` | [pi-powerline-footer](https://github.com/nicobailon/pi-powerline-footer) | [`859dee671b63`](https://github.com/nicobailon/pi-powerline-footer/commit/859dee671b633fb533b07ceba3e6c1ab1c43360a) | MIT | Nico Bailon | `components/powerline` | `pigpen-powerline` | review | Go port of pi-powerline-footer 0.19.1, https://github.com/nicobailon/pi-powerline-footer, by Nico Bailon (MIT), at commit 859dee671b633fb533b07ceba3e6c1ab1c43360a. |
 | `pi-goal-x` | [pi-goal-x](https://github.com/tmonk/pi-goal-x) | [`64c5ace87f34`](https://github.com/tmonk/pi-goal-x/commit/64c5ace87f3400c0b55ef87f2d2912167f53dbaa) | MIT | Lucas (tmonk) | `components/goal` | `pigpen-goal` | review | Go port of pi-goal-x 0.32.3, https://github.com/tmonk/pi-goal-x, by Lucas (tmonk) (MIT), at commit 64c5ace87f3400c0b55ef87f2d2912167f53dbaa. |
 | `pi-permission-system` | [@gotgenes/pi-permission-system](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system) | [`c5bc74712cd2`](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system/commit/c5bc74712cd2fe808d70246d93d26a092f736676) | MIT | MasuRii and Christopher D. Lasher | `components/permissions` | `pigpen-permissions` | review | Go port of @gotgenes/pi-permission-system 39.0.3, https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system, by MasuRii and Christopher D. Lasher (MIT), at commit c5bc74712cd2fe808d70246d93d26a092f736676. |
+| `rpiv-web-tools` | [@juicesharp/rpiv-web-tools](https://github.com/juicesharp/rpiv-mono) | [`7c9bc924c5bf`](https://github.com/juicesharp/rpiv-mono/commit/7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f) | MIT | juicesharp | `components/rpiv-web-tools` | `pigpen-rpiv-web-tools` | review | Go port of @juicesharp/rpiv-web-tools 2.12.0, https://github.com/juicesharp/rpiv-mono, by juicesharp (MIT), at commit 7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f. |
 
 ## How to read it
 
@@ -207,3 +208,9 @@ Status: queued: 3 · porting: 0 · review: 6 · done: 19
 
 - Kind: port. Permission rules for tool calls: wildcard patterns, last-match-wins allow/ask/deny, scope merging, and a tool_call gate (partial: the rule engine and tool-name gating).
 - Notes: Partial: the wildcard matcher, rule evaluation and merging, the global config (schema-checked as the original checks it), and the tool_call gate for bash (simple commands and chains of them, with the original's wrapper floors) and tools decided by name, the skill-read gate, and withholding of denied tools. Not ported: the approval dialog, bash parsing, path rules, MCP and skill gates, project and agent scopes. 229 twins, 646 bash decisions and 91 config files recorded from the original, 8 Pi-recorded scenarios, 171 of 171 mutations killed.
+
+### `rpiv-web-tools`: rpiv-web-tools (juicesharp)
+
+- Kind: port. Web search and fetch for the model with pluggable providers: web_search and web_fetch over Brave, Tavily, Serper, Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG and Ollama, plus the /web-tools command (slice 1: the config reader and writer).
+- Upstream path: `packages/rpiv-web-tools` in @juicesharp/rpiv-web-tools
+- Notes: Reviewed scope per slice in components/rpiv-web-tools/port/PORT.md. Slice 1 ports providers/config.ts (the typed config reader and writer for ~/.config/rpiv-web-tools/config.json): fail-soft read, per-field schema salvage with array widening, and additionalProperties pass-through. 20 exact twins and 1 named skip of the 21 upstream providers/config titles; pigeq twins check is the judge. The oracle is the unmodified original (36 files, every one verified by git blob hash). Ported in full: 272 exact twins and 2 named skips of the 274 upstream titles, with no missing case. The per-slice scope, the deliberate differences and what the twins do and do not prove are in components/rpiv-web-tools/port/PORT.md. What is not carried yet is the PiG registration layer, so the port is review-ready rather than runnable inside a host.

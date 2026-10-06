@@ -52,7 +52,7 @@ Every Package is MIT. Whose copyright the `LICENSE` names depends on where the c
 - **Pigpen code, including the Packages moved from PiG** (the repository `LICENSE`, and the `LICENSE` of `a2a`, `angry-pigs`,
   `context-info`, `extension-equivalence`, `extension-port`, `herdr`, `pig-doctor`, `pig-play`, `pig-runner`, `pig-snake`,
   `session-ingest`): Copyright (c) 2026 Michael Kinsy. PiG is credited in each moved Package's `CREDITS.md` and `provenance.json`.
-- **Ports of third-party upstreams** (`acp`, `ahp`, `dirty-repo-guard`, `jev`, `typesafe`, `warden`, `websearch`, `pi-typesafe`,
+- **Ports of third-party upstreams** (`acp`, `ahp`, `dirty-repo-guard`, `jev`, `rpiv-web-tools`, `todo`, `typesafe`, `warden`, `websearch`, `pi-typesafe`,
   `pi-typesafe-api`, `dev-skills`): the `LICENSE` lists the upstream copyright line(s) verbatim and then "Copyright (c) 2026 Michael
   Kinsy (the Go port)". The upstream's own `LICENSE` is kept unchanged next to the original source (`port/oracle/...`,
   `upstream/...`), and the credit is in each Package's `CREDITS.md`.
