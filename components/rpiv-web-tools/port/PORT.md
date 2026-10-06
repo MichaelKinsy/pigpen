@@ -17,11 +17,38 @@
 | Slice | Scope | Files | Titles |
 |---|---|---|---|
 | **1 (done)** | `providers/config.ts` — the typed config reader/writer | `providers/config` | **20 exact twins, 1 named skip** |
+| **2 (done)** | `providers/types.ts` + `providers/index.ts` + `providers/factory.ts` — the provider contract, the ten PROVIDER_META entries, the factory dispatch; plus `web-tools.ts` credential resolution, provider selection and the `max_results` schema | `index` | **12 exact twins** |
 | 2 | `providers/types.ts` + `providers/index.ts` + `providers/factory.ts` — the provider contract, the ten `PROVIDER_META` entries and `createSearchProvider` | (planned) | 0 |
 | 3 | `web_search` — schema, routing, provider search paths, error classification | (planned) | 0 |
 | 4 | `web_fetch` — fetch modes, helpers, content handling | (planned) | 0 |
 | 5 | `providers/interceptors/` — the GitHub interceptor and the chain | (planned) | 0 |
 | 6 | `/web-tools` command, guidance text, rendering | (planned) | 0 |
+
+## Slice 2: what is ported
+
+The provider contract, the ten-entry metadata table and the factory dispatch, with the orchestrator pieces the
+`index` ledger measures directly:
+
+- **Credential resolution** — env var, then `apiKeys[provider]`, then the legacy top-level `apiKey` for brave alone.
+  Every candidate is trimmed, so an empty or whitespace-only value reads as unset. upstream: `resolveProviderApiKey`.
+- **Base-URL resolution** — env, then `baseUrls[name]`, then the meta default; a hosted provider without a URL env
+  var short-circuits to the empty string. upstream: `resolveProviderBaseUrl`.
+- **Active provider** — env over config over `brave`, reported with the tier that named it and deliberately not
+  validated, so a bogus `WEB_SEARCH_PROVIDER` still renders in `--show`. upstream: `resolveActiveProviderName`.
+- **Two distinct unknown-provider errors** — the factory says `Unknown search provider: "x"`, the orchestrator says
+  `Unknown web_search provider: "x". Valid providers: …`; they are not merged, because only the orchestrator knows
+  the valid set. upstream: `factory.ts` vs `assertKnownProvider`.
+- **`max_results` schema** — `min:1`, `max:10`, `default:5`, with the same description text. upstream:
+  `registerWebSearchTool`.
+- **The provider arms themselves** are not ported yet: `newSearchProvider` returns an identity-complete stub whose
+  `Search` refuses with a loud error naming the slice that brings it. Slice 3 and slice 4 land the ten `Search` and
+  `Fetch` implementations with the per-provider twins that exercise them.
+
+### Note on the upstream comment in `factory.ts`
+
+That comment says the non-search-only providers are "the other five". The META table declares **six** providers with
+both roles (tavily, exa, youcom, jina, firecrawl, ollama); perplexity and searxng are search-only, brave and serper too.
+The table is authoritative and the port follows it.
 
 ## Slice 1: what is ported
 
