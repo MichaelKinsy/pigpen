@@ -120,7 +120,6 @@ func Extension() *sdk.Extension {
 type app struct {
 	client           httpClient
 	registry         interceptorRegistry
-	configDir        string
 	collapseRequests []string
 }
 
@@ -271,7 +270,7 @@ func (a *app) runSearch(providerName string, cfg config, query string, maxResult
 	provider, err := newSearchProvider(providerName, providerCredentials{
 		APIKey:    resolveProviderAPIKey(providerName, cfg, envReader),
 		HasAPIKey: resolveProviderAPIKey(providerName, cfg, envReader) != "",
-	})
+	}, a.client.doer)
 	if err != nil {
 		return searchResponse{}, err
 	}
@@ -287,6 +286,13 @@ func (a *app) executeFetch(ctx sdk.Context, params map[string]any) (any, error) 
 	if _, err := parseAndAssertHTTPURL(target); err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
+	// The raw listener is subscribed for the length of this call: pi-tui routes no input to a hidden overlay, so the
+	// collapse key needs this path while the fetch is in flight. upstream: the ctx.ui.onTerminalInput registration
+	// in execute().
+	if unsubscribe, err := a.subscribeTerminalInput(ctx); err == nil && unsubscribe != nil {
+		defer unsubscribe()
+	}
+
 	_ = ctx.OnUpdate(map[string]any{
 		"content": []any{map[string]any{"type": "text", "text": "Fetching " + target + "..."}},
 		"details": map[string]any{"url": target},
@@ -401,9 +407,9 @@ func (a *app) renderSearchCall(ctx sdk.Context, args map[string]any, _ sdk.ToolR
 }
 
 func (a *app) renderSearchResult(ctx sdk.Context, result sdk.ToolRenderResult, options sdk.ToolRenderResultOptions, _ sdk.ToolRenderContext, _ int) ([]string, error) {
-	details, results, partial := searchRenderDetails(result)
+	details, results := searchRenderDetails(result)
 	th := contextTheme(ctx)
-	return []string{searchRenderResult(th, partial, options.Expanded, details, results)}, nil
+	return []string{searchRenderResult(th, options.IsPartial, options.Expanded, details, results)}, nil
 }
 
 func (a *app) renderFetchCall(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContext, _ int) ([]string, error) {
@@ -470,13 +476,25 @@ func enumOf(values ...string) []any {
 	return out
 }
 
-// contextTheme is the host's theme behind the renderer's two styling calls. A host that cannot hand one over falls
-// back to the plain theme, so the rendered text is still produced. upstream: the theme argument of renderCall and
-// renderResult.
+// contextTheme is the host's theme behind the renderer's two styling calls. A render hook must never take the
+// host down, so every failure here — no host, no theme, a panicking lookup — falls back to the plain theme and the
+// text is produced without styling. upstream: the theme argument of renderCall and renderResult.
 func contextTheme(ctx sdk.Context) theme {
+	return safeContextTheme(ctx)
+}
+
+// safeContextTheme performs the lookup behind a guard, because a zero or headless Context has no host connection and
+// the SDK's host-required calls panic on one.
+func safeContextTheme(ctx sdk.Context) (th theme) {
+	th = plainTheme()
+	defer func() {
+		if recover() != nil {
+			th = plainTheme()
+		}
+	}()
 	loaded, err := ctx.GetTheme("default")
 	if err != nil || loaded == nil {
-		return plainTheme()
+		return th
 	}
 	if ui, ok := loaded.(*sdk.UITheme); ok && ui != nil {
 		return theme{
@@ -484,12 +502,12 @@ func contextTheme(ctx sdk.Context) theme {
 			bold: func(text string) string { return ui.Bold(text) },
 		}
 	}
-	return plainTheme()
+	return th
 }
 
 // searchRenderDetails pulls the search details and the rows out of a render result. upstream: the details object the
 // renderResult callback reads.
-func searchRenderDetails(result sdk.ToolRenderResult) (searchEnvelopeDetails, []searchResult, bool) {
+func searchRenderDetails(result sdk.ToolRenderResult) (searchEnvelopeDetails, []searchResult) {
 	details := searchEnvelopeDetails{}
 	var results []searchResult
 	if m, ok := result.Details.(map[string]any); ok {
@@ -505,7 +523,7 @@ func searchRenderDetails(result sdk.ToolRenderResult) (searchEnvelopeDetails, []
 		rows, _ := m["results"].([]searchResult)
 		results = rows
 	}
-	return details, results, len(result.Content) == 0
+	return details, results
 }
 
 // fetchRenderDetails pulls the title, the truncation flag and the first text block out of a render result. upstream:

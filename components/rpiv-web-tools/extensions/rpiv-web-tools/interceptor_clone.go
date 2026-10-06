@@ -153,14 +153,19 @@ func isBinaryFile(filePath string) bool {
 	if binaryExtensions[strings.ToLower(filepath.Ext(filePath))] {
 		return true
 	}
-	data, err := os.ReadFile(filePath)
+	// Only the first 512 bytes are inspected, so a multi-gigabyte blob costs the same as a small one: the original
+	// reads a fixed 512-byte buffer, while os.ReadFile would take the whole file into memory first.
+	file, err := os.Open(filePath)
 	if err != nil {
 		return false
 	}
-	if len(data) > 512 {
-		data = data[:512]
+	defer file.Close()
+	buf := make([]byte, 512)
+	n, err := file.Read(buf)
+	if err != nil && n == 0 {
+		return false
 	}
-	for _, b := range data {
+	for _, b := range buf[:n] {
 		if b == 0 {
 			return true
 		}

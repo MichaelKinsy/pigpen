@@ -164,7 +164,7 @@ func TestProviderTable(t *testing.T) {
 		eq(t, resolveProviderBaseURL(brave, config{}, noEnv), "", "hosted provider has no base URL")
 	})
 	t.Run("rejects an unknown provider with the factory's own message", func(t *testing.T) {
-		_, err := newSearchProvider("nope", providerCredentials{})
+		_, err := newSearchProvider("nope", providerCredentials{}, &fakeHTTP{})
 		if err == nil {
 			t.Fatal("an unknown provider must fail")
 		}

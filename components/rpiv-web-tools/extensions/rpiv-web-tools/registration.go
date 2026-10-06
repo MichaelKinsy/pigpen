@@ -168,21 +168,33 @@ type truncationResult struct {
 	TempFilePath string
 }
 
-// truncateBody caps a fetched body at maxBytes, counting lines and bytes as the original does, and spills the full
-// text to a temp file when anything was cut. upstream: the truncation branch in registerWebFetchTool.
+// truncateBody caps a fetched body on both budgets, as truncateHead does: the line budget and the byte budget, and it
+// spills the full text to a temp file when anything was cut. A body inside both budgets is returned untouched.
+// upstream: the truncateHead call in registerWebFetchTool with DEFAULT_MAX_LINES and DEFAULT_MAX_BYTES.
 func truncateBody(content string, maxBytes int) (string, truncationResult, error) {
+	lines := strings.Split(content, "\n")
 	total := truncationResult{
-		TotalLines:  len(strings.Split(content, "\n")),
+		TotalLines:  len(lines),
 		TotalBytes:  len(content),
-		OutputLines: len(strings.Split(content, "\n")),
+		OutputLines: len(lines),
 		OutputBytes: len(content),
 	}
-	if len(content) <= maxBytes {
+	withinLines := len(lines) <= maxTruncateLines
+	withinBytes := len(content) <= maxBytes
+	if withinLines && withinBytes {
 		return content, total, nil
 	}
-	cut := content[:maxBytes]
-	if idx := strings.LastIndex(cut, "\n"); idx >= 0 {
-		cut = content[:idx]
+	cut := content
+	if !withinLines {
+		cut = strings.Join(lines[:maxTruncateLines], "\n")
+	}
+	if !withinBytes {
+		if withinLines {
+			cut = content[:maxBytes]
+		}
+		if idx := strings.LastIndex(cut, "\n"); idx >= 0 {
+			cut = cut[:idx]
+		}
 	}
 	tempFile, err := spillFullContentToTempFile(content)
 	if err != nil {
@@ -223,3 +235,7 @@ func formatTruncationFooter(t truncationResult) string {
 		" " + itoa(omittedLines) + " lines (" + formatFileSize(int64(omittedBytes)) + ") omitted." +
 		" Full content saved to: " + t.TempFilePath + "]"
 }
+
+// maxTruncateLines is the line budget the fetch tool keeps inline, alongside maxFetchBytes. upstream:
+// @earendil-works/pi-coding-agent DEFAULT_MAX_LINES, which registerWebFetchTool passes to truncateHead.
+const maxTruncateLines = 2000

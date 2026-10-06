@@ -103,14 +103,8 @@ func ollamaHintForStatus(status int) string {
 	return ""
 }
 
-// searchOllamaCloud picks the endpoint the instance was built for. upstream: the `this.local` branch in OllamaProvider.
-func ollamaSearchPath(local bool) string {
-	if local {
-		return ollamaLocalSearchPath
-	}
-	return ollamaCloudSearchPath
-}
-
+// ollamaFetchPath picks the fetch endpoint the instance was built for. upstream: the `this.local` branch in
+// OllamaProvider.fetch, whose constants are the four paths above.
 func ollamaFetchPath(local bool) string {
 	if local {
 		return ollamaLocalFetchPath

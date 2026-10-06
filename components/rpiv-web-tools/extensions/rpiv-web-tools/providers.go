@@ -198,62 +198,6 @@ type providerCredentials struct {
 	HasBaseURL bool
 }
 
-// newSearchProvider builds the provider for a name. The unknown-name branch is the factory's uniform error. upstream:
-// providers/factory.ts createSearchProvider.
-func newSearchProvider(name string, creds providerCredentials) (searchProvider, error) {
-	if _, ok := providerMetaByName(name); !ok {
-		return nil, &unknownFactoryProviderError{Name: name}
-	}
-	// Slice 2 ports the table and the factory's dispatch; the provider arms themselves (Search and Fetch) arrive with
-	// slice 3 and slice 4, which is where the index ledger's per-provider twins live.
-	return newProviderStub(name, creds), nil
-}
-
-// unknownFactoryProviderError is the factory's own failure for an unregistered name. It differs from
-// unknownProviderError on purpose: the factory never has the valid list, the orchestrator does. upstream:
-// providers/factory.ts createSearchProvider's default branch.
-type unknownFactoryProviderError struct {
-	Name string
-}
-
-func (e *unknownFactoryProviderError) Error() string {
-	return `Unknown search provider: "` + e.Name + `"`
-}
-
-// newProviderStub stands in for a provider arm that slice 3 and slice 4 bring. It answers the identity half of the
-// contract exactly, so the table, the key resolution and the factory are exercisable now, and refuses the network
-// half rather than pretending to work.
-func newProviderStub(name string, creds providerCredentials) searchProvider {
-	meta, _ := providerMetaByName(name)
-	return &providerStub{meta: meta, creds: creds}
-}
-
-// providerStub is the not-yet-ported provider arm. upstream: none yet; see port/PORT.md slice 3 and slice 4.
-type providerStub struct {
-	meta  providerMeta
-	creds providerCredentials
-}
-
-func (p *providerStub) Name() string   { return p.meta.Name }
-func (p *providerStub) Label() string  { return p.meta.Label }
-func (p *providerStub) EnvVar() string { return p.meta.EnvVar }
-
-// Search refuses until the provider's search arm is ported. upstream: providers/*.ts search().
-func (p *providerStub) Search(query string, maxResults int) (searchResponse, error) {
-	return searchResponse{}, &notPortedError{Provider: p.meta.Name, Arm: "search"}
-}
-
-// notPortedError says which arm of which provider slice 3 or slice 4 brings, so a premature call is loud instead of
-// silently empty.
-type notPortedError struct {
-	Provider string
-	Arm      string
-}
-
-func (e *notPortedError) Error() string {
-	return e.Provider + " " + e.Arm + ": not ported yet (see components/rpiv-web-tools/port/PORT.md, slices 3 and 4)"
-}
-
 // providerLabel returns a provider's display label, falling back to the name for an unknown provider. upstream: the
 // label lookup in the search and fetch registration paths.
 func providerLabel(name string) string {

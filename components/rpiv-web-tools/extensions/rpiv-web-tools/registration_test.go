@@ -418,3 +418,45 @@ func TestSelfHostedRemainingTitles(t *testing.T) {
 		})
 	})
 }
+
+func TestTruncateBothBudgets(t *testing.T) {
+	t.Run("caps on the line budget even when the byte budget is roomy", func(t *testing.T) {
+		home := t.TempDir()
+		t.Setenv("HOME", home)
+		t.Setenv("XDG_CONFIG_HOME", "")
+		lines := make([]string, 0, maxTruncateLines+50)
+		for i := 0; i < maxTruncateLines+50; i++ {
+			lines = append(lines, "short")
+		}
+		body := strings.Join(lines, "\n")
+		kept, truncation, err := truncateBody(body, 10*1024*1024)
+		if err != nil {
+			t.Fatal(err)
+		}
+		eq(t, truncation.Truncated, true, "truncated on lines")
+		eq(t, truncation.OutputLines, maxTruncateLines, "kept exactly the line budget")
+		eq(t, truncation.TotalLines, maxTruncateLines+50, "totals count the whole body")
+		if len(kept) >= len(body) {
+			t.Fatal("the kept body must be shorter")
+		}
+	})
+	t.Run("caps on the byte budget even when the line budget is roomy", func(t *testing.T) {
+		home := t.TempDir()
+		t.Setenv("HOME", home)
+		t.Setenv("XDG_CONFIG_HOME", "")
+		body := strings.Repeat("x", 4096) // one long line, well under 2000 lines
+		kept, truncation, err := truncateBody(body, 512)
+		if err != nil {
+			t.Fatal(err)
+		}
+		eq(t, truncation.Truncated, true, "truncated on bytes")
+		eq(t, truncation.OutputLines, 1, "one line kept")
+		if len(kept) >= len(body) {
+			t.Fatal("the kept body must be shorter")
+		}
+	})
+	t.Run("the line budget matches the host's DEFAULT_MAX_LINES", func(t *testing.T) {
+		eq(t, maxTruncateLines, 2000, "line budget")
+		eq(t, maxFetchBytes, 50*1024, "byte budget")
+	})
+}

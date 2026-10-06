@@ -167,12 +167,11 @@ func TestRegistrationPieces(t *testing.T) {
 			},
 			Content: []map[string]any{{"type": "text", "text": "body"}},
 		}
-		details, results, partial := searchRenderDetails(result)
+		details, results := searchRenderDetails(result)
 		eq(t, details.Query, "q", "query")
 		eq(t, details.Backend, "brave", "backend")
 		eq(t, details.ResultCount, 2, "count")
 		eq(t, len(results), 1, "rows")
-		eq(t, partial, false, "a result with content is not partial")
 	})
 	t.Run("the fetch details are read back out of a render result", func(t *testing.T) {
 		result := sdk.ToolRenderResult{
@@ -229,4 +228,33 @@ func filepathDir(path string) string {
 		return path[:idx]
 	}
 	return "."
+}
+
+func TestRenderHooksUseTheHostFlags(t *testing.T) {
+	configHome(t)
+	app := newApp()
+	// A partial call carries no content yet, which is exactly what a content-emptiness guess would misread; only the
+	// host's flag knows it is still running.
+	result := sdk.ToolRenderResult{
+		Details: map[string]any{"query": "q", "backend": "brave", "resultCount": float64(0)},
+		Content: nil,
+	}
+	collapsed, err := app.renderSearchResult(sdk.Context{}, result,
+		sdk.ToolRenderResultOptions{Expanded: false, IsPartial: true}, sdk.ToolRenderContext{}, 80)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, collapsed[0], "Searching...", "the host's partial flag drives the line")
+	done, err := app.renderSearchResult(sdk.Context{}, result,
+		sdk.ToolRenderResultOptions{Expanded: false, IsPartial: false}, sdk.ToolRenderContext{}, 80)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, done[0], "✓ 0 results", "a finished call reports its count")
+	fetching, err := app.renderFetchResult(sdk.Context{}, sdk.ToolRenderResult{},
+		sdk.ToolRenderResultOptions{Expanded: false, IsPartial: true}, sdk.ToolRenderContext{}, 80)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, fetching[0], "Fetching...", "the fetch partial line")
 }
