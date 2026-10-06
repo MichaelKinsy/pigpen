@@ -1,6 +1,10 @@
 # Port record: @juicesharp/rpiv-web-tools 2.12.0
 
-**Status: ported. 272 exact twins and 2 named skips of the 274 upstream titles; no case is missing.**
+**Status: ported and registered. 272 exact twins and 2 named skips of the 274 upstream titles; no case is missing.**
+
+The PiG registration layer is in place: extension.go registers web_search, web_fetch and /web-tools, runs the arms
+through the httpClient seam, installs the GitHub interceptor chain from the config at registration, and renders both
+tools through the ported renderer with the host theme.
 
 ## Identity
 

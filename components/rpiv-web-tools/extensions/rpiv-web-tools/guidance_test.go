@@ -6,41 +6,6 @@ import "testing"
 
 const fGuidance = "web-tools.guidance"
 
-// toolGuidance is what a tool is registered with: the model-facing snippet and guidelines, each either the config's
-// override or the built-in default. upstream: the promptSnippet/promptGuidelines fields of the registration.
-type toolGuidance struct {
-	PromptSnippet    string
-	PromptGuidelines []string
-}
-
-// resolveToolGuidance is the per-tool override: an override field wins, an absent or empty one falls back to the
-// default. The two tools are independent, so overriding one leaves the other's defaults in place. upstream:
-// web-tools.ts registerWebSearchTool and registerWebFetchTool reading guidance off the config.
-func resolveToolGuidance(override *guidanceFields, defaultSnippet string, defaultGuidelines []string) toolGuidance {
-	out := toolGuidance{PromptSnippet: defaultSnippet, PromptGuidelines: defaultGuidelines}
-	if override == nil {
-		return out
-	}
-	if override.PromptSnippet != "" {
-		out.PromptSnippet = override.PromptSnippet
-	}
-	if override.PromptGuidelines != nil {
-		out.PromptGuidelines = override.PromptGuidelines
-	}
-	return out
-}
-
-// guidanceForTools resolves both tools from one config, which is what registration does. The two are independent by
-// design: a config that overrides web_search must not disturb web_fetch. upstream: the two registration functions.
-func guidanceForTools(cfg config) (search, fetch toolGuidance) {
-	var searchOverride, fetchOverride *guidanceFields
-	if cfg.Guidance != nil {
-		searchOverride, fetchOverride = cfg.Guidance.WebSearch, cfg.Guidance.WebFetch
-	}
-	return resolveToolGuidance(searchOverride, defaultWebSearchSnippet, defaultWebSearchGuidelines),
-		resolveToolGuidance(fetchOverride, defaultWebFetchSnippet, defaultWebFetchGuidelines)
-}
-
 func TestGuidanceResolution(t *testing.T) {
 	tw(t, fGuidance, "uses built-in defaults when no config file exists", func(t *testing.T) {
 		configHome(t)

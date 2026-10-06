@@ -53,6 +53,25 @@ var defaultWebFetchGuidelines = []string{
 	"Large responses are truncated and spilled to a temp file — the temp path is reported in the result details.",
 }
 
+// searchSchemaMaxResults is the registered web_search max_results parameter: its bounds and default. upstream:
+// web-tools.ts registerWebSearchTool's max_results Type.Number.
+type searchSchemaMaxResults struct {
+	Minimum     float64
+	Maximum     float64
+	Default     float64
+	Description string
+}
+
+// searchSchemaMaxResultsParameter is that parameter as registered. upstream: web-tools.ts registerWebSearchTool.
+func searchSchemaMaxResultsParameter() searchSchemaMaxResults {
+	return searchSchemaMaxResults{
+		Minimum:     minSearchResults,
+		Maximum:     maxSearchResults,
+		Default:     defaultSearchResult,
+		Description: "Maximum number of results to return (" + itoa(minSearchResults) + "-" + itoa(maxSearchResults) + "). Default: " + itoa(defaultSearchResult) + ".",
+	}
+}
+
 // clampSearchResultCount is the requested count clamped into [1,10], defaulting to 5 when nothing was asked for.
 // upstream: web-tools.ts clampSearchResultCount.
 func clampSearchResultCount(requested *float64) int {

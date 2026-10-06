@@ -18,25 +18,6 @@ func envMap(vars map[string]string) func(string) string {
 // noEnv is an environment with nothing set.
 func noEnv(string) string { return "" }
 
-// searchSchemaMaxResults is the registered web_search max_results parameter: its bounds and default. upstream:
-// web-tools.ts registerWebSearchTool's max_results Type.Number.
-type searchSchemaMaxResults struct {
-	Minimum     float64
-	Maximum     float64
-	Default     float64
-	Description string
-}
-
-// searchSchemaMaxResultsParameter is that parameter as registered. upstream: web-tools.ts registerWebSearchTool.
-func searchSchemaMaxResultsParameter() searchSchemaMaxResults {
-	return searchSchemaMaxResults{
-		Minimum:     minSearchResults,
-		Maximum:     maxSearchResults,
-		Default:     defaultSearchResult,
-		Description: "Maximum number of results to return (" + itoa(minSearchResults) + "-" + itoa(maxSearchResults) + "). Default: " + itoa(defaultSearchResult) + ".",
-	}
-}
-
 // registeredTool is one tool the extension registers. upstream: web-tools.ts registerWebSearchTool /
 // registerWebFetchTool.
 type registeredTool struct {
