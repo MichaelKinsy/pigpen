@@ -21,8 +21,20 @@ type processedImage struct {
 // maxDecodePixels bounds the images that are decoded for resizing. The decoders allocate the
 // whole pixel buffer from the declared size before reading any pixel data, so a few kilobytes of
 // PNG can otherwise ask for gigabytes and kill the extension process (a Go out-of-memory error
-// cannot be recovered). 64 megapixels is 8192×8192: at most 512 MiB even at 16 bits per channel.
+// cannot be recovered). 64 megapixels is 8192×8192: 256 MiB as RGBA, 512 MiB at 16 bits per
+// channel, and about 1 GiB for a progressive JPEG (its coefficients are kept for the whole image:
+// 130 bytes declaring 8192×8192 allocate 960 MiB before failing), so decodeSlot below lets only
+// one full decode run at a time. Always check image.DecodeConfig against it before image.Decode.
+//
+// components/ahp/extensions/ahp/internal/pi/imageinput.go carries the same limit under the same
+// name (the two are separate Go modules, so the value is shared by test, not by import):
+// TestDecodePixelCapMatchesAHP in this package fails if the two drift apart.
 const maxDecodePixels = 1 << 26
+
+// decodeSlot admits one full decode and rescale at a time. fetch_content extracts up to three URLs
+// at once, and each decode may cost up to about 1 GiB under maxDecodePixels; one at a time keeps
+// that a bound on the process rather than a per-goroutine figure.
+var decodeSlot = make(chan struct{}, 1)
 
 // resizeImage validates an image and fits it inside maxW×maxH, standing in for pi's resizeImage.
 // Images already inside the limit are returned as received; larger ones are scaled down and
@@ -38,8 +50,14 @@ func resizeImage(data []byte, mime string, maxW, maxH int) (*processedImage, err
 	if int64(cfg.Width)*int64(cfg.Height) > maxDecodePixels {
 		return nil, fmt.Errorf("Image too large to process (%d×%d pixels; the limit is %d megapixels)", cfg.Width, cfg.Height, maxDecodePixels/(1<<20))
 	}
+	decodeSlot <- struct{}{}
+	defer func() { <-decodeSlot }()
 	src, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
+		return nil, nil
+	}
+	if b := src.Bounds(); b.Dx() != cfg.Width || b.Dy() != cfg.Height {
+		// The header and the pixels disagree: a crafted file, whatever the decoder made of it.
 		return nil, nil
 	}
 	scale := float64(maxW) / float64(cfg.Width)

@@ -147,7 +147,7 @@ Merge that. The site (pi-in-go.dev) lists them at its next daily build once the 
 ## 6. Then the Piglets
 
 Needs sections 2 to 4 done and the key (section 1) merged. The version in the tag must equal `release.version` in `piglets/<name>/piglet.yaml`
-(currently `0.1.0` for all eleven), and the tagged commit must be on `main`.
+(currently `0.1.0` for ten of them and `0.1.1` for `pig-with-batteries`, re-released for the websearch image fix), and the tagged commit must be on `main`.
 
 ```bash
 git switch main && git pull --ff-only     # tags are made at HEAD, and the tagged commit must be on main

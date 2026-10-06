@@ -20,7 +20,7 @@ the 11 Piglet sources, skipping any name@version already on npm, and stops at th
 after a failed Package. Run it again after an interruption. If your npm account asks for a one-time password on writes,
 npm will ask at each publish.
 
-What gets published (all `0.1.0`, `access: public`): `@pi-in-go/pigpen-<dir>` for every directory in `components/` and
+What gets published (`0.1.0`, except `websearch`, `ahp` and the `pig-with-batteries` source at `0.1.1` for the hostile-image fix; `access: public`): `@pi-in-go/pigpen-<dir>` for every directory in `components/` and
 `@pi-in-go/pigpen-piglet-<name>` for every directory in `piglets/`. What a Piglet source contains and why it differs from the
 tree is in the README ("Install").
 

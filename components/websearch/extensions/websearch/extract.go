@@ -718,6 +718,7 @@ func FetchAllContent(ctx context.Context, urls []string, o ExtractOptions) []Ext
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
+			defer recoverInto("Fetch", func(err error) { results[i] = failed(u, err.Error()) })
 			results[i] = ExtractContent(ctx, u, o)
 		}(i, u)
 	}

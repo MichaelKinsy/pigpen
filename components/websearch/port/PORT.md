@@ -48,6 +48,10 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
 - **Image pixel budget** (review fix): images larger than 2000 px are decoded for resizing only up to 64 megapixels
   (8192x8192). Go's decoders allocate the full pixel buffer from the declared size, so a few kilobytes of PNG could
   otherwise demand gigabytes and kill the extension process; larger images fail with "Image too large to process".
+  Full decodes run one at a time: under the cap a progressive JPEG can still cost about 1 GiB, and fetches run three at once.
+- **Panic boundaries** (hardening): the fetch, multi-query and all-provider fan-outs and the background prefetch recover a
+  panic into that URL's, query's, provider's or prefetch's error. The SDK recovers only the request goroutine, and in a
+  Piglet Binary this extension runs inside the agent process.
 - Tool schemas are hash-identical to the original's (`tools-default.json` in `golden/`); on the wire the SDK carries them as JSON
   objects, so key order is the SDK's, not the original's.
 - The tool descriptions are kept identical to the original even where they mention unported capabilities (YouTube, GitHub,
@@ -65,7 +69,7 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   when nothing is configured and `exa` uses without a key, and the Jina Reader fetch fallback (off for remote URLs unless `fetchRouting.allowRemoteHostedProviders`).
 - Credentials are redacted from every error; the fetch cache is private (0600), symlink-free and size/TTL bounded.
 - Size and time limits: page bodies are capped at 5 MB (declared or streamed), provider API bodies at 16 MB, images at
-  64 megapixels before decoding, and every direct fetch runs under `fetch.timeout`.
+  64 megapixels before decoding (one full decode at a time), and every direct fetch runs under `fetch.timeout`.
 - The `proxy` tool parameter is chosen by the model, as in the original. A request through a proxy is validated by name
   before it is sent, but the dial-time address check does not apply (the proxy connects, not this process), and the proxy
   host itself is not restricted, so a model can route fetches through a proxy on a local address (a call parameter wins

@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-ahp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Go port of pi-ahp: serves the running PiG session to remote Microsoft Agent Host Protocol clients over WebSocket, with reconnect and auth. No listener unless you ask; no remote filesystem or terminal unless you opt in",
   "keywords": [
     "pig-package",

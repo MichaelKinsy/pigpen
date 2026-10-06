@@ -28,7 +28,7 @@ authentication tokens); and the [`websearch`](../../components/websearch/README.
 - `extensions/`, `skills/`, `prompts/`: owned resource source directories.
 
 Keep `status: planned` until curation, validation, source distribution and signed
-releases work. `release.version: 0.1.0` reserves a development version; it does
+releases work. `release.version: 0.1.1` reserves a development version; it does
 not assert that a release exists. The index generator deliberately does not
 turn build targets into supported binary platforms.
 

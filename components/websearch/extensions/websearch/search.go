@@ -473,6 +473,7 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 		wg.Add(1)
 		go func(i int, p string) {
 			defer wg.Done()
+			defer recoverInto(ProviderLabel(p)+" search", func(err error) { responses[i], errs[i] = nil, err })
 			responses[i], errs[i] = searchWithResolvedProvider(ctx, p, query, o)
 		}(i, p)
 	}
