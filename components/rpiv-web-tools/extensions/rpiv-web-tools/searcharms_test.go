@@ -11,17 +11,25 @@ import (
 // fakeHTTP answers each arm with a canned response and records what was asked, so a twin asserts the request shape and
 // the error text without a network. upstream: the vi.fn() fetch doubles in index.test.ts.
 type fakeHTTP struct {
-	status      int
-	body        string
-	contentType string
-	last        httpRequest
-	calls       int
+	status        int
+	body          string
+	contentType   string
+	contentLength string
+	last          httpRequest
+	calls         int
 }
 
 func (f *fakeHTTP) Do(req httpRequest) (httpResponse, error) {
 	f.last = req
 	f.calls++
-	return httpResponse{Status: f.status, Body: f.body, ContentType: f.contentType, HasContentType: f.contentType != ""}, nil
+	return httpResponse{
+		Status:           f.status,
+		Body:             f.body,
+		ContentType:      f.contentType,
+		HasContentType:   f.contentType != "",
+		ContentLength:    f.contentLength,
+		HasContentLength: f.contentLength != "",
+	}, nil
 }
 
 // arm is one provider's search arm behind a uniform signature, so a parameterized twin can sweep the table the way the

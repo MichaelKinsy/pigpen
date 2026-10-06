@@ -20,8 +20,33 @@
 | **2 (done)** | `providers/types.ts` + `providers/index.ts` + `providers/factory.ts` — the provider contract, the ten PROVIDER_META entries, the factory dispatch; plus `web-tools.ts` credential resolution, provider selection and the `max_results` schema | `index` | **12 exact twins** |
 | **3 (done)** | `web-tools.ts registerWebSearchConfigCommand` + `formatShowConfigMessage` — the picker, the two prompt flows, the legacy-key migration and the `--show` report | `index` | **8 exact twins** |
 | **4 (done)** | the ten provider `search()` arms + `providers/fetch-helpers.ts` (the HTML pipeline, the content-type guards, the generic HTTP path) | `index` | **2 exact twins** |
-| 5 | `web-tools.ts registerWebFetchTool` + the native fetch arms | `(planned)` | 0 |
+| **5 (done)** | `web-tools.ts` fetch guard (`parseAndAssertHttpUrl`, `isPrivateOrLoopbackHostname`) + the four native fetch arms (tavily, exa, jina, firecrawl) + the generic path the other three delegate to | `index` | **27 exact twins** |
 | 6 | `providers/interceptors/` — the GitHub interceptor and the chain | `(planned)` | 0 |
+
+## Slice 5: what is ported
+
+The fetch half: the URL guard, the four native fetch arms and the generic path.
+
+- **The URL guard** — the URL standard order: a bare word has no scheme and is unparseable, `file:` and friends report
+  the protocol they were refused for, and localhost, the IPv6 loopback/unspecified/link-local/unique-local ranges
+  and the IPv4 private blocks including 169.254.169.254 are refused by name. upstream: `parseAndAssertHttpUrl` and
+  `isPrivateOrLoopbackHostname`.
+- **The generic path** — the raw HTTP fetch with the shared UA and Accept headers, the content-type guard, the HTML
+  pipeline and the `content-length` parse. upstream: `fetchViaGenericHtml`.
+- **The four native arms** — Tavily on `/extract`, Exa on `/contents` with its character budget, Jina on the
+  `r.jina.ai` reader, Firecrawl on `/v1/scrape`, each keeping its guard text, its `<Label> Fetch API error (<status>)`
+  wrapper and its own content failure (`extraction failed for …`, `no content returned for …`, `success=false`).
+- **Raw is ignored by the extraction providers** — Jina and friends return the vendor body untouched even when raw is
+  false, because their body is already the extracted form. upstream: the `_raw` parameter they ignore.
+- **Rendering** — the fetch header and the search results body, plus the no-results envelope. upstream:
+  `formatFetchHeader`, `formatSearchResultsBody`, `buildEmptyResultsEnvelope`.
+
+### Two behaviours the twins pinned down
+
+- `htmlToText` does not remove `<title>`: only script, style and noscript go, so a page title stays inline in the
+  text. The first draft of the twin expected it gone; the twin was wrong, and the port keeps the original.
+- `url.Parse` accepts a bare word as a relative URL, where `new URL` throws. The port therefore treats an empty
+  scheme as unparseable, which is what the standard says and what the original reports.
 
 ## Slice 4: what is ported
 
