@@ -1,0 +1,49 @@
+{
+  "name": "@pi-in-go/pigpen-hardening",
+  "version": "0.1.0",
+  "description": "Shared Go library for the opt-in enterprise profile of Pigpen Packages: profile loading, per-request credential files, an allow-listed egress transport, closed-field audit events, headless helpers, a fail-closed policy Decider (Cedar in a nested module) and JWT resource-server verification. Libraries only, no extension of its own.",
+  "keywords": [
+    "pig-package",
+    "hardening",
+    "enterprise",
+    "security",
+    "library",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/hardening"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/hardening#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "audit",
+    "credfile",
+    "egress",
+    "headless",
+    "internal",
+    "licenses",
+    "policy",
+    "port",
+    "profile",
+    "resourceserver",
+    "doc.go",
+    "flagoff_test.go",
+    "go.mod",
+    "go.sum",
+    "go.work",
+    "PIG-0.4.1.md",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ]
+}

@@ -29,8 +29,12 @@ export function goModules(directory = root) {
     if (!existsSync(base)) continue;
     for (const owner of readdirSync(base, { withFileTypes: true })) {
       if (!owner.isDirectory()) continue;
-      // A component may be a shared Go library module rooted at its Package directory (libraries/*, assets).
-      if (existsSync(join(base, owner.name, 'go.mod'))) found.push(join(base, owner.name));
+      // A component may be a shared Go library module rooted at its Package directory (libraries/*, assets),
+      // with nested modules below it (hardening/policy/cedar keeps cedar-go out of the module graph of its users).
+      if (existsSync(join(base, owner.name, 'go.mod'))) {
+        found.push(join(base, owner.name));
+        found.push(...nestedModules(join(base, owner.name)));
+      }
       const extensions = join(base, owner.name, 'extensions');
       if (!existsSync(extensions)) continue;
       for (const entry of readdirSync(extensions, { withFileTypes: true })) {
@@ -48,6 +52,21 @@ export function goModules(directory = root) {
     }
   }
   return found.sort();
+}
+
+/** Go modules below a library Package's root module (a go.mod in a subdirectory). Vendored originals and extensions are not looked into. */
+function nestedModules(root) {
+  const found = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory() || ['node_modules', '.git', 'port', 'testdata', 'extensions'].includes(entry.name)) continue;
+      const sub = join(dir, entry.name);
+      if (existsSync(join(sub, 'go.mod'))) found.push(sub);
+      walk(sub);
+    }
+  };
+  walk(root);
+  return found;
 }
 
 let caches;

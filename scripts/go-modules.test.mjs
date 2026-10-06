@@ -2,12 +2,12 @@
 // test:port used to leave one pigpen-sdk-* per mutate call, a pigpen-gowork-* and a pigeq-* per run.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { after, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { registersNativeProvider, sdkBuildTags } from './go-modules.mjs';
+import { goModules, registersNativeProvider, sdkBuildTags } from './go-modules.mjs';
 
 const scratch = mkdtempSync(join(tmpdir(), 'go-modules-test-'));
 const fakePig = join(scratch, 'pig');
@@ -78,5 +78,21 @@ describe('registersNativeProvider', () => {
   });
   it('is false for a directory that is not there', () => {
     assert.equal(registersNativeProvider(join(own, 'missing')), false);
+  });
+});
+
+describe('goModules', () => {
+  const own = mkdtempSync(join(tmpdir(), 'go-modules-list-'));
+  after(() => rmSync(own, { recursive: true, force: true }));
+  const file = (path, text) => { mkdirSync(dirname(join(own, path)), { recursive: true }); writeFileSync(join(own, path), text); };
+  it('lists a library Package root, the modules nested below it, and extension modules, but not vendored originals', () => {
+    file('components/lib/go.mod', 'module example.com/lib\n');
+    file('components/lib/nested/deep/go.mod', 'module example.com/lib/nested/deep\n');
+    file('components/lib/port/oracle/go.mod', 'module example.com/oracle\n');
+    file('components/lib/testdata/go.mod', 'module example.com/testdata\n');
+    file('components/ext/extensions/one/go.mod', 'module example.com/one\n');
+    file('piglets/p/extensions/two/go.mod', 'module example.com/two\n');
+    const names = goModules(own).map((dir) => relative(own, dir)).sort();
+    assert.deepEqual(names, ['components/ext/extensions/one', 'components/lib', 'components/lib/nested/deep', 'piglets/p/extensions/two']);
   });
 });
