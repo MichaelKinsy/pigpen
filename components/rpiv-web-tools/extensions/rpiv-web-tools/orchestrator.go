@@ -69,16 +69,19 @@ func clampSearchResultCount(requested *float64) int {
 	return value
 }
 
-// maskApiKey keeps the last four characters and hides the rest, or reports the unset label. upstream: web-tools.ts
-// maskApiKey.
+// maskApiKey shows the first and last four characters around an ellipsis, or reports the unset label. upstream:
+// web-tools.ts maskApiKey.
 func maskApiKey(key string) string {
 	if key == "" {
 		return unsetLabel
 	}
-	if len(key) <= apiKeyMaskVisibleChars {
-		return strings.Repeat("*", len(key))
+	runes := []rune(key)
+	if len(runes) <= 2*apiKeyMaskVisibleChars {
+		return string(runes)
 	}
-	return strings.Repeat("*", len(key)-apiKeyMaskVisibleChars) + key[len(key)-apiKeyMaskVisibleChars:]
+	head := string(runes[:apiKeyMaskVisibleChars])
+	tail := string(runes[len(runes)-apiKeyMaskVisibleChars:])
+	return head + "..." + tail
 }
 
 // resolveProviderAPIKey is the three-tier credential lookup: the provider's env var, then apiKeys[provider] in the

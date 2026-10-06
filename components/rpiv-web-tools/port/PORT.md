@@ -18,11 +18,31 @@
 |---|---|---|---|
 | **1 (done)** | `providers/config.ts` — the typed config reader/writer | `providers/config` | **20 exact twins, 1 named skip** |
 | **2 (done)** | `providers/types.ts` + `providers/index.ts` + `providers/factory.ts` — the provider contract, the ten PROVIDER_META entries, the factory dispatch; plus `web-tools.ts` credential resolution, provider selection and the `max_results` schema | `index` | **12 exact twins** |
-| 2 | `providers/types.ts` + `providers/index.ts` + `providers/factory.ts` — the provider contract, the ten `PROVIDER_META` entries and `createSearchProvider` | (planned) | 0 |
-| 3 | `web_search` — schema, routing, provider search paths, error classification | (planned) | 0 |
-| 4 | `web_fetch` — fetch modes, helpers, content handling | (planned) | 0 |
-| 5 | `providers/interceptors/` — the GitHub interceptor and the chain | (planned) | 0 |
-| 6 | `/web-tools` command, guidance text, rendering | (planned) | 0 |
+| **3 (done)** | `web-tools.ts registerWebSearchConfigCommand` + `formatShowConfigMessage` — the picker, the two prompt flows, the legacy-key migration and the `--show` report | `index` | **8 exact twins** |
+| 4 | `web-tools.ts registerWebSearchTool` + the ten provider `search()` arms | `(planned)` | 0 |
+| 5 | `web-tools.ts registerWebFetchTool` + the fetch arms and `fetch-helpers.ts` | `(planned)` | 0 |
+| 6 | `providers/interceptors/` — the GitHub interceptor and the chain | `(planned)` | 0 |
+
+## Slice 3: what is ported
+
+The `/web-tools` command, host-free: the picker, the prompt flows and the `--show` report. Writing it without the pi
+context is what makes every branch the upstream twins drive through a mocked context a plain function call here.
+
+- **Picker order** — the active provider first, the rest in declaration order; each row carries its markers, the active
+  check and `(configured)`. upstream: `orderedMetas` + `labelOf`.
+- **Configured test** — a self-hosted provider counts as configured once a URL is set by env or config; the bare default
+  does not count, because it only hints the setting was never touched. upstream: `hasKey`.
+- **Label round trip** — the picked row resolves back to its provider by matching the original label or a `"label …`
+  prefix, so any marker suffix is safe. upstream: the `PROVIDERS.find` after the picker.
+- **Legacy migration** — a save sets the active provider, merges the key and URL, and deletes the legacy top-level
+  `apiKey`, which is migrated into `apiKeys`; unknown keys ride along untouched. upstream: the `toSave` construction.
+- **Prompt outcomes** — a cancel saves nothing, an empty answer keeps the existing key, and an empty answer with no key
+  saves nothing either. upstream: the `trimmed`/`keyToWrite` computation.
+- **`--show`** — the config path, the active provider and its source, one masked line per provider naming the env and
+  config sources separately, one URL line per self-hosted provider with its source, and the interceptor state. Key masking
+  keeps the first and last four characters around an ellipsis. upstream: `formatShowConfigMessage` + `maskApiKey`.
+- **Failure text** — a failed write names the config file, not the vendor, because the real cause is the disk. upstream:
+  the failed `ctx.ui.notify`.
 
 ## Slice 2: what is ported
 
