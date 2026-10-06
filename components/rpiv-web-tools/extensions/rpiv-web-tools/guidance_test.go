@@ -42,7 +42,7 @@ func guidanceForTools(cfg config) (search, fetch toolGuidance) {
 }
 
 func TestGuidanceResolution(t *testing.T) {
-	t.Run("uses built-in defaults when no config file exists", func(t *testing.T) {
+	tw(t, fGuidance, "uses built-in defaults when no config file exists", func(t *testing.T) {
 		configHome(t)
 		search, fetch := guidanceForTools(ReadConfig())
 		eq(t, search.PromptSnippet, defaultWebSearchSnippet, "search snippet")

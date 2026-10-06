@@ -164,7 +164,7 @@ func TestSearchMissingCredentials(t *testing.T) {
 			})
 		}
 	})
-	t.Run("slices results to max_results", func(t *testing.T) {
+	tw(t, fIndex, "slices results to max_results", func(t *testing.T) {
 		rows := make([]string, 0, 4)
 		for i := 0; i < 4; i++ {
 			rows = append(rows, fmt.Sprintf(`{"title":"t%d","url":"u%d","content":"c%d"}`, i, i, i))
@@ -176,7 +176,7 @@ func TestSearchMissingCredentials(t *testing.T) {
 		}
 		eq(t, len(res.Results), 2, "sliced to max_results")
 	})
-	t.Run("normalizes missing fields on result rows to empty strings", func(t *testing.T) {
+	tw(t, fIndex, "normalizes missing fields on result rows to empty strings", func(t *testing.T) {
 		client := &fakeHTTP{status: 200, body: `{"web":{"results":[{},{"url":"only-url"}]}}`}
 		res, err := searchBrave(client, "k", "q", 5)
 		if err != nil {

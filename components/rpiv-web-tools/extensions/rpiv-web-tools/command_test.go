@@ -117,16 +117,16 @@ func TestCommandPicker(t *testing.T) {
 // configured only once a URL is really set: the bare default is a hint, not a configuration.
 func TestSelfHostedResolution(t *testing.T) {
 	searxngMeta, _ := providerMetaByName("searxng")
-	t.Run("uses env URL (wins over config and default)", func(t *testing.T) {
+	tw(t, fIndex, "uses env URL (wins over config and default)", func(t *testing.T) {
 		env := envMap(map[string]string{searxngURLEnvVar: "http://env:8080"})
 		eq(t, resolveProviderBaseURL(searxngMeta, config{BaseURLs: map[string]string{"searxng": "http://config:8080"}}, env),
 			"http://env:8080", "env url")
 	})
-	t.Run("falls back to config URL when env is unset", func(t *testing.T) {
+	tw(t, fIndex, "falls back to config URL when env is unset", func(t *testing.T) {
 		eq(t, resolveProviderBaseURL(searxngMeta, config{BaseURLs: map[string]string{"searxng": "http://config:8080"}}, noEnv),
 			"http://config:8080", "config url")
 	})
-	t.Run("falls back to default URL (http://localhost:8080) when neither env nor config is set", func(t *testing.T) {
+	tw(t, fIndex, "falls back to default URL (http://localhost:8080) when neither env nor config is set", func(t *testing.T) {
 		eq(t, resolveProviderBaseURL(searxngMeta, config{}, noEnv), "http://localhost:8080", "default url")
 	})
 	t.Run("--show surfaces the resolved searxng URL and its source", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestSelfHostedResolution(t *testing.T) {
 			}
 		}
 	})
-	t.Run("marks searxng (configured) when SEARXNG_URL env is set, but not when only the default applies", func(t *testing.T) {
+	tw(t, fIndex, "marks searxng (configured) when SEARXNG_URL env is set, but not when only the default applies", func(t *testing.T) {
 		eq(t, contains(pickerLabels(t, config{}, envMap(map[string]string{searxngURLEnvVar: "http://env:8080"})), "SearXNG (configured)"),
 			true, "env URL configures it")
 		eq(t, contains(pickerLabels(t, config{}, noEnv), "SearXNG"), true, "the default alone does not configure it")
@@ -155,21 +155,21 @@ func TestSelfHostedResolution(t *testing.T) {
 }
 
 func TestCommandPromptOutcomes(t *testing.T) {
-	t.Run("empty input keeps existing key and persists provider switch", func(t *testing.T) {
+	tw(t, fIndex, "empty input keeps existing key and persists provider switch", func(t *testing.T) {
 		key, ok := keyPromptOutcome(inputOutcome{Value: ""}, "existing")
 		if !ok || key != "existing" {
 			t.Fatalf("an empty answer keeps the key, got %q ok=%v", key, ok)
 		}
 	})
-	t.Run("select cancelled leaves config untouched", func(t *testing.T) {
+	tw(t, fIndex, "select cancelled leaves config untouched", func(t *testing.T) {
 		meta, ok := matchProviderByLabel("")
 		eq(t, ok && meta.Name == "brave", false, "a cancelled selection resolves to nothing")
 	})
-	t.Run("input cancelled after select leaves config untouched", func(t *testing.T) {
+	tw(t, fIndex, "input cancelled after select leaves config untouched", func(t *testing.T) {
 		_, ok := keyPromptOutcome(inputOutcome{Cancelled: true}, "existing")
 		eq(t, ok, false, "a cancelled prompt saves nothing")
 	})
-	t.Run("empty input after select leaves config untouched when no existing key", func(t *testing.T) {
+	tw(t, fIndex, "empty input after select leaves config untouched when no existing key", func(t *testing.T) {
 		_, ok := keyPromptOutcome(inputOutcome{Value: "   "}, "")
 		eq(t, ok, false, "an empty answer with no existing key saves nothing")
 	})
