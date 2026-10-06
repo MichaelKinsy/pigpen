@@ -516,6 +516,10 @@ func tspNode(id string, node fe.Node) map[string]any {
 		return markdownNode(id, n)
 	case fe.Editor:
 		return editorNode(id, n)
+	case fe.Working:
+		return workingNode(id, n)
+	case fe.Footer:
+		return footerNode(id, n)
 	case fe.Lines:
 		text := strings.Join(n.Lines, "\n")
 		return map[string]any{"id": id, "k": "ansi", "p": map[string]any{"text": text, "hidden": blank(text)}}
