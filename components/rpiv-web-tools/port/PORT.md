@@ -19,9 +19,35 @@
 | **1 (done)** | `providers/config.ts` — the typed config reader/writer | `providers/config` | **20 exact twins, 1 named skip** |
 | **2 (done)** | `providers/types.ts` + `providers/index.ts` + `providers/factory.ts` — the provider contract, the ten PROVIDER_META entries, the factory dispatch; plus `web-tools.ts` credential resolution, provider selection and the `max_results` schema | `index` | **12 exact twins** |
 | **3 (done)** | `web-tools.ts registerWebSearchConfigCommand` + `formatShowConfigMessage` — the picker, the two prompt flows, the legacy-key migration and the `--show` report | `index` | **8 exact twins** |
-| 4 | `web-tools.ts registerWebSearchTool` + the ten provider `search()` arms | `(planned)` | 0 |
-| 5 | `web-tools.ts registerWebFetchTool` + the fetch arms and `fetch-helpers.ts` | `(planned)` | 0 |
+| **4 (done)** | the ten provider `search()` arms + `providers/fetch-helpers.ts` (the HTML pipeline, the content-type guards, the generic HTTP path) | `index` | **2 exact twins** |
+| 5 | `web-tools.ts registerWebFetchTool` + the native fetch arms | `(planned)` | 0 |
 | 6 | `providers/interceptors/` — the GitHub interceptor and the chain | `(planned)` | 0 |
+
+## Slice 4: what is ported
+
+The ten search arms and the shared HTTP layer.
+
+- **The seam** — Go has no global `fetch` to stub, so the arms take an `httpDoer`. The twins hand in a canned response
+  and assert the request shape and the error text without a network; production hands in the net/http client. upstream:
+  the global `fetch` each arm calls, and the `vi.fn()` doubles the upstream twins use.
+- **The shared HTML pipeline** — `htmlToText` (drop script/style/noscript, block closers to newlines, remaining tags to
+  spaces, decode the six named entities and every numeric one, collapse the whitespace), `extractTitle`, the binary
+  content-type guard and the generic request headers. upstream: `providers/fetch-helpers.ts`.
+- **The ten arms** — each keeps the original's guard (a missing key throws `<ENV> is not set. Run /web-tools to
+  configure, or export the env var.` before any request), its method, headers and body shape, its status check
+  (`<Label> Search API error (<status>): <body>`) and its vendor-field normalisation, where a missing field becomes an
+  empty string instead of dropping the row.
+- **The self-hosted pair** — SearXNG asks for one page and slices client-side (its API has no count or limit), and its
+  403 and 401 carry the diagnostic hints; both strip every trailing slash from the base URL and send `Authorization`
+  only when a key exists.
+- **Vendor quirks kept** — Tavily folds a `failed_results` entry into the list instead of dropping it, Exa caps the
+  snippet at 300 characters, Ollama picks the local or cloud search path from how it was built.
+
+### Deliberate difference
+
+`truncateRunes` caps at runes, where the original caps JavaScript code units. For ASCII snippets the two agree; for a
+snippet with astral characters the port keeps whole graphemes where the original can cut one in half. Recorded here
+because it is observable, and left as a gap rather than silently reproduced.
 
 ## Slice 3: what is ported
 

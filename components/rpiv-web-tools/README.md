@@ -6,15 +6,15 @@ Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG, Ollama), plus the `/web-tool
 It is a port of `@juicesharp/rpiv-web-tools` 2.12.0 (see [CREDITS.md](CREDITS.md)), made with the
 [extension porting Skill](../extension-port/README.md). It needs no Node runtime.
 
-## Status: slices 1, 2 and 3 of 6
+## Status: slices 1 to 4 of 6
 
-The port is in progress. Slices 1 to 3 — `~/.config/rpiv-web-tools/config.json` plus the provider contract with its
+The port is in progress. Slices 1 to 4 — `~/.config/rpiv-web-tools/config.json` plus the provider contract with its
 ten-entry table, the factory dispatch, credential resolution and the `max_results` schema — are ported and twinned.
-The two tools and the GitHub interceptor chain are not ported yet.
+The tools own registration, the native fetch arms and the GitHub interceptor chain are not ported yet.
 
 The per-slice scope, the twin coverage and the named gaps are in [port/PORT.md](port/PORT.md);
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/rpiv-web-tools` is the judge, and it currently
-reports **40 exact twins and 1 named skip** of the 274 upstream titles.
+reports **42 exact twins and 1 named skip** of the 274 upstream titles.
 
 ## What slices 1 and 2 give you
 
