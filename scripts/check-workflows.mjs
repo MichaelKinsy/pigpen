@@ -18,6 +18,8 @@ const shaPinned = /^[^@\s]+@[0-9a-f]{40}$/;
 
 // The only write permissions a job of release.yml may hold: attestations in the build, the release itself in publish.
 const releaseWrites = { build: ['id-token: write', 'attestations: write'], publish: ['contents: write'] };
+// npm-publish.yml publishes with npm trusted publishing (OIDC): id-token in its one publish job, nothing else.
+const npmWrites = { publish: ['id-token: write'] };
 
 /** Problems with one workflow's hardening; `name` prefixes each message. */
 export function hardeningProblems(name, text) {
@@ -34,7 +36,7 @@ export function hardeningProblems(name, text) {
   if (name !== 'release.yml' && /\$\{\{\s*secrets\./.test(text)) problems.push(`${name}: uses a secret`);
 
   for (const [id, job] of jobs) {
-    const allowed = name === 'release.yml' ? releaseWrites[id] ?? [] : [];
+    const allowed = name === 'release.yml' ? releaseWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
     for (const grant of writes(job.permissions)) if (!allowed.includes(grant)) problems.push(`${name}: job ${id}: ${grant}`);
     if (job.uses && !job.uses.startsWith('./') && !shaPinned.test(job.uses)) problems.push(`${name}: ${job.uses} is not pinned to a full commit SHA`);
     if (!job.uses && !(job['timeout-minutes'] > 0)) problems.push(`${name}: job ${id} has no timeout-minutes`);
@@ -79,7 +81,22 @@ export function releaseProblems(name, text) {
       if (/(^|[\s;&|(])(npm|npx|node|pnpm|yarn|bun)\s|\.\/|scripts\//.test(run)) problems.push(`${name}: job ${id}: the step that reads ${SIGNING_KEY} runs a repository script or package manager`);
     }
   }
+  const planIf = String(workflow.jobs?.plan?.if ?? '');
+  if (!planIf.includes("'npm/'")) problems.push(`${name}: the plan job must skip an npm/ tag (if: \${{ !startsWith(github.ref_name, 'npm/') }}): npm-publish.yml owns it`);
   if (found.filter((secret) => secret === SIGNING_KEY).length !== legitimate) problems.push(`${name}: ${SIGNING_KEY} may appear only in the env of a step (as ${SIGNING_KEY}: \${{ secrets.${SIGNING_KEY} }}), nowhere else`);
+  return problems;
+}
+
+/** npm-publish.yml: OIDC trusted publishing only (no token anywhere), provenance on, a pushed `npm/v*` tag or a manual run. */
+export function npmPublishProblems(name, text) {
+  if (name !== 'npm-publish.yml') return [];
+  const problems = [];
+  const workflow = parse(text) ?? {};
+  const triggers = Object.keys(workflow.on ?? {}).sort().join();
+  if (!['push', 'push,workflow_dispatch', 'workflow_dispatch,push'].includes(triggers)) problems.push(`${name}: runs only on a pushed tag or a manual run`);
+  if (workflow.on?.push && !(Array.isArray(workflow.on.push.tags) && workflow.on.push.tags.includes('npm/v*') && Object.keys(workflow.on.push).join() === 'tags')) problems.push(`${name}: push must be the tag filter npm/v* only`);
+  if (/NODE_AUTH_TOKEN|NPM_TOKEN|_authToken/.test(text)) problems.push(`${name}: a token is referenced; publish with trusted publishing (OIDC), never a token`);
+  if (!/--provenance/.test(text)) problems.push(`${name}: publish with --provenance`);
   return problems;
 }
 
@@ -94,7 +111,7 @@ export function tagProblems(workflows) {
   const problems = [];
   const piglet = 'herdr/v0.1.0';
   const pkg = 'components/herdr/v0.1.0';
-  for (const [file, [wants, refuses, kind, other]] of Object.entries({ 'release.yml': [piglet, pkg, 'Piglet', 'Package'], 'release-package.yml': [pkg, piglet, 'Package', 'Piglet'] })) {
+  for (const [file, [wants, refuses, kind, other]] of Object.entries({ 'release.yml': [piglet, pkg, 'Piglet', 'Package'], 'release-package.yml': [pkg, piglet, 'Package', 'Piglet'], 'npm-publish.yml': ['npm/v0.1.0', pkg, 'npm publish', 'Package'] })) {
     const patterns = workflows[file]?.on?.push?.tags;
     if (!patterns) continue;
     const regexes = patterns.map((pattern) => [pattern, tagFilter(pattern)]);
@@ -139,7 +156,7 @@ async function main() {
   for (const file of readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).sort()) {
     const text = readFileSync(join(dir, file), 'utf8');
     parsed[file] = parse(text);
-    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text));
+    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...npmPublishProblems(file, text));
     const requirement = JSON.parse(readFileSync(join(root, 'scripts/pig-requirement.json'), 'utf8'));
     if (file !== 'ci.yml' && /MichaelKinsy\/PiG/.test(text)) problems.push(...pinProblems(parsed[file], requirement, file));
     if (file === 'ci.yml') {

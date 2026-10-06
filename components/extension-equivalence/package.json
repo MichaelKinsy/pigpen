@@ -1,13 +1,37 @@
 {
-  "name": "pigpen-extension-equivalence",
+  "name": "@pi-in-go/pigpen-extension-equivalence",
   "version": "0.1.0",
-  "private": true,
   "description": "Differential harness that proves a Go port of a Pi extension behaves like the TypeScript original, plus a static check for Pi APIs the Go SDK lacks",
-  "keywords": ["pig-package", "extension-porting", "equivalence"],
+  "keywords": [
+    "pig-package",
+    "extension-porting",
+    "equivalence",
+    "pigpen",
+    "extension"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "README.md", "LICENSE", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/extension-equivalence"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/extension-equivalence#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/extension-equivalence"]
+    "extensions": [
+      "extensions/extension-equivalence"
+    ]
   }
 }

@@ -1,0 +1,50 @@
+# Publishes the Packages and Piglet sources to npm (scripts/npm-publish.mjs): every `@pi-in-go/pigpen-<dir>` Package, then every
+# `@pi-in-go/pigpen-piglet-<name>` Piglet source, skipping any name@version already on npm. pi-in-go.dev finds them by keyword
+# (`pig-package`, `pig-piglet`). A pushed tag `npm/v<x>` or a manual run starts it; the tag only starts the run, each package
+# is published at its own version.
+#
+# Authentication is npm trusted publishing (OIDC): no token and no secret exist here, `id-token: write` lets the job prove
+# who it is and npm checks that against the Trusted Publisher the owner added to each package on npmjs.com (organization
+# MichaelKinsy, repository pigpen, workflow npm-publish.yml, no environment; FIRST-NPM-PUBLISH.md). A package must exist on
+# npm before a Trusted Publisher can be added, which is why the first publish is the owner's one command
+# (scripts/first-npm-publish.sh); this workflow does every release after it. Provenance is attached to each version.
+# Needs npm >= 11.5.1; the job fails first if the runner's npm is older. scripts/check-workflows.mjs enforces: OIDC only, no
+# token, --provenance, and that release.yml (any `*/v*` tag) skips an `npm/` tag.
+name: Publish to npm
+
+on:
+  push:
+    tags: ['npm/v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: The run must be on a commit of main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: npm must be at least 11.5.1 (trusted publishing)
+        run: node -e 'const v=process.argv[1].split(".").map(Number);if(v[0]<11||(v[0]===11&&(v[1]<5||(v[1]===5&&v[2]<1))))throw new Error("npm "+process.argv[1]+" is older than 11.5.1")' "$(npm --version)"
+      - run: npm ci --ignore-scripts
+      - name: Quality gates and the npm contract
+        run: npm run check
+      - name: Publish Packages, then Piglet sources (provenance; versions already on npm are skipped)
+        run: node scripts/npm-publish.mjs --provenance

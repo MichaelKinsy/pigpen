@@ -1,13 +1,41 @@
 {
-  "name": "pigpen-pi-typesafe",
+  "name": "@pi-in-go/pigpen-pi-typesafe",
   "version": "0.1.0",
-  "private": true,
   "description": "Go port of pi-typesafe's extension: the batched typesafe_evaluate tool, the /typesafe command (login, consent, usage, sample test, playground) and result renderers. Off until the operator enables it. Content goes to api.typesafe.ai unless the own-model backend (the model PiG is configured with) is selected.",
-  "keywords": ["pig-package", "pig-extension", "typesafe", "jev", "structured-decisions"],
+  "keywords": [
+    "pig-package",
+    "pig-extension",
+    "typesafe",
+    "jev",
+    "structured-decisions",
+    "pigpen",
+    "extension"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pi-typesafe"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pi-typesafe#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/pi-typesafe"]
+    "extensions": [
+      "extensions/pi-typesafe"
+    ]
   }
 }

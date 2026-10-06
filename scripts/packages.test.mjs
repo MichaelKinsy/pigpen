@@ -50,7 +50,7 @@ describe('the Packages in this tree', () => {
     assert.ok(packages.length >= 21);
     for (const { dir, manifest } of packages) {
       // The npm-style name need not repeat the directory (pigpen-rpiv-todo lives in components/todo); it is the index id.
-      assert.match(manifest.name, /^pigpen-[a-z0-9][a-z0-9._-]*$/, dir);
+      assert.match(manifest.name, /^(?:@[a-z0-9-]+\/)?pigpen-[a-z0-9][a-z0-9._-]*$/, dir);
       assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
       assert.ok(manifest.license, dir);
       assert.ok(manifest.description, dir);

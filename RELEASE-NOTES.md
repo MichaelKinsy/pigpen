@@ -14,8 +14,22 @@ license and credit in `provenance.json` and `CREDITS.md`; the same data is the p
 
 ## Install (what works today)
 
-There is no published index, release Binary, signing key or remote install command yet
-([RELEASE-BLOCKERS.md](RELEASE-BLOCKERS.md)). Use a local checkout and PiG 0.4.1 (`pig --version` prints `0.4.1+1.0.3`;
+**npm (after the owner's first publish, [FIRST-NPM-PUBLISH.md](FIRST-NPM-PUBLISH.md)):**
+
+```sh
+pig install npm:@pi-in-go/pigpen-<name>                      # a Package (components/<name>)
+pig piglet add npm:@pi-in-go/pigpen-piglet-<name>            # a Piglet's source (piglets/<name>)
+pig piglet pull 'github:MichaelKinsy/pigpen/<name>@0.1.0'    # its signed Binary, once released (OWNER-ACTIONS.md)
+```
+
+All of these resolve only after the first publish and the first Binary release; before that, nothing is on npm. What was
+run for the npm form: `npm run test:npm-packages` (29 Packages, `pig install npm:...` against a local registry),
+`npm run test:npm-piglets` (11 Piglet sources, `pig piglet add npm:...` and `pig piglet validate`, and a fused `pig-games`
+Binary from the registered source) and `npm publish --dry-run` for all 40. A real publish, trusted publishing and provenance
+are not run yet.
+
+Until then there is no published index entry, release Binary or remote install command
+([RELEASE-BLOCKERS.md](RELEASE-BLOCKERS.md)). From a local checkout and PiG 0.4.1 (`pig --version` prints `0.4.1+1.0.3`;
 `go install github.com/MichaelKinsy/PiG/cmd/pig@v0.4.1` installs it).
 
 ```sh

@@ -1,13 +1,40 @@
 {
-  "name": "pigpen-pig-snake",
+  "name": "@pi-in-go/pigpen-pig-snake",
   "version": "0.1.0",
-  "private": true,
   "description": "Pig Snake: a snake game whose head is the PiG pig and whose every eaten apple adds another pig to the line, so a herd forms behind the leader. Explicit /pig-snake command only.",
-  "keywords": ["pig-package", "game", "pig", "snake", "extension"],
+  "keywords": [
+    "pig-package",
+    "game",
+    "pig",
+    "snake",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pig-snake"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pig-snake#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/pig-snake"]
+    "extensions": [
+      "extensions/pig-snake"
+    ]
   }
 }

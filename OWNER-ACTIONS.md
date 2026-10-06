@@ -10,6 +10,10 @@ The GitHub-side commands (`gh api`, `gh secret`) were not run: this lane has no 
 followed by a read that shows the result, so you can check it. Everything that runs locally was run against throwaway keys and
 a local bare repository (`npm run rehearse:release`, `npm run test:packages`).
 
+> **npm first.** The primary install channel is npm (`pig install npm:@pi-in-go/pigpen-<name>`, keyword `pig-package` /
+> `pig-piglet`): the owner's one command and the Trusted Publisher steps are in [FIRST-NPM-PUBLISH.md](FIRST-NPM-PUBLISH.md).
+> The Git tags and signed Binaries below stay available. Add `refs/tags/npm/v*` to the tag ruleset in section 3.
+
 ## What is decided
 
 | | |
@@ -76,7 +80,7 @@ asks six approvals. The tag ruleset below already limits who can start a release
 ```bash
 gh api -X POST "repos/$REPO/rulesets" --input - <<'JSON'
 { "name": "release tags", "target": "tag", "enforcement": "active",
-  "conditions": { "ref_name": { "include": ["refs/tags/*/v*", "refs/tags/components/*/v*"], "exclude": [] } },
+  "conditions": { "ref_name": { "include": ["refs/tags/*/v*", "refs/tags/components/*/v*", "refs/tags/npm/v*"], "exclude": [] } },
   "rules": [ { "type": "creation" }, { "type": "update" }, { "type": "deletion" }, { "type": "non_fast_forward" } ],
   "bypass_actors": [ { "actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always" } ] }
 JSON

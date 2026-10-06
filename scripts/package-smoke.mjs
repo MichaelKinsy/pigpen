@@ -30,12 +30,11 @@ export function installedRoot(pig, env, cwd, spec) {
 }
 
 /** Install `name` at `version` from `repository`'s tag into the isolated `env`, check it, remove it. Returns the installed root. */
-export function smokePackage({ pig, env, cwd, repository, name, version }) {
-  const spec = packageSpec(repository, name, version);
+export function smokePackage({ pig, env, cwd, repository, name, version, spec = packageSpec(repository, name, version) }) {
   run(pig, env, cwd, 'install', spec);
   const installed = installedRoot(pig, env, cwd, spec);
   const manifest = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
-  assert.equal(manifest.version, version, `${packageTag(name, version)} installed version ${manifest.version}`);
+  assert.equal(manifest.version, version, `${spec} installed version ${manifest.version}`);
   run(pig, env, cwd, 'package', 'validate', installed);
   // A Go extension must also build and register under pig, which `package validate` does not do.
   // An extension that registers a native Provider cannot load under --validate-only (PiG 0.4.x binds no native provider

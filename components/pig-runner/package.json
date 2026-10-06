@@ -1,13 +1,39 @@
 {
-  "name": "pigpen-pig-runner",
+  "name": "@pi-in-go/pigpen-pig-runner",
   "version": "0.1.0",
-  "private": true,
   "description": "PiG Runner: the pixel-art pig obstacle runner, opened with /runner or /pig-runner (Go). Nothing runs until you type the command.",
-  "keywords": ["pig-package", "game", "pixel-art", "extension"],
+  "keywords": [
+    "pig-package",
+    "game",
+    "pixel-art",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pig-runner"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pig-runner#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/pigrunner"]
+    "extensions": [
+      "extensions/pigrunner"
+    ]
   }
 }

@@ -1,13 +1,37 @@
 {
-  "name": "pigpen-pig-doctor",
+  "name": "@pi-in-go/pigpen-pig-doctor",
   "version": "0.1.0",
-  "private": true,
   "description": "Finds and safely fixes cruft in a PiG setup: duplicate or broken extensions, unpruned caches, orphaned agent directories, legacy files. Read-only by default; every removal is backed up and restorable",
-  "keywords": ["pig-package", "doctor", "maintenance", "extension"],
+  "keywords": [
+    "pig-package",
+    "doctor",
+    "maintenance",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "README.md", "LICENSE", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pig-doctor"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pig-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/pig-doctor"]
+    "extensions": [
+      "extensions/pig-doctor"
+    ]
   }
 }

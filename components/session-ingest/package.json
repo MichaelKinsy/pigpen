@@ -1,13 +1,38 @@
 {
-  "name": "pigpen-session-ingest",
+  "name": "@pi-in-go/pigpen-session-ingest",
   "version": "0.1.0",
-  "private": true,
   "description": "read_session: a token-safe tool that lets the model query Pi and PiG JSONL session transcripts (contents, search, single turns, tool usage, stats)",
-  "keywords": ["pig-package", "sessions", "history", "extension"],
+  "keywords": [
+    "pig-package",
+    "sessions",
+    "history",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/session-ingest"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/session-ingest#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/session-ingest"]
+    "extensions": [
+      "extensions/session-ingest"
+    ]
   }
 }

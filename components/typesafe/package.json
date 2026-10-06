@@ -1,10 +1,37 @@
 {
-  "name": "pigpen-typesafe",
+  "name": "@pi-in-go/pigpen-typesafe",
   "version": "0.1.0",
-  "private": true,
   "description": "Shared Go client for the TypeSafe AI API (a port of the official TypeScript SDK) with an own-model backend that answers the same typed questions with the model PiG is configured with. Libraries only, no extension of its own.",
-  "keywords": ["pig-package", "typesafe", "llm", "evaluation", "library"],
+  "keywords": [
+    "pig-package",
+    "typesafe",
+    "llm",
+    "evaluation",
+    "library",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["libraries", "port", "go.mod", "CONTRACT.md", "README.md", "LICENSE", "CREDITS.md", "provenance.json"]
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/typesafe"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/typesafe#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "libraries",
+    "port",
+    "go.mod",
+    "CONTRACT.md",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ]
 }

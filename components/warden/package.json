@@ -1,13 +1,41 @@
 {
-  "name": "pigpen-warden",
+  "name": "@pi-in-go/pigpen-warden",
   "version": "0.1.0",
-  "private": true,
   "description": "Go port of DevMortimer's pi-warden: guardrails that steer instead of interrupt. Holds irreversible tool calls, flags off-task and off-plan calls, breaks stuck loops and asks for verification of unverified done claims. Opt-in, discloses what leaves the machine, and judges with TypeSafe or the session's own model.",
-  "keywords": ["pig-package", "guardrails", "safety", "agent", "typesafe", "extension"],
+  "keywords": [
+    "pig-package",
+    "guardrails",
+    "safety",
+    "agent",
+    "typesafe",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/warden"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/warden#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/warden"]
+    "extensions": [
+      "extensions/warden"
+    ]
   }
 }

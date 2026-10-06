@@ -37,6 +37,8 @@ env:
 
 jobs:
   plan:
+    # An `npm/v*` tag is npm-publish.yml's, not a Piglet's; skipping here skips every job that needs plan.
+    if: ${{ !startsWith(github.ref_name, 'npm/') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
