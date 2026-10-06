@@ -244,6 +244,8 @@ components/dirty-repo-guard/        a Go port (Pi's dirty-repo-guard example) as
                                     with its evidence in port/
 components/typesafe/                shared Go client for the TypeSafe API, plus an own-model
                                     backend (libraries only, no extension)
+components/hardening/               shared Go library of the opt-in enterprise profile (profile, credential file,
+                                    egress, audit, headless, policy, resource server; libraries only, no extension)
 components/warden/                  a Go port of pi-warden as a Package, with its evidence in port/
 components/websearch/                a Go port (first slice) of pi-web-access as a Package, with its evidence in port/
 components/ahp/                     a Go port of pi-ahp as a Package (Agent Host Protocol host), with its evidence in proof/

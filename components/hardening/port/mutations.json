@@ -1,0 +1,2032 @@
+[
+ {
+  "name": "cred-expiry-check-dropped",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "if *e.Expires <= deadline {",
+  "replace": "if false && *e.Expires <= deadline {"
+ },
+ {
+  "name": "cred-expiry-margin-ignored",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "deadline := float64(s.now().Add(s.margin).UnixMilli())",
+  "replace": "deadline := float64(s.now().UnixMilli())"
+ },
+ {
+  "name": "cred-expiry-bound-exclusive",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "*e.Expires <= deadline",
+  "replace": "*e.Expires < deadline"
+ },
+ {
+  "name": "cred-expiry-margin-subtracted",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "s.now().Add(s.margin).UnixMilli()",
+  "replace": "s.now().Add(-s.margin).UnixMilli()"
+ },
+ {
+  "name": "cred-legacy-type-accepted",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "case \"api_key\":",
+  "replace": "case \"api_key\", \"api\":"
+ },
+ {
+  "name": "cred-command-key-allowed",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "|| token[0] == '!'",
+  "replace": "|| false"
+ },
+ {
+  "name": "cred-space-in-value-allowed",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "if c := v[i]; c < 0x21 || c > 0x7e {",
+  "replace": "if c := v[i]; c < 0x20 || c > 0x7e {"
+ },
+ {
+  "name": "cred-value-length-uncapped",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "if v == \"\" || len(v) > maxTokenBytes {",
+  "replace": "if v == \"\" {"
+ },
+ {
+  "name": "cred-file-cap-raised",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "const MaxFileBytes = 64 << 10",
+  "replace": "const MaxFileBytes = 1 << 20"
+ },
+ {
+  "name": "cred-duplicate-keys-allowed",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "if err := strictjson.Decode(data, &doc, false); err != nil || doc == nil {",
+  "replace": "_ = strictjson.ErrInvalid\n\tif err := json.Unmarshal(data, &doc); err != nil || doc == nil {"
+ },
+ {
+  "name": "cred-cancelled-context-ignored",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "\tif ctx != nil {\n\t\tif err := ctx.Err(); err != nil {",
+  "replace": "\tif false {\n\t\tif err := ctx.Err(); err != nil {"
+ },
+ {
+  "name": "cred-origin-binding-dropped",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "if err == nil && t.s.ok && o == t.s.origin {",
+  "replace": "if err == nil && t.s.ok && (o == t.s.origin || true) {"
+ },
+ {
+  "name": "cred-origin-port-ignored",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "o == t.s.origin {",
+  "replace": "o.Host == t.s.origin.Host && o.Scheme == t.s.origin.Scheme {"
+ },
+ {
+  "name": "cred-foreign-header-kept",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "if t.s.ok && req.Header.Get(t.s.header) != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cred-sent-without-credential",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "closeBody(req)\n\t\t\treturn nil, err",
+  "replace": "closeBody(req)\n\t\t\treturn t.next.RoundTrip(req)"
+ },
+ {
+  "name": "cred-body-not-closed",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "closeBody(req)\n\t\t\treturn nil, err",
+  "replace": "return nil, err"
+ },
+ {
+  "name": "cred-callers-request-mutated",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "clone := req.Clone(req.Context())\n\t\tclone.Header.Set(name, value)",
+  "replace": "clone := req\n\t\tclone.Header.Set(name, value)"
+ },
+ {
+  "name": "cred-header-appended",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "clone.Header.Set(name, value)",
+  "replace": "clone.Header.Add(name, value)"
+ },
+ {
+  "name": "cred-scheme-dropped",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "if s.scheme != \"\" {\n\t\ttoken = s.scheme + \" \" + token",
+  "replace": "if false {\n\t\ttoken = s.scheme + \" \" + token"
+ },
+ {
+  "name": "safefile-nonregular-allowed",
+  "pkg": "internal/safefile",
+  "file": "safefile.go",
+  "find": "if !info.Mode().IsRegular() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "safefile-size-precheck-off-by-one",
+  "pkg": "internal/safefile",
+  "file": "safefile.go",
+  "find": "if info.Size() > max {",
+  "replace": "if info.Size() >= max {"
+ },
+ {
+  "name": "safefile-read-cap-off-by-one",
+  "pkg": "internal/safefile",
+  "file": "safefile.go",
+  "find": "if int64(len(data)) > max {",
+  "replace": "if int64(len(data)) >= max {"
+ },
+ {
+  "name": "safefile-enotdir-is-unreadable",
+  "pkg": "internal/safefile",
+  "file": "safefile.go",
+  "find": "errors.Is(err, fs.ErrNotExist) || errors.Is(err, syscall.ENOTDIR)",
+  "replace": "errors.Is(err, fs.ErrNotExist)"
+ },
+ {
+  "name": "safefile-blocking-open",
+  "pkg": "internal/safefile",
+  "file": "safefile.go",
+  "find": "os.O_RDONLY|syscall.O_NONBLOCK",
+  "replace": "os.O_RDONLY"
+ },
+ {
+  "name": "strictjson-duplicates-allowed",
+  "pkg": "internal/strictjson",
+  "file": "strictjson.go",
+  "find": "if _, dup := seen[key]; dup {",
+  "replace": "if _, dup := seen[key]; dup && false {"
+ },
+ {
+  "name": "strictjson-trailing-allowed",
+  "pkg": "internal/strictjson",
+  "file": "strictjson.go",
+  "find": "if _, err := dec.Token(); !errors.Is(err, io.EOF) {",
+  "replace": "if _, err := dec.Token(); !errors.Is(err, io.EOF) && false {"
+ },
+ {
+  "name": "strictjson-depth-unbounded",
+  "pkg": "internal/strictjson",
+  "file": "strictjson.go",
+  "find": "if depth > maxDepth {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ident-package-length",
+  "pkg": "internal/ident",
+  "file": "ident.go",
+  "find": "if len(s) == 0 || len(s) > 32 || s[0] < 'a' || s[0] > 'z' {",
+  "replace": "if len(s) == 0 || s[0] < 'a' || s[0] > 'z' {"
+ },
+ {
+  "name": "ident-tool-allows-colon",
+  "pkg": "internal/ident",
+  "file": "ident.go",
+  "find": "c == '.' || c == '_' || c == '-') {",
+  "replace": "c == '.' || c == '_' || c == '-' || c == ':') {"
+ },
+ {
+  "name": "host-suffix-label-boundary",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "return len(host) > len(entry) && strings.HasSuffix(host, entry)",
+  "replace": "return strings.HasSuffix(host, entry[1:])"
+ },
+ {
+  "name": "host-suffix-matches-apex",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "return len(host) > len(entry) && strings.HasSuffix(host, entry)",
+  "replace": "return strings.HasSuffix(\".\"+host, entry)"
+ },
+ {
+  "name": "host-exact-widened",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "return host == entry",
+  "replace": "return strings.HasSuffix(host, entry)"
+ },
+ {
+  "name": "host-trailing-dot-kept",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "host = strings.TrimSuffix(host, \".\")",
+  "replace": ""
+ },
+ {
+  "name": "host-idna-dropped",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "ascii, err := idna.Lookup.ToASCII(host)",
+  "replace": "_ = idna.Lookup\n\tascii, err := host, error(nil)"
+ },
+ {
+  "name": "host-zone-allowed",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "if a.Zone() != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "host-ip-not-unmapped",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "return a.Unmap().String(), nil",
+  "replace": "return a.String(), nil"
+ },
+ {
+  "name": "host-suffix-ip-entry-allowed",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "if _, err := netip.ParseAddr(rest); err == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "origin-default-https-port",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "port = \"443\"",
+  "replace": "port = \"80\""
+ },
+ {
+  "name": "origin-userinfo-allowed",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "if u == nil || u.User != nil {",
+  "replace": "if u == nil {"
+ },
+ {
+  "name": "origin-path-allowed",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "(u.Path != \"\" && u.Path != \"/\") || u.RawQuery != \"\"",
+  "replace": "u.RawQuery != \"\""
+ },
+ {
+  "name": "origin-port-range",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "n < 1 || n > 65535 || strconv.Itoa(n) != port",
+  "replace": "n < 0 || n > 65535 || strconv.Itoa(n) != port"
+ },
+ {
+  "name": "loopback-too-wide",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "return err == nil && a.IsLoopback()",
+  "replace": "return err == nil && (a.IsLoopback() || a.IsPrivate())"
+ },
+ {
+  "name": "addr-normalize-dropped",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "n := Normalize(a)",
+  "replace": "n := a"
+ },
+ {
+  "name": "addr-ipv4-mapped-not-unmapped",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "a = a.WithZone(\"\").Unmap()",
+  "replace": "a = a.WithZone(\"\")"
+ },
+ {
+  "name": "addr-nat64-not-extracted",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "case nat64.Contains(a):",
+  "replace": "case false:"
+ },
+ {
+  "name": "addr-6to4-not-extracted",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "case to4.Contains(a):",
+  "replace": "case false:"
+ },
+ {
+  "name": "addr-nat64-wrong-bytes",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "return netip.AddrFrom4([4]byte{b[12], b[13], b[14], b[15]})",
+  "replace": "return netip.AddrFrom4([4]byte{b[11], b[12], b[13], b[14]})"
+ },
+ {
+  "name": "addr-6to4-wrong-bytes",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "return netip.AddrFrom4([4]byte{b[2], b[3], b[4], b[5]})",
+  "replace": "return netip.AddrFrom4([4]byte{b[3], b[4], b[5], b[6]})"
+ },
+ {
+  "name": "addr-hard-denied-skipped",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "case contains(hardDenied, n):",
+  "replace": "case false:"
+ },
+ {
+  "name": "addr-operator-range-first",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "case contains(hardDenied, n):\n\t\treturn ErrDenied\n\tcase contains(allow, n):\n\t\treturn nil",
+  "replace": "case contains(allow, n):\n\t\treturn nil\n\tcase contains(hardDenied, n):\n\t\treturn ErrDenied"
+ },
+ {
+  "name": "addr-operator-ranges-ignored",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "case contains(allow, n):\n\t\treturn nil",
+  "replace": "case false:\n\t\treturn nil"
+ },
+ {
+  "name": "addr-default-ranges-ignored",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "case contains(defaultDenied, n):",
+  "replace": "case false:"
+ },
+ {
+  "name": "range-metadata-v4-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"169.254.0.0/16\",     // IPv4 link-local",
+  "replace": "\"169.254.0.0/17\",     // IPv4 link-local"
+ },
+ {
+  "name": "range-linklocal-v6-moved",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"fe80::/10\",          // IPv6 link-local",
+  "replace": "\"fe81::/16\",          // IPv6 link-local"
+ },
+ {
+  "name": "range-metadata-aws-v6-moved",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"fd00:ec2::254/128\",",
+  "replace": "\"fd00:ec2::255/128\","
+ },
+ {
+  "name": "range-metadata-alibaba-moved",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"100.100.100.200/32\",",
+  "replace": "\"100.100.100.201/32\","
+ },
+ {
+  "name": "range-metadata-azure-moved",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"168.63.129.16/32\",",
+  "replace": "\"168.63.129.17/32\","
+ },
+ {
+  "name": "range-this-network-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"0.0.0.0/8\", \"10.0.0.0/8\",",
+  "replace": "\"0.128.0.0/9\", \"10.0.0.0/8\","
+ },
+ {
+  "name": "range-rfc1918-10-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"10.0.0.0/8\", \"100.64.0.0/10\",",
+  "replace": "\"10.0.0.0/9\", \"100.64.0.0/10\","
+ },
+ {
+  "name": "range-cgnat-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"100.64.0.0/10\", \"127.0.0.0/8\",",
+  "replace": "\"100.64.0.0/11\", \"127.0.0.0/8\","
+ },
+ {
+  "name": "range-rfc1918-172-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"172.16.0.0/12\",\n",
+  "replace": "\"172.16.0.0/13\",\n"
+ },
+ {
+  "name": "range-ietf-protocol-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"192.0.0.0/24\", \"192.168.0.0/16\",",
+  "replace": "\"192.0.0.0/25\", \"192.168.0.0/16\","
+ },
+ {
+  "name": "range-rfc1918-192-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"192.0.0.0/24\", \"192.168.0.0/16\",",
+  "replace": "\"192.0.0.0/24\", \"192.168.0.0/17\","
+ },
+ {
+  "name": "range-benchmark-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"198.18.0.0/15\",",
+  "replace": "\"198.18.0.0/16\","
+ },
+ {
+  "name": "range-reserved-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"240.0.0.0/4\",\n",
+  "replace": "\"240.0.0.0/5\",\n"
+ },
+ {
+  "name": "range-ula-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"fc00::/7\",",
+  "replace": "\"fc00::/8\","
+ },
+ {
+  "name": "range-teredo-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"2001::/32\",",
+  "replace": "\"2001:1::/32\","
+ },
+ {
+  "name": "range-site-local-narrowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"fec0::/10\",",
+  "replace": "\"fed0::/12\","
+ },
+ {
+  "name": "range-any-allowed-v4",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "if bits == 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "range-mapped-prefix-short",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "if bits < 96 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "range-prefix-not-masked",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "return netip.PrefixFrom(a, bits).Masked(), nil",
+  "replace": "return netip.PrefixFrom(a, bits), nil"
+ },
+ {
+  "name": "profile-code-unknown-accepted",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "if !code.Valid() {\n\t\tcode = PolicyError",
+  "replace": "if false {\n\t\tcode = PolicyError"
+ },
+ {
+  "name": "profile-package-echoed",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "if pkg != \"\" && !ident.Package(pkg) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-flag-echoed",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "if !validFlag(flag) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-site-echoed",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "if ident.Package(site) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "profile-noncontext-cause-kept",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {",
+  "replace": "if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || true {"
+ },
+ {
+  "name": "profile-is-ignores-code",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "return t.Code == e.Code && (t.Flag",
+  "replace": "return (t.Flag"
+ },
+ {
+  "name": "profile-is-ignores-flag",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "(t.Flag == \"\" || t.Flag == e.Flag)",
+  "replace": "true"
+ },
+ {
+  "name": "profile-is-ignores-package",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "(t.Package == \"\" || t.Package == e.Package)",
+  "replace": "true"
+ },
+ {
+  "name": "profile-reason-echoes-input",
+  "pkg": "profile",
+  "file": "error.go",
+  "find": "Reason: texts[code]}",
+  "replace": "Reason: string(code) + flag + pkg}"
+ },
+ {
+  "name": "profile-env-turns-on-for-false",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "case \"1\", \"true\":\n\t\t\tenvOn[flag] = true\n\t\tcase \"\", \"0\", \"false\", \"no\", \"off\":",
+  "replace": "case \"1\", \"true\", \"0\", \"false\":\n\t\t\tenvOn[flag] = true\n\t\tcase \"\", \"no\", \"off\":"
+ },
+ {
+  "name": "profile-env-only-one",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "case \"1\", \"true\":",
+  "replace": "case \"1\":"
+ },
+ {
+  "name": "profile-unknown-keys-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "strictjson.Decode(data, &raw, true)",
+  "replace": "strictjson.Decode(data, &raw, false)"
+ },
+ {
+  "name": "profile-parse-error-is-flags-off",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if err := strictjson.Decode(data, &raw, true); err != nil {\n\t\t\t\treturn fail(\"\")",
+  "replace": "if err := strictjson.Decode(data, &raw, true); err != nil {\n\t\t\t\treturn f, nil"
+ },
+ {
+  "name": "profile-null-profile-accepted",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "trimmed[0] != '{'",
+  "replace": "trimmed[0] != '{' && trimmed[0] != 'n'"
+ },
+ {
+  "name": "profile-relative-agent-dir-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "} else if agentDir != \"\" {\n\t\tif !filepath.IsAbs(agentDir) {",
+  "replace": "} else if agentDir != \"\" {\n\t\tif false {"
+ },
+ {
+  "name": "profile-relative-env-path-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if !filepath.IsAbs(p) {\n\t\t\treturn fail(\"\")",
+  "replace": "if false {\n\t\t\treturn fail(\"\")"
+ },
+ {
+  "name": "profile-named-missing-file-is-off",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "case errors.Is(err, safefile.ErrNotExist) && !explicit:",
+  "replace": "case errors.Is(err, safefile.ErrNotExist) && (!explicit || explicit):"
+ },
+ {
+  "name": "profile-unreadable-file-is-off",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "default:\n\t\t\tf.found = !errors.Is(err, safefile.ErrNotExist)\n\t\t\treturn fail(\"\")",
+  "replace": "default:\n\t\t\tf.found = !errors.Is(err, safefile.ErrNotExist)"
+ },
+ {
+  "name": "profile-schema-unchecked",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if raw.Schema != nil && *raw.Schema != SchemaVersion {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-pig-home-fallback-wrong",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "return filepath.Join(h, \"agent\")",
+  "replace": "return h"
+ },
+ {
+  "name": "profile-cred-relative-path-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if !filepath.IsAbs(c.Path) || !ident.Tool(c.Provider) {",
+  "replace": "if !ident.Tool(c.Provider) {"
+ },
+ {
+  "name": "profile-cred-provider-unchecked",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if !filepath.IsAbs(c.Path) || !ident.Tool(c.Provider) {",
+  "replace": "if !filepath.IsAbs(c.Path) {"
+ },
+ {
+  "name": "profile-cred-cleartext-origin-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if o.Scheme != \"https\" && !hostname.IsLoopback(o.Host) {",
+  "replace": "if o.Scheme != \"https\" && !hostname.IsLoopback(o.Host) && false {"
+ },
+ {
+  "name": "profile-cred-origin-path-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if u.Path != \"\" && u.Path != \"/\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-cred-forbidden-header-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if forbiddenHeaders[c.Header] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-cred-margin-uncapped",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "time.Duration(s)*time.Second > MaxExpiryMargin",
+  "replace": "time.Duration(s)*time.Second > 1000*MaxExpiryMargin"
+ },
+ {
+  "name": "profile-cred-negative-margin",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if s < 0 || time.Duration(s)*time.Second > MaxExpiryMargin {",
+  "replace": "if time.Duration(s)*time.Second > MaxExpiryMargin {"
+ },
+ {
+  "name": "profile-cred-default-scheme",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "c.Scheme = \"Bearer\"",
+  "replace": "c.Scheme = \"\""
+ },
+ {
+  "name": "profile-egress-empty-allow-list-ok",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if r == nil || len(r.Allow) == 0 {",
+  "replace": "if r == nil {"
+ },
+ {
+  "name": "profile-egress-cidr-any-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if p, err = netrange.NormalizePrefix(p); err != nil {",
+  "replace": "_ = netrange.ErrDenied\n\t\tif p, err = p.Masked(), error(nil); err != nil {"
+ },
+ {
+  "name": "profile-egress-proxy-userinfo",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "u.User != nil || u.Opaque != \"\" || (u.Path != \"\" && u.Path != \"/\")",
+  "replace": "u.Opaque != \"\" || (u.Path != \"\" && u.Path != \"/\")"
+ },
+ {
+  "name": "profile-egress-proxy-scheme",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "case \"http\", \"https\", \"socks5\", \"socks5h\":",
+  "replace": "case \"http\", \"https\", \"socks5\", \"socks5h\", \"ftp\":"
+ },
+ {
+  "name": "profile-egress-proxy-without-port",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "port := u.Port() // a proxy is named with its port",
+  "replace": "port := u.Port(); if port == \"\" { port = \"80\" }"
+ },
+ {
+  "name": "profile-egress-ca-unchecked",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if err != nil || !x509.NewCertPool().AppendCertsFromPEM(data) {",
+  "replace": "if err != nil || (!x509.NewCertPool().AppendCertsFromPEM(data) && false) {"
+ },
+ {
+  "name": "profile-egress-ca-relative",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if !filepath.IsAbs(*r.CABundle) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-audit-sink-unchecked",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "case SinkStderr, SinkSessionFile:\n\t\t\ta.Sink = *r.Sink\n\t\tdefault:\n\t\t\treturn nil, errInvalid",
+  "replace": "default:\n\t\t\ta.Sink = *r.Sink"
+ },
+ {
+  "name": "profile-resource-hs-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "\"ES512\", \"EdDSA\"}",
+  "replace": "\"ES512\", \"EdDSA\", \"HS256\"}"
+ },
+ {
+  "name": "profile-resource-none-allowed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "\"ES512\", \"EdDSA\"}",
+  "replace": "\"ES512\", \"EdDSA\", \"none\"}"
+ },
+ {
+  "name": "profile-resource-leeway-uncapped",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "time.Duration(s)*time.Second > MaxLeeway",
+  "replace": "time.Duration(s)*time.Second > 100*MaxLeeway"
+ },
+ {
+  "name": "profile-resource-cleartext-jwks",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "u, err := secureURL(rs.JWKSURL)",
+  "replace": "u, err := url.Parse(rs.JWKSURL)"
+ },
+ {
+  "name": "profile-resource-algorithm-default",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "rs.Algorithms = []string{\"RS256\"}",
+  "replace": "rs.Algorithms = []string{\"RS256\", \"ES256\"}"
+ },
+ {
+  "name": "profile-resource-claim-name-unchecked",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if !validClaimName(rs.SubjectClaim) || !validClaimName(rs.TenantClaim) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-policy-file-relative",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if !filepath.IsAbs(*r.PolicyFile) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-require-ignored",
+  "pkg": "profile",
+  "file": "flags.go",
+  "find": "if f.On(n) && !ok[n] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-insecure-no-auth-ignored",
+  "pkg": "profile",
+  "file": "flags.go",
+  "find": "if insecureNoAuth && f.ResourceServer != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-on-always-false-for-egress",
+  "pkg": "profile",
+  "file": "flags.go",
+  "find": "return f.EgressPolicy != nil",
+  "replace": "return false"
+ },
+ {
+  "name": "profile-status-reports-error-code-wrong",
+  "pkg": "profile",
+  "file": "status.go",
+  "find": "b.WriteString(string(s.LastError))",
+  "replace": "b.WriteString(\"none\")"
+ },
+ {
+  "name": "egress-dial-check-skipped",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "if err != nil || netrange.Check(ap.Addr(), p.cidrs) != nil {",
+  "replace": "if err != nil || (netrange.Check(ap.Addr(), p.cidrs) != nil && false) {"
+ },
+ {
+  "name": "egress-control-hook-not-installed",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "Resolver: p.resolver, ControlContext: p.control}",
+  "replace": "Resolver: p.resolver}"
+ },
+ {
+  "name": "egress-network-unchecked",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "if network != \"tcp4\" && network != \"tcp6\" && network != \"tcp\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "egress-allow-list-skipped",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "if !p.listed(h) {\n\t\treturn p.err(profile.EgressDenied)",
+  "replace": "if !p.listed(h) && false {\n\t\treturn p.err(profile.EgressDenied)"
+ },
+ {
+  "name": "egress-host-not-normalised",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "h, err := hostname.Normalize(host)\n\tif err != nil {\n\t\treturn p.err(profile.EgressDenied)",
+  "replace": "h, err := host, error(nil)\n\tif err != nil {\n\t\treturn p.err(profile.EgressDenied)"
+ },
+ {
+  "name": "egress-ip-literal-unchecked",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "if netrange.Check(a, p.cidrs) != nil {\n\t\t\treturn p.err(profile.EgressAddressDenied)",
+  "replace": "if netrange.Check(a, p.cidrs) != nil && false {\n\t\t\treturn p.err(profile.EgressAddressDenied)"
+ },
+ {
+  "name": "egress-scheme-unchecked",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "(u.Scheme != \"http\" && u.Scheme != \"https\")",
+  "replace": "false"
+ },
+ {
+  "name": "egress-transport-allow-list-dropped",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "if err := p.CheckURL(req.URL); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tif p.viaProxy",
+  "replace": "if p.viaProxy"
+ },
+ {
+  "name": "egress-env-proxy-used",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "t.Proxy = func(req *http.Request) (*url.URL, error) {",
+  "replace": "t.Proxy = http.ProxyFromEnvironment\n\t_ = func(req *http.Request) (*url.URL, error) {"
+ },
+ {
+  "name": "egress-base-dial-kept",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "t.Dial, t.DialTLS, t.DialTLSContext = nil, nil, nil",
+  "replace": "_ = t"
+ },
+ {
+  "name": "egress-base-proxy-headers-kept",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "t.ProxyConnectHeader, t.GetProxyConnectHeader, t.OnProxyConnectResponse = nil, nil, nil",
+  "replace": "_ = t"
+ },
+ {
+  "name": "egress-base-tls-kept",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: p.roots}",
+  "replace": "if t.TLSClientConfig == nil {\n\t\tt.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: p.roots}\n\t}"
+ },
+ {
+  "name": "egress-ca-bundle-ignored",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "RootCAs: p.roots}",
+  "replace": "}"
+ },
+ {
+  "name": "egress-proxy-never-used",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "if p.viaProxy(req.URL.Hostname()) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "egress-no-proxy-ignored",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "for _, e := range p.noProxy {\n\t\tif hostname.Match(e, h) {\n\t\t\treturn false",
+  "replace": "for _, e := range p.noProxy {\n\t\tif hostname.Match(e, h) && false {\n\t\t\treturn false"
+ },
+ {
+  "name": "egress-no-proxy-everything",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "\t\tif hostname.Match(e, h) {\n\t\t\treturn false\n\t\t}\n\t}\n\treturn true",
+  "replace": "\t\tif hostname.Match(e, h) {\n\t\t\treturn false\n\t\t}\n\t}\n\treturn false"
+ },
+ {
+  "name": "egress-redirect-limit-removed",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "if len(via) >= MaxRedirects {",
+  "replace": "if len(via) >= 100*MaxRedirects {"
+ },
+ {
+  "name": "egress-ca-bundle-not-read",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "if !pool.AppendCertsFromPEM(data) {",
+  "replace": "if !pool.AppendCertsFromPEM(data) && false {"
+ },
+ {
+  "name": "audit-event-name-unchecked",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if !eventNames[name] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "audit-package-unchecked",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if !ident.Package(pkg) || (l.pkg != \"\" && pkg != l.pkg) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "audit-package-pin-dropped",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": " || (l.pkg != \"\" && pkg != l.pkg)",
+  "replace": ""
+ },
+ {
+  "name": "audit-tool-unchecked",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "!ident.Tool(tool) || (l.tools != nil && !known)",
+  "replace": "(l.tools != nil && !known)"
+ },
+ {
+  "name": "audit-tool-allow-list-dropped",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": " || (l.tools != nil && !known)",
+  "replace": " || (known && false)"
+ },
+ {
+  "name": "audit-outcome-unchecked",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if !ev.Outcome.valid() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "audit-reason-unchecked",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if !ev.Reason.valid() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "audit-invalid-not-counted",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "l.invalid.Add(uint64(bad))",
+  "replace": ""
+ },
+ {
+  "name": "audit-negative-duration",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if ms < 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "audit-reason-code-unchecked",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if !c.Valid() {\n\t\treturn ReasonInvalid",
+  "replace": "if false {\n\t\treturn ReasonInvalid"
+ },
+ {
+  "name": "audit-notice-every-failure",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if l.lastUnavail.IsZero() || now.Sub(l.lastUnavail) >= UnavailableInterval {",
+  "replace": "if true {"
+ },
+ {
+  "name": "audit-notice-once-ever",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if l.lastUnavail.IsZero() || now.Sub(l.lastUnavail) >= UnavailableInterval {",
+  "replace": "if l.lastUnavail.IsZero() {"
+ },
+ {
+  "name": "audit-required-ignored",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if l.required {\n\t\treturn profile.NewError",
+  "replace": "if false {\n\t\treturn profile.NewError"
+ },
+ {
+  "name": "audit-short-write-ignored",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "failed := err != nil || n != len(buf)",
+  "replace": "failed := err != nil || (n != len(buf) && false)"
+ },
+ {
+  "name": "audit-nil-config-gives-logger",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "if cfg == nil {\n\t\treturn nil\n\t}\n\treturn &Logger{w: w",
+  "replace": "if cfg == nil {\n\t\treturn &Logger{w: w, stderr: os.Stderr, now: time.Now}\n\t}\n\treturn &Logger{w: w"
+ },
+ {
+  "name": "audit-timestamp-local",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "l.now().UTC().Format(time.RFC3339Nano)",
+  "replace": "l.now().Format(time.RFC3339Nano)"
+ },
+ {
+  "name": "audit-reason-none-for-error",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "return ReasonOf(profile.CodeOf(err))",
+  "replace": "return ReasonNone"
+ },
+ {
+  "name": "audit-denials-are-errors",
+  "pkg": "audit",
+  "file": "audit.go",
+  "find": "profile.PolicyForbidden, profile.PolicyDenied,",
+  "replace": ""
+ },
+ {
+  "name": "audit-file-nonregular-allowed",
+  "pkg": "audit",
+  "file": "sink.go",
+  "find": "if err != nil || !info.Mode().IsRegular() {",
+  "replace": "if err != nil || (!info.Mode().IsRegular() && false) {"
+ },
+ {
+  "name": "audit-file-world-readable",
+  "pkg": "audit",
+  "file": "sink.go",
+  "find": "0o600",
+  "replace": "0o644"
+ },
+ {
+  "name": "audit-file-truncates",
+  "pkg": "audit",
+  "file": "sink.go",
+  "find": "os.O_WRONLY|os.O_APPEND|os.O_CREATE|syscall.O_NONBLOCK",
+  "replace": "os.O_WRONLY|os.O_TRUNC|os.O_CREATE|syscall.O_NONBLOCK"
+ },
+ {
+  "name": "audit-relative-session-dir",
+  "pkg": "audit",
+  "file": "sink.go",
+  "find": "if !filepath.IsAbs(sessionDir) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "audit-unknown-sink-is-stderr",
+  "pkg": "audit",
+  "file": "sink.go",
+  "find": "default:\n\t\treturn nil, profile.NewError(profile.ProfileMisconfigured, profile.FlagAudit, pkg)",
+  "replace": "default:\n\t\tl.w = stderr"
+ },
+ {
+  "name": "audit-package-not-pinned-by-open",
+  "pkg": "audit",
+  "file": "sink.go",
+  "find": "now: time.Now, pkg: pkg}",
+  "replace": "now: time.Now}"
+ },
+ {
+  "name": "headless-ui-not-masked",
+  "pkg": "headless",
+  "file": "headless.go",
+  "find": "return hostHasUI && !f.Headless",
+  "replace": "return hostHasUI"
+ },
+ {
+  "name": "headless-ui-always-false",
+  "pkg": "headless",
+  "file": "headless.go",
+  "find": "return hostHasUI && !f.Headless",
+  "replace": "return false"
+ },
+ {
+  "name": "headless-guard-always-open",
+  "pkg": "headless",
+  "file": "headless.go",
+  "find": "if !f.Headless {\n\t\treturn nil",
+  "replace": "if true {\n\t\treturn nil"
+ },
+ {
+  "name": "headless-guard-always-blocks",
+  "pkg": "headless",
+  "file": "headless.go",
+  "find": "if !f.Headless {\n\t\treturn nil",
+  "replace": "if false {\n\t\treturn nil"
+ },
+ {
+  "name": "headless-dialog-answers",
+  "pkg": "headless",
+  "file": "headless.go",
+  "find": "\treturn Blocking(pkg, what)\n}\n\n// Guard",
+  "replace": "\treturn nil\n}\n\n// Guard"
+ },
+ {
+  "name": "headless-cancel-ignored",
+  "pkg": "headless",
+  "file": "headless.go",
+  "find": "if err := ctx.Err(); err != nil {\n\t\treturn profile.NewError(profile.Cancelled",
+  "replace": "if err := ctx.Err(); err != nil && false {\n\t\treturn profile.NewError(profile.Cancelled"
+ },
+ {
+  "name": "headless-cancel-loses-cause",
+  "pkg": "headless",
+  "file": "headless.go",
+  "find": "profile.NewError(profile.Cancelled, profile.FlagHeadless, pkg).WithCause(err)",
+  "replace": "profile.NewError(profile.Cancelled, profile.FlagHeadless, pkg)"
+ },
+ {
+  "name": "headless-blocking-wrong-code",
+  "pkg": "headless",
+  "file": "headless.go",
+  "find": "profile.NewError(profile.UIUnavailable, profile.FlagHeadless, pkg).WithSite(what)",
+  "replace": "profile.NewError(profile.PolicyDenied, profile.FlagHeadless, pkg).WithSite(what)"
+ },
+ {
+  "name": "policy-panic-not-recovered",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "if recover() != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "policy-nil-decider-allowed",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "if isNil(f.d) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "policy-typed-nil-not-detected",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "return v.IsNil()",
+  "replace": "return false"
+ },
+ {
+  "name": "policy-error-with-allow",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "\tif err != nil {\n\t\tswitch c := profile.CodeOf(err); c {",
+  "replace": "\tif err != nil && false {\n\t\tswitch c := profile.CodeOf(err); c {"
+ },
+ {
+  "name": "policy-error-code-from-error",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "\t\treturn deny(profile.PolicyError), nil\n\t}\n\tif !dec.Allow {",
+  "replace": "\t\treturn deny(profile.PolicyUnavailable), nil\n\t}\n\tif !dec.Allow {"
+ },
+ {
+  "name": "policy-cancelled-context-asks-anyway",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "if ctx != nil && ctx.Err() != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "policy-deny-reason-unchecked",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "if !dec.Reason.Valid() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "policy-allow-keeps-reason",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "return Decision{Allow: true, Matched: clip(dec.Matched)}, nil",
+  "replace": "dec.Allow = true\n\treturn dec, nil"
+ },
+ {
+  "name": "policy-matched-unbounded",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "if len(m) > MaxMatched {",
+  "replace": "if false {"
+ },
+ {
+  "name": "policy-matched-aliased",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "return append([]string(nil), m...)",
+  "replace": "return m"
+ },
+ {
+  "name": "policy-deny-code-unchecked",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "if !code.Valid() {\n\t\tcode = profile.PolicyError",
+  "replace": "if false {\n\t\tcode = profile.PolicyError"
+ },
+ {
+  "name": "cedar-evaluation-errors-ignored",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "case len(diag.Errors) > 0:",
+  "replace": "case false:"
+ },
+ {
+  "name": "cedar-forbid-reported-as-default-deny",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "case !bool(decision) && len(diag.Reasons) > 0:",
+  "replace": "case false:"
+ },
+ {
+  "name": "cedar-default-allow",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "\tcase !bool(decision):\n\t\treturn policy.Decision{Reason: profile.PolicyDenied}, nil",
+  "replace": "\tcase false:\n\t\treturn policy.Decision{Reason: profile.PolicyDenied}, nil"
+ },
+ {
+  "name": "cedar-errors-before-forbid",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "\tcase !bool(decision) && len(diag.Reasons) > 0:\n\t\treturn policy.Decision{Reason: profile.PolicyForbidden, Matched: matched}, nil\n\tcase len(diag.Errors) > 0:\n\t\t// A permit may have matched; a policy that errored may have been a forbid. Deny.\n\t\treturn policy.Decision{Reason: profile.PolicyError}, nil",
+  "replace": "\tcase len(diag.Errors) > 0:\n\t\treturn policy.Decision{Reason: profile.PolicyError}, nil\n\tcase !bool(decision) && len(diag.Reasons) > 0:\n\t\treturn policy.Decision{Reason: profile.PolicyForbidden, Matched: matched}, nil"
+ },
+ {
+  "name": "cedar-empty-action-allowed",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "if r.Action == \"\" || len(r.Resource) > maxResourceBytes ||",
+  "replace": "if len(r.Resource) > maxResourceBytes ||"
+ },
+ {
+  "name": "cedar-oversize-resource-allowed",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "len(r.Resource) > maxResourceBytes || ",
+  "replace": ""
+ },
+ {
+  "name": "cedar-oversize-ids-allowed",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "|| len(r.Action) > maxIDBytes || len(r.Principal) > maxIDBytes || len(r.Subject) > maxIDBytes || len(r.Tenant) > maxIDBytes",
+  "replace": ""
+ },
+ {
+  "name": "cedar-group-unchecked",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "if !ident.Tool(g) {",
+  "replace": "if !ident.Tool(g) && false {"
+ },
+ {
+  "name": "cedar-groups-dropped",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "action:    {UID: action, Parents: cedar.NewEntityUIDSet(groups...)},",
+  "replace": "action:    {UID: action},"
+ },
+ {
+  "name": "cedar-principal-attrs-dropped",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "principal: {UID: principal, Attributes: cedar.NewRecord(attrs)},",
+  "replace": "principal: {UID: principal},"
+ },
+ {
+  "name": "cedar-tenant-not-mapped",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "attrs[\"tenant\"] = cedar.String(r.Tenant)",
+  "replace": "attrs[\"tenant\"] = cedar.String(r.Subject)"
+ },
+ {
+  "name": "cedar-path-not-cleaned",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "return filepath.Clean(resource)",
+  "replace": "_ = filepath.Clean\n\treturn resource"
+ },
+ {
+  "name": "cedar-host-case-kept",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "return host, nil",
+  "replace": "_ = host\n\t\treturn u.Hostname(), nil"
+ },
+ {
+  "name": "cedar-url-target-is-whole-url",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "return host, nil",
+  "replace": "_ = host\n\t\treturn strings.ToLower(resource), nil"
+ },
+ {
+  "name": "cedar-empty-resource-not-none",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "if resource == \"\" {\n\t\treturn \"none\"",
+  "replace": "if resource == \"\" {\n\t\treturn \"\""
+ },
+ {
+  "name": "cedar-parse-error-ignored",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "if err != nil || set == nil {",
+  "replace": "if err != nil && false || set == nil {"
+ },
+ {
+  "name": "cedar-unreadable-file-allowed-empty",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "data, err := safefile.Read(path, MaxPolicyBytes)\n\tif err != nil {",
+  "replace": "data, err := safefile.Read(path, MaxPolicyBytes)\n\tif err != nil && false {"
+ },
+ {
+  "name": "cedar-policy-cap-raised",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "const MaxPolicyBytes = 1 << 20",
+  "replace": "const MaxPolicyBytes = 1 << 30"
+ },
+ {
+  "name": "cedar-cancelled-context-ignored",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "if err := ctx.Err(); err != nil {\n\t\t\treturn policy.Decision{}, profile.NewError(profile.Cancelled",
+  "replace": "if err := ctx.Err(); err != nil && false {\n\t\t\treturn policy.Decision{}, profile.NewError(profile.Cancelled"
+ },
+ {
+  "name": "cedar-nil-decider-allowed",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "if d == nil || d.set == nil {",
+  "replace": "if d == nil {"
+ },
+ {
+  "name": "cedar-integral-float-is-string",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "if f == math.Trunc(f) &&",
+  "replace": "if false &&"
+ },
+ {
+  "name": "cedar-float-range-inclusive",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "f < 9223372036854775808.0 {",
+  "replace": "f <= 9223372036854775808.0 {"
+ },
+ {
+  "name": "cedar-null-not-omitted",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "if v.IsNil() {\n\t\t\treturn nil, false, nil",
+  "replace": "if v.IsNil() {\n\t\t\treturn cedar.String(\"\"), true, nil"
+ },
+ {
+  "name": "cedar-uint-overflow-wraps",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "if u > math.MaxInt64 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cedar-unsupported-type-omitted",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "\t}\n\treturn nil, false, bad()\n}",
+  "replace": "\t}\n\treturn nil, false, nil\n}"
+ },
+ {
+  "name": "cedar-depth-unbounded",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "if depth > maxDepth {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cedar-nodes-unbounded",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "*nodes > maxNodes {",
+  "replace": "*nodes > 1000*maxNodes {"
+ },
+ {
+  "name": "cedar-string-unbounded",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "if v.Len() > maxStrings {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cedar-key-kind-unchecked",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "if iter.Key().Kind() != reflect.String {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cedar-json-number-always-string",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "if i, err := strconv.ParseInt(s, 10, 64); err == nil {",
+  "replace": "if i, err := strconv.ParseInt(s, 10, 64); err == nil && false {"
+ },
+ {
+  "name": "cedar-nil-slice-omitted",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "if v.Kind() == reflect.Slice && v.IsNil() {\n\t\t\treturn cedar.NewSet(), true, nil",
+  "replace": "if v.Kind() == reflect.Slice && v.IsNil() {\n\t\t\treturn nil, false, nil"
+ },
+ {
+  "name": "cedar-nil-elements-kept",
+  "pkg": "policy/cedar",
+  "file": "value.go",
+  "find": "\t\t\tif ok {\n\t\t\t\titems = append(items, item)",
+  "replace": "\t\t\tif ok || true {\n\t\t\t\titems = append(items, item)"
+ },
+ {
+  "name": "cedar-bad-url-is-none",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "if err != nil || u.Hostname() == \"\" {\n\t\t\treturn \"\", bad()",
+  "replace": "if err != nil || u.Hostname() == \"\" {\n\t\t\treturn \"none\", nil"
+ },
+ {
+  "name": "rs-alg-allow-list-dropped",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "alg == \"\" || !v.allow[alg]",
+  "replace": "alg == \"\""
+ },
+ {
+  "name": "rs-token-cap-dropped",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if token == \"\" || len(token) > MaxTokenBytes {",
+  "replace": "if token == \"\" {"
+ },
+ {
+  "name": "rs-whitespace-allowed",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "c >= '0' && c <= '9', c == '-', c == '_':",
+  "replace": "c >= '0' && c <= '9', c == '-', c == '_', c == ' ', c == '\\n', c == '=':"
+ },
+ {
+  "name": "rs-segment-count-dropped",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if dots != 2 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rs-kid-type-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if json.Unmarshal(raw, &h.kid) != nil || h.kid == \"\" || len(h.kid) > 256 {",
+  "replace": "if json.Unmarshal(raw, &h.kid) != nil && false {"
+ },
+ {
+  "name": "rs-issuer-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "json.Unmarshal(c[\"iss\"], &iss) != nil || iss != v.cfg.Issuer",
+  "replace": "json.Unmarshal(c[\"iss\"], &iss) != nil"
+ },
+ {
+  "name": "rs-issuer-prefix",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "iss != v.cfg.Issuer",
+  "replace": "!strings.HasPrefix(iss, v.cfg.Issuer)"
+ },
+ {
+  "name": "rs-audience-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if !audienceMatches(c[\"aud\"], v.cfg.Audience) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rs-audience-array-prefix",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "\t\tif a == want {",
+  "replace": "\t\tif strings.HasPrefix(a, want) {"
+ },
+ {
+  "name": "rs-audience-string-prefix",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "return one == want",
+  "replace": "return strings.HasPrefix(one, want)"
+ },
+ {
+  "name": "rs-audience-array-any",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "var many []string\n\tif json.Unmarshal(raw, &many) != nil {\n\t\treturn false\n\t}",
+  "replace": "var many []string\n\tif json.Unmarshal(raw, &many) != nil {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "rs-exp-optional",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if !ok || !now.Before(exp.Add(v.cfg.Leeway)) { // exp is required",
+  "replace": "if ok && !now.Before(exp.Add(v.cfg.Leeway)) { // exp is required"
+ },
+ {
+  "name": "rs-exp-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if !ok || !now.Before(exp.Add(v.cfg.Leeway)) { // exp is required",
+  "replace": "if !ok || (!now.Before(exp.Add(v.cfg.Leeway)) && false) { // exp is required"
+ },
+ {
+  "name": "rs-exp-leeway-ignored",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "!now.Before(exp.Add(v.cfg.Leeway))",
+  "replace": "!now.Before(exp)"
+ },
+ {
+  "name": "rs-exp-leeway-negative",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "!now.Before(exp.Add(v.cfg.Leeway))",
+  "replace": "!now.Before(exp.Add(-v.cfg.Leeway))"
+ },
+ {
+  "name": "rs-exp-boundary-inclusive",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "!now.Before(exp.Add(v.cfg.Leeway))",
+  "replace": "now.After(exp.Add(v.cfg.Leeway))"
+ },
+ {
+  "name": "rs-nbf-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if !ok || now.Add(v.cfg.Leeway).Before(nbf) {",
+  "replace": "if !ok || (now.Add(v.cfg.Leeway).Before(nbf) && false) {"
+ },
+ {
+  "name": "rs-nbf-leeway-ignored",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "now.Add(v.cfg.Leeway).Before(nbf)",
+  "replace": "now.Before(nbf)"
+ },
+ {
+  "name": "rs-nbf-leeway-doubled",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "now.Add(v.cfg.Leeway).Before(nbf)",
+  "replace": "now.Add(2 * v.cfg.Leeway).Before(nbf)"
+ },
+ {
+  "name": "rs-iat-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if !ok || now.Add(v.cfg.Leeway).Before(iat) {",
+  "replace": "if !ok || (now.Add(v.cfg.Leeway).Before(iat) && false) {"
+ },
+ {
+  "name": "rs-subject-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "|| !ident.Tool(p.Subject)",
+  "replace": ""
+ },
+ {
+  "name": "rs-tenant-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "|| !ident.Tool(p.Tenant)",
+  "replace": ""
+ },
+ {
+  "name": "rs-claims-duplicates-allowed",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if strictjson.Decode(payload, &c, false) != nil || c == nil {",
+  "replace": "if json.Unmarshal(payload, &c) != nil || c == nil {"
+ },
+ {
+  "name": "rs-numeric-date-string-allowed",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if dec.Decode(&n) != nil || raw[0] == '\"' {",
+  "replace": "if dec.Decode(&n) != nil {"
+ },
+ {
+  "name": "rs-key-use-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if k.Use != \"\" && k.Use != \"sig\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rs-key-alg-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if k.Algorithm != \"\" && k.Algorithm != alg {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rs-key-type-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if !keyFits(k.Key, alg) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rs-rsa-size-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": " && k.N.BitLen() >= minRSABits",
+  "replace": ""
+ },
+ {
+  "name": "rs-ec-curve-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "return k.Curve == elliptic.P256()",
+  "replace": "return true"
+ },
+ {
+  "name": "rs-ec-curve-384-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "return k.Curve == elliptic.P384()",
+  "replace": "return true"
+ },
+ {
+  "name": "rs-ec-curve-521-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "return k.Curve == elliptic.P521()",
+  "replace": "return true"
+ },
+ {
+  "name": "rs-rsa-key-for-ec-alg",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "(strings.HasPrefix(alg, \"RS\") || strings.HasPrefix(alg, \"PS\"))",
+  "replace": "true"
+ },
+ {
+  "name": "rs-no-kid-any-key",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if len(v.keys) == 1 {\n\t\t\treturn v.keys[0], true, false",
+  "replace": "if len(v.keys) >= 1 {\n\t\t\treturn v.keys[0], true, false"
+ },
+ {
+  "name": "rs-duplicate-kid-first-wins",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "return key, n == 1, n > 1",
+  "replace": "return key, n >= 1, false"
+ },
+ {
+  "name": "rs-unknown-kid-refresh-always",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "UnknownKIDRefreshInterval = time.Minute",
+  "replace": "UnknownKIDRefreshInterval = 0"
+ },
+ {
+  "name": "rs-failed-refresh-backoff-none",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "FailedRefreshBackoff = 5 * time.Second",
+  "replace": "FailedRefreshBackoff = 0"
+ },
+ {
+  "name": "rs-default-cache-lifetime",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "DefaultCacheLifetime = time.Hour",
+  "replace": "DefaultCacheLifetime = 10 * time.Minute"
+ },
+ {
+  "name": "rs-cache-min-dropped",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "\tif lifetime < MinCacheLifetime {\n\t\tlifetime = MinCacheLifetime\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "rs-cache-no-store-ignored",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "case part == \"no-store\" || part == \"no-cache\":\n\t\t\t\tlifetime = 0",
+  "replace": "case part == \"no-store\" || part == \"no-cache\":"
+ },
+ {
+  "name": "rs-cache-never-expires",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "v.expires = now.Add(lifetime)",
+  "replace": "v.expires = now.Add(1000 * lifetime)"
+ },
+ {
+  "name": "rs-fetch-status-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if resp.StatusCode != http.StatusOK {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rs-jwks-size-unchecked",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if err != nil || len(body) > MaxJWKSBytes {",
+  "replace": "if err != nil {"
+ },
+ {
+  "name": "rs-private-keys-used",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if k.Valid() && k.IsPublic() {",
+  "replace": "if k.Valid() {"
+ },
+ {
+  "name": "rs-failed-refresh-drops-cache",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "\t\tif err != nil {\n\t\t\tv.lastFailed = true",
+  "replace": "\t\tif err != nil {\n\t\t\tv.keys = nil\n\t\t\tv.lastFailed = true"
+ },
+ {
+  "name": "rs-failed-refresh-is-token-invalid",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "\t\tif err != nil {\n\t\t\treturn v.err(profile.JWKSUnavailable)\n\t\t}\n\t\treturn nil",
+  "replace": "\t\tif err != nil {\n\t\t\treturn v.err(profile.TokenInvalid)\n\t\t}\n\t\treturn nil"
+ },
+ {
+  "name": "rs-empty-key-set-accepted",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "\tif len(keys) == 0 {\n\t\treturn nil, 0, errFetch\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "rs-cache-ignores-expiry",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "fresh := len(v.keys) > 0 && now.Before(v.expires)",
+  "replace": "fresh := len(v.keys) > 0"
+ },
+ {
+  "name": "rs-stale-cache-served-on-failure",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "case !fresh && !neverTried && failed && sinceAttempt < FailedRefreshBackoff:",
+  "replace": "case !fresh && !neverTried && failed && sinceAttempt < FailedRefreshBackoff && false:"
+ },
+ {
+  "name": "rs-redirects-followed",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }",
+  "replace": ""
+ },
+ {
+  "name": "rs-given-client-ignored",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "v := &Verifier{pkg: pkg, cfg: *cfg, allow: map[string]bool{}, client: client,",
+  "replace": "v := &Verifier{pkg: pkg, cfg: *cfg, allow: map[string]bool{}, client: nil,"
+ },
+ {
+  "name": "rs-fetch-concurrent",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "sem: make(chan struct{}, 1)",
+  "replace": "sem: make(chan struct{}, 64)"
+ },
+ {
+  "name": "rs-config-unknown-alg-accepted",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if !known[a] {\n\t\t\treturn bad()",
+  "replace": "if false {\n\t\t\treturn bad()"
+ },
+ {
+  "name": "rs-leeway-uncapped",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "cfg.Leeway < 0 || cfg.Leeway > profile.MaxLeeway ||",
+  "replace": "cfg.Leeway < 0 ||"
+ },
+ {
+  "name": "rs-bearer-scheme",
+  "pkg": "resourceserver",
+  "file": "http.go",
+  "find": "!strings.EqualFold(scheme, \"Bearer\")",
+  "replace": "(!strings.EqualFold(scheme, \"Bearer\") && false)"
+ },
+ {
+  "name": "rs-bearer-multiple-headers",
+  "pkg": "resourceserver",
+  "file": "http.go",
+  "find": "if len(values) != 1 {",
+  "replace": "if len(values) < 1 {"
+ },
+ {
+  "name": "rs-status-cancelled",
+  "pkg": "resourceserver",
+  "file": "http.go",
+  "find": "case profile.JWKSUnavailable, profile.Cancelled:",
+  "replace": "case profile.JWKSUnavailable:"
+ },
+ {
+  "name": "rs-status-jwks",
+  "pkg": "resourceserver",
+  "file": "http.go",
+  "find": "case profile.JWKSUnavailable, profile.Cancelled:",
+  "replace": "case profile.Cancelled:"
+ },
+ {
+  "name": "rs-challenge-missing",
+  "pkg": "resourceserver",
+  "file": "http.go",
+  "find": "if status == http.StatusUnauthorized {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rs-error-body-echoes",
+  "pkg": "resourceserver",
+  "file": "http.go",
+  "find": "w.Write([]byte(string(code) + \": \" + code.Text() + \"\\n\"))",
+  "replace": "w.Write([]byte(err.Error() + \"\\n\"))"
+ },
+ {
+  "name": "rs-jwks-cleartext-allowed",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "&& !hostname.IsLoopback(o.Host)",
+  "replace": "&& false"
+ },
+ {
+  "name": "rs-crit-and-b64-allowed",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if _, has := fields[\"crit\"]; has { // this verifier understands no critical header, and b64 (RFC 7797) is not a JWT\n\t\treturn h, nil, v.err(profile.TokenInvalid)\n\t}\n\tif _, has := fields[\"b64\"]; has {\n\t\treturn h, nil, v.err(profile.TokenInvalid)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "strictjson-case-folded-key-accepted",
+  "pkg": "internal/strictjson",
+  "file": "strictjson.go",
+  "find": "if strings.EqualFold(name, k) {",
+  "replace": "if false && strings.EqualFold(name, k) {"
+ },
+ {
+  "name": "strictjson-exact-keys-skipped",
+  "pkg": "internal/strictjson",
+  "file": "strictjson.go",
+  "find": "if err := exactKeys(data, reflect.TypeOf(v), strict); err != nil {",
+  "replace": "if err := exactKeys(data, reflect.TypeOf(v), strict); false && err != nil {"
+ },
+ {
+  "name": "strictjson-nested-struct-unchecked",
+  "pkg": "internal/strictjson",
+  "file": "strictjson.go",
+  "find": "if err := checkKeys(val, ft, strict); err != nil {",
+  "replace": "if err := checkKeys(val, ft, strict); false && err != nil {"
+ },
+ {
+  "name": "cred-entry-decoded-leniently",
+  "pkg": "credfile",
+  "file": "credfile.go",
+  "find": "strictjson.Decode(raw, &e, false)",
+  "replace": "json.Unmarshal(raw, &e)"
+ },
+ {
+  "name": "profile-env-unknown-value-ignored",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "\t\tdefault:\n\t\t\treturn fail(flag)\n",
+  "replace": "\t\tdefault:\n"
+ },
+ {
+  "name": "profile-proxy-not-listed",
+  "pkg": "profile",
+  "file": "load.go",
+  "find": "if !listed(e.Allow, host) {",
+  "replace": "if false && !listed(e.Allow, host) {"
+ },
+ {
+  "name": "egress-proxy-not-listed",
+  "pkg": "egress",
+  "file": "egress.go",
+  "find": "err != nil || !p.listed(h) {",
+  "replace": "err != nil || (false && !p.listed(h)) {"
+ },
+ {
+  "name": "hostname-mapped-trailing-dot-kept",
+  "pkg": "internal/hostname",
+  "file": "hostname.go",
+  "find": "ascii = strings.TrimSuffix(ascii, \".\")",
+  "replace": "ascii = strings.TrimSuffix(ascii, \"\")"
+ },
+ {
+  "name": "netrange-siit-and-reserved-allowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"::/8\", \"2001::/32\",",
+  "replace": "\"2001::/32\","
+ },
+ {
+  "name": "netrange-discard-only-allowed",
+  "pkg": "internal/netrange",
+  "file": "netrange.go",
+  "find": "\"fec0::/10\", \"100::/64\",",
+  "replace": "\"fec0::/10\","
+ },
+ {
+  "name": "cedar-target-host-not-normalised",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "host, err := hostname.Normalize(u.Hostname())",
+  "replace": "host, err := strings.ToLower(u.Hostname()), error(nil)\n\t\t_ = hostname.Normalize"
+ },
+ {
+  "name": "cedar-relative-path-target",
+  "pkg": "policy/cedar",
+  "file": "cedar.go",
+  "find": "if !filepath.IsAbs(resource) {",
+  "replace": "if false && !filepath.IsAbs(resource) {"
+ },
+ {
+  "name": "policy-allow-with-reason-allowed",
+  "pkg": "policy",
+  "file": "policy.go",
+  "find": "if dec.Reason != \"\" { // an allow",
+  "replace": "if false && dec.Reason != \"\" { // an allow"
+ },
+ {
+  "name": "audit-session-file-follows-symlink",
+  "pkg": "audit",
+  "file": "sink.go",
+  "find": "syscall.O_NONBLOCK|noFollow, 0o600",
+  "replace": "syscall.O_NONBLOCK, 0o600"
+ },
+ {
+  "name": "rs-fetch-on-caller-context",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "v.fetch(context.WithoutCancel(ctx))",
+  "replace": "v.fetch(ctx)"
+ },
+ {
+  "name": "rs-fetch-panic-unrecovered",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "defer func() { _ = recover() }()",
+  "replace": "defer func() {}()"
+ },
+ {
+  "name": "rs-one-bad-key-refuses-the-set",
+  "pkg": "resourceserver",
+  "file": "resourceserver.go",
+  "find": "if err := k.UnmarshalJSON(raw); err != nil {\n\t\t\tcontinue",
+  "replace": "if err := k.UnmarshalJSON(raw); err != nil {\n\t\t\treturn nil, 0, errFetch"
+ }
+]

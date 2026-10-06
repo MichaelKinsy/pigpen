@@ -1,0 +1,10 @@
+go 1.26.0
+
+// The nested policy/cedar module requires this module at v0.0.0; the replace resolves that requirement to the
+// directory, as the repository's own go.work files for tests do (scripts/go-modules.mjs).
+use (
+	.
+	./policy/cedar
+)
+
+replace github.com/MichaelKinsy/pigpen/components/hardening v0.0.0 => .

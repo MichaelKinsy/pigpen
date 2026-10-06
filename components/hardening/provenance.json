@@ -1,0 +1,54 @@
+{
+  "origin": "original",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [],
+  "dependencies": [
+    {
+      "name": "cedar-go",
+      "authors": ["Cedar Contributors"],
+      "url": "https://github.com/cedar-policy/cedar-go",
+      "revision": "cda92d0d9345fce26b36366288afd3c909fc7bd8",
+      "license": "Apache-2.0",
+      "licenseFile": "licenses/cedar-go-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "go-jose",
+      "authors": ["Square Inc.", "go-jose contributors"],
+      "url": "https://github.com/go-jose/go-jose",
+      "revision": "b10771e937ddcce419e30fc0c2b9e38464a333d0",
+      "license": "Apache-2.0",
+      "licenseFile": "licenses/go-jose-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "golang.org/x/net",
+      "authors": ["The Go Authors"],
+      "url": "https://go.googlesource.com/net",
+      "revision": "540d04cfe5028e2655754591a4d3e08c586809f2",
+      "license": "BSD-3-Clause",
+      "licenseFile": "licenses/x-net-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "golang.org/x/text",
+      "authors": ["The Go Authors"],
+      "url": "https://go.googlesource.com/text",
+      "revision": "fafe4a06967e06550e69ee42787d9902845d2a3f",
+      "license": "BSD-3-Clause",
+      "licenseFile": "licenses/x-text-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "golang.org/x/exp",
+      "authors": ["The Go Authors"],
+      "url": "https://go.googlesource.com/exp",
+      "revision": "46d9e7742f1ec8239841d61597d0c6ca93b0e0a4",
+      "license": "BSD-3-Clause",
+      "licenseFile": "licenses/x-exp-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}
