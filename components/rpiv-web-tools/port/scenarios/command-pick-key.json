@@ -1,0 +1,56 @@
+{
+  "name": "command-pick-key",
+  "description": "/web-tools: pick Tavily, type a key, then show: the key is saved masked and Tavily is active.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "pick",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools"
+      },
+      "ui": [
+        {
+          "value": "Tavily"
+        },
+        {
+          "value": "tvly-secret-1234"
+        }
+      ]
+    },
+    {
+      "name": "show",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools --show"
+      }
+    },
+    {
+      "name": "pick-again",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools"
+      },
+      "ui": [
+        {
+          "value": "Tavily ✓ (configured)"
+        },
+        {
+          "value": ""
+        }
+      ]
+    }
+  ],
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

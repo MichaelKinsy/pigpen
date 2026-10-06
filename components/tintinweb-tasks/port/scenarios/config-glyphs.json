@@ -1,0 +1,72 @@
+{
+  "name": "config-glyphs",
+  "description": "A global tasks-config.json sets glyphs: /tasks lists rows with them, and a malformed sortOrder falls back.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Open one",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Done one",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "2",
+            "status": "completed"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    },
+    {
+      "name": "tasks",
+      "rpc": {
+        "type": "prompt",
+        "message": "/tasks"
+      },
+      "ui": [
+        {
+          "value": "View all tasks (2)"
+        },
+        {
+          "cancelled": true
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ],
+  "agentFiles": {
+    "tasks-config.json": "{\"glyphs\": {\"pending\": \"[ ]\", \"completed\": \"[x]\", \"inProgress\": \"[>]\"}, \"sortOrder\": \"newest\"}"
+  }
+}

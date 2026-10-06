@@ -1,0 +1,32 @@
+{
+  "name": "mode-lite",
+  "description": "/ponytail lite sets the session level; the next request carries that level's ruleset.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "set",
+      "rpc": {
+        "type": "prompt",
+        "message": "/ponytail lite"
+      }
+    },
+    {
+      "name": "hello",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/ponytail\" && printf '%s' '{\"hideStatus\": true}' > \"$HOME/.config/ponytail/config.json\""
+    ]
+  ]
+}

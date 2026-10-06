@@ -1,0 +1,101 @@
+{
+  "name": "searxng-search",
+  "description": "web_search through a SearXNG instance: the request it sends, the results, a trimmed count, a 403 hint and an empty answer.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "go release",
+            "max_results": 2
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "forbidden"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "nothing here"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "servers": {
+    "searx": {
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/search",
+          "query": {
+            "q": "go release"
+          },
+          "status": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"results\": [{\"title\": \"Go 1.27\", \"url\": \"https://go.dev/doc/go1.27\", \"content\": \"Release notes.\"}, {\"title\": \"Second\", \"url\": \"https://example.com/2\", \"content\": \"More.\"}, {\"title\": \"Third\", \"url\": \"https://example.com/3\", \"content\": \"Even more.\"}]}"
+        },
+        {
+          "method": "GET",
+          "path": "/search",
+          "query": {
+            "q": "forbidden"
+          },
+          "status": 403,
+          "body": "json disabled"
+        },
+        {
+          "method": "GET",
+          "path": "/search",
+          "query": {
+            "q": "nothing here"
+          },
+          "status": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"results\": []}"
+        }
+      ]
+    }
+  },
+  "env": {
+    "SEARXNG_URL": "{{server:searx}}/",
+    "WEB_SEARCH_PROVIDER": "searxng",
+    "SEARXNG_API_KEY": "tok-123456"
+  },
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

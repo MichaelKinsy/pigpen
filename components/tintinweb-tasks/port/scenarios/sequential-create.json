@@ -1,0 +1,136 @@
+{
+  "name": "sequential-create",
+  "description": "Ten TaskCreate calls (one per turn), then a list.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 1",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 2",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 3",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 4",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 5",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 6",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 7",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 8",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 9",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Task 10",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    }
+  ]
+}

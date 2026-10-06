@@ -1,0 +1,33 @@
+{
+  "name": "guidance-override",
+  "description": "A guidance override in the config replaces the tool snippet and guidelines in the request; an invalid one falls back.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/rpiv-web-tools\" && printf '%s' '{\"guidance\": {\"web_search\": {\"promptSnippet\": \"Custom search snippet\", \"promptGuidelines\": [\"Rule S1\", \"Rule S2\"]}, \"web_fetch\": {\"promptSnippet\": 123, \"promptGuidelines\": \"not an array\"}}}' > \"$HOME/.config/rpiv-web-tools/config.json\""
+    ]
+  ],
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

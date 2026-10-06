@@ -1,0 +1,72 @@
+{
+  "name": "ollama-search",
+  "description": "web_search through a local Ollama instance: the experimental endpoint, then a 401 hint.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "ollama news"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "signin"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "servers": {
+    "ollama": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/api/experimental/web_search",
+          "status": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"results\": [{\"title\": \"Ollama\", \"url\": \"https://ollama.com\", \"content\": \"Run models.\"}]}",
+          "times": 1
+        },
+        {
+          "method": "POST",
+          "path": "/api/experimental/web_search",
+          "status": 401,
+          "body": "unauthorized"
+        }
+      ]
+    }
+  },
+  "env": {
+    "OLLAMA_HOST": "{{server:ollama}}",
+    "WEB_SEARCH_PROVIDER": "ollama"
+  },
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

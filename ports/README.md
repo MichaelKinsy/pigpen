@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 3 · porting: 0 · review: 6 · done: 19
+Status: queued: 2 · porting: 0 · review: 11 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -32,12 +32,16 @@ Status: queued: 3 · porting: 0 · review: 6 · done: 19
 | `rpiv-todo` | [rpiv-mono](https://github.com/juicesharp/rpiv-mono) | [`61904e69e1a5`](https://github.com/juicesharp/rpiv-mono/commit/61904e69e1a50e12585bdf15f0310e633a62ba36) | MIT | juicesharp | `components/todo` | `pigpen-rpiv-todo` | review | Go port of @juicesharp/rpiv-todo 2.11.0 from rpiv-mono, https://github.com/juicesharp/rpiv-mono, by juicesharp (MIT), at commit 61904e69e1a50e12585bdf15f0310e633a62ba36. |
 | `rpiv-ask-user-question` | [rpiv-mono](https://github.com/juicesharp/rpiv-mono) | [`61904e69e1a5`](https://github.com/juicesharp/rpiv-mono/commit/61904e69e1a50e12585bdf15f0310e633a62ba36) | MIT | juicesharp | `components/ask-user-question` | `pigpen-ask-user-question` | review | Go port of @juicesharp/rpiv-ask-user-question 2.11.0 from rpiv-mono, https://github.com/juicesharp/rpiv-mono, by juicesharp (MIT), at commit 61904e69e1a50e12585bdf15f0310e633a62ba36. |
 | `plannotator` | [plannotator](https://github.com/backnotprop/plannotator) | [`3c9d79b36dbf`](https://github.com/backnotprop/plannotator/commit/3c9d79b36dbfbfcb7a180a52a9b7c60fc7d315df) | MIT OR Apache-2.0 | backnotprop | `components/plannotator` | `pigpen-plannotator` | queued | Go port of @plannotator/pi-extension 0.27.22 from plannotator, https://github.com/backnotprop/plannotator, by backnotprop (MIT OR Apache-2.0), at commit 3c9d79b36dbfbfcb7a180a52a9b7c60fc7d315df. |
-| `ponytail` | [ponytail](https://github.com/DietrichGebert/ponytail) | [`1d95ff7d39de`](https://github.com/DietrichGebert/ponytail/commit/1d95ff7d39de12d87014ea40d4e22201bddc501b) | MIT | Dietrich Gebert | `components/ponytail` | `pigpen-ponytail` | queued | Go port of @dietrichgebert/ponytail 4.10.0, https://github.com/DietrichGebert/ponytail, by Dietrich Gebert (MIT), at commit 1d95ff7d39de12d87014ea40d4e22201bddc501b. |
+| `ponytail` | [ponytail](https://github.com/DietrichGebert/ponytail) | [`1d95ff7d39de`](https://github.com/DietrichGebert/ponytail/commit/1d95ff7d39de12d87014ea40d4e22201bddc501b) | MIT | Dietrich Gebert | `components/ponytail` | `pig-essentials` | review | Go port of @dietrichgebert/ponytail 4.10.0, https://github.com/DietrichGebert/ponytail, by Dietrich Gebert (MIT), at commit 1d95ff7d39de12d87014ea40d4e22201bddc501b. |
 | `langfuse-observability` | [pi-observability-plugin](https://github.com/langfuse/pi-observability-plugin) | [`801108fac709`](https://github.com/langfuse/pi-observability-plugin/commit/801108fac709ee5e72aa57b5a03ab4bfb1d2195b) | MIT | Langfuse GmbH | `components/observability` | `pigpen-langfuse` | queued | Go port of @langfuse/pi-observability-plugin 0.1.2, https://github.com/langfuse/pi-observability-plugin, by Langfuse GmbH (MIT), at commit 801108fac709ee5e72aa57b5a03ab4bfb1d2195b. |
 | `pi-subagents` | [pi-subagents](https://github.com/nicobailon/pi-subagents) | [`8a403efba697`](https://github.com/nicobailon/pi-subagents/commit/8a403efba6975988cc0488ec8bb941db5ef1a19e) | MIT | Nico Bailon | `components/subagents` | `pigpen-subagents` | review | Go port of pi-subagents 0.73.1, https://github.com/nicobailon/pi-subagents, by Nico Bailon (MIT), at commit 8a403efba6975988cc0488ec8bb941db5ef1a19e. |
 | `pi-powerline-footer` | [pi-powerline-footer](https://github.com/nicobailon/pi-powerline-footer) | [`859dee671b63`](https://github.com/nicobailon/pi-powerline-footer/commit/859dee671b633fb533b07ceba3e6c1ab1c43360a) | MIT | Nico Bailon | `components/powerline` | `pigpen-powerline` | review | Go port of pi-powerline-footer 0.19.1, https://github.com/nicobailon/pi-powerline-footer, by Nico Bailon (MIT), at commit 859dee671b633fb533b07ceba3e6c1ab1c43360a. |
 | `pi-goal-x` | [pi-goal-x](https://github.com/tmonk/pi-goal-x) | [`64c5ace87f34`](https://github.com/tmonk/pi-goal-x/commit/64c5ace87f3400c0b55ef87f2d2912167f53dbaa) | MIT | Lucas (tmonk) | `components/goal` | `pigpen-goal` | review | Go port of pi-goal-x 0.32.3, https://github.com/tmonk/pi-goal-x, by Lucas (tmonk) (MIT), at commit 64c5ace87f3400c0b55ef87f2d2912167f53dbaa. |
 | `pi-permission-system` | [@gotgenes/pi-permission-system](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system) | [`c5bc74712cd2`](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system/commit/c5bc74712cd2fe808d70246d93d26a092f736676) | MIT | MasuRii and Christopher D. Lasher | `components/permissions` | `pigpen-permissions` | review | Go port of @gotgenes/pi-permission-system 39.0.3, https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system, by MasuRii and Christopher D. Lasher (MIT), at commit c5bc74712cd2fe808d70246d93d26a092f736676. |
+| `tintinweb-tasks` | [pi-tasks](https://github.com/tintinweb/pi-tasks) | [`00ecbd8110f1`](https://github.com/tintinweb/pi-tasks/commit/00ecbd8110f1a4e267791f9cecb2612144c78f6e) | MIT | tintinweb | `components/tintinweb-tasks` | `pig-essentials` | review | Go port of @tintinweb/pi-tasks 0.9.0, https://github.com/tintinweb/pi-tasks, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 00ecbd8110f1a4e267791f9cecb2612144c78f6e. |
+| `rpiv-web-tools` | [rpiv-mono](https://github.com/juicesharp/rpiv-mono) | [`7c9bc924c5bf`](https://github.com/juicesharp/rpiv-mono/commit/7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f) | MIT | juicesharp | `components/rpiv-web-tools` | `pig-essentials` | review | Go port of @juicesharp/rpiv-web-tools 2.12.0, https://github.com/juicesharp/rpiv-mono (packages/rpiv-web-tools), by juicesharp (MIT), at commit 7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f. |
+| `tintinweb-subagents` | [pi-subagents](https://github.com/tintinweb/pi-subagents) | [`4f572eaa04c0`](https://github.com/tintinweb/pi-subagents/commit/4f572eaa04c09d3dbc16e4a5f13a16b295e84e14) | MIT | tintinweb | `components/tintinweb-subagents` | `pig-essentials` | review | Go port of @tintinweb/pi-subagents 0.19.0, https://github.com/tintinweb/pi-subagents, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 4f572eaa04c09d3dbc16e4a5f13a16b295e84e14. |
+| `superpowers` | [superpowers](https://github.com/obra/superpowers) | [`8ca22dba9a94`](https://github.com/obra/superpowers/commit/8ca22dba9a94f28898bbce59f2537ff4d87c747d) | MIT | Jesse Vincent | `components/superpowers` | `pig-essentials` | review | Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v6.4.2, commit 8ca22dba9a94f28898bbce59f2537ff4d87c747d. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT). |
 
 ## How to read it
 
@@ -52,8 +56,7 @@ Status: queued: 3 · porting: 0 · review: 6 · done: 19
 ## Queue order
 
 1. `plannotator`: Plan mode with a browser review UI, code and PR diff review, and annotate-last-message. The flagship demo.
-2. `ponytail`: The "lazy senior dev" mode: /ponytail modes, review, audit, gain and debt commands, plus six skills.
-3. `langfuse-observability`: Traces prompts, turns, generations and tool calls to Langfuse. Opt-in; prompts leave the machine.
+2. `langfuse-observability`: Traces prompts, turns, generations and tool calls to Langfuse. Opt-in; prompts leave the machine.
 
 ## Details
 
@@ -180,8 +183,9 @@ Status: queued: 3 · porting: 0 · review: 6 · done: 19
 
 ### `ponytail`: Ponytail
 
-- Kind: port. The "lazy senior dev" mode: /ponytail modes, review, audit, gain and debt commands, plus six skills.
-- Notes: npm 69,188 in 30 days, 148,287 stars (marketing signal). Size XS, 1-3 days. Do not repeat the author's own 54% claim as ours.
+- Kind: port. The "lazy senior dev" mode: the ruleset at three levels, /ponytail and its review, audit, gain, debt and help commands, and six Skills.
+- Upstream path: `pi-extension` in ponytail
+- Notes: Part of the pig-essentials Piglet (no Node). Ports the Pi extension and the six Skills only; the project's other platform adapters are not ported. 22 twins and 1 named skip of 23, 13 Pi-recorded scenarios, 69 mutations killed. The status indicator is plain text (no theme in the Go SDK). Do not repeat the author's own savings claims as ours.
 
 ### `langfuse-observability`: Langfuse observability
 
@@ -207,3 +211,27 @@ Status: queued: 3 · porting: 0 · review: 6 · done: 19
 
 - Kind: port. Permission rules for tool calls: wildcard patterns, last-match-wins allow/ask/deny, scope merging, and a tool_call gate (partial: the rule engine and tool-name gating).
 - Notes: Partial: the wildcard matcher, rule evaluation and merging, the global config (schema-checked as the original checks it), and the tool_call gate for bash (simple commands and chains of them, with the original's wrapper floors) and tools decided by name, the skill-read gate, and withholding of denied tools. Not ported: the approval dialog, bash parsing, path rules, MCP and skill gates, project and agent scopes. 229 twins, 646 bash decisions and 91 config files recorded from the original, 8 Pi-recorded scenarios, 171 of 171 mutations killed.
+
+### `tintinweb-tasks`: @tintinweb/pi-tasks
+
+- Kind: port. Claude Code-style task tracking: seven task tools, a /tasks menu, a live widget, system reminders, and task execution by subagents over the event bus.
+- Upstream path: `src` in pi-tasks
+- Notes: Part of the pig-essentials Piglet (no Node). 386 twins and 3 named skips of 389 upstream cases, 15 Pi-recorded scenarios, 115 mutations killed. The widget is pre-rendered rows (Go SDK stand-in). Go port green: 386 twins, 15 Pi-recorded scenarios, 115 mutations killed.
+
+### `rpiv-web-tools`: @juicesharp/rpiv-web-tools
+
+- Kind: port. Live web for the model: web_search over ten providers (Brave, Tavily, Serper, Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG, Ollama), web_fetch, and a /web-tools config command.
+- Upstream path: `packages/rpiv-web-tools` in rpiv-mono
+- Notes: Part of the pig-essentials Piglet (no Node). Partial: the GitHub URL interceptor (opt-in) is not ported. 82 twins and 2 named skips, 190 cases deferred by name (index 106, interceptor 84), 14 Pi-recorded scenarios, a differential test of htmlToText and truncateHead, 97 mutations killed. No network or process at startup.
+
+### `tintinweb-subagents`: @tintinweb/pi-subagents (tintinweb)
+
+- Kind: port. Claude Code-style subagents (partial): the Agent tool, get_subagent_result, steer_subagent and /agents, agent types and files, a concurrency queue and the event-bus protocol pi-tasks uses, each agent a child pig process. Not nicobailon/pi-subagents.
+- Upstream path: `src` in pi-subagents
+- Notes: Part of the pig-essentials Piglet (no Node). Partial: a tested slice. Not ported: the JS workflow runtime, scheduling, worktree isolation, @mentions, widget/fleet/viewer UI, memory, nested delegation. 122 twins (agent-types, custom-agents), 1907 cases deferred by name, 3 Pi-recorded scenarios, 81 mutations killed. Agents run as child pig processes. Different project from the nicobailon port.
+
+### `superpowers`: superpowers (obra)
+
+- Kind: port. The fifteen Skills of obra/superpowers v6.4.2 (brainstorming, plans, TDD, debugging, review, verification) as one Skills Package; names carry the pigpen-superpowers- prefix. No Node extension, no hooks.
+- Upstream path: `skills` in superpowers
+- Notes: Part of the pig-essentials Piglet. Only names and Skill references change; the original's Node bootstrap extension and hooks are not included. skills tree vendored byte for byte; 2 kinds of change, recorded in ADAPTATIONS.md.

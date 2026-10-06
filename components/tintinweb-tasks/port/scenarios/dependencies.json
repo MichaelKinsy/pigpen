@@ -1,0 +1,164 @@
+{
+  "name": "dependencies",
+  "description": "Bidirectional blocks, display-time filtering of completed blockers, and the cycle, self and dangling warnings.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Blocker",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Blocked",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Third",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "2",
+            "addBlockedBy": [
+              "1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "3",
+            "addBlockedBy": [
+              "1",
+              "2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskGet",
+          "arguments": {
+            "taskId": "1"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "addBlockedBy": [
+              "2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "addBlocks": [
+              "1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "addBlocks": [
+              "9999"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "status": "completed"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskGet",
+          "arguments": {
+            "taskId": "2"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    }
+  ]
+}

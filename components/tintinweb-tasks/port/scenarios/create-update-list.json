@@ -1,0 +1,94 @@
+{
+  "name": "create-update-list",
+  "description": "Create, start, complete, list and get tasks (TaskCreate, TaskUpdate, TaskList, TaskGet).",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Write tests",
+            "description": "red first",
+            "activeForm": "Writing tests"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Implement",
+            "description": "green next",
+            "metadata": {
+              "area": "core",
+              "size": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "status": "in_progress"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskGet",
+          "arguments": {
+            "taskId": "2"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "status": "completed",
+            "owner": "porter"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    }
+  ]
+}

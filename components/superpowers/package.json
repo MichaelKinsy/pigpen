@@ -1,0 +1,57 @@
+{
+  "name": "@pi-in-go/pigpen-superpowers",
+  "version": "0.1.0",
+  "description": "The skills of obra/superpowers (Jesse Vincent): brainstorming, writing and executing plans, test-driven development, systematic debugging, code review and verification skills, at a pinned release, with PiG's Skill names",
+  "keywords": [
+    "pig-package",
+    "skills",
+    "superpowers",
+    "tdd",
+    "debugging",
+    "planning",
+    "code-review",
+    "pigpen",
+    "skill"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/superpowers"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/superpowers#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "skills",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "skills": [
+      "skills/pigpen-superpowers-brainstorming",
+      "skills/pigpen-superpowers-diagnosing-superpowers",
+      "skills/pigpen-superpowers-dispatching-parallel-agents",
+      "skills/pigpen-superpowers-executing-plans",
+      "skills/pigpen-superpowers-finishing-a-development-branch",
+      "skills/pigpen-superpowers-receiving-code-review",
+      "skills/pigpen-superpowers-requesting-code-review",
+      "skills/pigpen-superpowers-subagent-driven-development",
+      "skills/pigpen-superpowers-systematic-debugging",
+      "skills/pigpen-superpowers-test-driven-development",
+      "skills/pigpen-superpowers-using-git-worktrees",
+      "skills/pigpen-superpowers-using-superpowers",
+      "skills/pigpen-superpowers-verification-before-completion",
+      "skills/pigpen-superpowers-writing-plans",
+      "skills/pigpen-superpowers-writing-skills"
+    ]
+  }
+}

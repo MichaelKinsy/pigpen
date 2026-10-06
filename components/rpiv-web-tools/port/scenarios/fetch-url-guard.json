@@ -1,0 +1,137 @@
+{
+  "name": "fetch-url-guard",
+  "description": "web_fetch refuses malformed URLs, other protocols and private or loopback hosts, and a raw flag does not matter.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "not a url"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "ftp://example.com/x"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "file:///etc/passwd"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "http://localhost:8080/"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "http://127.0.0.1/"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "http://10.0.0.5/"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "http://169.254.169.254/latest/meta-data"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "http://192.168.1.1/",
+            "raw": true
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "http://172.16.0.1/"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "http://[::1]/"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "http://foo.localhost/"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

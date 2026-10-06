@@ -1,0 +1,60 @@
+{
+  "name": "unknown-env-provider",
+  "description": "A bogus WEB_SEARCH_PROVIDER throws on search and on fetch, but a valid per-call provider still names its own error.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "q"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://example.com/"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "q",
+            "provider": "exa"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "env": {
+    "WEB_SEARCH_PROVIDER": "bogus"
+  },
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

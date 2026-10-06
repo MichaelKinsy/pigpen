@@ -1,0 +1,28 @@
+{
+  "name": "config-default-written",
+  "description": "Saving a default keeps the other fields of the config file, in order.",
+  "llm": [],
+  "steps": [
+    {
+      "name": "save",
+      "rpc": {
+        "type": "prompt",
+        "message": "/ponytail default full"
+      }
+    },
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/ponytail status"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/ponytail\" && printf '%s' '{\"zeta\": {\"a\": [1, {\"b\": 2}], \"c\": null}, \"hideStatus\": true, \"alpha\": \"x\"}' > \"$HOME/.config/ponytail/config.json\""
+    ]
+  ]
+}

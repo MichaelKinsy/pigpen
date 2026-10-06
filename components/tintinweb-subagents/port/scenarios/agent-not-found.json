@@ -1,0 +1,54 @@
+{
+  "name": "agent-not-found",
+  "description": "get_subagent_result and steer_subagent name an agent that does not exist.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "get_subagent_result",
+          "arguments": {
+            "agent_id": "nope"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "steer_subagent",
+          "arguments": {
+            "agent_id": "nope",
+            "message": "x"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

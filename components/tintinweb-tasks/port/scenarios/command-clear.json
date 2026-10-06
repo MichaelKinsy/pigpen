@@ -1,0 +1,110 @@
+{
+  "name": "command-clear",
+  "description": "/tasks: Clear completed, Clear all and the empty list. (Create task is a layer-1 twin: PiG's RPC mode adds an empty placeholder to an input request.)",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Done one",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "status": "completed"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Open one",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Open two",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    },
+    {
+      "name": "clear-completed",
+      "rpc": {
+        "type": "prompt",
+        "message": "/tasks"
+      },
+      "ui": [
+        {
+          "value": "Clear completed (1)"
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    },
+    {
+      "name": "clear-all",
+      "rpc": {
+        "type": "prompt",
+        "message": "/tasks"
+      },
+      "ui": [
+        {
+          "value": "Clear all (2)"
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "rpc": {
+        "type": "prompt",
+        "message": "/tasks"
+      },
+      "ui": [
+        {
+          "value": "View all tasks (0)"
+        },
+        {
+          "value": "← Back"
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ]
+}

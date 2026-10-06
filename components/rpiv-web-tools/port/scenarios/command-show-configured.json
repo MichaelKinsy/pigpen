@@ -1,0 +1,37 @@
+{
+  "name": "command-show-configured",
+  "description": "/web-tools --show with a config file, an environment key and a legacy key (every key masked).",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "show",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools --show"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/rpiv-web-tools\" && printf '%s' '{\"provider\": \"exa\", \"apiKey\": \"legacy-brave-key-9999\", \"apiKeys\": {\"exa\": \"exa-secret-key-1234\", \"tavily\": \"tvly-cfg-key-5678\"}, \"baseUrls\": {\"ollama\": \"http://ollama.lan:11434\"}}' > \"$HOME/.config/rpiv-web-tools/config.json\""
+    ]
+  ],
+  "env": {
+    "SERPER_API_KEY": "env-serper-key-4321",
+    "SEARXNG_URL": "https://search.example.org"
+  },
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

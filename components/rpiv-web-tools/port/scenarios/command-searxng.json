@@ -1,0 +1,44 @@
+{
+  "name": "command-searxng",
+  "description": "/web-tools: SearXNG asks for a URL and an optional key; the picker then marks it configured and active.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "pick",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools"
+      },
+      "ui": [
+        {
+          "value": "SearXNG"
+        },
+        {
+          "value": "http://search.internal:8080"
+        },
+        {
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "show",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools --show"
+      }
+    }
+  ],
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

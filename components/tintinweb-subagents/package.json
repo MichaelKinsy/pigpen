@@ -1,0 +1,41 @@
+{
+  "name": "@pi-in-go/pigpen-tintinweb-subagents",
+  "version": "0.1.0",
+  "description": "Go port of @tintinweb/pi-subagents (partial): Claude Code-style subagents for PiG (the Agent tool, get_subagent_result, steer_subagent, /agents, the event-bus protocol pi-tasks uses), each agent a child pig process",
+  "keywords": [
+    "pig-package",
+    "subagents",
+    "agents",
+    "delegation",
+    "tintinweb",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/tintinweb-subagents"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/tintinweb-subagents#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/tintinweb-subagents"
+    ]
+  }
+}

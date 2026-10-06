@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-05",
+  "updatedAt": "2026-10-06",
   "entries": [
     {
       "id": "a2a",
@@ -114,6 +114,32 @@
         "The judge is the model PiG is configured with (default) or the TypeSafe API, through the shared Go client Package components/typesafe. Content goes to that provider; /jev names it.",
         "Fails open: when the judge is unavailable, tool calls run unjudged. A judgment is probabilistic advice, not a sandbox.",
         "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+      ]
+    },
+    {
+      "id": "pig-essentials",
+      "kind": "piglet",
+      "name": "pig-essentials",
+      "description": "A fast single-binary PiG with the essentials, no Node: web search and fetch (rpiv-web-tools), sub-agents (tintinweb pi-subagents, a tested slice), Claude Code-style task tracking (tintinweb pi-tasks), structured questions (rpiv-ask-user-question), the ponytail mode, and the Superpowers skills. Everything stays quiet until used: no network call and no process at start-up.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-essentials"
+      },
+      "manifestSha256": "0958d69eee23036ed97d2b2bf25629a786446d3b993beffb359c3912eb05108f",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Go only, no Node. Members: the rpiv-web-tools search and fetch tools (juicesharp, MIT), @tintinweb/pi-subagents (tintinweb, MIT, partial: see its PORT.md), @tintinweb/pi-tasks (tintinweb, MIT), rpiv-ask-user-question (juicesharp, MIT, partial), ponytail (Dietrich Gebert, MIT) and the fifteen Superpowers skills (Jesse Vincent, MIT). Each port keeps the original, the recorded Pi traces and its mutation list under components/<name>/port. Run npm run stage before using its generated manifest under dist/staged.",
+        "No release is published; version 0.1.0 is a development default. Nothing starts at start-up: no network call, no process."
       ]
     },
     {

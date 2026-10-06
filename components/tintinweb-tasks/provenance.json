@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-tasks",
+      "authors": [
+        "tintinweb"
+      ],
+      "url": "https://github.com/tintinweb/pi-tasks",
+      "revision": "00ecbd8110f1a4e267791f9cecb2612144c78f6e",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

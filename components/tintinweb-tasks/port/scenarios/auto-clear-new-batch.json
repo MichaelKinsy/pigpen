@@ -1,0 +1,99 @@
+{
+  "name": "auto-clear-new-batch",
+  "description": "A finished list stays visible after its run and is retired when the next batch starts; ids stay monotonic.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Old one",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Old two",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "status": "completed"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "2",
+            "status": "completed"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "first batch done"
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Fresh work",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "first batch"
+      }
+    },
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "second batch"
+      }
+    }
+  ]
+}

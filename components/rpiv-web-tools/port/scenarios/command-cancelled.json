@@ -1,0 +1,61 @@
+{
+  "name": "command-cancelled",
+  "description": "/web-tools: cancelled at the provider picker, cancelled at the key prompt, and an empty key with none saved.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cancel-pick",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools"
+      },
+      "ui": [
+        {
+          "cancelled": true
+        }
+      ]
+    },
+    {
+      "name": "cancel-key",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools"
+      },
+      "ui": [
+        {
+          "value": "Brave"
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    },
+    {
+      "name": "empty-key",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools"
+      },
+      "ui": [
+        {
+          "value": "Brave"
+        },
+        {
+          "value": "   "
+        }
+      ]
+    }
+  ],
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "new-session",
+  "description": "/eq-new starts a session: the session-scoped list of the old session is not the new session's.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Before the switch",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "first done"
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    },
+    {
+      "name": "new",
+      "rpc": {
+        "type": "prompt",
+        "message": "/eq-new"
+      }
+    },
+    {
+      "name": "after",
+      "rpc": {
+        "type": "prompt",
+        "message": "again"
+      }
+    }
+  ]
+}

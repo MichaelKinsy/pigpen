@@ -1,0 +1,74 @@
+{
+  "name": "reminder-stale",
+  "description": "A task left in_progress while the agent works with other tools: the reminder is injected into the next model request.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Keep going",
+            "description": "d",
+            "activeForm": "Going"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskUpdate",
+          "arguments": {
+            "taskId": "1",
+            "status": "in_progress"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "a.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "a.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "a.txt"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    }
+  ],
+  "files": {
+    "a.txt": "hello\n"
+  }
+}

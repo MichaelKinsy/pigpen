@@ -1,0 +1,644 @@
+[
+ {
+  "name": "brave-count-param",
+  "file": "providers.go",
+  "find": "q.Set(\"count\", fmt.Sprint(maxResults))",
+  "replace": "q.Set(\"limit\", fmt.Sprint(maxResults))"
+ },
+ {
+  "name": "brave-token-header",
+  "file": "providers.go",
+  "find": "\"X-Subscription-Token\": p.apiKey",
+  "replace": "\"Authorization\": \"Bearer \" + p.apiKey"
+ },
+ {
+  "name": "tavily-key-in-body",
+  "file": "providers.go",
+  "find": "ordered{{\"api_key\", p.apiKey}, {\"query\", query}, {\"max_results\", maxResults}}",
+  "replace": "ordered{{\"query\", query}, {\"max_results\", maxResults}}"
+ },
+ {
+  "name": "tavily-extract-endpoint",
+  "file": "providers.go",
+  "find": "\"https://api.tavily.com/extract\"",
+  "replace": "\"https://api.tavily.com/search\""
+ },
+ {
+  "name": "tavily-failed-results-ignored",
+  "file": "providers.go",
+  "find": "if failed := asList(data[\"failed_results\"]); len(failed) > 0 {",
+  "replace": "if failed := asList(data[\"failed_results\"]); len(failed) > 100 {"
+ },
+ {
+  "name": "serper-num-field",
+  "file": "providers.go",
+  "find": "ordered{{\"q\", query}, {\"num\", maxResults}}",
+  "replace": "ordered{{\"q\", query}, {\"limit\", maxResults}}"
+ },
+ {
+  "name": "serper-link-field",
+  "file": "providers.go",
+  "find": "key(\"title\"), key(\"link\"), key(\"snippet\")",
+  "replace": "key(\"title\"), key(\"url\"), key(\"snippet\")"
+ },
+ {
+  "name": "exa-snippet-limit",
+  "file": "providers.go",
+  "find": "{\"maxCharacters\", 300}",
+  "replace": "{\"maxCharacters\", 3000}"
+ },
+ {
+  "name": "exa-fetch-limit",
+  "file": "providers.go",
+  "find": "{\"maxCharacters\", 1000000}",
+  "replace": "{\"maxCharacters\", 100000}"
+ },
+ {
+  "name": "exa-fetch-title-dropped",
+  "file": "providers.go",
+  "find": "Title: asStr(first[\"title\"]), ContentType: \"text/plain\"}, nil\n}\n\n// ---- You.com",
+  "replace": "ContentType: \"text/plain\"}, nil\n}\n\n// ---- You.com"
+ },
+ {
+  "name": "youcom-snippet-order",
+  "file": "providers.go",
+  "find": "if s := asList(m[\"snippets\"]); len(s) > 0 && s[0] != nil {\n\t\t\treturn asStr(s[0])\n\t\t}\n\t\treturn asStr(m[\"description\"])",
+  "replace": "if d := asStr(m[\"description\"]); d != \"\" {\n\t\t\treturn d\n\t\t}\n\t\treturn asStr(asList(m[\"snippets\"])[0])"
+ },
+ {
+  "name": "youcom-fetch-format",
+  "file": "providers.go",
+  "find": "{\"formats\", []string{\"markdown\"}}})\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\traw, err := decodeJSON(res)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tvar item",
+  "replace": "{\"formats\", []string{\"html\"}}})\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\traw, err := decodeJSON(res)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tvar item"
+ },
+ {
+  "name": "jina-search-url-unencoded",
+  "file": "providers.go",
+  "find": "u, _ := url.Parse(\"https://s.jina.ai/\" + encodeURIComponent(query))",
+  "replace": "u, _ := url.Parse(\"https://s.jina.ai/\" + query)"
+ },
+ {
+  "name": "jina-results-not-capped",
+  "file": "providers.go",
+  "find": "if len(rs) > maxResults {\n\t\trs = rs[:maxResults]\n\t}\n\treturn &searchResponse{query, rs}, nil",
+  "replace": "return &searchResponse{query, rs}, nil"
+ },
+ {
+  "name": "jina-nested-results-lost",
+  "file": "providers.go",
+  "find": "items = asList(asObj(data)[\"results\"])",
+  "replace": "items = nil"
+ },
+ {
+  "name": "jina-empty-body-accepted",
+  "file": "providers.go",
+  "find": "if jsTrim(string(data)) == \"\" {",
+  "replace": "if len(data) == 0 {"
+ },
+ {
+  "name": "firecrawl-success-ignored",
+  "file": "providers.go",
+  "find": "if ok, _ := data[\"success\"].(bool); !ok {",
+  "replace": "if ok, _ := data[\"success\"].(bool); !ok && false {"
+ },
+ {
+  "name": "firecrawl-error-text",
+  "file": "providers.go",
+  "find": "msg = \"scrape failed\"",
+  "replace": "msg = \"failed\""
+ },
+ {
+  "name": "perplexity-field",
+  "file": "providers.go",
+  "find": "key(\"title\"), key(\"url\"), key(\"snippet\"))}, nil\n}\n\n// ---- SearXNG",
+  "replace": "key(\"title\"), key(\"url\"), key(\"content\"))}, nil\n}\n\n// ---- SearXNG"
+ },
+ {
+  "name": "api-error-format",
+  "file": "providers.go",
+  "find": "return nil, fmt.Errorf(\"%s %s API error (%d): %s\", b.lb, kind, res.StatusCode, text)",
+  "replace": "return nil, fmt.Errorf(\"%s %s API error: %d %s\", b.lb, kind, res.StatusCode, text)"
+ },
+ {
+  "name": "missing-key-text",
+  "file": "providers.go",
+  "find": "return fmt.Errorf(\"%s is not set. Run /web-tools to configure, or export the env var.\", b.env)",
+  "replace": "return fmt.Errorf(\"%s is not set.\", b.env)"
+ },
+ {
+  "name": "searxng-safesearch",
+  "file": "providers.go",
+  "find": "q.Set(\"safesearch\", \"0\")",
+  "replace": "q.Set(\"safesearch\", \"1\")"
+ },
+ {
+  "name": "searxng-trailing-slash",
+  "file": "providers.go",
+  "find": "func stripTrailingSlashes(u string) string { return strings.TrimRight(u, \"/\") }",
+  "replace": "func stripTrailingSlashes(u string) string { return u }"
+ },
+ {
+  "name": "searxng-auth-header",
+  "file": "providers.go",
+  "find": "headers[\"Authorization\"] = \"Bearer \" + p.apiKey\n\t}\n\treq, _ := http.NewRequestWithContext(ctx, \"GET\", u.String(), nil)",
+  "replace": "_ = headers\n\t}\n\treq, _ := http.NewRequestWithContext(ctx, \"GET\", u.String(), nil)"
+ },
+ {
+  "name": "searxng-results-not-capped",
+  "file": "providers.go",
+  "find": "items := asList(asObj(raw)[\"results\"])\n\tif len(items) > maxResults {\n\t\titems = items[:maxResults]\n\t}",
+  "replace": "items := asList(asObj(raw)[\"results\"])"
+ },
+ {
+  "name": "searxng-scheme-check",
+  "file": "providers.go",
+  "find": "if u.Scheme != \"http\" && u.Scheme != \"https\" {\n\t\treturn fmt.Errorf(\"%s must use",
+  "replace": "if false {\n\t\treturn fmt.Errorf(\"%s must use"
+ },
+ {
+  "name": "ollama-local-path",
+  "file": "providers.go",
+  "find": "path := \"/api/web_search\"\n\tif p.local {\n\t\tpath = \"/api/experimental/web_search\"\n\t}",
+  "replace": "path := \"/api/web_search\""
+ },
+ {
+  "name": "ollama-fetch-local-path",
+  "file": "providers.go",
+  "find": "path := \"/api/web_fetch\"\n\tif p.local {\n\t\tpath = \"/api/experimental/web_fetch\"\n\t}",
+  "replace": "path := \"/api/web_fetch\""
+ },
+ {
+  "name": "ollama-local-hosts",
+  "file": "providers.go",
+  "find": "return h == \"localhost\" || h == \"127.0.0.1\" || h == \"0.0.0.0\" || h == \"[::1]\"",
+  "replace": "return h == \"localhost\" || h == \"127.0.0.1\""
+ },
+ {
+  "name": "ollama-401-hint",
+  "file": "providers.go",
+  "find": "\" (run `ollama signin` to authenticate)\"",
+  "replace": "\" (sign in)\""
+ },
+ {
+  "name": "ollama-refused-text",
+  "file": "providers.go",
+  "find": "Make sure Ollama is running (ollama serve).",
+  "replace": "Is Ollama running?"
+ },
+ {
+  "name": "ollama-bearer",
+  "file": "providers.go",
+  "find": "h[\"Authorization\"] = \"Bearer \" + p.apiKey",
+  "replace": "_ = p"
+ },
+ {
+  "name": "fetch-failed-text",
+  "file": "providers.go",
+  "find": "func (e *fetchFailed) Error() string { return \"fetch failed\" }",
+  "replace": "func (e *fetchFailed) Error() string { return e.cause.Error() }"
+ },
+ {
+  "name": "unknown-provider-text",
+  "file": "providers.go",
+  "find": "return nil, fmt.Errorf(\"Unknown search provider: \\\"%s\\\"\", name)",
+  "replace": "return nil, fmt.Errorf(\"Unknown provider: \\\"%s\\\"\", name)"
+ },
+ {
+  "name": "html-script-kept",
+  "file": "fetch.go",
+  "find": "text := scriptBlockRe.ReplaceAllString(html, \"\")",
+  "replace": "text := html"
+ },
+ {
+  "name": "html-entity-order",
+  "file": "fetch.go",
+  "find": "text = strings.ReplaceAll(text, \"&amp;\", \"&\")\n\ttext = strings.ReplaceAll(text, \"&lt;\", \"<\")",
+  "replace": "text = strings.ReplaceAll(text, \"&lt;\", \"<\")\n\ttext = strings.ReplaceAll(text, \"&amp;\", \"&\")"
+ },
+ {
+  "name": "html-blank-lines",
+  "file": "fetch.go",
+  "find": "blankRunRe      = regexp.MustCompile(`\\n{3,}`)",
+  "replace": "blankRunRe      = regexp.MustCompile(`\\n{4,}`)"
+ },
+ {
+  "name": "html-block-closers",
+  "file": "fetch.go",
+  "find": "</(p|div|h[1-6]|li|tr|br|blockquote|pre|section|article|header|footer|nav|details|summary)>",
+  "replace": "</(p|div|h[1-6]|li|tr|br|blockquote|pre|section|article)>"
+ },
+ {
+  "name": "html-title-trim",
+  "file": "fetch.go",
+  "find": "return jsTrim(anyTagRe.ReplaceAllString(m[1], \"\"))",
+  "replace": "return anyTagRe.ReplaceAllString(m[1], \"\")"
+ },
+ {
+  "name": "content-type-audio",
+  "file": "fetch.go",
+  "find": "[]string{\"image/\", \"video/\", \"audio/\"}",
+  "replace": "[]string{\"image/\", \"video/\"}"
+ },
+ {
+  "name": "fetch-error-text",
+  "file": "fetch.go",
+  "find": "return nil, fmt.Errorf(\"HTTP %d %s for %s\", res.StatusCode, http.StatusText(res.StatusCode), rawURL)",
+  "replace": "return nil, fmt.Errorf(\"HTTP %d for %s\", res.StatusCode, rawURL)"
+ },
+ {
+  "name": "fetch-raw-ignored",
+  "file": "fetch.go",
+  "find": "if !raw && isHTMLContentType(contentType) {",
+  "replace": "if isHTMLContentType(contentType) {"
+ },
+ {
+  "name": "fetch-user-agent",
+  "file": "fetch.go",
+  "find": "userAgent         = \"Mozilla/5.0 (compatible; rpiv-pi/1.0)\"",
+  "replace": "userAgent         = \"rpiv-pi/1.0\""
+ },
+ {
+  "name": "fetch-content-length",
+  "file": "fetch.go",
+  "find": "if cl := res.Header.Get(\"Content-Length\"); cl != \"\" {",
+  "replace": "if cl := res.Header.Get(\"Content-Length\"); cl == \"\" {"
+ },
+ {
+  "name": "key-env-over-config",
+  "file": "webtools.go",
+  "find": "if k := envTrim(meta.EnvVar); k != \"\" {\n\t\t\treturn k, true\n\t\t}",
+  "replace": "if k := envTrim(meta.EnvVar); k != \"\" && false {\n\t\t\treturn k, true\n\t\t}"
+ },
+ {
+  "name": "key-legacy-any-provider",
+  "file": "webtools.go",
+  "find": "if name == legacyKeyProvider {\n\t\tif k, _ := cfg.str(\"apiKey\")",
+  "replace": "if true {\n\t\tif k, _ := cfg.str(\"apiKey\")"
+ },
+ {
+  "name": "env-provider-not-validated",
+  "file": "webtools.go",
+  "find": "if source == \"env\" {\n\t\t\tif err := assertKnownProvider(n); err != nil {",
+  "replace": "if source == \"never\" {\n\t\t\tif err := assertKnownProvider(n); err != nil {"
+ },
+ {
+  "name": "override-validated-against-env",
+  "file": "webtools.go",
+  "find": "if override != nil {\n\t\tif err := assertKnownProvider(*override); err != nil {",
+  "replace": "if override != nil && envTrim(\"WEB_SEARCH_PROVIDER\") == \"\" {\n\t\tif err := assertKnownProvider(*override); err != nil {"
+ },
+ {
+  "name": "active-config-over-env",
+  "file": "webtools.go",
+  "find": "if e := envTrim(\"WEB_SEARCH_PROVIDER\"); e != \"\" {\n\t\treturn e, \"env\"\n\t}\n\tif p, _ := cfg.str(\"provider\"); p != \"\" {\n\t\treturn p, \"config\"\n\t}",
+  "replace": "if p, _ := cfg.str(\"provider\"); p != \"\" {\n\t\treturn p, \"config\"\n\t}\n\tif e := envTrim(\"WEB_SEARCH_PROVIDER\"); e != \"\" {\n\t\treturn e, \"env\"\n\t}"
+ },
+ {
+  "name": "unknown-provider-list",
+  "file": "webtools.go",
+  "find": "\"Unknown web_search provider: \\\"%s\\\". Valid providers: %s.\"",
+  "replace": "\"Unknown web_search provider: \\\"%s\\\". Valid: %s.\""
+ },
+ {
+  "name": "base-url-config-over-env",
+  "file": "webtools.go",
+  "find": "if u := envTrim(meta.BaseURLEnvVar); u != \"\" {\n\t\treturn u\n\t}\n\tif u, _ := cfg.baseURL(meta.Name); jsTrim(u) != \"\" {\n\t\treturn jsTrim(u)\n\t}",
+  "replace": "if u, _ := cfg.baseURL(meta.Name); jsTrim(u) != \"\" {\n\t\treturn jsTrim(u)\n\t}\n\tif u := envTrim(meta.BaseURLEnvVar); u != \"\" {\n\t\treturn u\n\t}"
+ },
+ {
+  "name": "mask-width",
+  "file": "webtools.go",
+  "find": "head, tail := string(u[:min(4, len(u))]), string(u[max(0, len(u)-4):])",
+  "replace": "head, tail := string(u[:min(3, len(u))]), string(u[max(0, len(u)-3):])"
+ },
+ {
+  "name": "clamp-max",
+  "file": "webtools.go",
+  "find": "maxSearchResults     = 10",
+  "replace": "maxSearchResults     = 20"
+ },
+ {
+  "name": "clamp-default",
+  "file": "webtools.go",
+  "find": "defaultSearchResults = 5",
+  "replace": "defaultSearchResults = 10"
+ },
+ {
+  "name": "guard-172",
+  "file": "webtools.go",
+  "find": "case a == 172 && b >= 16 && b <= 31:",
+  "replace": "case a == 172 && b >= 16 && b <= 30:"
+ },
+ {
+  "name": "guard-link-local",
+  "file": "webtools.go",
+  "find": "case a == 169 && b == 254:",
+  "replace": "case a == 169 && b == 253:"
+ },
+ {
+  "name": "guard-localhost-subdomain",
+  "file": "webtools.go",
+  "find": "if h == \"localhost\" || strings.HasSuffix(h, \".localhost\") {",
+  "replace": "if h == \"localhost\" {"
+ },
+ {
+  "name": "guard-ipv6-unique-local",
+  "file": "webtools.go",
+  "find": "strings.HasPrefix(h, \"fe80:\") || strings.HasPrefix(h, \"fc\") || strings.HasPrefix(h, \"fd\")",
+  "replace": "strings.HasPrefix(h, \"fe80:\") || strings.HasPrefix(h, \"fc\")"
+ },
+ {
+  "name": "guard-protocol-text",
+  "file": "webtools.go",
+  "find": "\"Unsupported URL protocol: %s:. Only http and https are supported.\"",
+  "replace": "\"Unsupported URL protocol: %s. Only http and https are supported.\""
+ },
+ {
+  "name": "truncate-byte-newline",
+  "file": "webtools.go",
+  "find": "if i > 0 {\n\t\t\tlineBytes++\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "truncate-first-line",
+  "file": "webtools.go",
+  "find": "if len(lines[0]) > maxBytes {",
+  "replace": "if len(lines[0]) > maxBytes*2 {"
+ },
+ {
+  "name": "truncate-line-limit",
+  "file": "webtools.go",
+  "find": "defaultMaxLines      = 2000",
+  "replace": "defaultMaxLines      = 2001"
+ },
+ {
+  "name": "size-kb-decimals",
+  "file": "webtools.go",
+  "find": "return fmt.Sprintf(\"%.1fKB\", float64(b)/1024)",
+  "replace": "return fmt.Sprintf(\"%.0fKB\", float64(b)/1024)"
+ },
+ {
+  "name": "footer-text",
+  "file": "webtools.go",
+  "find": "omitted. Full content saved to: %s]",
+  "replace": "omitted. Saved to: %s]"
+ },
+ {
+  "name": "header-title",
+  "file": "webtools.go",
+  "find": "lines = append(lines, \"**Title:** \"+title)",
+  "replace": "lines = append(lines, \"**Title**: \"+title)"
+ },
+ {
+  "name": "results-body-format",
+  "file": "webtools.go",
+  "find": "text += fmt.Sprintf(\"%d. **%s**\\n   %s\\n   %s\\n\\n\", i+1, r.Title, r.URL, r.Snippet)",
+  "replace": "text += fmt.Sprintf(\"%d. **%s**\\n  %s\\n  %s\\n\\n\", i+1, r.Title, r.URL, r.Snippet)"
+ },
+ {
+  "name": "no-results-text",
+  "file": "webtools.go",
+  "find": "return fmt.Sprintf(\"No results found for \\\"%s\\\".\", query)",
+  "replace": "return fmt.Sprintf(\"No results for \\\"%s\\\".\", query)"
+ },
+ {
+  "name": "fetch-ignores-provider-fetch",
+  "file": "webtools.go",
+  "find": "if fp, ok := p.(fetchProvider); ok {",
+  "replace": "if fp, ok := p.(fetchProvider); ok && false {"
+ },
+ {
+  "name": "fetch-details-contentlength",
+  "file": "webtools.go",
+  "find": "details = append(details, kv{\"contentLength\", *resp.ContentLength})",
+  "replace": "_ = resp.ContentLength"
+ },
+ {
+  "name": "spill-prefix",
+  "file": "webtools.go",
+  "find": "os.MkdirTemp(\"\", \"rpiv-fetch-\")",
+  "replace": "os.MkdirTemp(\"\", \"fetch-\")"
+ },
+ {
+  "name": "search-partial-update",
+  "file": "webtools.go",
+  "find": "if onUpdate != nil {\n\t\tonUpdate(fmt.Sprintf(\"Searching %s for",
+  "replace": "if false {\n\t\tonUpdate(fmt.Sprintf(\"Searching %s for"
+ },
+ {
+  "name": "config-xdg-relative-accepted",
+  "file": "config.go",
+  "find": "if filepath.IsAbs(expanded) {\n\t\treturn expanded\n\t}",
+  "replace": "return expanded"
+ },
+ {
+  "name": "config-legacy-fallback",
+  "file": "config.go",
+  "find": "raw = loadJSONConfig(filepath.Join(defaultConfigDir(), configName, \"config.json\"))\n\t}",
+  "replace": "raw = map[string]any{}\n\t}"
+ },
+ {
+  "name": "config-salvage-widen-array",
+  "file": "config.go",
+  "find": "case []any:\n\t\t\tdelete(parent, segs[i])\n\t\t\treturn true",
+  "replace": "case []any:\n\t\t\treturn false"
+ },
+ {
+  "name": "config-no-salvage",
+  "file": "config.go",
+  "find": "if s := salvageConfig(raw); s != nil {\n\t\treturn s\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "config-chmod",
+  "file": "config.go",
+  "find": "_ = os.Chmod(path, 0o600)",
+  "replace": "_ = path"
+ },
+ {
+  "name": "config-union-nested-drop",
+  "file": "config.go",
+  "find": "bad(\"interceptors\", \"github\") // a union reports the field itself",
+  "replace": "bad(\"interceptors\", \"github\", \"enabled\")"
+ },
+ {
+  "name": "guidance-empty-guideline",
+  "file": "config.go",
+  "find": "if !ok || s == \"\" {\n\t\t\t\tvalid = false",
+  "replace": "if !ok {\n\t\t\t\tvalid = false"
+ },
+ {
+  "name": "guidance-empty-snippet",
+  "file": "config.go",
+  "find": "if s, ok := g[\"promptSnippet\"].(string); ok && s != \"\" {",
+  "replace": "if s, ok := g[\"promptSnippet\"].(string); ok {"
+ },
+ {
+  "name": "command-show-flag",
+  "file": "command.go",
+  "find": "if strings.Contains(args, \"--show\") {",
+  "replace": "if args == \"--show\" {"
+ },
+ {
+  "name": "command-no-ui-text",
+  "file": "command.go",
+  "find": "ctx.Notify(\"/web-tools requires interactive mode\", \"error\")",
+  "replace": "ctx.Notify(\"/web-tools needs a UI\", \"error\")"
+ },
+ {
+  "name": "command-active-first",
+  "file": "command.go",
+  "find": "for _, p := range providers {\n\t\tif p.Name == active {\n\t\t\tordered = append(ordered, p)\n\t\t}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "command-label-marker",
+  "file": "command.go",
+  "find": "markers = append(markers, \"✓\")",
+  "replace": "markers = append(markers, \"*\")"
+ },
+ {
+  "name": "command-configured-marker",
+  "file": "command.go",
+  "find": "markers = append(markers, \"(configured)\")",
+  "replace": "markers = append(markers, \"(set)\")"
+ },
+ {
+  "name": "command-legacy-key-kept",
+  "file": "command.go",
+  "find": "delete(toSave, \"apiKey\")\n\t\tif !writeConfig(toSave) {\n\t\t\tctx.Notify(fmt.Sprintf(\"Failed to save %s config",
+  "replace": "if !writeConfig(toSave) {\n\t\t\tctx.Notify(fmt.Sprintf(\"Failed to save %s config"
+ },
+ {
+  "name": "command-legacy-key-kept-plain",
+  "file": "command.go",
+  "find": "delete(toSave, \"apiKey\")\n\tif !writeConfig(toSave) {\n\t\tctx.Notify(fmt.Sprintf(\"Failed to save %s API key",
+  "replace": "if !writeConfig(toSave) {\n\t\tctx.Notify(fmt.Sprintf(\"Failed to save %s API key"
+ },
+ {
+  "name": "command-empty-key-saved",
+  "file": "command.go",
+  "find": "if keyToWrite == \"\" {\n\t\treturn unchanged()\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "command-existing-key-ignored",
+  "file": "command.go",
+  "find": "if keyToWrite == \"\" && hasExisting {\n\t\tkeyToWrite = existing\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "command-write-failure-silent",
+  "file": "command.go",
+  "find": "ctx.Notify(fmt.Sprintf(\"Failed to save %s API key to %s — disk write failed\", meta.Label, configPath()), \"error\")",
+  "replace": "ctx.Notify(fmt.Sprintf(\"Saved %s API key to %s\", meta.Label, configPath()), \"info\")"
+ },
+ {
+  "name": "command-searxng-default-url",
+  "file": "command.go",
+  "find": "return def, true, nil\n}",
+  "replace": "return \"\", true, nil\n}"
+ },
+ {
+  "name": "command-key-masked-in-prompt",
+  "file": "command.go",
+  "find": "placeholder = fmt.Sprintf(\"Press Enter to keep current (%s), or type new key\", maskKey(existing))",
+  "replace": "placeholder = fmt.Sprintf(\"Press Enter to keep current (%s), or type new key\", existing)"
+ },
+ {
+  "name": "show-legacy-key",
+  "file": "command.go",
+  "find": "case meta.Name == legacyKeyProvider && hasString(cfg, \"apiKey\"):",
+  "replace": "case false:"
+ },
+ {
+  "name": "show-url-source",
+  "file": "command.go",
+  "find": "resolved, src = meta.DefaultBaseURL, \"default\"",
+  "replace": "resolved, src = meta.DefaultBaseURL, \"config\""
+ },
+ {
+  "name": "show-interceptor-hint",
+  "file": "command.go",
+  "find": "`  ↳ enable:  add  \"interceptors\": { \"github\": true }   to config.json`",
+  "replace": "`  enable it in config.json`"
+ },
+ {
+  "name": "tool-guidance-fallback",
+  "file": "extension.go",
+  "find": "snippet, guidelines := defSnippet, defGuidelines\n\tif g.HasSnippet {\n\t\tsnippet = g.PromptSnippet\n\t}",
+  "replace": "snippet, guidelines := defSnippet, defGuidelines"
+ },
+ {
+  "name": "tool-description",
+  "file": "extension.go",
+  "find": "Search the web for information. Returns a list of results",
+  "replace": "Search the web. Returns a list of results"
+ },
+ {
+  "name": "schema-provider-description",
+  "file": "extension.go",
+  "find": "there is no silent fallback.",
+  "replace": "there is a silent fallback."
+ },
+ {
+  "name": "host-ipv4-forms-unparsed",
+  "file": "util.go",
+  "find": "if !endsInANumber(ascii) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "host-octal-as-decimal",
+  "file": "util.go",
+  "find": "s, radix = s[1:], 8",
+  "replace": "s, radix = s[1:], 10"
+ },
+ {
+  "name": "host-hex-ignored",
+  "file": "util.go",
+  "find": "s[:2] == \"0x\" || s[:2] == \"0X\"",
+  "replace": "s[:2] == \"0X\""
+ },
+ {
+  "name": "host-short-form-shift",
+  "file": "util.go",
+  "find": "v += n << (8 * (3 - i))",
+  "replace": "v += n << (8 * (2 - i))"
+ },
+ {
+  "name": "host-last-part-range",
+  "file": "util.go",
+  "find": "if last >= uint64(1)<<(8*(5-len(nums))) {",
+  "replace": "if last >= uint64(1)<<32 {"
+ },
+ {
+  "name": "host-ipv6-uncompressed",
+  "file": "util.go",
+  "find": "if compress == i {",
+  "replace": "if compress == i && false {"
+ },
+ {
+  "name": "host-ipv6-zone-accepted",
+  "file": "util.go",
+  "find": "|| a.Zone() != \"\" {",
+  "replace": "{"
+ },
+ {
+  "name": "host-idna-skipped",
+  "file": "util.go",
+  "find": "if ascii, err = idnaProfile.ToASCII(h); err != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "host-port-dropped",
+  "file": "util.go",
+  "find": "u.Host = host + \":\" + port",
+  "replace": "u.Host = host"
+ },
+ {
+  "name": "fetch-raw-url-requested",
+  "file": "webtools.go",
+  "find": "fetchViaGenericHTML(ctx, target.Href, rawURL, raw)",
+  "replace": "fetchViaGenericHTML(ctx, target.Href[:0]+rawURL, rawURL, raw)"
+ }
+]

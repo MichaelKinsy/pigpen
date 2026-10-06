@@ -1,0 +1,608 @@
+[
+ {
+  "name": "isvalid-ignores-enabled",
+  "file": "agent_types.go",
+  "find": "return ok && r.m[k].Enabled",
+  "replace": "return ok && (r.m[k].Enabled || true)"
+ },
+ {
+  "name": "fallback-hides-origin",
+  "file": "agent_types.go",
+  "find": "return spawnResolution{OK: true, Type: \"general-purpose\", FellBackFrom: raw}",
+  "replace": "return spawnResolution{OK: true, Type: \"general-purpose\"}"
+ },
+ {
+  "name": "none-case-sensitive",
+  "file": "agent_types.go",
+  "find": "strings.ToLower(configured) == noFallback",
+  "replace": "configured == noFallback"
+ },
+ {
+  "name": "unusable-fallback-accepted",
+  "file": "agent_types.go",
+  "find": "if !ok || !r.m[k].Enabled {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "enabled-type-guesses-case",
+  "file": "agent_types.go",
+  "find": "if k, ok := r.unambiguous(raw); ok && r.m[k].Enabled {\n\t\treturn k",
+  "replace": "if k, ok := r.resolveKey(raw); ok && r.m[k].Enabled {\n\t\treturn k"
+ },
+ {
+  "name": "defaults-disabled-ignored",
+  "file": "agent_types.go",
+  "find": "if !isDefaultsDisabled() {",
+  "replace": "if true {"
+ },
+ {
+  "name": "no-general-purpose-fallback",
+  "file": "agent_types.go",
+  "find": "if gp := r.m[\"general-purpose\"]; gp != nil && gp.Enabled {",
+  "replace": "if gp := r.m[\"general-purpose\"]; gp != nil && gp.Enabled && false {"
+ },
+ {
+  "name": "empty-tools-widened",
+  "file": "agent_types.go",
+  "find": "r.m[k].Enabled && r.m[k].BuiltinToolNames != nil {",
+  "replace": "r.m[k].Enabled && len(r.m[k].BuiltinToolNames) > 0 {"
+ },
+ {
+  "name": "memory-tools-always-listed",
+  "file": "agent_types.go",
+  "find": "if !existing[n] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "user-names-inverted",
+  "file": "agent_types.go",
+  "find": "if r.m[k].IsDefault == defaults {",
+  "replace": "if r.m[k].IsDefault != defaults {"
+ },
+ {
+  "name": "config-view-display-name",
+  "file": "agent_types.go",
+  "find": "if d == \"\" {\n\t\td = c.Name\n\t}",
+  "replace": "if d == \"\" {\n\t\td = \"\"\n\t}"
+ },
+ {
+  "name": "project-dir-source",
+  "file": "agents.go",
+  "find": "{filepath.Join(cwd, \".agents\", \"agents\"), \"project\"},",
+  "replace": "{filepath.Join(cwd, \".agents\", \"agents\"), \"global\"},"
+ },
+ {
+  "name": "enabled-default-off",
+  "file": "agents.go",
+  "find": "Enabled: fm[\"enabled\"] != false,",
+  "replace": "Enabled: fm[\"enabled\"] == true,"
+ },
+ {
+  "name": "negative-max-turns-kept",
+  "file": "agents.go",
+  "find": "if f, ok := v.(float64); ok && f >= 0 {",
+  "replace": "if f, ok := v.(float64); ok {"
+ },
+ {
+  "name": "all-alias-case-sensitive",
+  "file": "agents.go",
+  "find": "func isWildcard(e string) bool { return e == \"*\" || strings.ToLower(e) == \"all\" }",
+  "replace": "func isWildcard(e string) bool { return e == \"*\" || e == \"all\" }"
+ },
+ {
+  "name": "allowed-subagents-all-case",
+  "file": "agents.go",
+  "find": "if i == \"*\" || strings.ToLower(i) == \"all\" {",
+  "replace": "if i == \"*\" || i == \"all\" {"
+ },
+ {
+  "name": "isolation-false-not-off",
+  "file": "agents.go",
+  "find": "case \"off\", \"none\", \"no\", false:",
+  "replace": "case \"off\", \"none\", \"no\":"
+ },
+ {
+  "name": "memory-scope-any",
+  "file": "agents.go",
+  "find": "(s == \"user\" || s == \"project\" || s == \"local\")",
+  "replace": "s != \"\""
+ },
+ {
+  "name": "output-transcript-inverted",
+  "file": "agents.go",
+  "find": "b := v != false",
+  "replace": "b := v == true"
+ },
+ {
+  "name": "declared-colon-name-loaded",
+  "file": "agents.go",
+  "find": "if strings.Contains(declared, \":\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "description-defaults-to-file",
+  "file": "agents.go",
+  "find": "if !hasDesc {\n\t\t\tdesc = name\n\t\t}",
+  "replace": "if !hasDesc {\n\t\t\tdesc = filenameType\n\t\t}"
+ },
+ {
+  "name": "warnings-repeat",
+  "file": "agents.go",
+  "find": "if !this[w] && !warnedLast[w] {",
+  "replace": "if !this[w] {"
+ },
+ {
+  "name": "strict-ignored",
+  "file": "agents.go",
+  "find": "if strict {\n\t\t\t\treturn fmt.Errorf",
+  "replace": "if false {\n\t\t\t\treturn fmt.Errorf"
+ },
+ {
+  "name": "disabled-fallback-claimed",
+  "file": "agents.go",
+  "find": "surviving.SourcePath != \"\" && surviving.Enabled {",
+  "replace": "surviving.SourcePath != \"\" {"
+ },
+ {
+  "name": "empty-frontmatter-block",
+  "file": "frontmatter.go",
+  "find": "if end+3 > 4 {",
+  "replace": "if true {"
+ },
+ {
+  "name": "compact-mapping-allowed",
+  "file": "frontmatter.go",
+  "find": "c != '[' && strings.Contains(rest, \": \")",
+  "replace": "c != '[' && false"
+ },
+ {
+  "name": "bom-kept",
+  "file": "frontmatter.go",
+  "find": "content = strings.TrimPrefix(content, \"\\ufeff\")",
+  "replace": ""
+ },
+ {
+  "name": "queue-lifo",
+  "file": "manager.go",
+  "find": "next = m.queue[0]\n\t\tm.queue = m.queue[1:]",
+  "replace": "next = m.queue[len(m.queue)-1]\n\t\tm.queue = m.queue[:len(m.queue)-1]"
+ },
+ {
+  "name": "foreground-queued",
+  "file": "manager.go",
+  "find": "if background && m.running >= m.maxConcurrent {",
+  "replace": "if m.running >= m.maxConcurrent {"
+ },
+ {
+  "name": "slot-not-released",
+  "file": "manager.go",
+  "find": "if r.Background {\n\t\tm.running--\n\t}",
+  "replace": "if r.Background {\n\t}"
+ },
+ {
+  "name": "consume-running-agent",
+  "file": "manager.go",
+  "find": "if r == nil || r.Status == statusRunning || r.Status == statusQueued {",
+  "replace": "if r == nil {"
+ },
+ {
+  "name": "stopped-reads-as-aborted",
+  "file": "manager.go",
+  "find": "case r.stopped:\n\t\tr.Status = statusStopped",
+  "replace": "case r.stopped:\n\t\tr.Status = statusAborted"
+ },
+ {
+  "name": "steer-finished-agent",
+  "file": "manager.go",
+  "find": "if status != statusRunning || c == nil {",
+  "replace": "if c == nil {"
+ },
+ {
+  "name": "handle-numbering-starts-late",
+  "file": "manager.go",
+  "find": "for n := 2; taken[candidate]; n++ {",
+  "replace": "for n := 3; taken[candidate]; n++ {"
+ },
+ {
+  "name": "ambiguous-ref-resolved",
+  "file": "manager.go",
+  "find": "if found != nil {\n\t\t\t\treturn nil\n\t\t\t}",
+  "replace": "if found != nil {\n\t\t\t}"
+ },
+ {
+  "name": "queued-abort-keeps-queue",
+  "file": "manager.go",
+  "find": "m.queue = append(m.queue[:i], m.queue[i+1:]...)\n\t\t\t\tbreak",
+  "replace": "_ = i\n\t\t\t\tbreak"
+ },
+ {
+  "name": "handle-base-length",
+  "file": "manager.go",
+  "find": "len(r) > 32",
+  "replace": "len(r) > 33"
+ },
+ {
+  "name": "handle-base-empty",
+  "file": "manager.go",
+  "find": "if slug == \"\" {\n\t\treturn \"agent\"\n\t}",
+  "replace": "if slug == \"\" {\n\t\treturn \"\"\n\t}"
+ },
+ {
+  "name": "consumed-still-notified",
+  "file": "extension.go",
+  "find": "if consumed {\n\t\t\treturn\n\t\t}",
+  "replace": "if consumed && false {\n\t\t\treturn\n\t\t}"
+ },
+ {
+  "name": "foreground-announced",
+  "file": "extension.go",
+  "find": "if !r.Background {\n\t\treturn\n\t}",
+  "replace": "if false {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "stopped-on-completed-channel",
+  "file": "extension.go",
+  "find": "return status == statusError || status == statusStopped || status == statusAborted",
+  "replace": "return status == statusError || status == statusAborted"
+ },
+ {
+  "name": "notification-not-escaped",
+  "file": "extension.go",
+  "find": "\"<result>\"+escapeXML(preview)+\"</result>\"",
+  "replace": "\"<result>\"+preview+\"</result>\""
+ },
+ {
+  "name": "notification-not-truncated",
+  "file": "extension.go",
+  "find": "len(u) > resultMaxLen {",
+  "replace": "len(u) > resultMaxLen+1000 {"
+ },
+ {
+  "name": "notification-steers",
+  "file": "extension.go",
+  "find": "DeliverAs: \"followUp\"",
+  "replace": "DeliverAs: \"steer\""
+ },
+ {
+  "name": "protocol-version",
+  "file": "extension.go",
+  "find": "protocolVersion = 2",
+  "replace": "protocolVersion = 3"
+ },
+ {
+  "name": "wrapped-up-unmarked",
+  "file": "extension.go",
+  "find": "return \" (wrapped up at the turn limit — output may be partial)\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "error-status-text",
+  "file": "extension.go",
+  "find": "return \"Error: \" + e",
+  "replace": "return \"Error\""
+ },
+ {
+  "name": "spawn-not-background",
+  "file": "bus.go",
+  "find": "a.start(ctx, typ, prompt, description, \"\", model, \"\", maxTurns, true, false)",
+  "replace": "a.start(ctx, typ, prompt, description, \"\", model, \"\", maxTurns, false, false)"
+ },
+ {
+  "name": "stop-error-text",
+  "file": "bus.go",
+  "find": "errors.New(\"Agent not found\")",
+  "replace": "errors.New(\"Not found\")"
+ },
+ {
+  "name": "explore-model-forced",
+  "file": "bus.go",
+  "find": "spec.Model = \"\" // the original",
+  "replace": "spec.Model = cfg.Model // the original"
+ },
+ {
+  "name": "default-max-turns-ignored",
+  "file": "bus.go",
+  "find": "if a.defaultMaxTurns != nil {",
+  "replace": "if a.defaultMaxTurns != nil && false {"
+ },
+ {
+  "name": "isolated-agent-file-ignored",
+  "file": "bus.go",
+  "find": "|| (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}",
+  "replace": "}"
+ },
+ {
+  "name": "no-session-error",
+  "file": "bus.go",
+  "find": "errors.New(\"No active session\")",
+  "replace": "errors.New(\"no session\")"
+ },
+ {
+  "name": "no-tools-flag",
+  "file": "runner.go",
+  "find": "args = append(args, \"--no-tools\")",
+  "replace": "args = append(args, \"--tools\", \"\")"
+ },
+ {
+  "name": "append-flag",
+  "file": "runner.go",
+  "find": "args = append(args, \"--append-system-prompt\", spec.SystemPrompt)",
+  "replace": "args = append(args, \"--system-prompt\", spec.SystemPrompt)"
+ },
+ {
+  "name": "turn-limit-off-by-one",
+  "file": "runner.go",
+  "find": "!c.wrapped && c.turns >= c.maxTurn",
+  "replace": "!c.wrapped && c.turns > c.maxTurn"
+ },
+ {
+  "name": "grace-abort-off-by-one",
+  "file": "runner.go",
+  "find": "c.turns >= c.maxTurn+c.grace",
+  "replace": "c.turns > c.maxTurn+c.grace"
+ },
+ {
+  "name": "grace-abort-missing",
+  "file": "runner.go",
+  "find": "c.aborted, stop = true, true",
+  "replace": "c.aborted, stop = true, false"
+ },
+ {
+  "name": "grace-default",
+  "file": "runner.go",
+  "find": "const defaultGraceTurns = 5",
+  "replace": "const defaultGraceTurns = 6"
+ },
+ {
+  "name": "grace-setting-ignored",
+  "file": "bus.go",
+  "find": "spec.GraceTurns = a.graceTurns",
+  "replace": "spec.GraceTurns = 0"
+ },
+ {
+  "name": "turn-limit-steer-text",
+  "file": "runner.go",
+  "find": "Wrap up immediately — provide your final answer now.\"",
+  "replace": "Wrap up now: give your final answer.\""
+ },
+ {
+  "name": "final-turn-error-ignored",
+  "file": "runner.go",
+  "find": "case c.lastStop == \"error\":",
+  "replace": "case c.lastStop == \"error\" && false:"
+ },
+ {
+  "name": "final-turn-error-default",
+  "file": "runner.go",
+  "find": "res.Failure = \"provider error with no output\"",
+  "replace": "res.Failure = \"\""
+ },
+ {
+  "name": "final-turn-length-ignored",
+  "file": "runner.go",
+  "find": "case c.lastStop == \"length\" && strings.TrimSpace(c.lastText) == \"\":",
+  "replace": "case c.lastStop == \"length\" && false:"
+ },
+ {
+  "name": "aborted-reads-as-steered",
+  "file": "manager.go",
+  "find": "case res.Aborted:\n\t\tr.Status = statusAborted",
+  "replace": "case res.Aborted:\n\t\tr.Status = statusSteered"
+ },
+ {
+  "name": "failure-reads-as-completed",
+  "file": "manager.go",
+  "find": "case res.Failure != \"\":",
+  "replace": "case res.Failure != \"\" && false:"
+ },
+ {
+  "name": "steered-reads-as-completed",
+  "file": "manager.go",
+  "find": "case res.WrappedUp:\n\t\tr.Status = statusSteered",
+  "replace": "case res.WrappedUp:\n\t\tr.Status = statusCompleted"
+ },
+ {
+  "name": "foreground-note-missing",
+  "file": "tools.go",
+  "find": "strings.Join(stats, \", \"), foregroundOutcomeNote(status), out)",
+  "replace": "strings.Join(stats, \", \"), \"\", out)"
+ },
+ {
+  "name": "partial-output-dropped",
+  "file": "tools.go",
+  "find": "\"%sAgent failed: %s%s\", fallbackNote, errText, partialOutputSuffix(result)",
+  "replace": "\"%sAgent failed: %s%s\", fallbackNote, errText, \"\""
+ },
+ {
+  "name": "tool-use-id-missing",
+  "file": "extension.go",
+  "find": "if r.ToolCallID != \"\" {",
+  "replace": "if r.ToolCallID != \"\" && false {"
+ },
+ {
+  "name": "stopped-note-mild",
+  "file": "extension.go",
+  "find": "return \" (STOPPED BY THE USER before completion — output is partial; the task was NOT finished)\"",
+  "replace": "return \" (stopped)\""
+ },
+ {
+  "name": "fallback-note-text",
+  "file": "tools.go",
+  "find": "`Note: Unknown agent type \"` + fellBack + `\" — using ` + resolved",
+  "replace": "`Note: agent type \"` + fellBack + `\" is unknown; using ` + resolved"
+ },
+ {
+  "name": "harness-pig-ignored",
+  "file": "runner.go",
+  "find": "if b := os.Getenv(\"PIG_HARNESS_BINARY\"); b != \"\" {",
+  "replace": "if b := os.Getenv(\"PIG_HARNESS_BINARY\"); b != \"\" && false {"
+ },
+ {
+  "name": "probe-keeps-ext-socket",
+  "file": "runner.go",
+  "find": "return strings.HasPrefix(kv, \"PIG_EXT_\")",
+  "replace": "return strings.HasPrefix(kv, \"PIG_EXT_NONE_\")"
+ },
+ {
+  "name": "terminate-no-group-signal",
+  "file": "proc_unix.go",
+  "find": "_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)",
+  "replace": "_ = cmd.Process.Signal(syscall.SIGTERM)"
+ },
+ {
+  "name": "stats-tool-calls-ignored",
+  "file": "runner.go",
+  "find": "if f, ok := d[\"toolCalls\"].(float64); ok {",
+  "replace": "if f, ok := d[\"toolCalls\"].(float64); ok && false {"
+ },
+ {
+  "name": "tokens-dropped",
+  "file": "runner.go",
+  "find": "res.Tokens = int(f)",
+  "replace": "res.Tokens = int(f) * 0"
+ },
+ {
+  "name": "child-may-nest",
+  "file": "runner.go",
+  "find": "cmd.Env = append(os.Environ(), depthEnv+\"=1\")",
+  "replace": "cmd.Env = os.Environ()"
+ },
+ {
+  "name": "isolation-flag-dropped",
+  "file": "runner.go",
+  "find": "args = append(args, \"--no-extensions\")",
+  "replace": ""
+ },
+ {
+  "name": "version-probe-any",
+  "file": "runner.go",
+  "find": "err == nil && version.Match(bytes.TrimSpace(out))",
+  "replace": "err == nil && (version.Match(bytes.TrimSpace(out)) || true)"
+ },
+ {
+  "name": "tools-suffix-no-builtins",
+  "file": "tools.go",
+  "find": "return \"no built-ins, extension tools only\"",
+  "replace": "return \"none\""
+ },
+ {
+  "name": "model-label-date",
+  "file": "tools.go",
+  "find": "-\\d{8}$`",
+  "replace": "-\\d{9}$`"
+ },
+ {
+  "name": "resume-prompt",
+  "file": "tools.go",
+  "find": "You are continuing earlier work. Your previous run ended with this answer:",
+  "replace": "Earlier answer:"
+ },
+ {
+  "name": "inherit-context-allowed",
+  "file": "tools.go",
+  "find": "if v, _ := p[\"inherit_context\"].(bool); v {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wait-ignored",
+  "file": "tools.go",
+  "find": "if wait, _ := p[\"wait\"].(bool); wait {",
+  "replace": "if false {"
+ },
+ {
+  "name": "foreground-failure-text",
+  "file": "tools.go",
+  "find": "\"%sAgent failed: %s%s\"",
+  "replace": "\"%sFailure: %s%s\""
+ },
+ {
+  "name": "duration-format",
+  "file": "tools.go",
+  "find": "fmt.Sprintf(\"%.1fs\", float64(ms)/1000)",
+  "replace": "fmt.Sprintf(\"%.2fs\", float64(ms)/1000)"
+ },
+ {
+  "name": "tokens-format",
+  "file": "tools.go",
+  "find": "fmt.Sprintf(\"%.1fk token\", float64(n)/1000)",
+  "replace": "fmt.Sprintf(\"%.2fk token\", float64(n)/1000)"
+ },
+ {
+  "name": "tokens-millions",
+  "file": "tools.go",
+  "find": "case n >= 1_000_000:",
+  "replace": "case n >= 1_000_000_000:"
+ },
+ {
+  "name": "result-consumed-not-marked",
+  "file": "tools.go",
+  "find": "r.Consumed = true\n\t\ta.mgr.mu.Unlock()\n\t\ta.mu.Lock()",
+  "replace": "a.mgr.mu.Unlock()\n\t\ta.mu.Lock()"
+ },
+ {
+  "name": "steer-event",
+  "file": "tools.go",
+  "find": "_ = ctx.Events().Emit(\"subagents:steered\"",
+  "replace": "_ = ctx.Events().Emit(\"subagents:steer\""
+ },
+ {
+  "name": "result-by-name-ignored",
+  "file": "tools.go",
+  "find": "r := a.mgr.resolve(id)\n\tif r == nil {\n\t\treturn notFound(id), nil\n\t}\n\tif wait",
+  "replace": "r := a.mgr.get(id)\n\tif r == nil {\n\t\treturn notFound(id), nil\n\t}\n\tif wait"
+ },
+ {
+  "name": "prompt-header-spacing",
+  "file": "prompts.go",
+  "find": "autonomously.\\n\\n\" + envBlock",
+  "replace": "autonomously.\\n\" + envBlock"
+ },
+ {
+  "name": "prompt-env-git",
+  "file": "prompts.go",
+  "find": "repo = \"Git repository: yes\\nBranch: \" + env.Branch",
+  "replace": "repo = \"Git repository: yes\""
+ },
+ {
+  "name": "prompt-append-base",
+  "file": "prompts.go",
+  "find": "if identity == \"\" {\n\t\t\tidentity = genericBase\n\t\t}",
+  "replace": "if identity == \"\" {\n\t\t\tidentity = \"\"\n\t\t}"
+ },
+ {
+  "name": "env-platform-windows",
+  "file": "prompts.go",
+  "find": "return \"win32\"",
+  "replace": "return \"windows\""
+ },
+ {
+  "name": "git-branch-unknown",
+  "file": "prompts.go",
+  "find": "env.Branch = \"unknown\"",
+  "replace": "env.Branch = \"\""
+ },
+ {
+  "name": "settings-project-wins",
+  "file": "settings.go",
+  "find": "if p.MaxConcurrent != 0 {\n\t\ts.MaxConcurrent = p.MaxConcurrent\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "settings-ceiling",
+  "file": "settings.go",
+  "find": "n <= maxConcurrentCeiling {",
+  "replace": "n <= maxConcurrentCeiling+1 {"
+ },
+ {
+  "name": "fallback-false-spelling",
+  "file": "settings.go",
+  "find": "if !v { // `false` is a spelling of \"none\"",
+  "replace": "if v {"
+ },
+ {
+  "name": "fallback-trimmed",
+  "file": "settings.go",
+  "find": "if s := strings.TrimSpace(v); s != \"\" {",
+  "replace": "if s := strings.TrimLeft(v, \" \"); s != \"\" {"
+ }
+]

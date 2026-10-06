@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-subagents",
+      "authors": [
+        "tintinweb"
+      ],
+      "url": "https://github.com/tintinweb/pi-subagents",
+      "revision": "4f572eaa04c09d3dbc16e4a5f13a16b295e84e14",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

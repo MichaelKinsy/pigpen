@@ -1,0 +1,29 @@
+{
+ "extension": [
+  "extension registers Ponytail commands",
+  "/ponytail updates session mode and injects instructions",
+  "before_agent_start guards missing event and missing systemPrompt (#439, #440)",
+  "session_start restores latest persisted mode",
+  "skill alias commands delegate to Pi skill commands",
+  "normal mode disables persistent instructions",
+  "a request mentioning normal mode stays active",
+  "status bar renders the mode and flips active on agent_start",
+  "status bar stays silent when ui lacks a theme",
+  "PONYTAIL_HIDE_STATUS hides the indicator but keeps ponytail active (#324)",
+  "config.hideStatus hides the indicator but keeps ponytail active (#324)",
+  "PONYTAIL_HIDE_STATUS=0 does not hide the indicator"
+ ],
+ "helpers": [
+  "parsePonytailCommand falls back to full when invoked bare and default is off",
+  "parsePonytailCommand parses modes, status, and default subcommand",
+  "parsePonytailCommand rejects review as a default (session-only mode, #377)",
+  "resolveSessionMode still honors review as a session mode (not a default)",
+  "resolveSessionMode prefers latest persisted session mode",
+  "resolveSessionMode returns fallback when entries is not an array",
+  "readDefaultMode and writeDefaultMode use XDG config path",
+  "readQuietStartup resolves env var, config file, and default in that order",
+  "filterSkillBodyForMode keeps only requested intensity examples and rows",
+  "filterSkillBodyForMode does not drop a rule bullet whose label matches a mode name",
+  "filterSkillBodyForMode keeps rule bullets that contain a colon"
+ ]
+}

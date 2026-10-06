@@ -1,7 +1,7 @@
 {
   "$schema": "./ports.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-10-05",
+  "updatedAt": "2026-10-06",
   "ports": [
     {
       "id": "extension-porter",
@@ -457,20 +457,20 @@
       "id": "ponytail",
       "name": "Ponytail",
       "kind": "port",
-      "summary": "The \"lazy senior dev\" mode: /ponytail modes, review, audit, gain and debt commands, plus six skills.",
+      "summary": "The \"lazy senior dev\" mode: the ruleset at three levels, /ponytail and its review, audit, gain, debt and help commands, and six Skills.",
       "upstream": {
         "name": "ponytail",
         "url": "https://github.com/DietrichGebert/ponytail",
         "commit": "1d95ff7d39de12d87014ea40d4e22201bddc501b",
         "license": "MIT",
-        "author": "Dietrich Gebert"
+        "author": "Dietrich Gebert",
+        "path": "pi-extension"
       },
       "targetPackage": "components/ponytail",
-      "lane": "pigpen-ponytail",
-      "status": "queued",
-      "priority": 4,
+      "lane": "pig-essentials",
+      "status": "review",
       "credit": "Go port of @dietrichgebert/ponytail 4.10.0, https://github.com/DietrichGebert/ponytail, by Dietrich Gebert (MIT), at commit 1d95ff7d39de12d87014ea40d4e22201bddc501b.",
-      "notes": "npm 69,188 in 30 days, 148,287 stars (marketing signal). Size XS, 1-3 days. Do not repeat the author's own 54% claim as ours."
+      "notes": "Part of the pig-essentials Piglet (no Node). Ports the Pi extension and the six Skills only; the project's other platform adapters are not ported. 22 twins and 1 named skip of 23, 13 Pi-recorded scenarios, 69 mutations killed. The status indicator is plain text (no theme in the Go SDK). Do not repeat the author's own savings claims as ours."
     },
     {
       "id": "langfuse-observability",
@@ -562,6 +562,82 @@
       "status": "review",
       "credit": "Go port of @gotgenes/pi-permission-system 39.0.3, https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system, by MasuRii and Christopher D. Lasher (MIT), at commit c5bc74712cd2fe808d70246d93d26a092f736676.",
       "notes": "Partial: the wildcard matcher, rule evaluation and merging, the global config (schema-checked as the original checks it), and the tool_call gate for bash (simple commands and chains of them, with the original's wrapper floors) and tools decided by name, the skill-read gate, and withholding of denied tools. Not ported: the approval dialog, bash parsing, path rules, MCP and skill gates, project and agent scopes. 229 twins, 646 bash decisions and 91 config files recorded from the original, 8 Pi-recorded scenarios, 171 of 171 mutations killed."
+    },
+    {
+      "id": "tintinweb-tasks",
+      "name": "@tintinweb/pi-tasks",
+      "kind": "port",
+      "summary": "Claude Code-style task tracking: seven task tools, a /tasks menu, a live widget, system reminders, and task execution by subagents over the event bus.",
+      "upstream": {
+        "name": "pi-tasks",
+        "url": "https://github.com/tintinweb/pi-tasks",
+        "commit": "00ecbd8110f1a4e267791f9cecb2612144c78f6e",
+        "license": "MIT",
+        "author": "tintinweb",
+        "path": "src"
+      },
+      "targetPackage": "components/tintinweb-tasks",
+      "lane": "pig-essentials",
+      "status": "review",
+      "credit": "Go port of @tintinweb/pi-tasks 0.9.0, https://github.com/tintinweb/pi-tasks, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 00ecbd8110f1a4e267791f9cecb2612144c78f6e.",
+      "notes": "Part of the pig-essentials Piglet (no Node). 386 twins and 3 named skips of 389 upstream cases, 15 Pi-recorded scenarios, 115 mutations killed. The widget is pre-rendered rows (Go SDK stand-in). Go port green: 386 twins, 15 Pi-recorded scenarios, 115 mutations killed."
+    },
+    {
+      "id": "rpiv-web-tools",
+      "name": "@juicesharp/rpiv-web-tools",
+      "kind": "port",
+      "summary": "Live web for the model: web_search over ten providers (Brave, Tavily, Serper, Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG, Ollama), web_fetch, and a /web-tools config command.",
+      "upstream": {
+        "name": "rpiv-mono",
+        "url": "https://github.com/juicesharp/rpiv-mono",
+        "commit": "7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f",
+        "license": "MIT",
+        "author": "juicesharp",
+        "path": "packages/rpiv-web-tools"
+      },
+      "targetPackage": "components/rpiv-web-tools",
+      "lane": "pig-essentials",
+      "status": "review",
+      "credit": "Go port of @juicesharp/rpiv-web-tools 2.12.0, https://github.com/juicesharp/rpiv-mono (packages/rpiv-web-tools), by juicesharp (MIT), at commit 7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f.",
+      "notes": "Part of the pig-essentials Piglet (no Node). Partial: the GitHub URL interceptor (opt-in) is not ported. 82 twins and 2 named skips, 190 cases deferred by name (index 106, interceptor 84), 14 Pi-recorded scenarios, a differential test of htmlToText and truncateHead, 97 mutations killed. No network or process at startup."
+    },
+    {
+      "id": "tintinweb-subagents",
+      "name": "@tintinweb/pi-subagents (tintinweb)",
+      "kind": "port",
+      "summary": "Claude Code-style subagents (partial): the Agent tool, get_subagent_result, steer_subagent and /agents, agent types and files, a concurrency queue and the event-bus protocol pi-tasks uses, each agent a child pig process. Not nicobailon/pi-subagents.",
+      "upstream": {
+        "name": "pi-subagents",
+        "url": "https://github.com/tintinweb/pi-subagents",
+        "commit": "4f572eaa04c09d3dbc16e4a5f13a16b295e84e14",
+        "license": "MIT",
+        "author": "tintinweb",
+        "path": "src"
+      },
+      "targetPackage": "components/tintinweb-subagents",
+      "lane": "pig-essentials",
+      "status": "review",
+      "credit": "Go port of @tintinweb/pi-subagents 0.19.0, https://github.com/tintinweb/pi-subagents, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 4f572eaa04c09d3dbc16e4a5f13a16b295e84e14.",
+      "notes": "Part of the pig-essentials Piglet (no Node). Partial: a tested slice. Not ported: the JS workflow runtime, scheduling, worktree isolation, @mentions, widget/fleet/viewer UI, memory, nested delegation. 122 twins (agent-types, custom-agents), 1907 cases deferred by name, 3 Pi-recorded scenarios, 81 mutations killed. Agents run as child pig processes. Different project from the nicobailon port."
+    },
+    {
+      "id": "superpowers",
+      "name": "superpowers (obra)",
+      "kind": "port",
+      "summary": "The fifteen Skills of obra/superpowers v6.4.2 (brainstorming, plans, TDD, debugging, review, verification) as one Skills Package; names carry the pigpen-superpowers- prefix. No Node extension, no hooks.",
+      "upstream": {
+        "name": "superpowers",
+        "url": "https://github.com/obra/superpowers",
+        "commit": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+        "license": "MIT",
+        "author": "Jesse Vincent",
+        "path": "skills"
+      },
+      "targetPackage": "components/superpowers",
+      "lane": "pig-essentials",
+      "status": "review",
+      "credit": "Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v6.4.2, commit 8ca22dba9a94f28898bbce59f2537ff4d87c747d. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT).",
+      "notes": "Part of the pig-essentials Piglet. Only names and Skill references change; the original's Node bootstrap extension and hooks are not included. skills tree vendored byte for byte; 2 kinds of change, recorded in ADAPTATIONS.md."
     }
   ]
 }
