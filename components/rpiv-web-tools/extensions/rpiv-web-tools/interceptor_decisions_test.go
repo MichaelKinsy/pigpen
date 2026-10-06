@@ -168,7 +168,7 @@ func TestGitHubInterceptorDecisions(t *testing.T) {
 		_, _, _ = g.intercept("https://github.com/owner/repo", false)
 		_, _, _ = g.intercept("https://github.com/owner/repo", false)
 	})
-	tw(t, fGitHub, "resets ghAvailable so the probe re-runs on next call", func(t *testing.T) {
+	tw(t, fGH, "resets ghAvailable so checkGhAvailable re-probes on next call", func(t *testing.T) {
 		g := newInterceptor(true, &fakeRunner{gh: false})
 		eq(t, g.ghProbed, false, "the probe has not run yet")
 		_, _, _ = g.intercept("https://github.com/owner/repo", false)

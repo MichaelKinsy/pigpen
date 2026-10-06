@@ -65,7 +65,7 @@ func TestGitHubTreeRendering(t *testing.T) {
 			t.Fatalf("an escaping symlink must be marked, got:\n%s", tree)
 		}
 	})
-	t.Run("truncates the tree at the entry cap", func(t *testing.T) {
+	tw(t, fGitHubClone, "buildTree truncation at MAX_TREE_ENTRIES (>200 files)", func(t *testing.T) {
 		big := t.TempDir()
 		for i := 0; i < maxTreeEntries+20; i++ {
 			if err := os.WriteFile(filepath.Join(big, "f"+itoa(i)), []byte("x"), 0o644); err != nil {
@@ -103,7 +103,7 @@ func TestGitHubContentRendering(t *testing.T) {
 			t.Fatalf("the exploration hint is missing, got:\n%s", body)
 		}
 	})
-	t.Run("root: falls back to the root tree when the path is missing", func(t *testing.T) {
+	tw(t, fGitHubClone, "blob: falls back to repo root when file not found in clone", func(t *testing.T) {
 		body := generateCloneContent(root, gitHubURLInfo{
 			Owner: "o", Repo: "r", Ref: "main", HasRef: true, Path: "nope", HasPath: true, Type: githubURLBlob,
 		})
@@ -114,7 +114,7 @@ func TestGitHubContentRendering(t *testing.T) {
 			t.Fatalf("the root tree must be shown instead, got:\n%s", body)
 		}
 	})
-	t.Run("blob: returns the file content under a heading", func(t *testing.T) {
+	tw(t, fGitHubClone, "blob: returns file content", func(t *testing.T) {
 		body := generateCloneContent(root, gitHubURLInfo{
 			Owner: "o", Repo: "r", Ref: "main", HasRef: true, Path: "src/main.go", HasPath: true, Type: githubURLBlob,
 		})
@@ -122,7 +122,7 @@ func TestGitHubContentRendering(t *testing.T) {
 			t.Fatalf("the file view is missing, got:\n%s", body)
 		}
 	})
-	t.Run("blob: reports a binary file instead of its bytes", func(t *testing.T) {
+	tw(t, fGitHubClone, "blob: returns binary message for known binary extension (.png)", func(t *testing.T) {
 		body := generateCloneContent(root, gitHubURLInfo{
 			Owner: "o", Repo: "r", Ref: "main", HasRef: true, Path: "logo.png", HasPath: true, Type: githubURLBlob,
 		})
@@ -138,7 +138,7 @@ func TestGitHubContentRendering(t *testing.T) {
 			t.Fatalf("the directory view is wrong, got:\n%s", body)
 		}
 	})
-	t.Run("reads the first README it finds and truncates at 8K", func(t *testing.T) {
+	tw(t, fGitHubClone, "root: truncates README at 8K chars", func(t *testing.T) {
 		body, ok := readReadme(root)
 		if !ok || !strings.Contains(body, "# Fixture") {
 			t.Fatalf("the readme must be found, got %q ok=%v", body, ok)
@@ -196,7 +196,7 @@ func TestGitHubAPIRendering(t *testing.T) {
 		eq(t, cloneDir("/clones", "o", "r", "", false), filepath.Join("/clones", "o", "r"), "dir without ref")
 		eq(t, cloneDir("/clones", "o", "r", "main", true), filepath.Join("/clones", "o", "r@main"), "dir with ref")
 	})
-	t.Run("formats a file size the way the original does", func(t *testing.T) {
+	tw(t, fGitHubClone, "root: formatFileSize shows bytes for tiny files and KB for medium files", func(t *testing.T) {
 		eq(t, formatFileSize(512), "512 B", "bytes")
 		eq(t, formatFileSize(2048), "2.0 KB", "kilobytes")
 		eq(t, formatFileSize(3*1024*1024), "3.0 MB", "megabytes")

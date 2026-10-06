@@ -131,9 +131,6 @@ func (g *gitHubInterceptor) ghAvailableCached() bool {
 	}
 	g.ghPresent = g.runner.ghAvailable()
 	g.ghProbed = true
-	if !g.ghPresent {
-		g.ghHintShown = true
-	}
 	return g.ghPresent
 }
 
