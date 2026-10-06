@@ -22,7 +22,25 @@
 | **4 (done)** | the ten provider `search()` arms + `providers/fetch-helpers.ts` (the HTML pipeline, the content-type guards, the generic HTTP path) | `index` | **2 exact twins** |
 | **5 (done)** | `web-tools.ts` fetch guard (`parseAndAssertHttpUrl`, `isPrivateOrLoopbackHostname`) + the four native fetch arms (tavily, exa, jina, firecrawl) + the generic path the other three delegate to | `index` | **27 exact twins** |
 | **6a (done)** | `providers/interceptors/github.ts` — `parseGitHubUrl`, `resolveGitHubOptions`, `readUserGitHubConfig`, the non-code segments and the token env var | `providers/interceptors/github` | **22 exact twins** |
+| **7 (done)** | `web-tools.ts renderCall`, `renderResult`, the two preview helpers, `instantiateProvider` and the per-tool guidance resolution | `web-tools.render`, `web-tools.guidance`, `index` | **33 exact twins** |
 | 6b | `providers/interceptors/github.ts` — the clone and API paths (gh, git, size and timeout limits, tree and README rendering) + `interceptors/chain.ts` | `(planned)` | 0 |
+
+## Slice 7: what is ported
+
+The tool-call renderer, the per-call provider override and the per-tool guidance.
+
+- **The renderer** — the call header (`WebSearch "query"`, ` via <provider>` when a per-call provider is named,
+  `WebFetch <url>`), the running line (`Searching...` / `Fetching...`), the count line with its pluralization, the
+  collapsed line that shows the count alone, the expanded preview capped at five titles with an overflow line, and
+  the fetch line with its optional title suffix and `(truncated)` marker plus a fifteen-line content preview with the
+  read-tool hint. The theme is an interface of styling functions rather than a TUI type, so the text is a pure
+  function of the result and a theme the twins supply.
+- **The four-tier override** — the per-call `provider` wins, then `WEB_SEARCH_PROVIDER`, then `config.provider`, then
+  brave. The override is validated; the env var is validated **only when it is the tier that won**, so a bogus env
+  var cannot defeat a valid per-call override, and whitespace-only reads as unset.
+- **The per-tool guidance** — each tool resolves its own snippet and guidelines, so overriding one leaves the
+  other at its defaults; a wrong-typed leaf was already dropped by the slice 1 salvage, and an empty snippet is no
+  override. Saving an API key through `/web-tools` carries the guidance and the unknown keys along.
 
 ## Slice 6a: what is ported
 
