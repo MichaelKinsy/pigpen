@@ -7,7 +7,9 @@ release:
   version: 0.1.0
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
-  frontend: ./frontend
+slots:
+  frontend:
+    member: ./frontend
 skills: []
 # The frontend adds no behavior of its own, so the user's own extensions and
 # skills stay available beside it.

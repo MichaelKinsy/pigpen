@@ -22,11 +22,11 @@ export function scratchDir(prefix) {
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 
-/** The directory of a Piglet's frontend member (build.frontend in its piglet.yaml) when it holds go.mod, else undefined. */
+/** The directory of a Piglet's frontend member (slots.frontend.member in its piglet.yaml) when it holds go.mod, else undefined. */
 export function frontendMember(piglet) {
   const manifest = join(piglet, 'piglet.yaml');
   if (!existsSync(manifest)) return undefined;
-  const frontend = parseDocument(readFileSync(manifest, 'utf8'), { uniqueKeys: true }).toJS({ maxAliasCount: 0 })?.build?.frontend;
+  const frontend = parseDocument(readFileSync(manifest, 'utf8'), { uniqueKeys: true }).toJS({ maxAliasCount: 0 })?.slots?.frontend?.member;
   if (typeof frontend !== 'string' || !frontend) return undefined;
   const dir = resolve(piglet, frontend);
   return existsSync(join(dir, 'go.mod')) ? dir : undefined;
@@ -34,7 +34,7 @@ export function frontendMember(piglet) {
 
 /**
  * Every Go module: a component's own root go.mod (a shared library Package), each components/<name>/extensions/<dir>
- * and piglets/<name>/extensions/<dir>, and a Piglet's frontend member (piglet.yaml build.frontend).
+ * and piglets/<name>/extensions/<dir>, and a Piglet's frontend member (piglet.yaml slots.frontend.member).
  */
 export function goModules(directory = root) {
   const found = [];
