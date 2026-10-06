@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { registersNativeProvider } from './go-modules.mjs';
+import { goCaches, registersNativeProvider } from './go-modules.mjs';
 import { checkPackageTag, packageSpec, packageTag } from './packages.mjs';
 import { requirePig } from './pig-bin.mjs';
 
@@ -52,7 +52,19 @@ export function isolatedEnv(scratch, name, extra = {}) {
   const home = join(scratch, 'home-' + name);
   mkdirSync(join(home, 'agent'), { recursive: true });
   return { ...process.env, HOME: home, USERPROFILE: home, PIG_HOME: home, PIG_CODING_AGENT_DIR: join(home, 'agent'), PI_CODING_AGENT_DIR: join(home, 'agent'),
-    PI_TELEMETRY: '0', PI_SKIP_VERSION_CHECK: '1', GIT_TERMINAL_PROMPT: '0', GOTOOLCHAIN: 'local', ...extra };
+    PI_TELEMETRY: '0', PI_SKIP_VERSION_CHECK: '1', GIT_TERMINAL_PROMPT: '0', GOTOOLCHAIN: 'local', ...sharedGoCaches(), ...extra };
+}
+
+// Go's build and module caches default to directories under HOME, so a fresh HOME per Package would rebuild the SDK
+// and every dependency from nothing and download the modules again for each one: on a 4-CPU CI runner the npm install
+// checks then ran past 30 minutes instead of about 6. The caches are content-addressed and safe to share; PiG's own
+// state stays in the isolated home.
+function sharedGoCaches() {
+  try {
+    return goCaches();
+  } catch {
+    return {}; // no Go toolchain: nothing to build, so nothing to share
+  }
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

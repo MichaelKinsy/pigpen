@@ -4,10 +4,13 @@
 # Tiers:
 #   validate        every run: tests, checks, the PiG validator over every manifest, and ONE linux/amd64 build + smoke of
 #                   pig-with-batteries.
+#   slow-checks     every run, in parallel with validate: the live Package and Piglet installs (from tags and from npm)
+#                   and the release rehearsal, one job each so none can push another past its timeout.
 #   platform-matrix every push to main, merge group, manual run, the weekly schedule, and a pull request labelled
 #                   `full-ci`: one job per OS on a native runner builds ALL eleven Piglets for that OS and smokes every Binary.
 #   android-cross   with platform-matrix: compile + vet every module for android/arm64 (Termux), CGO_ENABLED=0.
-#   ci-result       the one required check. Green when validate passed and each other tier passed or was skipped.
+#   ci-result       the one required check. Green when validate and every slow check passed and each other tier passed or
+#                   was skipped.
 name: Validate Pigpen
 on:
   pull_request:
@@ -32,7 +35,8 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    # Measured: this set ran in 5 min 9 s on the hosted runner (run 37333959069, before the slow checks below existed).
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -58,27 +62,77 @@ jobs:
         with:
           go-version-file: .pig-src/go.mod
           cache-dependency-path: '**/go.sum'
-      - name: Build the PiG validator and validate every manifest
-        shell: bash
-        env:
-          PIG_HOME: ${{ runner.temp }}/pig-home
-          PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
+      - name: Build the PiG validator
         run: |
           set -euo pipefail
           mkdir -p .pig-bin
           go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
-          export PIG_BIN="$PWD/.pig-bin/pig"
-          npm run validate
-          node scripts/platform-smoke.mjs --only pig-with-batteries --no-stage
-          npm run test:porter
-          npm run test:tool-scope
-          npm run test:moved
-          npm run test:packages
-          npm run test:npm-packages
-          npm run test:npm-piglets
-          # The release workflow's own steps against a throwaway local repository, stub gh and throwaway key.
-          node scripts/rehearse-release.mjs --pig-src .pig-src
-          npm run test:go-ports
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      # One step per check, so the run shows what each costs (a single shell step hid it, and the job hit its timeout).
+      - name: Validate every manifest
+        run: npm run validate
+      - name: Build and smoke pig-with-batteries (linux/amd64)
+        run: node scripts/platform-smoke.mjs --only pig-with-batteries --no-stage
+      - run: npm run test:porter
+      - run: npm run test:tool-scope
+      - run: npm run test:moved
+      - run: npm run test:go-ports
+
+  # The slow checks that need only the built pig and share nothing with validate, one job each, in parallel. Before the
+  # split they ran after validate's steps in one job and took it past 45 minutes (runs 37391641163, 37413900709), so on
+  # the hosted runner the four together cost at least 40 minutes. Pinned to 4 CPUs with an empty Go build cache they took
+  # test:packages 123 s, test:npm-packages 344 s, test:npm-piglets 285 s and the rehearsal 507 s (21 minutes together),
+  # so the hosted runner is at least about 2x slower than that; each job also builds pig from source first. Timeouts
+  # give each check 2x its share of those 40+ minutes or more, and never less than the check's own node --test timeout
+  # (30 min). Read the real step times from the first runs and tighten them.
+  slow-checks:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: 'Package installs from tags (test:packages)', timeout: 30, run: 'npm run test:packages' }
+          - { name: 'Package installs from npm (test:npm-packages)', timeout: 30, run: 'npm run test:npm-packages' }
+          - { name: 'Piglet sources from npm (test:npm-piglets)', timeout: 30, run: 'npm run test:npm-piglets' }
+          - { name: 'Release rehearsal', timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src' }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the reviewed PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/go.mod
+          cache-dependency-path: '**/go.sum'
+      - name: Build the PiG validator
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.run }}
 
   platform-matrix:
     name: Platform ${{ matrix.target }}
@@ -166,18 +220,20 @@ jobs:
   ci-result:
     name: CI result
     if: ${{ always() }}
-    needs: [validate, platform-matrix, android-cross]
+    needs: [validate, slow-checks, platform-matrix, android-cross]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Require validate, and every other tier that ran
+      - name: Require validate and the slow checks, and every other tier that ran
         env:
           VALIDATE: ${{ needs.validate.result }}
+          SLOW_CHECKS: ${{ needs.slow-checks.result }}
           PLATFORM_MATRIX: ${{ needs.platform-matrix.result }}
           ANDROID_CROSS: ${{ needs.android-cross.result }}
         run: |
-          echo "validate=$VALIDATE platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS"
+          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS"
           [ "$VALIDATE" = success ] || { echo "validate did not pass"; exit 1; }
+          [ "$SLOW_CHECKS" = success ] || { echo "a slow check did not pass"; exit 1; }
           for result in "$PLATFORM_MATRIX" "$ANDROID_CROSS"; do
             case "$result" in
               success | skipped) ;;

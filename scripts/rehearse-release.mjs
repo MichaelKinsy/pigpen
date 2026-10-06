@@ -19,12 +19,15 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { readManifests } from './generate-index.mjs';
+import { goCaches } from './go-modules.mjs';
 import { parsePinnedKey, verifyReceipt } from './receipts.mjs';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2);
 const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
-const pigSrc = option('--pig-src');
+// Absolute: the checkouts below clone it from inside the rehearsal's scratch directory, where a relative path (CI passes
+// `.pig-src`) would not resolve.
+const pigSrc = option('--pig-src') && resolve(option('--pig-src'));
 const pig = process.env.PIG_BIN;
 if (!pigSrc || !pig) throw new Error('usage: PIG_BIN=<pig> node scripts/rehearse-release.mjs --pig-src <PiG checkout at the pinned commit> [--keep]');
 
@@ -36,7 +39,9 @@ const baseEnv = {
   PATH: `${join(R, 'bin')}:${process.env.PATH}`, HOME: join(R, 'home'), USERPROFILE: join(R, 'home'),
   GIT_CONFIG_GLOBAL: join(R, 'home', '.gitconfig'), GIT_CONFIG_SYSTEM: '/dev/null', GIT_TERMINAL_PROMPT: '0',
   GIT_AUTHOR_NAME: 'Rehearsal', GIT_AUTHOR_EMAIL: 'r@example.com', GIT_COMMITTER_NAME: 'Rehearsal', GIT_COMMITTER_EMAIL: 'r@example.com',
-  GOCACHE: process.env.GOCACHE ?? '', GOMODCACHE: process.env.GOMODCACHE ?? '', GOFLAGS: process.env.GOFLAGS ?? '', GOTOOLCHAIN: 'local', TMPDIR: join(R, 'tmp'),
+  // The caller's Go caches, resolved before HOME moves into the workspace: left to default they would land in R/home,
+  // cost a full rebuild and module download per job, and leave read-only module files that stop R from being removed.
+  ...goCaches(), GOFLAGS: process.env.GOFLAGS ?? '', GOTOOLCHAIN: 'local', TMPDIR: join(R, 'tmp'),
   PI_TELEMETRY: '0', PI_SKIP_VERSION_CHECK: '1', GH_RELEASES_DIR: join(R, 'releases'), STUB_GH_LOG: join(R, 'gh.log'),
 };
 for (const dir of ['bin', 'home', 'tmp', 'releases', 'artifacts', 'logs', 'keys']) mkdirSync(join(R, dir), { recursive: true });

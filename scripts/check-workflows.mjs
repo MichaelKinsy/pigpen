@@ -21,6 +21,15 @@ const releaseWrites = { build: ['id-token: write', 'attestations: write'], publi
 // npm-publish.yml publishes with npm trusted publishing (OIDC): id-token in its one publish job, nothing else.
 const npmWrites = { publish: ['id-token: write'] };
 
+/** A positive timeout-minutes, or `${{ matrix.<key> }}` where every matrix.include entry sets <key> to a positive number. */
+function boundedTimeout(job) {
+  const value = job['timeout-minutes'];
+  if (value > 0 && typeof value === 'number') return true;
+  const key = typeof value === 'string' ? /^\$\{\{\s*matrix\.([A-Za-z_][A-Za-z0-9_-]*)\s*\}\}$/.exec(value.trim())?.[1] : undefined;
+  const include = job.strategy?.matrix?.include;
+  return Boolean(key) && Array.isArray(include) && include.length > 0 && include.every((entry) => typeof entry?.[key] === 'number' && entry[key] > 0);
+}
+
 /** Problems with one workflow's hardening; `name` prefixes each message. */
 export function hardeningProblems(name, text) {
   const problems = [];
@@ -39,7 +48,7 @@ export function hardeningProblems(name, text) {
     const allowed = name === 'release.yml' ? releaseWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
     for (const grant of writes(job.permissions)) if (!allowed.includes(grant)) problems.push(`${name}: job ${id}: ${grant}`);
     if (job.uses && !job.uses.startsWith('./') && !shaPinned.test(job.uses)) problems.push(`${name}: ${job.uses} is not pinned to a full commit SHA`);
-    if (!job.uses && !(job['timeout-minutes'] > 0)) problems.push(`${name}: job ${id} has no timeout-minutes`);
+    if (!job.uses && !boundedTimeout(job)) problems.push(`${name}: job ${id} has no timeout-minutes`);
     for (const step of job.steps ?? []) {
       if (!step.uses || step.uses.startsWith('./') || step.uses.startsWith('docker://')) continue;
       if (!shaPinned.test(step.uses)) problems.push(`${name}: ${step.uses} is not pinned to a full commit SHA`);
