@@ -205,11 +205,27 @@ canonical schema, keeps every unknown key, and degrades fail-soft.
 
 ## What the twins do and do not prove
 
-Every upstream test title is claimed by an exact twin or a named skip, and `pigeq twins check` reports no missing case. The twins
-drive the ported logic with a canned HTTP response and a canned `gh`/`git` runner, so they prove behaviour, error text, request shape,
-rendering and every decision branch — but they cannot prove that the real `gh` CLI or the real `git` binary behave as the seams assume,
-nor that a live GitHub API answers as the fixtures do. Those remain the checks a run on a machine with `gh` installed has to make; the
-seams are the seam that lets them run.
+Every upstream test title is claimed by an exact twin or a named skip, and `pigeq twins check` reports no missing case. The canned-runner
+twins prove behaviour, error text, request shape, rendering and every decision branch, but not that the real tools behave as
+the seams assume.
+
+### What the live cases close
+
+`live_github_test.go` and `live_clone_test.go` run the port's own paths against the real `gh` CLI, the real GitHub API and the
+real `git`, and they skip unless `GH_TOKEN`/`GITHUB_TOKEN` is set and gh is installed. Against a public repository they cover
+the gh probe, the repository size, the unknown-repository nil case, the API view of a root, a blob file through its default
+branch, the 100K truncation, the pinned-commit note, and a real shallow clone rendered from disk.
+
+They are not decoration: the clone case caught a defect every canned twin missed. The clone runner derived the local path from
+the last argv element, but the gh form ends its argv with the flags after `--`, so the interceptor reported `--single-branch`
+as the clone path and rendered an empty tree from a clone that had actually succeeded. The path is now passed separately, as
+upstream's `execClone` takes it.
+
+`LIVE_GITHUB_REPO=owner/repo` points the cases at another public repository.
+
+The registration layer is covered by its own tests: what is published, the two parameter schemas against the original's
+field names and descriptions, the override and numeric readers, and the raw listener's verdict.
+
 
 ## Named gaps
 

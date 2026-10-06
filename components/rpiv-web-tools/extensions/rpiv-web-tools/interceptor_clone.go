@@ -46,13 +46,23 @@ type githubRunner interface {
 	ghJSON(path, jq string, timeoutSeconds float64) string
 	// ghRaw runs one `gh api` query and returns its raw stdout, which is what a base64 payload needs.
 	ghRaw(path, jq string, timeoutSeconds float64, maxBufferBytes int) string
-	// clone runs one clone command, returning the local path or "" when it failed.
-	clone(args []string, timeoutSeconds float64) (string, bool)
+	// clone runs one clone command into localPath, reporting whether it succeeded. The path is passed separately
+	// rather than derived from argv: the gh form ends its argv with the flags after --, so the last argument is
+	// not the destination. upstream: execClone(args, localPath, timeoutMs).
+	clone(args []string, localPath string, timeoutSeconds float64) bool
 }
 
 // execRunner is the production runner, shelling out to gh and git exactly as the original does. upstream: the
 // execFile calls in github.ts.
 type execRunner struct {
+}
+
+// ghAvailableRunner is the probe with its error, so a test can skip rather than fail when gh is absent.
+func (r execRunner) ghAvailableRunner() (bool, error) {
+	if _, err := exec.LookPath("gh"); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (r execRunner) ghAvailable() bool {
@@ -76,16 +86,16 @@ func (r execRunner) ghRaw(path, jq string, timeoutSeconds float64, maxBufferByte
 	return out
 }
 
-func (r execRunner) clone(args []string, timeoutSeconds float64) (string, bool) {
+func (r execRunner) clone(args []string, localPath string, timeoutSeconds float64) bool {
 	if len(args) == 0 {
-		return "", false
+		return false
 	}
-	localPath := args[len(args)-1]
 	if _, err := r.run(args[0], args[1:], time.Duration(timeoutSeconds*float64(time.Second))); err != nil {
+		// A partial clone is removed, so a later attempt starts clean. upstream: the rmSync in the error branch.
 		_ = os.RemoveAll(localPath)
-		return "", false
+		return false
 	}
-	return localPath, true
+	return true
 }
 
 // run executes a command under a deadline and returns its stdout, treating any failure as the nil result the original

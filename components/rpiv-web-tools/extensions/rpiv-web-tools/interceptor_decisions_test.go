@@ -35,12 +35,14 @@ func (f *fakeRunner) ghRaw(path, jq string, _ float64, _ int) string {
 	return f.responses[path]
 }
 
-func (f *fakeRunner) clone(args []string, _ float64) (string, bool) {
+func (f *fakeRunner) clone(args []string, localPath string, _ float64) bool {
 	f.clones = append(f.clones, args)
 	if !f.cloneOK {
-		return "", false
+		return false
 	}
-	return args[len(args)-1], true
+	// The clone reports success; the caller keeps the path it asked for.
+	_ = localPath
+	return true
 }
 
 func TestGitHubInterceptorDecisions(t *testing.T) {

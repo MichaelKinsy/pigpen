@@ -146,7 +146,7 @@ func (g *gitHubInterceptor) cloneRepo(info gitHubURLInfo) (string, bool) {
 		if info.HasRef {
 			args = append(args, "--branch", info.Ref)
 		}
-		return g.runner.clone(args, timeout)
+		return localPath, g.runner.clone(args, localPath, timeout)
 	}
 	// Without gh the user is told once, because the git path cannot reach a private repository.
 	g.showGhHint()
@@ -155,7 +155,7 @@ func (g *gitHubInterceptor) cloneRepo(info gitHubURLInfo) (string, bool) {
 		args = append(args, "--branch", info.Ref)
 	}
 	args = append(args, "https://github.com/"+info.Owner+"/"+info.Repo+".git", localPath)
-	return g.runner.clone(args, timeout)
+	return localPath, g.runner.clone(args, localPath, timeout)
 }
 
 // showGhHint prints the install hint once per process. upstream: showGhHint.
