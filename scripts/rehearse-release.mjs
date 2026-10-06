@@ -79,9 +79,10 @@ git(seed, 'commit', '-qam', 'rehearsal: herdr builds the host target only');
 git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
 const tagSha = git(seed, 'rev-parse', 'HEAD');
 const tag = `herdr/v${version}`;
-git(seed, 'tag', tag);
-git(seed, 'tag', 'herdr/v9.9.9');
-git(seed, 'push', '-q', 'origin', tag, 'herdr/v9.9.9');
+// The clone may already carry the real tags (the repository has released); the rehearsal's own commit gets them, forced, in its own bare repository.
+git(seed, 'tag', '-f', tag);
+git(seed, 'tag', '-f', 'herdr/v9.9.9');
+git(seed, 'push', '-q', '-f', 'origin', tag, 'herdr/v9.9.9');
 
 const workflow = parse(readFileSync(join(repoRoot, '.github/workflows/release.yml'), 'utf8'));
 

@@ -86,8 +86,8 @@ The pig games are Go Packages moved from PiG Standard (Michael Kinsy, MIT):
 [`pig-runner`](components/pig-runner/README.md) (`/runner`),
 [`angry-pigs`](components/angry-pigs/README.md) (`/angry-pigs`) and their shared library
 [`pig-play`](components/pig-play/README.md) (the pig sprite, pixel rasterizer, arcade scenery,
-terminal plumbing). Each installs on its own from a Pigpen checkout, where `pig-play` sits beside
-it (a copy of a game Package without `../pig-play` does not build); the
+terminal plumbing). Each installs on its own from npm (the tarball carries `pig-play`) or from a Pigpen checkout, where `pig-play` sits beside
+it; the
 [`pig-games`](piglets/pig-games/README.md) Piglet selects both games, and a Binary of it builds
 locally. A game starts only when you type its command. The games draw the pig you chose with PiG's
 built-in `/sprite` (the sprite login is part of PiG itself since 0.4.0, so Pigpen no longer ships its own).
@@ -135,40 +135,51 @@ batteries-included composition. Development versions and build targets are not r
 release path: the workflows, the tag scheme and the checks below, rehearsed locally with throwaway keys. The owner's
 first-release steps are in [OWNER-ACTIONS.md](OWNER-ACTIONS.md); what remains open is in [RELEASE-BLOCKERS.md](RELEASE-BLOCKERS.md).
 
+## Install
+
+Pigpen is published to npm under the `@pi-in-go` scope, the way Pi publishes its packages: Packages carry the keyword
+`pig-package`, Piglet sources `pig-piglet`, and pi-in-go.dev lists them by keyword. Not published yet: the owner's first
+publish is [FIRST-NPM-PUBLISH.md](FIRST-NPM-PUBLISH.md); until it is done these commands do not resolve.
+
+```bash
+pig install npm:@pi-in-go/pigpen-<name>                       # a Package: components/<name>, for example pigpen-herdr
+pig piglet add npm:@pi-in-go/pigpen-piglet-<name>             # a Piglet's source: piglets/<name>
+pig piglet pull 'github:MichaelKinsy/pigpen/<name>@0.1.0'     # the same Piglet as a signed Binary
+```
+
+The Binary is the signed per-platform build from the GitHub release `<name>/v<version>` (below); the npm package is its
+editable source and installs its Packages from npm. Check the signing key (`release-keys/pigpen-piglets.pub`) before you
+trust a Binary; a signature alone does not prove who holds the key.
+
+How the npm form differs from this tree (generated, never hand-edited):
+
+- Each `components/<dir>/package.json` is the published manifest (`npm run check` enforces it). A Go extension that reaches
+  `pig-play`, `typesafe` or `pi-typesafe-api` through a sibling directory carries that library under `libs/` in its tarball,
+  so it builds when installed on its own; `scripts/npm-packages.mjs` generates that into `dist/npm/packages/<dir>`.
+- A Piglet source (`scripts/npm-piglets.mjs`, `dist/npm/piglets/<name>`) names its Packages as
+  `npm:@pi-in-go/pigpen-<dir>@^<version>`, flattens `extends` (`pig-porter`) and drops the local `seed-check` build fixture,
+  because a remote Piglet source takes no local Resource.
+- `npm run test:npm-packages` and `npm run test:npm-piglets` pack everything, serve it from a local registry and run
+  `pig install npm:...`, `pig piglet add npm:...` and `pig piglet validate` with the real pig (the second also builds a
+  fused `pig-games` Binary from the registered source). `npm run publish:npm -- --dry-run` shows what would be published.
+- `.github/workflows/npm-publish.yml` publishes later releases (tag `npm/v<x>` or a manual run) with npm trusted
+  publishing and provenance, no token.
+
 ## Releases
+
+Two more channels stay available. The Git-tag channel for Packages and the signed Binaries for Piglets:
 
 | | Tag | Install | Workflow |
 |---|---|---|---|
 | Package (`components/<name>`) | `components/<name>/v<version>` | `pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/<name>/v<version>#subdirectory=components%2F<name>'` | `release-package.yml`: validates and installs from the tag; no secret |
 | Piglet (`piglets/<name>`) | `<name>/v<release.version>` | `pig piglet pull 'github:MichaelKinsy/pigpen/<name>@<version>'` | `release.yml`: builds every target natively, signs, publishes one GitHub Release |
+| npm (all of the above) | `npm/v<x>` | `pig install npm:...`, `pig piglet add npm:...` | `npm-publish.yml`: Packages, then Piglet sources; OIDC, provenance |
 
-The two tag shapes cannot start each other's workflow. `index.json` lists a Package as `available` once its tag is
+The three tag shapes cannot start each other's workflow. `index.json` lists a Package as `available` once its Git tag is
 recorded (`npm run record -- package <name> <version>`) and a Piglet as `available` once its signed receipt verifies
 against the key in `release-keys/` (`npm run record -- piglet <name> <version>`); until then a Piglet is `planned` and a
-Package is not listed. `npm run test:packages` installs every Package from its tag with the real pig;
+Package is not listed. `npm run test:packages` installs every Package from its Git tag with the real pig;
 `npm run rehearse:release` runs the Piglet workflow's own steps against a throwaway local repository.
-
-## Pull or add a Piglet — after support and releases are ready
-
-These are future instructions, **not commands to install this scaffold today**.
-Choose a published Piglet/version, review its source and requirements, and use
-only the commands recorded in its generated catalog entry and release notes.
-
-- **Signed binary:** `pig piglet pull <signed-release-index-url>` verifies the
-  signed index, checksums and Binary before installation. Direct HTTPS index
-  URLs already work in PiG; Pigpen has no published index to pull yet. A future
-  release's URL will use its own tag namespace, for example
-  `pig-with-batteries/v0.1.0`, rather than a repository-wide `v0.1.0`.
-  Confirm the public signing key with the publisher; a signature alone does not
-  prove who holds the key.
-- **Editable source:** `pig piglet add <version-pinned-source-reference>` adds a
-  named Piglet; select it with `pig --piglet pig-with-batteries`. The reference
-  must select `piglets/pig-with-batteries/` in this repository, not an arbitrary
-  root manifest. Published compositions must select approved immutable Package
-  references. Local staging alone does not verify remote source installation.
-- Do **not** use `pig piglet pull github:MichaelKinsy/pigpen@0.1.0` for a named
-  Piglet. Use the reviewed namespace-specific command recorded with its release.
-  No such Pigpen release is available yet.
 
 ## Run locally
 

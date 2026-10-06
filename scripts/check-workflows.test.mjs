@@ -2,7 +2,7 @@
 // Pigpen's own workflow: `npm run quality` runs the gate over .github/workflows, and a hosted run is the workflow's test.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems } from './check-workflows.mjs';
+import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems, npmPublishProblems } from './check-workflows.mjs';
 
 const sha = 'a'.repeat(40);
 const good = `
@@ -100,6 +100,7 @@ permissions:
   contents: read
 jobs:
   plan:
+    if: \${{ !startsWith(github.ref_name, 'npm/') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -169,8 +170,8 @@ describe('the release workflow', () => {
   });
 });
 
+const on = (...tags) => ({ on: { push: { tags } } });
 describe('tagProblems', () => {
-  const on = (...tags) => ({ on: { push: { tags } } });
   it('accepts a Piglet filter that cannot match a Package tag, and the reverse', () => {
     assert.deepEqual(tagProblems({ 'release.yml': on('*/v*'), 'release-package.yml': on('components/*/v*') }), []);
   });
@@ -178,5 +179,48 @@ describe('tagProblems', () => {
     assert.match(tagProblems({ 'release.yml': on('**/v*') }).join('\n'), /release\.yml.*\*\*\/v\*.*components\/herdr\/v0\.1\.0/);
     assert.match(tagProblems({ 'release-package.yml': on('**') }).join('\n'), /release-package\.yml.*herdr\/v0\.1\.0/);
     assert.match(tagProblems({ 'release.yml': on('v*') }).join('\n'), /does not match the Piglet tag/);
+  });
+});
+
+describe('the npm publish workflow', () => {
+  const npm = `
+on:
+  push:
+    tags: ['npm/v*']
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@${sha}
+        with: { persist-credentials: false }
+      - run: npm ci --ignore-scripts && node scripts/npm-publish.mjs --provenance
+`;
+  const problems = (text) => [...hardeningProblems('npm-publish.yml', text), ...npmPublishProblems('npm-publish.yml', text)].join('\n');
+  it('accepts OIDC publishing: id-token in the publish job, no secret, tag or manual run', () => {
+    assert.equal(problems(npm), '');
+  });
+  it('allows id-token: write only in the publish job, and no other write', () => {
+    assert.match(problems(npm.replace('  publish:\n', '  other:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 5\n    permissions: { id-token: write }\n    steps: []\n  publish:\n')), /job other: id-token: write/);
+    assert.match(problems(npm.replace('{ contents: read, id-token: write }', '{ contents: write, id-token: write }')), /job publish: contents: write/);
+  });
+  it('refuses a token: no secret, no NODE_AUTH_TOKEN, no NPM_TOKEN', () => {
+    assert.match(problems(npm.replace('      - run: npm ci', '      - env: { NODE_AUTH_TOKEN: x }\n        run: npm ci')), /token/);
+    assert.match(problems(npm + '      - run: echo ${{ secrets.NPM_TOKEN }}\n'), /uses a secret/);
+  });
+  it('requires provenance and trusted publishing, and only tag or manual triggers', () => {
+    assert.match(problems(npm.replace(' --provenance', '')), /--provenance/);
+    assert.match(problems(npm.replace("push:\n    tags: ['npm/v*']", 'push:\n    branches: [main]')), /npm\/v\*/);
+    assert.match(problems(npm.replace('workflow_dispatch: {}', 'pull_request: {}')), /only/);
+  });
+  it('is a tag no Piglet or Package workflow filter can be mistaken for, and release.yml skips it', () => {
+    assert.deepEqual(tagProblems({ 'npm-publish.yml': on('npm/v*'), 'release-package.yml': on('components/*/v*') }), []);
+    assert.match(tagProblems({ 'npm-publish.yml': on('**/v*') }).join('\n'), /npm-publish\.yml.*components\/herdr\/v0\.1\.0/);
+    assert.equal(problemsOf(release), '');
+    assert.match(problemsOf(release.replace("    if: ${{ !startsWith(github.ref_name, 'npm/') }}\n", '')), /npm\/ tag/);
   });
 });

@@ -1,13 +1,39 @@
 {
-  "name": "pigpen-angry-pigs",
+  "name": "@pi-in-go/pigpen-angry-pigs",
   "version": "0.1.0",
-  "private": true,
   "description": "Angry Pigs: a pixel-art slingshot game with towers, birds and physics, opened with /angry-pigs (Go). Nothing runs until you type the command.",
-  "keywords": ["pig-package", "game", "pixel-art", "extension"],
+  "keywords": [
+    "pig-package",
+    "game",
+    "pixel-art",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/angry-pigs"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/angry-pigs#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/angrypigs"]
+    "extensions": [
+      "extensions/angrypigs"
+    ]
   }
 }

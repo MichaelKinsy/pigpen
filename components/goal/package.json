@@ -1,13 +1,39 @@
 {
-  "name": "pigpen-goal",
+  "name": "@pi-in-go/pigpen-goal",
   "version": "0.1.0",
-  "private": true,
   "description": "Go port of pi-goal-x: durable goals kept as files under .pi/goals (/goal-direct, /sisyphus-direct, /goal-list, /goal-pause, /goal-clear, /goal-unfocus) (partial: storage and the direct lifecycle, not the scheduler, drafting or auditor)",
-  "keywords": ["pig-package", "goal", "persistence", "extension"],
+  "keywords": [
+    "pig-package",
+    "goal",
+    "persistence",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/goal"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/goal#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/pi-goal-x"]
+    "extensions": [
+      "extensions/pi-goal-x"
+    ]
   }
 }

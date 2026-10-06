@@ -28,7 +28,7 @@ test('every component Package installs from its tag with the real pig', { skip: 
   git(scratch, scratch, 'clone', '-q', '--bare', root, bare);
   const env = (name) => isolatedEnv(scratch, name, gitEnv(scratch));
   const packages = readPackages();
-  for (const { dir, manifest } of packages) git(scratch, bare, 'tag', packageTag(dir, manifest.version), 'HEAD');
+  for (const { dir, manifest } of packages) git(scratch, bare, 'tag', '-f', packageTag(dir, manifest.version), 'HEAD');
 
   for (const { dir, manifest } of packages) {
     await t.test(`${dir}: ${packageSpec(repository, dir, manifest.version)}`, () => {

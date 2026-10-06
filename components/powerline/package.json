@@ -1,13 +1,40 @@
 {
-  "name": "pigpen-powerline-footer",
+  "name": "@pi-in-go/pigpen-powerline",
   "version": "0.1.0",
-  "private": true,
   "description": "Go port of pi-powerline-footer: a powerline-style status bar of configurable segments (model, path, git, tokens, cost, context, time) with presets, separators and /powerline (partial: the bar, not the custom editor)",
-  "keywords": ["pig-package", "statusline", "powerline", "footer", "extension"],
+  "keywords": [
+    "pig-package",
+    "statusline",
+    "powerline",
+    "footer",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/powerline"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/powerline#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/powerline-footer"]
+    "extensions": [
+      "extensions/powerline-footer"
+    ]
   }
 }

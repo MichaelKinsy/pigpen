@@ -74,6 +74,8 @@ jobs:
           npm run test:tool-scope
           npm run test:moved
           npm run test:packages
+          npm run test:npm-packages
+          npm run test:npm-piglets
           # The release workflow's own steps against a throwaway local repository, stub gh and throwaway key.
           node scripts/rehearse-release.mjs --pig-src .pig-src
           npm run test:go-ports

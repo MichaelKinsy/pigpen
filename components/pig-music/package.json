@@ -1,13 +1,38 @@
 {
-  "name": "pigpen-pig-music",
+  "name": "@pi-in-go/pigpen-pig-music",
   "version": "0.1.0",
-  "private": true,
   "description": "Pig Music: a full-screen music player for PiG that keeps playing while it is hidden. /music opens the player (YouTube Music through yt-dlp, played by mpv); /music setup and /music doctor check the machine. Explicit /music command only.",
-  "keywords": ["pig-package", "music", "player", "extension"],
+  "keywords": [
+    "pig-package",
+    "music",
+    "player",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "third_party", "README.md", "LICENSE", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pig-music"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pig-music#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "third_party",
+    "README.md",
+    "LICENSE",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/pig-music"]
+    "extensions": [
+      "extensions/pig-music"
+    ]
   }
 }

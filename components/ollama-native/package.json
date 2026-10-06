@@ -1,13 +1,39 @@
 {
-  "name": "pigpen-ollama-native",
+  "name": "@pi-in-go/pigpen-ollama-native",
   "version": "0.1.0",
-  "private": true,
   "description": "PiG model provider (Go extension) for Ollama's native /api/chat, with the model list read from the server",
+  "keywords": [
+    "pig-package",
+    "pigpen",
+    "extension"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "contributors": ["Peder Munksgaard"],
-  "files": ["extensions", "README.md", "CREDITS.md", "LICENSE", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/ollama-native"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/ollama-native#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "CREDITS.md",
+    "LICENSE",
+    "provenance.json"
+  ],
+  "contributors": [
+    "Peder Munksgaard"
+  ],
   "pi": {
-    "extensions": ["extensions/ollama-native"]
+    "extensions": [
+      "extensions/ollama-native"
+    ]
   }
 }

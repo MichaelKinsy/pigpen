@@ -1,13 +1,39 @@
 {
-  "name": "pigpen-rpiv-ask-user-question",
+  "name": "@pi-in-go/pigpen-ask-user-question",
   "version": "0.1.0",
-  "private": true,
   "description": "Go port of @juicesharp/rpiv-ask-user-question: a structured questionnaire the model can put to you, with typed options instead of free-form replies (partial: the dialog walker; the interactive questionnaire is not ported yet)",
-  "keywords": ["pig-package", "questionnaire", "ask-user", "extension"],
+  "keywords": [
+    "pig-package",
+    "questionnaire",
+    "ask-user",
+    "extension",
+    "pigpen"
+  ],
   "license": "MIT",
   "author": "Michael Kinsy",
-  "files": ["extensions", "port", "README.md", "LICENSE", "CREDITS.md", "provenance.json"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/ask-user-question"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/ask-user-question#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
   "pi": {
-    "extensions": ["extensions/rpiv-ask-user-question"]
+    "extensions": [
+      "extensions/rpiv-ask-user-question"
+    ]
   }
 }
