@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
+	"unsafe"
 
 	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
 	"github.com/stencil-hq/tern-sdk/go/tern"
@@ -202,16 +204,17 @@ func TestInsertPlacesNodesBeforeTheirNextSibling(t *testing.T) {
 		fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "b", Index: 1, Node: fe.ToolCard{Name: "bash", Arguments: map[string]any{"command": "ls"}, Header: "$ ls", Status: fe.ToolRunning}},
 		fe.Op{Kind: fe.Remove, Region: fe.RegionMain, ID: "a", Index: 0},
 	)
-	befores := []any{ops[0].([]any)[3], ops[1].([]any)[3], ops[2].([]any)[3]}
-	if !reflect.DeepEqual(befores, []any{nil, nil, "n.c"}) {
-		t.Fatalf("before siblings = %#v", befores)
+	// Lines a settles once c follows it; the running tool b does not.
+	befores := []any{ops[0].([]any)[3], ops[1].([]any)[3], ops[3].([]any)[3]}
+	if !reflect.DeepEqual(befores, []any{nil, nil, "n.c"}) || !reflect.DeepEqual(ops[2], []any{"settle", "n.a"}) {
+		t.Fatalf("ops = %#v", ops)
 	}
-	tool := ops[2].([]any)[4].(map[string]any)
+	tool := ops[3].([]any)[4].(map[string]any)
 	if p := props(tool); tool["k"] != "tool" || p["targetKind"] != "command" || p["target"] != "ls" {
 		t.Fatalf("tool node = %#v", tool)
 	}
-	if !reflect.DeepEqual(ops[3], []any{"del", "n.a"}) {
-		t.Fatalf("remove = %#v", ops[3])
+	if len(ops) != 5 || !reflect.DeepEqual(ops[4], []any{"del", "n.a"}) {
+		t.Fatalf("remove = %#v", ops[4:])
 	}
 	if !reflect.DeepEqual(h.session.order, []string{"n.b", "n.c"}) {
 		t.Fatalf("order = %v", h.session.order)
@@ -331,7 +334,9 @@ func TestCloseWritesEverythingWithoutWaitingForTheDrain(t *testing.T) {
 }
 
 // HandleInput claims Tern's replies and events and the DA1 answer the
-// hello asked for; keys, other APCs and PiG's own DA1 answers stay PiG's.
+// hello asked for; keys, other APCs and PiG's own DA1 answers stay PiG's, as
+// do the answers to PiG's terminal color query and Tern's light/dark reports,
+// which PiG reads the terminal's appearance from (Tern 0.4.5's bytes).
 func TestHandleInputTakesOnlyTSP(t *testing.T) {
 	h := newHarness(t)
 	for _, tc := range []struct {
@@ -342,6 +347,9 @@ func TestHandleInputTakesOnlyTSP(t *testing.T) {
 		{"\x1b[A", false},
 		{"\x1b", false},
 		{"\x1b_Gi=1;OK\x1b\\", false},
+		{"\x1b]10;rgb:3b3b/3b3b/3b3b\x07", false},
+		{"\x1b]11;rgb:f8f8/f8f8/f8f8\x07", false},
+		{"\x1b]4;15;rgb:a5a5/a5a5/a5a5\x07", false},
 		{"\x1b[?62;22c", false}, // before the hello reply: PiG's own query's
 		{"\x1b_tsp;e;{\"ev\":\"resize\",\"cols\":80}\x1b\\", true},
 		{"\x1b]877;tsp;e;{\"ev\":\"theme\",\"dark\":true}\x07", true},
@@ -349,6 +357,10 @@ func TestHandleInputTakesOnlyTSP(t *testing.T) {
 		{"\x1b_tsp;r;{\"r\":\"hello\",\"v\":1}\x1b\\", true},
 		{"\x1b[?62;22c", true},  // the hello's
 		{"\x1b[?62;22c", false}, // PiG's again
+		{"\x1b[?997;1n", false},
+		{"\x1b_tsp;e;{\"ev\":\"theme\",\"dark\":true}\x1b\\", true},
+		{"\x1b]11;rgb:1515/1818/2020\x1b\\", false},
+		{"\x1b[?997;2n", false},
 	} {
 		if got := h.session.HandleInput(tc.data); got != tc.want {
 			t.Fatalf("HandleInput(%q) = %v", tc.data, got)
@@ -365,24 +377,173 @@ func TestBlankLinesBecomeHiddenNodes(t *testing.T) {
 	}
 }
 
-// Lines must fit Tern's layout: main at the Reader measure (720px), the dock
-// inside the regions' 16px padding, both following resize events, which
-// HandleInput reads before PiG asks.
-func TestColumnsFollowTernLayout(t *testing.T) {
+// Lines must fit Tern's ansi blocks, which wrap at their width: the dock's
+// hold Tern's cols, and main's fewer under every chat style. The widths
+// follow the hello and resize events, which HandleInput reads before PiG
+// asks. Each case is a geometry measured in Tern 0.4.5 (its pane width,
+// font size, layout, style or face), with the columns its blocks held:
+// main's under Reader, Spine and Console (0: not measured) and the dock's.
+func TestColumnsFitTernBlocks(t *testing.T) {
 	h := newHarness(t)
 	if main, dock := h.session.Columns(); main != 0 || dock != 0 {
 		t.Fatalf("before any width = %d, %d", main, dock)
 	}
-	h.reply(`,"cols":137,"cell":{"w":8,"h":16}`)
-	if main, dock := h.session.Columns(); main != 90 || dock != 133 {
+	h.reply(`,"cols":68,"cell":{"w":8,"h":16}`)
+	// 560px at 13px: Reader's block held 63 columns, so the 64 the member
+	// gave wrapped every padded line into a blank row.
+	if main, dock := h.session.Columns(); main != 55 || dock != 67 {
 		t.Fatalf("hello widths = %d, %d", main, dock)
 	}
-	h.event(`{"ev":"resize","cols":60,"cell":{"w":10,"h":20},"visible":true}`)
-	if main, dock := h.session.Columns(); main != 56 || dock != 56 {
-		t.Fatalf("narrow pane widths = %d, %d", main, dock)
+	for _, tc := range []struct {
+		what                   string
+		cols                   int
+		cell                   string
+		reader, spine, console int
+		measuredDock, wantMain int
+	}{
+		{"480px 13px", 57, `{"w":8,"h":16}`, 53, 47, 54, 57, 44},
+		{"560px 13px", 68, `{"w":8,"h":16}`, 63, 57, 65, 68, 55},
+		{"640px 13px", 78, `{"w":8,"h":16}`, 74, 0, 0, 78, 64},
+		{"760px 13px", 93, `{"w":8,"h":16}`, 89, 81, 90, 93, 78},
+		{"1000px 13px", 124, `{"w":8,"h":16}`, 92, 103, 121, 124, 87},
+		{"1400px 13px", 176, `{"w":8,"h":16}`, 92, 103, 131, 176, 87},
+		{"560px 11px", 80, `{"w":7,"h":13}`, 76, 0, 0, 80, 66},
+		{"1400px 11px", 208, `{"w":7,"h":13}`, 92, 0, 0, 208, 87},
+		{"560px 12px", 73, `{"w":7,"h":14}`, 69, 0, 0, 73, 59},
+		{"1400px 12px", 191, `{"w":7,"h":14}`, 92, 0, 0, 191, 87},
+		{"560px 14px", 63, `{"w":8,"h":17}`, 59, 0, 0, 63, 50},
+		{"1400px 14px", 163, `{"w":8,"h":17}`, 92, 0, 0, 163, 87},
+		{"560px 15px", 58, `{"w":9,"h":18}`, 54, 0, 0, 58, 45},
+		{"1400px 15px", 152, `{"w":9,"h":18}`, 92, 0, 0, 152, 87},
+		{"560px 16px", 55, `{"w":10,"h":19}`, 51, 45, 0, 55, 42},
+		{"1400px 16px", 143, `{"w":10,"h":19}`, 92, 0, 130, 143, 87},
+		{"560px 17px", 51, `{"w":10,"h":20}`, 47, 0, 0, 51, 38},
+		{"1400px 17px", 134, `{"w":10,"h":20}`, 92, 0, 0, 134, 87},
+		{"560px 20px", 44, `{"w":12,"h":24}`, 40, 0, 0, 44, 31},
+		{"1400px 20px", 114, `{"w":12,"h":24}`, 92, 0, 0, 114, 87},
+		{"560px rail layout", 42, `{"w":8,"h":16}`, 38, 0, 0, 42, 29},
+		{"560px float or studio layout", 69, `{"w":8,"h":16}`, 65, 0, 0, 69, 56},
+		{"560px islands style", 66, `{"w":8,"h":16}`, 62, 0, 0, 66, 53},
+		{"560px Menlo", 67, `{"w":8,"h":16}`, 63, 57, 0, 67, 54},
+		{"560px Monaspace Neon", 65, `{"w":8,"h":16}`, 61, 55, 0, 65, 52},
+		{"1400px Monaspace Neon", 170, `{"w":8,"h":16}`, 89, 0, 0, 170, 87},
+	} {
+		h.event(`{"ev":"resize","cols":` + itoa(int64(tc.cols)) + `,"cell":` + tc.cell + `,"visible":true}`)
+		main, dock := h.session.Columns()
+		if main != tc.wantMain || dock != tc.cols-1 {
+			t.Fatalf("%s: widths = %d, %d, want %d, %d", tc.what, main, dock, tc.wantMain, tc.cols-1)
+		}
+		for _, held := range []int{tc.reader, tc.spine, tc.console} {
+			if held > 0 && main > held {
+				t.Fatalf("%s: main's %d columns wrap in a block of %d", tc.what, main, held)
+			}
+		}
+		if dock > tc.measuredDock {
+			t.Fatalf("%s: the dock's %d columns wrap in a block of %d", tc.what, dock, tc.measuredDock)
+		}
 	}
-	h.event(`{"ev":"resize","cols":100,"cell":{"w":7.5,"h":15},"visible":true}`)
-	if main, dock := h.session.Columns(); main != 95 || dock != 95 {
-		t.Fatalf("fractional cell widths = %d, %d", main, dock)
+	// A pane too narrow for any chrome still gets a column.
+	h.event(`{"ev":"resize","cols":1,"cell":{"w":8,"h":16},"visible":true}`)
+	if main, dock := h.session.Columns(); main != 1 || dock != 1 {
+		t.Fatalf("one column = %d, %d", main, dock)
+	}
+}
+
+// Reader shows main's lines inside its 16px padding, centered on its 720px
+// measure: at the column of their left edge, from the dock's, as measured in
+// Tern 0.4.5 at 13px (dock region at x=16, a column 7.76px).
+func TestReaderMainColumnIsWhereTernShowsMain(t *testing.T) {
+	for _, tc := range []struct {
+		what       string
+		cols, want int
+		mainX      float64
+	}{
+		{"480px", 57, 2, 32},
+		{"560px", 68, 2, 32},
+		{"1000px", 124, 15, 140},
+		{"1400px", 176, 41, 340},
+	} {
+		got := readerMainColumn(tc.cols)
+		if measured := int((tc.mainX - 16) / 7.76); got != tc.want || got != measured {
+			t.Fatalf("%s: readerMainColumn(%d) = %d, want %d (measured %d)", tc.what, tc.cols, got, tc.want, measured)
+		}
+	}
+}
+
+// Tern draws nothing and acknowledges nothing while the pane is hidden, so
+// the raw ops and the renders wait in the member, folding, and go out when
+// it shows again. A render that turns the editor sendable still goes out
+// while hidden, so a prompt sent to the hidden pane arrives.
+func TestHiddenPaneHoldsFramesUntilShown(t *testing.T) {
+	h := newHarness(t)
+	h.reply(`,"credits":2`)
+	h.session.InputReady()
+	h.apply(editorOp(fe.Insert, fe.Editor{}))
+	h.ack()
+	h.messages()
+	md := func(kind fe.OpKind, text string) fe.Op {
+		return fe.Op{Kind: kind, Region: fe.RegionMain, ID: "m", Node: fe.MarkdownText{Role: fe.RoleAssistant, Text: text, Streaming: true}}
+	}
+	h.applyOps(md(fe.Insert, "Look"))
+	h.ack()
+	if !h.event(`{"ev":"visible","sf":"pig","visible":false}`) {
+		t.Fatal("visible event not taken")
+	}
+	for _, text := range []string{"Look at", "Rewr", "Rewritten", "Rewritten it"} {
+		h.apply(md(fe.Update, text))
+	}
+	h.apply(editorOp(fe.Update, fe.Editor{Text: "draft", Cursor: 5}))
+	h.apply(workingOp(fe.Insert, fe.Working{Kind: fe.WorkingAgent, Message: "Working"}))
+	h.apply(fe.Op{Kind: fe.Remove, Region: fe.RegionDock, ID: "working"})
+	h.apply(workingOp(fe.Insert, fe.Working{Kind: fe.WorkingAgent, Message: "Thinking"}))
+	if got := h.frames(); len(got) != 0 {
+		t.Fatalf("sent while hidden: %#v", got)
+	}
+	ops := h.applyOps(editorOp(fe.Update, fe.Editor{Text: "draft", Cursor: 5, Sendable: true}))
+	if len(opsOn(ops, "dock.editor")) != 1 || !reflect.DeepEqual(opsOn(ops, "dock.editor")[0], []any{"set", "dock.editor", map[string]any{"sendable": true}}) || node(ops, "dock.working") == nil {
+		t.Fatalf("render while hidden = %#v, want the sendable flip and the held structure", ops)
+	}
+	h.event(`{"ev":"send","sf":"pig","id":"dock.editor","text":"next"}`)
+	h.synced()
+	h.mu.Lock()
+	sends := slices.Clone(h.sends)
+	h.mu.Unlock()
+	if !reflect.DeepEqual(sends, []string{"next"}) {
+		t.Fatalf("sends = %#v", sends)
+	}
+	if !h.event(`{"ev":"visible","sf":"pig","visible":true}`) {
+		t.Fatal("visible event not taken")
+	}
+	got := h.frames()
+	want := jsonOps(t,
+		[]any{"text", "n.m", "replace", "Rewritten it"},
+		[]any{"text", "dock.editor", "replace", "draft"},
+		[]any{"set", "dock.editor", map[string]any{"cursor": 5}},
+	)
+	if len(got) != 1 || !reflect.DeepEqual(got[0].body["ops"], want) {
+		t.Fatalf("on show = %#v, want one frame %#v", got, want)
+	}
+}
+
+// Appends held back fold into the pending op of the node without copying:
+// the folded op appends from the same offset of the newest text.
+func TestHeldAppendsShareTheNewestText(t *testing.T) {
+	h := ready(t)
+	md := func(kind fe.OpKind, text string) fe.Op {
+		return fe.Op{Kind: kind, Region: fe.RegionMain, ID: "m", Node: fe.MarkdownText{Role: fe.RoleAssistant, Text: text, Streaming: true}}
+	}
+	h.applyOps(md(fe.Insert, "a"))
+	h.event(`{"ev":"visible","sf":"pig","visible":false}`)
+	// Each frame's text is a new string, as PiG's are.
+	var text string
+	for _, n := range []int{2, 4, 7} {
+		text = strings.Clone("abcdefg"[:n])
+		h.apply(md(fe.Update, text))
+	}
+	h.session.mu.Lock()
+	pending := slices.Clone(h.session.pending)
+	h.session.mu.Unlock()
+	if len(pending) != 1 || pending[0][3] != "bcdefg" || unsafe.StringData(pending[0][3].(string)) != unsafe.StringData(text[1:]) {
+		t.Fatalf("pending = %#v, want one append sharing the newest text", pending)
 	}
 }

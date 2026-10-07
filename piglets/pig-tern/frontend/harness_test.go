@@ -43,6 +43,9 @@ func (t *terminal) peek() string {
 type message struct {
 	verb string
 	body map[string]any
+	// params are the message's parameters; a blob's body is its base64
+	// text, as body["data"].
+	params map[string]string
 }
 
 // MarshalJSON writes the body, so a test can search frames as JSON.
@@ -64,12 +67,15 @@ func parse(t *testing.T, out string) []message {
 		}
 		body := m.Body
 		var chunk, more string
+		params := map[string]string{}
 		for _, p := range m.Params {
 			switch p.Key {
 			case "c":
 				chunk = p.Value
 			case "m":
 				more = p.Value
+			default:
+				params[p.Key] = p.Value
 			}
 		}
 		if chunk != "" {
@@ -80,11 +86,15 @@ func parse(t *testing.T, out string) []message {
 			body = chunks[chunk]
 			delete(chunks, chunk)
 		}
+		if m.Verb == tern.VerbBlob {
+			got = append(got, message{m.Verb, map[string]any{"data": string(body)}, params})
+			continue
+		}
 		var decoded map[string]any
 		if err := json.Unmarshal(body, &decoded); err != nil {
 			t.Fatalf("message %q: %v", body, err)
 		}
-		got = append(got, message{m.Verb, decoded})
+		got = append(got, message{m.Verb, decoded, params})
 	}
 	return got
 }
@@ -102,6 +112,7 @@ type harness struct {
 	undos     int
 	sends     []string
 	actions   []fe.Action
+	clicks    []fe.Click
 	timeout   func()
 	syncs     int
 	resized   int
@@ -119,10 +130,11 @@ func newHarness(t *testing.T) *harness {
 			defer h.mu.Unlock()
 			h.fallbacks = append(h.fallbacks, reason)
 		},
-		Edit: func(edit fe.Edit) { h.record(func() { h.edits = append(h.edits, edit) }) },
-		Undo: func() { h.record(func() { h.undos++ }) },
-		Send: func(text string) { h.record(func() { h.sends = append(h.sends, text) }) },
-		Act:  func(action fe.Action) { h.record(func() { h.actions = append(h.actions, action) }) },
+		Edit:  func(edit fe.Edit) { h.record(func() { h.edits = append(h.edits, edit) }) },
+		Undo:  func() { h.record(func() { h.undos++ }) },
+		Send:  func(text string) { h.record(func() { h.sends = append(h.sends, text) }) },
+		Act:   func(action fe.Action) { h.record(func() { h.actions = append(h.actions, action) }) },
+		Click: func(click fe.Click) { h.record(func() { h.clicks = append(h.clicks, click) }) },
 	}
 	h.session = newSession(env)
 	h.session.afterFunc = func(_ time.Duration, fn func()) *time.Timer {
@@ -175,10 +187,13 @@ func (h *harness) reply(fields string) {
 }
 
 // ack acknowledges every frame written so far and waits until the SDK took
-// the ack.
+// the ack. Acks count the surface's frames, from its first.
 func (h *harness) ack() {
 	h.t.Helper()
-	h.event(`{"ev":"ack","sf":"pig","s":` + itoa(h.session.out.frames.Load()) + `}`)
+	h.session.mu.Lock()
+	base := h.session.frameBase
+	h.session.mu.Unlock()
+	h.event(`{"ev":"ack","sf":"pig","s":` + itoa(h.session.out.frames.Load()-base) + `}`)
 	h.synced()
 }
 

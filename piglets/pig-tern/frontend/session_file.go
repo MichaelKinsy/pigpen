@@ -30,9 +30,7 @@ func (s *session) publishSessionFile(file string) {
 	if file != "" {
 		props["href"] = file
 	}
-	before := ""
-	if len(s.order) > 0 {
-		before = s.order[0]
-	}
-	s.queue(tern.OpAdd("main", before, tern.WireNode{ID: sessionNodeID, K: "text", P: props}))
+	// Before the first transcript node Tern still has: one it evicted is
+	// unknown to it, and an add before it would be rejected.
+	s.queue(tern.OpAdd("main", s.liveFrom(0), tern.WireNode{ID: sessionNodeID, K: "text", P: props}))
 }

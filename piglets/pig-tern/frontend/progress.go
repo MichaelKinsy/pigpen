@@ -22,34 +22,49 @@ const (
 // owner loop; the keepalive writes through the terminal writer, whose lock
 // keeps each sequence whole between the SDK's messages.
 func (s *session) setProgress(active bool) {
-	if active {
-		if s.progressStop != nil {
-			return
-		}
-		_, _ = io.WriteString(s.out, progressActive)
-		stop, done := make(chan struct{}), make(chan struct{})
-		s.progressStop, s.progressDone = stop, done
-		keepalive := s.keepalive
-		go func() {
-			defer close(done)
-			ticker := time.NewTicker(keepalive)
-			defer ticker.Stop()
-			for {
-				select {
-				case <-stop:
-					return
-				case <-ticker.C:
-					_, _ = io.WriteString(s.out, progressActive)
-				}
-			}
-		}()
+	if active == s.progress {
 		return
 	}
+	s.progress = active
+	if active {
+		s.startKeepalive()
+		return
+	}
+	s.stopKeepalive()
+	_, _ = io.WriteString(s.out, progressClear)
+}
+
+// startKeepalive reports the progress and repeats it until stopKeepalive.
+func (s *session) startKeepalive() {
+	if s.progressStop != nil {
+		return
+	}
+	_, _ = io.WriteString(s.out, progressActive)
+	stop, done := make(chan struct{}), make(chan struct{})
+	s.progressStop, s.progressDone = stop, done
+	keepalive := s.keepalive
+	go func() {
+		defer close(done)
+		ticker := time.NewTicker(keepalive)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-stop:
+				return
+			case <-ticker.C:
+				_, _ = io.WriteString(s.out, progressActive)
+			}
+		}
+	}()
+}
+
+// stopKeepalive stops the repeats; once it returns, the keepalive writes
+// nothing more.
+func (s *session) stopKeepalive() {
 	if s.progressStop == nil {
 		return
 	}
 	close(s.progressStop)
 	<-s.progressDone
 	s.progressStop, s.progressDone = nil, nil
-	_, _ = io.WriteString(s.out, progressClear)
 }
