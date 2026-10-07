@@ -2,7 +2,7 @@
 
 PiG drawn natively in [Tern](https://stencil.so/tern). Run directly in a Tern pane, PiG's interactive mode becomes a Tern Surface Protocol surface: messages render as Markdown, tool calls as tool cards, edits as diffs, selectors as pickers, settings as a prefs sheet, and the input editor as a Tern editor. Outside Tern, PiG draws as usual.
 
-**Needs PiG 0.4.2 or later.** The Piglet fills the frontend slot (`slots.frontend`, PiG D91), which PiG 0.4.1 rejects. The member also uses PiG's component kit and extension mouse delivery (D102), which no released PiG has yet, so it builds only against a PiG source tree that has them.
+**Needs PiG 0.4.2 or later.** The Piglet fills the frontend slot (`slots.frontend`, PiG D91), which PiG 0.4.1 rejects. The member also uses PiG's component kit and extension mouse delivery (D103), which no released PiG has yet, so it builds only against a PiG source tree that has them.
 
 **Source only, not a published release.** No release Binary is published. A frontend member is fused into a Piglet Binary, so build one with the reviewed PiG (set `PIG_SOURCE_ROOT` to a git checkout of it):
 
@@ -41,7 +41,7 @@ The member draws only when all of these hold. Otherwise it declines and PiG uses
 | `/settings` | a prefs sheet: on/off settings as switches, settings with a submenu as buttons, the rest as a choice of values |
 | Overlays | a card over the transcript around the overlay's lines |
 | Session file | a hidden `text` node with id and role `pig.session` whose `href` is the session file PiG writes (none while the session is not persisted), so a Tern plugin can find a pane's session |
-| Extension components drawn with PiG's component kit (D102), for example pig-music | Tern elements: text, Markdown, boxes as cards, stacks, lists, select and settings lists, progress bars, loaders, images in their cells, and a titled overlay's frame as its card. A view's theme overrides apply to its own element only |
+| Extension components drawn with PiG's component kit (D103), for example pig-music | Tern elements: text, Markdown, boxes as cards, stacks, lists, select and settings lists, progress bars, loaders, images in their cells, and a titled overlay's frame as its card. A view's theme overrides apply to its own element only |
 | Clicks on an extension's view | PiG's terminal click, with the view path, the clicked list item and the click count (so a double click counts), reaches the extension's component as a mouse click does in PiG's own renderer |
 | Footer folder | a path span that opens in Tern's Files pane on click |
 | PiG's theme | Tern's program palette, sent before the first frame and whenever PiG's colors change. PiG picks a light or dark theme from Tern's appearance, so switching Tern's appearance switches PiG's theme |

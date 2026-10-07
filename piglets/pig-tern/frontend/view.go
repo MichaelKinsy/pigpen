@@ -18,7 +18,7 @@ import (
 )
 
 // An extension surface whose lines Pi's tui components drew carries their
-// structure, its view (D102): the transcript's lines and a tool's result,
+// structure, its view (D103): the transcript's lines and a tool's result,
 // the dock's widgets, header and footer, and an extension's overlay. Tern
 // draws each component as its own element: a container or a vstack as a
 // col, an hstack as a row whose children keep their stack entry options as
@@ -41,7 +41,7 @@ import (
 //
 // A click on an element of an overlay's view or of a dock node's view is
 // PiG's click (Env.Click) at that element's cell, named by the path of its
-// view node (D102): on an item of a select or settings list, that item; on
+// view node (D103): on an item of a select or settings list, that item; on
 // a row of a lines list, that row; on any other element, its first cell.
 // PiG hands the click to the extension's component as the terminal's click
 // at that cell in fullscreen mode, and does nothing otherwise. The views of
