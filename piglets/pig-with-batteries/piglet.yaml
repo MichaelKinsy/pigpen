@@ -25,6 +25,7 @@ packages:
   a2a: local:../../components/a2a
   websearch: local:../../components/websearch
   pig-music: local:../../components/pig-music
+  pig-model-tweaks: local:../../components/pig-model-tweaks
 extensions:
   # Reports idle, working and blocked to herdr and releases the pane on quit.
   # Does nothing outside a herdr pane. Same selection as piglets/herdr.
@@ -81,6 +82,12 @@ extensions:
   # footer or widget and no timer before that. It registers no tool, so none is offered to the model.
   - name: pig-music
     origins: [package:pig-music]
+    tools: []
+  # Model-selection tweaks: remember the picked model, pin an OpenRouter model to
+  # one upstream provider, and refuse a prompt sent to a model outside the
+  # allow-list. Commands and event handlers only: no tool is offered to the model.
+  - name: pig-model-tweaks
+    origins: [package:pig-model-tweaks]
     tools: []
   # Empty build-pipeline fixture: PiG rejects Binary builds with zero extensions.
   - name: seed-check

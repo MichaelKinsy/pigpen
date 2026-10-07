@@ -1,0 +1,40 @@
+{
+  "name": "@pi-in-go/pigpen-pig-model-tweaks",
+  "version": "0.1.0",
+  "description": "PiG model-selection tweaks (Go extension): remember the picked model, pin an OpenRouter model to one provider, and guard prompts against a wrong model",
+  "keywords": [
+    "pig-package",
+    "pigpen",
+    "extension",
+    "model",
+    "openrouter",
+    "model-guard"
+  ],
+  "license": "MIT",
+  "author": "Yu Li",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pig-model-tweaks"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pig-model-tweaks#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/pig-model-tweaks"
+    ]
+  }
+}

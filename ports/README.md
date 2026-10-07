@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 2 · porting: 0 · review: 11 · done: 19
+Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -42,6 +42,7 @@ Status: queued: 2 · porting: 0 · review: 11 · done: 19
 | `rpiv-web-tools` | [rpiv-mono](https://github.com/juicesharp/rpiv-mono) | [`7c9bc924c5bf`](https://github.com/juicesharp/rpiv-mono/commit/7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f) | MIT | juicesharp | `components/rpiv-web-tools` | `pig-essentials` | review | Go port of @juicesharp/rpiv-web-tools 2.12.0, https://github.com/juicesharp/rpiv-mono (packages/rpiv-web-tools), by juicesharp (MIT), at commit 7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f. |
 | `tintinweb-subagents` | [pi-subagents](https://github.com/tintinweb/pi-subagents) | [`4f572eaa04c0`](https://github.com/tintinweb/pi-subagents/commit/4f572eaa04c09d3dbc16e4a5f13a16b295e84e14) | MIT | tintinweb | `components/tintinweb-subagents` | `pig-essentials` | review | Go port of @tintinweb/pi-subagents 0.19.0, https://github.com/tintinweb/pi-subagents, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 4f572eaa04c09d3dbc16e4a5f13a16b295e84e14. |
 | `superpowers` | [superpowers](https://github.com/obra/superpowers) | [`8ca22dba9a94`](https://github.com/obra/superpowers/commit/8ca22dba9a94f28898bbce59f2537ff4d87c747d) | MIT | Jesse Vincent | `components/superpowers` | `pig-essentials` | review | Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v6.4.2, commit 8ca22dba9a94f28898bbce59f2537ff4d87c747d. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT). |
+| `pig-model-tweaks` | [pi-tweaks](https://github.com/liyu1981/pi-tweaks) | [`65e6ccfbb779`](https://github.com/liyu1981/pi-tweaks/commit/65e6ccfbb77956aa15ce34e7ca9735e1d476c292) | MIT | Yu Li | `components/pig-model-tweaks` | `pig-model-tweaks` | porting | Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292. |
 
 ## How to read it
 
@@ -235,3 +236,8 @@ Status: queued: 2 · porting: 0 · review: 11 · done: 19
 - Kind: port. The fifteen Skills of obra/superpowers v6.4.2 (brainstorming, plans, TDD, debugging, review, verification) as one Skills Package; names carry the pigpen-superpowers- prefix. No Node extension, no hooks.
 - Upstream path: `skills` in superpowers
 - Notes: Part of the pig-essentials Piglet. Only names and Skill references change; the original's Node bootstrap extension and hooks are not included. skills tree vendored byte for byte; 2 kinds of change, recorded in ADAPTATIONS.md.
+
+### `pig-model-tweaks`: pig-model-tweaks
+
+- Kind: port. Model-selection tweaks: remember the picked model across sessions, pin an OpenRouter model to one upstream provider, and guard prompts against a model outside the allow-list.
+- Upstream path: `extensions` in pi-tweaks

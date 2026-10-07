@@ -321,7 +321,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
       },
-      "manifestSha256": "5b53152fa8c475878058e3ad9ee4dc60b7623c6f9c8edb101b895ada4000bbd6",
+      "manifestSha256": "5edd0f6a3c139dce6cec4e62ec7c1470336648afbe3929ffc274c9a3865126c3",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
