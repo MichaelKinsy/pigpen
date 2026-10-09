@@ -1,7 +1,7 @@
 {
   "$schema": "./ports.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-10-06",
+  "updatedAt": "2026-10-07",
   "ports": [
     {
       "id": "extension-porter",
@@ -638,6 +638,24 @@
       "status": "review",
       "credit": "Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v6.4.2, commit 8ca22dba9a94f28898bbce59f2537ff4d87c747d. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT).",
       "notes": "Part of the pig-essentials Piglet. Only names and Skill references change; the original's Node bootstrap extension and hooks are not included. skills tree vendored byte for byte; 2 kinds of change, recorded in ADAPTATIONS.md."
+    },
+    {
+      "id": "pig-model-tweaks",
+      "name": "pig-model-tweaks",
+      "kind": "port",
+      "summary": "Model-selection tweaks: remember the picked model across sessions, pin an OpenRouter model to one upstream provider, and guard prompts against a model outside the allow-list.",
+      "upstream": {
+        "name": "pi-tweaks",
+        "url": "https://github.com/liyu1981/pi-tweaks",
+        "commit": "65e6ccfbb77956aa15ce34e7ca9735e1d476c292",
+        "license": "MIT",
+        "author": "Yu Li",
+        "path": "extensions"
+      },
+      "targetPackage": "components/pig-model-tweaks",
+      "lane": "pig-model-tweaks",
+      "status": "porting",
+      "credit": "Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292."
     }
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "origin": "ported",
+  "authors": ["Yu Li"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-tweaks",
+      "authors": ["Yu Li"],
+      "url": "https://github.com/liyu1981/pi-tweaks",
+      "revision": "65e6ccfbb77956aa15ce34e7ca9735e1d476c292",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

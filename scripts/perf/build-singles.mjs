@@ -23,6 +23,7 @@ export const SINGLES = {
   a2a: { packages: ['a2a'], origin: 'a2a' },
   websearch: { packages: ['websearch'], origin: 'websearch' },
   warden: { packages: ['typesafe', 'warden'], origin: 'warden', tools: [] },
+  'pig-model-tweaks': { packages: ['pig-model-tweaks'], origin: 'pig-model-tweaks', tools: [] },
   'pi-typesafe': { packages: ['pi-typesafe', 'pi-typesafe-api', 'typesafe'], origin: 'pi-typesafe' },
   acp: { packages: ['acp'], origin: 'acp', tools: [] },
   'extension-equivalence': { packages: ['extension-equivalence'], origin: 'extension-equivalence' },
