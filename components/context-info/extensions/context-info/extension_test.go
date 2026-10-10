@@ -210,7 +210,7 @@ func TestPromptsAgentsListsAgentDefinitionsFromTheConfigHome(t *testing.T) {
 func TestPromptsAgentsWithoutAConfigHomeReportsAnError(t *testing.T) {
 	for _, args := range []string{"agents", "scout"} {
 		t.Run(args, func(t *testing.T) {
-			for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME"} {
+			for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
 				t.Setenv(k, "")
 			}
 			planted := filepath.Join(t.TempDir(), "agents")
