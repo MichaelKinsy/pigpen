@@ -419,7 +419,17 @@ func makeRepo(t *testing.T, cwd string, r *jsObject) {
 	}
 }
 
+// The original's git timeouts (200 ms and 500 ms) are for an interactive footer. A test on a loaded host would otherwise see a
+// killed `git symbolic-ref` fall back to `git rev-parse` and report "<sha> (detached)".
+func TestGitTimeoutsMatchTheOriginal(t *testing.T) {
+	eq(t, originalGitTimeouts, [3]time.Duration{200 * time.Millisecond, 200 * time.Millisecond, 500 * time.Millisecond}, "git-status.ts timeouts")
+}
+
+// originalGitTimeouts is read at package initialization, before TestMain raises the limits.
+var originalGitTimeouts = [3]time.Duration{gitBranchTimeout, gitRemoteTimeout, gitStatusTimeout}
+
 func TestMain(m *testing.M) {
 	fetchRates = nil // no test may reach the network
+	gitBranchTimeout, gitRemoteTimeout, gitStatusTimeout = time.Minute, time.Minute, time.Minute
 	os.Exit(m.Run())
 }

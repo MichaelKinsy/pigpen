@@ -2,8 +2,11 @@ package powerline_footer
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 )
 
 // Tests the port adds: behavior the original's tests do not pin and the render states cannot reach.
@@ -55,6 +58,34 @@ func TestDetachedProviderFallsBackToGit(t *testing.T) {
 	eq(t, sv(getCurrentBranch(s("detached"), dir)), "topic", "a provider that says detached is not trusted")
 	invalidateGitBranch()
 	eq(t, sv(getCurrentBranch(s("external"), dir)), "external", "a provider branch is used as is")
+}
+
+// A git that answers `symbolic-ref` after 400 ms, which is what a host under load does to the original's 200 ms limit. With the
+// tests' raised limit the branch is still found; with the original's (set here) it falls back to a short SHA marked detached.
+func TestSlowSymbolicRefStillFindsTheBranchWithinTheTestTimeout(t *testing.T) {
+	real, err := exec.LookPath("git")
+	if err != nil {
+		t.Skip("git is not installed")
+	}
+	bin := t.TempDir()
+	script := "#!/bin/sh\nif [ \"$1\" = symbolic-ref ]; then sleep 0.4; fi\nexec " + real + " \"$@\"\n"
+	if err := os.WriteFile(filepath.Join(bin, "git"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	dir := t.TempDir()
+	makeRepo(t, dir, jo(t, `{"branch":"topic"}`))
+
+	invalidateGitBranch()
+	eq(t, sv(getCurrentBranch(nil, dir)), "topic", "a slow git within the test limit")
+
+	t.Cleanup(func() { gitBranchTimeout = time.Minute })
+	gitBranchTimeout = originalGitTimeouts[0]
+	invalidateGitBranch()
+	got := sv(getCurrentBranch(nil, dir))
+	if !strings.HasSuffix(got, " (detached)") {
+		t.Fatalf("with the original's 200 ms limit a 400 ms symbolic-ref must fall back to a detached short SHA, got %q", got)
+	}
 }
 
 func TestGitPollingModes(t *testing.T) {

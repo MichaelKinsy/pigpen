@@ -74,11 +74,19 @@ func runGit(cwd string, timeout time.Duration, args ...string) (string, bool) {
 	return strings.TrimRightFunc(string(out), isJSSpace), true
 }
 
+// The original's git calls time out after 200 ms (branch, remote) and 500 ms (status); tests raise these so a loaded machine
+// cannot turn a slow `git symbolic-ref` into a "(detached)" branch.
+var (
+	gitBranchTimeout = 200 * time.Millisecond
+	gitRemoteTimeout = 200 * time.Millisecond
+	gitStatusTimeout = 500 * time.Millisecond
+)
+
 func fetchGitBranch(cwd string) *string {
-	if b, ok := runGit(cwd, 200*time.Millisecond, "symbolic-ref", "--short", "HEAD"); ok && b != "" {
+	if b, ok := runGit(cwd, gitBranchTimeout, "symbolic-ref", "--short", "HEAD"); ok && b != "" {
 		return &b
 	}
-	if sha, ok := runGit(cwd, 200*time.Millisecond, "rev-parse", "--short", "HEAD"); ok && sha != "" {
+	if sha, ok := runGit(cwd, gitBranchTimeout, "rev-parse", "--short", "HEAD"); ok && sha != "" {
 		d := sha + " (detached)"
 		return &d
 	}
@@ -149,7 +157,7 @@ func getGitRemoteHost(cwd string) string {
 		return cached.value
 	}
 	host := ""
-	if url, ok := runGit(cwd, 200*time.Millisecond, "remote", "get-url", "origin"); ok {
+	if url, ok := runGit(cwd, gitRemoteTimeout, "remote", "get-url", "origin"); ok {
 		if h := detectGitHost(&url); h != nil {
 			host = *h
 		}
@@ -208,7 +216,7 @@ func getGitStatus(providerBranch *string, polling, cwd string) gitStatus {
 	gitMu.Unlock()
 	if !cached.ok || cached.cwd != cwd || now-cached.at >= statusTTLMs {
 		next := struct{ Staged, Unstaged, Untracked int }{}
-		if out, ok := runGit(cwd, 500*time.Millisecond, "status", "--porcelain"); ok {
+		if out, ok := runGit(cwd, gitStatusTimeout, "status", "--porcelain"); ok {
 			next.Staged, next.Unstaged, next.Untracked = parseGitStatusOutput(out)
 		}
 		cached = timed[struct{ Staged, Unstaged, Untracked int }]{value: next, at: now, cwd: cwd, ok: true}
