@@ -357,12 +357,24 @@ func TestMutateUnitOnlyNeedsNoScenariosAndReportsSurvivors(t *testing.T) {
 	}
 }
 
+// Parallelism is shown by a rendezvous, not by a clock: every mutant's test run announces itself in a directory and waits until
+// four are there at once; the first to see four leaves `ok`. Serial runs each give up after 20 s and never leave it, however
+// loaded the host is.
 func TestMutateRunsMutantsInParallelAndKeepsTheirOrder(t *testing.T) {
 	port, muts := mutantsPort(t)
-	fakeGo(t, `sleep 0.4; if grep -q '= 9' x.go; then echo '--- FAIL: TestX (0.00s)'; exit 1; fi; exit 0`)
-	start := time.Now()
+	rv := t.TempDir()
+	fakeGo(t, `if grep -q '= 9' x.go; then
+  touch "`+rv+`/p.$$"
+  i=0
+  while [ ! -e "`+rv+`/ok" ] && [ $i -lt 400 ]; do
+    if [ "$(ls "`+rv+`" | grep -c '^p\.')" -ge 4 ]; then touch "`+rv+`/ok"; fi
+    sleep 0.05; i=$((i+1))
+  done
+  rm -f "`+rv+`/p.$$"
+  echo '--- FAIL: TestX (0.00s)'; exit 1
+fi
+exit 0`)
 	res, err := Mutate(nil, Config{Go: port, UnitOnly: true, Jobs: 4}, "", muts, NewUnitTest(t.TempDir()))
-	elapsed := time.Since(start)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -376,9 +388,8 @@ func TestMutateRunsMutantsInParallelAndKeepsTheirOrder(t *testing.T) {
 	if !reflect.DeepEqual(names, []string{"a", "b", "c", "d"}) {
 		t.Errorf("results out of order: %v", names)
 	}
-	// baseline (0.4 s) + four mutants: serial is at least 2.0 s, four jobs about 0.8 s.
-	if elapsed > 1500*time.Millisecond {
-		t.Errorf("4 jobs took %s: mutants did not run in parallel", elapsed)
+	if _, err := os.Stat(filepath.Join(rv, "ok")); err != nil {
+		t.Errorf("the four mutants never ran at the same time: %v", err)
 	}
 }
 
