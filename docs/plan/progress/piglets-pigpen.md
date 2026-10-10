@@ -183,3 +183,25 @@ Caching the module download per lock: Go's module cache is already keyed by modu
 ### Startup finding from the same run
 
 `GODEBUG=inittrace=1 pig --version` shows the largest package initialisation is `github.com/santhosh-tekuri/jsonschema/v6`: 5-9 ms and 1.7 MB per process start (median of 3: 6.8 ms). Its `init` (draft.go:127) compiles the metaschemas and vocabulary schemas of all five drafts. PiG links it into every path through `ai/validate.go` and `coding/piglet/schema.go`. Against `pig.startup` (80 ms, 48 MiB) that is about 8% of the time budget. Go cannot link a package lazily, so removing the cost means a patched copy of the library with lazy draft compilation, or asking upstream for it. Not done here: it is a dependency decision.
+
+## Proposal: the generated model catalog on the build critical path (2026-10-10)
+
+Problem: `ai/models_generated.go` (1563 models, 841 map and 2641 pointer literals) is one package-level composite literal, compiled as one very large initialisation function. The `ai` package compile is 13.6 s (three runs: 15.7, 13.7, 13.6); everything above it waits for it.
+
+Measured, same host, `ai` package only, deps cached, compile wall time from `-toolexec`; runtime from `GODEBUG=inittrace=1 pig --version`, three runs:
+
+| Layout | `ai` compile | `ai` init at every start |
+|---|---|---|
+| today: one package-level literal | 13.6 s | 1.6 ms, 364 KB |
+| 20 of 1563 models (lower bound, not a layout) | 6.7 s | n/a |
+| N package-level vars + `slices.Concat` (8, 16, 48 vars) | 13.9-15.4 s (no gain: still one init function) | 2.0 ms, 770 KB |
+| function-local, `append` per model, 16 chunks | 6.3 s (5.5-7.3 at 48 chunks) | 3.5-4.2 ms, 1.49 MB |
+| function-local, `return []GeneratedModel{...}` + `slices.Concat`, 16 chunks | 7.4 s | 3.1-3.7 ms, 1.95 MB |
+| today, `-gcflags=ai=-c=1/2/4/8/16` | 19.2 / 14.6 / 13.5 / 15.1 / 12.9 s (backend concurrency does nothing: one function) | unchanged |
+
+The gain is real (about 7 s, 54% of the `ai` compile, 12% of a cold build) and comes only from removing the single huge init function. Every layout that does so builds the catalog at run time, which costs +1.9 to +2.6 ms and +1.1 to +1.6 MB at every process start: today the compiler lays most of the literal out statically.
+
+Recommendation:
+1. Do not change the generated layout as it stands. A one-time 7 s on the first build of a machine does not justify +2.4 ms and +1.1 MB on every start against the 80 ms / 48 MiB `pig.startup` budget.
+2. Remove the whole 55-60 s compile instead, with no code: key a `GOCACHE` cache on the hash of the PiG source tree plus the Go version (CI and the Piglet release workflows). A Piglet build with that cache is the 8 s warm case measured above.
+3. If the 7 s is wanted anyway, make the catalog lazy so the cost leaves the start path: `var GeneratedModels` becomes `func GeneratedModels() []GeneratedModel` returning a `sync.OnceValue` of the 16-chunk `append` form, emitted by `cmd/gen-models/main.go:719`. That changes 32 call sites, and it only pays if the production start path does not read the catalog (readers: `ai/provider_strip.go:40`, `internal/codingagent/radius_models.go:98`, and the registry init, to be checked with a startup allocation test written first). Paths that do read it pay the same +2.4 ms once. I would build it behind a red startup budget test if you approve.
