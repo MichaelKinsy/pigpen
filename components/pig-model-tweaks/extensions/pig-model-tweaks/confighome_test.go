@@ -52,7 +52,7 @@ func TestRememberModelWhenTheConfigHomeIsGoneWarnsAndWritesNothing(t *testing.T)
 	h := StartHost(t, pigmodeltweaks.Extension(), HostOptions{})
 	h.Fire("session_start", map[string]any{"reason": "startup"})
 	dir := noConfigHome(t)
-	fireEveryHandler(t, h, "model_select", map[string]any{"model": map[string]any{"provider": "acme", "id": "m-1"}})
+	h.FireAll("model_select", map[string]any{"model": map[string]any{"provider": "acme", "id": "m-1"}})
 	var warned bool
 	for _, call := range h.CallsTo("ui.notify") {
 		if msg, _ := call.Args["message"].(string); strings.Contains(msg, "cannot remember the model") && call.Args["level"] == "warning" {
@@ -63,16 +63,4 @@ func TestRememberModelWhenTheConfigHomeIsGoneWarnsAndWritesNothing(t *testing.T)
 		t.Fatalf("no warning that the model could not be remembered: %+v", h.CallsTo("ui.notify"))
 	}
 	assertNothingWritten(t, dir)
-}
-
-// fireEveryHandler delivers an event to every handler the extension registered for it, in order, as the host does.
-func fireEveryHandler(t *testing.T, h *Host, event string, data map[string]any) {
-	t.Helper()
-	data["type"] = event
-	args, _ := json.Marshal(data)
-	for _, id := range h.allHandlers[event] {
-		if _, failure := h.roundTrip(map[string]any{"method": "event", "event": event, "handler_id": id, "args": json.RawMessage(args)}); failure != "" {
-			t.Fatalf("%s handler %d failed: %s", event, id, failure)
-		}
-	}
 }
