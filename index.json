@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-06",
+  "updatedAt": "2026-10-10",
   "entries": [
     {
       "id": "a2a",
@@ -194,6 +194,34 @@
         "Go only. Two pixel-art games, PiG Runner (/runner, /pig-runner) and Angry Pigs (/angry-pigs), moved from PiG Standard (Michael Kinsy, MIT). They draw the pig chosen with PiG's built-in /sprite (PiG 0.4.0 and later), so the Piglet bundles no login of its own. Run npm run stage before using its generated manifest under dist/staged.",
         "Nothing starts by itself. The games register only their commands and no event handler (PIG_GAMES_MCP=1 adds a session_start handler for the opt-in agent server; /runner mcp on and /angry-pigs mcp on serve a game to an agent on 127.0.0.1 behind a random token, off by default). Both Packages (pig-runner, angry-pigs) also install on their own from a Pigpen checkout; each needs the pig-play sprite library beside it (../pig-play).",
         "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+      ]
+    },
+    {
+      "id": "pig-music",
+      "kind": "piglet",
+      "name": "pig-music",
+      "description": "PiG with a music player: /music opens a full-screen YouTube Music player (yt-dlp resolves, mpv plays) that keeps playing while it is hidden. Nothing starts until you type /music.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-music"
+      },
+      "manifestSha256": "982c5f89022b47d754539d1d78ea7ba32edb73856133e4869acf010746a83357",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Go only. A full-screen music player: /music (or alt+m) opens YouTube Music search, library, queue and transport over mpv, with yt-dlp resolving tracks; the music keeps playing while the player is hidden and survives /reload. The extension is the Package components/pig-music. Run npm run stage before using its generated manifest under dist/staged.",
+        "Nothing starts by itself. The extension registers the /music command and the alt+m shortcut and no tool: no mpv or yt-dlp process, no network, no cookie access, no footer or widget and no timer before you type /music. The library reads your browser's cookies only after you say yes, once per browser. mpv and yt-dlp are not bundled: /music setup and /music doctor check the machine.",
+        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; none is a support claim.",
+        "Also selected by pig-with-batteries."
       ]
     },
     {

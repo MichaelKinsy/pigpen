@@ -103,7 +103,7 @@ export function stagedPiglets(dir = join(root, 'dist/staged/piglets')) {
   return existsSync(dir) ? readdirSync(dir).filter((name) => existsSync(join(dir, name, 'piglet.yaml'))).sort() : [];
 }
 
-function build(pig, name, out, host) {
+export function build(pig, name, out, host) {
   const target = join(out, `${name}${host.exe}`);
   rmSync(target, { force: true });
   const started = Date.now();
