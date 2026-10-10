@@ -31,8 +31,6 @@ const (
 	// source is the stable integration identity. herdr reserves the `herdr:` prefix for its own sources.
 	source = "custom:pig"
 	agent  = "pig"
-	// callTimeout bounds every herdr CLI call: herdr must never slow the agent down.
-	callTimeout = 3 * time.Second
 	// maxMessageLength bounds the sidebar message, in characters.
 	maxMessageLength = 120
 	// command is the first word of the resume command: a plain command name on PATH, as herdr requires.
@@ -539,6 +537,11 @@ func (r *reporter) release() {
 		r.diagnose(args, out, err)
 	}
 }
+
+// callTimeout bounds every herdr CLI call: herdr must never slow the agent down. It is a variable so
+// a test on a heavily loaded host can give the fake herdr, a freshly started test binary, time to
+// start; production never changes it.
+var callTimeout = 3 * time.Second
 
 // callHerdr runs one herdr command and returns its output. Callers do not wait on a
 // failed or slow herdr call (a failure is written once to stderr): the reporter is best effort, and it must never fail
