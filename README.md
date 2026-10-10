@@ -402,6 +402,8 @@ the music player opened (with stand-ins for mpv and yt-dlp: nothing is played), 
 load extension` and must exit 0 on `/quit`. A Piglet without a scenario in `scripts/e2e/piglets.mjs` fails the suite. Use
 `PIGLET_E2E_BIN_DIR=dir` for Binaries you already built and `PIGLET_E2E_ONLY=a2a,pig-games` for a few.
 
+The numbers for every Piglet, the 0.5 readiness list and the stripped-vs-stock measurements are in [`docs/plan/progress/piglets-pigpen.md`](docs/plan/progress/piglets-pigpen.md); `node scripts/perf/strip-matrix.mjs` regenerates the sizes (needs PiG 0.5).
+
 **Targets this machine cannot run.** PiG's native builder builds only its own OS and architecture, but the fused extensions link into one
 `go build`, so `npm run cross-link-check` (set `PIG_BIN` and `PIG_SOURCE_ROOT`; `-- --only <name>`, `--targets <os/arch,...>`) builds every
 Piglet with `GOOS`/`GOARCH` set to each other release target and counts a Binary that links but cannot run here as `linked`. It proves
