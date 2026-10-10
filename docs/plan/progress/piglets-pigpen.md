@@ -161,3 +161,25 @@ Fresh module cache and fresh build cache, network on (what a new machine pays on
 | `go mod download` of the whole workspace graph, then an offline `go build` | 14.7 s + 57.1 s = 71.8 s |
 
 A prefetch does not pay: Go already overlaps the module fetch with the compile, and the download is 15 s of the 68 s. An earlier run that showed a 64 s serial fetch (45 modules) against a 27 s targeted download was proxy latency noise on a warm compile cache, not a property of the build; it is retracted. No change to the builder is proposed for cold build time. The cost is the compile of PiG itself (about 55-60 s on this host), which the shared build cache removes for every later Piglet.
+
+## Where the cold build time goes (2026-10-10, PiG checkout, linux/amd64, same host)
+
+`go build` of cmd/pig with warm modules and an empty build cache, `-toolexec` timing every compile and link:
+
+| Step | Time |
+|---|---|
+| module download (whole graph, once per module cache, parallel with the compile) | 15 s of a 68.5 s first build |
+| compile: 586 package compiles, 219 s of work, 56.6 s wall | 94% of the 60 s build |
+| link (the one that matters: `-s -w`) | 2.5 s |
+| relink alone, compile cached | 4.1 s |
+| assemble, cgo | 17 s span, 4.4 s of work, overlapped with the compile |
+
+The compile is not CPU-bound: for 35.3 s of its 56.6 s at most one package was compiling. It is a dependency chain, and the longest single link of it is the `ai` package, 13.5-15.6 s on its own (everything above it waits). The next ones are `internal/codingagent` 5.5 s, `tui` 3.3 s, `coding/cli` 2.5 s.
+
+Why `ai` takes 13.5 s: `ai/models_generated.go` (1.46 MB, 1563 models) holds 841 map literals and 2641 pointer literals, which the compiler cannot lay out statically and compiles as one very large initialisation function. With 20 of the 1563 entries the package compiles in 6.7 s, so the catalog costs about 7-8 s on the critical path of every cold build (12-13% of it). A generated catalog the compiler can lay out statically, or one that is embedded as data and decoded on first use, would remove most of it. Runtime cost of that init is small (2 ms, 364 KB, 7.8k allocations), so the gain is build time, not startup.
+
+Caching the module download per lock: Go's module cache is already keyed by module version and checksum, so a CI cache keyed by the hash of go.sum is the right unit; it saves the 15 s. A cold Piglet build is otherwise the compile of PiG, which the shared build cache removes for every later Piglet (10-26 s).
+
+### Startup finding from the same run
+
+`GODEBUG=inittrace=1 pig --version` shows the largest package initialisation is `github.com/santhosh-tekuri/jsonschema/v6`: 5-9 ms and 1.7 MB per process start (median of 3: 6.8 ms). Its `init` (draft.go:127) compiles the metaschemas and vocabulary schemas of all five drafts. PiG links it into every path through `ai/validate.go` and `coding/piglet/schema.go`. Against `pig.startup` (80 ms, 48 MiB) that is about 8% of the time budget. Go cannot link a package lazily, so removing the cost means a patched copy of the library with lazy draft compilation, or asking upstream for it. Not done here: it is a dependency decision.
