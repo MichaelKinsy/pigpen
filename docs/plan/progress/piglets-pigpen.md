@@ -153,12 +153,11 @@ a2a Piglet (one fused Go extension with an external module), `pig piglet build -
 
 The compile cache is shared across Piglets: the cache keys (`-trimpath`, `-buildvcs=false`, link-only `-ldflags`) do not change between Piglets, so a second Piglet recompiles only its members. A strip list changes the build tags and recompiles the packages that carry them.
 
-Fresh module cache, network on (what a new machine pays on its first build), cmd/pig of the PiG checkout with a warm compile cache:
+Fresh module cache and fresh build cache, network on (what a new machine pays on its first build), `go build ./cmd/pig` of the PiG checkout, same host, run back to back:
 
 | Case | Time |
 |---|---|
-| `go build` fetching modules itself (45 module zips, 332 MB) | 64 s, one module after another |
-| `go mod download` of the whole workspace graph (1.6 GB, tools included) | 57 s |
-| `go mod download` of the 45 modules the build needs | 27 s (parallel), then the build still needs their go.mod files |
+| `go build` alone, fetching modules as it needs them | 68.5 s |
+| `go mod download` of the whole workspace graph, then an offline `go build` | 14.7 s + 57.1 s = 71.8 s |
 
-So a first build on a clean machine spends about as long fetching modules (64 s) as compiling (59 s), and the fetch is serial. A parallel `go mod download` of only the needed modules is 2.4x faster. The module list is not known without loading packages, which is what triggers the serial fetch. Next step if wanted: list the modules from the overlay `go.mod` require lines minus the `tool` block, prefetch them in parallel, and measure whether the go.mod-only fetches for the rest of the graph keep the saving.
+A prefetch does not pay: Go already overlaps the module fetch with the compile, and the download is 15 s of the 68 s. An earlier run that showed a 64 s serial fetch (45 modules) against a 27 s targeted download was proxy latency noise on a warm compile cache, not a property of the build; it is retracted. No change to the builder is proposed for cold build time. The cost is the compile of PiG itself (about 55-60 s on this host), which the shared build cache removes for every later Piglet.
