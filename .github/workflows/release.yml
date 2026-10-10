@@ -120,6 +120,20 @@ jobs:
         with:
           go-version-file: .pig-src/go.mod
           cache-dependency-path: .pig-src/go.sum
+      # setup-go restores the build cache keyed on go.sum and never refreshes it on a hit, so the cache
+      # holds the first PiG source it saw. A cold build compiles PiG for about a minute (13.6 s of it the
+      # ai package); this restores the newest cache for the runner and saves the one this build made.
+      - name: Locate the Go build cache
+        id: gocache
+        shell: bash
+        run: echo "dir=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+      - name: Restore the Go build cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.gocache.outputs.dir }}
+          key: gocache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.pig-src/go.sum') }}-${{ env.PIG_COMMIT }}
+          restore-keys: |
+            gocache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.pig-src/go.sum') }}-
       - name: Build PiG and stage the Piglet (no secrets)
         shell: bash
         env:
@@ -151,6 +165,12 @@ jobs:
           "$PIG_BIN" piglet build "dist/staged/piglets/$NAME/piglet.yaml" --format binary --builder native \
             --targets "$TARGET" --sign-key "$key" \
             --out "dist/piglet-${TARGET//\//-}$exe" --no-input
+      - name: Save the Go build cache
+        if: success()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.gocache.outputs.dir }}
+          key: gocache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.pig-src/go.sum') }}-${{ env.PIG_COMMIT }}
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
