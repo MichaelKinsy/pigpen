@@ -122,7 +122,11 @@ func (x *ext) baseStatus(ctx sdk.Context) {
 // sessionStart reloads the configuration. Nothing is judged unless the user's own
 // config says "enabled": a key alone is not consent.
 func (x *ext) sessionStart(ctx sdk.Context) {
-	l := loadConfig(ctx.ConfigHome(), ctx.Cwd())
+	home, homeErr := ctx.ConfigHome()
+	l := loadConfig(home, ctx.Cwd())
+	if homeErr != nil {
+		l.Warnings = append(l.Warnings, "could not find the PiG config directory, so your own "+configFile+" was not read: "+homeErr.Error())
+	}
 	be, err := newBackend(l.Config, ctx)
 	x.mu.Lock()
 	x.cfg, x.be, x.beEr = l.Config, be, err

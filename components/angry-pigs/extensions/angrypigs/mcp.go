@@ -57,7 +57,10 @@ func mcpGame() gamemcp.Game {
 // openForAgent opens the same overlay /angry-pigs opens, past the title screen, with the
 // agent HUD line showing.
 func openForAgent(ctx sdk.Context, agent *gamemcp.Agent) (gamemcp.Instance, error) {
-	configHome := ctx.ConfigHome()
+	configHome, err := ctx.ConfigHome()
+	if err != nil {
+		return nil, err
+	}
 	component := newComponent(loadHighScore(configHome), sprite.ActiveVariant(configHome), ctx.Height)
 	component.attachAgent(agent)
 	inst := &player{c: component, done: make(chan struct{}), save: func(high int) error { return saveHighScore(configHome, high) }}

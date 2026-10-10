@@ -1395,7 +1395,11 @@ func promptsCommand(ctx sdk.Context, args string) error {
 	}
 
 	if parts[0] == "agents" {
-		configHome := ctx.ConfigHome()
+		configHome, err := ctx.ConfigHome()
+		if err != nil {
+			ctx.Notify("Cannot locate the PiG config directory: "+err.Error(), "error")
+			return nil
+		}
 		agentsDir := filepath.Join(configHome, "agents")
 		entries, err := os.ReadDir(agentsDir)
 		if err != nil {
@@ -1426,7 +1430,11 @@ func promptsCommand(ctx sdk.Context, args string) error {
 
 	// Specific agent name.
 	agentName := strings.ToLower(strings.Join(parts, " "))
-	configHome := ctx.ConfigHome()
+	configHome, err := ctx.ConfigHome()
+	if err != nil {
+		ctx.Notify("Cannot locate the PiG config directory: "+err.Error(), "error")
+		return nil
+	}
 	agentsDir := filepath.Join(configHome, "agents")
 	entries, err := os.ReadDir(agentsDir)
 	if err != nil {
