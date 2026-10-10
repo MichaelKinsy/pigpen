@@ -564,6 +564,13 @@ func TestDaemonBoundsARequestThatHangs(t *testing.T) {
 // daemon from ever going idle.
 func TestConcurrentAttachLeavesNoStrayConnection(t *testing.T) {
 	r := startDaemon(t, 300*time.Millisecond)
+	// The daemon's idle clock starts when it comes up, so on a loaded host the 8 attaches could begin after the 300 ms
+	// idle exit and find no daemon. A held connection keeps it alive while they run and is dropped before the check:
+	// afterwards only a connection an Attach left behind could keep the daemon from exiting.
+	holder, err := dial(bg, Endpoint(r.paths))
+	if err != nil {
+		t.Fatal(err)
+	}
 	p := r.player()
 	start := make(chan struct{})
 	var wg sync.WaitGroup
@@ -579,6 +586,7 @@ func TestConcurrentAttachLeavesNoStrayConnection(t *testing.T) {
 	}
 	close(start)
 	wg.Wait()
+	_ = holder.Close()
 	_ = p.Close()
 	select {
 	case err := <-r.done:
