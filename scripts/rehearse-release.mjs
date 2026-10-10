@@ -81,7 +81,9 @@ git(R, 'clone', '-q', origin, seed);
 const manifestFile = join(seed, 'piglets/herdr/piglet.yaml');
 writeFileSync(manifestFile, readFileSync(manifestFile, 'utf8').replace(/^build:\n  targets: \[.*\]$/m, `build:\n  targets: [${host}]`));
 git(seed, 'commit', '-qam', 'rehearsal: herdr builds the host target only');
-git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+// Forced: the bare clone carries every local branch of this repository, so a checkout on a branch of its own finds a `main` it is not
+// a descendant of; the bare repository is the rehearsal's, so replacing its main is the point.
+git(seed, 'push', '-q', '-f', 'origin', 'HEAD:refs/heads/main');
 const tagSha = git(seed, 'rev-parse', 'HEAD');
 const tag = `herdr/v${version}`;
 // The clone may already carry the real tags (the repository has released); the rehearsal's own commit gets them, forced, in its own bare repository.
