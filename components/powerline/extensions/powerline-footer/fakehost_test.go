@@ -378,7 +378,23 @@ func (h *Host) Fire(event string, data map[string]any) json.RawMessage {
 	if failure != "" {
 		h.t.Errorf("%s handler failed: %s", event, failure)
 	}
+	if event == "tool_call" {
+		return toolCallResult(result)
+	}
 	return result
+}
+
+// toolCallResult unwraps the handler's {block, reason} from the host reply. The SDK carries it
+// in "_pigToolCallResult" beside any edited input ("_pigToolCallInput"), and the host reads
+// the same field, so a test must see what the host sees.
+func toolCallResult(reply json.RawMessage) json.RawMessage {
+	var wrapped struct {
+		Result json.RawMessage `json:"_pigToolCallResult"`
+	}
+	if err := json.Unmarshal(reply, &wrapped); err != nil {
+		return reply
+	}
+	return wrapped.Result
 }
 
 // Command runs a registered slash command and returns its error text ("" on success).
