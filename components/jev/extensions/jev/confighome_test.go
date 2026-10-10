@@ -19,6 +19,7 @@ func TestNoConfigHomeNeverReadsAProjectPlantedUserConfig(t *testing.T) {
 	t.Setenv("PIG_HOME", "")
 	t.Setenv("XDG_CONFIG_HOME", "")
 	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "") // os.UserHomeDir reads it on Windows
 	t.Setenv("TYPESAFE_API_KEY", testKey)
 
 	srv := newFakeJev(t, always(gateBody(0.99, 0.04, 0.4, 0.5, 0.9)))

@@ -10,7 +10,7 @@ import (
 // Context.ConfigHome fails when no config directory can be found (SDK 0.5). The command returns that error
 // before it opens any UI, so the game never reads or writes saved state under a guessed relative directory.
 func TestCommandWithoutAConfigHomeFailsBeforeOpeningTheGame(t *testing.T) {
-	for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME"} {
+	for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
 		t.Setenv(k, "")
 	}
 	t.Chdir(t.TempDir())
