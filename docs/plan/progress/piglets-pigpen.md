@@ -117,6 +117,13 @@ a product decision (it removes `/share`-class features users may expect) and the
 - **`extension-equivalence` flake**: `TestMutateRunsMutantsInParallelAndKeepsTheirOrder` asserted `elapsed <= 1.5 s` and failed in both
   full runs under load. It now proves parallelism by rendezvous (red with `Jobs: 1`, 102 s; green with 4 jobs, 2 s).
 
+- **`npm run rehearse:release` died from a branch checkout**: its bare clone carries every local branch, so the push of its own commit to
+  `main` was rejected as non-fast-forward. The push is forced in the throwaway repository; `REHEARSAL PASSED (15 checks)` from a branch.
+
+Gates run on the final tree: `npm test` 326/326, `npm run check`, `test:go` 65 packages and `test:go-ports` 95 packages (0 failures, after
+the two fixes), `test:npm-piglets` 15/15, `test:pig` 4/4, `rehearse:release` 15 checks, `platform-smoke` 13/13, `test:piglet-e2e` 15/15
+(twice), `cross-link-check` 13 x 4 linked.
+
 ## 7. Gates that only ratchet down
 
 PiG (`Makefile`, named "ratchet" or "may only shrink"): `divergence-guard` (`automation/ci/divguard/baseline.toml`, 70 entries),
