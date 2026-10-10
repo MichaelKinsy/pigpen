@@ -140,3 +140,25 @@ edited here.
 - The 0.5 migration of the seven modules (section 2) and strip lists in the manifests (section 5): both wait for the pin bump.
 - A real darwin or windows run: no native runner here. `ci.yml`'s `platform-matrix` runs them; the first run is the maintainer's.
 - `pig-tern`: not in this repository.
+
+## Piglet Binary cold build time (2026-10-10, linux/amd64, pig 0.5.0 dev, host load ~230)
+
+a2a Piglet (one fused Go extension with an external module), `pig piglet build --format binary --builder native`:
+
+| Case | Time |
+|---|---|
+| cold Go build cache, module cache warm | 62 s: 2 s prepare (resolve, hash, vet of members, workspace checksums) + 59 s compile and link of PiG + 1 s verify |
+| warm Go build cache | 7.9 s: 2 s prepare + 5 s link and verify |
+| pig-warden / pig-music / batteries after a2a, shared cache | 10 s / 26 s / 21 s |
+
+The compile cache is shared across Piglets: the cache keys (`-trimpath`, `-buildvcs=false`, link-only `-ldflags`) do not change between Piglets, so a second Piglet recompiles only its members. A strip list changes the build tags and recompiles the packages that carry them.
+
+Fresh module cache, network on (what a new machine pays on its first build), cmd/pig of the PiG checkout with a warm compile cache:
+
+| Case | Time |
+|---|---|
+| `go build` fetching modules itself (45 module zips, 332 MB) | 64 s, one module after another |
+| `go mod download` of the whole workspace graph (1.6 GB, tools included) | 57 s |
+| `go mod download` of the 45 modules the build needs | 27 s (parallel), then the build still needs their go.mod files |
+
+So a first build on a clean machine spends about as long fetching modules (64 s) as compiling (59 s), and the fetch is serial. A parallel `go mod download` of only the needed modules is 2.4x faster. The module list is not known without loading packages, which is what triggers the serial fetch. Next step if wanted: list the modules from the overlay `go.mod` require lines minus the `tool` block, prefetch them in parallel, and measure whether the go.mod-only fetches for the rest of the graph keep the saving.
