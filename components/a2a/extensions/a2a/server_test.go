@@ -26,6 +26,7 @@ import (
 
 	"github.com/a2aproject/a2a-go/v2/a2a"
 	"github.com/a2aproject/a2a-go/v2/a2aclient"
+	"github.com/a2aproject/a2a-go/v2/a2asrv"
 )
 
 // scriptedWorker is a Worker whose behaviour a test sets.
@@ -784,9 +785,48 @@ func TestShutdownClosesThePortEvenRightAfterStart(t *testing.T) {
 		if err := s.Shutdown(context.Background()); err != nil {
 			t.Fatal(err)
 		}
-		if c, err := net.DialTimeout("tcp", addr, time.Second); err == nil {
-			c.Close()
-			t.Fatalf("iteration %d: %s still accepts connections after Shutdown returned", i, addr)
+		if servesOurAgentCard(addr) {
+			t.Fatalf("iteration %d: %s still serves this server's agent card after Shutdown returned", i, addr)
 		}
+	}
+}
+
+// servesOurAgentCard reports whether the listener at addr is the server under test. Once Shutdown has closed an
+// ephemeral port, any other process on the machine (another test binary, on a busy host) may bind it, so a successful
+// dial alone does not mean this server still listens: only its own agent card does.
+func servesOurAgentCard(addr string) bool {
+	client := &http.Client{Timeout: time.Second}
+	resp, err := client.Get("http://" + addr + a2asrv.WellKnownAgentCardPath)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	return resp.StatusCode == http.StatusOK && strings.Contains(string(body), serverConfig().Name)
+}
+
+// Another process taking the freed port must not read as this server still listening, and a live server must.
+func TestServesOurAgentCardTellsThisServerFromAnotherListener(t *testing.T) {
+	s := startServer(t, serverConfig(), &scriptedWorker{})
+	if !servesOurAgentCard(s.Addr()) {
+		t.Fatal("a running server was not recognised by its agent card")
+	}
+	stranger, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stranger.Close()
+	go func() {
+		for {
+			c, err := stranger.Accept()
+			if err != nil {
+				return
+			}
+			_, _ = c.Write([]byte("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok"))
+			_ = c.Close()
+		}
+	}()
+	if servesOurAgentCard(stranger.Addr().String()) {
+		t.Fatal("another process's listener was read as this server")
 	}
 }
