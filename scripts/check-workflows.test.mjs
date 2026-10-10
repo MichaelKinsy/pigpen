@@ -1,8 +1,12 @@
 // The workflow hardening gate (scripts/check-workflows.mjs) on small workflows written here. It tests the gate, not
 // Pigpen's own workflow: `npm run quality` runs the gate over .github/workflows, and a hosted run is the workflow's test.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
-import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems, npmPublishProblems } from './check-workflows.mjs';
+import { fileURLToPath } from 'node:url';
+import { parse } from 'yaml';
+import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems, npmPublishProblems, cacheProblems } from './check-workflows.mjs';
 
 const sha = 'a'.repeat(40);
 const good = `
@@ -230,5 +234,37 @@ jobs:
     assert.match(tagProblems({ 'npm-publish.yml': on('**/v*') }).join('\n'), /npm-publish\.yml.*components\/herdr\/v0\.1\.0/);
     assert.equal(problemsOf(release), '');
     assert.match(problemsOf(release.replace("    if: ${{ !startsWith(github.ref_name, 'npm/') }}\n", '')), /npm\/ tag/);
+  });
+});
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+describe('the Go build cache', () => {
+  const read = (name) => readFileSync(join(root, '.github/workflows', name), 'utf8');
+  const workflows = () => ({ 'release.yml': read('release.yml'), 'gocache.yml': read('gocache.yml'), parsed: { 'gocache.yml': parse(read('gocache.yml')) } });
+  it('is saved on main and only restored by the release', () => {
+    assert.deepEqual(cacheProblems(workflows()), []);
+  });
+  it('refuses a release that saves the cache, which no later release could restore', () => {
+    const w = workflows();
+    w['release.yml'] = w['release.yml'].replace('actions/cache/restore@', 'actions/cache@');
+    assert.match(cacheProblems(w).join('\n'), /saves the Go build cache/);
+    w['release.yml'] = workflows()['release.yml'] + '\n      - uses: actions/cache/save@x\n';
+    assert.match(cacheProblems(w).join('\n'), /saves the Go build cache/);
+  });
+  it('refuses a restore with no save on main, and a warm workflow that runs on a tag or a pull request', () => {
+    const w = workflows();
+    delete w['gocache.yml'];
+    assert.match(cacheProblems(w).join('\n'), /no workflow on main saves/);
+    const v = workflows();
+    v.parsed['gocache.yml'] = { on: { push: { tags: ['*/v*'] } } };
+    assert.match(cacheProblems(v).join('\n'), /only on a push to main/);
+    v.parsed['gocache.yml'] = { on: { push: { branches: ['main'] }, pull_request: {}, workflow_dispatch: {} } };
+    assert.match(cacheProblems(v).join('\n'), /only on a push to main/);
+  });
+  it('refuses keys that differ, so the restore would never match what main saved', () => {
+    const w = workflows();
+    w['gocache.yml'] = w['gocache.yml'].replace('hashFiles(\'.pig-src/go.sum\')', 'hashFiles(\'.pig-src/go.mod\')');
+    assert.match(cacheProblems(w).join('\n'), /key differs/);
   });
 });

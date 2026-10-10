@@ -1,0 +1,65 @@
+# Warms the Go build cache that release.yml restores. A release runs on a tag, and a cache saved by a tag run is visible only
+# to that tag's re-runs, so no release could ever restore a cache a release saved. A cache saved on the default branch is
+# visible to every ref, so it is saved here, on main, once per PiG pin and runner platform. release.yml only restores it
+# (actions/cache/restore, never save), so the signing job does not write the cache it builds from.
+# Cold, the compile of PiG is about a minute per platform; with this cache the Piglet Binary build recompiles only what the
+# Piglet changes. The key is the one release.yml restores: gocache-<os>-<arch>-<hash of PiG go.sum>-<PiG commit>.
+name: Warm the Go build cache
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pig-requirement.json
+      - .github/workflows/gocache.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # The PiG release release.yml builds with: scripts/pig-requirement.json (`release`); scripts/check-workflows.mjs keeps it equal.
+  PIG_COMMIT: '3ee745c8cda3c1a9a8d71112c140790c4d64d78d' # PiG v0.4.1
+
+jobs:
+  warm:
+    name: Warm / ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        # The runner of each target (scripts/runners.mjs).
+        runner: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025]
+    steps:
+      - name: Keep checked-out line endings
+        shell: bash
+        run: git config --global core.autocrlf false
+      - name: Check out PiG
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/go.mod
+          cache: false
+      - name: Locate the Go build cache
+        id: gocache
+        shell: bash
+        run: echo "dir=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+      # actions/cache restores on entry and saves after the job when the exact key was not found.
+      - name: Restore the Go build cache, and save it when this key is new
+        id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.gocache.outputs.dir }}
+          key: gocache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.pig-src/go.sum') }}-${{ env.PIG_COMMIT }}
+      - name: Compile PiG into the cache
+        shell: bash
+        run: go -C .pig-src build -trimpath -o "$RUNNER_TEMP/pig" ./cmd/pig
+      - name: Say what the cache did
+        shell: bash
+        run: echo "Go build cache exact hit ${{ steps.cache.outputs.cache-hit }} for ${{ runner.os }}-${{ runner.arch }} at PiG ${PIG_COMMIT}" >> "$GITHUB_STEP_SUMMARY"

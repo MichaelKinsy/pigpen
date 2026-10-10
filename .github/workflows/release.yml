@@ -120,6 +120,23 @@ jobs:
         with:
           go-version-file: .pig-src/go.mod
           cache-dependency-path: .pig-src/go.sum
+      # Restore only. gocache.yml saves this cache on main: a cache saved by a tag run is visible only to that tag, so a
+      # release could never restore it, and the signing job must not write the cache it builds from.
+      - name: Locate the Go build cache
+        id: gocache
+        shell: bash
+        run: echo "dir=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+      - name: Restore the Go build cache saved on main
+        id: cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.gocache.outputs.dir }}
+          key: gocache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.pig-src/go.sum') }}-${{ env.PIG_COMMIT }}
+          restore-keys: |
+            gocache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.pig-src/go.sum') }}-
+      - name: Say what the cache did
+        shell: bash
+        run: echo "Go build cache exact hit ${{ steps.cache.outputs.cache-hit }}, matched ${{ steps.cache.outputs.cache-matched-key }}" >> "$GITHUB_STEP_SUMMARY"
       - name: Build PiG and stage the Piglet (no secrets)
         shell: bash
         env:
