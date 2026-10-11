@@ -103,7 +103,7 @@ export function stagedPiglets(dir = join(root, 'dist/staged/piglets')) {
   return existsSync(dir) ? readdirSync(dir).filter((name) => existsSync(join(dir, name, 'piglet.yaml'))).sort() : [];
 }
 
-export function build(pig, name, out, host) {
+export function build(pig, name, out, host, manifestPath = join(root, 'dist/staged/piglets', name, 'piglet.yaml')) {
   const target = join(out, `${name}${host.exe}`);
   rmSync(target, { force: true });
   const started = Date.now();
@@ -111,7 +111,7 @@ export function build(pig, name, out, host) {
   try {
     // pig keeps its Package cache and trust state under PIG_HOME; a build must not touch the runner's own.
     const env = { ...process.env, PIG_HOME: join(home, 'pig'), PIG_CODING_AGENT_DIR: join(home, 'agent') };
-    const manifest = join(root, 'dist/staged/piglets', name, 'piglet.yaml');
+    const manifest = manifestPath;
     const result = spawnSync(pig, ['piglet', 'build', manifest, '--format', 'binary', '--out', target, '--targets', host.target], { cwd: root, env, encoding: 'utf8', maxBuffer: 64 << 20 });
     const seconds = Math.round((Date.now() - started) / 100) / 10;
     if (result.error || result.status !== 0 || !existsSync(target)) {

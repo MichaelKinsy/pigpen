@@ -106,6 +106,42 @@ extension can strip `node-extensions`, `extension-sdk-rust` and `extension-sdk-p
 herdr builds with `extension-sdk-go` stripped too, saving a further 1.1 MiB). The manifests were not changed: a strip list is
 a product decision (it removes `/share`-class features users may expect) and the pin is still 0.4.1. The reproducible numbers are above.
 
+### Per-ID cost of an opt-in strip
+
+A strip is opt-in: a Piglet loses a built-in only when its manifest names it in `strip:`, and `discovery.extensions: []` strips nothing
+(the stock `a2a` Binary still loads `pig -e hello.ts`). A request for a stripped runtime fails with the Piglet's name, the entry and how to
+keep it. Measured on stock pig 0.5.0 (`-s -w`, linux/amd64, 65.84 MiB), one build tag at a time (`pig_strip_<id>`), so authors see what each
+entry saves. Entries that are not tags (`themes`, `skills`, `prompt-templates`, tools, commands) switch the feature off at runtime and save no bytes.
+
+| strip entry | saves | what the Piglet's users lose |
+| --- | ---: | --- |
+| `features: node-extensions` | 7.50 MiB | TypeScript and JavaScript extensions (`-e`, `pig install`) |
+| `features: word-dictionaries` | 6.05 MiB | word navigation in CJK, Thai, Lao, Khmer and Burmese text |
+| `extensions: codemode` | 3.36 MiB | the Codemode extension |
+| `apis: bedrock-converse-stream` | 3.03 MiB | Amazon Bedrock models |
+| `features: extension-sdk-go` | 2.55 MiB | building Go source extensions (fused Go extensions stay) |
+| `extensions: mcp` | 1.02 MiB | MCP servers and `pig mcp` |
+| `features: piglet-builder` | 0.89 MiB | `pig piglet build` and `pig piglet publish` |
+| `features: extension-sdk-rust` | 0.83 MiB | building Rust source extensions |
+| `features: mermaid` | 0.62 MiB | mermaid diagrams in code blocks |
+| `features: syntax-highlight` | 0.59 MiB | code highlighting |
+| `features: extension-sdk-python` | 0.37 MiB | running Python extensions |
+| `features: docs` | 0.36 MiB | `pig docs` and the docs pointer in the system prompt |
+| `features: export-html` | 0.32 MiB | HTML session export |
+| `extensions: llama.cpp` | 0.31 MiB | llama.cpp router models |
+| `apis: google-vertex` | 0.29 MiB | Google Vertex models |
+| `features: changelog` | 0.23 MiB | `/changelog` and What's New |
+| `features: self-update` | 0.14 MiB | `pig update` of pig itself (a Piglet Binary refuses it anyway) |
+| `apis: mistral-conversations` | 0.09 MiB | Mistral Conversations models |
+| `extensions: pig-login` | 0.04 MiB | the login extension |
+| `extensions: tool-search` | 0.01 MiB | tool search |
+| all of the above | 28.97 MiB | everything strippable (36.9 MiB left) |
+
+The four runtimes together (`node-extensions` and the three SDKs) save 11.27 MiB; the entries are not additive to the byte (shared code).
+Pigpen's own opt-ins, each proved by `node scripts/strip-inventory.mjs <piglet>` (stock and stripped Binary through the same probes;
+the inventories differ in the probes of the stripped IDs and nowhere else): `a2a`, `pig-typesafe` and `pig-with-batteries` strip
+`node-extensions`, the three SDKs and `self-update`, because each declares a closed extension surface. The user-discovering Piglets strip nothing.
+
 ## 6. Fixed on the way (red first)
 
 - **PiG repo, `make porter-smoke` failed on a clean tree** (three causes: the caller's `PIG_CODING_AGENT_DIR` beat `PIG_HOME/agent`, so

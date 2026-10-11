@@ -17,6 +17,11 @@ extensions:
   - name: pi-typesafe
     origins: [package:pi-typesafe]
 skills: []
+# Opt-in strip (D92): this Piglet declares a closed extension surface (discovery.extensions: []), and names the runtimes it does not ship.
+# `pig -e <file>` for a TypeScript, Go, Rust or Python extension then fails with a message that names this Piglet and the entry to remove.
+# Remove an entry here and rebuild to keep that runtime. node/ SDK sizes: docs/plan/progress/piglets-pigpen.md (per-ID table).
+strip:
+  features: [node-extensions, extension-sdk-go, extension-sdk-rust, extension-sdk-python, self-update]
 discovery:
   extensions: []
   skills: []
