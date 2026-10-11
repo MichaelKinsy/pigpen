@@ -93,6 +93,9 @@ func (m QuickModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.w, m.h = msg.Width, msg.Height
 	case tea.KeyPressMsg:
 		return m.key(msg.String())
+	case MouseMsg:
+		return m.mouse(msg)
+	case StateMsg: // the player changed (the extension sends what the box shows of it): drawn again, from the player
 	}
 	return m, nil
 }
@@ -239,15 +242,40 @@ func (m QuickModel) player(dir int) (tea.Model, tea.Cmd) {
 // View draws the screen at the size it was given, one string per row of the terminal.
 func (m QuickModel) View() tea.View { return tea.NewView(strings.Join(m.lines(), "\n")) }
 
-func (m QuickModel) lines() []string {
+// Draw is View together with its parts (parts.go): the heading and the track are text, the settings a list, the keys text.
+func (m QuickModel) Draw() (string, []Part) {
 	if m.w < 1 || m.h < 1 {
-		return []string{""}
+		return strings.Join(m.lines(), "\n"), []Part{{Kind: PartRows, Rows: 1}}
 	}
+	st, live := m.playerState()
+	rows := m.linesAt(st, live)
+	items := make([]ListItem, rowCount)
+	for i := range items {
+		items[i] = ListItem{Label: quickLabels[i], Detail: m.value(i, st, live)}
+	}
+	parts := []Part{{Kind: PartText, Rows: 4}, {Kind: PartList, Rows: rowCount, List: &List{Items: items, Selected: m.row}}, {Kind: PartText, Rows: m.h}}
+	return strings.Join(rows, "\n"), fitParts(parts, m.h)
+}
+
+// playerState is the player's state, and whether a player is there to change.
+func (m QuickModel) playerState() (music.State, bool) {
 	st := music.State{Index: -1}
 	if m.deps.Player != nil {
 		st = m.deps.Player.State()
 	}
-	live := st.Connected || st.Track != nil
+	return st, st.Connected || st.Track != nil
+}
+
+func (m QuickModel) lines() []string {
+	if m.w < 1 || m.h < 1 {
+		return []string{""}
+	}
+	st, live := m.playerState()
+	return m.linesAt(st, live)
+}
+
+// linesAt is lines for the player's state st.
+func (m QuickModel) linesAt(st music.State, live bool) []string {
 	out := []string{" " + bold.Render("Pigpen Music") + dim.Render("  quick settings"), ""}
 	switch {
 	case st.Track != nil:
@@ -264,13 +292,8 @@ func (m QuickModel) lines() []string {
 		out = append(out, dim.Render(" Nothing playing"), "")
 	}
 	for i := 0; i < rowCount; i++ {
-		mark := "  "
-		if i == m.row {
-			mark = "> "
-		}
-		label := fmt.Sprintf("%-18s", quickLabels[i])
 		val := m.value(i, st, live)
-		line := " " + mark + label + val
+		line := m.rowHead(i) + val
 		if i == m.row {
 			line = reverse.Render(pad(line, m.w))
 		}
@@ -290,6 +313,15 @@ func (m QuickModel) lines() []string {
 		}
 	}
 	return res
+}
+
+// rowHead is the start of row i of the settings: the mark of the selected row and the label, up to the value.
+func (m QuickModel) rowHead(i int) string {
+	mark := "  "
+	if i == m.row {
+		mark = "> "
+	}
+	return " " + mark + fmt.Sprintf("%-18s", quickLabels[i])
 }
 
 func (m QuickModel) value(row int, st music.State, live bool) string {

@@ -31,7 +31,7 @@ type view struct {
 	title     string
 	loopList  string // loop-playlist
 	loopFile  string // loop-file
-	shuffled  bool   // set by the Player: mpv has no property for it
+	shuffled  bool   // set by the Player, and read from its mark in mpv on adopt (shuffledProp): mpv has no property for it
 }
 
 func newView() view { return view{pos: -1} }
@@ -135,12 +135,14 @@ func seconds(f float64) time.Duration { return time.Duration(f * float64(time.Se
 // repeat maps mpv's loop-file and loop-playlist (no, yes, inf, force or a count) to a mode: a track that loops
 // wins over a queue that loops.
 func (v *view) repeat() music.RepeatMode {
-	on := func(s string) bool { return s != "" && s != "no" && s != "0" && s != "false" }
 	switch {
-	case on(v.loopFile):
+	case looping(v.loopFile):
 		return music.RepeatOne
-	case on(v.loopList):
+	case looping(v.loopList):
 		return music.RepeatAll
 	}
 	return music.RepeatOff
 }
+
+// looping reports whether a loop-file or loop-playlist value loops.
+func looping(s string) bool { return s != "" && s != "no" && s != "0" && s != "false" }

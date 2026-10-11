@@ -116,7 +116,7 @@ func TestReviewM10bANewSearchCancelsTheOneItReplaces(t *testing.T) {
 	for _, msg := range append(runAll(open2), runAll(open1)...) {
 		m, _ = m.Update(msg)
 	}
-	if got := m.(Model); got.ent == nil || len(got.ent.tracks) != 2 || got.status != "" {
-		t.Errorf("a cancelled open of the same album won: %+v, status %q", got.ent, got.status)
+	if got := m.(Model); len(got.pages) == 0 || len(got.topTracks()) != 2 || got.status != "" {
+		t.Errorf("a cancelled open of the same album won: %+v, status %q", got.pages, got.status)
 	}
 }

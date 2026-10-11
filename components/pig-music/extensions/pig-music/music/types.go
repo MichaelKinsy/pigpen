@@ -5,6 +5,7 @@ package music
 
 import (
 	"context"
+	"errors"
 	"image"
 	"time"
 )
@@ -36,6 +37,41 @@ type EntitySearcher interface {
 	// OpenEntity returns the entity's title and its tracks in order (an album's, or an artist's top songs); the tracks of an
 	// album carry its name.
 	OpenEntity(ctx context.Context, e Entity) (title string, tracks []Track, err error)
+}
+
+// Section is a titled list on a Page: tracks to play, or albums, artists and playlists to open.
+type Section struct {
+	Title    string   `json:"title"`
+	Tracks   []Track  `json:"tracks,omitempty"`
+	Entities []Entity `json:"entities,omitempty"`
+}
+
+// Page is an artist's, an album's, a playlist's or a track's Related page: a header and sections in the order YouTube Music
+// shows them.
+type Page struct {
+	Kind     string    `json:"kind"` // "artist" | "album" | "playlist" | "related"
+	ID       string    `json:"id"`
+	Title    string    `json:"title"`
+	Subtitle string    `json:"subtitle,omitempty"`
+	Sections []Section `json:"sections"`
+}
+
+// Watch is what YouTube Music's watch-next answer says about one track: whom and what it is by, the radio (the RDAMVM mix, the
+// track itself first) and the page of related things. Artists and Album are empty when the answer names none.
+type Watch struct {
+	Artists   []Entity `json:"artists,omitempty"`
+	Album     Entity   `json:"album,omitempty"`
+	Radio     []Track  `json:"radio,omitempty"`
+	RelatedID string   `json:"relatedId,omitempty"` // the browse ID of the Related page (MPTRt_...)
+}
+
+// Navigator is an optional extra of a Source: pages to go to from a track (its artist, its album, its radio, what is related)
+// and the pages themselves. A Source that is not one has no "go to" keys.
+type Navigator interface {
+	Watch(ctx context.Context, videoID string) (Watch, error)
+	// OpenPage returns the page of an album, artist or playlist entity, or of a Related entity (Kind "related", the Watch's
+	// RelatedID).
+	OpenPage(ctx context.Context, e Entity) (Page, error)
 }
 
 // Collection is a playlist, album or the liked-songs list.
@@ -111,6 +147,22 @@ type LibraryCache interface {
 	// CachedTracks returns the first n remembered tracks of a collection, and whether more are known to follow.
 	CachedTracks(ctx context.Context, id string, n int) (tracks []Track, more bool, ok bool)
 }
+
+// HomeFeed is an optional extra of a Source: what the Search screen shows before anything is searched, beside the history.
+type HomeFeed interface {
+	// Popular is a chart of the songs most played now (Title names the chart). It needs no account.
+	Popular(ctx context.Context) (Section, error)
+	// Suggested is the first sections of the account's YouTube Music home. It reads the account only when the user agreed to it
+	// for the library: else a *NeedsConsentError (not asked yet) or a *NoBrowserError, and ErrNoAccount when the account is off.
+	Suggested(ctx context.Context) ([]Section, error)
+	// CachedHome is what the last session left of both on disk, at once: the suggestions only while reading the account is still
+	// allowed and the same browser is in use. ok is false when there is nothing.
+	CachedHome(ctx context.Context) (popular Section, suggested []Section, ok bool)
+}
+
+// ErrNoAccount means the account is not used at all (PIG_MUSIC_LIBRARY=ytdlp, or no cookie access configured): there are no
+// suggestions, and nothing to ask.
+var ErrNoAccount = errors.New("the YouTube Music account is not used")
 
 // Artwork is an optional extra of a Source or of anything beside it: the cover picture of a track, from its thumbnail. It is
 // fetched over plain HTTPS with no cookies. Source and Player are unchanged.
@@ -191,4 +243,37 @@ type Player interface {
 	Close() error
 	// Shutdown stops the player process. Only an explicit request calls it.
 	Shutdown(ctx context.Context) error
+}
+
+// LyricWord is one word of a line sung at At (a track's own time), when the lyrics are word-synced.
+type LyricWord struct {
+	At   time.Duration
+	Text string
+}
+
+// LyricLine is one line of lyrics. For synced lyrics At is when it starts and End when the next line starts (0 for the last).
+type LyricLine struct {
+	At    time.Duration
+	End   time.Duration
+	Text  string
+	Words []LyricWord // empty unless the lyrics carry word timings
+}
+
+// Lyrics are a track's lyrics: time-synced lines, or a plain sheet (Synced false, At 0).
+type Lyrics struct {
+	Source       string // "lrclib" or "youtube"
+	Synced       bool
+	Instrumental bool
+	Lines        []LyricLine
+}
+
+// ErrNoLyrics is the answer for a track that has none anywhere.
+var ErrNoLyrics = errors.New("no lyrics for this track")
+
+// LyricsProvider is an optional extra of the player's surroundings (ui.Deps.Lyrics): lyrics for a track, and the offset the user
+// nudged for it (remembered per track).
+type LyricsProvider interface {
+	Lyrics(ctx context.Context, t Track) (Lyrics, error)
+	Offset(id string) time.Duration
+	SetOffset(id string, d time.Duration)
 }

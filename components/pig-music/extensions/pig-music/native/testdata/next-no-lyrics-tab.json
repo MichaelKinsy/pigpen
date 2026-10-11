@@ -1,0 +1,4 @@
+{"contents":{"singleColumnMusicWatchNextResultsRenderer":{"tabbedRenderer":{"watchNextTabbedResultsRenderer":{"tabs":[
+{"tabRenderer":{"title":"Up next"}},
+{"tabRenderer":{"title":"Lyrics","unselectable":true}},
+{"tabRenderer":{"title":"Related","endpoint":{"browseEndpoint":{"browseId":"MPTRt_X8pk5s2tHrH"}}}}]}}}}}

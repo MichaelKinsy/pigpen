@@ -62,7 +62,7 @@ describe('pig-music player in a real terminal (real mpv --ao=null and yt-dlp)', 
     const env = {
       HOME: join(dir, 'home'), PIG_HOME: join(dir, 'pighome'), PIG_CODING_AGENT_DIR: join(dir, 'agent'),
       PI_CODING_AGENT_DIR: join(dir, 'agent'), PIG_TEST_FAUX: '1', PIG_TEST_FAUX_SCENARIO: 'parity-basic',
-      TERM: 'xterm-256color', COLORTERM: 'truecolor', XDG_RUNTIME_DIR: run, PIG_MUSIC_MPV_ARGS: '--ao=null',
+      TERM: 'xterm-256color', COLORTERM: 'truecolor', XDG_RUNTIME_DIR: run, PIG_MUSIC_MPV_ARGS: '--ao=null', PIG_MUSIC_LYRICS: 'off', // these tests are about the queue: the lyrics view replaces it
       PATH: `${dirname(process.execPath)}:${process.env.PATH}`, ...goCaches(),
     };
     const exports = Object.entries(env).map(([n, v]) => `${n}='${v}'`).join(' ');

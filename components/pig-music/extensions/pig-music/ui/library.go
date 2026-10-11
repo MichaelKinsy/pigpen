@@ -277,10 +277,11 @@ func (m Model) libraryKey(k string) (tea.Model, tea.Cmd) {
 			tracks, at := m.filled(l.tracks), l.tcur
 			m.tab = tabPlayer
 			gen := m.queueGen.Add(1)
+			played := m.remember(music.Recent{Track: &tracks[at]})
 			if pager, ok := m.deps.Source.(music.TrackPager); ok && l.more {
-				return m, replaceAndFollow(p, pager, l.open.ID, tracks, at, gen, m.queueGen)
+				return m, tea.Batch(replaceAndFollow(p, pager, l.open.ID, tracks, at, gen, m.queueGen), played)
 			}
-			return m, op(func(ctx context.Context) error { return p.Replace(ctx, tracks, at) })
+			return m, tea.Batch(op(func(ctx context.Context) error { return p.Replace(ctx, tracks, at) }), played)
 		case "a":
 			if n == 0 {
 				return m, nil
@@ -293,6 +294,39 @@ func (m Model) libraryKey(k string) (tea.Model, tea.Cmd) {
 }
 
 // ── view ────────────────────────────────────────────────────────────────────
+
+// libraryBody is libraryLines with its parts: the collections and an opened one's tracks are lists, the rest text.
+func (m Model) libraryBody(s *sheet, rows int) {
+	lines := m.libraryLines(rows)
+	l := m.lib
+	switch {
+	case l.state != libReady || len(lines) < 2:
+		s.add(PartText, lines...)
+	case l.open == nil:
+		if len(l.cols) == 0 {
+			s.add(PartText, lines...)
+			return
+		}
+		first, end := window(len(l.cols), l.cur, rows-1) // as collectionLines shows them
+		items := make([]ListItem, 0, end-first)
+		for _, c := range l.cols[first:end] {
+			count := ""
+			if c.Count > 0 {
+				count = fmt.Sprintf("%d", c.Count)
+			}
+			items = append(items, ListItem{Label: clean(c.Title), Detail: count})
+		}
+		s.add(PartText, lines[0])
+		s.listRows(lines[1:], listAt(items, first, l.cur))
+	case l.loading:
+		s.add(PartText, lines...)
+	default:
+		s.add(PartText, lines[0])
+		t := m.trackTableOf(m.filled(l.tracks), l.tcur, -1, rows-1)
+		t.rows = lines[1:] // the same rows, as openedLines drew them
+		s.tableBody(t)
+	}
+}
 
 func (m Model) libraryLines(rows int) []string {
 	l := m.lib
@@ -326,7 +360,7 @@ func (m Model) consentLines() []string {
 	paras := []string{
 		"pig-music needs your OK before it reads your YouTube Music account.",
 		"To list your library, yt-dlp would read the cookies of " + clean(c.Description) + ".",
-		"It opens that browser's whole cookie store for each library request, in memory only; pig-music saves no cookie and never sees one. Only the library listing uses it: search, playback and mpv never use cookies.",
+		"It opens that browser's whole cookie store for each library request, in memory only; pig-music saves no cookie and never sees one. Only the library listing and the suggestions on the Search screen use it: search, playback and mpv never use cookies.",
 		clean(c.Notes),
 	}
 	out := []string{" " + bold.Render("Library: your playlists and liked songs"), ""}

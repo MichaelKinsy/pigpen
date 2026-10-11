@@ -35,6 +35,9 @@ type Options struct {
 	Redraw func()
 	// Hide is called when the model quits.
 	Hide func()
+	// Draw, when set, draws the model in place of its View: the view's text together with a structure of the caller's that
+	// Frame returns with the lines it describes.
+	Draw func(tea.Model) (string, any)
 }
 
 // Host runs one model.
@@ -51,8 +54,10 @@ type Host struct {
 
 	mu      sync.Mutex
 	view    string
+	shape   any // what Options.Draw returned with view
 	w, h    int
 	visible bool
+	stale   bool // the model changed while hidden: view is not its latest drawing
 	hideReq bool
 	stopped bool
 }
@@ -105,6 +110,10 @@ func (h *Host) do(f func()) bool {
 // Send delivers a message to the model.
 func (h *Host) Send(msg tea.Msg) { h.do(func() { h.update(msg, nil) }) }
 
+// Peek runs f with the model on the loop and waits for it; it reports false when the host has stopped. f must not call the
+// host.
+func (h *Host) Peek(f func(tea.Model)) bool { return h.do(func() { f(h.model) }) }
+
 // Input delivers a key and reports whether the model quit as a result. It waits a
 // moment for the commands the key started, so an immediate tea.Quit is reported.
 func (h *Host) Input(msg tea.Msg) (quit bool) {
@@ -141,6 +150,12 @@ func (h *Host) Resize(width, height int) {
 // clipped and padded without breaking styles. A different size from the last is
 // delivered to the model first.
 func (h *Host) Lines(width, height int) []string {
+	lines, _ := h.Frame(width, height)
+	return lines
+}
+
+// Frame is Lines together with the structure Options.Draw returned for the same drawing (nil without Draw).
+func (h *Host) Frame(width, height int) ([]string, any) {
 	h.mu.Lock()
 	same := h.w == width && h.h == height
 	h.mu.Unlock()
@@ -148,9 +163,15 @@ func (h *Host) Lines(width, height int) []string {
 		h.Resize(width, height)
 	}
 	h.mu.Lock()
-	view := h.view
+	view, shape, stale := h.view, h.shape, h.stale
 	h.mu.Unlock()
-	return fit(view, width, height)
+	if stale {
+		h.do(h.draw)
+		h.mu.Lock()
+		view, shape = h.view, h.shape
+		h.mu.Unlock()
+	}
+	return fit(view, width, height), shape
 }
 
 // Hide stops redraw requests; the model keeps running.
@@ -160,12 +181,16 @@ func (h *Host) Hide() {
 	h.mu.Unlock()
 }
 
-// Show resumes redraw requests and asks for one now.
+// Show resumes redraw requests and asks for one now, with the view drawn afresh if the model changed while hidden.
 func (h *Host) Show() {
 	h.mu.Lock()
 	h.visible = true
 	h.hideReq = false
+	stale := h.stale
 	h.mu.Unlock()
+	if stale {
+		h.do(h.draw)
+	}
 	if h.opts.Redraw != nil {
 		h.opts.Redraw()
 	}
@@ -190,14 +215,20 @@ func (h *Host) update(msg tea.Msg, wg *sync.WaitGroup) {
 	}
 	var cmd tea.Cmd
 	changed := true
+	h.mu.Lock()
+	shown := h.visible && !h.stopped
+	h.mu.Unlock()
 	func() {
 		defer func() { _ = recover() }() // a panicking model must not take the extension down
 		h.model, cmd = h.model.Update(msg)
-		content := h.model.View().Content
-		h.mu.Lock()
-		changed = content != h.view
-		h.view = content
-		h.mu.Unlock()
+		if !shown { // nobody sees it: drawn when shown or asked for (a playing track updates many times a second)
+			h.mu.Lock()
+			h.stale = true
+			h.mu.Unlock()
+			changed = false
+			return
+		}
+		changed = h.render()
 	}()
 	if isQuit(cmd) {
 		// Seen here, on the loop, the quit does not wait for a goroutine to be
@@ -213,6 +244,28 @@ func (h *Host) update(msg tea.Msg, wg *sync.WaitGroup) {
 	if visible && changed && h.opts.Redraw != nil {
 		h.opts.Redraw()
 	}
+}
+
+// render draws the model's view and reports whether it changed. It runs on the loop.
+func (h *Host) render() bool {
+	var content string
+	var shape any
+	if h.opts.Draw != nil {
+		content, shape = h.opts.Draw(h.model)
+	} else {
+		content = h.model.View().Content
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	changed := content != h.view
+	h.view, h.shape, h.stale = content, shape, false
+	return changed
+}
+
+// draw is render for callers that only want the view up to date; a panicking View keeps the old one.
+func (h *Host) draw() {
+	defer func() { _ = recover() }()
+	h.render()
 }
 
 // quit records that the model asked to quit (hide). It runs on the loop.

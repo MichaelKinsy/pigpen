@@ -53,6 +53,12 @@ func playerEnv(t *testing.T) (*overlayHost, *mpvfake.Server, map[string]string, 
 // playerEnvWith is playerEnv with more environment variables (COLORTERM, NO_COLOR...).
 func playerEnvWith(t *testing.T, extra map[string]string) (*overlayHost, *mpvfake.Server, map[string]string, *mpv.Player) {
 	t.Helper()
+	return playerEnvOn(t, fixedSource{songs(5)}, extra, false)
+}
+
+// playerEnvOn is playerEnvWith over src, on a host that reports a frontend (Tern) when frontend is set.
+func playerEnvOn(t *testing.T, src music.Source, extra map[string]string, frontend bool) (*overlayHost, *mpvfake.Server, map[string]string, *mpv.Player) {
+	t.Helper()
 	dir, err := os.MkdirTemp("", "pm")
 	if err != nil {
 		t.Fatal(err)
@@ -74,10 +80,9 @@ func playerEnvWith(t *testing.T, extra map[string]string) (*overlayHost, *mpvfak
 		t.Fatal(err)
 	}
 	t.Cleanup(srv.Close)
-	src := fixedSource{songs(5)}
 	p := mpv.New(mpv.Config{Paths: paths, PlayURL: src.PlayURL})
 	t.Cleanup(func() { _ = p.Close() })
-	return startOverlayHost(t, pig_music.ExtensionWith(src, p, env, nil, nil), "tui", 100, 30), srv, env, p
+	return startHost(t, pig_music.ExtensionWith(src, p, env, nil, nil), "tui", 100, 30, frontend), srv, env, p
 }
 
 func screenText(s snapshot) string { return strings.Join(s.Lines, "\n") }

@@ -1,6 +1,7 @@
 package teahost
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -341,4 +342,45 @@ func TestAnUpdateThatChangesNothingOnScreenRequestsNoRedraw(t *testing.T) {
 	}
 	h.Send(doneMsg("changed")) // the body is drawn
 	waitFor(t, "a redraw for a real change", func() bool { return redraws.Load() == base+1 })
+}
+
+// viewCounter counts the views the host asks for.
+type viewCounter struct {
+	toy
+	views *atomic.Int32
+}
+
+func (v viewCounter) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	m, cmd := v.toy.Update(msg)
+	return viewCounter{m.(toy), v.views}, cmd
+}
+
+func (v viewCounter) View() tea.View { v.views.Add(1); return v.toy.View() }
+
+// While hidden, nobody sees the view: the host draws none (a playing track sends its position many times a second), and the one
+// drawn when it is shown again is up to date.
+func TestNoViewIsDrawnWhileHiddenAndShowDrawsTheLatest(t *testing.T) {
+	m, log, mu := newToy(nil)
+	views := &atomic.Int32{}
+	h := New(viewCounter{m, views}, Options{Redraw: func() {}})
+	defer h.Stop()
+	h.Start(40, 10)
+	waitFor(t, "init", contains(log, mu, "done:init"))
+	h.Hide()
+	base := views.Load()
+	for i := 0; i < 20; i++ {
+		h.Send(doneMsg(fmt.Sprintf("hidden %d", i)))
+	}
+	if got := views.Load() - base; got != 0 {
+		t.Fatalf("%d views drawn while hidden", got)
+	}
+	h.Show()
+	if lines := h.Lines(40, 10); !strings.HasPrefix(lines[0], "hidden 19") {
+		t.Fatalf("shown again: %q", lines[0])
+	}
+	h.Hide()
+	h.Send(doneMsg("while hidden"))
+	if lines := h.Lines(40, 10); !strings.HasPrefix(lines[0], "while hidden") { // asked for anyway: drawn then
+		t.Fatalf("lines while hidden: %q", lines[0])
+	}
 }

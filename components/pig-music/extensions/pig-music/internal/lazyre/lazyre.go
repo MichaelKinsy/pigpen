@@ -44,3 +44,6 @@ func (r *Regexp) ReplaceAllStringFunc(s string, f func(string) string) string {
 }
 func (r *Regexp) Split(s string, n int) []string { return r.get().Split(s, n) }
 func (r *Regexp) Find(b []byte) []byte           { return r.get().Find(b) }
+func (r *Regexp) FindAllStringSubmatchIndex(s string, n int) [][]int {
+	return r.get().FindAllStringSubmatchIndex(s, n)
+}

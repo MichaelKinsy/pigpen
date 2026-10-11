@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"strings"
 
+	tea "charm.land/bubbletea/v2"
+
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/pig-music/music"
 	"github.com/MichaelKinsy/pigpen/pig-music/teahost"
@@ -25,7 +27,7 @@ func extensionWith(d deps) *sdk.Extension {
 	player := newApp(d)
 	diag := newHello(nil)
 	ext.RegisterCommand("music", sdk.CommandOptions{
-		Description:            "Open the pig-music player. Quick commands print one line and never open it: /music play <query|number>, pause, resume, toggle, next, prev, vol <0-100>, now, queue, shuffle on|off, repeat off|one|all, stop. /music settings: volume, shuffle, repeat, engine, library browser and more; /music setup: check this machine and offer to download yt-dlp and Deno; /music doctor: check only; /music hello: the layout diagnostic screen. Press q or Esc to hide the player; the music keeps playing.",
+		Description:            "Open the pig-music player. Quick commands print one line and never open it: /music play <query|number>, pause, resume, toggle, next, prev, vol <0-100>, now, queue, shuffle on|off, repeat off|one|all, stop. /music settings: volume, shuffle, repeat, engine, library browser and more; /music setup: check this machine and offer to download yt-dlp and Deno; /music doctor: check only; /music hello: the layout diagnostic screen. /music artist, album, radio, related: open the player on that page of the playing song. Press q to hide the player (Esc goes back a page, and hides at the first); the music keeps playing.",
 		GetArgumentCompletions: completions,
 		Handler: func(ctx sdk.Context, args string) error {
 			words := strings.Fields(args)
@@ -33,6 +35,8 @@ func extensionWith(d deps) *sdk.Extension {
 				return player.quickCommand(ctx, words)
 			}
 			switch strings.TrimSpace(args) {
+			case "artist", "album", "radio", "related":
+				return showGo(ctx, player, strings.TrimSpace(args))
 			case "hello":
 				return open(ctx, diag)
 			case "stop":
@@ -100,6 +104,26 @@ func show(ctx sdk.Context, a *app) error {
 	return nil
 }
 
+// showGo is /music artist, album, radio and related: the player opens on that page of the track that is playing.
+func showGo(ctx sdk.Context, a *app, kind string) error {
+	if !ctx.HasUI() || ctx.Mode() != "tui" {
+		ctx.Notify("pig-music needs an interactive terminal.", "warning")
+		return nil
+	}
+	st := a.currentState()
+	if st.Track == nil {
+		ctx.Notify("pig-music: nothing is playing, so there is no "+kind+" to go to.", "info")
+		return nil
+	}
+	host, err := a.ensure(context.Background())
+	if err != nil {
+		ctx.Notify(err.Error(), "warning")
+		return nil
+	}
+	host.Send(ui.GoMsg{Kind: kind, Track: st.Track})
+	return show(ctx, a)
+}
+
 func open(ctx sdk.Context, screen *hello) error {
 	// Print and JSON mode have no UI; RPC mode has dialogs but no custom
 	// components, so only the interactive TUI can show the screen.
@@ -141,13 +165,23 @@ func (a *app) quick(ctx sdk.Context) error {
 	}
 	a.foot.capture(ctx)
 	var scr *quickScreen
-	host := teahost.New(ui.NewQuick(ui.QuickDeps{Player: a.livePlayer(context.Background()), Port: quickPort{a}}), teahost.Options{Redraw: func() {
+	player := a.livePlayer(context.Background())
+	host := teahost.New(ui.NewQuick(ui.QuickDeps{Player: player, Port: quickPort{a}}), teahost.Options{Redraw: func() {
 		if scr != nil {
 			scr.redraw()
 		}
+	}, Draw: func(m tea.Model) (string, any) {
+		text, shape := drawScreen(m)
+		d, _ := shape.(drawing)
+		d.theme = a.theme() // the player's palette: the box belongs to the music that is playing
+		return text, d
 	}})
 	host.Start(60, quickRows)
 	defer host.Stop()
+	if player != nil { // follow hands it the player's changes until it closes (quickBox)
+		a.box.open(host, player.State())
+		defer a.box.close()
+	}
 	scr = newQuickScreen(host, ctx.Height)
 	if _, err := ctx.Custom(scr, smallOverlay()); err != nil {
 		return err

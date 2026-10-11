@@ -73,7 +73,7 @@ func TestAProbeNetworkErrorDoesNotPrintTheSignedStreamURL(t *testing.T) {
 	_ = ln.Close() // nothing listens there now: the read fails to connect
 	stream := "http://" + addr + "/videoplayback?expire=1&ip=203.0.113.7&sig=SECRETSIG&lsig=SECRETL"
 	run := func(context.Context, string, []string) ([]byte, []byte, error) {
-		return []byte(stream + "\n"), nil, nil
+		return probeListing(stream, 0), nil, nil
 	}
 	err = probeStream(context.Background(), run, &http.Client{}, "yt-dlp", "", "u")
 	if err == nil {

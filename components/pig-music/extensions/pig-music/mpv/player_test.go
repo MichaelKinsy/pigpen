@@ -115,6 +115,7 @@ func firstLoad(cmds []string) int {
 
 func TestReplaceRejectsWhatItCannotPlay(t *testing.T) {
 	p, srv, _ := inProcess(t)
+	attached := len(srv.Commands()) // what Attach asked
 	for name, call := range map[string]func() error{
 		"empty":        func() error { return p.Replace(ctx5(t), nil, 0) },
 		"negative":     func() error { return p.Replace(ctx5(t), tracks(2), -1) },
@@ -124,8 +125,8 @@ func TestReplaceRejectsWhatItCannotPlay(t *testing.T) {
 			t.Errorf("%s: no error", name)
 		}
 	}
-	if len(srv.Commands()) > len(propertyNames)+len(propertyNames) {
-		t.Errorf("a rejected Replace still reached mpv: %v", srv.Commands())
+	if got := srv.Commands(); len(got) != attached {
+		t.Errorf("a rejected Replace still reached mpv: %v", got[attached:])
 	}
 	noURL := New(Config{Paths: music.PathsIn(shortDir(t)), PlayURL: func(music.Track) string { return "" }})
 	noURL.client = &Client{closed: false}
