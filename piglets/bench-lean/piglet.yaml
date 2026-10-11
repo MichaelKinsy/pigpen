@@ -1,0 +1,17 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# The lean bench Piglet: an empty Piglet whose manifest names, in keep mode, the only built-ins it keeps, which is none.
+# Keep mode strips every built-in extension, extra model API and feature of the core that builds it, including ones a later
+# core adds. The built-in tools and slash commands stay, so a scripted model's requests carry the same tool declarations as
+# every other arm. It has no Node, Go, Rust or Python extension runtime, so it cannot load extensions: `pig -e <file>` fails
+# naming this Piglet and the entry to remove. Remove an entry from `strip` and rebuild to keep a runtime.
+name: bench-lean
+description: "The lean bench Piglet: PiG with every built-in extension, extra model API and feature stripped (opt-in, keep mode), for footprint comparisons."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+strip:
+  keep:
+    extensions: []
+    apis: []
+    features: []

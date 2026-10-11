@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-10",
+  "updatedAt": "2026-10-11",
   "entries": [
     {
       "id": "a2a",
@@ -56,6 +56,30 @@
         "The Piglet Binary does not speak ACP by itself. ACP is JSON-RPC on stdio and a fused extension must not write protocol bytes to the host's stdout, so the entrypoint is the companion executable pig-acp, started by the editor with --pig pointing at this agent. Proven with a built Piglet Binary as the --pig target of pig-acp (11 end-to-end scenarios and the ACP reference client); there is no one-command Binary yet.",
         "Advertised and implemented: initialize, session/new, session/load, session/list, session/delete, session/prompt with streaming text, thoughts, tool calls, diffs and terminal output, session/cancel, model and thinking-level selection, context usage, permission requests for extension select and confirm dialogs. Not supported, by design: file system and terminal delegation, MCP servers passed by the editor, extension slash commands, input and editor dialogs.",
         "No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+      ]
+    },
+    {
+      "id": "bench-lean",
+      "kind": "piglet",
+      "name": "bench-lean",
+      "description": "The lean bench Piglet: PiG with every built-in extension, extra model API and feature stripped (opt-in, keep mode), for footprint comparisons.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-lean"
+      },
+      "manifestSha256": "6d64deaf8dbac6ad2480f01c9dd0dcbcb7c06bfe0340dfd6d3527d21f70e356a",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Measurement Piglet for pi-arena: the footprint of a PiG that keeps no built-in extension, extra model API or feature (strip keep mode with empty lists; the tools and slash commands stay). Derived from pi-arena's fixtures/piglets/pig-min.yaml, same owner, MIT. It cannot load extensions; see the README.",
+        "Pin it by Pigpen commit (the manifest has a fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a PiG checkout; only linux/amd64 has been built and run."
       ]
     },
     {
