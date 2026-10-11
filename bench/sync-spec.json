@@ -1,0 +1,23 @@
+{
+  "pig": {
+    "repo": "https://github.com/MichaelKinsy/PiG",
+    "revision": "a220c94a53"
+  },
+  "components": {
+    "bun-runtime": {
+      "from": "piglets/standard/extensions/bunruntime",
+      "extensionDir": "bunruntime",
+      "module": "github.com/MichaelKinsy/pigpen/bunruntime",
+      "package": "@pi-in-go/pigpen-bun-runtime",
+      "description": "The Bun TypeScript runtime slot (Go): installs a pinned, signature-checked Bun and runs TypeScript and JavaScript extensions on it instead of Node. Copied from PiG Standard.",
+      "patches": [
+        {
+          "file": "extension_test.go",
+          "from": "filepath.Join(\"..\", \"..\", \"..\", \"..\", \"coding\", \"extension\", \"host\", \"tsruntime\", \"lock.go\")",
+          "to": "filepath.Join(os.Getenv(\"PIG_SOURCE_ROOT\"), \"coding\", \"extension\", \"host\", \"tsruntime\", \"lock.go\")",
+          "why": "the lock lives in PiG's core, which is a separate checkout here: PIG_SOURCE_ROOT, the PiG source every Piglet build uses"
+        }
+      ]
+    }
+  }
+}

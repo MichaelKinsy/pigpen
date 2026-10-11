@@ -1,0 +1,28 @@
+{
+  "note": "What pi-arena pins for each bench Piglet. Until PiG 0.5.0 ships it pulls the Pigpen commit that contains the manifest (git rev-parse HEAD of the checkout it builds) and builds with the PiG source at pigRevision; after 0.5.0 it pulls the Piglet by its pi-in-go.dev version and `version` is filled in. pigRevision is the PiG commit the copied Go sources come from (bench/sync-spec.json) and the oldest PiG that builds the Piglet.",
+  "pigRevision": "a220c94a53",
+  "piglets": {
+    "bench-standard": {
+      "manifest": "piglets/bench-standard/piglet.yaml",
+      "slots": [
+        "pigrunner",
+        "angrypigs",
+        "bunruntime"
+      ],
+      "version": null
+    },
+    "bench-bun": {
+      "manifest": "piglets/bench-bun/piglet.yaml",
+      "slots": [
+        "bunruntime"
+      ],
+      "version": null
+    },
+    "bench-lean": {
+      "manifest": "piglets/bench-lean/piglet.yaml",
+      "slots": [],
+      "strip": "keep mode, no built-in kept",
+      "version": null
+    }
+  }
+}
