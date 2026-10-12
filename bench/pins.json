@@ -47,6 +47,42 @@
       ],
       "version": null,
       "pigRevision": "4270b7d68b"
+    },
+    "bench-ext10-aot": {
+      "manifest": "piglets/bench-ext10-aot/piglet.yaml",
+      "slots": [
+        "aot-runtime",
+        "bench-ext-01",
+        "bench-ext-02",
+        "bench-ext-03",
+        "bench-ext-04",
+        "bench-ext-05",
+        "bench-ext-06",
+        "bench-ext-07",
+        "bench-ext-08",
+        "bench-ext-09",
+        "bench-ext-10"
+      ],
+      "version": null,
+      "requires": "a PiG that locks a single-file extension (PiG branch team/imladris/piglet-single-file-lock, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
+    },
+    "bench-ext10-split": {
+      "manifest": "piglets/bench-ext10-split/piglet.yaml",
+      "slots": [
+        "aot-runtime",
+        "bench-ext-01",
+        "bench-ext-02",
+        "bench-ext-03",
+        "bench-ext-04",
+        "bench-ext-05",
+        "bench-ext-06",
+        "bench-ext-07",
+        "bench-ext-08",
+        "bench-ext-09",
+        "bench-ext-10"
+      ],
+      "version": null,
+      "requires": "a PiG that locks a single-file extension (PiG branch team/imladris/piglet-single-file-lock, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
     }
   }
 }

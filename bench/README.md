@@ -9,6 +9,8 @@ Pinnable Piglets for pi-arena. Each is a Pigpen composition input under `piglets
 | `bench-bun` | `bun-runtime` | `piglets/standard/extensions/bunruntime` |
 | `bench-aot` | `aot-runtime` (experimental) | `piglets/aot` |
 | `bench-ext10` | the ten bench-ext Go factories, fused | ext-matrix `bench/evals/fixtures/extensions-go` |
+| `bench-ext10-aot` | `aot-runtime` and the ten bench-ext TypeScript files (the aot arm) | `piglets/aot`, `bench/evals/fixtures/extensions` |
+| `bench-ext10-split` | `aot-runtime`, bench-ext-01..05 as Go factories fused, bench-ext-06..10 as TypeScript | both |
 
 ## Pinning
 
@@ -21,3 +23,5 @@ Until PiG 0.5.0 ships, pull the Pigpen commit that holds the manifest and build 
 ## Frozen dependencies
 
 Go modules are locked by exact `go.mod` versions and `go.sum` hashes, with no `replace`. No bench component declares an npm dependency. A binary a Piglet fetches (Bun, Pi-Bolt) is pinned by version and SHA-256 in its source. `scripts/bench-pins.test.mjs` enforces all of it.
+
+The two TypeScript Piglets (`bench-ext10-aot`, `bench-ext10-split`) need a PiG that locks a single-file extension (see `requires` in `pins.json`). The aot runtime compiles the TypeScript at first start into a slot image that is not part of the Binary.

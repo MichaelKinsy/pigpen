@@ -1,1 +1,4 @@
-{}
+{
+  "bench-ext10-aot": "The aot arm of the overhead bench: its subject is the ten TypeScript extensions the aot runtime compiles, so they cannot be Go.",
+  "bench-ext10-split": "The split arm of the overhead bench: five of the ten extensions are the TypeScript originals the aot runtime compiles, so they cannot be Go."
+}

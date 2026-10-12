@@ -43,6 +43,12 @@
       "module": "github.com/MichaelKinsy/pigpen/bench-ext10",
       "package": "@pi-in-go/pigpen-bench-ext10",
       "description": "The ten bench-ext extensions of the overhead bench as Go factories (ports of bench/evals/fixtures/extensions/bench-ext-NN.ts), fused into one Piglet Binary: no subprocess, no IPC. Copied from PiG's ext-matrix branch."
+    },
+    "bench-ext10-ts": {
+      "from": "bench/evals/fixtures/extensions",
+      "extensionDir": ".",
+      "package": "@pi-in-go/pigpen-bench-ext10-ts",
+      "description": "The ten bench-ext extensions of the overhead bench as TypeScript files (no imports, no dependencies), the source the aot runtime compiles and the Node cell runs."
     }
   }
 }
