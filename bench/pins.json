@@ -52,6 +52,7 @@
       "manifest": "piglets/bench-ext10-aot/piglet.yaml",
       "slots": [
         "aot-runtime",
+        "bunruntime",
         "bench-ext-01",
         "bench-ext-02",
         "bench-ext-03",
@@ -70,6 +71,7 @@
       "manifest": "piglets/bench-ext10-split/piglet.yaml",
       "slots": [
         "aot-runtime",
+        "bunruntime",
         "bench-ext-01",
         "bench-ext-02",
         "bench-ext-03",

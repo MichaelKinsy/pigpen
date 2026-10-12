@@ -11,40 +11,35 @@ packages:
   aot-runtime: local:../../components/aot-runtime
   bench-ext10: local:../../components/bench-ext10
   bench-ext10-ts: local:../../components/bench-ext10-ts
+  bun-runtime: local:../../components/bun-runtime
 extensions:
   - name: aot-runtime
     origins: [package:aot-runtime]
     tools: []
+  # The first builds run on Bun (README of piglets/aot): /bun-runtime install gives the slot one.
+  - name: bunruntime
+    origins: [package:bun-runtime]
+    tools: []
   - name: bench-ext-01
     origins: [package:bench-ext10]
-    tools: []
   - name: bench-ext-02
     origins: [package:bench-ext10]
-    tools: []
   - name: bench-ext-03
     origins: [package:bench-ext10]
-    tools: []
   - name: bench-ext-04
     origins: [package:bench-ext10]
-    tools: []
   - name: bench-ext-05
     origins: [package:bench-ext10]
-    tools: []
   - name: bench-ext-06
     origins: [package:bench-ext10-ts]
-    tools: []
   - name: bench-ext-07
     origins: [package:bench-ext10-ts]
-    tools: []
   - name: bench-ext-08
     origins: [package:bench-ext10-ts]
-    tools: []
   - name: bench-ext-09
     origins: [package:bench-ext10-ts]
-    tools: []
   - name: bench-ext-10
     origins: [package:bench-ext10-ts]
-    tools: []
 skills: []
 discovery:
   extensions: [user, workspace]

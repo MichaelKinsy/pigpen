@@ -86,3 +86,16 @@ describe('bench Piglet dependency pins', () => {
     }
   });
 });
+
+// The ext10 Piglets exist to expose the ten extensions' tools: an entry with `tools: []` allows none of them, and the Binary then declares no
+// bench_tool_NN to the model (found by scripts/bench-equivalence.mjs: 0 of 10 tools declared).
+describe('ext10 Piglets expose their tools', () => {
+  for (const name of ['bench-ext10', 'bench-ext10-aot', 'bench-ext10-split']) {
+    it(`${name}: no bench-ext extension entry restricts its tools`, () => {
+      const manifest = parse(readFileSync(join(root, pins.piglets[name].manifest), 'utf8'));
+      const benchExtensions = manifest.extensions.filter((e) => /^bench-ext-\d\d$/.test(e.name));
+      assert.equal(benchExtensions.length, 10);
+      for (const entry of benchExtensions) assert.equal(entry.tools, undefined, `${entry.name} allows ${JSON.stringify(entry.tools)}`);
+    });
+  }
+});
