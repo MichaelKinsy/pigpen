@@ -27,8 +27,12 @@ func Extension() *sdk.Extension {
 
 // openRunner opens the overlay for the user's own game.
 func openRunner(ctx sdk.Context) error {
-	highScore := loadHighScore(ctx.ConfigHome())
-	component := newRunnerComponent(highScore, sprite.ActiveVariant(ctx.ConfigHome()), ctx.Height)
+	configHome, err := ctx.ConfigHome()
+	if err != nil {
+		return err
+	}
+	highScore := loadHighScore(configHome)
+	component := newRunnerComponent(highScore, sprite.ActiveVariant(configHome), ctx.Height)
 	return show(ctx, component)
 }
 
@@ -44,7 +48,11 @@ func show(ctx sdk.Context, component *runnerComponent) error {
 	}
 
 	score, highScore := runnerScores(result, component.State())
-	if err := saveHighScore(ctx.ConfigHome(), highScore); err != nil {
+	configHome, err := ctx.ConfigHome()
+	if err != nil {
+		return err
+	}
+	if err := saveHighScore(configHome, highScore); err != nil {
 		return err
 	}
 	ctx.Notify(fmt.Sprintf("PiG Runner score %d · high %d", score, highScore), "info")

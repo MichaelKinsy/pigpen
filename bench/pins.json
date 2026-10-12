@@ -1,0 +1,90 @@
+{
+  "note": "What pi-arena pins for each bench Piglet. Until PiG 0.5.0 ships it pulls the Pigpen commit that contains the manifest (git rev-parse HEAD of the checkout it builds) and builds with the PiG source at pigRevision; after 0.5.0 it pulls the Piglet by its pi-in-go.dev version and `version` is filled in. pigRevision is the PiG commit the copied Go sources come from (bench/sync-spec.json) and the oldest PiG that builds the Piglet.",
+  "pigRevision": "a220c94a53",
+  "piglets": {
+    "bench-standard": {
+      "manifest": "piglets/bench-standard/piglet.yaml",
+      "slots": [
+        "pigrunner",
+        "angrypigs",
+        "bunruntime"
+      ],
+      "version": null
+    },
+    "bench-bun": {
+      "manifest": "piglets/bench-bun/piglet.yaml",
+      "slots": [
+        "bunruntime"
+      ],
+      "version": null
+    },
+    "bench-lean": {
+      "manifest": "piglets/bench-lean/piglet.yaml",
+      "slots": [],
+      "strip": "keep mode, no built-in kept",
+      "version": null
+    },
+    "bench-aot": {
+      "manifest": "piglets/bench-aot/piglet.yaml",
+      "slots": [
+        "aot-runtime"
+      ],
+      "version": null
+    },
+    "bench-ext10": {
+      "manifest": "piglets/bench-ext10/piglet.yaml",
+      "slots": [
+        "bench-ext-01",
+        "bench-ext-02",
+        "bench-ext-03",
+        "bench-ext-04",
+        "bench-ext-05",
+        "bench-ext-06",
+        "bench-ext-07",
+        "bench-ext-08",
+        "bench-ext-09",
+        "bench-ext-10"
+      ],
+      "version": null,
+      "pigRevision": "4270b7d68b"
+    },
+    "bench-ext10-aot": {
+      "manifest": "piglets/bench-ext10-aot/piglet.yaml",
+      "slots": [
+        "aot-runtime",
+        "bunruntime",
+        "bench-ext-01",
+        "bench-ext-02",
+        "bench-ext-03",
+        "bench-ext-04",
+        "bench-ext-05",
+        "bench-ext-06",
+        "bench-ext-07",
+        "bench-ext-08",
+        "bench-ext-09",
+        "bench-ext-10"
+      ],
+      "version": null,
+      "requires": "a PiG that locks a single-file extension (PiG branch team/imladris/piglet-single-file-lock, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
+    },
+    "bench-ext10-split": {
+      "manifest": "piglets/bench-ext10-split/piglet.yaml",
+      "slots": [
+        "aot-runtime",
+        "bunruntime",
+        "bench-ext-01",
+        "bench-ext-02",
+        "bench-ext-03",
+        "bench-ext-04",
+        "bench-ext-05",
+        "bench-ext-06",
+        "bench-ext-07",
+        "bench-ext-08",
+        "bench-ext-09",
+        "bench-ext-10"
+      ],
+      "version": null,
+      "requires": "a PiG that locks a single-file extension (PiG branch team/imladris/piglet-single-file-lock, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
+    }
+  }
+}

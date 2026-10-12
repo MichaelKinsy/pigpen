@@ -1,0 +1,20 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# The Bun bench Piglet: PiG with the Bun runtime slot as its only member, so a TypeScript extension runs on Bun instead of Node.
+name: bench-bun
+description: "PiG with the Bun TypeScript runtime slot: installs a pinned, signature-checked Bun and runs TypeScript extensions on it, for pi-arena."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  bun-runtime: local:../../components/bun-runtime
+extensions:
+  - name: bunruntime
+    origins: [package:bun-runtime]
+    tools: []
+skills: []
+# The runtime slot is the only member: the user's own extensions and skills stay available, which is what a runtime is for.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

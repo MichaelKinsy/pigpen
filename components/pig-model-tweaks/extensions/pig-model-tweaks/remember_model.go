@@ -51,7 +51,12 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 			}{Provider: model.Provider, ModelID: baseID}
 		})
 
-		if persistDefaultModel(agentDir(ctx.ConfigHome()), model.Provider, baseID) == "" {
+		home, err := ctx.ConfigHome()
+		if err != nil {
+			ctx.Notify("cannot remember the model: "+err.Error(), "warning")
+			return nil, nil
+		}
+		if persistDefaultModel(agentDir(home), model.Provider, baseID) == "" {
 			return nil, nil
 		}
 		ctx.Notify(fmt.Sprintf("remembered %s/%s as the default model", model.Provider, baseID), "info")

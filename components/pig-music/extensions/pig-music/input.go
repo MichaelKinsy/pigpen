@@ -5,8 +5,10 @@ import (
 	"unicode/utf8"
 
 	tea "charm.land/bubbletea/v2"
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 
 	"github.com/MichaelKinsy/pigpen/pig-music/internal/keys"
+	"github.com/MichaelKinsy/pigpen/pig-music/ui"
 )
 
 // keyMsg turns one input chunk from PiG into the key press the model expects. It
@@ -88,4 +90,16 @@ base:
 		}
 	}
 	return tea.KeyPressMsg(key), true
+}
+
+// mouseMsg turns a mouse event from PiG into the model's: a left click or a turn of the wheel. The presses, releases, moves
+// and drags around them, and the other buttons, are not the model's.
+func mouseMsg(e sdk.MouseEvent) (ui.MouseMsg, bool) {
+	switch {
+	case e.Type == sdk.MouseClick && e.Button == sdk.MouseButtonLeft:
+		return ui.MouseMsg{X: e.X, Y: e.Y, Clicks: max(e.ClickCount, 1)}, true
+	case e.Type == sdk.MouseWheel && e.WheelDelta != 0:
+		return ui.MouseMsg{X: e.X, Y: e.Y, Wheel: e.WheelDelta}, true
+	}
+	return ui.MouseMsg{}, false
 }

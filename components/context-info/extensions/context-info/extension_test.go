@@ -205,6 +205,34 @@ func TestPromptsAgentsListsAgentDefinitionsFromTheConfigHome(t *testing.T) {
 	}
 }
 
+// Context.ConfigHome fails when no config directory can be found (SDK 0.5). Both agent commands must say so as
+// an error, not list agents from a guessed relative directory.
+func TestPromptsAgentsWithoutAConfigHomeReportsAnError(t *testing.T) {
+	for _, args := range []string{"agents", "scout"} {
+		t.Run(args, func(t *testing.T) {
+			for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+				t.Setenv(k, "")
+			}
+			planted := filepath.Join(t.TempDir(), "agents")
+			if err := os.MkdirAll(planted, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(planted, "scout.md"), []byte("---\nname: scout\ndescription: planted\n---\nplanted\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			t.Chdir(filepath.Dir(planted))
+			h := StartHost(t, contextinfo.Extension(), HostOptions{OnCall: answers{}.onCall})
+			if e := h.Command("prompts", args); e != "" {
+				t.Fatalf("/prompts %s: %s", args, e)
+			}
+			notes := h.CallsTo("ui.notify")
+			if len(notes) != 1 || notes[0].Args["level"] != "error" || !strings.Contains(notes[0].Args["message"].(string), "PiG config directory") {
+				t.Fatalf("notifications = %+v, want one error naming the config directory", notes)
+			}
+		})
+	}
+}
+
 func TestZeroTokensAreTreatedAsNoLiveUsage(t *testing.T) {
 	h := StartHost(t, contextinfo.Extension(), HostOptions{OnCall: answers{
 		"getContextUsage": {"tokens": 0, "contextWindow": 8000, "percent": 0.0},

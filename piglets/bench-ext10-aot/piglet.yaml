@@ -1,0 +1,45 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# The aot ext10 bench Piglet: the ten bench-ext TypeScript extensions carried in the Binary and the aot runtime (Go, fused) that compiles
+# them on the user's machine at first start and runs them from the next start. The compiled host is a slot image, not part of the Binary.
+name: bench-ext10-aot
+description: "The ten bench-ext TypeScript extensions with the aot runtime, which compiles them on first start, for pi-arena."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+packages:
+  aot-runtime: local:../../components/aot-runtime
+  bench-ext10-ts: local:../../components/bench-ext10-ts
+  bun-runtime: local:../../components/bun-runtime
+extensions:
+  - name: aot-runtime
+    origins: [package:aot-runtime]
+    tools: []
+  # The first builds run on Bun (README of piglets/aot): /bun-runtime install gives the slot one.
+  - name: bunruntime
+    origins: [package:bun-runtime]
+    tools: []
+  - name: bench-ext-01
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-02
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-03
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-04
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-05
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-06
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-07
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-08
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-09
+    origins: [package:bench-ext10-ts]
+  - name: bench-ext-10
+    origins: [package:bench-ext10-ts]
+skills: []
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

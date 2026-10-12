@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/PiG/extensions/sdk/kit"
 	"github.com/MichaelKinsy/pigpen/pig-music/mpv"
 	"github.com/MichaelKinsy/pigpen/pig-music/music"
 	"github.com/MichaelKinsy/pigpen/pig-music/ui"
@@ -75,6 +76,8 @@ type footer struct {
 	widget  bool // nowPlaying is "widget": the line is a one-line widget above the editor instead of a footer status
 	cur     music.State
 	calm    atomic.Bool // the calm setting: the spinner stands still
+	// theme is the player's palette as theme overrides for the widget (nil: none); it must not take the app's lock.
+	theme func() map[string]string
 }
 
 // text is the line for st, as the calm setting has it.
@@ -132,7 +135,7 @@ func (f *footer) setMode(mode string) {
 // set writes text unless it is what the line already says. The caller holds no lock: the call goes to the host.
 func (f *footer) set(text string) {
 	f.mu.Lock()
-	ctx, last, ok, widget := f.ctx, f.last, f.enabled, f.widget
+	ctx, last, ok, widget, cur, theme := f.ctx, f.last, f.enabled, f.widget, f.cur, f.theme
 	if ctx == nil || text == last || (!ok && text != "") {
 		f.mu.Unlock()
 		return
@@ -145,8 +148,25 @@ func (f *footer) set(text string) {
 	case text == "":
 		_ = ctx.SetWidget(widgetKey, nil)
 	default:
-		_ = ctx.SetWidget(widgetKey, []string{text}) // one line; widget_push needs no answer from the host
+		var overrides map[string]string
+		if theme != nil {
+			overrides = theme()
+		}
+		_ = ctx.SetWidget(widgetKey, widgetView(text, cur, overrides)) // one line; widget_push needs no answer from the host
 	}
+}
+
+// widgetView is the now-playing widget as a kit view (D103): the line as Pi lays out a string-list widget (Text(line, 1, 0),
+// so the terminal shows what it showed as a string list), then a lines node of no rows that says where the track is, for a
+// frontend that draws a bar; it draws nothing in the terminal.
+func widgetView(text string, st music.State, theme map[string]string) kit.View {
+	root := kit.NewContainer(kit.NewText(text, 1, 0))
+	if st.Duration > 0 {
+		bar := kit.NewLines(nil)
+		bar.Progress = &kit.Progress{Value: st.Position.Seconds(), Max: st.Duration.Seconds()}
+		root.AddChild(bar)
+	}
+	return kit.View{Root: root, Theme: theme}
 }
 
 // state is a player state: shown while hidden.
@@ -157,6 +177,16 @@ func (f *footer) state(st music.State) {
 	f.mu.Unlock()
 	if !shown {
 		f.set(f.text(st))
+	}
+}
+
+// notify shows text as a PiG notification while the screen is hidden: the open screen has it on its status line.
+func (f *footer) notify(text string) {
+	f.mu.Lock()
+	ctx, shown := f.ctx, f.shown
+	f.mu.Unlock()
+	if ctx != nil && !shown {
+		ctx.Notify(text, "warning")
 	}
 }
 
@@ -262,6 +292,7 @@ func (a *app) release() {
 	}
 	player, host := a.player, a.host
 	a.player, a.host = nil, nil
+	a.drawn.Store(nil)
 	a.mu.Unlock()
 	if host != nil {
 		host.Stop()

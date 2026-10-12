@@ -124,6 +124,14 @@ func (r *rig) send(msg tea.Msg) {
 			r.quit = true
 			continue
 		}
+		if batch, ok := msg.(tea.BatchMsg); ok { // a batch inside a batch: the host runs each of its commands too
+			for _, c := range batch {
+				if c != nil {
+					queue = append(queue, c())
+				}
+			}
+			continue
+		}
 		var cmd tea.Cmd
 		r.m, cmd = r.m.Update(msg)
 		if cmd == nil {
@@ -496,7 +504,7 @@ func TestProgressBarFollowsThePosition(t *testing.T) {
 		s.Position, s.Duration = pos, 100*time.Second
 		r.state(s)
 		lines := r.screen()
-		return strings.Count(ansi.Strip(lines[len(lines)-3]), "█")
+		return strings.Count(ansi.Strip(lines[len(lines)-3]), "━")
 	}
 	a, b, c := bar(0), bar(50*time.Second), bar(100*time.Second)
 	if !(a < b && b < c) || a != 0 {

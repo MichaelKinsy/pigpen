@@ -53,7 +53,11 @@ func Extension() *sdk.Extension {
 	// resolution of PIG_HOME and means a run that never starts a session writes
 	// nothing at all.
 	ext.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
-		agent := agentDir(ctx.ConfigHome())
+		home, err := ctx.ConfigHome()
+		if err != nil {
+			return nil, err
+		}
+		agent := agentDir(home)
 		st.bind(agent)
 		st.rememberStartupModel(agent)
 		return nil, nil

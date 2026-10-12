@@ -13,7 +13,7 @@ import (
 
 // rev-pig-music-m7: the /music quick commands run this code inside PiG, so its cost is the slash command's cost. In auto mode
 // every command ran the whole doctor (mpv --version, yt-dlp --version and -v, the browser lookup) before it looked for a
-// running player, about 2 s on the test machine for a /music pause. A running player is the one to control and needs no doctor.
+// running player, about 2 s on imladris for a /music pause. A running player is the one to control and needs no doctor.
 func TestAutoModeControlsARunningMpvWithoutRunningTheDoctor(t *testing.T) {
 	r := newRig(t)
 	r.ok("play", "night", "drive") // the fake mpv is running and playing

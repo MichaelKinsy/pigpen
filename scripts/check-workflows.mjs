@@ -96,6 +96,30 @@ export function releaseProblems(name, text) {
   return problems;
 }
 
+
+const cacheKey = /key:\s*(gocache-\$\{\{[^\n]*)/;
+
+/**
+ * The Go build cache a release restores. A cache saved by a tag run is visible only to that tag, so no release can restore the
+ * cache another release saved; it is saved on main by gocache.yml, and release.yml only restores it (the signing job does not
+ * write the cache it builds from). The two keys must be the same expression, or the restore never matches what main saved.
+ */
+export function cacheProblems(workflows) {
+  const problems = [];
+  const release = workflows['release.yml'];
+  const warm = workflows['gocache.yml'];
+  if (release && /actions\/cache(@|\/save)/.test(release)) problems.push('release.yml: saves the Go build cache; a cache saved on a tag is invisible to the next release, so only gocache.yml (on main) saves it and release.yml uses actions/cache/restore');
+  if (release && /actions\/cache\/restore/.test(release) && !warm) problems.push('release.yml: restores a Go build cache that no workflow on main saves (gocache.yml)');
+  if (warm) {
+    const on = Object.keys(workflows.parsed?.['gocache.yml']?.on ?? {}).sort().join();
+    if (on !== 'push,workflow_dispatch' || workflows.parsed['gocache.yml'].on.push?.branches?.join() !== 'main') problems.push('gocache.yml: must run only on a push to main or a manual run: only the default branch saves a cache every release can see');
+    const saved = warm.match(cacheKey)?.[1];
+    const restored = release?.match(cacheKey)?.[1];
+    if (!saved || saved !== restored) problems.push('gocache.yml: its cache key differs from the one release.yml restores');
+  }
+  return problems;
+}
+
 /** npm-publish.yml: OIDC trusted publishing only (no token anywhere), provenance on, a pushed `npm/v*` tag or a manual run. */
 export function npmPublishProblems(name, text) {
   if (name !== 'npm-publish.yml') return [];
@@ -175,6 +199,8 @@ async function main() {
     }
   }
   problems.push(...tagProblems(parsed));
+  const texts = Object.fromEntries(readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).map((f) => [f, readFileSync(join(dir, f), 'utf8')]));
+  problems.push(...cacheProblems({ ...texts, parsed }));
   for (const problem of problems) console.error(`check-workflows: ${problem}`);
   if (problems.length) process.exitCode = 1;
 }

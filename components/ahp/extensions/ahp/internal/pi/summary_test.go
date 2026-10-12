@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/microsoft/agent-host-protocol/clients/go/ahp"
 	"github.com/microsoft/agent-host-protocol/clients/go/ahptypes"
@@ -357,6 +358,19 @@ func projectsOutcome(t *testing.T, outcome string) {
 	}
 }
 
+// waitUntil polls condition until it holds. The bound only turns a lost projection into a failure
+// instead of a hang; a passing run does not depend on it.
+func waitUntil(t *testing.T, what string, condition func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(30 * time.Second)
+	for !condition() {
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for %s", what)
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
 func replaysProjection(t *testing.T, running bool) {
 	f := newSummaryFixture(t, nil)
 	baseline := f.h.host.ServerSeq()
@@ -372,6 +386,19 @@ func replaysProjection(t *testing.T, running bool) {
 		h.DispatchServerAction(f.chat, ahptypes.StateAction{Value: &ahptypes.ChatActivityChangedAction{Type: ahptypes.ActionTypeChatActivityChanged}})
 		h.DispatchServerAction(f.chat, ahptypes.StateAction{Value: &ahptypes.ChatTurnCompleteAction{Type: ahptypes.ActionTypeChatTurnComplete, TurnId: "turn", Duration: 1000}})
 	}
+	// DispatchServerAction returns once its own listener events are queued: when another goroutine
+	// is already draining the host's listener queue (an earlier action's projection), the call
+	// returns before the chat-to-session projection of these actions has run. A reconnect taken
+	// at that instant replays a session channel that lacks the projection, so the mirror keeps the
+	// chat's creation time. Wait for the projection the way a client would see it.
+	wantModified := endAt
+	if running {
+		wantModified = startAt
+	}
+	waitUntil(t, "the session summary to project the chat's modification time", func() bool {
+		session := f.sessionState()
+		return session != nil && len(session.Chats) == 1 && session.Chats[0].ModifiedAt == wantModified
+	})
 	resumed := testkit.Connect(t, h)
 	t.Cleanup(resumed.Close)
 	var replay struct {
@@ -401,10 +428,6 @@ func replaysProjection(t *testing.T, running bool) {
 	sameJSON(t, mirror, fallback.Snapshots[0].State, "replayed mirror vs snapshot fallback")
 	if mirror.Status != ahptypes.SessionStatusIdle {
 		t.Fatalf("mirror status = %d", mirror.Status)
-	}
-	wantModified := endAt
-	if running {
-		wantModified = startAt
 	}
 	if mirror.Chats[0].ModifiedAt != wantModified {
 		t.Fatalf("chat modifiedAt = %s", mirror.Chats[0].ModifiedAt)

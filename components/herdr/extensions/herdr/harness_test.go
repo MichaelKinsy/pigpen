@@ -23,6 +23,8 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+
+	herdr "github.com/MichaelKinsy/pigpen/components/herdr/extensions/herdr"
 )
 
 // ── Fake herdr ───────────────────────────────────────────────────────────────
@@ -35,6 +37,10 @@ func TestMain(m *testing.M) {
 	if log := os.Getenv("HERDR_FAKE_LOG"); log != "" {
 		os.Exit(runFakeHerdr(log))
 	}
+	// The fake herdr is this test binary, started afresh for every call. On a host under heavy load that start
+	// can take longer than the 3 s production bound and the call would be killed; the tests that are about the
+	// bound restore it.
+	*herdr.CallTimeout = time.Minute
 	os.Exit(m.Run())
 }
 

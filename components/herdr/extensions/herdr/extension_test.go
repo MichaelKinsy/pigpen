@@ -440,6 +440,7 @@ func TestResumeCommand(t *testing.T) {
 	})
 
 	t.Run("a hung herdr is not retried and the timeout still ends the call", func(t *testing.T) {
+		useProductionCallTimeout(t)
 		host, h := startTUI(t)
 		h.hang()
 		host.fire("session_start", map[string]any{"reason": "startup"})
@@ -747,6 +748,7 @@ func TestReviewAdditions(t *testing.T) {
 	})
 
 	t.Run("bounds a hung herdr call so quit still releases", func(t *testing.T) {
+		useProductionCallTimeout(t)
 		// Inherently about 3 s: the bound under test is the 3 s call timeout.
 		host, h := startTUI(t)
 		h.hang()
@@ -768,5 +770,20 @@ func unset(t *testing.T, name string) {
 	t.Setenv(name, "") // registers the restore
 	if err := os.Unsetenv(name); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// useProductionCallTimeout restores the production bound on a herdr call for a test about that bound.
+func useProductionCallTimeout(t *testing.T) {
+	t.Helper()
+	previous := *herdr.CallTimeout
+	*herdr.CallTimeout = herdr.OriginalCallTimeout
+	t.Cleanup(func() { *herdr.CallTimeout = previous })
+}
+
+// The ported tests give the call a long timeout (TestMain); this pins the production value the hung-herdr tests run with.
+func TestCallTimeoutKeepsTheProductionValue(t *testing.T) {
+	if herdr.OriginalCallTimeout != 3*time.Second {
+		t.Fatalf("callTimeout = %v, want 3s", herdr.OriginalCallTimeout)
 	}
 }

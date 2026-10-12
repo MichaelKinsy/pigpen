@@ -1,0 +1,9 @@
+{
+  "featured": false,
+  "updatedAt": "2026-10-11",
+  "languages": [],
+  "notes": [
+    "Measurement Piglet for pi-arena: the footprint of a PiG that keeps no built-in extension, extra model API or feature (strip keep mode with empty lists; the tools and slash commands stay). Derived from pi-arena's fixtures/piglets/pig-min.yaml, same owner, MIT. It cannot load extensions; see the README.",
+    "Pin it by Pigpen commit (the manifest has a fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a PiG checkout; only linux/amd64 has been built and run."
+  ]
+}

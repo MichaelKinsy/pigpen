@@ -135,7 +135,7 @@ func TestAnEntryThatFailedToOpenIsReported(t *testing.T) {
 	}
 	t.Cleanup(srv.Close)
 	failed := &seenURLs{}
-	p := New(Config{Paths: paths, PlayURL: playURL, StreamFailed: failed.add})
+	p := New(Config{Paths: paths, PlayURL: playURL, StreamFailed: func(u string) bool { failed.add(u); return false }})
 	if err := p.Attach(ctx5(t)); err != nil {
 		t.Fatal(err)
 	}

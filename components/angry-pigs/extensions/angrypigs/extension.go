@@ -30,8 +30,12 @@ func Extension() *sdk.Extension {
 
 // openAngryPigs opens the overlay for the user's own game.
 func openAngryPigs(ctx sdk.Context) error {
-	highScore := loadHighScore(ctx.ConfigHome())
-	game := newComponent(highScore, sprite.ActiveVariant(ctx.ConfigHome()), ctx.Height)
+	configHome, err := ctx.ConfigHome()
+	if err != nil {
+		return err
+	}
+	highScore := loadHighScore(configHome)
+	game := newComponent(highScore, sprite.ActiveVariant(configHome), ctx.Height)
 	return show(ctx, game)
 }
 
@@ -46,7 +50,11 @@ func show(ctx sdk.Context, game *component) error {
 		return err
 	}
 	score, highScore := scores(result, game.State())
-	if err := saveHighScore(ctx.ConfigHome(), highScore); err != nil {
+	configHome, err := ctx.ConfigHome()
+	if err != nil {
+		return err
+	}
+	if err := saveHighScore(configHome, highScore); err != nil {
 		return err
 	}
 	ctx.Notify(fmt.Sprintf("Angry Pigs score %d · high %d", score, highScore), "info")

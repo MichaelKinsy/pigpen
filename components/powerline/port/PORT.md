@@ -107,7 +107,7 @@ never visible (the first needs bash mode, the second renders nothing in the orig
    `token-stats` are named skips with their reasons.
 8. **The oracle is timing-dependent.** Its git calls time out after 200 ms; on a loaded machine a state came out with no branch. The
    recorder (`port/record-render.py`) accepts a state when two runs agree and runs each git state in its own process, because
-   `git-status.ts` and `currency-rates.ts` keep module-level caches that survive between scenarios.
+   `git-status.ts` and `currency-rates.ts` keep module-level caches that survive between scenarios. The port keeps the 200 ms and 500 ms limits (`gitBranchTimeout`, `gitRemoteTimeout`, `gitStatusTimeout`, pinned by `TestGitTimeoutsMatchTheOriginal`); its tests raise them to a minute, because on a loaded host a killed `git symbolic-ref` fell back to `rev-parse` and reported `<sha> (detached)` (`TestSlowSymbolicRefStillFindsTheBranchWithinTheTestTimeout` makes that deterministic with a git that answers after 400 ms).
 9. **Missing license file.** Recorded as an owner ruling (E3): MIT as declared in package.json; `port/oracle/LICENSE` is a notice
    file this Package added, and is marked as such.
 10. **Escape codes in host text reach the terminal.** A session name, directory or model name with OSC, CSI or BEL bytes is drawn

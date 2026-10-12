@@ -66,3 +66,26 @@ func TestSteerVisibilityFollowsTheEnvironmentAndTheTypeIsTheOriginals(t *testing
 		}
 	}
 }
+
+// Context.ConfigHome fails when no config directory can be found (SDK 0.5). Warden then runs on its
+// defaults, which leave it off, says why once, and never falls back to a relative path a project
+// could plant: the config file is the user's consent to enable it.
+func TestNoConfigHomeKeepsWardenOffAndSaysWhy(t *testing.T) {
+	h := startHarness(t, harnessOpts{noHome: true})
+	h.start()
+	var told bool
+	for _, n := range h.notices() {
+		if strings.Contains(n, "could not find the PiG config directory") && strings.Contains(n, "Defaults are in use") {
+			told = true
+		}
+	}
+	if !told {
+		t.Errorf("the user was not told the config directory is missing: %q", h.notices())
+	}
+	if r := h.toolCall("bash", "c1", map[string]any{"command": "git push --force origin main"}); r != nil {
+		t.Errorf("warden acted without a config file: %v", r)
+	}
+	if h.ts.count() != 0 {
+		t.Errorf("the judge was asked %d time(s) with warden off", h.ts.count())
+	}
+}

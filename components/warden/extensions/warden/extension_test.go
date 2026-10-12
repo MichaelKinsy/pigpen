@@ -42,6 +42,7 @@ type harness struct {
 type harnessOpts struct {
 	cfg      *Config // written to the config file before the session starts; nil: no file
 	noUI     bool
+	noHome   bool // no config directory can be found: Context.ConfigHome fails
 	env      map[string]string
 	newJudge func(Config, *Budget) (Judge, error)
 	git      GitRunner
@@ -53,6 +54,11 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 	t.Helper()
 	h := &harness{t: t, ts: newFakeTypeSafe(t), home: t.TempDir(), confirm: true, model: map[string]any{"id": "mod", "provider": "prov", "name": "Mod"}, fail: o.fail}
 	t.Setenv("PIG_HOME", h.home)
+	if o.noHome {
+		for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+			t.Setenv(k, "")
+		}
+	}
 	if o.cfg != nil {
 		if err := SaveConfig(ConfigPath(h.home), *o.cfg); err != nil {
 			t.Fatal(err)

@@ -1,0 +1,11 @@
+{
+  "featured": false,
+  "updatedAt": "2026-10-10",
+  "languages": ["go"],
+  "notes": [
+    "Go only. A full-screen music player: /music (or alt+m) opens YouTube Music search, library, queue and transport over mpv, with yt-dlp resolving tracks; the music keeps playing while the player is hidden and survives /reload. The extension is the Package components/pig-music. Run npm run stage before using its generated manifest under dist/staged.",
+    "Nothing starts by itself. The extension registers the /music command and the alt+m shortcut and no tool: no mpv or yt-dlp process, no network, no cookie access, no footer or widget and no timer before you type /music. The library reads your browser's cookies only after you say yes, once per browser. mpv and yt-dlp are not bundled: /music setup and /music doctor check the machine.",
+    "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; none is a support claim.",
+    "Also selected by pig-with-batteries."
+  ]
+}

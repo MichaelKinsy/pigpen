@@ -164,6 +164,26 @@ func TestMpvLogsOnlyItsWarningsToAPrivateFile(t *testing.T) {
 	}
 }
 
+// googlevideo serves a request for more than about 10 MiB at about 32 KiB/s and resets it after about 700 s (R4, measured);
+// mpv 0.41 asks for the whole stream in one request (it does not apply yt-dlp's http_chunk_size, as mpv master does). mpv is
+// told to ask in 10 MiB ranges, before ExtraArgs, so that PIG_MUSIC_MPV_ARGS can still set another size.
+func TestMpvAsksForTheStreamInRangesYouTubeServesAtFullSpeed(t *testing.T) {
+	p := New(Config{Paths: music.PathsIn("/run/pm"), ExtraArgs: []string{"--stream-lavf-o-append=request_size=1"}})
+	args := p.mpvArgs()
+	at, extra := -1, -1
+	for i, a := range args {
+		switch a {
+		case "--stream-lavf-o-append=request_size=10485760":
+			at = i
+		case "--stream-lavf-o-append=request_size=1":
+			extra = i
+		}
+	}
+	if at < 0 || at > extra {
+		t.Errorf("mpv is not asked for 10 MiB ranges before ExtraArgs: %v", args)
+	}
+}
+
 func TestAPositionOutsideTheQueueIsNoTrack(t *testing.T) {
 	v := newView()
 	v.apply("playlist", json.RawMessage(`[{"filename":"https://music.youtube.com/watch?v=aaaaaaaaaaa"}]`))

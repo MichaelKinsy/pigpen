@@ -28,11 +28,20 @@ type Options struct {
 	Duration func(url string) float64
 	// NoUnshuffle makes playlist-unshuffle an unknown command, as in mpv before 0.37.
 	NoUnshuffle bool
+	// NoUserData makes the user-data properties unknown, as in mpv before 0.36.
+	NoUserData bool
+	// NoCacheEnd leaves cache-end out of demuxer-cache-state, as mpv does when it has no timestamp for it.
+	NoCacheEnd bool
+	// Version is mpv-version ("mpv 0.37.0" when empty); from 0.38 loadfile takes flags insert-at with an index.
+	Version string
 }
 
 type entry struct {
 	id  int
 	url string
+	// start is the per-file start option loadfile was given (seconds): as in mpv, it stays with the entry, and every play of it
+	// starts there.
+	start float64
 }
 
 // Server is the fake mpv.
@@ -45,15 +54,19 @@ type Server struct {
 	nextID  int
 	pos     int // -1 when nothing plays
 	timePos float64
-	pause   bool
-	volume  float64
+	// cutAt is where the playing entry's stream ended early (CutCurrent), 0 while it has not: the demuxer is at its end there.
+	cutAt  float64
+	pause  bool
+	volume float64
 	// loop is loop-playlist and loop-file; "no" until set.
 	loopPlaylist, loopFile string
 	// before is the queue order from before playlist-shuffle, nil when not shuffled.
 	before []entry
-	conns  map[*conn]bool
-	quit   chan struct{}
-	closed bool
+	// userData is the user-data/ properties set by clients, by name, as their JSON; they live as long as the server.
+	userData map[string]json.RawMessage
+	conns    map[*conn]bool
+	quit     chan struct{}
+	closed   bool
 	// Commands records every command received, in order, as JSON.
 	commands []string
 	// filters are the audio filters added with "af add", by label; levelDB is what an astats filter measures (RMS, peak).
@@ -132,13 +145,17 @@ func (s *Server) serve(c *conn) {
 	sc.Buffer(make([]byte, 64*1024), 64*1024*1024)
 	for sc.Scan() {
 		var req struct {
-			Command   []json.RawMessage `json:"command"`
-			RequestID *int64            `json:"request_id"`
+			Command   json.RawMessage `json:"command"`
+			RequestID *int64          `json:"request_id"`
 		}
-		if json.Unmarshal(sc.Bytes(), &req) != nil || len(req.Command) == 0 {
+		if json.Unmarshal(sc.Bytes(), &req) != nil {
 			continue
 		}
-		data, errText := s.run(c, req.Command)
+		cmd := commandArgs(req.Command)
+		if len(cmd) == 0 {
+			continue
+		}
+		data, errText := s.run(c, cmd)
 		reply := map[string]any{"error": "success"}
 		if errText != "" {
 			reply["error"] = errText
@@ -194,13 +211,16 @@ func (s *Server) run(c *conn, cmd []json.RawMessage) (any, string) {
 			return nil, "invalid parameter"
 		}
 		prop := str(2)
-		if _, known := s.property(prop); !known {
+		// mpv observes a user-data property that is not set yet, and reports it once it is (measured, mpv 0.41).
+		userData := strings.HasPrefix(prop, "user-data/") && !s.opts.NoUserData
+		v, known := s.property(prop)
+		if !known && !userData {
 			return nil, "property not found"
 		}
 		c.observed[int(id)] = prop
-		// mpv reports the current value right after observe_property.
-		v, _ := s.property(prop)
-		c.send(map[string]any{"event": "property-change", "id": int(id), "name": prop, "data": v})
+		if known { // mpv reports the current value right after observe_property
+			c.send(map[string]any{"event": "property-change", "id": int(id), "name": prop, "data": v})
+		}
 		return nil, ""
 	case "unobserve_property":
 		id, _ := num(1)
@@ -238,6 +258,14 @@ func (s *Server) run(c *conn, cmd []json.RawMessage) (any, string) {
 			}
 			s.changed(prop)
 		default:
+			if strings.HasPrefix(prop, "user-data/") && !s.opts.NoUserData && len(cmd) > 2 {
+				if s.userData == nil {
+					s.userData = map[string]json.RawMessage{}
+				}
+				s.userData[prop] = cmd[2]
+				s.changed(prop)
+				return nil, ""
+			}
 			return nil, "property not found"
 		}
 		return nil, ""
@@ -273,10 +301,13 @@ func (s *Server) run(c *conn, cmd []json.RawMessage) (any, string) {
 			s.timePos += amount
 		}
 		s.timePos = min(max(s.timePos, 0), s.currentDuration())
+		for c := range s.conns {
+			c.send(map[string]any{"event": "seek"})
+		}
 		s.changed("time-pos")
 		return nil, ""
 	case "loadfile":
-		return s.loadfile(str(1), str(2))
+		return s.loadfile(str(1), str(2), str(3), str(4))
 	case "playlist-next":
 		if s.pos < 0 {
 			return nil, "error running command"
@@ -298,6 +329,10 @@ func (s *Server) run(c *conn, cmd []json.RawMessage) (any, string) {
 		s.play(s.pos - 1)
 		return nil, ""
 	case "playlist-play-index":
+		if str(1) == "none" { // stops playing and keeps the queue
+			s.stop()
+			return nil, ""
+		}
 		i, ok := num(1)
 		if !ok || int(i) < 0 || int(i) >= len(s.list) {
 			return nil, "invalid parameter"
@@ -369,13 +404,32 @@ func (s *Server) Filters() []string {
 	return append([]string(nil), s.filters...)
 }
 
-func (s *Server) loadfile(url, flags string) (any, string) {
+func (s *Server) loadfile(url, flags, index, options string) (any, string) {
 	if url == "" {
 		return nil, "invalid parameter"
 	}
 	s.nextID++
 	e := entry{id: s.nextID, url: url}
+	for _, kv := range strings.Split(options, ",") {
+		if v, ok := strings.CutPrefix(kv, "start="); ok {
+			e.start, _ = parseFloat(v)
+		}
+	}
 	switch flags {
+	case "insert-at": // mpv 0.38 and later: at index, or at the end when it is past it (or -1)
+		at, err := strconv.Atoi(index)
+		if !s.atLeast038() || err != nil {
+			return nil, "invalid parameter"
+		}
+		if at < 0 || at > len(s.list) {
+			at = len(s.list)
+		}
+		s.list = append(s.list[:at], append([]entry{e}, s.list[at:]...)...)
+		if s.pos >= at {
+			s.pos++
+			s.changed("playlist-pos")
+		}
+		s.changed("playlist")
 	case "", "replace":
 		s.list = []entry{e}
 		s.play(0)
@@ -453,15 +507,36 @@ func (s *Server) clear() {
 
 func (s *Server) play(i int) {
 	s.pos = i
-	s.timePos = 0
+	s.timePos = s.list[i].start
+	s.cutAt = 0
 	s.pause = false
+	for c := range s.conns {
+		c.send(map[string]any{"event": "start-file", "playlist_entry_id": s.list[i].id})
+	}
 	s.changed("playlist-pos", "playlist", "time-pos", "duration", "media-title", "path", "pause", "idle-active")
+	for c := range s.conns {
+		c.send(map[string]any{"event": "file-loaded"})
+	}
 }
 
 func (s *Server) stop() {
 	s.pos = -1
 	s.timePos = 0
+	s.cutAt = 0
 	s.changed("playlist-pos", "playlist", "time-pos", "duration", "media-title", "path", "idle-active")
+}
+
+// advance is what mpv does when the playing entry has ended: the next entry plays, the first after the last with
+// loop-playlist (the same one again when it is alone), or nothing.
+func (s *Server) advance() {
+	switch {
+	case s.pos < len(s.list)-1:
+		s.play(s.pos + 1)
+	case s.loopPlaylist != "no":
+		s.play(0)
+	default:
+		s.stop()
+	}
 }
 
 func (s *Server) setPause(p bool) {
@@ -519,6 +594,18 @@ func (s *Server) property(name string) (any, bool) {
 			return nil, true
 		}
 		return s.list[s.pos].url, true
+	case "demuxer-cache-state":
+		if s.pos < 0 {
+			return nil, true
+		}
+		if s.cutAt > 0 { // the demuxer has read all there is: up to where the stream was cut
+			if s.opts.NoCacheEnd {
+				return map[string]any{"eof": true}, true
+			}
+			return map[string]any{"eof": true, "cache-end": s.cutAt}, true
+		}
+		end := min(s.timePos+30, s.currentDuration())
+		return map[string]any{"eof": end >= s.currentDuration(), "cache-end": end}, true
 	case "playlist":
 		out := make([]map[string]any, 0, len(s.list))
 		for i, e := range s.list {
@@ -530,11 +617,32 @@ func (s *Server) property(name string) (any, bool) {
 		}
 		return out, true
 	}
+	if name == "mpv-version" {
+		return s.version(), true
+	}
+	if v, ok := s.userData[name]; ok && !s.opts.NoUserData {
+		return v, true
+	}
 	return nil, false
 }
 
-// FailCurrent sends the end-file event mpv sends when the current entry could not be opened (a stream URL that was refused):
-// reason "error" with the entry's ID, as a real mpv 0.37 does.
+func (s *Server) version() string {
+	if s.opts.Version != "" {
+		return s.opts.Version
+	}
+	return "mpv 0.37.0"
+}
+
+// atLeast038 is whether the fake is an mpv 0.38 or later (its loadfile takes an index: flags insert-at).
+func (s *Server) atLeast038() bool {
+	var major, minor int
+	_, _ = fmt.Sscanf(strings.TrimPrefix(strings.TrimPrefix(s.version(), "mpv "), "v"), "%d.%d", &major, &minor)
+	return major > 0 || minor >= 38
+}
+
+// FailCurrent does what mpv does when the current entry could not be opened (a stream URL that was refused): it sends end-file
+// with reason "error" and the entry's ID, as a real mpv 0.37 does, and goes on to the next entry. With loop-playlist and one
+// entry it stops, as mpv does when every entry of a looping queue has failed.
 func (s *Server) FailCurrent() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -544,6 +652,63 @@ func (s *Server) FailCurrent() {
 	for c := range s.conns {
 		c.send(map[string]any{"event": "end-file", "reason": "error", "playlist_entry_id": s.list[s.pos].id, "file_error": "loading failed"})
 	}
+	if len(s.list) == 1 {
+		s.stop()
+		return
+	}
+	s.advance()
+}
+
+// CutCurrent does what mpv does when the stream of the playing entry ends at seconds, before the end of the track (YouTube cut
+// the connection and refuses the rest, measured with a real mpv 0.41): the demuxer is at its end there, and mpv takes it for
+// the end of the file. With loop-file it seeks back to the start of the same entry (a seek event); otherwise it sends end-file
+// with reason "eof" and goes on as at the end of any track.
+func (s *Server) CutCurrent(seconds float64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.pos < 0 {
+		return
+	}
+	s.timePos, s.cutAt = seconds, seconds
+	s.changed("time-pos")
+	if s.loopFile != "no" {
+		for c := range s.conns {
+			c.send(map[string]any{"event": "seek"})
+		}
+		s.timePos = 0
+		s.changed("time-pos")
+		return
+	}
+	for c := range s.conns {
+		c.send(map[string]any{"event": "end-file", "reason": "eof", "playlist_entry_id": s.list[s.pos].id})
+	}
+	s.advance()
+}
+
+// CutAhead makes the stream of the playing entry end at seconds, ahead of where it plays: the demuxer has read up to there and
+// is at its end, and the sound has not reached it yet.
+func (s *Server) CutAhead(seconds float64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.cutAt = seconds
+}
+
+// IDs returns the entry IDs of the playlist, in order: an entry loaded again has a new one.
+func (s *Server) IDs() []int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ids := make([]int, len(s.list))
+	for i, e := range s.list {
+		ids[i] = e.id
+	}
+	return ids
+}
+
+// TimePos is the playback position in seconds.
+func (s *Server) TimePos() float64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.timePos
 }
 
 // changed sends a property-change event for each named property to the clients observing it.

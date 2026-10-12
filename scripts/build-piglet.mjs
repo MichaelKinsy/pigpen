@@ -8,6 +8,7 @@ import { requirePig } from './pig-bin.mjs';
 // One command from a checkout to a Piglet Binary:
 //   npm run build:piglet -- <piglet-name> [--out <file>] [--replace] [-- <extra pig piglet build flags>]
 // pig never overwrites a binary; --replace moves an existing one to <out>.prev first.
+// Without --out the Binary goes to dist/bin/<name>; PIGPEN_BIN_DIR names another directory (the tests use it so a Binary built in dist/bin cannot change their result).
 // PiG anchors a Piglet's local Packages inside the Piglet's own directory, so the authored
 // piglets/<name>/piglet.yaml (which selects ../../components/<pkg>) cannot be built directly:
 // PiG says `escapes the Piglet anchor`. `npm run stage` copies the shared Packages next to the
@@ -48,7 +49,7 @@ const staged = spawnSync(process.execPath, [join(root, 'scripts/quality-gates.mj
 if (!staged) fail('staging failed; fix the diagnostic above');
 
 const manifest = join(root, 'dist/staged/piglets', name, 'piglet.yaml');
-const target = out ? resolve(out) : join(root, 'dist/bin', name);
+const target = out ? resolve(out) : join(process.env.PIGPEN_BIN_DIR || join(root, 'dist/bin'), name);
 let pig;
 try { pig = requirePig(); } catch (error) { fail(error.message); }
 if (existsSync(target)) {

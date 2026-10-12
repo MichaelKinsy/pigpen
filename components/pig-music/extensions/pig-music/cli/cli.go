@@ -431,7 +431,7 @@ func (c *command) timeStream(ytdl, jsRuntime, video string, line func(string, ti
 		return
 	}
 	start = time.Now()
-	_, err = exec.CommandContext(c.ctx, shim, "--no-warnings", "-J", "--flat-playlist", "--sub-format", "ass/srt/best", "--format", "bestaudio", "--ignore-config", "--all-subs", "--no-playlist", "--", watch).Output()
+	_, err = exec.CommandContext(c.ctx, shim, "--no-warnings", "-J", "--flat-playlist", "--sub-format", "ass/srt/best", "--format", "bestaudio", "--ignore-config", "--sub-langs", "all", "--write-srt", "--no-playlist", "--", watch).Output()
 	line("stream, prefetched", time.Since(start), err)
 }
 
@@ -974,7 +974,7 @@ func (c *command) libraryCounts() error {
 	if errors.As(err, &need) {
 		fmt.Fprintf(c.io.Out, "pig-music needs your OK before it reads your YouTube Music account.\nTo list your library, yt-dlp would read the cookies of %s.\n"+
 			"It opens that browser's whole cookie store for each library request, in memory only; pig-music saves no cookie and never sees one.\n"+
-			"Only library listings use it: search, playback and mpv never use cookies.\n%s\nAllow reading %s? [y/N] ", need.Description, need.Notes, need.Browser)
+			"Only library listings and the player's suggestions (its Search screen) use it: search, playback and mpv never use cookies.\n%s\nAllow reading %s? [y/N] ", need.Description, need.Notes, need.Browser)
 		line, _ := bufio.NewReader(c.io.In).ReadString('\n')
 		if a := strings.ToLower(strings.TrimSpace(line)); a != "y" && a != "yes" {
 			return errors.New("not allowed; nothing was read")

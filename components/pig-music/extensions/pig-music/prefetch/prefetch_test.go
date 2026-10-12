@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -186,7 +187,9 @@ func runShim(t *testing.T, shim string, args ...string) string {
 	return string(out)
 }
 
-var mpvHook = []string{"--no-warnings", "-J", "--flat-playlist", "--sub-format", "ass/srt/best", "--format", "bestaudio", "--ignore-config", "--all-subs", "--no-playlist", "--"}
+// mpvHook is what mpv 0.41's yt-dlp hook passes for ytdl-format=bestaudio with ytdl-raw-options ignore-config (recorded from a
+// real mpv 0.41.0, with the watch URL last).
+var mpvHook = []string{"--no-warnings", "-J", "--flat-playlist", "--sub-format", "ass/srt/best", "--format", "bestaudio", "--ignore-config", "--sub-langs", "all", "--write-srt", "--no-playlist", "--"}
 
 func TestTheShimAnswersMpvsHookFromTheKeptAnswerWithoutRunningYtdlp(t *testing.T) {
 	c, shim, log := shimRig(t)
@@ -238,6 +241,59 @@ func TestTheShimDoesNotUseAnExpiredAnswer(t *testing.T) {
 	}
 }
 
+// answerExpiring is a listing whose two stream URLs YouTube signed to expire at first and at second (format URLs carry
+// expire=<unix seconds>; the second as yt-dlp's JSON may escape the &).
+func answerExpiring(first, second time.Time) string {
+	return `{"id":"fOT0BUpITw8","title":"x","formats":[` +
+		`{"url":"https://rr1.googlevideo.com/videoplayback?expire=` + strconv.FormatInt(second.Unix(), 10) + `&id=abc","format_id":"140"},` +
+		`{"url":"https://rr1.googlevideo.com/videoplayback?id=abc\u0026expire=` + strconv.FormatInt(first.Unix(), 10) + `\u0026ip=1.2.3.4","format_id":"251"}]}`
+}
+
+// An answer is kept for MaxAge (1 h) on the assumption that its stream URLs last about six hours. One whose URLs expire
+// sooner must not be answered from once they are about to: mpv would play a stream YouTube refuses part way through.
+func TestTheShimDoesNotServeAnAnswerWhoseStreamsExpireWithinTheMargin(t *testing.T) {
+	c, shim, _ := shimRig(t)
+	f := &fakeRun{out: answerExpiring(time.Now().Add(30*time.Minute), time.Now().Add(6*time.Hour))}
+	c.Runner = f.run
+	url := "https://music.youtube.com/watch?v=fOT0BUpITw8"
+	_ = c.Warm(context.Background(), url)
+	if c.Has(url) {
+		t.Error("an answer whose first stream expires in 30 minutes is offered")
+	}
+	if got := runShim(t, shim, append(mpvHook, url)...); !strings.Contains(got, "REAL") {
+		t.Errorf("the shim answered from it: %q", got)
+	}
+}
+
+// The first stream expires 90 minutes after the resolve: the answer goes stale half an hour in, before MaxAge.
+func TestAnAnswerGoesStaleAMarginBeforeItsFirstStreamExpires(t *testing.T) {
+	start := time.Now()
+	const life = 90 * time.Minute
+	f := &fakeRun{out: answerExpiring(start.Add(life), start.Add(6*time.Hour))}
+	c := newCache(t, f)
+	now := start
+	c.Now = func() time.Time { return now }
+	url := "https://music.youtube.com/watch?v=fOT0BUpITw8"
+	if err := c.Warm(context.Background(), url); err != nil {
+		t.Fatal(err)
+	}
+	if !c.Has(url) {
+		t.Fatal("a fresh answer is not offered")
+	}
+	now = start.Add(life - expiryMargin + time.Minute)
+	if c.Has(url) {
+		t.Errorf("offered %s before its first stream expires", life-(now.Sub(start)))
+	}
+	// The shim's age check reads the same deadline: the file is as old as an answer that has reached MaxAge.
+	st, err := os.Stat(filepath.Join(c.Dir, "fOT0BUpITw8.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deadline := st.ModTime().Add(c.maxAge()); deadline.Sub(start.Add(life-expiryMargin)).Abs() > 2*time.Second {
+		t.Errorf("the shim would answer until %s, want %s", deadline, start.Add(life-expiryMargin))
+	}
+}
+
 func TestTheShimQuotesTheProgramsItNames(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip()
@@ -256,7 +312,8 @@ func TestTheShimQuotesTheProgramsItNames(t *testing.T) {
 	}
 }
 
-func TestForgetDropsTheKeptAnswer(t *testing.T) {
+// Forget says whether a fresh answer was kept: only then did mpv play from it, and a refusal is one a fresh resolve can mend.
+func TestForgetDropsTheKeptAnswerAndSaysWhetherThereWasOne(t *testing.T) {
 	f := &fakeRun{out: answer}
 	c := newCache(t, f)
 	url := "https://music.youtube.com/watch?v=fOT0BUpITw8"
@@ -264,11 +321,18 @@ func TestForgetDropsTheKeptAnswer(t *testing.T) {
 	if !c.Has(url) {
 		t.Fatal("not kept")
 	}
-	c.Forget(url)
+	if !c.Forget(url) {
+		t.Error("Forget says nothing was kept")
+	}
 	if c.Has(url) {
 		t.Error("still kept after Forget")
 	}
-	c.Forget("not a url") // nothing happens
+	if c.Forget(url) {
+		t.Error("Forget says an answer was kept the second time")
+	}
+	if c.Forget("not a url") { // nothing happens
+		t.Error("Forget says an answer was kept for no URL")
+	}
 }
 
 // mpv's hook runs yt-dlp with the JavaScript runtime the doctor found (--ytdl-raw-options-append=js-runtimes=...): yt-dlp
@@ -284,5 +348,177 @@ func TestWarmUsesTheJavaScriptRuntimeMpvsHookUses(t *testing.T) {
 	got := strings.Join(f.calls[0], " ")
 	if !strings.Contains(got, "--js-runtimes node --") {
 		t.Errorf("args %s", got)
+	}
+}
+
+// Warm runs the command mpv's hook runs, so that what the shim hands mpv is what mpv's own run would have listed. mpv 0.41
+// asks for every subtitle with --sub-langs all --write-srt (mpv 0.37 said --all-subs, which yt-dlp reads the same way).
+func TestWarmRunsTheCommandMpv041sHookRuns(t *testing.T) {
+	f := &fakeRun{out: answer}
+	c := newCache(t, f)
+	url := "https://music.youtube.com/watch?v=fOT0BUpITw8"
+	if err := c.Warm(context.Background(), url); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := strings.Join(f.calls[0][1:], " "), strings.Join(append(append([]string{}, mpvHook...), url), " "); got != want {
+		t.Errorf("Warm ran\n%s\nmpv 0.41's hook runs\n%s", got, want)
+	}
+}
+
+// ── available_at: YouTube refuses a stream until its pre-roll ad could have been skipped ───────────────────────────────
+
+// listingAvailableAt is a listing whose requested stream YouTube serves from the unix second at (yt-dlp's available_at, 0 for a
+// yt-dlp that leaves it out), and whose other format, which mpv does not play, only from other.
+func listingAvailableAt(at, other int64) string {
+	field := func(v int64) string {
+		if v == 0 {
+			return ""
+		}
+		return `, "available_at": ` + strconv.FormatInt(v, 10)
+	}
+	want := `{"url": "https://rr1.googlevideo.com/videoplayback?id=abc", "format_id": "251"` + field(at) + `, "http_headers": {"User-Agent": "x]}"}}`
+	return `{"id": "fOT0BUpITw8", "title": "a ] title \" with } brackets", "formats": [` +
+		`{"url": "https://rr1.googlevideo.com/videoplayback?id=def", "format_id": "140"` + field(other) + `}, ` + want + `], ` +
+		`"requested_downloads": [` + want + `], "format_id": "251"` + field(other) + `}`
+}
+
+// timedShim runs the shim and says when it finished.
+func timedShim(t *testing.T, shim string, args ...string) (out string, done time.Time) {
+	t.Helper()
+	out = runShim(t, shim, args...)
+	return out, time.Now()
+}
+
+func TestTheShimHoldsAKeptAnswerUntilItsStreamIsAvailable(t *testing.T) {
+	c, shim, log := shimRig(t)
+	at := time.Now().Unix() + 2
+	listing := listingAvailableAt(at, 0)
+	c.Runner = (&fakeRun{out: listing}).run
+	url := "https://music.youtube.com/watch?v=fOT0BUpITw8"
+	if err := c.Warm(context.Background(), url); err != nil {
+		t.Fatal(err)
+	}
+	got, done := timedShim(t, shim, append(mpvHook, url)...)
+	if strings.TrimSpace(got) != listing {
+		t.Errorf("answer %q", got)
+	}
+	if done.Unix() < at {
+		t.Errorf("handed to mpv %s before its stream is available", time.Unix(at, 0).Sub(done))
+	}
+	if _, err := os.Stat(log); err == nil {
+		t.Error("yt-dlp ran")
+	}
+}
+
+// A stream that is available already, or a listing without available_at (yt-dlp before it had it), is handed over at once.
+// Only the requested stream counts: the listing's other formats (other clients' too) may be held back far longer.
+func TestTheShimDoesNotHoldAnAvailableStream(t *testing.T) {
+	for name, listing := range map[string]string{
+		"available":         listingAvailableAt(time.Now().Unix()-5, 0),
+		"no available_at":   listingAvailableAt(0, 0),
+		"another held back": listingAvailableAt(time.Now().Unix()-5, time.Now().Unix()+3600),
+	} {
+		c, shim, log := shimRig(t)
+		c.Runner = (&fakeRun{out: listing}).run
+		url := "https://music.youtube.com/watch?v=fOT0BUpITw8"
+		if err := c.Warm(context.Background(), url); err != nil {
+			t.Fatal(err)
+		}
+		start := time.Now()
+		got, done := timedShim(t, shim, append(mpvHook, url)...)
+		if strings.TrimSpace(got) != listing || done.Sub(start) > 900*time.Millisecond {
+			t.Errorf("%s: answered %q after %s", name, got, done.Sub(start))
+		}
+		if _, err := os.Stat(log); err == nil {
+			t.Errorf("%s: yt-dlp ran", name)
+		}
+	}
+}
+
+// fakeRealYtdlp makes the rig's yt-dlp print the listing (and exit with code), as a fresh resolve would.
+func fakeRealYtdlp(t *testing.T, c *Cache, listing string, code int) {
+	t.Helper()
+	script := "#!/bin/sh\necho \"$@\" >> '" + filepath.Join(filepath.Dir(c.Bin), "real.log") + "'\ncat <<'EOF'\n" + listing + "\nEOF\necho resolved >&2\nexit " + strconv.Itoa(code) + "\n"
+	if err := os.WriteFile(c.Bin, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// A resolve the shim passes to yt-dlp (nothing kept, or recovery's fresh resolve after Forget) is held the same way.
+func TestTheShimHoldsAFreshResolveUntilItsStreamIsAvailable(t *testing.T) {
+	c, shim, _ := shimRig(t)
+	at := time.Now().Unix() + 2
+	listing := listingAvailableAt(at, 0)
+	fakeRealYtdlp(t, c, listing, 0)
+	got, done := timedShim(t, shim, append(mpvHook, "https://music.youtube.com/watch?v=otherOTHER1")...)
+	if strings.TrimSpace(got) != listing {
+		t.Errorf("answer %q", got)
+	}
+	if done.Unix() < at {
+		t.Errorf("handed to mpv %s before its stream is available", time.Unix(at, 0).Sub(done))
+	}
+}
+
+// A failed resolve is passed on as it was: what yt-dlp printed, and its exit status.
+func TestTheShimPassesOnAFailedResolve(t *testing.T) {
+	c, shim, _ := shimRig(t)
+	fakeRealYtdlp(t, c, "partial", 3)
+	cmd := exec.Command(shim, append(mpvHook, "https://music.youtube.com/watch?v=otherOTHER1")...)
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	var exit *exec.ExitError
+	if !errors.As(err, &exit) || exit.ExitCode() != 3 || strings.TrimSpace(string(out)) != "partial" || !strings.Contains(stderr.String(), "resolved") {
+		t.Errorf("exit %v, stdout %q, stderr %q", err, out, stderr.String())
+	}
+}
+
+// A stream held back for longer than maxHold is not waited for: a kept answer is resolved afresh, and a fresh one fails,
+// saying why, so that mpv moves on instead of sitting silent.
+func TestTheShimDoesNotWaitLongForAStream(t *testing.T) {
+	c, shim, log := shimRig(t)
+	c.Runner = (&fakeRun{out: listingAvailableAt(time.Now().Unix()+3600, 0)}).run
+	url := "https://music.youtube.com/watch?v=fOT0BUpITw8"
+	if err := c.Warm(context.Background(), url); err != nil {
+		t.Fatal(err)
+	}
+	if got := runShim(t, shim, append(mpvHook, url)...); !strings.Contains(got, "REAL") {
+		t.Errorf("answered from a listing held back for an hour: %q", got)
+	}
+	if data, _ := os.ReadFile(log); strings.Count(string(data), "\n") != 1 {
+		t.Errorf("yt-dlp ran: %q", data)
+	}
+	fakeRealYtdlp(t, c, listingAvailableAt(time.Now().Unix()+3600, 0), 0)
+	start := time.Now()
+	cmd := exec.Command(shim, append(mpvHook, url)...)
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	if err == nil || len(out) != 0 || !strings.Contains(stderr.String(), "available") || time.Since(start) > 900*time.Millisecond {
+		t.Errorf("exit %v after %s, stdout %q, stderr %q", err, time.Since(start), out, stderr.String())
+	}
+}
+
+// An answer is used for an hour at most, by Has and by the shim alike: refusals were seen with older answers, and R4 found
+// stream URLs served at every age it measured, up to 2 h, so an hour leaves a margin.
+func TestAnAnswerIsUsedForAnHour(t *testing.T) {
+	c, shim, _ := shimRig(t)
+	url := "https://music.youtube.com/watch?v=fOT0BUpITw8"
+	if err := c.Warm(context.Background(), url); err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(c.Dir, "fOT0BUpITw8.json")
+	for _, age := range []time.Duration{59 * time.Minute, 61 * time.Minute} {
+		born := time.Now().Add(-age)
+		if err := os.Chtimes(file, born, born); err != nil {
+			t.Fatal(err)
+		}
+		fresh := age < time.Hour
+		if c.Has(url) != fresh {
+			t.Errorf("%s old: Has %v", age, !fresh)
+		}
+		if got := runShim(t, shim, append(mpvHook, url)...); (strings.TrimSpace(got) == answer) != fresh {
+			t.Errorf("%s old: the shim answered %q", age, got)
+		}
 	}
 }

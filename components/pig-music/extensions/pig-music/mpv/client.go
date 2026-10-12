@@ -167,6 +167,12 @@ func (c *Client) dispatch() {
 // Command sends one command and returns the reply's data. A failing command
 // returns an error carrying mpv's own message ("property unavailable").
 func (c *Client) Command(ctx context.Context, args ...any) (json.RawMessage, error) {
+	return c.send(ctx, args)
+}
+
+// send sends a command: its arguments in order, or a map of mpv's named arguments ({"name": "loadfile", "url": ...}), which
+// reach the same argument whatever position a version of mpv gives it.
+func (c *Client) send(ctx context.Context, command any) (json.RawMessage, error) {
 	ch := make(chan reply, 1)
 	c.mu.Lock()
 	if c.closed {
@@ -178,7 +184,7 @@ func (c *Client) Command(ctx context.Context, args ...any) (json.RawMessage, err
 	c.pending[id] = ch
 	c.mu.Unlock()
 
-	payload, err := json.Marshal(map[string]any{"command": args, "request_id": id})
+	payload, err := json.Marshal(map[string]any{"command": command, "request_id": id})
 	if err != nil {
 		c.forget(id)
 		return nil, err

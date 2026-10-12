@@ -27,6 +27,10 @@ type snapshot struct {
 	Lines []string `json:"lines"`
 	Width int      `json:"width"`
 	Seq   uint64   `json:"seq"`
+	// View is a kit view frame's view (D103); Lines are then what the test renderer draws of it (kitwire_test.go).
+	View json.RawMessage `json:"view"`
+	// Mouse is the frame's mark of a component that takes the mouse.
+	Mouse bool `json:"mouse"`
 }
 
 type hostFrame struct {
@@ -52,8 +56,9 @@ type hostFrame struct {
 		Args   json.RawMessage `json:"args"`
 	} `json:"notify,omitempty"`
 	WidgetPush *struct {
-		Key   string   `json:"key"`
-		Lines []string `json:"lines"`
+		Key   string          `json:"key"`
+		Lines []string        `json:"lines"`
+		View  json.RawMessage `json:"view"`
 	} `json:"widget_push,omitempty"`
 }
 
@@ -81,6 +86,13 @@ type overlayHost struct {
 
 func startOverlayHost(t *testing.T, ext *sdk.Extension, mode string, width, height int) *overlayHost {
 	t.Helper()
+	return startHost(t, ext, mode, width, height, false)
+}
+
+// startHost is startOverlayHost; with frontend the host reports a D91 frontend (StatePayload.frontend), so views carry their
+// frontend-only annotations.
+func startHost(t *testing.T, ext *sdk.Extension, mode string, width, height int, frontend bool) *overlayHost {
+	t.Helper()
 	hostSide, extSide := net.Pipe()
 	h := &overlayHost{t: t, nc: hostSide, responses: map[string]chan string{}}
 	runDone := make(chan error, 1)
@@ -95,7 +107,7 @@ func startOverlayHost(t *testing.T, ext *sdk.Extension, mode string, width, heig
 			h.handlers[d.Event] = d.HandlerID
 		}
 	}
-	state, _ := json.Marshal(map[string]any{"hasUI": mode == "tui" || mode == "rpc"})
+	state, _ := json.Marshal(map[string]any{"hasUI": mode == "tui" || mode == "rpc", "frontend": frontend})
 	h.write(map[string]any{"type": "ready", "ready": map[string]any{
 		"session_name": "", "cwd": t.TempDir(), "mode": mode, "width": width, "height": height, "state": json.RawMessage(state),
 	}})
@@ -165,8 +177,12 @@ func (h *overlayHost) serve() {
 		case f.Type == "call" && f.Call != nil:
 			h.call(f)
 		case f.Type == "widget_push" && f.WidgetPush != nil:
+			ev := widgetEvent{key: f.WidgetPush.Key, lines: f.WidgetPush.Lines, view: f.WidgetPush.View}
+			if ev.view != nil {
+				ev.lines = mustWidgetLines(h.t, ev.view)
+			}
 			h.mu.Lock()
-			h.widgets = append(h.widgets, widgetEvent{key: f.WidgetPush.Key, lines: f.WidgetPush.Lines})
+			h.widgets = append(h.widgets, ev)
 			h.mu.Unlock()
 		case f.Type == "notify" && f.Notify != nil:
 			h.notified(f.Notify.Method, f.Notify.Args)
@@ -242,6 +258,9 @@ func (h *overlayHost) notified(method string, raw json.RawMessage) {
 	case "ui.custom.render":
 		var s snapshot
 		if json.Unmarshal(raw, &s) == nil {
+			if s.View != nil {
+				s.Lines = mustRenderView(h.t, s.View, s.Width)
+			}
 			h.mu.Lock()
 			h.snapshots = append(h.snapshots, s)
 			h.mu.Unlock()
@@ -277,6 +296,15 @@ func (h *overlayHost) input(data string) {
 	h.mu.Unlock()
 	args, _ := json.Marshal(map[string]any{"key": key, "data": data})
 	h.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "ui.custom.input", "args": json.RawMessage(args)}})
+}
+
+// mouse delivers a mouse event (ui.custom.mouse) to the open component, as the host does in fullscreen.
+func (h *overlayHost) mouse(event map[string]any) {
+	h.mu.Lock()
+	key := h.customKey
+	h.mu.Unlock()
+	args, _ := json.Marshal(map[string]any{"key": key, "event": event})
+	h.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "ui.custom.mouse", "args": json.RawMessage(args)}})
 }
 
 func (h *overlayHost) resize(width, height int) {
@@ -429,6 +457,8 @@ func ctxBackground() context.Context { return context.Background() }
 type widgetEvent struct {
 	key   string
 	lines []string
+	// view is a kit view widget's view; lines are then the string list it draws as (kitwire_test.go).
+	view json.RawMessage
 }
 
 // lastWidget is the latest write to the widget key, and whether there was any.

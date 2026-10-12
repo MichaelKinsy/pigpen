@@ -6,7 +6,7 @@ package tintinweb_subagents
 // `Extension.RunWithConn`. The tests therefore cross the same boundary a real
 // host does and use no PiG-internal package.
 //
-// Copy this file into the port as fakehost_test.go and replace tintinweb_subagents with the
+// Copy this file into the port as fakehost_test.go and replace pigmodeltweaks with the
 // port's package name (the verification script checks the copy against this
 // template). Add port-specific helpers in a different file.
 //
@@ -21,6 +21,7 @@ package tintinweb_subagents
 // card with the renderers they returned (or with a tool's own renderers).
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -80,10 +81,13 @@ type Host struct {
 	calls    []HostCall
 	pending  map[string]chan json.RawMessage
 	failures map[string]string
-	handlers map[string]int
-	tools    map[string]bool
-	cmds     map[string]bool
-	nextID   int
+	// allHandlers keeps every handler an extension registered for an event, in registration order: handlers maps an event to the
+	// last one, and an extension may register several for one event (FireAll reaches them all).
+	allHandlers map[string][]int
+	handlers    map[string]int
+	tools       map[string]bool
+	cmds        map[string]bool
+	nextID      int
 	// resolvers is the extension's tool renderer resolver count; invalidated
 	// lists the cards whose renderers called context.invalidate().
 	resolvers   int
@@ -138,7 +142,7 @@ func StartHost(t *testing.T, ext *sdk.Extension, opts HostOptions) *Host {
 	hostSide, extSide := net.Pipe()
 	h := &Host{
 		t: t, nc: hostSide, opts: opts, runDone: make(chan error, 1),
-		pending: map[string]chan json.RawMessage{}, failures: map[string]string{},
+		pending: map[string]chan json.RawMessage{}, failures: map[string]string{}, allHandlers: map[string][]int{},
 		handlers: map[string]int{}, tools: map[string]bool{}, cmds: map[string]bool{},
 	}
 	go func() { h.runDone <- ext.RunWithConn(extSide) }()
@@ -153,6 +157,7 @@ func StartHost(t *testing.T, ext *sdk.Extension, opts HostOptions) *Host {
 	}
 	for _, hd := range first.Register.Handlers {
 		h.handlers[hd.Event] = hd.HandlerID
+		h.allHandlers[hd.Event] = append(h.allHandlers[hd.Event], hd.HandlerID)
 	}
 	for _, tl := range first.Register.Tools {
 		h.tools[tl.Name] = true
@@ -378,7 +383,51 @@ func (h *Host) Fire(event string, data map[string]any) json.RawMessage {
 	if failure != "" {
 		h.t.Errorf("%s handler failed: %s", event, failure)
 	}
+	if event == "tool_call" {
+		return h.toolCallResult(result)
+	}
 	return result
+}
+
+// FireAll delivers one event to every handler the extension registered for it, in registration order, as the host does, and
+// fails the test when one of them fails. Fire reaches only the last handler registered for the event.
+func (h *Host) FireAll(event string, data map[string]any) {
+	h.t.Helper()
+	if data == nil {
+		data = map[string]any{}
+	}
+	data["type"] = event
+	args, _ := json.Marshal(data)
+	h.mu.Lock()
+	ids := append([]int(nil), h.allHandlers[event]...)
+	h.mu.Unlock()
+	for _, id := range ids {
+		if _, failure := h.roundTrip(map[string]any{"method": "event", "event": event, "handler_id": id, "args": json.RawMessage(args)}); failure != "" {
+			h.t.Errorf("%s handler %d failed: %s", event, id, failure)
+		}
+	}
+}
+
+// toolCallResult unwraps the handler's {block, reason} from the host reply. The SDK carries it
+// in "_pigToolCallResult" beside any edited input ("_pigToolCallInput"), and the host reads
+// the same field, so a test must see what the host sees. Like the host, it rejects a reply
+// in any other shape: decoded loosely, such a reply would read as "no block" and hide one.
+func (h *Host) toolCallResult(reply json.RawMessage) json.RawMessage {
+	h.t.Helper()
+	if len(reply) == 0 {
+		return nil
+	}
+	var wrapped struct {
+		Input  json.RawMessage `json:"_pigToolCallInput"`
+		Result json.RawMessage `json:"_pigToolCallResult"`
+	}
+	decoder := json.NewDecoder(bytes.NewReader(reply))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&wrapped); err != nil {
+		h.t.Errorf("tool_call reply %s is not {_pigToolCallResult, _pigToolCallInput}: %v", reply, err)
+		return nil
+	}
+	return wrapped.Result
 }
 
 // Command runs a registered slash command and returns its error text ("" on success).
