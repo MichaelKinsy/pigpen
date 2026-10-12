@@ -36,6 +36,12 @@ describe('stripIdsOf', () => {
     assert.deepEqual(stripIdsOf('name: x\nstrip:\n  features: [self-update]\n  extensions: [mcp]\n  apis: [google-vertex]\n  tools: [grep]\n'), ['self-update', 'mcp', 'google-vertex']);
     assert.deepEqual(stripIdsOf('name: x\n'), []);
   });
+  it('expands a keep-mode feature list to every probed feature it does not keep', () => {
+    const everyProbed = Object.keys(PROBES).sort();
+    assert.deepEqual(stripIdsOf('name: x\nstrip:\n  keep:\n    extensions: []\n    apis: []\n    features: []\n').sort(), everyProbed);
+    assert.deepEqual(stripIdsOf('name: x\nstrip:\n  keep:\n    features: [self-update, docs]\n').sort(), everyProbed.filter((id) => id !== 'self-update' && id !== 'docs'));
+    assert.deepEqual(stripIdsOf('name: x\nstrip:\n  keep:\n    extensions: []\n'), [], 'a keep list for another kind strips no probed feature');
+  });
 });
 
 describe('normalize', () => {

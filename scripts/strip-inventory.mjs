@@ -88,10 +88,14 @@ export function compareInventories(stock, stripped, stripIds) {
   return problems;
 }
 
-/** The strip list a staged manifest names: every ID of the five lists as `kind.id`, features first as bare IDs for the probes. */
+/** The strip IDs a staged manifest names or, in keep mode, implies: features, extensions and apis as bare IDs for the probes. */
 export function stripIdsOf(manifestText) {
   const strip = parseDocument(manifestText).get('strip')?.toJSON?.() ?? {};
-  return [...(strip.features ?? []), ...(strip.extensions ?? []), ...(strip.apis ?? [])];
+  const named = [...(strip.features ?? []), ...(strip.extensions ?? []), ...(strip.apis ?? [])];
+  // Keep mode strips every feature the building core has except the kept ones; the features this script can prove are the probed ones.
+  const kept = strip.keep?.features;
+  const implied = Array.isArray(kept) ? Object.keys(PROBES).filter((id) => !kept.includes(id) && !named.includes(id)) : [];
+  return [...named, ...implied];
 }
 
 /** Write the stock variant of a staged manifest (its strip list removed) next to it, which keeps its Package paths valid. */
