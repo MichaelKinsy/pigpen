@@ -30,6 +30,23 @@
         "aot-runtime"
       ],
       "version": null
+    },
+    "bench-ext10": {
+      "manifest": "piglets/bench-ext10/piglet.yaml",
+      "slots": [
+        "bench-ext-01",
+        "bench-ext-02",
+        "bench-ext-03",
+        "bench-ext-04",
+        "bench-ext-05",
+        "bench-ext-06",
+        "bench-ext-07",
+        "bench-ext-08",
+        "bench-ext-09",
+        "bench-ext-10"
+      ],
+      "version": null,
+      "pigRevision": "4270b7d68b"
     }
   }
 }

@@ -31,6 +31,18 @@
         }
       ],
       "description": "The aot TypeScript runtime slot (Go): compiles a session's TypeScript extensions into one executable in the background and runs it from the next start. Copied from PiG's piglets/aot."
+    },
+    "bench-ext10": {
+      "revision": "4270b7d68b",
+      "from": "bench/evals/fixtures/extensions-go",
+      "extensionDir": ".",
+      "exclude": [
+        "standalone/",
+        "pig-ext10.yaml"
+      ],
+      "module": "github.com/MichaelKinsy/pigpen/bench-ext10",
+      "package": "@pi-in-go/pigpen-bench-ext10",
+      "description": "The ten bench-ext extensions of the overhead bench as Go factories (ports of bench/evals/fixtures/extensions/bench-ext-NN.ts), fused into one Piglet Binary: no subprocess, no IPC. Copied from PiG's ext-matrix branch."
     }
   }
 }

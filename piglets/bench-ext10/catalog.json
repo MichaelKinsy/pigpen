@@ -1,0 +1,10 @@
+{
+  "featured": false,
+  "updatedAt": "2026-10-12",
+  "languages": [
+    "go"
+  ],
+  "notes": [
+    "Bench Piglet for pi-arena: the ten bench-ext extensions as Go factories fused into one Binary. Go only. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG's ext-matrix branch at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check)."
+  ]
+}

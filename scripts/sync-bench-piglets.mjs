@@ -41,11 +41,12 @@ function patched(component, relative, bytes) {
 export function sync(pig, spec, { check = false } = {}) {
   const drift = [];
   for (const [name, component] of Object.entries(spec.components)) {
+    const revision = component.revision ?? spec.pig.revision;
     const target = join(root, 'components', name, 'extensions', component.extensionDir);
-    const files = filesAt(pig, spec.pig.revision, component.from);
-    if (!files.length) throw new Error(`${component.from} has no files at ${spec.pig.revision}`);
+    const files = filesAt(pig, revision, component.from).filter(([relative]) => !(component.exclude ?? []).some((prefix) => relative.startsWith(prefix)));
+    if (!files.length) throw new Error(`${component.from} has no files at ${revision}`);
     for (const rootFile of component.rootFiles ?? []) {
-      const bytes = git(pig, ['show', `${spec.pig.revision}:${rootFile.from}`]);
+      const bytes = git(pig, ['show', `${revision}:${rootFile.from}`]);
       const path = join(root, 'components', name, rootFile.to);
       if (existsSync(path) && Buffer.compare(readFileSync(path), bytes) === 0) continue;
       drift.push(`${name}: ${rootFile.to}`);
@@ -71,7 +72,7 @@ function main(argv) {
   const drift = sync(resolve(argv[pigIndex + 1]), spec, { check });
   if (check) {
     for (const line of drift) console.error(`differs from ${spec.pig.revision}: ${line}`);
-    console.log(drift.length ? `${drift.length} file(s) differ` : `bench components match PiG ${spec.pig.revision}`);
+    console.log(drift.length ? `${drift.length} file(s) differ` : 'bench components match their pinned PiG revisions');
     return drift.length ? 1 : 0;
   }
   console.log(`${drift.length} file(s) written from PiG ${spec.pig.revision}`);

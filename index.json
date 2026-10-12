@@ -109,6 +109,31 @@
       ]
     },
     {
+      "id": "bench-ext10",
+      "kind": "piglet",
+      "name": "bench-ext10",
+      "description": "The ten bench-ext extensions of the overhead bench, fused into one Piglet Binary, for pi-arena.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-ext10"
+      },
+      "manifestSha256": "508c2959e624321c755a90d88325f46c1c4d5cb6a96f79984ba2c2680276443b",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Bench Piglet for pi-arena: the ten bench-ext extensions as Go factories fused into one Binary. Go only. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG's ext-matrix branch at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check)."
+      ]
+    },
+    {
       "id": "bench-lean",
       "kind": "piglet",
       "name": "bench-lean",
