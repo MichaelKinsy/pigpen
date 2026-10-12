@@ -18,6 +18,19 @@
           "why": "the lock lives in PiG's core, which is a separate checkout here: PIG_SOURCE_ROOT, the PiG source every Piglet build uses"
         }
       ]
+    },
+    "aot-runtime": {
+      "from": "piglets/aot/extensions/aotruntime",
+      "extensionDir": "aot-runtime",
+      "module": "github.com/MichaelKinsy/pigpen/aot-runtime",
+      "package": "@pi-in-go/pigpen-aot-runtime",
+      "rootFiles": [
+        {
+          "from": "piglets/aot/THIRD_PARTY_NOTICES.md",
+          "to": "THIRD_PARTY_NOTICES.md"
+        }
+      ],
+      "description": "The aot TypeScript runtime slot (Go): compiles a session's TypeScript extensions into one executable in the background and runs it from the next start. Copied from PiG's piglets/aot."
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-11",
+  "updatedAt": "2026-10-12",
   "entries": [
     {
       "id": "a2a",
@@ -56,6 +56,31 @@
         "The Piglet Binary does not speak ACP by itself. ACP is JSON-RPC on stdio and a fused extension must not write protocol bytes to the host's stdout, so the entrypoint is the companion executable pig-acp, started by the editor with --pig pointing at this agent. Proven with a built Piglet Binary as the --pig target of pig-acp (11 end-to-end scenarios and the ACP reference client); there is no one-command Binary yet.",
         "Advertised and implemented: initialize, session/new, session/load, session/list, session/delete, session/prompt with streaming text, thoughts, tool calls, diffs and terminal output, session/cancel, model and thinking-level selection, context usage, permission requests for extension select and confirm dialogs. Not supported, by design: file system and terminal delegation, MCP servers passed by the editor, extension slash commands, input and editor dialogs.",
         "No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+      ]
+    },
+    {
+      "id": "bench-aot",
+      "kind": "piglet",
+      "name": "bench-aot",
+      "description": "PiG with the aot TypeScript runtime slot: compiles a session's TypeScript extensions into one executable in the background, for pi-arena.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-aot"
+      },
+      "manifestSha256": "2e2e17a1b963e9cd7e8dc3727912984a6634983372f9c0c49983a9ad23650705",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Bench Piglet for pi-arena: the aot runtime slot is the only member (the pig-pi-bolt arm without its TypeScript ext10 sources, which are not in Pigpen yet). Go only. Experimental: it downloads a pinned Pi-Bolt compiler on first use and checks its signature. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check)."
       ]
     },
     {

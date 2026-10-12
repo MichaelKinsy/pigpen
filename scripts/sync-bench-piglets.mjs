@@ -44,6 +44,13 @@ export function sync(pig, spec, { check = false } = {}) {
     const target = join(root, 'components', name, 'extensions', component.extensionDir);
     const files = filesAt(pig, spec.pig.revision, component.from);
     if (!files.length) throw new Error(`${component.from} has no files at ${spec.pig.revision}`);
+    for (const rootFile of component.rootFiles ?? []) {
+      const bytes = git(pig, ['show', `${spec.pig.revision}:${rootFile.from}`]);
+      const path = join(root, 'components', name, rootFile.to);
+      if (existsSync(path) && Buffer.compare(readFileSync(path), bytes) === 0) continue;
+      drift.push(`${name}: ${rootFile.to}`);
+      if (!check) { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, bytes); }
+    }
     for (const [relative, original] of files) {
       const bytes = patched(component, relative, original);
       const path = join(target, relative);

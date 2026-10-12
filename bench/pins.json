@@ -23,6 +23,13 @@
       "slots": [],
       "strip": "keep mode, no built-in kept",
       "version": null
+    },
+    "bench-aot": {
+      "manifest": "piglets/bench-aot/piglet.yaml",
+      "slots": [
+        "aot-runtime"
+      ],
+      "version": null
     }
   }
 }
