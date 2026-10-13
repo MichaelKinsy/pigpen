@@ -164,15 +164,29 @@ func (h *harness) assistantCalls(text string, calls ...map[string]string) {
 
 func (h *harness) start() { h.host.Fire("session_start", map[string]any{"reason": "startup"}) }
 
+// toolCall fires a tool_call event and returns the handler's result. The SDK replies
+// {"_pigToolCallResult": result} (plus "_pigToolCallInput" when the handler edited the input;
+// extensions/sdk/extension.go), and PiG's host reads the result from it.
 func (h *harness) toolCall(tool, id string, input map[string]any) map[string]any {
 	h.t.Helper()
 	raw := h.host.Fire("tool_call", map[string]any{"toolName": tool, "toolCallId": id, "input": input})
-	if len(raw) == 0 || string(raw) == "null" {
+	if len(raw) == 0 {
+		return nil
+	}
+	var reply map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &reply); err != nil {
+		h.t.Fatalf("tool_call reply %s: %v", raw, err)
+	}
+	result, ok := reply["_pigToolCallResult"]
+	if !ok {
+		h.t.Fatalf("tool_call reply %s has no _pigToolCallResult", raw)
+	}
+	if string(result) == "null" {
 		return nil
 	}
 	var out map[string]any
-	if err := json.Unmarshal(raw, &out); err != nil {
-		h.t.Fatalf("tool_call result %s: %v", raw, err)
+	if err := json.Unmarshal(result, &out); err != nil {
+		h.t.Fatalf("tool_call result %s: %v", result, err)
 	}
 	return out
 }
