@@ -178,6 +178,24 @@ func TestInvalidConfigurationIsReportedNotFatal(t *testing.T) {
 	}
 }
 
+// Without PIG_CODING_AGENT_DIR and a config home, the configuration cannot be
+// found: session start reports it and the tools fail, instead of reading an
+// agent directory relative to the working directory.
+func TestMissingConfigHomeIsReported(t *testing.T) {
+	t.Chdir(t.TempDir())
+	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+		t.Setenv(name, "")
+	}
+	h := StartHost(t, a2aext.ExtensionWith(a2aext.Options{Getenv: mapEnv(map[string]string{})}), HostOptions{Mode: "rpc"})
+	h.Fire("session_start", map[string]any{"reason": "startup"})
+	if got := strings.Join(notifications(h), "\n"); !strings.Contains(got, "error:") || !strings.Contains(got, "home directory") {
+		t.Fatalf("the user must be told the config home is missing: %q", got)
+	}
+	if _, fail := h.Tool("a2a_agents", map[string]any{}); !strings.Contains(fail, "home directory") {
+		t.Fatalf("a2a_agents failure = %q, want the missing home directory", fail)
+	}
+}
+
 func TestWorkerChildNeverListens(t *testing.T) {
 	h := hostWith(t, `{"listen":"127.0.0.1:0","insecureNoAuth":true}`, map[string]string{"PIG_A2A_WORKER": "1"}, &echoWorker{})
 	h.Fire("session_start", map[string]any{"reason": "startup"})
