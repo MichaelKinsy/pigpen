@@ -73,14 +73,31 @@ func (r *adapterRig) uiCalls(method string) []map[string]any {
 	return out
 }
 
+// toolCall fires a tool_call event and decodes the {block, reason} result. The SDK replies
+// {"_pigToolCallResult": result} (plus "_pigToolCallInput" when the handler edited the input;
+// extensions/sdk/extension.go), and PiG's host reads the result from it.
 func (r *adapterRig) toolCall(name string, input map[string]any) (blocked bool, reason string) {
+	r.h.t.Helper()
 	raw := r.h.Fire("tool_call", map[string]any{"toolName": name, "input": input, "toolCallId": "c1"})
 	var res struct {
 		Block  bool   `json:"block"`
 		Reason string `json:"reason"`
 	}
-	if len(raw) > 0 {
-		_ = json.Unmarshal(raw, &res)
+	if len(raw) == 0 {
+		return false, ""
+	}
+	var reply map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &reply); err != nil {
+		r.h.t.Fatalf("tool_call reply %s: %v", raw, err)
+	}
+	result, ok := reply["_pigToolCallResult"]
+	if !ok {
+		r.h.t.Fatalf("tool_call reply %s has no _pigToolCallResult", raw)
+	}
+	if string(result) != "null" {
+		if err := json.Unmarshal(result, &res); err != nil {
+			r.h.t.Fatalf("tool_call result %s: %v", result, err)
+		}
 	}
 	return res.Block, res.Reason
 }
