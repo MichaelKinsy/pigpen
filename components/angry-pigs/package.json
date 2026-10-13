@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-angry-pigs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Angry Pigs: a pixel-art slingshot game with towers, birds and physics, opened with /angry-pigs (Go). Nothing runs until you type the command.",
   "keywords": [
     "pig-package",

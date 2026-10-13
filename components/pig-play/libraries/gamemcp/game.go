@@ -246,7 +246,11 @@ func (s *Session) score(args json.RawMessage) (Result, error) {
 		sc = Score{}
 	}
 	if s.game.SavedHighScore != nil {
-		sc.HighScore = max(sc.HighScore, s.game.SavedHighScore(ctx.ConfigHome()))
+		configHome, err := ctx.ConfigHome()
+		if err != nil {
+			return Result{}, fmt.Errorf("game_score: %w", err)
+		}
+		sc.HighScore = max(sc.HighScore, s.game.SavedHighScore(configHome))
 	}
 	out := map[string]any{"score": sc.Score, "high_score": sc.HighScore, "decisions": s.agent.Decisions(), "game_over": sc.GameOver, "open": inst != nil, "stopped": stopped}
 	return Result{Value: out, Structured: out}, nil
