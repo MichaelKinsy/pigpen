@@ -27,13 +27,17 @@ func Extension() *sdk.Extension {
 
 // openRunner opens the overlay for the user's own game.
 func openRunner(ctx sdk.Context) error {
-	highScore := loadHighScore(ctx.ConfigHome())
-	component := newRunnerComponent(highScore, sprite.ActiveVariant(ctx.ConfigHome()), ctx.Height)
-	return show(ctx, component)
+	configHome, err := ctx.ConfigHome()
+	if err != nil {
+		return err
+	}
+	component := newRunnerComponent(loadHighScore(configHome), sprite.ActiveVariant(configHome), ctx.Height)
+	return show(ctx, component, configHome)
 }
 
-// show shows component as the overlay and reports the score when it closes.
-func show(ctx sdk.Context, component *runnerComponent) error {
+// show shows component as the overlay and reports the score when it closes, saving
+// the high score under configHome.
+func show(ctx sdk.Context, component *runnerComponent, configHome string) error {
 	// With no UI ctx.Custom returns at once and never disposes the component, which
 	// would leave its 60 Hz ticker running. Dispose is idempotent, so it is safe when
 	// the SDK has disposed it already.
@@ -44,7 +48,7 @@ func show(ctx sdk.Context, component *runnerComponent) error {
 	}
 
 	score, highScore := runnerScores(result, component.State())
-	if err := saveHighScore(ctx.ConfigHome(), highScore); err != nil {
+	if err := saveHighScore(configHome, highScore); err != nil {
 		return err
 	}
 	ctx.Notify(fmt.Sprintf("PiG Runner score %d · high %d", score, highScore), "info")
