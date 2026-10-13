@@ -776,6 +776,27 @@ func TestHeadlessEnableOfAJudgedBackendNeedsTheEnvironmentNotACommand(t *testing
 	}
 }
 
+// Without a config home there is no config file: warden says so and runs on the defaults, and a command that
+// would save fails instead of writing pigpen-warden/config.json under the working directory.
+func TestMissingConfigHomeUsesTheDefaultsAndSavesNothing(t *testing.T) {
+	h := startHarness(t, harnessOpts{})
+	cwd := t.TempDir()
+	t.Chdir(cwd)
+	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+		t.Setenv(name, "")
+	}
+	h.start()
+	if got := strings.Join(h.notices(), "\n"); !strings.Contains(got, "could not locate the config file") || !strings.Contains(got, "Defaults are in use") {
+		t.Fatalf("notices = %q, want the missing config file named", got)
+	}
+	if failure := h.host.Command("warden", "mode advise"); !strings.Contains(failure, "home directory") {
+		t.Fatalf("/warden mode failure = %q, want the missing home directory", failure)
+	}
+	if _, err := os.Stat(filepath.Join(cwd, "pigpen-warden")); err == nil {
+		t.Fatal("warden wrote its config under the working directory")
+	}
+}
+
 // The own-model backend end to end: the session's model is reached through PiG's model registry (the SDK's
 // ModelRegistry over the host's getModel / getModelAuth / modelStream calls), with no injected judge.
 func TestOwnModelBackendThroughPiGsModelRegistry(t *testing.T) {
