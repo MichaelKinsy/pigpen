@@ -105,12 +105,28 @@ func Extension() *sdk.Extension {
 		if title == "" {
 			title, _ = data["kind"].(string)
 		}
-		r.block(title)
+		r.block(holderPrompt, title)
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventUIPromptEnd, func(sdk.Context, map[string]any) (any, error) {
-		r.unblock()
+		r.unblock(holderPrompt)
 		return nil, nil
+	})
+
+	// Another extension can say the agent waits on the user by emitting
+	// `herdr:blocked` with `{ active, label }` on pi.events, the convention
+	// herdr's Pi integration and herdr-pig use. Ported from herdr-pig
+	// (https://github.com/Hai-Fai-Solutions/herdr-pig, Apache-2.0, see NOTICE).
+	// A failed subscription leaves the prompt-based blocked state working.
+	_, _ = e.Events().On("herdr:blocked", func(_ sdk.Context, data any) error {
+		payload, _ := data.(map[string]any)
+		if active, _ := payload["active"].(bool); !active {
+			r.unblock(holderBus)
+			return nil
+		}
+		label, _ := payload["label"].(string)
+		r.block(holderBus, label)
+		return nil
 	})
 
 	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -277,9 +293,10 @@ type reporter struct {
 	sessionID      string
 	agentActive    bool
 	blockedMessage string
-	// Prompts currently open: PiG reports only the outermost prompt of a kind,
-	// and producers can overlap, so count.
-	blockedCount int
+	// Blocks currently held, per holder: PiG reports only the outermost prompt
+	// of a kind, and producers can overlap, so count. A bus holder cannot
+	// release a prompt's block, nor a prompt a bus holder's.
+	blockedCount [holderCount]int
 	hasLast      bool
 	// resumeOff is set once herdr refused a resume command (herdr before 0.9.2,
 	// or invalid_resume_argv): later reports leave it out.
@@ -309,7 +326,7 @@ func (r *reporter) start(path, id string, active bool) {
 	// A session start opens a fresh reporting epoch.
 	r.rootSession = true
 	r.released = false
-	r.blockedCount, r.blockedMessage = 0, ""
+	r.blockedCount, r.blockedMessage = [holderCount]int{}, ""
 	r.sessionPath, r.sessionID = path, id
 	r.agentActive = active
 	r.publishLocked(true)
@@ -330,29 +347,47 @@ func (r *reporter) agentSettled() {
 	r.publishLocked(false)
 }
 
-func (r *reporter) block(label string) {
+func (r *reporter) block(h holder, label string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if !r.rootSession {
 		return
 	}
-	r.blockedCount++
+	r.blockedCount[h]++
 	r.blockedMessage = messageFrom(label)
 	r.publishLocked(false)
 }
 
-func (r *reporter) unblock() {
+func (r *reporter) unblock(h holder) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if !r.rootSession {
 		return
 	}
-	r.blockedCount = max(0, r.blockedCount-1)
-	if r.blockedCount == 0 {
+	r.blockedCount[h] = max(0, r.blockedCount[h]-1)
+	if !r.blockedLocked() {
 		r.blockedMessage = ""
 	}
 	r.publishLocked(false)
 }
+
+func (r *reporter) blockedLocked() bool {
+	for _, n := range r.blockedCount {
+		if n > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// holder is a source of a blocked state.
+type holder int
+
+const (
+	holderPrompt holder = iota // a PiG UI prompt
+	holderBus                  // a herdr:blocked emitter on pi.events
+	holderCount
+)
 
 // silence stops reporting without releasing the pane.
 func (r *reporter) silence() {
@@ -363,7 +398,7 @@ func (r *reporter) silence() {
 }
 
 func (r *reporter) desiredLocked() (agentState, string) {
-	if r.blockedCount > 0 {
+	if r.blockedLocked() {
 		return stateBlocked, r.blockedMessage
 	}
 	if r.agentActive {
