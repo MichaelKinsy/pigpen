@@ -10,7 +10,9 @@
 # usage: pig-support.sh <install|uninstall|status>
 set -eu
 
-PACKAGE="npm:@pi-in-go/pigpen-herdr"
+# PIGPEN_HERDR_PACKAGE installs another source, for example a local checkout
+# or a packed tarball of the Package.
+PACKAGE="${PIGPEN_HERDR_PACKAGE:-npm:@pi-in-go/pigpen-herdr}"
 # The TypeScript extension the herdr-pig plugin copied, and the marker that
 # says herdr-pig manages it. This Package replaces it.
 LEGACY_NAME="herdr-pig-agent-state.ts"

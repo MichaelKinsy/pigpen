@@ -10,7 +10,9 @@ param([string]$Command = "")
 
 $ErrorActionPreference = "Stop"
 
-$Package = "npm:@pi-in-go/pigpen-herdr"
+# PIGPEN_HERDR_PACKAGE installs another source, for example a local checkout
+# or a packed tarball of the Package.
+$Package = if ($env:PIGPEN_HERDR_PACKAGE) { $env:PIGPEN_HERDR_PACKAGE } else { "npm:@pi-in-go/pigpen-herdr" }
 $LegacyName = "herdr-pig-agent-state.ts"
 $LegacyMarker = "HERDR_PIG_EXTENSION_VERSION="
 

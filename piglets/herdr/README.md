@@ -83,6 +83,8 @@ PowerShell script), each of which shows its result as a herdr notification. Run 
 extension an earlier herdr-pig plugin copied to `~/.pig/agent/extensions/herdr-pig-agent-state.ts` (only when it carries
 herdr-pig's ownership marker), so one pane never has two reporters. Without herdr, `sh herdr-plugin/scripts/pig-support.sh
 install` (or `pig-support.ps1` on Windows) does the same. Use the plugin or this Piglet, not both in one pane.
+`PIGPEN_HERDR_PACKAGE` in herdr's environment installs another source instead of npm, for example a checkout's
+`components/herdr` or an unpacked `npm pack` of it (`pig install` takes a directory, not a `.tgz`).
 
 ## Credits
 
