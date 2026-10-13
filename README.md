@@ -7,7 +7,10 @@
 installed independently. Planned catalog entries are not published releases.
 The [herdr reporter](components/herdr/README.md) is a standalone extension Package
 that reports PiG's state to herdr. It works on its own with `pig install`; the
-[`herdr` Piglet](piglets/herdr/README.md) that selects it is optional.
+[`herdr` Piglet](piglets/herdr/README.md) that selects it is optional. Its herdr plugin
+and `herdr:blocked` listener are ported from
+[herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and
+Hai-Fai Solutions (Apache-2.0; [credits](piglets/herdr/README.md#credits)).
 
 ## Current status
 

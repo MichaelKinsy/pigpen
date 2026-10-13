@@ -1,0 +1,28 @@
+herdr-pig
+Copyright 2026 Hai-Fai Solutions
+
+This product includes software developed by the Herdr project
+(https://github.com/herdrdev/herdr), licensed under the Apache License,
+Version 2.0.
+
+extensions/herdr-agent-state.ts is based on Herdr's Pi integration
+(src/integration/assets/pi/herdr-agent-state.ts) and has been modified to
+report PiG's state.
+
+---
+
+Pigpen (https://github.com/MichaelKinsy/pigpen)
+Copyright 2026 Michael Kinsy
+
+This directory is ported from herdr-pig
+(https://github.com/Hai-Fai-Solutions/herdr-pig) at revision
+3ec6804 (v0.2.1), by Christian Polzer and Hai-Fai Solutions, with their
+permission (https://github.com/MichaelKinsy/PiG/issues/204). It stays under
+the Apache License, Version 2.0.
+
+Modified for Pigpen: herdr-plugin.toml, scripts/pig-support.sh and
+scripts/pig-support.ps1 install Pigpen's Go reporter Package
+(@pi-in-go/pigpen-herdr) with `pig install` instead of copying
+extensions/herdr-agent-state.ts, which Pigpen does not ship. The herdr:blocked
+listener in ../../../components/herdr/extensions/herdr/extension.go is ported
+from that file.

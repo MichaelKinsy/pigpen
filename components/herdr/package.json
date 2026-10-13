@@ -7,7 +7,7 @@
     "pigpen",
     "extension"
   ],
-  "license": "MIT",
+  "license": "MIT AND Apache-2.0",
   "author": "Michael Kinsy",
   "repository": {
     "type": "git",
@@ -25,6 +25,8 @@
     "extensions",
     "README.md",
     "LICENSE",
+    "LICENSE-herdr-pig",
+    "NOTICE",
     "provenance.json"
   ],
   "pi": {
