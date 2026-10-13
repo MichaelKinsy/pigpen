@@ -64,7 +64,14 @@ type ext struct {
 func Extension() *sdk.Extension {
 	e := sdk.New("jev")
 	x := &ext{cfg: defaultConfig(), secrets: map[string]bool{}, warned: map[string]bool{}, gateMemo: newMemo(), outMemo: newMemo(), now: time.Now}
-	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) { x.sessionStart(ctx); return nil, nil })
+	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		agent, err := agentDir(ctx.ConfigHome)
+		if err != nil {
+			return nil, err
+		}
+		x.sessionStart(ctx, agent)
+		return nil, nil
+	})
 	e.OnEvent(sdk.EventModelSelect, func(ctx sdk.Context, _ map[string]any) (any, error) { x.modelSelect(ctx); return nil, nil })
 	e.OnEvent(sdk.EventToolCall, x.toolCall)
 	e.OnToolResult(x.toolResult)
@@ -121,8 +128,8 @@ func (x *ext) baseStatus(ctx sdk.Context) {
 
 // sessionStart reloads the configuration. Nothing is judged unless the user's own
 // config says "enabled": a key alone is not consent.
-func (x *ext) sessionStart(ctx sdk.Context) {
-	l := loadConfig(ctx.ConfigHome(), ctx.Cwd())
+func (x *ext) sessionStart(ctx sdk.Context, agent string) {
+	l := loadConfig(agent, ctx.Cwd())
 	be, err := newBackend(l.Config, ctx)
 	x.mu.Lock()
 	x.cfg, x.be, x.beEr = l.Config, be, err
