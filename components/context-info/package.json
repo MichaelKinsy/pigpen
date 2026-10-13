@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-context-info",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Context-window and cost inspection for PiG: /context, /tools, /cost, /prompts, and an optional two-line status footer",
   "keywords": [
     "pig-package",
