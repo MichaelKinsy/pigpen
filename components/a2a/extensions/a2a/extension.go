@@ -107,11 +107,15 @@ func ExtensionWith(o Options) *sdk.Extension {
 	return e
 }
 
-func (m *manager) agentDir(ctx sdk.Context) string {
+func (m *manager) agentDir(ctx sdk.Context) (string, error) {
 	if d := m.getenv("PIG_CODING_AGENT_DIR"); d != "" {
-		return d
+		return d, nil
 	}
-	return filepath.Join(ctx.ConfigHome(), "agent")
+	home, err := ctx.ConfigHome()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, "agent"), nil
 }
 
 // load reads the configuration and replaces the remote client set.
@@ -120,7 +124,11 @@ func (m *manager) load(ctx sdk.Context) (Config, error) {
 	if v, err := ctx.GetFlag("a2a-listen"); err == nil {
 		flag, _ = v.(string)
 	}
-	cfg, err := LoadConfig(LoadOptions{ConfigHome: m.agentDir(ctx), Getenv: m.getenv, FlagListen: flag})
+	var cfg Config
+	dir, err := m.agentDir(ctx)
+	if err == nil {
+		cfg, err = LoadConfig(LoadOptions{ConfigHome: dir, Getenv: m.getenv, FlagListen: flag})
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.cfg, m.cfgErr = cfg, err
