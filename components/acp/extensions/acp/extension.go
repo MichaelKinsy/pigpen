@@ -7,6 +7,7 @@ package acp
 import (
 	"encoding/json"
 	"os"
+	"os/exec"
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -44,13 +45,23 @@ func Executable() string {
 	return "pig"
 }
 
+// missingCompanion is the plain notice shown above the editor settings while pig-acp is not on PATH.
+const missingCompanion = "pig-acp, the companion executable the editor starts, was not found on your PATH. " +
+	"Get it with two commands: `pig install npm:@pi-in-go/pigpen-acp` (if not installed yet), then `pig acp install` " +
+	"(builds it with Go 1.26 or newer and puts it next to pig). " +
+	"Details: https://pi-in-go.dev/docs/packages#editors-and-acp-pig-acp\n\n"
+
 func zedSnippet() string {
+	notice := ""
+	if _, err := exec.LookPath("pig-acp"); err != nil {
+		notice = missingCompanion
+	}
 	cfg := map[string]any{"agent_servers": map[string]any{"PiG": map[string]any{
 		"type": "custom", "command": "pig-acp", "args": []string{"--pig", Executable()}, "env": map[string]any{},
 	}}}
 	b, _ := json.MarshalIndent(cfg, "", "  ")
-	return "Agent Client Protocol (ACP): use this agent from an editor.\n" +
-		"Install pig-acp (the companion executable of the acp Package), then add this to Zed's settings.json:\n\n" +
+	return notice + "Agent Client Protocol (ACP): use this agent from an editor.\n" +
+		"Add this to Zed's settings.json:\n\n" +
 		string(b) +
 		"\n\nOther ACP clients run: pig-acp --pig " + Executable()
 }

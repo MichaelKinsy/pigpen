@@ -2,6 +2,9 @@ package acp_test
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -107,5 +110,40 @@ func TestAcpCommandStaysQuietWithoutUI(t *testing.T) {
 	h := StartHost(t, acpext.Extension(), HostOptions{Mode: "print", HasUI: &no})
 	if code := runCommand(h, "acp", ""); code != "" {
 		t.Fatalf("/acp failed headless: %s", code)
+	}
+}
+
+func acpMessage(t *testing.T) string {
+	t.Helper()
+	h := StartHost(t, acpext.Extension(), HostOptions{})
+	if code := runCommand(h, "acp", ""); code != "" {
+		t.Fatalf("/acp failed: %s", code)
+	}
+	msg, _ := notifications(h)[0].Args["message"].(string)
+	return msg
+}
+
+func TestAcpCommandSaysWhenCompanionIsMissing(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	msg := acpMessage(t)
+	for _, want := range []string{"was not found on your PATH", "pig install npm:@pi-in-go/pigpen-acp", "pig acp install", "Go 1.26", "https://pi-in-go.dev/docs/packages#editors-and-acp-pig-acp"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("message lacks %q:\n%s", want, msg)
+		}
+	}
+}
+
+func TestAcpCommandOmitsMissingNoticeWhenCompanionIsOnPath(t *testing.T) {
+	dir := t.TempDir()
+	name := "pig-acp"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir)
+	if msg := acpMessage(t); strings.Contains(msg, "was not found") {
+		t.Errorf("unexpected missing notice:\n%s", msg)
 	}
 }
