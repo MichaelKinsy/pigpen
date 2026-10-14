@@ -34,5 +34,6 @@
     "CREDITS.md",
     "provenance.json",
     "go.sum"
-  ]
+  ],
+  "pi": {}
 }
