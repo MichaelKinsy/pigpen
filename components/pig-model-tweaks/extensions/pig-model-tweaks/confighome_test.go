@@ -1,4 +1,4 @@
-package pigmodeltweaks_test
+package pigmodeltweaks
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	pigmodeltweaks "github.com/MichaelKinsy/pigpen/components/pig-model-tweaks/extensions/pig-model-tweaks"
 )
 
 // Context.ConfigHome fails when no config directory can be found (SDK 0.5). Both users of it must say so and must not
@@ -34,7 +33,7 @@ func assertNothingWritten(t *testing.T, dir string) {
 
 func TestSessionStartWithoutAConfigHomeFailsAndWritesNothing(t *testing.T) {
 	dir := noConfigHome(t)
-	h := StartHost(t, pigmodeltweaks.Extension(), HostOptions{})
+	h := StartHost(t, Extension(), HostOptions{})
 	args, _ := json.Marshal(map[string]any{"type": "session_start", "reason": "startup"})
 	_, failure := h.roundTrip(map[string]any{"method": "event", "event": "session_start", "handler_id": h.handlers["session_start"], "args": json.RawMessage(args)})
 	if !strings.Contains(failure, "home directory") {
@@ -49,7 +48,7 @@ func TestRememberModelWhenTheConfigHomeIsGoneWarnsAndWritesNothing(t *testing.T)
 	t.Setenv("PIG_HOME", t.TempDir())
 	t.Setenv("PIG_CODING_AGENT_DIR", "")
 	t.Setenv("PI_CODING_AGENT_DIR", "")
-	h := StartHost(t, pigmodeltweaks.Extension(), HostOptions{})
+	h := StartHost(t, Extension(), HostOptions{})
 	h.Fire("session_start", map[string]any{"reason": "startup"})
 	dir := noConfigHome(t)
 	h.FireAll("model_select", map[string]any{"model": map[string]any{"provider": "acme", "id": "m-1"}})
