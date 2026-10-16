@@ -31,7 +31,7 @@ scripted scenarios give identical traces for the original under Pi 1.0.x and the
 under PiG 0.4, and 26 of 26 mutations are caught. Nothing here is a published release.
 
 **Target: PiG 0.5.0** (Pi 1.1.0; `pig --version` prints `0.5.0+1.1.0`). PiG 0.5.0 is not published: the pin is the
-staging candidate `8ba802d544ef` (team/tern/batch-v13) (`scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows), and `scripts/pig-requirement.json`
+staging candidate `8ba802d544ef` (`scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows), and `scripts/pig-requirement.json`
 makes every script and test refuse a pig of another minor version. Every Go module still requires
 `github.com/MichaelKinsy/PiG/extensions/sdk v0.4.1`, because PiG's own go.mod pins that SDK version and a Piglet build refuses a
 member that requires a newer one; the code in each module is written against the 0.5 SDK (`Context.ConfigHome` returns
