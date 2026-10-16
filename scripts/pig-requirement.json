@@ -1,10 +1,10 @@
 {
   "pig": "0.5.0",
-  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. PiG 0.5.0 is not published yet: `release.commit` is the staging candidate team/tern/batch-v21 (swap it with scripts/pin-pig-release.mjs 0.5.0 at publish), and `published` is false and `assets` stays empty until the release exists and its SHA256SUMS can be recorded, so scripts/fetch-pig.mjs refuses to download a pig until then; Piglet builds use the source checkout at `commit`.",
+  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. PiG 0.5.0 is not published yet: `release.commit` is the staging candidate team/tern/batch-v22 (swap it with scripts/pin-pig-release.mjs 0.5.0 at publish), and `published` is false and `assets` stays empty until the release exists and its SHA256SUMS can be recorded, so scripts/fetch-pig.mjs refuses to download a pig until then; Piglet builds use the source checkout at `commit`.",
   "release": {
     "repository": "MichaelKinsy/PiG",
     "tag": "v0.5.0",
-    "commit": "9376fd0537524d48731a0a59da4bec4f93738cd8",
+    "commit": "55766a5c5823f52842029ece160dfaaa70ef9808",
     "assets": {},
     "published": false
   }
