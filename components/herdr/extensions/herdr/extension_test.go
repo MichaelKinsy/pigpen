@@ -3,11 +3,9 @@ package herdr_test
 // Ported case for case from components/herdr/tests/herdr.test.ts (35 tests, at
 // 6685dcd): same inputs, same expectations, driven through the real Go SDK.
 //
-// One TypeScript feature has no Go equivalent yet: the `herdr:blocked` bus
-// event. PiG's Go SDK has the `pi.events` bridge since 0.4.0 (Extension.Events),
-// but the reporter does not listen to it yet. Its two cases are kept as skipped,
-// named tests so the gap stays visible; the overlap counting the first one exercises
-// is also covered with prompts.
+// The `herdr:blocked` bus event, which the TypeScript suite drove through
+// pi.events, goes through the Go SDK's bridge (Extension.Events) here; the
+// listener is ported from herdr-pig.
 //
 // TestReviewAdditions holds cases the TypeScript suite did not have; each one
 // fails on a mutation the ported cases let through.
@@ -582,8 +580,25 @@ func TestBlocked(t *testing.T) {
 		eq(t, states(h.calls()), []string{"idle"})
 	})
 
-	t.Run("herdr:blocked bus block overlaps a prompt (not yet ported: no bus listener)", func(t *testing.T) {
-		t.Skip("not yet ported: the reporter does not listen to herdr:blocked on pi.events (the bridge is in the Go SDK since PiG 0.4.0, Extension.Events)")
+	t.Run("herdr:blocked bus block overlaps a prompt", func(t *testing.T) {
+		host, h := startSession(t)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "waiting on review"})
+		all := h.waitForCalls(2)
+		if got := mustFlag(t, all[1], "--message"); got != "waiting on review" {
+			t.Fatalf("message = %q", got)
+		}
+		host.fire("ui_prompt_start", map[string]any{"kind": "confirm", "title": "A"})
+		h.waitForCalls(3)
+		// The bus holder lets go; the open prompt keeps the pane blocked.
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		settle()
+		eq(t, states(h.calls()), []string{"idle", "blocked", "blocked"})
+		// A second bus release cannot end the prompt's block.
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		settle()
+		eq(t, states(h.calls()), []string{"idle", "blocked", "blocked"})
+		host.fire("ui_prompt_end", map[string]any{"kind": "confirm"})
+		eq(t, states(h.waitForCalls(4)), []string{"idle", "blocked", "blocked", "idle"})
 	})
 }
 
@@ -686,8 +701,14 @@ func TestRelease(t *testing.T) {
 		})
 	}
 
-	t.Run("stops listening for herdr:blocked on shutdown (not yet ported: no bus listener)", func(t *testing.T) {
-		t.Skip("not yet ported: the reporter has no herdr:blocked bus listener to unsubscribe (the bridge is in the Go SDK since PiG 0.4.0, Extension.Events)")
+	t.Run("ignores herdr:blocked after shutdown", func(t *testing.T) {
+		host, h := startSession(t)
+		h.waitForCalls(1)
+		host.fire("session_shutdown", map[string]any{"reason": "quit"})
+		h.waitForCalls(2)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "late"})
+		settle()
+		eq(t, verbs(h.calls()), []string{"report-agent", "release-agent"})
 	})
 
 	t.Run("does not release a pane it never reported on", func(t *testing.T) {
