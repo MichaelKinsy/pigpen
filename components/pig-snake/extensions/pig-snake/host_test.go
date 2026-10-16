@@ -163,6 +163,25 @@ func TestAHostErrorOpeningTheOverlayIsReturnedAndNothingIsSaved(t *testing.T) {
 	}
 }
 
+// Without a config home the game does not open, and no score file appears under the working directory.
+func TestAMissingConfigHomeIsReturnedAndNothingOpens(t *testing.T) {
+	cwd := t.TempDir()
+	t.Chdir(cwd)
+	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+		t.Setenv(name, "")
+	}
+	h := StartHost(t, pig_snake.Extension(), HostOptions{})
+	if failure := runCommand(h, "pig-snake", ""); !strings.Contains(failure, "home directory") {
+		t.Fatalf("failure = %q, want the missing home directory", failure)
+	}
+	if calls := h.CallsTo("ui.custom"); len(calls) != 0 {
+		t.Fatalf("the overlay opened without a config home: %+v", calls)
+	}
+	if _, err := os.Stat(filepath.Join(cwd, "state")); err == nil {
+		t.Fatal("state written under the working directory")
+	}
+}
+
 func TestOnlyAnExplicitCommandStartsAGame(t *testing.T) {
 	t.Setenv("PIG_HOME", t.TempDir())
 	h := StartHost(t, pig_snake.Extension(), HostOptions{})

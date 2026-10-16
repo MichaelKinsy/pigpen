@@ -284,19 +284,33 @@ func (h *Host) anyNotification(substr string) bool {
 	return false
 }
 
-// toolCall fires a tool_call event and decodes the {block, reason} result.
+// toolCall fires a tool_call event and decodes the {block, reason} result. The
+// SDK replies {"_pigToolCallResult": result} (plus "_pigToolCallInput" when the
+// handler edited the input; extensions/sdk/extension.go), and PiG's host reads
+// the result from it.
 func (h *Host) toolCall(name string, input map[string]any) (block bool, reason string) {
 	h.t.Helper()
 	raw := h.Fire("tool_call", map[string]any{"toolName": name, "toolCallId": "c1", "input": input})
-	if len(raw) == 0 || string(raw) == "null" {
+	if len(raw) == 0 {
+		return false, ""
+	}
+	var reply map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &reply); err != nil {
+		h.t.Fatalf("tool_call reply %s: %v", raw, err)
+	}
+	result, ok := reply["_pigToolCallResult"]
+	if !ok {
+		h.t.Fatalf("tool_call reply %s has no _pigToolCallResult", raw)
+	}
+	if string(result) == "null" {
 		return false, ""
 	}
 	var r struct {
 		Block  bool   `json:"block"`
 		Reason string `json:"reason"`
 	}
-	if err := json.Unmarshal(raw, &r); err != nil {
-		h.t.Fatalf("tool_call result %s: %v", raw, err)
+	if err := json.Unmarshal(result, &r); err != nil {
+		h.t.Fatalf("tool_call result %s: %v", result, err)
 	}
 	return r.Block, r.Reason
 }

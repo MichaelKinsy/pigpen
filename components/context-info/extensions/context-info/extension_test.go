@@ -205,31 +205,29 @@ func TestPromptsAgentsListsAgentDefinitionsFromTheConfigHome(t *testing.T) {
 	}
 }
 
-// Context.ConfigHome fails when no config directory can be found (SDK 0.5). Both agent commands must say so as
-// an error, not list agents from a guessed relative directory.
-func TestPromptsAgentsWithoutAConfigHomeReportsAnError(t *testing.T) {
+// Without a config home, /prompts fails instead of reading agent definitions
+// from an agents directory relative to the working directory.
+func TestPromptsAgentsFailsWithoutAConfigHome(t *testing.T) {
+	cwd := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(cwd, "agents"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	def := "---\nname: scout\ndescription: finds things\n---\nYou scout the codebase.\n"
+	if err := os.WriteFile(filepath.Join(cwd, "agents", "scout.md"), []byte(def), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(cwd)
+	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+		t.Setenv(name, "")
+	}
+	h := StartHost(t, contextinfo.Extension(), HostOptions{OnCall: answers{}.onCall})
 	for _, args := range []string{"agents", "scout"} {
-		t.Run(args, func(t *testing.T) {
-			for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
-				t.Setenv(k, "")
-			}
-			planted := filepath.Join(t.TempDir(), "agents")
-			if err := os.MkdirAll(planted, 0o755); err != nil {
-				t.Fatal(err)
-			}
-			if err := os.WriteFile(filepath.Join(planted, "scout.md"), []byte("---\nname: scout\ndescription: planted\n---\nplanted\n"), 0o644); err != nil {
-				t.Fatal(err)
-			}
-			t.Chdir(filepath.Dir(planted))
-			h := StartHost(t, contextinfo.Extension(), HostOptions{OnCall: answers{}.onCall})
-			if e := h.Command("prompts", args); e != "" {
-				t.Fatalf("/prompts %s: %s", args, e)
-			}
-			notes := h.CallsTo("ui.notify")
-			if len(notes) != 1 || notes[0].Args["level"] != "error" || !strings.Contains(notes[0].Args["message"].(string), "PiG config directory") {
-				t.Fatalf("notifications = %+v, want one error naming the config directory", notes)
-			}
-		})
+		if e := h.Command("prompts", args); !strings.Contains(e, "home directory") {
+			t.Errorf("/prompts %s: failure = %q, want the missing home directory", args, e)
+		}
+	}
+	if notes := h.CallsTo("ui.notify"); len(notes) != 0 {
+		t.Fatalf("notifications = %+v, want none", notes)
 	}
 }
 

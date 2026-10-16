@@ -1,6 +1,7 @@
 package jev_test
 
 import (
+	"encoding/json"
 	jev "github.com/MichaelKinsy/pigpen/jev"
 	"strings"
 	"testing"
@@ -211,4 +212,32 @@ func TestCommand_PlainStatusNamesTheKeySource(t *testing.T) {
 	h2 := start(t, e, newHostState(), HostOptions{})
 	h2.Command("jev", "")
 	mustContain(t, "status without a key", lastNote(h2), "key missing (TYPESAFE_API_KEY)")
+}
+
+// PIG_CODING_AGENT_DIR names the agent directory without a config home; with
+// neither, session start fails instead of reading an agent directory relative to
+// the working directory.
+func TestSessionStart_AgentDirWithoutAConfigHome(t *testing.T) {
+	e := newEnv(t)
+	t.Setenv("TYPESAFE_API_KEY", testKey)
+	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+		t.Setenv(name, "")
+	}
+	srv := newFakeJev(t, always(clearGate()))
+	e.writeGlobal(t, jevConfig(srv, nil))
+	h := start(t, e, newHostState(), HostOptions{})
+	h.Command("jev", "")
+	mustContain(t, "status", lastNote(h), "model jev-test")
+
+	t.Setenv("PIG_CODING_AGENT_DIR", "")
+	t.Setenv("PI_CODING_AGENT_DIR", "")
+	h2 := StartHost(t, jev.Extension(), HostOptions{Cwd: e.cwd, OnCall: newHostState().onCall})
+	h2.mu.Lock()
+	id := h2.handlers["session_start"]
+	h2.mu.Unlock()
+	_, failure := h2.roundTrip(map[string]any{"method": "event", "event": "session_start", "handler_id": id,
+		"args": json.RawMessage(`{"type":"session_start","reason":"startup"}`)})
+	if !strings.Contains(failure, "home directory") {
+		t.Fatalf("session_start failure = %q, want the missing home directory", failure)
+	}
 }

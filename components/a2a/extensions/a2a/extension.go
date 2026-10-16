@@ -124,11 +124,11 @@ func (m *manager) load(ctx sdk.Context) (Config, error) {
 	if v, err := ctx.GetFlag("a2a-listen"); err == nil {
 		flag, _ = v.(string)
 	}
-	agent, err := m.agentDir(ctx)
-	if err != nil {
-		return Config{}, err
+	var cfg Config
+	dir, err := m.agentDir(ctx)
+	if err == nil {
+		cfg, err = LoadConfig(LoadOptions{ConfigHome: dir, Getenv: m.getenv, FlagListen: flag})
 	}
-	cfg, err := LoadConfig(LoadOptions{ConfigHome: agent, Getenv: m.getenv, FlagListen: flag})
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.cfg, m.cfgErr = cfg, err

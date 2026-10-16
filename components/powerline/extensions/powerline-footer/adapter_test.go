@@ -152,13 +152,14 @@ func TestTUISessionNameOrTheSessionID(t *testing.T) {
 // Pi 1.0.0's Theme.fg knows scrollbarThumb (theme.d.ts ThemeColor), so a theme.json color naming it is drawn with it, not with
 // the "text" fallback an unknown token gets.
 func TestTUIThemeTokensArePi100s(t *testing.T) {
-	// A host theme holds every ThemeColor, and the SDK's Theme.fg throws on a token its palette lacks, as Pi's does.
-	foregrounds := map[string]any{}
+	// The host's theme defines every Pi token, and PiG 0.5.0's Theme.Fg panics on an undefined one as Pi's theme.fg throws, so
+	// the fixture defines them all and gives the three under test their own colors.
+	fg := map[string]any{}
 	for _, token := range powerline.PiThemeTokens {
-		foregrounds[token] = "\x1b[38;5;7m"
+		fg[token] = "\x1b[38;5;250m"
 	}
-	foregrounds["scrollbarThumb"], foregrounds["accent"] = "\x1b[38;5;99m", "\x1b[38;5;1m"
-	theme := map[string]any{"foregrounds": foregrounds}
+	fg["scrollbarThumb"], fg["text"], fg["accent"] = "\x1b[38;5;99m", "\x1b[38;5;7m", "\x1b[38;5;1m"
+	theme := map[string]any{"foregrounds": fg}
 	h := tuiRig{themeJSON: `{"colors":{"model":"scrollbarThumb","path":"nonsense"}}`, state: map[string]any{"theme": theme}}.start(t)
 	top, _ := lastWidget(t, h, "powerline-top")
 	if !strings.Contains(top, "\x1b[38;5;99mSonnet 4.5") {
