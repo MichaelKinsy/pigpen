@@ -45,9 +45,7 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 		baseID := baseIDOf(state, model.Model)
 		configHome, err := ctx.ConfigHome()
 		if err != nil {
-			// No config directory to write under: say so rather than failing the model switch or writing a relative path.
-			ctx.Notify("pig-model-tweaks: cannot remember the model, the PiG config directory was not found: "+err.Error(), "warning")
-			return nil, nil
+			return nil, err
 		}
 
 		st.update(func(draft *settings) {
