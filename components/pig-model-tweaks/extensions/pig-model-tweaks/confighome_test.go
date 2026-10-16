@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-
 )
 
 // Context.ConfigHome fails when no config directory can be found (SDK 0.5). Both users of it must say so and must not
