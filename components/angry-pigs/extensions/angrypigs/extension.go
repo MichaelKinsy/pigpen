@@ -34,13 +34,13 @@ func openAngryPigs(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-	highScore := loadHighScore(configHome)
-	game := newComponent(highScore, sprite.ActiveVariant(configHome), ctx.Height)
-	return show(ctx, game)
+	game := newComponent(loadHighScore(configHome), sprite.ActiveVariant(configHome), ctx.Height)
+	return show(ctx, game, configHome)
 }
 
-// show shows game as the overlay and reports the score when it closes.
-func show(ctx sdk.Context, game *component) error {
+// show shows game as the overlay and reports the score when it closes, saving the
+// high score under configHome.
+func show(ctx sdk.Context, game *component, configHome string) error {
 	// With no UI ctx.Custom returns at once and never disposes the component, which
 	// would leave its ticker running. Dispose is idempotent, so it is safe when the SDK
 	// has disposed it already.
@@ -50,10 +50,6 @@ func show(ctx sdk.Context, game *component) error {
 		return err
 	}
 	score, highScore := scores(result, game.State())
-	configHome, err := ctx.ConfigHome()
-	if err != nil {
-		return err
-	}
 	if err := saveHighScore(configHome, highScore); err != nil {
 		return err
 	}

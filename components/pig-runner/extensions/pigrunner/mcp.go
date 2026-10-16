@@ -64,7 +64,7 @@ func openForAgent(ctx sdk.Context, agent *gamemcp.Agent) (gamemcp.Instance, erro
 	player := &runnerPlayer{c: component, done: make(chan struct{}), save: func(high int) error { return saveHighScore(configHome, high) }}
 	go func() {
 		defer close(player.done)
-		if err := show(ctx, component); err != nil {
+		if err := show(ctx, component, configHome); err != nil {
 			ctx.Notify(fmt.Sprintf("PiG Runner: %v", err), "error")
 		}
 	}()

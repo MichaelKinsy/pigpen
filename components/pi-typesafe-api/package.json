@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-pi-typesafe-api",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Typed Go API for extension authors, a port of pi-typesafe's library half: one admission rule, request and spend caps, key store and auth state, judgment backends (TypeSafe, OpenRouter, Command Code, custom endpoint, own model), Ask, batching, calibration. Libraries only, no extension of its own.",
   "keywords": [
     "pig-package",
@@ -36,5 +36,6 @@
     "CREDITS.md",
     "provenance.json",
     "go.sum"
-  ]
+  ],
+  "pi": {}
 }

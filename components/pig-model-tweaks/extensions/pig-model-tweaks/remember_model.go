@@ -43,6 +43,10 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 			return nil, nil
 		}
 		baseID := baseIDOf(state, model.Model)
+		configHome, err := ctx.ConfigHome()
+		if err != nil {
+			return nil, err
+		}
 
 		st.update(func(draft *settings) {
 			draft.RememberModel.Last = &struct {
@@ -51,12 +55,7 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 			}{Provider: model.Provider, ModelID: baseID}
 		})
 
-		home, err := ctx.ConfigHome()
-		if err != nil {
-			ctx.Notify("cannot remember the model: "+err.Error(), "warning")
-			return nil, nil
-		}
-		if persistDefaultModel(agentDir(home), model.Provider, baseID) == "" {
+		if persistDefaultModel(agentDir(configHome), model.Provider, baseID) == "" {
 			return nil, nil
 		}
 		ctx.Notify(fmt.Sprintf("remembered %s/%s as the default model", model.Provider, baseID), "info")

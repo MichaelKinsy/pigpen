@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-hardening",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared Go library for the opt-in enterprise profile of Pigpen Packages: profile loading, per-request credential files, an allow-listed egress transport, closed-field audit events, headless helpers, a fail-closed policy Decider (Cedar in a nested module) and JWT resource-server verification. Libraries only, no extension of its own.",
   "keywords": [
     "pig-package",
@@ -45,5 +45,6 @@
     "LICENSE",
     "CREDITS.md",
     "provenance.json"
-  ]
+  ],
+  "pi": {}
 }

@@ -496,6 +496,37 @@ func TestScoreWithoutAGameAndTheInstructions(t *testing.T) {
 	}
 }
 
+// game_score reads the saved high score from the config home; without one it is a tool error, not a high
+// score read from a path relative to the working directory.
+func TestScoreReadsTheConfigHomeAndFailsWithoutOne(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("PIG_HOME", home)
+	game := fakeGame(&fakeInstance{}, new(int))
+	read := make(chan string, 2)
+	game.SavedHighScore = func(configHome string) int { read <- configHome; return 7 }
+	session := NewSession(game)
+	server, err := StartServer("games-fake", game.ServerInstructions(), session.Tools())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = server.Close() })
+	if r := call(t, server, "game_score", nil); !strings.Contains(text(r), `"high_score":7`) {
+		t.Fatalf("game_score = %s", text(r))
+	}
+	if got := <-read; got != home {
+		t.Fatalf("high score read from %q, want %q", got, home)
+	}
+	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+		t.Setenv(name, "")
+	}
+	if r := call(t, server, "game_score", nil); r["isError"] != true || !strings.Contains(text(r), "home directory") {
+		t.Fatalf("game_score without a config home = %s, want a tool error naming the home directory", text(r))
+	}
+	if len(read) != 0 {
+		t.Fatalf("high score read again without a config home: %q", <-read)
+	}
+}
+
 func TestAgentLineIsEmptyUntilAnAgentPlays(t *testing.T) {
 	var a Agent
 	if a.Line() != "" {

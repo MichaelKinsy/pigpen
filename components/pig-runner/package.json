@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-pig-runner",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "PiG Runner: the pixel-art pig obstacle runner, opened with /runner or /pig-runner (Go). Nothing runs until you type the command.",
   "keywords": [
     "pig-package",
