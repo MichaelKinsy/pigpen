@@ -48,11 +48,11 @@ requirement.release = { ...requirement.release, tag, commit, assets };
 const body = JSON.stringify(requirement, null, 2).replace(/\{\n\s+"file": ("[^"]+"),\n\s+"sha256": ("[^"]+")\n\s+\}/g, '{ "file": $1, "sha256": $2 }');
 writeFileSync(requirementFile, `${body}\n`);
 
-for (const workflow of ['ci.yml', 'release-package.yml', 'release.yml']) {
+for (const workflow of ['ci.yml', 'gocache.yml', 'release-package.yml', 'release.yml']) {
   const path = `${root}.github/workflows/${workflow}`;
   const text = readFileSync(path, 'utf8');
-  const next = text.replace(/PIG_COMMIT: '[0-9a-f]{40}' # PiG v[0-9.]+/, `PIG_COMMIT: '${commit}' # PiG ${tag}`);
+  const next = text.replace(/PIG_COMMIT: '[0-9a-f]{40}' # PiG .*$/m, `PIG_COMMIT: '${commit}' # PiG ${tag}`);
   if (next === text && !text.includes(`PIG_COMMIT: '${commit}'`)) throw new Error(`${workflow}: no PIG_COMMIT line to update`);
   writeFileSync(path, next);
 }
-console.log(`pinned PiG ${tag} (${commit}) in scripts/pig-requirement.json and 3 workflows`);
+console.log(`pinned PiG ${tag} (${commit}) in scripts/pig-requirement.json and 4 workflows`);
