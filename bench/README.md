@@ -28,4 +28,4 @@ The two TypeScript Piglets (`bench-ext10-aot`, `bench-ext10-split`) need a PiG t
 
 ## bench-lean strip proof
 
-`npm run strip-inventory -- bench-lean` builds the Piglet stock (no `strip`) and stripped and drives both through the same probes. The keep-mode list expands to every probed feature (node-extensions, extension-sdk-go/rust/python, self-update, docs, piglet-builder); the result on 2026-10-12 (pig from PiG `team/imladris/piglet-single-file-lock`, linux/amd64): the probes differ for exactly those seven and nowhere else, and the Binary shrinks from 66.3 MiB to 38.5 MiB.
+`npm run strip-inventory -- bench-lean` builds the Piglet stock (no `strip`) and stripped and drives both through the same probes. The keep-mode list expands to every probed feature (node-extensions, extension-sdk-go/rust/python, self-update, docs, piglet-builder); the result on 2026-10-12 (pig from PiG commit `d92513e779` (single-file lock; not in the 0.5.0 candidate `8ba802d544`), linux/amd64): the probes differ for exactly those seven and nowhere else, and the Binary shrinks from 66.3 MiB to 38.5 MiB.
