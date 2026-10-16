@@ -10,7 +10,6 @@ package warden
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -54,8 +53,6 @@ type warden struct {
 	// fileCfg is the configuration file's content, without the environment's overrides: what a command saves.
 	fileCfg  Config
 	cfgPath  string
-	// pathErr is why cfgPath is empty: the config home could not be found, so a command cannot save.
-	pathErr  error
 	loadErr  string
 	guard    *ActionGuard
 	window   *AttemptWindow
@@ -111,16 +108,19 @@ func truthy(s string) bool {
 // load reads the file and applies the environment: PIGPEN_WARDEN_ENABLED turns warden on for a headless run,
 // PIGPEN_WARDEN_BACKEND names its backend (setting it is the consent), PIGPEN_WARDEN_MODE picks the mode, PIGPEN_WARDEN_STEER_VISIBLE=0|1 hides or shows steers in the transcript (default shown).
 func (w *warden) load(ctx sdk.Context) {
+	home, homeErr := ctx.ConfigHome()
+	path := ""
 	cfg := DefaultConfig()
-	w.cfgPath, w.pathErr, w.loadErr = "", nil, ""
-	if home, err := ctx.ConfigHome(); err != nil {
-		w.pathErr = err
-		w.loadErr = "warden: could not locate the config file: " + err.Error() + ". Defaults are in use."
-	} else {
-		w.cfgPath = ConfigPath(home)
-		if cfg, err = LoadConfig(w.cfgPath); err != nil {
-			w.loadErr = "warden: could not read " + w.cfgPath + ": " + err.Error() + ". Defaults are in use."
-		}
+	var err error
+	if homeErr == nil {
+		path = ConfigPath(home)
+		cfg, err = LoadConfig(path)
+	}
+	w.cfgPath, w.loadErr = path, ""
+	if homeErr != nil {
+		w.loadErr = "warden: could not find the PiG config directory: " + homeErr.Error() + ". Defaults are in use."
+	} else if err != nil {
+		w.loadErr = "warden: could not read " + path + ": " + err.Error() + ". Defaults are in use."
 	}
 	w.fileCfg = cfg
 	if truthy(w.opts.Getenv("PIGPEN_WARDEN_ENABLED")) {
@@ -156,9 +156,6 @@ func (w *warden) update(ctx sdk.Context, change func(*Config)) (Config, error) {
 	defer w.mu.Unlock()
 	if !w.loaded {
 		w.load(ctx)
-	}
-	if w.pathErr != nil {
-		return w.cfg, fmt.Errorf("warden: could not locate the config file: %w", w.pathErr)
 	}
 	file := w.fileCfg
 	change(&file)

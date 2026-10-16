@@ -237,7 +237,8 @@ func (a *app) register(e *sdk.Extension) {
 			return nil, nil
 		}
 		base := ""
-		if s, _ := data["systemPrompt"].(string); s != "" {
+		// PiG 0.5 hands the handler a *sdk.SystemPrompt in data["systemPrompt"], not a string; GetSystemPrompt reads its rendered text.
+		if s, err := ctx.GetSystemPrompt(); err == nil && s != "" {
 			base = s + "\n\n"
 		}
 		return map[string]any{"systemPrompt": base + getPonytailInstructions(mode)}, nil
