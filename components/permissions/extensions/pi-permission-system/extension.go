@@ -68,7 +68,9 @@ func Extension() *sdk.Extension {
 		p := st.reload()
 		syncStatus(ctx, p)
 		// The skills the prompt lists, for the skill-read gate (before-agent-start.ts setActiveSkillEntries).
-		skills := p.visibleSkillEntries(promptText(data["systemPrompt"]), ctx.Cwd())
+		// PiG 0.5 hands the handler a *sdk.SystemPrompt in data["systemPrompt"], not a string; GetSystemPrompt reads its rendered text.
+		prompt, _ := ctx.GetSystemPrompt()
+		skills := p.visibleSkillEntries(prompt, ctx.Cwd())
 		st.mu.Lock()
 		st.skills, st.cwd = skills, ctx.Cwd()
 		st.mu.Unlock()

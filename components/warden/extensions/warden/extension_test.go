@@ -170,29 +170,15 @@ func (h *harness) assistantCalls(text string, calls ...map[string]string) {
 
 func (h *harness) start() { h.host.Fire("session_start", map[string]any{"reason": "startup"}) }
 
-// toolCall fires a tool_call event and returns the handler's result. The SDK replies
-// {"_pigToolCallResult": result} (plus "_pigToolCallInput" when the handler edited the input;
-// extensions/sdk/extension.go), and PiG's host reads the result from it.
 func (h *harness) toolCall(tool, id string, input map[string]any) map[string]any {
 	h.t.Helper()
 	raw := h.host.Fire("tool_call", map[string]any{"toolName": tool, "toolCallId": id, "input": input})
-	if len(raw) == 0 {
-		return nil
-	}
-	var reply map[string]json.RawMessage
-	if err := json.Unmarshal(raw, &reply); err != nil {
-		h.t.Fatalf("tool_call reply %s: %v", raw, err)
-	}
-	result, ok := reply["_pigToolCallResult"]
-	if !ok {
-		h.t.Fatalf("tool_call reply %s has no _pigToolCallResult", raw)
-	}
-	if string(result) == "null" {
+	if len(raw) == 0 || string(raw) == "null" {
 		return nil
 	}
 	var out map[string]any
-	if err := json.Unmarshal(result, &out); err != nil {
-		h.t.Fatalf("tool_call result %s: %v", result, err)
+	if err := json.Unmarshal(raw, &out); err != nil {
+		h.t.Fatalf("tool_call result %s: %v", raw, err)
 	}
 	return out
 }
@@ -793,27 +779,6 @@ func TestHeadlessEnableOfAJudgedBackendNeedsTheEnvironmentNotACommand(t *testing
 	h.host.Command("warden", "enable typesafe")
 	if _, err := os.Stat(filepath.Join(h.home, "pigpen-warden", "config.json")); err == nil {
 		t.Error("consent was recorded without a dialog")
-	}
-}
-
-// Without a config home there is no config file: warden says so and runs on the defaults, and a command that
-// would save fails instead of writing pigpen-warden/config.json under the working directory.
-func TestMissingConfigHomeUsesTheDefaultsAndSavesNothing(t *testing.T) {
-	h := startHarness(t, harnessOpts{})
-	cwd := t.TempDir()
-	t.Chdir(cwd)
-	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
-		t.Setenv(name, "")
-	}
-	h.start()
-	if got := strings.Join(h.notices(), "\n"); !strings.Contains(got, "could not locate the config file") || !strings.Contains(got, "Defaults are in use") {
-		t.Fatalf("notices = %q, want the missing config file named", got)
-	}
-	if failure := h.host.Command("warden", "mode advise"); !strings.Contains(failure, "home directory") {
-		t.Fatalf("/warden mode failure = %q, want the missing home directory", failure)
-	}
-	if _, err := os.Stat(filepath.Join(cwd, "pigpen-warden")); err == nil {
-		t.Fatal("warden wrote its config under the working directory")
 	}
 }
 

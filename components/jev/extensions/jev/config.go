@@ -124,16 +124,14 @@ func asToolNames(v any) ([]string, bool) {
 }
 
 // agentDir is PiG's agent directory: PIG_CODING_AGENT_DIR, else <config home>/agent.
-// configHome is called only when the variable is unset.
-func agentDir(configHome func() (string, error)) (string, error) {
+func agentDir(configHome string) string {
 	if d := os.Getenv("PIG_CODING_AGENT_DIR"); d != "" {
-		return d, nil
+		return d
 	}
-	home, err := configHome()
-	if err != nil {
-		return "", err
+	if configHome == "" {
+		return "" // no config directory was found: never a relative path, which a project could plant
 	}
-	return filepath.Join(home, "agent"), nil
+	return filepath.Join(configHome, "agent")
 }
 
 func readConfigFile(path string, warnings *[]string) (map[string]any, bool) {
@@ -370,23 +368,24 @@ type loaded struct {
 // <cwd>/.pig/pi-jev.json. Project values win only where they narrow: they cannot
 // opt in, name a backend, endpoint, model or key, or send more than the user
 // configured. See PORT.md C2.
-func loadConfig(agent, cwd string) loaded {
+func loadConfig(configHome, cwd string) loaded {
 	c := defaultConfig()
 	var warnings []string
-	globalPath := filepath.Join(agent, configFile)
-	if g, ok := readConfigFile(globalPath, &warnings); ok {
-		applyFile(&c, g, false)
+	if dir := agentDir(configHome); dir != "" {
+		if g, ok := readConfigFile(filepath.Join(dir, configFile), &warnings); ok {
+			applyFile(&c, g, false)
+		}
 	}
 	projectPath := filepath.Join(cwd, ".pig", configFile)
 	if p, ok := readConfigFile(projectPath, &warnings); ok {
 		before := c
 		if ignored := applyFile(&c, p, true); len(ignored) > 0 {
 			warnings = append(warnings, fmt.Sprintf("%s: ignored project setting %s (only your own %s can set these)",
-				projectPath, strings.Join(ignored, ", "), globalPath))
+				projectPath, strings.Join(ignored, ", "), filepath.Join(agentDir(configHome), configFile)))
 		}
 		if relaxed := relaxations(before, c); len(relaxed) > 0 {
 			warnings = append(warnings, fmt.Sprintf("%s relaxes the gate your own %s sets: %s",
-				projectPath, globalPath, strings.Join(relaxed, ", ")))
+				projectPath, filepath.Join(agentDir(configHome), configFile), strings.Join(relaxed, ", ")))
 		}
 	}
 	c.Key, c.KeySource = resolveKey(c, &warnings)
