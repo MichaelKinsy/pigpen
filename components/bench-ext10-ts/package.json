@@ -1,0 +1,47 @@
+{
+  "name": "@pi-in-go/pigpen-bench-ext10-ts",
+  "version": "0.1.0",
+  "description": "The ten bench-ext extensions of the overhead bench as TypeScript files (no imports, no dependencies): the source the aot runtime compiles and the Node cell runs.",
+  "keywords": [
+    "pig-package",
+    "bench",
+    "extension",
+    "typescript",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/bench-ext10-ts"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/bench-ext10-ts#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/bench-ext-01.ts",
+      "extensions/bench-ext-02.ts",
+      "extensions/bench-ext-03.ts",
+      "extensions/bench-ext-04.ts",
+      "extensions/bench-ext-05.ts",
+      "extensions/bench-ext-06.ts",
+      "extensions/bench-ext-07.ts",
+      "extensions/bench-ext-08.ts",
+      "extensions/bench-ext-09.ts",
+      "extensions/bench-ext-10.ts"
+    ]
+  }
+}

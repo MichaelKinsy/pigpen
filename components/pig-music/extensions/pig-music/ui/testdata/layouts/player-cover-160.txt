@@ -1,0 +1,30 @@
+ Playing  Night Drive - The Midnight                                                                                                                    vol 40% 
+  Search   Library   Player                                                                                                                                     
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Now Playing                          │ Up Next                                                                                                                 
+                                      │ #    Title                                                           Artist                   Album                Len  
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ >1.  Night Drive                                                     The Midnight             Endless Summer       3:34 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 2.   Café del Mar                                                    Energy 52                                     6:40 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 3.   夜に駆ける                                                      YOASOBI                                       4:21 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 4.   Explicit Content                                              E Somebody, Else           Loud                 3:07 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 5.   Song 5                                                          Artist                                        2:34 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 6.   Song 6                                                          Artist                                        2:35 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 7.   Song 7                                                          Artist                                        2:36 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 8.   Song 8                                                          Artist                                        2:37 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 9.   Song 9                                                          Artist                                        2:38 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 10.  Song 10                                                         Artist                                        2:39 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 11.  Song 11                                                         Artist                                        2:40 
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀             │ 12.  Song 12                                                         Artist                                        2:41 
+                                      │ 13.  Song 13                                                         Artist                                        2:42 
+ Night Drive                          │ 14.  Song 14                                                         Artist                                        2:43 
+ The Midnight                         │ 15.  Song 15                                                         Artist                                        2:44 
+ Endless Summer                       │ 16.  Song 16                                                         Artist                                        2:45 
+ Length 3:34                          │ 17.  Song 17                                                         Artist                                        2:46 
+                                      │ 18.  Song 18                                                         Artist                                        2:47 
+ 1 of 24 in the queue                 │ 19.  Song 19                                                         Artist                                        2:48 
+                                      │ 20.  Song 20                                                         Artist                                        2:49 
+ Shuffle: off                         │ 21.  Song 21                                                         Artist                                        2:50 
+ Repeat: off                          │  + 3 more                                                                                                               
+ > 0:50 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────────────── 3:34  
+                                                                                                                                                                
+ space play  n/p skip  left/right seek  +/- vol  s shuffle  l repeat  / search  ? help  q hide                                                                  

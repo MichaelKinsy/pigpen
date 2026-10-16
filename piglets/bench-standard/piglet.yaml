@@ -1,0 +1,29 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# The PiG Standard bench Piglet: the members of PiG's own pig-standard composition that are not built into the core since 0.4.0, which
+# are the two pig games (/runner, /angry-pigs) and the Bun runtime slot. The sprite login is the core's own.
+name: bench-standard
+description: "PiG Standard for pi-arena: the two pig games and the Bun runtime slot in one Piglet Binary."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  pig-play: local:../../components/pig-play
+  pig-runner: local:../../components/pig-runner
+  angry-pigs: local:../../components/angry-pigs
+  bun-runtime: local:../../components/bun-runtime
+extensions:
+  - name: pigrunner
+    origins: [package:pig-runner]
+    tools: []
+  - name: angrypigs
+    origins: [package:angry-pigs]
+    tools: []
+  - name: bunruntime
+    origins: [package:bun-runtime]
+    tools: []
+skills: []
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

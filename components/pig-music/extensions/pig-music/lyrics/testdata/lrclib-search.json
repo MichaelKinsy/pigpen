@@ -1,0 +1,2 @@
+[{"id":2,"trackName":"Example Song","artistName":"Example Artist","albumName":"Other Album","duration":260,"instrumental":false,"plainLyrics":"wrong length","syncedLyrics":"[00:01.00] wrong length"},
+ {"id":3,"trackName":"Example Song","artistName":"Example Artist","albumName":"Live","duration":201,"instrumental":false,"plainLyrics":"Found by search\nsecond\nthird","syncedLyrics":"[00:02.00] Found by search\n[00:04.00] second\n[00:06.00] third"}]

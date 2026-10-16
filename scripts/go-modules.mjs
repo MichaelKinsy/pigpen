@@ -3,7 +3,7 @@
 // tests map that same SDK instead of the published module. These helpers write a temporary go.work that maps the SDK
 // staged by the selected PiG binary, without touching the repository.
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -140,8 +140,19 @@ export function sdkBuildTags(sdk) {
  * is not bound"), so such a module is load-checked in a real pig instead (scripts/validate-manifests.mjs).
  */
 export function registersNativeProvider(dir) {
-  if (!existsSync(dir)) return false;
+  // A single-file extension (a lone .ts or .js) is a file, not a directory, and registers no Go provider.
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) return false;
   return readdirSync(dir).some((file) => file.endsWith('.go') && !file.endsWith('_test.go') && /\.RegisterNativeProvider\(/.test(readFileSync(join(dir, file), 'utf8')));
+}
+
+/**
+ * Whether a module is a library of factories (no `func Extension()` and no `package main`), such as the benchext package
+ * the bench-ext10 factories import. `pig install --validate-only` loads an extension, so a library has nothing to load.
+ */
+export function isLibraryModule(dir) {
+  if (!existsSync(dir)) return false;
+  const sources = readdirSync(dir).filter((file) => file.endsWith('.go') && !file.endsWith('_test.go')).map((file) => readFileSync(join(dir, file), 'utf8'));
+  return sources.length > 0 && !sources.some((text) => /^func Extension\(\)/m.test(text) || /^package main$/m.test(text));
 }
 
 /** Write a go.work mapping the SDK and every module; returns the environment to use. */

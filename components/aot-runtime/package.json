@@ -1,0 +1,39 @@
+{
+  "name": "@pi-in-go/pigpen-aot-runtime",
+  "version": "0.1.0",
+  "description": "The aot TypeScript runtime slot for PiG (Go): compiles a session's TypeScript extensions into one executable in the background and runs it from the next start.",
+  "keywords": [
+    "pig-package",
+    "aot",
+    "runtime",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/aot-runtime"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/aot-runtime#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "THIRD_PARTY_NOTICES.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/aot-runtime"
+    ]
+  }
+}

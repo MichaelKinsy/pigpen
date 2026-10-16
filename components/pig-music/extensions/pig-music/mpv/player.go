@@ -45,9 +45,20 @@ type Config struct {
 	// Prefetch, when set, is called (on its own goroutine, once for each) with the URL of the queue entry after the current one,
 	// so that it can be resolved while the current track plays (package prefetch). It must not block the caller.
 	Prefetch func(url string)
-	// StreamFailed, when set, is called (on its own goroutine) with the URL of an entry mpv could not open, so that a
-	// prefetched answer whose stream was refused is not used again.
-	StreamFailed func(url string)
+	// StreamFailed, when set, is called with the URL of an entry whose stream was refused (mpv could not open it, or, with
+	// Recover, it ended long before the track did), so that a prefetched answer whose stream was refused is not used again.
+	// It reports whether there was such an answer: what mpv played came from it. It is called on its own goroutine, and with
+	// Recover before the entry is loaded again, which must not be answered from it.
+	StreamFailed func(url string) (kept bool)
+	// Recover, when set, loads an entry whose stream was refused again in its place, resolved afresh, and resumes it where it
+	// stopped: one whose stream ended long before the track did, or one that could not be opened from a prefetched answer
+	// (another failure to open, such as a removed track, is left to mpv, which goes on to the next). An entry refused again
+	// within recoverWindow of that is not loaded again: the player moves past it (to the next entry, or stops when there is
+	// none, whatever the repeat mode) and reports why to Unplayable. Only the one long-lived client of an mpv sets it (the
+	// extension), so that a short-lived pigmusic command does not reload too.
+	Recover bool
+	// Unplayable, when set, is called (on its own goroutine) with a one-line reason when Recover moved past an entry.
+	Unplayable func(reason string)
 	// ExtraArgs are added to mpv's command line when the player starts it (for example --ao=null).
 	ExtraArgs []string
 	// Env is added to mpv's environment when the player starts it.
@@ -65,7 +76,7 @@ type Config struct {
 type Player struct {
 	cfg Config
 
-	opMu sync.Mutex // serializes multi-step operations (Replace, Move)
+	opMu sync.Mutex // serializes multi-step operations (Replace, Move, recover)
 
 	mu     sync.Mutex
 	client *Client
@@ -76,7 +87,34 @@ type Player struct {
 	closed bool
 
 	offered string // the last URL handed to Config.Prefetch
+
+	// heard is what the player heard of the entry playing, and prevHeard of the one before it: mpv names an entry in end-file
+	// once it has left it, and the next one may have started by then.
+	heard, prevHeard heardEntry
+	recovered        map[string]time.Time // the URLs Recover loaded again, and when
+	skipped          int                  // the entry Recover last moved past, until it starts again
+	resume           resumeAt             // where Recover's reload is to play from once it has loaded
+	// token names this Player in the recovery lease, lease is who holds it (leaseProp), and leaseless is set on an mpv that has
+	// no user-data to keep it in. insertAt is whether this mpv's loadfile takes an index (0.38 and later).
+	token, lease        string
+	leaseless, insertAt bool
 }
+
+// heardEntry is the last position and length mpv reported for one entry, in seconds (0 when it reported none), and the position
+// it was at before it last went back (loop-file's seek to the start may reach the player before or after the seek event).
+type heardEntry struct {
+	id             int
+	pos, dur, back float64
+}
+
+const (
+	// recoverWindow is how soon after Recover loaded an entry again a refusal of its stream counts as the same refusal: the
+	// entry is then skipped, not loaded once more.
+	recoverWindow = time.Minute
+	// cutSlack is how far short of its length (in seconds) a stream may end and still be whole: a container's length and its
+	// last sound differ by a fraction of a second, while a refused stream ends where the refusal began.
+	cutSlack = 5.0
+)
 
 var _ music.Player = (*Player)(nil)
 
@@ -94,7 +132,7 @@ func New(cfg Config) *Player {
 	if cfg.LookPath == nil {
 		cfg.LookPath = exec.LookPath
 	}
-	p := &Player{cfg: cfg, v: newView(), meta: map[string]music.Track{}}
+	p := &Player{cfg: cfg, v: newView(), meta: map[string]music.Track{}, recovered: map[string]time.Time{}, token: newLeaseToken()}
 	p.st = p.v.state(p.meta)
 	return p
 }
@@ -191,6 +229,12 @@ func (p *Player) mpvArgs() []string {
 		opts = "ytdl_hook-ytdl_path=" + scriptOptValue(p.cfg.YtdlPath) + "," + opts
 	}
 	args = append(args, "--script-opts="+opts)
+	// googlevideo serves a request for more than about 10 MiB (a track longer than about 11 minutes) at about 32 KiB/s and resets
+	// it after about 700 s (R4, measured); mpv 0.41 asks for the whole stream at once, as it does not apply yt-dlp's
+	// http_chunk_size (mpv master does). In 10 MiB ranges such a track is in mpv's cache within a second or two. FFmpeg before
+	// 8.1 has no request_size and mpv only notes the unused option (verbose); mpv 0.35 and later take -append. Before
+	// ExtraArgs, so that PIG_MUSIC_MPV_ARGS can set another size.
+	args = append(args, "--stream-lavf-o-append=request_size=10485760")
 	args = append(args, p.cfg.ExtraArgs...)
 	// The hook's yt-dlp ignores the user's yt-dlp config, as the Source and the
 	// doctor do: a --cookies-from-browser there would read browser cookies at
@@ -254,6 +298,10 @@ func (p *Player) adopt(ctx context.Context, c *Client) error {
 	p.v = newView()
 	p.v.connected = true
 	p.meta = loadMeta(p.cfg.Paths.Meta)
+	// Entry IDs are this mpv's: what was heard of another one's entries means nothing here.
+	p.heard, p.prevHeard, p.skipped, p.resume = heardEntry{}, heardEntry{}, 0, resumeAt{}
+	clear(p.recovered)
+	p.lease, p.leaseless, p.insertAt = "", false, false
 	p.mu.Unlock()
 	go func() {
 		<-c.Done()
@@ -264,6 +312,17 @@ func (p *Player) adopt(ctx context.Context, c *Client) error {
 			p.drop(c)
 			return fmt.Errorf("observe %s: %w", name, err)
 		}
+	}
+	if raw, err := p.call(ctx, c, "get_property", shuffledProp); err == nil { // unset, or an mpv before 0.36: not shuffled
+		var mark string
+		if json.Unmarshal(raw, &mark) == nil && mark == "yes" {
+			p.mu.Lock()
+			p.v.shuffled = true
+			p.mu.Unlock()
+		}
+	}
+	if p.cfg.Recover {
+		p.prepareRecovery(ctx, c)
 	}
 	if _, err := p.Sync(ctx); err != nil {
 		p.drop(c)
@@ -281,11 +340,20 @@ func (p *Player) drop(c *Client) {
 // call sends one command, bounded by the CommandTimeout as well as by ctx: mpv
 // answers at once when it is well, so a missing answer means it is stuck.
 func (p *Player) call(ctx context.Context, c *Client, args ...any) (json.RawMessage, error) {
+	return p.send(ctx, c, args[0], args)
+}
+
+// callNamed is call for a command given by mpv's named arguments (Client.send).
+func (p *Player) callNamed(ctx context.Context, c *Client, command map[string]any) (json.RawMessage, error) {
+	return p.send(ctx, c, command["name"], command)
+}
+
+func (p *Player) send(ctx context.Context, c *Client, name, command any) (json.RawMessage, error) {
 	cctx, cancel := context.WithTimeout(ctx, p.cfg.CommandTimeout)
 	defer cancel()
-	data, err := c.Command(cctx, args...)
+	data, err := c.send(cctx, command)
 	if err != nil && ctx.Err() == nil && errors.Is(err, context.DeadlineExceeded) {
-		return nil, fmt.Errorf("mpv did not answer %v within %s; it may be hung (its socket is %s)", args[0], p.cfg.CommandTimeout, p.cfg.Paths.Socket)
+		return nil, fmt.Errorf("mpv did not answer %v within %s; it may be hung (its socket is %s)", name, p.cfg.CommandTimeout, p.cfg.Paths.Socket)
 	}
 	return data, err
 }
@@ -307,11 +375,24 @@ func (p *Player) disconnected(c *Client) {
 
 // onEvent runs for every message mpv sends unasked.
 func (p *Player) onEvent(ev Event) {
-	if ev.Event == "end-file" && ev.Reason == "error" {
-		p.failed(ev.PlaylistEntryID)
+	switch ev.Event {
+	case "property-change":
+	case "start-file":
+		p.started(ev.PlaylistEntryID)
+		return
+	case "end-file":
+		p.ended(ev)
+		return
+	case "file-loaded":
+		p.loaded()
+		return
+	case "seek":
+		p.sought()
+		return
+	default:
 		return
 	}
-	if ev.Event != "property-change" || ev.Name == "" {
+	if ev.Name == "" {
 		return
 	}
 	p.mu.Lock()
@@ -324,33 +405,29 @@ func (p *Player) onEvent(ev Event) {
 		p.st.Position = seconds(p.v.timePos)
 		p.st.Duration = seconds(p.v.duration)
 		p.st.Volume = int(p.v.volume + 0.5)
+		switch { // what mpv reported for the entry, from that event's own value: mpv reports none as an entry ends
+		case ev.Name == "time-pos" && p.v.timePos > 0:
+			if p.v.timePos < p.heard.pos-1 {
+				p.heard.back = p.heard.pos
+			}
+			p.heard.pos = p.v.timePos
+		case ev.Name == "duration" && p.v.duration > 0:
+			p.heard.dur = p.v.duration
+		}
 		p.publish()
+	case leaseProp:
+		p.leaseChanged(ev.Data)
 	default:
 		p.refresh()
-	}
-}
-
-// failed reports the entry mpv could not open to Config.StreamFailed.
-func (p *Player) failed(id int) {
-	if p.cfg.StreamFailed == nil || id == 0 {
-		return
-	}
-	p.mu.Lock()
-	url := ""
-	for _, e := range p.v.entries {
-		if e.ID == id {
-			url = e.Filename
-		}
-	}
-	p.mu.Unlock()
-	if url != "" {
-		go p.cfg.StreamFailed(url)
 	}
 }
 
 // refresh recomputes the whole state and publishes it. The caller holds p.mu.
 func (p *Player) refresh() {
 	p.st = p.v.state(p.meta)
+	if p.heard.id == 0 && p.st.Index >= 0 { // attached to an mpv that was playing: no start-file was seen
+		p.heard.id = p.v.entries[p.v.pos].ID
+	}
 	p.publish()
 	p.offerNext()
 }
@@ -520,6 +597,7 @@ func (p *Player) Replace(ctx context.Context, tracks []music.Track, startAt int)
 	if _, err := p.call(ctx, c, "loadfile", urls[startAt], "replace"); err != nil {
 		return err
 	}
+	p.markShuffled(ctx, c, false)
 	for _, u := range urls[startAt+1:] {
 		if _, err := p.call(ctx, c, "loadfile", u, "append"); err != nil {
 			return err
@@ -695,8 +773,8 @@ func (p *Player) SetRepeat(ctx context.Context, mode music.RepeatMode) error {
 // SetShuffle reorders the queue at random with the current track first, still playing, and every other track after it
 // (playlist-shuffle, then playlist-move), or puts the order back (playlist-unshuffle, which needs mpv 0.37). mpv's
 // playlist-shuffle moves the playing entry too, to a random place; left there, the queue would end after it and the tracks
-// shuffled in front of it would never play. Whether the queue is shuffled is remembered here, not by mpv, so it is
-// forgotten when the extension restarts and a new queue starts unshuffled.
+// shuffled in front of it would never play. mpv has no property that says the queue is shuffled, so the Player marks it in
+// mpv (shuffledProp), where a Player that adopts this mpv later finds it; a new queue starts unshuffled.
 func (p *Player) SetShuffle(ctx context.Context, on bool) error {
 	cmd := "playlist-unshuffle"
 	if on {
@@ -715,11 +793,28 @@ func (p *Player) SetShuffle(ctx context.Context, on bool) error {
 			return err
 		}
 	}
+	if c, err := p.conn(); err == nil {
+		p.markShuffled(ctx, c, on)
+	}
 	p.mu.Lock()
 	p.v.shuffled = on
 	p.refresh()
 	p.mu.Unlock()
 	return nil
+}
+
+// shuffledProp is the mark of a shuffled queue in mpv itself, "yes" or "no": a user-data property (mpv 0.36 and later), which
+// lives as long as the mpv and its queue do, whichever client set it.
+const shuffledProp = "user-data/pig-music/shuffled"
+
+// markShuffled sets the mark, at best: on an mpv without user-data the music is the same, and a Player that adopts it later
+// shows shuffle off.
+func (p *Player) markShuffled(ctx context.Context, c *Client, on bool) {
+	mark := "no"
+	if on {
+		mark = "yes"
+	}
+	_, _ = p.call(ctx, c, "set_property", shuffledProp, mark)
 }
 
 // playingFirst moves the playing entry to the front of mpv's playlist. It asks mpv for the position rather than using the
@@ -750,6 +845,7 @@ func (p *Player) Close() error {
 	if c == nil {
 		return nil
 	}
+	p.releaseLease(c)
 	return c.Close()
 }
 

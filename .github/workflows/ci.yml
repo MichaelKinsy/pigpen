@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   # The PiG release these jobs target is scripts/pig-requirement.json (`release`); a test keeps this commit equal to it.
-  PIG_COMMIT: '3ee745c8cda3c1a9a8d71112c140790c4d64d78d' # PiG v0.4.1
+  PIG_COMMIT: '55766a5c5823f52842029ece160dfaaa70ef9808' # PiG 0.5.0 (candidate: staging team/tern/batch-v22, unreleased)
 jobs:
   validate:
     runs-on: ubuntu-24.04
@@ -180,6 +180,12 @@ jobs:
           PIG_HOME: ${{ runner.temp }}/pig-home
           PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
         run: node scripts/platform-smoke.mjs --out dist/bin
+      # Each Binary in a real terminal (tmux), with only system tools on PATH: its main features, a faux turn and a clean /quit.
+      - name: Drive every Binary in a terminal
+        if: ${{ runner.os == 'Linux' }}
+        env:
+          PIGLET_E2E_BIN_DIR: ${{ github.workspace }}/dist/bin
+        run: node --test --test-timeout=900000 scripts/piglet-e2e.test.mjs
       - name: Keep the Binaries for three days
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

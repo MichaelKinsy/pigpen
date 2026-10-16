@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-pig-play",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The shared pig sprite catalogue, half-block pixel rasterizer, arcade scenery and terminal game plumbing that Pigpen's pig games build on (Go libraries and licensed art, no extension of its own)",
   "keywords": [
     "pig-package",
@@ -34,5 +34,6 @@
     "CREDITS.md",
     "provenance.json",
     "go.sum"
-  ]
+  ],
+  "pi": {}
 }

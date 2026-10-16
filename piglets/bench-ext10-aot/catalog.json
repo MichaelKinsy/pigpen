@@ -1,0 +1,11 @@
+{
+  "featured": false,
+  "updatedAt": "2026-10-12",
+  "languages": [
+    "go",
+    "typescript"
+  ],
+  "notes": [
+    "Bench Piglet for pi-arena (the aot arm): the ten bench-ext TypeScript extensions are embedded in the Binary and the aot runtime (Go, fused) compiles them into a slot image at first start (Pi-Bolt 0.7.4, downloaded on first use and signature-checked) and runs the image from the next start. Run with PIG_TS_RUNTIME=aot. The image is not part of the Binary. Experimental. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version."
+  ]
+}

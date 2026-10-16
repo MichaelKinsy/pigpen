@@ -5,13 +5,15 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/PiG/extensions/sdk/kit"
 	"github.com/MichaelKinsy/pigpen/pig-music/teahost"
 	"github.com/MichaelKinsy/pigpen/pig-music/ui"
 )
 
-// screen is the sdk.RemoteComponent of the player: it hands PiG's input to the
-// model and the model's view back, and closes when the model quits. Closing it is
-// hiding: Dispose leaves the model and the player alone.
+// screen is the sdk.ViewComponent of the player: it hands PiG's input to the
+// model and the model's drawing back as a kit view (kitview.go), and closes when
+// the model quits. Closing it is hiding: Dispose leaves the model and the player
+// alone.
 type screen struct {
 	app    *app
 	host   *teahost.Host
@@ -36,8 +38,11 @@ func (s *screen) rows() int {
 	return fallbackRows
 }
 
-// Render draws the model at the terminal's size.
-func (s *screen) Render(width int) []string { return s.host.Lines(width, s.rows()) }
+// View draws the model at the terminal's size.
+func (s *screen) View(width int) kit.View {
+	lines, shape := s.host.Frame(width, s.rows())
+	return screenView(lines, shape, width)
+}
 
 // HandleInput gives the model a key and closes when the model quits.
 func (s *screen) HandleInput(data string) (sdk.RemoteComponentResult, error) {
@@ -49,6 +54,16 @@ func (s *screen) HandleInput(data string) (sdk.RemoteComponentResult, error) {
 		return sdk.RemoteComponentResult{Done: true}, nil
 	}
 	return sdk.RemoteComponentResult{}, nil
+}
+
+// HandleMouse gives the model a click or a turn of the wheel (in fullscreen, where Pi routes the mouse to components); x and
+// y are the cell of the screen it was drawn at.
+func (s *screen) HandleMouse(e sdk.MouseEvent) (sdk.RemoteComponentResult, error) {
+	msg, ok := mouseMsg(e)
+	if !ok {
+		return sdk.RemoteComponentResult{}, nil
+	}
+	return sdk.RemoteComponentResult{Done: s.host.Input(msg)}, nil
 }
 
 // SetInvalidate receives the SDK's render callback while the screen is open. The

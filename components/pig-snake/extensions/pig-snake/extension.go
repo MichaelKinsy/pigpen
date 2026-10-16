@@ -41,7 +41,10 @@ func run(ctx sdk.Context, _ string) error {
 		ctx.Notify("Pig Snake needs an interactive terminal.", "warning")
 		return nil
 	}
-	configHome := ctx.ConfigHome()
+	configHome, err := ctx.ConfigHome()
+	if err != nil {
+		return err
+	}
 	component := newComponent(loadHighScores(configHome), newSprites(configHome), ctx.Height)
 	result, err := ctx.Custom(component, termgame.Overlay("Pig Snake"))
 	if err != nil {

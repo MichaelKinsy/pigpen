@@ -53,3 +53,9 @@ func lockFile(ctx context.Context, path string) (unlock func(), err error) {
 		}
 	}
 }
+
+// processAlive reports whether a process with the pid runs (one owned by another user counts).
+func processAlive(pid int) bool {
+	err := syscall.Kill(pid, 0)
+	return pid > 0 && (err == nil || err == syscall.EPERM)
+}

@@ -117,7 +117,7 @@ func TestThePlayerScreenShowsADiscWhenThereIsNoCoverArt(t *testing.T) {
 }
 
 func TestTheDiscIsLeftOutWhereThereIsNoRoomForIt(t *testing.T) {
-	for _, sz := range [][2]int{{100, 14}, {59, 30}, {40, 12}} {
+	for _, sz := range [][2]int{{100, 14}, {49, 30}, {40, 12}, {79, 10}} { // a short body; under coverStack the text goes alone
 		r, _ := artRig(t, sz[0], sz[1], nil, art.TrueColor)
 		r.state(playing(tracks(3), 0))
 		r.send(ShowPlayerMsg{})
@@ -279,6 +279,30 @@ func TestACoverThatArrivesLateForAnotherTrackIsIgnored(t *testing.T) {
 	}
 }
 
+func TestArtMsgSwitchesBetweenTheCoverAndTheDiscWhileThePlayerRuns(t *testing.T) {
+	red := paint(color.RGBA{255, 0, 0, 255})
+	fa := &fakeArt{imgs: map[string]image.Image{"id00": red}}
+	r, _ := artRig(t, 100, 30, fa, art.TrueColor)
+	r.state(playing(tracks(3), 0))
+	r.send(ShowPlayerMsg{})
+	if !strings.Contains(r.raw(), "38;2;255;0;0") || hasBraille(r.text()) {
+		t.Fatalf("the cover first:\n%s", r.text())
+	}
+	r.send(ArtMsg{})
+	if strings.Contains(r.raw(), "38;2;255;0;0") || !hasBraille(r.text()) {
+		t.Fatalf("switched off, the disc at once:\n%s", r.text())
+	}
+	r.send(artMsg{id: "id00", img: red}) // a cover asked for before the switch
+	r.state(playing(tracks(3), 0))
+	if strings.Contains(r.raw(), "38;2;255;0;0") || fa.count("id00") != 1 {
+		t.Fatalf("switched off, a cover was drawn or asked for (%d asks):\n%s", fa.count("id00"), r.text())
+	}
+	r.send(ArtMsg{Art: fa})
+	if !strings.Contains(r.raw(), "38;2;255;0;0") || hasBraille(r.text()) || fa.count("id00") != 2 {
+		t.Fatalf("switched on, the cover again (%d asks):\n%s", fa.count("id00"), r.text())
+	}
+}
+
 func TestACoverThatFailsFallsBackToTheDiscAndIsNotAskedForAgain(t *testing.T) {
 	fa := &fakeArt{errs: map[string]error{"id00": context.DeadlineExceeded}}
 	r, _ := artRig(t, 100, 30, fa, art.TrueColor)
@@ -337,7 +361,7 @@ func TestNoGraphicsProtocolEscapeIsEverWritten(t *testing.T) {
 
 func TestTheCoverAndTheDiscFitEverySizeExactly(t *testing.T) {
 	fa := &fakeArt{imgs: map[string]image.Image{"id00": paint(color.RGBA{200, 100, 50, 255})}}
-	for _, sz := range [][2]int{{120, 40}, {100, 30}, {80, 24}, {60, 16}, {61, 20}, {59, 30}, {200, 14}, {70, 60}} {
+	for _, sz := range [][2]int{{120, 40}, {100, 30}, {80, 24}, {60, 16}, {61, 20}, {59, 30}, {50, 20}, {49, 20}, {200, 14}, {70, 60}} {
 		for _, a := range []music.Artwork{nil, fa} {
 			r, _ := artRig(t, sz[0], sz[1], a, art.TrueColor)
 			r.state(playing(tracks(30), 0))

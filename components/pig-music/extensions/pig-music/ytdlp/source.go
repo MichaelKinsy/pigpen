@@ -38,8 +38,9 @@ type Source struct {
 	// entries measured); default 2 minutes.
 	LibraryTimeout time.Duration
 	// Cookies, when set, returns the --cookies-from-browser value for a library call, or an error that says why there is
-	// none (*music.NeedsConsentError, *music.NoBrowserError). It is asked before every library call and never for anything
-	// else: search, enrichment and streams carry no cookies.
+	// none (*music.NeedsConsentError, *music.NoBrowserError). It is asked before every library call and before the account's
+	// home is read for the suggestions (home.go), and never for anything else: search, the charts, enrichment and streams carry
+	// no cookies.
 	Cookies func(ctx context.Context) (spec string, err error)
 	// JSRuntime, when set, is passed as --js-runtimes (yt-dlp's syntax: "deno", "node:/path/to/node"). YouTube needs a
 	// JavaScript runtime for most formats; the doctor finds one.
@@ -317,6 +318,12 @@ func (s *Source) libraryRun(ctx context.Context, args ...string) ([]byte, error)
 	if timeout == 0 {
 		timeout = DefaultLibraryTimeout
 	}
+	// the browser's cookie database is copied under TMPDIR for the run: into a directory that is private and always removed
+	ctx, remove, err := privateTemp(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not make a private temporary directory for yt-dlp: %w", err)
+	}
+	defer remove()
 	out, err := s.runFor(ctx, timeout, append([]string{"--cookies-from-browser", spec}, args...)...)
 	if err != nil && strings.Contains(err.Error(), "Operation not permitted") && strings.Contains(err.Error(), "ookies") {
 		// macOS keeps some browsers' cookie stores (Safari's above all) behind Full Disk Access.
@@ -334,6 +341,9 @@ func (s *Source) PlayURL(t music.Track) string {
 // to 32 MiB. When ctx ends, yt-dlp and everything it started are killed.
 func ExecRunner(ctx context.Context, bin string, args []string) ([]byte, []byte, error) {
 	cmd := exec.CommandContext(ctx, bin, args...)
+	if env := envOf(ctx); len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	}
 	ownGroup(cmd)
 	cmd.WaitDelay = 2 * time.Second
 	var stdout, stderr bytes.Buffer

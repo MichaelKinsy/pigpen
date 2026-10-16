@@ -1,0 +1,38 @@
+{
+  "name": "@pi-in-go/pigpen-bun-runtime",
+  "version": "0.1.0",
+  "description": "The Bun TypeScript runtime slot for PiG (Go): installs a pinned, signature-checked Bun and runs TypeScript and JavaScript extensions on it instead of Node.",
+  "keywords": [
+    "pig-package",
+    "bun",
+    "runtime",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/bun-runtime"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/bun-runtime#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/bunruntime"
+    ]
+  }
+}

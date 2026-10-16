@@ -1,7 +1,18 @@
 {
-  "origin": "original",
+  "origin": "ported",
   "authors": ["Michael Kinsy"],
   "license": "MIT",
   "licenseFile": "LICENSE",
-  "upstreams": []
+  "upstreams": [
+    {
+      "name": "herdr-pig",
+      "authors": ["Christian Polzer", "Hai-Fai Solutions"],
+      "url": "https://github.com/Hai-Fai-Solutions/herdr-pig",
+      "revision": "3ec680471e8282e0a8a64545781069f822c0c212",
+      "path": "extensions/herdr",
+      "license": "Apache-2.0",
+      "licenseFile": "LICENSE-herdr-pig",
+      "attributionFile": "NOTICE"
+    }
+  ]
 }

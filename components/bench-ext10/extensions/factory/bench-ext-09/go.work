@@ -1,0 +1,7 @@
+go 1.26.0
+
+// PiG reads this file to find the shared benchext module (the same relative path in the repository and in a staged Piglet).
+use (
+	.
+	../../benchext
+)
