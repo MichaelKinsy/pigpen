@@ -1,4 +1,4 @@
-package pi_permission_system
+package pi_permission_system_test
 
 // Layer-1 test harness for a Go extension port: a fake PiG host that speaks the
 // documented extension wire protocol (`pig docs show extension-api`) over an
