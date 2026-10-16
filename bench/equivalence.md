@@ -1,6 +1,6 @@
 # Equivalence of the ext10 bench Piglets
 
-`node scripts/bench-equivalence.mjs --pig <pig> --exts <dir of bench-ext-NN.ts> --binary go=<bench-ext10> --binary aot=<bench-ext10-aot> --binary split=<bench-ext10-split>` runs one scripted session per arm through `--mode rpc` and compares the hash of each section with the reference arm, Stock PiG running PiG's ten TypeScript originals with `-e` (they load unchanged in Pi). Run 2026-10-12 with a pig built from PiG `team/imladris/piglet-single-file-lock` (integrate-042 `a220c94a53` plus the single-file lock fix), linux/amd64, `PIG_TS_RUNTIME=node`:
+`node scripts/bench-equivalence.mjs --pig <pig> --exts <dir of bench-ext-NN.ts> --binary go=<bench-ext10> --binary aot=<bench-ext10-aot> --binary split=<bench-ext10-split>` runs one scripted session per arm through `--mode rpc` and compares the hash of each section with the reference arm, Stock PiG running PiG's ten TypeScript originals with `-e` (they load unchanged in Pi). Run 2026-10-12 with a pig built from PiG commit `d92513e779` (integrate-042 `a220c94a53` plus the single-file lock fix), linux/amd64, `PIG_TS_RUNTIME=node`:
 
 | section | originals | bench-ext10 (Go) | bench-ext10-aot | bench-ext10-split |
 |---|---|---|---|---|

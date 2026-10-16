@@ -65,7 +65,7 @@
         "bench-ext-10"
       ],
       "version": null,
-      "requires": "a PiG that locks a single-file extension (PiG branch team/imladris/piglet-single-file-lock, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
+      "requires": "a PiG that locks a single-file extension (PiG commit d92513e779, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
     },
     "bench-ext10-split": {
       "manifest": "piglets/bench-ext10-split/piglet.yaml",
@@ -84,7 +84,7 @@
         "bench-ext-10"
       ],
       "version": null,
-      "requires": "a PiG that locks a single-file extension (PiG branch team/imladris/piglet-single-file-lock, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
+      "requires": "a PiG that locks a single-file extension (PiG commit d92513e779, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
     }
   }
 }

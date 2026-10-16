@@ -2,7 +2,7 @@
 
 `node scripts/bench-aot-cost.mjs --binary <bench-ext10-aot|bench-ext10-split> --json <file>` measures what the aot runtime spends before a TypeScript set runs compiled. The compiled host is a slot image built on the user's machine from the pinned Pi-Bolt compiler (0.7.4, signature-checked); it is not part of the Binary and a later start pays none of this.
 
-Measured 2026-10-12, linux/amd64, pig built from PiG `team/imladris/piglet-single-file-lock` (integrate-042 `a220c94a53` plus the single-file lock fix), a host at load average about 220 (so the seconds are a ceiling, not a benchmark), one run each, network downloads included:
+Measured 2026-10-12, linux/amd64, pig built from PiG commit `d92513e779` (single-file lock; not in the 0.5.0 candidate `8ba802d544`) (integrate-042 `a220c94a53` plus the single-file lock fix), a host at load average about 220 (so the seconds are a ceiling, not a benchmark), one run each, network downloads included:
 
 | | bench-ext10-aot (10 TypeScript extensions) | bench-ext10-split (5 TypeScript, 5 Go-fused) |
 |---|---:|---:|
