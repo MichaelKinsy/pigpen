@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { readManifests, generateIndex, root } from './generate-index.mjs';
-import { goModules, registersNativeProvider } from './go-modules.mjs';
+import { goModules, isLibraryModule, registersNativeProvider } from './go-modules.mjs';
 import { requirePig } from './pig-bin.mjs';
 import { loadsInPig } from './platform-smoke.mjs';
 export function run(args) {
@@ -27,6 +27,7 @@ for (const { path } of readManifests(join(root, 'dist/staged'))) run(['piglet', 
 // pigpen-a2a). Load each one the way pig does: the extension directory, not the Package root.
 for (const module of goModules()) {
   if (module.includes('/cmd/') || !module.includes('/extensions/')) continue;
+  if (isLibraryModule(module)) continue;
   if (registersNativeProvider(module)) {
     loadInPig(module);
     continue;
