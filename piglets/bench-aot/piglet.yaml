@@ -1,0 +1,19 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# The aot bench Piglet: PiG with the aot runtime slot as its only member (experimental).
+name: bench-aot
+description: "PiG with the aot TypeScript runtime slot: compiles a session's TypeScript extensions into one executable in the background, for pi-arena."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  aot-runtime: local:../../components/aot-runtime
+extensions:
+  - name: aot-runtime
+    origins: [package:aot-runtime]
+    tools: []
+skills: []
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

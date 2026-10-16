@@ -137,6 +137,26 @@ func TestHostErrorFromTheOverlayIsReturned(t *testing.T) {
 	}
 }
 
+// Without a config home the command fails before the overlay opens, and no score file
+// appears under the working directory.
+func TestMissingConfigHomeIsReturnedAndNothingOpens(t *testing.T) {
+	cwd := t.TempDir()
+	t.Chdir(cwd)
+	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+		t.Setenv(name, "")
+	}
+	h := StartHost(t, pigrunner.Extension(), HostOptions{OnCall: closesWith(map[string]any{"score": 3, "highScore": 3})})
+	if err := h.Command("runner", ""); !strings.Contains(err, "home directory") {
+		t.Fatalf("error = %q, want the missing home directory", err)
+	}
+	if n := len(h.CallsTo("ui.custom")); n != 0 {
+		t.Errorf("%d overlays opened without a config home", n)
+	}
+	if _, err := os.Stat(filepath.Join(cwd, "state")); err == nil {
+		t.Error("state written under the working directory")
+	}
+}
+
 // tickers counts goroutines still running the game's own ticker.
 func tickers() int {
 	buf := make([]byte, 1<<20)

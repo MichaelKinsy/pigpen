@@ -308,3 +308,23 @@ func TestNoEscapeBeyondColoursIsEverWritten(t *testing.T) {
 }
 
 func color_(r, g, b uint8) color.Color { return color.RGBA{r, g, b, 255} }
+
+func TestSwitchingCoverArtOffTakesThePaletteFromTheTrackAndOnFromTheCoverAgain(t *testing.T) {
+	r, _ := vibeRig(t, 100, 30, redCover(), art.TrueColor)
+	r.state(playing(tracks(3), 0))
+	r.send(ShowPlayerMsg{})
+	r.send(ClosedMsg{}) // hidden: a palette change is there at once, not faded
+	fromCover, _ := r.m.(Model).Palette()
+	fromTrack := art.FromTrack("Artist", "Song 1")
+	if fromCover == fromTrack {
+		t.Fatal("the cover's palette should not be the track's")
+	}
+	r.send(ArtMsg{})
+	if p, _ := r.m.(Model).Palette(); p != fromTrack {
+		t.Errorf("Cover art off: palette %v, want the track's %v", p, fromTrack)
+	}
+	r.send(ArtMsg{Art: redCover()})
+	if p, _ := r.m.(Model).Palette(); p != fromCover {
+		t.Errorf("Cover art on: palette %v, want the cover's %v", p, fromCover)
+	}
+}

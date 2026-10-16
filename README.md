@@ -7,7 +7,10 @@
 installed independently. Planned catalog entries are not published releases.
 The [herdr reporter](components/herdr/README.md) is a standalone extension Package
 that reports PiG's state to herdr. It works on its own with `pig install`; the
-[`herdr` Piglet](piglets/herdr/README.md) that selects it is optional.
+[`herdr` Piglet](piglets/herdr/README.md) that selects it is optional. Its herdr plugin
+and `herdr:blocked` listener are ported from
+[herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and
+Hai-Fai Solutions (Apache-2.0; [credits](piglets/herdr/README.md#credits)).
 
 ## Current status
 
@@ -27,11 +30,14 @@ rules. The first port made with the workflow is
 scripted scenarios give identical traces for the original under Pi 1.0.x and the Go port
 under PiG 0.4, and 26 of 26 mutations are caught. Nothing here is a published release.
 
-**Target: PiG 0.4.1** (Pi 1.0.3; `pig --version` prints `0.4.1+1.0.3`). Every Go module requires the published
-`github.com/MichaelKinsy/PiG/extensions/sdk v0.4.1`, and `scripts/pig-requirement.json` makes every script and test refuse
-a pig of another minor version. The 0.4.1 SDK has tool renderers (`pi.registerToolRenderer`), so the tests that need them run
-(build tag `pigsdk_tool_renderer`, set automatically for an SDK that has them). Where a note names PiG 0.4.1 behavior, it is
-the target; a note that names an earlier PiG says so.
+**Target: PiG 0.5.0** (Pi 1.1.0; `pig --version` prints `0.5.0+1.1.0`). PiG 0.5.0 is not published: the pin is the
+staging candidate `8ba802d544ef` (`scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows), and `scripts/pig-requirement.json`
+makes every script and test refuse a pig of another minor version. Every Go module still requires
+`github.com/MichaelKinsy/PiG/extensions/sdk v0.4.1`, because PiG's own go.mod pins that SDK version and a Piglet build refuses a
+member that requires a newer one; the code in each module is written against the 0.5 SDK (`Context.ConfigHome` returns
+`(string, error)`) and builds with the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests). The SDK has tool renderers
+(`pi.registerToolRenderer`), so the tests that need them run (build tag `pigsdk_tool_renderer`, set automatically for an SDK that
+has them). Where a note names PiG 0.5.0 behavior, it is the target; a note that names an earlier PiG says so.
 
 **Every port has a row in the [ports list](ports/README.md)** (`ports/ports.json`, schema
 `ports/ports.schema.json`): upstream repository, the commit it is pinned to, license, upstream
@@ -263,7 +269,7 @@ components/pig-snake/               directly installable Go game Package: a snak
                                     the PiG pig and whose every apple adds another pig to the
                                     herd (explicit /pig-snake command; evidence in port/)
 components/pig-music/               Pig Music, /music: a full-screen music player for PiG (Go, SDK v0.4.0;
-                                    milestone 6: the player screen, library, footer status, shuffle and repeat, /music setup and the doctor, plus the pigmusic CLI; not in any Piglet)
+                                    milestone 6: the player screen, library, footer status, shuffle and repeat, /music setup and the doctor, plus the pigmusic CLI; selected by the pig-music Piglet and pig-with-batteries)
 components/acp/                     Agent Client Protocol for PiG: the pig-acp companion and
                                     the /acp extension, a Go port of pi-acp with its evidence in port/
 components/jev/                     a Go port of pi-jev as a Package (typed judge, off until /jev on),
@@ -279,6 +285,7 @@ piglets/
   pig-extension-porter/             source-only, Go-only focused porter Piglet
   pig-porter/                       source-only umbrella; extends pig-extension-porter
   pig-games/                        source-only: PiG Runner and Angry Pigs
+  pig-music/                        source-only, Go-only: PiG with the /music player (nothing starts until you type it)
   jev/                              Go Piglet selecting components/jev (also selected by pig-with-batteries)
   pig-warden/                       source-only, Go-only: PiG with the opt-in warden guardrails
   pig-typesafe/                     source-only, Go-only: PiG with the opt-in typesafe_evaluate tool and /typesafe
@@ -320,7 +327,7 @@ SECURITY.md                         private security reporting guidance
 
 ## Maintain and validate
 
-Use Node.js 24 and PiG 0.4.1 (CI builds the pig from PiG's `v0.4.1` commit). PiG is the
+Use Node.js 24 and PiG 0.5.0 (CI builds the pig from the pinned PiG commit). PiG is the
 authority for the closed Piglet manifest and resource contract.
 
 ```sh
@@ -367,8 +374,8 @@ fixture provider. It checks exact Skill delivery, selection, source preservation
 restaging, and path safety. It does not measure an LLM's ability to follow the Skill.
 
 The scenario also checks that an explicit `tools: []` reaches the provider with
-no tools; it passes on PiG 0.4.1 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
-`test:tool-scope`, `test:moved` and `test:go-ports` with the pig it builds from PiG's `v0.4.1` commit. No hosted CI pass is
+no tools; it passes on PiG 0.5.0 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
+`test:tool-scope`, `test:moved` and `test:go-ports` with the pig it builds from the pinned PiG commit. No hosted CI pass is
 claimed yet (these steps were run locally with that pig, not on GitHub). CI also runs `test:packages`, `test:npm-packages`,
 `test:npm-piglets` and the release rehearsal, each in its own parallel `slow-checks` job (one serial job ran past its 45-minute
 timeout). CI does not sign Piglet Binaries or publish releases (`release.yml` does, on a Piglet tag); it uploads the
@@ -382,7 +389,7 @@ Binaries it builds as short-lived artifacts for inspection.
 | --- | --- | --- |
 | `validate` | every run | tests, checks, the PiG validator over every manifest, and **one** linux/amd64 build and smoke of `pig-with-batteries` |
 | `slow-checks` | every run, in parallel with `validate` | one job each for `test:packages`, `test:npm-packages`, `test:npm-piglets` and the release rehearsal, each with its own timeout |
-| `platform-matrix` | push to `main`, merge group, manual run, the weekly schedule, and a pull request labelled `full-ci` | one job per OS on a native runner: `linux/amd64` (`ubuntu-24.04`), `linux/arm64` (`ubuntu-24.04-arm`), `darwin/arm64` (`macos-15`), `darwin/amd64` (`macos-15-intel`), `windows/amd64` (`windows-2025`). Each downloads the pinned PiG release for its OS, checks its SHA-256, builds **all ten Piglets** for its own target and smokes each Binary. Binaries are kept as artifacts for three days |
+| `platform-matrix` | push to `main`, merge group, manual run, the weekly schedule, and a pull request labelled `full-ci` | one job per OS on a native runner: `linux/amd64` (`ubuntu-24.04`), `linux/arm64` (`ubuntu-24.04-arm`), `darwin/arm64` (`macos-15`), `darwin/amd64` (`macos-15-intel`), `windows/amd64` (`windows-2025`). Each downloads the pinned PiG release for its OS, checks its SHA-256, builds **every Piglet** for its own target and smokes each Binary; the Linux jobs also drive each Binary in a terminal (below). Binaries are kept as artifacts for three days |
 | `android-cross` | with `platform-matrix` | `go build` and `go vet` of every module for `android/arm64` (Termux) with `CGO_ENABLED=0`. A compile check, not a Binary: pig's builder builds only the machine it runs on |
 | `ci-result` | always | the one required check: green when `validate` and every `slow-checks` job passed and the other tiers passed or were skipped |
 
@@ -391,6 +398,22 @@ pinned pig, and `-p "reply with exactly: ok" --model test-faux/faux-1 --no-sessi
 `Failed to load extension`. That proves a Binary starts on the platform, loads every fused extension and completes a turn; what each
 extension does is the Go tests' job. Run it yourself with `npm run platform-smoke` (set `PIG_BIN` and `PIG_SOURCE_ROOT`; `-- --only <name>`
 for one Piglet) and the android check with `npm run cross-check` (set `PIG_SDK_DIR` or `PIG_BIN`).
+
+**Each Binary in a real terminal.** `npm run test:piglet-e2e` (tmux; POSIX only) starts every Piglet Binary in its own tmux server with a
+PATH of a few linked system tools and nothing else (no Node, no Go: a Go-only Binary must run alone), under a throwaway home and
+runtime directory, and drives the features its Piglet is for through the keyboard: `/a2a` and `/acp` status, the Jev and warden consent
+dialogs, `/tasks` and `/agents`, `/todos` and `/goal-list`, `/typesafe`, the porter Skill, the two games and Pig Snake played and quit,
+the music player opened (with stand-ins for mpv and yt-dlp: nothing is played), the herdr reporter's idle/working/release calls to a fake
+`herdr`, and `/cost`, `/tools` and the rest for `pig-with-batteries`. Each run also answers a faux turn, must print no `Failed to
+load extension` and must exit 0 on `/quit`. A Piglet without a scenario in `scripts/e2e/piglets.mjs` fails the suite. Use
+`PIGLET_E2E_BIN_DIR=dir` for Binaries you already built and `PIGLET_E2E_ONLY=a2a,pig-games` for a few.
+
+The numbers for every Piglet, the 0.5 readiness list and the stripped-vs-stock measurements are in [`docs/plan/progress/piglets-pigpen.md`](docs/plan/progress/piglets-pigpen.md); `node scripts/perf/strip-matrix.mjs` regenerates the sizes (needs PiG 0.5).
+
+**Targets this machine cannot run.** PiG's native builder builds only its own OS and architecture, but the fused extensions link into one
+`go build`, so `npm run cross-link-check` (set `PIG_BIN` and `PIG_SOURCE_ROOT`; `-- --only <name>`, `--targets <os/arch,...>`) builds every
+Piglet with `GOOS`/`GOARCH` set to each other release target and counts a Binary that links but cannot run here as `linked`. It proves
+the Piglets compile and link for darwin and windows from Linux. It does not prove they run there: the native runners above do.
 
 The pin lives in `scripts/pig-requirement.json` (`release`: tag, source commit, and each archive's SHA-256); `npm run fetch:pig`
 downloads and verifies it. Add the `full-ci` label to a pull request to run the whole matrix before merging. `darwin/amd64` ran on

@@ -205,6 +205,32 @@ func TestPromptsAgentsListsAgentDefinitionsFromTheConfigHome(t *testing.T) {
 	}
 }
 
+// Without a config home, /prompts fails instead of reading agent definitions
+// from an agents directory relative to the working directory.
+func TestPromptsAgentsFailsWithoutAConfigHome(t *testing.T) {
+	cwd := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(cwd, "agents"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	def := "---\nname: scout\ndescription: finds things\n---\nYou scout the codebase.\n"
+	if err := os.WriteFile(filepath.Join(cwd, "agents", "scout.md"), []byte(def), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(cwd)
+	for _, name := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
+		t.Setenv(name, "")
+	}
+	h := StartHost(t, contextinfo.Extension(), HostOptions{OnCall: answers{}.onCall})
+	for _, args := range []string{"agents", "scout"} {
+		if e := h.Command("prompts", args); !strings.Contains(e, "home directory") {
+			t.Errorf("/prompts %s: failure = %q, want the missing home directory", args, e)
+		}
+	}
+	if notes := h.CallsTo("ui.notify"); len(notes) != 0 {
+		t.Fatalf("notifications = %+v, want none", notes)
+	}
+}
+
 func TestZeroTokensAreTreatedAsNoLiveUsage(t *testing.T) {
 	h := StartHost(t, contextinfo.Extension(), HostOptions{OnCall: answers{
 		"getContextUsage": {"tokens": 0, "contextWindow": 8000, "percent": 0.0},

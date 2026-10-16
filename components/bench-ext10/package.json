@@ -1,0 +1,46 @@
+{
+  "name": "@pi-in-go/pigpen-bench-ext10",
+  "version": "0.1.0",
+  "description": "The ten bench-ext extensions of the overhead bench as Go factories, fused into one Piglet Binary: no subprocess, no IPC.",
+  "keywords": [
+    "pig-package",
+    "bench",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/bench-ext10"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/bench-ext10#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/factory/bench-ext-01",
+      "extensions/factory/bench-ext-02",
+      "extensions/factory/bench-ext-03",
+      "extensions/factory/bench-ext-04",
+      "extensions/factory/bench-ext-05",
+      "extensions/factory/bench-ext-06",
+      "extensions/factory/bench-ext-07",
+      "extensions/factory/bench-ext-08",
+      "extensions/factory/bench-ext-09",
+      "extensions/factory/bench-ext-10"
+    ]
+  }
+}

@@ -58,8 +58,18 @@
       ],
       "lane": "pigpen-herdr-go",
       "status": "done",
-      "credit": "Original work by Michael Kinsy (MIT). Implements herdr's documented agent-state contract; no herdr code is copied.",
-      "notes": "Go port on the public SDK (it replaced the earlier Node extension). Reviewed and merged for the first release."
+      "credit": "Original work by Michael Kinsy (MIT) implementing herdr documented agent-state contract. The plugin and herdr:blocked listener are ported from herdr-pig (https://github.com/Hai-Fai-Solutions/herdr-pig, Apache-2.0) by Christian Polzer, Hai-Fai Solutions, with their permission.",
+      "notes": "Go port on the public SDK (it replaced the earlier Node extension). Reviewed and merged for the first release.",
+      "additionalUpstreams": [
+        {
+          "name": "herdr-pig",
+          "url": "https://github.com/Hai-Fai-Solutions/herdr-pig",
+          "commit": "3ec680471e8282e0a8a64545781069f822c0c212",
+          "license": "Apache-2.0",
+          "author": "Christian Polzer, Hai-Fai Solutions",
+          "path": "herdr-plugin"
+        }
+      ]
     },
     {
       "id": "ollama-native",

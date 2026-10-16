@@ -1,0 +1,11 @@
+{
+  "featured": false,
+  "updatedAt": "2026-10-12",
+  "languages": [
+    "go",
+    "typescript"
+  ],
+  "notes": [
+    "Bench Piglet for pi-arena (the split arm): bench-ext-01..05 are Go factories fused into the Binary, bench-ext-06..10 are the TypeScript originals embedded in it and compiled by the aot runtime at first start (Pi-Bolt 0.7.4, downloaded on first use and signature-checked). Run with PIG_TS_RUNTIME=aot. Experimental. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version."
+  ]
+}

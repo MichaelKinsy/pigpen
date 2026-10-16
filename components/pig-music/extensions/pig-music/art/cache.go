@@ -155,6 +155,13 @@ func (c *Cache) fetch(ctx context.Context, rawURL string) ([]byte, error) {
 	return data, nil
 }
 
+// Picture is a decoded cover together with the file it was decoded from, for a frontend that draws the picture itself.
+type Picture struct {
+	image.Image
+	Data     []byte
+	MimeType string // image/jpeg or image/png
+}
+
 func (c *Cache) decode(data []byte) (image.Image, error) {
 	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil {
@@ -163,11 +170,11 @@ func (c *Cache) decode(data []byte) (image.Image, error) {
 	if cfg.Width > maxSide || cfg.Height > maxSide || cfg.Width < 1 || cfg.Height < 1 {
 		return nil, fmt.Errorf("art: a %dx%d thumbnail is not accepted", cfg.Width, cfg.Height)
 	}
-	img, _, err := image.Decode(bytes.NewReader(data))
+	img, format, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("art: %w", err)
 	}
-	return img, nil
+	return Picture{Image: img, Data: data, MimeType: "image/" + format}, nil
 }
 
 // store writes a validated picture atomically (0600, in a 0700 directory) and trims the directory to its cap. A failure to

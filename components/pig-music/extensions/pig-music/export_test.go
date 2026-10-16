@@ -25,3 +25,12 @@ func ExtensionAs(token string, src music.Source, player music.Player, env map[st
 	}
 	return extensionWith(d)
 }
+
+// ExtensionWithArt is ExtensionWith whose cover art comes from art (a test Source leaves the extension without its cache).
+func ExtensionWithArt(src music.Source, player music.Player, art music.Artwork, env map[string]string) *sdk.Extension {
+	d := deps{Source: src, Player: player, Art: art}
+	if env != nil {
+		d.Getenv = func(k string) string { return env[k] }
+	}
+	return extensionWith(d)
+}

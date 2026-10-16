@@ -1,0 +1,36 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# The Go-fused ext10 bench Piglet: the ten bench-ext extensions as Go factories fused into the Piglet Binary (no subprocess, no IPC).
+name: bench-ext10
+description: "The ten bench-ext extensions of the overhead bench, fused into one Piglet Binary, for pi-arena."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  bench-ext10: local:../../components/bench-ext10
+extensions:
+  - name: bench-ext-01
+    origins: [package:bench-ext10]
+  - name: bench-ext-02
+    origins: [package:bench-ext10]
+  - name: bench-ext-03
+    origins: [package:bench-ext10]
+  - name: bench-ext-04
+    origins: [package:bench-ext10]
+  - name: bench-ext-05
+    origins: [package:bench-ext10]
+  - name: bench-ext-06
+    origins: [package:bench-ext10]
+  - name: bench-ext-07
+    origins: [package:bench-ext10]
+  - name: bench-ext-08
+    origins: [package:bench-ext10]
+  - name: bench-ext-09
+    origins: [package:bench-ext10]
+  - name: bench-ext-10
+    origins: [package:bench-ext10]
+skills: []
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

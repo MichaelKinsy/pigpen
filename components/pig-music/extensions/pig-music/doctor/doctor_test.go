@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -532,7 +533,7 @@ func TestProbeStreamReadsARangeAndReportsA403(t *testing.T) {
 			if !strings.Contains(strings.Join(args, " "), "--js-runtimes node") {
 				t.Errorf("js runtime missing from %v", args)
 			}
-			return []byte(srv.URL + path + "\n"), nil, nil
+			return probeListing(srv.URL+path, 0), nil, nil
 		}
 	}
 	if err := probeStream(context.Background(), runner("/ok"), srv.Client(), "yt-dlp", "node", "https://x/watch?v=1"); err != nil || gotRange != "bytes=0-65535" {
@@ -547,6 +548,67 @@ func TestProbeStreamReadsARangeAndReportsA403(t *testing.T) {
 	}
 	if err := probeStream(context.Background(), failing, srv.Client(), "yt-dlp", "", "u"); err == nil || !LooksLikeExtractionFailure(err.Error()) {
 		t.Fatalf("resolve failure: %v", err)
+	}
+}
+
+// probeListing is yt-dlp's -J listing of a video whose requested stream is at url and is served from the unix second at
+// (available_at; 0 leaves it out, as an older yt-dlp does). Its other format is held back for an hour.
+func probeListing(url string, at int64) []byte {
+	field := ""
+	if at != 0 {
+		field = `, "available_at": ` + strconv.FormatInt(at, 10)
+	}
+	want := `{"format_id": "251", "url": "` + url + `"` + field + `}`
+	return []byte(`{"id": "x", "formats": [{"format_id": "140", "url": "` + url + `/other", "available_at": ` +
+		strconv.FormatInt(time.Now().Unix()+3600, 10) + `}, ` + want + `], "requested_downloads": [` + want + `]}` + "\n")
+}
+
+// yt-dlp 2026.10.10 and later resolve with tv_samsung, whose stream YouTube refuses with 403 until a pre-roll ad could have
+// been skipped (available_at, 5 s after the resolve, measured). The probe reads it once it is available, as the player does.
+func TestTheProbeWaitsUntilTheStreamIsAvailable(t *testing.T) {
+	at := time.Now().Unix() + 2
+	var mu sync.Mutex
+	var first time.Time // the first read
+	srv := httptestServer(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		if first.IsZero() {
+			first = time.Now()
+		}
+		mu.Unlock()
+		if time.Now().Unix() < at {
+			http.Error(w, "no", http.StatusForbidden)
+			return
+		}
+		w.WriteHeader(http.StatusPartialContent)
+		_, _ = w.Write(make([]byte, 64<<10))
+	})
+	defer srv.Close()
+	run := func(context.Context, string, []string) ([]byte, []byte, error) {
+		return probeListing(srv.URL+"/s", at), nil, nil
+	}
+	err := probeStream(context.Background(), run, srv.Client(), "yt-dlp", "", "u")
+	mu.Lock()
+	defer mu.Unlock()
+	if err != nil || first.Unix() < at {
+		t.Errorf("%v; first read %s before available_at", err, time.Unix(at, 0).Sub(first))
+	}
+}
+
+// A stream held back for longer than the player waits for one is a failed probe: the player would not play it.
+func TestAProbeOfAStreamHeldBackLongFails(t *testing.T) {
+	var mu sync.Mutex
+	read := false
+	srv := httptestServer(func(w http.ResponseWriter, r *http.Request) { mu.Lock(); read = true; mu.Unlock() })
+	defer srv.Close()
+	run := func(context.Context, string, []string) ([]byte, []byte, error) {
+		return probeListing(srv.URL+"/s", time.Now().Unix()+3600), nil, nil
+	}
+	start := time.Now()
+	err := probeStream(context.Background(), run, srv.Client(), "yt-dlp", "", "u")
+	mu.Lock()
+	defer mu.Unlock()
+	if err == nil || !strings.Contains(err.Error(), "available") || read || time.Since(start) > time.Second {
+		t.Errorf("err %v after %s, read %v", err, time.Since(start), read)
 	}
 }
 

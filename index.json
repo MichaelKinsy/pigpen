@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-06",
+  "updatedAt": "2026-10-13",
   "entries": [
     {
       "id": "a2a",
@@ -20,7 +20,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/a2a"
       },
-      "manifestSha256": "f84e53bfc087fd630d6750ba5848367f936c4462d92e3f4d1aab3e4afad66d8c",
+      "manifestSha256": "9defdd9efd1d664cfd0a0eafc4aa703e8e91643d579fdb125af4924e68ff0cb6",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -59,6 +59,182 @@
       ]
     },
     {
+      "id": "bench-aot",
+      "kind": "piglet",
+      "name": "bench-aot",
+      "description": "PiG with the aot TypeScript runtime slot: compiles a session's TypeScript extensions into one executable in the background, for pi-arena.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-aot"
+      },
+      "manifestSha256": "2e2e17a1b963e9cd7e8dc3727912984a6634983372f9c0c49983a9ad23650705",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Bench Piglet for pi-arena: the aot runtime slot is the only member (the pig-pi-bolt arm without its TypeScript ext10 sources, which are not in Pigpen yet). Go only. Experimental: it downloads a pinned Pi-Bolt compiler on first use and checks its signature. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check)."
+      ]
+    },
+    {
+      "id": "bench-bun",
+      "kind": "piglet",
+      "name": "bench-bun",
+      "description": "PiG with the Bun TypeScript runtime slot: installs a pinned, signature-checked Bun and runs TypeScript extensions on it, for pi-arena.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-bun"
+      },
+      "manifestSha256": "393ba44388956a656117924549fe5f1aa7bf4a038a58a3f126fa0d9229a6bfb8",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Bench Piglet for pi-arena: the Bun runtime slot is the only member. Go only. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check). A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a PiG checkout; only linux/amd64 has been built and run."
+      ]
+    },
+    {
+      "id": "bench-ext10",
+      "kind": "piglet",
+      "name": "bench-ext10",
+      "description": "The ten bench-ext extensions of the overhead bench, fused into one Piglet Binary, for pi-arena.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-ext10"
+      },
+      "manifestSha256": "7188f9f63a6b3afb4645490066f14b10c1adda3ef2be383d2b75d6bfab500478",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Bench Piglet for pi-arena: the ten bench-ext extensions as Go factories fused into one Binary. Go only. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG's ext-matrix branch at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check)."
+      ]
+    },
+    {
+      "id": "bench-ext10-aot",
+      "kind": "piglet",
+      "name": "bench-ext10-aot",
+      "description": "The ten bench-ext TypeScript extensions with the aot runtime, which compiles them on first start, for pi-arena.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go",
+        "typescript"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-ext10-aot"
+      },
+      "manifestSha256": "b7b069c1b1312358df6852a0f164dbe83da29d33241c3c058d42c5ed2c75bb06",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Bench Piglet for pi-arena (the aot arm): the ten bench-ext TypeScript extensions are embedded in the Binary and the aot runtime (Go, fused) compiles them into a slot image at first start (Pi-Bolt 0.7.4, downloaded on first use and signature-checked) and runs the image from the next start. Run with PIG_TS_RUNTIME=aot. The image is not part of the Binary. Experimental. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version."
+      ]
+    },
+    {
+      "id": "bench-ext10-split",
+      "kind": "piglet",
+      "name": "bench-ext10-split",
+      "description": "The ten bench-ext extensions split five Go-fused and five TypeScript compiled by the aot runtime, for pi-arena.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go",
+        "typescript"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-ext10-split"
+      },
+      "manifestSha256": "1b7f59aacaeef75ea2ef158719e2654d87191513ab4b6b33ea7532aa5b501ebd",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Bench Piglet for pi-arena (the split arm): bench-ext-01..05 are Go factories fused into the Binary, bench-ext-06..10 are the TypeScript originals embedded in it and compiled by the aot runtime at first start (Pi-Bolt 0.7.4, downloaded on first use and signature-checked). Run with PIG_TS_RUNTIME=aot. Experimental. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version."
+      ]
+    },
+    {
+      "id": "bench-lean",
+      "kind": "piglet",
+      "name": "bench-lean",
+      "description": "The lean bench Piglet: PiG with every built-in extension, extra model API and feature stripped (opt-in, keep mode), for footprint comparisons.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-lean"
+      },
+      "manifestSha256": "6d64deaf8dbac6ad2480f01c9dd0dcbcb7c06bfe0340dfd6d3527d21f70e356a",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Measurement Piglet for pi-arena: the footprint of a PiG that keeps no built-in extension, extra model API or feature (strip keep mode with empty lists; the tools and slash commands stay). Derived from pi-arena's fixtures/piglets/pig-min.yaml, same owner, MIT. It cannot load extensions; see the README.",
+        "Pin it by Pigpen commit (the manifest has a fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a PiG checkout; only linux/amd64 has been built and run."
+      ]
+    },
+    {
+      "id": "bench-standard",
+      "kind": "piglet",
+      "name": "bench-standard",
+      "description": "PiG Standard for pi-arena: the two pig games and the Bun runtime slot in one Piglet Binary.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-standard"
+      },
+      "manifestSha256": "eb456b02f0f210f6cbaa035e04755eb44ca62ab56595c1d8933e33ae4224a4b8",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Bench Piglet for pi-arena: the two pig games and the Bun runtime slot, the members of PiG Standard that are not built into the core since 0.4.0. Go only. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check). A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a PiG checkout; only linux/amd64 has been built and run."
+      ]
+    },
+    {
       "id": "herdr",
       "kind": "piglet",
       "name": "herdr",
@@ -83,8 +259,9 @@
         "Optional: the reporter is the standalone extension Package components/herdr, which works on its own in plain PiG without this Piglet.",
         "The extension does nothing unless PiG runs inside a herdr pane (HERDR_ENV=1 with HERDR_PANE_ID, HERDR_BIN_PATH and HERDR_SOCKET_PATH set), as herdr's published integration guide (https://herdr.dev/docs/add-herdr-support/) requires.",
         "With herdr 0.9.2 or later it also reports the resume command `pig --session <session file>`, so herdr restores the pig session in its pane after a server restart. The restore runs plain `pig` (no Piglet or launch flags), and an in-memory session reports no command. Older herdr keeps the state reports and the release; the resume command is left out.",
-        "It is a Go extension on PiG's public SDK: building the Piglet needs a Go toolchain, not Node.js. It does not honor the Pi-only herdr:blocked event, because the Go SDK has no pi.events bridge.",
-        "A local Piglet Binary builds with the reviewed PiG and reports to a fake herdr, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+        "It is a Go extension on PiG's public SDK: building the Piglet needs a Go toolchain, not Node.js. It also honors the herdr:blocked event on pi.events, through the Go SDK's bridge.",
+        "A local Piglet Binary builds with the reviewed PiG and reports to a fake herdr, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim.",
+        "Ported in part from herdr-pig (https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and Hai-Fai Solutions, Apache-2.0: the herdr plugin in herdr-plugin/ (herdr plugin install MichaelKinsy/pigpen/piglets/herdr/herdr-plugin) and the herdr:blocked listener. Their LICENSE and NOTICE ship beside that code."
       ]
     },
     {
@@ -197,6 +374,34 @@
       ]
     },
     {
+      "id": "pig-music",
+      "kind": "piglet",
+      "name": "pig-music",
+      "description": "PiG with a music player: /music opens a full-screen YouTube Music player (yt-dlp resolves, mpv plays) that keeps playing while it is hidden. Nothing starts until you type /music.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-music"
+      },
+      "manifestSha256": "982c5f89022b47d754539d1d78ea7ba32edb73856133e4869acf010746a83357",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Go only. A full-screen music player: /music (or alt+m) opens YouTube Music search, library, queue and transport over mpv, with yt-dlp resolving tracks; the music keeps playing while the player is hidden and survives /reload. The extension is the Package components/pig-music. Run npm run stage before using its generated manifest under dist/staged.",
+        "Nothing starts by itself. The extension registers the /music command and the alt+m shortcut and no tool: no mpv or yt-dlp process, no network, no cookie access, no footer or widget and no timer before you type /music. The library reads your browser's cookies only after you say yes, once per browser. mpv and yt-dlp are not bundled: /music setup and /music doctor check the machine.",
+        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; none is a support claim.",
+        "Also selected by pig-with-batteries."
+      ]
+    },
+    {
       "id": "pig-popular",
       "kind": "piglet",
       "name": "pig-popular",
@@ -267,7 +472,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-typesafe"
       },
-      "manifestSha256": "26a405aa179cb87a4ad22fa892d17028a8b943e51eee344394ce0ad8919a3aea",
+      "manifestSha256": "9ad38524a986ebf27b43ef1fb7d2e8811fb1cbc2d042adf37d03f7ca5fdc91ec",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -321,7 +526,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
       },
-      "manifestSha256": "5edd0f6a3c139dce6cec4e62ec7c1470336648afbe3929ffc274c9a3865126c3",
+      "manifestSha256": "f05d9a2814ef19f0464d6eb1d9da7b255c497c1205484761c3b823e4307b0ac0",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",

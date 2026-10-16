@@ -1,0 +1,54 @@
+{
+  "pig": {
+    "repo": "https://github.com/MichaelKinsy/PiG",
+    "revision": "a220c94a53"
+  },
+  "components": {
+    "bun-runtime": {
+      "from": "piglets/standard/extensions/bunruntime",
+      "extensionDir": "bunruntime",
+      "module": "github.com/MichaelKinsy/pigpen/bunruntime",
+      "package": "@pi-in-go/pigpen-bun-runtime",
+      "description": "The Bun TypeScript runtime slot (Go): installs a pinned, signature-checked Bun and runs TypeScript and JavaScript extensions on it instead of Node. Copied from PiG Standard.",
+      "patches": [
+        {
+          "file": "extension_test.go",
+          "from": "filepath.Join(\"..\", \"..\", \"..\", \"..\", \"coding\", \"extension\", \"host\", \"tsruntime\", \"lock.go\")",
+          "to": "filepath.Join(os.Getenv(\"PIG_SOURCE_ROOT\"), \"coding\", \"extension\", \"host\", \"tsruntime\", \"lock.go\")",
+          "why": "the lock lives in PiG's core, which is a separate checkout here: PIG_SOURCE_ROOT, the PiG source every Piglet build uses"
+        }
+      ]
+    },
+    "aot-runtime": {
+      "from": "piglets/aot/extensions/aotruntime",
+      "extensionDir": "aot-runtime",
+      "module": "github.com/MichaelKinsy/pigpen/aot-runtime",
+      "package": "@pi-in-go/pigpen-aot-runtime",
+      "rootFiles": [
+        {
+          "from": "piglets/aot/THIRD_PARTY_NOTICES.md",
+          "to": "THIRD_PARTY_NOTICES.md"
+        }
+      ],
+      "description": "The aot TypeScript runtime slot (Go): compiles a session's TypeScript extensions into one executable in the background and runs it from the next start. Copied from PiG's piglets/aot."
+    },
+    "bench-ext10": {
+      "revision": "4270b7d68b",
+      "from": "bench/evals/fixtures/extensions-go",
+      "extensionDir": ".",
+      "exclude": [
+        "standalone/",
+        "pig-ext10.yaml"
+      ],
+      "module": "github.com/MichaelKinsy/pigpen/bench-ext10",
+      "package": "@pi-in-go/pigpen-bench-ext10",
+      "description": "The ten bench-ext extensions of the overhead bench as Go factories (ports of bench/evals/fixtures/extensions/bench-ext-NN.ts), fused into one Piglet Binary: no subprocess, no IPC. Copied from PiG's ext-matrix branch."
+    },
+    "bench-ext10-ts": {
+      "from": "bench/evals/fixtures/extensions",
+      "extensionDir": ".",
+      "package": "@pi-in-go/pigpen-bench-ext10-ts",
+      "description": "The ten bench-ext extensions of the overhead bench as TypeScript files (no imports, no dependencies), the source the aot runtime compiles and the Node cell runs."
+    }
+  }
+}

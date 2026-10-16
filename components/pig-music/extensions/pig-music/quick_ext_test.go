@@ -1,10 +1,14 @@
 package pig_music_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/charmbracelet/x/ansi"
 )
 
 // /music settings: the status item cannot take a key, so a small overlay gives the basic settings.
@@ -125,4 +129,49 @@ func TestSwitchingThePaletteOffInTheBoxReachesTheRunningPlayer(t *testing.T) {
 	}
 	h.input("q")
 	<-done
+}
+
+// TestTheSettingsBoxFollowsThePlayerWhileOpen: what the box shows of the player (its clock, the volume, shuffle) changes with no
+// key, from the player's own state changes, and an open box over a player where nothing changes is not drawn again.
+func TestTheSettingsBoxFollowsThePlayerWhileOpen(t *testing.T) {
+	h, srv, _, p := playerEnv(t)
+	done := playFirstResult(t, h)
+	h.input("q")
+	<-done
+	ctx := context.Background()
+	// the fake mpv's clock moves only when told (Advance): nothing changes but what the test changes
+	done = h.command("music", "settings")
+	h.waitOpenN(2)
+	h.waitSnapshot("the quick settings", hasText("quick settings"))
+	srv.Advance(65)
+	h.waitSnapshot("the clock at 1:05", hasText("1:05/"))
+	if err := p.SetVolume(ctx, 35); err != nil {
+		t.Fatal(err)
+	}
+	h.waitSnapshot("the volume at 35", hasText("< 35 >"))
+	if err := p.SetShuffle(ctx, true); err != nil {
+		t.Fatal(err)
+	}
+	h.waitSnapshot("shuffle on", func(s snapshot) bool {
+		for _, l := range s.Lines {
+			if strings.Contains(l, "Shuffle") && strings.HasSuffix(strings.TrimSpace(ansi.Strip(l)), "on") {
+				return true
+			}
+		}
+		return false
+	})
+	n := h.snapshotCount()
+	time.Sleep(400 * time.Millisecond)
+	if got := h.snapshotCount(); got != n {
+		t.Errorf("the box was drawn %d more times with nothing changing", got-n)
+	}
+	h.input("q")
+	if failure := <-done; failure != "" {
+		t.Errorf("closing failed: %s", failure)
+	}
+	srv.Advance(10) // the box is gone: nothing is handed to it
+	if err := p.SetVolume(ctx, 40); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, "the volume at 40", func() bool { return p.State().Volume == 40 })
 }

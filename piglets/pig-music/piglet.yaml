@@ -1,0 +1,22 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# pig-music and nothing else: a full-screen YouTube Music player that does nothing until the user types /music.
+name: pig-music
+description: "PiG with a music player: /music opens a full-screen YouTube Music player (yt-dlp resolves, mpv plays) that keeps playing while it is hidden. Nothing starts until you type /music."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  pig-music: local:../../components/pig-music
+extensions:
+  # /music and alt+m. Registers no tool, so none is offered to the model. No mpv or yt-dlp spawn, no network, no cookie
+  # access, no footer or widget and no timer before the user types /music or presses alt+m.
+  - name: pig-music
+    origins: [package:pig-music]
+    tools: []
+skills: []
+# The composition adds no behavior beyond /music, so the user's own extensions and skills stay available beside it.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

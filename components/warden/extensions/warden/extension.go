@@ -108,10 +108,18 @@ func truthy(s string) bool {
 // load reads the file and applies the environment: PIGPEN_WARDEN_ENABLED turns warden on for a headless run,
 // PIGPEN_WARDEN_BACKEND names its backend (setting it is the consent), PIGPEN_WARDEN_MODE picks the mode, PIGPEN_WARDEN_STEER_VISIBLE=0|1 hides or shows steers in the transcript (default shown).
 func (w *warden) load(ctx sdk.Context) {
-	path := ConfigPath(ctx.ConfigHome())
-	cfg, err := LoadConfig(path)
+	home, homeErr := ctx.ConfigHome()
+	path := ""
+	cfg := DefaultConfig()
+	var err error
+	if homeErr == nil {
+		path = ConfigPath(home)
+		cfg, err = LoadConfig(path)
+	}
 	w.cfgPath, w.loadErr = path, ""
-	if err != nil {
+	if homeErr != nil {
+		w.loadErr = "warden: could not find the PiG config directory: " + homeErr.Error() + ". Defaults are in use."
+	} else if err != nil {
 		w.loadErr = "warden: could not read " + path + ": " + err.Error() + ". Defaults are in use."
 	}
 	w.fileCfg = cfg

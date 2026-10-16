@@ -22,7 +22,8 @@ from fetched source fails for Packages with third-party Go modules.
 PiG, or a `pig -p` / JSON / RPC run, leaves it playing when it exits. A PiG killed by a signal stops nothing (no shutdown event
 reaches the extension); `/music stop` or `pigmusic stop` ends that music. Keys added: `s` shuffle (the playing track stays first
 and keeps playing; the rest of the queue follows in random order), `l` repeat (off, all, one; with all, `n` on the last track
-goes to the first; turning shuffle off needs mpv 0.37), `o` the settings screen (`stopOnExit`, `footerStatus`, saved at once to `settings.json`). `/music`
+goes to the first; turning shuffle off needs mpv 0.37; the shuffle is marked in mpv itself, a `user-data` property of mpv 0.36
+and later, so a PiG or `pigmusic` that finds the music playing again shows it on), `o` the settings screen (`stopOnExit`, `footerStatus`, saved at once to `settings.json`). `/music`
 opens on Search when nothing is playing and the library cannot list anything; the error stays on the Library tab.
 
 ## Library and liked songs (cookies, with your yes)
@@ -156,14 +157,105 @@ artists, album, length, cover URL: no cookie, no browser name) is kept in the da
 once, marked "updating...", and the live answer replaces it behind the rows. Withdrawing the consent deletes it.
 While a track plays, the stream of the next one is resolved ahead (4 s after it becomes next), and mpv uses that answer when the
 track starts: the silence between two tracks went from 3.5-4.3 s to 0.57-0.97 s here (`PIG_MUSIC_PREFETCH=off` turns it off;
-Windows and the native engine do not prefetch). A prefetched stream that does not open (the stream URLs are bound to the network
-address that resolved them) is resolved afresh the next time. Details and numbers: the progress note, "Milestone 10a".
+Windows and the native engine do not prefetch). A prefetched answer is used for an hour at most, and not within an hour of its
+stream URLs' expiry.
+A stream YouTube refuses (the stream URLs are bound to the network address that resolved them, and expire) either does not open
+or ends where the refusal began, which mpv took for the end of the track: with repeat one it played the first seconds again and
+again. The player now resolves such a track afresh and resumes it where it stopped, once (a track that does not open is retried
+only when its prefetched answer was used; one that is gone or blocked is passed over as before; with two PiGs on one player,
+one of them does it, named in mpv). Cut again within a minute, the track is skipped (or the music stops when nothing else is
+queued, whatever the repeat mode), and the reason shows on the
+player's status line, or as a PiG notification while the player is hidden. Details and numbers: the progress note, "Milestone 10a".
+
+YouTube may refuse a stream for a few seconds after it was resolved (yt-dlp's `available_at`: newer yt-dlp resolves with a client
+that gets a pre-roll ad, and the stream answers 403 until the ad could have been skipped, 5 s here). mpv 0.41 does not wait for
+it, so the player's yt-dlp stand-in holds the answer until then (a minute at most; longer is reported as a failure), and so does
+the stream probe of `/music setup` and `pigmusic doctor --probe`. mpv reads a stream in 10 MiB ranges: YouTube serves a single
+request for more (a track longer than about 11 minutes) at about 32 KiB/s and cuts it after about 12 minutes; in ranges such a
+track is in mpv's cache within seconds (with FFmpeg 8.1 or later; an older FFmpeg ignores the setting).
+`tests/youtube-canary.sh` plays real tracks with the stable and the nightly yt-dlp and reports what changed (run it by hand).
 
 ## Albums, artists and wide listings (milestone 10b)
 
 Track lists show title, artist, album and length, and the album column drops first on a narrow screen (under 90 cells), then the
 artist (under 50). Explicit tracks carry an `E`. A search lists albums and artists too: `1` songs, `2` albums, `3` artists, enter
 opens one (its tracks, or an artist's top songs), enter there plays, backspace goes back.
+
+## Lyrics (milestone 10c)
+
+The Player screen shows the lyrics in place of the queue: the line being sung is lit and a sweep follows it across the line, the
+lines around it are dimmed, and the sheet scrolls under it (the sung line stays a third of the way down). Synced lyrics come from LRCLIB (https://lrclib.net), plain ones from
+YouTube Music. `L` switches back to the queue, `,` and `.` move the lyrics 0.1 s earlier or later (remembered for the track),
+`PIG_MUSIC_LYRICS=off` turns it off. Lyrics are looked up only while they are on screen, and kept in the data directory.
+
+## Artist, album, radio, related (milestone 10d)
+
+On a song (in the search results, the library, the queue or the Player screen) press `A` for its artist's page (top songs, albums, singles, videos, similar
+artists), `B` for its album, `R` for its radio (the mix YouTube Music builds from it) and `T` for what is related. Enter on an album or artist in the search results
+opens its page too. On a page: Enter plays (or opens an album, artist or playlist), `P` plays everything, `S` plays it shuffled, `a` adds a song, Esc or backspace
+goes back one page (the breadcrumbs say where you are) and `q` hides the player. `/music artist`, `/music album`, `/music radio` and `/music related` open the player on that
+page of the song that is playing. No cookie is used.
+
+## The stage (milestone 10e)
+
+From 132 columns the Player screen is a stage: the cover and track on the left, the lyrics in the middle and the queue as a rail on the right;
+on the stage `A` `B` `R` `T` act on the queue rail's cursor. From 80 to 131 columns it is two columns: the cover and track, and one panel,
+the lyrics or the queue, switched by `L` or a click on the `Lyrics` / `Up Next` tabs over it; while the lyrics show, the next three
+tracks are listed under the track (a click jumps to one). Under 80 the track sits over the panel, with its
+cover from 50 columns, and names the next track. In the last 10 seconds of a track a card names the
+next one, in the place of the queue count and modes. Volume, seek, shuffle and repeat are confirmed on the status line. In a
+terminal only a few rows high the player is a strip with the track and its bar. Stills of the screen (80x24, 120x40, 200x60, the strip, the card, the queue, NO_COLOR) are in
+`docs/plan/progress/pig-music-stills/`.
+
+## The Search screen's home
+
+Before anything is searched the Search screen shows **Recents** (what was searched and played here, newest first, kept in
+`<agent dir>/pig-music/recents.json`, a private file of metadata only; `C` or a click on `C clear` deletes it), **Suggested**
+(the first shelves of your YouTube Music home, read only with the consent the Library asks for; without it a line says where to
+give it) and **Popular** (YouTube Music's top music-videos chart, no account). The feeds load when the home is first seen, from
+the last session's copy (`<agent dir>/pig-music/library/home.json`) first, and never on the update loop; offline, the copy stays
+with a note and `r` tries again. `enter` or a click plays a track (the queue becomes its shelf from there), runs a search
+again or opens a playlist or album; `backspace` on results, or an empty search, comes back to the home.
+
+## In a frontend: the component kit (PiG D103)
+
+The player, `/music settings` and the now-playing widget go to PiG as kit views (`kitview.go`), so a D91 frontend such as Tern
+draws them with its own elements: the cover as the picture itself (its JPEG or PNG file, sent once), the play bar and the
+widget's position as bars, the track tables, pages, collections and settings as lists, the line being sung as a node of its
+own, text as text, the tab bar and the Songs, Albums, Artists line of a search as a node per tab, and the track's palette as
+theme overrides (accent, muted, dim, text, error). The terminal shows exactly what it showed before: every row is the screen's
+own, byte for byte, except the Player stage's columns and the rows of tabs, which PiG joins with resets of its own and which
+keep every cell. Tern drops a text node of spaces alone, so a row of tabs has no such node: each gap, and the rest of the
+row, ends the tab node before it, and the row's margin is part of its first tab (a click there shows that tab).
+`kitparity/run.sh <PiG checkout>` checks this with PiG's own renderer at 50, 80, 120, 140 and 200 columns.
+A terminal narrower than the tab bar (under 28 columns) gets it as the one text row it is.
+
+## The mouse
+
+In PiG's fullscreen mode (the default; regular mode leaves the mouse to the terminal, as Pi does) the player and `/music
+settings` take the mouse through the SDK's `HandleMouse`, and do what the keys do where a click lands, found from the same
+layout code that draws the screen (`ui/mouse.go`):
+
+| Where | Click | Double click | Wheel |
+|---|---|---|---|
+| a tab (Search, Library, Player) | shows it (`tab`/`shift+tab`; a prompt being typed is left first, as `esc`) | | |
+| the Songs, Albums, Artists line of a search | shows that kind (`1` `2` `3`) | | |
+| a row of a track table, the albums or artists, the Search home (Recents, Suggested, Popular), a page, the collections | chooses it, as YouTube Music and Pi's `SelectList` do: moves the cursor there and plays the track, or opens the album, artist, playlist or page, or searches the recent query (`up`/`down`, then `enter`) | nothing more: the first click chose, so a track plays once | moves the cursor a row |
+| a row of the queue (Up Next, the short Up Next beside the lyrics, the stage's rail) | jumps to that track (`enter`) | nothing more | moves the cursor a row |
+| the Lyrics, Up Next tabs over the Player's panel; the Recents' `C clear` | presses its key (`L`, `C`) | | |
+| a row of the settings screen (`o`) | selects and toggles it (`space`), every click | | moves the cursor a row |
+| the play bar's bar | seeks to the middle of that cell's share of the track | | |
+| a row of `/music settings` | selects it and changes it as `right` does (`left` on the `<` of the volume), every click | | moves the selection |
+
+The keyboard is unchanged: the arrows move the selection and `enter` chooses it. The second click of a double click (PiG's
+click count 2, Tern's activate) does nothing on a list, whatever row it lands on: the first click may have scrolled the list or
+left the screen (a track played shows the Player).
+
+Everything else (the header, the rule, the lyrics, the status and key lines, the cover, help) does nothing. PiG counts a
+component that takes the mouse as handling every event over it, so text selection does not start over the player. In Tern,
+PiG turns a click on a list row into the same click on that row, and a click on a tab (of the tab bar, or of the Songs,
+Albums, Artists line) into a click on the tab's first cell, which shows it. The play bar is a bar row that Tern can click
+only at its first cell, so its click on the bar seeks by the row's width, not the bar's.
 
 ## The native engine (M4b)
 
@@ -205,7 +297,8 @@ The Player screen shows the track's cover, drawn as half blocks (24-bit colour, 
 `NO_COLOR` is honoured), or a braille disc that turns while the music plays and stands still when paused or hidden. The
 extension cannot draw terminal images (Kitty, iTerm2, sixel), so none is attempted. Covers are public thumbnails fetched over
 HTTPS without cookies and cached under the extension's data directory (20 MiB cap); set `"coverArt": false` in `settings.json`
-for the disc only. The footer status has a one-character record spinner while playing.
+(or switch Cover art off in `/music settings`, which the running player follows at once, with no `/reload`) for the disc only,
+and nothing is fetched. The footer status has a one-character record spinner while playing.
 
 ## Settings from the status line (milestone 7b)
 
@@ -213,6 +306,10 @@ A status item cannot take keys, so `/music settings` opens a small box: volume, 
 the now-playing line shows, and cover art. If another extension replaces PiG's footer (which hides every extension's status), set
 `"nowPlaying": "widget"` in `settings.json` (or choose it in that box): the same line, with the spinner, shows above the editor
 while the player is hidden. `auto` is the footer for now.
+While the box is open it follows the player: the track, its clock, the volume, shuffle and repeat change as the music does, whoever
+changed them. It is handed the player's own state changes, only when something it shows changes (about once a second while the
+music plays; paused or stopped, only when a value changes). It has no timer and nothing moves in it, so calm and low power leave it
+as it is.
 
 ## Quick commands (milestone 7c)
 
