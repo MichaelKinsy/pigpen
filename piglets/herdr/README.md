@@ -29,6 +29,8 @@ The extension follows herdr's published guide, [Add Herdr support to your agent]
 | `agent_settled` | `idle`, once no retry, compaction or queued continuation remains |
 | `ui_prompt_start` | `blocked`, with the prompt title as the message: `select`, `confirm`, `input`, `editor` and `custom` dialogs from any extension |
 | `ui_prompt_end` | back to `working` or `idle` |
+| `herdr:blocked` on `pi.events` with `{ active: true, label }` | `blocked`, with the label as the message |
+| `herdr:blocked` with `{ active: false }` | back to `working` or `idle` once no other block holds |
 | `session_shutdown` with reason `quit` | `pane release-agent` |
 
 - **Session.** Every report carries `--agent-session-path` (an absolute session file) and `--agent-session-id`. A new, resumed or forked session is reported as soon as it starts.
@@ -37,7 +39,7 @@ The extension follows herdr's published guide, [Add Herdr support to your agent]
 - **Release.** Only a real quit releases the pane. Reload and session replacement do not, so the successor's first report cannot race a release.
 - **Best effort.** Each call has a three-second limit and a failure is ignored. It never slows the agent down.
 - **Interactive only.** RPC, JSON and print runs report nothing, because herdr can only show a pane's terminal.
-- **No `herdr:blocked` bus event.** The earlier TypeScript extension also honored that `pi.events` event. The reporter does not listen to it yet (PiG's Go SDK has the `pi.events` bridge since 0.4.0), so only UI prompts report `blocked`.
+- **`herdr:blocked` bus event.** Another extension can mark a block that is not a UI prompt by emitting `herdr:blocked` with `{ active, label }` on `pi.events`, the convention herdr's own Pi integration uses. Blocks are counted per holder, so a bus release cannot end an open prompt's block, nor the other way round. The listener is ported from herdr-pig (see [Credits](#credits)).
 
 ## Resume after a herdr restart
 
@@ -65,6 +67,54 @@ cause: `herdr: pane report-agent failed: exit status 1: error: pane p_9 not foun
 call succeeds again. A report that only an old herdr refuses because of the resume command is retried without it and stays
 silent. This diagnostic came from the `herdr-agent-state` extension of pigpen pull request 2 (Yu Li, @liyu1981).
 
+## Install from herdr
+
+The [`herdr-plugin/`](herdr-plugin/) directory is a herdr plugin, ported from herdr-pig, that installs the reporter Package
+from herdr's side. It needs `pig` on `PATH` and herdr 0.9.2 or later:
+
+```sh
+herdr plugin install MichaelKinsy/pigpen/piglets/herdr/herdr-plugin
+```
+
+Installing it runs `pig install npm:@pi-in-go/pigpen-herdr`; restart `pig`, or run `/reload`. It adds the herdr actions
+`pigpen-herdr.install`, `pigpen-herdr.uninstall` and `pigpen-herdr.status` (with `-windows` variants that run the
+PowerShell script), each of which shows its result as a herdr notification. Run the uninstall action before
+`herdr plugin uninstall pigpen-herdr`, because herdr has no uninstall hook. The install also removes the TypeScript
+extension an earlier herdr-pig plugin copied to `~/.pig/agent/extensions/herdr-pig-agent-state.ts` (only when it carries
+herdr-pig's ownership marker), so one pane never has two reporters. Without herdr, `sh herdr-plugin/scripts/pig-support.sh
+install` (or `pig-support.ps1` on Windows) does the same. Use the plugin or this Piglet, not both in one pane.
+`PIGPEN_HERDR_PACKAGE` in herdr's environment installs another source instead of npm, for example a checkout's
+`components/herdr` or an unpacked `npm pack` of it (`pig install` takes a directory, not a `.tgz`).
+
+## Credits
+
+Pigpen's herdr support merges two implementations. The reporter and this Piglet are Pigpen's own (MIT). The herdr plugin
+in [`herdr-plugin/`](herdr-plugin/) and the `herdr:blocked` listener come from
+[herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer ([@cpolzer](https://github.com/cpolzer))
+and Hai-Fai Solutions, ported with their permission
+([PiG#204](https://github.com/MichaelKinsy/PiG/issues/204)) at v0.2.1. That code stays under the Apache License 2.0: see
+[`herdr-plugin/LICENSE`](herdr-plugin/LICENSE) and [`herdr-plugin/NOTICE`](herdr-plugin/NOTICE), and for the listener
+[`components/herdr/NOTICE`](../../components/herdr/NOTICE). herdr-pig is itself based on herdr's Pi integration
+(Apache-2.0).
+
+Where the two differed, Pigpen kept the better behaviour per feature:
+
+| Feature | Kept | Why |
+| --- | --- | --- |
+| Extension language | Pigpen's Go reporter | No Node.js needed; it fuses into a Piglet Binary |
+| Transport | Pigpen's `herdr pane report-agent` CLI calls | herdr's documented contract; the CLI finds the socket or pipe itself on every platform |
+| `blocked` from UI prompts | Pigpen's | herdr-pig could not detect PiG's own prompts |
+| `blocked` from `herdr:blocked` | herdr-pig's | Pigpen's Go reporter had no listener; now ported, counted per holder |
+| Resume fallback | Pigpen's `pig --session-id <id>` | herdr-pig's `pig --session <id>` asks to fork from another directory |
+| In-memory sessions | Pigpen's (no resume command) | resuming the id would create a new session |
+| Old herdr | Pigpen's (retry without the resume command) | state keeps working on herdr before 0.9.2 |
+| Failure reporting | Pigpen's one-line stderr diagnostic | herdr-pig failed silently |
+| Retry | Pigpen's single call with a 3 s limit | herdr-pig retried once (0.5 s, then 1.5 s); either keeps PiG unblocked |
+| Install from herdr | herdr-pig's plugin, adapted | Pigpen had none; it now installs the Go Package with `pig install` |
+| Plugin startup refresh | dropped | `pig update` updates the Package; a refresh would hit npm on every herdr start |
+| Plugin ownership check | herdr-pig's marker, used to replace its old copy | `pig install` and `pig remove` own the Package itself |
+| `PIG_USE_PI_DIRS=1` refusal | herdr-pig's | shared settings would hand the Package to Pi |
+
 ## Layout
 
 ```text
@@ -73,6 +123,7 @@ catalog.json                    presentation metadata
 tests/pig.integration.test.ts   real pig in tmux against a fake herdr (npm run test:pig)
 tests/fixtures/ask/             Go fixture: /ask opens a confirmation for the blocked step
 ../../components/herdr/         the reporter Package: extensions/herdr/ (Go, with its tests)
+herdr-plugin/                   herdr plugin ported from herdr-pig (Apache-2.0, LICENSE and NOTICE inside)
 ```
 
 Run the unit tests with `PIG_BIN=pig npm run test:go`. `pig-with-batteries` selects the same reporter Package alongside its own resources. Both Piglets build a Binary; `npm run test:pig` runs the real-pig scenario from source and, with `PIG_SOURCE_ROOT`, as a built Binary.

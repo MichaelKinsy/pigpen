@@ -42,12 +42,22 @@ type Deps struct {
 	// NoColor: the user asked for no colour (art.NoColor: NO_COLOR, TERM=dumb), so not even the accents' basic colours are
 	// written; they become bold.
 	NoColor bool
+	// Lyrics finds a track's lyrics and remembers the user's nudge; nil means no lyrics view.
+	Lyrics music.LyricsProvider
+	// Recents keeps the Search screen's history (what was searched, and what the user chose to play); nil means none.
+	Recents music.Recents
+	// Now is the clock of the lyrics' sweep between two reports of the player's position; nil means time.Now. Tests replace it.
+	Now func() time.Time
 	// Tick schedules the next animation frame; nil means tea.Tick. Tests replace it.
 	Tick func(time.Duration) tea.Cmd
 }
 
 // StateMsg carries a new player state; the host forwards Player.Subscribe into it.
 type StateMsg music.State
+
+// NoticeMsg is a one-line message from the player that no command asked for (a track it moved past, and why): it shows on the
+// status line until the next key.
+type NoticeMsg string
 
 type searchDoneMsg struct {
 	query  string
@@ -62,15 +72,6 @@ type entitiesDoneMsg struct {
 	ents  []music.Entity
 	err   error
 	gen   int
-}
-
-// entityOpenedMsg is the tracks of an opened album or artist.
-type entityOpenedMsg struct {
-	id     string
-	title  string
-	tracks []music.Track
-	err    error
-	gen    int // the opening it answers (entityPage.gen): the same album opened again is a newer one
 }
 
 // ShowPlayerMsg switches to the Player screen: the host sends it when the player was already playing before the screen
@@ -92,6 +93,10 @@ type enrichedMsg struct {
 
 // StyleMsg replaces the four switches of how the player looks and moves while it runs: the settings screen sends it.
 type StyleMsg struct{ Palette, Pulse, Calm, LowPower bool }
+
+// ArtMsg replaces the cover art source while the player runs (the settings screen's Cover art switch): nil leaves the disc
+// alone at once, and a source asks for the playing track's cover.
+type ArtMsg struct{ Art music.Artwork }
 
 // ClosedMsg tells the model its screen was hidden: the animation stops until OpenedMsg.
 type ClosedMsg struct{}
@@ -149,17 +154,33 @@ type Model struct {
 	loading  bool
 	results  []music.Track
 	resCur   int
+	home     homeState // what the Search screen shows before anything is searched (home.go)
 	enr      *enrichState
+
+	// lyrics (lyrics.go): lyricsOff is the user's L; posAt when the player last reported its position
+	toast      string // a confirmation of the last key (volume, seek, shuffle, repeat), shown for toastFor
+	toastAt    time.Time
+	toastArmed bool // a timer will clear the toast (toastDoneMsg)
+	lyr        lyricState
+	lyricsOff  bool
+	posAt      time.Time
 
 	// albums and artists of the search, and the one that is open (entities.go)
 	ents    []music.Entity
 	entKind string // "songs", "albums" or "artists": which list the search screen shows
 	entCur  int
-	ent     *entityPage
-	// stop the requests of the search on screen and of the album or artist being opened: a newer search, or leaving the
-	// page, cancels them rather than let them run on for up to opTimeout/libTimeout.
-	searchStop, entStop context.CancelFunc
-	searchGen, entGen   int // counts searches and openings, so a cancelled answer of an earlier one is told apart
+	// stop the request of the search on screen: a newer search cancels it rather than let it run on for up to opTimeout.
+	searchStop context.CancelFunc
+	searchGen  int // counts searches, so a cancelled answer of an earlier one is told apart
+
+	// the pages opened over the screen (pages.go): the stack, the screen they were opened from, how many were opened (so an
+	// answer for one that was left is told apart), the cancel of the request in flight, and what YouTube Music said about
+	// the tracks the "go to" keys were used on
+	pages    []*pageView
+	pagesTab string
+	pageGen  int
+	stopCell *stopCell
+	watches  map[string]music.Watch
 
 	// animation and cover art
 	hidden  bool // the screen is hidden (ClosedMsg): nothing animates
@@ -199,7 +220,14 @@ type Model struct {
 
 // New returns the model in its starting state: the search screen, nothing playing.
 func New(d Deps) Model {
-	return Model{deps: d, tab: tabSearch, state: music.State{Index: -1}, enr: newEnrichState(), artBad: map[string]bool{}, artDraw: &artDrawn{}, lvSync: &levelsSync{}, queueGen: &atomic.Uint64{}, pal: art.FromTrack("", "")}
+	return Model{deps: d, tab: tabSearch, state: music.State{Index: -1}, enr: newEnrichState(), stopCell: &stopCell{}, watches: map[string]music.Watch{}, artBad: map[string]bool{}, artDraw: &artDrawn{}, lvSync: &levelsSync{}, queueGen: &atomic.Uint64{}, pal: art.FromTrack("", "")}
+}
+
+// Hidden is m as a screen that is not shown yet (as after ClosedMsg): nothing animates, and the Search screen's home does not
+// load, until OpenedMsg.
+func (m Model) Hidden() Model {
+	m.hidden = true
+	return m
 }
 
 // Tab names the screen being shown: "search", "library" or "player".
@@ -260,8 +288,13 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.fading { // nobody is looking: no animation, the new colours are simply there
 			m.pal, m.fading = m.palTo, false
 		}
+	case ArtMsg:
+		if (msg.Art == nil) != (m.deps.Art == nil) { // switched: the cover, its request and its palette start again
+			m.artID, m.artImg, m.artReq, m.palID = "", nil, "", ""
+		}
+		m.deps.Art = msg.Art
 	case artMsg:
-		if cur := m.state.Track; cur != nil && cur.ID == msg.id {
+		if cur := m.state.Track; m.deps.Art != nil && cur != nil && cur.ID == msg.id { // a cover that came after the switch went off is dropped
 			if msg.err != nil || msg.img == nil {
 				m.artBad[msg.id] = true // the disc stays; a cover that is not there is not worth an error
 			} else {
@@ -287,6 +320,7 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m = m.settingsSaved(msg)
 	case OpenedMsg:
 		m.hidden = false
+		m = m.followLyrics()
 		if m.tab == tabLibrary && m.state.Track == nil {
 			switch m.lib.state {
 			case libConsent, libDeclined, libProblem:
@@ -307,11 +341,23 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m.pump()
 		}
+	case toastDoneMsg:
+		m.toastArmed = false
+		if m.now().Sub(m.toastAt) >= toastFor {
+			m.toast = ""
+		}
+	case lyricsMsg:
+		m = m.lyricsArrived(msg)
 	case entitiesDoneMsg:
 		m = m.entitiesDone(msg)
-	case entityOpenedMsg:
-		m = m.entityOpened(msg)
-		return m.pump() // an artist's top songs come without a length
+	case recentsMsg, homeCachedMsg, popularMsg, suggestedMsg:
+		return m.homeMsg(msg)
+	case pageOpenedMsg:
+		return m.pageOpened(msg)
+	case watchMsg:
+		return m.watched(msg)
+	case GoMsg:
+		return m.goMsg(msg)
 	case enrichedMsg:
 		m.enr.inflight--
 		if msg.err != nil {
@@ -336,25 +382,35 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m = m.libraryDone(libraryDoneMsg{err: msg.err}) // another browser in use now is asked about, not granted
 			break
 		}
+		if m.home.sug == feedConsent {
+			m.home.asked = false // the suggestions may load now: the home asks again when it is next seen
+		}
 		return m.loadLibrary(true)
 	case opDoneMsg:
 		if msg.err != nil {
 			m.status = msg.err.Error()
 		}
+	case NoticeMsg:
+		m.status = string(msg)
 	case tea.KeyPressMsg:
 		return m.key(msg)
+	case MouseMsg:
+		return m.mouse(msg)
 	}
 	return m, nil
 }
 
 func (m Model) withState(s music.State) Model {
 	followed := s.Index >= 0 && s.Index != m.state.Index
+	if s.Position != m.state.Position || s.Paused != m.state.Paused {
+		m.posAt = m.now() // the player's own report: the sweep is measured from it
+	}
 	m.state = s
 	if followed {
 		m.queueCur = s.Index
 	}
 	m.queueCur = clamp(m.queueCur, len(s.Queue))
-	return m
+	return m.followLyrics()
 }
 
 func clamp(i, n int) int {
@@ -395,6 +451,9 @@ func (m Model) key(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	p := m.deps.Player
+	if next, cmd, handled := m.pageKey(k); handled {
+		return next, cmd
+	}
 	if m.tab == tabLibrary {
 		switch {
 		case k == "esc" && m.lib.state == libReady && m.lib.open != nil:
@@ -412,6 +471,9 @@ func (m Model) key(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "o":
 		return m.openSettings()
 	case "/":
+		if m.tab != tabSearch {
+			m = m.clearPages()
+		}
 		m.tab, m.typing = tabSearch, true
 	case "tab":
 		return m.goTab(1)
@@ -424,8 +486,10 @@ func (m Model) key(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "p":
 		return m, op(func(ctx context.Context) error { return p.Prev(ctx) })
 	case "right":
+		m = m.toasted(fmt.Sprintf("Seek +%ds", int(seekStep/time.Second)))
 		return m, op(func(ctx context.Context) error { return p.SeekRelative(ctx, seekStep) })
 	case "left":
+		m = m.toasted(fmt.Sprintf("Seek -%ds", int(seekStep/time.Second)))
 		return m, op(func(ctx context.Context) error { return p.SeekRelative(ctx, -seekStep) })
 	case "s":
 		modes, ok := p.(music.Modes)
@@ -434,6 +498,7 @@ func (m Model) key(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		on := !m.state.Shuffle
+		m = m.toasted("Shuffle " + map[bool]string{true: "on", false: "off"}[on])
 		return m, op(func(ctx context.Context) error { return modes.SetShuffle(ctx, on) })
 	case "l":
 		modes, ok := p.(music.Modes)
@@ -442,14 +507,25 @@ func (m Model) key(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		next := map[music.RepeatMode]music.RepeatMode{music.RepeatOff: music.RepeatAll, music.RepeatAll: music.RepeatOne, music.RepeatOne: music.RepeatOff}[m.state.Repeat]
+		m = m.toasted("Repeat " + string(next))
 		return m, op(func(ctx context.Context) error { return modes.SetRepeat(ctx, next) })
 	case "+", "=":
 		v := min(m.state.Volume+volumeStep, 100)
+		m = m.toasted(volumeToast(v))
 		return m, op(func(ctx context.Context) error { return p.SetVolume(ctx, v) })
 	case "-", "_":
 		v := max(m.state.Volume-volumeStep, 0)
+		m = m.toasted(volumeToast(v))
 		return m, op(func(ctx context.Context) error { return p.SetVolume(ctx, v) })
 	default:
+		if m.tab == tabPlayer {
+			if next, cmd, handled := m.lyricsKey(k); handled {
+				return next, cmd
+			}
+		}
+		if next, cmd, handled := m.goKey(k); handled {
+			return next, cmd
+		}
 		switch m.tab {
 		case tabSearch:
 			return m.searchKey(k)
@@ -470,6 +546,7 @@ func (m Model) goTab(delta int) (tea.Model, tea.Cmd) {
 		}
 	}
 	m.tab = tabOrder[(i+delta+len(tabOrder))%len(tabOrder)]
+	m = m.clearPages() // leaving the screen the pages were opened from ends them
 	switch m.tab {
 	case tabPlayer:
 		if m.state.Index >= 0 {
@@ -492,35 +569,12 @@ func (m Model) typingKey(msg tea.KeyPressMsg, k string) (tea.Model, tea.Cmd) {
 		m.typing = false
 		q := trimSpace(m.query)
 		if q == "" {
+			if m.homeActive() && m.searched != "" { // an empty search goes back to the home
+				m = m.clearSearch()
+			}
 			return m, nil
 		}
-		m.searched, m.loading, m.results, m.resCur = q, true, nil, 0
-		m.ents, m.entKind, m.entCur, m.ent = nil, "", 0, nil
-		m = m.stopEntity()
-		if m.searchStop != nil {
-			m.searchStop() // the search this one replaces
-		}
-		parent, stop := context.WithCancel(context.Background())
-		m.searchStop = stop
-		m.searchGen++
-		gen := m.searchGen
-		m.enr.retryFailed()
-		src := m.deps.Source
-		songs := func() tea.Msg {
-			ctx, cancel := context.WithTimeout(parent, opTimeout)
-			defer cancel()
-			tracks, err := src.Search(ctx, q, searchLimit)
-			return searchDoneMsg{q, tracks, err, gen}
-		}
-		if es, ok := src.(music.EntitySearcher); ok {
-			return m, tea.Batch(songs, func() tea.Msg {
-				ctx, cancel := context.WithTimeout(parent, opTimeout)
-				defer cancel()
-				ents, err := es.SearchEntities(ctx, q, entitiesPerKind)
-				return entitiesDoneMsg{q, ents, err, gen}
-			})
-		}
-		return m, songs
+		return m.search(q)
 	case "backspace":
 		if r := []rune(m.query); len(r) > 0 {
 			m.query = string(r[:len(r)-1])
@@ -533,7 +587,58 @@ func (m Model) typingKey(msg tea.KeyPressMsg, k string) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// search searches for q (a query typed, or a search of the Recents) and remembers it in the Recents.
+func (m Model) search(q string) (tea.Model, tea.Cmd) {
+	m.typing = false
+	m.searched, m.loading, m.results, m.resCur = q, true, nil, 0
+	m.ents, m.entKind, m.entCur = nil, "", 0
+	m = m.clearPages()
+	if m.searchStop != nil {
+		m.searchStop() // the search this one replaces
+	}
+	parent, stop := context.WithCancel(context.Background())
+	m.searchStop = stop
+	m.searchGen++
+	gen := m.searchGen
+	m.enr.retryFailed()
+	src := m.deps.Source
+	songs := func() tea.Msg {
+		ctx, cancel := context.WithTimeout(parent, opTimeout)
+		defer cancel()
+		tracks, err := src.Search(ctx, q, searchLimit)
+		return searchDoneMsg{q, tracks, err, gen}
+	}
+	remember := m.remember(music.Recent{Query: q})
+	if es, ok := src.(music.EntitySearcher); ok {
+		return m, tea.Batch(songs, func() tea.Msg {
+			ctx, cancel := context.WithTimeout(parent, opTimeout)
+			defer cancel()
+			ents, err := es.SearchEntities(ctx, q, entitiesPerKind)
+			return entitiesDoneMsg{q, ents, err, gen}
+		}, remember)
+	}
+	return m, tea.Batch(songs, remember)
+}
+
+// clearSearch leaves the results: the Search screen shows its home again.
+func (m Model) clearSearch() Model {
+	if m.searchStop != nil {
+		m.searchStop()
+		m.searchStop = nil
+	}
+	m.searchGen++ // an answer still on its way is for a search that is gone
+	m.query, m.searched, m.loading, m.results, m.resCur = "", "", false, nil, 0
+	m.ents, m.entKind, m.entCur = nil, "", 0
+	return m.clearPages()
+}
+
 func (m Model) searchKey(k string) (tea.Model, tea.Cmd) {
+	if m.homeShown() {
+		return m.homeKey(k)
+	}
+	if k == "backspace" && m.homeActive() && m.searched != "" { // back from the results to the home
+		return m.clearSearch(), nil
+	}
 	if next, cmd, handled := m.entityKey(k); handled {
 		return next, cmd
 	}
@@ -552,7 +657,7 @@ func (m Model) searchKey(k string) (tea.Model, tea.Cmd) {
 		p, res, at := m.deps.Player, m.filled(m.results), m.resCur
 		m.tab = tabPlayer
 		m.queueGen.Add(1) // a collection still being added to the queue is not the queue any more
-		return m, op(func(ctx context.Context) error { return p.Replace(ctx, res, at) })
+		return m, tea.Batch(op(func(ctx context.Context) error { return p.Replace(ctx, res, at) }), m.remember(music.Recent{Track: &res[at]}))
 	case "a":
 		if n == 0 {
 			return m, nil

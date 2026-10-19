@@ -122,6 +122,20 @@ func (l *Library) TracksPage(ctx context.Context, id string, from, n int) ([]mus
 	return append([]music.Track(nil), st.tracks[from:last]...), last < len(st.tracks) || !st.done, nil
 }
 
+// Home is the first page of the account's YouTube Music home (FEmusic_home, signed): its sections in order. It is not kept: a
+// home changes from one visit to the next.
+func (l *Library) Home(ctx context.Context) ([]music.Section, error) {
+	data, err := l.C.Browse(ctx, map[string]any{"browseId": native.HomeID})
+	if err != nil {
+		return nil, err
+	}
+	secs, err := native.ParseHome(data)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrShape, err)
+	}
+	return secs, nil
+}
+
 // browseID is what a collection is browsed by: an album by its own ID, a playlist (the liked songs too) by "VL" and its ID.
 func browseID(id string) string {
 	if strings.HasPrefix(id, "MPREb_") {

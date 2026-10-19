@@ -40,6 +40,12 @@ type artDrawn struct {
 func (m Model) settle() (Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	vibes := m.vibes()
+	var lyricsCmd tea.Cmd
+	m, lyricsCmd = m.fetchLyrics()
+	cmds = append(cmds, lyricsCmd)
+	var toastCmd tea.Cmd
+	m, toastCmd = m.toastTimer()
+	cmds = append(cmds, toastCmd)
 	cur := m.state.Track
 	if cur != nil && m.artID != cur.ID {
 		m.artImg = nil // the old cover is not this track's
@@ -99,9 +105,16 @@ func (m Model) settle() (Model, tea.Cmd) {
 			every = pulseEvery
 		case m.fading:
 			every = fadeEvery
+		case m.lyricsAnimating() && !m.discTurning():
+			every = lyricEvery
 		}
 		m.lastTick = every
 		cmds = append(cmds, tick(every))
+	}
+	if m.homeShown() && !m.hidden && !m.home.asked { // the home loads when it is first seen, never before
+		var homeCmd tea.Cmd
+		m, homeCmd = m.loadHome(true)
+		cmds = append(cmds, homeCmd)
 	}
 	return m, tea.Batch(cmds...)
 }
@@ -201,7 +214,7 @@ func (m Model) advance() Model {
 	if m.fading {
 		m = m.stepFade()
 	}
-	return m
+	return m.followLyrics()
 }
 
 func (m Model) stepFade() Model {
@@ -215,7 +228,9 @@ func (m Model) stepFade() Model {
 }
 
 // wantTick: something is animating: a palette cross-fade, or the disc turning.
-func (m Model) wantTick() bool { return (m.fading && !m.hidden) || m.discTurning() || m.pulsing() }
+func (m Model) wantTick() bool {
+	return (m.fading && !m.hidden) || m.discTurning() || m.pulsing() || m.lyricsAnimating()
+}
 
 // discTurning: the disc turns only while a track plays, the screen is shown on the Player screen with a disc on it. Paused,
 // stopped, hidden, on another screen, or with a cover drawn: nothing animates, so nothing redraws.
@@ -234,13 +249,22 @@ func (m Model) discTurning() bool {
 	return m.coverRows() > 0
 }
 
-// coverRows is the height of the picture on the Player screen, 0 when it does not fit.
+// coverRows is the height of the picture on the Player screen, 0 when it does not fit (the layouts: see wideStage).
 func (m Model) coverRows() int {
-	if m.w < minWidth || m.h < minHeight || m.w < 60 {
+	if m.w < minWidth || m.h < minHeight || m.w < coverStack {
 		return 0
 	}
-	leftW := min(max(m.w/3, 22), 38)
-	_, rows := coverSize(leftW, m.h-6-2-len(m.nowText())-1)
+	body := m.h - bodyTop - bottomRows
+	if m.w < twoColumns {
+		head := m.stackHead(body)
+		_, rows := coverSize(2*head+2, head)
+		return rows
+	}
+	free := body - 2 - len(m.nowText()) - 1
+	if m.shortUpNext() && m.state.Track != nil {
+		free -= 2 + upNextRowsShort
+	}
+	_, rows := coverSize(min(max(m.w/3, 22), 38), free)
 	return rows
 }
 
@@ -252,6 +276,19 @@ func coverSize(w, free int) (cols, rows int) {
 		return 0, 0
 	}
 	return rows * 2, rows
+}
+
+// coverFile is the file of the cover the Player screen draws, nil while it draws the disc or when the picture did not come
+// from a file (art.Picture).
+func (m Model) coverFile() *Cover {
+	t := m.state.Track
+	if t == nil || m.artImg == nil || m.artID != t.ID {
+		return nil
+	}
+	if p, ok := m.artImg.(art.Picture); ok && len(p.Data) > 0 {
+		return &Cover{Data: p.Data, MimeType: p.MimeType}
+	}
+	return nil
 }
 
 // cover draws the picture, margin included, or nil: the loaded cover, else the disc.

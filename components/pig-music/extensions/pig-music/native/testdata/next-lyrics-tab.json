@@ -1,0 +1,4 @@
+{"contents":{"singleColumnMusicWatchNextResultsRenderer":{"tabbedRenderer":{"watchNextTabbedResultsRenderer":{"tabs":[
+{"tabRenderer":{"title":"Up next"}},
+{"tabRenderer":{"title":"Lyrics","endpoint":{"browseEndpoint":{"browseId":"MPLYt_X8pk5s2tHrH","browseEndpointContextSupportedConfigs":{"browseEndpointContextMusicConfig":{"pageType":"MUSIC_PAGE_TYPE_TRACK_LYRICS"}}}}}},
+{"tabRenderer":{"title":"Related","endpoint":{"browseEndpoint":{"browseId":"MPTRt_X8pk5s2tHrH","browseEndpointContextSupportedConfigs":{"browseEndpointContextMusicConfig":{"pageType":"MUSIC_PAGE_TYPE_TRACK_RELATED"}}}}}}]}}}}}

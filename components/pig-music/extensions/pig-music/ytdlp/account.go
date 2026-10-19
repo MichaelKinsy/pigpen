@@ -100,3 +100,22 @@ func (s *Source) OpenEntity(ctx context.Context, e music.Entity) (string, []musi
 	}
 	return "", nil, errors.New("albums and artists need the direct YouTube Music source (it is off: PIG_MUSIC_SEARCH=ytdlp)")
 }
+
+var _ music.Navigator = (*Source)(nil)
+
+var errNoPages = errors.New("artist and album pages need the direct YouTube Music source (it is off: PIG_MUSIC_SEARCH=ytdlp)")
+
+// Watch and OpenPage pass to the direct source; yt-dlp has no such pages.
+func (s *Source) Watch(ctx context.Context, id string) (music.Watch, error) {
+	if n, ok := s.Inner.(music.Navigator); ok {
+		return n.Watch(ctx, id)
+	}
+	return music.Watch{}, errNoPages
+}
+
+func (s *Source) OpenPage(ctx context.Context, e music.Entity) (music.Page, error) {
+	if n, ok := s.Inner.(music.Navigator); ok {
+		return n.OpenPage(ctx, e)
+	}
+	return music.Page{}, errNoPages
+}

@@ -36,19 +36,17 @@ func ExportCookies(ctx context.Context, bin, spec string) (account.Jar, error) {
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
 		return nil, err
 	}
-	// yt-dlp copies the browser's cookie database into a directory of its own under TMPDIR while it reads it (Firefox's holds
-	// the values in clear) and removes it when done; a run killed at the timeout would leave it. It gets a private TMPDIR,
-	// removed here whatever happened.
-	tmp, err := os.MkdirTemp(runtimeDir(), ".pm-ytdlp-")
+	// yt-dlp's copy of the browser's cookie database goes to a private TMPDIR, removed here whatever happened (privtmp.go).
+	ctx, remove, err := privateTemp(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(tmp)
+	defer remove()
 	ctx, cancel := context.WithTimeout(ctx, DefaultLibraryTimeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, bin, "--ignore-config", "--no-warnings", "--cookies-from-browser", spec,
 		"--cookies", "/dev/fd/3", "--skip-download", "--simulate", "file:///")
-	cmd.Env = append(os.Environ(), "TMPDIR="+tmp)
+	cmd.Env = append(os.Environ(), envOf(ctx)...)
 	cmd.ExtraFiles = []*os.File{f}
 	ownGroup(cmd)
 	cmd.WaitDelay = 2 * time.Second
@@ -95,14 +93,4 @@ func anonymousFile() (*os.File, error) {
 		return nil, err
 	}
 	return f, nil
-}
-
-// runtimeDir is $XDG_RUNTIME_DIR when it names a directory (a tmpfs of the user's own on most Linux systems), else "" (the
-// temporary directory).
-func runtimeDir() string {
-	dir := os.Getenv("XDG_RUNTIME_DIR")
-	if st, err := os.Stat(dir); err != nil || !st.IsDir() {
-		return ""
-	}
-	return dir
 }

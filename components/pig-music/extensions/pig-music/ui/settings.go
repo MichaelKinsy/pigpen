@@ -90,6 +90,31 @@ func (m Model) settingsSaved(msg settingsSavedMsg) Model {
 	return m
 }
 
+// settingsBody is settingsLines with its parts: the switches are a list, the rest text.
+func (m Model) settingsBody(s *sheet) {
+	lines := m.settingsLines()
+	if m.deps.Settings == nil || m.settings.loadErr != "" {
+		s.add(PartText, lines...)
+		return
+	}
+	items := make([]ListItem, len(settingRows))
+	for i, r := range settingRows {
+		on := r.key == "stopOnExit" && m.settings.stopOnExit || r.key == "footerStatus" && m.settings.footerStatus
+		items[i] = ListItem{Label: r.text, Detail: onOff(on)}
+	}
+	n := 2 + len(items)
+	s.add(PartText, lines[:2]...)
+	s.list(&List{Items: items, Selected: m.settings.cur}, lines[2:n]...)
+	s.add(PartText, lines[n:]...)
+}
+
+func onOff(b bool) string {
+	if b {
+		return "on"
+	}
+	return "off"
+}
+
 func (m Model) settingsLines() []string {
 	s := m.settings
 	out := []string{" " + bold.Render("Settings"), ""}

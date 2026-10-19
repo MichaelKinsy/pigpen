@@ -13,7 +13,7 @@ import (
 )
 
 // rev-pig-music-m9c F2: the direct search and details made a new HTTP transport for every request (Source.HTTP nil), so
-// each one paid a new TCP and TLS handshake (measured on the test machine: 169 ms a detail, 129 ms with one client) and left an
+// each one paid a new TCP and TLS handshake (measured on imladris: 169 ms a detail, 129 ms with one client) and left an
 // idle connection behind in a transport nobody used again (up to 30 of them while a list is filled in). The Searcher the
 // extension and pigmusic use keeps one client.
 func TestTheSearcherReusesItsConnection(t *testing.T) {

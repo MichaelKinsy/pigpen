@@ -84,9 +84,7 @@ func (m Model) wanted() []music.Track {
 	if m.lib.open != nil {
 		library = rotate(m.lib.tracks, m.lib.tcur)
 	}
-	if m.ent != nil {
-		opened = rotate(m.ent.tracks, m.ent.cur) // an opened album or artist (entities.go)
-	}
+	opened = m.wantedOnPage() // the page on top (pages.go)
 	switch m.tab {
 	case tabPlayer:
 		add(rotate(m.state.Queue, m.queueCur)...)

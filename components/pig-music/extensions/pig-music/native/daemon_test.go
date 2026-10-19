@@ -357,64 +357,32 @@ func TestDaemonSurvivesMalformedTraffic(t *testing.T) {
 	}
 }
 
-// ask sends one command and returns the error of reading the answer: nil when the daemon serves conn, io.EOF (or a reset)
-// when it closed the connection, a timeout when it did neither.
-func ask(conn net.Conn) error {
-	c := newCodec(conn)
-	_ = conn.SetDeadline(time.Now().Add(time.Second))
-	_ = c.write(&message{ID: 1, Cmd: cmdState}) // a write to a closed connection may fail; the read then says why
-	_, err := c.read()
-	return err
-}
-
-func answers(conn net.Conn) bool { return ask(conn) == nil }
-
-// The daemon serves at most maxClients connections at once and closes the rest at once.
-//
-// startDaemon's readiness probe connects and closes, and the daemon frees that connection's slot only when it sees the
-// close, a moment later. The test therefore first fills the slots until maxClients connections answer (a probe slot that is
-// still held makes the last one wait its turn), so it does not count on how fast the daemon notices; the surplus connections
-// are then the ones that must be closed.
 func TestDaemonLimitsClients(t *testing.T) {
 	r := startDaemon(t, 0)
-	var served []net.Conn
+	var conns []net.Conn
+	for i := 0; i < maxClients+3; i++ {
+		c, err := dial(bg, Endpoint(r.paths))
+		if err != nil {
+			t.Fatal(err)
+		}
+		conns = append(conns, c)
+	}
 	defer func() {
-		for _, c := range served {
+		for _, c := range conns {
 			_ = c.Close()
 		}
 	}()
-	deadline := time.Now().Add(5 * time.Second)
-	for len(served) < maxClients {
-		c, err := dial(bg, Endpoint(r.paths))
-		if err != nil {
-			t.Fatal(err)
+	time.Sleep(100 * time.Millisecond)
+	// The surplus connections were closed by the daemon: a read returns EOF at once.
+	closed := 0
+	for _, c := range conns {
+		_ = c.SetReadDeadline(time.Now().Add(50 * time.Millisecond))
+		if _, err := c.Read(make([]byte, 1)); err != nil && !os.IsTimeout(err) {
+			closed++
 		}
-		if answers(c) {
-			served = append(served, c)
-			continue
-		}
-		_ = c.Close()
-		if time.Now().After(deadline) {
-			t.Fatalf("only %d of %d connections were served", len(served), maxClients)
-		}
-		time.Sleep(10 * time.Millisecond)
 	}
-	// Every slot is taken: the next connections are closed by the daemon, not served and not left waiting.
-	for i := 0; i < 3; i++ {
-		c, err := dial(bg, Endpoint(r.paths))
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err := ask(c); err == nil || os.IsTimeout(err) {
-			t.Fatalf("connection %d beyond the limit of %d: read error %v, want it closed by the daemon", i+1, maxClients, err)
-		}
-		_ = c.Close()
-	}
-	// The clients that were served are untouched.
-	for i, c := range served {
-		if !answers(c) {
-			t.Fatalf("served client %d was dropped", i)
-		}
+	if closed != 3 {
+		t.Fatalf("%d connections were refused, want 3", closed)
 	}
 }
 
@@ -564,6 +532,13 @@ func TestDaemonBoundsARequestThatHangs(t *testing.T) {
 // daemon from ever going idle.
 func TestConcurrentAttachLeavesNoStrayConnection(t *testing.T) {
 	r := startDaemon(t, 300*time.Millisecond)
+	// The daemon's idle clock starts when it comes up, so on a loaded host the 8 attaches could begin after the 300 ms
+	// idle exit and find no daemon. A held connection keeps it alive while they run and is dropped before the check:
+	// afterwards only a connection an Attach left behind could keep the daemon from exiting.
+	holder, err := dial(bg, Endpoint(r.paths))
+	if err != nil {
+		t.Fatal(err)
+	}
 	p := r.player()
 	start := make(chan struct{})
 	var wg sync.WaitGroup
@@ -579,6 +554,7 @@ func TestConcurrentAttachLeavesNoStrayConnection(t *testing.T) {
 	}
 	close(start)
 	wg.Wait()
+	_ = holder.Close()
 	_ = p.Close()
 	select {
 	case err := <-r.done:

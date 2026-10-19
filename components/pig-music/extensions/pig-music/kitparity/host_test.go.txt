@@ -1,0 +1,65 @@
+package subprocess
+
+// pig-music's kit parity check (components/pig-music/extensions/pig-music/kitparity/run.sh copies this file into a scratch
+// clone of PiG): PiG's own host renderer draws every fixture view pig-music's tests wrote, and PiG's width of every character
+// pig-music lets a text node or a stage column hold is written next to them. pig-music's TestKitParityHostRendered compares.
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"strconv"
+	"testing"
+
+	"github.com/MichaelKinsy/PiG/tui/widthx"
+)
+
+func TestPigMusicKitParity(t *testing.T) {
+	dir := os.Getenv("PIG_MUSIC_KITPARITY_DIR")
+	if dir == "" {
+		t.Skip("PIG_MUSIC_KITPARITY_DIR holds pig-music's fixtures")
+	}
+	var fixtures []struct {
+		Name  string          `json:"name"`
+		Width int             `json:"width"`
+		View  json.RawMessage `json:"view"`
+	}
+	read := func(name string, v any) {
+		b, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(b, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+	read("fixtures.json", &fixtures)
+	var runes []rune
+	read("runes.json", &runes)
+	out := struct {
+		Rows   map[string][]string `json:"rows"`
+		Widths map[string]int      `json:"widths"`
+	}{Rows: map[string][]string{}, Widths: map[string]int{}}
+	for _, f := range fixtures {
+		s := newViewSurface("pig-music", newViewImageStore())
+		if err := s.accept(f.View, nil); err != nil {
+			t.Fatalf("%s: the host rejects the view: %v", f.Name, err)
+		}
+		out.Rows[f.Name] = s.Render(f.Width)
+		if s.FrontendView(f.Width) == nil {
+			t.Fatalf("%s: no frontend structure", f.Name)
+		}
+		s.close()
+	}
+	for _, r := range runes {
+		out.Widths[strconv.Itoa(int(r))] = widthx.VisibleWidth(string(r))
+	}
+	b, err := json.Marshal(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "rendered.json"), b, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("rendered %d views, measured %d characters", len(fixtures), len(runes))
+}

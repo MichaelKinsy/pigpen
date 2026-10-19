@@ -12,9 +12,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	tea "charm.land/bubbletea/v2"
+
 	"github.com/MichaelKinsy/pigpen/pig-music/art"
 	"github.com/MichaelKinsy/pigpen/pig-music/cookies"
 	"github.com/MichaelKinsy/pigpen/pig-music/doctor"
+	"github.com/MichaelKinsy/pigpen/pig-music/lyrics"
 	"github.com/MichaelKinsy/pigpen/pig-music/mpv"
 	"github.com/MichaelKinsy/pigpen/pig-music/music"
 	"github.com/MichaelKinsy/pigpen/pig-music/native"
@@ -40,6 +43,8 @@ type deps struct {
 	Doctor *doctor.Env
 	// Token stands for this PiG process; empty means processToken (tests give another PiG another token).
 	Token string
+	// Art replaces the cover art cache (tests: with a test Source there is no cache).
+	Art music.Artwork
 }
 
 // app is the player as the extension holds it. It outlives the overlay: hiding
@@ -53,18 +58,23 @@ type app struct {
 
 	gone atomic.Bool // the generation ended (session_shutdown): nothing is built or written any more
 
-	mu     sync.Mutex // guards player and host; held while they are built
+	mu     sync.Mutex // guards player, host and art; held while they are built
 	player music.Player
 	host   *teahost.Host
+	art    music.Artwork // the cover art source, whether the coverArt setting draws with it or not; nil when there is none
 
 	report    *doctor.Report        // the doctor's findings at start, for explaining a 403
 	installer *selfmanage.Installer // downloads and updates, nil when the source is injected
 	access    cookies.Access        // the user's consent to the library reading a browser's cookies
 
 	foot footer
+	// drawn is host for readers that must not take mu: the widget's theme, read while ensure holds mu.
+	drawn atomic.Pointer[teahost.Host]
 
 	redrawMu sync.Mutex // guards redraw; the model's loop takes it, so it must never wait on mu
 	redraw   func()
+
+	box quickBox // the open /music settings box, which follow keeps up to date
 }
 
 func newApp(d deps) *app {
@@ -74,7 +84,24 @@ func newApp(d deps) *app {
 	if d.LookPath == nil {
 		d.LookPath = lookPath
 	}
-	return &app{d: d}
+	a := &app{d: d}
+	a.foot.theme = a.theme
+	return a
+}
+
+// theme is the player's palette as kit theme overrides (kitview.go), nil before the player is built or when it is not painted.
+func (a *app) theme() map[string]string {
+	host := a.drawn.Load()
+	if host == nil {
+		return nil
+	}
+	var theme map[string]string
+	host.Peek(func(m tea.Model) {
+		if m, ok := m.(ui.Model); ok {
+			theme = paletteTheme(m.Palette())
+		}
+	})
+	return theme
 }
 
 // ensure builds the player and the model on first use. A missing program or a
@@ -110,7 +137,11 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 	extra := strings.Fields(a.d.Getenv("PIG_MUSIC_MPV_ARGS"))
 	source := a.d.Source
 	if source != nil {
-		source = savingSource{Source: source, a: a}
+		saving := savingSource{Source: source, a: a}
+		source = saving
+		if es, ok := a.d.Source.(music.EntitySearcher); ok {
+			source = savingEntitySource{saving, es}
+		}
 	}
 	if source == nil {
 		// The doctor looks before anything starts: a missing or too old program, or no way to make sound, is
@@ -133,7 +164,8 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 			Consent: cookies.Consent{Path: doctor.ConsentPath(paths.Data)},
 		}
 		a.access = access
-		// Cookies are asked for by library calls alone (see ytdlp.Source): search, enrichment and mpv never carry them.
+		// Cookies are asked for by library calls and the home's suggestions alone (see ytdlp.Source): search, enrichment, the
+		// charts and mpv never carry them.
 		source = a.guarded(&ytdlp.Source{Bin: ytPath, Cookies: access.Spec, JSRuntime: rep.JSRuntimeArg, Inner: native.NewSearcher(a.d.Getenv), Account: ytdlp.NewAccount(a.d.Getenv, ytPath, access.Spec), CacheDir: libraryCacheDir(paths.Data)})
 	}
 	player := a.d.Player
@@ -141,6 +173,9 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 		cfg := mpv.Config{
 			MPVPath: mpvPath, YtdlPath: ytPath, Paths: paths, PlayURL: source.PlayURL,
 			ExtraArgs: extra, Env: a.d.MPVEnv, LookPath: a.d.LookPath,
+			// A track whose stream YouTube refuses is resolved afresh and resumed where it stopped, once; refused again, it is
+			// skipped and the reason shown.
+			Recover: true, Unplayable: a.unplayable,
 		}
 		if a.d.Source == nil && !strings.EqualFold(a.d.Getenv("PIG_MUSIC_PREFETCH"), "off") {
 			a.prefetching(&cfg, paths)
@@ -163,15 +198,26 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 		return nil, errEnded
 	}
 	// Cover art is a plain HTTPS fetch of the track's public thumbnail (no cookies), cached in the data directory; with a
-	// test Source there is none, so no test reaches the network. coverArt:false leaves only the disc.
+	// test Source there is none, so no test reaches the network. coverArt:false leaves only the disc (and fetches nothing),
+	// and the settings screen's switch hands the source to the running model or takes it away (quickPort.Set).
+	switch {
+	case a.d.Art != nil:
+		a.art = a.d.Art
+	case a.d.Source == nil && paths.Data != "":
+		a.art = &art.Cache{Dir: filepath.Join(paths.Data, "art")}
+	}
 	var cover music.Artwork
-	if a.d.Source == nil && settings.CoverArtOrDefault() && paths.Data != "" {
-		cover = &art.Cache{Dir: filepath.Join(paths.Data, "art")}
+	if settings.CoverArtOrDefault() {
+		cover = a.art
+	}
+	var recents music.Recents
+	if paths.Data != "" {
+		recents = &music.RecentsFile{Path: music.RecentsPath(paths.Data)}
 	}
 	host := teahost.New(ui.New(ui.Deps{
-		Source: source, Player: player, Settings: settingsPort{a},
-		Art: cover, ArtMode: art.ModeFromEnv(a.d.Getenv), NoColor: art.NoColor(a.d.Getenv), Vibes: settings.PaletteOrDefault(), Pulse: settings.PulseOrDefault(), Calm: settings.CalmOrDefault(), LowPower: settings.LowPowerOrDefault(),
-	}), teahost.Options{Redraw: a.requestRedraw})
+		Source: source, Player: player, Settings: settingsPort{a}, Recents: recents,
+		Art: cover, Lyrics: a.lyricsProvider(source, paths.Data), ArtMode: art.ModeFromEnv(a.d.Getenv), NoColor: art.NoColor(a.d.Getenv), Vibes: settings.PaletteOrDefault(), Pulse: settings.PulseOrDefault(), Calm: settings.CalmOrDefault(), LowPower: settings.LowPowerOrDefault(),
+	}).Hidden(), teahost.Options{Redraw: a.requestRedraw, Draw: drawScreen})
 	host.Start(80, 24)
 	// No screen is open yet (session_start builds the player for the footer alone): nothing animates or measures until
 	// the overlay opens and sends OpenedMsg.
@@ -181,6 +227,7 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 		host.Send(ui.ShowPlayerMsg{}) // an mpv that was already playing: show its queue, not an empty search
 	}
 	a.player, a.host = player, host
+	a.drawn.Store(host)
 	return host, nil
 }
 
@@ -199,11 +246,22 @@ func (a *app) follow(player music.Player, host *teahost.Host) {
 		for st := range player.Subscribe() {
 			host.Send(ui.StateMsg(st))
 			a.foot.state(st)
+			a.box.state(st)
 		}
 		last := player.State()
 		host.Send(ui.StateMsg(last))
 		a.foot.state(last)
+		a.box.state(last)
 	}()
+}
+
+// unplayable says why the player moved past a track whose stream YouTube refused (mpv.Config.Unplayable): on the player's
+// status line, and as a PiG notification while the player is hidden.
+func (a *app) unplayable(reason string) {
+	if host := a.drawn.Load(); host != nil {
+		host.Send(ui.NoticeMsg(reason))
+	}
+	a.foot.notify("pig-music: " + reason)
 }
 
 func first(values ...string) string {
@@ -262,12 +320,33 @@ type savingSource struct {
 	a *app
 }
 
+// Watch and OpenPage pass through to a test source that has pages.
+func (s savingSource) Watch(ctx context.Context, id string) (music.Watch, error) {
+	if n, ok := s.Source.(music.Navigator); ok {
+		return n.Watch(ctx, id)
+	}
+	return music.Watch{}, errNoPages
+}
+
+func (s savingSource) OpenPage(ctx context.Context, e music.Entity) (music.Page, error) {
+	if n, ok := s.Source.(music.Navigator); ok {
+		return n.OpenPage(ctx, e)
+	}
+	return music.Page{}, errNoPages
+}
+
 func (s savingSource) Search(ctx context.Context, q string, limit int) ([]music.Track, error) {
 	t, err := s.Source.Search(ctx, q, limit)
 	if err == nil {
 		s.a.rememberSearch(t)
 	}
 	return t, err
+}
+
+// savingEntitySource is a savingSource over a test source that finds albums and artists too.
+type savingEntitySource struct {
+	savingSource
+	music.EntitySearcher
 }
 
 // guarded wraps the source so that a 403 or a missing format, which is almost always an old yt-dlp or no JavaScript
@@ -365,13 +444,57 @@ func (g guard) OpenEntity(ctx context.Context, e music.Entity) (string, []music.
 	return "", nil, errors.New("this source cannot open albums or artists")
 }
 
+// Watch and OpenPage (artist, album, radio and related pages) pass through to a source that has them.
+func (g guard) Watch(ctx context.Context, id string) (music.Watch, error) {
+	if n, ok := g.Source.(music.Navigator); ok {
+		w, err := n.Watch(ctx, id)
+		return w, g.a.explain(err)
+	}
+	return music.Watch{}, errNoPages
+}
+
+func (g guard) OpenPage(ctx context.Context, e music.Entity) (music.Page, error) {
+	if n, ok := g.Source.(music.Navigator); ok {
+		p, err := n.OpenPage(ctx, e)
+		return p, g.a.explain(err)
+	}
+	return music.Page{}, errNoPages
+}
+
+// Popular, Suggested and CachedHome (the Search screen's home) pass through to a source that has them.
+func (g guard) Popular(ctx context.Context) (music.Section, error) {
+	if h, ok := g.Source.(music.HomeFeed); ok {
+		sec, err := h.Popular(ctx)
+		return sec, g.a.explain(err)
+	}
+	return music.Section{}, errors.New("this source has no charts")
+}
+
+func (g guard) Suggested(ctx context.Context) ([]music.Section, error) {
+	if h, ok := g.Source.(music.HomeFeed); ok {
+		return h.Suggested(ctx)
+	}
+	return nil, music.ErrNoAccount
+}
+
+func (g guard) CachedHome(ctx context.Context) (music.Section, []music.Section, bool) {
+	if h, ok := g.Source.(music.HomeFeed); ok {
+		return h.CachedHome(ctx)
+	}
+	return music.Section{}, nil, false
+}
+
+var errNoPages = errors.New("artist and album pages need the direct YouTube Music source (it is off: PIG_MUSIC_SEARCH=ytdlp)")
+
 var (
+	_ music.Navigator       = guard{}
 	_ music.EntitySearcher  = guard{}
 	_ music.LibraryCache    = guard{}
 	_ music.Enricher        = guard{}
 	_ music.CookieConsenter = guard{}
 	_ music.TrackPager      = guard{}
 	_ music.Refresher       = guard{}
+	_ music.HomeFeed        = guard{}
 )
 
 func (a *app) explain(err error) error {
@@ -432,5 +555,31 @@ func (a *app) prefetching(cfg *mpv.Config, paths music.Paths) {
 		defer cancel()
 		_ = cache.Warm(ctx, url) // a failure costs only what there was before: mpv resolves the stream itself
 	}
-	cfg.StreamFailed = cache.Forget // a refused stream (another network since it was resolved) is resolved afresh next time
+	cfg.StreamFailed = cache.Forget // a refused stream (another network since it was resolved, or expired) is resolved afresh
+}
+
+// lyricsProvider finds lyrics for the Player screen: LRCLIB, then YouTube Music's own when the direct source is on. It asks
+// nothing until the lyrics are on screen. PIG_MUSIC_LYRICS=off, a test source or no data directory: no lyrics view.
+func (a *app) lyricsProvider(source music.Source, data string) music.LyricsProvider {
+	if a.d.Source != nil || data == "" || strings.EqualFold(strings.TrimSpace(a.d.Getenv("PIG_MUSIC_LYRICS")), "off") {
+		return nil
+	}
+	svc := &lyrics.Service{Dir: filepath.Join(data, "lyrics")}
+	if yl, ok := innerOf(source).(interface {
+		YouTubeLyrics(ctx context.Context, videoID string) (string, error)
+	}); ok {
+		svc.Fallback = yl.YouTubeLyrics
+	}
+	return svc
+}
+
+// innerOf is the direct YouTube Music source behind a guarded yt-dlp source, nil when there is none.
+func innerOf(source music.Source) music.Source {
+	if g, ok := source.(guard); ok {
+		source = g.Source
+	}
+	if y, ok := source.(*ytdlp.Source); ok {
+		return y.Inner
+	}
+	return nil
 }

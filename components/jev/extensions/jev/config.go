@@ -128,6 +128,9 @@ func agentDir(configHome string) string {
 	if d := os.Getenv("PIG_CODING_AGENT_DIR"); d != "" {
 		return d
 	}
+	if configHome == "" {
+		return "" // no config directory was found: never a relative path, which a project could plant
+	}
 	return filepath.Join(configHome, "agent")
 }
 
@@ -368,8 +371,10 @@ type loaded struct {
 func loadConfig(configHome, cwd string) loaded {
 	c := defaultConfig()
 	var warnings []string
-	if g, ok := readConfigFile(filepath.Join(agentDir(configHome), configFile), &warnings); ok {
-		applyFile(&c, g, false)
+	if dir := agentDir(configHome); dir != "" {
+		if g, ok := readConfigFile(filepath.Join(dir, configFile), &warnings); ok {
+			applyFile(&c, g, false)
+		}
 	}
 	projectPath := filepath.Join(cwd, ".pig", configFile)
 	if p, ok := readConfigFile(projectPath, &warnings); ok {

@@ -22,7 +22,7 @@ concurrency:
 
 env:
   # The PiG release this job builds with: scripts/pig-requirement.json (`release`); scripts/check-workflows.mjs keeps it equal.
-  PIG_COMMIT: '3ee745c8cda3c1a9a8d71112c140790c4d64d78d' # PiG v0.4.1
+  PIG_COMMIT: '7a5422f66d2f7a73ed566abdb7c4b29bf1571e3d' # PiG v0.5.0
 
 jobs:
   verify:

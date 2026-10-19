@@ -23,6 +23,8 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+
+	herdr "github.com/MichaelKinsy/pigpen/components/herdr/extensions/herdr"
 )
 
 // ── Fake herdr ───────────────────────────────────────────────────────────────
@@ -35,6 +37,10 @@ func TestMain(m *testing.M) {
 	if log := os.Getenv("HERDR_FAKE_LOG"); log != "" {
 		os.Exit(runFakeHerdr(log))
 	}
+	// The fake herdr is this test binary, started afresh for every call. On a host under heavy load that start
+	// can take longer than the 3 s production bound and the call would be killed; the tests that are about the
+	// bound restore it.
+	*herdr.CallTimeout = time.Minute
 	os.Exit(m.Run())
 }
 
@@ -275,6 +281,8 @@ type fakeHost struct {
 	pending  map[string]chan *wireResponse
 	nextID   int
 	handlers map[string]int
+	// listeners maps a pi.events channel to the handler id the extension subscribed.
+	listeners map[string]string
 }
 
 // startHost runs the extension against a fake host in the given mode.
@@ -286,7 +294,8 @@ func startHost(t *testing.T, ext *sdk.Extension, mode string) *fakeHost {
 		nc:       hostSide,
 		runDone:  make(chan error, 1),
 		pending:  map[string]chan *wireResponse{},
-		handlers: map[string]int{},
+		handlers:  map[string]int{},
+		listeners: map[string]string{},
 		state: hostState{
 			sessionFile: "/home/u/.pig/sessions/s1.jsonl",
 			sessionID:   "s1",
@@ -295,7 +304,18 @@ func startHost(t *testing.T, ext *sdk.Extension, mode string) *fakeHost {
 	}
 	go func() { h.runDone <- ext.RunWithConn(extSide) }()
 
+	// pi.events listeners subscribed in the factory register before the extension does.
 	first := h.readFrame()
+	for first.Type == "call" && first.Call != nil && first.Call.Method == "events.on" {
+		var args struct {
+			Channel   string `json:"channel"`
+			HandlerID string `json:"handlerId"`
+		}
+		_ = json.Unmarshal(first.Call.Args, &args)
+		h.listeners[args.Channel] = args.HandlerID
+		h.write(map[string]any{"type": "call_result", "id": first.ID, "call_result": map[string]any{"result": map[string]any{}}})
+		first = h.readFrame()
+	}
 	if first.Type != "register" || first.Register == nil {
 		t.Fatalf("expected register, got %+v", first)
 	}
@@ -428,6 +448,33 @@ func (h *fakeHost) fire(event string, data map[string]any) {
 		}
 	case <-time.After(10 * time.Second):
 		h.t.Fatalf("no response to %s within 10s", event)
+	}
+}
+
+// emit dispatches one pi.events payload to the extension's listener on channel
+// and waits for it to finish, as PiG's host does. It fails when nothing listens.
+func (h *fakeHost) emit(channel string, data any) {
+	h.t.Helper()
+	h.mu.Lock()
+	handlerID, ok := h.listeners[channel]
+	h.nextID++
+	reqID := fmt.Sprintf("r%d", h.nextID)
+	ch := make(chan *wireResponse, 1)
+	h.pending[reqID] = ch
+	h.mu.Unlock()
+	if !ok {
+		h.t.Fatalf("no pi.events listener on %q", channel)
+	}
+	payload, _ := json.Marshal(data)
+	args, _ := json.Marshal(map[string]any{"handlerId": handlerID, "channel": channel, "json": json.RawMessage(payload)})
+	h.write(map[string]any{"type": "request", "id": reqID, "request": map[string]any{"method": "events.dispatch", "args": json.RawMessage(args)}})
+	select {
+	case resp := <-ch:
+		if resp != nil && resp.Error != nil {
+			h.t.Errorf("%s listener failed: %s", channel, resp.Error.Message)
+		}
+	case <-time.After(10 * time.Second):
+		h.t.Fatalf("no response to %s within 10s", channel)
 	}
 }
 

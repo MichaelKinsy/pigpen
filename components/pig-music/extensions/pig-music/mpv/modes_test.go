@@ -110,3 +110,72 @@ func TestUnshuffleNeedsMpv037AndTheErrorSaysSo(t *testing.T) {
 }
 
 var _ music.Modes = (*Player)(nil)
+
+// adopted is a second Player on the mpv at paths, as the extension is after a restart or as pigmusic is beside it.
+func adopted(t *testing.T, paths music.Paths) *Player {
+	t.Helper()
+	p := New(Config{Paths: paths, PlayURL: playURL})
+	if err := p.Attach(ctx5(t)); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = p.Close() })
+	return p
+}
+
+// TestAPlayerThatAdoptsMpvKnowsTheQueueIsShuffled: the shuffle is marked in mpv, so another Player sees it on, and off again
+// once it is turned off or a new queue replaces the shuffled one.
+func TestAPlayerThatAdoptsMpvKnowsTheQueueIsShuffled(t *testing.T) {
+	p, _, paths := inProcess(t)
+	if err := p.Replace(ctx5(t), tracks(5), 0); err != nil {
+		t.Fatal(err)
+	}
+	if st := adopted(t, paths).State(); st.Shuffle {
+		t.Fatalf("an unshuffled queue adopted as shuffled")
+	}
+	if err := p.SetShuffle(ctx5(t), true); err != nil {
+		t.Fatal(err)
+	}
+	q := adopted(t, paths)
+	if st := q.State(); !st.Shuffle || len(st.Queue) != 5 {
+		t.Fatalf("adopted after shuffling: shuffle %v, %d in the queue", st.Shuffle, len(st.Queue))
+	}
+	if err := q.SetShuffle(ctx5(t), false); err != nil {
+		t.Fatal(err)
+	}
+	if adopted(t, paths).State().Shuffle {
+		t.Fatal("adopted after the shuffle was turned off: still on")
+	}
+	if err := q.SetShuffle(ctx5(t), true); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.Replace(ctx5(t), tracks(3), 0); err != nil {
+		t.Fatal(err)
+	}
+	if adopted(t, paths).State().Shuffle {
+		t.Fatal("adopted after a new queue: still shuffled")
+	}
+}
+
+// TestAnMpvWithoutUserDataStillShuffles: before mpv 0.36 the mark cannot be kept; shuffle works, and an adopting Player shows
+// it off.
+func TestAnMpvWithoutUserDataStillShuffles(t *testing.T) {
+	paths := music.PathsIn(shortDir(t))
+	srv, err := mpvfake.Listen(paths.Socket, mpvfake.Options{NoUserData: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(srv.Close)
+	p := adopted(t, paths)
+	if err := p.Replace(ctx5(t), tracks(4), 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.SetShuffle(ctx5(t), true); err != nil {
+		t.Fatal(err)
+	}
+	if !p.State().Shuffle || !srv.Shuffled() {
+		t.Fatalf("shuffle %v, mpv shuffled %v", p.State().Shuffle, srv.Shuffled())
+	}
+	if adopted(t, paths).State().Shuffle {
+		t.Fatal("no mark, yet adopted as shuffled")
+	}
+}

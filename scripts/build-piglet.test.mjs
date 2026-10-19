@@ -56,9 +56,24 @@ describe('build-piglet', () => {
   });
 
   it('defaults the output to dist/bin/<name>', () => {
+    // A Binary already built there is refused (pig never overwrites one), so the default path shows in the refusal then.
+    const defaultOut = join(root, 'dist/bin/pig-extension-porter');
     const result = run(['pig-extension-porter']);
+    if (existsSync(defaultOut)) {
+      assert.equal(result.status, 2, result.stdout + result.stderr);
+      assert.ok(result.stderr.includes(defaultOut), result.stderr);
+      return;
+    }
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.equal(JSON.parse(readFileSync(record, 'utf8')).argv[argvOut(record) + 1], join(root, 'dist/bin/pig-extension-porter'));
+    assert.equal(JSON.parse(readFileSync(record, 'utf8')).argv[argvOut(record) + 1], defaultOut);
+  });
+
+  it('PIGPEN_BIN_DIR moves the default output, so a Binary built in dist/bin does not decide the result', () => {
+    const bins = join(scratch, 'bins');
+    mkdirSync(bins, { recursive: true });
+    const result = run(['pig-extension-porter'], { PIGPEN_BIN_DIR: bins });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal(JSON.parse(readFileSync(record, 'utf8')).argv[argvOut(record) + 1], join(bins, 'pig-extension-porter'));
   });
 
   it('rejects an unknown Piglet and lists the known ones', () => {
@@ -76,7 +91,7 @@ describe('build-piglet', () => {
   });
 
   it('keeps pig\'s exit status and adds the two usual remedies', () => {
-    const result = run(['pig-extension-porter'], { FAKE_PIG_EXIT: '3', PIG_SOURCE_ROOT: '' });
+    const result = run(['pig-extension-porter'], { FAKE_PIG_EXIT: '3', PIG_SOURCE_ROOT: '', PIGPEN_BIN_DIR: join(scratch, 'exit-bins') });
     assert.equal(result.status, 3);
     assert.match(result.stderr, /PIG_SOURCE_ROOT/);
     assert.match(result.stderr, /git checkout/);
