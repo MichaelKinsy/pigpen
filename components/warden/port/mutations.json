@@ -418,5 +418,11 @@
   "file": "backend.go",
   "find": "if j.CheckAnswers && !validResult(res, r.Questions) {",
   "replace": "if false {"
+ },
+ {
+  "name": "audit-input-not-blocked",
+  "file": "audit_cmd.go",
+  "find": "if !w.auditState.running.Load() {\n\t\treturn nil, nil",
+  "replace": "if true {\n\t\treturn nil, nil"
  }
 ]
