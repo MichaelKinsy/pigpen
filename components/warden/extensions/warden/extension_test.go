@@ -38,7 +38,10 @@ type harness struct {
 	subscribed bool
 	fail       map[string]string
 	answer     func(method string, args map[string]any) (map[string]any, string, bool)
-	w          *warden
+	// cwd is the project directory the session runs in.
+	cwd string
+	// w is the extension's state, for the tests that read its trace.
+	w *warden
 }
 
 type harnessOpts struct {
@@ -98,6 +101,7 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 	if cwd == "" {
 		cwd = t.TempDir()
 	}
+	h.cwd = cwd
 	h.answer = o.answer
 	opts.Now = o.now
 	ext, w := newWarden(opts)
@@ -127,6 +131,8 @@ func (h *harness) onCall(method string, args map[string]any) (map[string]any, st
 			cursor = min(int(c), len(h.branch))
 		}
 		return map[string]any{"entries": h.branch[cursor:], "entryCount": len(h.branch), "hasMore": false, "leafId": h.leaf()}, ""
+	case "isIdle":
+		return map[string]any{"idle": true}, ""
 	case "ui.confirm":
 		return map[string]any{"confirmed": h.confirm}, ""
 	case "ui.select":
@@ -856,9 +862,7 @@ func TestSkippedSDKToolCallArgumentsAsObject(t *testing.T) {
 
 func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testing.T) {
 	cases := map[string]string{
-		"rules": "/warden rules", "rules check": "/warden rules check", "rules audit src": "/warden rules audit",
-		"rules calibrate --yes": "/warden rules calibrate", "rules tune": "/warden rules tune", "report": "/warden report",
-		"config get x": "/warden config", "init": "/warden init", "audit": "/warden audit", "index": "/warden index",
+		"config get x": "/warden config", "audit": "/warden audit", "index": "/warden index",
 		"recommend": "/warden recommend", "unmute": "/warden unmute", "bench": "/warden bench",
 	}
 	for args, feature := range cases {
