@@ -296,9 +296,11 @@ func (z *dpZone) setSign(s int) {
 		z.sign = 1
 	}
 }
-func (z *dpZone) isExpecting(n int) bool { return z.hour != dpNone && z.minute == dpNone && dpIsMinute(n) }
-func (z *dpZone) isUTC() bool            { return z.hour == 0 && z.minute == 0 }
-func (z *dpZone) isEmpty() bool          { return z.hour == dpNone }
+func (z *dpZone) isExpecting(n int) bool {
+	return z.hour != dpNone && z.minute == dpNone && dpIsMinute(n)
+}
+func (z *dpZone) isUTC() bool   { return z.hour == 0 && z.minute == 0 }
+func (z *dpZone) isEmpty() bool { return z.hour == dpNone }
 func (z *dpZone) write(out *[8]float64) bool {
 	if z.sign != dpNone {
 		if z.hour == dpNone {

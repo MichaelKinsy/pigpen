@@ -118,7 +118,7 @@ func (e *dfdGmail) getDate(row *ldNode) string {
 	return extText(dateEl)
 }
 
-// toISODate is the local calendar date of a parsed time (not the UTC one), '' when the text is not a date.
+// toISODate is the local calendar date of a parsed time (not the UTC one), ” when the text is not a date.
 func (e *dfdGmail) toISODate(date string) string {
 	if date == "" {
 		return ""

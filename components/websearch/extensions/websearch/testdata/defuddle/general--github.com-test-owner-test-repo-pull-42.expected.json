@@ -1,0 +1,6 @@
+{
+ "url": "https://github.com/test-owner/test-repo/pull/42",
+ "title": "Fix rendering when malformed elements nest content · Pull Request #42 · test-owner/test-repo",
+ "content": "## Summary\n\nThis fixes a regression where content was clipped partway through extraction.\n\nThe root cause was a malformed `<figure>` in the source HTML.\n\n## Changes\n\n- Skip processing when element contains unexpected content\n- Preserve remaining content after extraction\n- Add regression fixture and test coverage\n\n## Testing\n\n- `npm test`\n\n---\n\n## Comments\n\n> **reviewer-bot** · 2026-01-15\n> \n> Consider removing just the image element instead of the entire anchor, to preserve any text content inside the link.\n\n> **reviewer-bot** · 2026-01-15\n> \n> The early return here might skip valid figures that happen to contain extra whitespace nodes. Consider checking for actual block-level content instead.\n\n> **author-one** · 2026-01-15\n> \n> Posted a follow-up commit to address the review comments.\n> \n> - Preserve linked text when stripping the image\n> - Check for block-level content instead of early return",
+ "error": null
+}

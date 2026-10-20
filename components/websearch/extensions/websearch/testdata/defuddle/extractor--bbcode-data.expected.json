@@ -1,0 +1,6 @@
+{
+ "url": "https://store.example.com/news/app/123456/view/987654321",
+ "title": "Patch 1.2.3 is now LIVE!",
+ "content": "Patch 1.2.3 is now live! This is build 500, network compatible. Available on all platforms! You can read the [full patch notes here](https://docs.example.com/patch-123).  \n  \nOr, watch the video patch notes below:  \n\n![](https://www.youtube.com/watch?v=dQw4w9WgXcQ)",
+ "error": null
+}

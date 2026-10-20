@@ -107,7 +107,7 @@ func (e *dfdGitHub) getIssueContent() (content, author, published string) {
 	return e.cleanBodyContent(body), author, published
 }
 
-// ghDate is `timestamp ? new Date(timestamp).toISOString().split('T')[0] : ''`; an invalid timestamp throws a
+// ghDate is `timestamp ? new Date(timestamp).toISOString().split('T')[0] : ”`; an invalid timestamp throws a
 // RangeError, which nothing here catches.
 func ghDate(timestamp string) string {
 	if timestamp == "" {
