@@ -23,7 +23,7 @@ const session = { uri: sessionChannel, sessionId: id, workingDirectory: workspac
 const host = new AhpHost();
 installRootChannel(host, []);
 host.store.create(sessionChannel, {
-	provider: "pi", title: "Differential", status: "idle", lifecycle: "ready",
+	provider: "pi", title: "Differential", status: 1, lifecycle: "ready", // SessionStatus.Idle is the number 1
 	workingDirectories: [pathToFileURL(workspace).toString()], activeClients: [], chats: [],
 }, "session");
 host.store.create(chatChannel, initialChatState(chatChannel, "Differential"), "chat");

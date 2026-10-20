@@ -416,7 +416,7 @@
  {
   "name": "tunnel-name-leading-dashes-kept",
   "file": "internal/tunnel/discovery.go",
-  "find": "slug := leadingDashes.ReplaceAllString(name, \"\")",
+  "find": "slug := leadingDashes().ReplaceAllString(name, \"\")",
   "replace": "slug := name"
  },
  {
@@ -476,8 +476,8 @@
  {
   "name": "tunnel-warning-pattern-loose",
   "file": "internal/tunnel/devtunnel.go",
-  "find": "regexp.MustCompile(`(?i)\\bno tunnels? found\\b`)",
-  "replace": "regexp.MustCompile(`(?i)no tunnels? found`)"
+  "find": "lazyRegexp(`(?i)\\bno tunnels? found\\b`)",
+  "replace": "lazyRegexp(`(?i)no tunnels? found`)"
  },
  {
   "name": "tunnel-rename-always-removes",
@@ -628,5 +628,11 @@
   "file": "internal/live/live.go",
   "find": "pi.Unsupported(\"running a turn in a session other than the running PiG session\")",
   "replace": "\"not running\""
+ },
+ {
+  "name": "changeset-refusal-reason-changed",
+  "file": "internal/changeset/service.go",
+  "find": "return \"This host exposes read-only changesets\"",
+  "replace": "return \"read-only\""
  }
 ]

@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -186,18 +187,23 @@ func nulPaths(output []byte, ok bool, source string) ([]string, error) {
 	return strings.Split(value[:len(value)-1], "\x00"), nil
 }
 
+// lazyRegexp compiles on first use: package initialisation is on the extension's cold start path.
+func lazyRegexp(expr string) func() *regexp.Regexp {
+	return sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile(expr) })
+}
+
 var (
-	oidPattern      = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
-	zeroOidPattern  = regexp.MustCompile(`^0+$`)
-	blobModePattern = regexp.MustCompile(`^100[0-7]{3}$`)
-	digitsPattern   = regexp.MustCompile(`^\d+$`)
-	base64urlText   = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
+	oidPattern      = lazyRegexp(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
+	zeroOidPattern  = lazyRegexp(`^0+$`)
+	blobModePattern = lazyRegexp(`^100[0-7]{3}$`)
+	digitsPattern   = lazyRegexp(`^\d+$`)
+	base64urlText   = lazyRegexp(`^[A-Za-z0-9_-]+$`)
 )
 
-func validOID(value string) bool { return oidPattern.MatchString(value) }
+func validOID(value string) bool { return oidPattern().MatchString(value) }
 
 func blobOID(mode, oid string) string {
-	if blobModePattern.MatchString(mode) && validOID(oid) && !zeroOidPattern.MatchString(oid) {
+	if blobModePattern().MatchString(mode) && validOID(oid) && !zeroOidPattern().MatchString(oid) {
 		return oid
 	}
 	return ""
@@ -243,7 +249,7 @@ func numberField(value string) (int64, error) {
 	if value == "-" {
 		return -1, nil
 	}
-	if value == "" || !digitsPattern.MatchString(value) {
+	if value == "" || !digitsPattern().MatchString(value) {
 		return 0, gitErrorf("unexpected git numstat output")
 	}
 	parsed, err := strconv.ParseInt(value, 10, 64)
@@ -308,7 +314,7 @@ func parseGitChanges(output []byte) ([]parsedChange, error) {
 				}
 			}
 			oldBlob, newBlob := blobOID(oldMode, oldOID), blobOID(newMode, newOID)
-			if (oldMode != "000000" && !blobModePattern.MatchString(oldMode)) || (newMode != "000000" && !blobModePattern.MatchString(newMode)) {
+			if (oldMode != "000000" && !blobModePattern().MatchString(oldMode)) || (newMode != "000000" && !blobModePattern().MatchString(newMode)) {
 				continue
 			}
 			switch status {
@@ -499,7 +505,7 @@ func ParseBlobURI(uri string) (BlobRef, bool) {
 		return BlobRef{}, false
 	}
 	_, encoded, found := strings.Cut(rest, "?")
-	if !found || !base64urlText.MatchString(encoded) {
+	if !found || !base64urlText().MatchString(encoded) {
 		return BlobRef{}, false
 	}
 	raw, err := base64.RawURLEncoding.DecodeString(encoded)

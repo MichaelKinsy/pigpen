@@ -704,7 +704,7 @@ func TestGitBlobResources(t *testing.T) {
 	f.client.Ping()
 	rejected := false
 	for _, note := range f.client.Notifications()[n:] {
-		if env, ok := note.Envelope(); ok && env.Channel == channel && env.RejectionReason != nil {
+		if env, ok := note.Envelope(); ok && env.Channel == channel && env.RejectionReason != nil && *env.RejectionReason == "This host exposes read-only changesets" {
 			rejected = true
 		}
 	}

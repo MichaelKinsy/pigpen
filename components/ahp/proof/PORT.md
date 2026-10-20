@@ -31,11 +31,26 @@ session. The equivalence method is therefore three layers, not the scenario harn
    non-loopback without token, listener off unless asked, session replacement. The same eight
    scenarios pass against a Piglet Binary with the extension fused in (`PIGPEN_AHP_FUSED=1`).
 3. **Mutation.** `proof/mutations.json` (run with `pigeq mutate --unit-only`) lists mutants of the
-   security and reconciliation checks and of the changeset service, the dev tunnel and the MIME and refusal code (105 at 0.4.0). Each one is killed by a unit test; an
+   security and reconciliation checks and of the changeset service, the dev tunnel and the MIME and refusal code (106 at 0.4.0). Each one is killed by a unit test; an
    equivalent mutant is not listed (the changeset service's second guard against untracked files outside the working directory,
-   which `toFiles` repeats). **No protocol differential
-   against pi-ahp under Pi, and no interop run with Microsoft's Go client, has been done.** Both are
-   open.
+   which `toFiles` repeats). A protocol differential
+   against pi-ahp (layer 4, below) covers the changeset flow; **no differential of Pi-driven turns and no interop run with Microsoft's
+   Go client has been done.**
+4. **Protocol differential** (`proof/differential`, kind 4 of the porting skill: a protocol adapter, so no scenario lane exists).
+   `oracle-run.mjs` runs pi-ahp's own `AhpHost` and `ChangesetService` (unmodified `src/`, with its npm dependencies `@microsoft/agent-host-protocol@0.9.0`,
+   `chokidar@5` and `mime@4.1.1`, and without Pi) under Node 24 with a scripted client over an in-memory transport and a scripted git backend and
+   watcher; `TestDifferential` runs the same steps on `host.Host` and `changeset.Service`; `run.sh` runs both and compares the host's wire transcripts
+   frame by frame after removing what legitimately differs (`serverInfo`, the clocks `modifiedAt`/`createdAt`/`startedAt`, `_meta`, the work directory).
+   Architecture mapping: upstream's session registry embeds one Pi `AgentSession` per session and the host owns them all; here the session
+   state is created in the store directly (the registry and the single running PiG session sit behind the SDK adapter, so they are not part
+   of the comparison), while `AhpHost`/`host.Host` (handshake, subscribe, sequencing, hydration, client-action validation, error mapping) and the
+   changeset service (catalogue, hydration, computing/ready actions, refresh, rejection, eviction) are compared as the original wrote them.
+   Scenario (11 frames): initialize, subscribe to the session, subscribe to its Uncommitted changeset (hydrated), first scan, watcher-triggered
+   refresh, a client `changeset/filesReviewChanged` (rejected), unsubscribe (state evicted), subscribe to an unknown changeset (error), ping.
+   Result (imladris, node 24.19.0, go 1.27.2): the transcripts are equal after normalization. Findings: none in the port. One mistake of the
+   harness was found by the first run (the script's literal `status: "idle"` where the protocol has the number 1) and fixed in the script.
+   Not covered: turns driven by a Pi agent (the 15 pi-replay skips), resources, terminals, reconnect; the Go reducers and the npm client library
+   are not compared with each other.
 
 ## Mapping
 

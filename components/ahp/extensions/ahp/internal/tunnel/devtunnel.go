@@ -9,7 +9,6 @@ import (
 	"io/fs"
 	"math"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -161,8 +160,8 @@ func decodeLoginStatus(value map[string]any, stdout string) (loggedIn bool, err 
 }
 
 var (
-	noTunnelsFound = regexp.MustCompile(`(?i)\bno tunnels? found\b`)
-	noPortsFound   = regexp.MustCompile(`(?i)\bno (?:tunnel )?ports? found\b`)
+	noTunnelsFound = lazyRegexp(`(?i)\bno tunnels? found\b`)
+	noPortsFound   = lazyRegexp(`(?i)\bno (?:tunnel )?ports? found\b`)
 )
 
 func decodeTunnels(value map[string]any, stdout string) ([]Tunnel, error) {
@@ -190,7 +189,7 @@ func decodeTunnels(value map[string]any, stdout string) ([]Tunnel, error) {
 		}
 		return tunnels, nil
 	}
-	if warning, ok := value["warning"].(string); ok && noTunnelsFound.MatchString(warning) {
+	if warning, ok := value["warning"].(string); ok && noTunnelsFound().MatchString(warning) {
 		return nil, nil
 	}
 	return nil, unexpectedResponse("list", stdout)
@@ -236,7 +235,7 @@ func decodePortList(value map[string]any, stdout string) ([]portDetails, error) 
 		}
 		return ports, nil
 	}
-	if warning, ok := value["warning"].(string); ok && noPortsFound.MatchString(warning) {
+	if warning, ok := value["warning"].(string); ok && noPortsFound().MatchString(warning) {
 		return nil, nil
 	}
 	return nil, unexpectedResponse("port list", stdout)

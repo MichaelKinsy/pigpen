@@ -7,6 +7,7 @@ package tunnel
 import (
 	"regexp"
 	"strings"
+	"sync"
 )
 
 // LauncherLabel is required for clients using the VS Code-compatible discovery convention.
@@ -35,16 +36,21 @@ func DisplayLabel(labels []string) (string, bool) {
 	return "", false
 }
 
+// lazyRegexp compiles on first use: package initialisation is on the extension's cold start path.
+func lazyRegexp(expr string) func() *regexp.Regexp {
+	return sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile(expr) })
+}
+
 var (
-	leadingDashes = regexp.MustCompile(`^-+`)
-	notLabelChar  = regexp.MustCompile(`[^A-Za-z0-9_-]`)
+	leadingDashes = lazyRegexp(`^-+`)
+	notLabelChar  = lazyRegexp(`[^A-Za-z0-9_-]`)
 )
 
 // NameLabel applies the discovery convention's normalization to a user-supplied name; false when
 // nothing is left.
 func NameLabel(name string) (string, bool) {
-	slug := leadingDashes.ReplaceAllString(name, "")
-	slug = notLabelChar.ReplaceAllString(slug, "")
+	slug := leadingDashes().ReplaceAllString(name, "")
+	slug = notLabelChar().ReplaceAllString(slug, "")
 	if len(slug) > 20 {
 		slug = slug[:20]
 	}
