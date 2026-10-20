@@ -55,6 +55,8 @@ type ExtractOptions struct {
 	Prompt     string
 	Model      string
 	ToolNames  RegisteredToolNames
+	// AuthProfile fetches with the browser cookies of an authFetch profile (direct only).
+	AuthProfile *AuthFetchProfile
 	// Proxy routes the direct fetch through an HTTP(S) or SOCKS proxy.
 	Proxy string
 	// Lookup replaces the DNS resolver used for SSRF validation (test seam).
@@ -201,7 +203,8 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 			return failed(rawURL, err.Error())
 		}
 	}
-	if o.Mode == "raw" {
+	// An authenticated fetch is direct only: no hosted provider ever sees the cookies (extract.ts:552).
+	if o.AuthProfile != nil || o.Mode == "raw" {
 		timeout, err := ResolveFetchTimeoutMs(o.TimeoutMs)
 		if err != nil {
 			return failed(rawURL, err.Error())
@@ -577,6 +580,11 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		return fail(err.Error())
 	}
 	trustEnvProxy := o.Proxy == "" && ssrf.TrustEnvProxy
+	validation := ValidationOptions{Lookup: o.Lookup, DomainPolicy: &policy, AllowRanges: ssrf.AllowRanges, TrustEnvProxy: trustEnvProxy}
+	fetch := currentPageFetch()
+	if o.AuthProfile != nil {
+		fetch = authFetchFunc(*o.AuthProfile, fetch, validation)
+	}
 	resp, err := FetchRemoteURL(ctx, rawURL, RequestInit{Method: "GET", Header: http.Header{
 		"User-Agent":                {userAgentFetch},
 		"Accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"},
@@ -588,8 +596,8 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		"Sec-Fetch-User":            {"?1"},
 		"Upgrade-Insecure-Requests": {"1"},
 	}}, FetchRemoteOptions{
-		ValidationOptions: ValidationOptions{Lookup: o.Lookup, DomainPolicy: &policy, AllowRanges: ssrf.AllowRanges, TrustEnvProxy: trustEnvProxy},
-		Fetch:             currentPageFetch(),
+		ValidationOptions: validation,
+		Fetch:             fetch,
 	})
 	if err != nil {
 		return fail(err.Error())

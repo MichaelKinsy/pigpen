@@ -32,6 +32,8 @@ func ResetCaches() {
 	configMu.Unlock()
 	resetProviderState()
 	resetGitHubState()
+	resetGeminiWebConfig()
+	resetCookieState()
 }
 
 func fileExists(path string) bool {
