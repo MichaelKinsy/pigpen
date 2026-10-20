@@ -781,16 +781,16 @@ func TestSelectOverlayKeys(t *testing.T) {
 		}
 		return sdkResult{res.Done, res.Value}
 	}
-	if o.selected != 0 {
+	if o.list.selectedIndex != 0 {
 		t.Fatal("starts on the first item")
 	}
 	press("\x1b[A")
-	if o.selected != 2 {
-		t.Errorf("up wraps to the last item, got %d", o.selected)
+	if o.list.selectedIndex != 2 {
+		t.Errorf("up wraps to the last item, got %d", o.list.selectedIndex)
 	}
 	press("\x1b[B")
-	if o.selected != 0 {
-		t.Errorf("down wraps to the first item, got %d", o.selected)
+	if o.list.selectedIndex != 0 {
+		t.Errorf("down wraps to the first item, got %d", o.list.selectedIndex)
 	}
 	press("\x1b[B")
 	if r := press("\r"); !r.done || r.value.(map[string]any)["value"] != "1" || r.value.(map[string]any)["description"] != "second" {
