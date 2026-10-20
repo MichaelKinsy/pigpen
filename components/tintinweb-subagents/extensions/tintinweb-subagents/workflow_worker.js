@@ -27,7 +27,17 @@
   const realmParse = JSON.parse;
   const realmStringify = JSON.stringify;
   const isArray = Array.isArray;
-  const hasOwn = Object.prototype.hasOwnProperty;
+  // The script shares this realm (the original gives it a vm context of its own), so what the runtime calls on arrays,
+  // promises and objects is captured here, before the script can patch Array.prototype or Promise: a patched push or
+  // catch must break the script, never the runtime.
+  const uncurry = Function.prototype.bind.bind(Function.prototype.call);
+  const hasOwn = uncurry(Object.prototype.hasOwnProperty);
+  const arrPush = uncurry(Array.prototype.push);
+  const arrJoin = uncurry(Array.prototype.join);
+  const arrIndexOf = uncurry(Array.prototype.indexOf);
+  const arrMap = uncurry(Array.prototype.map);
+  const promiseCatch = uncurry(Promise.prototype.catch);
+  const NewPromise = Promise;
   const getOwnPropertySymbols = Object.getOwnPropertySymbols;
   const getPrototypeOf = Object.getPrototypeOf;
   const objectKeys = Object.keys;
@@ -53,7 +63,7 @@
   function callHost(method, payload) {
     // Drain first, so the phase() that named this agent reaches the host ahead of the agent entry.
     flushProgress();
-    return new Promise(function (resolve, reject) {
+    return new NewPromise(function (resolve, reject) {
       const callId = nextCallId++;
       pendingCalls.set(callId, { resolve: resolve, reject: reject });
       host.call(callId, method, payload);
@@ -88,7 +98,7 @@
   let flushTimer = null;
 
   function emit(entry) {
-    progressQueue.push(entry);
+    arrPush(progressQueue, entry);
     // Batched on a macrotask: a fan-out emits a burst of phase/log entries in one turn, and the host renders once per
     // batch rather than once per entry.
     if (flushTimer === null) flushTimer = host.defer(flushProgress);
@@ -143,7 +153,7 @@
       const length = value.length;
       for (let i = 0; i < length; i++) {
         // A sparse array round-trips through JSON as nulls, which silently changes the data. Reject instead.
-        if (!hasOwn.call(value, i)) {
+        if (!hasOwn(value, i)) {
           throw boundaryError("a sparse array", path + "[" + i + "]");
         }
         assertBoundary(value[i], path + "[" + i + "]", seen);
@@ -181,7 +191,7 @@
       throw new NewError(what + " was given " + length + " items, over the limit of " + ITEM_CAP + ".");
     }
     const out = [];
-    for (let i = 0; i < length; i++) out.push(value[i]);
+    for (let i = 0; i < length; i++) arrPush(out, value[i]);
     return out;
   }
 
@@ -293,8 +303,8 @@
   function makeConsole(scope) {
     const write = function () {
       const parts = [];
-      for (let i = 0; i < arguments.length; i++) parts.push(describe(arguments[i]));
-      emit({ type: "workflow_log", message: logPrefix(scope) + parts.join(" ") });
+      for (let i = 0; i < arguments.length; i++) arrPush(parts, describe(arguments[i]));
+      emit({ type: "workflow_log", message: logPrefix(scope) + arrJoin(parts, " ") });
     };
     return { log: write, info: write, warn: write, error: write, debug: write };
   }
@@ -309,12 +319,12 @@
     const optionKeys = objectKeys(options);
     for (let k = 0; k < optionKeys.length; k++) {
       const key = optionKeys[k];
-      if (AGENT_OPTIONS.indexOf(key) !== -1) continue;
+      if (arrIndexOf(AGENT_OPTIONS, key) !== -1) continue;
       const why = UNSUPPORTED_AGENT_OPTIONS[key];
       throw new NewError(
         why !== undefined
           ? "agent() opts." + key + " is not supported here: " + why
-          : "agent() opts." + key + " is not a recognised option. Supported: " + AGENT_OPTIONS.join(", ") + "."
+          : "agent() opts." + key + " is not a recognised option. Supported: " + arrJoin(AGENT_OPTIONS, ", ") + "."
       );
     }
 
@@ -337,8 +347,8 @@
       // A Map or a cycle would survive neither the journal key nor the tool's parameters: same check the return value gets.
       checkBoundary(schema, "agent() opts.schema");
     }
-    if (effort !== undefined && EFFORT_LEVELS.indexOf(effort) === -1) {
-      throw new NewError("agent() opts.effort must be one of: " + EFFORT_LEVELS.join(", ") + ".");
+    if (effort !== undefined && arrIndexOf(EFFORT_LEVELS, effort) === -1) {
+      throw new NewError("agent() opts.effort must be one of: " + arrJoin(EFFORT_LEVELS, ", ") + ".");
     }
 
     // resume revives a child that already exists, so anything describing how to *start* one is not a thing this call
@@ -415,7 +425,7 @@
       }
     }
     return await PromiseAll(
-      list.map(async function (thunk) {
+      arrMap(list, async function (thunk) {
         try {
           return await thunk();
         } catch (error) {
@@ -438,7 +448,7 @@
       }
     }
     return await PromiseAll(
-      list.map(async function (item, index) {
+      arrMap(list, async function (item, index) {
         let value = item;
         for (let s = 0; s < stages.length; s++) {
           try {
@@ -590,7 +600,7 @@
 
   return {
     main: function () {
-      main().catch(function (error) {
+      promiseCatch(main(), function (error) {
         flushProgress();
         host.error(
           error && error.message ? String(error.message) : String(error),

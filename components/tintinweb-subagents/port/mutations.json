@@ -651,7 +651,7 @@
   "name": "skills-false-accepted",
   "file": "refuse.go",
   "find": "return v == nil || (ok && b)",
-  "replace": "return true"
+  "replace": "_, _ = b, ok\n\treturn true"
  },
  {
   "name": "extension-list-accepted",
@@ -693,7 +693,7 @@
   "name": "setting-notice-repeats",
   "file": "extension.go",
   "find": "if text != \"\" && !same {",
-  "replace": "if text != \"\" {"
+  "replace": "if text != \"\" && (!same || true) {"
  },
  {
   "name": "setting-notice-silent",
@@ -705,13 +705,13 @@
   "name": "start-skips-agent-file-check",
   "file": "bus.go",
   "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedAgentFeature(cfg); false && feature != \"\" {"
  },
  {
   "name": "rpc-skips-option-check",
   "file": "bus.go",
   "find": "if feature := unportedSpawnOption(opts); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedSpawnOption(opts); false && feature != \"\" {"
  },
  {
   "name": "rpc-name-dropped",
@@ -1215,13 +1215,13 @@
   "name": "saved-list-unsorted",
   "file": "workflow_saved.go",
   "find": "sort.Strings(out)",
-  "replace": ""
+  "replace": "_ = sort.Strings"
  },
  {
   "name": "saved-list-includes-non-workflows",
   "file": "workflow_saved.go",
   "find": "return ok && hasMetaDeclaration(source)",
-  "replace": "return ok"
+  "replace": "return ok && (hasMetaDeclaration(source) || true)"
  },
  {
   "name": "saved-script-path-beats-nothing",
@@ -1256,7 +1256,7 @@
  {
   "name": "worker-unknown-option-ignored",
   "file": "workflow_worker.js",
-  "find": "if (AGENT_OPTIONS.indexOf(key) !== -1) continue;",
+  "find": "if (arrIndexOf(AGENT_OPTIONS, key) !== -1) continue;",
   "replace": "continue;"
  },
  {
@@ -1364,7 +1364,7 @@
  {
   "name": "worker-boundary-allows-sparse",
   "file": "workflow_worker.js",
-  "find": "if (!hasOwn.call(value, i)) {",
+  "find": "if (!hasOwn(value, i)) {",
   "replace": "if (false) {"
  },
  {
@@ -1515,7 +1515,7 @@
   "name": "runtime-replay-resume-journal",
   "file": "workflow_runtime.go",
   "find": "rt.prefixIntact = len(rt.journalEntries) > 0 && !journalResumes",
-  "replace": "rt.prefixIntact = len(rt.journalEntries) > 0"
+  "replace": "rt.prefixIntact = len(rt.journalEntries) > 0 && (!journalResumes || true)"
  },
  {
   "name": "runtime-replay-not-recorded",
@@ -1779,7 +1779,7 @@
   "name": "runtime-boundary-undefined-args",
   "file": "workflow_runtime.go",
   "find": "case reflect.Float32, reflect.Float64:\n\t\tif f := v.Float(); math.IsNaN(f) || math.IsInf(f, 0) {",
-  "replace": "case reflect.Float32, reflect.Float64:\n\t\tif f := v.Float(); false {"
+  "replace": "case reflect.Float32, reflect.Float64:\n\t\tif f := v.Float(); false && (math.IsNaN(f) || math.IsInf(f, 0)) {"
  },
  {
   "name": "runtime-boundary-struct-ok",
@@ -1905,7 +1905,7 @@
   "name": "host-cwd-stale",
   "file": "workflow_host.go",
   "find": "if _, err := os.Stat(r.WorktreePath); err != nil {\n\t\treturn \"\"\n\t}",
-  "replace": ""
+  "replace": "_ = os.Stat"
  },
  {
   "name": "host-gate-killed-passes",
@@ -1953,7 +1953,7 @@
   "name": "host-resume-unspawned",
   "file": "workflow_host.go",
   "find": "if !ok {\n\t\treturn workflowSpawnResult{Error: `Cannot resume",
-  "replace": "if false {\n\t\treturn workflowSpawnResult{Error: `Cannot resume"
+  "replace": "if !ok && false {\n\t\treturn workflowSpawnResult{Error: `Cannot resume"
  },
  {
   "name": "host-resume-no-report",
@@ -2013,7 +2013,7 @@
   "name": "models-list-unsorted",
   "file": "workflow_models.go",
   "find": "sort.Strings(list)",
-  "replace": ""
+  "replace": "_ = sort.Strings"
  },
  {
   "name": "models-describe-claude-prefix",
@@ -2067,7 +2067,7 @@
   "name": "tool-resume-reuses-script",
   "file": "workflow_tool.go",
   "find": "if !hasScript && !hasPath && !hasName && resumeFrom != nil {",
-  "replace": "if false {"
+  "replace": "if false && !hasScript && !hasPath && !hasName && resumeFrom != nil {"
  },
  {
   "name": "tool-meta-checked-late",
@@ -2115,7 +2115,7 @@
   "name": "tool-default-off",
   "file": "workflow_tool.go",
   "find": "w.mu.Lock()\n\t\tw.enabled, w.pinned = enabled, pinned",
-  "replace": "w.mu.Lock()\n\t\tw.pinned = pinned"
+  "replace": "w.mu.Lock()\n\t\t_ = enabled\n\t\tw.pinned = pinned"
  },
  {
   "name": "tool-setting-global-only",
@@ -2193,7 +2193,7 @@
   "name": "tool-withdraw-drops-others",
   "file": "workflow_tool.go",
   "find": "if n != workflowToolName {\n\t\t\t\t\trest = append(rest, n)\n\t\t\t\t}",
-  "replace": ""
+  "replace": "if n != workflowToolName {\n\t\t\t\t\t_ = rest\n\t\t\t\t}"
  },
  {
   "name": "flag-read-before-collision",
@@ -2301,7 +2301,7 @@
   "name": "adapter-workflow-child-block",
   "file": "workflow_manager.go",
   "find": "\treturn system[:end] + workflowChildBlock + system[end:]",
-  "replace": "\treturn system"
+  "replace": "\t_ = end\n\treturn system"
  },
  {
   "name": "adapter-task-dir-uid",
@@ -2343,7 +2343,7 @@
   "name": "runner-output-tokens",
   "file": "runner.go",
   "find": "res.OutputTokens = int(out)",
-  "replace": ""
+  "replace": "_ = out"
  },
  {
   "name": "bus-workflow-id-forwarded",
@@ -2530,5 +2530,11 @@
   "file": "workflow_task.go",
   "find": "Resume it once it has finished.`",
   "replace": "Stop it from /agents → Workflows before resuming it.`"
+ },
+ {
+  "name": "worker-array-methods-not-captured",
+  "file": "workflow_worker.js",
+  "find": "const arrPush = uncurry(Array.prototype.push);",
+  "replace": "const arrPush = function (a, v) { return a.push(v); };"
  }
 ]

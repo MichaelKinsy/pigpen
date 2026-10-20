@@ -253,7 +253,7 @@ m("saved-relative-path-cwd", "workflow_saved.go", "resolved = filepath.Join(cwd,
 
 # workflow_worker.js: the globals a script sees
 m("worker-effort-levels", "workflow_worker.js", "const EFFORT_LEVELS = [\"minimal\", \"low\", \"medium\", \"high\", \"xhigh\", \"max\"];", "const EFFORT_LEVELS = [\"low\", \"medium\", \"high\", \"xhigh\", \"max\"];")
-m("worker-unknown-option-ignored", "workflow_worker.js", "if (AGENT_OPTIONS.indexOf(key) !== -1) continue;", "continue;")
+m("worker-unknown-option-ignored", "workflow_worker.js", "if (arrIndexOf(AGENT_OPTIONS, key) !== -1) continue;", "continue;")
 m("worker-schema-option-dropped", "workflow_worker.js", "const AGENT_OPTIONS = [\"label\", \"phase\", \"model\", \"agentType\", \"isolation\", \"gate\", \"resume\", \"effort\", \"schema\"];", "const AGENT_OPTIONS = [\"label\", \"phase\", \"model\", \"agentType\", \"isolation\", \"gate\", \"resume\", \"effort\"];")
 m("worker-resume-agenttype-allowed", "workflow_worker.js", "if (agentType !== undefined) {\n        throw new NewError(\n          \"agent() opts.resume and opts.agentType", "if (false) {\n        throw new NewError(\n          \"agent() opts.resume and opts.agentType")
 m("worker-resume-gate-allowed", "workflow_worker.js", "if (gate !== undefined) {\n        throw new NewError(\"agent() opts.gate cannot be combined with opts.resume.\");", "if (false) {\n        throw new NewError(\"agent() opts.gate cannot be combined with opts.resume.\");")
@@ -271,7 +271,7 @@ m("worker-budget-total", "workflow_worker.js", "total: null,", "total: 0,")
 m("worker-budget-remaining", "workflow_worker.js", "return Infinity;", "return 0;")
 m("worker-boundary-allows-map", "workflow_worker.js", "if (prototype !== null && prototype !== ObjectPrototype) {", "if (false) {")
 m("worker-boundary-allows-nan", "workflow_worker.js", "if (!isFinite_(value)) throw boundaryError(\"a non-finite number\", path);", "")
-m("worker-boundary-allows-sparse", "workflow_worker.js", "if (!hasOwn.call(value, i)) {", "if (false) {")
+m("worker-boundary-allows-sparse", "workflow_worker.js", "if (!hasOwn(value, i)) {", "if (false) {")
 m("worker-boundary-allows-cycle", "workflow_worker.js", "if (seen.has(value)) throw boundaryError(\"a circular structure\", path);", "")
 m("worker-eval-allowed", "workflow_worker.js", "define(globalThis, \"eval\", banned);", "")
 m("worker-function-ctor-allowed", "workflow_worker.js", "define(FunctionPrototype, \"constructor\", banned);", "")
@@ -494,6 +494,30 @@ m("agents-menu-not-refused", "tools.go", "lines = append(lines, \"  \"+refusalTe
 m("resume-target-names-menu", "workflow_task.go", "Resume it once it has finished.`", "Stop it from /agents → Workflows before resuming it.`")
 
 M = [x for x in M if x]
+# Compile-safe forms (the first form of these left a variable or an import unused, so the mutant did not build).
+FIXED = {
+ "skills-false-accepted": ("return v == nil || (ok && b)", "_, _ = b, ok\n\treturn true"),
+ "setting-notice-repeats": ("if text != \"\" && !same {", "if text != \"\" && (!same || true) {"),
+ "start-skips-agent-file-check": ("if feature := unportedAgentFeature(cfg); feature != \"\" {", "if feature := unportedAgentFeature(cfg); false && feature != \"\" {"),
+ "rpc-skips-option-check": ("if feature := unportedSpawnOption(opts); feature != \"\" {", "if feature := unportedSpawnOption(opts); false && feature != \"\" {"),
+ "saved-list-unsorted": ("sort.Strings(out)", "_ = sort.Strings"),
+ "saved-list-includes-non-workflows": ("return ok && hasMetaDeclaration(source)", "return ok && (hasMetaDeclaration(source) || true)"),
+ "runtime-replay-resume-journal": ("rt.prefixIntact = len(rt.journalEntries) > 0 && !journalResumes", "rt.prefixIntact = len(rt.journalEntries) > 0 && (!journalResumes || true)"),
+ "runtime-boundary-undefined-args": ("case reflect.Float32, reflect.Float64:\n\t\tif f := v.Float(); math.IsNaN(f) || math.IsInf(f, 0) {", "case reflect.Float32, reflect.Float64:\n\t\tif f := v.Float(); false && (math.IsNaN(f) || math.IsInf(f, 0)) {"),
+ "host-cwd-stale": ("if _, err := os.Stat(r.WorktreePath); err != nil {\n\t\treturn \"\"\n\t}", "_ = os.Stat"),
+ "host-resume-unspawned": ("if !ok {\n\t\treturn workflowSpawnResult{Error: `Cannot resume", "if !ok && false {\n\t\treturn workflowSpawnResult{Error: `Cannot resume"),
+ "models-list-unsorted": ("sort.Strings(list)", "_ = sort.Strings"),
+ "tool-resume-reuses-script": ("if !hasScript && !hasPath && !hasName && resumeFrom != nil {", "if false && !hasScript && !hasPath && !hasName && resumeFrom != nil {"),
+ "tool-default-off": ("w.mu.Lock()\n\t\tw.enabled, w.pinned = enabled, pinned", "w.mu.Lock()\n\t\t_ = enabled\n\t\tw.pinned = pinned"),
+ "tool-withdraw-drops-others": ("if n != workflowToolName {\n\t\t\t\t\trest = append(rest, n)\n\t\t\t\t}", "if n != workflowToolName {\n\t\t\t\t\t_ = rest\n\t\t\t\t}"),
+ "adapter-workflow-child-block": ("\treturn system[:end] + workflowChildBlock + system[end:]", "\t_ = end\n\treturn system"),
+ "runner-output-tokens": ("res.OutputTokens = int(out)", "_ = out"),
+}
+for x in M:
+    if x and x["name"] in FIXED:
+        x["find"], x["replace"] = FIXED[x["name"]][0], FIXED[x["name"]][1]
+m("worker-array-methods-not-captured", "workflow_worker.js", "const arrPush = uncurry(Array.prototype.push);", "const arrPush = function (a, v) { return a.push(v); };")
+
 by_file = {}
 for x in M:
     by_file.setdefault(x["file"], open(os.path.join(root, x["file"])).read())
