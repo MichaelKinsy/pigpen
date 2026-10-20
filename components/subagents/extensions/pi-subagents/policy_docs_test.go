@@ -19,6 +19,10 @@ func TestWriterBudgetGuidance(t *testing.T) {
 			}
 			return string(b)
 		}
+		// the shipped docs sit beside the extension directory; a copy of the module alone (the mutation harness) has none
+		if _, err := os.Stat(filepath.Join("..", "..", "docs", "tool-reference.md")); err != nil {
+			t.Skipf("the package docs are not beside this module (%v); their guidance is not checked", err)
+		}
 		toolReference := read("docs/tool-reference.md")
 		for _, text := range []string{toolReference, read("skills/pigpen-subagents/SKILL.md"), read("prompts/review-loop.md")} {
 			polMatches(t, text, "As a conservative orchestration policy, do not (?:pass|set) a hard `toolBudget`")
