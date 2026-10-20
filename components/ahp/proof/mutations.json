@@ -591,7 +591,7 @@
   "name": "mime-bare-name-in-directory-typed",
   "file": "internal/svc/mime.go",
   "find": "if !hasDot && hasPath {",
-  "replace": "if false && !hasDot && hasPath {"
+  "replace": "if !hasDot && !hasPath {"
  },
  {
   "name": "mime-lookup-skips-first-match",
