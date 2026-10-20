@@ -195,6 +195,9 @@ func ScanGaps(tsSource, surfaceMarkdown string) []Gap {
 			sig = append(sig, re.String())
 		}
 		key := strings.Join(sig, "&") + "|" + row.goCell[:min(7, len(row.goCell))]
+		if row.inReplacedContext {
+			key += "|in withSession callbacks" // the same words elsewhere in the file are another claim
+		}
 		if i, dup := seen[key]; dup {
 			gaps[i].Related++
 			continue
