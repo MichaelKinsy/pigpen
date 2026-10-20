@@ -3,8 +3,11 @@ package warden
 import (
 	"encoding/json"
 	"io"
+	"math"
 	"net/http"
 	"net/http/httptest"
+	"sort"
+	"strconv"
 	"sync"
 	"testing"
 )
@@ -21,6 +24,8 @@ type fakeTypeSafe struct {
 	// noul and scope script the answers by question id; anything unscripted answers 0.05 / expected_step.
 	noul  map[string]float64
 	scope string
+	// shortAnswers drops one answer from every response: a response the original's validResult refuses.
+	shortAnswers bool
 }
 
 type tsRequest struct {
@@ -40,7 +45,7 @@ func newFakeTypeSafe(t *testing.T) *fakeTypeSafe {
 		_ = json.Unmarshal(raw, &body)
 		f.mu.Lock()
 		f.requests = append(f.requests, tsRequest{Auth: r.Header.Get("Authorization"), Path: r.URL.Path, Body: body})
-		status, noul, scope := f.status, map[string]float64{}, f.scope
+		status, noul, scope, short := f.status, map[string]float64{}, f.scope, f.shortAnswers
 		for k, v := range f.noul {
 			noul[k] = v
 		}
@@ -62,9 +67,40 @@ func newFakeTypeSafe(t *testing.T) *fakeTypeSafe {
 				}
 				answers[id] = map[string]any{"type": "noul", "noul": v}
 			case "choice":
-				answers[id] = map[string]any{"type": "choice", "choice": scope, "confidence": 0.9, "probabilities": map[string]any{scope: 0.9}}
+				// A valid answer: the confidence, and a probability for every label the question offers.
+				criteria, _ := q.(map[string]any)["criteria"].(map[string]any)
+				labels := make([]string, 0, len(criteria))
+				for k := range criteria {
+					labels = append(labels, k)
+				}
+				sort.Strings(labels)
+				pick := scope
+				if id == "outcome" {
+					pick = "complete" // the done check's answer for a finished piece of work
+				}
+				if _, ok := criteria[pick]; !ok && len(labels) > 0 {
+					pick = labels[0]
+				}
+				probs := map[string]any{}
+				for _, k := range labels {
+					probs[k] = 0.1
+				}
+				probs[pick] = 0.9
+				answers[id] = map[string]any{"type": "choice", "choice": pick, "confidence": 0.9, "probabilities": probs}
 			case "score":
-				answers[id] = map[string]any{"type": "score", "score": 1.0, "confidence": 0.9, "legend": map[string]any{}, "probabilities": map[string]any{}}
+				levels, _ := q.(map[string]any)["criteria"].([]any)
+				legend, probs := map[string]any{}, map[string]any{}
+				for i := range levels {
+					legend[strconv.Itoa(i)] = "level " + strconv.Itoa(i)
+					probs[strconv.Itoa(i)] = 1.0 / float64(len(levels))
+				}
+				answers[id] = map[string]any{"type": "score", "score": math.Min(1, float64(max(0, len(levels)-1))), "confidence": 0.9, "legend": legend, "probabilities": probs}
+			}
+		}
+		if short {
+			for id := range answers {
+				delete(answers, id)
+				break
 			}
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"model": "jev-fake", "answers": answers, "usage": map[string]any{"input_tokens": 10, "output_tokens": 2}})
