@@ -36,9 +36,20 @@ type agentRecord struct {
 	Result, Error               string
 	Background                  bool
 	StartedAt, CompletedAt      time.Time
-	ToolUses, Tokens, Turns     int
+	ToolUses, Turns             int
 	WrappedUp                   bool
 	Consumed                    bool
+
+	// Usage is what the agent's assistant messages spent, lifetime (it survives compaction); getLifetimeTotal is its
+	// display total (input + output + cacheWrite). upstream: types.ts AgentRecord.lifetimeUsage.
+	Usage             lifetimeUsage
+	CompactionCount   int      // successful compactions of the agent's session
+	ContextPercent    *float64 // context-window utilization when the agent settled, nil when unavailable
+	OutputFile        string   // the `.output` transcript, "" when none is written
+	Messages          []map[string]any
+	StructuredJSON    string // the validated StructuredOutput payload, when a schema was asked for
+	StructuredRetried bool
+	transcript        *transcriptStream
 
 	spec    childSpec
 	child   child
@@ -64,6 +75,54 @@ type manager struct {
 	start         childStarter
 	// onSettle runs once a record has settled (completed, stopped or failed).
 	onSettle func(*agentRecord)
+	// onSpawn runs synchronously once a record exists, before it is queued or started (the transcript is attached
+	// here). onStart runs when an agent starts running, immediately or when it leaves the queue. onCompact and
+	// onUsage run as the child's stream reports them. upstream: agent-manager.ts OnAgentStart, OnAgentCompact, OnAgentUsage.
+	onSpawn   func(*agentRecord)
+	onStart   func(*agentRecord)
+	onCompact func(r *agentRecord, reason string, tokensBefore, count int)
+	onUsage   func(*agentRecord, lifetimeUsage)
+}
+
+// hooksFor is what the record's child reports into. upstream: agent-manager.ts onAssistantUsage, onCompaction.
+func (m *manager) hooksFor(r *agentRecord) *childHooks {
+	return &childHooks{
+		Usage: func(u lifetimeUsage) {
+			m.mu.Lock()
+			addUsage(&r.Usage, u)
+			m.mu.Unlock()
+			if m.onUsage != nil {
+				m.onUsage(r, u)
+			}
+		},
+		Compaction: func(reason string, tokensBefore int) {
+			m.mu.Lock()
+			r.CompactionCount++
+			count := r.CompactionCount
+			m.mu.Unlock()
+			if m.onCompact != nil {
+				m.onCompact(r, reason, tokensBefore, count)
+			}
+		},
+		Event: func(ev map[string]any) {
+			m.mu.Lock()
+			tr := r.transcript
+			m.mu.Unlock()
+			if tr != nil {
+				tr.onEvent(ev)
+			}
+		},
+	}
+}
+
+// closeTranscript does the transcript's final flush and detaches it. upstream: record.outputCleanup.
+func (m *manager) closeTranscript(r *agentRecord) {
+	m.mu.Lock()
+	tr := r.transcript
+	m.mu.Unlock()
+	if tr != nil {
+		tr.close()
+	}
 }
 
 func newManager(start childStarter, onSettle func(*agentRecord)) *manager {
@@ -146,6 +205,12 @@ func (m *manager) spawn(typ, description, name string, spec childSpec, backgroun
 	if name != "" {
 		r.Alias = m.assignHandle(handleBase(name))
 	}
+	r.spec.Hooks = m.hooksFor(r)
+	m.mu.Unlock()
+	if m.onSpawn != nil {
+		m.onSpawn(r)
+	}
+	m.mu.Lock()
 	if background && m.running >= m.maxConcurrent {
 		m.queue = append(m.queue, r)
 		m.mu.Unlock()
@@ -156,6 +221,9 @@ func (m *manager) spawn(typ, description, name string, spec childSpec, backgroun
 	}
 	r.Status = statusRunning
 	m.mu.Unlock()
+	if m.onStart != nil {
+		m.onStart(r)
+	}
 	go m.run(r)
 	return r
 }
@@ -180,6 +248,7 @@ func (m *manager) run(r *agentRecord) {
 		}
 		res, err = c.wait()
 	}
+	m.closeTranscript(r)
 	m.mu.Lock()
 	r.CompletedAt = time.Now()
 	switch {
@@ -204,7 +273,8 @@ func (m *manager) run(r *agentRecord) {
 		r.Status = statusCompleted
 	}
 	if res != nil {
-		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Tokens, res.Turns, res.WrappedUp
+		r.Result, r.ToolUses, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Turns, res.WrappedUp
+		r.ContextPercent, r.Messages, r.StructuredJSON, r.StructuredRetried = res.ContextPercent, res.Messages, res.StructuredJSON, res.StructuredRetried
 	}
 	if r.Background {
 		m.running--
@@ -223,6 +293,9 @@ func (m *manager) run(r *agentRecord) {
 		m.onSettle(r)
 	}
 	if next != nil {
+		if m.onStart != nil {
+			m.onStart(next)
+		}
 		go m.run(next)
 	}
 }
@@ -252,6 +325,7 @@ func (m *manager) abort(r *agentRecord) bool {
 		}
 		r.Status, r.stopped, r.CompletedAt = statusStopped, true, time.Now()
 		m.mu.Unlock()
+		m.closeTranscript(r)
 		close(r.started)
 		close(r.done)
 		if m.onSettle != nil {

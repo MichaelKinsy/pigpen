@@ -69,8 +69,6 @@ func unportedAgentFeature(cfg *agentConfig) string {
 		return "skill selection (skills)"
 	case cfg.PersistSession != nil && *cfg.PersistSession:
 		return "persisted agent sessions (persist_session)"
-	case cfg.OutputTranscript != nil && *cfg.OutputTranscript:
-		return "output transcripts (output_transcript)"
 	case cfg.SessionDir != "":
 		return "a session directory (session_dir)"
 	}
@@ -141,11 +139,9 @@ var settingRules = []settingRule{
 	{key: "agentMentions", kind: "enum", enum: []string{"model", "direct", "off"}, okEnum: []string{"off"}},
 	{key: "rememberAgents", kind: "bool", okBool: false},
 	{key: "widgetMode", kind: "enum", enum: []string{"all", "background", "off"}, okEnum: []string{"off"}},
-	{key: "outputTranscript", kind: "bool", okBool: false},
 	{key: "worktreeIsolation", kind: "bool", okBool: false},
 	{key: "workflowsEnabled", kind: "bool", okBool: false},
 	{key: "maxSubagentDepth", kind: "int", okInts: []int{0, 1}},
-	{key: "reportUsage", kind: "bool", okBool: false},
 	{key: "showCost", kind: "bool", okBool: false},
 	{key: "showModel", kind: "bool", okBool: false},
 	{key: "viewerMarkdown", kind: "enum", enum: []string{"assistant", "all", "off"}},

@@ -1,0 +1,33 @@
+{
+  "name": "obs-settings-honored",
+  "description": "outputTranscript and reportUsage in subagents.json are honored: the session starts with no notice.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false, \"outputTranscript\": true, \"reportUsage\": true, \"showCost\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}

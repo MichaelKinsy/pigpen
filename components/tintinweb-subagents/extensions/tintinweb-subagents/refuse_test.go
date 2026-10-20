@@ -91,7 +91,6 @@ func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 		{"skills false", "skills: false", "skill selection (skills)"},
 		{"skills list", "skills: a, b", "skill selection (skills)"},
 		{"persist_session", "persist_session: true", "persisted agent sessions (persist_session)"},
-		{"output_transcript", "output_transcript: true", "output transcripts (output_transcript)"},
 		{"session_dir", "session_dir: /tmp/x", "a session directory (session_dir)"},
 	}
 	for _, c := range cases {
@@ -193,11 +192,9 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
 		{"rememberAgents", `{"rememberAgents": true}`, "rememberAgents: true"},
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
-		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
 		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
 		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
-		{"reportUsage", `{"reportUsage": true}`, "reportUsage: true"},
 		{"showCost", `{"showCost": true}`, "showCost: true"},
 		{"showModel", `{"showModel": true}`, "showModel: true"},
 		{"viewerMarkdown", `{"viewerMarkdown": "all"}`, `viewerMarkdown: "all"`},
@@ -215,14 +212,14 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	t.Run("the global file counts and the project file overrides it", func(t *testing.T) {
 		dir := t.TempDir()
 		t.Setenv("PIG_CODING_AGENT_DIR", dir)
-		if err := os.WriteFile(filepath.Join(dir, "subagents.json"), []byte(`{"showCost": true, "reportUsage": true}`), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "subagents.json"), []byte(`{"showCost": true, "showModel": true}`), 0o644); err != nil {
 			t.Fatal(err)
 		}
 		cwd := t.TempDir()
 		_ = os.MkdirAll(filepath.Join(cwd, ".pi"), 0o755)
 		_ = os.WriteFile(filepath.Join(cwd, ".pi", "subagents.json"), []byte(`{"showCost": false}`), 0o644)
 		r := startRigIn(t, cwd)
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true)")})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showModel: true)")})
 	})
 }
 

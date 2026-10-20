@@ -28,12 +28,14 @@ type app struct {
 	latest          *sdk.Context
 	timers          map[string]*time.Timer
 	settingsNotice  string
+	obs             obsState
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
 	a := &app{e: e, timers: map[string]*time.Timer{}}
 	a.mgr = newManager(start, a.onSettle)
+	a.wireObs()
 	return a
 }
 
@@ -49,6 +51,7 @@ func (a *app) reload(cwd string) {
 	a.defaultMaxTurns = st.DefaultMaxTurns
 	a.graceTurns = st.GraceTurns
 	a.mu.Unlock()
+	a.reloadObs(cwd)
 	setFallbackSubagent(st.FallbackSubagent)
 	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
 	custom, warnings := loadCustomAgents(cwd)
@@ -98,6 +101,10 @@ func (a *app) context() (sdk.Context, bool) {
 func Extension() *sdk.Extension {
 	e := sdk.New("tintinweb-subagents")
 	if os.Getenv(depthEnv) != "" {
+		// A schema-bound child reports through a StructuredOutput tool and registers nothing else.
+		if schema := os.Getenv(structuredSchemaEnv); schema != "" {
+			registerStructuredOutput(e, schema)
+		}
 		return e
 	}
 	a := newApp(e, startRPCChild)
@@ -133,6 +140,14 @@ func (a *app) onSettle(r *agentRecord) {
 	}
 	data := map[string]any{"id": r.ID, "type": r.Type, "description": r.Description, "status": r.Status,
 		"toolUses": r.ToolUses, "durationMs": r.CompletedAt.Sub(r.StartedAt).Milliseconds()}
+	// Lifetime spend, which survives compaction: `tokens` is the flat display view (cacheRead excluded), `usage` a
+	// complete pi Usage; each is omitted when nothing was spent. Ungated by showCost. upstream: index.ts buildEventData.
+	if total := getLifetimeTotal(r.Usage); total > 0 {
+		data["tokens"] = map[string]any{"input": r.Usage.Input, "output": r.Usage.Output, "total": total}
+	}
+	if usage := toReportedUsage(r.Usage); usage != nil {
+		data["usage"] = usage
+	}
 	if r.Result != "" {
 		data["result"] = r.Result
 	}
@@ -155,7 +170,7 @@ func (a *app) onSettle(r *agentRecord) {
 			return
 		}
 		turn := true
-		_ = ctx.SendMessage("subagent-notification", formatTaskNotification(r, 500), true, sdk.SendMessageOptions{DeliverAs: "followUp", TriggerTurn: &turn})
+		_ = ctx.SendMessage("subagent-notification", formatTaskNotification(r, 500, a.showCost())+outputFooter(r), true, sdk.SendMessageOptions{DeliverAs: "followUp", TriggerTurn: &turn})
 	})
 }
 
@@ -238,8 +253,16 @@ func partialOutputSuffix(result string) string {
 	return ""
 }
 
+// outputFooter points the model at the transcript. upstream: index.ts emitIndividualNudge.
+func outputFooter(r *agentRecord) string {
+	if r.OutputFile == "" {
+		return ""
+	}
+	return "\nFull transcript available at: " + r.OutputFile
+}
+
 // formatTaskNotification is the completion notice the model receives. upstream: index.ts formatTaskNotification.
-func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
+func formatTaskNotification(r *agentRecord, resultMaxLen int, showCost bool) string {
 	preview := "No output."
 	if r.Result != "" {
 		preview = r.Result
@@ -252,11 +275,26 @@ func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
 	if r.ToolCallID != "" {
 		lines = append(lines, "<tool-use-id>"+escapeXML(r.ToolCallID)+"</tool-use-id>")
 	}
+	if r.OutputFile != "" {
+		lines = append(lines, "<output-file>"+escapeXML(r.OutputFile)+"</output-file>")
+	}
+	ctxXML, compactXML, costXML := "", "", ""
+	if r.ContextPercent != nil {
+		ctxXML = fmt.Sprintf("<context_percent>%d</context_percent>", roundPercent(*r.ContextPercent))
+	}
+	if r.CompactionCount > 0 {
+		compactXML = fmt.Sprintf("<compactions>%d</compactions>", r.CompactionCount)
+	}
+	// Only under showCost: this is LLM context, and a figure the orchestrator did not ask for is a figure it may
+	// start reporting unprompted.
+	if cost := getLifetimeCost(r.Usage); showCost && cost > 0 {
+		costXML = fmt.Sprintf("<estimated_cost_usd>%.4f</estimated_cost_usd>", cost)
+	}
 	return strings.Join(append(lines,
 		"<status>"+escapeXML(statusLabel(r))+"</status>",
 		fmt.Sprintf("<summary>Agent \"%s\" %s%s</summary>", escapeXML(r.Description), r.Status, statusNote(r.Status)),
 		"<result>"+escapeXML(preview)+"</result>",
-		fmt.Sprintf("<usage><total_tokens>%d</total_tokens><tool_uses>%d</tool_uses><duration_ms>%d</duration_ms></usage>", r.Tokens, r.ToolUses, dur),
+		fmt.Sprintf("<usage><total_tokens>%d</total_tokens><tool_uses>%d</tool_uses>%s%s%s<duration_ms>%d</duration_ms></usage>", getLifetimeTotal(r.Usage), r.ToolUses, ctxXML, compactXML, costXML, dur),
 		"</task-notification>",
 	), "\n")
 }

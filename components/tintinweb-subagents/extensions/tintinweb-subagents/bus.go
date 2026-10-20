@@ -82,6 +82,16 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 
 // start builds the child's spec from the agent type and spawns it.
 func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
+	return a.startWith(ctx, spawnExtras{}, typ, prompt, description, name, model, thinking, maxTurns, background, isolated)
+}
+
+// spawnExtras are the per-call spawn settings that only the Agent tool has: the RPC spawn path takes none.
+type spawnExtras struct {
+	Transcript bool // write a `.output` transcript (the Agent tool's decision: the agent file, else the default)
+	SessionID  string
+}
+
+func (a *app) startWith(ctx sdk.Context, extras spawnExtras, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
 	a.mu.Lock()
 	cwd := a.cwd
 	a.mu.Unlock()
@@ -102,7 +112,7 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 		parentPrompt, _ = ctx.GetSystemPrompt()
 	}
 	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt)
-	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
+	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Transcript: extras.Transcript, SessionID: extras.SessionID, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
 	if cfg.IsDefault && cfg.Name == "Explore" {
 		spec.Model = "" // the original's haiku default falls back to the parent's model when it is not available; this port never forces it
 	} else {

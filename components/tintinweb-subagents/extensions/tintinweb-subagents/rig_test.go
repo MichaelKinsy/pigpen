@@ -52,7 +52,8 @@ func (c *fakeChild) abort() {
 	}
 }
 func (c *fakeChild) finish(text string) {
-	c.res = &childResult{Text: text, ToolUses: 3, Tokens: 1500, Turns: 2}
+	c.res = &childResult{Text: text, ToolUses: 3, Turns: 2}
+	c.spec.Hooks.Usage(lifetimeUsage{Input: 1500}) // what the child's stream reports
 	close(c.release)
 }
 

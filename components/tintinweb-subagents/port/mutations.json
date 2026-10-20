@@ -456,12 +456,6 @@
   "replace": "if f, ok := d[\"toolCalls\"].(float64); ok && false {"
  },
  {
-  "name": "tokens-dropped",
-  "file": "runner.go",
-  "find": "res.Tokens = int(f)",
-  "replace": "res.Tokens = int(f) * 0"
- },
- {
   "name": "child-may-nest",
   "file": "runner.go",
   "find": "cmd.Env = append(os.Environ(), depthEnv+\"=1\")",
@@ -724,5 +718,917 @@
   "file": "bus.go",
   "find": "thinking, _ := opts[\"thinkingLevel\"].(string)",
   "replace": "thinking := \"\""
+ },
+ {
+  "name": "encode-keeps-leading-dash",
+  "file": "output_file.go",
+  "find": "return leadingDash.ReplaceAllString(driveDash.ReplaceAllString(separators.ReplaceAllString(cwd, \"-\"), \"\"), \"\")",
+  "replace": "return driveDash.ReplaceAllString(separators.ReplaceAllString(cwd, \"-\"), \"\")"
+ },
+ {
+  "name": "encode-keeps-drive",
+  "file": "output_file.go",
+  "find": "return leadingDash.ReplaceAllString(driveDash.ReplaceAllString(separators.ReplaceAllString(cwd, \"-\"), \"\"), \"\")",
+  "replace": "return leadingDash.ReplaceAllString(separators.ReplaceAllString(cwd, \"-\"), \"\")"
+ },
+ {
+  "name": "encode-posix-separators-only",
+  "file": "output_file.go",
+  "find": "regexp.MustCompile(`[/\\\\]`)",
+  "replace": "regexp.MustCompile(`[/]`)"
+ },
+ {
+  "name": "transcript-root-world-readable",
+  "file": "output_file.go",
+  "find": "os.MkdirAll(root, 0o700)",
+  "replace": "os.MkdirAll(root, 0o755)"
+ },
+ {
+  "name": "transcript-root-not-tightened",
+  "file": "output_file.go",
+  "find": "os.Chmod(root, 0o700)",
+  "replace": "os.Chmod(root, 0o755)"
+ },
+ {
+  "name": "transcript-root-without-uid",
+  "file": "output_file.go",
+  "find": "\"pi-subagents-\"+strconv.Itoa(uid)",
+  "replace": "\"pi-subagents\""
+ },
+ {
+  "name": "transcript-dir-without-session",
+  "file": "output_file.go",
+  "find": "filepath.Join(root, encodeCwd(cwd), sessionID, \"tasks\")",
+  "replace": "filepath.Join(root, encodeCwd(cwd), \"tasks\")"
+ },
+ {
+  "name": "transcript-file-extension",
+  "file": "output_file.go",
+  "find": "agentID+\".output\"",
+  "replace": "agentID+\".out\""
+ },
+ {
+  "name": "ensure-truncates",
+  "file": "output_file.go",
+  "find": "func ensureOutputFile(path string) {\n\tif f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o666)",
+  "replace": "func ensureOutputFile(path string) {\n\tif f, err := os.OpenFile(path, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o666)"
+ },
+ {
+  "name": "initial-entry-not-sidechain",
+  "file": "output_file.go",
+  "find": "transcriptEntry{true, agentID, \"user\"",
+  "replace": "transcriptEntry{false, agentID, \"user\""
+ },
+ {
+  "name": "transcript-html-escaped",
+  "file": "output_file.go",
+  "find": "enc.SetEscapeHTML(false)",
+  "replace": "enc.SetEscapeHTML(true)"
+ },
+ {
+  "name": "transcript-timestamp-seconds",
+  "file": "output_file.go",
+  "find": "\"2006-01-02T15:04:05.000Z\"",
+  "replace": "\"2006-01-02T15:04:05Z\""
+ },
+ {
+  "name": "stream-anchor-ignored",
+  "file": "output_file.go",
+  "find": "written: startIndex}",
+  "replace": "written: 0}"
+ },
+ {
+  "name": "tool-message-typed-user",
+  "file": "output_file.go",
+  "find": "kind := \"toolResult\"",
+  "replace": "kind := \"user\""
+ },
+ {
+  "name": "assistant-message-typed-user",
+  "file": "output_file.go",
+  "find": "case \"assistant\":\n\t\t\tkind = \"assistant\"",
+  "replace": "case \"assistant\":\n\t\t\tkind = \"user\""
+ },
+ {
+  "name": "no-flush-at-turn-end",
+  "file": "output_file.go",
+  "find": "case \"turn_end\":\n\t\tt.flushLocked()",
+  "replace": "case \"turn_end\":"
+ },
+ {
+  "name": "no-flush-at-compaction-start",
+  "file": "output_file.go",
+  "find": "case \"compaction_start\":\n\t\t// Flush before the history is rewritten so a tail that never saw a turn_end still reaches the file.\n\t\tt.flushLocked()",
+  "replace": "case \"compaction_start\":"
+ },
+ {
+  "name": "no-reanchor-after-compaction",
+  "file": "output_file.go",
+  "find": "!aborted && result != nil {\n\t\t\tt.written = len(t.messages)",
+  "replace": "!aborted && result != nil {\n\t\t\t_ = result"
+ },
+ {
+  "name": "reanchor-on-failed-compaction",
+  "file": "output_file.go",
+  "find": "!aborted && result != nil {",
+  "replace": "!aborted {"
+ },
+ {
+  "name": "reanchor-on-aborted-compaction",
+  "file": "output_file.go",
+  "find": "!aborted && result != nil {",
+  "replace": "result != nil || true {"
+ },
+ {
+  "name": "stream-writes-after-close",
+  "file": "output_file.go",
+  "find": "if t.closed {\n\t\treturn\n\t}\n\tswitch ev[\"type\"] {",
+  "replace": "switch ev[\"type\"] {"
+ },
+ {
+  "name": "close-does-not-flush",
+  "file": "output_file.go",
+  "find": "t.flushLocked()\n\tt.closed = true",
+  "replace": "t.closed = true"
+ },
+ {
+  "name": "message-end-without-message-appended",
+  "file": "output_file.go",
+  "find": "if msg, ok := ev[\"message\"].(map[string]any); ok {\n\t\t\tt.messages = append(t.messages, msg)",
+  "replace": "if msg, _ := ev[\"message\"].(map[string]any); true {\n\t\t\tt.messages = append(t.messages, msg)"
+ },
+ {
+  "name": "structured-first-valid-wins",
+  "file": "structured_output.go",
+  "find": "c.JSON = canonical\n",
+  "replace": "if c.JSON == \"\" {\n\t\tc.JSON = canonical\n\t}\n"
+ },
+ {
+  "name": "structured-error-not-cleared",
+  "file": "structured_output.go",
+  "find": "c.LastError, c.HasError = \"\", false\n\treturn \"Recorded.\"",
+  "replace": "return \"Recorded.\""
+ },
+ {
+  "name": "structured-bad-payload-not-error",
+  "file": "structured_output.go",
+  "find": "\\nCall it again with a corrected value.\", true, \"\"",
+  "replace": "\\nCall it again with a corrected value.\", false, \"\""
+ },
+ {
+  "name": "structured-verdict-hidden",
+  "file": "structured_output.go",
+  "find": "\"StructuredOutput did not match the required schema:\\n\" + verdict + \"\\nCall",
+  "replace": "\"StructuredOutput did not match the required schema:\\n\" + \"\\nCall"
+ },
+ {
+  "name": "structured-name",
+  "file": "structured_output.go",
+  "find": "const structuredOutputToolName = \"StructuredOutput\"",
+  "replace": "const structuredOutputToolName = \"Structured\""
+ },
+ {
+  "name": "structured-sampling-required",
+  "file": "structured_output.go",
+  "find": "Strict: \"prefer\"}",
+  "replace": "Strict: \"require\"}"
+ },
+ {
+  "name": "structured-string-payload-kept",
+  "file": "structured_output.go",
+  "find": "if json.Unmarshal([]byte(s), &out) != nil {",
+  "replace": "if json.Unmarshal([]byte(s), &out) == nil {"
+ },
+ {
+  "name": "structured-retry-blames-silent",
+  "file": "structured_output.go",
+  "find": "if c.Called && c.HasError {",
+  "replace": "if true {"
+ },
+ {
+  "name": "structured-retry-never-blames",
+  "file": "structured_output.go",
+  "find": "if c.Called && c.HasError {",
+  "replace": "if false {"
+ },
+ {
+  "name": "structured-retry-no-ask",
+  "file": "structured_output.go",
+  "find": "\"\\n\\nCall \" + structuredOutputToolName + \" now with",
+  "replace": "\"\\n\\nNow \" + structuredOutputToolName + \" with"
+ },
+ {
+  "name": "structured-failure-silent-wrong",
+  "file": "structured_output.go",
+  "find": "\tif c.HasError {\n\t\treturn \"The agent's StructuredOutput call",
+  "replace": "\tif false {\n\t\treturn \"The agent's StructuredOutput call"
+ },
+ {
+  "name": "structured-failure-accepted",
+  "file": "structured_output.go",
+  "find": "\tif c.JSON != \"\" {\n\t\treturn \"\"\n\t}",
+  "replace": "\tif true {\n\t\treturn \"\"\n\t}"
+ },
+ {
+  "name": "schema-required-message",
+  "file": "json_schema.go",
+  "find": "\"must have required properties \"",
+  "replace": "\"must have properties \""
+ },
+ {
+  "name": "schema-path-pointer",
+  "file": "json_schema.go",
+  "find": "strings.ReplaceAll(e.path, \"/\", \".\")",
+  "replace": "e.path"
+ },
+ {
+  "name": "schema-reports-all",
+  "file": "json_schema.go",
+  "find": "if len(reported) >= maxReportedSchemaE {",
+  "replace": "if len(reported) >= 100 {"
+ },
+ {
+  "name": "schema-minimum-inclusive",
+  "file": "json_schema.go",
+  "find": "x < m {\n\t\t\tadd(\"must be >= \"",
+  "replace": "x <= m {\n\t\t\tadd(\"must be >= \""
+ },
+ {
+  "name": "schema-integer-any-number",
+  "file": "json_schema.go",
+  "find": "if x == math.Trunc(x) && !math.IsInf(x, 0) {\n\t\t\treturn \"integer\"",
+  "replace": "if false {\n\t\t\treturn \"integer\""
+ },
+ {
+  "name": "schema-additional-allowed",
+  "file": "json_schema.go",
+  "find": "\t\t\t\tif !ap {\n\t\t\t\t\textra = true",
+  "replace": "\t\t\t\tif ap {\n\t\t\t\t\textra = true"
+ },
+ {
+  "name": "schema-unique-ignored",
+  "file": "json_schema.go",
+  "find": "if u, _ := s[\"uniqueItems\"].(bool); u {",
+  "replace": "if u, _ := s[\"uniqueItems\"].(bool); u && false {"
+ },
+ {
+  "name": "schema-const-ignored",
+  "file": "json_schema.go",
+  "find": "if c, ok := s[\"const\"]; ok && !reflect.DeepEqual",
+  "replace": "if c, ok := s[\"const\"]; ok && false && !reflect.DeepEqual"
+ },
+ {
+  "name": "schema-ref-unchecked",
+  "file": "json_schema.go",
+  "find": "if ref, ok := n[\"$ref\"].(string); ok {\n\t\t\tv.resolve(ref)",
+  "replace": "if ref, ok := n[\"$ref\"].(string); ok {\n\t\t\t_ = ref"
+ },
+ {
+  "name": "schema-root-not-object",
+  "file": "json_schema.go",
+  "find": "if root[\"type\"] != \"object\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schema-size-limit",
+  "file": "json_schema.go",
+  "find": "n > maxSchemaBytes",
+  "replace": "n > 10*maxSchemaBytes"
+ },
+ {
+  "name": "schema-anyof-needs-all",
+  "file": "json_schema.go",
+  "find": "\t\tif n == 0 {\n\t\t\tadd(\"must match a schema in anyOf\")",
+  "replace": "\t\tif n != len(anyOf) {\n\t\t\tadd(\"must match a schema in anyOf\")"
+ },
+ {
+  "name": "usage-cache-read-dropped",
+  "file": "usage.go",
+  "find": "into.CacheRead += delta.CacheRead",
+  "replace": ""
+ },
+ {
+  "name": "usage-cost-dropped",
+  "file": "usage.go",
+  "find": "into.Cost += delta.Cost",
+  "replace": ""
+ },
+ {
+  "name": "usage-total-without-cache-read",
+  "file": "usage.go",
+  "find": "TotalTokens: u.Input + u.Output + u.CacheRead + u.CacheWrite,",
+  "replace": "TotalTokens: u.Input + u.Output + u.CacheWrite,"
+ },
+ {
+  "name": "usage-nothing-spent-reported",
+  "file": "usage.go",
+  "find": "u.CacheRead == 0 && u.Cost == 0 {",
+  "replace": "u.CacheRead == 0 && false {"
+ },
+ {
+  "name": "usage-cost-only-ignored",
+  "file": "usage.go",
+  "find": "u.Output == 0 && u.CacheWrite == 0 && u.CacheRead == 0 && u.Cost == 0 {",
+  "replace": "u.Output == 0 && u.CacheWrite == 0 && u.CacheRead == 0 {"
+ },
+ {
+  "name": "usage-pool-not-reset",
+  "file": "usage.go",
+  "find": "p.pending, p.dirty = lifetimeUsage{}, false",
+  "replace": "p.dirty = false"
+ },
+ {
+  "name": "usage-pool-never-empties",
+  "file": "usage.go",
+  "find": "p.pending, p.dirty = lifetimeUsage{}, false",
+  "replace": "p.pending = lifetimeUsage{}"
+ },
+ {
+  "name": "usage-pool-reports-when-clean",
+  "file": "usage.go",
+  "find": "if !p.dirty {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "usage-cost-breakdown-filled",
+  "file": "usage.go",
+  "find": "Cost:        reportedCost{Total: u.Cost},",
+  "replace": "Cost:        reportedCost{Total: u.Cost, Input: u.Cost},"
+ },
+ {
+  "name": "cost-zero-shown",
+  "file": "usage_display.go",
+  "find": "if !(cost > 0) {",
+  "replace": "if cost < 0 {"
+ },
+ {
+  "name": "cost-tiny-rounds-to-zero",
+  "file": "usage_display.go",
+  "find": "return \"<$0.0001\"",
+  "replace": "return \"~$0.0000\""
+ },
+ {
+  "name": "cost-dollar-decimals",
+  "file": "usage_display.go",
+  "find": "return fmt.Sprintf(\"~$%.2f\", cost)",
+  "replace": "return fmt.Sprintf(\"~$%.4f\", cost)"
+ },
+ {
+  "name": "cost-min-decimals",
+  "file": "usage_display.go",
+  "find": "max(2, decimals)",
+  "replace": "max(1, decimals)"
+ },
+ {
+  "name": "lifetime-total-with-cache-read",
+  "file": "usage_display.go",
+  "find": "return u.Input + u.Output + u.CacheWrite }",
+  "replace": "return u.Input + u.Output + u.CacheWrite + u.CacheRead }"
+ },
+ {
+  "name": "usage-cache-read-not-read",
+  "file": "runner.go",
+  "find": "CacheRead: n(\"cacheRead\")",
+  "replace": "CacheRead: 0"
+ },
+ {
+  "name": "usage-cost-not-read",
+  "file": "runner.go",
+  "find": "cost, _ = c[\"total\"].(float64)",
+  "replace": "cost = 0"
+ },
+ {
+  "name": "usage-cache-write-not-read",
+  "file": "runner.go",
+  "find": "CacheWrite: n(\"cacheWrite\")",
+  "replace": "CacheWrite: 0"
+ },
+ {
+  "name": "usage-only-assistant-messages",
+  "file": "runner.go",
+  "find": "if msg, ok := m[\"message\"].(map[string]any); ok && msg[\"role\"] == \"assistant\" {\n\t\t\tstop,",
+  "replace": "if msg, ok := m[\"message\"].(map[string]any); ok {\n\t\t\tstop,"
+ },
+ {
+  "name": "compaction-aborted-counted",
+  "file": "runner.go",
+  "find": "if aborted, _ := m[\"aborted\"].(bool); !aborted && c.hooks",
+  "replace": "if aborted, _ := m[\"aborted\"].(bool); c.hooks"
+ },
+ {
+  "name": "compaction-without-result-counted",
+  "file": "runner.go",
+  "find": "if result, _ := m[\"result\"].(map[string]any); result != nil {",
+  "replace": "if result, _ := m[\"result\"].(map[string]any); true {"
+ },
+ {
+  "name": "compaction-tokens-before-dropped",
+  "file": "runner.go",
+  "find": "before, _ := result[\"tokensBefore\"].(float64)",
+  "replace": "before := 0.0"
+ },
+ {
+  "name": "compaction-reason-dropped",
+  "file": "runner.go",
+  "find": "reason, _ := m[\"reason\"].(string)",
+  "replace": "reason := \"\""
+ },
+ {
+  "name": "events-not-forwarded",
+  "file": "runner.go",
+  "find": "if c.hooks != nil && c.hooks.Event != nil && m[\"type\"] != \"response\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "context-percent-ignored",
+  "file": "runner.go",
+  "find": "res.ContextPercent = contextPercentOf(d)",
+  "replace": ""
+ },
+ {
+  "name": "context-percent-zero-for-null",
+  "file": "runner.go",
+  "find": "if p, ok := cu[\"percent\"].(float64); ok {\n\t\treturn &p\n\t}\n\treturn nil",
+  "replace": "p, _ := cu[\"percent\"].(float64)\n\treturn &p"
+ },
+ {
+  "name": "messages-not-read",
+  "file": "runner.go",
+  "find": "if m, err := c.call(map[string]any{\"type\": \"get_messages\"}); err == nil {\n\t\tif d, ok := m[\"data\"].(map[string]any); ok {\n\t\t\tfor",
+  "replace": "if m, err := c.call(map[string]any{\"type\": \"get_messages\"}); err != nil {\n\t\tif d, ok := m[\"data\"].(map[string]any); ok {\n\t\t\tfor"
+ },
+ {
+  "name": "text-not-recovered-from-history",
+  "file": "runner.go",
+  "find": "if strings.TrimSpace(res.Text) == \"\" {\n\t\tres.Text = lastAssistantText(res.Messages)",
+  "replace": "if false {\n\t\tres.Text = lastAssistantText(res.Messages)"
+ },
+ {
+  "name": "last-text-takes-empty",
+  "file": "runner.go",
+  "find": "if text := strings.TrimSpace(contentText(messages[i][\"content\"])); text != \"\" {",
+  "replace": "if text := strings.TrimSpace(contentText(messages[i][\"content\"])); true {"
+ },
+ {
+  "name": "structured-no-retry",
+  "file": "runner.go",
+  "find": "again := c.capture.JSONUnset() && !c.aborted && !c.killed",
+  "replace": "again := false"
+ },
+ {
+  "name": "structured-retry-after-abort",
+  "file": "runner.go",
+  "find": "again := c.capture.JSONUnset() && !c.aborted && !c.killed",
+  "replace": "again := c.capture.JSONUnset()"
+ },
+ {
+  "name": "structured-retry-when-valid",
+  "file": "runner.go",
+  "find": "again := c.capture.JSONUnset() && !c.aborted && !c.killed",
+  "replace": "again := !c.aborted && !c.killed"
+ },
+ {
+  "name": "structured-failure-not-reported",
+  "file": "runner.go",
+  "find": "if res.Failure == \"\" {\n\t\t\tres.Failure = structuredFailure(c.capture)",
+  "replace": "if false {\n\t\t\tres.Failure = structuredFailure(c.capture)"
+ },
+ {
+  "name": "structured-payload-not-captured",
+  "file": "runner.go",
+  "find": "if j, _ := details[\"json\"].(string); j != \"\" {",
+  "replace": "if j, _ := details[\"json\"].(string); false {"
+ },
+ {
+  "name": "structured-rejection-not-captured",
+  "file": "runner.go",
+  "find": "c.capture.HasError = true\n\t\tc.capture.LastError = rejectionReason(result)",
+  "replace": "c.capture.Called = true"
+ },
+ {
+  "name": "structured-tool-not-allowed",
+  "file": "runner.go",
+  "find": "tools = append(slices.Clone(tools), structuredOutputToolName)",
+  "replace": "tools = slices.Clone(tools)"
+ },
+ {
+  "name": "structured-schema-not-passed",
+  "file": "runner.go",
+  "find": "cmd.Env = append(cmd.Env, structuredSchemaEnv+\"=\"+spec.Schema)",
+  "replace": "_ = spec.Schema"
+ },
+ {
+  "name": "structured-isolated-allowed",
+  "file": "runner.go",
+  "find": "if spec.Schema != \"\" && spec.Isolated {",
+  "replace": "if false {"
+ },
+ {
+  "name": "manager-usage-not-summed",
+  "file": "manager.go",
+  "find": "addUsage(&r.Usage, u)",
+  "replace": "r.Usage = u"
+ },
+ {
+  "name": "manager-usage-hook-skipped",
+  "file": "manager.go",
+  "find": "if m.onUsage != nil {\n\t\t\t\tm.onUsage(r, u)",
+  "replace": "if m.onUsage != nil && false {\n\t\t\t\tm.onUsage(r, u)"
+ },
+ {
+  "name": "manager-compaction-not-counted",
+  "file": "manager.go",
+  "find": "r.CompactionCount++\n",
+  "replace": ""
+ },
+ {
+  "name": "manager-compaction-hook-skipped",
+  "file": "manager.go",
+  "find": "if m.onCompact != nil {\n\t\t\t\tm.onCompact(r, reason, tokensBefore, count)",
+  "replace": "if m.onCompact != nil && false {\n\t\t\t\tm.onCompact(r, reason, tokensBefore, count)"
+ },
+ {
+  "name": "manager-transcript-events-dropped",
+  "file": "manager.go",
+  "find": "if tr != nil {\n\t\t\t\ttr.onEvent(ev)",
+  "replace": "if tr != nil && false {\n\t\t\t\ttr.onEvent(ev)"
+ },
+ {
+  "name": "manager-transcript-not-closed",
+  "file": "manager.go",
+  "find": "m.closeTranscript(r)\n\tm.mu.Lock()\n\tr.CompletedAt",
+  "replace": "m.mu.Lock()\n\tr.CompletedAt"
+ },
+ {
+  "name": "manager-queued-abort-keeps-transcript-open",
+  "file": "manager.go",
+  "find": "m.mu.Unlock()\n\t\tm.closeTranscript(r)\n\t\tclose(r.started)",
+  "replace": "m.mu.Unlock()\n\t\tclose(r.started)"
+ },
+ {
+  "name": "manager-started-not-announced",
+  "file": "manager.go",
+  "find": "if m.onStart != nil {\n\t\tm.onStart(r)\n\t}\n\tgo m.run(r)",
+  "replace": "go m.run(r)"
+ },
+ {
+  "name": "manager-dequeued-not-announced",
+  "file": "manager.go",
+  "find": "if m.onStart != nil {\n\t\t\tm.onStart(next)\n\t\t}\n\t\tgo m.run(next)",
+  "replace": "go m.run(next)"
+ },
+ {
+  "name": "manager-spawn-hook-skipped",
+  "file": "manager.go",
+  "find": "if m.onSpawn != nil {\n\t\tm.onSpawn(r)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "manager-context-percent-dropped",
+  "file": "manager.go",
+  "find": "r.ContextPercent, r.Messages, r.StructuredJSON, r.StructuredRetried = res.ContextPercent, res.Messages, res.StructuredJSON, res.StructuredRetried",
+  "replace": "r.Messages = res.Messages"
+ },
+ {
+  "name": "transcript-default-off",
+  "file": "observability_app.go",
+  "find": "a.obs.noTranscript = s.outputTranscript != nil && !*s.outputTranscript",
+  "replace": "a.obs.noTranscript = s.outputTranscript == nil || !*s.outputTranscript"
+ },
+ {
+  "name": "transcript-setting-ignored",
+  "file": "observability_app.go",
+  "find": "a.obs.noTranscript = s.outputTranscript != nil && !*s.outputTranscript",
+  "replace": "a.obs.noTranscript = false"
+ },
+ {
+  "name": "report-usage-default-on",
+  "file": "observability_app.go",
+  "find": "a.obs.reportUsage = s.reportUsage != nil && *s.reportUsage",
+  "replace": "a.obs.reportUsage = s.reportUsage == nil || *s.reportUsage"
+ },
+ {
+  "name": "show-cost-default-on",
+  "file": "observability_app.go",
+  "find": "a.obs.showCost = s.showCost != nil && *s.showCost",
+  "replace": "a.obs.showCost = s.showCost == nil || *s.showCost"
+ },
+ {
+  "name": "settings-project-loses",
+  "file": "observability_app.go",
+  "find": "pick := func(project, global *bool) *bool {\n\t\tif project != nil {\n\t\t\treturn project\n\t\t}\n\t\treturn global",
+  "replace": "pick := func(project, global *bool) *bool {\n\t\tif global != nil {\n\t\t\treturn global\n\t\t}\n\t\treturn project"
+ },
+ {
+  "name": "pool-kept-when-reporting-off",
+  "file": "observability_app.go",
+  "find": "if !report {\n\t\t// Whatever",
+  "replace": "if false {\n\t\t// Whatever"
+ },
+ {
+  "name": "usage-pooled-when-off",
+  "file": "observability_app.go",
+  "find": "if on {\n\t\t\ta.obs.pool.add(u)",
+  "replace": "if true {\n\t\t\ta.obs.pool.add(u)"
+ },
+ {
+  "name": "usage-attached-when-off",
+  "file": "observability_app.go",
+  "find": "if !on || ctx.ToolCallID() == \"\" {",
+  "replace": "if ctx.ToolCallID() == \"\" {"
+ },
+ {
+  "name": "usage-attached-without-call-id",
+  "file": "observability_app.go",
+  "find": "if !on || ctx.ToolCallID() == \"\" {",
+  "replace": "if !on {"
+ },
+ {
+  "name": "usage-attached-on-error-result",
+  "file": "observability_app.go",
+  "find": "out, err := fn(ctx, p)\n\t\tif err != nil {\n\t\t\treturn out, err\n\t\t}",
+  "replace": "out, err := fn(ctx, p)\n\t\t_ = err"
+ },
+ {
+  "name": "usage-pool-drained-without-attaching",
+  "file": "observability_app.go",
+  "find": "if usage := a.obs.pool.drain(); usage != nil {\n\t\t\tres.Usage = usage\n\t\t}",
+  "replace": "if usage := a.obs.pool.drain(); usage != nil {\n\t\t\t_ = usage\n\t\t}"
+ },
+ {
+  "name": "transcript-attached-without-flag",
+  "file": "observability_app.go",
+  "find": "if !r.spec.Transcript {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "transcript-initial-entry-skipped",
+  "file": "observability_app.go",
+  "find": "writeInitialEntry(path, r.ID, r.spec.Prompt, r.spec.Cwd)\n",
+  "replace": ""
+ },
+ {
+  "name": "transcript-stream-anchor",
+  "file": "observability_app.go",
+  "find": "newTranscriptStream(path, r.ID, r.spec.Cwd, 1)",
+  "replace": "newTranscriptStream(path, r.ID, r.spec.Cwd, 0)"
+ },
+ {
+  "name": "started-event-payload",
+  "file": "observability_app.go",
+  "find": "\"subagents:started\", map[string]any{\"id\": r.ID, \"type\": r.Type, \"description\": r.Description}",
+  "replace": "\"subagents:started\", map[string]any{\"id\": r.ID, \"type\": r.Type}"
+ },
+ {
+  "name": "compacted-event-count",
+  "file": "observability_app.go",
+  "find": "\"compactionCount\": count})",
+  "replace": "\"compactionCount\": 1})"
+ },
+ {
+  "name": "compacted-event-reason",
+  "file": "observability_app.go",
+  "find": "\"reason\": reason, \"tokensBefore\": tokensBefore,",
+  "replace": "\"reason\": \"manual\", \"tokensBefore\": tokensBefore,"
+ },
+ {
+  "name": "compacted-event-tokens",
+  "file": "observability_app.go",
+  "find": "\"reason\": reason, \"tokensBefore\": tokensBefore,",
+  "replace": "\"reason\": reason, \"tokensBefore\": 0,"
+ },
+ {
+  "name": "context-percent-rounds-down",
+  "file": "observability_app.go",
+  "find": "int(math.Floor(p + 0.5))",
+  "replace": "int(p)"
+ },
+ {
+  "name": "context-percent-running-stale",
+  "file": "observability_app.go",
+  "find": "if status == statusRunning {\n\t\tif lc, ok := c.(liveChild); ok {\n\t\t\treturn lc.stats()\n\t\t}\n\t\treturn nil\n\t}\n\treturn done",
+  "replace": "return done"
+ },
+ {
+  "name": "conversation-tool-result-untruncated",
+  "file": "observability_app.go",
+  "find": "len(u) > 200 {",
+  "replace": "len(u) > 20000 {"
+ },
+ {
+  "name": "conversation-skips-tool-calls",
+  "file": "observability_app.go",
+  "find": "if len(calls) > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "conversation-user-untrimmed",
+  "file": "observability_app.go",
+  "find": "if t := strings.TrimSpace(text); t != \"\" {\n\t\t\t\tparts = append(parts, \"[User]: \"+t)",
+  "replace": "if t := text; t != \"\" {\n\t\t\t\tparts = append(parts, \"[User]: \"+t)"
+ },
+ {
+  "name": "conversation-separator",
+  "file": "observability_app.go",
+  "find": "return strings.Join(parts, \"\\n\\n\")\n}",
+  "replace": "return strings.Join(parts, \"\\n\")\n}"
+ },
+ {
+  "name": "event-tokens-with-cache-read",
+  "file": "extension.go",
+  "find": "data[\"tokens\"] = map[string]any{\"input\": r.Usage.Input, \"output\": r.Usage.Output, \"total\": total}",
+  "replace": "data[\"tokens\"] = map[string]any{\"input\": r.Usage.Input, \"output\": r.Usage.Output, \"total\": total + r.Usage.CacheRead}"
+ },
+ {
+  "name": "event-usage-omitted",
+  "file": "extension.go",
+  "find": "data[\"usage\"] = usage",
+  "replace": "_ = usage"
+ },
+ {
+  "name": "event-tokens-always",
+  "file": "extension.go",
+  "find": "if total := getLifetimeTotal(r.Usage); total > 0 {",
+  "replace": "if total := getLifetimeTotal(r.Usage); true {"
+ },
+ {
+  "name": "notification-output-file-missing",
+  "file": "extension.go",
+  "find": "lines = append(lines, \"<output-file>\"+escapeXML(r.OutputFile)+\"</output-file>\")",
+  "replace": "_ = lines"
+ },
+ {
+  "name": "notification-output-file-unescaped",
+  "file": "extension.go",
+  "find": "\"<output-file>\"+escapeXML(r.OutputFile)+\"</output-file>\"",
+  "replace": "\"<output-file>\"+r.OutputFile+\"</output-file>\""
+ },
+ {
+  "name": "notification-context-missing",
+  "file": "extension.go",
+  "find": "ctxXML = fmt.Sprintf(\"<context_percent>%d</context_percent>\", roundPercent(*r.ContextPercent))",
+  "replace": "ctxXML = \"\""
+ },
+ {
+  "name": "notification-compactions-always",
+  "file": "extension.go",
+  "find": "if r.CompactionCount > 0 {\n\t\tcompactXML",
+  "replace": "if true {\n\t\tcompactXML"
+ },
+ {
+  "name": "notification-cost-ungated",
+  "file": "extension.go",
+  "find": "showCost && cost > 0 {",
+  "replace": "cost > 0 {"
+ },
+ {
+  "name": "notification-cost-zero",
+  "file": "extension.go",
+  "find": "showCost && cost > 0 {",
+  "replace": "showCost {"
+ },
+ {
+  "name": "notification-cost-decimals",
+  "file": "extension.go",
+  "find": "\"<estimated_cost_usd>%.4f</estimated_cost_usd>\"",
+  "replace": "\"<estimated_cost_usd>%.2f</estimated_cost_usd>\""
+ },
+ {
+  "name": "notification-usage-order",
+  "file": "extension.go",
+  "find": "<total_tokens>%d</total_tokens><tool_uses>%d</tool_uses>%s%s%s<duration_ms>%d</duration_ms>",
+  "replace": "<total_tokens>%d</total_tokens><tool_uses>%d</tool_uses><duration_ms>%d</duration_ms>%s%s%s"
+ },
+ {
+  "name": "notification-footer-missing",
+  "file": "extension.go",
+  "find": "return \"\\nFull transcript available at: \" + r.OutputFile",
+  "replace": "return \"\""
+ },
+ {
+  "name": "notification-cost-flag-ignored",
+  "file": "extension.go",
+  "find": "formatTaskNotification(r, 500, a.showCost())",
+  "replace": "formatTaskNotification(r, 500, false)"
+ },
+ {
+  "name": "child-registers-no-structured-tool",
+  "file": "extension.go",
+  "find": "if schema := os.Getenv(structuredSchemaEnv); schema != \"\" {",
+  "replace": "if schema := os.Getenv(structuredSchemaEnv); false {"
+ },
+ {
+  "name": "tool-output-file-line-missing",
+  "file": "tools.go",
+  "find": "pos = \"Output file: \" + outputFile + \"\\n\"",
+  "replace": "pos = \"\""
+ },
+ {
+  "name": "tool-transcript-default-ignored",
+  "file": "tools.go",
+  "find": "extras := spawnExtras{Transcript: a.outputTranscriptDefault()}",
+  "replace": "extras := spawnExtras{Transcript: true}"
+ },
+ {
+  "name": "tool-agent-file-transcript-ignored",
+  "file": "tools.go",
+  "find": "if cfg := reg.get(resolved); cfg != nil && cfg.OutputTranscript != nil {\n\t\textras.Transcript = *cfg.OutputTranscript",
+  "replace": "if cfg := reg.get(resolved); cfg != nil && cfg.OutputTranscript != nil {\n\t\t_ = cfg"
+ },
+ {
+  "name": "tool-session-id-dropped",
+  "file": "tools.go",
+  "find": "extras.SessionID, _ = ctx.GetSessionID()",
+  "replace": ""
+ },
+ {
+  "name": "tool-foreground-cost-ungated",
+  "file": "tools.go",
+  "find": "\tif a.showCost() {\n\t\tif c := formatCost(getLifetimeCost(usage)); c != \"\" {\n\t\t\tstats = append(stats, c)",
+  "replace": "\tif true {\n\t\tif c := formatCost(getLifetimeCost(usage)); c != \"\" {\n\t\t\tstats = append(stats, c)"
+ },
+ {
+  "name": "tool-result-cost-label",
+  "file": "tools.go",
+  "find": "stats = append(stats, \"Cost: \"+c)",
+  "replace": "stats = append(stats, c)"
+ },
+ {
+  "name": "tool-result-context-missing",
+  "file": "tools.go",
+  "find": "stats = append(stats, fmt.Sprintf(\"Context: %d%%\", roundPercent(*percent)))",
+  "replace": "_ = percent"
+ },
+ {
+  "name": "tool-result-compactions-missing",
+  "file": "tools.go",
+  "find": "stats = append(stats, fmt.Sprintf(\"Compactions: %d\", compactions))",
+  "replace": "_ = compactions"
+ },
+ {
+  "name": "tool-result-verbose-ignored",
+  "file": "tools.go",
+  "find": "if verbose, _ := p[\"verbose\"].(bool); verbose {",
+  "replace": "if verbose, _ := p[\"verbose\"].(bool); verbose && false {"
+ },
+ {
+  "name": "tool-result-verbose-heading",
+  "file": "tools.go",
+  "find": "\"\\n\\n--- Agent Conversation ---\\n\"",
+  "replace": "\"\\n\\n--- Conversation ---\\n\""
+ },
+ {
+  "name": "tool-steer-cost-ungated",
+  "file": "tools.go",
+  "find": "\tif a.showCost() {\n\t\tif c := formatCost(getLifetimeCost(usage)); c != \"\" {\n\t\t\tstate = append(state, c)",
+  "replace": "\tif true {\n\t\tif c := formatCost(getLifetimeCost(usage)); c != \"\" {\n\t\t\tstate = append(state, c)"
+ },
+ {
+  "name": "tool-steer-context-wording",
+  "file": "tools.go",
+  "find": "\"context %d%% full\"",
+  "replace": "\"context %d%%\""
+ },
+ {
+  "name": "tool-steer-compaction-plural",
+  "file": "tools.go",
+  "find": "if compactions == 1 {\n\t\t\tplural = \"\"",
+  "replace": "if compactions == 0 {\n\t\t\tplural = \"\""
+ },
+ {
+  "name": "tool-usage-wrapper-missing",
+  "file": "tools.go",
+  "find": "Execute:          a.withUsageReporting(a.agentTool),",
+  "replace": "Execute:          a.agentTool,"
+ },
+ {
+  "name": "tool-get-result-usage-wrapper-missing",
+  "file": "tools.go",
+  "find": "Execute:       a.withUsageReporting(a.getResultTool),",
+  "replace": "Execute:       a.getResultTool,"
+ },
+ {
+  "name": "tool-steer-usage-wrapper-missing",
+  "file": "tools.go",
+  "find": "Execute:       a.withUsageReporting(a.steerTool),",
+  "replace": "Execute:       a.steerTool,"
+ },
+ {
+  "name": "rpc-spawn-transcript",
+  "file": "bus.go",
+  "find": "return a.startWith(ctx, spawnExtras{}, typ,",
+  "replace": "return a.startWith(ctx, spawnExtras{Transcript: true}, typ,"
+ },
+ {
+  "name": "spec-transcript-dropped",
+  "file": "bus.go",
+  "find": "Transcript: extras.Transcript, SessionID: extras.SessionID, ",
+  "replace": ""
+ },
+ {
+  "name": "agent-file-transcript-refused",
+  "file": "refuse.go",
+  "find": "\tcase cfg.SessionDir != \"\":",
+  "replace": "\tcase cfg.OutputTranscript != nil && *cfg.OutputTranscript:\n\t\treturn \"output transcripts (output_transcript)\"\n\tcase cfg.SessionDir != \"\":"
  }
 ]
