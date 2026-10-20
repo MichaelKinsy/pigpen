@@ -12,6 +12,5 @@
  "quit-cursor": "not ported: the custom editor's quit and cursor handling",
  "quote-reply": "not ported: the quote-reply editor feature",
  "stash-shortcut": "not ported: the editor stash and its shortcut",
- "welcome": "not ported: the startup welcome header and overlay",
  "working-vibes": "not ported: the working-message vibes (LLM-generated spinner text)"
 }

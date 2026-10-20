@@ -40,9 +40,6 @@ func unsupportedSettings(settings map[string]any, cfg powerlineConfig, env func(
 
 	rawPowerline := asObject(settings["powerline"])
 	if rawPowerline != nil {
-		if rawPowerline.vals["welcome"] == true {
-			add("the startup welcome (powerline.welcome)")
-		}
 		if cfg.SendDelayMs > 0 {
 			add("delayed send (powerline.sendDelayMs)")
 		}

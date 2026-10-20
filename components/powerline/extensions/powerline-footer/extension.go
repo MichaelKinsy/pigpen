@@ -163,6 +163,7 @@ type app struct {
 	pl        *powerline
 	once      sync.Once
 	widthOnce sync.Once
+	welcome   welcomeState // welcome.go, welcome_ext.go
 }
 
 func (a *app) core(ctx sdk.Context) *powerline {
@@ -191,10 +192,12 @@ func (p *powerline) footerRows(width int) []string {
 func (a *app) onSessionStart(ctx sdk.Context, data map[string]any) (any, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.welcomeBeginSession()
 	pl := a.core(ctx)
 	reason, _ := data["reason"].(string)
 	pl.sessionStart(reason)
 	pl.warnUnsupported()
+	defer a.welcomeSessionStart(ctx, reason) // after the bar is installed, as in index.ts
 	a.widthOnce.Do(func() {
 		// The bar's widget rows are laid out at a width; lay them out again when the terminal changes size.
 		_, _ = ctx.OnWidthChange(func(c sdk.Context, _ int) {
@@ -214,6 +217,9 @@ func (a *app) onEvent(name string) sdk.EventFunc {
 		a.mu.Lock()
 		defer a.mu.Unlock()
 		a.core(ctx).event(name, data)
+		if name == sdk.EventAgentStart {
+			a.welcomeDismiss() // a prompt given on the command line starts a turn with no key press
+		}
 		return nil, nil
 	}
 }
@@ -221,7 +227,12 @@ func (a *app) onEvent(name string) sdk.EventFunc {
 func (a *app) command(ctx sdk.Context, args string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.core(ctx).command(args)
+	pl := a.core(ctx)
+	wasEnabled := pl.enabled
+	pl.command(args)
+	if wasEnabled && !pl.enabled {
+		a.welcomeDismiss() // /powerline toggled off
+	}
 	return nil
 }
 
@@ -238,6 +249,7 @@ func Extension() *sdk.Extension {
 		})
 	}
 	e.OnSessionStart(a.onSessionStart)
+	registerWelcome(e, a)
 	for _, ev := range []string{sdk.EventModelSelect, sdk.EventThinkingLevelSelect, sdk.EventSessionTree, sdk.EventSessionInfoChanged,
 		sdk.EventToolResult, sdk.EventUserBash, sdk.EventAgentStart, sdk.EventMessageUpdate, sdk.EventMessageEnd, sdk.EventTurnEnd,
 		sdk.EventSessionBeforeCompact, sdk.EventSessionCompact, sdk.EventAgentEnd} {

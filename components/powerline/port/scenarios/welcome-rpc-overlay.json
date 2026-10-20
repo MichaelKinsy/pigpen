@@ -1,0 +1,21 @@
+{
+ "name": "welcome-rpc-overlay",
+ "description": "powerline.welcome is on, quietStartup is false, and the client is RPC: the startup welcome is terminal art, so nothing of it reaches the client (no header, no overlay, no warning), and a turn dismisses nothing.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "prompt",
+   "rpc": {
+    "type": "prompt",
+    "message": "hello"
+   }
+  }
+ ],
+ "agentFiles": {
+  "settings.json": "{\"quietStartup\": false, \"powerline\": {\"welcome\": true}}"
+ }
+}

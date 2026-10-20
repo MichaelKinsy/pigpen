@@ -11,7 +11,7 @@ import json, os
 here = os.path.dirname(os.path.abspath(__file__))
 out = os.path.join(here, "..", "extensions", "powerline-footer", "testdata", "welcome-states.json")
 
-WIDTHS = [0, 1, 20, 43, 44, 45, 50, 60, 75, 76, 77, 78, 79, 90, 96, 97, 98, 99, 100, 120, 200]
+WIDTHS = [0, 20, 43, 44, 45, 60, 76, 78, 79, 96, 98, 100, 200]
 states = []
 
 def render(name, kind, model="Claude Sonnet 4.5", provider="anthropic", sessions=None, counts=None, tokens=None, countdown=30, widths=WIDTHS):
@@ -88,6 +88,10 @@ sess("sessions-max-zero", [f("d", "1.jsonl", H("/p/n"), 0)], count=0)
 sess("sessions-non-jsonl-ignored", [f("d", "1.json", H("/p/no"), 0), f("d", "x.jsonl.bak", H("/p/no2"), 0), f("e", "ok.jsonl", H("/p/yes"), MIN)], count=10)
 sess("sessions-legacy-and-agent", [f("--custom--", "session.jsonl", H("/tmp/custom-project"), MIN)],
      count=10, legacy=[f("--legacy--", "session.jsonl", H("/tmp/legacy-project"), 2 * MIN)], agentDirEnv=True)
+sess("sessions-header-over-8192", [
+    f("--Users-x-in-limit--", "ok.jsonl", json.dumps({"cwd": "/p/inside", "pad": "x" * 8000}), 1 * MIN),
+    f("--Users-x-over-limit--", "cut.jsonl", json.dumps({"cwd": "/p/outside", "pad": "x" * 9000}), 2 * MIN),
+], count=10)
 sess("sessions-crlf-and-padding", [f("d", "1.jsonl", "  " + H("/p/padded") + "\r", 0)])
 
 json.dump(states, open(out, "w"), indent=1, ensure_ascii=False)

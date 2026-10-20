@@ -95,6 +95,8 @@ type wlRig struct {
 	commands   atomic.Int32 // getCommands calls
 	editorText atomic.Value // string
 	branch     atomic.Value // []any
+	prompt     atomic.Value // string: the system prompt
+	noModel    atomic.Bool
 	release    chan struct{}
 }
 
@@ -132,10 +134,14 @@ func startWelcome(t *testing.T, quiet bool, mode string, extra map[string]any) *
 	r := &wlRig{t: t, home: home, timers: newWLTimers(), release: make(chan struct{})}
 	r.editorText.Store("")
 	r.branch.Store([]any{})
+	r.prompt.Store("")
 	t.Cleanup(powerline.SetWelcomeTimers(r.timers))
 	r.h = StartHost(t, powerline.Extension(), HostOptions{Mode: mode, Cwd: home, OnCallValue: func(method string, args map[string]any) (any, string) {
 		switch method {
 		case "getModelInfo":
+			if r.noModel.Load() {
+				return nil, "no model"
+			}
 			return map[string]any{"id": "test-model", "name": "Test model", "provider": "test", "reasoning": false, "contextWindow": 200000}, ""
 		case "getContextUsage":
 			return nil, "no usage yet"
@@ -149,7 +155,7 @@ func startWelcome(t *testing.T, quiet bool, mode string, extra map[string]any) *
 			r.commands.Add(1)
 			return map[string]any{"commands": wlCommands}, ""
 		case "getSystemPrompt":
-			return map[string]any{"prompt": ""}, ""
+			return map[string]any{"prompt": r.prompt.Load().(string)}, ""
 		case "sessionRead":
 			if args["method"] == "getBranch" {
 				return r.branch.Load().([]any), ""
@@ -374,6 +380,291 @@ func TestWelcomeLifecycleTwins(t *testing.T) {
 					t.Errorf("the keyboard was watched %d times in RPC mode", n)
 				}
 			})
+		}
+	})
+}
+
+// header starts a quiet-startup session and waits for the header.
+func headerRig(t *testing.T, mutate func(r *wlRig)) *wlRig {
+	t.Helper()
+	r := startWelcome(t, true, "tui", nil)
+	if mutate != nil {
+		mutate(r)
+	}
+	r.startSession("startup")
+	r.timers.runStartupWork()()
+	wlWait(t, "the header", func() bool { i, _ := r.headerCalls(); return i > 0 })
+	return r
+}
+
+// overlayRig starts a session with the overlay and tells the extension the host mounted it.
+func overlayRig(t *testing.T) (*wlRig, HostCall) {
+	t.Helper()
+	r := startWelcome(t, false, "tui", nil)
+	r.startSession("startup")
+	r.timers.runStartupWork()()
+	wlWait(t, "the overlay", func() bool { return len(r.customCalls()) > 0 })
+	call := r.customCalls()[0]
+	r.mounted(call)
+	return r, call
+}
+
+func TestWelcomeIsDismissedByEveryEventTheOriginalWires(t *testing.T) {
+	dismissals := map[string]func(r *wlRig){
+		"agent_start": func(r *wlRig) { r.h.Fire("agent_start", nil) },
+		"tool_call": func(r *wlRig) {
+			r.h.Fire("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
+		},
+		"session_shutdown": func(r *wlRig) { r.h.Fire("session_shutdown", map[string]any{"reason": "quit"}) },
+		"powerline_off":    func(r *wlRig) { r.h.Command("powerline", "") },
+		"new_session":      func(r *wlRig) { r.h.Fire("session_start", map[string]any{"reason": "resume"}) },
+	}
+	for name, dismiss := range dismissals {
+		t.Run("header/"+name, func(t *testing.T) {
+			r := headerRig(t, nil)
+			dismiss(r)
+			wlWait(t, "the header to be removed", func() bool { _, c := r.headerCalls(); return c == 1 })
+			if _, c := r.headerCalls(); c != 1 {
+				t.Errorf("header clears = %d", c)
+			}
+		})
+		t.Run("overlay/"+name, func(t *testing.T) {
+			r, _ := overlayRig(t)
+			dismiss(r)
+			wlWait(t, "the overlay to be hidden", func() bool { return r.hides() == 1 })
+			wlWait(t, "the keyboard watch to end", func() bool { return len(r.h.CallsTo("ui.offTerminalInput")) > 0 })
+		})
+	}
+}
+
+func TestWelcomeIsNotShownUnlessEligible(t *testing.T) {
+	cases := map[string]struct {
+		reason string
+		extra  map[string]any
+		setup  func(r *wlRig)
+	}{
+		"resume":                {reason: "resume"},
+		"reload":                {reason: "reload"},
+		"new":                   {reason: "new"},
+		"welcome disabled":      {reason: "startup", extra: map[string]any{"powerline": map[string]any{"welcome": false}}},
+		"a draft in the editor": {reason: "startup", setup: func(r *wlRig) { r.editorText.Store("draft") }},
+		"an assistant message already": {reason: "startup", setup: func(r *wlRig) {
+			r.branch.Store([]any{map[string]any{"type": "message", "message": map[string]any{"role": "assistant"}}})
+		}},
+		"a tool call already":   {reason: "startup", setup: func(r *wlRig) { r.branch.Store([]any{map[string]any{"type": "tool_call"}}) }},
+		"a tool result already": {reason: "startup", setup: func(r *wlRig) { r.branch.Store([]any{map[string]any{"type": "tool_result"}}) }},
+	}
+	for name, c := range cases {
+		for _, quiet := range []bool{true, false} {
+			t.Run(name, func(t *testing.T) {
+				r := startWelcome(t, quiet, "tui", c.extra)
+				if c.setup != nil {
+					c.setup(r)
+				}
+				r.startSession(c.reason)
+				r.timers.runStartupWork()()
+				r.quiescent()
+				if n := r.installations(); n != 0 {
+					t.Errorf("installations = %d, want 0", n)
+				}
+			})
+		}
+	}
+	t.Run("a user message does not block it", func(t *testing.T) {
+		headerRig(t, func(r *wlRig) {
+			r.branch.Store([]any{map[string]any{"type": "message", "message": map[string]any{"role": "user"}}})
+		})
+	})
+}
+
+func TestWelcomeTimersAreTheOriginals(t *testing.T) {
+	r := startWelcome(t, true, "tui", nil)
+	r.startSession("startup")
+	if got := r.timers.afterSet; len(got) != 1 || got[0] != 0 {
+		t.Errorf("header timeouts = %v, want one of 0 ms", got)
+	}
+	r2 := startWelcome(t, false, "tui", nil)
+	r2.startSession("startup")
+	if got := r2.timers.afterSet; len(got) != 1 || got[0] != 100*time.Millisecond {
+		t.Errorf("overlay timeouts = %v, want one of 100 ms", got)
+	}
+}
+
+func TestWelcomeOverlayCountsDownThirtySecondsAndCloses(t *testing.T) {
+	r, call := overlayRig(t)
+	args, _ := json.Marshal(call.Args)
+	var opts struct {
+		Overlay        bool `json:"overlay"`
+		HasHandle      bool `json:"hasHandle"`
+		OverlayOptions struct {
+			NonCapturing bool `json:"nonCapturing"`
+		} `json:"overlayOptions"`
+	}
+	_ = json.Unmarshal(args, &opts)
+	if !opts.Overlay || !opts.HasHandle || !opts.OverlayOptions.NonCapturing {
+		t.Errorf("ui.custom args = %s, want a non-capturing overlay with a handle", args)
+	}
+	if r.timers.intervals() != 1 {
+		t.Fatalf("countdown intervals = %d, want 1", r.timers.intervals())
+	}
+	for range 29 {
+		r.timers.tick()
+	}
+	r.quiescent()
+	if r.hides() != 0 {
+		t.Fatal("hidden before the 30 s are up")
+	}
+	r.timers.tick()
+	wlWait(t, "the overlay to be hidden at 0", func() bool { return r.hides() == 1 })
+	if r.timers.intervals() != 0 {
+		t.Error("the countdown keeps ticking after the dismissal")
+	}
+	wlWait(t, "the keyboard watch to end", func() bool { return len(r.h.CallsTo("ui.offTerminalInput")) > 0 })
+}
+
+func TestWelcomeKeyReleases(t *testing.T) {
+	release := "\x1b[120;1:3u"
+	t.Run("the editor never sees one, so the header stays", func(t *testing.T) {
+		r := headerRig(t, nil)
+		if r.key(release) {
+			t.Error("consumed")
+		}
+		r.quiescent()
+		if _, c := r.headerCalls(); c != 0 {
+			t.Error("a key release removed the header")
+		}
+	})
+	t.Run("the overlay wants them, so one dismisses it", func(t *testing.T) {
+		r, _ := overlayRig(t)
+		if r.key(release) {
+			t.Error("consumed")
+		}
+		wlWait(t, "the overlay to be hidden", func() bool { return r.hides() == 1 })
+	})
+	t.Run("a bracketed paste is input, not a release", func(t *testing.T) {
+		r := headerRig(t, nil)
+		r.key("\x1b[200~text:3u\x1b[201~")
+		wlWait(t, "the header to be removed", func() bool { _, c := r.headerCalls(); return c == 1 })
+	})
+}
+
+func TestWelcomeOverlayThatTakesFocusPassesPrintableKeysToTheEditor(t *testing.T) {
+	cases := map[string]struct {
+		data  string
+		paste string
+	}{
+		"a letter":          {"x", "x"},
+		"text":              {"héllo 界", "héllo 界"},
+		"a bracketed paste": {"\x1b[200~pasted\x1b[201~", "pasted"},
+		"enter":             {"\r", ""},
+		"escape":            {"\x1b", ""},
+		"an arrow":          {"\x1b[A", ""},
+		"a release":         {"x\x1b[120;1:3u", ""},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			r, call := overlayRig(t)
+			r.h.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "ui.custom.input", "args": map[string]any{"key": call.Args["key"], "data": c.data}}})
+			wlWait(t, "the overlay to be hidden", func() bool { return r.hides() == 1 })
+			if c.paste != "" {
+				wlWait(t, "the text to be pasted", func() bool { return len(r.h.CallsTo("ui.pasteToEditor")) > 0 })
+			}
+			r.quiescent()
+			var pasted []string
+			for _, p := range r.h.CallsTo("ui.pasteToEditor") {
+				pasted = append(pasted, p.Args["text"].(string))
+			}
+			if c.paste == "" && len(pasted) != 0 || c.paste != "" && (len(pasted) != 1 || pasted[0] != c.paste) {
+				t.Errorf("pasted = %q, want %q", pasted, c.paste)
+			}
+		})
+	}
+}
+
+func TestWelcomeDismissedBeforeTheHostMountedItIsHiddenWhenItDoes(t *testing.T) {
+	r := startWelcome(t, false, "tui", nil)
+	r.startSession("startup")
+	r.timers.runStartupWork()()
+	wlWait(t, "the overlay", func() bool { return len(r.customCalls()) > 0 })
+	r.h.Fire("agent_start", nil)
+	r.quiescent()
+	if r.hides() != 0 {
+		t.Fatal("nothing to hide before the host mounted it")
+	}
+	r.mounted(r.customCalls()[0])
+	wlWait(t, "the overlay to be hidden", func() bool { return r.hides() == 1 })
+}
+
+func TestWelcomeWatchesTheKeyboardOnlyWhileItIsPending(t *testing.T) {
+	r := headerRig(t, nil)
+	if n := len(r.h.CallsTo("ui.onTerminalInput")); n != 1 {
+		t.Errorf("onTerminalInput calls = %d, want 1", n)
+	}
+	if n := len(r.h.CallsTo("ui.offTerminalInput")); n != 0 {
+		t.Errorf("offTerminalInput calls = %d before any dismissal", n)
+	}
+	r.key("x")
+	wlWait(t, "the keyboard watch to end", func() bool { return len(r.h.CallsTo("ui.offTerminalInput")) == 1 })
+	r.key("y") // nothing is pending: no effect, nothing consumed
+	r.quiescent()
+	if _, c := r.headerCalls(); c != 1 {
+		t.Errorf("header clears = %d, want 1", c)
+	}
+}
+
+func TestWelcomeIsDecidedAfterTheBarIsInstalled(t *testing.T) {
+	// upstream: remaining-regressions "startup welcome predicate respects powerline.welcome false" (the source assertion that
+	// setupCustomEditor(ctx) runs before the shouldShowStartupWelcome decision).
+	r := headerRig(t, nil)
+	footer, watch := -1, -1
+	for i, c := range r.h.Calls() {
+		switch c.Method {
+		case "ui.setFooter":
+			if footer < 0 {
+				footer = i
+			}
+		case "ui.onTerminalInput":
+			if watch < 0 {
+				watch = i
+			}
+		}
+	}
+	if footer < 0 || watch < 0 || footer > watch {
+		t.Errorf("footer call at %d, welcome request at %d: the bar must be installed first", footer, watch)
+	}
+}
+
+func TestWelcomeHeaderContent(t *testing.T) {
+	t.Run("recent sessions and the prompt estimate", func(t *testing.T) {
+		r := headerRig(t, func(r *wlRig) {
+			sessionFile := filepath.Join(r.home, ".pi", "agent", "sessions", "--x--", "s.jsonl")
+			os.MkdirAll(filepath.Dir(sessionFile), 0o755)
+			os.WriteFile(sessionFile, []byte(`{"cwd":"/work/pigpen"}`+"\n"), 0o644)
+			r.prompt.Store(strings.Repeat("a", 7600))
+		})
+		out := r.lastHeader()
+		for _, want := range []string{"• pigpen (just now)", "≈ 1.9k initial prompt tokens"} {
+			if !strings.Contains(out, want) {
+				t.Errorf("header lacks %q:\n%s", want, out)
+			}
+		}
+	})
+	t.Run("no model", func(t *testing.T) {
+		r := headerRig(t, func(r *wlRig) { r.noModel.Store(true) })
+		out := r.lastHeader()
+		if !strings.Contains(out, "No model") || !strings.Contains(out, "Unknown") {
+			t.Errorf("header lacks the model fallbacks:\n%s", out)
+		}
+	})
+	t.Run("the header is drawn again at a new width", func(t *testing.T) {
+		r := headerRig(t, nil)
+		before, _ := r.headerCalls()
+		r.h.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "width_change", "args": map[string]any{"width": 120}}})
+		wlWait(t, "the header at 120 columns", func() bool { i, _ := r.headerCalls(); return i > before })
+		last := r.h.CallsTo("ui.setHeader")
+		rows, _ := last[len(last)-1].Args["lines"].([]any)
+		if first, _ := rows[0].(string); !strings.Contains(first, strings.Repeat("─", 10)) {
+			t.Errorf("first row = %q", first)
 		}
 	})
 }

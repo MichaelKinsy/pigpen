@@ -58,7 +58,6 @@ func TestEveryUnportedCommandIsRefused(t *testing.T) {
 
 func TestEveryUnportedSettingIsRefusedAtSessionStart(t *testing.T) {
 	settings := map[string]struct{ json, feature string }{
-		"welcome":             {`{"powerline":{"welcome":true}}`, "the startup welcome (powerline.welcome)"},
 		"sendDelayMs":         {`{"powerline":{"sendDelayMs":1500}}`, "delayed send (powerline.sendDelayMs)"},
 		"autoFollowUp":        {`{"powerline":{"autoFollowUp":true}}`, "auto follow-up (powerline.autoFollowUp)"},
 		"stashSharpSShortcut": {`{"powerline":{"stashSharpSShortcut":true}}`, "the prompt stash shortcut (powerline.stashSharpSShortcut)"},
@@ -92,7 +91,6 @@ func TestTheProfilerEnvironmentIsRefused(t *testing.T) {
 
 func TestSettingsTheOriginalAlsoIgnoresAreNotRefused(t *testing.T) {
 	for name, json := range map[string]string{
-		"welcome off":        `{"powerline":{"welcome":false}}`,
 		"vibe off":           `{"workingVibe":"off"}`,
 		"delay zero":         `{"powerline":{"sendDelayMs":0}}`,
 		"native compaction":  `{"powerline":{"queue":{"compactPromptMode":"native"}}}`,

@@ -240,3 +240,31 @@ func TestWelcomePureTwins(t *testing.T) {
 		eq(t, got, []recentSession{{"linked", "just now"}}, "sessions")
 	})
 }
+
+// discoverLoadedCounts counts five context file locations; the original's test covers one.
+func TestWelcomeCountsEveryContextFileLocation(t *testing.T) {
+	home := withWelcomeHome(t)
+	project := filepath.Join(t.TempDir(), "project")
+	if err := os.MkdirAll(project, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(project)
+	files := []string{
+		filepath.Join(home, ".pi", "agent", "AGENTS.md"),
+		filepath.Join(home, ".claude", "AGENTS.md"),
+		filepath.Join(project, "AGENTS.md"),
+		filepath.Join(project, ".pi", "AGENTS.md"),
+		filepath.Join(project, ".claude", "AGENTS.md"),
+	}
+	eq(t, discoverLoadedCounts(nil), loadedCounts{}, "nothing yet")
+	for i, f := range files {
+		writeFile(t, f, "# instructions\n")
+		eq(t, discoverLoadedCounts(nil), loadedCounts{ContextFiles: i + 1}, "after "+f)
+	}
+	// A directory of that name counts too: the original asks existsSync.
+	eq(t, os.Remove(filepath.Join(project, "AGENTS.md")), nil, "remove")
+	if err := os.Mkdir(filepath.Join(project, "AGENTS.md"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	eq(t, discoverLoadedCounts(nil).ContextFiles, 5, "a directory exists")
+}
