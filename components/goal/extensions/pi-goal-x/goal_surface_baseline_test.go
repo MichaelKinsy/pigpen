@@ -16,6 +16,8 @@ const gsbF = "goal-surface-baseline"
 // extensionRegistration is what an extension declares to the host in its register frame, in registration order.
 type extensionRegistration struct {
 	Events, Tools, Commands, Renderers []string
+	// Schemas are the tools' parameter schemas as JSON, by tool name.
+	Schemas map[string]string
 }
 
 // registrationOf runs ext against a bare in-memory host and reads its register frame (the original's recording mock Pi: registerTool,
@@ -57,7 +59,8 @@ func registrationOf(t *testing.T, ext *sdk.Extension) extensionRegistration {
 					Event string `json:"event"`
 				} `json:"handlers"`
 				Tools []struct {
-					Name string `json:"name"`
+					Name       string          `json:"name"`
+					Parameters json.RawMessage `json:"parameters"`
 				} `json:"tools"`
 				Commands []struct {
 					Name string `json:"name"`
@@ -77,8 +80,10 @@ func registrationOf(t *testing.T, ext *sdk.Extension) extensionRegistration {
 		for _, h := range f.Register.Handlers {
 			out.Events = append(out.Events, h.Event)
 		}
+		out.Schemas = map[string]string{}
 		for _, tl := range f.Register.Tools {
 			out.Tools = append(out.Tools, tl.Name)
+			out.Schemas[tl.Name] = string(tl.Parameters)
 		}
 		for _, c := range f.Register.Commands {
 			out.Commands = append(out.Commands, c.Name)

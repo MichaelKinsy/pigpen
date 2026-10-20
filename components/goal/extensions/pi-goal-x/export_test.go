@@ -112,6 +112,38 @@ func (p *Probe) SchedulerResume() (ok bool) {
 	p.c.locked(func() { ok = p.c.scheduler.resume() })
 	return ok
 }
+
+// RigDeclare is a scheduler declaration's result.
+type RigDeclare struct {
+	Text      string
+	Terminate bool
+	Details   map[string]any
+}
+
+// SchedulerAttach is scheduler.attach (the wake listener).
+func (p *Probe) SchedulerAttach() { p.c.locked(p.c.scheduler.attach) }
+
+// SchedulerDeclareReady and SchedulerDeclareWait are scheduler.declare(ctx, {kind: ...}).
+func (p *Probe) SchedulerDeclareReady() RigDeclare {
+	return p.declare(goalContinuation{kind: "ready"})
+}
+
+func (p *Probe) SchedulerDeclareWait(reason, deadline, waitID string, intervalSeconds, maxChecks float64) RigDeclare {
+	in := goalContinuation{kind: "wait", reason: &reason, deadline: deadline, waitID: waitID}
+	if maxChecks != 0 {
+		in.polling = &goalPolling{intervalSeconds, maxChecks}
+	}
+	return p.declare(in)
+}
+
+func (p *Probe) declare(in goalContinuation) (out RigDeclare) {
+	p.c.locked(func() {
+		r := p.c.scheduler.declare(in)
+		out = RigDeclare{Text: r.text, Terminate: r.terminate, Details: jsObjectMap(r.details)}
+	})
+	return out
+}
+
 func (p *Probe) SchedulerMessage(message map[string]any) {
 	p.c.locked(func() { p.c.scheduler.message(message) })
 }
@@ -135,14 +167,20 @@ type fakeTimer struct {
 func (p *Probe) FakeClock(startMs int64) *FakeClock {
 	f := &FakeClock{now: startMs, oldNow: clockMs, core: p.c, oldAfter: p.c.afterBase}
 	clockMs = func() int64 { return f.now }
-	p.c.afterBase = func(d time.Duration, fn func()) *time.Timer {
-		// The timer handed back is a real one that never fires: Stop on it is how the core cancels, and Tick asks it.
-		t := &fakeTimer{due: f.now + d.Milliseconds(), fn: fn, real: time.NewTimer(24 * time.Hour)}
-		f.timers = append(f.timers, t)
-		return t.real
-	}
+	p.c.afterBase = f.after
 	return f
 }
+
+// after is the fake time.AfterFunc: the timer handed back is a real one that never fires. Stop on it is how the core cancels, and
+// Tick asks it.
+func (f *FakeClock) after(d time.Duration, fn func()) *time.Timer {
+	t := &fakeTimer{due: f.now + d.Milliseconds(), fn: fn, real: time.NewTimer(24 * time.Hour)}
+	f.timers = append(f.timers, t)
+	return t.real
+}
+
+// Attach puts another core on this clock (the original's mock timers are global to the test).
+func (f *FakeClock) Attach(p *Probe) { p.c.afterBase = f.after }
 
 func (f *FakeClock) Now() int64 { return f.now }
 
