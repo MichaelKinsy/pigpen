@@ -1,0 +1,73 @@
+{
+  "name": "tools-disabled-replies",
+  "description": "With warden disabled in its config, the three tools answer with the original's refusal texts and warden_loops writes nothing.",
+  "env": {},
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write,warden_remember,warden_loops,warden_recall"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_recall",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "Always use Firefox for the vendor site"
+          }
+        }
+      ]
+    },
+    {
+      "text": "off"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "use your memory tools"
+      }
+    }
+  ],
+  "agentFiles": {
+    "pi-warden/config.json": "{\"enabled\": false}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\"enabled\": false}"
+  }
+}

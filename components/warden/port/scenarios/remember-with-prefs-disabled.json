@@ -1,0 +1,87 @@
+{
+  "name": "remember-with-prefs-disabled",
+  "description": "prefs.enabled false: warden_remember records nothing and says which switch is off; the loops and recall tools still work.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write,warden_remember,warden_loops,warden_recall"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "Always use Firefox for the vendor site"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "Bump the version"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_recall",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "remember that"
+      }
+    }
+  ],
+  "agentFiles": {
+    "pi-warden/config.json": "{\"prefs\": {\"enabled\": false}}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\"enabled\": true, \"prefs\": {\"enabled\": false}}"
+  }
+}

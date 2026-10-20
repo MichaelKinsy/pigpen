@@ -135,3 +135,24 @@ scenario(
     ],
     [prompt("fix the build", name="work"), {"name": "compact", "rpc": {"type": "compact"}, "wait": "response", "settleMs": 800}, prompt("go on", name="after")],
 )
+
+# Config-dependent scenarios: the original reads <agent dir>/pi-warden/config.json, the port <PIG_HOME>/pigpen-warden/config.json,
+# so each scenario writes both (agentFiles for Pi, homeFiles for PiG; needs the pigeq with the `homeFiles` field).
+scenario(
+    "tools-disabled-replies",
+    "With warden disabled in its config, the three tools answer with the original's refusal texts and warden_loops writes nothing.",
+    [call("warden_loops", action="list"), call("warden_recall"), call("warden_remember", lesson="Always use Firefox for the vendor site"), {"text": "off"}],
+    [prompt("use your memory tools")],
+    env={},
+    agentFiles={"pi-warden/config.json": json.dumps({"enabled": False})},
+    homeFiles={"pigpen-warden/config.json": json.dumps({"enabled": False})},
+)
+
+scenario(
+    "remember-with-prefs-disabled",
+    "prefs.enabled false: warden_remember records nothing and says which switch is off; the loops and recall tools still work.",
+    [call("warden_remember", lesson="Always use Firefox for the vendor site"), loops(action="add", text="Bump the version"), loops(action="list"), call("warden_recall"), {"text": "done"}],
+    [prompt("remember that")],
+    agentFiles={"pi-warden/config.json": json.dumps({"prefs": {"enabled": False}})},
+    homeFiles={"pigpen-warden/config.json": json.dumps({"enabled": True, "prefs": {"enabled": False}})},
+)
