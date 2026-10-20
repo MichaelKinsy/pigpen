@@ -173,8 +173,8 @@ func TestBashShellSessionMarkerEdgeCases(t *testing.T) {
 	defer session.dispose()
 	session.handleChunk("__PI_READY__\n")
 	eq(t, session.State().Ready, false, "a ready marker needs its colon")
-	session.handleChunk("__PI_READY__:/here\n")
-	eq(t, session.State().Ready, true, "ready")
+	session.handleChunk("__PI_READY__:/he\rre\n")
+	eq(t, []any{session.State().Ready, session.State().Cwd}, []any{true, "/here"}, "ready, with carriage returns removed from the line")
 
 	store.startCommand("cmd-1", "echo", "/here")
 	session.handleChunk("__PI_CMD_START__:cmd-1:/here\nprogress\rdone\n")

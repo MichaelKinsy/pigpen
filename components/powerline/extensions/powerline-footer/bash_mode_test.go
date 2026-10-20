@@ -594,6 +594,10 @@ func TestRenderBashTranscriptLines(t *testing.T) {
 
 	lines, err := mode.renderBashTranscriptLines(40, th)
 	eq(t, []any{lines, err}, []any{[]string(nil), error(nil)}, "nothing outside bash mode")
+	transcript.startCommand("0", "ls", "/w")
+	lines, _ = mode.renderBashTranscriptLines(40, th)
+	eq(t, len(lines), 0, "nothing outside bash mode even with commands")
+	transcript.clear()
 	mode.active = true
 	lines, _ = mode.renderBashTranscriptLines(40, th)
 	eq(t, len(lines), 0, "nothing without commands")
@@ -650,6 +654,18 @@ func TestRenderBashTranscriptLines(t *testing.T) {
 	one.transcript.appendOutput("b", "x\ny")
 	lines, _ = one.renderBashTranscriptLines(40, th)
 	eq(t, lines[0], " <dim>\u2026 1 earlier command truncated</>", "singular notice")
+
+	// Only the last four commands are shown.
+	six := newBashMode(mode.env, bashTranscriptLimits{MaxLines: 1000, MaxBytes: 1 << 20})
+	six.active = true
+	for i := 1; i <= 6; i++ {
+		id := bashItoa(i)
+		six.transcript.startCommand(id, "cmd"+id, "/w")
+		six.transcript.appendOutput(id, "out"+id)
+	}
+	lines, _ = six.renderBashTranscriptLines(40, th)
+	eq(t, len(lines), 8, "four commands, two rows each")
+	eq(t, lines[0], " <accent>$</> cmd3 <dim>(</><accent>running</><dim>)</>", "the oldest shown command")
 
 	// At most 16 rows, the newest.
 	big := newBashMode(mode.env, bashTranscriptLimits{MaxLines: 1000, MaxBytes: 1 << 20})
