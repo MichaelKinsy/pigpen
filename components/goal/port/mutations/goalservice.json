@@ -1,0 +1,542 @@
+[
+ {
+  "name": "svc-flush-lock-error-text",
+  "file": "goal_service.go",
+  "find": "\"Goal storage is locked; pending changes have not been persisted.\"",
+  "replace": "\"locked\""
+ },
+ {
+  "name": "svc-flush-drop-buffer-on-lock",
+  "file": "goal_service.go",
+  "find": "// Another writer holds the lock; keep the buffer so a later turn boundary retries.\n\t\treturn nil, nil",
+  "replace": "// x\n\t\ts.turn.active = false\n\t\treturn nil, nil"
+ },
+ {
+  "name": "svc-flush-revision-compare",
+  "file": "goal_service.go",
+  "find": "goalRevision(freshDisk) != goalRevision(expected)",
+  "replace": "goalRevision(freshDisk) < goalRevision(expected)"
+ },
+ {
+  "name": "svc-flush-expected-ignore-base",
+  "file": "goal_service.go",
+  "find": "expected := s.turnBase\n\tif expected == nil {\n\t\texpected = goal\n\t}",
+  "replace": "expected := goal"
+ },
+ {
+  "name": "svc-flush-keep-buffer-on-reject",
+  "file": "goal_service.go",
+  "find": "\t\ts.turn.goal = nil\n\t\ts.turn.ledger = nil\n",
+  "replace": "\t\ts.turn.ledger = nil\n"
+ },
+ {
+  "name": "svc-flush-usage-fold-tokens",
+  "file": "goal_service.go",
+  "find": "gnum(fu, \"tokensUsed\")+tokens)\n\t\t\tusage.set(\"activeSeconds\", gnum(fu, \"activeSeconds\")+seconds)\n\t\t\ts.ref.setFocused",
+  "replace": "gnum(fu, \"tokensUsed\"))\n\t\t\tusage.set(\"activeSeconds\", gnum(fu, \"activeSeconds\")+seconds)\n\t\t\ts.ref.setFocused"
+ },
+ {
+  "name": "svc-flush-usage-clamp",
+  "file": "goal_service.go",
+  "find": "tokens := max(0, gnum(goal.obj(\"usage\"), \"tokensUsed\")-gnum(expected.obj(\"usage\"), \"tokensUsed\"))",
+  "replace": "tokens := gnum(goal.obj(\"usage\"), \"tokensUsed\") - gnum(expected.obj(\"usage\"), \"tokensUsed\")"
+ },
+ {
+  "name": "svc-flush-deleted-pool",
+  "file": "goal_service.go",
+  "find": "s.ref.getPool().delete(id)\n\t\t\tif s.ref.getFocusedGoalId() == id {",
+  "replace": "if s.ref.getFocusedGoalId() == id {"
+ },
+ {
+  "name": "svc-flush-deleted-focus-lost",
+  "file": "goal_service.go",
+  "find": "s.ref.assignFocusedGoalId(\"\")\n\t\t\t\ts.ref.onFocusedGoalLost(id, ctx)",
+  "replace": "s.ref.assignFocusedGoalId(\"\")"
+ },
+ {
+  "name": "svc-flush-diagnostic",
+  "file": "goal_service.go",
+  "find": "s.ref.onDiagnostic(goalDiagnostic{severity: \"warning\", source: \"storage\", goalId: id, message: s.flushError})",
+  "replace": "_ = id"
+ },
+ {
+  "name": "svc-flush-revision-bump",
+  "file": "goal_service.go",
+  "find": "next := goalWith(goal, \"revision\", goalRevision(freshDisk)+1)",
+  "replace": "next := goalWith(goal, \"revision\", goalRevision(goal)+1)"
+ },
+ {
+  "name": "svc-flush-archive-complete",
+  "file": "goal_service.go",
+  "find": "if s.turn.archive || gstr(next, \"status\") == \"complete\" {",
+  "replace": "if s.turn.archive {"
+ },
+ {
+  "name": "svc-flush-ledger-batch",
+  "file": "goal_service.go",
+  "find": "\ts.turn.active = false\n\ts.appendLedgerEventsBestEffort(ctx, s.turn.ledger)",
+  "replace": "\ts.turn.active = false"
+ },
+ {
+  "name": "svc-flush-focus-steal",
+  "file": "goal_service.go",
+  "find": "if s.ref.getFocusedGoalId() == gstr(written, \"id\") {\n\t\ts.ref.setFocused(written)\n\t} else {",
+  "replace": "if true {\n\t\ts.ref.setFocused(written)\n\t} else {"
+ },
+ {
+  "name": "svc-begin-turn-flush-first",
+  "file": "goal_service.go",
+  "find": "\t\t_, _ = s.flushTurn(ctx)\n\t\t// Lock contention",
+  "replace": "\t\t// Lock contention"
+ },
+ {
+  "name": "svc-begin-turn-base-usage",
+  "file": "goal_service.go",
+  "find": "s.turnBase = goalWith(focused, \"usage\", goalUsageCopy(focused))",
+  "replace": "s.turnBase = focused"
+ },
+ {
+  "name": "svc-trackbaseline-activeseconds",
+  "file": "goal_service.go",
+  "find": "activeSeconds: gnum(usage, \"activeSeconds\")}\n}",
+  "replace": "activeSeconds: 0}\n}"
+ },
+ {
+  "name": "svc-usage-delta-tokens-clamp",
+  "file": "goal_service.go",
+  "find": "return max(0, gnum(cu, \"tokensUsed\")-base.tokensUsed), max(0, gnum(cu, \"activeSeconds\")-base.activeSeconds)",
+  "replace": "return gnum(cu, \"tokensUsed\") - base.tokensUsed, max(0, gnum(cu, \"activeSeconds\")-base.activeSeconds)"
+ },
+ {
+  "name": "svc-usage-delta-baseline-match",
+  "file": "goal_service.go",
+  "find": "s.lastPersistedUsage.goalId == gstr(current, \"id\") {",
+  "replace": "s.lastPersistedUsage.goalId != \"\" {"
+ },
+ {
+  "name": "svc-ledger-batch-threshold",
+  "file": "goal_service.go",
+  "find": "if len(events) > 1 && appendGoalEvents(ctx, events).ok {",
+  "replace": "if appendGoalEvents(ctx, events).ok {"
+ },
+ {
+  "name": "svc-ledger-diag-event-type",
+  "file": "goal_service.go",
+  "find": "d := goalDiagnostic{severity: \"warning\", source: \"ledger\", eventType: typ}",
+  "replace": "d := goalDiagnostic{severity: \"warning\", source: \"ledger\"}"
+ },
+ {
+  "name": "svc-ledger-diag-goalid",
+  "file": "goal_service.go",
+  "find": "d.goalId = gstr(event, \"goalId\")\n",
+  "replace": "_ = 0\n"
+ },
+ {
+  "name": "svc-reconcile-unchanged-size",
+  "file": "goal_service.go",
+  "find": "unchanged := source.size() == view.size() &&",
+  "replace": "unchanged := true &&"
+ },
+ {
+  "name": "svc-reconcile-buffered-overlay",
+  "file": "goal_service.go",
+  "find": "if s.turn.active && s.turn.goal != nil {\n\t\tfresh.set",
+  "replace": "if false {\n\t\tfresh.set"
+ },
+ {
+  "name": "svc-reconcile-lost-hook",
+  "file": "goal_service.go",
+  "find": "s.ref.assignFocusedGoalId(\"\")\n\t\ts.ref.onFocusedGoalLost(lost, ctx)\n\t\treturn false",
+  "replace": "s.ref.assignFocusedGoalId(\"\")\n\t\treturn false"
+ },
+ {
+  "name": "svc-reconcile-lost-result",
+  "file": "goal_service.go",
+  "find": "s.ref.onFocusedGoalLost(lost, ctx)\n\t\treturn false",
+  "replace": "s.ref.onFocusedGoalLost(lost, ctx)\n\t\treturn true"
+ },
+ {
+  "name": "svc-reconcile-keeps-unpersisted",
+  "file": "goal_service.go",
+  "find": "if current != nil && !current.has(\"activePath\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "svc-reconcile-baseline",
+  "file": "goal_service.go",
+  "find": "\ts.trackBaseline(gstr(reconciled, \"id\"), reconciled.obj(\"usage\"))\n\treturn true",
+  "replace": "\treturn true"
+ },
+ {
+  "name": "svc-reconcile-hook",
+  "file": "goal_service.go",
+  "find": "s.ref.onReconciled(reconciled)\n",
+  "replace": "_ = reconciled\n"
+ },
+ {
+  "name": "svc-apply-reconcile-default",
+  "file": "goal_service.go",
+  "find": "if (spec.reconcile == nil || *spec.reconcile) && !s.reconcileFocused(ctx, false) {",
+  "replace": "if spec.reconcile != nil && *spec.reconcile && !s.reconcileFocused(ctx, false) {"
+ },
+ {
+  "name": "svc-apply-no-focus",
+  "file": "goal_service.go",
+  "find": "return goalMutationFail(\"No focused goal to mutate.\"), nil\n\t}\n\tcurId",
+  "replace": "return goalMutationFail(\"x\"), nil\n\t}\n\tcurId"
+ },
+ {
+  "name": "svc-apply-expected-id",
+  "file": "goal_service.go",
+  "find": "if spec.expectedGoalId != nil && curId != *spec.expectedGoalId {",
+  "replace": "if spec.expectedGoalId != nil && curId == *spec.expectedGoalId {"
+ },
+ {
+  "name": "svc-apply-token",
+  "file": "goal_service.go",
+  "find": "if spec.focusToken != nil && !s.ref.isTokenCurrent(*spec.focusToken) {\n\t\treturn goalMutationFail(goalStaleTokenMessage",
+  "replace": "if false {\n\t\treturn goalMutationFail(goalStaleTokenMessage"
+ },
+ {
+  "name": "svc-apply-midturn-flush",
+  "file": "goal_service.go",
+  "find": "if s.turn.goalId != \"\" && curId != s.turn.goalId {",
+  "replace": "if false {"
+ },
+ {
+  "name": "svc-apply-midturn-pending-msg",
+  "file": "goal_service.go",
+  "find": "msg = \"Previous goal changes are still awaiting persistence.\"",
+  "replace": "msg = \"x\""
+ },
+ {
+  "name": "svc-apply-turn-revision",
+  "file": "goal_service.go",
+  "find": "goalWith(spec.mutate(cloneGoal(current)), \"revision\", goalRevision(current)+1))",
+  "replace": "goalWith(spec.mutate(cloneGoal(current)), \"revision\", goalRevision(current)))"
+ },
+ {
+  "name": "svc-apply-turn-archive-flag",
+  "file": "goal_service.go",
+  "find": "s.turn.archive = spec.archive",
+  "replace": "s.turn.archive = false"
+ },
+ {
+  "name": "svc-apply-commit-default",
+  "file": "goal_service.go",
+  "find": "commitFocused := spec.commitFocused == nil || *spec.commitFocused",
+  "replace": "commitFocused := spec.commitFocused != nil && *spec.commitFocused"
+ },
+ {
+  "name": "svc-apply-lock-error",
+  "file": "goal_service.go",
+  "find": "lock, err := acquireGoalLock(ctx, curId, 0, 0)\n\tif err != nil {\n\t\treturn goalMutationOutcome{}, err\n\t}\n\tdefer lock.release()\n\tfreshDisk := s.readFreshDiskGoal(ctx, current)\n\tif freshDisk == nil {\n\t\treturn goalMutationFail(fmt.Sprintf(\"Goal %s was deleted or archived by another process while this mutation",
+  "replace": "lock, err := acquireGoalLock(ctx, curId, 0, 0)\n\tif err != nil {\n\t\treturn goalMutationOutcome{}, err\n\t}\n\tdefer lock.release()\n\tfreshDisk := s.readFreshDiskGoal(ctx, current)\n\tif freshDisk == nil {\n\t\treturn goalMutationFail(fmt.Sprintf(\"Goal %s was removed by another process while this mutation"
+ },
+ {
+  "name": "svc-apply-revision-conflict",
+  "file": "goal_service.go",
+  "find": "if diskRevision != capturedRevision {\n\t\treturn goalMutationFail",
+  "replace": "if diskRevision < capturedRevision {\n\t\treturn goalMutationFail"
+ },
+ {
+  "name": "svc-apply-conflict-message",
+  "file": "goal_service.go",
+  "find": "current revision is %s. Refresh and retry; the mutation was not applied.\"",
+  "replace": "current revision is %s. Retry.\""
+ },
+ {
+  "name": "svc-apply-refresh",
+  "file": "goal_service.go",
+  "find": "if spec.refreshFromDisk {",
+  "replace": "if false {"
+ },
+ {
+  "name": "svc-apply-revision-bump",
+  "file": "goal_service.go",
+  "find": "mutated := goalWith(spec.mutate(cloneGoal(base)), \"revision\", capturedRevision+1)",
+  "replace": "mutated := goalWith(spec.mutate(cloneGoal(base)), \"revision\", capturedRevision)"
+ },
+ {
+  "name": "svc-apply-archive",
+  "file": "goal_service.go",
+  "find": "if spec.archive {\n\t\twritten, err = ctx.archiveGoalFile(mutated)",
+  "replace": "if false {\n\t\twritten, err = ctx.archiveGoalFile(mutated)"
+ },
+ {
+  "name": "svc-apply-focus-changed",
+  "file": "goal_service.go",
+  "find": "focusChanged := commitFocused && previousGoalId != gstr(written, \"id\")\n\tif focusChanged {",
+  "replace": "focusChanged := false\n\tif focusChanged {"
+ },
+ {
+  "name": "svc-apply-goalid-uncommitted",
+  "file": "goal_service.go",
+  "find": "goalId := s.ref.getFocusedGoalId()\n\tif commitFocused {\n\t\tgoalId = gstr(written, \"id\")\n\t}",
+  "replace": "goalId := gstr(written, \"id\")"
+ },
+ {
+  "name": "svc-apply-baseline",
+  "file": "goal_service.go",
+  "find": "\t\ts.ref.setFocused(written)\n\t\ts.trackBaseline(gstr(written, \"id\"), written.obj(\"usage\"))\n\t}\n\tgoalId",
+  "replace": "\t\ts.ref.setFocused(written)\n\t}\n\tgoalId"
+ },
+ {
+  "name": "svc-spec-events-factory-error",
+  "file": "goal_service.go",
+  "find": "return events, err == nil\n",
+  "replace": "return events, true\n"
+ },
+ {
+  "name": "svc-current-task-explicit",
+  "file": "goal_service.go",
+  "find": "if spec.setCurrentTaskId != nil {\n\t\treturn *spec.setCurrentTaskId\n\t}",
+  "replace": "if spec.setCurrentTaskId != nil {\n\t\treturn current\n\t}"
+ },
+ {
+  "name": "svc-current-task-skipped",
+  "file": "goal_service.go",
+  "find": "(st == \"complete\" || st == \"skipped\")",
+  "replace": "(st == \"complete\")"
+ },
+ {
+  "name": "svc-current-task-match",
+  "file": "goal_service.go",
+  "find": "&& current == spec.taskId {",
+  "replace": "&& current != spec.taskId {"
+ },
+ {
+  "name": "svc-task-turn-no-list",
+  "file": "goal_service.go",
+  "find": "return goalTaskFail(\"The goal has no task list.\"), nil\n\t\t}\n\t\ttasks, _ := taskList.vals[\"tasks\"].([]any)\n\t\ttask := findTaskInTree(tasks, spec.taskId)\n\t\tif task == nil {\n\t\t\treturn goalTaskFail(fmt.Sprintf(\"Task \\\"%s\\\" not found.\", spec.taskId)), nil\n\t\t}\n\t\tif spec.validate != nil {",
+  "replace": "return goalTaskFail(\"x\"), nil\n\t\t}\n\t\ttasks, _ := taskList.vals[\"tasks\"].([]any)\n\t\ttask := findTaskInTree(tasks, spec.taskId)\n\t\tif task == nil {\n\t\t\treturn goalTaskFail(fmt.Sprintf(\"Task \\\"%s\\\" not found.\", spec.taskId)), nil\n\t\t}\n\t\tif spec.validate != nil {"
+ },
+ {
+  "name": "svc-task-turn-revision",
+  "file": "goal_service.go",
+  "find": "\"updatedAt\", nowIso(),\n\t\t\t\"revision\", goalRevision(current)+1))",
+  "replace": "\"updatedAt\", nowIso(),\n\t\t\t\"revision\", goalRevision(current)))"
+ },
+ {
+  "name": "svc-task-turn-ledger-diag",
+  "file": "goal_service.go",
+  "find": "s.ref.onDiagnostic(goalDiagnostic{severity: \"warning\", source: \"ledger\", goalId: spec.taskId, message: fmt.Sprintf(\"Ledger spec error during task update: Error: %v\", err)})\n\t\t\t} else {\n\t\t\t\ts.turn.ledger",
+  "replace": "_ = err\n\t\t\t} else {\n\t\t\t\ts.turn.ledger"
+ },
+ {
+  "name": "svc-task-attempt-retry",
+  "file": "goal_service.go",
+  "find": "if retriesLeft > 0 {",
+  "replace": "if retriesLeft > 5 {"
+ },
+ {
+  "name": "svc-task-attempt-conflict-msg",
+  "file": "goal_service.go",
+  "find": "current revision is %s. The task was not updated.\"",
+  "replace": "current revision is %s.\""
+ },
+ {
+  "name": "svc-task-attempt-deleted-msg",
+  "file": "goal_service.go",
+  "find": "while the task update was in progress; the task was not updated.\"",
+  "replace": "while the task update was in progress.\""
+ },
+ {
+  "name": "svc-task-attempt-merge-prompt",
+  "file": "goal_service.go",
+  "find": "base := ctx.mergeGoalPromptFromDisk(current)\n\ttaskList := base.obj(\"taskList\")",
+  "replace": "base := current\n\ttaskList := base.obj(\"taskList\")"
+ },
+ {
+  "name": "svc-task-attempt-revision",
+  "file": "goal_service.go",
+  "find": "\"revision\", capturedRevision+1)\n\twritten, err := ctx.writeActiveGoalFile(mutated)",
+  "replace": "\"revision\", capturedRevision)\n\twritten, err := ctx.writeActiveGoalFile(mutated)"
+ },
+ {
+  "name": "svc-task-attempt-ledger-append",
+  "file": "goal_service.go",
+  "find": "\t\t} else {\n\t\t\ts.appendLedgerEventsBestEffort(ctx, events)\n\t\t}\n\t}\n\ts.ref.setFocused(written)\n\treturn goalTaskUpdateOutcome",
+  "replace": "\t\t}\n\t}\n\ts.ref.setFocused(written)\n\treturn goalTaskUpdateOutcome"
+ },
+ {
+  "name": "svc-tasks-batch-fresh-status",
+  "file": "goal_service.go",
+  "find": "if gstr(fresh, \"status\") != \"active\" || fresh.obj(\"taskList\") == nil {",
+  "replace": "if fresh.obj(\"taskList\") == nil {"
+ },
+ {
+  "name": "svc-tasks-batch-revision-check",
+  "file": "goal_service.go",
+  "find": "if fresh == nil || goalRevision(fresh) != goalRevision(current) {",
+  "replace": "if fresh == nil {"
+ },
+ {
+  "name": "svc-tasks-batch-usage-keep",
+  "file": "goal_service.go",
+  "find": "base = goalWith(fresh, \"usage\", current.vals[\"usage\"])",
+  "replace": "base = fresh"
+ },
+ {
+  "name": "svc-tasks-batch-token-msg",
+  "file": "goal_service.go",
+  "find": "\"The focused goal changed; no updates applied.\"",
+  "replace": "\"changed\""
+ },
+ {
+  "name": "svc-tasks-batch-index-new-subtasks",
+  "file": "goal_service.go",
+  "find": "if newSubs != nil {\n\t\t\t\tindexTasks(newSubs)",
+  "replace": "if false {\n\t\t\t\tindexTasks(newSubs)"
+ },
+ {
+  "name": "svc-tasks-batch-rename",
+  "file": "goal_service.go",
+  "find": "if gstr(updatedTask, \"id\") != gstr(task, \"id\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "svc-tasks-batch-revision",
+  "file": "goal_service.go",
+  "find": "goalWith(next, \"revision\", goalRevision(base)+1))",
+  "replace": "goalWith(next, \"revision\", goalRevision(base)))"
+ },
+ {
+  "name": "svc-tasks-batch-turn-route",
+  "file": "goal_service.go",
+  "find": "if s.turn.active {\n\t\tvar focusToken",
+  "replace": "if false {\n\t\tvar focusToken"
+ },
+ {
+  "name": "svc-tasks-batch-ledger",
+  "file": "goal_service.go",
+  "find": "\ts.appendLedgerEventsBestEffort(ctx, events)\n\ts.trackBaseline(gstr(written, \"id\"), written.obj(\"usage\"))\n\ts.ref.setFocused(written)\n\treturn goalMutationOutcome{ok: true, goal: written, previousGoalId: curId",
+  "replace": "\ts.trackBaseline(gstr(written, \"id\"), written.obj(\"usage\"))\n\ts.ref.setFocused(written)\n\treturn goalMutationOutcome{ok: true, goal: written, previousGoalId: curId"
+ },
+ {
+  "name": "svc-persist-turn-buffer",
+  "file": "goal_service.go",
+  "find": "if s.turn.active {\n\t\tnext := goalWith(current, \"updatedAt\", nowIso())",
+  "replace": "if false {\n\t\tnext := goalWith(current, \"updatedAt\", nowIso())"
+ },
+ {
+  "name": "svc-persist-lock-bound",
+  "file": "goal_service.go",
+  "find": "acquireGoalLock(ctx, gstr(current, \"id\"), 4, 25)",
+  "replace": "acquireGoalLock(ctx, gstr(current, \"id\"), 1, 25)"
+ },
+ {
+  "name": "svc-persist-zero-delta",
+  "file": "goal_service.go",
+  "find": "if tokens == 0 && seconds == 0 {",
+  "replace": "if tokens == 0 || seconds == 0 {"
+ },
+ {
+  "name": "svc-persist-merge-seconds",
+  "file": "goal_service.go",
+  "find": "usage.set(\"activeSeconds\", gnum(fu, \"activeSeconds\")+seconds)\n\t\tmerged",
+  "replace": "usage.set(\"activeSeconds\", gnum(fu, \"activeSeconds\"))\n\t\tmerged"
+ },
+ {
+  "name": "svc-persist-merge-revision",
+  "file": "goal_service.go",
+  "find": "\"updatedAt\", nowIso(), \"revision\", goalRevision(freshDisk)+1))",
+  "replace": "\"updatedAt\", nowIso(), \"revision\", goalRevision(freshDisk)))"
+ },
+ {
+  "name": "svc-persist-success-revision",
+  "file": "goal_service.go",
+  "find": "\"updatedAt\", nowIso(), \"revision\", capturedRevision+1))",
+  "replace": "\"updatedAt\", nowIso(), \"revision\", capturedRevision))"
+ },
+ {
+  "name": "svc-persist-archive-complete",
+  "file": "goal_service.go",
+  "find": "if gstr(merged, \"status\") == \"complete\" {\n\t\twritten, err = ctx.archiveGoalFile(merged)",
+  "replace": "if false {\n\t\twritten, err = ctx.archiveGoalFile(merged)"
+ },
+ {
+  "name": "svc-persist-baseline",
+  "file": "goal_service.go",
+  "find": "\ts.trackBaseline(gstr(written, \"id\"), written.obj(\"usage\"))\n\ts.ref.setFocused(written)\n\treturn written, nil\n}\n\n// create",
+  "replace": "\ts.ref.setFocused(written)\n\treturn written, nil\n}\n\n// create"
+ },
+ {
+  "name": "svc-create-ledger",
+  "file": "goal_service.go",
+  "find": "if len(ledger) > 0 {",
+  "replace": "if len(ledger) > 5 {"
+ },
+ {
+  "name": "svc-create-focus-changed",
+  "file": "goal_service.go",
+  "find": "focusChanged := previousGoalId != id\n",
+  "replace": "focusChanged := false\n"
+ },
+ {
+  "name": "svc-events-turn-buffer",
+  "file": "goal_service.go",
+  "find": "if s.turn.active {\n\t\ts.turn.ledger = append(s.turn.ledger, events...)\n\t\treturn",
+  "replace": "if false {\n\t\ts.turn.ledger = append(s.turn.ledger, events...)\n\t\treturn"
+ },
+ {
+  "name": "svc-fresh-disk-no-activepath",
+  "file": "goal_service.go",
+  "find": "if !ok || p == \"\" {\n\t\treturn nil",
+  "replace": "if !ok {\n\t\treturn nil"
+ },
+ {
+  "name": "svc-sameTasks-empty",
+  "file": "goal_service.go",
+  "find": "return len(a) == len(b)\n",
+  "replace": "return false\n"
+ },
+ {
+  "name": "svc-sched-limit-zero",
+  "file": "goal_scheduler_state.go",
+  "find": "if *limit == 0 {",
+  "replace": "if *limit < 0 {"
+ },
+ {
+  "name": "svc-sched-hidden-runs",
+  "file": "goal_scheduler_state.go",
+  "find": "if limit != nil && showRuns {",
+  "replace": "if limit != nil {"
+ },
+ {
+  "name": "svc-sched-used-default",
+  "file": "goal_scheduler_state.go",
+  "find": "used := 0.0\n\t\tif s != nil {",
+  "replace": "used := 1.0\n\t\tif s != nil {"
+ },
+ {
+  "name": "svc-sched-wait-line",
+  "file": "goal_scheduler_state.go",
+  "find": "\"Waiting: \"+gstr(w, \"reason\")",
+  "replace": "\"Wait: \"+gstr(w, \"reason\")"
+ },
+ {
+  "name": "svc-sched-next-check",
+  "file": "goal_scheduler_state.go",
+  "find": "if next, ok := w.num(\"nextCheckAt\"); ok {",
+  "replace": "if next, ok := w.num(\"nextCheckAt\"); !ok {"
+ },
+ {
+  "name": "svc-sched-claimed",
+  "file": "goal_scheduler_state.go",
+  "find": "phase == \"interrupted\" || phase == \"claimed\"",
+  "replace": "phase == \"interrupted\""
+ },
+ {
+  "name": "svc-sched-join-runs",
+  "file": "goal_scheduler_state.go",
+  "find": "if runs != \"\" {\n\t\tparts",
+  "replace": "if false {\n\t\tparts"
+ },
+ {
+  "name": "svc-debug-dir",
+  "file": "goal_service.go",
+  "find": "const goalDebugDir = \".pi/goals/debug\"",
+  "replace": "const goalDebugDir = \".pi/goals\""
+ }
+]
