@@ -5,18 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"iter"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/a2aproject/a2a-go/v2/a2a"
 	"github.com/a2aproject/a2a-go/v2/a2asrv"
-)
-
-const (
-	maxPromptBytes = 256 << 10
-	maxImages      = 8
 )
 
 type stopReason int32
@@ -70,37 +64,6 @@ func principalOf(ec *a2asrv.ExecutorContext) (Principal, error) {
 		return Principal{}, a2a.ErrUnauthenticated
 	}
 	return p, nil
-}
-
-// Image is an image attached to a task, as the worker's RPC `prompt` carries it.
-type Image struct {
-	MediaType string
-	Data      []byte
-}
-
-// promptOf accepts text parts only. A part it cannot represent is refused, never dropped.
-func promptOf(m *a2a.Message) (string, []Image, error) {
-	if m == nil {
-		return "", nil, fmt.Errorf("message is required: %w", a2a.ErrInvalidParams)
-	}
-	var texts []string
-	for _, p := range m.Parts {
-		if p == nil {
-			continue
-		}
-		if _, ok := p.Content.(a2a.Text); !ok {
-			return "", nil, fmt.Errorf("only text parts are supported: %w", a2a.ErrUnsupportedContentType)
-		}
-		texts = append(texts, p.Text())
-	}
-	prompt := strings.Join(texts, "\n")
-	if strings.TrimSpace(prompt) == "" {
-		return "", nil, fmt.Errorf("the message has no text: %w", a2a.ErrInvalidParams)
-	}
-	if len(prompt) > maxPromptBytes {
-		return "", nil, fmt.Errorf("the message exceeds %d bytes: %w", maxPromptBytes, a2a.ErrInvalidParams)
-	}
-	return prompt, nil, nil
 }
 
 func (e *executor) lockContext(ctx context.Context, key string) (func(), error) {

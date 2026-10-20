@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-a2a",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A2A (Agent2Agent) for PiG: serve PiG tasks to A2A agents and call remote A2A agents, on the upstream Go SDK a2a-go. The listener is off unless configured.",
   "keywords": [
     "pig-package",

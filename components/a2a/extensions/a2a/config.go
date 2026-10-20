@@ -25,17 +25,18 @@ type Config struct {
 	ExternalURL string `json:"externalUrl"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	// StateDir holds per-principal PiG session files. Default: <config home>/a2a.
+	// StateDir holds per-principal PiG session files and the stored tasks (tasks/). Default: <config home>/a2a.
 	StateDir string `json:"stateDir"`
 	// InsecureNoAuth serves without tokens; only allowed on a loopback address.
-	InsecureNoAuth     bool                   `json:"insecureNoAuth"`
-	Tokens             []TokenConfig          `json:"tokens"`
-	TLS                *TLSConfig             `json:"tls"`
-	Worker             WorkerConfig           `json:"worker"`
-	MaxConcurrentTasks int                    `json:"maxConcurrentTasks"`
-	TaskTimeoutSeconds int                    `json:"taskTimeoutSeconds"`
-	TaskRetentionDays  int                    `json:"taskRetentionDays"`
-	Remotes            map[string]RemoteAgent `json:"remotes"`
+	InsecureNoAuth     bool          `json:"insecureNoAuth"`
+	Tokens             []TokenConfig `json:"tokens"`
+	TLS                *TLSConfig    `json:"tls"`
+	Worker             WorkerConfig  `json:"worker"`
+	MaxConcurrentTasks int           `json:"maxConcurrentTasks"`
+	TaskTimeoutSeconds int           `json:"taskTimeoutSeconds"`
+	// TaskRetentionDays is how long a finished task stays stored (default 30). Unfinished tasks are never dropped.
+	TaskRetentionDays int                    `json:"taskRetentionDays"`
+	Remotes           map[string]RemoteAgent `json:"remotes"`
 }
 
 // TokenConfig names a bearer token by the environment variable that holds it.
@@ -174,6 +175,9 @@ func (c *Config) applyDefaults() {
 	if c.TaskTimeoutSeconds <= 0 {
 		c.TaskTimeoutSeconds = defaultTaskTimeout
 	}
+	if c.TaskRetentionDays == 0 {
+		c.TaskRetentionDays = defaultTaskRetentionDays
+	}
 	if c.Worker.GraceSeconds <= 0 {
 		c.Worker.GraceSeconds = defaultGraceSeconds
 	}
@@ -197,6 +201,9 @@ func isLoopbackHost(host string) bool {
 }
 
 func (c Config) validate(getenv func(string) string) error {
+	if c.TaskRetentionDays < 0 {
+		return fmt.Errorf("a2a: taskRetentionDays is %d; it is how many days finished tasks are kept, at least 1", c.TaskRetentionDays)
+	}
 	if c.Listen != "" {
 		host, port, err := net.SplitHostPort(c.Listen)
 		if err != nil {

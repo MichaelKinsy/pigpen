@@ -255,3 +255,67 @@ func TestServerWithoutAStateDirStillServes(t *testing.T) {
 }
 
 var _ taskstore.Store = (*fileStore)(nil)
+
+// Every RPC that names a task, driven as a second principal against a task that is stored (finished, from before
+// a restart) and one that is live: the answer is "not found", the worker is not started and the owner's task is
+// untouched.
+func TestSecondPrincipalIsRefusedOnEveryTaskRPC(t *testing.T) {
+	cfg := persistentConfig(t)
+	first, stop := startAt(t, cfg, &scriptedWorker{})
+	stored := sendTask(t, a2aClient(t, "http://"+first.Addr(), tokenA), &a2a.SendMessageRequest{Message: textMessage("alice's finished task")})
+	stop()
+
+	g := newGated()
+	s, _ := startAt(t, cfg, g)
+	base := "http://" + s.Addr()
+	idCh := make(chan a2a.TaskID, 1)
+	go func() {
+		first := true
+		for ev, err := range a2aClient(t, base, tokenA).SendStreamingMessage(context.Background(), &a2a.SendMessageRequest{Message: textMessage("alice's live task")}) {
+			if err != nil {
+				return
+			}
+			if first {
+				idCh <- ev.TaskInfo().TaskID
+				first = false
+			}
+		}
+	}()
+	live := <-idCh
+	waitChan(t, g.started, "the worker")
+	turns := len(g.Turns())
+
+	follow := func(id a2a.TaskID, ctxID string) map[string]any {
+		return map[string]any{"message": map[string]any{"messageId": "m-bob", "taskId": string(id), "contextId": ctxID, "role": "ROLE_USER", "parts": []any{map[string]any{"text": "attach to it"}}}}
+	}
+	for name, id := range map[string]a2a.TaskID{"stored": stored.ID, "live": live} {
+		calls := map[string]map[string]any{
+			"GetTask":              {"id": string(id)},
+			"CancelTask":           {"id": string(id)},
+			"SubscribeToTask":      {"id": string(id)},
+			"SendMessage":          follow(id, "c"),
+			"SendStreamingMessage": follow(id, "c"),
+		}
+		for method, params := range calls {
+			_, out := rawRPC(t, base, tokenB, "1.0", method, params)
+			if code, msg := rpcError(t, out); code != -32001 {
+				t.Errorf("%s of the %s task as another principal: code %d %q, want task-not-found", method, name, code, msg)
+			}
+		}
+		_, out := rawRPC(t, base, tokenB, "1.0", "ListTasks", map[string]any{})
+		if res, _ := out["result"].(map[string]any); res == nil || len(res["tasks"].([]any)) != 0 {
+			t.Errorf("another principal lists the %s task: %v", name, out)
+		}
+	}
+	if len(g.Turns()) != turns {
+		t.Fatal("a worker ran for another principal's request")
+	}
+	alice := a2aClient(t, base, tokenA)
+	if got, err := alice.GetTask(context.Background(), &a2a.GetTaskRequest{ID: live}); err != nil || got.Status.State != a2a.TaskStateWorking {
+		t.Fatalf("the live task was touched: %v %v", got, err)
+	}
+	if got, err := alice.GetTask(context.Background(), &a2a.GetTaskRequest{ID: stored.ID}); err != nil || got.Status.State != a2a.TaskStateCompleted {
+		t.Fatalf("the stored task was touched: %v %v", got, err)
+	}
+	close(g.gate)
+}

@@ -1,15 +1,19 @@
 package a2aext
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"mime"
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/a2aproject/a2a-go/v2/a2a"
 	"github.com/a2aproject/a2a-go/v2/a2aclient"
@@ -42,13 +46,101 @@ type WaitArgs struct {
 	Seconds int
 }
 
-// waitPollInterval is how often Wait asks a remote that does not stream.
+// waitPollInterval is how often Wait asks again: a remote that does not stream is polled at this rate, and a
+// stream that ended before the task did is not re-opened faster.
 var waitPollInterval = 2 * time.Second
 
-// Wait follows a remote task until it is finished or needs input, or the wait runs out. Running out
-// of time, or cancelling ctx, leaves the remote task running.
+// maxWaitSeconds is the longest single wait the tools allow.
+const maxWaitSeconds = 3600
+
+// interrupted reports a state the task waits in for the caller (input or authentication) rather than ends.
+func interrupted(s a2a.TaskState) bool {
+	return s == a2a.TaskStateInputRequired || s == a2a.TaskStateAuthRequired
+}
+
+// Wait follows a remote task until it is finished or needs the caller, or the wait runs out. Running out of
+// time is an answer (the task's current state, not terminal), not an error; cancelling ctx returns ctx's error.
+// Neither cancels the remote task. A remote that streams is followed with SubscribeToTask, and onProgress gets
+// the text as it arrives; one that does not is polled.
 func (r *Remotes) Wait(ctx context.Context, args WaitArgs, onProgress func(string)) (TaskSummary, error) {
-	return TaskSummary{}, errors.New("a2a: Wait is not implemented")
+	ra, err := r.remote(args.Agent)
+	if err != nil {
+		return TaskSummary{}, err
+	}
+	if strings.TrimSpace(args.TaskID) == "" {
+		return TaskSummary{}, errors.New("a2a: taskId is required")
+	}
+	if args.Seconds < 0 {
+		return TaskSummary{}, errors.New("a2a: waitSeconds must be positive")
+	}
+	budget := ra.TimeoutSeconds
+	if args.Seconds > 0 {
+		budget = args.Seconds
+	}
+	waitCtx, cancelWait := context.WithTimeout(ctx, time.Duration(budget)*time.Second)
+	defer cancelWait()
+	c, err := r.client(waitCtx, args.Agent, ra)
+	if err != nil {
+		return TaskSummary{}, err
+	}
+	streaming := r.streams(waitCtx, args.Agent, ra)
+	id := a2a.TaskID(args.TaskID)
+	var last TaskSummary
+	for {
+		if streaming {
+			follow(waitCtx, c, id, onProgress)
+		}
+		t, err := c.GetTask(waitCtx, &a2a.GetTaskRequest{ID: id})
+		if err == nil {
+			last = summarize(t)
+			if last.Terminal || interrupted(t.Status.State) {
+				return last, nil
+			}
+		} else if waitCtx.Err() == nil {
+			return TaskSummary{}, fmt.Errorf("a2a: %q: %w", args.Agent, describe(err))
+		}
+		if waitCtx.Err() != nil {
+			break
+		}
+		select {
+		case <-waitCtx.Done():
+		case <-time.After(waitPollInterval):
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return last, err
+	}
+	// The budget ran out: report where the task is now. It keeps running.
+	fresh, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if t, err := c.GetTask(fresh, &a2a.GetTaskRequest{ID: id}); err == nil {
+		last = summarize(t)
+	}
+	return last, nil
+}
+
+// follow reads a task's event stream until it ends, handing the text of artifact updates to onProgress. Errors
+// end it quietly: the caller asks for the task's state next, and that is the answer that counts.
+func follow(ctx context.Context, c *a2aclient.Client, id a2a.TaskID, onProgress func(string)) {
+	for ev, err := range c.SubscribeToTask(ctx, &a2a.SubscribeToTaskRequest{ID: id}) {
+		if err != nil {
+			return
+		}
+		if e, ok := ev.(*a2a.TaskArtifactUpdateEvent); ok && onProgress != nil {
+			if chunk := textOf(e.Artifact.Parts); chunk != "" {
+				onProgress(chunk)
+			}
+		}
+	}
+}
+
+// streams reports whether the remote offers streaming. A remote reached without a card (skipCard) is assumed to.
+func (r *Remotes) streams(ctx context.Context, name string, ra RemoteAgent) bool {
+	if ra.SkipCard {
+		return true
+	}
+	card, err := r.card(ctx, name, ra)
+	return err == nil && card.Capabilities.Streaming
 }
 
 // TaskSummary is what a remote task looks like to the model.
@@ -268,14 +360,71 @@ func stateName(s a2a.TaskState) string {
 	return strings.ToLower(strings.ReplaceAll(n, "_", "-"))
 }
 
+// maxInlineReply caps the text of one file or data part of a remote's reply shown to the model.
+const maxInlineReply = 64 << 10
+
+// textOf is what a remote's parts say, for the model. Text is as sent. A part that is not text is described, and
+// its content shown only where it is text or data: a file by name, type and size, never its binary bytes, and a
+// URL as a URL (this adapter does not fetch it).
 func textOf(parts a2a.ContentParts) string {
 	var b strings.Builder
+	line := func(s string) {
+		if b.Len() > 0 && !strings.HasSuffix(b.String(), "\n") {
+			b.WriteByte('\n')
+		}
+		b.WriteString(s)
+		b.WriteByte('\n')
+	}
 	for _, p := range parts {
-		if t, ok := p.Content.(a2a.Text); ok {
-			b.WriteString(string(t))
+		if p == nil {
+			continue
+		}
+		switch c := p.Content.(type) {
+		case a2a.Text:
+			b.WriteString(string(c))
+		case a2a.Raw:
+			head := fmt.Sprintf("[file%s (%s), %d bytes]", nameSuffix(p.Filename), mediaLabel(p.MediaType), len(c))
+			if mt, _, err := mime.ParseMediaType(p.MediaType); err == nil && isTextType(mt) && utf8.Valid(c) && bytes.IndexByte(c, 0) < 0 {
+				line(head + "\n" + capText(string(c), maxInlineReply))
+			} else {
+				line(head)
+			}
+		case a2a.Data:
+			body, err := encodeJSON(c.Value)
+			if err != nil {
+				line("[data that is not JSON]")
+				continue
+			}
+			line("[data] " + capText(string(body), maxInlineReply))
+		case a2a.URL:
+			line(fmt.Sprintf("[file%s (%s) at URL %s; not fetched]", nameSuffix(p.Filename), mediaLabel(p.MediaType), oneLine(string(c), 500)))
 		}
 	}
 	return b.String()
+}
+
+func nameSuffix(name string) string {
+	if n := displayName(name); n != "" {
+		return " " + strconv.Quote(n)
+	}
+	return ""
+}
+
+func mediaLabel(mt string) string {
+	if mt = oneLine(mt, 100); mt != "" {
+		return mt
+	}
+	return "unknown type"
+}
+
+func capText(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	for max > 0 && !utf8.RuneStart(s[max]) {
+		max--
+	}
+	return s[:max] + fmt.Sprintf("\n[%d more bytes not shown]", len(s)-max)
 }
 
 func messageText(m *a2a.Message) string {
@@ -328,12 +477,29 @@ func (r *Remotes) Send(ctx context.Context, args SendArgs, onProgress func(strin
 	msg.ContextID, msg.TaskID = args.ContextID, a2a.TaskID(args.TaskID)
 	req := &a2a.SendMessageRequest{Message: msg}
 
-	streaming := ra.SkipCard
-	if !ra.SkipCard {
-		if card, err := r.card(callCtx, args.Agent, ra); err == nil {
-			streaming = card.Capabilities.Streaming
+	if args.Detach {
+		// Return as soon as the remote has the task; it keeps running after this call.
+		req.Config = &a2a.SendMessageConfig{ReturnImmediately: true}
+		res, err := c.SendMessage(callCtx, req)
+		if err != nil {
+			return r.failedSend(ctx, callCtx, args.Agent, ra, TaskSummary{}, err)
 		}
+		var sum TaskSummary
+		switch e := res.(type) {
+		case *a2a.Task:
+			sum = summarize(e)
+		case *a2a.Message:
+			return TaskSummary{TaskID: string(e.TaskID), ContextID: e.ContextID, State: "message", Text: messageText(e), Terminal: true}, nil
+		default:
+			return TaskSummary{}, fmt.Errorf("a2a: %q answered with neither a task nor a message", args.Agent)
+		}
+		if args.OnTask != nil {
+			args.OnTask(sum.TaskID, sum.ContextID)
+		}
+		return sum, nil
 	}
+
+	streaming := r.streams(callCtx, args.Agent, ra)
 	var events func(func(a2a.Event, error) bool)
 	if streaming {
 		events = c.SendStreamingMessage(callCtx, req)

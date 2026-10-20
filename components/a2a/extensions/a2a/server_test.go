@@ -332,8 +332,16 @@ func rawRPC(t *testing.T, url, token, version, method string, params any) (int, 
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	// A streaming method answers with server-sent events, even when its first and only event is an error.
+	for _, line := range bytes.Split(raw, []byte("\n")) {
+		if rest, ok := bytes.CutPrefix(line, []byte("data:")); ok {
+			raw = rest
+			break
+		}
+	}
 	var out map[string]any
-	_ = json.NewDecoder(resp.Body).Decode(&out)
+	_ = json.Unmarshal(raw, &out)
 	return resp.StatusCode, out
 }
 

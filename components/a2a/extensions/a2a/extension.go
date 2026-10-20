@@ -8,7 +8,6 @@ package a2aext
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -78,7 +77,7 @@ func ExtensionWith(o Options) *sdk.Extension {
 		[]string{"Use a2a_agents to discover which remote agents exist before calling a2a_send."},
 		func(ctx sdk.Context, params map[string]any) (any, error) { return m.toolAgents(ctx) })
 
-	e.ToolWithGuidelines("a2a_send", "Send a task to a remote A2A agent and wait for its answer. Returns the task state, ids and the agent's reply. Reuse contextId to continue the same conversation.",
+	e.ToolWithGuidelines("a2a_send", "Send a task to a remote A2A agent and, by default, wait for its answer. Returns the task state, ids and the agent's reply. Reuse contextId to continue the same conversation. With wait false it returns as soon as the remote has the task, and the task keeps running there.",
 		sdk.Schema{
 			"type": "object",
 			"properties": map[string]any{
@@ -86,19 +85,23 @@ func ExtensionWith(o Options) *sdk.Extension {
 				"message":   map[string]any{"type": "string", "description": "The task or question, as plain text."},
 				"contextId": map[string]any{"type": "string", "description": "Continue this conversation (from an earlier a2a_send)."},
 				"taskId":    map[string]any{"type": "string", "description": "Continue this task, when it is waiting for input."},
+				"wait":      map[string]any{"type": "boolean", "description": "Wait for the task to finish (default true). With false the call returns the running task's ids at once; follow it with a2a_task action \"wait\"."},
 			},
 			"required": []string{"agent", "message"}, "additionalProperties": false,
 		},
-		[]string{"The remote agent is another agent, not a tool: send it a self-contained request. Data you send leaves this machine."},
+		[]string{"The remote agent is another agent, not a tool: send it a self-contained request. Data you send leaves this machine.",
+			"For a task that will take long, send with wait false and follow it with a2a_task action \"wait\" instead of holding this call open."},
 		func(ctx sdk.Context, params map[string]any) (any, error) { return m.toolSend(ctx, params) })
 
-	e.ToolWithGuidelines("a2a_task", "Get, list or cancel tasks on a remote A2A agent.",
+	e.ToolWithGuidelines("a2a_task", "Get, list, cancel or wait for tasks on a remote A2A agent. Action wait follows a running task until it finishes or waitSeconds pass; running out of time is not an error and leaves the task running.",
 		sdk.Schema{
 			"type": "object",
 			"properties": map[string]any{
 				"agent":  map[string]any{"type": "string", "description": "Name of a configured remote."},
-				"action": map[string]any{"type": "string", "enum": []string{"get", "cancel", "list"}},
-				"taskId": map[string]any{"type": "string", "description": "Required for get and cancel."},
+				"action": map[string]any{"type": "string", "enum": []string{"get", "cancel", "list", "wait"}},
+				"taskId": map[string]any{"type": "string", "description": "Required for get, cancel and wait."},
+				"waitSeconds": map[string]any{"type": "integer", "minimum": 1, "maximum": maxWaitSeconds,
+					"description": "With action wait: how long to wait at most (default: the remote's timeout)."},
 			},
 			"required": []string{"agent", "action"}, "additionalProperties": false,
 		},
@@ -276,7 +279,7 @@ func formatSummary(s TaskSummary) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "state: %s\ntaskId: %s\ncontextId: %s", s.State, s.TaskID, s.ContextID)
 	if !s.Terminal {
-		b.WriteString("\n(the task is not finished; use a2a_task to get it, or send another message with this taskId and contextId)")
+		b.WriteString("\n(the task is not finished; follow it with a2a_task action \"wait\" and this taskId, or send another message with this taskId and contextId)")
 	}
 	if s.Text != "" {
 		b.WriteString("\n\n" + s.Text)
@@ -307,6 +310,51 @@ func (m *manager) toolAgents(ctx sdk.Context) (any, error) {
 	return b.String(), nil
 }
 
+// boolParam reads an optional boolean; absent means def.
+func boolParam(params map[string]any, name string, def bool) (bool, error) {
+	v, ok := params[name]
+	if !ok || v == nil {
+		return def, nil
+	}
+	b, ok := v.(bool)
+	if !ok {
+		return false, sdk.NewToolError(fmt.Sprintf("a2a: %s must be a boolean", name))
+	}
+	return b, nil
+}
+
+// secondsParam reads an optional whole number of seconds from 1 to maxWaitSeconds; absent is 0.
+func secondsParam(params map[string]any, name string) (int, error) {
+	v, ok := params[name]
+	if !ok || v == nil {
+		return 0, nil
+	}
+	f, ok := v.(float64)
+	if !ok {
+		if n, isInt := v.(int); isInt {
+			f, ok = float64(n), true
+		}
+	}
+	if !ok || f != float64(int(f)) || f < 1 || f > maxWaitSeconds {
+		return 0, sdk.NewToolError(fmt.Sprintf("a2a: %s must be a whole number of seconds from 1 to %d", name, maxWaitSeconds))
+	}
+	return int(f), nil
+}
+
+// progressTo returns the callback that shows a task's streamed text as the tool's partial result, at most four
+// times a second.
+func progressTo(ctx sdk.Context) func(string) {
+	var soFar strings.Builder
+	last := time.Now()
+	return func(chunk string) {
+		soFar.WriteString(chunk)
+		if time.Since(last) > 250*time.Millisecond {
+			last = time.Now()
+			_ = ctx.OnUpdate(soFar.String())
+		}
+	}
+}
+
 func (m *manager) toolSend(ctx sdk.Context, params map[string]any) (any, error) {
 	agent, err := stringParam(params, "agent", true)
 	if err != nil {
@@ -318,21 +366,17 @@ func (m *manager) toolSend(ctx sdk.Context, params map[string]any) (any, error) 
 	}
 	contextID, _ := stringParam(params, "contextId", false)
 	taskID, _ := stringParam(params, "taskId", false)
+	wait, err := boolParam(params, "wait", true)
+	if err != nil {
+		return nil, err
+	}
 	r, err := m.remotesFor(ctx)
 	if err != nil {
 		return nil, err
 	}
 	cctx, cancel := callContext(ctx)
 	defer cancel()
-	var soFar strings.Builder
-	last := time.Now()
-	sum, err := r.Send(cctx, SendArgs{Agent: agent, Message: message, ContextID: contextID, TaskID: taskID}, func(chunk string) {
-		soFar.WriteString(chunk)
-		if time.Since(last) > 250*time.Millisecond {
-			last = time.Now()
-			_ = ctx.OnUpdate(soFar.String())
-		}
-	})
+	sum, err := r.Send(cctx, SendArgs{Agent: agent, Message: message, ContextID: contextID, TaskID: taskID, Detach: !wait}, progressTo(ctx))
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
@@ -348,6 +392,13 @@ func (m *manager) toolTask(ctx sdk.Context, params map[string]any) (any, error) 
 	if err != nil {
 		return nil, err
 	}
+	seconds, err := secondsParam(params, "waitSeconds")
+	if err != nil {
+		return nil, err
+	}
+	if _, given := params["waitSeconds"]; given && params["waitSeconds"] != nil && action != "wait" {
+		return nil, sdk.NewToolError("a2a: waitSeconds only applies to action \"wait\"")
+	}
 	r, err := m.remotesFor(ctx)
 	if err != nil {
 		return nil, err
@@ -355,6 +406,16 @@ func (m *manager) toolTask(ctx sdk.Context, params map[string]any) (any, error) 
 	cctx, cancel := callContext(ctx)
 	defer cancel()
 	switch action {
+	case "wait":
+		taskID, err := stringParam(params, "taskId", true)
+		if err != nil {
+			return nil, err
+		}
+		sum, err := r.Wait(cctx, WaitArgs{Agent: agent, TaskID: taskID, Seconds: seconds}, progressTo(ctx))
+		if err != nil {
+			return nil, sdk.NewToolError(err.Error())
+		}
+		return formatSummary(sum), nil
 	case "list":
 		list, err := r.list(cctx, agent)
 		if err != nil {
@@ -384,7 +445,5 @@ func (m *manager) toolTask(ctx sdk.Context, params map[string]any) (any, error) 
 		}
 		return formatSummary(sum), nil
 	}
-	return nil, sdk.NewToolError(fmt.Sprintf("a2a: unknown action %q (get, cancel or list)", action))
+	return nil, sdk.NewToolError(fmt.Sprintf("a2a: unknown action %q (get, cancel, list or wait)", action))
 }
-
-var _ = errors.New

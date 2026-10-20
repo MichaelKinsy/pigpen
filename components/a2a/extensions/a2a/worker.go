@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -273,7 +274,16 @@ func (w *ProcessWorker) Run(ctx context.Context, t Turn, onUpdate func(Update)) 
 		}()
 	}()
 
-	if err := write(map[string]any{"id": "prompt", "type": "prompt", "message": t.Prompt}); err != nil {
+	promptCmd := map[string]any{"id": "prompt", "type": "prompt", "message": t.Prompt}
+	if len(t.Images) > 0 {
+		// Pi's RPC `prompt` carries images as ImageContent: base64 data and its MIME type.
+		images := make([]map[string]any, len(t.Images))
+		for i, im := range t.Images {
+			images[i] = map[string]any{"type": "image", "data": base64.StdEncoding.EncodeToString(im.Data), "mimeType": im.MediaType}
+		}
+		promptCmd["images"] = images
+	}
+	if err := write(promptCmd); err != nil {
 		return Result{}, fmt.Errorf("a2a: write prompt: %w", err)
 	}
 
