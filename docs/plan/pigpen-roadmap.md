@@ -665,8 +665,11 @@ Row 16 is built as the Go Package [`components/a2a`](../../components/a2a/README
 steps are replaced by the evidence listed in `components/a2a/port/PORT.md`. Decisions recorded there:
 
 - The SDK is `a2a-go/v2` **v2.6.0** (the version kagent's checkout pins today; the row above still says v2.5.0). A2A protocol **1.0**
-  is pinned on both sides; 0.3 peers are refused rather than bridged (`a2acompat` is a named gap).
-- Only the JSON-RPC binding is served (streaming yes; gRPC, REST and push notifications are named gaps).
+  is pinned on both sides; 0.3 peers are refused rather than bridged (`a2acompat` is a named gap, owner decision pending).
+- Only the JSON-RPC binding is served (streaming yes; gRPC and REST are named gaps, push notifications and the extended agent card
+  are advertised false and refused with `@pi-in-go/pigpen-a2a does not support <feature> yet.`).
+- Tasks are stored on disk (`<stateDir>/tasks`) and survive a restart; text, text-like file, data and image parts are accepted;
+  `a2a_send` can return a running task and `a2a_task wait` follows it (0.2.0, `port/a2a-1`).
 - Identity: a `contextId` is a PiG session, a task is one worker turn; both are scoped to the caller's principal, and tokens map to
   tenants. Cancellation aborts and reaps the worker process group.
 - The listener is off unless configured, refuses to start without tokens, and the worker has no tools unless the operator names
