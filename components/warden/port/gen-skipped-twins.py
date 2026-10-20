@@ -52,6 +52,8 @@ def reason(f, name):
         return "stuck evidence (parsed failures, edit diffs) is off in this port: upstream's documented `stuck.evidence: false`"
     if f == "steer-delivery.test.ts":
         return "Pi host behavior (a steer rides the tool-result request); the port relies on PiG's SendMessage deliverAs=steer, see PORT.md"
+    if f == "extension.test.ts" and "completions" in n:
+        return "argument completion of the /warden command is not registered by this port (the SDK command completion hook is not wired)"
     return "module not part of this port: " + MODULES.get(base, "outside the four-guard scope (owner decision needed)")
 
 rows = []

@@ -98,7 +98,7 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	// A stuck verdict on the same call carries its own steer; the quick one would say the same thing twice.
 	if quick != nil && (verdict == nil || !verdict.Stuck) {
 		nudge := QuickRepeatNudge(*quick)
-		sent := w.steer(ctx, cfg, false, nudge, "steer", false)
+		sent := w.steer(cfg, []SteerGuard{SteerGuardRepeat}, ctx, nudge, SteerOptions{DeliverAs: "steer"})
 		what := "same output"
 		if quick.Attempt.Failed {
 			what = "same failure"
@@ -107,7 +107,7 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 		if sent {
 			note = "agent nudged"
 		}
-		w.addTrace(ctx, "warden · repeat · "+tool+" · "+what+" · "+note)
+		w.record(ctx, cfg, GuardStuck, "warden · repeat · "+tool+" · "+what+" · "+note, nil, nil)
 		if sent && cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · repeat: "+what+" (agent nudged)", "warning")
 		}
@@ -125,7 +125,7 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	if verdict.Stuck && cfg.Stuck.Nudge {
 		nudge = StuckNudge(*verdict)
 	}
-	w.addTrace(ctx, FormatStuck(*verdict))
+	w.record(ctx, cfg, GuardStuck, FormatStuck(*verdict), nil, stuckTokens(*verdict, w.opts.Now()))
 	if !verdict.Stuck {
 		return nil, nil
 	}
@@ -138,17 +138,14 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 		ctx.Notify("warden · stuck: "+strings.Join(verdict.Reasons, "; ")+suffix, "warning")
 	}
 	if nudge != "" {
-		w.steer(ctx, cfg, true, nudge, "steer", false)
+		w.steer(cfg, []SteerGuard{SteerGuardStuck}, ctx, nudge, SteerOptions{DeliverAs: "steer"})
 	}
 	return nil, nil
 }
 
 func (w *warden) latestTask(ctx sdk.Context) string {
-	branch := w.branchOf(ctx)
-	for i := len(branch) - 1; i >= 0; i-- {
-		if branch[i].Type == "message" && branch[i].Role == "user" && branchText(branch[i]) != "" {
-			return branchText(branch[i])
-		}
+	if text, ok := w.latestUserPrompt(ctx); ok && text != "" {
+		return text
 	}
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -159,6 +156,9 @@ func (w *warden) latestTask(ctx sdk.Context) string {
 // exercised or a UI change nothing showed, is asked to verify (or to say plainly that nothing was verified).
 func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 	cfg := w.config(ctx)
+	if cfg.Enabled {
+		w.toolsAgentEnd(ctx, cfg) // TOOLS-LANE HOOK: the open-loops reminder (tools_wiring.go)
+	}
 	if !cfg.Enabled || !cfg.Done.Enabled {
 		return nil, nil
 	}
@@ -193,7 +193,7 @@ func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 		nudge = DoneNudge(verdict)
 	}
 	w.mu.Unlock()
-	w.addTrace(ctx, FormatDone(verdict))
+	w.record(ctx, cfg, GuardDone, FormatDone(verdict), nil, doneTokens(verdict, w.opts.Now()))
 	if !verdict.Unverified {
 		return nil, nil
 	}
@@ -209,7 +209,7 @@ func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 		w.mu.Lock()
 		w.doneNudged = true
 		w.mu.Unlock()
-		w.steer(ctx, cfg, true, nudge, "followUp", true)
+		w.steer(cfg, []SteerGuard{SteerGuardDone}, ctx, nudge, SteerOptions{DeliverAs: "followUp", TriggerTurn: true})
 	}
 	return nil, nil
 }

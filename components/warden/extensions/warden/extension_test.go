@@ -37,6 +37,8 @@ type harness struct {
 	// subscribed is set once the extension has asked for the session log.
 	subscribed bool
 	fail       map[string]string
+	answer     func(method string, args map[string]any) (map[string]any, string, bool)
+	w          *warden
 }
 
 type harnessOpts struct {
@@ -48,11 +50,20 @@ type harnessOpts struct {
 	git      GitRunner
 	// fail makes host calls of these methods answer with this error message.
 	fail map[string]string
+	// answer is consulted before the harness's own answers; ok reports that it answered.
+	answer func(method string, args map[string]any) (result map[string]any, errMessage string, ok bool)
+	cwd    string // the session's working directory; default: a fresh directory
+	now    func() time.Time
+	home   string // the config home; default: a fresh directory (a second harness can share one)
 }
 
 func startHarness(t *testing.T, o harnessOpts) *harness {
 	t.Helper()
-	h := &harness{t: t, ts: newFakeTypeSafe(t), home: t.TempDir(), confirm: true, model: map[string]any{"id": "mod", "provider": "prov", "name": "Mod"}, fail: o.fail}
+	home := o.home
+	if home == "" {
+		home = t.TempDir()
+	}
+	h := &harness{t: t, ts: newFakeTypeSafe(t), home: home, confirm: true, model: map[string]any{"id": "mod", "provider": "prov", "name": "Mod"}, fail: o.fail}
 	t.Setenv("PIG_HOME", h.home)
 	if o.noHome {
 		for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
@@ -83,7 +94,15 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 		}
 	}
 	hasUI := !o.noUI
-	h.host = StartHost(t, New(opts), HostOptions{HasUI: &hasUI, Cwd: t.TempDir(), OnCall: h.onCall})
+	cwd := o.cwd
+	if cwd == "" {
+		cwd = t.TempDir()
+	}
+	h.answer = o.answer
+	opts.Now = o.now
+	ext, w := newWarden(opts)
+	h.w = w
+	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: cwd, OnCall: h.onCall})
 	return h
 }
 
@@ -92,6 +111,11 @@ func (h *harness) onCall(method string, args map[string]any) (map[string]any, st
 	defer h.mu.Unlock()
 	if msg, ok := h.fail[method]; ok {
 		return nil, msg
+	}
+	if h.answer != nil {
+		if result, msg, ok := h.answer(method, args); ok {
+			return result, msg
+		}
 	}
 	switch method {
 	case "watchSessionLog":
@@ -835,7 +859,7 @@ func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testi
 		"rules": "/warden rules", "rules check": "/warden rules check", "rules audit src": "/warden rules audit",
 		"rules calibrate --yes": "/warden rules calibrate", "rules tune": "/warden rules tune", "report": "/warden report",
 		"config get x": "/warden config", "init": "/warden init", "audit": "/warden audit", "index": "/warden index",
-		"prefs": "/warden prefs", "loops": "/warden loops", "recommend": "/warden recommend", "unmute": "/warden unmute", "bench": "/warden bench",
+		"recommend": "/warden recommend", "unmute": "/warden unmute", "bench": "/warden bench",
 	}
 	for args, feature := range cases {
 		h := startHarness(t, harnessOpts{})
@@ -851,11 +875,12 @@ func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testi
 	}
 }
 
-func TestUnportedWardenToolsAreNotRegistered(t *testing.T) {
+// The three tools are registered (tools_extension_test.go carries their behavior).
+func TestWardenToolsAreRegistered(t *testing.T) {
 	h := startHarness(t, harnessOpts{})
 	for _, tool := range []string{"warden_remember", "warden_loops", "warden_recall"} {
-		if h.host.tools[tool] {
-			t.Errorf("%s is advertised to the model but not ported", tool)
+		if !h.host.tools[tool] {
+			t.Errorf("%s is not registered", tool)
 		}
 	}
 }
