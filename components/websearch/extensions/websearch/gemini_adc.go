@@ -44,17 +44,12 @@ type geminiCfg struct {
 }
 
 func loadGeminiCfg() *geminiCfg {
-	path := ConfigPath()
-	data, err := os.ReadFile(path)
+	parsed, exists, err := readConfigValue(ConfigPath())
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return &geminiCfg{root: map[string]any{}}
-		}
 		return &geminiCfg{err: err}
 	}
-	var parsed any
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		return &geminiCfg{err: fmt.Errorf("Failed to parse %s: %s", path, jsonErrorText(err))}
+	if !exists {
+		return &geminiCfg{root: map[string]any{}}
 	}
 	root, ok := parsed.(map[string]any)
 	if !ok {
