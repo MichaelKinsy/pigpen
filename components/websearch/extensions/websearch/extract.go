@@ -730,14 +730,10 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	articleTitleText, markdown, ok := readableArticle(doc)
 	extractHook("processing")
 
-	var defuddleRefusal error
 	jsMsg := func(fallback string) string {
 		msg := fallback
 		if isLikelyJSRendered(text) {
 			msg = "Page appears to be JavaScript-rendered (content loads dynamically)"
-		}
-		if defuddleRefusal != nil {
-			msg += "\n\n" + defuddleRefusal.Error()
 		}
 		return msg
 	}
@@ -755,12 +751,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		}
 		def, err := extractWithDefuddle(text, responseURL(resp, rawURL))
 		if err != nil {
-			// A refusal is reported after the original's own verdict (below); a real failure is the URL's error.
-			if asUnsupported(err) == nil {
-				return fail(err.Error()), true
-			}
-			defuddleRefusal = err
-			return httpExtracted{}, false
+			return fail(err.Error()), true
 		}
 		if ctx.Err() != nil {
 			return fail(abortedByDeadline), true
