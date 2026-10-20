@@ -166,3 +166,43 @@ func LifecyclePolicyBlock() string { return lifecyclePolicyBlock(true, false) }
 
 // LedgerPathFor is goalLedgerPath({cwd}).
 func LedgerPathFor(cwd string) string { return goalLedgerPath(storage{cwd: cwd}) }
+
+// DashboardText is the lifecycle test's dashboardText(goal, expanded, cwd): the dashboard model derived from the persisted goal and
+// its ledger events, rendered with the plain theme at width 100 (the same pipeline the widget uses).
+func DashboardText(cwd string, g map[string]any, expanded bool) string {
+	var events []*jsObject
+	for _, e := range readGoalLedger(storage{cwd: cwd}).events {
+		if gstr(e, "goalId") == g["id"] {
+			events = append(events, e)
+		}
+	}
+	model := deriveGoalDashboardModel(mapJSObject(g), goalDashboardModelOptions{focused: true, otherOpenGoals: 0, ledgerEvents: events})
+	if model == nil {
+		panic("dashboard model derives from the persisted goal")
+	}
+	if expanded {
+		return strings.Join(renderExpandedDashboard(model, plainTheme, 100, goalExpandedOptions{}), "\n")
+	}
+	return strings.Join(renderCompactDashboard(model, plainTheme, 100, goalCompactOptions{}), "\n")
+}
+
+// AuditorCheckStates are the check states of the audit dashboard for a running audit at percentage.
+func AuditorCheckStates(label string, percentage float64) []string {
+	m := deriveAuditorDashboardModel(auditorProgress{phase: "running", elapsedMs: 1000, label: label, percentage: &percentage, recentOutput: []string{}}, deriveAuditorDashboardOptions{auditorLabel: "mock/auditor"})
+	var out []string
+	for _, c := range m.checks {
+		out = append(out, c.state)
+	}
+	return out
+}
+
+// AuditResultVerdict is core.auditResult?.verdict ("" when none).
+func (p *Probe) AuditResultVerdict() string {
+	var v string
+	p.c.locked(func() {
+		if p.c.auditResult != nil {
+			v = p.c.auditResult.verdict
+		}
+	})
+	return v
+}
