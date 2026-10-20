@@ -114,12 +114,6 @@
   "replace": "if PatternsOverlap(l.search.Pattern, r.search.Pattern) && false {"
  },
  {
-  "name": "waste-recheck-never",
-  "file": "waste.go",
-  "find": "if !ok || !trigger.HasFilter {",
-  "replace": "if !ok || !trigger.HasFilter || true {"
- },
- {
   "name": "waste-far-apart-reads-fire",
   "file": "waste.go",
   "find": "if r.Start > furthest+adjacentGap {",
@@ -142,12 +136,6 @@
   "file": "waste.go",
   "find": "\"You have waited \"",
   "replace": "\"You waited \""
- },
- {
-  "name": "waste-recheck-note-wording",
-  "file": "waste.go",
-  "find": "times and filtered the output each time. Run it once without a pipe;",
-  "replace": "times; run it once without a pipe;"
  },
  {
   "name": "waste-paging-note-offset",

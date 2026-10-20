@@ -60,6 +60,7 @@ M = [
  ('waste-paging-min-reads', 'waste.go', 'minReads      = 3', 'minReads      = 2'),
  ('waste-rate-limit-ignored', 'waste.go', 't.seen-fired < cfg.Every', 't.seen-fired < cfg.Every && false'),
  ('waste-tip-not-idempotent', 'waste.go', 'if strings.Contains(base, tip) {', 'if strings.Contains(base, tip) && false {'),
+ ('waste-recheck-note-wording', 'waste.go', 'times and filtered the output each time. Run it once without a pipe;', 'times; run it once without a pipe;'),
  ('waste-recheck-failure-chased-as-waste', 'waste.go', 'earlier.Failed || reFailSignal.MatchString(earlier.Result)', 'false'),
  ('waste-search-needs-overlap', 'waste.go', 'if !overlapping {', 'if !overlapping && false {'),
  ('waste-write-between-ignored', 'waste.go', 'if slices.Contains(WrittenPaths(c), file) {', 'if slices.Contains(WrittenPaths(c), file) && false {'),

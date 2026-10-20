@@ -48,6 +48,8 @@ def reason(f, name):
         return "not ported: owner decision needed"
     if f == "shape.test.ts":
         return "config schema migration (completeConfig) is not part of this port: the Go config merges defaults over a JSON file"
+    if f == "extension.test.ts" and n.startswith("stuck-loop diff:"):
+        return "asserts the context lane's duplicate note on the second result; the stuck-diff half (no diff for an identical failure with nothing saved, none with stuck.enabled false) is TestStuckLoopDiffIdenticalFailuresAreNotReplacedByADiff and TestStuckLoopDiffStuckEnabledFalsePreventsAnyReplacement"
     if f == "stuck-evidence.test.ts":
         return "project-file and junk-value legs of the config loader (applyProjectOverrides, applyUserOverrides on `\"no\"`) belong to the configui lane; the default and user-file legs are TestStuckEvidenceDefaultsOnAndTheUserFileTurnsItOff"
     if f == "steer-delivery.test.ts":

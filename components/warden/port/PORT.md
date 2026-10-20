@@ -6,7 +6,7 @@
 | Judge seam | `DevMortimer/pi-typesafe` commit `ed439f834665ad6fc652787f5ba7c23852566d49` (`ask`, questions, `errors.ts`), MIT |
 | Oracle | Pi 0.87.1 hosting the original; Node 24.19.0 |
 | Target | PiG 0.3.0+0.87.1, SDK of a 0.3.0 pre-release build (`63c6ba456`) (host getters return `(value, error)`), go1.27.1; shared client `components/typesafe` |
-| Original's tests | 1,264 cases in `port/oracle/tests`; 90 have a Go twin, 1,174 are named skipped subtests with a reason (see below) |
+| Original's tests | 1,264 cases in `port/oracle/tests`; 122 have a Go twin (this slice added 32), 1,142 are named skipped subtests with a reason (see below) |
 
 ## File-to-file mapping
 
@@ -93,6 +93,40 @@ not offered them. Also not yet ported: the trace panel shortcut and compaction.
   cancellation, error reporting, ...; 8 added by the review: redaction of the stuck/done task, the write excerpt and the
   earlier messages, own-model budget, no retry, environment consent not persisted, status line); 30 killed, 1 equivalent
   mutant kept with its reason (`judge-when-disabled`).
+
+## Supervision slice (call waste, subagent triage, stuck evidence, event handlers)
+
+Scope: `waste.go`, `subagent.go`, `evidence.go`, `supervision.go`, the `stuck.go` / `results.go` changes, and the
+registries of the `message_start`, `message_update`, `message_end`, `input` and `agent_settled` events.
+
+- **Twins**: `waste.test.ts` 9 of 9, `subagent.test.ts` 5 of 5, `stuck-evidence.test.ts` 11 of 12 (the config case has
+  its project-file and junk-value legs in the configui lane's loader; the default and user-file legs are
+  `TestStuckEvidenceDefaultsOnAndTheUserFileTurnsItOff`), `stuck-done.test.ts` 24 of 24, `steer-delivery.test.ts` stays
+  one named skip (it tests Pi's `createAgentSession` and its faux provider: how many model requests a steer costs; no
+  warden code is under test), and 7 `extension.test.ts` cases (`subagent reports`, three `stuck-loop diff`, three
+  `waste`); the three `stuck-loop diff` cases that assert the context lane's duplicate note stay named skips with that
+  reason, and their stuck-diff halves are Go tests.
+- **Default changed**: `stuck.evidence` is on by default, as upstream (`config.ts`: `evidence: true`). The earlier Pigpen
+  release forced `false`; the judge request now carries the `evidence` section unless `"stuck": {"evidence": false}`.
+- **Subagent reports** are collected from `message_end` events of custom messages (`customType` in `NOTIFY_TYPES`,
+  string content) and triaged on `agent_settled`, bounded to the newest 8 unseen, which is what upstream's scan of
+  `getBranch()` reads. SDK need: `BranchEntry` has no `CustomType`, so the branch cannot name a custom message's type
+  (Pi API mirrored: `SessionManager.getBranch()` entries of `type: "custom_message"` carry `customType`). One
+  difference follows: upstream's first scan after a resume also triages custom messages that were already in the
+  resumed branch; the port sees only the messages that end during the session.
+- **Event subscription**: `message_start` and `message_update` are subscribed only when a lane registers a piece,
+  because a host asks the extension and waits once per message (and `message_update` once per streamed token).
+- **Scenarios** (all equal to the original under Pi 1402973a): `waste-sleep-poll-note`, `waste-sleep-chain-no-note`,
+  `waste-paging-note`, `waste-far-apart-reads-no-note`, `waste-search-note`,
+  `stuck-evidence-judged` (the judge request carries the parsed failures, the same-failure link and the digest) and
+  `stuck-loop-diff-judged` (the third result is replaced by the diff note). Not a scenario, with the reason: the recheck
+  note (a pipeline of two shimmed commands starts them in a different order under Pi and PiG, so the exec events differ
+  for reasons outside the extension), the waste
+  tip (the model request the harness records carries no system prompt) and subagent reports (no pi-subagents in the
+  hermetic host injects `subagent-notify` messages): both are layer-1 tests (`supervision_test.go`) plus twins.
+- **Findings**: the harness's PATH holds only the commands a scenario declares, so a scenario that needs `sleep` or
+  `cat` declares it (`commands`, `canned`) or uses shell builtins; an undeclared command's stderr and the stdout of the
+  same call arrive in a different order under Pi and PiG.
 
 ## Equivalence (live: Pi original vs Go port)
 

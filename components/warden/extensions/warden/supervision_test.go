@@ -596,3 +596,16 @@ func TestAReportThatEndsTwiceIsTriagedOnce(t *testing.T) {
 		t.Errorf("a report with the same entry id is triaged once: %d", n)
 	}
 }
+
+func TestWasteRecheckNoteRidesTheSecondFilteredRunOfACheck(t *testing.T) {
+	h := startHarness(t, harnessOpts{cfg: on(BackendNone)})
+	h.start()
+	if got := h.fireResult("bash", map[string]any{"command": "npm run check 2>&1 | tail -30"}, "tests 1175\n"); got != nil {
+		t.Fatalf("the first run is not waste: %v", got)
+	}
+	got := h.fireResult("bash", map[string]any{"command": `npm run check 2>&1 | grep -E "^(tests)"`}, "tests 1175\n")
+	if len(got) != 1 {
+		t.Fatalf("content %v", got)
+	}
+	mustMatch(t, got[0]["text"].(string), `\n\nYou ran npm run check 2 times and filtered the output each time\. Run it once without a pipe;`, "recheck note")
+}
