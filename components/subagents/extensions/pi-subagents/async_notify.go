@@ -37,6 +37,10 @@ type NotifyDetails struct {
 	WorkflowRunID       string
 	ChildRuns           []NotifyChildRun
 	ReconciledChild     string
+	// ScheduleID and ScheduleName name the schedule a scheduled run came from (its scheduleOrigin); ScheduleQuiet is its quiet flag.
+	ScheduleID    string
+	ScheduleName  string
+	ScheduleQuiet bool
 }
 
 // NotifyChildRun names a child run of a workflow in a completion message.
@@ -239,6 +243,9 @@ func buildCompletionDetails(result map[string]any) NotifyDetails {
 	if rec, ok := result["workflowReceipt"].(map[string]any); ok {
 		d.WorkflowReceiptPath = nonEmptyString(rec["path"])
 	}
+	if o := scheduleOriginOf(result["scheduleOrigin"]); o != nil {
+		d.ScheduleID, d.ScheduleName, d.ScheduleQuiet = objStr(o, "id"), objStr(o, "name"), objBool(o, "quiet")
+	}
 	if ph, ok := result["parallelHandoff"].(map[string]any); ok {
 		d.HandoffPath, _ = ph["path"].(string)
 	}
@@ -348,7 +355,15 @@ func formatSingleCompletion(d NotifyDetails) string {
 	if d.WorkflowReceiptPath != "" {
 		lines = append(lines, "Workflow receipt: "+d.WorkflowReceiptPath)
 	}
-	lines = append(lines, "", formatResultPreview(d))
+	lines = append(lines, "")
+	if d.ScheduleID != "" {
+		label := d.ScheduleName
+		if label == "" {
+			label = d.ScheduleID
+		}
+		lines = append(lines, fmt.Sprintf("Scheduled run from **%s** (schedule %s).", label, d.ScheduleID), "")
+	}
+	lines = append(lines, formatResultPreview(d))
 	if d.HandoffPath != "" {
 		lines = append(lines, "", "Parallel handoff: "+d.HandoffPath)
 	}
@@ -388,6 +403,7 @@ func formatGroupedCompletion(details []NotifyDetails) string {
 }
 
 var notifyHeaderPattern = regexp.MustCompile(`^(Background task|Detached foreground task) (completed|failed|paused|stopped): \*\*(.+?)\*\*(?:\s+(\([^)]*\)))?$`)
+var scheduleLinePattern = regexp.MustCompile(`^Scheduled run from \*\*(.+?)\*\* \(schedule (.+?)\)\.$`)
 var notifySessionLinePattern = regexp.MustCompile(`^(Session|Session file|Session share error):\s+`)
 
 // parseSubagentNotifyContent recovers the details from a notification's text (the renderer's fallback); nil when it is not one.
@@ -410,6 +426,20 @@ func parseSubagentNotifyContent(content string) *NotifyDetails {
 	body := []string{}
 	if len(lines) > skip {
 		body = lines[skip:]
+	}
+	// the schedule origin keeps its attribution when a notice is drawn again
+	if len(body) > 0 {
+		if sm := scheduleLinePattern.FindStringSubmatch(body[0]); sm != nil {
+			d.ScheduleID = sm[2]
+			if sm[1] != sm[2] {
+				d.ScheduleName = sm[1]
+			}
+			drop := 1
+			if len(body) > 1 && jsTrim(body[1]) == "" {
+				drop = 2
+			}
+			body = body[drop:]
+		}
 	}
 	sessionIndex := -1
 	for i := len(body) - 1; i >= 1; i-- {
@@ -765,4 +795,13 @@ func (n *CompletionNotifier) Dispose() {
 	for _, b := range bs {
 		n.settle(b.Dispose(), false)
 	}
+}
+
+// scheduleOriginOf is the schedule origin of a result payload (an object from the workflow executor or from a result file).
+func scheduleOriginOf(v any) *jsObject {
+	o, ok := asObject(toDyn(v))
+	if !ok || objStr(o, "id") == "" {
+		return nil
+	}
+	return o
 }

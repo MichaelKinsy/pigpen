@@ -360,3 +360,27 @@ ends the step). **Not done:** the parent side, which has to create the structure
 with `-e <extension path>`, `--tools` including `structured_output` and the instructions of the original appended to the system prompt, read the capture after the
 child exits (`readStructuredOutput`) and report it as the original's result; and registering `outputSchema` as a run parameter. `outputSchema`,
 `structured_output` and `acceptance.report` therefore stay refused. `contact_supervisor` (the supervisor channel) and the watchdog diff tool are other slices.
+
+
+## Workflow runtime wired to real children (subagents-w2-workflowrun)
+
+`workflow_exec*.go` runs a `workflowScript`, `workflowScriptPath` or named `workflow` on the goja sandbox and answers `runs.*` with real
+children. The legacy `tasks`, `chain`, `parallel`, `concurrency`, `chainDir` and `chainName` inputs reach the public boundary and get the
+original's errors (parallel and chained runs exist only as workflow scripts).
+
+- **Foreground** (`async: false`, 30 min default): blocks the call; streams the live trace through `ctx.OnUpdate`; the result carries the
+  trace, emits, console, the child summary and the workflow receipt.
+- **Async** (the default, no timeout): returns the run id; the script runs on a goroutine of this process; `status.json` (mode workflow, steps,
+  lane graph, host rows, `workflowChildren`), `events.jsonl`, the active-run index, the capacity slot, the result file, the workflow receipt and the
+  completion notice are written as for any background run; `subagent {action: stop}` reaches the workflow through its control inbox.
+- **Children**: a child that is not `async: true` runs through the single-run executor (run policy, a `pig --print` process; 4 at once); `async:
+  true` starts a background run and returns its launch receipt (`state: "running"`). Differences from the original: the original awaits an async
+  runner for a child with `async` omitted, the port runs it in the foreground, so such a child's session is not retained and `resume` of it is
+  refused (a retained resume is refused for every child). Options a child does not honor (anything not registered by `registerRunParams`) fail the
+  child with the refusal text. `runs.steer` of a foreground child reports `failed` (a print-mode child reads no input after its task); the
+  steering slice routes it for background children through `workflowSteerHook`.
+- **Not ported here**: managed worktrees and `baseRef` (the launch refuses the child; the admission-time worktree preflight is skipped),
+  `usageBudget`, detached/paused workflows (no intercom detach), per-child live progress rows (the steps carry no turn or tool counters).
+- Schedules (`schedule_runs.go`, `schedule_register.go`, `config_file.go`): the nine `schedule.*` actions, the store, the timers and the async
+  completion hook, twinned by `scheduled-runs` (45 twins). The notice names the schedule of a scheduled run and a quiet schedule does not wake the
+  session for a run that went well.

@@ -105,7 +105,7 @@ func TestParallelAndChainInputsAreTheOriginalsErrors(t *testing.T) {
 
 func TestUnportedManagementAndControlActionsAreRefused(t *testing.T) {
 	h, _ := refusedHost(t)
-	actions := []string{"steer", "debug.run", "schedule.create", "append-step"}
+	actions := []string{"steer", "debug.run", "append-step"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})

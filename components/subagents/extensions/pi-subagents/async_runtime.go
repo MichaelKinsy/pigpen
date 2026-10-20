@@ -552,6 +552,10 @@ func (rt *asyncRuntime) processResult(file string, triggerTurn bool) {
 	recordWaitCompletion(rt.state, runID, data, nowMs(), completionSendTTLMs, &struct{ ResultsDir, SessionID string }{rt.dirs.Results, sessionID})
 	rt.mu.Unlock()
 	rt.bus.Emit(subagentAsyncCompleteEvent, data)
+	// a quiet schedule does not wake the session for a run that went well (scheduledCompletionTriggersTurn)
+	if d := buildCompletionDetails(data); d.ScheduleQuiet && d.Status == "completed" {
+		triggerTurn = false
+	}
 	data["triggerTurn"] = triggerTurn
 	go func() {
 		if accepted := <-rt.notifier.Deliver(data); accepted {

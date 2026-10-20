@@ -102,7 +102,11 @@ func executeWorkflowRun(ctx sdk.Context, params map[string]any) (any, error) {
 	if msg := nestedBlocked(os.Getenv); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
-	x := &wfExec{ctx: ctx, toolCallID: ctx.ToolCallID(), announced: map[string]bool{}, claimed: map[string]string{}, childOutputOverrides: map[string]string{}, childOutputClaimPaths: map[string]string{},
+	toolCallID := ctx.ToolCallID()
+	if toolCallID == "" { // a scheduled fire has no tool call
+		toolCallID = randomUUID()
+	}
+	x := &wfExec{ctx: ctx, toolCallID: toolCallID, announced: map[string]bool{}, claimed: map[string]string{}, childOutputOverrides: map[string]string{}, childOutputClaimPaths: map[string]string{},
 		produced: map[string]bool{}, childRunIDs: map[string]string{}, hostSteps: map[string]*WorkflowHostStep{}, startedAt: time.Now()}
 	x.sessionID = currentSessionID(ctx)
 	if bgRT != nil {
@@ -157,7 +161,13 @@ func executeWorkflowRun(ctx sdk.Context, params map[string]any) (any, error) {
 	}
 
 	// the request, with its gate normalized
+	if so := p["scheduleOrigin"]; so != nil {
+		x.scheduleOrigin = so
+	}
 	req, _ := toDyn(p).(*jsObject)
+	if req.vals["context"] == "fresh" { // the only context a port child has
+		req = lpWithout(req, "context")
+	}
 	req, gerr := normalizeWorkflowGateParams(req)
 	if gerr != nil {
 		return fail(gerr.Error())
@@ -308,7 +318,7 @@ func executeWorkflowRun(ctx sdk.Context, params map[string]any) (any, error) {
 
 	// what children inherit: the request without the workflow's own options
 	drop := []string{"workflowScript", "async", "chatProgress", "args", "action", "agent", "task", "resume", "tasks", "chain", "concurrency", "foregroundOnly", "clarify",
-		"timeoutMs", "maxRuntimeMs", "usageBudget", "missionId", "mission", "preflight", "globalConcurrencyLimit", "maxSubagentSpawnsPerRun"}
+		"timeoutMs", "maxRuntimeMs", "usageBudget", "missionId", "mission", "preflight", "globalConcurrencyLimit", "maxSubagentSpawnsPerRun", "scheduleOrigin"}
 	x.defaults = lpWithout(req, drop...)
 	x.setupEnv(discovery.Agents, p)
 
