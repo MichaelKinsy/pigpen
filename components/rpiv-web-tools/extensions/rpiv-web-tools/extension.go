@@ -47,10 +47,11 @@ func partial(ctx sdk.Context) func(text string, details any) {
 	}
 }
 
-// Extension returns the web tools extension. The tool guidance is read from the config at load, as the original
-// does at registration.
+// Extension returns the web tools extension. The tool guidance and the URL interceptor chain are read from the
+// config at load, as the original does at registration (registerWebTools: buildInterceptors first).
 func Extension() *sdk.Extension {
 	e := sdk.New("rpiv-web-tools")
+	buildInterceptors(nil)
 	cfg := readConfig()
 	snippet, guidelines := guidanceFor(cfg, "web_search", defaultWebSearchSnippet, defaultWebSearchGuidelines)
 	e.RegisterTool(sdk.ToolDefinition{
@@ -88,7 +89,7 @@ func Extension() *sdk.Extension {
 		Execute: func(ctx sdk.Context, p map[string]any) (any, error) {
 			u, _ := p["url"].(string)
 			raw, _ := p["raw"].(bool)
-			text, details, err := fetchTool(toolContext(ctx), u, raw, partial(ctx))
+			text, details, err := fetchTool(withExec(toolContext(ctx), hostExec(ctx)), u, raw, partial(ctx))
 			if err != nil {
 				return nil, err
 			}

@@ -3,6 +3,7 @@ package rpiv_web_tools
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -157,38 +158,25 @@ func formatShowConfigMessage(cfg webToolsConfig) string {
 		lines = append(lines, fmt.Sprintf("  %s url: %s (source: %s)", meta.Name, resolved, src))
 	}
 	lines = append(lines, "", "URL interceptors:")
-	lines = append(lines, githubInterceptorLines(cfg)...)
+	lines = append(lines, githubInterceptorLines()...)
 	return strings.Join(lines, "\n")
 }
 
 func hasString(cfg webToolsConfig, key string) bool { _, ok := cfg[key].(string); return ok }
 
-// githubInterceptorLines reports the interceptor: this port does not implement it (PORT.md, slice 2),
-// so a github.com URL is refused while it is enabled.
-func githubInterceptorLines(cfg webToolsConfig) []string {
-	if githubInterceptorEnabled(cfg) {
-		return []string{"  github: enabled in config. " + refusal(githubInterceptorFeature)}
+// githubInterceptorLines is the interceptor block of --show: the active interceptor's resolved options (the
+// chain built when the extension registered), or how to enable it. upstream: web-tools.ts:561-572.
+func githubInterceptorLines() []string {
+	if g := getActiveGitHubInterceptor(); g != nil {
+		token := envTrim(githubTokenEnvVar)
+		return []string{fmt.Sprintf("  github: enabled (%s: %s, maxRepoSizeMB: %s, clonePath: %s)", githubTokenEnvVar,
+			maskAPIKey(token, token != ""), strconv.FormatFloat(g.options.MaxRepoSizeMB, 'f', -1, 64), g.options.ClonePath)}
 	}
 	return []string{
 		"  github: disabled",
 		`  ↳ enable:  add  "interceptors": { "github": true }   to config.json`,
 		`  ↳ disable: set  "interceptors": { "github": false }  to override a consumer-enabled default`,
 	}
-}
-
-// githubInterceptorEnabled reads the opt-in the way the original does: true, or an object not disabled.
-func githubInterceptorEnabled(cfg webToolsConfig) bool {
-	im, _ := cfg["interceptors"].(map[string]any)
-	switch g := im["github"].(type) {
-	case bool:
-		return g
-	case map[string]any:
-		if e, ok := g["enabled"].(bool); ok {
-			return e
-		}
-		return true
-	}
-	return false
 }
 
 // webToolsCommand is /web-tools.
