@@ -40,7 +40,7 @@ against the original without a person: the rules and the tool gate for what they
 - withholding tools the policy denies outright from the model at `before_agent_start`, and restoring them (the tool-surface
   baseline), the `yolo` status, and the permissive-`*` warning at session start.
 
-**Blocked, fail-closed, with a visible reason** (the original decides these by machinery that is not ported):
+**Refused, fail-closed** (the original decides these by machinery that is not ported). Each is blocked with the Package's one refusal text, `@pi-in-go/pigpen-permissions (Go port) does not support <feature> yet. Install the original extension, npm:@gotgenes/pi-permission-system@39.0.3, which runs unchanged in PiG.` (`refusal.go`; `refusal_test.go` has one exact-text test per refused option and checks the Package name and the pinned original):
 
 - an `ask`: the approval dialog (and its session grants) is not ported, so the call is refused and the message says so.
   `yoloMode` turns asks into allows, as in the original;
@@ -56,7 +56,17 @@ against the original without a person: the rules and the tool gate for what they
   reads by its own rule (`ssh`, `su`, `source`, `command`, `bash script.sh`, ...) is refused when allowed. Both are listed with
   every other refusal in `testdata/port-differences.json`;
 - a tool that `shellTools` routes through the bash surface (the aliases are not ported);
-- MCP and skill tools.
+- MCP and skill tools;
+- the project scope while the project is trusted (`ctx.IsProjectTrusted`; unknown counts as trusted) and a project config file exists,
+  and the agent scope while the active agent (the last `active_agent` session entry, else the `<active_agent name="...">` tag of the
+  system prompt) has a definition file with a `permission` frontmatter block: every call the port would allow is refused
+  (`unported.go`, `scope_test.go`); a deny the global scope gives stays a deny. Before this the scopes were ignored, which let a call
+  through that a project or agent rule denies;
+- a `/skill:<name>` input: the `input` handler decides it by the skill surface (allow continues, deny is `handled` with the original's
+  notice, an ask or an unreadable scope is `handled` with the refusal text). Before this every input continued, so a denied skill
+  could be invoked;
+- config options the schema accepts and nothing reads yet (dialog, forwarding, logging, limits, `piInfrastructureReadPaths`,
+  `authorizerChain`): a warning at session start names the ones that are set.
 
 **Not ported at all:** project and agent scopes (the project scope is withheld in the original until the project is trusted;
 the port reads the global scope only), session approvals and rules, the review and debug logs, forwarding and subagent authority,
@@ -77,8 +87,11 @@ name (or the `*` fallback), not by the bash rules; deny it, or name it in `shell
 | M5 | `index.ts`, `handlers/lifecycle.ts` | `extension.go` | scenarios; `adapter_test.go` (a fake interactive host) |
 | M6 | JavaScript semantics: ordered objects, UTF-16 units, numbers beyond the double range | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that merges or normalizes |
 | M7 | `access-intent/bash/wrapper-analysis.ts` (`classifyWrapperWords`), `handlers/gates/bash-command.ts` (units, floors, most restrictive) | `bash.go` | 4 twins and the upstream tables; 646 recorded decisions (`oracle_test.go`) |
+| M8 | `access-intent/bash/{parser,async-cache,heredoc-tails,redirect-arguments,parse-health,heredoc-free-lines,node-text,shell-variable-expansion,unresolved-salvage,nested-execution,redirect-analysis}.ts`: tree-sitter-bash 0.25.1 through web-tree-sitter 0.26.9 and the two corrections | `bashparse/` (pure Go: `internal/ts` ports the tree-sitter 0.26.9 runtime, the grammar tables and scanner) | 117 twins and 2 named skips (`pigeq twins check`); differential against the original's recorded parse trees, every node (`bashparse/differential_test.go`, `port/bashparse-diff/`): 4302 original-test strings with full dumps, 5753 other test strings, 52043 hand-built shapes, 212925 prefix and deletion variants, 219159 fuzz inputs, zero differences (one input, an 1800-deep nest of empty subshells, makes the original's wasm trap) |
 | M8 | `config/config-loader.ts` (`stripJsonComments`, `validateUnifiedConfig`), `config/config-schema.ts` | `schema.go`, `config.go` | 91 recorded files (`oracle_test.go`); scenario `config-comments` |
 | M9 | `handlers/gates/skill-read.ts`, `exposure/skill-prompt-sanitizer.ts` (parsing, visibility, path match) | `skills.go` | 15 twins; `skills_test.go`; `adapter_test.go` |
+| M10 | `access-intent/bash/{command-enumeration,wrapper-analysis,command-effects,bash-arity,sed-invocation,awk-invocation,sync-commands,token-classification,token-collection}.ts` | `bashanalysis/` (subpackage; reads trees through `bashparse/`; `wrapper-analysis.ts` moves here from M7's `bash.go` once the lead swaps callers; `path/path-flavor.ts`'s `hasPathSeparator` is a minimal copy for the classifiers) | 298 twins in 9 ledger files; 42,038 recorded inputs compared field by field with the original (`bashanalysis/differential_test.go`, `port/bashanalysis-diff/`); `bashanalysis/extras_test.go`; 383 mutations (`port/gen-mutations-bashanalysis.py`) |
+| M11 | `logging/*` (debug and review JSONL writers, redaction, field cap, JSON-safe stringify, file modes, session logger, decision audit and reporter, command masking), `presentation/review-log-renderer.ts`, `presentation/fact-vocabulary.ts`, `handlers/tool-call-boundary.ts` | `logjsonsafe.go`, `logredaction.go`, `logfieldcap.go`, `logperms.go`, `logging.go`, `sessionlogger.go`, `decisionaudit.go`, `decisionreporter.go`, `permissionevents.go`, `commandredaction.go`, `reviewlogrenderer.go`, `factvocabulary.go`, `toolcallboundary.go` (lane-local stand-ins in `logging_deps.go`) | 135 twins (`logging/*`, the two presentation files, `handlers/tool-call-boundary`); the differential `testdata/logging-oracle.json` |
 
 ## Process: what was written before its tests
 
@@ -127,6 +140,34 @@ recorded by `port/record-probe.sh`, not with the port.
   `nice rm important.txt` is asked about (blocked), `ls && /bin/sh -c 'rm important.txt'` is refused, `ls | wc -l` runs.
 - Size: 2120 hand-written Go lines (non-test, 379 of them copied helpers; the review added 682 in `bash.go`, `schema.go`,
   `skills.go`), 2528 test lines; recorded, not written: `testdata/oracle.json`.
+
+## Bash parser: performance (M8)
+
+`bashparse` is new in this release, so there is no earlier release to compare with; the baseline is the original's WASM parser
+(web-tree-sitter 0.26.9 + tree-sitter-bash 0.25.1) under Node 24.19. Latency is the median of 12 interleaved rounds (a Go round,
+then a WASM round) of `bench-rounds.sh`, both pinned to the same four CPUs of one host (`port/bashparse-diff/bench-inputs.json`;
+the Go figure is `BenchmarkParse`, tree conversion and both corrections included):
+
+| input | Go ns/op | WASM ns/op | Go / WASM | Go B/op | Go allocs/op |
+|---|---|---|---|---|---|
+| 41-byte command | 16 297 | 47 966 | 0.34 | 2 322 | 7 |
+| 509-byte pipeline with a heredoc | 653 837 | 1 010 090 | 0.65 | 34 378 | 112 |
+| 5.2 KB script | 1 950 225 | 2 162 238 | 0.90 | 252 693 | 397 |
+
+Cold start (tables load, then the first parse): 6.3 ms against 40 ms (median of 12) for the WASM parser's init, load and first
+parse. Binary: +1.42 MiB (1 490 944 bytes) over an empty `main` (`-ldflags="-s -w"`, linux/amd64), of which 142 KB are the
+gzipped tables.
+
+Before the change recorded here the 509-byte and 5.2 KB inputs ran at 3.9 times the WASM time on a comparable idle four-CPU set
+of the same host (3 882 us and 8 283 us, 6 721 and 24 162 allocations per parse, 10 interleaved rounds): the cost was the garbage collector's work on the
+parse's garbage (the same code ran 2 to 2.6 times faster given 56 CPUs than given four; the new code with the collector off is a quarter to a
+third faster than with it on). The fix keeps a parser's subtrees, stack nodes and
+child arrays in slabs it reuses between parses (parsers come from a `sync.Pool`; a tree is converted before its parser is handed
+back, and a parser lets go of slabs a one-off huge input grew), builds the node tree in two allocations sized from the tree,
+expands a small parse state to a dense row on first use, counts references for balancing in a field instead of a map, and copies
+children in the correction walk only where something changed. Every step was held to the differential: zero differences on every
+corpus, the twins green, the `bp-*` mutations killed. `TestTreeSurvivesTheNextParse` and `TestParallelParsesMatchSerialOnes`
+(under `-race`) pin the two things reuse could break: a tree held while another parse runs, and parallel callers.
 
 ## Findings (to file against PiG, and notes on the porter)
 

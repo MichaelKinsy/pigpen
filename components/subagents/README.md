@@ -43,6 +43,15 @@ precedence project over user over builtin, packages, aliases, name resolution), 
 `subagent` tool's `list` and `get`, the `subagents_enable` loader, and running one agent or a chain through a child process (a Go
 addition: the original runs children through its own executor and scripted workflows).
 
-**Not ported:** parallel, async and background runs, scripted workflows (they need the original's JavaScript workflow runtime),
-council mode, worktree isolation, the fleet and status views, steering and the supervisor channel, the watchdog, missions,
-profiles and settings overrides, `.chain.json` chains, and the skills and prompt templates of the original. See [port/PORT.md](port/PORT.md).
+**Not ported, and refused:** parallel, async and background runs, scripted workflows (`workflow`, `workflowScript`,
+`workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet and status views, steering and
+the supervisor channel, the watchdog, missions, profiles and settings overrides, `.chain.json` chains, the management actions other
+than `list` and `get`. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model` and
+`async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope`. Any other
+parameter or action, and the tools `bg_wait` and `subagent_supervisor` (declared so the model sees the original's tools), is refused
+with one message and nothing runs:
+
+> @pi-in-go/pigpen-subagents (Go port) does not support async (background) runs (`async: true`) yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.
+
+The original's slash commands other than the port's own `/run-chain` (`/run`, `/subagents`, `/subagents-stop`, `/prompt-workflow`, ...) are not
+registered, and neither are its skills and prompt templates. See [port/PORT.md](port/PORT.md).

@@ -79,10 +79,26 @@ func textResult(text string, isError bool) sdk.ToolResult {
 	return sdk.ToolResult{Content: text, IsError: isError}
 }
 
-func notPorted(what string) sdk.ToolFunc {
-	return func(ctx sdk.Context, params map[string]any) (any, error) {
-		return textResult("(Go port) "+what+" is not ported.", true), nil
+func init() {
+	registerAction("list", []string{"agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
+		return manageOutcome(listAgents(ctx.Cwd(), params))
+	})
+	registerAction("get", []string{"agent", "agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
+		return manageOutcome(getAgent(ctx.Cwd(), params))
+	})
+}
+
+// extensionHooks add what a slice registers (tools, commands, events, flags) to the extension. A slice appends its hook from
+// an init() in its own file, so no slice edits Extension() for another.
+var extensionHooks []func(e *sdk.Extension)
+
+// manageOutcome is the tool result of a management action.
+func manageOutcome(r manageResult) (any, error) {
+	if r.isError {
+		// Pi reports a refused action as a failed tool call: the content, empty details, the error flag on the event
+		return nil, sdk.NewToolError(r.text)
 	}
+	return explicitOK{Content: r.text, Details: map[string]any{"mode": "management", "results": []any{}}}, nil
 }
 
 // Extension returns the subagents extension.
@@ -91,9 +107,9 @@ func Extension() *sdk.Extension {
 	defs := toolDefs()
 
 	// The tools the original registers besides subagent: a wait tool and the supervisor channel are declared so the
-	// model sees the same tools, and answer that they are not ported.
+	// model sees the same tools, and refuse (refuse.go).
 	e.RegisterTool(sdk.ToolDefinition{Name: "bg_wait", Label: "Wait for Background Work", Description: defs["bg_wait"].Description, Parameters: defs["bg_wait"].Parameters,
-		Execute: notPorted("waiting for background subagent work (background runs are")})
+		Execute: refuseTool("waiting for background work (`bg_wait`)")})
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: loaderName, Label: "Enable Subagents", Description: defs[loaderName].Description, Parameters: defs[loaderName].Parameters,
 		PromptSnippet: "pi-subagents is installed. For authorized specialist, independent-review, or parallel work, call subagents_enable, then subagent. Authorization must come from the current request or applicable instructions; complexity alone is not authorization.",
@@ -116,7 +132,7 @@ func Extension() *sdk.Extension {
 		},
 	})
 	e.RegisterTool(sdk.ToolDefinition{Name: "subagent_supervisor", Label: "Subagent Supervisor", Description: defs["subagent_supervisor"].Description, Parameters: defs["subagent_supervisor"].Parameters,
-		Execute: notPorted("the supervisor channel")})
+		Execute: refuseTool("the supervisor channel (`subagent_supervisor`)")})
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: subagentName, Label: "Subagent", Description: defs[subagentName].Description, Parameters: defs[subagentName].Parameters,
 		PromptSnippet:    promptSnippet,
@@ -152,28 +168,29 @@ func Extension() *sdk.Extension {
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})
+	for _, hook := range extensionHooks {
+		hook(e)
+	}
 	return e
 }
 
-// executeSubagent runs a management action; execution (single, chain, parallel) is not ported here.
+// executeSubagent runs a management action (list, get) or one agent; every other input is refused (refuse.go).
 func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
-	action, _ := params["action"].(string)
-	var r manageResult
-	switch action {
-	case "list":
-		r = listAgents(ctx.Cwd(), params)
-	case "get":
-		r = getAgent(ctx.Cwd(), params)
-	case "":
+	action := ""
+	if v := params["action"]; v != nil {
+		s, isString := v.(string)
+		if !isString || jsTrim(s) == "" {
+			return nil, sdk.NewToolError("action must be a non-empty management/control action, or omit action and use workflowScript.")
+		}
+		action = jsTrim(s)
+	}
+	if msg := refuseUnsupported(params, action); msg != "" {
+		return nil, sdk.NewToolError(msg)
+	}
+	if action == "" {
 		return runOne(ctx, params)
-	default:
-		return textResult("(Go port) the '"+action+"' action is not ported.", true), nil
 	}
-	if r.isError {
-		// Pi reports a refused action as a failed tool call: the content, empty details, the error flag on the event
-		return nil, sdk.NewToolError(r.text)
-	}
-	return explicitOK{Content: r.text, Details: map[string]any{"mode": "management", "results": []any{}}}, nil
+	return actions[action].run(ctx, params)
 }
 
 // explicitOK is a successful result that says so (the original's tool results carry isError: false).
@@ -200,13 +217,6 @@ func cancellation(ctx sdk.Context) (<-chan struct{}, func()) {
 	return eitherDone(ctx.Done(), run)
 }
 
-// runRequest reads the agent and task of a single-agent run; both are required.
-func runRequest(params map[string]any) (name, task string, ok bool) {
-	name, _ = params["agent"].(string)
-	task, _ = params["task"].(string)
-	return name, task, name != "" && task != ""
-}
-
 // findChain returns the chain called name; of several with that name (user, then project) the last one wins.
 func findChain(chains []ChainConfig, name string) *ChainConfig {
 	var found *ChainConfig
@@ -220,9 +230,20 @@ func findChain(chains []ChainConfig, name string) *ChainConfig {
 
 // runOne is the single-agent run: {agent, task}, the original's one-child form.
 func runOne(ctx sdk.Context, params map[string]any) (any, error) {
-	name, task, ok := runRequest(params)
-	if !ok {
-		return nil, sdk.NewToolError("Specify 'agent' and 'task' to run a subagent, or an 'action' to manage them. (Go port: only a single agent runs; parallel, workflow and async runs are not ported.)")
+	if params["agent"] == nil && params["task"] == nil {
+		return nil, sdk.NewToolError("Execution requires either { agent, task? } for one child, a named workflow resource, or a non-empty workflowScript or workflowScriptPath for orchestration.")
+	}
+	name, _ := params["agent"].(string)
+	name = jsTrim(name)
+	if name == "" {
+		return nil, sdk.NewToolError("Structured single-child execution requires agent to be a non-empty string.")
+	}
+	task, taskIsString := params["task"].(string)
+	if params["task"] != nil && !taskIsString {
+		return nil, sdk.NewToolError("Structured single-child task must be a string when provided.")
+	}
+	if task == "" {
+		return nil, sdk.NewToolError(refusal("a run without `task`"))
 	}
 	if msg := nestedBlocked(os.Getenv); msg != "" {
 		return nil, sdk.NewToolError(msg)
