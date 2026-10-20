@@ -360,3 +360,30 @@ ends the step). **Not done:** the parent side, which has to create the structure
 with `-e <extension path>`, `--tools` including `structured_output` and the instructions of the original appended to the system prompt, read the capture after the
 child exits (`readStructuredOutput`) and report it as the original's result; and registering `outputSchema` as a run parameter. `outputSchema`,
 `structured_output` and `acceptance.report` therefore stay refused. `contact_supervisor` (the supervisor channel) and the watchdog diff tool are other slices.
+
+## Child runtime lane, wave 2 (subagents-w2-childrt): what is ported, what is not
+
+Children are `pig` processes. Twinned (every upstream case a twin or an individually justified skip; entries removed from `slices.json`):
+`binary-pi-spawn`, `pi-spawn`, `pi-spawn-host-root` (`spawn_pig.go`: the pig a child is = `PIG_SUBAGENT_PIG_BINARY`, the host image
+`PIG_HARNESS_BINARY`, a sibling `pig`, PATH; the Node mechanisms named in each skip: `node <cli.js>`, npm package-root walks,
+`process.argv[1]`, the compiled-Bun image layout), `session-lease` (`session_lease.go`; session files are plain files for pig, so the
+lease is ported whole), `process-terminal` (+ the lease proof: `canonical-session-*` reasons, `revivalLeaseToken`), `owned-process-tree`
+(`owned_process_tree.go`), `stale-run-reconciler`, `nested-events`, `retained-nested-route-tracker`, `pi-web-session-liveness` (the
+liveness decision; the `globalThis[Symbol.for('@agegr/pi-web/session-liveness/v1')]` registry of the Node host that runs Pi and pi-web
+has no pig counterpart: 2 skips), `result-delivery-ownership`, `run-id-resolver` (nested kind; `inspectStatus` shows the nested exact
+status), `retained-children`, `child-lifecycle`, `child-launch-plan` (`planChildLaunch`), `child-session-name`,
+`opencode-session-headers`. The retained tracker's native `fs.watch` is an injectable seam (no file-watching dependency approved), the
+poll covers it.
+
+The child-facing interface for steering and the watchdog: `child_session.go` (`childSession` over `pig --mode rpc`: Prompt, Steer,
+FollowUp, Abort, Subscribe, HasQueuedMessages, Messages, Dispose), `child_registry.go` (`registerChild`, `lookupChild`, `listChildren`,
+`onChildRegistered`, `steerConsumer`), and `child_role.go` (`childRoleExtras`, `Watchdog`, `WatchdogStatusFile`, `RequiredTools`).
+
+**Not done in this lane (still refused, still listed in `slices.json`):** `child-runtime-config`, `child-session-host-sdk`,
+`child-session-parent-providers`, `child-session-queued`, `child-tool-plan`, `child-tool-plan-permission-system`, `child-transcript`,
+`fork-cache-key`, `fork-context`, `pruned-fork`, `types-fork-preamble`, `required-child-extensions`, `run-child-session`,
+`runner-bootstrap`, `runner-http-dispatcher`, `runner-peer-loader`, `runner-peer-symlinks`, `index-child-registration`,
+`workflow-child-summary`, `rpc`, `inspect-rpc`, `tool-activation`, `tool-activation-stale-peer`, `selector`,
+`runtime-agent-registration`, `pi-subagents-policy-guidance`, `mcp-direct-tool-grant`, `mcp-direct-tool-resolution`, and the foreground
+run's start of the child role (`outputSchema`, `structured_output`, `acceptance.report`) and its `--mode rpc` launch (the registry and
+`rpcChild` exist and compile; no run path uses them yet).
