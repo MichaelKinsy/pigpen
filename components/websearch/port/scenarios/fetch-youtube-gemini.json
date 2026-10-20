@@ -1,0 +1,125 @@
+{
+ "name": "fetch-youtube-gemini",
+ "description": "fetch_content reads a YouTube URL through the Gemini API (a relay base): the default prompt and model, a custom prompt and model, and the combined failure text when the model errors. The URL has the youtube.com/watch path on the local server so no DNS is needed.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"geminiApiKey\": \"synthetic-gemini-key\", \"geminiBaseUrl\": \"{{server:gemini}}\", \"image\": {\"enabled\": false}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/youtube.com/watch?v=dQw4w9WgXcQ"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/youtube.com/watch?v=dQw4w9WgXcQ",
+      "prompt": "What is said?",
+      "model": "gemini-test"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/youtube.com/watch?v=dQw4w9WgXcQ",
+      "model": "gemini-broken"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "look at the video"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/unused",
+     "body": "unused"
+    }
+   ]
+  },
+  "gemini": {
+   "recordHeaders": [
+    "x-goog-api-key"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/v1beta/models/gemini-test:generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "A plain answer without a heading."
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "method": "POST",
+     "path": "/v1beta/models/gemini-broken:generateContent",
+     "status": 503,
+     "json": {
+      "error": {
+       "message": "model overloaded"
+      }
+     }
+    },
+    {
+     "method": "POST",
+     "path": "/v1beta/models/gemini-3.6-flash:generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# Rick Roll\n\nA summary of the video."
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

@@ -544,5 +544,155 @@
     "file": "gemini_web_config.go",
     "find": "raw[\"chromeProfile\"]; has {",
     "replace": "raw[\"chromeProfile\"]; !has {"
+  },
+  {
+    "name": "video-timestamp-ceil",
+    "file": "frames.go",
+    "find": "return math.Floor(n), true",
+    "replace": "return math.Ceil(n), true"
+  },
+  {
+    "name": "video-range-min-interval",
+    "file": "frames.go",
+    "find": "minFrameInterval   = 5",
+    "replace": "minFrameInterval   = 4"
+  },
+  {
+    "name": "video-range-no-rounding",
+    "file": "frames.go",
+    "find": "math.Floor(start + float64(i)*ideal + 0.5)",
+    "replace": "math.Floor(start + float64(i)*ideal)"
+  },
+  {
+    "name": "video-spec-range-equal",
+    "file": "frames.go",
+    "find": "ok1 && ok2 && end > start",
+    "replace": "ok1 && ok2 && end >= start"
+  },
+  {
+    "name": "video-tofixed-ties-even",
+    "file": "frames.go",
+    "find": "new(big.Int).Add(new(big.Int).Mul(r.Num(), big.NewInt(2)), r.Denom())",
+    "replace": "new(big.Int).Mul(r.Num(), big.NewInt(2))"
+  },
+  {
+    "name": "video-frames-label",
+    "file": "frames.go",
+    "find": "\"Frames \" + label + \" (\" + n + \"/\"",
+    "replace": "\"Frames \" + label + \" (\"+n+\" of \""
+  },
+  {
+    "name": "video-ytdlp-timeout",
+    "file": "youtube_extract.go",
+    "find": "ytInfoTimeout     = 15 * time.Second",
+    "replace": "ytInfoTimeout     = 10 * time.Second"
+  },
+  {
+    "name": "video-youtube-frame-timeout",
+    "file": "youtube_extract.go",
+    "find": "ytFrameTimeout    = 30 * time.Second",
+    "replace": "ytFrameTimeout    = 10 * time.Second"
+  },
+  {
+    "name": "video-frame-buffer",
+    "file": "video_extract.go",
+    "find": "frameMaxBuffer       = 5 * 1024 * 1024",
+    "replace": "frameMaxBuffer       = 1024 * 1024"
+  },
+  {
+    "name": "video-oversize-boundary",
+    "file": "video_extract.go",
+    "find": "float64(st.Size()) <= maxBytes",
+    "replace": "float64(st.Size()) < maxBytes"
+  },
+  {
+    "name": "video-web-model-always",
+    "file": "youtube_extract.go",
+    "find": "\t\tif model != DefaultGeminiModel {\n\t\t\to.Model = model\n\t\t}\n\t\tvar text string",
+    "replace": "\t\to.Model = model\n\t\tvar text string"
+  },
+  {
+    "name": "video-perplexity-default-prompt",
+    "file": "youtube_extract.go",
+    "find": "if prompt == youtubePrompt {",
+    "replace": "if prompt != youtubePrompt {"
+  },
+  {
+    "name": "video-thumbnail-skipped",
+    "file": "youtube_extract.go",
+    "find": "result.Error == nil && videoID != \"\" && CanAttachImages()",
+    "replace": "false"
+  },
+  {
+    "name": "video-upload-delete-dropped",
+    "file": "video_extract.go",
+    "find": "\t\tdefer deleteGeminiFile(ctx, uploaded.Name, apiKey)\n",
+    "replace": ""
+  },
+  {
+    "name": "video-poll-failed-ignored",
+    "file": "video_extract.go",
+    "find": "\t\tcase \"FAILED\":\n\t\t\treturn errors.New(\"File processing failed\")\n",
+    "replace": ""
+  },
+  {
+    "name": "video-upload-offset",
+    "file": "video_extract.go",
+    "find": "\"X-Goog-Upload-Offset\":  {\"0\"}",
+    "replace": "\"X-Goog-Upload-Offset\":  {\"1\"}"
+  },
+  {
+    "name": "video-rethrow-parse-only",
+    "file": "video_extract.go",
+    "find": "strings.HasPrefix(err.Error(), \"Failed to parse \")",
+    "replace": "true"
+  },
+  {
+    "name": "video-enoent-code",
+    "file": "media_exec.go",
+    "find": "return nil, spawn(\"ENOENT\", false)",
+    "replace": "return nil, spawn(\"EPERM\", false)"
+  },
+  {
+    "name": "video-timeout-class",
+    "file": "media_exec.go",
+    "find": "case o.Timeout > 0 && errors.Is(tctx.Err(), context.DeadlineExceeded):",
+    "replace": "case false:"
+  },
+  {
+    "name": "video-maxbuffer-ignored",
+    "file": "media_exec.go",
+    "find": "case out.over || errOut.over:",
+    "replace": "case false:"
+  },
+  {
+    "name": "video-ffmpeg-403",
+    "file": "media_exec.go",
+    "find": "strings.Contains(stderr, \"403\")",
+    "replace": "strings.Contains(stderr, \"404\")"
+  },
+  {
+    "name": "video-ytdlp-private",
+    "file": "youtube_extract.go",
+    "find": "strings.Contains(lower, \"private\")",
+    "replace": "strings.Contains(lower, \"privat\") && false"
+  },
+  {
+    "name": "video-tool-frame-caption",
+    "file": "tool_fetch.go",
+    "find": "Text: \"Frame at \" + f.Timestamp",
+    "replace": "Text: f.Timestamp"
+  },
+  {
+    "name": "video-youtube-playlist",
+    "file": "youtube_extract.go",
+    "find": "u.Path == \"/playlist\"",
+    "replace": "u.Path == \"/playlists\""
+  },
+  {
+    "name": "video-route-yt-disabled",
+    "file": "video_route.go",
+    "find": "if !isYT || !enabled {",
+    "replace": "if !isYT {"
   }
 ]

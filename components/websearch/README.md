@@ -52,9 +52,8 @@ never falls back or runs part of the call:
   reached in `auto`, `"all"` or `searchRouting` with a credential set);
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
 - `fetch_content` `mode: "answer"`;
-- `fetch_content` URLs the original hands to an extractor: YouTube, local video files, video
-  `frames` and `timestamp`, GitHub repositories, issues and pull requests (while their config
-  sections are not disabled), and PDFs;
+- `fetch_content` URLs the original hands to an extractor: GitHub repositories, issues and pull
+  requests (while their config sections are not disabled), and PDFs;
 - a hosted fetch provider the original would call (Firecrawl and Crawl4AI with a base URL, TinyFish,
   Search1API, Querit, Kagi, Ollama, Parallel, Bright Data; the Gemini API is ported);
 - a page the original would hand to its RSC payload and Defuddle fallbacks after the readable

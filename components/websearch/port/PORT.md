@@ -14,7 +14,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; fetch `answer` mode and query rewrite (need a model-completion call); activity widget and shortcut; TUI render hooks |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search); routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | The other 26 providers (OpenAI/Codex hosted search, Gemini, xAI, Jina Search, Firecrawl, ...): in the provider table; selecting or reaching one is refused (see "Refusals") |
-| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, hosted fetch providers other than Jina |
+| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), GitHub clone, RSC/Defuddle fallbacks, hosted fetch providers other than Jina |
 
 ## Refusals (until the slices above are ported)
 
@@ -27,7 +27,7 @@ Every unported option, mode or URL kind is refused with one message and returns 
 | `<Label> search provider` | a provider this port lacks is selected, listed, configured, reached in `auto`, in `searchRouting`, or configured (credential set) for `"all"`; never a fallback, and a list or `"all"` is refused before any provider is contacted | `search.go` |
 | `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
 | `fetch_content mode answer` | `mode: "answer"` | `tool_fetch.go` |
-| `YouTube video extraction`, `local video file analysis`, `video frame and timestamp extraction`, `GitHub repository extraction (clone)`, `GitHub issue and pull request extraction` | the URL (or `frames`/`timestamp`) the original sends to that extractor and the matching config section (`youtube`, `video`, `githubClone`, `githubPrIssue`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
+| `GitHub repository extraction (clone)`, `GitHub issue and pull request extraction` | the URL the original sends to that extractor and the matching config section (`githubClone`, `githubPrIssue`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
 | `PDF text extraction` | a PDF response | `extract.go` |
 | `<Label> fetch provider` | the original would call a hosted fetch provider at this point of `fetchRouting` (base URL or key present) | `extract.go` |
 | `the RSC payload and Defuddle fallback extractors` | readable extraction failed, where the original tries these before giving up (the message follows the original's verdict) | `extract.go` |
@@ -186,8 +186,6 @@ Deliberate differences:
 - Provider timeouts follow the port-wide classification (network, so routing can fall through); the original treats them as aborts.
 - The activity monitor (curator slice) is not ported, so no activity is logged around Gemini calls.
 - The fetch "Fallback options" checklist names the Gemini API (`GEMINI_API_KEY`) and Gemini Web ("Sign into gemini.google.com in Chrome").
-- `gemini-api-transport` drives video-extract.ts upload, status and delete; those two twins run the generate call and the
-  upload base of the same transport (ADAPTED) until the video slice ships the rest.
 - Config is read at each call (the original caches it for the process), so an edit to `web-search.json` is seen without a restart.
 - The grounding-redirect lookup (`HEAD`, no redirect following, 5 s) goes through the provider transport, so a configured proxy applies.
 
@@ -228,3 +226,52 @@ Deliberate differences:
 - Gemini Web and the fixed Google endpoints cannot be reached by a scenario server, and authenticated fetch requires HTTPS to a
   host the profile names; the scenarios therefore cover profile errors, the opt-in, and the full cookie-extraction chain up to the
   point where no request is sent. The request side is covered by the twins.
+
+## Slice: video (youtube-extract, video-extract, frames and timestamps)
+
+YouTube URLs, local video files and `frames`/`timestamp` are ported, and the refusals `YouTube video extraction`, `local video file
+analysis` and `video frame and timestamp extraction` are removed (`youtube_extract.go`, `video_extract.go`, `video_route.go`,
+`frames.go`, `media_exec.go`, tool rendering in `tool_fetch.go`).
+
+- YouTube (`extract.ts:709`, `youtube-extract.ts`): Gemini Web, then the Gemini API (`QueryGeminiAPIWithVideo`), then Perplexity,
+  each failure kept as `Gemini Web: ...` lines of the combined error, the thumbnail from `img.youtube.com` when images are enabled.
+- Local video (`video-extract.ts`): the Files API upload (start, upload, state poll every 5 s for up to 120 s, generate, delete
+  that is not awaited), then Gemini Web with the file; the size limit (`video.maxSizeMB`, default 50) message; the first frame as
+  the thumbnail.
+- Frames and timestamps (`extract.ts:560-720`): single frames, ranges, `frames` density, duration checks, the same labels and titles;
+  `fetch_content` shows each frame followed by `Frame at <timestamp>`.
+- Programs: `yt-dlp`, `ffmpeg` and `ffprobe` with the original's arguments, timeouts (15 s, 30 s, 10 s) and 5 MiB frame limit.
+  `exec:yt-dlp`, `exec:ffmpeg` and `exec:ffprobe` are no longer accepted gaps: the scenarios declare them.
+- `GeminiWebClient` gained `QueryWithOptions` (model, YouTube URL, files to attach).
+
+Proof:
+
+- Twins named after the upstream titles: `local-video-oversize` (3), `youtube-extract-errors` (1) and the two `gemini-api-transport`
+  cases, which now drive the whole upload, state and delete flow (no longer ADAPTED).
+- `port/record-video-requests.mjs` records the original under Node with a stubbed `fetch` and shell scripts for the three programs
+  (`testdata/video-wire.json`, 70 cases): the Gemini API, Perplexity and thumbnail requests (the endpoints are fixed, so there is no
+  process-level differential for them), the commands started and every result text. `video_wire_test.go` runs the port against the
+  same scripts and requires the same commands, requests and results.
+- Scenarios `fetch-youtube-gemini` (a relay base), `fetch-youtube-frames`, `fetch-video-tools-missing`, `fetch-local-video-frames`
+  and `fetch-local-video-upload-start` with canned programs. A YouTube URL on the local server (`<server>/youtube.com/watch?v=ID`)
+  matches the original's unanchored pattern, so no DNS is needed. The upload start answer cannot carry an upload URL (route
+  headers are not expanded with the server address), so the rest of the upload is proven by the recording only.
+
+Deliberate differences:
+
+- **os/exec, not Context.Exec.** The original calls `execFileSync`. `Context.Exec` cannot tell a missing program from a failed one
+  (both code 1, and the original's messages differ: `ffmpeg is not installed`), returns stdout as a string (a JPEG does not
+  survive it) and has no output limit. The port classifies ENOENT, ETIMEDOUT and ENOBUFS like Node and builds the same
+  `Command failed: <program> <args>` text. SDK request: exec options with binary-safe stdout, a maximum output size and a
+  distinguishable spawn failure.
+- **Image and text block order.** A frame result is `[image, "Frame at <t>", image, ...]` then the text in the original (and a
+  thumbnail is `[image, text]`). `sdk.ToolResult` is `Content string` plus `Images`, so the host receives the text first and the
+  images after it. The tool output of the port is ordered like the original's (`TestFetchToolShowsFrames`); the scenarios for frames
+  therefore use failing `ffmpeg` and `image.enabled: false`, where no image is in the result, and the frame results are proven by
+  the twin and the recording. SDK request: ordered content blocks in `ToolResult` (upstream `content: (TextContent | ImageContent)[]`).
+- A cancelled fetch kills the program (`execFileSync` cannot be cancelled) and the result is `Aborted`.
+- Frames are read one after another, which is what the original's `Promise.all` over synchronous calls does.
+- The file deletion after a Gemini upload ignores the caller's cancellation, as the original, with a 5 minute bound; its failure
+  is dropped (the original prints it to the console).
+- Config is read at each call (the original caches it).
+- The activity monitor is not ported, so nothing is logged around extraction.
