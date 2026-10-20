@@ -278,3 +278,13 @@ func TestPageQueryInputBudgetAndFailures(t *testing.T) {
 		wantErr(t, err, "^No API key available for answer model test/page-model$")
 	}
 }
+
+func TestJSPrefixMatchesJSSlice(t *testing.T) {
+	for _, s := range []string{"", "abc", "héllo wörld", "a😀b😀c", "😀😀😀", "日本語のテキスト", strings.Repeat("x😀", 50)} {
+		for n := 0; n <= jsLen(s)+2; n++ {
+			if got, want := jsPrefix(s, n), jsSlice(s, 0, n); got != want {
+				t.Fatalf("%q, %d: %q, want %q", s, n, got, want)
+			}
+		}
+	}
+}
