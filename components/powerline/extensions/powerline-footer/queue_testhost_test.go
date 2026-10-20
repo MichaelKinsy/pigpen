@@ -195,6 +195,7 @@ func newQueueRigAt(t *testing.T, agentDir, cwd, sessionID, settings string, th t
 	p := newPowerline(host)
 	clk := &fakeQueueClock{}
 	p.queue.clock = clk
+	p.queue.spawn = func(f func()) { f() } // the unwaited host call runs inline, after the lock was released
 	return &queueRig{t: t, root: root, host: host, p: p, q: p.queue, clock: clk, store: p.queue.store}
 }
 

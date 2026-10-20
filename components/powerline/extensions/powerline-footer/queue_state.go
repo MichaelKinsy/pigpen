@@ -120,6 +120,8 @@ type queueState struct {
 
 	pending      map[string]*pendingQueueDelivery
 	pendingOrder []string
+	// spawn runs a host call that nothing waits for; the tests run it inline.
+	spawn func(func())
 
 	// The editor-facing half (queue_editor.go).
 	pendingSend   *pendingSend
@@ -128,7 +130,7 @@ type queueState struct {
 }
 
 func newQueueState(p *powerline, host queueHostAPI) *queueState {
-	return &queueState{p: p, mu: &sync.Mutex{}, host: host, clock: realQueueClock{}, store: defaultQueueStore(), pending: map[string]*pendingQueueDelivery{}}
+	return &queueState{p: p, mu: &sync.Mutex{}, host: host, clock: realQueueClock{}, store: defaultQueueStore(), pending: map[string]*pendingQueueDelivery{}, spawn: func(f func()) { go f() }}
 }
 
 // queueCollapseSpace is text.replace(/\s+/g, " ").trim().
@@ -321,7 +323,8 @@ func (q *queueState) finishPendingDelivery(text string) error {
 	return nil
 }
 
-// deliverQueueItem sends an item to the session; it reports whether a message was sent. During a compaction the item stays queued.
+// deliverQueueItem hands an item to the session; it reports whether a message was handed over (the host's refusal comes later,
+// see failDelivery). During a compaction the item stays queued.
 func (q *queueState) deliverQueueItem(item queueItem) (bool, error) {
 	if q.p.compacting {
 		if _, err := q.store.update(item.ID, queueUpdates{Status: statusQueued}); err != nil {
@@ -338,20 +341,36 @@ func (q *queueState) deliverQueueItem(item queueItem) (bool, error) {
 	deliverAs := q.deliveryMode(item)
 	text := formatQueueDeliveryText(item)
 	q.trackPendingDelivery(item, text)
+	// pi.sendUserMessage does not wait for the message to start (the host reports a failure as an extension error). The host call
+	// runs on its own goroutine, without the lock: PiG answers it only after the events of the message it starts
+	// (before_agent_start, message_start) were handled, and those handlers take the lock. Waiting for it here would also put the
+	// command's response behind them, where Pi's comes first.
 	send := q.host.Sender()
 	q.mu.Unlock()
-	err := send(text, deliverAs)
+	q.spawn(func() {
+		err := send(text, deliverAs)
+		if err == nil {
+			return
+		}
+		q.mu.Lock()
+		defer q.mu.Unlock()
+		if ferr := q.failDelivery(item, err); ferr != nil {
+			q.reportError(ferr)
+		}
+	})
 	q.mu.Lock()
-	if err == nil {
-		return true, nil
-	}
+	return true, nil
+}
+
+// failDelivery marks an item the host refused as failed and tells the user.
+func (q *queueState) failDelivery(item queueItem, err error) error {
 	q.clearPendingDelivery(item.ID)
 	if _, uerr := q.store.update(item.ID, queueUpdates{Status: statusFailed, SetError: true, Error: err.Error()}); uerr != nil {
-		return false, uerr
+		return uerr
 	}
 	q.p.h.Notify("Failed to send "+item.ID+": "+err.Error(), "error")
 	q.requestQueueRender()
-	return false, nil
+	return nil
 }
 
 func (q *queueState) cancelPostCompactionDelivery() {

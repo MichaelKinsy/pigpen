@@ -62,7 +62,7 @@ func TestDeliveryFailureMarksTheItemFailed(t *testing.T) {
 	r.host.idle = true
 	r.host.sendHook = func(string, string) error { return errors.New("boom") }
 	item := r.item("doomed", intentFollowUp, queueTarget{Kind: targetGlobal})
-	eq(t, r.deliver(item), false, "not sent")
+	eq(t, r.deliver(item), true, "handed over: the host's refusal comes after the call returned")
 	got := r.get(item.ID)
 	eq(t, got.Status, statusFailed, "status")
 	eq(t, got.Error, "boom", "error")

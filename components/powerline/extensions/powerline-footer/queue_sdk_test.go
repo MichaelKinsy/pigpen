@@ -137,6 +137,7 @@ func TestQueueSendDeliversThroughTheHost(t *testing.T) {
 	if failure := r.h.Command("queue", "send"); failure != "" {
 		t.Fatal(failure)
 	}
+	r.waitFor(t, "the host call", func() bool { return len(r.sent()) == 1 })
 	sent := r.sent()
 	if len(sent) != 1 || sent[0]["content"] != "run the tests" || sent[0]["deliverAs"] != nil && sent[0]["deliverAs"] != "" {
 		t.Fatalf("sent = %v, want one plain prompt", sent)
@@ -155,6 +156,7 @@ func TestQueueSendDeliversThroughTheHost(t *testing.T) {
 func TestQueueSendToABusySessionIsAFollowUp(t *testing.T) {
 	r := startQueueHost(t, queueSDKOptions{inbox: []string{inboxLine("bbbb2222", "later", 1, "")}})
 	r.h.Command("queue", "send bbbb")
+	r.waitFor(t, "the host call", func() bool { return len(r.sent()) == 1 })
 	sent := r.sent()
 	if len(sent) != 1 || sent[0]["deliverAs"] != "followUp" {
 		t.Errorf("sent = %v, want deliverAs followUp", sent)
@@ -177,6 +179,10 @@ func TestQueueDeliveryDoesNotDeadlockWhenTheHostStartsTheMessageFirst(t *testing
 	case <-time.After(8 * time.Second):
 		t.Fatal("/queue send deadlocked")
 	}
+	r.waitFor(t, "the acknowledgement", func() bool {
+		got := notifications(r.h)
+		return len(got) > 0 && got[len(got)-1] == "info: Sent queued item cccc3333"
+	})
 	got := notifications(r.h)
 	if got[len(got)-1] != "info: Sent queued item cccc3333" {
 		t.Errorf("notifications = %q", got)
@@ -202,6 +208,7 @@ func TestQueuePickerOpensAnOverlayAndActsOnTheChoice(t *testing.T) {
 	if oo, _ := calls[0].Args["overlayOptions"].(map[string]any); oo["anchor"] != "center" {
 		t.Errorf("overlayOptions = %v, want centered", calls[0].Args["overlayOptions"])
 	}
+	r.waitFor(t, "the host call", func() bool { return len(r.sent()) == 1 })
 	if sent := r.sent(); len(sent) != 1 || sent[0]["content"] != "pick me" {
 		t.Errorf("sent = %v", sent)
 	}
@@ -267,6 +274,7 @@ func TestQueueFailedCompactionBlocksTheQueuedItems(t *testing.T) {
 func TestQueueShutdownQueuesAnUnstartedMessageAgain(t *testing.T) {
 	r := startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{inboxLine("efef9999", "never starts", 1, "")}})
 	r.h.Command("queue", "send")
+	r.waitFor(t, "the host call", func() bool { return len(r.sent()) == 1 })
 	r.h.FireAll("session_shutdown", map[string]any{"reason": "quit"})
 	data, _ := os.ReadFile(filepath.Join(r.agent, "powerline-footer", "inbox.jsonl"))
 	if !strings.Contains(string(data), `"status":"queued"`) || !strings.Contains(string(data), "Session ended before queued message started") {
@@ -277,4 +285,24 @@ func TestQueueShutdownQueuesAnUnstartedMessageAgain(t *testing.T) {
 // agentStart is a before_agent_start event: the SDK requires the system prompt options.
 func agentStart(prompt string) map[string]any {
 	return map[string]any{"prompt": prompt, "systemPrompt": "", "systemPromptOptions": map[string]any{}}
+}
+
+// pi.sendUserMessage does not wait for the message to start, so /queue send answers at once even when the host is slow to
+// accept the message (Pi's response precedes the events of the message it starts; pigeq scenario queue-send-idle).
+func TestQueueSendDoesNotWaitForTheHostToAcceptTheMessage(t *testing.T) {
+	release := make(chan struct{})
+	r := startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{inboxLine("a9a9a9a9", "slow host", 1, "")},
+		onSend: func(r *queueSDKRig, text string) { <-release }})
+	defer close(release)
+	done := make(chan string, 1)
+	go func() { done <- r.h.Command("queue", "send") }()
+	select {
+	case failure := <-done:
+		if failure != "" {
+			t.Fatal(failure)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("/queue send waited for the host's answer to sendUserMessage")
+	}
+	r.waitFor(t, "the host call", func() bool { return len(r.sent()) == 1 })
 }
