@@ -99,8 +99,18 @@ func metaOf(name string) *providerMeta {
 	return nil
 }
 
-// httpClient performs the providers' requests (a test replaces its transport); redirects are followed.
-var httpClient = &http.Client{Timeout: 0}
+// maxRedirects is how many redirects the original's fetch (undici, redirect "follow") follows; the 21st is a
+// network error, which web_fetch reports as "fetch failed". net/http's default stops at the tenth.
+const maxRedirects = 20
+
+// httpClient performs the providers' requests (a test replaces its transport). CheckRedirect gets the requests
+// made so far, so the nth redirect arrives with n of them.
+var httpClient = &http.Client{Timeout: 0, CheckRedirect: func(_ *http.Request, via []*http.Request) error {
+	if len(via) > maxRedirects {
+		return errors.New("redirect count exceeded")
+	}
+	return nil
+}}
 
 // base is what the ten providers share.
 type base struct {
