@@ -2,6 +2,7 @@ package warden
 
 import (
 	"fmt"
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"os"
 	"runtime"
 	"sort"
@@ -69,4 +70,27 @@ func TestPerfRegistration(t *testing.T) {
 		ns = append(ns, float64(time.Since(start).Nanoseconds()))
 	}
 	fmt.Printf("PERF registration_ns=%.0f\n", median(ns))
+}
+
+// TestPerfOnToolResult: the handler alone, without the protocol round trip, on distinct calls (needs the steering
+// core's test rig, so it measures this tree and the trees stacked on the steering core).
+func TestPerfOnToolResult(t *testing.T) {
+	perfOn(t)
+	cfg := DefaultConfig()
+	cfg.Enabled = true
+	r := newSteerRig(t, cfg, false, nil)
+	commands := []string{"go test ./pkg%d", "git status --short %d", "sleep 1; echo ok %d", "ls -la dir%d", "grep -n foo src/f%d.go", "cat src/f%d.go"}
+	r.run(func(ctx sdk.Context) {
+		i := 0
+		var ns, allocs, bytes []float64
+		for range 12 {
+			a, b, c := measure(2000, func() {
+				data := map[string]any{"toolName": "bash", "toolCallId": "r", "input": map[string]any{"command": fmt.Sprintf(commands[i%len(commands)], i)}, "content": []any{map[string]any{"type": "text", "text": "ok  \tpkg\t0.2s\n"}}, "isError": false}
+				_, _ = r.w.onToolResult(ctx, data)
+				i++
+			})
+			ns, allocs, bytes = append(ns, a), append(allocs, b), append(bytes, c)
+		}
+		fmt.Printf("PERF on_tool_result ns/op=%.0f allocs/op=%.0f bytes/op=%.0f\n", median(ns), median(allocs), median(bytes))
+	})
 }
