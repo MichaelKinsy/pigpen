@@ -22,15 +22,15 @@ func TestExtDecodeAndEncodeURIEqualJavaScript(t *testing.T) {
 		{"[]{}|", "[]{}|", "%5B%5D%7B%7D%7C"},
 	}
 	for _, c := range cases {
-		if got := extDecodeURI(c.in); got != c.decoded {
+		if got := jsDecodeURI(c.in); got != c.decoded {
 			t.Errorf("decodeURI(%q) = %q, want %q", c.in, got, c.decoded)
 		}
-		if got := extEncodeURI(extDecodeURI(c.in)); got != c.href {
+		if got := jsEncodeURI(jsDecodeURI(c.in)); got != c.href {
 			t.Errorf("href of %q = %q, want %q", c.in, got, c.href)
 		}
 	}
 	for _, bad := range []string{"%", "%4", "%zz", "%C3", "%C3%28", "%80", "%F8%80%80%80%80", "%ED%A0%80", "%C0%80"} {
-		th := ldTry(func() { extDecodeURI(bad) })
+		th := ldTry(func() { jsDecodeURI(bad) })
 		if th == nil || th.name != "URIError" || th.msg != "URI malformed" {
 			t.Errorf("decodeURI(%q) did not throw a URIError: %v", bad, th)
 		}

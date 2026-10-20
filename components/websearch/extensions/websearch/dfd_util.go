@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 // JavaScript number parsing for the attribute values Defuddle reads.
@@ -90,3 +91,5 @@ func jsOr0(f float64) float64 {
 	}
 	return f
 }
+
+func lastRune(s string) (rune, int) { return utf8.DecodeLastRuneInString(s) }
