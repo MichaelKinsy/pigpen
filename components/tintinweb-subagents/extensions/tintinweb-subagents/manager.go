@@ -157,9 +157,12 @@ func (m *manager) spawnOwned(owner, typ, description, name string, spec childSpe
 	m.mu.Lock()
 	m.records[r.ID] = r
 	m.order = append(m.order, r.ID)
-	r.Handle = m.assignHandle(handleBase(typ))
-	if name != "" {
-		r.Alias = m.assignHandle(handleBase(name))
+	// A workflow's child gets no handle: the original assigns none (agent-manager.ts), so it is no @mention target.
+	if owner == "" {
+		r.Handle = m.assignHandle(handleBase(typ))
+		if name != "" {
+			r.Alias = m.assignHandle(handleBase(name))
+		}
 	}
 	if background && m.running >= m.maxConcurrent {
 		m.queue = append(m.queue, r)

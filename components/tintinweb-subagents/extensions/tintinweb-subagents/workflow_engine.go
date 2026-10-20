@@ -77,8 +77,10 @@ type workflowWorker struct {
 	timers       map[int]*workerTimer
 	nextTimer    int
 	finished     bool
-	response     goja.Callable
-	done         chan struct{}
+	// rejected holds the promises rejected with no handler yet, in order (Node's unhandled-rejection bookkeeping).
+	rejected []*goja.Promise
+	response goja.Callable
+	done     chan struct{}
 	// exitedUnreported is set when the worker goroutine crashed before the script reported (the original's worker
 	// `exit` event without a result).
 	exitedUnreported bool
@@ -148,6 +150,7 @@ func (w *workflowWorker) loop() {
 		w.queue = w.queue[1:]
 		w.mu.Unlock()
 		fn()
+		w.flushRejections()
 	}
 }
 
@@ -163,7 +166,9 @@ func (w *workflowWorker) sendResponse(r workerResponse) {
 		_ = msg.Set("fatal", r.Fatal)
 		_ = msg.Set("spent", r.Spent)
 		_ = msg.Set("value", w.toJS(r.Value))
-		_, _ = w.response(goja.Undefined(), msg)
+		if _, err := w.response(goja.Undefined(), msg); err != nil {
+			w.failUncaught(err)
+		}
 	})
 }
 
@@ -208,6 +213,19 @@ func (w *workflowWorker) boot(body, metaJSON string, argsJSON *string, itemCap, 
 	}
 	w.vm = vm
 	w.mu.Unlock()
+	vm.SetPromiseRejectionTracker(func(p *goja.Promise, op goja.PromiseRejectionOperation) {
+		switch op {
+		case goja.PromiseRejectionReject:
+			w.rejected = append(w.rejected, p)
+		case goja.PromiseRejectionHandle:
+			for i, q := range w.rejected {
+				if q == p {
+					w.rejected = append(w.rejected[:i], w.rejected[i+1:]...)
+					break
+				}
+			}
+		}
+	})
 	host := vm.NewObject()
 	_ = host.Set("call", func(call goja.FunctionCall) goja.Value {
 		id := int(call.Argument(0).ToInteger())
@@ -265,7 +283,9 @@ func (w *workflowWorker) boot(body, metaJSON string, argsJSON *string, itemCap, 
 		w.post(func() {
 			delete(w.timers, id)
 			if !t.cancelled {
-				_, _ = fn(goja.Undefined())
+				if _, err := fn(goja.Undefined()); err != nil {
+					w.failUncaught(err)
+				}
 			}
 		})
 		return vm.ToValue(id)
@@ -278,7 +298,7 @@ func (w *workflowWorker) boot(body, metaJSON string, argsJSON *string, itemCap, 
 		return goja.Undefined()
 	})
 	_ = host.Set("run", func(call goja.FunctionCall) goja.Value {
-		program, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), true)
+		program, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), false)
 		if err != nil {
 			w.compileError(err)
 		}
@@ -289,7 +309,7 @@ func (w *workflowWorker) boot(body, metaJSON string, argsJSON *string, itemCap, 
 		return v
 	})
 	_ = host.Set("compile", func(call goja.FunctionCall) goja.Value {
-		program, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), true)
+		program, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), false)
 		if err != nil {
 			w.compileError(err)
 		}
@@ -338,6 +358,44 @@ func (w *workflowWorker) boot(body, metaJSON string, argsJSON *string, itemCap, 
 func (w *workflowWorker) fail(err error) {
 	w.finished = true
 	w.onMsg(workerMessage{Type: "error", Message: wfErrorDetail(err)})
+}
+
+// failUncaught is fail for an error that escaped a task the worker ran (a response, a timer): the original's worker
+// `error` event for an uncaught exception, which fails the run. The one error it ignores is the interrupt that ends
+// the worker (terminate), which is not a failure. A stack overflow inside a job is uncatchable in goja and arrives
+// here, where it fails the run with V8's message instead of leaving the script parked on a promise nothing settles.
+func (w *workflowWorker) failUncaught(err error) {
+	var interrupted *goja.InterruptedError
+	if err == nil || w.finished || errors.As(err, &interrupted) {
+		return
+	}
+	w.fail(err)
+}
+
+// flushRejections runs after each task, once its promise jobs have drained: a promise still rejected with no handler
+// fails the run, as an unhandled rejection does in the original's worker (an uncaught `error` event). The first one
+// wins. An Error reports its message; any other reason reports Node's ERR_UNHANDLED_REJECTION text.
+func (w *workflowWorker) flushRejections() {
+	if len(w.rejected) == 0 {
+		return
+	}
+	first := w.rejected[0]
+	w.rejected = nil
+	if w.finished {
+		return
+	}
+	reason := first.Result()
+	message := ""
+	if o, ok := reason.(*goja.Object); ok {
+		if m := o.Get("message"); m != nil && !goja.IsUndefined(m) {
+			message = m.String()
+		}
+	}
+	if message == "" {
+		message = `This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). The promise rejected with the reason "` + reason.String() + `".`
+	}
+	w.finished = true
+	w.onMsg(workerMessage{Type: "error", Message: message})
 }
 
 // wfToInt reads a number a realm exported (an int64 or a float64) as an int.

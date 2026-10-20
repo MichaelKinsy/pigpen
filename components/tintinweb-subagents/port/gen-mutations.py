@@ -340,7 +340,7 @@ m("runtime-already-aborted-runs", "workflow_runtime.go", "if ctx.Err() != nil {\
 m("runtime-onresolved-after-settle", "workflow_runtime.go", "if !rt.inflight[agentID] {\n\t\t\t\treturn\n\t\t\t}", "")
 m("runtime-onresolved-record-id", "workflow_runtime.go", "if info.RecordID != \"\" {\n\t\t\t\tbase.RecordID = info.RecordID\n\t\t\t}", "")
 m("runtime-onresolved-model", "workflow_runtime.go", "if info.ModelName != \"\" {\n\t\t\t\tbase.Model = info.ModelName\n\t\t\t}", "")
-m("runtime-refusal-not-fatal", "workflow_runtime.go", "rt.respond(callID, false, nil, refusal.Error(), true)", "rt.respond(callID, true, nil, \"\", false)")
+m("runtime-refusal-not-fatal", "workflow_runtime.go", "rt.finish(workflowRunResult{Status: runFailed, Error: refusal.Error(), HasError: true})", "rt.respond(callID, true, nil, \"\", false)")
 m("runtime-unknown-method-not-fatal", "workflow_runtime.go", "`Unknown workflow host method \"%s\".`, m.Method), true)", "`Unknown workflow host method \"%s\".`, m.Method), false)")
 m("runtime-nested-load-error-fatal", "workflow_runtime.go", "rt.respond(callID, false, nil, source.Message, false)", "rt.respond(callID, false, nil, source.Message, true)")
 m("runtime-nested-no-loader-ok", "workflow_runtime.go", "if loader == nil {\n\t\trt.respond(callID, false, nil, \"This workflow host cannot run nested workflows.\", true)", "if loader == nil {\n\t\trt.respond(callID, false, nil, \"This workflow host cannot run nested workflows.\", false)")
@@ -465,6 +465,32 @@ m("menu-stop-announces-twice", "workflow_menu.go", "if task.Ctx.Err() != nil {\n
 m("menu-stop-does-not-abort", "workflow_menu.go", "\ttask.Abort()\n\ttask.mu.Lock()\n\tname := task.ID", "\ttask.mu.Lock()\n\tname := task.ID")
 m("menu-pause-notice", "workflow_menu.go", "notify(\"Paused — running agents finish, no new ones start.\", \"info\")", "notify(\"Paused.\", \"info\")")
 m("menu-skip-notice-always", "workflow_menu.go", "if c := workflowControlOf(task); c == nil || !c.Skip(index) {", "if c := workflowControlOf(task); true {\n\t\t_ = c")
+
+# review fixes of the workflow slice: refusals, sloppy scripts, engine errors, rejections, meta null, task dir
+m("bus-refusal-untyped", "bus.go", "return nil, &workflowRefusalError{feature}", "return nil, refusal(feature)")
+m("engine-run-strict", "workflow_engine.go", "_ = host.Set(\"run\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), false)", "_ = host.Set(\"run\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), true)")
+m("engine-compile-strict", "workflow_engine.go", "_ = host.Set(\"compile\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), false)", "_ = host.Set(\"compile\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), true)")
+m("meta-eval-strict", "workflow_meta.go", "\"(\"+fragment+\")\", false)", "\"(\"+fragment+\")\", true)")
+m("engine-response-error-dropped", "workflow_engine.go", "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\tw.failUncaught(err)", "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\t_ = err")
+# Not mutated, equivalent: the timer site of workflowWorker (host.defer is used only for the progress flush, which a script cannot
+# make overflow) and `encoded = encoded[3:]` vs `[2:]` (the TrimLeft of dashes that follows removes the difference).
+m("engine-overflow-text", "workflow_meta.go", "return \"Maximum call stack size exceeded\"", "return \"Stack overflow\"")
+m("engine-rejections-not-flushed", "workflow_engine.go", "\t\tfn()\n\t\tw.flushRejections()", "\t\tfn()")
+m("engine-rejection-never-handled", "workflow_engine.go", "case goja.PromiseRejectionHandle:", "case goja.PromiseRejectionHandle + 9:")
+m("engine-rejection-error-message", "workflow_engine.go", "message = m.String()", "message = \"\"")
+m("manager-owned-gets-handle", "manager.go", "\tif owner == \"\" {\n\t\tr.Handle = m.assignHandle(handleBase(typ))", "\tif true {\n\t\tr.Handle = m.assignHandle(handleBase(typ))")
+m("adapter-task-dir-drive-colon", "workflow_manager.go", "encoded[1] == ':' && encoded[2] == '-'", "encoded[1] == '-' && encoded[2] == '-'")
+m("adapter-child-block-first-index", "workflow_manager.go", "i := strings.LastIndex(system, envBlock)", "i := strings.Index(system, envBlock)")
+m("meta-null-detail-accepted", "workflow_meta.go", "present && (d != nil || nulls[fmt.Sprintf(\"phases.%d.detail\", index)]) {", "present && d != nil {")
+m("meta-null-model-accepted", "workflow_meta.go", "present && (d != nil || nulls[fmt.Sprintf(\"phases.%d.model\", index)]) {", "present && d != nil {")
+m("meta-null-whentouse-accepted", "workflow_meta.go", "present && (w != nil || nulls[\"whenToUse\"]) {", "present && w != nil {")
+m("meta-null-phases-accepted", "workflow_meta.go", "if value == nil && !nulls[\"phases\"] {", "if value == nil {")
+m("meta-empty-phases-dropped", "workflow_meta.go", "\tif m.Phases == nil {\n\t\treturn json.Marshal(plain(m))", "\tif true {\n\t\treturn json.Marshal(plain(m))")
+m("task-pause-overwrites-settled", "workflow_task.go", "\tif task.Status != runRunning {\n\t\treturn false\n\t}\n\ttask.Status = runPaused", "\ttask.Status = runPaused")
+m("task-resume-overwrites-settled", "workflow_task.go", "\tif task.Status != runPaused {\n\t\treturn false\n\t}\n\ttask.Status = runRunning", "\ttask.Status = runRunning")
+m("utf16-prefix-split-pair", "workflow_task.go", "\t		if units < n {\n\t\t\t\treturn s[:i] + \"\\uFFFD\"\n\t\t\t}\n", "")
+m("agents-menu-not-refused", "tools.go", "lines = append(lines, \"  \"+refusalText(", "_ = (refusalText(")
+m("resume-target-names-menu", "workflow_task.go", "Resume it once it has finished.`", "Stop it from /agents → Workflows before resuming it.`")
 
 M = [x for x in M if x]
 by_file = {}

@@ -127,7 +127,6 @@ func (a *app) register(e *sdk.Extension) {
 		return nil, nil
 	})
 	a.registerTools(e)
-	a.registerWorkflow(e)
 	e.Command("agents", "List the agent types and the running agents", a.agentsCommand)
 }
 

@@ -61,6 +61,8 @@ difference from the original are in [port/PORT.md](port/PORT.md). A workflow's a
 `/agents`, no completion notice of their own, no slot in the session's concurrency limit. `isolation: "worktree"`,
 `agent({ schema })` and `agent({ resume })` need features the port does not have yet and fail the run with the refusal
 message below.
+The `/agents → Workflows` menu (stop, pause, skip, retry, the run dialog) is not ported yet: `/agents` lists the runs and
+says so with the same refusal message.
 
 ## What is not ported, and how it answers
 

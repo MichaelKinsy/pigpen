@@ -114,7 +114,13 @@ func (s sdkModelRegistry) GetAvailable() []*workflowModel { return s.list(s.r.Ge
 
 // wfExec runs a command through the host's executor (pi.exec). timeout is in milliseconds on the wire.
 func wfExec(ctx sdk.Context) func(context.Context, string, []string, string, time.Duration) (workflowExecResult, error) {
-	return func(_ context.Context, command string, args []string, cwd string, timeout time.Duration) (workflowExecResult, error) {
+	return func(c context.Context, command string, args []string, cwd string, timeout time.Duration) (workflowExecResult, error) {
+		// SDK gap: Pi's pi.exec takes { signal } and kills the command on abort; sdk.ExecOptions has only Timeout and Cwd
+		// (and the host runs the command, so exec.CommandContext cannot reach it). Until it does, a command already
+		// running when the run is aborted is left to finish or time out; one not yet started is not started.
+		if err := c.Err(); err != nil {
+			return workflowExecResult{}, err
+		}
 		res, err := ctx.ExecWithOptions(command, args, sdk.ExecOptions{Cwd: cwd, Timeout: float64(timeout.Milliseconds())})
 		if err != nil {
 			return workflowExecResult{}, err
@@ -128,8 +134,9 @@ func wfExec(ctx sdk.Context) func(context.Context, string, []string, string, tim
 // script here so iterating is edit-the-file-then-rerun. upstream: output-file.ts sessionTaskDir.
 func workflowSessionTaskDir(cwd, sessionID string) (string, error) {
 	encoded := strings.ReplaceAll(strings.ReplaceAll(cwd, "/", "-"), "\\", "-")
-	if len(encoded) > 2 && encoded[1] == '-' && (encoded[0] >= 'A' && encoded[0] <= 'Z' || encoded[0] >= 'a' && encoded[0] <= 'z') {
-		encoded = encoded[2:]
+	// encodeCwd's /^[A-Za-z]:-/: the drive prefix of "C:\Users" once the separators are dashes ("C:-Users").
+	if len(encoded) >= 3 && encoded[1] == ':' && encoded[2] == '-' && (encoded[0] >= 'A' && encoded[0] <= 'Z' || encoded[0] >= 'a' && encoded[0] <= 'z') {
+		encoded = encoded[3:]
 	}
 	encoded = strings.TrimLeft(encoded, "-")
 	root := filepath.Join(os.TempDir(), "pi-subagents-"+wfUID())
@@ -170,7 +177,9 @@ func withWorkflowChildBlock(system string, cfg *agentConfig, cwd string, env env
 		repo = "Git repository: yes\nBranch: " + env.Branch
 	}
 	envBlock := "# Environment\nWorking directory: " + cwd + "\n" + repo + "\nPlatform: " + env.Platform
-	i := strings.Index(system, envBlock)
+	// The last occurrence: the environment block is what buildAgentPrompt puts before the agent's own instructions,
+	// so a copy of it quoted inside those instructions must not be the one the block is spliced after.
+	i := strings.LastIndex(system, envBlock)
 	if i < 0 {
 		return system
 	}

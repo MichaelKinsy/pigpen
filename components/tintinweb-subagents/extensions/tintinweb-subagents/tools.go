@@ -121,6 +121,8 @@ func (a *app) registerTools(e *sdk.Extension) {
 		Parameters:       agentToolSchema(reg, specs["Agent"]),
 		Execute:          a.agentTool,
 	})
+	// Between Agent and get_subagent_result, where the original registers it (index.ts): the order is what the model sees.
+	a.registerWorkflow(e)
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: "get_subagent_result", Label: "Get Agent Result", Description: *specs["get_subagent_result"].Description,
 		PromptSnippet: "Check status and retrieve results from a background agent",
@@ -363,6 +365,25 @@ func (a *app) agentsCommand(ctx sdk.Context, _ string) error {
 		a.mgr.mu.Lock()
 		lines = append(lines, fmt.Sprintf("  %s %s %s — %s", r.ID, displayName(a, r.Type), r.Status, r.Description))
 		a.mgr.mu.Unlock()
+	}
+	if entry := a.workflowsMenuEntry(); entry != "" {
+		lines = append(lines, "", entry+":")
+		tasks := a.workflows().tasks.values()
+		if len(tasks) == 0 {
+			lines = append(lines, "  (none)")
+		}
+		sort.SliceStable(tasks, func(i, j int) bool { return tasks[i].StartTime < tasks[j].StartTime })
+		for _, t := range tasks {
+			t.mu.Lock()
+			name := t.ID
+			if t.Meta != nil {
+				name = t.Meta.Name
+			}
+			lines = append(lines, fmt.Sprintf("  %s %s %s", t.ID, name, t.Status))
+			t.mu.Unlock()
+		}
+		// The inspector (stop, pause, skip, retry) is the UI slice's: refused, never a menu that looks like it works.
+		lines = append(lines, "  "+refusalText("the Workflows menu (stop, pause, skip and retry of a run)"))
 	}
 	ctx.Notify(strings.Join(lines, "\n"), "info")
 	return nil

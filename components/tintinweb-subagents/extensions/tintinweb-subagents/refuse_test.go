@@ -11,6 +11,15 @@ import (
 // Everything of the original that this port does not do yet is refused with one message (refuse.go): a tool error,
 // or a notification for a setting; never a silent fallback and never a partial run.
 
+// needComponentRoot skips a test that reads the component's own files (package.json, the original under port/oracle)
+// when run in a copy of the Go directory alone, as the mutation runner's sandbox is. In the repository it always runs.
+func needComponentRoot(t *testing.T) {
+	t.Helper()
+	if _, err := os.Stat("../../package.json"); err != nil {
+		t.Skip("the component's files are not next to this directory (a copy of the Go port alone)")
+	}
+}
+
 func readJSONFile(t *testing.T, path string) map[string]any {
 	t.Helper()
 	data, err := os.ReadFile(path)
@@ -25,6 +34,7 @@ func readJSONFile(t *testing.T, path string) map[string]any {
 }
 
 func TestRefusalMessageNamesThisPackageAndThePinnedOriginal(t *testing.T) {
+	needComponentRoot(t)
 	pkg := readJSONFile(t, "../../package.json")
 	orig := readJSONFile(t, "../../port/oracle/package.json")
 	eq(t, portName, pkg["name"])

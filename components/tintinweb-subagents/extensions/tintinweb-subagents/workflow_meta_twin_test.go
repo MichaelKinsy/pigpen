@@ -51,8 +51,8 @@ func TestWorkflowMeta(t *testing.T) {
       phases: [{ title: 'Scan' }, { title: 'Verify', detail: 'adversarial', model: 'haiku' }],
     }
     return 1`)
-		eq(t, meta.WhenToUse, "when a PR lands")
-		eq(t, meta.Phases, []workflowPhaseMeta{{Title: "Scan"}, {Title: "Verify", Detail: "adversarial", Model: "haiku"}})
+		eq(t, meta.WhenToUse, sp("when a PR lands"))
+		eq(t, meta.Phases, []workflowPhaseMeta{{Title: "Scan"}, {Title: "Verify", Detail: sp("adversarial"), Model: sp("haiku")}})
 	})
 	tw(t, f, "tolerates whitespace and newlines inside the declaration", func(t *testing.T) {
 		meta, _ := wfMustMeta(t, "export   const\n  meta\n=\n{ name: 'a', description: 'b' }\nreturn 1")

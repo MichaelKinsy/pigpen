@@ -100,7 +100,7 @@ func (a *app) startOwned(ctx sdk.Context, owner, typ, prompt, description, name,
 		return nil, fmt.Errorf("Unknown agent type: %q", typ)
 	}
 	if feature := unportedAgentFeature(cfg); feature != "" {
-		return nil, refusal(feature)
+		return nil, &workflowRefusalError{feature}
 	}
 	parentPrompt := ""
 	if cfg.PromptMode == "append" {

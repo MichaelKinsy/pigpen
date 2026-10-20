@@ -1742,7 +1742,7 @@
  {
   "name": "runtime-refusal-not-fatal",
   "file": "workflow_runtime.go",
-  "find": "rt.respond(callID, false, nil, refusal.Error(), true)",
+  "find": "rt.finish(workflowRunResult{Status: runFailed, Error: refusal.Error(), HasError: true})",
   "replace": "rt.respond(callID, true, nil, \"\", false)"
  },
  {
@@ -2392,5 +2392,137 @@
   "file": "workflow_menu.go",
   "find": "if c := workflowControlOf(task); c == nil || !c.Skip(index) {",
   "replace": "if c := workflowControlOf(task); true {\n\t\t_ = c"
+ },
+ {
+  "name": "bus-refusal-untyped",
+  "file": "bus.go",
+  "find": "return nil, &workflowRefusalError{feature}",
+  "replace": "return nil, refusal(feature)"
+ },
+ {
+  "name": "engine-run-strict",
+  "file": "workflow_engine.go",
+  "find": "_ = host.Set(\"run\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), false)",
+  "replace": "_ = host.Set(\"run\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), true)"
+ },
+ {
+  "name": "engine-compile-strict",
+  "file": "workflow_engine.go",
+  "find": "_ = host.Set(\"compile\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), false)",
+  "replace": "_ = host.Set(\"compile\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), true)"
+ },
+ {
+  "name": "meta-eval-strict",
+  "file": "workflow_meta.go",
+  "find": "\"(\"+fragment+\")\", false)",
+  "replace": "\"(\"+fragment+\")\", true)"
+ },
+ {
+  "name": "engine-response-error-dropped",
+  "file": "workflow_engine.go",
+  "find": "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\tw.failUncaught(err)",
+  "replace": "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\t_ = err"
+ },
+ {
+  "name": "engine-overflow-text",
+  "file": "workflow_meta.go",
+  "find": "return \"Maximum call stack size exceeded\"",
+  "replace": "return \"Stack overflow\""
+ },
+ {
+  "name": "engine-rejections-not-flushed",
+  "file": "workflow_engine.go",
+  "find": "\t\tfn()\n\t\tw.flushRejections()",
+  "replace": "\t\tfn()"
+ },
+ {
+  "name": "engine-rejection-never-handled",
+  "file": "workflow_engine.go",
+  "find": "case goja.PromiseRejectionHandle:",
+  "replace": "case goja.PromiseRejectionHandle + 9:"
+ },
+ {
+  "name": "engine-rejection-error-message",
+  "file": "workflow_engine.go",
+  "find": "message = m.String()",
+  "replace": "message = \"\""
+ },
+ {
+  "name": "manager-owned-gets-handle",
+  "file": "manager.go",
+  "find": "\tif owner == \"\" {\n\t\tr.Handle = m.assignHandle(handleBase(typ))",
+  "replace": "\tif true {\n\t\tr.Handle = m.assignHandle(handleBase(typ))"
+ },
+ {
+  "name": "adapter-task-dir-drive-colon",
+  "file": "workflow_manager.go",
+  "find": "encoded[1] == ':' && encoded[2] == '-'",
+  "replace": "encoded[1] == '-' && encoded[2] == '-'"
+ },
+ {
+  "name": "adapter-child-block-first-index",
+  "file": "workflow_manager.go",
+  "find": "i := strings.LastIndex(system, envBlock)",
+  "replace": "i := strings.Index(system, envBlock)"
+ },
+ {
+  "name": "meta-null-detail-accepted",
+  "file": "workflow_meta.go",
+  "find": "present && (d != nil || nulls[fmt.Sprintf(\"phases.%d.detail\", index)]) {",
+  "replace": "present && d != nil {"
+ },
+ {
+  "name": "meta-null-model-accepted",
+  "file": "workflow_meta.go",
+  "find": "present && (d != nil || nulls[fmt.Sprintf(\"phases.%d.model\", index)]) {",
+  "replace": "present && d != nil {"
+ },
+ {
+  "name": "meta-null-whentouse-accepted",
+  "file": "workflow_meta.go",
+  "find": "present && (w != nil || nulls[\"whenToUse\"]) {",
+  "replace": "present && w != nil {"
+ },
+ {
+  "name": "meta-null-phases-accepted",
+  "file": "workflow_meta.go",
+  "find": "if value == nil && !nulls[\"phases\"] {",
+  "replace": "if value == nil {"
+ },
+ {
+  "name": "meta-empty-phases-dropped",
+  "file": "workflow_meta.go",
+  "find": "\tif m.Phases == nil {\n\t\treturn json.Marshal(plain(m))",
+  "replace": "\tif true {\n\t\treturn json.Marshal(plain(m))"
+ },
+ {
+  "name": "task-pause-overwrites-settled",
+  "file": "workflow_task.go",
+  "find": "\tif task.Status != runRunning {\n\t\treturn false\n\t}\n\ttask.Status = runPaused",
+  "replace": "\ttask.Status = runPaused"
+ },
+ {
+  "name": "task-resume-overwrites-settled",
+  "file": "workflow_task.go",
+  "find": "\tif task.Status != runPaused {\n\t\treturn false\n\t}\n\ttask.Status = runRunning",
+  "replace": "\ttask.Status = runRunning"
+ },
+ {
+  "name": "utf16-prefix-split-pair",
+  "file": "workflow_task.go",
+  "find": "\t\t\tif units < n {\n\t\t\t\treturn s[:i] + \"\\uFFFD\"\n\t\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "agents-menu-not-refused",
+  "file": "tools.go",
+  "find": "lines = append(lines, \"  \"+refusalText(",
+  "replace": "_ = (refusalText("
+ },
+ {
+  "name": "resume-target-names-menu",
+  "file": "workflow_task.go",
+  "find": "Resume it once it has finished.`",
+  "replace": "Stop it from /agents → Workflows before resuming it.`"
  }
 ]

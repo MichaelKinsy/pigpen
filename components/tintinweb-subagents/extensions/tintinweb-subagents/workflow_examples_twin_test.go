@@ -198,6 +198,7 @@ func TestWorkflowClaudeCodeCompat(t *testing.T) {
 
 func TestWorkflowExamples(t *testing.T) {
 	const f = "workflow-examples"
+	needComponentRoot(t)
 	exampleFiles := exampleNames(t, examplesDir)
 	childFiles := exampleNames(t, filepath.Join(examplesDir, "lib"))
 	sampleArgs := map[string]any{"fan-out-audit.js": map[string]any{"root": "src/routes/"}, "compose.js": map[string]any{"root": "src/"}}

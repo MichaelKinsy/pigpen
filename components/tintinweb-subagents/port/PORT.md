@@ -88,7 +88,9 @@ Differences from the original (each deliberate or forced by the engine):
    inside the realm).
 6. **What a child process cannot do yet is refused, and fails the run.** `agent({ isolation: "worktree" })`,
    `agent({ schema })` (the `StructuredOutput` tool) and `agent({ resume })` of a finished agent's session fail the *run*
-   with the refusal text (`workflowRefusalError`): a script must never be handed a `null` that means "not supported". The
+   with the refusal text (`workflowRefusalError`, which `startOwned` returns too, for an unported agent-file feature): the
+   runtime fails the run directly (`finish`), not with a call error a script's `try/catch` could swallow, so a script
+   must never be handed a `null` that means "not supported" nor carry on after catching it. The
    runtime, the host, the journal and the twins implement all three; the adapter over today's manager
    (`workflow_manager.go`) refuses them until the worktree, observability and sessions slices land (hooks assumed below).
 7. **A child's effective model is not read back.** The original reads `record.invocation` (the model its session resolved
@@ -97,6 +99,40 @@ Differences from the original (each deliberate or forced by the engine):
 8. **Worker crash.** `Workflow worker exited before completing.` only on a crash of the worker goroutine; like the
    original's worker (whose `parentPort` listener keeps it alive) a script awaiting a promise nothing settles stays parked
    until the run is stopped.
+9. **Scripts are compiled sloppy**, like the original (`vm.Script`, `Function` and `meta` evaluation have no `"use strict"`):
+   implicit globals, legacy octal and `this === globalThis` in a plain function behave as they do there (goja is asked for
+   non-strict mode at the three compile sites).
+10. **Stack overflow is not catchable in a script.** V8 throws a `RangeError` a `try/catch` can handle; goja raises an
+    uncatchable `StackOverflowError` at 10,000 frames. The run fails with V8's message, `Maximum call stack size exceeded`,
+    wherever it happens (before or after the first `await`); a script cannot recover from it. The text of other engine errors
+    (a `TypeError` for calling a non-function, `x is not defined`) is goja's wording, not V8's, and reaches the model in
+    `<status>` and a failed row.
+11. **An unhandled promise rejection fails the run**, as the original's worker `error` does (goja's rejection tracker, checked
+    after each task once its promise jobs have drained). An `Error` reports its message; any other reason reports Node's
+    `ERR_UNHANDLED_REJECTION` sentence with `String(reason)` where Node prints `util.inspect(reason)`.
+12. **No Workflows UI yet.** `/agents → Workflows` (list, dialog, stop, pause, skip, retry) is the UI slice's
+    (`workflow-dialog`, `workflow-dialog-open-agent`, `workflow-render` in `slices.json`). `/agents` lists the runs and says
+    the menu is refused with the unified refusal text, and the one model-visible text
+    that sends the model there and that a run can reach, `Workflow "id" is still running. Stop it from /agents → Workflows
+    before resuming it`, is reworded (`resolveResumeTarget`: `Resume it once it has finished.`). The tool *description*
+    (`Use /agents → Workflows to watch live progress`, the nested-workflow group sentence, `stop it from /agents →
+    Workflows first`) is kept as the original's, byte for byte: the scenarios compare the model request, so rewording it
+    fails `pigeq check`. It therefore still names the menu, which `/agents` refuses until the UI slice; the `--subagents-workflow-file`
+    warning (a user message, as `workflow-off` records it) still names `/agents → Settings → Workflows`. Until then a running workflow ends by finishing, by session shutdown or by
+    the script's own failure; nothing stops one from the UI.
+13. **A gate command is not killed on abort (SDK gap).** Pi's `pi.exec(command, args, { signal, timeout, cwd })` kills the
+    command when the signal fires; the SDK's `ExecOptions` has only `Timeout` and `Cwd`, and the host runs the command, so
+    `exec.CommandContext` cannot reach it. The port refuses to start a gate on an aborted run and otherwise leaves a running
+    one to finish or hit `GateTimeout`. Needed: `ExecOptions.Signal`/context on the Go SDK.
+14. **Small things.** A workflow's own children carry no `@mention` handle or alias (as in the original). The concurrency
+    default counts every logical CPU (`/proc/stat`), as `os.cpus().length` does, not the process's affinity mask.
+    `wfUTF16Prefix` cutting inside a surrogate pair keeps U+FFFD (what UTF-8 encoding makes of the lone surrogate JavaScript
+    would leave). `decideWorkflowCollision` reads the tool's `sourceInfo.source` as a string: the SDK cannot tell an absent
+    `source` from an empty one, which Pi never produces. `meta` keeps `null` rejected, `""` and `[]` kept, as the original.
+
+**Dependency.** goja `v0.0.0-20260723142020-b4aef50fa347` is MIT; its requirements are `dlclark/regexp2` (BSD-3-Clause),
+`go-sourcemap/sourcemap` (BSD-2-Clause), `google/pprof` (Apache-2.0) and `golang.org/x/text` (BSD-3-Clause), all recorded
+in `go.sum`. The source is 2.2 MB (regexp2 7.9 MB); the cost in the built extension is measured below.
 
 Manager hooks assumed (for the lane lead at stacking): `agentRecord.Owner` (a workflow's child is out of `list()`,
 `resolve()` and `onSettle`, in no pool slot as a foreground spawn), `manager.spawnOwned`, `app.startOwned`,
@@ -131,6 +167,15 @@ components; this port registers none.
 - `pigeq check` against goldens **recorded from the original under Pi 1.0.3**: 3 of 3 scenarios, plus `port-gaps` and
   `exec-coverage`. `tool-tools` compares the whole model request, so the three tool definitions, the Agent guidelines in
   the system prompt and the tool list equal Pi's.
+- Workflow scenarios, recorded under Pi `1.3.0.1402973a` (the pi-src pin): `workflow-tools`, `-bad-meta`, `-no-meta`, `-no-source`,
+  `-unknown-name`, `-bad-name`, `-resume-unknown`, `-missing-script-path` and `-off` (the flag warning, the tool list and its
+  order: `SubagentWorkflow` is registered between `Agent` and `get_subagent_result`, as the original does; a first check found
+  the port registering it last). **No scenario starts a run**: a run's task id (`wf_` + random hex) and `duration_ms` reach the
+  model in the tool result and the task notification, and pigeq's normalizer (N1-N6) has no rule for either, so such a scenario
+  fails against its own golden. Eight were written and dropped for that reason (`gen-scenarios.py` says which); a bare
+  `--subagents-workflow-file` cannot be recorded because Pi refuses to start (`Extension flag ... requires a value`). Those
+  behaviors are covered by the twins. When those scenarios were recorded, the original run under PiG differed from Pi at the
+  fleet `setWidget` (PiG emits it before `tool_execution_end`, Pi after): a PiG core difference, reported to the lane lead.
 - `pigeq mutate --unit`: 81 mutations, all killed (the first run killed 58; 16 survived and 7 did not build; each
   survivor got a test in `extra_test.go` / `extra2_test.go` and each invalid mutation was rewritten). After the review
   fixes (finding 10): **101 mutations, all killed by the unit tests** (`--unit-only`); the first run after the fixes left

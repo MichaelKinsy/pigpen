@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -34,6 +35,23 @@ const (
 type workflowRuntimeError struct{ msg string }
 
 func (e *workflowRuntimeError) Error() string { return e.msg }
+
+// wfCPUCount is os.cpus().length: every logical CPU the machine has, which on Linux is /proc/stat's cpuN lines, not
+// the affinity mask runtime.NumCPU honours (a pinned container would otherwise read as a small machine).
+func wfCPUCount() int {
+	if b, err := os.ReadFile("/proc/stat"); err == nil {
+		n := 0
+		for _, line := range strings.Split(string(b), "\n") {
+			if rest, ok := strings.CutPrefix(line, "cpu"); ok && rest != "" && rest[0] >= '0' && rest[0] <= '9' {
+				n++
+			}
+		}
+		if n > 0 {
+			return n
+		}
+	}
+	return runtime.NumCPU()
+}
 
 // workflowConcurrency is the concurrent agents allowed, leaving two cores for the host and the TUI. The max(1, …) is
 // not decoration: min(16, cpus - 2) is 0 on a one- or two-core machine, and a semaphore with zero permits hangs
@@ -1072,7 +1090,9 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 				e.QueuedAt, e.StartedAt = &queuedAt, &startedAt
 				e.State, e.Error = entryError, refusal.Error()
 			}))
-			rt.respond(callID, false, nil, refusal.Error(), true)
+			// Failed directly, not answered with a fatal call error: a script's try/catch would swallow that, and the
+			// run would go on as if the feature had run.
+			rt.finish(workflowRunResult{Status: runFailed, Error: refusal.Error(), HasError: true})
 			return
 		}
 
@@ -1218,7 +1238,7 @@ func runWorkflow(opts workflowRunOptions) (*workflowRunResult, error) {
 	}
 	rt.sem.limit = opts.Concurrency
 	if rt.sem.limit == 0 {
-		rt.sem.limit = workflowConcurrency(runtime.NumCPU())
+		rt.sem.limit = workflowConcurrency(wfCPUCount())
 	}
 	rt.inboxCond = sync.NewCond(&rt.inboxMu)
 	ctx := opts.Ctx

@@ -160,9 +160,14 @@ func pauseWorkflowTask(task *workflowTask, now int64) bool {
 	}
 	control := task.Control
 	task.mu.Unlock()
+	// The run is paused outside the task's lock (the control takes the run's own), so the task is re-checked after:
+	// a run that settled in between keeps its final status rather than being relabelled paused.
 	control.Pause()
 	task.mu.Lock()
 	defer task.mu.Unlock()
+	if task.Status != runRunning {
+		return false
+	}
 	task.Status = runPaused
 	task.PausedAt = &now
 	return true
@@ -180,6 +185,9 @@ func resumeWorkflowTask(task *workflowTask, now int64) bool {
 	control.Resume()
 	task.mu.Lock()
 	defer task.mu.Unlock()
+	if task.Status != runPaused {
+		return false
+	}
 	task.Status = runRunning
 	pausedAt := now
 	if task.PausedAt != nil {
@@ -331,7 +339,7 @@ func resolveResumeTarget(runID string, tasks *workflowTaskStore) *resumeTarget {
 	prior.mu.Lock()
 	defer prior.mu.Unlock()
 	if prior.Status == runRunning {
-		return &resumeTarget{Message: fmt.Sprintf(`Workflow "%s" is still running. Stop it from /agents → Workflows before resuming it.`, id)}
+		return &resumeTarget{Message: fmt.Sprintf(`Workflow "%s" is still running. Resume it once it has finished.`, id)}
 	}
 	if prior.JournalPath == "" {
 		return &resumeTarget{Message: fmt.Sprintf(`Workflow "%s" has no journal to resume from.`, id)}
@@ -340,7 +348,9 @@ func resolveResumeTarget(runID string, tasks *workflowTaskStore) *resumeTarget {
 	return &resumeTarget{OK: true, RunID: id, JournalPath: prior.JournalPath, ScriptPath: prior.ScriptPath}
 }
 
-// wfUTF16Prefix is the first n UTF-16 code units of s (a surrogate pair is never split).
+// wfUTF16Prefix is the first n UTF-16 code units of s, as `s.slice(0, n)`. A cut inside a surrogate pair leaves a lone
+// high surrogate in JavaScript, which UTF-8 encoding turns into U+FFFD; Go strings hold no lone surrogate, so that
+// is what is kept.
 func wfUTF16Prefix(s string, n int) string {
 	units := 0
 	for i, r := range s {
@@ -349,6 +359,9 @@ func wfUTF16Prefix(s string, n int) string {
 			w = 2
 		}
 		if units+w > n {
+			if units < n {
+				return s[:i] + "\uFFFD"
+			}
 			return s[:i]
 		}
 		units += w

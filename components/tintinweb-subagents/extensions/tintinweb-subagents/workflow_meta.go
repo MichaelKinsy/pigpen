@@ -1,9 +1,11 @@
 package tintinweb_subagents
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -16,18 +18,33 @@ import (
 // JavaScript realm, so anything that is not a literal throws or is rejected. upstream: src/workflow/meta.ts.
 
 // workflowPhaseMeta is a phase declared up front, so the UI can show it before any agent runs.
+// Detail and Model are pointers because the original tells an absent field from an empty one (`detail: ""` is kept).
 type workflowPhaseMeta struct {
-	Title  string `json:"title"`
-	Detail string `json:"detail,omitempty"`
+	Title  string  `json:"title"`
+	Detail *string `json:"detail,omitempty"`
 	// Model is display-only: the runtime does not read it.
-	Model string `json:"model,omitempty"`
+	Model *string `json:"model,omitempty"`
 }
 
+// workflowMeta: WhenToUse is a pointer and Phases is nil-or-not for the same reason (`phases: []` is kept, so the
+// worker's `meta` global holds what the author wrote). Phases marshals through MarshalJSON, since omitempty drops an
+// empty non-nil slice.
 type workflowMeta struct {
 	Name        string              `json:"name"`
 	Description string              `json:"description"`
-	WhenToUse   string              `json:"whenToUse,omitempty"`
+	WhenToUse   *string             `json:"whenToUse,omitempty"`
 	Phases      []workflowPhaseMeta `json:"phases,omitempty"`
+}
+
+func (m workflowMeta) MarshalJSON() ([]byte, error) {
+	type plain workflowMeta
+	if m.Phases == nil {
+		return json.Marshal(plain(m))
+	}
+	return json.Marshal(struct {
+		plain
+		Phases []workflowPhaseMeta `json:"phases"`
+	}{plain(m), m.Phases})
 }
 
 // workflowMetaError is the author-facing rejection of a meta block; its message is shown verbatim.
@@ -181,8 +198,10 @@ func isMetaRegexPosition(source string, i int) bool {
 	return !(isWord || prev == ')' || prev == ']')
 }
 
-func assertWorkflowPhases(value any) ([]workflowPhaseMeta, error) {
-	if value == nil {
+// assertWorkflowPhases checks meta.phases. nulls names the `null` values of the literal (Export cannot tell null from
+// undefined, and the original rejects null where it accepts absence): "phases", "phases.N.detail", "phases.N.model".
+func assertWorkflowPhases(value any, nulls map[string]bool) ([]workflowPhaseMeta, error) {
+	if value == nil && !nulls["phases"] {
 		return nil, nil
 	}
 	list, ok := value.([]any)
@@ -200,19 +219,19 @@ func assertWorkflowPhases(value any) ([]workflowPhaseMeta, error) {
 			return nil, workflowMetaFail(fmt.Sprintf("`meta.phases[%d].title` must be a non-empty string.", index))
 		}
 		phase := workflowPhaseMeta{Title: title}
-		if d, present := m["detail"]; present && d != nil {
+		if d, present := m["detail"]; present && (d != nil || nulls[fmt.Sprintf("phases.%d.detail", index)]) {
 			s, isString := d.(string)
 			if !isString {
 				return nil, workflowMetaFail(fmt.Sprintf("`meta.phases[%d].detail` must be a string.", index))
 			}
-			phase.Detail = s
+			phase.Detail = &s
 		}
-		if d, present := m["model"]; present && d != nil {
+		if d, present := m["model"]; present && (d != nil || nulls[fmt.Sprintf("phases.%d.model", index)]) {
 			s, isString := d.(string)
 			if !isString {
 				return nil, workflowMetaFail(fmt.Sprintf("`meta.phases[%d].model` must be a string.", index))
 			}
-			phase.Model = s
+			phase.Model = &s
 		}
 		out = append(out, phase)
 	}
@@ -220,23 +239,47 @@ func assertWorkflowPhases(value any) ([]workflowPhaseMeta, error) {
 }
 
 // evalWorkflowMetaFragment evaluates `(fragment)` in an empty realm, bounded by metaEvalTimeout.
-func evalWorkflowMetaFragment(fragment string) (any, error) {
+// nulls lists the literal's `null` values that matter to the checks (see assertWorkflowPhases, plus "whenToUse").
+func evalWorkflowMetaFragment(fragment string) (any, map[string]bool, error) {
 	vm := goja.New()
 	timer := time.AfterFunc(workflowMetaEvalTimeout, func() { vm.Interrupt("timeout") })
 	defer timer.Stop()
-	program, err := goja.Compile("workflow-meta.js", "("+fragment+")", true)
+	program, err := goja.Compile("workflow-meta.js", "("+fragment+")", false)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	v, err := vm.RunProgram(program)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return v.Export(), nil
+	nulls := map[string]bool{}
+	if obj, ok := v.(*goja.Object); ok {
+		isNull := func(o *goja.Object, key string) bool { return goja.IsNull(o.Get(key)) }
+		nulls["whenToUse"] = isNull(obj, "whenToUse")
+		nulls["phases"] = isNull(obj, "phases")
+		if phases, ok := obj.Get("phases").(*goja.Object); ok {
+			for i := 0; ; i++ {
+				entry, ok := phases.Get(strconv.Itoa(i)).(*goja.Object)
+				if !ok {
+					if phases.Get(strconv.Itoa(i)) == nil {
+						break
+					}
+					continue
+				}
+				nulls[fmt.Sprintf("phases.%d.detail", i)] = isNull(entry, "detail")
+				nulls[fmt.Sprintf("phases.%d.model", i)] = isNull(entry, "model")
+			}
+		}
+	}
+	return v.Export(), nulls, nil
 }
 
 // wfErrorDetail is an error's message as JavaScript would report it (without goja's name prefix on thrown errors).
 func wfErrorDetail(err error) string {
+	var overflow *goja.StackOverflowError
+	if errors.As(err, &overflow) {
+		return "Maximum call stack size exceeded"
+	}
 	var ex *goja.Exception
 	if errors.As(err, &ex) {
 		if o, ok := ex.Value().(*goja.Object); ok {
@@ -270,7 +313,7 @@ func extractMeta(source string) (workflowMeta, string, error) {
 	if sawInterpolation {
 		return workflowMeta{}, "", workflowMetaFail("`meta` must not use template interpolation (`${...}`).\n" + workflowPureLiteralHint)
 	}
-	value, err := evalWorkflowMetaFragment(source[open:closeAt])
+	value, nulls, err := evalWorkflowMetaFragment(source[open:closeAt])
 	if err != nil {
 		var interrupted *goja.InterruptedError
 		if errors.As(err, &interrupted) {
@@ -291,14 +334,14 @@ func extractMeta(source string) (workflowMeta, string, error) {
 		return workflowMeta{}, "", workflowMetaFail("`meta.description` is required and must be a non-empty string.")
 	}
 	meta := workflowMeta{Name: name, Description: description}
-	if w, present := raw["whenToUse"]; present && w != nil {
+	if w, present := raw["whenToUse"]; present && (w != nil || nulls["whenToUse"]) {
 		s, isString := w.(string)
 		if !isString {
 			return workflowMeta{}, "", workflowMetaFail("`meta.whenToUse` must be a string.")
 		}
-		meta.WhenToUse = s
+		meta.WhenToUse = &s
 	}
-	phases, err := assertWorkflowPhases(raw["phases"])
+	phases, err := assertWorkflowPhases(raw["phases"], nulls)
 	if err != nil {
 		return workflowMeta{}, "", err
 	}
