@@ -41,6 +41,7 @@ type followUpRig struct {
 	requests  []jevRequest
 	rawBodies []string
 	headers   []http.Header
+	methods   []string
 	sent      []recordedSend
 	warnings  []string
 	sendErr   error
@@ -139,6 +140,7 @@ func newFollowUpRig(t *testing.T, answer func(http.ResponseWriter)) *followUpRig
 		r.requests = append(r.requests, parsed)
 		r.rawBodies = append(r.rawBodies, string(body))
 		r.headers = append(r.headers, req.Header.Clone())
+		r.methods = append(r.methods, req.Method)
 		release := r.release
 		r.active++
 		r.maxActive = max(r.maxActive, r.active)
@@ -845,5 +847,46 @@ func TestRecentAgentContextEdges(t *testing.T) {
 	notText := map[string]any{"type": "thinking", "text": "private"}
 	if got := recentAgentContext([]map[string]any{assistant(notText, text("answer"))}); got != "answer" {
 		t.Errorf("only text blocks count: got %q", got)
+	}
+}
+
+func TestAutoFollowUpOnAnAlreadyAbortedRunNeverRestores(t *testing.T) {
+	// A listener added to an aborted signal never fires (AbortSignal), so the message is routed and sent as usual.
+	h := newFollowUpRig(t, jevRoute("follow_up", 0.95))
+	h.pressEsc()
+	h.SetEditorText("draft")
+	if got := h.input(steerInput("also lint")); !reflect.DeepEqual(got, handledResult()) {
+		t.Fatalf("result = %#v", got)
+	}
+	want := []recordedSend{{"also lint", "followUp"}}
+	if !reflect.DeepEqual(h.sentMessages(), want) || h.editorText() != "draft" {
+		t.Errorf("sent = %#v, editor = %q", h.sentMessages(), h.editorText())
+	}
+}
+
+func TestAutoFollowUpPostsToJev(t *testing.T) {
+	h := newFollowUpRig(t, jevRoute("steer", 0.9))
+	h.input(steerInput("also lint"))
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if len(h.methods) != 1 || h.methods[0] != http.MethodPost {
+		t.Errorf("methods = %v", h.methods)
+	}
+}
+
+func TestAutoFollowUpAnAbortWatcherThatLostTheRaceRestoresNothing(t *testing.T) {
+	// The handler removes its listener (removed) when it is past the Jev call; a watcher that still wakes on the abort, because
+	// both channels were ready, must do nothing, as an AbortSignal listener that was removed does nothing.
+	h := newFollowUpRig(t, jevRoute("follow_up", 0.95))
+	h.pressEsc()
+	routing := &routingInput{text: "late", signal: h.signal, removed: true, stop: make(chan struct{})}
+	h.fu.mu.Lock()
+	h.fu.routing = append(h.fu.routing, routing)
+	generation := h.fu.generation
+	h.fu.mu.Unlock()
+	h.SetEditorText("draft")
+	h.fu.watchAbort(h, generation, routing)
+	if got := h.editorText(); got != "draft" {
+		t.Errorf("editor = %q: a removed listener restored its message", got)
 	}
 }

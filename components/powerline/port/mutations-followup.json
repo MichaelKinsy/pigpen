@@ -153,7 +153,7 @@
   "name": "jev-accepts-missing-confidence",
   "file": "auto_follow_up.go",
   "find": "isString && (c == \"steer\" || c == \"follow_up\") && isNumber",
-  "replace": "isString && (c == \"steer\" || c == \"follow_up\")"
+  "replace": "isString && (c == \"steer\" || c == \"follow_up\") && (isNumber || !isNumber)"
  },
  {
   "name": "jev-timeout-text",
@@ -172,12 +172,6 @@
   "file": "auto_follow_up.go",
   "find": "if errors.Is(ctx.Err(), context.DeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {",
   "replace": "if false {"
- },
- {
-  "name": "jev-slice-units",
-  "file": "auto_follow_up.go",
-  "find": "units := utf16.Encode([]rune(s))\n\tif len(units) <= n {",
-  "replace": "units := utf16.Encode([]rune(s))\n\tif len(units) < n {"
  },
  {
   "name": "fu-disabled",
@@ -267,7 +261,7 @@
   "name": "fu-not-follow-up",
   "file": "follow_up.go",
   "find": "if !followUp {\n\t\treturn nil\n\t}",
-  "replace": "if false {\n\t\treturn nil\n\t}"
+  "replace": "if !followUp && false {\n\t\treturn nil\n\t}"
  },
  {
   "name": "fu-handled-action",
@@ -285,13 +279,13 @@
   "name": "fu-restored-ignored",
   "file": "follow_up.go",
   "find": "if restored {",
-  "replace": "if false {"
+  "replace": "if restored && false {"
  },
  {
   "name": "fu-generation-guard",
   "file": "follow_up.go",
   "find": "if generation != current {",
-  "replace": "if false {"
+  "replace": "if generation != current && false {"
  },
  {
   "name": "fu-generation-start",
@@ -348,16 +342,16 @@
   "replace": "if true {\n\t\tif signal"
  },
  {
-  "name": "fu-routing-removed",
+  "name": "fu-watch-removed-check",
   "file": "follow_up.go",
-  "find": "\t\trouting.removed = true\n",
-  "replace": ""
+  "find": "if routing.removed || generation != f.generation {",
+  "replace": "if generation != f.generation {"
  },
  {
   "name": "fu-routing-remove",
   "file": "follow_up.go",
   "find": "\t\t\t\tf.routing = append(f.routing[:i], f.routing[i+1:]...)\n",
-  "replace": ""
+  "replace": "\t\t\t\t_ = i\n"
  },
  {
   "name": "fu-aborted-listener",
@@ -369,7 +363,7 @@
   "name": "fu-chain",
   "file": "follow_up.go",
   "find": "\t\t<-previous\n",
-  "replace": ""
+  "replace": "\t\t_ = previous\n"
  },
  {
   "name": "fu-chain-close",
@@ -417,7 +411,7 @@
   "name": "fu-restore-draft-error",
   "file": "follow_up.go",
   "find": "if err != nil {\n\t\treturn // upstream",
-  "replace": "if false {\n\t\treturn // upstream"
+  "replace": "if err != nil && false {\n\t\treturn // upstream"
  },
  {
   "name": "fu-task",
@@ -639,7 +633,7 @@
   "name": "perf-nil-env",
   "file": "editor_performance.go",
   "find": "if env == nil {\n\t\tenv = os.Getenv\n\t}",
-  "replace": ""
+  "replace": "_ = os.Getenv"
  },
  {
   "name": "perf-measure-defer",
@@ -837,7 +831,7 @@
   "name": "perf-locale-length",
   "file": "editor_performance.go",
   "find": "if c := cmp.Compare(len(ra), len(rb)); c != 0 {",
-  "replace": "if false {"
+  "replace": "if c := cmp.Compare(len(ra), len(rb)); c != 0 && false {"
  },
  {
   "name": "perf-locale-order",
@@ -873,7 +867,7 @@
   "name": "comp-setter-not-called",
   "file": "editor_composition.go",
   "find": "\tsetter.SetAutocompleteProvider(provider)\n",
-  "replace": ""
+  "replace": "\t_ = setter\n"
  },
  {
   "name": "comp-setter-fallback",

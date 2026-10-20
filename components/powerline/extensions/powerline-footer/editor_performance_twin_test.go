@@ -119,7 +119,7 @@ func TestEditorPerfReportFormat(t *testing.T) {
 	clock.attach(p)
 
 	// input.total twice: 2 ms and 4 ms. editor.render.total once: 1.25 ms (exact in binary, a tie for toFixed(1)).
-	for _, ms := range []float64{2, 4} {
+	for _, ms := range []float64{4, 2} {
 		measureEditorPerf(p, "input.total", func() struct{} { clock.perf += ms; return struct{}{} })
 	}
 	measureEditorPerf(p, "editor.render.total", func() struct{} { clock.perf += 1.25; return struct{}{} })
@@ -187,7 +187,8 @@ func TestJSLocaleCompareMatchesICUOnASCII(t *testing.T) {
 		want int
 	}{
 		{"a", "A", -1}, {"A", "b", -1}, {"a-b", "a.b", -1}, {"ab", "a-b", 1}, {"a", "a", 0}, {"a", "ab", -1}, {"ab", "a", 1},
-		{"a.b", "a-b", 1}, {"a_b", "a-b", -1}, {"1", "a", -1}, {"B", "a", 1}, {"aB", "Ab", -1}, {"x y", "x-y", -1},
+		{"a.b", "a-b", 1}, {"a_b", "a-b", -1}, {"a-b", "a,b", -1}, {"a,b", "a;b", -1}, {"a.b", "a!b", 1}, {"a?b", "a.b", -1},
+		{"a(b", "a)b", -1}, {"a&b", "a#b", -1}, {"a$b", "a0b", -1}, {"a~b", "a$b", -1}, {"1", "a", -1}, {"B", "a", 1}, {"aB", "Ab", -1}, {"x y", "x-y", -1},
 	} {
 		if got := jsLocaleCompare(c.a, c.b); got != c.want {
 			t.Errorf("jsLocaleCompare(%q, %q) = %d, want %d", c.a, c.b, got, c.want)
@@ -287,4 +288,46 @@ func atoiOrFail(t *testing.T, s string) int {
 		t.Fatalf("not a number: %q", s)
 	}
 	return n
+}
+
+func TestEditorPerfReportNamesEveryABSwitchOnItsOwnLine(t *testing.T) {
+	fields := []func(*editorPerfOptions){
+		func(o *editorPerfOptions) { o.FastRender = true },
+		func(o *editorPerfOptions) { o.EditorChrome = true },
+		func(o *editorPerfOptions) { o.Widgets = true },
+		func(o *editorPerfOptions) { o.BashWidgets = true },
+		func(o *editorPerfOptions) { o.LastPrompt = true },
+	}
+	names := []string{"fast-render", "editor-chrome", "widgets", "bash-widgets", "last-prompt"}
+	for i, set := range fields {
+		var o editorPerfOptions
+		set(&o)
+		var parts []string
+		for j, name := range names {
+			parts = append(parts, name+"="+map[bool]string{true: "on", false: "off"}[i == j])
+		}
+		want := "A/B: " + strings.Join(parts, ", ")
+		if got := strings.Split(newEditorPerfProfiler(o).report(), "\n")[1]; got != want {
+			t.Errorf("only %s on: %q, want %q", names[i], got, want)
+		}
+	}
+}
+
+func TestEditorPerfMetricWithCancellingDurationsKeepsTheTimedForm(t *testing.T) {
+	// total 0 but max 1: only a metric with both at zero reads "n=" alone.
+	p := newEditorPerfProfiler(editorPerfOptions{})
+	p.record("x", 1)
+	p.record("x", -1)
+	if got := p.report(); !strings.HasSuffix(got, "x: n=2, avg=0.000ms, max=1.000ms, total=0.0ms") {
+		t.Errorf("report:\n%s", got)
+	}
+}
+
+func TestEditorPerfOneLineDraftsAreAlwaysMeasured(t *testing.T) {
+	p := newEditorPerfProfiler(editorPerfOptions{})
+	p.observeDraft([]string{"a"})
+	p.observeDraft([]string{"abcdefghij"}) // the second observation, one line: still measured
+	if got := p.report(); !strings.Contains(got, "max-draft=10") {
+		t.Errorf("report:\n%s", got)
+	}
 }

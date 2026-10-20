@@ -312,3 +312,25 @@ func TestAutoFollowUpSessionStartClearsTheTask(t *testing.T) {
 		t.Errorf("current_task = %v, want Unknown after a new session", state["current_task"])
 	}
 }
+
+func TestAutoFollowUpReadsSourceAndStreamingBehaviorFromTheEvent(t *testing.T) {
+	jev := newJevServer(t, "follow_up", 0.95)
+	t.Setenv("TYPESAFE_API_KEY", "test-key")
+	h := startFollowUp(t, followUpSettings)
+	for name, extra := range map[string]map[string]any{
+		"a queued follow-up":     {"streamingBehavior": "followUp"},
+		"an idle prompt":         {"streamingBehavior": ""},
+		"an extension's message": {"source": "extension"},
+		"an RPC prompt":          {"source": "rpc"},
+	} {
+		if got := fireInput(h.Host, "later task", extra); len(got) != 0 && string(got) != "null" {
+			t.Errorf("%s: result = %s, want none", name, got)
+		}
+	}
+	if n := len(jev.seen()); n != 0 {
+		t.Errorf("Jev was called %d times for input it must leave alone", n)
+	}
+	if n := len(h.CallsTo("sendUserMessage")); n != 0 {
+		t.Errorf("sendUserMessage calls = %d", n)
+	}
+}
