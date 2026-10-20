@@ -227,12 +227,13 @@ reports it; its refusal (`PDF text extraction`) is removed. What each file carri
 through a Type0/ToUnicode font, Cyrillic, CJK, Hebrew, ligatures, `/Differences`, run splitting and kerning gaps, flate content,
 RC4-40, AES-128 and AES-256 encryption, a password-protected file, four corrupt files, a scanned page, 120 pages, rotated text,
 a form XObject, a content array, off-page text, an inline image, an object-stream and xref-stream file, control codes, and a
-30-page report). `port/record-pdf-extract.mjs` runs the original `pdf-extract.ts` (unpdf 1.8.0, PDF.js 6.1) over them under Node 24 in the
+30-page report, and spacing operators with item splits). `port/record-pdf-extract.mjs` runs the original `pdf-extract.ts` (unpdf 1.8.0, PDF.js 6.1) over them under Node 24 in the
 container and records the saved Markdown or the error (`testdata/pdf-unpdf.json`, also the title and file name derived from 16 URLs).
 `TestPDFCorpusAgainstUnpdf` requires byte-identical Markdown, page and character counts and file names, and identical error text, on
-every fixture but the one below. Seven real documents outside the corpus (not redistributed; two from system documentation, the
-library's own test files) were compared the same way while building the extractor: six are identical, including a 19-page, 37 356
-character specification; the seventh, a 6-page license text, differs in 2 of 33 728 characters (see the font metrics item below).
+every fixture but the one below. Seven PDFs outside the corpus (not redistributed: four of the library's own test and example files and three real documents) were
+compared the same way while building the extractor: five were identical, including a 19-page, 37 356 character specification; a
+library test file with NUL character codes differed until the control-code rule was added (fixture `control-codes.pdf`; not re-compared
+afterwards); a 6-page license text differs in 2 of 33 728 characters (see the font metrics item below).
 
 ### Deliberate differences
 
@@ -277,3 +278,8 @@ recorder (`testdata/datalab-wire.json`, seven cases) and `TestDatalabWireFixture
 headers, JSON, multipart fields in order, the uploaded bytes) and the same result or error. The failure texts of a bad or oversized PDF
 carry the fetch "Fallback options" list, which this base lists differently from the original until the hosted-provider slice lands, so
 no scenario asserts them (twins do).
+
+Mutations: 50 mutants for this slice in `port/mutations.json`, all killed by `pigeq mutate --unit`. Three candidates were removed as
+equivalent: no cancellation rethrow in the chain (the local extractor checks the context itself, so the result is the same), no
+wide-gap flush (a flush and an inserted space both read as one space after the join), and no baseline-change flush (a new line always
+begins with a gap beyond -0.2 em, which flushes first); one was removed because it did not compile.

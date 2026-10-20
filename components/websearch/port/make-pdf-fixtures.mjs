@@ -264,7 +264,7 @@ write("flate.pdf", simpleDoc([textPage(["Compressed page one"]), textPage(["Comp
 
 // 7. Encrypted with the empty user password (RC4 40 bit, AES 128) and with a user password.
 write("encrypted-rc4-empty.pdf", simpleDoc([textPage(["Encrypted with RC4"])], { title: "RC4 doc", encrypt: ["rc4-40", ""] }));
-write("encrypted-aes-empty.pdf", simpleDoc([textPage(["Encrypted with AES"])], { title: "AES doc", encrypt: ["aes-128", ""], flate: true }));
+write("encrypted-aes-empty.pdf", simpleDoc([textPage(["Encrypted with AES"])], { title: "AES doc 0123456", encrypt: ["aes-128", ""], flate: true }));
 write("encrypted-password.pdf", simpleDoc([textPage(["Needs a password"])], { encrypt: ["aes-128", "secret"] }));
 
 // 8. Corrupt files: truncated in the middle of the page tree, damaged cross reference table
@@ -393,3 +393,19 @@ write(
 
 // 16. Control codes with no glyph (PDF.js shows nothing for them) between visible characters.
 write("control-codes.pdf", simpleDoc(["BT /F1 12 Tf 72 720 Td (A\x00\x00\x00B \x01C) Tj ET"]));
+
+// 17. Spacing operators and item splits: character spacing, negative word spacing, a TJ move back,
+// a size change and a font change in the middle of a word.
+write(
+	"spacing-ops.pdf",
+	simpleDoc(
+		[
+			"q 6 Tc BT /F1 12 Tf 72 720 Td (spaced) Tj ET Q " +
+				"q -3.2 Tw BT /F1 12 Tf 72 700 Td (two words) Tj ET Q " +
+				"BT /F1 12 Tf 72 680 Td [(a) 800 (b)] TJ ET " +
+				"BT /F1 12 Tf 72 660 Td (Hel) Tj /F1 14 Tf (lo) Tj ET " +
+				"BT /F1 12 Tf 72 640 Td (Wor) Tj /F2 12 Tf (ld) Tj ET",
+		],
+		{ fonts: { F1: () => helvetica, F2: () => "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>" } },
+	),
+);

@@ -522,3 +522,17 @@ func TestDatalabFailurePaths(t *testing.T) {
 	wantErr(t, err, `missing file reference`)
 	waitDeleted(t, n)
 }
+
+func TestDatalabMissingUploadURL(t *testing.T) {
+	n := datalabEnv(t, func(c netCall) *netReply {
+		if strings.HasSuffix(c.URL, "/files/upload") {
+			return rp(jsonReply(map[string]any{"file_id": 7, "reference": "datalab://file-7"}))
+		}
+		return nil
+	})
+	_, err := ExtractPDFViaDatalab(bg(), []byte{0}, datalabOpts("Doc", 1))
+	wantErr(t, err, `^Datalab PDF conversion failed: missing upload_url$`)
+	if n.count() != 1 {
+		t.Fatalf("%d requests", n.count())
+	}
+}
