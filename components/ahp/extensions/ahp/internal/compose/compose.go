@@ -9,6 +9,7 @@ import (
 
 	ahptypes "github.com/microsoft/agent-host-protocol/clients/go/ahptypes"
 
+	"github.com/MichaelKinsy/pigpen/ahp/internal/changeset"
 	"github.com/MichaelKinsy/pigpen/ahp/internal/host"
 	"github.com/MichaelKinsy/pigpen/ahp/internal/pi"
 	"github.com/MichaelKinsy/pigpen/ahp/internal/svc"
@@ -55,6 +56,9 @@ type Options struct {
 	// Filesystem and Terminals are nil unless the user opted in.
 	Filesystem *FilesystemOptions
 	Terminals  *TerminalOptions
+
+	// TuneChangesets adjusts the git changeset service before it is built; nil in production.
+	TuneChangesets func(*changeset.Options)
 }
 
 // Built is the composed host and the services a caller may need to reach or shut down.
@@ -64,6 +68,8 @@ type Built struct {
 	Resources *svc.ResourceService // nil unless Filesystem was given
 	Watches   *svc.WatchService    // nil unless Filesystem was given
 	Terminals *svc.TerminalService // nil unless Terminals was given
+	// Changesets publishes the git changesets of every session; always present.
+	Changesets *changeset.Service
 
 	closeOnce sync.Once
 }
@@ -136,6 +142,11 @@ func Build(opts Options) (*Built, error) {
 		})
 		caps.Terminals = built.Terminals
 	}
+	co := changeset.Options{}
+	if opts.TuneChangesets != nil {
+		opts.TuneChangesets(&co)
+	}
+	built.Changesets = changeset.New(h, co)
 	h.Serve(caps)
 	return built, nil
 }
@@ -143,6 +154,7 @@ func Build(opts Options) (*Built, error) {
 // Close shuts the optional services down: terminals are killed, watches released.
 func (b *Built) Close() {
 	b.closeOnce.Do(func() {
+		b.Changesets.Dispose()
 		if b.Terminals != nil {
 			b.Terminals.Shutdown()
 		}

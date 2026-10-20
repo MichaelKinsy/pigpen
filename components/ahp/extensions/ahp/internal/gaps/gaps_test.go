@@ -50,30 +50,6 @@ func TestGapPiReplay(t *testing.T) {
 	twin.Skip(t, "pi-replay", "bash-long-output", "replays provider streams through a live Pi agent loop, which a Go extension cannot embed; the recorded-stream half is the mapper-fixtures twins and the live half is the layer-6 differential against a scripted provider")
 }
 
-func TestGapChangeset(t *testing.T) {
-	twin.Skip(t, "changeset", "keeps the latest commit separate from uncommitted work and refreshes it", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset", "limits changes to the session working-directory subtree", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset", "ignores ambient Git repository overrides", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset", "omits changesets when Git is unavailable", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset", "omits changesets outside Git workspaces", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset", "omits Latest Commit before the repository has a commit", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset", "resumes changeset updates when durable session deletion fails", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset", "hydrates the parent session when its changeset is subscribed directly", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-}
-
-func TestGapChangesetLifecycle(t *testing.T) {
-	twin.Skip(t, "changeset-lifecycle", "observes changes during the initial scan and rebuilds changed ignore rules", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset-lifecycle", "refreshes file changes while a turn is still active", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset-lifecycle", "does not recursively watch when ignored paths cannot be determined", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset-lifecycle", "publishes an explicit error when Git cannot compute the changeset", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset-lifecycle", "drains an in-flight scan before deleting its channel", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-}
-
-func TestGapChangesetURI(t *testing.T) {
-	twin.Skip(t, "changeset-uri", "builds stable static catalogue channels", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-	twin.Skip(t, "changeset-uri", "rejects channels the host did not advertise", "git changeset service not ported in this release (documented gap: no changeset channels are advertised, see PORT.md)")
-}
-
 func TestGapImageSession(t *testing.T) {
 	twin.Skip(t, "image-session", "passes and persists images while honouring preflight cancellation", "needs Pi's InProcessPiBackend with a faux model; the SDK adapter's image path is covered by its own adapter tests")
 }
