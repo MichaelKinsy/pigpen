@@ -391,6 +391,11 @@ func frReplay(t *testing.T, sc *frScenario, palette frPalette) frRun {
 	}
 	ui.SetLocale(sc.Locale)
 	t.Cleanup(func() { ui.SetLocale("") })
+	// The recorder runs the original without Pi's interactive mode, which loads every highlight.js language in the
+	// background after startup: only the 21 eager languages exist in the recordings (a "text" fence is unsupported).
+	loadHighlightLanguages := ui.LoadHighlightLanguages
+	ui.LoadHighlightLanguages = func() {}
+	t.Cleanup(func() { ui.LoadHighlightLanguages = loadHighlightLanguages })
 	// OSC 8 hyperlink support is detected from the environment; pin it as the recorder does.
 	tui.SetHyperlinksSupported(new(sc.Hyperlinks))
 	t.Cleanup(func() { tui.SetHyperlinksSupported(nil) })

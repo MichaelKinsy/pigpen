@@ -86,6 +86,10 @@ func (a *app) walkDialogs(h host, typed questionParams) (any, error) {
 // always resolves a result (cancel included), so nil means the host cannot render a component: the dialog walker
 // asks instead. upstream: the custom() branch of execute, resolveUndefinedResult.
 func (a *app) runQuestionnaire(h host, typed questionParams) (any, error) {
+	// Pi loads every highlight.js language in the background when its interactive mode starts, so a preview's fenced
+	// code is highlighted in any language by the time a questionnaire opens. Start that load now; a preview that
+	// renders before it ends waits for it (once, bounded), never for a host call.
+	go ui.LoadHighlightLanguages()
 	itemsByTab := make([][]ui.WrappingSelectItem, 0, len(typed.Questions))
 	for _, q := range typed.Questions {
 		itemsByTab = append(itemsByTab, buildItemsForQuestion(q))

@@ -4,6 +4,11 @@ import (
 	tui "github.com/MichaelKinsy/pigpen/components/pitui"
 )
 
+// LoadHighlightLanguages loads every highlight.js language, as Pi's interactive mode does in the background when it
+// starts (utils/syntax-highlight.ts loadAllHighlightLanguages). A variable so the frame harness, which replays
+// recordings made without Pi's interactive mode (only the eager languages exist there), can switch the load off.
+var LoadHighlightLanguages = tui.LoadAllHighlightLanguages
+
 // GetMarkdownTheme is the Go equivalent of pi-coding-agent's getMarkdownTheme(): a pi-tui MarkdownTheme whose
 // callbacks colour through the given Theme's md* tokens, and whose highlightCode colours fenced code of a language
 // highlight.js knows through the theme's syntax* tokens (cli-highlight's theme, built as theme.js
@@ -30,8 +35,8 @@ func GetMarkdownTheme(theme Theme) *tui.MarkdownTheme {
 		Strikethrough:   theme.Strikethrough,
 		HighlightCode: func(code, lang string) []string {
 			// Pi has loaded every highlight.js language by the time a questionnaire opens (interactive mode loads
-			// them in the background at startup); the first fenced block here does the same load, once.
-			tui.LoadAllHighlightLanguages()
+			// them in the background at startup); a fenced block that renders first waits for that load, once.
+			LoadHighlightLanguages()
 			return tui.HighlightMarkdownCode(code, lang, cli, fg("mdCodeBlock"))
 		},
 	}

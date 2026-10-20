@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // Tests of the highlight.js bridge, adapted from PiG v0.5.0's highlight_test.go: PiG's version drives the active theme,
@@ -137,5 +138,17 @@ func TestRenderHighlightedHtmlReadsObjectPrototypeMembers(t *testing.T) {
 	}
 	if got := RenderHighlightedHtml(`<span class="hljs-keyword">x</span>y`, HighlightTheme{"keyword": nil, "default": defaultFormatter}); got != "DxDy" {
 		t.Errorf("own undefined keyword: got %q, want %q", got, "DxDy")
+	}
+}
+
+// TestHighlightLoadAllTiming logs how long the one-time load of every language takes (the cost the first fenced
+// preview of a session waits for at most); it asserts only a generous bound.
+func TestHighlightLoadAllTiming(t *testing.T) {
+	start := time.Now()
+	LoadAllHighlightLanguages()
+	elapsed := time.Since(start)
+	t.Logf("LoadAllHighlightLanguages: %s", elapsed)
+	if elapsed > 10*time.Second {
+		t.Fatalf("loading every language took %s", elapsed)
 	}
 }
