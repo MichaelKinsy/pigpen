@@ -34,6 +34,8 @@ type harness struct {
 	model   map[string]any
 	// registry answers the model calls the session model receives (own-model backend).
 	registry *fakeRegistry
+	// w is the extension's state, for tests that drive the internal API.
+	w *warden
 	// subscribed is set once the extension has asked for the session log.
 	subscribed bool
 	fail       map[string]string
@@ -83,7 +85,9 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 		}
 	}
 	hasUI := !o.noUI
-	h.host = StartHost(t, New(opts), HostOptions{HasUI: &hasUI, Cwd: t.TempDir(), OnCall: h.onCall})
+	ext, w := newWarden(opts)
+	h.w = w
+	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: t.TempDir(), OnCall: h.onCall})
 	return h
 }
 

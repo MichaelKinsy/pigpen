@@ -76,7 +76,7 @@ var ShellWriteTargets = func(command string) []string { return nil }
 
 // ── shell text ───────────────────────────────────────────────────────────────
 
-type shellSegment struct {
+type wasteSegment struct {
 	text string
 	// sep is the top-level operator that preceded this segment, "" for the first one.
 	sep string
@@ -104,9 +104,9 @@ func matchingParen(command string, open int) int {
 	return len(command)
 }
 
-// shellSegments splits at top-level `|`, `&&`, `||`, `;`, `&`, and newlines; pipes inside quotes or `$( … )` stay put.
-func shellSegments(command string) []shellSegment {
-	var segs []shellSegment
+// wasteSegments splits at top-level `|`, `&&`, `||`, `;`, `&`, and newlines; pipes inside quotes or `$( … )` stay put.
+func wasteSegments(command string) []wasteSegment {
+	var segs []wasteSegment
 	start := 0
 	sep := ""
 	var quote byte
@@ -167,17 +167,17 @@ func shellSegments(command string) []shellSegment {
 		if op == "" {
 			continue
 		}
-		segs = append(segs, shellSegment{text: command[start:min(i, len(command))], sep: sep, start: start})
+		segs = append(segs, wasteSegment{text: command[start:min(i, len(command))], sep: sep, start: start})
 		i += len(op) - 1
 		start = i + 1
 		sep = op
 	}
-	segs = append(segs, shellSegment{text: command[min(start, len(command)):], sep: sep, start: start})
+	segs = append(segs, wasteSegment{text: command[min(start, len(command)):], sep: sep, start: start})
 	return segs
 }
 
-// shellWords are the words of one already-split segment, unquoted; no expansion.
-func shellWords(text string) []string {
+// wasteWords are the words of one already-split segment, unquoted; no expansion.
+func wasteWords(text string) []string {
 	var out []string
 	var cur []byte
 	var quote byte
@@ -243,8 +243,6 @@ func stripCd(command string) (rest, dir string, hasDir bool) {
 	return command[loc[1]:], d, true
 }
 
-func isAbsPath(p string) bool { return strings.HasPrefix(p, "/") || filepath.IsAbs(p) }
-
 // wasteAbsolute resolves p the way a shell would from cwd, after an optional `cd dir`.
 func wasteAbsolute(cwd, dir string, hasDir bool, p string) string {
 	if isAbsPath(p) {
@@ -288,7 +286,7 @@ func bashWriteTargets(segment string) []string {
 			}
 		}
 	}
-	toks := shellWords(segment)
+	toks := wasteWords(segment)
 	if len(toks) == 0 {
 		return out
 	}
@@ -342,7 +340,7 @@ func WrittenPaths(c WasteCall) []string {
 	for _, w := range ShellWriteTargets(command) {
 		out = append(out, resolveTarget(c, dir, hasDir, w))
 	}
-	for _, seg := range shellSegments(command) {
+	for _, seg := range wasteSegments(command) {
 		for _, t := range bashWriteTargets(seg.text) {
 			out = append(out, resolveTarget(c, dir, hasDir, t))
 		}
@@ -384,7 +382,7 @@ func IsSleepPoll(command string) bool {
 	if status == "" || utf16Len(status) > statusLimit {
 		return false
 	}
-	for _, s := range shellSegments(status) {
+	for _, s := range wasteSegments(status) {
 		if s.sep != "" && s.sep != "|" {
 			return false
 		}
@@ -438,7 +436,7 @@ type RangeRead struct {
 var (
 	reSedRange = lazyRE(`^(\d+),(\d+)p$`)
 	reAwkRange = lazyRE(`NR\s*>=\s*(\d+)\s*&&\s*NR\s*<=\s*(\d+)`)
-	reHeredoc  = lazyRE(`<<`)
+	reWasteHeredoc  = lazyRE(`<<`)
 	reDashNum  = lazyRE(`^-\d+$`)
 	reLinesEq  = lazyRE(`^--lines=\d+$`)
 )
@@ -506,15 +504,15 @@ func RangeReadOf(c WasteCall) (RangeRead, bool) {
 	view, ok := shellCommandOf(c)
 	// A program's own reads (`python -c`, a heredoc, an interpreter) are not reads of the agent; only a lone shell
 	// read command is.
-	if !ok || reHeredoc.MatchString(view.Command) {
+	if !ok || reWasteHeredoc.MatchString(view.Command) {
 		return RangeRead{}, false
 	}
 	command, dir, hasDir := stripCd(view.Command)
-	segs := shellSegments(command)
+	segs := wasteSegments(command)
 	if len(segs) != 1 {
 		return RangeRead{}, false
 	}
-	toks := shellWords(segs[0].text)
+	toks := wasteWords(segs[0].text)
 	if len(toks) == 0 {
 		return RangeRead{}, false
 	}
@@ -679,11 +677,11 @@ func SearchReadOf(c WasteCall) (SearchRead, bool) {
 		return SearchRead{}, false
 	}
 	command, dir, hasDir := stripCd(view.Command)
-	segs := shellSegments(command)
+	segs := wasteSegments(command)
 	if len(segs) == 0 {
 		return SearchRead{}, false
 	}
-	toks := shellWords(segs[0].text)
+	toks := wasteWords(segs[0].text)
 	if len(toks) == 0 || (toks[0] != "grep" && toks[0] != "rg") {
 		return SearchRead{}, false
 	}
@@ -851,7 +849,7 @@ func CheckRunOf(c WasteCall) (CheckRun, bool) {
 		return CheckRun{}, false
 	}
 	command, _, _ := stripCd(view.Command)
-	segs := shellSegments(command)
+	segs := wasteSegments(command)
 	if len(segs) == 0 {
 		return CheckRun{}, false
 	}

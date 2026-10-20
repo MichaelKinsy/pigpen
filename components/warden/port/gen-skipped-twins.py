@@ -49,9 +49,9 @@ def reason(f, name):
     if f == "shape.test.ts":
         return "config schema migration (completeConfig) is not part of this port: the Go config merges defaults over a JSON file"
     if f == "stuck-evidence.test.ts":
-        return "stuck evidence (parsed failures, edit diffs) is off in this port: upstream's documented `stuck.evidence: false`"
+        return "project-file and junk-value legs of the config loader (applyProjectOverrides, applyUserOverrides on `\"no\"`) belong to the configui lane; the default and user-file legs are TestStuckEvidenceDefaultsOnAndTheUserFileTurnsItOff"
     if f == "steer-delivery.test.ts":
-        return "Pi host behavior (a steer rides the tool-result request); the port relies on PiG's SendMessage deliverAs=steer, see PORT.md"
+        return "tests Pi's createAgentSession and its faux provider (how many model requests a steer sent from tool_call or tool_result costs), no warden code is under test; PiG's own agent loop is covered by PiG's conformance suite, and the port sends the same steer through ctx.SendMessage deliverAs=steer"
     return "module not part of this port: " + MODULES.get(base, "outside the four-guard scope (owner decision needed)")
 
 rows = []

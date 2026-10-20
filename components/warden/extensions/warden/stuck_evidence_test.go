@@ -227,7 +227,7 @@ func TestEditDiffReportsThePathTheLineCountsAndACappedDiff(t *testing.T) {
 	}
 }
 
-// The config case of tests/stuck-evidence.test.ts:159 (stuck.evidence is a boolean, defaults on, settable from the
+// The config case of the stuck-evidence tests, "stuck.evidence is a boolean, defaults on, settable from the
 // user file). Its project-file and junk-value legs belong to the config loader (configui lane), so the upstream
 // case itself is a named skip.
 func TestStuckEvidenceDefaultsOnAndTheUserFileTurnsItOff(t *testing.T) {

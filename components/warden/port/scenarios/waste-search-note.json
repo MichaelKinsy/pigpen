@@ -1,0 +1,75 @@
+{
+  "name": "waste-search-note",
+  "description": "Three searches of one file with overlapping patterns earn a note to reuse the earlier hits.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "files": {
+    "app.log": "INFO 1\nINFO 2\nERROR 3\nINFO 4\nINFO 5\nERROR 6\nINFO 7\nINFO 8\nERROR 9\nINFO 10\nINFO 11\nERROR 12\nINFO 13\nINFO 14\nERROR 15\nINFO 16\nINFO 17\nERROR 18\nINFO 19\nINFO 20\nERROR 21\nINFO 22\nINFO 23\nERROR 24\nINFO 25\nINFO 26\nERROR 27\nINFO 28\nINFO 29\nERROR 30\nERROR 2 again\nERROR 3 again\n"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "grep ERROR app.log"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "grep 'ERROR 2' app.log"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "grep 'ERROR 3' app.log"
+          }
+        }
+      ]
+    },
+    {
+      "text": "stop"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

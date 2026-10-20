@@ -7,7 +7,9 @@ matters, tells the agent why and lets it re-plan, instead of stopping you with a
 |---|---|---|
 | **Irreversible** | offline: force-pushes, `rm -rf` of absolute, home or parent paths, `DROP`/`TRUNCATE`, `git reset --hard` (touching a secrets file is flagged with a warning). With a judge, those patterns are evidence and the judge's irreversible score decides (0.9 holds, 0.5 warns), as in the original's default `action.floor: "evidence"`; set `"floor": "level"` under `action` in the config file to hold every pattern hit regardless of the judge | the call is **held before it runs**; the agent is told why and what to do instead (a recoverable alternative, or ask you) |
 | **Off-task / off-plan** | a call unrelated to your request, or at odds with what the agent just said it would do | the call runs; the agent is told in one line to justify it or return to the task |
-| **Stuck** | the same call repeated, failing over and over, churning the same file | the agent is nudged to change approach |
+| **Stuck** | the same call repeated, failing over and over, churning the same file. With a judge, the request carries the parsed failure of each run (test names, error lines, location), what each edit changed and a digest (`stuck.evidence`, on by default; `"stuck": {"evidence": false}` sends the output tails only) | the agent is nudged to change approach; a failed result that repeats an earlier failure is replaced by a short diff against it |
+| **Call waste** | sleep polling, paging one file in small reads, searching one file again and again, re-running a check through a different output filter | one advisory sentence on the tool result that triggers it (no extra call, no steer, no request); `waste.tip` adds a one-time system prompt tip |
+| **Subagent reports** | a report of an async subagent that names a failure, a blocker or a question | read in code first; only a report that names trouble reaches the judge; a high answer wakes the agent once, with a pointer to the reports (`subagent.*`) |
 | **Done claims** | "done, tests pass" when nothing was verified | a follow-up asks for the evidence |
 
 It is a port of [pi-warden](https://github.com/DevMortimer/pi-warden) by Ryan Gapac
@@ -120,9 +122,9 @@ required) or fuses into a Piglet Binary (see `piglets/pig-warden`). It shares th
 
 ## What is and is not ported
 
-Ported: the four guards above, the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
+Ported: the four guards above, call waste and subagent triage, the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
 `exemptRules`, the steer budget, and both judge backends. Not ported (rules file, slop, secret masking, context
-saver, conscience, subagent supervision, …) and every deliberate deviation are listed in
+saver, conscience, …) and every deliberate deviation are listed in
 [`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test. The upstream `/warden` actions that are not ported are refused with an error that names the original (`npm:pi-warden@0.80.0`); the tools `warden_remember`, `warden_loops` and `warden_recall` are not yet ported and are not registered.
 
 ## Proof
