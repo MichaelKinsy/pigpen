@@ -816,41 +816,6 @@
   "replace": "shown := installed"
  },
  {
-  "name": "update-no-timeout",
-  "module": "cmd",
-  "file": "internal/acp/updatenotice.go",
-  "find": "context.WithTimeout(context.Background(), updateLookupTimeout)",
-  "replace": "context.WithTimeout(context.Background(), time.Hour)"
- },
- {
-  "name": "update-lowercase-registry-ignored",
-  "module": "cmd",
-  "file": "internal/acp/updatenotice.go",
-  "find": "[]string{\"npm_config_registry\", \"NPM_CONFIG_REGISTRY\"}",
-  "replace": "[]string{\"NPM_CONFIG_REGISTRY\"}"
- },
- {
-  "name": "update-uppercase-registry-ignored",
-  "module": "cmd",
-  "file": "internal/acp/updatenotice.go",
-  "find": "[]string{\"npm_config_registry\", \"NPM_CONFIG_REGISTRY\"}",
-  "replace": "[]string{\"npm_config_registry\"}"
- },
- {
-  "name": "update-registry-status-unchecked",
-  "module": "cmd",
-  "file": "internal/acp/updatenotice.go",
-  "find": "if resp.StatusCode != http.StatusOK {\n\t\treturn \"\"\n\t}",
-  "replace": ""
- },
- {
-  "name": "update-latest-v-kept",
-  "module": "cmd",
-  "file": "internal/acp/updatenotice.go",
-  "find": "return leadingV.ReplaceAllString(jsTrim(doc.Version), \"\")",
-  "replace": "return jsTrim(doc.Version)"
- },
- {
   "name": "update-notice-says-npm-only",
   "module": "cmd",
   "file": "internal/acp/updatenotice.go",
@@ -877,5 +842,40 @@
   "file": "internal/acp/agent_prompt.go",
   "find": "return a.say(id, changelogRefusal)",
   "replace": "return a.say(id, \"Changelog not found.\")"
+ },
+ {
+  "name": "update-no-timeout",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "context.WithTimeout(context.Background(), updateLookupTimeout)",
+  "replace": "context.WithTimeout(context.Background(), time.Hour)"
+ },
+ {
+  "name": "update-wrong-package",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "cmd := exec.CommandContext(ctx, \"npm\", \"view\", updatePackage, \"version\")",
+  "replace": "cmd := exec.CommandContext(ctx, \"npm\", \"view\", \"@earendil-works/pi-coding-agent\", \"version\")"
+ },
+ {
+  "name": "update-npm-failure-ignored",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "if err != nil {\n\t\treturn \"\"\n\t}\n\treturn leadingV",
+  "replace": "_ = err\n\treturn leadingV"
+ },
+ {
+  "name": "update-latest-v-kept",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "return leadingV.ReplaceAllString(jsTrim(string(out)), \"\")",
+  "replace": "return jsTrim(string(out))"
+ },
+ {
+  "name": "update-no-wait-delay",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "cmd.WaitDelay = 100 * time.Millisecond",
+  "replace": ""
  }
 ]

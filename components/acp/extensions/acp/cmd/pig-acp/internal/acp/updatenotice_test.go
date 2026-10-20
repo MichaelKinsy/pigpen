@@ -1,13 +1,13 @@
 package acp
 
 // Tests for the update notice (the original's buildUpdateNotice, agent.ts), including its
-// PiG-specific parts: where "latest" comes from, which switches turn the lookup off, and how a
-// PiG version with build metadata ("0.5.1+1.3.0.1402973a") is compared.
+// PiG-specific parts: which package `npm view` asks about, which switches turn the lookup off, and
+// how a PiG version with build metadata ("0.5.1+1.3.0.1402973a") is compared.
 
 import (
-	"net/http"
-	"net/http/httptest"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -35,30 +35,36 @@ func fakePigPrinting(t *testing.T, out string) string {
 	return script
 }
 
-// registry serves the npm registry's "latest" document for @pi-in-go/pig and counts requests.
-func registry(t *testing.T, status int, body string, delay time.Duration) (hits *atomic.Int32) {
+// npmStub puts an `npm` first on PATH that records its arguments, then sleeps, prints out and exits
+// with code. The returned func reports how many times npm was started and with which arguments.
+func npmStub(t *testing.T, out string, code int, delay time.Duration) (calls func() []string) {
 	t.Helper()
-	hits = new(atomic.Int32)
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		hits.Add(1)
-		if got := r.URL.EscapedPath(); got != "/@pi-in-go%2Fpig/latest" {
-			t.Errorf("registry path = %q, want /@pi-in-go%%2Fpig/latest", got)
-		}
-		if got := r.Header.Get("Accept"); !strings.Contains(got, "application/json") {
-			t.Errorf("Accept = %q", got)
-		}
-		time.Sleep(delay)
-		w.WriteHeader(status)
-		_, _ = w.Write([]byte(body))
-	}))
-	t.Cleanup(srv.Close)
-	t.Setenv("npm_config_registry", srv.URL)
-	t.Setenv("NPM_CONFIG_REGISTRY", "")
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake npm is a POSIX shell script")
+	}
+	dir := t.TempDir()
+	log := filepath.Join(dir, "calls")
+	body := "#!/bin/sh\necho \"$*\" >> '" + log + "'\n"
+	if delay > 0 {
+		body += fmt.Sprintf("sleep %.2f\n", delay.Seconds())
+	}
+	body += "printf '%s' '" + out + "'\nexit " + fmt.Sprint(code) + "\n"
+	write(t, filepath.Join(dir, "npm"), body)
+	if err := os.Chmod(filepath.Join(dir, "npm"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	// A lookup is on unless a test turns it off.
 	for _, k := range []string{"PIG_OFFLINE", "PI_OFFLINE", "PI_SKIP_VERSION_CHECK"} {
 		t.Setenv(k, "")
 	}
-	return hits
+	return func() []string {
+		raw, _ := os.ReadFile(log)
+		if strings.TrimSpace(string(raw)) == "" {
+			return nil
+		}
+		return strings.Split(strings.TrimSpace(string(raw)), "\n")
+	}
 }
 
 func TestCompareSemver(t *testing.T) {
@@ -93,83 +99,70 @@ func TestIsSemver(t *testing.T) {
 }
 
 func TestUpdateNotice(t *testing.T) {
-	latestDoc := func(v string) string { return `{"name":"@pi-in-go/pig","version":"` + v + `"}` }
-
-	t.Run("a newer release on the registry gives the notice", func(t *testing.T) {
-		hits := registry(t, 200, latestDoc("0.6.0"), 0)
+	t.Run("a newer release on npm gives the notice, from `npm view @pi-in-go/pig version`", func(t *testing.T) {
+		calls := npmStub(t, "0.6.0\n", 0, 0)
 		got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0+1.3.0.1402973a"), nil)
 		if want := notice("0.6.0", "0.5.0"); got != want {
 			t.Errorf("notice = %q, want %q", got, want)
 		}
-		if hits.Load() != 1 {
-			t.Errorf("registry hits = %d, want 1", hits.Load())
+		if c := calls(); len(c) != 1 || c[0] != "view @pi-in-go/pig version" {
+			t.Errorf("npm calls = %q", c)
 		}
 	})
 	t.Run("a patch release is noticed although pig's version carries build metadata", func(t *testing.T) {
-		registry(t, 200, latestDoc("0.5.2"), 0)
+		npmStub(t, "0.5.2", 0, 0)
 		if got, want := BuildUpdateNotice(fakePigPrinting(t, "0.5.1+1.3.0.1402973a"), nil), notice("0.5.2", "0.5.1"); got != want {
 			t.Errorf("notice = %q, want %q", got, want)
 		}
 	})
 	t.Run("a leading v is dropped from both versions", func(t *testing.T) {
-		registry(t, 200, latestDoc("v0.6.0"), 0)
+		npmStub(t, "v0.6.0", 0, 0)
 		if got, want := BuildUpdateNotice(fakePigPrinting(t, "v0.5.0"), nil), notice("0.6.0", "0.5.0"); got != want {
 			t.Errorf("notice = %q, want %q", got, want)
 		}
 	})
 	for name, tc := range map[string]struct{ installed, latest string }{
 		"the same version gives none":                     {"0.5.2+1.3.0.1402973a", "0.5.2"},
-		"an installed version ahead of the registry":      {"0.7.0+1.3.0.1402973a", "0.6.0"},
+		"an installed version ahead of npm":               {"0.7.0+1.3.0.1402973a", "0.6.0"},
 		"a pre-release of the latest is not older":        {"0.6.0-rc.1", "0.6.0"},
 		"a latest that is not a version gives none":       {"0.5.0", "next"},
 		"an empty latest gives none":                      {"0.5.0", ""},
 		"a latest with fewer than three parts gives none": {"0.5.0", "9"},
+		"npm's error text is not a version":               {"0.5.0", "npm ERR! 404 Not Found"},
 	} {
 		t.Run(name, func(t *testing.T) {
-			registry(t, 200, latestDoc(tc.latest), 0)
+			npmStub(t, tc.latest, 0, 0)
 			if got := BuildUpdateNotice(fakePigPrinting(t, tc.installed), nil); got != "" {
 				t.Errorf("notice = %q, want none", got)
 			}
 		})
 	}
 	t.Run("an installed version that is not semver skips the lookup", func(t *testing.T) {
-		hits := registry(t, 200, latestDoc("9.9.9"), 0)
+		calls := npmStub(t, "9.9.9", 0, 0)
 		if got := BuildUpdateNotice(fakePigPrinting(t, "dev"), nil); got != "" {
 			t.Errorf("notice = %q", got)
 		}
-		if hits.Load() != 0 {
-			t.Errorf("registry hits = %d, want 0", hits.Load())
+		if len(calls()) != 0 {
+			t.Errorf("npm calls = %q, want none", calls())
 		}
 	})
 	t.Run("a pig that does not answer --version skips the lookup", func(t *testing.T) {
-		hits := registry(t, 200, latestDoc("9.9.9"), 0)
-		if got := BuildUpdateNotice("no-such-pig-binary", nil); got != "" || hits.Load() != 0 {
-			t.Errorf("notice = %q, hits = %d", got, hits.Load())
+		calls := npmStub(t, "9.9.9", 0, 0)
+		if got := BuildUpdateNotice("no-such-pig-binary", nil); got != "" || len(calls()) != 0 {
+			t.Errorf("notice = %q, npm calls = %q", got, calls())
 		}
 	})
-	for name, tc := range map[string]struct {
-		status int
-		body   string
-	}{
-		"a registry error gives none":                {500, "boom"},
-		"an unknown package gives none":              {404, `{"error":"not found"}`},
-		"a body that is not JSON gives none":         {200, "<html>"},
-		"a document without a version":               {200, `{"name":"@pi-in-go/pig"}`},
-		"a version that is not a string":             {200, `{"version":6}`},
-		"an error status with a version in the body": {500, `{"version":"9.9.9"}`},
-	} {
-		t.Run(name, func(t *testing.T) {
-			registry(t, tc.status, tc.body, 0)
-			if got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0"), nil); got != "" {
-				t.Errorf("notice = %q, want none", got)
-			}
-		})
-	}
-	t.Run("a registry slower than the lookup timeout gives none, in time", func(t *testing.T) {
+	t.Run("npm failing gives none", func(t *testing.T) {
+		npmStub(t, "9.9.9", 1, 0)
+		if got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0"), nil); got != "" {
+			t.Errorf("notice = %q, want none", got)
+		}
+	})
+	t.Run("npm slower than the lookup timeout gives none, in time", func(t *testing.T) {
 		old := updateLookupTimeout
 		updateLookupTimeout = 100 * time.Millisecond
 		t.Cleanup(func() { updateLookupTimeout = old })
-		registry(t, 200, latestDoc("0.6.0"), 2*time.Second)
+		npmStub(t, "0.6.0", 0, 3*time.Second)
 		start := time.Now()
 		if got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0"), nil); got != "" {
 			t.Errorf("notice = %q", got)
@@ -178,20 +171,17 @@ func TestUpdateNotice(t *testing.T) {
 			t.Errorf("lookup took %v", took)
 		}
 	})
-	t.Run("an unreachable registry gives none", func(t *testing.T) {
-		registry(t, 200, latestDoc("0.6.0"), 0)
-		t.Setenv("npm_config_registry", "http://127.0.0.1:1")
-		if got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0"), nil); got != "" {
-			t.Errorf("notice = %q", got)
+	t.Run("no npm on PATH gives none", func(t *testing.T) {
+		pig := fakePigPrinting(t, "0.5.0")
+		for _, k := range []string{"PIG_OFFLINE", "PI_OFFLINE", "PI_SKIP_VERSION_CHECK"} {
+			t.Setenv(k, "")
 		}
-	})
-	t.Run("NPM_CONFIG_REGISTRY selects the registry too, and a trailing slash is fine", func(t *testing.T) {
-		hits := registry(t, 200, latestDoc("0.6.0"), 0)
-		url := os.Getenv("npm_config_registry")
-		t.Setenv("npm_config_registry", "")
-		t.Setenv("NPM_CONFIG_REGISTRY", url+"/")
-		if got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0"), nil); got != notice("0.6.0", "0.5.0") || hits.Load() != 1 {
-			t.Errorf("notice = %q, hits = %d", got, hits.Load())
+		t.Setenv("PATH", filepath.Dir(pig)+string(os.PathListSeparator)+"/bin:/usr/bin")
+		if _, err := exec.LookPath("npm"); err == nil {
+			t.Skip("npm is installed in /bin or /usr/bin")
+		}
+		if got := BuildUpdateNotice(pig, nil); got != "" {
+			t.Errorf("notice = %q", got)
 		}
 	})
 }
@@ -209,21 +199,21 @@ func TestUpdateNoticeOfflineSwitches(t *testing.T) {
 		"--offline passed to pig": {args: []string{"--no-themes", "--offline"}},
 	} {
 		t.Run(name+" turns the lookup off", func(t *testing.T) {
-			hits := registry(t, 200, `{"version":"9.9.9"}`, 0)
+			calls := npmStub(t, "9.9.9", 0, 0)
 			for k, v := range tc.env {
 				t.Setenv(k, v)
 			}
-			if got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0"), tc.args); got != "" || hits.Load() != 0 {
-				t.Errorf("notice = %q, hits = %d", got, hits.Load())
+			if got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0"), tc.args); got != "" || len(calls()) != 0 {
+				t.Errorf("notice = %q, npm calls = %q", got, calls())
 			}
 		})
 	}
 	t.Run("PIG_OFFLINE=0 and an unrelated argument leave it on", func(t *testing.T) {
-		hits := registry(t, 200, `{"version":"9.9.9"}`, 0)
+		calls := npmStub(t, "9.9.9", 0, 0)
 		t.Setenv("PIG_OFFLINE", "0")
 		got := BuildUpdateNotice(fakePigPrinting(t, "0.5.0"), []string{"--piglet", "offline"})
-		if got != notice("9.9.9", "0.5.0") || hits.Load() != 1 {
-			t.Errorf("notice = %q, hits = %d", got, hits.Load())
+		if got != notice("9.9.9", "0.5.0") || len(calls()) != 1 {
+			t.Errorf("notice = %q, npm calls = %q", got, calls())
 		}
 	})
 }
@@ -324,4 +314,39 @@ func TestNewSessionUpdateNotice(t *testing.T) {
 			t.Error("LoadSession asked for an update notice")
 		}
 	})
+}
+
+// BenchmarkBuildUpdateNotice measures the whole lookup against a stub npm and a stub pig: the two child processes
+// the original also starts.
+func BenchmarkBuildUpdateNotice(b *testing.B) {
+	if runtime.GOOS == "windows" {
+		b.Skip("the fakes are POSIX shell scripts")
+	}
+	dir := b.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "npm"), []byte("#!/bin/sh\nprintf 0.6.0\n"), 0o755); err != nil {
+		b.Fatal(err)
+	}
+	pig := filepath.Join(dir, "fakepig")
+	if err := os.WriteFile(pig, []byte("#!/bin/sh\necho '0.5.0+1.3.0.1402973a'\n"), 0o755); err != nil {
+		b.Fatal(err)
+	}
+	for _, k := range []string{"PIG_OFFLINE", "PI_OFFLINE", "PI_SKIP_VERSION_CHECK"} {
+		b.Setenv(k, "")
+	}
+	b.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if BuildUpdateNotice(pig, nil) == "" {
+			b.Fatal("no notice")
+		}
+	}
+}
+
+func BenchmarkCompareSemver(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if compareSemver("0.6.0", "0.5.1+1.3.0.1402973a") != 1 || !isSemver("0.5.1+1.3.0.1402973a") {
+			b.Fatal("wrong")
+		}
+	}
 }
