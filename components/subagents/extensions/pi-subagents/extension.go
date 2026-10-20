@@ -79,6 +79,24 @@ func textResult(text string, isError bool) sdk.ToolResult {
 	return sdk.ToolResult{Content: text, IsError: isError}
 }
 
+func init() {
+	registerAction("list", []string{"agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
+		return manageOutcome(listAgents(ctx.Cwd(), params))
+	})
+	registerAction("get", []string{"agent", "agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
+		return manageOutcome(getAgent(ctx.Cwd(), params))
+	})
+}
+
+// manageOutcome is the tool result of a management action.
+func manageOutcome(r manageResult) (any, error) {
+	if r.isError {
+		// Pi reports a refused action as a failed tool call: the content, empty details, the error flag on the event
+		return nil, sdk.NewToolError(r.text)
+	}
+	return explicitOK{Content: r.text, Details: map[string]any{"mode": "management", "results": []any{}}}, nil
+}
+
 // Extension returns the subagents extension.
 func Extension() *sdk.Extension {
 	e := sdk.New(extensionID)
@@ -162,20 +180,10 @@ func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
 	if msg := refuseUnsupported(params, action); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
-	var r manageResult
-	switch action {
-	case "list":
-		r = listAgents(ctx.Cwd(), params)
-	case "get":
-		r = getAgent(ctx.Cwd(), params)
-	default:
+	if action == "" {
 		return runOne(ctx, params)
 	}
-	if r.isError {
-		// Pi reports a refused action as a failed tool call: the content, empty details, the error flag on the event
-		return nil, sdk.NewToolError(r.text)
-	}
-	return explicitOK{Content: r.text, Details: map[string]any{"mode": "management", "results": []any{}}}, nil
+	return actions[action].run(ctx, params)
 }
 
 // explicitOK is a successful result that says so (the original's tool results carry isError: false).

@@ -21,12 +21,34 @@ func refusal(feature string) string {
 	return fmt.Sprintf(refusalFormatFmt, portPackageName, feature, originalSpec)
 }
 
-// Parameters of the subagent tool that the port honors, per mode.
+// A management or control action the port runs, with the parameters it reads. Every slice that ports an action registers it
+// from its own file, so the refusal below shrinks as the port grows and no slice edits another's lists.
+type action struct {
+	params map[string]bool
+	run    func(ctx sdk.Context, params map[string]any) (any, error)
+}
+
 var (
-	runParams  = map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true}
-	listParams = map[string]bool{"action": true, "agentScope": true}
-	getParams  = map[string]bool{"action": true, "agent": true, "agentScope": true}
+	// runParams are the parameters an execution ({agent, task}) honors.
+	runParams = map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true}
+	actions   = map[string]*action{}
 )
+
+// registerRunParams marks execution parameters as ported.
+func registerRunParams(names ...string) {
+	for _, n := range names {
+		runParams[n] = true
+	}
+}
+
+// registerAction marks a management or control action as ported; params are the parameters besides `action` it reads.
+func registerAction(name string, params []string, run func(ctx sdk.Context, params map[string]any) (any, error)) {
+	a := &action{params: map[string]bool{"action": true}, run: run}
+	for _, p := range params {
+		a.params[p] = true
+	}
+	actions[name] = a
+}
 
 // Inputs that start a workflow (the original's only orchestration: parallel and chained runs are workflow scripts).
 var workflowParams = []string{"workflow", "workflowScript", "workflowScriptPath"}
@@ -64,8 +86,8 @@ func optionsFeature(names []string) string {
 }
 
 // refuseUnsupported returns the refusal for the first unported input of a call to the subagent tool, or "" when the
-// port runs every parameter that is set. action is the call's action ("" for an execution).
-func refuseUnsupported(params map[string]any, action string) string {
+// port runs every parameter that is set. name is the call's action ("" for an execution).
+func refuseUnsupported(params map[string]any, name string) string {
 	var set []string
 	for _, n := range workflowParams {
 		if has(params, n) {
@@ -84,16 +106,14 @@ func refuseUnsupported(params map[string]any, action string) string {
 		return refusal("parallel and chain runs (" + quoteList(set) + ")")
 	}
 	allowed := runParams
-	switch action {
-	case "":
-	case "list":
-		allowed = listParams
-	case "get":
-		allowed = getParams
-	default:
-		return refusal("the `" + action + "` action")
+	if name != "" {
+		a := actions[name]
+		if a == nil {
+			return refusal("the `" + name + "` action")
+		}
+		allowed = a.params
 	}
-	if action == "" {
+	if name == "" {
 		if v, ok := params["async"]; ok && v != nil && v != false {
 			return refusal("async (background) runs (`async: " + fmt.Sprint(v) + "`)")
 		}
@@ -115,4 +135,3 @@ func refuseTool(feature string) sdk.ToolFunc {
 		return nil, sdk.NewToolError(refusal(feature))
 	}
 }
-

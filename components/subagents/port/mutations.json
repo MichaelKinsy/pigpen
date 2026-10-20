@@ -740,20 +740,20 @@
  {
   "name": "ref-action",
   "file": "refuse.go",
-  "find": "return refusal(\"the `\" + action + \"` action\")",
+  "find": "return refusal(\"the `\" + name + \"` action\")",
   "replace": "return \"\""
  },
  {
   "name": "ref-list-params",
-  "file": "refuse.go",
-  "find": "listParams = map[string]bool{\"action\": true, \"agentScope\": true}",
-  "replace": "listParams = map[string]bool{\"action\": true, \"agentScope\": true, \"capabilities\": true}"
+  "file": "extension.go",
+  "find": "registerAction(\"list\", []string{\"agentScope\"}",
+  "replace": "registerAction(\"list\", []string{\"agentScope\", \"capabilities\"}"
  },
  {
   "name": "ref-get-params",
-  "file": "refuse.go",
-  "find": "getParams  = map[string]bool{\"action\": true, \"agent\": true, \"agentScope\": true}",
-  "replace": "getParams  = map[string]bool{\"action\": true, \"agent\": true, \"agentScope\": true, \"config\": true}"
+  "file": "extension.go",
+  "find": "registerAction(\"get\", []string{\"agent\", \"agentScope\"}",
+  "replace": "registerAction(\"get\", []string{\"agent\", \"agentScope\", \"config\"}"
  },
  {
   "name": "ref-run-params",
