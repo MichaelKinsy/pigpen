@@ -8,12 +8,12 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (305 exact twins, 570 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (381 exact twins, 494 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; fetch `answer` mode and query rewrite (need a model-completion call); activity widget and shortcut; TUI render hooks |
-| Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search); routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | The other 26 providers (OpenAI/Codex hosted search, Gemini, xAI, Jina Search, Firecrawl, ...): in the provider table; selecting or reaching one is refused (see "Refusals") |
+| Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search), Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | The other 14 providers (OpenAI/Codex hosted search, Gemini, xAI, Firecrawl, ...): in the provider table; selecting or reaching one is refused (see "Refusals") |
 | SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, hosted fetch providers other than Jina, authenticated fetch, Gemini Web and browser cookies |
 
 ## Refusals (until the slices above are ported)
@@ -37,11 +37,53 @@ A batch of URLs is refused whole when one URL is. Not registered, so not adverti
 `/google-account`, the shortcuts and the activity widget. Known approximation: whether an unported provider is available
 uses its credential names (OAuth, ADC and browser-cookie availability of OpenAI, Gemini, xAI and Kimi is not known here).
 
+## Slice 2: the REST search providers
+
+Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG and Jina Search
+(`serper.go`, `serpapi.go`, `serpbase.go`, `serply.go`, `valyu.go`, `bocha.go`, `baizhi.go`, `you.go`, `anysearch.go`,
+`xcrawl.go`, `searxng.go`, `jinasearch.go`, shared mechanics in `restcommon.go`). Their `<Label> search provider` refusal is
+gone; the refusal stays for the 14 providers other slices own. The provider table keeps the original's availability checks:
+SerpApi reads `SERPAPI_KEY`, You.com `YDC_API_KEY`, AnySearch is always available (a key is optional), XCrawl reads
+`xcrawlApiKey`/`XCRAWL_API_KEY`, SearXNG needs a valid base URL and a readable `ssrf` section (a malformed one fails the
+search instead of letting a hosted provider run). Jina and XCrawl have no hosted fetch in their provider files; the Jina
+Reader fetch fallback is `extract.go`'s.
+
+**Proof, and its limit.** Eleven of the twelve providers call a fixed https endpoint with no base-URL setting, so a pigeq
+scenario cannot point the original at a fake server. Their wire proof is oracle-derived instead:
+`port/record-provider-requests.mjs` imports the unmodified original modules (`port/oracle/*.ts`) under Node with a
+recording `fetch`, replays the inputs of the upstream tests and of the error paths (status codes, envelopes, redirects,
+timeouts, cancellation) and writes the original's actual requests (method, URL, headers, body) and outcomes (result or
+error text) to `extensions/websearch/testdata/provider-requests.json` (131 cases). `provider_fixtures_test.go` replays every case against the port
+with the same canned responses and requires identical requests and outcomes; the twins call into it. The comparison
+ignores two things on purpose: a request's `redirect` mode (a Node option; the Go transport never follows redirects by
+itself) and the parser text after `invalid JSON:` (Node and Go word it differently). SearXNG has a configurable base URL and also has
+pigeq scenarios against a fake server.
+
+**Differences recorded with fixtures**
+
+- The JSON parser text after `... returned invalid JSON: ` is Go's, not V8's (`serper-invalid-json`, `xcrawl-invalid-json`).
+- A provider's own deadline: SerpApi, Serply, You.com and XCrawl say `<name> request timed out after 60s` (as the original);
+  Jina says `Jina Search API error 408: request timed out` (as the original). Serper, SerpBase, Valyu, Bocha, AnySearch and
+  SearXNG have no such branch upstream, where a deadline is an abort error; here it is the shared network-class timeout
+  (see "Provider timeouts" above), so routing can fall through. Caller cancellation is an abort everywhere.
+- Credentials leave on cross-origin redirects of the plain `fetch` upstream (undici drops only `Authorization`); the Go
+  transport drops the provider's credential header (`X-API-KEY`, `x-api-key`, `Authorization`, `X-Api-Key`) as well. Valyu,
+  Serper, Bocha, AnySearch, XCrawl and Jina follow redirects like Node's `fetch` does; Baizhi and SearXNG never send the
+  credential to another origin (Baizhi's fetch is `redirect: "error"`, SearXNG's `onRedirect` drops the configured headers).
+- Baizhi's MCP client is written against the wire sequence of the SDK's streamable-HTTP client (initialize,
+  `notifications/initialized`, the optional GET event stream, `tools/call`, DELETE with the session id), with the same
+  headers and bodies (`baizhi-*` fixture cases); JSON and server-sent-event responses are read; the SDK's schema
+  validation of results is reduced to the fields the provider reads.
+- `structuredContent` is re-serialised like `JSON.stringify(x, null, 2)` (key order and string escapes of JavaScript).
+- The activity monitor is the widget slice's: the cases that read it (Bocha, Jina "recorded as activity errors") run the error
+  path and its text; the Curator page halves of the Serply, SerpApi, You.com and Baizhi cases belong to the curator slice.
+  The real Pi session case of Baizhi runs the registered `web_search` tool instead of a Pi agent session.
+
 ## Mapping (original file -> Go)
 
 `storage.ts` storage.go - `utils.ts`/`ssrf-protection.ts`/`credential-source.ts` config.go, credential.go, ssrf.go, proxy.go,
-transport.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi.ts`
-same names - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
+transport.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi/serper/serpapi/serpbase/serply/valyu/bocha/baizhi/you/anysearch/xcrawl/searxng.ts`
+same names (`jina-search.ts` jinasearch.go; the shared mechanics of the keyed REST providers are in restcommon.go) - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
 find.go, sourcecheck.go, fetchparams.go - `data-uri-sanitize.ts` datauri.go - `index.ts` tools.go, tool_*.go, toolconfig.go,
 schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enable.go.
 
@@ -98,7 +140,7 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
 
 ## Adapted twins
 
-These upstream cases use a provider that is not ported (OpenAI, XCrawl, AnySearch, SerpBase, Serply) or observe curl; the
+These upstream cases use a provider that is not ported (OpenAI), observe curl, or have a half (curator page, activity monitor, the real Pi session) with no Go counterpart; the
 behaviour under test is provider-independent, so the case runs with a ported provider (or the proxy the request carries).
 Each logs `ADAPTED:` when run.
 
@@ -107,10 +149,7 @@ Each logs `ADAPTED:` when run.
 | source_check fetchContent uses the explicit proxy for result pages | provider tavily instead of openai (not ported); recorded proxy of each request instead of curl arguments | `proxy_test.go` |
 | fetch_content passes the explicit proxy through queued extraction | the page body is padded past the 500-character usefulness floor: this port's HTML pipeline (like the original's, which also rejects the short fixture body) reports shorter pages as incomplete | `proxy_test.go` |
 | configured socks5h proxy is accepted and routed to curl | asserts the accepted proxy the request carries instead of curl arguments | `proxy_test.go` |
-| non-curated search stops after caller cancellation | provider tavily instead of anysearch (not ported) | `tools_provider_test.go` |
 | web_search and Curator reject disabled providers before availability or requests | only workflow none runs; summary-review is the curator (deferred) | `tools_provider_test.go` |
-| allowlisting an explicit-only provider does not opt it into auto or all | duckduckgo instead of serply (not ported); both are explicit-only | `tools_provider_test.go` |
-| an allowlisted explicit-only provider remains directly selectable with its credential | duckduckgo (keyless) instead of serply (not ported); credential header check dropped | `tools_provider_test.go` |
 | an absent config file preserves registration and search behavior | commands are the ported ones and web_enable is registered (dynamic activation is the default here) | `tools_provider_test.go` |
 | source_check executes a successful OpenAI provider response with runtime context | provider tavily instead of openai (not ported) | `tools_provider_test.go` |
 | source_check stops on cancellation instead of continuing queries | provider tavily instead of openai (not ported) | `tools_provider_test.go` |
@@ -118,11 +157,7 @@ Each logs `ADAPTED:` when run.
 | web_search output tells the model the responseId that get_search_content accepts | provider tavily instead of openai (not ported); the identifier flow is provider-independent | `tools_search_test.go` |
 | web_search output honours a renamed get_search_content tool | provider tavily instead of openai (not ported); the identifier flow is provider-independent | `tools_search_test.go` |
 | web_search output omits the retrieval hint when get_search_content is disabled | provider tavily instead of openai (not ported); the identifier flow is provider-independent | `tools_search_test.go` |
-| web_search expands a JSON-array string in query into separate searches | provider brave instead of xcrawl (not ported); query expansion is provider-independent | `tools_search_test.go` |
-| web_search keeps mixed JSON arrays in query as a single literal query | provider brave instead of xcrawl (not ported); query expansion is provider-independent | `tools_search_test.go` |
-| web_search does not reinterpret already-structured queries entries | provider brave instead of xcrawl (not ported); query expansion is provider-independent | `tools_search_test.go` |
-| web_search reports the existing no-query error for empty JSON-array strings | provider brave instead of xcrawl (not ported); query expansion is provider-independent | `tools_search_test.go` |
-| web_search bounds batch concurrency and preserves query order | provider brave instead of xcrawl (not ported); the summary-review half runs the curator, a named gap | `tools_search_test.go` |
+| web_search bounds batch concurrency and preserves query order | the summary-review half runs the curator, a named gap | `tools_search_test.go` |
 | web_search preserves OpenAI answers even when no sources are returned | provider tavily instead of openai (not ported) | `tools_search_test.go` |
 | default raw multi-query output is bounded, attributed, and stored without mutation | provider tavily (answer text passes through) instead of openai/anysearch (not ported) | `tools_search_test.go` |
 | stored search answers support bounded continuation and findText | provider tavily (answer text passes through) instead of openai/anysearch (not ported) | `tools_search_test.go` |
@@ -136,7 +171,7 @@ Each logs `ADAPTED:` when run.
 
 | Layer | Result |
 |---|---|
-| Twins | `pigeq twins check`: 305 exact + 570 named skips = 875 titles; exit 0 |
+| Twins | `pigeq twins check`: 381 exact + 494 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
 | Mutation | `mutations.json`: 15 mutants, all killed (`pigeq mutate --unit`) |
