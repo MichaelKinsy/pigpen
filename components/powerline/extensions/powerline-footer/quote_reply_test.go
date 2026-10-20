@@ -52,6 +52,24 @@ func TestReplyIdMatching(t *testing.T) {
 	}
 }
 
+func TestOnlyMessageEntriesWithTextBlocksAreQuotable(t *testing.T) {
+	branch := []map[string]any{
+		{"type": "compaction", "id": "c1", "message": map[string]any{"role": "user", "content": "from a compaction"}},
+		{"type": "message", "id": "m1", "message": map[string]any{"role": "assistant", "content": []any{
+			map[string]any{"type": "image", "text": "not text"},
+			map[string]any{"type": "text", "text": 5},
+			"a bare string",
+			map[string]any{"type": "text", "text": "kept"},
+		}}},
+		{"type": "message", "id": "m2", "message": map[string]any{"role": "user", "content": []any{map[string]any{"type": "image", "text": "x"}}}},
+		{"type": "message", "id": "m3"},
+	}
+	candidates, err := collectCandidates(&fakeQuoteCtx{branch: branch})
+	if err != nil || len(candidates) != 1 || candidates[0].ID != "m1" || candidates[0].Text != "kept" {
+		t.Errorf("candidates %+v %v", candidates, err)
+	}
+}
+
 func TestReplyEmptyIdIsAnError(t *testing.T) {
 	ctx := &fakeQuoteCtx{mode: "rpc", branch: []map[string]any{messageEntry("  ", "2026-08-23T00:00:00.000Z", "user", "x")}}
 	if err := reply("", ctx); err == nil || err.Error() != "Session entry id must not be empty." {
@@ -416,6 +434,13 @@ func TestFuzzyMatchScoresAreThoseOfPiTui(t *testing.T) {
 		{"tool", "tool", true, -159.4},
 		{"é", "café", true, 0.30000000000000004},
 		{"a b", "a b", true, -149.7},
+		{"b", "a:b", true, -9.8},
+		{"b", "a/b", true, -9.8},
+		{"b", "a.b", true, -9.8},
+		{"b", "a_b", true, -9.8},
+		{"b", "a-b", true, -9.8},
+		{"b", "a b", true, -9.8},
+		{"b", "axb", true, 0.2},
 	} {
 		m := fuzzyMatch(c.query, c.text)
 		if m.matches != c.matches || math.Abs(m.score-c.score) > 1e-9 {
@@ -451,5 +476,93 @@ func TestCandidateDetails(t *testing.T) {
 	_ = reply("", opts)
 	if got, want := opts.selectOptions[0], "o1 user: "+strings.TrimSpace(strings.Repeat("word ", 44))[:219]+"…"; got != want {
 		t.Errorf("option %q, want %q", got, want)
+	}
+}
+
+func TestPickerMoreKeys(t *testing.T) {
+	chosen := func(keys ...string) string {
+		t.Helper()
+		p := newTestPicker()
+		for _, k := range keys[:len(keys)-1] {
+			p.HandleInput(k)
+		}
+		s, _ := p.HandleInput(keys[len(keys)-1])
+		if s == nil {
+			return ""
+		}
+		return s.ID
+	}
+	if got := chosen("\x1b[57414u"); got != "id00" {
+		t.Errorf("keypad Enter (kitty) chose %q", got)
+	}
+	if got := chosen("\x1b[B", "\x1bOA", "\r"); got != "id00" {
+		t.Errorf("SS3 up chose %q", got)
+	}
+	if got := chosen("\x1b[B", "\x1b[B", "\x7f", "\r"); got != "id00" {
+		t.Errorf("a backspace resets the selection even with an empty query: %q", got)
+	}
+	if got := chosen("\x1b[B", "\x1b[B", "x", "\x7f", "\r"); got != "id00" {
+		t.Errorf("typing and deleting resets the selection: %q", got)
+	}
+	if got := chosen("i", "d", "\x1b[B", "\x1b[B", "\x08", "\x08", "\x08", "\x08", "\r"); got != "id00" {
+		t.Errorf("raw BS deletes: %q", got)
+	}
+	p := newTestPicker()
+	p.HandleInput("a\u0085b") // a C1 control is not text
+	p.HandleInput("\x1b[31u") // a control codepoint is not text
+	p.HandleInput("\x1b[1u")
+	if p.query != "" {
+		t.Errorf("control input typed %q", p.query)
+	}
+	p.HandleInput("\x1b[32u")
+	if p.query != " " {
+		t.Errorf("codepoint 32 is text: %q", p.query)
+	}
+}
+
+func TestPickerScrollIndicatorNeverEmpty(t *testing.T) {
+	var candidates []quoteCandidate
+	for i := range 25 {
+		candidates = append(candidates, quoteCandidate{ID: fmt.Sprintf("i%02d", i), Role: "user", Text: "t", SearchText: "i user t"})
+	}
+	p := newQuotePicker(candidates, pickerPlainTheme{}, time.Now, nil, nil)
+	if got := strings.Join(p.Render(90), "\n"); !strings.Contains(got, "● ○ ○ ○ ○ ○ ○ ○ ○ ○  1/25") {
+		t.Errorf("the first of 25 shows one dot:\n%s", got)
+	}
+}
+
+func TestPickerExcerptNeedsMoreThanEighteenCells(t *testing.T) {
+	p := newTestPicker()
+	row := func(width int) string { return p.Render(width)[6] }
+	// head "▸ user id00  09:05 AM" is 21 cells wide; the excerpt gets inner width - head - 8.
+	if got := row(49); strings.Contains(got, "—") { // 47 - 21 - 8 = 18
+		t.Errorf("18 cells show no excerpt: %q", got)
+	}
+	if got := row(50); !strings.Contains(got, "—  message number") { // 19 cells
+		t.Errorf("19 cells show the excerpt: %q", got)
+	}
+}
+
+type markTheme struct{}
+
+func (markTheme) Fg(token, text string) string { return "<" + token + ">" + text + "</>" }
+func (markTheme) Bold(text string) string      { return "<b>" + text + "</b>" }
+func (markTheme) Italic(text string) string    { return "<i>" + text + "</i>" }
+
+func TestPickerStyling(t *testing.T) {
+	p := newQuotePicker(newTestPicker().candidates, markTheme{}, func() time.Time { return time.Date(2026, 10, 20, 12, 0, 0, 0, time.Local) }, nil, nil)
+	lines := p.Render(120)
+	if !strings.Contains(lines[6], "<b><success>user</></b>") || strings.Count(strings.Join(lines, "\n"), "<b>") != 1 {
+		t.Errorf("only the selected row is bold, users are success:\n%s", strings.Join(lines, "\n"))
+	}
+	if !strings.Contains(lines[7], "<accent>assistant</>") || strings.Contains(lines[7], "<b>") {
+		t.Errorf("assistants are accent: %q", lines[7])
+	}
+	if !strings.Contains(lines[6], "<accent>▸") || !strings.Contains(lines[7], "<borderMuted>·</>") {
+		t.Errorf("markers: %q %q", lines[6], lines[7])
+	}
+	// the border is split evenly around the title: 118 inner cells, the title is 7: 111 -> 55 and 56
+	if want := "<borderMuted>╭" + strings.Repeat("─", 55) + "</><dim> Reply </><borderMuted>" + strings.Repeat("─", 56) + "╮</>"; lines[0] != want {
+		t.Errorf("top border\n got %q\nwant %q", lines[0], want)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	powerline "github.com/MichaelKinsy/pigpen/powerline-footer"
 )
@@ -27,6 +28,7 @@ type cdRig struct {
 	switchResult map[string]any // the host's answer to switchSession
 	switchError  string
 	branch       []any
+	noUI         bool
 	selectAnswer map[string]any
 	customAnswer map[string]any
 
@@ -60,7 +62,8 @@ func (r *cdRig) startWithAgentDir(t *testing.T, home string) *Host {
 		r.mode = "tui"
 	}
 	var h *Host
-	h = StartHost(t, powerline.Extension(), HostOptions{Mode: r.mode, Cwd: r.cwd, OnCallValue: func(method string, args map[string]any) (any, string) {
+	hasUI := !r.noUI
+	h = StartHost(t, powerline.Extension(), HostOptions{Mode: r.mode, Cwd: r.cwd, HasUI: &hasUI, OnCallValue: func(method string, args map[string]any) (any, string) {
 		switch method {
 		case "getSessionFile":
 			if r.sessionFile == "" {
@@ -533,4 +536,53 @@ func TestLastPromptIsInstalledAgainWhenTheCoreReinstallsItsWidgets(t *testing.T)
 	if last := calls[len(calls)-1]; last.Args["content"] == nil {
 		t.Errorf("the last-prompt line is gone after the core reinstalled its widgets: %+v", last.Args)
 	}
+}
+
+func TestReplyAndCdWithoutAUIDoNothingVisible(t *testing.T) {
+	r := &cdRig{mode: "print", sessionFile: "<new>", branch: branchOf(msg("aaa111", "user", "q"))}
+	h := r.start(t)
+	if failure := h.Command("reply", ""); failure != "" {
+		t.Errorf("/reply failed without a UI: %s", failure)
+	}
+	if got := len(h.CallsTo("ui.setEditorText")); got != 0 {
+		t.Errorf("setEditorText called %d times without a UI", got)
+	}
+	if h.Command("cd", "child") != "" || len(r.switched) != 1 {
+		t.Errorf("/cd without a UI still switches the session (switched %d)", len(r.switched))
+	}
+	if len(lastPromptCalls(h)) != 0 {
+		t.Error("the last-prompt widget was touched without a UI")
+	}
+}
+
+func TestLastPromptNeedsAUI(t *testing.T) {
+	r := &cdRig{sessionFile: "<new>", noUI: true} // the mode is tui but there is no UI
+	h := r.start(t)
+	beforeAgentStart(h, "hello")
+	for _, call := range lastPromptCalls(h) {
+		if call.Args["content"] != nil {
+			t.Errorf("a widget was shown without a UI: %+v", call.Args)
+		}
+	}
+}
+
+func TestLastPromptIsLaidOutAgainWhenTheTerminalResizes(t *testing.T) {
+	r := &cdRig{sessionFile: "<new>"}
+	h := r.start(t)
+	beforeAgentStart(h, strings.Repeat("word ", 30))
+	calls := lastPromptCalls(h)
+	first, _ := calls[len(calls)-1].Args["content"].([]any)
+	if len(first) != 1 || powerline.VisibleWidth(first[0].(string)) != 80 {
+		t.Fatalf("first layout %q", first)
+	}
+	h.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "width_change", "args": map[string]any{"width": 40}}})
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		calls = lastPromptCalls(h)
+		if content, _ := calls[len(calls)-1].Args["content"].([]any); len(content) == 1 && powerline.VisibleWidth(content[0].(string)) == 40 {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Errorf("the line was not laid out again at 40 cells: %v", calls[len(calls)-1].Args)
 }

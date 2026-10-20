@@ -630,12 +630,6 @@
   "replace": "id := selected"
  },
  {
-  "name": "reply-select-dismissed",
-  "file": "quote_reply.go",
-  "find": "if !ok || selected == \"\" {",
-  "replace": "if false {"
- },
- {
   "name": "reply-collapse-whitespace",
   "file": "quote_reply.go",
   "find": "compact := collapseSpaces(text)",
@@ -1014,12 +1008,6 @@
   "replace": "truncateToWidth(compact, available, \"\")"
  },
  {
-  "name": "lastprompt-final-cut",
-  "file": "last_prompt.go",
-  "find": "lines = []string{truncateToWidth(prefix+color+truncateToWidth(compact, available, \"…\")+ansiReset, width, \"…\")}",
-  "replace": "lines = []string{prefix + color + truncateToWidth(compact, available, \"…\") + ansiReset}"
- },
- {
   "name": "lastprompt-reset",
   "file": "last_prompt.go",
   "find": "+ansiReset, width, \"…\")}",
@@ -1155,7 +1143,7 @@
   "name": "wire-session-file",
   "file": "cdquote_ext.go",
   "find": "if err != nil || file == nil {\n\t\treturn \"\", err\n\t}\n\treturn *file, nil",
-  "replace": "return \"\", err"
+  "replace": "if err != nil || false {\n\t\treturn \"\", err\n\t}\n\treturn *file, nil"
  },
  {
   "name": "wire-with-session",
@@ -1167,19 +1155,19 @@
   "name": "wire-cancelled",
   "file": "cdquote_ext.go",
   "find": "return result.Cancelled, err",
-  "replace": "return false, err"
+  "replace": "return result.Cancelled && false, err"
  },
  {
   "name": "wire-picker-theme",
   "file": "cdquote_ext.go",
   "find": "newQuotePicker(candidates, c.ctx.UITheme(), time.Now, nil, nil)",
-  "replace": "newQuotePicker(candidates, pickerPlainTheme{}, time.Now, nil, nil)"
+  "replace": "newQuotePicker(candidates, sdk.UITheme{}, time.Now, nil, nil)"
  },
  {
   "name": "wire-picker-result",
   "file": "cdquote_ext.go",
   "find": "id, _ := value.(string)\n\treturn id, nil",
-  "replace": "return \"\", nil"
+  "replace": "_ = value\n\treturn \"\", nil"
  },
  {
   "name": "wire-reply-args",

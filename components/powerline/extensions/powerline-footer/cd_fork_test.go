@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -14,6 +15,9 @@ import (
 // recorded on the pinned Pi build 1402973a: `SessionManager.forkFrom(source, "/target/dir", dir)`; source-after.jsonl is the
 // source as Pi left it: its last line got the newline it lacked).
 func TestForkSessionFromMatchesPi(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the recorded file names a posix target directory")
+	}
 	root := t.TempDir()
 	source := filepath.Join(root, "source.jsonl")
 	data, err := os.ReadFile("testdata/cdfork/source.jsonl")

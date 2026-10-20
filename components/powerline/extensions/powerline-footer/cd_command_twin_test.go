@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -143,12 +144,14 @@ func TestCdCommandTwins(t *testing.T) {
 			}
 		}
 
-		var values []string
-		for _, item := range getCdArgumentCompletions("~/p", root, home) {
-			values = append(values, item.Value)
-		}
-		if len(values) != 1 || values[0] != "~/project/" {
-			t.Errorf("~/p = %q, want [~/project/]", values)
+		if runtime.GOOS != "win32" && runtime.GOOS != "windows" { // upstream: process.platform !== "win32"
+			var values []string
+			for _, item := range getCdArgumentCompletions("~/p", root, home) {
+				values = append(values, item.Value)
+			}
+			if len(values) != 1 || values[0] != "~/project/" {
+				t.Errorf("~/p = %q, want [~/project/]", values)
+			}
 		}
 	})
 
@@ -310,6 +313,9 @@ func TestCompletionEdgeCases(t *testing.T) {
 	if got := values("."); len(got) < 1 || got[0] != "../" {
 		t.Errorf("a typed . still offers ../: %q", got)
 	}
+	if got := values("  ."); len(got) < 1 || got[0] != "../" {
+		t.Errorf("blanks before a typed . still offer ../: %q", got)
+	}
 	if got := values("~"); len(got) < 1 || got[0] != "~/" {
 		t.Errorf("a typed ~ still offers ~/: %q", got)
 	}
@@ -335,6 +341,12 @@ func TestCompletionEdgeCases(t *testing.T) {
 	// The original's quirk: "/" has an empty base directory, which resolves to the cwd.
 	if got := values("/"); len(got) < 1 || got[len(got)-1] != "/child/" && !containsString(got, "/child/") {
 		t.Errorf("/ lists the cwd: %q", got)
+	}
+	if runtime.GOOS != "windows" {
+		// "/tmp" has its base directory "/" (the real root), not the cwd.
+		if got := values("/tm"); !containsString(got, "/tmp/") {
+			t.Errorf("/tm lists the root: %q", got)
+		}
 	}
 	if got := getCdArgumentCompletions("nope/", root, home); len(got) != 0 {
 		t.Errorf("an unreadable directory offers nothing: %+v", got)
