@@ -146,8 +146,8 @@ saver, conscience, subagent supervision, …) and every deliberate deviation are
 |---|---|
 | `port/oracle/` | the unmodified original at the pinned commit, and its license |
 | `extensions/warden/testdata/diff_corpus.json` | 2,552 commands; the original's and the port's offline decisions are compared on every one |
-| `extensions/warden/*_test.go` | 90 twins of the original's own test cases, the fake TypeSafe server, the fake model registry and fake-host tests against PiG's event protocol |
-| `port/scenarios/`, `port/golden/` | 19 live scenarios, traces recorded from the original under Pi; the port (as a Go directory and as the built Binary) produces the same trace, event for event |
+| `extensions/warden/*_test.go` | 163 twins of the original's own test cases, the fake TypeSafe server, the fake model registry and fake-host tests against PiG's event protocol |
+| `port/scenarios/`, `port/golden/` | 23 live scenarios, traces recorded from the original under Pi; the port (as a Go directory and as the built Binary) produces the same trace, event for event |
 | `port/mutations.json`, `port/mutate.py` | deliberate defects that the scenarios or the layer-1 tests must catch |
 | `port/PORT.md` | file map, scope, deviations, equivalence results, **named gaps** |
 

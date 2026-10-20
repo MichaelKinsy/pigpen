@@ -94,5 +94,29 @@
   "file": "stuck.go",
   "find": "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {",
   "replace": "if prev.Failed != l.Failed {"
+ },
+ {
+  "name": "cfg-project-removes-tools",
+  "file": "config_load.go",
+  "find": "tools = append([]string{}, base.Tools...)",
+  "replace": "tools = listed; _ = base.Tools"
+ },
+ {
+  "name": "cfg-project-weaker-switch-taken",
+  "file": "config_load.go",
+  "find": "if base && v == false {",
+  "replace": "if false && v == false {"
+ },
+ {
+  "name": "cfg-file-not-reloaded",
+  "file": "config_runtime.go",
+  "find": "if w.cfgPath != \"\" && w.configSig() != w.cfgSig {",
+  "replace": "if false && w.configSig() != w.cfgSig {"
+ },
+ {
+  "name": "cfg-stuck-nudge-ignored",
+  "file": "config_load.go",
+  "find": "\t\tNudge:          boolean(raw[\"nudge\"], base.Nudge),",
+  "replace": "\t\tNudge:          base.Nudge,"
  }
 ]

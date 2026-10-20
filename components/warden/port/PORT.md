@@ -6,7 +6,7 @@
 | Judge seam | `DevMortimer/pi-typesafe` commit `ed439f834665ad6fc652787f5ba7c23852566d49` (`ask`, questions, `errors.ts`), MIT |
 | Oracle | Pi 0.87.1 hosting the original; Node 24.19.0 |
 | Target | PiG 0.3.0+0.87.1, SDK of a 0.3.0 pre-release build (`63c6ba456`) (host getters return `(value, error)`), go1.27.1; shared client `components/typesafe` |
-| Original's tests | 1,264 cases in `port/oracle/tests`; 90 have a Go twin, 1,174 are named skipped subtests with a reason (see below) |
+| Original's tests | 1,264 cases in `port/oracle/tests`; 163 have a Go twin, 1,101 are named skipped subtests with a reason (see below) |
 
 ## File-to-file mapping
 
@@ -158,6 +158,15 @@ Mutations (`port/mutations.json`, 16 defects; `pigeq mutate`): 12 killed by scen
 (`port/mutate.py`, `port/mutation-results.txt`); pigeq's `--unit` cannot run them because its temporary `go.work` does
 not include the shared `components/typesafe` library module (finding below).
 
+Configuration slice (lane configui): four more scenarios, `config-project-turns-repeat-steer-off`,
+`config-project-cannot-weaken-action-guard`, `config-hostile-project-file` and `config-set-command-changes-behavior`. Goldens recorded from
+the original under Pi 1.3.0+1402973a; host check pig-ts == pi-ts and `pigeq run`/`check` pig-go == pi-ts on all four (17, 17, 38 and 40
+events). The workspace is trusted in RPC mode on both hosts (the project file changes behavior in both lanes). They write the project file
+for both hosts (`.pi/` and `.pig/`); the user-file behavior is proved by the `config set` scenario, which writes each lane's own user file.
+Four mutations (`cfg-project-removes-tools`, `cfg-project-weaker-switch-taken`, `cfg-file-not-reloaded`, `cfg-stuck-nudge-ignored`) are
+killed by these scenarios under `pigeq mutate`. What scenarios cannot show: `/warden config get`, the status line and the panels (UI requests, gap G2),
+the shortcut (not visible to pigeq; `TestTheTraceShortcutIsRegisteredFromTheUserFile` proves it at layer 1).
+
 ## Named gaps
 
 | # | Gap | Why | Closes when |
@@ -187,6 +196,11 @@ not include the shared `components/typesafe` library module (finding below).
    shared library module (`components/typesafe`) cannot run its unit layer under it.
 6. pigeq's host check with a Binary as the host (`--builtin`) loads the port into the original's lane too; use a plain `pig` for
    the host check and `check --builtin` only for the Binary.
+
+7. Steer-bearing scenarios are timing-sensitive on a loaded host: on imladris (load above 150) `two-calls-one-held` failed three of four
+   `pigeq check` runs on the same difference (an `llm` request recorded before the `turn_end` event) and passed the other; a scenario of the same shape
+   (stuck.repeatSteer false alone, 40 events) alternated the same way and was left out for that reason. Not re-run on a quiet host, not normalized;
+   reported to the steering owner.
 
 ## Re-verified on PiG 0.4.1 (porter-verify)
 
