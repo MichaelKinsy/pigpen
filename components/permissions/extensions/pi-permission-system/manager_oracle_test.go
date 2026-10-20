@@ -35,9 +35,10 @@ type managerWorld struct {
 type managerOracle struct {
 	Home   string `json:"home"`
 	Worlds []struct {
-		ID      string                    `json:"id"`
-		Results []map[string]any          `json:"results"`
-		Display map[string]map[string]any `json:"display"`
+		ID       string                      `json:"id"`
+		Results  []map[string]any            `json:"results"`
+		Resolved []map[string]map[string]any `json:"resolved"`
+		Display  map[string]map[string]any   `json:"display"`
 	} `json:"worlds"`
 }
 
@@ -187,7 +188,35 @@ func TestManagerOracleDifferential(t *testing.T) {
 			session = append(session, Rule{Surface: r.Surface, Pattern: r.Pattern, Action: r.Action, Layer: r.Layer, Origin: r.Origin})
 		}
 
+		resolver := NewPermissionResolver(m, &SessionRules{rules: session})
 		for j, raw := range w.Intents {
+			// the resolver: the family fold, the access-path unwrap and the pre-resolved wire (ResolvePrefixed)
+			intent := w.intent(t, raw)
+			if len(want.Resolved) != len(w.Intents) {
+				t.Fatalf("%s: %d resolver records for %d intents", w.ID, len(want.Resolved), len(w.Intents))
+			}
+			compareResolved := func(how string, got PermissionCheckResult, rec map[string]any) {
+				checks++
+				wantResult, ok := rec["result"]
+				if !ok {
+					t.Errorf("%s intent %d %s (%s): the original threw (%v), the port answered %v", w.ID, j, raw, how, rec["throws"], got)
+					differences++
+					return
+				}
+				if !reflect.DeepEqual(normalizeJSON(checkResultJSON(got)), wantResult) {
+					differences++
+					t.Errorf("%s intent %d %s (%s, session %v):\n  port     %v\n  original %v", w.ID, j, raw, how, session, checkResultJSON(got), wantResult)
+				}
+			}
+			switch it := intent.(type) {
+			case PathValuesAccessIntent:
+				compareResolved("ResolvePrefixed", resolver.ResolvePrefixed(it), want.Resolved[j]["direct"])
+				compareResolved("access-path", resolver.Resolve(AccessPathAccessIntent{Surface: it.Surface, Path: &AccessPath{matchAliases: it.Values}, AgentName: it.AgentName}), want.Resolved[j]["viaAccessPath"])
+			case ToolAccessIntent:
+				compareResolved("Resolve", resolver.Resolve(it), want.Resolved[j]["direct"])
+			case BashCommandAccessIntent:
+				compareResolved("Resolve", resolver.Resolve(it), want.Resolved[j]["direct"])
+			}
 			checks++
 			got := checkResultJSON(m.Check(w.intent(t, raw), session))
 			wantResult, ok := want.Results[j]["result"]
