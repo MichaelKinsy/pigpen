@@ -32,7 +32,7 @@ var (
 
 	reAngleOnly       = lazyRE(`^<[^<>]*>$`)
 	reTrimEnds        = lazyRE("^[`\"'(\\[{<]+|[`\"')\\]}>.,;]+$")
-	reTrimEndsSynth   = lazyRE("^[`\"'(\\[{<]+|[`\"')\\]\\}>.,;\\]+$")
+	reTrimEndsSynth   = lazyRE("^[`\"'(\\[{<]+|[`\"')]\\}>.,;\\]+$")
 	reNotValueShape   = lazyRE(`(?i)^[$%<\[{*]|^(?:process|os|env|settings|config|secrets?|vault|keychain|import\.meta)\.|^\$?\{|^\*+$|^x+$|^(?:your|my|the|a|an)[-_ ]`)
 	rePlainNumber     = lazyRE(`^\d+(?:[,_]\d+)*$`)
 	reCallExpression  = lazyRE(`^(?:[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+|[a-z]+(?:[A-Z][\w$]*)+|[A-Z][a-z]+(?:[A-Z][\w$]*)*)\s*[(\[]`)
