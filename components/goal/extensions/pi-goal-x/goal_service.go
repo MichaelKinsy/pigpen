@@ -138,6 +138,8 @@ type goalService struct {
 	flushError string
 	turnBase   *jsObject
 	turn       goalTurn
+	// applyOverride replaces apply (tests simulate a rejected mutation: lock contention, a revision conflict).
+	applyOverride func(spec goalMutationSpec) (goalMutationOutcome, error)
 }
 
 func newGoalService(ref goalServiceRef) *goalService { return &goalService{ref: ref} }
@@ -387,6 +389,9 @@ func goalStaleTokenMessage(token goalFocusToken) string {
 
 // apply is the single ordered mutation pipeline for a focused goal.
 func (s *goalService) apply(ctx goalServiceContext, spec goalMutationSpec) (goalMutationOutcome, error) {
+	if s.applyOverride != nil {
+		return s.applyOverride(spec)
+	}
 	if (spec.reconcile == nil || *spec.reconcile) && !s.reconcileFocused(ctx, false) {
 		return goalMutationFail("The focused goal was lost during reconciliation; the mutation was not applied."), nil
 	}
