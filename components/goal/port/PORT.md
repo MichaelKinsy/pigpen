@@ -40,6 +40,31 @@ a scenario-level normalize rule (`HOSTDOCS`); the difference is PiG's documented
 - Outages: a scenario server answers 503, 429 or 401 on the provider's route (`net-503-ladder`, `net-429-ladder`, `net-503-recovers`, `net-429-allowance`, `net-401-not-recovered`); the model is not scripted and the request bodies enter the trace. `message_end` is not captured because the recovery checkpoint's `details.timestamp` is a JSON number (`Date.now()`) that the normalizer's string rules do not reach; the checkpoint stays visible as the marker message in the next request body and as the run it starts.
 - Finding about the original under Pi 1402973a (the port equals it): a recovery checkpoint reaches `before_agent_start` as a custom trigger with no `prompt`, so the original's `extractGoalIdFromInjectedMessage(event.prompt)` finds nothing, treats the run as user driven and resets the recovery counter. A live outage therefore announces `5s (recovery 1)` every time; the ladder never escalates and `networkRecovery.maxAttempts` never exhausts. The original's own e2e asserts escalation and cannot hold against this Pi. The Go twins assert the escalation on the event shape the e2e expects (the marker as the prompt); the scenarios pin the live behavior.
 - Host checks: with the base prompt the original under PiG's Node runtime equals Pi on the outage scenarios apart from the factory-widget rows (G3). On the audit scenarios it differs because the nested `createAgentSession` of PiG's Node runtime fails (`Auditor error: this._modelRuntime.hasConfiguredAuth is not a function`): a PiG core finding for the Tern lead, not an extension difference.
+||||||| 27122fb7
+
+**pigeq, tasks and scheduler (GoalScenTasksSched):** `tools-tasks`, `tools-tasks-edge`, `tools-tasks-disabled` and nine `scheduler-*` scenarios
+(`gen-scenarios.py`, block `GoalScenTasksSched`; goldens recorded under Pi 1402973a). The earlier note that `set_goal_tasks` never asked its select
+dialog under Pi was a scenario error: `create_goal` ends the model's turn (`terminate: true`), so the scripted `set_goal_tasks` call answered the next prompt
+and never ran. Under Pi's RPC mode `ctx.hasUI` is true and `ctx.mode` is `"rpc"` (`rpc-mode.ts:319-321`, `runner.ts:572-574`, `:628-630`), so
+`showTaskConfirmation` skips `ui.custom` and asks `ui.select("Task list confirmation\n\n<proposal>", ["Confirm task list", "Keep current tasks"])`; PiG binds the
+same (`coding/cli/rpc_mode_runtime.go:196`, `coding/extension/host/inproc/runner.go:736-741`), the original under PiG asks the identical select, and the Go port
+(`goal_task_confirmation.go`) asks it too: no difference. Nine of the twelve scenarios pass `pigeq check` (3 runs in a row). Findings, all PiG against Pi, none normalized
+except where stated:
+
+- **PiG core bug, first run.** A run that an extension starts with `pi.sendMessage(msg, {triggerTurn: true, deliverAs: "followUp"})` as the *first run of a session* sends the
+  model no system prompt under PiG (Pi sends it). Reproduced without the goal extension (a one-tool probe; `before_agent_start` and `turn_start` still see a 2715-character
+  `ctx.getSystemPrompt()`): the request's system text is empty for that run and correct for every later user-started run. Scenario `scheduler-direct-first-run` (the kickoff run of
+  `/goal-direct` is the first run) therefore differs from the Pi golden in the llm channel's `system` field (`inserted ""`, `removed <host prompt>` against the tool snippets).
+- **PiG core bug, stale snippets.** A run started by `sendMessage(triggerTurn)` after a previous run's tool changed the active tools (`pi.setActiveTools` in `execute`, what `create_goal` does) sends the
+  tool list correctly but the system prompt of the previous run: the new tool's snippet is missing (probe: `late_tool` absent from the system text, present in `tools`). A user-started run is
+  correct. Scenario `scheduler-budget` (create_goal, then the scheduler's continuation run) differs the same way (`update_goal` and `set_goal_tasks` snippets missing) and in the same request's `Context snapshot` figure (733 against 1200; not explained, not masked).
+  The other scheduler scenarios keep the goal focused before the first run and start with a user prompt, so no run changes the tool set and they pass.
+- **D22 consequence, masked (`CTXEST`).** The extension prints the host's context estimate (`Context snapshot: N/100000 tokens`). Before the model has reported a usage it includes the host's system prompt, whose wording differs between
+  the hosts (D22; 2666 against 2715 characters in the probe, `pi` against `pig` in the first line and the documentation block), so the figure differs by 12 tokens (2527 against 2539). Only estimates of four or more digits are masked; the figures after a model reply (the
+  scripted usage) are compared exactly.
+- Epoch milliseconds (the checkpoint message's `details.timestamp`, the scheduler's `claimedAt` and `nextCheckAt` in goal tool results) are different in every run and no normalize rule can reach a number, so the scheduler scenarios capture
+  neither `message_end` nor `tool_execution_end`; the model request, the notifications and `tool_execution_start` still show every continuation prompt, scheduler message and tool call.
+- Existing scenarios `tools-create-get`, `tools-blocked` and `tools-pause-and-bad-args` script turns after `create_goal` that are never requested (the turn ends); they only exercise `create_goal`.
 
 ## Mapping
 
