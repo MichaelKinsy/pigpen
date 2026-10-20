@@ -140,7 +140,7 @@ func (j *EvaluatorJudge) Evaluate(ctx context.Context, r Request) (Evaluation, e
 	if err != nil {
 		return Evaluation{}, j.safeError(err)
 	}
-	out := Evaluation{Model: res.Model, ElapsedMs: int(time.Since(start).Milliseconds()), Answers: map[string]Answer{}}
+	out := Evaluation{Model: res.Model, ElapsedMs: int(time.Since(start).Milliseconds()), InputTokens: res.Usage.InputTokens, Answers: map[string]Answer{}}
 	for name, a := range res.Answers {
 		switch v := a.(type) {
 		case typesafe.NoulAnswer:

@@ -50,6 +50,8 @@ type Evaluation struct {
 	Answers   map[string]Answer
 	Model     string
 	ElapsedMs int
+	// InputTokens is the usage the judge reported for the request (pi-typesafe `usage.input_tokens`); 0 when unknown.
+	InputTokens int
 }
 
 // Judge answers typed questions. Implementations return *IntegrationError for failures
@@ -75,6 +77,8 @@ type AskAnswer struct {
 	ElapsedMs int
 	Error     string
 	ErrorCode string
+	// InputTokens is Evaluation.InputTokens.
+	InputTokens int
 }
 
 const fallbackMessage = "TypeSafe request failed."
@@ -101,7 +105,7 @@ func Ask(ctx context.Context, judge Judge, request Request, timeout time.Duratio
 		}
 		return AskAnswer{Error: fallbackMessage}
 	}
-	return AskAnswer{OK: true, Answers: result.Answers, Model: result.Model, ElapsedMs: result.ElapsedMs}
+	return AskAnswer{OK: true, Answers: result.Answers, Model: result.Model, ElapsedMs: result.ElapsedMs, InputTokens: result.InputTokens}
 }
 
 // Noul builds a yes/no question. The optional criteria say what counts as yes and as no.
