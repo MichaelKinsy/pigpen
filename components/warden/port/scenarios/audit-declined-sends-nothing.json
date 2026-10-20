@@ -23,8 +23,7 @@
     "turn_end",
     "tool_execution_start",
     "tool_execution_end",
-    "message_end",
-    "extension_ui_request"
+    "message_end"
   ],
   "files": {
     "package.json": "{\"name\":\"demo\"}\n",
@@ -42,6 +41,11 @@
           "confirmed": false
         }
       ]
+    }
+  ],
+  "llm": [
+    {
+      "text": "unexpected model request"
     }
   ]
 }

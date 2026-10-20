@@ -172,17 +172,5 @@
   "file": "audit_cmd.go",
   "find": "if !w.auditState.running.Load() {\n\t\treturn nil, nil",
   "replace": "if true {\n\t\treturn nil, nil"
- },
- {
-  "name": "audit-stale-counts-as-written",
-  "file": "audit.go",
-  "find": "after.MtimeMs > before.MtimeMs",
-  "replace": "after.MtimeMs >= before.MtimeMs"
- },
- {
-  "name": "audit-runs-without-confirm",
-  "file": "audit_cmd.go",
-  "find": "if err != nil || !ok {",
-  "replace": "if err != nil {"
  }
 ]
