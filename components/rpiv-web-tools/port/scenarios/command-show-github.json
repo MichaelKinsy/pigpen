@@ -1,0 +1,36 @@
+{
+  "name": "command-show-github",
+  "description": "/web-tools --show with the interceptor on: the token masked, the size limit and the clone path.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "show",
+      "rpc": {
+        "type": "prompt",
+        "message": "/web-tools --show"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/rpiv-web-tools\" && printf '{\"interceptors\":{\"github\":{\"clonePath\":\"%s/clones\"}}}' \"$HOME\" > \"$HOME/.config/rpiv-web-tools/config.json\""
+    ]
+  ],
+  "env": {
+    "GITHUB_TOKEN": "ghp_abcdefgh1234"
+  },
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

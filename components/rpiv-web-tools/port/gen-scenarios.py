@@ -103,3 +103,51 @@ scenario("guidance-override", "A guidance override in the config replaces the to
          steps=[prompt("hello")],
          setup=config_setup({"guidance": {"web_search": {"promptSnippet": "Custom search snippet", "promptGuidelines": ["Rule S1", "Rule S2"]},
                                            "web_fetch": {"promptSnippet": 123, "promptGuidelines": "not an array"}}}))
+
+
+# The GitHub URL interceptor (opt-in). The original starts gh and git; both sides run them through the harness's
+# command shims, so the command lines are compared too. The fetch needs a key first (instantiateProvider runs
+# before the interceptor chain), hence BRAVE_SEARCH_API_KEY.
+GH_ENV = {"BRAVE_SEARCH_API_KEY": "scenario-key"}
+
+
+def github_config_setup(extra=None):
+    """A setup step writing a config that enables the interceptor with its clone directory under the lane HOME."""
+    return [["sh", "-c", "mkdir -p \"$HOME/.config/rpiv-web-tools\" && printf '{\"interceptors\":{\"github\":{\"clonePath\":\"%s/clones\"}}}' \"$HOME\" > \"$HOME/.config/rpiv-web-tools/config.json\""]]
+
+
+# gh answers every command with the same text: "20000000" is the size in KB read by parseInt (over the 350 MB
+# threshold), the rest is base64 for the contents calls, and the whole text is the default branch and the tree.
+scenario("github-api-view", "With the interceptor on and gh answering a 20 GB size, a repository root, a blob and a commit URL get the API view.",
+         [[call("web_fetch", url="https://github.com/o/r")],
+          [call("web_fetch", url="https://github.com/o/r/blob/main/README.md")],
+          [call("web_fetch", url="https://github.com/o/r/blob/0123456789abcdef0123456789abcdef01234567/src/a.go")]],
+         setup=github_config_setup(), env=GH_ENV,
+         commands={"gh": {"mode": "canned", "stdout": "20000000UkVBRE1FIGhlbGxvCg==", "exit": 0}, "git": {"mode": "missing"}})
+
+# gh answers 100 (KB) to everything and its clone makes no directory: the clone views of an empty clone, with
+# --branch for a ref and the cache for a repeat.
+scenario("github-clone-gh", "With gh available and a small repository the clone command line is gh repo clone; an empty clone renders an empty tree, a ref adds --branch, and a repeat uses the cache.",
+         [[call("web_fetch", url="https://github.com/o/r")],
+          [call("web_fetch", url="https://github.com/o/r/tree/dev/src")],
+          [call("web_fetch", url="https://github.com/o/r/blob/dev/src/main.go")],
+          [call("web_fetch", url="https://github.com/o/r/tree/dev/src")],
+          [call("web_fetch", url="https://github.com/o/r")]],
+         setup=github_config_setup(), env=GH_ENV,
+         commands={"gh": {"mode": "canned", "stdout": "100", "exit": 0}, "git": {"mode": "missing"}})
+
+# git answers 0 and clones nothing. A real git with a local repository behind url.<base>.insteadOf is not possible
+# here: the harness fixes GIT_CONFIG_GLOBAL, GIT_CONFIG_NOSYSTEM and GIT_CONFIG_COUNT, and git clone reads no
+# repository-local config. The rendering of a populated clone is proven by the twins and the layer-1 tests instead.
+scenario("github-clone-git", "Without gh, git clones a repository: the command line with and without a ref, the empty views of a clone that holds nothing, and the cache on a repeat.",
+         [[call("web_fetch", url="https://github.com/o/r")],
+          [call("web_fetch", url="https://github.com/o/r/tree/main/docs")],
+          [call("web_fetch", url="https://github.com/o/r/blob/main/src/main.go")],
+          [call("web_fetch", url="https://github.com/o/r/blob/main/data.bin")],
+          [call("web_fetch", url="https://github.com/o/r/tree/feature%2Fx")],
+          [call("web_fetch", url="https://github.com/o/r/tree/main/docs")]],
+         setup=github_config_setup(), env=GH_ENV,
+         commands={"gh": {"mode": "missing"}, "git": {"mode": "canned", "exit": 0}})
+
+scenario("command-show-github", "/web-tools --show with the interceptor on: the token masked, the size limit and the clone path.", [],
+         steps=[prompt("/web-tools --show", name="show")], setup=github_config_setup(), env={"GITHUB_TOKEN": "ghp_abcdefgh1234"})
