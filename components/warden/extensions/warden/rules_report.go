@@ -27,7 +27,6 @@ const (
 	firesRateMax  = 0.5
 	undecidedLow  = 0.3
 	undecidedHigh = 0.5
-	dayMs         = 24 * 60 * 60 * 1000
 )
 
 // RuleReportRow is one rule's row of the report.
@@ -207,12 +206,12 @@ func shortName(name string, limit int) string {
 
 // formatRulesReport is one rule per short line; the flags and the no-record list are named after the rows.
 func formatRulesReport(report RulesReport) string {
-	window := "last " + strconv.Itoa(report.Days) + " " + plural(report.Days, "day", "days")
+	window := "last " + strconv.Itoa(report.Days) + " " + pluralOf(report.Days, "day", "days")
 	var lines []string
 	if len(report.Rows) == 0 {
 		lines = append(lines, "Rules report: no judgments in the "+window+".")
 	} else {
-		lines = append(lines, "Rules report: "+strconv.Itoa(report.Records)+" "+plural(report.Records, "judgment", "judgments")+", "+strconv.Itoa(len(report.Rows))+" "+plural(len(report.Rows), "rule", "rules")+", "+window+".")
+		lines = append(lines, "Rules report: "+strconv.Itoa(report.Records)+" "+pluralOf(report.Records, "judgment", "judgments")+", "+strconv.Itoa(len(report.Rows))+" "+pluralOf(len(report.Rows), "rule", "rules")+", "+window+".")
 		lines = append(lines, "Worst first:")
 		for i, row := range report.Rows {
 			firedRate := strconv.Itoa(jsRound(row.FiredRate*100)) + "%"

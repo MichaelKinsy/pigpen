@@ -571,7 +571,7 @@ func (w *warden) rulesStatusLine(ctx sdk.Context, cfg Config) string {
 	}
 	text := w.rules.guard.Describe(ctx.Cwd(), cfg.Rules)
 	if n := len(cfg.Rules.SensitivePaths); n > 0 {
-		text += "; " + strconv.Itoa(n) + " sensitive " + plural(n, "path", "paths")
+		text += "; " + strconv.Itoa(n) + " sensitive " + pluralOf(n, "path", "paths")
 	}
 	return "Rules: " + text + "."
 }

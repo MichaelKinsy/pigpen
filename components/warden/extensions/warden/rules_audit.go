@@ -297,13 +297,13 @@ func runRulesAudit(options RulesAuditOptions) RulesAuditResult {
 		if options.Confirm == nil {
 			return RulesAuditResult{Status: "needs-yes", Files: len(plan.Files), LeftOut: plan.LeftOut}
 		}
-		title := "Send " + strconv.Itoa(len(plan.Files)) + " " + plural(len(plan.Files), "file", "files") + " to " + options.Destination + " for a rules audit?"
+		title := "Send " + strconv.Itoa(len(plan.Files)) + " " + pluralOf(len(plan.Files), "file", "files") + " to " + options.Destination + " for a rules audit?"
 		body := []string{
 			"Each file is judged against the project rules as if it had just been written.",
 			"What leaves the machine: a redacted sample of each file (up to 6000 characters per file) and the rule text, sent to " + options.Destination + ".",
 		}
 		if plan.LeftOut > 0 {
-			body = append(body, strconv.Itoa(plan.LeftOut)+" "+plural(plan.LeftOut, "file", "files")+" left out at the --max "+strconv.Itoa(options.Max)+" cap.")
+			body = append(body, strconv.Itoa(plan.LeftOut)+" "+pluralOf(plan.LeftOut, "file", "files")+" left out at the --max "+strconv.Itoa(options.Max)+" cap.")
 		}
 		body = append(body, "Nothing is written to the rules log.")
 		if !options.Confirm(title, strings.Join(body, "\n")) {
@@ -486,7 +486,7 @@ func formatRulesAuditFiles(results []RulesAuditFileResult) string {
 
 // formatRulesAudit is the terminal output: summary, the table by rule, the file list, and where the Markdown copy went.
 func formatRulesAudit(outcome RulesAuditOutcome) string {
-	lines := []string{"Rules audit: " + strconv.Itoa(outcome.Judged) + " " + plural(outcome.Judged, "file", "files") + " judged as new writes against " + strings.Join(outcome.Sources, ", ") + " (" + strconv.Itoa(outcome.Rules) + " " + plural(outcome.Rules, "rule", "rules") + " in play); " + strconv.Itoa(outcome.LeftOut) + " left out at the --max " + strconv.Itoa(outcome.Max) + " cap; " + strconv.Itoa(outcome.Flagged) + " of " + strconv.Itoa(outcome.Judged) + " flagged."}
+	lines := []string{"Rules audit: " + strconv.Itoa(outcome.Judged) + " " + pluralOf(outcome.Judged, "file", "files") + " judged as new writes against " + strings.Join(outcome.Sources, ", ") + " (" + strconv.Itoa(outcome.Rules) + " " + pluralOf(outcome.Rules, "rule", "rules") + " in play); " + strconv.Itoa(outcome.LeftOut) + " left out at the --max " + strconv.Itoa(outcome.Max) + " cap; " + strconv.Itoa(outcome.Flagged) + " of " + strconv.Itoa(outcome.Judged) + " flagged."}
 	if outcome.Aggregate {
 		lines = append(lines, "The rules document has no rule headings, so each file is judged against it as one document.")
 	}
@@ -498,7 +498,7 @@ func formatRulesAudit(outcome RulesAuditOutcome) string {
 		lines = append(lines, "not judged (unreadable or empty): "+strings.Join(outcome.Unreadable, "; ")+".")
 	}
 	if len(outcome.Errors) > 0 {
-		lines = append(lines, "judgment failed for "+strconv.Itoa(len(outcome.Errors))+" "+plural(len(outcome.Errors), "file", "files")+": "+strings.Join(outcome.Errors, "; ")+".")
+		lines = append(lines, "judgment failed for "+strconv.Itoa(len(outcome.Errors))+" "+pluralOf(len(outcome.Errors), "file", "files")+": "+strings.Join(outcome.Errors, "; ")+".")
 	}
 	lines = append(lines, "Markdown copy: "+outcome.ReportPath+". Nothing was recorded in the rules log.")
 	return strings.Join(lines, "\n")
@@ -516,7 +516,7 @@ func rulesAuditMarkdown(outcome RulesAuditOutcome, date time.Time) string {
 		"- Date: " + isoTime(date),
 		"- Paths: " + strings.Join(outcome.Paths, ", "),
 		"- Judged: " + strconv.Itoa(outcome.Judged) + " of " + strconv.Itoa(outcome.Selected) + " selected files as new writes (" + strconv.Itoa(outcome.LeftOut) + " left out at the --max " + strconv.Itoa(outcome.Max) + " cap)",
-		"- Rules in force: " + strings.Join(outcome.Sources, ", ") + " (" + strconv.Itoa(outcome.Rules) + " " + plural(outcome.Rules, "rule", "rules") + " in play" + one + ")",
+		"- Rules in force: " + strings.Join(outcome.Sources, ", ") + " (" + strconv.Itoa(outcome.Rules) + " " + pluralOf(outcome.Rules, "rule", "rules") + " in play" + one + ")",
 		"- Flagged: " + strconv.Itoa(outcome.Flagged) + " of " + strconv.Itoa(outcome.Judged) + " files",
 		"",
 		"## By rule",
@@ -543,7 +543,7 @@ func rulesAuditMarkdown(outcome RulesAuditOutcome, date time.Time) string {
 		lines = append(lines, "Not judged (unreadable or empty): "+strings.Join(outcome.Unreadable, "; ")+".", "")
 	}
 	if len(outcome.Errors) > 0 {
-		lines = append(lines, "Judgment failed for "+strconv.Itoa(len(outcome.Errors))+" "+plural(len(outcome.Errors), "file", "files")+": "+strings.Join(outcome.Errors, "; ")+".", "")
+		lines = append(lines, "Judgment failed for "+strconv.Itoa(len(outcome.Errors))+" "+pluralOf(len(outcome.Errors), "file", "files")+": "+strings.Join(outcome.Errors, "; ")+".", "")
 	}
 	lines = append(lines, "Nothing was recorded in the rules log.")
 	return strings.Join(lines, "\n") + "\n"
@@ -751,7 +751,7 @@ func formatBench(result BenchResult) string {
 		failed = " (" + strconv.Itoa(result.Errors) + " failed)"
 	}
 	lines := []string{
-		"Bench: " + strconv.Itoa(result.Runs) + " " + plural(result.Runs, "check", "checks") + " of one built-in sample file against the active rules (" + strconv.Itoa(result.Asked) + " " + plural(result.Asked, "rule", "rules") + " per check" + one + ").",
+		"Bench: " + strconv.Itoa(result.Runs) + " " + pluralOf(result.Runs, "check", "checks") + " of one built-in sample file against the active rules (" + strconv.Itoa(result.Asked) + " " + pluralOf(result.Asked, "rule", "rules") + " per check" + one + ").",
 		"The sample is built in and no project content is sent, so no confirmation was needed.",
 		"Latency: p50 " + strconv.Itoa(result.P50) + " ms, p95 " + strconv.Itoa(result.P95) + " ms; requests " + strconv.Itoa(result.Requests) + failed + ".",
 	}

@@ -620,12 +620,12 @@ func calibrate(history []*HistoryCommit, options CalibrateOptions) Calibration {
 // formatCalibration is one line per rule, worst first: how often it applied and fired, the mean score, and the flags;
 // then the unheard rules.
 func formatCalibration(result Calibration) string {
-	parts := []string{strconv.Itoa(result.Requests) + " " + plural(result.Requests, "request", "requests"), strconv.Itoa(result.Commits) + " " + plural(result.Commits, "commit", "commits")}
+	parts := []string{strconv.Itoa(result.Requests) + " " + pluralOf(result.Requests, "request", "requests"), strconv.Itoa(result.Commits) + " " + pluralOf(result.Commits, "commit", "commits")}
 	if result.Failed > 0 {
 		parts = append(parts, strconv.Itoa(result.Failed)+" without an answer")
 	}
 	if len(result.Skipped) > 0 {
-		parts = append(parts, strconv.Itoa(len(result.Skipped))+" "+plural(len(result.Skipped), "change", "changes")+" skipped")
+		parts = append(parts, strconv.Itoa(len(result.Skipped))+" "+pluralOf(len(result.Skipped), "change", "changes")+" skipped")
 	}
 	if result.Dropped > 0 {
 		parts = append(parts, strconv.Itoa(result.Dropped)+" past the cap, not sent")
@@ -662,7 +662,7 @@ func formatCalibration(result Calibration) string {
 		}
 		lines = append(lines, "Skipped: "+strings.Join(skips, ", ")+".")
 	}
-	lines = append(lines, strconv.Itoa(len(result.Records))+" "+plural(len(result.Records), "score", "scores")+` saved to the local rules log with source "calibrate"; /warden report counts them apart from live verdicts.`)
+	lines = append(lines, strconv.Itoa(len(result.Records))+" "+pluralOf(len(result.Records), "score", "scores")+` saved to the local rules log with source "calibrate"; /warden report counts them apart from live verdicts.`)
 	return strings.Join(lines, "\n")
 }
 
@@ -697,7 +697,7 @@ const (
 func calibrationNotice(plan CalibratePlan) string {
 	shown := min(noticeSamples, len(plan.Samples))
 	lines := []string{
-		strconv.Itoa(plan.Requests) + " " + plural(plan.Requests, "request", "requests") + " will go to the judgment backend, one per changed file in the sample. Each carries the project-relative path, the added and removed lines of the change with about " + strconv.Itoa(editContextLines*2) + " lines of the file after the commit around them, and the rule text. Everything is redacted first. The diffs, first " + strconv.Itoa(shown) + " of " + strconv.Itoa(plan.Requests) + ":",
+		strconv.Itoa(plan.Requests) + " " + pluralOf(plan.Requests, "request", "requests") + " will go to the judgment backend, one per changed file in the sample. Each carries the project-relative path, the added and removed lines of the change with about " + strconv.Itoa(editContextLines*2) + " lines of the file after the commit around them, and the rule text. Everything is redacted first. The diffs, first " + strconv.Itoa(shown) + " of " + strconv.Itoa(plan.Requests) + ":",
 		"",
 	}
 	for _, sample := range plan.Samples[:shown] {
@@ -720,7 +720,7 @@ func calibrationNotice(plan CalibratePlan) string {
 		if n == 1 {
 			stays, is = "stays", "is"
 		}
-		lines = append(lines, strconv.Itoa(n)+" further "+plural(n, "change", "changes")+" "+stays+" outside the --max cap and "+is+" not sent.")
+		lines = append(lines, strconv.Itoa(n)+" further "+pluralOf(n, "change", "changes")+" "+stays+" outside the --max cap and "+is+" not sent.")
 	}
 	return strings.Join(lines, "\n")
 }

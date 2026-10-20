@@ -352,9 +352,9 @@ func formatRulesCheck(result RulesCheckResult) string {
 	case "skipped":
 		return "Jev judgments are off, so the rules check sent nothing. /warden rules shows the rule set locally."
 	case "error":
-		return "Rules check failed after " + strconv.Itoa(result.Requests) + " " + plural(result.Requests, "request", "requests") + ": " + orNoAnswer(result.Error) + ". Nothing was changed; /warden rules shows the rule set locally."
+		return "Rules check failed after " + strconv.Itoa(result.Requests) + " " + pluralOf(result.Requests, "request", "requests") + ": " + orNoAnswer(result.Error) + ". Nothing was changed; /warden rules shows the rule set locally."
 	}
-	header := "Rules check: " + strings.Join(result.Sources, ", ") + " — " + strconv.Itoa(result.Checked) + " " + plural(result.Checked, "rule", "rules") + " checked in " + strconv.Itoa(result.Requests) + " " + plural(result.Requests, "request", "requests")
+	header := "Rules check: " + strings.Join(result.Sources, ", ") + " — " + strconv.Itoa(result.Checked) + " " + pluralOf(result.Checked, "rule", "rules") + " checked in " + strconv.Itoa(result.Requests) + " " + pluralOf(result.Requests, "request", "requests")
 	if result.NotChecked > 0 {
 		header += ", " + strconv.Itoa(result.NotChecked) + " left out (the request would be too large)"
 	}
@@ -362,7 +362,7 @@ func formatRulesCheck(result RulesCheckResult) string {
 		header += ", " + strconv.Itoa(result.Unanswered) + " without an answer"
 	}
 	if result.FailedRequests > 0 {
-		header += ", " + strconv.Itoa(result.FailedRequests) + " " + plural(result.FailedRequests, "request", "requests") + " failed: " + orNoAnswer(result.Error)
+		header += ", " + strconv.Itoa(result.FailedRequests) + " " + pluralOf(result.FailedRequests, "request", "requests") + " failed: " + orNoAnswer(result.Error)
 	}
 	header += "."
 	if result.Checked == 0 {

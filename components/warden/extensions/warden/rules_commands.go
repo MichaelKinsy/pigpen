@@ -171,9 +171,9 @@ func (w *warden) rulesCalibrate(ctx sdk.Context, cfg Config, tokens []string, se
 	if plan.Requests == 0 {
 		skipped := ""
 		if n := len(plan.Skipped); n > 0 {
-			skipped = " (" + strconv.Itoa(n) + " " + plural(n, "change", "changes") + " skipped)"
+			skipped = " (" + strconv.Itoa(n) + " " + pluralOf(n, "change", "changes") + " skipped)"
 		}
-		w.say(ctx, "Rules calibrate sent nothing: no changed file in the last "+strconv.Itoa(commits)+" non-merge "+plural(commits, "commit", "commits")+" is judgeable"+skipped+".", "info")
+		w.say(ctx, "Rules calibrate sent nothing: no changed file in the last "+strconv.Itoa(commits)+" non-merge "+pluralOf(commits, "commit", "commits")+" is judgeable"+skipped+".", "info")
 		return nil
 	}
 	// Nothing leaves the machine before this gate: the dialog shows the count and the redacted diffs, and a headless run
@@ -184,7 +184,7 @@ func (w *warden) rulesCalibrate(ctx sdk.Context, cfg Config, tokens []string, se
 		return nil
 	}
 	if gate.Kind == "confirm" {
-		ok, err := ctx.Confirm("warden: send "+strconv.Itoa(plan.Requests)+" calibration "+plural(plan.Requests, "request", "requests")+"?", calibrationNotice(plan))
+		ok, err := ctx.Confirm("warden: send "+strconv.Itoa(plan.Requests)+" calibration "+pluralOf(plan.Requests, "request", "requests")+"?", calibrationNotice(plan))
 		if err != nil || !ok {
 			w.say(ctx, "Cancelled. Nothing was sent.", "info")
 			return nil
@@ -294,7 +294,7 @@ func (w *warden) reportCommand(ctx sdk.Context, tokens []string) error {
 	}
 	text := formatRulesReport(buildRulesReport(all, ReportOptions{Days: days, Now: w.opts.Now(), CurrentRules: current, Source: "live"}))
 	if replays > 0 {
-		text += "\n" + strconv.Itoa(replays) + " calibration replay " + plural(replays, "record", "records") + " in this log, counted apart (source: calibrate)."
+		text += "\n" + strconv.Itoa(replays) + " calibration replay " + pluralOf(replays, "record", "records") + " in this log, counted apart (source: calibrate)."
 	}
 	w.say(ctx, text, "info")
 	return nil

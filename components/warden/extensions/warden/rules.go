@@ -717,7 +717,7 @@ func turnRulesFor(set *RuleSet) []Rule {
 	return out
 }
 
-func plural(n int, one, many string) string {
+func pluralOf(n int, one, many string) string {
 	if n == 1 {
 		return one
 	}
@@ -740,7 +740,7 @@ func describeRuleSet(set *RuleSet) string {
 	if set.AlwaysDropped > 0 {
 		dropped = ", " + strconv.Itoa(set.AlwaysDropped) + " unscoped past the " + strconv.Itoa(maxRules) + "-question cap for every file"
 	}
-	return where + " (" + strconv.Itoa(len(set.Rules)) + " " + plural(len(set.Rules), "rule", "rules") + dropped + ")"
+	return where + " (" + strconv.Itoa(len(set.Rules)) + " " + pluralOf(len(set.Rules), "rule", "rules") + dropped + ")"
 }
 
 // formatRuleSetDetails is the detailed local-only view for `/warden rules`; nothing here is sent to the judge.
@@ -762,7 +762,7 @@ func formatRuleSetDetails(set *RuleSet, tier string, exclude []string) string {
 	if set.ProseOnly {
 		return "Rules in force: " + source + " (prose only; no rule-shaped sections)" + excluded
 	}
-	lines := []string{"Rules in force: " + source + " (" + strconv.Itoa(len(set.Rules)) + " " + plural(len(set.Rules), "rule", "rules") + ", " + strconv.Itoa(set.AlwaysDropped) + " dropped)"}
+	lines := []string{"Rules in force: " + source + " (" + strconv.Itoa(len(set.Rules)) + " " + pluralOf(len(set.Rules), "rule", "rules") + ", " + strconv.Itoa(set.AlwaysDropped) + " dropped)"}
 	showSource := tier == tierConfigured && len(set.Sources) > 1
 	for i, rule := range set.Rules {
 		from := ""
@@ -1569,7 +1569,7 @@ func (g *RulesGuard) CapNotice(verdict RulesVerdict) string {
 		return ""
 	}
 	g.capNoted = true
-	return "warden · rules · " + verdict.Path + ": " + strconv.Itoa(verdict.Dropped) + " " + plural(verdict.Dropped, "rule", "rules") + " from " + strings.Join(verdict.Sources, ", ") +
+	return "warden · rules · " + verdict.Path + ": " + strconv.Itoa(verdict.Dropped) + " " + pluralOf(verdict.Dropped, "rule", "rules") + " from " + strings.Join(verdict.Sources, ", ") +
 		" not judged, past the " + strconv.Itoa(maxRules) + "-question cap, starting with " + verdict.FirstDropped +
 		". A `paths:` line on a rule keeps it out of requests for other files. Shown once per session."
 }
@@ -1673,7 +1673,7 @@ func rulesDetails(verdict RulesVerdict, told string) []string {
 	if verdict.Dropped > 0 {
 		dropped = "; " + strconv.Itoa(verdict.Dropped) + " past the question cap from " + verdict.FirstDropped
 	}
-	lines := []string{verdict.Tool + " " + verdict.Path + "; rules from " + sources + one + "; " + strconv.Itoa(verdict.Asked) + " " + plural(verdict.Asked, "question", "questions") + dropped}
+	lines := []string{verdict.Tool + " " + verdict.Path + "; rules from " + sources + one + "; " + strconv.Itoa(verdict.Asked) + " " + pluralOf(verdict.Asked, "question", "questions") + dropped}
 	if len(verdict.Scores) > 0 {
 		parts := make([]string, len(verdict.Scores))
 		for i, s := range verdict.Scores {
