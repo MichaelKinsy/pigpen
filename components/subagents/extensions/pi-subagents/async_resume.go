@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
-	"strings"
 )
 
 // RecoveryDescriptor is what a run persists in recovery-descriptor.json so a finished child can be revived.

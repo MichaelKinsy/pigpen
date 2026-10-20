@@ -2,7 +2,6 @@ package pi_subagents
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -45,8 +44,6 @@ func missionUUID() string {
 	h := hex.EncodeToString(b[:])
 	return h[0:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:]
 }
-
-
 
 func expandConfiguredPath(value, projectRoot string) string {
 	expanded := value

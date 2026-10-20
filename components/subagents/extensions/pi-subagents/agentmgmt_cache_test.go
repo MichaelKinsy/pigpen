@@ -22,8 +22,7 @@ func TestAgentDiscoveryCache(t *testing.T) {
 		t.Setenv("USERPROFILE", e.home)
 		t.Setenv("PI_CODING_AGENT_DIR", filepath.Join(e.home, ".pi", "agent"))
 		t.Setenv("PI_OFFLINE", "true")
-		os.Unsetenv("PI_SUBAGENT_EXTRA_AGENT_DIRS")
-		t.Cleanup(func() { os.Unsetenv("PI_SUBAGENT_EXTRA_AGENT_DIRS") })
+		unsetenv(t, "PI_SUBAGENT_EXTRA_AGENT_DIRS")
 		clearAgentDiscoveryCache()
 		t.Cleanup(clearAgentDiscoveryCache)
 		return e
@@ -198,7 +197,7 @@ func TestAgentGlobalRootOverride(t *testing.T) {
 	t.Setenv("USERPROFILE", home)
 	t.Setenv("APPDATA", filepath.Join(temp, "missing-appdata"))
 	t.Setenv("PI_CODING_AGENT_DIR", filepath.Join(home, ".pi", "agent"))
-	os.Unsetenv("PI_OFFLINE")
+	unsetenv(t, "PI_OFFLINE")
 	t.Cleanup(func() { clearAgentDiscoveryCache(); resetGlobalNpmRootCache() })
 	writeAgentFile(t, filepath.Join(project, ".pi", "agents"), "local-only", "local-only")
 	for _, name := range []string{"global-a", "global-b"} {

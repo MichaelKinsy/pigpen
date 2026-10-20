@@ -83,6 +83,7 @@ func RewriteExtension(in RewriteInput, out *string, failure *error) *sdk.Extensi
 
 // ErrCancelled is what a cancelled child run returns.
 var ErrCancelled = errCancelled
+
 // SetAsyncKill replaces the process probe of the control actions for one test.
 func SetAsyncKill(t *testing.T, f func(pid, signal int) error) {
 	old := asyncKill

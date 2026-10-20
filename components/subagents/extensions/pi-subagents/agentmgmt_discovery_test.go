@@ -128,8 +128,8 @@ func TestExtraAgentDirs(t *testing.T) {
 		t.Setenv("HOME", home)
 		t.Setenv("USERPROFILE", home)
 		t.Setenv("PI_OFFLINE", "true")
-		os.Unsetenv("PI_SUBAGENT_EXTRA_AGENT_DIRS")
-		t.Cleanup(func() { os.Unsetenv("PI_SUBAGENT_EXTRA_AGENT_DIRS"); clearAgentDiscoveryCache() })
+		unsetenv(t, "PI_SUBAGENT_EXTRA_AGENT_DIRS")
+		t.Cleanup(clearAgentDiscoveryCache)
 		clearAgentDiscoveryCache()
 		return
 	}

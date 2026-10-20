@@ -163,7 +163,6 @@ func truncateRunes(s string, utf16Units int) string {
 	return string(utf16Runes(u[:utf16Units]))
 }
 
-
 func isNotFoundErr(err error) bool { return err != nil && errors.Is(err, fs.ErrNotExist) }
 
 // ── runs ──

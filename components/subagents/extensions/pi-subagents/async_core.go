@@ -293,16 +293,6 @@ func isTerminalAsyncState(state string) bool {
 
 const maxPathComponentBytes = 255
 
-func atomicTempName(filePath string, now int64, rnd string) string {
-	suffix := fmt.Sprintf(".%d.%d.%s.tmp", os.Getpid(), now, rnd)
-	preferred := "." + filepath.Base(filePath) + suffix
-	if len(preferred) <= maxPathComponentBytes {
-		return preferred
-	}
-	sum := sha256.Sum256([]byte(filepath.Base(filePath)))
-	return "." + hex.EncodeToString(sum[:]) + suffix
-}
-
 func randomToken() string {
 	var b [8]byte
 	_, _ = rand.Read(b[:])
@@ -331,7 +321,7 @@ func asyncWriteJSONMode(filePath string, payload any, mode os.FileMode) error {
 		return err
 	}
 	body := strings.TrimSuffix(buf.String(), "\n")
-	tmp := filepath.Join(filepath.Dir(filePath), atomicTempName(filePath, nowMs(), randomToken()))
+	tmp := filepath.Join(filepath.Dir(filePath), tempBaseName(filePath, os.Getpid(), nowMs(), randomToken()))
 	if err := os.WriteFile(tmp, []byte(body), mode); err != nil {
 		_ = os.Remove(tmp)
 		return err

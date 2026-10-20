@@ -25,6 +25,13 @@ func writeFile(t *testing.T, path, body string) {
 	}
 }
 
+// unsetenv removes a variable for the test; t.Setenv records the original (set or unset) and restores it on cleanup.
+func unsetenv(t *testing.T, key string) {
+	t.Helper()
+	t.Setenv(key, "")
+	os.Unsetenv(key)
+}
+
 // withTempHome isolates HOME (and the variables that move the agent directory) the way the original's tests do;
 // it returns the home. Tests that do not name a home in the original still run isolated here, so the machine's own
 // agents never leak into an assertion.
@@ -35,13 +42,7 @@ func withTempHome(t *testing.T) string {
 		t.Setenv(k, home)
 	}
 	for _, k := range []string{"PI_CODING_AGENT_DIR", "PI_SUBAGENT_EXTRA_AGENT_DIRS"} {
-		old, had := os.LookupEnv(k)
-		os.Unsetenv(k)
-		t.Cleanup(func() {
-			if had {
-				os.Setenv(k, old)
-			}
-		})
+		unsetenv(t, k)
 	}
 	return home
 }

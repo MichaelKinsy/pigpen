@@ -2,14 +2,24 @@
 
 package pi_subagents
 
-import "os"
+import (
+	"errors"
+	"syscall"
+)
 
-// processAlive reports whether the process exists (os.FindProcess opens it on Windows).
+// stillActive is the exit code GetExitCodeProcess reports for a running process.
+const stillActive = 259
+
+// processAlive is process.kill(pid, 0): whether a process with this pid is running (an access error means it exists).
 func processAlive(pid int) bool {
-	p, err := os.FindProcess(pid)
+	h, err := syscall.OpenProcess(syscall.PROCESS_QUERY_INFORMATION, false, uint32(pid))
 	if err != nil {
-		return false
+		return errors.Is(err, syscall.ERROR_ACCESS_DENIED)
 	}
-	_ = p.Release()
-	return true
+	defer syscall.CloseHandle(h)
+	var code uint32
+	if syscall.GetExitCodeProcess(h, &code) != nil {
+		return true
+	}
+	return code == stillActive
 }

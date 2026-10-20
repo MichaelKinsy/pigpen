@@ -297,7 +297,7 @@ func NewMissionWorkflowState(loc MissionStoreLocation, missionID string, opts Mi
 	}
 	s := &MissionWorkflowState{path: p, values: newObject(), lock: stateLockOptions{isProcessAlive: opts.IsProcessAlive, getProcessStartKey: opts.GetProcessStartKey, retryDelaysMs: opts.RetryDelaysMs}}
 	if s.lock.isProcessAlive == nil {
-		s.lock.isProcessAlive = missionProcessAlive
+		s.lock.isProcessAlive = processAlive
 	}
 	if s.lock.getProcessStartKey == nil {
 		s.lock.getProcessStartKey = processStartKey

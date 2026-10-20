@@ -26,6 +26,8 @@ func TestMain(m *testing.M) {
 		helperChild()
 		return
 	}
+	// No test reaches the network or the machine's npm: package discovery stays offline unless a test turns it on.
+	os.Setenv("PI_OFFLINE", "1")
 	os.Exit(m.Run())
 }
 

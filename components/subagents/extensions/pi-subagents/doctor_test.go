@@ -2,7 +2,6 @@ package pi_subagents
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -34,9 +33,9 @@ func TestDoctor(t *testing.T) {
 			mkdirAll(t, d)
 		}
 		t.Setenv("PI_SUBAGENT_MAX_SPAWNS_PER_SESSION", "")
-		os.Unsetenv("PI_SUBAGENT_MAX_SPAWNS_PER_SESSION")
+		unsetenv(t, "PI_SUBAGENT_MAX_SPAWNS_PER_SESSION")
 		t.Setenv("PI_SUBAGENT_MAX_SPAWNS_PER_RUN", "")
-		os.Unsetenv("PI_SUBAGENT_MAX_SPAWNS_PER_RUN")
+		unsetenv(t, "PI_SUBAGENT_MAX_SPAWNS_PER_RUN")
 		report := buildDoctorReport(doctorInput{
 			Cwd: root, Config: doctorConfig{DefaultSessionDir: "~/subagent-sessions", MaxActiveAsyncRunsPerSession: float64(2), Spawn: extensionConfig{MaxSubagentSpawnsPerSession: float64(4)}},
 			State: state, CurrentSessionFile: filepath.Join(root, "sessions", "parent.jsonl"), CurrentSessionID: "session-abc123", OrchestratorTarget: "subagent-chat-abc123",
@@ -95,12 +94,12 @@ func TestDoctor(t *testing.T) {
 		runner := report()
 		polMatches(t, runner, `runner parent session: set \(launch-parent\) — explicit target for this dedicated child process`)
 		polNotMatches(t, runner, `foreground external ask forwarding`)
-		os.Unsetenv("PI_SUBAGENT_CHILD")
+		unsetenv(t, "PI_SUBAGENT_CHILD")
 		t.Setenv("PI_SUBAGENT_PARENT_SESSION", "legacy-root")
 		legacy := report()
 		polMatches(t, legacy, `root parent session: ignored legacy process-global value — root sessions do not use it for routing`)
 		polMatches(t, legacy, `foreground external ask forwarding: unavailable until the permission extension supports a session-scoped target`)
-		os.Unsetenv("PI_SUBAGENT_PARENT_SESSION")
+		unsetenv(t, "PI_SUBAGENT_PARENT_SESSION")
 		polMatches(t, report(), `root parent session: not set \(healthy\) — detached forwarding is attached at runner launch`)
 	})
 	tw(t, f, "keeps reporting when a directory or discovery check fails", func(t *testing.T) {

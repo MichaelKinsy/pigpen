@@ -29,7 +29,7 @@ func init() {
 // asyncUnsupportedPolicyParam is the first policy option a background run does not apply ("" when none is set): the options
 // shape the foreground run (applyRunPolicy), so a background run refuses them rather than ignore them.
 func asyncUnsupportedPolicyParam(params map[string]any) string {
-	for _, p := range []string{"output", "outputMode", "artifacts", "acceptance", "gate", "agentContract", "includeProgress"} {
+	for _, p := range []string{"output", "outputMode", "artifacts", "acceptance", "gate", "agentContract", "includeProgress", "mission", "missionId"} {
 		if v, ok := params[p]; defined(params, p) && !(p == "output" && ok && v == true) { // the public boundary defaults output to true
 			return p
 		}

@@ -3,7 +3,6 @@ package pi_subagents
 import (
 	"errors"
 	"math"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -330,8 +329,7 @@ func TestConfigDirRuntime(t *testing.T) {
 	const f = "config-dir-runtime"
 	setup := func(t *testing.T) {
 		t.Helper()
-		os.Unsetenv(piCodingAgentPackageRootEnv)
-		t.Cleanup(func() { os.Unsetenv(piCodingAgentPackageRootEnv) })
+		unsetenv(t, piCodingAgentPackageRootEnv)
 	}
 	pkg := func(t *testing.T, root, configDir string) {
 		t.Helper()

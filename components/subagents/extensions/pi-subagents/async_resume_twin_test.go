@@ -109,7 +109,7 @@ func TestAsyncResumeTwins(t *testing.T) {
 	tskip(t, f, "preserves and validates persisted capability ceilings for resume", "capability ceilings (parseSubagentCapabilityCeiling and their intersection) belong to the capability-ceiling slice, not ported; the port refuses to resume a run that carries one (covered by the unsupported-field refusal tests)")
 	tskip(t, f, "rejects unknown, cross-run, and wrong-agent recovery descriptors", "the case also checks capability ceilings, extension bindings, required child extensions, nested-subagent allowlists and applySteeringRecoveryAgentConfig, which belong to slices not ported; the unknown-field, source-run and agent checks it shares are in readAsyncRecoveryDescriptor and resolveAsyncResumeTarget and are covered by the cross-run and wrong-agent assertions of the other twins")
 	writeDescriptor := func(t *testing.T, r roots, runID string, extra jm) {
-		d := jm{"version": 1, "runFanoutBudget": createRunFanoutBudget(t, runID, 64), "sourceRunId": runID, "agent": "worker", "cwd": r.root, "systemPromptMode": "replace",
+		d := jm{"version": 1, "runFanoutBudget": testFanoutBudget(t, runID, 64), "sourceRunId": runID, "agent": "worker", "cwd": r.root, "systemPromptMode": "replace",
 			"inheritGlobalContext": false, "inheritProjectContext": false, "inheritSkills": false, "outputMode": "inline", "maxSubagentDepth": 2, "share": false}
 		for k, v := range extra {
 			d[k] = v
@@ -370,7 +370,7 @@ func TestResumeRefusesWhatItCannotHonor(t *testing.T) {
 		writeJ(t, filepath.Join(dirs.Async, "run-ceiling", "status.json"), m)
 	}
 	descriptor := func(extra jm) {
-		d := jm{"version": 1, "runFanoutBudget": createRunFanoutBudget(t, "run-ceiling", 64), "sourceRunId": "run-ceiling", "agent": "worker", "cwd": root, "systemPromptMode": "replace",
+		d := jm{"version": 1, "runFanoutBudget": testFanoutBudget(t, "run-ceiling", 64), "sourceRunId": "run-ceiling", "agent": "worker", "cwd": root, "systemPromptMode": "replace",
 			"inheritGlobalContext": false, "inheritProjectContext": false, "inheritSkills": false, "outputMode": "inline", "maxSubagentDepth": 2, "share": false}
 		for k, v := range extra {
 			d[k] = v

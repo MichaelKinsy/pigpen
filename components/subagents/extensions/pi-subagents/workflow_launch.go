@@ -6,7 +6,6 @@ import (
 	"math"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 )
 
@@ -362,91 +361,40 @@ func normalizeWorkflowGateParams(params *jsObject) (*jsObject, error) {
 
 // ---- capability ceilings (capability-ceiling.ts) ----
 
-// intersectCapabilityCeilings is intersectSubagentCapabilityCeilings: the narrowest ceiling the given ones allow together.
+// intersectCapabilityCeilings is intersectSubagentCapabilityCeilings over ceilings as decoded JSON objects (policy_ceiling.go).
 func intersectCapabilityCeilings(ceilings ...*jsObject) *jsObject {
-	var active []*jsObject
-	for _, c := range ceilings {
-		if c != nil {
-			active = append(active, c)
+	resolved := make([]*resolvedCeiling, 0, len(ceilings))
+	for _, o := range ceilings {
+		if o == nil {
+			continue
 		}
+		c := &resolvedCeiling{Version: capabilityCeilingVersion, Sources: []string{}}
+		c.AllowedTools, c.HasAllowedTools = stringListField(o, "allowedTools")
+		c.AllowedAgents, c.HasAllowedAgents = stringListField(o, "allowedAgents")
+		c.DenyExtensions, _ = o.vals["denyExtensions"].(bool)
+		c.Sources, _ = stringListField(o, "sources")
+		resolved = append(resolved, c)
 	}
-	if len(active) == 0 {
+	out := intersectSubagentCapabilityCeilings(resolved...)
+	if out == nil {
 		return nil
 	}
-	intersect := func(field string) ([]any, bool) {
-		var lists []map[string]bool
-		var first []any
-		for _, c := range active {
-			arr, ok := c.vals[field].([]any)
-			if !ok {
-				continue
-			}
-			set := map[string]bool{}
-			for _, e := range arr {
-				if s, ok := e.(string); ok {
-					set[s] = true
-				}
-			}
-			if lists == nil {
-				for k := range set {
-					first = append(first, k)
-				}
-			}
-			lists = append(lists, set)
-		}
-		if lists == nil {
-			return nil, false
-		}
-		var out []string
-		for k := range lists[0] {
-			all := true
-			for _, l := range lists {
-				all = all && l[k]
-			}
-			if all {
-				out = append(out, k)
-			}
-		}
-		sort.Slice(out, func(i, j int) bool { return compareUTF16(out[i], out[j]) < 0 })
-		res := make([]any, len(out))
-		for i, s := range out {
-			res[i] = s
-		}
-		return res, true
+	return out.object()
+}
+
+// stringListField is the string entries of an array field and whether the field is an array at all.
+func stringListField(o *jsObject, field string) ([]string, bool) {
+	arr, ok := o.vals[field].([]any)
+	if !ok {
+		return nil, false
 	}
-	out := jo("version", float64(1))
-	if t, ok := intersect("allowedTools"); ok {
-		out.set("allowedTools", t)
-	}
-	if a, ok := intersect("allowedAgents"); ok {
-		out.set("allowedAgents", a)
-	}
-	deny := false
-	srcSet := map[string]bool{}
-	for _, c := range active {
-		if b, _ := c.vals["denyExtensions"].(bool); b {
-			deny = true
-		}
-		if arr, ok := c.vals["sources"].([]any); ok {
-			for _, e := range arr {
-				if s, ok := e.(string); ok {
-					srcSet[s] = true
-				}
-			}
+	out := make([]string, 0, len(arr))
+	for _, e := range arr {
+		if s, ok := e.(string); ok {
+			out = append(out, s)
 		}
 	}
-	out.set("denyExtensions", deny)
-	sources := make([]string, 0, len(srcSet))
-	for s := range srcSet {
-		sources = append(sources, s)
-	}
-	sort.Slice(sources, func(i, j int) bool { return compareUTF16(sources[i], sources[j]) < 0 })
-	arr := make([]any, len(sources))
-	for i, s := range sources {
-		arr[i] = s
-	}
-	out.set("sources", arr)
-	return out
+	return out, true
 }
 
 // ---- the rest ----

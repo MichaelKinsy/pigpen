@@ -39,7 +39,6 @@ type MissionActionResult struct {
 	Details map[string]any
 }
 
-
 func validateMissionStatus(v any, label string) (string, error) { return missionStatusOf(v, label) }
 
 func missionNonBlank(v any) (string, bool) {

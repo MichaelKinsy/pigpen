@@ -6,7 +6,6 @@ import (
 	"strings"
 )
 
-
 func jsString(v any) string {
 	switch x := v.(type) {
 	case string:

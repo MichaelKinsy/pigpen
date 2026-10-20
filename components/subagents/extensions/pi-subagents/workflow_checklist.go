@@ -902,4 +902,3 @@ func formatWorkflowChecklistText(p WorkflowChecklistProjection, indent string, i
 	}
 	return lines
 }
-

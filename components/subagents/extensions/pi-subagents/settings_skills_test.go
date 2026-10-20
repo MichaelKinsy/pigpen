@@ -289,7 +289,7 @@ func TestSkillsFallback(t *testing.T) {
 		if _, err := os.Stat(marker); err == nil {
 			t.Fatal("npm was invoked while PI_OFFLINE was enabled")
 		}
-		os.Unsetenv("PI_OFFLINE")
+		unsetenv(t, "PI_OFFLINE")
 		clearSkillCache()
 		clearAgentDiscoveryCache()
 		mustSkills(t, dir)
@@ -335,7 +335,7 @@ func TestSkillsFallback(t *testing.T) {
 		userAgentDir := filepath.Join(fake, ".pi", "agent")
 		t.Setenv("HOME", fake)
 		t.Setenv("USERPROFILE", fake)
-		os.Unsetenv("PI_CODING_AGENT_DIR")
+		unsetenv(t, "PI_CODING_AGENT_DIR")
 		t.Setenv("PI_OFFLINE", "true")
 		clearSkillCache()
 		t.Cleanup(clearSkillCache)

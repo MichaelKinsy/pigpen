@@ -122,10 +122,12 @@ fake launchers; wiring it to real child runs of the background engine (`async_ru
 fan-out budget, receipts written to the async directory, completion notification of a background workflow) is not done in this
 change, so a run is refused with the exact message rather than half-run.
 
-Helpers this slice carries that the run-policy and agent-management slices also port (to merge into one): `normalizeGateAcceptance`,
-`normalizeExtensionBindings`, `intersectSubagentCapabilityCeilings` (workflow_launch.go), `sanitizeDisplayText` (workflow_checklist.go),
-`validGitRef` (one copy is kept, the async slice's duplicate was removed), `schemaViolations` (jsonschema_validate.go).
-**The async lane's twins.** All 26 ledger files of the background runs are covered by `tw` or an individual `tskip` (title-exact check against `port/upstream-tests.json`). The cases that need the workflow runtime, steering, the Fleet views, managed worktrees, capability ceilings, acceptance gates, tool budgets, external runners or Node/Bun loader internals are skipped one by one with their reason (each names the slice that owns it). Added behavior to match the original: the stale-run retention cleaner (`async_retention.go`, one bounded pass 60 s after the session starts, never deleting a run the session tracks), the bounded async status snapshot an RPC host reads as the widget (`async_projection.go`), retained fleet jobs, `resolveAsyncResumeTarget` with the original's validation (`async_resume_target.go`), the process-terminal event on the bus, Git routing variables removed from a background child's environment, and the refusal of an interrupt for external or workflow runs. `stop` honors `childId` and `resume` honors `index`.
+The helpers the workflow, run-policy and agent-management slices each ported (gate normalization, extension bindings, the dynamic fan-out and
+chain-output validators, `stableJSON`, display-text sanitizing, locale ordering, the filesystem helpers of the missions) are merged into one
+copy each: `normalizeGateAcceptance`/`parseGateInput` (policy_acceptance*.go), `normalizeExtensionBindings` (extbindings.go),
+`validateChainOutputBindings`/`validateDynamicStepShape` (dynamic_fanout.go, which `.chain.json` parsing calls), `stableJSON` (extbindings.go),
+`sanitizeDisplayText` (policy_display.go), `localeCompare` (parallel_handoff.go), the retry and atomic JSON writers (policy_fsutil.go).
+`intersectSubagentCapabilityCeilings` is policy_ceiling.go (workflow_launch.go calls it through `intersectCapabilityCeilings` over decoded objects).
 
 ## Mapping
 

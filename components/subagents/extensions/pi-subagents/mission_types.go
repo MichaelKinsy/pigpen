@@ -432,7 +432,6 @@ func (d MissionDecision) toObject() *jsObject {
 	return o
 }
 
-
 func parseMissionWorkflowChild(v any, label string) (MissionWorkflowChild, error) {
 	var c MissionWorkflowChild
 	o, err := missionAsObject(v, label)

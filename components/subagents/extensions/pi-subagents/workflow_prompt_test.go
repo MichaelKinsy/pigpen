@@ -101,7 +101,7 @@ func TestPromptWorkflowsTwins(t *testing.T) {
 		eq(t, params["async"], false, "async")
 		script, _ := params["workflowScript"].(string)
 		for _, want := range []string{`runs.run("prompt-1-native-run"`, `"agent":"reviewer"`, `"model":"anthropic/claude-sonnet-4"`, `"skill":["deslop","typescript-code"]`, `"context":"fork"`, "Review target with target"} {
-			contains(t, script, want)
+			mustContain(t, script, want)
 		}
 	})
 
@@ -122,9 +122,9 @@ func TestPromptWorkflowsTwins(t *testing.T) {
 		eq(t, params["agentScope"], "both", "agentScope")
 		eq(t, params["async"], false, "async")
 		script, _ := params["workflowScript"].(string)
-		contains(t, script, `runs.run("prompt-1-native-analyze"`)
-		contains(t, script, `runs.run("prompt-2-native-fix"`)
-		contains(t, script, `replaceAll("{previous}"`)
+		mustContain(t, script, `runs.run("prompt-1-native-analyze"`)
+		mustContain(t, script, `runs.run("prompt-2-native-fix"`)
+		mustContain(t, script, `replaceAll("{previous}"`)
 		eq(t, reservedPromptCommandNames["chain-prompts"], true, "chain-prompts is not a prompt workflow")
 
 		var launches []string

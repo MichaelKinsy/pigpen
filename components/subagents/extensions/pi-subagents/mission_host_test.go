@@ -91,7 +91,7 @@ func TestMissionActionsThroughTheTool(t *testing.T) {
 
 func TestSingleRunRecordsItsMission(t *testing.T) {
 	h, cwd := missionHost(t)
-	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build"})
+	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false})
 	eq(t, failure, "", "run")
 	if !regexp.MustCompile(`^built it\nMission: [0-9a-f-]{36} \(completed\)$`).MatchString(resultText(t, raw)) {
 		t.Errorf("text: %q", resultText(t, raw))
@@ -101,14 +101,14 @@ func TestSingleRunRecordsItsMission(t *testing.T) {
 	if !strings.Contains(resultText(t, raw), "  completed  [prompt redacted]  ") {
 		t.Errorf("auto mission: %s", raw)
 	}
-	raw, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "mission": false})
+	raw, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false, "mission": false})
 	eq(t, failure, "", "opt-out")
 	eq(t, resultText(t, raw), "built it", "no mission line")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "missionId": "nope"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false, "missionId": "nope"})
 	if !strings.HasPrefix(failure, "Mission 'nope' was not found in mission directory ") {
 		t.Errorf("unknown mission: %q", failure)
 	}
-	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "mission": true})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false, "mission": true})
 	eq(t, failure, "mission must be an object", "invalid mission")
 	_ = cwd
 }
@@ -117,7 +117,7 @@ func TestMissionConfigDisablesAutomaticMissions(t *testing.T) {
 	h, _ := missionHost(t)
 	home := os.Getenv("HOME")
 	writeFile(t, filepath.Join(home, ".pi", "agent", "extensions", "subagent", "config.json"), `{"missions":{"enabled":false}}`)
-	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build"})
+	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false})
 	eq(t, failure, "", "run")
 	eq(t, resultText(t, raw), "built it", "no mission")
 }
