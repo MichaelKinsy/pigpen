@@ -197,7 +197,7 @@ func (j *EvaluatorJudge) safeError(err error) error {
 		case 400, 422:
 			advice = "Check the question format and model limits."
 		}
-		return &IntegrationError{Code: "http", Message: label + " returned HTTP " + strconv.Itoa(api.Status) + ". " + advice + " No automatic retry was made."}
+		return &IntegrationError{Code: "http", Message: label + " returned HTTP " + strconv.Itoa(api.Status) + ". " + advice + " No automatic retry was made.", Status: api.Status}
 	}
 	var conn *typesafe.APIConnectionError
 	if errors.As(err, &conn) {

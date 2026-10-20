@@ -60,6 +60,8 @@ type Judge interface {
 type IntegrationError struct {
 	Code    string // configuration | validation | budget | aborted | timeout | http | connection | response
 	Message string
+	// Status is the HTTP status of an "http" failure (errors.ts `status`); zero otherwise.
+	Status int
 }
 
 func (e *IntegrationError) Error() string { return e.Message }

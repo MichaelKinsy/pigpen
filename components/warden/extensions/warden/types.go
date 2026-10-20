@@ -73,8 +73,14 @@ type Judgment struct {
 	IntentMismatch  *float64
 	Visible         *float64
 	ShouldProceed   *float64
-	Model           string
-	ElapsedMs       int
+	SecurityRisk    *float64
+	LargeOutput     *float64
+	// Regretted is P(regret) from the regret question that rode this request, RegretTarget the candidate it names
+	// ("a<id>"); the learning lane settles the labels from them (holds.go).
+	Regretted    *float64
+	RegretTarget string
+	Model        string
+	ElapsedMs    int
 }
 
 // Verdict is the action guard's decision.
