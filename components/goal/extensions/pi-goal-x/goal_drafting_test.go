@@ -19,6 +19,7 @@ type draftOpts struct {
 	settings string // "" none (the original's cwd has no settings file)
 	env      map[string]string
 	cwd      string
+	session  string // default "draft-session"
 	branch   []any
 	seed     map[string]string
 	select_  func(string, []string) (string, bool)
@@ -36,12 +37,15 @@ func draftRig(t *testing.T, o draftOpts) (*goalRig, *dialogDriver) {
 	if settings == "" {
 		settings = "-"
 	}
+	if o.session == "" {
+		o.session = "draft-session"
+	}
 	sel := d.selectFn
 	if o.select_ != nil {
 		sel = o.select_
 	}
 	r := newGoalRig(t, rigOptions{
-		Cwd: o.cwd, HasUI: boolPtr(o.hasUI), SessionID: "draft-session", Settings: settings, Env: o.env, Branch: o.branch, Seed: o.seed,
+		Cwd: o.cwd, HasUI: boolPtr(o.hasUI), SessionID: o.session, Settings: settings, Env: o.env, Branch: o.branch, Seed: o.seed,
 		ActiveTools: []string{"read", "bash", "edit", "write"}, Select: sel, Input: o.input,
 	})
 	return r, d
