@@ -63,6 +63,9 @@ type warden struct {
 	budgetExhausted bool
 	// adaptor is the per-model steer adaptation; the default sends everything.
 	adaptor steerAdaptor
+	// sup is the supervision module: subagent triage, call waste, the stuck-loop diff memory, and the piece
+	// registries of the message, input and agent_settled events (supervision.go).
+	sup *supervision
 }
 
 // Extension returns the guard.
@@ -82,7 +85,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	if o.Now == nil {
 		o.Now = time.Now
 	}
-	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}}
+	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, sup: newSupervision()}
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
@@ -92,6 +95,14 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
+	e.OnEvent(sdk.EventMessageStart, w.onMessageStart)
+	e.OnEvent(sdk.EventMessageUpdate, w.onMessageUpdate)
+	e.OnEvent(sdk.EventMessageEnd, w.onMessageEnd)
+	e.OnEvent(sdk.EventInput, w.onInput)
+	e.OnEvent(sdk.EventAgentSettled, w.onAgentSettled)
+	// Pieces of those events, in upstream's order (supervision.go lists the whole order). Each lane adds its own
+	// line here.
+	w.sup.onSettled(w.checkSubagentReports) // supervision: subagent triage
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); return nil, nil })
 	return e, w
 }
@@ -265,6 +276,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) 
 	w.steersThisRun, w.doneNudged, w.continuation, w.lastPrompt = 0, false, false, ""
 	w.repeats.Reset()
 	w.budget.Reset()
+	w.sup.reset()
 	loadErr, enabled := w.loadErr, w.cfg.Enabled
 	w.mu.Unlock()
 	w.guard.Reset()
@@ -286,6 +298,8 @@ func (w *warden) disclose(ctx sdk.Context) {
 }
 
 func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, error) {
+	// ── supervision: the call-waste tip rides every run's system prompt, a continuation included ──
+	w.wasteTip(ctx, w.config(ctx), data)
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if p, ok := data["prompt"].(string); ok && strings.TrimSpace(p) != "" {
@@ -299,6 +313,7 @@ func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, 
 		w.window.Reset()
 	}
 	w.repeats.Reset()
+	w.sup.fullOutputs = map[string]fullOutput{}
 	w.doneNudged = false
 	w.steersThisRun = 0
 	return nil, nil

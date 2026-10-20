@@ -82,10 +82,10 @@ type ParsedFailure struct {
 	Exit *int
 }
 
-var reExitCode = lazyRE(`(?im)(?:exited with code|exit code:?|exit status|Error)\s+(\d+)\s*$`)
+var reEvExitCode = lazyRE(`(?im)(?:exited with code|exit code:?|exit status|Error)\s+(\d+)\s*$`)
 
 func evExitCode(text string) *int {
-	m := reExitCode.FindAllStringSubmatch(text, -1)
+	m := reEvExitCode.FindAllStringSubmatch(text, -1)
 	if len(m) == 0 {
 		return nil
 	}
@@ -140,7 +140,7 @@ func col(ms [][]string, i int) []string {
 	return out
 }
 
-func first(re *lazyRegexp, text string) string {
+func firstGroup(re *lazyRegexp, text string) string {
 	if m := re.FindStringSubmatch(text); m != nil {
 		return m[1]
 	}
@@ -253,7 +253,7 @@ var evParsers = []evParser{
 			}
 			panics = append(panics, panicAt{m[1], strings.Join(keep, " ")})
 		}
-		summary := first(reCargoSummary, text)
+		summary := firstGroup(reCargoSummary, text)
 		var errs []string
 		for _, m := range compile {
 			errs = append(errs, m[1]+m[2])
@@ -312,7 +312,7 @@ var evParsers = []evParser{
 	}},
 	{"pytest", func(text string) (parsedFields, bool) {
 		failed := subs(rePyFailed, text)
-		summary := first(rePySummary, text)
+		summary := firstGroup(rePySummary, text)
 		if len(failed) == 0 && summary == "" {
 			return parsedFields{}, false
 		}
@@ -354,7 +354,7 @@ var evParsers = []evParser{
 		if len(errs) == 0 {
 			return parsedFields{}, false
 		}
-		return parsedFields{errors: errs, summary: first(reEslintTotal, text)}, true
+		return parsedFields{errors: errs, summary: firstGroup(reEslintTotal, text)}, true
 	}},
 	{"tap", func(text string) (parsedFields, bool) {
 		lines := strings.Split(text, "\n")
@@ -392,7 +392,7 @@ var evParsers = []evParser{
 				errs = append(errs, message)
 			}
 			if location == "" {
-				location = first(reTapLocation, strings.Join(block, "\n"))
+				location = firstGroup(reTapLocation, strings.Join(block, "\n"))
 			}
 		}
 		var spec []string
@@ -404,10 +404,10 @@ var evParsers = []evParser{
 		if len(failing) == 0 && len(spec) == 0 {
 			return parsedFields{}, false
 		}
-		fail := first(reTapFail, text)
+		fail := firstGroup(reTapFail, text)
 		summary := ""
 		if fail != "" {
-			tests := first(reTapTests, text)
+			tests := firstGroup(reTapTests, text)
 			if tests == "" {
 				tests = "undefined"
 			}
@@ -454,13 +454,13 @@ var evParsers = []evParser{
 			failing = append(failing, "["+m[1]+"] "+m[2])
 		}
 		summary := ""
-		if failed := first(rePwFailed, text); failed != "" {
+		if failed := firstGroup(rePwFailed, text); failed != "" {
 			summary = failed + " failed"
-			if passed := first(rePwPassed, text); passed != "" {
+			if passed := firstGroup(rePwPassed, text); passed != "" {
 				summary += ", " + passed + " passed"
 			}
 		}
-		return parsedFields{failing: failing, errors: errs, location: first(rePwLoc, text), summary: summary}, true
+		return parsedFields{failing: failing, errors: errs, location: firstGroup(rePwLoc, text), summary: summary}, true
 	}},
 	{"jest", func(text string) (parsedFields, bool) {
 		var bullets []string
@@ -516,7 +516,7 @@ var evParsers = []evParser{
 			}
 			failing = append(failing, b)
 		}
-		return parsedFields{failing: failing, errors: errs, location: first(reJestLoc, text), summary: first(reJestSummary, text)}, true
+		return parsedFields{failing: failing, errors: errs, location: firstGroup(reJestLoc, text), summary: firstGroup(reJestSummary, text)}, true
 	}},
 	{"vitest", func(text string) (parsedFields, bool) {
 		fails := col(subs(reVitestFail, text), 1)
@@ -528,14 +528,14 @@ var evParsers = []evParser{
 		if len(fails) == 0 {
 			names = crosses
 		}
-		return parsedFields{failing: names, errors: col(subs(reVitestError, text), 1), location: first(reVitestLoc, text), summary: first(reVitestTests, text)}, true
+		return parsedFields{failing: names, errors: col(subs(reVitestError, text), 1), location: firstGroup(reVitestLoc, text), summary: firstGroup(reVitestTests, text)}, true
 	}},
 	{"test-script", func(text string) (parsedFields, bool) {
 		fails := subs(reScriptFail, text)
 		if len(fails) == 0 {
 			return parsedFields{}, false
 		}
-		return parsedFields{failing: col(fails, 1), errors: col(fails, 2), summary: first(reScriptTotal, text)}, true
+		return parsedFields{failing: col(fails, 1), errors: col(fails, 2), summary: firstGroup(reScriptTotal, text)}, true
 	}},
 	{"python-traceback", func(text string) (parsedFields, bool) {
 		if !rePyTrace.MatchString(text) {
@@ -571,7 +571,7 @@ var evParsers = []evParser{
 				kept = append(kept, line)
 			}
 		}
-		return parsedFields{errors: []string{m[1] + ": " + m[2]}, location: first(reNodeLoc, strings.Join(kept, "\n"))}, true
+		return parsedFields{errors: []string{m[1] + ": " + m[2]}, location: firstGroup(reNodeLoc, strings.Join(kept, "\n"))}, true
 	}},
 }
 

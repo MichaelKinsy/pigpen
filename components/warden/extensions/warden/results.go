@@ -2,6 +2,7 @@ package warden
 
 import (
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -38,8 +39,21 @@ func projectPath(target, cwd string) string {
 	return target
 }
 
+// rawContent is the result content as the host sent it: its parts, untouched, so a rewrite keeps images and fields.
+func rawContent(v any) []any {
+	switch c := v.(type) {
+	case []any:
+		return c
+	case string:
+		return []any{map[string]any{"type": "text", "text": c}}
+	}
+	return nil
+}
+
 // onToolResult keeps the run's memory: the loop window (repeats and stuck loops) and the evidence the
-// done-check reads (changes, checks, UI proof).
+// done-check reads (changes, checks, UI proof), and rewrites the result the model reads: the call-waste note and
+// the stuck-loop diff. Upstream order (extension.ts 1806-2140): masking, call waste record, conscience, stuck
+// window, output security and context, stuck-loop diff, evidence, quick repeat, stuck verdict, call-waste note.
 func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error) {
 	cfg := w.config(ctx)
 	if !cfg.Enabled {
@@ -50,12 +64,34 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	if input == nil {
 		input = map[string]any{}
 	}
+	raw := rawContent(data["content"])
 	content := contentParts(data["content"])
 	isError, _ := data["isError"].(bool)
 	details, _ := data["details"].(map[string]any)
 	failed := ResultFailed(isError, details, content)
 	text := ResultText(content)
 
+	// ── supervision: call waste. Every finished call enters the window; a note, when one fires, is attached to
+	// this result below, and never reaches a hold, the judge, or the steer budget.
+	wasteNudge := w.wasteNote(ctx, cfg, tool, input, failed, text)
+
+	out, changed := w.toolResultRun(ctx, cfg, tool, input, raw, content, failed, text)
+
+	// ── supervision: the call-waste note rides the result the model is about to read ──
+	if wasteNudge != nil {
+		if next, ok := withWasteNote(out, wasteNudge.Text); ok {
+			out, changed = next, true
+			w.recordWasteNote(ctx, cfg, tool, input, wasteNudge)
+		}
+	}
+	if !changed {
+		return nil, nil
+	}
+	return map[string]any{"content": out}, nil
+}
+
+// toolResultRun is the run memory and the stuck guard; it returns the content to deliver and whether it changed.
+func (w *warden) toolResultRun(ctx sdk.Context, cfg Config, tool string, input map[string]any, raw []any, content []ContentPart, failed bool, text string) ([]any, bool) {
 	// Evidence for the done-check.
 	w.mu.Lock()
 	outcome := ClassifyToolResult(tool, input, failed, text)
@@ -72,7 +108,7 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	w.mu.Unlock()
 
 	if !cfg.Stuck.Enabled {
-		return nil, nil
+		return raw, false
 	}
 	w.mu.Lock()
 	if w.window == nil {
@@ -84,6 +120,9 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 		quick = w.window.QuickRepeat()
 	}
 	judgeNow := w.window.ShouldJudge(cfg.Stuck)
+	if judgeNow {
+		w.stats.StuckChecks++
+	}
 	w.mu.Unlock()
 
 	var verdict *StuckVerdict
@@ -95,39 +134,52 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 		v := EvaluateStuck(newContext(), win, w.latestTask(ctx), StuckOptions{Config: cfg.Stuck, Judge: judge, Timeout: w.timeout(cfg)})
 		verdict = &v
 	}
+
+	// ── supervision: the stuck-loop diff replaces a failed result that repeats a failure ──
+	out, changed := w.stuckDiffResult(ctx, cfg, verdict, failed, text, raw)
+
 	// A stuck verdict on the same call carries its own steer; the quick one would say the same thing twice.
 	if quick != nil && (verdict == nil || !verdict.Stuck) {
 		nudge := QuickRepeatNudge(*quick)
-		sent := w.steer(cfg, []SteerGuard{SteerGuardRepeat}, ctx, nudge, SteerOptions{DeliverAs: "steer"})
-		what := "same output"
-		if quick.Attempt.Failed {
-			what = "same failure"
-		}
-		note := "recorded only"
+		sent := w.adaptiveSend(ctx, cfg, SteerKindRepeat) && w.steer(cfg, []SteerGuard{SteerGuardRepeat}, ctx, nudge, SteerOptions{DeliverAs: "steer"})
 		if sent {
-			note = "agent nudged"
+			w.watchSteer(ctx, cfg, []SteerKind{SteerKindRepeat}, SteerSubject{Call: &SteerCall{Name: tool, Input: input}}, false)
 		}
-		w.record(ctx, cfg, GuardStuck, "warden · repeat · "+tool+" · "+what+" · "+note, nil, nil)
+		what, noticeWhat := "same output", "same output re-read"
+		if quick.Attempt.Failed {
+			what, noticeWhat = "same failure", "same call failed the same way"
+		}
+		note, told := "recorded only", "nothing (repeat of a recent steer, over the steer budget, or trace-only for this model)"
+		if sent {
+			note, told = "agent nudged", nudge
+		}
+		ago := strconv.Itoa(quick.CallsAgo)
+		w.record(ctx, cfg, GuardStuck, "warden · stuck · repeat · "+quick.Attempt.Tool+" · "+what+" · "+note, []string{
+			"call: " + quick.Attempt.Call, "previous identical call: " + ago + " calls ago, nothing changed between", "agent told: " + told,
+		}, nil)
 		if sent && cfg.Notices && ctx.HasUI() {
-			ctx.Notify("warden · repeat: "+what+" (agent nudged)", "warning")
+			ctx.Notify("warden \u00b7 repeat: "+noticeWhat+" (agent nudged)", "warning")
 		}
 	}
 	if verdict == nil {
-		return nil, nil
+		return out, changed
 	}
 	if verdict.Error != "" {
-		w.noteOnce(ctx, "err:"+verdict.Error, "warden: "+verdict.Error)
+		w.noteError(ctx, verdict.Error, verdict.ErrorCode)
 	}
 	if verdict.Source == "repeat" && !verdict.Stuck {
-		return nil, nil
+		return out, changed
 	}
 	nudge := ""
 	if verdict.Stuck && cfg.Stuck.Nudge {
 		nudge = StuckNudge(*verdict)
 	}
-	w.record(ctx, cfg, GuardStuck, FormatStuck(*verdict), nil, stuckTokens(*verdict, w.opts.Now()))
+	w.mu.Lock()
+	attempts := append([]Attempt(nil), w.window.Attempts...)
+	w.mu.Unlock()
+	w.record(ctx, cfg, GuardStuck, RenderTemplate(cfg.Widget.Stuck, stuckTokens(*verdict, w.opts.Now())), stuckDetails(*verdict, attempts, nudge), nil)
 	if !verdict.Stuck {
-		return nil, nil
+		return out, changed
 	}
 	w.bump(func(s *stats) { s.Stuck++ })
 	if cfg.Notices && ctx.HasUI() {
@@ -135,13 +187,46 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 		if nudge != "" {
 			suffix = " (agent nudged)"
 		}
-		ctx.Notify("warden · stuck: "+strings.Join(verdict.Reasons, "; ")+suffix, "warning")
+		ctx.Notify("warden \u00b7 stuck: "+strings.Join(verdict.Reasons, "; ")+suffix, "warning")
 	}
-	if nudge != "" {
-		w.steer(cfg, []SteerGuard{SteerGuardStuck}, ctx, nudge, SteerOptions{DeliverAs: "steer"})
+	if nudge != "" && w.adaptiveSend(ctx, cfg, SteerKindStuck) && w.steer(cfg, []SteerGuard{SteerGuardStuck}, ctx, nudge, SteerOptions{DeliverAs: "steer"}) {
+		w.watchSteer(ctx, cfg, []SteerKind{SteerKindStuck}, SteerSubject{Call: &SteerCall{Name: tool, Input: input}}, false)
 	}
-	return nil, nil
+	return out, changed
 }
+
+// stuckDetails is the trace detail of a stuck verdict (trace.ts stuckDetails): the attempts, what the judge said,
+// why, and what the agent was told.
+func stuckDetails(v StuckVerdict, attempts []Attempt, told string) []string {
+	lines := make([]string, 0, len(attempts)+4)
+	for i, a := range attempts {
+		mark := "\u2713"
+		if a.Failed {
+			mark = "\u2717"
+		}
+		line := strconv.Itoa(i+1) + ". " + mark + " " + clip(collapseSpaceAll(a.Call), 120)
+		if a.Failed && a.Output != "" {
+			line += " \u2192 " + clip(collapseSpaceAll(a.Output), 120)
+		}
+		lines = append(lines, line)
+	}
+	if j := v.Judgment; j != nil {
+		lines = append(lines, "jev: same strategy "+percent(j.SameStrategy)+" \u00b7 approach change "+toFixed(j.ApproachChange, 2)+"/2 \u00b7 progress "+percent(j.Progress)+" \u00b7 "+j.Model+" \u00b7 "+strconv.Itoa(j.ElapsedMs)+" ms")
+	}
+	if len(v.Reasons) > 0 {
+		lines = append(lines, "why: "+strings.Join(v.Reasons, "; "))
+	}
+	if v.Error != "" {
+		lines = append(lines, "typesafe: "+v.Error)
+	}
+	if told != "" {
+		lines = append(lines, "agent told: "+clip(told, 400))
+	}
+	return lines
+}
+
+// collapseSpaceAll is `.replace(/\s+/g, " ")` without a trim.
+func collapseSpaceAll(s string) string { return reJSSpace.ReplaceAllString(s, " ") }
 
 func (w *warden) latestTask(ctx sdk.Context) string {
 	if text, ok := w.latestUserPrompt(ctx); ok && text != "" {
@@ -154,9 +239,33 @@ func (w *warden) latestTask(ctx sdk.Context) string {
 
 // onAgentEnd is the done-check: a final message that claims the work is finished, after file changes no check
 // exercised or a UI change nothing showed, is asked to verify (or to say plainly that nothing was verified).
+//
+// The order of upstream's agent_end handler (extension.ts 2298-2450). Other lanes add their piece at its marker, as
+// ONE call, so the order stays upstream's:
+//
+//	1. the enabled gate
+//	2. regret settled by the prompt text, when no guarded call carried the question   (guardcore)
+//	3. a runaway stop: the recovery steer, then the handler returns                   (security)
+//	4. the open-loops reminder                                                        (tools)
+//	5. restatement measured on the final message, recorded only                       (security: prose)
+//	6. the conscience reminder, when no final text answered                           (conscience)
+//	7. turn rules: one judgment against the whole diff                                (rules)
+//	8. with a final message and a judge: prose and done evaluated together, prose recorded
+//	   and nudged first, then the done verdict and its follow-up                      (prose: security; done: here)
 func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 	cfg := w.config(ctx)
-	if !cfg.Enabled || !cfg.Done.Enabled {
+	// 1. enabled gate.
+	if !cfg.Enabled {
+		return nil, nil
+	}
+	// 2. regret settle: guardcore.
+	// 3. runaway recovery (returns): security.
+	// 4. open-loops reminder: tools.
+	// 5. restatement: security.
+	// 6. conscience reminder: conscience.
+	// 7. turn rules: rules.
+	// 8. done check (below); the prose check runs with it.
+	if !cfg.Done.Enabled {
 		return nil, nil
 	}
 	var messages []map[string]any
