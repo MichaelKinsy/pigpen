@@ -150,10 +150,11 @@ func payloadSourceOf(node *bashparse.Node) payloadSource {
 // MaskCommandFields applies RedactCommandSecrets to every command-bearing key in a log record, recursing through plain objects
 // and arrays. The result is a copy.
 func MaskCommandFields(details *jsObject) *jsObject {
-	return maskValue(details, false).(*jsObject)
+	return maskValue(details, false, 0).(*jsObject)
 }
 
-func maskValue(value any, bindsCommand bool) any {
+func maskValue(value any, bindsCommand bool, depth int) any {
+	checkLogDepth(depth)
 	switch v := value.(type) {
 	case string:
 		if bindsCommand {
@@ -163,18 +164,18 @@ func maskValue(value any, bindsCommand bool) any {
 	case []any:
 		out := make([]any, len(v))
 		for i, e := range v {
-			out[i] = maskValue(e, bindsCommand)
+			out[i] = maskValue(e, bindsCommand, depth+1)
 		}
 		return out
 	case map[string]any:
 		if v != nil {
-			return maskValue(orderedRecord(v), bindsCommand)
+			return maskValue(orderedRecord(v), bindsCommand, depth)
 		}
 	case *jsObject:
 		if v != nil {
 			out := newObject()
 			for _, k := range v.order() {
-				out.set(k, maskValue(v.vals[k], CommandBearingLogKeys[k]))
+				out.set(k, maskValue(v.vals[k], CommandBearingLogKeys[k], depth+1))
 			}
 			return out
 		}

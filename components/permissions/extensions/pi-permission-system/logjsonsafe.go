@@ -1,6 +1,7 @@
 package pi_permission_system
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -8,7 +9,6 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
-	"strings"
 	"unicode/utf8"
 )
 
@@ -116,7 +116,7 @@ func SafeJSONStringify(value any) (string, bool) {
 
 // jsonStringifyWith is JSON.stringify(value, replacer) with no indent.
 func jsonStringifyWith(value any, replacer JSONReplacer) (string, bool) {
-	var b strings.Builder
+	var b bytes.Buffer
 	if !serializeProperty(&b, "", value, replacer) {
 		return "", false
 	}
@@ -126,7 +126,7 @@ func jsonStringifyWith(value any, replacer JSONReplacer) (string, bool) {
 func isFunc(v any) bool { return v != nil && reflect.TypeOf(v).Kind() == reflect.Func }
 
 // serializeProperty is SerializeJSONProperty: it writes the property's JSON, or nothing (false) where it is undefined.
-func serializeProperty(b *strings.Builder, key string, value any, replacer JSONReplacer) bool {
+func serializeProperty(b *bytes.Buffer, key string, value any, replacer JSONReplacer) bool {
 	if replacer != nil {
 		value = replacer(key, value)
 	}
@@ -194,26 +194,26 @@ func serializeProperty(b *strings.Builder, key string, value any, replacer JSONR
 	return true
 }
 
-func writeObjectWith(b *strings.Builder, keys []string, vals map[string]any, replacer JSONReplacer) {
+func writeObjectWith(b *bytes.Buffer, keys []string, vals map[string]any, replacer JSONReplacer) {
 	b.WriteByte('{')
 	first := true
 	for _, k := range keys {
-		var inner strings.Builder
-		if !serializeProperty(&inner, k, vals[k], replacer) {
-			continue
-		}
+		mark := b.Len()
 		if !first {
 			b.WriteByte(',')
 		}
-		first = false
 		writeWTFString(b, k)
 		b.WriteByte(':')
-		b.WriteString(inner.String())
+		if !serializeProperty(b, k, vals[k], replacer) {
+			b.Truncate(mark) // undefined: the property is left out
+			continue
+		}
+		first = false
 	}
 	b.WriteByte('}')
 }
 
-func writeNumber(b *strings.Builder, f float64) {
+func writeNumber(b *bytes.Buffer, f float64) {
 	if math.IsNaN(f) || math.IsInf(f, 0) {
 		b.WriteString("null")
 		return
@@ -232,7 +232,7 @@ func wtfSurrogate(s string, i int) (unit rune, ok bool) {
 }
 
 // writeWTFString quotes like JSON.stringify (well-formed): control characters and lone surrogates escape, nothing else does.
-func writeWTFString(b *strings.Builder, s string) {
+func writeWTFString(b *bytes.Buffer, s string) {
 	b.WriteByte('"')
 	for i := 0; i < len(s); {
 		if u, ok := wtfSurrogate(s, i); ok {

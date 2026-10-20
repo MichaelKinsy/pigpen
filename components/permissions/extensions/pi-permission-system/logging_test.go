@@ -264,3 +264,15 @@ func TestLoggingTwins(t *testing.T) {
 		eq(t, strings.HasPrefix(w, "Failed to write permission-system review log '"), true, w)
 	})
 }
+
+func TestLoggingCyclicRecord(t *testing.T) {
+	// A record that contains itself overflows the original's recursive walks (a RangeError the writer reports as a warning); the
+	// port stops at a fixed depth and reports the same text rather than crash on an unrecoverable Go stack overflow.
+	x := newLgFixture(t)
+	d := newObject()
+	d.set("self", d)
+	w := x.logger().Review("e", d)
+	eq(t, w, "Failed to write permission-system review log '"+x.revPath+"': Maximum call stack size exceeded", "warning")
+	_, err := os.Stat(x.revPath)
+	eq(t, os.IsNotExist(err), true, "nothing written")
+}

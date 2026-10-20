@@ -1,0 +1,944 @@
+[
+ {
+  "name": "js-circular-marker",
+  "file": "logjsonsafe.go",
+  "find": "return \"[Circular]\"",
+  "replace": "return \"[circular]\""
+ },
+ {
+  "name": "js-seen-add",
+  "file": "logjsonsafe.go",
+  "find": "\t\t\tseen[id] = true\n",
+  "replace": "\t\t\t_ = id\n"
+ },
+ {
+  "name": "js-seen-check",
+  "file": "logjsonsafe.go",
+  "find": "if seen[id] {",
+  "replace": "if !seen[id] {"
+ },
+ {
+  "name": "js-error-name",
+  "file": "logjsonsafe.go",
+  "find": "o.set(\"name\", name)",
+  "replace": "o.set(\"name\", \"Error\")"
+ },
+ {
+  "name": "js-error-message",
+  "file": "logjsonsafe.go",
+  "find": "o.set(\"message\", message)",
+  "replace": "o.set(\"message\", name)"
+ },
+ {
+  "name": "js-error-stack-nil",
+  "file": "logjsonsafe.go",
+  "find": "o.set(\"stack\", undef{})",
+  "replace": "o.set(\"stack\", nil)"
+ },
+ {
+  "name": "js-go-error",
+  "file": "logjsonsafe.go",
+  "find": "return errorRecord(\"Error\", e.Error(), nil)",
+  "replace": "return e.Error()"
+ },
+ {
+  "name": "js-bigint",
+  "file": "logjsonsafe.go",
+  "find": "return e.String()",
+  "replace": "return e.Int64()"
+ },
+ {
+  "name": "js-undefined-in-array",
+  "file": "logjsonsafe.go",
+  "find": "b.WriteString(\"null\")\n\t\t\t}\n\t\t}\n\t\tb.WriteByte(']')",
+  "replace": "}\n\t\t}\n\t\tb.WriteByte(']')"
+ },
+ {
+  "name": "js-nan-null",
+  "file": "logjsonsafe.go",
+  "find": "if math.IsNaN(f) || math.IsInf(f, 0) {",
+  "replace": "if math.IsInf(f, 0) {"
+ },
+ {
+  "name": "js-inf-null",
+  "file": "logjsonsafe.go",
+  "find": "if math.IsNaN(f) || math.IsInf(f, 0) {",
+  "replace": "if math.IsNaN(f) {"
+ },
+ {
+  "name": "js-func-omitted",
+  "file": "logjsonsafe.go",
+  "find": "if isFunc(value) {\n\t\t\treturn false",
+  "replace": "if isFunc(value) {\n\t\t\treturn true"
+ },
+ {
+  "name": "js-surrogate-escape",
+  "file": "logjsonsafe.go",
+  "find": "if u, ok := wtfSurrogate(s, i); ok {\n\t\t\tb.WriteString",
+  "replace": "if u, ok := wtfSurrogate(s, i); false && ok {\n\t\t\tb.WriteString"
+ },
+ {
+  "name": "js-control-escape",
+  "file": "logjsonsafe.go",
+  "find": "case r < 0x20:",
+  "replace": "case r < 0x1f:"
+ },
+ {
+  "name": "js-invalid-utf8",
+  "file": "logjsonsafe.go",
+  "find": "case r == utf8.RuneError && size == 1:\n\t\t\tb.WriteString(`\\ufffd`)",
+  "replace": "case false:\n\t\t\tb.WriteString(`\\ufffd`)"
+ },
+ {
+  "name": "js-utf16-astral",
+  "file": "logjsonsafe.go",
+  "find": "if r >= 0x10000 {\n\t\t\tn += 2",
+  "replace": "if r >= 0x10000 {\n\t\t\tn += 1"
+ },
+ {
+  "name": "js-prefix-split",
+  "file": "logjsonsafe.go",
+  "find": "if units+2 > n {",
+  "replace": "if units+2 > n+1 {"
+ },
+ {
+  "name": "js-prefix-high",
+  "file": "logjsonsafe.go",
+  "find": "hi := 0xD800 + (r-0x10000)>>10",
+  "replace": "hi := 0xDC00 + (r-0x10000)>>10"
+ },
+ {
+  "name": "js-array-key",
+  "file": "logjsonsafe.go",
+  "find": "serializeProperty(b, strconv.Itoa(i), e, replacer)",
+  "replace": "serializeProperty(b, \"\", e, replacer)"
+ },
+ {
+  "name": "js-object-order",
+  "file": "logjsonsafe.go",
+  "find": "writeObjectWith(b, x.order(), x.vals, replacer)",
+  "replace": "writeObjectWith(b, x.keys, x.vals, replacer)"
+ },
+ {
+  "name": "js-empty-array-identity",
+  "file": "logjsonsafe.go",
+  "find": "if len(x) > 0 {\n\t\t\treturn seenKey{reflect.Slice",
+  "replace": "if len(x) >= 0 {\n\t\t\treturn seenKey{reflect.Slice"
+ },
+ {
+  "name": "rd-placeholder",
+  "file": "logredaction.go",
+  "find": "const RedactedPlaceholder = \"[redacted]\"",
+  "replace": "const RedactedPlaceholder = \"[REDACTED]\""
+ },
+ {
+  "name": "rd-nullish",
+  "file": "logredaction.go",
+  "find": "if !isNullish(current) && IsSensitiveName(key) {",
+  "replace": "if IsSensitiveName(key) {"
+ },
+ {
+  "name": "rd-name-authorization",
+  "file": "logredaction.go",
+  "find": "authorization|api",
+  "replace": "api"
+ },
+ {
+  "name": "rd-name-secret",
+  "file": "logredaction.go",
+  "find": "|secret|token",
+  "replace": "|token"
+ },
+ {
+  "name": "rd-name-cookie",
+  "file": "logredaction.go",
+  "find": "|cookie|",
+  "replace": "|"
+ },
+ {
+  "name": "rd-name-boundary-start",
+  "file": "logredaction.go",
+  "find": "(?:^|[-_])keys?(?:$|[-_])",
+  "replace": "(?:[-_])keys?(?:$|[-_])"
+ },
+ {
+  "name": "rd-name-boundary-end",
+  "file": "logredaction.go",
+  "find": "(?:^|[-_])keys?(?:$|[-_])",
+  "replace": "(?:^|[-_])keys?(?:[-_])"
+ },
+ {
+  "name": "rd-camel",
+  "file": "logredaction.go",
+  "find": "|| camelKeyPattern.MatchString(name)",
+  "replace": "|| false"
+ },
+ {
+  "name": "rd-camel-keys",
+  "file": "logredaction.go",
+  "find": "(?:Key|Keys)(?:$|[A-Z_-])",
+  "replace": "(?:Key)(?:$|[A-Z_-])"
+ },
+ {
+  "name": "rd-camel-tail",
+  "file": "logredaction.go",
+  "find": "(?:Key|Keys)(?:$|[A-Z_-])",
+  "replace": "(?:Key|Keys)(?:[A-Z_-])"
+ },
+ {
+  "name": "rd-lower",
+  "file": "logredaction.go",
+  "find": "sensitiveNamePattern.MatchString(asciiLower(name))",
+  "replace": "sensitiveNamePattern.MatchString(name)"
+ },
+ {
+  "name": "rd-lower-range",
+  "file": "logredaction.go",
+  "find": "c >= 'A' && c <= 'Z' {\n\t\t\tb := []byte(s)",
+  "replace": "c >= 'A' && c < 'Z' {\n\t\t\tb := []byte(s)"
+ },
+ {
+  "name": "rd-lower-tail",
+  "file": "logredaction.go",
+  "find": "if b[j] >= 'A' && b[j] <= 'Z' {",
+  "replace": "if b[j] >= 'A' && b[j] < 'Z' {"
+ },
+ {
+  "name": "cap-default",
+  "file": "logfieldcap.go",
+  "find": "const DefaultReviewLogFieldMaxWidth = 1000",
+  "replace": "const DefaultReviewLogFieldMaxWidth = 100"
+ },
+ {
+  "name": "cap-nil",
+  "file": "logfieldcap.go",
+  "find": "if reviewLogFieldMaxWidth == nil {",
+  "replace": "if reviewLogFieldMaxWidth != nil {"
+ },
+ {
+  "name": "cap-boundary",
+  "file": "logfieldcap.go",
+  "find": "if float64(n) <= maxWidth {",
+  "replace": "if float64(n) < maxWidth {"
+ },
+ {
+  "name": "cap-ellipsis",
+  "file": "logfieldcap.go",
+  "find": "+ \"\\u2026\"",
+  "replace": "+ \"...\""
+ },
+ {
+  "name": "cap-array",
+  "file": "logfieldcap.go",
+  "find": "out[i] = capValue(e, maxWidth, depth+1)",
+  "replace": "out[i] = e"
+ },
+ {
+  "name": "cap-object",
+  "file": "logfieldcap.go",
+  "find": "out.set(k, capValue(v.vals[k], maxWidth, depth+1))",
+  "replace": "out.set(k, v.vals[k])"
+ },
+ {
+  "name": "cap-map",
+  "file": "logfieldcap.go",
+  "find": "return capValue(orderedRecord(v), maxWidth, depth)",
+  "replace": "return v"
+ },
+ {
+  "name": "cap-depth",
+  "file": "logfieldcap.go",
+  "find": "const maxLogDepth = 4000",
+  "replace": "const maxLogDepth = 4000000"
+ },
+ {
+  "name": "cap-nan",
+  "file": "logfieldcap.go",
+  "find": "if math.IsNaN(end) {\n\t\treturn 0",
+  "replace": "if math.IsNaN(end) {\n\t\treturn length"
+ },
+ {
+  "name": "cap-negative",
+  "file": "logfieldcap.go",
+  "find": "e += float64(length)\n\t\tif e < 0 {",
+  "replace": "e += 0\n\t\tif e < 0 {"
+ },
+ {
+  "name": "cap-trunc",
+  "file": "logfieldcap.go",
+  "find": "e := math.Trunc(end)",
+  "replace": "e := math.Ceil(end)"
+ },
+ {
+  "name": "cap-clamp",
+  "file": "logfieldcap.go",
+  "find": "if e > float64(length) {\n\t\treturn length",
+  "replace": "if e > float64(length) {\n\t\treturn 0"
+ },
+ {
+  "name": "perm-file",
+  "file": "logperms.go",
+  "find": "OwnerOnlyFileMode      os.FileMode = 0o600",
+  "replace": "OwnerOnlyFileMode      os.FileMode = 0o644"
+ },
+ {
+  "name": "perm-dir",
+  "file": "logperms.go",
+  "find": "OwnerOnlyDirectoryMode os.FileMode = 0o700",
+  "replace": "OwnerOnlyDirectoryMode os.FileMode = 0o755"
+ },
+ {
+  "name": "perm-chmod",
+  "file": "logperms.go",
+  "find": "_ = os.Chmod(path, mode)",
+  "replace": "_ = path"
+ },
+ {
+  "name": "lg-debug-gate",
+  "file": "logging.go",
+  "find": "if !l.opts.GetConfig().DebugLog {",
+  "replace": "if l.opts.GetConfig().DebugLog {"
+ },
+ {
+  "name": "lg-review-gate",
+  "file": "logging.go",
+  "find": "if !config.PermissionReviewLog {",
+  "replace": "if config.PermissionReviewLog {"
+ },
+ {
+  "name": "lg-debug-uncapped",
+  "file": "logging.go",
+  "find": "return l.writeLine(\"debug\", l.opts.DebugLogPath, event, details, nil)",
+  "replace": "w := ResolveReviewLogFieldWidth(l.opts.GetConfig().ReviewLogFieldMaxWidth)\n\treturn l.writeLine(\"debug\", l.opts.DebugLogPath, event, details, &w)"
+ },
+ {
+  "name": "lg-review-uncapped",
+  "file": "logging.go",
+  "find": "return l.writeLine(\"review\", l.opts.ReviewLogPath, event, details, &width)",
+  "replace": "return l.writeLine(\"review\", l.opts.ReviewLogPath, event, details, nil)"
+ },
+ {
+  "name": "lg-mask-order",
+  "file": "logging.go",
+  "find": "masked := MaskCommandFields(details)\n\tbounded := masked\n\tif maxFieldWidth != nil {\n\t\tbounded = CapLogFieldWidths(masked, *maxFieldWidth).(*jsObject)\n\t}",
+  "replace": "bounded := details\n\tif maxFieldWidth != nil {\n\t\tbounded = CapLogFieldWidths(details, *maxFieldWidth).(*jsObject)\n\t}\n\tbounded = MaskCommandFields(bounded)"
+ },
+ {
+  "name": "lg-no-mask",
+  "file": "logging.go",
+  "find": "masked := MaskCommandFields(details)",
+  "replace": "masked := details"
+ },
+ {
+  "name": "lg-fixed-order",
+  "file": "logging.go",
+  "find": "line.set(\"extension\", extensionID)\n\tline.set(\"stream\", stream)",
+  "replace": "line.set(\"stream\", stream)\n\tline.set(\"extension\", extensionID)"
+ },
+ {
+  "name": "lg-timestamp-ms",
+  "file": "logging.go",
+  "find": "\"2006-01-02T15:04:05.000Z\"",
+  "replace": "\"2006-01-02T15:04:05Z\""
+ },
+ {
+  "name": "lg-timestamp-utc",
+  "file": "logging.go",
+  "find": ".UTC().Format",
+  "replace": ".Format"
+ },
+ {
+  "name": "lg-newline",
+  "file": "logging.go",
+  "find": "f.WriteString(line + \"\\n\")",
+  "replace": "f.WriteString(line)"
+ },
+ {
+  "name": "lg-append",
+  "file": "logging.go",
+  "find": "os.O_APPEND|os.O_CREATE|os.O_WRONLY",
+  "replace": "os.O_TRUNC|os.O_CREATE|os.O_WRONLY"
+ },
+ {
+  "name": "lg-create-mode",
+  "file": "logging.go",
+  "find": "os.O_WRONLY, OwnerOnlyFileMode)",
+  "replace": "os.O_WRONLY, 0o644)"
+ },
+ {
+  "name": "lg-harden-once",
+  "file": "logging.go",
+  "find": "if first {\n\t\tRestrictExistingPathToOwner",
+  "replace": "if !first {\n\t\tRestrictExistingPathToOwner"
+ },
+ {
+  "name": "lg-harden-keyed",
+  "file": "logging.go",
+  "find": "first := !l.hardened[path]",
+  "replace": "first := true"
+ },
+ {
+  "name": "lg-dir-error",
+  "file": "logging.go",
+  "find": "if msg := l.opts.EnsureLogsDirectory(); msg != \"\" {\n\t\treturn msg",
+  "replace": "if msg := l.opts.EnsureLogsDirectory(); msg != \"\" {\n\t\treturn \"\""
+ },
+ {
+  "name": "lg-serialize-warning",
+  "file": "logging.go",
+  "find": "if !ok || line == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "lg-write-warning",
+  "file": "logging.go",
+  "find": "if werr != nil {\n\t\treturn fmt.Sprintf",
+  "replace": "if false {\n\t\treturn fmt.Sprintf"
+ },
+ {
+  "name": "lg-recover",
+  "file": "logging.go",
+  "find": "if r := recover(); r != nil {\n\t\t\twarning",
+  "replace": "if r := recover(); r != nil && false {\n\t\t\twarning"
+ },
+ {
+  "name": "sl-dedup",
+  "file": "sessionlogger.go",
+  "find": "if !seen {\n\t\ts.notify(warning)",
+  "replace": "if true {\n\t\ts.notify(warning)"
+ },
+ {
+  "name": "sl-dedup-set",
+  "file": "sessionlogger.go",
+  "find": "s.reported[warning] = true",
+  "replace": "_ = warning"
+ },
+ {
+  "name": "sl-warn-dedup",
+  "file": "sessionlogger.go",
+  "find": "func (s *PermissionSessionLogger) Warn(message string) { s.notify(message) }",
+  "replace": "func (s *PermissionSessionLogger) Warn(message string) { s.reportOnce(message) }"
+ },
+ {
+  "name": "sl-debug-path",
+  "file": "sessionlogger.go",
+  "find": "DebugLogPath:        filepath.Join(deps.GlobalLogsDir, debugLogFilename)",
+  "replace": "DebugLogPath:        filepath.Join(deps.GlobalLogsDir, reviewLogFilename)"
+ },
+ {
+  "name": "sl-review-notify",
+  "file": "sessionlogger.go",
+  "find": "func (s *PermissionSessionLogger) Review(event string, details *jsObject) {\n\tif w := s.writer.Review(event, details); w != \"\" {\n\t\ts.reportOnce(w)\n\t}",
+  "replace": "func (s *PermissionSessionLogger) Review(event string, details *jsObject) {\n\ts.writer.Review(event, details)"
+ },
+ {
+  "name": "au-allowed",
+  "file": "decisionaudit.go",
+  "find": "if action == \"allow\" {",
+  "replace": "if action == \"block\" {"
+ },
+ {
+  "name": "au-decision-count",
+  "file": "decisionaudit.go",
+  "find": "a.toolCalls++\n\tif action",
+  "replace": "if action"
+ },
+ {
+  "name": "au-error-count",
+  "file": "decisionaudit.go",
+  "find": "a.toolCalls++\n\ta.errors++",
+  "replace": "a.errors++"
+ },
+ {
+  "name": "au-invariant",
+  "file": "decisionaudit.go",
+  "find": "if toolCalls != allowed+blocked+errs {",
+  "replace": "if toolCalls < allowed+blocked+errs {"
+ },
+ {
+  "name": "au-summary-event",
+  "file": "decisionaudit.go",
+  "find": "\"permission.session_summary\"",
+  "replace": "\"permission.summary\""
+ },
+ {
+  "name": "au-text",
+  "file": "decisionaudit.go",
+  "find": "decision audit invariant violated",
+  "replace": "decision audit invariant broken"
+ },
+ {
+  "name": "ev-channel",
+  "file": "permissionevents.go",
+  "find": "\"permissions:decision\"",
+  "replace": "\"permissions:decisions\""
+ },
+ {
+  "name": "ev-recover",
+  "file": "permissionevents.go",
+  "find": "defer func() { _ = recover() }()",
+  "replace": "defer func() {}()"
+ },
+ {
+  "name": "ev-error",
+  "file": "permissionevents.go",
+  "find": "_ = events.Emit(PermissionsDecisionChannel, event)",
+  "replace": "_ = events.Emit(PermissionsDecisionChannel, nil)"
+ },
+ {
+  "name": "ev-forwarding-omit",
+  "file": "permissionevents.go",
+  "find": "`json:\"forwarding,omitempty\"`",
+  "replace": "`json:\"forwarding\"`"
+ },
+ {
+  "name": "ev-field-order",
+  "file": "permissionevents.go",
+  "find": "Surface        string                       `json:\"surface\"`\n\tValue          string                       `json:\"value\"`",
+  "replace": "Value          string                       `json:\"value\"`\n\tSurface        string                       `json:\"surface\"`"
+ },
+ {
+  "name": "rp-review",
+  "file": "decisionreporter.go",
+  "find": "r.logger.Review(event, details)",
+  "replace": "r.logger.Debug(event, details)"
+ },
+ {
+  "name": "bd-block-reason",
+  "file": "toolcallboundary.go",
+  "find": "return ToolCallResult{Block: true, Reason: outcome.Reason}, nil, false",
+  "replace": "return ToolCallResult{Block: true}, nil, false"
+ },
+ {
+  "name": "bd-record-decision",
+  "file": "toolcallboundary.go",
+  "find": "audit.RecordDecision(outcome.Action)\n",
+  "replace": "\n"
+ },
+ {
+  "name": "bd-trace-reason",
+  "file": "toolcallboundary.go",
+  "find": "if outcome.Action == \"block\" {\n\t\tdetails.set(\"reason\"",
+  "replace": "if false {\n\t\tdetails.set(\"reason\""
+ },
+ {
+  "name": "bd-trace-event",
+  "file": "toolcallboundary.go",
+  "find": "tracer.Debug(\"permission.decision\", details)",
+  "replace": "tracer.Debug(\"permission.decisions\", details)"
+ },
+ {
+  "name": "bd-error-record",
+  "file": "toolcallboundary.go",
+  "find": "audit.RecordError()\n\treason",
+  "replace": "reason"
+ },
+ {
+  "name": "bd-share-id",
+  "file": "toolcallboundary.go",
+  "find": "RequestID: requestID, Surface: toolName",
+  "replace": "RequestID: CreatePermissionRequestId(), Surface: toolName"
+ },
+ {
+  "name": "bd-value-command",
+  "file": "toolcallboundary.go",
+  "find": "if hasCommand {\n\t\tvalue = command",
+  "replace": "if false {\n\t\tvalue = command"
+ },
+ {
+  "name": "bd-recover",
+  "file": "toolcallboundary.go",
+  "find": "defer func() { _ = recover() }()\n\taudit.RecordError()",
+  "replace": "audit.RecordError()"
+ },
+ {
+  "name": "bd-run-recover",
+  "file": "toolcallboundary.go",
+  "find": "thrown, failed = r, true",
+  "replace": "thrown, failed = r, false"
+ },
+ {
+  "name": "bd-err-return",
+  "file": "toolcallboundary.go",
+  "find": "return ToolCallResult{}, err, true",
+  "replace": "return ToolCallResult{}, err, false"
+ },
+ {
+  "name": "bd-unknown",
+  "file": "toolcallboundary.go",
+  "find": "return \"<unknown>\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "bd-name-first",
+  "file": "toolcallboundary.go",
+  "find": "\"name\", \"toolName\")",
+  "replace": "\"toolName\", \"name\")"
+ },
+ {
+  "name": "bd-nullish",
+  "file": "toolcallboundary.go",
+  "find": "if v, _ := r.get(a); !isNullish(v) {",
+  "replace": "if v, _ := r.get(a); v != \"\" {"
+ },
+ {
+  "name": "bd-arguments",
+  "file": "toolcallboundary.go",
+  "find": "\"input\", \"arguments\"",
+  "replace": "\"input\", \"args\""
+ },
+ {
+  "name": "bd-reason-text",
+  "file": "toolcallboundary.go",
+  "find": "Permission gate failed and blocked the tool call (fail-closed): ",
+  "replace": "Permission gate failed: "
+ },
+ {
+  "name": "bd-resolution",
+  "file": "toolcallboundary.go",
+  "find": "details.set(\"resolution\", \"gate_error\")",
+  "replace": "details.set(\"resolution\", \"error\")"
+ },
+ {
+  "name": "bd-decided-by",
+  "file": "toolcallboundary.go",
+  "find": "decidedBy.set(\"kind\", \"gate_error\")",
+  "replace": "decidedBy.set(\"kind\", \"error\")"
+ },
+ {
+  "name": "bd-value-block",
+  "file": "toolcallboundary.go",
+  "find": "if !r.Block {\n\t\treturn nil",
+  "replace": "if r.Block {\n\t\treturn nil"
+ },
+ {
+  "name": "rr-forwarded",
+  "file": "reviewlogrenderer.go",
+  "find": "if request.Requester.Forwarded {",
+  "replace": "if !request.Requester.Forwarded {"
+ },
+ {
+  "name": "rr-session",
+  "file": "reviewlogrenderer.go",
+  "find": "present(out, \"requesterSessionId\", request.Requester.SessionID)",
+  "replace": "present(out, \"requesterSessionId\", request.Requester.AgentName)"
+ },
+ {
+  "name": "rr-order",
+  "file": "reviewlogrenderer.go",
+  "find": "present(out, \"matchedPattern\", request.MatchedPattern)\n\tpresent(out, \"executedUnit\", request.ExecutedUnit)",
+  "replace": "present(out, \"executedUnit\", request.ExecutedUnit)\n\tpresent(out, \"matchedPattern\", request.MatchedPattern)"
+ },
+ {
+  "name": "rr-context",
+  "file": "reviewlogrenderer.go",
+  "find": "present(out, \"commandContext\", request.CommandContext)\n",
+  "replace": "\n"
+ },
+ {
+  "name": "rr-invoked",
+  "file": "reviewlogrenderer.go",
+  "find": "present(out, \"invokedToolName\", request.InvokedToolName)\n",
+  "replace": "\n"
+ },
+ {
+  "name": "rr-nil",
+  "file": "reviewlogrenderer.go",
+  "find": "if value != nil {",
+  "replace": "if value != nil && *value != \"\" {"
+ },
+ {
+  "name": "fv-flag-kind",
+  "file": "factvocabulary.go",
+  "find": "if payload.Kind == \"bash_external_directory\" {\n\t\tout := []string{}",
+  "replace": "if payload.Kind == \"bash\" {\n\t\tout := []string{}"
+ },
+ {
+  "name": "fv-label",
+  "file": "factvocabulary.go",
+  "find": "if e.Label == label {",
+  "replace": "if e.Label != label {"
+ },
+ {
+  "name": "fv-empty",
+  "file": "factvocabulary.go",
+  "find": "if payload.Request.Value == \"\" {",
+  "replace": "if payload.Request.Value == \"x\" {"
+ },
+ {
+  "name": "fv-flag-label",
+  "file": "factvocabulary.go",
+  "find": "if payload.Kind == \"bash_external_directory\" {\n\t\treturn \"path\"",
+  "replace": "if payload.Kind == \"bash\" {\n\t\treturn \"path\""
+ },
+ {
+  "name": "fv-mcp",
+  "file": "factvocabulary.go",
+  "find": "return \"target\"",
+  "replace": "return \"path\""
+ },
+ {
+  "name": "fv-skill-read",
+  "file": "factvocabulary.go",
+  "find": "case \"skill\", \"skill_read\":",
+  "replace": "case \"skill\":"
+ },
+ {
+  "name": "fv-forwarded-bash",
+  "file": "factvocabulary.go",
+  "find": "case \"bash\":\n\t\t\treturn \"command\"\n\t\tcase \"skill\":",
+  "replace": "case \"skill\":"
+ },
+ {
+  "name": "fv-ctx-sub",
+  "file": "factvocabulary.go",
+  "find": "return \"command substitution\", true",
+  "replace": "return \"subshell\", true"
+ },
+ {
+  "name": "fv-ctx-nil",
+  "file": "factvocabulary.go",
+  "find": "if context == nil {\n\t\treturn \"\", false",
+  "replace": "if context == nil {\n\t\treturn \"\", true"
+ },
+ {
+  "name": "cr-keys",
+  "file": "commandredaction.go",
+  "find": "\"command\": true, \"executedUnit\": true",
+  "replace": "\"command\": true"
+ },
+ {
+  "name": "cr-unit",
+  "file": "commandredaction.go",
+  "find": "\"command\": true, \"executedUnit\": true",
+  "replace": "\"executedUnit\": true"
+ },
+ {
+  "name": "cr-empty",
+  "file": "commandredaction.go",
+  "find": "if command == \"\" {\n\t\treturn command",
+  "replace": "if command == \"x\" {\n\t\treturn command"
+ },
+ {
+  "name": "cr-cold",
+  "file": "commandredaction.go",
+  "find": "if parser == nil {\n\t\treturn command",
+  "replace": "if parser == nil {\n\t\tparser = nil"
+ },
+ {
+  "name": "cr-recover",
+  "file": "commandredaction.go",
+  "find": "if recover() != nil {\n\t\t\tresult = command",
+  "replace": "if recover() != nil {\n\t\t\tresult = \"\""
+ },
+ {
+  "name": "cr-depth",
+  "file": "commandredaction.go",
+  "find": "const maxPayloadDepth = 4",
+  "replace": "const maxPayloadDepth = 1"
+ },
+ {
+  "name": "cr-depth-check",
+  "file": "commandredaction.go",
+  "find": "if depth >= maxPayloadDepth {",
+  "replace": "if depth > maxPayloadDepth {"
+ },
+ {
+  "name": "cr-slice-shift",
+  "file": "commandredaction.go",
+  "find": "shift = offset + payload.start",
+  "replace": "shift = payload.start"
+ },
+ {
+  "name": "cr-stitched",
+  "file": "commandredaction.go",
+  "find": "} else if len(inner) > 0 {",
+  "replace": "} else if len(inner) > 1 {"
+ },
+ {
+  "name": "cr-stitched-whole",
+  "file": "commandredaction.go",
+  "find": "spans = append(spans, maskSpan{payload.start + offset, payload.end + offset, RedactedPlaceholder})",
+  "replace": "spans = append(spans, maskSpan{payload.start, payload.end, RedactedPlaceholder})"
+ },
+ {
+  "name": "cr-word-type",
+  "file": "commandredaction.go",
+  "find": "if node.Type() == \"word\" {\n\t\treturn payloadSource{\"slice\"",
+  "replace": "if node.Type() == \"wordx\" {\n\t\treturn payloadSource{\"slice\""
+ },
+ {
+  "name": "cr-dollar",
+  "file": "commandredaction.go",
+  "find": "if strings.HasPrefix(text, \"$\") {\n\t\tquoteAt = 1",
+  "replace": "if strings.HasPrefix(text, \"$\") {\n\t\tquoteAt = 0"
+ },
+ {
+  "name": "cr-quote-end",
+  "file": "commandredaction.go",
+  "find": "text[len(text)-1] == text[quoteAt]",
+  "replace": "text[len(text)-1] != 0"
+ },
+ {
+  "name": "cr-quote-len",
+  "file": "commandredaction.go",
+  "find": "len(text) >= quoteAt+2",
+  "replace": "len(text) >= quoteAt+1"
+ },
+ {
+  "name": "cr-quoted-types",
+  "file": "commandredaction.go",
+  "find": "{\"string\": true, \"raw_string\": true, \"ansi_c_string\": true}",
+  "replace": "{\"string\": true, \"raw_string\": true}"
+ },
+ {
+  "name": "cr-redirect-skip",
+  "file": "commandredaction.go",
+  "find": "|| bashparse.RedirectNodeTypes[child.Type()] {",
+  "replace": "{"
+ },
+ {
+  "name": "cr-assign-skip",
+  "file": "commandredaction.go",
+  "find": "child.Type() == \"variable_assignment\" ||",
+  "replace": ""
+ },
+ {
+  "name": "cr-named",
+  "file": "commandredaction.go",
+  "find": "!child.IsNamed() ||",
+  "replace": ""
+ },
+ {
+  "name": "cr-index-range",
+  "file": "commandredaction.go",
+  "find": "if index < 0 || index >= len(nodes) {",
+  "replace": "if index < 0 {"
+ },
+ {
+  "name": "cr-assign-name",
+  "file": "commandredaction.go",
+  "find": "if name == nil || !IsSensitiveName(name.Text()) {",
+  "replace": "if name == nil {"
+ },
+ {
+  "name": "cr-assign-value",
+  "file": "commandredaction.go",
+  "find": "value := node.Child(2)",
+  "replace": "value := node.Child(1)"
+ },
+ {
+  "name": "cr-assign-end",
+  "file": "commandredaction.go",
+  "find": "return newMaskSpan(value.StartByte(), node.EndByte(), RedactedPlaceholder)",
+  "replace": "return newMaskSpan(value.StartByte(), value.EndByte(), RedactedPlaceholder)"
+ },
+ {
+  "name": "cr-word-assign",
+  "file": "commandredaction.go",
+  "find": "if m == nil || !IsSensitiveName(m[1]) {",
+  "replace": "if m == nil {"
+ },
+ {
+  "name": "cr-word-start",
+  "file": "commandredaction.go",
+  "find": "node.StartByte()+len(m[0])",
+  "replace": "node.StartByte()+len(m[1])"
+ },
+ {
+  "name": "cr-word-regexp",
+  "file": "commandredaction.go",
+  "find": "`^([A-Za-z_][A-Za-z0-9_]*)=`",
+  "replace": "`^([A-Za-z][A-Za-z0-9_]*)=`"
+ },
+ {
+  "name": "cr-header-sensitive",
+  "file": "commandredaction.go",
+  "find": "if !ok || !IsSensitiveName(field) || camelCased.MatchString(field) {",
+  "replace": "if !ok || camelCased.MatchString(field) {"
+ },
+ {
+  "name": "cr-header-camel",
+  "file": "commandredaction.go",
+  "find": "if !ok || !IsSensitiveName(field) || camelCased.MatchString(field) {",
+  "replace": "if !ok || !IsSensitiveName(field) {"
+ },
+ {
+  "name": "cr-header-types",
+  "file": "commandredaction.go",
+  "find": "if !bashparse.ArgNodeTypes[node.Type()] {",
+  "replace": "if node.Type() != \"word\" {"
+ },
+ {
+  "name": "cr-header-colon",
+  "file": "commandredaction.go",
+  "find": "node.StartByte()+colon+1, node.EndByte()",
+  "replace": "node.StartByte()+colon, node.EndByte()"
+ },
+ {
+  "name": "cr-header-quote",
+  "file": "commandredaction.go",
+  "find": "RedactedPlaceholder+openQuoteAt(text, colon))",
+  "replace": "RedactedPlaceholder)"
+ },
+ {
+  "name": "cr-header-js-space",
+  "file": "commandredaction.go",
+  "find": "isJSSpace(r)",
+  "replace": "r == ' '"
+ },
+ {
+  "name": "cr-header-nonspace",
+  "file": "commandredaction.go",
+  "find": "if i >= len(s) {\n\t\treturn \"\", false\n\t}\n\tif r, _",
+  "replace": "if r, _"
+ },
+ {
+  "name": "cr-header-first",
+  "file": "commandredaction.go",
+  "find": "if i >= len(s) || !(s[i] >= 'A' && s[i] <= 'Z' || s[i] >= 'a' && s[i] <= 'z') {",
+  "replace": "if i >= len(s) {"
+ },
+ {
+  "name": "cr-quote-single",
+  "file": "commandredaction.go",
+  "find": "if c == '\"' || c == '\\'' {\n\t\t\t\tquote = c",
+  "replace": "if c == '\"' {\n\t\t\t\tquote = c"
+ },
+ {
+  "name": "cr-sort-end",
+  "file": "commandredaction.go",
+  "find": "return ordered[i].end > ordered[j].end",
+  "replace": "return ordered[i].end < ordered[j].end"
+ },
+ {
+  "name": "cr-disjoint",
+  "file": "commandredaction.go",
+  "find": "if n := len(disjoint); n > 0 && s.start < disjoint[n-1].end {",
+  "replace": "if n := len(disjoint); n > 0 && s.start < disjoint[n-1].start {"
+ },
+ {
+  "name": "cr-apply-order",
+  "file": "commandredaction.go",
+  "find": "for i := len(disjoint) - 1; i >= 0; i-- {",
+  "replace": "for i := 0; i < len(disjoint); i++ {"
+ },
+ {
+  "name": "cr-nonstring",
+  "file": "commandredaction.go",
+  "find": "\tcase string:\n\t\tif bindsCommand {",
+  "replace": "\tcase string:\n\t\tif true {"
+ },
+ {
+  "name": "cr-nest-key",
+  "file": "commandredaction.go",
+  "find": "out.set(k, maskValue(v.vals[k], CommandBearingLogKeys[k], depth+1))",
+  "replace": "out.set(k, maskValue(v.vals[k], false, depth+1))"
+ },
+ {
+  "name": "cr-nest-array",
+  "file": "commandredaction.go",
+  "find": "out[i] = maskValue(e, bindsCommand, depth+1)",
+  "replace": "out[i] = e"
+ }
+]
