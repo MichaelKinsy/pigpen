@@ -76,6 +76,9 @@ type core struct {
 	auditMessages *goalAuditMessages
 	accounting    *goalAccounting
 
+	// draft is the active guided draft (goal-drafting.ts activeDrafts.get(core)).
+	draft *activeGoalDraft
+
 	profileInitialized bool
 	draftingProfile    bool
 

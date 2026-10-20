@@ -76,7 +76,7 @@ func TestGoalTaskToolsRig(t *testing.T) {
 		f := fixtureWithTasks(t, "Task tool goal", `[{"id":"t1","title":"Task one","status":"pending","verificationContract":"Run the check."}]`, "")
 		r := startedRig(t, f, rigOptions{})
 		out := r.callTool("update_goal_task", map[string]any{"task_id": "t1", "status": "complete"})
-		contains(t, out.Content, "verification contract", "evidence required for contracted task")
+		textContains(t, out.Content, "verification contract", "evidence required for contracted task")
 		equal(t, listTasks(goal.ToolsActiveGoal(f.cwd))[0].(map[string]any)["status"], "pending", "task unchanged")
 	})
 
@@ -84,9 +84,9 @@ func TestGoalTaskToolsRig(t *testing.T) {
 		f := fixtureWithTasks(t, "Skip test", `[{"id":"t1","title":"Parent","status":"pending","subtasks":[{"id":"t2","title":"Child","status":"pending"}]}]`, "")
 		r := startedRig(t, f, rigOptions{})
 		noReason := r.callTool("update_goal_task", map[string]any{"task_id": "t1", "status": "skipped"})
-		contains(t, noReason.Content, "requires a non-empty reason", "reason required")
+		textContains(t, noReason.Content, "requires a non-empty reason", "reason required")
 		ok := r.callTool("update_goal_task", map[string]any{"task_id": "t1", "status": "skipped", "reason": "user direction"})
-		contains(t, ok.Content, "skipped", "skipped")
+		textContains(t, ok.Content, "skipped", "skipped")
 		parent := listTasks(goal.ToolsActiveGoal(f.cwd))[0].(map[string]any)
 		equal(t, parent["status"], "skipped", "parent skipped")
 		equal(t, parent["subtasks"].([]any)[0].(map[string]any)["status"], "skipped", "subtask cascaded")
@@ -100,9 +100,9 @@ func TestGoalTaskToolsRig(t *testing.T) {
 			`{"id":"done","title":"Done","status":"complete","evidence":"y","completedAt":"`+nowZ()+`"}]`, "")
 		r := startedRig(t, f, rigOptions{})
 		reopen := r.callTool("update_goal_task", map[string]any{"task_id": "sk", "status": "pending"})
-		contains(t, reopen.Content, "reopened", "reopened")
+		textContains(t, reopen.Content, "reopened", "reopened")
 		immutable := r.callTool("update_goal_task", map[string]any{"task_id": "done", "status": "pending"})
-		contains(t, immutable.Content, "cannot be reopened", "immutable")
+		textContains(t, immutable.Content, "cannot be reopened", "immutable")
 		tasks := listTasks(goal.ToolsActiveGoal(f.cwd))
 		equal(t, taskByID(tasks, "sk")["status"], "pending", "skipped task reopened")
 		equal(t, taskByID(tasks, "done")["status"], "complete", "completed task immutable")
@@ -156,7 +156,7 @@ func TestGoalTaskToolsRig(t *testing.T) {
 		disk["taskList"].(map[string]any)["tasks"] = []any{map[string]any{"id": "other", "title": "Other", "status": "pending"}}
 		goal.ToolsWriteGoal(f.cwd, jsonOf(disk))
 		out := r.callTool("update_goal_task", map[string]any{"task_id": "t1", "status": "complete", "evidence": "x"})
-		contains(t, out.Content, "not found", "removed task must return a typed failure")
+		textContains(t, out.Content, "not found", "removed task must return a typed failure")
 	})
 
 	tw(t, gttFile, "set_goal_tasks never creates per-goal auditor bypass state", func(t *testing.T) {
@@ -169,7 +169,7 @@ func TestGoalTaskToolsRig(t *testing.T) {
 		}
 		files := goal.ToolsActiveGoalFiles(f.cwd)
 		raw, _ := os.ReadFile(f.cwd + "/.pi/goals/" + files[0])
-		notContains(t, string(raw), "skipAuditor", "skipAuditor must not be written by set_goal_tasks")
+		textNotContains(t, string(raw), "skipAuditor", "skipAuditor must not be written by set_goal_tasks")
 	})
 
 	tw(t, gttFile, "update_goal_task(pending) writes a task_reopened ledger event", func(t *testing.T) {
@@ -188,7 +188,7 @@ func TestGoalTaskToolsRig(t *testing.T) {
 		os.Unsetenv("PI_GOAL_AUTO_CONFIRM")
 		f := fixtureWithTasks(t, "Task tool goal", `[{"id":"original","title":"Original task","status":"pending"}]`, "")
 		r := startedRig(t, f, rigOptions{Mode: "rpc", HasUI: boolPtr(true), Select: func(title string, options []string) (string, bool) {
-			contains(t, title, "Replacement task", "the proposal is shown")
+			textContains(t, title, "Replacement task", "the proposal is shown")
 			return "", false
 		}})
 		out := r.callTool("set_goal_tasks", map[string]any{"tasks": []any{map[string]any{"id": "replacement", "title": "Replacement task"}}})
@@ -215,7 +215,7 @@ func TestGoalTaskLifecycleRig(t *testing.T) {
 		f := lifecycleFixture(t, pendingTasksJSON, "")
 		r := startedRig(t, f, rigOptions{})
 		out := ut(r, map[string]any{"task_id": "t2", "status": "start"})
-		contains(t, out.Content, "Started t2", "start message")
+		textContains(t, out.Content, "Started t2", "start message")
 		if out.Terminate != nil {
 			t.Error("start does not terminate the turn")
 		}
@@ -234,7 +234,7 @@ func TestGoalTaskLifecycleRig(t *testing.T) {
 		f := lifecycleFixture(t, `[{"id":"t1","title":"Task one","verificationContract":"Run the check."}]`, "")
 		r := startedRig(t, f, rigOptions{})
 		out := ut(r, map[string]any{"task_id": "t1", "status": "start"})
-		contains(t, out.Content, "Contract: Run the check.", "contract surfaced")
+		textContains(t, out.Content, "Contract: Run the check.", "contract surfaced")
 	})
 
 	tw(t, gtlFile, "starting another task replaces the current task", func(t *testing.T) {
@@ -294,11 +294,11 @@ func TestGoalTaskLifecycleRig(t *testing.T) {
 		f := lifecycleFixture(t, pendingTasksJSON, "")
 		r := startedRig(t, f, rigOptions{})
 		missing := ut(r, map[string]any{"task_id": "ghost", "status": "start"})
-		contains(t, missing.Content, "not found", "missing task")
+		textContains(t, missing.Content, "not found", "missing task")
 		// Complete the task first, then starting it must fail.
 		ut(r, map[string]any{"task_id": "t1", "status": "complete", "evidence": "done"})
 		terminal := ut(r, map[string]any{"task_id": "t1", "status": "start"})
-		contains(t, terminal.Content, "only pending tasks can be started", "terminal task")
+		textContains(t, terminal.Content, "only pending tasks can be started", "terminal task")
 		if _, has := goal.ToolsActiveGoal(f.cwd)["currentTaskId"]; has {
 			t.Error("failed start does not set focus")
 		}
@@ -308,14 +308,14 @@ func TestGoalTaskLifecycleRig(t *testing.T) {
 		f := lifecycleFixture(t, pendingTasksJSON, `"status":"paused","stopReason":"user","pauseReason":"user pause"`)
 		r := startedRig(t, f, rigOptions{})
 		out := ut(r, map[string]any{"task_id": "t1", "status": "start"})
-		contains(t, out.Content, "only to an active goal", "paused goal")
+		textContains(t, out.Content, "only to an active goal", "paused goal")
 		if _, has := goal.ToolsActiveGoal(f.cwd)["currentTaskId"]; has {
 			t.Error("no focus")
 		}
 		noTasks := lifecycleFixture(t, `[]`, "")
 		r2 := startedRig(t, noTasks, rigOptions{})
 		out2 := ut(r2, map[string]any{"task_id": "t1", "status": "start"})
-		contains(t, out2.Content, "no task list", "taskless goal")
+		textContains(t, out2.Content, "no task list", "taskless goal")
 	})
 
 	tw(t, gtlFile, "start honors disableTasks settings", func(t *testing.T) {
@@ -323,7 +323,7 @@ func TestGoalTaskLifecycleRig(t *testing.T) {
 		writeSettings(t, f.cwd, `{"disableTasks":true}`)
 		r := startedRig(t, f, rigOptions{})
 		out := ut(r, map[string]any{"task_id": "t1", "status": "start"})
-		contains(t, out.Content, "disabled by settings", "disabled")
+		textContains(t, out.Content, "disabled by settings", "disabled")
 		if _, has := goal.ToolsActiveGoal(f.cwd)["currentTaskId"]; has {
 			t.Error("no focus")
 		}
@@ -377,4 +377,3 @@ func TestGoalTaskLifecycleRig(t *testing.T) {
 		}
 	})
 }
-

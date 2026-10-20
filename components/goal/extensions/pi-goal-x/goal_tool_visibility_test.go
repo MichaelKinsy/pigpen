@@ -197,7 +197,7 @@ func TestGoalToolVisibility(t *testing.T) {
 		r := gtvRig(t, f, entries, gtvHostA, "")
 		gtvSession(r)
 		out := r.callTool("update_goal", map[string]any{"status": "blocked", "reason": "test blocker"})
-		contains(t, out.Content, "applies only to an active goal", "blocked from paused must be a state-aware failure")
+		textContains(t, out.Content, "applies only to an active goal", "blocked from paused must be a state-aware failure")
 		// The paused profile retains outcome and task-planning tools after rejection.
 		gtvExpectGoalProfile(t, r, gtvActiveNoTask)
 		gtvExpectHostUntouched(t, r, gtvHostA)

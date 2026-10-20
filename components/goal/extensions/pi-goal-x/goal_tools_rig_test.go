@@ -14,8 +14,6 @@ import (
 	goal "github.com/MichaelKinsy/pigpen/pi-goal-x"
 )
 
-func boolPtr(b bool) *bool { return &b }
-
 // toolOut is the AgentToolResult a tool returned: its text, the terminate flag (nil when undefined) and its details.
 type toolOut struct {
 	Content   string         `json:"content"`
@@ -121,14 +119,14 @@ func eventsOfType(cwd, typ string) []map[string]any {
 
 func hasEvent(cwd, typ string) bool { return len(eventsOfType(cwd, typ)) > 0 }
 
-func contains(t *testing.T, s, sub, msg string) {
+func textContains(t *testing.T, s, sub, msg string) {
 	t.Helper()
 	if !strings.Contains(s, sub) {
 		t.Errorf("%s: %q does not contain %q", msg, s, sub)
 	}
 }
 
-func notContains(t *testing.T, s, sub, msg string) {
+func textNotContains(t *testing.T, s, sub, msg string) {
 	t.Helper()
 	if strings.Contains(s, sub) {
 		t.Errorf("%s: %q contains %q", msg, s, sub)
