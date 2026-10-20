@@ -9,8 +9,9 @@ import (
 	"testing"
 )
 
-// Twins of test/provider-credential-source.test.mjs. The upstream cases run seven providers; the
-// table below holds the ones this port has. A slice that ports another provider adds its row.
+// Twins of test/provider-credential-source.test.mjs. The upstream case runs seven providers
+// (Cloudflare through the Gemini API); the table below holds the original's seven and the
+// Mistral row of this port.
 
 // credentialSourceRedactionAttempts is `attempts` of the upstream redaction case: the provider,
 // the secret its command source prints, and the call that must fail with that secret redacted.
@@ -20,9 +21,15 @@ var credentialSourceRedactionAttempts = []struct {
 }{
 	{"brave", "brave-redaction-secret", func() error { _, err := SearchWithBrave(bg(), "query", SearchOptions{}); return err }},
 	{"openai", "openai-redaction-secret", func() error { _, err := SearchWithOpenAI(bg(), "query", SearchOptions{}); return err }},
+	{"parallel", "parallel-redaction-secret", func() error { _, err := SearchWithParallel(bg(), "query", SearchOptions{}); return err }},
+	{"tinyfish", "tinyfish-redaction-secret", func() error { _, err := SearchWithTinyFish(bg(), "query", SearchOptions{}); return err }},
 	{"perplexity", "perplexity-redaction-secret", func() error { _, err := SearchWithPerplexity(bg(), "query", SearchOptions{}); return err }},
 	{"tavily", "tavily-redaction-secret", func() error { _, err := SearchWithTavily(bg(), "query", SearchOptions{}); return err }},
 	{"mistral", "mistral-redaction-secret", func() error { _, err := SearchWithMistral(bg(), "query", SearchOptions{}); return err }},
+	{"cloudflare", "cf-redaction-secret", func() error {
+		_, err := QueryGeminiAPIWithVideo(bg(), "prompt", "files/synthetic", GeminiAPIOptions{})
+		return err
+	}},
 }
 
 func TestUpstream_provider_credential_source(t *testing.T) {
@@ -99,12 +106,17 @@ func TestUpstream_provider_credential_source(t *testing.T) {
 		_, agent := isolate(t)
 		writeConfig(t, agent, string(mustJSON(map[string]any{
 			"braveApiKey":      "${BRAVE_SCOPED_KEY}",
+			"cloudflareApiKey": "${CLOUDFLARE_SCOPED_KEY}",
+			"geminiBaseUrl":    geminiGatewayAI,
 			"openaiApiKey":     "!printf openai-redaction-secret",
+			"parallelApiKey":   "!printf parallel-redaction-secret",
+			"tinyfishApiKey":   "!printf tinyfish-redaction-secret",
 			"perplexityApiKey": "!printf perplexity-redaction-secret",
 			"tavilyApiKey":     "!printf tavily-redaction-secret",
 			"mistralApiKey":    "!printf mistral-redaction-secret",
 		})))
 		t.Setenv("BRAVE_SCOPED_KEY", "brave-redaction-secret")
+		t.Setenv("CLOUDFLARE_SCOPED_KEY", "cf-redaction-secret")
 		for _, a := range credentialSourceRedactionAttempts {
 			secret := a.secret
 			useNet(t, func(netCall) netReply { return reply(400, string(mustJSON(map[string]any{"error": secret}))) })
@@ -118,5 +130,5 @@ func TestUpstream_provider_credential_source(t *testing.T) {
 		}
 	})
 
-	// Title 4 belongs to the Gemini API slice (the Cloudflare gateway); its tskip stays in deferred_test.go.
+	// Title 4 (the Cloudflare gateway response) is twinned in gemini_test.go.
 }
