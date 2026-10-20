@@ -199,5 +199,22 @@ Results (imladris, PiG 0.5.0, go1.27.2, Node 24.19.0):
 - `gofmt`, `go vet` with GOOS linux, windows and darwin: clean. `pig install extensions/superpowers-tools --validate-only --json`:
   `form: factory`, `language: go`, tools `brainstorm_server` and `render_skill_graphs`. `pig package validate components/superpowers`:
   2 extensions, 15 skills.
-- Not measured: binary size, cold start and per-call latency of these two tools against the Node scripts. `node server.cjs` and the
-  port serve the same pages; the numbers belong to a follow-up, listed in `status/superpowers.md`.
+- Merged head, re-run: `go test -race -count=24` in both modules (with the Node original available): pass; `pigeq mutate` bootstrap
+  34 of 34 and tools 28 of 28 killed.
+
+Performance of the tools (imladris, CPUs 96-151, PiG 0.5.0, go1.27.2, Node 24.19.0; scripts in `handoffs/pigpen-parity/perf-superpowers-3/`):
+
+| What | Go port | Node original |
+|---|---|---|
+| runner binary in PiG's cache | 7.95 MB (`superpowers-tools`), 5.76 MB (bootstrap) | `server.cjs` 723 lines, `render-graphs.js` 169 lines, run by the shared Node runtime |
+| cold start, `pig --mode rpc` to the first response, median of 15 interleaved rounds | no extension 46.5 ms, bootstrap 79.4 ms (+32.9), tools 65.0 ms (+18.5) | the original bootstrap under PiG's Node runtime 389.3 ms (+342.8) |
+| `GET /` of a framed screen, keep-alive, median of 10 runs of 3000 (Go) or 2000 (Node) | 274 us, 70 KB, 180 allocs (client and server in one process) | 327 us (Node client, server in its own process) |
+| server start to `server-info` | in process, within the tool call | 53.8 ms (spawn of `node server.cjs`) |
+| `render_skill_graphs`, three diagrams, a stand-in `dot`, median of 10 (Go) or 15 (Node) | 7.3 ms, 33 KB, 284 allocs (4 `dot` spawns included) | 59.2 ms for the whole `node render-graphs.js` process |
+
+The Go server answers a request 16% faster than `server.cjs` and the renderer call is 8 times faster than starting the Node script, so
+no tool regresses against its original. The comparison of the request path uses each side's own client (the Go benchmark cannot drive
+the Node server and vice versa without a second process), so it bounds the difference rather than isolating the server.
+For the bootstrap extension the in-process `context` handler stays slower than the original's (988 ns against 335 ns, 9 allocs): the
+allocations are the message and content maps and the output slice that the SDK's `map[string]any` message type requires; no profile was
+taken, and the absolute cost, once per model request of the first run, is under a microsecond.
