@@ -97,6 +97,8 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 	}
 	ext, w := newWarden(opts)
 	h.w = w
+	// The learning store writes in the background: finish before the temporary directory goes.
+	t.Cleanup(func() { w.learnFlush(); CloseLearningDatabases() })
 	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: h.cwd, OnCall: h.onCall})
 	return h
 }
@@ -849,7 +851,7 @@ func TestSkippedSDKToolCallArgumentsAsObject(t *testing.T) {
 func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testing.T) {
 	cases := map[string]string{
 		"config get x": "/warden config", "audit": "/warden audit", "index": "/warden index",
-		"prefs": "/warden prefs", "loops": "/warden loops", "recommend": "/warden recommend", "unmute": "/warden unmute", "bench": "/warden bench",
+		"prefs": "/warden prefs", "loops": "/warden loops", "bench": "/warden bench",
 	}
 	for args, feature := range cases {
 		h := startHarness(t, harnessOpts{})

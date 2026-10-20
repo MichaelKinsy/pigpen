@@ -60,9 +60,24 @@ RULES_CASES = {
     ("extension.test.ts", 5073): "wiring case: TestRulesAgentStartDoesNotWaitForTheSnapshot",
 }
 
+# Cases of the learning lane that cannot be Go twins. The original runs on node:sqlite or bun:sqlite; the port opens one
+# embedded engine (modernc.org/sqlite) behind sqlStore, so there is no second driver to wrap or to choose between.
+_ADAPTER = "bun:sqlite adapter shape (wrapBunDatabase): the port has one embedded engine behind sqlStore and no second driver whose result shapes need wrapping; the same contract (exec changes and last id, a miss, an empty list, positional parameters) is exercised on the real engine by TestSQLiteStoreOpensARealDatabaseWithTheSchemaPragmasAndRowsLearningNeeds"
+LEARNING_CASES = {
+    ("sqlite-adapter.test.ts", 48): _ADAPTER, ("sqlite-adapter.test.ts", 55): _ADAPTER, ("sqlite-adapter.test.ts", 60): _ADAPTER,
+    ("sqlite-adapter.test.ts", 65): _ADAPTER, ("sqlite-adapter.test.ts", 71): _ADAPTER, ("sqlite-adapter.test.ts", 79): _ADAPTER,
+    ("sqlite-adapter.test.ts", 86): _ADAPTER,
+    ("sqlite-adapter.test.ts", 94): "refusal to open on a runtime without bun:sqlite (SqliteUnavailableError): there is no module to be unavailable; a database that cannot be opened is TestLearningFailedOpenIsRememberedAndWarnedOnce",
+    ("sqlite-adapter.test.ts", 112): "asserts the JavaScript runtime is Bun (isBunRuntime): no such runtime question exists in Go",
+    ("learning-driver.test.ts", 53): "asserts that node:sqlite, not bun:sqlite, opened the database (sqliteDriver()): the port has one embedded engine; that it opens and records is TestLearningInitSchemaCreatesDatabase and TestLearningRecordHoldReturnsID",
+    ("learning-driver.test.ts", 72): "blocks the node:sqlite module with a Node loader hook and expects one warning naming node:sqlite and bun:sqlite: neither module exists here; the Go counterpart (one warning for a database that cannot be opened, the NOOP answers id 0 and no rows) is TestLearningFailedOpenIsRememberedAndWarnedOnce",
+}
+
 def reason(f, name, line=0):
     if (f, line) in RULES_CASES:
         return RULES_CASES[(f, line)]
+    if (f, line) in LEARNING_CASES:
+        return LEARNING_CASES[(f, line)]
     if f == "rules-replay.test.ts":
         return "scripts/rules-replay.mjs (a repository maintainer script, npm run eval:*) is absent from the published package files (dist, extensions, examples) and not vendored; case: " + name
     base = f[:-len(".test.ts")]
