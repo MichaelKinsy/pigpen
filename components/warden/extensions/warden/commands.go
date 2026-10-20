@@ -54,6 +54,8 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 		w.selfTest(ctx)
 	case "trace":
 		w.showTrace(ctx)
+	case "audit": // audit lane
+		return w.audit(ctx)
 	default:
 		w.show(ctx, "unknown subcommand "+sub+".\n\n"+help)
 	}

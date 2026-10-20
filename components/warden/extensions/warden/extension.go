@@ -67,6 +67,7 @@ type warden struct {
 	noted         map[string]bool
 	stats         stats
 	trace         []traceEntry
+	audit         auditState // audit lane: /warden audit running flag
 }
 
 // Extension returns the guard.
@@ -90,6 +91,7 @@ func New(o Options) *sdk.Extension {
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
+	e.OnEvent(sdk.EventInput, w.onAuditInput) // audit lane: blocks input while /warden audit runs
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); return nil, nil })
 	return e
 }

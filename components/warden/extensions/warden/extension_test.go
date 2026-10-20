@@ -37,12 +37,15 @@ type harness struct {
 	// subscribed is set once the extension has asked for the session log.
 	subscribed bool
 	fail       map[string]string
+	// hooks run when the host receives a call of that method (before it answers); they must not call h.
+	hooks map[string]func()
 }
 
 type harnessOpts struct {
 	cfg      *Config // written to the config file before the session starts; nil: no file
 	noUI     bool
-	noHome   bool // no config directory can be found: Context.ConfigHome fails
+	cwd      string // the session working directory; empty: a fresh temp directory
+	noHome   bool   // no config directory can be found: Context.ConfigHome fails
 	env      map[string]string
 	newJudge func(Config, *Budget) (Judge, error)
 	git      GitRunner
@@ -52,7 +55,7 @@ type harnessOpts struct {
 
 func startHarness(t *testing.T, o harnessOpts) *harness {
 	t.Helper()
-	h := &harness{t: t, ts: newFakeTypeSafe(t), home: t.TempDir(), confirm: true, model: map[string]any{"id": "mod", "provider": "prov", "name": "Mod"}, fail: o.fail}
+	h := &harness{t: t, ts: newFakeTypeSafe(t), home: t.TempDir(), confirm: true, model: map[string]any{"id": "mod", "provider": "prov", "name": "Mod"}, fail: o.fail, hooks: map[string]func(){}}
 	t.Setenv("PIG_HOME", h.home)
 	if o.noHome {
 		for _, k := range []string{"PIG_HOME", "XDG_CONFIG_HOME", "HOME", "USERPROFILE"} {
@@ -83,11 +86,14 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 		}
 	}
 	hasUI := !o.noUI
-	h.host = StartHost(t, New(opts), HostOptions{HasUI: &hasUI, Cwd: t.TempDir(), OnCall: h.onCall})
+	h.host = StartHost(t, New(opts), HostOptions{HasUI: &hasUI, Cwd: o.cwd, OnCall: h.onCall})
 	return h
 }
 
 func (h *harness) onCall(method string, args map[string]any) (map[string]any, string) {
+	if hook := h.hooks[method]; hook != nil {
+		hook()
+	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if msg, ok := h.fail[method]; ok {
@@ -834,7 +840,7 @@ func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testi
 	cases := map[string]string{
 		"rules": "/warden rules", "rules check": "/warden rules check", "rules audit src": "/warden rules audit",
 		"rules calibrate --yes": "/warden rules calibrate", "rules tune": "/warden rules tune", "report": "/warden report",
-		"config get x": "/warden config", "init": "/warden init", "audit": "/warden audit", "index": "/warden index",
+		"config get x": "/warden config", "init": "/warden init", "index": "/warden index",
 		"prefs": "/warden prefs", "loops": "/warden loops", "recommend": "/warden recommend", "unmute": "/warden unmute", "bench": "/warden bench",
 	}
 	for args, feature := range cases {
