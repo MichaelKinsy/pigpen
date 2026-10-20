@@ -1,0 +1,82 @@
+{
+ "name": "web-search-gemini-web-no-cookies",
+ "description": "With browser cookie access allowed and no Gemini API credential, web_search on gemini reads the browser's cookie database through the canned programs; the profile lacks the required Google cookies, so the search reports why Gemini Web is unavailable.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"provider\": \"gemini\", \"allowBrowserCookies\": true}"
+ },
+ "setup": [
+  [
+   "sh",
+   "-c",
+   "mkdir -p \"$HOME/.config/google-chrome/Default\" && printf placeholder > \"$HOME/.config/google-chrome/Default/Cookies\""
+  ]
+ ],
+ "commands": {
+  "sh": {
+   "mode": "real"
+  },
+  "secret-tool": {
+   "mode": "canned",
+   "stdout": "peanuts"
+  },
+  "sqlite3": {
+   "mode": "canned",
+   "stdout": "[{\"name\": \"NID\"}]"
+  },
+  "security": {
+   "mode": "missing"
+  },
+  "kwallet-query": {
+   "mode": "missing"
+  },
+  "python3": {
+   "mode": "missing"
+  },
+  "powershell.exe": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "gemini web without cookies",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "pi-chrome-cookies-[A-Za-z0-9]+",
+   "replacement": "pi-chrome-cookies-<random>"
+  },
+  {
+   "pattern": "> [0-9]{13}\\)",
+   "replacement": "> <now-ms>)"
+  },
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

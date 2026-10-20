@@ -1,0 +1,86 @@
+{
+ "name": "fetch-auth-profile-errors",
+ "description": "fetch_content with an unknown authFetch profile, and with a profile while browser cookie access is off (the default), reports the original's errors and starts no program.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"authFetch\": {\"work\": [\"93.184.216.34\"], \"home\": {\"hosts\": [\"example.org\"], \"cache\": \"off\"}}}"
+ },
+ "commands": {
+  "security": {
+   "mode": "missing"
+  },
+  "secret-tool": {
+   "mode": "missing"
+  },
+  "sqlite3": {
+   "mode": "missing"
+  },
+  "python3": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://93.184.216.34/private",
+      "auth": "nope"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://93.184.216.34/private",
+      "auth": "work"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://93.184.216.34/private",
+      "auth": true
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "pi-chrome-cookies-[A-Za-z0-9]+",
+   "replacement": "pi-chrome-cookies-<random>"
+  },
+  {
+   "pattern": "> [0-9]{13}\\)",
+   "replacement": "> <now-ms>)"
+  },
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}
