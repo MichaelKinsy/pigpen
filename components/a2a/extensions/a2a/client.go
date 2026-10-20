@@ -31,6 +31,24 @@ type SendArgs struct {
 	Agent, Message, ContextID, TaskID string
 	// OnTask, if set, is called once, as soon as the remote reports the task's ids.
 	OnTask func(taskID, contextID string)
+	// Detach returns as soon as the remote has created the task, without waiting for it to finish.
+	Detach bool
+}
+
+// WaitArgs are the inputs of Wait.
+type WaitArgs struct {
+	Agent, TaskID string
+	// Seconds bounds the wait; zero means the remote's timeout.
+	Seconds int
+}
+
+// waitPollInterval is how often Wait asks a remote that does not stream.
+var waitPollInterval = 2 * time.Second
+
+// Wait follows a remote task until it is finished or needs input, or the wait runs out. Running out
+// of time, or cancelling ctx, leaves the remote task running.
+func (r *Remotes) Wait(ctx context.Context, args WaitArgs, onProgress func(string)) (TaskSummary, error) {
+	return TaskSummary{}, errors.New("a2a: Wait is not implemented")
 }
 
 // TaskSummary is what a remote task looks like to the model.

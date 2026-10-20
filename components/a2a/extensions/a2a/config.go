@@ -34,6 +34,7 @@ type Config struct {
 	Worker             WorkerConfig           `json:"worker"`
 	MaxConcurrentTasks int                    `json:"maxConcurrentTasks"`
 	TaskTimeoutSeconds int                    `json:"taskTimeoutSeconds"`
+	TaskRetentionDays  int                    `json:"taskRetentionDays"`
 	Remotes            map[string]RemoteAgent `json:"remotes"`
 }
 
@@ -91,11 +92,12 @@ type LoadOptions struct {
 }
 
 const (
-	defaultMaxConcurrent = 4
-	defaultTaskTimeout   = 900
-	defaultRemoteTimeout = 300
-	defaultGraceSeconds  = 5
-	minTokenLength       = 16
+	defaultMaxConcurrent     = 4
+	defaultTaskTimeout       = 900
+	defaultTaskRetentionDays = 30
+	defaultRemoteTimeout     = 300
+	defaultGraceSeconds      = 5
+	minTokenLength           = 16
 )
 
 var (

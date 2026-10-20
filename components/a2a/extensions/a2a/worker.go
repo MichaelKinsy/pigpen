@@ -23,6 +23,7 @@ type Turn struct {
 	ContextID string
 	TaskID    string
 	Prompt    string
+	Images    []Image
 }
 
 // Update is incremental output from a running turn.
