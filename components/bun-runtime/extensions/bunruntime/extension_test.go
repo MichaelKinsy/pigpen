@@ -332,7 +332,11 @@ func TestSlotRootFollowsPigsRule(t *testing.T) {
 // for its platform and version, and the lock must pin nothing this Piglet does not install. The Piglet imports only the Go SDK, so the
 // test reads the lock's source.
 func TestAssetsEqualPigsRuntimeLock(t *testing.T) {
-	source, err := os.ReadFile(filepath.Join(os.Getenv("PIG_SOURCE_ROOT"), "coding", "extension", "host", "tsruntime", "lock.go"))
+	root := os.Getenv("PIG_SOURCE_ROOT")
+	if root == "" {
+		t.Fatal("PIG_SOURCE_ROOT must name a PiG checkout at the commit pinned in scripts/pig-requirement.json (CI sets it): the test compares this Piglet's assets with that checkout's runtime lock")
+	}
+	source, err := os.ReadFile(filepath.Join(root, "coding", "extension", "host", "tsruntime", "lock.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
