@@ -10,6 +10,16 @@ import (
 // (truncation limits) so a cut lands where the original's does.
 
 func utf16Len(s string) int {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return utf16LenRunes(s)
+		}
+	}
+	// ASCII (the common case for tool output): one byte is one UTF-16 unit.
+	return len(s)
+}
+
+func utf16LenRunes(s string) int {
 	n := 0
 	for _, r := range s {
 		if r >= 0x10000 {
@@ -23,6 +33,16 @@ func utf16Len(s string) int {
 
 // utf16Slice is s.slice(from, to) for UTF-16 code unit offsets; to < 0 means the end.
 func utf16Slice(s string, from, to int) string {
+	if isASCII(s) {
+		// One byte is one UTF-16 unit: a slice needs no conversion (the common case for tool output).
+		if to < 0 || to > len(s) {
+			to = len(s)
+		}
+		if from > to {
+			from = to
+		}
+		return s[from:to]
+	}
 	units := utf16.Encode([]rune(s))
 	if to < 0 || to > len(units) {
 		to = len(units)
@@ -31,6 +51,15 @@ func utf16Slice(s string, from, to int) string {
 		from = to
 	}
 	return string(utf16.Decode(units[from:to]))
+}
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return false
+		}
+	}
+	return true
 }
 
 // truncate is guard.ts `truncate`: the text, or its first `limit` code units and a count of the rest.

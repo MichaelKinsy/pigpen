@@ -43,6 +43,14 @@ var (
 // each is tried only where its pattern can start (redact_fast.go), which keeps a tool output of tens of kilobytes at
 // tens of microseconds instead of milliseconds.
 func Redact(text string) string {
+	if !mayHaveCredential(text) { // redact_prefilter.go: no rule can match
+		return text
+	}
+	return redactRules(text)
+}
+
+// redactRules applies every rule, in order.
+func redactRules(text string) string {
 	out := rePrivateKey.ReplaceAllString(text, redacted)
 	lower := lowerASCII(out)
 	step := func(next string, changed bool) {

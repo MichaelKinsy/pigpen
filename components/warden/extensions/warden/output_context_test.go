@@ -2,6 +2,7 @@ package warden
 
 import (
 	"context"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -212,5 +213,47 @@ func TestCompressionLearnerResetsCorrectly(t *testing.T) {
 	l.Reset()
 	if best := l.BestRetention("bash"); best != "" {
 		t.Errorf("%q", best)
+	}
+}
+
+// TestDiagnosticLineEqualsItsRegularExpression: the hand-written whole-word scan answers like the pattern it replaces.
+func TestDiagnosticLineEqualsItsRegularExpression(t *testing.T) {
+	words := []string{"error", "Error", "ERROR", "fail", "failed", "failure", "failing", "warn", "warning", "warnings", "fatal", "exception", "exit", "exited", "exiting", "summary", "Summary", "x", "_", "-", " ", ".", ":", "1", "é", "progress", "compiled"}
+	rng := rand.New(rand.NewSource(5))
+	matched := 0
+	for range 20000 {
+		var b strings.Builder
+		for range rng.Intn(6) + 1 {
+			b.WriteString(words[rng.Intn(len(words))])
+		}
+		line := b.String()
+		want := reDiagnostic.MatchString(line)
+		if want {
+			matched++
+		}
+		if got := diagnosticLine(line); got != want {
+			t.Fatalf("%q: scan %v, pattern %v", line, got, want)
+		}
+	}
+	if matched == 0 {
+		t.Fatal("the pattern never matched: the test proves nothing")
+	}
+}
+
+// Go-only: the learner counts recalls by retention, in the order the retentions first appeared.
+func TestCompressionLearnerPrefersTheRetentionTheAgentDidNotGoBackFor(t *testing.T) {
+	l := &CompressionLearner{}
+	for range 3 {
+		l.Record("bash", RetentionSummaryOnly, "", true)
+	}
+	for range 3 {
+		l.Record("bash", RetentionErrorsAndSummary, "", false)
+	}
+	if best := l.BestRetention("bash"); best != RetentionErrorsAndSummary {
+		t.Errorf("%q", best)
+	}
+	l.NoteRecall("bash")
+	if s := l.Stats("bash"); s.Recalled != 4 {
+		t.Errorf("a recall marks the latest outcome of the tool: %+v", s)
 	}
 }
