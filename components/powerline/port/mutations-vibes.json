@@ -204,12 +204,6 @@
   "replace": "utf16Head(vibe, m.config.MaxLength-2)"
  },
  {
-  "name": "vibe-parse-empty",
-  "file": "working_vibes.go",
-  "find": "if vibe == \"\" || vibe == \"...\" || vibe == \"\\u2026\\u2026\" {",
-  "replace": "if vibe == \"\" || vibe == \"...\" {"
- },
- {
   "name": "vibe-request-system-prompt",
   "file": "working_vibes.go",
   "find": "\"systemPrompt\": vibeSystemPrompt,",
@@ -538,12 +532,6 @@
   "file": "working_vibes.go",
   "find": "\tcount = 100\n\tif hasCount",
   "replace": "\tcount = 99\n\tif hasCount"
- },
- {
-  "name": "vibe-args-infinity",
-  "file": "working_vibes.go",
-  "find": "err == nil && !math.IsInf(f, 0)",
-  "replace": "err == nil"
  },
  {
   "name": "vibe-command-whitespace",

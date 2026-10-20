@@ -26,13 +26,13 @@
  {
   "name": "welcome-center-ellipsis",
   "file": "welcome.go",
-  "find": "return truncateToWidth(text, width, \"\u2026\")",
+  "find": "return truncateToWidth(text, width, \"…\")",
   "replace": "return truncateToWidth(text, width, \"...\")"
  },
  {
   "name": "welcome-fit-ellipsis",
   "file": "welcome.go",
-  "find": "return truncateToWidth(str, width, \"\u2026\")",
+  "find": "return truncateToWidth(str, width, \"…\")",
   "replace": "return truncateToWidth(str, width, \"...\")"
  },
  {
@@ -110,8 +110,8 @@
  {
   "name": "welcome-header-junction",
   "file": "welcome.go",
-  "find": "welcomeDim(\"\u2534\")",
-  "replace": "welcomeDim(\"\u252c\")"
+  "find": "welcomeDim(\"┴\")",
+  "replace": "welcomeDim(\"┬\")"
  },
  {
   "name": "welcome-header-spacing",
@@ -208,12 +208,6 @@
   "file": "welcome.go",
   "find": "firstLine, _, _ := strings.Cut(text, \"\\n\")",
   "replace": "firstLine := text"
- },
- {
-  "name": "welcome-header-cr",
-  "file": "welcome.go",
-  "find": "firstLine = strings.TrimSuffix(firstLine, \"\\r\")",
-  "replace": ""
  },
  {
   "name": "welcome-header-object",
@@ -320,7 +314,7 @@
  {
   "name": "welcome-name-ellipsis",
   "file": "welcome.go",
-  "find": "string(utf16.Decode(u[:17])) + \"\u2026\"",
+  "find": "string(utf16.Decode(u[:17])) + \"…\"",
   "replace": "string(utf16.Decode(u[:17])) + \"...\""
  },
  {

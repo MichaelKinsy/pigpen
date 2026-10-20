@@ -1,10 +1,12 @@
 package powerline_footer
 
 import (
+	"maps"
 	"math"
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 )
 
 // Shortcut settings: powerlineShortcuts and bashMode in settings.json, with the conflict rules of the original.
@@ -220,6 +222,10 @@ func bashToggleShortcutReservation(settings map[string]any) *string {
 	return new(defaultBashToggleShortcut)
 }
 
+// reservedUsage is the usage key set of reservedShortcuts, built once: it is constant, and normalising about 100 key names on
+// every session start was most of the allocations of that event.
+var reservedUsage = sync.OnceValue(func() map[string]bool { return usageKeys(reservedShortcuts()) })
+
 func usageKeys(list map[string]bool) map[string]bool {
 	used := map[string]bool{}
 	for k := range list {
@@ -244,7 +250,7 @@ func resolveShortcutConfig(settings map[string]any) powerlineShortcuts {
 		}
 	}
 
-	used := usageKeys(reservedShortcuts())
+	used := maps.Clone(reservedUsage())
 	if toggle := bashToggleShortcutReservation(settings); toggle != nil {
 		used[shortcutUsageKey(*toggle)] = true
 	}
@@ -281,7 +287,7 @@ func parseBashModeSettings(settings map[string]any, shortcuts *powerlineShortcut
 	if raw == nil {
 		raw = newObject()
 	}
-	used := usageKeys(reservedShortcuts())
+	used := maps.Clone(reservedUsage())
 	if shortcuts != nil {
 		for _, s := range shortcuts.values() {
 			if s != nil {
