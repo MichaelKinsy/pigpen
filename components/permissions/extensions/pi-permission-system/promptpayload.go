@@ -1,7 +1,50 @@
 package pi_permission_system
 
-// Port of the tolerant reader and the wire form of src/presentation/prompt-payload.ts (asPromptPayload), which the forwarded
-// request carries. The struct itself is declared by the logging lane (fwd_stub_logging.go until integration).
+// Port of src/presentation/prompt-payload.ts: the complete, structured description of a permission ask, the constructor of a local
+// requester, the tolerant reader (asPromptPayload) and the wire form the forwarded request carries.
+
+// PromptPayload is the complete, structured description of a permission ask (ADR 0011 section 2).
+type PromptPayload struct {
+	// Kind is one of bash, mcp, tool, path, external_directory, bash_external_directory, skill, skill_read, forwarded.
+	Kind        string
+	Request     PromptRequestFacts
+	Evidence    []PromptEvidence
+	Annotations []PromptAnnotation
+}
+
+// PromptRequestFacts is the invariant core of an ask. A nil pointer is the original's null.
+type PromptRequestFacts struct {
+	Requester       PromptRequester
+	Surface         string
+	ToolName        *string
+	InvokedToolName *string
+	Value           string
+	MatchedPattern  *string
+	// CommandContext is command_substitution, process_substitution or subshell; nil for a current-shell command.
+	CommandContext *string
+	ExecutedUnit   *string
+}
+
+// PromptRequester is who is asking, one hop below when the ask was forwarded.
+type PromptRequester struct {
+	AgentName *string
+	Forwarded bool
+	SessionID *string
+}
+
+// PromptEvidence is one piece of decision evidence.
+type PromptEvidence struct {
+	Label, Text string
+	Detail      *string
+}
+
+// PromptAnnotation is a model-generated advisory.
+type PromptAnnotation struct{ Source, Text string }
+
+// LocalRequester is localRequester: the requester facts for an ask raised by this session.
+func LocalRequester(agentName *string) PromptRequester {
+	return PromptRequester{AgentName: agentName}
+}
 
 var promptPayloadKinds = []string{"bash", "mcp", "tool", "path", "external_directory", "bash_external_directory", "skill", "skill_read", "forwarded"}
 
@@ -154,5 +197,26 @@ func (p PromptPayload) JS() *jsObject {
 	out.set("request", request)
 	out.set("evidence", evidence)
 	out.set("annotations", annotations)
+	return out
+}
+
+// FindEvidence is findEvidence: the first evidence entry carrying the label, or nil.
+func FindEvidence(payload PromptPayload, label string) *PromptEvidence {
+	for i := range payload.Evidence {
+		if payload.Evidence[i].Label == label {
+			return &payload.Evidence[i]
+		}
+	}
+	return nil
+}
+
+// AllEvidence is allEvidence: every evidence entry carrying the label, in payload order.
+func AllEvidence(payload PromptPayload, label string) []PromptEvidence {
+	out := []PromptEvidence{}
+	for _, e := range payload.Evidence {
+		if e.Label == label {
+			out = append(out, e)
+		}
+	}
 	return out
 }
