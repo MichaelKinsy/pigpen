@@ -535,14 +535,14 @@ M = [
  ("audit-missing-report-ignored", "audit.go", "\tif !after.Exists {\n\t\treturn \"missing\"\n\t}", "\tif false {\n\t\treturn \"missing\"\n\t}"),
  ("audit-report-path-not-in-pi-warden", "audit.go", 'filepath.Join(cwd, ".pi-warden", "audit-report.html")', 'filepath.Join(cwd, "audit-report.html")'),
  ("audit-prompt-text-changed", "audit.go", "Prefer fewer, well-evidenced findings over many thin ones.", "Prefer many findings."),
- ("audit-manifest-not-named", "audit.go", '\t\tif manifest != "" {\n\t\t\tline += ", manifest: " + manifest\n\t\t}', ""),
+ ("audit-manifest-not-named", "audit.go", '\t\t\tline += ", manifest: " + manifest\n', '\t\t\tline += ", manifest: x"\n'),
  ("discover-max-ignored", "discover.go", "\t\t\tif len(files) >= max {\n\t\t\t\treturn\n\t\t\t}\n\t\t\tname := entry.Name()", "\t\t\tname := entry.Name()"),
  ("discover-enters-hidden-dirs", "discover.go", '\t\t\tif strings.HasPrefix(name, ".") {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tfull', "\t\t\tfull"),
  ("discover-vendor-not-skipped", "discover.go", '".pi-warden": true, "vendor": true,', '".pi-warden": true,'),
  ("discover-follows-symlinks-as-files", "discover.go", "entry.Type().IsRegular() &&", "!entry.IsDir() &&"),
  ("findprojects-root-dropped", "discover.go", "\tif hasManifest(cwd) {\n\t\tprojects = append(projects, cwd)", "\tif false {\n\t\tprojects = append(projects, cwd)"),
  ("findprojects-enters-dot-dirs", "discover.go", 'name == "node_modules" || strings.HasPrefix(name, ".")', 'name == "node_modules"'),
- ("audit-runs-without-confirm", "audit_cmd.go", "if err != nil || !ok {", "if err != nil {"),
+ ("audit-runs-without-confirm", "audit_cmd.go", "if err != nil || !ok {", "if err != nil || false && !ok {"),
  ("audit-runs-headless", "audit_cmd.go", "\tif !ctx.HasUI() {", "\tif false {"),
  ("audit-input-not-blocked", "audit_cmd.go", "if !w.auditState.running.Load() {\n\t\treturn nil, nil", "if true {\n\t\treturn nil, nil"),
  ("audit-flag-left-on", "audit_cmd.go", "defer w.auditState.running.Store(false)", "defer func() {}()"),
@@ -571,6 +571,7 @@ EQUIVALENT = {"learn-offtask-not-gated": "unreachable: every off-task steer is t
  "sql-commit-voids-nothing": "redundant by construction: a COMMIT is also a transaction-control statement (SQL_TX_CONTROL) and a trailing one is not the final ROLLBACK, so the void list is a second line of defence",
  "large-output-memory-lost": "the steer repeat window drops the identical second text, so the memory is a second line of defence (checked at the unit level by the notice twin)"}
 EQUIVALENT["banner-only-on-first-block"] = "a notice and several text blocks never meet outside the per-block path: more than one block means judged per block, and a block that is not judged (a duplicate or a recall) has no verdict, so no notice"
+EQUIVALENT["audit-new-file-not-written"] = "a missing file snapshots with mtime 0 and an existing one has a positive mtime, so `after.MtimeMs > before.MtimeMs` alone already says written; `!before.Exists` is the original's explicit form"
 EQUIVALENT.update(SECURITY_EQUIVALENT)
 EQUIVALENT["state-reminder-while-awaiting-user"] = "redundant in the original too: assess selects nothing unless the disposition is advance, so a fresh assessment that awaits the user has no selection and the earlier test of the selection already stops the reminder"
 EQUIVALENT["state-loaded-bytes-not-counted"] = "the counter is read only by the next load of the same prompt, and the original loads at most once a prompt (before_agent_start); it starts again at 0 for every prompt"
