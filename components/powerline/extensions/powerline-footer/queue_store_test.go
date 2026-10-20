@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // The store beyond the upstream cases: the file format, validation of what is read, retention, ids and aliases.
@@ -169,4 +170,48 @@ func TestQueuedDeliveryItemsFilterByIntent(t *testing.T) {
 		eq(t, len(all), 2, "queued of every intent, not the blocked one")
 		eq(t, len(post), 1, "queued post-compaction")
 	})
+}
+
+func TestQueueStoreWaitsForALockThatIsReleased(t *testing.T) {
+	withStore(t, func(store tstore, dir string) {
+		lock := filepath.Join(dir, "inbox.jsonl.lock")
+		if err := os.Mkdir(lock, 0o777); err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			time.Sleep(300 * time.Millisecond)
+			os.Remove(lock)
+		}()
+		store.add(createQueueItemInput{Text: "waited", Source: queueSource{Cwd: dir}, Target: queueTarget{Kind: targetGlobal}, Intent: intentFollowUp})
+		eq(t, len(store.list()), 1, "the write went through once the lock was released")
+		if _, err := os.Stat(lock); err == nil {
+			t.Error("the lock directory is left behind")
+		}
+	})
+}
+
+func TestParseCompactQueuedPromptEdgeCases(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+		ok   bool
+	}{
+		{"/compact a\nb", "", false},
+		{"/compact a\r\nb", "", false},
+		{"/compact a\u2028b", "", false},
+		{"/compact \n x", "x", true},
+		{"/compact\tx y", "x y", true},
+		{"/compact\u00a0\u3000x", "x", true},
+		{"/compact   ", "", false},
+		{"compact x", "", false},
+		{"/Compact x", "", false},
+		{"x /compact y", "", false},
+		{"\n /compact  spaced out \n", "spaced out", true},
+	}
+	for _, c := range cases {
+		got, ok := parseCompactQueuedPrompt(c.in)
+		if got != c.want || ok != c.ok {
+			t.Errorf("parseCompactQueuedPrompt(%q) = %q, %v; want %q, %v", c.in, got, ok, c.want, c.ok)
+		}
+	}
 }

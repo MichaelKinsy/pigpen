@@ -1,4 +1,4 @@
-{"kind":"header","scenario":"queue-post-compaction","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:b6ab8658d40122733f451a165f9cf01a5c290f46aacef27c418cbdc767dc02fb","normalizer":"v3"}
+{"kind":"header","scenario":"queue-compaction-failed","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:b6ab8658d40122733f451a165f9cf01a5c290f46aacef27c418cbdc767dc02fb","normalizer":"v3"}
 {"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"stash"}}
 {"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
 {"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}

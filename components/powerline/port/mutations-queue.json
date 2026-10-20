@@ -1,0 +1,860 @@
+[
+ {
+  "name": "queue-store-lock-not-taken",
+  "file": "queue_store.go",
+  "find": "err := os.Mkdir(lockPath, 0o777)\n\t\tif err == nil {",
+  "replace": "err := error(nil)\n\t\tif err == nil {"
+ },
+ {
+  "name": "queue-store-lock-timeout-ms",
+  "file": "queue_store.go",
+  "find": "queueLockTimeout  = 2 * time.Second",
+  "replace": "queueLockTimeout  = 20 * time.Millisecond"
+ },
+ {
+  "name": "queue-store-get-exact-only",
+  "file": "queue_store.go",
+  "find": "item.ID == normalized || strings.HasPrefix(item.ID, normalized)",
+  "replace": "item.ID == normalized"
+ },
+ {
+  "name": "queue-store-get-ambiguous",
+  "file": "queue_store.go",
+  "find": "if len(matches) != 1 {",
+  "replace": "if len(matches) == 0 {"
+ },
+ {
+  "name": "queue-store-sort-newest-first",
+  "file": "queue_store.go",
+  "find": "items[i].CreatedAt < items[j].CreatedAt",
+  "replace": "items[i].CreatedAt > items[j].CreatedAt"
+ },
+ {
+  "name": "queue-store-session-scope",
+  "file": "queue_store.go",
+  "find": "return context.SessionID == item.Source.SessionID",
+  "replace": "return true"
+ },
+ {
+  "name": "queue-store-project-scope",
+  "file": "queue_store.go",
+  "find": "return normalizeQueueCwd(item.Target.Cwd) == currentCwd",
+  "replace": "return true"
+ },
+ {
+  "name": "queue-store-global-scope",
+  "file": "queue_store.go",
+  "find": "case targetGlobal:\n\t\treturn true",
+  "replace": "case targetGlobal:\n\t\treturn false"
+ },
+ {
+  "name": "queue-store-cwd-scope",
+  "file": "queue_store.go",
+  "find": "return item.Source.Cwd == currentCwd",
+  "replace": "return true"
+ },
+ {
+  "name": "queue-store-failed-not-active",
+  "file": "queue_store.go",
+  "find": "case statusQueued, statusBlocked, statusDelivering, statusFailed:\n\tdefault:",
+  "replace": "case statusQueued, statusBlocked, statusDelivering:\n\tdefault:"
+ },
+ {
+  "name": "queue-store-delivering-not-active",
+  "file": "queue_store.go",
+  "find": "case statusQueued, statusBlocked, statusDelivering, statusFailed:\n\tdefault:",
+  "replace": "case statusQueued, statusBlocked, statusFailed:\n\tdefault:"
+ },
+ {
+  "name": "queue-store-failed-not-blocked",
+  "file": "queue_store.go",
+  "find": "if item.Status == statusBlocked || item.Status == statusFailed {",
+  "replace": "if item.Status == statusBlocked {"
+ },
+ {
+  "name": "queue-store-blocked-lead-last",
+  "file": "queue_store.go",
+  "find": "if len(blocked) > 0 {\n\t\tleading = &blocked[0]",
+  "replace": "if len(blocked) > 0 {\n\t\tleading = &blocked[len(blocked)-1]"
+ },
+ {
+  "name": "queue-store-no-blocked-lead",
+  "file": "queue_store.go",
+  "find": "if len(blocked) > 0 {\n\t\tleading = &blocked[0]\n\t} else if len(queueItems) > 0 {",
+  "replace": "if len(queueItems) > 0 {"
+ },
+ {
+  "name": "queue-store-sent-forever",
+  "file": "queue_store.go",
+  "find": "item.Status != statusSent || now-item.UpdatedAt < queueSentRetained",
+  "replace": "item.Status != statusSent || now-item.UpdatedAt < queueSentRetained || true"
+ },
+ {
+  "name": "queue-store-sent-dropped",
+  "file": "queue_store.go",
+  "find": "item.Status != statusSent || now-item.UpdatedAt < queueSentRetained",
+  "replace": "item.Status != statusSent || now < 0"
+ },
+ {
+  "name": "queue-store-update-keeps-time",
+  "file": "queue_store.go",
+  "find": "items[i].UpdatedAt = nowMs()\n\t\t\t}",
+  "replace": "items[i].UpdatedAt = items[i].UpdatedAt\n\t\t\t}"
+ },
+ {
+  "name": "queue-store-clear-keeps-error",
+  "file": "queue_store.go",
+  "find": "return s.update(id, queueUpdates{Status: statusSent, SetError: true})",
+  "replace": "return s.update(id, queueUpdates{Status: statusSent})"
+ },
+ {
+  "name": "queue-store-compact-needs-space",
+  "file": "queue_store.go",
+  "find": "len(content) == len(rest) ||",
+  "replace": ""
+ },
+ {
+  "name": "queue-store-compact-multiline",
+  "file": "queue_store.go",
+  "find": "strings.ContainsAny(content, \"\\n\\r\\u2028\\u2029\")",
+  "replace": "false"
+ },
+ {
+  "name": "queue-store-blank-text-valid",
+  "file": "queue_store.go",
+  "find": "if !ok || jsTrim(text) == \"\" {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "queue-store-id-short",
+  "file": "queue_store.go",
+  "find": "var b [4]byte",
+  "replace": "var b [2]byte"
+ },
+ {
+  "name": "queue-store-alias-empty",
+  "file": "queue_store.go",
+  "find": "aliasPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)",
+  "replace": "aliasPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]*$`)"
+ },
+ {
+  "name": "queue-store-alias-dot",
+  "file": "queue_store.go",
+  "find": "aliasPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)",
+  "replace": "aliasPattern = regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`)"
+ },
+ {
+  "name": "queue-store-alias-untrimmed",
+  "file": "queue_store.go",
+  "find": "normalized := jsTrim(alias)\n\tif !aliasPattern",
+  "replace": "normalized := alias\n\tif !aliasPattern"
+ },
+ {
+  "name": "queue-store-alias-proto",
+  "file": "queue_store.go",
+  "find": "alias != \"__proto__\" && ",
+  "replace": ""
+ },
+ {
+  "name": "queue-store-alias-blank-path",
+  "file": "queue_store.go",
+  "find": "&& jsTrim(cwd) != \"\" {\n\t\t\taliases.set",
+  "replace": "{\n\t\t\taliases.set"
+ },
+ {
+  "name": "queue-store-sessionid-untrimmed",
+  "file": "queue_store.go",
+  "find": "SessionID: jsTrim(in.Source.SessionID)}",
+  "replace": "SessionID: in.Source.SessionID}"
+ },
+ {
+  "name": "queue-store-snapshot-stale",
+  "file": "queue_store.go",
+  "find": "if s.snapshot != nil && s.snapshot.fingerprint == fingerprint {",
+  "replace": "if s.snapshot != nil {"
+ },
+ {
+  "name": "queue-store-no-access-check",
+  "file": "queue_store.go",
+  "find": "f, err := os.Open(s.inboxPath)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\t_ = f.Close()",
+  "replace": ""
+ },
+ {
+  "name": "queue-store-snapshot-never",
+  "file": "queue_store.go",
+  "find": "s.snapshot = &displaySnapshot{fingerprint, slices.Clone(items)}",
+  "replace": "s.snapshot = nil"
+ },
+ {
+  "name": "queue-store-add-without-list",
+  "file": "queue_store.go",
+  "find": "items, err := s.list()\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\treturn s.writeItems(append(items, item))",
+  "replace": "return s.writeItems([]queueItem{item})"
+ },
+ {
+  "name": "queue-delivery-steer-as-followup",
+  "file": "queue_state.go",
+  "find": "if item.Intent == intentSteer {\n\t\treturn \"steer\"",
+  "replace": "if false {\n\t\treturn \"steer\""
+ },
+ {
+  "name": "queue-delivery-unknown-idle-is-idle",
+  "file": "queue_state.go",
+  "find": "if err == nil && idle {",
+  "replace": "if idle {"
+ },
+ {
+  "name": "queue-delivery-ignores-compaction",
+  "file": "queue_state.go",
+  "find": "if q.p.compacting {\n\t\tif _, err := q.store.update(item.ID, queueUpdates{Status: statusQueued}); err != nil {",
+  "replace": "if false {\n\t\tif _, err := q.store.update(item.ID, queueUpdates{Status: statusQueued}); err != nil {"
+ },
+ {
+  "name": "queue-delivery-lock-held-over-send",
+  "file": "queue_state.go",
+  "find": "send := q.host.Sender()\n\tq.mu.Unlock()\n\terr := send(text, deliverAs)\n\tq.mu.Lock()",
+  "replace": "send := q.host.Sender()\n\terr := send(text, deliverAs)"
+ },
+ {
+  "name": "queue-delivery-failure-not-failed",
+  "file": "queue_state.go",
+  "find": "queueUpdates{Status: statusFailed, SetError: true, Error: err.Error()}",
+  "replace": "queueUpdates{Status: statusQueued, SetError: true, Error: err.Error()}"
+ },
+ {
+  "name": "queue-delivery-failure-silent",
+  "file": "queue_state.go",
+  "find": "q.p.h.Notify(\"Failed to send \"+item.ID+\": \"+err.Error(), \"error\")",
+  "replace": ""
+ },
+ {
+  "name": "queue-delivery-failure-keeps-timer",
+  "file": "queue_state.go",
+  "find": "q.clearPendingDelivery(item.ID)\n\tif _, uerr",
+  "replace": "if _, uerr"
+ },
+ {
+  "name": "queue-delivery-not-delivering",
+  "file": "queue_state.go",
+  "find": "queueUpdates{Status: statusDelivering, SetError: true}",
+  "replace": "queueUpdates{SetError: true}"
+ },
+ {
+  "name": "queue-delivery-deadline-59s",
+  "file": "queue_state.go",
+  "find": "pendingDeliveryDeadline = 60 * time.Second",
+  "replace": "pendingDeliveryDeadline = 59 * time.Second"
+ },
+ {
+  "name": "queue-delivery-requeue-message",
+  "file": "queue_state.go",
+  "find": "Error: \"Queued message did not start\"",
+  "replace": "Error: \"Queued message did not start.\""
+ },
+ {
+  "name": "queue-delivery-requeue-any-status",
+  "file": "queue_state.go",
+  "find": "if current != nil && current.Status == statusDelivering {\n\t\t\tif _, err := q.store.update(item.ID,",
+  "replace": "if current != nil {\n\t\t\tif _, err := q.store.update(item.ID,"
+ },
+ {
+  "name": "queue-delivery-ack-exact-text",
+  "file": "queue_state.go",
+  "find": "queueCollapseSpace(q.pending[id].text) != normalized",
+  "replace": "q.pending[id].text != normalized"
+ },
+ {
+  "name": "queue-delivery-ack-any-text",
+  "file": "queue_state.go",
+  "find": "queueCollapseSpace(q.pending[id].text) != normalized",
+  "replace": "false"
+ },
+ {
+  "name": "queue-delivery-ack-silent",
+  "file": "queue_state.go",
+  "find": "q.p.h.Notify(\"Sent queued item \"+id, \"info\")",
+  "replace": ""
+ },
+ {
+  "name": "queue-delivery-ack-keeps-timer",
+  "file": "queue_state.go",
+  "find": "q.clearPendingDelivery(id)\n\t\tupdated, err",
+  "replace": "updated, err"
+ },
+ {
+  "name": "queue-delivery-shutdown-message",
+  "file": "queue_state.go",
+  "find": "\"Session ended before queued message started\"",
+  "replace": "\"Session ended\""
+ },
+ {
+  "name": "queue-delivery-shutdown-keeps-ctx",
+  "file": "queue_state.go",
+  "find": "q.p.compacting = false\n\t\tq.ctxLive = false",
+  "replace": "q.p.compacting = false"
+ },
+ {
+  "name": "queue-post-delay-100ms",
+  "file": "queue_state.go",
+  "find": "postCompactionDelay     = 50 * time.Millisecond",
+  "replace": "postCompactionDelay     = 100 * time.Millisecond"
+ },
+ {
+  "name": "queue-post-keeps-last-timer",
+  "file": "queue_state.go",
+  "find": "if len(items) <= 1 {\n\t\tq.cancelPostCompactionDelivery()",
+  "replace": "if len(items) < 1 {\n\t\tq.cancelPostCompactionDelivery()"
+ },
+ {
+  "name": "queue-post-busy-gives-up",
+  "file": "queue_state.go",
+  "find": "if idle, err := q.host.IsIdle(); err != nil || !idle {\n\t\tq.schedulePostCompactionDelivery()\n\t\treturn nil",
+  "replace": "if idle, err := q.host.IsIdle(); err != nil || !idle {\n\t\treturn nil"
+ },
+ {
+  "name": "queue-post-session-generation",
+  "file": "queue_state.go",
+  "find": "if pending.generation != q.sessionGeneration || !q.ctxLive {",
+  "replace": "if !q.ctxLive {"
+ },
+ {
+  "name": "queue-post-context-gone",
+  "file": "queue_state.go",
+  "find": "if pending.generation != q.sessionGeneration || !q.ctxLive {",
+  "replace": "if pending.generation != q.sessionGeneration {"
+ },
+ {
+  "name": "queue-post-all-intents",
+  "file": "queue_state.go",
+  "find": "q.store.queuedDeliveryItems(pending.context, intentPostCompact)",
+  "replace": "q.store.queuedDeliveryItems(pending.context, \"\")"
+ },
+ {
+  "name": "queue-post-stops-after-first",
+  "file": "queue_state.go",
+  "find": "if _, err := q.deliverQueueItem(items[0]); err != nil {\n\t\treturn err\n\t}\n\tq.schedulePostCompactionDelivery()",
+  "replace": "if _, err := q.deliverQueueItem(items[0]); err != nil {\n\t\treturn err\n\t}"
+ },
+ {
+  "name": "queue-post-compact-not-scheduled",
+  "file": "queue_state.go",
+  "find": "q.postCompaction = &postCompactionDelivery{generation: q.sessionGeneration, context: context}\n\t\t\tq.schedulePostCompactionDelivery()",
+  "replace": "q.postCompaction = &postCompactionDelivery{generation: q.sessionGeneration, context: context}"
+ },
+ {
+  "name": "queue-post-settled-no-wake",
+  "file": "queue_state.go",
+  "find": "case \"agent_settled\":\n\t\tq.schedulePostCompactionDelivery()",
+  "replace": "case \"agent_settled\":"
+ },
+ {
+  "name": "queue-post-agent-end-no-wake",
+  "file": "queue_state.go",
+  "find": "q.ctxLive = true\n\t\tq.schedulePostCompactionDelivery()",
+  "replace": "q.ctxLive = true"
+ },
+ {
+  "name": "queue-post-before-compact-keeps-timer",
+  "file": "queue_state.go",
+  "find": "q.compactionGeneration++\n\t\tq.cancelPostCompactionDelivery()\n\t\tq.requestQueueRender()",
+  "replace": "q.compactionGeneration++\n\t\tq.requestQueueRender()"
+ },
+ {
+  "name": "queue-post-before-compact-not-compacting",
+  "file": "queue_state.go",
+  "find": "case \"session_before_compact\":\n\t\tq.p.compacting = true",
+  "replace": "case \"session_before_compact\":\n\t\tq.p.compacting = q.p.compacting"
+ },
+ {
+  "name": "queue-failed-keeps-compacting",
+  "file": "queue_state.go",
+  "find": "q.compactionGeneration++\n\tq.p.compacting = false\n\tq.cancelPostCompactionDelivery()",
+  "replace": "q.compactionGeneration++\n\tq.cancelPostCompactionDelivery()"
+ },
+ {
+  "name": "queue-failed-keeps-timer",
+  "file": "queue_state.go",
+  "find": "q.p.compacting = false\n\tq.cancelPostCompactionDelivery()\n\terr := q.blockPostCompactionQueue(message)",
+  "replace": "q.p.compacting = false\n\terr := q.blockPostCompactionQueue(message)"
+ },
+ {
+  "name": "queue-failed-default-message",
+  "file": "queue_state.go",
+  "find": "message = \"Compaction cancelled\"",
+  "replace": "message = \"Compaction failed\""
+ },
+ {
+  "name": "queue-failed-blocks-all-intents",
+  "file": "queue_state.go",
+  "find": "items, err := q.store.queuedDeliveryItems(q.context(), intentPostCompact)\n\tif err != nil {\n\t\treturn err\n\t}\n\tfor _, item := range items {\n\t\tif _, err := q.store.update(item.ID, queueUpdates{Status: statusBlocked",
+  "replace": "items, err := q.store.queuedDeliveryItems(q.context(), \"\")\n\tif err != nil {\n\t\treturn err\n\t}\n\tfor _, item := range items {\n\t\tif _, err := q.store.update(item.ID, queueUpdates{Status: statusBlocked"
+ },
+ {
+  "name": "queue-failed-notice-level",
+  "file": "queue_state.go",
+  "find": "\" blocked\", \"warning\")",
+  "replace": "\" blocked\", \"info\")"
+ },
+ {
+  "name": "queue-failed-notice-plural",
+  "file": "queue_state.go",
+  "find": "func queuePlural(n int) string {\n\tif n == 1 {",
+  "replace": "func queuePlural(n int) string {\n\tif n == 0 {"
+ },
+ {
+  "name": "queue-session-start-no-generation",
+  "file": "queue_state.go",
+  "find": "func (q *queueState) onSessionStart() {\n\tq.sessionGeneration++",
+  "replace": "func (q *queueState) onSessionStart() {"
+ },
+ {
+  "name": "queue-session-start-keeps-timer",
+  "file": "queue_state.go",
+  "find": "q.p.compacting = false\n\tq.cancelPostCompactionDelivery()\n}",
+  "replace": "q.p.compacting = false\n}"
+ },
+ {
+  "name": "queue-summary-cache-100ms",
+  "file": "queue_state.go",
+  "find": "queueSummaryCacheTTLMs  = 250",
+  "replace": "queueSummaryCacheTTLMs  = 100"
+ },
+ {
+  "name": "queue-summary-cache-forever",
+  "file": "queue_state.go",
+  "find": "now < c.expiresAt",
+  "replace": "true"
+ },
+ {
+  "name": "queue-summary-cache-ignores-compaction",
+  "file": "queue_state.go",
+  "find": "c.compacting == q.p.compacting && ",
+  "replace": ""
+ },
+ {
+  "name": "queue-summary-cache-ignores-session",
+  "file": "queue_state.go",
+  "find": "c.sessionID == context.SessionID && ",
+  "replace": ""
+ },
+ {
+  "name": "queue-summary-always-reads",
+  "file": "queue_state.go",
+  "find": "if id == \"queue\" {",
+  "replace": "if id != \"\" {"
+ },
+ {
+  "name": "queue-summary-error-is-empty",
+  "file": "queue_state.go",
+  "find": "if s, err := q.summary(); err == nil {\n\t\t\t\treturn s\n\t\t\t}\n\t\t\tbreak",
+  "replace": "if s, err := q.summary(); err == nil {\n\t\t\t\treturn s\n\t\t\t}\n\t\t\treturn queueSummary{}"
+ },
+ {
+  "name": "queue-render-drops-cache",
+  "file": "queue_state.go",
+  "find": "func (q *queueState) requestQueueRender() {\n\tq.summaryCache = nil",
+  "replace": "func (q *queueState) requestQueueRender() {"
+ },
+ {
+  "name": "queue-preview-failed-color",
+  "file": "queue_state.go",
+  "find": "blocked := summary.LeadingStatus == statusBlocked || summary.LeadingStatus == statusFailed",
+  "replace": "blocked := summary.LeadingStatus == statusBlocked"
+ },
+ {
+  "name": "queue-preview-sending-label",
+  "file": "queue_state.go",
+  "find": "prefix = \"sending: \"",
+  "replace": "prefix = \"queued: \""
+ },
+ {
+  "name": "queue-preview-width",
+  "file": "queue_state.go",
+  "find": "truncateToWidth(text, max(1, width-1), \"…\")",
+  "replace": "truncateToWidth(text, max(1, width), \"…\")"
+ },
+ {
+  "name": "queue-preview-collapse",
+  "file": "queue_state.go",
+  "find": "text := prefix + queueCollapseSpace(summary.LeadingText)",
+  "replace": "text := prefix + summary.LeadingText"
+ },
+ {
+  "name": "queue-preview-needs-context",
+  "file": "queue_state.go",
+  "find": "if !q.ctxLive {\n\t\treturn []string{}\n\t}\n\tsummary, err := q.summary()",
+  "replace": "summary, err := q.summary()"
+ },
+ {
+  "name": "queue-capture-blank",
+  "file": "queue_state.go",
+  "find": "trimmed := jsTrim(text)\n\tif trimmed == \"\" {\n\t\treturn nil, nil\n\t}",
+  "replace": "trimmed := jsTrim(text)"
+ },
+ {
+  "name": "queue-capture-untrimmed",
+  "file": "queue_state.go",
+  "find": "q.captureQueueItem(trimmed, intentPostCompact",
+  "replace": "q.captureQueueItem(text, intentPostCompact"
+ },
+ {
+  "name": "queue-capture-intent",
+  "file": "queue_state.go",
+  "find": "q.captureQueueItem(trimmed, intentPostCompact",
+  "replace": "q.captureQueueItem(trimmed, intentFollowUp"
+ },
+ {
+  "name": "queue-capture-notice",
+  "file": "queue_state.go",
+  "find": "\"Queued for after compaction (\"",
+  "replace": "\"Queued after compaction (\""
+ },
+ {
+  "name": "queue-prompt-text-blocks",
+  "file": "queue_state.go",
+  "find": "strings.Join(parts, \"\\n\")",
+  "replace": "strings.Join(parts, \"\")"
+ },
+ {
+  "name": "queue-message-start-any-role",
+  "file": "queue_state.go",
+  "find": "message[\"role\"] == \"user\"",
+  "replace": "message[\"role\"] != \"\""
+ },
+ {
+  "name": "queue-cmd-picker-rows",
+  "file": "queue_command.go",
+  "find": "min(len(active), 12)",
+  "replace": "min(len(active), 13)"
+ },
+ {
+  "name": "queue-cmd-label-queued",
+  "file": "queue_command.go",
+  "find": "if item.Status != statusQueued {\n\t\tstatus += \"/\" + string(item.Status)",
+  "replace": "if item.Status != statusSent {\n\t\tstatus += \"/\" + string(item.Status)"
+ },
+ {
+  "name": "queue-cmd-description-alias",
+  "file": "queue_command.go",
+  "find": "if item.Target.Alias != \"\" {\n\t\treturn \"@\" + item.Target.Alias",
+  "replace": "if item.Target.Alias != \"\" {\n\t\treturn item.Target.Alias"
+ },
+ {
+  "name": "queue-cmd-send-edit-keeps-item",
+  "file": "queue_command.go",
+  "find": "q.host.SetEditorText(item.Text)\n\t\tif _, err := q.store.clear(item.ID); err != nil {\n\t\t\treturn err\n\t\t}\n\t\tq.requestQueueRender()",
+  "replace": "q.host.SetEditorText(item.Text)\n\t\tq.requestQueueRender()"
+ },
+ {
+  "name": "queue-cmd-retry-no-requeue",
+  "file": "queue_command.go",
+  "find": "updated, err := q.store.update(item.ID, queueUpdates{Status: statusQueued, SetError: true})\n\t\tif err != nil || updated == nil {\n\t\t\treturn err\n\t\t}\n\t\t_, err = q.deliverQueueItem(*updated)",
+  "replace": "_, err = q.deliverQueueItem(item)"
+ },
+ {
+  "name": "queue-cmd-alias-default-path",
+  "file": "queue_command.go",
+  "find": "aliasPath = q.p.h.Cwd()",
+  "replace": "aliasPath = \".\""
+ },
+ {
+  "name": "queue-cmd-alias-words",
+  "file": "queue_command.go",
+  "find": "strings.Join(parts[2:], \" \")",
+  "replace": "strings.Join(parts[2:], \"\")"
+ },
+ {
+  "name": "queue-cmd-send-oldest",
+  "file": "queue_command.go",
+  "find": "return q.sendOrRetryQueueItem(items[0].ID)",
+  "replace": "return q.sendOrRetryQueueItem(items[len(items)-1].ID)"
+ },
+ {
+  "name": "queue-cmd-clear-all-count",
+  "file": "queue_command.go",
+  "find": "strconv.Itoa(len(active))+\" queued item\"+queuePlural(len(active))",
+  "replace": "strconv.Itoa(len(active))+\" queued items\""
+ },
+ {
+  "name": "queue-cmd-target-at",
+  "file": "queue_command.go",
+  "find": "normalized = strings.TrimPrefix(normalized, \"@\")",
+  "replace": ""
+ },
+ {
+  "name": "queue-cmd-target-error-silent",
+  "file": "queue_command.go",
+  "find": "notify(err.Error(), \"error\")\n\t\t\treturn nil\n\t\t}\n\t\tnotify(\"Retargeted \"",
+  "replace": "return nil\n\t\t}\n\t\tnotify(\"Retargeted \""
+ },
+ {
+  "name": "select-wrap-up",
+  "file": "select_overlay.go",
+  "find": "l.selectedIndex = len(l.items) - 1\n\t\t} else {",
+  "replace": "l.selectedIndex = 0\n\t\t} else {"
+ },
+ {
+  "name": "select-wrap-down",
+  "file": "select_overlay.go",
+  "find": "if l.selectedIndex == len(l.items)-1 {\n\t\t\tl.selectedIndex = 0",
+  "replace": "if l.selectedIndex == len(l.items)-1 {\n\t\t\tl.selectedIndex = len(l.items) - 1"
+ },
+ {
+  "name": "select-ctrl-c",
+  "file": "select_overlay.go",
+  "find": "\"\\x03\", ",
+  "replace": ""
+ },
+ {
+  "name": "select-escape",
+  "file": "select_overlay.go",
+  "find": "case \"\\x1b\", \"\\x1b[27u\"",
+  "replace": "case \"\\x1b[27u\""
+ },
+ {
+  "name": "select-column-width",
+  "file": "select_overlay.go",
+  "find": "selectPrimaryColumnWidth = 32 //",
+  "replace": "selectPrimaryColumnWidth = 30 //"
+ },
+ {
+  "name": "select-description-edge",
+  "file": "select_overlay.go",
+  "find": "if description != \"\" && width > 40 {",
+  "replace": "if description != \"\" && width >= 40 {"
+ },
+ {
+  "name": "select-min-description",
+  "file": "select_overlay.go",
+  "find": "if remaining > selectMinDescriptionWide {",
+  "replace": "if remaining >= selectMinDescriptionWide {"
+ },
+ {
+  "name": "select-visible-window",
+  "file": "select_overlay.go",
+  "find": "start = max(0, min(l.selectedIndex-l.maxVisible/2, len(l.items)-l.maxVisible))",
+  "replace": "start = max(0, min(l.selectedIndex-l.maxVisible/2+1, len(l.items)-l.maxVisible))"
+ },
+ {
+  "name": "select-scroll-info",
+  "file": "select_overlay.go",
+  "find": "if start > 0 || end < len(l.items) {",
+  "replace": "if end < len(l.items) {"
+ },
+ {
+  "name": "select-description-single-line",
+  "file": "select_overlay.go",
+  "find": "description = normalizeToSingleLine(item.Description)",
+  "replace": "description = item.Description"
+ },
+ {
+  "name": "select-row-pad",
+  "file": "select_overlay.go",
+  "find": "if pad := inner - visibleWidth(cut); pad > 0 {",
+  "replace": "if pad := inner - visibleWidth(cut); pad > 1 {"
+ },
+ {
+  "name": "select-title-bold",
+  "file": "select_overlay.go",
+  "find": "row(o.theme.Fg(\"accent\", o.theme.Bold(o.title)))",
+  "replace": "row(o.theme.Fg(\"accent\", o.title))"
+ },
+ {
+  "name": "select-confirm-result",
+  "file": "select_overlay.go",
+  "find": "\"description\": item.Description}}, nil",
+  "replace": "\"description\": \"\"}}, nil"
+ },
+ {
+  "name": "select-stash-preview-empty",
+  "file": "select_overlay.go",
+  "find": "return \"(empty)\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "delay-send-trimmed",
+  "file": "queue_editor.go",
+  "find": "text: trimmed, submit: submit,",
+  "replace": "text: text, submit: submit,"
+ },
+ {
+  "name": "delay-commands-delayed",
+  "file": "queue_editor.go",
+  "find": "strings.HasPrefix(trimmed, \"/\") || strings.HasPrefix(trimmed, \"!\")",
+  "replace": "strings.HasPrefix(trimmed, \"!\")"
+ },
+ {
+  "name": "delay-bang-delayed",
+  "file": "queue_editor.go",
+  "find": "strings.HasPrefix(trimmed, \"/\") || strings.HasPrefix(trimmed, \"!\")",
+  "replace": "strings.HasPrefix(trimmed, \"/\")"
+ },
+ {
+  "name": "delay-previous-not-sent",
+  "file": "queue_editor.go",
+  "find": "\tq.sendPendingNow()\n\tq.pendingSend = &pendingSend{",
+  "replace": "\tq.pendingSend = &pendingSend{"
+ },
+ {
+  "name": "delay-restore-order",
+  "file": "queue_editor.go",
+  "find": "q.editor.SetText(pending.text + \"\\n\\n\" + draft)",
+  "replace": "q.editor.SetText(draft + \"\\n\\n\" + pending.text)"
+ },
+ {
+  "name": "delay-restore-blank-draft",
+  "file": "queue_editor.go",
+  "find": "if jsTrim(draft) != \"\" {",
+  "replace": "if draft != \"\" {"
+ },
+ {
+  "name": "delay-compaction-capture",
+  "file": "queue_editor.go",
+  "find": "if q.p.compacting && q.ctxLive {\n\t\tif q.editor != nil {",
+  "replace": "if false {\n\t\tif q.editor != nil {"
+ },
+ {
+  "name": "delay-seconds-floor",
+  "file": "queue_editor.go",
+  "find": "math.Max(1, math.Ceil(float64(pending.deadline-clock())/1000))",
+  "replace": "math.Max(1, math.Floor(float64(pending.deadline-clock())/1000))"
+ },
+ {
+  "name": "delay-seconds-min",
+  "file": "queue_editor.go",
+  "find": "math.Max(1, math.Ceil(",
+  "replace": "math.Max(0, math.Ceil("
+ },
+ {
+  "name": "delay-hint",
+  "file": "queue_editor.go",
+  "find": "· esc to edit · enter to send now",
+  "replace": "· esc to cancel · enter to send now"
+ },
+ {
+  "name": "intercept-interrupt-autocomplete",
+  "file": "queue_editor.go",
+  "find": "in.Interrupt && !in.AutocompleteShowing",
+  "replace": "in.Interrupt"
+ },
+ {
+  "name": "intercept-compact-native",
+  "file": "queue_editor.go",
+  "find": "if q.p.config.CompactPromptMode == \"queue\" {",
+  "replace": "if q.p.config.CompactPromptMode != \"queue\" {"
+ },
+ {
+  "name": "intercept-compact-history",
+  "file": "queue_editor.go",
+  "find": "\t\t\ted.AddToHistory(text)\n\t\t\ted.SetText(\"\")\n\t\t\tif hasQueued {",
+  "replace": "\t\t\ted.SetText(\"\")\n\t\t\tif hasQueued {"
+ },
+ {
+  "name": "intercept-compact-no-flag",
+  "file": "queue_editor.go",
+  "find": "q.p.compacting = true\n\t\t\tq.cancelPostCompactionDelivery()\n\t\t\tgeneration",
+  "replace": "q.cancelPostCompactionDelivery()\n\t\t\tgeneration"
+ },
+ {
+  "name": "intercept-compact-error-guard",
+  "file": "queue_editor.go",
+  "find": "q.compactionGeneration > operation+1 || !q.p.compacting",
+  "replace": "!q.p.compacting"
+ },
+ {
+  "name": "intercept-compact-error-session",
+  "file": "queue_editor.go",
+  "find": "if generation != q.sessionGeneration || q.compactionGeneration",
+  "replace": "if q.compactionGeneration"
+ },
+ {
+  "name": "intercept-slash-captured",
+  "file": "queue_editor.go",
+  "find": "if strings.HasPrefix(text, \"/\") {\n\t\t\treturn editorPassThrough",
+  "replace": "if strings.HasPrefix(text, \"/\") {\n\t\t\treturn editorHandled"
+ },
+ {
+  "name": "intercept-empty-sends-pending",
+  "file": "queue_editor.go",
+  "find": "if text == \"\" {\n\t\t\tq.sendPendingNow()",
+  "replace": "if text == \"\" {"
+ },
+ {
+  "name": "intercept-followup-submit",
+  "file": "queue_editor.go",
+  "find": "(in.Submit || in.FollowUpSubmit)",
+  "replace": "in.Submit"
+ },
+ {
+  "name": "intercept-bash-mode",
+  "file": "queue_editor.go",
+  "find": "if q.p.compacting && !in.BashModeActive && (in.Submit",
+  "replace": "if q.p.compacting && (in.Submit"
+ },
+ {
+  "name": "queue-ext-no-shutdown-event",
+  "file": "queue_ext.go",
+  "find": "sdk.EventAgentEnd, sdk.EventBeforeAgentStart, sdk.EventMessageStart, sdk.EventSessionShutdown}",
+  "replace": "sdk.EventAgentEnd, sdk.EventBeforeAgentStart, sdk.EventMessageStart}"
+ },
+ {
+  "name": "queue-ext-no-message-start",
+  "file": "queue_ext.go",
+  "find": "sdk.EventAgentEnd, sdk.EventBeforeAgentStart, sdk.EventMessageStart, sdk.EventSessionShutdown}",
+  "replace": "sdk.EventAgentEnd, sdk.EventBeforeAgentStart, sdk.EventSessionShutdown}"
+ },
+ {
+  "name": "queue-ext-no-settled",
+  "file": "queue_ext.go",
+  "find": "sdk.EventSessionCompactFailed, sdk.EventAgentSettled,",
+  "replace": "sdk.EventSessionCompactFailed,"
+ },
+ {
+  "name": "queue-ext-no-failed",
+  "file": "queue_ext.go",
+  "find": "sdk.EventSessionCompact, sdk.EventSessionCompactFailed, sdk.EventAgentSettled,",
+  "replace": "sdk.EventSessionCompact, sdk.EventAgentSettled,"
+ },
+ {
+  "name": "queue-core-segment-summary",
+  "file": "core.go",
+  "find": "Queue:             p.queue.segmentSummary(all),",
+  "replace": "Queue:             queueSummary{Compacting: p.compacting},"
+ },
+ {
+  "name": "queue-core-widgets-not-installed",
+  "file": "core.go",
+  "find": "p.ui.Widgets[widgetQueuePreview] = \"belowEditor\"",
+  "replace": "p.ui.Widgets[widgetQueuePreview+\"-off\"] = \"belowEditor\""
+ },
+ {
+  "name": "queue-core-teardown-pending",
+  "file": "core.go",
+  "find": "func (p *powerline) teardown() {\n\tp.queue.restorePendingSend()",
+  "replace": "func (p *powerline) teardown() {"
+ },
+ {
+  "name": "queue-core-session-start",
+  "file": "core.go",
+  "find": "func (p *powerline) sessionStart(reason string) {\n\tp.queue.onSessionStart()",
+  "replace": "func (p *powerline) sessionStart(reason string) {"
+ },
+ {
+  "name": "queue-ext-sender-ctx",
+  "file": "extension.go",
+  "find": "ctx := h.ctx\n\treturn func(text, deliverAs string) error { return ctx.SendUserMessage(text, deliverAs) }",
+  "replace": "return func(text, deliverAs string) error { return h.ctx.SendUserMessage(text, deliverAs) }"
+ },
+ {
+  "name": "queue-ext-preview-push",
+  "file": "extension.go",
+  "find": "_ = h.ctx.SetWidget(widgetQueuePreview, h.pl.renderQueuePreview(width), sdk.WidgetOptions{\"placement\": placement})",
+  "replace": ""
+ },
+ {
+  "name": "queue-ext-pending-push",
+  "file": "extension.go",
+  "find": "_ = h.ctx.SetWidget(widgetPendingSend, h.pl.renderPendingSend(width), sdk.WidgetOptions{\"placement\": placement})",
+  "replace": ""
+ }
+]
