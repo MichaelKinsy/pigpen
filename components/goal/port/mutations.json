@@ -846,12 +846,6 @@
   "replace": "cwd: \"\","
  },
  {
-  "name": "audit-session-suffix-only-custom",
-  "file": "goal_audit_session.go",
-  "find": "if len(s.customTools) > 0 {\n\t\ttext += pigCustomToolSuffix",
-  "replace": "if len(s.customTools) >= 0 {\n\t\ttext += pigCustomToolSuffix"
- },
- {
   "name": "audit-session-suffix-name",
   "file": "goal_audit_session.go",
   "find": "\"<\" + t.name + \">\\n{JSON arguments}\\n</\" + t.name + \">\\n\"",
@@ -1116,12 +1110,6 @@
   "replace": "len(l) >= 0 {\n\t\tw.onLine(l)"
  },
  {
-  "name": "audit-session-linewriter-flush-skip",
-  "file": "goal_audit_session.go",
-  "find": "if !w.skip && len(w.buf) > 0 {\n\t\tw.line()",
-  "replace": "if len(w.buf) > 0 {\n\t\tw.line()"
- },
- {
   "name": "audit-session-linewriter-flush-reset",
   "file": "goal_audit_session.go",
   "find": "w.buf, w.skip = nil, false\n}\n\n// pigTailWriter",
@@ -1284,12 +1272,6 @@
   "replace": "Pdeathsig: 0"
  },
  {
-  "name": "audit-proc-setpgid-2",
-  "file": "audit_proc_other_unix.go",
-  "find": "Setpgid: true",
-  "replace": "Setpgid: false"
- },
- {
   "name": "auditor-decision-last-line",
   "file": "goal_auditor.go",
   "find": "marker = lines[len(lines)-1]",
@@ -1347,13 +1329,13 @@
   "name": "auditor-prompt-disable-contracts",
   "file": "goal_auditor.go",
   "find": "withContract := !disableContracts && contract != \"\"",
-  "replace": "withContract := contract != \"\""
+  "replace": "withContract := (!disableContracts || disableContracts) && contract != \"\""
  },
  {
   "name": "auditor-prompt-disable-tasks",
   "file": "goal_auditor.go",
   "find": "!disableTasks && tl != nil",
-  "replace": "tl != nil"
+  "replace": "(!disableTasks || disableTasks) && tl != nil"
  },
  {
   "name": "auditor-prompt-warm",
@@ -1515,7 +1497,7 @@
   "name": "auditor-abort-error-name",
   "file": "goal_auditor.go",
   "find": "if args.aborted() || errors.As(err, &abortErr) {",
-  "replace": "if args.aborted() {"
+  "replace": "if (args.aborted() || errors.As(err, &abortErr)) && abortErr == nil {"
  },
  {
   "name": "auditor-abort-after-prompt",
@@ -1623,7 +1605,7 @@
   "name": "oracle-normalize-nfkc",
   "file": "goal_oracle.go",
   "find": "strings.ToLower(norm.NFKC.String(reason))",
-  "replace": "strings.ToLower(reason)"
+  "replace": "strings.ToLower(norm.NFC.String(reason))"
  },
  {
   "name": "oracle-normalize-lower",
@@ -1635,7 +1617,7 @@
   "name": "oracle-normalize-collapse",
   "file": "goal_oracle.go",
   "find": "if !inSpace {\n\t\t\t\tb.WriteByte(' ')\n\t\t\t}",
-  "replace": "b.WriteByte(' ')"
+  "replace": "if !inSpace || true {\n\t\t\t\tb.WriteByte(' ')\n\t\t\t}"
  },
  {
   "name": "oracle-task-depth",
@@ -1938,22 +1920,10 @@
   "replace": "health := false"
  },
  {
-  "name": "status-sync-prompt",
-  "file": "goal_commands.go",
-  "find": "\tif c.state() != nil {\n\t\tc.syncGoalPromptFromDisk()\n\t}\n",
-  "replace": ""
- },
- {
   "name": "status-settings-report",
   "file": "goal_commands.go",
   "find": "opts.settingsReport = append(effectiveSettingsReport(c.h.Cwd()), \"effective goal pool: \"+c.st.root())",
   "replace": "opts.settingsReport = nil"
- },
- {
-  "name": "status-focused",
-  "file": "goal_commands.go",
-  "find": "focused:           view != nil && c.focused != nil && *c.focused == gstr(view, \"id\"),",
-  "replace": "focused:           view != nil,"
  },
  {
   "name": "status-health-checkpoint",
@@ -1965,13 +1935,7 @@
   "name": "flag-boundary",
   "file": "goal_commands.go",
   "find": "return !(r == '_' || (r >= '0' && r <= '9') || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z'))",
-  "replace": "return true"
- },
- {
-  "name": "choose-complete-skip",
-  "file": "goal_commands.go",
-  "find": "g != nil && gstr(g, \"status\") != \"complete\" {\n\t\treturn g",
-  "replace": "g != nil {\n\t\treturn g"
+  "replace": "_ = r\n\treturn true"
  },
  {
   "name": "choose-single-select",
@@ -2014,12 +1978,6 @@
   "file": "goal_commands.go",
   "find": "\t\tc.setFocusedGoalId(&selectedID, \"selected\", true)\n\t\tc.armFocusedContinuation()\n\t\tc.h.Notify(\"Focused goal: \"+oneLineSummary(c.state()), \"info\")",
   "replace": "\t\tc.setFocusedGoalId(&selectedID, \"selected\", true)\n\t\tc.h.Notify(\"Focused goal: \"+oneLineSummary(c.state()), \"info\")"
- },
- {
-  "name": "select-empty-label",
-  "file": "goal_commands.go",
-  "find": "if !ok || picked == \"\" {\n\t\treturn \"\", false",
-  "replace": "if !ok {\n\t\treturn \"\", false"
  },
  {
   "name": "modal-enter-choose",
@@ -2244,12 +2202,6 @@
   "replace": "(environment; read-only)\")"
  },
  {
-  "name": "menu-header-skip",
-  "file": "goal_settings_menu.go",
-  "find": "if strings.HasPrefix(selected, \"───\") {\n\t\t\tcontinue",
-  "replace": "if strings.HasPrefix(selected, \"──\") && false {\n\t\t\tcontinue"
- },
- {
   "name": "menu-done",
   "file": "goal_settings_menu.go",
   "find": "if !ok || selected == \"Done\" {\n\t\t\tbreak",
@@ -2260,12 +2212,6 @@
   "file": "goal_settings_menu.go",
   "find": "row.key == \"stallTimeoutMinutes\" || row.key == \"objectiveMaxChars\" || row.key == \"maxAutonomousRuns\"",
   "replace": "row.key == \"stallTimeoutMinutes\" || row.key == \"objectiveMaxChars\""
- },
- {
-  "name": "menu-min-oracle",
-  "file": "goal_settings_menu.go",
-  "find": "if row.path == nil && (row.key",
-  "replace": "if (row.key"
  },
  {
   "name": "menu-safe-int",
@@ -2295,7 +2241,7 @@
   "name": "menu-bool-effective",
   "file": "goal_settings_menu.go",
   "find": "if value != effective || !hasLocalOverride {",
-  "replace": "if !hasLocalOverride {"
+  "replace": "if true || effective {"
  },
  {
   "name": "menu-bool-inherit",
@@ -2370,12 +2316,6 @@
   "replace": "\"Settings failed: \""
  },
  {
-  "name": "menu-local-override",
-  "file": "goal_settings_menu.go",
-  "find": "if hasLocalOverride && prov != nil && prov.source == string(scope) {",
-  "replace": "if hasLocalOverride && prov != nil {"
- },
- {
   "name": "menu-subtask-default",
   "file": "goal_settings_menu.go",
   "find": "case \"subtaskDepth\":\n\t\treturn jsNumber(config.subtaskDepth)",
@@ -2409,7 +2349,7 @@
   "name": "draft-tombstone",
   "file": "goal_drafting.go",
   "find": "\tc.draftSessionEntry(draftSession(existing, nowIso()))\n\tc.installGoalToolProfile(c.tasksEnabled)\n}",
-  "replace": "\tc.installGoalToolProfile(c.tasksEnabled)\n}"
+  "replace": "\t_ = existing\n\tc.installGoalToolProfile(c.tasksEnabled)\n}"
  },
  {
   "name": "draft-restore-profile",
@@ -2433,7 +2373,7 @@
   "name": "draft-choice-resume",
   "file": "goal_drafting.go",
   "find": "if !ok || selected == \"\" || selected == choices[0] {",
-  "replace": "if selected == choices[0] {"
+  "replace": "if _ = ok; selected == choices[0] {"
  },
  {
   "name": "draft-choice-cancel",
@@ -2505,13 +2445,7 @@
   "name": "draft-sisyphus-mode",
   "file": "goal_drafting.go",
   "find": "sis != expectedSisyphus {",
-  "replace": "false {"
- },
- {
-  "name": "draft-flush-buffered",
-  "file": "goal_drafting.go",
-  "find": "if flushError != \"\" || c.goalService.isTurnBuffered() {",
-  "replace": "if flushError != \"\" {"
+  "replace": "(sis != expectedSisyphus) && false {"
  },
  {
   "name": "draft-complete-tweak",
@@ -2542,12 +2476,6 @@
   "file": "goal_drafting.go",
   "find": "\tif decision == proposalDecisionCancel {\n\t\tc.clearGoalDrafting()",
   "replace": "\tif decision == proposalDecisionCancel {"
- },
- {
-  "name": "draft-unavailable",
-  "file": "goal_drafting.go",
-  "find": "\tif unavailable {\n\t\treturn draftResult",
-  "replace": "\tif false {\n\t\treturn draftResult"
  },
  {
   "name": "draft-refine-auditor",
@@ -2613,7 +2541,7 @@
   "name": "draft-stalled",
   "file": "goal_drafting.go",
   "find": "stalled := wantsResume && !exhausted && owned && allowance",
-  "replace": "stalled := wantsResume && !exhausted && owned"
+  "replace": "stalled := wantsResume && !exhausted && owned && (allowance || !allowance)"
  },
  {
   "name": "draft-generation",
@@ -2769,7 +2697,7 @@
   "name": "toggle-contract",
   "file": "goal_widget_glue.go",
   "find": "!settings.disableContracts && has",
-  "replace": "has"
+  "replace": "(!settings.disableContracts || settings.disableContracts) && has"
  },
  {
   "name": "toggle-subtasks",
@@ -2842,12 +2770,6 @@
   "file": "goal_scheduler.go",
   "find": "if flushErr != \"\" || c.goalService.isTurnBuffered() {",
   "replace": "if false {"
- },
- {
-  "name": "sched-write-expected-goal",
-  "file": "goal_scheduler.go",
-  "find": "\t\texpectedGoalId: &id,\n\t\tmutate:         change,",
-  "replace": "\t\texpectedGoalId: func() *string { _ = id; return nil }(),\n\t\tmutate:         change,"
  },
  {
   "name": "sched-write-pause-event",
@@ -3366,12 +3288,6 @@
   "replace": "s.update"
  },
  {
-  "name": "sched-signal-inrun",
-  "file": "goal_scheduler.go",
-  "find": "\t\tif !s.inRun {\n\t\t\ts.schedule()\n\t\t}\n\t})\n}\n\n// schedule",
-  "replace": "\t\ts.schedule()\n\t})\n}\n\n// schedule"
- },
- {
   "name": "sched-signal-goalid",
   "file": "goal_scheduler.go",
   "find": "g == nil || any(gstr(g, \"id\")) != goalID || gstr(g, \"status\") != \"active\"",
@@ -3588,12 +3504,6 @@
   "replace": "case m[4] != \"\":\n\t\tloc = time.UTC"
  },
  {
-  "name": "sched-datepars-hour",
-  "file": "goal_scheduler.go",
-  "find": "hour > 24 ||",
-  "replace": ""
- },
- {
   "name": "sched-datepars-overflow",
   "file": "goal_scheduler.go",
   "find": "if t.Day() != day {",
@@ -3627,7 +3537,7 @@
   "name": "core-cancelled-text",
   "file": "core.go",
   "find": "cancelled because goal %s is no longer focused in this session. The shared goal was not modified.",
-  "replace": "cancelled."
+  "replace": "cancelled because goal %s is no longer focused in this session."
  },
  {
   "name": "core-cancelled-terminate",
@@ -4044,12 +3954,6 @@
   "replace": ""
  },
  {
-  "name": "core-load-complete",
-  "file": "core.go",
-  "find": "if gstr(g, \"status\") == \"complete\" {\n\t\t\tc.goals.delete(gstr(g, \"id\"))\n\t\t}",
-  "replace": "_ = g"
- },
- {
   "name": "core-load-migrated",
   "file": "core.go",
   "find": "\t\treason := \"selected\"\n\t\tif legacy != nil && gstr(legacy, \"id\") == *c.focused {\n\t\t\treason = \"migrated\"\n\t\t}",
@@ -4419,7 +4323,7 @@
   "name": "events-compact-drops-prefix",
   "file": "goal_events.go",
   "find": "output = append([]any{}, messages[:i]...)",
-  "replace": "output = []any{}"
+  "replace": "output = append([]any{}, messages[i:i]...)"
  },
  {
   "name": "events-compact-original-mutated",
@@ -4432,12 +4336,6 @@
   "file": "goal_events.go",
   "find": "return \"unidentified\"",
   "replace": "return \"\""
- },
- {
-  "name": "events-sessionkey-swapped-model",
-  "file": "goal_events.go",
-  "find": "provider, model = m.provider, m.id",
-  "replace": "provider, model = m.id, m.provider"
  },
  {
   "name": "events-sessionkey-ignores-model",
@@ -4461,7 +4359,7 @@
   "name": "events-provider-request-no-live",
   "file": "goal_events.go",
   "find": "cacheGoalHistory(eventJS(data[\"payload\"]), contents)",
-  "replace": "cacheGoalHistory(eventJS(data[\"payload\"]), nil)"
+  "replace": "cacheGoalHistory(eventJS(data[\"payload\"]), contents[:0])"
  },
  {
   "name": "events-stale-checkpoint-inverted",
@@ -4480,12 +4378,6 @@
   "file": "goal_events.go",
   "find": "staleContinuationPrompt(*checkpoint, c.state())",
   "replace": "staleContinuationPrompt(*checkpoint, nil)"
- },
- {
-  "name": "events-ledger-read-once-broken",
-  "file": "goal_events.go",
-  "find": "if !haveLedger {",
-  "replace": "if true {"
  },
  {
   "name": "events-unfocused-hide-inverted",
@@ -4564,12 +4456,6 @@
   "file": "goal_events.go",
   "find": "if remaining < 0 {",
   "replace": "if remaining <= 0 {"
- },
- {
-  "name": "events-budget-over-sign",
-  "file": "goal_events.go",
-  "find": "formatTokenValue(-remaining) + \" over the budget\"",
-  "replace": "formatTokenValue(remaining) + \" over the budget\""
  },
  {
   "name": "events-budget-remaining-text",
@@ -4782,12 +4668,6 @@
   "replace": "_ = id"
  },
  {
-  "name": "events-turn-start-wrong-goal",
-  "file": "goal_events.go",
-  "find": "c.goalService.beginTurn(c.st, id)",
-  "replace": "c.goalService.beginTurn(c.st, \"\")"
- },
- {
   "name": "events-turn-start-no-activity",
   "file": "goal_events.go",
   "find": "c.touchGoalActivity()             // F5\n\t\tc.updateUI()",
@@ -4923,7 +4803,7 @@
   "name": "events-turnend-tokens-dropped",
   "file": "goal_events.go",
   "find": "c.accountProgress(tokens)",
-  "replace": "c.accountProgress(0)"
+  "replace": "c.accountProgress(tokens * 0)"
  },
  {
   "name": "events-turnend-abort-no-signal",
@@ -4977,13 +4857,7 @@
   "name": "events-archive-reconcile",
   "file": "goal_events.go",
   "find": "reconcile:     &noReconcile,",
-  "replace": "reconcile:     nil,"
- },
- {
-  "name": "events-archive-commit",
-  "file": "goal_events.go",
-  "find": "commitFocused: &noCommit,",
-  "replace": "commitFocused: nil,"
+  "replace": "reconcile:     func() *bool { _ = noReconcile; return nil }(),"
  },
  {
   "name": "events-archive-completed-event",
@@ -5118,12 +4992,6 @@
   "replace": "// NAF"
  },
  {
-  "name": "events-start-settings-cache",
-  "file": "goal_events.go",
-  "find": "\t\tinvalidateGoalSettingsCache()\n\t\tinvalidateGoalPoolCache()",
-  "replace": "\t\tinvalidateGoalPoolCache()"
- },
- {
   "name": "events-start-pool-cache",
   "file": "goal_events.go",
   "find": "\t\tinvalidateGoalPoolCache()\n\t\tinvalidateGoalLedgerCache()",
@@ -5188,12 +5056,6 @@
   "file": "goal_events.go",
   "find": "c.setFocusedGoalId(&id, \"selected\", true)\n\t\t\t\t\tc.armFocusedContinuation()",
   "replace": "c.setFocusedGoalId(&id, \"resumed\", true)\n\t\t\t\t\tc.armFocusedContinuation()"
- },
- {
-  "name": "events-start-select-no-arm",
-  "file": "goal_events.go",
-  "find": "c.setFocusedGoalId(&id, \"selected\", true)\n\t\t\t\t\tc.armFocusedContinuation()",
-  "replace": "c.setFocusedGoalId(&id, \"selected\", true)"
  },
  {
   "name": "events-start-select-not-ok",
@@ -5502,12 +5364,6 @@
   "replace": "if c.h.Signal().Err() == nil {\n\t\t\tc.pauseActiveGoal()\n\t\t\treturn nil, nil"
  },
  {
-  "name": "events-end-signal-no-return",
-  "file": "goal_events.go",
-  "find": "c.pauseActiveGoal()\n\t\t\treturn nil, nil\n\t\t}\n\t\t// Provider failures",
-  "replace": "c.pauseActiveGoal()\n\t\t}\n\t\t// Provider failures"
- },
- {
   "name": "events-end-network-and",
   "file": "goal_events.go",
   "find": "hasNetworkErrorAssistantMessage(messages) || hasAbortedAssistantMessage(messages)",
@@ -5586,12 +5442,6 @@
   "replace": "_ = c"
  },
  {
-  "name": "events-settled-actionable",
-  "file": "goal_events.go",
-  "find": "actionable := goalID != nil && *goalID != \"\" && c.isActionableContinuationGoal(goalID)",
-  "replace": "actionable := goalID != nil && *goalID != \"\""
- },
- {
   "name": "events-settled-no-settled",
   "file": "goal_events.go",
   "find": "c.scheduler.settled(actionable)",
@@ -5602,12 +5452,6 @@
   "file": "goal_events.go",
   "find": "c.scheduler.settled(actionable)",
   "replace": "c.scheduler.settled(!actionable)"
- },
- {
-  "name": "events-settled-returns-late",
-  "file": "goal_events.go",
-  "find": "if actionable {\n\t\t\treturn nil, nil\n\t\t}",
-  "replace": "if false {\n\t\t\treturn nil, nil\n\t\t}"
  },
  {
   "name": "events-settled-network-or",
@@ -5625,7 +5469,7 @@
   "name": "events-settled-policy-nil",
   "file": "goal_events.go",
   "find": "c.runtime.scheduleNetworkErrorRetry(hostRuntimeCtx{c.h}, c.state(), policy)",
-  "replace": "c.runtime.scheduleNetworkErrorRetry(hostRuntimeCtx{c.h}, c.state(), nil)"
+  "replace": "c.runtime.scheduleNetworkErrorRetry(hostRuntimeCtx{c.h}, c.state(), func() *networkErrorRecoveryPolicy { _ = policy; return nil }())"
  },
  {
   "name": "events-settled-cap-inverted",
@@ -5877,7 +5721,7 @@
   "name": "role-check",
   "file": "goal_format_rest.go",
   "find": "return role == \"assistant\" && stop == reason",
-  "replace": "return stop == reason"
+  "replace": "_ = role\n\treturn stop == reason"
  },
  {
   "name": "hasaborted-all",
@@ -6099,7 +5943,7 @@
   "name": "ledger-focus-terminal",
   "file": "goal_ledger.go",
   "find": "\t\t\tif inGoals || inTerminal {",
-  "replace": "\t\t\tif inGoals {"
+  "replace": "\t\t\t_ = inTerminal\n\t\t\tif inGoals {"
  },
  {
   "name": "ledger-paused-default-status",
@@ -6118,12 +5962,6 @@
   "file": "goal_ledger.go",
   "find": "\t\t\tst, ok := goals.get(goalID)\n\t\t\tif !ok {\n\t\t\t\tst, ok = terminalGoals.get(goalID)\n\t\t\t}\n\t\t\tif ok {\n\t\t\t\tr := newObject()\n\t\t\t\tr.set(\"verdict\"",
   "replace": "\t\t\tst, ok := goals.get(goalID)\n\t\t\tif ok {\n\t\t\t\tr := newObject()\n\t\t\t\tr.set(\"verdict\""
- },
- {
-  "name": "ledger-completed-stub-status",
-  "file": "goal_ledger.go",
-  "find": "st = &reconstructedGoalState{goalID: goalID, latestStatus: \"complete\"}",
-  "replace": "st = &reconstructedGoalState{goalID: goalID, latestStatus: \"active\"}"
  },
  {
   "name": "ledger-completed-keeps-goal",
@@ -6147,7 +5985,7 @@
   "name": "ledger-finalize-latest-focus",
   "file": "goal_ledger.go",
   "find": "g.latestFocus = ok && gen == acc.focusGeneration",
-  "replace": "g.latestFocus = ok"
+  "replace": "_ = gen\n\t\t\tg.latestFocus = ok"
  },
  {
   "name": "ledger-latest-events-order",
@@ -6172,12 +6010,6 @@
   "file": "goal_ledger.go",
   "find": "tail = tail[len(tail)-checkpointRecentCap:]",
   "replace": "tail = tail[:checkpointRecentCap]"
- },
- {
-  "name": "ledger-cp-tail-gate",
-  "file": "goal_ledger.go",
-  "find": "if cp != nil && cp.coveredBytes < size {",
-  "replace": "if cp != nil && cp.coveredBytes <= size {"
  },
  {
   "name": "ledger-cp-hit-size",
@@ -6225,7 +6057,7 @@
   "name": "ledger-cp-recent-maintain",
   "file": "goal_ledger.go",
   "find": "\t\tif id, ok := goalIdOf(e); ok {\n\t\t\tappendRecent(cp.recentEventsByGoal, id, e)\n\t\t}\n\t}\n\tcp.createdAt",
-  "replace": "\t}\n\tcp.createdAt"
+  "replace": "\t\t_ = e\n\t}\n\tcp.createdAt"
  },
  {
   "name": "ledger-cp-tail-coverage",
@@ -6384,12 +6216,6 @@
   "replace": "\tlimit := 3\n"
  },
  {
-  "name": "activity-indexed-break",
-  "file": "goal_activity.go",
-  "find": "if limit > 0 && len(items) >= limit {",
-  "replace": "if limit > 0 && len(items) > limit {"
- },
- {
   "name": "activity-slice-last",
   "file": "goal_activity.go",
   "find": "\tstart := -limit\n",
@@ -6411,7 +6237,7 @@
   "name": "recovery-lock-alive",
   "file": "goal_recovery.go",
   "find": "if !alive || ageMs > lockStaleTtlMs {",
-  "replace": "if ageMs > lockStaleTtlMs {"
+  "replace": "if !alive && ageMs > lockStaleTtlMs {"
  },
  {
   "name": "recovery-malformed-message",
@@ -6492,12 +6318,6 @@
   "replace": "(version == 2)"
  },
  {
-  "name": "health-marker-version-required",
-  "file": "goal_session_health.go",
-  "find": "hasVersion && (version == 2",
-  "replace": "(version == 2"
- },
- {
   "name": "health-largest",
   "file": "goal_session_health.go",
   "find": "if n > h.largestCheckpointChars {",
@@ -6534,12 +6354,6 @@
   "replace": "false"
  },
  {
-  "name": "health-skip-malformed",
-  "file": "goal_session_health.go",
-  "find": "if v, err := parseJSON([]byte(line)); err == nil {",
-  "replace": "if v, err := parseJSON([]byte(line)); err != nil || true {"
- },
- {
   "name": "recover-marker-limit",
   "file": "session_recover.go",
   "find": "if utf16Len(content) > 160 {",
@@ -6567,7 +6381,7 @@
   "name": "recover-confirm",
   "file": "session_recover.go",
   "find": "if apply && !confirmPiClosed {",
-  "replace": "if false {"
+  "replace": "if apply && !confirmPiClosed && false {"
  },
  {
   "name": "recover-symlink",
@@ -6675,7 +6489,7 @@
   "name": "neterr-stop-reason",
   "file": "goal_format_network.go",
   "find": "role == \"assistant\" && stop == \"error\"",
-  "replace": "role == \"assistant\""
+  "replace": "role == \"assistant\" && (stop == \"error\" || stop != \"error\")"
  },
  {
   "name": "neterr-has-any",
@@ -6735,13 +6549,13 @@
   "name": "budget-remaining",
   "file": "goal_accounting.go",
   "find": "math.Floor(budget-used)",
-  "replace": "math.Floor(budget)"
+  "replace": "math.Floor(budget-0*used)"
  },
  {
   "name": "budget-line",
   "file": "goal_accounting.go",
   "find": "\" used, \" + jsNumber(remaining)",
-  "replace": "\" used, \" + jsNumber(used)"
+  "replace": "\" used, \" + jsNumber(used+0*remaining)"
  },
  {
   "name": "budget-model-line",
@@ -6771,7 +6585,7 @@
   "name": "rt-idle-delay",
   "file": "goal_runtime.go",
   "find": "if idle && !pending {\n\t\tdelay = 0\n\t}",
-  "replace": "if idle {\n\t\tdelay = 0\n\t}"
+  "replace": "if idle {\n\t\tdelay = 0\n\t}\n\t_ = pending"
  },
  {
   "name": "rt-force-dedup",
@@ -6969,7 +6783,7 @@
   "name": "p-cache-runs",
   "file": "goal_prompts.go",
   "find": "\t\trunsEnabled, strict, waiting}",
-  "replace": "\t\ttrue, strict, waiting}"
+  "replace": "\t\ttrue, strict, waiting}\n\t_ = runsEnabled"
  },
  {
   "name": "p-limits-none",
@@ -7146,12 +6960,6 @@
   "replace": "if false {"
  },
  {
-  "name": "lr-anchor-fp",
-  "file": "goal_live_retention.go",
-  "find": "if current == nil || !samePtr(current, tail.anchorFingerprint) {",
-  "replace": "if current == nil {"
- },
- {
   "name": "lr-result-role",
   "file": "goal_live_retention.go",
   "find": "if role == \"toolResult\" || role == \"tool\" {",
@@ -7233,7 +7041,7 @@
   "name": "pc-tail-live",
   "file": "goal_prompt_cache.go",
   "find": "!live[tailText] || asRecord(tail.vals[\"cache_control\"]) == nil",
-  "replace": "asRecord(tail.vals[\"cache_control\"]) == nil"
+  "replace": "(live[tailText] && false) || asRecord(tail.vals[\"cache_control\"]) == nil"
  },
  {
   "name": "pc-skip-live",
@@ -7257,7 +7065,7 @@
   "name": "pc-bedrock-dup",
   "file": "goal_prompt_cache.go",
   "find": "next == nil || asRecord(next.vals[\"cachePoint\"]) == nil",
-  "replace": "true"
+  "replace": "true || next == nil"
  },
  {
   "name": "pc-contentless",
@@ -7302,12 +7110,6 @@
   "replace": "if rows < 0 {"
  },
  {
-  "name": "segments: tail guard",
-  "file": "goal_questionnaire.go",
-  "find": "if tailStart < 0 {\n\t\treturn nil\n\t}\n\ttasksStart",
-  "replace": "if tailStart < -1 {\n\t\treturn nil\n\t}\n\ttasksStart"
- },
- {
   "name": "segments: box header marker",
   "file": "goal_questionnaire.go",
   "find": "strings.Contains(l, \"┌─ TASKS ─\")",
@@ -7342,12 +7144,6 @@
   "file": "goal_questionnaire.go",
   "find": "return append(out, rest[len(rest)-budget:]...)",
   "replace": "return append(out, rest[:budget]...)"
- },
- {
-  "name": "fit: no budget returns head",
-  "file": "goal_questionnaire.go",
-  "find": "if budget <= 0 {",
-  "replace": "if budget < 0 {"
  },
  {
   "name": "viewport: window reserve",
@@ -7395,7 +7191,7 @@
   "name": "proposal fit: strip blanks",
   "file": "goal_questionnaire.go",
   "find": "if i < keepHead || jsTrim(l) != \"\" {",
-  "replace": "if jsTrim(l) != \"\" {"
+  "replace": "if i < 0 || jsTrim(l) != \"\" {"
  },
  {
   "name": "proposal fit: auditor kept",
@@ -7602,12 +7398,6 @@
   "replace": "head := jsSlice(lines, 0, max(questionBlockEnd, 0))"
  },
  {
-  "name": "fitOptions: block guard",
-  "file": "goal_questionnaire.go",
-  "find": "if optionsBlockLen+1 > maxDialogLines {",
-  "replace": "if optionsBlockLen > maxDialogLines {"
- },
- {
   "name": "draft text: mode label",
   "file": "goal_draft.go",
   "find": "\"Sisyphus (prompt/criteria style)\"",
@@ -7728,18 +7518,6 @@
   "replace": "const taskConfirmationMaxBody = 17"
  },
  {
-  "name": "task dialog: width cap",
-  "file": "goal_task_confirmation.go",
-  "find": "if termWidth > 80 {",
-  "replace": "if termWidth > 81 {"
- },
- {
-  "name": "task dialog: up wraps",
-  "file": "goal_task_confirmation.go",
-  "find": "d.selected = (d.selected - 1 + n) % n",
-  "replace": "d.selected = (d.selected + 1) % n"
- },
- {
   "name": "task dialog: escape cancels",
   "file": "goal_task_confirmation.go",
   "find": "d.done(&taskConfirmationResult{\"cancel\"})\n\t}",
@@ -7779,7 +7557,7 @@
   "name": "svc-flush-usage-fold-tokens",
   "file": "goal_service.go",
   "find": "gnum(fu, \"tokensUsed\")+tokens)\n\t\t\tusage.set(\"activeSeconds\", gnum(fu, \"activeSeconds\")+seconds)\n\t\t\ts.ref.setFocused",
-  "replace": "gnum(fu, \"tokensUsed\"))\n\t\t\tusage.set(\"activeSeconds\", gnum(fu, \"activeSeconds\")+seconds)\n\t\t\ts.ref.setFocused"
+  "replace": "gnum(fu, \"tokensUsed\")+0*tokens)\n\t\t\tusage.set(\"activeSeconds\", gnum(fu, \"activeSeconds\")+seconds)\n\t\t\ts.ref.setFocused"
  },
  {
   "name": "svc-flush-usage-clamp",
@@ -7860,12 +7638,6 @@
   "replace": "s.lastPersistedUsage.goalId != \"\" {"
  },
  {
-  "name": "svc-ledger-batch-threshold",
-  "file": "goal_service.go",
-  "find": "if len(events) > 1 && appendGoalEvents(ctx, events).ok {",
-  "replace": "if appendGoalEvents(ctx, events).ok {"
- },
- {
   "name": "svc-ledger-diag-event-type",
   "file": "goal_service.go",
   "find": "d := goalDiagnostic{severity: \"warning\", source: \"ledger\", eventType: typ}",
@@ -7893,7 +7665,7 @@
   "name": "svc-reconcile-lost-hook",
   "file": "goal_service.go",
   "find": "s.ref.assignFocusedGoalId(\"\")\n\t\ts.ref.onFocusedGoalLost(lost, ctx)\n\t\treturn false",
-  "replace": "s.ref.assignFocusedGoalId(\"\")\n\t\treturn false"
+  "replace": "s.ref.assignFocusedGoalId(\"\")\n\t\t_ = lost\n\t\treturn false"
  },
  {
   "name": "svc-reconcile-lost-result",
@@ -7948,12 +7720,6 @@
   "file": "goal_service.go",
   "find": "if s.turn.goalId != \"\" && curId != s.turn.goalId {",
   "replace": "if false {"
- },
- {
-  "name": "svc-apply-midturn-pending-msg",
-  "file": "goal_service.go",
-  "find": "msg = \"Previous goal changes are still awaiting persistence.\"",
-  "replace": "msg = \"x\""
  },
  {
   "name": "svc-apply-turn-revision",
@@ -8031,7 +7797,7 @@
   "name": "svc-spec-events-factory-error",
   "file": "goal_service.go",
   "find": "return events, err == nil\n",
-  "replace": "return events, true\n"
+  "replace": "_ = err\n\treturn events, true\n"
  },
  {
   "name": "svc-current-task-explicit",
@@ -8088,12 +7854,6 @@
   "replace": "while the task update was in progress.\""
  },
  {
-  "name": "svc-task-attempt-merge-prompt",
-  "file": "goal_service.go",
-  "find": "base := ctx.mergeGoalPromptFromDisk(current)\n\ttaskList := base.obj(\"taskList\")",
-  "replace": "base := current\n\ttaskList := base.obj(\"taskList\")"
- },
- {
   "name": "svc-task-attempt-revision",
   "file": "goal_service.go",
   "find": "\"revision\", capturedRevision+1)\n\twritten, err := ctx.writeActiveGoalFile(mutated)",
@@ -8103,7 +7863,7 @@
   "name": "svc-task-attempt-ledger-append",
   "file": "goal_service.go",
   "find": "\t\t} else {\n\t\t\ts.appendLedgerEventsBestEffort(ctx, events)\n\t\t}\n\t}\n\ts.ref.setFocused(written)\n\treturn goalTaskUpdateOutcome",
-  "replace": "\t\t}\n\t}\n\ts.ref.setFocused(written)\n\treturn goalTaskUpdateOutcome"
+  "replace": "\t\t} else {\n\t\t\t_ = events\n\t\t}\n\t}\n\ts.ref.setFocused(written)\n\treturn goalTaskUpdateOutcome"
  },
  {
   "name": "svc-tasks-batch-fresh-status",
@@ -8224,18 +7984,6 @@
   "file": "goal_service.go",
   "find": "if s.turn.active {\n\t\ts.turn.ledger = append(s.turn.ledger, events...)\n\t\treturn",
   "replace": "if false {\n\t\ts.turn.ledger = append(s.turn.ledger, events...)\n\t\treturn"
- },
- {
-  "name": "svc-fresh-disk-no-activepath",
-  "file": "goal_service.go",
-  "find": "if !ok || p == \"\" {\n\t\treturn nil",
-  "replace": "if !ok {\n\t\treturn nil"
- },
- {
-  "name": "svc-sameTasks-empty",
-  "file": "goal_service.go",
-  "find": "return len(a) == len(b)\n",
-  "replace": "return false\n"
  },
  {
   "name": "svc-sched-limit-zero",
@@ -8724,12 +8472,6 @@
   "replace": "\"empty path\""
  },
  {
-  "name": "mutate-thinking-unset-alias",
-  "file": "settings.go",
-  "find": "\t\t\tsettingsDelete(container, \"thinking_level\")\n",
-  "replace": ""
- },
- {
   "name": "mutate-thinking-set",
   "file": "settings.go",
   "find": "container.set(\"thinkingLevel\", m.value)",
@@ -8774,8 +8516,8 @@
  {
   "name": "persist-zero-kept",
   "file": "settings.go",
-  "find": "func settingsTruthy(v any) bool {\n\tswitch x := v.(type) {",
-  "replace": "func settingsTruthy(v any) bool {\n\tswitch x := v.(type) {\n\tcase float64:\n\t\treturn false"
+  "find": "return x != 0 && !math.IsNaN(x)",
+  "replace": "return !math.IsNaN(x)"
  },
  {
   "name": "env-override-goals-root",
@@ -8871,7 +8613,7 @@
   "name": "root-invalid-diag",
   "file": "goal_root.go",
   "find": "source != \"environment\" && (d.scope == settingsScopeProject || source != \"project\")",
-  "replace": "false"
+  "replace": "false && source != \"environment\" && (d.scope == settingsScopeProject || source != \"project\")"
  },
  {
   "name": "root-path-prefix",
@@ -9213,7 +8955,7 @@
   "name": "tasks-policy: count ignores subtasks",
   "file": "goal_task_count.go",
   "find": "if subs, ok := t.vals[\"subtasks\"].([]any); ok && len(subs) > 0 {",
-  "replace": "if false {"
+  "replace": "if subs, ok := t.vals[\"subtasks\"].([]any); ok && len(subs) > 0 && false {"
  },
  {
   "name": "tasks-policy: lone numbered line",
@@ -9507,7 +9249,7 @@
   "name": "create-contract-extracted",
   "file": "goal_core_tools.go",
   "find": "c.replaceGoal(goalCreationConfig{objective: cleaned, autoContinue: true, sisyphus: sisyphus}, true, contract, tokenBudget)",
-  "replace": "c.replaceGoal(goalCreationConfig{objective: cleaned, autoContinue: true, sisyphus: sisyphus}, true, \"\", tokenBudget)"
+  "replace": "c.replaceGoal(goalCreationConfig{objective: cleaned, autoContinue: true, sisyphus: sisyphus}, true, contract[:0], tokenBudget)"
  },
  {
   "name": "create-autocontinue",
@@ -9579,7 +9321,7 @@
   "name": "update-polling-nan",
   "file": "goal_core_tools.go",
   "find": "return math.NaN()",
-  "replace": "return 0"
+  "replace": "return math.Abs(1)"
  },
  {
   "name": "update-route-paused",
@@ -9654,12 +9396,6 @@
   "replace": "if failedAttempts > oracleSettings.maxFailedAttemptsPerBlocker {"
  },
  {
-  "name": "oracle-default-code",
-  "file": "goal_core_tools.go",
-  "find": "code := \"provider\"",
-  "replace": "code := \"config\""
- },
- {
   "name": "oracle-started-reason-cap",
   "file": "goal_core_tools.go",
   "find": "utf16Prefix(reason, 1000)",
@@ -9670,12 +9406,6 @@
   "file": "goal_core_tools.go",
   "find": "if len(attempted) > 8 {\n\t\tattempted = attempted[:8]",
   "replace": "if len(attempted) > 4 {\n\t\tattempted = attempted[:4]"
- },
- {
-  "name": "oracle-abort-keeps-active",
-  "file": "goal_core_tools.go",
-  "find": "if run.errorCode == \"aborted\" {\n\t\t\tappendOracle",
-  "replace": "if run.errorCode == \"abortedx\" {\n\t\t\tappendOracle"
  },
  {
   "name": "oracle-message-cap",
@@ -9879,7 +9609,7 @@
   "name": "count-recursive",
   "file": "goal_task_tools.go",
   "find": "total += countTasks(subs)",
-  "replace": "total += 0"
+  "replace": "total += countTasks(subs[:0])"
  },
  {
   "name": "omit-keys-skip",
@@ -9918,12 +9648,6 @@
   "replace": "if !params.hasRe {"
  },
  {
-  "name": "task-reopen-skipped-only",
-  "file": "goal_task_tools.go",
-  "find": "if gstr(task, \"status\") != \"skipped\" {\n\t\t\t\treturn goalGate{message: fmt.Sprintf(\"Task \\\"%s\\\" is not skipped",
-  "replace": "if gstr(task, \"status\") == \"pending\" {\n\t\t\t\treturn goalGate{message: fmt.Sprintf(\"Task \\\"%s\\\" is not skipped"
- },
- {
   "name": "task-disable-tasks",
   "file": "goal_task_tools.go",
   "find": "if loadGoalSettings(c.h.Cwd()).disableTasks {\n\t\treturn c.textResult(\"update_goal_task is disabled",
@@ -9936,16 +9660,10 @@
   "replace": "if st := gstr(c.state(), \"status\"); st == \"complete\" {\n\t\treturn c.textResult(fmt.Sprintf(\"update_goal_task applies only"
  },
  {
-  "name": "task-no-list",
-  "file": "goal_task_tools.go",
-  "find": "if c.state().obj(\"taskList\") == nil {\n\t\treturn c.textResult(\"The goal has no task list.\")",
-  "replace": "if false {\n\t\treturn c.textResult(\"The goal has no task list.\")"
- },
- {
   "name": "task-start-sets-current",
   "file": "goal_task_tools.go",
   "find": "setCurrentTaskId: &id,\n\t\t\tledger:           func(written, _ *jsObject) ([]*jsObject, error) { return event(\"task_started\"",
-  "replace": "setCurrentTaskId: nil,\n\t\t\tledger:           func(written, _ *jsObject) ([]*jsObject, error) { return event(\"task_started\""
+  "replace": "setCurrentTaskId: func() *string { _ = id; return nil }(),\n\t\t\tledger:           func(written, _ *jsObject) ([]*jsObject, error) { return event(\"task_started\""
  },
  {
   "name": "batch-bounds",
@@ -9957,7 +9675,7 @@
   "name": "batch-both",
   "file": "goal_task_tools.go",
   "find": "if toolParamPresent(raw, k) {\n\t\t\t\treturn fail(\"Use either updates",
-  "replace": "if false {\n\t\t\t\treturn fail(\"Use either updates"
+  "replace": "if toolParamPresent(raw, k) && false {\n\t\t\t\treturn fail(\"Use either updates"
  },
  {
   "name": "batch-summary",
@@ -10164,12 +9882,6 @@
   "replace": "c.auditAborted = true"
  },
  {
-  "name": "complete-progress-lines",
-  "file": "goal_completion.go",
-  "find": "if len(lines) > 8 {\n\t\t\tlines = lines[:8]",
-  "replace": "if len(lines) > 4 {\n\t\t\tlines = lines[:4]"
- },
- {
   "name": "complete-verdict-error",
   "file": "goal_completion.go",
   "find": "} else if auditor.err != \"\" {\n\t\tverdict = \"error\"",
@@ -10210,12 +9922,6 @@
   "file": "goal_completion.go",
   "find": "auditorReport: auditor.output, terminate: true",
   "replace": "auditorReport: auditor.output, terminate: false"
- },
- {
-  "name": "commit-focus-token",
-  "file": "goal_completion.go",
-  "find": "focusToken: &token,\n\t\tmutate: func(*jsObject) *jsObject {",
-  "replace": "focusToken: nil,\n\t\tmutate: func(*jsObject) *jsObject {"
  },
  {
   "name": "commit-stop-reason",
@@ -10294,12 +10000,6 @@
   "file": "goal_widget.go",
   "find": "if terminalRows == nil || *terminalRows <= 0 {\n\t\treturn lines\n\t}\n\tcap := *terminalRows - widgetHeightReserve",
   "replace": "if terminalRows == nil || *terminalRows < 0 {\n\t\treturn lines\n\t}\n\tcap := *terminalRows - widgetHeightReserve"
- },
- {
-  "name": "bound-le-cap",
-  "file": "goal_widget.go",
-  "find": "if len(lines) <= cap {\n\t\treturn lines\n\t}\n\treturn lines[:cap]",
-  "replace": "if len(lines) < cap {\n\t\treturn lines\n\t}\n\treturn lines[:cap]"
  },
  {
   "name": "stable-nonpositive-rows",
@@ -10413,7 +10113,7 @@
   "name": "regime-no-tasks",
   "file": "goal_widget.go",
   "find": "jsBool(settings.disableTasks), jsBool(hasTasks)}",
-  "replace": "jsBool(settings.disableTasks), \"\"}"
+  "replace": "jsBool(settings.disableTasks), jsBool(hasTasks && false)}"
  },
  {
   "name": "regime-unfocused",
@@ -10497,13 +10197,13 @@
   "name": "dock-skip-document",
   "file": "goal_widget.go",
   "find": "if i == 0 && sameDockList(dockList, top) {",
-  "replace": "if false && sameDockList(dockList, top) {"
+  "replace": "if false && i == 0 && sameDockList(dockList, top) {"
  },
  {
   "name": "dock-skip-container",
   "file": "goal_widget.go",
   "find": "if ch == widgetContainer {\n\t\t\tcontinue\n\t\t}",
-  "replace": "if false {\n\t\t\tcontinue\n\t\t}"
+  "replace": "if false && ch == widgetContainer {\n\t\t\tcontinue\n\t\t}"
  },
  {
   "name": "dock-min-children",
@@ -10546,12 +10246,6 @@
   "file": "goal_escape_dialog.go",
   "find": "selectedIndex: 1}",
   "replace": "selectedIndex: 0}"
- },
- {
-  "name": "escape-term-width",
-  "file": "goal_escape_dialog.go",
-  "find": "if termWidth > 80 {\n\t\ttermWidth = 80\n\t}",
-  "replace": "if termWidth > 90 {\n\t\ttermWidth = 90\n\t}"
  },
  {
   "name": "escape-objective-width",
@@ -10620,12 +10314,6 @@
   "replace": "c.selectedIndex = (c.selectedIndex - 1 + n) % n"
  },
  {
-  "name": "scaffold-max-inner",
-  "file": "dialog_scaffold.go",
-  "find": "if termWidth > maxInner {",
-  "replace": "if termWidth >= maxInner+1 {"
- },
- {
   "name": "scaffold-inner-minus",
   "file": "dialog_scaffold.go",
   "find": "return termWidth - 2",
@@ -10636,12 +10324,6 @@
   "file": "dialog_scaffold.go",
   "find": "if fill > 0 {",
   "replace": "if fill > 1 {"
- },
- {
-  "name": "overlay-term-width",
-  "file": "task_list_overlay.go",
-  "find": "if termWidth > 100 {\n\t\ttermWidth = 100\n\t}",
-  "replace": "if termWidth > 110 {\n\t\ttermWidth = 110\n\t}"
  },
  {
   "name": "overlay-inner-cap",
@@ -12202,5 +11884,17 @@
   "file": "settings.go",
   "find": "v.strictExecutionContract = asB(simple(\"strictExecutionContract\", false))",
   "replace": "v.strictExecutionContract = false"
+ },
+ {
+  "name": "auditor-prompt-contract-empty",
+  "file": "goal_auditor.go",
+  "find": "withContract := !disableContracts && contract != \"\"",
+  "replace": "withContract := !disableContracts"
+ },
+ {
+  "name": "auditor-prompt-tasks-nil",
+  "file": "goal_auditor.go",
+  "find": "!disableTasks && tl != nil",
+  "replace": "!disableTasks"
  }
 ]
