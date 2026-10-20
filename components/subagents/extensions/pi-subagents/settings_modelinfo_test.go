@@ -7,8 +7,6 @@ import (
 
 // Twins of test/unit/model-info.test.ts.
 
-func new(float64(f float64)) *float64 { return &f }
-
 func lvl(kv ...any) map[string]*string {
 	out := map[string]*string{}
 	for i := 0; i < len(kv); i += 2 {

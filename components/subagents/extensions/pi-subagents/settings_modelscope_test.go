@@ -7,7 +7,6 @@ import (
 
 // Twins of test/unit/model-scope.test.ts and test/unit/model-scope-settings.test.ts.
 
-
 func scopeOf(v any) (*ModelScopeConfig, error) {
 	if v == nil {
 		return parseModelScopeConfig(nil, false, "~/.pi/agent/settings.json")
