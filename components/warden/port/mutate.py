@@ -90,7 +90,7 @@ M = [
  ('rules-standing-rule-late', 'rules.go', '\t\tif count >= 3 {\n\t\t\trepeat', '\t\tif count >= 4 {\n\t\t\trepeat'),
  ('rules-path-note-repeats', 'rules.go', 'if g.noted[key] {', 'if false {'),
  ('rules-outside-project-judged', 'rules.go', 'strings.HasPrefix(rel, "..") || filepath.IsAbs(rel)', 'filepath.IsAbs(rel)'),
- ('rules-prose-fallback-judged', 'rules.go', 'if isRuleShaped(text) {\n\t\t\t\treturn &RuleSet{Sources: []string{file}, Aggregate', 'if true {\n\t\t\t\treturn &RuleSet{Sources: []string{file}, Aggregate'),
+ ('rules-prose-fallback-judged', 'rules.go', 'if isRuleShaped(fallbackText) {\n\t\t\tset = &RuleSet{Sources: []string{fallbackSource}, Aggregate', 'if true {\n\t\t\tset = &RuleSet{Sources: []string{fallbackSource}, Aggregate'),
  ('rules-declined-write-told', 'rules_wire.go', 'if proceeds && hasRules && w.adaptiveSend', 'if hasRules && w.adaptiveSend'),
  ('rules-disabled-still-judges', 'rules_wire.go', 'if !cfg.Rules.Enabled {\n\t\treturn plan', 'if false {\n\t\treturn plan'),
  ('rules-shell-file-cap-lost', 'rules_wire.go', 'if len(judged) > shellRulesChecks {', 'if false {'),

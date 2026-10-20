@@ -223,7 +223,7 @@ The golden traces were recorded again from the original under Pi 1.0.1 (host che
 difference, and `pigeq check` passes on the Go port. Details: `docs/plan/progress/porter-verify.md`.
 
 
-## Rules lane (port/warden-rules-1)
+## Rules lane (port/warden-rules-2, stacked on port/warden-tools-1)
 
 Ported modules: `rules.ts`, `rules-file.ts`, `rules-lint.ts`, `rules-log.ts`, `rules-report.ts`, `rules-audit.ts`,
 `rules-calibrate.ts`, `turn-rules.ts`, `shell-writes.ts`, `init.ts` and their extension hooks.
@@ -258,8 +258,8 @@ existing `jsRound` of the steering core is reused. The baseline snapshot of turn
 
 pigeq: 5 scenarios (`sensitive-path-note-steered` and `rules-file-offline-write-runs`, `rules-offline-fallback-document-write-runs`,
 `rules-offline-heredoc-write-runs`, `rules-offline-turn-rules-without-git-run-quietly`), goldens recorded from the original;
-Pi original == original under PiG Node == Go port on all five (`pigeq check`: 24 of 24 scenarios PASS, with the 19 earlier ones).
-Mutations: 21 layer-1 rows (`port/mutate.py`, `port/mutation-results.txt`, all killed by the twins) and two pigeq rows
+Pi original == original under PiG Node == Go port on all five. `pigeq check` over all 31 scenarios (19 guards, 7 tools, 5 rules): 29 equal in the full run; `two-calls-one-held` and `write-to-ssh-directory-runs-offline` differed once each at the turn-end/next-request order on a host at load average 85, and were equal in two single reruns each.
+Mutations: 22 layer-1 rows (`port/mutate.py`, `port/mutation-results.txt`: the whole file, 93 rows, run on the stacked tree: all killed but `judge-when-disabled` (equivalent) and `disable-keeps-consent`, a tools-era row whose pattern no longer matches in `commands.go`; both are not this lane's) and two pigeq rows
 (`rules-sends-an-empty-steer`, killed by `changing-failure-not-steered`; `rules-sensitive-note-not-sent`, see the PR body). `go test -race -count=24` passes.
 The hot paths (rule matching, the store cache, shell writes) are benchmarked in `rules_bench_test.go`.
 
@@ -285,3 +285,22 @@ what the model is sent: the init prompt text is covered by the `TestInit*` twins
 Stacking notes: when the supervision lane lands, register `w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...")`
 in `newWarden` (first of init, audit, index), and set `ShellWriteTargets` (waste.go) from `shellWrites(command, ...).Writes`
 paths. `discover.go` is a copy of the audit lane's until it lands (commit `c0a805e`): drop it on stacking.
+
+Stacking on the tools lane: the rules helpers `plural` and `dayMs` collided with the prefs lane's (`prefs.go`) and became `pluralOf` and the shared `dayMs`. `TestRulesAgentStartDoesNotWaitForTheSnapshot` and its neighbours failed now and then with "TempDir RemoveAll cleanup: directory not empty" because the baseline snapshot goroutine and the rules log's queued writes outlived the test (reported by the security lane): `rulesShutdown` now also waits for the snapshot and flushes the log, and the harness runs it as a cleanup. `agent_end` keeps upstream's order: the open-loops reminder (tools hook), then the turn rules pass, then the done check.
+
+## Performance (rules slice, 0.1.4)
+
+Measured on imladris (Intel Xeon 6746E, CPU set shared with other lanes; load average 85 to 125, so not noise-free). Go: `go test -bench` in `extensions/warden/rules_bench_test.go`, `-benchmem -count=10`, median of 10. No benchmark of the original was run, so there is no per-call comparison with it.
+
+| Path | Go (median of 10) |
+|---|---|
+| parse a 40-rule `pi-warden.md` | 684 us, 84 KB, 950 allocs |
+| rule set from an unchanged file (store cache) | 5.0 us, 641 B, 9 allocs (4.9 ms before the cache) |
+| rules request for 40 rules | 178 us, 104 KB, 244 allocs |
+| score a 40-rule verdict | 46 us, 30 KB, 94 allocs |
+| shell heredoc write detection | 22.5 us, 13 KB, 85 allocs |
+| user-rule pattern matching | 104 us, 2.7 KB, 145 allocs |
+| describe a write target (runs `git check-ignore`) | 9.2 ms, 494 KB, 81 allocs (one process per target, as upstream) |
+
+Binary: a `package main` that only runs `warden.Extension()` (linux/amd64, `-s -w`) is 9,605,383 bytes at this branch against 9,085,191 at `port/warden-tools-1` (4709961): +520,192 bytes (+5.7%), the rules code and the embedded question texts.
+
