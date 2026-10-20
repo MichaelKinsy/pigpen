@@ -1,7 +1,7 @@
 {
   "name": "@pi-in-go/pigpen-superpowers",
-  "version": "0.1.0",
-  "description": "The skills of obra/superpowers (Jesse Vincent): brainstorming, writing and executing plans, test-driven development, systematic debugging, code review and verification skills, at a pinned release, with PiG's Skill names",
+  "version": "0.2.0",
+  "description": "The skills of obra/superpowers (Jesse Vincent): brainstorming, writing and executing plans, test-driven development, systematic debugging, code review and verification skills, at pinned release v7.0.0, with PiG's Skill names",
   "keywords": [
     "pig-package",
     "skills",

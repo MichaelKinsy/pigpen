@@ -10,6 +10,8 @@ Nothing else is touched: every other file, and every other byte of a SKILL.md, i
 import os, re, shutil, sys, hashlib
 
 here = os.path.dirname(os.path.abspath(__file__))
+VERSION = "v7.0.0"
+COMMIT = "bb92a77741419a4ab5f06e711a283343f1ada0c3"
 src = os.path.join(here, "oracle", "skills")
 dst = os.path.join(here, "..", "skills")
 shutil.rmtree(dst, ignore_errors=True)
@@ -41,8 +43,8 @@ for n in names:
             if os.path.exists(p) and (refs or rename):
                 report.append((n, rel, rename, refs))
 lines = ["# Adaptations", "",
-         "Every change between the unmodified original (`port/oracle/skills`, obra/superpowers v6.4.2, commit",
-         "`8ca22dba9a94f28898bbce59f2537ff4d87c747d`) and the Skills shipped here (`skills/`), written by `port/adapt.py`.",
+         "Every change between the unmodified original (`port/oracle/skills`, obra/superpowers %s, commit" % VERSION,
+         "`%s`) and the Skills shipped here (`skills/`), written by `port/adapt.py`." % COMMIT,
          "Two kinds of change, and no others: the Skill `name` and its directory take the `pigpen-superpowers-` prefix",
          "(Pigpen's Skill gate requires `pigpen-<name>` and a directory equal to the name), and a reference of the form",
          "`superpowers:<skill>` becomes `pigpen-superpowers-<skill>`. All other files and bytes are as upstream.", "",

@@ -12,7 +12,7 @@ needs nothing else to start. **Everything stays quiet until used**: no network c
 | `tintinweb-tasks` | `@tintinweb/pi-tasks` 0.9.0 by tintinweb, MIT | `TaskCreate`, `TaskList`, `TaskGet`, `TaskUpdate`, `TaskOutput`, `TaskStop`, `TaskExecute`, `/tasks`, a task widget |
 | `ask-user-question` | `@juicesharp/rpiv-ask-user-question` 2.11.0 by juicesharp, MIT | the `ask_user_question` tool (partial: dialogs) |
 | `ponytail` | `@dietrichgebert/ponytail` 4.10.0 by Dietrich Gebert, MIT | the "lazy senior dev" mode: `/ponytail`, five more commands and six skills |
-| `superpowers` (skills) | `obra/superpowers` v6.4.2 by Jesse Vincent, MIT | fifteen skills: brainstorming, plans, TDD, debugging, review, verification |
+| `superpowers` (skills) | `obra/superpowers` v7.0.0 by Jesse Vincent, MIT | fifteen skills: brainstorming, plans, TDD, debugging, review, verification |
 
 ## Install
 

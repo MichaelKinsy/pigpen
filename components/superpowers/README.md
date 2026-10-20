@@ -3,7 +3,7 @@
 The fifteen Skills of [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent, as a PiG Skills Package:
 brainstorming before building, writing and executing plans, test-driven development, systematic debugging, requesting
 and receiving code review, verification before completion, git worktrees, finishing a branch, parallel and
-subagent-driven development, and writing Skills. The text is Jesse Vincent's, at release v6.4.2 (see
+subagent-driven development, and writing Skills. The text is Jesse Vincent's, at release v7.0.0 (see
 [CREDITS.md](CREDITS.md)). It carries no code that runs at start-up and no hook.
 
 ```sh
@@ -17,7 +17,7 @@ agent to check for Skills before it answers.
 ## What is changed
 
 Only what PiG's Skill format and Pigpen's Skill gate require, all recorded in [port/ADAPTATIONS.md](port/ADAPTATIONS.md):
-each Skill's `name` and directory carry the `pigpen-superpowers-` prefix, and the 39 references to a Skill by its plugin name
+each Skill's `name` and directory carry the `pigpen-superpowers-` prefix, and the 41 references to a Skill by its plugin name
 (`superpowers:test-driven-development`) name the renamed Skill. Every other byte is the original's; the unmodified tree is
 in [port/oracle/skills](port/oracle/skills).
 
