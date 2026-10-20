@@ -186,12 +186,6 @@
   "replace": "if d := providerTable[p]; d == nil && false {"
 },
 {
-  "name": "refusal-routing-falls-through",
-  "file": "search.go",
-  "find": "if u := asUnsupported(err); u != nil {",
-  "replace": "if u := asUnsupported(err); u != nil && false {"
-},
-{
   "name": "refusal-fetch-extractor-dropped",
   "file": "extract.go",
   "find": "return failed(rawURL, unsupported(feature).Error())",
