@@ -97,15 +97,15 @@
  },
  {
   "name": "surface-path",
-  "file": "rule.go",
-  "find": "\"path\": true, \"external_directory\": true,\n\t\"path_read\"",
-  "replace": "\"external_directory\": true,\n\t\"path_read\""
+  "file": "pathsurfaces.go",
+  "find": "[]string{\"path\", \"external_directory\"}",
+  "replace": "[]string{\"external_directory\"}"
  },
  {
   "name": "surface-options-only-path",
   "file": "rule.go",
-  "find": "if pathSurfaces[surface] {\n\t\treturn f.MatchOptions",
-  "replace": "if !pathSurfaces[surface] {\n\t\treturn f.MatchOptions"
+  "find": "if PathSurfaces[surface] {\n\t\treturn f.MatchOptions",
+  "replace": "if !PathSurfaces[surface] {\n\t\treturn f.MatchOptions"
  },
  {
   "name": "rule-surface-match",
