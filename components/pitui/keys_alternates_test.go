@@ -85,8 +85,8 @@ func TestMatchesKey_KittyAlternateKeys(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, c := range tt.checks {
-				if got := MatchesKey(c.data, c.keyID); got != c.want {
-					t.Errorf("MatchesKey(%q, %q) = %v, want %v", c.data, c.keyID, got, c.want)
+				if got := MatchesKeyID(c.data, c.keyID); got != c.want {
+					t.Errorf("MatchesKeyID(%q, %q) = %v, want %v", c.data, c.keyID, got, c.want)
 				}
 			}
 		})
@@ -123,8 +123,8 @@ func TestMatchesKey_KittyKeypadEnter(t *testing.T) {
 		{"\x1b[57414u", "tab", false},
 	}
 	for _, c := range cases {
-		if got := MatchesKey(c.data, c.keyID); got != c.want {
-			t.Errorf("MatchesKey(%q, %q) = %v, want %v", c.data, c.keyID, got, c.want)
+		if got := MatchesKeyID(c.data, c.keyID); got != c.want {
+			t.Errorf("MatchesKeyID(%q, %q) = %v, want %v", c.data, c.keyID, got, c.want)
 		}
 	}
 }

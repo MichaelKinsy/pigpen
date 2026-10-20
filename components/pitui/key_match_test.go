@@ -256,9 +256,9 @@ func TestMatchesKeyDynamic(t *testing.T) {
 	}
 }
 
-// TestMatchesKey_DynamicFallback verifies that MatchesKey handles
+// TestMatchesKeyID_DynamicFallback verifies that MatchesKeyID handles
 // key combos not in the static map via the dynamic matcher.
-func TestMatchesKey_DynamicFallback(t *testing.T) {
+func TestMatchesKeyID_DynamicFallback(t *testing.T) {
 	// These are NOT in tuiKeyIDInputs: they must be resolved dynamically.
 	dynamicCases := []struct {
 		data  string
@@ -277,16 +277,16 @@ func TestMatchesKey_DynamicFallback(t *testing.T) {
 	}
 	for _, tt := range dynamicCases {
 		t.Run(tt.keyID, func(t *testing.T) {
-			if !MatchesKey(tt.data, tt.keyID) {
-				t.Errorf("MatchesKey(%q, %q) = false, want true", tt.data, tt.keyID)
+			if !MatchesKeyID(tt.data, tt.keyID) {
+				t.Errorf("MatchesKeyID(%q, %q) = false, want true", tt.data, tt.keyID)
 			}
 		})
 	}
 }
 
-// TestMatchesKey_StaticAndDynamic verifies that keys in the static map
+// TestMatchesKeyID_StaticAndDynamic verifies that keys in the static map
 // still work (both paths agree).
-func TestMatchesKey_StaticAndDynamic(t *testing.T) {
+func TestMatchesKeyID_StaticAndDynamic(t *testing.T) {
 	staticCases := []struct {
 		data  string
 		keyID string
@@ -300,8 +300,8 @@ func TestMatchesKey_StaticAndDynamic(t *testing.T) {
 	}
 	for _, tt := range staticCases {
 		t.Run(tt.keyID, func(t *testing.T) {
-			if !MatchesKey(tt.data, tt.keyID) {
-				t.Errorf("MatchesKey(%q, %q) = false, want true", tt.data, tt.keyID)
+			if !MatchesKeyID(tt.data, tt.keyID) {
+				t.Errorf("MatchesKeyID(%q, %q) = false, want true", tt.data, tt.keyID)
 			}
 		})
 	}

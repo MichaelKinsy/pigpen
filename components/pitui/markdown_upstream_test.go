@@ -12,7 +12,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:69
 	t.Run("should render simple nested list", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("- Item 1\n  - Nested 1.1\n  - Nested 1.2\n- Item 2", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("- Item 1\n  - Nested 1.1\n  - Nested 1.2\n- Item 2", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		mdAssert(t, (mdLen(lines) > 0), "lines.length > 0")
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
@@ -24,7 +24,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:95
 	t.Run("should render deeply nested list", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("- Level 1\n  - Level 2\n    - Level 3\n      - Level 4", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("- Level 1\n  - Level 2\n    - Level 3\n      - Level 4", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		mdAssert(t, slices.ContainsFunc(plainLines, func(line string) bool { return strings.Contains(line, "- Level 1") }), "plainLines.some((line) => line.includes(\"- Level 1\"))")
@@ -35,7 +35,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:116
 	t.Run("should render ordered nested list", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("1. First\n   1. Nested first\n   2. Nested second\n2. Second", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("1. First\n   1. Nested first\n   2. Nested second\n2. Second", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		mdAssert(t, slices.ContainsFunc(plainLines, func(line string) bool { return strings.Contains(line, "1. First") }), "plainLines.some((line) => line.includes(\"1. First\"))")
@@ -46,21 +46,21 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:136
 	t.Run("should normalize ordered list markers by default", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("1. alpha\n1. beta\n1. gamma", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("1. alpha\n1. beta\n1. gamma", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"1. alpha", "2. beta", "3. gamma"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:144
 	t.Run("should preserve source list markers when configured", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("  4. forth\n  3. third\n\n10) ten\n7) seven\n\n+ plus\n* star\n- minus\n+", 0, 0, mdUpstreamTheme(), nil, &MarkdownOptions{PreserveOrderedListMarkers: true})
+		markdown := testMDWithOptions("  4. forth\n  3. third\n\n10) ten\n7) seven\n\n+ plus\n* star\n- minus\n+", 0, 0, mdUpstreamTheme(), nil, &MarkdownOptions{PreserveOrderedListMarkers: true})
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"4. forth", "3. third", "", "10) ten", "7) seven", "", "+ plus", "* star", "- minus", "+"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:172
 	t.Run("should render mixed ordered and unordered nested lists", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("1. Ordered item\n   - Unordered nested\n   - Another nested\n2. Second ordered\n   - More nested", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("1. Ordered item\n   - Unordered nested\n   - Another nested\n2. Second ordered\n   - More nested", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		mdAssert(t, slices.ContainsFunc(plainLines, func(line string) bool { return strings.Contains(line, "1. Ordered item") }), "plainLines.some((line) => line.includes(\"1. Ordered item\"))")
@@ -70,21 +70,21 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:192
 	t.Run("should render blank lines between loose list items", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("1. Lorem ipsum dolor sit amet.\n\n   Ut enim ad minim veniam.\n\n2. Duis aute irure dolor.\n\n   Excepteur sint occaecat cupidatat.\n\n3. Beep boop", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("1. Lorem ipsum dolor sit amet.\n\n   Ut enim ad minim veniam.\n\n2. Duis aute irure dolor.\n\n   Excepteur sint occaecat cupidatat.\n\n3. Beep boop", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"1. Lorem ipsum dolor sit amet.", "", "   Ut enim ad minim veniam.", "", "2. Duis aute irure dolor.", "", "   Excepteur sint occaecat cupidatat.", "", "3. Beep boop"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:223
 	t.Run("should render task list markers", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("- [ ] beep\n- [x] boop", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("- [ ] beep\n- [x] boop", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"- [ ] beep", "- [x] boop"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:231
 	t.Run("should maintain numbering when code blocks are not indented (LLM output)", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("1. First item\n\n```typescript\n// code block\n```\n\n2. Second item\n\n```typescript\n// another code block\n```\n\n3. Third item", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("1. First item\n\n```typescript\n// code block\n```\n\n2. Second item\n\n```typescript\n// another code block\n```\n\n3. Third item", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrim(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		numberedLines := mdFilter(plainLines, func(line string) bool { return mdMatch("^\\d+\\.", line) })
@@ -96,56 +96,56 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:268
 	t.Run("should indent wrapped unordered list lines", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("- alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("- alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(20), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"- alpha beta gamma", "  delta epsilon"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:276
 	t.Run("should indent wrapped ordered list lines", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("1. alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("1. alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(20), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"1. alpha beta gamma", "   delta epsilon"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:284
 	t.Run("should indent wrapped ordered list lines with multi-digit markers", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("10. alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("10. alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(21), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"10. alpha beta gamma", "    delta epsilon"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:292
 	t.Run("should indent wrapped nested list lines", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("- parent\n  - alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("- parent\n  - alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(24), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"- parent", "    - alpha beta gamma", "      delta epsilon"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:300
 	t.Run("should indent wrapped nested list lines under ordered parents", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("1. parent\n   - alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("1. parent\n   - alpha beta gamma delta epsilon", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(24), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"1. parent", "    - alpha beta gamma", "      delta epsilon"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:308
 	t.Run("should render and wrap blockquotes inside list items", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("- > alpha beta gamma delta epsilon zeta", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("- > alpha beta gamma delta epsilon zeta", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(24), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"- │ alpha beta gamma", "  │ delta epsilon zeta"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:316
 	t.Run("should render and wrap code blocks inside list items", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("- ```ts\n  alpha beta gamma delta epsilon zeta\n  ```", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("- ```ts\n  alpha beta gamma delta epsilon zeta\n  ```", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(24), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"- ```ts", "    alpha beta gamma", "  delta epsilon zeta", "  ```"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:331
 	t.Run("should render simple table", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Name | Age |\n| --- | --- |\n| Alice | 30 |\n| Bob | 25 |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Name | Age |\n| --- | --- |\n| Alice | 30 |\n| Bob | 25 |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		mdAssert(t, slices.ContainsFunc(plainLines, func(line string) bool { return strings.Contains(line, "Name") }), "plainLines.some((line) => line.includes(\"Name\"))")
@@ -158,7 +158,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:355
 	t.Run("should render row dividers between data rows", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Name | Age |\n| --- | --- |\n| Alice | 30 |\n| Bob | 25 |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Name | Age |\n| --- | --- |\n| Alice | 30 |\n| Bob | 25 |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		dividerLines := mdFilter(plainLines, func(line string) bool { return strings.Contains(line, "┼") })
@@ -168,7 +168,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should keep column width at least the longest word", func(t *testing.T) {
 		mdCaseSetup(t)
 		longestWord := "superlongword"
-		markdown := NewMarkdownWithOptions(("| Column One | Column Two |\n| --- | --- |\n| " + longestWord + " short | otherword |\n| small | tiny |"), 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions(("| Column One | Column Two |\n| --- | --- |\n| " + longestWord + " short | otherword |\n| small | tiny |"), 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(32)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		dataLine := mdFind(plainLines, func(line string) bool { return strings.Contains(line, longestWord) })
@@ -182,7 +182,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:401
 	t.Run("should render table with alignment", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Left | Center | Right |\n| :--- | :---: | ---: |\n| A | B | C |\n| Long text | Middle | End |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Left | Center | Right |\n| :--- | :---: | ---: |\n| A | B | C |\n| Long text | Middle | End |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		mdAssert(t, slices.ContainsFunc(plainLines, func(line string) bool { return strings.Contains(line, "Left") }), "plainLines.some((line) => line.includes(\"Left\"))")
@@ -193,7 +193,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:423
 	t.Run("should handle tables with varying column widths", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Short | Very long column header |\n| --- | --- |\n| A | This is a much longer cell content |\n| B | Short |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Short | Very long column header |\n| --- | --- |\n| A | This is a much longer cell content |\n| B | Short |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		mdAssert(t, (mdLen(lines) > 0), "lines.length > 0")
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
@@ -203,7 +203,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:444
 	t.Run("should wrap table cells when table exceeds available width", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Command | Description | Example |\n| --- | --- | --- |\n| npm install | Install all dependencies | npm install |\n| npm run build | Build the project | npm run build |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Command | Description | Example |\n| --- | --- | --- |\n| npm install | Install all dependencies | npm install |\n| npm run build | Build the project | npm run build |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(50)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		for _, line := range plainLines {
@@ -218,7 +218,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:571
 	t.Run("should wrap long cell content to multiple lines", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Header |\n| --- |\n| This is a very long cell content that should wrap |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Header |\n| --- |\n| This is a very long cell content that should wrap |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(25)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		dataRows := mdFilter(plainLines, func(line string) bool { return (strings.HasPrefix(line, "│") && !strings.Contains(line, "─")) })
@@ -233,7 +233,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 		mdCaseSetup(t)
 		SetCapabilities(TerminalCapabilities{TrueColor: false, Hyperlinks: false})
 		url := "https://example.com/this/is/a/very/long/url/that/should/wrap"
-		markdown := NewMarkdownWithOptions(("| Value |\n| --- |\n| prefix " + url + " |"), 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions(("| Value |\n| --- |\n| prefix " + url + " |"), 0, 0, mdUpstreamTheme(), nil, nil)
 		width := 30
 		lines := markdown.Render(width)
 		ResetCapabilitiesCache()
@@ -254,7 +254,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:633
 	t.Run("should wrap styled inline code inside table cells without breaking borders", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Code |\n| --- |\n| `averyveryveryverylongidentifier` |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Code |\n| --- |\n| `averyveryveryverylongidentifier` |", 0, 0, mdUpstreamTheme(), nil, nil)
 		width := 20
 		lines := markdown.Render(width)
 		joinedOutput := strings.Join(lines, "\n")
@@ -272,7 +272,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:660
 	t.Run("should handle extremely narrow width gracefully", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(15)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		mdAssert(t, (mdLen(lines) > 0), "lines.length > 0")
@@ -283,7 +283,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:683
 	t.Run("should render table correctly when it fits naturally", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| A | B |\n| --- | --- |\n| 1 | 2 |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| A | B |\n| --- | --- |\n| 1 | 2 |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		headerLine := mdFind(plainLines, func(line string) bool { return (strings.Contains(line, "A") && strings.Contains(line, "B")) })
@@ -297,7 +297,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:709
 	t.Run("should respect paddingX when calculating table width", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Column One | Column Two |\n| --- | --- |\n| Data 1 | Data 2 |", 2, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Column One | Column Two |\n| --- | --- |\n| Data 1 | Data 2 |", 2, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(40)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		for _, line := range plainLines {
@@ -309,7 +309,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:733
 	t.Run("should not add a trailing blank line when table is the last rendered block", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("| Name |\n| --- |\n| Alice |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("| Name |\n| --- |\n| Alice |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		mdNotEqual(t, mdAt(plainLines, -1), "")
@@ -317,7 +317,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:755
 	t.Run("should render lists and tables together", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("# Test Document\n\n- Item 1\n  - Nested item\n- Item 2\n\n| Col1 | Col2 |\n| --- | --- |\n| A | B |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("# Test Document\n\n- Item 1\n  - Nested item\n- Item 2\n\n| Col1 | Col2 |\n| --- | --- |\n| A | B |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		mdAssert(t, slices.ContainsFunc(plainLines, func(line string) bool { return strings.Contains(line, "Test Document") }), "plainLines.some((line) => line.includes(\"Test Document\"))")
@@ -329,42 +329,42 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:786
 	t.Run("renders inline dollar and parenthesis delimiters", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("A map $\\mathbb{C}^3 \\to \\mathbb{C}^3$, $xy$, $x-y$, $-x$, $\\frac{1}{2}$, $\\rightarrow$, and \\(s \\to \\infty\\).", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("A map $\\mathbb{C}^3 \\to \\mathbb{C}^3$, $xy$, $x-y$, $-x$, $\\frac{1}{2}$, $\\rightarrow$, and \\(s \\to \\infty\\).", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"A map ℂ³ → ℂ³, xy, x-y, -x, 1/2, →, and s → ∞."})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:799
 	t.Run("renders display dollar delimiters without Markdown escape corruption", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("Before\n\n$$\\{3x+2y,\\; x \\in \\{0, \\pm 1\\}\\}$$\n\nafter", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Before\n\n$$\\{3x+2y,\\; x \\in \\{0, \\pm 1\\}\\}$$\n\nafter", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"Before", "", "{3x+2y, x ∈ {0, ± 1}}", "", "after"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:816
 	t.Run("renders display bracket delimiters", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("Before\n\n\\[\nE \\approx \\frac{0.1\\ \\text{lux}}{100\\ \\text{lm/W}}\n\\]\n\nafter", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Before\n\n\\[\nE \\approx \\frac{0.1\\ \\text{lux}}{100\\ \\text{lm/W}}\n\\]\n\nafter", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"Before", "", "    0.1 lux", "E ≈ ────────", "    100 lm/W", "", "after"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:835
 	t.Run("aligns matrix rows with the opening delimiter", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("Consider the matrix\n\n\\[\nA=\n\\begin{pmatrix}\n\\pi & 0\\\\\n0 & \\frac{1}{\\pi}\n\\end{pmatrix}.\n\\]", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Consider the matrix\n\n\\[\nA=\n\\begin{pmatrix}\n\\pi & 0\\\\\n0 & \\frac{1}{\\pi}\n\\end{pmatrix}.\n\\]", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"Consider the matrix", "", "A = ⎛ π │ 0   ⎞", "    ⎝ 0 │ 1/π ⎠."})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:856
 	t.Run("renders lower limits beneath display operators", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("\\[\n\\lim_{x\\to 0}\\frac{\\frac{\\sin x}{x}-1}{\\frac{e^x-1}{x}-1}=0\n\\]", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("\\[\n\\lim_{x\\to 0}\\frac{\\frac{\\sin x}{x}-1}{\\frac{e^x-1}{x}-1}=0\n\\]", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"     (sin x)/x-1", "lim  ─────────── = 0", "x→0  (eˣ-1)/x-1"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:871
 	t.Run("renders math inside lists and tables", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("- Formula: $F_1 = u^2$\n\n| Value |\n| --- |\n| $\\mathbb{C}^3$ |", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("- Formula: $F_1 = u^2$\n\n| Value |\n| --- |\n| $\\mathbb{C}^3$ |", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		output := strings.Join(lines, "\n")
 		mdAssert(t, strings.Contains(output, "- Formula: F₁ = u²"), "output.includes(\"- Formula: F₁ = u²\")")
@@ -374,11 +374,11 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("does not treat currency, shell variables, or code spans as math", func(t *testing.T) {
 		mdCaseSetup(t)
 		source := ("Costs $5 and $10 or $8k–$12k; use `$x$`, $HOME, and $" + "{PATH}.")
-		markdown := NewMarkdownWithOptions(source, 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions(source, 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{("Costs $5 and $10 or $8k–$12k; use $x$, $HOME, and $" + "{PATH}.")})
 		shellVariables := "Paths: $HOME/$USER and $XDG_CONFIG_HOME/$APP_CONFIG"
-		shellLines := mdMap(NewMarkdownWithOptions(shellVariables, 0, 0, mdUpstreamTheme(), nil, nil).Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
+		shellLines := mdMap(testMDWithOptions(shellVariables, 0, 0, mdUpstreamTheme(), nil, nil).Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, shellLines, []string{shellVariables})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:905
@@ -386,7 +386,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 		mdCaseSetup(t)
 		cases := []string{"Unknown $x + \\unknown{y}$ after", "Streaming $\\mathbb{C}^3"}
 		for _, source := range cases {
-			markdown := NewMarkdownWithOptions(source, 0, 0, mdUpstreamTheme(), nil, nil)
+			markdown := testMDWithOptions(source, 0, 0, mdUpstreamTheme(), nil, nil)
 			lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 			mdEqual(t, lines, []string{source})
 		}
@@ -394,29 +394,29 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:915
 	t.Run("preserves incomplete backslash delimiters while streaming", func(t *testing.T) {
 		mdCaseSetup(t)
-		inline := NewMarkdownWithOptions("Map \\(\\mathbb{C}^3", 0, 0, mdUpstreamTheme(), nil, nil)
+		inline := testMDWithOptions("Map \\(\\mathbb{C}^3", 0, 0, mdUpstreamTheme(), nil, nil)
 		mdEqual(t, mdMap(inline.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) }), []string{"Map \\(\\mathbb{C}^3"})
-		display := NewMarkdownWithOptions("\\[\nx^2", 0, 0, mdUpstreamTheme(), nil, nil)
+		display := testMDWithOptions("\\[\nx^2", 0, 0, mdUpstreamTheme(), nil, nil)
 		mdEqual(t, mdMap(display.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) }), []string{"\\[", "x^2"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:929
 	t.Run("does not render LaTeX inside escaped delimiters or code fences", func(t *testing.T) {
 		mdCaseSetup(t)
 		source := strings.Join([]string{"Escaped \\$x-y\\$.", "", "```text", "$\\mathbb{C}^3$", "```"}, "\n")
-		markdown := NewMarkdownWithOptions(source, 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions(source, 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"Escaped $x-y$.", "", "```text", "  $\\mathbb{C}^3$", "```"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:937
 	t.Run("allows LaTeX rendering to be disabled", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("$$\n\\widetilde Y_{sf}\n=\n(1-w_{sf})\\mu_{sf}^{\\mathrm{MAR}}\n$$\n\nInline \\(A_{sf}\\)", 0, 0, mdUpstreamTheme(), nil, &MarkdownOptions{RenderLatex: new(false)})
+		markdown := testMDWithOptions("$$\n\\widetilde Y_{sf}\n=\n(1-w_{sf})\\mu_{sf}^{\\mathrm{MAR}}\n$$\n\nInline \\(A_{sf}\\)", 0, 0, mdUpstreamTheme(), nil, &MarkdownOptions{RenderLatex: new(false)})
 		mdEqual(t, mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) }), []string{"$$", "\\widetilde Y_{sf}", "=", "(1-w_{sf})\\mu_{sf}^{\\mathrm{MAR}}", "$$", "", "Inline \\(A_{sf}\\)"})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:969
 	t.Run("switches from raw to rendered math when a streamed delimiter closes", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("Map $\\mathbb{C}^3", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Map $\\mathbb{C}^3", 0, 0, mdUpstreamTheme(), nil, nil)
 		mdEqual(t, mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) }), []string{"Map $\\mathbb{C}^3"})
 		markdown.SetText("Map $\\mathbb{C}^3$")
 		mdEqual(t, mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) }), []string{"Map ℂ³"})
@@ -424,21 +424,21 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:986
 	t.Run("should normalize escaped punctuation by default", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("\"\\\"", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("\"\\\"", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"\"\""})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:994
 	t.Run("should preserve source backslash escapes when configured", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("\"\\\"", 0, 0, mdUpstreamTheme(), nil, &MarkdownOptions{PreserveBackslashEscapes: true})
+		markdown := testMDWithOptions("\"\\\"", 0, 0, mdUpstreamTheme(), nil, &MarkdownOptions{PreserveBackslashEscapes: true})
 		lines := mdMap(markdown.Render(80), func(line string) string { return widthx.JSTrimEnd(mdStripSGR(line)) })
 		mdEqual(t, lines, []string{"\"\\\""})
 	})
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1006
 	t.Run("should preserve gray italic styling after inline code", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("This is thinking with `inline code` and more text after", 1, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("gray"), Italic: true}, nil)
+		markdown := testMDWithOptions("This is thinking with `inline code` and more text after", 1, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("gray"), Italic: true}, nil)
 		lines := markdown.Render(80)
 		joinedOutput := strings.Join(lines, "\n")
 		mdAssert(t, strings.Contains(joinedOutput, "inline code"), "joinedOutput.includes(\"inline code\")")
@@ -450,7 +450,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1034
 	t.Run("should preserve gray italic styling after bold text", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("This is thinking with **bold text** and more after", 1, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("gray"), Italic: true}, nil)
+		markdown := testMDWithOptions("This is thinking with **bold text** and more after", 1, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("gray"), Italic: true}, nil)
 		lines := markdown.Render(80)
 		joinedOutput := strings.Join(lines, "\n")
 		mdAssert(t, strings.Contains(joinedOutput, "bold text"), "joinedOutput.includes(\"bold text\")")
@@ -461,7 +461,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1100
 	t.Run("should have only one blank line between code block and following paragraph", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("hello world\n\n```js\nconst hello = \"world\";\n```\n\nagain, hello world", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("hello world\n\n```js\nconst hello = \"world\";\n```\n\nagain, hello world", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		closingBackticksIndex := slices.Index(plainLines, "```")
@@ -476,7 +476,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 		cases := []string{"hello this is text\n```\ncode block\n```\nmore text", "hello this is text\n\n```\ncode block\n```\n\nmore text"}
 		expectedLines := []string{"hello this is text", "", "```", "  code block", "```", "", "more text"}
 		for _, text := range cases {
-			markdown := NewMarkdownWithOptions(text, 0, 0, mdUpstreamTheme(), nil, nil)
+			markdown := testMDWithOptions(text, 0, 0, mdUpstreamTheme(), nil, nil)
 			lines := markdown.Render(80)
 			plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 			mdEqual(t, plainLines, expectedLines)
@@ -487,7 +487,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 		mdCaseSetup(t)
 		cases := []string{"```js\nconst hello = 'world';\n```", "hello world\n\n```js\nconst hello = 'world';\n```"}
 		for _, text := range cases {
-			markdown := NewMarkdownWithOptions(text, 0, 0, mdUpstreamTheme(), nil, nil)
+			markdown := testMDWithOptions(text, 0, 0, mdUpstreamTheme(), nil, nil)
 			lines := markdown.Render(80)
 			plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 			mdNotEqual(t, mdAt(plainLines, -1), "")
@@ -496,7 +496,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1178
 	t.Run("should have only one blank line between divider and following paragraph", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("hello world\n\n---\n\nagain, hello world", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("hello world\n\n---\n\nagain, hello world", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		dividerIndex := slices.IndexFunc(plainLines, func(line string) bool { return strings.Contains(line, "─") })
@@ -508,7 +508,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1206
 	t.Run("should not add a trailing blank line when divider is the last rendered block", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("---", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("---", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		mdNotEqual(t, mdAt(plainLines, -1), "")
@@ -516,7 +516,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1220
 	t.Run("should have only one blank line between heading and following paragraph", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("# Hello\n\nThis is a paragraph", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("# Hello\n\nThis is a paragraph", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		headingIndex := slices.IndexFunc(plainLines, func(line string) bool { return strings.Contains(line, "Hello") })
@@ -528,7 +528,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1246
 	t.Run("should not add a trailing blank line when heading is the last rendered block", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("# Hello", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("# Hello", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		mdNotEqual(t, mdAt(plainLines, -1), "")
@@ -536,7 +536,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1260
 	t.Run("should have only one blank line between blockquote and following paragraph", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("hello world\n\n> This is a quote\n\nagain, hello world", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("hello world\n\n> This is a quote\n\nagain, hello world", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		quoteIndex := slices.IndexFunc(plainLines, func(line string) bool { return strings.Contains(line, "This is a quote") })
@@ -548,7 +548,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1288
 	t.Run("should not add a trailing blank line when blockquote is the last rendered block", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("> This is a quote", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("> This is a quote", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		mdNotEqual(t, mdAt(plainLines, -1), "")
@@ -556,7 +556,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1302
 	t.Run("should apply consistent styling to all lines in lazy continuation blockquote", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions(">Foo\nbar", 0, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("magenta")}, nil)
+		markdown := testMDWithOptions(">Foo\nbar", 0, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("magenta")}, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		quotedLines := mdFilter(plainLines, func(line string) bool { return strings.HasPrefix(line, "│ ") })
@@ -573,7 +573,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1337
 	t.Run("should apply consistent styling to explicit multiline blockquote", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions(">Foo\n>bar", 0, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("cyan")}, nil)
+		markdown := testMDWithOptions(">Foo\n>bar", 0, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("cyan")}, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		quotedLines := mdFilter(plainLines, func(line string) bool { return strings.HasPrefix(line, "│ ") })
@@ -588,7 +588,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1367
 	t.Run("should render list content inside blockquotes", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("> 1. bla bla\n> - nested bullet", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("> 1. bla bla\n> - nested bullet", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		quotedLines := mdFilter(plainLines, func(line string) bool { return strings.HasPrefix(line, "│ ") })
@@ -599,7 +599,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should wrap long blockquote lines and add border to each wrapped line", func(t *testing.T) {
 		mdCaseSetup(t)
 		longText := "This is a very long blockquote line that should wrap to multiple lines when rendered"
-		markdown := NewMarkdownWithOptions(("> " + longText + ""), 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions(("> " + longText + ""), 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(30)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		contentLines := mdFilter(plainLines, func(line string) bool { return (mdLen(line) > 0) })
@@ -615,7 +615,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1416
 	t.Run("should properly indent wrapped blockquote lines with styling", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("> This is styled text that is long enough to wrap", 0, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("yellow"), Italic: true}, nil)
+		markdown := testMDWithOptions("> This is styled text that is long enough to wrap", 0, 0, mdUpstreamTheme(), &DefaultTextStyle{Color: mdChalk("yellow"), Italic: true}, nil)
 		lines := markdown.Render(25)
 		plainLines := mdMap(lines, func(line string) string { return widthx.JSTrimEnd(mdReplace(line, "\\x1b\\[[0-9;]*m", "")) })
 		contentLines := mdFilter(plainLines, func(line string) bool { return (mdLen(line) > 0) })
@@ -629,7 +629,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1447
 	t.Run("should render inline formatting inside blockquotes and reapply quote styling after", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("> Quote with **bold** and `code`", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("> Quote with **bold** and `code`", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		mdAssert(t, slices.ContainsFunc(plainLines, func(line string) bool { return strings.HasPrefix(line, "│ ") }), "plainLines.some((line) => line.startsWith(\"│ \"))")
@@ -645,7 +645,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1479
 	t.Run("should preserve heading styling after inline code", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("### Why `sourceInfo` should not be optional", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("### Why `sourceInfo` should not be optional", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		joinedOutput := strings.Join(lines, "\n")
 		mdAssert(t, strings.Contains(joinedOutput, "\u001b[33m"), "joinedOutput.includes(\"\\x1b[33m\")")
@@ -658,7 +658,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1508
 	t.Run("should preserve heading styling after inline code for h1", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("# Title with `code` inside", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("# Title with `code` inside", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		joinedOutput := strings.Join(lines, "\n")
 		afterCodeIndex := strings.Index(joinedOutput, "inside")
@@ -671,7 +671,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1548
 	t.Run("should preserve heading styling after bold text", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("## Heading with **bold** and more", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("## Heading with **bold** and more", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		joinedOutput := strings.Join(lines, "\n")
 		afterBoldIndex := strings.Index(joinedOutput, "and more")
@@ -683,7 +683,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1564
 	t.Run("should render ~~text~~ as strikethrough", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("Use ~~strikethrough~~ here", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Use ~~strikethrough~~ here", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		joinedOutput := strings.Join(lines, "\n")
 		joinedPlain := strings.Join(mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") }), " ")
@@ -694,7 +694,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1576
 	t.Run("should keep ~text~ as plain text", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("Use ~strikethrough~ literally", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Use ~strikethrough~ literally", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		joinedOutput := strings.Join(lines, "\n")
 		joinedPlain := strings.Join(mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") }), " ")
@@ -705,7 +705,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should not duplicate URL for autolinked emails", func(t *testing.T) {
 		mdCaseSetup(t)
 		SetCapabilities(TerminalCapabilities{TrueColor: false, Hyperlinks: false})
-		markdown := NewMarkdownWithOptions("Contact user@example.com for help", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Contact user@example.com for help", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		joinedPlain := strings.Join(plainLines, " ")
@@ -716,7 +716,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should not duplicate URL for bare URLs", func(t *testing.T) {
 		mdCaseSetup(t)
 		SetCapabilities(TerminalCapabilities{TrueColor: false, Hyperlinks: false})
-		markdown := NewMarkdownWithOptions("Visit https://example.com for more", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Visit https://example.com for more", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		joinedPlain := strings.Join(plainLines, " ")
@@ -727,7 +727,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should show URL in parentheses when hyperlinks are not supported", func(t *testing.T) {
 		mdCaseSetup(t)
 		SetCapabilities(TerminalCapabilities{TrueColor: false, Hyperlinks: false})
-		markdown := NewMarkdownWithOptions("[click here](https://example.com)", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("[click here](https://example.com)", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		joinedPlain := strings.Join(plainLines, " ")
@@ -738,7 +738,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should show mailto URL in parentheses when hyperlinks are not supported", func(t *testing.T) {
 		mdCaseSetup(t)
 		SetCapabilities(TerminalCapabilities{TrueColor: false, Hyperlinks: false})
-		markdown := NewMarkdownWithOptions("[Email me](mailto:test@example.com)", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("[Email me](mailto:test@example.com)", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		joinedPlain := strings.Join(plainLines, " ")
@@ -749,7 +749,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should emit OSC 8 hyperlink sequence when terminal supports hyperlinks", func(t *testing.T) {
 		mdCaseSetup(t)
 		SetCapabilities(TerminalCapabilities{TrueColor: false, Hyperlinks: true})
-		markdown := NewMarkdownWithOptions("[click here](https://example.com)", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("[click here](https://example.com)", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		joined := strings.Join(lines, "")
 		mdAssert(t, strings.Contains(joined, "\u001b]8;;https://example.com\u001b\\"), "joined.includes(\"\\x1b]8;;https://example.com\\x1b\\\\\")")
@@ -765,7 +765,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should use OSC 8 for mailto links when terminal supports hyperlinks", func(t *testing.T) {
 		mdCaseSetup(t)
 		SetCapabilities(TerminalCapabilities{TrueColor: false, Hyperlinks: true})
-		markdown := NewMarkdownWithOptions("[Email me](mailto:test@example.com)", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("[Email me](mailto:test@example.com)", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		joined := strings.Join(lines, "")
 		mdAssert(t, strings.Contains(joined, "\u001b]8;;mailto:test@example.com\u001b\\"), "joined.includes(\"\\x1b]8;;mailto:test@example.com\\x1b\\\\\")")
@@ -775,7 +775,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	t.Run("should use OSC 8 for bare URLs when terminal supports hyperlinks", func(t *testing.T) {
 		mdCaseSetup(t)
 		SetCapabilities(TerminalCapabilities{TrueColor: false, Hyperlinks: true})
-		markdown := NewMarkdownWithOptions("Visit https://example.com for more", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("Visit https://example.com for more", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		joined := strings.Join(lines, "")
 		mdAssert(t, strings.Contains(joined, "\u001b]8;;https://example.com\u001b\\"), "joined.includes(\"\\x1b]8;;https://example.com\\x1b\\\\\")")
@@ -787,7 +787,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1696
 	t.Run("should render content with HTML-like tags as text", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("This is text with <thinking>hidden content</thinking> that should be visible", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("This is text with <thinking>hidden content</thinking> that should be visible", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		joinedPlain := strings.Join(plainLines, " ")
@@ -796,7 +796,7 @@ func TestUpstreamMarkdown(t *testing.T) {
 	// .upstream/v0.87.1/packages/tui/test/markdown.test.ts:1717
 	t.Run("should render HTML tags in code blocks correctly", func(t *testing.T) {
 		mdCaseSetup(t)
-		markdown := NewMarkdownWithOptions("```html\n<div>Some HTML</div>\n```", 0, 0, mdUpstreamTheme(), nil, nil)
+		markdown := testMDWithOptions("```html\n<div>Some HTML</div>\n```", 0, 0, mdUpstreamTheme(), nil, nil)
 		lines := markdown.Render(80)
 		plainLines := mdMap(lines, func(line string) string { return mdReplace(line, "\\x1b\\[[0-9;]*m", "") })
 		joinedPlain := strings.Join(plainLines, "\n")

@@ -1,7 +1,5 @@
 package tui
 
-import "strings"
-
 // Key identifiers: Go spelling of pi-tui's `Key` object (keys.ts).
 const (
 	KeyEscape    = "escape"
@@ -51,17 +49,3 @@ func KeyAltShift(key string) string  { return "alt+shift+" + key }
 // MatchesKey reports whether raw terminal input matches a key id such as
 // "ctrl+c", "shift+tab" or "escape" (pi-tui matchesKey).
 func MatchesKey(data, keyID string) bool { return matchesKeyID(data, keyID) }
-
-// IsKeyRepeat reports whether a raw input chunk is a Kitty key-repeat event
-// (event type 2). Bracketed-paste content is never a repeat (pi-tui isKeyRepeat).
-func IsKeyRepeat(data string) bool {
-	if strings.Contains(data, "\x1b[200~") {
-		return false
-	}
-	for _, suffix := range []string{":2u", ":2~", ":2A", ":2B", ":2C", ":2D", ":2H", ":2F"} {
-		if strings.Contains(data, suffix) {
-			return true
-		}
-	}
-	return false
-}

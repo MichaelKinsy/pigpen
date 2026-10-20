@@ -154,9 +154,9 @@ func TestMarkdownTaskListMarkerStyleAndContinuation(t *testing.T) {
 	}
 }
 
-// Source marker preservation is an explicit Markdown option, enabled by UserMessageBlock.
+// Source marker preservation is an explicit Markdown option, enabled by UserMessageComponent.
 func TestMarkdownPreservesSourceOrderedListMarkers(t *testing.T) {
-	m := NewMarkdownWithOptions("3. three\n5. five\n7. seven", 0, 0, nil, nil, &MarkdownOptions{PreserveOrderedListMarkers: true})
+	m := testMDWithOptions("3. three\n5. five\n7. seven", 0, 0, nil, nil, &MarkdownOptions{PreserveOrderedListMarkers: true})
 	out := markdownPlainLines(m.Render(80))
 	if len(out) != 3 {
 		t.Fatalf("expected 3 items, got %d: %v", len(out), out)

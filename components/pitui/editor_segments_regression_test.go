@@ -34,7 +34,7 @@ func TestEditorMarkerCursorPaintAndMouseUseAtomicSegments(t *testing.T) {
 	e.HandleInput("\x1b[C")
 	rows := renderEditor(e, 80)
 	t.Run("paint", func(t *testing.T) {
-		if !strings.Contains(rows[1], "A\x1b[7m"+marker+"\x1b[27mB") {
+		if !strings.Contains(rows[1], "A"+widthx.RenderFakeCursor(marker)+"B") {
 			t.Fatalf("cursor does not highlight the complete marker: %q", rows[1])
 		}
 	})

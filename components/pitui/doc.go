@@ -1,54 +1,73 @@
-// Package tui is the subset of pi-tui (as ported by PiG's tui package) that
-// the ask-user-question questionnaire needs, with the PiG application
-// coupling removed. See NOTICE for provenance.
+// Package tui is the subset of pi-tui that the ask-user-question questionnaire
+// needs, as ported by PiG's tui package (v0.5.0) with PiG's application
+// coupling removed, plus pi-tui's simple components rewritten from Pi.
+// README.md and CREDITS.md give provenance and the file inventory.
 //
 // Components: Component, Container (AddChild/RemoveChild/Clear), Spacer, Text,
-// DynamicBorder, Editor, Markdown. Keys: MatchesKey, IsKeyRelease,
-// IsKeyRepeat, Key* constants and modifier helpers, Keybindings (interface),
-// NewKeybindings, TUIKeybindingsManager, Set/GetTUIKeybindings (the global
-// manager Editor reads), KB* ids (tui.* and app.editor.external).
-// Other exported names: EditorTheme, MarkdownTheme (HighlightCode nil =
-// plain), DefaultTextStyle, MarkdownOptions, CursorMarker, FakeCursorStart,
-// FakeCursorEnd, RenderFakeCursor, ResolveFakeCursors, Hyperlink,
-// HyperlinksSupported, SetHyperlinksSupported, SetKittyProtocolActive,
-// IsKittyProtocolActive, FindWordForward/FindWordBackward,
-// WordNavigationOptions, SGR* resets, FgClose, KillRing.
+// DynamicBorder, Editor, Markdown. Keys: MatchesKey (and PiG's MatchesKeyID),
+// IsKeyRelease, IsKeyRepeat, Key* constants and modifier helpers, Keybindings
+// (interface), NewKeybindings, TUIKeybindingsManager, Set/GetTUIKeybindings (the
+// global manager Editor reads), KB* ids (tui.* and app.editor.external).
+// Other exported names: EditorTheme and SelectListTheme, MarkdownTheme
+// (HighlightCode nil = plain), DefaultTextStyle, MarkdownOptions, CursorMarker,
+// FakeCursorStart, FakeCursorEnd, RenderFakeCursor, ResolveFakeCursors,
+// Hyperlink, HyperlinksSupported, SetHyperlinksSupported,
+// SetKittyProtocolActive, IsKittyProtocolActive, FindWordForward and
+// FindWordBackward with WordNavigationOptions, SGR* resets, FgClose, KillRing.
 // Editor extras: SetRowsProvider, SetRequestRender, SetMaxVisibleLines.
 //
-// Differences from PiG's public tui (origin/main, which has NewEditorWithTUI
-// with EditorTheme/EditorOptions, widthx fake-cursor helpers, GetMarkdownTheme,
-// DynamicBorder, Spacer, IsKeyRepeat and MatchesKeyID) that this package
-// papers over so the questionnaire gets the pi-tui shape: Text()/GetText,
-// GetCursor() returning (line, col) instead of EditorCursor, a Keybindings
-// interface + NewKeybindings + app.editor.external, MatchesKey and the Key*
-// constants, pi-tui's Text(text, paddingX, paddingY, bg) and Container
-// AddChild/RemoveChild/Clear, a Markdown without global-theme coupling, and an
-// Editor without ActiveTheme/mouse/remote/status/autocomplete coupling.
-// Delete this package when PiG exports those (core item C1); see README.md.
+// # What PiG's public tui lacks or shapes differently
 //
-// Deviations from pi-tui 1.2.0 and PiG
+// PiG v0.5.0 has NewEditorWithTUI(ui, theme, options), GetMarkdownTheme,
+// DynamicBorder, Spacer, IsKeyRepeat, MatchesKeyID and the widthx fake-cursor
+// helpers. This package supplies the pi-tui shape the questionnaire's port is
+// written against: NewEditor(EditorTheme) with GetText and GetCursor() returning
+// (line, col); a Keybindings interface, NewKeybindings and app.editor.external;
+// MatchesKey and the Key* constants; pi-tui's Text(text, paddingX, paddingY,
+// bg), Container.AddChild/RemoveChild/Clear; a Markdown and an Editor without
+// ActiveTheme, mouse, remote, status or autocomplete coupling. Delete this
+// package when PiG exports those (core item C1).
 //
-//   - Pruned: mouse events, StatusIndicator/Loader, async and slash/file
-//     autocomplete (SelectList popup, providers), remote/extension editor,
-//     thinking-level/bash border colours, global theme (ActiveTheme),
-//     async markdown transforms, alt-screen keybinding ids, input-history
-//     key defaults beyond the tui.* table, Editor.Clear, the PiG TUI.
-//   - NewEditor takes an EditorTheme (PiG's NewEditorWithTUI takes a TUI and
-//     options); the tui argument is replaced by SetRowsProvider (visible-line cap max(5, floor(rows*0.3))) and
+// # Deviations from PiG v0.5.0
+//
+//   - Pruned: mouse events, StatusIndicator/Loader, autocomplete (providers,
+//     async provider, SelectList popup), the remote/delegated editor
+//     component, thinking-level and bash-mode borders, the global theme
+//     (ActiveTheme, GetMarkdownTheme, Theme), async markdown transforms and
+//     their generation tracking, alt-screen keybinding ids, keybinding hints,
+//     PiG's KeyHelper/KeyID (replaced by the Key* constants in keys.go),
+//     Editor.Clear and the Editor's host-visible BorderColor/ThinkingLevel
+//     fields.
+//   - NewEditor takes an EditorTheme; PiG's tui argument is replaced by
+//     SetRowsProvider (visible-line cap max(5, floor(rows*0.3))) and
 //     SetRequestRender (called by SetPaddingX).
-//   - Editor.Render emits pi-tui 1.2.0's fake-cursor APC markers instead of
-//     PiG's inline "\x1b[7m...\x1b[0m"; hosts run ResolveFakeCursors (which
-//     yields "\x1b[7m...\x1b[27m" like TUI.resolveFakeCursors). PiG's D66 width-1
-//     cursor divergence is removed.
+//   - Editor.Render and Editor.HandleInput are pi-tui's, which Pi
+//     1402973a shares (packages/tui/src is identical): Render emits the fake
+//     cursor APC markers (hosts run ResolveFakeCursors), without PiG's row and
+//     border caches; HandleInput dispatches in pi-tui's order (undo, deletion,
+//     kill ring, history, cursor movement, newline, submit, ...) and ignores
+//     Tab since there is no provider.
 //   - Editor.OnChange fires once per HandleInput when the text changed (plus
-//     explicitly from SetText/InsertTextAtCursor/history), not after every
-//     internal edit step; submitValue reports "" before OnSubmit as pi-tui does.
-//   - Editor.GetCursor returns (line, col) with col in UTF-16 units.
-//   - Tab is ignored (no provider), Editor.HandleInput follows pi-tui's
-//     dispatch order exactly (undo, kill, history, cursor, newline, submit...).
-//   - Markdown: nil theme means identity styling (pi-tui requires a theme);
-//     the render cache is cleared by Invalidate; hyperlinks use
-//     HyperlinksSupported (env detection incl. tmux probe) instead of PiG's
-//     capability cache.
-//   - Text/Container/Spacer are pi-tui's versions, not PiG's.
+//     explicitly from SetText, InsertTextAtCursor and history navigation);
+//     submitValue reports "" before OnSubmit as pi-tui does.
+//   - Editor.GetCursor returns (line, col) with col in UTF-16 units; the text is
+//     GetText (PiG's Text() is gone).
+//   - Markdown: a nil theme means identity styling (pi-tui requires a theme);
+//     markdownPureStyles lists the plain theme's and the emphasis styles'
+//     functions instead of PiG's active-theme functions, so the streaming memos
+//     and resume apply to those themes and to themes registered the same way;
+//     the transform cache is cleared by Invalidate; hyperlinks use
+//     HyperlinksSupported (environment detection incl. the tmux probe) instead of
+//     PiG's capability cache.
+//   - jsnumber carries a copy of durable/core/jv.AppendNumber instead of
+//     importing internal/jsparity; jsstring drops Stringify and its tests (they
+//     need PiG's SDK JSON); wordsegmenter drops the pigstrip dictionary
+//     switch and the dictionary-size budget test.
+//   - Text, Container, Spacer, DynamicBorder, keys.go, hyperlink.go and sgr.go
+//     are pi-tui's, not PiG's.
+//   - Tests: PiG's tests of the kept code are carried over; those that need
+//     Node, Pi's oracle or PiG internals (the *_oracle tests, termsim grids,
+//     testenv, pioracle), the pruned features, or PiG components (assistant and
+//     user message blocks, TextInput) are not. compat_test.go supplies the
+//     helpers and a test ActiveTheme.
 package tui

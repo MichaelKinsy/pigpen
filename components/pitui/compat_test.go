@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -57,21 +58,37 @@ func ActiveTheme() testThemeTokens {
 	}
 }
 
-func testMarkdownTheme() *MarkdownTheme {
-	t := ActiveTheme()
-	fg := func(open string) func(string) string {
-		return func(s string) string { return markdownForeground(open, s) }
-	}
-	return &MarkdownTheme{
-		Heading: fg(t.MDHeading), Link: fg(t.MDLink), LinkUrl: fg(t.MDLinkUrl), Code: fg(t.MDCode),
-		CodeBlock: fg(t.MDCodeBlock), CodeBlockBorder: fg(t.MDCodeBlockBorder), Quote: fg(t.MDQuote),
-		QuoteBorder: fg(t.MDQuoteBorder), Hr: fg(t.MDHr), ListBullet: fg(t.MDListBullet),
-		Bold:          func(s string) string { return markdownDecoration("\x1b[1m", SGRBoldDimReset, s) },
-		Italic:        func(s string) string { return markdownDecoration("\x1b[3m", SGRItalicReset, s) },
-		Strikethrough: func(s string) string { return markdownDecoration("\x1b[9m", SGRStrikeReset, s) },
-		Underline:     func(s string) string { return markdownDecoration("\x1b[4m", SGRUnderlineReset, s) },
+// GetMarkdownTheme is PiG's GetMarkdownTheme with the test ActiveTheme: capture-free style functions, which the
+// package recognizes as pure (registered in init as PiG's own theme functions are).
+func GetMarkdownTheme() MarkdownTheme {
+	return MarkdownTheme{
+		Heading:         func(s string) string { return markdownForeground(ActiveTheme().MDHeading, s) },
+		Link:            func(s string) string { return markdownForeground(ActiveTheme().MDLink, s) },
+		LinkUrl:         func(s string) string { return markdownForeground(ActiveTheme().MDLinkUrl, s) },
+		Code:            func(s string) string { return markdownForeground(ActiveTheme().MDCode, s) },
+		CodeBlock:       func(s string) string { return markdownForeground(ActiveTheme().MDCodeBlock, s) },
+		CodeBlockBorder: func(s string) string { return markdownForeground(ActiveTheme().MDCodeBlockBorder, s) },
+		Quote:           func(s string) string { return markdownForeground(ActiveTheme().MDQuote, s) },
+		QuoteBorder:     func(s string) string { return markdownForeground(ActiveTheme().MDQuoteBorder, s) },
+		Hr:              func(s string) string { return markdownForeground(ActiveTheme().MDHr, s) },
+		ListBullet:      func(s string) string { return markdownForeground(ActiveTheme().MDListBullet, s) },
+		Bold:            markdownBold,
+		Italic:          markdownItalic,
+		Strikethrough:   markdownStrikethrough,
+		Underline:       func(s string) string { return markdownDecoration("\x1b[4m", SGRUnderlineReset, s) },
 	}
 }
+
+var testActiveMarkdownTheme = GetMarkdownTheme()
+
+func init() {
+	t := testActiveMarkdownTheme
+	for _, style := range []func(string) string{t.Heading, t.Link, t.LinkUrl, t.Code, t.CodeBlock, t.CodeBlockBorder, t.Quote, t.QuoteBorder, t.Hr, t.ListBullet, t.Bold, t.Italic, t.Strikethrough, t.Underline} {
+		markdownPureStyles[reflect.ValueOf(style).Pointer()] = true
+	}
+}
+
+func testMarkdownTheme() *MarkdownTheme { t := GetMarkdownTheme(); return &t }
 
 func testNewMarkdown(content string) *Markdown {
 	return NewMarkdownWithOptions(content, 0, 0, testMarkdownTheme(), nil, nil)
@@ -107,7 +124,13 @@ func (e *Editor) Clear() {
 	e.notifyChange()
 }
 
-// renderEditor renders and resolves fake cursor markers as the host TUI does.
-func renderEditor(e *Editor, width int) []string {
-	return ResolveFakeCursors(e.Render(width), false)
+// renderEditor is Editor.Render (PiG v0.5.0's tests read the fake-cursor markers directly).
+func renderEditor(e *Editor, width int) []string { return e.Render(width) }
+
+// testMDWithOptions is NewMarkdownWithOptions where a nil theme means the test active theme, as in PiG.
+func testMDWithOptions(content string, paddingX, paddingY int, theme *MarkdownTheme, style *DefaultTextStyle, options *MarkdownOptions) *Markdown {
+	if theme == nil {
+		theme = testMarkdownTheme()
+	}
+	return NewMarkdownWithOptions(content, paddingX, paddingY, theme, style, options)
 }

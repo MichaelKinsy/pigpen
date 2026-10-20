@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/MichaelKinsy/pigpen/components/pitui/lazyregexp"
 
@@ -44,9 +45,12 @@ type EditorTheme struct {
 type Editor struct {
 	theme EditorTheme
 	// Focused emits widthx.CursorMarker so the TUI can position the hardware cursor for IME candidate windows.
-	Focused    bool
-	lines      []string
-	cursor     [2]int // [logical line, UTF-16 column]
+	Focused bool
+	lines   []string
+	cursor  [2]int // [logical line, UTF-16 column]
+	// typed holds the line that typing at its end last produced. strings.Builder never rewrites bytes it has handed out, so the next key
+	// typed at the end of that line extends the same buffer instead of copying the line.
+	typed      strings.Builder
 	jumpMode   string // "forward" | "backward" | ""
 	history    []editorState
 	killRing   KillRing
@@ -86,6 +90,11 @@ type Editor struct {
 	wrapCacheLines    []string
 	wrapCacheChunks   [][]textChunk
 	wrapCachePasteIDs map[int]bool
+	// visualMap backs the last visual line map; its callers use a map only while they run.
+	visualMap []editorVisualLine
+	// layoutScratch and visualScratch are Render's per-frame working lists; nothing retains them past the frame.
+	layoutScratch []layoutLine
+	visualScratch []string
 
 	// scrollOffset + maxVisibleLines: when the visual layout exceeds
 	// maxVisibleLines the editor renders a window plus "up/down N more"
@@ -348,7 +357,7 @@ func wordWrapLine(line string, maxWidth int, preSegmented []editorSegment) []tex
 	}
 	segments := preSegmented
 	if segments == nil {
-		segments = editorSegments(graphemeSegmentData(line))
+		segments = editorSegments(graphemeSegmentData(line), line)
 	}
 	// Decode once: wrapping many chunks must not repeatedly scan the entire logical line.
 	units := jsstring.ToUTF16(line)
@@ -373,7 +382,14 @@ func wordWrapLine(line string, maxWidth int, preSegmented []editorSegment) []tex
 			wrapOppIndex = -1
 		}
 		if gWidth > maxWidth {
-			subChunks := wordWrapLine(seg.Text, maxWidth, nil)
+			// pig divergence (D159): a single grapheme wider than maxWidth (a tab at width 2, a wide character at width 1) stays one chunk. Pi re-wraps it with the same input and exhausts the stack.
+			subSegments := editorSegments(graphemeSegmentData(seg.Text), seg.Text)
+			var subChunks []textChunk
+			if len(subSegments) <= 1 {
+				subChunks = []textChunk{{text: seg.Text, startIndex: 0, endIndex: jsstring.Length(seg.Text)}}
+			} else {
+				subChunks = wordWrapLine(seg.Text, maxWidth, subSegments)
+			}
 			for j := range len(subChunks) - 1 {
 				sc := subChunks[j]
 				chunks = append(chunks, textChunk{text: sc.text, startIndex: charIndex + sc.startIndex, endIndex: charIndex + sc.endIndex})
@@ -432,7 +448,7 @@ func clonePastes(m map[int]string) map[int]string {
 // at the given width, memoizing per line. A line whose content is unchanged
 // from the previous call at the same width and with the same valid paste IDs reuses its cached chunks instead of
 // re-running wordWrapLine (grapheme segmentation + wrapping). Output is
-// identical to calling wordWrapLine(line, width, e.segmentLine(line)) for each
+// identical to calling e.wrapLine(line, width) for each
 // line; the reuse is invisible. The comparison is by content, so SetText
 // rebuilding the buffer still reuses chunks for lines whose text is unchanged.
 func (e *Editor) wrappedChunks(width int) [][]textChunk {
@@ -448,23 +464,39 @@ func (e *Editor) wrappedChunks(width int) [][]textChunk {
 			}
 		}
 	}
-	out := make([][]textChunk, len(e.lines))
-	for i, line := range e.lines {
-		if reuse && i < len(e.wrapCacheLines) && e.wrapCacheLines[i] == line {
-			out[i] = e.wrapCacheChunks[i]
-			continue
+	if !reuse || len(e.wrapCacheLines) != len(e.lines) {
+		lines := make([]string, len(e.lines))
+		chunks := make([][]textChunk, len(e.lines))
+		for i, line := range e.lines {
+			lines[i] = line
+			if reuse && i < len(e.wrapCacheLines) && e.wrapCacheLines[i] == line {
+				chunks[i] = e.wrapCacheChunks[i]
+				continue
+			}
+			chunks[i] = e.wrapLine(line, width)
 		}
-		out[i] = wordWrapLine(line, width, e.segmentLine(line))
+		e.wrapCacheLines, e.wrapCacheChunks = lines, chunks
+		e.wrapCacheWidth = width
+		if !reuse {
+			e.wrapCachePasteIDs = e.validPasteIDs()
+		}
+		return e.wrapCacheChunks
 	}
-	snap := make([]string, len(e.lines))
-	copy(snap, e.lines)
-	e.wrapCacheWidth = width
-	e.wrapCacheLines = snap
-	e.wrapCacheChunks = out
-	if !reuse {
-		e.wrapCachePasteIDs = e.validPasteIDs()
+	for i, line := range e.lines {
+		if e.wrapCacheLines[i] != line {
+			e.wrapCacheLines[i] = line
+			e.wrapCacheChunks[i] = e.wrapLine(line, width)
+		}
 	}
-	return out
+	return e.wrapCacheChunks
+}
+
+// wrapLine is wordWrapLine(line, width, e.segmentLine(line)). A line that fits is one chunk, so it is not segmented.
+func (e *Editor) wrapLine(line string, width int) []textChunk {
+	if line == "" || width <= 0 || widthx.VisibleWidth(line) <= width {
+		return wordWrapLine(line, width, nil)
+	}
+	return wordWrapLine(line, width, e.segmentLine(line))
 }
 
 // layoutText walks logical lines through the word-wrap cache and applies the
@@ -480,7 +512,8 @@ func (e *Editor) layoutText(contentWidth int) []layoutLine {
 	// wordWrapLine returns a single chunk (startIndex 0) for a line that fits,
 	// so the chunk loop below reproduces the former short-line fast path
 	// exactly while letting wrappedChunks memoize the expensive wrapping.
-	layoutLines := make([]layoutLine, 0, len(e.lines))
+	layoutLines := e.layoutScratch[:0]
+	defer func() { e.layoutScratch = layoutLines[:0] }()
 	for i, chunks := range e.wrappedChunks(contentWidth) {
 		isCurrentLine := i == e.cursor[0]
 		for ci, chunk := range chunks {
@@ -513,15 +546,24 @@ func (e *Editor) buildVisualLineMap(width int) []editorVisualLine {
 	if len(e.lines) == 0 {
 		return []editorVisualLine{{logicalLine: 0, startCol: 0, length: 0}}
 	}
-	var out []editorVisualLine
-	for i, chunks := range e.wrappedChunks(width) {
+	chunked := e.wrappedChunks(width)
+	count := 0
+	for _, chunks := range chunked {
+		count += len(chunks)
+	}
+	if count == 0 {
+		return []editorVisualLine{{logicalLine: 0, startCol: 0, length: 0}}
+	}
+	out := e.visualMap[:0]
+	if cap(out) < count {
+		out = make([]editorVisualLine, 0, count)
+	}
+	for i, chunks := range chunked {
 		for _, chunk := range chunks {
 			out = append(out, editorVisualLine{logicalLine: i, startCol: chunk.startIndex, length: jsstring.Length(chunk.text)})
 		}
 	}
-	if len(out) == 0 {
-		return []editorVisualLine{{logicalLine: 0, startCol: 0, length: 0}}
-	}
+	e.visualMap = out
 	return out
 }
 
@@ -746,9 +788,11 @@ func (e *Editor) handlePasteFlush(buf string) {
 			marker = fmt.Sprintf("[paste #%d %d chars]", id, charCount)
 		}
 		e.insert(marker)
+		e.notifyChange()
 		return
 	}
 	e.insert(text)
+	e.notifyChange()
 }
 
 func jsStringLength(text string) int { return jsstring.Length(text) }
@@ -1042,6 +1086,7 @@ func (e *Editor) submitValue() {
 }
 
 func (e *Editor) insertCharacter(char string) {
+	defer e.notifyChange()
 	if isWhitespaceChar(char) || e.lastAction != "type-word" {
 		e.saveHistory()
 	}
@@ -1067,11 +1112,29 @@ func (e *Editor) insert(s string) {
 	l := e.cursor[0]
 	c := e.cursor[1]
 	line := e.lines[l]
-	e.lines[l] = jsstring.Splice(line, c, c, s)
+	e.lines[l] = e.spliceTyped(line, c, s)
 	e.setCursorCol(c + jsstring.Length(s))
 	e.inputHistIdx = -1 // typing exits history-browse mode
 	e.inputHistSaved = nil
 	e.Invalidate()
+}
+
+// spliceTyped is jsstring.Splice(line, c, c, s). At the end of a valid UTF-8 line the result is line+s, built in e.typed so that a run of keys
+// typed at the end of one line copies the line once rather than once per key.
+func (e *Editor) spliceTyped(line string, c int, s string) string {
+	if line == "" {
+		return s
+	}
+	if !utf8.ValidString(line) || !utf8.ValidString(s) || jsstring.Length(line) != c {
+		return jsstring.Splice(line, c, c, s)
+	}
+	if e.typed.Len() != len(line) || e.typed.String() != line {
+		e.typed = strings.Builder{}
+		e.typed.Grow(2*(len(line)+len(s)) + 16)
+		e.typed.WriteString(line)
+	}
+	e.typed.WriteString(s)
+	return e.typed.String()
 }
 
 // insertMultiLine inserts text that may contain newlines.
@@ -1103,6 +1166,7 @@ func (e *Editor) InsertTextAtCursor(text string) {
 }
 
 func (e *Editor) insertNewline() {
+	defer e.notifyChange()
 	e.saveHistory()
 	e.lastAction = ""
 	e.inputHistIdx = -1
@@ -1120,6 +1184,7 @@ func (e *Editor) insertNewline() {
 }
 
 func (e *Editor) backspace() {
+	defer e.notifyChange()
 	e.lastAction = ""
 	e.inputHistIdx = -1
 	e.inputHistSaved = nil
@@ -1133,8 +1198,9 @@ func (e *Editor) backspace() {
 		// If the segment immediately before the cursor is a paste marker,
 		// delete the whole marker atomically and compact the paste registry,
 		// mirroring upstream editor.ts backspace. Otherwise delete one grapheme.
-		if segs := e.segmentLine(jsstring.Slice(line, 0, c)); len(segs) > 0 && isPasteMarker(segs[len(segs)-1].Text) {
-			marker := segs[len(segs)-1]
+		last, ok := e.lastSegment(jsstring.Slice(line, 0, c))
+		if ok && isPasteMarker(last.Text) {
+			marker := last
 			e.lines[l] = jsstring.Splice(line, marker.Start, c, "")
 			e.cursor[1] = marker.Start
 			if m := pasteMarkerSingle.FindStringSubmatch(marker.Text); m != nil {
@@ -1143,7 +1209,10 @@ func (e *Editor) backspace() {
 				}
 			}
 		} else {
-			start := e.previousSegmentStart(line, c)
+			start := 0
+			if ok {
+				start = last.Start
+			}
 			e.lines[l] = jsstring.Splice(line, start, c, "")
 			e.cursor[1] = start
 		}
@@ -1199,6 +1268,7 @@ func (e *Editor) removePasteFromRegistry(targetID int) {
 // forwardDelete deletes the character at the cursor (Delete key / Ctrl+D).
 // Mirrors upstream editor.ts::forwardDelete.
 func (e *Editor) forwardDelete() {
+	defer e.notifyChange()
 	e.lastAction = ""
 	e.inputHistIdx = -1
 	e.inputHistSaved = nil
@@ -1400,6 +1470,7 @@ func (e *Editor) undo() {
 	e.lastAction = ""
 	e.preferredVisualCol = nil
 	e.Invalidate()
+	e.notifyChange()
 }
 
 func (e *Editor) cursorWordBackward() {
@@ -1433,6 +1504,7 @@ func (e *Editor) cursorWordForward() {
 }
 
 func (e *Editor) deleteWordBackward() {
+	defer e.notifyChange()
 	e.inputHistIdx = -1
 	e.inputHistSaved = nil
 	l := e.cursor[0]
@@ -1466,6 +1538,7 @@ func (e *Editor) deleteWordBackward() {
 }
 
 func (e *Editor) deleteWordForward() {
+	defer e.notifyChange()
 	e.inputHistIdx = -1
 	e.inputHistSaved = nil
 	l := e.cursor[0]
@@ -1500,6 +1573,7 @@ func (e *Editor) deleteWordForward() {
 // kills the newline (joining with next line).
 // Mirrors upstream editor.ts::deleteToEndOfLine.
 func (e *Editor) deleteToLineEnd() {
+	defer e.notifyChange()
 	e.inputHistIdx = -1
 	e.inputHistSaved = nil
 	l := e.cursor[0]
@@ -1526,6 +1600,7 @@ func (e *Editor) deleteToLineEnd() {
 // If cursor is at col 0 and not on first line, kills the newline.
 // Mirrors upstream editor.ts::deleteToStartOfLine.
 func (e *Editor) deleteToLineStart() {
+	defer e.notifyChange()
 	e.inputHistIdx = -1
 	e.inputHistSaved = nil
 	l := e.cursor[0]
@@ -1558,6 +1633,7 @@ func (e *Editor) deleteYankedText() {
 	if text == "" {
 		return
 	}
+	defer e.notifyChange()
 	parts := strings.Split(text, "\n")
 	l, c := e.cursor[0], e.cursor[1]
 	startLine := l - len(parts) + 1

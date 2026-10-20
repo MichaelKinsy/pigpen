@@ -4,7 +4,7 @@ import "testing"
 
 // Ports the mode-dependent and raw-BS matchesKey cases from
 // packages/tui/test/keys.test.ts "Legacy key matching".
-func TestMatchesKey_ModeAwareLegacyInput(t *testing.T) {
+func TestMatchesKeyID_ModeAwareLegacyInput(t *testing.T) {
 	cases := []struct {
 		name        string
 		kittyActive bool
@@ -40,8 +40,8 @@ func TestMatchesKey_ModeAwareLegacyInput(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			SetKittyProtocolActive(tc.kittyActive)
 			t.Cleanup(func() { SetKittyProtocolActive(false) })
-			if got := MatchesKey(tc.data, tc.keyID); got != tc.want {
-				t.Fatalf("MatchesKey(%q, %q) with Kitty=%v = %v, want %v", tc.data, tc.keyID, tc.kittyActive, got, tc.want)
+			if got := MatchesKeyID(tc.data, tc.keyID); got != tc.want {
+				t.Fatalf("MatchesKeyID(%q, %q) with Kitty=%v = %v, want %v", tc.data, tc.keyID, tc.kittyActive, got, tc.want)
 			}
 		})
 	}
@@ -49,21 +49,21 @@ func TestMatchesKey_ModeAwareLegacyInput(t *testing.T) {
 
 // Pi treats raw LF as the custom Shift+Enter mapping while Kitty mode is
 // active. It must not also trigger the plain Enter binding.
-func TestMatchesKey_KittyRawLFIsNotPlainEnter(t *testing.T) {
+func TestMatchesKeyID_KittyRawLFIsNotPlainEnter(t *testing.T) {
 	SetKittyProtocolActive(true)
 	t.Cleanup(func() { SetKittyProtocolActive(false) })
-	if MatchesKey("\n", "enter") {
+	if MatchesKeyID("\n", "enter") {
 		t.Fatal("raw LF matched plain Enter while Kitty mode was active")
 	}
-	if !MatchesKey("\n", "shift+enter") {
+	if !MatchesKeyID("\n", "shift+enter") {
 		t.Fatal("raw LF did not match Shift+Enter while Kitty mode was active")
 	}
-	if !MatchesKey("\n", "ctrl+j") {
+	if !MatchesKeyID("\n", "ctrl+j") {
 		t.Fatal("raw LF did not retain its Ctrl+J identity")
 	}
 }
 
-func TestMatchesKey_RawBackspaceWindowsTerminalHeuristic(t *testing.T) {
+func TestMatchesKeyID_RawBackspaceWindowsTerminalHeuristic(t *testing.T) {
 	SetKittyProtocolActive(false)
 	t.Cleanup(func() { SetKittyProtocolActive(false) })
 	t.Setenv("WT_SESSION", "")
@@ -79,7 +79,7 @@ func TestMatchesKey_RawBackspaceWindowsTerminalHeuristic(t *testing.T) {
 	assertRawBackspaceMatches(t, true, false)
 }
 
-func TestMatchesKey_LegacyClearAndFunctionSequences(t *testing.T) {
+func TestMatchesKeyID_LegacyClearAndFunctionSequences(t *testing.T) {
 	cases := []struct {
 		data  string
 		keyID string
@@ -95,27 +95,27 @@ func TestMatchesKey_LegacyClearAndFunctionSequences(t *testing.T) {
 		{"\x1b[[E", "f5"},
 	}
 	for _, tc := range cases {
-		if !MatchesKey(tc.data, tc.keyID) {
-			t.Errorf("MatchesKey(%q, %q) = false, want true", tc.data, tc.keyID)
+		if !MatchesKeyID(tc.data, tc.keyID) {
+			t.Errorf("MatchesKeyID(%q, %q) = false, want true", tc.data, tc.keyID)
 		}
 	}
-	if MatchesKey("\x0c", "clear") {
+	if MatchesKeyID("\x0c", "clear") {
 		t.Error("ctrl+l byte matched clear")
 	}
 }
 
 func assertRawBackspaceMatches(t *testing.T, wantPlain, wantCtrl bool) {
 	t.Helper()
-	if got := MatchesKey("\x08", "backspace"); got != wantPlain {
+	if got := MatchesKeyID("\x08", "backspace"); got != wantPlain {
 		t.Errorf("raw BS plain match = %v, want %v", got, wantPlain)
 	}
-	if got := MatchesKey("\x08", "ctrl+backspace"); got != wantCtrl {
+	if got := MatchesKeyID("\x08", "ctrl+backspace"); got != wantCtrl {
 		t.Errorf("raw BS ctrl match = %v, want %v", got, wantCtrl)
 	}
-	if !MatchesKey("\x08", "ctrl+h") {
+	if !MatchesKeyID("\x08", "ctrl+h") {
 		t.Error("raw BS must continue to match ctrl+h")
 	}
-	if !MatchesKey("\x7f", "backspace") || MatchesKey("\x7f", "ctrl+backspace") {
+	if !MatchesKeyID("\x7f", "backspace") || MatchesKeyID("\x7f", "ctrl+backspace") {
 		t.Error("DEL must match only plain backspace")
 	}
 }

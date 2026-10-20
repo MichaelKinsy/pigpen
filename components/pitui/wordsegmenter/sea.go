@@ -1,3 +1,5 @@
+//go:build !pig_strip_word_dictionaries
+
 // © 2016 and later: Unicode, Inc. and others.
 // Copyright (C) 2006-2016, International Business Machines Corporation and others.
 // ICU DictionaryBreakEngine, PossibleWord and Thai/Lao/Khmer/BurmeseBreakEngine translation.
@@ -22,14 +24,6 @@ var khmerDictionary string
 
 //go:embed burmese_dictionary.bin
 var burmeseDictionary string
-
-func complexContext(r rune) rune {
-	i := sort.Search(len(complexContextRanges), func(i int) bool { return complexContextRanges[i][1] >= r })
-	if i < len(complexContextRanges) && complexContextRanges[i][0] <= r {
-		return complexContextRanges[i][2]
-	}
-	return 0
-}
 
 // byteDictionary borrows ICU's offset-transformed word bytes in a sorted index. Lookup narrows the prefix range without allocating a runtime trie.
 type byteDictionary string

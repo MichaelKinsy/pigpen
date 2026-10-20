@@ -1,8 +1,9 @@
+//go:build !pig_strip_word_dictionaries
+
 // © 2016 and later: Unicode, Inc. and others.
 // Copyright (C) 2006-2016, International Business Machines Corporation and others.
 // ICU CjkBreakEngine translation; see LICENSES/Unicode-3.0.txt and LICENSES/LicenseRef-ICU-CJK.txt.
 
-// Package wordsegmenter implements word segments used by the terminal editor.
 package wordsegmenter
 
 import (
@@ -44,9 +45,6 @@ func dictionaryMatches(text string, offsets []int, start int, visit func(length 
 	}
 }
 
-func dictionaryCharacter(r rune) bool {
-	return wordRuleClass(r)&ruleDictionaryCJK != 0
-}
 func katakana(r rune) bool {
 	return r >= 0x30a1 && r <= 0x30fe && r != 0x30fb || r >= 0xff66 && r <= 0xff9f
 }

@@ -2,7 +2,6 @@ package tui
 
 import (
 	"slices"
-	"strings"
 	"testing"
 )
 
@@ -19,31 +18,9 @@ func TestMarkdownMatchingCodeSpanRuns(t *testing.T) {
 		{"before `incomplete", "before `incomplete"},
 		{"before `one\ntwo` after", "before one two after"},
 	} {
-		got := mdPlain(NewMarkdownWithOptions(tt.source, 0, 0, mdUpstreamTheme(), nil, nil).Render(80))
+		got := mdPlain(testMDWithOptions(tt.source, 0, 0, mdUpstreamTheme(), nil, nil).Render(80))
 		if !slices.Equal(got, []string{tt.want}) {
 			t.Fatalf("%q => %q, want %q", tt.source, got, tt.want)
 		}
-	}
-}
-func TestMarkdownQuoteStyleWrapBoundary(t *testing.T) {
-	md := NewMarkdownWithOptions("- > alpha beta gamma delta epsilon zeta", 0, 0, mdUpstreamTheme(), nil, nil)
-	lines := md.Render(24)
-	if len(lines) != 2 {
-		t.Fatalf("quote rows=%q", lines)
-	}
-	upstreamExcludes(t, lines[0], "\x1b[23m")
-	upstreamContains(t, lines[1], "\x1b[23m")
-}
-
-func TestMarkdownBackgroundCallbackOrder(t *testing.T) {
-	var calls []string
-	md := NewMarkdownWithOptions("alpha\nbeta", 1, 2, mdUpstreamTheme(), &DefaultTextStyle{BgColor: func(s string) string { calls = append(calls, s); return s }}, nil)
-	lines := md.Render(12)
-	want := []string{" alpha      ", " beta       ", strings.Repeat(" ", 12), strings.Repeat(" ", 12)}
-	if !slices.Equal(calls, want) {
-		t.Fatalf("background calls=%q, want %q", calls, want)
-	}
-	if len(lines) != 6 {
-		t.Fatalf("rows=%d, want 6", len(lines))
 	}
 }

@@ -12,7 +12,7 @@
         "Mario Zechner"
       ],
       "url": "https://github.com/earendil-works/pi",
-      "revision": "06a466935536f8c9bcacb2d5efc0fc021be1bdff",
+      "revision": "1402973a9dbe8c627341e04c9744c54953e285ca",
       "path": "port/oracle/pi",
       "license": "MIT",
       "licenseFile": "port/oracle/LICENSE",
@@ -24,7 +24,7 @@
         "Hewlett Packard Enterprise Development LP"
       ],
       "url": "https://github.com/MichaelKinsy/PiG",
-      "revision": "de6604a5ea3e27ed73a05ee89358d3d82eea43b7",
+      "revision": "7a5422f66d2f7a73ed566abdb7c4b29bf1571e3d",
       "path": ".",
       "license": "MIT",
       "licenseFile": "licenses/PiG-LICENSE",

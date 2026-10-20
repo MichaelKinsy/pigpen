@@ -2,6 +2,7 @@ package tui
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 )
 
@@ -99,6 +100,21 @@ func TestTUIKeybindingsManager_Conflicts(t *testing.T) {
 	if !found {
 		t.Error("expected conflict on ctrl+c")
 	}
+	// keybindings.ts getConflicts lists the actions that share the key, and each call returns its own copy.
+	for _, c := range conflicts {
+		if c.Key != "ctrl+c" {
+			continue
+		}
+		if !slices.Contains(c.Keybindings, KBSelectCancel) || !slices.Contains(c.Keybindings, KBSelectConfirm) {
+			t.Fatalf("conflict on ctrl+c lists %v, want both select actions", c.Keybindings)
+		}
+		c.Keybindings[0] = "changed"
+	}
+	for _, c := range kb.GetConflicts() {
+		if slices.Contains(c.Keybindings, "changed") {
+			t.Fatal("GetConflicts returned the manager's own slice")
+		}
+	}
 }
 
 func TestTUIKeybindingsManager_GetKeys(t *testing.T) {
@@ -118,6 +134,10 @@ func TestTUIKeybindingsManager_GetDefinition(t *testing.T) {
 	if def.Description != "Move cursor up" {
 		t.Errorf("unexpected description: %s", def.Description)
 	}
+	// An action that is not defined has no definition (keybindings.ts getDefinition returns undefined).
+	if _, ok := kb.GetDefinition(TUIKeybinding("tui.not.defined")); ok {
+		t.Fatal("an undefined action reported a definition")
+	}
 }
 
 func TestTUIKeybindingsManager_GetUserAndResolvedBindings(t *testing.T) {
@@ -135,11 +155,17 @@ func TestTUIKeybindingsManager_GetUserAndResolvedBindings(t *testing.T) {
 		t.Fatalf("GetUserBindings() = %#v want %#v", gotUser, wantUser)
 	}
 
-	resolved := kb.GetResolvedBindings()
-	if got := resolved[KBSelectCancel]; got != "ctrl+q" {
-		t.Fatalf("resolved cancel = %#v want ctrl+q", got)
+	// The returned table is a copy: removing from it does not change the manager's overrides.
+	delete(gotUser, KBSelectCancel)
+	if again := kb.GetUserBindings(); !reflect.DeepEqual(again, wantUser) {
+		t.Fatalf("GetUserBindings shared the manager's map: %#v", again)
 	}
-	if got, ok := resolved[KBEditorCursorLeft].([]string); !ok || !reflect.DeepEqual(got, []string{"left", "ctrl+b"}) {
+
+	resolved := kb.GetResolvedBindings()
+	if got := resolved[KBSelectCancel]; !reflect.DeepEqual(got, []string{"ctrl+q"}) {
+		t.Fatalf("resolved cancel = %#v want [ctrl+q]", got)
+	}
+	if got := resolved[KBEditorCursorLeft]; !reflect.DeepEqual(got, []string{"left", "ctrl+b"}) {
 		t.Fatalf("resolved cursorLeft = %#v want []string{left, ctrl+b}", resolved[KBEditorCursorLeft])
 	}
 	if _, ok := resolved[KBEditorCursorUp]; !ok {
@@ -156,71 +182,4 @@ func TestTUIKeybindingsGlobalAliases(t *testing.T) {
 	if GetTUIKeybindings() != kb {
 		t.Fatal("GetTUIKeybindings should share global instance with GetKeybindings")
 	}
-}
-
-func TestTUIKeybindingsUpstream(t *testing.T) {
-	newManager := func(bindings map[string][]string) *TUIKeybindingsManager {
-		// Pi's test supplies the unmodified TUI_KEYBINDINGS table, not the coding-agent's Windows/WSL overrides. The Linux column preserves that table on every test host.
-		return NewKeybindingsManager(TUIKeybindingDefinitionsFor(KeybindingPlatformLinux), bindings)
-	}
-	assertKeys := func(t *testing.T, manager *TUIKeybindingsManager, action string, want []string) {
-		t.Helper()
-		if got := manager.GetKeys(action); !reflect.DeepEqual(got, want) {
-			t.Fatalf("GetKeys(%q)=%q, want %q", action, got, want)
-		}
-	}
-
-	// upstream: packages/tui/test/keybindings.test.ts:6
-	t.Run("binds Ctrl+J as a default newline alias", func(t *testing.T) {
-		previous := IsKittyProtocolActive()
-		SetKittyProtocolActive(false)
-		t.Cleanup(func() { SetKittyProtocolActive(previous) })
-		manager := newManager(nil)
-		assertKeys(t, manager, KBInputNewLine, []string{"shift+enter", "ctrl+j"})
-		for _, input := range []string{"\n", "\x1b[106;5u"} {
-			if !manager.Matches(input, KBInputNewLine) {
-				t.Fatalf("newline did not match %q", input)
-			}
-		}
-	})
-
-	// upstream: packages/tui/test/keybindings.test.ts:14
-	t.Run("binds modified and unmodified editor viewport navigation", func(t *testing.T) {
-		manager := newManager(nil)
-		assertKeys(t, manager, KBEditorCursorLineStart, []string{"home", "ctrl+a"})
-		assertKeys(t, manager, KBEditorCursorLineEnd, []string{"end", "ctrl+e"})
-		assertKeys(t, manager, KBEditorPageUp, []string{"pageUp", "ctrl+pageUp"})
-		assertKeys(t, manager, KBEditorPageDown, []string{"pageDown", "ctrl+pageDown"})
-	})
-
-	// upstream: packages/tui/test/keybindings.test.ts:23
-	t.Run("leaves dedicated prompt history navigation unbound by default", func(t *testing.T) {
-		manager := newManager(nil)
-		assertKeys(t, manager, KBEditorHistoryPrevious, []string{})
-		assertKeys(t, manager, KBEditorHistoryNext, []string{})
-	})
-
-	// upstream: packages/tui/test/keybindings.test.ts:49
-	t.Run("does not evict selector confirm when input submit is rebound", func(t *testing.T) {
-		manager := newManager(map[string][]string{KBInputSubmit: {"enter", "ctrl+enter"}})
-		assertKeys(t, manager, KBInputSubmit, []string{"enter", "ctrl+enter"})
-		assertKeys(t, manager, KBSelectConfirm, []string{"enter"})
-	})
-
-	// upstream: packages/tui/test/keybindings.test.ts:58
-	t.Run("does not evict cursor bindings when another action reuses the same key", func(t *testing.T) {
-		manager := newManager(map[string][]string{KBSelectUp: {"up", "ctrl+p"}})
-		assertKeys(t, manager, KBSelectUp, []string{"up", "ctrl+p"})
-		assertKeys(t, manager, KBEditorCursorUp, []string{"up"})
-	})
-
-	// upstream: packages/tui/test/keybindings.test.ts:67
-	t.Run("still reports direct user binding conflicts without evicting defaults", func(t *testing.T) {
-		manager := newManager(map[string][]string{KBInputSubmit: {"ctrl+x"}, KBSelectConfirm: {"ctrl+x"}})
-		want := []TUIKeybindingConflict{{Key: "ctrl+x", Actions: []string{KBInputSubmit, KBSelectConfirm}}}
-		if got := manager.GetConflicts(); !reflect.DeepEqual(got, want) {
-			t.Fatalf("conflicts=%#v, want %#v", got, want)
-		}
-		assertKeys(t, manager, KBEditorCursorLeft, []string{"left", "ctrl+b"})
-	})
 }
