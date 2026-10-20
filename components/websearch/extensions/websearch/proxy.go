@@ -93,6 +93,9 @@ func NormalizeProxyURL(value any, source string) (string, bool, error) {
 		return "", false, fmt.Errorf("%s must include a proxy host: %s", source, trimmed)
 	}
 	parsed.Fragment, parsed.RawQuery, parsed.ForceQuery = "", "", false
+	if parsed.Scheme == "http" || parsed.Scheme == "https" {
+		whatwgHostPath(parsed)
+	}
 	out := parsed.String()
 	return out, true, nil
 }
@@ -113,4 +116,20 @@ func RedactProxyURL(value string) string {
 		parsed.User = url.User(name)
 	}
 	return parsed.String()
+}
+
+// whatwgHostPath gives an http(s) URL the form URL.toString() prints (utils.ts normalizeProxyUrl
+// returns it, and curl receives it): a lowercased host, no default port, and at least the root path.
+func whatwgHostPath(u *url.URL) {
+	host := strings.ToLower(u.Hostname())
+	if strings.Contains(host, ":") {
+		host = "[" + host + "]"
+	}
+	if port := u.Port(); port != "" && !(port == "80" && u.Scheme == "http") && !(port == "443" && u.Scheme == "https") {
+		host += ":" + port
+	}
+	u.Host = host
+	if u.Path == "" {
+		u.Path = "/"
+	}
 }
