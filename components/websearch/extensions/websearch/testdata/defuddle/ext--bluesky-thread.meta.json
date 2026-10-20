@@ -1,0 +1,10 @@
+{
+ "author": "Alice A",
+ "published": "2024-04-05",
+ "description": "Hello @bob.bsky.social and Carol see example.com/x second paragraph",
+ "site": "Bluesky",
+ "language": "",
+ "image": "",
+ "extractorType": "bluesky",
+ "wordCount": 39
+}

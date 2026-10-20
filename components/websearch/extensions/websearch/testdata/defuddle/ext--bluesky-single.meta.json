@@ -1,0 +1,10 @@
+{
+ "author": "@solo.bsky.social",
+ "published": "",
+ "description": "Only post, no meta tag.",
+ "site": "Bluesky",
+ "language": "",
+ "image": "",
+ "extractorType": "bluesky",
+ "wordCount": 5
+}
