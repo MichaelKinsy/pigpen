@@ -1,0 +1,3 @@
+{"kind":"header","scenario":"audit-prompt-blocked-by-its-own-input-handler","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:0888d88365285855ab4651e55ee28215c889108e8531537b57dd642ddd87fb17","normalizer":"v3"}
+{"step":"01-audit","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}
