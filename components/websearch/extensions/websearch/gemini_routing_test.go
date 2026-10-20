@@ -13,6 +13,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -477,4 +478,16 @@ func TestGeminiAllIgnoresGeminiWeb(t *testing.T) {
 	if !eqStrings(providerNames(r.ProviderResponses), []string{"exa"}) || len(r.ProviderErrors) != 0 || len(web.prompts) != 0 {
 		t.Fatalf("%+v %v", r, web.prompts)
 	}
+}
+
+func TestGeminiMalformedADCFileEndsTheFetch(t *testing.T) {
+	// gemini-url-context.ts:16-19 shouldRethrow: an unreadable credential file is shown, not swallowed
+	home, agentDir := geminiEnv(t)
+	adc := home + "/adc.json"
+	noErr(t, os.WriteFile(adc, []byte("not json"), 0o600))
+	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", adc)
+	writeConfig(t, agentDir, `{"geminiAuth":"adc","geminiProject":"p","geminiLocation":"l","fetchRouting":{"providers":["http","gemini"],"allowRemoteHostedProviders":true}}`)
+	useNet(t, func(netCall) netReply { return reply(500, "origin down") })
+	r := ExtractContent(bg(), "https://example.com/p", pageOpts())
+	wantErr(t, errors.New(errOf(r)), `^Failed to parse Google Application Default Credentials file at .*adc\.json`)
 }

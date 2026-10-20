@@ -1,0 +1,66 @@
+{
+ "name": "web-search-gemini-adc-rejected",
+ "description": "geminiAuth adc with a service account file (a relative GOOGLE_APPLICATION_CREDENTIALS, written next to the workspace) whose token endpoint rejects the credentials: the explicit-provider search fails with the credential-resolution message and never reaches Vertex AI.",
+ "env": {
+  "GOOGLE_APPLICATION_CREDENTIALS": "adc.json"
+ },
+ "files": {
+  "adc.json": "{\"type\": \"service_account\", \"client_email\": \"svc@example.iam\", \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC+bQ53tOlSN8lo\\nEkJ1Bftf/MRha4KencgNH+neie36UidIHqYKUoCY6aNsDid/wtwLTF5a68QaSQ6q\\nre3chxz0E2h76SIxLgoMTuCt6+1vuu1SCrAL+imo09iLQemBLWE4RPbGiQlwp1Zn\\nydole8gc9iD00kwkQCfI2bdY6Ek1C6c1nyBYEXRkSJIswH6mjtICS/bvNELktnUv\\nkHhspz47DjG7cFLeq5vumUs0ZXAwFyL9J3BMJL8L03eboETer5u2xGJk2XaAYzBB\\nFI7Q5GJ0yFJowCG81oiYPKOPyFld0tCiy30VY4wmpYBwD27x0n2305PS8ewJQLMF\\nH07WD9UdAgMBAAECggEACP7OK1HJ9cl52PyH1CRYsrjrg+3tXoB15fInJ40yHIbg\\noSkFeeuvdHRmSmFEH2Zn45wTbE3CgTqzQn/IgogwEh2P7CPgAB0Rz3FdxAl8OVtw\\nq3/4FKYYGAgN13eLyBTfM1Eaq9fnBhckNJnrP/sKwcd6A2ajFHv4BSZiYVpJCa7d\\nh4eAx0athE1IrA9r3RiNSYrBcB6ZmOhHyFfb3XVhK3oPhG1lEjlK83VHaQNq6+Qq\\n2B8AlQ31Y97wYdnnoAkRSpySFrrgwnpFnqZVoGiCr4ppj/2+Ug+ZxRwoawZPfXIn\\npbrP1s6VBg0HSf3AfVSepLNiImFgLlvQdQCP47UGAQKBgQDl8RUFshCtfIWQnfJD\\ne96jayWBWGPVuDiMNIOfAzF3x6jX4xCJqbL34+XL/46Gtf4PyL0XOyaKJp9hB32J\\nk/YXS/cLWaNRdQQkbEBVhkRVnqvwP8yAZnZSuzgt8fcfGq0SZaVcYzY54G4bqg/8\\nTD7W/LdibmF5hgkgcQgRKU4hAQKBgQDUAZH5yG8a3eH9drT9JX/YMoLCQTYT/XbP\\neUuKPGL3Ssn5PBD+nbKnwYcIjA1etVbal5bf2Wu1ezv6ZeovqHCcdzefrW2QFkw5\\nzPohAFtMRUEalZxn7JQEWtpMT4RPKYBBXrmk6QyvmEGQbt1ocPnKpdQc9b4dnC01\\nwiJ+9x4YHQKBgAumAuKe+qlPPZTt62/vvn+Y1fWPfL8+7d5sap6Lkt32h18oaZYP\\nurlEGkgTUi0Q2yYBjVK39GPbQQexUXK+xCC6AHHawKNHwkX2Few/OQb9Wsh48usu\\nRaA7S8VIFLTGrS3ZaF8dx4l3DRzpqJWnZyeM9d1OqjF10NCL6VS1OvgBAoGBAMFu\\naVTAhna56V6MN1gdJccJVvqL6x5UDVoBLmYC8Lz2VM98+XiGQ6IB1gV7WxuFUqiA\\n1NyKkFZ2COROplwzUAPCVlLvNl7XqVa3aaRAogw1x8/Mn3bGiMpsZm5nwq1DjUyX\\nc8Q+CiAQSAnSzVpkcdRudtixcnOrsigxZ632JFQVAoGBAMGPaFNCEKomAqzHGlMC\\nL9VD/wahWRKAJ2nom9WDSj/cxjQ3AGSqFJZkaDPfzP4BjiKfLQwEoQw/fyz9af7b\\nDeAC42EHoFFBx8cqsl5h8kEg96N2XNSC1qqo3iYPrtTFXTfGGTOss3cfoNpLls7Y\\n9M2SVurZKDklsDvxAvZZPWfe\\n-----END PRIVATE KEY-----\\n\", \"token_uri\": \"{{server:token}}/oauth\"}\n"
+ },
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"provider\": \"gemini\", \"geminiAuth\": \"adc\", \"geminiProject\": \"ai-eng-sandbox\", \"geminiLocation\": \"global\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "adc rejected",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "token": {
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/oauth",
+     "status": 401,
+     "json": {
+      "error": "invalid_client"
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "eyJ[A-Za-z0-9_-]+\\.eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+",
+   "replacement": "<jwt>"
+  }
+ ]
+}

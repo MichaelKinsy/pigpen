@@ -1,0 +1,88 @@
+{
+ "name": "web-search-gemini-gateway",
+ "description": "A Cloudflare AI Gateway base URL sends only the cf-aig-authorization header and no Gemini key.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"provider\": \"gemini\", \"geminiApiKey\": \"synthetic-gemini-key\", \"cloudflareApiKey\": \"synthetic-cloudflare-key\", \"geminiBaseUrl\": \"{{server:gemini}}/gateway.ai.cloudflare.com/v1/account/gateway/google-ai-studio\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "latest typescript release",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "gemini": {
+   "recordHeaders": [
+    "x-goog-api-key",
+    "cf-aig-authorization",
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/gateway.ai.cloudflare.com/v1/account/gateway/google-ai-studio/v1beta/models/gemini-3.6-flash:generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "TypeScript 5.9 is the latest release."
+          }
+         ]
+        },
+        "groundingMetadata": {
+         "groundingChunks": [
+          {
+           "web": {
+            "uri": "https://www.typescriptlang.org/docs/",
+            "title": "TypeScript Docs"
+           }
+          },
+          {
+           "retrievedContext": {}
+          },
+          {
+           "web": {
+            "uri": "https://example.com/notes"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

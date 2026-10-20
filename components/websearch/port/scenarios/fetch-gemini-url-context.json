@@ -1,0 +1,76 @@
+{
+ "name": "fetch-gemini-url-context",
+ "description": "fetch_content falls through a failing page to the gemini fetch provider: the url_context request and the extracted Markdown.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"geminiApiKey\": \"synthetic-gemini-key\", \"geminiBaseUrl\": \"{{server:gemini}}\", \"fetchRouting\": {\"providers\": [\"http\", \"gemini\"], \"allowRemoteHostedProviders\": true}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/docs/page"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/docs/page",
+     "status": 500,
+     "body": "origin down"
+    }
+   ]
+  },
+  "gemini": {
+   "recordHeaders": [
+    "x-goog-api-key"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/v1beta/models/gemini-3.6-flash:generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# Gemini Extracted Page\n\nGemini extracted this page. Gemini extracted this page. Gemini extracted this page. Gemini extracted this page. Gemini extracted this page. Gemini extracted this page. "
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}
