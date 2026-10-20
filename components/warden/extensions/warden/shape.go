@@ -165,21 +165,8 @@ func CompleteConfig(loaded Config) (Config, []string) {
 	if f := c.Action.Floor; f != "level" && f != "evidence" {
 		c.Action.Floor = "evidence"
 	}
-	if c.Action.CommandRules == nil {
-		c.Action.CommandRules = []CommandRule{}
-	}
-	if c.Action.CommandDenyRules == nil {
-		c.Action.CommandDenyRules = []CommandRule{}
-	}
-	if c.Action.ExemptRules == nil {
-		c.Action.ExemptRules = []string{}
-	}
-	if c.Action.PathRules == nil {
-		c.Action.PathRules = []PathRule{}
-	}
-	if c.Action.ArmingRules == nil {
-		c.Action.ArmingRules = []ArmingRule{}
-	}
+	// A nil slice reads as empty everywhere in Go, so the action rule lists need no fill-in (upstream keeps them present
+	// because `undefined.length` throws).
 	// The runaway, rules and subagent guards added their widget templates later than the other sections; an older
 	// widget section renders the default line.
 	if c.Widget.Runaway == "" {

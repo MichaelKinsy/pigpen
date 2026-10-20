@@ -64,16 +64,11 @@ func (w *warden) paint(ctx sdk.Context, cfg Config) {
 	}
 	w.mu.Lock()
 	s := w.stats
-	var lines []string
-	if cfg.Widget.Enabled {
-		for _, wl := range w.widget {
-			lines = append(lines, wl.line)
-		}
-	}
+	lines := w.widgetLinesLocked(ctx, cfg) // widget_paint.go
 	w.mu.Unlock()
 	ctx.SetStatus(statusKey, fmt.Sprintf("warden: %s · %s · %d checked, %d held", w.statusBackend(cfg), cfg.Mode, s.Inspected, s.Held))
 	if len(lines) > 0 {
-		_ = ctx.SetWidget(widgetKey, lines)
+		_ = ctx.SetWidget(widgetKey, lines, sdk.WidgetOptions{"placement": cfg.Widget.Placement})
 	} else {
 		_ = ctx.SetWidget(widgetKey, []string(nil))
 	}

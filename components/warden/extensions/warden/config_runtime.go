@@ -23,7 +23,7 @@ func (w *warden) readConfigFiles(ctx sdk.Context, userPath string) (file, merged
 	merged = file
 	w.projectPath = ""
 	if cwd := ctx.Cwd(); cwd != "" {
-		w.projectPath = DefaultHostDirs(w.opts.Getenv).ProjectConfigPath(cwd)
+		w.projectPath = DefaultHostDirs(nil).ProjectConfigPath(cwd)
 		if w.trustCwd != cwd {
 			trusted, terr := ctx.IsProjectTrusted()
 			w.projectTrusted, w.trustCwd = terr == nil && trusted, cwd
@@ -96,4 +96,16 @@ func (w *warden) configLocations() string {
 		text += " and " + w.projectPath
 	}
 	return text + "."
+}
+
+// configStatusLines are the configuration lines of /warden status: where the files are, and what was not applied as written.
+func (w *warden) configStatusLines(cfg Config) string {
+	text := "\n\n" + w.configLocations()
+	if cfg.BackendRefusal != "" {
+		text += "\nJudgments are off: " + cfg.BackendRefusal
+	}
+	if len(cfg.Warnings) > 0 {
+		text += "\nConfig warnings: " + joinStrings(cfg.Warnings, "; ") + "."
+	}
+	return text
 }

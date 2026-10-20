@@ -1,0 +1,96 @@
+{
+  "name": "config-set-command-changes-behavior",
+  "description": "/warden config set writes the user file and the next hook call reads it: after `stuck.repeatSteer false` and `stuck.nudge false` the same repeated failing call is no longer steered (the command's own notification is a UI request, not compared: gap G2).",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat missing-file.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat missing-file.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat missing-file.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat missing-file.txt"
+          }
+        }
+      ]
+    },
+    {
+      "text": "giving up"
+    }
+  ],
+  "steps": [
+    {
+      "name": "set-repeat-steer",
+      "rpc": {
+        "type": "prompt",
+        "message": "/warden config set stuck.repeatSteer false"
+      }
+    },
+    {
+      "name": "set-nudge",
+      "rpc": {
+        "type": "prompt",
+        "message": "/warden config set stuck.nudge false"
+      }
+    },
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "read missing-file.txt"
+      }
+    }
+  ]
+}

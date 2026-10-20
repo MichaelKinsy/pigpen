@@ -23,7 +23,9 @@ func raw(t *testing.T, text string) any {
 	return v
 }
 
-func user(t *testing.T, base Config, text string) Config { return ApplyUserOverrides(base, raw(t, text)) }
+func user(t *testing.T, base Config, text string) Config {
+	return ApplyUserOverrides(base, raw(t, text))
+}
 func project(t *testing.T, base Config, text string) Config {
 	return ApplyProjectOverrides(base, raw(t, text))
 }
@@ -679,3 +681,5 @@ func TestParseDuration(t *testing.T) {
 		eq(t, in, ParseDuration(raw(t, in), 7), want)
 	}
 }
+
+func reflectEqualConfig(a, b Config) bool { return reflect.DeepEqual(a, b) }

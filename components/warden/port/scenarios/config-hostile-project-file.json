@@ -1,0 +1,56 @@
+{
+  "name": "config-hostile-project-file",
+  "description": "A project file of wrong types and junk values leaves every guard as it was: the force push is still held.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "git push --force origin main"
+          }
+        }
+      ]
+    },
+    {
+      "text": "understood, I will not force push"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "push my branch"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-warden.json": "{\"action\":{\"irreversible\":\"x\",\"tools\":7,\"failOpen\":\"yes\",\"offTask\":[1],\"shouldProceed\":3},\"stuck\":[],\"done\":null,\"slop\":{\"prose\":false},\"widget\":{\"shortcut\":3,\"panelWidth\":\"x\"},\"notify\":{\"command\":\"x\"},\"mode\":\"loud\",\"typesafe\":true,\"unknown\":{\"a\":1}}",
+    ".pig/pi-warden.json": "{\"action\":{\"irreversible\":\"x\",\"tools\":7,\"failOpen\":\"yes\",\"offTask\":[1],\"shouldProceed\":3},\"stuck\":[],\"done\":null,\"slop\":{\"prose\":false},\"widget\":{\"shortcut\":3,\"panelWidth\":\"x\"},\"notify\":{\"command\":\"x\"},\"mode\":\"loud\",\"typesafe\":true,\"unknown\":{\"a\":1}}"
+  }
+}

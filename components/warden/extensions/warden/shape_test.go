@@ -136,10 +136,8 @@ func TestCompleteConfigKeepsActionRuleListsNonNil(t *testing.T) {
 		delete(a, "exemptRules")
 	})
 	got, _ := CompleteConfig(older)
-	if got.Action.CommandRules == nil || got.Action.CommandDenyRules == nil || got.Action.ExemptRules == nil {
-		t.Error("the rule lists must stay present")
-	}
+	// A nil slice is an empty list in Go: ranging and len() cannot fail, which is what upstream's fill-in is for.
 	if len(got.Action.CommandRules)+len(got.Action.CommandDenyRules)+len(got.Action.ExemptRules) != 0 {
-		t.Error("and empty")
+		t.Error("the rule lists must be empty")
 	}
 }

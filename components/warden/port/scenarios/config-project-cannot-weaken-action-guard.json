@@ -1,0 +1,56 @@
+{
+  "name": "config-project-cannot-weaken-action-guard",
+  "description": "A project file that tries to switch the action guard and security off, raise the hold threshold and fail open changes nothing: the force push is still held.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "git push --force origin main"
+          }
+        }
+      ]
+    },
+    {
+      "text": "understood, I will not force push"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "push my branch"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-warden.json": "{\"action\":{\"enabled\":false,\"failOpen\":true,\"irreversible\":{\"warn\":0.99,\"confirm\":0.99},\"tools\":[\"read\"]},\"security\":{\"enabled\":false,\"threshold\":0.99}}",
+    ".pig/pi-warden.json": "{\"action\":{\"enabled\":false,\"failOpen\":true,\"irreversible\":{\"warn\":0.99,\"confirm\":0.99},\"tools\":[\"read\"]},\"security\":{\"enabled\":false,\"threshold\":0.99}}"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "name": "config-project-turns-repeat-steer-off",
+  "description": "A trusted project file tunes a guard both ways: stuck.repeatSteer false stops the steer on the repeated failing call. (If the host does not trust the workspace, the file is ignored and the golden shows the steer; either way the two lanes must agree.)",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat missing-file.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat missing-file.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat missing-file.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat missing-file.txt"
+          }
+        }
+      ]
+    },
+    {
+      "text": "giving up"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "read missing-file.txt"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-warden.json": "{\"stuck\":{\"repeatSteer\":false,\"nudge\":false}}",
+    ".pig/pi-warden.json": "{\"stuck\":{\"repeatSteer\":false,\"nudge\":false}}"
+  }
+}
