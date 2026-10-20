@@ -24,16 +24,9 @@ json.dump([x for x in m if x["name"].startswith("bp-")], open("/tmp/bpmut.json",
 PY
 /work/pigeq-bin mutate --unit-only --go extensions/pi-permission-system --mutations /tmp/bpmut.json --sdk-dir "${PIG_SDK_DIR:-/pigsrc}" --jobs 4 2>&1 | tail -25
 cd /work/components/permissions/extensions/pi-permission-system
-echo "== (4) performance"
+echo "== (4) performance (interleaved rounds, one pinned CPU set; see bench-rounds.sh)"
+bash /work/components/permissions/port/bashparse-diff/bench-rounds.sh 12 4
 cd /work/components/permissions/extensions/pi-permission-system
-go test -c -o /tmp/bp.test ./bashparse 2>&1 | tail -3
-cd bashparse
-/tmp/bp.test -test.run TestColdStart -test.v 2>&1 | grep COLD
-for r in 1 2 3 4 5 6 7 8 9 10; do
-  echo "GO round $r"; /tmp/bp.test -test.run XXX -test.bench BenchmarkParse -test.benchtime 300ms 2>&1 | grep -E "^Benchmark"
-  node /work/components/permissions/port/bashparse-diff/bench.mjs /work/components/permissions/port/oracle/packages/pi-permission-system /work/components/permissions/port/bashparse-diff/bench-inputs.json 2>&1 | tail -1
-done
-cd ..
 echo "== binary size"
 cat > /tmp/sz_main.go <<'EOF'
 package main

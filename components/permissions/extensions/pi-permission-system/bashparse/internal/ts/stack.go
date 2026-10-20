@@ -16,8 +16,8 @@ type stackLink struct {
 }
 
 type stackNode struct {
-	state             uint16
-	position          Length
+	state    uint16
+	position Length
 	// links are the paths back through the stack (at most maxLinkCount). The first lives in the
 	// node's own allocation: nearly every node has exactly one.
 	links             []stackLink
@@ -67,6 +67,10 @@ type stack struct {
 	heads    []stackHead
 	slices   []stackSlice
 	baseNode *stackNode
+	arenas   *arenas
+	// scratch kept between iterations
+	iters    []stackIterator
+	freeBufs [][]*subtree
 }
 
 const (
@@ -90,8 +94,9 @@ func stackSubtreeNodeCount(s *subtree) uint32 {
 }
 
 // newStackNode is stack_node_new.
-func newStackNode(previous *stackNode, st *subtree, isPending bool, state uint16) *stackNode {
-	n := &stackNode{state: state}
+func (s *stack) newStackNode(previous *stackNode, st *subtree, isPending bool, state uint16) *stackNode {
+	n := s.arenas.stackNodes.alloc()
+	n.state = state
 	if previous != nil {
 		n.first[0] = stackLink{previous, st, isPending}
 		n.links = n.first[:1]
@@ -198,11 +203,15 @@ func (s *subtree) dynamicPrecOrZero() int32 {
 	return s.dynamicPrec()
 }
 
-func newStack() *stack {
-	s := &stack{}
-	s.baseNode = newStackNode(nil, nil, false, 1)
+// init makes the stack empty for a new parse, keeping the scratch it grew in earlier ones.
+func (s *stack) init(a *arenas) {
+	s.arenas = a
+	s.slices = s.slices[:0]
+	for i := range s.heads {
+		s.heads[i] = stackHead{}
+	}
+	s.baseNode = s.newStackNode(nil, nil, false, 1)
 	s.clear()
-	return s
 }
 
 // clear is ts_stack_clear.
@@ -250,7 +259,7 @@ func (s *stack) nodeCountSinceError(v int) uint32 {
 // push is ts_stack_push.
 func (s *stack) push(v int, st *subtree, pending bool, state uint16) {
 	head := &s.heads[v]
-	n := newStackNode(head.node, st, pending, state)
+	n := s.newStackNode(head.node, st, pending, state)
 	if st == nil {
 		head.nodeCountAtLastError = n.nodeCount
 	}
@@ -284,10 +293,12 @@ func (s *stack) addSlice(original int, node *stackNode, subtrees []*subtree) {
 	s.slices = append(s.slices, stackSlice{subtrees, version})
 }
 
-// iterate is stack__iter. callback decides, per iterator, whether to pop and/or stop.
+// iterate is stack__iter. callback decides, per iterator, whether to pop and/or stop. The slices
+// it returns (and the stack's own list they live in) are valid until the next iterate: a caller
+// that iterates again while it still walks them copies them first.
 func (s *stack) iterate(version int, callback func(it *stackIterator) int, goalSubtreeCount int) []stackSlice {
 	s.slices = s.slices[:0]
-	iterators := []stackIterator{{node: s.heads[version].node, isPending: true}}
+	iterators := append(s.iters[:0], stackIterator{node: s.heads[version].node, subtrees: s.takeBuf(), isPending: true})
 	includeSubtrees := goalSubtreeCount >= 0
 
 	for len(iterators) > 0 {
@@ -300,18 +311,17 @@ func (s *stack) iterate(version int, callback func(it *stackIterator) int, goalS
 			shouldStop := action&actionStop != 0 || len(node.links) == 0
 
 			if shouldPop {
-				subtrees := it.subtrees
-				if !shouldStop {
-					subtrees = append([]*subtree(nil), subtrees...)
-				}
-				// ts_subtree_array_reverse
-				for a, b := 0, len(subtrees)-1; a < b; a, b = a+1, b-1 {
-					subtrees[a], subtrees[b] = subtrees[b], subtrees[a]
+				// ts_subtree_array_reverse: the iterator collected the subtrees top first.
+				n := len(it.subtrees)
+				subtrees := s.arenas.arrays.alloc(n)
+				for k := 0; k < n; k++ {
+					subtrees[k] = it.subtrees[n-1-k]
 				}
 				s.addSlice(version, node, subtrees)
 			}
 
 			if shouldStop {
+				s.putBuf(it.subtrees)
 				iterators = append(iterators[:i], iterators[i+1:]...)
 				i--
 				size--
@@ -330,7 +340,8 @@ func (s *stack) iterate(version int, callback func(it *stackIterator) int, goalS
 					}
 					link = node.links[j]
 					current := iterators[i]
-					current.subtrees = append([]*subtree(nil), current.subtrees...)
+					buf := s.takeBuf()
+					current.subtrees = append(buf, current.subtrees...)
 					iterators = append(iterators, current)
 					next = &iterators[len(iterators)-1]
 				}
@@ -353,8 +364,21 @@ func (s *stack) iterate(version int, callback func(it *stackIterator) int, goalS
 			}
 		}
 	}
-	return append([]stackSlice(nil), s.slices...)
+	s.iters = iterators[:0]
+	return s.slices
 }
+
+// takeBuf is an empty buffer for an iterator's subtrees, recycled from the iterators that ended.
+func (s *stack) takeBuf() []*subtree {
+	if n := len(s.freeBufs); n > 0 {
+		b := s.freeBufs[n-1]
+		s.freeBufs = s.freeBufs[:n-1]
+		return b[:0]
+	}
+	return make([]*subtree, 0, 16)
+}
+
+func (s *stack) putBuf(b []*subtree) { s.freeBufs = append(s.freeBufs, b[:0]) }
 
 // popCount is ts_stack_pop_count.
 func (s *stack) popCount(version int, count uint32) []stackSlice {

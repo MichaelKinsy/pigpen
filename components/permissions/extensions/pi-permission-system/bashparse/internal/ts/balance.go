@@ -11,9 +11,10 @@ package ts
 // holds. By then the parse stack has been cleared (ts_parser_parse does it before balancing), so
 // nothing else holds a non-leaf subtree.
 
-// refCounts counts, for every non-leaf subtree of the tree, how many places reference it.
-func refCounts(root *subtree) map[*subtree]int {
-	refs := map[*subtree]int{root: 1}
+// countRefs counts, in every non-leaf subtree of the tree, how many places reference it (its
+// refs field; a leaf is never counted and reads as 0).
+func countRefs(root *subtree) {
+	root.refs = 1
 	stack := []*subtree{root}
 	for len(stack) > 0 {
 		s := stack[len(stack)-1]
@@ -22,20 +23,19 @@ func refCounts(root *subtree) map[*subtree]int {
 			if len(c.children) == 0 {
 				continue
 			}
-			if refs[c] == 0 {
+			if c.refs == 0 {
 				stack = append(stack, c)
 			}
-			refs[c]++
+			c.refs++
 		}
 	}
-	return refs
 }
 
 // balance is ts_parser__balance_subtree.
 func balance(l *Language, root *subtree) {
-	refs := refCounts(root)
+	countRefs(root)
 	var stack []*subtree
-	if len(root.children) > 0 && refs[root] == 1 {
+	if len(root.children) > 0 && root.refs == 1 {
 		stack = append(stack, root)
 	}
 	for len(stack) > 0 {
@@ -48,7 +48,7 @@ func balance(l *Language, root *subtree) {
 			if repeatDelta > 0 {
 				n := uint(repeatDelta)
 				for i := n / 2; i > 0; i /= 2 {
-					compress(l, tree, i, refs)
+					compress(l, tree, i)
 					n -= i
 				}
 			}
@@ -57,7 +57,7 @@ func balance(l *Language, root *subtree) {
 		stack = stack[:len(stack)-1]
 
 		for _, child := range tree.children {
-			if len(child.children) > 0 && refs[child] == 1 {
+			if len(child.children) > 0 && child.refs == 1 {
 				stack = append(stack, child)
 			}
 		}
@@ -68,23 +68,23 @@ func balance(l *Language, root *subtree) {
 func own(s *subtree) { s.children = append([]*subtree(nil), s.children...) }
 
 // compress is ts_subtree_compress.
-func compress(l *Language, self *subtree, count uint, refs map[*subtree]int) {
+func compress(l *Language, self *subtree, count uint) {
 	var stack []*subtree
 
 	tree := self
 	symbol := tree.symbol
 	for i := uint(0); i < count; i++ {
-		if refs[tree] > 1 || len(tree.children) < 2 {
+		if tree.refs > 1 || len(tree.children) < 2 {
 			break
 		}
 
 		child := tree.children[0]
-		if len(child.children) < 2 || refs[child] > 1 || child.symbol != symbol {
+		if len(child.children) < 2 || child.refs > 1 || child.symbol != symbol {
 			break
 		}
 
 		grandchild := child.children[0]
-		if len(grandchild.children) < 2 || refs[grandchild] > 1 || grandchild.symbol != symbol {
+		if len(grandchild.children) < 2 || grandchild.refs > 1 || grandchild.symbol != symbol {
 			break
 		}
 
