@@ -232,3 +232,33 @@ with open("../../extensions/pi-permission-system/testdata/manager-cases.json", "
     json.dump(worlds, f, indent=1, sort_keys=True)
     f.write("\n")
 print(len(worlds), "worlds", sum(len(w["intents"]) for w in worlds), "intents")
+
+
+# ---- the active-agent corpus: system prompts and session entries for getActiveAgentNameFromSystemPrompt and getActiveAgentName ----
+WS = [" ", "  ", "\t", "\n", "\r\n", "\u00a0", "\u2003", "\u3000", "\ufeff", "\u2028", "\u200b", "\u180e", "\u0085", ""]
+NAMES = ["my-agent", "  padded  ", "", " ", "a b", "x\ny", "名前", "a>b", "Reviewer", "\u00a0nbsp\u00a0", "\ufefffeff", "q'uote", 'd"quote']
+QUOTES = ['"', "'", ""]
+prompts = ["", "no tag", "You are helpful.\n<active_agent name=\"my-bot\">\nDo work."]
+for ws in WS:
+    for name in NAMES:
+        for q1 in QUOTES:
+            for q2 in QUOTES:
+                for tail in ["", ">", " role=\"x\">", "\n>", " ", " <"]:
+                    prompts.append("<active_agent" + ws + "name=" + q1 + name + q2 + tail)
+for tag in ["<ACTIVE_AGENT name=\"a\">", "<Active_Agent name='b'>", "<active_agent\u212a name=\"k\">", "<active\u017f_agent name=\"s\">",
+            "<active_agent name=\"first\"><active_agent name=\"second\">", "<active_agent name=\"\"><active_agent name=\"second\">",
+            "x<active_agent name = \"spaced\">", "<active_agent name=\"a\"\n\n>", "<<active_agent name=\"nested\">", "<active_agent  name=\"two\">"]:
+    prompts.append(tag)
+rnd2 = random.Random(7)
+prompts = prompts[:3] + rnd2.sample(prompts[3:], min(len(prompts) - 3, 4000))
+DATA = [{"name": "bot"}, {"name": "  padded  "}, {"name": ""}, {"name": "   "}, {"name": None}, {"name": 7}, {"name": ["x"]}, {}, None, 5, "str", [], {"nested": {"name": "x"}}]
+def entry(rnd):
+    return {"type": rnd.choice(["custom", "custom", "custom", "message", "tool_call"]), "customType": rnd.choice(["active_agent", "active_agent", "other", None]), "data": rnd.choice(DATA)}
+entry_lists = [[], [{"type": "custom", "customType": "active_agent", "data": {"name": "bot"}}]]
+rnd3 = random.Random(9)
+for _ in range(600):
+    entry_lists.append([entry(rnd3) for _ in range(rnd3.randint(1, 6))])
+with open("../../extensions/pi-permission-system/testdata/active-agent-cases.json", "w") as f:
+    json.dump({"prompts": prompts, "entries": entry_lists}, f, indent=0, sort_keys=True)
+    f.write("\n")
+print(len(prompts), "prompts", len(entry_lists), "entry lists")

@@ -1,5 +1,7 @@
 package pi_permission_system
 
+import "sync"
+
 // Port of src/session/session-rules.ts.
 
 // SessionRules is the ephemeral in-memory store of session-scoped permission approvals. Each approval is a Rule with action "allow",
@@ -14,13 +16,19 @@ func (s *SessionRules) Approve(surface, pattern string) {
 	if members, ok := SurfaceFamilyMembers(surface); ok {
 		targets = members[:]
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for _, target := range targets {
 		s.rules = append(s.rules, Rule{Surface: target, Pattern: pattern, Action: "allow", Layer: "session", Origin: "session"})
 	}
 }
 
 // GetRuleset is getRuleset: a defensive copy of the recorded rules (never nil).
-func (s *SessionRules) GetRuleset() Ruleset { return append(Ruleset{}, s.rules...) }
+func (s *SessionRules) GetRuleset() Ruleset {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append(Ruleset{}, s.rules...)
+}
 
 // RecordSessionApproval is recordSessionApproval: every grant, each on the surface it names. Implements SessionApprovalRecorder.
 func (s *SessionRules) RecordSessionApproval(approval *SessionApproval) {
@@ -30,4 +38,8 @@ func (s *SessionRules) RecordSessionApproval(approval *SessionApproval) {
 }
 
 // Clear is clear: remove all session approvals.
-func (s *SessionRules) Clear() { s.rules = nil }
+func (s *SessionRules) Clear() {
+	s.mu.Lock()
+	s.rules = nil
+	s.mu.Unlock()
+}

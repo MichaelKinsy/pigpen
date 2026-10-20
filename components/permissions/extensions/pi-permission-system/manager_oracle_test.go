@@ -229,3 +229,54 @@ func TestManagerOracleDifferential(t *testing.T) {
 	}
 	t.Logf("%d worlds, %d comparisons, %d differences", len(worlds), checks, differences)
 }
+
+// The active-agent corpus: system prompts (the tag regex under JavaScript's `\s` and case folding) and session entries.
+func TestActiveAgentOracleDifferential(t *testing.T) {
+	read := func(name string, into any) {
+		data, err := os.ReadFile("testdata/" + name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(data, into); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var cases struct {
+		Prompts []string           `json:"prompts"`
+		Entries [][]map[string]any `json:"entries"`
+	}
+	var oracle struct {
+		Prompts []*string `json:"prompts"`
+		Entries []struct {
+			Name   *string `json:"name"`
+			Throws *string `json:"throws"`
+		} `json:"entries"`
+	}
+	read("active-agent-cases.json", &cases)
+	read("active-agent-oracle.json", &oracle)
+	if len(cases.Prompts) != len(oracle.Prompts) || len(cases.Entries) != len(oracle.Entries) {
+		t.Fatalf("corpus %d/%d, record %d/%d", len(cases.Prompts), len(cases.Entries), len(oracle.Prompts), len(oracle.Entries))
+	}
+	for i, p := range cases.Prompts {
+		got, want := GetActiveAgentNameFromSystemPrompt(p), oracle.Prompts[i]
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("prompt %q: port %v, original %v", p, got, want)
+		}
+	}
+	for i, es := range cases.Entries {
+		views := make([]SessionEntryView, len(es))
+		for j, e := range es {
+			views[j] = e
+		}
+		got, err := GetActiveAgentName(fakeEntriesCtx{entries: views})
+		want := oracle.Entries[i]
+		if want.Throws != nil || err != nil {
+			t.Errorf("entries %d: the original threw %v, the port returned %v / %v", i, want.Throws, got, err)
+			continue
+		}
+		if !reflect.DeepEqual(got, want.Name) {
+			t.Errorf("entries %d %v: port %v, original %v", i, es, got, want.Name)
+		}
+	}
+	t.Logf("%d prompts, %d entry lists", len(cases.Prompts), len(cases.Entries))
+}

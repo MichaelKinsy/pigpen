@@ -860,8 +860,14 @@
  {
   "name": "sr-clear",
   "file": "sessionrules.go",
-  "find": "func (s *SessionRules) Clear() { s.rules = nil }",
-  "replace": "func (s *SessionRules) Clear() {}"
+  "find": "s.rules = nil\n\ts.mu.Unlock()",
+  "replace": "s.mu.Unlock()"
+ },
+ {
+  "name": "sr-lock-ruleset",
+  "file": "sessionrules.go",
+  "find": "func (s *SessionRules) GetRuleset() Ruleset {\n\ts.mu.Lock()\n\tdefer s.mu.Unlock()\n",
+  "replace": "func (s *SessionRules) GetRuleset() Ruleset {\n"
  },
  {
   "name": "ag-width-proven",

@@ -7,6 +7,7 @@ import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { it } from "vitest";
 import type { ResolvedAccessIntent } from "#src/access-intent/access-intent";
+import { getActiveAgentName, getActiveAgentNameFromSystemPrompt } from "#src/session/active-agent";
 import { PermissionManager } from "#src/policy/permission-manager";
 import type { Ruleset } from "#src/policy/rule";
 
@@ -91,4 +92,20 @@ it("records the manager corpus", () => {
     must(process.env.PROBE_OUT, "PROBE_OUT"),
     `${JSON.stringify({ home: homedir(), worlds })}\n`,
   );
+});
+
+it("records the active-agent corpus", () => {
+  const cases = JSON.parse(readFileSync(must(process.env.PROBE_AGENT_CASES, "PROBE_AGENT_CASES"), "utf8")) as {
+    prompts: string[];
+    entries: { type: string; customType?: string; data?: unknown }[][];
+  };
+  const prompts = cases.prompts.map((p) => getActiveAgentNameFromSystemPrompt(p));
+  const entries = cases.entries.map((es) => {
+    try {
+      return { name: getActiveAgentName({ sessionManager: { getEntries: () => es } }) };
+    } catch (e) {
+      return { throws: String(e) };
+    }
+  });
+  writeFileSync(must(process.env.PROBE_AGENT_OUT, "PROBE_AGENT_OUT"), `${JSON.stringify({ prompts, entries })}\n`);
 });

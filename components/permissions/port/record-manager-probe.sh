@@ -9,4 +9,5 @@ here="$(pwd)"
 cp port/probe/manager-probe.test.ts "$pkg/test/zz-manager-probe.test.ts"
 trap 'rm -f "$pkg/test/zz-manager-probe.test.ts"' EXIT
 (cd "$pkg" && PROBE_CASES="$here/extensions/pi-permission-system/testdata/manager-cases.json" PROBE_OUT="$here/extensions/pi-permission-system/testdata/manager-oracle.json" \
+  PROBE_AGENT_CASES="$here/extensions/pi-permission-system/testdata/active-agent-cases.json" PROBE_AGENT_OUT="$here/extensions/pi-permission-system/testdata/active-agent-oracle.json" \
   node_modules/.bin/vitest run test/zz-manager-probe.test.ts)

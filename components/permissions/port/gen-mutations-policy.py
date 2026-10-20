@@ -172,7 +172,8 @@ m("sr-ruleset-copy", SR, 'return append(Ruleset{}, s.rules...)', 'return s.rules
 m("sr-ruleset-nil", SR, 'return append(Ruleset{}, s.rules...)', 'return append(Ruleset(nil), s.rules...)')
 m("sr-record", SR, 'for _, g := range approval.Grants {\n\t\ts.Approve(g.Surface, g.Pattern)', 'for _, g := range approval.Grants[:min(1, len(approval.Grants))] {\n\t\ts.Approve(g.Surface, g.Pattern)')
 m("sr-record-surface", SR, 's.Approve(g.Surface, g.Pattern)', 's.Approve(SurfaceFamilyOf(g.Surface), g.Pattern)')
-m("sr-clear", SR, 'func (s *SessionRules) Clear() { s.rules = nil }', 'func (s *SessionRules) Clear() {}')
+m("sr-clear", SR, 's.rules = nil\n\ts.mu.Unlock()', 's.mu.Unlock()')
+m("sr-lock-ruleset", SR, 'func (s *SessionRules) GetRuleset() Ruleset {\n\ts.mu.Lock()\n\tdefer s.mu.Unlock()\n', 'func (s *SessionRules) GetRuleset() Ruleset {\n')
 
 AG = "sessionapprovalgrant.go"
 m("ag-width-proven", AG, 'v == "proven" || v == "family"', 'v == "family"')
