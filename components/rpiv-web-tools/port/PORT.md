@@ -5,7 +5,7 @@
 | Original | `@juicesharp/rpiv-web-tools` 2.12.0 by juicesharp, https://github.com/juicesharp/rpiv-mono (`packages/rpiv-web-tools`), commit `7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f`, MIT |
 | Oracle | Pi 1.3.0 (build `1402973a`), Node 24.19.0, with the unmodified package at `port/oracle` (its dependency `@juicesharp/rpiv-config` from npm) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
-| Original's tests | the `it` cases in the vitest files listed in `port/upstream-tests.json`: **COUNTS** |
+| Original's tests | the `it` cases in the vitest files listed in `port/upstream-tests.json`: **272 exact twins, 2 named skips, 0 deferred** (the TypeBox schema object and the npm `files` manifest, each with its reason in `config_test.go`; `port/slices.json` is empty). All 274 titles are twinned: the 147 of `index.test.ts` (a title the original uses in both its SearXNG and its Ollama block is twinned twice), the 78 of `github.test.ts` and the 6 of `chain.test.ts` |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
 ## Mapping
@@ -25,11 +25,11 @@
 
 ## Results (this revision)
 
-- `pigeq check` against goldens **recorded from the original under Pi 1.3.0 (1402973a)**: NSCEN of NSCEN scenarios, plus `port-gaps`
+- `pigeq check` against goldens **recorded from the original under Pi 1.3.0 (1402973a)**: 19 of 19 scenarios, plus `port-gaps`
   and `exec-coverage`; the record-host check passes. The scenarios put the API config into the lane HOME with `setup`.
   The GitHub scenarios declare `gh` and `git` as canned; the others declare both missing.
 - `go test -race ./...`: pass.
-- `pigeq mutate --unit`: 125 mutations (see below).
+- `pigeq mutate --unit`: 231 mutations (see below).
 - `pig package validate components/rpiv-web-tools` and `pig install <extension dir> --validate-only --json`: valid.
 
 ## Mutations
@@ -51,7 +51,7 @@ unknown action, an absolute path, a killed command, the exact buffer limit, the 
 compile were rewritten, and two were removed as equivalent: `gh-size-parse-untrimmed` (`parseInt` skips surrounding white
 space itself) and `gh-path-escape` (the symlink check that follows it rejects an existing file outside the clone, and a
 missing one reads as missing either way); the case-folding mutant of the non-code segment list (`gh-noncode-case`) is
-equivalent too, because the action check rejects every segment the list names. Final run: **214 mutations, all killed**.
+equivalent too, because the action check rejects every segment the list names. Final run of the slice: **214 mutations, all killed**; the stack at this PR (slices 1 to 3) holds **231**, all killed.
 
 ## Deliberate differences and findings
 
