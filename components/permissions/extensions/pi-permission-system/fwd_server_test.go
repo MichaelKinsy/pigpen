@@ -779,3 +779,22 @@ func TestProcessInboxWithoutAnInboxDoesNothing(t *testing.T) {
 		t.Fatalf("logged %+v, or created the inbox", env.logger.reviews())
 	}
 }
+
+// Go-specific: a registered requester whose entry names no parent session is silent, as an unregistered one is.
+func TestProcessInboxOneHopCanaryRegisteredWithoutParent(t *testing.T) {
+	env := fwNewServerEnv(t, true)
+	env.temp.writeRequest(fwWith("req-orphan", "", "bash", "git push"))
+	env.registry = fwMakeSubagentRegistry("child-session", &SubagentSessionInfo{})
+	env.process()
+	if env.logger.reviewMatching("permission_forwarding.warning", nil) {
+		t.Fatalf("%+v", env.logger.reviews())
+	}
+	// ...and one whose parent is empty text names none either.
+	env2 := fwNewServerEnv(t, true)
+	env2.temp.writeRequest(fwWith("req-blank", "", "bash", "git push"))
+	env2.registry = fwMakeSubagentRegistry("child-session", &SubagentSessionInfo{ParentSessionID: fwSP("")})
+	env2.process()
+	if env2.logger.reviewMatching("permission_forwarding.warning", nil) {
+		t.Fatalf("%+v", env2.logger.reviews())
+	}
+}

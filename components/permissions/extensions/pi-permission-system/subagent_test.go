@@ -1017,3 +1017,44 @@ func TestEncloseInDelegationEnvelope(t *testing.T) {
 		}
 	})
 }
+
+// Go-specific: the walk through the inheriting lookups, which hand each service to a getter, over a hop with no service and over a
+// node the registry knows with no parent.
+func TestInheritingLookupsWalkPastUnpublishedHops(t *testing.T) {
+	extractor := &fwExtractor{out: "/etc/hosts"}
+	grandparent := &fwService{extractor: extractor, formatter: &fwFormatter{out: "p"}}
+	locate, _ := fwLocatorOf(map[string]PermissionsService{"grandparent": grandparent})
+	ancestors := NewAncestorNodes(fwNodeIdentity("child"), fwParentChain{"child": "parent", "parent": "grandparent"}, locate)
+	got := NewInheritingToolAccessExtractorLookup(&ToolAccessExtractorRegistry{}, ancestors).Resolve("t")
+	if got == nil || got.Origin != "inherited" || got.Extractor != ToolAccessExtractor(extractor) {
+		t.Fatalf("%+v", got)
+	}
+	if NewInheritingToolInputFormatterLookup(&ToolInputFormatterRegistry{}, ancestors).Get("t") == nil {
+		t.Fatal("formatter not inherited across an unpublished hop")
+	}
+}
+
+type fwNoParentChain struct{}
+
+func (fwNoParentChain) Get(string) (SubagentSessionInfo, bool) { return SubagentSessionInfo{}, true }
+
+func TestAncestorNodesStopAtANodeWithNoParent(t *testing.T) {
+	locate, calls := fwLocatorOf(nil)
+	ancestors := NewAncestorNodes(fwNodeIdentity("child"), fwNoParentChain{}, locate)
+	if got := ancestors.FindFirst(func(PermissionsService) any { return "hit" }); got != nil || len(*calls) != 0 {
+		t.Fatalf("%v %v", got, *calls)
+	}
+}
+
+// Go-specific: a session manager that answers an id together with an error did not answer (the original's call threw).
+func TestIsRegisteredSubagentChildIgnoresAnIdWithAnError(t *testing.T) {
+	registry := NewSubagentSessionRegistry()
+	registry.Register("child", SubagentSessionInfo{})
+	ctx := SubagentDetectionContext{SessionManager: &fwSessionManager{
+		sessionDir: fwID(""),
+		sessionID:  func() (string, error) { return "child", errors.New("session id unavailable") },
+	}}
+	if IsRegisteredSubagentChild(ctx, registry) {
+		t.Fatal("an id that came with an error was used")
+	}
+}

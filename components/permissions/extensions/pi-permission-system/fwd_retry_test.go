@@ -320,3 +320,12 @@ func TestNodeFsErrorMessages(t *testing.T) {
 		}
 	}
 }
+
+// Go-specific: an empty delay list is a budget of none (the original's `delaysMs ?? default` keeps `[]`), not the default.
+func TestRetryOnTransientFsErrorEmptyBudgetDoesNotRetry(t *testing.T) {
+	sleep, sleeps := fwSleepRecorder()
+	operation, attempts := fwFailingOperation("EPERM", 5)
+	if _, err := RetryOnTransientFsError(operation, &TransientFsRetryOptions{Sleep: sleep, DelaysMs: []int{}}); err == nil || attempts() != 1 || len(sleeps()) != 0 {
+		t.Fatalf("err=%v attempts=%d sleeps=%v", err, attempts(), sleeps())
+	}
+}

@@ -246,3 +246,21 @@ plus `Normalize`.
 3. **Escalation can block for as long as a human takes.** `ProcessInbox` runs on its own goroutine, one at a time, as the original's
    un-awaited promise does, and the heartbeat refresh runs ahead of that guard so a session deliberating at a dialog still reads as
    serving.
+
+### Results (forwarding lane)
+
+- `go test -race ./...` passes; `-race -count=24` over the file protocol, liveness, manager, server and retry tests (the two-process
+  tests included, 24 spawned parents) passes under the pinned CPU set of the shared host (201 s).
+- `go vet` is clean for linux, darwin and windows.
+- `pigeq mutate --unit-only` over `port/mutations-forwarding.json` (`port/gen-mutations-forwarding.py`): **178 mutations, all killed**.
+  The first run killed 153 of 180: 21 did not compile (an unused variable once the defect was applied) and 6 survived. The 21 were
+  rebuilt, and two mutants proved equivalent and are gone (a walk without a session id that ends the same way, and an `!ok` guard
+  whose zero value already fails the check after it). The 6 survivors and 2 more that survived once rebuilt each got a test: the retry
+  budget of an empty delay list, the walk over a hop that published no service and over a node with no parent, the one-hop canary
+  for a registered requester without a parent, the context's session-id reader (trim and the `unknown` fallback), the real ticker's
+  stop, and a session id that arrives together with an error. The mutants that only the differential kills are the response key
+  order, the sweep rules, the heartbeat record shape and the serving-node log entries.
+- The original's own tests for the 15 files pass in the oracle copy (`vitest run`, in the same log as the twin check).
+- Not done in this lane: a Pi scenario (`pigeq run`) and a fused-binary check, because the layer has no effect in a trace until the
+  lead wires it into `Extension()`; the interleaved benchmark against the original (`port/bench-forwarding.sh`), which the load rule
+  holds back; `npm run check` and `npm run generate` (the lead runs them with the assembled versions).

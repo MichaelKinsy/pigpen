@@ -483,3 +483,22 @@ func TestForwardingManagerStopClearsTheProcessingFlag(t *testing.T) {
 	fn()
 	fwPoll(t, "the second drain", func() bool { return env.forwarder.callCount() == 2 })
 }
+
+// Go-specific: the real scheduler's stop ends its goroutine, and is idempotent (an interval that survives its stop would keep a
+// session's tick, and the context it holds, alive after shutdown).
+func TestTickerSchedulerStopEndsTheInterval(t *testing.T) {
+	var mu sync.Mutex
+	ticks := 0
+	stop := tickerScheduler{}.SetInterval(func() { mu.Lock(); ticks++; mu.Unlock() }, 2*time.Millisecond)
+	count := func() int { mu.Lock(); defer mu.Unlock(); return ticks }
+	fwPoll(t, "a few ticks", func() bool { return count() >= 3 })
+	stop()
+	stop()
+	// A tick already in flight may land; after that the count must hold still.
+	time.Sleep(20 * time.Millisecond)
+	settled := count()
+	time.Sleep(40 * time.Millisecond)
+	if count() != settled {
+		t.Fatalf("ticks continued after stop: %d then %d", settled, count())
+	}
+}
