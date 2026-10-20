@@ -17,7 +17,7 @@ M = [
  ("repeat-window-empty", "guard.go", "window: 3}", "window: 0}"),
  ("stale-prejudgment-reused", "action_guard.go", "ready.key == key &&", "true &&"),
  ("force-push-flag-f-missed", "patterns.go", "(?:-f|--force)(?:[^-\\w]|$)", "(?:--force)(?:[^-\\w]|$)"),
- ("dangerous-rm-authorizable", "authorize.go", 'neverAuthorized  = setOf("rm-recursive-dangerous-target")', 'neverAuthorized  = setOf("none")'),
+ ("dangerous-rm-authorizable", "authorize.go", 'neverAuthorized = setOf("rm-recursive-dangerous-target")', 'neverAuthorized = setOf("none")'),
  ("deny-rule-only-confirms", "guard.go", "\t\t\tlevel = LevelDeny\n\t\t\treasons = append(reasons, orDefault(hit.Message, hit.Label))", "\t\t\tlevel = LevelConfirm\n\t\t\treasons = append(reasons, orDefault(hit.Message, hit.Label))"),
  ("disable-keeps-consent", "commands.go", 'cfg.Enabled, cfg.Consent = false, ""', "cfg.Enabled = false"),
  ("prejudge-outlives-nothing", "action_guard.go", "bg := context.WithoutCancel(ctx)", "bg := ctx"),
@@ -131,7 +131,11 @@ M = [
  ("sql-ids-not-exemptable", "patterns.go", "\"sql-delete-local\", \"sql-hosted\", \"sql-hosted-write\", ", ""),
  ("authorize-force-push-verb", "authorize.go", "\"git-force-push\":                {\"force push\", \"force-push\"},", "\"git-force-push\":                {\"push\"},"),
 ]
-EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
+EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth",
+ "sensitive-violations-escalate": "unreachable: only rm-family hits yield violations (hitViolations), and none is sensitive; the filter is upstream's defence in depth",
+ "large-output-any-tool": "unreachable: BuildRequest asks the large_output question of bash only, so no other tool has an answer to read",
+ "scratch-moves-in-ignored": "the stripped command is read too (`unquoted(command)`); the raw text only adds a case where data text hid a move-in word",
+ "large-output-memory-lost": "the steer repeat window drops the identical second text, so the memory is a second line of defence (checked at the unit level by the notice twin)"}
 only = set(sys.argv[1:])
 out = []
 for mid, f, old, new in M:
