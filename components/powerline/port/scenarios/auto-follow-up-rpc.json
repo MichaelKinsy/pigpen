@@ -1,0 +1,60 @@
+{
+ "name": "auto-follow-up-rpc",
+ "description": "autoFollowUp is on and TYPESAFE_API_KEY is unset. A prompt sent over RPC while the agent runs a tool is queued as steering with source rpc, which the handler leaves alone: no warning, no Jev call, and no refusal of the setting at session start. (The interactive path, where Jev is called, cannot be reached over RPC: the endpoint is hardcoded and the source is rpc; layer-1 tests and the twins cover it.)",
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "bash",
+     "arguments": {
+      "command": "sleep 2"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  },
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "start the task",
+   "rpc": {
+    "type": "prompt",
+    "message": "fix the checkout bug"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "steer while the tool runs",
+   "rpc": {
+    "type": "prompt",
+    "message": "also lint",
+    "streamingBehavior": "steer"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "slash command while the tool runs",
+   "rpc": {
+    "type": "prompt",
+    "message": "/powerline",
+    "streamingBehavior": "steer"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "let the run finish",
+   "rpc": {
+    "type": "get_state"
+   },
+   "wait": "agent_end"
+  }
+ ],
+ "agentFiles": {
+  "settings.json": "{\"powerline\": {\"welcome\": false, \"autoFollowUp\": true}}"
+ }
+}

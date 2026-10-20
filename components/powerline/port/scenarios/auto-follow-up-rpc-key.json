@@ -1,0 +1,54 @@
+{
+ "name": "auto-follow-up-rpc-key",
+ "description": "Same as auto-follow-up-rpc with a TYPESAFE_API_KEY in the environment: a queued RPC prompt (source rpc) still never reaches Jev, so the trace shows no request and no warning.",
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "bash",
+     "arguments": {
+      "command": "sleep 2"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  },
+  {
+   "text": "ok"
+  }
+ ],
+ "env": {
+  "TYPESAFE_API_KEY": "scenario-key"
+ },
+ "steps": [
+  {
+   "name": "start the task",
+   "rpc": {
+    "type": "prompt",
+    "message": "fix the checkout bug"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "steer while the tool runs",
+   "rpc": {
+    "type": "prompt",
+    "message": "also lint",
+    "streamingBehavior": "steer"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "let the run finish",
+   "rpc": {
+    "type": "get_state"
+   },
+   "wait": "agent_end"
+  }
+ ],
+ "agentFiles": {
+  "settings.json": "{\"powerline\": {\"welcome\": false, \"autoFollowUp\": true}}"
+ }
+}

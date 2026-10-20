@@ -1,10 +1,7 @@
 {
- "auto-follow-up": "not ported: the Jev auto follow-up classifier of queued messages belongs to the prompt queue",
  "bash-mode": "not ported: the bash-mode editor, shell session, completions and transcript are an editor replacement, outside the footer slice",
  "cd-command": "not ported: the /cd command changes the session working directory; it is not part of the status bar",
  "delayed-send": "not ported: delayed send belongs to the prompt queue",
- "editor-composition": "not ported: custom editor composition (autocomplete providers) is outside the footer slice",
- "editor-performance": "not ported: the editor render profiler belongs to the custom editor",
  "post-compaction-queue": "not ported: the post-compaction prompt queue",
  "queue-store": "not ported: the persistent prompt queue store",
  "quote-reply": "not ported: the quote-reply editor feature",

@@ -59,7 +59,6 @@ func TestEveryUnportedSettingIsRefusedAtSessionStart(t *testing.T) {
 	settings := map[string]struct{ json, feature string }{
 		"welcome":        {`{"powerline":{"welcome":true}}`, "the startup welcome (powerline.welcome)"},
 		"sendDelayMs":    {`{"powerline":{"sendDelayMs":1500}}`, "delayed send (powerline.sendDelayMs)"},
-		"autoFollowUp":   {`{"powerline":{"autoFollowUp":true}}`, "auto follow-up (powerline.autoFollowUp)"},
 		"workingVibes":   {`{"powerline":{"workingVibes":{"color":"accent"}}}`, "working vibes (powerline.workingVibes)"},
 		"workingVibe":    {`{"workingVibe":"pirate"}`, "working vibes (workingVibe)"},
 		"bashMode":       {`{"bashMode":{"completions":true}}`, "bash mode (bashMode)"},
@@ -95,6 +94,7 @@ func TestSettingsTheOriginalAlsoIgnoresAreNotRefused(t *testing.T) {
 		"native compaction":  `{"powerline":{"queue":{"compactPromptMode":"native"}}}`,
 		"last prompt off":    `{"showLastPrompt":false}`,
 		"auto follow-up off": `{"powerline":{"autoFollowUp":false}}`,
+		"auto follow-up on":  `{"powerline":{"autoFollowUp":true}}`,
 		"no settings at all": ``,
 		"a preset string":    `{"powerline":"minimal"}`,
 	} {
@@ -111,7 +111,6 @@ func TestSeveralUnportedSettingsAreEachRefused(t *testing.T) {
 	got := notifications(h)
 	want := []string{
 		"warning: " + refusalFor("delayed send (powerline.sendDelayMs)"),
-		"warning: " + refusalFor("auto follow-up (powerline.autoFollowUp)"),
 		"warning: " + refusalFor("bash mode (bashMode)"),
 	}
 	if len(got) != len(want) {

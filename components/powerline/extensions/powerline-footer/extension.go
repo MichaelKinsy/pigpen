@@ -242,6 +242,7 @@ func Extension() *sdk.Extension {
 		})
 	}
 	registerKeys(e, a)
+	registerFollowUp(e, a)
 	e.OnSessionStart(a.onSessionStart)
 	for _, ev := range []string{sdk.EventModelSelect, sdk.EventThinkingLevelSelect, sdk.EventSessionTree, sdk.EventSessionInfoChanged,
 		sdk.EventToolResult, sdk.EventUserBash, sdk.EventAgentStart, sdk.EventMessageUpdate, sdk.EventMessageEnd, sdk.EventTurnEnd,

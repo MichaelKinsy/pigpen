@@ -45,9 +45,6 @@ func unsupportedSettings(settings map[string]any, cfg powerlineConfig, env func(
 		if cfg.SendDelayMs > 0 {
 			add("delayed send (powerline.sendDelayMs)")
 		}
-		if cfg.AutoFollowUp {
-			add("auto follow-up (powerline.autoFollowUp)")
-		}
 		if rawPowerline.vals["workingVibes"] != nil {
 			add("working vibes (powerline.workingVibes)")
 		}
@@ -61,7 +58,7 @@ func unsupportedSettings(settings map[string]any, cfg powerlineConfig, env func(
 	if settings["showLastPrompt"] == true {
 		add("the last-prompt line (showLastPrompt)")
 	}
-	if env("POWERLINE_DEBUG_PERF") == "1" {
+	if readEditorPerfOptions(env).Enabled {
 		add("the editor performance profiler (POWERLINE_DEBUG_PERF)")
 	}
 	return features
