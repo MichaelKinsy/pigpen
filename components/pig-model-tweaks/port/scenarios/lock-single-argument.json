@@ -1,0 +1,63 @@
+{
+  "name": "lock-single-argument",
+  "description": "`/cmd <provider>` locks the current OpenRouter model, says `defaultModel -> base:provider` and writes it into settings.json (read back through a bash call on eq-llm); remembering is off so only the lock writes.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat \"$PI_CODING_AGENT_DIR/settings.json\""
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "env": {
+    "OPENROUTER_API_KEY": "eq-or-key"
+  },
+  "args": [
+    "--provider",
+    "openrouter",
+    "--model",
+    "google/gemma-4-26b-a4b-it"
+  ],
+  "agentFiles": {
+    "settings.json": "{\"theme\":\"dark\",\"defaultThinkingLevel\":\"off\"}\n",
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": false}}"
+  },
+  "steps": [
+    {
+      "name": "lock",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider deepseek"
+      }
+    },
+    {
+      "name": "list",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider list"
+      }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "read-settings",
+      "rpc": {
+        "type": "prompt",
+        "message": "show settings"
+      }
+    }
+  ]
+}

@@ -23,6 +23,14 @@
       }
     },
     {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
       "name": "new-session",
       "rpc": {
         "type": "new_session"

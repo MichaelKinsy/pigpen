@@ -35,6 +35,21 @@
         "type": "prompt",
         "message": "/pt-remember-model"
       }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "status-eq-llm",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
     }
   ]
 }
