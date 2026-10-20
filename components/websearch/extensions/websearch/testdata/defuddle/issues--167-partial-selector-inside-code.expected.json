@@ -1,0 +1,6 @@
+{
+ "url": "https://example.org/docs/type-theory",
+ "title": "Type Theory Reference",
+ "content": "This page defines helper functions for working with natural numbers. The code blocks below use span elements with generated anchor IDs that happen to match partial selector patterns like \"next-\".\n\n```lean\ndef h1 (x : Nat) : Nat :=\n```\n\nThe function h1 takes a natural number and returns a natural number. Below is a second definition that should also be preserved.\n\n```lean\ndef h2 (x : Nat) : Nat :=\n```\n\nBoth h1 and h2 should appear in the output. If partial selector removal strips the span elements inside code, the function names will be missing.",
+ "error": null
+}

@@ -1,0 +1,6 @@
+{
+ "url": "https://data-table",
+ "title": "Data Table Test",
+ "content": "## Programming Language Comparison\n\nHere is a comparison of popular programming languages:\n\n| Language | Year | Typing | Primary Use |\n| --- | --- | --- | --- |\n| Python | 1991 | Dynamic | General purpose, data science |\n| Rust | 2015 | Static | Systems programming |\n| TypeScript | 2012 | Static | Web development |\n| Go | 2009 | Static | Cloud infrastructure |\n\nEach language has its strengths and trade-offs.\n\n## Without thead\n\n| Name | Score |\n| --- | --- |\n| Alice | 95 |\n| Bob | 87 |",
+ "error": null
+}

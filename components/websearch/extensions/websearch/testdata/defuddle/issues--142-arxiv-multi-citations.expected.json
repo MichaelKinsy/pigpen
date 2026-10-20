@@ -1,0 +1,6 @@
+{
+ "url": "https://142-arxiv-multi-citations",
+ "title": "arXiv Multi-Citations",
+ "content": "## Introduction\n\nRecurrent models typically factor computation along the symbol positions of the input and output sequences, as explored in prior work [^6] [^1] [^2]. Some models use a single citation [^5] while others reference two works [^3] [^4].\n\n## References\n\n[^1]: Dzmitry Bahdanau, Kyunghyun Cho, and Yoshua Bengio. Neural machine translation by jointly learning to align and translate. *CoRR*, 2014.\n\n[^2]: Junyoung Chung, Caglar Gulcehre, KyungHyun Cho, and Yoshua Bengio. Empirical evaluation of gated recurrent neural networks on sequence modeling. 2014.\n\n[^3]: Jonas Gehring, Michael Auli, David Grangier, Denis Yarats, and Yann N. Dauphin. Convolutional sequence to sequence learning. 2017.\n\n[^4]: Alex Graves. Generating sequences with recurrent neural networks. 2013.\n\n[^5]: Sepp Hochreiter and Jurgen Schmidhuber. Long short-term memory. 1997.\n\n[^6]: Ilya Sutskever, Oriol Vinyals, and Quoc V. Le. Sequence to sequence learning with neural networks. 2014.",
+ "error": null
+}

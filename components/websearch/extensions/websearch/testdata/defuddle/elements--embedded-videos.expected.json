@@ -1,0 +1,6 @@
+{
+ "url": "https://embedded-videos",
+ "title": "Embedded videos test",
+ "content": "A YouTube video:\n\n![](https://www.youtube.com/watch?v=b_PXuEPxN50)\n\nA YouTube nocookie video:\n\n![](https://www.youtube.com/watch?v=b_PXuEPxN50)\n\nA tweet:\n\n![](https://x.com/i/status/1675626836821409792)\n\nAn X.com embed:\n\n![](https://x.com/kepano/status/1675626836821409792)\n\nA Vimeo video should stay as iframe:\n\n<iframe src=\"https://player.vimeo.com/video/45725193?h=a290f71a57\" width=\"100%\" height=\"100%\" frameborder=\"0\" allow=\"autoplay; fullscreen; picture-in-picture\" allowfullscreen=\"\"></iframe>",
+ "error": null
+}

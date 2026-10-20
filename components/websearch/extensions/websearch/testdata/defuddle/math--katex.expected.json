@@ -1,0 +1,6 @@
+{
+ "url": "https://katex",
+ "title": "KaTeX and MathJax Comparison Demo, currently processed as KaTeX",
+ "content": "## KaTeX and MathJax Comparison Demo\n\n### Repeating fractions\n\n $\\displaystyle \\frac{1}{\\Bigl(\\sqrt{\\phi \\sqrt{5}}-\\phi\\Bigr) e^{\\frac25 \\pi}} \\equiv 1+\\frac{e^{-2\\pi}} {1+\\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }$\n\n### Summation notation\n\n $\\displaystyle \\left( \\sum_{k=1}^n a_k b_k \\right)^2 \\leq \\left( \\sum_{k=1}^n a_k^2 \\right) \\left( \\sum_{k=1}^n b_k^2 \\right)$\n\n### Inline math\n\nAnd here is some in-line math: $k_{n+1} = n^2 + k_n^2 - k_{n-1}$, followed by some more text.\n\n### Calculus\n\n $\\displaystyle \\int u \\frac{dv}{dx}\\,dx=uv-\\int \\frac{du}{dx}v\\,dx$\n\n### Lorenz Equations\n\n $\\displaystyle \\begin{aligned}\n\\dot{x} & = \\sigma(y-x) \\\\\n\\dot{y} & = \\rho x - y - xz \\\\\n\\dot{z} & = -\\beta z + xy\n\\end{aligned}$\n\n### Case definitions\n\n $\\displaystyle f(n) = \\begin{cases} \\frac{n}{2}, & \\text{if } n\\text{ is even} \\\\ 3n+1, & \\text{if } n\\text{ is odd} \\end{cases}$\n\n### Matrices\n\n $\\displaystyle \\begin{pmatrix}\na_{11} & a_{12} & a_{13}\\\\\na_{21} & a_{22} & a_{23}\\\\\na_{31} & a_{32} & a_{33}\n\\end{pmatrix}$",
+ "error": null
+}

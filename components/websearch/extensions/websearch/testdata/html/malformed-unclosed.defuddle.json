@@ -1,0 +1,6 @@
+{
+ "url": "http://fixtures.test/malformed-unclosed",
+ "title": "Malformed page",
+ "content": "",
+ "error": null
+}

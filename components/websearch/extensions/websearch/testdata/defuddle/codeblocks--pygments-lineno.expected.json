@@ -1,0 +1,6 @@
+{
+ "url": "https://pygments-lineno",
+ "title": "Sample Python Tutorial",
+ "content": "### Imports\n\nFirst, import the required modules:\n\n```\nimport torch\nfrom torch import nn\n```\n\nThen define the model:\n\n```\nclass Model(nn.Module):\n    def __init__(self):\n        super().__init__()\n```",
+ "error": null
+}

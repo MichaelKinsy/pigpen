@@ -1,0 +1,6 @@
+{
+ "url": "https://mathjax-svg",
+ "title": "MathJax v3 SVG Output",
+ "content": "## MathJax v3 SVG rendering\n\nWe define the reward as $r_{\\text{perf}}$.\n\nThe full formula is:\n\n$$\nr_{PARL} \\left(x , y\\right) = \\lambda_{1} \\cdot r_{\\text{parallel}} + \\lambda_{2} \\cdot r_{\\text{finish}} + r_{\\text{perf}} \\left(x , y\\right)\n$$\n\nThis is a VitePress blog using MathJax SVG rendering without embedded LaTeX source.",
+ "error": null
+}

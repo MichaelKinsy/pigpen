@@ -1,0 +1,6 @@
+{
+ "url": "https://example.org/docs/inline-code-links",
+ "title": "Inline Code with Links",
+ "content": "Documentation tools sometimes wrap identifiers in links inside inline code. For example, the type `Nat` is a common type in the language.\n\nMultiple links can appear in a single code span: `List Nat` should render as `List Nat` without any markdown link syntax.\n\nRegular links outside of code should still work normally. See [the guide](https://example.org/guide) for more details. This paragraph ensures there is enough content for stable extraction.",
+ "error": null
+}

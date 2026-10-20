@@ -1,0 +1,6 @@
+{
+ "url": "https://example.com/docs/quickstart",
+ "title": "Quickstart",
+ "content": "Install the package and run your first job:\n\n```\nnpm install example-sdk\n\nconst sdk = require('example-sdk');\nconst result = await sdk.run({ task: 'hello' });\nconsole.log(result);\n```\n\nYou can also pass options:\n\n```typescript\ninterface Options {\n  task: string;\n  model?: string;\n  maxSteps?: number;\n}\n```",
+ "error": null
+}
