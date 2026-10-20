@@ -345,19 +345,32 @@ func asyncWriteJSONMode(filePath string, payload any, mode os.FileMode) error {
 
 func isNotExist(err error) bool { return err != nil && errors.Is(err, fs.ErrNotExist) }
 
+// The file operations of the status and index readers, as variables so a test can count them or make one fail.
+var (
+	asyncStat     = os.Stat
+	asyncReadFile = os.ReadFile
+	asyncReadDir  = os.ReadDir
+)
+
 // readStatus is utils.ts readStatus: nil for a directory without a status file (or a name over 255 bytes), an error for a
-// file that cannot be read or parsed.
+// file that cannot be inspected, read or parsed (the errors wrap their cause).
 func readStatus(asyncDir string) (*AsyncStatus, error) {
 	if len(filepath.Base(asyncDir)) > 255 {
 		return nil, nil
 	}
 	statusPath := filepath.Join(asyncDir, "status.json")
-	data, err := os.ReadFile(statusPath)
+	if _, err := asyncStat(statusPath); err != nil {
+		if isNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Failed to inspect async status file '%s': %w", statusPath, err)
+	}
+	data, err := asyncReadFile(statusPath)
 	if err != nil {
 		if isNotExist(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("Failed to read async status file '%s': %s", statusPath, err.Error())
+		return nil, fmt.Errorf("Failed to read async status file '%s': %w", statusPath, err)
 	}
 	var st AsyncStatus
 	if err := json.Unmarshal(data, &st); err != nil {

@@ -105,7 +105,11 @@ func updateActiveRunIndex(asyncDir, state, toolCallID string, opts indexOptions)
 		if err := touch(marker); err != nil {
 			return err
 		}
-		if st, _ := readStatus(asyncDir); st != nil && st.State == state {
+		st, serr := readStatus(asyncDir)
+		if serr != nil {
+			return serr
+		}
+		if st != nil && st.State == state {
 			if err := updateTerminalRunIndex(asyncDir, st); err != nil {
 				if opts.retryCapacityErrors {
 					return err
@@ -118,7 +122,11 @@ func updateActiveRunIndex(asyncDir, state, toolCallID string, opts indexOptions)
 	if err := releaseActiveRunIndex(asyncDir); err != nil {
 		return err
 	}
-	if st, _ := readStatus(asyncDir); st != nil && st.State == state {
+	st, serr := readStatus(asyncDir)
+	if serr != nil {
+		return serr
+	}
+	if st != nil && st.State == state {
 		if err := updateTerminalRunIndex(asyncDir, st); err != nil && opts.retryCapacityErrors && isStorageCapacityError(err) {
 			return err
 		}
@@ -140,7 +148,7 @@ func activeRunMarkerAgeMs(asyncDir string, now int64) int64 {
 
 // readActiveRunIndex lists the runs marked active; nil when the index does not exist.
 func readActiveRunIndex(asyncDirRoot string) ([]string, bool) {
-	entries, err := os.ReadDir(activeIndexDir(asyncDirRoot))
+	entries, err := asyncReadDir(activeIndexDir(asyncDirRoot))
 	if err != nil {
 		return nil, false
 	}
@@ -633,6 +641,9 @@ type ReconcileOptions struct {
 	MissingStatusGrace *int64
 	StaleAlivePidMs    *int64
 	PidScope           func() string
+	// Observe is called with the raw status the reconciler reads first (nil when there is none), before any repair: the drain's
+	// read-only observation.
+	Observe func(*AsyncStatus)
 }
 
 // StartedRunMetadata is what the start event knew about a run whose status file is not written yet.
@@ -1046,6 +1057,9 @@ func reconcileAsyncRun(asyncDir string, o ReconcileOptions) (ReconcileResult, er
 	st, err := readStatus(asyncDir)
 	if err != nil {
 		return ReconcileResult{}, err
+	}
+	if o.Observe != nil {
+		o.Observe(st)
 	}
 	var started *AsyncStatus
 	if st == nil && o.StartedRun != nil {

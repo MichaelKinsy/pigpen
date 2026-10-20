@@ -187,7 +187,7 @@ func resolveTargetedAsyncRun(asyncDirRoot, id, sessionID string) (TargetedRun, e
 			}
 			return TargetedRun{Kind: "reject"}, nil
 		}
-		return TargetedRun{}, fmt.Errorf("Failed to inspect async run path '%s': %s", dir, err.Error())
+		return TargetedRun{}, fmt.Errorf("Failed to inspect async run path '%s': %w", dir, err)
 	}
 	if !st.IsDir() || st.Mode()&os.ModeSymlink != 0 {
 		return TargetedRun{Kind: "reject"}, nil
@@ -261,6 +261,14 @@ func isStatusIsolationError(asyncDir string, err error) bool {
 	return strings.HasPrefix(msg, "Invalid async status '"+statusPath+"'")
 }
 
+// listFailure is the error of an index listing that failed (the raw status observer is told the scan met uncertainty).
+func listFailure(o AsyncRunListOptions, asyncDirRoot string, err error) ([]AsyncRunSummary, error) {
+	if o.Observe != nil {
+		o.Observe(nil)
+	}
+	return nil, fmt.Errorf("Failed to list async runs in '%s': %w", asyncDirRoot, err)
+}
+
 // listAsyncRuns lists the runs of a root: the active ones from the active index, the finished ones from the terminal index.
 func listAsyncRuns(asyncDirRoot string, o AsyncRunListOptions) ([]AsyncRunSummary, error) {
 	wantsActive, wantsTerminal := o.States == nil, o.States == nil
@@ -323,14 +331,20 @@ func listAsyncRuns(asyncDirRoot string, o AsyncRunListOptions) ([]AsyncRunSummar
 		if wantsActive {
 			names, _ := readActiveRunIndex(asyncDirRoot)
 			for _, e := range names {
-				if r, _ := resolveTargetedAsyncRun(asyncDirRoot, e, ""); r.Kind == "exact" {
+				r, rerr := resolveTargetedAsyncRun(asyncDirRoot, e, "")
+				if rerr != nil {
+					return listFailure(o, asyncDirRoot, rerr)
+				}
+				if r.Kind == "exact" {
 					add(e)
 					active[e] = true
 				} else {
 					if o.Observe != nil {
 						o.Observe(nil)
 					}
-					_ = updateActiveRunIndex(filepath.Join(asyncDirRoot, e), "failed", "", indexOptions{})
+					if uerr := updateActiveRunIndex(filepath.Join(asyncDirRoot, e), "failed", "", indexOptions{}); uerr != nil {
+						return listFailure(o, asyncDirRoot, uerr)
+					}
 				}
 			}
 		}
@@ -355,32 +369,28 @@ func listAsyncRuns(asyncDirRoot string, o AsyncRunListOptions) ([]AsyncRunSummar
 		var st *AsyncStatus
 		var err error
 		if o.SessionID != "" {
-			stored, rerr := readStatus(asyncDir)
-			if rerr == nil && stored != nil && stored.SessionID != o.SessionID {
+			var stored *AsyncStatus
+			stored, err = readStatus(asyncDir)
+			if err == nil && stored != nil && stored.SessionID != o.SessionID {
 				if o.Observe != nil {
 					o.Observe(stored)
 				}
 				continue
 			}
 		}
-		if o.NoReconcile {
-			st, err = readStatus(asyncDir)
-			if err == nil && o.Observe != nil {
-				o.Observe(st)
-			}
-		} else {
-			var rec ReconcileResult
-			if rec, err = reconcileAsyncRun(asyncDir, ReconcileOptions{ResultsDir: o.ResultsDir, Kill: o.Kill, Now: o.Now}); err == nil {
-				st = rec.Status
-				if st == nil {
-					st, err = readStatus(asyncDir)
+		if err == nil {
+			if o.NoReconcile {
+				st, err = readStatus(asyncDir)
+				if err == nil && o.Observe != nil {
+					o.Observe(st)
 				}
-			}
-			if o.Observe != nil {
-				if raw, _ := readStatusQuiet(asyncDir); raw != nil {
-					o.Observe(raw)
-				} else {
-					o.Observe(nil)
+			} else {
+				var rec ReconcileResult
+				if rec, err = reconcileAsyncRun(asyncDir, ReconcileOptions{ResultsDir: o.ResultsDir, Kill: o.Kill, Now: o.Now, Observe: o.Observe}); err == nil {
+					st = rec.Status
+					if st == nil {
+						st, err = readStatus(asyncDir)
+					}
 				}
 			}
 		}
