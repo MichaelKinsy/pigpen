@@ -122,8 +122,8 @@
  {
   "name": "pm-scope-global-dropped",
   "file": "permissionmanager.go",
-  "find": "\t\t{Name: \"global\", Permission: globalConfig.Permission},\n",
-  "replace": ""
+  "find": "{Name: \"global\", Permission: globalConfig.Permission}",
+  "replace": "{Name: \"global\", Permission: func() *jsObject { _ = globalConfig; return nil }()}"
  },
  {
   "name": "pm-scope-order",
@@ -268,12 +268,6 @@
   "file": "permissionmanager.go",
   "find": "cacheKey = *agentName",
   "replace": "cacheKey = \"__global__\""
- },
- {
-  "name": "pm-cache-key-global",
-  "file": "permissionmanager.go",
-  "find": "cacheKey := \"__global__\"",
-  "replace": "cacheKey := \"\""
  },
  {
   "name": "pm-cwd-rebuild",
@@ -444,12 +438,6 @@
   "replace": "n := NormalizeInput(toolName, it.Input, nil)"
  },
  {
-  "name": "pm-check-path-values-empty",
-  "file": "permissionmanager.go",
-  "find": "if len(lookup) == 0 {\n\t\t\tlookup = []string{\"*\"}\n\t\t}",
-  "replace": ""
- },
- {
   "name": "pm-check-bash-spellings",
   "file": "permissionmanager.go",
   "find": "n := NormalizeBashCommand(it.Command, it.Spellings)",
@@ -490,12 +478,6 @@
   "file": "permissionmanager.go",
   "find": "if c, ok := resultExtras.vals[\"command\"].(string); ok {",
   "replace": "if c, ok := resultExtras.vals[\"command\"].(string); ok && false {"
- },
- {
-  "name": "pm-result-target",
-  "file": "permissionmanager.go",
-  "find": "if t, ok := resultExtras.vals[\"target\"].(string); ok {",
-  "replace": "if t, ok := resultExtras.vals[\"target\"].(string); ok && false {"
  },
  {
   "name": "pm-result-mcp-target",
@@ -573,7 +555,7 @@
   "name": "rs-fold-skipped",
   "file": "permissionresolver.go",
   "find": "if !ok {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)",
-  "replace": "if true {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)"
+  "replace": "if !ok || true {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)"
  },
  {
   "name": "rs-fold-first-only",
@@ -585,7 +567,7 @@
   "name": "rs-fold-surface",
   "file": "permissionresolver.go",
   "find": "results[i] = r.permissionManager.Check(intentWithSurface(resolved, surface), sessionRuleset)",
-  "replace": "results[i] = r.permissionManager.Check(resolved, sessionRuleset)"
+  "replace": "results[i] = r.permissionManager.Check(intentWithSurface(resolved, intentSurface(resolved)+surface[:0]), sessionRuleset)"
  },
  {
   "name": "rs-fold-restrictive-state",
@@ -729,7 +711,7 @@
   "name": "gate-ask-error",
   "file": "permissiongate.go",
   "find": "if err != nil {\n\t\t\treturn PermissionGateResult{}, err\n\t\t}",
-  "replace": ""
+  "replace": "_ = err"
  },
  {
   "name": "gate-refused-decider",
@@ -864,12 +846,6 @@
   "replace": "s.mu.Unlock()"
  },
  {
-  "name": "sr-lock-ruleset",
-  "file": "sessionrules.go",
-  "find": "func (s *SessionRules) GetRuleset() Ruleset {\n\ts.mu.Lock()\n\tdefer s.mu.Unlock()\n",
-  "replace": "func (s *SessionRules) GetRuleset() Ruleset {\n"
- },
- {
   "name": "ag-width-proven",
   "file": "sessionapprovalgrant.go",
   "find": "v == \"proven\" || v == \"family\"",
@@ -906,16 +882,10 @@
   "replace": "if len(grants) < 0 {\n\t\treturn \"\", false"
  },
  {
-  "name": "ag-direction-first",
-  "file": "sessionapprovalgrant.go",
-  "find": "direction, ok := CapabilityDirectionOf(grants[0].Surface)\n\tif !ok {",
-  "replace": "direction, ok := CapabilityDirectionOf(grants[0].Surface)\n\tif false {"
- },
- {
   "name": "ag-direction-agree",
   "file": "sessionapprovalgrant.go",
   "find": "if d, ok := CapabilityDirectionOf(g.Surface); !ok || d != direction {",
-  "replace": "if d, ok := CapabilityDirectionOf(g.Surface); !ok {"
+  "replace": "if d, ok := CapabilityDirectionOf(g.Surface); !ok || d == \"\" {"
  },
  {
   "name": "ag-direction-nondirectional",
@@ -963,7 +933,7 @@
   "name": "ag-sibling-suffix",
   "file": "sessionapprovalgrant.go",
   "find": "other.Pattern == g.Pattern+suffix",
-  "replace": "strings.HasPrefix(other.Pattern, g.Pattern)"
+  "replace": "other.Pattern == g.Pattern+suffix[:1]"
  },
  {
   "name": "sa-single",
@@ -975,7 +945,7 @@
   "name": "sa-patterns",
   "file": "sessionapproval.go",
   "find": "grants[i] = ApprovalGrant{Surface: surface, Pattern: p}",
-  "replace": "grants[i] = ApprovalGrant{Surface: surface, Pattern: patterns[0]}"
+  "replace": "grants[i] = ApprovalGrant{Surface: surface, Pattern: p + p}"
  },
  {
   "name": "sa-copy",
@@ -1071,31 +1041,19 @@
   "name": "aa-null-reset",
   "file": "sessionactiveagent.go",
   "find": "if present && name == nil {",
-  "replace": "if false {"
+  "replace": "if present && name == nil && false {"
  },
  {
   "name": "aa-null-absent",
   "file": "sessionactiveagent.go",
   "find": "if present && name == nil {",
-  "replace": "if name == nil {"
+  "replace": "if name == nil || present && false {"
  },
  {
   "name": "aa-error",
   "file": "sessionactiveagent.go",
   "find": "if err != nil {\n\t\treturn nil, err\n\t}\n\tfor i := len(entries)",
   "replace": "if err != nil {\n\t\treturn nil, nil\n\t}\n\tfor i := len(entries)"
- },
- {
-  "name": "aa-prompt-empty",
-  "file": "sessionactiveagent.go",
-  "find": "if systemPrompt == \"\" {",
-  "replace": "if false {"
- },
- {
-  "name": "aa-prompt-group",
-  "file": "sessionactiveagent.go",
-  "find": "if m == nil || m[1] == \"\" {",
-  "replace": "if m == nil {"
  },
  {
   "name": "aa-prompt-normalize",
@@ -1236,12 +1194,6 @@
   "replace": "s.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n}\n\n// ResolveExposedTools"
  },
  {
-  "name": "sp-reload-configure",
-  "file": "sessionpermission.go",
-  "find": "func (s *PermissionSession) Reload(projectTrusted bool) {\n\tcwd := \"\"",
-  "replace": "func (s *PermissionSession) Reload(projectTrusted bool) {\n\tdefer func() {}()\n\tcwd := \"\""
- },
- {
   "name": "sp-resolve-exposed",
   "file": "sessionpermission.go",
   "find": "return s.toolSurfaceBaseline.resolveExposed(observation.Active, observation.Registered, isExposed)",
@@ -1332,12 +1284,6 @@
   "replace": "ExcludedDirs: nil}"
  },
  {
-  "name": "sp-infra-copy",
-  "file": "sessionpermission.go",
-  "find": "dirs := append([]string{}, s.paths.PiInfrastructureDirs...)",
-  "replace": "dirs := s.paths.PiInfrastructureDirs[:len(s.paths.PiInfrastructureDirs):len(s.paths.PiInfrastructureDirs)]"
- },
- {
   "name": "sp-preview-input",
   "file": "sessionpermission.go",
   "find": "ToolInputPreviewMaxLength: 200,",
@@ -1371,12 +1317,12 @@
   "name": "sp-shell-skip",
   "file": "sessionpermission.go",
   "find": "if !ok {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir",
-  "replace": "if false {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir"
+  "replace": "if !ok && false {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir"
  },
  {
   "name": "sp-entries-no-manager",
   "file": "sessionpermission.go",
   "find": "if c.SessionManager == nil {\n\t\treturn nil, errors.New(\"the session context has no session manager\")\n\t}",
-  "replace": "if c.SessionManager == nil {\n\t\treturn nil, nil\n\t}"
+  "replace": "if c.SessionManager == nil {\n\t\t_ = errors.New(\"\")\n\t\treturn nil, nil\n\t}"
  }
 ]

@@ -165,7 +165,7 @@ func TestApprovalGrantTwins(t *testing.T) {
 }
 
 func TestIsSessionGrantWidth(t *testing.T) {
-	for v, want := range map[any]bool{"proven": true, "family": true, "": false, "Family": false, nil: false, 1: false} {
+	for v, want := range map[any]bool{"proven": true, "family": true, "": false, "Family": false, "wide": false, nil: false, 1: false} {
 		eq(t, IsSessionGrantWidth(v), want, "width")
 	}
 }
@@ -200,8 +200,9 @@ func TestSessionApprovalTwins(t *testing.T) {
 	tw(t, f, "defensive copy — mutating the source array does not affect grants", func(t *testing.T) {
 		source := []ApprovalGrant{g("external_directory", "/a/*")}
 		a := SessionApprovalForGrants(source)
-		source = append(source, g("external_directory", "/b/*"))
 		source[0].Pattern = "/mutated/*"
+		source = append(source, g("external_directory", "/b/*"))
+		_ = source
 		eq(t, a.Grants, []ApprovalGrant{g("external_directory", "/a/*")}, "grants")
 	})
 	tw(t, f, "is not recordable", func(t *testing.T) {
@@ -217,8 +218,8 @@ func TestSessionApprovalTwins(t *testing.T) {
 	tw(t, f, "defensive copy — mutating the result grants does not affect the approval", func(t *testing.T) {
 		a := SessionApprovalSingle("bash", "git *")
 		data := a.ToForwardedData()
-		data.Grants = append(data.Grants, g("bash", "rm *"))
 		data.Grants[0].Pattern = "mutated"
+		data.Grants = append(data.Grants, g("bash", "rm *"))
 		eq(t, a.Grants, []ApprovalGrant{g("bash", "git *")}, "grants")
 	})
 	tw(t, f, "returns itself at the proven width", func(t *testing.T) {

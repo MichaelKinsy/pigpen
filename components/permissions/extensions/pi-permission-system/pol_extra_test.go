@@ -2,6 +2,7 @@ package pi_permission_system
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -123,4 +124,114 @@ func TestPermissionResolverAgentAndSessionThreading(t *testing.T) {
 	eq(t, len(pm.checks[1].rules), 1, "session ruleset")
 	r.Resolve(AccessPathAccessIntent{Surface: "path_write", Path: AccessPathForPath("/x", AccessPathForPathOptions{Cwd: "/w", Flavor: PosixPathFlavor}), AgentName: sp("a")})
 	eq(t, pm.checks[2].intent, ResolvedAccessIntent(PathValuesAccessIntent{Surface: "path_write", Values: AccessPathForPath("/x", AccessPathForPathOptions{Cwd: "/w", Flavor: PosixPathFlavor}).MatchValues(), AgentName: sp("a")}), "unwrapped surface and agent")
+}
+
+func TestGrantTargetsOfNoGrantsIsEmptyNotNil(t *testing.T) {
+	eq(t, GrantTargets(nil), []string{}, "targets")
+}
+
+// A project scope whose file changes while its stamp does not still follows ConfigureForCwd: the cache is cleared with the loader.
+func TestPermissionManagerConfigureForCwdClearsTheCacheEvenWithEqualStamps(t *testing.T) {
+	base := t.TempDir()
+	agentDir := filepath.Join(base, "agent")
+	polWriteFile(t, getGlobalConfigPath(agentDir), `{"permission":{}}`)
+	cwdA, cwdB := filepath.Join(base, "a"), filepath.Join(base, "b")
+	at := time.Unix(1_700_000_000, 0)
+	for cwd, state := range map[string]string{cwdA: "allow", cwdB: "deny"} {
+		path := getProjectConfigPath(cwd)
+		polWriteFile(t, path, `{"permission":{"read":"`+state+`"}}`)
+		if err := os.Chtimes(path, at, at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	m := NewPermissionManager(PermissionManagerOptions{AgentDir: agentDir})
+	m.ConfigureForCwd(cwdA)
+	eq(t, checkTool(t, m, "read", "{}").State, "allow", "cwd a")
+	m.ConfigureForCwd(cwdB)
+	eq(t, checkTool(t, m, "read", "{}").State, "deny", "cwd b")
+}
+
+// The loader's issues are read after the load they come from: the first call on a fresh manager already has them.
+func TestPermissionManagerFirstConfigIssuesCallSeesTheLoad(t *testing.T) {
+	m := managerWithProject(t, `{"permission":{"bash":"allow"}}`, nil, projectFiles{config: `{"permission":{"bash":"maybe"}}`})
+	issues := m.GetConfigIssues(nil)
+	eq(t, len(issues), 2, "issues")
+	eq(t, issues[0], "Invalid config value at 'permission.bash': Invalid input", "loader issue first")
+}
+
+// The tool-level state is the "*" catch-all value: a rule that matches the text "*" but not the empty string applies.
+func TestPermissionManagerToolPermissionEvaluatesTheCatchAllText(t *testing.T) {
+	m := newInMemoryManager(polScopes{global: permScope(t, `{"bash":{"*":"deny","?":"allow"}}`)})
+	eq(t, m.GetToolPermission("bash", nil), "allow", "state")
+}
+
+// A tool or bash-command intent on a bare family surface is folded too (the fold is on the resolved surface, whatever the kind).
+func TestPermissionResolverFoldsEveryIntentKind(t *testing.T) {
+	pm := newFakeManager()
+	r := NewPermissionResolver(pm, &SessionRules{})
+	r.Resolve(ToolAccessIntent{Surface: "path", Input: jo(t, `{}`)})
+	r.Resolve(BashCommandAccessIntent{Surface: "external_directory", Command: "ls"})
+	eq(t, intentSurfaces(pm), []string{"path_read", "path_write", "external_directory_read", "external_directory_write"}, "surfaces")
+	eq(t, pm.checks[1].intent, ResolvedAccessIntent(ToolAccessIntent{Surface: "path_write", Input: jo(t, `{}`)}), "tool member")
+	eq(t, pm.checks[3].intent, ResolvedAccessIntent(BashCommandAccessIntent{Surface: "external_directory_write", Command: "ls"}), "bash member")
+}
+
+// The unwrap hands the manager every alias of the path, not its lexical form alone.
+func TestPermissionResolverUnwrapsEveryMatchValue(t *testing.T) {
+	pm := newFakeManager()
+	ap := AccessPathForPath("src/a.ts", AccessPathForPathOptions{Cwd: "/proj", Flavor: PosixPathFlavor})
+	if len(ap.MatchValues()) < 2 {
+		t.Fatalf("the fixture needs a path with several aliases: %v", ap.MatchValues())
+	}
+	NewPermissionResolver(pm, &SessionRules{}).Resolve(AccessPathAccessIntent{Surface: "path_read", Path: ap})
+	eq(t, pm.checks[0].intent, ResolvedAccessIntent(PathValuesAccessIntent{Surface: "path_read", Values: ap.MatchValues()}), "intent")
+}
+
+// The session remembers the name it resolved, from the system prompt too, and a session name always wins over a remembered one.
+func TestPermissionSessionResolveAgentNameMemory(t *testing.T) {
+	ctx, _ := makeSessionCtx("/p", true)
+	r := makeRealSession(nil)
+	agents := r.stubAgents()
+	agents.fromPrompt = sp("prompt-agent")
+	name, _ := r.session.ResolveAgentName(ctx, "p")
+	eq(t, name, sp("prompt-agent"), "from prompt")
+	agents.fromPrompt = nil
+	name, _ = r.session.ResolveAgentName(ctx, "")
+	eq(t, name, sp("prompt-agent"), "remembered from the prompt")
+	agents.fromSession = sp("session-agent")
+	name, _ = r.session.ResolveAgentName(ctx, "")
+	eq(t, name, sp("session-agent"), "the session wins over the remembered name")
+	agents.fromSession = nil
+	name, _ = r.session.ResolveAgentName(ctx, "")
+	eq(t, name, sp("session-agent"), "and is remembered in turn")
+}
+
+func TestPermissionSessionLogsPathsForTheActiveCwd(t *testing.T) {
+	r := makeRealSession(nil)
+	r.session.LogResolvedConfigPaths()
+	ctx, _ := makeSessionCtx("/active", true)
+	r.session.Activate(ctx)
+	r.session.LogResolvedConfigPaths()
+	eq(t, r.store.logged, []string{"", "/active"}, "cwds")
+}
+
+// SessionRules is written by the approval path while the resolver reads it; under go test -race this is the check of its lock.
+func TestSessionRulesConcurrentUse(t *testing.T) {
+	rules := &SessionRules{}
+	done := make(chan struct{})
+	for i := 0; i < 4; i++ {
+		go func() {
+			for j := 0; j < 200; j++ {
+				rules.Approve("path", "/x/*")
+				rules.RecordSessionApproval(SessionApprovalSingle("bash", "ls"))
+				_ = rules.GetRuleset()
+			}
+			done <- struct{}{}
+		}()
+	}
+	for i := 0; i < 4; i++ {
+		<-done
+	}
+	rules.Clear()
+	eq(t, len(rules.GetRuleset()), 0, "cleared")
 }
