@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 )
 
@@ -182,7 +181,7 @@ func dfdStandardizeCallouts(element *ldNode) {
 
 // ---- headings.js -----------------------------------------------------------------------------------------------
 
-var rePermalinkText = regexp.MustCompile("^[#\u00b6\u00a7\ufeff]$")
+var rePermalinkText = mustRE("^[#\u00b6\u00a7\ufeff]$")
 
 func dfdIsPermalinkAnchor(node *ldNode) bool {
 	if node.name != "a" {
@@ -281,11 +280,11 @@ func dfdHeadingTransform(el *ldNode) *ldNode {
 
 // ---- code.js ---------------------------------------------------------------------------------------------------
 
-var dfdHighlighterPatterns = []*regexp.Regexp{
-	regexp.MustCompile(`^language-(\w+)$`), regexp.MustCompile(`^lang-(\w+)$`), regexp.MustCompile(`^(\w+)-code$`),
-	regexp.MustCompile(`^code-(\w+)$`), regexp.MustCompile(`^syntax-(\w+)$`), regexp.MustCompile(`^code-snippet__(\w+)$`),
-	regexp.MustCompile(`^highlight-(\w+)$`), regexp.MustCompile(`^(\w+)-snippet$`),
-	regexp.MustCompile(`(?i)(?:^|\s)(?:language|lang|brush|syntax)-(\w+)(?:\s|$)`),
+var dfdHighlighterPatterns = []*lazyRE{
+	mustRE(`^language-(\w+)$`), mustRE(`^lang-(\w+)$`), mustRE(`^(\w+)-code$`),
+	mustRE(`^code-(\w+)$`), mustRE(`^syntax-(\w+)$`), mustRE(`^code-snippet__(\w+)$`),
+	mustRE(`^highlight-(\w+)$`), mustRE(`^(\w+)-snippet$`),
+	mustRE(`(?i)(?:^|\s)(?:language|lang|brush|syntax)-(\w+)(?:\s|$)`),
 }
 
 var dfdCodeLanguages = func() map[string]bool {
@@ -592,19 +591,19 @@ func dfdCodeTransform(el *ldNode) *ldNode {
 // ---- images.js -------------------------------------------------------------------------------------------------
 
 var (
-	reSrcsetPattern   = regexp.MustCompile(`\.(jpg|jpeg|png|webp)\s+\d`)
+	reSrcsetPattern   = mustRE(`\.(jpg|jpeg|png|webp)\s+\d`)
 	reSrcPattern      = jsRE(`^\s*\S+\.(jpg|jpeg|png|webp)\S*\s*$`, "")
 	reImageURLPattern = jsRE(`\.(jpg|jpeg|png|webp|gif|avif)(\?.*)?$`, "i")
 	reWidthPattern    = jsRE(`\s(\d+)w`, "")
-	reDprPattern      = regexp.MustCompile(`dpr=(\d+(?:\.\d+)?)`)
+	reDprPattern      = mustRE(`dpr=(\d+(?:\.\d+)?)`)
 	reURLPattern      = jsRE(`^([^\s]+)`, "")
-	reAbsoluteURL     = regexp.MustCompile(`^https?://`)
+	reAbsoluteURL     = mustRE(`^https?://`)
 	reFilenamePattern = jsRE(`^[\w\-\.\/\\]+\.(jpg|jpeg|png|gif|webp|svg)$`, "i")
-	reDatePattern     = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+	reDatePattern     = mustRE(`^\d{4}-\d{2}-\d{2}$`)
 	reImgExt          = jsRE(`\.(jpg|jpeg|png|webp|gif)(\?.*)?$`, "i")
 	reSrcsetEntry     = jsRE(`(.+?)\s+(\d+(?:\.\d+)?[wx])`, "")
 	reLeadingComma    = jsRE(`^,\s*`, "")
-	reDigitsOnly      = regexp.MustCompile(`^\d+$`)
+	reDigitsOnly      = mustRE(`^\d+$`)
 )
 
 func dfdIsSvgDataURL(src string) bool { return strings.HasPrefix(src, "data:image/svg+xml") }

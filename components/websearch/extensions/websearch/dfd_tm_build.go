@@ -7,15 +7,15 @@ import "strings"
 
 func tmSymbolTable(mode string) map[string]*tmSymbol {
 	if mode == "text" {
-		return tmSymbolsText
+		return tmSymbolsText()
 	}
-	return tmSymbolsMath
+	return tmSymbolsMath()
 }
 
 // tmMakeText is makeText(text, mode, style); style is nil where the original passes none.
 func tmMakeText(text, mode string, style *tmStyle) *textNode {
 	if sym, ok := tmSymbolTable(mode)[text]; ok && sym.replace != "" && tmCodePointUnit(text) != 0xd835 {
-		if !(tmLigatures[text] && style != nil && ((style.fontFamily() != "" && tmSlice46(style.fontFamily()) == "tt") || (style.font() != "" && tmSlice46(style.font()) == "tt"))) {
+		if !(tmLigatures()[text] && style != nil && ((style.fontFamily() != "" && tmSlice46(style.fontFamily()) == "tt") || (style.font() != "" && tmSlice46(style.font()) == "tt"))) {
 			text = sym.replace
 		}
 	}

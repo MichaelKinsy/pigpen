@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"unicode/utf8"
 )
 
 // css-what 6.2.2 (parse.js) and css-select 5.2.2 (compile.js, general.js, attributes.js, pseudo-selectors/*) with the
@@ -64,8 +66,8 @@ func (t cssTok) isTraversalSort() bool {
 }
 
 var (
-	cssReName   = regexp.MustCompile(`^[^\\#]?(?:\\(?:[\da-f]{1,6}\s?|.)|[\w\-\x{00b0}-\x{FFFF}])+`)
-	cssReEscape = regexp.MustCompile(`(?i)\\([\da-f]{1,6}\s?|(\s)|.)`)
+	cssReName   = mustRE(`^[^\\#]?(?:\\(?:[\da-f]{1,6}\s?|.)|[\w\-\x{00b0}-\x{FFFF}])+`)
+	cssReEscape = mustRE(`(?i)\\([\da-f]{1,6}\s?|(\s)|.)`)
 )
 
 var cssActionTypes = map[byte]string{'~': "element", '^': "start", '$': "end", '*': "any", '!': "not", '|': "hyphen"}
@@ -472,17 +474,47 @@ func cssEnsureIsTag(next cssFn) cssFn {
 	return cssNew(func(n *ldNode) bool { return cssIsTag(n) && next.f(n) })
 }
 
-var cssParseCache = map[string][][]cssTok{}
+var (
+	cssCacheMu    sync.Mutex
+	cssParseCache = map[string][][]cssTok{}
+	cssRegexCache = map[string]*regexp.Regexp{}
+)
+
+const cssCacheMax = 4096
 
 func cssParseCached(selector string) [][]cssTok {
-	if t, ok := cssParseCache[selector]; ok {
+	cssCacheMu.Lock()
+	t, ok := cssParseCache[selector]
+	cssCacheMu.Unlock()
+	if ok {
 		return t
 	}
-	t := cssParse(selector)
-	if len(cssParseCache) < 4096 {
+	t = cssParse(selector)
+	cssCacheMu.Lock()
+	if len(cssParseCache) < cssCacheMax {
 		cssParseCache[selector] = t
 	}
+	cssCacheMu.Unlock()
 	return t
+}
+
+// cssRegexp compiles an attribute-selector pattern once: the selectors of the pipeline compile on every query, and
+// a compiled expression does not change between queries (the compiled selector itself is rebuilt each time, because
+// its descendant combinator keeps a per-compile cache of the ancestors it has rejected).
+func cssRegexp(pattern string) *regexp.Regexp {
+	cssCacheMu.Lock()
+	re, ok := cssRegexCache[pattern]
+	cssCacheMu.Unlock()
+	if ok {
+		return re
+	}
+	re = regexp.MustCompile(pattern)
+	cssCacheMu.Lock()
+	if len(cssRegexCache) < cssCacheMax {
+		cssRegexCache[pattern] = re
+	}
+	cssCacheMu.Unlock()
+	return re
 }
 
 func cssClone(t [][]cssTok) [][]cssTok {
@@ -714,6 +746,53 @@ func cssShouldIgnoreCase(s cssTok) bool {
 
 const cssJSWS = `[\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}]`
 
+// cssHasToken is the attribute selector [name~=value]: the regular expression (?:^|\s)value(?:$|\s) of css-select, by
+// search for the value with a JavaScript space or an end on each side. A non-ASCII text under the i flag takes the
+// expression itself, whose case folding is Unicode's.
+func cssHasToken(a, value string, ic bool) bool {
+	if ic {
+		if !cssIsASCII(a) || !cssIsASCII(value) {
+			pat := "(?i)(?:^|" + cssJSWS + ")" + regexp.QuoteMeta(value) + "(?:$|" + cssJSWS + ")"
+			return cssRegexp(pat).MatchString(a)
+		}
+		a, value = strings.ToLower(a), strings.ToLower(value)
+	}
+	for from := 0; from <= len(a); {
+		i := strings.Index(a[from:], value)
+		if i < 0 {
+			return false
+		}
+		i += from
+		end := i + len(value)
+		leftOK := i == 0
+		if !leftOK {
+			r, _ := utf8.DecodeLastRuneInString(a[:i])
+			leftOK = isJSSpace(r)
+		}
+		if leftOK {
+			rightOK := end == len(a)
+			if !rightOK {
+				r, _ := utf8.DecodeRuneInString(a[end:])
+				rightOK = isJSSpace(r)
+			}
+			if rightOK {
+				return true
+			}
+		}
+		from = i + 1
+	}
+	return false
+}
+
+func cssIsASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			return false
+		}
+	}
+	return true
+}
+
 func cssAttributeRule(next cssFn, d cssTok) cssFn {
 	name, value := d.name, d.value
 	ic := cssShouldIgnoreCase(d)
@@ -752,17 +831,12 @@ func cssAttributeRule(next cssFn, d cssTok) cssFn {
 			return head == value && next.f(e)
 		})
 	case "element":
-		if regexp.MustCompile(cssJSWS).MatchString(value) {
+		if strings.IndexFunc(value, isJSSpace) >= 0 {
 			return cssFalseFn
 		}
-		pat := "(?:^|" + cssJSWS + ")" + regexp.QuoteMeta(value) + "(?:$|" + cssJSWS + ")"
-		if ic {
-			pat = "(?i)" + pat
-		}
-		re := regexp.MustCompile(pat)
 		return cssNew(func(e *ldNode) bool {
 			a, ok := get(e)
-			return ok && re.MatchString(a) && next.f(e)
+			return ok && cssHasToken(a, value, ic) && next.f(e)
 		})
 	case "exists":
 		return cssNew(func(e *ldNode) bool { return e.hasAttribute(name) && next.f(e) })
@@ -810,7 +884,7 @@ func cssAttributeRule(next cssFn, d cssTok) cssFn {
 			return cssFalseFn
 		}
 		if ic {
-			re := regexp.MustCompile("(?i)" + regexp.QuoteMeta(value))
+			re := cssRegexp("(?i)" + regexp.QuoteMeta(value))
 			return cssNew(func(e *ldNode) bool {
 				a, ok := get(e)
 				return ok && re.MatchString(a) && next.f(e)

@@ -671,10 +671,10 @@ func (g *tmGullet) isDefined(name string) bool {
 	if _, ok := tmFunctions[name]; ok {
 		return true
 	}
-	if _, ok := tmSymbolsMath[name]; ok {
+	if _, ok := tmSymbolsMath()[name]; ok {
 		return true
 	}
-	if _, ok := tmSymbolsText[name]; ok {
+	if _, ok := tmSymbolsText()[name]; ok {
 		return true
 	}
 	return tmImplicitCommands[name]

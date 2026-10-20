@@ -63,7 +63,7 @@ type dfdMetadata struct {
 var (
 	reMetaBraces   = jsRE(`[{}]`, "")
 	reMetaHash     = jsRE(`^#[a-zA-Z]`, "")
-	reHasLetterNum = regexp.MustCompile(`[\p{L}\p{N}]`)
+	reHasLetterNum = mustRE(`[\p{L}\p{N}]`)
 )
 
 func dfdIsPlaceholderValue(s string) bool {
@@ -560,7 +560,7 @@ func dfdCleanTitle(title, siteName string) (string, string) {
 	return jsTrim(title), ""
 }
 
-func dfdTrySeparatorSplit(title string, pattern *regexp.Regexp, suffixOnly bool, guard func(tW, sW int) bool) (string, string, bool) {
+func dfdTrySeparatorSplit(title string, pattern *lazyRE, suffixOnly bool, guard func(tW, sW int) bool) (string, string, bool) {
 	var positions []dfdSepPos
 	for _, m := range pattern.FindAllStringIndex(title, -1) {
 		positions = append(positions, dfdSepPos{m[0], m[1] - m[0]})

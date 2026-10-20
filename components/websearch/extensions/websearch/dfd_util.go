@@ -2,7 +2,6 @@ package websearch
 
 import (
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -59,7 +58,7 @@ func jsParseInt(s string) float64 {
 	return v
 }
 
-var reFloatPrefix = regexp.MustCompile(`^[+-]?(?:Infinity|(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)`)
+var reFloatPrefix = mustRE(`^[+-]?(?:Infinity|(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)`)
 
 // jsParseFloat is parseFloat(s): NaN when there is no leading decimal literal.
 func jsParseFloat(s string) float64 {

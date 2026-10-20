@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 )
 
@@ -43,7 +42,7 @@ func tmSmallsHas(v any) bool {
 
 // ---- cancelto.js builder -----------------------------------------------------------------------------------------
 
-var tmCancelRe = regexp.MustCompile(`[f∫∑]`)
+var tmCancelRe = mustRE(`[f∫∑]`)
 
 func tmFirstBodyText(group tmObj) any {
 	body, ok := group["body"].(tmObj)
@@ -575,7 +574,7 @@ func init() {
 			for nextToken.text == "\\middle" {
 				parser.consume()
 				middle := parser.fetch().text
-				if tmSymbolsMath[middle] == nil {
+				if tmSymbolsMath()[middle] == nil {
 					tmThrowf("Invalid delimiter '" + middle + "' after '\\middle'")
 				}
 				tmCheckDelimiter(tmObj{"type": "atom", "mode": "math", "text": middle}, "\\middle")
@@ -961,7 +960,7 @@ func init() {
 		})
 }
 
-var tmInvalidIDRe = regexp.MustCompile(`[^A-Za-z_0-9-]`)
+var tmInvalidIDRe = mustRE(`[^A-Za-z_0-9-]`)
 
 func tmSpaceCharacter(width float64) string {
 	switch {
@@ -1022,7 +1021,7 @@ func tmLapBuilder(group tmObj, style *tmStyle) mmNode {
 // tmIncludegraphicsHandler runs the handler of includegraphics.js up to the trust check that always fails.
 func tmIncludegraphicsHandler(ctx *tmCtx, args, opt []any) any {
 	sizeData := func(str string) {
-		if regexp.MustCompile(`^[-+]? *(\d+(\.\d*)?|\.\d+)$`).MatchString(str) {
+		if tmPlainNumberRe.MatchString(str) {
 			return
 		}
 		m := tmSizeRe.FindStringSubmatch(str)
@@ -1053,3 +1052,5 @@ func tmIncludegraphicsHandler(ctx *tmCtx, args, opt []any) any {
 	tmThrow("Function \"\\includegraphics\" is not trusted", ctx.token)
 	return nil
 }
+
+var tmPlainNumberRe = mustRE(`^[-+]? *(\d+(\.\d*)?|\.\d+)$`)

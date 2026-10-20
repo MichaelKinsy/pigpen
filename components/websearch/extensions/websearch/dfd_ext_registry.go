@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 )
 
@@ -53,7 +52,7 @@ func dfdRegisterExtractor(name string, ctor dfdExtCtor) { dfdExtractorCtors[name
 type dfdExtMapping struct {
 	name    string
 	domains []string
-	res     []*regexp.Regexp
+	res     []*lazyRE
 }
 
 func dfdMap(name string, domains []string, res ...string) dfdExtMapping {

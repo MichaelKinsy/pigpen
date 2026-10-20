@@ -2,7 +2,6 @@ package websearch
 
 import (
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -48,7 +47,7 @@ func tmParseJSNumber(s string) (float64, bool) {
 // ---- mclass.js ---------------------------------------------------------------------------------------------------
 
 var tmTextAtomTypes = map[string]bool{"text": true, "textord": true, "mathord": true, "atom": true}
-var tmLatinLetterRe = regexp.MustCompile(`[A-Za-z]`)
+var tmLatinLetterRe = mustRE(`[A-Za-z]`)
 
 func tmMclassBuilder(group tmObj, style *tmStyle) mmNode {
 	inner := tmBuildExpression(tmList(group["body"]), style, false)
@@ -151,7 +150,7 @@ func tmBinrelClass(arg tmObj) string {
 		family := tmStr(atom, "family")
 		if len(body) > 0 {
 			if t := tmStr(body[0].(tmObj), "text"); t != "" {
-				if sym := tmSymbolsMath[t]; sym != nil {
+				if sym := tmSymbolsMath()[t]; sym != nil {
 					family = sym.group
 				}
 			}
@@ -377,8 +376,8 @@ func tmStyleWithFont(group tmObj, style *tmStyle) *tmStyle {
 // ---- symbolsOrd.js -----------------------------------------------------------------------------------------------
 
 var (
-	tmNumberRe = regexp.MustCompile(`^\d(?:[\d,.]*\d)?$`)
-	tmLatinRe  = regexp.MustCompile(`[A-Ba-z]`)
+	tmNumberRe = mustRE(`^\d(?:[\d,.]*\d)?$`)
+	tmLatinRe  = mustRE(`[A-Ba-z]`)
 	tmPrimes   = map[string]bool{"\\prime": true, "\\dprime": true, "\\trprime": true, "\\qprime": true, "\\backprime": true, "\\backdprime": true, "\\backtrprime": true}
 )
 
@@ -668,7 +667,7 @@ var tmXHeights = map[string]bool{"a": true, "c": true, "e": true, "ı": true, "m
 
 var tmNumSubs = []string{"₀", "₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉"}
 var tmNumSups = []string{"⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"}
-var tmDigitRe = regexp.MustCompile(`^[0-9]$`)
+var tmDigitRe = mustRE(`^[0-9]$`)
 
 func tmSfracPart(group tmObj, what string) string {
 	out := ""
@@ -822,7 +821,7 @@ func init() {
 					panic(&tmJSError{"Cannot read properties of undefined (reading 'charAt')"})
 				}
 				if strings.HasPrefix(text, "\\") {
-					text = tmSymbolsMath[text].replace
+					text = tmSymbolsMath()[text].replace
 				}
 				u := tmUTF16Units(text)
 				first := ""
