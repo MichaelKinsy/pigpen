@@ -35,6 +35,8 @@ const runs = [
 	]),
 	{ piglet: "herdr", binary: false, prompts: false },
 ];
+// pig-with-batteries strips the Go extension SDK, so `-e` cannot load the Go /ask fixture there: it gets no dialog step.
+const dialogPiglets = new Set(["herdr"]);
 let session = "";
 let dir: string;
 let server: Server;
@@ -60,6 +62,7 @@ async function until(what: string, ready: () => boolean): Promise<void> {
 const state = (request: { method: string; params: Record<string, unknown> }) => (request.method === "pane.release_agent" ? "release" : String(request.params.state));
 
 for (const { piglet, binary, prompts } of runs) describe(`real pig in a herdr pane: ${piglet} ${binary ? "Binary" : "from source"}${prompts ? "" : ", prompts off"}`, () => {
+	const dialog = dialogPiglets.has(piglet);
 	before(async () => {
 		session = `herdr-piglet-${piglet}-${binary ? "bin" : "src"}${prompts ? "" : "-noprompts"}-${process.pid}`;
 		const manifest = path.join(repoRoot, "dist/staged/piglets", piglet, "piglet.yaml");
@@ -108,7 +111,7 @@ for (const { piglet, binary, prompts } of runs) describe(`real pig in a herdr pa
 					PIG_SOURCE_ROOT: sourceRoot!, GIT_TERMINAL_PROMPT: "0",
 				},
 			});
-			command = `env ${exports} '${built}' --model test-faux/faux-1 -e '${ask}'`;
+			command = `env ${exports} '${built}' --model test-faux/faux-1${dialog ? ` -e '${ask}'` : ""}`;
 		} else {
 			command = `env ${exports} '${pigBin}' --model test-faux/faux-1 --piglet '${manifest}' -e '${ask}'`;
 		}
@@ -132,24 +135,26 @@ for (const { piglet, binary, prompts } of runs) describe(`real pig in a herdr pa
 		type("TUI_LIVE_STREAM");
 		await until("working then idle", () => calls().map(state).join(",") === "idle,working,idle");
 
-		type("/ask");
-		await until("the confirmation", () => screen().includes("Allow rm -rf build?"));
-		if (prompts) {
-			await until("the blocked report", () => calls().map(state).at(-1) === "blocked");
-			assert.equal(calls().at(-1)!.params.message, "Allow rm -rf build?");
-		} else {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-			assert.equal(calls().map(state).join(","), "idle,working,idle", "a dialog must not report blocked without the opt-in");
-		}
+		if (dialog) {
+			type("/ask");
+			await until("the confirmation", () => screen().includes("Allow rm -rf build?"));
+			if (prompts) {
+				await until("the blocked report", () => calls().map(state).at(-1) === "blocked");
+				assert.equal(calls().at(-1)!.params.message, "Allow rm -rf build?");
+			} else {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				assert.equal(calls().map(state).join(","), "idle,working,idle", "a dialog must not report blocked without the opt-in");
+			}
 
-		key("Enter");
-		if (prompts) await until("idle after the answer", () => calls().map(state).at(-1) === "idle");
+			key("Enter");
+			if (prompts) await until("idle after the answer", () => calls().map(state).at(-1) === "idle");
+		}
 
 		type("/quit");
 		await until("the release", () => calls().at(-1)?.method === "pane.release_agent");
 
 		const all = calls();
-		assert.deepEqual(all.map(state), prompts ? ["idle", "working", "idle", "blocked", "idle", "release"] : ["idle", "working", "idle", "release"]);
+		assert.deepEqual(all.map(state), prompts && dialog ? ["idle", "working", "idle", "blocked", "idle", "release"] : ["idle", "working", "idle", "release"]);
 		const seqs = all.map((request) => Number(request.params.seq));
 		assert.ok(seqs.every((n, i) => i === 0 || n > seqs[i - 1]!), `seq not increasing: ${seqs}`);
 		for (const request of all) {
