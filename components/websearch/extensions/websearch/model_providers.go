@@ -241,6 +241,13 @@ func collationOf(r rune) (collationClass, int) {
 	return collLetter, int(toLowerRune(r))
 }
 
+func collationLetter(r rune) (rune, bool) {
+	if cls, _ := collationOf(r); cls == collLetter {
+		return r, true
+	}
+	return 0, false
+}
+
 func toLowerRune(r rune) rune {
 	if r >= 'A' && r <= 'Z' {
 		return r + 32
@@ -291,10 +298,21 @@ func compareNumericLocale(a, b string) int {
 	if j < len(rb) {
 		return -1
 	}
-	// Equal at the primary level: lower case before upper case at the first difference.
-	for k := 0; k < len(ra) && k < len(rb); k++ {
-		if ra[k] != rb[k] {
-			if ra[k] > rb[k] {
+	// Equal at the primary level: lower case before upper case at the first letter that differs.
+	var la, lb []rune
+	for _, r := range ra {
+		if _, isLetter := collationLetter(r); isLetter {
+			la = append(la, r)
+		}
+	}
+	for _, r := range rb {
+		if _, isLetter := collationLetter(r); isLetter {
+			lb = append(lb, r)
+		}
+	}
+	for k := 0; k < len(la) && k < len(lb); k++ {
+		if la[k] != lb[k] {
+			if la[k] > lb[k] {
 				return -1
 			}
 			return 1
