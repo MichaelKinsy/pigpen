@@ -190,6 +190,9 @@ func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError(norm.Error)
 	}
 	if action == "" {
+		if defined(norm.Params, "workflowScript") || defined(norm.Params, "workflowScriptPath") || defined(norm.Params, "workflow") {
+			return executeWorkflowRun(ctx, norm.Params)
+		}
 		return runOne(ctx, norm.Params)
 	}
 	return actions[action].run(ctx, norm.Params)

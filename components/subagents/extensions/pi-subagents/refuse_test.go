@@ -38,7 +38,9 @@ func TestEveryUnportedParameterIsRefused(t *testing.T) {
 	// ported by the run policy (policy_run.go): twins and behavior tests are in policy_run_test.go
 	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true,
 		"output": true, "outputMode": true, "artifacts": true, "acceptance": true, "gate": true, "agentContract": true, "timeoutMs": true, "maxRuntimeMs": true, "includeProgress": true, "mission": true, "missionId": true}
-	special := map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true}
+	// the workflow runtime (workflow_exec.go) honors these; the public boundary judges the legacy orchestration inputs
+	special := map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true, "args": true, "preflight": true, "globalConcurrencyLimit": true,
+		"maxSubagentSpawnsPerRun": true, "chatProgress": true, "tasks": true, "chain": true, "parallel": true, "concurrency": true, "chainDir": true, "chainName": true}
 	names := sub.ToolParamNames()
 	sort.Strings(names)
 	h, calls := refusedHost(t)
@@ -66,37 +68,38 @@ func TestSeveralUnportedParametersAreNamedTogether(t *testing.T) {
 	eq(t, len(*calls), 0, "no child started")
 }
 
-func TestWorkflowRunsAreRefused(t *testing.T) {
+// the workflow inputs are judged by the public boundary with the original's messages (policy_publicexec.go), not refused
+func TestWorkflowInputsReachThePublicBoundary(t *testing.T) {
 	h, calls := refusedHost(t)
 	cases := []struct {
-		params  map[string]any
-		feature string
+		params map[string]any
+		want   string
 	}{
-		{map[string]any{"workflowScript": "return 1", "async": true}, "workflow runs (`workflowScript`)"},
-		{map[string]any{"workflowScriptPath": "w.js"}, "workflow runs (`workflowScriptPath`)"},
-		{map[string]any{"workflow": "review", "args": map[string]any{"task": "x"}}, "workflow runs (`workflow`)"},
-		{map[string]any{"workflowScript": "return 1", "workflowScriptPath": "w.js"}, "workflow runs (`workflowScript`, `workflowScriptPath`)"},
-		{map[string]any{"workflowScript": "return 1", "action": nil}, "workflow runs (`workflowScript`)"},
-		{map[string]any{"agent": "helper", "task": "t", "workflowScript": "return 1"}, "workflow runs (`workflowScript`)"},
+		{map[string]any{"workflowScript": "return 1", "workflowScriptPath": "w.js"}, "workflowScript and workflowScriptPath are mutually exclusive."},
+		{map[string]any{"agent": "helper", "task": "t", "workflowScript": "return 1"}, "Structured single-child execution cannot be combined with workflow, workflowScript, or workflowScriptPath."},
+		{map[string]any{"workflow": "review", "workflowScript": "return 1"}, "workflow is mutually exclusive with workflowScript and workflowScriptPath."},
+		{map[string]any{"args": map[string]any{}}, "args requires workflow, workflowScript, or workflowScriptPath."},
+		{map[string]any{"preflight": map[string]any{}}, "preflight requires workflowScript or workflowScriptPath."},
 	}
 	for i, c := range cases {
 		_, failure := h.Tool("subagent", c.params)
 		t.Logf("case %d", i)
-		wantRefusal(t, failure, c.feature)
+		eq(t, failure, c.want, "boundary")
 	}
 	eq(t, len(*calls), 0, "nothing ran")
 }
 
-func TestParallelAndChainRunsAreRefused(t *testing.T) {
+// parallel and chained runs exist only as workflow scripts, as in the original: the legacy inputs are its errors
+func TestParallelAndChainInputsAreTheOriginalsErrors(t *testing.T) {
 	h, calls := refusedHost(t)
-	for _, name := range []string{"tasks", "chain", "parallel", "concurrency", "chainDir", "chainName"} {
+	for _, name := range []string{"tasks", "chain", "parallel", "concurrency", "chainDir"} {
 		t.Run(name, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{name: []any{map[string]any{"agent": "helper", "task": "t"}}})
-			wantRefusal(t, failure, "parallel and chain runs (`"+name+"`)")
+			eq(t, failure, "Legacy top-level chain and parallel inputs were removed; use workflowScript.", name)
 		})
 	}
 	_, failure := h.Tool("subagent", map[string]any{"tasks": []any{map[string]any{"agent": "helper", "task": "t"}}, "async": true, "concurrency": 2})
-	wantRefusal(t, failure, "parallel and chain runs (`tasks`, `concurrency`)")
+	eq(t, failure, "Legacy top-level chain and parallel inputs were removed; use workflowScript.", "several")
 	eq(t, len(*calls), 0, "nothing ran")
 }
 

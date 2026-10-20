@@ -50,11 +50,12 @@ func registerAction(name string, params []string, run func(ctx sdk.Context, para
 	actions[name] = a
 }
 
-// Inputs that start a workflow (the original's only orchestration: parallel and chained runs are workflow scripts).
-var workflowParams = []string{"workflow", "workflowScript", "workflowScriptPath"}
-
-// Legacy top-level orchestration inputs (the original itself refuses them in favor of workflowScript; the port has no workflow runtime).
-var legacyOrchestrationParams = []string{"tasks", "chain", "parallel", "concurrency", "chainDir", "chainName"}
+// publicBoundaryParams are inputs the public boundary of the subagent tool (policy_publicexec.go) judges with the original's
+// messages: a workflow script runs, and the legacy top-level orchestration inputs (tasks, chain, parallel, concurrency, chainDir,
+// chainName) are errors there, as in the original, which runs parallel and chained work only through a workflowScript. They are
+// never refused here.
+var publicBoundaryParams = map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true, "tasks": true, "chain": true, "parallel": true,
+	"concurrency": true, "chainDir": true, "chainName": true}
 
 // present lists the parameters the model set (a JSON null counts as unset), sorted.
 func present(params map[string]any) []string {
@@ -89,25 +90,6 @@ func optionsFeature(names []string) string {
 // port runs every parameter that is set. name is the call's action ("" for an execution).
 func refuseUnsupported(params map[string]any, name string) string {
 	var set []string
-	// An action that takes workflow inputs (validate) lists them among its parameters; an execution may not run them yet.
-	if name == "" {
-		for _, n := range workflowParams {
-			if has(params, n) {
-				set = append(set, n)
-			}
-		}
-		if len(set) > 0 {
-			return refusal("workflow runs (" + quoteList(set) + ")")
-		}
-	}
-	for _, n := range legacyOrchestrationParams {
-		if has(params, n) {
-			set = append(set, n)
-		}
-	}
-	if len(set) > 0 {
-		return refusal("parallel and chain runs (" + quoteList(set) + ")")
-	}
 	allowed := runParams
 	if name != "" {
 		a := actions[name]
@@ -120,7 +102,7 @@ func refuseUnsupported(params map[string]any, name string) string {
 		allowed = a.params
 	}
 	for _, k := range present(params) {
-		if !allowed[k] {
+		if !allowed[k] && !publicBoundaryParams[k] {
 			set = append(set, k)
 		}
 	}

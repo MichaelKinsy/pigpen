@@ -94,6 +94,15 @@ type Host struct {
 	resolvers   int
 	invalidated []string
 	widgets     []WidgetPush
+	// toolUpdates are the partial results a running tool streamed (ctx.OnUpdate), in order.
+	toolUpdates []json.RawMessage
+}
+
+// ToolUpdates returns the partial results the extension streamed from its running tools.
+func (h *Host) ToolUpdates() []json.RawMessage {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return append([]json.RawMessage(nil), h.toolUpdates...)
 }
 
 // WidgetPush is a widget the extension drew with a list of lines (ui.setWidget with a string list is a push, not a call).
@@ -381,6 +390,13 @@ func (h *Host) notified(method string, args json.RawMessage) {
 		}
 		if json.Unmarshal(args, &p) == nil {
 			h.resolvers = p.Count
+		}
+	case "tool_update":
+		var p struct {
+			Result json.RawMessage `json:"result"`
+		}
+		if json.Unmarshal(args, &p) == nil {
+			h.toolUpdates = append(h.toolUpdates, p.Result)
 		}
 	case "tool_render_invalidate":
 		var p struct {
