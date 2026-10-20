@@ -46,7 +46,7 @@ func TestDecideBash(t *testing.T) {
 	for _, cmd := range []string{"echo $(ls)", "", "ls &", "ls;", "git status > x"} {
 		v := p.Decide("bash", map[string]any{"command": cmd})
 		eq(t, v.Block, true, "blocked: "+cmd)
-		eq(t, strings.Contains(v.Reason, "cannot evaluate this 'bash' call"), true, "says why: "+cmd)
+		eq(t, strings.HasPrefix(v.Reason, packageName+" (Go port) does not support matching this bash command against bash patterns (") && strings.HasSuffix(v.Reason, "yet. Install the original extension, npm:@gotgenes/pi-permission-system@39.0.3, which runs unchanged in PiG."), true, "refuses with the exact text: "+cmd)
 	}
 	eq(t, p.Decide(" bash ", map[string]any{"command": "git status"}), Verdict{}, "the tool name is trimmed")
 	eq(t, p.Decide("bash", nil).Block, true, "no input")
@@ -61,19 +61,19 @@ func TestDecideBash(t *testing.T) {
 		eq(t, q.Decide("bash", map[string]any{"command": cmd}), asked("bash"), "floored: "+cmd)
 	}
 	// a command the port cannot read is refused while the catch-all allows: it could hide a wrapper
-	eq(t, strings.Contains(q.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"}).Reason, "cannot evaluate"), true, "unreadable")
+	eq(t, strings.Contains(q.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"}).Reason, "does not support analysing this bash command"), true, "unreadable")
 	// yoloMode grants the floored ask, and anything the catch-all allows
 	y := policyOf(t, `{"yoloMode":true,"permission":{`+allowPaths+`,"bash":"allow"}}`)
 	eq(t, y.Decide("bash", map[string]any{"command": "nice touch a"}), Verdict{}, "yolo floor")
 	eq(t, y.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"}), Verdict{}, "yolo unreadable")
 	// a command the port guards (it runs another command the original reads by its own rule) is refused when allowed
-	eq(t, strings.Contains(q.Decide("bash", map[string]any{"command": "ssh host rm x"}).Reason, "'ssh' runs another command"), true, "guard")
+	eq(t, strings.Contains(q.Decide("bash", map[string]any{"command": "ssh host rm x"}).Reason, "does not support checking the command that 'ssh' runs yet."), true, "guard")
 }
 
 func TestDecideAsk(t *testing.T) {
 	p := policyOf(t, `{"permission":{`+allowPaths+`,"bash":{"*":"ask","git *":"allow"},"foo":"ask"}}`)
 	eq(t, p.Decide("bash", map[string]any{"command": "ls"}).Block, true, "ask blocks")
-	eq(t, strings.Contains(p.Decide("bash", map[string]any{"command": "ls"}).Reason, "approval dialog is not ported"), true, "ask says so")
+	eq(t, strings.Contains(p.Decide("bash", map[string]any{"command": "ls"}).Reason, "does not support the approval dialog (the 'bash' call needs approval) yet."), true, "ask says so")
 	eq(t, p.Decide("bash", map[string]any{"command": "git log"}), Verdict{}, "allow")
 	eq(t, p.Decide("foo", nil).Block, true, "extension tool ask")
 	// The universal fallback is ask without any config.
@@ -101,25 +101,25 @@ func TestDecideGuards(t *testing.T) {
 	has := func(v Verdict, s string) bool { return v.Block && strings.Contains(v.Reason, s) }
 	// A path-bearing tool with value patterns is not evaluated.
 	p := policyOf(t, `{"permission":{`+allowPaths+`,"read":{"*":"deny","*.md":"allow"}}}`)
-	eq(t, has(p.Decide("read", map[string]any{"path": "a.md"}), "value patterns, and path matching is not ported"), true, "read with patterns")
+	eq(t, has(p.Decide("read", map[string]any{"path": "a.md"}), "does not support path rules with value patterns for the 'read' tool (path matching) yet."), true, "read with patterns")
 	// Constant rules are decided.
 	q := policyOf(t, `{"permission":{`+allowPaths+`,"read":"allow","write":"deny"}}`)
 	eq(t, q.Decide("read", map[string]any{"path": "a"}), Verdict{}, "read allowed")
 	eq(t, q.Decide("write", map[string]any{"path": "a"}).Reason, "[pi-permission-system] Denied by policy: 'write' (rule '*').", "write denied")
 	// The path surfaces must allow everything, or the port cannot stand in for the path gates.
 	n := policyOf(t, `{"permission":{"read":"allow","bash":"allow"}}`)
-	eq(t, has(n.Decide("read", map[string]any{"path": "a"}), "path_read surface does not allow every path"), true, "default path ask")
-	eq(t, has(n.Decide("bash", map[string]any{"command": "ls"}), "path_read surface does not allow every path"), true, "bash needs it too")
+	eq(t, has(n.Decide("read", map[string]any{"path": "a"}), "a 'path_read' surface that does not allow every path"), true, "default path ask")
+	eq(t, has(n.Decide("bash", map[string]any{"command": "ls"}), "path checks for the 'bash' tool (a 'path_read' surface that does not allow every path)"), true, "bash needs it too")
 	o := policyOf(t, `{"permission":{"path":{"*":"allow","*.env":"deny"},"external_directory":"allow","read":"allow"}}`)
-	eq(t, has(o.Decide("read", map[string]any{"path": "a"}), "path rules have value patterns"), true, "path patterns")
+	eq(t, has(o.Decide("read", map[string]any{"path": "a"}), "(path rules with value patterns)"), true, "path patterns")
 	e := policyOf(t, `{"permission":{"path":"allow","external_directory":"ask","read":"allow"}}`)
-	eq(t, has(e.Decide("read", map[string]any{"path": "a"}), "external_directory_read surface does not allow"), true, "external ask")
+	eq(t, has(e.Decide("read", map[string]any{"path": "a"}), "a 'external_directory_read' surface that does not allow every path"), true, "external ask")
 	w := policyOf(t, `{"permission":{"path":"allow","external_directory":{"*":"allow"},"external_directory_write":"ask","read":"allow"}}`)
-	eq(t, has(w.Decide("read", map[string]any{"path": "a"}), "external_directory_write surface does not allow"), true, "external write ask")
+	eq(t, has(w.Decide("read", map[string]any{"path": "a"}), "a 'external_directory_write' surface that does not allow every path"), true, "external write ask")
 	// MCP and skill surfaces.
-	eq(t, has(q.Decide("mcp", nil), "MCP and skill surfaces are not ported"), true, "mcp")
-	eq(t, has(q.Decide("skill", nil), "MCP and skill surfaces are not ported"), true, "skill")
-	eq(t, has(q.Decide("mcp__srv__tool", nil), "MCP and skill surfaces are not ported"), true, "pi mcp tool")
+	eq(t, has(q.Decide("mcp", nil), "does not support permissions for the 'mcp' tool (the MCP and skill surfaces) yet."), true, "mcp")
+	eq(t, has(q.Decide("skill", nil), "does not support permissions for the 'skill' tool (the MCP and skill surfaces) yet."), true, "skill")
+	eq(t, has(q.Decide("mcp__srv__tool", nil), "does not support permissions for the 'mcp__srv__tool' tool (the MCP and skill surfaces) yet."), true, "pi mcp tool")
 	eq(t, q.Decide("mcp__srv", nil).Block, true, "not an MCP name: an extension tool under the default ask")
 }
 

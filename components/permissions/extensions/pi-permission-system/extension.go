@@ -4,6 +4,7 @@
 package pi_permission_system
 
 import (
+	"strings"
 	"sync"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -16,6 +17,8 @@ type state struct {
 	baseline surfaceBaseline
 	skills   []skillEntry // the listed skills the policy does not deny, from the last system prompt
 	cwd      string
+	// agentName is the last known active agent (session.resolveAgentName's knownAgentName).
+	agentName string
 }
 
 func (s *state) reload() *Policy {
@@ -54,10 +57,17 @@ func Extension() *sdk.Extension {
 		st.mu.Lock()
 		st.baseline.reset()
 		st.skills = nil
+		st.agentName = ""
 		st.mu.Unlock()
 		syncStatus(ctx, p)
 		if st.config.Issue != "" {
 			ctx.Notify(st.config.Issue, "warning")
+		}
+		if len(st.config.Unported) > 0 {
+			ctx.Notify(refusal("the config option(s) '"+strings.Join(st.config.Unported, "', '")+"' (they are accepted and ignored)"), "warning")
+		}
+		if feature := st.unportedScope(ctx); feature != "" {
+			ctx.Notify(refusal(feature)+" Until then every call the port would allow is blocked.", "warning")
 		}
 		if msg := detectPermissiveBashFallback(st.config.Permission); msg != "" {
 			ctx.Notify(msg, "warning")
@@ -70,6 +80,18 @@ func Extension() *sdk.Extension {
 		// The skills the prompt lists, for the skill-read gate (before-agent-start.ts setActiveSkillEntries).
 		// PiG 0.5 hands the handler a *sdk.SystemPrompt in data["systemPrompt"], not a string; GetSystemPrompt reads its rendered text.
 		prompt, _ := ctx.GetSystemPrompt()
+		agent := ""
+		if entries, err := ctx.GetEntries(); err == nil {
+			agent = agentFromEntries(entries)
+		}
+		if agent == "" {
+			agent = agentFromSystemPrompt(prompt)
+		}
+		if agent != "" {
+			st.mu.Lock()
+			st.agentName = agent
+			st.mu.Unlock()
+		}
 		skills := p.visibleSkillEntries(prompt, ctx.Cwd())
 		st.mu.Lock()
 		st.skills, st.cwd = skills, ctx.Cwd()
@@ -104,10 +126,16 @@ func Extension() *sdk.Extension {
 			v = skillRead(name, input, st.skills, st.cwd)
 			st.mu.Unlock()
 		}
+		if !v.Block {
+			if feature := st.unportedScope(ctx); feature != "" {
+				v = unsupported(feature)
+			}
+		}
 		if v.Block {
 			return map[string]any{"block": true, "reason": v.Reason}, nil
 		}
 		return nil, nil
 	})
+	e.OnEvent(sdk.EventInput, st.skillInput)
 	return e
 }

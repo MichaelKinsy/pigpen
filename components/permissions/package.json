@@ -1,7 +1,7 @@
 {
   "name": "@pi-in-go/pigpen-permissions",
-  "version": "0.1.0",
-  "description": "Go port of pi-permission-system: allow, ask and deny rules for tool calls, with last-match-wins wildcard patterns and a tool_call gate (partial: the rule engine and tool-name gating, not the approval dialog, bash parsing or path rules)",
+  "version": "0.1.1",
+  "description": "Go port of pi-permission-system: allow, ask and deny rules for tool calls, with last-match-wins wildcard patterns and a tool_call gate (partial: the rule engine and tool-name gating; everything else is refused with a message that names the original, not allowed)",
   "keywords": [
     "pig-package",
     "permissions",

@@ -458,7 +458,7 @@
  {
   "name": "bash-needs-path-family",
   "file": "config.go",
-  "find": "\t\tif ok, why := p.pathFamilyAllows(name); !ok {\n\t\t\treturn unsupported(name, why)\n\t\t}\n\t\treturn p.decideBash(cmd)",
+  "find": "\t\tif ok, why := p.pathFamilyAllows(name); !ok {\n\t\t\treturn unsupported(\"path checks for the 'bash' tool (\" + why + \")\")\n\t\t}\n\t\treturn p.decideBash(cmd)",
   "replace": "\t\treturn p.decideBash(cmd)"
  },
  {
@@ -482,13 +482,13 @@
  {
   "name": "path-tool-patterns",
   "file": "config.go",
-  "find": "if p.valuePatterns(name) {\n\t\t\treturn unsupported(name, \"the rules for it",
-  "replace": "if false {\n\t\t\treturn unsupported(name, \"the rules for it"
+  "find": "if p.valuePatterns(name) {\n\t\t\treturn unsupported(\"path rules with value patterns for the",
+  "replace": "if false {\n\t\t\treturn unsupported(\"path rules with value patterns for the"
  },
  {
   "name": "path-tool-family",
   "file": "config.go",
-  "find": "\t\tif ok, why := p.pathFamilyAllows(name); !ok {\n\t\t\treturn unsupported(name, why)\n\t\t}\n\t\treturn p.outcome(name, p.constant(name))",
+  "find": "\t\tif ok, why := p.pathFamilyAllows(name); !ok {\n\t\t\treturn unsupported(\"path checks for the '\" + name + \"' tool (\" + why + \")\")\n\t\t}\n\t\treturn p.outcome(name, p.constant(name))",
   "replace": "\t\treturn p.outcome(name, p.constant(name))"
  },
  {
@@ -1066,5 +1066,143 @@
   "file": "bashparse/heredocfreelines.go",
   "find": "for start > lineStart && isBlank(source, start-1-offset) {",
   "replace": "for start > lineStart && false {"
+ },
+ {
+  "name": "refusal-package-name",
+  "file": "refusal.go",
+  "find": "packageName = \"@pi-in-go/pigpen-permissions\"",
+  "replace": "packageName = \"@pi-in-go/pigpen-permission\""
+ },
+ {
+  "name": "refusal-original-spec",
+  "file": "refusal.go",
+  "find": "@gotgenes/pi-permission-system@39.0.3",
+  "replace": "@gotgenes/pi-permission-system@39.0.2"
+ },
+ {
+  "name": "refusal-says-yet",
+  "file": "refusal.go",
+  "find": "\" yet. Install the original extension, \"",
+  "replace": "\" . Install the original extension, \""
+ },
+ {
+  "name": "refusal-ask-allows",
+  "file": "config.go",
+  "find": "return unsupported(\"the approval dialog (the '\" + tool + \"' call needs approval)\")",
+  "replace": "return Verdict{}"
+ },
+ {
+  "name": "refusal-shelltools",
+  "file": "config.go",
+  "find": "case p.shellTools[name]:\n\t\treturn unsupported(",
+  "replace": "case p.shellTools[name] && false:\n\t\treturn unsupported("
+ },
+ {
+  "name": "refusal-skill-surface",
+  "file": "config.go",
+  "find": "case name == \"mcp\", name == \"skill\", isPiMcpToolName(name):",
+  "replace": "case name == \"mcp\", isPiMcpToolName(name):"
+ },
+ {
+  "name": "scope-project-trust",
+  "file": "unported.go",
+  "find": "if trusted && cwd != \"\" {\n\t\tif _, err := os.Stat(projectConfigPath(cwd)); err == nil {",
+  "replace": "if false {\n\t\tif _, err := os.Stat(projectConfigPath(cwd)); err == nil {"
+ },
+ {
+  "name": "scope-project-untrusted-applies",
+  "file": "unported.go",
+  "find": "trusted, err := ctx.IsProjectTrusted()\n\tif err != nil {\n\t\ttrusted = true\n\t}",
+  "replace": "trusted, _ := ctx.IsProjectTrusted()"
+ },
+ {
+  "name": "scope-agent-none",
+  "file": "unported.go",
+  "find": "if len(withPermission) == 0 {\n\t\treturn \"\"\n\t}",
+  "replace": "if true {\n\t\treturn \"\"\n\t}"
+ },
+ {
+  "name": "scope-agent-frontmatter",
+  "file": "unported.go",
+  "find": "return true, permissionFrontmatter.MatchString(text[4 : 4+end])",
+  "replace": "return true, true"
+ },
+ {
+  "name": "scope-agent-null-clears",
+  "file": "unported.go",
+  "find": "if string(e.Data.Name) == \"null\" {\n\t\t\treturn \"\"\n\t\t}",
+  "replace": "if string(e.Data.Name) == \"null\" {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "scope-agent-prompt-tag",
+  "file": "extension.go",
+  "find": "agent = agentFromSystemPrompt(prompt)",
+  "replace": "agent = \"\""
+ },
+ {
+  "name": "scope-agent-reset",
+  "file": "extension.go",
+  "find": "st.agentName = \"\"\n",
+  "replace": "\n"
+ },
+ {
+  "name": "scope-gate-tool-call",
+  "file": "extension.go",
+  "find": "v = unsupported(feature)",
+  "replace": "_ = feature"
+ },
+ {
+  "name": "scope-announce",
+  "file": "extension.go",
+  "find": "ctx.Notify(refusal(feature)+\" Until then every call the port would allow is blocked.\", \"warning\")",
+  "replace": "_ = feature"
+ },
+ {
+  "name": "options-announce",
+  "file": "extension.go",
+  "find": "ctx.Notify(refusal(\"the config option(s) '\"+strings.Join(st.config.Unported, \"', '\")+\"' (they are accepted and ignored)\"), \"warning\")",
+  "replace": "_ = strings.Join(st.config.Unported, \"\")"
+ },
+ {
+  "name": "options-false-quiet",
+  "file": "unported.go",
+  "find": "case bool:\n\t\t\tif !x {\n\t\t\t\tcontinue\n\t\t\t}",
+  "replace": "case bool:\n\t\t\tif x {\n\t\t\t\tcontinue\n\t\t\t}"
+ },
+ {
+  "name": "input-registered",
+  "file": "extension.go",
+  "find": "e.OnEvent(sdk.EventInput, st.skillInput)",
+  "replace": "_ = st.skillInput"
+ },
+ {
+  "name": "input-deny-handled",
+  "file": "unported.go",
+  "find": "\tcase \"deny\":\n\t\tctx.Notify(formatSkillDenyNotice(skill, agent), \"warning\")\n\tdefault:",
+  "replace": "\tcase \"deny\":\n\t\tctx.Notify(formatSkillDenyNotice(skill, agent), \"warning\")\n\t\treturn nil, nil\n\tdefault:"
+ },
+ {
+  "name": "input-ask-allowed",
+  "file": "unported.go",
+  "find": "\tdefault:\n\t\tctx.Notify(refusal(\"the approval dialog (the skill",
+  "replace": "\tdefault:\n\t\treturn nil, nil\n\t\tctx.Notify(refusal(\"the approval dialog (the skill"
+ },
+ {
+  "name": "input-prefix",
+  "file": "unported.go",
+  "find": "strings.HasPrefix(t, \"/skill:\")",
+  "replace": "strings.HasPrefix(t, \"/skill\")"
+ },
+ {
+  "name": "input-name-end",
+  "file": "unported.go",
+  "find": "strings.IndexFunc(rest, isJSSpace)",
+  "replace": "strings.IndexFunc(rest, func(r rune) bool { return r == ' ' })"
+ },
+ {
+  "name": "input-scope-refused",
+  "file": "unported.go",
+  "find": "if feature := s.unportedScope(ctx); feature != \"\" {\n\t\tctx.Notify(refusal(feature), \"warning\")\n\t\treturn handled, nil\n\t}",
+  "replace": "if false {\n\t\treturn handled, nil\n\t}"
  }
 ]
