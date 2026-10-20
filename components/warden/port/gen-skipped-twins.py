@@ -76,6 +76,8 @@ def reason(f, name, line=0):
         return "not ported: owner decision needed"
     if f in ("violation.test.ts", "violation-pipeline.test.ts"):
         return "rules file resolution, starter rules and the init prompt belong to the rules guard (pi-warden.md)"
+    if f in ("filter.test.ts", "relevance.test.ts") and re.match(r"filter config:|a project file tunes the filter|config: ", n):
+        return "config loader (applyUserOverrides, applyProjectOverrides, completeConfig) is owned by the configui lane; this case asserts the loader's parsing and clamping, not the context module"
     if f == "shape.test.ts":
         return "config schema migration (completeConfig) is not part of this port: the Go config merges defaults over a JSON file"
     if f == "extension.test.ts" and n.startswith("stuck-loop diff:"):

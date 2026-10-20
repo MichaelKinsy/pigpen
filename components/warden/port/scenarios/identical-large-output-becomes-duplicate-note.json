@@ -1,0 +1,68 @@
+{
+  "name": "identical-large-output-becomes-duplicate-note",
+  "description": "Two different calls that print the same large output: the second result is replaced by a duplicate note that points to a stored copy. The stored copy lives in a directory the extension names pi-warden-output-<random>: the original randomizes that name on every run (Node mkdtemp), so the scenario's own normalize rule masks it.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "i=1; while [ $i -le 700 ]; do echo \"line $i of the build log: compiled module $i without warnings\"; i=$((i+1)); done"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "i=1; while [ $i -le 700 ]; do echo \"line $i of the build log: compiled module $i without warnings\"; i=$((i+1)); done; true"
+          }
+        }
+      ]
+    },
+    {
+      "text": "stop"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "run it"
+      }
+    }
+  ],
+  "normalize": [
+    {
+      "pattern": "pi-warden-output-[A-Za-z0-9]+",
+      "replacement": "pi-warden-output-<id>"
+    }
+  ]
+}

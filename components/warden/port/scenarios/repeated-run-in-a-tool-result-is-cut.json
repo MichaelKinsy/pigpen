@@ -1,0 +1,68 @@
+{
+  "name": "repeated-run-in-a-tool-result-is-cut",
+  "description": "A tool result that prints a block the agent already has in context keeps only its new part: the repeated lines become one pointer line. The stored copy lives in a directory the extension names pi-warden-output-<random>: the original randomizes that name on every run (Node mkdtemp), so the scenario's own normalize rule masks it.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "i=1; while [ $i -le 80 ]; do echo \"report line $i: module $i built and every check passed cleanly\"; i=$((i+1)); done"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "i=1; while [ $i -le 80 ]; do echo \"report line $i: module $i built and every check passed cleanly\"; i=$((i+1)); done; i=1; while [ $i -le 70 ]; do echo \"new status line $i: fresh progress since the last report\"; i=$((i+1)); done"
+          }
+        }
+      ]
+    },
+    {
+      "text": "stop"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "run it"
+      }
+    }
+  ],
+  "normalize": [
+    {
+      "pattern": "pi-warden-output-[A-Za-z0-9]+",
+      "replacement": "pi-warden-output-<id>"
+    }
+  ]
+}

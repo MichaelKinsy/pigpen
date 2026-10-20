@@ -263,3 +263,16 @@ func TestContextFixtureShapedCredentialsFromATestFileAreTracedOnceAndNeverSteere
 		t.Error("still no steer")
 	}
 }
+
+// twin: tests/extension.test.ts:2788
+func TestContextEachUnseenCredentialBannersItsResultAndTracesAndNeitherCostsATurn(t *testing.T) {
+	c := startContext(t)
+	first := c.result("read", map[string]any{}, "TOKEN=ghp_Qk7mZ2pR9vT4xL8nW3sY6bD1cF5hJ0aM", false)
+	mustMatch(t, c.firstText(first), `do not echo or commit`, "first banner")
+	second := c.result("read", map[string]any{}, "AWS_ACCESS_KEY_ID=AKIA3M7QZ2PRT9LVXW8Y", false)
+	mustMatch(t, c.firstText(second), `do not echo or commit`, "the banner still reaches the user through the tool result")
+	if len(c.messages()) != 0 {
+		t.Error("an identical notice text never becomes a steer")
+	}
+	mustMatch(t, c.traceText(), `possible credentials`, "both findings are in the trace")
+}
