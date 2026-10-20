@@ -2,6 +2,7 @@ package pi_subagents
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -383,4 +384,22 @@ func TestAsyncStatusProjectionTwins(t *testing.T) {
 		eq(t, eu{c[1].EndedAt, c[1].UpdatedAt}, eu{nil, i64(1500)}, "active")
 		eq(t, eu{c[2].EndedAt, c[2].UpdatedAt}, eu{nil, i64(int64(maxSafe))}, "overflow")
 	})
+}
+
+func TestRetainedFleetJobsAreLimitedToTheMostRecentTerminalOnes(t *testing.T) {
+	state := newSubagentState()
+	for i := 0; i < 25; i++ {
+		state.rememberFleetJob(&AsyncJobState{AsyncID: fmt.Sprintf("done-%02d", i), Status: "complete", UpdatedAt: int64(i)})
+	}
+	state.rememberFleetJob(&AsyncJobState{AsyncID: "live", Status: "running", UpdatedAt: 0})
+	eq(t, len(state.FleetJobs), maxRecentFleetJobs+1, "retained jobs: the 20 newest terminal ones and the live one")
+	if _, ok := state.FleetJobs["done-04"]; ok {
+		t.Error("an old terminal job was kept")
+	}
+	if _, ok := state.FleetJobs["done-05"]; !ok {
+		t.Error("the 20th newest terminal job was dropped")
+	}
+	if _, ok := state.FleetJobs["live"]; !ok {
+		t.Error("a live job was dropped")
+	}
 }

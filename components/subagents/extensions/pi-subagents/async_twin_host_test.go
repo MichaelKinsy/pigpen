@@ -3,6 +3,8 @@
 package pi_subagents_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,3 +62,19 @@ func TestAsyncSpawnPreloadAndBinaryTwins(t *testing.T) {
 	tskip(t, "async-spawn-preload", "executeAsyncSingle preloads all peer aliases before the selected runner loader when aliases exist", "Node and TypeScript loader internals: the case checks the JITI_ALIAS peer-package map, --import preload and --experimental-strip-types arguments of the Node runner; a pig child loads nothing through Node")
 	tskip(t, "binary-async-spawn", "compiled background launch ${entry} ${missingBootstrap ? \"rejects a missing bootstrap\" : \"uses Pi's loader without npm aliases\"}", "Bun compiled-binary internals: the case fakes a Bun host entry (/$bunfs, B:/~BUN) and the binary-bootstrap.ts extension a compiled Pi loads; PiG's pig child is started with its own binary and none of that exists")
 }
+
+func TestTheProcessTerminalProofIsPublishedOnTheEventBus(t *testing.T) {
+	e := newAsyncEnv(t)
+	h := e.host(t)
+	id, _ := launch(t, h, map[string]any{})
+	eventually(t, "the process-terminal event", func() bool {
+		for _, c := range h.CallsTo("events.emit") {
+			if c.Args["channel"] == "subagent:process-terminal" {
+				return strings.Contains(string(mustJSON(c.Args["json"])), id) || strings.Contains(fmt.Sprint(c.Args["json"]), id)
+			}
+		}
+		return false
+	})
+}
+
+func mustJSON(v any) []byte { b, _ := json.Marshal(v); return b }

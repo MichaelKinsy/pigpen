@@ -56,3 +56,12 @@ scenario("get-builtin", "Detail of a builtin agent with a runner and one with a 
          [ENABLE, call("subagent", action="get", agent="worker"), call("subagent", action="get", agent="claude-code")], {}, to="host-bound/scenarios")
 scenario("enable-only", "Enable twice: the second call finds the tool already active.",
          [ENABLE, ENABLE], {})
+
+# the background (async) runs: what the model reads when no child is involved. Each text is the original's, none needs a child
+# session, so the original under Pi and the port under PiG can be compared on them.
+scenario("async-status", "Enable the tool, then ask for the status of the session's background runs (none), and of a run id that does not exist.",
+         [ENABLE, call("subagent", action="status"), call("subagent", action="status", id="no-such-run-0000")], PROJECT)
+scenario("bg-wait-empty", "Wait for background work when nothing runs: blocking, non-blocking, and for a run id that is not active.",
+         [call("bg_wait"), call("bg_wait", nonBlocking=True), call("bg_wait", id="no-such-run-0000")], PROJECT)
+scenario("unknown-action", "A misspelled and an unknown management action get the original's recovery text.",
+         [ENABLE, call("subagent", action="statsu"), call("subagent", action="launch")], PROJECT)

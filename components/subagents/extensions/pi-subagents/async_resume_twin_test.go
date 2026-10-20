@@ -355,3 +355,40 @@ func TestAsyncResumeTwins(t *testing.T) {
 }
 
 func contains(s, sub string) bool { return strings.Contains(s, sub) }
+
+func TestResumeRefusesWhatItCannotHonor(t *testing.T) {
+	t.Setenv("PI_SUBAGENTS_TEMP_ROOT", tmp(t))
+	root := tmp(t)
+	dirs := asyncDirs{Async: filepath.Join(root, "runs"), Results: filepath.Join(root, "results")}
+	sf := filepath.Join(root, "session.jsonl")
+	writeFile(t, sf, "")
+	status := func(extra jm) {
+		m := jm{"runId": "run-ceiling", "mode": "single", "state": "paused", "startedAt": 100, "lastUpdate": 200, "cwd": root, "steps": []any{jm{"agent": "worker", "status": "paused", "sessionFile": sf}}}
+		for k, v := range extra {
+			m[k] = v
+		}
+		writeJ(t, filepath.Join(dirs.Async, "run-ceiling", "status.json"), m)
+	}
+	descriptor := func(extra jm) {
+		d := jm{"version": 1, "runFanoutBudget": createRunFanoutBudget(t, "run-ceiling", 64), "sourceRunId": "run-ceiling", "agent": "worker", "cwd": root, "systemPromptMode": "replace",
+			"inheritGlobalContext": false, "inheritProjectContext": false, "inheritSkills": false, "outputMode": "inline", "maxSubagentDepth": 2, "share": false}
+		for k, v := range extra {
+			d[k] = v
+		}
+		writeJ(t, filepath.Join(dirs.Async, "run-ceiling", "recovery-descriptor.json"), d)
+	}
+	status(jm{"capabilityCeiling": jm{"version": 1, "allowedTools": []any{"read"}, "denyExtensions": true, "sources": []any{"run"}}})
+	target, err := resolveAsyncResumeTarget(resumeParams{ID: "run-ceiling"}, dirs, resumeOptions{})
+	eq(t, err, nil, "error")
+	eq(t, target.unsupported, []string{"capabilityCeiling"}, "a ceiling cannot be dropped")
+	status(nil)
+	descriptor(jm{"sourceRunId": "another-run"})
+	_, err = resolveAsyncResumeTarget(resumeParams{ID: "run-ceiling"}, dirs, resumeOptions{})
+	hasMatch(t, err, "different source run")
+	descriptor(jm{"agent": "another-agent"})
+	_, err = resolveAsyncResumeTarget(resumeParams{ID: "run-ceiling"}, dirs, resumeOptions{})
+	hasMatch(t, err, "not 'worker'")
+	descriptor(jm{"token": "must-not-be-accepted"})
+	_, err = resolveAsyncResumeTarget(resumeParams{ID: "run-ceiling"}, dirs, resumeOptions{})
+	hasMatch(t, err, "unknown field 'token'")
+}
