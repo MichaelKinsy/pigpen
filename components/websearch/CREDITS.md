@@ -15,3 +15,9 @@ wording, defaults and error strings follow the original. Where the port differs 
 (HTML-to-Markdown implementation, hardened SSRF checks, timeout classification, deferred
 features) each difference is listed in [`port/PORT.md`](port/PORT.md). No file of the original
 is modified; the port is a separate implementation.
+
+## Go dependency of the PDF slice
+
+PDF text is read with [`github.com/ledongthuc/pdf`](https://github.com/ledongthuc/pdf) (BSD-3-Clause,
+Copyright (c) 2009 The Go Authors; a fork of `rsc.io/pdf`), in `extensions/websearch/go.mod`. The original uses
+`unpdf` (PDF.js); `port/PORT.md` ("Slice: PDF text extraction") lists where the output differs.

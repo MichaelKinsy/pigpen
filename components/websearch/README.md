@@ -59,6 +59,19 @@ original; every search provider of the original is ported.
 | `searxng` | `searxngBaseUrl`, `SEARXNG_BASE_URL`; optional `searxngHeaders` | first in `auto` when configured; the `ssrf` settings apply |
 | `jina` | `jinaApiKey`, `JINA_API_KEY` | search through `s.jina.ai`; in `auto` and `"all"`; with `includeContent` the pages come back inline |
 
+## PDFs
+
+`fetch_content` converts a PDF (an `application/pdf` response or a `.pdf` path) to Markdown, saves it
+as `<tmp>/pi-web-pdf/<title>.md` and returns the path with the page and character counts; with
+`mode: "answer"` the Markdown itself is what the answer is drawn from. `pdf.provider` (`auto`,
+`datalab`, `gemini`, `unpdf`) picks the converter. `auto` tries Datalab (`datalabApiKey` or
+`DATALAB_API_KEY`; `DATALAB_API_BASE`, `DATALAB_MODE` and `DATALAB_PROCESSING_LOCATION` apply), then the
+Gemini API, then the local extractor, which is pure Go (`github.com/ledongthuc/pdf`, no Node) where the
+original uses unpdf. `pdf.enabled`, `pdf.maxSizeMB` (20, at most 50), `pdf.maxPages` (100),
+`pdf.datalabMode` and `pdf.datalabTimeoutMs` (120000, at most 300000) follow the original. Where the
+local extractor's text differs from unpdf's, `port/PORT.md` ("Slice: PDF text extraction") lists the
+fixture that shows it.
+
 ## What is refused until it is ported
 
 Each of these returns a tool error with one message, which names the working alternative, and
@@ -71,7 +84,7 @@ never falls back or runs part of the call:
 - `fetch_content` `auth` (authenticated fetch);
 - `fetch_content` URLs the original hands to an extractor: YouTube, local video files, video
   `frames` and `timestamp`, GitHub repositories, issues and pull requests (while their config
-  sections are not disabled), and PDFs;
+  sections are not disabled);
 - Gemini Web (browser cookies) when browser cookie access is switched on (`PI_ALLOW_BROWSER_COOKIES`, `allowBrowserCookies`): the Gemini API is ported, the browser path is not;
 - a page the original would hand to its RSC payload and Defuddle fallbacks after the readable
   extraction fails.

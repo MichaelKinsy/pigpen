@@ -174,12 +174,6 @@
   "replace": "return failed(rawURL, \"\")"
  },
  {
-  "name": "refusal-pdf-message",
-  "file": "extract.go",
-  "find": "return fail(unsupported(\"PDF text extraction\").Error())",
-  "replace": "return fail(\"PDF extraction failed\")"
- },
- {
   "name": "refusal-fallback-extractors-unnamed",
   "file": "extract.go",
   "find": "msg += \"\\n\\n\" + unsupported(\"the RSC payload and Defuddle fallback extractors\").Error()",
@@ -1390,5 +1384,330 @@
   "file": "page_query.go",
   "find": "asciiRun(s[i:], n-units)",
   "replace": "asciiRun(s[i:], len(s))"
+
+ },
+ {
+  "name": "pdf-chain-datalab-gate",
+  "file": "pdf_extract.go",
+  "find": "if cfg.Provider == \"auto\" || cfg.Provider == \"datalab\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "pdf-chain-gemini-gate",
+  "file": "pdf_extract.go",
+  "find": "if cfg.Provider == \"auto\" || cfg.Provider == \"gemini\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "pdf-rethrow-cancellation",
+  "file": "pdf_extract.go",
+  "find": "\tif ctx.Err() != nil {\n\t\treturn true\n\t}\n\tvar credErr",
+  "replace": "\tvar credErr"
+ },
+ {
+  "name": "pdf-rethrow-credential",
+  "file": "pdf_extract.go",
+  "find": "errors.As(err, &credErr) || isConfigParseError(err.Error())",
+  "replace": "isConfigParseError(err.Error())"
+ },
+ {
+  "name": "pdf-rethrow-config-parse",
+  "file": "pdf_extract.go",
+  "find": "errors.As(err, &credErr) || isConfigParseError(err.Error())",
+  "replace": "errors.As(err, &credErr)"
+ },
+ {
+  "name": "pdf-max-pages-floor",
+  "file": "pdf_extract.go",
+  "find": "maxPages = max(1, *o.MaxPages)",
+  "replace": "maxPages = *o.MaxPages"
+ },
+ {
+  "name": "pdf-truncation-boundary",
+  "file": "pdf_extract.go",
+  "find": "truncated: numPages > maxPages",
+  "replace": "truncated: numPages >= maxPages"
+ },
+ {
+  "name": "pdf-author-line",
+  "file": "pdf_extract.go",
+  "find": "if o.author != \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "pdf-title-trim",
+  "file": "pdf_extract.go",
+  "find": "title = jsTrim(t)",
+  "replace": "title = t"
+ },
+ {
+  "name": "pdf-chars-utf16-units",
+  "file": "pdf_extract.go",
+  "find": "Chars: jsLen(content)",
+  "replace": "Chars: len(content)"
+ },
+ {
+  "name": "pdf-saved-file-private",
+  "file": "pdf_extract.go",
+  "find": "os.WriteFile(outputPath, []byte(content), 0o600)",
+  "replace": "os.WriteFile(outputPath, []byte(content), 0o644)"
+ },
+ {
+  "name": "pdf-title-arxiv",
+  "file": "pdf_extract.go",
+  "find": "filename = \"arxiv-\" + m[1]",
+  "replace": "filename = m[1]"
+ },
+ {
+  "name": "pdf-basename-keeps-bare-extension",
+  "file": "pdf_extract.go",
+  "find": "if ext != \"\" && base != ext && strings.HasSuffix(base, ext) {",
+  "replace": "if ext != \"\" && strings.HasSuffix(base, ext) {"
+ },
+ {
+  "name": "pdf-filename-length",
+  "file": "pdf_extract.go",
+  "find": "s = jsSlice(s, 0, 100)",
+  "replace": "s = jsSlice(s, 0, 101)"
+ },
+ {
+  "name": "pdf-page-marker-spacing",
+  "file": "pdf_extract.go",
+  "find": "\"\\n\\n<!-- Page %d -->\\n\\n\"",
+  "replace": "\"\\n<!-- Page %d -->\\n\""
+ },
+ {
+  "name": "pdf-page-order-skips-empty",
+  "file": "pdf_extract.go",
+  "find": "if text != \"\" {\n\t\t\tpages = append(pages, page{i, text})",
+  "replace": "if true {\n\t\t\tpages = append(pages, page{i, text})"
+ },
+ {
+  "name": "datalab-redirect-is-error",
+  "file": "datalab_pdf_extract.go",
+  "find": "if resp.Header.Get(\"Location\") != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-poll-origin",
+  "file": "datalab_pdf_extract.go",
+  "find": "if Origin(check) != Origin(base) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-poll-interval-bounded",
+  "file": "datalab_pdf_extract.go",
+  "find": "min(datalabPollInterval, c.remaining())",
+  "replace": "datalabPollInterval"
+ },
+ {
+  "name": "datalab-cleanup",
+  "file": "datalab_pdf_extract.go",
+  "find": "defer func() { c.deleteFile(fileID) }()",
+  "replace": "defer func() {}()"
+ },
+ {
+  "name": "datalab-response-limit",
+  "file": "datalab_pdf_extract.go",
+  "find": "if len(data) > datalabMaxResponseBytes {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-error-detail-length",
+  "file": "datalab_pdf_extract.go",
+  "find": "jsSlice(jsTrim(text), 0, datalabMaxErrorBodyBytes)",
+  "replace": "jsTrim(text)"
+ },
+ {
+  "name": "datalab-default-location",
+  "file": "datalab_pdf_extract.go",
+  "find": "if value == \"\" {\n\t\treturn \"us\", nil",
+  "replace": "if value == \"\" {\n\t\treturn \"eu\", nil"
+ },
+ {
+  "name": "datalab-complete-status",
+  "file": "datalab_pdf_extract.go",
+  "find": "case \"complete\":",
+  "replace": "case \"completed\":"
+ },
+ {
+  "name": "datalab-paginate",
+  "file": "datalab_pdf_extract.go",
+  "find": "{\"paginate\", \"true\"}",
+  "replace": "{\"paginate\", \"false\"}"
+ },
+ {
+  "name": "datalab-confirm-file-id",
+  "file": "datalab_pdf_extract.go",
+  "find": "if id := datalabFileID(confirmed[\"file_id\"]); id != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-key-redaction",
+  "file": "datalab_pdf_extract.go",
+  "find": "return nil, redactErr(timeoutFix(c.ctx, ctx, err), c.apiKey)",
+  "replace": "return nil, timeoutFix(c.ctx, ctx, err)"
+ },
+ {
+  "name": "datalab-put-status",
+  "file": "datalab_pdf_extract.go",
+  "find": "if !put.ok() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-missing-reference",
+  "file": "datalab_pdf_extract.go",
+  "find": "if reference == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-missing-file-id",
+  "file": "datalab_pdf_extract.go",
+  "find": "if fileID == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-missing-upload-url",
+  "file": "datalab_pdf_extract.go",
+  "find": "if uploadURL == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-empty-markdown",
+  "file": "datalab_pdf_extract.go",
+  "find": "if markdown == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "datalab-page-count",
+  "file": "datalab_pdf_extract.go",
+  "find": "r.Pages = int(n)",
+  "replace": "r.Pages = 1"
+ },
+ {
+  "name": "pdf-text-negative-gap-break",
+  "file": "pdf_text.go",
+  "find": "case gap < negativeSpaceMax*p.size:",
+  "replace": "case false:"
+ },
+ {
+  "name": "pdf-text-line-break",
+  "file": "pdf_text.go",
+  "find": "case math.Abs(across) > itemHeight:",
+  "replace": "case false:"
+ },
+ {
+  "name": "pdf-text-word-gap-space",
+  "file": "pdf_text.go",
+  "find": "case gap <= trackingSpaceMin*p.size:",
+  "replace": "case gap <= 100*p.size:"
+ },
+ {
+  "name": "pdf-text-wide-gap-break",
+  "file": "pdf_text.go",
+  "find": "case gap <= spaceInFlowMax*p.size:",
+  "replace": "case gap <= 1e9*p.size:"
+ },
+ {
+  "name": "pdf-text-font-change-break",
+  "file": "pdf_text.go",
+  "find": "in.lastSize != st.size ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "pdf-text-crop-box",
+  "file": "pdf_text.go",
+  "find": "inBox := !(",
+  "replace": "inBox := true || !("
+ },
+ {
+  "name": "pdf-text-form-xobject",
+  "file": "pdf_text.go",
+  "find": "xo.Key(\"Subtype\").Name() == \"Form\"",
+  "replace": "xo.Key(\"Subtype\").Name() == \"Never\""
+ },
+ {
+  "name": "pdf-text-contents-array",
+  "file": "pdf_text.go",
+  "find": "if strm.Kind() == pdflib.Array {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pdf-text-xref-rebuild",
+  "file": "pdf_text.go",
+  "find": "if rebuilt := rebuildXref(data); rebuilt != nil {",
+  "replace": "if rebuilt := []byte(nil); rebuilt != nil {"
+ },
+ {
+  "name": "pdf-text-aes-padding",
+  "file": "pdf_text.go",
+  "find": "if d.encrypted {\n\t\traw = stripPKCS7(raw)",
+  "replace": "if false {\n\t\traw = stripPKCS7(raw)"
+ },
+ {
+  "name": "pdf-text-bidi",
+  "file": "pdf_text.go",
+  "find": "if !rtl {\n\t\treturn s",
+  "replace": "if true {\n\t\treturn s"
+ },
+ {
+  "name": "pdf-text-ligatures",
+  "file": "pdf_text.go",
+  "find": "norm.NFKC.String(m)",
+  "replace": "m"
+ },
+ {
+  "name": "pdf-text-metadata-utf16",
+  "file": "pdf_text.go",
+  "find": "case len(b) >= 2 && b[0] == 0xfe && b[1] == 0xff:",
+  "replace": "case false:"
+ },
+ {
+  "name": "pdf-text-word-spacing",
+  "file": "pdf_text.go",
+  "find": "after += st.tw",
+  "replace": "after += 0"
+ },
+ {
+  "name": "pdf-text-char-spacing",
+  "file": "pdf_text.go",
+  "find": "after := st.tc",
+  "replace": "after := 0.0"
+ },
+ {
+  "name": "pdf-text-rotation",
+  "file": "pdf_text.go",
+  "find": "gap := (dx*ux + dy*uy) / p.scale",
+  "replace": "gap := dx / p.scale"
+ },
+ {
+  "name": "pdf-text-password-message",
+  "file": "pdf_text.go",
+  "find": "return nil, errors.New(pdfErrPassword)",
+  "replace": "return nil, errors.New(pdfErrInvalid)"
+ },
+ {
+  "name": "pdf-text-empty-message",
+  "file": "pdf_text.go",
+  "find": "return nil, errors.New(pdfErrEmpty)",
+  "replace": "return nil, errors.New(pdfErrInvalid)"
+ },
+ {
+  "name": "pdf-config-env-mode-lazy",
+  "file": "featureconfig.go",
+  "find": "cfg.DatalabMode, err = normalizeDatalabMode(os.Getenv(\"DATALAB_MODE\"))\n\treturn cfg, err",
+  "replace": "cfg.DatalabMode = \"balanced\"\n\treturn cfg, nil"
+ },
+ {
+  "name": "pdf-fetch-failure-prefix",
+  "file": "extract.go",
+  "find": "return \"PDF extraction failed: \" + msg",
+  "replace": "return msg"
+ },
+ {
+  "name": "pdf-fetch-answer-content",
+  "file": "extract.go",
+  "find": "if o.Mode == \"answer\" {\n\t\t\tcontent = result.Content",
+  "replace": "if false {\n\t\t\tcontent = result.Content"
  }
 ]

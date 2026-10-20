@@ -14,7 +14,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; activity widget and shortcut; TUI render hooks |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
-| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, authenticated fetch, Gemini Web and browser cookies |
+| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, authenticated fetch, Gemini Web and browser cookies |
 
 ## Refusals (until the slices above are ported)
 
@@ -27,7 +27,6 @@ Every unported option, mode or URL kind is refused with one message and returns 
 | `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
 | `authenticated fetch` | any `auth` value | `tool_fetch.go` |
 | `YouTube video extraction`, `local video file analysis`, `video frame and timestamp extraction`, `GitHub repository extraction (clone)`, `GitHub issue and pull request extraction` | the URL (or `frames`/`timestamp`) the original sends to that extractor and the matching config section (`youtube`, `video`, `githubClone`, `githubPrIssue`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
-| `PDF text extraction` | a PDF response | `extract.go` |
 | `the RSC payload and Defuddle fallback extractors` | readable extraction failed, where the original tries these before giving up (the message follows the original's verdict) | `extract.go` |
 
 A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
@@ -177,7 +176,7 @@ Deliberate differences:
 ## Mapping (original file -> Go)
 
 `storage.ts` storage.go - `utils.ts`/`ssrf-protection.ts`/`credential-source.ts` config.go, credential.go, ssrf.go, proxy.go,
-transport.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi/serper/serpapi/serpbase/serply/valyu/bocha/baizhi/you/anysearch/xcrawl/searxng.ts`
+transport.go - `pdf-extract.ts` pdf_extract.go, featureconfig.go (`pdf.*`), pdf_text.go (the unpdf extraction) - `datalab-pdf-extract.ts` datalab_pdf_extract.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi/serper/serpapi/serpbase/serply/valyu/bocha/baizhi/you/anysearch/xcrawl/searxng.ts`
 same names (`jina-search.ts` jinasearch.go; the shared mechanics of the keyed REST providers are in restcommon.go; the hosted providers are listed in "Slice: hosted search and fetch providers") - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
 find.go, sourcecheck.go, fetchparams.go - `data-uri-sanitize.ts` datauri.go - `index.ts` tools.go, tool_*.go, toolconfig.go,
 schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enable.go - `page-query.ts` page_query.go, fetch_answer.go -
@@ -404,3 +403,88 @@ Deliberate differences:
   upload base of the same transport (ADAPTED) until the video slice ships the rest.
 - Config is read at each call (the original caches it for the process), so an edit to `web-search.json` is seen without a restart.
 - The grounding-redirect lookup (`HEAD`, no redirect following, 5 s) goes through the provider transport, so a configured proxy applies.
+
+## Slice: PDF text extraction (pdf-extract, datalab-pdf-extract, `pdf.*` config, fetch-pdf-answer)
+
+A PDF response of `fetch_content` is converted to Markdown, saved as `<tmp>/pi-web-pdf/<title>.md`, and reported as the original
+reports it; its refusal (`PDF text extraction`) is removed. What each file carries:
+
+- **`pdf_extract.go`** (`pdf-extract.ts`): `ExtractPDFToMarkdown`: the `pdf.provider` chain (`auto`: Datalab, the Gemini API, local
+  text; or one of them pinned), the Markdown file layout (title, source, pages, author, page markers, the truncation notice),
+  the file and title names from the URL (`extractTitleFromURL`, `sanitizeFilename`, `arxiv.org` ids), and the rule of which errors
+  end the chain (a cancellation, a credential failure, an unreadable config) and which fall through. The `fetch_content` branch
+  (`extract.go`, `extract.ts:1298`) reports `PDF extracted and saved to: ...` with the page and character counts, the Markdown itself
+  in `mode: "answer"`, the size and configuration errors as they are, and any other failure as `PDF extraction failed: ...`.
+- **`datalab_pdf_extract.go`** (`datalab-pdf-extract.ts`): presigned upload, `PUT`, confirm, convert (multipart, no
+  `processing_location`), polling with the shared deadline and the 1.5 s interval, the cross-origin check on `request_check_url`,
+  redirects as errors, the 4 MiB response bound, redaction of the key from every error, best-effort cleanup that never delays the
+  caller. `DATALAB_API_BASE`, `DATALAB_MODE` and `DATALAB_PROCESSING_LOCATION` as in the original.
+- **`pdf_text.go`** (the `unpdf` call): the library `github.com/ledongthuc/pdf` (BSD-3-Clause, pure Go, no cgo, no Node) reads the
+  file structure: cross-reference tables and streams, object streams, filters, RC4 and AES-128 encryption with the empty password,
+  fonts and ToUnicode maps. The text assembly is PDF.js's `getTextContent` as unpdf drives it (`pdf-extract.ts:226`): the library's
+  own `Content()` reader is not used, because it joins streams without a separator, ignores word and character spacing and measures
+  every glyph with its first byte. `pdf_text.go` has its own content-stream interpreter that tracks the text matrix, spacing and
+  scale, form XObjects and `q`/`Q`, and splits items where PDF.js does (a font or size change, a baseline change beyond the glyph
+  height, a gap under -0.2 em or over 0.6 em, a gap between 0.102 and 0.6 em becomes a space); items are joined with a space and
+  whitespace collapses, as in the original. Text outside the crop box is dropped, ligatures and compatibility forms fold to NFKC like
+  PDF.js's `normalizeUnicode`, right-to-left runs are reordered to logical order, zero-width and bidi control characters are skipped.
+  A PDF whose cross-reference table is damaged is rebuilt from its objects and trailer (what PDF.js does); a file with no trailer, a
+  password, no bytes or no PDF structure fails with PDF.js's own messages (`Invalid PDF structure.`, `No password given`,
+  `The PDF file is empty, i.e. its size is zero bytes.`).
+
+### Evidence that the text matches unpdf
+
+`port/make-pdf-fixtures.mjs` writes 24 PDFs by hand (no PDF library: text, several pages, metadata, Unicode through WinAnsi and
+through a Type0/ToUnicode font, Cyrillic, CJK, Hebrew, ligatures, `/Differences`, run splitting and kerning gaps, flate content,
+RC4-40, AES-128 and AES-256 encryption, a password-protected file, four corrupt files, a scanned page, 120 pages, rotated text,
+a form XObject, a content array, off-page text, an inline image, an object-stream and xref-stream file, control codes, and a
+30-page report). `port/record-pdf-extract.mjs` runs the original `pdf-extract.ts` (unpdf 1.8.0, PDF.js 6.1) over them under Node 24 in the
+container and records the saved Markdown or the error (`testdata/pdf-unpdf.json`, also the title and file name derived from 16 URLs).
+`TestPDFCorpusAgainstUnpdf` requires byte-identical Markdown, page and character counts and file names, and identical error text, on
+every fixture but the one below. Seven real documents outside the corpus (not redistributed; two from system documentation, the
+library's own test files) were compared the same way while building the extractor: six are identical, including a 19-page, 37 356
+character specification; the seventh, a 6-page license text, differs in 2 of 33 728 characters (see the font metrics item below).
+
+### Deliberate differences
+
+- **AES-256 (PDF 2.0, V5/R6) encryption**: the library reads encryption up to V4 (AES-128). Fixture `encrypted-aes256-empty.pdf`:
+  the port fails with `Invalid PDF structure.`; the original also fails on PiG's Node 24 runtime, because PDF.js 6.1 calls
+  `Math.sumPrecise` for the AES-256 key hash (`Math.sumPrecise is not a function`); on a runtime that has it (Node 25) the original
+  extracts the text and the port still fails. Pinned by `knownPDFDifferences`.
+- **Font metrics**: PDF.js measures glyphs with the font program (embedded or its built-in standard-14 metrics); the port has
+  only the `/Widths` array (0.5 em for a standard font without one, 0.6 em for Courier, 0.278 em for a space). A word gap decided
+  by a position that lands near a threshold (0.102 em, 0.6 em) can therefore differ. Fixture `runs-and-spacing.pdf` shows the rule
+  on exact positions (identical); the one observed difference is two spaces before `.` and `,` in a real license text (not
+  redistributed), where PDF.js inserted a space and the port did not.
+- **Right-to-left text** is reordered with the Unicode bidirectional algorithm of `golang.org/x/text`, PDF.js uses its own port of it:
+  fixture `fonts-encodings-rtl.pdf` (Hebrew in visual order) is identical; mixed numbers and neutrals are not proven to be.
+- **Vertical writing** (`WMode 1`, `-V` CMaps) and Type3 glyph metrics are approximated; rotation by any angle follows the text direction
+  (fixture `rotated.pdf`).
+- **Recovery**: a damaged cross-reference table is rebuilt from the `N G obj` headers and the last trailer that has a `/Root`
+  (fixture `corrupt-xref.pdf`, identical); objects that live in object streams are not found by the rebuild, and a file that lost its
+  trailer fails, as in PDF.js (`corrupt-truncated.pdf`, identical).
+- **Error messages** of the library are mapped to the three PDF.js messages above; every other open failure reads `Invalid PDF structure.`
+  where PDF.js has more specific ones (for example for a missing page tree).
+- **The saved file is private** (directory 0700, file 0600); the original writes with the default mode. Nothing else reads it.
+- **Datalab transport**: the calls go through the provider transport, so a configured proxy applies; a redirect is `fetch failed:
+  unexpected redirect`; a request that outlives the shared deadline reads `request timed out (...)`, not the runtime's TimeoutError text;
+  the key from `datalabApiKey` is read on every call (the original caches the config for the process).
+- **No activity monitor** around the fetch (curator slice).
+- **fetch-pdf-answer**: its six answer-mode twins stay named skips, each with its own reason, until the answer-mode slice ports the model
+  call (`mode: "answer"` is still refused in `tool_fetch.go`); the PDF half of each is a Go test beside it
+  (`TestPDFAnswerModeExtraction*`, driving `ExtractContent` with `Mode: "answer"`). The readable-PDF twin runs through the tool.
+  `pdf-extract` keeps two named skips: `works on Node 22 without native Promise.try` (a Node runtime shim) and `passes PDF.js
+  errors-only verbosity` (a PDF.js option); both have no Go counterpart.
+
+### Scenarios and harness gaps
+
+`fetch-pdf-readable`, `fetch-pdf-disabled` and `fetch-pdf-datalab-fallback` (the Datalab upload request and its rejection, then the
+local text) pass under Pi 1402973a, PiG's Node runtime and the Go port, with goldens recorded under Pi (`port/make-pdf-scenarios.mjs`
+writes them; the saved-file directory is normalized). Two gaps in the harness are reported to the lane lead: a scenario route cannot
+carry binary bytes (the body is a JSON string), so only uncompressed ASCII PDFs can be served; and `{{server:NAME}}` is not expanded in
+route bodies, so a fake Datalab server cannot return an `upload_url` that points at itself and the full Datalab flow cannot run in a
+scenario. That flow is proven instead by `port/record-datalab-requests.mjs`, which runs the original with `fetch` replaced by a
+recorder (`testdata/datalab-wire.json`, seven cases) and `TestDatalabWireFixture`, which requires the same requests (method, URL,
+headers, JSON, multipart fields in order, the uploaded bytes) and the same result or error. The failure texts of a bad or oversized PDF
+carry the fetch "Fallback options" list, which this base lists differently from the original until the hosted-provider slice lands, so
+no scenario asserts them (twins do).
