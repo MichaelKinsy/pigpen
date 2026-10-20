@@ -300,16 +300,16 @@
   "replace": "500 * time.Millisecond"
  },
  {
-  "name": "backoff-uncapped",
+  "name": "backoff-shift-uncapped",
   "file": "chat.go",
-  "find": "return min(d, 8*time.Second)",
-  "replace": "return d"
+  "find": "<< min(attempt, 4)",
+  "replace": "<< attempt"
  },
  {
   "name": "retry-wait-ignores-signal",
   "file": "chat.go",
-  "find": "\t\tcase <-ctx.Done():\n\t\t\ttimer.Stop()\n\t\t\treturn nil, nil, \"\", ctx.Err()",
-  "replace": "\t\tcase <-ctx.Done():"
+  "find": "\t\tcase <-ctx.Done():\n\t\t\ttimer.Stop()\n\t\t\treturn nil, nil, \"\", ctx.Err()\n",
+  "replace": ""
  },
  {
   "name": "connection-errors-not-retried",
@@ -321,7 +321,7 @@
   "name": "timeout-ignored",
   "file": "chat.go",
   "find": "if hasTimeout && timeout > 0 {",
-  "replace": "if false {"
+  "replace": "if hasTimeout && timeout > 0 && false {"
  },
  {
   "name": "timeout-covers-stream",
@@ -339,6 +339,6 @@
   "name": "note-dropped",
   "file": "chat.go",
   "find": "text, note))",
-  "replace": "text, \"\"))"
+  "replace": "text, note[:0]))"
  }
 ]

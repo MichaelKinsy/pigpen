@@ -325,8 +325,7 @@ func retryable(status int) bool {
 }
 
 func backoff(attempt int) time.Duration {
-	d := 500 * time.Millisecond << min(attempt, 4)
-	return min(d, 8*time.Second)
+	return 500 * time.Millisecond << min(attempt, 4) // 0.5 s doubling, 8 s at most
 }
 
 // retryAfter reads Retry-After (seconds or an HTTP date) or the millisecond

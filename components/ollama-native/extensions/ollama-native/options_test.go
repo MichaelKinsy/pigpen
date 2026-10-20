@@ -313,11 +313,93 @@ func TestTimeoutMsDoesNotCutALongStream(t *testing.T) {
 		for _, l := range lines {
 			fmt.Fprint(w, l)
 			w.(http.Flusher).Flush()
-			time.Sleep(60 * time.Millisecond)
+			time.Sleep(80 * time.Millisecond)
 		}
 	})
-	s := run(t, newClient(srv.URL), graniteModel, userTranscript("hi"), vals(map[string]any{"timeoutMs": float64(200)}))
+	s := run(t, newClient(srv.URL), graniteModel, userTranscript("hi"), vals(map[string]any{"timeoutMs": float64(100)}))
 	if s.terminal()["type"] != "done" {
 		t.Errorf("terminal = %v", s.terminal())
+	}
+}
+
+func TestMaxTokensZeroIsNotSent(t *testing.T) {
+	if o := requestOptions(t, map[string]any{"maxTokens": float64(0)}); o != nil {
+		t.Errorf("options = %v", o)
+	}
+}
+
+func TestBackoffDoublesFromHalfASecondUpToEight(t *testing.T) {
+	want := []time.Duration{500 * time.Millisecond, time.Second, 2 * time.Second, 4 * time.Second, 8 * time.Second, 8 * time.Second, 8 * time.Second}
+	for i, w := range want {
+		if got := backoff(i); got != w {
+			t.Errorf("backoff(%d) = %v, want %v", i, got, w)
+		}
+	}
+}
+
+func TestRetryAfterForms(t *testing.T) {
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	h := func(kv ...string) http.Header {
+		out := http.Header{}
+		for i := 0; i < len(kv); i += 2 {
+			out.Set(kv[i], kv[i+1])
+		}
+		return out
+	}
+	cases := []struct {
+		name string
+		in   http.Header
+		want time.Duration
+	}{
+		{"seconds", h("Retry-After", "3"), 3 * time.Second},
+		{"fractional seconds", h("Retry-After", "1.5"), 1500 * time.Millisecond},
+		{"milliseconds header wins", h("Retry-After-Ms", "250", "Retry-After", "9"), 250 * time.Millisecond},
+		{"http date", h("Retry-After", now.Add(7*time.Second).Format(http.TimeFormat)), 7 * time.Second},
+		{"date in the past", h("Retry-After", now.Add(-time.Hour).Format(http.TimeFormat)), 0},
+		{"absent", h(), -1},
+		{"garbage", h("Retry-After", "soon"), -1},
+	}
+	for _, c := range cases {
+		if got := retryAfter(c.in, now); got != c.want {
+			t.Errorf("%s: %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+func TestRetryWaitsForTheServerNotTheBackoff(t *testing.T) {
+	ok := okChat(t)
+	srv, _ := capture(t, func(w http.ResponseWriter, r *http.Request, i int) {
+		if i == 1 {
+			w.Header().Set("Retry-After-Ms", "0")
+			http.Error(w, `{"error":"busy"}`, 503)
+			return
+		}
+		ok(w)
+	})
+	start := time.Now()
+	s := run(t, newClient(srv.URL), graniteModel, userTranscript("hi"), vals(map[string]any{"maxRetries": float64(1)}))
+	if s.terminal()["type"] != "done" || time.Since(start) > 400*time.Millisecond {
+		t.Errorf("terminal = %v after %v", s.terminal()["type"], time.Since(start))
+	}
+}
+
+func TestConnectionFailuresAreRetried(t *testing.T) {
+	ok := okChat(t)
+	srv, n := capture(t, func(w http.ResponseWriter, r *http.Request, i int) {
+		if i == 1 {
+			conn, _, _ := w.(http.Hijacker).Hijack()
+			conn.Close()
+			return
+		}
+		ok(w)
+	})
+	s := run(t, newClient(srv.URL), graniteModel, userTranscript("hi"), vals(map[string]any{"maxRetries": float64(1)}))
+	if s.terminal()["type"] != "done" || n.Load() != 2 {
+		t.Errorf("terminal = %v after %d requests", s.terminal()["type"], n.Load())
+	}
+	n.Store(0)
+	s = run(t, newClient(srv.URL), graniteModel, userTranscript("hi"), vals(map[string]any{}))
+	if n.Load() != 1 {
+		t.Errorf("no retries were asked for, %d requests", n.Load())
 	}
 }
