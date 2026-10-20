@@ -67,6 +67,7 @@ type controlledGit struct {
 	computeCalls   int
 	ignoredCalls   int
 	failCompute    bool
+	cancelDelay    time.Duration // how long a cancelled scan takes to end, like a git process being killed
 	failIgnored    bool
 	blockFirstCall bool
 }
@@ -86,6 +87,12 @@ func (g *controlledGit) calls() (compute, ignored int) {
 func (g *controlledGit) Inspect(context.Context, string) (*changeset.Workspace, error) {
 	ws := g.workspace
 	return &ws, nil
+}
+
+func (g *controlledGit) delayAfterCancel() time.Duration {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.cancelDelay
 }
 
 func (g *controlledGit) running() int {
@@ -110,6 +117,7 @@ func (g *controlledGit) Compute(ctx context.Context, _ changeset.Workspace, _ st
 		select {
 		case <-g.computeGate:
 		case <-ctx.Done():
+			time.Sleep(g.delayAfterCancel())
 			return nil, context.Cause(ctx)
 		}
 	}
@@ -347,6 +355,9 @@ func TestChangesetRefreshesWhenATurnEnds(t *testing.T) {
 // touch the host afterwards.
 func TestChangesetRemoveSessionWaitsForTheScan(t *testing.T) {
 	c := startControlled(t, controlledOptions{blockFirstCompute: true})
+	c.git.mu.Lock()
+	c.git.cancelDelay = 200 * time.Millisecond
+	c.git.mu.Unlock()
 	c.client.Subscribe(c.channel)
 	<-c.git.computeStarted
 	if c.git.running() != 1 {
