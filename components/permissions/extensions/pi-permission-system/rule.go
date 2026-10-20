@@ -145,15 +145,21 @@ type CheckResult struct {
 
 var restrictiveness = map[string]int{"allow": 0, "ask": 1, "deny": 2}
 
-// MostRestrictiveOf returns the most restrictive member (deny over ask over allow); the first one on a tie.
-func MostRestrictiveOf(results []*CheckResult) *CheckResult {
+// mostRestrictiveOf returns the most restrictive member of a non-empty list (deny over ask over allow), the first one on a tie. The
+// winner is the member's own value, so its tool name, pattern, origin and source name the input that forced the verdict.
+func mostRestrictiveOf[T any](results []T, state func(T) string) T {
 	worst := results[0]
 	for _, r := range results {
-		if restrictiveness[r.State] > restrictiveness[worst.State] {
+		if restrictiveness[state(r)] > restrictiveness[state(worst)] {
 			worst = r
 		}
 	}
 	return worst
+}
+
+// MostRestrictiveOf returns the most restrictive member (deny over ask over allow); the first one on a tie.
+func MostRestrictiveOf(results []*CheckResult) *CheckResult {
+	return mostRestrictiveOf(results, func(r *CheckResult) string { return r.State })
 }
 
 // PickMostRestrictive is MostRestrictiveOf for a list that may be empty (nil).
