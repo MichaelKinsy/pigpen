@@ -4,23 +4,39 @@ import (
 	"context"
 	"strings"
 	"testing"
-	"time"
 )
 
 // Twins of proxy-transport.test.mjs. The original tunnels proxied requests through a `curl`
-// child process; Go's net/http speaks the proxy protocols itself, so the curl-specific cases
-// are named skips and the scoping, validation and routing cases assert the same behaviour on
-// the proxy each request carries.
+// child process and so does this port, through the host's command runner: the curl cases run
+// against fakeCurl (proxy_curl_test.go), the twin of the original's fake `curl` script.
 
 func TestUpstream_proxy_transport(t *testing.T) {
 	const F = "proxy-transport"
 	sptr := func(s string) *string { return &s }
 	tskip(t, F, "extension initialization preserves fetch identity and installs proxy transport on first proxied tool call",
 		"there is no global fetch to wrap in Go: the proxy travels in the request context (WithProxy) instead")
-	tskip(t, F, "proxy curl redirects strip caller headers across origins", "the original spawns a curl child process for proxied requests and Go's net/http speaks the proxy protocol itself, so there is no child process to observe; cross-origin header stripping is covered by the FetchRemoteURL redirect twins")
-	tskip(t, F, "proxy curl redirects keep caller headers on the same origin", "the original spawns a curl child process for proxied requests and Go's net/http speaks the proxy protocol itself, so there is no child process to observe; same-origin header handling is covered by the FetchRemoteURL redirect twins")
-	tskip(t, F, "proxy curl keeps manual redirects as redirect responses", "the original spawns a curl child process for proxied requests and Go's net/http speaks the proxy protocol itself, so there is no child process to observe; the guarded fetch never follows redirects itself")
-	tskip(t, F, "proxy transport does not spawn curl for pre-aborted requests", "the original spawns a curl child process for proxied requests and Go's net/http speaks the proxy protocol itself, so there is no child process to observe; pre-aborted requests are covered by the extraction cancellation twins")
+	tskip(t, F, "proxy curl redirects strip caller headers across origins", "the original's fetch wrapper follows redirects itself (up to 20) when the caller does not ask for manual ones; every proxied request of this port is a single hop (FetchRemoteURL and FetchWithCredentialRedirects follow redirects by hand, as the original's fetchRemoteUrl does with redirect manual), so there is no follow loop to strip headers in; the curl arguments of each hop are covered by TestCurlTransportArguments")
+	tskip(t, F, "proxy curl redirects keep caller headers on the same origin", "the original's fetch wrapper follows redirects itself (up to 20) when the caller does not ask for manual ones; every proxied request of this port is a single hop (FetchRemoteURL and FetchWithCredentialRedirects follow redirects by hand), so there is no follow loop to keep headers in; see the cross-origin twin")
+	tw(t, F, "proxy curl keeps manual redirects as redirect responses", func(t *testing.T) {
+		extractEnv(t, "")
+		f := useCurl(t, map[string]curlRoute{"https://93.184.216.34/start": {Status: 302, StatusText: "Found", Location: "https://other.example/final"}})
+		resp, err := guardedFetch(WithProxy(bg(), "http://proxy.example:8080/"), mustURL(t, "https://93.184.216.34/start"), RequestInit{Method: "GET"}, ValidationOptions{})
+		noErr(t, err)
+		if resp.StatusCode != 302 || resp.Header.Get("Location") != "https://other.example/final" || len(f.snapshot()) != 1 {
+			t.Fatalf("%d %v %d", resp.StatusCode, resp.Header, len(f.snapshot()))
+		}
+	})
+	tw(t, F, "proxy transport does not spawn curl for pre-aborted requests", func(t *testing.T) {
+		extractEnv(t, "")
+		f := useCurl(t, map[string]curlRoute{"https://93.184.216.34/abort": {Status: 200, StatusText: "OK", Body: "late"}})
+		ctx, cancel := context.WithCancel(WithProxy(bg(), "http://proxy.example:8080/"))
+		cancel()
+		_, err := guardedFetch(ctx, mustURL(t, "https://93.184.216.34/abort"), RequestInit{Method: "GET"}, ValidationOptions{})
+		wantErr(t, err, `(?i)error.*abort|abort`)
+		if len(f.snapshot()) != 0 {
+			t.Fatalf("curl ran: %+v", f.snapshot())
+		}
+	})
 	tskip(t, F, "websearch command scopes searches but not model callbacks to configured proxy", "the /websearch curator command is deferred (docs/PORT.md)")
 
 	tw(t, F, "configured proxy is scoped to web operations while empty string forces direct access", func(t *testing.T) {
@@ -31,7 +47,7 @@ func TestUpstream_proxy_transport(t *testing.T) {
 			return activeProxy(ctx)
 		}
 		got := []string{activeProxy(context.Background()), active(nil), active(sptr("")), active(sptr("http://call-proxy.example:8080")), activeProxy(context.Background())}
-		want := []string{"", "http://global-proxy.example:8080", "", "http://call-proxy.example:8080", ""}
+		want := []string{"", "http://global-proxy.example:8080/", "", "http://call-proxy.example:8080/", ""}
 		if !eqStrings(got, want) {
 			t.Fatalf("%q", got)
 		}
@@ -87,81 +103,73 @@ func TestUpstream_proxy_transport(t *testing.T) {
 	})
 	tw(t, F, "proxy transport errors redact proxy credentials", func(t *testing.T) {
 		extractEnv(t, "")
-		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-		defer cancel()
-		ctx, err := ScopeProxy(ctx, sptr("http://user:secret@127.0.0.1:1"))
+		useCurl(t, map[string]curlRoute{})
+		ctx, err := ScopeProxy(bg(), sptr("http://user:secret@proxy.example:8080"))
 		noErr(t, err)
-		// The real transport, aimed at a closed local port: the failure must not echo the credentials.
+		_, err = guardedFetch(ctx, mustURL(t, "https://93.184.216.34/missing"), RequestInit{Method: "GET"}, ValidationOptions{})
+		wantErr(t, err, `http://redacted:redacted@proxy\.example:8080/`)
+		if strings.Contains(err.Error(), "user:secret") {
+			t.Fatalf("credentials leaked: %v", err)
+		}
 		res := ExtractContent(ctx, "https://93.184.216.34/missing", ExtractOptions{})
-		if res.Error == nil {
-			t.Fatal("expected a proxy failure")
-		}
-		if strings.Contains(*res.Error, "user:secret") || strings.Contains(*res.Error, "secret") {
-			t.Fatalf("credentials leaked: %s", *res.Error)
-		}
-		if got := RedactProxyURL("http://user:secret@proxy.example:8080/"); got != "http://redacted:redacted@proxy.example:8080/" {
-			t.Fatal(got)
+		if res.Error == nil || strings.Contains(*res.Error, "secret") || !strings.Contains(*res.Error, "http://redacted:redacted@proxy.example:8080/") {
+			t.Fatalf("%v", res.Error)
 		}
 	})
 	tw(t, F, "source_check fetchContent uses the explicit proxy for result pages", func(t *testing.T) {
-		adapted(t, "provider tavily instead of openai (not ported); recorded proxy of each request instead of curl arguments")
+		adapted(t, "provider tavily instead of openai (not ported here); the result page is an IP literal so no DNS is needed")
 		r, _ := newRuntime(t, `{}`)
 		t.Setenv("TAVILY_API_KEY", "source-check-proxy-test-key")
-		fn := useNet(t, func(c netCall) netReply {
-			if c.URL == "https://api.tavily.com/search" {
-				return reply(200, tavilyBody("", map[string]string{"title": "API docs", "url": "https://93.184.216.34/api", "content": ""}))
-			}
-			return netReply{Status: 200, Body: "<html><title>API docs</title><body>The API docs are available.</body></html>", Header: hdr("content-type", "text/html")}
+		f := useCurl(t, map[string]curlRoute{
+			"https://api.tavily.com/search": {Status: 200, StatusText: "OK", Body: tavilyBody("", map[string]string{"title": "API docs", "url": "https://93.184.216.34/api", "content": ""})},
+			"https://93.184.216.34/api":     {Status: 200, StatusText: "OK", Body: "<html><title>API docs</title><body>The API docs are available.</body></html>", Dump: strp("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n")},
 		})
 		out := run(t, mustTool(t, r, "source_check"), map[string]any{"claim": "API docs", "provider": "tavily", "fetchContent": true, "proxy": "http://call-proxy.example:8080"})
 		if dInt(t, out, "sourceCount") != 1 {
 			t.Fatalf("%v", out.Details)
 		}
-		seen := map[string]string{}
-		for _, c := range fn.calls {
-			seen[c.URL] = c.Proxy
-		}
-		if seen["https://api.tavily.com/search"] != "http://call-proxy.example:8080" || seen["https://93.184.216.34/api"] != "http://call-proxy.example:8080" {
-			t.Fatalf("%v", seen)
+		apiCall, pageCall := f.argsOf("https://api.tavily.com/search"), f.argsOf("https://93.184.216.34/api")
+		if apiCall == nil || pageCall == nil || valueAfter(apiCall, "-x") != "http://call-proxy.example:8080/" || valueAfter(pageCall, "-x") != "http://call-proxy.example:8080/" {
+			t.Fatalf("%+v", f.snapshot())
 		}
 	})
 	tw(t, F, "fetch_content passes the explicit proxy through queued extraction", func(t *testing.T) {
 		adapted(t, "the page body is padded past the 500-character usefulness floor: this port's HTML pipeline (like the original's, which also rejects the short fixture body) reports shorter pages as incomplete")
 		r, _ := newRuntime(t, `{}`)
-		fn := useNet(t, func(netCall) netReply {
-			return netReply{Status: 200, Body: "<html><title>Proxy page</title><body><p>Fetched through the requested proxy. " + strings.Repeat("More readable words for the page. ", 30) + "</p></body></html>", Header: hdr("content-type", "text/html")}
-		})
+		f := useCurl(t, map[string]curlRoute{"https://93.184.216.34/page": {Status: 200, StatusText: "OK",
+			Body: "<html><title>Proxy page</title><body><p>Fetched through the requested proxy. " + strings.Repeat("More readable words for the page. ", 30) + "</p></body></html>",
+			Dump: strp("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n")}})
 		out := run(t, mustTool(t, r, "fetch_content"), map[string]any{"url": "https://93.184.216.34/page", "proxy": "http://call-proxy.example:8080"})
-		if dInt(t, out, "successful") != 1 || len(fn.calls) != 1 || fn.calls[0].Proxy != "http://call-proxy.example:8080" {
-			t.Fatalf("%v %+v", out.Details, fn.calls)
+		pageCall := f.argsOf("https://93.184.216.34/page")
+		if dInt(t, out, "successful") != 1 || pageCall == nil || valueAfter(pageCall, "-x") != "http://call-proxy.example:8080/" {
+			t.Fatalf("%v %+v", out.Details, f.snapshot())
 		}
 	})
 	tw(t, F, "configured socks5h proxy is accepted and routed to curl", func(t *testing.T) {
-		adapted(t, "asserts the accepted proxy the request carries instead of curl arguments")
 		extractEnv(t, `{"proxy":"socks5h://proxy.example:9050"}`)
 		r, _ := newRuntime(t, `{"proxy":"socks5h://proxy.example:9050"}`)
-		fn := useNet(t, func(netCall) netReply {
-			return netReply{Status: 200, Body: "through socks proxy", Header: hdr("content-type", "text/plain")}
-		})
+		f := useCurl(t, map[string]curlRoute{"https://93.184.216.34/page": {Status: 200, StatusText: "OK", Body: "through socks proxy", Dump: strp("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n")}})
+		ctx, err := ScopeProxy(bg(), nil)
+		noErr(t, err)
+		if activeProxy(ctx) != "socks5h://proxy.example:9050" {
+			t.Fatalf("active proxy %q", activeProxy(ctx))
+		}
 		out := run(t, mustTool(t, r, "fetch_content"), map[string]any{"url": "https://93.184.216.34/page"})
-		if out.Text() != "through socks proxy" || fn.calls[0].Proxy != "socks5h://proxy.example:9050" {
-			t.Fatalf("%q %+v", out.Text(), fn.calls)
+		pageCall := f.argsOf("https://93.184.216.34/page")
+		if out.Text() != "through socks proxy" || pageCall == nil || valueAfter(pageCall, "-x") != "socks5h://proxy.example:9050" {
+			t.Fatalf("%+v %+v", out.Text(), f.snapshot())
 		}
 	})
 	tw(t, F, "per-call ${scheme} proxy is routed unchanged to curl", func(t *testing.T) {
 		for _, scheme := range []string{"socks4", "socks4a", "socks5", "socks5h"} {
 			t.Run(scheme, func(t *testing.T) {
-				if scheme == "socks4" || scheme == "socks4a" {
-					t.Skip("Go's net/http cannot dial " + scheme + " proxies: the URL validates like the original but the connection fails closed (TestSocks4FailsClosed)")
-				}
 				r, _ := newRuntime(t, `{}`)
-				fn := useNet(t, func(netCall) netReply {
-					return netReply{Status: 200, Body: "through socks proxy", Header: hdr("content-type", "text/plain")}
-				})
+				f := useCurl(t, map[string]curlRoute{"https://93.184.216.34/page": {Status: 200, StatusText: "OK", Body: "through socks proxy", Dump: strp("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n")}})
 				proxy := scheme + "://proxy.example:9050"
 				out := run(t, mustTool(t, r, "fetch_content"), map[string]any{"url": "https://93.184.216.34/page", "proxy": proxy})
-				if out.Text() != "through socks proxy" || fn.calls[0].Proxy != proxy {
-					t.Fatalf("%q %+v", out.Text(), fn.calls)
+				calls := f.snapshot()
+				if out.Text() != "through socks proxy" || len(calls) != 1 || valueAfter(calls[0].Args, "-x") != proxy {
+					t.Fatalf("%+v %+v", out.Text(), calls)
 				}
 			})
 		}
@@ -169,25 +177,15 @@ func TestUpstream_proxy_transport(t *testing.T) {
 	tw(t, F, "generic socks proxy is rejected before transport runs", func(t *testing.T) {
 		r, _ := newRuntime(t, `{}`)
 		fn := useNet(t, func(netCall) netReply { return reply(200, "x") })
+		f := useCurl(t, nil)
 		out, err := mustTool(t, r, "fetch_content").Execute(bg(), map[string]any{"url": "https://93.184.216.34/page", "proxy": "socks://proxy.example:9050"}, nil)
 		if err == nil {
 			matchRE(t, `proxy.*must use the http://, https://, or socks scheme`, out.Text())
 		} else {
 			wantErr(t, err, `proxy.*must use the http://, https://, or socks scheme`)
 		}
-		if len(fn.calls) != 0 {
-			t.Fatalf("transport ran: %+v", fn.calls)
+		if len(fn.calls) != 0 || len(f.snapshot()) != 0 {
+			t.Fatalf("transport ran: %+v %+v", fn.calls, f.snapshot())
 		}
 	})
-}
-
-// Go's net/http has no SOCKS4 dialer: the request fails closed instead of going out directly.
-func TestSocks4FailsClosed(t *testing.T) {
-	extractEnv(t, "")
-	ctx, err := ScopeProxy(bg(), func() *string { s := "socks4://127.0.0.1:1"; return &s }())
-	noErr(t, err)
-	res := ExtractContent(ctx, "https://93.184.216.34/page", ExtractOptions{})
-	if res.Error == nil || res.Content != "" {
-		t.Fatalf("%+v", res)
-	}
 }
