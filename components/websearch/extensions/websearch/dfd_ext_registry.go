@@ -14,7 +14,7 @@ import (
 // here, so every `includeReplies !== false` test of the extractors is true and is not carried.
 
 // dfdExtractor is what the registry returns: BaseExtractor's synchronous surface. name is
-// constructor.name.replace('Extractor', '').toLowerCase(), the extractorType of the result.
+// constructor.name.replace('Extractor', ”).toLowerCase(), the extractorType of the result.
 type dfdExtractor interface {
 	canExtract() bool
 	extract() dfdExtracted

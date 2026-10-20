@@ -1,0 +1,6 @@
+{
+ "url": "https://store.steampowered.com/news/app/1/view/2",
+ "title": "Patch 1.2",
+ "content": "Line one  \nline two\n\n  \n**bold** *it* u ~~s~~ [link](https://example.com/a) bad  \n- one\n- two\n1. a\n2. b\n\n> quoted\n\n```\nx = 1\n```\nSpoilerhidden  \n![](https://example.com/i.png) \n![](https://www.youtube.com/watch?v=abc123)\n gone **UP**",
+ "error": null
+}

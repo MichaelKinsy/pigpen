@@ -135,7 +135,6 @@ func dfdBuildCommentTree(comments []dfdComment) string {
 	return b.String()
 }
 
-
 // dfdBuildComment is buildComment: author, date (a link when there is a safe URL) and score, then the content.
 func dfdBuildComment(c dfdComment) string {
 	author := `<span class="comment-author"><strong>` + dfdEscapeHTML(c.author) + `</strong></span>`
