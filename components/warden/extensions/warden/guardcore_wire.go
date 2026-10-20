@@ -2,6 +2,7 @@ package warden
 
 import (
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -153,7 +154,7 @@ func (w *warden) gcArmed(cfg Config, tool string, input map[string]any, v Verdic
 	}
 	var visible []ArmedHit
 	for _, hit := range w.gc.arming.CheckArmed(view.Command) {
-		if !contains(cfg.Action.ExemptRules, hit.ID) {
+		if !slices.Contains(cfg.Action.ExemptRules, hit.ID) {
 			visible = append(visible, hit)
 		}
 	}
