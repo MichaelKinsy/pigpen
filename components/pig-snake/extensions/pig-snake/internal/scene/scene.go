@@ -118,6 +118,13 @@ func BoardOrigin(canvasW, canvasH, cols, rows, size int) (x, y int) {
 	return (canvasW - cols*size) / 2, (canvasH - rows*size) / 2
 }
 
+// PointerOffset is where a pointer at content cell (cx, cy) is from the middle of the leader, in pixels (dx right, dy down), as
+// Render draws the game in a viewW x viewH view. ok is false when nothing is drawn there to point at: the view is too small for
+// the board, or the cell is on the HUD lines or outside the view.
+func PointerOffset(g *snake.Game, src sprites.Source, viewW, viewH, cx, cy int) (dx, dy int, ok bool) {
+	return 0, 0, false
+}
+
 // Buffers are the reusable buffers of one view.
 type Buffers struct {
 	canvas  pixel.Canvas

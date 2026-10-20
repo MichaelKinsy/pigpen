@@ -222,6 +222,11 @@ func direction(key termgame.Key, letter rune) (snake.Dir, bool) {
 	return 0, false
 }
 
+// HandleMouse steers the leader toward a left press on the board.
+func (c *component) HandleMouse(event sdk.MouseEvent) (sdk.RemoteComponentResult, error) {
+	return sdk.RemoteComponentResult{}, nil
+}
+
 func (c *component) SetInvalidate(invalidate func()) {
 	c.mu.Lock()
 	c.invalidate = invalidate

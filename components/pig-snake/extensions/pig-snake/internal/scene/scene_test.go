@@ -588,3 +588,59 @@ func TestAppleArtHasUniformRowsAndOnlyKnownSymbols(t *testing.T) {
 		t.Error("appleFor must fall back to the nearest smaller art")
 	}
 }
+
+// The Sheriff wears his hat over the top rows of the leader's head; nobody else does, followers included.
+func TestTheSheriffLeaderWearsAHatAndNoFollowerDoes(t *testing.T) {
+	hatColour := sprites.Shared("sheriff").Palette(0)['H']
+	for _, size := range []int{8, 6, 4} {
+		g := snake.New(10, 6, snake.Walls, 0, fixedRand{})
+		g.Body = append(g.Body, snake.Point{X: g.Body[0].X - 1, Y: g.Body[0].Y})
+		w, h := 10*size+4, 6*size+4
+		ox, oy := BoardOrigin(w, h, g.W, g.H, size)
+		leaderTop := func(src sprites.Source, member int) bool {
+			var cv pixel.Canvas
+			cv.Resize(w, h)
+			Draw(&cv, g, src, size)
+			p := g.Body[member]
+			for x := range size {
+				if cv.At(ox+p.X*size+x, oy+p.Y*size) == hatColour {
+					return true
+				}
+			}
+			return false
+		}
+		if !leaderTop(sprites.Shared("sheriff"), 0) {
+			t.Errorf("size %d: the Sheriff leader has no hat", size)
+		}
+		if leaderTop(sprites.Shared("sheriff"), 1) {
+			t.Errorf("size %d: a follower wears the Sheriff's hat", size)
+		}
+		if leaderTop(sprites.Shared("pink"), 0) || leaderTop(sprites.Shared(""), 0) {
+			t.Errorf("size %d: a leader that is not the Sheriff wears a hat", size)
+		}
+	}
+}
+
+func TestTheHatStaysOnTheHeadAndLeavesTheEyesAlone(t *testing.T) {
+	src := sprites.Shared("sheriff")
+	pal := src.Palette(0)
+	g := snake.New(10, 6, snake.Walls, 0, fixedRand{})
+	for _, size := range []int{8, 6, 4} {
+		var c pixel.Canvas
+		c.Resize(10*size+4, 6*size+4)
+		Draw(&c, g, src, size)
+		ox, oy := BoardOrigin(c.W, c.H, g.W, g.H, size)
+		x0, y0 := ox+g.Body[0].X*size, oy+g.Body[0].Y*size
+		eyes := 0
+		for y := range size {
+			for x := range size {
+				if c.At(x0+x, y0+y) == pal['K'] {
+					eyes++
+				}
+			}
+		}
+		if eyes < 2 {
+			t.Errorf("size %d: the hat hides the eyes (%d dark pixels)", size, eyes)
+		}
+	}
+}
