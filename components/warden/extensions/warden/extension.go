@@ -103,6 +103,8 @@ type warden struct {
 	learn *learningState
 	// conscience is the conscience's state (conscience_state.go).
 	conscience conscienceState
+	// auditState is the /warden audit running flag (audit_cmd.go).
+	auditState auditState
 }
 
 // Extension returns the guard.

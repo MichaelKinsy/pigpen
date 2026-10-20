@@ -12,11 +12,10 @@ func refusal(feature string) string {
 
 // unportedAction maps the first words of /warden args to the upstream action that is not ported, or "".
 // Upstream's list: status, rules, report, enable, disable, mode, config, test, trace, init, audit, index, prefs,
-// loops, recommend, unmute, bench (extension.ts). `rules` (with check, audit, calibrate and tune), `report` and `init`
+// loops, recommend, unmute, bench (extension.ts). `audit` and `bench` are ported (audit_cmd.go, bench_cmd.go). `rules` (with check, audit, calibrate and tune), `report` and `init`
 // are ported (rules_commands.go).
 func unportedAction(sub string, rest []string) string {
 	switch sub {
-	case "audit", "bench":
 		return "/warden " + sub
 	}
 	return ""
