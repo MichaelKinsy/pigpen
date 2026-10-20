@@ -27,8 +27,12 @@ func (e ejectEnv) projectSettings() string { return filepath.Join(e.dir, ".pi", 
 func (e ejectEnv) userAgent(n string) string {
 	return filepath.Join(e.dir, "agent-home", "agents", n+".md")
 }
-func (e ejectEnv) projectAgent(n string) string { return filepath.Join(e.dir, ".pi", "agents", n+".md") }
-func (e ejectEnv) packageAgent(n string) string { return filepath.Join(e.dir, "packaged-agents", n+".md") }
+func (e ejectEnv) projectAgent(n string) string {
+	return filepath.Join(e.dir, ".pi", "agents", n+".md")
+}
+func (e ejectEnv) packageAgent(n string) string {
+	return filepath.Join(e.dir, "packaged-agents", n+".md")
+}
 
 func (e ejectEnv) writePackageAgent(t *testing.T, name string) {
 	t.Helper()

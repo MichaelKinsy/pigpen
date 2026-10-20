@@ -88,16 +88,7 @@ func configObject(config any) configResult {
 	case *jsObject:
 		return configResult{status: "ok", value: x}
 	case map[string]any:
-		o := newObject()
-		keys := make([]string, 0, len(x))
-		for k := range x {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			o.set(k, x[k])
-		}
-		return configResult{status: "ok", value: o}
+		return configResult{status: "ok", value: deepJS(x).(*jsObject)}
 	}
 	return configResult{status: "missing"}
 }
@@ -2309,4 +2300,29 @@ func handleManagementAction(action string, params map[string]any, ctx mgmtContex
 		return ctx.handleReset(params)
 	}
 	return mgmtResultOf("Unknown action: "+action, true)
+}
+
+// deepJS converts the nested maps and slices of a decoded tool call to the ordered objects the config code reads (a map has no
+// order, so its keys are visited sorted).
+func deepJS(v any) any {
+	switch x := v.(type) {
+	case map[string]any:
+		o := newObject()
+		keys := make([]string, 0, len(x))
+		for k := range x {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			o.set(k, deepJS(x[k]))
+		}
+		return o
+	case []any:
+		out := make([]any, len(x))
+		for i, e := range x {
+			out[i] = deepJS(e)
+		}
+		return out
+	}
+	return v
 }

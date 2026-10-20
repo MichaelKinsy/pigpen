@@ -158,3 +158,30 @@ func getAgent(cwd string, params map[string]any) manageResult {
 func listAgents(cwd string, params map[string]any) manageResult {
 	return handleManagementAction("list", params, testMgmtCtx(cwd))
 }
+
+// canonJSON is the JSON of a decoded value with every object's keys sorted: deepEqual in the original ignores key order.
+func canonJSON(v any) string {
+	var norm func(v any) any
+	norm = func(v any) any {
+		switch x := v.(type) {
+		case *jsObject:
+			out := map[string]any{}
+			for _, k := range x.keys {
+				if _, u := x.vals[k].(undef); !u {
+					out[k] = norm(x.vals[k])
+				}
+			}
+			return out
+		case []any:
+			out := make([]any, len(x))
+			for i, e := range x {
+				out[i] = norm(e)
+			}
+			return out
+		case []string:
+			return norm(anyStrings(x))
+		}
+		return v
+	}
+	return marshalJSON(norm(v), "")
+}
