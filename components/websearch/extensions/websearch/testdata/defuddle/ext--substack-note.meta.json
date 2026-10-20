@@ -1,0 +1,10 @@
+{
+ "author": "Some User",
+ "published": "",
+ "description": "Note text",
+ "site": "Substack",
+ "language": "",
+ "image": "https://substack.com/img/og.png",
+ "extractorType": "substack",
+ "wordCount": 3
+}
