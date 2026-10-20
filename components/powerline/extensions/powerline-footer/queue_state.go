@@ -27,6 +27,8 @@ const (
 // IsIdle is ctx.isIdle() and Compact is ctx.compact({onError}); onError is called later, from another goroutine.
 type queueHostAPI interface {
 	Sender() func(text, deliverAs string) error
+	// IdleCheck is IsIdle bound to the current context, for a goroutine that runs without the lock.
+	IdleCheck() func() (bool, error)
 	IsIdle() (bool, error)
 	SetEditorText(text string)
 	Compact(onError func(error))
@@ -68,15 +70,26 @@ type stopFunc func()
 
 func (f stopFunc) Stop() { f() }
 
+// spawnAfter runs f on its own goroutine once gate is closed.
+func spawnAfter(gate <-chan struct{}, f func()) {
+	go func() {
+		if gate != nil {
+			<-gate
+		}
+		f()
+	}()
+}
+
 // noQueueHost serves a host that cannot send messages (the render tests' scripted host).
 type noQueueHost struct{}
 
 func (noQueueHost) Sender() func(string, string) error {
 	return func(string, string) error { return errNoQueueHost }
 }
-func (noQueueHost) IsIdle() (bool, error) { return true, nil }
-func (noQueueHost) SetEditorText(string)  {}
-func (noQueueHost) Compact(func(error))   {}
+func (noQueueHost) IdleCheck() func() (bool, error) { return func() (bool, error) { return true, nil } }
+func (noQueueHost) IsIdle() (bool, error)           { return true, nil }
+func (noQueueHost) SetEditorText(string)            {}
+func (noQueueHost) Compact(func(error))             {}
 
 type queueError string
 
@@ -120,8 +133,10 @@ type queueState struct {
 
 	pending      map[string]*pendingQueueDelivery
 	pendingOrder []string
-	// spawn runs a host call that nothing waits for; the tests run it inline.
-	spawn func(func())
+	// spawn runs a host call that nothing waits for, after gate is closed (a nil gate: at once); the tests run it inline.
+	spawn func(gate <-chan struct{}, f func())
+	// gate is closed when the command that is running returns (nil outside a command).
+	gate chan struct{}
 
 	// The editor-facing half (queue_editor.go).
 	pendingSend   *pendingSend
@@ -130,7 +145,7 @@ type queueState struct {
 }
 
 func newQueueState(p *powerline, host queueHostAPI) *queueState {
-	return &queueState{p: p, mu: &sync.Mutex{}, host: host, clock: realQueueClock{}, store: defaultQueueStore(), pending: map[string]*pendingQueueDelivery{}, spawn: func(f func()) { go f() }}
+	return &queueState{p: p, mu: &sync.Mutex{}, host: host, clock: realQueueClock{}, store: defaultQueueStore(), pending: map[string]*pendingQueueDelivery{}, spawn: spawnAfter}
 }
 
 // queueCollapseSpace is text.replace(/\s+/g, " ").trim().
@@ -233,9 +248,8 @@ func (q *queueState) capturePostCompactPrompt(text string) (*queueItem, error) {
 }
 
 // deliveryMode is deliveryModeForItem: an idle session takes the message as a prompt, a busy one as steering or a follow-up.
-func (q *queueState) deliveryMode(item queueItem) string {
-	idle, err := q.host.IsIdle()
-	if err == nil && idle {
+func deliveryMode(idle func() (bool, error), item queueItem) string {
+	if ok, err := idle(); err == nil && ok {
 		return ""
 	}
 	if item.Intent == intentSteer {
@@ -338,17 +352,18 @@ func (q *queueState) deliverQueueItem(item queueItem) (bool, error) {
 	}
 	q.requestQueueRender()
 
-	deliverAs := q.deliveryMode(item)
 	text := formatQueueDeliveryText(item)
 	q.trackPendingDelivery(item, text)
-	// pi.sendUserMessage does not wait for the message to start (the host reports a failure as an extension error). The host call
-	// runs on its own goroutine, without the lock: PiG answers it only after the events of the message it starts
-	// (before_agent_start, message_start) were handled, and those handlers take the lock. Waiting for it here would also put the
-	// command's response behind them, where Pi's comes first.
-	send := q.host.Sender()
+	// pi.sendUserMessage does not wait for the message to start (the host reports a failure as an extension error), and the
+	// command that sent it answers first: the events of the message come after the command's response. PiG starts the message, and
+	// so delivers before_agent_start and message_start, inside the host call, so the call runs on its own goroutine, without the
+	// lock (those handlers take it), and only once the command's handler has returned (gate): the response is then written before
+	// the call that starts the message. The idle check that picks deliverAs is made there too, for the same reason.
+	send, idle := q.host.Sender(), q.host.IdleCheck()
+	gate := q.gate
 	q.mu.Unlock()
-	q.spawn(func() {
-		err := send(text, deliverAs)
+	q.spawn(gate, func() {
+		err := send(text, deliveryMode(idle, item))
 		if err == nil {
 			return
 		}

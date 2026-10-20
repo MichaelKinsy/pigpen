@@ -111,6 +111,11 @@ func (h *sdkHost) Sender() func(text, deliverAs string) error {
 	return func(text, deliverAs string) error { return ctx.SendUserMessage(text, deliverAs) }
 }
 
+func (h *sdkHost) IdleCheck() func() (bool, error) {
+	ctx := h.ctx
+	return ctx.IsIdle
+}
+
 func (h *sdkHost) IsIdle() (bool, error)     { return h.ctx.IsIdle() }
 func (h *sdkHost) SetEditorText(text string) { h.ctx.SetEditorText(text) }
 func (h *sdkHost) Compact(onError func(error)) {

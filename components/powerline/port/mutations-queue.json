@@ -32,7 +32,7 @@
  {
   "name": "queue-store-session-scope",
   "file": "queue_store.go",
-  "find": "return context.SessionID == item.Source.SessionID",
+  "find": "return sessionID == item.Source.SessionID",
   "replace": "return true"
  },
  {
@@ -74,14 +74,14 @@
  {
   "name": "queue-store-blocked-lead-last",
   "file": "queue_store.go",
-  "find": "if len(blocked) > 0 {\n\t\tleading = &blocked[0]",
-  "replace": "if len(blocked) > 0 {\n\t\tleading = &blocked[len(blocked)-1]"
+  "find": "if firstBlocked == nil {",
+  "replace": "if true {"
  },
  {
   "name": "queue-store-no-blocked-lead",
   "file": "queue_store.go",
-  "find": "if len(blocked) > 0 {\n\t\tleading = &blocked[0]\n\t} else if len(queueItems) > 0 {",
-  "replace": "if len(queueItems) > 0 {"
+  "find": "if firstBlocked != nil {\n\t\tleading = firstBlocked",
+  "replace": "if false {\n\t\tleading = firstBlocked"
  },
  {
   "name": "queue-store-sent-forever",
@@ -200,8 +200,8 @@
  {
   "name": "queue-delivery-unknown-idle-is-idle",
   "file": "queue_state.go",
-  "find": "if err == nil && idle {",
-  "replace": "if idle {"
+  "find": "if ok, err := idle(); err == nil && ok {",
+  "replace": "if ok, _ := idle(); ok {"
  },
  {
   "name": "queue-delivery-ignores-compaction",
@@ -210,10 +210,16 @@
   "replace": "if false {\n\t\tif _, err := q.store.update(item.ID, queueUpdates{Status: statusQueued}); err != nil {"
  },
  {
-  "name": "queue-delivery-lock-held-over-send",
+  "name": "queue-delivery-send-before-handler-returns",
   "file": "queue_state.go",
-  "find": "send := q.host.Sender()\n\tq.mu.Unlock()\n\terr := send(text, deliverAs)\n\tq.mu.Lock()",
-  "replace": "send := q.host.Sender()\n\terr := send(text, deliverAs)"
+  "find": "if gate != nil {\n\t\t\t<-gate\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "queue-delivery-send-waits",
+  "file": "queue_state.go",
+  "find": "spawn: spawnAfter}",
+  "replace": "spawn: func(_ <-chan struct{}, f func()) { f() }}"
  },
  {
   "name": "queue-delivery-failure-not-failed",
@@ -520,6 +526,12 @@
   "file": "queue_state.go",
   "find": "message[\"role\"] == \"user\"",
   "replace": "message[\"role\"] != \"\""
+ },
+ {
+  "name": "queue-cmd-gate-not-closed",
+  "file": "queue_command.go",
+  "find": "gate := make(chan struct{})\n\tdefer close(gate)",
+  "replace": "gate := make(chan struct{})"
  },
  {
   "name": "queue-cmd-picker-rows",

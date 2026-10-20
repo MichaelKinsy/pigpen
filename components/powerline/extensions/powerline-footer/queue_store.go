@@ -413,22 +413,29 @@ func (s *queueStore) summarize(context queueContext, compacting bool) (queueSumm
 	if err != nil {
 		return queueSummary{}, err
 	}
-	var queueItems, blocked []queueItem
-	for _, item := range all {
-		if !isActiveForContext(item, context) {
+	// One pass, no copies: the first blocked item leads, else the first active one.
+	cwd := normalizeQueueCwd(context.Cwd)
+	summary := queueSummary{Compacting: compacting}
+	var firstActive, firstBlocked *queueItem
+	for i := range all {
+		item := &all[i]
+		if !isActive(item, context.SessionID, cwd) {
 			continue
 		}
-		queueItems = append(queueItems, item)
+		summary.QueueCount++
+		if firstActive == nil {
+			firstActive = item
+		}
 		if item.Status == statusBlocked || item.Status == statusFailed {
-			blocked = append(blocked, item)
+			summary.BlockedCount++
+			if firstBlocked == nil {
+				firstBlocked = item
+			}
 		}
 	}
-	summary := queueSummary{QueueCount: len(queueItems), BlockedCount: len(blocked), Compacting: compacting}
-	var leading *queueItem
-	if len(blocked) > 0 {
-		leading = &blocked[0]
-	} else if len(queueItems) > 0 {
-		leading = &queueItems[0]
+	leading := firstActive
+	if firstBlocked != nil {
+		leading = firstBlocked
 	}
 	if leading != nil {
 		summary.LeadingText, summary.LeadingIntent, summary.LeadingStatus = leading.Text, leading.Intent, leading.Status
@@ -613,12 +620,16 @@ func currentQueueContext(cwd, sessionID string) queueContext {
 // isActiveForContext: an item is shown and delivered where its target says: everywhere (global), in one project, or in the
 // session that queued it (in that session's directory when no session was known).
 func isActiveForContext(item queueItem, context queueContext) bool {
+	return isActive(&item, context.SessionID, normalizeQueueCwd(context.Cwd))
+}
+
+// isActive is isActiveForContext with the context's directory already normalized.
+func isActive(item *queueItem, sessionID, currentCwd string) bool {
 	switch item.Status {
 	case statusQueued, statusBlocked, statusDelivering, statusFailed:
 	default:
 		return false
 	}
-	currentCwd := normalizeQueueCwd(context.Cwd)
 	switch item.Target.Kind {
 	case targetGlobal:
 		return true
@@ -626,7 +637,7 @@ func isActiveForContext(item queueItem, context queueContext) bool {
 		return normalizeQueueCwd(item.Target.Cwd) == currentCwd
 	}
 	if item.Source.SessionID != "" {
-		return context.SessionID == item.Source.SessionID
+		return sessionID == item.Source.SessionID
 	}
 	return item.Source.Cwd == currentCwd
 }

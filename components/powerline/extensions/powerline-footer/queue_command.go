@@ -145,9 +145,20 @@ func (q *queueState) chooseQueueAction(item queueItem, show selectFunc) error {
 // command is /queue [send|retry|clear|target|alias]. Without an argument it opens the picker. It takes the lock itself.
 func (q *queueState) command(args string, show selectFunc) error {
 	parts := strings.FieldsFunc(args, isJSSpace)
+	// What the command sends is handed to the host after this returns (see deliverQueueItem).
+	gate := make(chan struct{})
+	defer close(gate)
 	q.mu.Lock()
 	q.ctxLive = true
+	q.gate = gate
 	q.mu.Unlock()
+	defer func() {
+		q.mu.Lock()
+		if q.gate == gate {
+			q.gate = nil
+		}
+		q.mu.Unlock()
+	}()
 	if len(parts) == 0 {
 		return q.openQueuePicker(show)
 	}

@@ -67,6 +67,8 @@ func (h *queueTestHost) IsIdle() (bool, error) {
 	return h.idle, h.idleErr
 }
 
+func (h *queueTestHost) IdleCheck() func() (bool, error) { return h.IsIdle }
+
 func (h *queueTestHost) Sender() func(text, deliverAs string) error {
 	return func(text, deliverAs string) error {
 		h.sends = append(h.sends, sentMessage{text, deliverAs})
@@ -195,7 +197,7 @@ func newQueueRigAt(t *testing.T, agentDir, cwd, sessionID, settings string, th t
 	p := newPowerline(host)
 	clk := &fakeQueueClock{}
 	p.queue.clock = clk
-	p.queue.spawn = func(f func()) { f() } // the unwaited host call runs inline, after the lock was released
+	p.queue.spawn = func(_ <-chan struct{}, f func()) { f() } // the unwaited host call runs inline, after the lock was released
 	return &queueRig{t: t, root: root, host: host, p: p, q: p.queue, clock: clk, store: p.queue.store}
 }
 

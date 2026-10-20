@@ -331,3 +331,52 @@ func TestSessionStartResetsTheQueueState(t *testing.T) {
 	r.emit("session_shutdown", nil)
 	eq(t, r.q.sessionGeneration, generation+1, "shutdown retires the session too")
 }
+
+// The host call that starts a message runs only after the handler that sent it has returned: the command's response goes first.
+func TestSpawnAfterWaitsForTheGate(t *testing.T) {
+	gate := make(chan struct{})
+	ran := make(chan struct{})
+	spawnAfter(gate, func() { close(ran) })
+	select {
+	case <-ran:
+		t.Fatal("ran before the gate was closed")
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(gate)
+	select {
+	case <-ran:
+	case <-time.After(5 * time.Second):
+		t.Fatal("did not run after the gate was closed")
+	}
+	ran2 := make(chan struct{})
+	spawnAfter(nil, func() { close(ran2) })
+	select {
+	case <-ran2:
+	case <-time.After(5 * time.Second):
+		t.Fatal("a nil gate must not wait")
+	}
+}
+
+func TestCommandSendsAfterItReturns(t *testing.T) {
+	r := newQueueRig(t)
+	r.host.idle = true
+	r.q.spawn = spawnAfter
+	sent := make(chan struct{}, 1)
+	r.host.sendHook = func(text, _ string) error {
+		sent <- struct{}{}
+		return nil
+	}
+	r.item("go", intentFollowUp, queueTarget{Kind: targetGlobal})
+	if err := r.q.command("send", nil); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-sent:
+	case <-time.After(5 * time.Second):
+		t.Fatal("never sent")
+	}
+	r.q.mu.Lock()
+	cleared := r.q.gate == nil
+	r.q.mu.Unlock()
+	eq(t, cleared, true, "the gate is cleared when the command returns")
+}
