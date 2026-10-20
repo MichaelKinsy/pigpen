@@ -94,11 +94,13 @@ type goalRig struct {
 	sendHook    func(message, options map[string]any)
 	sessionID   string
 	model       map[string]any
+	idle        func() bool
+	pending     func() bool
 }
 
 func newGoalRig(t *testing.T, opts rigOptions) *goalRig {
 	t.Helper()
-	r := &goalRig{t: t, opts: opts, branch: append([]any{}, opts.Branch...), activeTools: opts.ActiveTools, sendHook: opts.OnSendMessage, model: opts.Model}
+	r := &goalRig{t: t, opts: opts, branch: append([]any{}, opts.Branch...), activeTools: opts.ActiveTools, sendHook: opts.OnSendMessage, model: opts.Model, idle: opts.Idle, pending: opts.Pending}
 	if r.activeTools == nil {
 		r.activeTools = []string{"read", "write", "bash"}
 	}
@@ -166,14 +168,20 @@ func (r *goalRig) answer(method string, args map[string]any) (any, string) {
 		return map[string]any{"sessionFile": ""}, ""
 	case "isIdle":
 		idle := true
-		if o.Idle != nil {
-			idle = o.Idle()
+		r.mu.Lock()
+		fn := r.idle
+		r.mu.Unlock()
+		if fn != nil {
+			idle = fn()
 		}
 		return map[string]any{"idle": idle}, ""
 	case "hasPendingMessages":
 		pending := false
-		if o.Pending != nil {
-			pending = o.Pending()
+		r.mu.Lock()
+		fn := r.pending
+		r.mu.Unlock()
+		if fn != nil {
+			pending = fn()
 		}
 		return map[string]any{"pending": pending}, ""
 	case "sessionRead":
@@ -487,4 +495,17 @@ func (r *goalRig) ToolAsync(name string, params map[string]any) <-chan rigToolOu
 		out <- rigToolOutcome{raw, failure}
 	}()
 	return out
+}
+
+// SetIdle and SetPending replace the isIdle and hasPendingMessages answers after the rig started.
+func (r *goalRig) SetIdle(fn func() bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.idle = fn
+}
+
+func (r *goalRig) SetPending(fn func() bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.pending = fn
 }

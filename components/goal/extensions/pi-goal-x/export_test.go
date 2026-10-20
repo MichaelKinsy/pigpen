@@ -146,6 +146,11 @@ func (p *Probe) declare(in goalContinuation) (out RigDeclare) {
 	return out
 }
 
+// SchedulerSignal is the pi-goal:wake event reaching the scheduler (goalId and waitToken as the producer sent them).
+func (p *Probe) SchedulerSignal(goalID, waitToken string) {
+	p.c.locked(func() { p.c.scheduler.signal(goalID, waitToken) })
+}
+
 func (p *Probe) SchedulerMessage(message map[string]any) {
 	p.c.locked(func() { p.c.scheduler.message(message) })
 }
