@@ -104,17 +104,16 @@ func TestWorkflowChatProgressTwins(t *testing.T) {
 		eq(t, missionWorkflowChildStatus(false, []*jsObject{jo("exitCode", float64(0), "detached", true)}, "", ""), "paused", "detached")
 		eq(t, missionWorkflowChildStatus(true, []*jsObject{jo("exitCode", float64(0))}, "", ""), "failed", "error")
 	})
-	const render = "the terminal rendering of the workflow card is the terminal-views slice's (tui/render.ts renderSubagentResult, a TUI component tree); the row logic it renders from is covered by TestWorkflowChatProgressRows"
-	tskip(t, f, "keeps advisory preflight lanes in plan metadata instead of runtime rows", render)
-	tskip(t, f, "renders detached workflow trace rows as paused attention", render)
-	tskip(t, f, "renders stable rows keyed by workflow trace entries", render)
-	tskip(t, f, "uses the compact plan preview for collapsed workflow launch output", render)
-	tskip(t, f, "keeps each expanded preflight warning visible as a bounded row", render)
-	tskip(t, f, "keeps mixed detached and failed workflow traces failed", render)
-	tskip(t, f, "applies main-window density settings to collapsed workflow live cards", render)
-	tskip(t, f, "bounds workflow live-card rows and keeps old failed children visible", render)
-	tskip(t, f, "keeps mixed workflow child error output visible", render)
-	tskip(t, f, "shows final workflow output after live-card progress completes", render)
+	tskip(t, f, "keeps advisory preflight lanes in plan metadata instead of runtime rows", "asserts the collapsed and expanded text of renderSubagentResult (tui/render.ts): a `Plan: 2 lanes · writer, review` line and no `planned writer` row; the row side (advisory lanes are not rows, the plan summary) is TestWorkflowChatProgressRows, the card text is the terminal-views slice's")
+	tskip(t, f, "renders detached workflow trace rows as paused attention", "asserts the card text of renderSubagentResult for a detached trace (`paused`, a `detached` row with its intercom note, no running/failed row); the detached row state itself is TestWorkflowChatProgressRows, the card is the terminal-views slice's")
+	tskip(t, f, "renders stable rows keyed by workflow trace entries", "asserts the card text of renderSubagentResult for a trace (`workflow wf_8f3a12345 … same repo … failed`, Repo and Phase header lines, one row per state complete/running/failed/stopped); the keyed rows are TestWorkflowChatProgressRows, the card is the terminal-views slice's")
+	tskip(t, f, "uses the compact plan preview for collapsed workflow launch output", "asserts that collapsed renderSubagentResult shows `Plan: 1 lane · Implement the change` without the preflight table and expanded shows `Preflight: v1 · complete · 1 lane` with the `key | mode | decision` table; the plan summary string is TestWorkflowChatProgressRows, the two card layouts are the terminal-views slice's")
+	tskip(t, f, "keeps each expanded preflight warning visible as a bounded row", "asserts the line layout of renderSubagentResult at width 56 (each preflight warning its own row of at most 52 columns when expanded, one `Plan note:` row when collapsed); a TUI component line-width check of the terminal-views slice")
+	tskip(t, f, "keeps mixed detached and failed workflow traces failed", "asserts the card text of renderSubagentResult for a trace with a detached and a failed child (headline `failed`, one `detached` and one `failed` row); the mixed-state precedence is TestWorkflowChatProgressRows, the card is the terminal-views slice's")
+	tskip(t, f, "applies main-window density settings to collapsed workflow live cards", "asserts renderSubagentResult with the horizontalSpacing and compactResultMaxLines display settings (3 collapsed lines with `rows hidden`, expanded card indented by two columns); the display-density settings belong to the terminal-views slice")
+	tskip(t, f, "bounds workflow live-card rows and keeps old failed children visible", "asserts the live card of renderSubagentResult caps its rows (`2 older workflow rows hidden`, the oldest failed row kept with its `latest:` text, no `Output:` block); the live-card row cap is the terminal-views slice's, the row list is TestWorkflowChatProgressRows")
+	tskip(t, f, "keeps mixed workflow child error output visible", "asserts the card text of renderSubagentResult for a failed child that also has output (`Failed · error: …` kept, no `latest:` line, no `Output:` block); the card text is the terminal-views slice's")
+	tskip(t, f, "shows final workflow output after live-card progress completes", "asserts renderSubagentResult for a completed workflow shows `Workflow completed` and the final answer instead of the live card (no `workflow wf_done` header); the result card is the terminal-views slice's")
 }
 
 // The row logic behind the rendering twins that are skipped above.

@@ -54,33 +54,29 @@ func TestAsyncInterruptActionTwins(t *testing.T) {
 			t.Errorf("%q does not match %s", s, pattern)
 		}
 	}
-	for _, c := range []struct{ title, reason string }{
-		{"routes debug.run to async lifecycle debug, not live foreground status", "the debug.run lifecycle report (inspectSubagentStatus, run-status.ts) of foreground-tracked runs belongs to the status-inspection and foreground-executor slices, not ported"},
-		{"renders run lifecycle debug without transcript content", "the debug.run lifecycle report renders the workflow children and capacity of a run (run-status.ts debug view, workflow slice), not ported"},
-		{"steers a live workflow-owned foreground child by child id", "steering (action steer) belongs to the steering and supervisor-channel slice, not ported; a steer is refused"},
-		{"steers a foreground workflow child by stable key", "workflow-key steering of a foreground child (workflow-foreground-steering.ts) belongs to the workflow and steering slices, not ported"},
-		{"retries a foreground workflow-key steer until the child session is running", "the retry of a workflow-key steer belongs to the workflow and steering slices, not ported"},
-		{"routes a stable key to async steering without recovery", "async steering of a workflow child by stable key belongs to the workflow and steering slices, not ported"},
-		{"rejects workflow-key steering for a one-shot external CLI child", "external CLI runners and workflow-key steering are separate slices, not ported"},
-		{"returns missed when a terminal keyed child cannot accept a retained follow-up", "the retained follow-up of a terminal workflow child (steering slice) is not ported"},
-		{"returns missed when a keyed child's raw running status reconciles terminal", "steering by workflow key against a reconciled status (steering slice) is not ported"},
-		{"reports a failed steer when the child session rejects it", "the in-process child session a foreground steer is delivered to does not exist in the port (it runs a pig child process); steering is refused"},
-		{"rejects a steer request when the child session is not steerable", "foreground child sessions and their steer support do not exist in the port; steering is refused"},
-		{"queues follow-up steering through the child session", "follow-up steering through an in-process child session does not exist in the port; steering is refused"},
-		{"steers the unique live foreground child by workflow id and directory", "workflow ids and foreground child controls belong to the workflow and steering slices, not ported"},
-		{"exposes exact async child targets when owned workflow steering has no foreground route", "async workflow steering hints belong to the workflow and steering slices, not ported"},
-		{"keeps async workflow hints projection-only, selective, and scoped to the active owner", "async workflow hints belong to the workflow and steering slices, not ported"},
-		{"rejects ambiguous workflow steering without choosing a foreground child", "workflow steering resolution belongs to the workflow and steering slices, not ported"},
-		{"rejects a terminal workflow instead of queuing to its outer inbox", "workflow steering inboxes belong to the workflow and steering slices, not ported"},
-		{"queues steering for a running async child", "the steer control inbox (consumeSteerRequests) belongs to the steering slice, not ported; a steer of a background child is refused"},
-		{"queues steering for a running async child by directory", "the steer control inbox addressed by run directory belongs to the steering slice, not ported"},
-		{"queues steering for a pending indexed async child", "steering a pending indexed child belongs to the steering slice, not ported"},
-		{"rejects steering async runs outside the active session", "steering (and its session check) belongs to the steering slice, not ported; every steer is refused"},
-		{"rejects runs.steer for the one-shot external CLI with its adapter reason", "external CLI adapters and runs.steer belong to separate slices, not ported"},
-		{"rejects runs.steer for an old persisted external CLI status shape", "persisted external CLI statuses and runs.steer belong to separate slices, not ported"},
-	} {
-		tskip(t, f, c.title, c.reason)
-	}
+	tskip(t, f, "routes debug.run to async lifecycle debug, not live foreground status", "the debug.run lifecycle report (inspectSubagentStatus, run-status.ts) of foreground-tracked runs belongs to the status-inspection and foreground-executor slices, not ported")
+	tskip(t, f, "renders run lifecycle debug without transcript content", "the debug.run lifecycle report renders the workflow children and capacity of a run (run-status.ts debug view, workflow slice), not ported")
+	tskip(t, f, "steers a live workflow-owned foreground child by child id", "steering (action steer) belongs to the steering and supervisor-channel slice, not ported; a steer is refused")
+	tskip(t, f, "steers a foreground workflow child by stable key", "workflow-key steering of a foreground child (workflow-foreground-steering.ts) belongs to the workflow and steering slices, not ported")
+	tskip(t, f, "retries a foreground workflow-key steer until the child session is running", "the retry of a workflow-key steer belongs to the workflow and steering slices, not ported")
+	tskip(t, f, "routes a stable key to async steering without recovery", "async steering of a workflow child by stable key belongs to the workflow and steering slices, not ported")
+	tskip(t, f, "rejects workflow-key steering for a one-shot external CLI child", "external CLI runners and workflow-key steering are separate slices, not ported")
+	tskip(t, f, "returns missed when a terminal keyed child cannot accept a retained follow-up", "the retained follow-up of a terminal workflow child (steering slice) is not ported")
+	tskip(t, f, "returns missed when a keyed child's raw running status reconciles terminal", "steering by workflow key against a reconciled status (steering slice) is not ported")
+	tskip(t, f, "reports a failed steer when the child session rejects it", "the in-process child session a foreground steer is delivered to does not exist in the port (it runs a pig child process); steering is refused")
+	tskip(t, f, "rejects a steer request when the child session is not steerable", "foreground child sessions and their steer support do not exist in the port; steering is refused")
+	tskip(t, f, "queues follow-up steering through the child session", "follow-up steering through an in-process child session does not exist in the port; steering is refused")
+	tskip(t, f, "steers the unique live foreground child by workflow id and directory", "workflow ids and foreground child controls belong to the workflow and steering slices, not ported")
+	tskip(t, f, "exposes exact async child targets when owned workflow steering has no foreground route", "async workflow steering hints belong to the workflow and steering slices, not ported")
+	tskip(t, f, "keeps async workflow hints projection-only, selective, and scoped to the active owner", "async workflow hints belong to the workflow and steering slices, not ported")
+	tskip(t, f, "rejects ambiguous workflow steering without choosing a foreground child", "workflow steering resolution belongs to the workflow and steering slices, not ported")
+	tskip(t, f, "rejects a terminal workflow instead of queuing to its outer inbox", "workflow steering inboxes belong to the workflow and steering slices, not ported")
+	tskip(t, f, "queues steering for a running async child", "the steer control inbox (consumeSteerRequests) belongs to the steering slice, not ported; a steer of a background child is refused")
+	tskip(t, f, "queues steering for a running async child by directory", "the steer control inbox addressed by run directory belongs to the steering slice, not ported")
+	tskip(t, f, "queues steering for a pending indexed async child", "steering a pending indexed child belongs to the steering slice, not ported")
+	tskip(t, f, "rejects steering async runs outside the active session", "steering (and its session check) belongs to the steering slice, not ported; every steer is refused")
+	tskip(t, f, "rejects runs.steer for the one-shot external CLI with its adapter reason", "external CLI adapters and runs.steer belong to separate slices, not ported")
+	tskip(t, f, "rejects runs.steer for an old persisted external CLI status shape", "persisted external CLI statuses and runs.steer belong to separate slices, not ported")
 
 	tw(t, f, "requests an interrupt without signaling a running async runner", func(t *testing.T) {
 		e := newAsyncEnv(t)
@@ -276,11 +272,7 @@ func TestAsyncInterruptActionTwins(t *testing.T) {
 			eq(t, readResult(t, e, runID)["state"], "paused", proofCase+" result")
 		}
 	})
-	for _, c := range []struct{ title, reason string }{
-		{"stops a reload-recovered workflow through the durable control channel", "workflow runs and their controllers belong to the workflow slice, not ported"},
-	} {
-		tskip(t, f, c.title, c.reason)
-	}
+	tskip(t, f, "stops a reload-recovered workflow through the durable control channel", "workflow runs and their controllers belong to the workflow slice, not ported")
 	tw(t, f, "writes child-scoped stop requests for a running async run", func(t *testing.T) {
 		e := newAsyncEnv(t)
 		recordKills(t)
@@ -306,17 +298,13 @@ func TestAsyncInterruptActionTwins(t *testing.T) {
 			t.Errorf("ts %v", req["ts"])
 		}
 	})
-	for _, c := range []struct{ title, reason string }{
-		{"/subagents-stop rejects a nested-only child without writing a parent target request", "the /subagents-stop slash command and nested child routes belong to the slash-commands and nested-run slices, not ported"},
-		{"dismisses only a reload-recovered running workflow without terminating work", "dismiss (a Fleet view action on workflows) belongs to the terminal-views and workflow slices, not ported"},
-		{"rejects transcript view for display-dismissed workflows from another session", "the transcript view of dismissed workflows belongs to the terminal-views slice, not ported"},
-		{"shows terminal status when a result appears after display dismissal", "display dismissal of workflows belongs to the terminal-views slice, not ported"},
-		{"rejects dismiss when a stale running workflow has a terminal result", "dismiss of workflows belongs to the terminal-views and workflow slices, not ported"},
-		{"rejects dismiss from child-safe fanout mode", "dismiss and the child-safe fan-out mode belong to the terminal-views and workflow slices, not ported"},
-		{"rejects dismiss for live-controller, non-workflow, terminal, and other-session runs", "dismiss of runs (live workflow controllers) belongs to the terminal-views and workflow slices, not ported"},
-	} {
-		tskip(t, f, c.title, c.reason)
-	}
+	tskip(t, f, "/subagents-stop rejects a nested-only child without writing a parent target request", "the /subagents-stop slash command and nested child routes belong to the slash-commands and nested-run slices, not ported")
+	tskip(t, f, "dismisses only a reload-recovered running workflow without terminating work", "dismiss (a Fleet view action on workflows) belongs to the terminal-views and workflow slices, not ported")
+	tskip(t, f, "rejects transcript view for display-dismissed workflows from another session", "the transcript view of dismissed workflows belongs to the terminal-views slice, not ported")
+	tskip(t, f, "shows terminal status when a result appears after display dismissal", "display dismissal of workflows belongs to the terminal-views slice, not ported")
+	tskip(t, f, "rejects dismiss when a stale running workflow has a terminal result", "dismiss of workflows belongs to the terminal-views and workflow slices, not ported")
+	tskip(t, f, "rejects dismiss from child-safe fanout mode", "dismiss and the child-safe fan-out mode belong to the terminal-views and workflow slices, not ported")
+	tskip(t, f, "rejects dismiss for live-controller, non-workflow, terminal, and other-session runs", "dismiss of runs (live workflow controllers) belongs to the terminal-views and workflow slices, not ported")
 	tw(t, f, "does not stop a different async run when the requested id is missing", func(t *testing.T) {
 		e := newAsyncEnv(t)
 		recordKills(t)
