@@ -5,10 +5,19 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
-func writeBenchConfig(dir, json string) error {
-	return os.WriteFile(filepath.Join(dir, "web-search.json"), []byte(json), 0o600)
+func writeBenchConfig(dir, json string, age time.Duration) error {
+	path := filepath.Join(dir, "web-search.json")
+	if err := os.WriteFile(path, []byte(json), 0o600); err != nil {
+		return err
+	}
+	if age == 0 {
+		return nil
+	}
+	when := time.Now().Add(-age)
+	return os.Chtimes(path, when, when)
 }
 
 // The model-backed providers on the inputs of the wire fixtures (port/fixtures): one search each,
@@ -57,12 +66,21 @@ func BenchmarkSearchOpenAIRegistry(b *testing.B) {
 	benchModelProvider(b, "UNUSED_API_KEY", "x", benchResponsesBody, SearchWithOpenAI, withExt(ec))
 }
 
-func BenchmarkSearchOpenAIAlpha(b *testing.B) {
+// BenchmarkSearchOpenAIAlpha reads a config file that was edited a minute ago, like a real one: the
+// config cache serves it after the first call. The original reads and parses it on every call.
+func BenchmarkSearchOpenAIAlpha(b *testing.B) { benchAlpha(b, time.Minute) }
+
+// BenchmarkSearchOpenAIAlphaFreshConfig is the same search with a config file written just now, which
+// the cache does not trust for two seconds (a second write could keep the stat), so every call
+// reads and parses it like the original does.
+func BenchmarkSearchOpenAIAlphaFreshConfig(b *testing.B) { benchAlpha(b, 0) }
+
+func benchAlpha(b *testing.B, age time.Duration) {
 	benchEnv(b, "OPENAI_API_KEY", "bench-key")
 	dir := b.TempDir()
 	b.Setenv("PIG_CODING_AGENT_DIR", dir)
 	ResetCaches()
-	if err := writeBenchConfig(dir, `{"openaiUseAlphaSearch":true,"openaiSearchModel":"gpt-5.6-luna"}`); err != nil {
+	if err := writeBenchConfig(dir, `{"openaiUseAlphaSearch":true,"openaiSearchModel":"gpt-5.6-luna"}`, age); err != nil {
 		b.Fatal(err)
 	}
 	b.Cleanup(SetHTTP(stubDoer{benchAlphaBody}))

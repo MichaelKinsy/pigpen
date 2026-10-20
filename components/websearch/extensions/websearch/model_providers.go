@@ -1,12 +1,12 @@
 package websearch
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"net"
 	"net/http"
@@ -214,7 +214,18 @@ func uuidV4() string {
 	_, _ = rand.Read(b[:])
 	b[6] = b[6]&0x0f | 0x40
 	b[8] = b[8]&0x3f | 0x80
-	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+	const digits = "0123456789abcdef"
+	var out [36]byte
+	n := 0
+	for i, c := range b {
+		if i == 4 || i == 6 || i == 8 || i == 10 {
+			out[n] = '-'
+			n++
+		}
+		out[n], out[n+1] = digits[c>>4], digits[c&0x0f]
+		n += 2
+	}
+	return string(out[:])
 }
 
 // ---- String.prototype.localeCompare(b, undefined, { numeric: true }) ----------------------
@@ -335,8 +346,8 @@ var plainFetchCredentialHeaders = []string{"Authorization", "Cookie", "Proxy-Aut
 
 // decodeResponseJSON is `response.json()`: any JSON value, or the decoder's error text.
 func decodeResponseJSON(text string) (any, error) {
-	var v any
-	if err := json.Unmarshal([]byte(text), &v); err != nil {
+	v, err := unmarshalAny(text)
+	if err != nil {
 		return nil, errors.New(jsonErrorText(err))
 	}
 	return v, nil
@@ -344,13 +355,13 @@ func decodeResponseJSON(text string) (any, error) {
 
 // encodeJSONBody is JSON.stringify: no HTML escaping.
 func encodeJSONBody(v any) ([]byte, error) {
-	var b strings.Builder
-	enc := json.NewEncoder(&b)
+	b := bytes.NewBuffer(make([]byte, 0, 512))
+	enc := json.NewEncoder(b)
 	enc.SetEscapeHTML(false)
 	if err := enc.Encode(v); err != nil {
 		return nil, err
 	}
-	return []byte(strings.TrimSuffix(b.String(), "\n")), nil
+	return bytes.TrimSuffix(b.Bytes(), []byte("\n")), nil
 }
 
 // isTimeout reports a request that ran out of time (the original's TimeoutError).

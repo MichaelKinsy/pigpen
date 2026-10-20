@@ -19,7 +19,7 @@ func (d stubDoer) Do(r *http.Request) (*http.Response, error) {
 	if r.Body != nil {
 		_, _ = io.Copy(io.Discard, r.Body)
 	}
-	return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(d.body)), Request: r}, nil
+	return &http.Response{StatusCode: 200, Header: http.Header{}, ContentLength: int64(len(d.body)), Body: io.NopCloser(strings.NewReader(d.body)), Request: r}, nil
 }
 
 // benchEnv points the config at an empty directory and sets one environment variable.

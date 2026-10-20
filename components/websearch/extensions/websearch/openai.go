@@ -2,7 +2,6 @@ package websearch
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -200,8 +199,8 @@ func decodeJWTPayload(token string) map[string]any {
 	if err != nil {
 		return nil
 	}
-	var payload any
-	if err := json.Unmarshal(raw, &payload); err != nil {
+	payload, err := unmarshalAny(bytesToString(raw))
+	if err != nil {
 		return nil
 	}
 	m, _ := mpObject(payload)
@@ -548,7 +547,7 @@ func resolveCurrentModelAuth(ctx context.Context, ec ExtensionContext) (*openAIA
 
 // ---- request bodies -----------------------------------------------------------------------
 
-func buildInstructions(o SearchOptions) string {
+func buildInstructions(o SearchOptions, f domainFilters) string {
 	lines := []string{
 		"Search the web and return a concise answer grounded only in the web results.",
 		"Include clickable source citations in the response text when possible.",
@@ -559,7 +558,6 @@ func buildInstructions(o SearchOptions) string {
 	if n, ok := mpFinitePositive(o.NumResults); ok {
 		lines = append(lines, fmt.Sprintf("Prefer around %d distinct sources.", mpCap(n)))
 	}
-	f := normalizeDomainFilters(o.DomainFilter)
 	if len(f.allowed) > 0 {
 		lines = append(lines, "Only use sources from: "+strings.Join(capDomains(f.allowed), ", ")+".")
 	}
@@ -620,12 +618,13 @@ type openAIResponsesBody struct {
 
 func buildResponsesBody(query string, o SearchOptions, model string) openAIResponsesBody {
 	tool := openAIWebSearchTool{Type: "web_search"}
-	if f := normalizeDomainFilters(o.DomainFilter); len(f.allowed) > 0 || len(f.blocked) > 0 {
+	f := normalizeDomainFilters(o.DomainFilter)
+	if len(f.allowed) > 0 || len(f.blocked) > 0 {
 		tool.Filters = &openAIWebSearchFilters{AllowedDomains: capDomains(f.allowed), BlockedDomains: capDomains(f.blocked)}
 	}
 	return openAIResponsesBody{
 		Model:        model,
-		Instructions: buildInstructions(o),
+		Instructions: buildInstructions(o, f),
 		Input:        []openAIInputMessage{{Role: "user", Content: []openAIInputText{{Type: "input_text", Text: query}}}},
 		Tools:        []openAIWebSearchTool{tool},
 		Include:      []string{"web_search_call.action.sources"},
@@ -733,8 +732,8 @@ func anyWebSearchCall(items []any) bool {
 func parseOpenAIResponse(text string) (*parsedOpenAIResponse, error) {
 	trimmed := jsTrim(text)
 	if strings.HasPrefix(trimmed, "{") || strings.HasPrefix(trimmed, "[") {
-		var parsed any
-		if err := json.Unmarshal([]byte(trimmed), &parsed); err != nil {
+		parsed, err := unmarshalAny(trimmed)
+		if err != nil {
 			return nil, fmt.Errorf("OpenAI API returned invalid JSON: %s", jsonErrorText(err))
 		}
 		var output []any
@@ -757,8 +756,8 @@ func parseOpenAIResponse(text string) (*parsedOpenAIResponse, error) {
 		if data == "" || data == "[DONE]" {
 			continue
 		}
-		var parsed any
-		if json.Unmarshal([]byte(data), &parsed) != nil {
+		parsed, err := unmarshalAny(data)
+		if err != nil {
 			continue
 		}
 		m, ok := mpObject(parsed)
@@ -865,7 +864,11 @@ func extractSnippetAround(text string, start, end any) string {
 	}
 	before := int(math.Max(0, math.Trunc(s)-100))
 	after := int(math.Min(float64(jsLen(text)), math.Trunc(e)+100))
-	snippet := jsTrim(markdownLinkRE.ReplaceAllString(jsSlice(text, before, after), "$1"))
+	window := jsSlice(text, before, after)
+	if strings.Contains(window, "](") { // a markdown link needs "](": nothing to flatten without it
+		window = markdownLinkRE.ReplaceAllString(window, "$1")
+	}
+	snippet := jsTrim(window)
 	if jsLen(snippet) > 300 {
 		return jsSlice(snippet, 0, 297) + "..."
 	}
@@ -990,8 +993,8 @@ func extractOpenAIAnswer(output []any) string {
 // parseAlphaSearchResponse reads the alpha/search JSON (openai-search.ts:628-662); numResults
 // defaults to 5 when unset.
 func parseAlphaSearchResponse(text string, numResults *float64) (*SearchResponse, error) {
-	var payload any
-	if err := json.Unmarshal([]byte(text), &payload); err != nil {
+	payload, err := unmarshalAny(text)
+	if err != nil {
 		return nil, errors.New("OpenAI alpha/search returned invalid JSON")
 	}
 	record, ok := mpObject(payload)
