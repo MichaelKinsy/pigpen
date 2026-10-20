@@ -570,6 +570,12 @@
   "replace": "return PermissionPromptDecision{Approved: true, State: DecisionApproved}, nil"
  },
  {
+  "name": "ch-silent-link",
+  "file": "auth_chain.go",
+  "find": "if verdict.Kind == \"\" {",
+  "replace": "if verdict.Kind == \"\\x00\" {"
+ },
+ {
   "name": "ch-link-args",
   "file": "auth_chain.go",
   "find": "link.Authorize(details, c.query, c.log)",
@@ -1338,6 +1344,18 @@
   "replace": ""
  },
  {
+  "name": "pc-reason-render-request",
+  "file": "auth_prompt_component.go",
+  "find": "// The editor mutates its own buffer silently; only the dialog can repaint.\n\tc.renderRequests++",
+  "replace": "// The editor mutates its own buffer silently; only the dialog can repaint."
+ },
+ {
+  "name": "pc-render-requests-once",
+  "file": "auth_prompt_component.go",
+  "find": "for ; renders > 0; renders-- {",
+  "replace": "for ; renders > 1; renders-- {"
+ },
+ {
   "name": "pc-mode",
   "file": "auth_prompt_component.go",
   "find": "if view.Mode == \"tui\" {",
@@ -1538,8 +1556,8 @@
  {
   "name": "pc-requests-render",
   "file": "auth_prompt_component.go",
-  "find": "if render && c.requestRender != nil {",
-  "replace": "if false && render && c.requestRender != nil {"
+  "find": "if c.requestRender != nil {\n\t\tfor ; renders > 0;",
+  "replace": "if false && c.requestRender != nil {\n\t\tfor ; renders > 0;"
  },
  {
   "name": "pc-hint-expanded",

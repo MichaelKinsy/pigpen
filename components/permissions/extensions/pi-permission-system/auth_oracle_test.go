@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/MichaelKinsy/pigpen/components/pitui/widthx"
 )
 
 // Differential test of the authority layer against the original's own modules. testdata/authority_oracle.json is what
@@ -376,10 +378,6 @@ func TestAuthorityOracleSelection(t *testing.T) {
 	for i, raw := range cases {
 		c, w := raw.(*jsObject), want[i].(*jsObject)
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			clearHintEnv(t)
-			if env, ok := c.str("env"); ok {
-				t.Setenv("PI_SUBAGENT_PARENT_SESSION", env)
-			}
 			hasUI, _ := c.flag("hasUI")
 			subagent, _ := c.flag("subagent")
 			var s *servingFake
@@ -390,6 +388,10 @@ func TestAuthorityOracleSelection(t *testing.T) {
 				s = &servingFake{}
 			}
 			env := newSelEnv(t, withDetector(subagent), withServing(s))
+			// newSelEnv clears the hint variables, so the case's parent-session variable is set after it.
+			if parent, ok := c.str("env"); ok {
+				t.Setenv("PI_SUBAGENT_PARENT_SESSION", parent)
+			}
 			if reg, ok := c.str("registry"); ok {
 				env.deps.Registry = fwMakeSubagentRegistry("session-1", &SubagentSessionInfo{ParentSessionID: &reg})
 			}
@@ -470,17 +472,25 @@ func TestAuthorityOracleComponent(t *testing.T) {
 
 		tuiRec := &recordingTUI{}
 		ui := &promptUIFake{}
+		// The first decision the component passes to done, read by the key loop; the channel only releases the host call.
+		var decidedMu sync.Mutex
+		var decidedFirst *UnattributedDecision
 		decisions := make(chan UnattributedDecision, 8)
 		var optionsSeen PromptCustomOptions
 		var component PromptComponent
 		mounted := make(chan struct{})
 		ui.custom = func(factory PromptComponentFactory, options PromptCustomOptions) (UnattributedDecision, bool, error) {
 			optionsSeen = options
-			component = factory(tuiRec, tagTheme{}, keyedExpand{fwStrOf(c, "expandKey")}, func(d UnattributedDecision) { decisions <- d })
+			component = factory(tuiRec, tagTheme{}, keyedExpand{fwStrOf(c, "expandKey")}, func(d UnattributedDecision) {
+				decidedMu.Lock()
+				if decidedFirst == nil {
+					decidedFirst = &d
+				}
+				decidedMu.Unlock()
+				decisions <- d
+			})
 			close(mounted)
-			d := <-decisions
-			decisions <- d
-			return d, true, nil
+			return <-decisions, true, nil
 		}
 		view := PermissionPromptView{PromptPreferences: prefs, Mode: "tui", UI: ui, Notice: PromptNotice{Title: fwStrOf(notice, "title"), Body: fwStrOf(notice, "body")}}
 		payload := AsPromptPayload(c.vals["payloadJson"])
@@ -497,7 +507,10 @@ func TestAuthorityOracleComponent(t *testing.T) {
 		renderAll := func() []any {
 			var all []any
 			for _, wd := range widths {
-				lines := component.Render(int(wd.(float64)))
+				// The pinned Pi's pi-tui Input draws its cursor with the fake-cursor APC markers and its TUI resolves them to reverse
+				// video (tui.ts resolveFakeCursors; the PiG host does the same); the oracle's installed pi-tui 1.0.0 writes the reverse
+				// video itself. Resolving the port's frame the way the host does makes the two comparable byte for byte.
+				lines := widthx.ResolveFakeCursors(component.Render(int(wd.(float64))), false)
 				row := make([]any, len(lines))
 				for k, l := range lines {
 					row[k] = l
@@ -524,17 +537,17 @@ func TestAuthorityOracleComponent(t *testing.T) {
 				sets = append(sets, s)
 			}
 			step.set("set", sets)
-			select {
-			case d := <-decisions:
-				decisions <- d
-				step.set("decision", unattributedJS(d))
-				frames = append(frames, step)
-				final = step.vals["decision"]
-			default:
+			decidedMu.Lock()
+			first := decidedFirst
+			decidedMu.Unlock()
+			if first == nil {
 				step.set("lines", renderAll())
 				frames = append(frames, step)
 				continue
 			}
+			step.set("decision", unattributedJS(*first))
+			frames = append(frames, step)
+			final = step.vals["decision"]
 			break
 		}
 		var writes []any

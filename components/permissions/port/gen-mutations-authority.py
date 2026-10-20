@@ -119,6 +119,7 @@ m("ch-deny-normalize", CH, "CreateDeniedPermissionDecision(verdict.Reason).Attri
 m("ch-defer-next", CH, "if decision, decided := decideFromVerdict(link.Name, verdict); decided {\n\t\t\treturn decision, nil\n\t\t}", "if decision, decided := decideFromVerdict(link.Name, verdict); decided {\n\t\t\t_ = decision\n\t\t}")
 m("ch-unknown-allow", CH, "\t}\n\treturn PermissionPromptDecision{}, false\n}", "\t}\n\treturn PermissionPromptDecision{Approved: true, State: DecisionApproved}, true\n}")
 m("ch-terminal", CH, "return c.terminal.Authorize(details)", "return PermissionPromptDecision{Approved: true, State: DecisionApproved}, nil")
+m("ch-silent-link", CH, 'if verdict.Kind == "" {', 'if verdict.Kind == "\\x00" {')
 m("ch-link-args", CH, "link.Authorize(details, c.query, c.log)", "link.Authorize(details, nil, nil)")
 m("ch-decider-kind", CH, 'DecisionSource{Kind: "authorizer", Name: name, Verdict: verdict, Reason: reason}', 'DecisionSource{Kind: "user", Name: name, Verdict: verdict, Reason: reason}')
 
@@ -275,6 +276,8 @@ m("se-system-prompt", SE, "GetSystemPrompt: ctx.GetSystemPrompt,", "")
 
 # ── the component ───────────────────────────────────────────────────────────
 PC = "auth_prompt_component.go"
+m("pc-reason-render-request", PC, "// The editor mutates its own buffer silently; only the dialog can repaint.\n\tc.renderRequests++", "// The editor mutates its own buffer silently; only the dialog can repaint.")
+m("pc-render-requests-once", PC, "for ; renders > 0; renders-- {", "for ; renders > 1; renders-- {")
 m("pc-mode", PC, 'if view.Mode == "tui" {', 'if view.Mode != "rpc" {')
 m("pc-dialog-via", PC, 'Via: "dialog"}', 'Via: "select"}')
 m("pc-select-via", PC, 'Via: "select"}), nil', 'Via: "dialog"}), nil')
@@ -308,7 +311,7 @@ m("pc-key-escape", PC, 'if tui.MatchesKey(data, "escape") {', 'if tui.MatchesKey
 m("pc-hotkey-step", PC, "if c.state.Step == StepDecision {\n\t\tfor _, option := range VisibleActions(c.config) {", "{\n\t\tfor _, option := range VisibleActions(c.config) {")
 m("pc-hotkey-roster", PC, "for _, option := range VisibleActions(c.config) {\n\t\t\tif tui.MatchesKey", "for _, option := range optionOrder {\n\t\t\tif tui.MatchesKey")
 m("pc-hotkey-binding", PC, "tui.MatchesKey(data, c.config.Keys[option])", "tui.MatchesKey(data, string(option)[:1])")
-m("pc-requests-render", PC, "if render && c.requestRender != nil {", "if false && render && c.requestRender != nil {")
+m("pc-requests-render", PC, "if c.requestRender != nil {\n\t\tfor ; renders > 0;", "if false && c.requestRender != nil {\n\t\tfor ; renders > 0;")
 m("pc-hint-expanded", PC, 'if c.expanded {\n\t\tkeys = append(keys, "ctrl+o collapse")', 'if !c.expanded {\n\t\tkeys = append(keys, "ctrl+o collapse")')
 m("pc-hint-elided", PC, "} else if view.Elided {", "} else if !view.Elided {")
 m("pc-budget-expanded", PC, "if c.expanded {\n\t\tbudget = CompleteViewBudget(width)", "if !c.expanded {\n\t\tbudget = CompleteViewBudget(width)")

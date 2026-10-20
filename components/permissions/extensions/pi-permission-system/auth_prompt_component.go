@@ -186,7 +186,9 @@ type permissionPromptComponent struct {
 	reason   *LineInput
 	expanded bool
 	finished bool
-	dirty    bool
+	// renderRequests counts the repaints the keystroke asks for, as many as the original calls tui.requestRender: a reason-editor
+	// callback that changes the step requests one, and the editor keystroke itself requests another.
+	renderRequests int
 	// toggleTools is set when a keystroke was the expansion action: the host call happens after the lock is released.
 	toggleTools bool
 }
@@ -265,19 +267,21 @@ func (c *permissionPromptComponent) hint(view DialogView) string {
 // second decision must never be produced.
 func (c *permissionPromptComponent) HandleInput(data string) {
 	c.mu.Lock()
-	c.dirty = false
+	c.renderRequests = 0
 	if !c.finished {
 		c.handleInputLocked(data)
 	}
-	render, toggle := c.dirty, c.toggleTools
-	c.dirty, c.toggleTools = false, false
+	renders, toggle := c.renderRequests, c.toggleTools
+	c.renderRequests, c.toggleTools = 0, false
 	c.mu.Unlock()
 	// Host effects run after the lock is released: a host may repaint synchronously, which calls Render.
 	if toggle {
 		c.tools.toggle()
 	}
-	if render && c.requestRender != nil {
-		c.requestRender()
+	if c.requestRender != nil {
+		for ; renders > 0; renders-- {
+			c.requestRender()
+		}
 	}
 }
 
@@ -291,7 +295,7 @@ func (c *permissionPromptComponent) handleInputLocked(data string) {
 		// keystroke.
 		c.toggleTools = true
 		c.expanded = !c.expanded
-		c.dirty = true
+		c.renderRequests++
 		return
 	}
 	if event, ok := c.toEvent(data); ok {
@@ -305,7 +309,7 @@ func (c *permissionPromptComponent) handleInputLocked(data string) {
 func (c *permissionPromptComponent) handleReasonInput(data string) {
 	c.reason.HandleInput(CollapsePastedNewlines(data))
 	// The editor mutates its own buffer silently; only the dialog can repaint.
-	c.dirty = true
+	c.renderRequests++
 }
 
 func (c *permissionPromptComponent) toEvent(data string) (PromptEvent, bool) {
@@ -344,7 +348,7 @@ func (c *permissionPromptComponent) apply(event PromptEvent) {
 		c.reason = c.createReasonEditor()
 	}
 	c.state = outcome.State
-	c.dirty = true
+	c.renderRequests++
 }
 
 func (c *permissionPromptComponent) renderDecision(width int) []string {
