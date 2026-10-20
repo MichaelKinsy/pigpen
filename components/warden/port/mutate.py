@@ -17,7 +17,7 @@ M = [
  ("repeat-window-empty", "guard.go", "window: 3}", "window: 0}"),
  ("stale-prejudgment-reused", "action_guard.go", "ready.key == key &&", "true &&"),
  ("force-push-flag-f-missed", "patterns.go", "(?:-f|--force)(?:[^-\\w]|$)", "(?:--force)(?:[^-\\w]|$)"),
- ("dangerous-rm-authorizable", "authorize.go", 'neverAuthorized  = setOf("rm-recursive-dangerous-target")', 'neverAuthorized  = setOf("none")'),
+ ("dangerous-rm-authorizable", "authorize.go", 'neverAuthorized = setOf("rm-recursive-dangerous-target")', 'neverAuthorized = setOf("none")'),
  ("deny-rule-only-confirms", "guard.go", "\t\t\tlevel = LevelDeny\n\t\t\treasons = append(reasons, orDefault(hit.Message, hit.Label))", "\t\t\tlevel = LevelConfirm\n\t\t\treasons = append(reasons, orDefault(hit.Message, hit.Label))"),
  ("disable-keeps-consent", "commands.go", 'cfg.Enabled, cfg.Consent = false, ""', "cfg.Enabled = false"),
  ("prejudge-outlives-nothing", "action_guard.go", "bg := context.WithoutCancel(ctx)", "bg := ctx"),
@@ -168,7 +168,7 @@ M = [
  ("arming-case-insensitive-always", "arming.go", "if !rule.Arms.CaseSensitive {\n\t\tpattern = \"(?i)\" + pattern", "if true {\n\t\tpattern = \"(?i)\" + pattern"),
  ("arming-expiry-ignored", "arming.go", "if !t.armed[id].expiresAt.After(now) {", "if false {"),
  ("arming-redirect-never-arms", "guardcore_wire.go", "sinks = writeSinkTargets(StripDataText(view.Command).Text)", "sinks = nil"),
- ("armed-exempt-ignored", "guardcore_wire.go", "if !contains(cfg.Action.ExemptRules, hit.ID) {", "if true {"),
+ ("armed-exempt-ignored", "guardcore_wire.go", "if !slices.Contains(cfg.Action.ExemptRules, hit.ID) {", "if true {"),
  ("armed-confirm-is-hold", "guardcore_wire.go", "case \"confirm\":\n\t\t\tpattern.Action = \"dialog\"", "case \"confirm\":\n\t\t\tpattern.Action = \"hold\""),
  ("armed-block-is-confirm", "guardcore_wire.go", "if hit.Action == \"block\" {\n\t\t\tseverity = SeverityDeny", "if false {\n\t\t\tseverity = SeverityDeny"),
  ("arming-survives-session", "guardcore_wire.go", "w.gc.arming.Reset()", "_ = w.gc.arming"),
@@ -183,6 +183,7 @@ EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before ju
  "sensitive-violations-escalate": "unreachable: only rm-family hits yield violations (hitViolations), and none is sensitive; the filter is upstream's defence in depth",
  "large-output-any-tool": "unreachable: BuildRequest asks the large_output question of bash only, so no other tool has an answer to read",
  "scratch-moves-in-ignored": "the stripped command is read too (`unquoted(command)`); the raw text only adds a case where data text hid a move-in word",
+ "sql-commit-voids-nothing": "redundant by construction: a COMMIT is also a transaction-control statement (SQL_TX_CONTROL) and a trailing one is not the final ROLLBACK, so the void list is a second line of defence",
  "large-output-memory-lost": "the steer repeat window drops the identical second text, so the memory is a second line of defence (checked at the unit level by the notice twin)"}
 only = set(sys.argv[1:])
 out = []
