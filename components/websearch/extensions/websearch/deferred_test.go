@@ -26,16 +26,6 @@ func TestDeferred_anysearch_provider(t *testing.T) {
 	tskip(t, F, "AnySearch HTTP errors redact keyed credentials", "the AnySearch provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (AnySearch HTTP errors redact keyed credentials) ships with the feature")
 }
 
-func TestDeferred_auth_fetch(t *testing.T) {
-	const F = "auth-fetch"
-	tskip(t, F, "authFetch profiles resolve named, single true, and host policy", "authenticated fetch reads browser cookies, which this port never does; auth profiles return an explicit 'not available' error (docs/PORT.md); this case (authFetch profiles resolve named, single true, and host policy) ships with the feature")
-	tskip(t, F, "authFetch true selects the only profile", "authenticated fetch reads browser cookies, which this port never does; auth profiles return an explicit 'not available' error (docs/PORT.md); this case (authFetch true selects the only profile) ships with the feature")
-	tskip(t, F, "authenticated fetch sends only browser-scoped cookies with raw values", "authenticated fetch reads browser cookies, which this port never does; auth profiles return an explicit 'not available' error (docs/PORT.md); this case (authenticated fetch sends only browser-scoped cookies with raw values) ships with the feature")
-	tskip(t, F, "authenticated same-origin redirects recompute path-scoped cookies", "authenticated fetch reads browser cookies, which this port never does; auth profiles return an explicit 'not available' error (docs/PORT.md); this case (authenticated same-origin redirects recompute path-scoped cookies) ships with the feature")
-	tskip(t, F, "authenticated fetch failure does not fall through to hosted providers", "authenticated fetch reads browser cookies, which this port never does; auth profiles return an explicit 'not available' error (docs/PORT.md); this case (authenticated fetch failure does not fall through to hosted providers) ships with the feature")
-	tskip(t, F, "authenticated Cloudflare challenge stays direct-only", "authenticated fetch reads browser cookies, which this port never does; auth profiles return an explicit 'not available' error (docs/PORT.md); this case (authenticated Cloudflare challenge stays direct-only) ships with the feature")
-}
-
 func TestDeferred_auto_summary_source(t *testing.T) {
 	const F = "auto-summary-source"
 	tskip(t, F, "web_search accepts auto-summary workflow in schema and config resolution", "the auto-summary workflow is deferred with the curator (docs/PORT.md); web_search reports workflow != none as not available; this case (web_search accepts auto-summary workflow in schema and config resolution) ships with the feature")
@@ -115,31 +105,6 @@ func TestDeferred_brightdata_unlocker(t *testing.T) {
 	tskip(t, F, "Bright Data Web Unlocker failures stay visible in fetch_content guidance", "the Bright Data Unlocker (a paid hosted fetch provider; never called without configuration) provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Bright Data Web Unlocker failures stay visible in fetch_content guidance) ships with the feature")
 	tskip(t, F, "Bright Data Web Unlocker rejects a malformed zone and a malformed config root", "the Bright Data Unlocker (a paid hosted fetch provider; never called without configuration) provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Bright Data Web Unlocker rejects a malformed zone and a malformed config root) ships with the feature")
 	tskip(t, F, "a private Bright Data endpoint mirror requires an explicit narrow SSRF range", "the Bright Data Unlocker (a paid hosted fetch provider; never called without configuration) provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (a private Bright Data endpoint mirror requires an explicit narrow SSRF range) ships with the feature")
-}
-
-func TestDeferred_chrome_cookie_extraction(t *testing.T) {
-	const F = "chrome-cookie-extraction"
-	tskip(t, F, "cookie extraction remains opt-in even when a browser database exists", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (cookie extraction remains opt-in even when a browser database exists) ships with the feature")
-	tskip(t, F, "auto-discovery finds a non-default Chromium profile", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (auto-discovery finds a non-default Chromium profile) ships with the feature")
-	tskip(t, F, "KDE ${scenario.browser} decrypts v11 cookies with the KWallet safe-storage password", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (KDE ${scenario.browser} decrypts v11 cookies with the KWallet safe-storage password) ships with the feature")
-	tskip(t, F, "KDE keeps Secret Service ahead of KWallet", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (KDE keeps Secret Service ahead of KWallet) ships with the feature")
-	tskip(t, F, "KDE caches both Secret Service and KWallet passwords", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (KDE caches both Secret Service and KWallet passwords) ships with the feature")
-	tskip(t, F, "failed KWallet reads retry and successful passwords are cached", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (failed KWallet reads retry and successful passwords are cached) ships with the feature")
-	tskip(t, F, "auto-discovery finds a Brave profile on macOS", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (auto-discovery finds a Brave profile on macOS) ships with the feature")
-	tskip(t, F, "browser selection checks only the requested preset", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (browser selection checks only the requested preset) ships with the feature")
-	tskip(t, F, "Windows Chrome profiles decrypt v10 cookies with DPAPI keys", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (Windows Chrome profiles decrypt v10 cookies with DPAPI keys) ships with the feature")
-	tskip(t, F, "cookie queries keep high Chromium expiry values safe", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (cookie queries keep high Chromium expiry values safe) ships with the feature")
-	tskip(t, F, "cookie expiry filtering preserves same-second validity", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (cookie expiry filtering preserves same-second validity) ships with the feature")
-	tskip(t, F, "Windows Edge uses the USERPROFILE AppData fallback and reports unsupported v20 cookies", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (Windows Edge uses the USERPROFILE AppData fallback and reports unsupported v20 cookies) ships with the feature")
-	tskip(t, F, "required-cookie preflight avoids password invocation for unrelated profiles", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (required-cookie preflight avoids password invocation for unrelated profiles) ships with the feature")
-	tskip(t, F, "diagnostics report browser profile when password-store access fails", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (diagnostics report browser profile when password-store access fails) ships with the feature")
-	tskip(t, F, "diagnostics distinguish required cookie decryption failure", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (diagnostics distinguish required cookie decryption failure) ships with the feature")
-	tskip(t, F, "browser encryption password is cached within a process", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (browser encryption password is cached within a process) ships with the feature")
-	tskip(t, F, "failed password lookups are retried instead of cached (${targetPlatform})", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (failed password lookups are retried instead of cached (${targetPlatform})) ships with the feature")
-	tskip(t, F, "configured profile names cannot escape the browser profile root", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (configured profile names cannot escape the browser profile root) ships with the feature")
-	tskip(t, F, "explicit profile symlinks cannot escape the browser profile root", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (explicit profile symlinks cannot escape the browser profile root) ships with the feature")
-	tskip(t, F, "sqlite3 CLI fallback reads a copied database when node sqlite is unavailable", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (sqlite3 CLI fallback reads a copied database when node sqlite is unavailable) ships with the feature")
-	tskip(t, F, "unavailable SQLite backends produce actionable sanitized diagnostics", "browser cookie extraction is not part of the port: no browser-cookie access by default (docs/PORT.md); this case (unavailable SQLite backends produce actionable sanitized diagnostics) ships with the feature")
 }
 
 func TestDeferred_config_path(t *testing.T) {
@@ -249,25 +214,6 @@ func TestDeferred_firecrawl_extraction(t *testing.T) {
 	tskip(t, F, "Firecrawl malformed success envelopes throw visible shape errors", "the Firecrawl fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (Firecrawl malformed success envelopes throw visible shape errors) ships with the feature")
 	tskip(t, F, "fetch_content prefers configured Firecrawl before hosted fallbacks", "the Firecrawl fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (fetch_content prefers configured Firecrawl before hosted fallbacks) ships with the feature")
 	tskip(t, F, "Firecrawl extraction errors remain visible in fetch_content guidance", "the Firecrawl fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (Firecrawl extraction errors remain visible in fetch_content guidance) ships with the feature")
-}
-
-func TestDeferred_gemini_web_cookie_opt_in(t *testing.T) {
-	const F = "gemini-web-cookie-opt-in"
-	tskip(t, F, "Gemini Web never forwards browser cookies across origins", "Gemini is a later slice (docs/PORT.md); this case (Gemini Web never forwards browser cookies across origins) ships with the feature")
-	tskip(t, F, "Gemini Web generation rejects automatic redirects", "Gemini is a later slice (docs/PORT.md); this case (Gemini Web generation rejects automatic redirects) ships with the feature")
-	tskip(t, F, "Gemini Web rejects unsupported models instead of falling back to 2.5 Flash", "Gemini is a later slice (docs/PORT.md); this case (Gemini Web rejects unsupported models instead of falling back to 2.5 Flash) ships with the feature")
-	tskip(t, F, "Gemini Web file uploads read the file and reject automatic redirects", "Gemini is a later slice (docs/PORT.md); this case (Gemini Web file uploads read the file and reject automatic redirects) ships with the feature")
-	tskip(t, F, "browser cookie access is disabled unless explicitly allowed", "Gemini Web needs browser cookies, which this port never reads (docs/PORT.md); this case (browser cookie access is disabled unless explicitly allowed) ships with the feature")
-	tskip(t, F, "disabled browser cookie access does not validate legacy profile selection", "Gemini Web needs browser cookies, which this port never reads (docs/PORT.md); this case (disabled browser cookie access does not validate legacy profile selection) ships with the feature")
-	tskip(t, F, "browser cookie config validates presets and rejects arbitrary profile paths", "Gemini Web needs browser cookies, which this port never reads (docs/PORT.md); this case (browser cookie config validates presets and rejects arbitrary profile paths) ships with the feature")
-}
-
-func TestDeferred_gemini_web_header_overflow(t *testing.T) {
-	const F = "gemini-web-header-overflow"
-	tskip(t, F, "createGeminiFetch wires a dedicated agent with a >16 KiB header budget", "Gemini is a later slice (docs/PORT.md); this case (createGeminiFetch wires a dedicated agent with a >16 KiB header budget) ships with the feature")
-	tskip(t, F, "dedicated agent fetches oversized-header responses the pi-style global dispatcher rejects", "Gemini Web needs browser cookies, which this port never reads (docs/PORT.md); this case (dedicated agent fetches oversized-header responses the pi-style global dispatcher rejects) ships with the feature")
-	tskip(t, F, "resolveGeminiFetch falls back to the ambient global fetch when undici is not resolvable", "Gemini is a later slice (docs/PORT.md); this case (resolveGeminiFetch falls back to the ambient global fetch when undici is not resolvable) ships with the feature")
-	tskip(t, F, "resolveGeminiFetch surfaces dedicated agent construction errors", "Gemini is a later slice (docs/PORT.md); this case (resolveGeminiFetch surfaces dedicated agent construction errors) ships with the feature")
 }
 
 func TestDeferred_github_extract(t *testing.T) {

@@ -26,6 +26,8 @@ func ResetCaches() {
 	cachedDir, cachedDirOK = "", false
 	cacheMu.Unlock()
 	resetProviderState()
+	resetGeminiWebConfig()
+	resetCookieState()
 }
 
 func fileExists(path string) bool {
