@@ -32,6 +32,9 @@ type Options struct {
 	// NewJudge builds the judge for the configured backend; nil uses the real backends.
 	NewJudge func(ctx sdk.Context, cfg Config, budget *Budget, getenv func(string) string) (Judge, error)
 	Now      func() time.Time
+	// setup runs after the warden state is built and before the events are subscribed: tests register pieces
+	// of the supervision registries there.
+	setup func(*warden)
 }
 
 type warden struct {
@@ -95,14 +98,13 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
-	e.OnEvent(sdk.EventMessageStart, w.onMessageStart)
-	e.OnEvent(sdk.EventMessageUpdate, w.onMessageUpdate)
-	e.OnEvent(sdk.EventMessageEnd, w.onMessageEnd)
-	e.OnEvent(sdk.EventInput, w.onInput)
-	e.OnEvent(sdk.EventAgentSettled, w.onAgentSettled)
-	// Pieces of those events, in upstream's order (supervision.go lists the whole order). Each lane adds its own
-	// line here.
+	// Pieces of the message, input and agent_settled events, in upstream's order (supervision.go lists the whole
+	// order). Each lane adds its own line here, above registerSupervisionEvents.
 	w.sup.onSettled(w.checkSubagentReports) // supervision: subagent triage
+	if o.setup != nil {
+		o.setup(w)
+	}
+	w.registerSupervisionEvents(e)
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); return nil, nil })
 	return e, w
 }

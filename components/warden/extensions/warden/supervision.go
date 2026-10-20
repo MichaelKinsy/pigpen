@@ -108,6 +108,21 @@ func runPieces(pieces []eventPiece, ctx sdk.Context, data map[string]any) (any, 
 	return nil, nil
 }
 
+// registerSupervisionEvents subscribes to the events that have pieces. A host sends a subscribed event to the
+// extension and waits for its answer, and message_update arrives once per streamed token, so an event nobody has a
+// piece for is not subscribed to. message_end always is: the subagent reports are collected there.
+func (w *warden) registerSupervisionEvents(e *sdk.Extension) {
+	if len(w.sup.messageStart) > 0 {
+		e.OnEvent(sdk.EventMessageStart, w.onMessageStart)
+	}
+	if len(w.sup.messageUpdate) > 0 {
+		e.OnEvent(sdk.EventMessageUpdate, w.onMessageUpdate)
+	}
+	e.OnEvent(sdk.EventMessageEnd, w.onMessageEnd)
+	e.OnEvent(sdk.EventInput, w.onInput)
+	e.OnEvent(sdk.EventAgentSettled, w.onAgentSettled)
+}
+
 // onMessageStart is the `message_start` handler: Pi does not forward the stream's own "start" event, so lanes
 // reset their per-message state here.
 func (w *warden) onMessageStart(ctx sdk.Context, data map[string]any) (any, error) {

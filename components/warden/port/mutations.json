@@ -75,7 +75,7 @@
   "name": "quick-repeat-fires-on-success-without-readonly",
   "file": "stuck.go",
   "find": "if !l.Failed && !l.ReadOnly {",
-  "replace": "if false {"
+  "replace": "if !l.Failed && !l.ReadOnly && false {"
  },
  {
   "name": "quick-repeat-ignores-changes",
@@ -111,25 +111,25 @@
   "name": "waste-search-overlap-never",
   "file": "waste.go",
   "find": "if PatternsOverlap(l.search.Pattern, r.search.Pattern) {",
-  "replace": "if false {"
+  "replace": "if PatternsOverlap(l.search.Pattern, r.search.Pattern) && false {"
  },
  {
   "name": "waste-recheck-never",
   "file": "waste.go",
   "find": "if !ok || !trigger.HasFilter {",
-  "replace": "if true {"
+  "replace": "if !ok || !trigger.HasFilter || true {"
  },
  {
   "name": "waste-far-apart-reads-fire",
   "file": "waste.go",
   "find": "if r.Start > furthest+adjacentGap {",
-  "replace": "if false {"
+  "replace": "if r.Start > furthest+adjacentGap && false {"
  },
  {
   "name": "waste-sleep-chain-is-a-poll",
   "file": "waste.go",
   "find": "\t\tif s.sep != \"\" && s.sep != \"|\" {",
-  "replace": "\t\tif false {"
+  "replace": "\t\tif s.sep != \"\" && s.sep != \"|\" && false {"
  },
  {
   "name": "waste-note-before-result",

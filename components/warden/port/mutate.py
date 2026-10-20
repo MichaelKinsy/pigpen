@@ -58,12 +58,12 @@ M = [
  # Supervision (waste.go, evidence.go, subagent.go, supervision.go).
  ('waste-sleep-needs-two', 'waste.go', 'if polls < 2 {', 'if polls < 1 {'),
  ('waste-paging-min-reads', 'waste.go', 'minReads      = 3', 'minReads      = 2'),
- ('waste-rate-limit-ignored', 'waste.go', 't.seen-fired < cfg.Every', 'false'),
- ('waste-tip-not-idempotent', 'waste.go', 'if strings.Contains(base, tip) {', 'if false {'),
+ ('waste-rate-limit-ignored', 'waste.go', 't.seen-fired < cfg.Every', 't.seen-fired < cfg.Every && false'),
+ ('waste-tip-not-idempotent', 'waste.go', 'if strings.Contains(base, tip) {', 'if strings.Contains(base, tip) && false {'),
  ('waste-recheck-failure-chased-as-waste', 'waste.go', 'earlier.Failed || reFailSignal.MatchString(earlier.Result)', 'false'),
- ('waste-search-needs-overlap', 'waste.go', 'if !overlapping {', 'if false {'),
- ('waste-write-between-ignored', 'waste.go', 'if slices.Contains(WrittenPaths(c), file) {', 'if false {'),
- ('waste-detector-switch-ignored', 'waste.go', 'if !d.enable(cfg) {', 'if false {'),
+ ('waste-search-needs-overlap', 'waste.go', 'if !overlapping {', 'if !overlapping && false {'),
+ ('waste-write-between-ignored', 'waste.go', 'if slices.Contains(WrittenPaths(c), file) {', 'if slices.Contains(WrittenPaths(c), file) && false {'),
+ ('waste-detector-switch-ignored', 'waste.go', 'if !d.enable(cfg) {', 'if !d.enable(cfg) && false {'),
  ('waste-guard-switch-ignored', 'waste.go', 'if !cfg.Enabled {\n\t\treturn nil\n\t}\n\tfor _, d := range wasteDetectors', 'for _, d := range wasteDetectors'),
  ('waste-note-unredacted-trigger', 'supervision.go', 'utf16Slice(collapseSpace(Redact(cmd)), 0, 200)', 'utf16Slice(collapseSpace(cmd), 0, 200)'),
  ('waste-tip-noted-every-run', 'supervision.go', 'first := !w.sup.wasteTipOffered', 'first := true'),
@@ -73,24 +73,26 @@ M = [
  ('evidence-cap-ignored', 'evidence.go', 'if len(marshalPlain(kept)) <= limit ||', 'if true ||'),
  ('evidence-signature-keeps-line-numbers', 'evidence.go', '{lazyRE(`:\\d+(?::\\d+)?\\b`), ":#"},', ''),
  ('evidence-request-ignores-config', 'stuck.go', '\tif evidence {\n\t\tstate["evidence"]', '\tif true {\n\t\tstate["evidence"]'),
- ('evidence-same-failure-not-linked', 'evidence.go', 'if c.failed && c.signature == sig {', 'if false {'),
+ ('evidence-same-failure-not-linked', 'evidence.go', 'if c.failed && c.signature == sig {', 'if c.failed && c.signature == sig && false {'),
  ('stuck-diff-grows-result', 'supervision.go', 'if len(note) < len(joinedText(content)) {', 'if true {'),
  ('stuck-diff-on-success', 'supervision.go', 'verdict.Stuck && failed && !verdict.SuccessRepeat', 'verdict.Stuck && !verdict.SuccessRepeat'),
  ('stuck-diff-on-churn', 'supervision.go', '!verdict.SuccessRepeat && !verdict.Churn && text != ""', '!verdict.SuccessRepeat && text != ""'),
- ('stuck-diff-full-copy-not-saved', 'supervision.go', 'd.FullPath = saved', 'd.FullPath = ""'),
- ('subagent-incremental-wakes', 'subagent.go', 'if r.Incremental {\n\t\treturn TriageResult', 'if false {\n\t\treturn TriageResult'),
+ ('stuck-diff-full-copy-not-saved', 'supervision.go', 'd.FullPath = saved', '_ = saved\n\t\t\td.FullPath = ""'),
+ ('subagent-incremental-wakes', 'subagent.go', 'if r.Incremental {\n\t\treturn TriageResult', 'if r.Incremental && false {\n\t\treturn TriageResult'),
  ('subagent-threshold-ignored', 'subagent.go', 'Wake: p >= o.Config.Threshold,', 'Wake: true,'),
- ('subagent-no-trouble-asks-judge', 'subagent.go', 'if !MentionsTrouble(r.Text) {', 'if false {'),
- ('subagent-seen-not-recorded', 'supervision.go', 'w.sup.subagentSeen[r.ID] = true\n', ''),
+ ('subagent-no-trouble-asks-judge', 'subagent.go', 'if !MentionsTrouble(r.Text) {', 'if !MentionsTrouble(r.Text) && false {'),
+ ('subagent-seen-not-recorded', 'supervision.go', 'w.sup.subagentSeen[r.ID] = true\n', '_ = r.ID\n'),
  ('subagent-wake-window-ignored', 'subagent.go', 'if p.lastWakeAt == 0 || at-p.lastWakeAt >= p.CooldownMs {', 'if true {'),
- ('subagent-collects-any-custom-type', 'supervision.go', 'if !IsNotifyType(customType) {', 'if false {'),
+ ('subagent-collects-any-custom-type', 'supervision.go', 'if !IsNotifyType(customType) {', 'if !IsNotifyType(customType) && false {'),
  ('subagent-pending-unbounded', 'supervision.go', 'if over := len(w.sup.subagentPending) - subagentPendingLimit; over > 0 {', 'if over := 0; over > 0 {'),
  ('subagent-wake-not-a-turn', 'supervision.go', 'SteerOptions{DeliverAs: "followUp", TriggerTurn: true})\n\t}\n}\n\n// wasteTip', 'SteerOptions{DeliverAs: "followUp"})\n\t}\n}\n\n// wasteTip'),
- ('input-block-ignored', 'supervision.go', 'if b.busy() {', 'if false {'),
+ ('input-block-ignored', 'supervision.go', 'if b.busy() {', 'if b.busy() && false {'),
  ('input-pass-does-not-settle', 'supervision.go', '\tw.settleSteers(w.config(ctx), w.adaptor.user())\n', ''),
- ('message-end-first-wins-lost', 'supervision.go', 'if v, err := p(ctx, data); v != nil || err != nil {', 'if v, err := p(ctx, data); false {'),
+ ('message-end-first-wins-lost', 'supervision.go', 'if v, err := p(ctx, data); v != nil || err != nil {', 'if v, err := p(ctx, data); (v != nil || err != nil) && false {'),
 ]
-EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
+EQUIVALENT = {
+ "stuck-diff-on-success": "unreachable: a successful latest result reaches a stuck verdict only as a success repeat or churn, which the same condition already excludes",
+ "subagent-collects-any-custom-type": "newReports filters the notify types again before triage; the collection filter only keeps the pending list small","judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
 only = set(sys.argv[1:])
 out = []
 for mid, f, old, new in M:

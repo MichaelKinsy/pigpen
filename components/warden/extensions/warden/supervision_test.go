@@ -278,6 +278,35 @@ func TestStuckLoopDiffTwoFailuresThenASuccessLeaveTheSuccessUnchanged(t *testing
 	}
 }
 
+func TestStuckLoopDiffNeverGrowsAShortResult(t *testing.T) {
+	h := stuckHarness(t, func(c *Config) {})
+	call := map[string]any{"command": "npm test"}
+	h.result(call, "FAIL a", true)
+	h.result(call, "FAIL b", true)
+	if got := h.result(call, "FAIL c", true); got != nil {
+		t.Errorf("a diff note longer than the result is not sent: %v", got)
+	}
+}
+
+func TestStuckLoopDiffStopsWhenTheSameTargetChurnsPastTheThreshold(t *testing.T) {
+	h := stuckHarness(t, func(c *Config) { c.Stuck.Cooldown = 0 })
+	call := map[string]any{"command": "npm run build"}
+	outputs := []string{longOutput("a"), longOutput("b"), longOutput("c"), longOutput("d"), longOutput("e")}
+	var patched []bool
+	for _, o := range outputs {
+		patched = append(patched, h.result(call, o, true) != nil)
+	}
+	mustEqual(t, patched, []bool{false, false, true, true, false}, "the 5th call of one target is a churn verdict, which keeps the result whole")
+}
+
+// userCountingAdaptor counts the settles of the user's reply.
+type userCountingAdaptor struct {
+	sendAllAdaptor
+	users *int
+}
+
+func (a userCountingAdaptor) user() []SteerOutcome { *a.users++; return nil }
+
 func TestStuckLoopDiffStuckEnabledFalsePreventsAnyReplacement(t *testing.T) {
 	h := stuckHarness(t, func(c *Config) { c.Stuck.Enabled = false })
 	call := map[string]any{"command": "npm test"}
@@ -483,7 +512,8 @@ func TestInputIsHandledWhileARegisteredLaneIsBusyAndPassesOtherwise(t *testing.T
 	busy := true
 	w.sup.blockInput(func() bool { return false }, "never shown")
 	w.sup.blockInput(func() bool { return busy }, "pi-warden is generating rules. Please wait...")
-	passed := 0
+	passed, settles := 0, 0
+	w.adaptor = userCountingAdaptor{users: &settles}
 	w.sup.onInputPass(func(sdk.Context) { passed++ })
 	h := &harness{t: t, ts: newFakeTypeSafe(t), home: t.TempDir()}
 	t.Setenv("PIG_HOME", h.home)
@@ -497,29 +527,33 @@ func TestInputIsHandledWhileARegisteredLaneIsBusyAndPassesOtherwise(t *testing.T
 		t.Errorf("busy: %s passed=%d", raw, passed)
 	}
 	mustEqual(t, h.notices(), []string{"pi-warden is generating rules. Please wait..."}, "the user is told")
+	if settles != 0 {
+		t.Errorf("a swallowed input settles nothing: %d", settles)
+	}
 	busy = false
 	raw = h.host.Fire("input", map[string]any{"text": "hello", "source": "interactive"})
 	if s := string(raw); s != "" && s != "null" {
 		t.Errorf("idle input passes: %s", s)
 	}
-	if passed != 1 {
-		t.Errorf("pass-through pieces run once: %d", passed)
+	if passed != 1 || settles != 1 {
+		t.Errorf("pass-through pieces run once and the user's reply settles the watched steers once: %d %d", passed, settles)
 	}
 }
 
 func TestMessageAndSettledPiecesRunInRegistrationOrderAndTheFirstReplacementWins(t *testing.T) {
-	ext, w := newWarden(Options{})
 	var order []string
-	w.sup.onMessageStart(func(sdk.Context, map[string]any) (any, error) { order = append(order, "start1"); return nil, nil })
-	w.sup.onMessageStart(func(sdk.Context, map[string]any) (any, error) { order = append(order, "start2"); return nil, nil })
-	w.sup.onMessageUpdate(func(sdk.Context, map[string]any) (any, error) { order = append(order, "update"); return nil, nil })
-	w.sup.onMessageEnd(func(sdk.Context, map[string]any) (any, error) { order = append(order, "end1"); return nil, nil })
-	w.sup.onMessageEnd(func(sdk.Context, map[string]any) (any, error) {
-		order = append(order, "end2")
-		return map[string]any{"message": map[string]any{"role": "user", "content": "replaced"}}, nil
-	})
-	w.sup.onMessageEnd(func(sdk.Context, map[string]any) (any, error) { order = append(order, "end3"); return nil, nil })
-	w.sup.onSettled(func(sdk.Context) { order = append(order, "settled2") })
+	ext, _ := newWarden(Options{setup: func(w *warden) {
+		w.sup.onMessageStart(func(sdk.Context, map[string]any) (any, error) { order = append(order, "start1"); return nil, nil })
+		w.sup.onMessageStart(func(sdk.Context, map[string]any) (any, error) { order = append(order, "start2"); return nil, nil })
+		w.sup.onMessageUpdate(func(sdk.Context, map[string]any) (any, error) { order = append(order, "update"); return nil, nil })
+		w.sup.onMessageEnd(func(sdk.Context, map[string]any) (any, error) { order = append(order, "end1"); return nil, nil })
+		w.sup.onMessageEnd(func(sdk.Context, map[string]any) (any, error) {
+			order = append(order, "end2")
+			return map[string]any{"message": map[string]any{"role": "user", "content": "replaced"}}, nil
+		})
+		w.sup.onMessageEnd(func(sdk.Context, map[string]any) (any, error) { order = append(order, "end3"); return nil, nil })
+		w.sup.onSettled(func(sdk.Context) { order = append(order, "settled2") })
+	}})
 	h := &harness{t: t, ts: newFakeTypeSafe(t), home: t.TempDir()}
 	t.Setenv("PIG_HOME", h.home)
 	hasUI := true
@@ -531,4 +565,34 @@ func TestMessageAndSettledPiecesRunInRegistrationOrderAndTheFirstReplacementWins
 	h.host.Fire("agent_settled", nil)
 	mustEqual(t, order, []string{"start1", "start2", "update", "end1", "end2", "settled2"}, "order")
 	mustMatch(t, string(raw), `"content":"replaced"`, "the replacement reaches the host")
+}
+
+func TestEventsWithoutPiecesAreNotSubscribedExceptTheOnesThisModuleNeeds(t *testing.T) {
+	h := startHarness(t, harnessOpts{cfg: on(BackendNone)})
+	for _, e := range []string{"message_start", "message_update"} {
+		if h.host.Registered(e) {
+			t.Errorf("%s has no piece, so the host is not asked per message or per token", e)
+		}
+	}
+	for _, e := range []string{"message_end", "input", "agent_settled"} {
+		if !h.host.Registered(e) {
+			t.Errorf("%s is needed by the subagent triage and the input registry", e)
+		}
+	}
+}
+
+func TestAReportThatEndsTwiceIsTriagedOnce(t *testing.T) {
+	h := startHarness(t, harnessOpts{cfg: on(BackendNone)})
+	h.start()
+	msg := map[string]any{"id": "m1", "role": "custom", "customType": "subagent-notify", "content": subCompletion}
+	for range 2 {
+		h.host.Fire("message_end", map[string]any{"message": msg})
+		h.host.Fire("agent_settled", nil)
+	}
+	h.w.mu.Lock()
+	n := h.w.stats.SubagentReports
+	h.w.mu.Unlock()
+	if n != 1 {
+		t.Errorf("a report with the same entry id is triaged once: %d", n)
+	}
 }
