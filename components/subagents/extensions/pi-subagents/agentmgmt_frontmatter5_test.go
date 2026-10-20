@@ -110,10 +110,11 @@ func TestAgentFrontmatterTail(t *testing.T) {
 		}
 	})
 	tw(t, f, "adds the fast extension only for native OpenAI-Codex models", func(t *testing.T) {
-		needed, err := resolveFastModeExtension(true, "openai-codex/gpt-6-sol:low", "worker")
-		eq(t, err == nil && needed, true, "allowed")
+		yes := true
+		exts, err := resolveFastModeExtension(&yes, "openai-codex/gpt-6-sol:low", "worker")
+		eq(t, err == nil && len(exts) > 0, true, "allowed")
 		for _, model := range []string{"anthropic/claude-sonnet-4", "openai/gpt-6-sol"} {
-			_, err := resolveFastModeExtension(true, model, "worker")
+			_, err := resolveFastModeExtension(&yes, model, "worker")
 			hasMatch(t, err, `fast mode supports only`)
 		}
 	})

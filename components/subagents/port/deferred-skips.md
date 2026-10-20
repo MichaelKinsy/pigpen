@@ -99,3 +99,14 @@ Every case below is an individual `tskip` that is only acceptable until the owni
 | workflow-resume-hint | does not hint when status proof or direct resumability is not safe | workflow runtime (scripted workflows) | the case checks the safety conditions of the workflow keyed-resume hint (status proof, workflowChildren inventory) of a scripted workflow run; the port refuses workflow runs and keeps no workflowChildren inventory |
 | workflow-resume-hint | names a directly resumable child when the parent receipt is missing | workflow runtime (scripted workflows) | the hint is printed by a scripted workflow's keyed resume (`runs.run(..., {resume: {workflowRunId, key}})`) when the parent workflow receipt is missing; the port refuses workflow runs, so it has no keyed workflow resume to recover from |
 | workflow-resume-hint | rejects explicit baseRef when resuming a retained managed-worktree child | workflow runtime (scripted workflows) | the case resumes a retained managed-worktree child (handoff.json) through a scripted workflow and its baseRef check; both the workflow runtime and managed worktrees are slices the port does not run |
+
+# Deferred skips of the run-policy lane
+
+Upstream test cases whose Go twin cannot be written until another slice exists. Each is a `tskip` in the twin tests with the
+same reason; the final reconciliation turns them into twins once the slice lands.
+
+Format: ledger file | title | owning slice | what must exist for the twin
+
+capability-ceiling-agent-allowlist | includes allowedAgents in the child runtime config and audit metadata | child session runtime (`runs/shared/child-launch.ts`, `child-runtime-config.ts`) | a child launch builder that composes the child tool plan (`policy_toolplan.go`) with the child runtime config (the ceiling, depth, supervisor and nested route the child reads) and reports the capability audit
+capability-ceiling-agent-allowlist | applies the selected agent's descendant ceiling only after its parent-authorized launch | child session runtime (`runs/shared/child-launch.ts`) | the same launch builder, taking `descendantAllowedAgents` and intersecting it into the child's ceiling after the parent-authorized launch
+capability-ceiling-agent-allowlist | propagates the detached runner step snapshot through the common launch seam | background runs, detached runner (`runs/background/runner-child-launch.ts`) | the runner's step snapshot (`allowedAgents`, ceiling) passed through the same launch builder

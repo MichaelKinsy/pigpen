@@ -122,12 +122,13 @@ fake launchers; wiring it to real child runs of the background engine (`async_ru
 fan-out budget, receipts written to the async directory, completion notification of a background workflow) is not done in this
 change, so a run is refused with the exact message rather than half-run.
 
-The helpers the workflow, run-policy and agent-management slices each ported (gate normalization, extension bindings, the dynamic fan-out and
-chain-output validators, `stableJSON`, display-text sanitizing, locale ordering, the filesystem helpers of the missions) are merged into one
-copy each: `normalizeGateAcceptance`/`parseGateInput` (policy_acceptance*.go), `normalizeExtensionBindings` (extbindings.go),
-`validateChainOutputBindings`/`validateDynamicStepShape` (dynamic_fanout.go, which `.chain.json` parsing calls), `stableJSON` (extbindings.go),
-`sanitizeDisplayText` (policy_display.go), `localeCompare` (parallel_handoff.go), the retry and atomic JSON writers (policy_fsutil.go).
-`intersectSubagentCapabilityCeilings` is policy_ceiling.go (workflow_launch.go calls it through `intersectCapabilityCeilings` over decoded objects).
+The helpers that the workflow, run-policy and agent-management slices each ported are merged into one copy each: gate normalization
+(`normalizeGateAcceptance`/`parseGateInput`, policy_acceptance*.go), extension bindings and the launch binding projection (extbindings.go),
+the stable JSON digest (`stableJSON`, policy_launch.go), the dynamic fan-out and chain-output validators (dynamic_fanout.go, which `.chain.json`
+parsing calls), `sanitizeDisplayText` (policy_display.go), locale ordering (`localeCompare`, parallel_handoff.go), the retry and atomic JSON
+writers (policy_fsutil.go), the capability ceiling intersection (policy_ceiling.go; workflow_launch.go reaches it through
+`intersectCapabilityCeilings` over decoded objects), the child tool plan (policy_toolplan.go), the live prompt registry (policy_foreground.go),
+the refinement overlay (agentmgmt_refine.go) and the structured delegation bridge (policy_delegation.go).
 
 ## Mapping
 
@@ -150,14 +151,14 @@ copy each: `normalizeGateAcceptance`/`parseGateInput` (policy_acceptance*.go), `
 | M15 | `slash/prompt-workflows.ts` | `workflow_prompt.go`, `prompts/` | 4 twins, `mission_host_test.go` |
 | M16 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
 | M17 | `agents/advertised-agent-prompt.ts`, `extension/index.ts` (advertisement state, `before_agent_start`, `session_start`) | `advertise.go`, `extension.go` | `advertise_test.go`, `advertise_host_test.go` (6 + 2 + 1 twins) |
-| M18 | `runs/shared/agent-contract.ts`, `runtime-acknowledged-extensions.ts`, `fast-mode-extension.ts`, `extension-bindings.ts`, `shared/launch-contract.ts` (digest) | `contract.go`, `runtimeack.go`, `fastmode.go`, `extbindings.go` | `misc_twins_test.go` |
-| M19 | `runs/foreground/prompt-audit.ts`, `shared/opencode-session-headers.ts` | `promptaudit.go` | `misc_twins_test.go`, `promptaudit_host_test.go` |
+| M18 | `runs/shared/agent-contract.ts`, `runtime-acknowledged-extensions.ts`, `fast-mode-extension.ts`, `extension-bindings.ts`, `shared/launch-contract.ts` (digest) | `contract.go`, `runtimeack.go`, `fastmode.go`, `extbindings.go` (the single copy of extension bindings and the launch binding projection; `policy_launch.go` calls it) | `misc_twins_test.go`, `policy_launch_test.go` |
+| M19 | `runs/foreground/prompt-audit.ts`, `shared/opencode-session-headers.ts` | `promptaudit.go` (the rewrite; the live prompt registry is `policy_foreground.go`) | `misc_twins_test.go`, `promptaudit_host_test.go` |
 | M20 | `agents/agent-refinements.ts` | `agentmgmt_refine.go` | `agentmgmt_refine_test.go` |
 | M21 | `extension/doctor.ts`, `extension/subagent-guide.ts` | `doctor.go`, `guide.go` (the guide topics are embedded from the original: `guide/`) | `doctor_test.go`, `guide_test.go` |
 | M22 | `profiles/profiles.ts` | `profiles.go` | `profiles_test.go` |
 | M23 | `slash/slash-commands.ts` (the administration commands), `slash/subagents-admin.ts` | `slash_commands.go`, `slash_admin.go` | `slash_admin_test.go` |
-| M24 | `runs/shared/subagent-prompt-runtime.ts` (prompt rewriting and fork context cleaning), `child-tool-plan.ts` (extension plan, fast mode, thinking suffix) | `child_prompt.go`, `extension_plan.go` | `child_prompt_test.go`, `default_extensions_test.go` |
-| M25 | `slash/prompt-template-bridge.ts`, `delegation-request.ts`, `delegation-adapters.ts`, `api/delegation.ts` | `delegation.go` | `delegation_test.go` |
+| M24 | `runs/shared/subagent-prompt-runtime.ts` (prompt rewriting and fork context cleaning), `child-tool-plan.ts` (extension plan, fast mode, thinking suffix: `policy_toolplan.go`) | `child_prompt.go` | `child_prompt_test.go`, `default_extensions_test.go` |
+| M25 | `slash/prompt-template-bridge.ts`, `delegation-request.ts`, `delegation-adapters.ts`, `api/delegation.ts` | `policy_delegation.go`, `policy_delegation_host.go` (the single bridge) | `delegation_test.go` (the 6 twins of `prompt-template-bridge`) |
 
 ## Differences from the original (missions and prompt workflows)
 
@@ -276,3 +277,86 @@ runs) and take this port's definitions, discovery and activation. Nothing of the
 - The twin ledger and slice file (264 entries by name, grouped by hand) and the 41 twins' file layout.
 - The mutation generator (116 pairs by hand, 42 of them the review's) and the scenario generator.
 - A tool-definition importer that reads a recorded request would replace `gen-tooldefs.py`.
+
+## Run policy lane, second pass (subagents-policy-2)
+
+Merged into this lane: the agent settings lane (discovery engine, model resolution, skills) and the background runs lane
+(`origin/subagents-async-1`), whose result files this lane twins. Where both lanes ported the same helper one copy was kept (the
+temp scope, run fan-out descriptor and capacity predicate stay here, with their test seams; the index segments, display helpers,
+recovery projection and git refs stay with the background runs).
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| M10 | `runs/background/result-files.ts` (indexes, pending promotion, cleanup, mission observer index) | `async_results.go` (fault seams `resultReadFile`, `resultReadDir`, `resultStat`, `resultRename`) | 23 twins (`policy_resultfiles_test.go`) |
+| M11 | `runs/shared/readonly-drain-observation.ts`, `runs/background/auto-drain.ts` (observation), `async-status.ts` (raw status observer) | `policy_readonlydrain.go`, `async_wait.go`, `async_list.go`, `async_status.go` | 5 twins and 1 skip (the in-process child hook factory) |
+| M12 | `runs/foreground/foreground-control.ts`, live prompt registry of `prompt-audit.ts` | `policy_foreground.go` | 2 twins + 1 host test |
+| M13 | `tui/running-tone.ts` (thinking level reader), `shared/extension-context.ts` (stale and unbound runtime tests) | `policy_tone.go` | 1 twin |
+
+Changes to the background runs' status code made for the observation: `readStatus` inspects before it reads and wraps the cause,
+the reconciler reports the raw status it read first (before any repair), `updateActiveRunIndex` and the active index listing
+report status errors as `Failed to list async runs`. A background run (`async` unset or true) refuses the policy options that
+only a foreground run applies (`output` other than the default, `outputMode`, `artifacts`, `acceptance`, `gate`,
+`agentContract`, `includeProgress`) instead of ignoring them; the policy reads the real `config.json`.
+
+## Run policy lane, third pass (subagents-policy-3)
+
+The five ledger files the second pass left open are now twinned (every upstream case has a `tw` or an individually justified `tskip`,
+and their entries are gone from `port/slices.json`).
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| M14 | `api/preflight.ts` (`resolveSubagentLaunchContract`) | `policy_preflight.go` | 31 twins (`policy_preflight_test.go`) |
+| M15 | `shared/launch-contract.ts` (stable digests, agent definition projection, launch binding), `runs/shared/extension-bindings.ts`, `shared/required-child-extensions.ts`, `intercom/intercom-bridge.ts`, launch context of `shared/fork-context.ts`, `resolveStepBehavior` of `child-launch-plan.ts` | `policy_launch.go` | the preflight twins, `policy_launch_test.go` |
+| M16 | `runs/shared/child-tool-plan.ts` | `policy_toolplan.go` | the preflight twins, `policy_launch_test.go` |
+| M17 | `runs/shared/mcp-direct-tool-grant.ts`, `mcp-direct-tool-allowlist.ts`, `mcp-config-sources.ts` | `policy_mcpgrant.go`, `policy_mcpconfig.go` | the preflight twins, `policy_launch_test.go` |
+| M18 | `agents/agent-refinements.ts` (the overlay), `runs/shared/effective-system-prompt.ts` | `agentmgmt_refine.go` (overlay and file), `policy_refinement.go` (the effective system prompt) | `policy_launch_test.go`, `agentmgmt_refine_test.go` |
+| M19 | `api/delegation.ts`, `slash/delegation-request.ts`, `delegation-adapters.ts`, `delegation-json.ts`, `prompt-template-bridge.ts` | `policy_delegation.go` (the bridge), `policy_delegation_host.go` (SDK event bus, child process executor) | 17 twins (`policy_delegation_test.go`) |
+| M20 | the structured output tool of `runs/shared/subagent-prompt-runtime.ts` | `child_role.go` | not yet wired (see the child role below) |
+
+Counts: preflight 31 twins; delegation-api 17 twins; capability-ceiling-agent-allowlist 3 twins here, 1 in the host-test package
+(`policy_run_test.go`), 1 from the second pass and 3 skips; writer-budget-guidance 1 twin; usage-reconciliation-owners 2 skips.
+
+**Decisions and differences.**
+
+- The preflight is the in-package function `resolveSubagentLaunchContract`; the original exports it from a Node module
+  (`pi-subagents/preflight`), and a Go extension cannot be imported by another extension at run time. Cross-extension access is the
+  delegation event bus, as in the original.
+- The original's runtime extension files (`fast-mode-extension.ts`, `subagent-prompt-runtime.ts`, `fanout-child.ts`) are the child
+  roles `native:pi-subagents-fast-mode`, `-prompt-runtime` and `-fanout-child` (the way the original already names its supervisor channel,
+  `native:pi-subagents-supervisor-channel`); the twins assert those names where the original asserts the file names.
+  `protocol.packageVersion` is the original package version the port follows (0.73.1).
+- The MCP runtime snapshot of pi-mcp-adapter (`pi-mcp-adapter:runtime-snapshot:v1`) is not ported: the original asks for it by emitting a
+  request object on the in-process event bus and reading the `result` the adapter's listener sets on it. The SDK's event bus passes payloads by
+  value, so a listener cannot answer; a selector of a server that exists only in that snapshot stays unresolved (a preflight failure).
+  Pi API mirrored: an event bus request/response, `pi.events.emit` with a mutable payload.
+- The permission-system extension of a child (`resolvePermissionSystemExtension`) is found as the original finds it; it is a Pi extension that
+  a pig child does not load.
+- The package now ships the original's `pi-subagents` skill (renamed `pigpen-subagents`), its six prompt templates and its tool reference
+  (`skills/`, `prompts/`, `docs/`) because the writer-budget-guidance twin reads them; they describe features that other lanes still refuse.
+- `config.json` is read raw for `defaultSubagentContext`, `intercomBridge` and `permissions`; the original's whole-file validation (a failed one
+  gives an empty config) is not ported for the keys outside this lane.
+- Delegation: the executor runs on its own goroutine, so an emitter is not held until the delegation ends; the terminal event is emitted after the
+  attempt's node is free (the original's `finally` runs after the emit, but one tick before anyone can observe the difference). A delegated leaf runs
+  a text result in a child process; `toolBudget`, `skill`, `intercomBridge`, `artifacts` and a structured result are refused with the port's message.
+  The legacy prompt-template cancel state (`legacyControllers`, `pendingLegacyCancels`) is not ported: it is unreachable, every legacy request is rejected first.
+
+**Skips.** capability-ceiling-agent-allowlist: three cases need `buildInProcessChildLaunch` / `buildRunnerChildLaunch` (child session runtime slice;
+listed in `port/deferred-skips.md` for the final reconciliation). usage-reconciliation-owners: both cases script an in-process
+`ChildSessionFactory` (a Pi child session), which the port does not have.
+
+**Mutations.** 203 in `gen-mutations.py` (about 55 added for this lane). Four stale ones (`ext-bgwait`, `ref-async-true`, `ref-async-text` and the
+text of `ext-run-model`) targeted code the earlier merges replaced; the first three were removed, the last re-pointed.
+
+**Scenarios.** Four pigeq scenarios of the model-visible validation errors that both the original under Pi and the port answer before any child
+starts (so no child model is needed): `run-public-validation`, `run-acceptance-validation`, `run-gate-validation`, `run-limit-validation`.
+Not possible yet: invalid `toolBudget` and `outputSchema` calls (the port refuses these parameters with its own message, the original validates them), and
+any call that starts a child (it needs a model and the Pi child session).
+
+**Child role (item 3).** Nothing in pig or the SDK blocks it: `-e <path>` loads an explicit extension under `--no-extensions`; the SDK's
+`ToolResult.Terminate` ends the step like Pi's `terminate: true`; `ctx.GetAllTools()` reports the `SourceInfo.Path` of this extension's own `subagent`
+tool, which is the path to pass to `-e`. `child_role.go` is the child side: with `PIG_SUBAGENT_CHILD_ROLE` naming a role file, `Extension()` returns only
+`structured_output` (validates the value against the schema, persists it and the acceptance report to the capture files of `policy_structured.go`,
+ends the step). **Not done:** the parent side, which has to create the structured output runtime, write the role file (`writeChildRoleConfig`), start the child
+with `-e <extension path>`, `--tools` including `structured_output` and the instructions of the original appended to the system prompt, read the capture after the
+child exits (`readStructuredOutput`) and report it as the original's result; and registering `outputSchema` as a run parameter. `outputSchema`,
+`structured_output` and `acceptance.report` therefore stay refused. `contact_supervisor` (the supervisor channel) and the watchdog diff tool are other slices.

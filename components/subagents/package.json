@@ -27,6 +27,9 @@
   },
   "files": [
     "extensions",
+    "skills",
+    "prompts",
+    "docs",
     "port",
     "README.md",
     "LICENSE",
@@ -36,6 +39,12 @@
   "pi": {
     "extensions": [
       "extensions/pi-subagents"
+    ],
+    "skills": [
+      "skills/pigpen-subagents"
+    ],
+    "prompts": [
+      "prompts"
     ]
   }
 }

@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestAgentRefinements(t *testing.T) {
@@ -124,5 +123,3 @@ func TestAgentRefinements(t *testing.T) {
 		eq(t, strings.Contains(prompt, "Base\n\n<pi-subagents-refinement"), true, "overlay follows the base prompt")
 	})
 }
-
-func nowMillis() int64 { return time.Now().UnixMilli() }

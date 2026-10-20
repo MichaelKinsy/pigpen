@@ -1,0 +1,105 @@
+{
+  "name": "run-gate-validation",
+  "description": "Invalid gates of a single run: an empty gate, a gate that conflicts with acceptance, a gate of the wrong type.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "subagents_enable",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "agent": "helper",
+            "task": "do the work",
+            "gate": {},
+            "async": false
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "agent": "helper",
+            "task": "do the work",
+            "gate": "npm test",
+            "acceptance": {
+              "level": "checked"
+            },
+            "async": false
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "agent": "helper",
+            "task": "do the work",
+            "gate": 5,
+            "async": false
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "delegate the work"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agents/helper.md": "---\nname: helper\ndescription: Helps with things\nmodel: claude-x\ntools: read, grep\n---\n\nYou help.\n",
+    ".pi/agents/reviewer-x.md": "---\nname: reviewer-x\ndescription: Reviews code\naliases: rx, critic\nthinking: high\nskills: lint, style\n---\n\nYou review.\n",
+    ".pi/chains/review.chain.md": "---\nname: review\ndescription: Review chain\n---\n\n## helper\n\nLook at it\n\n## reviewer-x\n\nReview {previous}\n"
+  },
+  "commands": {
+    "git": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "npm": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "ps": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "gh": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "powershell.exe": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    }
+  }
+}

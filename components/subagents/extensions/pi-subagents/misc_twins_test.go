@@ -144,8 +144,8 @@ func TestPromptAuditTwin(t *testing.T) {
 	tw(t, "prompt-audit-optional-peers", "ordinary prompt audit works without optional Pi peers", func(t *testing.T) {
 		// The original copies prompt-audit.ts into an isolated tree without the Pi packages and imports it; a Go binary has
 		// no peers to be missing, so the registry behavior is what remains.
-		control := new(int)
-		registerLivePromptAudit(control, 0, "authored", "before authored after", livePromptAudit{})
+		control := &foregroundRunControl{}
+		registerLivePromptAudit(control, 0, "authored", "before authored after", livePromptMetadata{})
 		eq(t, *getLivePromptAudit(control, 0), livePromptAudit{AuthoredTask: "authored", RuntimeAdditions: "before\n\nafter", FinalEffectivePrompt: "before authored after"}, "audit")
 		updateLiveEffectivePrompt(control, 0, "next authored tail")
 		eq(t, getLivePromptAudit(control, 0).RuntimeAdditions, "next\n\ntail", "updated")

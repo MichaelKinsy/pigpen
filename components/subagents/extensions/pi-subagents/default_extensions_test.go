@@ -52,13 +52,13 @@ func TestDefaultExtensions(t *testing.T) {
 		scout := scoutOf(t, r)
 		eq(t, scout.Extensions == nil, true, "extensions unset")
 		eq(t, scout.SubagentOnlyExtensions, []string{"./child.ts"}, "child-only")
-		plan := resolveExtensionLaunchPlan(*scout, false)
+		plan := extensionPlanOf(t, *scout)
 		eq(t, plan.DisableAmbientExtensions, false, "ambient")
 		eq(t, contains(plan.ExtensionArgs, "./child.ts"), true, "child.ts in args")
 
 		wj(t, userSettings(r), js(t, `{"subagents":{"defaultExtensions":["./allowlisted.ts"],"defaultSubagentOnlyExtensions":["./child.ts"]}}`))
 		clearAgentDiscoveryCache()
-		allow := resolveExtensionLaunchPlan(*scoutOf(t, r), false)
+		allow := extensionPlanOf(t, *scoutOf(t, r))
 		eq(t, allow.DisableAmbientExtensions, true, "ambient disabled")
 		eq(t, contains(allow.ExtensionArgs, "./allowlisted.ts"), true, "allowlisted")
 		eq(t, contains(allow.ExtensionArgs, "./child.ts"), true, "child")
@@ -166,4 +166,14 @@ func readFileText(t *testing.T, p string) string {
 		t.Fatal(err)
 	}
 	return string(b)
+}
+
+// extensionPlanOf is the extension half of resolvePiLaunchToolPlan for one agent definition.
+func extensionPlanOf(t *testing.T, a AgentConfig) *piLaunchToolPlan {
+	t.Helper()
+	plan, err := resolvePiLaunchToolPlan(piLaunchToolPlanInput{Tools: a.Tools, Extensions: a.Extensions, SubagentOnlyExtensions: a.SubagentOnlyExtensions, AgentName: a.Name, Cwd: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return plan
 }

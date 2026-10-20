@@ -136,3 +136,19 @@ scenario("bg-wait-empty", "Wait for background work when nothing runs: blocking,
          [call("bg_wait"), call("bg_wait", nonBlocking=True), call("bg_wait", id="no-such-run-0000")], PROJECT)
 scenario("unknown-action", "A misspelled and an unknown management action get the original's recovery text.",
          [ENABLE, call("subagent", action="statsu"), call("subagent", action="launch")], PROJECT)
+# Model-visible validation errors of the run options, which both the original under Pi and the port answer before any child starts
+# (so no child model is needed). Each call names an existing agent and runs in the foreground (`async: false`).
+def fg(**args):
+    c = call("subagent", agent="helper", task="do the work", **args)
+    c["arguments"]["async"] = False
+    return c
+
+
+scenario("run-public-validation", "The public execution boundary: an empty call, a blank agent, a non-string task and a blank action.",
+         [ENABLE, call("subagent"), call("subagent", agent="  ", task="x"), call("subagent", agent="helper", task=5), call("subagent", action="  ")], PROJECT)
+scenario("run-acceptance-validation", "Invalid acceptance policies of a single run: an unknown level, a bare true, a malformed JSON string.",
+         [ENABLE, fg(acceptance={"level": "bogus"}), fg(acceptance=True), fg(acceptance="{bad")], PROJECT)
+scenario("run-gate-validation", "Invalid gates of a single run: an empty gate, a gate that conflicts with acceptance, a gate of the wrong type.",
+         [ENABLE, fg(gate={}), fg(gate="npm test", acceptance={"level": "checked"}), fg(gate=5)], PROJECT)
+scenario("run-limit-validation", "Invalid run limits and output options: timeouts, an output mode that needs a file, an agent contract version.",
+         [ENABLE, fg(timeoutMs=0), fg(timeoutMs=-1), fg(maxRuntimeMs="soon"), fg(outputMode="file-only"), fg(agentContract={"version": 2})], PROJECT)

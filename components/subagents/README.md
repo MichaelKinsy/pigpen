@@ -69,7 +69,17 @@ with one message and nothing runs:
 > @pi-in-go/pigpen-subagents (Go port) does not support async (background) runs (`async: true`) yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.
 
 The original's slash commands other than the port's own `/run-chain` (`/run`, `/subagents`, `/subagents-stop`, ...) are not
-registered (`/prompt-workflow` is), and neither are its skills and prompt templates. See [port/PORT.md](port/PORT.md).
+registered (`/prompt-workflow` is). The package ships the original's `pi-subagents` skill (as `pigpen-subagents`), its prompt templates and its tool reference
+(`skills/`, `prompts/`, `docs/`); they describe features that other parts of the port still refuse. See [port/PORT.md](port/PORT.md).
+
+**Run policy (third pass).** Besides the run options of the foreground run (output, acceptance, gate, deadlines, spawn budget,
+capability ceiling), the extension carries the launch contract preflight (`resolveSubagentLaunchContract`: the resolved agent,
+model, skills, tools, extensions, MCP tools, session and lifecycle paths and the digests that bind them), the child tool plan, the
+Intercom bridge state, and the structured delegation API over the event bus (`prompt-template:subagent:request`, `started`,
+`update`, `response`, `cancel`): another extension delegates one owned leaf and receives the terminal response. A delegated leaf
+runs a text result in a child process; `toolBudget`, `skill`, `intercomBridge`, `artifacts` and a structured result are refused.
+`outputSchema`, `structured_output` and `acceptance.report` stay refused; the child role that would host `structured_output`
+(`child_role.go`) is written but not yet started by the foreground run (see PORT.md).
 
 ## Embedded JavaScript (owner-approved exception)
 

@@ -45,7 +45,7 @@ func TestWorkflowValidateMatchesTheOriginal(t *testing.T) {
 			opts.MaxSubagentSpawnsPerRun = c.Opts.Budget
 		}
 		got := ValidateWorkflowScript(c.Script, opts)
-		if got.OK != c.Result.OK || !reflect.DeepEqual(nilIfEmpty(got.Errors), nilIfEmpty(c.Result.Errors)) || !reflect.DeepEqual(nilIfEmptyW(got.Warnings), nilIfEmptyW(c.Result.Warnings)) {
+		if got.OK != c.Result.OK || !reflect.DeepEqual(nilIfNoErrors(got.Errors), nilIfNoErrors(c.Result.Errors)) || !reflect.DeepEqual(nilIfEmptyW(got.Warnings), nilIfEmptyW(c.Result.Warnings)) {
 			gj, _ := json.Marshal(map[string]any{"ok": got.OK, "errors": got.Errors, "warnings": got.Warnings})
 			wj, _ := json.Marshal(c.Result)
 			t.Errorf("case %d %q\n got  %s\n want %s", i, c.Script, gj, wj)
@@ -53,7 +53,7 @@ func TestWorkflowValidateMatchesTheOriginal(t *testing.T) {
 	}
 }
 
-func nilIfEmpty(e []WorkflowScriptValidationError) []WorkflowScriptValidationError {
+func nilIfNoErrors(e []WorkflowScriptValidationError) []WorkflowScriptValidationError {
 	if len(e) == 0 {
 		return nil
 	}

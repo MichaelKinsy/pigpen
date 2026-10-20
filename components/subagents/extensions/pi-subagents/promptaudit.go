@@ -4,99 +4,12 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"sync"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
-// Prompt Audit (src/runs/foreground/prompt-audit.ts and src/shared/opencode-session-headers.ts): the live prompts of a
-// foreground run, and the rewrite of an authored task from human guidance.
-
-// livePromptAudit is LivePromptAudit.
-type livePromptAudit struct {
-	AuthoredTask         string
-	RuntimeAdditions     string
-	FinalEffectivePrompt string
-	Cwd                  string
-	OutputPath           string
-	Rerun                map[string]any
-}
-
-var livePrompts = struct {
-	sync.Mutex
-	byControl map[any]map[int]*livePromptAudit
-}{byControl: map[any]map[int]*livePromptAudit{}}
-
-// promptRuntimeAdditions is what the runtime put around the authored task: the text before and after it.
-func promptRuntimeAdditions(authoredTask, effectivePrompt string) string {
-	if authoredTask == "" {
-		return effectivePrompt
-	}
-	i := strings.Index(effectivePrompt, authoredTask)
-	if i < 0 {
-		return "(runtime additions unavailable)"
-	}
-	before := jsTrim(effectivePrompt[:i])
-	after := jsTrim(effectivePrompt[i+len(authoredTask):])
-	var parts []string
-	for _, p := range []string{before, after} {
-		if p != "" {
-			parts = append(parts, p)
-		}
-	}
-	if len(parts) == 0 {
-		return "(none)"
-	}
-	return strings.Join(parts, "\n\n")
-}
-
-// registerLivePromptAudit records the prompt of child index of a run (control is any comparable run handle).
-func registerLivePromptAudit(control any, index int, authoredTask, effectivePrompt string, meta livePromptAudit) {
-	livePrompts.Lock()
-	defer livePrompts.Unlock()
-	prompts := livePrompts.byControl[control]
-	if prompts == nil {
-		prompts = map[int]*livePromptAudit{}
-		livePrompts.byControl[control] = prompts
-	}
-	prompts[index] = &livePromptAudit{
-		AuthoredTask: authoredTask, RuntimeAdditions: promptRuntimeAdditions(authoredTask, effectivePrompt), FinalEffectivePrompt: effectivePrompt,
-		Cwd: meta.Cwd, OutputPath: meta.OutputPath, Rerun: meta.Rerun,
-	}
-}
-
-func updateLiveEffectivePrompt(control any, index int, effectivePrompt string) {
-	livePrompts.Lock()
-	defer livePrompts.Unlock()
-	if p := livePrompts.byControl[control][index]; p != nil {
-		p.FinalEffectivePrompt = effectivePrompt
-		p.RuntimeAdditions = promptRuntimeAdditions(p.AuthoredTask, effectivePrompt)
-	}
-}
-
-// getLivePromptAudit returns a copy of the recorded prompt (nil when none).
-func getLivePromptAudit(control any, index int) *livePromptAudit {
-	livePrompts.Lock()
-	defer livePrompts.Unlock()
-	if p := livePrompts.byControl[control][index]; p != nil {
-		c := *p
-		return &c
-	}
-	return nil
-}
-
-func removeLivePromptAudit(control any, index int) {
-	livePrompts.Lock()
-	defer livePrompts.Unlock()
-	prompts := livePrompts.byControl[control]
-	if prompts == nil {
-		return
-	}
-	delete(prompts, index)
-	if len(prompts) == 0 {
-		delete(livePrompts.byControl, control)
-	}
-}
+// Prompt Audit (src/runs/foreground/prompt-audit.ts and src/shared/opencode-session-headers.ts): the rewrite of an authored task
+// from human guidance (the live prompts of a foreground run are policy_foreground.go).
 
 // opencodeSessionHeaders are the session-routing headers OpenCode needs for internal subagent model calls; nil for every
 // other provider so their requests stay byte-identical.

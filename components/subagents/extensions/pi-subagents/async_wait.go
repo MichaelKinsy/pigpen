@@ -1135,17 +1135,26 @@ type AutoDrainDeps struct {
 	Wait                        func(p WaitParams, signal <-chan struct{}, deps WaitDeps) WaitResult
 	HasWork                     func(sessionID string, nowMs int64) (bool, error)
 	HasPendingSupervisorRequest func() bool
+	// Observation, when set, is the read-only child's private evidence that the ordinary drain finished with nothing left
+	// (readonly-drain-observation.ts); it never changes what the drain does.
+	Observation *ReadonlyDrainObservation
 }
 
 func hasOutstandingWork(deps AutoDrainDeps, sessionID string, nowMs int64) (bool, error) {
+	var found bool
 	for _, scope := range waitRunScopes(deps.AsyncDirRoot, deps.ResultsDir, deps.NestedRootRunID) {
-		runs, err := listAsyncRuns(scope.AsyncDirRoot, AsyncRunListOptions{States: activeWaitStates, SessionID: sessionID, ResultsDir: scope.ResultsDir, Now: func() int64 { return nowMs }})
+		var observe func(*AsyncStatus)
+		if deps.Observation != nil {
+			observe = deps.Observation.status
+		}
+		runs, err := listAsyncRuns(scope.AsyncDirRoot, AsyncRunListOptions{States: activeWaitStates, SessionID: sessionID, ResultsDir: scope.ResultsDir, Now: func() int64 { return nowMs }, Observe: observe})
 		if err != nil {
 			return false, err
 		}
-		if len(runs) > 0 {
-			return true, nil
-		}
+		found = found || len(runs) > 0
+	}
+	if found {
+		return true, nil
 	}
 	snap, err := snapshotBackgroundWork(sessionID, nowMs)
 	if err != nil {
@@ -1167,8 +1176,30 @@ func hasOutstandingWork(deps AutoDrainDeps, sessionID string, nowMs int64) (bool
 	return false, nil
 }
 
-// drainOutstandingWork drains all work owned by the current headless session, including work added while draining.
-func drainOutstandingWork(deps AutoDrainDeps) error {
+// drainOutstandingWork drains all work owned by the current headless session, including work added while draining. An
+// observation (deps.Observation) learns whether the ordinary drain found nothing and completed normally.
+func drainOutstandingWork(deps AutoDrainDeps) (err error) {
+	obs := deps.Observation
+	if obs != nil {
+		obs.begin(deps.State.CurrentSessionID, deps.HasWork == nil && deps.Wait == nil && deps.Now == nil && deps.HasPendingSupervisorRequest == nil)
+		defer func() {
+			if r := recover(); r != nil {
+				obs.deny()
+				panic(r)
+			}
+			if err != nil {
+				obs.deny()
+			}
+		}()
+	}
+	if err = drainLoop(deps, obs); err != nil {
+		return err
+	}
+	obs.complete()
+	return nil
+}
+
+func drainLoop(deps AutoDrainDeps, obs *ReadonlyDrainObservation) error {
 	sessionID := deps.State.CurrentSessionID
 	if sessionID == "" {
 		return errors.New("Cannot auto-drain background work without an active session identity.")
@@ -1204,6 +1235,7 @@ func drainOutstandingWork(deps AutoDrainDeps) error {
 		if err != nil {
 			return err
 		}
+		obs.predicate(work)
 		if !work {
 			return nil
 		}

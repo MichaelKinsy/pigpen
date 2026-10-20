@@ -1,14 +1,11 @@
 package pi_subagents
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"math"
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"unicode/utf16"
 )
 
@@ -179,58 +176,6 @@ func omitExtensionBindingsEnv(env map[string]string) map[string]string {
 }
 
 const launchBindingProjectionVersion = 2
-
-// stableJSON is launch-contract.ts stableJson: keys sorted by localeCompare, undefined entries left out.
-func stableJSON(value any) string {
-	switch v := value.(type) {
-	case []any:
-		parts := make([]string, len(v))
-		for i, e := range v {
-			parts[i] = stableJSON(e)
-		}
-		return "[" + strings.Join(parts, ",") + "]"
-	case []string:
-		parts := make([]string, len(v))
-		for i, e := range v {
-			parts[i] = stableJSON(e)
-		}
-		return "[" + strings.Join(parts, ",") + "]"
-	case map[string]any:
-		var keys []string
-		for k, e := range v {
-			if _, u := e.(undef); !u {
-				keys = append(keys, k)
-			}
-		}
-		sort.SliceStable(keys, func(i, j int) bool { return localeCompare(keys[i], keys[j]) < 0 })
-		parts := make([]string, len(keys))
-		for i, k := range keys {
-			parts[i] = marshalJSON(k, "") + ":" + stableJSON(v[k])
-		}
-		return "{" + strings.Join(parts, ",") + "}"
-	case *jsObject:
-		var keys []string
-		for _, k := range v.order() {
-			if v.has(k) {
-				keys = append(keys, k)
-			}
-		}
-		sort.SliceStable(keys, func(i, j int) bool { return localeCompare(keys[i], keys[j]) < 0 })
-		parts := make([]string, len(keys))
-		for i, k := range keys {
-			parts[i] = marshalJSON(k, "") + ":" + stableJSON(v.vals[k])
-		}
-		return "{" + strings.Join(parts, ",") + "}"
-	case undef:
-		return "null"
-	}
-	return marshalJSON(value, "")
-}
-
-func stableJSONDigest(value any) string {
-	sum := sha256.Sum256([]byte(stableJSON(value)))
-	return hex.EncodeToString(sum[:])
-}
 
 // launchBindingInput is LaunchBindingInput: nil pointers and slices are the fields a launch does not set.
 type launchBindingInput struct {
