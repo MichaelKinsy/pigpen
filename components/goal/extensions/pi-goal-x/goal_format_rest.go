@@ -140,7 +140,7 @@ func renderGoalEvent(details any, expanded bool, theme goalTheme) *tui.Text {
 	lines = append(lines, "Goal id: "+d.goalId)
 	if (d.hasCurrentGoalId && !d.currentGoalIdNull && d.currentGoalId != "") || d.currentStatus != "" {
 		current := "none"
-		if d.hasCurrentGoalId && !d.currentGoalIdNull && d.currentGoalId != "" {
+		if d.hasCurrentGoalId && !d.currentGoalIdNull { // `currentGoalId ?? "none"`: an empty id is kept
 			current = d.currentGoalId
 		}
 		if d.currentStatus != "" {

@@ -157,6 +157,9 @@ func recoverSession(inputPath string, apply bool, cwd string, stdout io.Writer) 
 	absolute = filepath.Clean(absolute)
 	lstat, err := os.Lstat(absolute)
 	if err != nil {
+		if os.IsNotExist(err) { // Node's message, as the original prints it
+			return fmt.Errorf("cannot stat %s: ENOENT: no such file or directory, lstat '%s'", absolute, absolute)
+		}
 		return fmt.Errorf("cannot stat %s: %v", absolute, err)
 	}
 	if lstat.Mode()&os.ModeSymlink != 0 {
@@ -306,7 +309,20 @@ func recoverSessionCheckpointsMain(argv []string, cwd string, stdout, stderr io.
 	if cwd == "" {
 		cwd, _ = os.Getwd()
 	}
-	if err := recoverSession(session, apply, cwd, stdout); err != nil {
+	// The original's checkpointTriggerPrompt throws (an Error, caught by main): here it is a string panic.
+	err := func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				s, ok := r.(string)
+				if !ok {
+					panic(r)
+				}
+				err = errors.New(s)
+			}
+		}()
+		return recoverSession(session, apply, cwd, stdout)
+	}()
+	if err != nil {
 		fmt.Fprintf(stderr, "error: %s\n", err.Error())
 		return 1
 	}
