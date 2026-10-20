@@ -257,13 +257,6 @@ func textsOf(content any) []string {
 	return nil
 }
 
-func orDefault(s, d string) string {
-	if s == "" {
-		return d
-	}
-	return s
-}
-
 // SeenItemOf is the texts a session entry puts in context and where the agent saw them. Thinking, images and
 // summaries are not indexed.
 func SeenItemOf(entry SeenEntry) (SeenItem, bool) {
