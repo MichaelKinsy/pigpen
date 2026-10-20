@@ -255,22 +255,18 @@ func requestDialog(t *testing.T, ui *dialogUI, options *RequestPermissionOptions
 
 func TestPermissionDialogTwins(t *testing.T) {
 	f := "authority/permission-dialog"
-	for _, c := range []struct {
-		title string
-		v     any
-		want  bool
-	}{
-		{"accepts approved", "approved", true}, {"accepts denied", "denied", true}, {"accepts denied_with_reason", "denied_with_reason", true},
-		{"accepts approved_for_session", "approved_for_session", true},
-		{"accepts approved_for_serving_session", "approved_for_serving_session", true},
-		{"rejects unknown strings", "unknown", false},
-	} {
-		tw(t, f, c.title, func(t *testing.T) {
-			if IsPermissionDecisionState(c.v) != c.want {
-				t.Error("wrong answer")
-			}
-		})
+	acceptsState := func(t *testing.T, state string, want bool) {
+		t.Helper()
+		if IsPermissionDecisionState(state) != want {
+			t.Errorf("%q: wrong answer", state)
+		}
 	}
+	tw(t, f, "accepts approved", func(t *testing.T) { acceptsState(t, "approved", true) })
+	tw(t, f, "accepts denied", func(t *testing.T) { acceptsState(t, "denied", true) })
+	tw(t, f, "accepts denied_with_reason", func(t *testing.T) { acceptsState(t, "denied_with_reason", true) })
+	tw(t, f, "accepts approved_for_session", func(t *testing.T) { acceptsState(t, "approved_for_session", true) })
+	tw(t, f, "accepts approved_for_serving_session", func(t *testing.T) { acceptsState(t, "approved_for_serving_session", true) })
+	tw(t, f, "rejects unknown strings", func(t *testing.T) { acceptsState(t, "unknown", false) })
 	tw(t, f, "rejects non-strings", func(t *testing.T) {
 		if IsPermissionDecisionState(42.0) || IsPermissionDecisionState(nil) {
 			t.Error("accepted a non-string")
