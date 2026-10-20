@@ -2,6 +2,7 @@ package eq
 
 import (
 	"encoding/json"
+	"fmt"
 	"maps"
 	"path/filepath"
 	"regexp"
@@ -59,10 +60,39 @@ type Replacement struct{ From, To string }
 // Normalizer applies rules N1-N7.
 type Normalizer struct {
 	Replace []Replacement
+	rules   []compiledRule
 }
 
-// AddRules installs the scenario's N7 rules.
-func (n *Normalizer) AddRules(rules []NormalizeRule) error { return nil }
+type compiledRule struct {
+	re   *regexp.Regexp
+	repl string
+}
+
+// compileRules validates and compiles a scenario's N7 rules.
+func compileRules(rules []NormalizeRule) ([]compiledRule, error) {
+	var out []compiledRule
+	for i, r := range rules {
+		if r.Pattern == "" {
+			return nil, fmt.Errorf("normalize rule %d: pattern is empty (it would match between every character)", i)
+		}
+		re, err := regexp.Compile(r.Pattern)
+		if err != nil {
+			return nil, fmt.Errorf("normalize rule %d: pattern %q: %w", i, r.Pattern, err)
+		}
+		out = append(out, compiledRule{re, r.Replacement})
+	}
+	return out, nil
+}
+
+// AddRules installs the scenario's N7 rules; they run after N1 to N3, in the given order.
+func (n *Normalizer) AddRules(rules []NormalizeRule) error {
+	c, err := compileRules(rules)
+	if err != nil {
+		return err
+	}
+	n.rules = append(n.rules, c...)
+	return nil
+}
 
 // NewNormalizer builds rule N1 from the run's roots. Symlink-resolved forms are
 // added because hosts report either.
@@ -99,6 +129,9 @@ func (n *Normalizer) str(s string) string {
 	}
 	s = uuidRE.ReplaceAllString(s, "<uuid>")
 	s = timeRE.ReplaceAllString(s, "<time>")
+	for _, r := range n.rules {
+		s = r.re.ReplaceAllString(s, r.repl)
+	}
 	return s
 }
 
