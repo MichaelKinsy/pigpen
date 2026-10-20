@@ -1,6 +1,7 @@
 package pi_subagents
 
 import (
+	"fmt"
 	"math"
 	"strings"
 )
@@ -175,4 +176,88 @@ func getSupportedThinkingLevels(model *ModelInfo) []string {
 		out = append(out, l)
 	}
 	return out
+}
+
+// thinkingLevelRank is the position of a level in thinkingLevelList (thinking-ceiling.ts thinkingLevelRanks).
+func thinkingLevelRank(level string) (int, bool) {
+	for i, l := range thinkingLevelList {
+		if l == level {
+			return i, true
+		}
+	}
+	return 0, false
+}
+
+// compareThinkingLevels is thinking-ceiling.ts:compareThinkingLevels.
+func compareThinkingLevels(left, right string) (int, error) {
+	l, ok1 := thinkingLevelRank(left)
+	r, ok2 := thinkingLevelRank(right)
+	if !ok1 || !ok2 {
+		return 0, fmt.Errorf("Invalid thinking level comparison; expected one of %s.", strings.Join(thinkingLevelList, ", "))
+	}
+	return l - r, nil
+}
+
+// intersectThinkingCeilings is thinking-ceiling.ts:intersectThinkingCeilings: the lowest set ceiling, "" for none.
+func intersectThinkingCeilings(ceilings ...string) (string, error) {
+	lowest := ""
+	for _, c := range ceilings {
+		if c == "" {
+			continue
+		}
+		if lowest == "" {
+			lowest = c
+			continue
+		}
+		cmp, err := compareThinkingLevels(c, lowest)
+		if err != nil {
+			return "", err
+		}
+		if cmp < 0 {
+			lowest = c
+		}
+	}
+	return lowest, nil
+}
+
+// ThinkingCeilingCheck is thinking-ceiling.ts ThinkingCeilingCheck.
+type ThinkingCeilingCheck struct {
+	Model          string
+	ConfigThinking any
+	Ceiling        string
+	Agent, RunID   string
+}
+
+// assertThinkingWithinCeiling is thinking-ceiling.ts:assertThinkingWithinCeiling.
+func assertThinkingWithinCeiling(in ThinkingCeilingCheck) error {
+	if in.Ceiling == "" {
+		return nil
+	}
+	requested := resolveEffectiveThinking(in.Model, in.ConfigThinking)
+	if requested == "" {
+		return nil
+	}
+	level, err := parseThinkingLevel(requested, "requested thinking level")
+	if err != nil {
+		return err
+	}
+	cmp, err := compareThinkingLevels(level, in.Ceiling)
+	if err != nil {
+		return err
+	}
+	if cmp <= 0 {
+		return nil
+	}
+	var subject []string
+	if in.Agent != "" {
+		subject = append(subject, "agent '"+in.Agent+"'")
+	}
+	if in.RunID != "" {
+		subject = append(subject, "run '"+in.RunID+"'")
+	}
+	s := ""
+	if len(subject) > 0 {
+		s = " for " + strings.Join(subject, " ")
+	}
+	return fmt.Errorf("Thinking level '%s' exceeds configured maximum '%s'%s.", level, in.Ceiling, s)
 }
