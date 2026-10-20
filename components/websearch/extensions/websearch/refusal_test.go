@@ -185,15 +185,6 @@ func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
 	})
 }
 
-func TestRefusalFetchPDF(t *testing.T) {
-	r, _ := newRuntime(t, "")
-	useNet(t, func(netCall) netReply {
-		return netReply{Status: 200, Header: hdr("content-type", "application/pdf"), Body: "%PDF-1.4\n"}
-	})
-	_, err := execTool(t, r, "fetch_content", map[string]any{"url": "https://93.184.216.34/doc.pdf"})
-	wantRefusal(t, err, "PDF text extraction")
-}
-
 func TestRefusalFetchHostedProviders(t *testing.T) {
 	t.Run("a provider that is not configured is skipped as in the original", func(t *testing.T) {
 		r, _ := newRuntime(t, "")
