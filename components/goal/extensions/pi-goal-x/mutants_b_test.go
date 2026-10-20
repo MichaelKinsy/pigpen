@@ -407,3 +407,23 @@ func TestMutantsBOracleFocusChange(t *testing.T) {
 }
 
 var _ = regexp.MustCompile
+
+// blocked-refresh-disk: an objective edited on disk while the Oracle ran is not overwritten by the block
+func TestMutantsBBlockedKeepsObjectiveEditedDuringOracle(t *testing.T) {
+	goal.RigDisarmOracle()
+	t.Cleanup(goal.RigDisarmOracle)
+	f := newToolsFixture(t, "Original objective", false, mbAt, "")
+	r := newToolsRig(t, f, rigOptions{Settings: mbSettingsOracle(""), OnCall: mbOracleModels})
+	r.startToolsSession()
+	r.Probe.SetOracleSession(func(_ string, submit func(string)) error {
+		g := goal.ToolsActiveGoal(f.cwd)
+		g["objective"] = "Edited on disk"
+		goal.ToolsWriteGoal(f.cwd, jsonOf(g))
+		submit(mbAdvice("Cannot go on", "Ask", "needs_human"))
+		return nil
+	})
+	r.callTool("update_goal", map[string]any{"status": "blocked", "reason": "stuck"})
+	after := goal.ToolsActiveGoal(f.cwd)
+	equal(t, after["status"], "blocked", "blocked")
+	equal(t, after["objective"], "Edited on disk", "the objective edited on disk survives")
+}

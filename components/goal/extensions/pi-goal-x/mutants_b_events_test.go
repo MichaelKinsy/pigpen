@@ -879,6 +879,94 @@ func TestMutantsBSettledNotices(t *testing.T) {
 	equal(t, notices[len(notices)-1], "warning: Provider network errors persisted after all recovery attempts. The goal remains active; resume it when the provider is healthy.", "the exhausted notice")
 }
 
+// events-stale-prompt-wrong-goal
+func TestMutantsBStalePromptNamesCurrentGoal(t *testing.T) {
+	e := newEvRig(t, "", nil)
+	e.startSession()
+	e.beforeAgentStart(`<pi_goal_continuation goal_id="ghost-goal" kind="checkpoint">continue`)
+	mustContain(t, e.contextTail(t), "Current goal: golden_fixture_goal (running) - Golden fixture goal objective\n")
+}
+
+// events-context-no-clear: a host without a session id keeps no retained tails
+func TestMutantsBContextWithoutSessionID(t *testing.T) {
+	position := func(sessionID string) (index, total int) {
+		r := focusedRig(t, nil, rigOptions{SessionID: sessionID})
+		user1 := map[string]any{"role": "user", "content": "one", "timestamp": 1}
+		mbRawContext(r.goalRig, []any{user1})
+		again := mbRawContext(r.goalRig, []any{user1, map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "ok"}}, "timestamp": 2},
+			map[string]any{"role": "user", "content": "two", "timestamp": 3}})
+		for i, m := range again {
+			if c, _ := m["content"].(string); strings.Contains(c, "[PI GOAL ACTIVE goalId=") {
+				return i, len(again)
+			}
+		}
+		return -1, len(again)
+	}
+	if i, n := position("a-session"); i != 1 || n != 5 {
+		t.Fatalf("an identified session keeps the tail where it sent it: %d of %d", i, n)
+	}
+	if i, n := position("-"); i != 3 || n != 5 {
+		t.Errorf("an unidentified session sends the tail at the end again: %d of %d", i, n)
+	}
+}
+
+// events-context-no-clear: with no goal state to send, the retained tails are dropped
+func TestMutantsBContextDropsRetentionWithoutGoal(t *testing.T) {
+	r := focusedRig(t, nil, rigOptions{})
+	user1 := map[string]any{"role": "user", "content": "one", "timestamp": 1}
+	convo := []any{user1, map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "ok"}}, "timestamp": 2},
+		map[string]any{"role": "user", "content": "two", "timestamp": 3}}
+	mbRawContext(r.goalRig, []any{user1})
+	r.Probe.CompleteFocused()
+	mbRawContext(r.goalRig, convo)
+	r.Probe.SetGoalField("status", "active")
+	again := mbRawContext(r.goalRig, convo)
+	for i, m := range again {
+		if c, _ := m["content"].(string); strings.Contains(c, "[PI GOAL ACTIVE goalId=") && i != 3 {
+			t.Errorf("the tail is sent fresh at the end, found at %d of %d", i, len(again))
+		}
+	}
+}
+
+// events-compact-no-queue: a compaction queues the declared continuation
+func TestMutantsBCompactionQueuesContinuation(t *testing.T) {
+	e := newEvRig(t, `{"maxAutonomousRuns": 5}`, nil)
+	e.startSession()
+	e.beforeAgentStart("user typed: continue")
+	e.declareNextRun(t)
+	if e.Probe.RigRuntime().ContinuationPending {
+		t.Fatal("nothing is queued before the compaction")
+	}
+	e.fire("session_compact", map[string]any{})
+	if !e.Probe.RigRuntime().ContinuationPending {
+		t.Error("the compaction queues the continuation")
+	}
+}
+
+// update-flush-first
+func TestMutantsBUpdateGoalFlushesTurn(t *testing.T) {
+	f := fixtureWithTasks(t, "Flush goal", `[{"id":"t1","title":"T1","status":"pending"}]`, "")
+	r := startedRig(t, f, rigOptions{})
+	r.Fire("turn_start", map[string]any{})
+	r.callTool("update_goal_task", map[string]any{"task_id": "t1", "status": "complete", "evidence": "done"})
+	status := func() any { return taskByID(listTasks(goal.ToolsActiveGoal(f.cwd)), "t1")["status"] }
+	equal(t, status(), "pending", "the turn's change is still buffered")
+	r.callTool("update_goal", map[string]any{})
+	equal(t, status(), "complete", "update_goal persists the buffered turn first")
+}
+
+// blocked-refresh-disk: a hand edit of the objective is not clobbered by the block
+func TestMutantsBBlockedKeepsDiskObjective(t *testing.T) {
+	r, f := mbRig(t, "Original objective", "", rigOptions{})
+	g := goal.ToolsActiveGoal(f.cwd)
+	g["objective"] = "Edited on disk"
+	goal.ToolsWriteGoal(f.cwd, jsonOf(g))
+	r.callTool("update_goal", map[string]any{"status": "blocked", "reason": "stuck"})
+	after := goal.ToolsActiveGoal(f.cwd)
+	equal(t, after["status"], "blocked", "blocked")
+	equal(t, after["objective"], "Edited on disk", "the objective edited on disk survives")
+}
+
 func mbRawContext(r *goalRig, messages []any) []map[string]any {
 	raw := r.Fire("context", map[string]any{"messages": messages})
 	var out struct {

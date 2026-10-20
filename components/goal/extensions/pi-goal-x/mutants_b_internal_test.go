@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
 func mbActEv(typ string, kv ...any) *jsObject {
@@ -300,4 +302,30 @@ func TestMutantsBTaskTools(t *testing.T) {
 	in := decodeGoalContinuation(map[string]any{"kind": "wait", "reason": "r", "deadline": "d", "polling": map[string]any{"interval_seconds": "x", "max_checks": 2.0}})
 	eq(t, in.polling != nil && math.IsNaN(in.polling.intervalSeconds), true, "a non-number interval is NaN")
 	eq(t, in.polling.maxChecks, 2.0, "a number is kept")
+}
+
+// events-compact-original-mutated: compaction leaves the messages it was given alone
+func TestMutantsBCompactDoesNotMutateInput(t *testing.T) {
+	checkpoint := jo(t, `{"role":"custom","customType":"pi-goal-event","content":"legacy long text","display":true,"details":{"kind":"checkpoint","version":1,"goalId":"g-1"}}`)
+	user := jo(t, `{"role":"user","content":"keep me"}`)
+	before := marshalJSON(checkpoint, "")
+	out := compactGoalCheckpointContext([]any{user, checkpoint})
+	eq(t, len(out), 2, "output")
+	eq(t, marshalJSON(checkpoint, ""), before, "the input message is not modified")
+	eq(t, out[0] == any(user), true, "messages before the first checkpoint are kept as they are")
+	eq(t, strings.Contains(marshalJSON(out[1].(*jsObject), ""), "legacy long text"), false, "the output message is rewritten")
+}
+
+// render-expanded: the tool result renderer passes the host's expanded flag on
+func TestMutantsBToolRenderResultExpanded(t *testing.T) {
+	theme := createMockTheme()
+	goalRec := baseGoal("Pause test", false, ms(2026, time.August, 4, 9, 0, 0))
+	result := sdk.ToolRenderResult{
+		Content: []map[string]any{{"type": "text", "text": "Goal paused by the agent: waiting. Stop now."}},
+		Details: map[string]any{"goal": map[string]any{"id": gstr(goalRec, "id"), "objective": "Pause test", "status": "active", "autoContinue": true}, "resultDetail": "Pause reason: waiting"},
+	}
+	collapsed := strings.Join(toolRenderResultLines(theme, result, false, 200), "\n")
+	expanded := strings.Join(toolRenderResultLines(theme, result, true, 200), "\n")
+	eq(t, strings.Contains(collapsed, "Pause reason: waiting"), false, "collapsed")
+	eq(t, strings.Contains(expanded, "Pause reason: waiting"), true, "expanded")
 }

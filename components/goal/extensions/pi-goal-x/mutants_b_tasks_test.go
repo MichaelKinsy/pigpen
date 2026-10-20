@@ -64,6 +64,9 @@ func TestMutantsBUpdateGoalTaskSingle(t *testing.T) {
 	equal(t, r.callTool("update_goal_task", map[string]any{"task_id": "w", "status": "pending"}).Content,
 		`Task "w" is not skipped; only skipped tasks can be reopened with status=pending.`, "reopening a task that is not skipped")
 
+	r.callTool("update_goal_task", map[string]any{"task_id": "p", "status": "start"})
+	equal(t, r.Probe.Goal()["currentTaskId"], "p", "starting a task makes it current")
+
 	r2, _ := mbRig(t, "No task list", "", rigOptions{})
 	equal(t, r2.callTool("update_goal_task", map[string]any{"task_id": "x", "status": "start"}).Content, "The goal has no task list.", "no task list")
 }
@@ -89,9 +92,10 @@ func TestMutantsBSetGoalTasks(t *testing.T) {
 	r, f = mbTaskRig(t, `[{"id":"t1","title":"T1","status":"complete","evidence":"e","completedAt":"`+nowZ()+`"},{"id":"t2","title":"T2","status":"pending"}]`, `"currentTaskId":"t1"`)
 	r.Probe.SetGoalField("currentTaskId", "t1")
 	r.callTool("set_goal_tasks", map[string]any{"tasks": []any{map[string]any{"id": "t1", "title": "T1"}, map[string]any{"id": "t2", "title": "T2"}}})
-	if id, has := goal.ToolsActiveGoal(f.cwd)["currentTaskId"]; has {
+	if id, has := r.Probe.Goal()["currentTaskId"]; has {
 		t.Errorf("a completed task is no longer current, got %v", id)
 	}
+	_ = f
 	r, f = mbTaskRig(t, `[{"id":"t1","title":"T1","status":"pending"}]`, `"currentTaskId":"t1"`)
 	r.callTool("set_goal_tasks", map[string]any{"tasks": []any{map[string]any{"id": "t1", "title": "T1 renamed"}}})
 	equal(t, goal.ToolsActiveGoal(f.cwd)["currentTaskId"], "t1", "a pending current task stays current")
