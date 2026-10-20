@@ -31,8 +31,8 @@ m("matches-fold-value", "wildcard.go", "v := utf16.Encode([]rune(foldSeparators(
 m("pattern-utf16", "wildcard.go", "for _, u := range utf16.Encode([]rune(expanded)) {", "for _, u := range []uint16(nil) {")
 
 # rule.go
-m("surface-path", "rule.go", '"path": true, "external_directory": true,\n\t"path_read"', '"external_directory": true,\n\t"path_read"')
-m("surface-options-only-path", "rule.go", "if pathSurfaces[surface] {\n\t\treturn f.MatchOptions", "if !pathSurfaces[surface] {\n\t\treturn f.MatchOptions")
+m("surface-path", "pathsurfaces.go", '[]string{"path", "external_directory"}', '[]string{"external_directory"}')
+m("surface-options-only-path", "rule.go", "if PathSurfaces[surface] {\n\t\treturn f.MatchOptions", "if !PathSurfaces[surface] {\n\t\treturn f.MatchOptions")
 m("rule-surface-match", "rule.go", "return WildcardMatch(r.Surface, surface, nil) && WildcardMatch(r.Pattern", "return WildcardMatch(r.Surface, surface, nil) || WildcardMatch(r.Pattern")
 m("yolo-rewrite", "rule.go", 'if r.Action == "ask" {\n\t\t\tr.Action, r.Origin = "allow", "yolo"', 'if r.Action != "ask" {\n\t\t\tr.Action, r.Origin = "allow", "yolo"')
 m("yolo-origin", "rule.go", 'r.Action, r.Origin = "allow", "yolo"', 'r.Action, r.Origin = "allow", "builtin"')
