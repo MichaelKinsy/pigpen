@@ -36,16 +36,16 @@ type goalWidgetHandle interface {
 
 // goalDebugCore is the part of GoalCore the debug helpers use.
 type goalDebugCore interface {
-	removeDebugFile(ctx goalExtensionContext, path string)
-	writeDebugFile(ctx goalExtensionContext, path, content string)
-	setGoal(ctx goalExtensionContext, goal *jsObject, persist bool, reason string)
+	removeDebugFile(ctx goalDialogContext, path string)
+	writeDebugFile(ctx goalDialogContext, path, content string)
+	setGoal(ctx goalDialogContext, goal *jsObject, persist bool, reason string)
 	currentGoal() *jsObject
 	clearStateGoal()
 	focusedGoalID() *string
 	deleteGoalByID(id string)
 	assignFocusedGoalID(id *string)
 	clearStoppedRuntimeState()
-	updateUI(ctx goalExtensionContext)
+	updateUI(ctx goalDialogContext)
 	setAuditProgress(p *auditorWidgetProgress)
 	auditProgressNow() *auditorWidgetProgress
 }
@@ -55,11 +55,11 @@ type goalWidgetCore interface {
 	goalDebugCore
 	goalModalDepth() int
 	auditProgress() *auditorWidgetProgress
-	pauseActiveGoal(ctx goalExtensionContext)
-	abortAudit(ctx goalExtensionContext)
+	pauseActiveGoal(ctx goalDialogContext)
+	abortAudit(ctx goalDialogContext)
 	isDashboardExpanded() bool
 	toggleDashboardExpanded()
-	toggleGoalAuditor(ctx goalExtensionContext)
+	toggleGoalAuditor(ctx goalDialogContext)
 	widgetComponent() goalWidgetHandle
 	terminalInputUnsubscribe() func()
 	setTerminalInputUnsubscribe(f func())
@@ -88,7 +88,7 @@ func anyKeyMatches(data string, keys ...string) bool {
 
 // syncTerminalInputPause (re)registers the terminal input listener: Escape pause/abort-audit, the dashboard toggle and scroll chords,
 // Ctrl+Shift+A and the hidden debug bindings. The handler reads live state through the core at event time.
-func syncTerminalInputPause(core goalWidgetCore, ctx goalExtensionContext) {
+func syncTerminalInputPause(core goalWidgetCore, ctx goalDialogContext) {
 	if !ctx.hasUI() {
 		return
 	}
@@ -250,7 +250,7 @@ func debugTaskList(tasks []any, now string) *jsObject {
 }
 
 // createDebugGoal toggles a test goal: create (first press) or remove (second press).
-func createDebugGoal(core goalDebugCore, ctx goalExtensionContext) {
+func createDebugGoal(core goalDebugCore, ctx goalDialogContext) {
 	if !isDebugEnabled() {
 		return
 	}
@@ -281,7 +281,7 @@ func createDebugGoal(core goalDebugCore, ctx goalExtensionContext) {
 }
 
 // injectDebugTasks injects 3 sample tasks into the current goal.
-func injectDebugTasks(core goalDebugCore, ctx goalExtensionContext) {
+func injectDebugTasks(core goalDebugCore, ctx goalDialogContext) {
 	if !isDebugEnabled() {
 		return
 	}
@@ -404,7 +404,7 @@ Verification contract:
 - Confirm expanded sections render tasks with correct indentation and styling`
 
 // openDebugProposal builds a fresh debug goal with a sample task list in memory and notifies (the legacy proposal dialog is gone).
-func openDebugProposal(ctx goalExtensionContext) {
+func openDebugProposal(ctx goalDialogContext) {
 	if !isDebugEnabled() {
 		return
 	}

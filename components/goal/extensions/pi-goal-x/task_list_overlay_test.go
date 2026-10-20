@@ -11,19 +11,19 @@ import (
 func overlayMakeGoal(id, objective string, kv ...any) *jsObject {
 	g := wgObj("status", "active", "autoContinue", true, "usage", wgObj("tokensUsed", 0.0, "activeSeconds", 0.0), "sisyphus", false,
 		"createdAt", "2026-01-01T00:00:00.000Z", "updatedAt", "2026-01-01T00:00:00.000Z")
-	g = with(g, "id", id, "objective", objective)
-	return with(g, kv...)
+	g = wgWith(g, "id", id, "objective", objective)
+	return wgWith(g, kv...)
 }
 
 func overlayGoalWithTasks(id, objective string, titles ...string) *jsObject {
 	tasks := []any{}
 	for i, title := range titles {
-		tasks = append(tasks, wgTask(id+"-task-"+itoa(i), title, "pending"))
+		tasks = append(tasks, wgTask(id+"-task-"+wgItoa(i), title, "pending"))
 	}
 	return overlayMakeGoal(id, objective, "taskList", wgTaskList(tasks...))
 }
 
-func itoa(i int) string { return jsNumber(float64(i)) }
+func wgItoa(i int) string { return jsNumber(float64(i)) }
 
 func overlayGoalWithMixedTasks(id, objective string) *jsObject {
 	return overlayMakeGoal(id, objective, "taskList", wgTaskList(
@@ -34,7 +34,7 @@ func overlayGoalWithMixedTasks(id, objective string) *jsObject {
 }
 
 // overlayFixture runs showTaskListOverlay (it blocks until done) and returns the created component.
-func overlayFixture(t *testing.T, pool *goalPool, focused *string) goalComponent {
+func overlayFixture(t *testing.T, pool *goalPool, focused *string) goalDialogComponent {
 	t.Helper()
 	ctx := createMockExtensionContext(t)
 	ctx.startCustom(func() { showTaskListOverlay(ctx, pool, focused, taskListOverlayOptions{}) })
@@ -67,7 +67,7 @@ func TestTaskListOverlay(t *testing.T) {
 	})
 	tw(t, f, "toggles to all open goals with 'a'", func(t *testing.T) {
 		c := overlayFixture(t, poolOf(overlayGoalWithTasks("g1", "Goal one", "Task A"), overlayGoalWithTasks("g2", "Goal two", "Task B")), sp("g1"))
-		in := c.(goalInputComponent)
+		in := c
 		in.HandleInput("a")
 		all := strings.Join(renderComponent(c, 80), "\n")
 		has(t, all, "Goal one", "shows first goal after toggle")
@@ -105,7 +105,7 @@ func TestTaskListOverlay(t *testing.T) {
 	})
 	tw(t, f, "renders multiple goals when toggled to all", func(t *testing.T) {
 		c := overlayFixture(t, poolOf(overlayGoalWithTasks("g1", "First goal", "Task A", "Task B"), overlayGoalWithTasks("g2", "Second goal", "Task C")), sp("g1"))
-		c.(goalInputComponent).HandleInput("a")
+		c.HandleInput("a")
 		joined := strings.Join(renderComponent(c, 80), "\n")
 		has(t, joined, "2 goals", "header mentions 2 goals")
 		has(t, joined, "First goal", "shows first goal")
@@ -148,10 +148,10 @@ func TestTaskListOverlay(t *testing.T) {
 	tw(t, f, "scroll state changes on page up/down", func(t *testing.T) {
 		titles := []string{}
 		for i := 1; i <= 30; i++ {
-			titles = append(titles, "Task "+itoa(i))
+			titles = append(titles, "Task "+wgItoa(i))
 		}
 		c := overlayFixture(t, poolOf(overlayGoalWithTasks("g1", "Long goal", titles...)), sp("g1"))
-		in := c.(goalInputComponent)
+		in := c
 		has(t, strings.Join(renderComponent(c, 80), "\n"), "Task 1", "renders top of list at offset 0")
 		in.HandleInput("down")
 		joined1 := strings.Join(renderComponent(c, 80), "\n")
@@ -165,7 +165,7 @@ func TestTaskListOverlay(t *testing.T) {
 	})
 	tw(t, f, "dismisses on escape and enter", func(t *testing.T) {
 		c := overlayFixture(t, poolOf(overlayGoalWithTasks("g1", "Test goal", "Task A")), sp("g1"))
-		in := c.(goalInputComponent)
+		in := c
 		in.HandleInput("escape")
 		in.HandleInput("enter")
 	})

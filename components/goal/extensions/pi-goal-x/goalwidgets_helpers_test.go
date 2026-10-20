@@ -20,9 +20,10 @@ func (th wgTheme) fg(color, value string) string {
 	}
 	return value
 }
-func (th wgTheme) bold(value string) string { return value }
+func (th wgTheme) bold(value string) string      { return value }
+func (th wgTheme) bg(color, value string) string { return value }
 
-func createMockTheme() goalTheme { return wgTheme{} }
+func createMockTheme() dialogTheme { return wgTheme{} }
 
 // ── Mock TUI ──
 
@@ -41,7 +42,8 @@ func (m *mockTUI) getShowHardwareCursor() bool { return m.state.getShowHardwareC
 func (m *mockTUI) setShowHardwareCursor(enabled bool) {
 	m.state.setShowHardwareCursorCalls = append(m.state.setShowHardwareCursorCalls, enabled)
 }
-func (m *mockTUI) requestRender() { m.state.requestRenderCalls++ }
+func (m *mockTUI) requestRender()                { m.state.requestRenderCalls++ }
+func (m *mockTUI) previousLinesLen() (int, bool) { return 0, false }
 
 // terminalRows is `terminal.rows`; the mock exposes it only when created with terminalRows.
 func (m *mockTUI) terminalRows() (int, bool) {
@@ -74,28 +76,33 @@ type mockUI struct {
 	release     chan struct{}
 }
 
-func (u *mockUI) custom(factory goalCustomFactory, opts goalCustomOptions) any {
+func (u *mockUI) custom(factory goalCustomFactory, opts goalCustomOptions) (any, error) {
 	u.mu.Lock()
 	u.customCalls = append(u.customCalls, customCallRecord{factory, opts})
 	u.mu.Unlock()
 	u.called <- struct{}{}
 	// The promise resolves when the test calls done: the mock never resolves it by itself.
 	<-u.release
-	return nil
+	return nil, nil
 }
 func (u *mockUI) setWorkingVisible(bool)                               {}
 func (u *mockUI) onTerminalInput(func(string) *goalInputResult) func() { return func() {} }
 func (u *mockUI) notify(string, string)                                {}
-func (u *mockUI) input(string, string) (string, bool)                  { return "", false }
+func (u *mockUI) input(string, string) (string, bool, error)           { return "", false, nil }
+func (u *mockUI) hasCustom() bool                                      { return true }
+func (u *mockUI) hasSelect() bool                                      { return false }
+func (u *mockUI) hasInput() bool                                       { return false }
+func (u *mockUI) selectOption(string, []string) (string, bool, error)  { return "", false, nil }
 
 type mockExtensionContext struct {
 	ui_    *mockUI
 	hasUI_ bool
 }
 
-func (c *mockExtensionContext) hasUI() bool { return c.hasUI_ }
-func (c *mockExtensionContext) cwd() string { return "/test" }
-func (c *mockExtensionContext) ui() goalUI  { return c.ui_ }
+func (c *mockExtensionContext) hasUI() bool      { return c.hasUI_ }
+func (c *mockExtensionContext) cwd() string      { return "/test" }
+func (c *mockExtensionContext) ui() goalDialogUI { return c.ui_ }
+func (c *mockExtensionContext) mode() string     { return "interactive" }
 
 // createMockExtensionContext is a context configured for TUI rendering (hasUI = true) that records every custom() call.
 func createMockExtensionContext(t *testing.T) *mockExtensionContext {
@@ -117,7 +124,7 @@ func (c *mockExtensionContext) customCalls() []customCallRecord {
 }
 
 // invokeCustomFactory invokes the captured factory with a mock TUI and theme and returns the created component.
-func invokeCustomFactory(t *testing.T, calls []customCallRecord, index int) (goalComponent, *mockTUI, goalTheme) {
+func invokeCustomFactory(t *testing.T, calls []customCallRecord, index int) (goalDialogComponent, *mockTUI, dialogTheme) {
 	t.Helper()
 	if index >= len(calls) {
 		t.Fatalf("No custom() call at index %d", index)
@@ -129,7 +136,7 @@ func invokeCustomFactory(t *testing.T, calls []customCallRecord, index int) (goa
 }
 
 // renderComponent renders a component at a given width and returns the lines.
-func renderComponent(c goalComponent, width int) []string { return c.Render(width) }
+func renderComponent(c goalDialogComponent, width int) []string { return c.Render(width) }
 
 // ── Record builders shared by the widget twins ──
 
@@ -154,7 +161,7 @@ func wgTaskList(tasks ...any) *jsObject {
 }
 
 // with returns g with the given keys set (the TS `{...g, ...overrides}`).
-func with(g *jsObject, kv ...any) *jsObject {
+func wgWith(g *jsObject, kv ...any) *jsObject {
 	c := g.clone()
 	for i := 0; i+1 < len(kv); i += 2 {
 		c.set(kv[i].(string), kv[i+1])

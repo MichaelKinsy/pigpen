@@ -37,6 +37,7 @@ func (u *mockDialogUI) input(title, placeholder string) (string, bool, error) {
 }
 func (u *mockDialogUI) notify(message, level string)   { u.notices = append(u.notices, message) }
 func (u *mockDialogUI) setWorkingVisible(visible bool) { u.workingLog = append(u.workingLog, visible) }
+func (u *mockDialogUI) onTerminalInput(func(string) *goalInputResult) func() { return func() {} }
 
 type mockDialogCtx struct {
 	uiFlag  bool
@@ -46,6 +47,7 @@ type mockDialogCtx struct {
 
 func (c *mockDialogCtx) hasUI() bool      { return c.uiFlag }
 func (c *mockDialogCtx) mode() string     { return c.modeStr }
+func (c *mockDialogCtx) cwd() string      { return "/test" }
 func (c *mockDialogCtx) ui() goalDialogUI { return c.u }
 
 const dialogNone = -1

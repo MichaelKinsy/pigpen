@@ -9,9 +9,10 @@ import (
 
 type headlessCtx struct{}
 
-func (headlessCtx) hasUI() bool { return false }
-func (headlessCtx) cwd() string { return "/test" }
-func (headlessCtx) ui() goalUI  { panic("headless context has no ui") }
+func (headlessCtx) hasUI() bool      { return false }
+func (headlessCtx) cwd() string      { return "/test" }
+func (headlessCtx) mode() string     { return "print" }
+func (headlessCtx) ui() goalDialogUI { panic("headless context has no ui") }
 
 // escapeFixture starts the dialog (it blocks on user input) and returns the context holding the captured factory.
 func escapeFixture(t *testing.T, objective string) *mockExtensionContext {
@@ -20,7 +21,7 @@ func escapeFixture(t *testing.T, objective string) *mockExtensionContext {
 	return ctx
 }
 
-func escapeComponent(t *testing.T, ctx *mockExtensionContext, tui goalTUI, done func(any)) goalComponent {
+func escapeComponent(t *testing.T, ctx *mockExtensionContext, tui goalDialogTUI, done func(any)) goalDialogComponent {
 	t.Helper()
 	return ctx.customCalls()[0].factory(tui, createMockTheme(), done)
 }
@@ -72,7 +73,7 @@ func TestGoalEscapeDialog(t *testing.T) {
 		tui, state := createMockTUI()
 		var doneValue any
 		component := escapeComponent(t, ctx, tui, func(r any) { doneValue = r })
-		input := component.(goalInputComponent)
+		input := component
 
 		before := state.requestRenderCalls
 		input.HandleInput("\x1b[A")
@@ -92,7 +93,7 @@ func TestGoalEscapeDialog(t *testing.T) {
 		tui, _ := createMockTUI()
 		var doneValue any
 		component := escapeComponent(t, ctx, tui, func(r any) { doneValue = r })
-		component.(goalInputComponent).HandleInput("\r")
+		component.HandleInput("\r")
 		eq(t, doneValue, any("continue_working"), "Default enter selects continue_working")
 	})
 	tw(t, f, "escape dialog handleInput: up + enter selects complete_without_audit", func(t *testing.T) {
@@ -100,7 +101,7 @@ func TestGoalEscapeDialog(t *testing.T) {
 		tui, _ := createMockTUI()
 		var doneValue any
 		component := escapeComponent(t, ctx, tui, func(r any) { doneValue = r })
-		in := component.(goalInputComponent)
+		in := component
 		in.HandleInput("\x1b[A")
 		in.HandleInput("\r")
 		eq(t, doneValue, any("complete_without_audit"), "Up+enter selects complete_without_audit")
@@ -110,7 +111,7 @@ func TestGoalEscapeDialog(t *testing.T) {
 		tui, _ := createMockTUI()
 		var doneValue any
 		component := escapeComponent(t, ctx, tui, func(r any) { doneValue = r })
-		in := component.(goalInputComponent)
+		in := component
 		in.HandleInput("\x1b[A")
 		in.HandleInput("\x1b[A")
 		in.HandleInput("\r")
@@ -118,7 +119,7 @@ func TestGoalEscapeDialog(t *testing.T) {
 
 		doneValue = nil
 		component2 := escapeComponent(t, ctx, tui, func(r any) { doneValue = r })
-		in2 := component2.(goalInputComponent)
+		in2 := component2
 		in2.HandleInput("\x1b[B")
 		in2.HandleInput("\r")
 		eq(t, doneValue, any("complete_without_audit"), "Down wraps around correctly")
@@ -131,7 +132,7 @@ func TestGoalEscapeDialog(t *testing.T) {
 			t.Fatal("setShowHardwareCursor was called")
 		}
 		eq(t, state.setShowHardwareCursorCalls[0], false, "first call")
-		component.(goalDisposable).Dispose()
+		component.dispose()
 		eq(t, state.setShowHardwareCursorCalls[len(state.setShowHardwareCursorCalls)-1], false, "Hardware cursor restored after dispose")
 	})
 	tw(t, f, "escape dialog renders without overflow at width ${testWidth}", func(t *testing.T) {

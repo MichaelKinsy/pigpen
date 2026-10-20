@@ -22,12 +22,15 @@ type goalDialogUI interface {
 	input(title, placeholder string) (string, bool, error)
 	notify(message, level string)
 	setWorkingVisible(visible bool)
+	// onTerminalInput registers a terminal input listener (nil result = not consumed) and returns its unsubscribe.
+	onTerminalInput(cb func(data string) *goalInputResult) (unsubscribe func())
 }
 
 // goalDialogContext is the ExtensionContext slice the dialogs use.
 type goalDialogContext interface {
 	hasUI() bool
 	mode() string
+	cwd() string
 	ui() goalDialogUI
 }
 

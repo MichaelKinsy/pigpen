@@ -24,7 +24,7 @@ func goldenRecord(kv ...any) *jsObject {
 		"updatedAt", "2026-01-01T00:00:00.000Z",
 		"activePath", ".pi/goals/active_goal_g1.md",
 	)
-	return with(g, kv...)
+	return wgWith(g, kv...)
 }
 
 func goldenWithTasks(tasks []*jsObject, kv ...any) *jsObject {
@@ -55,10 +55,10 @@ func goldenFiveTaskTree() []*jsObject {
 func goldenManyTaskTree() []*jsObject {
 	tasks := make([]*jsObject, 30)
 	for i := range tasks {
-		tasks[i] = goldenTask("t"+itoa(i+1), "Task number "+itoa(i+1))
+		tasks[i] = goldenTask("t"+wgItoa(i+1), "Task number "+wgItoa(i+1))
 	}
-	tasks[4] = with(tasks[4], "status", "complete", "completedAt", "2026-01-01T10:00:00.000Z")
-	tasks[19] = with(tasks[19], "status", "complete", "completedAt", "2026-01-01T11:00:00.000Z")
+	tasks[4] = wgWith(tasks[4], "status", "complete", "completedAt", "2026-01-01T10:00:00.000Z")
+	tasks[19] = wgWith(tasks[19], "status", "complete", "completedAt", "2026-01-01T11:00:00.000Z")
 	return tasks
 }
 
@@ -124,11 +124,11 @@ func TestGoalDashboardGolden(t *testing.T) {
 		for _, width := range goldenWidths {
 			completeTasks := []*jsObject{}
 			for _, tk := range goldenFiveTaskTree() {
-				c := with(tk, "status", "complete")
+				c := wgWith(tk, "status", "complete")
 				if subs, ok := tk.vals["subtasks"].([]any); ok {
 					ns := []any{}
 					for _, s := range subs {
-						ns = append(ns, with(s.(*jsObject), "status", "complete", "skipReason", undef{}))
+						ns = append(ns, wgWith(s.(*jsObject), "status", "complete", "skipReason", undef{}))
 					}
 					c.set("subtasks", ns)
 				} else {
@@ -203,7 +203,7 @@ func TestGoalDashboardGolden(t *testing.T) {
 			r := regexp.MustCompile(re)
 			return r.MatchString
 		}
-		hasStr := func(list []string, s string) bool { return contains(list, s) }
+		hasStr := func(list []string, s string) bool { return wgContains(list, s) }
 		muted := byColor("muted")
 		check := func(ok bool, msg string) {
 			t.Helper()
@@ -394,11 +394,11 @@ func TestGoalDashboardGolden(t *testing.T) {
 	tw(t, f, "compact: complete state shows the §4.7 message", func(t *testing.T) {
 		tasks := []*jsObject{}
 		for _, tk := range goldenFiveTaskTree() {
-			c := with(tk, "status", "complete")
+			c := wgWith(tk, "status", "complete")
 			if subs, ok := tk.vals["subtasks"].([]any); ok {
 				ns := []any{}
 				for _, s := range subs {
-					ns = append(ns, with(s.(*jsObject), "status", "complete"))
+					ns = append(ns, wgWith(s.(*jsObject), "status", "complete"))
 				}
 				c.set("subtasks", ns)
 			} else {

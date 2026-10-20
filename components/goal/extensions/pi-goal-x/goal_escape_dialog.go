@@ -29,9 +29,9 @@ var escapeDialogOptions = []escapeDialogOption{
 
 // escapeDialogComponent is the component built by showEscapeDialog's factory.
 type escapeDialogComponent struct {
-	ctx                    goalExtensionContext
-	tui                    goalTUI
-	theme                  goalTheme
+	ctx                    goalDialogContext
+	tui                    goalDialogTUI
+	theme                  dialogTheme
 	done                   func(any)
 	objective              string
 	wasHardwareCursorShown bool
@@ -41,11 +41,11 @@ type escapeDialogComponent struct {
 
 // showEscapeDialog shows a confirmation dialog when the user presses Escape during a completion audit and returns the choice.
 // Headless contexts return "continue_working", the safe default.
-func showEscapeDialog(ctx goalExtensionContext, goalObjective string) escapeDialogResult {
+func showEscapeDialog(ctx goalDialogContext, goalObjective string) escapeDialogResult {
 	if !ctx.hasUI() {
 		return escapeContinueWorking
 	}
-	result := ctx.ui().custom(func(t goalTUI, theme goalTheme, done func(any)) goalComponent {
+	result, err := ctx.ui().custom(func(t goalDialogTUI, theme dialogTheme, done func(any)) goalDialogComponent {
 		c := &escapeDialogComponent{ctx: ctx, tui: t, theme: theme, done: done, objective: goalObjective, selectedIndex: 1}
 		c.wasHardwareCursorShown = t.getShowHardwareCursor()
 		t.setShowHardwareCursor(false)
@@ -53,11 +53,16 @@ func showEscapeDialog(ctx goalExtensionContext, goalObjective string) escapeDial
 		ctx.ui().setWorkingVisible(false)
 		return c
 	}, goalCustomOptions{overlay: true, anchor: "center", width: "70%", minWidth: 50, maxHeight: "50%"})
+	if err != nil {
+		return escapeContinueWorking
+	}
 	s, _ := result.(string)
 	return s
 }
 
-func (c *escapeDialogComponent) Dispose() {
+func (c *escapeDialogComponent) SetFocused(bool) {}
+
+func (c *escapeDialogComponent) dispose() {
 	c.tui.setShowHardwareCursor(c.wasHardwareCursorShown)
 	c.ctx.ui().setWorkingVisible(true)
 }

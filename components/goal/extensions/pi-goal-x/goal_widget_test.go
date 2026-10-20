@@ -25,7 +25,7 @@ func wgGoal(kv ...any) *jsObject {
 		"sisyphus", true,
 		"activePath", ".pi/goals/active_goal.md",
 	)
-	return with(g, kv...)
+	return wgWith(g, kv...)
 }
 
 func wgAuditorProgress(mod func(p *auditorWidgetProgress)) *auditorWidgetProgress {
@@ -67,7 +67,7 @@ func lastLine(lines []string) string {
 	return lines[len(lines)-1]
 }
 
-func newWidget(tui goalTUI, goal func() *jsObject, mod func(o *goalWidgetOptions)) *goalWidgetComponent {
+func newWidget(tui goalDialogTUI, goal func() *jsObject, mod func(o *goalWidgetOptions)) *goalWidgetComponent {
 	o := goalWidgetOptions{tui: tui, theme: createMockTheme(), getGoal: goal, getOpenGoalCount: func() int { return 1 }}
 	if mod != nil {
 		mod(&o)
@@ -90,10 +90,14 @@ type wgSubscriptions struct {
 
 type wgKeyUI struct{ subs *wgSubscriptions }
 
-func (u *wgKeyUI) custom(goalCustomFactory, goalCustomOptions) any { return nil }
-func (u *wgKeyUI) setWorkingVisible(bool)                          {}
-func (u *wgKeyUI) notify(string, string)                           {}
-func (u *wgKeyUI) input(string, string) (string, bool)             { return "", false }
+func (u *wgKeyUI) custom(goalCustomFactory, goalCustomOptions) (any, error) { return nil, nil }
+func (u *wgKeyUI) hasCustom() bool                                          { return false }
+func (u *wgKeyUI) hasSelect() bool                                          { return false }
+func (u *wgKeyUI) hasInput() bool                                           { return false }
+func (u *wgKeyUI) selectOption(string, []string) (string, bool, error)      { return "", false, nil }
+func (u *wgKeyUI) setWorkingVisible(bool)                                   {}
+func (u *wgKeyUI) notify(string, string)                                    {}
+func (u *wgKeyUI) input(string, string) (string, bool, error)               { return "", false, nil }
 func (u *wgKeyUI) onTerminalInput(cb func(string) *goalInputResult) func() {
 	u.subs.cb = cb
 	id := u.subs.next
@@ -104,9 +108,10 @@ func (u *wgKeyUI) onTerminalInput(cb func(string) *goalInputResult) func() {
 
 type wgKeyCtx struct{ u *wgKeyUI }
 
-func (c *wgKeyCtx) hasUI() bool { return true }
-func (c *wgKeyCtx) cwd() string { return "" }
-func (c *wgKeyCtx) ui() goalUI  { return c.u }
+func (c *wgKeyCtx) hasUI() bool      { return true }
+func (c *wgKeyCtx) cwd() string      { return "" }
+func (c *wgKeyCtx) mode() string     { return "interactive" }
+func (c *wgKeyCtx) ui() goalDialogUI { return c.u }
 
 type wgCore struct {
 	modalDepth int
@@ -122,32 +127,32 @@ type wgCore struct {
 func (c *wgCore) goalModalDepth() int                   { return c.modalDepth }
 func (c *wgCore) auditProgress() *auditorWidgetProgress { return c.audit }
 func (c *wgCore) currentGoal() *jsObject                { return c.goal }
-func (c *wgCore) pauseActiveGoal(goalExtensionContext)  { *c.consumed = append(*c.consumed, "pause") }
-func (c *wgCore) abortAudit(goalExtensionContext)       { *c.consumed = append(*c.consumed, "abort-audit") }
+func (c *wgCore) pauseActiveGoal(goalDialogContext)     { *c.consumed = append(*c.consumed, "pause") }
+func (c *wgCore) abortAudit(goalDialogContext)          { *c.consumed = append(*c.consumed, "abort-audit") }
 func (c *wgCore) isDashboardExpanded() bool             { return *c.expanded }
 func (c *wgCore) toggleDashboardExpanded() {
 	*c.expanded = !*c.expanded
 	*c.consumed = append(*c.consumed, "toggle")
 }
-func (c *wgCore) toggleGoalAuditor(goalExtensionContext) {
+func (c *wgCore) toggleGoalAuditor(goalDialogContext) {
 	*c.consumed = append(*c.consumed, "toggle-auditor")
 }
-func (c *wgCore) widgetComponent() goalWidgetHandle                     { return c.handle }
-func (c *wgCore) terminalInputUnsubscribe() func()                      { return c.unsub }
-func (c *wgCore) setTerminalInputUnsubscribe(f func())                  { c.unsub = f }
-func (c *wgCore) debugMode() bool                                       { return c.debug }
-func (c *wgCore) setDebugMode(on bool)                                  { c.debug = on }
-func (c *wgCore) removeDebugFile(goalExtensionContext, string)          {}
-func (c *wgCore) writeDebugFile(goalExtensionContext, string, string)   {}
-func (c *wgCore) setGoal(goalExtensionContext, *jsObject, bool, string) {}
-func (c *wgCore) clearStateGoal()                                       {}
-func (c *wgCore) focusedGoalID() *string                                { return nil }
-func (c *wgCore) deleteGoalByID(string)                                 {}
-func (c *wgCore) assignFocusedGoalID(*string)                           {}
-func (c *wgCore) clearStoppedRuntimeState()                             {}
-func (c *wgCore) updateUI(goalExtensionContext)                         {}
-func (c *wgCore) setAuditProgress(p *auditorWidgetProgress)             { c.audit = p }
-func (c *wgCore) auditProgressNow() *auditorWidgetProgress              { return c.audit }
+func (c *wgCore) widgetComponent() goalWidgetHandle                  { return c.handle }
+func (c *wgCore) terminalInputUnsubscribe() func()                   { return c.unsub }
+func (c *wgCore) setTerminalInputUnsubscribe(f func())               { c.unsub = f }
+func (c *wgCore) debugMode() bool                                    { return c.debug }
+func (c *wgCore) setDebugMode(on bool)                               { c.debug = on }
+func (c *wgCore) removeDebugFile(goalDialogContext, string)          {}
+func (c *wgCore) writeDebugFile(goalDialogContext, string, string)   {}
+func (c *wgCore) setGoal(goalDialogContext, *jsObject, bool, string) {}
+func (c *wgCore) clearStateGoal()                                    {}
+func (c *wgCore) focusedGoalID() *string                             { return nil }
+func (c *wgCore) deleteGoalByID(string)                              {}
+func (c *wgCore) assignFocusedGoalID(*string)                        {}
+func (c *wgCore) clearStoppedRuntimeState()                          {}
+func (c *wgCore) updateUI(goalDialogContext)                         {}
+func (c *wgCore) setAuditProgress(p *auditorWidgetProgress)          { c.audit = p }
+func (c *wgCore) auditProgressNow() *auditorWidgetProgress           { return c.audit }
 
 type wgInvalidateOnly struct{ consumed *[]string }
 
@@ -204,10 +209,10 @@ func consumeOK(t *testing.T, got *goalInputResult, what string) {
 func manyTasksGoal() *jsObject {
 	tasks := make([]any, 30)
 	for i := range tasks {
-		tasks[i] = wgTask("t"+itoa(i+1), "Task number "+itoa(i+1), "pending")
+		tasks[i] = wgTask("t"+wgItoa(i+1), "Task number "+wgItoa(i+1), "pending")
 	}
-	tasks[4] = with(tasks[4].(*jsObject), "status", "complete", "completedAt", "2026-01-01T10:00:00.000Z")
-	tasks[19] = with(tasks[19].(*jsObject), "status", "complete", "completedAt", "2026-01-01T11:00:00.000Z")
+	tasks[4] = wgWith(tasks[4].(*jsObject), "status", "complete", "completedAt", "2026-01-01T10:00:00.000Z")
+	tasks[19] = wgWith(tasks[19].(*jsObject), "status", "complete", "completedAt", "2026-01-01T11:00:00.000Z")
 	return wgGoal("taskList", wgTaskList(tasks...))
 }
 
@@ -253,7 +258,7 @@ func countPrefix(list []string, p string) int {
 	return n
 }
 
-func contains(list []string, s string) bool {
+func wgContains(list []string, s string) bool {
 	for _, x := range list {
 		if x == s {
 			return true
@@ -288,11 +293,12 @@ type wgDockTUI struct {
 	children []any
 }
 
-func (d *wgDockTUI) getShowHardwareCursor() bool { return false }
-func (d *wgDockTUI) setShowHardwareCursor(bool)  {}
-func (d *wgDockTUI) requestRender()              {}
-func (d *wgDockTUI) terminalRows() (int, bool)   { return d.rows, true }
-func (d *wgDockTUI) dockChildren() []any         { return d.children }
+func (d *wgDockTUI) getShowHardwareCursor() bool   { return false }
+func (d *wgDockTUI) setShowHardwareCursor(bool)    {}
+func (d *wgDockTUI) requestRender()                {}
+func (d *wgDockTUI) terminalRows() (int, bool)     { return d.rows, true }
+func (d *wgDockTUI) previousLinesLen() (int, bool) { return 0, false }
+func (d *wgDockTUI) dockChildren() []any           { return d.children }
 
 func TestGoalWidget(t *testing.T) {
 	f := "goal-widget"
@@ -609,7 +615,7 @@ func TestGoalWidget(t *testing.T) {
 		h.fire("\x1b")
 		eq(t, *h.expanded, false, "escape collapses the expanded dashboard")
 		eq(t, *h.consumed, []string{"toggle"}, "consumed")
-		if contains(*h.consumed, "pause") {
+		if wgContains(*h.consumed, "pause") {
 			t.Error("escape while expanded must not pause the goal")
 		}
 	})
@@ -736,7 +742,7 @@ func TestGoalWidget(t *testing.T) {
 		h.component.Render(100)
 		reMatch(t, `↑ 15 more tasks`, render(h))
 		h.fire(csUp)
-		if !contains(*h.consumed, "c:"+csUp) {
+		if !wgContains(*h.consumed, "c:"+csUp) {
 			t.Error("Ctrl+Shift+↑ is consumed")
 		}
 		reMatch(t, `↑ 14 more tasks`, render(h))
@@ -745,7 +751,7 @@ func TestGoalWidget(t *testing.T) {
 		h.fire(up)
 		h.fire("\x1b")
 		eq(t, countPrefix(*h.consumed, "c:"+up), 0, "plain ↑ is never consumed")
-		if contains(*h.consumed, "c:\x1b") {
+		if wgContains(*h.consumed, "c:\x1b") {
 			t.Error("Esc is not consumed when not expanded")
 		}
 	})
@@ -805,13 +811,13 @@ func TestGoalWidget(t *testing.T) {
 		h := scrollHarness(false, nil)
 		h.component.Render(100)
 		h.fire(csUp)
-		if !contains(*h.consumed, "c:"+csUp) {
+		if !wgContains(*h.consumed, "c:"+csUp) {
 			t.Error("compact scroll — chord")
 		}
 		h.fire(ctrlShiftT)
 		eq(t, *h.expanded, true, "expanded")
 		h.fire(up)
-		if !contains(*h.consumed, "c:"+up) {
+		if !wgContains(*h.consumed, "c:"+up) {
 			t.Error("expanded is modal → plain arrow scrolls")
 		}
 		h.fire("\x1b")
@@ -860,8 +866,8 @@ func TestGoalWidget(t *testing.T) {
 		for _, x := range current.obj("taskList").vals["tasks"].([]any) {
 			tasks = append(tasks, x.(*jsObject).clone())
 		}
-		tasks[8] = with(tasks[8].(*jsObject), "status", "complete", "completedAt", "2026-01-01T12:00:00.000Z")
-		current = with(current, "taskList", wgTaskList(tasks...))
+		tasks[8] = wgWith(tasks[8].(*jsObject), "status", "complete", "completedAt", "2026-01-01T12:00:00.000Z")
+		current = wgWith(current, "taskList", wgTaskList(tasks...))
 		text := strings.Join(c.Render(100), "\n")
 		reMatch(t, `↑ 4 more tasks`, text)
 		reMatch(t, `Task number 9`, text)
@@ -1096,7 +1102,7 @@ func TestGoalWidget(t *testing.T) {
 				status = "complete"
 				kv = append(kv, "completedAt", "2026-08-10T00:01:00Z")
 			}
-			tasks[i] = wgTask("t"+itoa(i), "Task t"+itoa(i)+" with a reasonably long title for wrapping tests", status, kv...)
+			tasks[i] = wgTask("t"+wgItoa(i), "Task t"+wgItoa(i)+" with a reasonably long title for wrapping tests", status, kv...)
 		}
 		return wgObj("tasks", tasks, "blockCompletion", false, "proposedAt", "2026-08-10T00:00:00Z")
 	}
@@ -1111,7 +1117,7 @@ func TestGoalWidget(t *testing.T) {
 		tl := func(tasks ...any) *jsObject {
 			return wgObj("tasks", tasks, "blockCompletion", false, "proposedAt", "2026-08-10T00:00:00Z")
 		}
-		current := with(wgGoal(), "taskList", tl(stask("t1", "pending")))
+		current := wgWith(wgGoal(), "taskList", tl(stask("t1", "pending")))
 		var events []*jsObject
 		tui, _ := createMockTUI(24)
 		c := newWidget(tui, func() *jsObject { return current }, func(o *goalWidgetOptions) {
@@ -1122,7 +1128,7 @@ func TestGoalWidget(t *testing.T) {
 		heights := []int{}
 		steps := []func(){
 			func() {
-				current = with(current, "taskList", tl(stask("t1", "complete"), stask("t2", "pending")))
+				current = wgWith(current, "taskList", tl(stask("t1", "complete"), stask("t2", "pending")))
 				events = []*jsObject{wgObj("type", "task_complete", "at", "2026-08-10T00:01:00Z", "goalId", "g1", "taskId", "t1")}
 			},
 			func() {
@@ -1132,15 +1138,15 @@ func TestGoalWidget(t *testing.T) {
 					if i < 5 {
 						s = "complete"
 					}
-					ts[i] = stask("t"+itoa(i), s)
+					ts[i] = stask("t"+wgItoa(i), s)
 				}
-				current = with(current, "taskList", tl(ts...))
+				current = wgWith(current, "taskList", tl(ts...))
 			},
 			func() {
-				current = with(current, "verificationContract", "Run npm test (0 failures) and re-read every requirement")
+				current = wgWith(current, "verificationContract", "Run npm test (0 failures) and re-read every requirement")
 			},
-			func() { current = with(current, "tokenBudget", 200000.0) },
-			func() { current = with(current, "usage", wgObj("activeSeconds", 5000.0, "tokensUsed", 9000.0)) },
+			func() { current = wgWith(current, "tokenBudget", 200000.0) },
+			func() { current = wgWith(current, "usage", wgObj("activeSeconds", 5000.0, "tokensUsed", 9000.0)) },
 		}
 		for _, step := range steps {
 			step()
@@ -1158,11 +1164,11 @@ func TestGoalWidget(t *testing.T) {
 		}
 	})
 	tw(t, f, "GoalWidgetComponent: the first task appearing re-latches (task presence is part of the regime)", func(t *testing.T) {
-		current := with(wgGoal(), "taskList", wgObj("tasks", []any{}, "blockCompletion", false, "proposedAt", "2026-08-10T00:00:00Z"))
+		current := wgWith(wgGoal(), "taskList", wgObj("tasks", []any{}, "blockCompletion", false, "proposedAt", "2026-08-10T00:00:00Z"))
 		tui, _ := createMockTUI(40)
 		c := newWidget(tui, func() *jsObject { return current }, func(o *goalWidgetOptions) { o.getExpanded = func() bool { return true } })
 		h0 := len(c.Render(100))
-		current = with(current, "taskList", wgObj("tasks", []any{wgTask("t1", "Task one", "pending")}, "blockCompletion", false, "proposedAt", "2026-08-10T00:00:00Z"))
+		current = wgWith(current, "taskList", wgObj("tasks", []any{wgTask("t1", "Task one", "pending")}, "blockCompletion", false, "proposedAt", "2026-08-10T00:00:00Z"))
 		h1 := len(c.Render(100))
 		h2 := len(c.Render(100))
 		if h1 <= h0 {
@@ -1171,7 +1177,7 @@ func TestGoalWidget(t *testing.T) {
 		eq(t, h2, h1, "stable within the task-present regime")
 	})
 	tw(t, f, "GoalWidgetComponent: expanding the terminal reveals more of the widget, collapsing re-latches", func(t *testing.T) {
-		current := with(wgGoal(), "taskList", manyTaskList(12, 5))
+		current := wgWith(wgGoal(), "taskList", manyTaskList(12, 5))
 		tui, _ := createMockTUI(24)
 		c := newWidget(tui, func() *jsObject { return current }, func(o *goalWidgetOptions) { o.getExpanded = func() bool { return true } })
 		cap24 := max(1, 24-widgetHeightReserve)
@@ -1187,7 +1193,7 @@ func TestGoalWidget(t *testing.T) {
 		}
 	})
 	tw(t, f, "GoalWidgetComponent: measured dock chrome shrinks the widget so the block + chrome fits the terminal", func(t *testing.T) {
-		current := with(wgGoal(), "taskList", manyTaskList(12, 5))
+		current := wgWith(wgGoal(), "taskList", manyTaskList(12, 5))
 		editorLines := []string{""}
 		container := &wgDockContainer{}
 		tui := &wgDockTUI{rows: 15, children: []any{

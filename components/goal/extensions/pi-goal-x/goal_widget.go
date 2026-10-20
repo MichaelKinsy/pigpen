@@ -16,16 +16,6 @@ const widgetHeightReserve = 6
 
 // ── Host interfaces (what the original gets from pi-tui's TUI and pi's ctx) ──
 
-// goalTUI is the part of pi-tui's TUI the widgets use.
-type goalTUI interface {
-	getShowHardwareCursor() bool
-	setShowHardwareCursor(enabled bool)
-	requestRender()
-}
-
-// goalTerminalTUI is implemented by a TUI that exposes `terminal.rows` (the terminal-height bound reads it at render time).
-type goalTerminalTUI interface{ terminalRows() (int, bool) }
-
 // goalDockTUI is implemented by a TUI that exposes its top-level `children` (the dock measurement reads them).
 type goalDockTUI interface{ dockChildren() []any }
 
@@ -33,49 +23,8 @@ type goalDockTUI interface{ dockChildren() []any }
 type goalDockContainer interface{ dockChildren() []any }
 type goalDockRenderer interface{ render(width int) []string }
 
-// goalInputComponent is a component that takes keyboard input (Component.handleInput).
-type goalInputComponent interface{ HandleInput(data string) }
-
-// goalDisposable is a component with dispose().
-type goalDisposable interface{ Dispose() }
-
-// goalCustomOptions is the options argument of ctx.ui.custom for the overlays.
-type goalCustomOptions struct {
-	overlay   bool
-	anchor    string
-	width     string
-	minWidth  int
-	maxHeight string
-}
-
-// goalCustomFactory is the factory passed to ctx.ui.custom: (tui, theme, keybindings, done) => Component.
-type goalCustomFactory func(t goalTUI, theme goalTheme, done func(result any)) goalComponent
-
-// goalComponent is a pi-tui Component (the Go interface is tui.Component).
-type goalComponent interface {
-	Render(width int) []string
-	Invalidate()
-}
-
 // goalInputResult is `{ consume: true }`, returned by a terminal input listener (nil = undefined).
 type goalInputResult struct{ consume bool }
-
-// goalUI is the part of ctx.ui the widgets use.
-type goalUI interface {
-	// custom blocks until the component calls done and returns its result (nil for done()).
-	custom(factory goalCustomFactory, opts goalCustomOptions) any
-	setWorkingVisible(visible bool)
-	onTerminalInput(cb func(data string) *goalInputResult) (unsubscribe func())
-	notify(message, level string)
-	input(title, placeholder string) (value string, ok bool)
-}
-
-// goalExtensionContext is the part of ExtensionContext the widgets use.
-type goalExtensionContext interface {
-	hasUI() bool
-	cwd() string
-	ui() goalUI
-}
 
 // ── Records and options ──
 
@@ -100,7 +49,7 @@ type auditResultView struct {
 
 type goalWidgetOptions struct {
 	theme              goalTheme
-	tui                goalTUI
+	tui                goalDialogTUI
 	getGoal            func() *jsObject
 	getOpenGoalCount   func() int
 	getAuditorProgress func() *auditorWidgetProgress
@@ -145,8 +94,8 @@ func liveDisplayGoal(goal *jsObject, accounting interface {
 }
 
 // makeGoalWidgetFactory builds the factory the host UI calls at render time.
-func makeGoalWidgetFactory(opts goalWidgetFactoryOptions) func(t goalTUI, theme goalTheme) *goalWidgetComponent {
-	return func(t goalTUI, theme goalTheme) *goalWidgetComponent {
+func makeGoalWidgetFactory(opts goalWidgetFactoryOptions) func(t goalDialogTUI, theme goalTheme) *goalWidgetComponent {
+	return func(t goalDialogTUI, theme goalTheme) *goalWidgetComponent {
 		component := newGoalWidgetComponent(goalWidgetOptions{
 			tui:                t,
 			theme:              theme,
@@ -344,7 +293,7 @@ func renderGoalWidgetLines(goal *jsObject, theme goalTheme, width int, options g
 
 type goalWidgetComponent struct {
 	theme goalTheme
-	tui   goalTUI
+	tui   goalDialogTUI
 
 	getGoal            func() *jsObject
 	getOpenGoalCount   func() int
@@ -490,10 +439,8 @@ func (c *goalWidgetComponent) Render(width int) []string {
 	}
 	// Terminal-height bound (spec 2026-08-10): read pi's terminal rows at render time; a TUI without a terminal renders unbounded.
 	var terminalRows *int
-	if tt, ok := c.tui.(goalTerminalTUI); ok {
-		if rows, ok := tt.terminalRows(); ok {
-			terminalRows = intPtr(rows)
-		}
+	if rows, ok := c.tui.terminalRows(); ok {
+		terminalRows = intPtr(rows)
 	}
 	// Render the current branch unbounded (natural), then apply the stable-height bound (spec 2026-08-11).
 	natural := c.renderNatural(width)

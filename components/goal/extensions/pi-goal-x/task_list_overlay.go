@@ -40,11 +40,11 @@ var overlayClearDelay = 2500 * time.Millisecond
 
 // showTaskListOverlay shows a scrollable modal overlay displaying the current goal's task list. 'a' toggles between the current goal
 // and all open goals. focusedGoalID is nil when no goal is focused.
-func showTaskListOverlay(ctx goalExtensionContext, goalsByID *goalPool, focusedGoalID *string, opts taskListOverlayOptions) {
+func showTaskListOverlay(ctx goalDialogContext, goalsByID *goalPool, focusedGoalID *string, opts taskListOverlayOptions) {
 	if !ctx.hasUI() {
 		return
 	}
-	ctx.ui().custom(func(t goalTUI, theme goalTheme, done func(any)) goalComponent {
+	_, _ = ctx.ui().custom(func(t goalDialogTUI, theme dialogTheme, done func(any)) goalDialogComponent {
 		o := &taskListOverlay{tui: t, theme: theme, done: done, goalsByID: goalsByID, focusedGoalID: focusedGoalID, opts: opts, cursorEntryIndex: -1, lastRenderWidth: 80}
 		o.rebuildEntries()
 		o.wasHardwareCursorShown = t.getShowHardwareCursor()
@@ -55,8 +55,8 @@ func showTaskListOverlay(ctx goalExtensionContext, goalsByID *goalPool, focusedG
 
 type taskListOverlay struct {
 	mu    sync.Mutex
-	tui   goalTUI
-	theme goalTheme
+	tui   goalDialogTUI
+	theme dialogTheme
 	done  func(any)
 	opts  taskListOverlayOptions
 
@@ -262,7 +262,9 @@ func overlayVisibleHeight(innerWidth int) int {
 	return h
 }
 
-func (o *taskListOverlay) Dispose() { o.tui.setShowHardwareCursor(o.wasHardwareCursorShown) }
+func (o *taskListOverlay) SetFocused(bool) {}
+
+func (o *taskListOverlay) dispose() { o.tui.setShowHardwareCursor(o.wasHardwareCursorShown) }
 
 func (o *taskListOverlay) Invalidate() {}
 
