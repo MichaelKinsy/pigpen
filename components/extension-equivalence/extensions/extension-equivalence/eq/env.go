@@ -267,10 +267,15 @@ func SnapshotSource(from, rev, out string) error {
 	return nil
 }
 
-// CheckPiVersion requires the Pi used as the oracle to be the Pi version the pig is built to match
+// CheckPiVersion requires the Pi used as the oracle to be the Pi the pig is built to match
 // (`pig --version` prints PiG version plus Pi version, for example 0.4.0+1.0.0). A pig that does not report
 // one cannot be checked.
-func CheckPiVersion(pi, pig string) error {
+//
+// A PiG that pins an untagged Pi commit reports a four-part Pi version, 0.5.0+1.3.0.1402973a: the Pi
+// package version and the commit. Such a Pi must print the package version from `--version` and be a
+// build of that commit, read from the git checkout it runs from. piSource names that checkout; empty
+// means the nearest git checkout above the (symlink-resolved) pi executable.
+func CheckPiVersion(pi, pig, piSource string) error {
 	out, err := exec.Command(pig, "--version").Output()
 	if err != nil {
 		return nil
@@ -279,12 +284,34 @@ func CheckPiVersion(pi, pig string) error {
 	if !ok || want == "" {
 		return nil
 	}
+	wantVersion, wantCommit := want, ""
+	if parts := strings.Split(want, "."); len(parts) == 4 {
+		wantVersion, wantCommit = strings.Join(parts[:3], "."), parts[3]
+	}
 	got, err := exec.Command(pi, "--version").Output()
 	if err != nil {
 		return fmt.Errorf("%s --version: %w (the Pi oracle must run; node must be on PATH)", pi, err)
 	}
-	if have := strings.TrimSpace(string(got)); have != want {
-		return fmt.Errorf("the Pi at %s is %s but %s is built to match Pi %s: use that version (for example `npm i @earendil-works/pi-coding-agent@%s` in a scratch directory)", pi, have, pig, want, want)
+	if have := strings.TrimSpace(string(got)); have != wantVersion {
+		return fmt.Errorf("the Pi at %s is %s but %s is built to match Pi %s: use that version (for example `npm i @earendil-works/pi-coding-agent@%s` in a scratch directory)", pi, have, pig, want, wantVersion)
+	}
+	if wantCommit == "" {
+		return nil
+	}
+	dir := piSource
+	if dir == "" {
+		real, err := filepath.EvalSymlinks(pi)
+		if err != nil {
+			return fmt.Errorf("%s: %w", pi, err)
+		}
+		dir = filepath.Dir(real)
+	}
+	head, err := exec.Command("git", "-C", dir, "rev-parse", "HEAD").Output()
+	if err != nil {
+		return fmt.Errorf("the Pi at %s must be a build of commit %s but no git checkout was found at %s: pass --pi-source with the Pi source tree it was built from", pi, wantCommit, dir)
+	}
+	if have := strings.TrimSpace(string(head)); !strings.HasPrefix(have, wantCommit) {
+		return fmt.Errorf("the Pi at %s is built from commit %s but %s is built to match Pi commit %s: check out and build that commit", pi, have, pig, wantCommit)
 	}
 	return nil
 }
