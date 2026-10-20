@@ -49,7 +49,7 @@ never falls back or runs part of the call:
 - the 26 search providers not listed above (a provider that is selected, listed, configured, or
   reached in `auto`, `"all"` or `searchRouting` with a credential set);
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
-- `fetch_content` `mode: "answer"` and `auth` (authenticated fetch);
+- `fetch_content` `auth` (authenticated fetch);
 - `fetch_content` URLs the original hands to an extractor: YouTube, local video files, video
   `frames` and `timestamp`, GitHub repositories, issues and pull requests (while their config
   sections are not disabled), and PDFs;
@@ -77,7 +77,7 @@ API keys come from the file, from the named environment variable, or lazily from
   "toolNames": { "webSearch": "web_search" },
   "tools": { "sourceCheck": { "enabled": false } },
   "commands": { "search": { "enabled": true } },
-  "fetch": { "allowedModes": ["readable", "raw"], "defaultMode": "readable" },
+  "fetch": { "allowedModes": ["readable", "raw", "answer"], "defaultMode": "readable" },
   "fetchContent": { "domainPolicy": { "deny": ["internal.example"] } },
   "ssrf": { "allowRanges": [] },
   "maxInlineContentChars": 30000
@@ -92,6 +92,31 @@ Pi restart is required for tool and command registration changes (the host reads
 
 `toolNames` can opt into alternate public tool names; the names are validated (pattern,
 uniqueness, and `web_enable` is reserved for the loader).
+
+## Answer mode
+
+`fetch_content` with `mode: "answer"` and a `prompt` fetches each page as usual and replaces its
+content with a model's answer to the prompt, using only that page's text (untrusted: the model is
+told never to follow instructions inside it). The model is, in order: the call's `answerModel`
+(`provider/model-id`), the `fetch.answerProvider` + `fetch.answerModel` pair of `web-search.json`
+(both or neither, non-empty strings), or the session's current model. It must accept text, be
+enabled in the session's model scope and have credentials. Configured defaults can send page text
+to another provider and cost money, so they are opt-in; a per-call `answerModel` is resolved first
+and works even when the configured pair is malformed. A page that cannot be answered carries
+`Page answer failed: <reason>`; the stored result keeps the fetched page, not the answer.
+
+```json
+{ "fetch": { "answerProvider": "openai", "answerModel": "gpt-5.6" } }
+```
+
+Summary generation (the model call behind the curator's summaries) has a hard deadline,
+`summaryGenerationDeadlineMs` (default `30000`, an integer, capped at `600000`); on expiry or when
+no model is usable it falls back to a deterministic summary. The curator workflows that use it are
+not ported yet.
+
+```json
+{ "summaryGenerationDeadlineMs": 30000 }
+```
 
 ## Security
 
