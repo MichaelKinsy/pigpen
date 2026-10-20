@@ -87,39 +87,8 @@ type app struct {
 	rebind bool              // the overlay must attach to the UI again before its next update
 	unsub  func()            // ends the terminal-resize subscription made when the overlay was bound
 	sink   widgetSink        // where the bound UI shows widgets: the original's captured uiCtx, usable by the teardown after its ctx went stale
-	order  sequencer         // commits tool calls in the order they started
-	held   map[string]func() // tool call id -> release of its place, until the host reports the call ended
-}
-
-// sequencer runs steps in the order their tickets were taken. Pi starts the calls of a parallel batch in
-// source order and each reaches the synchronous reducer at once, so the commits happen in source order; here
-// the handler first asks the host for the session id, and without a ticket the commits could be reordered
-// (an update before the create it follows). The SDK starts the handlers in source order, so the ticket is
-// taken as the handler's first statement. That order has the residual window the SDK documents
-// (tool_start_order.go): a handler thread preempted between its start and its first statement can still be
-// overtaken, so the order is not guaranteed under preemption (PORT.md G4). A place is also held until the host reports the call's
-// tool_execution_end, so the ends reach the client in start order as they do for Pi's synchronous reducer
-// (a call that returned early would otherwise overtake the response of the one before it).
-type sequencer struct {
-	mu   sync.Mutex
-	tail chan struct{}
-}
-
-// turn takes the next place. wait returns when every earlier place was released; release hands the place on.
-func (q *sequencer) turn() (wait func(), release func()) {
-	done := make(chan struct{})
-	q.mu.Lock()
-	prev := q.tail
-	q.tail = done
-	q.mu.Unlock()
-	var once sync.Once
-	wait = func() {
-		if prev != nil {
-			<-prev
-		}
-	}
-	release = func() { wait(); once.Do(func() { close(done) }) }
-	return wait, release
+	order  sequencer         // keeps the calls of a parallel batch in source order (sequencer.go)
+	held   map[string]func() // tool call id -> release of its arrival place, until the host reports the call ended
 }
 
 func newApp() *app { return &app{st: newStore(), held: map[string]func(){}} }
@@ -267,16 +236,26 @@ func detailsFromJSON(v any) *taskDetails {
 
 // execute applies one tool call to the calling session's slot. upstream: todo.ts:73-79.
 func (a *app) execute(ctx sdk.Context, p map[string]any) (any, error) {
-	wait, release := a.order.turn() // the first statement: the SDK starts handlers in source order
+	tk := a.order.ticket() // the first statement: the arrival place, for a call the leaf entry does not list
 	handed := false
 	defer func() {
 		if !handed {
-			release()
+			tk.release()
 		}
 	}()
 	id, err := ctxSid(ctx)
 	if err != nil {
 		return nil, err
+	}
+	callID := ctx.ToolCallID()
+	wait := tk.wait
+	if prev, listed := a.predecessor(ctx, callID); listed {
+		tk.skip()
+		wait = func() {
+			if prev != "" {
+				<-a.order.endOf(prev)
+			}
+		}
 	}
 	action, _ := p["action"].(string)
 	wait()
@@ -287,11 +266,24 @@ func (a *app) execute(ctx sdk.Context, p map[string]any) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if callID := ctx.ToolCallID(); callID != "" {
-		a.hold(callID, release)
+	if callID != "" {
+		a.hold(callID, tk.release)
 		handed = true
 	}
 	return sdk.ToolResult{Content: env.Text, Details: json.RawMessage(details)}, nil
+}
+
+// predecessor is the todo call ahead of this one in the assistant message that is the session's leaf while the
+// batch runs; listed is false when the leaf cannot say (no call id, a failed read, a leaf that is not the message).
+func (a *app) predecessor(ctx sdk.Context, callID string) (prev string, listed bool) {
+	if callID == "" {
+		return "", false
+	}
+	leaf, err := ctx.SessionManager().GetLeafEntry()
+	if err != nil {
+		return "", false
+	}
+	return predecessorIn(leaf, callID)
 }
 
 // commandHandler is the /todos command: the list grouped by status. upstream: todo.ts:119-158.
@@ -467,11 +459,15 @@ func (a *app) onSessionShutdown(ctx sdk.Context, _ map[string]any) (any, error) 
 // time and never replays the branch (the branch is stale: message_end runs after tool_execution_end). The
 // tool succeeded, so a refused widget push only costs this refresh. upstream: index.ts:227-243.
 func (a *app) onToolExecutionEnd(ctx sdk.Context, data map[string]any) (any, error) {
-	if callID, _ := data["toolCallId"].(string); callID != "" {
+	callID, _ := data["toolCallId"].(string)
+	if callID != "" {
 		a.releaseCall(callID)
 	}
 	if name, _ := data["toolName"].(string); name != toolName {
 		return nil, nil
+	}
+	if callID != "" {
+		a.order.end(callID)
 	}
 	if isErr, _ := data["isError"].(bool); isErr {
 		return nil, nil
@@ -525,6 +521,7 @@ func Extension() *sdk.Extension {
 	// Every call has ended when the run does: hand on any place whose end event was not seen.
 	e.OnEvent(sdk.EventAgentEnd, func(sdk.Context, map[string]any) (any, error) {
 		a.releaseCall("")
+		a.order.reset()
 		return nil, nil
 	})
 	return e
