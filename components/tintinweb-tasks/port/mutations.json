@@ -681,7 +681,7 @@
   "name": "command-row-parsed-from-label",
   "file": "command.go",
   "find": "if i := slices.Index(choices, selected); i >= 0 && i < len(tasks) {\n\t\t\treturn viewTaskDetail(tasks[i].ID)\n\t\t}",
-  "replace": "for k := 0; k < len(selected); k++ {\n\t\t\tif selected[k] == '#' {\n\t\t\t\te := k + 1\n\t\t\t\tfor e < len(selected) && selected[e] >= '0' && selected[e] <= '9' {\n\t\t\t\t\te++\n\t\t\t\t}\n\t\t\t\treturn viewTaskDetail(selected[k+1 : e])\n\t\t\t}\n\t\t}"
+  "replace": "_ = slices.Index(choices, selected)\n\t\tfor k := 0; k < len(selected); k++ {\n\t\t\tif selected[k] == '#' {\n\t\t\t\te := k + 1\n\t\t\t\tfor e < len(selected) && selected[e] >= '0' && selected[e] <= '9' {\n\t\t\t\t\te++\n\t\t\t\t}\n\t\t\t\treturn viewTaskDetail(selected[k+1 : e])\n\t\t\t}\n\t\t}"
  },
  {
   "name": "command-complete-no-track",

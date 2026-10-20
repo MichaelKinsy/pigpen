@@ -5,7 +5,7 @@
 | Original | `@tintinweb/pi-tasks` 0.9.0 by tintinweb, https://github.com/tintinweb/pi-tasks, commit `00ecbd8110f1a4e267791f9cecb2612144c78f6e`, MIT |
 | Oracle | Pi 1.0.3, Node 24.19.0, with the unmodified package at `port/oracle` (dependency `typebox` 1.x from npm; `@earendil-works/pi-coding-agent` and `pi-tui` are Pi's own) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
-| Original's tests | 389 `it` cases in 19 vitest files; 386 titles are in the ledger (`port/upstream-tests.json`; the two `it.each` cases of `task-sort.test.ts` have no literal title and are ported as ordinary subtests): **386 exact twins, 3 named skips** |
+| Original's tests | 389 `it` cases in 19 vitest files; 386 titles are in the ledger (`port/upstream-tests.json`; the two `it.each` cases of `task-sort.test.ts` have no literal title and are ported as ordinary subtests): **388 exact twins, 1 named skip** (PR 2: `pigeq twins check` on xd670) |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
 ## Mapping
@@ -48,6 +48,17 @@ bridged in PiG 0.4 (`Context.Events()`).
   tell apart from the original (finding 8); they had no test of their own until `TestLaunchResultAndCadenceEdges`,
   `TestTaskPaths`, `TestTaskExecuteRefusesAMissingBlocker` and the `/tasks` auto-clear case were written.
   `port/gen-mutations.py` writes `port/mutations.json` and checks every `find` string is unique.
+- **PR 2 (this revision), run on xd670 in the tern-ci:v3 container, `nice -n 10` on cpus 64-127, oracle `~/pp-askuser/bin/pig`
+  0.5.0+1.3.0.1402973a and Pi 1.3.0.1402973a:** `go vet` for linux, windows and darwin clean; `go test -race -count=3 ./...`
+  pass; `pigeq twins check`: 388 exact twins, 1 skipped; `pigeq check`: 11 of 17 scenarios printed identical to Pi, with
+  `reminder-cap` and `reminder-stale` (and others that call the `read` tool) differing only because that pig's built-in
+  `read` result carries `"structuredContent"` where Pi's does not (the imladris `~/pp-shared-pig/bin/pig` does not: the
+  three new scenarios and the re-recorded `reminder-sanitized` were checked there, identical); `pigeq mutate --unit`:
+  146 mutations, 145 killed by the port's own tests or scenarios, 1 invalid (`command-row-parsed-from-label` no longer
+  built after `slices` lost its other user; rewritten, not re-run). Kills by the `read` scenarios on that pig are not
+  trusted; `settings-panel-error-swallowed` was killed only by such a scenario until `TestSettingsPanelFailureIsReportedByTheCommand`.
+  `npm run generate` leaves index.json and ports/README.md unchanged and `npm run check` passes (in a copy of the repo
+  with `.git`, `npm ci --ignore-scripts`).
 - `pig package validate components/tintinweb-tasks` and `pig install <extension dir> --validate-only --json` (`form:
   factory`, `language: go`): valid.
 
@@ -57,22 +68,19 @@ bridged in PiG 0.4 (`Context.Events()`).
 `<agent dir>` follows PiG's rule (D2), while named lists (`PI_TASKS=<name>`) stay under `~/.pi/tasks/` as in the original; the ping to pi-subagents is sent on the first `session_start`, on `subagents:ready` and from
 `TaskExecute`; task metadata keys are sorted.
 
-**Named skips (3):**
-1. `opens the settings panel and returns to the main menu afterwards`: it counts `ui.custom()` calls of a `SettingsList`
-   component (G1). The Go behavior is covered by `command_test.go` and `extra_ext_test.go`.
-2. `stops waiting when the tool call is aborted`: the fake host has no frame that cancels one request. The wait selects on
-   `ctx.Done()`, which the SDK closes when the host cancels.
-3. `keeps an in-memory store when the context cwd changes`: the Go SDK fixes the workspace of an extension process.
+**Named skip (1):**
+1. `keeps an in-memory store when the context cwd changes`: the Go SDK fixes the workspace of an extension process (the
+   ready message), so a context cannot change cwd under a running extension. (PR 2 made the other two real twins: the
+   settings panel counts one `ui.custom` call, and the aborted `TaskOutput` wait is driven by a cancel frame.)
 
 **Host and SDK findings (to file against PiG):**
-1. **G1 No component widget.** `SetWidget` takes lines (the host shows ten). A `SetWidgetRenderer` like
-   `SetFooterRenderer` is needed.
-2. **G2 `Context.Input` always sends a `placeholder`.** In RPC mode the request carries `placeholder: ""` where Pi's
+1. **G1 (closed in PR 2)** No component widget: the widget is a `kit` lines view now (`SetWidget(key, kit.View)`), redrawn on `OnWidthChange`.
+2. **G2 (open, SDK request C3+ 1)** `Context.Input` always sends a `placeholder`. In RPC mode the request carries `placeholder: ""` where Pi's
    `ui.input(title)` has none, so the menu's *Create task* cannot be a scenario (a layer-1 twin covers it).
 3. **G3 PiG's RPC mode emits a factory widget's rows** (`widgetLines: []`) where Pi emits nothing. The host check
    (original under PiG's Node runtime against the original under Pi) therefore fails at the first widget on 14 of 15
    scenarios (`tool-definitions` passes). The Pi trace is the oracle, and the port draws nothing in RPC mode.
-4. **G4 PiG's request body escapes `<`, `>`, `&`** in tool-call arguments as `\u003c` where Pi does not, so the
+4. **G4 (closed on PiG 0.5.0: `reminder-sanitized` carries the tag)** PiG's request body escapes `<`, `>`, `&` in tool-call arguments as `\u003c` where Pi does not, so the
    scenario for the reminder's tag stripping (`reminder-sanitized`) carries a newline only; the tag case is the twin
    `sanitizes task subjects so they cannot break out of the reminder block`.
 5. **G5 The event bus is reachable only after the connection.** The original pings in its factory. The SDK returns
@@ -81,7 +89,7 @@ bridged in PiG 0.4 (`Context.Events()`).
    Binary: the reply is dispatched to an extension that has not finished loading; one extension per lane never shows
    it). The ping now waits for the first `session_start` (once), and is repeated from `subagents:ready` and
    `TaskExecute`. Load order still does not matter. Twin and tests: `TestPingWaitsForTheFirstSession`.
-6. **G6 No `ui.custom` for a Go extension** (the settings panel).
+6. **G6 (closed in PR 2)** `ctx.Custom` with a `kit.ViewComponent` runs the settings panel.
 7. **Stale context.** Retained contexts outlive their request; the spinner timer stops when `Context.Err()` is non-nil.
 8. **Parallel tool calls finish in no fixed order in PiG.** Ten `TaskCreate` calls of one model turn run concurrently
    in the SDK's request goroutines, so their `tool_execution_end` events (and which call takes `#1`) vary from run to
@@ -94,8 +102,12 @@ bridged in PiG 0.4 (`Context.Events()`).
 
 ## Run in PiG (tmux)
 
-Not run for this port. The widget and the menus are exercised by the layer-1 twins and, for the menus, by the
-Pi-recorded scenarios; a live interactive run of the widget is open.
+PR 2: a real pig (0.5.1+1.3.0.1402973a on the Mac, isolated HOME, PIG_HOME and agent dir; the oracle binary is 0.5.0) with
+the extension installed (`pig install <extension dir>`): `/tasks` menu; Settings opens the real SettingsList (eight rows,
+the description of the row under the cursor, "Enter/Space to change . Esc to cancel"); Enter on Max visible cycled
+10, 15, 20, 30 and wrote `{"maxVisible": 30}` to `.pi/tasks-config.json`; Esc returned to the menu; fifteen tasks showed
+fifteen rows (maxVisible 30), the terminal resized to 50 and 44 columns redrew the rows (a long subject cut with an
+ellipsis) and back at 130; starting a task showed the spinner and elapsed time and the header "1 in progress".
 
 ## Piglet build
 

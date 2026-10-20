@@ -136,7 +136,7 @@ m("taskexecute-owner-not-set", "tools.go", "a.store.update(taskID, updateFields{
 
 # command.go
 m("command-clear-all-keeps-file", "command.go", "a.store.clearAll()\n\t\t\t\tif a.isSessionScope() {\n\t\t\t\t\ta.deleteSessionFileIfEmpty()\n\t\t\t\t}", "a.store.clearAll()")
-m("command-row-parsed-from-label", "command.go", "if i := slices.Index(choices, selected); i >= 0 && i < len(tasks) {\n\t\t\treturn viewTaskDetail(tasks[i].ID)\n\t\t}", "for k := 0; k < len(selected); k++ {\n\t\t\tif selected[k] == '#' {\n\t\t\t\te := k + 1\n\t\t\t\tfor e < len(selected) && selected[e] >= '0' && selected[e] <= '9' {\n\t\t\t\t\te++\n\t\t\t\t}\n\t\t\t\treturn viewTaskDetail(selected[k+1 : e])\n\t\t\t}\n\t\t}")
+m("command-row-parsed-from-label", "command.go", "if i := slices.Index(choices, selected); i >= 0 && i < len(tasks) {\n\t\t\treturn viewTaskDetail(tasks[i].ID)\n\t\t}", "_ = slices.Index(choices, selected)\n\t\tfor k := 0; k < len(selected); k++ {\n\t\t\tif selected[k] == '#' {\n\t\t\t\te := k + 1\n\t\t\t\tfor e < len(selected) && selected[e] >= '0' && selected[e] <= '9' {\n\t\t\t\t\te++\n\t\t\t\t}\n\t\t\t\treturn viewTaskDetail(selected[k+1 : e])\n\t\t\t}\n\t\t}")
 m("command-complete-no-track", "command.go", "a.store.update(taskID, updateFields{Status: strPtr(statusCompleted)})\n\t\t\t\t\ta.autoClear.trackCompletion(taskID, a.cadence.CurrentTurn)", "a.store.update(taskID, updateFields{Status: strPtr(statusCompleted)})")
 m("command-menu-no-clear-completed", "command.go", "if completed > 0 {\n\t\t\tchoices", "if false {\n\t\t\tchoices")
 m("command-back-option", "command.go", 'actions = append(actions, "✗ Delete", "← Back")', 'actions = append(actions, "✗ Delete")')
