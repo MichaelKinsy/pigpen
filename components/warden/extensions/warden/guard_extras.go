@@ -4,8 +4,8 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
+	"sync"
 )
 
 // The parts of src/guard.ts that ride the action request beside the base questions: the regret question, the large-output
@@ -22,13 +22,20 @@ type guardQuestionSets struct {
 	Regret      map[string]rawQuestion `json:"regret"`
 }
 
-var gqs = func() guardQuestionSets {
-	var s guardQuestionSets
-	if err := json.Unmarshal(guardQuestionsJSON, &s); err != nil {
-		panic(fmt.Sprintf("warden: questions_guard.json: %v", err))
-	}
-	return s
-}()
+var (
+	gqsOnce sync.Once
+	gqsSets guardQuestionSets
+)
+
+// gq parses questions_guard.json on first use, so the package does not pay for it at start.
+func gq() *guardQuestionSets {
+	gqsOnce.Do(func() {
+		if err := json.Unmarshal(guardQuestionsJSON, &gqsSets); err != nil {
+			panic(fmt.Sprintf("warden: questions_guard.json: %v", err))
+		}
+	})
+	return &gqsSets
+}
 
 // PreviousAction is a call the guard allowed in the previous turn, as the regret question sees it: redacted summary
 // fields only.
@@ -45,7 +52,7 @@ const previousCommandLimit = 300
 // regretQuestions is one yes/no on whether the user's reply regrets what the agent did last turn; with several candidates a
 // choice names the one. It labels the allowed calls for hold calibration and never changes the verdict on the current call.
 func regretQuestions(actions []PreviousAction) Questions {
-	out := Questions{"regretted": gqs.Regret["regretted"].build()}
+	out := Questions{"regretted": gq().Regret["regretted"].build()}
 	if len(actions) < 2 {
 		return out
 	}
@@ -102,7 +109,7 @@ func (s SlopJudgment) Score(symptom string) float64 {
 // subcommandHeads are tools whose first word names what runs: `git log` and `git status` print very different amounts.
 var subcommandHeads = setOf("git", "npm", "pnpm", "yarn", "bun", "cargo", "go", "docker", "kubectl")
 
-var reSubcommandWord = regexp.MustCompile(`^[A-Za-z][\w:.-]*$`)
+var reSubcommandWord = lazyRE(`^[A-Za-z][\w:.-]*$`)
 
 // commandFamily is the command family the large-output steer is remembered by: the head of the first segment that is
 // not a `cd`, plus the subcommand for tools that have one (`git log`, `npm test`, `npm run build`). "" when no head can
@@ -145,7 +152,7 @@ func commandFamily(command string) string {
 	return head + " " + rest[0]
 }
 
-var reNonAlnumRun = regexp.MustCompile(`[^A-Za-z0-9]+`)
+var reNonAlnumRun = lazyRE(`[^A-Za-z0-9]+`)
 
 // largeOutputSteer is what the agent reads the first time a command family is judged noisy: the family and one concrete
 // way to print less.

@@ -22,7 +22,7 @@ import (
 // defaultArmingDuration is 10 minutes (config.ts DEFAULT_ARMING_DURATION).
 const defaultArmingDuration = 600_000 * time.Millisecond
 
-var reArmingDuration = regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(ms|s|m|h)?$`)
+var reArmingDuration = lazyRE(`^(\d+(?:\.\d+)?)\s*(ms|s|m|h)?$`)
 
 // armingDuration is an arming duration (config.ts parseDuration): a number is milliseconds; a string takes `ms`, `s`,
 // `m`, or `h`, and a string without a unit means minutes. Zero, negative, and unreadable values give the default.

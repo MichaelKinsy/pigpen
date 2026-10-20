@@ -148,16 +148,16 @@ func BuildRequest(summary ActionSummary, task string, extras BuildExtras) Reques
 		sets = append(sets, build(qs.Intent))
 	}
 	if extras.LargeOutput && summary.Tool == "bash" {
-		sets = append(sets, build(gqs.LargeOutput))
+		sets = append(sets, build(gq().LargeOutput))
 	}
 	if extras.Slop && writesContent {
-		sets = append(sets, build(gqs.Slop))
+		sets = append(sets, build(gq().Slop))
 	}
 	if extras.Approval {
 		sets = append(sets, build(qs.Approval))
 	}
 	if extras.Security && writesContent {
-		sets = append(sets, build(gqs.Security))
+		sets = append(sets, build(gq().Security))
 	}
 	if len(previous) > 0 {
 		sets = append(sets, regretQuestions(previous))
