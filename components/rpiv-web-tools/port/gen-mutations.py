@@ -146,11 +146,11 @@ m("scan-tags-dropped-not-spaced", "htmltext.go", 'text = stripTags(text, " ")', 
 m("scan-title-includes-bracket", "htmltext.go", "return jsTrim(stripTags(html[from:end], \"\"))", "return jsTrim(stripTags(html[from-1:end], \"\"))")
 
 # text.go: the layout of pi-tui's Text component
-m("text-padding-dropped", "text.go", 'lines[i] = l + strings.Repeat(" ", pad)', 'lines[i] = l')
+m("text-padding-dropped", "text.go", "lines[i] = l + blanks[:pad]", "lines[i] = l")
 m("text-tab-width", "text.go", r'strings.ReplaceAll(text, "\t", "   ")', r'strings.ReplaceAll(text, "\t", "  ")')
 m("text-blank-has-a-line", "text.go", "if jsTrim(text) == \"\" {\n\t\treturn []string{}", "if jsTrim(text) == \"\" {\n\t\treturn []string{\"\"}")
 m("wrap-line-end-not-trimmed", "text.go", "wrapped[i] = jsTrimEnd(wrapped[i])", 'wrapped[i] = wrapped[i] + ""')
-m("wrap-styling-not-carried", "text.go", "current, currentWidth = t.active()+token, tokenWidth", "current, currentWidth = token, tokenWidth")
+m("wrap-styling-not-carried", "text.go", "current.WriteString(t.active())", 'current.WriteString("")')
 m("wrap-underline-not-closed", "text.go", r'return "\x1b[24m"', 'return ""')
 m("wrap-cjk-only-han", "text.go", "unicode.In(r, unicode.Han, unicode.Hiragana, unicode.Katakana, unicode.Hangul, unicode.Bopomofo)", "unicode.In(r, unicode.Han)")
 m("width-joined-emoji-narrow", "text.go", "strings.ContainsRune(g, 0xfe0f) || strings.ContainsRune(g, 0x200d) || isRegionalIndicator(first)", "strings.ContainsRune(g, 0xfe0f)")
