@@ -57,10 +57,11 @@ func TestLastPromptCacheFollowsTheInputs(t *testing.T) {
 	if got := s.render(40); got[0] == first[0] {
 		t.Error("a new prompt reused the old lines")
 	}
+	s.prompt = "a prompt that is longer than twenty cells"
 	narrow := s.render(20)
 	wide := s.render(60)
-	if len(narrow) != 1 || len(wide) != 1 {
-		t.Fatal("no lines")
+	if len(narrow) != 1 || len(wide) != 1 || narrow[0] == wide[0] || visibleWidth(wide[0]) < 41 {
+		t.Fatalf("the width is part of the cache key: %q %q", narrow, wide)
 	}
 	s.prompt = strings.Repeat("x", 100)
 	if got := s.render(20); visibleWidth(got[0]) > 20 {

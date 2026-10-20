@@ -272,3 +272,148 @@ func TestCdUsesSessionReplacementNotProcessCwd(t *testing.T) {
 		}
 	}
 }
+
+func TestUnescapeAndQuotes(t *testing.T) {
+	for in, want := range map[string]string{
+		`My\ Folder`: "My Folder", `a\\b`: `a\b`, "a\\\nb": "a\\\nb", `trail\`: `trail\`, `"quoted dir"`: "quoted dir", `'single'`: "single",
+		`"half`: `"half`, `"`: `"`, `""`: "", `'mixed"`: `'mixed"`, "  padded  ": "padded", `"a\"b"`: `a"b`, "\\\u2028x": "\\\u2028x", "\\\rx": "\\\rx",
+	} {
+		if got := unescapePathArg(in); got != want {
+			t.Errorf("unescapePathArg(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestEscapeCompletionPath(t *testing.T) {
+	if got, want := escapeCompletionPath("a b$c&d|e;f<g>h(i)j[k]l{m}n?o!p*q'r\"s`t\\u\tv"), "a\\ b\\$c\\&d\\|e\\;f\\<g\\>h\\(i\\)j\\[k\\]l\\{m\\}n\\?o\\!p\\*q\\'r\\\"s\\`t\\\\u\\\tv"; got != want {
+		t.Errorf("got %q\nwant %q", got, want)
+	}
+	if got := displayPath(`a\b/c`); got != "a/b/c" {
+		t.Errorf("displayPath = %q", got)
+	}
+}
+
+func TestCompletionEdgeCases(t *testing.T) {
+	root, home := t.TempDir(), t.TempDir()
+	for _, d := range []string{"child", "~", "dir with $pecial"} {
+		if err := os.Mkdir(filepath.Join(root, d), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	values := func(prefix string) []string {
+		var out []string
+		for _, item := range getCdArgumentCompletions(prefix, root, home) {
+			out = append(out, item.Value)
+		}
+		return out
+	}
+	if got := values("."); len(got) < 1 || got[0] != "../" {
+		t.Errorf("a typed . still offers ../: %q", got)
+	}
+	if got := values("~"); len(got) < 1 || got[0] != "~/" {
+		t.Errorf("a typed ~ still offers ~/: %q", got)
+	}
+	if got := values("  chi"); len(got) != 1 || got[0] != "child/" {
+		t.Errorf("leading blanks are ignored: %q", got)
+	}
+	if got := values("zz"); len(got) != 0 {
+		t.Errorf("nothing matches: %q", got)
+	}
+	count := map[string]int{}
+	for _, v := range values("") {
+		count[v]++
+	}
+	if count["~/"] != 1 || count["dir\\ with\\ \\$pecial/"] != 1 {
+		t.Errorf("a directory named ~ collides with the quick pick and is listed once, specials are escaped: %v", count)
+	}
+	if got := values("./ch"); len(got) != 1 || got[0] != "./child/" {
+		t.Errorf("./ch = %q", got)
+	}
+	if got := values(filepath.Join(root, "ch")); len(got) != 1 || got[0] != filepath.Join(root, "child")+"/" {
+		t.Errorf("absolute = %q", got)
+	}
+	// The original's quirk: "/" has an empty base directory, which resolves to the cwd.
+	if got := values("/"); len(got) < 1 || got[len(got)-1] != "/child/" && !containsString(got, "/child/") {
+		t.Errorf("/ lists the cwd: %q", got)
+	}
+	if got := getCdArgumentCompletions("nope/", root, home); len(got) != 0 {
+		t.Errorf("an unreadable directory offers nothing: %+v", got)
+	}
+}
+
+func containsString(list []string, want string) bool {
+	for _, s := range list {
+		if s == want {
+			return true
+		}
+	}
+	return false
+}
+
+func TestCompletionsAreCappedAtFiftyAndFollowSymlinks(t *testing.T) {
+	root, home := t.TempDir(), t.TempDir()
+	for i := range 60 {
+		if err := os.Mkdir(filepath.Join(root, "d"+string(rune('a'+i/26))+string(rune('a'+i%26))), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(root, "dzfile"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if got := getCdArgumentCompletions("d", root, home); len(got) != 50 {
+		t.Errorf("%d completions, want 50", len(got))
+	}
+
+	linkRoot := t.TempDir()
+	_ = os.Mkdir(filepath.Join(linkRoot, "real"), 0o755)
+	_ = os.WriteFile(filepath.Join(linkRoot, "file"), []byte("x"), 0o644)
+	if err := os.Symlink(filepath.Join(linkRoot, "real"), filepath.Join(linkRoot, "linkdir")); err != nil {
+		t.Skip("symlinks are not available")
+	}
+	_ = os.Symlink(filepath.Join(linkRoot, "file"), filepath.Join(linkRoot, "linkfile"))
+	_ = os.Symlink(filepath.Join(linkRoot, "missing"), filepath.Join(linkRoot, "linkdead"))
+	var got []string
+	for _, item := range getCdArgumentCompletions("l", linkRoot, home) {
+		got = append(got, item.Value)
+	}
+	if len(got) != 1 || got[0] != "linkdir/" {
+		t.Errorf("only a symlink to a directory is offered: %q", got)
+	}
+}
+
+func TestTitleOfTheRootDirectory(t *testing.T) {
+	root := t.TempDir()
+	next := &fakeNext{cwd: "/"}
+	host := &fakeCdHost{
+		cwd: root, sessionsRoot: filepath.Join(root, "agent", "sessions"), home: root,
+		sessionFile: writeSession(t, filepath.Join(root, "sessions"), root),
+		switchSession: func(_ string, withSession func(cdNextContext) error) (bool, error) {
+			return false, withSession(next)
+		},
+	}
+	if err := runCdCommand("/", host); err != nil {
+		t.Fatal(err)
+	}
+	if len(next.titles) != 1 || next.titles[0] != "pi - /" {
+		t.Errorf("titles %q: a root directory has no basename, so the path is used", next.titles)
+	}
+}
+
+func TestCdRejectsWhatTheOriginalLetsRejectOutOfTheHandler(t *testing.T) {
+	root := t.TempDir()
+	_ = os.Mkdir(filepath.Join(root, "t"), 0o755)
+	host := &fakeCdHost{cwd: root, sessionFile: filepath.Join(root, "gone.jsonl"), sessionsRoot: filepath.Join(root, "s"),
+		switchSession: func(string, func(cdNextContext) error) (bool, error) { t.Fatal("switched"); return false, nil }}
+	err := runCdCommand("t", host)
+	if err == nil || err.Error() != "Cannot fork: source session file is empty or invalid: "+filepath.Join(root, "gone.jsonl") {
+		t.Errorf("err = %v", err)
+	}
+	idle := errors.New("aborted")
+	host2 := &fakeCdHost{cwd: root, sessionFile: writeSession(t, filepath.Join(root, "sessions"), root), sessionsRoot: filepath.Join(root, "s"), waitErr: idle}
+	if err := runCdCommand("t", host2); err != idle {
+		t.Errorf("a failing waitForIdle rejects the command: %v", err)
+	}
+	if entries, _ := os.ReadDir(filepath.Join(root, "s")); len(entries) != 0 {
+		t.Error("forked before the agent was idle")
+	}
+}

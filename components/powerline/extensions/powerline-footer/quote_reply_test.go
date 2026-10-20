@@ -2,6 +2,7 @@ package powerline_footer
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -278,7 +279,25 @@ func TestPickerKeys(t *testing.T) {
 		t.Errorf("after ctrl+u:\n%s", got)
 	}
 	selected("\x1b[97;1u") // kitty printable "a"
-	selected("\x1b[27;5;99~")
+	if p.query != "a" {
+		t.Errorf("a kitty printable did not type: %q", p.query)
+	}
+	selected("\x1b[98;2:2u") // shift+b as the shifted key "B" is not given: the base codepoint
+	if p.query != "ab" {
+		t.Errorf("a shifted kitty key without a shifted codepoint types the base: %q", p.query)
+	}
+	selected("\x1b[98:66;2u") // shift+b with the shifted codepoint 66
+	if p.query != "abB" {
+		t.Errorf("the shifted codepoint is typed: %q", p.query)
+	}
+	selected("\x1b[97;5u") // ctrl+a is not text
+	selected("\x1b[97;3u") // alt+a is not text
+	if p.query != "abB" {
+		t.Errorf("a ctrl or alt kitty key typed: %q", p.query)
+	}
+	if _, cancelled := p.HandleInput("\x1b[27;5;99~"); !cancelled {
+		t.Error("modifyOtherKeys ctrl+c did not cancel")
+	}
 	if _, cancelled := p.HandleInput("\x1b"); !cancelled {
 		t.Error("escape did not cancel")
 	}
@@ -327,5 +346,110 @@ func TestFormatTimestamp(t *testing.T) {
 	}
 	if got := formatTimestamp(other, now); got != "3/4/2026 12:07 AM" {
 		t.Errorf("another day: %q", got)
+	}
+}
+
+func TestPickerScrollsToTheSelection(t *testing.T) {
+	p := newTestPicker()
+	for range 9 {
+		p.HandleInput("\x1b[B")
+	}
+	got := strings.Join(p.Render(90), "\n")
+	for _, want := range []string{"id04", "id09", "id11"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("the window around row 10 lacks %s:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "id03") || !strings.Contains(got, "▸ user id09") && !strings.Contains(got, "▸ assistant id09") || !strings.Contains(got, "10/12") {
+		t.Errorf("window or indicator wrong:\n%s", got)
+	}
+}
+
+func TestPickerScrollIndicatorRoundsHalvesUp(t *testing.T) {
+	var candidates []quoteCandidate
+	for i := range 20 {
+		candidates = append(candidates, quoteCandidate{ID: fmt.Sprintf("i%02d", i), Role: "user", Text: "t", SearchText: "i user t"})
+	}
+	p := newQuotePicker(candidates, pickerPlainTheme{}, time.Now, nil, nil)
+	p.HandleInput("\x1b[B")
+	p.HandleInput("\x1b[B") // 3 of 20: 1.5 dots, Math.round gives 2
+	if got := strings.Join(p.Render(90), "\n"); !strings.Contains(got, "● ● ○ ○ ○ ○ ○ ○ ○ ○  3/20") {
+		t.Errorf("indicator:\n%s", got)
+	}
+}
+
+func TestPickerSmallWidthsAndEmptyList(t *testing.T) {
+	p := newQuotePicker(nil, pickerPlainTheme{}, time.Now, nil, nil)
+	lines := p.Render(1) // innerWidth 0
+	if len(lines) == 0 {
+		t.Fatal("no lines")
+	}
+	if got := strings.Join(newQuotePicker(nil, pickerPlainTheme{}, time.Now, nil, nil).Render(60), "\n"); !strings.Contains(got, "No matching messages") {
+		t.Errorf("an empty list:\n%s", got)
+	}
+	if s, c := p.HandleInput("\r"); s != nil || c {
+		t.Errorf("Enter on an empty list: %v %v", s, c)
+	}
+	p.HandleInput("\x1b[A")
+	p.HandleInput("\x1b[B")
+}
+
+func TestFuzzyMatchScoresAreThoseOfPiTui(t *testing.T) {
+	// Values computed by pi-tui's fuzzy.js (fuzzyMatch) for the same inputs.
+	for _, c := range []struct {
+		query, text string
+		matches     bool
+		score       float64
+	}{
+		{"quick", "abc111 user the quick fox", true, -51},
+		{"quick", "zzz user quick", true, -54.5},
+		{"abc", "abc111 user", true, -39.699999999999996},
+		{"a1", "1a xx", true, -19.9},
+		{"12abc", "abc12 foo", true, -79},
+		{"ab", "a-b", true, -22.8},
+		{"ab", "axxb", true, -10.7},
+		{"abc", "aXbXc abc", true, -10.4},
+		{"id05", "id05 user message", true, -59.4},
+		{"usr", "id01 user x", true, -11.1},
+		{"x", "abc", false, 0},
+		{"abc", "ab", false, 0},
+		{"tool", "tool", true, -159.4},
+		{"é", "café", true, 0.30000000000000004},
+		{"a b", "a b", true, -149.7},
+	} {
+		m := fuzzyMatch(c.query, c.text)
+		if m.matches != c.matches || math.Abs(m.score-c.score) > 1e-9 {
+			t.Errorf("fuzzyMatch(%q, %q) = %+v, pi-tui gives matches=%v score=%v", c.query, c.text, m, c.matches, c.score)
+		}
+	}
+}
+
+func TestCandidateDetails(t *testing.T) {
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	long := strings.Repeat("x", 1500)
+	entry := messageEntry("ID1", "2026-10-20T10:00:01.500Z", "assistant", long)
+	c, err := buildCandidate(entry, now)
+	if err != nil || c == nil {
+		t.Fatal(err)
+	}
+	if utf16Len(c.SearchText) != 1000 || !strings.HasPrefix(c.SearchText, "id1 assistant xxx") {
+		t.Errorf("search text %d %q", utf16Len(c.SearchText), c.SearchText[:20])
+	}
+	if c.TimestampMs != time.Date(2026, 10, 20, 10, 0, 1, 500_000_000, time.UTC).UnixMilli() {
+		t.Errorf("an entry timestamp is read as ISO: %d", c.TimestampMs)
+	}
+	entry["message"].(map[string]any)["timestamp"] = float64(1234)
+	if c, _ := buildCandidate(entry, now); c.TimestampMs != 1234 {
+		t.Errorf("the message timestamp wins: %d", c.TimestampMs)
+	}
+	delete(entry["message"].(map[string]any), "timestamp")
+	entry["timestamp"] = "not a date"
+	if c, _ := buildCandidate(entry, now); c.TimestampMs != now.UnixMilli() {
+		t.Errorf("an unreadable timestamp falls back to now: %d", c.TimestampMs)
+	}
+	opts := &fakeQuoteCtx{mode: "rpc", branch: []map[string]any{messageEntry("o1", "2026-10-20T10:00:01.000Z", "user", strings.Repeat("word ", 100))}}
+	_ = reply("", opts)
+	if got, want := opts.selectOptions[0], "o1 user: "+strings.TrimSpace(strings.Repeat("word ", 44))[:219]+"…"; got != want {
+		t.Errorf("option %q, want %q", got, want)
 	}
 }

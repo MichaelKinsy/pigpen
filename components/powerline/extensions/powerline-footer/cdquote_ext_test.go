@@ -519,3 +519,18 @@ func TestLastPromptWidgetCanBeSwitchedOffByThePerfEnvironment(t *testing.T) {
 		}
 	}
 }
+
+func TestLastPromptIsInstalledAgainWhenTheCoreReinstallsItsWidgets(t *testing.T) {
+	r := &cdRig{sessionFile: "<new>"}
+	h := r.start(t)
+	beforeAgentStart(h, "hello")
+	before := len(lastPromptCalls(h))
+	_ = h.Command("powerline", "placement below") // the core clears every widget and installs its own again
+	calls := lastPromptCalls(h)
+	if len(calls) < before+2 {
+		t.Fatalf("%d widget calls after the placement change, want the clear and the new widget", len(calls)-before)
+	}
+	if last := calls[len(calls)-1]; last.Args["content"] == nil {
+		t.Errorf("the last-prompt line is gone after the core reinstalled its widgets: %+v", last.Args)
+	}
+}

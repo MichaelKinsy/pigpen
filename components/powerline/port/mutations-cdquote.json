@@ -1,0 +1,1226 @@
+[
+ {
+  "name": "cd-unescape-keeps-backslash",
+  "file": "cd_command.go",
+  "find": "\t\t\t\ti++\n\t\t\t\tb.WriteRune(runes[i])\n\t\t\t\tcontinue",
+  "replace": "\t\t\t\tb.WriteRune(runes[i])\n\t\t\t\tcontinue"
+ },
+ {
+  "name": "cd-unescape-escapes-newline",
+  "file": "cd_command.go",
+  "find": "case '\\n', '\\r', '\\u2028', '\\u2029':",
+  "replace": "case '\\r', '\\u2028', '\\u2029':"
+ },
+ {
+  "name": "cd-unescape-escapes-cr",
+  "file": "cd_command.go",
+  "find": "case '\\n', '\\r', '\\u2028', '\\u2029':",
+  "replace": "case '\\n', '\\u2028', '\\u2029':"
+ },
+ {
+  "name": "cd-unescape-escapes-ls",
+  "file": "cd_command.go",
+  "find": "case '\\n', '\\r', '\\u2028', '\\u2029':",
+  "replace": "case '\\n', '\\r', '\\u2029':"
+ },
+ {
+  "name": "cd-quotes-double-only",
+  "file": "cd_command.go",
+  "find": "(first == '\"' && last == '\"') || (first == '\\'' && last == '\\'')",
+  "replace": "(first == '\"' && last == '\"')"
+ },
+ {
+  "name": "cd-quotes-mismatch-ok",
+  "file": "cd_command.go",
+  "find": "(first == '\"' && last == '\"') || (first == '\\'' && last == '\\'')",
+  "replace": "(first == '\"' || first == '\\'') && (last == '\"' || last == '\\'')"
+ },
+ {
+  "name": "cd-quotes-need-two-chars",
+  "file": "cd_command.go",
+  "find": "if len(runes) >= 2 {",
+  "replace": "if len(runes) >= 1 {"
+ },
+ {
+  "name": "cd-home-alone",
+  "file": "cd_command.go",
+  "find": "if value == \"~\" {",
+  "replace": "if value == \"~~\" {"
+ },
+ {
+  "name": "cd-home-slash",
+  "file": "cd_command.go",
+  "find": "strings.CutPrefix(value, \"~/\")",
+  "replace": "strings.CutPrefix(value, \"~\")"
+ },
+ {
+  "name": "cd-escape-space-missing",
+  "file": "cd_command.go",
+  "find": "if isJSSpace(r) || strings.ContainsRune(",
+  "replace": "if strings.ContainsRune("
+ },
+ {
+  "name": "cd-escape-dollar-missing",
+  "file": "cd_command.go",
+  "find": "\"\\\\\\\"'`$&|;<>()[]{}?!*\"",
+  "replace": "\"\\\\\\\"'`&|;<>()[]{}?!*\""
+ },
+ {
+  "name": "cd-escape-star-missing",
+  "file": "cd_command.go",
+  "find": "\"\\\\\\\"'`$&|;<>()[]{}?!*\"",
+  "replace": "\"\\\\\\\"'`$&|;<>()[]{}?!\""
+ },
+ {
+  "name": "cd-display-keeps-backslash",
+  "file": "cd_command.go",
+  "find": "func displayPath(value string) string { return strings.ReplaceAll(value, \"\\\\\", \"/\") }",
+  "replace": "func displayPath(value string) string { return value }"
+ },
+ {
+  "name": "cd-resolve-relative-to-root",
+  "file": "cd_command.go",
+  "find": "return filepath.Clean(filepath.Join(base, p))",
+  "replace": "return filepath.Clean(p)"
+ },
+ {
+  "name": "cd-resolve-not-a-directory",
+  "file": "cd_command.go",
+  "find": "if !info.IsDir() {\n\t\treturn &cdTarget{Error: \"Not a directory: \" + target}",
+  "replace": "if info.IsDir() {\n\t\treturn &cdTarget{Error: \"Not a directory: \" + target}"
+ },
+ {
+  "name": "cd-resolve-missing-text",
+  "file": "cd_command.go",
+  "find": "\"Directory does not exist: \" + target",
+  "replace": "\"Directory missing: \" + target"
+ },
+ {
+  "name": "cd-resolve-empty-is-cwd",
+  "file": "cd_command.go",
+  "find": "\tif input == \"\" {\n\t\treturn nil\n\t}",
+  "replace": "\tif input == \"\" {\n\t\treturn &cdTarget{Path: cwd}\n\t}"
+ },
+ {
+  "name": "cd-compl-quickpick-prefix",
+  "file": "cd_command.go",
+  "find": "if prefix == \"\" || strings.HasPrefix(quickPick, prefix) {",
+  "replace": "if prefix == \"\" {"
+ },
+ {
+  "name": "cd-compl-quickpick-desc",
+  "file": "cd_command.go",
+  "find": "description := \"Home directory\"",
+  "replace": "description := \"Parent directory\""
+ },
+ {
+  "name": "cd-compl-cap-51",
+  "file": "cd_command.go",
+  "find": "if count == 50 {",
+  "replace": "if count == 51 {"
+ },
+ {
+  "name": "cd-compl-symlink-ignored",
+  "file": "cd_command.go",
+  "find": "isDir := entry.IsDir() || (entry.Type()&os.ModeSymlink != 0 && isDirectoryEntry(base.dir, entry.Name()))",
+  "replace": "isDir := entry.IsDir()"
+ },
+ {
+  "name": "cd-compl-symlink-any",
+  "file": "cd_command.go",
+  "find": "(entry.Type()&os.ModeSymlink != 0 && isDirectoryEntry(base.dir, entry.Name()))",
+  "replace": "(entry.Type()&os.ModeSymlink != 0)"
+ },
+ {
+  "name": "cd-compl-prefix-filter",
+  "file": "cd_command.go",
+  "find": "if !strings.HasPrefix(entry.Name(), base.prefix) {",
+  "replace": "if !strings.Contains(entry.Name(), base.prefix) {"
+ },
+ {
+  "name": "cd-compl-no-dedupe",
+  "file": "cd_command.go",
+  "find": "\t\tif seen[item.Value] {\n\t\t\tcontinue\n\t\t}",
+  "replace": "\t\tif false {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "cd-compl-display-prefix-not-cut",
+  "file": "cd_command.go",
+  "find": "displayPrefix = utf16Prefix(unescaped, utf16Len(unescaped)-utf16Len(prefix))",
+  "replace": "displayPrefix = unescaped"
+ },
+ {
+  "name": "cd-compl-trailing-slash-base",
+  "file": "cd_command.go",
+  "find": "baseDir = expanded[:len(expanded)-1]",
+  "replace": "baseDir = expanded"
+ },
+ {
+  "name": "cd-compl-leading-trim",
+  "file": "cd_command.go",
+  "find": "prefix := strings.TrimLeftFunc(argumentPrefix, isJSSpace)",
+  "replace": "prefix := argumentPrefix"
+ },
+ {
+  "name": "cd-compl-root-base",
+  "file": "cd_command.go",
+  "find": "\t\tif idx == 0 {\n\t\t\tbaseDir = \"/\"\n\t\t}",
+  "replace": "\t\tif idx == 0 {\n\t\t\tbaseDir = \"\"\n\t\t}"
+ },
+ {
+  "name": "cd-compl-value-unescaped",
+  "file": "cd_command.go",
+  "find": "suggestions = append(suggestions, cdCompletion{Value: escapeCompletionPath(path), Label: path})",
+  "replace": "suggestions = append(suggestions, cdCompletion{Value: path, Label: path})"
+ },
+ {
+  "name": "fork-version",
+  "file": "cd_command.go",
+  "find": "header.set(\"version\", float64(currentSessionVersion))",
+  "replace": "header.set(\"version\", float64(2))"
+ },
+ {
+  "name": "fork-keeps-second-header",
+  "file": "cd_command.go",
+  "find": "\t\t\tif kind, _ := o.get(\"type\"); kind == \"session\" {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t}\n\t\tout.WriteString",
+  "replace": "\t\t\tif kind, _ := o.get(\"type\"); kind == \"sessionx\" {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t}\n\t\tout.WriteString"
+ },
+ {
+  "name": "fork-keeps-falsy-entries",
+  "file": "cd_command.go",
+  "find": "\tcase nil:\n\t\treturn nil, false\n\tcase bool:",
+  "replace": "\tcase nil:\n\t\treturn nil, true\n\tcase bool:"
+ },
+ {
+  "name": "fork-keeps-zero",
+  "file": "cd_command.go",
+  "find": "return v, x != 0 && x == x",
+  "replace": "return v, true"
+ },
+ {
+  "name": "fork-no-newline-repair",
+  "file": "cd_command.go",
+  "find": "\tif pending != \"\" {\n\t\tif f, err := os.OpenFile",
+  "replace": "\tif pending == \"\" {\n\t\tif f, err := os.OpenFile"
+ },
+ {
+  "name": "fork-keeps-malformed-lines",
+  "file": "cd_command.go",
+  "find": "v, err := parseJSON([]byte(line))\n\tif err != nil {\n\t\treturn nil, false\n\t}",
+  "replace": "v, err := parseJSON([]byte(line))\n\tif err != nil {\n\t\treturn line, true\n\t}"
+ },
+ {
+  "name": "fork-blank-line-entry",
+  "file": "cd_command.go",
+  "find": "if jsTrim(line) == \"\" {\n\t\treturn nil, false\n\t}",
+  "replace": "if line == \"\" {\n\t\treturn nil, false\n\t}"
+ },
+ {
+  "name": "fork-header-type-unchecked",
+  "file": "cd_command.go",
+  "find": "if kind, _ := header.get(\"type\"); kind != \"session\" {\n\t\treturn nil\n\t}",
+  "replace": "if kind, _ := header.get(\"type\"); kind == \"x\" {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "fork-header-id-unchecked",
+  "file": "cd_command.go",
+  "find": "if id, _ := header.get(\"id\"); !isString(id) {\n\t\treturn nil\n\t}",
+  "replace": "if id, _ := header.get(\"id\"); id == 1 {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "fork-dir-name",
+  "file": "cd_command.go",
+  "find": "strings.NewReplacer(\"/\", \"-\", \"\\\\\", \"-\", \":\", \"-\")",
+  "replace": "strings.NewReplacer(\"/\", \"-\", \"\\\\\", \"-\")"
+ },
+ {
+  "name": "fork-dir-leading-slash",
+  "file": "cd_command.go",
+  "find": "if len(cwd) > 0 && (cwd[0] == '/' || cwd[0] == '\\\\') {",
+  "replace": "if len(cwd) > 0 && (cwd[0] == '\\\\') {"
+ },
+ {
+  "name": "fork-file-timestamp",
+  "file": "cd_command.go",
+  "find": "strings.NewReplacer(\":\", \"-\", \".\", \"-\").Replace(timestamp)",
+  "replace": "strings.NewReplacer(\":\", \"-\").Replace(timestamp)"
+ },
+ {
+  "name": "fork-iso-millis",
+  "file": "cd_command.go",
+  "find": "t.UTC().Format(\"2006-01-02T15:04:05.000Z\")",
+  "replace": "t.UTC().Format(\"2006-01-02T15:04:05Z\")"
+ },
+ {
+  "name": "uuid-version",
+  "file": "cd_command.go",
+  "find": "b[6] = 0x70 | byte((seq>>37)&0x0f)",
+  "replace": "b[6] = 0x40 | byte((seq>>37)&0x0f)"
+ },
+ {
+  "name": "uuid-variant",
+  "file": "cd_command.go",
+  "find": "b[8] = 0x80 | byte((seq>>23)&0x3f)",
+  "replace": "b[8] = 0xc0 | byte((seq>>23)&0x3f)"
+ },
+ {
+  "name": "uuid-timestamp-order",
+  "file": "cd_command.go",
+  "find": "b[i] = byte(uint64(nowMs) >> ((5 - i) * 8))",
+  "replace": "b[i] = byte(uint64(nowMs) >> (i * 8))"
+ },
+ {
+  "name": "uuid-sequence-not-increasing",
+  "file": "cd_command.go",
+  "find": "\t\tuuidState.sequence++\n",
+  "replace": "\t\tuuidState.sequence += 0\n"
+ },
+ {
+  "name": "fork-parent-session-missing",
+  "file": "cd_command.go",
+  "find": "header.set(\"parentSession\", resolvedSource)",
+  "replace": "header.set(\"parentSession\", \"\")"
+ },
+ {
+  "name": "fork-empty-source-allowed",
+  "file": "cd_command.go",
+  "find": "if len(sourceEntries) == 0 {",
+  "replace": "if len(sourceEntries) < 0 {"
+ },
+ {
+  "name": "fork-copy-skips-first-entry",
+  "file": "cd_command.go",
+  "find": "\tfor _, entry := range sourceEntries {\n\t\tif o, ok := entry.(*jsObject); ok {\n\t\t\tif kind, _ := o.get(\"type\"); kind == \"session\" {\n\t\t\t\tcontinue",
+  "replace": "\tfor _, entry := range sourceEntries[1:] {\n\t\tif o, ok := entry.(*jsObject); ok {\n\t\t\tif kind, _ := o.get(\"type\"); kind == \"session\" {\n\t\t\t\tcontinue"
+ },
+ {
+  "name": "cd-run-same-dir",
+  "file": "cd_command.go",
+  "find": "if resolved.Path == ctx.Cwd() {",
+  "replace": "if resolved.Path != ctx.Cwd() {"
+ },
+ {
+  "name": "cd-run-same-text",
+  "file": "cd_command.go",
+  "find": "ctx.Notify(\"Already in \"+ctx.Cwd(), \"info\")",
+  "replace": "ctx.Notify(\"Already in \"+resolved.Path, \"warning\")"
+ },
+ {
+  "name": "cd-run-no-arg-level",
+  "file": "cd_command.go",
+  "find": "ctx.Notify(ctx.Cwd(), \"info\")",
+  "replace": "ctx.Notify(ctx.Cwd(), \"warning\")"
+ },
+ {
+  "name": "cd-run-error-level",
+  "file": "cd_command.go",
+  "find": "ctx.Notify(resolved.Error, \"error\")",
+  "replace": "ctx.Notify(resolved.Error, \"warning\")"
+ },
+ {
+  "name": "cd-run-persisted-text",
+  "file": "cd_command.go",
+  "find": "\"/cd requires a persisted Pi session\"",
+  "replace": "\"/cd requires a session\""
+ },
+ {
+  "name": "cd-run-no-wait",
+  "file": "cd_command.go",
+  "find": "if err := ctx.WaitForIdle(); err != nil {\n\t\treturn err\n\t}",
+  "replace": "if false {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "cd-run-title-full-path",
+  "file": "cd_command.go",
+  "find": "next.SetTitle(\"pi - \" + title)",
+  "replace": "next.SetTitle(\"pi - \" + next.Cwd())"
+ },
+ {
+  "name": "cd-run-title-no-root-fallback",
+  "file": "cd_command.go",
+  "find": "\t\tif title == \"\" {\n\t\t\ttitle = next.Cwd()\n\t\t}",
+  "replace": "\t\tif title == \"x\" {\n\t\t\ttitle = next.Cwd()\n\t\t}"
+ },
+ {
+  "name": "cd-run-changed-text",
+  "file": "cd_command.go",
+  "find": "next.Notify(\"Changed directory to \"+next.Cwd(), \"info\")",
+  "replace": "next.Notify(\"Changed directory to \"+next.Cwd(), \"warning\")"
+ },
+ {
+  "name": "cd-run-keeps-fork-on-cancel",
+  "file": "cd_command.go",
+  "find": "\t\t_ = os.Remove(nextSessionFile)\n",
+  "replace": ""
+ },
+ {
+  "name": "cd-run-cancel-text",
+  "file": "cd_command.go",
+  "find": "\"Directory change cancelled\", \"warning\"",
+  "replace": "\"Directory change cancelled\", \"info\""
+ },
+ {
+  "name": "cd-run-failure-text",
+  "file": "cd_command.go",
+  "find": "\"Failed to change directory: \"+err.Error()",
+  "replace": "\"Failed: \"+err.Error()"
+ },
+ {
+  "name": "cd-run-removes-fork-on-error",
+  "file": "cd_command.go",
+  "find": "\tif err != nil {\n\t\tctx.Notify(\"Failed to change directory: \"",
+  "replace": "\tif err != nil {\n\t\t_ = os.Remove(nextSessionFile)\n\t\tctx.Notify(\"Failed to change directory: \""
+ },
+ {
+  "name": "cd-run-fork-into-source-root",
+  "file": "cd_command.go",
+  "find": "nextSessionFile, err := forkSessionFrom(sessionFile, resolved.Path, ctx.SessionsRoot(), ctx.Now())",
+  "replace": "nextSessionFile, err := forkSessionFrom(sessionFile, resolved.Path, filepath.Dir(sessionFile), ctx.Now())"
+ },
+ {
+  "name": "cd-run-fork-from-cwd",
+  "file": "cd_command.go",
+  "find": "nextSessionFile, err := forkSessionFrom(sessionFile, resolved.Path,",
+  "replace": "nextSessionFile, err := forkSessionFrom(sessionFile, ctx.Cwd(),"
+ },
+ {
+  "name": "reply-candidate-cap",
+  "file": "quote_reply.go",
+  "find": "maxCandidates       = 200",
+  "replace": "maxCandidates       = 201"
+ },
+ {
+  "name": "reply-iterates-oldest-first",
+  "file": "quote_reply.go",
+  "find": "for index := len(branch) - 1; index >= 0 && len(candidates) < maxCandidates; index-- {\n\t\tcandidate, err := buildCandidate(branch[index], ctx.Now())",
+  "replace": "for index := 0; index < len(branch) && len(candidates) < maxCandidates; index++ {\n\t\tcandidate, err := buildCandidate(branch[index], ctx.Now())"
+ },
+ {
+  "name": "reply-role-assistant-only",
+  "file": "quote_reply.go",
+  "find": "if role != \"assistant\" && role != \"user\" {",
+  "replace": "if role != \"assistant\" {"
+ },
+ {
+  "name": "reply-role-user-only",
+  "file": "quote_reply.go",
+  "find": "if role != \"assistant\" && role != \"user\" {",
+  "replace": "if role != \"user\" {"
+ },
+ {
+  "name": "reply-type-unchecked",
+  "file": "quote_reply.go",
+  "find": "if entry[\"type\"] != \"message\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "reply-blank-text-kept",
+  "file": "quote_reply.go",
+  "find": "\ttext := jsTrim(contentText(message[\"content\"]))\n\tif text == \"\" {",
+  "replace": "\ttext := jsTrim(contentText(message[\"content\"]))\n\tif false {"
+ },
+ {
+  "name": "reply-text-untrimmed",
+  "file": "quote_reply.go",
+  "find": "text := jsTrim(contentText(message[\"content\"]))",
+  "replace": "text := contentText(message[\"content\"])"
+ },
+ {
+  "name": "reply-blocks-joined-by-newline",
+  "file": "quote_reply.go",
+  "find": "strings.Join(texts, \"\\n\\n\")",
+  "replace": "strings.Join(texts, \"\\n\")"
+ },
+ {
+  "name": "reply-non-text-blocks",
+  "file": "quote_reply.go",
+  "find": "rec[\"type\"] == \"text\"",
+  "replace": "rec[\"type\"] != \"x\""
+ },
+ {
+  "name": "reply-id-untrimmed",
+  "file": "quote_reply.go",
+  "find": "id := jsTrim(rawID)",
+  "replace": "id := rawID"
+ },
+ {
+  "name": "reply-empty-id-ok",
+  "file": "quote_reply.go",
+  "find": "\tif id == \"\" {\n\t\treturn nil, errors.New(quoteCandidateIDErr)\n\t}",
+  "replace": "\tif id == \"x\" {\n\t\treturn nil, errors.New(quoteCandidateIDErr)\n\t}"
+ },
+ {
+  "name": "reply-search-length",
+  "file": "quote_reply.go",
+  "find": "maxSearchTextChars  = 1_000",
+  "replace": "maxSearchTextChars  = 999"
+ },
+ {
+  "name": "reply-search-case",
+  "file": "quote_reply.go",
+  "find": "SearchText:  strings.ToLower(utf16Prefix(id+\" \"+role+\" \"+text, maxSearchTextChars)),",
+  "replace": "SearchText:  utf16Prefix(id+\" \"+role+\" \"+text, maxSearchTextChars),"
+ },
+ {
+  "name": "reply-timestamp-message-first",
+  "file": "quote_reply.go",
+  "find": "\tif f, ok := fallback.(float64); ok && f == f && f-f == 0 {\n\t\treturn int64(f)\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "reply-timestamp-fallback-now",
+  "file": "quote_reply.go",
+  "find": "\t\tif ms, ok := jsDateParse(ts); ok {\n\t\t\treturn ms\n\t\t}",
+  "replace": "\t\tif ms, ok := jsDateParse(ts); ok && false {\n\t\t\treturn ms\n\t\t}"
+ },
+ {
+  "name": "reply-hash-prefix",
+  "file": "quote_reply.go",
+  "find": "strings.TrimPrefix(jsTrim(args), \"#\")",
+  "replace": "jsTrim(args)"
+ },
+ {
+  "name": "reply-query-case",
+  "file": "quote_reply.go",
+  "find": "query := strings.ToLower(strings.TrimPrefix(",
+  "replace": "query := (strings.TrimPrefix("
+ },
+ {
+  "name": "reply-id-match-case",
+  "file": "quote_reply.go",
+  "find": "strings.HasPrefix(strings.ToLower(c.ID), query)",
+  "replace": "strings.HasPrefix(c.ID, query)"
+ },
+ {
+  "name": "reply-id-contains",
+  "file": "quote_reply.go",
+  "find": "strings.HasPrefix(strings.ToLower(c.ID), query)",
+  "replace": "strings.Contains(strings.ToLower(c.ID), query)"
+ },
+ {
+  "name": "reply-ambiguous-text",
+  "file": "quote_reply.go",
+  "find": "Type more of the id.\"",
+  "replace": "Type more.\""
+ },
+ {
+  "name": "reply-nomatch-text",
+  "file": "quote_reply.go",
+  "find": "\"No quotable message matches id \\\"\"",
+  "replace": "\"No message matches id \\\"\""
+ },
+ {
+  "name": "reply-nomatch-level",
+  "file": "quote_reply.go",
+  "find": "ctx.Notify(\"No quotable message matches id \\\"\"+query+\"\\\".\", \"warning\")",
+  "replace": "ctx.Notify(\"No quotable message matches id \\\"\"+query+\"\\\".\", \"info\")"
+ },
+ {
+  "name": "reply-empty-text",
+  "file": "quote_reply.go",
+  "find": "noQuotableMessages  = \"No user or assistant messages are available to quote.\"",
+  "replace": "noQuotableMessages  = \"No messages to quote.\""
+ },
+ {
+  "name": "reply-first-of-many",
+  "file": "quote_reply.go",
+  "find": "\t\tif len(matches) == 1 {\n\t\t\treturn insertQuote(ctx, matches[0])\n\t\t}",
+  "replace": "\t\tif len(matches) >= 1 {\n\t\t\treturn insertQuote(ctx, matches[0])\n\t\t}"
+ },
+ {
+  "name": "reply-draft-first",
+  "file": "quote_reply.go",
+  "find": "ctx.SetEditorText(formatQuote(candidate) + draft)",
+  "replace": "ctx.SetEditorText(draft + formatQuote(candidate))"
+ },
+ {
+  "name": "reply-insert-text",
+  "file": "quote_reply.go",
+  "find": "\"Inserted quote from \"+candidate.Role+\" message \"+candidate.ID+\".\", \"info\"",
+  "replace": "\"Inserted quote from \"+candidate.Role+\" message \"+candidate.ID+\".\", \"warning\""
+ },
+ {
+  "name": "reply-quote-header",
+  "file": "quote_reply.go",
+  "find": "\"Quoted previous \" + candidate.Role + \" message \" + candidate.ID + \" for reference only:\"",
+  "replace": "\"Quoted previous \" + candidate.Role + \" message \" + candidate.ID"
+ },
+ {
+  "name": "reply-quote-blank-line",
+  "file": "quote_reply.go",
+  "find": "\t\t} else {\n\t\t\tquoted = append(quoted, \">\")",
+  "replace": "\t\t} else {\n\t\t\tquoted = append(quoted, \"> \")"
+ },
+ {
+  "name": "reply-quote-crlf",
+  "file": "quote_reply.go",
+  "find": "strings.ReplaceAll(quoteText, \"\\r\\n\", \"\\n\")",
+  "replace": "quoteText"
+ },
+ {
+  "name": "reply-quote-limit",
+  "file": "quote_reply.go",
+  "find": "maxQuoteChars       = 6_000",
+  "replace": "maxQuoteChars       = 6_001"
+ },
+ {
+  "name": "reply-quote-no-trim",
+  "file": "quote_reply.go",
+  "find": "quoteText = strings.TrimRightFunc(utf16Prefix(candidate.Text, maxQuoteChars), isJSSpace)",
+  "replace": "quoteText = utf16Prefix(candidate.Text, maxQuoteChars)"
+ },
+ {
+  "name": "reply-quote-truncation-note",
+  "file": "quote_reply.go",
+  "find": "\"> [Quote truncated from \"+formatThousands(textLen)+\" characters.]\"",
+  "replace": "\"> [Quote truncated from \"+fmt.Sprint(textLen)+\" characters.]\""
+ },
+ {
+  "name": "reply-thousands",
+  "file": "quote_reply.go",
+  "find": "if i > 0 && (len(s)-i)%3 == 0 {",
+  "replace": "if i > 0 && (len(s)-i)%4 == 0 {"
+ },
+ {
+  "name": "reply-tail",
+  "file": "quote_reply.go",
+  "find": "lines = append(lines, \"\", \"My reply:\", \"\")",
+  "replace": "lines = append(lines, \"\", \"My reply:\")"
+ },
+ {
+  "name": "reply-rpc-option-cap",
+  "file": "quote_reply.go",
+  "find": "maxRPCOptions       = 80",
+  "replace": "maxRPCOptions       = 81"
+ },
+ {
+  "name": "reply-rpc-option-format",
+  "file": "quote_reply.go",
+  "find": "options[i] = c.ID + \" \" + c.Role + \": \" + excerpt(c.Text, maxExcerptChars)",
+  "replace": "options[i] = c.ID + \" \" + c.Role + \" \" + excerpt(c.Text, maxExcerptChars)"
+ },
+ {
+  "name": "reply-excerpt-limit",
+  "file": "quote_reply.go",
+  "find": "maxExcerptChars     = 220",
+  "replace": "maxExcerptChars     = 221"
+ },
+ {
+  "name": "reply-select-title",
+  "file": "quote_reply.go",
+  "find": "quoteSelectTitle    = \"Reply to previous message\"",
+  "replace": "quoteSelectTitle    = \"Reply\""
+ },
+ {
+  "name": "reply-mode-rpc-only",
+  "file": "quote_reply.go",
+  "find": "if ctx.Mode() != \"tui\" || !ctx.CanCustom() {",
+  "replace": "if ctx.Mode() == \"rpc\" || !ctx.CanCustom() {"
+ },
+ {
+  "name": "reply-mode-ignored",
+  "file": "quote_reply.go",
+  "find": "if ctx.Mode() != \"tui\" || !ctx.CanCustom() {",
+  "replace": "if !ctx.CanCustom() {"
+ },
+ {
+  "name": "reply-select-id-split",
+  "file": "quote_reply.go",
+  "find": "id, _, _ := strings.Cut(selected, \" \")",
+  "replace": "id := selected"
+ },
+ {
+  "name": "reply-select-dismissed",
+  "file": "quote_reply.go",
+  "find": "if !ok || selected == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "reply-collapse-whitespace",
+  "file": "quote_reply.go",
+  "find": "compact := collapseSpaces(text)",
+  "replace": "compact := text"
+ },
+ {
+  "name": "reply-excerpt-ellipsis-trim",
+  "file": "quote_reply.go",
+  "find": "return strings.TrimRightFunc(utf16Prefix(compact, max(0, maxChars-1)), isJSSpace) + \"…\"",
+  "replace": "return utf16Prefix(compact, max(0, maxChars-1)) + \"…\""
+ },
+ {
+  "name": "picker-overlay-min-width",
+  "file": "quote_picker.go",
+  "find": "MinWidth: 72,",
+  "replace": "MinWidth: 71,"
+ },
+ {
+  "name": "picker-overlay-width",
+  "file": "quote_picker.go",
+  "find": "Width: sdk.OverlayPercent(85)",
+  "replace": "Width: sdk.OverlayPercent(80)"
+ },
+ {
+  "name": "picker-overlay-height",
+  "file": "quote_picker.go",
+  "find": "MaxHeight: sdk.OverlayPercent(80)",
+  "replace": "MaxHeight: sdk.OverlayPercent(85)"
+ },
+ {
+  "name": "picker-overlay-flag",
+  "file": "quote_picker.go",
+  "find": "sdk.RemoteOverlayOptions{Overlay: true,",
+  "replace": "sdk.RemoteOverlayOptions{Overlay: false,"
+ },
+ {
+  "name": "picker-result-value",
+  "file": "quote_picker.go",
+  "find": "Value: selected.ID}",
+  "replace": "Value: selected.Role}"
+ },
+ {
+  "name": "picker-finishes-once",
+  "file": "quote_picker.go",
+  "find": "\tif c.finished {\n\t\treturn sdk.RemoteComponentResult{}, nil\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "picker-fuzzy-consecutive",
+  "file": "quote_picker.go",
+  "find": "score -= float64(consecutive * 5)",
+  "replace": "score -= float64(consecutive * 4)"
+ },
+ {
+  "name": "picker-fuzzy-gap",
+  "file": "quote_picker.go",
+  "find": "score += float64((i - lastMatchIndex - 1) * 2)",
+  "replace": "score += float64((i - lastMatchIndex - 1) * 3)"
+ },
+ {
+  "name": "picker-fuzzy-boundary",
+  "file": "quote_picker.go",
+  "find": "if isWordBoundary {\n\t\t\t\tscore -= 10",
+  "replace": "if isWordBoundary {\n\t\t\t\tscore -= 9"
+ },
+ {
+  "name": "picker-fuzzy-position",
+  "file": "quote_picker.go",
+  "find": "score += float64(i) * 0.1",
+  "replace": "score += float64(i) * 0.2"
+ },
+ {
+  "name": "picker-fuzzy-exact",
+  "file": "quote_picker.go",
+  "find": "\t\t\tscore -= 100\n",
+  "replace": "\t\t\tscore -= 99\n"
+ },
+ {
+  "name": "picker-fuzzy-swap-penalty",
+  "file": "quote_picker.go",
+  "find": "return fuzzyResult{true, sm.score + 5}",
+  "replace": "return fuzzyResult{true, sm.score + 4}"
+ },
+ {
+  "name": "picker-fuzzy-no-swap",
+  "file": "quote_picker.go",
+  "find": "if m := fuzzyAlphaNumeric.FindStringSubmatch(queryLower); m != nil {",
+  "replace": "if m := fuzzyAlphaNumeric.FindStringSubmatch(queryLower); m != nil && false {"
+ },
+ {
+  "name": "picker-fuzzy-slash-token",
+  "file": "quote_picker.go",
+  "find": "return isJSSpace(r) || r == '/' }",
+  "replace": "return isJSSpace(r) }"
+ },
+ {
+  "name": "picker-fuzzy-unstable",
+  "file": "quote_picker.go",
+  "find": "sort.SliceStable(results, func(a, b int) bool { return results[a].total < results[b].total })",
+  "replace": "sort.SliceStable(results, func(a, b int) bool { return results[a].total > results[b].total })"
+ },
+ {
+  "name": "picker-fuzzy-boundary-chars",
+  "file": "quote_picker.go",
+  "find": "strings.ContainsRune(\"-_./:\", rune(textLower[i-1]))",
+  "replace": "strings.ContainsRune(\"-_.\", rune(textLower[i-1]))"
+ },
+ {
+  "name": "picker-time-format",
+  "file": "quote_picker.go",
+  "find": "clock := date.Format(\"03:04 PM\")",
+  "replace": "clock := date.Format(\"15:04\")"
+ },
+ {
+  "name": "picker-time-other-day",
+  "file": "quote_picker.go",
+  "find": "return strconv.Itoa(int(date.Month())) + \"/\" + strconv.Itoa(date.Day()) + \"/\" + strconv.Itoa(date.Year()) + \" \" + clock",
+  "replace": "return clock"
+ },
+ {
+  "name": "picker-time-same-day",
+  "file": "quote_picker.go",
+  "find": "date.Year() == now.Year() && date.Month() == now.Month() && date.Day() == now.Day()",
+  "replace": "date.Year() == now.Year() && date.Month() == now.Month()"
+ },
+ {
+  "name": "picker-visible-items",
+  "file": "quote_picker.go",
+  "find": "const maxVisibleItems = 8",
+  "replace": "const maxVisibleItems = 7"
+ },
+ {
+  "name": "picker-key-up-wrap",
+  "file": "quote_picker.go",
+  "find": "p.selectedIdx = (p.selectedIdx - 1 + len(filtered)) % len(filtered)",
+  "replace": "p.selectedIdx = max(0, p.selectedIdx-1)"
+ },
+ {
+  "name": "picker-key-down-wrap",
+  "file": "quote_picker.go",
+  "find": "p.selectedIdx = (p.selectedIdx + 1) % len(filtered)",
+  "replace": "p.selectedIdx = min(len(filtered)-1, p.selectedIdx+1)"
+ },
+ {
+  "name": "picker-key-enter-legacy-lf",
+  "file": "quote_picker.go",
+  "find": "return data == \"\\r\" || data == \"\\n\" || data == \"\\x1bOM\"",
+  "replace": "return data == \"\\r\" || data == \"\\x1bOM\""
+ },
+ {
+  "name": "picker-key-enter-kp",
+  "file": "quote_picker.go",
+  "find": "|| matchesKitty(data, cpKpEnter, 0)",
+  "replace": ""
+ },
+ {
+  "name": "picker-key-up-ss3",
+  "file": "quote_picker.go",
+  "find": "return data == \"\\x1b[A\" || data == \"\\x1bOA\" ||",
+  "replace": "return data == \"\\x1b[A\" ||"
+ },
+ {
+  "name": "picker-key-down-ss3",
+  "file": "quote_picker.go",
+  "find": "return data == \"\\x1b[B\" || data == \"\\x1bOB\" ||",
+  "replace": "return data == \"\\x1b[B\" ||"
+ },
+ {
+  "name": "picker-key-ctrl-u",
+  "file": "quote_picker.go",
+  "find": "return data == \"\\x15\" ||",
+  "replace": "return data == \"\\x14\" ||"
+ },
+ {
+  "name": "picker-key-ctrl-c",
+  "file": "quote_picker.go",
+  "find": "return data == \"\\x03\" ||",
+  "replace": "return data == \"\\x04\" ||"
+ },
+ {
+  "name": "picker-key-escape-kitty",
+  "file": "quote_picker.go",
+  "find": "return data == \"\\x1b\" || matchesKitty(data, cpEscape, 0) ||",
+  "replace": "return data == \"\\x1b\" ||"
+ },
+ {
+  "name": "picker-key-backspace-bs",
+  "file": "quote_picker.go",
+  "find": "return data == \"\\x7f\" || data == \"\\x08\" ||",
+  "replace": "return data == \"\\x7f\" ||"
+ },
+ {
+  "name": "picker-backspace-resets-selection",
+  "file": "quote_picker.go",
+  "find": "\t\tp.query = string(runes)\n\t\tp.selectedIdx = 0",
+  "replace": "\t\tp.query = string(runes)"
+ },
+ {
+  "name": "picker-type-resets-selection",
+  "file": "quote_picker.go",
+  "find": "\t\t\tp.query += printable\n\t\t\tp.selectedIdx = 0",
+  "replace": "\t\t\tp.query += printable"
+ },
+ {
+  "name": "picker-ctrl-u-clears",
+  "file": "quote_picker.go",
+  "find": "\tcase matchesPickerKey(data, \"ctrl+u\"):\n\t\tp.query = \"\"",
+  "replace": "\tcase matchesPickerKey(data, \"ctrl+u\"):\n\t\tp.query = p.query"
+ },
+ {
+  "name": "picker-printable-control",
+  "file": "quote_picker.go",
+  "find": "if r < 32 || r == 0x7f || (r >= 0x80 && r <= 0x9f) {",
+  "replace": "if r < 32 || r == 0x7f {"
+ },
+ {
+  "name": "picker-kitty-shift",
+  "file": "quote_picker.go",
+  "find": "if modifier&modShift != 0 && shifted != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "picker-kitty-ctrl-alt",
+  "file": "quote_picker.go",
+  "find": "if modifier&^kittyAllowMods != 0 || modifier&(modAlt|modCtrl) != 0 {",
+  "replace": "if modifier&^kittyAllowMods != 0 {"
+ },
+ {
+  "name": "picker-kitty-low-codepoint",
+  "file": "quote_picker.go",
+  "find": "if effective < 32 || effective > 0x10ffff",
+  "replace": "if effective < 31 || effective > 0x10ffff"
+ },
+ {
+  "name": "picker-scroll-window",
+  "file": "quote_picker.go",
+  "find": "start := max(0, min(p.selectedIdx-maxVisibleItems/2, len(filtered)-maxVisibleItems))",
+  "replace": "start := max(0, min(p.selectedIdx-maxVisibleItems/2+1, len(filtered)-maxVisibleItems))"
+ },
+ {
+  "name": "picker-scroll-indicator-round",
+  "file": "quote_picker.go",
+  "find": "int(math.Floor(float64(p.selectedIdx+1)/float64(total)*10+0.5))",
+  "replace": "int(math.Floor(float64(p.selectedIdx+1)/float64(total)*10))"
+ },
+ {
+  "name": "picker-scroll-indicator-min",
+  "file": "quote_picker.go",
+  "find": "filled := max(1, int(",
+  "replace": "filled := max(0, int("
+ },
+ {
+  "name": "picker-scroll-hidden",
+  "file": "quote_picker.go",
+  "find": "if len(filtered) > maxVisibleItems {\n\t\t\tlines = append(lines, p.row(innerWidth, p.scrollIndicator",
+  "replace": "if len(filtered) > maxVisibleItems+100 {\n\t\t\tlines = append(lines, p.row(innerWidth, p.scrollIndicator"
+ },
+ {
+  "name": "picker-title",
+  "file": "quote_picker.go",
+  "find": "p.topBorder(innerWidth, \" Reply \")",
+  "replace": "p.topBorder(innerWidth, \" Quote \")"
+ },
+ {
+  "name": "picker-help",
+  "file": "quote_picker.go",
+  "find": "\" cancel  \"+i(\"⌫\")+\" edit\"",
+  "replace": "\" cancel  \"+i(\"⌫\")+\" delete\""
+ },
+ {
+  "name": "picker-assistant-color",
+  "file": "quote_picker.go",
+  "find": "roleToken := \"success\"\n\tif c.Role == \"assistant\" {\n\t\troleToken = \"accent\"\n\t}",
+  "replace": "roleToken := \"success\""
+ },
+ {
+  "name": "picker-excerpt-threshold",
+  "file": "quote_picker.go",
+  "find": "if maxExcerptWidth > 18 {",
+  "replace": "if maxExcerptWidth > 17 {"
+ },
+ {
+  "name": "picker-excerpt-margin",
+  "file": "quote_picker.go",
+  "find": "maxExcerptWidth := max(0, innerWidth-visibleWidth(head)-8)",
+  "replace": "maxExcerptWidth := max(0, innerWidth-visibleWidth(head)-7)"
+ },
+ {
+  "name": "picker-selected-bold",
+  "file": "quote_picker.go",
+  "find": "\tif selected {\n\t\tshownRole = p.theme.Bold(role)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "picker-row-pad",
+  "file": "quote_picker.go",
+  "find": "\tif pad := width - visibleWidth(out); pad > 0 {\n\t\tout += strings.Repeat(\" \", pad)\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "picker-top-border-split",
+  "file": "quote_picker.go",
+  "find": "left := borderLength / 2",
+  "replace": "left := borderLength / 3"
+ },
+ {
+  "name": "picker-clamps-selection",
+  "file": "quote_picker.go",
+  "find": "p.selectedIdx = min(p.selectedIdx, len(filtered)-1)",
+  "replace": "p.selectedIdx = p.selectedIdx"
+ },
+ {
+  "name": "picker-search-placeholder",
+  "file": "quote_picker.go",
+  "find": "\"type to filter messages...\"",
+  "replace": "\"filter...\""
+ },
+ {
+  "name": "picker-no-match-text",
+  "file": "quote_picker.go",
+  "find": "p.theme.Italic(\"No matching messages\")",
+  "replace": "p.theme.Italic(\"No matches\")"
+ },
+ {
+  "name": "lastprompt-min-room",
+  "file": "last_prompt.go",
+  "find": "if compact != \"\" && available >= 10 {",
+  "replace": "if compact != \"\" && available > 10 {"
+ },
+ {
+  "name": "lastprompt-color",
+  "file": "last_prompt.go",
+  "find": "lastPromptColor = \"\\x1b[38;5;244m\"",
+  "replace": "lastPromptColor = \"\\x1b[38;5;245m\""
+ },
+ {
+  "name": "lastprompt-glyph",
+  "file": "last_prompt.go",
+  "find": "prefix := \" \" + color + \"↳\" + ansiReset + \" \"",
+  "replace": "prefix := \" \" + color + \">\" + ansiReset + \" \""
+ },
+ {
+  "name": "lastprompt-no-collapse",
+  "file": "last_prompt.go",
+  "find": "compact = collapseSpaces(s.prompt)",
+  "replace": "compact = jsTrim(s.prompt)"
+ },
+ {
+  "name": "lastprompt-show-ignored",
+  "file": "last_prompt.go",
+  "find": "if !s.show || s.prompt == \"\" {",
+  "replace": "if s.prompt == \"\" {"
+ },
+ {
+  "name": "lastprompt-empty-ignored",
+  "file": "last_prompt.go",
+  "find": "if !s.show || s.prompt == \"\" {",
+  "replace": "if !s.show {"
+ },
+ {
+  "name": "lastprompt-cache-width",
+  "file": "last_prompt.go",
+  "find": "c.source == s.prompt && c.width == width && c.color == color",
+  "replace": "c.source == s.prompt && c.color == color"
+ },
+ {
+  "name": "lastprompt-cache-source",
+  "file": "last_prompt.go",
+  "find": "c.source == s.prompt && c.width == width",
+  "replace": "c.width == width"
+ },
+ {
+  "name": "lastprompt-no-ellipsis",
+  "file": "last_prompt.go",
+  "find": "truncateToWidth(compact, available, \"…\")",
+  "replace": "truncateToWidth(compact, available, \"\")"
+ },
+ {
+  "name": "lastprompt-final-cut",
+  "file": "last_prompt.go",
+  "find": "lines = []string{truncateToWidth(prefix+color+truncateToWidth(compact, available, \"…\")+ansiReset, width, \"…\")}",
+  "replace": "lines = []string{prefix + color + truncateToWidth(compact, available, \"…\") + ansiReset}"
+ },
+ {
+  "name": "lastprompt-reset",
+  "file": "last_prompt.go",
+  "find": "+ansiReset, width, \"…\")}",
+  "replace": "+\"\", width, \"…\")}"
+ },
+ {
+  "name": "lastprompt-setting",
+  "file": "last_prompt.go",
+  "find": "return settings[\"showLastPrompt\"] != false",
+  "replace": "return settings[\"showLastPrompt\"] == true"
+ },
+ {
+  "name": "lastprompt-perf-profiler",
+  "file": "last_prompt.go",
+  "find": "if env(\"POWERLINE_DEBUG_PERF\") != \"1\" {\n\t\treturn true\n\t}",
+  "replace": "if env(\"POWERLINE_DEBUG_PERF\") != \"1\" {\n\t\treturn false\n\t}"
+ },
+ {
+  "name": "lastprompt-perf-widgets",
+  "file": "last_prompt.go",
+  "find": "env(\"POWERLINE_PERF_WIDGETS\") != \"0\" && ",
+  "replace": ""
+ },
+ {
+  "name": "lastprompt-perf-last",
+  "file": "last_prompt.go",
+  "find": "&& env(\"POWERLINE_PERF_LAST_PROMPT\") != \"0\"",
+  "replace": ""
+ },
+ {
+  "name": "collapse-unicode-space",
+  "file": "last_prompt.go",
+  "find": "if isJSSpace(r) {\n\t\t\tspace = true",
+  "replace": "if r == ' ' || r == '\\n' || r == '\\t' {\n\t\t\tspace = true"
+ },
+ {
+  "name": "wire-tui-only",
+  "file": "cdquote_ext.go",
+  "find": "want := enabled && ctx.HasUI() && ctx.Mode() == \"tui\" &&",
+  "replace": "want := enabled && ctx.HasUI() &&"
+ },
+ {
+  "name": "wire-needs-enabled",
+  "file": "cdquote_ext.go",
+  "find": "want := enabled && ctx.HasUI()",
+  "replace": "want := ctx.HasUI()"
+ },
+ {
+  "name": "wire-needs-ui",
+  "file": "cdquote_ext.go",
+  "find": "want := enabled && ctx.HasUI() &&",
+  "replace": "want := enabled &&"
+ },
+ {
+  "name": "wire-perf-gate",
+  "file": "cdquote_ext.go",
+  "find": "&& lastPromptWidgetEnabled(osEnv)",
+  "replace": ""
+ },
+ {
+  "name": "wire-placement",
+  "file": "cdquote_ext.go",
+  "find": "sdk.WidgetOptions{\"placement\": \"belowEditor\"}",
+  "replace": "sdk.WidgetOptions{\"placement\": \"aboveEditor\"}"
+ },
+ {
+  "name": "wire-dedupe-width",
+  "file": "cdquote_ext.go",
+  "find": "q.pushedAt == width && equalLines(q.pushed, lines)",
+  "replace": "equalLines(q.pushed, lines)"
+ },
+ {
+  "name": "wire-dedupe-lines",
+  "file": "cdquote_ext.go",
+  "find": "q.pushedAt == width && equalLines(q.pushed, lines)",
+  "replace": "q.pushedAt == width"
+ },
+ {
+  "name": "wire-no-dedupe",
+  "file": "cdquote_ext.go",
+  "find": "if !force && q.pushed != nil && q.pushedAt == width && equalLines(q.pushed, lines) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wire-clear-empty",
+  "file": "cdquote_ext.go",
+  "find": "\t\tif q.pushed != nil {\n\t\t\t_ = ctx.SetWidget(widgetLastPrompt, nil)\n\t\t\tq.pushed = nil\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "wire-session-start-keeps-prompt",
+  "file": "cdquote_ext.go",
+  "find": "\tq.lp.prompt = \"\"\n\tq.lp.show",
+  "replace": "\tq.lp.show"
+ },
+ {
+  "name": "wire-session-start-show",
+  "file": "cdquote_ext.go",
+  "find": "q.lp.show = showLastPromptSetting(readSettings(cwd))",
+  "replace": "q.lp.show = true"
+ },
+ {
+  "name": "wire-prompt-from-event",
+  "file": "cdquote_ext.go",
+  "find": "prompt, _ := data[\"prompt\"].(string)",
+  "replace": "prompt, _ := data[\"text\"].(string)"
+ },
+ {
+  "name": "wire-width-sync",
+  "file": "cdquote_ext.go",
+  "find": "_, _ = ctx.OnWidthChange(func(c sdk.Context, _ int) { q.sync(c, q.enabled(c), false) })",
+  "replace": ""
+ },
+ {
+  "name": "wire-sessions-root-parent",
+  "file": "cdquote_ext.go",
+  "find": "return filepath.Dir(dir)",
+  "replace": "return dir"
+ },
+ {
+  "name": "wire-sessions-root-custom",
+  "file": "cdquote_ext.go",
+  "find": "if usesDefault, err := sm.UsesDefaultSessionDir(); err == nil && usesDefault {",
+  "replace": "if usesDefault, err := sm.UsesDefaultSessionDir(); err == nil && !usesDefault {"
+ },
+ {
+  "name": "wire-completion-cwd",
+  "file": "cdquote_ext.go",
+  "find": "getCdArgumentCompletions(argumentPrefix, q.currentCwd(), getHomeDir())",
+  "replace": "getCdArgumentCompletions(argumentPrefix, mustGetwd(), getHomeDir())"
+ },
+ {
+  "name": "wire-session-file",
+  "file": "cdquote_ext.go",
+  "find": "if err != nil || file == nil {\n\t\treturn \"\", err\n\t}\n\treturn *file, nil",
+  "replace": "return \"\", err"
+ },
+ {
+  "name": "wire-with-session",
+  "file": "cdquote_ext.go",
+  "find": "\"withSession\": sdk.WithSessionFunc(",
+  "replace": "\"withSessionX\": sdk.WithSessionFunc("
+ },
+ {
+  "name": "wire-cancelled",
+  "file": "cdquote_ext.go",
+  "find": "return result.Cancelled, err",
+  "replace": "return false, err"
+ },
+ {
+  "name": "wire-picker-theme",
+  "file": "cdquote_ext.go",
+  "find": "newQuotePicker(candidates, c.ctx.UITheme(), time.Now, nil, nil)",
+  "replace": "newQuotePicker(candidates, pickerPlainTheme{}, time.Now, nil, nil)"
+ },
+ {
+  "name": "wire-picker-result",
+  "file": "cdquote_ext.go",
+  "find": "id, _ := value.(string)\n\treturn id, nil",
+  "replace": "return \"\", nil"
+ },
+ {
+  "name": "wire-reply-args",
+  "file": "cdquote_ext.go",
+  "find": "func runReplyCommand(ctx sdk.Context, args string) error { return reply(args, sdkQuoteContext{ctx}) }",
+  "replace": "func runReplyCommand(ctx sdk.Context, args string) error { return reply(\"\", sdkQuoteContext{ctx}) }"
+ },
+ {
+  "name": "wire-cd-description",
+  "file": "cdquote_ext.go",
+  "find": "Description: \"Switch the Pi session working directory\",",
+  "replace": "Description: \"Switch directory\","
+ },
+ {
+  "name": "wire-reply-description",
+  "file": "cdquote_ext.go",
+  "find": "Description: \"Quote a previous user or assistant message into the editor\",",
+  "replace": "Description: \"Quote a message\","
+ },
+ {
+  "name": "wire-powerline-force",
+  "file": "extension.go",
+  "find": "a.cdq.sync(ctx, a.pl.enabled, true)",
+  "replace": "a.cdq.sync(ctx, a.pl.enabled, false)"
+ },
+ {
+  "name": "wire-session-start-hook",
+  "file": "extension.go",
+  "find": "\ta.cdq.sessionStart(ctx, pl.enabled)\n",
+  "replace": ""
+ },
+ {
+  "name": "wire-powerline-hook",
+  "file": "extension.go",
+  "find": "\ta.cdq.sync(ctx, a.pl.enabled, true) // the core clears and installs the widgets again\n",
+  "replace": ""
+ },
+ {
+  "name": "wire-registration",
+  "file": "extension.go",
+  "find": "\tregisterCdQuote(e, a)\n",
+  "replace": ""
+ }
+]
