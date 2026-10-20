@@ -63,11 +63,13 @@ func prefsPattern(expr string) string {
 // prefsRE is a lazily compiled JavaScript-flavoured pattern; flags is "" or "i" (or "m", "im"); multiline
 // recognises \n only, where JavaScript also recognises \r, U+2028 and U+2029 (PORT.md).
 func prefsRE(flags, expr string) *lazyRegexp {
-	prefix := ""
-	if flags != "" {
-		prefix = "(?" + flags + ")"
-	}
-	return lazyRE(prefix + prefsPattern(expr))
+	return lazyREBuilt(func() string {
+		prefix := ""
+		if flags != "" {
+			prefix = "(?" + flags + ")"
+		}
+		return prefix + prefsPattern(expr)
+	})
 }
 
 // jsLower is String.prototype.toLowerCase for the characters the detectors can see: Go's simple mapping, except
@@ -88,8 +90,17 @@ func jsUpperFirst(s string) string {
 		if r >= 0x10000 {
 			return s
 		}
-		if full, ok := jsUpperFull[r]; ok {
-			return full + rest
+		lo, hi := 0, len(jsUpperFull)
+		for lo < hi {
+			mid := (lo + hi) / 2
+			if jsUpperFull[mid].r < r {
+				lo = mid + 1
+			} else {
+				hi = mid
+			}
+		}
+		if lo < len(jsUpperFull) && jsUpperFull[lo].r == r {
+			return jsUpperFull[lo].s + rest
 		}
 		return string(unicode.ToUpper(r)) + rest
 	}

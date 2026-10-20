@@ -124,19 +124,22 @@ var (
 	reNegationWord = prefsRE("", `^(?:dont|not|never|stop|no)$`)
 )
 
-var stopWords = func() map[string]bool {
-	m := map[string]bool{}
-	for _, w := range strings.Fields(`a an the and or but so to of in on at for with by from as into
-		i me my we us our you your it its this that these those there here
-		is are was were be been am do does did have has had will would can
-		could should please pls just also then again ok okay any some all more
-		very really always ever next time now anymore yourself itself them they
-		use run let make get
-		stuff thing anything everything something nothing though first actually even`) {
-		m[w] = true
+// isStopWord is STOP_WORDS. A switch, not a map, so that package init allocates nothing for it.
+func isStopWord(w string) bool {
+	switch w {
+	case "a", "an", "the", "and", "or", "but", "so", "to", "of", "in", "on", "at", "for", "with", "by", "from", "as", "into",
+		"i", "me", "my", "we", "us", "our", "you", "your", "it", "its", "this", "that", "these", "those", "there", "here",
+		"is", "are", "was", "were", "be", "been", "am", "do", "does", "did", "have", "has", "had", "will", "would", "can",
+		"could", "should", "please", "pls", "just", "also", "then", "again", "ok", "okay", "any", "some", "all", "more",
+		"very", "really", "always", "ever", "next", "time", "now", "anymore", "yourself", "itself", "them", "they",
+		// Generic verbs: "don't use the cache", "don't run the cache", and "don't let it make a cache" are one preference.
+		"use", "run", "let", "make", "get",
+		// Filler: rare enough to pass for a subject word, and says nothing about one.
+		"stuff", "thing", "anything", "everything", "something", "nothing", "though", "first", "actually", "even":
+		return true
 	}
-	return m
-}()
+	return false
+}
 
 // tokens: lowercased content words with a light plural strip. A clause that starts with a negation gets a `not`
 // token, so "never use X" and "always use X" do not merge. The original splits on everything that is not
@@ -154,7 +157,7 @@ func tokens(clause string) []string {
 		}
 		word := lower[start:end]
 		start = -1
-		if stopWords[word] || reNegationWord.MatchString(word) {
+		if isStopWord(word) || reNegationWord.MatchString(word) {
 			return
 		}
 		if len(word) > 3 && strings.HasSuffix(word, "s") && !strings.HasSuffix(word, "ss") {

@@ -25,11 +25,12 @@ def prompt(message, name=None, **extra):
     return step
 
 
-def scenario(name, description, llm, steps, **extra):
+def scenario(name, description, llm, steps, folder="scenarios", **extra):
     sc = {"name": name, "description": description, "env": ENV, "commands": {"git": {"mode": "missing"}}, "args": ["--tools", TOOLS],
           "capture": CAPTURE, "llm": llm, "steps": steps}
     sc.update(extra)
-    with open(os.path.join(out, name + ".json"), "w") as f:
+    os.makedirs(os.path.join(here, folder), exist_ok=True)
+    with open(os.path.join(here, folder, name + ".json"), "w") as f:
         json.dump(sc, f, indent=2)
         f.write("\n")
 
@@ -100,11 +101,12 @@ scenario(
     ],
     [
         prompt("add the export button", name="first-session"),
-        {"name": "second-session", "rpc": {"type": "new_session"}, "settleMs": 500},
+        prompt("/eq-new", name="second-session", settleMs=500),
         prompt("check the vendor invoices", name="second-prompt"),
-        {"name": "third-session", "rpc": {"type": "new_session"}, "settleMs": 500},
+        prompt("/eq-new", name="third-session", settleMs=500),
         prompt("open the vendor portal", name="third-prompt"),
     ],
+    folder="scenarios-b4",
 )
 
 scenario(

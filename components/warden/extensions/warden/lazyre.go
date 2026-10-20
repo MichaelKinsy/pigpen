@@ -10,9 +10,11 @@ import (
 // 1 MB (7,000 allocations) in every pig that selects warden, whether or not it is on. A lazyRegexp compiles its
 // expression the first time it is used, so a pig that never enables warden never pays.
 type lazyRegexp struct {
-	expr string
-	once sync.Once
-	re   *regexp.Regexp
+	expr    string
+	build   func() string
+	srcOnce sync.Once
+	once    sync.Once
+	re      *regexp.Regexp
 }
 
 // lazyCompiled counts compilations, for the test that no expression is compiled at start.
@@ -33,6 +35,15 @@ func lazyRE(expr string) *lazyRegexp {
 	return l
 }
 
+// lazyREBuilt is lazyRE for an expression that is assembled from parts: build runs on first use.
+func lazyREBuilt(build func() string) *lazyRegexp {
+	l := &lazyRegexp{build: build}
+	lazyRegistry.mu.Lock()
+	lazyRegistry.all = append(lazyRegistry.all, l)
+	lazyRegistry.mu.Unlock()
+	return l
+}
+
 // lazyExpressions returns every lazyRegexp made so far.
 func lazyExpressions() []*lazyRegexp {
 	lazyRegistry.mu.Lock()
@@ -43,13 +54,24 @@ func lazyExpressions() []*lazyRegexp {
 func (l *lazyRegexp) get() *regexp.Regexp {
 	l.once.Do(func() {
 		lazyCompiled.Add(1)
-		l.re = regexp.MustCompile(l.expr)
+		l.re = regexp.MustCompile(l.source())
 	})
 	return l.re
 }
 
+// source is the expression's text; a built expression (lazyREBuilt) is produced on first use too, so that
+// assembling a long pattern does not allocate at package init either.
+func (l *lazyRegexp) source() string {
+	l.srcOnce.Do(func() {
+		if l.build != nil {
+			l.expr = l.build()
+		}
+	})
+	return l.expr
+}
+
 func (l *lazyRegexp) MatchString(s string) bool            { return l.get().MatchString(s) }
-func (l *lazyRegexp) String() string                       { return l.expr }
+func (l *lazyRegexp) String() string                       { return l.source() }
 func (l *lazyRegexp) Split(s string, n int) []string       { return l.get().Split(s, n) }
 func (l *lazyRegexp) FindString(s string) string           { return l.get().FindString(s) }
 func (l *lazyRegexp) FindStringIndex(s string) []int       { return l.get().FindStringIndex(s) }

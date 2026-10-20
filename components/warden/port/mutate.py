@@ -54,6 +54,28 @@ M = [
  ("adaptive-trace-only-sent", "steer_core.go", "if w.adaptor.request(model, kind, cfg.Steers) != SteerTraceOnly {", "if true {"),
  ("adaptive-muted-not-counted", "steer_core.go", "w.bump(func(s *stats) { s.SteersMuted++ })", ""),
  ("note-error-budget-flag-lost", "steer_core.go", "w.budgetExhausted = true", "_ = code"),
+ # Tools slice: loops, prefs, lessons, recall, the compaction appendix (tools_wiring.go, loops.go, prefs*.go, compact.go).
+ ("loops-open-cap-off-by-one", "loops.go", "len(openLoops(store)) >= maxOpenLoops", "len(openLoops(store)) > maxOpenLoops"),
+ ("loops-drop-without-reason-allowed", "loops.go", 'if action == "drop" && reason == "" {', "if false {"),
+ ("loops-text-not-redacted", "loops.go", "func oneLine(text string) string { return Redact(jsTrim(jsCollapseSpace(text))) }", "func oneLine(text string) string { return jsTrim(jsCollapseSpace(text)) }"),
+ ("loops-session-id-escapes-folder", "loops.go", 'reUnsafeSessionChar.ReplaceAllString(session, "_")', "session"),
+ ("loops-reminder-repeats", "tools_wiring.go", "same := fingerprint == w.tools.loopsReminded", "same := false"),
+ ("loops-reminder-starts-a-turn", "tools_wiring.go", 'SteerOptions{DeliverAs: "nextTurn"}', 'SteerOptions{DeliverAs: "followUp", TriggerTurn: true}'),
+ ("loops-reminder-not-remembered", "tools_wiring.go", "w.tools.loopsReminded = fingerprint", "_ = fingerprint"),
+ ("prefs-inject-flag-ignored", "tools_wiring.go", "cfg.Prefs.Enabled && cfg.Prefs.Inject && len(", "cfg.Prefs.Enabled && len("),
+ ("prefs-injected-again-on-resume", "tools_wiring.go", "len(w.customMessages(ctx, prefsType)) == 0", "true"),
+ ("prefs-weakening-injected", "prefs.go", "case pref.Kind == classWeakens:", "case false:"),
+ ("prefs-one-session-injected", "prefs.go", "case pref.Sessions < injectSessions:", "case pref.Sessions < 1:"),
+ ("prefs-stale-injected", "prefs.go", "case pref.LastAt < current:", "case false:"),
+ ("lesson-unconfirmed-injected", "prefs.go", "case !confirmed:", "case false:"),
+ ("lesson-forgotten-recorded-again", "prefs.go", "if isForgotten(in.Store, [][]string{words}, rare) {", "if false {"),
+ ("remember-ignores-prefs-off", "tools_wiring.go", 'if !cfg.Enabled || !cfg.Prefs.Enabled {\n\t\toff := "enabled"\n\t\tif cfg.Enabled {\n\t\t\toff = "prefs.enabled"\n\t\t}\n\t\treturn toolReply(', 'if !cfg.Enabled {\n\t\toff := "enabled"\n\t\tif cfg.Enabled {\n\t\t\toff = "prefs.enabled"\n\t\t}\n\t\treturn toolReply('),
+ ("forget-not-persisted", "tools_wiring.go", "return struct{}{}, &next", "_ = next\n\t\t\treturn struct{}{}, nil"),
+ ("scan-reads-the-current-session", "prefs_scan.go", '|| name == exclude {', '|| false {'),
+ ("compact-appendix-flag-ignored", "tools_wiring.go", "!cfg.Enabled || !cfg.Context.CompactAppendix", "!cfg.Enabled"),
+ ("compact-saved-outputs-uncapped", "compact.go", "savedKeepWhenOver    = 3", "savedKeepWhenOver    = 8"),
+ ("recall-lists-checks", "compact.go", 'sec.name == "failed" || sec.name == "verification" || sec.name == "saved"', 'sec.name == "failed" || sec.name == "verification" || sec.name == "saved" || sec.name == "checks"'),
+ ("compact-error-line-first-not-last", "compact.go", "for i := len(lines) - 1; i >= 0; i-- {\n\t\tif reErrorLine", "for i := 0; i < len(lines); i++ {\n\t\tif reErrorLine"),
 ]
 EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
 only = set(sys.argv[1:])

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -52,13 +51,26 @@ type LoopStore struct {
 
 func emptyLoopStore() LoopStore { return LoopStore{Next: 1, Loops: []Loop{}} }
 
-var reUnsafeSessionChar = regexp.MustCompile(`[^\w.-]`)
+// safeSessionID keeps `[\w.-]` and turns every other character into `_`, so a session id cannot leave the project folder.
+func safeSessionID(session string) string {
+	var b strings.Builder
+	for _, r := range session {
+		if r < 0x80 && (r == '_' || r == '.' || r == '-' || r >= '0' && r <= '9' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z') {
+			b.WriteRune(r)
+		} else if r >= 0x10000 {
+			b.WriteString("__") // two UTF-16 code units, each replaced
+		} else {
+			b.WriteByte('_')
+		}
+	}
+	return b.String()
+}
 
 // loopsPath is <data folder>/loops/<first 12 hex of sha256(cwd)>/<session id>.json: the working directory's hash keeps
 // another project's session with the same id apart, and the id keeps another session of this project apart.
 func loopsPath(cwd, session, dataDir string) string {
 	sum := sha256.Sum256([]byte(cwd))
-	return filepath.Join(dataDir, "loops", hex.EncodeToString(sum[:])[:12], reUnsafeSessionChar.ReplaceAllString(session, "_")+".json")
+	return filepath.Join(dataDir, "loops", hex.EncodeToString(sum[:])[:12], safeSessionID(session)+".json")
 }
 
 // readLoops: a missing file is an empty store; an unreadable or malformed one is an error, so a write never replaces

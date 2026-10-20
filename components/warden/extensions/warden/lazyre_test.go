@@ -54,8 +54,8 @@ func TestEveryLazyExpressionCompiles(t *testing.T) {
 		t.Fatalf("expected the package's hundred-odd expressions to be registered, found %d", len(all))
 	}
 	for _, l := range all {
-		if _, err := regexp.Compile(l.expr); err != nil {
-			t.Errorf("%q does not compile: %v", l.expr, err)
+		if _, err := regexp.Compile(l.source()); err != nil {
+			t.Errorf("%q does not compile: %v", l.source(), err)
 		}
 	}
 }
