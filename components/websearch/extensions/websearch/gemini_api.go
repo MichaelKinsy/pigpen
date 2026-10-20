@@ -371,8 +371,8 @@ func geminiJSON(resp *http.Response) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	var v any
-	if err := json.Unmarshal([]byte(text), &v); err != nil {
+	v, err := unmarshalAny(text)
+	if err != nil {
 		return nil, fmt.Errorf("Gemini API returned a response that is not valid JSON: %s", jsonErrorText(err))
 	}
 	m, _ := v.(map[string]any)
