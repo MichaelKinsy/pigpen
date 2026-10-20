@@ -1,0 +1,62 @@
+{
+  "name": "audit-prompt-reaches-the-model-report-written",
+  "description": "/warden audit: after the confirm the audit prompt (workspace inventory, instructions, report path) is the user message the model receives; the agent writes the report.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "files": {
+    "package.json": "{\"name\":\"demo\"}\n",
+    "src/classify.ts": "export function kind(t: string) { return /error/.test(t) ? \"bad\" : \"ok\"; }\n"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": ".pi-warden/audit-report.html",
+            "content": "<html>report</html>"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Audit report written: 1 finding."
+    }
+  ],
+  "steps": [
+    {
+      "name": "audit",
+      "rpc": {
+        "type": "prompt",
+        "message": "/warden audit"
+      },
+      "ui": [
+        {
+          "confirmed": true
+        }
+      ]
+    }
+  ]
+}
