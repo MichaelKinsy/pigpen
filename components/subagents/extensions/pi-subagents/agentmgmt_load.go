@@ -482,7 +482,8 @@ func loadOne(f definitionFile, source AgentSource, priority *int, pkg *packageSo
 		rules, err := validatePermissionRules(pv, fmt.Sprintf("Agent '%s' permissions", local))
 		check(err)
 		if rules != nil {
-			permissions = rules
+			// the rules in the order the file wrote them (a serialized agent keeps it)
+			permissions = pv
 		}
 	}
 	var toolBudget any
