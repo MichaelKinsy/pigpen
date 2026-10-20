@@ -32,14 +32,12 @@ func TestRefusalMessageIsExact(t *testing.T) {
 
 func TestEveryUnportedCommandIsRefused(t *testing.T) {
 	commands := map[string]string{
-		"reply":          "quote reply (/reply)",
 		"queue":          "the prompt queue (/queue)",
 		"stash-history":  "the prompt stash (/stash-history)",
 		"bash-mode":      "bash mode (/bash-mode)",
 		"bash-reset":     "bash mode (/bash-reset)",
 		"powerline-perf": "the editor performance profiler (/powerline-perf)",
 		"vibe":           "working vibes (/vibe)",
-		"cd":             "the /cd command",
 	}
 	for name, feature := range commands {
 		t.Run(name, func(t *testing.T) {
@@ -66,7 +64,6 @@ func TestEveryUnportedSettingIsRefusedAtSessionStart(t *testing.T) {
 		"workingVibe":         {`{"workingVibe":"pirate"}`, "working vibes (workingVibe)"},
 		"bashMode":            {`{"bashMode":{"completions":true}}`, "bash mode (bashMode)"},
 		"powerlineShortcuts":  {`{"powerlineShortcuts":{"copyEditor":"ctrl+alt+y"}}`, "the editor shortcuts (powerlineShortcuts)"},
-		"showLastPrompt":      {`{"showLastPrompt":true}`, "the last-prompt line (showLastPrompt)"},
 	}
 	for name, c := range settings {
 		t.Run(name, func(t *testing.T) {
@@ -97,6 +94,7 @@ func TestSettingsTheOriginalAlsoIgnoresAreNotRefused(t *testing.T) {
 		"delay zero":         `{"powerline":{"sendDelayMs":0}}`,
 		"native compaction":  `{"powerline":{"queue":{"compactPromptMode":"native"}}}`,
 		"last prompt off":    `{"showLastPrompt":false}`,
+		"last prompt on":     `{"showLastPrompt":true}`,
 		"auto follow-up off": `{"powerline":{"autoFollowUp":false}}`,
 		"no settings at all": ``,
 		"a preset string":    `{"powerline":"minimal"}`,

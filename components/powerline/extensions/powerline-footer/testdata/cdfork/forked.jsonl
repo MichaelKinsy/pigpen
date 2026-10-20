@@ -1,0 +1,6 @@
+{"type":"session","version":3,"id":"01a159c0-c5e5-74ed-89e7-2afe1d153200","timestamp":"2026-10-20T14:39:28.230Z","cwd":"/target/dir","parentSession":"/home/kinsy/pp-pl-cdquote/fix/out/source.jsonl"}
+{"type":"message","id":"a1b2c3d4","parentId":null,"timestamp":"2026-10-20T10:00:01.000Z","message":{"role":"user","content":"héllo   😀 \"q\" \\ / \u0001 tab\t","timestamp":1792490401000}}
+{"type":"message","id":"b2c3d4e5","parentId":"a1b2c3d4","timestamp":"2026-10-20T10:00:02.000Z","message":{"role":"assistant","content":[{"type":"text","text":"x"}],"n":[1,1e+21,0,0.1,123456789012345680000,1e-7,3.14159],"nested":{"z":null,"y":true,"x":[]}}}
+"a bare string"
+{"type":"custom","id":"c3d4e5f6","parentId":"b2c3d4e5","timestamp":"2026-10-20T10:00:03.000Z","data":{"k":"v","big":12345678901234567000}}
+{"type":"label","id":"d4e5f607","parentId":"c3d4e5f6","timestamp":"2026-10-20T10:00:04.000Z","targetId":"a1b2c3d4","label":"last line without newline"}
