@@ -33,3 +33,23 @@ async function time(name, params) {
 }
 await time("web_search", { query: "go news" });
 await time("web_fetch", { url: "https://example.com/p" });
+
+// The card layout: the original's renderResult component for an expanded web_fetch result of 20 lines, rendered at
+// 80 columns (bench_test.go's BenchmarkRenderLayout times the same text).
+const theme = { fg: (name, text) => `\x1b[38;5;33m${text}\x1b[39m`, bold: (text) => `\x1b[1m${text}\x1b[22m` };
+const lines = Array.from({ length: 20 }, (_, i) => `line ${i + 1} of the fetched page, long enough to take a good part of the row it is on`).join("\n");
+const result = { content: [{ type: "text", text: lines }], details: { title: "Bench" } };
+const render = () => tools.get("web_fetch").renderResult(result, { expanded: true }, theme, undefined).render(80);
+{
+  const t0 = process.hrtime.bigint();
+  render();
+  const cold = Number(process.hrtime.bigint() - t0) / 1e3;
+  const xs = [];
+  for (let i = 0; i < calls; i++) {
+    const s = process.hrtime.bigint();
+    render();
+    xs.push(Number(process.hrtime.bigint() - s) / 1e3);
+  }
+  xs.sort((a, b) => a - b);
+  console.log(["render_layout", xs[xs.length >> 1], xs[Math.floor(xs.length * 0.9)], cold].join("\t"));
+}
