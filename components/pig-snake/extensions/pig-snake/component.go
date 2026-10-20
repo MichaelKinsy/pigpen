@@ -7,10 +7,10 @@ import (
 	"unicode"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/components/pig-play/libraries/termgame"
 	"github.com/MichaelKinsy/pigpen/pig-snake/internal/scene"
 	"github.com/MichaelKinsy/pigpen/pig-snake/internal/snake"
 	"github.com/MichaelKinsy/pigpen/pig-snake/internal/sprites"
-	"github.com/MichaelKinsy/pigpen/pig-snake/internal/termgame"
 )
 
 const (

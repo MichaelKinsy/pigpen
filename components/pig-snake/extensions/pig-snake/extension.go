@@ -14,8 +14,8 @@ import (
 	"fmt"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/components/pig-play/libraries/termgame"
 	"github.com/MichaelKinsy/pigpen/pig-snake/internal/sprites"
-	"github.com/MichaelKinsy/pigpen/pig-snake/internal/termgame"
 )
 
 // Extension returns the extension.
@@ -30,7 +30,7 @@ func Extension() *sdk.Extension {
 // sprite package from lane pigpen-games is available, return an adapter that
 // implements sprites.Source on top of it here.
 func newSprites(configHome string) sprites.Source {
-	return sprites.Builtin(sprites.LoadVariantID(configHome))
+	return sprites.Shared(sprites.LoadVariantID(configHome))
 }
 
 func run(ctx sdk.Context, _ string) error {

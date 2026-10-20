@@ -14,7 +14,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/MichaelKinsy/pigpen/pig-snake/internal/pixel"
+	"github.com/MichaelKinsy/pigpen/components/pig-play/libraries/pixel"
 	"github.com/MichaelKinsy/pigpen/pig-snake/internal/snake"
 	"github.com/MichaelKinsy/pigpen/pig-snake/internal/sprites"
 )

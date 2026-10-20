@@ -11,7 +11,7 @@ import (
 //
 //	go test -run xxx -bench . -benchmem
 func BenchmarkSnakeRender100x30(b *testing.B) {
-	c := newComponentWith(highScores{}, sprites.Builtin(""), func() int { return 30 }, options{manual: true, rng: fixedRand{}})
+	c := newComponentWith(highScores{}, sprites.Shared(""), func() int { return 30 }, options{manual: true, rng: fixedRand{}})
 	b.Cleanup(func() { c.Dispose() })
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
