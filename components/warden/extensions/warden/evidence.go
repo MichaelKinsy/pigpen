@@ -346,7 +346,7 @@ var evParsers = []evParser{
 		}
 		return parsedFields{failing: col(failed, 1), errors: errs, location: loc, summary: summary}, true
 	}},
-	{"eslint", []string{"error"}, func(text string) (parsedFields, bool) {
+	{"eslint", []string{" error ", " error\t", "\terror ", "\terror\t"}, func(text string) (parsedFields, bool) {
 		var errs []string
 		file := ""
 		for _, line := range strings.Split(text, "\n") {
@@ -373,6 +373,9 @@ var evParsers = []evParser{
 		var failing, errs []string
 		location := ""
 		for i, line := range lines {
+			if !strings.Contains(line, "not ok") {
+				continue
+			}
 			m := reTapNotOk.FindStringSubmatch(line)
 			if m == nil {
 				continue
@@ -408,9 +411,11 @@ var evParsers = []evParser{
 			}
 		}
 		var spec []string
-		for _, m := range subs(reTapSpec, text) {
-			if !reTapSpecSkip.MatchString(m[1]) {
-				spec = append(spec, m[1])
+		if strings.Contains(text, "✖") {
+			for _, m := range subs(reTapSpec, text) {
+				if !reTapSpecSkip.MatchString(m[1]) {
+					spec = append(spec, m[1])
+				}
 			}
 		}
 		if len(failing) == 0 && len(spec) == 0 {

@@ -66,17 +66,18 @@ type WasteCall struct {
 
 // wasteMemo holds the parsed views of one call. A call without a memo (a test's literal) is parsed on each use.
 type wasteMemo struct {
-	view                 CommandView
-	viewOK, viewDone     bool
-	poll, pollDone       bool
-	rng                  RangeRead
-	rngOK, rngDone       bool
-	search               SearchRead
-	searchOK, searchDone bool
-	check                CheckRun
-	checkOK, checkDone   bool
-	writes               []string
-	writesDone           bool
+	view             CommandView
+	viewOK, viewDone bool
+	poll, pollDone   bool
+	// The range, search and check views are rare (most calls are none of them): a nil pointer is "not one".
+	rng        *RangeRead
+	rngDone    bool
+	search     *SearchRead
+	searchDone bool
+	check      *CheckRun
+	checkDone  bool
+	writes     []string
+	writesDone bool
 }
 
 // WasteNudge is the advisory note for one tool result.
@@ -526,10 +527,15 @@ func numberInput(input map[string]any, key string) (int, bool) {
 func RangeReadOf(c WasteCall) (RangeRead, bool) {
 	if m := c.memo; m != nil {
 		if !m.rngDone {
-			m.rng, m.rngOK = rangeReadOfCompute(c)
+			if v, ok := rangeReadOfCompute(c); ok {
+				m.rng = &v
+			}
 			m.rngDone = true
 		}
-		return m.rng, m.rngOK
+		if m.rng == nil {
+			return RangeRead{}, false
+		}
+		return *m.rng, true
 	}
 	return rangeReadOfCompute(c)
 }
@@ -733,10 +739,15 @@ var (
 func SearchReadOf(c WasteCall) (SearchRead, bool) {
 	if m := c.memo; m != nil {
 		if !m.searchDone {
-			m.search, m.searchOK = searchReadOfCompute(c)
+			if v, ok := searchReadOfCompute(c); ok {
+				m.search = &v
+			}
 			m.searchDone = true
 		}
-		return m.search, m.searchOK
+		if m.search == nil {
+			return SearchRead{}, false
+		}
+		return *m.search, true
 	}
 	return searchReadOfCompute(c)
 }
@@ -931,10 +942,15 @@ func startsWithCheckRunner(command string) bool {
 func CheckRunOf(c WasteCall) (CheckRun, bool) {
 	if m := c.memo; m != nil {
 		if !m.checkDone {
-			m.check, m.checkOK = checkRunOfCompute(c)
+			if v, ok := checkRunOfCompute(c); ok {
+				m.check = &v
+			}
 			m.checkDone = true
 		}
-		return m.check, m.checkOK
+		if m.check == nil {
+			return CheckRun{}, false
+		}
+		return *m.check, true
 	}
 	return checkRunOfCompute(c)
 }
@@ -1049,7 +1065,9 @@ func (t *WasteTracker) Record(c WasteCall, cfg WasteConfig) *WasteNudge {
 	t.calls = append(t.calls, c)
 	t.seen++
 	if len(t.calls) > WasteWindow {
-		t.calls = slices.Clone(t.calls[len(t.calls)-WasteWindow:])
+		n := copy(t.calls, t.calls[len(t.calls)-WasteWindow:])
+		clear(t.calls[n:])
+		t.calls = t.calls[:n]
 	}
 	if !cfg.Enabled {
 		return nil
