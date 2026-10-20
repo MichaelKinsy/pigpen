@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -257,5 +258,33 @@ func TestBuildAuditPromptMatchesTheOriginal(t *testing.T) {
 	}
 	if got != string(want) {
 		t.Fatalf("prompt differs from the original's:\n%s", got)
+	}
+}
+
+// discover.ts counts regular files only (Dirent.isFile is false for a symlink) and never enters a symlinked directory.
+func TestDiscoverIgnoresSymlinks(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlinks need privileges on Windows")
+	}
+	p := t.TempDir()
+	writeTree(t, p, map[string]string{"real.ts": "x", "other/inner.ts": "x"})
+	if err := os.Symlink(filepath.Join(p, "real.ts"), filepath.Join(p, "link.ts")); err != nil {
+		t.Skip(err)
+	}
+	if err := os.Symlink(filepath.Join(p, "other"), filepath.Join(p, "dirlink")); err != nil {
+		t.Skip(err)
+	}
+	got := DiscoverSourceFiles(p, 200)
+	sort.Strings(got)
+	if !reflect.DeepEqual(got, []string{"other/inner.ts", "real.ts"}) {
+		t.Fatalf("got %v", got)
+	}
+}
+
+func TestFindProjectsIgnoresDotDirectoriesAndPlainFiles(t *testing.T) {
+	w := t.TempDir()
+	writeTree(t, w, map[string]string{".hidden/package.json": "{}", "plain/readme.md": "x", "real/go.mod": "module x"})
+	if got := FindProjects(w); !reflect.DeepEqual(got, []string{filepath.Join(w, "real")}) {
+		t.Fatalf("got %v", got)
 	}
 }

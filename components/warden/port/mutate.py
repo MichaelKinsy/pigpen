@@ -108,14 +108,14 @@ M = [
  ("audit-missing-report-ignored", "audit.go", "\tif !after.Exists {\n\t\treturn \"missing\"\n\t}", "\tif false {\n\t\treturn \"missing\"\n\t}"),
  ("audit-report-path-not-in-pi-warden", "audit.go", 'filepath.Join(cwd, ".pi-warden", "audit-report.html")', 'filepath.Join(cwd, "audit-report.html")'),
  ("audit-prompt-text-changed", "audit.go", "Prefer fewer, well-evidenced findings over many thin ones.", "Prefer many findings."),
- ("audit-manifest-not-named", "audit.go", '\t\tif manifest != "" {\n\t\t\tline += ", manifest: " + manifest\n\t\t}', ""),
+ ("audit-manifest-not-named", "audit.go", '\t\t\tline += ", manifest: " + manifest\n', '\t\t\tline += ", manifest: x"\n'),
  ("discover-max-ignored", "discover.go", "\t\t\tif len(files) >= max {\n\t\t\t\treturn\n\t\t\t}\n\t\t\tname := entry.Name()", "\t\t\tname := entry.Name()"),
  ("discover-enters-hidden-dirs", "discover.go", '\t\t\tif strings.HasPrefix(name, ".") {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tfull', "\t\t\tfull"),
  ("discover-vendor-not-skipped", "discover.go", '".pi-warden": true, "vendor": true,', '".pi-warden": true,'),
  ("discover-follows-symlinks-as-files", "discover.go", "entry.Type().IsRegular() &&", "!entry.IsDir() &&"),
  ("findprojects-root-dropped", "discover.go", "\tif hasManifest(cwd) {\n\t\tprojects = append(projects, cwd)", "\tif false {\n\t\tprojects = append(projects, cwd)"),
  ("findprojects-enters-dot-dirs", "discover.go", 'name == "node_modules" || strings.HasPrefix(name, ".")', 'name == "node_modules"'),
- ("audit-runs-without-confirm", "audit_cmd.go", "if err != nil || !ok {", "if err != nil {"),
+ ("audit-runs-without-confirm", "audit_cmd.go", "if err != nil || !ok {", "if err != nil || false && !ok {"),
  ("audit-runs-headless", "audit_cmd.go", "\tif !ctx.HasUI() {", "\tif false {"),
  ("audit-input-not-blocked", "audit_cmd.go", "if !w.auditState.running.Load() {\n\t\treturn nil, nil", "if true {\n\t\treturn nil, nil"),
  ("audit-flag-left-on", "audit_cmd.go", "defer w.auditState.running.Store(false)", "defer func() {}()"),
@@ -127,7 +127,8 @@ M = [
  ("bench-without-usage-counters", "bench_cmd.go", "options.GetUsage = w.budget.Usage", "_ = w.budget"),
  ("bench-off-says-nothing-sent-wrong", "bench_cmd.go", '"Bench sent nothing: Jev judgments are off"+off', '"Bench is off"+off'),
 ]
-EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
+EQUIVALENT = {"audit-new-file-not-written": "a missing file snapshots with mtime 0 and an existing one has a positive mtime, so `after.MtimeMs > before.MtimeMs` alone already says written; `!before.Exists` is the original's explicit form",
+ "judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
 only = set(sys.argv[1:])
 out = []
 for mid, f, old, new in M:
