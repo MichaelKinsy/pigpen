@@ -81,6 +81,8 @@ enable`, or, when the chosen judge is not in use, `warden: offline (typesafe: no
 | `/warden backend typesafe\|own-model\|offline` | change the judge (asks for consent again if it sends somewhere new) |
 | `/warden test` | run synthetic dangerous calls through the guard; executes nothing |
 | `/warden trace` | the recent decisions and why |
+| `/warden recommend` | what the hold history says about the thresholds, the patterns that are mostly false alarms and how well each kind of steer works |
+| `/warden unmute <kind> [model]` | send a steer kind again that a model's history had made trace-only |
 
 Headless runs (no UI) cannot answer the consent dialog, so they use environment variables. Setting
 `PIGPEN_WARDEN_BACKEND` (with `PIGPEN_WARDEN_ENABLED=1`) **is** the consent to that backend, for runs with that
@@ -93,6 +95,7 @@ environment only: the variables are never written to the config file.
 | `PIGPEN_WARDEN_MODE=steer\|confirm\|advise` | how a held call is handled |
 | `PIGPEN_WARDEN_STEER_VISIBLE=0\|1` | hide or show the steer messages in the transcript (default shown) |
 | `TYPESAFE_API_KEY`, `TYPESAFE_BASE_URL` | the TypeSafe key and endpoint (the key is never written to disk) |
+| `PIGPEN_WARDEN_DB`, `PIGPEN_WARDEN_STEER_STATS` | where the learning database (default `<PIG_HOME>/pigpen-warden/holds.db`, the same file the original writes) and the per-model steer counts (`steer-stats.json`) live |
 
 Settings live in `<PIG_HOME>/pigpen-warden/config.json` (mode 0600, contains no key).
 
@@ -120,7 +123,7 @@ required) or fuses into a Piglet Binary (see `piglets/pig-warden`). It shares th
 
 ## What is and is not ported
 
-Ported: the four guards above, the project rules guard (`pi-warden.md`, `/warden rules`, `/warden report`, `/warden init`, end-of-run turn rules), the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
+Ported: the four guards above, the project rules guard (`pi-warden.md`, `/warden rules`, `/warden report`, `/warden init`, end-of-run turn rules), the hold feedback loop (what you do next labels each hold and each allowed call, a per-session log, a learning database that carries over between sessions), per-model steer adaptation, the judge cooldown, the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
 `exemptRules`, user path rules and arming rules, session scratch, host paths, SQL target classes, violation escalation, the large-output steer, the steer budget, and both judge backends. Not ported (secret masking, context
 saver, conscience, subagent supervision, …) and every deliberate deviation are listed in
 [`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test. The upstream `/warden` actions that are not ported are refused with an error that names the original (`npm:pi-warden@0.80.0`); the tools `warden_remember`, `warden_loops` and `warden_recall` are not yet ported and are not registered.
