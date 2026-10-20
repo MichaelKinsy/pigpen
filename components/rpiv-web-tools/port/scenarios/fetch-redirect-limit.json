@@ -1,0 +1,93 @@
+{
+  "name": "fetch-redirect-limit",
+  "description": "The original's fetch follows 20 redirects and fails on the 21st (a Go client stops at 10): an Ollama search answered after 20 redirects, then one that meets a 21st.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "twenty"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "twenty-one"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "servers": {
+    "ollama": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/api/experimental/web_search",
+          "status": 307,
+          "headers": {
+            "Location": "/api/experimental/web_search"
+          },
+          "times": 20
+        },
+        {
+          "method": "POST",
+          "path": "/api/experimental/web_search",
+          "status": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"results\": [{\"title\": \"Redirected\", \"url\": \"https://ollama.com/r\", \"content\": \"Arrived after twenty redirects.\"}]}",
+          "times": 1
+        },
+        {
+          "method": "POST",
+          "path": "/api/experimental/web_search",
+          "status": 307,
+          "headers": {
+            "Location": "/api/experimental/web_search"
+          },
+          "times": 21
+        },
+        {
+          "method": "POST",
+          "path": "/api/experimental/web_search",
+          "status": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"results\": [{\"title\": \"Redirected\", \"url\": \"https://ollama.com/r\", \"content\": \"Arrived after twenty redirects.\"}]}"
+        }
+      ]
+    }
+  },
+  "env": {
+    "OLLAMA_HOST": "{{server:ollama}}",
+    "WEB_SEARCH_PROVIDER": "ollama"
+  },
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

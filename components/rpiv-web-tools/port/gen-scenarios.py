@@ -77,6 +77,18 @@ scenario("ollama-search", "web_search through a local Ollama instance: the exper
              {"method": "POST", "path": "/api/experimental/web_search", "status": 401, "body": "unauthorized"}]}},
          env={"OLLAMA_HOST": "{{server:ollama}}", "WEB_SEARCH_PROVIDER": "ollama"})
 
+OLLAMA_PATH = "/api/experimental/web_search"
+OLLAMA_BODY = json.dumps({"results": [{"title": "Redirected", "url": "https://ollama.com/r", "content": "Arrived after twenty redirects."}]})
+redirect = {"method": "POST", "path": OLLAMA_PATH, "status": 307, "headers": {"Location": OLLAMA_PATH}}
+scenario("fetch-redirect-limit", "The original's fetch follows 20 redirects and fails on the 21st (a Go client stops at 10): an Ollama search answered after 20 redirects, then one that meets a 21st.",
+         [[call("web_search", query="twenty")], [call("web_search", query="twenty-one")]],
+         servers={"ollama": {"routes": [
+             {**redirect, "times": 20},
+             {"method": "POST", "path": OLLAMA_PATH, "status": 200, "headers": {"Content-Type": "application/json"}, "body": OLLAMA_BODY, "times": 1},
+             {**redirect, "times": 21},
+             {"method": "POST", "path": OLLAMA_PATH, "status": 200, "headers": {"Content-Type": "application/json"}, "body": OLLAMA_BODY}]}},
+         env={"OLLAMA_HOST": "{{server:ollama}}", "WEB_SEARCH_PROVIDER": "ollama"})
+
 scenario("command-show", "/web-tools --show with nothing configured.", [],
          steps=[prompt("/web-tools --show", name="show-empty")])
 

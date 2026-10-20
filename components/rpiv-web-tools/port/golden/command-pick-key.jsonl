@@ -1,4 +1,4 @@
-{"kind":"header","scenario":"command-pick-key","lane":"pi-ts","host":"pi 1.0.3","extension":"sha256:f7ec4a1ce15ad83978fb37905844588356af9b014a4355a8cb4f71bff009b302","normalizer":"v3"}
+{"kind":"header","scenario":"command-pick-key","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:f7ec4a1ce15ad83978fb37905844588356af9b014a4355a8cb4f71bff009b302","normalizer":"v3"}
 {"step":"01-pick","ch":"ui","data":{"method":"select","options":["Brave ✓","Tavily","Serper","Exa","You.com","Jina","Firecrawl","Perplexity","SearXNG","Ollama"],"title":"Search provider"}}
 {"step":"01-pick","ch":"ui","data":{"method":"input","placeholder":"...","title":"Tavily API key"}}
 {"step":"01-pick","ch":"ui","data":{"message":"Saved Tavily API key to <home>/.config/rpiv-web-tools/config.json","method":"notify","notifyType":"info"}}

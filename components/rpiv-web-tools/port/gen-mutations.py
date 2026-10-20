@@ -131,6 +131,11 @@ m("host-idna-skipped", "util.go", "if ascii, err = idnaProfile.ToASCII(h); err !
 m("host-port-dropped", "util.go", 'u.Host = host + ":" + port', "u.Host = host")
 m("fetch-raw-url-requested", "webtools.go", "fetchViaGenericHTML(ctx, target.Href, rawURL, raw)", "fetchViaGenericHTML(ctx, target.Href[:0]+rawURL, rawURL, raw)")
 
+# providers.go: the redirect limit of the original's fetch (undici follows 20)
+m("redirect-limit-ten", "providers.go", "const maxRedirects = 20", "const maxRedirects = 10")
+m("redirect-limit-off-by-one", "providers.go", "if len(via) > maxRedirects {", "if len(via) >= maxRedirects {")
+m("redirect-limit-unbounded", "providers.go", "if len(via) > maxRedirects {", "if len(via) > 1000 {")
+
 # refusal.go, webtools.go, command.go: the refusal of the unported GitHub interceptor
 m("refusal-wording", "refusal.go", '" (Go port) does not support " + feature', '" (Go port) does not handle " + feature')
 m("refusal-install-advice", "refusal.go", '", which runs unchanged in PiG."', '"."')

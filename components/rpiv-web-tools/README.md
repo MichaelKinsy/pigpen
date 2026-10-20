@@ -35,7 +35,7 @@ that field alone.
 address however it is written (`127.1`, `0x7f000001`, `[0::1]`, full-width digits: the host is read as Node's URL
 parser reads it, and the request goes to that address). Like the original, it does not resolve host names first: a name
 that resolves to a private address, `localhost.` with its trailing dot, an IPv4-mapped IPv6 address and a redirect to a
-private address are fetched, and the body is read whole before it is truncated. A provider
+private address are fetched, up to 20 redirects are followed (as Node does), and the body is read whole before it is truncated. A provider
 with its own fetch (Tavily, Exa, You.com, Jina, Firecrawl, Ollama) uses it; otherwise the page is fetched directly,
 HTML is turned into text and large bodies are truncated to 2000 lines or 50 KB, the full text being written to a temp
 file whose path is in the result.

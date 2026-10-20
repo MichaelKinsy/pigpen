@@ -642,6 +642,24 @@
   "replace": "fetchViaGenericHTML(ctx, target.Href[:0]+rawURL, rawURL, raw)"
  },
  {
+  "name": "redirect-limit-ten",
+  "file": "providers.go",
+  "find": "const maxRedirects = 20",
+  "replace": "const maxRedirects = 10"
+ },
+ {
+  "name": "redirect-limit-off-by-one",
+  "file": "providers.go",
+  "find": "if len(via) > maxRedirects {",
+  "replace": "if len(via) >= maxRedirects {"
+ },
+ {
+  "name": "redirect-limit-unbounded",
+  "file": "providers.go",
+  "find": "if len(via) > maxRedirects {",
+  "replace": "if len(via) > 1000 {"
+ },
+ {
   "name": "refusal-wording",
   "file": "refusal.go",
   "find": "\" (Go port) does not support \" + feature",

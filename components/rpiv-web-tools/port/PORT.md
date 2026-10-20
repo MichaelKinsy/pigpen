@@ -3,9 +3,9 @@
 | Input | Identity |
 |---|---|
 | Original | `@juicesharp/rpiv-web-tools` 2.12.0 by juicesharp, https://github.com/juicesharp/rpiv-mono (`packages/rpiv-web-tools`), commit `7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f`, MIT |
-| Oracle | Pi 1.0.3, Node 24.19.0, with the unmodified package at `port/oracle` (its dependency `@juicesharp/rpiv-config` from npm) |
+| Oracle | Pi 1.3.0 (build `1402973a`), Node 24.19.0, with the unmodified package at `port/oracle` (its dependency `@juicesharp/rpiv-config` from npm) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
-| Original's tests | the `it` cases in the vitest files listed in `port/upstream-tests.json`: **82 exact twins, 2 named skips, 190 deferred by name** (`index` 106, GitHub interceptor 78, interceptor chain 6; `port/slices.json`) |
+| Original's tests | the `it` cases in the vitest files listed in `port/upstream-tests.json`: **187 exact twins, 3 named skips, 84 deferred by name** (GitHub interceptor 78, interceptor chain 6; `port/slices.json`). All 147 `index.test.ts` cases are twinned (a title the original uses in both its SearXNG and its Ollama block is twinned twice) except one named skip, the GitHub `--show` line of slice 3 |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
 ## Mapping
@@ -13,7 +13,7 @@
 | ID | Original | Go | Scenario / test |
 |---|---|---|---|
 | M1 | `index.ts`: `web_search` and `web_fetch` with schemas, descriptions, `promptGuidelines`, the config `guidance` override | `webtools.go`, `config.go` | `tool-definitions`, `guidance-override`; `tools_test.go`, `guidance_render_test.go` |
-| M2 | `providers/*.ts`: ten search backends (Brave, Tavily, Serper, Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG, Ollama), their key and base-URL resolution, request bodies, result shaping, error texts | `providers.go` | `search-without-key`, `search-config-key-errors`, `searxng-search`, `ollama-search`, `unknown-env-provider`; `tools_test.go`, `extra_test.go` |
+| M2 | `providers/*.ts`: ten search backends (Brave, Tavily, Serper, Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG, Ollama), their key and base-URL resolution, request bodies, result shaping, error texts, the 20-redirect limit of `fetch` | `providers.go` | `search-without-key`, `search-config-key-errors`, `searxng-search`, `ollama-search`, `unknown-env-provider`, `fetch-redirect-limit`; `tools_test.go`, `extra_test.go`, `index_twin_test.go`, `index_command_twin_test.go`, `redirect_test.go` |
 | M3 | `web_fetch`: URL and private-address guard, provider-native fetch, direct fetch, content-type refusal, HTML to text, truncation and spill file | `fetch.go`, `text.go`, `util.go` | `fetch-url-guard`, `fetch-keyed-provider-without-key`; `differential_test.go` (against the original's `htmlToText` and `truncateHead`, `testdata/differential.json` made by `port/gen-differential.mjs`) |
 | M3a | Node's `new URL()` host parsing, which the guard (and the SearXNG and Ollama base URLs) rely on: domain to ASCII, the IPv4 number forms, IPv6 serialization | `util.go` (`parseJSURL`, `whatwgHost`; `golang.org/x/net/idna`) | `hostparse_test.go`: 35 hosts whose expected `hostname` was taken from Node 24.19.0, the guard on every private form, the request going to the parsed URL |
 | M4 | config file read and write (`~/.config/rpiv-web-tools/config.json`, XDG, legacy path, mode 0600), per-field validation | `config.go` | `config_test.go`, `extra_test.go` |
@@ -23,11 +23,11 @@
 
 ## Results (this revision)
 
-- `pigeq check` against goldens **recorded from the original under Pi 1.0.3**: 14 of 14 scenarios, plus `port-gaps`
+- `pigeq check` against goldens **recorded from the original under Pi 1.3.0 (1402973a)**: 15 of 15 scenarios, plus `port-gaps`
   and `exec-coverage`; the record-host check passes. The scenarios put the API config into the lane HOME with `setup`
   and declare `gh` and `git` as missing.
 - `go test -race ./...`: pass.
-- `pigeq mutate --unit`: 107 mutations (see below).
+- `pigeq mutate --unit`: 118 mutations (see below).
 - `pig package validate components/rpiv-web-tools` and `pig install <extension dir> --validate-only --json`: valid.
 
 ## Mutations
@@ -47,10 +47,17 @@ the scenarios, re-run one at a time).
    clone made with `gh` or `git`. Slice 2: the 84 interceptor cases are deferred by name. With the option on, a
    repository root, blob or tree URL is refused (`refusal.go`, `refusal_test.go`: the message names the package and
    the original, `npm:@juicesharp/rpiv-web-tools@2.12.0`) and `/web-tools --show` says so; with it off nothing changes.
-2. **Order of work.** Unlike the tintinweb-tasks port, the implementation was written before the twins, so there is no
-   red commit. The substitute proof is the 14 Pi-recorded scenarios, the differential test and the mutation run.
-3. **106 cases of `index.test.ts` are deferred** (the per-provider matrix, the `--show` variants and so on). Their
-   behavior is covered by this port's own layer-1 tests and the scenarios, not twinned one by one.
+2. **Order of work.** Slice 1 wrote the implementation before the twins, so there is no red commit for it. Slice 2 (the
+   `index.test.ts` twins and the redirect limit) has one: the twins commit fails only on the redirect limit, the next
+   commit makes it pass.
+3. **The 147 `index.test.ts` cases are twinned one by one** (`index_twin_test.go`, `index_command_twin_test.go`, and the
+   cases of slice 1 in `tools_test.go` and `command_test.go`), with these points:
+   - the original's consumer opt-in (`registerWebTools(pi, { interceptors: { github: true } })`) has no Go
+     counterpart; the twin of "user config wins" uses the user's `false`;
+   - "--show lists 'github: enabled' with token + clonePath when opted in" is the one named skip: the line reports the
+     resolved interceptor options and belongs to the GitHub slice (R1, R2);
+   - the class-level cases (`SearxngProvider`, `configureSearxng`, `SEARXNG_PROVIDER_META`) run against `newSearxng`,
+     `configureSearxng` and the provider table.
 4. **PiG and Pi word the host's schema-validation error for an unknown `provider` literal differently**; the scenario
    leaves that case out and the Go side rejects it with the original's own message.
 5. **Node's `fetch failed` text** is reproduced for transport failures (`fetchFailed`).
@@ -64,5 +71,9 @@ the scenarios, re-run one at a time).
    requests that parsed URL. `hostparse_test.go` holds the cases.
 9. **Inherited, not added: what the guard does not cover.** As in the original, the guard reads the URL only. A host name
    that resolves to a private address (`127.0.0.1.nip.io`), `localhost.` with a trailing dot, an IPv4-mapped IPv6
-   address (`[::ffff:7f00:1]`) and a redirect to a private address are fetched; redirects are followed (Go's limit of
-   10, Node's 20); the body is read whole (`res.text()`) before truncation, with no size cap. The README says so.
+   address (`[::ffff:7f00:1]`) and a redirect to a private address are fetched; the body is read whole (`res.text()`)
+   before truncation, with no size cap. The README says so.
+10. **Redirects: 20, as in the original.** Node's `fetch` (undici) follows 20 redirects and fails on the 21st with
+    `fetch failed`; Go's default client stopped at the tenth. `httpClient` now allows 20 (`maxRedirects`,
+    `redirect_test.go`), and the scenario `fetch-redirect-limit` runs an Ollama search through 20 redirects (answered)
+    and 21 (`fetch failed`) against the original under Pi.
