@@ -288,3 +288,42 @@ Not reachable by pigeq (UI requests cannot be compared: the original and the por
 the notices of `/warden recommend`, `/warden unmute` and the cooldown, `/warden status`, the hold log and the database files.
 They are proved by the layer-1 tests (`learning_wire_test.go`, `learning_ext_test.go`) and by the judge-server scenarios through the requests
 that leave (the regret question, the cooldown's silence).
+
+Results of the learning lane (imladris, tern-ci:v2, go1.27.2, linux/amd64):
+
+- **Twins**: holds 10 of 10, learning 31 of 31, learning-dirs 3 of 3, adaptive 12 of 12, judge-cooldown 6 of 6, ask 2 of 2,
+  sqlite-adapter 1 of 10 (the real-engine case; the nine others test the bun:sqlite wrapper and stay named skips), the
+  `extension.test.ts` cases on adaptive steers, hold feedback (offline, record-time outcome, with Jev, confirm mode) and the judge
+  cooldown (seven) 12 of 12. Named skips with per-case reasons: sqlite-adapter 9 and learning-driver 2 (they test which JavaScript
+  module opened the database). 511 twins and 753 named skips in all (1,264 upstream cases).
+- **Red first**: the tests alone (commit `59fd381`) fail to build with 167 undefined symbols (the first is `undefined: SteerStats`).
+- **Mutations** (`port/mutate.py`, rows `holds-*`, `learning-*`, `adaptive-*`, `cooldown-*`, `learn-*`): 143 rows, 138 killed, 5 equivalent
+  mutants named in `EQUIVALENT` with their reasons (a redundant outer floor, a limit that cannot be reached, a defensive guard).
+  pigeq (`port/mutations.json`): 3 rows (`learn-regret-candidates-never-offered`, `learn-judge-cooldown-ignored`,
+  `learn-answer-check-skipped`), 3 killed by the judge-server scenarios.
+- **pigeq**: three scenarios, `judge-regret-question-rides-the-first-request-after-a-reply` (42 events),
+  `judge-auth-failure-pauses-the-judge` (25) and `judge-answers-that-do-not-match-the-questions-fail-the-request` (41): the original
+  under Pi == the original under PiG's Node runtime == the Go port, event for event, including every request to the fake judge. Goldens
+  are recorded from the original. Under host load (load average 100 to 200) four scenarios of the stack differed once at event 10 or 11
+  (`llm` before `turn_end`, the harness's event order); each passed three further runs.
+- **Shared file**: the port's `holds.db` and the original's are one file format: the original wrote six rows with `node:sqlite`
+  and the port read them (stats, smart history), and the port wrote six rows and the original read them (stats, history,
+  recommendations, steer report): `port/perf/learning-cross.mts` with `TestLearningCrossCheck` (needs `WARDEN_LEARNING_CROSS`).
+- **Performance** (median; 4 CPUs of the shared host, `taskset 100-103`, load average 90 to 200, so differences under 10% are noise):
+
+  | | previous release (main 0.1.1) | guard core lane | this lane |
+  |---|---|---|---|
+  | single-extension Binary | 71,536,800 bytes | 72,294,560 | **76,554,400** (+4.26 MB, +5.9% over the guard core lane, +7.0% over the release; the engine) |
+  | startup, 41 interleaved runs, `-p` through the fused Binary, warden off | 71.1 ms | 62.7 ms | 74.3 ms (seed-check control 70.8 ms) |
+
+  The warden package's own init is 0.9 ms and 245 KB (the engine adds 0.5 to 0.9 ms of package init in the Binary). An off warden
+  opens no database (`learnEnsure`): before that rule the first-use cost of the engine (open, WAL, schema) added about 11 ms to a run.
+  Per operation, 500 rows of one project, Go 4 CPUs against the original under Node 24 (`node:sqlite`) on the same CPUs:
+  `recordHold` 173 us (40 allocs, 2.4 KB) against 165 us; `generateRecommendations` 800 us (104 allocs) against 490 us;
+  `analyzeSteerEffectivenessReport` 330 us against 185 us; `holdStats` 495 us (54 allocs) against 298 us. The pure-Go engine is
+  about 1.6 times slower on the reads. They run in `/warden recommend` and `/warden status` (sub-millisecond), never on the tool-call
+  path; the per-call work is the ledger (630 ns, 12 allocs, 888 B) and an enqueue, and the database write runs in the background
+  (173 us). The steer counts write 3 KB in 170 us per observed steer. This is the >10% regression the quality bar names: the owner
+  decision is the dependency itself (no cgo, one file format); a faster path would need a cgo SQLite.
+  The original under PiG's Node runtime was not measured for startup: it is on by default and its first-run judgment notice is a
+  message the faux model of the perf harness refuses (`unhandled request`), so a headless run of the original ends with an error.
