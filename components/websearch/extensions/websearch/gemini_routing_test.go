@@ -155,7 +155,7 @@ func TestGeminiExplicitRouting(t *testing.T) {
 			t.Fatal(err, web.prompts)
 		}
 	})
-	t.Run("the default Gemini Web client refuses only when browser cookies are switched on", func(t *testing.T) {
+	t.Run("the default Gemini Web client reads browser cookies only when they are switched on", func(t *testing.T) {
 		geminiAuto(t, "")
 		if geminiWebOptionallyAvailable(bg()) {
 			t.Fatal("available without opt-in")
@@ -164,11 +164,12 @@ func TestGeminiExplicitRouting(t *testing.T) {
 		wantErr(t, err, `^Gemini search unavailable`)
 		_, agentDir := isolate(t)
 		writeConfig(t, agentDir, `{"allowBrowserCookies":true}`)
+		resetCookieState()
 		if geminiWebOptionallyAvailable(bg()) {
-			t.Fatal("available while refused")
+			t.Fatal("available without a signed-in browser profile")
 		}
 		_, err = geminiSearch(bg(), "q")
-		wantErr(t, err, `^Gemini search failed:\n  - Gemini Web: @pi-in-go/pigpen-websearch \(Go port\) does not support Gemini Web \(browser cookies\) yet`)
+		wantErr(t, err, `^Gemini search failed:\n  - Gemini Web: No detected Chromium profile contains a cookie database\.`)
 	})
 	t.Run("a configured routing skips an unavailable Gemini and classifies its failure", func(t *testing.T) {
 		geminiAuto(t, `{"searchRouting":{"providers":["gemini"],"fallbackOn":["transient"]}}`)
