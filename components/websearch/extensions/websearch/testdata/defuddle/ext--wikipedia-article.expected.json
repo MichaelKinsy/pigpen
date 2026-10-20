@@ -1,0 +1,6 @@
+{
+ "url": "https://en.wikipedia.org/wiki/Go_(programming_language)",
+ "title": "Go (programming language)",
+ "content": "**Go** is a statically typed, compiled language designed at Google by Robert Griesemer, Rob Pike and Ken Thompson. It is syntactically similar to C, but with memory safety, garbage collection and structural typing.\n\n## History\n\nDesign of the language began in September 2007. Go was announced in November 2009 and version 1.0 was released in March 2012. The language has been adopted widely for network services and tooling.\n\n## Syntax\n\nThe syntax is deliberately small. Statements are separated by newlines, and the language has no classes, but types can have methods.",
+ "error": null
+}

@@ -1,0 +1,10 @@
+{
+ "author": "",
+ "published": "",
+ "description": "The first paragraph of a post that has no subtitle element, so the description is taken from the first paragraph of the cleaned article.",
+ "site": "Example Publication",
+ "language": "",
+ "image": "",
+ "extractorType": "medium",
+ "wordCount": 43
+}

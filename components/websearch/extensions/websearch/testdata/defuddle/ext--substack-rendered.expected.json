@@ -1,0 +1,6 @@
+{
+ "url": "https://example.substack.com/p/rendered",
+ "title": "Rendered Title",
+ "content": "The post body as the browser rendered it, with real sentences in it.\n\nA second paragraph in the same post body.",
+ "error": null
+}
