@@ -171,6 +171,7 @@ Ported from `openai-search.ts`, `opencode-session-headers.ts`, `xai-search.ts`, 
 like the other ported providers. 91 upstream titles are twinned (`openai-alpha-search` 42, `openai-origin` 1,
 `openai-search-opencode-headers` 5, `xai-provider` 14, `kimi-provider` 14, `mistral-provider` 11, and three of the four of
 `provider-credential-source`), plus `auto still uses provider fallback when no provider is configured` of `provider-precedence`.
+`pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` on this branch: 393 exact twins, 482 named skips (the first slice had 305 and 570; each other slice changes the counts, the integrator recomputes them).
 
 **Credentials, mapped to the public Go SDK.** The originals call `ctx.modelRegistry.getAll()`, `.find(provider, id)` and
 `.getApiKeyAndHeaders(model)` and read `ctx.model` and `ctx.sessionManager.getSessionId()`. The port reads the same through
