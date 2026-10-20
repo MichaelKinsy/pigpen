@@ -53,6 +53,10 @@ func (realWelcomeTimers) Every(d time.Duration, f func()) func() {
 
 var welcomeClock welcomeTimers = realWelcomeTimers{}
 
+// welcomeAfterHeaderMark, when set, runs between the moment the header is marked active and the moment it is installed. The tests
+// dismiss the welcome there.
+var welcomeAfterHeaderMark func()
+
 // welcomeRequest is the original's AbortController of one welcome attempt.
 type welcomeRequest struct {
 	ctx    context.Context
@@ -437,6 +441,9 @@ func (a *app) welcomeHeaderWork(ctx sdk.Context, req *welcomeRequest, generation
 	}
 	w.headerActive = true
 	w.mu.Unlock()
+	if welcomeAfterHeaderMark != nil {
+		welcomeAfterHeaderMark()
+	}
 	w.hdrMu.Lock()
 	defer w.hdrMu.Unlock()
 	w.mu.Lock()

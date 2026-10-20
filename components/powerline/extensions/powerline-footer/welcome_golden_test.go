@@ -23,7 +23,7 @@ type welcomeStateFile struct {
 	Sessions  []struct{ Name, TimeAgo string }
 	Counts    loadedCountsJSON `json:"counts"`
 	Tokens    any              `json:"tokens"`
-	Countdown int              `json:"countdown"`
+	Countdown *int             `json:"countdown"`
 	Widths    []int            `json:"widths"`
 	Files     []welcomeFileFixture
 	Legacy    []welcomeFileFixture `json:"legacy"`
@@ -124,6 +124,9 @@ func TestWelcomeMatchesTheOriginal(t *testing.T) {
 				tokens = &v
 			case string:
 				nan := math.NaN()
+				if v == "Infinity" {
+					nan = math.Inf(1)
+				}
 				tokens = &nan
 			}
 			var sessions []recentSession
@@ -134,7 +137,9 @@ func TestWelcomeMatchesTheOriginal(t *testing.T) {
 			var render func(int) []string
 			if s.Kind == "overlay" {
 				c := newWelcomeComponent(s.Model, s.Provider, sessions, counts, tokens)
-				c.setCountdown(s.Countdown)
+				if s.Countdown != nil {
+					c.setCountdown(*s.Countdown)
+				}
 				render = c.render
 			} else {
 				render = newWelcomeHeader(s.Model, s.Provider, sessions, counts, tokens).render

@@ -44,11 +44,11 @@ for (const s of states) {
     }
     continue;
   }
-  const tokens = s.tokens === "NaN" ? Number.NaN : s.tokens;
+  const tokens = s.tokens === "NaN" ? Number.NaN : s.tokens === "Infinity" ? Number.POSITIVE_INFINITY : s.tokens;
   const view = s.kind === "overlay"
     ? new WelcomeComponent(s.model, s.provider, s.sessions, s.counts, tokens)
     : new WelcomeHeader(s.model, s.provider, s.sessions, s.counts, tokens);
-  if (s.kind === "overlay") view.setCountdown(s.countdown);
+  if (s.kind === "overlay" && s.countdown !== undefined) view.setCountdown(s.countdown);
   const byWidth = {};
   for (const w of s.widths) byWidth[w] = view.render(w);
   result[s.name] = byWidth;

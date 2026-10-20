@@ -324,6 +324,23 @@
   "countdown": 30
  },
  {
+  "name": "overlay-tokens-Infinity",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": "Infinity",
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
   "name": "overlay-tokens-999",
   "kind": "overlay",
   "model": "Claude Sonnet 4.5",
@@ -807,6 +824,22 @@
   ]
  },
  {
+  "name": "header-tokens-Infinity",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": "Infinity",
+  "widths": [
+   96
+  ]
+ },
+ {
   "name": "header-tokens-999",
   "kind": "header",
   "model": "Claude Sonnet 4.5",
@@ -963,6 +996,37 @@
   },
   "tokens": 123456789,
   "widths": [
+   96
+  ]
+ },
+ {
+  "name": "overlay-default-countdown",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   44,
+   78,
    96
   ]
  },
@@ -1697,6 +1761,20 @@
     "body": 0
    },
    {
+    "dir": "d",
+    "name": "page.html",
+    "header": "{\"cwd\": \"/p/no3\"}",
+    "age": 500,
+    "body": 0
+   },
+   {
+    "dir": "d",
+    "name": "ends-in-l",
+    "header": "{\"cwd\": \"/p/no4\"}",
+    "age": 500,
+    "body": 0
+   },
+   {
     "dir": "e",
     "name": "ok.jsonl",
     "header": "{\"cwd\": \"/p/yes\"}",
@@ -1731,6 +1809,76 @@
    }
   ],
   "customAgentDir": true
+ },
+ {
+  "name": "sessions-single-dash-dir",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "-one-dash-dir",
+    "name": "1.jsonl",
+    "header": "not-json",
+    "age": 60500,
+    "body": 0
+   },
+   {
+    "dir": "--two-dash-dir--",
+    "name": "1.jsonl",
+    "header": "not-json",
+    "age": 120500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-tie-agent-first",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "agent-first",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/from-agent\"}",
+    "age": 60500,
+    "body": 0
+   }
+  ],
+  "maxCount": 1,
+  "legacy": [
+   {
+    "dir": "legacy-second",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/from-legacy\"}",
+    "age": 60500,
+    "body": 0
+   }
+  ],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-round-boundary",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "a",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/almost-an-hour\"}",
+    "age": 3599700,
+    "body": 0
+   },
+   {
+    "dir": "b",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/almost-a-day\"}",
+    "age": 86399700,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
  },
  {
   "name": "sessions-header-over-8192",

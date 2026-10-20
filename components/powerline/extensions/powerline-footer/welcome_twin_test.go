@@ -268,3 +268,74 @@ func TestWelcomeCountsEveryContextFileLocation(t *testing.T) {
 	}
 	eq(t, discoverLoadedCounts(nil).ContextFiles, 5, "a directory exists")
 }
+
+func TestWelcomeLeavesTheFirstRepeatOfALinkedDirectory(t *testing.T) {
+	home := withWelcomeHome(t)
+	root := filepath.Join(home, ".pi", "agent", "sessions")
+	archive := filepath.Join(home, "archive")
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(archive, "session.jsonl"), `{"cwd":"/projects/linked"}`+"\n")
+	if err := os.Symlink(archive, filepath.Join(root, "linked")); err != nil {
+		t.Skipf("no symbolic links here: %v", err)
+	}
+	if err := os.Symlink(root, filepath.Join(archive, "cycle")); err != nil {
+		t.Fatal(err)
+	}
+	var realpaths []string
+	welcomeFSHook = func(op, path string) {
+		if op == "realpath" {
+			realpaths = append(realpaths, path)
+		}
+	}
+	t.Cleanup(func() { welcomeFSHook = nil })
+	if _, err := getRecentSessions(context.Background(), 3); err != nil {
+		t.Fatal(err)
+	}
+	// the sessions directory, the linked archive and the link back, which is the first repeat: the legacy directory does not exist
+	eq(t, len(realpaths), 4, "directories resolved (agent sessions, linked, cycle, legacy)")
+}
+
+func TestWelcomeReadsNoMoreHeadersThanItNeeds(t *testing.T) {
+	home := withWelcomeHome(t)
+	root := filepath.Join(home, ".pi", "agent", "sessions")
+	now := time.Now()
+	for i := range 6 {
+		file := filepath.Join(root, "d", "f"+jsNumber(float64(i))+".jsonl")
+		writeFile(t, file, `{"cwd":"/projects/p`+jsNumber(float64(i))+`"}`+"\n")
+		mt := now.Add(-time.Duration(i) * time.Minute)
+		if err := os.Chtimes(file, mt, mt); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var ops []string
+	welcomeFSHook = func(op, path string) { ops = append(ops, op) }
+	t.Cleanup(func() { welcomeFSHook = nil })
+	count := func(op string) (n int) {
+		for _, o := range ops {
+			if o == op {
+				n++
+			}
+		}
+		return
+	}
+	if _, err := getRecentSessions(context.Background(), 2); err != nil {
+		t.Fatal(err)
+	}
+	eq(t, count("open"), 2, "headers read for two projects")
+	ops = nil
+	got, err := getRecentSessions(context.Background(), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, got, []recentSession{}, "no sessions")
+	eq(t, len(ops), 0, "no filesystem operation for a count of 0")
+}
+
+func TestShouldShowStartupWelcomeIsForTheTerminalOnly(t *testing.T) {
+	for _, mode := range []string{"rpc", "json", "print", ""} {
+		eq(t, shouldShowStartupWelcome("startup", true, mode), false, "mode "+mode)
+	}
+	eq(t, shouldShowStartupWelcome("new", true, "tui"), false, "new")
+}

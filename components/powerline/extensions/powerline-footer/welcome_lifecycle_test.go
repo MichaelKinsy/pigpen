@@ -97,6 +97,8 @@ type wlRig struct {
 	branch     atomic.Value // []any
 	prompt     atomic.Value // string: the system prompt
 	noModel    atomic.Bool
+	model      atomic.Value  // map[string]any: the model the host reports
+	holdHeader chan struct{} // when set, the call that installs the header waits for it
 	release    chan struct{}
 }
 
@@ -135,6 +137,7 @@ func startWelcome(t *testing.T, quiet bool, mode string, extra map[string]any) *
 	r.editorText.Store("")
 	r.branch.Store([]any{})
 	r.prompt.Store("")
+	r.model.Store(map[string]any{"id": "test-model", "name": "Test model", "provider": "acme-cloud", "reasoning": false, "contextWindow": 200000})
 	t.Cleanup(powerline.SetWelcomeTimers(r.timers))
 	r.h = StartHost(t, powerline.Extension(), HostOptions{Mode: mode, Cwd: home, OnCallValue: func(method string, args map[string]any) (any, string) {
 		switch method {
@@ -142,7 +145,12 @@ func startWelcome(t *testing.T, quiet bool, mode string, extra map[string]any) *
 			if r.noModel.Load() {
 				return nil, "no model"
 			}
-			return map[string]any{"id": "test-model", "name": "Test model", "provider": "test", "reasoning": false, "contextWindow": 200000}, ""
+			return r.model.Load().(map[string]any), ""
+		case "ui.setHeader":
+			if hold := r.holdHeader; hold != nil && args["clear"] != true {
+				<-hold
+			}
+			return map[string]any{}, ""
 		case "getContextUsage":
 			return nil, "no usage yet"
 		case "getSessionName":
@@ -667,4 +675,137 @@ func TestWelcomeHeaderContent(t *testing.T) {
 			t.Errorf("first row = %q", first)
 		}
 	})
+}
+
+func TestWelcomeNamesTheModelAsTheOriginalDoes(t *testing.T) {
+	cases := map[string]struct {
+		model map[string]any
+		want  []string
+	}{
+		"name and provider": {map[string]any{"id": "m-id", "name": "Fancy Name", "provider": "acme-cloud"}, []string{"Fancy Name", "acme-cloud"}},
+		"no name: the id":   {map[string]any{"id": "m-id", "name": "", "provider": "acme-cloud"}, []string{"m-id", "acme-cloud"}},
+		"no provider":       {map[string]any{"id": "m-id", "name": "Fancy Name", "provider": ""}, []string{"Fancy Name", "Unknown"}},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			r := headerRig(t, func(r *wlRig) { r.model.Store(c.model) })
+			out := r.lastHeader()
+			for _, want := range c.want {
+				if !strings.Contains(out, want) {
+					t.Errorf("header lacks %q:\n%s", want, out)
+				}
+			}
+		})
+	}
+	t.Run("the overlay reads the model at setup", func(t *testing.T) {
+		// The original reads ctx.model when the overlay is set up and the header when its timer runs.
+		r := startWelcome(t, false, "tui", nil)
+		r.startSession("startup")
+		r.model.Store(map[string]any{"id": "later", "name": "Later Model", "provider": "later-cloud"})
+		before := len(r.h.CallsTo("getModelInfo"))
+		r.timers.runStartupWork()()
+		wlWait(t, "the overlay", func() bool { return len(r.customCalls()) > 0 })
+		if after := len(r.h.CallsTo("getModelInfo")); after != before {
+			t.Errorf("getModelInfo was called again at the timer (%d -> %d)", before, after)
+		}
+	})
+}
+
+func TestWelcomeEstimatesThePromptByFourCharactersAToken(t *testing.T) {
+	r := headerRig(t, func(r *wlRig) { r.prompt.Store(strings.Repeat("a", 3996)) })
+	if out := r.lastHeader(); !strings.Contains(out, "≈ 999 initial prompt tokens") {
+		t.Errorf("header:\n%s", out)
+	}
+}
+
+func TestWelcomeIsNotShownAfterThePowerlineWasToggledOff(t *testing.T) {
+	r := startWelcome(t, true, "tui", nil)
+	r.startSession("startup")
+	r.h.Command("powerline", "") // off
+	r.h.Fire("session_start", map[string]any{"reason": "startup"})
+	r.timers.runStartupWork()()
+	r.quiescent()
+	if n := r.installations(); n != 0 {
+		t.Errorf("installations = %d, want 0 while the powerline is off", n)
+	}
+}
+
+func TestWelcomeEveryKeyReleaseSuffixIsARelease(t *testing.T) {
+	for _, suffix := range []string{":3u", ":3~", ":3A", ":3B", ":3C", ":3D", ":3H", ":3F"} {
+		t.Run(suffix, func(t *testing.T) {
+			r := headerRig(t, nil)
+			r.key("\x1b[1;1" + suffix)
+			r.quiescent()
+			if _, c := r.headerCalls(); c != 0 {
+				t.Error("a key release removed the header")
+			}
+		})
+	}
+}
+
+func TestWelcomeDeleteIsNotTextForTheEditor(t *testing.T) {
+	r, call := overlayRig(t)
+	r.h.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "ui.custom.input", "args": map[string]any{"key": call.Args["key"], "data": "\x7f"}}})
+	wlWait(t, "the overlay to be hidden", func() bool { return r.hides() == 1 })
+	r.quiescent()
+	if n := len(r.h.CallsTo("ui.pasteToEditor")); n != 0 {
+		t.Errorf("pasted %d times", n)
+	}
+}
+
+func TestWelcomeDismissalStopsThePendingTimer(t *testing.T) {
+	r := startWelcome(t, true, "tui", nil)
+	r.startSession("startup")
+	if r.timers.pendingAfter() != 1 {
+		t.Fatalf("pending timeouts = %d, want 1", r.timers.pendingAfter())
+	}
+	r.h.Fire("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
+	if n := r.timers.pendingAfter(); n != 0 {
+		t.Errorf("pending timeouts after the dismissal = %d, want 0 (clearTimeout)", n)
+	}
+}
+
+func TestWelcomeHeaderIsRemovedOnlyAfterItWasInstalled(t *testing.T) {
+	// The install and the removal are two host calls; a removal that overtook the install would leave the header up for good.
+	r := startWelcome(t, true, "tui", nil)
+	r.holdHeader = make(chan struct{})
+	var released sync.Once
+	release := func() { released.Do(func() { close(r.holdHeader) }) }
+	t.Cleanup(release)
+	r.startSession("startup")
+	r.timers.runStartupWork()
+	wlWait(t, "the install call", func() bool { i, _ := r.headerCalls(); return i == 1 })
+	r.key("x") // dismisses while the install call is still outstanding
+	r.quiescent()
+	if _, c := r.headerCalls(); c != 0 {
+		t.Fatal("the header was removed before its install call returned")
+	}
+	release()
+	wlWait(t, "the removal", func() bool { _, c := r.headerCalls(); return c == 1 })
+}
+
+func TestWelcomeHeaderDismissedBetweenTheCheckAndTheInstallIsNotInstalled(t *testing.T) {
+	r := startWelcome(t, true, "tui", nil)
+	var once sync.Once
+	t.Cleanup(powerline.SetWelcomeAfterHeaderMark(func() {
+		once.Do(func() { r.h.Fire("agent_start", nil) })
+	}))
+	r.startSession("startup")
+	r.timers.runStartupWork()()
+	r.quiescent()
+	if installs, _ := r.headerCalls(); installs != 0 {
+		t.Errorf("the header was installed after it was dismissed (%d installs)", installs)
+	}
+}
+
+func TestWelcomeOverlayThatTookFocusEndsAfterTheFirstKey(t *testing.T) {
+	r, call := overlayRig(t)
+	for _, key := range []string{"a", "b"} {
+		r.h.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "ui.custom.input", "args": map[string]any{"key": call.Args["key"], "data": key}}})
+	}
+	wlWait(t, "the first key to be pasted", func() bool { return len(r.h.CallsTo("ui.pasteToEditor")) > 0 })
+	r.quiescent()
+	if n := len(r.h.CallsTo("ui.pasteToEditor")); n != 1 {
+		t.Errorf("pasted %d times: the second key reached a closed overlay", n)
+	}
 }

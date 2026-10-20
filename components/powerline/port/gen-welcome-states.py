@@ -19,7 +19,7 @@ def render(name, kind, model="Claude Sonnet 4.5", provider="anthropic", sessions
          "sessions": sessions if sessions is not None else [],
          "counts": counts or {"contextFiles": 0, "skills": 0, "promptTemplates": 0},
          "tokens": tokens, "widths": widths}
-    if kind == "overlay":
+    if kind == "overlay" and countdown is not None:
         s["countdown"] = countdown
     states.append(s)
 
@@ -33,8 +33,9 @@ for kind in ("overlay", "header"):
     render(kind + "-wide-chars", kind, model="模型名称很长很长很长很长很长", provider="提供者😀", sessions=[{"name": "项目名称项目名称", "timeAgo": "1h ago"}])
     render(kind + "-empty-names", kind, model="", provider="")
     render(kind + "-ansi-in-names", kind, model="\x1b[31mred\x1b[0m model", provider="p\tq", sessions=[{"name": "\x1b[1mbold\x1b[0m", "timeAgo": "3h ago"}])
-    for tokens in (None, 0, "NaN", 999, 1000, 9999, 10000, 123456, 999999, 1000000, 9999999, 12500000, 123456789):
+    for tokens in (None, 0, "NaN", "Infinity", 999, 1000, 9999, 10000, 123456, 999999, 1000000, 9999999, 12500000, 123456789):
         render("%s-tokens-%s" % (kind, tokens), kind, counts={"contextFiles": 1, "skills": 0, "promptTemplates": 0}, tokens=tokens, widths=[96])
+render("overlay-default-countdown", "overlay", sessions=three, widths=[44, 78, 96], countdown=None)
 for cd in (30, 29, 10, 9, 1, 0):
     render("overlay-countdown-%d" % cd, "overlay", sessions=three, countdown=cd, widths=[44, 60, 78, 96])
 
@@ -85,9 +86,12 @@ sess("sessions-time-ago", [
 ], count=10)
 sess("sessions-max-count", [f("d%d" % i, "1.jsonl", H("/p/n%d" % i), i * MIN) for i in range(6)], count=2)
 sess("sessions-max-zero", [f("d", "1.jsonl", H("/p/n"), 0)], count=0)
-sess("sessions-non-jsonl-ignored", [f("d", "1.json", H("/p/no"), 0), f("d", "x.jsonl.bak", H("/p/no2"), 0), f("e", "ok.jsonl", H("/p/yes"), MIN)], count=10)
+sess("sessions-non-jsonl-ignored", [f("d", "1.json", H("/p/no"), 0), f("d", "x.jsonl.bak", H("/p/no2"), 0), f("d", "page.html", H("/p/no3"), 0), f("d", "ends-in-l", H("/p/no4"), 0), f("e", "ok.jsonl", H("/p/yes"), MIN)], count=10)
 sess("sessions-legacy-and-agent", [f("--custom--", "session.jsonl", H("/tmp/custom-project"), MIN)],
      count=10, legacy=[f("--legacy--", "session.jsonl", H("/tmp/legacy-project"), 2 * MIN)], agentDirEnv=True)
+sess("sessions-single-dash-dir", [f("-one-dash-dir", "1.jsonl", "not-json", 1 * MIN), f("--two-dash-dir--", "1.jsonl", "not-json", 2 * MIN)], count=10)
+sess("sessions-tie-agent-first", [f("agent-first", "1.jsonl", H("/p/from-agent"), MIN)], count=1, legacy=[f("legacy-second", "1.jsonl", H("/p/from-legacy"), MIN)])
+sess("sessions-round-boundary", [f("a", "1.jsonl", H("/p/almost-an-hour"), 59 * MIN + 59200), f("b", "1.jsonl", H("/p/almost-a-day"), 23 * HOUR + 59 * MIN + 59200)], count=10)
 sess("sessions-header-over-8192", [
     f("--Users-x-in-limit--", "ok.jsonl", json.dumps({"cwd": "/p/inside", "pad": "x" * 8000}), 1 * MIN),
     f("--Users-x-over-limit--", "cut.jsonl", json.dumps({"cwd": "/p/outside", "pad": "x" * 9000}), 2 * MIN),

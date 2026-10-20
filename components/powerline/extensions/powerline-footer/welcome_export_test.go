@@ -14,3 +14,9 @@ func SetWelcomeFSHook(f func(op, path string)) (restore func()) {
 	welcomeFSHook = f
 	return func() { welcomeFSHook = nil }
 }
+
+// SetWelcomeAfterHeaderMark sets the hook that runs between marking the header active and installing it.
+func SetWelcomeAfterHeaderMark(f func()) (restore func()) {
+	welcomeAfterHeaderMark = f
+	return func() { welcomeAfterHeaderMark = nil }
+}

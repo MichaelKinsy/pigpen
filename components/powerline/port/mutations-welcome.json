@@ -138,12 +138,6 @@
   "replace": "\tif len(lines) > 100 {\n\t\tlines = append(lines, \"\") // spacing"
  },
  {
-  "name": "welcome-plural",
-  "file": "welcome.go",
-  "find": "if n != 1 {",
-  "replace": "if n > 1 {"
- },
- {
   "name": "welcome-tokens-zero",
   "file": "welcome.go",
   "find": "finite(*t) && *t > 0",
@@ -194,8 +188,8 @@
  {
   "name": "welcome-context-home-claude",
   "file": "welcome.go",
-  "find": "\t\tfilepath.Join(homeDir, \".claude\", \"AGENTS.md\"),\n",
-  "replace": ""
+  "find": "filepath.Join(homeDir, \".claude\", \"AGENTS.md\")",
+  "replace": "filepath.Join(homeDir, \".claude\", \"AGENT.md\")"
  },
  {
   "name": "welcome-context-project-pi",
@@ -243,19 +237,13 @@
   "name": "welcome-header-object",
   "file": "welcome.go",
   "find": "if parseErr != nil || !isObj {",
-  "replace": "if parseErr != nil {"
+  "replace": "if parseErr != nil || !isObj && false {"
  },
  {
   "name": "welcome-header-cwd-blank",
   "file": "welcome.go",
   "find": "if !isString || jsTrim(cwd) == \"\" {",
   "replace": "if !isString {"
- },
- {
-  "name": "welcome-header-basename-root",
-  "file": "welcome.go",
-  "find": "if base := nodeBasename(cwd); base != \"\" {",
-  "replace": "if base := nodeBasename(cwd); base != \"\" || cwd == \"\" {"
  },
  {
   "name": "welcome-basename-trailing",
@@ -378,12 +366,6 @@
   "replace": "math.Round(ms / 1000)"
  },
  {
-  "name": "welcome-abort-before-stat",
-  "file": "welcome.go",
-  "find": "\t\t\twelcomeFS(\"stat\", entryPath)\n\t\t\tst, err := os.Stat(entryPath)\n\t\t\tif ctx.Err() != nil {\n\t\t\t\treturn abort()\n\t\t\t}",
-  "replace": "\t\t\twelcomeFS(\"stat\", entryPath)\n\t\t\tst, err := os.Stat(entryPath)"
- },
- {
   "name": "welcome-abort-cause",
   "file": "welcome.go",
   "find": "abort := func() ([]recentSession, error) { return nil, context.Cause(ctx) }",
@@ -423,7 +405,7 @@
   "name": "welcome-countdown-repaint",
   "file": "welcome_ext.go",
   "find": "\tif invalidate != nil {\n\t\tinvalidate()\n\t}\n",
-  "replace": ""
+  "replace": "\tif invalidate != nil && false {\n\t\tinvalidate()\n\t}\n"
  },
  {
   "name": "welcome-overlay-start-30",
@@ -435,7 +417,7 @@
   "name": "welcome-can-show-editor",
   "file": "welcome_ext.go",
   "find": "if err != nil || text != \"\" {",
-  "replace": "if err != nil {"
+  "replace": "if err != nil || text != \"\" && false {"
  },
  {
   "name": "welcome-can-show-tool-result",
@@ -454,12 +436,6 @@
   "file": "welcome_ext.go",
   "find": "msg[\"role\"] == \"assistant\"",
   "replace": "msg[\"role\"] == \"user\""
- },
- {
-  "name": "welcome-can-show-request",
-  "file": "welcome_ext.go",
-  "find": "current := w.request == req && w.generation == generation",
-  "replace": "current := w.generation == generation"
  },
  {
   "name": "welcome-can-show-aborted",
@@ -510,12 +486,6 @@
   "replace": "if readSettings(ctx.Cwd())[\"quietStartup\"] != true {"
  },
  {
-  "name": "welcome-session-start-dismiss",
-  "file": "welcome_ext.go",
-  "find": "\t} else {\n\t\ta.welcomeDismiss()\n\t}\n}\n\n// registerWelcome",
-  "replace": "\t}\n}\n\n// registerWelcome"
- },
- {
   "name": "welcome-session-start-decision",
   "file": "welcome_ext.go",
   "find": "if !pl.enabled || !ctx.HasUI() {\n\t\treturn\n\t}\n\tif shouldShow",
@@ -550,12 +520,6 @@
   "file": "welcome_ext.go",
   "find": "if w.overlay == nil && welcomeIsKeyRelease(data) {",
   "replace": "if w.overlay != nil && welcomeIsKeyRelease(data) {"
- },
- {
-  "name": "welcome-input-inactive",
-  "file": "welcome_ext.go",
-  "find": "if w.request == nil && w.overlay == nil && !w.headerActive {\n\t\tw.mu.Unlock()\n\t\treturn sdk.TerminalInputResult{}\n\t}",
-  "replace": ""
  },
  {
   "name": "welcome-input-consume",
@@ -598,12 +562,6 @@
   "file": "welcome_ext.go",
   "find": "if inner, ok := strings.CutPrefix(data, \"\\x1b[200~\"); ok {",
   "replace": "if inner, ok := strings.CutPrefix(data, \"\\x1b[2000~\"); ok {"
- },
- {
-  "name": "welcome-input-forward-release",
-  "file": "welcome_ext.go",
-  "find": "if !welcomeIsKeyRelease(data) {\n\t\tif text, ok := welcomeEditorText(data); ok {",
-  "replace": "if true {\n\t\tif text, ok := welcomeEditorText(data); ok {"
  },
  {
   "name": "welcome-focused-done",
@@ -663,7 +621,7 @@
   "name": "welcome-header-install-guard",
   "file": "welcome_ext.go",
   "find": "\tif still {\n\t\t_ = ctx.SetHeaderRenderer(header.render)",
-  "replace": "\tif true {\n\t\t_ = ctx.SetHeaderRenderer(header.render)"
+  "replace": "\tif still || true {\n\t\t_ = ctx.SetHeaderRenderer(header.render)"
  },
  {
   "name": "welcome-header-clear-order",
@@ -682,24 +640,6 @@
   "file": "welcome_ext.go",
   "find": "func (a *app) welcomeEndSession() {\n\ta.welcome.mu.Lock()\n\ta.welcome.generation++\n\ta.welcome.mu.Unlock()\n\ta.welcomeDismiss()",
   "replace": "func (a *app) welcomeEndSession() {\n\ta.welcome.mu.Lock()\n\ta.welcome.generation++\n\ta.welcome.mu.Unlock()"
- },
- {
-  "name": "welcome-session-generation",
-  "file": "welcome_ext.go",
-  "find": "func (a *app) welcomeBeginSession() {\n\ta.welcomeDismiss()\n\ta.welcome.mu.Lock()\n\ta.welcome.generation++",
-  "replace": "func (a *app) welcomeBeginSession() {\n\ta.welcomeDismiss()\n\ta.welcome.mu.Lock()"
- },
- {
-  "name": "welcome-begin-dismiss",
-  "file": "welcome_ext.go",
-  "find": "func (a *app) welcomeBegin(ctx sdk.Context) *welcomeRequest {\n\ta.welcomeDismiss()",
-  "replace": "func (a *app) welcomeBegin(ctx sdk.Context) *welcomeRequest {"
- },
- {
-  "name": "welcome-session-begin-dismiss",
-  "file": "welcome_ext.go",
-  "find": "func (a *app) welcomeBeginSession() {\n\ta.welcomeDismiss()",
-  "replace": "func (a *app) welcomeBeginSession() {"
  },
  {
   "name": "welcome-predicate-reason",
@@ -741,12 +681,6 @@
   "name": "welcome-hook-registered",
   "file": "extension.go",
   "find": "\tregisterWelcome(e, a)\n",
-  "replace": ""
- },
- {
-  "name": "welcome-hook-begin-session",
-  "file": "extension.go",
-  "find": "\ta.welcomeBeginSession()\n",
   "replace": ""
  }
 ]
