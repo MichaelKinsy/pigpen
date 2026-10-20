@@ -41,7 +41,7 @@ func (h *queueTestHost) SessionID() string            { return h.sessionID }
 func (h *queueTestHost) SessionName() string          { return "" }
 func (h *queueTestHost) UsingOAuth() bool             { return false }
 func (h *queueTestHost) AutoCompactEnabled() bool     { return true }
-func (h *queueTestHost) Session() branchProvider      { return nil }
+func (h *queueTestHost) Session() branchProvider      { return &fakeBranch{} }
 func (h *queueTestHost) ContextUsage() map[string]any { return nil }
 func (h *queueTestHost) ExtensionStatuses() []statusEntry {
 	return nil
@@ -176,12 +176,22 @@ type queueRig struct {
 func newQueueRig(t *testing.T) *queueRig {
 	t.Helper()
 	root := t.TempDir()
+	return newQueueRigAt(t, root, root, "readiness", `{"powerline":{"welcome":false}}`, plainTheme{})
+}
+
+// newQueueRigAt starts the core in agentDir (Pi's agent directory: the settings and the queue store) with a working directory.
+func newQueueRigAt(t *testing.T, agentDir, cwd, sessionID, settings string, th theme) *queueRig {
+	t.Helper()
+	root := agentDir
 	t.Setenv("PI_CODING_AGENT_DIR", root)
 	t.Setenv("HOME", root)
-	if err := os.WriteFile(filepath.Join(root, "settings.json"), []byte(`{"powerline":{"welcome":false}}`), 0o644); err != nil {
+	if err := os.MkdirAll(root, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	host := &queueTestHost{cwd: root, sessionID: "readiness", mode: "tui", th: plainTheme{}}
+	if err := os.WriteFile(filepath.Join(root, "settings.json"), []byte(settings), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	host := &queueTestHost{cwd: cwd, sessionID: sessionID, mode: "tui", hasUI: true, idle: true, th: th}
 	p := newPowerline(host)
 	clk := &fakeQueueClock{}
 	p.queue.clock = clk

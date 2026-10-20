@@ -1119,7 +1119,8 @@
     },
     "target": {
      "kind": "project",
-     "cwd": "{CWD}"
+     "cwd": "{CWD}",
+     "alias": "proj2"
     },
     "intent": "follow-up",
     "status": "queued"

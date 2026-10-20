@@ -108,7 +108,7 @@ for (const sc of scenarios) {
     if (step.wait) await sleep(step.wait);
     if (step.event) await fire(step.event, { type: step.event, ...(step.data ?? {}) });
     if (step.command) {
-      const done = commands[step.command].handler(step.args ?? "", ctx);
+      const done = commands[step.command].handler(sub(step.args ?? ""), ctx);
       let settled = false;
       const finished = Promise.resolve(done).then(() => { settled = true; }, (e) => { settled = true; notes.push(["throw", String(e.message ?? e)]); });
       for (const level of step.levels ?? []) {

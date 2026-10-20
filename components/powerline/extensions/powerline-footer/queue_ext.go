@@ -11,11 +11,14 @@ import (
 // queue first thing in its own handler.
 func registerQueue(e *sdk.Extension, a *app) {
 	e.Command("queue", "Manage Powerline queued prompts and project aliases", a.queueCommand)
-	for _, ev := range []string{sdk.EventSessionBeforeCompact, sdk.EventSessionCompact, sdk.EventSessionCompactFailed, sdk.EventAgentSettled,
-		sdk.EventAgentEnd, sdk.EventBeforeAgentStart, sdk.EventMessageStart, sdk.EventSessionShutdown} {
+	for _, ev := range queueEvents {
 		e.OnEvent(ev, a.queueEvent(ev))
 	}
 }
+
+// queueEvents are the events the queue handles itself (session_start goes through the core).
+var queueEvents = []string{sdk.EventSessionBeforeCompact, sdk.EventSessionCompact, sdk.EventSessionCompactFailed, sdk.EventAgentSettled,
+	sdk.EventAgentEnd, sdk.EventBeforeAgentStart, sdk.EventMessageStart, sdk.EventSessionShutdown}
 
 // queueFor binds the core to this handler's context.
 func (a *app) queueFor(ctx sdk.Context) *queueState {
