@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -182,6 +183,14 @@ func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
 		}
 		action = jsTrim(s)
 	}
+	if strings.HasPrefix(action, "schedule.") {
+		// the original validates a schedule call's arguments (after the public boundary) before it stores or runs anything
+		if norm := normalizePublicSubagentExecution(params); !norm.OK {
+			return nil, sdk.NewToolError(norm.Error)
+		} else if msg := scheduleArgumentError(action, norm.Params, time.Now()); msg != "" {
+			return nil, sdk.NewToolError(msg)
+		}
+	}
 	if msg := refuseUnsupported(params, action); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
@@ -250,6 +259,9 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	if msg := nestedBlocked(os.Getenv); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
+	if err := validateMissionParams(params, ctx.Cwd()); err != nil {
+		return nil, sdk.NewToolError(err.Error())
+	}
 	scope := ResolveExecutionAgentScope(params["agentScope"])
 	d, derr := discoverAgents(ctx.Cwd(), scope, ctx.ModelProvider(), adv.options())
 	if derr != nil {
@@ -287,16 +299,22 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		}
 		return fan.annotate(res, err)
 	}
-	pol, err := applyRunPolicy(ctx, params, a, task, cwd)
+	var fan *runFanout
+	var model string
+	modelFailed := false
+	pol, err := applyRunPolicy(ctx, params, a, task, cwd, func(runID string) (err error) {
+		fan, err = claimRunFanout(runID)
+		return err
+	}, func() (err error) {
+		if model, err = resolveRunModel(ctx, d, a, params); err != nil {
+			modelFailed = true
+		}
+		return err
+	})
 	if err != nil {
-		return nil, sdk.NewToolError(err.Error())
-	}
-	fan, err := claimRunFanout(pol.RunID)
-	if err != nil {
-		return nil, sdk.NewToolError(err.Error())
-	}
-	model, err := resolveRunModel(ctx, d, a, params)
-	if err != nil {
+		if fan != nil && !modelFailed { // a check of the run's own after its budget slot was claimed: the original's failed result carries the budget line
+			return fan.annotate(nil, err)
+		}
 		return nil, sdk.NewToolError(err.Error())
 	}
 	pol.writeInputArtifact()

@@ -57,3 +57,29 @@ func (f *runFanout) annotate(res any, err error) (any, error) {
 	}
 	return res, err
 }
+
+// validateMissionParams is the validation prepareMissionLaunch does before it creates or binds a mission, so a malformed mission
+// option answers with its own message on every path (a background run refuses a valid one).
+func validateMissionParams(params map[string]any, cwd string) error {
+	missionID, hasID := params["missionId"]
+	mission, hasMission := params["mission"]
+	if hasID && hasMission {
+		return errors.New("Use missionId or mission, not both")
+	}
+	if hasMission && mission == false {
+		return nil
+	}
+	if hasID {
+		id, err := validateMissionID(toDyn(missionID), "missionId")
+		if err != nil {
+			return err
+		}
+		_, err = readMission(resolveMissionStoreLocation(cwd, loadMissionStoreConfig(), ""), id)
+		return err
+	}
+	if hasMission {
+		_, err := validateMissionLaunch(toDyn(mission))
+		return err
+	}
+	return nil
+}

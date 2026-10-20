@@ -125,11 +125,11 @@ func TestOutputFileIsInstructedAndReadBack(t *testing.T) {
 func TestOutputOptionsAreValidated(t *testing.T) {
 	p := policyHostWith(t, echo("x"), HostOptions{})
 	_, failure := p.run(map[string]any{"outputMode": "file-only"})
-	if !strings.HasPrefix(failure, `Single run (helper) sets outputMode: "file-only" but does not configure an output file.`) {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\n"+`Single run (helper) sets outputMode: "file-only" but does not configure an output file.`) {
 		t.Errorf("file-only without output: %q", failure)
 	}
 	_, failure = p.run(map[string]any{"output": false, "outputMode": "file-only"})
-	if !strings.HasPrefix(failure, `Single run (helper) sets outputMode: "file-only"`) {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\n"+`Single run (helper) sets outputMode: "file-only"`) {
 		t.Errorf("output false: %q", failure)
 	}
 	eq(t, len(*p.calls), 0, "no child started")

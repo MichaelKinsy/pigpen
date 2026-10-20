@@ -371,24 +371,7 @@ func init() {
 		}
 		sessionDir, _ := params["sessionDir"].(string)
 		report, snap := doctorReport(ctx, context, sessionDir)
-		budget := obj("used", float64(snap.Used))
-		setLimit := func(k string, v *int) {
-			if v == nil {
-				budget.set(k, nil)
-			} else {
-				budget.set(k, float64(*v))
-			}
-		}
-		setLimit("configuredLimit", snap.ConfiguredLimit)
-		budget.set("granted", float64(snap.Granted))
-		setLimit("limit", snap.Limit)
-		setLimit("remaining", snap.Remaining)
-		setLimit("grantRemaining", snap.GrantRemaining)
-		history := []any{}
-		for _, g := range snap.GrantHistory {
-			history = append(history, obj("sessionId", g.SessionID, "amount", float64(g.Amount), "grantedAt", float64(g.GrantedAt), "previousLimit", float64(g.PreviousLimit), "limit", float64(g.Limit)))
-		}
-		budget.set("grantHistory", history)
+		budget := spawnBudgetDetails(snap)
 		return manageOutcome(manageResult{text: report, details: obj("spawnBudget", budget, "activeAsyncCapacity", capacityDetails(loadDoctorConfig(), sessionIDOf(ctx)))})
 	})
 	registerAction("guide", []string{"topic"}, func(ctx sdk.Context, params map[string]any) (any, error) {

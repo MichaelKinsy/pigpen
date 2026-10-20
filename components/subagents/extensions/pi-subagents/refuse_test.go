@@ -105,7 +105,11 @@ func TestUnportedManagementAndControlActionsAreRefused(t *testing.T) {
 	actions := []string{"steer", "debug.run", "schedule.create", "append-step"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
-			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
+			params := map[string]any{"action": a, "agent": "helper"}
+			if a == "schedule.create" { // valid arguments: the original's own argument checks (schedule_validate.go) come before the refusal
+				params = map[string]any{"action": a, "at": "+10m", "workflowScript": "return 1;"}
+			}
+			_, failure := h.Tool("subagent", params)
 			wantRefusal(t, failure, "the `"+a+"` action")
 		})
 	}

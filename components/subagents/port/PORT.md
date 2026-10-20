@@ -270,6 +270,38 @@ runs) and take this port's definitions, discovery and activation. Nothing of the
    `PIG_HARNESS_ARGV_FILE`, ...), and a program the extension starts inherits them unless it removes them; the SDK could
    offer the environment for a child process, or the variables could be documented as not to be passed on.
 
+## PiG core findings and the pigeq equivalence pass (24 scenarios under Pi 1402973a)
+
+**PiG core findings.**
+
+- **B9 (logged by Main; fix lane ExtDirDiscovery): a direct `-e <dir>` of a Go extension that holds a `prompts/` directory is taken for a
+  resource package.** PiG v0.5.0 registers the directory's `.md` files as prompt commands and never builds or starts the Go module in it
+  (no tools, no commands, no `session_start`; every scenario failed at event 0, `00-startup` missing). Pi's `-e <dir>` loads the extension and does not
+  discover prompts there; installed as a package (the component root, `package.json` `pi.*`) the extension loads. Workaround here: the copy of the
+  original's prompt templates the binary embeds moved from `extensions/pi-subagents/prompts/` to `promptdata/` (`workflow_prompt.go`); the package-root
+  `prompts/` is unchanged. **Re-check once B9's fix lands: the scenarios must also pass with the original layout (`prompts/` in the extension directory).**
+- Host-bound scenarios (the original prints its install path): `get-builtin` (existing) and `manage-reset` (its two `get` answers). Both live in
+  `host-bound/` with the path recorded as `<oracle>`; `builtin_test.go` replays the original's answers (`testdata/*.jsonl`) against the port.
+
+**Differences the first full equivalence run found, and what was done (all in the port).** The earlier five goldens predate the async, run-policy,
+mission and workflow slices; no `pigeq check` had run since.
+
+| Difference from the original | Fix |
+|---|---|
+| `bg_wait` registered after `subagents_enable` (the model sees tools in registration order) | `toolHooks` registers it first (`async_runtime.go`) |
+| two `setWidget` calls per session start and shutdown (the base handlers and the async runtime) | the base handlers no longer clear the widget |
+| a single run never resolved its model against the registry: an unknown model started a child | `run_model.go`: `resolveEffectiveSubagentModel` then `resolveModelSelection`, thrown (foreground) or as a failed launch (background); a run that inherits the parent's model starts the child with it |
+| no run fan-out budget on a single run | `run_fanout.go`: claim `single`, the first line `Run fan-out: n/limit used, r remaining` and `details.runFanoutBudget` on results and failed results; the active-run capacity refusal comes before the claim and carries no line, as in the original. **Not ported: inheriting a parent run's budget in a nested child (each top-level call creates its own).** |
+| order of checks of a foreground run | gate and acceptance, deadline, agentContract, spawn budget, claim, output options, model (`policy_run.go`) |
+| `status`: spawn budget line fixed to "unlimited", no `spawnBudget`/`activeAsyncCapacity` details, `isError` fields | `run_budget_status.go` (`withSpawnBudgetStatus`); a failed status or wait is a failed tool call |
+| `validate`: `isError` field on the result, warning keys in another order, a missing script path message without Node's `ENOENT: ..., open '...'` | fixed in `workflow_validate_action.go` |
+| a malformed `mission`/`missionId` of a background run answered with the refusal | `validateMissionParams` runs first on every path (a valid mission option is still refused for a background run) |
+| `schedule.*` answered with the refusal before the original's argument checks | `schedule_validate.go` ports the checks (exactly one of at/every, overlap, catchUp, id, `at`, `every`, required id); a valid call is still refused |
+| `exec-coverage` failed: `/bin/sh` started by path | named once (`posixShell`), as the Windows branch already names `ComSpec` |
+
+Known difference left: a failed foreground or mission result returns `ToolResult{IsError, Details}`; Pi shows a failed result's details as `{}`
+(finding 4 above: `sdk.NewToolError` matches). No scenario reaches it without a child.
+
 ## Where a generated skeleton (`pig-codegen extension`) would have saved hand work
 
 - Module, `Extension()`, event and tool registration; the tool definition from a JSON Schema (here read from the original).
