@@ -66,3 +66,24 @@ func uniqueStrings(values []string) []string {
 	}
 	return out
 }
+
+// toWellFormed is String.prototype.toWellFormed over a WTF-8 string: every lone surrogate (what slicing at an astral character
+// leaves) becomes U+FFFD, the form a terminal or a UTF-8 encoder writes for it. The renderers apply it to what they hand back, so one
+// lone surrogate reads as one replacement character rather than as three invalid bytes.
+func toWellFormed(s string) string {
+	if !strings.Contains(s, "\xed") {
+		return s
+	}
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); {
+		if _, ok := wtfSurrogate(s, i); ok {
+			b.WriteString("\uFFFD")
+			i += 3
+			continue
+		}
+		b.WriteByte(s[i])
+		i++
+	}
+	return b.String()
+}

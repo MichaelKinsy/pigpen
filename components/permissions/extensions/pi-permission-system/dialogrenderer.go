@@ -105,6 +105,9 @@ func RenderPromptDialog(payload PromptPayload, budget DialogBudget, paint Highli
 		coreLines = append(coreLines, block...)
 	}
 	lines, dropped := fitToRows(coreLines, blocks[coreCount:], budget.MaxRows)
+	for i := range lines {
+		lines[i] = toWellFormed(lines[i])
+	}
 	elided := dropped
 	for _, f := range facts {
 		if f.clipped {

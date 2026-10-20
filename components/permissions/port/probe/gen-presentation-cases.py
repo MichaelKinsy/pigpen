@@ -244,13 +244,14 @@ for _ in range(350):
     if rnd.random() < 0.5:
         spec = {"path": pick(UNI), "command": pick(UNI), "authorization": "Bearer x", "arguments": jsonish(1)}
     log.append({"result": {"toolName": tool, "state": pick(["allow", "ask", "deny"]), "source": pick(["tool", "mcp", "default", "bash", "skill", "special", "session"]),
-                           "origin": pick(["builtin", "project", "global", "agent"]), "command": pick([None, "ls -la", pick(UNI)]), "target": pick([None, "srv:tool", pick(UNI)])},
+                           "origin": pick(["builtin", "project", "global", "agent"]), **({"command": pick(["ls -la", pick(UNI)])} if rnd.random() < 0.5 else {}),
+                           **({"target": pick(["srv:tool", pick(UNI)])} if rnd.random() < 0.5 else {})},
                 "input": spec, "pathBearing": pick([PATH_BEARING, ["read", "write", "edit"], []])})
 
 # ---- askpayload: the payload builders (through the dialog renderer at one budget too)
 def check(tool, **kw):
     r = {"toolName": tool, "state": "ask", "source": pick(["tool", "mcp", "default"]), "origin": "builtin"}
-    r.update(kw)
+    r.update({k: v for k, v in kw.items() if v is not None})  # an absent field is undefined, never null
     return r
 
 
@@ -262,10 +263,10 @@ for _ in range(250):
                        "agentName": pick(AGENTS), "surface": pick(SURFACES), "invokedToolName": pick([None, "exec_command", tool, ""]), "input": jsonish() if rnd.random() < 0.5 else {"command": pick(UNI), "path": pick(UNI), "arguments": jsonish(1)},
                        "formatter": pick([None, "builtin", "decline", "fixed"])})
 for _ in range(200):
-    askpayload.append({"fn": pick(["path", "extdir"]), "facts": {"toolName": pick(["read", "write", "edit"]), "pathValue": pick(UNI), "resolvedPath": pick([None, "/x/y", pick(UNI)]),
-                                                                 "agentName": pick(AGENTS), "matchedPattern": pick(PATTERNS), "surface": pick(SURFACES), "cwd": pick(UNI)}})
+    askpayload.append({"fn": pick(["path", "extdir"]), "facts": {"toolName": pick(["read", "write", "edit"]), "pathValue": pick(UNI), "agentName": pick(AGENTS), "matchedPattern": pick(PATTERNS), "surface": pick(SURFACES), "cwd": pick(UNI),
+                                                                 **({"resolvedPath": pick(["/x/y", pick(UNI)])} if rnd.random() < 0.5 else {})}})
 for _ in range(150):
-    askpayload.append({"fn": "bashext", "facts": {"command": pick(UNI), "externalPaths": [{"path": pick(UNI), "resolvedPath": pick([None, "/r/p", pick(UNI)])} for _ in range(rnd.randint(0, 5))],
+    askpayload.append({"fn": "bashext", "facts": {"command": pick(UNI), "externalPaths": [dict({"path": pick(UNI)}, **({"resolvedPath": pick(["/r/p", pick(UNI)])} if rnd.random() < 0.5 else {})) for _ in range(rnd.randint(0, 5))],
                                                    "cwd": pick(UNI), "agentName": pick(AGENTS), "toolName": pick(["bash", "exec_command"]), "matchedPattern": pick(PATTERNS), "surface": pick(SURFACES)}})
 for _ in range(80):
     askpayload.append({"fn": pick(["skill", "skillpath"]), "name": pick(UNI), "readPath": pick(UNI), "agentName": pick(AGENTS)})

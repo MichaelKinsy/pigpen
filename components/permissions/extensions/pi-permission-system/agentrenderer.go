@@ -114,7 +114,7 @@ func servingClause(decidedElsewhere bool) string {
 }
 
 func taggedReason(sentence string, reason *string) string {
-	return ExtensionTag + " " + sentence + reasonClause(reason)
+	return toWellFormed(ExtensionTag + " " + sentence + reasonClause(reason))
 }
 
 // identification is what was refused, in the order a reader needs it: the gate surface, the tool that reached it, who asked, which
