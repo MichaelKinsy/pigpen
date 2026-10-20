@@ -107,6 +107,9 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 	ext, w := newWarden(opts)
 	h.w = w
 	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: cwd, OnCall: h.onCall})
+	// Registered after the host's own cleanup, so it runs first: background rules work (the baseline snapshot, the log's
+	// queued writes) must be over before the test's temporary directories are removed.
+	t.Cleanup(w.rulesShutdown)
 	return h
 }
 

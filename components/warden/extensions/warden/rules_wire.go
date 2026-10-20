@@ -97,8 +97,21 @@ func (w *warden) agentStartWithRules(ctx sdk.Context, data map[string]any) (any,
 // rulesTurnEnd forgets the turn's prejudgments.
 func (w *warden) rulesTurnEnd() { w.rules.guard.TurnEnd() }
 
-// rulesShutdown waits for the requests still in flight.
-func (w *warden) rulesShutdown() { w.rules.guard.Wait() }
+// rulesShutdown waits for the work still in flight: the requests, the baseline snapshot and the verdict log's queued
+// writes, so nothing writes into the project or the data folder after the session is over.
+func (w *warden) rulesShutdown() {
+	rs := w.rules
+	rs.guard.Wait()
+	rs.mu.Lock()
+	snapshot, log := rs.snapshot, rs.log
+	rs.mu.Unlock()
+	if snapshot != nil {
+		<-snapshot.done
+	}
+	if log != nil {
+		log.Flush()
+	}
+}
 
 // rulesAgentStart starts the working-tree baseline that turn rules need: the snapshot runs in the background and is
 // awaited at agent_end, so this hook never waits for git to hash the changed and untracked files. One trace line when a
