@@ -1,0 +1,84 @@
+{
+  "name": "net-503-ladder",
+  "description": "Sustained 503: after Pi's own retries the goal announces recovery 1 in 5 s, retries, and announces recovery 2 in 10 s (unbounded, escalating); shutdown cancels the pending retry.",
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "continue working on the task"
+      },
+      "settleMs": 1500
+    },
+    {
+      "name": "ladder",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-list"
+      },
+      "settleMs": 5500
+    }
+  ],
+  "files": {
+    ".pi/goals/active_goal_20260102030405_seed-net.md": "{\n  \"version\": 3,\n  \"id\": \"seed-net\",\n  \"objective\": \"keep making progress despite provider outages\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-net.md\"\n}\n\n# Goal Prompt\n\nkeep making progress despite provider outages\n\n## Progress\n\n- Status: active\n"
+  },
+  "agentFiles": {
+    "settings.json": "{\"defaultProvider\": \"outage\", \"defaultModel\": \"broken\", \"retry\": {\"maxRetries\": 3, \"baseDelayMs\": 10}}",
+    "models.json": "{\"providers\": {\"outage\": {\"baseUrl\": \"{{server:provider}}/v1\", \"api\": \"openai-completions\", \"apiKey\": \"dummy\", \"compat\": {\"supportsDeveloperRole\": false, \"supportsReasoningEffort\": false}, \"models\": [{\"id\": \"broken\", \"name\": \"Broken\"}]}}}",
+    "pi-goal-x-settings.json": "{\"autoSelectSingleGoal\": true, \"maxAutonomousRuns\": 100}"
+  },
+  "servers": {
+    "provider": {
+      "routes": [
+        {
+          "path": "/v1/chat/completions",
+          "status": 503,
+          "json": {
+            "error": {
+              "type": "server_error",
+              "message": "Error from provider (Console): Upstream request failed: Endpoint is unavailable."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "args": [
+    "--system-prompt",
+    "You are the executor of a goal. Work on it with the goal tools and keep every answer short.",
+    "--provider",
+    "outage",
+    "--model",
+    "broken"
+  ],
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    }
+  ],
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end"
+  ],
+  "tailMs": -1
+}

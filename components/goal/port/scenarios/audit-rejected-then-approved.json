@@ -1,0 +1,113 @@
+{
+  "name": "audit-rejected-then-approved",
+  "description": "The auditor rejects with feedback (the parent sees it as the tool result; /goal-status shows the audit result), the next turn's prompt carries the rejection, the second audit is warm with the previous rejection and approves.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal",
+          "arguments": {
+            "status": "complete",
+            "completion_summary": "done"
+          }
+        }
+      ]
+    },
+    {
+      "text": "notes.txt does not say ready yet.\nRequired: the file must contain the word ready.\n<disapproved/>"
+    },
+    {
+      "text": "I will fix notes.txt."
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "notes.txt",
+            "content": "ready\n"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal",
+          "arguments": {
+            "status": "complete",
+            "completion_summary": "notes.txt now says ready"
+          }
+        }
+      ]
+    },
+    {
+      "text": "The previous rejection is resolved: notes.txt says ready.\n<approved/>"
+    }
+  ],
+  "steps": [
+    {
+      "name": "first",
+      "rpc": {
+        "type": "prompt",
+        "message": "Finish the notes."
+      }
+    },
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    },
+    {
+      "name": "second",
+      "rpc": {
+        "type": "prompt",
+        "message": "Fix what the auditor found."
+      }
+    }
+  ],
+  "files": {
+    ".pi/goals/active_goal_20260102030405_seed-aud.md": "{\n  \"version\": 3,\n  \"id\": \"seed-aud\",\n  \"objective\": \"Write notes.txt with the word ready\\nSuccess criteria: notes.txt exists and says ready\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-aud.md\"\n}\n\n# Goal Prompt\n\nWrite notes.txt with the word ready\nSuccess criteria: notes.txt exists and says ready\n\n## Progress\n\n- Status: active\n",
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0, \"autoSelectSingleGoal\": true}",
+    "notes.txt": "ready\n"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "archived/goal_\\d{16}_",
+      "replacement": "archived/goal_<stamp>_"
+    }
+  ],
+  "args": [
+    "--system-prompt",
+    "You are the executor of a goal. Work on it with the goal tools and keep every answer short."
+  ],
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "message_end"
+  ]
+}
