@@ -1,0 +1,66 @@
++ go test -count=1 ./...
++ tail -80
+--- FAIL: TestUpstreamTwins (0.00s)
+    --- FAIL: TestUpstreamTwins/extension_registers_lifecycle_hooks_without_pre-compaction_injection (0.00s)
+        extension_test.go:73: missing resources_discover handler
+        extension_test.go:73: missing session_start handler
+        extension_test.go:73: missing session_compact handler
+        extension_test.go:73: missing context handler
+        extension_test.go:73: missing agent_end handler
+        extension_test.go:82: resources_discover: 0 handlers, want 1
+        extension_test.go:82: session_start: 0 handlers, want 1
+        extension_test.go:82: session_compact: 0 handlers, want 1
+        extension_test.go:82: context: 0 handlers, want 1
+        extension_test.go:82: agent_end: 0 handlers, want 1
+    --- FAIL: TestUpstreamTwins/resources_discover_contributes_the_bundled_skills_directory (0.00s)
+        extension_test.go:100: unexpected end of JSON input
+    --- FAIL: TestUpstreamTwins/startup_context_injects_the_bootstrap_as_one_user_message_until_agent_end (0.00s)
+        extension_test.go:110: context reply null: unexpected end of JSON input
+    --- FAIL: TestUpstreamTwins/session_compact_injects_bootstrap_after_compaction_summaries,_not_before_compaction (0.00s)
+        extension_test.go:152: context reply null: unexpected end of JSON input
+--- FAIL: TestBootstrapText (0.00s)
+    extension_test.go:183: bootstrap head: ""
+    extension_test.go:186: bootstrap tail: ""
+    extension_test.go:189: marker appears 0 times, want 1
+    extension_test.go:193: the Skill body (without its frontmatter) is not followed by the Pi tool mapping
+    extension_test.go:196: the mapping keeps its backticks and no escape
+--- FAIL: TestStripFrontmatter (0.00s)
+    extension_test.go:216: frontmatter and body: stripFrontmatter("---\nname: x\n---\nbody\n") = "---\nname: x\n---\nbody\n", want "body"
+    extension_test.go:216: body is trimmed: stripFrontmatter("---\nname: x\n---\n\n  body\n\n") = "---\nname: x\n---\n\n  body\n\n", want "body"
+    extension_test.go:216: no frontmatter: stripFrontmatter("\n  plain text \n") = "\n  plain text \n", want "plain text"
+    extension_test.go:216: only the first block is frontmatter: stripFrontmatter("---\na: 1\n---\nx\n---\ny\n---\nz") = "---\na: 1\n---\nx\n---\ny\n---\nz", want "x\n---\ny\n---\nz"
+    extension_test.go:216: U+FEFF and U+00A0 trim, U+0085 does not: stripFrontmatter("\ufeff\u00a0body\u00a0\ufeff\u0085") = "\ufeff\u00a0body\u00a0\ufeff\u0085", want "body\u00a0\ufeff\u0085"
+--- FAIL: TestMessageContainsBootstrap (0.00s)
+    extension_test.go:242: string content with the marker: false, want true
+    extension_test.go:242: text part with the marker: false, want true
+    extension_test.go:242: marker in a later part: false, want true
+--- FAIL: TestFirstNonCompactionSummaryIndex (0.00s)
+    extension_test.go:264: one summary: 0, want 1
+    extension_test.go:264: two summaries: 0, want 2
+    extension_test.go:264: only summaries: 0, want 2
+--- FAIL: TestInjectionCycle (0.00s)
+    extension_test.go:274: context reply null: unexpected end of JSON input
+--- FAIL: TestInjectionPlacement (0.00s)
+    --- FAIL: TestInjectionPlacement/before_the_first_non-summary_message (0.00s)
+        extension_test.go:307: context reply null: unexpected end of JSON input
+    --- FAIL: TestInjectionPlacement/an_empty_conversation_gets_the_bootstrap_alone (0.00s)
+        extension_test.go:314: context reply null: unexpected end of JSON input
+    --- FAIL: TestInjectionPlacement/a_conversation_of_summaries_gets_it_last (0.00s)
+        extension_test.go:320: context reply null: unexpected end of JSON input
+    --- FAIL: TestInjectionPlacement/the_message_has_a_role,_one_text_part_and_a_millisecond_timestamp (0.00s)
+        extension_test.go:326: context reply null: unexpected end of JSON input
+    --- FAIL: TestInjectionPlacement/a_bootstrap_in_string_content_blocks_the_injection (0.00s)
+        extension_test.go:338: context reply null: unexpected end of JSON input
+    --- FAIL: TestInjectionPlacement/the_bootstrap_in_any_message_blocks_it,_wherever_it_is (0.00s)
+        extension_test.go:344: context reply null: unexpected end of JSON input
+--- FAIL: TestSkillsDir (0.00s)
+    --- FAIL: TestSkillsDir/the_skills_directory_of_the_package_the_extension_sits_in (0.00s)
+        extension_test.go:358: skillsDir() = "", want "/tmp/TestSkillsDirthe_skills_directory_of_the_package_the_extension_4213249990/001/skills"
+FAIL
+FAIL	github.com/MichaelKinsy/pigpen/superpowers	0.029s
+FAIL
++ cd ../..
++ pigeq twins check --ledger port/upstream-tests.json --go extensions/superpowers
+4 exact twins, 2 skipped:
+  SKIP "package.json declares a pi package with skills and extension resources": asserts upstream's own package.json (name, keywords, pi.skills, pi.extensions); this Package's manifest lists its 15 renamed Skills and extensions/superpowers, and npm run check and pig package validate verify them
+  SKIP "pi tools reference documents pi-specific mappings": reads upstream's skills/using-superpowers/references/pi-tools.md, a Skill file outside this module; the shipped copy is checked byte for byte against the original (plus the recorded renames) by port/adapt.py and the Skill gate

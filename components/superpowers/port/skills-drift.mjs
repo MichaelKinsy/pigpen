@@ -83,7 +83,7 @@ export function check({ root, upstream } = {}) {
 
   if (upstream) {
     const wanted = new Map();
-    const listing = execFileSync('git', ['-C', upstream, 'ls-tree', '-r', '--name-only', pinned, '--', 'skills', 'LICENSE'], { encoding: 'utf8' });
+    const listing = execFileSync('git', ['-C', upstream, 'ls-tree', '-r', '--name-only', pinned, '--', 'skills', 'LICENSE', '.pi/extensions/superpowers.ts', 'tests/pi/test-pi-extension.mjs'], { encoding: 'utf8' });
     for (const path of listing.split('\n').filter(Boolean)) {
       wanted.set(path, execFileSync('git', ['-C', upstream, 'show', `${pinned}:${path}`], { maxBuffer: 1 << 28 }));
     }

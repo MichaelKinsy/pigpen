@@ -10,5 +10,7 @@ The Skills in this Package are **obra/superpowers**, https://github.com/obra/sup
   the renamed Skills. [`port/adapt.py`](port/adapt.py) makes the change from the original and nothing else.
 - The adaptation (the script, the Package files) is by Michael Kinsy, MIT. Superpowers is Jesse Vincent's work; the
   method, the wording and every Skill belong to him and the contributors of the repository.
-- Not included, and said so in `port/ADAPTATIONS.md`: the Node extension that injects the bootstrap, the hooks and the
-  other harness manifests.
+- `extensions/superpowers` is a Go port, by Michael Kinsy (MIT), of the original's `.pi/extensions/superpowers.ts`
+  (Jesse Vincent, MIT), which is kept byte for byte in [`port/oracle/.pi/extensions/superpowers.ts`](port/oracle/.pi/extensions/superpowers.ts)
+  with its test. The text of the Pi tool mapping it injects is the original's.
+- Not included, and said so in `port/ADAPTATIONS.md`: the hooks and the other harness manifests.
