@@ -652,8 +652,29 @@ func TestUpstream_inline_content_config(t *testing.T) {
 }
 
 func TestUpstream_fetch_answer_storage(t *testing.T) {
-	tskip(t, "fetch-answer-storage", "answer mode stores original fetched content instead of its answer presentation",
-		"fetch_content mode answer is refused until the answer model call is ported (TestRefusalFetchAnswerMode)")
+	// Upstream runs the tool with a context whose registry cannot answer (`modelRegistry: {}`, no
+	// model); here the session has no model, so the answer fails the same visible way.
+	tw(t, "fetch-answer-storage", "answer mode stores original fetched content instead of its answer presentation", func(t *testing.T) {
+		r, _ := newRuntime(t, "")
+		original := strings.Repeat("Original page content. ", 60)
+		useNet(t, func(netCall) netReply {
+			return netReply{Status: 200, Header: hdr("content-type", "text/html"),
+				Body: "<!doctype html><html><head><title>Stored Page</title></head><body><article><h1>Stored Page</h1><p>" + original + "</p></article></body></html>"}
+		})
+		ctx := WithSideCallContext(bg(), &fakeSide{reg: &fakeSideRegistry{}})
+		result, err := mustTool(t, r, "fetch_content").Execute(ctx, map[string]any{"url": "https://93.184.216.34/page", "mode": "answer", "prompt": "What does it say?"}, nil)
+		noErr(t, err)
+		if !regexpMust(`Page answer failed`).MatchString(dStr(result, "error")) {
+			t.Fatalf("%v", result.Details)
+		}
+		stored := GetResult(dStr(result, "responseId"))
+		if stored == nil || stored.Type != "fetch" || len(stored.URLs) == 0 {
+			t.Fatalf("%+v", stored)
+		}
+		if content := stored.URLs[0].Content; !strings.Contains(content, "Original page content") || strings.Contains(content, "Page answer failed") {
+			t.Fatalf("stored content %q", content)
+		}
+	})
 }
 
 var _ = context.Background
