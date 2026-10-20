@@ -312,3 +312,74 @@ var _ = errors.New
 var _ = reflect.DeepEqual
 var _ = runtime.GOOS
 var _ = strings.Contains
+
+// makeGateCheckResult is the path-surface check result factory (toolName "path", source "special", origin "global").
+func makeGateCheckResult(mut ...func(*PermissionCheckResult)) PermissionCheckResult {
+	c := PermissionCheckResult{ToolName: "path", State: "allow", Source: "special", Origin: "global"}
+	for _, m := range mut {
+		m(&c)
+	}
+	return c
+}
+
+// sameAccessPath compares two AccessPaths by everything they expose (the original compares the objects with toEqual).
+func sameAccessPath(t *testing.T, got, want *AccessPath, what string) {
+	t.Helper()
+	if got == nil || want == nil {
+		t.Fatalf("%s: got %v want %v", what, got, want)
+	}
+	eq(t, got.Value(), want.Value(), what+" value")
+	eq(t, got.BoundaryValue(), want.BoundaryValue(), what+" boundary")
+	eq(t, got.MatchValues(), want.MatchValues(), what+" matchValues")
+	ga, gok := got.ResolvedAlias()
+	wa, wok := want.ResolvedAlias()
+	eq(t, [2]any{ga, gok}, [2]any{wa, wok}, what+" resolvedAlias")
+}
+
+// expectAccessPathCall checks one resolver call: an access-path intent on surface for want, with the agent.
+func expectAccessPathCall(t *testing.T, call AccessIntent, surface string, want *AccessPath, agent *string) {
+	t.Helper()
+	it, ok := call.(AccessPathAccessIntent)
+	if !ok {
+		t.Fatalf("intent %T, want an access-path intent", call)
+	}
+	eq(t, it.Surface, surface, "surface")
+	eq(t, it.AgentName, agent, "agent")
+	sameAccessPath(t, it.Path, want, "path")
+}
+
+// gfExtractors is the originals' extractorLookup: one tool whose extractor reads a string input key.
+type gfExtractors struct{ toolName, key string }
+
+func (e gfExtractors) Resolve(name string) *ResolvedToolAccessExtractor {
+	if name != e.toolName {
+		return nil
+	}
+	return &ResolvedToolAccessExtractor{Origin: RegistrationLocal, Extractor: NewToolAccessExtractor(func(input *jsObject) (string, bool) {
+		return input.str(e.key)
+	})}
+}
+
+// hostNormalizer is `new PathNormalizer(pathFlavorForPlatform(process.platform), cwd)` built under the identity realpath.
+func hostNormalizer(t *testing.T, cwd string) *PathNormalizer {
+	t.Helper()
+	mockRealpath(t, identityRealpath)
+	return NewPathNormalizer(PathFlavorForPlatform(runtime.GOOS), cwd)
+}
+
+// grantPatterns is `grants.map((grant) => grant.pattern)`.
+func grantPatterns(a *SessionApproval) []string {
+	out := []string{}
+	for _, g := range a.Grants {
+		out = append(out, g.Pattern)
+	}
+	return out
+}
+
+// with applies overrides to a context (the spread of `{ ...defaults, ...overrides }`).
+func (t ToolCallContext) with(mut ...func(*ToolCallContext)) ToolCallContext {
+	for _, m := range mut {
+		m(&t)
+	}
+	return t
+}
