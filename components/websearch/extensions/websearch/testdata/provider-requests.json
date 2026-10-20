@@ -565,6 +565,106 @@
   }
  },
  {
+  "id": "serper-recency-day",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "k-day"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "day"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k-day"
+    },
+    "body": {
+     "q": "q",
+     "num": 5,
+     "tbs": "qdr:d"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "serper-recency-month",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "k-month"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k-month"
+    },
+    "body": {
+     "q": "q",
+     "num": 5,
+     "tbs": "qdr:m"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
   "id": "serpapi-env-filters",
   "provider": "serpapi",
   "fn": "searchWithSerpApi",
@@ -1200,6 +1300,138 @@
   "requests": [],
   "outcome": {
    "error": "SerpBase API key not found. Either:\n  1. Create <CONFIG> with { \"serpbaseApiKey\": \"your-key\" }\n  2. Set SERPBASE_API_KEY environment variable\nGet a key at https://serpbase.dev"
+  }
+ },
+ {
+  "id": "serpbase-recency-day-and-year",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "k-sb"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "day"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic_results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=q&api_key=k-sb&num=10&tbs=qdr%3Ad",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "serpbase-recency-month",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "k-sb"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic_results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=q&api_key=k-sb&num=10&tbs=qdr%3Am",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "serpbase-recency-year",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "k-sb"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "year"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic_results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=q&api_key=k-sb&num=10&tbs=qdr%3Ay",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
   }
  },
  {
@@ -2001,6 +2233,159 @@
   }
  },
  {
+  "id": "valyu-recency-day",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "k-v"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "day"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "success": true,
+     "results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": "2026-03-10T12:00:00.000Z",
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k-v"
+    },
+    "body": {
+     "query": "q",
+     "max_num_results": 5,
+     "start_date": "2026-03-09"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "valyu-recency-month",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "k-v"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "success": true,
+     "results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": "2026-03-10T12:00:00.000Z",
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k-v"
+    },
+    "body": {
+     "query": "q",
+     "max_num_results": 5,
+     "start_date": "2026-02-08"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "valyu-recency-year",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "k-v"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "year"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "success": true,
+     "results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": "2026-03-10T12:00:00.000Z",
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k-v"
+    },
+    "body": {
+     "query": "q",
+     "max_num_results": 5,
+     "start_date": "2025-03-10"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
   "id": "bocha-filters",
   "provider": "bocha",
   "fn": "searchWithBocha",
@@ -2433,6 +2818,172 @@
   ],
   "outcome": {
    "error": "Bocha API error 401: bad [redacted]"
+  }
+ },
+ {
+  "id": "bocha-freshness-day",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "day"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 200,
+     "data": {
+      "webPages": {
+       "value": []
+      }
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 8,
+     "freshness": "oneDay",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "bocha-freshness-year",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "recencyFilter": "year"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 200,
+     "data": {
+      "webPages": {
+       "value": []
+      }
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 8,
+     "freshness": "oneYear",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "bocha-freshness-none",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 200,
+     "data": {
+      "webPages": {
+       "value": []
+      }
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 8,
+     "freshness": "noLimit",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
   }
  },
  {

@@ -8,7 +8,7 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (381 exact twins, 494 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (382 exact twins, 493 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
@@ -53,11 +53,13 @@ scenario cannot point the original at a fake server. Their wire proof is oracle-
 `port/record-provider-requests.mjs` imports the unmodified original modules (`port/oracle/*.ts`) under Node with a
 recording `fetch`, replays the inputs of the upstream tests and of the error paths (status codes, envelopes, redirects,
 timeouts, cancellation) and writes the original's actual requests (method, URL, headers, body) and outcomes (result or
-error text) to `extensions/websearch/testdata/provider-requests.json` (131 cases). `provider_fixtures_test.go` replays every case against the port
+error text) to `extensions/websearch/testdata/provider-requests.json` (142 cases). `provider_fixtures_test.go` replays every case against the port
 with the same canned responses and requires identical requests and outcomes; the twins call into it. The comparison
 ignores two things on purpose: a request's `redirect` mode (a Node option; the Go transport never follows redirects by
 itself) and the parser text after `invalid JSON:` (Node and Go word it differently). SearXNG has a configurable base URL and also has
-pigeq scenarios against a fake server.
+pigeq scenarios against a fake server (`web-search-searxng*`, 8 scenarios), plus three offline scenarios
+(`web-search-routing-rest-unavailable`, `web-search-baizhi-bad-filter`, `web-search-explicit-only-rest-auto`); all 11 were recorded
+under Pi 1402973a and pass `pigeq check` on PiG.
 
 **Differences recorded with fixtures**
 
@@ -66,10 +68,13 @@ pigeq scenarios against a fake server.
   Jina says `Jina Search API error 408: request timed out` (as the original). Serper, SerpBase, Valyu, Bocha, AnySearch and
   SearXNG have no such branch upstream, where a deadline is an abort error; here it is the shared network-class timeout
   (see "Provider timeouts" above), so routing can fall through. Caller cancellation is an abort everywhere.
-- Credentials leave on cross-origin redirects of the plain `fetch` upstream (undici drops only `Authorization`); the Go
-  transport drops the provider's credential header (`X-API-KEY`, `x-api-key`, `Authorization`, `X-Api-Key`) as well. Valyu,
-  Serper, Bocha, AnySearch, XCrawl and Jina follow redirects like Node's `fetch` does; Baizhi and SearXNG never send the
-  credential to another origin (Baizhi's fetch is `redirect: "error"`, SearXNG's `onRedirect` drops the configured headers).
+- Serper, Valyu, Bocha, AnySearch, XCrawl and Jina use a plain `fetch` upstream, which forwards a custom credential
+  header (`X-API-KEY`, `x-api-key`) to another origin on a redirect (undici drops only `Authorization`). The Go transport
+  follows the redirect the same way but drops the provider's credential header when the origin changes (hardening beyond the
+  original). Baizhi and SearXNG never send the credential to another origin (Baizhi's fetch is `redirect: "error"`,
+  SearXNG's `onRedirect` drops the configured headers).
+- A failed connection reads `fetch failed` and a body cut short `terminated`, as in Node, so the routing classifier treats it as
+  a network failure (`TestRestProviderTransportFailure`, scenario `web-search-searxng-drop`).
 - Baizhi's MCP client is written against the wire sequence of the SDK's streamable-HTTP client (initialize,
   `notifications/initialized`, the optional GET event stream, `tools/call`, DELETE with the session id), with the same
   headers and bodies (`baizhi-*` fixture cases); JSON and server-sent-event responses are read; the SDK's schema
@@ -171,7 +176,7 @@ Each logs `ADAPTED:` when run.
 
 | Layer | Result |
 |---|---|
-| Twins | `pigeq twins check`: 381 exact + 494 named skips = 875 titles; exit 0 |
+| Twins | `pigeq twins check`: 382 exact + 493 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
 | Mutation | `mutations.json`: 15 mutants, all killed (`pigeq mutate --unit`) |
