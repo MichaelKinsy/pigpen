@@ -244,6 +244,7 @@ type app struct {
 	persistedTasksShown bool
 	agentsReattached    bool
 	watchingWidth       bool
+	gate                orderGate
 }
 
 func newApp(e *sdk.Extension) *app {
