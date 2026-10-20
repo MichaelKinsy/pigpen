@@ -1,8 +1,6 @@
 package pi_subagents
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -559,12 +557,7 @@ func handoffDigestString(value any, label string) (string, error) {
 	return n, nil
 }
 
-// stableJSONDigest is stableJsonDigest (launch-contract.ts): the SHA-256 of the JSON with sorted keys and without undefined.
-func stableJSONDigest(v any) string {
-	sum := sha256.Sum256([]byte(stableJSON(v)))
-	return hex.EncodeToString(sum[:])
-}
-
+// stableJSON is stableJson (launch-contract.ts:12): JSON with the keys sorted by localeCompare and undefined entries dropped.
 func stableJSON(v any) string {
 	switch x := v.(type) {
 	case []any:

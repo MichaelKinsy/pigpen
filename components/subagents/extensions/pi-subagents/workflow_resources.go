@@ -22,7 +22,7 @@ const (
 
 // stableJSONDigest is stableJsonDigest (launch-contract.ts:24): the SHA-256 of the key-sorted JSON of a value.
 func stableJSONDigest(v any) string {
-	sum := sha256.Sum256([]byte(stableRunJSON(v)))
+	sum := sha256.Sum256([]byte(stableJSON(v)))
 	return hex.EncodeToString(sum[:])
 }
 
