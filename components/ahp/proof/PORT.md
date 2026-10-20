@@ -31,7 +31,7 @@ session. The equivalence method is therefore three layers, not the scenario harn
    non-loopback without token, listener off unless asked, session replacement. The same eight
    scenarios pass against a Piglet Binary with the extension fused in (`PIGPEN_AHP_FUSED=1`).
 3. **Mutation.** `proof/mutations.json` (run with `pigeq mutate --unit-only`) lists mutants of the
-   security and reconciliation checks and of the changeset service (62 at 0.2.0). Each one is killed by a unit test; an
+   security and reconciliation checks and of the changeset service and the dev tunnel (97 at 0.3.0). Each one is killed by a unit test; an
    equivalent mutant is not listed (the changeset service's second guard against untracked files outside the working directory,
    which `toFiles` repeats). **No protocol differential
    against pi-ahp under Pi, and no interop run with Microsoft's Go client, has been done.** Both are

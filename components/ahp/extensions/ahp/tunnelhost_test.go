@@ -14,6 +14,7 @@ import (
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 
 	"github.com/MichaelKinsy/pigpen/ahp/internal/tunnel"
+	"github.com/MichaelKinsy/pigpen/ahp/internal/ws"
 )
 
 func sdkContext() sdk.Context { return sdk.Context{} }
@@ -283,6 +284,11 @@ func TestTunnelRefusesWhileAListenerRuns(t *testing.T) {
 		t.Fatalf("/ahp start during tunnel setup: %v", err)
 	}
 	rt.tunnelStarting = false
+	rt.server = new(ws.Server)
+	if err := rt.startTunnel(sdkContext(), ""); err == nil || !strings.Contains(err.Error(), "listener is already running") {
+		t.Fatalf("a tunnel beside the direct listener: %v", err)
+	}
+	rt.server = nil
 	if err := rt.startTunnel(sdkContext(), ""); err == nil || !strings.Contains(err.Error(), "no PiG session") {
 		t.Fatalf("error = %v", err)
 	}
