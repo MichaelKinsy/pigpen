@@ -73,6 +73,12 @@ func TestJSCompat(t *testing.T) {
 	})
 }
 
+func TestGitHubURLActions(t *testing.T) {
+	eq(t, parseGitHubURL("https://github.com/o/r/Issues"), (*githubURLInfo)(nil))
+	eq(t, parseGitHubURL("https://github.com/o/r/foo/bar"), (*githubURLInfo)(nil))
+	eq(t, parseGitHubURL("https://github.com/o/r/blob/main").Type, "blob")
+}
+
 func TestGitHubURLNormalization(t *testing.T) {
 	// Expected paths from `new URL(...).pathname` in Node 24.
 	for in, want := range map[string]string{
@@ -461,6 +467,10 @@ func TestGitHubCloneRendering(t *testing.T) {
 		ghHas(t, r.Text, "Path `x/../../etc/passwd` not found in clone. Showing repository root instead.\n\n## Structure\na.ts\n\n"+hint)
 		r = ghIntercept(ctx, g, "https://github.com/o/r/blob/main/%2Fetc%2Fpasswd")
 		ghHas(t, r.Text, "not found in clone")
+	})
+	t.Run("blob: an absolute path is resolved as an absolute path, not under the clone", func(t *testing.T) {
+		ctx, g, _ := setup(t, "o/r@main", map[string]string{"etc/passwd": "inside"})
+		ghHas(t, ghIntercept(ctx, g, "https://github.com/o/r/blob/main/%2Fetc%2Fpasswd").Text, "not found in clone")
 	})
 	t.Run("blob: a file with invalid UTF-8 is shown with replacement characters", func(t *testing.T) {
 		ctx, g, _ := setup(t, "o/r@main", map[string]string{"f.txt": "a\xe2\x82b"})

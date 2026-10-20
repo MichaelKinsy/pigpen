@@ -1,4 +1,1 @@
-{
- "providers/interceptors/github": "slice 2: the GitHub URL interceptor (opt-in; clones with gh or git) is not ported; see PORT.md",
- "providers/interceptors/chain": "slice 2: the interceptor chain is part of the same deferred slice"
-}
+{}
