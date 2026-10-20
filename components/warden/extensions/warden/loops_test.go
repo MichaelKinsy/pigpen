@@ -13,7 +13,9 @@ import (
 
 const loopsNow = int64(1768910400000) // 2026-01-20T12:00:00.000Z
 
-func applyLoop(store LoopStore, in map[string]any) loopReply { return applyLoopAction(store, in, loopsNow) }
+func applyLoop(store LoopStore, in map[string]any) loopReply {
+	return applyLoopAction(store, in, loopsNow)
+}
 
 func addedLoops(t *testing.T, texts ...string) LoopStore {
 	t.Helper()
@@ -187,7 +189,9 @@ func TestLoopsIsolationOneFilePerSessionAndProjectAndCorruptFileFailsClosed(t *t
 // twin: tests/loops.test.ts:88
 func TestLoopsConcurrentOperationsNeitherThrowNorLoseAnUpdate(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "loops.json")
-	if _, err := updateLoops(path, func(s LoopStore) loopReply { return applyLoopAction(s, map[string]any{"action": "add", "text": "Bump the version"}, loopsNow) }); err != nil {
+	if _, err := updateLoops(path, func(s LoopStore) loopReply {
+		return applyLoopAction(s, map[string]any{"action": "add", "text": "Bump the version"}, loopsNow)
+	}); err != nil {
 		t.Fatal(err)
 	}
 	replies := make([]string, 2)

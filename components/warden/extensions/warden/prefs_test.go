@@ -84,12 +84,12 @@ func TestPrefsDetectionQuestionsStatementsFragmentsAndRelayedTextAreNotCandidate
 		clauseList(t, text)
 	}
 	for text, want := range map[string]bool{
-		"# Order\n\nNever push to main.":                              false,
-		"<skill name=\"x\">\nAlways lint.\n</skill>":                  false,
-		"STATUS REPORT   FROM: worker-1\nNever push to main.":        false,
-		"SCHEDULE · 10:00 · check the queue\nNever push to main.":    false,
-		"never push to main. " + strings.Repeat("x", 2100):           false,
-		"never push to main":                                          true,
+		"# Order\n\nNever push to main.":                          false,
+		"<skill name=\"x\">\nAlways lint.\n</skill>":              false,
+		"STATUS REPORT   FROM: worker-1\nNever push to main.":     false,
+		"SCHEDULE · 10:00 · check the queue\nNever push to main.": false,
+		"never push to main. " + strings.Repeat("x", 2100):        false,
+		"never push to main":                                      true,
 	} {
 		if got := isHumanTyped(text); got != want {
 			t.Errorf("isHumanTyped(%.40q) = %v", text, got)
@@ -217,12 +217,12 @@ func TestPrefsCommandOutputListsEachItemWithCountDaysLastDateAndStatusWithTheHin
 	dir := prefsFixtureDir(t)
 	scan := scanPreferences(ScanOptions{Dir: dir, Exclude: prefsCurrent, Now: prefsNow})
 	text := formatPrefs(scan.Scanned, scan.Directories, evaluatePrefs(scan, emptyPrefsStore(), prefsNow))
-	mustMatch(t, text, `^Standing preferences \(repeated in 2\+ of the last 3 sessions of this project; injected from 3 sessions on 2 days\):`)
-	mustMatch(t, text, `1\. Never paste the api_key=\[redacted\] value into the chat log \(2 sessions on 2 days, last 2026-01-03\): not injected: seen in 2 sessions`)
+	mustMatchRe(t, text, `^Standing preferences \(repeated in 2\+ of the last 3 sessions of this project; injected from 3 sessions on 2 days\):`)
+	mustMatchRe(t, text, `1\. Never paste the api_key=\[redacted\] value into the chat log \(2 sessions on 2 days, last 2026-01-03\): not injected: seen in 2 sessions`)
 	if !strings.HasSuffix(text, prefsHint) {
 		t.Error("no hint")
 	}
-	mustMatch(t, formatPrefs(1, 1, nil), `No standing preferences: nothing was repeated in 2 or more of the last 1 session of this project, and the agent recorded no lesson\.`)
+	mustMatchRe(t, formatPrefs(1, 1, nil), `No standing preferences: nothing was repeated in 2 or more of the last 1 session of this project, and the agent recorded no lesson\.`)
 }
 
 // twin: tests/prefs.test.ts:134
@@ -376,7 +376,7 @@ func TestPrefsScanSessionsFromAnotherWorktreeOfTheSameRepositoryAreRead(t *testi
 	if !reflect.DeepEqual(prefTexts(scan.Prefs), [][2]any{{"Never force-push the release branch", 3}}) {
 		t.Errorf("prefs %v", prefTexts(scan.Prefs))
 	}
-	mustMatch(t, formatPrefs(scan.Scanned, scan.Directories, evaluatePrefs(scan, emptyPrefsStore(), prefsNow)), `of the last 3 sessions of this project and its worktrees`)
+	mustMatchRe(t, formatPrefs(scan.Scanned, scan.Directories, evaluatePrefs(scan, emptyPrefsStore(), prefsNow)), `of the last 3 sessions of this project and its worktrees`)
 	if scan.Project != main {
 		t.Errorf("project %q, want the main worktree %q", scan.Project, main)
 	}

@@ -249,7 +249,12 @@ func (h *Host) answer(f frame) {
 		if result == nil {
 			result = map[string]any{}
 		}
-		h.write(map[string]any{"type": "call_result", "id": f.ID, "call_result": map[string]any{"result": result}})
+		// A host call that answers a bare value (a string, a list) returns it as {"__value": value}.
+		var payload any = result
+		if v, ok := result["__value"]; ok {
+			payload = v
+		}
+		h.write(map[string]any{"type": "call_result", "id": f.ID, "call_result": map[string]any{"result": payload}})
 	}()
 }
 

@@ -14,14 +14,14 @@ func attemptOf(key, call string, failed bool, output string) compactAttempt {
 	return compactAttempt{Key: key, Call: call, Failed: failed, Output: output}
 }
 
-func mustMatch(t *testing.T, text, pattern string) {
+func mustMatchRe(t *testing.T, text, pattern string) {
 	t.Helper()
 	if !regexp.MustCompile(pattern).MatchString(text) {
 		t.Errorf("no match for /%s/ in:\n%s", pattern, text)
 	}
 }
 
-func mustNotMatch(t *testing.T, text, pattern string) {
+func mustNotMatchRe(t *testing.T, text, pattern string) {
 	t.Helper()
 	if regexp.MustCompile(pattern).MatchString(text) {
 		t.Errorf("unexpected match for /%s/ in:\n%s", pattern, text)
@@ -65,9 +65,9 @@ func TestCompactFullSnapshotProducesABoundedAppendixWithAllSections(t *testing.T
 			t.Errorf("appendix lacks %q", want)
 		}
 	}
-	mustMatch(t, text, `bash.*approved`)
-	mustMatch(t, text, `write.*replanned`)
-	mustNotMatch(t, text, `undefined|unknown`)
+	mustMatchRe(t, text, `bash.*approved`)
+	mustMatchRe(t, text, `write.*replanned`)
+	mustNotMatchRe(t, text, `undefined|unknown`)
 }
 
 func manyHolds(n int) []HeldEntry {
@@ -208,11 +208,11 @@ func TestCompactTriedAndFailedEachDistinctFailedCallOnce(t *testing.T) {
 		t.Fatalf("error %q", built.FailedAttempts[0].Error)
 	}
 	text := compactAppendix(built)
-	mustMatch(t, text, `### Tried and failed`)
+	mustMatchRe(t, text, `### Tried and failed`)
 	if strings.Count(text, "npm test") != 1 {
 		t.Errorf("not deduplicated by call:\n%s", text)
 	}
-	mustMatch(t, text, `- npm test → Error: Cannot find module '\./b\.js'`)
+	mustMatchRe(t, text, `- npm test → Error: Cannot find module '\./b\.js'`)
 	if strings.Index(text, "make k4") > strings.Index(text, "make k7") {
 		t.Error("not oldest to newest")
 	}
@@ -241,7 +241,7 @@ func TestCompactTriedAndFailedEntriesAreAtMost160CharactersAndRedacted(t *testin
 	if strings.Contains(text, "sk-live-abcdefghij1234567890abcdef") {
 		t.Error("not redacted")
 	}
-	mustNotMatch(t, text, `earlier chars`)
+	mustNotMatchRe(t, text, `earlier chars`)
 }
 
 // twin: tests/compact.test.ts:200
@@ -250,10 +250,10 @@ func TestCompactVerificationStates(t *testing.T) {
 		return compactAppendix(buildCompactSnapshot(snapshotInput{Evidence: &RunEvidence{Mutations: mutations, ChecksBeforeMutation: before, Checks: checks}, Runs: 1}))
 	}
 	i := func(n int) *int { return &n }
-	mustMatch(t, verification(1, i(0), Check{Call: "npm run check", Passed: true}), `- last passing check: npm run check; code changed since last passing check: no`)
-	mustMatch(t, verification(1, i(1), Check{Call: "npm test", Passed: true}, Check{Call: "npm run lint", Passed: false}), `- last passing check: npm test; code changed since last passing check: yes`)
-	mustMatch(t, verification(2, i(1), Check{Call: "npm test", Passed: false}), `- no check has passed yet; code was changed`)
-	mustNotMatch(t, verification(0, nil, Check{Call: "npm test", Passed: false}), `### Verification`)
+	mustMatchRe(t, verification(1, i(0), Check{Call: "npm run check", Passed: true}), `- last passing check: npm run check; code changed since last passing check: no`)
+	mustMatchRe(t, verification(1, i(1), Check{Call: "npm test", Passed: true}, Check{Call: "npm run lint", Passed: false}), `- last passing check: npm test; code changed since last passing check: yes`)
+	mustMatchRe(t, verification(2, i(1), Check{Call: "npm test", Passed: false}), `- no check has passed yet; code was changed`)
+	mustNotMatchRe(t, verification(0, nil, Check{Call: "npm test", Passed: false}), `### Verification`)
 }
 
 // twin: tests/compact.test.ts:216 (the compact half; ContextLedger.record/storedOutputs are the context lane's saver twins)
@@ -263,16 +263,16 @@ func TestCompactSavedOutputsShowTheRealToolAndByteSize(t *testing.T) {
 		{Tool: "ctx_execute", Path: "/tmp/pi-warden-output-b/output.txt", Bytes: 12345, HasBytes: true},
 	}
 	text := compactAppendix(buildCompactSnapshot(snapshotInput{SavedOutputs: saved, Runs: 1}))
-	mustMatch(t, text, `- bash → /tmp/pi-warden-output-a/output\.txt \(34567 bytes\)`)
-	mustMatch(t, text, `- ctx_execute → /tmp/pi-warden-output-b/output\.txt \(12345 bytes\)`)
-	mustNotMatch(t, text, `unknown|\(0 bytes\)`)
+	mustMatchRe(t, text, `- bash → /tmp/pi-warden-output-a/output\.txt \(34567 bytes\)`)
+	mustMatchRe(t, text, `- ctx_execute → /tmp/pi-warden-output-b/output\.txt \(12345 bytes\)`)
+	mustNotMatchRe(t, text, `unknown|\(0 bytes\)`)
 }
 
 // twin: tests/compact.test.ts:226 (the compact half, see above)
 func TestCompactSavedOutputsRecordedWithoutASourceShowOnlyThePath(t *testing.T) {
 	text := compactAppendix(buildCompactSnapshot(snapshotInput{SavedOutputs: []SavedOutput{{Path: "/tmp/pi-warden-output-c/output.txt"}}, Runs: 1}))
-	mustMatch(t, text, `\n- /tmp/pi-warden-output-c/output\.txt\n`)
-	mustNotMatch(t, text, `unknown|bytes\)|undefined|→`)
+	mustMatchRe(t, text, `\n- /tmp/pi-warden-output-c/output\.txt\n`)
+	mustNotMatchRe(t, text, `unknown|bytes\)|undefined|→`)
 }
 
 // twin: tests/compact.test.ts:235
@@ -298,17 +298,17 @@ func TestCompactOverTheCapSavedOutputsShrinkThenHoldsGoAndFailedAttemptsStayWhol
 	if utf16Len(text) > 2000 {
 		t.Fatalf("length %d", utf16Len(text))
 	}
-	mustNotMatch(t, text, `\[truncated\]`)
-	mustNotMatch(t, text, `### Held actions`)
+	mustNotMatchRe(t, text, `\[truncated\]`)
+	mustNotMatchRe(t, text, `### Held actions`)
 	if n := strings.Count(text, "pi-warden-output-"); n != 3 {
 		t.Errorf("%d saved outputs kept", n)
 	}
-	mustMatch(t, text, `pi-warden-output-7`)
-	mustNotMatch(t, text, `pi-warden-output-4/`)
+	mustMatchRe(t, text, `pi-warden-output-7`)
+	mustNotMatchRe(t, text, `pi-warden-output-4/`)
 	for i := range 5 {
-		mustMatch(t, text, `npm run step-`+itoaInt(i))
+		mustMatchRe(t, text, `npm run step-`+itoaInt(i))
 	}
-	mustMatch(t, text, `code changed since last passing check: yes`)
+	mustMatchRe(t, text, `code changed since last passing check: yes`)
 }
 
 // twin: tests/compact.test.ts:257
@@ -328,9 +328,9 @@ func TestCompactSampleAppendix(t *testing.T) {
 		Evidence:   &RunEvidence{Mutations: 2, ChecksBeforeMutation: &one, Checks: []Check{{Call: "npm run check", Passed: true}}},
 		ActiveTask: "Make the migration script read the seed file", Runs: 1,
 	}))
-	mustMatch(t, text, `(?s)### Tried and failed.*npm run build → src/a\.ts\(3,7\): error TS2322.*node scripts/migrate\.mjs --dry-run → Error: ENOENT`)
-	mustMatch(t, text, `code changed since last passing check: yes`)
-	mustMatch(t, text, `ctx_execute → /tmp/pi-warden-output-b/output\.txt \(20480 bytes\)`)
+	mustMatchRe(t, text, `(?s)### Tried and failed.*npm run build → src/a\.ts\(3,7\): error TS2322.*node scripts/migrate\.mjs --dry-run → Error: ENOENT`)
+	mustMatchRe(t, text, `code changed since last passing check: yes`)
+	mustMatchRe(t, text, `ctx_execute → /tmp/pi-warden-output-b/output\.txt \(20480 bytes\)`)
 }
 
 func loopSnapshot(openLoopsText string) CompactSnapshot {
@@ -351,11 +351,11 @@ func loopSnapshot(openLoopsText string) CompactSnapshot {
 func TestLoopsCompactionAppendixIncludesTheOpenLoops(t *testing.T) {
 	loops := formatOpenLoops(addedLoops(t, "Bump the version", "Rerun the flaky test").Loops)
 	appendix := compactAppendix(loopSnapshot(loops))
-	mustMatch(t, appendix, `### Open loops\nPromised earlier in this session and not done yet; close each with warden_loops done or drop\.\n- #1 Bump the version\n- #2 Rerun the flaky test`)
+	mustMatchRe(t, appendix, `### Open loops\nPromised earlier in this session and not done yet; close each with warden_loops done or drop\.\n- #1 Bump the version\n- #2 Rerun the flaky test`)
 	if strings.Index(appendix, "### Open loops") > strings.Index(appendix, "### Last checks") {
 		t.Error("loops come after the sections the cap cuts first")
 	}
-	mustNotMatch(t, compactAppendix(loopSnapshot("")), `Open loops`)
+	mustNotMatchRe(t, compactAppendix(loopSnapshot("")), `Open loops`)
 }
 
 // twin: tests/loops.test.ts:131
@@ -374,10 +374,10 @@ func TestLoopsRecallPrintsTheAppendixSectionsWordForWord(t *testing.T) {
 	if !slices.Equal(heads, []string{"### Tried and failed", "### Verification", "### Saved full outputs"}) {
 		t.Fatalf("sections %v", heads)
 	}
-	mustMatch(t, recall, `- bash: npm run build → src/app\.ts\(3,1\): error TS2304: Cannot find name 'x'\.`)
-	mustMatch(t, recall, `last passing check: npm test; code changed since last passing check: yes`)
-	mustMatch(t, recall, `bash → /tmp/pi-warden-saved/out-1\.txt \(48000 bytes\)`)
-	mustNotMatch(t, recall, `Open loops|Active task|Last checks`)
+	mustMatchRe(t, recall, `- bash: npm run build → src/app\.ts\(3,1\): error TS2304: Cannot find name 'x'\.`)
+	mustMatchRe(t, recall, `last passing check: npm test; code changed since last passing check: yes`)
+	mustMatchRe(t, recall, `bash → /tmp/pi-warden-saved/out-1\.txt \(48000 bytes\)`)
+	mustNotMatchRe(t, recall, `Open loops|Active task|Last checks`)
 	if got := recallText(buildCompactSnapshot(snapshotInput{Runs: 1})); got != "Nothing recorded yet in this session: no failed attempt, no check, and no saved output." {
 		t.Fatalf("empty recall %q", got)
 	}

@@ -97,14 +97,14 @@ func TestPrefsRule1OnlyWhatTheHumanTypedCounts(t *testing.T) {
 // twin: tests/prefs-rules.test.ts:33
 func TestPrefsRule2StandingFormsPassQuestionsAndTemporaryWordsFail(t *testing.T) {
 	for text, clause := range map[string]string{
-		"don't open pull requests":                           "Don't open pull requests",
-		"never force-push the release branch":                "Never force-push the release branch",
-		"always run the linter before a commit":              "Always run the linter before a commit",
-		"stop adding emoji to the changelog":                 "Stop adding emoji to the changelog",
+		"don't open pull requests":                             "Don't open pull requests",
+		"never force-push the release branch":                  "Never force-push the release branch",
+		"always run the linter before a commit":                "Always run the linter before a commit",
+		"stop adding emoji to the changelog":                   "Stop adding emoji to the changelog",
 		"from now on, write commit messages in the imperative": "Write commit messages in the imperative",
-		"next time ask before deleting a branch":             "Ask before deleting a branch",
-		"I told you to keep the tests offline":               "Keep the tests offline",
-		"always use pnpm for this project":                   "Always use pnpm for this project",
+		"next time ask before deleting a branch":               "Ask before deleting a branch",
+		"I told you to keep the tests offline":                 "Keep the tests offline",
+		"always use pnpm for this project":                     "Always use pnpm for this project",
 	} {
 		clauseList(t, text, clause)
 	}
@@ -233,7 +233,7 @@ func TestPrefsRule6AProhibitionOfAHarmfulActionIsASafetyPreferenceAndIsInjected(
 			t.Errorf("%q: %s", clause, got)
 		}
 	}
-	mustMatch(t, prefsMessage(items), `- "Never check in secrets" \(3 sessions\)`)
+	mustMatchRe(t, prefsMessage(items), `- "Never check in secrets" \(3 sessions\)`)
 }
 
 // twin: tests/prefs-rules.test.ts:119
@@ -261,7 +261,7 @@ func TestPrefsRule7AtMostFiveItemsAnd400CharactersTheClosingSentenceIsExact(t *t
 	if prefsClosing != "If the current request says otherwise, follow the current request." {
 		t.Error("closing sentence")
 	}
-	mustMatch(t, message, `- "Keep replies short" \(3 sessions\)`)
+	mustMatchRe(t, message, `- "Keep replies short" \(3 sessions\)`)
 	var long []PrefCandidate
 	for _, clause := range []string{
 		"Always describe the database migration steps in the pull request body with rollback notes and owners",
@@ -306,9 +306,9 @@ func TestPrefsAgentLessonRecordedWithNoCorrectionBeforeItRejectedWhenItWeakensAC
 		t.Errorf("weakens: %q %v", reply, store)
 	}
 	for text, prefix := range map[string]string{
-		"Don't commit or stage it":    "not recorded: task-bound",
-		"The client is generated":     "not recorded: not one standing instruction",
-		"Don't touch the schema yet":  "not recorded: not one standing instruction",
+		"Don't commit or stage it":                         "not recorded: task-bound",
+		"The client is generated":                          "not recorded: not one standing instruction",
+		"Don't touch the schema yet":                       "not recorded: not one standing instruction",
 		"Never " + strings.Repeat("write long notes ", 12): "not recorded: longer than 160 characters",
 	} {
 		if reply, _ := lesson(text, "s1", "2026-01-10", nil, emptyPrefsStore()); !strings.HasPrefix(reply, prefix) {
@@ -342,7 +342,7 @@ func TestPrefsAgentLessonRecordedButNotInjectedUntilConfirmed(t *testing.T) {
 	if confirmed[0].Status != wasInjected {
 		t.Errorf("confirmed %s", confirmed[0].Status)
 	}
-	mustMatch(t, prefsMessage(confirmed), `- "Never edit the generated client by hand" \(2 sessions\) `+regexp.QuoteMeta(lessonMark))
+	mustMatchRe(t, prefsMessage(confirmed), `- "Never edit the generated client by hand" \(2 sessions\) `+regexp.QuoteMeta(lessonMark))
 	byUser := evaluateWith([]PrefCandidate{said("never edit the generated client by hand", "u1", "2026-01-12")}, *first, rulesNow)
 	if got := statusOf(byUser, "Never edit the generated client by hand"); got != wasInjected {
 		t.Errorf("a matching user preference confirms it: %s", got)
@@ -362,7 +362,7 @@ func TestPrefsAgentLessonUserPreferencesFillTheBudgetFirst(t *testing.T) {
 	if last.Source != "agent" {
 		t.Errorf("last item is %s", last.Source)
 	}
-	mustMatch(t, last.Status, `over the 5-item`)
+	mustMatchRe(t, last.Status, `over the 5-item`)
 	listed := thrice("Keep replies short")
 	reply, repeat := lesson("Always keep replies short", "s1", "2026-01-10", scanOf(listed), emptyPrefsStore())
 	if !strings.HasPrefix(reply, `recorded as a confirmation of the user's preference "Keep replies short"`) || len(repeat.Lessons) != 0 {
@@ -464,8 +464,8 @@ func TestPrefsTwoConcurrentLessonChangesNeitherThrowNorLoseAnUpdate(t *testing.T
 		go func() { defer wg.Done(); replies[i] = record(c[0], c[1]) }()
 	}
 	wg.Wait()
-	mustMatch(t, replies[0], `^recorded: "Never edit the generated client by hand"`)
-	mustMatch(t, replies[1], `^recorded: "Always sign the release tags"`)
+	mustMatchRe(t, replies[0], `^recorded: "Never edit the generated client by hand"`)
+	mustMatchRe(t, replies[1], `^recorded: "Always sign the release tags"`)
 	store, err := readPrefsStore(path)
 	if err != nil {
 		t.Fatal(err)

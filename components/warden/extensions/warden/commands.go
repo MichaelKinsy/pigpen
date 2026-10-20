@@ -54,6 +54,10 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 		w.selfTest(ctx)
 	case "trace":
 		w.showTrace(ctx)
+	case "prefs":
+		w.cmdPrefs(ctx, rest) // TOOLS-LANE HOOK (tools_wiring.go)
+	case "loops":
+		w.cmdLoops(ctx) // TOOLS-LANE HOOK (tools_wiring.go)
 	default:
 		w.show(ctx, "unknown subcommand "+sub+".\n\n"+help)
 	}

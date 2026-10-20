@@ -32,7 +32,10 @@ func TestRecallConfiguredToolIsUsedWithoutProbingAndAutoProbesTheChain(t *testin
 	}
 	// With only grep, the chain reaches it after rg, ag, ugrep and git.
 	var order []string
-	probeCommand = func(command string, _ []string, _ time.Duration) bool { order = append(order, command); return command == "grep" }
+	probeCommand = func(command string, _ []string, _ time.Duration) bool {
+		order = append(order, command)
+		return command == "grep"
+	}
 	if got := detectSearchTool("auto", probeTimeout); got != "grep" || !slices.Equal(order, []string{"rg", "ag", "ugrep", "git", "grep"}) {
 		t.Fatalf("auto: %s after %v", got, order)
 	}

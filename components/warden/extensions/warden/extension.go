@@ -63,6 +63,8 @@ type warden struct {
 	budgetExhausted bool
 	// adaptor is the per-model steer adaptation; the default sends everything.
 	adaptor steerAdaptor
+	// tools is the state of the prefs, loops and recall tools (tools_wiring.go).
+	tools toolsState
 }
 
 // Extension returns the guard.
@@ -93,6 +95,9 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); return nil, nil })
+	// TOOLS-LANE HOOK: the three tools and the compaction evidence appendix (tools_wiring.go).
+	w.registerWardenTools(e)
+	e.OnEvent(sdk.EventSessionCompact, w.onSessionCompact)
 	return e, w
 }
 
@@ -253,7 +258,7 @@ func (w *warden) mode(cfg Config, ctx sdk.Context) string {
 // ---------------------------------------------------------------------------
 // Session and run lifecycle.
 
-func (w *warden) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) {
+func (w *warden) onSessionStart(ctx sdk.Context, data map[string]any) (any, error) {
 	w.mu.Lock()
 	w.load(ctx)
 	w.window = NewAttemptWindow(w.cfg.Stuck.Window)
@@ -275,6 +280,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) 
 		w.disclose(ctx)
 	}
 	w.refresh(ctx)
+	w.toolsSessionStart(ctx, data) // TOOLS-LANE HOOK: prefs injection, resume announcement, search probe
 	return nil, nil
 }
 
