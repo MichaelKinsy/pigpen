@@ -55,7 +55,7 @@ func newRig(actions ...act) *overlayRig {
 	st := newStore()
 	st.setActiveRenderSession("test-session")
 	runActions(st, "test-session", actions...)
-	ov := newOverlay(st, 0)
+	ov := newOverlay(st)
 	sink := &fakeSink{}
 	r := &overlayRig{st: st, ov: ov, sink: sink, env: viewEnv{sink: sink, theme: identityTheme{}, width: 200}}
 	ov.bind()
@@ -247,7 +247,7 @@ func TestOverlayRenderCollapse(t *testing.T) {
 		runActions(st, "test-session", completes("done", 1, 1)...)
 		sink := &fakeSink{}
 		env := viewEnv{sink: sink, theme: identityTheme{}, width: 200}
-		ov := newOverlay(st, 0)
+		ov := newOverlay(st)
 		ov.bind()
 		ov.toggleCollapse(env)
 		ov.update(env) // collapsed render: must NOT queue the completed task
@@ -327,29 +327,13 @@ func TestOverlayRenderWidth(t *testing.T) {
 	})
 }
 
-// The host shows a string[] widget's first ten rows only (Pi interactive-mode.ts:2321-2336), so the
-// production overlay caps its own budget instead of letting the host truncate mid-list.
-func TestOverlayRowCap(t *testing.T) {
-	r := newRig(creates("t", 1, 17)...)
-	r.ov = newOverlay(r.st, hostWidgetRows-1)
-	lines := r.render()
-	if len(lines) > hostWidgetRows {
-		t.Fatalf("%d rows, the host shows %d", len(lines), hostWidgetRows)
-	}
-	contains(t, join(lines), "more")
-	r.env.toolsExpanded = true
-	if got := len(r.render()); got > hostWidgetRows {
-		t.Fatalf("expanded: %d rows, the host shows %d", got, hostWidgetRows)
-	}
-}
-
 func TestOverlayLifecycle(t *testing.T) {
 	tw(t, fLifecycle, "update() with no UI ctx bound is a no-op", func(t *testing.T) {
 		st := newStore()
 		st.setActiveRenderSession("s")
 		runActions(st, "s", creates("t", 1, 1)...)
 		sink := &fakeSink{}
-		ov := newOverlay(st, 0)
+		ov := newOverlay(st)
 		ov.update(viewEnv{sink: sink, theme: identityTheme{}, width: 80})
 		eq(t, len(sink.calls), 0, "widget calls")
 	})
@@ -446,7 +430,7 @@ func TestOverlayLifecycle(t *testing.T) {
 		st := newStore()
 		st.setActiveRenderSession("s")
 		sink := &fakeSink{}
-		ov := newOverlay(st, 0)
+		ov := newOverlay(st)
 		env := viewEnv{sink: sink, theme: identityTheme{}, width: 80}
 		ov.bind()
 		eq(t, ov.isRegistered(), false, "before")

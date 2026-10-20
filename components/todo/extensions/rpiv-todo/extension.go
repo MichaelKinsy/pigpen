@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/PiG/extensions/sdk/kit"
 )
 
 // defaultPromptSnippet and defaultPromptGuidelines are the tool's built-in prompt copy. The strings are
@@ -84,6 +85,7 @@ type app struct {
 	ov     *overlay          // nil until a foreground session has visible tasks (the original loads it lazily)
 	bound  bool              // a foreground session with a UI is attached (the original's uiCtx)
 	rebind bool              // the overlay must attach to the UI again before its next update
+	unsub  func()            // ends the terminal-resize subscription made when the overlay was bound
 	order  sequencer         // commits tool calls in the order they started
 	held   map[string]func() // tool call id -> release of its place, until the host reports the call ended
 }
@@ -144,14 +146,16 @@ func (a *app) releaseCall(callID string) {
 	}
 }
 
-// ctxSink pushes overlay rows to the host's widget above the editor.
+// ctxSink installs the overlay as a component widget above the editor: a kit view of verbatim rows, which
+// the host draws uncapped like Pi draws a component widget (a string[] widget shows ten rows only).
+// upstream: todo-overlay.ts:99-110 (setWidget with a factory and {placement: "aboveEditor"}).
 type ctxSink struct{ ctx sdk.Context }
 
 func (s ctxSink) SetWidgetLines(key string, lines []string) error {
 	if lines == nil {
 		return s.ctx.SetWidget(key, nil)
 	}
-	return s.ctx.SetWidget(key, lines, sdk.WidgetOptions{"placement": "aboveEditor"})
+	return s.ctx.SetWidget(key, kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{"placement": "aboveEditor"})
 }
 
 // rpcSink models Pi's RPC mode, where a component widget is not rendered: its registration is dropped, and
@@ -244,9 +248,6 @@ func detailsFromJSON(v any) *taskDetails {
 
 // execute applies one tool call to the calling session's slot. upstream: todo.ts:73-79.
 func (a *app) execute(ctx sdk.Context, p map[string]any) (any, error) {
-	if err := refuseUnportedConfig(); err != nil {
-		return nil, err
-	}
 	wait, release := a.order.turn() // the first statement: the SDK starts handlers in source order
 	handed := false
 	defer func() {
@@ -276,10 +277,6 @@ func (a *app) execute(ctx sdk.Context, p map[string]any) (any, error) {
 
 // commandHandler is the /todos command: the list grouped by status. upstream: todo.ts:119-158.
 func (a *app) commandHandler(ctx sdk.Context, _ string) error {
-	if err := refuseUnportedConfig(); err != nil {
-		ctx.Notify(err.Error(), "error")
-		return nil
-	}
 	if !ctx.HasUI() {
 		ctx.Notify(tr("command.requires_interactive", errRequiresInteractive), "error")
 		return nil
@@ -331,7 +328,7 @@ func (a *app) updateOverlay(ctx sdk.Context, resetCompletedDisplayState bool) {
 		return
 	}
 	if a.ov == nil {
-		a.ov = newOverlay(a.st, hostWidgetRows-1)
+		a.ov = newOverlay(a.st)
 		a.rebind = true
 	}
 	if a.rebind {
@@ -394,9 +391,25 @@ func (a *app) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) {
 	}
 	a.mu.Lock()
 	a.bound, a.rebind = true, true
+	if a.unsub == nil {
+		// Pi draws a component widget at the current width on every frame: a resize lays the rows out again.
+		if unsub, err := ctx.OnWidthChange(a.onWidthChange); err == nil {
+			a.unsub = unsub
+		}
+	}
 	a.mu.Unlock()
 	a.updateOverlay(ctx, true)
 	return nil, nil
+}
+
+// onWidthChange lays the overlay out again at the new terminal width.
+func (a *app) onWidthChange(ctx sdk.Context, _ int) {
+	a.mu.Lock()
+	ov := a.ov
+	a.mu.Unlock()
+	if ov != nil {
+		ov.refresh(envFor(ctx))
+	}
 }
 
 func (a *app) onSessionShutdown(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -415,9 +428,12 @@ func (a *app) onSessionShutdown(ctx sdk.Context, _ map[string]any) (any, error) 
 		return nil, nil
 	}
 	a.mu.Lock()
-	ov := a.ov
-	a.ov, a.bound, a.rebind = nil, false, false
+	ov, unsub := a.ov, a.unsub
+	a.ov, a.bound, a.rebind, a.unsub = nil, false, false, nil
 	a.mu.Unlock()
+	if unsub != nil {
+		unsub()
+	}
 	// The pointer clear and the overlay drop run whether or not the widget clear fails, so a dead UI does
 	// not leave the foreground pointing at an evicted slot.
 	var derr error

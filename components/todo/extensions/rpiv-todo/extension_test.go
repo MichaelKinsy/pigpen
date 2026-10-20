@@ -482,26 +482,6 @@ func TestParallelCallsCommitInStartOrder(t *testing.T) {
 	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-b", "toolName": "todo", "isError": false})
 }
 
-// The overlay is pushed above the editor, and within the rows the host shows of a string[] widget
-// (Pi interactive-mode.ts:2321-2336; todo-overlay.ts:107 placement "aboveEditor").
-func TestOverlayPlacementAndRowBudget(t *testing.T) {
-	r := startRig(t, HostOptions{})
-	var tasks []map[string]any
-	for i := 1; i <= 17; i++ {
-		tasks = append(tasks, jtask(float64(i), "task"))
-	}
-	r.setBranch(snapshot(18, tasks...))
-	r.Fire("session_start", nil)
-	calls := r.widgetCalls()
-	eq(t, len(calls), 1, "widget calls")
-	eq(t, calls[0]["key"], "rpiv-todos", "key")
-	eq(t, calls[0]["options"], map[string]any{"placement": "aboveEditor"}, "options")
-	if n := len(rowsOf(calls[0])); n == 0 || n > 10 {
-		t.Fatalf("%d rows pushed, the host shows 10", n)
-	}
-	contains(t, strings.Join(rowsOf(calls[0]), "\n"), "more")
-}
-
 // A host failure while reading the session id is an error of the call, not an empty session: the model sees
 // the failure instead of a list that silently went to the wrong slot.
 func TestToolReportsAHostFailure(t *testing.T) {

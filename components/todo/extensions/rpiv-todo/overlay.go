@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// widgetSink is what the overlay pushes rows to (the host's widget). A nil slice clears the widget.
+// widgetSink is what the overlay pushes its rows to (the host's component widget). A nil slice clears the widget.
 type widgetSink interface {
 	SetWidgetLines(key string, lines []string) error
 }
@@ -20,18 +20,12 @@ type viewEnv struct {
 	toolsExpanded bool
 }
 
-// hostWidgetRows is how many rows PiG shows of a string[] widget (Pi interactive-mode.ts:2321-2336). The
-// overlay of the original is a component widget, which the Go SDK cannot express (PORT.md, SDK gap G1), so
-// the rows are pre-rendered and the production overlay keeps its budget inside this limit.
-const hostWidgetRows = 10
-
 // overlay is the lifecycle controller of the persistent todo widget: register once, refresh by pushing
 // again, collapse instead of scroll, follow Pi's tool-output expansion mode, hide when empty.
 // upstream: todo-overlay.ts. A subprocess has no TUI handle (requestRender), so every refresh pushes the
-// rows again, laid out at the width the host reported.
+// rows again, laid out at the width the host reported; a terminal resize is a refresh too (refresh).
 type overlay struct {
-	st     *store
-	rowCap int // 0: no cap; else the most rows the host shows (the body budget shrinks to fit)
+	st *store
 
 	mu              sync.Mutex
 	bound           bool
@@ -43,8 +37,8 @@ type overlay struct {
 	lastNextIDKnown bool
 }
 
-func newOverlay(st *store, rowCap int) *overlay {
-	return &overlay{st: st, rowCap: rowCap, pendingHide: map[int]bool{}, hidden: map[int]bool{}}
+func newOverlay(st *store) *overlay {
+	return &overlay{st: st, pendingHide: map[int]bool{}, hidden: map[int]bool{}}
 }
 
 // bind attaches the overlay to a (new) UI: a rebind invalidates the registration so the next update
@@ -158,16 +152,9 @@ func (o *overlay) renderLocked(env viewEnv) []string {
 	}
 
 	lines := []string{heading}
-	maxLines := getMaxWidgetLines()
-	if o.rowCap > 0 && maxLines > o.rowCap {
-		maxLines = o.rowCap
-	}
-	budget := maxLines - 1
+	budget := getMaxWidgetLines() - 1
 	if env.toolsExpanded {
 		budget = len(tasks)
-		if o.rowCap > 0 && budget > o.rowCap-1 {
-			budget = o.rowCap - 1
-		}
 	}
 	layout := selectOverlayLayout(state, budget)
 	for _, t := range layout.Visible {
@@ -232,6 +219,16 @@ func (o *overlay) hideCompletedTasksFromPreviousTurn(env viewEnv) {
 		o.hidden[id] = true
 	}
 	o.pendingHide = map[int]bool{}
+	if o.registered {
+		o.pushLocked(env)
+	}
+}
+
+// refresh lays the rows out again at the width the host reports after a terminal resize: Pi renders a
+// component widget at the current width on every frame. A no-op while the widget is not registered.
+func (o *overlay) refresh(env viewEnv) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
 	if o.registered {
 		o.pushLocked(env)
 	}
