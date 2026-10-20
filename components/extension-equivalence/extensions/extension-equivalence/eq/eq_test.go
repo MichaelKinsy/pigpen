@@ -752,6 +752,23 @@ func TestScenarioNormalizeRulesApplyAfterTheBuiltInRulesToEveryString(t *testing
 	if s := n.str("at 2026-09-29T16:30:24Z"); s != "at U" {
 		t.Errorf("order or stage: %q", s)
 	}
+	// Rules added by separate calls run in call order, and a bad pattern is an error the caller sees.
+	n = NewNormalizer("", "", "")
+	if err := n.AddRules([]NormalizeRule{{Pattern: `a`, Replacement: "b"}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := n.AddRules([]NormalizeRule{{Pattern: `b`, Replacement: "c"}}); err != nil {
+		t.Fatal(err)
+	}
+	if s := n.str("a"); s != "c" {
+		t.Errorf("call order: %q", s)
+	}
+	if err := n.AddRules([]NormalizeRule{{Pattern: `(`, Replacement: "x"}}); err == nil {
+		t.Error("AddRules accepted a pattern that does not compile")
+	}
+	if s := n.str("a"); s != "c" {
+		t.Errorf("a rejected list must add nothing: %q", s)
+	}
 	// A normalizer without rules is exactly N1 to N3.
 	if s := NewNormalizer("", "", "").str("mfx3k2a9j-q7w8e1"); s != "mfx3k2a9j-q7w8e1" {
 		t.Errorf("no rules must change nothing: %q", s)
