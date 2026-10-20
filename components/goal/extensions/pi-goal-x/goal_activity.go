@@ -2,6 +2,11 @@ package pi_goal_x
 
 // ported from goal-activity.ts: the human-readable activity feed derived from ledger events.
 
+import (
+	"cmp"
+	"slices"
+)
+
 const (
 	conciseEvidenceMax = 48
 	activityReasonMax  = 80
@@ -227,10 +232,8 @@ func deriveGoalActivity(events []*jsObject, goalID string, o deriveGoalActivityO
 	return sliceLast(items, limit)
 }
 
+// activitySortStable is items.sort((a, b) => a.at < b.at ? -1 : a.at > b.at ? 1 : 0): stable, and O(n log n) like the engine's sort
+// (an insertion sort takes quadratic time on a ledger whose timestamps run backwards, for example after a clock change).
 func activitySortStable(s []goalActivityItem) {
-	for i := 1; i < len(s); i++ {
-		for j := i; j > 0 && s[j].at < s[j-1].at; j-- {
-			s[j], s[j-1] = s[j-1], s[j]
-		}
-	}
+	slices.SortStableFunc(s, func(a, b goalActivityItem) int { return cmp.Compare(a.at, b.at) })
 }
