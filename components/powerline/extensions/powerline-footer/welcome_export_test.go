@@ -20,3 +20,9 @@ func SetWelcomeAfterHeaderMark(f func()) (restore func()) {
 	welcomeAfterHeaderMark = f
 	return func() { welcomeAfterHeaderMark = nil }
 }
+
+// SetWelcomeBeforeHeaderInstall sets the hook that runs after the header install was checked and before it is made.
+func SetWelcomeBeforeHeaderInstall(f func()) (restore func()) {
+	welcomeBeforeHeaderInstall = f
+	return func() { welcomeBeforeHeaderInstall = nil }
+}

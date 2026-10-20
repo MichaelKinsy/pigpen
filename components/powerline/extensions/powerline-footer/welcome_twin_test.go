@@ -339,3 +339,21 @@ func TestShouldShowStartupWelcomeIsForTheTerminalOnly(t *testing.T) {
 	}
 	eq(t, shouldShowStartupWelcome("new", true, "tui"), false, "new")
 }
+
+// One tick of the countdown draws the new number and asks the host to repaint.
+func TestWelcomeCountdownTickRepaints(t *testing.T) {
+	a := &app{}
+	req := &welcomeRequest{ctx: context.Background(), cancel: func() {}}
+	ov := &welcomeOverlay{a: a, req: req, countdown: 30, comp: newWelcomeComponent("Model", "Provider", nil, loadedCounts{}, nil)}
+	repaints := 0
+	ov.SetInvalidate(func() { repaints++ })
+	a.welcome.overlay = ov
+	if !strings.Contains(welcomeText(ov.Render(96)), "(30s)") {
+		t.Fatal("the overlay does not start at 30 s")
+	}
+	a.welcomeTick(ov)
+	eq(t, repaints, 1, "repaints after one tick")
+	if out := welcomeText(ov.Render(96)); !strings.Contains(out, "(29s)") {
+		t.Errorf("after one tick:\n%s", out)
+	}
+}

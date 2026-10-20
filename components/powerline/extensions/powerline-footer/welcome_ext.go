@@ -57,6 +57,9 @@ var welcomeClock welcomeTimers = realWelcomeTimers{}
 // dismiss the welcome there.
 var welcomeAfterHeaderMark func()
 
+// welcomeBeforeHeaderInstall, when set, runs after the install was checked and before it is made, with the header lock held.
+var welcomeBeforeHeaderInstall func()
+
 // welcomeRequest is the original's AbortController of one welcome attempt.
 type welcomeRequest struct {
 	ctx    context.Context
@@ -449,6 +452,9 @@ func (a *app) welcomeHeaderWork(ctx sdk.Context, req *welcomeRequest, generation
 	w.mu.Lock()
 	still := w.headerActive
 	w.mu.Unlock()
+	if welcomeBeforeHeaderInstall != nil {
+		welcomeBeforeHeaderInstall()
+	}
 	if still {
 		_ = ctx.SetHeaderRenderer(header.render)
 	}

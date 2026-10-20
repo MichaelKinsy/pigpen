@@ -809,3 +809,30 @@ func TestWelcomeOverlayThatTookFocusEndsAfterTheFirstKey(t *testing.T) {
 		t.Errorf("pasted %d times: the second key reached a closed overlay", n)
 	}
 }
+
+func TestWelcomeHeaderRemovalWaitsForAnInstallThatIsAlreadyDecided(t *testing.T) {
+	// The install checked that the header is wanted, then a dismissal arrives. The removal must come after the install, or the
+	// header it meant to remove would be drawn for good.
+	r := startWelcome(t, true, "tui", nil)
+	var once sync.Once
+	t.Cleanup(powerline.SetWelcomeBeforeHeaderInstall(func() {
+		once.Do(func() {
+			go r.h.Fire("agent_start", nil)
+			time.Sleep(150 * time.Millisecond) // the dismissal reaches the header lock
+		})
+	}))
+	r.startSession("startup")
+	r.timers.runStartupWork()()
+	wlWait(t, "the removal", func() bool { _, c := r.headerCalls(); return c == 1 })
+	var order []string
+	for _, c := range r.h.CallsTo("ui.setHeader") {
+		if c.Args["clear"] == true {
+			order = append(order, "clear")
+		} else {
+			order = append(order, "install")
+		}
+	}
+	if len(order) != 2 || order[0] != "install" || order[1] != "clear" {
+		t.Errorf("header calls = %v, want install then clear", order)
+	}
+}
