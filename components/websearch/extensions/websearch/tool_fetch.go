@@ -65,15 +65,15 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 	if len(urlList) == 0 {
 		return errorOutput("No URL provided.", "No URL provided", nil), nil
 	}
-	if mode == "answer" {
-		return ToolOutput{}, unsupported("fetch_content mode answer (answering from a page needs a model call)")
-	}
 	if update != nil {
 		update(textOutput(fmt.Sprintf("Fetching %d URL(s)...", len(urlList)), map[string]any{"phase": "fetch", "progress": 0}))
 	}
 
 	ex := ExtractOptions{Mode: mode, Frames: opts.Frames, Timestamp: opts.Timestamp, ForceClone: opts.ForceClone != nil && *opts.ForceClone, Model: opts.Model, ToolNames: r.registeredNames()}
-	ex.Prompt = opts.Prompt
+	if mode != "answer" {
+		// Answer mode keeps the prompt for the page question; the extractor never sees it (index.ts:2620-2624).
+		ex.Prompt = opts.Prompt
+	}
 	fetched := FetchAllContent(ctx, urlList, ex)
 	if ctx.Err() != nil {
 		return ToolOutput{}, abortError(ctx.Err())
@@ -89,6 +89,9 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 		}
 	}
 	presented := fetched
+	if mode == "answer" {
+		presented = answerPages(ctx, fetched, opts.Prompt, opts.AnswerModel)
+	}
 	successful, totalChars := 0, 0
 	for _, p := range presented {
 		if p.Error == nil {
