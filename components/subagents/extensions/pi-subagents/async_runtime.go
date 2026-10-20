@@ -173,6 +173,7 @@ func (rt *asyncRuntime) onSessionStart(ctx sdk.Context, _ map[string]any) (any, 
 	rt.state.BaseCwd = ctx.Cwd()
 	rt.state.CurrentSessionID = currentSessionID(ctx)
 	rt.state.AsyncJobs = map[string]*AsyncJobState{}
+	rt.state.FleetJobs = map[string]*AsyncJobState{}
 	rt.state.WidgetsSuspended = false // resetSessionState (index.ts:1122)
 	rt.mu.Unlock()
 	rt.restoreActiveJobs()
@@ -312,6 +313,7 @@ func (rt *asyncRuntime) restoreActiveJobs() {
 	for _, r := range runs {
 		rt.mu.Lock()
 		rt.state.AsyncJobs[r.ID] = jobFromSummary(r)
+		rt.state.rememberFleetJob(rt.state.AsyncJobs[r.ID])
 		_, owned := rt.handles[r.ID]
 		rt.mu.Unlock()
 		if owned || !backgroundSupported {
@@ -343,6 +345,7 @@ func (rt *asyncRuntime) refreshJob(asyncDir string) {
 	if j := rt.state.AsyncJobs[st.RunID]; j != nil {
 		sum := statusToSummary(asyncDir, st)
 		*j = *jobFromSummary(sum)
+		rt.state.rememberFleetJob(j)
 	}
 }
 
@@ -360,6 +363,11 @@ func (rt *asyncRuntime) refreshWidget() {
 	}
 	rt.mu.Unlock()
 	if suspended {
+		return
+	}
+	if ctx.Mode() == "rpc" && len(jobs) > 0 {
+		// renderWidget (render.ts): an RPC host reads the versioned snapshot, not terminal lines
+		_ = ctx.SetWidget(widgetKeyAsync, encodeAsyncStatusSnapshotWidget(jobs, SnapshotOptions{}))
 		return
 	}
 	lines := widgetLines(jobs)
@@ -438,6 +446,7 @@ func (rt *asyncRuntime) onRunComplete(cfg *RunConfig, result map[string]any, st 
 	delete(rt.handles, cfg.ID)
 	if j := rt.state.AsyncJobs[cfg.ID]; j != nil && st != nil {
 		*j = *jobFromSummary(statusToSummary(cfg.AsyncDir, st))
+		rt.state.rememberFleetJob(j)
 	}
 	cap := rt.capacity[cfg.ID]
 	delete(rt.capacity, cfg.ID)
@@ -679,6 +688,7 @@ func (rt *asyncRuntime) launchBackground(ctx sdk.Context, params map[string]any,
 	if st, _ := readStatusQuiet(asyncDir); st != nil {
 		rt.mu.Lock()
 		rt.state.AsyncJobs[id] = jobFromSummary(statusToSummary(asyncDir, st))
+		rt.state.rememberFleetJob(rt.state.AsyncJobs[id])
 		rt.mu.Unlock()
 	}
 	rt.refreshWidget()

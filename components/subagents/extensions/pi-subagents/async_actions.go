@@ -919,6 +919,7 @@ func (rt *asyncRuntime) launchBackgroundResume(ctx sdk.Context, p map[string]any
 	if st, _ := readStatusQuiet(asyncDir); st != nil {
 		rt.mu.Lock()
 		rt.state.AsyncJobs[id] = jobFromSummary(statusToSummary(asyncDir, st))
+		rt.state.rememberFleetJob(rt.state.AsyncJobs[id])
 		rt.mu.Unlock()
 	}
 	rt.refreshWidget()
