@@ -259,7 +259,17 @@ func childEnv(base []string, depth int, role string) []string {
 		}
 		out = append(out, kv)
 	}
-	return append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
+	out = append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
+	// child-cache-retention.ts: PI_SUBAGENT_CACHE_RETENTION pins the children's tier (the last duplicate key wins)
+	baseMap := map[string]string{}
+	for _, kv := range base {
+		k, v, _ := strings.Cut(kv, "=")
+		baseMap[k] = v
+	}
+	for k, v := range childCacheRetentionEnv(baseMap) {
+		out = append(out, k+"="+v)
+	}
+	return out
 }
 
 func nonNegativeInt(s string) (int, bool) {
