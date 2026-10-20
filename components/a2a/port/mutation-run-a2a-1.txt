@@ -363,3 +363,11 @@ SURVIVED shutdown-does-not-close-the-port-3
          
 8 mutation(s), 3 not killed
 SUB-DONE
+
+# Last block: the survivor was made deterministic. Server.serveHook (tests only) holds the Serve goroutine back for 300 ms;
+# TestShutdownWaitsForTheServeGoroutineAndClosesThePort asserts that after Shutdown returns the goroutine has finished and the port refuses
+# connections. `pigeq mutate --unit` on shutdown-does-not-close-the-port alone (xd670):
+KILLED   shutdown-does-not-close-the-port
+         unit test: --- FAIL: TestShutdownWaitsForTheServeGoroutineAndClosesThePort (0.00s)
+1 mutation(s), 0 not killed
+# Total: 166 of 166 killed.

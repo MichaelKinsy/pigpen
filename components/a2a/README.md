@@ -90,7 +90,7 @@ Data you send to a remote leaves the machine.
 extensions/a2a/         the Go extension (package a2aext): config, auth, worker, executor, server, client, extension; tests
 port/PORT.md            contract table, gaps, host findings, proof results (this is an original adapter: there is no Pi oracle)
 port/scenarios,golden   host-level scenarios recorded from the port itself under PiG (self-recorded regression, not equivalence)
-port/mutations.json     166 deliberate defects; 165 are caught, one scheduling-window mutant survives on a many-processor host (port/mutation-run.txt, mutation-run-a2a-1.txt)
+port/mutations.json     166 deliberate defects; every one is caught (port/mutation-run.txt is the earlier 109, mutation-run-a2a-1.txt the 166)
 port/interop/kagent/    kagent-compatible endpoint used by scripts/interop-kagent.mjs
 port/red.txt            the RED run of the tests on a stub; red-a2a-1.txt the RED run of the task store, parts, wait and refusal tests
 ```
