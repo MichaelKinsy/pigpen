@@ -387,7 +387,7 @@
   "name": "fast-json-accepts-repeated-keys",
   "file": "fastjson.go",
   "find": "if len(m) == n {",
-  "replace": "if false {"
+  "replace": "if len(m) == n \u0026\u0026 false {"
  },
  {
   "name": "fast-json-accepts-trailing-data",
@@ -399,7 +399,7 @@
   "name": "fast-json-accepts-invalid-utf8",
   "file": "fastjson.go",
   "find": "if r == utf8.RuneError && size == 1 {",
-  "replace": "if false {"
+  "replace": "if r == utf8.RuneError \u0026\u0026 size == 1 \u0026\u0026 false {"
  },
  {
   "name": "fast-json-accepts-numbers-out-of-range",
@@ -435,7 +435,7 @@
   "name": "read-body-drops-read-error",
   "file": "searchcommon.go",
   "find": "if err == io.EOF {",
-  "replace": "if err != nil {"
+  "replace": "if err == io.EOF || err != nil {"
  },
  {
   "name": "gemini-config-non-object-root-ignored",
