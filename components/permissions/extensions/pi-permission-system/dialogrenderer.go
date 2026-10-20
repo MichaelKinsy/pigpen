@@ -80,6 +80,10 @@ const (
 )
 
 // RenderPromptDialog renders a payload for a human deciding an ask. A nil paint leaves the text plain.
+//
+// The evidence is laid out and wrapped only as far as the row budget can show it: once the rows already counted overrun maxRows the
+// rest cannot appear (an entry is shown whole or not at all), so a payload carrying thousands of entries costs no more to render than
+// one that fits. The answer is the one the original computes by wrapping every entry first.
 func RenderPromptDialog(payload PromptPayload, budget DialogBudget, paint HighlightPaint) DialogView {
 	if paint == nil {
 		paint = func(text string) string { return text }
@@ -92,29 +96,39 @@ func RenderPromptDialog(payload PromptPayload, budget DialogBudget, paint Highli
 	for _, fact := range evidenceFacts(payload) {
 		facts = append(facts, capField(fact, budget.FieldMaxWidth))
 	}
-	plain := make([]promptFact, len(facts))
-	for i, f := range facts {
-		plain[i] = f.promptFact
+	elided := false
+	width := 0
+	for _, f := range facts {
+		elided = elided || f.clipped
+		if n := utf16LenWTF(f.label); n > width {
+			width = n
+		}
 	}
-	blocks := layoutFacts(plain, FlaggedElements(payload), paint)
-	for i := range blocks {
-		blocks[i] = FitLinesToWidth(blocks[i], budget.Width)
+	flagged := FlaggedElements(payload)
+	block := func(f cappedFact) []string {
+		return FitLinesToWidth(layoutFact(f.promptFact, width, flagged, paint), budget.Width)
 	}
+
 	var coreLines []string
-	for _, block := range blocks[:coreCount] {
-		coreLines = append(coreLines, block...)
+	for _, f := range facts[:coreCount] {
+		coreLines = append(coreLines, block(f)...)
 	}
-	lines, dropped := fitToRows(coreLines, blocks[coreCount:], budget.MaxRows)
+	// The evidence blocks, wrapped until their rows (with the core's) first exceed the budget.
+	var evidence [][]string
+	total := 0
+	for _, f := range facts[coreCount:] {
+		b := block(f)
+		evidence = append(evidence, b)
+		total += len(b)
+		if float64(len(coreLines)+total) > budget.MaxRows {
+			break
+		}
+	}
+	lines, dropped := fitToRows(coreLines, evidence, len(facts)-coreCount, budget.MaxRows)
 	for i := range lines {
 		lines[i] = toWellFormed(lines[i])
 	}
-	elided := dropped
-	for _, f := range facts {
-		if f.clipped {
-			elided = true
-		}
-	}
-	return DialogView{Lines: lines, Elided: elided}
+	return DialogView{Lines: lines, Elided: elided || dropped}
 }
 
 // capField narrows one field's text to the budget: a quantity bound applied uniformly, never a content filter. The marker is a
@@ -128,13 +142,15 @@ func capField(fact promptFact, fieldMaxWidth float64) cappedFact {
 }
 
 // fitToRows fits the rendered blocks into the row budget. The core is exempt and the evidence is what gives way; a drop costs one
-// row for its marker, taken only when there is something to mark. An entry is shown whole or not at all.
-func fitToRows(core []string, evidence [][]string, maxRows float64) (lines []string, dropped bool) {
+// row for its marker, taken only when there is something to mark. An entry is shown whole or not at all. evidence holds the blocks
+// rendered so far and entries the number of evidence entries there are: fewer blocks than entries means the rest were left unrendered
+// because the rows already counted overrun the budget.
+func fitToRows(core []string, evidence [][]string, entries int, maxRows float64) (lines []string, dropped bool) {
 	total := 0
 	for _, block := range evidence {
 		total += len(block)
 	}
-	if float64(len(core)+total) <= maxRows {
+	if len(evidence) == entries && float64(len(core)+total) <= maxRows {
 		lines = append([]string{}, core...)
 		for _, block := range evidence {
 			lines = append(lines, block...)
@@ -237,38 +253,28 @@ func jsPadEnd(s string, n int) string {
 	return s
 }
 
-// layoutFacts aligns the labels into a `label : value` column. A field carrying its own newlines continues under the column
-// rather than back at the margin.
-func layoutFacts(facts []promptFact, flagged []string, paint HighlightPaint) [][]string {
-	width := 0
-	for _, fact := range facts {
-		if n := utf16LenWTF(fact.label); n > width {
-			width = n
+// layoutFact aligns one fact's label into the `label : value` column of the given width. A field carrying its own newlines continues
+// under the column rather than back at the margin.
+func layoutFact(fact promptFact, width int, flagged []string, paint HighlightPaint) []string {
+	// A fact that is the flagged element paints whole; any other line paints the whole-token occurrences of it.
+	isFlagged := inStrings(flagged, fact.text)
+	highlight := func(line string) string {
+		if isFlagged {
+			return paint(line)
 		}
+		return paintTokens(line, flagged, paint)
 	}
 	indent := strings.Repeat(" ", width+3)
-	blocks := make([][]string, len(facts))
-	for i, fact := range facts {
-		// A fact that is the flagged element paints whole; any other line paints the whole-token occurrences of it.
-		isFlagged := inStrings(flagged, fact.text)
-		highlight := func(line string) string {
-			if isFlagged {
-				return paint(line)
-			}
-			return paintTokens(line, flagged, paint)
+	parts := strings.Split(fact.text, "\n")
+	block := make([]string, len(parts))
+	for j, line := range parts {
+		if j == 0 {
+			block[j] = jsPadEnd(fact.label, width) + " : " + highlight(line)
+		} else {
+			block[j] = indent + highlight(line)
 		}
-		parts := strings.Split(fact.text, "\n")
-		block := make([]string, len(parts))
-		for j, line := range parts {
-			if j == 0 {
-				block[j] = jsPadEnd(fact.label, width) + " : " + highlight(line)
-			} else {
-				block[j] = indent + highlight(line)
-			}
-		}
-		blocks[i] = block
 	}
-	return blocks
+	return block
 }
 
 // isTokenCharacter is /[\w/.-]/ on one UTF-16 unit: ASCII only, so a non-ASCII byte is never one.

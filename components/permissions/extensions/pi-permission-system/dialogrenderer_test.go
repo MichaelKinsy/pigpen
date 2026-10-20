@@ -4,6 +4,7 @@ import (
 	"math"
 	"strings"
 	"testing"
+	"time"
 )
 
 // ppPayload is makePromptPayload (test/helpers/prompt-details-fixtures.ts): a minimal complete payload, with the fixture's defaults
@@ -265,4 +266,28 @@ func TestDialogRendererTwins(t *testing.T) {
 		})
 		eq(t, got, S("subagent : unknown", "surface  : read", "value    : /tmp/x"), "lines")
 	})
+}
+
+// A payload from a forwarding child is untrusted input: its evidence is laid out and wrapped only as far as the budget shows it, so a
+// hostile one costs no more than one that fits (the render path stays bounded).
+func TestRenderPromptDialogBoundedWork(t *testing.T) {
+	p := ppPayload("bash_external_directory", func(p *PromptPayload) {
+		p.Request.ToolName, p.Request.Surface, p.Request.Value = sp("bash"), "external_directory", "cat /etc/hosts"
+		for i := 0; i < 200000; i++ {
+			p.Evidence = append(p.Evidence, evid("external path", "/etc/path-"+jsNumber(float64(i))+strings.Repeat("x", 200), sp("/private/etc/hosts")))
+		}
+	})
+	start := time.Now()
+	view := RenderPromptDialog(p, DialogBudget{RenderBudget: DefaultRenderBudget, Width: 80}, nil)
+	elapsed := time.Since(start)
+	eq(t, len(view.Lines) <= 24, true, "rows")
+	eq(t, view.Elided, true, "elided")
+	eq(t, view.Lines[len(view.Lines)-1], "\u2026", "marker")
+	// The cap and the labels are one pass over the entries (about 0.1 s here); wrapping every entry would cost far more.
+	if elapsed > 2*time.Second {
+		t.Fatalf("render took %v", elapsed)
+	}
+	if testing.Verbose() {
+		t.Logf("render took %v", elapsed)
+	}
 }
