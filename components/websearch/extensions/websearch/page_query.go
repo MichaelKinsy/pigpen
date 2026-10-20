@@ -224,7 +224,7 @@ func AnswerFromPage(ctx context.Context, input PageAnswerInput, sc SideCallConte
 	pageChars := originalChars
 	// A string never has more UTF-16 units than bytes, so a short page needs no slicing.
 	if float64(len(pageText)) > maximumInputChars {
-		pageText = jsSlice(pageText, 0, int(math.Min(maximumInputChars, math.MaxInt32)))
+		pageText = jsPrefix(pageText, int(math.Min(maximumInputChars, math.MaxInt32)))
 		pageChars = jsLen(pageText)
 	}
 	truncated := pageChars < originalChars
@@ -265,6 +265,26 @@ func AnswerFromPage(ctx context.Context, input PageAnswerInput, sc SideCallConte
 		text = fmt.Sprintf("%s\n\nNote: The source page was truncated to %d of %d characters for model context.", text, pageChars, originalChars)
 	}
 	return PageAnswer{Text: text, Model: modelLabel(model), InputChars: pageChars, OriginalInputChars: originalChars, Truncated: truncated}, nil
+}
+
+// jsPrefix is jsSlice(s, 0, n) without encoding the whole page to UTF-16: a page can be megabytes
+// and only its first n units are kept. A cut inside a surrogate pair gives U+FFFD, as jsSlice does.
+func jsPrefix(s string, n int) string {
+	units := 0
+	for i, r := range s {
+		width := 1
+		if r >= 0x10000 {
+			width = 2
+		}
+		if units+width > n {
+			if units < n {
+				return s[:i] + "\uFFFD"
+			}
+			return s[:i]
+		}
+		units += width
+	}
+	return s
 }
 
 // mergeHeaders is `(headers) => ({ ...headers, ...sessionHeaders })`.
