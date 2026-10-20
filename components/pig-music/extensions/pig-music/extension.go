@@ -68,7 +68,7 @@ func extensionWith(d deps) *sdk.Extension {
 // stop is /music stop: end the music, whether or not this PiG session started it.
 func (a *app) stop(ctx sdk.Context) error {
 	a.foot.capture(ctx)
-	stopped, err := a.stopMPV(context.Background())
+	stopped, err := a.stopMusic(context.Background())
 	if stopped && err == nil {
 		a.disown()
 	}

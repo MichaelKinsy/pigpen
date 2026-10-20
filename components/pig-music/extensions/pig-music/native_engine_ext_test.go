@@ -9,9 +9,10 @@ import (
 	"testing"
 	"time"
 
+	pig_music "github.com/MichaelKinsy/pigpen/pig-music"
+	"github.com/MichaelKinsy/pigpen/pig-music/internal/mpvfake"
 	"github.com/MichaelKinsy/pigpen/pig-music/music"
 	"github.com/MichaelKinsy/pigpen/pig-music/native"
-	pig_music "github.com/MichaelKinsy/pigpen/pig-music"
 )
 
 // The /music player and its quick commands honor engine "native": the player runs as `pigmusic serve`, a daemon on a local
@@ -27,6 +28,9 @@ type nativeRig struct {
 
 func nativeLookPath(name string) (string, error) {
 	if filepath.IsAbs(name) {
+		if _, err := os.Stat(name); err != nil {
+			return "", err
+		}
 		return name, nil
 	}
 	return "", os.ErrNotExist // no mpv, no yt-dlp on this machine
@@ -250,7 +254,7 @@ func TestDoctorShowsTheNativeEnginesHealth(t *testing.T) {
 	var text string
 	waitFor(t, "the native health", func() bool {
 		for _, n := range h.notifications() {
-			if m, _ := n["message"].(string); strings.Contains(m, "native engine") {
+			if m, _ := n["message"].(string); strings.Contains(m, "doctor, native engine") {
 				text = m
 				return true
 			}
@@ -278,7 +282,7 @@ func TestDoctorOnTheMPVEngineStillShowsTheNativeEnginesHealthAsInformation(t *te
 	var text string
 	waitFor(t, "the native health", func() bool {
 		for _, n := range r.h.notifications() {
-			if m, _ := n["message"].(string); strings.Contains(m, "native engine") {
+			if m, _ := n["message"].(string); strings.Contains(m, "doctor, native engine") {
 				text = m
 				return true
 			}
@@ -287,5 +291,130 @@ func TestDoctorOnTheMPVEngineStillShowsTheNativeEnginesHealthAsInformation(t *te
 	})
 	if !strings.Contains(text, "audio output") || strings.Contains(text, "stream probe") {
 		t.Errorf("on the mpv engine the native health is shown without its network probe:\n%s", text)
+	}
+}
+
+// listenMPV starts a fake mpv on the rig's mpv socket, as a second player that is already running.
+func (r *nativeRig) listenMPV(t *testing.T) *mpvfake.Server {
+	t.Helper()
+	srv, err := mpvfake.Listen(r.paths.Socket, mpvfake.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// mpvPresent is a machine where mpv and yt-dlp are installed (any name resolves), so that auto has a healthy mpv to prefer.
+func mpvPresent(name string) (string, error) { return os.Args[0], nil }
+
+// With engine auto, a native player that is already running is the one to control even when mpv is healthy: the footer follows it.
+func TestAutoEngineControlsARunningNativePlayerEvenWhenMPVIsHealthy(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("see above")
+	}
+	r := nativeEnv(t, map[string]string{"PIG_MUSIC_ENGINE": "auto"})
+	r.h = startHost(t, pig_music.ExtensionWith(fixedSource{songs(5)}, nil, r.env, mpvPresent, nil), "tui", 100, 30, false)
+	r.h.emit("session_start", nil)
+	say(t, r.h, "play", "night")
+	waitFor(t, "the native player's track in the footer", statusHas(r.h, " Song 1 - Some Artist"))
+	if st := r.client(t).State(); len(st.Queue) != 5 {
+		t.Fatalf("the native player has %d tracks", len(st.Queue))
+	}
+}
+
+// A running mpv comes first, ahead of a running native player: the footer follows mpv.
+func TestAutoEngineControlsARunningMPVAheadOfARunningNativePlayer(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("see above")
+	}
+	r := nativeEnv(t, map[string]string{"PIG_MUSIC_ENGINE": "auto"})
+	srv := r.listenMPV(t)
+	r.h = startHost(t, pig_music.ExtensionWith(fixedSource{songs(5)}, nil, r.env, mpvPresent, nil), "tui", 100, 30, false)
+	say(t, r.h, "play", "night")
+	waitFor(t, "the mpv's track in the footer", statusHas(r.h, " Song 1 - Some Artist"))
+	if urls, _ := srv.Playlist(); len(urls) != 5 {
+		t.Fatalf("mpv has %d entries", len(urls))
+	}
+	if st := r.client(t).State(); len(st.Queue) != 0 {
+		t.Fatalf("the native player was given %d tracks", len(st.Queue))
+	}
+}
+
+// Changing the engine in settings.json while the player is held moves the footer to the new engine's player at the next command.
+func TestSwitchingTheEngineInTheSettingsMovesThePlayerFromMPVToNative(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("see above")
+	}
+	r := nativeEnv(t, map[string]string{"PIG_MUSIC_ENGINE": ""})
+	r.listenMPV(t)
+	writeSettings(t, r.env, `{"engine": "mpv"}`)
+	r.h = startHost(t, pig_music.ExtensionWith(fixedSource{songs(5)}, nil, r.env, mpvPresent, nil), "tui", 100, 30, false)
+	<-r.h.emit("session_start", nil)
+	time.Sleep(300 * time.Millisecond) // session_start attaches in the background
+	writeSettings(t, r.env, `{"engine": "native"}`)
+	say(t, r.h, "play", "night")
+	waitFor(t, "the native player's track in the footer", statusHas(r.h, " Song 1 - Some Artist"))
+}
+
+func TestSwitchingTheEngineInTheSettingsMovesThePlayerFromNativeToMPV(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("see above")
+	}
+	r := nativeEnv(t, map[string]string{"PIG_MUSIC_ENGINE": ""})
+	writeSettings(t, r.env, `{"engine": "native"}`)
+	r.h = startHost(t, pig_music.ExtensionWith(fixedSource{songs(5)}, nil, r.env, mpvPresent, nil), "tui", 100, 30, false)
+	<-r.h.emit("session_start", nil) // the native daemon is running: the footer attaches to it
+	time.Sleep(300 * time.Millisecond)
+	srv := r.listenMPV(t)
+	writeSettings(t, r.env, `{"engine": "mpv"}`)
+	say(t, r.h, "play", "night")
+	waitFor(t, "the mpv's track in the footer", statusHas(r.h, " Song 1 - Some Artist"))
+	if urls, _ := srv.Playlist(); len(urls) != 5 {
+		t.Fatalf("mpv has %d entries", len(urls))
+	}
+}
+
+// Termux has mpv only: a native player that happens to be running there is not used, and the player says what is missing.
+func TestTermuxIsMPVOnlyEvenWithANativePlayerRunning(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("see above")
+	}
+	r := nativeEnv(t, map[string]string{"PIG_MUSIC_ENGINE": "auto", "TERMUX_VERSION": "0.118"})
+	h := r.h
+	<-h.command("music")
+	h.mu.Lock()
+	opened := len(h.opens)
+	h.mu.Unlock()
+	if opened != 0 || lastNotice(h) == "" {
+		t.Fatalf("the player opened %d times on Termux with no mpv, notice %q", opened, lastNotice(h))
+	}
+}
+
+func notice(h *overlayHost, contains string) (map[string]any, bool) {
+	for _, n := range h.notifications() {
+		if m, _ := n["message"].(string); strings.Contains(m, contains) {
+			return n, true
+		}
+	}
+	return nil, false
+}
+
+func TestDoctorSaysErrorWhenTheNativeEngineInUseIsBrokenAndWarningWhenItIsOnlyTheFallback(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("see above")
+	}
+	missing := filepath.Join(t.TempDir(), "no-such-pigmusic")
+	r := nativeEnv(t, map[string]string{"PIG_MUSIC_SERVE": missing})
+	<-r.h.command("music", "doctor")
+	waitFor(t, "the native health", func() bool { _, ok := notice(r.h, "doctor, native engine"); return ok })
+	if n, _ := notice(r.h, "doctor, native engine"); n["level"] != "error" {
+		t.Errorf("a broken native engine that is the engine in use: level %v", n["level"])
+	}
+	r = nativeEnv(t, map[string]string{"PIG_MUSIC_SERVE": missing, "PIG_MUSIC_ENGINE": "mpv"})
+	<-r.h.command("music", "doctor")
+	waitFor(t, "the native health", func() bool { _, ok := notice(r.h, "doctor, native engine"); return ok })
+	if n, _ := notice(r.h, "doctor, native engine"); n["level"] != "warning" {
+		t.Errorf("a native engine that is only the fallback: level %v", n["level"])
 	}
 }
