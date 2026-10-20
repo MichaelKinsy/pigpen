@@ -142,7 +142,7 @@ m("command-menu-no-clear-completed", "command.go", "if completed > 0 {\n\t\t\tch
 m("command-back-option", "command.go", 'actions = append(actions, "✗ Delete", "← Back")', 'actions = append(actions, "✗ Delete")')
 
 # the component widget, the settings panel and JSON.stringify output (PR 2)
-m("widget-rows-sent-as-strings", "extension.go", 'kit.View{Root: kit.NewLines(lines)}', 'lines')
+m("widget-rows-sent-as-strings", "extension.go", '_ = u.ctx.SetWidget(key, kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{"placement": widgetPlacement})', '_ = u.ctx.SetWidget(key, lines, sdk.WidgetOptions{"placement": widgetPlacement}); _ = kit.View{}')
 m("widget-view-without-placement", "extension.go", 'kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{"placement": widgetPlacement})', 'kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{})')
 m("widget-rpc-sends-rows", "extension.go", 'if u.ctx.Mode() == "rpc" {\n\t\treturn\n\t}\n\t_ = u.ctx.SetWidget(key, kit.View', 'if false {\n\t\treturn\n\t}\n\t_ = u.ctx.SetWidget(key, kit.View')
 m("widget-resize-not-watched", "extension.go", "if !a.watchingWidth && ctx.HasUI() {", "if false {")
@@ -169,7 +169,7 @@ m("settings-panel-error-swallowed", "settings.go", "_, err := ctx.Custom(a.newSe
 m("command-settings-not-back-to-menu", "command.go", "if err := a.settingsMenu(ctx); err != nil {\n\t\t\treturn err\n\t\t}\n\t\treturn mainMenu()", "return a.settingsMenu(ctx)")
 m("taskoutput-wait-ignores-abort", "tools.go", "case <-timer.C:\n\t\tcase <-ctx.Done():\n\t\t}", "case <-timer.C:\n\t\t}")
 m("json-stringify-html-escaped", "extension.go", "sdkjson.MarshalStringify(v)", "sdkjson.Marshal(v)")
-m("store-file-not-stringify", "store.go", "sdkjson.MarshalStringify(data)", "json.Marshal(data)")
+m("store-file-not-stringify", "store.go", "sdkjson.MarshalStringify(data)", "func() ([]byte, error) { _ = sdkjson.Marshal; return json.Marshal(data) }()")
 m("store-file-indent", "store.go", 'json.Indent(&buf, compact, "", "  ")', 'json.Indent(&buf, compact, "", "\\t")')
 
 # validation

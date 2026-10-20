@@ -704,8 +704,8 @@
  {
   "name": "widget-rows-sent-as-strings",
   "file": "extension.go",
-  "find": "kit.View{Root: kit.NewLines(lines)}",
-  "replace": "lines"
+  "find": "_ = u.ctx.SetWidget(key, kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{\"placement\": widgetPlacement})",
+  "replace": "_ = u.ctx.SetWidget(key, lines, sdk.WidgetOptions{\"placement\": widgetPlacement}); _ = kit.View{}"
  },
  {
   "name": "widget-view-without-placement",
@@ -867,7 +867,7 @@
   "name": "store-file-not-stringify",
   "file": "store.go",
   "find": "sdkjson.MarshalStringify(data)",
-  "replace": "json.Marshal(data)"
+  "replace": "func() ([]byte, error) { _ = sdkjson.Marshal; return json.Marshal(data) }()"
  },
  {
   "name": "store-file-indent",

@@ -204,3 +204,20 @@ func TestSettingsPanelViewDoesNotChangeUnderTheHost(t *testing.T) {
 	b, _ := json.Marshal(after)
 	eqv(t, string(a), string(b))
 }
+
+func TestSettingsPanelFailureIsReportedByTheCommand(t *testing.T) {
+	// upstream awaits ui.custom(): a rejection fails the command.
+	useEnv(t, "PI_TASKS", "off")
+	useConfig(t, obj{})
+	cwd := t.TempDir()
+	r := &rig{cwd: cwd, sessionID: "s1", persisted: true, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
+	r.Host = StartHost(t, tintinweb_tasks.Extension(), HostOptions{Cwd: cwd, OnCallValue: func(method string, args map[string]any) (any, string) {
+		if method == "ui.custom" {
+			return nil, "custom failed"
+		}
+		return r.answer(method, args)
+	}})
+	r.setScript("Settings")
+	failure := r.Host.Command("tasks", "")
+	eqv(t, strings.Contains(failure, "custom failed"), true)
+}
