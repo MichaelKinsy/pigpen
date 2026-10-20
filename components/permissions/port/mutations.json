@@ -1053,7 +1053,7 @@
   "name": "bp-reattach-only-after-trailing",
   "file": "bashparse/redirectarguments.go",
   "find": "if i >= trailing && LiteralNodeTypes[child.typ] {",
-  "replace": "if LiteralNodeTypes[child.typ] {"
+  "replace": "if i >= trailing-1 && LiteralNodeTypes[child.typ] {"
  },
  {
   "name": "bp-reattach-pipeline-last-stage",

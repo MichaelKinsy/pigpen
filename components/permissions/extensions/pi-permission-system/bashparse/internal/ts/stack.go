@@ -18,8 +18,10 @@ type stackLink struct {
 type stackNode struct {
 	state             uint16
 	position          Length
-	links             [maxLinkCount]stackLink
-	linkCount         int
+	// links are the paths back through the stack (at most maxLinkCount). The first lives in the
+	// node's own allocation: nearly every node has exactly one.
+	links             []stackLink
+	first             [1]stackLink
 	errorCost         uint32
 	nodeCount         uint32
 	dynamicPrecedence int32
@@ -91,8 +93,8 @@ func stackSubtreeNodeCount(s *subtree) uint32 {
 func newStackNode(previous *stackNode, st *subtree, isPending bool, state uint16) *stackNode {
 	n := &stackNode{state: state}
 	if previous != nil {
-		n.linkCount = 1
-		n.links[0] = stackLink{previous, st, isPending}
+		n.first[0] = stackLink{previous, st, isPending}
+		n.links = n.first[:1]
 		n.position = previous.position
 		n.errorCost = previous.errorCost
 		n.dynamicPrecedence = previous.dynamicPrecedence
@@ -134,7 +136,7 @@ func (n *stackNode) addLink(link stackLink) {
 	if link.node == n {
 		return
 	}
-	for i := 0; i < n.linkCount; i++ {
+	for i := 0; i < len(n.links); i++ {
 		existing := &n.links[i]
 		if subtreeIsEquivalent(existing.subtree, link.subtree) {
 			// In general, ambiguities are preserved until they are removed from the stack during a
@@ -152,7 +154,7 @@ func (n *stackNode) addLink(link stackLink) {
 			if existing.node.state == link.node.state &&
 				existing.node.position.bytes == link.node.position.bytes &&
 				existing.node.errorCost == link.node.errorCost {
-				for j := 0; j < link.node.linkCount; j++ {
+				for j := 0; j < link.len(node.links); j++ {
 					existing.node.addLink(link.node.links[j])
 				}
 				dp := link.node.dynamicPrecedence
@@ -167,14 +169,13 @@ func (n *stackNode) addLink(link stackLink) {
 		}
 	}
 
-	if n.linkCount == maxLinkCount {
+	if len(n.links) == maxLinkCount {
 		return
 	}
 
 	nodeCount := link.node.nodeCount
 	dp := link.node.dynamicPrecedence
-	n.links[n.linkCount] = link
-	n.linkCount++
+	n.links = append(n.links, link)
 
 	if link.subtree != nil {
 		nodeCount += stackSubtreeNodeCount(link.subtree)
@@ -231,7 +232,7 @@ func (s *stack) setLastExternalToken(v int, token *subtree) { s.heads[v].lastExt
 func (s *stack) errorCost(v int) uint32 {
 	head := &s.heads[v]
 	result := head.node.errorCost
-	if head.status == stackPaused || (head.node.state == errorState && head.node.links[0].subtree == nil) {
+	if head.status == stackPaused || (head.node.state == errorState && (len(head.node.links) == 0 || head.node.links[0].subtree == nil)) {
 		result += errorCostPerRecovery
 	}
 	return result
@@ -296,7 +297,7 @@ func (s *stack) iterate(version int, callback func(it *stackIterator) int, goalS
 
 			action := callback(it)
 			shouldPop := action&actionPop != 0
-			shouldStop := action&actionStop != 0 || node.linkCount == 0
+			shouldStop := action&actionStop != 0 || len(node.links) == 0
 
 			if shouldPop {
 				subtrees := it.subtrees
@@ -317,10 +318,10 @@ func (s *stack) iterate(version int, callback func(it *stackIterator) int, goalS
 				continue
 			}
 
-			for j := 1; j <= node.linkCount; j++ {
+			for j := 1; j <= len(node.links); j++ {
 				var next *stackIterator
 				var link stackLink
-				if j == node.linkCount {
+				if j == len(node.links) {
 					link = node.links[0]
 					next = &iterators[i]
 				} else {
@@ -386,7 +387,7 @@ func (s *stack) popPending(version int) []stackSlice {
 // popError is ts_stack_pop_error: the subtrees of the ERROR on top, or nil.
 func (s *stack) popError(version int) []*subtree {
 	node := s.heads[version].node
-	for i := 0; i < node.linkCount; i++ {
+	for i := 0; i < len(node.links); i++ {
 		if node.links[i].subtree != nil && node.links[i].subtree.isError() {
 			foundError := false
 			pop := s.iterate(version, func(it *stackIterator) int {
@@ -412,7 +413,7 @@ func (s *stack) popError(version int) []*subtree {
 // popAll is ts_stack_pop_all.
 func (s *stack) popAll(version int) []stackSlice {
 	return s.iterate(version, func(it *stackIterator) int {
-		if it.node.linkCount == 0 {
+		if it.len(node.links) == 0 {
 			return actionPop
 		}
 		return actionNone
@@ -461,7 +462,7 @@ func (s *stack) hasAdvancedSinceError(v int) bool {
 		return true
 	}
 	for node != nil {
-		if node.linkCount > 0 {
+		if len(node.links) > 0 {
 			st := node.links[0].subtree
 			if st != nil {
 				if st.totalBytes() > 0 {
@@ -525,7 +526,7 @@ func (s *stack) merge(v1, v2 int) bool {
 		return false
 	}
 	h1, h2 := &s.heads[v1], &s.heads[v2]
-	for i := 0; i < h2.node.linkCount; i++ {
+	for i := 0; i < h2.len(node.links); i++ {
 		h1.node.addLink(h2.node.links[i])
 	}
 	if h1.node.state == errorState {
