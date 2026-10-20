@@ -31,6 +31,7 @@ func ResetCaches() {
 	configCache = nil
 	configMu.Unlock()
 	resetProviderState()
+	resetGitHubState()
 }
 
 func fileExists(path string) bool {

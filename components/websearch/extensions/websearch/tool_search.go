@@ -480,6 +480,7 @@ func (r *Runtime) fetchInBackground(ctx context.Context, urls []string, proxy *s
 // session are cancelled and the retained results are rebuilt from the session entries.
 func (r *Runtime) SessionStarted(entries []CustomEntry) {
 	r.abortPending()
+	clearCloneCache()
 	r.mu.Lock()
 	r.sessionActive = true
 	r.mu.Unlock()
@@ -492,6 +493,7 @@ func (r *Runtime) SessionShutdown() {
 	r.sessionActive = false
 	r.mu.Unlock()
 	r.abortPending()
+	clearCloneCache()
 	ClearResults()
 }
 

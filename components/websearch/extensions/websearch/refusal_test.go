@@ -119,11 +119,6 @@ func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
 		{"YouTube timestamp", map[string]any{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "timestamp": "1:30"}, "video frame and timestamp extraction"},
 		{"local video", map[string]any{"url": video}, "local video file analysis"},
 		{"local video frames", map[string]any{"url": video, "frames": 2.0}, "video frame and timestamp extraction"},
-		{"GitHub repository", map[string]any{"url": "https://github.com/octocat/Hello-World"}, "GitHub repository extraction (clone)"},
-		{"GitHub tree", map[string]any{"url": "https://github.com/octocat/Hello-World/tree/main/docs", "forceClone": true}, "GitHub repository extraction (clone)"},
-		{"GitHub blob", map[string]any{"url": "https://github.com/octocat/Hello-World/blob/main/README"}, "GitHub repository extraction (clone)"},
-		{"GitHub issue", map[string]any{"url": "https://github.com/octocat/Hello-World/issues/12"}, "GitHub issue and pull request extraction"},
-		{"GitHub pull request", map[string]any{"url": "https://github.com/octocat/Hello-World/pull/7/files"}, "GitHub issue and pull request extraction"},
 	}
 	for _, c := range cases {
 		c := c
@@ -151,8 +146,8 @@ func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
 		}
 	})
 	t.Run("a disabled extractor leaves its URLs to the plain fetch", func(t *testing.T) {
-		cfg := `{"youtube":{"enabled":false},"githubClone":{"enabled":false},"githubPrIssue":{"enabled":false},"video":{"enabled":false}}`
-		for _, u := range []string{"https://www.youtube.com/watch?v=dQw4w9WgXcQ", "https://github.com/octocat/Hello-World", "https://github.com/octocat/Hello-World/issues/12", video} {
+		cfg := `{"youtube":{"enabled":false},"video":{"enabled":false}}`
+		for _, u := range []string{"https://www.youtube.com/watch?v=dQw4w9WgXcQ", video} {
 			extractEnv(t, cfg)
 			feature, err := unportedFetchFeature(u, ExtractOptions{})
 			if err != nil || feature != "" {
@@ -162,7 +157,7 @@ func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
 	})
 	t.Run("a page that is not one of them is not refused", func(t *testing.T) {
 		extractEnv(t, "")
-		for _, u := range []string{"https://www.youtube.com/playlist?list=PL1", "https://github.com/octocat", "https://github.com/octocat/Hello-World/issues", "https://github.com/octocat/Hello-World/pulls", "https://example.com/a.mp4", "https://example.com/"} {
+		for _, u := range []string{"https://www.youtube.com/playlist?list=PL1", "https://example.com/a.mp4", "https://example.com/"} {
 			feature, err := unportedFetchFeature(u, ExtractOptions{})
 			if err != nil || feature != "" {
 				t.Fatalf("%s: feature %q, err %v", u, feature, err)

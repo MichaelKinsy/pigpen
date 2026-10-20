@@ -22,8 +22,8 @@ import (
 // HTTP path (SSRF-checked, redirect-limited, size-capped, raw and readable modes, images,
 // Cloudflare challenge detection), the hosted fetch providers (the keyless Jina Reader, and
 // Firecrawl, Crawl4AI, TinyFish, Search1API, Querit, Kagi, Ollama, Parallel, Parallel MCP and Bright
-// Data), the fetch routing configuration, and the failure guidance. Gemini URL context, PDF text,
-// video, YouTube and GitHub-clone extraction are named gaps (docs/PORT.md): their routing entries
+// Data), the fetch routing configuration, the failure guidance, the PDF extractors, and the GitHub
+// extractors. Video and YouTube extraction are named gaps (docs/PORT.md): their routing entries
 // exist so configuration validates, but they are not called.
 
 const (
@@ -222,6 +222,9 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 		if _, err := ParseURL(rawURL, nil); err != nil {
 			return failed(rawURL, err.Error())
 		}
+	}
+	if res, done := extractGitHubURL(ctx, rawURL, o); done {
+		return res
 	}
 	if ctx.Err() != nil {
 		return abortedResult(rawURL)
