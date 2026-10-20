@@ -243,12 +243,12 @@ exit 1`)
 	tw(t, F, "background cleanup removes dead runtimes after unrelated files and ownerless directories", func(t *testing.T) {
 		w := newGHWorld(t, nil)
 		for i := range 512 {
-			if err := os.MkdirAll(filepath.Join(w.clonePath, "runtime-preserved-"+pad3(i)), 0o755); err != nil {
+			if err := os.MkdirAll(filepath.Join(w.clonePath, "runtime-preserved-"+ghPad3(i)), 0o755); err != nil {
 				t.Fatal(err)
 			}
 		}
 		for i := range 1024 {
-			writeFile(t, filepath.Join(w.clonePath, "unrelated-"+pad4(i)), "preserve")
+			writeFile(t, filepath.Join(w.clonePath, "unrelated-"+ghPad4(i)), "preserve")
 		}
 		w.shim(t, "gh", controlledGh)
 		// A process that owned a runtime and died: a child that is alive while its runtime is made and reaped after.
@@ -264,7 +264,7 @@ exit 1`)
 		owner := readFile(t, filepath.Join(staleRuntime, ".owner.json"))
 		var stalePaths []string
 		for i := range 3 {
-			p := filepath.Join(w.clonePath, "runtime-late-dead-"+pad3(i))
+			p := filepath.Join(w.clonePath, "runtime-late-dead-"+ghPad3(i))
 			writeFile(t, filepath.Join(p, ".owner.json"), owner)
 			stalePaths = append(stalePaths, p)
 		}
@@ -464,9 +464,9 @@ func deadOwner() string {
 	return `{"version":1,"pid":999999999,"platform":"` + nodePlatform() + `","bootId":"test","startTime":"1"}`
 }
 
-func pad3(i int) string { return pad(i, 3) }
-func pad4(i int) string { return pad(i, 4) }
-func pad(i, n int) string {
+func ghPad3(i int) string { return ghPad(i, 3) }
+func ghPad4(i int) string { return ghPad(i, 4) }
+func ghPad(i, n int) string {
 	s := itoa(i)
 	for len(s) < n {
 		s = "0" + s
