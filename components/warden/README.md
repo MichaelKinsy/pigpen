@@ -123,7 +123,7 @@ required) or fuses into a Piglet Binary (see `piglets/pig-warden`). It shares th
 Ported: the four guards above, the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
 `exemptRules`, the steer budget, and both judge backends. Not ported (rules file, slop, secret masking, context
 saver, conscience, subagent supervision, …) and every deliberate deviation are listed in
-[`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test.
+[`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test. The upstream `/warden` actions and the tools `warden_remember`, `warden_loops` and `warden_recall` that are not ported are refused with an error that names the original (`npm:pi-warden@0.80.0`); they never run partially.
 
 ## Proof
 

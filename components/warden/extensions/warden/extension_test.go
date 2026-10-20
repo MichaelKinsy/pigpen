@@ -827,3 +827,37 @@ func TestSkippedSDKToolCallArgumentsAsObject(t *testing.T) {
 		t.Errorf("the agent's words before the call did not reach the judge: %v", state["plan"])
 	}
 }
+
+// --- refusals of what the port does not carry ---------------------------------------------------------------
+
+func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testing.T) {
+	cases := map[string]string{
+		"rules": "/warden rules", "rules check": "/warden rules check", "rules audit src": "/warden rules audit",
+		"rules calibrate --yes": "/warden rules calibrate", "rules tune": "/warden rules tune", "report": "/warden report",
+		"config get x": "/warden config", "init": "/warden init", "audit": "/warden audit", "index": "/warden index",
+		"prefs": "/warden prefs", "loops": "/warden loops", "recommend": "/warden recommend", "unmute": "/warden unmute", "bench": "/warden bench",
+	}
+	for args, feature := range cases {
+		h := startHarness(t, harnessOpts{})
+		h.host.Command("warden", args)
+		want := "pi-warden (Go port) does not support " + feature + " yet. Install the original extension, npm:pi-warden@0.80.0, which runs unchanged in PiG."
+		got := h.notices()
+		if len(got) != 1 || got[0] != want {
+			t.Errorf("/warden %s: notices %q, want %q", args, got, want)
+		}
+		if len(h.messages()) != 0 {
+			t.Errorf("/warden %s ran something: %v", args, h.messages())
+		}
+	}
+}
+
+func TestUnportedWardenToolsAreRegisteredAndRefuse(t *testing.T) {
+	h := startHarness(t, harnessOpts{})
+	for _, tool := range []string{"warden_remember", "warden_loops", "warden_recall"} {
+		_, failure := h.host.Tool(tool, map[string]any{"lesson": "Never X", "action": "list"})
+		want := "pi-warden (Go port) does not support the " + tool + " tool yet. Install the original extension, npm:pi-warden@0.80.0, which runs unchanged in PiG."
+		if !strings.Contains(failure, want) {
+			t.Errorf("%s: failure %q, want %q", tool, failure, want)
+		}
+	}
+}
