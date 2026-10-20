@@ -83,7 +83,6 @@ func New(o Options) *sdk.Extension {
 	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}}
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
-	registerRefusedTools(e)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
 	e.OnEvent(sdk.EventBeforeAgentStart, w.onBeforeAgentStart)
 	e.OnEvent(sdk.EventAgentStart, w.onAgentStart)

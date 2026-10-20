@@ -48,11 +48,11 @@ feedback database and regret question, learning, the config schema migration, an
 documented `stuck.evidence: false`).
 
 Refused, not silent: the `/warden` actions `rules` (and `rules check|audit|calibrate|tune`), `report`, `config`, `init`,
-`audit`, `index`, `prefs`, `loops`, `recommend`, `unmute` and `bench`, and the tools `warden_remember`, `warden_loops`
-and `warden_recall`, answer with "pi-warden (Go port) does not support <feature> yet. Install the original extension,
-npm:pi-warden@0.80.0, which runs unchanged in PiG." (a command notification; a tool error). The tools are registered
-with the original's schemas so the model sees them and gets the refusal. Not yet ported: the trace panel shortcut and
-the upstream events with no Go handler (message_*, input, compaction, agent_settled).
+`audit`, `index`, `prefs`, `loops`, `recommend`, `unmute` and `bench` answer with a command notification: "@pi-in-go/pigpen-warden
+(Go port) does not support <feature> yet. Install the original extension, npm:pi-warden@0.80.0, which runs unchanged in
+PiG." The tools `warden_remember`, `warden_loops` and `warden_recall` are not registered (not yet ported), so the model is
+not offered them. Also not yet ported: the trace panel shortcut and the upstream events with no Go handler (message_*,
+input, compaction, agent_settled).
 
 ## Deviations on purpose
 
