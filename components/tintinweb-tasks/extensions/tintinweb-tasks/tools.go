@@ -44,9 +44,6 @@ func (a *app) guarded(fn func(ctx sdk.Context, p map[string]any) (string, error)
 	return func(ctx sdk.Context, p map[string]any) (res any, err error) {
 		a.mu.Lock()
 		defer a.mu.Unlock()
-		if err := a.refuseUnported(); err != nil {
-			return nil, err
-		}
 		defer func() {
 			if r := recover(); r != nil {
 				if e, ok := r.(error); ok {
