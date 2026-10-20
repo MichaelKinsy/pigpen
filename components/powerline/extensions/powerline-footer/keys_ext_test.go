@@ -17,6 +17,10 @@ import (
 // that keeps an editor.
 
 type keysRig struct {
+	// custom, when set, answers ui.custom (an overlay the extension opened): it may block until the test releases it.
+	custom func(args map[string]any) map[string]any
+	// hasUI is false for a host without a UI.
+	noUI   bool
 	agent  string
 	mu     sync.Mutex
 	editor string
@@ -37,9 +41,20 @@ func newKeysRig(t *testing.T, agent, sessionID, editor string) *keysRig {
 	if _, err := os.Stat(filepath.Join(agent, "settings.json")); err != nil {
 		os.WriteFile(filepath.Join(agent, "settings.json"), []byte(`{"powerline":{"welcome":false}}`), 0o644)
 	}
-	r := &keysRig{agent: agent, editor: editor}
-	r.h = StartHost(t, powerline.Extension(), HostOptions{Mode: "tui", Cwd: t.TempDir(), OnCall: func(method string, args map[string]any) (map[string]any, string) {
+	return startKeysRig(t, &keysRig{agent: agent, editor: editor}, sessionID)
+}
+
+func startKeysRig(t *testing.T, r *keysRig, sessionID string) *keysRig {
+	t.Helper()
+	hasUI := !r.noUI
+	r.h = StartHost(t, powerline.Extension(), HostOptions{Mode: "tui", HasUI: &hasUI, Cwd: t.TempDir(), OnCall: func(method string, args map[string]any) (map[string]any, string) {
 		switch method {
+		case "ui.custom":
+			if r.custom != nil {
+				return r.custom(args), ""
+			}
+		case "ui.select":
+			return map[string]any{"selected": "Insert", "ok": true}, ""
 		case "getSessionID":
 			return map[string]any{"sessionId": sessionID}, ""
 		case "ui.getEditorText":
@@ -286,5 +301,87 @@ func TestTheRefusalsOfThePortedFeaturesAreGone(t *testing.T) {
 	}
 	if !r.input(t, "\x1b[121;7u") {
 		t.Error("the configured copy shortcut ctrl+alt+y is live")
+	}
+}
+
+// A picker the extension opened is an overlay: the listener stands down while it is open (the original asks tui.hasOverlay()), and
+// the shortcut that opened it returns at once, since the picker waits for the user.
+func TestShortcutsStandDownWhileAPickerIsOpen(t *testing.T) {
+	agent := t.TempDir()
+	dir := filepath.Join(agent, "powerline-footer")
+	os.MkdirAll(dir, 0o755)
+	os.WriteFile(filepath.Join(dir, "stash-history.json"), []byte(`{"version":1,"history":["saved stash"]}`), 0o644)
+	opened := make(chan string, 4)
+	release := make(chan struct{})
+	r := &keysRig{agent: agent, editor: ""}
+	var mu sync.Mutex
+	picks := []string{"stash", "0"}
+	r.custom = func(args map[string]any) map[string]any {
+		opened <- args["key"].(string)
+		<-release
+		mu.Lock()
+		defer mu.Unlock()
+		pick := picks[0]
+		picks = picks[1:]
+		return CustomResult(map[string]any{"value": pick, "label": pick, "description": ""})
+	}
+	t.Setenv("PI_CODING_AGENT_DIR", agent)
+	os.WriteFile(filepath.Join(agent, "settings.json"), []byte(`{"powerline":{"welcome":false}}`), 0o644)
+	startKeysRig(t, r, "overlay-session")
+	r.h.Fire("session_start", map[string]any{"reason": "startup"})
+
+	// ctrl+alt+h opens the picker; the input call returns while the picker is still open.
+	if !r.input(t, "\x1b[104;7u") {
+		t.Fatal("ctrl+alt+h must be consumed")
+	}
+	select {
+	case <-opened:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the picker did not open")
+	}
+	r.mu.Lock()
+	r.editor = "typing under the overlay"
+	r.mu.Unlock()
+	if r.input(t, "\x1bs") || r.input(t, "\x1b[99;7u") {
+		t.Error("shortcuts must not fire while the picker is open")
+	}
+	if r.text() != "typing under the overlay" {
+		t.Errorf("editor = %q", r.text())
+	}
+	r.mu.Lock()
+	r.editor = ""
+	r.mu.Unlock()
+	release <- struct{}{} // "Prompt history" -> stash
+	select {
+	case <-opened:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the stash list did not open")
+	}
+	release <- struct{}{} // "Stash history" -> #1
+	deadline := time.Now().Add(5 * time.Second)
+	for r.text() != "saved stash" && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if r.text() != "saved stash" {
+		t.Fatalf("the chosen stash was not inserted: %q", r.text())
+	}
+	// With the pickers closed the shortcuts work again.
+	deadline = time.Now().Add(5 * time.Second)
+	for !r.input(t, "\x1bs") && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if r.text() != "" {
+		t.Errorf("alt+s after the picker closed: editor %q", r.text())
+	}
+}
+
+func TestStashHistoryCommandNeedsAUI(t *testing.T) {
+	r := startKeysRig(t, &keysRig{agent: t.TempDir(), noUI: true}, "no-ui")
+	t.Setenv("PI_CODING_AGENT_DIR", r.agent)
+	if failure := r.h.Command("stash-history", ""); failure != "" {
+		t.Fatal(failure)
+	}
+	if got := r.notes(); len(got) != 0 {
+		t.Errorf("without a UI /stash-history does nothing, got %q", got)
 	}
 }

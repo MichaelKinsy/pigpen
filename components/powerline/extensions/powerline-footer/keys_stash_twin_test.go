@@ -647,7 +647,7 @@ func TestStashHistoryPersistence(t *testing.T) {
 	if !strings.HasPrefix(string(data), want) || !strings.HasSuffix(string(data), "\n  ]\n}\n") {
 		t.Errorf("file = %q", data)
 	}
-	if got := readPersistedStashHistory(); len(got) != stashHistoryLimit {
+	if got := readPersistedStashHistory(); len(got) != 12 {
 		t.Errorf("history limit: %d", len(got))
 	}
 	h := []string{"x"}
@@ -657,7 +657,7 @@ func TestStashHistoryPersistence(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		pushStashHistory(&h, fmt.Sprintf("p%d", i))
 	}
-	if len(h) != stashHistoryLimit || h[0] != "p19" {
+	if len(h) != 12 || h[0] != "p19" {
 		t.Errorf("pushed history = %q", h)
 	}
 }
@@ -676,9 +676,12 @@ func TestProjectPromptReading(t *testing.T) {
 	blocks := newObject()
 	blocks.set("type", "text")
 	blocks.set("text", "block  one")
+	image := newObject()
+	image.set("type", "image")
+	image.set("text", "not a text block")
 	msg := newObject()
 	msg.set("role", "user")
-	msg.set("content", []any{blocks, newObject(), "x"})
+	msg.set("content", []any{blocks, image, newObject(), "x"})
 	entry := newObject()
 	entry.set("type", "message")
 	entry.set("message", msg)
@@ -687,6 +690,7 @@ func TestProjectPromptReading(t *testing.T) {
 		sessionLine("older\n  prompt", 2), // duplicate: kept once
 		marshalJSON(entry, ""),
 		`{"type":"message","message":{"role":"assistant","content":"no"}}`,
+		`{"type":"message","message":{"role":"assistant","content":"leaked","meta":{"role":"user"}}}`,
 		sessionLine("   ", 3),
 		`not a message line`,
 	}, "\n") + "\n"
@@ -721,6 +725,83 @@ func TestProjectPromptReading(t *testing.T) {
 	}
 }
 
+func TestProjectPromptFileLimit(t *testing.T) {
+	agentRig(t)
+	cwd := "/work/file-limit"
+	dir := getProjectSessionsPath(cwd)
+	os.MkdirAll(dir, 0o755)
+	now := time.Now()
+	for i := 0; i < 55; i++ {
+		path := filepath.Join(dir, fmt.Sprintf("s-%02d.jsonl", i))
+		os.WriteFile(path, []byte(sessionLine(fmt.Sprintf("prompt %d", i), 1)+"\n"), 0o644)
+		mtime := now.Add(-time.Duration(i) * time.Second)
+		os.Chtimes(path, mtime, mtime)
+	}
+	got, err := readRecentProjectPrompts(cwd, 100)
+	if err != nil || len(got) != 50 || got[0] != "prompt 0" || got[49] != "prompt 49" {
+		t.Errorf("only the 50 newest files are read: %d prompts, first %q (%v)", len(got), got, err)
+	}
+}
+
+func TestDisableDropsTheReloadHandOff(t *testing.T) {
+	agentRig(t)
+	f := &fakeKeys{session: "disable-session"}
+	transferActiveStashReload("disable-session", new("handed over"))
+	newKeysState(map[string]any{}, false).disable(f)
+	if got := takeActiveStashReload("disable-session"); got != nil {
+		t.Errorf("disable left the hand-off %q", *got)
+	}
+	f.wantStatus(t, "stash", "")
+}
+
+func TestSelectOverlayKeys(t *testing.T) {
+	items := []selectItem{{"0", "a", ""}, {"1", "b", "second"}, {"2", "c", ""}}
+	o := newSelectOverlay(keysPlainTheme{}, "Title", "hint", items, 2)
+	press := func(data string) sdkResult {
+		res, err := o.HandleInput(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return sdkResult{res.Done, res.Value}
+	}
+	if o.selected != 0 {
+		t.Fatal("starts on the first item")
+	}
+	press("\x1b[A")
+	if o.selected != 2 {
+		t.Errorf("up wraps to the last item, got %d", o.selected)
+	}
+	press("\x1b[B")
+	if o.selected != 0 {
+		t.Errorf("down wraps to the first item, got %d", o.selected)
+	}
+	press("\x1b[B")
+	if r := press("\r"); !r.done || r.value.(map[string]any)["value"] != "1" || r.value.(map[string]any)["description"] != "second" {
+		t.Errorf("enter selects the current item: %+v", r)
+	}
+	if r := press("\x1b"); !r.done || r.value != nil {
+		t.Errorf("escape cancels: %+v", r)
+	}
+	if r := press("\x03"); !r.done || r.value != nil {
+		t.Errorf("ctrl+c cancels: %+v", r)
+	}
+	if r := press("x"); r.done {
+		t.Error("other keys do nothing")
+	}
+	lines := o.Render(30)
+	if len(lines) == 0 || !strings.HasPrefix(lines[0], "╭") || !strings.Contains(strings.Join(lines, "\n"), "(2/3)") || !strings.Contains(strings.Join(lines, "\n"), "→ b") {
+		t.Errorf("render: %q", lines)
+	}
+	if buildStashPreview("  a \n b\t c ", 72) != "a b c" || buildStashPreview(" \n ", 72) != "(empty)" || buildStashPreview(strings.Repeat("x", 100), 10) == strings.Repeat("x", 100) {
+		t.Error("buildStashPreview")
+	}
+}
+
+type sdkResult struct {
+	done  bool
+	value any
+}
+
 func keysContains(list []string, s string) bool {
 	for _, e := range list {
 		if e == s {
@@ -735,6 +816,7 @@ func TestInsertSelectedPromptHistoryEntry(t *testing.T) {
 		name, text, answer, wantText, wantNote string
 	}{
 		{"empty editor", "", "", "picked", "Inserted prompt"},
+		{"whitespace editor", "  \n ", "", "picked", "Inserted prompt"},
 		{"replace", "draft", "Replace", "picked", "Replaced editor with prompt"},
 		{"append", "draft", "Append", "draft\npicked", "Appended prompt"},
 		{"append after a newline", "draft\n", "Append", "draft\npicked", "Appended prompt"},
@@ -876,14 +958,15 @@ func TestShortcutActions(t *testing.T) {
 
 func TestClipboard(t *testing.T) {
 	type call struct {
-		cmd   string
-		args  []string
-		input string
+		cmd     string
+		args    []string
+		input   string
+		timeout float64
 	}
 	run := func(env clipboardEnv, ok func(cmd string) bool) (error, []call) {
 		var calls []call
-		r := runnerFunc(func(cmd string, args []string, input string, _ float64) (string, bool) {
-			calls = append(calls, call{cmd, args, input})
+		r := runnerFunc(func(cmd string, args []string, input string, timeout float64) (string, bool) {
+			calls = append(calls, call{cmd, args, input, timeout})
 			if cmd == "wslpath" {
 				return "C:\\tmp\\x.txt\n", ok(cmd)
 			}
@@ -898,7 +981,7 @@ func TestClipboard(t *testing.T) {
 	all := func(string) bool { return true }
 	none := func(string) bool { return false }
 
-	if err, calls := run(envOf("darwin", nil), all); err != nil || len(calls) != 1 || calls[0].cmd != "pbcopy" || calls[0].input != "hello" {
+	if err, calls := run(envOf("darwin", nil), all); err != nil || len(calls) != 1 || calls[0].cmd != "pbcopy" || calls[0].input != "hello" || calls[0].timeout != 5000 {
 		t.Errorf("darwin: %v %+v", err, calls)
 	}
 	if err, calls := run(envOf("windows", nil), all); err != nil || calls[0].cmd != "clip" {
@@ -931,7 +1014,7 @@ func TestClipboard(t *testing.T) {
 	wsl := envOf("linux", nil)
 	wsl.isWSL = func() bool { return true }
 	err, calls = run(wsl, all)
-	if err != nil || len(calls) != 2 || calls[0].cmd != "wslpath" || calls[1].cmd != "powershell.exe" || !strings.Contains(calls[1].args[2], `ReadAllText('C:\tmp\x.txt'`) {
+	if err != nil || len(calls) != 2 || calls[0].timeout != 1000 || calls[1].timeout != 5000 || calls[0].cmd != "wslpath" || calls[1].cmd != "powershell.exe" || !strings.Contains(calls[1].args[2], `ReadAllText('C:\tmp\x.txt'`) {
 		t.Errorf("wsl: %v %+v", err, calls)
 	}
 	if err, _ := run(wsl, func(c string) bool { return c != "powershell.exe" }); err == nil {

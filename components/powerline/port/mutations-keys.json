@@ -123,7 +123,7 @@
   "name": "config-modifier-order",
   "file": "shortcut_config.go",
   "find": "return rank(a) - rank(b) })",
-  "replace": "return 0 })"
+  "replace": "return rank(a) - rank(a) })"
  },
  {
   "name": "config-reserved-pi-keys",
@@ -160,12 +160,6 @@
   "file": "shortcut_config.go",
   "find": "case configuredDefined && configured == nil:\n\t\ttoggle = nil",
   "replace": "case configuredDefined && configured == nil:\n\t\ttoggle = fallback"
- },
- {
-  "name": "config-bash-lines-floor",
-  "file": "shortcut_config.go",
-  "find": "math.Max(100, math.Floor(n))",
-  "replace": "math.Max(100, n)"
  },
  {
   "name": "config-bash-bytes-min",
@@ -288,12 +282,6 @@
   "replace": "projectPromptHistoryFileLimit    = 60"
  },
  {
-  "name": "prompts-tail-newline",
-  "file": "stash_history.go",
-  "find": "return text[i+1:], nil",
-  "replace": "return text[i:], nil"
- },
- {
   "name": "prompts-project-key",
   "file": "stash_history.go",
   "find": "projectKeyRuns.ReplaceAllString(projectKeyEdges.ReplaceAllString(cwd, \"\"), \"-\")",
@@ -382,12 +370,6 @@
   "file": "keys.go",
   "find": "if isKeyRelease(data) {\n\t\treturn \"\"\n\t}\n\tk.mu.Lock()",
   "replace": "if false {\n\t\treturn \"\"\n\t}\n\tk.mu.Lock()"
- },
- {
-  "name": "action-reply-opt-in",
-  "file": "keys.go",
-  "find": "case k.shortcuts.Reply != nil && matchesConfiguredShortcut",
-  "replace": "case matchesConfiguredShortcut"
  },
  {
   "name": "action-hook-required",
@@ -480,12 +462,6 @@
   "replace": "false"
  },
  {
-  "name": "ext-sharp-s-setting",
-  "file": "keys_ext.go",
-  "find": "parsePowerlineConfig(settings[\"powerline\"], presetNames).StashSharpSShortcut",
-  "replace": "false"
- },
- {
   "name": "ext-disabled-guard",
   "file": "keys_ext.go",
   "find": "if !k.enabled.Load() || !ctx.HasUI() ||",
@@ -574,5 +550,11 @@
   "file": "core.go",
   "find": "if p.keys != nil {\n\t\tp.keys.disable()\n\t} else {",
   "replace": "if p.keys != nil {\n\t} else {"
+ },
+ {
+  "name": "ext-enabled-flag",
+  "file": "keys_ext.go",
+  "find": "k.enabled.Store(true)\n\tk.unsubscribe()",
+  "replace": "k.unsubscribe()"
  }
 ]

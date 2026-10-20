@@ -151,6 +151,10 @@ func TestShortcutMatching(t *testing.T) {
 		{"\x1bOP", "f1", true},
 		{"\x1b[66;6u", "ctrl+shift+b", true},
 		{"\x1b[98;6u", "ctrl+shift+b", true},
+		{"\x1bx", "alt+s", false},
+		{"\x1b", "alt+s", false},
+		{"\x1b[104;71u", "ctrl+alt+h", true}, // caps lock and num lock do not count
+		{"\x1b[104;7:2u", "ctrl+alt+h", true},
 		{"\x02", "ctrl+b", true},
 		{"b", "ctrl+b", false},
 	} {
@@ -158,11 +162,39 @@ func TestShortcutMatching(t *testing.T) {
 			t.Errorf("matchesKey(%q, %q) = %v, want %v", c.data, c.key, got, c.want)
 		}
 	}
-	if !isKeyRelease("\x1b[104;7:3u") || isKeyRelease("\x1b[104;7u") || isKeyRelease("\x1b[200~x:3u\x1b[201~") {
+	if !isKeyRelease("\x1b[104;7:3u") || isKeyRelease("\x1b[104;7u") || isKeyRelease("\x1b[200~x:3u") || isKeyRelease("\x1b[200~x:3u\x1b[201~") {
 		t.Error("isKeyRelease")
 	}
 	if matchesConfiguredShortcut("x", nil) || matchesConfiguredShortcut("x", new("")) {
 		t.Error("a missing shortcut matches nothing")
+	}
+}
+
+func TestSuperShortcutHelpers(t *testing.T) {
+	for in, want := range map[string]string{
+		"super+home": "super+up", "super+end": "super+down", "super+shift+home": "super+shift+up", "super+shift+end": "super+shift+down",
+		"SUPER+END": "super+down", "ctrl+home": "ctrl+home", "super+up": "super+up",
+	} {
+		if got := shortcutConflictKey(in); got != want {
+			t.Errorf("shortcutConflictKey(%q) = %q, want %q", in, got, want)
+		}
+	}
+	for in, want := range map[string]bool{"super+up": true, "ctrl+super+up": true, "Super+x": true, "ctrl+super": false, "super": false, "ctrl+up": false} {
+		if got := shortcutUsesSuper(in); got != want {
+			t.Errorf("shortcutUsesSuper(%q) = %v, want %v", in, got, want)
+		}
+	}
+	for _, c := range []struct {
+		data, key string
+		want      bool
+	}{
+		{"\x1b[1;9B", "super+down", true}, {"\x1b[1;9F", "super+end", true}, {"\x1b[6;9~", "super+pagedown", true},
+		{"\x1b[1;10A", "super+shift+up", true}, {"\x1b[1;9A", "super+shift+up", false}, {"\x1b[1;10A", "super+up", false},
+		{"\x1b[27;9;65~", "super+up", true}, {"\x1b[57419;9u", "super+up", true}, {"\x1b[57419;9:3u", "super+up", false},
+	} {
+		if got := matchesConfiguredShortcut(c.data, new(c.key)); got != c.want {
+			t.Errorf("matchesConfiguredShortcut(%q, %q) = %v, want %v", c.data, c.key, got, c.want)
+		}
 	}
 }
 
@@ -215,6 +247,12 @@ func TestShortcutConflictsFallBackToTheOwnDefault(t *testing.T) {
 	// The bash toggle's default is reserved against the powerline shortcuts.
 	r = resolveShortcutConfig(settingsFrom(t, `{"powerlineShortcuts":{"stashHistory":"ctrl+shift+b"}}`))
 	wantBinding(t, r.StashHistory, "ctrl+alt+h", "stashHistory")
+	// The bash toggle's shortcut takes an action's default away, so its replacement is not found and the action is off.
+	r = resolveShortcutConfig(settingsFrom(t, `{"bashMode":{"toggleShortcut":"ctrl+alt+c"},"powerlineShortcuts":{"copyEditor":"ctrl+a"}}`))
+	wantBinding(t, r.CopyEditor, "", "copyEditor: replacement taken")
+	r = resolveShortcutConfig(settingsFrom(t, `{"bashMode":{"toggleShortcut":"ctrl+alt+c"}}`))
+	wantBinding(t, r.CopyEditor, "", "copyEditor default taken by the toggle")
+	wantBinding(t, r.CutEditor, "ctrl+alt+x", "cutEditor unaffected")
 	// Super+home and super+up are one key.
 	r = resolveShortcutConfig(settingsFrom(t, `{"powerlineShortcuts":{"reply":"super+home","editorStart":"super+shift+home"}}`))
 	wantBinding(t, r.Reply, "super+home", "reply")
