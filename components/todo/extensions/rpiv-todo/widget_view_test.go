@@ -133,3 +133,18 @@ func TestResizeAfterShutdownPushesNothing(t *testing.T) {
 	settled()
 	eq(t, len(r.widgetCalls()), n, "widget calls after the shutdown")
 }
+
+// A session that starts again after a shutdown subscribes once: one resize is one push.
+func TestRestartedSessionIsSubscribedOnce(t *testing.T) {
+	r := startRig(t, HostOptions{})
+	r.setBranch(snapshot(2, jtask(1, "one")))
+	r.Fire("session_start", nil)
+	r.Fire("session_shutdown", nil)
+	r.setSession("next")
+	r.Fire("session_start", nil)
+	n := len(r.widgetCalls())
+	r.widthChange(33)
+	r.waitWidgetCalls(n + 1)
+	settled()
+	eq(t, len(r.widgetCalls()), n+1, "widget calls after one resize")
+}

@@ -1,0 +1,229 @@
+{
+  "name": "max-widget-lines-above-twelve",
+  "description": "A config with maxWidgetLines 30: the tool and /todos run as usual with 25 tasks.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 1"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 2"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 3"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 4"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 5"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 6"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 7"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 8"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 9"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 10"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 11"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 12"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 13"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 14"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 15"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 16"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 17"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 18"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 19"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 20"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 21"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 22"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 23"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 24"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "create",
+            "subject": "task 25"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "update",
+            "id": 1,
+            "status": "completed"
+          }
+        },
+        {
+          "name": "todo",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "plan the work"
+      }
+    },
+    {
+      "name": "todos",
+      "rpc": {
+        "type": "prompt",
+        "message": "/todos"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/rpiv-todo\" && printf '{\"maxWidgetLines\":30}' > \"$HOME/.config/rpiv-todo/config.json\""
+    ]
+  ]
+}

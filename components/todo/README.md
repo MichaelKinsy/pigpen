@@ -25,16 +25,16 @@ The tool is `todo` (actions `create`, `update`, `list`, `get`, `delete`, `clear`
 `/todos` shows the list. The overlay collapses with `ctrl+shift+t`.
 
 Configuration is `~/.config/rpiv-todo/config.json` (or `$XDG_CONFIG_HOME/rpiv-todo/config.json`), read on
-every use: `maxWidgetLines` (default 12, at least 3; a value above 12 is refused by the `todo` tool and `/todos` with an error that names the original extension), `collapseKey` (a key like `alt+o`, or `off`), and
+every use: `maxWidgetLines` (default 12, at least 3), `collapseKey` (a key like `alt+o`, or `off`), and
 `guidance.promptSnippet` and `guidance.promptGuidelines` to replace the tool's prompt copy.
 
 ## Differences from the original
 
-- **The overlay is pre-rendered rows.** The Go SDK cannot express a component widget, so the rows are sent
-  as a list the host shows (at most ten rows), laid out at the width the host reported. The row budget is
-  kept inside that limit: with the default `maxWidgetLines` of 12 the overlay shows nine rows plus the
-  heading and the blank line, not twelve. After a terminal resize the rows stay as they were until the next
-  refresh.
+- **The overlay follows the terminal size on resize, not on every frame.** It is a component widget (a kit
+  view of rows), so the host draws every row the budget allows, with no cap, and a terminal resize lays the
+  rows out again. Pi redraws the original's widget on every frame, so a change of the theme or of Pi's
+  tool-output expansion (the expand key) shows in it at once; here it shows at the next refresh (the next
+  `todo` call, turn or resize), because the SDK sends an extension neither change.
 - **No locales.** The original translates its text with `@juicesharp/rpiv-i18n` when that is installed.
   Without it, and in this port, the text is English.
 - **Parallel calls.** Calls to `todo` in one model turn are applied in the order the model wrote them and

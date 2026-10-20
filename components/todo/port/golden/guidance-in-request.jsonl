@@ -1,4 +1,4 @@
-{"kind":"header","scenario":"guidance-in-request","lane":"pi-ts","host":"pi 1.0.0","extension":"sha256:27e4c8f9003683a410fdc7b14122683cd8b189fe53be3d889b8a61856816fa46","normalizer":"v3"}
+{"kind":"header","scenario":"guidance-in-request","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:509904d71a601ba2e2694c3f0fda1f014553eaafde1515ddd99dab8bb123d85a","normalizer":"v3"}
 {"step":"01-prompt","ch":"response","data":{"command":"prompt","data":{"disposition":"started"},"success":true}}
 {"step":"01-prompt","ch":"host","data":{"type":"agent_start"}}
 {"step":"01-prompt","ch":"host","data":{"type":"turn_start"}}

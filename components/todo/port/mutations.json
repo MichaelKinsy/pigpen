@@ -434,8 +434,8 @@
  {
   "name": "budget-off-by-one",
   "file": "overlay.go",
-  "find": "budget := maxLines - 1",
-  "replace": "budget := maxLines"
+  "find": "budget := getMaxWidgetLines() - 1",
+  "replace": "budget := getMaxWidgetLines()"
  },
  {
   "name": "expanded-ignored",
@@ -460,6 +460,108 @@
   "file": "overlay.go",
   "find": "return withTrailingSpacer([]string{heading, truncate(theme.Fg(\"dim\", \"└─\") + \" \" + theme.Fg(\"dim\", hint))})",
   "replace": "return []string{heading, truncate(theme.Fg(\"dim\", \"└─\") + \" \" + theme.Fg(\"dim\", hint))}"
+ },
+ {
+  "name": "overlay-is-a-row-list",
+  "file": "extension.go",
+  "find": "kit.View{Root: kit.NewLines(lines)}",
+  "replace": "lines"
+ },
+ {
+  "name": "budget-capped-at-ten",
+  "file": "overlay.go",
+  "find": "budget := getMaxWidgetLines() - 1",
+  "replace": "budget := min(getMaxWidgetLines(), 10) - 1"
+ },
+ {
+  "name": "expanded-budget-capped",
+  "file": "overlay.go",
+  "find": "budget = len(tasks)",
+  "replace": "budget = min(len(tasks), 9)"
+ },
+ {
+  "name": "resize-not-subscribed",
+  "file": "extension.go",
+  "find": "ctx.OnWidthChange(a.onWidthChange)",
+  "replace": "ctx.OnWidthChange(nil)"
+ },
+ {
+  "name": "resize-pushes-unregistered",
+  "file": "overlay.go",
+  "find": "defer o.mu.Unlock()\n\tif o.registered {\n\t\to.pushLocked(env)\n\t}\n}\n\n// toggleCollapse",
+  "replace": "defer o.mu.Unlock()\n\tif true {\n\t\to.pushLocked(env)\n\t}\n}\n\n// toggleCollapse"
+ },
+ {
+  "name": "resize-subscription-leaks",
+  "file": "extension.go",
+  "find": "if unsub != nil {\n\t\tunsub()\n\t}",
+  "replace": "if false {\n\t\tunsub()\n\t}"
+ },
+ {
+  "name": "resize-subscribes-every-start",
+  "file": "extension.go",
+  "find": "if a.unsub == nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "stale-probe-lost",
+  "file": "extension.go",
+  "find": "\tctx.Cwd()\n\treturn sid(ctx.SessionManager())",
+  "replace": "\treturn sid(ctx.SessionManager())"
+ },
+ {
+  "name": "teardown-through-the-dead-ctx",
+  "file": "extension.go",
+  "find": "derr = ov.dispose(sink)",
+  "replace": "derr = ov.dispose(sinkFor(ctx))"
+ },
+ {
+  "name": "order-by-arrival-always",
+  "file": "extension.go",
+  "find": "if prev, listed := a.predecessor(ctx, callID); listed {",
+  "replace": "if prev, listed := a.predecessor(ctx, callID); false && listed {"
+ },
+ {
+  "name": "other-tools-are-waited-for",
+  "file": "sequencer.go",
+  "find": "if m[\"type\"] != \"toolCall\" || m[\"name\"] != toolName {",
+  "replace": "if m[\"type\"] != \"toolCall\" {"
+ },
+ {
+  "name": "predecessor-lost",
+  "file": "sequencer.go",
+  "find": "\t\tprev = id\n",
+  "replace": "\t\t_ = id\n"
+ },
+ {
+  "name": "predecessor-end-not-awaited",
+  "file": "extension.go",
+  "find": "<-a.order.endOf(prev)",
+  "replace": "_ = prev"
+ },
+ {
+  "name": "never-ran-call-blocks",
+  "file": "extension.go",
+  "find": "a.order.end(callID)",
+  "replace": "_ = callID"
+ },
+ {
+  "name": "agent-end-keeps-waiters",
+  "file": "extension.go",
+  "find": "a.order.reset()",
+  "replace": "_ = a"
+ },
+ {
+  "name": "arrival-place-kept-in-position-order",
+  "file": "extension.go",
+  "find": "tk.skip()",
+  "replace": "_ = tk"
+ },
+ {
+  "name": "sink-not-captured",
+  "file": "extension.go",
+  "find": "a.bound, a.rebind, a.sink = true, true, sinkFor(ctx)",
+  "replace": "a.bound, a.rebind = true, true"
  },
  {
   "name": "truncate-no-reset",
@@ -494,14 +596,14 @@
  {
   "name": "end-order-lost",
   "file": "extension.go",
-  "find": "a.hold(callID, release)",
+  "find": "a.hold(callID, tk.release)",
   "replace": "_ = callID"
  },
  {
   "name": "end-order-released-at-return",
   "file": "extension.go",
-  "find": "a.hold(callID, release)",
-  "replace": "release()"
+  "find": "a.hold(callID, tk.release)",
+  "replace": "tk.release()"
  },
  {
   "name": "shutdown-keeps-slot",
@@ -614,14 +716,8 @@
  {
   "name": "sid-error-swallowed",
   "file": "extension.go",
-  "find": "id, err := sid(ctx.SessionManager())\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\taction",
-  "replace": "id, _ := sid(ctx.SessionManager())\n\taction"
- },
- {
-  "name": "rowcap-lost",
-  "file": "extension.go",
-  "find": "a.ov = newOverlay(a.st, hostWidgetRows-1)",
-  "replace": "a.ov = newOverlay(a.st, 0)"
+  "find": "id, err := ctxSid(ctx)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tcallID",
+  "replace": "id, _ := ctxSid(ctx)\n\tcallID"
  },
  {
   "name": "compact-replay-lost",

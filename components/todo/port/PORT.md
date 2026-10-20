@@ -18,9 +18,10 @@
 | M4 | `tool/envelope.ts`, `tool/sanitize.ts` | `envelope.go`, `sanitize.go` | `sanitize`, `bad-input`; `envelope_test.go` |
 | M5 | `view/format.ts`: result text, `renderCall`, `renderResult` | `view.go` (`RenderCall`, `RenderResult` of `ToolDefinition`) | scenarios (result text); `format_test.go` |
 | M6 | `/todos` command with groups, empty and per-status variants | `RegisterCommand("todos")` | `command-empty`, `command-groups`, `command-only-deleted`, `command-pending-only`, `command-completed-only`, `many-tasks` |
-| M7 | `todo-overlay.ts`: widget above the editor, collapse key, width clip, hide completed on `agent_start` | `overlay.go`: `ctx.SetWidget` with pre-rendered rows, collapse shortcut | `overlay_test.go`, `register_test.go`; the tmux run |
+| M7 | `todo-overlay.ts`: component widget above the editor, collapse key, width clip, hide completed on `agent_start` | `overlay.go`, `extension.go`: `ctx.SetWidget` with a kit view of verbatim rows (`ui.setWidget` with a view and `aboveEditor`), laid out again on a terminal resize (`OnWidthChange`), collapse shortcut | `overlay_test.go`, `widget_view_test.go`, `register_test.go`; the tmux runs |
 | M8 | `config.ts` via `@juicesharp/rpiv-config` | `config.go` (XDG, legacy fallback, validation, read on every use) | `config_test.go` |
-| M9 | `index.ts` session hooks: `session_start`, `session_compact`, `session_tree` (replay + refresh), `session_shutdown` (dispose), `tool_execution_end`, `agent_start` | `extension.go` | `extension_test.go` (fake host), `new-session-resets` |
+| M9 | `index.ts` session hooks: `session_start`, `session_compact`, `session_tree` (replay + refresh), `session_shutdown` (dispose), `tool_execution_end`, `agent_start`; the stale-context handling of `sid(ctx)` | `extension.go` (`ctxSid`: asks the context before the session read, as Pi's `ctx.sessionManager` getter throws when stale) | `extension_test.go`, `stale_ctx_test.go` (fake host), `new-session-resets` |
+| M11 | `agent-loop.ts:619-647`: the calls of a parallel batch start in source order, the synchronous reducer commits in that order and the calls end in that order | `sequencer.go`, `extension.go` (`execute`, `onToolExecutionEnd`): a call waits for the end of the todo call ahead of it in the assistant message that is the session's leaf; arrival ticket when the leaf does not list the call | `TestParallelCallsCommitInSourceOrderWhicheverArrivesFirst` and the four cases beside it, `TestParallelCallsCommitInStartOrder`; every scenario with several calls in a turn |
 | M10 | Locales via `@juicesharp/rpiv-i18n` | **not ported** (exclusion E1, below) | 3 named skips |
 
 Twins: `pigeq twins check --ledger port/upstream-tests.json --go extensions/rpiv-todo` lists all 231 upstream
@@ -59,42 +60,78 @@ boundary. rpiv-todo 2.11.0 does not call `registerToolRenderer`, so the PiG 0.4.
 - Red commit `9dd3994`: 272 failing, 18 passing (stubs returning zero values), 23 skipped (a review rerun of
   `go test -json`; 25 was reported); `port/red-run.log` keeps the failures only.
 
-## Differences and findings
+## Port 2 (this revision): the component widget, the batch order, the stale context
 
-**Differences from the original (also in README):** locales are not ported; the overlay is pre-rendered rows
-(at most ten host rows, so nine task rows with the default 12, not re-laid-out on resize); metadata key order
-in a result follows Go's sorted maps where JS keeps insertion order (not observable in the traces, which sort keys).
+Branch `port/todo-2`, stacked on the refusal PR (`refuse/todo-unported`). Against PiG 0.5.0+1.3.0.1402973a (SDK
+source of PiG commit `6af0806f7a`), the original under Pi 1402973a.
 
-**Exclusion E1 (approved by the owner: English only): locales.** `@juicesharp/rpiv-i18n` translates the tool's
-text when installed. Go has no counterpart and the translations are 9 locale files under `port/oracle/locales`. The port is
-English only, as the owner ruled; the 3 related twins are named skips that cite the ruling.
+- **Overlay (M7, was G1).** The SDK now takes a kit view as a widget (`Context.SetWidget(key, kit.View, options)`,
+  `ui.setWidget` with `view`). The overlay goes out as one `kit.Lines` node of verbatim rows with placement
+  `aboveEditor`, which the host draws like Pi draws a component widget: every row (the 10-row cap and the
+  `... (widget truncated)` row belong to string[] widgets), no `Text(line, 1, 0)` padding or wrapping. With the cap
+  gone the PR 1 refusal of `maxWidgetLines` above 12 is removed and the value is honoured (the default 12 content
+  rows plus the spacer, as the original). A terminal resize lays the rows out again (`Context.OnWidthChange`, one
+  subscription per bound overlay, removed at shutdown).
+- **Batch order (M11, was G4).** See the mapping. The arrival ticket is kept as the fallback for a call the leaf does
+  not list. Before this change the `bad-input` scenario (4 parallel calls, first batch of a cold process) diverged
+  from Pi in 1 of 17 first `pigeq run` runs and in 1 of 40 `pigeq check` runs (two adjacent calls swapped); see
+  Results for the rate after.
+- **Stale context (M9, was finding 8).** The SDK throws the host's stale message from its own getters (`Context.Cwd`,
+  `Mode`, `HasUI`; PiG's default message is Pi's text, `inproc/runner.go` `defaultStaleMessage`) but answers session
+  reads regardless, so `ctxSid` asks the context first, as Pi's `ctx.sessionManager` getter throws. The teardown
+  clears the widget through the sink captured at bind time (the original clears through its captured `uiCtx`).
+  Five fake-host cases (`stale_ctx_test.go`); not reachable in a scenario (no RPC way to hold a stale ctx).
+- **Goldens.** All 16 goldens were recorded again from the original under Pi 1.3.0.1402973a (`pigeq record`): only
+  the header line changed (`host`, `extension` hash), the traces equal the Pi 1.0.0 ones. New scenario
+  `max-widget-lines-above-twelve` (config written by a `setup` command into the lane HOME).
 
-**Host and SDK findings (to file against PiG):**
-1. **G1 No component widget in the Go SDK.** `SetWidget` takes lines; the host truncates to 10 rows plus a
-   "... (widget truncated)" row. Needs a `SetWidgetRenderer` like `SetFooterRenderer`.
+**Differences from the original (also in README):** locales are not ported (owner decision pending, below); a change
+of the theme or of Pi's tool-output expansion shows in the overlay at the next refresh, not at once (SDK items
+below); metadata key order in the details and in the replayed state follows Go's sorted maps where JS keeps
+insertion order (SDK item below).
+
+**Exclusion E1 (written owner approval not located): locales.** `@juicesharp/rpiv-i18n` (2.13.9 inspected) resolves
+the locale in process: `--locale`, `~/.config/rpiv-i18n/locale.json`, `LANG`/`LC_ALL`, else English, and `/languages`
+switches it live through `globalThis[Symbol.for("rpiv-i18n.runtime")]`, which a Go extension process cannot read.
+The 9 locale files of this extension are 7 KB. PORT.md recorded "English only" as an owner ruling; the program
+requires it in writing. **Question for the Tern lead:** (a) approve English-only in writing (and say whether a
+notice is wanted when `~/.config/rpiv-i18n/locale.json` exists), or (b) have the port embed the 9 locale files and
+resolve the locale at `session_start` from `locale.json`/`LANG`/`LC_ALL` (no live `/languages` switch without an SDK
+channel from rpiv-i18n)? Not ported meanwhile, as instructed.
+
+**Host and SDK findings:**
+1. **G1 closed** (kit view widget). Remaining differences: the widget is not re-rendered per frame (below).
 2. **G2 No pi-tui text helpers** (`visibleWidth`, `truncateToWidth`, `wrapTextWithAnsi`): reimplemented per
    rune in `text.go`, tested against the original's own width cases.
-3. **G3 PiG's RPC mode emits the rows of a factory widget; Pi's RPC mode drops them** (it emits a bare
-   `setWidget{widgetKey}` with no lines). The host check pig-ts vs pi-ts therefore fails on every scenario that
-   creates a task. Pi's golden is still the oracle; the port draws nothing in `rpc` mode (it still clears on
-   `session_shutdown`), which is what the golden shows, and the overlay is covered in the fake host and the tmux run.
-4. **G4 Parallel tool calls end out of order.** A Go tool's `tool_execution_end` events arrive in completion
-   order; Pi's synchronous TypeScript tool ends in start order. The port takes a start-order ticket
-   (`TestParallelCallsCommitInStartOrder`) and holds each call's slot until its own end event
-   (`agent_end` releases leftovers). Cost: a call waits for the previous one's end event. The ticket relies on
-   the SDK starting handlers in arrival order, which the SDK itself documents as having a residual window
-   (`tool_start_order.go`: a handler thread preempted before its first statement can be overtaken), so the
-   commit order is not guaranteed under preemption; the fix belongs in the SDK.
+3. **G3 PiG's RPC mode emits the rows of a factory widget; Pi's RPC mode drops them** (PiG core: Pi emits a bare
+   `setWidget{widgetKey}` on a clear only). The host check pig-ts vs pi-ts fails on every scenario that creates a
+   task (the 17 `run` results: 15 differ at the first widget event, `command-empty` and `guidance-in-request`
+   pass). The port draws nothing in `rpc` mode (it still clears on `session_shutdown`), which is what the golden
+   shows (`rpcSink`). The `errors` host check also differs in the order of two parallel results in PiG's Node
+   runtime (a tool-end order difference of the PiG Node host, not of the port). Both are PiG-vs-Pi differences, reported, not normalized.
+4. **G4 narrowed**: the commit and end order no longer depend on the SDK's handler start order when the host's
+   session leaf is the assistant message (it is in PiG 0.5.0: the `bad-input` and `many-tasks` runs below). The
+   arrival ticket remains for hosts or batches where the leaf does not list the call.
 5. **G5 PiG's request body escapes U+2028/U+2029** in tool-call arguments where Pi's `JSON.stringify` does
-   not; the scenario avoids them.
-6. **G6 One host round trip for the session id** on every tool call; Pi reads it synchronously.
+   not; the scenario avoids them (PiG core).
+6. **G6 One host round trip for the session id** on every tool call (two since the batch order reads the leaf
+   entry); Pi reads it synchronously. SDK item below.
 7. **G7 Compaction is not reachable over RPC with a small session** ("Nothing to compact"), so there is no
    compact scenario; the compact handler is covered in the fake host.
-8. **Stale context:** the original treats "stale after session replacement" errors as a no-op; the Go SDK has
-   no such error that I could find, so the predicate matches Pi's message only (unverified).
-9. **Harness:** `pigeq record` writes the golden but exits non-zero when the host check fails, so a known host
-   difference cannot be accepted; the scenarios were kept clear of them where possible (the widget difference G3 cannot be avoided: the
-   host check is expected to fail on the scenarios that create tasks).
+8. **Harness:** `pigeq record` writes the golden but exits non-zero when the host check fails, so a known host
+   difference cannot be accepted; the 15 host-check failures above are expected. The new scenario's golden has a
+   `llm`/`turn_end` arrival race for 25 parallel calls (see Results).
+
+**SDK requests (also in `core-items.md`, C3+):** (a) `Context.OnThemeChange`: a kit.Lines widget keeps the colors of
+its last push, Pi calls the component's `invalidate()` on a theme change and the original reads `uiCtx.theme` at
+every render; (b) `Context.OnToolsExpandedChange`: the original reads `ui.getToolsExpanded()` at every frame and
+Pi redraws on its expand key; (c) `Context.SetWidgetRenderer(key, render(width), options)` like `SetFooterRenderer`
+(rows tagged with their width, the host never paints rows laid out for another width), mirroring
+`setWidget(key, factory, {placement})`; (d) ordered input: `ToolFunc` params and `SessionManager` entries are Go
+maps, so JS insertion order of `metadata` keys (details of the result, replayed state) is lost; Pi keeps it
+(`Context.ToolParams() *OrderedObject` or raw JSON, and raw entries); (e) a synchronous session id
+(`ctx.sessionManager.getSessionId()`; the SDK mirror already knows it); (f) per-call batch index
+(`ctx.ToolCallIndex()`) so no leaf read is needed to order a batch.
 
 ## Run in pig 0.4.0 (tmux, detached)
 

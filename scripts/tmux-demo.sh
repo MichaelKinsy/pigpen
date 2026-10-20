@@ -9,7 +9,8 @@
 # tmux), PATH with `go` and `node` (a source extension is built by pig on first use), DEMO_CONFIG_FILE and
 # DEMO_CONFIG (optional: a file under the private ~/.config and its content), DEMO_ROOT (default: a new directory).
 # A step is `type:<text>` (typed and sent with Enter), `key:<tmux key>` or `wait:<n>` (until the model has been
-# asked n times) or `grab:<label>` (write the pane to <root>/pane-<label>.txt). The root is printed last.
+# asked n times) or `resize:<columns>` (resize the window, as a terminal resize does) or `grab:<label>` (write the pane to
+# <root>/pane-<label>.txt). The root is printed last.
 set -euo pipefail
 name=$1 ext=$2 turns=$3
 shift 3
@@ -47,6 +48,7 @@ for step in "$@"; do
     type:*) "$tmux" -L "demo-$name" send-keys -t "$name" -l "${step#type:}"; sleep 0.3; "$tmux" -L "demo-$name" send-keys -t "$name" Enter ;;
     key:*) "$tmux" -L "demo-$name" send-keys -t "$name" "${step#key:}" ;;
     wait:*) for _ in $(seq 1 600); do [ "$(requests)" -ge "${step#wait:}" ] && break; sleep 0.1; done; sleep 2 ;;
+    resize:*) "$tmux" -L "demo-$name" resize-window -t "$name" -x "${step#resize:}"; sleep 1.5 ;;
     grab:*) sleep 1.5; pane >"$root/pane-${step#grab:}.txt" ;;
     *) echo "unknown step $step" >&2; exit 2 ;;
   esac
