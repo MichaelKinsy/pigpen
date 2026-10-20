@@ -528,14 +528,24 @@ type cachedFile struct {
 	text  string
 }
 
-// RuleStore loads and caches the rule sources.
+// RuleStore loads and caches the rule sources: a file is re-read when its mtime or size changes, and the rule set built
+// from unchanged files is reused (upstream parses and redacts it again on every call).
 type RuleStore struct {
 	mu    sync.Mutex
 	cache map[string]cachedFile
+	sets  map[string]cachedSet
+}
+
+type cachedSet struct {
+	key  string
+	set  *RuleSet
+	tier string
 }
 
 // NewRuleStore returns an empty store.
-func NewRuleStore() *RuleStore { return &RuleStore{cache: map[string]cachedFile{}} }
+func NewRuleStore() *RuleStore {
+	return &RuleStore{cache: map[string]cachedFile{}, sets: map[string]cachedSet{}}
+}
 
 // decodeUTF8 reads bytes as Node's "utf8" does: an invalid byte becomes U+FFFD.
 func decodeUTF8(b []byte) string {
@@ -555,56 +565,84 @@ func decodeUTF8(b []byte) string {
 	return out.String()
 }
 
-func (s *RuleStore) read(path string) (string, bool) {
+// read is a file's text and its stamp (path, mtime, size), or false when it cannot be read.
+func (s *RuleStore) read(path string) (string, string, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	info, err := os.Stat(path)
 	if err != nil {
 		delete(s.cache, path)
-		return "", false
+		return "", "", false
 	}
+	stamp := path + "|" + strconv.FormatInt(info.ModTime().UnixNano(), 10) + "|" + strconv.FormatInt(info.Size(), 10)
 	if cached, ok := s.cache[path]; ok && cached.mtime == info.ModTime().UnixNano() && cached.size == info.Size() {
-		return cached.text, true
+		return cached.text, stamp, true
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		delete(s.cache, path)
-		return "", false
+		return "", "", false
 	}
 	text := decodeUTF8(data)
 	s.cache[path] = cachedFile{mtime: info.ModTime().UnixNano(), size: info.Size(), text: text}
-	return text, true
+	return text, stamp, true
 }
 
 // LoadTiered is where a rule set came from; the order is the resolution order.
 func (s *RuleStore) LoadTiered(cwd string, config RulesConfig) (*RuleSet, string) {
-	if root, ok := s.read(resolvePath(cwd, RulesFile)); ok {
-		return newRuleSet([]string{RulesFile}, []string{root}, config.MaxChars), tierRoot
-	}
-	var sources, texts []string
-	for _, file := range config.Files {
-		if text, ok := s.read(resolvePath(cwd, file)); ok {
-			sources = append(sources, file)
-			texts = append(texts, text)
+	var stamps, sources, texts []string
+	tier := tierNone
+	fallbackSource, fallbackText := "", ""
+	if text, stamp, ok := s.read(resolvePath(cwd, RulesFile)); ok {
+		stamps, sources, texts, tier = append(stamps, stamp), []string{RulesFile}, []string{text}, tierRoot
+	} else {
+		for _, file := range config.Files {
+			if text, stamp, ok := s.read(resolvePath(cwd, file)); ok {
+				stamps, sources, texts = append(stamps, stamp), append(sources, file), append(texts, text)
+			}
+		}
+		if len(sources) > 0 {
+			tier = tierConfigured
+		} else if config.Fallback {
+			for _, file := range fallbackFiles {
+				text, stamp, ok := s.read(resolvePath(cwd, file))
+				if !ok {
+					continue
+				}
+				// A blank fallback document is not a source, but a change to it must still show.
+				stamps = append(stamps, stamp)
+				if jsTrim(text) != "" {
+					fallbackSource, fallbackText, tier = file, text, tierFallback
+					break
+				}
+			}
 		}
 	}
-	if len(sources) > 0 {
-		return newRuleSet(sources, texts, config.MaxChars), tierConfigured
-	}
-	if !config.Fallback {
+	if tier == tierNone {
 		return nil, tierNone
 	}
-	for _, file := range fallbackFiles {
-		text, ok := s.read(resolvePath(cwd, file))
-		if ok && jsTrim(text) != "" {
-			redactedText := Redact(text)
-			if isRuleShaped(text) {
-				return &RuleSet{Sources: []string{file}, Aggregate: condense(redactedText, config.MaxChars), HasAggregate: true}, tierFallback
-			}
-			return &RuleSet{Sources: []string{file}, ProseOnly: true}, tierFallback
-		}
+	key := cwd + "\x00" + strconv.Itoa(config.MaxChars) + "\x00" + strconv.FormatBool(config.Fallback) + "\x00" + strings.Join(config.Files, "\x01") + "\x00" + strings.Join(stamps, "\x00")
+	s.mu.Lock()
+	hit, ok := s.sets[cwd]
+	s.mu.Unlock()
+	if ok && hit.key == key {
+		return hit.set, hit.tier
 	}
-	return nil, tierNone
+	var set *RuleSet
+	if tier == tierFallback {
+		redactedText := Redact(fallbackText)
+		if isRuleShaped(fallbackText) {
+			set = &RuleSet{Sources: []string{fallbackSource}, Aggregate: condense(redactedText, config.MaxChars), HasAggregate: true}
+		} else {
+			set = &RuleSet{Sources: []string{fallbackSource}, ProseOnly: true}
+		}
+	} else {
+		set = newRuleSet(sources, texts, config.MaxChars)
+	}
+	s.mu.Lock()
+	s.sets[cwd] = cachedSet{key: key, set: set, tier: tier}
+	s.mu.Unlock()
+	return set, tier
 }
 
 // Load is the active rule set for a project, or nil when no source exists.

@@ -94,5 +94,11 @@
   "file": "stuck.go",
   "find": "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {",
   "replace": "if prev.Failed != l.Failed {"
+ },
+ {
+  "name": "rules-sends-an-empty-steer",
+  "file": "rules_wire.go",
+  "find": "\tif len(n.notes) == 0 {\n\t\treturn\n\t}\n\tdelivered := w.steer(",
+  "replace": "\tif false {\n\t\treturn\n\t}\n\tdelivered := w.steer("
  }
 ]

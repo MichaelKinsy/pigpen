@@ -1,0 +1,56 @@
+{
+  "name": "rules-offline-turn-rules-without-git-run-quietly",
+  "description": "A rules file with a when: turn rule, no judge and no git: the run ends without a request and without a steer.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "files": {
+    "pi-warden.md": "# Stay inside the task\nwhen: turn\nThe diff must contain only what the task asked for.\n"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "a.ts",
+            "content": "export const a = 1;\n"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go ahead"
+      }
+    }
+  ]
+}

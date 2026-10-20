@@ -1,0 +1,46 @@
+{
+  "name": "init-prompt-reaches-the-model",
+  "description": "/warden init asks the session's agent to write the project's rules: the prompt, with the project context and the compiled instructions, is the user message the model receives.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "files": {
+    "package.json": "{\"name\":\"demo\",\"scripts\":{\"test\":\"node test.js\"}}\n",
+    "AGENTS.md": "# Demo\nAlways run the tests before you commit.\n"
+  },
+  "llm": [
+    {
+      "text": "I will write pi-warden.md"
+    }
+  ],
+  "steps": [
+    {
+      "name": "init",
+      "rpc": {
+        "type": "prompt",
+        "message": "/warden init"
+      }
+    }
+  ]
+}

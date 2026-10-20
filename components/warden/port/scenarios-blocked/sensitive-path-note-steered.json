@@ -1,0 +1,68 @@
+{
+  "name": "sensitive-path-note-steered",
+  "description": "A write to a path matching rules.sensitivePaths runs, and the agent is given the note once; a second write to the same path adds nothing.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "agentFiles": {
+    "pi-warden/config.json": "{\"rules\": {\"enabled\": true, \"sensitivePaths\": {\"migrations/**\": \"Tell the user this touches a migration and add a rollback\"}}}",
+    "../pighome/pigpen-warden/config.json": "{\"rules\": {\"enabled\": true, \"sensitivePaths\": {\"migrations/**\": \"Tell the user this touches a migration and add a rollback\"}}}"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "src/db/migrations/0182.sql",
+            "content": "select 1;\n"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "src/db/migrations/0182.sql",
+            "content": "select 2;\n"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "add the migration"
+      }
+    }
+  ]
+}
