@@ -191,11 +191,6 @@ func TestDeferred_jina_search(t *testing.T) {
 	tskip(t, F, "curator page exposes Jina Search as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Jina Search as a manual provider) ships with the feature")
 }
 
-func TestDeferred_lazy_extract_load(t *testing.T) {
-	const F = "lazy-extract-load"
-	tskip(t, F, "registers tool definitions and loads content extraction on first use", "Node dynamic-import laziness has no Go equivalent: extraction is compiled in and costs nothing at registration; this case (registers tool definitions and loads content extraction on first use) ships with the feature")
-}
-
 func TestDeferred_local_video_oversize(t *testing.T) {
 	const F = "local-video-oversize"
 	tskip(t, F, "oversized local videos are still recognized for frame extraction", "local video and Gemini/YouTube frame extraction are deferred (docs/PORT.md); this case (oversized local videos are still recognized for frame extraction) ships with the feature")
@@ -211,23 +206,6 @@ func TestDeferred_new_search_providers(t *testing.T) {
 func TestDeferred_package_typebox_dependency(t *testing.T) {
 	const F = "package-typebox-dependency"
 	tskip(t, F, "packed installs keep typebox as a peer dependency (hosted by pi at runtime)", "npm packaging concern (typebox peer dependency); the Go port has no npm dependencies; this case (packed installs keep typebox as a peer dependency (hosted by pi at runtime)) ships with the feature")
-}
-
-func TestDeferred_page_query(t *testing.T) {
-	const F = "page-query"
-	tskip(t, F, "answerFromPage grounds the model call in supplied page content", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage grounds the model call in supplied page content) ships with the feature")
-	tskip(t, F, "answerFromPage uses a valid configured answer model", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage uses a valid configured answer model) ships with the feature")
-	tskip(t, F, "answerFromPage resolves configured models through routed providers", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage resolves configured models through routed providers) ships with the feature")
-	tskip(t, F, "answerFromPage gives a per-call model precedence over valid and partial config", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage gives a per-call model precedence over valid and partial config) ships with the feature")
-	tskip(t, F, "answerFromPage adds opencode session headers on the registry path", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage adds opencode session headers on the registry path) ships with the feature")
-	tskip(t, F, "answerFromPage adds opencode session headers for an opencode.ai base url", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage adds opencode session headers for an opencode.ai base url) ships with the feature")
-	tskip(t, F, "answerFromPage leaves request headers alone for non-opencode models", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage leaves request headers alone for non-opencode models) ships with the feature")
-	tskip(t, F, "answerFromPage omits opencode session headers when no session id is available", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage omits opencode session headers when no session id is available) ships with the feature")
-	tskip(t, F, "answerFromPage rejects partial configured answer defaults", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage rejects partial configured answer defaults) ships with the feature")
-	tskip(t, F, "answerFromPage rejects blank and non-string configured answer defaults", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage rejects blank and non-string configured answer defaults) ships with the feature")
-	tskip(t, F, "answerFromPage rejects an unknown configured answer model", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage rejects an unknown configured answer model) ships with the feature")
-	tskip(t, F, "answerFromPage preserves configured model scope and text-input checks", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage preserves configured model scope and text-input checks) ships with the feature")
-	tskip(t, F, "answerFromPage preserves configured model auth checks", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage preserves configured model auth checks) ships with the feature")
 }
 
 func TestDeferred_parallel_curator_state(t *testing.T) {
@@ -270,17 +248,6 @@ func TestDeferred_publish_wrapper(t *testing.T) {
 func TestDeferred_querit_provider(t *testing.T) {
 	const F = "querit-provider"
 	tskip(t, F, "curator page exposes Querit as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Querit as a manual provider) ships with the feature")
-}
-
-func TestDeferred_query_cold_abort(t *testing.T) {
-	const F = "query-cold-abort"
-	tskip(t, F, "${kind} cancels before cold compat import ${outcome}s without late completion", "the page-answer and query-rewrite modules are deferred with model calls (docs/PORT.md); this case (${kind} cancels before cold compat import ${outcome}s without late completion) ships with the feature")
-}
-
-func TestDeferred_query_rewrite(t *testing.T) {
-	const F = "query-rewrite"
-	tskip(t, F, "rewriteSearchQuery uses the registered provider runtime", "query rewriting needs a model-completion API; deferred (docs/PORT.md); this case (rewriteSearchQuery uses the registered provider runtime) ships with the feature")
-	tskip(t, F, "rewriteSearchQuery skips models outside the host's resolved scope", "query rewriting needs a model-completion API; deferred (docs/PORT.md); this case (rewriteSearchQuery skips models outside the host's resolved scope) ships with the feature")
 }
 
 func TestDeferred_rsc_fallback(t *testing.T) {
@@ -346,45 +313,6 @@ func TestDeferred_search1api(t *testing.T) {
 func TestDeferred_searchinfinity(t *testing.T) {
 	const F = "searchinfinity"
 	tskip(t, F, "curator page exposes Searchinfinity as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Searchinfinity as a manual provider) ships with the feature")
-}
-
-func TestDeferred_summary_cold_deadline(t *testing.T) {
-	const F = "summary-cold-deadline"
-	tskip(t, F, "pre-aborted summary rejects without creating an unhandled abort contender", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (pre-aborted summary rejects without creating an unhandled abort contender) ships with the feature")
-	tskip(t, F, "summary ${mode}: ${scenario} respects cancellation on cold first use", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summary ${mode}: ${scenario} respects cancellation on cold first use) ships with the feature")
-}
-
-func TestDeferred_summary_model_scope(t *testing.T) {
-	const F = "summary-model-scope"
-	tskip(t, F, "never-settling summary completion returns a deterministic deadline fallback", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (never-settling summary completion returns a deterministic deadline fallback) ships with the feature")
-	tskip(t, F, "model resolution errors after the deadline return timeout fallback", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (model resolution errors after the deadline return timeout fallback) ships with the feature")
-	tskip(t, F, "caller abort takes precedence over a pending summary completion", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (caller abort takes precedence over a pending summary completion) ships with the feature")
-	tskip(t, F, "summary generation only uses models in the host's resolved scope", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summary generation only uses models in the host's resolved scope) ships with the feature")
-	tskip(t, F, "summary generation resolves preferred models through routed providers", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summary generation resolves preferred models through routed providers) ships with the feature")
-	tskip(t, F, "summaryModel thinking suffix strips before lookup and reaches completion options", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summaryModel thinking suffix strips before lookup and reaches completion options) ships with the feature")
-	tskip(t, F, "summaryModel keeps non-thinking colons in model ids", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summaryModel keeps non-thinking colons in model ids) ships with the feature")
-	tskip(t, F, "summaryModel thinking suffix omits effort for non-reasoning models", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summaryModel thinking suffix omits effort for non-reasoning models) ships with the feature")
-	tskip(t, F, "preferred models resolve through routed providers", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (preferred models resolve through routed providers) ships with the feature")
-	tskip(t, F, "model resolution preserves the direct registry fallback", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (model resolution preserves the direct registry fallback) ships with the feature")
-	tskip(t, F, "routed model resolution follows available-model ordering", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (routed model resolution follows available-model ordering) ships with the feature")
-	tskip(t, F, "summary generation has a hard deadline and preserves caller cancellation", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summary generation has a hard deadline and preserves caller cancellation) ships with the feature")
-	tskip(t, F, "summary generation deadline config defaults, validates, caps, and reaches both workflows", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summary generation deadline config defaults, validates, caps, and reaches both workflows) ships with the feature")
-	tskip(t, F, "summary generation no longer uses catalog fallback or first available model", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summary generation no longer uses catalog fallback or first available model) ships with the feature")
-	tskip(t, F, "summary and query rewrite defaults use the refreshed model order", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summary and query rewrite defaults use the refreshed model order) ships with the feature")
-}
-
-func TestDeferred_summary_opencode_headers(t *testing.T) {
-	const F = "summary-opencode-headers"
-	tskip(t, F, "registry summary attributes the configured OpenCode candidate instead of falling through", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (registry summary attributes the configured OpenCode candidate instead of falling through) ships with the feature")
-	tskip(t, F, "direct summary completion merges OpenCode attribution with provider headers", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (direct summary completion merges OpenCode attribution with provider headers) ships with the feature")
-	tskip(t, F, "non-OpenCode registry summaries do not install a header transform", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (non-OpenCode registry summaries do not install a header transform) ships with the feature")
-	tskip(t, F, "non-OpenCode direct summaries preserve provider headers", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (non-OpenCode direct summaries preserve provider headers) ships with the feature")
-	tskip(t, F, "thinking summary completion sends OpenCode attribution headers", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (thinking summary completion sends OpenCode attribution headers) ships with the feature")
-}
-
-func TestDeferred_summary_provider_routing(t *testing.T) {
-	const F = "summary-provider-routing"
-	tskip(t, F, "summary generation preserves registered provider behavior", "the summary workflows need a model-completion API and the curator; deferred (docs/PORT.md); this case (summary generation preserves registered provider behavior) ships with the feature")
 }
 
 func TestDeferred_tinyfish(t *testing.T) {
