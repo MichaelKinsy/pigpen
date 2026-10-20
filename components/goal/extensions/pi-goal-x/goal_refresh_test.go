@@ -73,8 +73,8 @@ func TestGoalRefresh(t *testing.T) {
 func TestGoalHarnessShell(t *testing.T) {
 	tw(t, "goal-harness-shell", "experiment harness shell tests pass", func(t *testing.T) {
 		// The harness parses SUPPORTED_CASES.json with jq (experiments/harness/lib.sh); the original's test needs it too.
-		if _, err := exec.LookPath("jq"); err != nil {
-			t.Skip("jq is not installed: the harness shell script cannot resolve a case id without it")
+		if err := exec.Command("jq", "--version").Run(); err != nil {
+			t.Skip("jq is not installed or does not run: the harness shell script cannot resolve a case id without it")
 		}
 		script, err := filepath.Abs("../../port/oracle/tests/shell/harness.test.sh")
 		if err != nil {
