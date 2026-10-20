@@ -13,11 +13,10 @@ import (
 )
 
 const (
-	extensionID   = "pi-subagents"
-	loaderName    = "subagents_enable"
-	subagentName  = "subagent"
-	asyncWidget   = "subagent-async"
-	promptSnippet = "For operator-requested delegation, use subagents; compose multi-child work in one workflow call."
+	extensionID  = "pi-subagents"
+	loaderName   = "subagents_enable"
+	subagentName = "subagent"
+	asyncWidget  = "subagent-async"
 )
 
 //go:embed tooldefs.json
@@ -131,10 +130,14 @@ func Extension() *sdk.Extension {
 	})
 	e.RegisterTool(sdk.ToolDefinition{Name: "subagent_supervisor", Label: "Subagent Supervisor", Description: defs["subagent_supervisor"].Description, Parameters: defs["subagent_supervisor"].Parameters,
 		Execute: refuseTool("the supervisor channel (`subagent_supervisor`)")})
+	// The description follows the extension config's toolDescriptionMode (tool-description.ts); the split prompt metadata is
+	// registered only while no mode is configured.
+	mode := configuredToolDescriptionMode()
+	snippet, guidelines := BuildSubagentToolPromptMetadata(mode)
 	e.RegisterTool(sdk.ToolDefinition{
-		Name: subagentName, Label: "Subagent", Description: defs[subagentName].Description, Parameters: defs[subagentName].Parameters,
-		PromptSnippet:    promptSnippet,
-		PromptGuidelines: []string{"Do not invoke subagents unless the operator requested delegation directly or through applicable instructions."},
+		Name: subagentName, Label: "Subagent", Description: BuildSubagentToolDescription(mode, ToolDescriptionOptions{}), Parameters: defs[subagentName].Parameters,
+		PromptSnippet:    snippet,
+		PromptGuidelines: guidelines,
 		Execute:          executeSubagent,
 	})
 

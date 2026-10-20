@@ -17,7 +17,6 @@ import (
 
 const (
 	appendRequestsDir             = "append-requests"
-	promptRedacted                = "[prompt redacted]" // PROMPT_REDACTED
 	maxStatusStepDescriptionChars = 160
 	childSessionNameMaxChars      = 80
 	taskExcerptMaxChars           = 60

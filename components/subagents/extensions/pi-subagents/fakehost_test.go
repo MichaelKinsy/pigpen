@@ -86,6 +86,7 @@ type Host struct {
 	allHandlers map[string][]int
 	handlers    map[string]int
 	tools       map[string]bool
+	toolDefs    map[string]RegisteredTool
 	cmds        map[string]bool
 	nextID      int
 	// resolvers is the extension's tool renderer resolver count; invalidated
@@ -110,7 +111,11 @@ type frame struct {
 			HandlerID int    `json:"handler_id"`
 		} `json:"handlers"`
 		Tools []struct {
-			Name string `json:"name"`
+			Name             string         `json:"name"`
+			Description      string         `json:"description"`
+			PromptSnippet    string         `json:"prompt_snippet"`
+			PromptGuidelines []string       `json:"prompt_guidelines"`
+			Parameters       map[string]any `json:"parameters"`
 		} `json:"tools"`
 		Commands []struct {
 			Name string `json:"name"`
@@ -154,7 +159,7 @@ func StartHost(t *testing.T, ext *sdk.Extension, opts HostOptions) *Host {
 	h := &Host{
 		t: t, nc: hostSide, opts: opts, runDone: make(chan error, 1),
 		pending: map[string]chan json.RawMessage{}, failures: map[string]string{}, allHandlers: map[string][]int{},
-		handlers: map[string]int{}, tools: map[string]bool{}, cmds: map[string]bool{},
+		handlers: map[string]int{}, tools: map[string]bool{}, toolDefs: map[string]RegisteredTool{}, cmds: map[string]bool{},
 	}
 	go func() { h.runDone <- ext.RunWithConn(extSide) }()
 	first := h.read()
@@ -172,6 +177,7 @@ func StartHost(t *testing.T, ext *sdk.Extension, opts HostOptions) *Host {
 	}
 	for _, tl := range first.Register.Tools {
 		h.tools[tl.Name] = true
+		h.toolDefs[tl.Name] = RegisteredTool{Description: tl.Description, PromptSnippet: tl.PromptSnippet, PromptGuidelines: tl.PromptGuidelines, Parameters: tl.Parameters}
 	}
 	for _, c := range first.Register.Commands {
 		h.cmds[c.Name] = true
@@ -625,3 +631,14 @@ func (h *Host) stop() {
 	}
 	_ = h.nc.Close()
 }
+
+// RegisteredTool is a tool as the extension registered it with the host.
+type RegisteredTool struct {
+	Description      string
+	PromptSnippet    string
+	PromptGuidelines []string
+	Parameters       map[string]any
+}
+
+// RegisteredTool returns the definition the extension registered for a tool.
+func (h *Host) RegisteredTool(name string) RegisteredTool { return h.toolDefs[name] }
