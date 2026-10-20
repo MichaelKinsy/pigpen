@@ -210,7 +210,11 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 		if msg := imageGateError(); msg != "" {
 			return failed(rawURL, msg)
 		}
-		return failed(rawURL, "Video frame and timestamp extraction is not available in this Go port yet (planned for a later slice)")
+	}
+	if feature, err := unportedFetchFeature(rawURL, o); err != nil {
+		return failed(rawURL, err.Error())
+	} else if feature != "" {
+		return failed(rawURL, unsupported(feature).Error())
 	}
 	if remote == nil {
 		if _, err := ParseURL(rawURL, nil); err != nil {
@@ -264,6 +268,9 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 				return &r
 			}
 		}
+		if isRefusalText(*r.Error) {
+			return &r
+		}
 		if isRedirectPolicyError(*r.Error) || isConfigParseError(*r.Error) {
 			return &r
 		}
@@ -288,8 +295,12 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 			if r := extractWithJinaReader(ctx, rawURL, timeout, o.Lookup); r != nil {
 				return withDeclared(*r)
 			}
+		default:
+			// A hosted fetch provider the original would call here; this port has none of them.
+			if fetchProviderRequested(p) {
+				return failed(rawURL, unsupported(fetchProviderLabel(p)+" fetch provider").Error())
+			}
 		}
-		// Every other hosted provider is not ported yet (docs/PORT.md): it is never called.
 	}
 
 	if ctx.Err() != nil {
@@ -634,7 +645,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		if _, err := readLimited(resp.Body, maxBytes, sizeErr); err != nil {
 			return fail(err.Error())
 		}
-		return fail("PDF extraction failed: PDF text extraction is not available in this Go port yet (planned for a later slice)")
+		return fail(unsupported("PDF text extraction").Error())
 	}
 
 	if strings.Contains(contentType, "application/octet-stream") || strings.Contains(contentType, "image/") ||
@@ -673,7 +684,10 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	articleTitleText, markdown, ok := readableArticle(doc)
 	extractHook("processing")
 
+	// The original tries an RSC payload and then Defuddle before it reports an incomplete page;
+	// this port has neither, so the error says so instead of passing for the original's verdict.
 	incomplete := func(title, content, msg string) httpExtracted {
+		msg += "\n\n" + unsupported("the RSC payload and Defuddle fallback extractors").Error()
 		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: title, Content: AppendDeclaredWebLinks(content, declared), Error: errp(msg)}, declared: declared}
 	}
 	jsMsg := func(fallback string) string {
@@ -682,7 +696,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		}
 		return fallback
 	}
-	// RSC payloads and Defuddle are not ported (docs/PORT.md): both fallbacks yield nothing.
+	// RSC payloads and Defuddle are not ported (docs/PORT.md): see incomplete.
 	if !ok {
 		return incomplete(docTitle, "", jsMsg("Could not extract readable content from HTML structure"))
 	}
