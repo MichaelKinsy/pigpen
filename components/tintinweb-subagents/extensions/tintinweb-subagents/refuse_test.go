@@ -229,6 +229,11 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		r := startRigIn(t, cwd)
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true)")})
 	})
+	t.Run("the same notice is not repeated when another session starts with the same settings", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.Fire("session_start", obj{"reason": "new"})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
+	})
 }
 
 func TestSettingsThePortMatchesAreNotRefused(t *testing.T) {
