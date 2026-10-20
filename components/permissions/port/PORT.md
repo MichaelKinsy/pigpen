@@ -426,8 +426,8 @@ commit; the forwarding twins pass unchanged.
 | A1 | `decision-source.ts`, `decision-resolution.ts` | `auth_decision_source.go`, `auth_resolution.go` | 10 + 18 twins; the forwarding differential |
 | A2 | `permission-dialog.ts` | `auth_permission_dialog.go` | 31 twins; the differential (975 scripted answers) |
 | A3 | `permission-prompt-decision.ts` | `auth_prompt_model.go` | 32 twins; the differential (7,200 event sequences, 16 configs) |
-| A4 | `permission-prompt-component.ts`, `bracketed-paste.ts`, pi-tui `Input` | `auth_prompt_component.go`, `auth_input.go`, `auth_bracketed_paste.go` | 39 + 8 twins; the differential (368 key-sequence scenarios, every frame at two widths; pending the recording) |
-| A5 | `authorizer.ts`, `denying-authorizer.ts`, `authorizer-chain.ts`, `authorizer-chain-audit.ts`, `authorizer-registry.ts`, `authorizer-selection.ts` | `auth_authorizer.go`, `auth_chain.go`, `auth_chain_audit.go`, `auth_registry.go`, `auth_selection.go` | 15 + 2 + 7 + 8 + 12 + 34 twins; the differential (800 chains, 72 selections) |
+| A4 | `permission-prompt-component.ts`, `bracketed-paste.ts`, pi-tui `Input` | `auth_prompt_component.go`, `auth_input.go`, `auth_bracketed_paste.go` | 39 + 8 twins; the differential (368 key-sequence scenarios, every frame at two widths, byte for byte: 0 differences) |
+| A5 | `authorizer.ts`, `denying-authorizer.ts`, `authorizer-chain.ts`, `authorizer-chain-audit.ts`, `authorizer-registry.ts`, `authorizer-selection.ts` | `auth_authorizer.go`, `auth_chain.go`, `auth_chain_audit.go`, `auth_registry.go`, `auth_selection.go` | 15 + 2 + 7 + 8 + 12 + 34 twins; the differential (940 chains, 72 selections: 0 differences) |
 | A6 | `local-user-authorizer.ts`, `ask-dialog-queue.ts`, `permission-prompter.ts` | `auth_local_user.go`, `auth_queue.go`, `auth_prompter.go` | 24 + 8 + 17 twins; the differential (458 asks, 180 review entries) |
 | A7 | `approval-escalator.ts` (`ParentAuthorizer`) | `auth_escalator.go` | 26 twins on the real filesystem and clock |
 | A8 | `service/permission-ui-prompt.ts`, the `permissions:ui_prompt` half of `service/permission-events.ts` | `uiprompt.go` | 8 + 3 twins; the differential (96 events) |
@@ -438,7 +438,7 @@ twins, 0 skips; the 16 `authority/*` entries and `service/permission-ui-prompt` 
 `service/permission-events` is narrowed (its `ui_prompt` cases are twinned, the ready and decision halves are not). The `it.each` rows
 with a `%s` title (malformed decision sources, "returns a %s source unchanged") run as plain subtests.
 
-**Differential against the original's own modules (generator, probe and replay written; the recording is pending)** (`port/probe/gen-authority-cases.py` makes `authority-cases.json`;
+**Differential against the original's own modules, recorded: 10,613 cases, 0 unexplained differences** (`port/probe/gen-authority-cases.py` makes `testdata/authority-cases.json`;
 `port/record-authority-probe.sh` runs `port/probe/authority-probe.test.ts` inside an installed copy of the oracle and writes
 `testdata/authority_oracle.json`; `auth_oracle_test.go` replays it): the dialog model, the `select`/`input` fallback, the chain, the
 bracketed-paste collapse, `LocalUserAuthorizer` (the `permissions:ui_prompt` event, the notice, the request options), the prompter's
@@ -466,10 +466,20 @@ partial), and the reason editor's keys (cursor, word, kill, yank, undo, wide and
 
 ### Differences from the original
 
-- A chain link's error (the original's rejected promise) is returned as an error and decides nothing; the original's `undefined`
-  verdict throws a `TypeError` where a Go zero verdict (`Kind` empty) defers. Both end at the terminal or at a block, never at an allow.
-- `AuthorizerRegistry`'s disposer is guarded by the registration, not by the function value: a stale disposer cannot evict a later
-  registration even of the same function (the original evicts it).
+- A chain link's error (the original's rejected promise) is returned as an error and decides nothing: the chain stops, no later link and
+  not the terminal runs, nothing is allowed. The original's `undefined` verdict throws a `TypeError` that rejects the ask; the port's zero
+  verdict (`Kind` empty) is an error too (fixed in this lane; it used to defer). Both are in the differential (140 chains with links that
+  reject or answer undefined: same consulted links, terminal not run, ask rejected). The gate propagates the rejection in both.
+- `AuthorizerRegistry`'s disposer is guarded by the registration, not by the function value, because Go functions are not comparable
+  (a code-pointer compare would evict another closure's registration, which the original does not). They agree whenever the later
+  registration is a different function (differential case 1). Registering the same function again and calling the first disposer a second
+  time evicts it in the original (recorded, case 2) and not here; that is the guard's documented intent ("a stale call cannot evict a
+  later registration"), cannot be reproduced exactly, and only ever leaves a registered link in place (the operator's chain still names it).
+- The oracle's installed pi-tui (1.0.0) writes the reason editor's cursor as `ESC[7m..ESC[27m`; the pinned Pi's `Input` writes the
+  fake-cursor APC markers its TUI resolves to the same bytes (the PiG host resolves them too). The replay resolves the port's frame with
+  `widthx.ResolveFakeCursors` before comparing, so the comparison is exact otherwise.
+- The component asks the host for as many repaints as the original has `requestRender` calls (a reason-editor callback plus the keystroke:
+  two). Found by the differential (57 scenarios), fixed.
 - `PromptPermissionDetails.Surface` and `.Value` are `*string`: an explicit `null` display override on a direct ask (the original
   distinguishes it from "derive") is not representable. No producer sets it: the serving node builds details with no tool, command,
   path, target or skill name, so deriving yields the same `null`. Recorded by the differential's excluded corpus.
@@ -493,7 +503,7 @@ partial), and the reason editor's keys (cursor, word, kill, yank, undo, wide and
 
 ### Findings
 
-- Not yet established: the differential's recording and replay were queued on the shared CPU set when this section was written (`testdata/authority_oracle.json` and `auth_oracle_test.go` are added by the commit that records them). Until then nothing here claims the port equals the original beyond the twins.
+- The differential (recorded on imladris from the unmodified original, replayed by `auth_oracle_test.go`) found three things, all fixed or explained above: the repaint count, the fake-cursor representation, and a harness ordering bug of the replay itself. The default focus is identical: in all 368 scenarios the original's first frame highlights `Yes` (approve), and the 9 scenarios whose first key is Enter all approve in the original (4 with double-press on); the port's frames and decisions are equal.
 - Inherited from the original, by design: the decision step opens with `approve` highlighted and Enter confirms the highlight in one
   press even with double-press confirmation on, so a stray Enter at the moment the dialog opens approves. The port keeps it (a
   difference would be a policy change); see the security review in the PR body.
@@ -591,7 +601,7 @@ code, then a differential against the original's own functions.
 How it is checked (STATUS at this commit: the differential ran: 9,209 answers compared with the original's own, 0 differences. The mutation run, the race/vet/npm run and the Node-vs-Go benchmarks are queued on imladris and have NOT been run; the counts below are corpus sizes):
 
 - `port/record-presentation-probe.sh <installed oracle>` runs `port/probe/presentation-probe.test.ts` inside the original's package on
-  `port/probe/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
+  `testdata/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
   `presentation_oracle_test.go` replays it and compares each answer as compact JSON. Two kinds of recorded answer are not compared byte for byte, on purpose: one function-valued MCP argument (`String(fn)` is source text; not reachable from a JSON tool input) and the home directory inside `~` skill locations (read on the host running the test). `gen-presentation-cases.py` no longer produces either, so the next recording needs neither exception; the committed oracle was recorded from the previous corpus. Every string is well-formed on both sides
   (the probe applies `toWellFormed()`; see "Differences" for why).
 - Mutations: `port/gen-mutations-presentation.py` writes `port/mutations-presentation.json` (392 mutations, one per behaviour of

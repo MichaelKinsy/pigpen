@@ -8,7 +8,7 @@ import (
 )
 
 // The differential: testdata/presentation-oracle.json holds what the original's presentation, tool-input and exposure modules
-// answered for port/probe/presentation-cases.json (recorded by port/record-presentation-probe.sh). Every answer must be byte for
+// answered for testdata/presentation-cases.json (recorded by port/record-presentation-probe.sh). Every answer must be byte for
 // byte the port's. Both sides are compared as compact JSON; strings are well-formed (the probe applies toWellFormed to its output).
 
 type pcSuite struct {
@@ -239,7 +239,7 @@ func TestPresentationOracle(t *testing.T) {
 		}
 		return v.(*jsObject)
 	}
-	s := &pcSuite{t: t, cases: read("../../port/probe/presentation-cases.json"), oracle: read("testdata/presentation-oracle.json")}
+	s := &pcSuite{t: t, cases: read("testdata/presentation-cases.json"), oracle: read("testdata/presentation-oracle.json")}
 	cases, oracle := s.cases, s.oracle
 	obj := func(v any) *jsObject { return v.(*jsObject) }
 	build := func(spec any) any { return lgBuild(spec, map[string]any{}) }
