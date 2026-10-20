@@ -23,8 +23,15 @@ func TestDetectEnvTwins(t *testing.T) {
 		return string(out), 0, nil
 	}
 	tw(t, f, "detects git repo in current project", func(t *testing.T) {
+		// The original runs in its own checkout, which is a git repository; here the working directory is made one, so the
+		// test does not depend on where the module is (a copy of it, as the mutation runner makes, has no .git).
+		dir := t.TempDir()
+		if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
+			t.Fatalf("git init: %v: %s", err, out)
+		}
+		t.Chdir(dir)
 		wd, _ := os.Getwd()
-		env := detectEnvWith(realGit, wd) // the pigpen checkout is a git repository, as the original's own is
+		env := detectEnvWith(realGit, wd)
 		eq(t, env.IsGitRepo, true)
 		eq(t, env.Platform, platformName(goosForTest()))
 	})

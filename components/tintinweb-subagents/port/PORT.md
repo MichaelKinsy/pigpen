@@ -3,7 +3,7 @@
 | Input | Identity |
 |---|---|
 | Original | `@tintinweb/pi-subagents` 0.19.0 by tintinweb, https://github.com/tintinweb/pi-subagents, commit `4f572eaa04c09d3dbc16e4a5f13a16b295e84e14`, MIT |
-| Oracle | Pi 1.0.3, Node 24.19.0, with the unmodified package at `port/oracle` (dependencies from npm: `croner`, `nanoid`, `typebox`) |
+| Oracle | Pi 1.0.3 (goldens `tool-tools`, `agent-not-found`, `agent-unknown-type-strict`) and Pi 1.3.0.1402973a (goldens `agent-resume-not-found`, `agent-resume-ignores-type`), Node 24.19.0, with the unmodified package at `port/oracle` (dependencies from npm: `croner`, `nanoid`, `typebox`) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
 | Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). **122 exact twins** (`agent-types` 46, `custom-agents` 76), no skips; **1907 deferred by name** in `port/slices.json`, each file with its reason |
 | Kind | 1: an extension, no CLI built-in, no provider |
