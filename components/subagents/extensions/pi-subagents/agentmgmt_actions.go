@@ -58,6 +58,10 @@ func newMgmtContext(ctx sdk.Context) mgmtContext {
 	}
 	c.available = func() []ModelInfo { return availableModels(ctx) }
 	c.proactive = loadProactiveSkillConfig()
+	c.onAgentsChanged = adv.refresh
+	c.discoverAll = func(cwd, provider string) (DiscoveryAll, error) {
+		return discoverAgentsAll(cwd, provider, adv.options())
+	}
 	return c
 }
 

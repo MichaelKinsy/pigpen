@@ -107,8 +107,15 @@ func Extension() *sdk.Extension {
 			if !ok {
 				return sdk.ToolResult{Content: "Activation failed: subagent.", IsError: true, Details: map[string]any{"missing": []string{subagentName}}}, nil
 			}
+			if err := adv.wait(ctx.Done()); err != nil {
+				return nil, sdk.NewToolError(err.Error())
+			}
+			text := "Enabled: subagent. On the next model request, call subagent({action:\"list\",capabilities:true}) for current capabilities. Some providers, such as bridges to another agent SDK, fix the tool list for a whole prompt. With those, subagent appears only after the next user prompt, so do not retry it in this one. The operator can start Pi with --exclude-tools subagents_enable to keep subagent always available."
+			if prompt := adv.prompt(sessionIDOf(ctx)); prompt != "" {
+				text += "\n\n" + prompt
+			}
 			return sdk.ToolResult{
-				Content: "Enabled: subagent. On the next model request, call subagent({action:\"list\",capabilities:true}) for current capabilities. Some providers, such as bridges to another agent SDK, fix the tool list for a whole prompt. With those, subagent appears only after the next user prompt, so do not retry it in this one. The operator can start Pi with --exclude-tools subagents_enable to keep subagent always available.",
+				Content: text,
 				Details: map[string]any{"enabled": []string{subagentName}},
 			}, nil
 		},
@@ -158,6 +165,9 @@ func Extension() *sdk.Extension {
 
 // executeSubagent runs a management action (list, get) or one agent; every other input is refused (refuse.go).
 func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
+	if err := adv.wait(ctx.Done()); err != nil {
+		return nil, sdk.NewToolError(err.Error())
+	}
 	action := ""
 	if v := params["action"]; v != nil {
 		s, isString := v.(string)
@@ -231,7 +241,10 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError(msg)
 	}
 	scope := ResolveExecutionAgentScope(params["agentScope"])
-	d := DiscoverAgents(ctx.Cwd(), scope)
+	d, derr := discoverAgents(ctx.Cwd(), scope, ctx.ModelProvider(), adv.options())
+	if derr != nil {
+		return nil, sdk.NewToolError(derr.Error())
+	}
 	a, msg := ResolveAgentName(name, d.Agents)
 	if a == nil {
 		if diag := blockingDiagnostic(name, nil, d.Diagnostics); diag != nil {
