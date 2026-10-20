@@ -667,10 +667,10 @@ func TestRealPigDevTunnel(t *testing.T) {
 	if e != nil || !strings.Contains(string(raw), `"protocolVersion"`) {
 		t.Fatalf("initialize through the tunnel port: %s %v", raw, e)
 	}
-	// The direct listener cannot be started beside it.
+	// /ahp start while the tunnel runs reports the running listener; it opens no second one.
 	p.rpcPrompt("/ahp start")
-	testkit.Eventually(t, "the refusal", func() bool {
-		return strings.Contains(p.pigLog(), "AHP: the AHP listener is already running") || strings.Contains(p.pigLog(), "AHP listening on ws://127.0.0.1:31546")
+	testkit.Eventually(t, "the running listener to be reported again", func() bool {
+		return strings.Count(p.pigLog(), "AHP dev tunnel fake.usw2: listening on ws://127.0.0.1:31546") >= 2
 	})
 	if strings.Contains(p.pigLog(), "?tkn=") {
 		t.Fatal("/ahp start must not open a second listener while the tunnel runs")
