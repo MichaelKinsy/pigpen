@@ -350,6 +350,14 @@ Inputs: a 200 KB build log (3,500 lines, one error line), a 100 KB `tsc` log (2,
 The fixes (each tested against the code it replaces): `Redact` returns early for a text none of its rules can match (`redact_prefilter.go`; it was 1 µs a character of regexp scanning on any large text, so it also speeds up every judged request of every guard), the ASCII fast paths of `utf16Len` and `utf16Slice` (eight bytes a step), a one-pass byte scan in place of the diagnostic regexp, a literal gate in front of each per-line pattern of the excerpt parsers, and the dedupe index without a slice per hash. Three paths are still slower than the original by more than 10%, each by about a millisecond: the generic compress (+0.5 ms; of its 0.91 ms, 0.35 ms is the byte scan for the seven diagnostic words, 0.1 ms the ASCII checks, 0.05 ms the line split), the `tsc` parser (+0.3 ms; half of it the literal gates' `strings.Index` calls, the rest the patterns on the lines that carry a diagnostic) and the summary render (+1.2 ms; 3 MB of string concatenation for 120 results of 5 KB). Each sits beside the judge request that follows it in the same code path (hundreds of milliseconds) and none runs on the input or render path. OWNER DECISION NEEDED whether that is accepted or the remaining parsers are rewritten by hand.
 
 Against the previous release (`origin/main`, 0.1.1; a probe `main` that calls `warden.Extension()`, stripped, 31 interleaved runs): binary 8,446,215 to 9,171,207 bytes (+8.6%, this branch also holds the tools, steering-core and security slices); package init 83 KB, 426 allocs to 61 KB, 451 allocs, 0.16 ms (the regexp translation of `jsRE` and `prefsRE` and the parse of `questions.json` now happen on first use, which is what keeps `TestPackageInitDoesNotCompileRegexps` green: it failed at 165 KB with the slices merged); process start to a built extension 7.34 ms to 6.12 ms (noise: the box is shared); `Extension()` itself 14 to 52 µs. The original's module load under Node (`registration-original.ts`; the factory call fails against the stand-in, so only the load is timed) is about 350 ms of wall time per process, of which about 40 ms is Node's own start.
+Configuration slice (lane configui): four more scenarios, `config-project-turns-repeat-steer-off`,
+`config-project-cannot-weaken-action-guard`, `config-hostile-project-file` and `config-set-command-changes-behavior`. Goldens recorded from
+the original under Pi 1.3.0+1402973a; host check pig-ts == pi-ts and `pigeq run`/`check` pig-go == pi-ts on all four (17, 17, 38 and 40
+events). The workspace is trusted in RPC mode on both hosts (the project file changes behavior in both lanes). They write the project file
+for both hosts (`.pi/` and `.pig/`); the user-file behavior is proved by the `config set` scenario, which writes each lane's own user file.
+Four mutations (`cfg-project-removes-tools`, `cfg-project-weaker-switch-taken`, `cfg-file-not-reloaded`, `cfg-stuck-nudge-ignored`) are
+killed by these scenarios under `pigeq mutate`. What scenarios cannot show: `/warden config get`, the status line and the panels (UI requests, gap G2),
+the shortcut (not visible to pigeq; `TestTheTraceShortcutIsRegisteredFromTheUserFile` proves it at layer 1).
 
 ## Named gaps
 
@@ -387,6 +395,11 @@ Against the previous release (`origin/main`, 0.1.1; a probe `main` that calls `w
    shared library module (`components/typesafe`) cannot run its unit layer under it.
 6. pigeq's host check with a Binary as the host (`--builtin`) loads the port into the original's lane too; use a plain `pig` for
    the host check and `check --builtin` only for the Binary.
+
+7. Steer-bearing scenarios are timing-sensitive on a loaded host: on imladris (load above 150) `two-calls-one-held` failed three of four
+   `pigeq check` runs on the same difference (an `llm` request recorded before the `turn_end` event) and passed the other; a scenario of the same shape
+   (stuck.repeatSteer false alone, 40 events) alternated the same way and was left out for that reason. Not re-run on a quiet host, not normalized;
+   reported to the steering owner.
 
 ## Re-verified on PiG 0.4.1 (porter-verify)
 

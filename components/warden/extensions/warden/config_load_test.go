@@ -683,3 +683,56 @@ func TestParseDuration(t *testing.T) {
 }
 
 func reflectEqualConfig(a, b Config) bool { return reflect.DeepEqual(a, b) }
+
+// Each key of a project file's stuck section is read on its own (a scenario cannot show this one key at a time: see PORT.md).
+func TestProjectTunesStuckKeysIndependently(t *testing.T) {
+	cfg := project(t, DefaultConfig(), `{"stuck":{"repeatSteer":false}}`)
+	eq(t, "repeatSteer", cfg.Stuck.RepeatSteer, false)
+	eq(t, "nudge untouched", cfg.Stuck.Nudge, true)
+	cfg = project(t, DefaultConfig(), `{"stuck":{"nudge":false}}`)
+	eq(t, "nudge", cfg.Stuck.Nudge, false)
+	eq(t, "repeatSteer untouched", cfg.Stuck.RepeatSteer, true)
+}
+
+func TestConscienceTimeoutIsClampedToTheFloor(t *testing.T) {
+	eq(t, "floor", user(t, DefaultConfig(), `{"conscience":{"timeoutMs":50}}`).Conscience.TimeoutMs, 100)
+	eq(t, "ceiling", user(t, DefaultConfig(), `{"conscience":{"timeoutMs":99999}}`).Conscience.TimeoutMs, 10000)
+}
+
+func TestProjectCannotTurnOnCompactionOrTheContextFilter(t *testing.T) {
+	cfg := project(t, DefaultConfig(), `{"compaction":{"enabled":true,"keepThreshold":0.4},"context":{"filter":{"enabled":true,"chunkChars":900}}}`)
+	eq(t, "compaction stays off", cfg.Compaction.Enabled, false)
+	eq(t, "the rest of the section applies", cfg.Compaction.KeepThreshold, 0.4)
+	eq(t, "filter stays off", cfg.Context.Filter.Enabled, false)
+	eq(t, "the rest of the filter applies", cfg.Context.Filter.ChunkChars, 900)
+	u := user(t, DefaultConfig(), `{"compaction":{"enabled":true},"context":{"filter":{"enabled":true}}}`)
+	eq(t, "the user can: compaction", u.Compaction.Enabled, true)
+	eq(t, "the user can: filter", u.Context.Filter.Enabled, true)
+}
+
+func TestARefusedBackendTurnsJudgmentsOffEvenWhenTheBaseHadOne(t *testing.T) {
+	base := DefaultConfig()
+	base.Backend = "typesafe"
+	cfg := user(t, base, `{"backend":"azure"}`)
+	eq(t, "backend", cfg.Backend, "")
+}
+
+func TestPanelWidthNeedsAtLeastTwentyColumnsOrAPercentage(t *testing.T) {
+	eq(t, "too narrow", user(t, DefaultConfig(), `{"widget":{"panelWidth":10}}`).Widget.PanelWidth, "40%")
+	eq(t, "columns", user(t, DefaultConfig(), `{"widget":{"panelWidth":25}}`).Widget.PanelWidth, 25.0)
+	eq(t, "percentage", user(t, DefaultConfig(), `{"widget":{"panelWidth":"55%"}}`).Widget.PanelWidth, "55%")
+	eq(t, "bad percentage", user(t, DefaultConfig(), `{"widget":{"panelWidth":"0%"}}`).Widget.PanelWidth, "40%")
+}
+
+func TestAFailedSaveLeavesNoTemporaryFileBehind(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "pigpen-warden")
+	target := filepath.Join(dir, "config.json")
+	if err := os.MkdirAll(target, 0o700); err != nil { // a directory where the file should be: the rename fails
+		t.Fatal(err)
+	}
+	if err := WriteUserConfig(target, map[string]any{"a": 1}); err == nil {
+		t.Fatal("expected a failure")
+	}
+	left, _ := filepath.Glob(filepath.Join(dir, "*.tmp"))
+	eq(t, "temporary files", len(left), 0)
+}
