@@ -17,6 +17,23 @@ type goalSettings struct {
 	disableContracts        bool
 	autoSelectSingle        bool
 	strictExecutionContract bool
+
+	// Temporary additive fields for the goal-auditor slice; GoalSettings' settings.go replaces this struct at integration.
+	disableTasks            bool
+	auditorProjectResources bool
+	provider                string
+	model                   string
+	thinkingLevel           string
+	oracle                  resolvedGoalOracleSettings
+}
+
+// resolvedGoalOracleSettings is ResolvedGoalOracleSettings of goal-settings.ts (temporary copy, owned by GoalSettings).
+type resolvedGoalOracleSettings struct {
+	enabled                     bool
+	provider, model             string
+	thinkingLevel               string
+	projectResources            bool
+	maxFailedAttemptsPerBlocker int
 }
 
 var getenv = os.Getenv
