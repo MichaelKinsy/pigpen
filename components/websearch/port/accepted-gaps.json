@@ -1,5 +1,4 @@
 {
-  "exec:gh": "GitHub repository extraction (github-extract.ts, github-api.ts, github-issue-pr.ts): deferred in the first slice (port/PORT.md); no scenario reaches it",
   "exec:ffmpeg": "video frame extraction (video-extract.ts): deferred in the first slice (port/PORT.md); no scenario reaches it",
   "exec:ffprobe": "video frame extraction (video-extract.ts): deferred in the first slice (port/PORT.md); no scenario reaches it",
   "exec:yt-dlp": "YouTube and video extraction: deferred in the first slice (port/PORT.md); no scenario reaches it",
@@ -7,5 +6,6 @@
   "exec:security": "browser cookie extraction (chrome-cookies.ts); the port has no browser-cookie access: deferred in the first slice (port/PORT.md); no scenario reaches it",
   "exec:sqlite3": "browser cookie extraction (chrome-cookies.ts); the port has no browser-cookie access: deferred in the first slice (port/PORT.md); no scenario reaches it",
   "exec:python3": "browser cookie extraction (chrome-cookies.ts); the port has no browser-cookie access: deferred in the first slice (port/PORT.md); no scenario reaches it",
-  "exec:curl": "utils.ts runs curl only to fetch through a proxy; the port uses net/http with the same proxy and its twins record each proxied request instead of curl arguments (port/PORT.md)"
+  "exec:curl": "utils.ts runs curl only to fetch through a proxy; the port uses net/http with the same proxy and its twins record each proxied request instead of curl arguments (port/PORT.md)",
+  "exec:taskkill": "Windows process-tree kill of a timed-out clone (github_extract.go via procgroup_windows.go, like taskkill in github-extract.ts:511): the harness runs on Linux and macOS only, so no scenario reaches it"
 }

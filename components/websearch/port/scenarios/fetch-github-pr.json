@@ -1,0 +1,75 @@
+{
+ "name": "fetch-github-pr",
+ "description": "fetch_content renders a pull request and an issue from gh: the gh calls (view, review comment pages, the anchored review comment) and the document.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\"}"
+ },
+ "commands": {
+  "gh": {
+   "mode": "canned",
+   "stdout": "{\"number\": 7, \"title\": \"Improve fetch\", \"state\": \"OPEN\", \"isDraft\": true, \"author\": {\"login\": \"alice\"}, \"baseRefName\": \"main\", \"headRefName\": \"feature\", \"headRepositoryOwner\": {\"login\": \"fork\"}, \"createdAt\": \"2026-01-01T00:00:00Z\", \"labels\": [{\"name\": \"bug\"}], \"milestone\": {\"title\": \"v1\"}, \"additions\": 5, \"deletions\": 1, \"changedFiles\": 1, \"files\": [{\"path\": \"a.ts\", \"additions\": 5, \"deletions\": 1}], \"commits\": [{\"oid\": \"abcdef123456\", \"messageHeadline\": \"commit subject\"}], \"reviews\": [{\"author\": {\"login\": \"bob\"}, \"state\": \"APPROVED\", \"body\": \"looks good\"}], \"statusCheckRollup\": [{\"name\": \"test\", \"conclusion\": \"SUCCESS\"}], \"comments\": [{\"id\": 1, \"author\": {\"login\": \"carol\"}, \"createdAt\": \"2026-01-02T00:00:00Z\", \"body\": \"first comment\"}], \"body\": \"Body of the pull request.\", \"closingIssuesReferences\": [{\"number\": 5, \"title\": \"Bug five\"}], \"stateReason\": \"COMPLETED\", \"assignees\": [{\"login\": \"dave\"}], \"closedByPullRequestsReferences\": [{\"number\": 7, \"title\": \"Improve fetch\", \"url\": \"https://github.com/o/r/pull/7\"}], \"url\": \"https://github.com/o/r/pull/7\", \"id\": 42, \"pull_request_url\": \"https://api.github.com/repos/o/r/pulls/7\", \"user\": {\"login\": \"reviewer\"}, \"path\": \"src/a.ts\", \"line\": 9}",
+   "exit": 0
+  },
+  "git": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/pull/7/files#discussion_r42"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/issues/5"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/pull/7"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "look at the repository"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "runtime-[A-Za-z0-9]{6}",
+   "replacement": "runtime-<id>"
+  }
+ ]
+}
