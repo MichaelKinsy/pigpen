@@ -95,10 +95,6 @@ po, to = by_package("old")
 if pn:
     lines += [f"Symbol bytes by package (unstripped build, `go tool nm -size`, text, read-only and data symbols; total {tn:,} port, {to:,} 0.1.1):", "", "| package | port | 0.1.1 |", "|---|---|---|"]
     lines += [f"| `{k}` | {v:,} | {po.get(k, 0):,} |" for k, v in sorted(pn.items(), key=lambda kv: -kv[1])[:16]] + [""]
-dn, do = set(read(f"{out}/bin/deps-new.txt").split()), set(read(f"{out}/bin/deps-old.txt").split())
-if dn:
-    extra = sorted(d for d in dn - do if not d.startswith("internal") and "/internal/" not in d)
-    lines += [f"Packages linked: {len(dn)} (port), {len(do)} (0.1.1). Linked only by the port: " + ", ".join(f"`{d}`" for d in extra) + ".", ""]
 dic = read(f"{out}/bin/pitui-dictionaries.txt")
 if dic:
     total = sum(int(l.split()[4]) for l in dic.splitlines() if len(l.split()) >= 5)
@@ -166,7 +162,7 @@ if os.path.exists(rpc_path):
         phases = "; ".join(f"{k.split('.', 2)[2]} {med(v):.0f}" for k, v in sorted(mk.items(), key=lambda kv: med(kv[1])) if k.startswith("extension.") and k.count(".") >= 2)
         lines.append(f"| {s} | {med(mk.get('extension-discovery-done', [float('nan')])):.0f} | {med(mk.get('extensions-loaded', [float('nan')])):.0f} | {phases} |")
 
-    lines += ["", "### Tools and commands (ms; each run's median over its calls, then the median over runs; the first call of each tool in a run is dropped)", "", "| operation | " + " | ".join(s for s in subs if any(r['tools'] or r['cmds'] for r in by[s])) + " | new/orig (fused vs orig where both) |", "|---|" + "---|" * (len([s for s in subs if any(r['tools'] or r['cmds'] for r in by[s])]) + 1)]
+    lines += ["", "### Tools and commands (ms; each run's median over its calls, then the median over runs; the first call of each tool in a run is dropped, except update_goal, which runs once per run)", "", "| operation | " + " | ".join(s for s in subs if any(r['tools'] or r['cmds'] for r in by[s])) + " | new/orig (fused vs orig where both) |", "|---|" + "---|" * (len([s for s in subs if any(r['tools'] or r['cmds'] for r in by[s])]) + 1)]
     active = [s for s in subs if any(r["tools"] or r["cmds"] for r in by[s])]
     names = []
     for s in active:
@@ -179,8 +175,8 @@ if os.path.exists(rpc_path):
         vals = []
         for r in by[s]:
             series = r["tools"].get(name) or r["cmds"].get(name)
-            if series and len(series) > 1:
-                vals.append(med(series[1:]))
+            if series:
+                vals.append(med(series[1:] if len(series) > 1 else series))
         return vals
 
     for name in names:

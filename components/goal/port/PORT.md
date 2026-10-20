@@ -117,6 +117,112 @@ The review's own changes went red first: the tests in one commit, the fixes in t
 - Size: 3482 hand-written Go lines (non-test), 2181 test lines (548 of them the Skill's fake-host template); nothing is generated except the recorded golden and the case
   files (`testdata/`).
 
+## Performance
+
+Measured on xd670 (Xeon Platinum 8468; the measured processes pinned to CPUs 64-71 inside a container limited to them, other jobs
+running on the host: load average 14 at the end), 2026-10-20, 12 interleaved rounds after a warm-up round, medians. Raw numbers,
+per-round values and the host: `port/perf/results.md`. Three subjects: the port (this branch), the previous release (0.1.1,
+`origin/goal-honest-refusal`: the commands it implemented, refuses the rest) and the original under PiG's runtime (Node 24.19 and PiG
+v0.5.0, Pi 1402973a for the pin).
+
+Method (`port/perf/`, one command: `NEW=... OLD=... PIG=... OUT=... CPUS=64-71 bash port/perf/run.sh`, then `summarize.py`):
+
+- **Size**: the extension as PiG builds and caches it (`cache/cells/go/<hash>/runner`), and a single-extension Piglet Binary
+  (`build-piglets.mjs`; the shipped Piglets fuse the extension) against a control Piglet whose extension registers nothing.
+- **In process** (`extensions/pi-goal-x/perf_bench_test.go`, `go test -bench -benchmem`; `bench-original.mjs` for the original on
+  the same fixture and operations; `old_bench_test.go.txt` for 0.1.1): five goals, a twelve-task tree, the same inputs; a mutating
+  operation runs on a freshly booted core over restored files, outside the timed region. The Go side times the core with the replay
+  test's scripted host, so no SDK wire and no host; the original is driven the way its own tests drive it. B/op for the original is V8
+  heap growth with no collection (a lower bound; not comparable with Go's allocated bytes). Rounds alternate port, original, 0.1.1.
+- **Through a real pig** (`rpc.mjs`, RPC mode): cold start is the spawn of pig to the `get_commands` response (pig reads RPC after it
+  has loaded its extensions; the control's span is pig alone). Tools run under a scripted OpenAI-compatible model, timed from
+  `tool_execution_start` to `tool_execution_end`; commands (`prompt` "/name") from the send to the first notification. PiG hosts the Go port
+  as a subprocess and the original as a Node subprocess, so both pay the same IPC.
+
+Size and cold start (bytes, ms):
+
+| | original | 0.1.1 | port | port over 0.1.1 |
+|---|---|---|---|---|
+| extension binary (PiG-built runner) | TypeScript, 0.6 MB of sources | 6,213,792 | 15,519,904 | +150% |
+| single-extension Piglet Binary (control 70,861,063) | not a binary | 71,192,839 | 73,347,335 | +3.0% (+2.15 MB) |
+| cold start, `pig -e <extension>` | 683.5 (first start 2,064: jiti) | 51.4 (first start 410: build) | 121.8 (first start 593: build) | +70.4 ms |
+| cold start, fused Piglet (control 33.9) | not applicable | 40.9 | 50.1 | +9.2 ms |
+| pig's own extension span, spawn to handshake | 532.0 | 15.0 | 19.0 | +4.0 ms |
+
+The runner grew by 9.3 MB: `.rodata` +6.5 MB, of which 6.32 MB are the five word-segmentation dictionaries that `pitui` embeds
+(`wordsegmenter/*.bin`, linked through `pitui.Editor`); `.text` +1.4 MB and `.gopclntab` +0.9 MB are the port's own code (1.11 MB of
+symbols against 0.18 MB in 0.1.1; 0.1.1 only refused) plus `widthx`, `pitui`, `uax29`, `x/text` tables. **Owner decision needed:** the growth
+over 10% is the scope of the port (0.1.1 had no tools, dashboard, scheduler or auditor) and a library cost; the fused Piglet, the
+shipping vehicle, grows 3.0%. A `pitui` build tag that drops the dictionaries (PiG's `pigstrip` switch, removed from the copy) would
+cut 6.3 MB from every port that links `pitui.Editor`; that is the `pitui` lane's change. The cold-start rise with `-e` is mostly
+pig hashing and checking the larger source tree (`build-check` 21 ms against 4 ms, discovery 48 against 12), which a Piglet does not
+do; in the fused Piglet the extension's own span is 3.0 ms against 2.0 ms and the whole start 9.2 ms over the control (0.1.1: 7.0 ms), above
+the 1 ms of the registration allowance, so it is stated here: it is the larger Go program (more type data and package initialisers) and
+the registration of 16 commands and 8 tools.
+
+Per-call cost through pig (ms; port in the `-e` form, the fused form is about 10-20% lower):
+
+| operation | original | port | |
+|---|---|---|---|
+| create_goal | 5.01 | 2.79 | -44% |
+| set_goal_tasks | 5.01 | 4.15 | -17% |
+| update_goal (pause) | 3.79 | 2.20 | -42% |
+| get_goal / tasks | 2.94 / 3.24 | 1.74 / 2.31 | -41% / -29% |
+| update_goal_task | 0.84 | 0.52 | -38% |
+| /goal-list, /goal-status, status verbose, /goal-refresh | 2.62, 3.72, 4.06, 2.53 | 1.69, 2.70, 2.43, 1.94 | -36%, -27%, -40%, -23% |
+
+0.1.1 has no tools; its commands `/goal-direct` and `/goal-list` are in the in-process table. In pig the port is faster than the original on every
+operation measured, because the original's Node host costs more per call than the Go extension.
+
+In process (median; port against the original, against 0.1.1 where it had the command): see `results.md` for B/op and allocs/op.
+
+| operation | port | original | port/original | 0.1.1 |
+|---|---|---|---|---|
+| session_start (load, widget, input listener) | 506 us | 1.00 ms | -50% | 131 us (+286%) |
+| get_goal summary / tasks | 65 / 150 us | 71 / 41 us | -9% / +270% | n/a (refuses) |
+| create_goal / update_goal pause | 1.49 / 1.11 ms | 1.56 / 1.02 ms | -4% / +9% | n/a |
+| set_goal_tasks / update_goal_task | 1.22 / 1.16 ms | 1.03 / 1.06 ms | +18% / +10% | n/a |
+| /goal-list | 79 us | 12.6 us | +528% | 16.7 us (+373%) |
+| /goal-status, verbose | 137, 142 us | 78, 90 us | +77%, +58% | n/a |
+| /goal-refresh | 383 us | 111 us | +245% | n/a |
+| /goal-direct | 1.43 ms | 1.39 ms | +3% | 1.14 ms (+25%) |
+| dashboard render, compact / expanded (width 100) | 74 / 101 us | 67 / 91 us | +9% / +11% | n/a |
+| terminal key, plain / toggle chord | 2.5 / 81 us | 17.6 / 10.5 us | -86% / +673% | n/a |
+| scheduler tick (begin, ready declaration, settled) | 1.20 ms | 1.15 ms | +5% | n/a |
+| 16,000-event ledger: session_start, /goal-status, update_goal_task | 1.01, 2.92, 1.34 ms | 1.28, 2.09, 1.06 ms | -21%, +39%, +27% | n/a |
+
+Regressions over 10% in process and what is behind them (profiles with `go test -cpuprofile` on the benchmarks):
+
+1. **Quadratic activity sort (fixed).** `/goal-status` on a ledger whose timestamps run backwards took 23.7 ms at 16,000 events;
+   `activitySortStable` was an insertion sort. It is now `slices.SortStableFunc` with the original's comparator (3 ms; twin
+   `TestActivitySortStableMatchesInsertionSort` against the old order, ties included).
+2. **Dashboard laid out on every UI update (owner decision).** The SDK carries no component widget (G1), so the port lays the
+   dashboard out at the host's width and pushes the lines; the original hands the host a component that the host renders per frame.
+   Profile of `/goal-list`: 60% of its time is `pushWidget` and `Render` (about 60 us per update); the toggle chord is the same
+   render. This explains the small commands (`/goal-list`, `/goal-refresh`, the toggle key) and about 60 us of every tool. The cost is
+   bounded (flat over a 16,000-event ledger: 65 us), and the original's component is rendered on every host frame, which this
+   benchmark does not count. In RPC mode the lines are dropped after the layout (G3); skipping the layout there would save the work and
+   was not done because it changes `previousLinesLen` state the faithful twins read.
+3. **`get_goal` tasks and the detail page cache (owner decision).** The original caches the compiled detail source by object
+   identity; the port omitted the cache (`goal_detail.go`: "it only reuses pure results"). Profile: half of the call is
+   `goalDetailSource` (marshalling every task). Repeated identical reads are 3.7 times the original's cache hit; paging a long history
+   recompiles the source on every page. Porting the cache needs generation counters on the goal record (identity is not stable in
+   the port), so it is listed rather than done.
+4. **Ordered-object representation (owner decision).** Remaining differences on pure computation (`/goal-status` +77%, 16,000-event
+   status +39%, `update_goal_task` +27% at 16,000 events, set_goal_tasks +18%) are the `jsObject` maps and the decoder that
+   builds them (`parseJSON` over `encoding/json` tokens) against V8's `JSON.parse`; faithful key order and number text are why
+   they exist (M7). The absolute differences are 10 to 300 microseconds per call, and through pig the port is faster.
+
+No unbounded work or blocking host call on the render and input paths (read in `core.go`, `goal_widget*.go`, `extension.go`, the SDK
+and PiG's `ui_bridge.go`): a render reads the settings cache and the bounded per-goal ledger projection and makes no host call (width and
+height are fields the SDK keeps); the terminal-input listener is subscribed for the whole TUI session, PiG waits for its verdict on every
+key with no deadline (`handleOnTerminalInput`; the original under PiG pays the same IPC), and the handler takes the core lock, so a key
+waits for the unit of work in flight (the longest measured is 1.4 ms, a tool that writes files; a file lock held by another process
+retries for up to 1 s). Every UI update makes one blocking `SetStatus` round trip (the widget push is one way). The sort above was the
+only unbounded step found. Not measured: `update_goal` complete and the auditor and oracle (they start a child pig and a model call),
+the tmux TUI frame cost, and per-event handlers (`context`, `before_provider_request`) whose cost is dominated by the SDK's
+JSON of the payload; they are covered only inside the through-pig numbers.
+
 ## Findings (to file against PiG, and notes on the porter)
 
 1. **G1 again: no component widget.** The dashboard is a component factory; the port shows one status line in a terminal and
