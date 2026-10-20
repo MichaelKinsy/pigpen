@@ -72,67 +72,6 @@ func providerRuntime(t *testing.T, cfg string, env map[string]string) *Runtime {
 	return r
 }
 
-func TestRefusalSearchProviders(t *testing.T) {
-	t.Run("an explicit unported provider", func(t *testing.T) {
-		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
-		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": "xai"})
-		wantRefusal(t, err, "xAI search provider")
-		wantCalls(t, n)
-	})
-	t.Run("a provider list with an unported provider contacts none", func(t *testing.T) {
-		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
-		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": []any{"tavily", "xai"}})
-		wantRefusal(t, err, "xAI search provider")
-		wantCalls(t, n)
-	})
-	t.Run("provider all refuses when an unported provider is configured", func(t *testing.T) {
-		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k", "OPENAI_API_KEY": "k"})
-		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": "all"})
-		wantRefusal(t, err, "OpenAI search provider")
-		wantCalls(t, n)
-	})
-	t.Run("auto refuses at a configured unported provider instead of falling through", func(t *testing.T) {
-		// Keyless Exa comes first in the auto order, so the allowlist leaves it out.
-		r := providerRuntime(t, `{"webSearch":{"allowedProviders":["openai","tavily"]}}`, map[string]string{"TAVILY_API_KEY": "k", "OPENAI_API_KEY": "k"})
-		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x"})
-		wantRefusal(t, err, "OpenAI search provider")
-		wantCalls(t, n)
-	})
-	t.Run("a configured provider that is unported refuses", func(t *testing.T) {
-		r := providerRuntime(t, `{"provider":"xai"}`, map[string]string{"TAVILY_API_KEY": "k"})
-		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x"})
-		wantRefusal(t, err, "xAI search provider")
-		wantCalls(t, n)
-	})
-	t.Run("searchRouting refuses at an available unported provider", func(t *testing.T) {
-		cfg := `{"searchRouting":{"providers":["openai","tavily"],"fallbackOn":["quota","unsupported"]}}`
-		r := providerRuntime(t, cfg, map[string]string{"TAVILY_API_KEY": "k", "OPENAI_API_KEY": "k"})
-		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x"})
-		wantRefusal(t, err, "OpenAI search provider")
-		wantCalls(t, n)
-	})
-	t.Run("source_check refuses too", func(t *testing.T) {
-		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
-		n := searchProviderNet(t)
-		_, err := execTool(t, r, "source_check", map[string]any{"claim": "x", "provider": "xai"})
-		wantRefusal(t, err, "xAI search provider")
-		wantCalls(t, n)
-	})
-	t.Run("a ported provider is not refused", func(t *testing.T) {
-		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
-		searchProviderNet(t)
-		if _, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": "tavily"}); err != nil {
-			t.Fatal(err)
-		}
-	})
-}
-
 func TestRefusalSearchWorkflows(t *testing.T) {
 	for _, workflow := range []string{"summary-review", "auto-summary"} {
 		workflow := workflow

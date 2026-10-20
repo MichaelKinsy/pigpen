@@ -372,10 +372,6 @@ func AllowedSearchProviders() ([]string, error) {
 	return ResolvedProviders, nil
 }
 
-func errNotPorted(provider string) *UnsupportedError {
-	return unsupported(ProviderLabel(provider) + " search provider")
-}
-
 var (
 	statusRE            = regexp.MustCompile(`(?i)\b(?:error|status|http)\s+(\d{3})\b`)
 	unsupportedSearchRE = regexp.MustCompile(`(?i)(?:web[_ -]?search|web[_ -]?search_preview|(?:the )?tool)\b.*\b(?:unsupported|not supported|does not support|doesn't support|unknown|unrecognized|unavailable|not found)|\b(?:unsupported|not supported|does not support|doesn't support|unknown|unrecognized|unavailable|not found)\b.*\b(?:web[_ -]?search|web[_ -]?search_preview|(?:the )?tool)`)
@@ -466,8 +462,8 @@ func providerAvailable(ctx context.Context, provider string, o FullSearchOptions
 
 func searchWithResolvedProvider(ctx context.Context, provider, query string, o FullSearchOptions) (*ProviderSearchResponse, error) {
 	d := providerTable[provider]
-	if d == nil || d.search == nil {
-		return nil, errNotPorted(provider)
+	if d == nil {
+		return nil, fmt.Errorf("unknown search provider %q", provider)
 	}
 	r, err := d.search(ctx, query, o.SearchOptions)
 	if err != nil {
@@ -504,13 +500,6 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 	}
 	if len(providers) == 0 {
 		return nil, errors.New(`No configured search provider available for provider "all". Parallel MCP, DuckDuckGo, Kimi, AnySearch, xAI, Mistral, Bright Data, SerpBase, SerpApi, Serper, Serply, You.com, Valyu, and XCrawl are excluded.`)
-	}
-	// A provider this port lacks refuses the whole call before any provider is contacted:
-	// answering from the others would pass for the original's aggregate.
-	for _, p := range providers {
-		if d := providerTable[p]; d == nil || d.search == nil {
-			return nil, errNotPorted(p)
-		}
 	}
 	responses := make([]*ProviderSearchResponse, len(providers))
 	errs := make([]error, len(providers))
@@ -743,14 +732,13 @@ func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *sea
 	if len(fallbackErrors) > 0 {
 		return nil, fmt.Errorf("Auto provider search failed:\n  - %s", strings.Join(fallbackErrors, "\n  - "))
 	}
-	// The original's list also names OpenAI/Codex, Gemini Web (browser cookies) and 20 more
-	// providers; those are not ported at this point, so only the ported ones are offered
-	// (docs/PORT.md, deliberate differences).
+	// gemini-search.ts:820-828. Item 5 of the original (sign into gemini.google.com in a Chromium
+	// browser) is left out: Gemini Web is not ported (docs/PORT.md, deliberate differences), so the
+	// explicit-selection item is numbered 5.
 	return nil, errors.New("No search provider available. Either:\n" +
-		"  1. Set braveApiKey, tavilyApiKey, serpdiveApiKey, kagiApiKey, perplexityApiKey, exaApiKey, geminiApiKey, or cloudflareApiKey in " + ConfigPath() + "\n" +
-		"  2. Set BRAVE_API_KEY, TAVILY_API_KEY, SERPDIVE_API_KEY, KAGI_API_KEY, PERPLEXITY_API_KEY, EXA_API_KEY, GEMINI_API_KEY, or CLOUDFLARE_API_KEY env vars\n" +
-		"  3. Set GOOGLE_GEMINI_BASE_URL with CLOUDFLARE_API_KEY for Cloudflare AI Gateway routing\n" +
-		"  4. Allow \"exa\" in webSearch.allowedProviders to use the keyless Exa MCP (queries go to mcp.exa.ai)\n" +
-		"  5. Explicitly select provider: \"duckduckgo\" for keyless DuckDuckGo search\n" +
-		"Other pi-web-access providers are not ported to this Go extension yet.")
+		"  1. Use /login to sign in with a Codex subscription for OpenAI web search\n" +
+		"  2. Set openaiApiKey, braveApiKey, parallelApiKey, tinyfishApiKey, search1apiApiKey, searchinfinityApiKey, queritApiKey, tavilyApiKey, firecrawlBaseUrl, jinaApiKey, serpdiveApiKey, kagiApiKey, ollamaApiKey, searxngBaseUrl, perplexityApiKey, exaApiKey, geminiApiKey, bochaApiKey, or cloudflareApiKey in " + ConfigPath() + "\n" +
+		"  3. Set OPENAI_API_KEY, BRAVE_API_KEY, PARALLEL_API_KEY, TINYFISH_API_KEY, SEARCH1API_KEY, SEARCHINFINITY_API_KEY, QUERIT_API_KEY, TAVILY_API_KEY, FIRECRAWL_BASE_URL, JINA_API_KEY, SERPDIVE_API_KEY, KAGI_API_KEY, BOCHA_API_KEY, OLLAMA_API_KEY, SEARXNG_BASE_URL, EXA_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY, or CLOUDFLARE_API_KEY env vars\n" +
+		"  4. Set GOOGLE_GEMINI_BASE_URL with CLOUDFLARE_API_KEY for Cloudflare AI Gateway routing\n" +
+		"  5. Explicitly select provider: \"anysearch\" for anonymous AnySearch, \"xcrawl\" for XCrawl, \"xai\" for Grok, \"mistral\" for Mistral Conversations web search, \"brightdata\" with brightdataSerpZone for paid Bright Data SERP, \"serpbase\", \"serpapi\", \"serper\", or \"serply\" for Google SERP, \"you\" for You.com, or \"valyu\" for research search")
 }

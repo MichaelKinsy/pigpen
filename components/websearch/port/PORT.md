@@ -147,10 +147,11 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
 - **A session that cannot be read** (restore or transcript selection) still starts; the user gets a warning.
 - **SOCKS4/4a proxies** validate like the original but fail closed at connect (Go's `net/http` has no SOCKS4 dialer).
 - **Credential commands** run through the bare `sh` (Go) instead of `/bin/sh`, so the harness can record them and NixOS-style systems work.
-- **Guidance names only what this port can do** (review fix): the "No search provider available" error of the original also
-  suggests OpenAI/Codex `/login`, the Gemini API and signing into Gemini Web in Chrome, which do not work here, so they are
-  left out. The fetch "Fallback options" list is the original's, hosted providers and Gemini lines included (the Gemini lines
-  point at providers that arrive with the Gemini slice).
+- **Guidance names only what this port can do** (review fix): the "No search provider available" error of `auto` is the
+  original's (gemini-search.ts:820-828) and lists every provider of the port, OpenAI/Codex `/login` included; its item 5 (sign
+  into gemini.google.com in a Chromium browser) is left out because Gemini Web is not ported, so the explicit-selection item is
+  numbered 5 (`auto_guidance_test.go`). The fetch "Fallback options" list is the original's, hosted providers and Gemini lines
+  included.
 - **Image pixel budget** (review fix): images larger than 2000 px are decoded for resizing only up to 64 megapixels
   (8192x8192). Go's decoders allocate the full pixel buffer from the declared size, so a few kilobytes of PNG could
   otherwise demand gigabytes and kill the extension process; larger images fail with "Image too large to process".
@@ -189,7 +190,7 @@ cannot be redirected to a pigeq server under the unmodified original; only OpenA
 (`openaiResponsesUrl`). So: pigeq scenarios cover OpenAI through a fake server (`web-search-openai-responses`,
 `-alpha`, `-registry-key` (the key held in `auth.json` reaches the request under Pi and PiG alike), `-http-error`) and the
 credential and configuration errors of all four providers (`web-search-model-providers-unavailable`, `-bad-config`).
-For the fixed endpoints, `port/record-provider-requests.mjs` runs the original modules with a recording `fetch` and checks in
+For the fixed endpoints, `port/record-model-requests.mjs` runs the original modules with a recording `fetch` and checks in
 `port/fixtures/model-provider-requests.json` (18 cases: method, URL, headers, raw body, result or error);
 `TestModelProviderWireFixtures` replays every case against the port and requires the same.
 
@@ -214,12 +215,12 @@ For the fixed endpoints, `port/record-provider-requests.mjs` runs the original m
 - The activity monitor (`activityMonitor.logStart/logComplete`) is not driven: the activity widget is the curator slice.
 - Provider timeouts take the classification of the first slice (see "Provider timeouts" above), except Kimi, whose own
   `Kimi Code search API timed out` message is ported.
-- Not changed here: the shared "No search provider available" text of `auto`, which still lists the ported providers only.
+- The shared "No search provider available" text of `auto` lists every provider present (integration of this slice with the Gemini slice).
 
 **Named skips kept** (no Go counterpart): `curator page exposes xAI as a manual provider` and `Curator page exposes Mistral as an
-available manual provider` (the curator page is the curator slice); `Cloudflare gateway response redacts the credential used by
-the request` (the Gemini API slice). `provider-credential-source` is twinned over the providers present
-(`credentialSourceRedactionAttempts`); a slice that ports another provider adds its row.
+available manual provider` (the curator page is the curator slice). `provider-credential-source` is twinned over the original's
+seven providers (parallel, tinyfish and the Cloudflare gateway rows joined once those slices were in the stack) plus Mistral
+(`credentialSourceRedactionAttempts`).
 
 ## Security posture
 

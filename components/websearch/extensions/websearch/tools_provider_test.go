@@ -147,18 +147,6 @@ func TestUpstream_provider_precedence(t *testing.T) {
 		"asserts on the upstream TypeScript source text (index.ts regexes); the Go tool has one resolution path, ResolveRequestedProvider, covered by the cases above")
 }
 
-func TestUnportedProviderFailsWithoutFallback(t *testing.T) {
-	providerEnv(t, `{"provider":"xai"}`, map[string]string{"TAVILY_API_KEY": "k"})
-	r, err := NewRuntime(&fakeHost{})
-	noErr(t, err)
-	n := searchProviderNet(t)
-	_, err = mustTool(t, r, "web_search").Execute(bg(), map[string]any{"query": "x", "workflow": "none"}, nil)
-	if want := refusal("xAI search provider"); err == nil || err.Error() != want {
-		t.Fatalf("error = %v, want %q", err, want)
-	}
-	wantCalls(t, n)
-}
-
 func TestUpstream_allowed_search_providers(t *testing.T) {
 	const F = "allowed-search-providers"
 	kagiOnly := func(extra string) string {
