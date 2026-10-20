@@ -735,3 +735,27 @@ type scopedDirs struct{ Results, Async, Chain, Artifacts string }
 
 // DIRS is the process's shared directories.
 var DIRS = scopedDirs{Results: resultsDir(), Async: asyncDir(), Chain: chainRunsDir(), Artifacts: tempArtifactsDir()}
+
+// nodeFSErrorText is the message Node gives an fs error: "ENOTDIR: not a directory, scandir '/x'". The messages the original
+// builds from them ("... is unreadable at '...': <that>") reach the model, so the port words them the same way.
+func nodeFSErrorText(err error, op, path string) string {
+	code := fsErrorCode(err)
+	desc := map[string]string{
+		"ENOENT": "no such file or directory", "ENOTDIR": "not a directory", "EACCES": "permission denied", "EPERM": "operation not permitted",
+		"EEXIST": "file already exists", "EISDIR": "illegal operation on a directory", "EBUSY": "resource busy or locked",
+		"ENOSPC": "no space left on device",
+	}[code]
+	if code == "" {
+		switch {
+		case errors.Is(err, syscall.EEXIST):
+			code, desc = "EEXIST", "file already exists"
+		case errors.Is(err, syscall.EISDIR):
+			code, desc = "EISDIR", "illegal operation on a directory"
+		case errors.Is(err, syscall.ENOTEMPTY):
+			code, desc = "ENOTEMPTY", "directory not empty"
+		default:
+			return err.Error()
+		}
+	}
+	return fmt.Sprintf("%s: %s, %s '%s'", code, desc, op, path)
+}
