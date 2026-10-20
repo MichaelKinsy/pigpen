@@ -48,22 +48,13 @@ after(() => { server.close(); rmSync(scratch, { recursive: true, force: true });
 
 describe('the committed pin', () => {
   const requirement = readRequirement();
-  it('names a release asset with a sha256 for every target the Piglet manifests build, once the release is published', () => {
-    if (requirement.release.published === false) {
-      // An unpublished release has no archives to pin; it must not carry another release's.
-      assert.deepEqual(requirement.release.assets, {}, 'an unpublished release pins no assets');
-      return;
-    }
+  it('names a release asset with a sha256 for every target the Piglet manifests build', () => {
     for (const t of ['linux/amd64', 'linux/arm64', 'darwin/arm64', 'darwin/amd64', 'windows/amd64']) {
       const asset = requirement.release.assets[t];
       assert.ok(asset, `no pinned asset for ${t}`);
       assert.match(asset.sha256, /^[0-9a-f]{64}$/);
       assert.ok(asset.file.startsWith(`pig-${requirement.pig}-${t.replace('/', '-')}.`), `${asset.file} is not the ${t} archive of ${requirement.pig}`);
     }
-  });
-  it('refuses to download for an unpublished release, naming that nothing is pinned', async () => {
-    if (requirement.release.published !== false) return;
-    await assert.rejects(fetchPig({ target: 'linux/amd64', out: join(scratch, 'unpublished'), baseUrl }), /no pinned PiG release asset for linux\/amd64 \(pinned: none\)/);
   });
   it('pins the release tag and source commit of the version it requires', () => {
     assert.equal(requirement.release.tag, `v${requirement.pig}`);

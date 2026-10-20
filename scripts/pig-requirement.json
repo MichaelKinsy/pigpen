@@ -1,11 +1,16 @@
 {
   "pig": "0.5.0",
-  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. PiG 0.5.0 is not published yet: `release.commit` is the staging candidate team/tern/batch-v22 (swap it with scripts/pin-pig-release.mjs 0.5.0 at publish), and `published` is false and `assets` stays empty until the release exists and its SHA256SUMS can be recorded, so scripts/fetch-pig.mjs refuses to download a pig until then; Piglet builds use the source checkout at `commit`.",
+  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. Re-pin with scripts/pin-pig-release.mjs <version>.",
   "release": {
     "repository": "MichaelKinsy/PiG",
     "tag": "v0.5.0",
     "commit": "7a5422f66d2f7a73ed566abdb7c4b29bf1571e3d",
-    "assets": {},
-    "published": false
+    "assets": {
+      "linux/amd64": { "file": "pig-0.5.0-linux-amd64.tar.gz", "sha256": "91de15fc532073c15ae4e881d8958b92fe0af4f3a2b6c80590a5c4701fe89080" },
+      "linux/arm64": { "file": "pig-0.5.0-linux-arm64.tar.gz", "sha256": "51c2d320b2b8013484b5ba386c2eaf618d71a0999b193fc8547594ae1ef89ec3" },
+      "darwin/arm64": { "file": "pig-0.5.0-darwin-arm64.tar.gz", "sha256": "20d500a2ec5bbbe10963c58bc08fe851335b056c0ffe758a2e429d93199c94d6" },
+      "darwin/amd64": { "file": "pig-0.5.0-darwin-amd64.tar.gz", "sha256": "88c027cf519586c05acfebe4d91312686bdd34059f902c3312a3e86289732611" },
+      "windows/amd64": { "file": "pig-0.5.0-windows-amd64.zip", "sha256": "3c699b1012e36d8c64a6c4f0fbe38913d7d3c11b4a9ce9896c2071deb1963b34" }
+    }
   }
 }
