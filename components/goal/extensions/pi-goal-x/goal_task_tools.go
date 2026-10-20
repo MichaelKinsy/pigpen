@@ -37,12 +37,12 @@ func convertFlatTasks(flat []any, maxSubtaskDepth int) (tasks []any, errMsg stri
 			return nil, "All tasks must have a non-empty id."
 		}
 		if ids[id] {
-			return nil, fmt.Sprintf("Duplicate task id: %q.", id)
+			return nil, fmt.Sprintf("Duplicate task id: \"%s\".", id)
 		}
 		ids[id] = true
 		title, _ := toolItemString(item, "title")
 		if jsTrim(title) == "" {
-			return nil, fmt.Sprintf("Task %q must have a non-empty title.", id)
+			return nil, fmt.Sprintf("Task \"%s\" must have a non-empty title.", id)
 		}
 	}
 
@@ -55,14 +55,14 @@ func convertFlatTasks(flat []any, maxSubtaskDepth int) (tasks []any, errMsg stri
 		parentID := flatTaskParent(item)
 		if parentID != "" {
 			if _, ok := byID[parentID]; !ok {
-				return nil, fmt.Sprintf("Task %q references missing parent %q.", flatTaskID(item), parentID)
+				return nil, fmt.Sprintf("Task \"%s\" references missing parent \"%s\".", flatTaskID(item), parentID)
 			}
 			// Walk up; if we return to the node itself, there is a cycle.
 			cursor := byID[parentID]
 			seen := map[string]bool{flatTaskID(item): true}
 			for cursor != nil {
 				if seen[flatTaskID(cursor)] {
-					return nil, fmt.Sprintf("Cyclic parent relationship involving task %q.", flatTaskID(cursor))
+					return nil, fmt.Sprintf("Cyclic parent relationship involving task \"%s\".", flatTaskID(cursor))
 				}
 				seen[flatTaskID(cursor)] = true
 				if up := flatTaskParent(cursor); up != "" {
@@ -119,7 +119,7 @@ func convertFlatTasks(flat []any, maxSubtaskDepth int) (tasks []any, errMsg stri
 	for _, item := range flat {
 		if lw, _ := toolItemField(item, "lightweight_subtasks"); lw == true {
 			if len(childrenOf[flatTaskID(item)]) == 0 {
-				return nil, fmt.Sprintf("Task %q sets lightweight_subtasks but has no subtasks.", flatTaskID(item))
+				return nil, fmt.Sprintf("Task \"%s\" sets lightweight_subtasks but has no subtasks.", flatTaskID(item))
 			}
 		}
 	}
@@ -202,4 +202,3 @@ func countTasks(tasks []any) int {
 	}
 	return total
 }
-
