@@ -186,12 +186,6 @@
   "replace": "return failed(rawURL, \"\")"
  },
  {
-  "name": "refusal-hosted-provider-skipped",
-  "file": "extract.go",
-  "find": "if fetchProviderRequested(p) {",
-  "replace": "if false && fetchProviderRequested(p) {"
- },
- {
   "name": "refusal-pdf-message",
   "file": "extract.go",
   "find": "return fail(unsupported(\"PDF text extraction\").Error())",
@@ -202,199 +196,199 @@
   "file": "extract.go",
   "find": "msg += \"\\n\\n\" + unsupported(\"the RSC payload and Defuddle fallback extractors\").Error()",
   "replace": "msg += \"\""
-},
-{
+ },
+ {
   "name": "rest-google-extra-results",
   "file": "restcommon.go",
   "find": "return numResults + 5",
   "replace": "return numResults + 4"
-},
-{
+ },
+ {
   "name": "rest-google-recency-day",
   "file": "restcommon.go",
   "find": "\"day\": \"qdr:d\"",
   "replace": "\"day\": \"qdr:h\""
-},
-{
+ },
+ {
   "name": "rest-site-query-or-group",
   "file": "restcommon.go",
   "find": "\"(\"+strings.Join(sites, \" OR \")+\")\"",
   "replace": "strings.Join(sites, \" OR \")"
-},
-{
+ },
+ {
   "name": "rest-abort-message",
   "file": "restcommon.go",
   "find": "return errors.New(\"Aborted\")",
   "replace": "return errors.New(\"Abort\")"
-},
-{
+ },
+ {
   "name": "rest-provider-timeout-message",
   "file": "restcommon.go",
   "find": "\"%s request timed out after 60s\"",
   "replace": "\"%s request failed\""
-},
-{
+ },
+ {
   "name": "serpbase-default-count",
   "file": "serpbase.go",
   "find": "normalizeCountDefault(o.NumResults, 10)",
   "replace": "normalizeCountDefault(o.NumResults, 5)"
-},
-{
+ },
+ {
   "name": "bocha-default-count",
   "file": "bocha.go",
   "find": "normalizeCountDefault(o.NumResults, 8)",
   "replace": "normalizeCountDefault(o.NumResults, 5)"
-},
-{
+ },
+ {
   "name": "bocha-freshness-week",
   "file": "bocha.go",
   "find": "return \"oneWeek\"",
   "replace": "return \"oneMonth\""
-},
-{
+ },
+ {
   "name": "bocha-envelope-code",
   "file": "bocha.go",
   "find": "jsNumberOf(code) != 200",
   "replace": "jsNumberOf(code) == 200"
-},
-{
+ },
+ {
   "name": "serpapi-engine",
   "file": "serpapi.go",
   "find": "\"engine=google\"",
   "replace": "\"engine=bing\""
-},
-{
+ },
+ {
   "name": "serply-key-kept-cross-origin",
   "file": "serply.go",
   "find": "[]string{\"X-Api-Key\"}, func(data any) error",
   "replace": "nil, func(data any) error"
-},
-{
+ },
+ {
   "name": "you-env-name",
   "file": "you.go",
   "find": "hasProviderCredential(\"You.com\", \"youApiKey\", \"YDC_API_KEY\")",
   "replace": "hasProviderCredential(\"You.com\", \"youApiKey\", \"YOU_API_KEY\")"
-},
-{
+ },
+ {
   "name": "valyu-content-bound",
   "file": "valyu.go",
   "find": "valyuMaxContent    = 4000",
   "replace": "valyuMaxContent    = 4001"
-},
-{
+ },
+ {
   "name": "valyu-week-days",
   "file": "valyu.go",
   "find": "\"week\": 7",
   "replace": "\"week\": 6"
-},
-{
+ },
+ {
   "name": "xcrawl-status-check",
   "file": "xcrawl.go",
   "find": "status != \"completed\"",
   "replace": "status == \"completed\""
-},
-{
+ },
+ {
   "name": "xcrawl-keeps-relative-links",
   "file": "xcrawl.go",
   "find": "if absoluteHTTPRE.MatchString(link) {",
   "replace": "if true {"
-},
-{
+ },
+ {
   "name": "anysearch-bearer-only-keyed",
   "file": "anysearch.go",
   "find": "if apiKey != \"\" {",
   "replace": "if apiKey == \"\" {"
-},
-{
+ },
+ {
   "name": "jina-content-header",
   "file": "jinasearch.go",
   "find": "respond = \"content\"",
   "replace": "respond = \"no-content\""
-},
-{
+ },
+ {
   "name": "jina-timeout-status",
   "file": "jinasearch.go",
   "find": "error 408: request timed out",
   "replace": "error 500: request timed out"
-},
-{
+ },
+ {
   "name": "searxng-redirect-strips-same-origin",
   "file": "searxng.go",
   "find": "Origin(a.From) == Origin(a.To)",
   "replace": "Origin(a.From) != Origin(a.To)"
-},
-{
+ },
+ {
   "name": "searxng-availability-error-dropped",
   "file": "search.go",
   "find": "return d.availableErr()",
   "replace": "return false, nil"
-},
-{
+ },
+ {
   "name": "baizhi-default-time-range",
   "file": "baizhi.go",
   "find": "args.TimeRange = \"month\"",
   "replace": "args.TimeRange = \"year\""
-},
-{
+ },
+ {
   "name": "baizhi-no-session-delete",
   "file": "baizhi.go",
   "find": "if s.sessionID == \"\" {",
   "replace": "if s.sessionID != \"\" {"
-},
-{
+ },
+ {
   "name": "baizhi-network-message",
   "file": "baizhi.go",
   "find": "return \"Baizhi network request failed\"",
   "replace": "return \"Baizhi request failed\""
-},
-{
+ },
+ {
   "name": "rest-transport-failure-message",
   "file": "restcommon.go",
   "find": "return &redactedError{\"fetch failed\", err}",
   "replace": "return &redactedError{\"failed\", err}"
-},
-{
+ },
+ {
   "name": "rest-body-cut-message",
   "file": "restcommon.go",
   "find": "return &redactedError{\"terminated\", err}",
   "replace": "return &redactedError{\"cut\", err}"
-},
-{
+ },
+ {
   "name": "config-cache-trusts-recent-file",
   "file": "config.go",
   "find": "statErr == nil && time.Since(info.ModTime()) >= configRacyWindow",
   "replace": "statErr == nil"
-},
-{
+ },
+ {
   "name": "config-cache-ignores-size",
   "file": "config.go",
   "find": "e.info.Size() == info.Size() &&",
   "replace": "true &&"
-},
-{
+ },
+ {
   "name": "config-cache-ignores-mtime",
   "file": "config.go",
   "find": "e.info.ModTime().UnixNano() == info.ModTime().UnixNano() && os.SameFile(e.info, info)",
   "replace": "os.SameFile(e.info, info)"
-},
-{
+ },
+ {
   "name": "config-cache-ignores-identity",
   "file": "config.go",
   "find": "e.info.ModTime().UnixNano() == info.ModTime().UnixNano() && os.SameFile(e.info, info)",
   "replace": "e.info.ModTime().UnixNano() == info.ModTime().UnixNano()"
-},
-{
+ },
+ {
   "name": "config-cache-survives-reset",
   "file": "config.go",
   "find": "\tconfigMu.Lock()\n\tconfigCache = nil\n\tconfigMu.Unlock()\n\tresetProviderState()",
   "replace": "\tresetProviderState()"
-},
-{
+ },
+ {
   "name": "config-cache-never-hits",
   "file": "config.go",
   "find": "if configEntryMatches(e, path, info) {",
   "replace": "if false && configEntryMatches(e, path, info) {"
-},
+ },
  {
   "name": "tinyfish-per-url-cap-raised",
   "file": "tinyfish.go",
@@ -704,9 +698,10 @@
  {
   "name": "gemini-all-counts-web-availability",
   "file": "search.go",
-  "find": "(p == \"gemini\" && IsGeminiAPIAvailable())",
-  "replace": "(p == \"gemini\" && geminiProviderAvailable(ctx, o))"
- }, {
+  "find": "ok = IsGeminiAPIAvailable()",
+  "replace": "ok = geminiProviderAvailable(ctx, o)"
+ },
+ {
   "name": "gemini-grounding-redirect-kept",
   "file": "gemini_search.go",
   "find": "if resolved := resolveGeminiRedirect(ctx, u); resolved != \"\" {",
