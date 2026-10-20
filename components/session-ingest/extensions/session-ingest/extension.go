@@ -204,6 +204,9 @@ type sessionMetadata struct {
 	Version   string `json:"version,omitempty"`
 	CWD       string `json:"cwd,omitempty"`
 	Timestamp string `json:"timestamp,omitempty"`
+	Name      string `json:"name,omitempty"`
+	// OffBranchEntries counts the entries that are not on the active branch.
+	OffBranchEntries int `json:"offBranchEntries,omitempty"`
 }
 
 type sessionEvent struct {
@@ -229,6 +232,8 @@ type sessionMessage struct {
 	StopReason   string
 	Model        string
 	Provider     string
+	CustomType   string
+	TokensBefore int
 }
 
 type toolCall struct {
@@ -272,6 +277,7 @@ type tocItem struct {
 	AssistantMessages int          `json:"assistantMessages"`
 	ToolResults       int          `json:"toolResults"`
 	Errors            int          `json:"errors,omitempty"`
+	Compactions       int          `json:"compactions,omitempty"`
 	Usage             usageSummary `json:"usage,omitempty"`
 }
 
@@ -326,6 +332,8 @@ type sliceMessage struct {
 	StopReason   string       `json:"stopReason,omitempty"`
 	Model        string       `json:"model,omitempty"`
 	Provider     string       `json:"provider,omitempty"`
+	CustomType   string       `json:"customType,omitempty"`
+	TokensBefore int          `json:"tokensBefore,omitempty"`
 }
 
 func parseSessionFile(path string, maxChars int) (sessionFile, error) {

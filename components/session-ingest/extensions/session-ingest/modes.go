@@ -37,6 +37,8 @@ type turnMessage struct {
 	StopReason   string        `json:"stopReason,omitempty"`
 	ErrorMessage string        `json:"errorMessage,omitempty"`
 	Model        string        `json:"model,omitempty"`
+	CustomType   string        `json:"customType,omitempty"`
+	TokensBefore int           `json:"tokensBefore,omitempty"`
 	Usage        *usageSummary `json:"usage,omitempty"`
 }
 
@@ -330,6 +332,7 @@ type statsReport struct {
 	ToolCalls       int             `json:"toolCalls"`
 	Errors          int             `json:"errors"`
 	Usage           usageSummary    `json:"usage"`
+	OtherUsage      usageSummary    `json:"otherUsage,omitempty"`
 	Models          []modelStat     `json:"models,omitempty"`
 	FirstTimestamp  string          `json:"firstTimestamp,omitempty"`
 	LastTimestamp   string          `json:"lastTimestamp,omitempty"`
