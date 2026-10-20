@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 const (
@@ -478,8 +479,142 @@ func TestParallelCallsCommitInStartOrder(t *testing.T) {
 	close(r.gate)
 	eq(t, <-first, "Created #1: a (pending)", "first call")
 	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-a", "toolName": "todo", "isError": false})
-	eq(t, <-second, "Updated #1 (pending → completed)", "second call")
+	eq(t, within(t, second), "Updated #1 (pending → completed)", "second call")
 	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-b", "toolName": "todo", "isError": false})
+}
+
+// assistantCalls is the leaf entry while a batch runs: the assistant message with its tool calls in source order.
+func assistantCalls(calls ...[2]string) map[string]any {
+	var blocks []any
+	for _, c := range calls {
+		blocks = append(blocks, map[string]any{"type": "toolCall", "id": c[0], "name": c[1], "arguments": map[string]any{}})
+	}
+	return map[string]any{"type": "message", "id": "m1", "message": map[string]any{"role": "assistant", "content": blocks}}
+}
+
+// within waits for an answer; a call that never answers fails the test instead of hanging it.
+func within(t *testing.T, c chan string) string {
+	t.Helper()
+	select {
+	case got := <-c:
+		return got
+	case <-time.After(3 * time.Second):
+		t.Fatal("no answer within 3s")
+		return ""
+	}
+}
+
+// sendTool sends a tool_call without waiting for its answer.
+func (r *rig) sendTool(callID, tool string, params map[string]any) chan string {
+	out := make(chan string, 1)
+	argv, _ := json.Marshal(params)
+	go func() {
+		raw, failure := r.Host.roundTrip(map[string]any{"method": "tool_call", "tool": tool, "tool_call_id": callID, "args": json.RawMessage(argv)})
+		var res struct {
+			Content string `json:"content"`
+		}
+		_ = json.Unmarshal(raw, &res)
+		out <- res.Content + failure
+	}()
+	return out
+}
+
+// The order of a batch is the order of the calls in the assistant message that is the session's leaf while it
+// runs, whichever handler the scheduler starts first: Pi starts the calls in source order from one thread, and a
+// Go handler can be overtaken between the SDK's hand-off and its first statement (observed once in about 40
+// runs of the bad-input scenario). upstream: agent-loop.ts:619-647.
+func TestParallelCallsCommitInSourceOrderWhicheverArrivesFirst(t *testing.T) {
+	r := startRig(t, HostOptions{})
+	r.setLeaf(assistantCalls([2]string{"call-a", "todo"}, [2]string{"call-b", "todo"}))
+	second := r.sendTool("call-b", "todo", map[string]any{"action": "update", "id": 1.0, "status": "completed"})
+	// call-b arrived first and must wait for call-a, which has not arrived.
+	select {
+	case got := <-second:
+		t.Fatalf("the second call ran before the first arrived: %q", got)
+	case <-time.After(150 * time.Millisecond):
+	}
+	first := r.sendTool("call-a", "todo", map[string]any{"action": "create", "subject": "a"})
+	eq(t, within(t, first), "Created #1: a (pending)", "first call")
+	// Pi ends the calls in source order: the second answers only after the first's end event.
+	select {
+	case got := <-second:
+		t.Fatalf("the second call answered before the first ended: %q", got)
+	case <-time.After(150 * time.Millisecond):
+	}
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-a", "toolName": "todo", "isError": false})
+	eq(t, within(t, second), "Updated #1 (pending → completed)", "second call")
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-b", "toolName": "todo", "isError": false})
+}
+
+// Calls of other tools in the message are not part of the order.
+func TestOtherToolsInTheMessageAreNotWaitedFor(t *testing.T) {
+	r := startRig(t, HostOptions{})
+	r.setLeaf(assistantCalls([2]string{"call-x", "bash"}, [2]string{"call-a", "todo"}, [2]string{"call-y", "read"}, [2]string{"call-b", "todo"}))
+	first := r.sendTool("call-a", "todo", map[string]any{"action": "create", "subject": "a"})
+	eq(t, <-first, "Created #1: a (pending)", "first call")
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-a", "toolName": "todo", "isError": false})
+	second := r.sendTool("call-b", "todo", map[string]any{"action": "list"})
+	eq(t, <-second, "[pending] #1 a", "second call")
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-b", "toolName": "todo", "isError": false})
+}
+
+// A call Pi finished without running it (arguments that fail the schema end at once, with no tool_call) leaves
+// its successor free once its end event is seen.
+func TestACallThatNeverRanDoesNotBlockItsSuccessor(t *testing.T) {
+	r := startRig(t, HostOptions{})
+	r.setLeaf(assistantCalls([2]string{"call-a", "todo"}, [2]string{"call-b", "todo"}))
+	second := r.sendTool("call-b", "todo", map[string]any{"action": "create", "subject": "b"})
+	select {
+	case got := <-second:
+		t.Fatalf("the second call ran before the first ended: %q", got)
+	case <-time.After(150 * time.Millisecond):
+	}
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-a", "toolName": "todo", "isError": true})
+	select {
+	case got := <-second:
+		eq(t, got, "Created #1: b (pending)", "second call")
+	case <-time.After(3 * time.Second):
+		t.Fatal("the second call still waits for a call that ended without running")
+	}
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-b", "toolName": "todo", "isError": false})
+}
+
+// The end of the agent run frees a call whose predecessor's end event was never reported.
+func TestAgentEndFreesACallWaitingForALostEnd(t *testing.T) {
+	r := startRig(t, HostOptions{})
+	r.setLeaf(assistantCalls([2]string{"call-a", "todo"}, [2]string{"call-b", "todo"}))
+	second := r.sendTool("call-b", "todo", map[string]any{"action": "create", "subject": "b"})
+	select {
+	case got := <-second:
+		t.Fatalf("the second call ran before the first ended: %q", got)
+	case <-time.After(150 * time.Millisecond):
+	}
+	r.Fire("agent_end", nil)
+	select {
+	case got := <-second:
+		eq(t, got, "Created #1: b (pending)", "second call")
+	case <-time.After(3 * time.Second):
+		t.Fatal("agent_end left the second call waiting")
+	}
+}
+
+// The calls of two sessions (a child and its parent share the process) do not wait for each other.
+func TestCallsOfOneMessageDoNotWaitForAnotherMessage(t *testing.T) {
+	r := startRig(t, HostOptions{})
+	r.setLeaf(assistantCalls([2]string{"call-a", "todo"}))
+	first := r.sendTool("call-a", "todo", map[string]any{"action": "create", "subject": "a"})
+	eq(t, <-first, "Created #1: a (pending)", "first call")
+	// call-a's end event has not arrived; a call of the next message (a new leaf) is not held behind it.
+	r.setLeaf(assistantCalls([2]string{"call-n", "todo"}))
+	next := r.sendTool("call-n", "todo", map[string]any{"action": "list"})
+	select {
+	case got := <-next:
+		eq(t, got, "[pending] #1 a", "next message's call")
+	case <-time.After(2 * time.Second):
+		t.Fatal("a call of the next message waits for a call of the previous one")
+	}
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-a", "toolName": "todo", "isError": false})
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-n", "toolName": "todo", "isError": false})
 }
 
 // A host failure while reading the session id is an error of the call, not an empty session: the model sees

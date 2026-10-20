@@ -18,6 +18,7 @@ type rig struct {
 	mu         sync.Mutex
 	id         string
 	branch     []map[string]any
+	leaf       map[string]any // the session's leaf entry: the assistant message whose calls run (nil: an empty entry)
 	expanded   bool
 	toolCalls  int
 	gate       chan struct{} // when set, the first session-id read waits for it
@@ -56,6 +57,11 @@ func startRig(t *testing.T, opts HostOptions) *rig {
 					r.mu.Lock()
 				}
 				return r.id, ""
+			case "getLeafEntry":
+				if r.leaf == nil {
+					return map[string]any{}, ""
+				}
+				return r.leaf, ""
 			case "getBranch":
 				if r.branch == nil {
 					return []any{}, ""
@@ -79,6 +85,7 @@ func startRig(t *testing.T, opts HostOptions) *rig {
 }
 
 func (r *rig) setSession(id string)         { r.mu.Lock(); r.id = id; r.mu.Unlock() }
+func (r *rig) setLeaf(l map[string]any)     { r.mu.Lock(); r.leaf = l; r.mu.Unlock() }
 func (r *rig) setBranch(b []map[string]any) { r.mu.Lock(); r.branch = b; r.mu.Unlock() }
 func (r *rig) setFailClear(v bool)          { r.mu.Lock(); r.failClear = v; r.mu.Unlock() }
 func (r *rig) setFail(msg string)           { r.mu.Lock(); r.failRead = msg; r.mu.Unlock() }
