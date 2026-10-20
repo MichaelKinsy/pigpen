@@ -11,8 +11,8 @@ import (
 )
 
 // The stuck guard (src/stuck.ts): a rolling memory of tool results for the current prompt, exact repeats
-// decided in code, and one judge request for the rest. `stuck.evidence` (the parsed failures and edit
-// diffs) is not part of this port: it runs as upstream's documented `stuck.evidence: false`.
+// decided in code, and one judge request for the rest. With `stuck.evidence` on (the default) the request also
+// carries the parsed failures, edit diffs and a digest (evidence.go).
 
 const (
 	callLimit   = 300
@@ -36,8 +36,20 @@ type Attempt struct {
 	ReadOnly bool
 	// Poll: polling or waiting; the call is expected to run again with the same output.
 	Poll bool
-	// Text is the whole result text.
+	// Text is the whole result text, so the evidence builder can parse the failing test out of it. It never
+	// leaves the machine as it is: every string in the evidence is redacted, and Output stays the field sent
+	// verbatim.
 	Text string
+	// Change is, for an `edit` or `write`, the path and capped diff of the change, both redacted.
+	Change *AttemptChange
+}
+
+// AttemptChange is the change an `edit` or `write` made, as the stuck evidence reports it.
+type AttemptChange struct {
+	Path    string
+	Added   int
+	Removed int
+	Diff    string
 }
 
 func headText(text string, limit int) string { return truncate(text, limit) }
@@ -120,7 +132,13 @@ func MakeAttempt(tool string, input map[string]any, content []ContentPart, faile
 	}
 	text := jsTrim(ResultText(content))
 	raw, _ := json.Marshal(input)
+	var change *AttemptChange
+	if isEditTool(tool) {
+		d := MakeEditDiff(tool, input)
+		change = &AttemptChange{Path: Redact(d.Path), Added: d.Added, Removed: d.Removed, Diff: Redact(d.Diff)}
+	}
 	return Attempt{
+		Change:    change,
 		Tool:      tool,
 		Key:       sha1Hex(tool, "\x00", string(raw)),
 		OutputKey: sha1Hex(normaliseOutput(text)),
@@ -304,8 +322,9 @@ type StuckVerdict struct {
 	ErrorCode string
 }
 
-// BuildStuckRequest is the one request state for the stuck guard.
-func BuildStuckRequest(attempts []Attempt, task string) Request {
+// BuildStuckRequest is the one request state for the stuck guard: the attempts, plus the evidence section when
+// it is on (config `stuck.evidence`).
+func BuildStuckRequest(attempts []Attempt, task string, evidence bool) Request {
 	taskText := "(no user request recorded in this session)"
 	if t := jsTrim(task); t != "" {
 		// Redacted like the action request's task (deviation D11: stuck.ts sends it as typed).
@@ -319,7 +338,11 @@ func BuildStuckRequest(attempts []Attempt, task string) Request {
 		}
 		list = append(list, map[string]any{"n": i + 1, "tool": a.Tool, "call": a.Call, "outcome": outcome, "output": a.Output})
 	}
-	return Request{State: map[string]any{"task": taskText, "attempts": list}, Questions: build(qs.Stuck)}
+	state := map[string]any{"task": taskText, "attempts": list}
+	if evidence {
+		state["evidence"] = BuildStuckEvidence(attempts, EvidenceLimit)
+	}
+	return Request{State: state, Questions: build(qs.Stuck)}
 }
 
 // StuckOptions configure EvaluateStuck.
@@ -346,7 +369,7 @@ func EvaluateStuck(ctx context.Context, w *AttemptWindow, task string, opts Stuc
 		return StuckVerdict{Source: "repeat", Failures: failures}
 	}
 	w.MarkJudged()
-	res := Ask(ctx, opts.Judge, BuildStuckRequest(w.Attempts, task), opts.Timeout)
+	res := Ask(ctx, opts.Judge, BuildStuckRequest(w.Attempts, task, opts.Config.Evidence), opts.Timeout)
 	if !res.OK {
 		return StuckVerdict{Source: "error", Failures: failures, Error: res.Error, ErrorCode: res.ErrorCode}
 	}
