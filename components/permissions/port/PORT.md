@@ -410,3 +410,90 @@ Differences from the original, on purpose:
 - `getPackageDir()` (Pi's install directory) has no counterpart in PiG's Go SDK (`sdk.AgentDir()` is the only host path): the
   caller that builds the infrastructure roots must pass it, and until the SDK has it that root is missing.
 - `ScopeConfig` lives with the config layer; `ShellToolsConfig` here is a map of `ShellToolAlias`.
+
+## Approval dialog and authorizer chain (lane `authority`: `src/authority`, the approval-dialog half)
+
+Lane `authority` (branch `perm-authority-1`). The original asks a human with an inline `ctx.ui.custom` dialog (or `select`/`input` outside
+the TUI), serializes those dialogs, runs the operator's `authorizerChain` before the terminal authorizer, and a subagent escalates to
+its parent. This lane ports that whole half as library code in the module root (`auth_*.go`, `uiprompt.go`); `Extension()` does not
+call it yet (the gate lane wires it), so the root gate still refuses what it cannot read. It replaces the authority stand-ins of
+`fwd_stub_authority.go` (decision source, decision resolution, prompt decision, `AskEscalator`, authorizer types) in the same
+commit; the forwarding twins pass unchanged.
+
+| ID | Original (`src/authority/`) | Go | Checked by |
+|---|---|---|---|
+| A1 | `decision-source.ts`, `decision-resolution.ts` | `auth_decision_source.go`, `auth_resolution.go` | 10 + 18 twins; the forwarding differential |
+| A2 | `permission-dialog.ts` | `auth_permission_dialog.go` | 31 twins; the differential (975 scripted answers) |
+| A3 | `permission-prompt-decision.ts` | `auth_prompt_model.go` | 32 twins; the differential (7,200 event sequences, 16 configs) |
+| A4 | `permission-prompt-component.ts`, `bracketed-paste.ts`, pi-tui `Input` | `auth_prompt_component.go`, `auth_input.go`, `auth_bracketed_paste.go` | 39 + 8 twins; the differential (304 key-sequence scenarios, every frame at two widths) |
+| A5 | `authorizer.ts`, `denying-authorizer.ts`, `authorizer-chain.ts`, `authorizer-chain-audit.ts`, `authorizer-registry.ts`, `authorizer-selection.ts` | `auth_authorizer.go`, `auth_chain.go`, `auth_chain_audit.go`, `auth_registry.go`, `auth_selection.go` | 15 + 2 + 7 + 8 + 12 + 34 twins; the differential (800 chains, 72 selections) |
+| A6 | `local-user-authorizer.ts`, `ask-dialog-queue.ts`, `permission-prompter.ts` | `auth_local_user.go`, `auth_queue.go`, `auth_prompter.go` | 24 + 8 + 17 twins; the differential (458 asks, 180 review entries) |
+| A7 | `approval-escalator.ts` (`ParentAuthorizer`) | `auth_escalator.go` | 26 twins on the real filesystem and clock |
+| A8 | `service/permission-ui-prompt.ts`, the `permissions:ui_prompt` half of `service/permission-events.ts` | `uiprompt.go` | 8 + 3 twins; the differential (96 events) |
+| A9 | the host seam of `ctx.ui.custom` | `auth_sdk_ui.go` (a `sdk.RemoteComponent` over `Context.Custom`) | `auth_sdk_ui_test.go` |
+
+**Twins:** `pigeq twins check --files <the 16 authority files and service/permission-ui-prompt> --deferred port/slices.json`: 299 exact
+twins, 0 skips; the 16 `authority/*` entries and `service/permission-ui-prompt` are removed from `port/slices.json`, and
+`service/permission-events` is narrowed (its `ui_prompt` cases are twinned, the ready and decision halves are not). The `it.each` rows
+with a `%s` title (malformed decision sources, "returns a %s source unchanged") run as plain subtests.
+
+**Differential against the original's own modules** (`port/probe/gen-authority-cases.py` makes `authority-cases.json`;
+`port/record-authority-probe.sh` runs `port/probe/authority-probe.test.ts` inside an installed copy of the oracle and writes
+`testdata/authority_oracle.json`; `auth_oracle_test.go` replays it): the dialog model, the `select`/`input` fallback, the chain, the
+bracketed-paste collapse, `LocalUserAuthorizer` (the `permissions:ui_prompt` event, the notice, the request options), the prompter's
+review entries, `selectAuthorizer`, `buildUiPrompt`, `requestPermissionDecision`'s fallback, and the inline component under key
+sequences: for each key, the rendered lines at widths 30 and 80 (a tag theme marks every colored span with its token), the render
+requests, the tool-expansion toggles, the terminal writes and the decision. The sequences include the decision keys under every key
+set, uppercase, control and alt chords, Kitty CSI-u presses, shifted presses and releases, bracketed pastes (stray, multi-line,
+partial), and the reason editor's keys (cursor, word, kill, yank, undo, wide and combining characters, a paste longer than the row).
+
+**Mutations:** `port/gen-mutations-authority.py` writes `port/mutations-authority.json` (287 mutations, one per behaviour); run
+`pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-authority.json`.
+
+### How the original's promises and callbacks map
+
+- A promise is a blocking call. `AskDialogQueue` hands out an `AdmittedAsk` (admission order is the call order) whose `Wait` blocks;
+  `ReleaseAll` settles every outstanding ask with its own released value, a stale presentation that returns after its release is
+  discarded, and a panicking presentation rejects only its own ask.
+- `ctx.ui.custom(factory)` is `PermissionPromptUi.Custom(factory, options)`: the factory receives the same four things (the TUI's
+  render request and terminal write, the theme, the keybindings, `done`) and the call blocks until `done`. A dialog the host closed
+  without a decision is an error (`errDialogClosed`), never an approval; the gate turns an error into a block.
+- Every host effect of the component (render request, tool-expansion toggle, terminal write) runs outside its lock, and `Render` is a
+  pure function of the state (no host call): a host that repaints synchronously from the render request cannot deadlock.
+- `UnattributedDecision` is a type of its own (the original's `Omit<PermissionPromptDecision, "decidedBy">`): a producer that only
+  states an outcome cannot be handed on as a decided one, so the "decider is never missing" guarantee is the compiler's, as in TypeScript.
+
+### Differences from the original
+
+- A chain link's error (the original's rejected promise) is returned as an error and decides nothing; the original's `undefined`
+  verdict throws a `TypeError` where a Go zero verdict (`Kind` empty) defers. Both end at the terminal or at a block, never at an allow.
+- `AuthorizerRegistry`'s disposer is guarded by the registration, not by the function value: a stale disposer cannot evict a later
+  registration even of the same function (the original evicts it).
+- `PromptPermissionDetails.Surface` and `.Value` are `*string`: an explicit `null` display override on a direct ask (the original
+  distinguishes it from "derive") is not representable. No producer sets it: the serving node builds details with no tool, command,
+  path, target or skill name, so deriving yields the same `null`. Recorded by the differential's excluded corpus.
+- `AuthorizerSelection.Activate` returns the error of a failing subagent detection (a session-directory read) instead of throwing, and
+  stores no selection then.
+- The original's `Input` reads pi-tui's global keybindings manager on every key; so does `LineInput` (`tui.GetKeybindings`). A host
+  adapter that wants the user's keybinding overrides must `tui.SetKeybindings` once.
+- pi-tui has no Go counterpart for `Input` (pitui ports the `Editor` only), so `LineInput` (`auth_input.go`) is a port of `input.ts`
+  from the pinned Pi over pitui's kill ring, key matcher, word navigation and width helpers; its mouse handler is not ported (the dialog
+  never routes a mouse event to it).
+
+### SDK gaps (reported to the Tern lead, not worked around)
+
+- `tui.terminal.write` (the prompt notification's raw bytes: bell, OSC 9, OSC 777): the SDK has no terminal write. `NewSDKPromptUi`
+  takes an optional `write` callback; with `nil` the notification is dropped. The gate lane must refuse a configured
+  `promptNotifications` until the SDK has it, or take the gap.
+- The host's `KeybindingsManager.matches` (the `app.tools.expand` action and pi-tui's global manager with the user's overrides): the
+  adapter takes a `tui.Keybindings`; the caller builds it from `<agent dir>/keybindings.json` as the questionnaire does.
+- `ctx.ui.custom`'s theme is `Context.UITheme()` (present), its `tui.requestRender` is the remote component's invalidation callback
+  (present).
+
+### Findings
+
+- Pi and PiG differ on nothing observed here: every frame, decision and render request of the 304 key-sequence scenarios equals the
+  original's under the pinned Pi.
+- Inherited from the original, by design: the decision step opens with `approve` highlighted and Enter confirms the highlight in one
+  press even with double-press confirmation on, so a stray Enter at the moment the dialog opens approves. The port keeps it (a
+  difference would be a policy change); see the security review in the PR body.

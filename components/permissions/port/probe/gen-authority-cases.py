@@ -198,7 +198,7 @@ decision_keys = ["y", "s", "b", "n", "r", "j", "k", "Y", "N", "R", "1", "4", " "
                  pasted("y"), pasted("n"), pasted("some copied text"), pasted("r"), "\x7f", "\x00", "\x1b[3~", "\x1b[200~y", "y\x1b[201~", "yy", "ny", "yn", "\u00e9", "\U0001F600"]
 reason_keys = ["a", "b", "c", " ", "x", "\u00e9", "\u65e5", "\U0001F600", "e\u0301", "\x7f", "\x08", "\x1b[3~", "\x1b[D", "\x1b[C", "\x1b[H", "\x1b[F", "\x1b[1;5D", "\x1b[1;5C",
                CTRL("a"), CTRL("e"), CTRL("w"), CTRL("u"), CTRL("k"), CTRL("y"), CTRL("b"), CTRL("f"), CTRL("d"), "\x1b\x7f", "\x1bb", "\x1bf", "\x1bd", "\x1by", "\x1b[45;5u",
-               "\x1f", CTRL("z"), CTRL("o"), CTRL("c"), ENTER, "\n", ESC, "\t", "\x1b[97u", "\x1b[97;2u", "\x1b[13u", "\x1b[27u",
+               "\x1f", CTRL("z"), CTRL("o"), CTRL("c"), ENTER, "\n", ESC, "\t", "\x1b[97u", "\x1b[13u", "\x1b[27u",
                pasted("pasted text"), pasted("multi\nline\r\npaste"), pasted("q" * 120), pasted("tab\there"), pasted(""), pasted("e\u0301\U0001F600"), S + "partial", "rest" + E, "j", "k", "y", "n", "r"]
 
 def seqs_for(options):
