@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-subagents",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Go port of pi-subagents: agent and chain definitions, their discovery, the subagent tool's list and get actions, and single-agent and chain runs through a child pig process (partial: no parallel, async, workflow, worktree or fleet features)",
   "keywords": [
     "pig-package",

@@ -644,8 +644,122 @@
  {
   "name": "ext-single-needs-task",
   "file": "extension.go",
-  "find": "return name, task, name != \"\" && task != \"\"",
-  "replace": "return name, task, name != \"\""
+  "find": "\tif task == \"\" {\n",
+  "replace": "\tif false {\n"
+ },
+ {
+  "name": "ext-single-agent-type",
+  "file": "extension.go",
+  "find": "if name == \"\" {\n\t\treturn nil, sdk.NewToolError(\"Structured single-child execution",
+  "replace": "if false {\n\t\treturn nil, sdk.NewToolError(\"Structured single-child execution"
+ },
+ {
+  "name": "ext-action-type",
+  "file": "extension.go",
+  "find": "!isString || jsTrim(s) == \"\"",
+  "replace": "!isString"
+ },
+ {
+  "name": "ext-refuse-first",
+  "file": "extension.go",
+  "find": "if msg := refuseUnsupported(params, action); msg != \"\" {",
+  "replace": "if msg := refuseUnsupported(params, action); msg != \"\" && false {"
+ },
+ {
+  "name": "ext-bgwait",
+  "file": "extension.go",
+  "find": "refuseTool(\"waiting for background work (`bg_wait`)\")",
+  "replace": "refuseTool(\"waiting\")"
+ },
+ {
+  "name": "ext-supervisor",
+  "file": "extension.go",
+  "find": "refuseTool(\"the supervisor channel (`subagent_supervisor`)\")",
+  "replace": "refuseTool(\"the supervisor\")"
+ },
+ {
+  "name": "ref-spec",
+  "file": "refuse.go",
+  "find": "originalSpec     = \"npm:pi-subagents@0.73.1\"",
+  "replace": "originalSpec     = \"npm:pi-subagents@0.73.0\""
+ },
+ {
+  "name": "ref-package",
+  "file": "refuse.go",
+  "find": "portPackageName  = \"@pi-in-go/pigpen-subagents\"",
+  "replace": "portPackageName  = \"pigpen-subagents\""
+ },
+ {
+  "name": "ref-async-true",
+  "file": "refuse.go",
+  "find": "v != nil && v != false",
+  "replace": "v != nil && v != true"
+ },
+ {
+  "name": "ref-async-text",
+  "file": "refuse.go",
+  "find": "\"async (background) runs (`async: \"",
+  "replace": "\"async runs (`async: \""
+ },
+ {
+  "name": "ref-workflow-list",
+  "file": "refuse.go",
+  "find": "\"workflow\", \"workflowScript\", \"workflowScriptPath\"}",
+  "replace": "\"workflow\", \"workflowScript\"}"
+ },
+ {
+  "name": "ref-legacy-list",
+  "file": "refuse.go",
+  "find": "\"tasks\", \"chain\", \"parallel\", \"concurrency\", \"chainDir\", \"chainName\"}",
+  "replace": "\"chain\", \"parallel\", \"concurrency\", \"chainDir\", \"chainName\"}"
+ },
+ {
+  "name": "ref-legacy-text",
+  "file": "refuse.go",
+  "find": "refusal(\"parallel and chain runs (\"",
+  "replace": "refusal(\"parallel runs (\""
+ },
+ {
+  "name": "ref-option",
+  "file": "refuse.go",
+  "find": "if !allowed[k] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ref-option-plural",
+  "file": "refuse.go",
+  "find": "if len(names) == 1 {",
+  "replace": "if len(names) >= 1 {"
+ },
+ {
+  "name": "ref-null",
+  "file": "refuse.go",
+  "find": "if v != nil {\n\t\t\tkeys",
+  "replace": "if true {\n\t\t\tkeys"
+ },
+ {
+  "name": "ref-action",
+  "file": "refuse.go",
+  "find": "return refusal(\"the `\" + action + \"` action\")",
+  "replace": "return \"\""
+ },
+ {
+  "name": "ref-list-params",
+  "file": "refuse.go",
+  "find": "listParams = map[string]bool{\"action\": true, \"agentScope\": true}",
+  "replace": "listParams = map[string]bool{\"action\": true, \"agentScope\": true, \"capabilities\": true}"
+ },
+ {
+  "name": "ref-get-params",
+  "file": "refuse.go",
+  "find": "getParams  = map[string]bool{\"action\": true, \"agent\": true, \"agentScope\": true}",
+  "replace": "getParams  = map[string]bool{\"action\": true, \"agent\": true, \"agentScope\": true, \"config\": true}"
+ },
+ {
+  "name": "ref-run-params",
+  "file": "refuse.go",
+  "find": "\"cwd\": true, \"model\": true, \"async\": true}",
+  "replace": "\"cwd\": true, \"model\": true, \"async\": true, \"output\": true}"
  },
  {
   "name": "ext-run-depth",
