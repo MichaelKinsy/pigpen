@@ -265,3 +265,60 @@ func TestSessionNameAndSideUsageAreReported(t *testing.T) {
 		t.Fatalf("stats markdown does not show the name:\n%s", md)
 	}
 }
+
+func TestEntryWithoutAMessageBodyKeepsItsChildrenAttached(t *testing.T) {
+	path := writeLines(t,
+		treeHeader,
+		userEntry("a1", "", "first"),
+		`{"type":"message","id":"broken","parentId":"a1","timestamp":"2026-06-01T10:00:02.000Z"}`,
+		userEntry("a2", "broken", "second"),
+	)
+	toc := run(t, map[string]any{"path": path, "mode": "toc", "format": "json"}).(tocReport)
+	if toc.TotalTurns != 2 || toc.Session.OffBranchEntries != 0 {
+		t.Fatalf("toc = %+v, want both turns (the entry between them has no message but is still on the branch)", toc)
+	}
+}
+
+func TestEventsOnTheActiveBranchAreListedOnce(t *testing.T) {
+	path := writeLines(t,
+		treeHeader,
+		userEntry("a1", "", "go"),
+		`{"type":"model_change","id":"m1","parentId":"a1","timestamp":"2026-06-01T10:00:02.000Z","provider":"acme","modelId":"m-9"}`,
+		`{"type":"thinking_level_change","id":"t1","parentId":"m1","timestamp":"2026-06-01T10:00:03.000Z","thinkingLevel":"high"}`,
+	)
+	toc := run(t, map[string]any{"path": path, "mode": "toc", "format": "json"}).(tocReport)
+	if len(toc.Events) != 2 || toc.Events[0].ModelID != "m-9" || toc.Events[1].ThinkingLevel != "high" {
+		t.Fatalf("events = %+v", toc.Events)
+	}
+}
+
+func TestStatsMarkdownShowsSpendOutsideMessages(t *testing.T) {
+	path := writeLines(t,
+		treeHeader,
+		userEntry("a1", "", "hello"),
+		`{"type":"usage","id":"u1","parentId":"a1","timestamp":"2026-06-01T10:00:02.000Z","kind":"cache_warm","provider":"acme","model":"m-1","usage":{"input":7,"output":3,"totalTokens":10,"cost":{"total":0.02}}}`,
+	)
+	md := run(t, map[string]any{"path": path, "mode": "stats"}).(sdk.ToolResult).Content
+	if !strings.Contains(md, "usage_outside_messages (included above): total 10 tokens, $0.0200") {
+		t.Fatalf("stats markdown:\n%s", md)
+	}
+}
+
+func TestTurnMarkdownShowsCompactionAndCustomDetails(t *testing.T) {
+	path := writeLines(t,
+		treeHeader,
+		userEntry("a1", "", "go"),
+		`{"type":"compaction","id":"c1","parentId":"a1","timestamp":"2026-06-01T10:00:02.000Z","summary":"Gist","firstKeptEntryId":"a1","tokensBefore":777}`,
+		`{"type":"custom_message","id":"k1","parentId":"c1","timestamp":"2026-06-01T10:00:03.000Z","customType":"note","content":"hi","display":true}`,
+	)
+	turn := run(t, map[string]any{"path": path, "mode": "turn", "turn": 1, "format": "json"}).(turnReport)
+	if turn.Messages[1].TokensBefore != 777 || turn.Messages[2].CustomType != "note" {
+		t.Fatalf("turn messages = %+v", turn.Messages)
+	}
+	md := run(t, map[string]any{"path": path, "mode": "turn", "turn": 1}).(sdk.ToolResult).Content
+	for _, want := range []string{"- tokens_before_compaction: 777", "- custom_type: note"} {
+		if !strings.Contains(md, want) {
+			t.Errorf("turn markdown missing %q:\n%s", want, md)
+		}
+	}
+}

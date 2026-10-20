@@ -24,12 +24,36 @@ read_session(path, mode = toc | query | slice | turn | tools | stats, ...)
 Common parameters: `start` and `limit` (paging; not for `stats`), `maxCharsPerItem` (truncate long
 text, 0 = do not), `format` (`compact_markdown` by default, or `json`).
 
-A parameter that does not apply to the chosen mode (for example `query` with
-`mode=toc`, or `limit` with `mode=stats`) is refused with a tool error, not ignored.
+A parameter the chosen mode does not use (for example `query` with `mode=toc`, or `limit`
+with `mode=stats`) is ignored, as in PiG's own tools. The schema is one flat object for
+every mode and a call often carries schema defaults, so refusing them would fail calls
+that are otherwise right. Each parameter's description names the modes that use it.
 
-Not covered: the tool reads every `message` entry in file order. It does not follow
-the session tree, so a forked session shows both branches in sequence; it ignores
-compaction and other non-message entries.
+## What is read
+
+`read_session` reads the **active branch** of the session tree. Session files from Pi and
+PiG (v2 and later) give every entry an `id` and a `parentId`; the active branch is the
+path from the last entry in the file back to the root, the branch Pi continues from. After a
+fork (`/tree`, `/fork`) the abandoned branches are not part of the transcript and cannot turn
+up in a query; every report says how many entries it left out (`off_branch_entries`, JSON
+`session.offBranchEntries`). An entry whose parent is not in the file starts a new root, as in
+Pi's `getBranch`. Entries without a `parentId` (v1 sessions) follow file order.
+
+On the branch the transcript keeps, in order:
+
+| Entry | Becomes |
+|---|---|
+| `message` | the message, with its role (`user`, `assistant`, `toolResult`, `bashExecution` as `$ command` and its output, `custom`, ...) |
+| `compaction` | a `compactionSummary` message: the summary, `tokensBefore`, and the cost of the call that wrote it. Messages before the compaction stay readable; the toc marks the turn with `compaction:N` |
+| `branch_summary` | a `branchSummary` message |
+| `custom_message` | a `custom` message with its `customType` |
+| `model_change`, `thinking_level_change` | the events listed in the toc |
+| `session_info` | the session name (the latest on the branch) |
+| `usage` | counted in `stats` tokens and cost; `stats` shows the part that belongs to no message |
+
+Summaries are transcript items, so `messages` counts them and `roles` lists them. They do not
+start a turn. `custom` (private extension state), `label` and `context_edit` entries are not
+shown: they never become a message in the transcript.
 
 ## Install
 
