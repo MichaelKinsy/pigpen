@@ -1,6 +1,7 @@
 package powerline_footer
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -73,5 +74,30 @@ func TestFormatTimestampSameMonthOtherDay(t *testing.T) {
 	other := time.Date(2026, 10, 5, 9, 30, 0, 0, time.Local).UnixMilli()
 	if got := formatTimestamp(other, now); got != "10/5/2026 09:30 AM" {
 		t.Errorf("got %q", got)
+	}
+}
+
+// Typing a character puts the selection back on the first match, as the original does.
+func TestPickerTypingResetsTheSelectionToTheFirstMatch(t *testing.T) {
+	var candidates []quoteCandidate
+	for i := range 4 {
+		candidates = append(candidates, quoteCandidate{ID: fmt.Sprintf("c%d", i), Role: "user", Text: "message", SearchText: fmt.Sprintf("c%d user message", i)})
+	}
+	p := newQuotePicker(candidates, pickerPlainTheme{}, time.Now, nil, nil)
+	p.HandleInput("\x1b[B")
+	p.HandleInput("\x1b[B") // third candidate selected
+	p.HandleInput("m")       // every candidate still matches
+	selected, _ := p.HandleInput("\r")
+	if selected == nil || selected.ID != "c0" {
+		t.Errorf("Enter after typing chose %+v, want the first match c0", selected)
+	}
+}
+
+// A path that merely starts with a tilde is not the home directory.
+func TestExpandHomePathNeedsTheSlash(t *testing.T) {
+	for in, want := range map[string]string{"~": "/h", "~/x": "/h/x", "~x": "~x", "~~": "~~", "a/~/b": "a/~/b"} {
+		if got := expandHomePath(in, "/h"); got != want {
+			t.Errorf("expandHomePath(%q) = %q, want %q", in, got, want)
+		}
 	}
 }

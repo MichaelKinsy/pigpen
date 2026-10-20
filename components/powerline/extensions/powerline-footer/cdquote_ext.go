@@ -28,7 +28,6 @@ type cdQuote struct {
 	mu        sync.Mutex
 	lp        lastPromptState
 	pushed    []string // lines of the widget the host shows now, nil when none
-	pushedAt  int      // the width they were laid out at
 	cwd       atomic.Pointer[string]
 	widthOnce sync.Once
 }
@@ -126,11 +125,11 @@ func (q *cdQuote) sync(ctx sdk.Context, enabled, force bool) {
 		}
 		return
 	}
-	if !force && q.pushed != nil && q.pushedAt == width && equalLines(q.pushed, lines) {
+	if !force && q.pushed != nil && equalLines(q.pushed, lines) {
 		return
 	}
 	_ = ctx.SetWidget(widgetLastPrompt, lines, sdk.WidgetOptions{"placement": "belowEditor"})
-	q.pushed, q.pushedAt = lines, width
+	q.pushed = lines
 }
 
 func equalLines(a, b []string) bool {
