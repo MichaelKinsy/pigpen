@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -187,6 +188,69 @@ func explicitOnly(t *testing.T, provider, urlPrefix, body string) {
 	if explicit.Provider != provider || auto.Provider != "exa" || !eqStrings(providerNames(all.ProviderResponses), []string{"exa"}) || callsWithPrefix(n, urlPrefix) != 1 {
 		t.Fatal(explicit.Provider, auto.Provider, providerNames(all.ProviderResponses), n.urls())
 	}
+}
+
+// TestRestProviderAvailabilityNames pins the credential names of each provider's availability
+// check (the config key and the environment variable of the upstream module).
+func TestRestProviderAvailabilityNames(t *testing.T) {
+	for _, c := range []struct {
+		provider, config, env string
+		available             func() bool
+	}{
+		{"serper", "serperApiKey", "SERPER_API_KEY", IsSerperAvailable},
+		{"serpapi", "serpapiApiKey", "SERPAPI_KEY", IsSerpAPIAvailable},
+		{"serpbase", "serpbaseApiKey", "SERPBASE_API_KEY", IsSerpBaseAvailable},
+		{"serply", "serplyApiKey", "SERPLY_API_KEY", IsSerplyAvailable},
+		{"valyu", "valyuApiKey", "VALYU_API_KEY", IsValyuAvailable},
+		{"bocha", "bochaApiKey", "BOCHA_API_KEY", IsBochaAvailable},
+		{"baizhi", "baizhiApiKey", "BAIZHI_API_KEY", IsBaizhiAvailable},
+		{"you", "youApiKey", "YDC_API_KEY", IsYouAvailable},
+		{"xcrawl", "xcrawlApiKey", "XCRAWL_API_KEY", IsXcrawlAvailable},
+		{"jina", "jinaApiKey", "JINA_API_KEY", IsJinaSearchAvailable},
+	} {
+		t.Run(c.provider, func(t *testing.T) {
+			_, agentDir := isolate(t)
+			unsetenv(t, "SERPAPI_KEY", "YDC_API_KEY")
+			if c.available() || isProviderAvailable(c.provider) {
+				t.Fatal("available without a credential")
+			}
+			t.Setenv(c.env, "k")
+			if !c.available() || !isProviderAvailable(c.provider) {
+				t.Fatalf("%s does not enable %s", c.env, c.provider)
+			}
+			unsetenv(t, c.env)
+			writeConfig(t, agentDir, fmt.Sprintf(`{%q:"k"}`, c.config))
+			if !c.available() || !isProviderAvailable(c.provider) {
+				t.Fatalf("%s does not enable %s", c.config, c.provider)
+			}
+		})
+	}
+	t.Run("anysearch is available without a key", func(t *testing.T) {
+		isolate(t)
+		if !IsAnySearchAvailable() || !isProviderAvailable("anysearch") {
+			t.Fatal("anysearch needs no key")
+		}
+	})
+	t.Run("searxng needs a valid base URL", func(t *testing.T) {
+		_, agentDir := isolate(t)
+		if ok, err := IsSearXNGAvailable(); ok || err != nil {
+			t.Fatal(ok, err)
+		}
+		for _, bad := range []string{"", "ftp://x.example", "https://user:pw@x.example", "not a url"} {
+			writeConfig(t, agentDir, fmt.Sprintf(`{"searxngBaseUrl":%q}`, bad))
+			if ok, _ := IsSearXNGAvailable(); ok {
+				t.Fatalf("%q must not be a base URL", bad)
+			}
+		}
+		writeConfig(t, agentDir, `{"searxngBaseUrl":"https://search.example.com/"}`)
+		if ok, err := IsSearXNGAvailable(); !ok || err != nil {
+			t.Fatal(ok, err)
+		}
+		t.Setenv("SEARXNG_BASE_URL", "")
+		if ok, _ := IsSearXNGAvailable(); ok {
+			t.Fatal("an empty environment variable wins over the config and is invalid")
+		}
+	})
 }
 
 func TestUpstream_serpapi_provider(t *testing.T) {
@@ -562,5 +626,42 @@ func TestUpstream_anysearch_provider(t *testing.T) {
 	})
 	tw(t, F, "AnySearch HTTP errors redact keyed credentials", func(t *testing.T) {
 		fixtureCases(t, "anysearch-401-redacted")
+	})
+}
+
+// TestRestProviderTransportFailure: a connection that fails, drops or is refused reads as Node's
+// "fetch failed" (a network failure the routing falls through on), as upstream; a body cut short is
+// "terminated". Go's own texts (EOF, connection refused) never reach the model or the classifier.
+func TestRestProviderTransportFailure(t *testing.T) {
+	refused := &net.OpError{Op: "dial", Net: "tcp", Err: errors.New("connection refused")}
+	for name, call := range map[string]func() error{
+		"serper":  func() error { _, err := SearchWithSerper(bg(), "q", SearchOptions{}); return err },
+		"serpapi": func() error { _, err := SearchWithSerpAPI(bg(), "q", SearchOptions{}); return err },
+		"jina":    func() error { _, err := SearchWithJina(bg(), "q", SearchOptions{}); return err },
+		"xcrawl":  func() error { _, err := SearchWithXCrawl(bg(), "q", SearchOptions{}); return err },
+		"valyu":   func() error { _, err := SearchWithValyu(bg(), "q", SearchOptions{}); return err },
+	} {
+		for failure, transport := range map[string]error{"EOF": io.EOF, "refused": refused} {
+			t.Run(name+"/"+failure, func(t *testing.T) {
+				_, agentDir := isolate(t)
+				writeConfig(t, agentDir, `{"serperApiKey":"k","serpapiApiKey":"k","jinaApiKey":"k","xcrawlApiKey":"k","valyuApiKey":"k"}`)
+				useNet(t, func(netCall) netReply { return netReply{Err: transport} })
+				err := call()
+				if err == nil || err.Error() != "fetch failed" || ClassifyProviderError(name, err).Kind != "network" {
+					t.Fatalf("%v", err)
+				}
+			})
+		}
+	}
+	t.Run("a body cut short", func(t *testing.T) {
+		_, agentDir := isolate(t)
+		writeConfig(t, agentDir, `{"serperApiKey":"k"}`)
+		t.Cleanup(SetHTTP(doerFunc(func(r *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: 200, Header: http.Header{}, Body: brokenBody{io.ErrUnexpectedEOF}, Request: r}, nil
+		})))
+		_, err := SearchWithSerper(bg(), "q", SearchOptions{})
+		if err == nil || err.Error() != "terminated" {
+			t.Fatal(err)
+		}
 	})
 }

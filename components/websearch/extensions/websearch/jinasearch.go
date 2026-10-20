@@ -57,7 +57,7 @@ func jinaRequestFailure(ctx, tctx context.Context, apiKey string, err error) err
 	if ctx.Err() != nil {
 		return &redactedError{"This operation was aborted", err}
 	}
-	return redactErr(err, apiKey)
+	return redactErr(transportFailure(err, false), apiKey)
 }
 
 type jinaItem struct{ title, url, snippet, content string }
@@ -97,7 +97,7 @@ func SearchWithJina(ctx context.Context, query string, o SearchOptions) (*Search
 	}
 	text, err := readBody(resp)
 	if err != nil {
-		return nil, jinaRequestFailure(ctx, tctx, apiKey, err)
+		return nil, jinaRequestFailure(ctx, tctx, apiKey, transportFailure(err, true))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, fmt.Errorf("Jina Search API error %d: %s", resp.StatusCode, slice300(RedactCredential(text, apiKey)))

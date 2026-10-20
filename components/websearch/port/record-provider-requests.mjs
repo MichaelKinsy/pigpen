@@ -60,6 +60,8 @@ export const cases = [
 	{ id: "serper-array-envelope", module: "serper.ts", fn: "searchWithSerper", config: { serperApiKey: "k" }, query: "q", options: {}, responses: [json([])] },
 	{ id: "serper-invalid-json", module: "serper.ts", fn: "searchWithSerper", config: { serperApiKey: "k" }, query: "q", options: {}, responses: [r("not json")] },
 	{ id: "serper-config-root", module: "serper.ts", fn: "searchWithSerper", configRaw: "[]", query: "q", options: {}, responses: [] },
+	{ id: "serper-recency-day", module: "serper.ts", fn: "searchWithSerper", config: { serperApiKey: "k-day" }, query: "q", options: { recencyFilter: "day" }, responses: [json({ organic: [] })] },
+	{ id: "serper-recency-month", module: "serper.ts", fn: "searchWithSerper", config: { serperApiKey: "k-month" }, query: "q", options: { recencyFilter: "month" }, responses: [json({ organic: [] })] },
 	// ── serpapi ──
 	{ id: "serpapi-env-filters", module: "serpapi.ts", fn: "searchWithSerpApi", env: { SERPAPI_KEY: "serpapi-test-key" }, query: "google query", options: { numResults: 3, domainFilter: ["example.com", "-private.docs.example.com"], recencyFilter: "week" },
 		responses: [json({ organic_results: googleOrganic })] },
@@ -81,6 +83,9 @@ export const cases = [
 	{ id: "serpbase-bad-envelope", module: "serpbase.ts", fn: "searchWithSerpBase", config: { serpbaseApiKey: "k" }, query: "q", options: {}, responses: [json({ status: 200 })] },
 	{ id: "serpbase-429", module: "serpbase.ts", fn: "searchWithSerpBase", config: { serpbaseApiKey: "k" }, query: "q", options: { numResults: 50 }, responses: [r("slow down", 429)] },
 	{ id: "serpbase-missing-key", module: "serpbase.ts", fn: "searchWithSerpBase", config: {}, query: "q", options: {}, responses: [] },
+	{ id: "serpbase-recency-day-and-year", module: "serpbase.ts", fn: "searchWithSerpBase", config: { serpbaseApiKey: "k-sb" }, query: "q", options: { recencyFilter: "day" }, responses: [json({ organic_results: [] })] },
+	{ id: "serpbase-recency-month", module: "serpbase.ts", fn: "searchWithSerpBase", config: { serpbaseApiKey: "k-sb" }, query: "q", options: { recencyFilter: "month" }, responses: [json({ organic_results: [] })] },
+	{ id: "serpbase-recency-year", module: "serpbase.ts", fn: "searchWithSerpBase", config: { serpbaseApiKey: "k-sb" }, query: "q", options: { recencyFilter: "year" }, responses: [json({ organic_results: [] })] },
 	// ── serply ──
 	{ id: "serply-env-filters", module: "serply.ts", fn: "searchWithSerply", env: { SERPLY_API_KEY: "serply-test-key" }, query: "google query", options: { numResults: 3, domainFilter: ["example.com", "-private.docs.example.com"], recencyFilter: "week" },
 		responses: [json({ results: [{ title: "Allowed", link: "https://docs.example.com/a", description: "result" }, { title: "Excluded", link: "https://private.docs.example.com/b", description: "private" }, { title: "Outside", link: "https://example.net/c", description: "outside" }] })] },
@@ -104,6 +109,9 @@ export const cases = [
 	{ id: "valyu-not-success", module: "valyu.ts", fn: "searchWithValyu", config: { valyuApiKey: "k" }, query: "q", options: {}, responses: [json({ success: false, results: [] })] },
 	{ id: "valyu-missing-results", module: "valyu.ts", fn: "searchWithValyu", config: { valyuApiKey: "k" }, query: "q", options: {}, responses: [json({ success: true })] },
 	{ id: "valyu-401-redacted", module: "valyu.ts", fn: "searchWithValyu", config: { valyuApiKey: "valyu-secret" }, query: "redact", options: {}, responses: [r("secret valyu-secret", 401)] },
+	{ id: "valyu-recency-day", module: "valyu.ts", fn: "searchWithValyu", config: { valyuApiKey: "k-v" }, query: "q", options: { recencyFilter: "day" }, now: "2026-03-10T12:00:00.000Z", responses: [json({ success: true, results: [] })] },
+	{ id: "valyu-recency-month", module: "valyu.ts", fn: "searchWithValyu", config: { valyuApiKey: "k-v" }, query: "q", options: { recencyFilter: "month" }, now: "2026-03-10T12:00:00.000Z", responses: [json({ success: true, results: [] })] },
+	{ id: "valyu-recency-year", module: "valyu.ts", fn: "searchWithValyu", config: { valyuApiKey: "k-v" }, query: "q", options: { recencyFilter: "year" }, now: "2026-03-10T12:00:00.000Z", responses: [json({ success: true, results: [] })] },
 	// ── bocha ──
 	{ id: "bocha-filters", module: "bocha.ts", fn: "searchWithBocha", config: { bochaApiKey: "bocha-test-key" }, query: "bocha query", options: { numResults: 5, recencyFilter: "week", domainFilter: ["example.com", "-private.docs.example.com"] },
 		responses: [json({ code: 200, data: { webPages: { value: [{ name: "Bocha result", url: "https://docs.example.com/bocha", summary: "Bocha snippet" }, { name: "Blocked result", url: "https://private.docs.example.com/bocha", summary: "Blocked snippet" }, { name: "Outside result", url: "https://outside.example.net/bocha", summary: "Outside snippet" }] } } })] },
@@ -114,6 +122,9 @@ export const cases = [
 	{ id: "bocha-missing-array", module: "bocha.ts", fn: "searchWithBocha", config: { bochaApiKey: "k" }, query: "q", options: {}, responses: [json({ data: { webPages: {} } })] },
 	{ id: "bocha-no-code", module: "bocha.ts", fn: "searchWithBocha", config: { bochaApiKey: "k" }, query: "q", options: { numResults: 2, recencyFilter: "month" }, responses: [json({ data: { webPages: { value: [{ url: "https://a.example.com/1" }, { url: "https://a.example.com/2" }, { url: "https://a.example.com/3" }] } } })] },
 	{ id: "bocha-401", module: "bocha.ts", fn: "searchWithBocha", config: { bochaApiKey: "bocha-secret" }, query: "q", options: {}, responses: [r("bad bocha-secret", 401)] },
+	{ id: "bocha-freshness-day", module: "bocha.ts", fn: "searchWithBocha", config: { bochaApiKey: "bocha-k" }, query: "q", options: { recencyFilter: "day" }, responses: [json({ code: 200, data: { webPages: { value: [] } } })] },
+	{ id: "bocha-freshness-year", module: "bocha.ts", fn: "searchWithBocha", config: { bochaApiKey: "bocha-k" }, query: "q", options: { recencyFilter: "year" }, responses: [json({ code: 200, data: { webPages: { value: [] } } })] },
+	{ id: "bocha-freshness-none", module: "bocha.ts", fn: "searchWithBocha", config: { bochaApiKey: "bocha-k" }, query: "q", options: {}, responses: [json({ code: 200, data: { webPages: { value: [] } } })] },
 	// ── you ──
 	{ id: "you-map", module: "you.ts", fn: "searchWithYou", env: { YDC_API_KEY: "you-test-key" }, query: "you query", options: { numResults: 3, recencyFilter: "week", domainFilter: ["example.com", "-private.example.com"] },
 		responses: [json({ results: { web: [{ title: "Docs", url: "https://docs.example.com/a", description: "described" }, { title: "Snippet only", url: "https://example.com/b", snippets: ["first snippet"] }, { title: "Not a link", url: "not-a-url" }, { title: "Script", url: "javascript:alert(1)" }, { url: "https://example.com", description: "   ", snippets: [3] }] } })] },

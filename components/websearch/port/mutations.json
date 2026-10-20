@@ -358,5 +358,17 @@
   "file": "baizhi.go",
   "find": "return \"Baizhi network request failed\"",
   "replace": "return \"Baizhi request failed\""
+},
+{
+  "name": "rest-transport-failure-message",
+  "file": "restcommon.go",
+  "find": "return &redactedError{\"fetch failed\", err}",
+  "replace": "return &redactedError{\"failed\", err}"
+},
+{
+  "name": "rest-body-cut-message",
+  "file": "restcommon.go",
+  "find": "return &redactedError{\"terminated\", err}",
+  "replace": "return &redactedError{\"cut\", err}"
 }
 ]
