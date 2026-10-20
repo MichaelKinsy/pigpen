@@ -23,7 +23,8 @@
     "turn_end",
     "tool_execution_start",
     "tool_execution_end",
-    "message_end"
+    "message_end",
+    "extension_ui_request"
   ],
   "files": {
     "package.json": "{\"name\":\"demo\"}\n",

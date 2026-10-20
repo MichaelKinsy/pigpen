@@ -143,8 +143,11 @@ func TestAuditBlocksUserInputWhileRunning(t *testing.T) {
 	if !strings.Contains(during, `"handled"`) {
 		t.Fatalf("during: %q", during)
 	}
-	if strings.Contains(ext, "handled") || strings.Contains(after, "handled") {
-		t.Fatalf("ext %q after %q", ext, after)
+	if !strings.Contains(ext, `"handled"`) {
+		t.Fatalf("an extension-sent message is blocked too, as in the original: %q", ext)
+	}
+	if strings.Contains(after, "handled") {
+		t.Fatalf("after: %q", after)
 	}
 	found := false
 	for _, n := range h.notices() {

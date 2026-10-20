@@ -1,6 +1,6 @@
 {
-  "name": "audit-no-report-written",
-  "description": "/warden audit where the agent answers in chat and writes no report.",
+  "name": "audit-prompt-blocked-by-its-own-input-handler",
+  "description": "/warden audit on Pi 1.3.0: the audit's own sendUserMessage raises the input event, the running-audit handler answers it as handled (original behavior, PORT.md A1), so the model receives no prompt and the outcome is `missing`.",
   "env": {
     "PIGPEN_WARDEN_ENABLED": "1",
     "PIGPEN_WARDEN_STEER_VISIBLE": "0"
@@ -23,17 +23,13 @@
     "turn_end",
     "tool_execution_start",
     "tool_execution_end",
-    "message_end"
+    "message_end",
+    "extension_ui_request"
   ],
   "files": {
     "package.json": "{\"name\":\"demo\"}\n",
     "src/classify.ts": "export function kind(t: string) { return /error/.test(t) ? \"bad\" : \"ok\"; }\n"
   },
-  "llm": [
-    {
-      "text": "Findings are in chat."
-    }
-  ],
   "steps": [
     {
       "name": "audit",
