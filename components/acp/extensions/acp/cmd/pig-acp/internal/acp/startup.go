@@ -151,5 +151,9 @@ func BuildStartupInfo(cwd, piCommand, updateNotice string) string {
 	}
 	addSection("Extensions", exts)
 
+	if updateNotice != "" {
+		md = append(md, "---", updateNotice, "")
+	}
+
 	return jsTrim(strings.Join(md, "\n")) + "\n"
 }

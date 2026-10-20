@@ -42,11 +42,11 @@ built Piglet Binary. See "Results" below.
 | A11 | `agent.ts` `listSessions` | scoped to the last session cwd when none is given; cursor paging by 50; invalid cursor reads as 0 | `Agent.ListSessions` | list twins, `TestNewSessionPolicies` | mapped |
 | A12 | `agent.ts` `deleteSession` | removes the file and the map entry; unknown ids succeed | `Agent.DeleteSession` | delete twins | mapped |
 | A13 | `agent.ts` `setSessionMode`, `setSessionConfigOption`, `unstable_setSessionModel` | thinking level and model; the update pair is sent only after pi's own state was read back and is consistent; the model change refreshes usage | same | model-thinking-levels twins (about 40), context-usage twins | mapped |
-| A14 | `agent.ts` `prompt` built-ins | `/compact`, `/session`, `/name`, `/steering`, `/follow-up`, `/changelog`, `/export`, `/autocompact` are handled in the adapter and never reach the model | `Agent.Prompt` | builtin twins, `agent_builtin_test.go` | mapped; `/changelog` looks beside the pig binary (gap, below) |
+| A14 | `agent.ts` `prompt` built-ins | `/compact`, `/session`, `/name`, `/steering`, `/follow-up`, `/changelog`, `/export`, `/autocompact` are handled in the adapter and never reach the model | `Agent.Prompt` | builtin twins, `agent_builtin_test.go` | mapped; `/changelog` reads a `CHANGELOG.md` beside the pig binary and otherwise refuses by name (F3, SDK need) |
 | A15 | `agent.ts` `prompt` result | `error` maps to `cancelled` if cancel was requested, else `end_turn` | `Agent.Prompt` | `TestPromptRouting` | mapped |
 | A16 | `agent.ts` `cancel` | ignores unknown sessions, never restores one | `Agent.Cancel` | "cancel ignores stale session IDs" twin | mapped |
 | A17 | `agent.ts` available commands | pi `get_commands` (extension commands hidden, skill commands per setting) merged with the built-ins; prompt files as the fallback | `ToAvailableCommandsFromPiGetCommands`, `MergeCommands` | pi-commands, merge twins, `TestAgentCommandsAdvertised` | mapped |
-| A18 | `agent.ts` startup info / update notice | markdown block (version, context, skills, prompts, extensions); `quietStartup` suppresses it; **npm update notice** | `BuildStartupInfo` | startup-info twins | mapped except the update notice: **skipped, gap** |
+| A18 | `agent.ts` startup info / update notice | markdown block (version, context, skills, prompts, extensions); `quietStartup` suppresses it but not the update notice (a "New version available" line, shown last under a rule) | `BuildStartupInfo`, `BuildUpdateNotice` | startup-info twins, `updatenotice_test.go` | mapped; the update lookup targets PiG (D12, D14) |
 | S1 | `session.ts` turn lifecycle | a turn ends only on `agent_settled`; retry runs and `turn_end`/`agent_end` never end it | `Session` | session-events twins | mapped |
 | S2 | `session.ts` queue | prompts queue behind a running turn; cancel clears the queue and aborts; queue depth in `session_info_update` | `Session.Prompt/Cancel` | queue twins, `session_extra_test.go` | mapped |
 | S3 | `session.ts` streaming | `text_delta` to `agent_message_chunk`, `thinking_delta` to `agent_thought_chunk`, tool call events, monotonic status | `Session.handlePiEvent` | session-events twins | mapped |
@@ -54,7 +54,7 @@ built Piglet Binary. See "Results" below.
 | S5 | `bash.ts` | bash as a display terminal via `_meta` (`terminal_info`, `terminal_output` deltas, `terminal_exit`) | `Bash*` | `TestBashHelpers`, tool-call twins | mapped |
 | S6 | `session.ts` usage | `usage_update` from `get_session_stats.contextUsage` before the turn resolves; never breaks the turn | `Session.PublishContextUsage` | usage twins | mapped |
 | S7 | `session.ts` retry notices | `auto_retry_start` / `auto_retry_end` chunks | same | retry twins | mapped |
-| S8 | `session.ts` compaction notices | `auto_compaction_start` / `auto_compaction_end` chunks | same | compaction twins | mapped as upstream; **PiG never sends these names**, see finding F1 |
+| S8 | `session.ts` compaction notices | `auto_compaction_start` / `auto_compaction_end` chunks | same | compaction twins | mapped as upstream; Pi 1.3.0 and PiG never send these names, so neither shows a notice (F1, owner decision pending) |
 | S9 | `session.ts` extension UI | `select` and `confirm` become `session/request_permission`; `input` and `editor` are cancelled with a visible notice; `notify` becomes a chunk with its severity; anything else is cancelled | same | permission twins, `TestSessionExtensionUI`, `TestE2EExtensionSelectBecomesPermissionRequest` | mapped |
 | S10 | `prompt.ts` | text, resource links, embedded resources, images, audio marker | `PromptToPiMessage` | prompt twins | mapped (marker names pig-acp) |
 | S11 | `pi-tools.ts` | tool result text: diff, content, stdout/stderr/exit code, JSON | `ToolResultToText` | pi-tools twins | mapped |
@@ -67,13 +67,21 @@ built Piglet Binary. See "Results" below.
 
 ## Findings about the hosts and about the original
 
-- **F1: compaction event names.** The original handles `auto_compaction_start` and `auto_compaction_end`. Pi 0.84 to 0.99 and
-  PiG 0.3.0 emit `compaction_start` (reason `manual`, `threshold` or `overflow`) and `compaction_end`. The original's two notices never
-  appear against these hosts. Ported as upstream (twins keep the old names). Fixing it changes observable behavior, so it needs
-  owner approval: recommended, map `compaction_start`/`compaction_end` with reason `threshold` or `overflow` to the same two texts.
-- **F2: update notice.** See A18. PiG has no npm package; `pig update` uses a signed manifest.
-- **F3: `/changelog`.** pi-acp reads the installed Pi package's `CHANGELOG.md`. PiG binaries carry none; the port looks for one beside the binary
-  and otherwise says it could not find one.
+- **F1: compaction event names (owner decision pending).** The original handles `auto_compaction_start` and `auto_compaction_end`. Pi 1.3.0
+  (`agent-session.ts:209`, checked at pi-mono `1402973a`) and PiG emit `compaction_start` (reason `manual`, `threshold` or `overflow`) and
+  `compaction_end`; Pi 0.84 and later renamed them. The original's two notices therefore never appear against these hosts, and the port
+  matches that: it handles the original's two event names and nothing else (twins keep the old names; the skipped twin at
+  `session_events_test.go` names the gap). Showing a notice for the new names would add behavior the original does not have in practice, so it
+  stays pending the owner. Recommendation: map `compaction_start`/`compaction_end` with reason `threshold` or `overflow` to the same two
+  texts (a `manual` compaction is already announced by the `/compact` reply).
+- **F2: update notice (ported, D12).** The original asks npm whether a newer Pi exists. The port asks the npm registry whether a newer PiG
+  (`@pi-in-go/pig`) exists and points at `pig update`. PiG's own startup check reads a signed release manifest that only pig can verify
+  and offers no check-only command, so that source is not available to a companion; the registry is. It honors PiG's offline switches.
+- **F3: `/changelog` (SDK need).** pi-acp reads the installed Pi package's `CHANGELOG.md`. PiG embeds its changelog in the binary
+  (`pig.Changelog`, shown by the interactive `/changelog`) and exposes no way to print it: `pig --help`, `pig docs list` and `pig version`
+  show none, and `get_commands` over RPC lists no built-in `/changelog`. The port reads a `CHANGELOG.md` beside the pig binary (or one directory
+  up) when a distribution ships one, and otherwise answers with the refusal naming the original. The accessor it needs is recorded in
+  `handoffs/pigpen-parity/core-items.md` (`pig --changelog`, mirroring Pi's package `CHANGELOG.md` that `getChangelogPath` locates).
 - **F4: directories.** The original reads `~/.pi/...` and `PI_CODING_AGENT_DIR`. PiG keeps everything in `~/.pig` and never reads `~/.pi`;
   `PIG_USE_PI_DIRS=1` (shared mode) selects Pi's directories. The port follows PiG's rules, and its session map lives under `PIG_HOME`.
 - **F5: RPC differences that mattered.** None blocked the port: `get_available_thinking_levels`, `get_session_stats.contextUsage`,
@@ -107,12 +115,13 @@ built Piglet Binary. See "Results" below.
 | D9 | `PI_ACP_PI_COMMAND`, `PI_ACP_ENABLE_EMBEDDED_CONTEXT` | `PIG_ACP_PIG_COMMAND`, `PIG_ACP_ENABLE_EMBEDDED_CONTEXT`; the `PI_ACP_*` names are still read | migration |
 | D10 | no flags beyond `--terminal-login` | `--pig`, `--piglet`, `--pig-arg`, `--version`, `--help`; the advertised terminal auth method repeats them, so a login starts the agent the sessions use | drive a Piglet Binary; explicit entrypoint |
 | D11 | `startupInfo` header `pi v<version>` from `pi --version` | `pig v<version>` from `pig --version` (`0.3.0+0.87.1`) | identity |
-| D12 | npm update notice, also under `quietStartup` | none (named skip) | see F2 |
-| D13 | `/changelog` finds the npm package's file | looks for `CHANGELOG.md` beside the executable (one level up first) | PiG binaries carry none; the answer is then "Changelog not found" |
+| D12 | `spawnSync('pi', ['--version'])`, then `npm view @earendil-works/pi-coding-agent version` (800 ms); notice "New version available: v<latest> (installed v<installed>). Run: `npm i -g @earendil-works/pi-coding-agent`", also under `quietStartup` | `pig --version`, then GET `<registry>/@pi-in-go%2Fpig/latest` (800 ms; registry from `npm_config_registry` or `NPM_CONFIG_REGISTRY`, default `https://registry.npmjs.org`; no Node or npm needed); notice "... Run: `pig update` (installed with npm: `npm i -g @pi-in-go/pig`)", also under `quietStartup`. No request, and no notice, under `PIG_OFFLINE` (1, true, yes), `PI_OFFLINE`, `PI_SKIP_VERSION_CHECK`, or `--offline` among the pig arguments | the agent is PiG; `pig update` verifies a signed manifest the companion cannot check, so the notice only points at it (F2) |
+| D13 | `/changelog` finds the npm package's file and otherwise says "Changelog not found (couldn't locate pi installation)." | looks for `CHANGELOG.md` beside the executable (one level up first); otherwise the refusal naming `@pi-in-go/pigpen-acp` and the pinned original | PiG binaries embed their changelog and expose no accessor (F3, SDK need) |
+| D14 | version comparison splits on `.` and `-`, so `0.5.1+1.3.0.1402973a` has a `NaN` patch and a patch release is never noticed | splits on `+` as well; the notice shows the PiG version before the `+` | PiG's `--version` is `<pig>+<pi>` |
 
 Named gaps (skipped tests, never silent): the simulated-Windows `.cmd` spawn twin (Go cannot fake `runtime.GOOS`; the shell
-predicate is tested with an explicit `goos`, Windows execution only with `GOOS=windows go vet`); the npm update notice; the
-compaction event names (F1). Not verified in a real Windows or macOS run; `go vet` passes for both.
+predicate is tested with an explicit `goos`, Windows execution only with `GOOS=windows go vet`); the compaction event names (F1, owner
+decision pending). Not verified in a real Windows or macOS run; `go vet` passes for both.
 
 ## Results (this revision, PiG 0.3.0+0.87.1 `63c6ba456`, go1.27.1)
 

@@ -225,9 +225,6 @@ func TestBuiltinExport(t *testing.T) {
 	})
 }
 
-const changelogRefusal = "@pi-in-go/pigpen-acp (Go port) does not support /changelog without a CHANGELOG.md beside the pig binary yet. " +
-	"Install the original extension, git:github.com/svkozak/pi-acp@b0581c9c1d675e634234674484247008b03d69b4, which runs unchanged in PiG."
-
 func TestBuiltinChangelog(t *testing.T) {
 	t.Run("/changelog refuses by name when the pig installation carries no changelog", func(t *testing.T) {
 		proc := newFakeProc()

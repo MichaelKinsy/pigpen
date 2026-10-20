@@ -15,7 +15,7 @@ import (
 )
 
 // Version is the adapter version reported in agentInfo.
-var Version = "0.1.0"
+var Version = "0.2.0"
 
 const (
 	modelConfigID        = "model"
@@ -466,11 +466,14 @@ func (a *Agent) NewSession(req NewSessionRequest) (NewSessionResponse, error) {
 		return NewSessionResponse{}, ErrInternal(map[string]any{}, messageOf(err))
 	}
 
-	// PiG has no npm update check (`pig update` uses a signed manifest), so quietStartup simply
-	// suppresses the startup block: see PORT.md, gap A18.
+	// quietStartup suppresses the startup block but not the update notice: it is high-signal and actionable.
+	updateNotice := a.updateNotice()
 	prelude := ""
-	if !GetQuietStartup(req.Cwd) {
-		prelude = BuildStartupInfo(req.Cwd, a.pigCommand(), "")
+	switch {
+	case !GetQuietStartup(req.Cwd):
+		prelude = BuildStartupInfo(req.Cwd, a.pigCommand(), updateNotice)
+	case updateNotice != "":
+		prelude = updateNotice + "\n"
 	}
 	if prelude != "" {
 		sess.SetStartupInfo(prelude)

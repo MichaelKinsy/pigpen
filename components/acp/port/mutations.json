@@ -83,8 +83,8 @@
   "name": "quiet-startup-ignored",
   "module": "cmd",
   "file": "internal/acp/agent.go",
-  "find": "if !GetQuietStartup(req.Cwd) {",
-  "replace": "if true {"
+  "find": "case !GetQuietStartup(req.Cwd):",
+  "replace": "case true:"
  },
  {
   "name": "startup-sent-before-response",
@@ -744,5 +744,138 @@
   "find": "\t\tenv = \"PI_CODING_AGENT_SESSION_DIR\"",
   "replace": "\t\tenv = \"PIG_CODING_AGENT_SESSION_DIR\"",
   "why": "review: shared mode reads PI_CODING_AGENT_SESSION_DIR"
+ },
+ {
+  "name": "update-equal-version-noticed",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "if compareSemver(latest, installed) <= 0 {",
+  "replace": "if compareSemver(latest, installed) < 0 {"
+ },
+ {
+  "name": "update-older-latest-noticed",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "if compareSemver(latest, installed) <= 0 {",
+  "replace": "if compareSemver(latest, installed) >= 0 {"
+ },
+ {
+  "name": "update-plus-not-a-separator",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "semverSplit = regexp.MustCompile(`[.+-]`)",
+  "replace": "semverSplit = regexp.MustCompile(`[.-]`)"
+ },
+ {
+  "name": "update-skip-version-check-ignored",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "os.Getenv(\"PI_SKIP_VERSION_CHECK\") != \"\" ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "update-pi-offline-ignored",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "strings.TrimSpace(os.Getenv(\"PI_OFFLINE\")) != \"\"",
+  "replace": "false"
+ },
+ {
+  "name": "update-pig-offline-yes-ignored",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "case \"1\", \"true\", \"yes\":",
+  "replace": "case \"1\", \"true\":"
+ },
+ {
+  "name": "update-offline-flag-ignored",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "if a == \"--offline\" {",
+  "replace": "if a == \"--offline-ignored\" {"
+ },
+ {
+  "name": "update-installed-semver-unchecked",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "if installed == \"\" || !isSemver(installed) {",
+  "replace": "if installed == \"\" {"
+ },
+ {
+  "name": "update-latest-semver-unchecked",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "if latest == \"\" || !isSemver(latest) {",
+  "replace": "if latest == \"\" {"
+ },
+ {
+  "name": "update-build-metadata-shown",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "shown, _, _ := strings.Cut(installed, \"+\")",
+  "replace": "shown := installed"
+ },
+ {
+  "name": "update-no-timeout",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "context.WithTimeout(context.Background(), updateLookupTimeout)",
+  "replace": "context.WithTimeout(context.Background(), time.Hour)"
+ },
+ {
+  "name": "update-lowercase-registry-ignored",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "[]string{\"npm_config_registry\", \"NPM_CONFIG_REGISTRY\"}",
+  "replace": "[]string{\"NPM_CONFIG_REGISTRY\"}"
+ },
+ {
+  "name": "update-uppercase-registry-ignored",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "[]string{\"npm_config_registry\", \"NPM_CONFIG_REGISTRY\"}",
+  "replace": "[]string{\"npm_config_registry\"}"
+ },
+ {
+  "name": "update-registry-status-unchecked",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "if resp.StatusCode != http.StatusOK {\n\t\treturn \"\"\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "update-latest-v-kept",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "return leadingV.ReplaceAllString(jsTrim(doc.Version), \"\")",
+  "replace": "return jsTrim(doc.Version)"
+ },
+ {
+  "name": "update-notice-says-npm-only",
+  "module": "cmd",
+  "file": "internal/acp/updatenotice.go",
+  "find": "Run: `pig update` (installed with npm: `npm i -g \"",
+  "replace": "Run: `npm i -g \""
+ },
+ {
+  "name": "update-quiet-startup-drops-notice",
+  "module": "cmd",
+  "file": "internal/acp/agent.go",
+  "find": "case updateNotice != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "update-notice-not-in-startup-block",
+  "module": "cmd",
+  "file": "internal/acp/startup.go",
+  "find": "if updateNotice != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "changelog-refusal-replaced",
+  "module": "cmd",
+  "file": "internal/acp/agent_prompt.go",
+  "find": "return a.say(id, changelogRefusal)",
+  "replace": "return a.say(id, \"Changelog not found.\")"
  }
 ]

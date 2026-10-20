@@ -70,9 +70,9 @@ func TestCompareSemver(t *testing.T) {
 		{"0.5.9", "0.6.0", -1},
 		{"1.0.0", "1.0.0", 0},
 		{"1.2.10", "1.2.9", 1},
-		{"0.5.2", "0.5.1+1.3.0.1402973a", 1},    // build metadata does not hide a patch release
-		{"0.5.1+1.3.0.1402973a", "0.5.1", 0},     // and is not part of the comparison
-		{"0.6.0-rc.1", "0.6.0", 0},               // a pre-release is not "greater" (the original's comment)
+		{"0.5.2", "0.5.1+1.3.0.1402973a", 1}, // build metadata does not hide a patch release
+		{"0.5.1+1.3.0.1402973a", "0.5.1", 0}, // and is not part of the comparison
+		{"0.6.0-rc.1", "0.6.0", 0},           // a pre-release is not "greater" (the original's comment)
 		{"1.0.0", "0.99.99-beta.2", 1},
 	} {
 		if got := compareSemver(tc.a, tc.b); got != tc.want {
@@ -118,11 +118,12 @@ func TestUpdateNotice(t *testing.T) {
 		}
 	})
 	for name, tc := range map[string]struct{ installed, latest string }{
-		"the same version gives none":                 {"0.5.2+1.3.0.1402973a", "0.5.2"},
-		"an installed version ahead of the registry":  {"0.7.0+1.3.0.1402973a", "0.6.0"},
-		"a pre-release of the latest is not older":    {"0.6.0-rc.1", "0.6.0"},
-		"a latest that is not a version gives none":   {"0.5.0", "next"},
-		"an empty latest gives none":                  {"0.5.0", ""},
+		"the same version gives none":                     {"0.5.2+1.3.0.1402973a", "0.5.2"},
+		"an installed version ahead of the registry":      {"0.7.0+1.3.0.1402973a", "0.6.0"},
+		"a pre-release of the latest is not older":        {"0.6.0-rc.1", "0.6.0"},
+		"a latest that is not a version gives none":       {"0.5.0", "next"},
+		"an empty latest gives none":                      {"0.5.0", ""},
+		"a latest with fewer than three parts gives none": {"0.5.0", "9"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			registry(t, 200, latestDoc(tc.latest), 0)
@@ -150,11 +151,12 @@ func TestUpdateNotice(t *testing.T) {
 		status int
 		body   string
 	}{
-		"a registry error gives none":      {500, "boom"},
-		"an unknown package gives none":    {404, `{"error":"not found"}`},
-		"a body that is not JSON gives none": {200, "<html>"},
-		"a document without a version":     {200, `{"name":"@pi-in-go/pig"}`},
-		"a version that is not a string":   {200, `{"version":6}`},
+		"a registry error gives none":                {500, "boom"},
+		"an unknown package gives none":              {404, `{"error":"not found"}`},
+		"a body that is not JSON gives none":         {200, "<html>"},
+		"a document without a version":               {200, `{"name":"@pi-in-go/pig"}`},
+		"a version that is not a string":             {200, `{"version":6}`},
+		"an error status with a version in the body": {500, `{"version":"9.9.9"}`},
 	} {
 		t.Run(name, func(t *testing.T) {
 			registry(t, tc.status, tc.body, 0)
@@ -199,12 +201,12 @@ func TestUpdateNoticeOfflineSwitches(t *testing.T) {
 		env  map[string]string
 		args []string
 	}{
-		"PIG_OFFLINE=1":              {env: map[string]string{"PIG_OFFLINE": "1"}},
-		"PIG_OFFLINE=true":           {env: map[string]string{"PIG_OFFLINE": "true"}},
-		"PIG_OFFLINE=YES":            {env: map[string]string{"PIG_OFFLINE": "YES"}},
-		"PI_OFFLINE=1":               {env: map[string]string{"PI_OFFLINE": "1"}},
-		"PI_SKIP_VERSION_CHECK=1":    {env: map[string]string{"PI_SKIP_VERSION_CHECK": "1"}},
-		"--offline passed to pig":    {args: []string{"--no-themes", "--offline"}},
+		"PIG_OFFLINE=1":           {env: map[string]string{"PIG_OFFLINE": "1"}},
+		"PIG_OFFLINE=true":        {env: map[string]string{"PIG_OFFLINE": "true"}},
+		"PIG_OFFLINE=YES":         {env: map[string]string{"PIG_OFFLINE": "YES"}},
+		"PI_OFFLINE=1":            {env: map[string]string{"PI_OFFLINE": "1"}},
+		"PI_SKIP_VERSION_CHECK=1": {env: map[string]string{"PI_SKIP_VERSION_CHECK": "1"}},
+		"--offline passed to pig": {args: []string{"--no-themes", "--offline"}},
 	} {
 		t.Run(name+" turns the lookup off", func(t *testing.T) {
 			hits := registry(t, 200, `{"version":"9.9.9"}`, 0)
