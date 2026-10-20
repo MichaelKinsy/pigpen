@@ -80,7 +80,7 @@ var (
 	geminiWebFetchMu       sync.Mutex
 	geminiWebFetchOverride GeminiWebFetch
 
-	geminiWebClientMu   sync.Mutex
+	geminiWebClientMu    sync.Mutex
 	geminiWebClientBuilt *http.Client
 )
 
@@ -627,9 +627,9 @@ var (
 		regexp.MustCompile(`"identifier"\s*:\s*"([^"]+)"`),
 		regexp.MustCompile(`"gaiaIdentifier"\s*:\s*"([^"]+)"`),
 	}
-	emailRE     = regexp.MustCompile(`(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b`)
-	emailExactRE = regexp.MustCompile(`(?i)^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$`)
-	emailEscapes = regexp.MustCompile(`(?i)\\u0040|\\x40|&#64;|&commat;`)
+	emailRE            = regexp.MustCompile(`(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b`)
+	emailExactRE       = regexp.MustCompile(`(?i)^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$`)
+	emailEscapes       = regexp.MustCompile(`(?i)\\u0040|\\x40|&#64;|&commat;`)
 	listAccountsPrefix = regexp.MustCompile(`^\)\]\}'\s*`)
 )
 

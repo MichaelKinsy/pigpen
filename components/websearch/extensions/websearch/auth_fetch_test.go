@@ -39,6 +39,8 @@ func TestAuthFetch(t *testing.T) {
 		wantErr(t, err, `HTTPS`)
 		_, err = AssertAuthFetchURL(work, "https://evil.example/private")
 		wantErr(t, err, `not allowed`)
+		_, err = AssertAuthFetchURL(work, "https://evildocs.company.com/private")
+		wantErr(t, err, `not allowed`)
 		u, err := AssertAuthFetchURL(work, "https://sub.docs.company.com/private")
 		noErr(t, err)
 		if u.Hostname() != "sub.docs.company.com" {
