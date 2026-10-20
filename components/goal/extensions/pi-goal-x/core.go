@@ -139,6 +139,15 @@ func (c *core) locked(fn func()) {
 	c.flush()
 }
 
+// await runs fn, a wait for something outside the core (an auditor run, a model call), with the core's lock released: the original's
+// other handlers run at an `await`, and the key that aborts the wait must not queue behind it. Code after await revalidates what it read
+// before. A host dialog (host.Confirm, Select, Input, Custom) already does this.
+func (c *core) await(fn func()) {
+	c.mu.Unlock()
+	defer c.mu.Lock()
+	fn()
+}
+
 func (c *core) state() *jsObject { return focusedGoalFromPool(c.goals, c.focused) }
 
 func sameFocus(a, b *string) bool {
