@@ -68,6 +68,32 @@ func readSessionSchema() sdk.Schema {
 	}
 }
 
+// modeOnlyParams lists, per parameter, the only modes that use it. A parameter
+// given for any other mode would be ignored, so it is refused instead.
+var modeOnlyParams = []struct {
+	name  string
+	modes []string
+}{
+	{"query", []string{"query"}},
+	{"regex", []string{"query"}},
+	{"caseSensitive", []string{"query"}},
+	{"roles", []string{"slice"}},
+	{"include", []string{"turn"}},
+	{"turn", []string{"turn", "tools"}},
+	{"start", []string{"toc", "query", "slice", "turn", "tools"}},
+	{"limit", []string{"toc", "query", "slice", "turn", "tools"}},
+}
+
+func rejectInapplicableParams(params map[string]any, mode string) error {
+	for _, p := range modeOnlyParams {
+		if _, given := params[p.name]; !given || slices.Contains(p.modes, mode) {
+			continue
+		}
+		return sdk.NewToolError(fmt.Sprintf("session-ingest does not support the %q parameter with mode=%s (it applies only to mode=%s).", p.name, mode, strings.Join(p.modes, ", mode=")))
+	}
+	return nil
+}
+
 // Output truncation constants — match pig's built-in tool limits.
 const (
 	defaultMaxOutputBytes = 50 * 1024 // 50 KB
@@ -80,6 +106,10 @@ func handleReadSession(ctx sdk.Context, params map[string]any) (any, error) {
 	case "toc", "query", "slice", "turn", "tools", "stats":
 	default:
 		return nil, sdk.NewToolError(fmt.Sprintf("unknown mode %q", mode))
+	}
+
+	if err := rejectInapplicableParams(params, mode); err != nil {
+		return nil, err
 	}
 
 	path := stringParam(params, "path", "")

@@ -63,3 +63,33 @@ func TestSchemaAdvertisesOnlyImplementedModes(t *testing.T) {
 		}
 	}
 }
+
+func TestParametersThatDoNotApplyToTheModeAreRefused(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "s.jsonl")
+	if err := os.WriteFile(path, []byte(`{"type":"session","id":"abcdef0123456789","cwd":"/w"}`+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	h := StartHost(t, sessioningest.Extension(), HostOptions{})
+	cases := []struct {
+		mode, param string
+		value       any
+	}{
+		{"toc", "query", "x"},
+		{"toc", "regex", true},
+		{"slice", "caseSensitive", true},
+		{"toc", "roles", []any{"user"}},
+		{"slice", "include", []any{"text"}},
+		{"toc", "turn", 1},
+		{"stats", "limit", 5},
+		{"stats", "start", 1},
+	}
+	for _, c := range cases {
+		_, errText := h.Tool("read_session", map[string]any{"path": path, "mode": c.mode, c.param: c.value})
+		if !strings.Contains(errText, "does not support the \""+c.param+"\" parameter with mode="+c.mode) {
+			t.Errorf("mode=%s %s: error = %q", c.mode, c.param, errText)
+		}
+	}
+	if _, errText := h.Tool("read_session", map[string]any{"path": path, "mode": "toc", "limit": 5}); errText != "" {
+		t.Errorf("applicable parameter refused: %s", errText)
+	}
+}

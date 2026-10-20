@@ -21,8 +21,11 @@ read_session(path, mode = toc | query | slice | turn | tools | stats, ...)
 | `tools` | Which tools ran, on which files? | Calls, results and errors per tool, and the files touched by `read`, `write` and `edit` (`turn` restricts to one turn). |
 | `stats` | How big was it? | Turns, messages by role, tool calls, errors, tokens, cost, models, duration. |
 
-Common parameters: `start` and `limit` (paging), `maxCharsPerItem` (truncate long
+Common parameters: `start` and `limit` (paging; not for `stats`), `maxCharsPerItem` (truncate long
 text, 0 = do not), `format` (`compact_markdown` by default, or `json`).
+
+A parameter that does not apply to the chosen mode (for example `query` with
+`mode=toc`, or `limit` with `mode=stats`) is refused with a tool error, not ignored.
 
 Not covered: the tool reads every `message` entry in file order. It does not follow
 the session tree, so a forked session shows both branches in sequence; it ignores
