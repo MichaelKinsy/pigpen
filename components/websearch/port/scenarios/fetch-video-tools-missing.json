@@ -1,0 +1,88 @@
+{
+ "name": "fetch-video-tools-missing",
+ "description": "fetch_content reports yt-dlp, ffmpeg and ffprobe that are not installed (the three programs are declared missing): YouTube frames, a local video frame and local video frames.",
+ "files": {
+  "clip.mp4": "fake media"
+ },
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}}"
+ },
+ "commands": {
+  "yt-dlp": {
+   "mode": "missing"
+  },
+  "ffmpeg": {
+   "mode": "missing"
+  },
+  "ffprobe": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/youtube.com/watch?v=dQw4w9WgXcQ",
+      "frames": 2
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "./clip.mp4",
+      "timestamp": "12"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "./clip.mp4",
+      "frames": 3
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "look at the video"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/unused",
+     "body": "unused"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

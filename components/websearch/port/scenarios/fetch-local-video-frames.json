@@ -1,0 +1,106 @@
+{
+ "name": "fetch-local-video-frames",
+ "description": "fetch_content on a local video above video.maxSizeMB: the analysis reports the size limit, ffprobe gives the duration and ffmpeg fails each frame (canned programs, see fetch-youtube-frames), a single timestamp, a range and file: URLs.",
+ "files": {
+  "clip.mp4": "fake media"
+ },
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"video\": {\"maxSizeMB\": 1e-05}}"
+ },
+ "commands": {
+  "ffprobe": {
+   "mode": "canned",
+   "stdout": "75.25\n",
+   "exit": 0
+  },
+  "ffmpeg": {
+   "mode": "canned",
+   "stdout": "",
+   "stderr": "Invalid data found when processing input\n",
+   "exit": 1
+  },
+  "yt-dlp": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "./clip.mp4",
+      "prompt": "summarize"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "./clip.mp4",
+      "frames": 4
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "./clip.mp4",
+      "timestamp": "12"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "./clip.mp4",
+      "timestamp": "0:10-0:40",
+      "frames": 3
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "./clip.mp4",
+      "timestamp": "later"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "look at the video"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}
