@@ -243,30 +243,13 @@ func (a *app) execute(ctx sdk.Context, p map[string]any) (any, error) {
 			tk.release()
 		}
 	}()
-	// The leaf read and the session id read are independent host round trips: they run side by side, so the batch
-	// order costs no extra latency over the id read the original's synchronous getter replaces.
-	callID := ctx.ToolCallID()
-	type pred struct {
-		prev   string
-		listed bool
-	}
-	predCh := make(chan pred, 1)
-	go func() {
-		var r pred
-		// A stale context panics from its getters; ctxSid reports that on this call's own goroutine.
-		defer func() {
-			recover()
-			predCh <- r
-		}()
-		r.prev, r.listed = a.predecessor(ctx, callID)
-	}()
 	id, err := ctxSid(ctx)
 	if err != nil {
 		return nil, err
 	}
+	callID := ctx.ToolCallID()
 	wait := tk.wait
-	if pr := <-predCh; pr.listed {
-		prev := pr.prev
+	if prev, listed := a.predecessor(ctx, callID); listed {
 		tk.skip()
 		wait = func() {
 			if prev != "" {
