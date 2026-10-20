@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates manager-cases.json: the worlds (config files, agent files, session rules, yolo, MCP servers) and intents the manager probe
+"""Generates testdata/manager-cases.json: the worlds (config files, agent files, session rules, yolo, MCP servers) and intents the manager probe
 (manager-probe.test.ts) runs through the original's PermissionManager, recorded to extensions/pi-permission-system/testdata/
 manager-oracle.json for manager_oracle_test.go. Run from this directory; the output is deterministic (fixed seed)."""
 import json
@@ -228,7 +228,7 @@ for i in range(170):
     worlds.append(world("random-%03d" % i, gp, project=project, agents=ag, project_agents=pag,
                         mcp=rnd.sample(SERVERS, rnd.randint(0, 3)), yolo=rnd.random() < 0.25, session=random_session_rules(), **over))
 
-with open("manager-cases.json", "w") as f:
+with open("../../extensions/pi-permission-system/testdata/manager-cases.json", "w") as f:
     json.dump(worlds, f, indent=1, sort_keys=True)
     f.write("\n")
 print(len(worlds), "worlds", sum(len(w["intents"]) for w in worlds), "intents")

@@ -8,5 +8,5 @@ test -d "$pkg/node_modules" || { echo "usage: $0 <installed copy of port/oracle>
 here="$(pwd)"
 cp port/probe/manager-probe.test.ts "$pkg/test/zz-manager-probe.test.ts"
 trap 'rm -f "$pkg/test/zz-manager-probe.test.ts"' EXIT
-(cd "$pkg" && PROBE_CASES="$here/port/probe/manager-cases.json" PROBE_OUT="$here/extensions/pi-permission-system/testdata/manager-oracle.json" \
+(cd "$pkg" && PROBE_CASES="$here/extensions/pi-permission-system/testdata/manager-cases.json" PROBE_OUT="$here/extensions/pi-permission-system/testdata/manager-oracle.json" \
   node_modules/.bin/vitest run test/zz-manager-probe.test.ts)

@@ -10,7 +10,7 @@ import (
 )
 
 // The differential for the permission manager: testdata/manager-oracle.json holds every verdict the original's PermissionManager gave
-// over the worlds of port/probe/manager-cases.json (config files, agent files, session rules, yolo, MCP servers; recorded by
+// over the worlds of testdata/manager-cases.json (config files, agent files, session rules, yolo, MCP servers; recorded by
 // port/record-manager-probe.sh), and this test replays the corpus through the port. Any difference fails: an allow where the original
 // asks or denies is a security bug.
 
@@ -122,7 +122,7 @@ func TestManagerOracleDifferential(t *testing.T) {
 	if err := json.Unmarshal(data, &oracle); err != nil {
 		t.Fatal(err)
 	}
-	casesData, err := os.ReadFile("../../port/probe/manager-cases.json")
+	casesData, err := os.ReadFile("testdata/manager-cases.json")
 	if err != nil {
 		t.Fatal(err)
 	}
