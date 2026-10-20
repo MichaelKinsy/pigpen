@@ -53,8 +53,8 @@ markers; `OnChange` fires once per input chunk.
 | `jsarray/` tests | 1 files | 45 |
 | `jsarray/` data, generators and notes | 1 files | 1 |
 | `internal/hljs/` code (PiG v0.5.0 copy) | 10 files | 4363 |
-| `internal/hljs/` tests | 7 files | 939 |
-| `internal/hljs/` data, generators and notes | 4 files | 1961 |
+| `internal/hljs/` tests | 10 files | 1115 |
+| `internal/hljs/` data, generators and notes | 5 files | 5213 |
 | `testdata/` (PiG v0.5.0 goldens the kept tests read) | 4 files | 2985 |
 | `port/oracle/pi/` (Pi sources, unmodified) | 47 files | 19565 |
 
