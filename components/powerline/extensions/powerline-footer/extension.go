@@ -186,6 +186,9 @@ type app struct {
 	pl        *powerline
 	once      sync.Once
 	widthOnce sync.Once
+	welcome   welcomeState // welcome.go, welcome_ext.go
+	cdq       *cdQuote     // /cd, /reply and the last-prompt line (cdquote_ext.go)
+	keys      *keysExt
 }
 
 func (a *app) core(ctx sdk.Context) *powerline {
@@ -194,6 +197,9 @@ func (a *app) core(ctx sdk.Context) *powerline {
 		a.pl = newPowerline(a.host)
 		a.host.pl = a.pl
 		a.pl.queue.mu = &a.mu
+		if a.keys != nil {
+			a.pl.keys = a.keys
+		}
 	})
 	a.host.ctx = ctx
 	return a.pl
@@ -215,10 +221,13 @@ func (p *powerline) footerRows(width int) []string {
 func (a *app) onSessionStart(ctx sdk.Context, data map[string]any) (any, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.welcomeBeginSession()
 	pl := a.core(ctx)
 	reason, _ := data["reason"].(string)
 	pl.sessionStart(reason)
 	pl.warnUnsupported()
+	a.cdq.sessionStart(ctx, pl.enabled)
+	defer a.welcomeSessionStart(ctx, reason) // after the bar is installed, as in index.ts
 	a.widthOnce.Do(func() {
 		// The bar's widget rows are laid out at a width; lay them out again when the terminal changes size.
 		_, _ = ctx.OnWidthChange(func(c sdk.Context, _ int) {
@@ -238,6 +247,9 @@ func (a *app) onEvent(name string) sdk.EventFunc {
 		a.mu.Lock()
 		defer a.mu.Unlock()
 		a.core(ctx).event(name, data)
+		if name == sdk.EventAgentStart {
+			a.welcomeDismiss() // a prompt given on the command line starts a turn with no key press
+		}
 		return nil, nil
 	}
 }
@@ -245,7 +257,13 @@ func (a *app) onEvent(name string) sdk.EventFunc {
 func (a *app) command(ctx sdk.Context, args string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.core(ctx).command(args)
+	pl := a.core(ctx)
+	wasEnabled := pl.enabled
+	pl.command(args)
+	if wasEnabled && !pl.enabled {
+		a.welcomeDismiss() // /powerline toggled off
+	}
+	a.cdq.sync(ctx, a.pl.enabled, true) // the core clears and installs the widgets again
 	return nil
 }
 
@@ -261,12 +279,17 @@ func Extension() *sdk.Extension {
 			return nil
 		})
 	}
+	registerKeys(e, a)
+	registerFollowUp(e, a)
+	registerVibes(e, a)
 	e.OnSessionStart(a.onSessionStart)
+	registerWelcome(e, a)
 	for _, ev := range []string{sdk.EventModelSelect, sdk.EventThinkingLevelSelect, sdk.EventSessionTree, sdk.EventSessionInfoChanged,
 		sdk.EventToolResult, sdk.EventUserBash, sdk.EventAgentStart, sdk.EventMessageUpdate, sdk.EventMessageEnd, sdk.EventTurnEnd,
 		sdk.EventSessionBeforeCompact, sdk.EventSessionCompact, sdk.EventAgentEnd} {
 		e.OnEvent(ev, a.onEvent(ev))
 	}
 	registerQueue(e, a)
+	registerCdQuote(e, a)
 	return e
 }

@@ -1,0 +1,74 @@
+{
+ "name": "vibes-generate-failures",
+ "description": "/vibe generate reports an unknown model and an invalid model spec before any request reaches the model (a request that does reach it is not comparable under this harness, see PORT notes: the vibe prompt replaces the whole system prompt, so the trace holds the host's own wording).",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe model eq-llm/missing"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe generate noir"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe model eq-llm/missing:low"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe generate star trek 7"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe model eq-llm/"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe generate noir"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe model /eq-1"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe generate"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe generate 12"
+   }
+  }
+ ]
+}

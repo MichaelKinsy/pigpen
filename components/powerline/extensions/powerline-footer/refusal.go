@@ -1,9 +1,6 @@
 package powerline_footer
 
-import (
-	"os"
-	"strings"
-)
+import "os"
 
 // What the original does that this port does not do yet. Each such command or setting is refused with one message that names the
 // working alternative; nothing is accepted and then ignored. The feature names are the ones in port/slices.json.
@@ -22,13 +19,9 @@ func refusal(feature string) string {
 
 // refusedCommands are the commands the original registers that the port does not implement: command name, description, feature.
 var refusedCommands = []struct{ name, description, feature string }{
-	{"reply", "Quote a previous user or assistant message into the editor", "quote reply (/reply)"},
-	{"stash-history", "Browse stashed prompts and recent project prompts", "the prompt stash (/stash-history)"},
 	{"bash-mode", "Toggle bash mode", "bash mode (/bash-mode)"},
 	{"bash-reset", "Restart the bash mode shell session", "bash mode (/bash-reset)"},
 	{"powerline-perf", "Show or reset the editor performance counters", "the editor performance profiler (/powerline-perf)"},
-	{"vibe", "Configure the working-message vibes", "working vibes (/vibe)"},
-	{"cd", "Change the session working directory", "the /cd command"},
 }
 
 // unsupportedSettings lists the features the user's settings or environment turn on that the port does not provide, in a fixed
@@ -39,35 +32,14 @@ func unsupportedSettings(settings map[string]any, cfg powerlineConfig, env func(
 
 	rawPowerline := asObject(settings["powerline"])
 	if rawPowerline != nil {
-		if rawPowerline.vals["welcome"] == true {
-			add("the startup welcome (powerline.welcome)")
-		}
 		if cfg.SendDelayMs > 0 {
 			add("delayed send (powerline.sendDelayMs)")
 		}
-		if cfg.AutoFollowUp {
-			add("auto follow-up (powerline.autoFollowUp)")
-		}
-		if cfg.StashSharpSShortcut {
-			add("the prompt stash shortcut (powerline.stashSharpSShortcut)")
-		}
-		if rawPowerline.vals["workingVibes"] != nil {
-			add("working vibes (powerline.workingVibes)")
-		}
-	}
-	if theme, ok := settings["workingVibe"].(string); ok && !strings.EqualFold(theme, "off") {
-		add("working vibes (workingVibe)")
 	}
 	if settings["bashMode"] != nil {
 		add("bash mode (bashMode)")
 	}
-	if settings["powerlineShortcuts"] != nil {
-		add("the editor shortcuts (powerlineShortcuts)")
-	}
-	if settings["showLastPrompt"] == true {
-		add("the last-prompt line (showLastPrompt)")
-	}
-	if env("POWERLINE_DEBUG_PERF") == "1" {
+	if readEditorPerfOptions(env).Enabled {
 		add("the editor performance profiler (POWERLINE_DEBUG_PERF)")
 	}
 	return features

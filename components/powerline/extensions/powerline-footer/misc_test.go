@@ -107,7 +107,12 @@ func TestRemainingRegressions(t *testing.T) {
 	tw(t, "remaining-regressions", "Nerd Font context icon uses stable database glyph", func(t *testing.T) {
 		eq(t, nerdIcons.Context, "\uF1C0", "glyph")
 	})
-	tskip(t, "remaining-regressions", "startup welcome predicate respects powerline.welcome false", "the welcome header and overlay are not ported (named exclusion in PORT.md), so shouldShowStartupWelcome has no caller; the powerline.welcome setting itself is parsed and twinned in the config tests")
+	tw(t, "remaining-regressions", "startup welcome predicate respects powerline.welcome false", func(t *testing.T) {
+		eq(t, shouldShowStartupWelcome("startup", true, "tui"), true, "startup, enabled, tui")
+		eq(t, shouldShowStartupWelcome("startup", false, "tui"), false, "welcome disabled")
+		eq(t, shouldShowStartupWelcome("resume", true, "tui"), false, "resume")
+		// The test's source assertion (setupCustomEditor runs before the decision) is TestWelcomeIsDecidedAfterTheBarIsInstalled.
+	})
 	tskip(t, "remaining-regressions", "stale ctx guard handles old and new Pi messages on agent_end", "isStaleExtensionContextError matches the message text of Pi's stale-context error, which the Go SDK does not raise (G14 in PORT.md); the Go host reports a replaced session through its own error, and the source-text assertions have no Go counterpart")
 	tskip(t, "remaining-regressions", "queue delivery tracks acknowledgement and requeues unstarted messages on shutdown", "asserts the TypeScript source text of index.ts (a regex over the prompt queue code), which has no Go counterpart; the behavior it guards is covered by TestTheHostStartingAMessageMarksTheItemSent, TestAnItemTheHostNeverStartsIsQueuedAgainAfterSixtySeconds and TestShutdownQueuesUnstartedDeliveriesAgain, and by the queue golden")
 	tskip(t, "remaining-regressions", "editor-adjacent widgets cache queue and last-prompt work", "asserts the TypeScript source text of index.ts (the widget caches), which has no Go counterpart; the queue summary cache is covered by TestSummaryIsCachedForQuarterOfASecond and the footer render path by TestFooterRenderDoesNotReadTheInbox, the last-prompt widget belongs to another slice")

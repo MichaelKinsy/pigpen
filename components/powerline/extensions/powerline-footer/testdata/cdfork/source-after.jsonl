@@ -1,0 +1,11 @@
+{"type":"session","version":3,"id":"0192f5a0-0000-7000-8000-000000000001","timestamp":"2026-10-20T10:00:00.000Z","cwd":"/src/proj","extra":{"10":1,"2":2,"b":3,"a":4}}
+
+this is not json
+{"type":"message","id":"a1b2c3d4","parentId":null,"timestamp":"2026-10-20T10:00:01.000Z","message":{"role":"user","content":"h\u00e9llo \u2028 \ud83d\ude00 \"q\" \\ \/ \u0001 tab\t","timestamp":1792490401000}}
+  {  "type" : "message" , "id":"b2c3d4e5","parentId":"a1b2c3d4","timestamp":"2026-10-20T10:00:02.000Z","message":{"role":"assistant","content":[{"type":"text","text":"x"}],"n":[1.0,1e21,-0,0.1,123456789012345680000,1E-7,3.14159],"nested":{"z":null,"y":true,"x":[]}} }
+0
+"a bare string"
+null
+{"type":"custom","id":"c3d4e5f6","parentId":"b2c3d4e5","timestamp":"2026-10-20T10:00:03.000Z","data":{"k":"v","big":12345678901234567890}}
+{"type":"session","id":"second-header-in-the-middle","version":3}
+{"type":"label","id":"d4e5f607","parentId":"c3d4e5f6","timestamp":"2026-10-20T10:00:04.000Z","targetId":"a1b2c3d4","label":"last line without newline"}

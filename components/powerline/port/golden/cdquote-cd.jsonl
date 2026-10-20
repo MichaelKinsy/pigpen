@@ -1,0 +1,32 @@
+{"kind":"header","scenario":"cdquote-cd","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:b6ab8658d40122733f451a165f9cf01a5c290f46aacef27c418cbdc767dc02fb","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"stash"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"01-show","ch":"ui","data":{"message":"<cwd>","method":"notify","notifyType":"info"}}
+{"step":"01-show","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-blank","ch":"ui","data":{"message":"<cwd>","method":"notify","notifyType":"info"}}
+{"step":"02-blank","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-same","ch":"ui","data":{"message":"Already in <cwd>","method":"notify","notifyType":"info"}}
+{"step":"03-same","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"04-same-slash","ch":"ui","data":{"message":"Already in <cwd>","method":"notify","notifyType":"info"}}
+{"step":"04-same-slash","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"05-missing","ch":"ui","data":{"message":"Directory does not exist: <cwd>/nope","method":"notify","notifyType":"error"}}
+{"step":"05-missing","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"06-escaped","ch":"ui","data":{"message":"Directory does not exist: <cwd>/My Folder","method":"notify","notifyType":"error"}}
+{"step":"06-escaped","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"07-quoted-missing","ch":"ui","data":{"message":"Directory does not exist: <cwd>/no such","method":"notify","notifyType":"error"}}
+{"step":"07-quoted-missing","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"08-file","ch":"ui","data":{"message":"Not a directory: <cwd>/file.txt","method":"notify","notifyType":"error"}}
+{"step":"08-file","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"09-home","ch":"ui","data":{"message":"/cd requires a persisted Pi session","method":"notify","notifyType":"error"}}
+{"step":"09-home","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"10-sub","ch":"ui","data":{"message":"/cd requires a persisted Pi session","method":"notify","notifyType":"error"}}
+{"step":"10-sub","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"11-quoted-sub","ch":"ui","data":{"message":"/cd requires a persisted Pi session","method":"notify","notifyType":"error"}}
+{"step":"11-quoted-sub","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

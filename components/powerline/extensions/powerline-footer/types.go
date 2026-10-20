@@ -107,7 +107,8 @@ type segmentContext struct {
 	CustomCompactionEnabled bool
 	UsingSubscription       bool
 	Queue                   queueSummary
-	SessionStart            int64 // milliseconds
+	Shell                   shellSegmentData // bash mode state: shell_mode and path read it (index.ts shellModeActive, shellRunning, shellName, shellCwd)
+	SessionStart            int64            // milliseconds
 	Git                     gitStatus
 	ExtensionStatuses       []statusEntry
 	HiddenStatusKeys        map[string]bool

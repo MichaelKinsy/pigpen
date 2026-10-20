@@ -1,0 +1,692 @@
+[
+ {
+  "name": "vibe-default-model",
+  "file": "working_vibes.go",
+  "find": "defaultVibeModel = \"openai-codex/gpt-5.6-luna:low\"",
+  "replace": "defaultVibeModel = \"openai-codex/gpt-5.6-luna\""
+ },
+ {
+  "name": "vibe-default-fallback",
+  "file": "working_vibes.go",
+  "find": "Fallback:        \"Working\",",
+  "replace": "Fallback:        \"Working on it\","
+ },
+ {
+  "name": "vibe-default-refresh",
+  "file": "working_vibes.go",
+  "find": "refreshSeconds := 30.0",
+  "replace": "refreshSeconds := 31.0"
+ },
+ {
+  "name": "vibe-default-maxlength",
+  "file": "working_vibes.go",
+  "find": "maxLength := 65",
+  "replace": "maxLength := 64"
+ },
+ {
+  "name": "vibe-maxlength-floor",
+  "file": "working_vibes.go",
+  "find": "math.Max(4, math.Floor(f))",
+  "replace": "math.Max(3, math.Floor(f))"
+ },
+ {
+  "name": "vibe-refresh-negative",
+  "file": "working_vibes.go",
+  "find": "refreshSeconds = math.Max(0, f)",
+  "replace": "refreshSeconds = f"
+ },
+ {
+  "name": "vibe-off-case",
+  "file": "working_vibes.go",
+  "find": "strings.ToLower(raw) != \"off\"",
+  "replace": "raw != \"off\""
+ },
+ {
+  "name": "vibe-timeout",
+  "file": "working_vibes.go",
+  "find": "TimeoutMs:       3000,",
+  "replace": "TimeoutMs:       300000,"
+ },
+ {
+  "name": "vibe-cjk-ellipsis",
+  "file": "working_vibes.go",
+  "find": "tail = \"\\u2026\\u2026\"",
+  "replace": "tail = \"\\u2026\""
+ },
+ {
+  "name": "vibe-ellipsis-collapse",
+  "file": "working_vibes.go",
+  "find": "regexp.MustCompile(`[.\\x{2026}]+$`)",
+  "replace": "regexp.MustCompile(`[.\\x{2026}]$`)"
+ },
+ {
+  "name": "vibe-file-suffix-unicode",
+  "file": "working_vibes.go",
+  "find": "strings.HasSuffix(line, \"\\u2026\")",
+  "replace": "false"
+ },
+ {
+  "name": "vibe-file-suffix-dots",
+  "file": "working_vibes.go",
+  "find": "strings.HasSuffix(line, \"...\")",
+  "replace": "strings.HasSuffix(line, \"..\")"
+ },
+ {
+  "name": "vibe-file-trim",
+  "file": "working_vibes.go",
+  "find": "line = jsTrim(line)\n\t\tif !endsWithEllipsis(line)",
+  "replace": "line = strings.TrimSpace(line)\n\t\tif !endsWithEllipsis(line)"
+ },
+ {
+  "name": "vibe-slug-lower",
+  "file": "working_vibes.go",
+  "find": "slug := jsLower(jsTrim(theme))",
+  "replace": "slug := jsTrim(theme)"
+ },
+ {
+  "name": "vibe-slug-dashes",
+  "file": "working_vibes.go",
+  "find": "slug = slugDashes.ReplaceAllString(slug, \"-\")",
+  "replace": "slug = slug+\"\""
+ },
+ {
+  "name": "vibe-slug-default",
+  "file": "working_vibes.go",
+  "find": "return \"theme\"",
+  "replace": "return \"vibe\""
+ },
+ {
+  "name": "vibe-shuffle-direction",
+  "file": "working_vibes.go",
+  "find": "for i := len(indices) - 1; i > 0; i-- {",
+  "replace": "for i := len(indices) - 2; i > 0; i-- {"
+ },
+ {
+  "name": "vibe-rng-constant",
+  "file": "working_vibes.go",
+  "find": "s += 0x6D2B79F5",
+  "replace": "s += 0x6D2B79F4"
+ },
+ {
+  "name": "vibe-cache-reload",
+  "file": "working_vibes.go",
+  "find": "m.vibeCacheTheme == nil || *m.vibeCacheTheme != *m.config.Theme",
+  "replace": "m.vibeCacheTheme == nil"
+ },
+ {
+  "name": "vibe-index-advance",
+  "file": "working_vibes.go",
+  "find": "m.vibeIndex++",
+  "replace": "m.vibeIndex += 0"
+ },
+ {
+  "name": "vibe-task-truncation",
+  "file": "working_vibes.go",
+  "find": "utf16Head(userPrompt, 100)",
+  "replace": "utf16Head(userPrompt, 101)"
+ },
+ {
+  "name": "vibe-exclude-text",
+  "file": "working_vibes.go",
+  "find": "exclude = \"Don't use: \"",
+  "replace": "exclude = \"Avoid: \""
+ },
+ {
+  "name": "vibe-recent-limit",
+  "file": "working_vibes.go",
+  "find": "maxRecentVibes = 5",
+  "replace": "maxRecentVibes = 6"
+ },
+ {
+  "name": "vibe-recent-dedupe",
+  "file": "working_vibes.go",
+  "find": "if v != vibe {\n\t\t\tnext = append(next, v)",
+  "replace": "if true {\n\t\t\tnext = append(next, v)"
+ },
+ {
+  "name": "vibe-fallback-not-tracked",
+  "file": "working_vibes.go",
+  "find": "if vibe == normalizeEllipsis(m.config.Fallback) {\n\t\treturn // fallback messages are not tracked",
+  "replace": "if false {\n\t\treturn // fallback messages are not tracked"
+ },
+ {
+  "name": "vibe-substitute-amp",
+  "file": "working_vibes.go",
+  "find": "\t\tcase '&':\n\t\t\tb.WriteString(matched)",
+  "replace": "\t\tcase '&':\n\t\t\tb.WriteString(\"&\")"
+ },
+ {
+  "name": "vibe-substitute-dollar",
+  "file": "working_vibes.go",
+  "find": "\t\tcase '$':\n\t\t\tb.WriteByte('$')",
+  "replace": "\t\tcase '$':\n\t\t\tb.WriteString(\"$$\")"
+ },
+ {
+  "name": "vibe-substitute-before",
+  "file": "working_vibes.go",
+  "find": "b.WriteString(str[:position])",
+  "replace": "b.WriteString(\"\")"
+ },
+ {
+  "name": "vibe-substitute-after",
+  "file": "working_vibes.go",
+  "find": "b.WriteString(str[position+len(matched):])",
+  "replace": "b.WriteString(\"\")"
+ },
+ {
+  "name": "vibe-parse-first-line",
+  "file": "working_vibes.go",
+  "find": "strings.SplitN(jsTrim(response), \"\\n\", 2)[0]",
+  "replace": "jsTrim(response)"
+ },
+ {
+  "name": "vibe-parse-quote-prefix",
+  "file": "working_vibes.go",
+  "find": "if strings.HasPrefix(vibe, `\"`) || strings.HasPrefix(vibe, \"'\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "vibe-parse-quote-suffix",
+  "file": "working_vibes.go",
+  "find": "if strings.HasSuffix(vibe, `\"`) || strings.HasSuffix(vibe, \"'\") {\n\t\tvibe = vibe[:len(vibe)-1]\n\t}\n\tvibe = normalizeEllipsis(vibe)",
+  "replace": "if false {\n\t\tvibe = vibe[:len(vibe)-1]\n\t}\n\tvibe = normalizeEllipsis(vibe)"
+ },
+ {
+  "name": "vibe-parse-length",
+  "file": "working_vibes.go",
+  "find": "utf16Len(vibe) > m.config.MaxLength",
+  "replace": "utf16Len(vibe) >= m.config.MaxLength"
+ },
+ {
+  "name": "vibe-parse-cut",
+  "file": "working_vibes.go",
+  "find": "utf16Head(vibe, m.config.MaxLength-3)",
+  "replace": "utf16Head(vibe, m.config.MaxLength-2)"
+ },
+ {
+  "name": "vibe-parse-empty",
+  "file": "working_vibes.go",
+  "find": "if vibe == \"\" || vibe == \"...\" || vibe == \"\\u2026\\u2026\" {",
+  "replace": "if vibe == \"\" || vibe == \"...\" {"
+ },
+ {
+  "name": "vibe-request-system-prompt",
+  "file": "working_vibes.go",
+  "find": "\"systemPrompt\": vibeSystemPrompt,",
+  "replace": "\"systemPrompt\": \"\","
+ },
+ {
+  "name": "vibe-request-auth-options",
+  "file": "working_vibes.go",
+  "find": "for _, key := range []string{\"apiKey\", \"headers\", \"env\"} {",
+  "replace": "for _, key := range []string{\"apiKey\", \"headers\"} {"
+ },
+ {
+  "name": "vibe-reasoning-option",
+  "file": "working_vibes.go",
+  "find": "options[\"reasoning\"] = thinkingLevel",
+  "replace": "options[\"reasoning\"] = \"high\""
+ },
+ {
+  "name": "vibe-thinking-levels",
+  "file": "working_vibes.go",
+  "find": "var vibeThinkingLevels = []string{\"off\", \"minimal\", \"low\", \"medium\", \"high\", \"xhigh\", \"max\"}",
+  "replace": "var vibeThinkingLevels = []string{\"off\", \"minimal\", \"low\", \"medium\", \"high\", \"xhigh\"}"
+ },
+ {
+  "name": "vibe-base-url",
+  "file": "working_vibes.go",
+  "find": "requestModel[\"baseUrl\"] = baseURL",
+  "replace": "requestModel[\"baseUrl\"] = \"\""
+ },
+ {
+  "name": "vibe-resolve-exact-first",
+  "file": "working_vibes.go",
+  "find": "if exact != nil {\n\t\treturn &resolvedVibeModel{provider: parsed.provider, model: exact}, nil",
+  "replace": "if exact != nil && false {\n\t\treturn &resolvedVibeModel{provider: parsed.provider, model: exact}, nil"
+ },
+ {
+  "name": "vibe-resolve-last-colon",
+  "file": "working_vibes.go",
+  "find": "strings.LastIndex(parsed.modelID, \":\")",
+  "replace": "strings.Index(parsed.modelID, \":\")"
+ },
+ {
+  "name": "vibe-model-spec-parse",
+  "file": "working_vibes.go",
+  "find": "if provider == \"\" || modelID == \"\" {",
+  "replace": "if provider == \"\" {"
+ },
+ {
+  "name": "vibe-timeout-aborts-to-fallback",
+  "file": "working_vibes.go",
+  "find": "case <-signal:\n\t\treturn map[string]any{\"role\": \"assistant\", \"content\": []any{}, \"stopReason\": \"aborted\", \"errorMessage\": \"Request was aborted\"}, nil",
+  "replace": "case <-signal:\n\t\treturn nil, errors.New(\"aborted\")"
+ },
+ {
+  "name": "vibe-generation-abort-previous",
+  "file": "working_vibes.go",
+  "find": "if m.currentGeneration != nil {\n\t\tm.currentGeneration.abort()\n\t}\n\tm.currentGeneration = controller",
+  "replace": "m.currentGeneration = controller"
+ },
+ {
+  "name": "vibe-update-needs-streaming",
+  "file": "working_vibes.go",
+  "find": "if !m.isStreaming || controller.aborted() {",
+  "replace": "if controller.aborted() {"
+ },
+ {
+  "name": "vibe-update-needs-current",
+  "file": "working_vibes.go",
+  "find": "if !m.isStreaming || controller.aborted() {",
+  "replace": "if !m.isStreaming {"
+ },
+ {
+  "name": "vibe-stale-silent",
+  "file": "working_vibes.go",
+  "find": "if isStaleExtensionContextError(err) {\n\t\t\t\treturn",
+  "replace": "if false {\n\t\t\t\treturn"
+ },
+ {
+  "name": "vibe-debug-failure",
+  "file": "working_vibes.go",
+  "find": "m.debug(\"[working-vibes] Generation failed:\", err)",
+  "replace": "m.debug(\"[working-vibes] Generation failed\", err)"
+ },
+ {
+  "name": "vibe-debug-model",
+  "file": "working_vibes.go",
+  "find": "m.debug(\"[working-vibes] Model not found: \" + modelSpec)",
+  "replace": "m.debug(\"[working-vibes] Model not found\")"
+ },
+ {
+  "name": "vibe-error-logged",
+  "file": "working_vibes.go",
+  "find": "if text == \"\" && response[\"stopReason\"] == \"error\" {",
+  "replace": "if text == \"\" && response[\"stopReason\"] == \"stop\" {"
+ },
+ {
+  "name": "vibe-style-needs-theme",
+  "file": "working_vibes.go",
+  "find": "if message == \"\" || color == \"\" || th == nil {",
+  "replace": "if message == \"\" || color == \"\" {"
+ },
+ {
+  "name": "vibe-placeholder",
+  "file": "working_vibes.go",
+  "find": "normalizeEllipsis(\"Channeling \" + *m.config.Theme)",
+  "replace": "normalizeEllipsis(\"Channelling \" + *m.config.Theme)"
+ },
+ {
+  "name": "vibe-before-start-needs-registry",
+  "file": "working_vibes.go",
+  "find": "if m.config.Theme == nil || *m.config.Theme == \"\" || m.registry == nil {\n\t\tm.mu.Unlock()\n\t\treturn\n\t}\n\tplaceholder",
+  "replace": "if m.config.Theme == nil || *m.config.Theme == \"\" {\n\t\tm.mu.Unlock()\n\t\treturn\n\t}\n\tplaceholder"
+ },
+ {
+  "name": "vibe-last-time-before-start",
+  "file": "working_vibes.go",
+  "find": "m.lastVibeTime = m.now() // for rate limiting",
+  "replace": "m.lastVibeTime = 0 // for rate limiting"
+ },
+ {
+  "name": "vibe-rate-limit-boundary",
+  "file": "working_vibes.go",
+  "find": "return float64(now-m.lastVibeTime) >= m.config.RefreshInterval",
+  "replace": "return float64(now-m.lastVibeTime) > m.config.RefreshInterval"
+ },
+ {
+  "name": "vibe-rate-limit-updates-time",
+  "file": "working_vibes.go",
+  "find": "m.lastVibeTime = now\n\tm.mu.Unlock()",
+  "replace": "m.mu.Unlock()"
+ },
+ {
+  "name": "vibe-tool-call-needs-streaming",
+  "file": "working_vibes.go",
+  "find": "|| m.registry == nil || !m.isStreaming {\n\t\treturn false",
+  "replace": "|| m.registry == nil {\n\t\treturn false"
+ },
+ {
+  "name": "vibe-agent-context-min",
+  "file": "working_vibes.go",
+  "find": "utf16Len(agentContext) > 10",
+  "replace": "utf16Len(agentContext) >= 10"
+ },
+ {
+  "name": "vibe-hint-bash-cut",
+  "file": "working_vibes.go",
+  "find": "utf16Head(jsString(toolInput[\"command\"]), 40)",
+  "replace": "utf16Head(jsString(toolInput[\"command\"]), 41)"
+ },
+ {
+  "name": "vibe-hint-default",
+  "file": "working_vibes.go",
+  "find": "hint = \"using \" + toolName + \" tool\"",
+  "replace": "hint = \"using \" + toolName"
+ },
+ {
+  "name": "vibe-hint-read",
+  "file": "working_vibes.go",
+  "find": "hint = \"reading file: \" + jsString(toolInput[\"path\"])",
+  "replace": "hint = \"reading: \" + jsString(toolInput[\"path\"])"
+ },
+ {
+  "name": "vibe-hint-write",
+  "file": "working_vibes.go",
+  "find": "hint = \"writing file: \" + jsString(toolInput[\"path\"])",
+  "replace": "hint = \"writing: \" + jsString(toolInput[\"path\"])"
+ },
+ {
+  "name": "vibe-hint-edit",
+  "file": "working_vibes.go",
+  "find": "hint = \"editing file: \" + jsString(toolInput[\"path\"])",
+  "replace": "hint = \"editing: \" + jsString(toolInput[\"path\"])"
+ },
+ {
+  "name": "vibe-hint-bash",
+  "file": "working_vibes.go",
+  "find": "hint = \"running command: \"",
+  "replace": "hint = \"running: \""
+ },
+ {
+  "name": "vibe-agent-end-resets",
+  "file": "working_vibes.go",
+  "find": "m.mu.Unlock()\n\tsetWorkingMessage(\"\")",
+  "replace": "m.mu.Unlock()"
+ },
+ {
+  "name": "vibe-agent-end-aborts",
+  "file": "working_vibes.go",
+  "find": "m.isStreaming = false\n\tif m.currentGeneration != nil {\n\t\tm.currentGeneration.abort()\n\t}",
+  "replace": "m.isStreaming = false"
+ },
+ {
+  "name": "vibe-agent-start-streaming",
+  "file": "working_vibes.go",
+  "find": "m.isStreaming = true",
+  "replace": "m.isStreaming = false"
+ },
+ {
+  "name": "vibe-set-theme-clears-recent",
+  "file": "working_vibes.go",
+  "find": "m.recentVibes = nil // cleared on theme change",
+  "replace": ""
+ },
+ {
+  "name": "vibe-save-theme-delete",
+  "file": "working_vibes.go",
+  "find": "if m.config.Theme == nil {\n\t\tdeleteObjectKey(settings, \"workingVibe\")",
+  "replace": "if m.config.Theme == nil {\n\t\tsettings.set(\"workingVibe\", \"off\")"
+ },
+ {
+  "name": "vibe-save-model-default",
+  "file": "working_vibes.go",
+  "find": "if m.config.ModelSpec == defaultVibeModel {",
+  "replace": "if false {"
+ },
+ {
+  "name": "vibe-save-mode-default",
+  "file": "working_vibes.go",
+  "find": "if m.config.Mode == vibeModeGenerate {\n\t\tdeleteObjectKey(settings, \"workingVibeMode\")",
+  "replace": "if false {\n\t\tdeleteObjectKey(settings, \"workingVibeMode\")"
+ },
+ {
+  "name": "vibe-write-refuses-broken",
+  "file": "working_vibes.go",
+  "find": "o, ok := v.(*jsObject)\n\tif !ok {\n\t\tm.debug(\"[working-vibes] Refusing to write \"",
+  "replace": "o, ok := v.(*jsObject)\n\tif !ok {\n\t\treturn newObject()\n\t\tm.debug(\"[working-vibes] Refusing to write \""
+ },
+ {
+  "name": "vibe-write-indent",
+  "file": "working_vibes.go",
+  "find": "marshalJSON(settings, \"  \")",
+  "replace": "marshalJSON(settings, \"\\t\")"
+ },
+ {
+  "name": "vibe-write-newline",
+  "file": "working_vibes.go",
+  "find": "marshalJSON(settings, \"  \")+\"\\n\"",
+  "replace": "marshalJSON(settings, \"  \")"
+ },
+ {
+  "name": "vibe-reload-on-init",
+  "file": "working_vibes.go",
+  "find": "m.registry = registry\n\tm.config = m.loadConfig()",
+  "replace": "m.registry = registry"
+ },
+ {
+  "name": "vibe-generate-clamp",
+  "file": "working_vibes.go",
+  "find": "safeCount := min(max(count, 1), 500)",
+  "replace": "safeCount := count"
+ },
+ {
+  "name": "vibe-batch-timeout",
+  "file": "working_vibes.go",
+  "find": "batchTimeout: 30 * time.Second,",
+  "replace": "batchTimeout: 3 * time.Second,"
+ },
+ {
+  "name": "vibe-batch-bullets",
+  "file": "working_vibes.go",
+  "find": "r == '\"' || r == '\\'' || (r >= '0' && r <= '9') || r == '.' || r == '-' || r == ')' || isJSSpace(r)",
+  "replace": "r == '\"' || r == '\\'' || (r >= '0' && r <= '9') || r == '.' || r == '-' || isJSSpace(r)"
+ },
+ {
+  "name": "vibe-batch-length-filter",
+  "file": "working_vibes.go",
+  "find": "if utf16Len(vibe) > 3 && vibe != \"...\" {",
+  "replace": "if utf16Len(vibe) > 4 && vibe != \"...\" {"
+ },
+ {
+  "name": "vibe-batch-trailing-quote",
+  "file": "working_vibes.go",
+  "find": "if strings.HasSuffix(vibe, `\"`) || strings.HasSuffix(vibe, \"'\") {\n\t\t\tvibe = vibe[:len(vibe)-1]\n\t\t}\n\t\tvibe = normalizeEllipsis(vibe)\n\t\tif utf16Len",
+  "replace": "if false {\n\t\t\tvibe = vibe[:len(vibe)-1]\n\t\t}\n\t\tvibe = normalizeEllipsis(vibe)\n\t\tif utf16Len"
+ },
+ {
+  "name": "vibe-batch-empty-error",
+  "file": "working_vibes.go",
+  "find": "return fail(\"Empty response from model\")",
+  "replace": "return fail(\"Empty response\")"
+ },
+ {
+  "name": "vibe-batch-error-message",
+  "file": "working_vibes.go",
+  "find": "if msg, _ := response[\"errorMessage\"].(string); response[\"stopReason\"] == \"error\" && msg != \"\" {",
+  "replace": "if msg, _ := response[\"errorMessage\"].(string); response[\"stopReason\"] == \"stop\" && msg != \"\" {"
+ },
+ {
+  "name": "vibe-batch-cache-clear",
+  "file": "working_vibes.go",
+  "find": "m.vibeCache, m.vibeCacheTheme = nil, nil",
+  "replace": "m.vibeCache = nil"
+ },
+ {
+  "name": "vibe-batch-prompt-count",
+  "file": "working_vibes.go",
+  "find": "jsReplaceAll(vibeBatchPrompt, \"{theme}\", theme), \"{count}\", strconv.Itoa(safeCount)",
+  "replace": "jsReplaceAll(vibeBatchPrompt, \"{theme}\", theme), \"{count}\", strconv.Itoa(safeCount+1)"
+ },
+ {
+  "name": "vibe-batch-file-join",
+  "file": "working_vibes.go",
+  "find": "strings.Join(vibes, \"\\n\")",
+  "replace": "strings.Join(vibes, \"\\n\")+\"\\n\""
+ },
+ {
+  "name": "vibe-fs-message",
+  "file": "working_vibes.go",
+  "find": "return c[0] + \": \" + c[1] + \", \" + syscallName",
+  "replace": "return c[0] + \": \" + c[1] + \" \" + syscallName"
+ },
+ {
+  "name": "vibe-args-count-limit",
+  "file": "working_vibes.go",
+  "find": "math.Min(math.Max(math.Floor(parsed), 1), 500)",
+  "replace": "math.Min(math.Max(math.Floor(parsed), 1), 501)"
+ },
+ {
+  "name": "vibe-args-needs-theme",
+  "file": "working_vibes.go",
+  "find": "parsed, hasCount = f, len(args) > 1",
+  "replace": "parsed, hasCount = f, true"
+ },
+ {
+  "name": "vibe-args-default-count",
+  "file": "working_vibes.go",
+  "find": "\tcount = 100\n\tif hasCount",
+  "replace": "\tcount = 99\n\tif hasCount"
+ },
+ {
+  "name": "vibe-args-infinity",
+  "file": "working_vibes.go",
+  "find": "err == nil && !math.IsInf(f, 0)",
+  "replace": "err == nil"
+ },
+ {
+  "name": "vibe-command-whitespace",
+  "file": "working_vibes.go",
+  "find": "parts = strings.FieldsFunc(trimmed, isJSSpace)",
+  "replace": "parts = strings.Fields(trimmed)"
+ },
+ {
+  "name": "vibe-command-subcommand-case",
+  "file": "working_vibes.go",
+  "find": "subcommand = strings.ToLower(parts[0])",
+  "replace": "subcommand = parts[0]"
+ },
+ {
+  "name": "vibe-command-model-format",
+  "file": "working_vibes.go",
+  "find": "if !strings.Contains(spec, \"/\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "vibe-command-mode-case",
+  "file": "working_vibes.go",
+  "find": "newMode = strings.ToLower(parts[1])",
+  "replace": "newMode = parts[1]"
+ },
+ {
+  "name": "vibe-command-mode-file-check",
+  "file": "working_vibes.go",
+  "find": "if newMode == \"file\" && theme != nil && *theme != \"\" && !m.hasVibeFile(*theme) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "vibe-command-status-file",
+  "file": "working_vibes.go",
+  "find": "if theme != nil && *theme != \"\" && mode == vibeModeFile {",
+  "replace": "if false {"
+ },
+ {
+  "name": "vibe-command-status-count",
+  "file": "working_vibes.go",
+  "find": "if count := m.vibeFileCount(*theme); count > 0 {",
+  "replace": "if count := m.vibeFileCount(*theme); count >= 0 {"
+ },
+ {
+  "name": "vibe-command-theme-casing",
+  "file": "working_vibes.go",
+  "find": "theme := trimmed\n\tpersisted := m.setTheme(new(theme))",
+  "replace": "theme := strings.ToLower(trimmed)\n\tpersisted := m.setTheme(new(theme))"
+ },
+ {
+  "name": "vibe-command-file-warning",
+  "file": "working_vibes.go",
+  "find": "if m.getMode() == vibeModeFile && !m.hasVibeFile(theme) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "vibe-command-not-persisted",
+  "file": "working_vibes.go",
+  "find": "const notPersisted = \" (not persisted; check settings.json)\"",
+  "replace": "const notPersisted = \" (not persisted)\""
+ },
+ {
+  "name": "vibe-command-off-persisted",
+  "file": "working_vibes.go",
+  "find": "if m.setTheme(nil) {\n\t\t\tnotify(\"Vibe disabled\", \"info\")",
+  "replace": "if true {\n\t\t\tnotify(\"Vibe disabled\", \"info\")"
+ },
+ {
+  "name": "vibe-command-generate-announce",
+  "file": "working_vibes.go",
+  "find": "notify(\"Generating \"+strconv.Itoa(count)",
+  "replace": "notify(\"Generating: \"+strconv.Itoa(count)"
+ },
+ {
+  "name": "vibe-command-generate-failed",
+  "file": "working_vibes.go",
+  "find": "notify(\"Failed to generate vibes: \"+result.Error, \"error\")",
+  "replace": "notify(\"Failed to generate vibes: \"+result.Error, \"warning\")"
+ },
+ {
+  "name": "vibe-recent-agent-context-skip-non-assistant",
+  "file": "working_vibes.go",
+  "find": "msg[\"role\"] != \"assistant\" {",
+  "replace": "msg[\"role\"] == \"\" {"
+ },
+ {
+  "name": "vibe-recent-agent-context-trim",
+  "file": "working_vibes.go",
+  "find": "if text = jsTrim(text); text != \"\" {",
+  "replace": "if text != \"\" {"
+ },
+ {
+  "name": "vibe-recent-agent-context-length",
+  "file": "working_vibes.go",
+  "find": "return utf16Head(text, 200)",
+  "replace": "return utf16Head(text, 199)"
+ },
+ {
+  "name": "vibe-ext-has-ui-before",
+  "file": "working_vibes_ext.go",
+  "find": "if ctx.HasUI() {\n\t\t\tstyled(ctx)\n\t\t\tprompt, _",
+  "replace": "if true {\n\t\t\tstyled(ctx)\n\t\t\tprompt, _"
+ },
+ {
+  "name": "vibe-ext-has-ui-agent-end",
+  "file": "working_vibes_ext.go",
+  "find": "if ctx.HasUI() {\n\t\t\tm.onAgentEnd",
+  "replace": "if true {\n\t\t\tm.onAgentEnd"
+ },
+ {
+  "name": "vibe-ext-color",
+  "file": "working_vibes_ext.go",
+  "find": ".WorkingVibesColor)",
+  "replace": ".WorkingVibesColor + \"x\")"
+ },
+ {
+  "name": "vibe-ext-tool-input",
+  "file": "working_vibes_ext.go",
+  "find": "input, _ := data[\"input\"].(map[string]any)",
+  "replace": "input, _ := data[\"inputs\"].(map[string]any)"
+ },
+ {
+  "name": "vibe-ext-prompt",
+  "file": "working_vibes_ext.go",
+  "find": "prompt, _ := data[\"prompt\"].(string)",
+  "replace": "prompt, _ := data[\"promptx\"].(string)"
+ },
+ {
+  "name": "vibe-ext-base-url",
+  "file": "working_vibes_ext.go",
+  "find": "baseURL, _ := auth[\"baseUrl\"].(string)",
+  "replace": "baseURL, _ := auth[\"baseURL\"].(string)"
+ },
+ {
+  "name": "vibe-ext-theme-after-render",
+  "file": "working_vibes_ext.go",
+  "find": "return a.pl != nil && a.pl.frame.Load() != nil",
+  "replace": "return true"
+ },
+ {
+  "name": "vibe-tool-call-branch-only-when-due",
+  "file": "working_vibes_ext.go",
+  "find": "if m.toolCallDue() {",
+  "replace": "if true {"
+ }
+]

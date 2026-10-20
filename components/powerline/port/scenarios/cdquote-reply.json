@@ -1,0 +1,58 @@
+{
+ "name": "cdquote-reply",
+ "description": "/reply without quotable messages and with an id that matches none (ids of a live session are random, so a successful quote cannot be compared; the layer-1 tests cover it).",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "empty",
+   "rpc": {
+    "type": "prompt",
+    "message": "/reply"
+   }
+  },
+  {
+   "name": "empty-id",
+   "rpc": {
+    "type": "prompt",
+    "message": "/reply abc"
+   }
+  },
+  {
+   "name": "turn",
+   "rpc": {
+    "type": "prompt",
+    "message": "hello there"
+   }
+  },
+  {
+   "name": "no-match",
+   "rpc": {
+    "type": "prompt",
+    "message": "/reply zzz"
+   }
+  },
+  {
+   "name": "no-match-hash",
+   "rpc": {
+    "type": "prompt",
+    "message": "/reply #ZZZ"
+   }
+  },
+  {
+   "name": "no-match-spaces",
+   "rpc": {
+    "type": "prompt",
+    "message": "/reply   #zz  "
+   }
+  }
+ ],
+ "commands": {
+  "git": {
+   "mode": "real"
+  }
+ }
+}

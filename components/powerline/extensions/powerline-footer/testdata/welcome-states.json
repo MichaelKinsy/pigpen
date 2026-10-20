@@ -1,0 +1,2021 @@
+[
+ {
+  "name": "overlay-empty",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-full",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 2,
+   "skills": 3,
+   "promptTemplates": 1
+  },
+  "tokens": 1900,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-singular",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   }
+  ],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 1,
+   "promptTemplates": 1
+  },
+  "tokens": 1,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-plural-only-skills",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 12,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-five-sessions",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   },
+   {
+    "name": "fourth",
+    "timeAgo": "3d ago"
+   },
+   {
+    "name": "fifth",
+    "timeAgo": "4d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-long-model",
+  "kind": "overlay",
+  "model": "A very long model name that does not fit the left column at all",
+  "provider": "a-provider-with-a-long-name-too",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-wide-chars",
+  "kind": "overlay",
+  "model": "模型名称很长很长很长很长很长",
+  "provider": "提供者😀",
+  "sessions": [
+   {
+    "name": "项目名称项目名称",
+    "timeAgo": "1h ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-empty-names",
+  "kind": "overlay",
+  "model": "",
+  "provider": "",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-ansi-in-names",
+  "kind": "overlay",
+  "model": "\u001b[31mred\u001b[0m model",
+  "provider": "p\tq",
+  "sessions": [
+   {
+    "name": "\u001b[1mbold\u001b[0m",
+    "timeAgo": "3h ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-None",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-0",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 0,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-NaN",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": "NaN",
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-Infinity",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": "Infinity",
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-999",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 999,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-1000",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 1000,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-9999",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 9999,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-10000",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 10000,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-123456",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 123456,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-999999",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 999999,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-1000000",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 1000000,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-9999999",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 9999999,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-12500000",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 12500000,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-tokens-123456789",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 123456789,
+  "widths": [
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "header-empty",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-full",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 2,
+   "skills": 3,
+   "promptTemplates": 1
+  },
+  "tokens": 1900,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-singular",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   }
+  ],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 1,
+   "promptTemplates": 1
+  },
+  "tokens": 1,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-plural-only-skills",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 12,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-five-sessions",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   },
+   {
+    "name": "fourth",
+    "timeAgo": "3d ago"
+   },
+   {
+    "name": "fifth",
+    "timeAgo": "4d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-long-model",
+  "kind": "header",
+  "model": "A very long model name that does not fit the left column at all",
+  "provider": "a-provider-with-a-long-name-too",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-wide-chars",
+  "kind": "header",
+  "model": "模型名称很长很长很长很长很长",
+  "provider": "提供者😀",
+  "sessions": [
+   {
+    "name": "项目名称项目名称",
+    "timeAgo": "1h ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-empty-names",
+  "kind": "header",
+  "model": "",
+  "provider": "",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-ansi-in-names",
+  "kind": "header",
+  "model": "\u001b[31mred\u001b[0m model",
+  "provider": "p\tq",
+  "sessions": [
+   {
+    "name": "\u001b[1mbold\u001b[0m",
+    "timeAgo": "3h ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-tokens-None",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-0",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 0,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-NaN",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": "NaN",
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-Infinity",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": "Infinity",
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-999",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 999,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-1000",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 1000,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-9999",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 9999,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-10000",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 10000,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-123456",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 123456,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-999999",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 999999,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-1000000",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 1000000,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-9999999",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 9999999,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-12500000",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 12500000,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "header-tokens-123456789",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [],
+  "counts": {
+   "contextFiles": 1,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": 123456789,
+  "widths": [
+   96
+  ]
+ },
+ {
+  "name": "overlay-default-countdown",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   44,
+   78,
+   96
+  ]
+ },
+ {
+  "name": "overlay-countdown-30",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   44,
+   60,
+   78,
+   96
+  ],
+  "countdown": 30
+ },
+ {
+  "name": "overlay-countdown-29",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   44,
+   60,
+   78,
+   96
+  ],
+  "countdown": 29
+ },
+ {
+  "name": "overlay-countdown-10",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   44,
+   60,
+   78,
+   96
+  ],
+  "countdown": 10
+ },
+ {
+  "name": "overlay-countdown-9",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   44,
+   60,
+   78,
+   96
+  ],
+  "countdown": 9
+ },
+ {
+  "name": "overlay-countdown-1",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   44,
+   60,
+   78,
+   96
+  ],
+  "countdown": 1
+ },
+ {
+  "name": "overlay-countdown-0",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   44,
+   60,
+   78,
+   96
+  ],
+  "countdown": 0
+ },
+ {
+  "name": "sessions-empty",
+  "kind": "sessions",
+  "files": [],
+  "maxCount": 3,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-header-cwd",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "--Users-nico-dev-encoded-name--",
+    "name": "session.jsonl",
+    "header": "{\"cwd\": \"/Users/nico/dev/my-dashed-project\"}",
+    "age": 500,
+    "body": 0
+   }
+  ],
+  "maxCount": 3,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-unusable-headers",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "--Users-nico-dev-invalid-json--",
+    "name": "session.jsonl",
+    "header": "not-json",
+    "age": 60500,
+    "body": 0
+   },
+   {
+    "dir": "--Users-nico-dev-missing-cwd--",
+    "name": "session.jsonl",
+    "header": "{\"type\": \"session\"}",
+    "age": 120500,
+    "body": 0
+   },
+   {
+    "dir": "--Users-nico-dev-non-string-cwd--",
+    "name": "session.jsonl",
+    "header": "{\"cwd\": 123}",
+    "age": 180500,
+    "body": 0
+   },
+   {
+    "dir": "--Users-nico-dev-blank-cwd--",
+    "name": "session.jsonl",
+    "header": "{\"cwd\": \"   \"}",
+    "age": 240500,
+    "body": 0
+   },
+   {
+    "dir": "plain-dir",
+    "name": "session.jsonl",
+    "header": "[1, 2]",
+    "age": 300500,
+    "body": 0
+   },
+   {
+    "dir": "--",
+    "name": "session.jsonl",
+    "header": "",
+    "age": 360500,
+    "body": 0
+   },
+   {
+    "dir": "--a-b--",
+    "name": "empty.jsonl",
+    "header": "",
+    "age": 420500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-trailing-slash-and-root",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "a",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/projects/trailing/\"}",
+    "age": 60500,
+    "body": 0
+   },
+   {
+    "dir": "b",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/\"}",
+    "age": 120500,
+    "body": 0
+   },
+   {
+    "dir": "c",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"relative\"}",
+    "age": 180500,
+    "body": 0
+   },
+   {
+    "dir": "d",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/x/y//\"}",
+    "age": 240500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-name-truncation",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "a",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/xxxxxxxxxxxxxxxxxxxx\"}",
+    "age": 60500,
+    "body": 0
+   },
+   {
+    "dir": "b",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/yyyyyyyyyyyyyyyyyyyyy\"}",
+    "age": 120500,
+    "body": 0
+   },
+   {
+    "dir": "c",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\\u754c\"}",
+    "age": 180500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-newest-distinct",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "0.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "2.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "3.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "4.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "5.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "6.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "7.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "8.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "9.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "10.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "11.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "12.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "13.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "14.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "15.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "16.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "17.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "18.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "19.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "20.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "21.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "22.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "23.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "24.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "25.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "26.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "27.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "28.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "29.jsonl",
+    "header": "{\"cwd\": \"/projects/older\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "a.jsonl",
+    "header": "{\"cwd\": \"/projects/my-dashed-project\"}",
+    "age": 60500,
+    "body": 5000
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "b.jsonl",
+    "header": "{\"cwd\": \"/other/my-dashed-project\"}",
+    "age": 120500,
+    "body": 5000
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "c.jsonl",
+    "header": "not-json",
+    "age": 180500,
+    "body": 5000
+   },
+   {
+    "dir": "--encoded--/artifacts/nested",
+    "name": "d.jsonl",
+    "header": "{\"cwd\": \"/projects/third\"}",
+    "age": 240500,
+    "body": 5000
+   }
+  ],
+  "maxCount": 3,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-time-ago",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "a",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/just\"}",
+    "age": 500,
+    "body": 0
+   },
+   {
+    "dir": "b",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/m59\"}",
+    "age": 3540500,
+    "body": 0
+   },
+   {
+    "dir": "c",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/h1\"}",
+    "age": 3600500,
+    "body": 0
+   },
+   {
+    "dir": "d",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/h23\"}",
+    "age": 82800500,
+    "body": 0
+   },
+   {
+    "dir": "e",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/d1\"}",
+    "age": 86400500,
+    "body": 0
+   },
+   {
+    "dir": "f",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/d400\"}",
+    "age": 34560000500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-max-count",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "d0",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/n0\"}",
+    "age": 500,
+    "body": 0
+   },
+   {
+    "dir": "d1",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/n1\"}",
+    "age": 60500,
+    "body": 0
+   },
+   {
+    "dir": "d2",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/n2\"}",
+    "age": 120500,
+    "body": 0
+   },
+   {
+    "dir": "d3",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/n3\"}",
+    "age": 180500,
+    "body": 0
+   },
+   {
+    "dir": "d4",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/n4\"}",
+    "age": 240500,
+    "body": 0
+   },
+   {
+    "dir": "d5",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/n5\"}",
+    "age": 300500,
+    "body": 0
+   }
+  ],
+  "maxCount": 2,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-max-zero",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "d",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/n\"}",
+    "age": 500,
+    "body": 0
+   }
+  ],
+  "maxCount": 0,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-non-jsonl-ignored",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "d",
+    "name": "1.json",
+    "header": "{\"cwd\": \"/p/no\"}",
+    "age": 500,
+    "body": 0
+   },
+   {
+    "dir": "d",
+    "name": "x.jsonl.bak",
+    "header": "{\"cwd\": \"/p/no2\"}",
+    "age": 500,
+    "body": 0
+   },
+   {
+    "dir": "d",
+    "name": "page.html",
+    "header": "{\"cwd\": \"/p/no3\"}",
+    "age": 500,
+    "body": 0
+   },
+   {
+    "dir": "d",
+    "name": "ends-in-l",
+    "header": "{\"cwd\": \"/p/no4\"}",
+    "age": 500,
+    "body": 0
+   },
+   {
+    "dir": "e",
+    "name": "ok.jsonl",
+    "header": "{\"cwd\": \"/p/yes\"}",
+    "age": 60500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-legacy-and-agent",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "--custom--",
+    "name": "session.jsonl",
+    "header": "{\"cwd\": \"/tmp/custom-project\"}",
+    "age": 60500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [
+   {
+    "dir": "--legacy--",
+    "name": "session.jsonl",
+    "header": "{\"cwd\": \"/tmp/legacy-project\"}",
+    "age": 120500,
+    "body": 0
+   }
+  ],
+  "customAgentDir": true
+ },
+ {
+  "name": "sessions-single-dash-dir",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "-one-dash-dir",
+    "name": "1.jsonl",
+    "header": "not-json",
+    "age": 60500,
+    "body": 0
+   },
+   {
+    "dir": "--two-dash-dir--",
+    "name": "1.jsonl",
+    "header": "not-json",
+    "age": 120500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-tie-agent-first",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "agent-first",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/from-agent\"}",
+    "age": 60500,
+    "body": 0
+   }
+  ],
+  "maxCount": 1,
+  "legacy": [
+   {
+    "dir": "legacy-second",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/from-legacy\"}",
+    "age": 60500,
+    "body": 0
+   }
+  ],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-round-boundary",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "a",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/almost-an-hour\"}",
+    "age": 3599700,
+    "body": 0
+   },
+   {
+    "dir": "b",
+    "name": "1.jsonl",
+    "header": "{\"cwd\": \"/p/almost-a-day\"}",
+    "age": 86399700,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-header-over-8192",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "--Users-x-in-limit--",
+    "name": "ok.jsonl",
+    "header": "{\"cwd\": \"/p/inside\", \"pad\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+    "age": 60500,
+    "body": 0
+   },
+   {
+    "dir": "--Users-x-over-limit--",
+    "name": "cut.jsonl",
+    "header": "{\"cwd\": \"/p/outside\", \"pad\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+    "age": 120500,
+    "body": 0
+   }
+  ],
+  "maxCount": 10,
+  "legacy": [],
+  "customAgentDir": false
+ },
+ {
+  "name": "sessions-crlf-and-padding",
+  "kind": "sessions",
+  "files": [
+   {
+    "dir": "d",
+    "name": "1.jsonl",
+    "header": "  {\"cwd\": \"/p/padded\"}\r",
+    "age": 500,
+    "body": 0
+   }
+  ],
+  "maxCount": 3,
+  "legacy": [],
+  "customAgentDir": false
+ }
+]
