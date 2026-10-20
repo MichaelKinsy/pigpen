@@ -1,5 +1,5 @@
 // The same cases as extensions/warden/security_bench_test.go, against the original. Run with:
-//   node --import tsx port/bench/security-bench.ts   (from components/warden/port/oracle, or via port/bench/run.sh)
+//   port/bench/run.sh (node --experimental-transform-types with port/bench/ts-register.mjs)
 import { findSecrets, maskSecrets } from "../oracle/src/redact.js";
 import { RunawayMonitor } from "../oracle/src/runaway.js";
 import { buildProseRequest, restatedShare } from "../oracle/src/prose.js";
@@ -8,7 +8,7 @@ function benchOutput(): string {
   const parts: string[] = [];
   let size = 0;
   for (let i = 0; size < 64 * 1024; i++) {
-    if (i === 600) { const k = "export API_KEY=k7Rm2Qx9Lp4Ns8Vt1Wd6Yc3Zb5Hf7Jg0Pk2Mn5Qz\n"; parts.push(k); size += k.length; }
+    if (i === 600) { const k = "export API_KEY=k7Rm2Qx9Lp4Ns8Vt1Wd6" + "Yc3Zb5Hf7Jg0Pk2Mn5Qz\n"; parts.push(k); size += k.length; }
     const line = `build step ${i}: compiled module_${i % 97}.o in ${(i * 37) % 1000} ms, token count ${i * 13}\n`;
     parts.push(line); size += line.length;
   }

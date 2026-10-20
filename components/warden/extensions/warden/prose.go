@@ -2,10 +2,12 @@ package warden
 
 import (
 	"context"
+	"math/bits"
 	"sort"
 	"strings"
 	"time"
 	"unicode"
+	"unicode/utf8"
 )
 
 // The prose check (src/prose.ts): the final reply is scored against the configured audience for wordiness,
@@ -189,45 +191,144 @@ const (
 	RestateMinSentences = 2
 )
 
-var reSentenceBreak = lazyRE(`(?:[.!?]|\n)+[` + jsSpaceClass + `]*`)
-
-// sentenceWords is one sentence's content-word set; order keeps the first sighting, as a JS Set does.
-type sentenceWords struct {
-	set   map[string]bool
-	order []string
-}
-
-func contentWords(sentence string) sentenceWords {
-	out := sentenceWords{set: map[string]bool{}}
-	words := strings.FieldsFunc(strings.ToLower(sentence), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) })
-	for _, w := range words {
-		if utf16Len(w) > 2 && !out.set[w] {
-			out.set[w] = true
-			out.order = append(out.order, w)
+// splitSentences is text.split(/(?:[.!?]|\n)+\s*/): a separator is a run of sentence ends and newlines and the
+// whitespace after it. Empty pieces are dropped (they hold no content word).
+func splitSentences(text string) []string {
+	var out []string
+	start := 0
+	for i := 0; i < len(text); {
+		c := text[i]
+		if c != '.' && c != '!' && c != '?' && c != '\n' {
+			i++
+			continue
 		}
+		j := i
+		for j < len(text) && (text[j] == '.' || text[j] == '!' || text[j] == '?' || text[j] == '\n') {
+			j++
+		}
+		for j < len(text) {
+			r, size := utf8.DecodeRuneInString(text[j:])
+			if !isJSSpace(r) {
+				break
+			}
+			j += size
+		}
+		if i > start {
+			out = append(out, text[start:i])
+		}
+		start, i = j, j
+	}
+	if start < len(text) {
+		out = append(out, text[start:])
 	}
 	return out
 }
 
-// SubstantiveSentences are the substantive sentences of a reply, as content-word sets.
-func SubstantiveSentences(text string) []sentenceWords {
+// vocabulary gives each distinct content word of the sentences compared in one call an index, so a sentence is a bit
+// set and two sentences' shared words are one AND and a population count.
+type vocabulary struct{ ids map[string]int }
+
+func newVocabulary() *vocabulary { return &vocabulary{ids: map[string]int{}} }
+
+// sentenceWords is one sentence's content-word set: bits over a vocabulary, how many distinct words, and the length
+// the original measures (`[...set].join(" ").length`).
+type sentenceWords struct {
+	bits  []uint64
+	n     int
+	chars int
+}
+
+func (s *sentenceWords) add(id int, length int) {
+	word, bit := id/64, uint64(1)<<(id%64)
+	for len(s.bits) <= word {
+		s.bits = append(s.bits, 0)
+	}
+	if s.bits[word]&bit != 0 {
+		return
+	}
+	s.bits[word] |= bit
+	s.n++
+	s.chars += length + 1
+}
+
+// contentWords is the set of words longer than two UTF-16 units of the lower-cased sentence, split on everything that
+// is not a letter or a number.
+func (v *vocabulary) contentWords(sentence string) sentenceWords {
+	var out sentenceWords
+	intern := func(word []byte, length int) {
+		if length <= 2 {
+			return
+		}
+		id, ok := v.ids[string(word)]
+		if !ok {
+			id = len(v.ids)
+			v.ids[string(word)] = id
+		}
+		out.add(id, length)
+	}
+	ascii := true
+	for i := 0; i < len(sentence); i++ {
+		if sentence[i] >= utf8.RuneSelf {
+			ascii = false
+			break
+		}
+	}
+	if ascii {
+		var buf [64]byte
+		word := buf[:0]
+		for i := 0; i <= len(sentence); i++ {
+			if i < len(sentence) {
+				c := sentence[i]
+				if 'A' <= c && c <= 'Z' {
+					word = append(word, c+('a'-'A'))
+					continue
+				}
+				if ('a' <= c && c <= 'z') || ('0' <= c && c <= '9') {
+					word = append(word, c)
+					continue
+				}
+			}
+			intern(word, len(word))
+			word = word[:0]
+		}
+		out.chars--
+		return out
+	}
+	for _, w := range strings.FieldsFunc(strings.ToLower(sentence), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) }) {
+		intern([]byte(w), utf16Len(w))
+	}
+	out.chars--
+	return out
+}
+
+// parse returns the substantive sentences of text.
+func (v *vocabulary) parse(text string) []sentenceWords {
 	var out []sentenceWords
-	for _, raw := range reSentenceBreak.Split(text, -1) {
-		words := contentWords(raw)
-		if utf16Len(strings.Join(words.order, " ")) >= SentenceMinChars {
+	for _, raw := range splitSentences(text) {
+		words := v.contentWords(raw)
+		if words.chars >= SentenceMinChars {
 			out = append(out, words)
 		}
 	}
 	return out
 }
 
+// SubstantiveSentences counts the substantive sentences of a reply (those with enough content-word characters to be
+// worth comparing).
+func SubstantiveSentences(text string) int { return len(newVocabulary().parse(text)) }
+
 // RestatedShare is the share of reply's substantive sentences that restate a sentence of the earlier replies (0..1).
 func RestatedShare(reply string, earlier []string) float64 {
-	mine := SubstantiveSentences(reply)
+	v := newVocabulary()
 	var pool []sentenceWords
 	for _, text := range earlier {
-		pool = append(pool, SubstantiveSentences(text)...)
+		pool = append(pool, v.parse(text)...)
 	}
+	return restatedShareOf(v.parse(reply), pool)
+}
+
+// restatedShareOf is RestatedShare over parsed sentences.
+func restatedShareOf(mine, pool []sentenceWords) float64 {
 	if len(mine) == 0 || len(pool) == 0 {
 		return 0
 	}
@@ -236,12 +337,10 @@ sentence:
 	for _, s := range mine {
 		for _, old := range pool {
 			shared := 0
-			for _, w := range s.order {
-				if old.set[w] {
-					shared++
-				}
+			for i := 0; i < len(s.bits) && i < len(old.bits); i++ {
+				shared += bits.OnesCount64(s.bits[i] & old.bits[i])
 			}
-			if float64(shared)/float64(len(s.order)) >= SentenceOverlap {
+			if float64(shared)/float64(s.n) >= SentenceOverlap {
 				restated++
 				continue sentence
 			}
@@ -253,26 +352,47 @@ sentence:
 // RestatementWindow remembers the final messages of the current run; reset with each user prompt, since answering
 // the user is never a restatement.
 type RestatementWindow struct {
-	finals []string
-	limit  int
+	limit int
+	vocab *vocabulary
+	// pool holds the parsed sentences of each final, so a reply is compared without parsing the window again.
+	pool [][]sentenceWords
+	// last is the reply Share parsed most recently, which Record keeps from parsing twice.
+	lastReply string
+	last      []sentenceWords
+	parsed    bool
 }
 
 // NewRestatementWindow returns a window of the last limit finals (upstream's default is 4).
-func NewRestatementWindow(limit int) *RestatementWindow { return &RestatementWindow{limit: limit} }
+func NewRestatementWindow(limit int) *RestatementWindow {
+	return &RestatementWindow{limit: limit, vocab: newVocabulary()}
+}
+
+func (w *RestatementWindow) parse(reply string) []sentenceWords {
+	if !w.parsed || w.lastReply != reply {
+		w.lastReply, w.last, w.parsed = reply, w.vocab.parse(reply), true
+	}
+	return w.last
+}
 
 // Share is the 0..1 share of the reply already stated in an earlier final of this run.
-func (w *RestatementWindow) Share(reply string) float64 { return RestatedShare(reply, w.finals) }
+func (w *RestatementWindow) Share(reply string) float64 {
+	var pool []sentenceWords
+	for _, sentences := range w.pool {
+		pool = append(pool, sentences...)
+	}
+	return restatedShareOf(w.parse(reply), pool)
+}
 
 // Record remembers a final reply.
 func (w *RestatementWindow) Record(reply string) {
-	w.finals = append(w.finals, reply)
-	if len(w.finals) > w.limit {
-		w.finals = w.finals[1:]
+	w.pool = append(w.pool, w.parse(reply))
+	if len(w.pool) > w.limit {
+		w.pool = w.pool[1:]
 	}
 }
 
 // Reset forgets every final.
-func (w *RestatementWindow) Reset() { w.finals = nil }
+func (w *RestatementWindow) Reset() { *w = RestatementWindow{limit: w.limit, vocab: newVocabulary()} }
 
 // ProseNudge is queued for the next user prompt, so it shapes the next reply without spending a turn.
 func ProseNudge(symptoms []ProseSymptom, audience string, counts map[ProseSymptom]int) string {

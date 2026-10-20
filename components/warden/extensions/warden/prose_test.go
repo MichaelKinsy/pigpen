@@ -27,7 +27,7 @@ func TestRestatedShareKeepsAReplyWithNewInformationBelowTheThreshold(t *testing.
 
 // twin: tests/prose.test.ts:19
 func TestShortConnectiveSentencesNeverCountTowardARestatement(t *testing.T) {
-	if n := len(SubstantiveSentences("Yes. Done. On it.")); n != 0 {
+	if n := SubstantiveSentences("Yes. Done. On it."); n != 0 {
 		t.Fatalf("one-line acknowledgements carry no comparable sentence: %d", n)
 	}
 }

@@ -203,7 +203,7 @@ func DetectNotifier(platform string, run NotifyRunner, timeout time.Duration) No
 
 // ClipBody keeps the reason first: notifications truncate around a hundred characters.
 func ClipBody(text string, limit int) string {
-	flat := jsTrim(reJSSpaceRun.ReplaceAllLiteralString(text, " "))
+	flat := jsTrim(jsCollapseSpace(text))
 	if utf16Len(flat) <= limit {
 		return flat
 	}

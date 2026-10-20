@@ -179,7 +179,7 @@ func (w *warden) restatement(ctx sdk.Context, cfg Config, final string) {
 	share := w.sec.finals.Share(final)
 	w.sec.finals.Record(final)
 	w.sec.mu.Unlock()
-	sentences := len(SubstantiveSentences(final))
+	sentences := SubstantiveSentences(final)
 	if share < RestateShare || sentences < RestateMinSentences {
 		return
 	}

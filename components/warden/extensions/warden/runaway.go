@@ -3,7 +3,9 @@ package warden
 import (
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf16"
+	"unicode/utf8"
 )
 
 // The runaway guard (src/runaway.ts): a model that degenerates mid-reply repeats the same block of text over and
@@ -50,21 +52,124 @@ const (
 	CheckEvery = 256
 )
 
-var (
-	reJSSpaceRun     = lazyRE(`[` + jsSpaceClass + `]+`)
-	reParagraphBreak = lazyRE(`\n[` + jsSpaceClass + `]*\n`)
-)
+// jsCollapseSpace is s.replace(/\s+/g, " "): every run of JavaScript whitespace becomes one space.
+func jsCollapseSpace(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	inRun := false
+	for i := 0; i < len(s); {
+		c := s[i]
+		if c < utf8.RuneSelf {
+			if isJSSpace(rune(c)) {
+				if !inRun {
+					b.WriteByte(' ')
+					inRun = true
+				}
+			} else {
+				b.WriteByte(c)
+				inRun = false
+			}
+			i++
+			continue
+		}
+		r, size := utf8.DecodeRuneInString(s[i:])
+		if isJSSpace(r) {
+			if !inRun {
+				b.WriteByte(' ')
+				inRun = true
+			}
+		} else {
+			b.WriteString(s[i : i+size])
+			inRun = false
+		}
+		i += size
+	}
+	return b.String()
+}
 
-// normaliseRunaway is runaway.ts `normalise`: whitespace runs collapse to one space; trimmed and lower-cased.
+// splitParagraphs is text.split(/\n\s*\n/): a separator is a newline, the whitespace after it, and the last newline
+// of that whitespace.
+func splitParagraphs(text string) []string {
+	var parts []string
+	start := 0
+	for i := 0; i < len(text); i++ {
+		if text[i] != '\n' {
+			continue
+		}
+		last := -1
+		for j := i + 1; j < len(text); {
+			r, size := utf8.DecodeRuneInString(text[j:])
+			if !isJSSpace(r) {
+				break
+			}
+			if r == '\n' {
+				last = j
+			}
+			j += size
+		}
+		if last < 0 {
+			continue
+		}
+		parts = append(parts, text[start:i])
+		start = last + 1
+		i = last
+	}
+	return append(parts, text[start:])
+}
+
+// normaliseRunaway is runaway.ts `normalise`: whitespace runs collapse to one space; trimmed and lower-cased. One
+// pass: a space is written only before the next non-space character, which also trims.
 func normaliseRunaway(text string) string {
-	return strings.ToLower(jsTrim(reJSSpaceRun.ReplaceAllLiteralString(text, " ")))
+	var b strings.Builder
+	b.Grow(len(text))
+	pending := false
+	for i := 0; i < len(text); {
+		c := text[i]
+		if c < utf8.RuneSelf {
+			i++
+			if isJSSpace(rune(c)) {
+				pending = b.Len() > 0
+				continue
+			}
+			if pending {
+				b.WriteByte(' ')
+				pending = false
+			}
+			if 'A' <= c && c <= 'Z' {
+				c += 'a' - 'A'
+			}
+			b.WriteByte(c)
+			continue
+		}
+		r, size := utf8.DecodeRuneInString(text[i:])
+		i += size
+		if isJSSpace(r) {
+			pending = b.Len() > 0
+			continue
+		}
+		if pending {
+			b.WriteByte(' ')
+			pending = false
+		}
+		b.WriteRune(unicode.ToLower(r)) // an invalid byte becomes U+FFFD, as strings.ToLower does
+	}
+	return b.String()
+}
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			return false
+		}
+	}
+	return true
 }
 
 // RepeatedBlock is the paragraph (blank-line separated, normalised, at least minChars) that occurs most often.
 func RepeatedBlock(text string, minChars int) RepeatSignal {
 	counts := map[string]int{}
 	best := RepeatSignal{}
-	for _, raw := range reParagraphBreak.Split(text, -1) {
+	for _, raw := range splitParagraphs(text) {
 		block := normaliseRunaway(raw)
 		if utf16Len(block) < minChars {
 			continue
@@ -113,7 +218,11 @@ func equalUnits(a, b []uint16) bool {
 // step back, so templated sentences that share only a suffix count once. Units shorter than minPeriod (table
 // separators, ellipses) are ignored.
 func RepeatedTail(text string, chars, minPeriod int) RepeatSignal {
-	normal := utf16.Encode([]rune(normaliseRunaway(text)))
+	text = normaliseRunaway(text)
+	if isASCII(text) {
+		return repeatedTailASCII(text, chars, minPeriod)
+	}
+	normal := utf16.Encode([]rune(text))
 	if len(normal) < chars*2 {
 		return RepeatSignal{}
 	}
@@ -288,4 +397,28 @@ func RunawayDetails(v RunawayVerdict, told string, recovering bool) []string {
 		lines = append(lines, "agent told: "+clipEllipsis(told, 400))
 	}
 	return lines
+}
+
+// repeatedTailASCII is RepeatedTail for normalised text that is all ASCII, where a byte is a UTF-16 unit and
+// strings.LastIndex finds the previous occurrence.
+func repeatedTailASCII(normal string, chars, minPeriod int) RepeatSignal {
+	if len(normal) < chars*2 {
+		return RepeatSignal{}
+	}
+	start := len(normal) - chars
+	phrase := normal[start:]
+	previous := strings.LastIndex(normal[:len(normal)-1], phrase)
+	if previous == -1 {
+		return RepeatSignal{Count: 1, Block: phrase}
+	}
+	period := start - previous
+	if period < minPeriod {
+		return RepeatSignal{Count: 1, Block: phrase}
+	}
+	unit := normal[len(normal)-period:]
+	count := 1
+	for end := len(normal) - period; end >= period && normal[end-period:end] == unit; end -= period {
+		count++
+	}
+	return RepeatSignal{Count: count, Block: unit}
 }

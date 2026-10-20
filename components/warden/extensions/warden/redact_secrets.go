@@ -13,22 +13,30 @@ import (
 // on a name. `secret: boolean`, `TYPESAFE_API_KEY`, `savedKey`, `token: string` and `password=<your password>`
 // are code and prose about credentials, not credentials.
 
+// secretShape is a token regexp that opens with a literal; boundary says its first character is a word character, so
+// the `\b` the original writes before it is checked by hand (shapeSpans).
+type secretShape struct {
+	re       *lazyRegexp
+	boundary bool
+}
+
 var (
 	// Token shapes that are a credential by construction (redact.ts TOKEN_SHAPES).
-	reTokenShapes = []*lazyRegexp{
-		lazyRE(`-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----`),
-		lazyRE(`\bsk-[A-Za-z0-9_-]{16,}`),
-		lazyRE(`\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}`),
-		lazyRE(`\bgithub_pat_[A-Za-z0-9_]{20,}`),
-		lazyRE(`\bAKIA[0-9A-Z]{16}\b`),
-		lazyRE(`\bxox[abprs]-[A-Za-z0-9-]{10,}`),
-		lazyRE(`\bAIza[0-9A-Za-z_-]{30,}`),
-		lazyRE(`\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}`),
+	secretShapes = []secretShape{
+		{lazyRE(`-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----`), false},
+		{lazyRE(`sk-[A-Za-z0-9_-]{16,}`), true},
+		{lazyRE(`(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}`), true},
+		{lazyRE(`github_pat_[A-Za-z0-9_]{20,}`), true},
+		{lazyRE(`AKIA[0-9A-Z]{16}\b`), true},
+		{lazyRE(`xox[abprs]-[A-Za-z0-9-]{10,}`), true},
+		{lazyRE(`AIza[0-9A-Za-z_-]{30,}`), true},
+		{lazyRE(`eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}`), true},
 	}
-	// Headers and URL passwords whose value must still look like a secret; group 1 is the value.
-	reAuthorizationValue = lazyRE(`(?i)authorization\s*[:=]\s*(?:basic|bearer|token)?\s*([^\s"']+)`)
-	reBearerValue        = lazyRE(`(?i)\bbearer\s+([^\s"']+)`)
-	reURLPasswordValue   = lazyRE(`(?i)[a-z][a-z0-9+.-]*://[^\s/@:]+:([^\s/@]+)@`)
+	// Headers and URL passwords whose value must still look like a secret; group 1 is the value. Anchored: tried at
+	// the candidate offsets of redact_fast.go.
+	reAuthorizationValueAt = lazyRE(`(?i)^authorization\s*[:=]\s*(?:basic|bearer|token)?\s*([^\s"']+)`)
+	reBearerValueAt        = lazyRE(`(?i)^bearer\s+([^\s"']+)`)
+	reURLPasswordValueAt   = lazyRE(`(?i)^[a-z][a-z0-9+.-]*://[^\s/@:]+:([^\s/@]+)@`)
 
 	reAngleOnly       = lazyRE(`^<[^<>]*>$`)
 	reTrimEnds        = lazyRE("^[`\"'(\\[{<]+|[`\"')\\]}>.,;]+$")
@@ -262,23 +270,26 @@ func PartitionSecretsIn(secrets []string, text string) (real, synthetic []string
 }
 
 // assignmentValues returns the value of every `credential-key = value` assignment (redact.ts
-// CREDENTIAL_ASSIGNMENT). A value stops at whitespace, quotes, `;`, `,`, `)` and a separator `&`.
-func assignmentValues(text string) []string {
+// CREDENTIAL_ASSIGNMENT); lower is text lower-cased (ASCII) and cands its key offsets. A value stops at whitespace,
+// quotes, `;`, `,`, `)` and a separator `&`.
+func assignmentValues(text, lower string, cands []int) []string {
 	var out []string
-	pos := 0
-	for pos < len(text) {
-		loc := reAssignHead.FindStringSubmatchIndex(text[pos:])
-		if loc == nil {
-			break
-		}
-		headStart, headEnd := pos+loc[0], pos+loc[3]
-		end := valueEndFind(text, headEnd)
-		if end == headEnd {
-			pos = headStart + 1
+	last := 0
+	for _, p := range cands {
+		if p < last {
 			continue
 		}
-		out = append(out, text[headEnd:end])
-		pos = end
+		valueStart, ok := assignValueStart(text, lower, p)
+		if !ok {
+			continue
+		}
+		end := valueEndFind(text, valueStart)
+		if end == valueStart {
+			// A head with no value character is no match; the scan resumes at the next candidate.
+			continue
+		}
+		out = append(out, text[valueStart:end])
+		last = end
 	}
 	return out
 }
@@ -312,22 +323,30 @@ func FindSecrets(text string) []string {
 			found = append(found, v)
 		}
 	}
-	for _, shape := range reTokenShapes {
-		for _, m := range shape.FindAllString(text, -1) {
-			add(m)
+	for _, shape := range secretShapes {
+		for _, span := range shapeSpans(shape.re, text, shape.boundary) {
+			add(text[span[0]:span[1]])
 		}
 	}
-	for _, v := range assignmentValues(text) {
+	lower := asciiLower(text)
+	for _, v := range assignmentValues(text, lower, keyCandidates(lower)) {
 		if v != "" && LooksLikeSecretValue(v) {
 			add(v)
 		}
 	}
-	for _, re := range []*lazyRegexp{reAuthorizationValue, reBearerValue, reURLPasswordValue} {
-		for _, m := range re.get().FindAllStringSubmatch(text, -1) {
-			if m[1] != "" && LooksLikeSecretValue(m[1]) {
-				add(m[1])
+	for _, header := range []struct {
+		re    *lazyRegexp
+		cands []int
+	}{
+		{reAuthorizationValueAt, indexAll(lower, "authorization", nil)},
+		{reBearerValueAt, boundaryCandidates(text, indexAll(lower, "bearer", nil))},
+		{reURLPasswordValueAt, urlStarts(text)},
+	} {
+		matchesAt(text, header.cands, header.re, func(loc []int) {
+			if v := text[loc[2]:loc[3]]; v != "" && LooksLikeSecretValue(v) {
+				add(v)
 			}
-		}
+		})
 	}
 	return found
 }

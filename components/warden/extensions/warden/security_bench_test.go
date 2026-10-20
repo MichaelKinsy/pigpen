@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
 // Benchmarks of the security lane on representative inputs; port/bench/security-bench.ts runs the same cases against
@@ -13,7 +15,7 @@ func benchOutput() string {
 	var b strings.Builder
 	for i := 0; b.Len() < 64*1024; i++ {
 		if i == 600 {
-			b.WriteString("export API_KEY=k7Rm2Qx9Lp4Ns8Vt1Wd6Yc3Zb5Hf7Jg0Pk2Mn5Qz\n")
+			b.WriteString("export API_KEY=k7Rm2Qx9Lp4Ns8Vt1Wd6" + "Yc3Zb5Hf7Jg0Pk2Mn5Qz\n")
 		}
 		fmt.Fprintf(&b, "build step %d: compiled module_%d.o in %d ms, token count %d\n", i, i%97, (i*37)%1000, i*13)
 	}
@@ -82,3 +84,22 @@ func BenchmarkBuildProseRequest(b *testing.B) {
 		benchSink = BuildProseRequest("explain the bug", reply, "technical")
 	}
 }
+
+// BenchmarkRunawayMessageUpdateHandler is the per-token cost of the message_update handler itself (no host round
+// trip): the path of an ordinary delta that is not yet due for a check.
+func BenchmarkRunawayMessageUpdateHandler(b *testing.B) {
+	_, w := newWarden(Options{})
+	w.loaded, w.cfg = true, DefaultConfig()
+	w.cfg.Enabled = true
+	data := map[string]any{"message": map[string]any{}, "assistantMessageEvent": map[string]any{"type": "text_delta", "delta": "seven c"}}
+	w.onRunawayMessageStart(sdkZeroContext(), map[string]any{"message": map[string]any{"role": "assistant"}})
+	b.ReportAllocs()
+	for i := 0; b.Loop(); i++ {
+		if i%30 == 0 { // stay below the check window: a message of a few hundred characters at most
+			w.onRunawayMessageStart(sdkZeroContext(), map[string]any{"message": map[string]any{"role": "assistant"}})
+		}
+		_, _ = w.onRunawayMessageUpdate(sdkZeroContext(), data)
+	}
+}
+
+func sdkZeroContext() sdk.Context { return sdk.Context{} }

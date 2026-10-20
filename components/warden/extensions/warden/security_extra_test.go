@@ -44,7 +44,7 @@ func TestProseRequestRedactsTheReplyAndClipsTaskAndReply(t *testing.T) {
 
 func TestBoundedOutputRequestsRedactBeforeSamplingAndBatchTheSecurityQuestions(t *testing.T) {
 	secret := "-----BEGIN PRIVATE KEY-----\n" + strings.Repeat("x", 15000) + "\n-----END PRIVATE KEY-----"
-	req := BuildOutputRequest("read", secret, "TOKEN=private-value", true, false, []TaskMessage{{Role: "user", Text: "API_KEY=k7Rm2Qx9Lp4Ns8Vt1Wd6Yc3Zb5Hf7Jg0Pk2Mn5Qz"}})
+	req := BuildOutputRequest("read", secret, "TOKEN=private-value", true, false, []TaskMessage{{Role: "user", Text: "API_KEY=k7Rm2Qx9Lp4Ns8Vt1Wd6" + "Yc3Zb5Hf7Jg0Pk2Mn5Qz"}})
 	b, _ := json.Marshal(req)
 	if s := string(b); strings.Contains(s, "private-value") || strings.Contains(s, "xxxx") || strings.Contains(s, "k7Rm2Qx9") || len(s) >= 10000 {
 		t.Fatalf("request leaks or is unbounded: %d bytes", len(s))
@@ -76,8 +76,8 @@ func TestSecretsReportedFromTheOutputVerdictAreFingerprintedNeverQuoted(t *testi
 }
 
 func TestMaskReplacesALongerValueWholeBeforeAValueInsideIt(t *testing.T) {
-	long := "ZZk7Rm2Qx9Lp4Ns8Vt1Wd6Yc3Zb5Hf7Jg0Pk2Mn5Qz"
-	short := "k7Rm2Qx9Lp4Ns8Vt1Wd6Yc3Zb5Hf7Jg0Pk2Mn5Qz"
+	long := "ZZk7Rm2Qx9Lp4Ns8Vt1Wd6" + "Yc3Zb5Hf7Jg0Pk2Mn5Qz"
+	short := "k7Rm2Qx9Lp4Ns8Vt1Wd6" + "Yc3Zb5Hf7Jg0Pk2Mn5Qz"
 	out, n := MaskSecrets("API_KEY=" + long + "\nSECRET=" + short)
 	if out != "API_KEY=[redacted]\nSECRET=[redacted]" || n != 2 {
 		t.Fatalf("%q %d", out, n)

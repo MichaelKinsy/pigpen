@@ -121,8 +121,7 @@ required) or fuses into a Piglet Binary (see `piglets/pig-warden`). It shares th
 ## What is and is not ported
 
 Ported: the four guards above, the project rules guard (`pi-warden.md`, `/warden rules`, `/warden report`, `/warden init`, end-of-run turn rules), the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
-`exemptRules`, user path rules and arming rules, session scratch, host paths, SQL target classes, violation escalation, the large-output steer, the steer budget, and both judge backends. Not ported (secret masking, context
-saver, conscience, subagent supervision, …) and every deliberate deviation are listed in
+`exemptRules`, user path rules and arming rules, session scratch, host paths, SQL target classes, violation escalation, the large-output steer, the steer budget, both judge backends, the runaway guard (a reply that repeats its block is stopped, with one recovery turn per prompt), the prose check and the restatement record at the end of a run, the security-write and slop steers, desktop notifications (`notify`, off by default), and secret detection with its masking helpers. Not ported (the tool-output masking path and the context saver, conscience, subagent supervision, …) and every deliberate deviation are listed in
 [`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test. The upstream `/warden` actions that are not ported are refused with an error that names the original (`npm:pi-warden@0.80.0`); the tools `warden_remember`, `warden_loops` and `warden_recall` are not yet ported and are not registered.
 
 ## Proof
@@ -131,8 +130,8 @@ saver, conscience, subagent supervision, …) and every deliberate deviation are
 |---|---|
 | `port/oracle/` | the unmodified original at the pinned commit, and its license |
 | `extensions/warden/testdata/diff_corpus.json` | 2,552 commands; the original's and the port's offline decisions are compared on every one |
-| `extensions/warden/*_test.go` | 90 twins of the original's own test cases, the fake TypeSafe server, the fake model registry and fake-host tests against PiG's event protocol |
-| `port/scenarios/`, `port/golden/` | 19 live scenarios, traces recorded from the original under Pi; the port (as a Go directory and as the built Binary) produces the same trace, event for event |
+| `extensions/warden/*_test.go` | 473 twins of the original's own test cases (of 1,264), the fake TypeSafe server, the fake model registry and fake-host tests against PiG's event protocol |
+| `port/scenarios/`, `port/golden/` | 37 live scenarios, traces recorded from the original under Pi; the port (as a Go directory and as the built Binary) produces the same trace, event for event |
 | `port/mutations.json`, `port/mutate.py` | deliberate defects that the scenarios or the layer-1 tests must catch |
 | `port/PORT.md` | file map, scope, deviations, equivalence results, **named gaps** |
 
