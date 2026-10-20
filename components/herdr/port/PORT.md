@@ -104,4 +104,19 @@ Pi. This is not tested against a real PiG replacement here (the harness reaches 
 
 ## Results (this revision)
 
-RESULTS
+Run on xd670 (tern-ci:v3, CPUs 64-127), with `pigeq env`, Pi `1402973a` (`1.3.0.1402973a`) and the PiG `0.5.0+1.3.0.1402973a` binary, Node 24.19.0, go1.27.2:
+
+- `pigeq gaps --ts port/oracle/herdr-agent-state.ts` and `pigeq gaps --go extensions/herdr`: no SDK gaps, no PiG-internal import or fuse hazard.
+- `pigeq twins check`: 7 exact twins, 0 skipped.
+- `pigeq record` (original under Pi): 3 scenarios recorded, host check pi-ts == pig-ts on all three. `pigeq run`: port == Pi on 3 of 3
+  (`outside-herdr` 10 events, `rpc-mode-silent` 10, `rpc-new-session` 11). `pigeq check` against the committed goldens: 3 of 3 (without Pi).
+- Drive replay: 98 cases, 176 request lines; the Go port reproduces the original's lines byte for byte. The golden was re-recorded
+  from the original in a second run and is identical (`golden-reproduced`).
+- `go test -race -count=4` in `extensions/herdr`: pass (83 s). `GOOS=linux|darwin|windows go vet`: pass.
+- `pig install extensions/herdr --validate-only --json`: `valid: true`, `form: factory`, `language: go`; `pig package validate components/herdr`: valid.
+
+Not yet run when this was written (queued behind other lanes on the shared lock; logs `~/pp-smallports/herdr/stepF.log`, `stepP.log` on
+xd670): `pigeq mutate` over the 71 mutations in `mutations.json` (the unit tests of the unmutated port pass; an earlier attempt stopped
+at a mutation whose find text a refactor had changed, since fixed), the real-pig tmux test (`npm run test:pig`) and the performance
+measurement. The PR body says so.
+
