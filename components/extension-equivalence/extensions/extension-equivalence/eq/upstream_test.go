@@ -279,3 +279,93 @@ func TestScenarioEnvReachesEveryLaneAndKeepsTheHostHermetic(t *testing.T) {
 		}
 	}
 }
+
+// pigpen-websearch: the model's tool-call arguments must be able to name a fake server (fetch_content's
+// url), so {{server:NAME}} is expanded in the LLM script too: turn text and every string value of the
+// arguments, at any depth. The scenario is shared by the lanes and must stay unexpanded.
+func TestExpandTurnsExpandsServersInTextAndNestedArgumentsWithoutChangingTheScenario(t *testing.T) {
+	u, _ := startUp(t, map[string]ServerSpec{"web": {Routes: []Route{{Path: "/x", Body: "ok"}}}, "api": {Routes: []Route{{Path: "/y", Body: "ok"}}}})
+	turns := []Turn{
+		{Text: "fetching {{server:web}}/page", ToolCalls: []ToolCall{
+			{Name: "fetch_content", Arguments: map[string]any{
+				"url":    "{{server:web}}/page",
+				"urls":   []any{"{{server:web}}/a", "{{server:api}}/b", 7, true, nil},
+				"nested": map[string]any{"deep": []any{map[string]any{"u": "x {{server:api}} y"}}},
+				"n":      3,
+			}},
+			{Name: "get_search_content"}, // no arguments
+		}},
+		{Text: "done"},
+	}
+	got := u.expandTurns(turns)
+	web, api := u.URL("web"), u.URL("api")
+	b, _ := json.Marshal(got)
+	want := `[{"text":"fetching ` + web + `/page","toolCalls":[{"name":"fetch_content","arguments":{"n":3,"nested":{"deep":[{"u":"x ` + api + ` y"}]},"url":"` + web + `/page","urls":["` + web + `/a","` + api + `/b",7,true,null]}},{"name":"get_search_content","arguments":null}]},{"text":"done"}]`
+	if string(b) != want {
+		t.Errorf("got  %s\nwant %s", b, want)
+	}
+	orig, _ := json.Marshal(turns)
+	if !strings.Contains(string(orig), "{{server:web}}/page") || strings.Contains(string(orig), web) {
+		t.Errorf("the shared scenario was changed: %s", orig)
+	}
+	// An unknown name is left as written (validation rejects it earlier).
+	if g := u.expandTurns([]Turn{{Text: "{{server:nope}}"}}); g[0].Text != "{{server:nope}}" {
+		t.Errorf("unknown reference: %q", g[0].Text)
+	}
+}
+
+// The expanded URL is what the model script puts on the wire, and a URL the extension echoes back is
+// normalized to <server:NAME>, so the trace of each lane (its own ports) is the same.
+func TestExpandedScriptReachesTheWireAndNormalizesToTheServerName(t *testing.T) {
+	u, _ := startUp(t, map[string]ServerSpec{"web": {Routes: []Route{{Path: "/x", Body: "ok"}}}})
+	llm, err := newFakeLLM(u.expandTurns([]Turn{{ToolCalls: []ToolCall{{Name: "fetch_content", Arguments: map[string]any{"url": "{{server:web}}/page"}}}}}), func(string, any) {})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer llm.close()
+	resp, err := http.Post(llm.baseURL()+"/chat/completions", "application/json", strings.NewReader(`{"messages":[{"role":"user","content":"go"}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	out, _ := io.ReadAll(resp.Body)
+	if !strings.Contains(string(out), `\"url\":\"`+u.URL("web")+`/page\"`) {
+		t.Errorf("the wire lacks the expanded URL: %s", out)
+	}
+	n := NewNormalizer("", "", "")
+	u.normalize(n)
+	if s := string(n.Data(map[string]any{"arguments": `{"url":"` + u.URL("web") + `/page"}`})); !strings.Contains(s, `<server:web>/page`) || strings.Contains(s, "127.0.0.1") {
+		t.Errorf("normalized = %s", s)
+	}
+}
+
+func TestScenarioValidatesServerReferencesInTheLLMScript(t *testing.T) {
+	ok := func(mod func(*Scenario)) error {
+		sc := &Scenario{Name: "a", Steps: []Step{{RPC: map[string]any{"type": "prompt", "message": "x"}}},
+			Servers: map[string]ServerSpec{"web": {Routes: []Route{{Path: "/x", Body: "ok"}}}},
+			LLM:     []Turn{{Text: "see {{server:web}}", ToolCalls: []ToolCall{{Name: "fetch_content", Arguments: map[string]any{"url": "{{server:web}}/page"}}}}, {Text: "done"}}}
+		mod(sc)
+		return sc.Validate()
+	}
+	if err := ok(func(*Scenario) {}); err != nil {
+		t.Fatalf("valid script rejected: %v", err)
+	}
+	for name, c := range map[string]struct {
+		mod  func(*Scenario)
+		want string
+	}{
+		"unknown server in turn text":   {func(s *Scenario) { s.LLM[1].Text = "{{server:nope}}" }, "llm turn 2 text"},
+		"unknown server in an argument": {func(s *Scenario) { s.LLM[0].ToolCalls[0].Arguments["url"] = "{{server:nope}}/p" }, `llm turn 1 tool call 1 (fetch_content) arguments refers to server "nope"`},
+		"unknown server in a nested array": {func(s *Scenario) {
+			s.LLM[0].ToolCalls[0].Arguments["urls"] = []any{map[string]any{"u": []any{"{{server:nope}}"}}}
+		}, `server "nope"`},
+		"server reference with no servers": {func(s *Scenario) { s.Servers = nil }, `server "web"`},
+	} {
+		err := ok(c.mod)
+		if err == nil {
+			t.Errorf("%s: accepted", name)
+		} else if !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%s: error %q lacks %q", name, err, c.want)
+		}
+	}
+}

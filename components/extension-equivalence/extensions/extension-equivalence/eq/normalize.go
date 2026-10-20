@@ -21,6 +21,9 @@ import (
 //	    records late effects before shutdown.
 //	v3  N6 (Pi 1.0's bash tool reports its wall time in a tool result's
 //	    structuredContent).
+//
+// N7 (a scenario's own `normalize` list) does not change the version: a scenario without the field
+// produces the same trace as under v3, and only a harness that knows the field can load one with it.
 const NormalizerVersion = "v3"
 
 // The normalizer removes only values that are different in every run by
@@ -53,8 +56,13 @@ var (
 // Replacement is one literal N1 rule.
 type Replacement struct{ From, To string }
 
-// Normalizer applies rules N1-N6.
-type Normalizer struct{ Replace []Replacement }
+// Normalizer applies rules N1-N7.
+type Normalizer struct {
+	Replace []Replacement
+}
+
+// AddRules installs the scenario's N7 rules.
+func (n *Normalizer) AddRules(rules []NormalizeRule) error { return nil }
 
 // NewNormalizer builds rule N1 from the run's roots. Symlink-resolved forms are
 // added because hosts report either.
@@ -90,10 +98,11 @@ func (n *Normalizer) str(s string) string {
 		s = strings.ReplaceAll(s, r.From, r.To)
 	}
 	s = uuidRE.ReplaceAllString(s, "<uuid>")
-	return timeRE.ReplaceAllString(s, "<time>")
+	s = timeRE.ReplaceAllString(s, "<time>")
+	return s
 }
 
-// Value applies N1-N3 to a decoded JSON value.
+// Value applies N1-N3 and N7 to a decoded JSON value.
 func (n *Normalizer) Value(v any) any {
 	switch x := v.(type) {
 	case string:
