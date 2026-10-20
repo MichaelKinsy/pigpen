@@ -18,6 +18,9 @@ func readJSONFile(t *testing.T, rel string) map[string]any {
 	t.Helper()
 	data, err := os.ReadFile(filepath.FromSlash(rel))
 	if err != nil {
+		if os.IsNotExist(err) {
+			t.Skip("the Package files are not beside this module (a mutation run copies the module alone); the repository run checks them")
+		}
 		t.Fatal(err)
 	}
 	var m map[string]any
