@@ -168,7 +168,7 @@ M = [
  ("arming-case-insensitive-always", "arming.go", "if !rule.Arms.CaseSensitive {\n\t\tpattern = \"(?i)\" + pattern", "if true {\n\t\tpattern = \"(?i)\" + pattern"),
  ("arming-expiry-ignored", "arming.go", "if !t.armed[id].expiresAt.After(now) {", "if false {"),
  ("arming-redirect-never-arms", "guardcore_wire.go", "sinks = writeSinkTargets(StripDataText(view.Command).Text)", "sinks = nil"),
- ("armed-exempt-ignored", "guardcore_wire.go", "if !slices.Contains(cfg.Action.ExemptRules, hit.ID) {", "if true {"),
+ ("armed-exempt-ignored", "guardcore_wire.go", "if !slices.Contains(cfg.Action.ExemptRules, hit.ID) {", "if true || !slices.Contains(cfg.Action.ExemptRules, hit.ID) {"),
  ("armed-confirm-is-hold", "guardcore_wire.go", "case \"confirm\":\n\t\t\tpattern.Action = \"dialog\"", "case \"confirm\":\n\t\t\tpattern.Action = \"hold\""),
  ("armed-block-is-confirm", "guardcore_wire.go", "if hit.Action == \"block\" {\n\t\t\tseverity = SeverityDeny", "if false {\n\t\t\tseverity = SeverityDeny"),
  ("arming-survives-session", "guardcore_wire.go", "w.gc.arming.Reset()", "_ = w.gc.arming"),
