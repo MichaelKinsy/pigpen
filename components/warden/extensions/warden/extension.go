@@ -34,16 +34,6 @@ type Options struct {
 	Now      func() time.Time
 }
 
-type stats struct {
-	Inspected, Judged, Held, Warned, Approved, Errors    int
-	Steers, SteersSkipped, Stuck, DoneChecks, Unverified int
-}
-
-type traceEntry struct {
-	At   time.Time
-	Line string
-}
-
 type warden struct {
 	opts Options
 
@@ -66,7 +56,13 @@ type warden struct {
 	lastPrompt    string
 	noted         map[string]bool
 	stats         stats
-	trace         []traceEntry
+	trace         *Trace
+	// widget holds each guard's latest line, in recency order.
+	widget []widgetLine
+	// budgetExhausted: a judge failed for lack of budget; set by noteError.
+	budgetExhausted bool
+	// adaptor is the per-model steer adaptation; the default sends everything.
+	adaptor steerAdaptor
 }
 
 // Extension returns the guard.
@@ -74,13 +70,19 @@ func Extension() *sdk.Extension { return New(Options{}) }
 
 // New returns the guard with injectable parts.
 func New(o Options) *sdk.Extension {
+	e, _ := newWarden(o)
+	return e
+}
+
+// newWarden builds the extension and its state; tests use the state to drive the internal API.
+func newWarden(o Options) (*sdk.Extension, *warden) {
 	if o.Getenv == nil {
 		o.Getenv = os.Getenv
 	}
 	if o.Now == nil {
 		o.Now = time.Now
 	}
-	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}}
+	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}}
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
@@ -91,7 +93,7 @@ func New(o Options) *sdk.Extension {
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); return nil, nil })
-	return e
+	return e, w
 }
 
 // ---------------------------------------------------------------------------
@@ -256,8 +258,9 @@ func (w *warden) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) 
 	w.load(ctx)
 	w.window = NewAttemptWindow(w.cfg.Stuck.Window)
 	w.evidence = EmptyEvidence()
-	w.stats = stats{}
-	w.trace = nil
+	w.stats = newStats()
+	w.trace.Clear()
+	w.widget, w.budgetExhausted = nil, false
 	w.noted = map[string]bool{}
 	w.steersThisRun, w.doneNudged, w.continuation, w.lastPrompt = 0, false, false, ""
 	w.repeats.Reset()

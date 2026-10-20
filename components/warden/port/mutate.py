@@ -13,7 +13,7 @@ M = [
  ("bearer-not-redacted", "redact.go", '\tout = reBearer.ReplaceAllString(out, "${1}"+redacted)\n', ''),
  ("config-world-readable", "configfile.go", "0o600); err != nil", "0o644); err != nil"),
  ("budget-off-by-one", "backend.go", "b.used >= b.Max", "b.used > b.Max"),
- ("steer-budget-off-by-one", "steer.go", "w.steersThisRun >= cfg.SteerBudget", "w.steersThisRun > cfg.SteerBudget"),
+ ("steer-budget-off-by-one", "steer_core.go", "w.steersThisRun >= cfg.SteerBudget", "w.steersThisRun > cfg.SteerBudget"),
  ("repeat-window-empty", "guard.go", "window: 3}", "window: 0}"),
  ("stale-prejudgment-reused", "action_guard.go", "ready.key == key &&", "true &&"),
  ("force-push-flag-f-missed", "patterns.go", "(?:-f|--force)(?:[^-\\w]|$)", "(?:--force)(?:[^-\\w]|$)"),
@@ -38,6 +38,22 @@ M = [
  ("typesafe-retries", "backend.go", "none := 0", "none := 2"),
  ("env-consent-persisted", "extension.go", "\tfile := w.fileCfg\n", "\tfile := w.cfg\n"),
  ("status-claims-unready-judge", "steer.go", "w.statusBackend(cfg), cfg.Mode", "describeBackendShort(cfg.Backend), cfg.Mode"),
+ # Steering and trace core (steer_core.go).
+ ("steer-critical-set-narrowed", "steer_core.go", "SteerGuardStuck: true, SteerGuardDone: true, SteerGuardRunaway: true, SteerGuardSubagent: true", "SteerGuardStuck: true, SteerGuardDone: true, SteerGuardRunaway: true"),
+ ("steer-critical-is-any-guard", "steer_core.go", "\t\tif !criticalSteerGuards[g] {\n\t\t\tcritical = false", "\t\tif criticalSteerGuards[g] {\n\t\t\tcritical = false"),
+ ("steer-repeat-delivers", "steer_core.go", "(!over && !w.repeats.Seen(content))", "(!over && !w.repeats.Seen(content) || true)"),
+ ("steer-over-budget-records-fingerprint", "steer_core.go", "deliver := critical || (!over && !w.repeats.Seen(content))", "seen := w.repeats.Seen(content)\n\tdeliver := critical || (!over && !seen)"),
+ ("steer-guard-not-counted", "steer_core.go", "\t\tw.stats.SteerGuards[g]++\n", ""),
+ ("steer-skip-not-counted", "steer_core.go", "w.stats.SteersSkipped++\n\t\tw.mu.Unlock()\n\t\treturn false", "w.mu.Unlock()\n\t\treturn false"),
+ ("steer-trigger-no-continuation", "steer_core.go", "if opt.TriggerTurn {\n\t\tw.continuation = true", "if false {\n\t\tw.continuation = true"),
+ ("steer-display-override-ignored", "steer_core.go", "display = *opt.Display", "_ = opt.Display"),
+ ("budget-available-allows-spent", "steer_core.go", "w.steersThisRun < cfg.SteerBudget", "w.steersThisRun <= cfg.SteerBudget"),
+ ("record-keeps-old-guard-line", "steer_core.go", "w.widget = append(w.widget[:i:i], w.widget[i+1:]...)\n\t\t\tbreak", "_ = i\n\t\t\tbreak"),
+ ("trace-limit-unbounded", "steer_core.go", "if len(t.items) > t.limit {", "if false {"),
+ ("trace-amend-dropped-entry", "steer_core.go", "\t\t\te.Details = append(e.Details, note)\n", ""),
+ ("adaptive-trace-only-sent", "steer_core.go", "if w.adaptor.request(model, kind, cfg.Steers) != SteerTraceOnly {", "if true {"),
+ ("adaptive-muted-not-counted", "steer_core.go", "w.bump(func(s *stats) { s.SteersMuted++ })", ""),
+ ("note-error-budget-flag-lost", "steer_core.go", "w.budgetExhausted = true", "_ = code"),
 ]
 EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
 only = set(sys.argv[1:])
