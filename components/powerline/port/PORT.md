@@ -4,7 +4,7 @@
 |---|---|
 | Original | `pi-powerline-footer` 0.19.1 by Nico Bailon, https://github.com/nicobailon/pi-powerline-footer, commit `859dee671b633fb533b07ceba3e6c1ab1c43360a`. MIT as declared in its package.json; the repository ships no LICENSE file (the owner ruled: treat it as MIT, say so in CREDITS.md) |
 | Oracle | Pi 1.0.0, Node 24.19.0, the unmodified package at `port/oracle` (dev dependencies `@earendil-works/pi-*` 0.84.4 from its own `package-lock.json`, used only by `port/drive/drive.mjs`; every render state gives the same output with Pi 1.0.0's own pi-tui, pi-ai and pi-coding-agent, see below) |
-| Target | PiG 0.4.0+1.0.0 (build `76022638`), go1.27.1 |
+| Target | PiG 0.5.0 (Pi 1.3.0 build `1402973a`, the build `pigeq` pins), go1.27 |
 | Original's tests | 249 cases in 26 files. Slice: 107 cases in 11 files, 82 exact twins and 25 named skips; the other 142 (15 files) are deferred by name in `port/slices.json` |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
@@ -17,6 +17,10 @@ currency conversion. **Not ported** (named in `port/slices.json`): the bash-mode
 send, the welcome header and overlay, the working-message vibes, quote reply, `/cd`, the editor chrome (borders, fast renderer,
 shortcuts, autocomplete composition) and the editor profiler. The original's `shell_mode` and `subagents` segments are therefore
 never visible (the first needs bash mode, the second renders nothing in the original either).
+
+### Ported in the follow-up (version 0.2.0)
+
+`auto-follow-up.ts` and the `input` handler of `index.ts` (Jev classifier: POST to `api.typesafe.ai/v1/systemone`, 1500 ms for the exchange, confidence at least 0.8, requests serialised, Esc during the call returns the messages to the editor, a session switch during the call routes nothing into the new session, any failure keeps the message as steering and says so) are in `follow_up.go`, `followup_ext.go` and `auto_follow_up.go`. `editor-performance.ts` (options, counters, report) and `editor-composition.ts` are ported as `editor_performance.go` and `editor_composition.go`; nothing calls them, because the call site is the editor setup (`setEditorComponent`), which the Go SDK cannot do (PiG item C3). `/powerline-perf` and `POWERLINE_DEBUG_PERF` stay refused. Evidence: 10 more exact twins (6 auto-follow-up, 2 editor-performance, 2 editor-composition), 3 scenarios recorded from the original under Pi 1402973a, 146 mutations killed.
 
 ### Refusal of what is not ported
 
