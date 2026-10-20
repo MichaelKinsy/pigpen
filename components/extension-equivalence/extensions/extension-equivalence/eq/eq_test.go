@@ -717,3 +717,102 @@ func TestNormalizerCoversStringSlices(t *testing.T) {
 		t.Fatalf("got %#v, want %#v", got, want)
 	}
 }
+
+// N7: a scenario's own rules hide a value the extension invents on every run (pi-web-access's
+// responseId: Date.now in base 36 plus six random characters), in both lanes and in every kind of
+// event, and nothing else.
+func TestScenarioNormalizeRulesApplyAfterTheBuiltInRulesToEveryString(t *testing.T) {
+	rules := []NormalizeRule{
+		{Pattern: `[a-z0-9]{8,12}-[a-z0-9]{6}`, Replacement: "<id>"},
+		{Pattern: `(?i)id=(\w+)`, Replacement: "ID:$1"},
+		{Pattern: `never matches anything`, Replacement: "x"},
+	}
+	n := NewNormalizer("/tmp/eq1/work", "/tmp/eq1", "/tmp/eq1/home")
+	if err := n.AddRules(rules); err != nil {
+		t.Fatal(err)
+	}
+	got := string(n.Data(map[string]any{
+		"text":             "stored as mfx3k2a9j-q7w8e1 at /tmp/eq1/work/a",
+		"details":          map[string]any{"responseId": "mfx3k2a9j-q7w8e1", "list": []any{"id=abc"}},
+		"mfx3k2a9j-q7w8e1": "a key",
+		"args":             []string{"--id", "mfx3k2a9j-q7w8e1"},
+		"stamp":            "2026-09-29T16:30:24.531Z",
+		"untouched":        "extension text",
+		"number":           7,
+	}))
+	want := `{"<id>":"a key","args":["--id","<id>"],"details":{"list":["ID:abc"],"responseId":"<id>"},"number":7,"stamp":"<time>","text":"stored as <id> at <cwd>/a","untouched":"extension text"}`
+	if got != want {
+		t.Errorf("got  %s\nwant %s", got, want)
+	}
+	// Rules run in list order, after N1 to N3: a later rule sees the earlier rule's output.
+	n = NewNormalizer("", "", "")
+	if err := n.AddRules([]NormalizeRule{{Pattern: `<time>`, Replacement: "T"}, {Pattern: `T`, Replacement: "U"}}); err != nil {
+		t.Fatal(err)
+	}
+	if s := n.str("at 2026-09-29T16:30:24Z"); s != "at U" {
+		t.Errorf("order or stage: %q", s)
+	}
+	// A normalizer without rules is exactly N1 to N3.
+	if s := NewNormalizer("", "", "").str("mfx3k2a9j-q7w8e1"); s != "mfx3k2a9j-q7w8e1" {
+		t.Errorf("no rules must change nothing: %q", s)
+	}
+}
+
+func TestScenarioNormalizeRulesReachEveryRecordedEvent(t *testing.T) {
+	rec := &recorder{step: "01-x", norm: NewNormalizer("", "", "")}
+	if err := rec.norm.AddRules([]NormalizeRule{{Pattern: `r-[0-9a-f]{6}`, Replacement: "<rid>"}}); err != nil {
+		t.Fatal(err)
+	}
+	rec.add(ChLLM, map[string]any{"messages": []any{map[string]any{"role": "tool", "text": "responseId: r-1a2b3c"}}})
+	rec.add(ChExec, map[string]any{"cmd": "x", "args": []string{"r-9f8e7d"}})
+	v, _ := decodeAny([]byte(`{"type":"tool_execution_end","toolName":"t","isError":false,"result":{"content":[{"type":"text","text":"id r-00ff00"}],"details":{"responseId":"r-00ff00"}}}`))
+	_, data, _ := rec.norm.ProjectHost(v.(map[string]any), DefaultCapture)
+	all := rec.events[0].Data
+	all = append(append(all, rec.events[1].Data...), data...)
+	if s := string(all); strings.Contains(s, "r-1a") || strings.Contains(s, "r-9f") || strings.Contains(s, "r-00") || strings.Count(s, "<rid>") != 4 {
+		t.Errorf("rule missed an event: %s", all)
+	}
+}
+
+func TestScenarioValidatesNormalizeRules(t *testing.T) {
+	ok := func(rules ...NormalizeRule) error {
+		return (&Scenario{Name: "a", Steps: []Step{{RPC: map[string]any{"type": "get_state"}}}, Normalize: rules}).Validate()
+	}
+	if err := ok(NormalizeRule{Pattern: `\b[a-z0-9]{6}\b`, Replacement: "<id>"}, NormalizeRule{Pattern: `matches nothing`, Replacement: ""}); err != nil {
+		t.Fatalf("valid rules rejected: %v", err)
+	}
+	for name, rule := range map[string]NormalizeRule{
+		"a pattern that does not compile": {Pattern: `(unclosed`, Replacement: "x"},
+		"a lookahead (not RE2)":           {Pattern: `a(?=b)`, Replacement: "x"},
+		"an empty pattern":                {Pattern: "", Replacement: "x"},
+	} {
+		err := ok(NormalizeRule{Pattern: `fine`, Replacement: "y"}, rule)
+		if err == nil {
+			t.Errorf("%s: accepted", name)
+		} else if !strings.Contains(err.Error(), "normalize rule 1") {
+			t.Errorf("%s: the error must name the rule: %v", name, err)
+		}
+	}
+}
+
+func TestLoadScenarioReadsNormalizeAndRejectsABadPattern(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, normalize string) string {
+		p := filepath.Join(dir, name+".json")
+		body := `{"name":"` + name + `","steps":[{"rpc":{"type":"get_state"}}],"normalize":` + normalize + `}`
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	sc, err := LoadScenario(write("good", `[{"pattern":"a+","replacement":"A"}]`))
+	if err != nil || len(sc.Normalize) != 1 || sc.Normalize[0].Pattern != "a+" || sc.Normalize[0].Replacement != "A" {
+		t.Fatalf("good: %+v %v", sc, err)
+	}
+	if _, err := LoadScenario(write("bad", `[{"pattern":"(","replacement":"A"}]`)); err == nil || !strings.Contains(err.Error(), "bad.json") || !strings.Contains(err.Error(), "normalize rule 0") {
+		t.Errorf("bad pattern: %v", err)
+	}
+	if _, err := LoadScenario(write("typo", `[{"patern":"a","replacement":"A"}]`)); err == nil {
+		t.Error("an unknown rule field was accepted")
+	}
+}

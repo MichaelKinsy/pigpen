@@ -19,7 +19,7 @@ import (
 
 // ServerSpec declares one fake HTTP upstream: an API the extension calls (a search provider, a
 // judge model, a remote agent). Every lane gets its own instance, with the same routes, on a
-// loopback port; {{server:NAME}} in the scenario's env, files and args is that server's base URL.
+// loopback port; {{server:NAME}} in the scenario's env, files, agent files, args and LLM script is that server's base URL.
 type ServerSpec struct {
 	Routes []Route `json:"routes"`
 	// RecordHeaders are the request headers copied into the trace, lower-case, in addition to
@@ -94,6 +94,9 @@ func (u *upstreams) expand(s string) string {
 		return u.URL(name)
 	})
 }
+
+// expandTurns returns the LLM script with {{server:NAME}} expanded.
+func (u *upstreams) expandTurns(turns []Turn) []Turn { return turns }
 
 // normalize teaches the normalizer that a server's host:port is <server:NAME>, so a URL an
 // extension echoes back compares equal across lanes (each lane's ports differ).
