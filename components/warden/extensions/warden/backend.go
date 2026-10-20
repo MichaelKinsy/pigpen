@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"sort"
 	"strconv"
 	"sync"
@@ -40,6 +41,8 @@ type Budget struct {
 	mu   sync.Mutex
 	used int
 	Max  int
+	// inputTokens and outputTokens add up what the successful requests reported (pi-typesafe getUsage).
+	inputTokens, outputTokens int
 }
 
 // Used is the number of requests attempted.
@@ -53,7 +56,31 @@ func (b *Budget) Used() int {
 func (b *Budget) Reset() {
 	b.mu.Lock()
 	b.used = 0
+	b.inputTokens, b.outputTokens = 0, 0
 	b.mu.Unlock()
+}
+
+// recordSuccess adds one successful request's token usage; a negative count counts as none.
+func (b *Budget) recordSuccess(input, output int) {
+	if b == nil {
+		return
+	}
+	b.mu.Lock()
+	b.inputTokens += max(input, 0)
+	b.outputTokens += max(output, 0)
+	b.mu.Unlock()
+}
+
+// typesafeUSDPerMTok is pi-typesafe's default price: input tokens only, $42 per billion (usage.ts).
+const typesafeUSDPerMTok = 0.042
+
+// Usage is the session counters pi-typesafe's getUsage() returns: requests started, tokens, and the input-token cost
+// rounded to a micro-dollar.
+func (b *Budget) Usage() BenchUsage {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return BenchUsage{RequestsStarted: b.used, InputTokens: float64(b.inputTokens), OutputTokens: float64(b.outputTokens),
+		EstimatedUSD: math.Round(float64(b.inputTokens)*typesafeUSDPerMTok/1e6*1e6) / 1e6}
 }
 
 func (b *Budget) take(label string) error {
@@ -140,6 +167,7 @@ func (j *EvaluatorJudge) Evaluate(ctx context.Context, r Request) (Evaluation, e
 	if err != nil {
 		return Evaluation{}, j.safeError(err)
 	}
+	j.Budget.recordSuccess(res.Usage.InputTokens, res.Usage.OutputTokens)
 	out := Evaluation{Model: res.Model, ElapsedMs: int(time.Since(start).Milliseconds()), Answers: map[string]Answer{}}
 	for name, a := range res.Answers {
 		switch v := a.(type) {

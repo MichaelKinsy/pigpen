@@ -68,6 +68,10 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 		return w.reportCommand(ctx, rest)
 	case "init":
 		return w.initCommand(ctx, rest)
+	case "audit": // AUDIT-LANE HOOK (audit_cmd.go)
+		return w.audit(ctx)
+	case "bench": // AUDIT-LANE HOOK (bench_cmd.go)
+		return w.bench(ctx, rest)
 	default:
 		w.show(ctx, "unknown subcommand "+sub+".\n\n"+help)
 	}

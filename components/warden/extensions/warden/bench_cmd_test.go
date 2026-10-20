@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func benchProject(t *testing.T, o harnessOpts) *harness {
+func benchCommandProject(t *testing.T, o harnessOpts) *harness {
 	t.Helper()
 	cwd := t.TempDir()
 	writeFile(t, filepath.Join(cwd, "pi-warden.md"), "# No console statements\nCode must not contain `console.log`.\n")
@@ -20,7 +20,7 @@ func benchProject(t *testing.T, o harnessOpts) *harness {
 // twin(wiring): tests/extension.test.ts:2624 (/warden bench measures with a built-in sample and sends nothing without
 // consent). The fake backend reports 10 input tokens per request, not the upstream fixture's 50.
 func TestBenchMeasuresWithTheBuiltInSample(t *testing.T) {
-	h := benchProject(t, harnessOpts{cfg: on(BackendTypeSafe)})
+	h := benchCommandProject(t, harnessOpts{cfg: on(BackendTypeSafe)})
 	h.host.Command("warden", "bench --runs 3")
 	if h.ts.count() != 3 {
 		t.Fatalf("%d requests, want one per run", h.ts.count())
@@ -43,7 +43,7 @@ func TestBenchMeasuresWithTheBuiltInSample(t *testing.T) {
 }
 
 func TestBenchWithoutConsentSendsNothingAndBadArgsAreWarned(t *testing.T) {
-	h := benchProject(t, harnessOpts{})
+	h := benchCommandProject(t, harnessOpts{})
 	h.host.Command("warden", "bench")
 	n := h.notices()
 	if got := n[len(n)-1]; got != "Bench sent nothing: Jev judgments are off. warden: Jev judgments are off (no consent). Run /warden enable." {

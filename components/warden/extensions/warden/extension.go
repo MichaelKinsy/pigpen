@@ -67,6 +67,8 @@ type warden struct {
 	tools toolsState
 	// rules is the project rules guard's state (rules_wire.go).
 	rules *rulesState
+	// auditState is the /warden audit running flag (audit_cmd.go).
+	auditState auditState
 }
 
 // Extension returns the guard.
@@ -96,6 +98,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
+	e.OnEvent(sdk.EventInput, w.onAuditInput) // AUDIT-LANE HOOK: replaced by the supervision lane's input registry when it lands
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); w.rulesShutdown(); return nil, nil })
 	// TOOLS-LANE HOOK: the three tools and the compaction evidence appendix (tools_wiring.go).
 	w.registerWardenTools(e)
