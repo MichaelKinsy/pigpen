@@ -1,7 +1,7 @@
 package pi_goal_x
 
 import (
-	"strings"
+	"encoding/json"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -72,23 +72,38 @@ func goalDelegatedContext(data map[string]any) (any, error) {
 	return nil, nil
 }
 
-// goalMessageRenderFunc draws one goal message (details as decoded JSON) at width; expanded is the host's expand state.
+// goalMessageRenderFunc draws one goal message (decoded JSON) at width; expanded is the host's expand state.
 type goalMessageRenderFunc func(message map[string]any, expanded bool, width int, theme goalTheme) []string
 
-// goalEventRenderer and goalAuditEventRenderer are renderGoalEvent and renderGoalAuditEvent of goal-format.ts. They are the seam
-// goal_format.go's renderers plug into; until then a message shows its plain content.
+// goalEventRenderer and goalAuditEventRenderer are renderGoalEvent and renderGoalAuditEvent of goal-format.ts.
 var (
-	goalEventRenderer      goalMessageRenderFunc = renderGoalMessagePlain
-	goalAuditEventRenderer goalMessageRenderFunc = renderGoalMessagePlain
+	goalEventRenderer      goalMessageRenderFunc = renderGoalEventMessage
+	goalAuditEventRenderer goalMessageRenderFunc = renderGoalAuditEventMessage
 )
 
-func renderGoalMessagePlain(message map[string]any, _ bool, width int, _ goalTheme) []string {
-	text, _ := message["content"].(string)
-	var lines []string
-	for _, line := range strings.Split(text, "\n") {
-		lines = append(lines, truncateToWidth(line, width, "…", false))
+// jsonValue is the value as the *jsObject tree the ported modules read (decoded JSON in, ordered objects out).
+func jsonValue(v any) any {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil
 	}
-	return lines
+	out, err := parseJSON(b)
+	if err != nil {
+		return nil
+	}
+	return out
+}
+
+func renderGoalEventMessage(message map[string]any, expanded bool, width int, theme goalTheme) []string {
+	return renderGoalEvent(jsonValue(message["details"]), expanded, theme).Render(width)
+}
+
+func renderGoalAuditEventMessage(message map[string]any, _ bool, width int, theme goalTheme) []string {
+	phase := ""
+	if d := asRecord(jsonValue(message["details"])); d != nil {
+		phase, _ = d.str("phase")
+	}
+	return renderGoalAuditEvent(message["content"], phase, theme).Render(width)
 }
 
 func goalMessageRenderer(pick func() goalMessageRenderFunc) sdk.RendererFunc {
