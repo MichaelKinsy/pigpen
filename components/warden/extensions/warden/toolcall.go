@@ -110,6 +110,10 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	verdict := w.guard.Inspect(newContext(), call, conv, InspectOptions{Config: cfg.Action, Cwd: ctx.Cwd(), Judge: judge, Timeout: w.timeout(cfg), Git: w.opts.Git, GuardExtras: w.gcExtras(cfg)})
 	// guardcore: armed rules fire as deterministic hits on top of the verdict.
 	verdict = w.gcArmed(cfg, tool, input, verdict)
+	// SECURITY: the proposed write may introduce a security weakness (a steer of its own, before the call's notes).
+	if verdict.Judgment != nil {
+		w.securityWrite(ctx, cfg, verdict.Judgment.SecurityRisk, verdict.Summary.Path)
+	}
 
 	dv := deliveryVerdict(verdict)
 	mode := w.mode(cfg, ctx)
@@ -150,6 +154,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	if len(notes) > 0 {
 		cn.addGuard(SteerGuardAction)
 	}
+	w.slopNote(ctx, cfg, tool, input, verdict, cn)             // SECURITY: slop findings wait with the call's content notes
 	w.rulesVerdicts(ctx, cfg, plan, tool, verdict.Summary, cn) // rules hook: await the rules requests, log, trace, path notes
 	deliverNotes := func(proceeds bool) { w.deliverCallNotes(ctx, cfg, cn, proceeds, notePathOf(verdict.Summary, plan)) }
 	reasons := strings.Join(verdict.Reasons, "; ")

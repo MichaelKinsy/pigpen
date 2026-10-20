@@ -1,7 +1,9 @@
 package warden
 
 import (
+	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -513,4 +515,146 @@ func TestNoNotifierOnThisMachineIsSilent(t *testing.T) {
 	if got := h.w.notificationsStatus(h.w.cfg); got != "Desktop notifications: on (no notifier found on this machine; cooldown 0 ms)." {
 		t.Fatal(got)
 	}
+}
+
+// --- security-write and slop -------------------------------------------------------------------------------------
+
+// twin: tests/extension.test.ts:757
+func TestSecurityWeaknessesInWrittenContentShareTheActionRequestAndSteer(t *testing.T) {
+	h := startHarness(t, harnessOpts{cfg: securityConfig(nil)})
+	h.ts.set(map[string]float64{"security_risk": 0.95})
+	h.say("user", "make the client work")
+	h.start()
+	h.toolCall("write", "c1", map[string]any{"path": filepath.Join(h.cwd, "client.ts"), "content": "const agent = new Agent({ rejectUnauthorized: false });"})
+	if h.ts.count() != 1 {
+		t.Fatalf("the security question rides the action request: %d requests", h.ts.count())
+	}
+	steers := h.steers()
+	if len(steers) == 0 || !strings.Contains(steers[0].Content, "security weakness") || steers[0].Options["deliverAs"] != "steer" {
+		t.Fatalf("steers %+v", steers)
+	}
+	found := false
+	for _, n := range h.notices() {
+		found = found || strings.Contains(n, "security weakness")
+	}
+	if !found {
+		t.Fatalf("notices %v", h.notices())
+	}
+	// Below the threshold, or with the security guard off, nothing is said.
+	h2 := startHarness(t, harnessOpts{cfg: securityConfig(func(c *Config) { c.Security.Enabled = false })})
+	h2.ts.set(map[string]float64{"security_risk": 0.95})
+	h2.say("user", "make the client work")
+	h2.start()
+	h2.toolCall("write", "c1", map[string]any{"path": filepath.Join(h2.cwd, "client.ts"), "content": "x"})
+	if len(h2.steers()) != 0 {
+		t.Fatal("security.enabled false asks nothing and says nothing")
+	}
+}
+
+func TestSecurityWriteSteerIsASteerOfItsOwnAndWatchedByKind(t *testing.T) {
+	h := startHarness(t, harnessOpts{cfg: securityConfig(nil)})
+	adaptor := &recordingAdaptor{}
+	h.w.adaptor = adaptor
+	h.ts.set(map[string]float64{"security_risk": 0.95})
+	h.say("user", "make the client work")
+	h.start()
+	h.toolCall("write", "c1", map[string]any{"path": filepath.Join(h.cwd, "client.ts"), "content": "x"})
+	if len(adaptor.added) != 1 || len(adaptor.added[0].kinds) != 1 || adaptor.added[0].kinds[0] != SteerKindSecurityWrite || adaptor.added[0].subject.Path == "" {
+		t.Fatalf("watched %+v", adaptor.added)
+	}
+}
+
+// twin: tests/extension.test.ts:1635
+// (steers are shown by default in the port, so the twin sets steerVisible false to read the original's default.)
+func TestSlopSymptomsSteerAfterTheWriteWithoutHoldingAndEscalateOnRepeats(t *testing.T) {
+	h := startHarness(t, harnessOpts{cfg: securityConfig(func(c *Config) { c.SteerVisible = false })})
+	h.ts.set(map[string]float64{"irreversible": 0.05, "off_task": 0.05, "should_proceed": 0.95, "slop_stub": 0.92, "slop_hedging": 0.75, "slop_comments": 0.1, "slop_dead": 0.1})
+	h.say("user", "write the module")
+	h.start()
+	write := func(id, name string) map[string]any {
+		return h.toolCall("write", id, map[string]any{"path": filepath.Join(h.cwd, "src", name), "content": "// TODO: implement\nexport const a = () => null;"})
+	}
+	if r := write("c1", "a.ts"); r != nil {
+		t.Fatalf("slop never holds: %v", r)
+	}
+	reqs := h.ts.reqs()
+	qs, _ := reqs[len(reqs)-1].Body["questions"].(map[string]any)
+	var ids []string
+	for id := range qs {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	if got := strings.Join(ids, ","); got != "irreversible,mutates,off_task,scope,security_risk,should_proceed,slop_comments,slop_dead,slop_hedging,slop_stub" {
+		t.Fatalf("questions %s", got)
+	}
+	steers := h.steers()
+	if len(steers) != 1 || steers[0].Display || steers[0].Options["deliverAs"] != "steer" {
+		t.Fatalf("hidden from the transcript, delivered as a steer: %+v", steers)
+	}
+	if !strings.Contains(steers[0].Content, "src/a.ts has stub or placeholder code where a working implementation is needed; hedging or vague notes. Fix it in your next edit: replace stubs") {
+		t.Fatalf("steer %q", steers[0].Content)
+	}
+	if n := h.notices(); !regexp.MustCompile(`warden · slop · src/a\.ts`).MatchString(n[len(n)-1]) {
+		t.Fatalf("notices %v", n)
+	}
+	// The original also asserts the widget chip carries `slop: stub 0.92, hedging 0.75`; the port draws its action
+	// line in steer.go traceLine, which names no slop scores (guard core / widget lane), so that assertion is not carried.
+
+	h.ts.set(map[string]float64{"irreversible": 0.05, "off_task": 0.05, "should_proceed": 0.95, "slop_stub": 0.1, "slop_hedging": 0.1, "slop_comments": 0.1, "slop_dead": 0.1})
+	h.toolCall("edit", "c2", map[string]any{"path": filepath.Join(h.cwd, "src", "a.ts"), "edits": []any{map[string]any{"oldText": "a", "newText": "b"}}})
+	if len(h.steers()) != 1 {
+		t.Fatal("clean content: no steer")
+	}
+
+	h.ts.set(map[string]float64{"irreversible": 0.05, "off_task": 0.05, "should_proceed": 0.95, "slop_stub": 0.9, "slop_hedging": 0.1, "slop_comments": 0.1, "slop_dead": 0.1})
+	write("c3", "b.ts")
+	write("c4", "c.ts")
+	steers = h.steers()
+	if len(steers) != 3 || !regexp.MustCompile(`\(3th time this session\)[\s\S]*standing rule`).MatchString(steers[2].Content) {
+		t.Fatalf("repeats escalate: %+v", steers)
+	}
+
+	visible := securityConfig(func(c *Config) { c.SteerVisible = true; c.SteerBudget = 0 })
+	h.reconfigure(visible)
+	write("c5", "d.ts")
+	if steers = h.steers(); len(steers) != 4 || !steers[3].Display {
+		t.Fatalf("steerVisible: %+v", steers)
+	}
+}
+
+func TestASlopSteerWaitsForTheCallToProceed(t *testing.T) {
+	// A held write never lands, so its slop note is dropped: a rm -rf hold carries no steer about content.
+	h := startHarness(t, harnessOpts{cfg: securityConfig(nil)})
+	h.ts.set(map[string]float64{"irreversible": 0.95, "slop_stub": 0.92})
+	h.say("user", "clean up")
+	h.start()
+	h.toolCall("write", "c1", map[string]any{"path": filepath.Join(h.cwd, "src", "a.ts"), "content": "// TODO: implement"})
+	for _, s := range h.steers() {
+		if strings.Contains(s.Content, "the content just written") {
+			t.Fatalf("a held write got a slop steer: %q", s.Content)
+		}
+	}
+}
+
+func TestSlopSteerTextNamesEachSymptomAndItsFix(t *testing.T) {
+	got := SlopSteer("a.ts, b.ts", []string{"dead", "comments"}, map[string]int{"dead": 3, "comments": 1})
+	want := "pi-warden: the content just written to a.ts, b.ts has dead or duplicated code (3th time this session); comments that restate the code. Fix it in your next edit: " + SlopFixes["dead"] + "; " + SlopFixes["comments"] + ". Treat this as a standing rule for the rest of the session."
+	if got != want {
+		t.Fatalf("%q", got)
+	}
+}
+
+// recordingAdaptor records what the guards ask to watch, with the subject.
+type recordingAdaptor struct {
+	sendAllAdaptor
+	added []watched
+}
+
+type watched struct {
+	kinds   []SteerKind
+	subject SteerSubject
+}
+
+func (r *recordingAdaptor) add(_ string, kinds []SteerKind, subject SteerSubject, _ bool) {
+	r.added = append(r.added, watched{kinds, subject})
 }

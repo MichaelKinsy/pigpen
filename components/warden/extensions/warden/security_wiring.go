@@ -41,10 +41,12 @@ type securityState struct {
 	lastNotifiedAt time.Time
 	// sending tracks fire-and-forget notification goroutines (a test waits on it).
 	sending sync.WaitGroup
+	// slopCounts: how often each slop symptom was steered this session; the third repeat becomes a standing rule.
+	slopCounts map[string]int
 }
 
 func newSecurityState() *securityState {
-	return &securityState{runaway: NewRunawayMonitor(), prose: NewProseTrend(), finals: NewRestatementWindow(4), notifier: &notifierProbe{}}
+	return &securityState{runaway: NewRunawayMonitor(), prose: NewProseTrend(), finals: NewRestatementWindow(4), notifier: &notifierProbe{}, slopCounts: map[string]int{}}
 }
 
 // resetSession is the security part of session_start (extension.ts 1033, 1053-1058).
@@ -56,6 +58,7 @@ func (s *securityState) resetSession() {
 	s.runaway.Reset()
 	s.stops, s.pending = 0, nil
 	s.notifier, s.lastNotifiedAt = &notifierProbe{}, time.Time{}
+	s.slopCounts = map[string]int{}
 }
 
 // resetPrompt is the security part of before_agent_start (1115-1120): a new user prompt starts a new restatement
@@ -253,7 +256,7 @@ func (w *warden) securityWrite(ctx sdk.Context, cfg Config, securityRisk *float6
 	if securityRisk == nil || *securityRisk < cfg.Security.Threshold || !w.adaptiveSend(ctx, cfg, SteerKindSecurityWrite) {
 		return
 	}
-	if w.steer(cfg, []SteerGuard{SteerGuardSecurity}, ctx, securityWriteSteer, SteerOptions{}) {
+	if w.steer(cfg, []SteerGuard{SteerGuardSecurity}, ctx, securityWriteSteer, SteerOptions{DeliverAs: "steer"}) {
 		w.watchSteer(ctx, cfg, []SteerKind{SteerKindSecurityWrite}, SteerSubject{Path: path}, false)
 	}
 }
