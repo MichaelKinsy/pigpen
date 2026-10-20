@@ -8,8 +8,8 @@ import (
 // The bash transcript store. upstream: bash-mode/transcript.ts. It is read by the widget renderer and written by the shell
 // session's reader goroutines, so it is guarded by a mutex (upstream is single-threaded).
 
-// compactLines is compactLines(): carriage returns removed, an empty chunk kept as one empty line, otherwise split at "\n".
-func compactLines(lines []string) []string {
+// bashCompactLines is bashCompactLines(): carriage returns removed, an empty chunk kept as one empty line, otherwise split at "\n".
+func bashCompactLines(lines []string) []string {
 	var normalized []string
 	for _, line := range lines {
 		sanitized := strings.ReplaceAll(line, "\r", "")
@@ -55,7 +55,7 @@ func (s *bashTranscriptStore) appendOutput(id, chunk string) {
 	if entry == nil || chunk == "" {
 		return
 	}
-	lines := compactLines([]string{chunk})
+	lines := bashCompactLines([]string{chunk})
 	if len(lines) == 0 {
 		return
 	}

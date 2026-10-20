@@ -307,8 +307,8 @@ func (b *bashMode) segmentData() shellSegmentData {
 	return data
 }
 
-// collapseWhitespace is text.replace(/\s+/g, " ") followed by trim().
-func collapseWhitespace(text string) string {
+// bashCollapseWhitespace is text.replace(/\s+/g, " ") followed by trim().
+func bashCollapseWhitespace(text string) string {
 	return strings.Join(strings.FieldsFunc(text, isJSSpace), " ")
 }
 
@@ -331,7 +331,7 @@ func (b *bashMode) renderBashTranscriptLines(width int, th theme) ([]string, err
 		if snapshot.TruncatedCommands == 1 {
 			plural = ""
 		}
-		text, err := th.Fg("dim", "… "+itoa(snapshot.TruncatedCommands)+" earlier command"+plural+" truncated")
+		text, err := th.Fg("dim", "… "+bashItoa(snapshot.TruncatedCommands)+" earlier command"+plural+" truncated")
 		if err != nil {
 			return nil, err
 		}
@@ -358,7 +358,7 @@ func (b *bashMode) renderBashTranscriptLines(width int, th theme) ([]string, err
 		case *command.ExitCode == 0:
 			status, err = th.Fg("success", "ok")
 		default:
-			status, err = th.Fg("error", "exit "+itoa(*command.ExitCode))
+			status, err = th.Fg("error", "exit "+bashItoa(*command.ExitCode))
 		}
 		if err != nil {
 			return nil, err
@@ -375,7 +375,7 @@ func (b *bashMode) renderBashTranscriptLines(width int, th theme) ([]string, err
 		if err != nil {
 			return nil, err
 		}
-		commandLine := truncateToWidth(collapseWhitespace(command.Command), max(8, width-8), "…")
+		commandLine := truncateToWidth(bashCollapseWhitespace(command.Command), max(8, width-8), "…")
 		lines = append(lines, " "+glyph+" "+commandLine+" "+open+status+closing)
 
 		output := command.Output

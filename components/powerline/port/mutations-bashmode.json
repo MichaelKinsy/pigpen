@@ -134,13 +134,13 @@
  {
   "name": "history-fish-oldest-first",
   "file": "bash_history.go",
-  "find": "entries = reverseStrings(parseFishHistory(raw))",
+  "find": "entries = bashReverseStrings(parseFishHistory(raw))",
   "replace": "entries = parseFishHistory(raw)"
  },
  {
   "name": "history-bash-oldest-first",
   "file": "bash_history.go",
-  "find": "entries = reverseStrings(parseBashHistory(strings.Split(raw, \"\\n\")))",
+  "find": "entries = bashReverseStrings(parseBashHistory(strings.Split(raw, \"\\n\")))",
   "replace": "entries = parseBashHistory(strings.Split(raw, \"\\n\"))"
  },
  {
@@ -722,8 +722,8 @@
  {
   "name": "transcript-exit-status-color",
   "file": "bash_mode.go",
-  "find": "th.Fg(\"error\", \"exit \"+itoa(*command.ExitCode))",
-  "replace": "th.Fg(\"warning\", \"exit \"+itoa(*command.ExitCode))"
+  "find": "th.Fg(\"error\", \"exit \"+bashItoa(*command.ExitCode))",
+  "replace": "th.Fg(\"warning\", \"exit \"+bashItoa(*command.ExitCode))"
  },
  {
   "name": "transcript-whitespace-collapse",

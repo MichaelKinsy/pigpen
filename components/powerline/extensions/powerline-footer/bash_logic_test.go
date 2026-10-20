@@ -88,7 +88,7 @@ func TestBashProjectHistory(t *testing.T) {
 	eq(t, string(raw), want, "file text")
 
 	for i := 0; i < 600; i++ {
-		appendProjectHistory(cwd, "cmd "+itoa(i), cwd)
+		appendProjectHistory(cwd, "cmd "+bashItoa(i), cwd)
 	}
 	eq(t, len(readProjectHistory(cwd)), 500, "history is capped at 500")
 	eq(t, readProjectHistory(cwd)[0].Command, "cmd 599", "newest of the cap")
@@ -148,7 +148,7 @@ func TestBashProjectKey(t *testing.T) {
 	for cwd, want := range map[string]string{
 		"/Users/me/proj": "Users-me-proj", "/": "root", "": "root", `C:\work\app`: "C:-work-app", "//a//b//": "a-b", "rel/dir/": "rel-dir",
 	} {
-		eq(t, projectKey(cwd), want, "projectKey("+cwd+")")
+		eq(t, bashProjectKey(cwd), want, "bashProjectKey("+cwd+")")
 	}
 }
 
@@ -288,7 +288,7 @@ func TestBashUniqueByReplacement(t *testing.T) {
 	got := uniqueByReplacement(in)
 	var order []string
 	for _, item := range got {
-		order = append(order, item.Label+":"+itoa(item.Score)+":"+item.Source)
+		order = append(order, item.Label+":"+bashItoa(item.Score)+":"+item.Source)
 	}
 	eq(t, order, []string{"b:50:git", "c:50:", "b:41:", "a:40:"}, "best per range and replacement, by score then label")
 }
@@ -298,15 +298,15 @@ func TestBashPathSuggestions(t *testing.T) {
 	home := t.TempDir()
 	setenv(t, "HOME", s(home))
 	for _, d := range []string{"src", "scripts", "My Dir"} {
-		mustMkdir(t, filepath.Join(cwd, d))
+		bashMustMkdir(t, filepath.Join(cwd, d))
 	}
 	for _, f := range []string{"setup.sh", "$weird&name", ".hidden"} {
 		if err := os.WriteFile(filepath.Join(cwd, f), nil, 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
-	mustMkdir(t, filepath.Join(home, "docs"))
-	mustMkdir(t, filepath.Join(cwd, "src", "inner"))
+	bashMustMkdir(t, filepath.Join(home, "docs"))
+	bashMustMkdir(t, filepath.Join(cwd, "src", "inner"))
 
 	type row struct {
 		Label, Replacement string
@@ -334,7 +334,7 @@ func TestBashPathSuggestions(t *testing.T) {
 
 	big := t.TempDir()
 	for i := 0; i < 130; i++ {
-		if err := os.WriteFile(filepath.Join(big, "f"+itoa(1000+i)), nil, 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(big, "f"+bashItoa(1000+i)), nil, 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -359,8 +359,8 @@ func TestBashGitCompletions(t *testing.T) {
 	logPath := useFakeGit(t)
 	histfile := ""
 	cwd, _ := bashTestEnv(t, &histfile)
-	wantGhost(t, ghost(t, "git checkout fe", cwd, "/bin/zsh"), "git checkout feature", "git")
-	wantGhost(t, ghost(t, "git checkout m", cwd, "/bin/zsh"), "git checkout main", "git")
+	bashWantGhost(t, bashGhost(t, "git checkout fe", cwd, "/bin/zsh"), "git checkout feature", "git")
+	bashWantGhost(t, bashGhost(t, "git checkout m", cwd, "/bin/zsh"), "git checkout main", "git")
 	calls, err := os.ReadFile(logPath)
 	if err != nil {
 		t.Fatal(err)
@@ -373,14 +373,14 @@ func TestBashGitCompletions(t *testing.T) {
 
 	// Only the ref-taking subcommands ask git; others complete from the file system alone.
 	before := len(calls)
-	eq(t, ghost(t, "git commit fe", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "git commit has no ref completion")
+	eq(t, bashGhost(t, "git commit fe", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "git commit has no ref completion")
 	after, _ := os.ReadFile(logPath)
 	eq(t, len(after), before, "git was not asked for commit")
 
 	// The refs go through tokenContext: the subcommand list is offered at the second word, filtered by prefix.
-	wantGhost(t, ghost(t, "git ch", cwd, "/bin/zsh"), "git checkout", "git")
+	bashWantGhost(t, bashGhost(t, "git ch", cwd, "/bin/zsh"), "git checkout", "git")
 	// Upstream quirk kept: with a trailing space the token is empty and tokenIndex still 1, so subcommands are offered.
-	wantGhost(t, ghost(t, "git checkout ", cwd, "/bin/zsh"), "git checkout add", "git")
+	bashWantGhost(t, bashGhost(t, "git checkout ", cwd, "/bin/zsh"), "git checkout add", "git")
 
 	// A cancelled context yields nothing.
 	ctx, cancel := context.WithCancel(context.Background())
@@ -389,23 +389,23 @@ func TestBashGitCompletions(t *testing.T) {
 
 	// Not a git repository state: no git at all.
 	setenv(t, "PATH", s(t.TempDir()))
-	eq(t, ghost(t, "git checkout fe", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "git missing")
+	eq(t, bashGhost(t, "git checkout fe", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "git missing")
 }
 
 func TestBashGhostEdgeCases(t *testing.T) {
 	cwd, _ := bashTestEnv(t, nil)
 	appendProjectHistory(cwd, "docker ps", cwd)
-	wantGhost(t, ghost(t, "   ", cwd, "/bin/zsh"), "   docker ps", "project-history")
-	wantGhost(t, ghost(t, "docker", cwd, "/bin/zsh"), "docker ps", "project-history")
+	bashWantGhost(t, bashGhost(t, "   ", cwd, "/bin/zsh"), "   docker ps", "project-history")
+	bashWantGhost(t, bashGhost(t, "docker", cwd, "/bin/zsh"), "docker ps", "project-history")
 	// Argument position: project history beats everything, a quoted history entry does not match a shorter prefix.
-	wantGhost(t, ghost(t, "docker p", cwd, "/bin/zsh"), "docker ps", "project-history")
-	eq(t, ghost(t, "nomatch zz", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "no deterministic candidate")
+	bashWantGhost(t, bashGhost(t, "docker p", cwd, "/bin/zsh"), "docker ps", "project-history")
+	eq(t, bashGhost(t, "nomatch zz", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "no deterministic candidate")
 	// A path candidate equal to the typed text is no ghost.
-	mustMkdir(t, filepath.Join(cwd, "dev"))
-	eq(t, ghost(t, "cd dev/", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "nothing left to complete")
+	bashMustMkdir(t, filepath.Join(cwd, "dev"))
+	eq(t, bashGhost(t, "cd dev/", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "nothing left to complete")
 	// Command position falls back to the curated list only for the stems.
-	wantGhost(t, ghost(t, "cd", cwd, "/bin/zsh"), "cd ..", "path")
-	wantGhost(t, ghost(t, "  gi", cwd, "/bin/zsh"), "git status", "git")
+	bashWantGhost(t, bashGhost(t, "cd", cwd, "/bin/zsh"), "cd ..", "path")
+	bashWantGhost(t, bashGhost(t, "  gi", cwd, "/bin/zsh"), "git status", "git")
 }
 
 func TestBashOneOffContextShouldTrigger(t *testing.T) {

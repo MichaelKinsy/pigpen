@@ -56,19 +56,19 @@ func TestBashGlobalHistoryBoostScores(t *testing.T) {
 
 	histfile := strings.Join([]string{": 1:0;git cherry-pick", ": 2:0;git ch1"}, "\n")
 	cwd, _ := bashTestEnv(t, &histfile)
-	wantGhost(t, ghost(t, "git ch", cwd, "/bin/zsh"), "git checkout", "git")
+	bashWantGhost(t, bashGhost(t, "git ch", cwd, "/bin/zsh"), "git checkout", "git")
 }
 
 // Only history entries for the same command head can complete a command-position stem (completion.ts:289).
 func TestBashGlobalGitHistoryNeedsTheGitHead(t *testing.T) {
 	histfile := ": 1:0;git stash\n: 2:0;gitk --all\n"
 	cwd, _ := bashTestEnv(t, &histfile)
-	wantGhost(t, ghost(t, "gi", cwd, "/bin/zsh"), "git stash", "global-history")
+	bashWantGhost(t, bashGhost(t, "gi", cwd, "/bin/zsh"), "git stash", "global-history")
 	histfile = ": 2:0;gitk --all\n"
 	if err := os.WriteFile(os.Getenv("HISTFILE"), []byte(histfile), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	wantGhost(t, ghost(t, "gi", cwd, "/bin/zsh"), "git status", "git")
+	bashWantGhost(t, bashGhost(t, "gi", cwd, "/bin/zsh"), "git status", "git")
 }
 
 func TestBashGitRefSubcommands(t *testing.T) {
@@ -77,16 +77,16 @@ func TestBashGitRefSubcommands(t *testing.T) {
 	cwd, _ := bashTestEnv(t, &histfile)
 	for _, sub := range []string{"checkout", "switch", "merge", "rebase", "branch", "show", "diff"} {
 		_ = os.Remove(logPath)
-		wantGhost(t, ghost(t, "git "+sub+" fea", cwd, "/bin/zsh"), "git "+sub+" feature", "git")
+		bashWantGhost(t, bashGhost(t, "git "+sub+" fea", cwd, "/bin/zsh"), "git "+sub+" feature", "git")
 		calls, _ := os.ReadFile(logPath)
 		if !strings.Contains(string(calls), "tag --list") {
 			t.Errorf("git %s did not ask for refs", sub)
 		}
 	}
 	// "feature" is a branch and a tag; two branches match "feature".
-	wantGhost(t, ghost(t, "git checkout feature-", cwd, "/bin/zsh"), "git checkout feature-two", "git")
+	bashWantGhost(t, bashGhost(t, "git checkout feature-", cwd, "/bin/zsh"), "git checkout feature-two", "git")
 	// Not git: no ref completion even for a ref-taking word.
-	eq(t, ghost(t, "gix checkout fea", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "other command")
+	eq(t, bashGhost(t, "gix checkout fea", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "other command")
 }
 
 func TestBashCloseExitCode(t *testing.T) {
@@ -147,7 +147,7 @@ func TestBashShellSessionEnvironmentAndInterruptWhileIdle(t *testing.T) {
 	}
 	if syscall.Kill(pid, 0) == nil {
 		// a zombie answers signal 0 until it is reaped: wait for the close handler
-		waitFor(t, func() bool { return !session.State().Ready })
+		bashWaitFor(t, func() bool { return !session.State().Ready })
 	}
 	eq(t, session.State().Ready, false, "not ready after dispose")
 }

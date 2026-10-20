@@ -37,12 +37,12 @@ func bashTestEnv(t *testing.T, histfile *string) (cwd, histPath string) {
 	return cwd, histPath
 }
 
-func ghost(t *testing.T, line, cwd, shell string) *ghostSuggestion {
+func bashGhost(t *testing.T, line, cwd, shell string) *ghostSuggestion {
 	t.Helper()
 	return (&bashCompletionEngine{}).getGhostSuggestion(context.Background(), line, cwd, shell)
 }
 
-func wantGhost(t *testing.T, got *ghostSuggestion, value, source string) {
+func bashWantGhost(t *testing.T, got *ghostSuggestion, value, source string) {
 	t.Helper()
 	if got == nil {
 		t.Fatalf("no suggestion, want %q (%s)", value, source)
@@ -183,7 +183,7 @@ func TestBashModeTwins(t *testing.T) {
 		cwd, _ := bashTestEnv(t, &histfile)
 		appendProjectHistory(cwd, "git status", cwd)
 		appendProjectHistory(cwd, "git stash", cwd)
-		wantGhost(t, ghost(t, "git st", cwd, "/bin/zsh"), "git stash", "project-history")
+		bashWantGhost(t, bashGhost(t, "git st", cwd, "/bin/zsh"), "git stash", "project-history")
 	})
 
 	tw(t, "bash-mode", "ghost suggestion shows newest project history on an empty prompt", func(t *testing.T) {
@@ -191,27 +191,27 @@ func TestBashModeTwins(t *testing.T) {
 		cwd, _ := bashTestEnv(t, &histfile)
 		appendProjectHistory(cwd, "git status", cwd)
 		appendProjectHistory(cwd, "git stash", cwd)
-		wantGhost(t, ghost(t, "", cwd, "/bin/zsh"), "git stash", "project-history")
+		bashWantGhost(t, bashGhost(t, "", cwd, "/bin/zsh"), "git stash", "project-history")
 	})
 
 	tw(t, "bash-mode", "ghost suggestion stays empty on an empty prompt when only global history exists", func(t *testing.T) {
 		histfile := strings.Join([]string{": 1711111111:0;git fetch", ": 1711111112:0;git pull"}, "\n")
 		cwd, _ := bashTestEnv(t, &histfile)
-		eq(t, ghost(t, "", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "suggestion")
+		eq(t, bashGhost(t, "", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "suggestion")
 	})
 
 	tw(t, "bash-mode", "ghost suggestion stays empty when the prompt is empty and no history exists", func(t *testing.T) {
 		histfile := ""
 		cwd, _ := bashTestEnv(t, &histfile)
-		eq(t, ghost(t, "", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "suggestion")
+		eq(t, bashGhost(t, "", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "suggestion")
 	})
 
 	tw(t, "bash-mode", "ghost suggestion can extend the current token from deterministic path completions", func(t *testing.T) {
 		cwd, _ := bashTestEnv(t, nil)
-		mustMkdir(t, filepath.Join(cwd, "dev"))
-		mustMkdir(t, filepath.Join(cwd, "My Folder"))
-		wantGhost(t, ghost(t, "cd d", cwd, "/bin/sh"), "cd dev/", "path")
-		wantGhost(t, ghost(t, "cd M", cwd, "/bin/sh"), "cd My\\ Folder/", "path")
+		bashMustMkdir(t, filepath.Join(cwd, "dev"))
+		bashMustMkdir(t, filepath.Join(cwd, "My Folder"))
+		bashWantGhost(t, bashGhost(t, "cd d", cwd, "/bin/sh"), "cd dev/", "path")
+		bashWantGhost(t, bashGhost(t, "cd M", cwd, "/bin/sh"), "cd My\\ Folder/", "path")
 	})
 
 	// Adaptation: the original replaces a getNativeSuggestions method on the engine with one that throws. The Go engine has
@@ -219,49 +219,49 @@ func TestBashModeTwins(t *testing.T) {
 	// alone, and the engine type has no shell-native completion hook.
 	tw(t, "bash-mode", "ghost suggestion does not invoke shell-native completion hooks", func(t *testing.T) {
 		cwd, _ := bashTestEnv(t, nil)
-		mustMkdir(t, filepath.Join(cwd, "dev"))
+		bashMustMkdir(t, filepath.Join(cwd, "dev"))
 		if _, ok := reflect.TypeOf(&bashCompletionEngine{}).MethodByName("getNativeSuggestions"); ok {
 			t.Fatal("the engine must not have a native completion hook")
 		}
-		wantGhost(t, ghost(t, "cd d", cwd, "/bin/zsh"), "cd dev/", "path")
+		bashWantGhost(t, bashGhost(t, "cd d", cwd, "/bin/zsh"), "cd dev/", "path")
 	})
 
 	tw(t, "bash-mode", "command-position ghost prefers the newest successful project-history command", func(t *testing.T) {
 		histfile := ""
 		cwd, _ := bashTestEnv(t, &histfile)
 		appendProjectHistory(cwd, "git status", cwd)
-		wantGhost(t, ghost(t, "g", cwd, "/bin/zsh"), "git status", "project-history")
+		bashWantGhost(t, bashGhost(t, "g", cwd, "/bin/zsh"), "git status", "project-history")
 	})
 
 	tw(t, "bash-mode", "command-position ghost uses guarded global git history when project history is absent", func(t *testing.T) {
 		histfile := ": 1711111111:0;git stash\n"
 		cwd, _ := bashTestEnv(t, &histfile)
-		wantGhost(t, ghost(t, "g", cwd, "/bin/zsh"), "git status", "git")
-		wantGhost(t, ghost(t, "gi", cwd, "/bin/zsh"), "git stash", "global-history")
+		bashWantGhost(t, bashGhost(t, "g", cwd, "/bin/zsh"), "git status", "git")
+		bashWantGhost(t, bashGhost(t, "gi", cwd, "/bin/zsh"), "git stash", "global-history")
 	})
 
 	tw(t, "bash-mode", "command-position ghost falls back to git status when git is likely but history is absent", func(t *testing.T) {
 		histfile := ""
 		cwd, _ := bashTestEnv(t, &histfile)
-		wantGhost(t, ghost(t, "g", cwd, "/bin/zsh"), "git status", "git")
+		bashWantGhost(t, bashGhost(t, "g", cwd, "/bin/zsh"), "git status", "git")
 	})
 
 	tw(t, "bash-mode", "command-position ghost falls back to cd dot-dot for the cd stem", func(t *testing.T) {
 		histfile := ""
 		cwd, _ := bashTestEnv(t, &histfile)
-		wantGhost(t, ghost(t, "c", cwd, "/bin/zsh"), "cd ..", "path")
+		bashWantGhost(t, bashGhost(t, "c", cwd, "/bin/zsh"), "cd ..", "path")
 	})
 
 	tw(t, "bash-mode", "command-position ghost stays empty when there is no supported history-backed stem", func(t *testing.T) {
 		histfile := ""
 		cwd, _ := bashTestEnv(t, &histfile)
-		eq(t, ghost(t, "x", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "suggestion")
+		eq(t, bashGhost(t, "x", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "suggestion")
 	})
 
 	tw(t, "bash-mode", "ghost suggestion ignores invalid raw global history and keeps a deterministic git candidate", func(t *testing.T) {
 		histfile := ": 1711111111:0;git statis\n"
 		cwd, _ := bashTestEnv(t, &histfile)
-		got := ghost(t, "git st", cwd, "/bin/zsh")
+		got := bashGhost(t, "git st", cwd, "/bin/zsh")
 		if got == nil || !regexp.MustCompile(`^git sta(?:sh|tus)$`).MatchString(got.Value) {
 			t.Fatalf("suggestion = %+v, want git stash or git status", got)
 		}
@@ -271,20 +271,20 @@ func TestBashModeTwins(t *testing.T) {
 	tw(t, "bash-mode", "global history boosts already-valid deterministic git candidates", func(t *testing.T) {
 		histfile := ": 1711111111:0;git stash\n"
 		cwd, _ := bashTestEnv(t, &histfile)
-		wantGhost(t, ghost(t, "git st", cwd, "/bin/zsh"), "git stash", "git")
+		bashWantGhost(t, bashGhost(t, "git st", cwd, "/bin/zsh"), "git stash", "git")
 	})
 
 	tw(t, "bash-mode", "deterministic path completion keeps directory suffixes for escaped paths", func(t *testing.T) {
 		histfile := ""
 		cwd, _ := bashTestEnv(t, &histfile)
-		mustMkdir(t, filepath.Join(cwd, "My Folder"))
-		wantGhost(t, ghost(t, "cd M", cwd, "/bin/zsh"), "cd My\\ Folder/", "path")
+		bashMustMkdir(t, filepath.Join(cwd, "My Folder"))
+		bashWantGhost(t, bashGhost(t, "cd M", cwd, "/bin/zsh"), "cd My\\ Folder/", "path")
 	})
 
 	tw(t, "bash-mode", "deterministic path completion handles bash argument position", func(t *testing.T) {
 		cwd, _ := bashTestEnv(t, nil)
-		mustMkdir(t, filepath.Join(cwd, "devdir"))
-		wantGhost(t, ghost(t, "cd d", cwd, "/bin/bash"), "cd devdir/", "path")
+		bashMustMkdir(t, filepath.Join(cwd, "devdir"))
+		bashWantGhost(t, bashGhost(t, "cd d", cwd, "/bin/bash"), "cd devdir/", "path")
 	})
 
 	tw(t, "bash-mode", "managed shell session preserves cwd changes across commands", func(t *testing.T) {
@@ -294,7 +294,7 @@ func TestBashModeTwins(t *testing.T) {
 		}
 		cwd := t.TempDir()
 		childDir := filepath.Join(cwd, "child")
-		mustMkdir(t, childDir)
+		bashMustMkdir(t, childDir)
 		store := newBashTranscriptStore(bashTranscriptLimits{MaxLines: 100, MaxBytes: 64 * 1024})
 		session, err := newManagedShellSession(shellPath, cwd, store, func() {}, func(string, string) {})
 		if err != nil {
@@ -513,7 +513,7 @@ func TestBashModeTwins(t *testing.T) {
 	tskip(t, "bash-mode", "bash editor submit clears the prompt and refreshes the empty ghost suggestion", "handleInput's submit branch calling setText('') and refreshGhostSuggestion on the editor instance, with shellHistory* reset: needs the editor component")
 }
 
-func mustMkdir(t *testing.T, dir string) {
+func bashMustMkdir(t *testing.T, dir string) {
 	t.Helper()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)

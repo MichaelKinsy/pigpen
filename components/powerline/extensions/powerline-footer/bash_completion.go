@@ -215,7 +215,7 @@ func uniqueByReplacement(items []extendedCompletionItem) []extendedCompletionIte
 	index := map[string]int{}
 	var best []extendedCompletionItem
 	for _, item := range items {
-		key := itoa(item.StartCol) + ":" + itoa(item.EndCol) + ":" + item.Replacement
+		key := bashItoa(item.StartCol) + ":" + bashItoa(item.EndCol) + ":" + item.Replacement
 		if i, ok := index[key]; !ok {
 			index[key] = len(best)
 			best = append(best, item)
@@ -232,14 +232,14 @@ func uniqueByReplacement(items []extendedCompletionItem) []extendedCompletionIte
 	return best
 }
 
-func itoa(n int) string {
+func bashItoa(n int) string {
 	return jsNumber(float64(n))
 }
 
-type pathBaseResult struct{ dir, prefix, displayPrefix string }
+type bashPathBaseResult struct{ dir, prefix, displayPrefix string }
 
 // jsPathJoin is node:path join for two segments: joined, normalized, a trailing slash kept (filepath.Join would drop it, and
-// pathBase tests for it).
+// bashPathBase tests for it).
 func jsPathJoin(a, b string) string {
 	joined := a + "/" + b
 	if a == "" {
@@ -258,14 +258,14 @@ func jsPathJoin(a, b string) string {
 	return res
 }
 
-// pathBase upstream: completion.ts:171.
-func pathBase(token, cwd string) pathBaseResult {
+// bashPathBase upstream: completion.ts:171.
+func bashPathBase(token, cwd string) bashPathBaseResult {
 	expanded := token
 	if strings.HasPrefix(token, "~/") {
 		expanded = jsPathJoin(os.Getenv("HOME"), token[2:])
 	}
 	if !strings.Contains(expanded, "/") {
-		return pathBaseResult{dir: cwd, prefix: expanded}
+		return bashPathBaseResult{dir: cwd, prefix: expanded}
 	}
 	var baseDir string
 	if strings.HasSuffix(expanded, "/") {
@@ -285,7 +285,7 @@ func pathBase(token, cwd string) pathBaseResult {
 	if !strings.HasSuffix(token, "/") {
 		displayPrefix = token[:max(0, len(token)-len(prefix))]
 	}
-	return pathBaseResult{dir: resolvedDir, prefix: prefix, displayPrefix: displayPrefix}
+	return bashPathBaseResult{dir: resolvedDir, prefix: prefix, displayPrefix: displayPrefix}
 }
 
 var shellPathEscape = regexp.MustCompile("([\\\\" + jsWhitespaceClass + "\"'`$&|;<>()\\[\\]{}?!*])")
@@ -300,7 +300,7 @@ func getPathSuggestions(token, cwd string) []extendedCompletionItem {
 	if token == "" {
 		return nil
 	}
-	base := pathBase(token, cwd)
+	base := bashPathBase(token, cwd)
 	entries, err := os.ReadDir(base.dir)
 	if err != nil {
 		return nil

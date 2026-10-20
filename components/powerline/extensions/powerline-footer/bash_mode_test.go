@@ -216,7 +216,7 @@ func TestGhostUpdaterCoalescesUpdates(t *testing.T) {
 	mu.Lock()
 	eq(t, len(resolved), 0, "nothing resolved inside the debounce window")
 	mu.Unlock()
-	waitFor(t, func() bool { return u.current() != nil })
+	bashWaitFor(t, func() bool { return u.current() != nil })
 	mu.Lock()
 	eq(t, resolved, []string{"git"}, "three quick updates resolve once, for the last text")
 	mu.Unlock()
@@ -250,9 +250,9 @@ func TestGhostUpdaterCoalescesUpdates(t *testing.T) {
 	<-started
 	slow.schedule(true, "fast")
 	close(release)
-	waitFor(t, func() bool { return slow.current() != nil })
+	bashWaitFor(t, func() bool { return slow.current() != nil })
 	eq(t, slow.current().Value, "fresh", "the newer result wins")
-	waitFor(t, cancelled.Load)
+	bashWaitFor(t, cancelled.Load)
 
 	// A resolver error is reported and leaves the ghost alone.
 	var reported atomic.Int32
@@ -262,11 +262,11 @@ func TestGhostUpdaterCoalescesUpdates(t *testing.T) {
 	failing := newGhostUpdater(func(context.Context, string) (*ghostSuggestion, error) { return nil, os.ErrInvalid }, nil)
 	failing.debounce = time.Millisecond
 	failing.schedule(true, "x")
-	waitFor(t, func() bool { return reported.Load() == 1 })
+	bashWaitFor(t, func() bool { return reported.Load() == 1 })
 	eq(t, failing.current(), (*ghostSuggestion)(nil), "no ghost after an error")
 }
 
-func waitFor(t *testing.T, cond func() bool) {
+func bashWaitFor(t *testing.T, cond func() bool) {
 	t.Helper()
 	deadline := time.Now().Add(5 * time.Second)
 	for !cond() {
@@ -370,7 +370,7 @@ func (f *bashModeFixture) notifications() []string {
 
 func (f *bashModeFixture) wait(t *testing.T) {
 	t.Helper()
-	waitFor(t, func() bool { return !f.mode.isShellRunning() })
+	bashWaitFor(t, func() bool { return !f.mode.isShellRunning() })
 }
 
 func TestBashModeToggle(t *testing.T) {
@@ -434,7 +434,7 @@ func TestBashModeHistoryRecording(t *testing.T) {
 	f.wait(t)
 	f.mode.runShellCommand(ctx, "false")
 	f.wait(t)
-	waitFor(t, func() bool { return len(readProjectHistory(f.cwd)) == 1 })
+	bashWaitFor(t, func() bool { return len(readProjectHistory(f.cwd)) == 1 })
 	history := readProjectHistory(f.cwd)
 	eq(t, history[0].Command, "true", "only a successful command is recorded")
 	eq(t, f.mode.shellHistoryEntries("tr")[0], "true", "the history source offers it")
@@ -529,7 +529,7 @@ func TestBashModeShellCwdTracking(t *testing.T) {
 	f := newBashModeFixture(t)
 	ctx := context.Background()
 	child := filepath.Join(f.cwd, "child")
-	mustMkdir(t, child)
+	bashMustMkdir(t, child)
 	f.mode.setBashModeActive(ctx, true)
 	f.mode.runShellCommand(ctx, "cd child")
 	f.wait(t)
@@ -594,7 +594,7 @@ func TestRenderBashTranscriptLines(t *testing.T) {
 	small := newBashMode(mode.env, bashTranscriptLimits{MaxLines: 2, MaxBytes: 1 << 20})
 	small.active = true
 	for i := 1; i <= 6; i++ {
-		id := itoa(i)
+		id := bashItoa(i)
 		small.transcript.startCommand(id, "cmd"+id, "/w")
 		small.transcript.appendOutput(id, "out")
 		small.transcript.finishCommand(id, 0)
@@ -614,7 +614,7 @@ func TestRenderBashTranscriptLines(t *testing.T) {
 	big := newBashMode(mode.env, bashTranscriptLimits{MaxLines: 1000, MaxBytes: 1 << 20})
 	big.active = true
 	for i := 1; i <= 4; i++ {
-		id := itoa(i)
+		id := bashItoa(i)
 		big.transcript.startCommand(id, "cmd"+id, "/w")
 		big.transcript.appendOutput(id, "1\n2\n3\n4\n5\n6")
 	}

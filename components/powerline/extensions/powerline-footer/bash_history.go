@@ -45,21 +45,21 @@ type cachedGlobalHistory struct {
 }
 
 var (
-	historyMu           sync.Mutex
+	bashHistoryMu       sync.Mutex
 	projectHistoryCache = map[string]cachedProjectHistory{}
 	globalHistoryCache  = map[string]cachedGlobalHistory{}
 )
 
-func getHistoryDir() string { return getAgentPath("powerline-footer", "bash-history") }
+func bashHistoryDir() string { return getAgentPath("powerline-footer", "bash-history") }
 
 var (
-	projectKeyEdges = regexp.MustCompile(`^[/\\]+|[/\\]+$`)
-	projectKeySeps  = regexp.MustCompile(`[\\/]+`)
+	bashProjectKeyEdges = regexp.MustCompile(`^[/\\]+|[/\\]+$`)
+	bashProjectKeySeps  = regexp.MustCompile(`[\\/]+`)
 )
 
-// projectKey upstream: history.ts:38.
-func projectKey(cwd string) string {
-	key := projectKeySeps.ReplaceAllString(projectKeyEdges.ReplaceAllString(cwd, ""), "-")
+// bashProjectKey upstream: history.ts:38.
+func bashProjectKey(cwd string) string {
+	key := bashProjectKeySeps.ReplaceAllString(bashProjectKeyEdges.ReplaceAllString(cwd, ""), "-")
 	if key == "" {
 		return "root"
 	}
@@ -67,7 +67,7 @@ func projectKey(cwd string) string {
 }
 
 func projectHistoryPath(cwd string) string {
-	return filepath.Join(getHistoryDir(), projectKey(cwd)+".json")
+	return filepath.Join(bashHistoryDir(), bashProjectKey(cwd)+".json")
 }
 
 // normalizePersistedEntries upstream: history.ts:46: entries that are not objects, or lack a command, a cwd or a non-zero finite
@@ -114,8 +114,8 @@ func sortNewestFirst(entries []persistedHistoryEntry) {
 // readProjectHistory upstream: history.ts:63.
 func readProjectHistory(cwd string) []persistedHistoryEntry {
 	filePath := projectHistoryPath(cwd)
-	historyMu.Lock()
-	defer historyMu.Unlock()
+	bashHistoryMu.Lock()
+	defer bashHistoryMu.Unlock()
 	fi, err := os.Stat(filePath)
 	if err != nil { // existsSync is false for any stat failure
 		delete(projectHistoryCache, filePath)
@@ -165,8 +165,8 @@ func appendProjectHistory(cwd, command, entryCwd string) {
 	sortNewestFirst(next)
 
 	filePath := projectHistoryPath(cwd)
-	historyMu.Lock()
-	defer historyMu.Unlock()
+	bashHistoryMu.Lock()
+	defer bashHistoryMu.Unlock()
 	delete(projectHistoryCache, filePath)
 	list := make([]any, len(next))
 	for i, e := range next {
@@ -244,7 +244,7 @@ func parseFishHistory(raw string) []string {
 	return commands
 }
 
-func reverseStrings(s []string) []string {
+func bashReverseStrings(s []string) []string {
 	out := make([]string, len(s))
 	for i, v := range s {
 		out[len(s)-1-i] = v
@@ -270,8 +270,8 @@ func readGlobalShellHistory(shellPath string) []string {
 	}
 	cacheKey := shellName + "\x00" + filePath
 
-	historyMu.Lock()
-	defer historyMu.Unlock()
+	bashHistoryMu.Lock()
+	defer bashHistoryMu.Unlock()
 	fi, err := os.Stat(filePath)
 	if err != nil { // existsSync is false for any stat failure
 		delete(globalHistoryCache, cacheKey)
@@ -297,11 +297,11 @@ func readGlobalShellHistory(shellPath string) []string {
 				parsed = append(parsed, c)
 			}
 		}
-		entries = reverseStrings(parsed)
+		entries = bashReverseStrings(parsed)
 	case strings.Contains(shellName, "fish"):
-		entries = reverseStrings(parseFishHistory(raw))
+		entries = bashReverseStrings(parseFishHistory(raw))
 	default:
-		entries = reverseStrings(parseBashHistory(strings.Split(raw, "\n")))
+		entries = bashReverseStrings(parseBashHistory(strings.Split(raw, "\n")))
 	}
 	globalHistoryCache[cacheKey] = cachedGlobalHistory{fp: fp, entries: entries}
 	return entries
