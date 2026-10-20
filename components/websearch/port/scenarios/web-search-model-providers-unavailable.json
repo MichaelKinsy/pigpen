@@ -1,0 +1,104 @@
+{
+ "name": "web-search-model-providers-unavailable",
+ "description": "Selecting xAI, Kimi, Mistral or OpenAI with no credential fails before any request and says how to sign in or configure a key.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "xai",
+      "query": "no credential for xai"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "kimi",
+      "query": "no credential for kimi"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "mistral",
+      "query": "no credential for mistral"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "openai",
+      "query": "no credential for openai"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId:? \")[a-z0-9]{10,}\"",
+   "replacement": "${1}<response-id>\""
+  },
+  {
+   "pattern": "^[a-z0-9]{13,15}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+   "replacement": "<uuid>"
+  }
+ ],
+ "commands": {
+  "xdg-open": {
+   "mode": "missing"
+  },
+  "open": {
+   "mode": "missing"
+  },
+  "cmd": {
+   "mode": "missing"
+  },
+  "npm": {
+   "mode": "missing"
+  },
+  "sh": {
+   "mode": "real"
+  }
+ },
+ "args": [
+  "--tools",
+  "read,bash,edit,write,web_search,source_check,fetch_content,get_search_content"
+ ]
+}

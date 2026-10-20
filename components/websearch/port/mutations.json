@@ -742,5 +742,251 @@
   "file": "gemini_url_context.go",
   "find": "strings.HasPrefix(err.Error(), \"Failed to parse \")",
   "replace": "strings.HasPrefix(err.Error(), \"Failed to parse X\")"
+ },
+ {
+  "name": "openai-default-model",
+  "file": "openai.go",
+  "find": "model := \"gpt-5.6-terra\"",
+  "replace": "model := \"gpt-5.6\""
+ },
+ {
+  "name": "openai-codex-token-ignored",
+  "file": "openai.go",
+  "find": "useCodex := provider == \"openai-codex\" || isCodexJWT(resolved.APIKey)",
+  "replace": "useCodex := provider == \"openai-codex\""
+ },
+ {
+  "name": "openai-default-providers-swapped",
+  "file": "openai.go",
+  "find": "[]string{\"openai-codex\", \"openai\"}",
+  "replace": "[]string{\"openai\", \"openai-codex\"}"
+ },
+ {
+  "name": "openai-alpha-week-recency",
+  "file": "openai.go",
+  "find": "\"week\": 7",
+  "replace": "\"week\": 8"
+ },
+ {
+  "name": "openai-alpha-501-not-unsupported",
+  "file": "openai.go",
+  "find": "resp.StatusCode == 404 || resp.StatusCode == 405 || resp.StatusCode == 501",
+  "replace": "resp.StatusCode == 404 || resp.StatusCode == 405"
+ },
+ {
+  "name": "openai-deadline-halved",
+  "file": "openai.go",
+  "find": "var openAISearchTimeout = 60 * time.Second",
+  "replace": "var openAISearchTimeout = 30 * time.Second"
+ },
+ {
+  "name": "openai-alpha-originator",
+  "file": "openai.go",
+  "find": "h.set(\"Originator\", \"codex_cli_rs\")",
+  "replace": "h.set(\"Originator\", \"codex\")"
+ },
+ {
+  "name": "openai-codex-originator",
+  "file": "openai.go",
+  "find": "headers.set(\"originator\", \"pi\")",
+  "replace": "headers.set(\"originator\", \"codex\")"
+ },
+ {
+  "name": "openai-keeps-registry-opencode-session",
+  "file": "openai.go",
+  "find": "h.del(\"x-opencode-session\")",
+  "replace": "h.del(\"x-opencode-sessionx\")"
+ },
+ {
+  "name": "openai-opencode-client-name",
+  "file": "openai.go",
+  "find": "h.set(\"x-opencode-client\", \"pi\")",
+  "replace": "h.set(\"x-opencode-client\", \"codex\")"
+ },
+ {
+  "name": "openai-snippet-context",
+  "file": "openai.go",
+  "find": "math.Trunc(s)-100",
+  "replace": "math.Trunc(s)-101"
+ },
+ {
+  "name": "openai-keeps-foreign-utm-source",
+  "file": "openai.go",
+  "find": "if !found || value != \"openai\" {",
+  "replace": "if !found {"
+ },
+ {
+  "name": "openai-pro-tier-allowed",
+  "file": "openai.go",
+  "find": "{\"pro\": true, \"ultra\": true}",
+  "replace": "{\"ultra\": true}"
+ },
+ {
+  "name": "openai-terra-not-preferred",
+  "file": "openai.go",
+  "find": "strings.Contains(id, \"terra\")",
+  "replace": "strings.Contains(id, \"terrb\")"
+ },
+ {
+  "name": "openai-gpt-prefix-case-sensitive",
+  "file": "openai.go",
+  "find": "(?i)^gpt-",
+  "replace": "^gpt-"
+ },
+ {
+  "name": "openai-responses-store-on",
+  "file": "openai.go",
+  "find": "Store:        false,",
+  "replace": "Store:        true,"
+ },
+ {
+  "name": "openai-availability-error-swallowed",
+  "file": "search.go",
+  "find": "providerTable[\"openai\"].availableErr = openAIAvailable",
+  "replace": "_ = providerTable[\"openai\"]"
+ },
+ {
+  "name": "openai-auto-order-after-exa",
+  "file": "search.go",
+  "find": "if p == \"exa\" {",
+  "replace": "if p == \"brave\" {"
+ },
+ {
+  "name": "openai-current-model-routing-off",
+  "file": "search.go",
+  "find": "*routing.UseCurrentModel {",
+  "replace": "!*routing.UseCurrentModel {"
+ },
+ {
+  "name": "openai-alpha-unsupported-kind",
+  "file": "search.go",
+  "find": "case errors.As(err, &alphaUnsupported):",
+  "replace": "case false && errors.As(err, &alphaUnsupported):"
+ },
+ {
+  "name": "xai-first-model",
+  "file": "xai.go",
+  "find": "xaiWebSearchModelCandidates = []string{\"grok-4.5\",",
+  "replace": "xaiWebSearchModelCandidates = []string{\"grok-4.4\","
+ },
+ {
+  "name": "xai-x-search-model",
+  "file": "xai.go",
+  "find": "[]string{\"grok-4.6\", \"grok-4.5\"",
+  "replace": "[]string{\"grok-4.7\", \"grok-4.5\""
+ },
+ {
+  "name": "xai-prompt-citation-line",
+  "file": "xai.go",
+  "find": "\"Cite your sources inline.\"",
+  "replace": "\"Cite sources.\""
+ },
+ {
+  "name": "xai-deadline-halved",
+  "file": "xai.go",
+  "find": "xaiSearchTimeout = 60 * time.Second",
+  "replace": "xaiSearchTimeout = 30 * time.Second"
+ },
+ {
+  "name": "kimi-deadline-doubled",
+  "file": "kimi.go",
+  "find": "kimiSearchTimeout = 30 * time.Second",
+  "replace": "kimiSearchTimeout = 60 * time.Second"
+ },
+ {
+  "name": "kimi-provider-order",
+  "file": "kimi.go",
+  "find": "[]string{\"kimi-coding\", \"kimi-code\"}",
+  "replace": "[]string{\"kimi-code\", \"kimi-coding\"}"
+ },
+ {
+  "name": "kimi-tool-call-header",
+  "file": "kimi.go",
+  "find": "\"X-Msh-Tool-Call-Id\"",
+  "replace": "\"X-Msh-Tool-Id\""
+ },
+ {
+  "name": "kimi-timeout-message",
+  "file": "kimi.go",
+  "find": "\"Kimi Code search API timed out\"",
+  "replace": "\"Kimi timed out\""
+ },
+ {
+  "name": "kimi-one-result-too-many",
+  "file": "kimi.go",
+  "find": "if len(results) >= numResults {",
+  "replace": "if len(results) > numResults {"
+ },
+ {
+  "name": "mistral-default-model",
+  "file": "mistral.go",
+  "find": "\"mistral-small-latest\"",
+  "replace": "\"mistral-small\""
+ },
+ {
+  "name": "mistral-prompt-count",
+  "file": "mistral.go",
+  "find": "\"Prefer up to %d distinct sources.\"",
+  "replace": "\"Prefer %d sources.\""
+ },
+ {
+  "name": "mistral-no-dedupe",
+  "file": "mistral.go",
+  "find": "!ok || !filters.matches(u) || seen[u]",
+  "replace": "!ok || !filters.matches(u)"
+ },
+ {
+  "name": "mistral-deadline-halved",
+  "file": "mistral.go",
+  "find": "mistralSearchTimeout    = 60 * time.Second",
+  "replace": "mistralSearchTimeout    = 30 * time.Second"
+ },
+ {
+  "name": "redirect-keeps-authorization",
+  "file": "model_providers.go",
+  "find": "{\"Authorization\", \"Cookie\", \"Proxy-Authorization\"}",
+  "replace": "{\"Cookie\", \"Proxy-Authorization\"}"
+ },
+ {
+  "name": "headers-join-separator",
+  "file": "model_providers.go",
+  "find": "cur + \", \" + value",
+  "replace": "cur + \",\" + value"
+ },
+ {
+  "name": "uuid-variant",
+  "file": "model_providers.go",
+  "find": "b[8] = b[8]&0x3f | 0x80",
+  "replace": "b[8] = b[8]&0x3f | 0x40"
+ },
+ {
+  "name": "numeric-collation-by-length",
+  "file": "model_providers.go",
+  "find": "if len(na) != len(nb) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "model-sort-ascending",
+  "file": "openai.go",
+  "find": "compareNumericLocale(candidates[j][\"id\"].(string), candidates[i][\"id\"].(string)) < 0",
+  "replace": "compareNumericLocale(candidates[i][\"id\"].(string), candidates[j][\"id\"].(string)) < 0"
+ },
+ {
+  "name": "tool-call-without-extension-context",
+  "file": "extension.go",
+  "find": "context.WithCancel(WithExtensionContext(context.Background(), sdkExtensionContext{ctx}))",
+  "replace": "context.WithCancel(context.Background())"
+ },
+ {
+  "name": "session-id-dropped",
+  "file": "extensioncontext.go",
+  "find": "id, _ := s.ctx.SessionManager().GetSessionID()",
+  "replace": "id := \"\""
+ },
+ {
+  "name": "opencode-go-provider",
+  "file": "opencode_headers.go",
+  "find": "provider == \"opencode\" || provider == \"opencode-go\"",
+  "replace": "provider == \"opencode\""
  }
 ]

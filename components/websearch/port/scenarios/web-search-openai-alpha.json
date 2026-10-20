@@ -1,0 +1,103 @@
+{
+ "name": "web-search-openai-alpha",
+ "description": "web_search through OpenAI alpha/search: the separate JSON protocol, recency and allowed domains, plaintext answer and cleaned sources.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"openaiApiKey\": \"sk-standalone-key\", \"openaiUseAlphaSearch\": true, \"openaiResponsesUrl\": \"{{server:openai}}/v1/responses\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "openai",
+      "query": "alpha search",
+      "recencyFilter": "month",
+      "domainFilter": [
+       "example.com"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "openai": {
+   "recordHeaders": [
+    "authorization",
+    "content-type",
+    "openai-beta",
+    "originator"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/v1/alpha/search",
+     "json": {
+      "output": "Alpha plaintext answer",
+      "results": [
+       {
+        "type": "text_result",
+        "url": "https://example.com/alpha?utm_source=openai",
+        "title": "Alpha source",
+        "snippet": "Alpha evidence"
+       },
+       {
+        "type": "image_result",
+        "url": "https://ignored.example"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId:? \")[a-z0-9]{10,}\"",
+   "replacement": "${1}<response-id>\""
+  },
+  {
+   "pattern": "^[a-z0-9]{13,15}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+   "replacement": "<uuid>"
+  }
+ ],
+ "commands": {
+  "xdg-open": {
+   "mode": "missing"
+  },
+  "open": {
+   "mode": "missing"
+  },
+  "cmd": {
+   "mode": "missing"
+  },
+  "npm": {
+   "mode": "missing"
+  },
+  "sh": {
+   "mode": "real"
+  }
+ },
+ "args": [
+  "--tools",
+  "read,bash,edit,write,web_search,source_check,fetch_content,get_search_content"
+ ]
+}

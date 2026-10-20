@@ -3,9 +3,11 @@ package websearch
 import (
 	"context"
 	"errors"
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Behaviour of the model-backed providers that the upstream titles do not pin one by one.
@@ -143,6 +145,9 @@ func TestOpenAISnippetsAndSourceURLs(t *testing.T) {
 	}
 	if got := extractSnippetAround("short text", 0.0, 5.0); got != "short text" {
 		t.Fatal(got)
+	}
+	if got := extractSnippetAround(long, 150.0, 160.0); len(got) != 210 {
+		t.Fatalf("a citation at 150..160 keeps 100 characters either side: %d", len(got))
 	}
 	// Offsets count UTF-16 units: the emoji is two of them.
 	if got := extractSnippetAround("😀 cited", 3.0, 8.0); got != "😀 cited" {
@@ -489,5 +494,130 @@ func TestExtensionContextCarriesToTheProviderCall(t *testing.T) {
 	ec := &fakeExt{session: "s"}
 	if ExtensionContextFrom(withExt(ec)) != ExtensionContext(ec) {
 		t.Fatal("the attached context was lost")
+	}
+}
+
+func TestCurrentModelOf(t *testing.T) {
+	reg := &fakeRegistry{models: []map[string]any{model("openai", "gpt-5")}}
+	if got := currentModelOf("gpt-5", "openai", reg); got == nil || got["id"] != "gpt-5" {
+		t.Fatalf("%v", got)
+	}
+	for _, c := range [][2]string{{"", "openai"}, {"gpt-5", ""}, {"gpt-6", "openai"}} {
+		if got := currentModelOf(c[0], c[1], reg); got != nil {
+			t.Errorf("%v: %v", c, got)
+		}
+	}
+}
+
+func TestOpenAICodexTokenOnAnotherProviderUsesTheCodexEndpoint(t *testing.T) {
+	// A Codex login under another Pi provider id is recognised by its token: it passes the origin
+	// guard (the token, not the baseUrl, says where it belongs) and goes to the Codex endpoint.
+	out := runOpenAI(t, oaScenario{registry: true, key: strp(codexToken()),
+		model: map[string]any{"provider": "openai", "baseUrl": "https://gateway.example/v1"}, config: map[string]any{"openaiUseAlphaSearch": false}, payload: legacyPayload})
+	out.mustOK(t)
+	req := out.requests[0]
+	if req.URL != codexResponsesURL || headerOf(req, "chatgpt-account-id") != "test-account" || headerOf(req, "originator") != "pi" {
+		t.Fatalf("%s %v", req.URL, req.Header)
+	}
+}
+
+func TestOpenAIRequestHeadersKeepTheRegistrysDuplicateNamesAsOneHeader(t *testing.T) {
+	// Headers joins keys that differ only in case: the registry's stale lower-case authorization and
+	// the search's own Authorization travel as one value, as in the original (alpha overwrites it).
+	out := runOpenAI(t, oaScenario{registry: true, headers: map[string]any{"authorization": "stale"}, payload: legacyPayload, config: map[string]any{"openaiUseAlphaSearch": false}})
+	out.mustOK(t)
+	if got := headerOf(out.requests[0], "Authorization"); got != "stale, Bearer registry-test-key" {
+		t.Fatal(got)
+	}
+}
+
+func TestOpenAICurrentModelRoutingIgnoresTheConfiguredEndpointAndModel(t *testing.T) {
+	out := runOpenAI(t, oaScenario{route: true, current: true, key: strp("current-key"), config: map[string]any{
+		"openaiResponsesUrl": "https://gateway.example/v1/responses", "openaiSearchModel": "not-current", "searchRouting": routeRaw(`,"useCurrentModel":true`)}})
+	out.mustOK(t)
+	req := out.requests[0]
+	if req.URL != "https://api.openai.com/v1/alpha/search" || req.Body["model"] != "gpt-5.6-luna" || headerOf(req, "Authorization") != "Bearer current-key" {
+		t.Fatalf("%s %v %v", req.URL, req.Body, req.Header)
+	}
+	// Without the switch the configured endpoint and model apply.
+	out = runOpenAI(t, oaScenario{route: true, registry: true, key: strp("current-key"), config: map[string]any{
+		"openaiResponsesUrl": "https://gateway.example/v1/responses", "openaiSearchModel": "pinned", "searchRouting": routeRaw("")}})
+	out.mustOK(t)
+	if out.requests[0].URL != "https://gateway.example/v1/alpha/search" || out.requests[0].Body["model"] != "pinned" {
+		t.Fatalf("%s %v", out.requests[0].URL, out.requests[0].Body)
+	}
+}
+
+func TestProviderDeadlines(t *testing.T) {
+	// SEARCH_TIMEOUT_MS of each original: OpenAI, xAI and Mistral 60 s, Kimi 30 s.
+	for _, tc := range []struct {
+		name string
+		want time.Duration
+		run  func(ctx context.Context) error
+		cfg  string
+	}{
+		{"openai", 60 * time.Second, func(ctx context.Context) error { _, err := SearchWithOpenAI(ctx, "q", SearchOptions{}); return err }, `{"openaiApiKey":"k"}`},
+		{"xai", 60 * time.Second, func(ctx context.Context) error { _, err := SearchWithXai(ctx, "q", SearchOptions{}); return err }, `{"xaiApiKey":"k"}`},
+		{"mistral", 60 * time.Second, func(ctx context.Context) error { _, err := SearchWithMistral(ctx, "q", SearchOptions{}); return err }, `{"mistralApiKey":"k"}`},
+		{"kimi", 30 * time.Second, func(ctx context.Context) error {
+			_, err := SearchWithKimi(withExt(registryContext(nil, nil)), "q", SearchOptions{})
+			return err
+		}, `{}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, dir := isolate(t)
+			writeConfig(t, dir, tc.cfg)
+			var left time.Duration
+			t.Cleanup(SetHTTP(doerFunc(func(r *http.Request) (*http.Response, error) {
+				if d, ok := r.Context().Deadline(); ok {
+					left = time.Until(d)
+				}
+				return nil, errors.New("stop")
+			})))
+			_ = tc.run(bg())
+			if left > tc.want || left < tc.want-5*time.Second {
+				t.Fatalf("deadline in %v, want about %v", left, tc.want)
+			}
+		})
+	}
+}
+
+func TestErrorBodiesKeepThreeHundredCharacters(t *testing.T) {
+	long := strings.Repeat("e", 400)
+	for _, tc := range []struct {
+		name, cfg string
+		run       func() error
+	}{
+		{"openai", `{"openaiApiKey":"k"}`, func() error { _, err := SearchWithOpenAI(bg(), "q", SearchOptions{}); return err }},
+		{"xai", `{"xaiApiKey":"k"}`, func() error { _, err := SearchWithXai(bg(), "q", SearchOptions{}); return err }},
+		{"mistral", `{"mistralApiKey":"k"}`, func() error { _, err := SearchWithMistral(bg(), "q", SearchOptions{}); return err }},
+		{"kimi", `{}`, func() error {
+			_, err := SearchWithKimi(withExt(registryContext(nil, nil)), "q", SearchOptions{})
+			return err
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, dir := isolate(t)
+			writeConfig(t, dir, tc.cfg)
+			useNet(t, func(netCall) netReply { return reply(500, long) })
+			err := tc.run()
+			if err == nil || !strings.HasSuffix(err.Error(), ": "+long[:300]) {
+				t.Fatalf("%v", err)
+			}
+		})
+	}
+}
+
+func TestOpenAIPrefersTheCodexLoginOverTheOpenAIOne(t *testing.T) {
+	codex := map[string]any{"id": "gpt-5.6-terra", "provider": "openai-codex", "api": "openai-codex-responses", "baseUrl": "https://chatgpt.com/backend-api"}
+	official := map[string]any{"id": "gpt-5.6-terra", "provider": "openai", "api": "openai-responses", "baseUrl": "https://api.openai.com/v1"}
+	out := runOpenAI(t, oaScenario{registry: true, models: []map[string]any{official, codex}, payload: legacyPayload,
+		authByProvider: map[string]map[string]any{
+			"openai-codex": {"ok": true, "apiKey": "codex-login", "headers": map[string]any{}},
+			"openai":       {"ok": true, "apiKey": "openai-login", "headers": map[string]any{}},
+		}, config: map[string]any{"openaiUseAlphaSearch": false}})
+	out.mustOK(t)
+	if out.requests[0].URL != codexResponsesURL || headerOf(out.requests[0], "Authorization") != "Bearer codex-login" || !eqStrings(out.authProviders, []string{"openai-codex"}) {
+		t.Fatalf("%s %v %v", out.requests[0].URL, out.requests[0].Header, out.authProviders)
 	}
 }
