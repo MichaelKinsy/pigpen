@@ -18,7 +18,7 @@ is a separate implementation. This is a **partial** port: see [port/PORT.md](por
 
 `extensions/pi-permission-system/bashparse` parses bash exactly as the original does, which needs the parser the original runs.
 
-- **tree-sitter-bash** 0.25.1, https://github.com/tree-sitter/tree-sitter-bash, MIT, by Max Brunsfeld and Amaan Qureshi
+- **tree-sitter-bash** 0.25.1 (commit `a06c2e4415e9bc0346c6b86d401879ffb44058f7`), https://github.com/tree-sitter/tree-sitter-bash, MIT, by Max Brunsfeld and Amaan Qureshi
   ([`LICENSE-tree-sitter-bash`](extensions/pi-permission-system/bashparse/internal/ts/LICENSE-tree-sitter-bash)). Its generated
   parse tables are embedded (`bash_tables.bin.gz`, dumped from its `src/parser.c` by `port/bashparse-diff/gen/dumptables.c`),
   its generated lexer is transpiled to Go (`lex_gen.go`, by `gen/genlex.py`), and its external scanner (`src/scanner.c`) is
@@ -26,6 +26,9 @@ is a separate implementation. This is a **partial** port: see [port/PORT.md](por
 - **tree-sitter** 0.26.9 (commit `7f534862c3ec939c3a6ee147f7600ef5c1bf900f`), https://github.com/tree-sitter/tree-sitter, MIT, by
   Max Brunsfeld and contributors ([`LICENSE-tree-sitter`](extensions/pi-permission-system/bashparse/internal/ts/LICENSE-tree-sitter)).
   `bashparse/internal/ts` is a port to Go of the runtime's `lexer.c`, `subtree.c`, `stack.c`, `parser.c`, `language.c` and `node.c`
-  (the web-tree-sitter 0.26.9 runtime the original uses is built from it); it cites the C function it ports.
+  (the web-tree-sitter 0.26.9 runtime the original uses is built from it); it cites the C function it ports. The Go version
+  keeps a parser's subtrees, stack nodes and child arrays in slabs it reuses between parses (the C runtime pools them with
+  reference counts) and fills the small-state lookup rows on first use; neither changes a result, and the differential in
+  `port/bashparse-diff` proves it.
 - The wide-character classes the scanner calls (`wctype_gen.go`) are recorded from the original by probing, not copied from a libc.
 - No third-party Go module is added: the package uses the standard library only.

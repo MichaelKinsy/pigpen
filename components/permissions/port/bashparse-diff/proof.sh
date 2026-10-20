@@ -22,7 +22,7 @@ import json
 m = json.load(open("port/mutations.json"))
 json.dump([x for x in m if x["name"].startswith("bp-")], open("/tmp/bpmut.json", "w"))
 PY
-/work/pigeq-bin mutate --unit-only --go extensions/pi-permission-system --mutations /tmp/bpmut.json --sdk-dir "${PIG_SDK_DIR:-/pigsrc}" --jobs 4 2>&1 | tail -25
+/home/kinsy/pigeq-bin-bp mutate --unit-only --go extensions/pi-permission-system --mutations /tmp/bpmut.json --sdk-dir "${PIG_SDK_DIR:-/pigsrc}" --jobs 4 2>&1 | tail -25
 cd /work/components/permissions/extensions/pi-permission-system
 echo "== (4) performance (interleaved rounds, one pinned CPU set; see bench-rounds.sh)"
 bash /work/components/permissions/port/bashparse-diff/bench-rounds.sh 12 4
