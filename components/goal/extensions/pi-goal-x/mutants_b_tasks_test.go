@@ -242,7 +242,7 @@ func TestMutantsBCompleteWarmContext(t *testing.T) {
 	textContains(t, plain, "- 2026-08-04T09:06:00.000Z task_complete (task t6) evidence: ev 6", "evidence of a task completion")
 	textNotContains(t, plain, "Previous rejection", "no earlier audit")
 
-	rejected := warm(`{"type":"audit_result","goalId":"GOAL","verdict":"disapproved","report":"`+strings.Repeat("m", 700)+`","at":"2026-08-04T09:07:00.000Z"}`)
+	rejected := warm(`{"type":"audit_result","goalId":"GOAL","verdict":"disapproved","report":"` + strings.Repeat("m", 700) + `","at":"2026-08-04T09:07:00.000Z"}`)
 	textContains(t, rejected, "\nPrevious rejection (verify whether resolved): "+strings.Repeat("m", 600), "a previous rejection is passed on, cut to 600 chars")
 	textNotContains(t, rejected, strings.Repeat("m", 601), "the rejection is cut")
 	errored := warm(`{"type":"audit_result","goalId":"GOAL","verdict":"error","report":"it broke","at":"2026-08-04T09:07:00.000Z"}`)
