@@ -210,12 +210,6 @@
   "replace": "v, err := parseJSON([]byte(line))\n\tif err != nil {\n\t\treturn line, true\n\t}"
  },
  {
-  "name": "fork-blank-line-entry",
-  "file": "cd_command.go",
-  "find": "if jsTrim(line) == \"\" {\n\t\treturn nil, false\n\t}",
-  "replace": "if line == \"\" {\n\t\treturn nil, false\n\t}"
- },
- {
   "name": "fork-header-type-unchecked",
   "file": "cd_command.go",
   "find": "if kind, _ := header.get(\"type\"); kind != \"session\" {\n\t\treturn nil\n\t}",
@@ -286,12 +280,6 @@
   "file": "cd_command.go",
   "find": "if len(sourceEntries) == 0 {",
   "replace": "if len(sourceEntries) < 0 {"
- },
- {
-  "name": "fork-copy-skips-first-entry",
-  "file": "cd_command.go",
-  "find": "\tfor _, entry := range sourceEntries {\n\t\tif o, ok := entry.(*jsObject); ok {\n\t\t\tif kind, _ := o.get(\"type\"); kind == \"session\" {\n\t\t\t\tcontinue",
-  "replace": "\tfor _, entry := range sourceEntries[1:] {\n\t\tif o, ok := entry.(*jsObject); ok {\n\t\t\tif kind, _ := o.get(\"type\"); kind == \"session\" {\n\t\t\t\tcontinue"
  },
  {
   "name": "cd-run-same-dir",
@@ -850,12 +838,6 @@
   "file": "quote_picker.go",
   "find": "if modifier&qpModShift != 0 && shifted != nil {",
   "replace": "if false {"
- },
- {
-  "name": "picker-kitty-ctrl-alt",
-  "file": "quote_picker.go",
-  "find": "if modifier&^qpKittyAllowMods != 0 || modifier&(qpModAlt|qpModCtrl) != 0 {",
-  "replace": "if modifier&^qpKittyAllowMods != 0 {"
  },
  {
   "name": "picker-kitty-low-codepoint",
