@@ -94,5 +94,41 @@
   "file": "stuck.go",
   "find": "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {",
   "replace": "if prev.Failed != l.Failed {"
+ },
+ {
+  "name": "sql-delete-local-held",
+  "file": "sqltarget.go",
+  "find": "Severity: SeverityRisky, Label: \"SQL DELETE FROM \u2026 WHERE on a loopback database\"",
+  "replace": "Severity: SeverityDestructive, Label: \"SQL DELETE FROM \u2026 WHERE on a loopback database\""
+ },
+ {
+  "name": "sql-hosted-write-only-warns",
+  "file": "sqltarget.go",
+  "find": "Severity: SeverityDestructive, Label: \"SQL write against a hosted database (\"",
+  "replace": "Severity: SeverityRisky, Label: \"SQL write against a hosted database (\""
+ },
+ {
+  "name": "sql-hosted-select-held",
+  "file": "sqltarget.go",
+  "find": "Severity: SeverityRisky, Label: \"SQL client against a hosted database (\"",
+  "replace": "Severity: SeverityDestructive, Label: \"SQL client against a hosted database (\""
+ },
+ {
+  "name": "sql-read-only-wrapper-ignored",
+  "file": "sqltarget.go",
+  "find": "case reBeginRO.MatchString(nth(0)):\n\t\tstart = 1",
+  "replace": "case false:\n\t\tstart = 1"
+ },
+ {
+  "name": "rm-verb-never-authorizes",
+  "file": "authorize.go",
+  "find": "deleteVerbs     = []string{\"delete\", \"remove\", \"clean\", \"tidy\", \"purge\"}",
+  "replace": "deleteVerbs     = []string{\"zzz\"}"
+ },
+ {
+  "name": "find-delete-authorized-by-verb",
+  "file": "authorize.go",
+  "find": "if scope.Segments != nil {",
+  "replace": "if false {"
  }
 ]
