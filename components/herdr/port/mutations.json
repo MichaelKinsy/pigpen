@@ -128,8 +128,8 @@
  {
   "name": "report-method-release",
   "file": "extension.go",
-  "find": "r.send(\"state\", \"pane.report_agent\", payload)",
-  "replace": "r.send(\"state\", \"pane.release_agent\", payload)"
+  "find": "r.send(\"state\", \"pane.report_agent\", next.payload)",
+  "replace": "r.send(\"state\", \"pane.release_agent\", next.payload)"
  },
  {
   "name": "release-agent-name",
@@ -146,8 +146,8 @@
  {
   "name": "report-sent-twice",
   "file": "extension.go",
-  "find": "\t\tr.send(\"state\", \"pane.report_agent\", payload)\n",
-  "replace": "\t\tr.send(\"state\", \"pane.report_agent\", payload)\n\t\tr.send(\"state\", \"pane.report_agent\", payload)\n"
+  "find": "\t\tr.send(\"state\", \"pane.report_agent\", next.payload)\n",
+  "replace": "\t\tr.send(\"state\", \"pane.report_agent\", next.payload)\n\t\tr.send(\"state\", \"pane.report_agent\", next.payload)\n"
  },
  {
   "name": "seq-not-clock-seeded",
@@ -374,8 +374,8 @@
  {
   "name": "sends-do-not-queue-behind-each-other",
   "file": "extension.go",
-  "find": "\tif !r.sending {\n\t\tr.sending = true\n\t\tgo r.drain()",
-  "replace": "\tif true {\n\t\tr.sending = true\n\t\tgo r.drain()"
+  "find": "\tif !r.sending {\n\t\tr.sending = true\n\t\tfirst := r.takeLocked()",
+  "replace": "\tif true {\n\t\tr.sending = true\n\t\tfirst := r.takeLocked()"
  },
  {
   "name": "prompts-always-on",
