@@ -9,8 +9,10 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
+	"unsafe"
 )
 
 // SearchOptions are the per-search options every provider receives.
@@ -231,10 +233,44 @@ func isAbortError(err error) bool {
 
 const maxProviderBody = 16 << 20
 
+// bodyReadHint is the first buffer of a response body that does not announce its length.
+const bodyReadHint = 4096
+
+// readBody reads a response body, at most maxProviderBody bytes, into one buffer sized from the
+// announced length, so a typical response costs one allocation and no copy (io.ReadAll grows from
+// 512 bytes and a conversion to string copies the result).
 func readBody(resp *http.Response) (string, error) {
 	defer resp.Body.Close()
-	b, err := io.ReadAll(io.LimitReader(resp.Body, maxProviderBody))
-	return string(b), err
+	size := bodyReadHint
+	if n := resp.ContentLength; n > 0 && n < maxProviderBody {
+		size = int(n) + 1 // one spare byte lets the final Read report EOF without growing
+	}
+	buf := make([]byte, 0, size)
+	var err error
+	for len(buf) < maxProviderBody {
+		if len(buf) == cap(buf) {
+			buf = slices.Grow(buf, 1)
+		}
+		room := buf[len(buf):cap(buf)]
+		if len(buf)+len(room) > maxProviderBody {
+			room = room[:maxProviderBody-len(buf)]
+		}
+		var n int
+		n, err = resp.Body.Read(room)
+		buf = buf[:len(buf)+n]
+		if err != nil {
+			break
+		}
+	}
+	if err == io.EOF {
+		err = nil
+	}
+	return bytesToString(buf), err
+}
+
+// bytesToString views buf as a string without copying; the caller must not write to buf again.
+func bytesToString(buf []byte) string {
+	return unsafe.String(unsafe.SliceData(buf), len(buf))
 }
 
 func slice300(s string) string { return jsSlice(s, 0, 300) }
