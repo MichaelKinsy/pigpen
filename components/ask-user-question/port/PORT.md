@@ -1,40 +1,41 @@
-# Port record: rpiv-ask-user-question (slice A, partial)
+# Port record: rpiv-ask-user-question (slices A and B)
 
 | Input | Identity |
 |---|---|
 | Original | `@juicesharp/rpiv-ask-user-question` 2.11.0, `packages/rpiv-ask-user-question` of https://github.com/juicesharp/rpiv-mono, commit `61904e69e1a50e12585bdf15f0310e633a62ba36`, MIT (juicesharp) |
-| Oracle | Pi 1.0.0, Node 24.19.0, with the unmodified package at `port/oracle` (dependency `@juicesharp/rpiv-config` 2.12.0 from npm) |
-| Target | PiG 0.4.0+1.0.0 (build `76022638`), go1.27.1 |
-| Original's tests | 647 cases in 35 files. Slice A files: 173 cases, 148 exact twins and 25 named skips; the other 474 (22 files) are deferred to slice B, 8 of them the locale shim (E1) (`port/slices.json`, stated once) |
+| Oracle | Pi commit 1402973a9dbe8c627341e04c9744c54953e285ca (1.3.0+1402973a, built from source: the Pi PiG 0.5.0 targets), Node 24.19.0, with the unmodified package at `port/oracle` (dependency `@juicesharp/rpiv-config` 2.12.0 from npm) |
+| Target | PiG 0.5.0 (tag v0.5.0, 7a5422f66d), go1.27 |
+| Original's tests | 647 cases in 35 files: 621 exact twins and 26 named skips (the skips and their reasons are in the Go test files; `pigeq twins check`) |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
-## Scope: what is and is not ported
+## Scope
 
-**Ported (slice A):** the tool (schema, description, prompt guidance, config overrides), normalisation,
-validation, the response envelope, the sequential select/input dialog walker, the prompt and blocked events, the
-`before_agent_start` reconciler.
+Everything the original ships is ported: the tool, schema, envelope and events (slice A); the RPC dialog walker; and the
+interactive questionnaire (slice B: `internal/ui` is `state/` and `view/` file for file, `questionnaire.go` is the
+`ctx.ui.custom` factory and the collapse-key listener, built on the shared `components/pitui`). Unlike slice A, slice B cannot be
+reached by the RPC scenarios (Pi's RPC mode has no custom UI), so its equivalence evidence is the twins of the original's tests and
+`port/frames`: the original's real session, built through its own `makeSessionFactory`, driven by 173 scripted scenarios and
+recorded frame by frame under Pi 1402973a (`port/frames/recorder`), then replayed through the Go component
+(`TestFramesAgainstOriginal`, 1276 frames compared).
 
-**Not ported (slice B), so this port is partial:**
+Differences (all SDK-bound, none silent; `port/frames/known-differences.json` pins the observable ones):
 
-- The interactive questionnaire: a focused component with tabs, a submit tab, per-option notes, multi-select toggles,
-  the side-by-side markdown preview pane and the external editor. **The Go SDK can express it** (`Context.Custom` takes a
-  `RemoteComponent`: `Render(width)` and `HandleInput(data)`), so this is work, not a gap. It is 458 of the original's 647 test
-  cases (state reducer 47, key router 77, wrapping select 48, preview pane 86, factory 44, ...); with the
-  collapse-key listener (8) and the locale shim (8), 474 cases are deferred (`port/slices.json`). In a terminal this port
-  therefore shows the same select and input dialogs the original uses on RPC hosts.
-- The collapse key. Its hide-while-collapsed behaviour needs `ctx.ui.custom(options.onHandle)`, which the Go SDK lacks
-  (`pigeq gaps`: MISSING, blocking; owner ruling E2: keep the original's fallback, an approved exclusion; the lead files a PiG SDK request for a `Context.Custom` result handle with SetHidden/IsHidden/IsFocused). The original has a fallback without the
-  handle (a one-line row) that slice B would take.
-- Locales (E1: English only, an approved exclusion, same as rpiv-todo).
-- The terminal bell (G10, below).
-
-## Refusals while slice B is open
-
-In `tui` mode (where the original shows its questionnaire) `refuseUnported` (`refusal.go`) fails the call, before any
-dialog or event, for an option preview beyond 600 UTF-16 units and for a `collapseKey` other than the default or
-`off`. The text is `@pi-in-go/pigpen-ask-user-question (Go port) does not support <feature> yet. Install the
-original extension, npm:@juicesharp/rpiv-ask-user-question@2.11.0, which runs unchanged in PiG.` In `rpc` mode the
-original runs the same dialog walker, so nothing is refused. Tests: `refusal_test.go`. Removed when slice B lands.
+- **Overlay handle (E2).** `ctx.ui.custom(options.onHandle)` has no SDK counterpart (`pigeq gaps`: MISSING). The port takes the
+  original's own handle-less path (`canReopenWhileHidden` false): collapse shows the one-line row, the same key expands. The raw
+  terminal listener is ported (`registerCollapseKeyListener`, 8 twins) but production does not register it: without a handle it
+  can do nothing, and the SDK would make the host wait on the extension for a verdict on every keystroke. Needs-SDK: a
+  `Context.Custom` result handle with SetHidden/IsHidden/IsFocused.
+- **External editor (Ctrl+G).** `state/external-editor.ts` is ported and tested (`ui.EditWithExternalEditor`) but has no production
+  caller: it needs `tui.stop()`/`tui.start()`/`requestRender(true)` around a child with inherited stdio. The key reports the original's
+  failure path with the Pigpen refusal text. Needs-SDK: terminal suspend.
+- **Keybindings.** The factory's `KeybindingsManager` is stood in for by pi-tui's defaults plus `keybindings.json` of the agent
+  directory (legacy names migrated). Needs-SDK: `KeybindingsManager.matches`.
+- **Bell (G10).** No terminal write from a subprocess; 5 upstream cases are named skips. Needs-SDK: `Context.Bell()`.
+- **Syntax highlighting** of fenced code in previews: Pi's `highlightCode` uses cli-highlight; `HighlightCode` is nil. Owner decision
+  needed (port a highlighter, or accept).
+- **Locales (E1 lifted).** The nine locales are ported with rpiv-i18n 2.13.9's resolution (locale.json, LANG, LC_ALL; `--locale` is
+  not available). Owner decision pending: the original is English without `rpiv-i18n` installed.
+- **Pitui bugs open when this was written:** see the PR body.
 
 ## Mapping
 
@@ -49,7 +50,7 @@ original runs the same dialog walker, so nothing is refused. Tests: `refusal_tes
 | M7 | `reconcile.ts` | `reconcile` on `before_agent_start` | `reconcile_test.go` (16 twins) |
 | M8 | `config.ts` (collapse key spec, guidance) | `config.go` (the todo port's, adapted) | `config_test.go` |
 | M9 | `buildItemsForQuestion`, `sentinelsToAppend` | `buildItemsForQuestion` | `items_test.go` (7 twins) |
-| M10 | the interactive questionnaire (`state/`, `view/`, `QuestionnaireSession`) | **slice B, not ported** | named deferral |
+| M10 | the interactive questionnaire (`state/`, `view/`, `QuestionnaireSession`, the factory and collapse listener) | `internal/ui/*`, `questionnaire.go`, `host.go`, `keybindings.go` | the twins of `state/*`, `view/*`, `factory`, `ask-user-question.listener`; `port/frames` |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle`)
 
