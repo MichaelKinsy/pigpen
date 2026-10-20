@@ -1,0 +1,76 @@
+{
+  "name": "git-lease-push-feature-branch-warns",
+  "description": "A lease push to a named non-default branch is a warning.",
+  "files": {
+    "a.txt": "one\n"
+  },
+  "setup": [
+    [
+      "git",
+      "init",
+      "-q",
+      "-b",
+      "feature"
+    ],
+    [
+      "git",
+      "add",
+      "a.txt"
+    ],
+    [
+      "git",
+      "commit",
+      "-q",
+      "-m",
+      "one"
+    ]
+  ],
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "real"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "git push --force-with-lease origin feature"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "push my branch"
+      }
+    }
+  ]
+}

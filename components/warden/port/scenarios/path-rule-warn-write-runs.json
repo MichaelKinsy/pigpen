@@ -1,0 +1,59 @@
+{
+  "name": "path-rule-warn-write-runs",
+  "description": "A warn path rule lets the write run and tells the agent.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "agentFiles": {
+    "pi-warden/config.json": "{\n \"rules\": {\n  \"enabled\": false\n },\n \"action\": {\n  \"pathRules\": [\n   {\n    \"id\": \"prod-config\",\n    \"paths\": [\n     \"config/prod.yaml\"\n    ],\n    \"access\": \"none\",\n    \"tools\": [\n     \"write\"\n    ],\n    \"action\": \"warn\",\n    \"onlyIfExists\": false\n   }\n  ]\n }\n}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\n \"rules\": {\n  \"enabled\": false\n },\n \"action\": {\n  \"pathRules\": [\n   {\n    \"id\": \"prod-config\",\n    \"paths\": [\n     \"config/prod.yaml\"\n    ],\n    \"access\": \"none\",\n    \"tools\": [\n     \"write\"\n    ],\n    \"action\": \"warn\",\n    \"onlyIfExists\": false\n   }\n  ]\n }\n}"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "config/prod.yaml",
+            "content": "a: 1\n"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "write the config"
+      }
+    }
+  ]
+}

@@ -51,6 +51,10 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 		input = map[string]any{}
 	}
 	content := contentParts(data["content"])
+	// guardcore: record what a bash/write call created under the temp directory (session scratch).
+	if id, _ := data["toolCallId"].(string); id != "" {
+		w.gcToolResult(id, tool, input, ResultText(content))
+	}
 	isError, _ := data["isError"].(bool)
 	details, _ := data["details"].(map[string]any)
 	failed := ResultFailed(isError, details, content)

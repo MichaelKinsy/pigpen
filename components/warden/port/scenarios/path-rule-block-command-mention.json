@@ -1,0 +1,61 @@
+{
+  "name": "path-rule-block-command-mention",
+  "description": "A block path rule with access none on the command surface holds a command that mentions the path.",
+  "files": {
+    "secrets.txt": "s\n"
+  },
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "agentFiles": {
+    "pi-warden/config.json": "{\n \"rules\": {\n  \"enabled\": false\n },\n \"action\": {\n  \"pathRules\": [\n   {\n    \"id\": \"no-secrets\",\n    \"paths\": [\n     \"secrets.txt\"\n    ],\n    \"access\": \"none\",\n    \"tools\": [\n     \"*\"\n    ],\n    \"action\": \"block\"\n   }\n  ]\n }\n}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\n \"rules\": {\n  \"enabled\": false\n },\n \"action\": {\n  \"pathRules\": [\n   {\n    \"id\": \"no-secrets\",\n    \"paths\": [\n     \"secrets.txt\"\n    ],\n    \"access\": \"none\",\n    \"tools\": [\n     \"*\"\n    ],\n    \"action\": \"block\"\n   }\n  ]\n }\n}"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat secrets.txt"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "print the notes"
+      }
+    }
+  ]
+}

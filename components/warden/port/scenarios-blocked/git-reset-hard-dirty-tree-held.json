@@ -1,0 +1,81 @@
+{
+  "name": "git-reset-hard-dirty-tree-held",
+  "description": "An untracked file makes the tree dirty: the hard reset is held.",
+  "files": {
+    "a.txt": "one\n"
+  },
+  "setup": [
+    [
+      "git",
+      "init",
+      "-q",
+      "-b",
+      "feature"
+    ],
+    [
+      "git",
+      "add",
+      "a.txt"
+    ],
+    [
+      "git",
+      "commit",
+      "-q",
+      "-m",
+      "one"
+    ],
+    [
+      "sh",
+      "-c",
+      "echo two > b.txt"
+    ]
+  ],
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "real"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "git reset --hard"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "undo the last change"
+      }
+    }
+  ]
+}

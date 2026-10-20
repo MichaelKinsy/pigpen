@@ -4,28 +4,99 @@ import (
 	"strings"
 )
 
-// Authorization (src/guard.ts): a deterministic reading of the user's prompt against the deletions a command
-// would make. Only rm-family hits of a bash command yield violations; every other hit is decided by the
-// pattern loop. A prompt authorizes a hit when it names the action (delete, remove, clean...), does not
-// negate it, and names every target. Nothing authorizes a recursive rm of `/`, `~`, `$HOME`, a parent, or a
-// path outside the project.
+// The violation model and authorization (src/guard.ts): a deterministic reading of the user's prompt against the
+// deletions a command would make. Only rm-family hits of a bash command yield violations; every other hit is decided by
+// the pattern loop. A prompt authorizes a violation when it names the action (delete, remove, clean...), does not negate
+// it, and names every target. Nothing authorizes a recursive rm of `/`, `~`, `$HOME`, a parent, or a path outside the
+// project.
 
-type violationScope struct {
-	paths []string
-	// segments are the command pipelines the prompt must quote when the deletion has no readable target.
-	segments []string
+// ViolationSource is who found the violation.
+type ViolationSource string
+
+const (
+	SourcePattern       ViolationSource = "pattern"
+	SourceRulesGuard    ViolationSource = "rules-guard"
+	SourceSecurityGuard ViolationSource = "security-guard"
+	SourceSlopGuard     ViolationSource = "slop-guard"
+)
+
+// ViolationScope is the scope of a violation for deterministic authorization matching.
+type ViolationScope struct {
+	// Paths are the files involved, e.g. ["eval/reports/"]; none means the verb alone decides.
+	Paths []string
+	// Command is the full shell command, if bash.
+	Command string
+	// Tool is the tool name.
+	Tool string
+	// TargetIndex and TargetCount say which target of an rm this violation represents.
+	TargetIndex, TargetCount int
+	// Segments are the command pipelines the prompt must quote (whitespace collapsed) when an rm-family violation has no
+	// target. nil means no such requirement; an empty non-nil slice is satisfied by any prompt.
+	Segments []string
 }
 
-type violation struct {
-	id       string
-	severity Severity
-	scope    violationScope
+// Violation is a pattern detection result enriched with severity, authorization eligibility, and scope.
+type Violation struct {
+	ID          string
+	Severity    Severity
+	Source      ViolationSource
+	Description string
+	// MatchedRule is the pi-warden.md rule text, if Source is the rules guard.
+	MatchedRule string
+	// PatternFamily groups related patterns (e.g. "rm" covers rm, git-rm, find-delete).
+	PatternFamily string
+	Scope         ViolationScope
+}
+
+// Authorization is the result of deterministic authorization analysis for one violation.
+type Authorization struct {
+	// Authorized is true only if action and scope match and nothing negates it.
+	Authorized bool
+	// ActionMatched: the prompt contains the action verb.
+	ActionMatched bool
+	// ScopeMatched: the prompt references the affected paths/targets (when there is a scope).
+	ScopeMatched bool
+	// Negated: the prompt negates the action ("don't", "do not", "never", "skip").
+	Negated bool
+}
+
+// EscalatedViolation is a violation after escalation rules have been applied.
+type EscalatedViolation struct {
+	Violation
+	EscalatedSeverity Severity
 }
 
 var (
-	rmFamilyIDs      = setOf("rm", "rm-recursive", "rm-rf", "rm-recursive-dangerous-target", "rm-session-scratch", "find-delete")
-	neverAuthorized  = setOf("rm-recursive-dangerous-target")
-	deleteVerbs      = []string{"delete", "remove", "clean", "tidy", "purge"}
+	rmFamilyIDs     = setOf("rm", "rm-recursive", "rm-rf", "rm-recursive-dangerous-target", "rm-session-scratch", "find-delete")
+	neverAuthorized = setOf("rm-recursive-dangerous-target")
+	deleteVerbs     = []string{"delete", "remove", "clean", "tidy", "purge"}
+	// actionVerbTable are the action verb families for authorization matching. Keys match a violation's patternFamily or id.
+	actionVerbTable = map[string][]string{
+		"git-commit":                    {"commit"},
+		"git-push":                      {"push"},
+		"git-force-push":                {"force push", "force-push"},
+		"git-force-with-lease":          {"force push", "force-push", "force-with-lease"},
+		"deploy":                        {"deploy", "release", "ship"},
+		"rm":                            deleteVerbs,
+		"rm-recursive":                  deleteVerbs,
+		"rm-rf":                         deleteVerbs,
+		"rm-recursive-dangerous-target": deleteVerbs,
+		"rm-session-scratch":            deleteVerbs,
+		"find-delete":                   deleteVerbs,
+		"git-rm":                        deleteVerbs,
+		"publish":                       {"publish"},
+		"npm-publish":                   {"publish"},
+		"merge":                         {"merge"},
+		"pr-merge":                      {"merge"},
+		"git-reset-hard":                {"reset"},
+		"git-clean":                     {"clean"},
+		"sql-drop":                      {"drop"},
+		"sql-truncate":                  {"truncate"},
+		"sql-delete":                    {"delete"},
+		"sql-delete-local":              {"delete"},
+		"infra-destroy":                 {"destroy"},
+		"git-branch-force-delete":       {"delete", "remove"},
+	}
 	reNegators       = lazyRE(`(?i)\b(?:don'?t|do\s+not|never|skip|avoid|without|no\s+(?:need\s+to\s+)?)\b`)
 	reUnscopedTarget = lazyRE("(?s)^(?:.?|[./~*]+|~.*|.*\\$.*)$")
 	rePathBefore     = lazyRE("[\\s\"'`(\\[,:;]")
@@ -35,21 +106,16 @@ var (
 	reSplitPipelines = lazyRE(`\n|;|&&|\|\||&`)
 )
 
-func actionVerbs(id string) []string {
-	if rmFamilyIDs[id] {
-		return deleteVerbs
-	}
-	return nil
-}
-
+// isNegated: whether a negator precedes the action verb within 40 characters.
 func isNegated(prompt, verb string) bool {
 	lower := strings.ToLower(prompt)
 	i := strings.Index(lower, verb)
 	if i < 0 {
 		return false
 	}
-	start := max(0, i-40)
-	return reNegators.MatchString(lower[start:i])
+	// JavaScript measures in UTF-16 units: so does the 40-character window.
+	at := utf16Len(lower[:i])
+	return reNegators.MatchString(utf16Slice(lower, max(0, at-40), at))
 }
 
 func collapseSpace(text string) string { return jsTrim(reSpaceRuns.ReplaceAllString(text, " ")) }
@@ -73,21 +139,25 @@ func checkExact(haystack, needle string) bool {
 	return false
 }
 
-func scopeMatches(prompt string, scope violationScope) bool {
-	if scope.segments != nil {
+// scopeMatches is deterministic scope matching: exact path or basename. For command-scoped violations (bash with no
+// file paths), scope is not required to match: the verb family alone determines authorization. File-scoped violations
+// require the prompt to mention the path.
+func scopeMatches(prompt string, scope ViolationScope) bool {
+	// A deletion with no readable target (`xargs rm -rf`, `find -delete`) can remove anything: the verb is not enough.
+	if scope.Segments != nil {
 		text := collapseSpace(prompt)
-		for _, seg := range scope.segments {
+		for _, seg := range scope.Segments {
 			if !strings.Contains(text, collapseSpace(seg)) {
 				return false
 			}
 		}
 		return true
 	}
-	if len(scope.paths) == 0 {
-		return true
+	if len(scope.Paths) == 0 {
+		return true // no file paths = verb alone determines authorization
 	}
 	lower := strings.ToLower(prompt)
-	for _, p := range scope.paths {
+	for _, p := range scope.Paths {
 		// A root-like target or a one-character one is found in almost any prompt.
 		if reUnscopedTarget.MatchString(strings.TrimRight(p, "/")) {
 			return false
@@ -96,6 +166,7 @@ func scopeMatches(prompt string, scope violationScope) bool {
 		if checkExact(lower, lp) {
 			continue
 		}
+		// Trailing slash in path: also match when the prompt omits it ("delete eval/reports" for "eval/reports/").
 		if strings.HasSuffix(lp, "/") && len(lp) > 1 && checkExact(lower, lp[:len(lp)-1]) {
 			continue
 		}
@@ -104,27 +175,41 @@ func scopeMatches(prompt string, scope violationScope) bool {
 	return true
 }
 
-func authorize(prompt string, v violation) bool {
-	if v.severity == SeverityDeny || v.severity == SeveritySensitive || neverAuthorized[v.id] {
-		return false
+// isAuthEligible: whether a violation with this severity is authorization-eligible. Hard denies and sensitive-path
+// violations are not.
+func isAuthEligible(severity Severity) bool {
+	return severity != SeverityDeny && severity != SeveritySensitive
+}
+
+// authorize is the full authorization check for one violation against the user's prompt. It requires (1) the action
+// verb in the prompt, (2) no negation, (3) a scope match. Command-scoped violations match on the verb; path-scoped
+// ones require every path to appear exactly.
+func authorize(prompt string, v Violation) Authorization {
+	family := v.PatternFamily
+	if family == "" {
+		family = v.ID
 	}
-	verbs := actionVerbs(v.id)
+	if !isAuthEligible(v.Severity) || neverAuthorized[family] {
+		return Authorization{}
+	}
+	verbs := actionVerbTable[family]
 	lower := strings.ToLower(prompt)
-	matched := false
+	actionMatched := false
 	for _, verb := range verbs {
 		if strings.Contains(lower, verb) {
-			matched = true
+			actionMatched = true
 		}
 	}
-	if !matched {
-		return false
+	if !actionMatched {
+		return Authorization{}
 	}
 	for _, verb := range verbs {
 		if isNegated(prompt, verb) {
-			return false
+			return Authorization{ActionMatched: true, Negated: true}
 		}
 	}
-	return scopeMatches(prompt, v.scope)
+	scopeMatched := scopeMatches(prompt, v.Scope)
+	return Authorization{Authorized: scopeMatched, ActionMatched: true, ScopeMatched: scopeMatched}
 }
 
 func rmSegmentTargets(args string) []string {
@@ -169,7 +254,7 @@ func rmSegments(command string) []rmSegment {
 	for _, seg := range splitShell(StripDataText(command).Text) {
 		if m := reRmCommand.FindStringSubmatch(seg); m != nil {
 			s := rmSegment{targets: rmSegmentTargets(m[1])}
-			if hit := classifyRm(seg, ""); hit != nil {
+			if hit := classifyRm(seg, "", nil); hit != nil {
 				s.id, s.hasID = hit.ID, true
 			}
 			out = append(out, s)
@@ -245,8 +330,11 @@ func segmentsOfHit(hit PatternHit, hits []PatternHit, segments []rmSegment) []rm
 	return rest
 }
 
-// hitViolations are the violations of each hit, in hit order.
-func hitViolations(hits []PatternHit, tool string, input map[string]any) [][]violation {
+// hitViolations are the violations of each hit, in hit order. Only rm-family hits of a shell command yield violations:
+// one per target of the segments that produced the hit, so authorization and scope checks are per target (the prompt must
+// name each target the user wants to authorize). An rm-family hit with no readable target produces one violation without
+// paths, scoped to the command segments the prompt must quote. Other hits are decided by the pattern loop.
+func hitViolations(hits []PatternHit, tool string, input map[string]any) [][]Violation {
 	command, _ := input["command"].(string)
 	if command == "" {
 		command, _ = input["code"].(string)
@@ -255,11 +343,12 @@ func hitViolations(hits []PatternHit, tool string, input map[string]any) [][]vio
 	if tool == "bash" && command != "" {
 		segments = rmSegments(command)
 	}
-	out := make([][]violation, len(hits))
+	out := make([][]Violation, len(hits))
 	for i, hit := range hits {
 		if tool != "bash" || command == "" || !rmFamilyIDs[hit.ID] {
 			continue
 		}
+		base := Violation{ID: hit.ID, Severity: hit.Severity, Source: SourcePattern, Description: orDefault(hit.Message, hit.Label), PatternFamily: hit.ID}
 		var targets []string
 		for _, s := range segmentsOfHit(hit, hits, segments) {
 			targets = append(targets, s.targets...)
@@ -267,12 +356,25 @@ func hitViolations(hits []PatternHit, tool string, input map[string]any) [][]vio
 		if len(targets) == 0 {
 			// A deletion with no readable target (`xargs rm -rf`, `find -delete`) can remove anything: only a
 			// task that quotes its command segment authorizes it.
-			out[i] = []violation{{id: hit.ID, severity: hit.Severity, scope: violationScope{segments: untargetedSegments(hit, command)}}}
+			v := base
+			v.Scope = ViolationScope{Command: command, Tool: tool, Segments: untargetedSegments(hit, command)}
+			out[i] = []Violation{v}
 			continue
 		}
-		for _, t := range targets {
-			out[i] = append(out[i], violation{id: hit.ID, severity: hit.Severity, scope: violationScope{paths: []string{t}}})
+		for ti, t := range targets {
+			v := base
+			v.Scope = ViolationScope{Paths: []string{t}, Command: command, Tool: tool, TargetIndex: ti, TargetCount: len(targets)}
+			out[i] = append(out[i], v)
 		}
+	}
+	return out
+}
+
+// patternHitsToViolations converts hits to violations with scope (hitViolations, flattened).
+func patternHitsToViolations(hits []PatternHit, tool string, input map[string]any) []Violation {
+	var out []Violation
+	for _, vs := range hitViolations(hits, tool, input) {
+		out = append(out, vs...)
 	}
 	return out
 }

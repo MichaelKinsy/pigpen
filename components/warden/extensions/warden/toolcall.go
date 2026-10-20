@@ -84,14 +84,18 @@ func blockResult(reason string) any { return map[string]any{"block": true, "reas
 func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	cfg := w.config(ctx)
 	tool, _ := data["toolName"].(string)
-	if !cfg.Enabled || !cfg.Action.Enabled || !toolGuarded(cfg.Action, tool) {
-		return nil, nil
-	}
 	input, _ := data["input"].(map[string]any)
 	if input == nil {
 		input = map[string]any{}
 	}
 	id, _ := data["toolCallId"].(string)
+	if cfg.Enabled {
+		// guardcore: temp paths this call may create (session scratch) and the one-time rule notices.
+		w.gcToolCallStart(ctx, cfg, id, tool, input)
+	}
+	if !cfg.Enabled || !cfg.Action.Enabled || !toolGuarded(cfg.Action, tool) {
+		return nil, nil
+	}
 	judge := w.judgeFor(ctx, cfg)
 	w.mu.Lock()
 	fallback := w.lastPrompt
@@ -99,9 +103,13 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	w.mu.Unlock()
 	call := ToolCallRef{ID: id, Tool: tool, Input: input}
 	conv := conversationOf(w.branchOf(ctx), id, fallback, call)
+	// guardcore: a write/edit to a protected path arms matching command patterns before the guard looks at the call.
+	w.gcArm(ctx, cfg, tool, input)
 	w.rulesFirstRunNotice(ctx, cfg)                            // rules hook: the first-run notice
 	plan := w.rulesStart(ctx, cfg, call, conv.Siblings, judge) // rules hook: the rules requests start beside the action request
-	verdict := w.guard.Inspect(newContext(), call, conv, InspectOptions{Config: cfg.Action, Cwd: ctx.Cwd(), Judge: judge, Timeout: w.timeout(cfg), Git: w.opts.Git})
+	verdict := w.guard.Inspect(newContext(), call, conv, InspectOptions{Config: cfg.Action, Cwd: ctx.Cwd(), Judge: judge, Timeout: w.timeout(cfg), Git: w.opts.Git, GuardExtras: w.gcExtras(cfg)})
+	// guardcore: armed rules fire as deterministic hits on top of the verdict.
+	verdict = w.gcArmed(cfg, tool, input, verdict)
 
 	dv := deliveryVerdict(verdict)
 	mode := w.mode(cfg, ctx)
@@ -131,8 +139,14 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	if verdict.ShouldProceedSteer && !verdict.ShouldProceedTraceOnly {
 		notes = append(notes, ShouldProceedMessage(verdict))
 	}
+	// guardcore: the large-output steer, once per command family per session (never holds).
+	var noteKinds []SteerKind
+	if note := w.gcLargeOutput(verdict); note != "" && w.adaptiveSend(ctx, cfg, SteerKindLargeOutput) {
+		notes = append(notes, note)
+		noteKinds = append(noteKinds, SteerKindLargeOutput)
+	}
 	// One combined steer per call: the action notes, then the rules findings, then the sensitive-path notes.
-	cn := &callNotes{notes: notes}
+	cn := &callNotes{notes: notes, kinds: noteKinds}
 	if len(notes) > 0 {
 		cn.addGuard(SteerGuardAction)
 	}

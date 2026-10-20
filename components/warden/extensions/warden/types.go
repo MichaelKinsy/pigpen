@@ -54,6 +54,8 @@ type ActionSummary struct {
 	Input     string     `json:"input,omitempty"`
 	// DataText is present when part of the command is data (a heredoc body, a quoted message).
 	DataText string `json:"dataText,omitempty"`
+	// Writes are the files a bash command writes with content literal in the command; Excerpt then holds that content.
+	Writes []string `json:"writes,omitempty"`
 }
 
 // EditPair is one edit of an `edit` call, redacted and clipped.
@@ -70,11 +72,19 @@ type Judgment struct {
 	ScopeConfidence float64
 	Approved        *float64
 	Mutates         *float64
-	IntentMismatch  *float64
-	Visible         *float64
-	ShouldProceed   *float64
-	Model           string
-	ElapsedMs       int
+	// Regretted is P(the latest user message regrets an allowed call of the previous turn); RegretTarget names it when
+	// several were offered.
+	Regretted    *float64
+	RegretTarget string
+	// SecurityRisk is P(the written content introduces a security weakness), asked for write/edit when security.enabled.
+	SecurityRisk *float64
+	// LargeOutput is P(the command prints far more than the agent needs); bash only, never holds.
+	LargeOutput    *float64
+	IntentMismatch *float64
+	Visible        *float64
+	ShouldProceed  *float64
+	Model          string
+	ElapsedMs      int
 }
 
 // Verdict is the action guard's decision.
@@ -98,9 +108,17 @@ type Verdict struct {
 	ShouldProceedSteer                bool
 	ShouldProceedTraceOnly            bool
 	ShouldProceedTraceOnlyReasonIndex int
-	Extra                             map[string]any
-	Error                             string
-	ErrorCode                         string
+	// Slop is one probability per symptom when the slop questions were asked; SlopSymptoms are those at or above the
+	// threshold, strongest first. The level itself is never raised by slop.
+	Slop         *SlopJudgment
+	SlopSymptoms []string
+	SlopReasons  []string
+	// LargeOutputFamily is the command family of a bash call at or above the large-output threshold; the agent is
+	// steered once per family per session.
+	LargeOutputFamily string
+	Extra             map[string]any
+	Error             string
+	ErrorCode         string
 }
 
 // TaskMessage is one earlier message given to the judge for scope context.
