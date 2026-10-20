@@ -198,7 +198,7 @@ var exemptableIDs = func() []string {
 	for _, r := range shellRules {
 		ids = append(ids, r.ID)
 	}
-	return append(ids, "rm-recursive", "rm-rf", "rm-recursive-dangerous-target", "sensitive-path")
+	return append(ids, "rm-recursive", "rm-rf", "rm-recursive-dangerous-target", "rm-session-scratch", "sql-delete-local", "sql-hosted", "sql-hosted-write", "sensitive-path")
 }()
 
 // ---------------------------------------------------------------------------
@@ -286,7 +286,11 @@ func isInside(target, cwd string) bool {
 	return rel == "." || (!strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel))
 }
 
-func classifyRm(segment, cwd string) *PatternHit {
+// classifyRm reads one rm segment. A recursive rm with both recursive and force flags is destructive when a target is
+// absolute (outside the project), home, a variable, a wildcard or a parent; relative ones are risky. A quote,
+// parenthesis, or backtick before `rm` is allowed so a quoted or substituted command is read; data quotes were blanked
+// before this runs. With scratch records, a dangerous target set that is all session scratch is risky.
+func classifyRm(segment, cwd string, scratch ScratchRecords) *PatternHit {
 	m := reRm.FindStringSubmatch(segment)
 	if m == nil {
 		return nil
@@ -334,6 +338,19 @@ func classifyRm(segment, cwd string) *PatternHit {
 					dangerous = true
 				}
 			}
+		}
+	}
+	if dangerous && len(scratch) > 0 && len(targets) > 0 {
+		budget := newScratchBudget()
+		allScratch := true
+		for _, t := range targets {
+			if !isSessionScratch(t, scratch, budget) {
+				allScratch = false
+				break
+			}
+		}
+		if allScratch {
+			return &PatternHit{ID: "rm-session-scratch", Severity: SeverityRisky, Label: "recursive rm of session scratch: every target is under the temp directory and was created in this session"}
 		}
 	}
 	switch {
@@ -542,13 +559,19 @@ type PatternOptions struct {
 	CommandRules     []CommandRule
 	CommandDenyRules []CommandRule
 	ExemptRules      []string
+	PathRules        []PathRule
+	// Scratch holds real paths the agent created under the temp directory in this session; a recursive rm of only these
+	// is not destructive.
+	Scratch ScratchRecords
+	// Platform is the platform scratchPlatform decides for; the running one when empty.
+	Platform string
 	// Git runs the git state checks (default: the real git).
 	Git GitRunner
 }
 
 // UnknownExemptIds are exempt ids that name neither a built-in, a classifier id, nor one of the user's own
 // rules: inert, but almost certainly not what the user meant.
-func UnknownExemptIds(exempt []string, commandRules, commandDenyRules []CommandRule) []string {
+func UnknownExemptIds(exempt []string, commandRules, commandDenyRules []CommandRule, pathRules []PathRule, armingRules []ArmingRule) []string {
 	known := map[string]bool{}
 	for _, id := range exemptableIDs {
 		known[id] = true
@@ -557,6 +580,12 @@ func UnknownExemptIds(exempt []string, commandRules, commandDenyRules []CommandR
 		known[r.ID] = true
 	}
 	for _, r := range commandDenyRules {
+		known[r.ID] = true
+	}
+	for _, r := range pathRules {
+		known[r.ID] = true
+	}
+	for _, r := range armingRules {
 		known[r.ID] = true
 	}
 	out := []string{}
@@ -630,6 +659,18 @@ func (h *hitSet) set(hit PatternHit) {
 	}
 	h.byID[hit.ID] = hit
 }
+func (h *hitSet) del(id string) {
+	if !h.has(id) {
+		return
+	}
+	delete(h.byID, id)
+	for i, o := range h.order {
+		if o == id {
+			h.order = append(h.order[:i], h.order[i+1:]...)
+			break
+		}
+	}
+}
 func (h *hitSet) list() []PatternHit {
 	out := make([]PatternHit, 0, len(h.order))
 	for _, id := range h.order {
@@ -660,14 +701,22 @@ func MatchPatterns(tool string, input map[string]any, cwd string, opts *PatternO
 				hits.add(PatternHit{ID: rule.ID, Severity: rule.Severity, Label: rule.Label})
 			}
 		}
+		applySqlTargets(view.Command, hits, exempt)
 		if h, ok := hits.byID["git-reset-hard"]; ok && h.Severity == SeverityDestructive && cleanHardReset(view.Command, cwd, git) {
 			hits.set(PatternHit{ID: "git-reset-hard", Severity: SeverityRisky, Label: "git reset --hard on a clean working tree"})
 		}
 		if h, ok := hits.byID["git-force-with-lease"]; ok && h.Severity == SeverityDestructive && !hits.has("git-force-push") && safeLeasePush(view.Command, cwd, git) {
 			hits.set(PatternHit{ID: "git-force-with-lease", Severity: SeverityRisky, Label: "git push --force-with-lease to a branch that is not the default"})
 		}
+		// A command that raises privileges anywhere (`sudo`, `doas`, `su -c`, a heredoc fed to `sudo bash`) deletes as
+		// someone else, and one that moves, links, copies, or extracts data can fill a path after the birth-time walk: no
+		// scratch.
+		scratch := opts.Scratch
+		if rePrivileged.MatchString(command) || reMovesIn.MatchString(unquoted(view.Command)) || reMovesIn.MatchString(unquoted(command)) || !scratchPlatform(opts.Platform) {
+			scratch = nil
+		}
 		for _, segment := range splitShell(command) {
-			if hit := classifyRm(segment, cwd); hit != nil && !exempt[hit.ID] {
+			if hit := classifyRm(segment, cwd, scratch); hit != nil && !exempt[hit.ID] {
 				hits.add(*hit)
 			}
 		}
@@ -700,6 +749,9 @@ func MatchPatterns(tool string, input map[string]any, cwd string, opts *PatternO
 	}
 	if path, ok := input["path"].(string); ok && path != "" && SensitivePath(path) {
 		hits.add(PatternHit{ID: "sensitive-path", Severity: SeveritySensitive, Label: "touches a secrets or credentials file"})
+	}
+	for _, hit := range matchPathRules(tool, input, cwd, opts.PathRules, exempt) {
+		hits.add(hit)
 	}
 	return hits.list()
 }

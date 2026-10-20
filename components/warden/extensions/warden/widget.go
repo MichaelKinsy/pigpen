@@ -111,6 +111,7 @@ func actionTokens(v Verdict, at time.Time) Tokens {
 		put(t, "approved", fixedp(j.Approved))
 		put(t, "intent", fixedp(j.IntentMismatch))
 		put(t, "visible", fixedp(j.Visible))
+		put(t, "largeOutput", fixedp(j.LargeOutput))
 		put(t, "model", j.Model)
 		t["ms"] = strconv.Itoa(j.ElapsedMs)
 	}
@@ -120,6 +121,18 @@ func actionTokens(v Verdict, at time.Time) Tokens {
 			plan = utf16Slice(plan, 0, 80) + "…"
 		}
 		t["plan"] = reWhitespaceRun.ReplaceAllString(plan, " ")
+	}
+	if v.Slop != nil {
+		if len(v.SlopSymptoms) > 0 {
+			parts := make([]string, len(v.SlopSymptoms))
+			for i, symptom := range v.SlopSymptoms {
+				parts[i] = symptom + " " + toFixed(v.Slop.Score(symptom), 2)
+			}
+			t["slop"] = strings.Join(parts, ", ")
+		} else {
+			t["slop"] = "none"
+		}
+		t["slopStub"], t["slopComments"], t["slopDead"], t["slopHedging"] = toFixed(v.Slop.Stub, 2), toFixed(v.Slop.Comments, 2), toFixed(v.Slop.Dead, 2), toFixed(v.Slop.Hedging, 2)
 	}
 	if len(v.Patterns) > 0 {
 		ids := make([]string, len(v.Patterns))

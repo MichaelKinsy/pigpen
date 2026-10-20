@@ -28,6 +28,8 @@ type InspectOptions struct {
 	Judge   Judge
 	Timeout time.Duration
 	Git     GitRunner
+	// GuardExtras ride every request this guard makes (slop, large output, scratch, host paths, ...).
+	GuardExtras
 }
 
 type prejudged struct {
@@ -95,7 +97,7 @@ func (g *ActionGuard) Inspect(ctx context.Context, call ToolCallRef, conv Conver
 	retryAfterHold := g.holdPending && g.lastHoldPrompt != conv.Task
 	judgeCall := func(tool string, input map[string]any) Verdict {
 		return EvaluateAction(ctx, ActionInput{Tool: tool, Input: input, Cwd: opts.Cwd, Task: conv.Task, Context: conv.Context, Plan: conv.Plan, Spine: conv.Spine},
-			EvaluateOptions{Config: opts.Config, Judge: opts.Judge, RetryAfterHold: retryAfterHold, Timeout: opts.Timeout, Git: opts.Git})
+			EvaluateOptions{Config: opts.Config, Judge: opts.Judge, RetryAfterHold: retryAfterHold, Timeout: opts.Timeout, Git: opts.Git, GuardExtras: opts.GuardExtras})
 	}
 	var started []*prejudged
 	// A retry after a hold stays sequential: an approval consumed by one sibling changes the question for the next.
@@ -114,7 +116,7 @@ func (g *ActionGuard) Inspect(ctx context.Context, call ToolCallRef, conv Conver
 				defer g.inflight.Done()
 				defer close(p.done)
 				p.verdict = EvaluateAction(bg, ActionInput{Tool: sib.Tool, Input: sib.Input, Cwd: opts.Cwd, Task: conv.Task, Context: conv.Context, Plan: conv.Plan, Spine: conv.Spine},
-					EvaluateOptions{Config: opts.Config, Judge: notifier, Timeout: opts.Timeout, Git: opts.Git})
+					EvaluateOptions{Config: opts.Config, Judge: notifier, Timeout: opts.Timeout, Git: opts.Git, GuardExtras: opts.GuardExtras})
 			}(sib)
 		}
 	}

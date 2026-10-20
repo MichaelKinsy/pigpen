@@ -32,6 +32,8 @@ type Options struct {
 	// NewJudge builds the judge for the configured backend; nil uses the real backends.
 	NewJudge func(ctx sdk.Context, cfg Config, budget *Budget, getenv func(string) string) (Judge, error)
 	Now      func() time.Time
+	// ScratchPlatform overrides the platform the session-scratch exemption decides for (tests; "" is the running one).
+	ScratchPlatform string
 }
 
 type warden struct {
@@ -63,6 +65,8 @@ type warden struct {
 	budgetExhausted bool
 	// adaptor is the per-model steer adaptation; the default sends everything.
 	adaptor steerAdaptor
+	// gc is the guard core's session state: arming, session scratch, host paths, large-output memory.
+	gc guardcoreState
 }
 
 // Extension returns the guard.
@@ -82,7 +86,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	if o.Now == nil {
 		o.Now = time.Now
 	}
-	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}}
+	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, gc: newGuardcoreState()}
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
@@ -268,6 +272,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) 
 	loadErr, enabled := w.loadErr, w.cfg.Enabled
 	w.mu.Unlock()
 	w.guard.Reset()
+	w.gcSessionStart(ctx)
 	if loadErr != "" {
 		w.say(ctx, loadErr, "warning")
 	}
