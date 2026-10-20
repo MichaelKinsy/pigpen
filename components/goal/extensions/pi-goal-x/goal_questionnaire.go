@@ -60,11 +60,11 @@ type proposalPresentationSegments struct{ tasksStart, tasksEnd, tailStart int }
 
 var (
 	ansiSGRRe       = regexp.MustCompile("\x1b\\[[0-9;]*m")
-	taskLineRe      = regexp.MustCompile(`^\s*\[[ x~]\]`)
+	taskLineRe      = regexp.MustCompile(`^` + jsS + `*\[[ x~]\]`)
 	boxBorderRe     = regexp.MustCompile(`^[└┐┤┘─]`)
 	announceRe      = regexp.MustCompile(`^● Goal (draft|tweak) ready for confirmation\.$`)
-	sectionMarkerRe = regexp.MustCompile(`^───\s+(.+?)\s+───$`)
-	checkboxRe      = regexp.MustCompile(`^(\[.\])(\s+)(.+)$`)
+	sectionMarkerRe = regexp.MustCompile(`^───` + jsS + `+(` + jsDot + `+?)` + jsS + `+───$`)
+	checkboxRe      = regexp.MustCompile(`^(\[` + jsDot + `\])(` + jsS + `+)(` + jsDot + `+)$`)
 	goalSectionRe   = regexp.MustCompile(`^(=== (Goal|Sisyphus Goal) ===|Objective:|Success criteria:|Boundaries:|Constraints:|Verification contract:|If blocked:)`)
 	borderStartRe   = regexp.MustCompile(`^[┌├└┐┤┘─]`)
 	vagueTopicRe    = regexp.MustCompile(`(整理笔记|organize notes|notes|笔记)$`)

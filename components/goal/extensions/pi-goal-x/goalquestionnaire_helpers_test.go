@@ -35,8 +35,8 @@ func (u *mockDialogUI) selectOption(title string, options []string) (string, boo
 func (u *mockDialogUI) input(title, placeholder string) (string, bool, error) {
 	return u.inputFn(title, placeholder)
 }
-func (u *mockDialogUI) notify(message, level string)   { u.notices = append(u.notices, message) }
-func (u *mockDialogUI) setWorkingVisible(visible bool) { u.workingLog = append(u.workingLog, visible) }
+func (u *mockDialogUI) notify(message, level string)                         { u.notices = append(u.notices, message) }
+func (u *mockDialogUI) setWorkingVisible(visible bool)                       { u.workingLog = append(u.workingLog, visible) }
 func (u *mockDialogUI) onTerminalInput(func(string) *goalInputResult) func() { return func() {} }
 
 type mockDialogCtx struct {

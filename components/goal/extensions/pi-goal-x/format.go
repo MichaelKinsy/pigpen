@@ -326,13 +326,68 @@ func buildUnfocusedOpenGoalsSummary(n int) string {
 	return fmt.Sprintf("No goal is focused in this session. %d open goal%s exist in the goal pool. Use /goal-focus to choose the session focus before doing goal work.", n, s)
 }
 
-// localeCompare approximates String.prototype.localeCompare for the ASCII text of ISO times and generated ids.
+// icuASCIIPunct is the root-collation order of the ASCII punctuation (non-ignorable): all of it sorts before the digits,
+// which sort before the letters.
+const icuASCIIPunct = " _-,;:!?.'\"()[]{}@*/\\&#%`^+<=>|~$"
+
+func icuASCIIRank(c byte) int {
+	switch {
+	case c >= 'a' && c <= 'z':
+		return 200 + int(c-'a')
+	case c >= 'A' && c <= 'Z':
+		return 200 + int(c-'A')
+	case c >= '0' && c <= '9':
+		return 100 + int(c-'0')
+	}
+	if i := strings.IndexByte(icuASCIIPunct, c); i >= 0 {
+		return i
+	}
+	return 300 + int(c)
+}
+
+func isASCIIText(s string) bool {
+	for i := range len(s) {
+		if s[i] >= 0x80 {
+			return false
+		}
+	}
+	return true
+}
+
+// localeCompare approximates String.prototype.localeCompare (ICU root collation): ASCII text compares by the collation order
+// of its characters, ignoring case, then a lowercase letter sorts before its uppercase twin at the first case difference.
+// Other text compares case-insensitively by bytes.
 func localeCompare(a, b string) int {
 	if a == b {
 		return 0
 	}
+	if isASCIIText(a) && isASCIIText(b) {
+		for i := 0; i < len(a) && i < len(b); i++ {
+			if ra, rb := icuASCIIRank(a[i]), icuASCIIRank(b[i]); ra != rb {
+				if ra < rb {
+					return -1
+				}
+				return 1
+			}
+		}
+		if len(a) != len(b) {
+			if len(a) < len(b) {
+				return -1
+			}
+			return 1
+		}
+		for i := range len(a) {
+			if a[i] != b[i] { // the same letter in the other case
+				if a[i] > b[i] { // lowercase has the larger byte
+					return -1
+				}
+				return 1
+			}
+		}
+		return 0
+	}
 	if utf8.ValidString(a) && utf8.ValidString(b) {
-		return strings.Compare(strings.ToLower(a), strings.ToLower(b))*2 + strings.Compare(a, b)
+		return strings.Compare(strings.ToLower(a), strings.ToLower(b))*2 - strings.Compare(a, b)
 	}
 	return strings.Compare(a, b)
 }
