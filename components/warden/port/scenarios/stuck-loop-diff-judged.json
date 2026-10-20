@@ -1,0 +1,134 @@
+{
+  "name": "stuck-loop-diff-judged",
+  "description": "Three failures of one command with a long output that differs in one line: the judge says stuck, the third result is replaced by a short diff against the second, and the full output is saved.",
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0",
+    "PIGPEN_WARDEN_BACKEND": "typesafe",
+    "FIXTURE_JUDGE_KEY": "x",
+    "TYPESAFE_API_KEY": "x",
+    "TYPESAFE_BASE_URL": "{{server:judge}}"
+  },
+  "agentFiles": {
+    "pi-warden/config.json": "{\"typesafe\": true, \"typesafeBackend\": {\"label\": \"Fixture judge\", \"host\": \"{{server:judge}}\", \"keyEnv\": \"FIXTURE_JUDGE_KEY\", \"defaultModel\": \"jev-latest\"}, \"notices\": false, \"action\": {\"enabled\": false}, \"security\": {\"enabled\": false, \"maskOutput\": false}, \"context\": {\"enabled\": false}, \"slop\": {\"enabled\": false}, \"done\": {\"enabled\": false}, \"rules\": {\"enabled\": false}, \"runaway\": {\"enabled\": false}, \"subagent\": {\"enabled\": false}, \"stuck\": {\"cooldown\": 0}}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\"enabled\": true, \"backend\": \"typesafe\", \"consent\": \"typesafe\", \"action\": {\"enabled\": false}, \"done\": {\"enabled\": false}, \"stuck\": {\"cooldown\": 0}}"
+  },
+  "servers": {
+    "judge": {
+      "recordHeaders": [
+        "authorization"
+      ],
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "json": {
+            "model": "jev-fixture",
+            "answers": {
+              "same_strategy": {
+                "type": "noul",
+                "noul": 0.9
+              },
+              "approach_change": {
+                "type": "score",
+                "score": 0.0,
+                "confidence": 0.9,
+                "legend": {
+                  "0": "Identical or near-identical retries",
+                  "1": "Cosmetic changes: different flags, paths, or wording, same underlying idea",
+                  "2": "Meaningfully different: a new hypothesis, tool, or information-gathering step"
+                },
+                "probabilities": {
+                  "0": 0.8,
+                  "1": 0.15,
+                  "2": 0.05
+                }
+              },
+              "progress": {
+                "type": "noul",
+                "noul": 0.1
+              }
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          },
+          "times": 1
+        }
+      ]
+    }
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
+          }
+        }
+      ]
+    },
+    {
+      "text": "stop"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "make the build pass"
+      }
+    }
+  ],
+  "normalize": [
+    {
+      "pattern": "/[^ ]*pi-warden-output-[A-Za-z0-9]+/output\\.txt",
+      "replacement": "<saved-output>"
+    }
+  ]
+}
