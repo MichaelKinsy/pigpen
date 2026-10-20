@@ -156,7 +156,9 @@ func (l *auditLog) Warn(m string)                { l.warns = append(l.warns, m) 
 
 func TestAuthorizerChainAuditTwins(t *testing.T) {
 	f := "authority/authorizer-chain-audit"
-	skip := func(a *AuthorizerChainAudit, name, id string) { a.AuditUnregisteredLink(UnregisteredLink{Name: name, RequestID: id}) }
+	skip := func(a *AuthorizerChainAudit, name, id string) {
+		a.AuditUnregisteredLink(UnregisteredLink{Name: name, RequestID: id})
+	}
 	tw(t, f, "records the skipped name against the ask that skipped it", func(t *testing.T) {
 		log := &auditLog{}
 		skip(NewAuthorizerChainAudit(log), "model-judge", "req-1")

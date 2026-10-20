@@ -204,7 +204,9 @@ func detailsOn(surface string) *PromptPermissionDetails {
 
 func TestSelectAuthorizerTwins(t *testing.T) {
 	f := "authority/authorizer"
-	deps := func(t *testing.T, mut ...func(*selEnv)) AuthorizerSelectionDeps { return newSelEnv(t, mut...).deps.AuthorizerSelectionDeps }
+	deps := func(t *testing.T, mut ...func(*selEnv)) AuthorizerSelectionDeps {
+		return newSelEnv(t, mut...).deps.AuthorizerSelectionDeps
+	}
 
 	tw(t, f, "selects LocalUserAuthorizer when the context has UI", func(t *testing.T) {
 		if _, ok := selectOf(t, selCtx(true), deps(t)).Terminal.(*LocalUserAuthorizer); !ok {

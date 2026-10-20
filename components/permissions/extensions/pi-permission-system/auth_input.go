@@ -48,7 +48,8 @@ type LineInput struct {
 	keys        tui.Keybindings
 }
 
-// NewLineInput is `new Input()`: the prompt is "> " and the key bindings are the ones given (the original reads the global manager).
+// NewLineInput is `new Input()`: the prompt is "> ". The original reads pi-tui's global keybindings manager on every key; nil keys do
+// the same here (tui.GetKeybindings, which a host adapter sets with the user's overrides), and a non-nil keys replaces it.
 func NewLineInput(keys tui.Keybindings) *LineInput {
 	return &LineInput{prompt: "> ", keys: keys}
 }
@@ -71,6 +72,9 @@ func (in *LineInput) head() string { return jsstring.Slice(in.value, 0, in.curso
 func (in *LineInput) tail() string { return jsstring.Slice(in.value, in.cursor) }
 
 func (in *LineInput) matches(data string, id tui.TUIKeybinding) bool {
+	if in.keys == nil {
+		return tui.GetKeybindings().Matches(data, string(id))
+	}
 	return in.keys.Matches(data, string(id))
 }
 

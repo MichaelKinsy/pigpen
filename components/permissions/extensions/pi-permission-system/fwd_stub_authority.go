@@ -2,7 +2,6 @@ package pi_permission_system
 
 // Remaining lane-local stand-ins: the tool-input registries and the service surface (owner: the presentation and service lanes).
 
-
 // ── types.ts ───────────────────────────────────────────────────────────────
 
 // ── tool-input registries and service.ts ───────────────────────────────────

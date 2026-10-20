@@ -14,7 +14,9 @@ func modelConfig(mut ...func(*PromptModelConfig)) PromptModelConfig {
 
 func noDouble(c *PromptModelConfig) { c.DoublePressToConfirm = false }
 
-func withWidth(c *PromptModelConfig) { c.WidthLabel = `Yes, allow reads and writes to "/tmp/*" for this session` }
+func withWidth(c *PromptModelConfig) {
+	c.WidthLabel = `Yes, allow reads and writes to "/tmp/*" for this session`
+}
 
 func withScope(c *PromptModelConfig) {
 	c.SessionScope = &SessionScopeOption{SubagentLabel: "This subagent only", ServingSessionLabel: "The whole session"}
@@ -34,7 +36,9 @@ func asRender(t *testing.T, o PromptOutcome) PromptViewState {
 
 func renderOf(s PromptViewState) PromptOutcome { return PromptOutcome{State: s} }
 
-func decisionOf(d UnattributedDecision) PromptOutcome { return PromptOutcome{Decided: true, Decision: d} }
+func decisionOf(d UnattributedDecision) PromptOutcome {
+	return PromptOutcome{Decided: true, Decision: d}
+}
 
 func TestPromptModelTwins(t *testing.T) {
 	f := "authority/permission-prompt-decision"

@@ -37,16 +37,19 @@ type PromptComponent interface {
 
 // PromptComponentFactory is ctx.ui.custom's factory: it runs once, as the dialog mounts, which is the moment the human is being
 // asked; a re-render does not come back through here. keybindings is the host's manager: the dialog reads only the tool-expansion
-// action from it, and the denial-reason editor reads the editing actions.
+// action from it (the denial-reason editor reads pi-tui's global manager, as the original's Input does).
 type PromptComponentFactory func(tui PromptTUI, theme PromptTheme, keybindings tui.Keybindings, done func(UnattributedDecision)) PromptComponent
+
+// PromptCustomOptions are ctx.ui.custom's options. The dialog always asks for Overlay false: it renders inline, never as an overlay.
+type PromptCustomOptions struct{ Overlay bool }
 
 // PermissionPromptUi is the subset of the session UI surface the inline dialog needs (select, input, custom, getToolsExpanded,
 // setToolsExpanded).
 type PermissionPromptUi interface {
 	PermissionDecisionUi
-	// Custom is ctx.ui.custom with options { overlay: false }: it mounts the component inline and returns what it passed to done.
-	// ok false is a dialog that closed without a decision.
-	Custom(factory PromptComponentFactory) (decision UnattributedDecision, ok bool, err error)
+	// Custom is ctx.ui.custom: it mounts the component and returns what it passed to done. ok false is a dialog that closed without a
+	// decision.
+	Custom(factory PromptComponentFactory, options PromptCustomOptions) (decision UnattributedDecision, ok bool, err error)
 	GetToolsExpanded() bool
 	SetToolsExpanded(expanded bool)
 }
@@ -141,8 +144,8 @@ func PresentInlinePermissionPrompt(view PermissionPromptView, title string, payl
 		if notification := RenderPromptNotification(view.PromptNotifications, view.Notice); notification != "" {
 			host.Write(notification)
 		}
-		return newPermissionPromptComponent(theme, config, title, payload, view.Budget, toolsExpansion{keys: keybindings, ui: view.UI}, host.RequestRender, done, keybindings)
-	})
+		return newPermissionPromptComponent(theme, config, title, payload, view.Budget, toolsExpansion{keys: keybindings, ui: view.UI}, host.RequestRender, done)
+	}, PromptCustomOptions{Overlay: false})
 	if err != nil {
 		return UnattributedDecision{}, err
 	}
@@ -172,10 +175,8 @@ type permissionPromptComponent struct {
 	config PromptModelConfig
 	title  string
 	// payload is the ask itself: every frame renders it, bounded to budget at that frame's width.
-	payload PromptPayload
-	budget  RenderBudget
-	keys    tui.Keybindings
-
+	payload       PromptPayload
+	budget        RenderBudget
 	tools         toolsExpansion
 	requestRender func()
 	done          func(UnattributedDecision)
@@ -191,9 +192,9 @@ type permissionPromptComponent struct {
 }
 
 func newPermissionPromptComponent(theme PromptTheme, config PromptModelConfig, title string, payload PromptPayload, budget RenderBudget,
-	tools toolsExpansion, requestRender func(), done func(UnattributedDecision), keys tui.Keybindings) *permissionPromptComponent {
+	tools toolsExpansion, requestRender func(), done func(UnattributedDecision)) *permissionPromptComponent {
 	c := &permissionPromptComponent{
-		theme: theme, config: config, title: title, payload: payload, budget: budget, keys: keys,
+		theme: theme, config: config, title: title, payload: payload, budget: budget,
 		tools: tools, requestRender: requestRender, done: done,
 		state: InitialPromptState(config),
 	}
@@ -205,7 +206,7 @@ func newPermissionPromptComponent(theme PromptTheme, config PromptModelConfig, t
 // so reusing one instance would let a reason the operator backed out of be restored into a later ask. It emits pi-tui's zero-width
 // cursor marker, which positions the hardware cursor for IME composition.
 func (c *permissionPromptComponent) createReasonEditor() *LineInput {
-	editor := NewLineInput(c.keys)
+	editor := NewLineInput(nil)
 	editor.Focused = true
 	editor.OnSubmit = func(draft string) { c.apply(PromptEvent{Type: EventSubmitReason, Draft: draft}) }
 	editor.OnEscape = func() { c.apply(PromptEvent{Type: EventCancel}) }

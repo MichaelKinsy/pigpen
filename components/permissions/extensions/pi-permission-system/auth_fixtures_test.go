@@ -90,7 +90,9 @@ func (l *linkFake) authorize(d *PromptPermissionDetails, q PermissionQuery, log 
 	return l.verdict, l.err
 }
 
-func (l *linkFake) named() NamedAuthorizer { return NamedAuthorizer{Name: l.name, Authorize: l.authorize} }
+func (l *linkFake) named() NamedAuthorizer {
+	return NamedAuthorizer{Name: l.name, Authorize: l.authorize}
+}
 
 // queryFake is an identity-comparable PermissionQuery.
 type queryFake struct{ id int }
@@ -143,17 +145,17 @@ func mustDecision(t *testing.T) func(PermissionPromptDecision, error) Permission
 type promptUIFake struct {
 	dialogUI
 	mu       sync.Mutex
-	custom   func(factory PromptComponentFactory) (UnattributedDecision, bool, error)
+	custom   func(factory PromptComponentFactory, options PromptCustomOptions) (UnattributedDecision, bool, error)
 	expanded bool
 	getCalls int
 	setCalls []bool
 }
 
-func (u *promptUIFake) Custom(factory PromptComponentFactory) (UnattributedDecision, bool, error) {
+func (u *promptUIFake) Custom(factory PromptComponentFactory, options PromptCustomOptions) (UnattributedDecision, bool, error) {
 	if u.custom == nil {
 		return UnattributedDecision{}, false, nil
 	}
-	return u.custom(factory)
+	return u.custom(factory, options)
 }
 
 func (u *promptUIFake) GetToolsExpanded() bool {
