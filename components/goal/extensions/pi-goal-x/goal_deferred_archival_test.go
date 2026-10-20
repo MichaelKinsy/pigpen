@@ -23,7 +23,7 @@ func TestGoalDeferredArchivalTwins(t *testing.T) {
 		matches(t, gstr(completed, "activePath"), `^\.pi/goals/active_goal_`, "deferred activePath")
 		eq(t, hasAnyKey(completed, "archivedPath"), false, "complete goal not archived yet")
 
-		contains(t, readRel(t, s, gstr(completed, "activePath")), `"status": "complete"`, "disk")
+		tpContains(t, readRel(t, s, gstr(completed, "activePath")), `"status": "complete"`, "disk")
 		if s.readActiveGoalPool().has(gstr(goal, "id")) {
 			t.Error("complete goal should NOT be in active pool")
 		}
@@ -43,21 +43,21 @@ func TestGoalDeferredArchivalTwins(t *testing.T) {
 	tw(t, gdaF, "approval path: buildCompletionReport includes auditor report", func(t *testing.T) {
 		r := buildCompletionReport(completionReportArgs{detailedSummary: "Goal: Audit approval test\nStatus: active", auditorReport: "Auditor: I have verified all requirements.\n\n<approved/>"})
 		for _, w := range []string{"Goal audit approved.", "<approved/>", "Auditor: I have verified all requirements.", "Goal complete."} {
-			contains(t, r, w, "approval")
+			tpContains(t, r, w, "approval")
 		}
 	})
 	tw(t, gdaF, "disabled-bypass path: buildCompletionReport includes auditSkippedReason", func(t *testing.T) {
 		r := buildCompletionReport(completionReportArgs{detailedSummary: "Goal: Disabled bypass test\nStatus: active", auditSkippedReason: "auditor disabled in settings"})
 		for _, w := range []string{"Goal audit skipped.", "auditor disabled in settings", "Goal complete."} {
-			contains(t, r, w, "disabled")
+			tpContains(t, r, w, "disabled")
 		}
-		notContains(t, r, "<approved/>", "disabled")
-		notContains(t, r, "Auditor approval:", "disabled")
+		tpNotContains(t, r, "<approved/>", "disabled")
+		tpNotContains(t, r, "Auditor approval:", "disabled")
 	})
 	tw(t, gdaF, "Esc-skip path: buildCompletionReport includes Esc-abort reason", func(t *testing.T) {
 		r := buildCompletionReport(completionReportArgs{detailedSummary: "Goal: Esc abort test\nStatus: active", auditSkippedReason: "auditor bypassed (user pressed Escape during audit)"})
 		for _, w := range []string{"Goal audit skipped.", "auditor bypassed (user pressed Escape during audit)", "Goal complete."} {
-			contains(t, r, w, "esc")
+			tpContains(t, r, w, "esc")
 		}
 	})
 	tw(t, gdaF, "all three paths produce distinct tool output text", func(t *testing.T) {
@@ -65,14 +65,14 @@ func TestGoalDeferredArchivalTwins(t *testing.T) {
 		approval := buildCompletionReport(completionReportArgs{detailedSummary: d, auditorReport: "Inspected and verified.\n\n<approved/>"})
 		disabled := buildCompletionReport(completionReportArgs{detailedSummary: d, auditSkippedReason: "auditor disabled in settings"})
 		esc := buildCompletionReport(completionReportArgs{detailedSummary: d, auditSkippedReason: "auditor bypassed (user pressed Escape during audit)"})
-		contains(t, approval, "Goal audit approved.", "approval header")
-		contains(t, disabled, "Goal audit skipped.", "disabled header")
-		contains(t, esc, "Goal audit skipped.", "esc header")
-		contains(t, disabled, "auditor disabled in settings", "disabled reason")
-		contains(t, esc, "auditor bypassed (user pressed Escape during audit)", "esc reason")
-		notContains(t, approval, "Goal audit skipped.", "approval")
-		notContains(t, disabled, "<approved/>", "disabled")
-		notContains(t, esc, "<approved/>", "esc")
+		tpContains(t, approval, "Goal audit approved.", "approval header")
+		tpContains(t, disabled, "Goal audit skipped.", "disabled header")
+		tpContains(t, esc, "Goal audit skipped.", "esc header")
+		tpContains(t, disabled, "auditor disabled in settings", "disabled reason")
+		tpContains(t, esc, "auditor bypassed (user pressed Escape during audit)", "esc reason")
+		tpNotContains(t, approval, "Goal audit skipped.", "approval")
+		tpNotContains(t, disabled, "<approved/>", "disabled")
+		tpNotContains(t, esc, "<approved/>", "esc")
 	})
 	tw(t, gdaF, "readActiveGoalFiles filters complete goals regardless of archivedPath", func(t *testing.T) {
 		s := tempStore(t)

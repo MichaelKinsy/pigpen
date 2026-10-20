@@ -17,15 +17,15 @@ func TestGoalUpdateObjectiveTwins(t *testing.T) {
 		completed := mustWrite(t, s, with(active, "status", "complete", "stopReason", "agent", "updatedAt", nowIso()))
 		eq(t, gstr(completed, "status"), "complete", "status")
 		eq(t, gstr(completed, "objective"), gstr(active, "objective"), "objective")
-		contains(t, readRel(t, s, gstr(completed, "activePath")), `"status": "complete"`, "disk")
+		tpContains(t, readRel(t, s, gstr(completed, "activePath")), `"status": "complete"`, "disk")
 		archived := mustArchive(t, s, completed)
 		eq(t, hasAnyKey(archived, "activePath"), false, "activePath")
 		matches(t, gstr(archived, "archivedPath"), `^\.pi/goals/archived/goal_`, "archivedPath")
 	})
 	tw(t, guoF, "buildCompletionReport handles updated objective display", func(t *testing.T) {
 		r := buildCompletionReport(completionReportArgs{detailedSummary: "Goal: Build feature X\nUpdated objective: Build feature Y\nStatus: active", auditorReport: "Inspected and verified.\n\n<approved/>"})
-		contains(t, r, "Goal complete.", "report")
-		contains(t, r, "<approved/>", "report")
+		tpContains(t, r, "Goal complete.", "report")
+		tpContains(t, r, "<approved/>", "report")
 	})
 	tw(t, guoF, "tweak persist path: writeActiveGoalFile with new objective (simulated handler execution)", func(t *testing.T) {
 		s := tempStore(t)
@@ -38,8 +38,8 @@ func TestGoalUpdateObjectiveTwins(t *testing.T) {
 		eq(t, gstr(tweaked, "status"), "active", "status")
 		eq(t, gstr(tweaked, "activePath"), gstr(active, "activePath"), "active path")
 		disk := readRel(t, s, gstr(tweaked, "activePath"))
-		contains(t, disk, newObj, "disk objective")
-		contains(t, disk, `"status": "active"`, "disk status")
+		tpContains(t, disk, newObj, "disk objective")
+		tpContains(t, disk, `"status": "active"`, "disk status")
 		if !s.readActiveGoalPool().has(gstr(goal, "id")) {
 			t.Error("tweaked goal must still be in active pool")
 		}
@@ -62,8 +62,8 @@ func TestGoalUpdateObjectiveTwins(t *testing.T) {
 		eq(t, gstr(tasks[1].(*jsObject), "verificationContract"), "Must verify", "contract")
 		eq(t, gstr(tweaked, "objective"), "Updated objective with new tasks", "objective")
 		disk := readRel(t, s, gstr(tweaked, "activePath"))
-		contains(t, disk, "Task one", "disk title")
-		contains(t, disk, "Must verify", "disk contract")
+		tpContains(t, disk, "Task one", "disk title")
+		tpContains(t, disk, "Must verify", "disk contract")
 	})
 	tw(t, guoF, "tweak persist path: original taskList inherited when tasks omitted", func(t *testing.T) {
 		s := tempStore(t)
@@ -85,8 +85,8 @@ func TestGoalUpdateObjectiveTwins(t *testing.T) {
 		eq(t, gstr(tasks[0].(*jsObject), "title"), "Original task", "title")
 		eq(t, gstr(w, "objective"), upd, "objective")
 		disk := readRel(t, s, gstr(w, "activePath"))
-		contains(t, disk, upd, "disk objective")
-		contains(t, disk, "Original task", "disk task")
+		tpContains(t, disk, upd, "disk objective")
+		tpContains(t, disk, "Original task", "disk task")
 	})
 	tw(t, guoF, "tweak persist path: taskList cleared when tasks omitted and goal has no taskList", func(t *testing.T) {
 		s := tempStore(t)
@@ -103,15 +103,15 @@ func TestGoalUpdateObjectiveTwins(t *testing.T) {
 		if v == "" {
 			t.Fatal("must reject tasks with subtask depth > 1")
 		}
-		contains(t, v, "subtask nesting depth", "violation")
+		tpContains(t, v, "subtask nesting depth", "violation")
 		rec := with(active, "status", "active", "autoContinue", true)
 		r := validateTaskListProposal(rec, deep, nil)
 		hasMsg(t, r, false, "depth")
 	})
 	tw(t, guoF, "goal evolution instruction mentions /goal-tweak instead of updatedObjective", func(t *testing.T) {
-		text := goalPrompt(mk("Original objective: build feature X"))
-		notContains(t, text, "updatedObjective", "goalPrompt")
-		contains(t, text, "immutable", "goalPrompt")
-		contains(t, text, "/goal-tweak", "goalPrompt")
+		text := goalPrompt(mk("Original objective: build feature X"), nil)
+		tpNotContains(t, text, "updatedObjective", "goalPrompt")
+		tpContains(t, text, "immutable", "goalPrompt")
+		tpContains(t, text, "/goal-tweak", "goalPrompt")
 	})
 }

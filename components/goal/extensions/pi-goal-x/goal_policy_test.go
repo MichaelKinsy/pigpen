@@ -7,7 +7,7 @@ import (
 
 const gpF = "goal-policy"
 
-func gpGoal(kv ...any) *jsObject {
+func gpolGoal(kv ...any) *jsObject {
 	g := newObject()
 	g.set("id", "g1")
 	g.set("objective", "=== Goal ===\nObjective: test")
@@ -26,29 +26,29 @@ func gpGoal(kv ...any) *jsObject {
 }
 
 func gpSisyphus(kv ...any) *jsObject {
-	return gpGoal(append([]any{"objective", "=== Sisyphus Goal ===\nSteps:\n1. A\n2. B", "sisyphus", true}, kv...)...)
+	return gpolGoal(append([]any{"objective", "=== Sisyphus Goal ===\nSteps:\n1. A\n2. B", "sisyphus", true}, kv...)...)
 }
 
 func TestGoalPolicyTwins(t *testing.T) {
 	tw(t, gpF, "goal lifecycle completion gates reject unsafe transitions", func(t *testing.T) {
-		hasMsg(t, validateGoalCompletion(gpGoal("sisyphus", false), ""), true, "")
+		hasMsg(t, validateGoalCompletion(gpolGoal("sisyphus", false), ""), true, "")
 		hasMsg(t, validateGoalCompletion(nil, ""), false, "No goal is set")
-		hasMsg(t, validateGoalCompletion(gpGoal("id", "current"), "old"), false, "changed during this run")
-		hasMsg(t, validateGoalCompletion(gpGoal("status", "paused", "autoContinue", false), ""), true, "")
-		hasMsg(t, validateGoalCompletion(gpGoal("status", "complete", "autoContinue", false), ""), false, "complete")
+		hasMsg(t, validateGoalCompletion(gpolGoal("id", "current"), "old"), false, "changed during this run")
+		hasMsg(t, validateGoalCompletion(gpolGoal("status", "paused", "autoContinue", false), ""), true, "")
+		hasMsg(t, validateGoalCompletion(gpolGoal("status", "complete", "autoContinue", false), ""), false, "complete")
 		hasMsg(t, validateGoalCompletion(gpSisyphus(), ""), true, "")
 	})
 	tw(t, gpF, "update_goal(blocked) policy applies only to an active goal", func(t *testing.T) {
-		hasMsg(t, validateGoalBlock(gpGoal("status", "active")), true, "")
-		hasMsg(t, validateGoalBlock(gpGoal("status", "paused")), false, "applies only to an active goal")
-		hasMsg(t, validateGoalBlock(gpGoal("status", "complete")), false, "applies only to an active goal")
+		hasMsg(t, validateGoalBlock(gpolGoal("status", "active")), true, "")
+		hasMsg(t, validateGoalBlock(gpolGoal("status", "paused")), false, "applies only to an active goal")
+		hasMsg(t, validateGoalBlock(gpolGoal("status", "complete")), false, "applies only to an active goal")
 		hasMsg(t, validateGoalBlock(nil), false, "No goal is set")
 	})
 	tw(t, gpF, "resume and clear policy preserve human-owned lifecycle affordances", func(t *testing.T) {
 		hasMsg(t, validateResumeGoal(nil), false, "No goal is set")
-		hasMsg(t, validateResumeGoal(gpGoal("status", "complete")), false, "Goal is complete")
-		hasMsg(t, validateResumeGoal(gpGoal("status", "active", "autoContinue", true)), false, "already running")
-		hasMsg(t, validateResumeGoal(gpGoal("status", "paused", "autoContinue", false)), true, "")
+		hasMsg(t, validateResumeGoal(gpolGoal("status", "complete")), false, "Goal is complete")
+		hasMsg(t, validateResumeGoal(gpolGoal("status", "active", "autoContinue", true)), false, "already running")
+		hasMsg(t, validateResumeGoal(gpolGoal("status", "paused", "autoContinue", false)), true, "")
 
 		eq(t, clearGoalCommandMessage(true), "Goal cleared and archived.", "archived")
 		eq(t, clearGoalCommandMessage(false), "No goal is set.", "none")
@@ -91,12 +91,12 @@ func TestGoalPolicyTwins(t *testing.T) {
 		}
 	})
 	tw(t, gpF, "continuation and compaction policies are deterministic", func(t *testing.T) {
-		eq(t, shouldQueueContinuation(gpGoal("status", "active", "autoContinue", true)), true, "queue active")
-		eq(t, shouldQueueContinuation(gpGoal("status", "paused", "autoContinue", true)), false, "queue paused")
+		eq(t, shouldQueueContinuation(gpolGoal("status", "active", "autoContinue", true)), true, "queue active")
+		eq(t, shouldQueueContinuation(gpolGoal("status", "paused", "autoContinue", true)), false, "queue paused")
 		eq(t, shouldArmPostCompactReminder(gpSisyphus("status", "active")), true, "arm active")
 		eq(t, shouldArmPostCompactReminder(gpSisyphus("status", "paused", "autoContinue", false)), false, "arm paused")
 		eq(t, shouldInjectPostCompactReminder(true, gpSisyphus()), true, "inject sisyphus")
-		eq(t, shouldInjectPostCompactReminder(true, gpGoal("sisyphus", false)), true, "inject plain")
+		eq(t, shouldInjectPostCompactReminder(true, gpolGoal("sisyphus", false)), true, "inject plain")
 		eq(t, shouldInjectPostCompactReminder(false, gpSisyphus()), false, "inject not pending")
 	})
 }

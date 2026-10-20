@@ -72,14 +72,14 @@ func matches(t *testing.T, got, re, what string) {
 	}
 }
 
-func contains(t *testing.T, got, want, what string) {
+func tpContains(t *testing.T, got, want, what string) {
 	t.Helper()
 	if !strings.Contains(got, want) {
 		t.Errorf("%s: %q lacks %q", what, got, want)
 	}
 }
 
-func notContains(t *testing.T, got, bad, what string) {
+func tpNotContains(t *testing.T, got, bad, what string) {
 	t.Helper()
 	if strings.Contains(got, bad) {
 		t.Errorf("%s: %q contains %q", what, got, bad)

@@ -24,9 +24,9 @@ func TestGoalE2ETwins(t *testing.T) {
 		eq(t, gstr(after2, "objective"), obj3, "obj3")
 		eq(t, gstr(after2, "status"), "active", "status2")
 		disk := readRel(t, s, gstr(after2, "activePath"))
-		notContains(t, disk, obj1, "disk")
-		notContains(t, disk, obj2, "disk")
-		contains(t, disk, obj3, "disk")
+		tpNotContains(t, disk, obj1, "disk")
+		tpNotContains(t, disk, obj2, "disk")
+		tpContains(t, disk, obj3, "disk")
 		if !s.readActiveGoalPool().has(gstr(goal, "id")) {
 			t.Error("pool membership unchanged")
 		}
@@ -49,30 +49,30 @@ func TestGoalE2ETwins(t *testing.T) {
 		eq(t, hasAnyKey(archived, "activePath"), false, "activePath")
 		matches(t, gstr(archived, "archivedPath"), `^\.pi/goals/archived/goal_`, "archivedPath")
 		content := readRel(t, s, gstr(archived, "archivedPath"))
-		contains(t, content, updatedObj, "archived")
-		notContains(t, content, originalObj, "archived")
-		contains(t, content, `"status": "complete"`, "archived")
+		tpContains(t, content, updatedObj, "archived")
+		tpNotContains(t, content, originalObj, "archived")
+		tpContains(t, content, `"status": "complete"`, "archived")
 	})
 	d := "Goal: Build feature X\nUpdated objective: Build feature Y\nStatus: active"
 	tw(t, geF, "sync + approval path: report includes new objective and approval", func(t *testing.T) {
 		r := buildCompletionReport(completionReportArgs{detailedSummary: d, auditorReport: "Inspected and verified.\n\n<approved/>"})
 		for _, w := range []string{"Goal audit approved.", "<approved/>", "Goal complete.", "Build feature Y"} {
-			contains(t, r, w, "report")
+			tpContains(t, r, w, "report")
 		}
 	})
 	tw(t, geF, "sync + disabled bypass: report includes new objective and skip reason", func(t *testing.T) {
 		r := buildCompletionReport(completionReportArgs{detailedSummary: d, auditSkippedReason: "auditor disabled in settings"})
 		for _, w := range []string{"Goal audit skipped.", "auditor disabled in settings", "Goal complete.", "Build feature Y"} {
-			contains(t, r, w, "report")
+			tpContains(t, r, w, "report")
 		}
-		notContains(t, r, "<approved/>", "report")
+		tpNotContains(t, r, "<approved/>", "report")
 	})
 	tw(t, geF, "sync + Esc bypass: report includes new objective and Esc reason", func(t *testing.T) {
 		r := buildCompletionReport(completionReportArgs{detailedSummary: d, auditSkippedReason: "auditor bypassed (user pressed Escape during audit)"})
 		for _, w := range []string{"Goal audit skipped.", "auditor bypassed (user pressed Escape during audit)", "Goal complete.", "Build feature Y"} {
-			contains(t, r, w, "report")
+			tpContains(t, r, w, "report")
 		}
-		notContains(t, r, "<approved/>", "report")
+		tpNotContains(t, r, "<approved/>", "report")
 	})
 	tw(t, geF, "multiple syncs then complete: final objective in archived file", func(t *testing.T) {
 		s := tempStore(t)
@@ -87,9 +87,9 @@ func TestGoalE2ETwins(t *testing.T) {
 		eq(t, gstr(completed, "objective"), objs[2], "completed objective")
 		archived := mustArchive(t, s, completed)
 		content := readRel(t, s, gstr(archived, "archivedPath"))
-		contains(t, content, objs[2], "archived")
-		notContains(t, content, objs[0], "archived")
-		notContains(t, content, objs[1], "archived")
+		tpContains(t, content, objs[2], "archived")
+		tpNotContains(t, content, objs[0], "archived")
+		tpNotContains(t, content, objs[1], "archived")
 	})
 	tw(t, geF, "sync while paused: status stays paused, objective changed on disk", func(t *testing.T) {
 		s := tempStore(t)
@@ -100,8 +100,8 @@ func TestGoalE2ETwins(t *testing.T) {
 		eq(t, gstr(updated, "status"), "paused", "status must stay paused")
 		eq(t, gstr(updated, "objective"), "Updated while paused", "objective")
 		disk := readRel(t, s, gstr(updated, "activePath"))
-		contains(t, disk, "Updated while paused", "disk")
-		contains(t, disk, `"status": "paused"`, "disk")
+		tpContains(t, disk, "Updated while paused", "disk")
+		tpContains(t, disk, `"status": "paused"`, "disk")
 	})
 	tw(t, geF, "deferred archival after sync: verify active then archived", func(t *testing.T) {
 		s := tempStore(t)
@@ -120,24 +120,24 @@ func TestGoalE2ETwins(t *testing.T) {
 		eq(t, hasAnyKey(archived, "activePath"), false, "no activePath")
 		matches(t, gstr(archived, "archivedPath"), `^\.pi/goals/archived/goal_`, "archivedPath")
 		content := readRel(t, s, gstr(archived, "archivedPath"))
-		contains(t, content, updatedObj, "archived")
-		contains(t, content, `"status": "complete"`, "archived")
+		tpContains(t, content, updatedObj, "archived")
+		tpContains(t, content, `"status": "complete"`, "archived")
 	})
 	tw(t, geF, "all three bypass paths produce correct distinct reports", func(t *testing.T) {
 		base := "Base detailed summary"
 		approval := buildCompletionReport(completionReportArgs{detailedSummary: base, auditorReport: "All verified.\n\n<approved/>"})
 		disabled := buildCompletionReport(completionReportArgs{detailedSummary: base, auditSkippedReason: "auditor disabled in settings"})
 		esc := buildCompletionReport(completionReportArgs{detailedSummary: base, auditSkippedReason: "auditor bypassed (user pressed Escape during audit)"})
-		contains(t, approval, "Goal audit approved.", "approval header")
-		contains(t, disabled, "Goal audit skipped.", "disabled header")
-		contains(t, esc, "Goal audit skipped.", "esc header")
-		contains(t, disabled, "auditor disabled in settings", "disabled reason")
-		contains(t, esc, "auditor bypassed (user pressed Escape during audit)", "esc reason")
-		contains(t, approval, "<approved/>", "approval marker")
-		notContains(t, disabled, "<approved/>", "disabled")
-		notContains(t, esc, "<approved/>", "esc")
+		tpContains(t, approval, "Goal audit approved.", "approval header")
+		tpContains(t, disabled, "Goal audit skipped.", "disabled header")
+		tpContains(t, esc, "Goal audit skipped.", "esc header")
+		tpContains(t, disabled, "auditor disabled in settings", "disabled reason")
+		tpContains(t, esc, "auditor bypassed (user pressed Escape during audit)", "esc reason")
+		tpContains(t, approval, "<approved/>", "approval marker")
+		tpNotContains(t, disabled, "<approved/>", "disabled")
+		tpNotContains(t, esc, "<approved/>", "esc")
 		for _, r := range []string{approval, disabled, esc} {
-			contains(t, r, "Goal complete.", "complete")
+			tpContains(t, r, "Goal complete.", "complete")
 		}
 		for _, label := range []string{"approval", "disabled", "esc"} {
 			s := tempStore(t)
@@ -149,7 +149,7 @@ func TestGoalE2ETwins(t *testing.T) {
 			eq(t, hasAnyKey(completed, "archivedPath"), false, "archivedPath")
 			archived := mustArchive(t, s, completed)
 			matches(t, gstr(archived, "archivedPath"), `^\.pi/goals/archived/goal_`, "archivedPath")
-			contains(t, readRel(t, s, gstr(archived, "archivedPath")), obj, label+": archived objective")
+			tpContains(t, readRel(t, s, gstr(archived, "archivedPath")), obj, label+": archived objective")
 		}
 	})
 }
