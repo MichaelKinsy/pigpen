@@ -187,3 +187,7 @@ func TestWorkflowMenuIsRefused(t *testing.T) {
 		eq(t, strings.Contains(out, refusalText("the Workflows menu (stop, pause, skip and retry of a run)")), true)
 	})
 }
+
+func TestWorkflowMetaEvalErrorKeepsTheName(t *testing.T) {
+	wfMetaErr(t, "export const meta = { name: computeName(), description: 'b' }\nreturn 1", "could not be evaluated: ReferenceError: computeName is not defined\n")
+}

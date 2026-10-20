@@ -472,6 +472,7 @@ m("engine-run-strict", "workflow_engine.go", "_ = host.Set(\"run\", func(call go
 m("engine-compile-strict", "workflow_engine.go", "_ = host.Set(\"compile\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), false)", "_ = host.Set(\"compile\", func(call goja.FunctionCall) goja.Value {\n\t\tprogram, err := goja.Compile(call.Argument(1).String(), call.Argument(0).String(), true)")
 m("meta-eval-strict", "workflow_meta.go", "\"(\"+fragment+\")\", false)", "\"(\"+fragment+\")\", true)")
 m("engine-response-error-dropped", "workflow_engine.go", "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\tw.failUncaught(err)", "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\t_ = err")
+m("meta-eval-error-name-dropped", "workflow_meta.go", "return ex.Value().String()\n\t}\n\treturn err.Error()\n}\n\n// wfErrorDetail", "return wfErrorDetail(err)\n\t}\n\treturn err.Error()\n}\n\n// wfErrorDetail")
 # Not mutated, equivalent: the timer site of workflowWorker (host.defer is used only for the progress flush, which a script cannot
 # make overflow) and `encoded = encoded[3:]` vs `[2:]` (the TrimLeft of dashes that follows removes the difference).
 m("engine-overflow-text", "workflow_meta.go", "return \"Maximum call stack size exceeded\"", "return \"Stack overflow\"")

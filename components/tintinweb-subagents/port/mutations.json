@@ -2424,6 +2424,12 @@
   "replace": "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\t_ = err"
  },
  {
+  "name": "meta-eval-error-name-dropped",
+  "file": "workflow_meta.go",
+  "find": "return ex.Value().String()\n\t}\n\treturn err.Error()\n}\n\n// wfErrorDetail",
+  "replace": "return wfErrorDetail(err)\n\t}\n\treturn err.Error()\n}\n\n// wfErrorDetail"
+ },
+ {
   "name": "engine-overflow-text",
   "file": "workflow_meta.go",
   "find": "return \"Maximum call stack size exceeded\"",

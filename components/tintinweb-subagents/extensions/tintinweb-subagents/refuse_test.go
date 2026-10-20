@@ -33,6 +33,10 @@ func readJSONFile(t *testing.T, path string) map[string]any {
 	return out
 }
 
+func TestRefusalMessageText(t *testing.T) {
+	eq(t, refusalText("x"), "@pi-in-go/pigpen-tintinweb-subagents (Go port) does not support x yet. Install the original extension, npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.")
+}
+
 func TestRefusalMessageNamesThisPackageAndThePinnedOriginal(t *testing.T) {
 	needComponentRoot(t)
 	pkg := readJSONFile(t, "../../package.json")

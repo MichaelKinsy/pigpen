@@ -274,6 +274,16 @@ func evalWorkflowMetaFragment(fragment string) (any, map[string]bool, error) {
 	return v.Export(), nulls, nil
 }
 
+// wfMetaEvalDetail is String(error), which is what the original prints: the error comes out of a different V8 context, so
+// `error instanceof Error` is false there and the name stays (`ReferenceError: computeName is not defined`).
+func wfMetaEvalDetail(err error) string {
+	var ex *goja.Exception
+	if errors.As(err, &ex) {
+		return ex.Value().String()
+	}
+	return err.Error()
+}
+
 // wfErrorDetail is an error's message as JavaScript would report it (without goja's name prefix on thrown errors).
 func wfErrorDetail(err error) string {
 	var overflow *goja.StackOverflowError
@@ -319,7 +329,7 @@ func extractMeta(source string) (workflowMeta, string, error) {
 		if errors.As(err, &interrupted) {
 			return workflowMeta{}, "", workflowMetaFail(fmt.Sprintf("`meta` did not finish evaluating within %dms — it must be a literal, not a computation.\n%s", workflowMetaEvalTimeout.Milliseconds(), workflowPureLiteralHint))
 		}
-		return workflowMeta{}, "", workflowMetaFail("`meta` could not be evaluated: " + wfErrorDetail(err) + "\n" + workflowPureLiteralHint)
+		return workflowMeta{}, "", workflowMetaFail("`meta` could not be evaluated: " + wfMetaEvalDetail(err) + "\n" + workflowPureLiteralHint)
 	}
 	raw, ok := value.(map[string]any)
 	if !ok {
