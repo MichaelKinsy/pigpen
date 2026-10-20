@@ -43,7 +43,7 @@ extension rather than a fourth feature of this one.
 | Command | Description |
 | --- | --- |
 | `/pmt-remember-model [status\|on\|off\|clear]` | Remember and restore the last selected model. |
-| `/pmt-openrouter-lock-provider [list\|on\|off\|clear <model>\|lock <model> <provider>]` | Manage OpenRouter provider locks. With no arguments, asks for a model and then a provider. |
+| `/pmt-openrouter-lock-provider [<provider>\|clear [<model>]\|list\|on\|off\|lock <model> <provider>]` | Manage OpenRouter provider locks. `<provider>` locks the current OpenRouter model and `clear` clears its lock, as in the original; `clear <model>` and `lock <model> <provider>` name a model explicitly. With no arguments in the TUI, picks a model and then asks for a provider. |
 | `/pmt-model-guard-pref [list\|on\|off\|toggle\|ask\|noask\|add <provider/model>\|remove <provider/model>]` | Manage the allowed-model list, and whether a prompt outside it is refused or asked about. |
 
 `status` is the default for `pmt-remember-model`: no argument reports whether it is
@@ -121,11 +121,14 @@ this session", not "start the next session on it", so `pmt-settings.json` and
 
 ### openrouter-lock-provider
 
-A lock is expressed two ways. It is appended to the model id written into
-`settings.json` as `base:provider`, and at request time the suffix is stripped
-again while OpenRouter's `provider.order` is set to put the locked provider first.
-The stripping is what keeps the request from 404ing on a model id that OpenRouter
-never heard of.
+A lock is applied at request time, and only for a request whose model is an
+OpenRouter model: the `:provider` suffix is stripped from the model id and
+OpenRouter's `provider.order` is set to put the locked provider first. Requests
+for any other provider are left untouched. The stripping is what keeps the request
+from 404ing on a model id that OpenRouter never heard of. Setting or clearing a
+lock also writes the locked model into `settings.json` as `defaultProvider` and
+`defaultModel`, as the original does. Unlike the original, the written id is the
+base id, not the `base:provider` variant (see the deliberate differences).
 
 ### model-guard
 
@@ -185,14 +188,16 @@ that one event so the restored model is never questioned again in a loop.
 
 ## Deliberate differences from the pi original
 
-- **No model pickers.** The original opened a filterable multi-select over every
-  available model for `pmt-model-guard-pref`, and a model list for
-  `pmt-openrouter-lock-provider`. PiG's Go SDK cannot enumerate the model registry
-  at the PiG revision this repository's CI pins, so both commands take explicit
-  arguments (`add <provider/model>`, `lock <model> <provider>`) and fall back to
-  asking for the value. `ModelRegistry.GetAvailable()` exists in PiG main; with it
-  the pickers can come back unchanged in behaviour.
-- **No subagent profiles**, as described under provenance.
+- **Pickers are partly ported.** `pmt-model-guard-pref` with no argument and
+  `pmt-openrouter-lock-provider` with no argument open a picker over the host's
+  model catalog. The pickers are simpler than the original's: no checked-first
+  ordering, no missing-key marker, no per-model lock descriptions, and
+  `add` / `remove` with no model ask for a typed `provider/model` instead of
+  opening the multi-select. The original's exact picker behaviour is not ported.
+- **`pt-subagent` is not provided**, as described under provenance. No command or
+  tool of that name is registered.
+- **`settings.json` gets the base model id**, not the original's `base:provider`
+  variant, because a variant id in `settings.json` is not one PiG can parse.
 - **Selecting a non-preferred model asks; the original only warns.** The Pi
   original announces a non-preferred `model_select` with a toast and lets the
   switch stand. Here the switch is confirmed off-loop, a decline changes back,

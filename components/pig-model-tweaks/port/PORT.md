@@ -30,11 +30,10 @@ The three model extensions are ported; this is not a whole-repository port.
 - **Names**: commands take the `pmt-` prefix where the original used `pt-`, and the settings file
   is `pmt-settings.json` where the original wrote `pi-tweaks-settings.json`, so the port's identity
   is distinct from the original it runs beside.
-- **No model pickers.** The original opened a filterable multi-select over the model registry for
-  `pmt-model-guard-pref` and a model list for `pmt-openrouter-lock-provider`. PiG's Go SDK cannot
-  enumerate the model registry at the PiG revision this repository's CI pins, so both commands take
-  explicit arguments (`add <provider/model>`, `lock <model> <provider>`) and fall back to asking.
-  The pickers can come back unchanged when `ModelRegistry.GetAvailable()` is available to the port.
+- **Pickers are partly ported.** Both no-argument commands open a picker over the host catalog, but
+  without the original's checked-first ordering, missing-key marker or lock descriptions, and
+  `add` / `remove` without a model ask for a typed `provider/model` instead of a multi-select.
+- **`settings.json` gets the base model id**, not the original's `base:provider` variant.
 - **One Go package instead of a shared module.** The three features are one factory, so they share
   a `store` value rather than the original's filesystem lock between separate extensions.
 - **Model identity is read from the host event and `getModelInfo`**, since PiG exposes models as
@@ -50,7 +49,7 @@ The three model extensions are ported; this is not a whole-repository port.
   model), because PiG applies the model before it emits `model_select` and discards the handler's
   result, so there is no refuse-in-place. An approval is session-only and is deliberately **not**
   remembered: remember-model skips every selection the guard would question, approved or not.
-- **`pt-subagent` is out of scope**, as in the table above.
+- **`pt-subagent` is not provided** (no command or tool is registered), as in the table above.
 
 ## Results (this revision)
 
@@ -73,3 +72,18 @@ The three model extensions are ported; this is not a whole-repository port.
 
 - Target: PiG 0.4.1 (the version `npm run validate` pins in `scripts/pig-requirement.json`),
   go1.27.x, `npm run check` (quality gates, npm contract, go-only, ports list) passes.
+
+## Fixed against the original (0.1.2)
+
+- `before_provider_request` now acts only when the active model's provider is `openrouter`, as the
+  original does; it used to strip suffixes and add `provider.order` for any provider.
+- `/pmt-openrouter-lock-provider <provider>` locks the current OpenRouter model and bare `clear`
+  clears it; setting or clearing a lock writes the model into `settings.json` as the default.
+- `pmt-remember-model` restores the remembered model on `startup` when the session branch has no
+  message, as well as on `new`.
+
+## Still open
+
+Tracked in `handoffs/pigpen-parity/status/pig-model-tweaks.md`: the input-handler confirm and
+model-select behaviour (needs an SDK capability), picker parity, the `session_start` hint, the
+allow-list semantics, deferred remember toast, pigeq traces, and `pt-subagent`.
