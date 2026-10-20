@@ -41,6 +41,9 @@ func ansiAt(s string, i int) int {
 }
 
 func runeWidth(r rune) int {
+	if r < 0x300 {
+		return 1
+	}
 	switch {
 	case r == 0x200d || unicode.Is(unicode.Mn, r) || unicode.Is(unicode.Me, r) || (r >= 0xfe00 && r <= 0xfe0f):
 		return 0
@@ -61,36 +64,35 @@ func extendsCluster(r rune) bool {
 		(r >= 0xfe00 && r <= 0xfe0f) || (r >= 0xe0100 && r <= 0xe01ef) || (r >= 0x1f3fb && r <= 0x1f3ff) || r == 0x200c
 }
 
-// graphemeClusters splits s into the units a terminal draws in one place.
-func graphemeClusters(s string) []string {
-	var out []string
-	for i := 0; i < len(s); {
-		first, n := utf8.DecodeRuneInString(s[i:])
-		j := i + n
-		if isRegionalIndicator(first) && j < len(s) {
-			if r, n2 := utf8.DecodeRuneInString(s[j:]); isRegionalIndicator(r) {
-				j += n2
-			}
-		}
-		for j < len(s) {
-			r, n2 := utf8.DecodeRuneInString(s[j:])
-			if r == 0x200d {
-				j += n2
-				if j < len(s) {
-					_, n3 := utf8.DecodeRuneInString(s[j:])
-					j += n3
-				}
-				continue
-			}
-			if !extendsCluster(r) {
-				break
-			}
+// clusterEnd is the end of the unit a terminal draws in one place that starts at s[i]: a rune with the marks,
+// variation selectors, modifiers and joined runes that attach to it, or a pair of regional indicators.
+func clusterEnd(s string, i int) int {
+	if s[i] < utf8.RuneSelf && (i+1 == len(s) || s[i+1] < utf8.RuneSelf) {
+		return i + 1
+	}
+	first, n := utf8.DecodeRuneInString(s[i:])
+	j := i + n
+	if isRegionalIndicator(first) && j < len(s) {
+		if r, n2 := utf8.DecodeRuneInString(s[j:]); isRegionalIndicator(r) {
 			j += n2
 		}
-		out = append(out, s[i:j])
-		i = j
 	}
-	return out
+	for j < len(s) {
+		r, n2 := utf8.DecodeRuneInString(s[j:])
+		if r == 0x200d {
+			j += n2
+			if j < len(s) {
+				_, n3 := utf8.DecodeRuneInString(s[j:])
+				j += n3
+			}
+			continue
+		}
+		if !extendsCluster(r) {
+			break
+		}
+		j += n2
+	}
+	return j
 }
 
 // graphemeWidth is the cells a cluster takes: an emoji sequence is two wide, otherwise its first rune decides.
@@ -114,18 +116,15 @@ func graphemeWidth(g string) int {
 func visibleWidth(s string) int {
 	w := 0
 	for i := 0; i < len(s); {
-		if n := ansiAt(s, i); n > 0 {
-			i += n
-			continue
+		if s[i] == 0x1b {
+			if n := ansiAt(s, i); n > 0 {
+				i += n
+				continue
+			}
 		}
-		end := i
-		for end < len(s) && ansiAt(s, end) == 0 {
-			end++
-		}
-		for _, g := range graphemeClusters(s[i:end]) {
-			w += graphemeWidth(g)
-		}
-		i = end
+		e := clusterEnd(s, i)
+		w += graphemeWidth(s[i:e])
+		i = e
 	}
 	return w
 }
@@ -293,61 +292,66 @@ func isCJKBreak(g string) bool {
 }
 
 // splitTokens splits a line into runs of spaces and of other characters (each CJK character alone), keeping every
-// escape sequence with the visible character after it. upstream: pi-tui utils.js splitIntoTokensWithAnsi.
+// escape sequence with the visible character after it (the sequences before the end of the line go with the last
+// token). Every token is a slice of text. upstream: pi-tui utils.js splitIntoTokensWithAnsi.
 func splitTokens(text string) []string {
 	var tokens []string
-	var current strings.Builder
-	pending := ""
-	kind := 0
+	start, end, kind := -1, 0, 0 // the token being built: its bounds and what it is made of (1 spaces, 2 other)
+	lastStart := 0               // where the last emitted token starts
 	flush := func() {
-		if current.Len() > 0 {
-			tokens = append(tokens, current.String())
-			current.Reset()
-			kind = 0
+		if start >= 0 {
+			tokens = append(tokens, text[start:end])
+			lastStart = start
+			start, kind = -1, 0
 		}
 	}
+	pending := -1 // where the escape sequences waiting for the next visible character begin
 	for i := 0; i < len(text); {
-		if n := ansiAt(text, i); n > 0 {
-			pending += text[i : i+n]
-			i += n
-			continue
-		}
-		end := i
-		for end < len(text) && ansiAt(text, end) == 0 {
-			end++
-		}
-		for _, seg := range graphemeClusters(text[i:end]) {
-			isSpace := seg == " "
-			if !isSpace && isCJKBreak(seg) {
-				flush()
-				tokens = append(tokens, pending+seg)
-				pending = ""
+		if text[i] == 0x1b {
+			if n := ansiAt(text, i); n > 0 {
+				if pending < 0 {
+					pending = i
+				}
+				i += n
 				continue
 			}
-			k := 2
-			if isSpace {
-				k = 1
-			}
-			if current.Len() > 0 && kind != k {
-				flush()
-			}
-			if pending != "" {
-				current.WriteString(pending)
-				pending = ""
-			}
-			kind = k
-			current.WriteString(seg)
 		}
-		i = end
+		e := clusterEnd(text, i)
+		seg := text[i:e]
+		isSpace := seg == " "
+		from := i
+		if pending >= 0 {
+			from = pending
+			pending = -1
+		}
+		if !isSpace && isCJKBreak(seg) {
+			flush()
+			tokens = append(tokens, text[from:e])
+			lastStart = from
+			i = e
+			continue
+		}
+		k := 2
+		if isSpace {
+			k = 1
+		}
+		if start >= 0 && kind != k {
+			flush()
+		}
+		if start < 0 {
+			start = from
+		}
+		end, kind = e, k
+		i = e
 	}
-	if pending != "" {
+	if pending >= 0 {
 		switch {
-		case current.Len() > 0:
-			current.WriteString(pending)
+		case start >= 0:
+			end = len(text)
 		case len(tokens) > 0:
-			tokens[len(tokens)-1] += pending
+			tokens[len(tokens)-1] = text[lastStart:]
 		default:
-			current.WriteString(pending)
+			start, end = pending, len(text)
 		}
 	}
 	flush()
@@ -357,33 +361,34 @@ func splitTokens(text string) []string {
 // breakLongWord cuts a token wider than the line into cluster-sized pieces, carrying the styling across each cut.
 func breakLongWord(word string, width int, t *ansiTracker) []string {
 	var lines []string
-	line := t.active()
+	var line strings.Builder
+	line.WriteString(t.active())
 	lineWidth := 0
 	for i := 0; i < len(word); {
-		if n := ansiAt(word, i); n > 0 {
-			line += word[i : i+n]
-			t.process(word[i : i+n])
-			i += n
-			continue
-		}
-		end := i
-		for end < len(word) && ansiAt(word, end) == 0 {
-			end++
-		}
-		for _, g := range graphemeClusters(word[i:end]) {
-			gw := graphemeWidth(g)
-			if lineWidth+gw > width {
-				lines = append(lines, line+t.lineEndReset())
-				line = t.active()
-				lineWidth = 0
+		if word[i] == 0x1b {
+			if n := ansiAt(word, i); n > 0 {
+				line.WriteString(word[i : i+n])
+				t.process(word[i : i+n])
+				i += n
+				continue
 			}
-			line += g
-			lineWidth += gw
 		}
-		i = end
+		e := clusterEnd(word, i)
+		g := word[i:e]
+		gw := graphemeWidth(g)
+		if lineWidth+gw > width {
+			line.WriteString(t.lineEndReset())
+			lines = append(lines, line.String())
+			line.Reset()
+			line.WriteString(t.active())
+			lineWidth = 0
+		}
+		line.WriteString(g)
+		lineWidth += gw
+		i = e
 	}
-	if line != "" {
-		lines = append(lines, line)
+	if line.Len() > 0 {
+		lines = append(lines, line.String())
 	}
 	if len(lines) == 0 {
 		return []string{""}
@@ -400,35 +405,39 @@ func wrapSingleLine(line string, width int) []string {
 	}
 	var wrapped []string
 	t := &ansiTracker{}
-	current, currentWidth := "", 0
+	var current strings.Builder
+	currentWidth := 0
 	for _, token := range splitTokens(line) {
 		tokenWidth := visibleWidth(token)
 		isSpace := jsTrim(token) == ""
 		if tokenWidth > width && !isSpace {
-			if current != "" {
-				wrapped = append(wrapped, current+t.lineEndReset())
+			if current.Len() > 0 {
+				wrapped = append(wrapped, current.String()+t.lineEndReset())
 			}
 			broken := breakLongWord(token, width, t)
 			wrapped = append(wrapped, broken[:len(broken)-1]...)
-			current = broken[len(broken)-1]
-			currentWidth = visibleWidth(current)
+			current.Reset()
+			current.WriteString(broken[len(broken)-1])
+			currentWidth = visibleWidth(broken[len(broken)-1])
 			continue
 		}
 		if currentWidth+tokenWidth > width && currentWidth > 0 {
-			wrapped = append(wrapped, jsTrimEnd(current)+t.lineEndReset())
-			if isSpace {
-				current, currentWidth = t.active(), 0
-			} else {
-				current, currentWidth = t.active()+token, tokenWidth
+			wrapped = append(wrapped, jsTrimEnd(current.String())+t.lineEndReset())
+			current.Reset()
+			current.WriteString(t.active())
+			currentWidth = 0
+			if !isSpace {
+				current.WriteString(token)
+				currentWidth = tokenWidth
 			}
 		} else {
-			current += token
+			current.WriteString(token)
 			currentWidth += tokenWidth
 		}
 		t.update(token)
 	}
-	if current != "" {
-		wrapped = append(wrapped, current)
+	if current.Len() > 0 {
+		wrapped = append(wrapped, current.String())
 	}
 	if len(wrapped) == 0 {
 		return []string{""}

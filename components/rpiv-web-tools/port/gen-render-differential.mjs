@@ -7,6 +7,7 @@ import { writeFileSync } from "node:fs";
 
 const { createJiti } = await import(process.env.JITI ?? "jiti");
 const registerWebTools = await createJiti(import.meta.url, { moduleCache: false }).import(new URL("./oracle/index.ts", import.meta.url).pathname, { default: true });
+const { Text } = await createJiti(new URL("./oracle/index.ts", import.meta.url).href, { moduleCache: false }).import("@earendil-works/pi-tui");
 const tools = new Map();
 registerWebTools({ registerTool: (t) => tools.set(t.name, t), registerCommand() {}, on() {}, registerShortcut() {} });
 
@@ -73,12 +74,15 @@ for (let i = 0; i < 40; i++) {
   cases.push({ tool: "web_fetch", phase: "result", options: { expanded: true }, result: { content: [{ type: "text", text }], details: { url: "https://x" } } });
 }
 
-const out = cases.map((c) => {
+// Text itself, for the inputs no renderer produces: blank text, tabs, empty lines.
+const plain = ["", "   ", "\t\n ", " x ", "tab\there", "a\n\nb", "  leading and trailing  ", "one\r\ntwo"];
+
+const out = [...cases.map((c) => {
   const tool = tools.get(c.tool);
   const component = c.phase === "call"
     ? tool.renderCall(c.args, theme, undefined)
     : tool.renderResult(c.result, c.options, theme, undefined);
   return { ...c, rendered: widths.map((w) => ({ width: w, lines: component.render(w) })) };
-});
+}), ...plain.map((text) => ({ tool: "text", text, rendered: widths.map((w) => ({ width: w, lines: new Text(text, 0, 0).render(w) })) }))];
 writeFileSync(new URL("../extensions/rpiv-web-tools/testdata/render-differential.json", import.meta.url), JSON.stringify(out));
 console.log(out.length, "cases,", widths.length, "widths");

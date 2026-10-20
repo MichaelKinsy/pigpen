@@ -33,6 +33,7 @@ func TestRenderersMatchTheOriginalComponents(t *testing.T) {
 	}
 	var cases []struct {
 		Tool    string         `json:"tool"`
+		Text    string         `json:"text"`
 		Phase   string         `json:"phase"`
 		Args    map[string]any `json:"args"`
 		Options struct {
@@ -55,6 +56,8 @@ func TestRenderersMatchTheOriginalComponents(t *testing.T) {
 	for i, c := range cases {
 		var text string
 		switch {
+		case c.Tool == "text":
+			text = c.Text
 		case c.Tool == "web_search" && c.Phase == "call":
 			text = renderSearchCallText(c.Args, th)
 		case c.Tool == "web_fetch" && c.Phase == "call":
