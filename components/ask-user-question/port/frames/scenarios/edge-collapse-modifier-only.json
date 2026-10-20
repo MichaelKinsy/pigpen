@@ -1,0 +1,46 @@
+{
+	"name": "edge-collapse-modifier-only",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[93;5u",
+			"label": "ctrl+]"
+		},
+		{
+			"input": "\u001b[93;6u",
+			"label": "ctrl+shift+]"
+		},
+		{
+			"input": "\u001b[93;5u",
+			"label": "ctrl+]"
+		},
+		{
+			"input": "\u001b",
+			"label": "esc"
+		}
+	]
+}

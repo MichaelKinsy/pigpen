@@ -1,0 +1,49 @@
+{
+	"name": "collapse-preview",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which database fits the workload?",
+				"header": "Database",
+				"options": [
+					{
+						"label": "SQLite",
+						"description": "Embedded, zero setup",
+						"preview": "file.db\n  └─ one file"
+					},
+					{
+						"label": "Postgres",
+						"description": "Server, concurrent writers",
+						"preview": "app ──▶ pg\n       └─ WAL"
+					},
+					{
+						"label": "DuckDB",
+						"description": "Columnar analytics",
+						"preview": "scan ▒▒▒▒▒▒▒▒"
+					}
+				]
+			}
+		]
+	},
+	"width": 100,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001d",
+			"label": "ctrl-]"
+		},
+		{
+			"input": "\u001d",
+			"label": "ctrl-]"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

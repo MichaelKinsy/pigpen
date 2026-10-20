@@ -1,0 +1,62 @@
+{
+	"name": "edge-kitty-alternate-keys",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[97:65;2u",
+			"label": "shifted A"
+		},
+		{
+			"input": "\u001b[98;1:1u",
+			"label": "kitty b press"
+		},
+		{
+			"input": "\u001b[98;1:2u",
+			"label": "kitty b repeat"
+		},
+		{
+			"input": "\u001b[98;1:3u",
+			"label": "kitty b release"
+		},
+		{
+			"input": "\u001b[13;1:2u",
+			"label": "enter repeat"
+		}
+	]
+}

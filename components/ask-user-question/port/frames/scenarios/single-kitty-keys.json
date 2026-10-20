@@ -1,0 +1,54 @@
+{
+	"name": "single-kitty-keys",
+	"description": "Kitty protocol press and release events: releases are dropped before the component",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[1;1:1B",
+			"label": "k-down"
+		},
+		{
+			"input": "\u001b[1;1:3B",
+			"label": "k-down-release"
+		},
+		{
+			"input": "\u001b[1;1:1A",
+			"label": "k-up"
+		},
+		{
+			"input": "\u001b[1;1:1B",
+			"label": "k-down"
+		},
+		{
+			"input": "\u001b[13;1:3u",
+			"label": "k-enter-release"
+		},
+		{
+			"input": "\u001b[13u",
+			"label": "k-enter"
+		}
+	]
+}

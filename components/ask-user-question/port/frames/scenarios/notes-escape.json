@@ -1,0 +1,74 @@
+{
+	"name": "notes-escape",
+	"description": "Esc leaves the editor, the draft is kept",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "n",
+			"label": "n"
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "a",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "f",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "t",
+			"label": "type"
+		},
+		{
+			"input": "\u001b",
+			"label": "esc"
+		},
+		{
+			"input": "n",
+			"label": "n"
+		},
+		{
+			"input": "\u001b",
+			"label": "esc"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

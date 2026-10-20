@@ -1,0 +1,78 @@
+{
+	"name": "edge-input-two-large-pastes",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[200~a0\na1\na2\na3\na4\na5\na6\na7\na8\na9\na10\na11\u001b[201~",
+			"label": "paste"
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "m",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "i",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type"
+		},
+		{
+			"input": "\u001b[200~b0\nb1\nb2\nb3\nb4\nb5\nb6\nb7\nb8\nb9\nb10\nb11\u001b[201~",
+			"label": "paste"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

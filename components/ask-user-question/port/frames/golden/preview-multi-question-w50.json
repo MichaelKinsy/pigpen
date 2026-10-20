@@ -1,0 +1,281 @@
+{
+	"scenario": "preview-multi-question-w50",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				" ← <bg:selectedBg><fg:text> □ Database </fg></bg> <fg:muted> □ Library </fg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which database fits the workload?</b>                ",
+				"",
+				"<fg:accent><b>❯ 1. SQLite</b></fg>",
+				"     <fg:muted>Embedded, zero setup</fg>",
+				"  2. Postgres",
+				"     <fg:muted>Server, concurrent writers</fg>",
+				"  3. DuckDB",
+				"     <fg:muted>Columnar analytics</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>┌──────────────────────────────────────────┐</fg>",
+				"<fg:accent>│</fg> file.db                                 <reset> <fg:accent>│</fg>",
+				"<fg:accent>│</fg>   └─ one file                           <reset> <fg:accent>│</fg>",
+				"<fg:accent>└──────────────────────────────────────────┘</fg>",
+				"",
+				"<fg:muted>Notes: press n to add notes</fg>",
+				"",
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add not<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				" ← <bg:selectedBg><fg:text> □ Database </fg></bg> <fg:muted> □ Library </fg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which database fits the workload?</b>                ",
+				"",
+				"  1. SQLite",
+				"     <fg:muted>Embedded, zero setup</fg>",
+				"<fg:accent><b>❯ 2. Postgres</b></fg>",
+				"     <fg:muted>Server, concurrent writers</fg>",
+				"  3. DuckDB",
+				"     <fg:muted>Columnar analytics</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>┌──────────────────────────────────────────┐</fg>",
+				"<fg:accent>│</fg> app ──▶ pg                              <reset> <fg:accent>│</fg>",
+				"<fg:accent>│</fg>        └─ WAL                           <reset> <fg:accent>│</fg>",
+				"<fg:accent>└──────────────────────────────────────────┘</fg>",
+				"",
+				"<fg:muted>Notes: press n to add notes</fg>",
+				"",
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add not<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Database </fg> <bg:selectedBg><fg:text> □ Library </fg></bg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which library should we use for date formatting?</b> ",
+				"",
+				"<fg:accent><b>❯ 1. date-fns (Recommended)</b></fg>",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add not<reset>…<reset>",
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add not<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 3
+		},
+		{
+			"step": 3,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Database </fg> <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> →",
+				"",
+				"",
+				" <b><fg:accent>Review your answers</fg></b>                              ",
+				"",
+				" <fg:muted> ● Database</fg>                                      ",
+				"    <fg:muted>→</fg> <fg:text>Postgres</fg>                                    ",
+				" <fg:muted> ● Library</fg>                                       ",
+				"    <fg:muted>→</fg> <fg:text>date-fns (Recommended)</fg>                      ",
+				"",
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                    ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a n<reset>…<reset>",
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                    ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a n<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 4
+		},
+		{
+			"step": 4,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Database </fg> <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> →",
+				"",
+				"",
+				" <b><fg:accent>Review your answers</fg></b>                              ",
+				"",
+				" <fg:muted> ● Database</fg>                                      ",
+				"    <fg:muted>→</fg> <fg:text>Postgres</fg>                                    ",
+				" <fg:muted> ● Library</fg>                                       ",
+				"    <fg:muted>→</fg> <fg:text>date-fns (Recommended)</fg>                      ",
+				"",
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                    ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a n<reset>…<reset>",
+				"<fg:accent>──────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                    ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a n<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 5
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "Which database fits the workload?",
+				"kind": "option",
+				"answer": "Postgres",
+				"preview": "app ──▶ pg\n       └─ WAL"
+			},
+			{
+				"questionIndex": 1,
+				"question": "Which library should we use for date formatting?",
+				"kind": "option",
+				"answer": "date-fns (Recommended)"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"Which database fits the workload?\"=\"Postgres\". selected preview: app ──▶ pg\n       └─ WAL. \"Which library should we use for date formatting?\"=\"date-fns (Recommended)\". You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "Which database fits the workload?",
+					"kind": "option",
+					"answer": "Postgres",
+					"preview": "app ──▶ pg\n       └─ WAL"
+				},
+				{
+					"questionIndex": 1,
+					"question": "Which library should we use for date formatting?",
+					"kind": "option",
+					"answer": "date-fns (Recommended)"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "Which database fits the workload?",
+						"header": "Database",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "SQLite",
+								"description": "Embedded, zero setup",
+								"hasPreview": true
+							},
+							{
+								"label": "Postgres",
+								"description": "Server, concurrent writers",
+								"hasPreview": true
+							},
+							{
+								"label": "DuckDB",
+								"description": "Columnar analytics",
+								"hasPreview": true
+							}
+						]
+					},
+					{
+						"question": "Which library should we use for date formatting?",
+						"header": "Library",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "date-fns (Recommended)",
+								"description": "Modular, tree-shakeable functions",
+								"hasPreview": false
+							},
+							{
+								"label": "Luxon",
+								"description": "Immutable wrapper with time zone support",
+								"hasPreview": false
+							},
+							{
+								"label": "Day.js",
+								"description": "Tiny Moment-compatible API",
+								"hasPreview": false
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

@@ -1,0 +1,54 @@
+{
+	"name": "preview-code-fence-languages",
+	"description": "fenced code with and without a highlightable language",
+	"params": {
+		"questions": [
+			{
+				"question": "Which snippet?",
+				"header": "Snippet",
+				"options": [
+					{
+						"label": "TypeScript",
+						"description": "ts fence",
+						"preview": "```ts\nconst x: number = 1;\n// comment\nfunction f(a: string) { return `${a}!`; }\n```"
+					},
+					{
+						"label": "Go",
+						"description": "go fence",
+						"preview": "```go\nfunc main() {\n\tfmt.Println(\"hi\", 42)\n}\n```"
+					},
+					{
+						"label": "JSON",
+						"description": "json fence",
+						"preview": "```json\n{\"a\": [1, true, null], \"b\": \"x\"}\n```"
+					},
+					{
+						"label": "Text",
+						"description": "text fence",
+						"preview": "```text\nnot highlighted\n```"
+					}
+				]
+			}
+		]
+	},
+	"width": 100,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

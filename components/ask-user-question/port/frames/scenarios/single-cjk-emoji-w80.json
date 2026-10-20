@@ -1,0 +1,38 @@
+{
+	"name": "single-cjk-emoji-w80",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "どのライブラリを使いますか？ 日本語と😀の幅",
+				"header": "言語",
+				"options": [
+					{
+						"label": "日本語ライブラリ",
+						"description": "全角文字の説明文がここに入ります。折り返しの確認用です。"
+					},
+					{
+						"label": "Emoji 😀🎉 label",
+						"description": "A description with emoji 👨‍👩‍👧 and combining é marks"
+					},
+					{
+						"label": "한국어",
+						"description": "한글 설명 text mixed"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

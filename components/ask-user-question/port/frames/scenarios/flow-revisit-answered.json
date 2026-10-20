@@ -1,0 +1,110 @@
+{
+	"name": "flow-revisit-answered",
+	"description": "answer, go back, change an answer",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			},
+			{
+				"question": "Pick the runtime",
+				"header": "Runtime",
+				"options": [
+					{
+						"label": "Node",
+						"description": "JavaScript"
+					},
+					{
+						"label": "Bun",
+						"description": "Fast"
+					},
+					{
+						"label": "Deno",
+						"description": "Secure"
+					}
+				]
+			},
+			{
+				"question": "Pick the editor",
+				"header": "Editor",
+				"options": [
+					{
+						"label": "Vim",
+						"description": "Modal"
+					},
+					{
+						"label": "Emacs",
+						"description": "Extensible"
+					},
+					{
+						"label": "Nano",
+						"description": "Simple"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\u001b[Z",
+			"label": "stab"
+		},
+		{
+			"input": "\u001b[Z",
+			"label": "stab"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\t",
+			"label": "tab"
+		},
+		{
+			"input": "\t",
+			"label": "tab"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

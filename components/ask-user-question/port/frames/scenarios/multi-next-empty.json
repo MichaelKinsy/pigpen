@@ -1,0 +1,59 @@
+{
+	"name": "multi-next-empty",
+	"description": "Next with nothing checked",
+	"params": {
+		"questions": [
+			{
+				"question": "Which features do you want to enable?",
+				"header": "Features",
+				"options": [
+					{
+						"label": "Auth",
+						"description": "Sign-in and sessions"
+					},
+					{
+						"label": "Billing",
+						"description": "Plans and invoices"
+					},
+					{
+						"label": "Search",
+						"description": "Full-text search over records"
+					},
+					{
+						"label": "Export",
+						"description": "CSV and JSON download"
+					}
+				],
+				"multiSelect": true
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

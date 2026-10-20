@@ -1,0 +1,50 @@
+{
+	"name": "edge-input-ansi-paste",
+	"description": "escape sequences inside a bracketed paste",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[200~red \u001b[31mtext\u001b[0m and \u001b]8;;http://x\u0007link\u001b]8;;\u0007 done\u001b[201~",
+			"label": "paste"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

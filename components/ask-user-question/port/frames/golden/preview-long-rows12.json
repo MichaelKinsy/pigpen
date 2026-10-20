@@ -1,0 +1,172 @@
+{
+	"scenario": "preview-long-rows12",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				"<fg:dim>↑</fg>",
+				"",
+				"<fg:accent><b>❯ 1. Wide</b></fg>                                   <fg:accent>┌──────────────────────────────────────────────────────┐</fg>",
+				"     <fg:muted>Many columns</fg>                           <fg:accent>│</fg> line 01: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"  2. Tall                                   <fg:accent>│</fg> line 02: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"     <fg:muted>Many rows</fg>                              <fg:accent>│</fg> line 03: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"<fg:dim>↓</fg>",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				"<fg:dim>↑</fg>",
+				"     <fg:muted>Many columns</fg>                                       <fg:accent>│</fg> row 01                                  <reset> <fg:accent>│</fg>",
+				"<fg:accent><b>❯ 2. Tall</b></fg>                                               <fg:accent>│</fg> row 02                                  <reset> <fg:accent>│</fg>",
+				"     <fg:muted>Many rows</fg>                                          <fg:accent>│</fg> row 03                                  <reset> <fg:accent>│</fg>",
+				"  3. Compact                                            <fg:accent>│</fg> row 04                                  <reset> <fg:accent>│</fg>",
+				"     <fg:muted>Dense</fg>                                              <fg:accent>│</fg> row 05                                  <reset> <fg:accent>│</fg>",
+				"<fg:dim>↓</fg>",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "up",
+			"input": "\u001b[A",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				"<fg:dim>↑</fg>",
+				"",
+				"<fg:accent><b>❯ 1. Wide</b></fg>                                   <fg:accent>┌──────────────────────────────────────────────────────┐</fg>",
+				"     <fg:muted>Many columns</fg>                           <fg:accent>│</fg> line 01: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"  2. Tall                                   <fg:accent>│</fg> line 02: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"     <fg:muted>Many rows</fg>                              <fg:accent>│</fg> line 03: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"<fg:dim>↓</fg>",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 3
+		},
+		{
+			"step": 3,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				"<fg:dim>↑</fg>",
+				"",
+				"<fg:accent><b>❯ 1. Wide ✔</b></fg>                                 <fg:accent>┌──────────────────────────────────────────────────────┐</fg>",
+				"     <fg:muted>Many columns</fg>                           <fg:accent>│</fg> line 01: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"  2. Tall                                   <fg:accent>│</fg> line 02: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"     <fg:muted>Many rows</fg>                              <fg:accent>│</fg> line 03: the quick brown fox jumps over the lazy dog <fg:accent>│</fg>",
+				"<fg:dim>↓</fg>",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 4
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "Which layout?",
+				"kind": "option",
+				"answer": "Wide",
+				"preview": "line 01: the quick brown fox jumps over the lazy dog\nline 02: the quick brown fox jumps over the lazy dog\nline 03: the quick brown fox jumps over the lazy dog\nline 04: the quick brown fox jumps over the lazy dog\nline 05: the quick brown fox jumps over the lazy dog\nline 06: the quick brown fox jumps over the lazy dog\nline 07: the quick brown fox jumps over the lazy dog\nline 08: the quick brown fox jumps over the lazy dog\nline 09: the quick brown fox jumps over the lazy dog\nline 10: the quick brown fox jumps over the lazy dog\nline 11: the quick brown fox jumps over the lazy dog\nline 12: the quick brown fox jumps over the lazy dog\nline 13: the quick brown fox jumps over the lazy dog\nline 14: the quick brown fox jumps over the lazy dog\nline 15: the quick brown fox jumps over the lazy dog\nline 16: the quick brown fox jumps over the lazy dog\nline 17: the quick brown fox jumps over the lazy dog\nline 18: the quick brown fox jumps over the lazy dog\nline 19: the quick brown fox jumps over the lazy dog\nline 20: the quick brown fox jumps over the lazy dog\nline 21: the quick brown fox jumps over the lazy dog\nline 22: the quick brown fox jumps over the lazy dog\nline 23: the quick brown fox jumps over the lazy dog\nline 24: the quick brown fox jumps over the lazy dog\nline 25: the quick brown fox jumps over the lazy dog\nline 26: the quick brown fox jumps over the lazy dog\nline 27: the quick brown fox jumps over the lazy dog\nline 28: the quick brown fox jumps over the lazy dog\nline 29: the quick brown fox jumps over the lazy dog\nline 30: the quick brown fox jumps over the lazy dog"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"Which layout?\"=\"Wide\". selected preview: line 01: the quick brown fox jumps over the lazy dog\nline 02: the quick brown fox jumps over the lazy dog\nline 03: the quick brown fox jumps over the lazy dog\nline 04: the quick brown fox jumps over the lazy dog\nline 05: the quick brown fox jumps over the lazy dog\nline 06: the quick brown fox jumps over the lazy dog\nline 07: the quick brown fox jumps over the lazy dog\nline 08: the quick brown fox jumps over the lazy dog\nline 09: the quick brown fox jumps over the lazy dog\nline 10: the quick brown fox jumps over the lazy dog\nline 11: the quick brown fox jumps over the lazy dog\nline 12: the quick brown fox jumps over the lazy dog\nline 13: the quick brown fox jumps over the lazy dog\nline 14: the quick brown fox jumps over the lazy dog\nline 15: the quick brown fox jumps over the lazy dog\nline 16: the quick brown fox jumps over the lazy dog\nline 17: the quick brown fox jumps over the lazy dog\nline 18: the quick brown fox jumps over the lazy dog\nline 19: the quick brown fox jumps over the lazy dog\nline 20: the quick brown fox jumps over the lazy dog\nline 21: the quick brown fox jumps over the lazy dog\nline 22: the quick brown fox jumps over the lazy dog\nline 23: the quick brown fox jumps over the lazy dog\nline 24: the quick brown fox jumps over the lazy dog\nline 25: the quick brown fox jumps over the lazy dog\nline 26: the quick brown fox jumps over the lazy dog\nline 27: the quick brown fox jumps over the lazy dog\nline 28: the quick brown fox jumps over the lazy dog\nline 29: the quick brown fox jumps over the lazy dog\nline 30: the quick brown fox jumps over the lazy dog. You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "Which layout?",
+					"kind": "option",
+					"answer": "Wide",
+					"preview": "line 01: the quick brown fox jumps over the lazy dog\nline 02: the quick brown fox jumps over the lazy dog\nline 03: the quick brown fox jumps over the lazy dog\nline 04: the quick brown fox jumps over the lazy dog\nline 05: the quick brown fox jumps over the lazy dog\nline 06: the quick brown fox jumps over the lazy dog\nline 07: the quick brown fox jumps over the lazy dog\nline 08: the quick brown fox jumps over the lazy dog\nline 09: the quick brown fox jumps over the lazy dog\nline 10: the quick brown fox jumps over the lazy dog\nline 11: the quick brown fox jumps over the lazy dog\nline 12: the quick brown fox jumps over the lazy dog\nline 13: the quick brown fox jumps over the lazy dog\nline 14: the quick brown fox jumps over the lazy dog\nline 15: the quick brown fox jumps over the lazy dog\nline 16: the quick brown fox jumps over the lazy dog\nline 17: the quick brown fox jumps over the lazy dog\nline 18: the quick brown fox jumps over the lazy dog\nline 19: the quick brown fox jumps over the lazy dog\nline 20: the quick brown fox jumps over the lazy dog\nline 21: the quick brown fox jumps over the lazy dog\nline 22: the quick brown fox jumps over the lazy dog\nline 23: the quick brown fox jumps over the lazy dog\nline 24: the quick brown fox jumps over the lazy dog\nline 25: the quick brown fox jumps over the lazy dog\nline 26: the quick brown fox jumps over the lazy dog\nline 27: the quick brown fox jumps over the lazy dog\nline 28: the quick brown fox jumps over the lazy dog\nline 29: the quick brown fox jumps over the lazy dog\nline 30: the quick brown fox jumps over the lazy dog"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "Which layout?",
+						"header": "Layout",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "Wide",
+								"description": "Many columns",
+								"hasPreview": true
+							},
+							{
+								"label": "Tall",
+								"description": "Many rows",
+								"hasPreview": true
+							},
+							{
+								"label": "Compact",
+								"description": "Dense",
+								"hasPreview": true
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

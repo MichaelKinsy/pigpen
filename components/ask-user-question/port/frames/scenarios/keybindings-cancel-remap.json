@@ -1,0 +1,45 @@
+{
+	"name": "keybindings-cancel-remap",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"keybindings": {
+		"tui.select.cancel": "ctrl+q"
+	},
+	"steps": [
+		{
+			"input": "\u001b",
+			"label": "esc"
+		},
+		{
+			"input": "\u0003",
+			"label": "ctrl-c"
+		},
+		{
+			"input": "\u0011",
+			"label": "ctrl-q"
+		}
+	]
+}
