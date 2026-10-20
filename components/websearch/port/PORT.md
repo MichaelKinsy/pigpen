@@ -14,7 +14,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; fetch `answer` mode and query rewrite (need a model-completion call); activity widget and shortcut; TUI render hooks |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search); routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | The other 26 providers (OpenAI/Codex hosted search, Gemini, xAI, Jina Search, Firecrawl, ...): in the provider table; selecting or reaching one is refused (see "Refusals") |
-| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, hosted fetch providers other than Jina, authenticated fetch, Gemini Web and browser cookies |
+| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, Defuddle fallback, hosted fetch providers other than Jina, authenticated fetch, Gemini Web and browser cookies |
 
 ## Refusals (until the slices above are ported)
 
@@ -31,7 +31,7 @@ Every unported option, mode or URL kind is refused with one message and returns 
 | `YouTube video extraction`, `local video file analysis`, `video frame and timestamp extraction`, `GitHub repository extraction (clone)`, `GitHub issue and pull request extraction` | the URL (or `frames`/`timestamp`) the original sends to that extractor and the matching config section (`youtube`, `video`, `githubClone`, `githubPrIssue`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
 | `PDF text extraction` | a PDF response | `extract.go` |
 | `<Label> fetch provider` | the original would call a hosted fetch provider at this point of `fetchRouting` (base URL or key present) | `extract.go` |
-| `the RSC payload and Defuddle fallback extractors` | readable extraction failed, where the original tries these before giving up (the message follows the original's verdict) | `extract.go` |
+| `the Defuddle fallback extractor` | readable extraction failed or was short and the RSC payload gave nothing, where the original tries Defuddle before giving up (the refusal follows the original's verdict) | `extract.go`, `defuddle.go` |
 
 A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
 `/google-account`, the shortcuts and the activity widget. Known approximation: whether an unported provider is available
@@ -47,10 +47,25 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
 
 ## Deliberate differences
 
-- **HTML to Markdown** uses an `x/net/html` readability-lite and a Turndown-style converter, not Mozilla Readability + Turndown:
-  not byte-identical (named gap in the fetch twins). RSC and Defuddle fallbacks return nothing.
-- **Provider timeouts** are classified as network errors, so `searchRouting` can fall through; the original treats
-  them as aborts. Caller cancellation is still an abort and never falls through.
+- **HTML to Markdown** is `github.com/go-shiori/go-readability` (a line-by-line port of Readability.js 0.5.0; the original runs
+  @mozilla/readability 0.6.0) and a hand port of turndown 7.2.4 (`turndown.go`) over `x/net/html`, where the original has linkedom
+  (htmlparser2) and domino. Recorded from the original (`port/record-html-extract.mjs`, `port/record-turndown.mjs`): 25 HTML
+  fixtures and 177 turndown snippets, byte for byte equal except the fixture below. Remaining differences: **malformed HTML**
+  (`malformed-misnested`): linkedom and `x/net/html` build different trees for misnested inline tags and an unclosed table
+  (the original keeps `italic only` unstyled and turns the cells into paragraphs; the port applies the HTML adoption agency
+  and loses the table); an article whose `articleContent` is non-null but empty reads as null here (no fixture reaches it);
+  JSON lone surrogates in an RSC chunk become U+FFFD; a non-string RSC `href` is not the TypeError it is upstream.
+- **RSC payload fallback** (`rsc-extract.ts`) is ported (`rsc_extract.go`), proven on four recorded fixtures (main chunk,
+  fallback chunks with ordering and de-duplication, short, malformed). **The Defuddle fallback is not ported**: no Go port tracks
+  Defuddle 0.19.3 (dotcommander/defuddle and kaptinlin/defuddle-go build the Markdown with html-to-markdown and score
+  differently, vaayne/go-defuddle runs the JavaScript in an embedded engine) and its removal, scoring, standardization and
+  Markdown steps are several thousand lines. A page the original would give to Defuddle is reported with the original's verdict
+  followed by the refusal (`the Defuddle fallback extractor`); four upstream `rsc-fallback` cases stay named skips.
+- **Provider timeouts** are aborts, as in the original (`searchcommon.go timeoutFix`: a provider's own deadline reads "The operation
+  was aborted due to timeout", so `searchRouting` does not fall through and the search stops). Twins: `timeout_test.go`. Providers
+  with their own timeout text (SerpApi, Serply, You.com, XCrawl, Jina, Querit) keep it. Slice branches that record "own timeouts use the
+  network-class timeout" (rest-providers PORT.md 'Differences recorded with fixtures', hosted-providers PORT.md 'Own timeouts') must
+  drop that note when they are rebased on this change.
 - **SSRF hardening beyond the original**: the address is checked again when the connection is made (a name that changes
   between validation and connect cannot reach an internal address); IPv6 multicast, NAT64 and 6to4-embedded IPv4 are blocked.
 - **Config directory** is PiG-first (`PIG_CODING_AGENT_DIR`, then `PI_CODING_AGENT_DIR`, XDG `pig`, `$PIG_HOME/agent`), with Pi's
@@ -60,7 +75,14 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
 - **Invalid `web-search.json`** makes the original throw at registration; an extension cannot fail its load here, so nothing is
   registered and the problem is shown at session start.
 - **A session that cannot be read** (restore or transcript selection) still starts; the user gets a warning.
-- **SOCKS4/4a proxies** validate like the original but fail closed at connect (Go's `net/http` has no SOCKS4 dialer).
+- **Proxied requests run `curl`** through the host's command runner (`proxy_curl.go`, `hostexec.go`), with the original's arguments,
+  header dump, write-out JSON and temporary files (`port/record-proxy-curl.mjs` records the original's invocations for 17 requests;
+  `testdata/proxy-curl.json`; scenarios `fetch-proxy-curl` and `fetch-proxy-curl-config` run the real `curl` against a fake HTTP proxy),
+  so SOCKS4 and SOCKS4a work. Differences: the host runner cannot tell a missing `curl` from a failing one, so the original's "curl
+  executable not found on PATH" reads "curl exited with code 1 via <proxy>"; the body read back from curl's file is bounded at 64 MB;
+  requests are single hops (every caller follows redirects by hand, as `fetchRemoteUrl` does with `redirect: "manual"`), so the
+  follow-mode header stripping of the original's fetch wrapper has no counterpart; a localhost or NO_PROXY host is fetched directly,
+  behind the dial-time address check.
 - **Credential commands** run through the bare `sh` (Go) instead of `/bin/sh`, so the harness can record them and NixOS-style systems work.
 - **Guidance names only what this port can do** (review fix): the fetch "Fallback options" checklist and the
   "No search provider available" error of the original also suggest Firecrawl, Crawl4AI, TinyFish, Search1API, Querit,
@@ -104,9 +126,8 @@ Each logs `ADAPTED:` when run.
 
 | Upstream title | Adaptation | Go file |
 |---|---|---|
-| source_check fetchContent uses the explicit proxy for result pages | provider tavily instead of openai (not ported); recorded proxy of each request instead of curl arguments | `proxy_test.go` |
+| source_check fetchContent uses the explicit proxy for result pages | provider tavily instead of openai (not ported here); the curl arguments are asserted | `proxy_test.go` |
 | fetch_content passes the explicit proxy through queued extraction | the page body is padded past the 500-character usefulness floor: this port's HTML pipeline (like the original's, which also rejects the short fixture body) reports shorter pages as incomplete | `proxy_test.go` |
-| configured socks5h proxy is accepted and routed to curl | asserts the accepted proxy the request carries instead of curl arguments | `proxy_test.go` |
 | non-curated search stops after caller cancellation | provider tavily instead of anysearch (not ported) | `tools_provider_test.go` |
 | web_search and Curator reject disabled providers before availability or requests | only workflow none runs; summary-review is the curator (deferred) | `tools_provider_test.go` |
 | allowlisting an explicit-only provider does not opt it into auto or all | duckduckgo instead of serply (not ported); both are explicit-only | `tools_provider_test.go` |

@@ -134,8 +134,8 @@
  {
   "name": "fallback-guidance-unported",
   "file": "extract.go",
-  "find": "\"  • none in this port: the other fetch providers of pi-web-access are not ported yet\"",
-  "replace": "\"  • Set firecrawlBaseUrl to a self-hosted Firecrawl instance\""
+  "find": "\"  \u2022 none in this port: the other fetch providers of pi-web-access are not ported yet\"",
+  "replace": "\"  \u2022 Set firecrawlBaseUrl to a self-hosted Firecrawl instance\""
  },
  {
   "name": "kagi-limit-key",
@@ -148,65 +148,137 @@
   "file": "kagi.go",
   "find": "{\"Bearer \" + apiKey}",
   "replace": "{\"Bot \" + apiKey}"
-},
-{
+ },
+ {
   "name": "refusal-wording",
   "file": "refusal.go",
   "find": "\" (Go port) does not support \" + e.Feature",
   "replace": "\" (Go port) does not handle \" + e.Feature"
-},
-{
+ },
+ {
   "name": "refusal-install-advice",
   "file": "refusal.go",
   "find": "\", which runs unchanged in PiG.\"",
   "replace": "\".\""
-},
-{
+ },
+ {
   "name": "refusal-fetch-auth-dropped",
   "file": "tool_fetch.go",
   "find": "return ToolOutput{}, unsupported(\"authenticated fetch (auth profiles read local browser cookies)\")",
   "replace": "_ = 0"
-},
-{
+ },
+ {
   "name": "refusal-fetch-answer-dropped",
   "file": "tool_fetch.go",
   "find": "return ToolOutput{}, unsupported(\"fetch_content mode answer (answering from a page needs a model call)\")",
   "replace": "_ = 0"
-},
-{
+ },
+ {
   "name": "refusal-workflow-dropped",
   "file": "tool_search.go",
   "find": "if workflow != \"none\" {",
   "replace": "if workflow != \"none\" && workflow == \"\" {"
-},
-{
+ },
+ {
   "name": "refusal-provider-list-fan-out",
   "file": "search.go",
   "find": "if d := providerTable[p]; d == nil || d.search == nil {",
   "replace": "if d := providerTable[p]; d == nil && false {"
-},
-{
+ },
+ {
   "name": "refusal-fetch-extractor-dropped",
   "file": "extract.go",
   "find": "return failed(rawURL, unsupported(feature).Error())",
   "replace": "return failed(rawURL, \"\")"
-},
-{
+ },
+ {
   "name": "refusal-hosted-provider-skipped",
   "file": "extract.go",
   "find": "if fetchProviderRequested(p) {",
   "replace": "if false && fetchProviderRequested(p) {"
-},
-{
+ },
+ {
   "name": "refusal-pdf-message",
   "file": "extract.go",
   "find": "return fail(unsupported(\"PDF text extraction\").Error())",
   "replace": "return fail(\"PDF extraction failed\")"
-},
-{
-  "name": "refusal-fallback-extractors-unnamed",
-  "file": "extract.go",
-  "find": "msg += \"\\n\\n\" + unsupported(\"the RSC payload and Defuddle fallback extractors\").Error()",
-  "replace": "msg += \"\""
-}
+ },
+ {
+  "name": "timeout-classified-as-network",
+  "file": "searchcommon.go",
+  "find": "const providerTimeoutMessage = \"The operation was aborted due to timeout\"",
+  "replace": "const providerTimeoutMessage = \"request timed out\""
+ },
+ {
+  "name": "curl-compressed-dropped",
+  "file": "proxy_curl.go",
+  "find": "\t\t\"--compressed\",\n",
+  "replace": "\t\t\"--connect-timeout\", \"20\",\n"
+ },
+ {
+  "name": "curl-connect-timeout-changed",
+  "file": "proxy_curl.go",
+  "find": "\"--connect-timeout\", \"20\",",
+  "replace": "\"--connect-timeout\", \"30\","
+ },
+ {
+  "name": "curl-no-x-for-get-body",
+  "file": "proxy_curl.go",
+  "find": "args = append([]string{\"-X\", \"GET\"}, args...)",
+  "replace": "_ = method"
+ },
+ {
+  "name": "curl-headers-unsorted-case",
+  "file": "proxy_curl.go",
+  "find": "lower := strings.ToLower(name)\n\t\tcombined[lower] = append(combined[lower], h[name]...)",
+  "replace": "lower := name\n\t\tcombined[lower] = append(combined[lower], h[name]...)"
+ },
+ {
+  "name": "curl-no-http-status-message",
+  "file": "proxy_curl.go",
+  "find": "returned no HTTP status",
+  "replace": "returned nothing"
+ },
+ {
+  "name": "curl-bypass-localhost-dropped",
+  "file": "proxy_curl.go",
+  "find": "host == \"localhost\" || strings.HasSuffix(host, \".localhost\") || host == \"127.0.0.1\" || host == \"::1\"",
+  "replace": "false"
+ },
+ {
+  "name": "proxy-normalize-default-port",
+  "file": "proxy.go",
+  "find": "!(port == \"80\" && u.Scheme == \"http\") && !(port == \"443\" && u.Scheme == \"https\")",
+  "replace": "true"
+ },
+ {
+  "name": "turndown-escape-star",
+  "file": "turndown.go",
+  "find": "s = strings.ReplaceAll(s, `*`, `\\*`)",
+  "replace": "_ = s"
+ },
+ {
+  "name": "turndown-bullet-padding",
+  "file": "turndown.go",
+  "find": "prefix := tdBullet + \"   \"",
+  "replace": "prefix := tdBullet + \"  \""
+ },
+ {
+  "name": "turndown-fence-grows",
+  "file": "turndown.go",
+  "find": "fenceSize = j - i + 1",
+  "replace": "fenceSize = j - i"
+ },
+ {
+  "name": "rsc-main-chunk-floor",
+  "file": "rsc_extract.go",
+  "find": "if jsLen(jsTrim(content)) > 100 {",
+  "replace": "if jsLen(jsTrim(content)) > 100000 {"
+ },
+ {
+  "name": "rsc-dedupe-key",
+  "file": "rsc_extract.go",
+  "find": "key := jsSlice(p.text, 0, 150)",
+  "replace": "key := p.text[:0]"
+ }
 ]
