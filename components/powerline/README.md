@@ -24,6 +24,8 @@ The segments, the layout, presets and separators, custom items, the settings and
 changes, token and cost totals (subagent costs included), context usage, git status and host icons, currency conversion, and the
 Nerd Font detection. In RPC mode it clears the same widgets and status Pi does and draws nothing.
 
+**Also ported:** auto follow-up (`powerline.autoFollowUp` with `TYPESAFE_API_KEY`: while the agent works, a plain Enter is sent to the Jev classifier and moves to the follow-up queue when Jev is confident it can wait), and the pure parts of the editor profiler and the editor composition helpers (not yet wired in; see below).
+
 **Not ported yet:** the bash-mode editor, the prompt queue and stash, the welcome header, the working-message vibes, quote reply,
 `/cd`, the editor chrome and shortcuts. Two things differ because the Go SDK lacks them: other extensions' statuses are not
 visible to the bar (it only draws its own), and the primary bar is widget lines laid out at the terminal width when the bar is
@@ -31,7 +33,7 @@ refreshed. See [port/PORT.md](port/PORT.md).
 
 Nothing unported is silently accepted. The commands the original adds (`/reply`, `/queue`, `/stash-history`, `/bash-mode`,
 `/bash-reset`, `/powerline-perf`, `/vibe`, `/cd`) answer with an error naming the feature, and a setting or environment variable
-that turns an unported feature on (`powerline.welcome: true`, `sendDelayMs`, `autoFollowUp`, `stashSharpSShortcut`,
+that turns an unported feature on (`powerline.welcome: true`, `sendDelayMs`, `stashSharpSShortcut`,
 `workingVibes`, `workingVibe`, `bashMode`, `powerlineShortcuts`, `showLastPrompt: true`, `POWERLINE_DEBUG_PERF=1`) gets a warning at
 session start:
 
