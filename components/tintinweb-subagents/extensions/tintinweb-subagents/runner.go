@@ -33,6 +33,13 @@ type childSpec struct {
 	MaxTurns     int
 	GraceTurns   int  // turns allowed after the wrap-up steer before the run is aborted (0: the default, 5)
 	Isolated     bool // no extensions (and so no extension tools) in the child
+	// Observer sees every event of the child's rpc stream (the surfaces' transcript, activity and usage).
+	Observer childObserver
+}
+
+// childObserver consumes the events of a child. query sends a command to the child and returns its answer.
+type childObserver interface {
+	observe(event map[string]any, query func(cmd string) (map[string]any, error))
 }
 
 // childResult is what a finished child reports.
@@ -168,6 +175,7 @@ type rpcChild struct {
 	// The last assistant message of the run: its stop reason, error and text. upstream: finalTurnError.
 	lastStop, lastError, lastText string
 	exited                        chan struct{} // closed when the child's output ends
+	observer                      childObserver
 	// limits carries the turn-limit commands (the wrap-up steer, then the abort) to one sender, in order.
 	limits chan map[string]any
 }
@@ -194,7 +202,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-	c := &rpcChild{cmd: cmd, stdin: stdin, pending: map[string]chan map[string]any{}, settled: make(chan struct{}), errc: make(chan error, 1), maxTurn: spec.MaxTurns, grace: spec.GraceTurns, exited: make(chan struct{})}
+	c := &rpcChild{cmd: cmd, stdin: stdin, pending: map[string]chan map[string]any{}, settled: make(chan struct{}), errc: make(chan error, 1), maxTurn: spec.MaxTurns, grace: spec.GraceTurns, exited: make(chan struct{}), observer: spec.Observer}
 	if c.grace <= 0 {
 		c.grace = defaultGraceTurns
 	}
@@ -246,6 +254,9 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 }
 
 func (c *rpcChild) handle(m map[string]any) {
+	if c.observer != nil {
+		c.observer.observe(m, c.query)
+	}
 	switch m["type"] {
 	case "response":
 		id, _ := m["id"].(string)
@@ -295,6 +306,11 @@ func (c *rpcChild) handle(m map[string]any) {
 			close(c.settled)
 		}
 	}
+}
+
+// query sends a bare command and returns its answer (the surfaces' reads of the child's state).
+func (c *rpcChild) query(cmd string) (map[string]any, error) {
+	return c.call(map[string]any{"type": cmd})
 }
 
 // call sends a command and waits for its response.

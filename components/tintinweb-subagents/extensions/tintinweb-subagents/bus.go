@@ -102,18 +102,18 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 		parentPrompt, _ = ctx.GetSystemPrompt()
 	}
 	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt)
-	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
+	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
+	// An agent file's model, thinking level and turn limit outrank the call's, which only fills gaps; the original's
+	// haiku default of Explore falls back to the parent's model when it is not available, so this port never forces it.
+	// upstream: invocation-config.ts resolveAgentInvocationConfig.
+	pinned := cfg
 	if cfg.IsDefault && cfg.Name == "Explore" {
-		spec.Model = "" // the original's haiku default falls back to the parent's model when it is not available; this port never forces it
-	} else {
-		spec.Model = cfg.Model
+		c := *cfg
+		c.Model = ""
+		pinned = &c
 	}
-	if model != "" {
-		spec.Model = model
-	}
-	if spec.Thinking == "" {
-		spec.Thinking = cfg.Thinking
-	}
+	inv := resolveInvocation(pinned, model, thinking, maxTurns)
+	spec.Model, spec.Thinking = inv.modelInput, inv.thinking
 	// Without a model or thinking level of its own the child follows the parent's current ones.
 	if parent, ok := a.context(); ok {
 		if spec.Model == "" {
@@ -125,12 +125,9 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 			}
 		}
 	}
-	switch {
-	case maxTurns > 0:
-		spec.MaxTurns = maxTurns
-	case cfg.MaxTurns != nil:
-		spec.MaxTurns = *cfg.MaxTurns
-	default:
+	if inv.maxTurns != nil {
+		spec.MaxTurns = *inv.maxTurns
+	} else {
 		a.mu.Lock()
 		if a.defaultMaxTurns != nil {
 			spec.MaxTurns = *a.defaultMaxTurns
@@ -143,5 +140,10 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	if description == "" {
 		description = strings.Join(strings.Fields(prompt)[:min(5, len(strings.Fields(prompt)))], " ")
 	}
-	return a.mgr.spawn(resolved, description, name, spec, background), nil
+	snapshot := buildInvocation(ctx, inv, background, isolated || (cfg.Isolated != nil && *cfg.Isolated))
+	obs := a.ui.newObserver(snapshot, spec.MaxTurns)
+	spec.Observer = obs
+	r := a.mgr.spawn(resolved, description, name, spec, background)
+	a.ui.attach(r, obs)
+	return r, nil
 }

@@ -188,19 +188,14 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"scopeModels", `{"scopeModels": true}`, "scopeModels: true"},
 		{"strictAgentFiles", `{"strictAgentFiles": true}`, "strictAgentFiles: true"},
 		{"toolDescriptionMode", `{"toolDescriptionMode": "compact"}`, `toolDescriptionMode: "compact"`},
-		{"fleetView", `{"fleetView": true}`, "fleetView: true"},
 		{"agentMentions", `{"agentMentions": "direct"}`, `agentMentions: "direct"`},
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
 		{"rememberAgents", `{"rememberAgents": true}`, "rememberAgents: true"},
-		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
 		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
 		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
 		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
 		{"reportUsage", `{"reportUsage": true}`, "reportUsage: true"},
-		{"showCost", `{"showCost": true}`, "showCost: true"},
-		{"showModel", `{"showModel": true}`, "showModel: true"},
-		{"viewerMarkdown", `{"viewerMarkdown": "all"}`, `viewerMarkdown: "all"`},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -209,8 +204,8 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		})
 	}
 	t.Run("two settings are listed in one notice", func(t *testing.T) {
-		r := settingsRig(t, `{"showCost": true, "scopeModels": true}`)
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (scopeModels: true, showCost: true)")})
+		r := settingsRig(t, `{"reportUsage": true, "scopeModels": true}`)
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (scopeModels: true, reportUsage: true)")})
 	})
 	t.Run("the global file counts and the project file overrides it", func(t *testing.T) {
 		dir := t.TempDir()

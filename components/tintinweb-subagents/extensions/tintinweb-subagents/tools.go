@@ -13,9 +13,15 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/components/pitui/jsstring"
 )
 
 func textResult(s string) sdk.ToolResult { return sdk.ToolResult{Content: s} }
+
+// textResultD is a text result with the details its renderer reads. upstream: index.ts textResult(msg, details).
+func textResultD(s string, d agentDetails) sdk.ToolResult {
+	return sdk.ToolResult{Content: s, Details: d}
+}
 
 //go:embed agent_description.txt
 var agentDescriptionTemplate string
@@ -120,6 +126,8 @@ func (a *app) registerTools(e *sdk.Extension) {
 		PromptGuidelines: guidelines,
 		Parameters:       agentToolSchema(reg, specs["Agent"]),
 		Execute:          a.agentTool,
+		RenderCall:       a.renderAgentCall,
+		RenderResult:     a.renderAgentResult,
 	})
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: "get_subagent_result", Label: "Get Agent Result", Description: *specs["get_subagent_result"].Description,
@@ -136,7 +144,7 @@ func (a *app) registerTools(e *sdk.Extension) {
 }
 
 // formatMs is seconds with one decimal. upstream: ui/agent-widget.ts formatMs.
-func formatMs(ms int64) string { return fmt.Sprintf("%.1fs", float64(ms)/1000) }
+func formatMs(ms int64) string { return jsstring.ToFixed(float64(ms)/1000, 1) + "s" }
 
 // formatTokens is "" for no tokens, else the count. upstream: index.ts formatLifetimeTokens, ui/agent-widget.ts formatTokens.
 func formatTokens(n int) string {
@@ -220,21 +228,27 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 		if queued {
 			state = "queued"
 		}
-		return textResult(fmt.Sprintf("%sAgent %s in background.\nAgent ID: %s\nType: %s\nDescription: %s\n%s\nYou will be notified when this agent completes.\n"+
+		bgDetails := newDetailBase(resolved, description, a.ui.invocationOf(r.ID)).details()
+		bgDetails.Status, bgDetails.AgentID = "background", r.ID
+		return textResultD(fmt.Sprintf("%sAgent %s in background.\nAgent ID: %s\nType: %s\nDescription: %s\n%s\nYou will be notified when this agent completes.\n"+
 			"Use get_subagent_result to retrieve full results, or steer_subagent to send it messages.\nDo not duplicate this agent's work.",
-			fallbackNote, state, r.ID, displayName(a, resolved), description, pos)), nil
+			fallbackNote, state, r.ID, displayName(a, resolved), description, pos), bgDetails), nil
 	}
+	// Stream progress while the agent runs: the spinner turns every 80 ms. upstream: index.ts streamUpdate.
+	stopStream := a.streamForeground(ctx, r, resolved, description)
 	select {
 	case <-r.done:
 	case <-ctx.Done():
 		a.mgr.abort(r)
 		<-r.done
 	}
+	stopStream()
 	a.mgr.mu.Lock()
 	status, result, errText, tokens, uses, dur := r.Status, r.Result, r.Error, r.Tokens, r.ToolUses, r.CompletedAt.Sub(r.StartedAt).Milliseconds()
 	a.mgr.mu.Unlock()
+	finalDetails := a.ui.recordDetails(r, status, dur)
 	if status == statusError {
-		return textResult(fmt.Sprintf("%sAgent failed: %s%s", fallbackNote, errText, partialOutputSuffix(result))), nil
+		return textResultD(fmt.Sprintf("%sAgent failed: %s%s", fallbackNote, errText, partialOutputSuffix(result)), finalDetails), nil
 	}
 	stats := []string{fmt.Sprintf("%d tool uses", uses)}
 	if t := formatTokens(tokens); t != "" {
@@ -244,7 +258,7 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if out == "" {
 		out = "No output."
 	}
-	return textResult(fmt.Sprintf("%sAgent completed in %s (%s)%s.\n\n%s", fallbackNote, formatMs(dur), strings.Join(stats, ", "), foregroundOutcomeNote(status), out)), nil
+	return textResultD(fmt.Sprintf("%sAgent completed in %s (%s)%s.\n\n%s", fallbackNote, formatMs(dur), strings.Join(stats, ", "), foregroundOutcomeNote(status), out), finalDetails), nil
 }
 
 // getResultTool upstream: index.ts get_subagent_result execute.

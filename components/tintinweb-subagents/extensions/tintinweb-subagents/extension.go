@@ -28,12 +28,14 @@ type app struct {
 	latest          *sdk.Context
 	timers          map[string]*time.Timer
 	settingsNotice  string
+	ui              *uiHub // the widget, fleet list and conversation viewer
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
 	a := &app{e: e, timers: map[string]*time.Timer{}}
 	a.mgr = newManager(start, a.onSettle)
+	a.ui = newUIHub(a)
 	return a
 }
 
@@ -59,6 +61,7 @@ func (a *app) reload(cwd string) {
 	a.cwd = cwd
 	a.mu.Unlock()
 	registerAgents(custom)
+	a.ui.loadSettings(cwd)
 }
 
 // refuseSettings tells the user once per distinct text that a setting of subagents.json asks for a feature that is
@@ -79,6 +82,7 @@ func (a *app) touch(ctx sdk.Context) {
 	a.mu.Lock()
 	a.latest = &c
 	a.mu.Unlock()
+	a.ui.bind(ctx)
 	if ctx.Cwd() != a.cwd {
 		a.reload(ctx.Cwd())
 	}
@@ -116,12 +120,18 @@ func (a *app) register(e *sdk.Extension) {
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
-	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
+	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		a.touch(ctx)
+		a.ui.onTurnStart()
+		return nil, nil
+	})
 	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.mgr.abortAll()
+		a.ui.dispose()
 		return nil, nil
 	})
 	a.registerTools(e)
+	a.registerRenderers(e)
 	e.Command("agents", "List the agent types and the running agents", a.agentsCommand)
 }
 
@@ -144,6 +154,7 @@ func (a *app) onSettle(r *agentRecord) {
 		}
 	}
 	_ = ctx.Events().Emit(channel, data)
+	a.ui.onSettle(r)
 	if !r.Background {
 		return
 	}
@@ -155,7 +166,8 @@ func (a *app) onSettle(r *agentRecord) {
 			return
 		}
 		turn := true
-		_ = ctx.SendMessage("subagent-notification", formatTaskNotification(r, 500), true, sdk.SendMessageOptions{DeliverAs: "followUp", TriggerTurn: &turn})
+		_ = ctx.SendCustomMessage(sdk.CustomMessage{CustomType: "subagent-notification", Content: formatTaskNotification(r, 500), Display: true, Details: a.ui.notificationDetails(r, 500)},
+			sdk.SendMessageOptions{DeliverAs: "followUp", TriggerTurn: &turn})
 	})
 }
 

@@ -137,18 +137,13 @@ var settingRules = []settingRule{
 	{key: "scopeModels", kind: "bool", okBool: false},
 	{key: "strictAgentFiles", kind: "bool", okBool: false},
 	{key: "toolDescriptionMode", kind: "enum", enum: []string{"full", "compact", "custom"}, okEnum: []string{"full"}},
-	{key: "fleetView", kind: "bool", okBool: false},
 	{key: "agentMentions", kind: "enum", enum: []string{"model", "direct", "off"}, okEnum: []string{"off"}},
 	{key: "rememberAgents", kind: "bool", okBool: false},
-	{key: "widgetMode", kind: "enum", enum: []string{"all", "background", "off"}, okEnum: []string{"off"}},
 	{key: "outputTranscript", kind: "bool", okBool: false},
 	{key: "worktreeIsolation", kind: "bool", okBool: false},
 	{key: "workflowsEnabled", kind: "bool", okBool: false},
 	{key: "maxSubagentDepth", kind: "int", okInts: []int{0, 1}},
 	{key: "reportUsage", kind: "bool", okBool: false},
-	{key: "showCost", kind: "bool", okBool: false},
-	{key: "showModel", kind: "bool", okBool: false},
-	{key: "viewerMarkdown", kind: "enum", enum: []string{"assistant", "all", "off"}},
 }
 
 func (r settingRule) unported(v any) bool {
