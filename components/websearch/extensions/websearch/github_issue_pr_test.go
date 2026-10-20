@@ -84,8 +84,8 @@ func TestUpstream_github_issue_pr(t *testing.T) {
 				"baseRefName": "main", "headRefName": "feature", "headRepositoryOwner": map[string]any{"login": "fork"},
 				"createdAt": "2026-01-01T00:00:00Z", "labels": []any{map[string]any{"name": "bug"}},
 				"additions": 5.0, "deletions": 1.0, "changedFiles": 1.0, "body": strings.Repeat("x", 4100),
-				"files":   []any{map[string]any{"path": "a.ts", "additions": 5.0, "deletions": 1.0}},
-				"commits": []any{map[string]any{"oid": "abcdef123456", "messageHeadline": "commit subject"}},
+				"files":    []any{map[string]any{"path": "a.ts", "additions": 5.0, "deletions": 1.0}},
+				"commits":  []any{map[string]any{"oid": "abcdef123456", "messageHeadline": "commit subject"}},
 				"comments": comments, "statusCheckRollup": []any{map[string]any{"name": "test", "conclusion": "SUCCESS"}},
 			},
 		})

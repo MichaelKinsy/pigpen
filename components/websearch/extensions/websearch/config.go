@@ -26,6 +26,7 @@ func ResetCaches() {
 	cachedDir, cachedDirOK = "", false
 	cacheMu.Unlock()
 	resetProviderState()
+	resetGitHubState()
 }
 
 func fileExists(path string) bool {

@@ -20,9 +20,9 @@ import (
 // Port of extract.ts: fetch one URL and return readable text. What is ported here is the direct
 // HTTP path (SSRF-checked, redirect-limited, size-capped, raw and readable modes, images,
 // Cloudflare challenge detection), the keyless Jina Reader fallback (opt-in), the fetch routing
-// configuration, and the failure guidance. The hosted extraction providers, PDF text, video,
-// YouTube and GitHub-clone extraction are named gaps (docs/PORT.md): their routing entries exist
-// so configuration validates, but they are never called.
+// configuration, the failure guidance, and the GitHub extractors. PDF text, video and YouTube
+// extraction are named gaps (docs/PORT.md): their routing entries exist so configuration
+// validates, but they are never called.
 
 const (
 	minUsefulContent  = 500
@@ -220,6 +220,9 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 		if _, err := ParseURL(rawURL, nil); err != nil {
 			return failed(rawURL, err.Error())
 		}
+	}
+	if res, done := extractGitHubURL(ctx, rawURL, o); done {
+		return res
 	}
 	if ctx.Err() != nil {
 		return abortedResult(rawURL)

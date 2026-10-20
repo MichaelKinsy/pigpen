@@ -26,9 +26,9 @@ func TestUpstream_github_extract(t *testing.T) {
 			}
 		}
 		for u, want := range map[string]githubURL{
-			"https://github.com/owner/repo.git":                           {Owner: "owner", Repo: "repo", Type: "root"},
-			"https://github.com/owner/repo/blob/main/src/file.ts":         {Owner: "owner", Repo: "repo", Ref: "main", Path: "src/file.ts", Type: "blob"},
-			"https://github.com/owner/repo/tree/feature%2Fbranch/src":     {Owner: "owner", Repo: "repo", Ref: "feature/branch", Path: "src", Type: "tree"},
+			"https://github.com/owner/repo.git":                       {Owner: "owner", Repo: "repo", Type: "root"},
+			"https://github.com/owner/repo/blob/main/src/file.ts":     {Owner: "owner", Repo: "repo", Ref: "main", Path: "src/file.ts", Type: "blob"},
+			"https://github.com/owner/repo/tree/feature%2Fbranch/src": {Owner: "owner", Repo: "repo", Ref: "feature/branch", Path: "src", Type: "tree"},
 		} {
 			got := parseGitHubURL(u)
 			if got == nil || *got != want {
@@ -221,7 +221,14 @@ exit 1`)
 			once.Do(func() { close(started) })
 			<-release
 		}
-		t.Cleanup(func() { once.Do(func() { close(started) }); select { case <-release: default: close(release) } })
+		t.Cleanup(func() {
+			once.Do(func() { close(started) })
+			select {
+			case <-release:
+			default:
+				close(release)
+			}
+		})
 		res, err := s.extractGitHub(bg(), "https://github.com/owner/repo", true)
 		noErr(t, err)
 		select {

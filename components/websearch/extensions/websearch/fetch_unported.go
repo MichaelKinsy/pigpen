@@ -9,8 +9,9 @@ import (
 )
 
 // Classification of the URLs that pi-web-access's extract.ts hands to a specialised extractor
-// (YouTube, local video, GitHub). This port has none of those extractors yet, so a URL that the
-// original would route to one is refused instead of being fetched as a plain page.
+// (YouTube, local video). This port has none of those extractors yet, so a URL that the
+// original would route to one is refused instead of being fetched as a plain page. GitHub URLs are
+// extracted (github_extract.go, github_issue_pr.go).
 
 var youtubeRE = regexp.MustCompile(`(?:(?:www\.|m\.)?youtube\.com/(?:watch\?.*v=|shorts/|live/|embed/|v/)|youtu\.be/)([a-zA-Z0-9_-]{11})`)
 
@@ -67,99 +68,6 @@ func isLocalVideoFile(input string) (bool, error) {
 	return err == nil && st.Mode().IsRegular(), nil
 }
 
-var (
-	ghOwnerRE = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$`)
-	ghRepoRE  = regexp.MustCompile(`^[A-Za-z0-9._-]{1,100}$`)
-	ghDigits  = regexp.MustCompile(`^\d+$`)
-)
-
-var ghNonCodeSegments = []string{"issues", "pull", "pulls", "discussions", "releases", "wiki", "actions", "settings", "security", "projects", "graphs", "compare", "commits", "tags", "branches", "stargazers", "watchers", "network", "forks", "milestone", "labels", "packages", "codespaces", "contribute", "community", "sponsors", "invitations", "notifications", "insights"}
-
-var ghPrSubpaths = []string{"files", "commits", "checks", "conversation"}
-
-// githubSegments returns the decoded path segments of a github.com URL, or nil.
-func githubSegments(raw string) []string {
-	u, err := ParseURL(raw, nil)
-	if err != nil {
-		return nil
-	}
-	host := strings.ToLower(u.Hostname())
-	if host != "github.com" && host != "www.github.com" {
-		return nil
-	}
-	var segments []string
-	for _, s := range strings.Split(u.EscapedPath(), "/") {
-		if s == "" {
-			continue
-		}
-		d, err := url.PathUnescape(s)
-		if err != nil {
-			return nil
-		}
-		segments = append(segments, d)
-	}
-	return segments
-}
-
-// isGitHubRepoURL is github-extract.ts parseGitHubUrl: a repository root, blob or tree URL.
-func isGitHubRepoURL(raw string) bool {
-	segments := githubSegments(raw)
-	if len(segments) < 2 {
-		return false
-	}
-	owner, repo := segments[0], strings.TrimSuffix(segments[1], ".git")
-	if !ghOwnerRE.MatchString(owner) || strings.Contains(owner, "--") || !ghRepoRE.MatchString(repo) || repo == "." || repo == ".." {
-		return false
-	}
-	if len(segments) > 2 && sliceHas(ghNonCodeSegments, strings.ToLower(segments[2])) {
-		return false
-	}
-	if len(segments) == 2 {
-		return true
-	}
-	if segments[2] != "blob" && segments[2] != "tree" || len(segments) < 4 {
-		return false
-	}
-	ref := segments[3]
-	if ref == "" || len(ref) > 1024 {
-		return false
-	}
-	for _, c := range ref {
-		if c < 0x20 || c == 0x7f {
-			return false
-		}
-	}
-	return true
-}
-
-// isGitHubIssuePRURL is github-issue-pr.ts parseGitHubIssuePrUrl.
-func isGitHubIssuePRURL(raw string) bool {
-	segments := githubSegments(raw)
-	if len(segments) < 4 {
-		return false
-	}
-	owner, repo := segments[0], strings.TrimSuffix(segments[1], ".git")
-	if !ghOwnerRE.MatchString(owner) || strings.Contains(owner, "--") || !ghRepoRE.MatchString(repo) || repo == "." || repo == ".." {
-		return false
-	}
-	route := strings.ToLower(segments[2])
-	if route != "pull" && route != "issues" || !ghDigits.MatchString(segments[3]) {
-		return false
-	}
-	sub := ""
-	if len(segments) > 4 {
-		sub = strings.ToLower(segments[4])
-	}
-	if route == "pull" && sub != "" && !sliceHas(ghPrSubpaths, sub) {
-		return false
-	}
-	if route == "issues" && sub != "" {
-		return false
-	}
-	n := segments[3]
-	return strings.Trim(n, "0") != ""
-}
-
 // unportedFetchFeature names the feature of a specialised extractor that the original would use
 // for rawURL and this port lacks ("" when the URL is a plain page). The error is a configuration
 // parse failure, reported like the original does.
@@ -181,20 +89,6 @@ func unportedFetchFeature(rawURL string, o ExtractOptions) (string, error) {
 	}
 	if local {
 		return "local video file analysis", nil
-	}
-	if isGitHubIssuePRURL(rawURL) {
-		if on, err := sectionEnabled("githubPrIssue"); err != nil {
-			return "", err
-		} else if on {
-			return "GitHub issue and pull request extraction", nil
-		}
-	}
-	if isGitHubRepoURL(rawURL) {
-		if on, err := sectionEnabled("githubClone"); err != nil {
-			return "", err
-		} else if on {
-			return "GitHub repository extraction (clone)", nil
-		}
 	}
 	if yt {
 		if on, err := sectionEnabled("youtube"); err != nil {
