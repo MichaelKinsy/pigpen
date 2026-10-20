@@ -10,6 +10,15 @@ public extension SDK**: every extension Pigpen ships must fuse into a Piglet Bin
 and a Node extension cannot. A Go launcher around the unchanged TypeScript is not a
 port; do not add embedded JavaScript, WASM or dynamic plugins.
 
+**Owner-approved exceptions to "no embedded JavaScript"** (each is narrow, named, and recorded in the component's `port/PORT.md`):
+
+- `pigpen-subagents` embeds the pure-Go interpreter [goja](https://github.com/dop251/goja) (MIT, pseudo-version
+  `v0.0.0-20261020130706-bae9ed654303`, its license kept in the module cache and named in the Package's `provenance.json`) to run the
+  model-written workflow script, exposing exactly what the original's `node:vm` sandbox exposes (`runs`, `Promise`, `emit`, `console`,
+  `args`, and `state` under a mission). Owner decision of 2026-10-20 (relayed to the Tern lead), inside the subagents extension only;
+  no PiG core change. It is not a non-Go extension, so `go-only-exceptions.json` (which lists Piglets that select one) does not list it
+  and the gate would reject an entry for it; this paragraph, the component's `port/PORT.md` and README are the record.
+
 This is a workflow, not a checklist to skim. Do the steps in order; a step is done
 when its evidence exists. Use the reusable pieces this Skill ships:
 

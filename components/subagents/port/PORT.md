@@ -1,4 +1,4 @@
-# Port record: pi-subagents (partial: definitions, discovery, list and get, single-agent and chain runs)
+# Port record: pi-subagents (partial: definitions, discovery, list and get, single-agent and chain runs, background runs, the workflow sandbox)
 
 | Input | Identity |
 |---|---|
@@ -76,6 +76,48 @@ original's request shows it). The original's 19 other slash commands are not reg
 original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
 `refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. The `asyncByDefault` difference is gone: an omitted `async` runs in the background as in the original.
 
+## Owner-approved exception: embedded JavaScript (goja) for workflow scripts
+
+The porting skill forbids embedded JavaScript. The owner decided on 2026-10-20 (relayed by the Tern lead; recorded in
+`handoffs/pigpen-parity/PROGRAM.md`, "Owner decisions") that the model-written workflow script (`workflowScript`, `runs.run`,
+`runs.all`) may run on the pure-Go interpreter **goja** inside this extension only, exposing exactly what the original's `node:vm`
+context exposes, with no change to PiG core. The skill's exception list, this record and the README name it. `go-only-exceptions.json`
+lists Piglets that select a non-Go extension; goja is Go, so that file does not list it (the gate would refuse the entry as unneeded).
+
+- Dependency: `github.com/dop251/goja v0.0.0-20261020130706-bae9ed654303` (no tagged release; MIT), with its indirect modules
+  `dlclark/regexp2/v2 v2.8.1` (MIT), `go-sourcemap/sourcemap v2.1.3` (BSD-2-Clause), `google/pprof` (Apache-2.0, a goja test dependency
+  kept by `go.sum`) and `golang.org/x/text v0.43.0` (BSD-3-Clause). The PR body carries the extension binary's size with and without it.
+- What the script can touch: `runs` (`run`, `all`, `lanes`, `host`, `steer`, `status`, `ref`, `refs`), the tracked `Promise`, `emit`,
+  `console` (`log`, `info`, `warn`, `error`), a frozen `args`, and `state` when a mission is bound. `eval`, the `Function` constructors
+  and their `.constructor` paths are blocked by patching before the script runs; no `require`, `process`, timers, `fetch`, `URL`,
+  `TextEncoder` or `structuredClone` (a `node:vm` context has none either).
+
+Differences from V8 that remain (each has a test in `workflow_goja_gaps_test.go`): the call-stack overflow is a RangeError the
+script cannot catch (the workflow fails with V8's message); `null.x` reads "of undefined" where V8 says "of null"; `Intl` and
+`toLocaleString` grouping are absent; `async function*` and `async` methods are a validation error in the original too (every async
+function but the wrapper is), and goja cannot parse them, which the validator reports the same way. `WeakRef`, `FinalizationRegistry`
+and `Array.fromAsync` are small polyfills.
+
+## The workflow slice (this change)
+
+Twinned: `workflow-receipt`, `workflow-checklist`, `workflow-launch-params`, `workflow-terminal-proof`, `workflow-worktree-admission`
+(the admission check; allocating worktrees is the worktree slice's), `parallel-utils`, `parallel-handoff` (the manifest, evidence and
+eligibility; `writeWorktreeSetupHandoff` and `discardPreservedWorktrees` take the worktree slice's setup progress and cleanup and are
+ported with it), `dynamic-fanout` (with `chain-outputs` and a JSON Schema validator), `chain-append`, `chain-root-attachment`,
+`tool-description`, and 16 of the 22 cases of `workflow-chat-progress` (the ten rendering cases wait for the terminal-views slice's
+`renderSubagentResult`, the three foreground-executor cases for the workflow executor, the three mission-ledger cases for the mission
+slices). `subagent {action: "validate"}` is registered (static validation, the original's text and JSON, without launching).
+
+**Still refused:** the execution parameters `workflow`, `workflowScript`, `workflowScriptPath`, `args`, `preflight`, `globalConcurrencyLimit`
+and `maxSubagentSpawnsPerRun` on a run. The launcher seam (`WorkflowLauncher`, `RunWorkflowScriptOptions`) is defined and tested with
+fake launchers; wiring it to real child runs of the background engine (`async_run.go`) and the executor around it (admission,
+fan-out budget, receipts written to the async directory, completion notification of a background workflow) is not done in this
+change, so a run is refused with the exact message rather than half-run.
+
+Helpers this slice carries that the run-policy and agent-management slices also port (to merge into one): `normalizeGateAcceptance`,
+`normalizeExtensionBindings`, `intersectSubagentCapabilityCeilings` (workflow_launch.go), `sanitizeDisplayText` (workflow_checklist.go),
+`validGitRef` (one copy is kept, the async slice's duplicate was removed), `schemaViolations` (jsonschema_validate.go).
+
 ## Mapping
 
 | ID | Original | Go | Checked by |
@@ -87,6 +129,9 @@ original's own errors for an empty call, a blank agent, a non-string task and a 
 | M5 | `agents/agent-management.ts` (list, get) | `management.go` | 5 Pi scenarios, `builtin_test.go` (the original's recorded text), `extras_test.go` |
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
 | M7 | (addition) child process runs | `run.go`, `child_*.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go` |
+| M9 | `workflows/workflow-receipt.ts`, `workflow-checklist.ts`, `chat-progress.ts`, `runs/background/workflow-terminal-proof.ts`, `chain-append.ts`, `chain-root-attachment.ts` | `workflow_receipt.go`, `workflow_checklist.go`, `workflow_chat_progress.go`, `workflow_terminal_proof.go`, `chain_append.go`, `chain_root_attachment.go` | twins |
+| M10 | `runs/shared/parallel-utils.ts`, `parallel-handoff.ts`, `dynamic-fanout.ts`, `chain-outputs.ts`; executor `prepareWorkflowLaunchParams`, `preflightWorkflowWorktrees` | `parallel_utils.go`, `parallel_handoff.go`, `dynamic_fanout.go`, `jsonschema_validate.go`, `workflow_launch.go`, `workflow_admission.go` | twins |
+| M11 | `extension/tool-description.ts`; `validate` of `extension/public-execution.ts` and the executor | `tool_description.go`, `workflow_validate_action.go` | twins, `validate_action_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
 
 ## Process: what was written before its tests

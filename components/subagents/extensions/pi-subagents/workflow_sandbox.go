@@ -170,6 +170,32 @@ const workflowHardening = `(function (global) {
     Object.defineProperty(FinalizationRegistry.prototype, Symbol.toStringTag, { value: "FinalizationRegistry", configurable: true });
     hide(global, "FinalizationRegistry", FinalizationRegistry);
   }
+  if (typeof Array.fromAsync !== "function") {
+    // Array.fromAsync (ES2026, in the original's V8): goja has none and no async generators, so it is plain promise code.
+    var fromAsync = function fromAsync(items, mapFn, thisArg) {
+      if (items === null || items === undefined) return Promise.reject(new TypeError(items + " is not iterable"));
+      if (mapFn !== undefined && typeof mapFn !== "function") return Promise.reject(new TypeError(mapFn + " is not a function"));
+      var out = [];
+      var step = function (i, value) {
+        return Promise.resolve(value).then(function (v) { return mapFn ? mapFn.call(thisArg, v, i) : v; });
+      };
+      if (typeof items[Symbol.asyncIterator] === "function") {
+        var it = items[Symbol.asyncIterator]();
+        var next = function (i) {
+          return Promise.resolve(it.next()).then(function (r) {
+            if (r.done) return out;
+            return step(i, r.value).then(function (v) { out.push(v); return next(i + 1); });
+          });
+        };
+        return next(0);
+      }
+      var list = typeof items[Symbol.iterator] === "function" ? Array.from(items) : Array.prototype.slice.call(items);
+      return list.reduce(function (chain, value, i) {
+        return chain.then(function () { return step(i, value).then(function (v) { out.push(v); }); });
+      }, Promise.resolve()).then(function () { return out; });
+    };
+    hide(Array, "fromAsync", fromAsync);
+  }
 })(this);`
 
 type wfStart struct {

@@ -12,3 +12,10 @@
 The Go code, the scenarios and the tests were written for this Package by Michael Kinsy. Behavior, wording and file formats
 follow the original; the original's code is not modified, and the port is a separate implementation. This is a **partial** port:
 see [port/PORT.md](port/PORT.md).
+
+## Dependencies with their own licenses
+
+- **goja** (`github.com/dop251/goja`, pseudo-version `v0.0.0-20261020130706-bae9ed654303`), by Dmitry Panov and Robert Krimen: MIT, kept
+  unmodified at [`LICENSES/goja-LICENSE`](LICENSES/goja-LICENSE). It runs the workflow script (the owner-approved exception recorded
+  in [port/PORT.md](port/PORT.md)). Its modules `dlclark/regexp2/v2` (MIT), `go-sourcemap/sourcemap` (BSD-2-Clause) and `golang.org/x/text`
+  (BSD-3-Clause) come with it.

@@ -74,7 +74,7 @@ func TestWorkflowRunsAreRefused(t *testing.T) {
 		{map[string]any{"workflowScriptPath": "w.js"}, "workflow runs (`workflowScriptPath`)"},
 		{map[string]any{"workflow": "review", "args": map[string]any{"task": "x"}}, "workflow runs (`workflow`)"},
 		{map[string]any{"workflowScript": "return 1", "workflowScriptPath": "w.js"}, "workflow runs (`workflowScript`, `workflowScriptPath`)"},
-		{map[string]any{"action": "validate", "workflowScript": "return 1"}, "workflow runs (`workflowScript`)"},
+		{map[string]any{"workflowScript": "return 1", "action": nil}, "workflow runs (`workflowScript`)"},
 		{map[string]any{"agent": "helper", "task": "t", "workflowScript": "return 1"}, "workflow runs (`workflowScript`)"},
 	}
 	for i, c := range cases {
@@ -100,7 +100,7 @@ func TestParallelAndChainRunsAreRefused(t *testing.T) {
 
 func TestManagementActionsOtherThanListAndGetAreRefused(t *testing.T) {
 	h, _ := refusedHost(t)
-	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "doctor", "guide", "steer", "debug.run", "validate", "schedule.create", "append-step"}
+	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "doctor", "guide", "steer", "debug.run", "schedule.create", "append-step"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
