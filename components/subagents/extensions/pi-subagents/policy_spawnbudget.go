@@ -51,8 +51,6 @@ type spawnBudgetSnapshot struct {
 	GrantHistory    []grantRecord
 }
 
-func intPtr(n int) *int { return &n }
-
 func configuredSessionLimit(config extensionConfig, getenv envLookup) *int {
 	if n, ok := resolveMaxSubagentSpawnsPerSession(config.MaxSubagentSpawnsPerSession, getenv); ok {
 		return intPtr(n)
@@ -124,7 +122,7 @@ func reserveSpawnBudget(state *subagentState, config extensionConfig, sessionID 
 // preflightSpawnBudgetGrant validates a grant request; additional is the raw value (a number).
 func preflightSpawnBudgetGrant(state *subagentState, config extensionConfig, sessionID string, additional any, getenv envLookup) (spawnBudgetSnapshot, string) {
 	s := getSpawnBudgetSnapshot(state, config, sessionID, getenv)
-	if f, _ := asNumber(additional); !isInteger(additional) || f <= 0 {
+	if f, _ := asNumber(additional); !isIntegerValue(additional) || f <= 0 {
 		return s, "action='grant-spawn-budget' requires additional to be a positive integer."
 	}
 	if s.ConfiguredLimit == nil || s.Limit == nil {

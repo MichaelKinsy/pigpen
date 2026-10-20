@@ -260,6 +260,6 @@ func chainRunsDir() string     { return filepath.Join(tempRootDir(), "chain-runs
 func tempArtifactsDir() string { return filepath.Join(tempRootDir(), "artifacts") }
 
 // asyncConfigPath is getAsyncConfigPath.
-func asyncConfigPath(suffix string) string {
+func asyncRunConfigPath(suffix string) string {
 	return filepath.Join(tempRootDir(), "async-cfg-"+suffix+".json")
 }

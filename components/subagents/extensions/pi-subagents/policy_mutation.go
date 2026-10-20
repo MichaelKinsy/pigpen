@@ -13,10 +13,7 @@ import (
 // Port of src/runs/shared/mutation-evidence.ts: which tracked files a child changed (by git diff fingerprints taken before and
 // after), and the bounded recovery summary of a timed-out child.
 
-const (
-	maxTrackedPaths = 500
-	maxTimeoutFiles = 20
-)
+const maxTrackedPaths = 500
 
 // trackedMutationSnapshot is the tracked-file state at child start.
 type trackedMutationSnapshot struct {
@@ -245,79 +242,4 @@ func buildTimeoutRecoverySummary(in timeoutRecoveryInput) timeoutRecoverySummary
 		s.RecoveryNeeded, s.Reason = true, "timed-out-with-dirty-worktree"
 	}
 	return s
-}
-
-// timeoutRecoveryProjection is the safe parent-facing subset of a recovery summary.
-type timeoutRecoveryProjection struct {
-	Termination    string
-	ChangedFiles   []string
-	Truncated      bool
-	RecoveryNeeded bool
-	Reason         string
-	ReportStatus   string
-}
-
-// projectTimeoutRecovery projects a decoded recovery summary (nil when value is not one).
-func projectTimeoutRecovery(value any) *timeoutRecoveryProjection {
-	src, ok := asObject(value)
-	if !ok {
-		return nil
-	}
-	term, _ := src.vals["termination"].(string)
-	changed, isArr := asArray(src.vals["changedFiles"])
-	if (term != "timed-out" && term != "stopped") || !isArr {
-		return nil
-	}
-	var all []string
-	for _, f := range changed {
-		if s, ok := f.(string); ok {
-			all = append(all, s)
-		}
-	}
-	kept := all
-	if len(kept) > maxTimeoutFiles {
-		kept = kept[:maxTimeoutFiles]
-	}
-	if kept == nil {
-		kept = []string{}
-	}
-	p := &timeoutRecoveryProjection{Termination: term, ChangedFiles: kept}
-	p.Truncated = src.vals["truncated"] == true || len(all) > len(kept)
-	p.RecoveryNeeded = src.vals["recoveryNeeded"] == true
-	if src.vals["reason"] == "timed-out-with-dirty-worktree" {
-		p.Reason = "timed-out-with-dirty-worktree"
-	}
-	if rs, _ := src.vals["reportStatus"].(string); rs == "missing" || rs == "written" || rs == "not-requested" || rs == "unknown" {
-		p.ReportStatus = rs
-	}
-	return p
-}
-
-// formatTimeoutRecoveryLines renders only the bounded recovery route a parent or operator needs.
-func formatTimeoutRecoveryLines(value any, indent string) []string {
-	r := projectTimeoutRecovery(value)
-	if r == nil || !r.RecoveryNeeded {
-		return nil
-	}
-	changed, count := "none", "0"
-	if len(r.ChangedFiles) > 0 {
-		changed = strings.Join(r.ChangedFiles, ", ")
-		count = fmt.Sprint(len(r.ChangedFiles))
-		if r.Truncated {
-			changed += ", …"
-			count += "+"
-		}
-	}
-	report := r.ReportStatus
-	if report == "" {
-		report = "unknown"
-	}
-	class := r.Reason
-	if class == "" {
-		class = r.Termination
-	}
-	return []string{
-		indent + "Recovery needed: review the diff and artifacts before resuming or launching dependent stages.",
-		fmt.Sprintf("%sRecovery evidence: requested report: %s; changed tracked files: %s (%s); classification: %s", indent, report, changed, count, class),
-	}
 }

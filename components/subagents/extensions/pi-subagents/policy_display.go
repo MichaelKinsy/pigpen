@@ -1,7 +1,6 @@
 package pi_subagents
 
 import (
-	"fmt"
 	"strings"
 	"unicode/utf8"
 )
@@ -160,56 +159,4 @@ func previewDisplayText(value string, maxLength int) string {
 		return truncateDisplayText(normalized, maxLength)
 	}
 	return truncateDisplayText(normalized, maxLength-3) + "..."
-}
-
-const binaryContentPlaceholder = "[binary content omitted for safe display]"
-
-func isUnsafeTerminalCodePoint(cp rune) bool {
-	terminalControl := (cp <= 0x1f && cp != 0x09 && cp != 0x0a) || (cp >= 0x7f && cp <= 0x9f)
-	bidi := cp == 0x061c || cp == 0x200e || cp == 0x200f || (cp >= 0x202a && cp <= 0x202e) || (cp >= 0x2066 && cp <= 0x2069)
-	private := (cp >= 0xe000 && cp <= 0xf8ff) || (cp >= 0xf0000 && cp <= 0xffffd) || (cp >= 0x100000 && cp <= 0x10fffd)
-	invalid := cp >= 0xd800 && cp <= 0xdfff
-	nonChar := (cp >= 0xfdd0 && cp <= 0xfdef) || cp&0xffff == 0xfffe || cp&0xffff == 0xffff
-	return terminalControl || bidi || private || invalid || nonChar
-}
-
-func looksLikeBinaryContent(text string) bool {
-	if strings.Contains(text, "\x00") {
-		return true
-	}
-	suspicious, replacements, total := 0, 0, 0
-	for i := 0; i < len(text); {
-		cp, w := nextCodePoint(text, i)
-		total++
-		if cp <= 0x08 || (cp >= 0x0e && cp <= 0x1f) {
-			suspicious++
-		}
-		if cp == 0xfffd {
-			replacements++
-		}
-		i += w
-	}
-	if total == 0 {
-		return false
-	}
-	return (suspicious >= 4 && float64(suspicious)/float64(total) >= 0.1) || (replacements >= 3 && float64(replacements)/float64(total) >= 0.1)
-}
-
-// safeTerminalText escapes untrusted text for a terminal, keeping safe newlines and tabs.
-func safeTerminalText(value string) string {
-	normalized := strings.ReplaceAll(value, "\r\n", "\n")
-	if looksLikeBinaryContent(normalized) {
-		return binaryContentPlaceholder
-	}
-	var out strings.Builder
-	for i := 0; i < len(normalized); {
-		cp, w := nextCodePoint(normalized, i)
-		if isUnsafeTerminalCodePoint(cp) {
-			out.WriteString(fmt.Sprintf("[U+%04X]", cp))
-		} else {
-			out.WriteString(normalized[i : i+w])
-		}
-		i += w
-	}
-	return out.String()
 }

@@ -113,7 +113,7 @@ func TestPathResolutionForAgents(t *testing.T) {
 
 func TestBoundedIndexSegments(t *testing.T) {
 	hashed := regexp.MustCompile(`^~sha256-[a-f0-9]{64}$`)
-	enc := func(s string) string { return encodeIndexSegment(s, maxIndexSegmentBytes) }
+	enc := func(s string) string { return encodeIndexSegment(s) }
 	tw(t, "index-segment", "preserves legacy encoding for short values and hashes oversized opaque ids", func(t *testing.T) {
 		got, _ := jsEncodeURIComponent("call/a+b=")
 		equal(t, enc("call/a+b="), got, "short")

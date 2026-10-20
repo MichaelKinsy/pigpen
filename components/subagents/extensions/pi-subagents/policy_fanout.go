@@ -99,7 +99,7 @@ func parseFanoutManifest(v any) *fanoutManifest {
 	root, _ := o.vals["rootRunId"].(string)
 	lim, _ := asNumber(o.vals["limit"])
 	created, hasCreated := asNumber(o.vals["createdAt"])
-	if ver, _ := asNumber(o.vals["version"]); ver != 1 || root == "" || !isInteger(o.vals["limit"]) || lim <= 0 || !hasCreated || created != created {
+	if ver, _ := asNumber(o.vals["version"]); ver != 1 || root == "" || !isIntegerValue(o.vals["limit"]) || lim <= 0 || !hasCreated || created != created {
 		return nil
 	}
 	return &fanoutManifest{root, int(lim)}
@@ -189,7 +189,7 @@ func validateRunFanoutBudgetDescriptor(value any) (runFanoutBudgetDescriptor, er
 	lim, _ := asNumber(o.vals["limit"])
 	parent, hasParent := o.vals["parentPath"], !isUndefined(o.vals["parentPath"])
 	parentStr, parentOK := parent.(string)
-	if ver, _ := asNumber(o.vals["version"]); ver != 1 || root == "" || dir == "" || !isInteger(o.vals["limit"]) || lim <= 0 || (hasParent && !parentOK) {
+	if ver, _ := asNumber(o.vals["version"]); ver != 1 || root == "" || dir == "" || !isIntegerValue(o.vals["limit"]) || lim <= 0 || (hasParent && !parentOK) {
 		return runFanoutBudgetDescriptor{}, errors.New("Run fan-out budget descriptor is invalid.")
 	}
 	real, err := validateFanoutDirectory(dir)

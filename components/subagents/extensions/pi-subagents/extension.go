@@ -88,10 +88,8 @@ func Extension() *sdk.Extension {
 	e := sdk.New(extensionID)
 	defs := toolDefs()
 
-	// The tools the original registers besides subagent: a wait tool and the supervisor channel are declared so the
-	// model sees the same tools, and refuse (refuse.go).
-	e.RegisterTool(sdk.ToolDefinition{Name: "bg_wait", Label: "Wait for Background Work", Description: defs["bg_wait"].Description, Parameters: defs["bg_wait"].Parameters,
-		Execute: refuseTool("waiting for background work (`bg_wait`)")})
+	// The supervisor channel is declared so the model sees the same tools, and refuses (refuse.go); bg_wait is the
+	// background runs' (async_actions.go).
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: loaderName, Label: "Enable Subagents", Description: defs[loaderName].Description, Parameters: defs[loaderName].Parameters,
 		PromptSnippet: "pi-subagents is installed. For authorized specialist, independent-review, or parallel work, call subagents_enable, then subagent. Authorization must come from the current request or applicable instructions; complexity alone is not authorization.",
@@ -252,6 +250,12 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError(err.Error())
 	}
 	model, _ := params["model"].(string)
+	if cfg := loadAsyncConfig(); wantsAsync(params, cfg) {
+		if p := asyncUnsupportedPolicyParam(params); p != "" {
+			return nil, sdk.NewToolError(refusal("the `" + p + "` option of a background (async) run; pass async: false to run in the foreground"))
+		}
+		return bgRT.launchBackground(ctx, params, a, task, cwd, model, cfg)
+	}
 	pol, err := applyRunPolicy(ctx, params, a, task, cwd)
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())

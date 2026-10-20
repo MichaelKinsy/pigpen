@@ -201,7 +201,7 @@ func TestTempPaths(t *testing.T) {
 	})
 	tskip(t, "temp-paths", "stops a test runner before consuming config when its test parent is gone", "tests the original's Node background-runner bootstrap (subagent-runner-bootstrap.ts) and its PI_SUBAGENTS_TEST_PARENT_PID loader; the Go port has no Node runner")
 	tw(t, "temp-paths", "writes async config files under the same scoped temp root", func(t *testing.T) {
-		equal(t, filepath.Dir(asyncConfigPath("abc123")), tempRootDir(), "dir")
-		equal(t, filepath.Base(asyncConfigPath("abc123")), "async-cfg-abc123.json", "name")
+		equal(t, filepath.Dir(asyncRunConfigPath("abc123")), tempRootDir(), "dir")
+		equal(t, filepath.Base(asyncRunConfigPath("abc123")), "async-cfg-abc123.json", "name")
 	})
 }

@@ -2,7 +2,6 @@ package pi_subagents
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 )
 
@@ -19,29 +18,6 @@ type publicExecution struct {
 }
 
 func publicFail(msg, mode string) publicExecution { return publicExecution{Error: msg, Mode: mode} }
-
-var (
-	gitRefCommitID = regexp.MustCompile(`(?i)^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
-	gitRefBadChars = regexp.MustCompile("[\\[\\]\\\\~^:?*\x00-\x20\x7f]")
-)
-
-func validGitRef(ref string) bool {
-	if ref == "" || ref == "@" || len(ref) > 1024 || strings.HasPrefix(ref, "/") || strings.HasSuffix(ref, "/") || strings.Contains(ref, "//") || strings.Contains(ref, "..") || strings.Contains(ref, "@{") {
-		return false
-	}
-	if gitRefCommitID.MatchString(ref) {
-		return false
-	}
-	if gitRefBadChars.MatchString(ref) || strings.HasSuffix(ref, ".") || strings.HasSuffix(ref, ".lock") {
-		return false
-	}
-	for _, c := range strings.Split(ref, "/") {
-		if c == "" || c == "." || c == ".." || strings.HasPrefix(c, ".") || strings.HasSuffix(c, ".") || strings.HasSuffix(c, ".lock") {
-			return false
-		}
-	}
-	return true
-}
 
 // normalizePublicBaseRef is the original's normalizeWorktreeBaseRef (a validation of the ref, which is not resolved here).
 func normalizePublicBaseRef(v any) error {

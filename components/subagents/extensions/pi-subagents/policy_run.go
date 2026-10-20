@@ -26,16 +26,37 @@ func init() {
 	registerAction("grant-spawn-budget", []string{"additional"}, grantSpawnBudgetAction)
 }
 
+// asyncUnsupportedPolicyParam is the first policy option a background run does not apply ("" when none is set): the options
+// shape the foreground run (applyRunPolicy), so a background run refuses them rather than ignore them.
+func asyncUnsupportedPolicyParam(params map[string]any) string {
+	for _, p := range []string{"output", "outputMode", "artifacts", "acceptance", "gate", "agentContract", "includeProgress"} {
+		if v, ok := params[p]; defined(params, p) && !(p == "output" && ok && v == true) { // the public boundary defaults output to true
+			return p
+		}
+	}
+	return ""
+}
+
 var (
 	runPolicyMu sync.Mutex
 	// runState holds the spawn counters of the session (SubagentState.subagentSpawns).
 	runState = &subagentState{}
 	// activeRuns counts the children of this session that are queued or running.
 	activeRuns atomic.Int32
-	// loadExtensionConfig is the extension config the policy reads (the original's config.json); the default has no file and
-	// leaves the environment variables (PI_SUBAGENT_MAX_SPAWNS_PER_SESSION and friends) as the only source.
-	loadExtensionConfig = func() extensionConfig { return extensionConfig{} }
+	// loadExtensionConfig is the extension config the policy reads: the original's config.json (<agent dir>/extensions/subagent),
+	// whose spawn limits and timeouts the environment variables (PI_SUBAGENT_MAX_SPAWNS_PER_SESSION and friends) override.
+	loadExtensionConfig = readExtensionConfigFile
 )
+
+// readExtensionConfigFile reads the policy keys of config.json; a missing or malformed file is an empty config (the background
+// run reports a malformed file itself).
+func readExtensionConfigFile() extensionConfig {
+	var raw map[string]any
+	if readJSONFile(asyncConfigPath(), &raw) != nil {
+		return extensionConfig{}
+	}
+	return extensionConfig{MaxSubagentSpawnsPerSession: raw["maxSubagentSpawnsPerSession"], MaxSubagentSpawnsPerRun: raw["maxSubagentSpawnsPerRun"], ToolTimeoutMs: raw["toolTimeoutMs"], TimeoutMs: raw["timeoutMs"]}
+}
 
 // sessionIDOf is the logical session id ("" when the host has none).
 func sessionIDOf(ctx sdk.Context) string {

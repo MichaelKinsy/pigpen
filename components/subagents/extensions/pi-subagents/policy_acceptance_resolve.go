@@ -396,7 +396,7 @@ func formatAcceptancePrompt(a *resolvedAcceptance, opt acceptancePromptOptions) 
 }
 
 // sortedKeys is the keys of a set, sorted (for stable text).
-func sortedKeys(m map[string]bool) []string {
+func sortedSetKeys(m map[string]bool) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
 		out = append(out, k)

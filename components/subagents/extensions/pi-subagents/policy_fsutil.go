@@ -37,7 +37,7 @@ func fsErrorCode(err error) string {
 	if errors.As(err, &ce) {
 		return ce.Code
 	}
-	for code, errno := range map[string]syscall.Errno{"EACCES": syscall.EACCES, "EPERM": syscall.EPERM, "EBUSY": syscall.EBUSY, "ENOSPC": syscall.ENOSPC, "EDQUOT": syscall.EDQUOT, "EMFILE": syscall.EMFILE, "ENFILE": syscall.ENFILE, "ENOENT": syscall.ENOENT, "ENOTDIR": syscall.ENOTDIR} {
+	for code, errno := range map[string]syscall.Errno{"EACCES": syscall.EACCES, "EPERM": syscall.EPERM, "EBUSY": syscall.EBUSY, "ENOSPC": syscall.ENOSPC, "EDQUOT": syscall.EDQUOT, "EMFILE": syscall.EMFILE, "ENFILE": syscall.ENFILE, "ENOENT": syscall.ENOENT, "ENOTDIR": syscall.ENOTDIR, "EEXIST": syscall.EEXIST, "ENAMETOOLONG": syscall.ENAMETOOLONG} {
 		if errors.Is(err, errno) {
 			return code
 		}
@@ -122,8 +122,6 @@ func runFileSystemOperationWithRetry(op func() error, retryDelaysMs []int, wait 
 }
 
 // ---- atomic-json.ts -----------------------------------------------------------------------------------------------------
-
-const maxPathComponentBytes = 255
 
 // atomicJSONFS is the file operations of the atomic writer (the original's AtomicJsonFs).
 type atomicJSONFS interface {

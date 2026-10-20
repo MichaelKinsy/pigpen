@@ -557,7 +557,7 @@ func runMemoizedVerifyCommand(c verifyCommand, defaultCwd string, o verifyOption
 	for k := range c.Env {
 		envKeysSet[k] = true
 	}
-	envKeys := sortedKeys(envKeysSet)
+	envKeys := sortedSetKeys(envKeysSet)
 	full := effectiveVerifyEnv(c.Env)
 	keys := make([]string, 0, len(full))
 	for k := range full {

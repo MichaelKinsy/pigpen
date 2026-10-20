@@ -75,7 +75,7 @@ func asNumber(v any) (float64, bool) {
 }
 
 // isInteger is Number.isInteger on a value.
-func isInteger(v any) bool {
+func isIntegerValue(v any) bool {
 	f, ok := asNumber(v)
 	return ok && !math.IsInf(f, 0) && !math.IsNaN(f) && f == math.Trunc(f)
 }
@@ -83,7 +83,7 @@ func isInteger(v any) bool {
 // isSafeInteger is Number.isSafeInteger on a value.
 func isSafeInteger(v any) bool {
 	f, ok := asNumber(v)
-	return ok && isInteger(v) && math.Abs(f) <= 1<<53-1
+	return ok && isIntegerValue(v) && math.Abs(f) <= 1<<53-1
 }
 
 // hasOwn is Object.hasOwn(object, key) for a key that is not undefined.

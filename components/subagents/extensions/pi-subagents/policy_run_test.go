@@ -45,7 +45,8 @@ func policyHostWith(t *testing.T, child childFunc, opts HostOptions) *policyHost
 		return sub.ChildResult{Stdout: out}, nil
 	})
 	cwd := tmp(t)
-	withTempHome(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(home, ".pi", "agent", "extensions", "subagent", "config.json"), `{"asyncByDefault": false}`)
 	writeFile(t, filepath.Join(cwd, ".pi", "agents", "helper.md"), agentMD("helper", "Helps", "You help."))
 	writeFile(t, filepath.Join(cwd, ".pi", "agents", "other.md"), agentMD("other", "Other", "Other."))
 	opts.Cwd = cwd

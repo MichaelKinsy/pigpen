@@ -103,7 +103,7 @@ func resolveToolTimeoutMs(in toolTimeoutInput) (ms int, set bool, errMsg string)
 		}
 	}
 	f, isNum := asNumber(raw)
-	if !isNum || !isInteger(raw) || f <= 0 || f > maxTimerDelayMs {
+	if !isNum || !isIntegerValue(raw) || f <= 0 || f > maxTimerDelayMs {
 		return 0, false, fmt.Sprintf("%s must be a positive integer no larger than %d.", winner.label, maxTimerDelayMs)
 	}
 	return int(f), true, ""

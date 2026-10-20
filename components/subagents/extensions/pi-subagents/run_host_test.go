@@ -69,7 +69,7 @@ func TestSingleRunThroughTheTool(t *testing.T) {
 	writeFile(t, filepath.Join(home, ".pi", "agent", "agents", "mine.md"), agentMD("mine", "Mine", "Mine."))
 	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
 
-	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "cwd": "sub", "model": "p/m:low"})
+	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "cwd": "sub", "model": "p/m:low", "async": false})
 	eq(t, failure, "", "failure")
 	if !strings.Contains(string(raw), "built it") {
 		t.Errorf("result %s", raw)
@@ -87,7 +87,7 @@ func TestSingleRunThroughTheTool(t *testing.T) {
 	if !strings.HasPrefix(failure, "Unknown agent 'mine'") {
 		t.Errorf("agentScope: %q", failure)
 	}
-	_, failure = h.Tool("subagent", map[string]any{"agent": "mine", "task": "t", "agentScope": "user"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "mine", "task": "t", "agentScope": "user", "async": false})
 	eq(t, failure, "", "a user agent in user scope")
 	eq(t, len(*calls), 2, "children")
 }

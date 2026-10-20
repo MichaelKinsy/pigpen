@@ -81,7 +81,7 @@ func parseGateInput(gate any) (gateObjectInput, string) {
 	}
 	timeout := value.vals["timeoutMs"]
 	if !isUndefined(timeout) {
-		if f, _ := asNumber(timeout); !isInteger(timeout) || f < 1 {
+		if f, _ := asNumber(timeout); !isIntegerValue(timeout) || f < 1 {
 			return gateObjectInput{}, "gate.timeoutMs must be an integer >= 1."
 		}
 	}

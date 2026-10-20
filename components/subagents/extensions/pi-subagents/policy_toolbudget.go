@@ -64,13 +64,13 @@ func validateToolBudgetConfig(raw any, label string, minimumHard int) (budget *r
 		return nil, label + " must be an object with hard and optional soft/block."
 	}
 	hard, _ := asNumber(value.vals["hard"])
-	if !isInteger(value.vals["hard"]) || hard < float64(minimumHard) {
+	if !isIntegerValue(value.vals["hard"]) || hard < float64(minimumHard) {
 		return nil, fmt.Sprintf("%s.hard must be an integer >= %d.", label, minimumHard)
 	}
 	softV, hasSoft := value.get("soft")
 	hasSoft = hasSoft && !isUndefined(softV)
 	soft, _ := asNumber(softV)
-	if hasSoft && (!isInteger(softV) || soft < 1) {
+	if hasSoft && (!isIntegerValue(softV) || soft < 1) {
 		return nil, label + ".soft must be an integer >= 1 when provided."
 	}
 	if hasSoft && soft > hard {
