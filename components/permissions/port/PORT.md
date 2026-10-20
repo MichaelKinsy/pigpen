@@ -159,3 +159,43 @@ recorded by `port/record-probe.sh`, not with the port.
 - The JS helper layer again (`jsjson.go`, `jsutil.go`: 375 lines copied from the powerline port).
 - The twin ledger (203 titles by hand, from a `twins list` that cannot see `test.each`) and the slice file (170 entries by hand).
 - The fake interactive host: `adapter_test.go` could be generated from the registered events.
+
+## Path layer (lane `paths`)
+
+The shared layer the gates build on: Node's `path` module for both platforms, the path flavors, symlink canonicalization,
+`AccessPath`, `PathNormalizer`, the access-intent types, tool kinds, MCP targets, input normalization and the shared types. Twins
+first (all 473 upstream cases of the files below, one named skip), then the code, then a differential against the original's own
+functions.
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| P1 | Node's `path.posix` / `path.win32` (v24.19: resolve, normalize, join, relative, isAbsolute, dirname, basename, parse root), the win32 reserved device names and `\\.\` roots | `nodepath.go` | 34,626 recorded results (`paths_oracle_test.go`), none different |
+| P2 | `String.prototype.toLowerCase` (the win32 fold) | `jscase.go` | all 1,112,064 scalar values and 20 sigma strings against Node |
+| P3 | `fileURLToPath(url, { windows })` over WHATWG URL parsing for `file:` | `fileurl.go` | 248 URLs, both platforms |
+| P4 | `path/path-flavor.ts`, `access-intent/bash/msys-bash-tokens.ts`, `path/safe-system-paths.ts` | `pathflavor.go`, `msysbash.go`, `safepaths.go` | twins; recorded `toolShellPath` against Pi's `normalizeWindowsShellPath`, `bashTokenShape`, folding, containment |
+| P5 | `path/canonicalize-path.ts`, `path/path-containment.ts`, `path/approval-pattern.ts`, `path/pi-infrastructure-read.ts`, `path/node-modules-discovery.ts`, `path/expand-home.ts` | `canonicalize.go`, `pathcontainment.go`, `approvalpattern.go`, `infraread.go`, `nodemodules.go`, `wildcard.go` | twins; 202 approval rows per flavor; 783 infrastructure-read rows |
+| P6 | `path/native-tool-target.ts` | `nativetarget.go` | twins; 5,560 recorded targets (existence sets, read fallbacks, both flavors); Pi's `resolveReadPath` / `resolveToCwd` on a real layout (`testdata/native-target.json`) |
+| P7 | `access-intent/{path-normalization,access-path}.ts`, `path/path-normalizer.ts` | `pathnormalization.go`, `accesspath.go`, `pathnormalizer.go` | twins; 1,212 rows per flavor; 6,384 intents |
+| P8 | `access-intent/{access-intent,effect,path-surfaces,tool-kind,tool-input-path,input-normalizer,mcp-targets}.ts` | `accessintent.go`, `effect.go`, `pathsurfaces.go`, `toolkind.go`, `toolinputpath.go`, `inputnormalizer.go`, `mcptargets.go` | twins; 1,020 tool kinds, 740 MCP target lists, 593 normalizations |
+| P9 | `types.ts`, `value-guards.ts`, `permission-request-id.ts`, `handlers/gates/types.ts` | `types.go`, `valueguards.go`, `requestid.go` | twins |
+
+How it is checked:
+
+- `port/record-paths-probe.sh <installed oracle>` runs `port/probe/paths-probe.test.ts` inside the original's package and writes
+  `testdata/paths-oracle.json` and `testdata/native-target.json`; `paths_oracle_test.go` replays them. Every difference is a
+  failure unless listed with its reason in `testdata/paths-differences.json` (one: `/dev/stdin` is a symlink into `/proc` on the
+  recording host).
+- Mutations: `port/gen-mutations-paths.py` writes `port/mutations-paths.json`; run
+  `pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-paths.json`.
+- The win32 flavor is pure string logic and is tested on every OS; only the real-filesystem tests (`entryExists`, the parity
+  layout, symlinks) depend on the host.
+
+Differences from the original, on purpose:
+
+- Indexes are bytes where the original counts UTF-16 units (`LastSeparatorIndex`); every caller slices the same string with it.
+- `fileURLToPath` takes a host through the mapping part of UTS #46 (NFKC, case, ignored characters, `xn--` labels, IPv4, IPv6) but
+  not its validity tables, so a host the original rejects for a reason in those tables is accepted: the result is a UNC prefix on
+  win32 and a failure on POSIX either way.
+- `getPackageDir()` (Pi's install directory) has no counterpart in PiG's Go SDK (`sdk.AgentDir()` is the only host path): the
+  caller that builds the infrastructure roots must pass it, and until the SDK has it that root is missing.
+- `ScopeConfig` lives with the config layer; `ShellToolsConfig` here is a map of `ShellToolAlias`.

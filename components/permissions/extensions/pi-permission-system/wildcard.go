@@ -2,7 +2,6 @@ package pi_permission_system
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"unicode"
 	"unicode/utf16"
@@ -36,6 +35,12 @@ func splitHomePrefix(v string) (string, bool) {
 	return "", false
 }
 
+// hasHomePrefix reports whether expandHomePath reads value as starting at the home directory.
+func hasHomePrefix(value string) bool {
+	_, ok := splitHomePrefix(value)
+	return ok
+}
+
 func expandHomePath(pattern string) string {
 	rest, ok := splitHomePrefix(pattern)
 	if !ok {
@@ -44,7 +49,7 @@ func expandHomePath(pattern string) string {
 	if rest == "" {
 		return homeDir()
 	}
-	return filepath.Join(homeDir(), rest[1:])
+	return HostPath.Join(homeDir(), rest[1:])
 }
 
 type tokKind int
