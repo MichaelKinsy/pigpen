@@ -1,0 +1,524 @@
+[
+ {
+  "name": "auditor-decision-last-line",
+  "file": "goal_auditor.go",
+  "find": "marker = lines[len(lines)-1]",
+  "replace": "marker = lines[0]"
+ },
+ {
+  "name": "auditor-decision-approved",
+  "file": "goal_auditor.go",
+  "find": "approved: marker == \"<approved/>\"",
+  "replace": "approved: strings.Contains(marker, \"approved\")"
+ },
+ {
+  "name": "auditor-decision-disapproved",
+  "file": "goal_auditor.go",
+  "find": "disapproved: marker == \"<disapproved/>\"",
+  "replace": "disapproved: marker != \"<approved/>\""
+ },
+ {
+  "name": "auditor-decision-trim",
+  "file": "goal_auditor.go",
+  "find": "if t := jsTrim(l); t != \"\" {\n\t\t\tlines = append(lines, t)",
+  "replace": "if t := l; t != \"\" {\n\t\t\tlines = append(lines, t)"
+ },
+ {
+  "name": "auditor-escape-amp",
+  "file": "goal_auditor.go",
+  "find": "strings.NewReplacer(\"&\", \"&amp;\", \"<\", \"&lt;\", \">\", \"&gt;\")",
+  "replace": "strings.NewReplacer(\"<\", \"&lt;\", \">\", \"&gt;\")"
+ },
+ {
+  "name": "auditor-escape-lt",
+  "file": "goal_auditor.go",
+  "find": "\"<\", \"&lt;\", \">\", \"&gt;\")",
+  "replace": "\">\", \"&gt;\")"
+ },
+ {
+  "name": "auditor-prompt-claim-default",
+  "file": "goal_auditor.go",
+  "find": "claim = \"(no claim provided)\"",
+  "replace": "claim = \"\""
+ },
+ {
+  "name": "auditor-prompt-claim-trim",
+  "file": "goal_auditor.go",
+  "find": "claim := jsTrim(args.completionSummary)",
+  "replace": "claim := args.completionSummary"
+ },
+ {
+  "name": "auditor-prompt-contract-step",
+  "file": "goal_auditor.go",
+  "find": "if withContract {\n\t\tout = append(out, \"3.",
+  "replace": "if false {\n\t\tout = append(out, \"3."
+ },
+ {
+  "name": "auditor-prompt-disable-contracts",
+  "file": "goal_auditor.go",
+  "find": "withContract := !disableContracts && contract != \"\"",
+  "replace": "withContract := contract != \"\""
+ },
+ {
+  "name": "auditor-prompt-disable-tasks",
+  "file": "goal_auditor.go",
+  "find": "!disableTasks && tl != nil",
+  "replace": "tl != nil"
+ },
+ {
+  "name": "auditor-prompt-warm",
+  "file": "goal_auditor.go",
+  "find": "if warm := jsTrim(args.warmContext); warm != \"\" {",
+  "replace": "if warm := jsTrim(args.warmContext); warm == \"\" {"
+ },
+ {
+  "name": "auditor-prompt-contract-trim",
+  "file": "goal_auditor.go",
+  "find": "contract := jsTrim(gstr(args.goal, \"verificationContract\"))",
+  "replace": "contract := gstr(args.goal, \"verificationContract\")"
+ },
+ {
+  "name": "auditor-task-gate",
+  "file": "goal_auditor.go",
+  "find": "if gflag(taskList, \"blockCompletion\") && pending > 0 {",
+  "replace": "if pending > 0 {"
+ },
+ {
+  "name": "auditor-task-pending-skipped",
+  "file": "goal_auditor.go",
+  "find": "pending := c.total - c.complete",
+  "replace": "pending := c.total - c.complete - c.skipped"
+ },
+ {
+  "name": "auditor-task-skipped-count",
+  "file": "goal_auditor.go",
+  "find": "if c.skipped > 0 {\n\t\thead",
+  "replace": "if c.skipped > 5 {\n\t\thead"
+ },
+ {
+  "name": "auditor-task-marker-skipped",
+  "file": "goal_auditor.go",
+  "find": "marker = \"[~]\"",
+  "replace": "marker = \"[x]\""
+ },
+ {
+  "name": "auditor-task-marker-complete",
+  "file": "goal_auditor.go",
+  "find": "marker = \"[x]\"\n\t\tcase \"skipped\"",
+  "replace": "marker = \"[ ]\"\n\t\tcase \"skipped\""
+ },
+ {
+  "name": "auditor-task-indent",
+  "file": "goal_auditor.go",
+  "find": "lines = append(lines, renderAuditorTaskTree(subs, indent+1)...)",
+  "replace": "lines = append(lines, renderAuditorTaskTree(subs, indent)...)"
+ },
+ {
+  "name": "auditor-task-title-escape",
+  "file": "goal_auditor.go",
+  "find": "\": \"+escapePromptPayload(gstr(task, \"title\")))",
+  "replace": "\": \"+gstr(task, \"title\"))"
+ },
+ {
+  "name": "auditor-metadata-mode",
+  "file": "goal_auditor.go",
+  "find": "mode = \"sisyphus\"",
+  "replace": "mode = \"regular\""
+ },
+ {
+  "name": "auditor-metadata-budget",
+  "file": "goal_auditor.go",
+  "find": "if budget := gnum(goal, \"tokenBudget\"); budget != 0 {",
+  "replace": "if budget := gnum(goal, \"tokenBudget\"); budget == 0 {"
+ },
+ {
+  "name": "auditor-tail-limit",
+  "file": "goal_auditor.go",
+  "find": "for end >= 0 && len(lines) < limit {",
+  "replace": "for end >= 0 && len(lines) <= limit {"
+ },
+ {
+  "name": "auditor-tail-blank",
+  "file": "goal_auditor.go",
+  "find": "if jsTrim(line) != \"\" {\n\t\t\tlines = append",
+  "replace": "if line != \"\" {\n\t\t\tlines = append"
+ },
+ {
+  "name": "auditor-tail-order",
+  "file": "goal_auditor.go",
+  "find": "for i, j := 0, len(lines)-1; i < j; i, j = i+1, j-1 {\n\t\tlines[i], lines[j] = lines[j], lines[i]\n\t}\n\treturn lines",
+  "replace": "return lines"
+ },
+ {
+  "name": "auditor-label-bash",
+  "file": "goal_auditor.go",
+  "find": "return \"Running verification commands...\"",
+  "replace": "return \"Inspecting files...\""
+ },
+ {
+  "name": "auditor-label-grep",
+  "file": "goal_auditor.go",
+  "find": "return \"Searching content...\"",
+  "replace": "return \"Locating files...\""
+ },
+ {
+  "name": "auditor-estimate-grep",
+  "file": "goal_auditor.go",
+  "find": "case \"grep\":\n\t\treturn 50",
+  "replace": "case \"grep\":\n\t\treturn 25"
+ },
+ {
+  "name": "auditor-estimate-bash",
+  "file": "goal_auditor.go",
+  "find": "case \"bash\":\n\t\treturn 75",
+  "replace": "case \"bash\":\n\t\treturn 50"
+ },
+ {
+  "name": "auditor-model-provider-only",
+  "file": "goal_auditor.go",
+  "find": "if config.provider != \"\" {\n\t\t// Provider-only",
+  "replace": "if config.provider == \"\" {\n\t\t// Provider-only"
+ },
+ {
+  "name": "auditor-model-unset",
+  "file": "goal_auditor.go",
+  "find": "if config.model == \"\" && config.provider == \"\" {",
+  "replace": "if config.model == \"\" || config.provider == \"\" {"
+ },
+ {
+  "name": "auditor-model-slash",
+  "file": "goal_auditor.go",
+  "find": "if slash := strings.Index(config.model, \"/\"); slash > 0 {",
+  "replace": "if slash := strings.Index(config.model, \"/\"); slash > 1 {"
+ },
+ {
+  "name": "auditor-model-match-name",
+  "file": "goal_auditor.go",
+  "find": "if m.id == config.model || m.name == config.model {",
+  "replace": "if m.id == config.model {"
+ },
+ {
+  "name": "auditor-model-ambiguous",
+  "file": "goal_auditor.go",
+  "find": "if len(matches) == 1 {",
+  "replace": "if len(matches) >= 1 {"
+ },
+ {
+  "name": "auditor-runtime-shared",
+  "file": "goal_auditor.go",
+  "find": "if rt := registry.runtime(); rt != nil {",
+  "replace": "if rt := registry.runtime(); rt == nil {"
+ },
+ {
+  "name": "auditor-project-resources",
+  "file": "goal_auditor.go",
+  "find": "if args.settings != nil && args.settings.auditorProjectResources {",
+  "replace": "if args.settings != nil && !args.settings.auditorProjectResources {"
+ },
+ {
+  "name": "auditor-tools",
+  "file": "goal_auditor.go",
+  "find": "tools: []string{\"read\", \"grep\", \"find\", \"ls\", \"bash\"},",
+  "replace": "tools: []string{\"read\", \"grep\", \"find\", \"ls\", \"bash\", \"write\"},"
+ },
+ {
+  "name": "auditor-abort-error-name",
+  "file": "goal_auditor.go",
+  "find": "if args.aborted() || errors.As(err, &abortErr) {",
+  "replace": "if args.aborted() {"
+ },
+ {
+  "name": "auditor-abort-after-prompt",
+  "file": "goal_auditor.go",
+  "find": "if args.aborted() {\n\t\treturn result(goalAuditorResult{disapproved: true, output: joined(), err: \"Auditor aborted.\"})",
+  "replace": "if false {\n\t\treturn result(goalAuditorResult{disapproved: true, output: joined(), err: \"Auditor aborted.\"})"
+ },
+ {
+  "name": "auditor-preflight",
+  "file": "goal_auditor.go",
+  "find": "if args.aborted() {\n\t\t\tpreAborted = true",
+  "replace": "if false {\n\t\t\tpreAborted = true"
+ },
+ {
+  "name": "auditor-output-join",
+  "file": "goal_auditor.go",
+  "find": "strings.Join(outputParts, \"\\n\\n\")",
+  "replace": "strings.Join(outputParts, \"\\n\")"
+ },
+ {
+  "name": "auditor-tail-8",
+  "file": "goal_auditor.go",
+  "find": "if len(outputTail) > 8 {",
+  "replace": "if len(outputTail) > 4 {"
+ },
+ {
+  "name": "auditor-stream-5",
+  "file": "goal_auditor.go",
+  "find": "recentNonEmptyLines(text, 5); len(lines) > 0",
+  "replace": "recentNonEmptyLines(text, 3); len(lines) > 0"
+ },
+ {
+  "name": "auditor-report-90",
+  "file": "goal_auditor.go",
+  "find": "progress.percentage = maxPct(90)",
+  "replace": "progress.percentage = maxPct(80)"
+ },
+ {
+  "name": "auditor-percent-max",
+  "file": "goal_auditor.go",
+  "find": "if progress.percentage != nil && *progress.percentage > v {",
+  "replace": "if progress.percentage != nil && *progress.percentage < v {"
+ },
+ {
+  "name": "auditor-args-120",
+  "file": "goal_auditor.go",
+  "find": "case string:\n\t\treturn utf16Prefix(v, 120)",
+  "replace": "case string:\n\t\treturn utf16Prefix(v, 12)"
+ },
+ {
+  "name": "auditor-role-check",
+  "file": "goal_auditor.go",
+  "find": "if event.message == nil || event.message.role != \"assistant\" {\n\t\t\t\treturn",
+  "replace": "if event.message == nil {\n\t\t\t\treturn"
+ },
+ {
+  "name": "auditor-done-label",
+  "file": "goal_auditor.go",
+  "find": "\"done\", \"Audit complete.\"",
+  "replace": "\"done\", \"Audit\""
+ },
+ {
+  "name": "auditor-abort-once",
+  "file": "goal_auditor.go",
+  "find": "once.Do(abort)\n\t\tcase <-stop:",
+  "replace": "abort()\n\t\tcase <-stop:"
+ },
+ {
+  "name": "auditor-abort-registered-aborted",
+  "file": "goal_auditor.go",
+  "find": "if signal == nil || signal.Err() != nil {\n\t\treturn func() {}",
+  "replace": "if signal == nil {\n\t\treturn func() {}"
+ },
+ {
+  "name": "oracle-fp-reason",
+  "file": "goal_oracle.go",
+  "find": "in.set(\"normalizedReason\", normalizeBlockerReason(reason))",
+  "replace": "in.set(\"normalizedReason\", reason)"
+ },
+ {
+  "name": "oracle-fp-task-state",
+  "file": "goal_oracle.go",
+  "find": "in.set(\"taskStateHash\", taskStateFingerprint(goal))",
+  "replace": "in.set(\"taskStateHash\", \"x\")"
+ },
+ {
+  "name": "oracle-fp-length",
+  "file": "goal_oracle.go",
+  "find": "return oracleHash(marshalJSON(in, \"\"), 24)",
+  "replace": "return oracleHash(marshalJSON(in, \"\"), 16)"
+ },
+ {
+  "name": "oracle-fp-objective",
+  "file": "goal_oracle.go",
+  "find": "in.set(\"objectiveHash\", oracleHash(gstr(goal, \"objective\"), 16))",
+  "replace": "in.set(\"objectiveHash\", \"x\")"
+ },
+ {
+  "name": "oracle-fp-current-task",
+  "file": "goal_oracle.go",
+  "find": "if cur, ok := goal.str(\"currentTaskId\"); ok {",
+  "replace": "if cur, ok := goal.str(\"currentTaskId\"); !ok {"
+ },
+ {
+  "name": "oracle-normalize-nfkc",
+  "file": "goal_oracle.go",
+  "find": "strings.ToLower(norm.NFKC.String(reason))",
+  "replace": "strings.ToLower(reason)"
+ },
+ {
+  "name": "oracle-normalize-lower",
+  "file": "goal_oracle.go",
+  "find": "strings.ToLower(norm.NFKC.String(reason))",
+  "replace": "norm.NFKC.String(reason)"
+ },
+ {
+  "name": "oracle-normalize-collapse",
+  "file": "goal_oracle.go",
+  "find": "if !inSpace {\n\t\t\t\tb.WriteByte(' ')\n\t\t\t}",
+  "replace": "b.WriteByte(' ')"
+ },
+ {
+  "name": "oracle-task-depth",
+  "file": "goal_oracle.go",
+  "find": "walk(subs, depth+1)",
+  "replace": "walk(subs, depth)"
+ },
+ {
+  "name": "oracle-state-goal",
+  "file": "goal_oracle.go",
+  "find": "if gstr(e, \"goalId\") != goalID || gstr(e, \"fingerprint\") != fingerprint {",
+  "replace": "if gstr(e, \"fingerprint\") != fingerprint {"
+ },
+ {
+  "name": "oracle-state-fingerprint",
+  "file": "goal_oracle.go",
+  "find": "if gstr(e, \"goalId\") != goalID || gstr(e, \"fingerprint\") != fingerprint {",
+  "replace": "if gstr(e, \"goalId\") != goalID {"
+ },
+ {
+  "name": "oracle-state-failed",
+  "file": "goal_oracle.go",
+  "find": "state.failedAttempts++",
+  "replace": "state.failedAttempts += 2"
+ },
+ {
+  "name": "oracle-state-followup",
+  "file": "goal_oracle.go",
+  "find": "state.followupAttempted = true",
+  "replace": "state.followupAttempted = false"
+ },
+ {
+  "name": "oracle-evidence-2000",
+  "file": "goal_oracle.go",
+  "find": "utf16Prefix(recentEvidence, 2000)",
+  "replace": "utf16Prefix(recentEvidence, 200)"
+ },
+ {
+  "name": "oracle-attempted-8",
+  "file": "goal_oracle.go",
+  "find": "if len(attempted) > 8 {\n\t\t\tattempted = attempted[:8]",
+  "replace": "if len(attempted) > 4 {\n\t\t\tattempted = attempted[:4]"
+ },
+ {
+  "name": "oracle-validate-max-alts",
+  "file": "goal_oracle.go",
+  "find": "len(alts) < 1 || len(alts) > 4",
+  "replace": "len(alts) < 1 || len(alts) > 5"
+ },
+ {
+  "name": "oracle-validate-steps",
+  "file": "goal_oracle.go",
+  "find": "if !okS || len(steps) < 1 {",
+  "replace": "if !okS {"
+ },
+ {
+  "name": "oracle-validate-index-range",
+  "file": "goal_oracle.go",
+  "find": "idx >= float64(len(alts))",
+  "replace": "idx > float64(len(alts))"
+ },
+ {
+  "name": "oracle-validate-diagnosis",
+  "file": "goal_oracle.go",
+  "find": "if jsTrim(diagnosis) == \"\" {",
+  "replace": "if diagnosis == \"\" {"
+ },
+ {
+  "name": "oracle-validate-disposition",
+  "file": "goal_oracle.go",
+  "find": "disp != \"actionable\" && disp != \"needs_human\" && disp != \"insufficient_context\"",
+  "replace": "disp != \"actionable\" && disp != \"needs_human\""
+ },
+ {
+  "name": "oracle-model-config",
+  "file": "goal_oracle.go",
+  "find": "if settings.provider == \"\" || settings.model == \"\" {",
+  "replace": "if settings.provider == \"\" && settings.model == \"\" {"
+ },
+ {
+  "name": "oracle-tools",
+  "file": "goal_oracle.go",
+  "find": "tools:       []string{\"read\", \"grep\", \"find\", \"ls\", \"submit_goal_oracle_advice\"},",
+  "replace": "tools:       []string{\"read\", \"grep\", \"find\", \"ls\", \"bash\", \"submit_goal_oracle_advice\"},"
+ },
+ {
+  "name": "oracle-project-resources",
+  "file": "goal_oracle.go",
+  "find": "if !args.settings.projectResources {",
+  "replace": "if args.settings.projectResources {"
+ },
+ {
+  "name": "oracle-no-advice",
+  "file": "goal_oracle.go",
+  "find": "if submitted == nil {",
+  "replace": "if submitted != nil {"
+ },
+ {
+  "name": "oracle-aborted-after",
+  "file": "goal_oracle.go",
+  "find": "if args.aborted() {\n\t\treturn abortedResult\n\t}\n\tmu.Lock()",
+  "replace": "if false {\n\t\treturn abortedResult\n\t}\n\tmu.Lock()"
+ },
+ {
+  "name": "oracle-advice-id-24",
+  "file": "goal_oracle.go",
+  "find": "if n := len(id); n > 24 {\n\t\tid = id[:24]",
+  "replace": "if n := len(id); n > 12 {\n\t\tid = id[:12]"
+ },
+ {
+  "name": "oracle-armed-evidence",
+  "file": "goal_oracle.go",
+  "find": "if len(rec.expectedEvidence) > 0 {",
+  "replace": "if len(rec.expectedEvidence) > 1 {"
+ },
+ {
+  "name": "oracle-consume",
+  "file": "goal_oracle.go",
+  "find": "delete(armedByGoalID, goalID)",
+  "replace": ""
+ },
+ {
+  "name": "selector-sort",
+  "file": "auditor_selector.go",
+  "find": "localeCompare(auditorModelLabel(models[i]), auditorModelLabel(models[j])) < 0",
+  "replace": "localeCompare(auditorModelLabel(models[i]), auditorModelLabel(models[j])) > 0"
+ },
+ {
+  "name": "selector-name",
+  "file": "auditor_selector.go",
+  "find": "if m.name != \"\" && m.name != m.id {",
+  "replace": "if m.name != \"\" {"
+ },
+ {
+  "name": "selector-default-mark",
+  "file": "auditor_selector.go",
+  "find": "if configured == \"\" && session != \"\" {",
+  "replace": "if session != \"\" {"
+ },
+ {
+  "name": "selector-filter-case",
+  "file": "auditor_selector.go",
+  "find": "strings.Contains(strings.ToLower(c.label), normalized)",
+  "replace": "strings.Contains(c.label, normalized)"
+ },
+ {
+  "name": "selector-filter-keep",
+  "file": "auditor_selector.go",
+  "find": "if c.kind == \"default\" || c.kind == \"manual\" ||",
+  "replace": "if c.kind == \"default\" ||"
+ },
+ {
+  "name": "selector-manual-slash",
+  "file": "auditor_selector.go",
+  "find": "if slash <= 0 || slash == len(value)-1 {",
+  "replace": "if slash < 0 || slash == len(value)-1 {"
+ },
+ {
+  "name": "selector-manual-trailing",
+  "file": "auditor_selector.go",
+  "find": "if slash <= 0 || slash == len(value)-1 {",
+  "replace": "if slash <= 0 {"
+ },
+ {
+  "name": "selector-thinking-mark",
+  "file": "auditor_selector.go",
+  "find": "out = append(out, \"✓ \"+level)",
+  "replace": "out = append(out, \"  \"+level)"
+ },
+ {
+  "name": "selector-configured-key",
+  "file": "auditor_selector.go",
+  "find": "if provider != \"\" && model != \"\" {",
+  "replace": "if provider != \"\" || model != \"\" {"
+ }
+]

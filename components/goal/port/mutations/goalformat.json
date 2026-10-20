@@ -1,0 +1,254 @@
+[
+ {
+  "name": "toolset-drop-all",
+  "file": "goal_format_rest.go",
+  "find": "m[n] = true",
+  "replace": "m[n] = false"
+ },
+ {
+  "name": "norm-kind-stale",
+  "file": "goal_format_rest.go",
+  "find": "d.kind = \"stale\"",
+  "replace": "d.kind = \"checkpoint\""
+ },
+ {
+  "name": "norm-goalid-default",
+  "file": "goal_format_rest.go",
+  "find": "d.goalId = \"unknown\"",
+  "replace": "d.goalId = \"\""
+ },
+ {
+  "name": "norm-focus-sisyphus",
+  "file": "goal_format_rest.go",
+  "find": "d.focus = \"sisyphus\"",
+  "replace": "d.focus = \"goal\""
+ },
+ {
+  "name": "status-paused",
+  "file": "goal_format_rest.go",
+  "find": "s == \"paused\" || s == \"complete\"",
+  "replace": "s == \"complete\""
+ },
+ {
+  "name": "event-stale-label",
+  "file": "goal_format_rest.go",
+  "find": "label = \"stale checkpoint\"",
+  "replace": "label = \"checkpoint\""
+ },
+ {
+  "name": "event-running",
+  "file": "goal_format_rest.go",
+  "find": "status = \"running\"",
+  "replace": "status = \"active\""
+ },
+ {
+  "name": "event-unknown",
+  "file": "goal_format_rest.go",
+  "find": "status := \"unknown\"",
+  "replace": "status := \"none\""
+ },
+ {
+  "name": "event-objective",
+  "file": "goal_format_rest.go",
+  "find": "\"Objective: \"+d.objective",
+  "replace": "d.objective"
+ },
+ {
+  "name": "event-none",
+  "file": "goal_format_rest.go",
+  "find": "current := \"none\"",
+  "replace": "current := \"\""
+ },
+ {
+  "name": "audit-skipped",
+  "file": "goal_format_rest.go",
+  "find": "case \"approved\", \"rejected\", \"skipped\":",
+  "replace": "case \"approved\", \"rejected\":"
+ },
+ {
+  "name": "audit-default-content",
+  "file": "goal_format_rest.go",
+  "find": "text = \"Goal audit \" + label + \".\"",
+  "replace": "text = \"\""
+ },
+ {
+  "name": "v2-version",
+  "file": "goal_format_rest.go",
+  "find": "v=\"2\"` + jsS",
+  "replace": "v=\"3\"` + jsS"
+ },
+ {
+  "name": "v2-slash-optional",
+  "file": "goal_format_rest.go",
+  "find": "`*/?>`)",
+  "replace": "`*/>`)"
+ },
+ {
+  "name": "legacy-bracket-stale",
+  "file": "goal_format_rest.go",
+  "find": "|GOAL STALE)",
+  "replace": "|GOAL STAL)"
+ },
+ {
+  "name": "bracket-space-check",
+  "file": "goal_format_rest.go",
+  "find": "m != nil && !strings.ContainsFunc(m[1], isJSSpace)",
+  "replace": "m != nil"
+ },
+ {
+  "name": "extract-order-skip-legacy",
+  "file": "goal_format_rest.go",
+  "find": "if id, ok := matchLegacyContinuation(text); ok {\n\t\treturn id, true\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "event-id-custom",
+  "file": "goal_format_rest.go",
+  "find": "custom != any(goalEventEntry)",
+  "replace": "custom == any(goalEventEntry)"
+ },
+ {
+  "name": "event-id-empty",
+  "file": "goal_format_rest.go",
+  "find": "ok && id != \"\" {\n\t\t\treturn id, true",
+  "replace": "ok {\n\t\t\treturn id, true"
+ },
+ {
+  "name": "aborted-reason",
+  "file": "goal_format_rest.go",
+  "find": "assistantStopReason(message, \"aborted\")",
+  "replace": "assistantStopReason(message, \"error\")"
+ },
+ {
+  "name": "tooluse-reason",
+  "file": "goal_format_rest.go",
+  "find": "assistantStopReason(message, \"toolUse\")",
+  "replace": "assistantStopReason(message, \"stop\")"
+ },
+ {
+  "name": "role-check",
+  "file": "goal_format_rest.go",
+  "find": "return role == \"assistant\" && stop == reason",
+  "replace": "return stop == reason"
+ },
+ {
+  "name": "hasaborted-all",
+  "file": "goal_format_rest.go",
+  "find": "if isAbortedAssistantMessage(m) {",
+  "replace": "if !isAbortedAssistantMessage(m) {"
+ },
+ {
+  "name": "haserror-impl",
+  "file": "goal_format_rest.go",
+  "find": "if isErrorAssistantMessage(m) {",
+  "replace": "if isNetworkErrorAssistantMessage(m) {"
+ },
+ {
+  "name": "tokens-floor",
+  "file": "goal_format_rest.go",
+  "find": "math.Max(0, math.Trunc(f))",
+  "replace": "math.Trunc(f)"
+ },
+ {
+  "name": "tokens-trunc",
+  "file": "goal_format_rest.go",
+  "find": "math.Max(0, math.Trunc(f))",
+  "replace": "math.Max(0, math.Round(f))"
+ },
+ {
+  "name": "turn-role",
+  "file": "goal_format_rest.go",
+  "find": "role != \"assistant\" {\n\t\treturn 0",
+  "replace": "role == \"assistant\" {\n\t\treturn 0"
+ },
+ {
+  "name": "turn-output",
+  "file": "goal_format_rest.go",
+  "find": "+ usageChannelTokens(usage.vals[\"output\"])",
+  "replace": ""
+ },
+ {
+  "name": "progress-goals-dir",
+  "file": "goal_format_rest.go",
+  "find": "strings.HasPrefix(path, \".pi/goals/\")",
+  "replace": "strings.HasPrefix(path, \".pi/goals\")"
+ },
+ {
+  "name": "progress-goals-exact",
+  "file": "goal_format_rest.go",
+  "find": "path == \".pi/goals\" || ",
+  "replace": ""
+ },
+ {
+  "name": "progress-toolname",
+  "file": "goal_format_rest.go",
+  "find": "if toolName == \"bash\" {",
+  "replace": "if toolName == \"ls\" {"
+ },
+ {
+  "name": "detail-pending-cap",
+  "file": "goal_format_rest.go",
+  "find": "if i >= 3 {",
+  "replace": "if i >= 4 {"
+ },
+ {
+  "name": "detail-more-count",
+  "file": "goal_format_rest.go",
+  "find": "len(pending)-3",
+  "replace": "len(pending)-2"
+ },
+ {
+  "name": "detail-recent-cap",
+  "file": "goal_format_rest.go",
+  "find": "len(recent) < 2",
+  "replace": "len(recent) < 3"
+ },
+ {
+  "name": "detail-depth-contract",
+  "file": "goal_format_rest.go",
+  "find": "strings.Repeat(\"  \", entry.depth+1)",
+  "replace": "strings.Repeat(\"  \", entry.depth)"
+ },
+ {
+  "name": "detail-skipped",
+  "file": "goal_format_rest.go",
+  "find": "if counts.skipped > 0 {",
+  "replace": "if counts.skipped >= 0 {"
+ },
+ {
+  "name": "detail-evidence-sep",
+  "file": "goal_format_rest.go",
+  "find": "\" — \" + ev",
+  "replace": "\" - \" + ev"
+ },
+ {
+  "name": "usage-time",
+  "file": "goal_format_rest.go",
+  "find": "\"Time spent: \"",
+  "replace": "\"Time: \""
+ },
+ {
+  "name": "debug-section",
+  "file": "goal_widget_pure.go",
+  "find": "\"─── \" + title",
+  "replace": "\"--- \" + title"
+ },
+ {
+  "name": "debug-skipped-marker",
+  "file": "goal_widget_pure.go",
+  "find": "marker = \"[~]\"",
+  "replace": "marker = \"[x]\""
+ },
+ {
+  "name": "debug-lightweight",
+  "file": "goal_widget_pure.go",
+  "find": "\" (lightweight)\"",
+  "replace": "\"\""
+ },
+ {
+  "name": "debug-prefix",
+  "file": "goal_widget_pure.go",
+  "find": "\"│   \"+raw",
+  "replace": "\"│  \"+raw"
+ }
+]

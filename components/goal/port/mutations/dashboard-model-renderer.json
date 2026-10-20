@@ -1,0 +1,560 @@
+[
+ {
+  "name": "dash-idle-label",
+  "file": "goal_dashboard_model.go",
+  "find": "label: \"Idle\"",
+  "replace": "label: \"Running\""
+ },
+ {
+  "name": "dash-paused-agent",
+  "file": "goal_dashboard_model.go",
+  "find": "who = \" (agent)\"",
+  "replace": "who = \" (user)\""
+ },
+ {
+  "name": "dash-paused-user",
+  "file": "goal_dashboard_model.go",
+  "find": "who = \" (user)\"",
+  "replace": "who = \"\""
+ },
+ {
+  "name": "dash-blocked-label",
+  "file": "goal_dashboard_model.go",
+  "find": "label: \"Blocked\"",
+  "replace": "label: \"Block\""
+ },
+ {
+  "name": "dash-budget-label",
+  "file": "goal_dashboard_model.go",
+  "find": "label: \"Budget limited\"",
+  "replace": "label: \"Budget\""
+ },
+ {
+  "name": "dash-waiting-footer",
+  "file": "goal_dashboard_model.go",
+  "find": "\"Waiting\", \"waiting\"",
+  "replace": "\"Waiting\", \"idle\""
+ },
+ {
+  "name": "dash-waiting-active-only",
+  "file": "goal_dashboard_model.go",
+  "find": "gstr(goal, \"status\") == \"active\" && sched != nil",
+  "replace": "sched != nil"
+ },
+ {
+  "name": "dash-progress-skipped",
+  "file": "goal_dashboard_model.go",
+  "find": "s == \"complete\" || s == \"skipped\"",
+  "replace": "s == \"complete\""
+ },
+ {
+  "name": "dash-percent-clamp",
+  "file": "goal_dashboard_model.go",
+  "find": "math.Min(100, math.Max(0, jsRound(float64(done/total*100))))",
+  "replace": "math.Max(0, jsRound(float64(done/total*100)))"
+ },
+ {
+  "name": "dash-percent-zero-total",
+  "file": "goal_dashboard_model.go",
+  "find": "if total <= 0 {\n\t\treturn 0",
+  "replace": "if total < 0 {\n\t\treturn 0"
+ },
+ {
+  "name": "dash-flatten-depth",
+  "file": "goal_dashboard_model.go",
+  "find": "walk(subs, depth+1)",
+  "replace": "walk(subs, depth)"
+ },
+ {
+  "name": "dash-subtask-leaf",
+  "file": "goal_dashboard_model.go",
+  "find": "if len(children) == 0 {\n\t\treturn currentTaskSubtaskProgress{}",
+  "replace": "if len(children) == 1 {\n\t\treturn currentTaskSubtaskProgress{}"
+ },
+ {
+  "name": "dash-current-pending",
+  "file": "goal_dashboard_model.go",
+  "find": "nodes[i].id == cur && nodes[i].status == \"pending\"",
+  "replace": "nodes[i].id == cur"
+ },
+ {
+  "name": "dash-current-inferred",
+  "file": "goal_dashboard_model.go",
+  "find": "inferred := node == nil",
+  "replace": "inferred := false"
+ },
+ {
+  "name": "dash-current-first-pending",
+  "file": "goal_dashboard_model.go",
+  "find": "if nodes[i].status == \"pending\" {\n\t\t\t\tnode = &nodes[i]\n\t\t\t\tbreak\n\t\t\t}\n\t\t}\n\t}\n\tif node == nil",
+  "replace": "if nodes[i].status != \"complete\" {\n\t\t\t\tnode = &nodes[i]\n\t\t\t\tbreak\n\t\t\t}\n\t\t}\n\t}\n\tif node == nil"
+ },
+ {
+  "name": "dash-latest-tie",
+  "file": "goal_dashboard_model.go",
+  "find": "utf16Compare(n.completedAt, bestAt) >= 0",
+  "replace": "utf16Compare(n.completedAt, bestAt) > 0"
+ },
+ {
+  "name": "dash-latest-status",
+  "file": "goal_dashboard_model.go",
+  "find": "n.status != \"complete\" || n.completedAt == \"\"",
+  "replace": "n.completedAt == \"\""
+ },
+ {
+  "name": "dash-latest-stamp",
+  "file": "goal_dashboard_model.go",
+  "find": "n.status != \"complete\" || n.completedAt == \"\"",
+  "replace": "n.status != \"complete\""
+ },
+ {
+  "name": "dash-max-offset",
+  "file": "goal_dashboard_model.go",
+  "find": "if totalRows-rows > 0 {\n\t\treturn totalRows - rows",
+  "replace": "if totalRows-rows > 1 {\n\t\treturn totalRows - rows"
+ },
+ {
+  "name": "dash-clamp-floor",
+  "file": "goal_dashboard_model.go",
+  "find": "o := math.Max(0, math.Floor(offset))",
+  "replace": "o := math.Max(0, math.Ceil(offset))"
+ },
+ {
+  "name": "dash-anchor-last-row",
+  "file": "goal_dashboard_model.go",
+  "find": "anchor-(rows-1)",
+  "replace": "anchor-rows"
+ },
+ {
+  "name": "dash-anchor-rows-zero",
+  "file": "goal_dashboard_model.go",
+  "find": "if anchor < 0 || rows <= 0 {",
+  "replace": "if anchor < 0 {"
+ },
+ {
+  "name": "dash-compact-wide",
+  "file": "goal_dashboard_model.go",
+  "find": "case width >= 100:\n\t\treturn 5",
+  "replace": "case width >= 100:\n\t\treturn 6"
+ },
+ {
+  "name": "dash-compact-medium",
+  "file": "goal_dashboard_model.go",
+  "find": "case width >= 70:\n\t\treturn 4",
+  "replace": "case width >= 71:\n\t\treturn 4"
+ },
+ {
+  "name": "dash-compact-narrow",
+  "file": "goal_dashboard_model.go",
+  "find": "case width >= 50:\n\t\treturn 3",
+  "replace": "case width >= 51:\n\t\treturn 3"
+ },
+ {
+  "name": "dash-expanded-wide",
+  "file": "goal_dashboard_model.go",
+  "find": "return 20",
+  "replace": "return 21"
+ },
+ {
+  "name": "dash-expanded-medium",
+  "file": "goal_dashboard_model.go",
+  "find": "return 16",
+  "replace": "return 15"
+ },
+ {
+  "name": "dash-expanded-narrow",
+  "file": "goal_dashboard_model.go",
+  "find": "return 12",
+  "replace": "return 13"
+ },
+ {
+  "name": "dash-page-min",
+  "file": "goal_dashboard_model.go",
+  "find": "math.Max(1, math.Floor(rows))",
+  "replace": "math.Max(0, math.Floor(rows))"
+ },
+ {
+  "name": "dash-viewport-below",
+  "file": "goal_dashboard_model.go",
+  "find": "below := totalRows - (clamped + visible)",
+  "replace": "below := totalRows - clamped"
+ },
+ {
+  "name": "dash-viewport-above",
+  "file": "goal_dashboard_model.go",
+  "find": "taskListViewport{totalRows, safeRows, clamped, maxOffset, clamped, below}",
+  "replace": "taskListViewport{totalRows, safeRows, clamped, maxOffset, 0, below}"
+ },
+ {
+  "name": "dash-audit-elapsed",
+  "file": "goal_dashboard_model.go",
+  "find": "math.Floor(math.Max(0, elapsedMs) / 1000)",
+  "replace": "math.Floor(math.Max(0, elapsedMs) / 100)"
+ },
+ {
+  "name": "dash-tokens-million",
+  "file": "goal_dashboard_model.go",
+  "find": "safe >= 1_000_000",
+  "replace": "safe >= 1_000_001"
+ },
+ {
+  "name": "dash-tokens-thousand",
+  "file": "goal_dashboard_model.go",
+  "find": "safe >= 1_000 {",
+  "replace": "safe >= 10_000 {"
+ },
+ {
+  "name": "dash-tokens-trim",
+  "file": "goal_dashboard_model.go",
+  "find": "strings.TrimSuffix(value, \".0\")",
+  "replace": "value"
+ },
+ {
+  "name": "dash-budget-clamp",
+  "file": "goal_dashboard_model.go",
+  "find": "pct = int(math.Min(100, math.Max(0, jsRound(float64(used/total*100)))))",
+  "replace": "pct = int(math.Max(0, jsRound(float64(used/total*100))))"
+ },
+ {
+  "name": "dash-budget-remaining",
+  "file": "goal_dashboard_model.go",
+  "find": "remaining: math.Max(0, total-tokensUsed)",
+  "replace": "remaining: total-tokensUsed"
+ },
+ {
+  "name": "dash-footer-bits-seconds",
+  "file": "goal_dashboard_model.go",
+  "find": "if activeSeconds > 0 {",
+  "replace": "if activeSeconds > 1 {"
+ },
+ {
+  "name": "dash-footer-bits-tokens",
+  "file": "goal_dashboard_model.go",
+  "find": "if tokensUsed > 0 {\n\t\tbits",
+  "replace": "if tokensUsed > 1 {\n\t\tbits"
+ },
+ {
+  "name": "dash-file-path-order",
+  "file": "goal_dashboard_model.go",
+  "find": "filePath := gstr(goal, \"archivedPath\")",
+  "replace": "filePath := \"\""
+ },
+ {
+  "name": "dash-auditor-enabled",
+  "file": "goal_dashboard_model.go",
+  "find": "!(gflag(goal, \"skipAuditor\"))",
+  "replace": "true"
+ },
+ {
+  "name": "dash-tasks-disabled",
+  "file": "goal_dashboard_model.go",
+  "find": "if !options.tasksDisabled {",
+  "replace": "if true {"
+ },
+ {
+  "name": "dash-limit",
+  "file": "goal_dashboard_model.go",
+  "find": "limit: options.activityLimit}",
+  "replace": "limit: nil}"
+ },
+ {
+  "name": "dash-scheduling-split",
+  "file": "goal_dashboard_model.go",
+  "find": "if row != \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "dash-title",
+  "file": "goal_dashboard_model.go",
+  "find": "title:                    displayObjectiveTitle(gstr(goal, \"objective\")),",
+  "replace": "title:                    gstr(goal, \"objective\"),"
+ },
+ {
+  "name": "dash-tree-current-mark",
+  "file": "goal_dashboard_model.go",
+  "find": "tree[i].isCurrent = true",
+  "replace": "tree[i].isCurrent = false"
+ },
+ {
+  "name": "status-width",
+  "file": "goal_status.go",
+  "find": "const goalStatusWidth = 78",
+  "replace": "const goalStatusWidth = 80"
+ },
+ {
+  "name": "status-health-ok",
+  "file": "goal_status.go",
+  "find": "focusValue, focusSev := \"not focused\", \"warn\"",
+  "replace": "focusValue, focusSev := \"not focused\", \"ok\""
+ },
+ {
+  "name": "status-lifecycle-auto",
+  "file": "goal_status.go",
+  "find": "auto = \" · auto-continue on\"",
+  "replace": "auto = \" · auto-continue off\""
+ },
+ {
+  "name": "status-file-unknown",
+  "file": "goal_status.go",
+  "find": "fileSeverity := \"warn\"",
+  "replace": "fileSeverity := \"ok\""
+ },
+ {
+  "name": "status-file-missing-text",
+  "file": "goal_status.go",
+  "find": "value = \"missing · \" + ap",
+  "replace": "value = ap"
+ },
+ {
+  "name": "status-malformed-plural",
+  "file": "goal_status.go",
+  "find": "if malformed == 1 {",
+  "replace": "if malformed == 2 {"
+ },
+ {
+  "name": "status-tasks-contracted",
+  "file": "goal_status.go",
+  "find": "if contractedPending > 0 {",
+  "replace": "if contractedPending > 1 {"
+ },
+ {
+  "name": "status-tasks-block",
+  "file": "goal_status.go",
+  "find": "gflag(tl, \"blockCompletion\") && pending > 0",
+  "replace": "pending > 0"
+ },
+ {
+  "name": "status-budget-threshold",
+  "file": "goal_status.go",
+  "find": "percentage >= 100 || percentage >= 90",
+  "replace": "percentage >= 100"
+ },
+ {
+  "name": "status-budget-negative",
+  "file": "goal_status.go",
+  "find": "if shown < 0 {",
+  "replace": "if shown < -1000 {"
+ },
+ {
+  "name": "status-goal-trunc",
+  "file": "goal_status.go",
+  "find": "dashMax(20, width-12)",
+  "replace": "dashMax(20, width-2)"
+ },
+ {
+  "name": "status-checkpoint",
+  "file": "goal_status.go",
+  "find": "options.checkpointHealth.total > 0",
+  "replace": "options.checkpointHealth.total > 1"
+ },
+ {
+  "name": "status-audit-label",
+  "file": "goal_status.go",
+  "find": "verdictLabel = \"CHANGES REQUIRED\"",
+  "replace": "verdictLabel = \"ERROR\""
+ },
+ {
+  "name": "status-audit-date",
+  "file": "goal_status.go",
+  "find": "utf16Prefix(gstr(audit, \"at\"), 10) + \") — \"",
+  "replace": "utf16Prefix(gstr(audit, \"at\"), 11) + \") — \""
+ },
+ {
+  "name": "status-audit-trunc",
+  "file": "goal_status.go",
+  "find": "truncateText(wsRun.ReplaceAllString(gstr(audit, \"report\"), \" \"), 90)",
+  "replace": "truncateText(wsRun.ReplaceAllString(gstr(audit, \"report\"), \" \"), 9)"
+ },
+ {
+  "name": "status-verbose-recent",
+  "file": "goal_status.go",
+  "find": "latestEventsForGoal(events, gstr(goal, \"id\"), 12)",
+  "replace": "latestEventsForGoal(events, gstr(goal, \"id\"), 1)"
+ },
+ {
+  "name": "status-verbose-mark-current",
+  "file": "goal_status.go",
+  "find": "case gstr(t, \"id\") == currentTaskID:",
+  "replace": "case false:"
+ },
+ {
+  "name": "status-verbose-evidence",
+  "file": "goal_status.go",
+  "find": "status == \"complete\" && e != \"\"",
+  "replace": "e != \"\""
+ },
+ {
+  "name": "status-verbose-ledger-ts",
+  "file": "goal_status.go",
+  "find": "utf16Prefix(gstr(e, \"at\"), 19)",
+  "replace": "utf16Prefix(gstr(e, \"at\"), 10)"
+ },
+ {
+  "name": "status-standard-hint",
+  "file": "goal_status.go",
+  "find": "\"Run /goal-status verbose for full detail\"",
+  "replace": "\"\""
+ },
+ {
+  "name": "status-unfocused",
+  "file": "goal_status.go",
+  "find": "if options.otherOpenGoals > 0 {\n\t\t\treturn strings.Join(renderUnfocused",
+  "replace": "if options.otherOpenGoals > 1 {\n\t\t\treturn strings.Join(renderUnfocused"
+ },
+ {
+  "name": "status-parts-sep",
+  "file": "goal_status.go",
+  "find": "strings.Join(parts, \"\\n\\n\")",
+  "replace": "strings.Join(parts, \"\\n\")"
+ },
+ {
+  "name": "render-spec-wide-bar",
+  "file": "goal_dashboard_renderer.go",
+  "find": "dashLayoutSpec{26, 8, 4, true, true,",
+  "replace": "dashLayoutSpec{26, 8, 4, false, true,"
+ },
+ {
+  "name": "render-medium-boundary",
+  "file": "goal_dashboard_renderer.go",
+  "find": "case width >= 70:\n\t\treturn \"medium\"",
+  "replace": "case width >= 71:\n\t\treturn \"medium\""
+ },
+ {
+  "name": "render-hidden-above",
+  "file": "goal_dashboard_renderer.go",
+  "find": "\" more task\"+dashPlural(viewport.hiddenAbove)))\n\t}\n\tend",
+  "replace": "\" more tasks\"))\n\t}\n\tend"
+ },
+ {
+  "name": "render-sub-word",
+  "file": "goal_dashboard_renderer.go",
+  "find": "subWord = \"\"",
+  "replace": "subWord = \"Sub \""
+ },
+ {
+  "name": "render-fuel",
+  "file": "goal_dashboard_renderer.go",
+  "find": "if model.budget.used >= model.budget.total {",
+  "replace": "if model.budget.used > model.budget.total {"
+ },
+ {
+  "name": "render-all-complete",
+  "file": "goal_dashboard_renderer.go",
+  "find": "model.taskProgress.completed == model.taskProgress.total &&",
+  "replace": "model.taskProgress.completed >= 0 &&"
+ },
+ {
+  "name": "render-auditor-dot",
+  "file": "goal_dashboard_renderer.go",
+  "find": "if model.auditorEnabled {\n\t\tauditorDot = dashSuccess",
+  "replace": "if !model.auditorEnabled {\n\t\tauditorDot = dashSuccess"
+ },
+ {
+  "name": "render-indent-cap",
+  "file": "goal_dashboard_renderer.go",
+  "find": "dashMin(node.depth, 6)",
+  "replace": "node.depth"
+ },
+ {
+  "name": "render-id-width",
+  "file": "goal_dashboard_renderer.go",
+  "find": "idWidth = dashMin(10, idWidth)",
+  "replace": "idWidth = dashMin(5, idWidth)"
+ },
+ {
+  "name": "render-clamp",
+  "file": "goal_dashboard_renderer.go",
+  "find": "if visibleWidth(line) > width {\n\t\t\tout[i]",
+  "replace": "if visibleWidth(line) > width+1 {\n\t\t\tout[i]"
+ },
+ {
+  "name": "render-showdetails",
+  "file": "goal_dashboard_renderer.go",
+  "find": "showToolDetails || model.verdict == \"disapproved\" || model.verdict == \"error\"",
+  "replace": "showToolDetails"
+ },
+ {
+  "name": "render-open-count",
+  "file": "goal_dashboard_renderer.go",
+  "find": "if model.otherOpenGoals > 0 {\n\t\topen",
+  "replace": "if model.otherOpenGoals > 1 {\n\t\topen"
+ },
+ {
+  "name": "audit-pct-objective",
+  "file": "auditor_dashboard_model.go",
+  "find": "if pct >= 20 {\n\t\t\treturn \"passed\"",
+  "replace": "if pct >= 30 {\n\t\t\treturn \"passed\""
+ },
+ {
+  "name": "audit-pct-verification",
+  "file": "auditor_dashboard_model.go",
+  "find": "return pick(40, 20, \"pending\")",
+  "replace": "return pick(40, 30, \"pending\")"
+ },
+ {
+  "name": "audit-pct-tasks",
+  "file": "auditor_dashboard_model.go",
+  "find": "return pick(60, 40, \"pending\")",
+  "replace": "return pick(50, 40, \"pending\")"
+ },
+ {
+  "name": "audit-pct-workspace",
+  "file": "auditor_dashboard_model.go",
+  "find": "return pick(80, 60, \"pending\")",
+  "replace": "return pick(80, 70, \"pending\")"
+ },
+ {
+  "name": "audit-pct-decision",
+  "file": "auditor_dashboard_model.go",
+  "find": "if pct >= 80 {\n\t\treturn \"running\"",
+  "replace": "if pct >= 90 {\n\t\treturn \"running\""
+ },
+ {
+  "name": "audit-done-failed",
+  "file": "auditor_dashboard_model.go",
+  "find": "if verdict == \"disapproved\" || verdict == \"error\" {",
+  "replace": "if verdict == \"disapproved\" {"
+ },
+ {
+  "name": "audit-findings-cap",
+  "file": "auditor_dashboard_model.go",
+  "find": "len(findings) >= 3",
+  "replace": "len(findings) >= 4"
+ },
+ {
+  "name": "audit-finding-len",
+  "file": "auditor_dashboard_model.go",
+  "find": "utf16Len(cleaned) > 200",
+  "replace": "utf16Len(cleaned) > 201"
+ },
+ {
+  "name": "audit-label-default",
+  "file": "auditor_dashboard_model.go",
+  "find": "label = \"Independent completion audit\"",
+  "replace": "label = \"Audit\""
+ },
+ {
+  "name": "audit-card-lines",
+  "file": "auditor_dashboard_model.go",
+  "find": "\"Verification requirements satisfied.\"",
+  "replace": "\"Verification satisfied.\""
+ },
+ {
+  "name": "cache-max-entries",
+  "file": "text_cache.go",
+  "find": "textCacheMaxEntries = 1024",
+  "replace": "textCacheMaxEntries = 1"
+ },
+ {
+  "name": "cache-pad-key",
+  "file": "text_cache.go",
+  "find": "strconv.FormatBool(pad) + \":\" +",
+  "replace": "\"\" + \":\" +"
+ },
+ {
+  "name": "cache-wrap-copy",
+  "file": "text_cache.go",
+  "find": "return append([]string(nil), c.lines...)",
+  "replace": "return c.lines"
+ }
+]
