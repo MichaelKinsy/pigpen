@@ -217,9 +217,9 @@
  },
  {
   "name": "multi-instructions",
-  "file": "rpc.go",
-  "find": "comma-separated (e.g. \"1,3\")",
-  "replace": "comma separated (e.g. \"1,3\")"
+  "file": "internal/ui/locales/en.json",
+  "find": "comma-separated (e.g. \\\"1,3\\\")",
+  "replace": "comma separated (e.g. \\\"1,3\\\")"
  },
  {
   "name": "multi-trim-lost",
