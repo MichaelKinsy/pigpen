@@ -13,6 +13,8 @@ const require = createRequire(import.meta.url);
 const jitiMod = require(process.env.JITI ?? "/opt/oracle/pi-src/node_modules/jiti");
 const jiti = (jitiMod.createJiti ?? jitiMod)(import.meta.url, { moduleCache: false, interopDefault: true });
 
+const TREE = Array.from({ length: 300 }, (_, i) => `src/file${String(i).padStart(3, "0")}.go\n`).join("");
+const README = Buffer.from("# Readme line\n".repeat(200)).toString("base64");
 cp.execFile = (...args) => {
 	const cmdArgs = args[1];
 	const cb = args[args.length - 1];
@@ -20,8 +22,8 @@ cp.execFile = (...args) => {
 	const jq = cmdArgs[cmdArgs.length - 1];
 	if (jq === ".size") return cb(null, "400000\n");
 	if (jq === ".default_branch") return cb(null, "main\n");
-	if (jq === ".tree[].path") return cb(null, Array.from({ length: 300 }, (_, i) => `src/file${String(i).padStart(3, "0")}.go\n`).join(""));
-	return cb(null, Buffer.from("# Readme line\n".repeat(200)).toString("base64"));
+	if (jq === ".tree[].path") return cb(null, TREE);
+	return cb(null, README);
 };
 
 const { GitHubInterceptor, parseGitHubUrl } = jiti(resolve(here, "oracle/providers/interceptors/github.ts"));

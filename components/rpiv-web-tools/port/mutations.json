@@ -1260,6 +1260,48 @@
   "replace": "neg = false"
  },
  {
+  "name": "gh-host-www-plain",
+  "file": "github_interceptor.go",
+  "find": "case strings.EqualFold(host, \"www.github.com\"):",
+  "replace": "case strings.EqualFold(host, \"www.githubx.com\"):"
+ },
+ {
+  "name": "gh-host-percent-decoded",
+  "file": "github_interceptor.go",
+  "find": "if strings.Contains(auth, \"%\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gh-host-bad-port-accepted",
+  "file": "github_interceptor.go",
+  "find": "if port[j] < '0' || port[j] > '9' {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gh-resolve-symlink-fast-path",
+  "file": "github_interceptor.go",
+  "find": "fi.Mode()&os.ModeSymlink != 0",
+  "replace": "false"
+ },
+ {
+  "name": "js-ascii-run-limit",
+  "file": "jscompat.go",
+  "find": "i+8 <= limit {",
+  "replace": "i+8 <= limit+8 {"
+ },
+ {
+  "name": "js-utf16len-astral",
+  "file": "jscompat.go",
+  "find": "case b >= 0xF0:\n\t\t\tn += 2",
+  "replace": "case b >= 0xF0:\n\t\t\tn++"
+ },
+ {
+  "name": "js-compare-low-surrogate",
+  "file": "jscompat.go",
+  "find": "ua, ub = ra, rb // the same high surrogate",
+  "replace": "ua, ub = 0, 0 // the same high surrogate"
+ },
+ {
   "name": "gh-chain-built-disabled",
   "file": "interceptors.go",
   "find": "if resolved.Enabled {",

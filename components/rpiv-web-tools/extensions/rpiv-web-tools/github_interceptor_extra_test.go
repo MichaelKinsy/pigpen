@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"unicode/utf16"
 )
 
 // Cases beyond the original's: the exact commands and their limits, the clone cache, and the Node
@@ -65,11 +66,24 @@ func TestJSCompat(t *testing.T) {
 		eq(t, utf16Prefix("abc", 10), "abc")
 		eq(t, utf16Prefix("abc", 0), "")
 	})
+	t.Run("UTF-16 length and slice agree with the code unit sequence on mixed strings", func(t *testing.T) {
+		for _, s := range []string{"", "abcdefgh", "abcdefghi", strings.Repeat("a", 23) + "é" + strings.Repeat("b", 17) + "😀" + "tail", strings.Repeat("x", 40) + "😀😀" + strings.Repeat("y", 9), "😀" + strings.Repeat("z", 16), "日本語" + strings.Repeat("q", 8)} {
+			units := utf16.Encode([]rune(s))
+			eq(t, utf16Len(s), len(units))
+			for k := 0; k <= len(units)+2; k++ {
+				want := string(utf16.Decode(units[:min(k, len(units))]))
+				eq(t, utf16Prefix(s, k), want)
+			}
+		}
+	})
 	t.Run("default sort order is by UTF-16 code unit", func(t *testing.T) {
 		eq(t, compareUTF16("😀", "\ue000"), -1)
 		eq(t, compareUTF16("b", "a"), 1)
 		eq(t, compareUTF16("a", "a"), 0)
 		eq(t, compareUTF16("a", "ab"), -1)
+		eq(t, compareUTF16("ab", "a"), 1)
+		eq(t, compareUTF16("😀", "😁"), -1)
+		eq(t, compareUTF16("😁", "😀"), 1)
 	})
 }
 
@@ -77,6 +91,27 @@ func TestGitHubURLActions(t *testing.T) {
 	eq(t, parseGitHubURL("https://github.com/o/r/Issues"), (*githubURLInfo)(nil))
 	eq(t, parseGitHubURL("https://github.com/o/r/foo/bar"), (*githubURLInfo)(nil))
 	eq(t, parseGitHubURL("https://github.com/o/r/blob/main").Type, "blob")
+}
+
+func TestGitHubURLHosts(t *testing.T) {
+	// Hostnames as `new URL(...)` in Node 24 gives them.
+	for in, want := range map[string]bool{
+		"https://%67ithub.com/o/r":            true,
+		"https://\uff47ithub.com/o/r":         true,
+		"https://GITHUB.COM:/o/r":             true,
+		"https://github.com:abc/o/r":          false,
+		"https://u:p@www.GitHub.com:8443/o/r": true,
+		"https://github.com./o/r":             false,
+		"HTTPS://github.com/o/r":              true,
+		"https:github.com/o/r":                true,
+		"https:///github.com/o/r":             true,
+		"https://[::1]/o/r":                   false,
+		"https://127.1/o/r":                   false,
+	} {
+		if (parseGitHubURL(in) != nil) != want {
+			t.Errorf("%q: parsed = %v", in, !want)
+		}
+	}
 }
 
 func TestGitHubURLNormalization(t *testing.T) {
@@ -611,6 +646,18 @@ func TestGitHubCloneListings(t *testing.T) {
 		os.Symlink(filepath.Join(dir, "nowhere"), filepath.Join(dir, "broken"))
 		r := ghIntercept(ctx, g, "https://github.com/o/r/tree/main")
 		ghHas(t, r.Text, "## /\n  broken  (unreadable)\n  escape  (outside repo)")
+	})
+	t.Run("a symlink that stays inside the clone is followed and one deeper down that leaves is skipped", func(t *testing.T) {
+		ctx, g, dir := seed(t, "o/r")
+		os.MkdirAll(filepath.Join(dir, "real"), 0o755)
+		os.MkdirAll(filepath.Join(dir, "sub"), 0o755)
+		os.WriteFile(filepath.Join(dir, "real", "x.txt"), nil, 0o644)
+		if err := os.Symlink("real", filepath.Join(dir, "link")); err != nil {
+			t.Skip("symlinks: " + err.Error())
+		}
+		os.Symlink(os.TempDir(), filepath.Join(dir, "sub", "out"))
+		r := ghIntercept(ctx, g, "https://github.com/o/r")
+		ghHas(t, r.Text, "## Structure\nlink/\nlink/x.txt\nreal/\nreal/x.txt\nsub/\nsub/out  [outside repo skipped]\n")
 	})
 	t.Run("a tree URL naming a file lists nothing readable", func(t *testing.T) {
 		ctx, g, dir := seed(t, "o/r@main")

@@ -130,9 +130,11 @@ def github_config_setup(extra=None):
 
 # gh answers every command with the same text: "20000000" is the size in KB read by parseInt (over the 350 MB
 # threshold), the rest is base64 for the contents calls, and the whole text is the default branch and the tree.
-scenario("github-api-view", "With the interceptor on and gh answering a 20 GB size, a repository root, a blob and a commit URL get the API view.",
-         [[call("web_fetch", url="https://github.com/o/r")],
-          [call("web_fetch", url="https://github.com/o/r/blob/main/README.md")],
+# Only blob URLs: a root or tree view starts the tree and README reads together, and the original's own command
+# events then interleave differently from run to run.
+scenario("github-api-view", "With the interceptor on and gh answering a 20 GB size, a blob URL, a blob in a subdirectory and a commit URL get the API view.",
+         [[call("web_fetch", url="https://github.com/o/r/blob/main/README.md")],
+          [call("web_fetch", url="https://github.com/o/r/blob/dev/docs/guide/intro.md")],
           [call("web_fetch", url="https://github.com/o/r/blob/0123456789abcdef0123456789abcdef01234567/src/a.go")]],
          setup=github_config_setup(), env=GH_ENV,
          commands={"gh": {"mode": "canned", "stdout": "20000000UkVBRE1FIGhlbGxvCg==", "exit": 0}, "git": {"mode": "missing"}})

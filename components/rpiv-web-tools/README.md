@@ -62,7 +62,7 @@ option takes effect on the next session.
   `execFile`. Smaller differences: the one-time "install `gh`" hint goes to the extension's stderr; the original's
   programmatic consumer opt-in (`registerWebTools(pi, { interceptors: { github: true } })`) has no counterpart in the Pi
   package manifest, so only the user's config switches the interceptor on; and a URL of a scheme other than http(s)
-  never reaches the interceptor (the tool refuses it first); the tree and README reads of an API view run one after the other, where the original starts them together, so that the host sees its commands in the original's order. See [port/PORT.md](port/PORT.md).
+  never reaches the interceptor (the tool refuses it first). See [port/PORT.md](port/PORT.md).
 - **Renderers return lines** (the Go SDK cannot return a TUI component), laid out at the width the host gives.
 - **Network failures read as in Node.** A transport failure reads `fetch failed`, as Node's fetch reports it.
 

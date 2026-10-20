@@ -70,35 +70,63 @@ var fullSHARe = regexp.MustCompile(`^[0-9a-f]{40}$`)
 // Standard serializes it and the percent-decoded path segments (dot segments resolved, empty ones dropped).
 // A URL of another scheme, which the tool refuses before the chain runs, is not parsed here.
 func githubURLParts(raw string) (host string, segments []string, ok bool) {
-	s := strings.TrimFunc(raw, func(r rune) bool { return r <= 0x20 })
-	s = strings.Map(func(r rune) rune {
-		if r == '\t' || r == '\n' || r == '\r' {
-			return -1
-		}
-		return r
-	}, s)
-	m := schemeRe.FindStringSubmatch(s)
-	if m == nil {
+	s := raw
+	if len(s) > 0 && (s[0] <= 0x20 || s[len(s)-1] <= 0x20) {
+		s = strings.TrimFunc(s, func(r rune) bool { return r <= 0x20 })
+	}
+	if strings.ContainsAny(s, "\t\n\r") {
+		s = strings.Map(func(r rune) rune {
+			if r == '\t' || r == '\n' || r == '\r' {
+				return -1
+			}
+			return r
+		}, s)
+	}
+	colon := strings.IndexByte(s, ':')
+	if colon <= 0 || !isSchemeName(s[:colon]) {
 		return "", nil, false
 	}
-	scheme := strings.ToLower(m[1])
-	if scheme != "http" && scheme != "https" {
+	var scheme string
+	switch {
+	case strings.EqualFold(s[:colon], "https"):
+		scheme = "https"
+	case strings.EqualFold(s[:colon], "http"):
+		scheme = "http"
+	default:
 		return "", nil, false
 	}
-	rest := s[len(m[0]):]
+	rest := s[colon+1:]
 	head, tail := rest, ""
 	if cut := strings.IndexAny(rest, "?#"); cut >= 0 {
 		head, tail = rest[:cut], rest[cut:]
 	}
-	head = strings.ReplaceAll(head, "\\", "/")
-	u, err := parseJSURL(scheme + ":" + head + tail)
-	if err != nil {
-		return "", nil, false
+	if strings.IndexByte(head, '\\') >= 0 {
+		head = strings.ReplaceAll(head, "\\", "/")
 	}
 	authAndPath := strings.TrimLeft(head, "/")
-	path := ""
-	if i := strings.Index(authAndPath, "/"); i >= 0 {
-		path = authAndPath[i:]
+	auth, path := authAndPath, ""
+	if i := strings.IndexByte(authAndPath, '/'); i >= 0 {
+		auth, path = authAndPath[:i], authAndPath[i:]
+	}
+	if h, plain := plainHost(auth); plain {
+		host = h
+	} else {
+		// The URL Standard percent-decodes the host before it validates it; url.Parse refuses an escape there.
+		slow := head
+		if strings.Contains(auth, "%") {
+			userinfo, hostport := "", auth
+			if at := strings.LastIndexByte(auth, '@'); at >= 0 {
+				userinfo, hostport = auth[:at+1], auth[at+1:]
+			}
+			if d, ok := decodeURIComponent(hostport); ok {
+				slow = "//" + userinfo + d + path
+			}
+		}
+		u, err := parseJSURL(scheme + ":" + slow + tail)
+		if err != nil {
+			return "", nil, false
+		}
+		host = u.Hostname
 	}
 	var parts []string
 	if path != "" {
@@ -131,7 +159,7 @@ func githubURLParts(raw string) (host string, segments []string, ok bool) {
 		}
 		segments = append(segments, p)
 	}
-	return u.Hostname, segments, true
+	return host, segments, true
 }
 
 // parseGitHubURL is parseGitHubUrl: nil unless the URL is a repository root, or a blob or tree URL, of
@@ -478,10 +506,14 @@ func (g *githubInterceptor) fetchViaAPI(ctx context.Context, owner, repo string,
 		lines = truncateInline(lines, content, "\n[File truncated at 100K chars]")
 		return &fetchResponse{Text: strings.Join(lines, "\n"), Title: owner + "/" + repo + " - " + info.Path, ContentType: "text/plain"}
 	}
-	// The original starts both reads at once (Promise.all). They run one after the other here, tree first, so
-	// the host sees the commands in the order the original starts them; a parallel pair would race for it.
-	tree, treeOK := g.fetchTreeViaAPI(ctx, owner, repo, ref)
-	readme, readmeOK := g.fetchReadmeViaAPI(ctx, owner, repo, ref)
+	// Both reads start at once, as the original's Promise.all starts them.
+	var tree, readme string
+	var treeOK, readmeOK bool
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() { defer wg.Done(); readme, readmeOK = g.fetchReadmeViaAPI(ctx, owner, repo, ref) }()
+	tree, treeOK = g.fetchTreeViaAPI(ctx, owner, repo, ref)
+	wg.Wait()
 	treeOK = treeOK && tree != ""
 	readmeOK = readmeOK && readme != ""
 	if !treeOK && !readmeOK {
@@ -640,22 +672,38 @@ func isBinaryFile(filePath string) bool {
 	return slices.Contains(buf[:n], 0)
 }
 
-// resolveWithinRepo is the candidate path for rel inside root, or false when it leaves the root, also through
-// a symlink. upstream: github.ts:640-660.
-func resolveWithinRepo(rootPath, rel string) (string, bool) {
+// repoPaths resolves paths inside one clone, remembering the real path of its root.
+type repoPaths struct {
+	root     string
+	realRoot string
+	realOK   bool
+	realDone bool
+}
+
+func newRepoPaths(rootPath string) *repoPaths {
 	root, err := filepath.Abs(rootPath)
 	if err != nil {
-		return "", false
+		root = filepath.Clean(rootPath)
 	}
+	return &repoPaths{root: root}
+}
+
+// resolveWithinRepo is the candidate path for rel inside the clone at rootPath, or false when it leaves the
+// root, also through a symlink. upstream: github.ts:640-660.
+func resolveWithinRepo(rootPath, rel string) (string, bool) {
+	return newRepoPaths(rootPath).resolve(rel)
+}
+
+func (r *repoPaths) resolve(rel string) (string, bool) {
 	var candidate string
 	if filepath.IsAbs(rel) {
 		candidate = filepath.Clean(rel)
 	} else {
-		candidate = filepath.Join(root, rel)
+		candidate = filepath.Join(r.root, rel)
 	}
 	sep := string(os.PathSeparator)
-	if candidate != root {
-		prefix := root
+	if candidate != r.root {
+		prefix := r.root
 		if !strings.HasSuffix(prefix, sep) {
 			prefix += sep
 		}
@@ -666,18 +714,37 @@ func resolveWithinRepo(rootPath, rel string) (string, bool) {
 	if _, err := os.Stat(candidate); err != nil {
 		return candidate, true
 	}
-	realRoot, err := filepath.EvalSymlinks(root)
-	if err != nil {
+	if !r.realDone {
+		real, err := filepath.EvalSymlinks(r.root)
+		r.realRoot, r.realOK, r.realDone = real, err == nil, true
+	}
+	if !r.realOK {
 		return "", false
+	}
+	if candidate == r.root {
+		return candidate, true
+	}
+	// Without a symlink below the root the real path is the real root plus the same tail, which is inside it.
+	plain := true
+	p := r.root
+	for _, part := range strings.Split(strings.TrimPrefix(candidate, r.root+sep), sep) {
+		p = filepath.Join(p, part)
+		if fi, err := os.Lstat(p); err != nil || fi.Mode()&os.ModeSymlink != 0 {
+			plain = false
+			break
+		}
+	}
+	if plain {
+		return candidate, true
 	}
 	realCandidate, err := filepath.EvalSymlinks(candidate)
 	if err != nil {
 		return "", false
 	}
-	if realCandidate == realRoot {
+	if realCandidate == r.realRoot {
 		return candidate, true
 	}
-	realPrefix := realRoot
+	realPrefix := r.realRoot
 	if !strings.HasSuffix(realPrefix, sep) {
 		realPrefix += sep
 	}
@@ -702,6 +769,7 @@ func readDirSorted(dir string) ([]string, error) {
 }
 
 func buildTree(rootPath string) string {
+	rp := newRepoPaths(rootPath)
 	var entries []string
 	var walk func(dir, relPath string)
 	walk = func(dir, relPath string) {
@@ -723,7 +791,7 @@ func buildTree(rootPath string) string {
 			if relPath != "" {
 				rel = relPath + "/" + item
 			}
-			safePath, ok := resolveWithinRepo(rootPath, rel)
+			safePath, ok := rp.resolve(rel)
 			if !ok {
 				entries = append(entries, rel+"  [outside repo skipped]")
 				continue
@@ -752,7 +820,8 @@ func buildTree(rootPath string) string {
 }
 
 func buildDirListing(rootPath, subPath string) string {
-	target, ok := resolveWithinRepo(rootPath, subPath)
+	rp := newRepoPaths(rootPath)
+	target, ok := rp.resolve(subPath)
 	if !ok {
 		return "(path escapes repository root)"
 	}
@@ -769,7 +838,7 @@ func buildDirListing(rootPath, subPath string) string {
 		if subPath != "" {
 			rel = subPath + "/" + item
 		}
-		safePath, ok := resolveWithinRepo(rootPath, rel)
+		safePath, ok := rp.resolve(rel)
 		if !ok {
 			lines = append(lines, "  "+item+"  (outside repo)")
 			continue
@@ -867,4 +936,55 @@ func generateCloneContent(localPath string, info *githubURLInfo) string {
 	lines = truncateInline(lines, decodeUTF8Lossy(data), "\n[File truncated at 100K chars. Full file: "+full+"]")
 	lines = append(lines, "", githubExploreHint)
 	return strings.Join(lines, "\n")
+}
+
+// isSchemeName reports whether s is a URL scheme: a letter, then letters, digits, "+", "-" and ".".
+func isSchemeName(s string) bool {
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z':
+		case i > 0 && (c >= '0' && c <= '9' || c == '+' || c == '-' || c == '.'):
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// plainHost reads the host of an authority made only of ASCII letters, digits, dots and hyphens (after any
+// user information and numeric port), which the URL Standard lower-cases and leaves otherwise as it is. Such a
+// host is "github.com" or "www.github.com" exactly when it equals them, and any other one is not a GitHub host
+// however it is written, so it is given as "other" without the full host parser. Anything else (an escape,
+// brackets, a non-ASCII character, a port that is not a number) goes to the full parser.
+func plainHost(auth string) (string, bool) {
+	if at := strings.LastIndexByte(auth, '@'); at >= 0 {
+		auth = auth[at+1:]
+	}
+	host := auth
+	if i := strings.LastIndexByte(auth, ':'); i >= 0 {
+		port := auth[i+1:]
+		for j := 0; j < len(port); j++ {
+			if port[j] < '0' || port[j] > '9' {
+				return "", false
+			}
+		}
+		host = auth[:i]
+	}
+	if host == "" {
+		return "", false
+	}
+	for i := 0; i < len(host); i++ {
+		c := host[i]
+		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '.' || c == '-') {
+			return "", false
+		}
+	}
+	switch {
+	case strings.EqualFold(host, "github.com"):
+		return "github.com", true
+	case strings.EqualFold(host, "www.github.com"):
+		return "www.github.com", true
+	}
+	return "other", true
 }

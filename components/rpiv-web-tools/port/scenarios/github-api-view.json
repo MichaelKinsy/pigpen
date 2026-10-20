@@ -1,13 +1,13 @@
 {
   "name": "github-api-view",
-  "description": "With the interceptor on and gh answering a 20 GB size, a repository root, a blob and a commit URL get the API view.",
+  "description": "With the interceptor on and gh answering a 20 GB size, a blob URL, a blob in a subdirectory and a commit URL get the API view.",
   "llm": [
     {
       "toolCalls": [
         {
           "name": "web_fetch",
           "arguments": {
-            "url": "https://github.com/o/r"
+            "url": "https://github.com/o/r/blob/main/README.md"
           }
         }
       ]
@@ -17,7 +17,7 @@
         {
           "name": "web_fetch",
           "arguments": {
-            "url": "https://github.com/o/r/blob/main/README.md"
+            "url": "https://github.com/o/r/blob/dev/docs/guide/intro.md"
           }
         }
       ]
