@@ -51,7 +51,7 @@ never falls back or runs part of the call:
 - the search providers not listed above (a provider that is selected, listed, configured, or
   reached in `auto`, `"all"` or `searchRouting` with a credential set);
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
-- `fetch_content` `mode: "answer"` and `auth` (authenticated fetch);
+- `fetch_content` `mode: "answer"`;
 - `fetch_content` URLs the original hands to an extractor: YouTube, local video files, video
   `frames` and `timestamp`, GitHub repositories, issues and pull requests (while their config
   sections are not disabled), and PDFs;
@@ -101,8 +101,10 @@ uniqueness, and `web_enable` is reserved for the loader).
   NAT64 and 6to4 addresses are refused (also after redirects, and at dial time for direct
   connections), and redirects are limited and re-validated. Page bodies are capped at 5 MB and
   images at 64 megapixels before decoding. `ssrf.allowRanges` exempts CIDR ranges you choose (TUN / fake-IP proxies).
-- No browser cookies or credentials are read. Authenticated fetch, Gemini Web and Chrome cookie
-  extraction are not part of this port.
+- No browser profile is read unless you opt in (`allowBrowserCookies` in `web-search.json`, or
+  `PI_ALLOW_BROWSER_COOKIES=1`). Authenticated fetch (`auth`) and Gemini Web then read your Chromium
+  cookies through `security`, `secret-tool`, `kwallet-query`, `powershell.exe`, `sqlite3` and `python3`,
+  exactly as the original does; cookies are sent only to the origin they belong to.
 - No paid provider is called without configuration. With nothing configured, `web_search`
   (provider `auto`) sends the query to the keyless Exa MCP (`mcp.exa.ai`), as the original does;
   that is also what `exa` uses with no key. Exclude it with `webSearch.allowedProviders` or
