@@ -353,6 +353,12 @@
     }
    },
    {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
     "op": "shutdown",
     "reason": "quit"
    }
@@ -1579,8 +1585,8 @@
   ]
  },
  {
-  "name": "fresh-session",
-  "description": "session_start after a replacement shutdown",
+  "name": "second-session-start",
+  "description": "a second session_start on one instance does not reset the blocked counters: it reports blocked with the new resume command",
   "steps": [
    {
     "op": "start"
@@ -1589,7 +1595,7 @@
     "op": "bus",
     "data": {
      "active": true,
-     "label": "stale"
+     "label": "held"
     }
    },
    {
@@ -1598,7 +1604,6 @@
    },
    {
     "op": "start",
-    "fresh": true,
     "ctx": {
      "file": "/x/s2.jsonl",
      "id": "s2"
@@ -1606,6 +1611,15 @@
    },
    {
     "op": "agent_start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "agent_settled"
    }
   ]
  },

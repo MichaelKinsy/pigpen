@@ -414,15 +414,14 @@ func (r *reporter) isRoot() bool {
 	return r.rootSession
 }
 
-// start opens a reporting epoch (ts:242-247). Pi loads a fresh copy of the extension for every session, so the
-// counters and dedupe state start over here as they do there. An isIdle failure fails the handler after the session
-// and its resume command are recorded, as a throwing isIdle() does in the original.
+// start is the session_start handler's state change (ts:242-247). It keeps everything else as it is, the blocked counters
+// included: the original does not reset them (a second session_start on one instance does not occur under Pi, which loads
+// a fresh copy of the module for every session). An isIdle failure fails the handler after the session and its resume
+// command are recorded, as a throwing isIdle() does in the original.
 func (r *reporter) start(resume []string, active bool, idleErr error) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.rootSession = true
-	r.blockedCount, r.blockedMessage = [holderCount]int{}, jsValue{}
-	r.hasLast = false
 	r.resume = resume
 	if idleErr != nil {
 		return idleErr
@@ -502,42 +501,61 @@ func (r *reporter) publishLocked(force bool) {
 	r.queueLocked(state, message)
 }
 
-// queueLocked is queueState (ts:149-154).
+// queueLocked is queueState (ts:149-154). When nothing is in flight the drain starts at once on this state, as the
+// original's drainStateQueue takes the queued state synchronously, so a following event cannot replace it.
 func (r *reporter) queueLocked(state agentState, message jsValue) {
 	r.queued = &report{state: state, message: message, seq: nextSeq()}
 	if !r.sending {
 		r.sending = true
-		go r.drain()
+		first := r.takeLocked()
+		go r.drain(first)
 	}
 }
 
+// takeLocked removes the queued state and builds its request. The resume command goes out as it is when the request is
+// built, not when the state was queued (ts:129-133).
+func (r *reporter) takeLocked() *outgoing {
+	next := r.queued
+	r.queued = nil
+	if next == nil {
+		return nil
+	}
+	return &outgoing{message: next.message, payload: statePayload{
+		PaneID: r.env.paneID, Source: source, Agent: agent, State: next.state, Seq: next.seq,
+		ResumeArgv: append([]string(nil), r.resume...),
+	}}
+}
+
+// outgoing is a state report ready to send.
+type outgoing struct {
+	message jsValue
+	payload statePayload
+}
+
 // drain sends queued reports one at a time until none is left (ts:156-174).
-func (r *reporter) drain() {
-	for {
-		r.mu.Lock()
-		next := r.queued
-		r.queued = nil
-		if next == nil {
-			r.sending = false
-			r.mu.Unlock()
-			return
-		}
-		// The resume command goes out as it is when the request is built, not when the state was queued (ts:129-133).
-		payload := statePayload{
-			PaneID: r.env.paneID, Source: source, Agent: agent, State: next.state, Seq: next.seq,
-			ResumeArgv: append([]string(nil), r.resume...),
-		}
-		r.mu.Unlock()
+func (r *reporter) drain(next *outgoing) {
+	for ; next != nil; next = r.nextOutgoing() {
 		if next.message.defined {
 			raw, err := marshalValue(next.message.value)
 			if err != nil {
 				r.diagnose("pane.report_agent", err)
 				continue
 			}
-			payload.Message = raw
+			next.payload.Message = raw
 		}
-		r.send("state", "pane.report_agent", payload)
+		r.send("state", "pane.report_agent", next.payload)
 	}
+}
+
+// nextOutgoing takes the next queued state, or ends the drain.
+func (r *reporter) nextOutgoing() *outgoing {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	next := r.takeLocked()
+	if next == nil {
+		r.sending = false
+	}
+	return next
 }
 
 // marshalValue is JSON.stringify of a decoded value, without HTML escaping.

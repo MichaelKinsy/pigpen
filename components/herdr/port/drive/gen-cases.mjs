@@ -3,10 +3,6 @@
 //
 //   node gen-cases.mjs
 //
-// `fresh: true` on a start step is a session replacement under Pi: Pi shuts the old extension instance down, loads a fresh
-// copy of the module (core/extensions/loader.ts moduleCache: false) and starts the new session on it, so the driver
-// imports the module again; the Go port is one instance that session_start resets.
-//
 // A case: env (overrides of the herdr variables; null unsets), mode, ctx (the defaults of every event's ctx), server
 // (how the fake herdr answers), steps and finalMs. A step is {op, ...}: start, agent_start, agent_settled, shutdown
 // (reason), bus (data) or sleep (ms); `ctx` overrides the case's for that event; `waitMs` is the quiet time after it.
@@ -41,7 +37,7 @@ add("start-mid-turn", "a reload mid-turn starts as working", { ctx: { idle: fals
 add("settled-while-running", "agent_settled with isIdle() false is ignored", { steps: [START, { op: "agent_start" }, { op: "agent_settled", ctx: { idle: false } }] });
 add("settled-idle-throws", "isIdle() throws at agent_settled", { steps: [START, { op: "agent_start" }, { op: "agent_settled", ctx: { idle: "throws" } }, { op: "agent_settled", ctx: { idle: true } }] });
 add("start-idle-throws", "isIdle() throws at session_start: the handler fails, the session is still the root", { ctx: { idle: "throws" }, steps: [START, { op: "agent_start" }, { op: "agent_settled", ctx: { idle: true } }] });
-add("events-before-start", "agent events before session_start are ignored", { steps: [{ op: "agent_start" }, { op: "agent_settled" }, { op: "bus", data: { active: true, label: "early" } }, { op: "shutdown", reason: "quit" }] });
+add("events-before-start", "agent events before session_start are ignored", { steps: [{ op: "agent_start" }, { op: "agent_settled" }, { op: "bus", data: { active: true, label: "early" } }, { op: "bus", data: { active: false } }, { op: "shutdown", reason: "quit" }] });
 add("resume-changes-mid-turn", "the same state is reported again when the resume command changed", { steps: [START, { op: "agent_start" }, { op: "agent_start", ctx: { file: "/home/user/.pig/agent/sessions/two.jsonl" } }, { op: "agent_start", ctx: { file: "/home/user/.pig/agent/sessions/two.jsonl" } }, { op: "agent_settled" }] });
 
 // Resume command.
@@ -99,7 +95,7 @@ add("quit", "quit releases once", { steps: [START, { op: "agent_start" }, { op: 
 add("quit-after-resume-shutdown", "a resume shutdown and then quit, as the original's test does", { steps: [START, { op: "shutdown", reason: "resume" }, { op: "shutdown", reason: "quit" }] });
 add("quit-never-started", "quit before any session_start", { steps: [{ op: "shutdown", reason: "quit" }] });
 add("quit-blocked", "quit while blocked drops nothing queued after it", { steps: [START, { op: "agent_start" }, { op: "bus", data: { active: true, label: "A" } }, { op: "shutdown", reason: "quit" }] });
-add("fresh-session", "session_start after a replacement shutdown", { steps: [START, { op: "bus", data: { active: true, label: "stale" } }, { op: "shutdown", reason: "new" }, { op: "start", fresh: true, ctx: { file: "/x/s2.jsonl", id: "s2" } }, { op: "agent_start" }] });
+add("second-session-start", "a second session_start on one instance does not reset the blocked counters: it reports blocked with the new resume command", { steps: [START, { op: "bus", data: { active: true, label: "held" } }, { op: "shutdown", reason: "new" }, { op: "start", ctx: { file: "/x/s2.jsonl", id: "s2" } }, { op: "agent_start" }, { op: "bus", data: { active: false } }, { op: "agent_settled" }] });
 
 // Transport.
 add("retry-after-close", "the first connection ends without an answer", { server: { behaviors: ["close"] }, steps: [START, { op: "agent_start", waitMs: 200 }], finalMs: 300 });

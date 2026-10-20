@@ -1,0 +1,8 @@
+{
+  "name": "outside-herdr",
+  "description": "No herdr variables: the extension registers nothing, so a turn looks like a host without it.",
+  "llm": [{"text": "hello"}],
+  "steps": [
+    {"name": "turn", "rpc": {"type": "prompt", "message": "hi"}}
+  ]
+}

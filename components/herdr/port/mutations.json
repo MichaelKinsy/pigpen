@@ -1,0 +1,428 @@
+[
+ {
+  "name": "source-custom-pig",
+  "file": "extension.go",
+  "find": "source = \"pig\"",
+  "replace": "source = \"custom:pig\""
+ },
+ {
+  "name": "agent-name",
+  "file": "extension.go",
+  "find": "agent  = \"pig\"",
+  "replace": "agent  = \"herdr\""
+ },
+ {
+  "name": "first-attempt-5s",
+  "file": "extension.go",
+  "find": "firstAttempt = 500 * time.Millisecond",
+  "replace": "firstAttempt = 5 * time.Second"
+ },
+ {
+  "name": "retry-attempt-3s",
+  "file": "extension.go",
+  "find": "retryAttempt = 1500 * time.Millisecond",
+  "replace": "retryAttempt = 3 * time.Second"
+ },
+ {
+  "name": "no-retry",
+  "file": "extension.go",
+  "find": "\tif err != nil {\n\t\terr = attempt(r.env.endpoint, line, retryAttempt)\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "env-requires-bin-path",
+  "file": "extension.go",
+  "find": "getenv(\"HERDR_ENV\") != \"1\" || socket == \"\"",
+  "replace": "getenv(\"HERDR_ENV\") != \"1\" || getenv(\"HERDR_BIN_PATH\") == \"\" || socket == \"\""
+ },
+ {
+  "name": "env-ignores-pane-id",
+  "file": "extension.go",
+  "find": "socket == \"\" || pane == \"\"",
+  "replace": "socket == \"\""
+ },
+ {
+  "name": "env-ignores-socket-path",
+  "file": "extension.go",
+  "find": "socket == \"\" || pane == \"\"",
+  "replace": "pane == \"\""
+ },
+ {
+  "name": "env-any-herdr-env",
+  "file": "extension.go",
+  "find": "getenv(\"HERDR_ENV\") != \"1\"",
+  "replace": "getenv(\"HERDR_ENV\") == \"\""
+ },
+ {
+  "name": "windows-pipe-prefix-dropped",
+  "file": "extension.go",
+  "find": "return `\\\\.\\pipe\\` + socketPath",
+  "replace": "return socketPath"
+ },
+ {
+  "name": "mode-guard-dropped",
+  "file": "extension.go",
+  "find": "if ctx.Mode() != \"tui\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "notify-in-every-mode",
+  "file": "extension.go",
+  "find": "\t\t// TUI only: print, JSON and RPC modes have no pane for herdr to show (ts:238-241).\n",
+  "replace": "\t\t_ = ctx.Notify(\"herdr\", \"info\")\n\t\t// TUI only: print, JSON and RPC modes have no pane for herdr to show (ts:238-241).\n"
+ },
+ {
+  "name": "start-idle-inverted",
+  "file": "extension.go",
+  "find": "err == nil && !idle",
+  "replace": "err == nil && idle"
+ },
+ {
+  "name": "settled-ignores-idle",
+  "file": "extension.go",
+  "find": "\t\tif idle {\n\t\t\tr.agentSettled()",
+  "replace": "\t\tif true {\n\t\t\tr.agentSettled()"
+ },
+ {
+  "name": "settled-swallows-idle-error",
+  "file": "extension.go",
+  "find": "\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tif idle {",
+  "replace": "\t\tif err != nil {\n\t\t\treturn nil, nil\n\t\t}\n\t\tif idle {"
+ },
+ {
+  "name": "start-swallows-idle-error",
+  "file": "extension.go",
+  "find": "\tif idleErr != nil {\n\t\treturn idleErr\n\t}\n\tr.agentActive = active",
+  "replace": "\tr.agentActive = active"
+ },
+ {
+  "name": "agent-start-ignores-root",
+  "file": "extension.go",
+  "find": "\t\tif !r.isRoot() {\n\t\t\treturn nil, nil\n\t\t}\n\t\tfile, id := sessionIdentity(ctx)\n\t\tr.agentStarted",
+  "replace": "\t\tfile, id := sessionIdentity(ctx)\n\t\tr.agentStarted"
+ },
+ {
+  "name": "shutdown-releases-on-any-reason",
+  "file": "extension.go",
+  "find": "reason != \"quit\"",
+  "replace": "reason == \"none\""
+ },
+ {
+  "name": "release-keeps-queued",
+  "file": "extension.go",
+  "find": "\tr.rootSession = false\n\tr.queued = nil\n\tseq := nextSeq()",
+  "replace": "\tr.rootSession = false\n\tseq := nextSeq()"
+ },
+ {
+  "name": "release-keeps-root",
+  "file": "extension.go",
+  "find": "\tr.rootSession = false\n\tr.queued = nil\n\tseq := nextSeq()",
+  "replace": "\tr.queued = nil\n\tseq := nextSeq()"
+ },
+ {
+  "name": "release-method-report",
+  "file": "extension.go",
+  "find": "\"pane.release_agent\"",
+  "replace": "\"pane.report_agent\""
+ },
+ {
+  "name": "report-method-release",
+  "file": "extension.go",
+  "find": "r.send(\"state\", \"pane.report_agent\", payload)",
+  "replace": "r.send(\"state\", \"pane.release_agent\", payload)"
+ },
+ {
+  "name": "release-agent-name",
+  "file": "extension.go",
+  "find": "Agent: agent, Seq: seq})",
+  "replace": "Agent: \"herdr\", Seq: seq})"
+ },
+ {
+  "name": "release-id-kind",
+  "file": "extension.go",
+  "find": "r.send(\"release\", \"pane.release_agent\"",
+  "replace": "r.send(\"state\", \"pane.release_agent\""
+ },
+ {
+  "name": "report-sent-twice",
+  "file": "extension.go",
+  "find": "\t\tr.send(\"state\", \"pane.report_agent\", payload)\n",
+  "replace": "\t\tr.send(\"state\", \"pane.report_agent\", payload)\n\t\tr.send(\"state\", \"pane.report_agent\", payload)\n"
+ },
+ {
+  "name": "seq-not-clock-seeded",
+  "file": "extension.go",
+  "find": "lastSeq = max(lastSeq+1, time.Now().UnixMicro())",
+  "replace": "lastSeq = lastSeq + 1"
+ },
+ {
+  "name": "seq-in-milliseconds",
+  "file": "extension.go",
+  "find": "lastSeq = max(lastSeq+1, time.Now().UnixMicro())",
+  "replace": "lastSeq = max(lastSeq+1, time.Now().UnixMilli()*1000)"
+ },
+ {
+  "name": "dedupe-dropped",
+  "file": "extension.go",
+  "find": "if !force && r.hasLast &&",
+  "replace": "if false && r.hasLast &&"
+ },
+ {
+  "name": "dedupe-ignores-message",
+  "file": "extension.go",
+  "find": "message.strictEquals(r.lastMessage)",
+  "replace": "true"
+ },
+ {
+  "name": "dedupe-ignores-resume",
+  "file": "extension.go",
+  "find": "hasResume == r.hasResume && resume == r.lastResume",
+  "replace": "true"
+ },
+ {
+  "name": "dedupe-ignores-resume-presence",
+  "file": "extension.go",
+  "find": "hasResume == r.hasResume && resume == r.lastResume",
+  "replace": "resume == r.lastResume"
+ },
+ {
+  "name": "objects-equal-by-value",
+  "file": "extension.go",
+  "find": "\t\treturn a.ref == b.ref\n",
+  "replace": "\t\treturn true\n"
+ },
+ {
+  "name": "truthy-zero",
+  "file": "extension.go",
+  "find": "return v != 0",
+  "replace": "return true"
+ },
+ {
+  "name": "truthy-empty-string",
+  "file": "extension.go",
+  "find": "return v != \"\"\n\tdefault:",
+  "replace": "return true\n\tdefault:"
+ },
+ {
+  "name": "truthy-objects-false",
+  "file": "extension.go",
+  "find": "\tdefault:\n\t\treturn true\n\t}\n}\n\nvar (\n\tseqMu",
+  "replace": "\tdefault:\n\t\treturn false\n\t}\n}\n\nvar (\n\tseqMu"
+ },
+ {
+  "name": "truthy-null-true",
+  "file": "extension.go",
+  "find": "\tcase nil:\n\t\treturn false",
+  "replace": "\tcase nil:\n\t\treturn true"
+ },
+ {
+  "name": "blocked-count-unbounded",
+  "file": "extension.go",
+  "find": "r.blockedCount[h] = max(0, r.blockedCount[h]-1)",
+  "replace": "r.blockedCount[h]--"
+ },
+ {
+  "name": "release-keeps-message",
+  "file": "extension.go",
+  "find": "\tif !r.blockedLocked() {\n\t\tr.blockedMessage = jsValue{}\n\t}",
+  "replace": "\tif !r.blockedLocked() {\n\t}"
+ },
+ {
+  "name": "block-ignores-root",
+  "file": "extension.go",
+  "find": "\tif !r.rootSession {\n\t\treturn\n\t}\n\tr.blockedCount[h]++",
+  "replace": "\tr.blockedCount[h]++"
+ },
+ {
+  "name": "unblock-ignores-root",
+  "file": "extension.go",
+  "find": "\tif !r.rootSession {\n\t\treturn\n\t}\n\tr.blockedCount[h] = max",
+  "replace": "\tr.blockedCount[h] = max"
+ },
+ {
+  "name": "first-label-wins",
+  "file": "extension.go",
+  "find": "\tr.blockedMessage = label\n",
+  "replace": "\tif !r.blockedMessage.defined {\n\t\tr.blockedMessage = label\n\t}\n"
+ },
+ {
+  "name": "holders-release-each-other",
+  "file": "extension.go",
+  "find": "r.blockedCount[h] = max(0, r.blockedCount[h]-1)",
+  "replace": "r.blockedCount[holderBus] = max(0, r.blockedCount[holderBus]-1)"
+ },
+ {
+  "name": "message-always-sent",
+  "file": "extension.go",
+  "find": "if next.message.defined {",
+  "replace": "if true {"
+ },
+ {
+  "name": "html-escaped-in-message",
+  "file": "extension.go",
+  "find": "func marshalValue(v any) (json.RawMessage, error) {\n\tvar buf bytes.Buffer\n\tenc := json.NewEncoder(&buf)\n\tenc.SetEscapeHTML(false)",
+  "replace": "func marshalValue(v any) (json.RawMessage, error) {\n\tvar buf bytes.Buffer\n\tenc := json.NewEncoder(&buf)\n\tenc.SetEscapeHTML(true)"
+ },
+ {
+  "name": "html-escaped-in-request",
+  "file": "extension.go",
+  "find": "\tenc.SetEscapeHTML(false)\n\tif err := enc.Encode(req); err != nil {",
+  "replace": "\tenc.SetEscapeHTML(true)\n\tif err := enc.Encode(req); err != nil {"
+ },
+ {
+  "name": "line-separators-escaped",
+  "file": "extension.go",
+  "find": "return rawLineSeparators(buf.Bytes()), nil",
+  "replace": "return buf.Bytes(), nil"
+ },
+ {
+  "name": "backslash-before-separator-ignored",
+  "file": "extension.go",
+  "find": "\t\tcase b[i] == '\\\\' && i+1 < len(b) && b[i+1] == '\\\\':",
+  "replace": "\t\tcase false:"
+ },
+ {
+  "name": "apostrophe-is-safe",
+  "file": "extension.go",
+  "find": "if r == '\\'' || r < 0x20 || r == 0x7f {",
+  "replace": "if r < 0x20 || r == 0x7f {"
+ },
+ {
+  "name": "del-is-safe",
+  "file": "extension.go",
+  "find": "if r == '\\'' || r < 0x20 || r == 0x7f {",
+  "replace": "if r == '\\'' || r < 0x20 {"
+ },
+ {
+  "name": "c1-is-unsafe",
+  "file": "extension.go",
+  "find": "if r == '\\'' || r < 0x20 || r == 0x7f {",
+  "replace": "if r == '\\'' || unicode.IsControl(r) {"
+ },
+ {
+  "name": "tab-is-safe",
+  "file": "extension.go",
+  "find": "if r == '\\'' || r < 0x20 || r == 0x7f {",
+  "replace": "if r == '\\'' || r < 0x09 || r > 0x09 && r < 0x20 || r == 0x7f {"
+ },
+ {
+  "name": "empty-is-safe",
+  "file": "extension.go",
+  "find": "\tif value == \"\" {\n\t\treturn false\n\t}\n\tfor _, r := range value {",
+  "replace": "\tfor _, r := range value {"
+ },
+ {
+  "name": "relative-file-accepted",
+  "file": "extension.go",
+  "find": "file != nil && isAbsolutePath(*file) && isSafeResumeArg(*file)",
+  "replace": "file != nil && isSafeResumeArg(*file)"
+ },
+ {
+  "name": "unsafe-file-accepted",
+  "file": "extension.go",
+  "find": "file != nil && isAbsolutePath(*file) && isSafeResumeArg(*file)",
+  "replace": "file != nil && isAbsolutePath(*file)"
+ },
+ {
+  "name": "unsafe-id-accepted",
+  "file": "extension.go",
+  "find": "id != nil && isSafeResumeArg(*id)",
+  "replace": "id != nil"
+ },
+ {
+  "name": "backslash-path-relative",
+  "file": "extension.go",
+  "find": "if p[0] == '/' || p[0] == '\\\\' {",
+  "replace": "if p[0] == '/' {"
+ },
+ {
+  "name": "drive-needs-forward-slash",
+  "file": "extension.go",
+  "find": "(p[2] == '/' || p[2] == '\\\\')",
+  "replace": "p[2] == '/'"
+ },
+ {
+  "name": "drive-without-separator",
+  "file": "extension.go",
+  "find": "len(p) >= 3 && isLetter && p[1] == ':' && (p[2] == '/' || p[2] == '\\\\')",
+  "replace": "len(p) >= 2 && isLetter && p[1] == ':'"
+ },
+ {
+  "name": "resume-uses-session-id-flag",
+  "file": "extension.go",
+  "find": "return []string{\"pig\", \"--session\", *id}",
+  "replace": "return []string{\"pig\", \"--session-id\", *id}"
+ },
+ {
+  "name": "resume-first-word",
+  "file": "extension.go",
+  "find": "return []string{\"pig\", \"--session\", *file}",
+  "replace": "return []string{\"pi\", \"--session\", *file}"
+ },
+ {
+  "name": "session-start-not-root",
+  "file": "extension.go",
+  "find": "\tr.rootSession = true\n\tr.resume = resume\n\tif idleErr",
+  "replace": "\tr.rootSession = false\n\tr.resume = resume\n\tif idleErr"
+ },
+ {
+  "name": "agent-start-keeps-resume",
+  "file": "extension.go",
+  "find": "\tr.resume = resume\n\tr.agentActive = true",
+  "replace": "\tr.agentActive = true"
+ },
+ {
+  "name": "sends-do-not-queue-behind-each-other",
+  "file": "extension.go",
+  "find": "\tif !r.sending {\n\t\tr.sending = true\n\t\tgo r.drain()",
+  "replace": "\tif true {\n\t\tr.sending = true\n\t\tgo r.drain()"
+ },
+ {
+  "name": "prompts-always-on",
+  "file": "extension.go",
+  "find": "if getenv(promptsEnv) == \"1\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "prompts-on-for-any-value",
+  "file": "extension.go",
+  "find": "if getenv(promptsEnv) == \"1\" {",
+  "replace": "if getenv(promptsEnv) != \"\" {"
+ },
+ {
+  "name": "prompt-kind-fallback-dropped",
+  "file": "extension.go",
+  "find": "\t\t\t\ttitle, _ = data[\"kind\"].(string)\n",
+  "replace": ""
+ },
+ {
+  "name": "prompt-message-unshortened",
+  "file": "extension.go",
+  "find": "if len(runes) > maxPromptMessage {",
+  "replace": "if len(runes) > 100000 {"
+ },
+ {
+  "name": "diagnostic-repeats",
+  "file": "extension.go",
+  "find": "\tif !repeat {",
+  "replace": "\tif true {"
+ },
+ {
+  "name": "diagnostic-silent",
+  "file": "extension.go",
+  "find": "\t\tfmt.Fprintln(os.Stderr, msg)",
+  "replace": "\t\t_ = msg"
+ },
+ {
+  "name": "data-without-answer-is-delivery",
+  "file": "transport.go",
+  "find": "\tif n > 0 {\n\t\treturn nil\n\t}",
+  "replace": "\tif n >= 0 {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "start-resets-blocked-counters",
+  "file": "extension.go",
+  "find": "\tr.rootSession = true\n\tr.resume = resume\n\tif idleErr",
+  "replace": "\tr.rootSession = true\n\tr.blockedCount, r.blockedMessage = [holderCount]int{}, jsValue{}\n\tr.resume = resume\n\tif idleErr"
+ }
+]

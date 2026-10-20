@@ -424,6 +424,7 @@
    "ok",
    "ok",
    "ok",
+   "ok",
    "ok"
   ],
   "requests": [],
@@ -2266,7 +2267,7 @@
   "seqFromClock": true
  },
  {
-  "name": "fresh-session",
+  "name": "second-session-start",
   "handlers": [
    "agent_settled",
    "agent_start",
@@ -2281,6 +2282,8 @@
    "ok",
    "ok",
    "ok",
+   "ok",
+   "ok",
    "ok"
   ],
   "requests": [
@@ -2290,15 +2293,23 @@
    },
    {
     "conn": 1,
-    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"stale\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"held\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
    },
    {
     "conn": 2,
-    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/x/s2.jsonl\"]}}"
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"held\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/x/s2.jsonl\"]}}"
    },
    {
     "conn": 3,
-    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":3,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"held\",\"seq\":3,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 4,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":4,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 5,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":5,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
    }
   ],
   "seqFromClock": true

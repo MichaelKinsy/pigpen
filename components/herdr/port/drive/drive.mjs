@@ -84,7 +84,7 @@ for (const [index, c] of cases.entries()) {
   let handlers;
   let busHandlers;
   let instances = 0;
-  // One extension instance: the module is imported fresh, as Pi's loader does for every session.
+  // One extension instance: the module is imported fresh, as the original's own test does.
   const load = async () => {
     handlers = new Map();
     busHandlers = new Map();
@@ -103,7 +103,7 @@ for (const [index, c] of cases.entries()) {
     let result = "ok";
     try {
       switch (step.op) {
-        case "start": if (step.fresh) await load(); await handlers.get("session_start")?.({ reason: "startup" }, ctx); break;
+        case "start": await handlers.get("session_start")?.({ reason: "startup" }, ctx); break;
         case "agent_start": await handlers.get("agent_start")?.({}, ctx); break;
         case "agent_settled": await handlers.get("agent_settled")?.({}, ctx); break;
         case "shutdown": await handlers.get("session_shutdown")?.(step.reason === undefined ? {} : { reason: step.reason }); break;

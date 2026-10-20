@@ -252,7 +252,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/herdr"
       },
-      "manifestSha256": "5687870ce4601995d38c7fe8b90c66e20c3a978200db6257d3efd9ac2954bbde",
+      "manifestSha256": "1170a84a9c2696de12b884fdae31ed1419819796bf893a91fd7b31ee80b79de6",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",

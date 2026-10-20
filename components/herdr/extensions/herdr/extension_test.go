@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -586,12 +587,13 @@ func TestSession(t *testing.T) {
 		}
 	})
 
-	t.Run("a shutdown that is not a quit changes nothing, and the next session_start starts a fresh state", func(t *testing.T) {
-		// Pi loads a fresh copy of the extension for every session (core/extensions/loader.ts moduleCache: false, after
-		// session_shutdown in core/agent-session-runtime.ts), so the blocked counter and the dedupe state start over. A Go
-		// host may keep the extension alive: session_start resets them. A shutdown alone does nothing (ts:266-269).
+	t.Run("a shutdown that is not a quit changes nothing, and a second session_start keeps the blocked counters, as the original does", func(t *testing.T) {
+		// The original does not reset anything at session_start (ts:237-247) and does nothing at a shutdown that is not a
+		// quit (ts:266-269). Under Pi each session gets a fresh copy of the module (core/extensions/loader.ts moduleCache:
+		// false, after session_shutdown in core/agent-session-runtime.ts); a host that keeps the Go extension alive carries
+		// a block over, as the original would on one instance.
 		host, h := startSession(t)
-		host.emit("herdr:blocked", map[string]any{"active": true, "label": "stale"})
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "held"})
 		h.waitFor(2)
 		host.fire("session_shutdown", map[string]any{"reason": "new"})
 		host.fire("agent_start", nil)
@@ -600,13 +602,17 @@ func TestSession(t *testing.T) {
 		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = "/x/s2.jsonl", "s2" })
 		host.fire("session_start", map[string]any{"reason": "new"})
 		all := h.waitFor(3)
-		equalStrings(t, states(all), []string{"idle", "blocked", "idle"})
+		equalStrings(t, states(all), []string{"idle", "blocked", "blocked"})
+		if all[2].Params["message"] != "held" {
+			t.Fatalf("message = %v", all[2].Params["message"])
+		}
 		resume, _ := all[2].Params["resume_argv"].([]any)
 		if len(resume) != 3 || resume[2] != "/x/s2.jsonl" {
 			t.Fatalf("resume_argv = %v", resume)
 		}
-		host.fire("agent_start", nil)
-		equalStrings(t, states(h.waitFor(4)), []string{"idle", "blocked", "idle", "working"})
+		// session_start set agentActive from isIdle() (true here), so the release returns to idle.
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		equalStrings(t, states(h.waitFor(4)), []string{"idle", "blocked", "blocked", "idle"})
 	})
 
 	t.Run("agent events before session_start report nothing", func(t *testing.T) {
@@ -679,8 +685,10 @@ func TestRelease(t *testing.T) {
 			t.Fatalf("quit waited %v for the in-flight report", took)
 		}
 		time.Sleep(900 * time.Millisecond)
+		// The report in flight and the release run concurrently, as in the original: either may arrive first.
 		got := states(h.requests())
-		if len(got) != 2 || got[0] != "idle" || got[1] != "release" {
+		slices.Sort(got)
+		if !slices.Equal(got, []string{"idle", "release"}) {
 			t.Fatalf("requests = %v, want the in-flight report and the release", got)
 		}
 	})

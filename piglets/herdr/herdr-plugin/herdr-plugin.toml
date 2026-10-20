@@ -5,7 +5,7 @@
 
 id = "pigpen-herdr"
 name = "PiG support"
-version = "0.3.0"
+version = "0.4.0"
 description = "Show PiG's idle, working and blocked state in herdr, and restore its sessions after a restart."
 # The reporter sends the resume command with every state report, which herdr
 # takes from 0.9.2.
@@ -24,6 +24,17 @@ platforms = ["linux", "macos"]
 
 [[build]]
 command = ["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "scripts/pig-support.ps1", "install"]
+platforms = ["windows"]
+
+# Keeps an installed copy of the Package in step with this plugin's pinned version.
+# It does nothing when the Package is not installed, so uninstalling it sticks, and
+# it never fails herdr's startup.
+[[startup]]
+command = ["/bin/sh", "scripts/pig-support.sh", "refresh"]
+platforms = ["linux", "macos"]
+
+[[startup]]
+command = ["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "scripts/pig-support.ps1", "refresh"]
 platforms = ["windows"]
 
 [[actions]]
