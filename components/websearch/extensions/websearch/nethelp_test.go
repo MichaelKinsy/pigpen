@@ -26,6 +26,8 @@ type netCall struct {
 	Body   string
 	// Proxy is the proxy the call's context scopes ("" = none / direct).
 	Proxy string
+	// Ctx is the request's context, for assertions on its deadline and cancellation.
+	Ctx context.Context
 }
 
 // netReply is a canned response; Err simulates a transport failure.
@@ -34,6 +36,8 @@ type netReply struct {
 	Body   string
 	Header http.Header
 	Err    error
+	// Hang holds the request until its context ends, like a server that never answers.
+	Hang bool
 }
 
 func reply(status int, body string) netReply { return netReply{Status: status, Body: body} }
@@ -48,7 +52,7 @@ func (f *fakeNet) Do(r *http.Request) (*http.Response, error) {
 		b, _ := io.ReadAll(r.Body)
 		body = string(b)
 	}
-	c := netCall{URL: r.URL.String(), Method: r.Method, Header: r.Header.Clone(), Body: body, Proxy: activeProxy(r.Context())}
+	c := netCall{URL: r.URL.String(), Method: r.Method, Header: r.Header.Clone(), Body: body, Proxy: activeProxy(r.Context()), Ctx: r.Context()}
 	f.mu.Lock()
 	f.calls = append(f.calls, c)
 	f.mu.Unlock()
@@ -56,6 +60,10 @@ func (f *fakeNet) Do(r *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 	rep := f.fn(c)
+	if rep.Hang {
+		<-r.Context().Done()
+		return nil, r.Context().Err()
+	}
 	if rep.Err != nil {
 		return nil, rep.Err
 	}

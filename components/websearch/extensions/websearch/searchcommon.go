@@ -20,6 +20,10 @@ type SearchOptions struct {
 	RecencyFilter  string
 	DomainFilter   []string
 	IncludeContent bool
+	// TimeoutMs and Lookup are the options the self-hosted Firecrawl search takes beside the
+	// shared ones (firecrawl.ts FirecrawlSearchOptions); no other provider reads them.
+	TimeoutMs *int64
+	Lookup    Lookup
 }
 
 // SearchResponse is what a provider returns.

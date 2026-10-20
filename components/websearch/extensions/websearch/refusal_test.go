@@ -88,18 +88,18 @@ func TestRefusalSearchProviders(t *testing.T) {
 		wantCalls(t, n)
 	})
 	t.Run("provider all refuses when an unported provider is configured", func(t *testing.T) {
-		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k", "TINYFISH_API_KEY": "k"})
+		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k", "OPENAI_API_KEY": "k"})
 		n := searchProviderNet(t)
 		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": "all"})
-		wantRefusal(t, err, "TinyFish search provider")
+		wantRefusal(t, err, "OpenAI search provider")
 		wantCalls(t, n)
 	})
 	t.Run("auto refuses at a configured unported provider instead of falling through", func(t *testing.T) {
 		// Keyless Exa comes first in the auto order, so the allowlist leaves it out.
-		r := providerRuntime(t, `{"webSearch":{"allowedProviders":["tinyfish","tavily"]}}`, map[string]string{"TAVILY_API_KEY": "k", "TINYFISH_API_KEY": "k"})
+		r := providerRuntime(t, `{"webSearch":{"allowedProviders":["openai","tavily"]}}`, map[string]string{"TAVILY_API_KEY": "k", "OPENAI_API_KEY": "k"})
 		n := searchProviderNet(t)
 		_, err := execTool(t, r, "web_search", map[string]any{"query": "x"})
-		wantRefusal(t, err, "TinyFish search provider")
+		wantRefusal(t, err, "OpenAI search provider")
 		wantCalls(t, n)
 	})
 	t.Run("a configured provider that is unported refuses", func(t *testing.T) {
@@ -110,11 +110,11 @@ func TestRefusalSearchProviders(t *testing.T) {
 		wantCalls(t, n)
 	})
 	t.Run("searchRouting refuses at an available unported provider", func(t *testing.T) {
-		cfg := `{"searchRouting":{"providers":["tinyfish","tavily"],"fallbackOn":["quota","unsupported"]}}`
-		r := providerRuntime(t, cfg, map[string]string{"TAVILY_API_KEY": "k", "TINYFISH_API_KEY": "k"})
+		cfg := `{"searchRouting":{"providers":["openai","tavily"],"fallbackOn":["quota","unsupported"]}}`
+		r := providerRuntime(t, cfg, map[string]string{"TAVILY_API_KEY": "k", "OPENAI_API_KEY": "k"})
 		n := searchProviderNet(t)
 		_, err := execTool(t, r, "web_search", map[string]any{"query": "x"})
-		wantRefusal(t, err, "TinyFish search provider")
+		wantRefusal(t, err, "OpenAI search provider")
 		wantCalls(t, n)
 	})
 	t.Run("source_check refuses too", func(t *testing.T) {
@@ -264,21 +264,21 @@ func TestRefusalFetchPDF(t *testing.T) {
 }
 
 func TestRefusalFetchHostedProviders(t *testing.T) {
-	t.Run("a configured self-hosted provider the original would call", func(t *testing.T) {
-		r, _ := newRuntime(t, "")
-		t.Setenv("FIRECRAWL_BASE_URL", "https://firecrawl.invalid")
+	t.Run("the Gemini fetch provider with a key, in the default order", func(t *testing.T) {
+		r, _ := newRuntime(t, `{"fetchRouting":{"allowRemoteHostedProviders":true}}`)
+		t.Setenv("GEMINI_API_KEY", "k")
 		n := useNet(t, func(netCall) netReply { return reply(500, "boom") })
 		_, err := execTool(t, r, "fetch_content", map[string]any{"url": "https://93.184.216.34/page"})
-		wantRefusal(t, err, "Firecrawl fetch provider")
-		wantCalls(t, n, "https://93.184.216.34/page")
+		wantRefusal(t, err, "Gemini fetch provider")
+		wantCalls(t, n, "https://93.184.216.34/page", "https://r.jina.ai/https://93.184.216.34/page")
 	})
-	t.Run("an order that lists a provider with a key", func(t *testing.T) {
-		cfg := `{"fetchRouting":{"providers":["http","tinyfish"],"allowRemoteHostedProviders":true}}`
+	t.Run("an order that lists Gemini with a key", func(t *testing.T) {
+		cfg := `{"fetchRouting":{"providers":["http","gemini"],"allowRemoteHostedProviders":true}}`
 		r, _ := newRuntime(t, cfg)
-		t.Setenv("TINYFISH_API_KEY", "k")
+		t.Setenv("GEMINI_API_KEY", "k")
 		useNet(t, func(netCall) netReply { return reply(500, "boom") })
 		_, err := execTool(t, r, "fetch_content", map[string]any{"url": "https://93.184.216.34/page"})
-		wantRefusal(t, err, "TinyFish fetch provider")
+		wantRefusal(t, err, "Gemini fetch provider")
 	})
 	t.Run("a provider that is not configured is skipped as in the original", func(t *testing.T) {
 		r, _ := newRuntime(t, "")
