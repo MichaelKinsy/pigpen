@@ -256,5 +256,26 @@ existing `jsRound` of the steering core is reused. The baseline snapshot of turn
 `agent_start`; upstream starts its first git process synchronously, so a file written within a few milliseconds of
 `agent_start` can be in the baseline (the tests wait for it, as upstream's do through the git shim).
 
-Not done in this PR (honest list): pigeq scenarios and goldens for the rules behaviours, the layer-1 and pigeq mutation
-rows, the performance section's measurements, and the `go test -race -count=24` run; see the status file.
+pigeq: 4 offline scenarios (`rules-file-offline-write-runs`, `rules-offline-fallback-document-write-runs`,
+`rules-offline-heredoc-write-runs`, `rules-offline-turn-rules-without-git-run-quietly`), goldens recorded from the original;
+Pi original == original under PiG Node == Go port on all four (`pigeq check`: 23 of 23 scenarios PASS, with the 19 earlier ones).
+Mutations: 21 layer-1 rows (`port/mutate.py`, `port/mutation-results.txt`, all killed by the twins) and one pigeq row
+(`rules-sends-an-empty-steer`, killed by `changing-failure-not-steered`). `go test -race -count=24` passes.
+The hot paths (rule matching, the store cache, shell writes) are benchmarked in `rules_bench_test.go`.
+
+Judged rules behaviour (the rules request to the judge, steers, `rules check|audit|calibrate`) is proven by the twins and the
+fake-server layer-1 tests only: the original cannot be pointed at a fake judge from the hermetic host (G1), so no pigeq
+scenario can script its verdicts.
+
+Two scenarios are written but blocked on pigeq harness gaps, kept in `port/scenarios-blocked/` (not run by pigeq):
+- `sensitive-path-note-steered`: the original reads `<PIG_HOME>/pigpen-warden/config.json` (D5) and pigeq's `agentFiles`
+  may only write inside the agent directory (`<root>/agent`), while `PIG_HOME` is `<root>/pighome`. The scenario cannot
+  set `rules.sensitivePaths` for the original until pigeq can write a file under `PIG_HOME`.
+- `init-prompt-reaches-the-model`: `/warden init` is `sendUserMessage` + `waitForIdle`. Under Pi (and the TS original
+  under PiG's Node) the RPC `prompt` response arrives before `agent_start`; with the Go port under PiG the response is held
+  until the handler returns (after `agent_end`), so `agent_start` precedes it. Pi-ts == pi-ts holds; pig-go differs
+  from pi-ts at event 0/1 (17 vs 2 events). The init prompt text itself is proven by `TestInit*` twins.
+
+Stacking notes: when the supervision lane lands, register `w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...")`
+in `newWarden` (first of init, audit, index), and set `ShellWriteTargets` (waste.go) from `shellWrites(command, ...).Writes`
+paths. `discover.go` is a copy of the audit lane's until it lands (commit `c0a805e`): drop it on stacking.

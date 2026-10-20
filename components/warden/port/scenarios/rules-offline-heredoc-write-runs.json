@@ -1,0 +1,55 @@
+{
+  "name": "rules-offline-heredoc-write-runs",
+  "description": "A bash heredoc that writes a file runs untouched when there is no judge: the rules guard judges nothing and says nothing to the agent.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "files": {
+    "pi-warden.md": "# No console statements\nCode must not contain `console.log`. Use the logger.\n"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat > a.ts <<'EOF'\nconsole.log(1);\nEOF"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go ahead"
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "rules-file-offline-write-runs",
+  "description": "With a pi-warden.md and no judge the rules guard has nothing to ask: a write runs, nothing is steered, no request goes anywhere.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "files": {
+    "pi-warden.md": "# No console statements\nCode must not contain `console.log`. Use the logger.\n"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "src/a.ts",
+            "content": "console.log(1);\n"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "add a.ts"
+      }
+    }
+  ]
+}

@@ -902,3 +902,31 @@ func TestFormatRuleSetDetailsDroppedCountIsAlwaysVisible(t *testing.T) {
 	set := &RuleSet{Sources: []string{"pi-warden.md"}, Rules: []Rule{{ID: "first", Name: "First"}}, AlwaysDropped: 7}
 	mustMatch(t, formatRuleSetDetails(set, "root", nil), `\(1 rule, 7 dropped\)`, "dropped")
 }
+
+// The store keeps the rule set built from unchanged files (upstream parses and redacts it again on every call).
+func TestRuleStoreReusesTheRuleSetOfUnchangedFilesAndRebuildsOnAChange(t *testing.T) {
+	cwd := t.TempDir()
+	file := filepath.Join(cwd, "pi-warden.md")
+	writeFile(t, file, "# One\nBody one.\n")
+	store := NewRuleStore()
+	cfg := rulesConfig()
+	first := store.Load(cwd, cfg)
+	if store.Load(cwd, cfg) != first {
+		t.Fatal("an unchanged file must reuse the rule set")
+	}
+	writeFile(t, file, "# One\nBody one.\n\n# Two\nBody two.\n")
+	changed := store.Load(cwd, cfg)
+	if changed == first || len(changed.Rules) != 2 {
+		t.Fatalf("a changed file must rebuild the rule set: %+v", changed)
+	}
+	// A configuration that reads the file differently is another rule set.
+	if other := store.Load(cwd, rulesConfig(func(c *RulesConfig) { c.MaxChars = 100 })); other == changed {
+		t.Fatal("another maxChars must not reuse the rule set")
+	}
+	if err := os.Remove(file); err != nil {
+		t.Fatal(err)
+	}
+	if store.Load(cwd, rulesConfig(func(c *RulesConfig) { c.Fallback = false })) != nil {
+		t.Fatal("a removed file leaves no rules")
+	}
+}
