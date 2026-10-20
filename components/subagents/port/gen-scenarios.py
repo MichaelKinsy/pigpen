@@ -76,3 +76,23 @@ scenario("manage-reset", "Change a builtin agent's model through an override, th
           call("subagent", action="reset", agent="scout", agentScope="project"), call("subagent", action="get", agent="scout")], {".pi/keep": ""})
 scenario("advertise-catalog", "An agent that opts in with advertise: true is listed in the system prompt once the subagent tool is active.",
          [ENABLE, call("subagent", action="list", capabilities=True)], {".pi/agents/specialist.md": ADVERTISED, ".pi/agents/helper.md": HELPER})
+# the validate action: a script checked without a child (the original runs these without a child model)
+OK_SCRIPT = 'const review = await runs.run("review", { agent: "helper", task: "Review the change" });\nreturn { output: review.output };'
+scenario("validate-ok", "Validate a script that launches one known agent: ok, no errors; then the same script by workflowScriptPath.",
+         [ENABLE, call("subagent", action="validate", workflowScript=OK_SCRIPT),
+          call("subagent", action="validate", workflowScriptPath="flow.js")], {**PROJECT, "flow.js": OK_SCRIPT})
+scenario("validate-errors", "Validate invalid scripts: a nested async function, a syntax error, an empty script, an unknown agent with a suggestion, a bad run key.",
+         [ENABLE, call("subagent", action="validate", workflowScript="async function helper() { return 1; }\nreturn await helper();"),
+          call("subagent", action="validate", workflowScript='await runs.run("a", {'),
+          call("subagent", action="validate", workflowScript="   "),
+          call("subagent", action="validate", workflowScript='return await runs.run("a", { agent: "helpr", task: "x" });'),
+          call("subagent", action="validate", workflowScript='return await runs.run("bad key", { agent: "helper", task: "x" });')], PROJECT)
+scenario("validate-budget", "Validate against a spawn budget: two static launches with a budget of one, then a dynamic fan-out that only warns.",
+         [ENABLE, call("subagent", action="validate", maxSubagentSpawnsPerRun=1, workflowScript='await runs.run("a", { agent: "helper", task: "x" });\nawait runs.run("b", { agent: "helper", task: "y" });\nreturn 1;'),
+          call("subagent", action="validate", maxSubagentSpawnsPerRun=4, workflowScript='const items = args.items;\nawait runs.all(items.map((i) => ({ key: "k" + i, agent: "helper", task: String(i) })));\nreturn 1;')], PROJECT)
+scenario("validate-refusals", "Validate with direct execution fields, both script inputs, no script, an unreadable script path and a capacity override.",
+         [ENABLE, call("subagent", action="validate", agent="helper", workflowScript="return 1"),
+          call("subagent", action="validate", workflowScript="return 1", workflowScriptPath="flow.js"),
+          call("subagent", action="validate"),
+          call("subagent", action="validate", workflowScriptPath="missing.js"),
+          call("subagent", action="validate", workflowScript="return 1", globalConcurrencyLimit=2)], PROJECT)

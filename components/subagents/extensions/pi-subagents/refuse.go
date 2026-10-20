@@ -89,13 +89,16 @@ func optionsFeature(names []string) string {
 // port runs every parameter that is set. name is the call's action ("" for an execution).
 func refuseUnsupported(params map[string]any, name string) string {
 	var set []string
-	for _, n := range workflowParams {
-		if has(params, n) {
-			set = append(set, n)
+	// An action that takes workflow inputs (validate) lists them among its parameters; an execution may not run them yet.
+	if name == "" {
+		for _, n := range workflowParams {
+			if has(params, n) {
+				set = append(set, n)
+			}
 		}
-	}
-	if len(set) > 0 {
-		return refusal("workflow runs (" + quoteList(set) + ")")
+		if len(set) > 0 {
+			return refusal("workflow runs (" + quoteList(set) + ")")
+		}
 	}
 	for _, n := range legacyOrchestrationParams {
 		if has(params, n) {

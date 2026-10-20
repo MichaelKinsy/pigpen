@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"sort"
 	"strings"
 )
@@ -80,25 +79,6 @@ var descriptorAllowedFields = map[string]bool{
 	"inheritSkills": true, "skills": true, "skillPath": true, "agentFilePath": true, "memory": true, "outputPath": true, "outputMode": true, "structuredOutputSchema": true, "acceptance": true, "sessionDir": true,
 	"artifactConfig": true, "artifactsDir": true, "maxOutput": true, "controlConfig": true, "context": true, "intercomBridge": true, "absoluteDeadlineAt": true, "initialTurnBudget": true, "initialToolBudget": true,
 	"maxSubagentDepth": true, "share": true, "capabilityCeiling": true, "launchResolvedExtensions": true, "runFanoutBudget": true, "lane": true, "baseRef": true, "extensionBindings": true, "requiredExtensions": true,
-}
-
-var gitRefForbidden = regexp.MustCompile("[\\[\\]\\\\~^:?*\\x00-\\x20\\x7f]")
-var gitHexRef = regexp.MustCompile(`(?i)^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
-
-// validGitRef is worktree.ts validGitRef.
-func validGitRef(ref string) bool {
-	if ref == "" || ref == "@" || len(ref) > 1024 || strings.HasPrefix(ref, "/") || strings.HasSuffix(ref, "/") || strings.Contains(ref, "//") || strings.Contains(ref, "..") || strings.Contains(ref, "@{") {
-		return false
-	}
-	if gitHexRef.MatchString(ref) || gitRefForbidden.MatchString(ref) || strings.HasSuffix(ref, ".") || strings.HasSuffix(ref, ".lock") {
-		return false
-	}
-	for _, c := range strings.Split(ref, "/") {
-		if c == "" || c == "." || c == ".." || strings.HasPrefix(c, ".") || strings.HasSuffix(c, ".") || strings.HasSuffix(c, ".lock") {
-			return false
-		}
-	}
-	return true
 }
 
 const invalidBaseRefText = "baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported."

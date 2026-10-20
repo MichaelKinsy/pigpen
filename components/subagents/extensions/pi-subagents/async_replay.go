@@ -13,7 +13,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"unicode/utf8"
@@ -122,172 +121,22 @@ func formatTimeoutRecoveryLines(value any, indent string) []string {
 }
 
 // ── workflow-child-summary.ts (parseWorkflowChildSummary) ──
+// The summary type and its strict parser are the workflow slice's (workflow_child_summary.go); a persisted result file is
+// decoded to maps, so the value is re-read as ordered JSON first.
 
-var workflowKeyPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`)
-
-const maxRequiredIDBytes = 4096
-
-var workflowActivityCounters = []string{"currentToolStartedAt", "lastActivityAt", "durationMs", "toolCount", "turnCount", "tokens", "inputTokens", "outputTokens"}
-
-// WorkflowChildRow is one child of a workflow summary.
-type WorkflowChildRow struct {
-	ChildID     string         `json:"childId"`
-	RunID       string         `json:"runId,omitempty"`
-	Agent       string         `json:"agent,omitempty"`
-	SessionName string         `json:"sessionName,omitempty"`
-	Model       string         `json:"model,omitempty"`
-	Thinking    string         `json:"thinking,omitempty"`
-	State       string         `json:"state"`
-	Activity    map[string]any `json:"activity,omitempty"`
-}
-
-// WorkflowChildSummary is the bounded child inventory of a workflow run.
-type WorkflowChildSummary struct {
-	Version           int                `json:"version"`
-	ParentToolCallID  string             `json:"parentToolCallId"`
-	WorkflowRunID     string             `json:"workflowRunId"`
-	InventoryComplete bool               `json:"inventoryComplete"`
-	WorkflowState     string             `json:"workflowState"`
-	Children          []WorkflowChildRow `json:"children"`
-}
-
-func boundedString(v any, maxBytes int) string {
-	s, ok := v.(string)
-	if !ok || jsTrim(s) == "" || len(s) > maxBytes {
-		return ""
-	}
-	return s
-}
-
-func requiredID(v, label string) (string, error) {
-	if boundedString(v, maxRequiredIDBytes) == "" {
-		return "", fmt.Errorf("%s must be a non-empty identifier of at most %d UTF-8 bytes.", label, maxRequiredIDBytes)
-	}
-	return v, nil
-}
-
-func parseWorkflowActivity(v any) (map[string]any, error) {
-	if v == nil {
+func parseWorkflowChildSummaryMap(value any, present bool) (*WorkflowChildSummary, error) {
+	if !present {
 		return nil, nil
 	}
-	m, ok := v.(map[string]any)
-	if !ok {
-		return nil, errors.New("workflowChildren child activity is invalid.")
-	}
-	for k, val := range m {
-		if k == "currentTool" {
-			if boundedString(val, 256) == "" {
-				return nil, errors.New("workflowChildren child activity is invalid.")
-			}
-			continue
-		}
-		known := false
-		for _, c := range workflowActivityCounters {
-			known = known || c == k
-		}
-		f, isNum := val.(float64)
-		if !known || !isNum || math.IsNaN(f) || math.IsInf(f, 0) || f < 0 {
-			return nil, errors.New("workflowChildren child activity is invalid.")
-		}
-	}
-	return m, nil
-}
-
-// parseWorkflowChildSummary validates a persisted summary; nil for an absent value.
-func parseWorkflowChildSummary(value any, present bool) (*WorkflowChildSummary, error) {
-	if !present || value == nil && !present {
-		return nil, nil
-	}
-	input, ok := value.(map[string]any)
-	if !ok {
+	b, err := json.Marshal(value)
+	if err != nil {
 		return nil, errors.New("workflowChildren must be an object.")
 	}
-	for k := range input {
-		switch k {
-		case "version", "parentToolCallId", "workflowRunId", "inventoryComplete", "workflowState", "children":
-		default:
-			return nil, errors.New("workflowChildren has unsupported fields.")
-		}
+	parsed, err := parseJSON(b)
+	if err != nil {
+		return nil, errors.New("workflowChildren must be an object.")
 	}
-	version, _ := input["version"].(float64)
-	_, boolOK := input["inventoryComplete"].(bool)
-	rows, rowsOK := input["children"].([]any)
-	if version != 1 || !boolOK || !rowsOK {
-		return nil, errors.New("workflowChildren is invalid.")
-	}
-	state, _ := input["workflowState"].(string)
-	switch state {
-	case "queued", "running", "completed", "failed", "paused", "stopped":
-	default:
-		return nil, errors.New("workflowChildren.workflowState is invalid.")
-	}
-	children := []WorkflowChildRow{}
-	seen := map[string]bool{}
-	for _, r := range rows {
-		child, ok := r.(map[string]any)
-		if !ok {
-			return nil, errors.New("workflowChildren child row is invalid.")
-		}
-		for k := range child {
-			switch k {
-			case "childId", "runId", "agent", "sessionName", "model", "thinking", "state", "activity":
-			default:
-				return nil, errors.New("workflowChildren child row has unsupported fields.")
-			}
-		}
-		childID, _ := child["childId"].(string)
-		if !workflowKeyPattern.MatchString(childID) {
-			return nil, errors.New("workflowChildren childId is invalid.")
-		}
-		cs, _ := child["state"].(string)
-		switch cs {
-		case "pending", "running", "completed", "failed", "paused", "stopped", "rejected", "detached":
-		default:
-			return nil, errors.New("workflowChildren child state is invalid.")
-		}
-		for _, f := range []struct {
-			name string
-			max  int
-		}{{"runId", 256}, {"agent", 256}, {"sessionName", 256}, {"model", 256}, {"thinking", 32}} {
-			if v, has := child[f.name]; has && v != nil && boundedString(v, f.max) == "" {
-				return nil, fmt.Errorf("workflowChildren child %s is invalid.", f.name)
-			}
-		}
-		activity, err := parseWorkflowActivity(child["activity"])
-		if err != nil {
-			return nil, err
-		}
-		if activity != nil && cs != "running" {
-			return nil, errors.New("workflowChildren child activity requires running state.")
-		}
-		row := WorkflowChildRow{ChildID: childID, State: cs, Activity: activity}
-		row.RunID, _ = child["runId"].(string)
-		row.Agent, _ = child["agent"].(string)
-		row.SessionName, _ = child["sessionName"].(string)
-		row.Model, _ = child["model"].(string)
-		row.Thinking, _ = child["thinking"].(string)
-		children = append(children, row)
-		if seen[childID] {
-			return nil, errors.New("workflowChildren has duplicate childId values.")
-		}
-		seen[childID] = true
-	}
-	parent, ok := input["parentToolCallId"].(string)
-	if !ok {
-		return nil, errors.New("workflowChildren.parentToolCallId is invalid.")
-	}
-	run, ok := input["workflowRunId"].(string)
-	if !ok {
-		return nil, errors.New("workflowChildren.workflowRunId is invalid.")
-	}
-	if _, err := requiredID(parent, "workflowChildren.parentToolCallId"); err != nil {
-		return nil, err
-	}
-	if _, err := requiredID(run, "workflowChildren.workflowRunId"); err != nil {
-		return nil, err
-	}
-	inv, _ := input["inventoryComplete"].(bool)
-	return &WorkflowChildSummary{Version: 1, ParentToolCallID: parent, WorkflowRunID: run, InventoryComplete: inv, WorkflowState: state, Children: children}, nil
+	return ParseWorkflowChildSummary(parsed)
 }
 
 // ── the completion shapes (types.ts WaitCompletion) ──
@@ -411,7 +260,7 @@ func toWaitCompletion(data map[string]any, runID string) (WaitCompletion, error)
 		comp.WorkflowReceiptPath = nonEmptyString(receipt["path"])
 	}
 	wc, present := data["workflowChildren"]
-	summary, err := parseWorkflowChildSummary(wc, present)
+	summary, err := parseWorkflowChildSummaryMap(wc, present)
 	if err != nil {
 		return WaitCompletion{}, err
 	}

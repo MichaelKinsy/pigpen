@@ -1510,5 +1510,167 @@
   "file": "delegation.go",
   "find": "if o.has(\"tasks\") || o.has(\"worktree\") {",
   "replace": "if false {"
+ },
+ {
+  "name": "ca-running",
+  "file": "chain_append.go",
+  "find": "if state != \"running\" {",
+  "replace": "if state != \"running\" && false {"
+ },
+ {
+  "name": "ca-chain-only",
+  "file": "chain_append.go",
+  "find": "if mode != \"chain\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ca-order",
+  "file": "chain_append.go",
+  "find": "return localeCompare(reqs[i].ID, reqs[j].ID) < 0",
+  "replace": "return localeCompare(reqs[i].ID, reqs[j].ID) > 0"
+ },
+ {
+  "name": "ca-pending",
+  "file": "chain_append.go",
+  "find": "updated.set(\"pendingAppends\", float64(pending))",
+  "replace": "updated.set(\"pendingAppends\", float64(0))"
+ },
+ {
+  "name": "ca-redacted",
+  "file": "chain_append.go",
+  "find": "d := promptRedacted",
+  "replace": "d := task"
+ },
+ {
+  "name": "lp-capacity",
+  "file": "workflow_launch.go",
+  "find": "defaults = lpWithout(defaults, \"globalConcurrencyLimit\", \"maxSubagentSpawnsPerRun\")",
+  "replace": "defaults = lpWithout(defaults)"
+ },
+ {
+  "name": "lp-await-async",
+  "file": "workflow_launch.go",
+  "find": "if asyncOmitted {\n\t\tlaunch.set(\"workflowAwaitAsync\", true)",
+  "replace": "if false {\n\t\tlaunch.set(\"workflowAwaitAsync\", true)"
+ },
+ {
+  "name": "lp-resume-gate",
+  "file": "workflow_launch.go",
+  "find": "gate is not supported with retained resume; resume",
+  "replace": "gate is fine with retained resume; resume"
+ },
+ {
+  "name": "lp-segment",
+  "file": "workflow_launch.go",
+  "find": "s = strings.Trim(s, \"_\")",
+  "replace": "s = strings.Trim(s, \"\")"
+ },
+ {
+  "name": "pu-skipped",
+  "file": "parallel_utils.go",
+  "find": "case r.ExitCode != nil && *r.ExitCode == -1:",
+  "replace": "case r.ExitCode != nil && *r.ExitCode == -2:"
+ },
+ {
+  "name": "pu-empty",
+  "file": "parallel_utils.go",
+  "find": "case !hasOutput && r.OutputTargetPath == \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "ph-stale",
+  "file": "parallel_handoff.go",
+  "find": "Reason: \"stored merge evidence is stale\"}",
+  "replace": "Reason: \"stored merge evidence is fresh\"}"
+ },
+ {
+  "name": "ph-active",
+  "file": "parallel_handoff.go",
+  "find": "if co == nil || !IsTerminalParallelHandoffChildStatus(co.vals[\"status\"]) {",
+  "replace": "if co == nil {"
+ },
+ {
+  "name": "ph-supersede-self",
+  "file": "parallel_handoff.go",
+  "find": "if sup.vals[\"supersededBy\"] == lane {",
+  "replace": "if false {"
+ },
+ {
+  "name": "df-max",
+  "file": "dynamic_fanout.go",
+  "find": "if float64(len(list)) > maxItems {",
+  "replace": "if float64(len(list)) >= maxItems {"
+ },
+ {
+  "name": "df-dup-key",
+  "file": "dynamic_fanout.go",
+  "find": "if seen[key] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "df-dup-id",
+  "file": "dynamic_fanout.go",
+  "find": "if seenIDs[id] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cr-exit",
+  "file": "chain_root_attachment.go",
+  "find": "exit := float64(1)\n\tif success {",
+  "replace": "exit := float64(0)\n\tif success {"
+ },
+ {
+  "name": "rc-digest",
+  "file": "workflow_receipt.go",
+  "find": "if in.ArgsDigest != \"\" && !sha256HexPattern.MatchString(in.ArgsDigest) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rc-stale",
+  "file": "workflow_receipt.go",
+  "find": "if hasLatest && (len(runIDs) == 0 || runIDs[len(runIDs)-1] != latestRunID) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ck-priority",
+  "file": "workflow_checklist.go",
+  "find": "case \"blocked\":\n\t\treturn 0",
+  "replace": "case \"blocked\":\n\t\treturn 9"
+ },
+ {
+  "name": "adm-resume",
+  "file": "workflow_admission.go",
+  "find": "if call.Params.has(\"resume\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tp-host",
+  "file": "workflow_terminal_proof.go",
+  "find": "if hostCommandCount > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "td-safety-last",
+  "file": "tool_description.go",
+  "find": "return custom + \"\\n\\n\" + SubagentSafetyGuidance",
+  "replace": "return custom"
+ },
+ {
+  "name": "cp-same-repo",
+  "file": "workflow_chat_progress.go",
+  "find": "if mode == \"live-card\" && !same {",
+  "replace": "if false {"
+ },
+ {
+  "name": "val-capacity",
+  "file": "workflow_validate_action.go",
+  "find": "if isSet(\"globalConcurrencyLimit\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "val-exclusive",
+  "file": "workflow_validate_action.go",
+  "find": "if isSet(\"workflowScript\") && isSet(\"workflowScriptPath\") {",
+  "replace": "if false {"
  }
 ]

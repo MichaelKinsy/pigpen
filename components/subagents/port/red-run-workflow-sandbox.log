@@ -1,0 +1,12 @@
+--- FAIL: TestWorkflowChildSummaryTwins (0.00s)
+    --- FAIL: TestWorkflowChildSummaryTwins/projects_independent_bounded_snapshots_by_stable_key_and_clears_terminal_activity (0.00s)
+panic: not implemented [recovered, repanicked]
+
+goroutine 50 [running]:
+testing.tRunner.func1.2({0x100e1c880, 0x100d50db0})
+	/Users/kinsy/.local/share/mise/installs/go/1.27.2/src/testing/testing.go:2125 +0x1a0
+testing.tRunner.func1()
+	/Users/kinsy/.local/share/mise/installs/go/1.27.2/src/testing/testing.go:2128 +0x2c8
+panic({0x100e1c880?, 0x100d50db0?})
+	/Users/kinsy/.local/share/mise/installs/go/1.27.2/src/runtime/panic.go:859 +0x120
+github.com/MichaelKinsy/pigpen/pi-subagents.WorkflowChildProgress(...)

@@ -1,0 +1,2185 @@
+[
+ {
+  "script": "const value = 1;\nreturn (;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 2,
+     "column": 9
+    }
+   ]
+  }
+ },
+ {
+  "script": "const task = `Run:\n```bash\nnpm test\n```;\nreturn task;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 2,
+     "column": 4
+    }
+   ]
+  }
+ },
+ {
+  "script": "return 1 +;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 1,
+     "column": 11
+    }
+   ]
+  }
+ },
+ {
+  "script": "let a = 1; let a = 2;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Identifier 'a' has already been declared",
+     "line": 1,
+     "column": 16
+    }
+   ]
+  }
+ },
+ {
+  "script": "foo(",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 2,
+     "column": 1
+    }
+   ]
+  }
+ },
+ {
+  "script": "const x = 'abc",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unterminated string constant",
+     "line": 1,
+     "column": 11
+    }
+   ]
+  }
+ },
+ {
+  "script": "const x = `abc",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unterminated template",
+     "line": 1,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "   \n ",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript must not be empty."
+    }
+   ]
+  }
+ },
+ {
+  "script": "if (x) {",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 2,
+     "column": 2
+    }
+   ]
+  }
+ },
+ {
+  "script": "return await",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 2,
+     "column": 1
+    }
+   ]
+  }
+ },
+ {
+  "script": "for (;;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 2,
+     "column": 1
+    }
+   ]
+  }
+ },
+ {
+  "script": "x = = 1",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 1,
+     "column": 5
+    }
+   ]
+  }
+ },
+ {
+  "script": "class { }",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Unexpected token",
+     "line": 1,
+     "column": 7
+    }
+   ]
+  }
+ },
+ {
+  "script": "try { x }",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "Missing catch or finally clause",
+     "line": 1,
+     "column": 1
+    }
+   ]
+  }
+ },
+ {
+  "script": "async function helper() { return 1; }\nreturn 1;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 1
+    }
+   ]
+  }
+ },
+ {
+  "script": "const f = async () => 1;\nreturn f;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 11
+    }
+   ]
+  }
+ },
+ {
+  "script": "const o = { async m() { return 1; } };\nreturn o;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 20
+    }
+   ]
+  }
+ },
+ {
+  "script": "class A { async m() { return 1; } }\nreturn A;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 18
+    }
+   ]
+  }
+ },
+ {
+  "script": "const f = async function () {};\nreturn f;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 11
+    }
+   ]
+  }
+ },
+ {
+  "script": "const g = async function* () {};\nreturn g;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 11
+    }
+   ]
+  }
+ },
+ {
+  "script": "async function* gen() { yield 1; }\nreturn gen;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 1
+    }
+   ]
+  }
+ },
+ {
+  "script": "for await (const x of []) { }\nreturn 1;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const r = /async function x() {}/;\nreturn r;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return `${(async () => 1)()}`;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"bad key\", { agent: \"worker\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run key must be 1-128 characters using letters, numbers, '.', '_' or '-', and start with a letter or number.",
+     "line": 1,
+     "column": 17
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"single\", { agent: \"worker\", task: undefined });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run params are invalid: undefined is not JSON-representable.",
+     "line": 1,
+     "column": 27
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"same\", agent: \"worker\", task: undefined }]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item params are invalid: undefined is not JSON-representable.",
+     "line": 1,
+     "column": 18
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"single\", { agent: \"worker\", task: undefined, task: \"real\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ ...{ key: \"bad key\" }, agent: \"worker\" }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"same\", { agent: selectedAgent });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"k\", { agent: \"a\", task: () => 1 });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run params are invalid: functions are not JSON-representable.",
+     "line": 1,
+     "column": 22
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"k\", { agent: \"a\", task: 10n });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run params are invalid: BigInt values are not JSON-representable.",
+     "line": 1,
+     "column": 22
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"k\", { agent: \"a\", task: /x/ });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run params are invalid: regular expressions are not JSON-representable.",
+     "line": 1,
+     "column": 22
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"k\", { agent: \"a\", task: [1,,2] });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run params are invalid: sparse arrays are not JSON-representable.",
+     "line": 1,
+     "column": 22
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"k\", { agent: \"a\", task: [undefined] });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run params are invalid: undefined is not JSON-representable.",
+     "line": 1,
+     "column": 22
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"k\", { agent: \"a\", nested: { x: void 0 } });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run params are invalid: undefined is not JSON-representable.",
+     "line": 1,
+     "column": 22
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(`k`, { agent: \"a\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs[\"run\"](\"bad key\", { agent: \"a\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run key must be 1-128 characters using letters, numbers, '.', '_' or '-', and start with a letter or number.",
+     "line": 1,
+     "column": 20
+    }
+   ]
+  }
+ },
+ {
+  "script": "const runs = {}; return runs.run(\"bad key\", {});",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run key must be 1-128 characters using letters, numbers, '.', '_' or '-', and start with a letter or number.",
+     "line": 1,
+     "column": 34
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(`${x}`, {});",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", {\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n});",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", {\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\n});",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\n}]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`\n}]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", {\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: \"HEAD~1\"\n});",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: \"refs/heads/bad..ref\"\n}]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", {\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: null\n});",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: 42\n}]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", {\n  key: \"child\", agent: \"worker\", task: \"Check\",\n  baseRef: false\n});",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 3,
+     "column": 12
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\",  });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\",  }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD\" }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"refs/heads/release\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"refs/heads/release\" }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"refs/tags/v1\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"refs/tags/v1\" }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"origin/main\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"origin/main\" }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", baseRef: \"HEAD\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", baseRef: \"HEAD\" }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", [\"baseRef\"]: `HEAD` });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", [\"baseRef\"]: `HEAD` }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", baseRef: selectedRef });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", baseRef: selectedRef }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", baseRef: \"refs/heads/\" + branch });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", baseRef: \"refs/heads/\" + branch }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", ...overrides });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", ...overrides }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", [field]: \"HEAD\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", [field]: \"HEAD\" }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", get baseRef() { return \"HEAD\"; } });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", get baseRef() { return \"HEAD\"; } }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", set baseRef(value) {} });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD~1\", set baseRef(value) {} }]);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", baseRef: \"HEAD\", baseRef: \"HEAD~1\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 1,
+     "column": 86
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", baseRef: \"HEAD\", baseRef: \"HEAD~1\" }]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 1,
+     "column": 92
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", ...defaults, baseRef: \"HEAD~1\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 1,
+     "column": 82
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", ...defaults, baseRef: \"HEAD~1\" }]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 1,
+     "column": 88
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", [field]: \"HEAD\", [\"baseRef\"]: \"HEAD~1\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 1,
+     "column": 90
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", [field]: \"HEAD\", [\"baseRef\"]: \"HEAD~1\" }]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 1,
+     "column": 96
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { agent: \"worker\", task: \"Check\", get baseRef() { return \"HEAD\"; }, baseRef: \"HEAD~1\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 1,
+     "column": 103
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"child\", agent: \"worker\", task: \"Check\", get baseRef() { return \"HEAD\"; }, baseRef: \"HEAD~1\" }]);",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+     "line": 1,
+     "column": 109
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"child\", { baseRef() { return \"HEAD\"; } });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.run params are invalid: functions are not JSON-representable.",
+     "line": 1,
+     "column": 26
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"tests\", { kind: \"command\", command: \"npm test\", timeoutMs: 1000, output: \"reports/tests.log\", role: \"ci\" });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.host(\"tests\", { command: \"npm test\", timeoutMs: 1000 });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.host params require kind: 'command'.",
+     "line": 1,
+     "column": 27
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"tests\", { kind: \"http\", command: \"npm test\", timeoutMs: 1000 });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.host params kind must be 'command'.",
+     "line": 1,
+     "column": 35
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"tests\", { kind: \"command\", command: \"npm test\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.host params require timeoutMs.",
+     "line": 1,
+     "column": 27
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"tests\", { kind: \"command\", command: \"npm test\", timeoutMs: 1000, output: \"../tests.log\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.host params output must be a non-empty relative path without traversal.",
+     "line": 1,
+     "column": 92
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"tests\", { kind: \"command\", command: \"npm test\", timeoutMs: 1000, cwd: \"/tmp\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.host params contain unsupported field 'cwd'. The host step does not accept per-step cwd; commands and relative output paths use the workflow cwd. Set cwd on the outer subagent request, or put a trusted directory change in command (for example, 'cd /path/to/worktree && npm test').",
+     "line": 1,
+     "column": 84
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"bad key\", { kind: \"command\", command: \" \", timeoutMs: 1.5, role: \"x\", output: \" \", extra: 1 });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.host key must be 1-128 characters using letters, numbers, '.', '_' or '-', and start with a letter or number.",
+     "line": 1,
+     "column": 18
+    },
+    {
+     "message": "runs.host params contain unsupported field 'extra'.",
+     "line": 1,
+     "column": 102
+    },
+    {
+     "message": "runs.host params command must be non-empty.",
+     "line": 1,
+     "column": 57
+    },
+    {
+     "message": "runs.host params timeoutMs must be a positive integer.",
+     "line": 1,
+     "column": 73
+    },
+    {
+     "message": "runs.host params output must be a non-empty relative path without traversal.",
+     "line": 1,
+     "column": 97
+    },
+    {
+     "message": "runs.host params role must be 'ci' or 'gate'.",
+     "line": 1,
+     "column": 84
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 0 });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.host params timeoutMs must be a positive integer.",
+     "line": 1,
+     "column": 67
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5, role: \"gate\", output: \"/abs\" });",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.host params output must be a non-empty relative path without traversal.",
+     "line": 1,
+     "column": 92
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.host(\"t\", { ...x });",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "emit(undefined); emit(() => 1); emit({a: 10n}); return undefined;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript boundary value is invalid: undefined is not JSON-representable.",
+     "line": 1,
+     "column": 6
+    },
+    {
+     "message": "workflowScript boundary value is invalid: functions are not JSON-representable.",
+     "line": 1,
+     "column": 23
+    },
+    {
+     "message": "workflowScript boundary value is invalid: BigInt values are not JSON-representable.",
+     "line": 1,
+     "column": 38
+    }
+   ]
+  }
+ },
+ {
+  "script": "state.set(\"k\", undefined); return void 0;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript boundary value is invalid: undefined is not JSON-representable.",
+     "line": 1,
+     "column": 16
+    }
+   ]
+  }
+ },
+ {
+  "script": "return () => 1;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript boundary value is invalid: functions are not JSON-representable.",
+     "line": 1,
+     "column": 8
+    }
+   ]
+  }
+ },
+ {
+  "script": "function f() { return undefined; } return 1;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return [undefined, 1];",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return { a: undefined, b: function(){} };",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript boundary value is invalid: functions are not JSON-representable.",
+     "line": 1,
+     "column": 8
+    }
+   ]
+  }
+ },
+ {
+  "script": "const results = await runs.all([{ key: \"bad key\", agent: \"worker\" }, { key: \"someChild\", agent: \"reviewer\" }]);\nasync function helper() { return \"no\"; }\nreturn results.someChild;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all item key must be 1-128 characters using letters, numbers, '.', '_' or '-', and start with a letter or number.",
+     "line": 1,
+     "column": 40
+    },
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 2,
+     "column": 1
+    },
+    {
+     "message": "runs.all returns an ordered array; 'results.someChild' is keyed access. Use an index, destructuring, or map(...).",
+     "line": 3,
+     "column": 8
+    }
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.all([{ key: \"analysis\", agent: \"a\", task: \"t\" }]);\nreturn r.analysis.output;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all returns an ordered array; 'r.analysis' is keyed access. Use an index, destructuring, or map(...).",
+     "line": 2,
+     "column": 8
+    }
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.all([{ key: \"map\", agent: \"a\", task: \"t\" }, { key: \"0\", agent: \"a\", task: \"t\" }, { key: \"length\", agent: \"a\", task: \"t\" }, { key: \"5\", agent: \"a\", task: \"t\" }]);\nreturn [r.map, r[\"0\"], r.length, r[5], r.constructor];",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "let r = await runs.all([{ key: \"x\", agent: \"a\", task: \"t\" }]);\nr = [];\nreturn r.x;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const r = await runs.all([{ key: \"x\", agent: \"a\", task: \"t\" }]);\n{ const r = {}; r.x; }\nreturn 1;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "var r = await runs.all([{ key: \"x\", agent: \"a\", task: \"t\" }]);\nr = {};\nr.x;\nreturn r;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const r = await runs.all([{ key: \"x\", agent: \"a\", task: \"t\" }]);\nreturn r[\"x\"];",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all returns an ordered array; 'r.x' is keyed access. Use an index, destructuring, or map(...).",
+     "line": 2,
+     "column": 8
+    }
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.all([{ key: \"x\", agent: \"a\", task: \"t\" }]);\nreturn r?.x;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all returns an ordered array; 'r.x' is keyed access. Use an index, destructuring, or map(...).",
+     "line": 2,
+     "column": 8
+    }
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.all([{ key: \"x\", agent: \"a\", task: \"t\" }]);\nfunction f(r) { return r.x; }\nreturn f;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const r = await runs.all([{ key: \"x\", agent: \"a\", task: \"t\" }]);\nfor (const r of []) { r.x; }\ntry {} catch (r) { r.x; }\nreturn r.x;",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "runs.all returns an ordered array; 'r.x' is keyed access. Use an index, destructuring, or map(...).",
+     "line": 4,
+     "column": 8
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { agent: \"ghost\", task: \"x\" });",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "agent",
+     "message": "runs.run: Unknown agent 'ghost'.",
+     "line": 1,
+     "column": 31
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.all([{ key: \"a\", agent: \"ghost\", task: \"x\" }, { key: \"b\", agent: \"worker\", task: \"y\" }]);",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "agent",
+     "message": "runs.all item: Unknown agent 'ghost'.",
+     "line": 1,
+     "column": 37
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.lanes([{ key: \"l\", stages: [{ key: \"s\", agent: \"ghost\", task: \"x\" }] }]);",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "agent",
+     "message": "runs.lanes stage: Unknown agent 'ghost'.",
+     "line": 1,
+     "column": 60
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { agent: \"ghost\", cwd: \"/x\", task: \"x\" });",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { agent: \"ghost\", resume: \"r\", task: \"x\" });",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { ...x, agent: \"ghost\" });",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const runs = {}; return runs.run(\"a\", { agent: \"ghost\" });",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { agent: `ghost`, task: \"x\" });",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "agent",
+     "message": "runs.run: Unknown agent 'ghost'.",
+     "line": 1,
+     "column": 31
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { [\"agent\"]: \"ghost\" });",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "agent",
+     "message": "runs.run: Unknown agent 'ghost'.",
+     "line": 1,
+     "column": 35
+    }
+   ]
+  }
+ },
+ {
+  "script": "return runs.lanes([{ ...l, stages: [{ key: \"s\", agent: \"ghost\" }] }]);",
+  "opts": {
+   "agent": true
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nawait runs.all([{ key: \"b\", agent: \"w\", task: \"y\" }, { key: \"c\", agent: \"w\", task: \"z\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "spawn-budget",
+     "message": "workflowScript statically requires child launches 'a', 'b', 'c'; minimum required: 3; configured: 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "const keys = [\"a\",\"b\"];\nawait runs.all(keys.map((k) => ({ key: k, agent: \"w\", task: \"x\" })));\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "for (const k of [\"a\",\"b\"]) { await runs.run(k, { agent: \"w\", task: \"x\" }); }\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nif (x) return 1;\nawait runs.run(\"b\", { agent: \"w\", task: \"x\" });\nreturn 2;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "spawn-budget",
+     "message": "workflowScript statically requires child launches 'a'; minimum required: 1; configured: 0."
+    }
+   ],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 1 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nreturn 1;\nawait runs.run(\"b\", { agent: \"w\", task: \"x\" });",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "spawn-budget",
+     "message": "workflowScript statically requires child launches 'a'; minimum required: 1; configured: 0."
+    }
+   ],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 1 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "const r = runs; await r.run(\"a\", {});\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "var runs = 1; await runs.run(\"a\", {});\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: (await runs.run(\"inner\", {})).output });\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [{ key: \"s\", agent: \"w\" }] }]);",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all(items);\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all([{ key: k, agent: \"w\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all([{ ...x, key: \"a\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 0
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 0."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nawait runs.all([{ key: \"b\", agent: \"w\", task: \"y\" }, { key: \"c\", agent: \"w\", task: \"z\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "spawn-budget",
+     "message": "workflowScript statically requires child launches 'a', 'b', 'c'; minimum required: 3; configured: 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "const keys = [\"a\",\"b\"];\nawait runs.all(keys.map((k) => ({ key: k, agent: \"w\", task: \"x\" })));\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "for (const k of [\"a\",\"b\"]) { await runs.run(k, { agent: \"w\", task: \"x\" }); }\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nif (x) return 1;\nawait runs.run(\"b\", { agent: \"w\", task: \"x\" });\nreturn 2;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 1 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nreturn 1;\nawait runs.run(\"b\", { agent: \"w\", task: \"x\" });",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 1 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "const r = runs; await r.run(\"a\", {});\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "var runs = 1; await runs.run(\"a\", {});\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: (await runs.run(\"inner\", {})).output });\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [{ key: \"s\", agent: \"w\" }] }]);",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all(items);\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all([{ key: k, agent: \"w\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all([{ ...x, key: \"a\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 1
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 1."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nawait runs.all([{ key: \"b\", agent: \"w\", task: \"y\" }, { key: \"c\", agent: \"w\", task: \"z\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "kind": "spawn-budget",
+     "message": "workflowScript statically requires child launches 'a', 'b', 'c'; minimum required: 3; configured: 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "const keys = [\"a\",\"b\"];\nawait runs.all(keys.map((k) => ({ key: k, agent: \"w\", task: \"x\" })));\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "for (const k of [\"a\",\"b\"]) { await runs.run(k, { agent: \"w\", task: \"x\" }); }\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nif (x) return 1;\nawait runs.run(\"b\", { agent: \"w\", task: \"x\" });\nreturn 2;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 1 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nreturn 1;\nawait runs.run(\"b\", { agent: \"w\", task: \"x\" });",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 1 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "const r = runs; await r.run(\"a\", {});\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "var runs = 1; await runs.run(\"a\", {});\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: (await runs.run(\"inner\", {})).output });\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [{ key: \"s\", agent: \"w\" }] }]);",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all(items);\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all([{ key: k, agent: \"w\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all([{ ...x, key: \"a\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 2
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 2."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nawait runs.all([{ key: \"b\", agent: \"w\", task: \"y\" }, { key: \"c\", agent: \"w\", task: \"z\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const keys = [\"a\",\"b\"];\nawait runs.all(keys.map((k) => ({ key: k, agent: \"w\", task: \"x\" })));\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "for (const k of [\"a\",\"b\"]) { await runs.run(k, { agent: \"w\", task: \"x\" }); }\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nif (x) return 1;\nawait runs.run(\"b\", { agent: \"w\", task: \"x\" });\nreturn 2;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 1 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" });\nreturn 1;\nawait runs.run(\"b\", { agent: \"w\", task: \"x\" });",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 1 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "const r = runs; await r.run(\"a\", {});\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "var runs = 1; await runs.run(\"a\", {});\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: (await runs.run(\"inner\", {})).output });\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [{ key: \"s\", agent: \"w\" }] }]);",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all(items);\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all([{ key: k, agent: \"w\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "await runs.all([{ ...x, key: \"a\" }]);\nreturn 1;",
+  "opts": {
+   "budget": 5
+  },
+  "result": {
+   "ok": true,
+   "errors": [],
+   "warnings": [
+    {
+     "kind": "dynamic-spawn-count",
+     "message": "workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."
+    }
+   ]
+  }
+ },
+ {
+  "script": "const {a, b: {c = 1}, ...rest} = args; const [x, , y = 2, ...z] = rest.list; return {a, c, x, y, z};",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "label: for (const x of [1]) { if (x) continue label; else break label; } switch (1) { case 1: break; default: }",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const t = tag`a${1}b`; const o = { get a() { return 1; }, set a(v) {}, [k]: 1, \"s\": 2, 3: 4 };",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "class A extends B { static x = 1; #p = 2; static { this.y = 3; } get v() { return this.#p; } static async s() {} }",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains.",
+     "line": 1,
+     "column": 108
+    }
+   ]
+  }
+ },
+ {
+  "script": "do { x++; } while (x < 3); while (x) { x--; } for (var i = 0, j = 1; i < 2; i++, j--) {} for (const k in o) {} with (o) {}",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const f = (a, b = 1, ...c) => a + b; const g = function* () { yield* [1]; }; x ??= 1; y ||= 2; z &&= 3; return a?.b?.[c]?.(d);",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return new.target; ",
+  "result": {
+   "ok": false,
+   "errors": [
+    {
+     "message": "'new.target' can only be used in functions and class static block",
+     "line": 1,
+     "column": 8
+    }
+   ]
+  }
+ },
+ {
+  "script": "debugger; ; return typeof x === \"undefined\" ? void 0 : delete x.y, !x, -x, +x, ~x;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "return 0x10 + 1_000 + .5 + 1e3 + 0b11 + 0o7;",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ {
+  "script": "const x = \"\\u00e9\" + '\\x41'; const r = /[a-z]+/giu; return [x, r];",
+  "result": {
+   "ok": true,
+   "errors": []
+  }
+ }
+]

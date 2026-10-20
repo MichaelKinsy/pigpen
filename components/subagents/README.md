@@ -21,6 +21,7 @@ You help.
 The model sees two tools. `subagents_enable` makes the `subagent` tool available (it is not offered until then, as in the
 original); then:
 
+- `subagent {action: "validate", workflowScript: "..."}` (or `workflowScriptPath`) checks a workflow script without launching a child and answers the original's JSON (`{ok, errors, warnings?}`);
 - `subagent {action: "list"}` lists the agents (`agentScope`: user, project or both), `{action: "get", agent: "helper"}` shows one;
 - `subagent {agent: "helper", task: "..."}` runs one agent in a child `pig --print` process and returns its answer;
 - `subagent {agent, task}` without `async` runs in the background (the original's `asyncByDefault`): the call returns at once, the result arrives as a message that wakes the session, `{action: "status"}`, `interrupt`, `resume` and `stop` manage runs, and the `bg_wait` tool waits for them. `async: false` runs in the foreground. A run survives its session and is adopted by the next one;
@@ -66,3 +67,11 @@ with one message and nothing runs:
 
 The original's slash commands other than the port's own `/run-chain` (`/run`, `/subagents`, `/subagents-stop`, `/prompt-workflow`, ...) are not
 registered, and neither are its skills and prompt templates. See [port/PORT.md](port/PORT.md).
+
+## Embedded JavaScript (owner-approved exception)
+
+Running a model-written workflow script needs a JavaScript interpreter; the Pigpen porting skill otherwise forbids one. The owner approved
+the pure-Go interpreter [goja](https://github.com/dop251/goja) (MIT) inside this extension only, exposing exactly what the original's
+`node:vm` sandbox exposes (the decision of 2026-10-20 is recorded in [port/PORT.md](port/PORT.md) and the skill's exception list). This
+change ships the sandbox, the static `validate` action and the receipts, checklists and chain helpers around it; a run that names
+`workflow`, `workflowScript` or `workflowScriptPath` is still refused until the launcher drives real child runs.
