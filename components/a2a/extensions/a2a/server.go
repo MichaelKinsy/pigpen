@@ -41,6 +41,10 @@ type Server struct {
 	srv    *http.Server
 	ln     net.Listener
 	served chan struct{} // closed when the Serve goroutine has returned
+
+	// serveHook, when set (tests), runs on the Serve goroutine before it starts serving, so a test can hold that
+	// goroutine back and observe that Shutdown waits for it.
+	serveHook func()
 	logs   []string
 
 	// The Agent Card is the same document for every request, so its handler (which holds the encoded card) is
@@ -188,6 +192,9 @@ func (s *Server) Start() error {
 	s.served = make(chan struct{})
 	go func() {
 		defer close(s.served)
+		if h := s.serveHook; h != nil {
+			h()
+		}
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			s.logf("listener stopped: %v", err)
 		}
