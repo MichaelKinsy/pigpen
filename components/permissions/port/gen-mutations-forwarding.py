@@ -33,8 +33,8 @@ m("pf-source-registry-name", PF, 'TargetSourceRegistry PermissionForwardingTarge
 m("pf-response-key-order", PF, 'o.set("responderSessionId", r.ResponderSessionID)\n\to.set("respondedAt", r.RespondedAt)', 'o.set("respondedAt", r.RespondedAt)\n\to.set("responderSessionId", r.ResponderSessionID)')
 
 IO = "fwd_io.go"
-m("io-dir-mode", IO, "ownerOnlyDirectoryMode os.FileMode = 0o700", "ownerOnlyDirectoryMode os.FileMode = 0o755")
-m("io-file-mode", IO, "ownerOnlyFileMode      os.FileMode = 0o600", "ownerOnlyFileMode      os.FileMode = 0o644")
+m("io-dir-mode", IO, "mkdirAll(path, OwnerOnlyDirectoryMode)", "mkdirAll(path, 0o755)")
+m("io-file-mode", IO, "[]byte(marshalJSON(value, \"\")), OwnerOnlyFileMode)", "[]byte(marshalJSON(value, \"\")), 0o644)")
 m("io-request-id-optional", IO, "if !okID || !okAt ||", "if (!okID && false) || !okAt ||")
 m("io-request-source-list", IO, 'var uiPromptSources = []string{"tool_call", "skill_input", "skill_read"}', 'var uiPromptSources = []string{"tool_call", "skill_input"}')
 m("io-grant-empty-surface", IO, 'if !okS || surface == "" || !okP {', "if !okS || !okP {")
@@ -131,7 +131,7 @@ m("sv-grant-needs-approval", SV, "if request.SessionApproval != nil {\n\t\twidth
 m("sv-policy-ask", SV, 'if check.State != "ask" {', 'if check.State == "deny" {')
 m("sv-policy-skipped", SV, "if request.AccessIntent != nil {\n\t\tcheck :=", "if false {\n\t\tcheck :=")
 m("sv-rule-surface", SV, "Surface: request.AccessIntent.Surface, Pattern: check.MatchedPattern", "Surface: check.ToolName, Pattern: check.MatchedPattern")
-m("sv-rule-pattern", SV, "Pattern: check.MatchedPattern, Origin: check.Origin}", "Origin: check.Origin}")
+m("sv-rule-pattern", SV, "Pattern: check.MatchedPattern, Origin: optionalString(check.Origin)}", "Origin: optionalString(check.Origin)}")
 m("sv-deny-reason", SV, "denied := CreateDeniedPermissionDecision(check.Reason)", "denied := CreateDeniedPermissionDecision(nil)")
 m("sv-deny-decider", SV, "\t\t\tdenied.DecidedBy = decidedBy\n", "")
 m("sv-auto-event", SV, 'event := "forwarded_permission.auto_denied"', 'event := "forwarded_permission.auto_approved"')
@@ -210,7 +210,7 @@ m("in-walk-on-decline", IN, "if answer := pick(service); answer != nil {", "if a
 m("in-unpublished", IN, "if service := a.locate(parent); service != nil {", "if service := a.locate(parent); true {")
 m("in-parent-undefined", IN, "if !found || info.ParentSessionID == nil {\n\t\t\treturn nil\n\t\t}", "if !found {\n\t\t\treturn nil\n\t\t}")
 m("in-local-first", IN, "if own := l.local.Resolve(toolName); own != nil {", "if own := l.local.Resolve(toolName); false {")
-m("in-origin", IN, 'Origin: "inherited"}', 'Origin: "local"}')
+m("in-origin", IN, "Origin: RegistrationInherited}", "Origin: RegistrationLocal}")
 m("in-formatter-local", IN, "if own := l.local.Get(toolName); own != nil {", "if own := l.local.Get(toolName); false {")
 
 bad = 0

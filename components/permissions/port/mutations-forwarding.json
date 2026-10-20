@@ -116,14 +116,14 @@
  {
   "name": "io-dir-mode",
   "file": "fwd_io.go",
-  "find": "ownerOnlyDirectoryMode os.FileMode = 0o700",
-  "replace": "ownerOnlyDirectoryMode os.FileMode = 0o755"
+  "find": "mkdirAll(path, OwnerOnlyDirectoryMode)",
+  "replace": "mkdirAll(path, 0o755)"
  },
  {
   "name": "io-file-mode",
   "file": "fwd_io.go",
-  "find": "ownerOnlyFileMode      os.FileMode = 0o600",
-  "replace": "ownerOnlyFileMode      os.FileMode = 0o644"
+  "find": "[]byte(marshalJSON(value, \"\")), OwnerOnlyFileMode)",
+  "replace": "[]byte(marshalJSON(value, \"\")), 0o644)"
  },
  {
   "name": "io-request-id-optional",
@@ -644,8 +644,8 @@
  {
   "name": "sv-rule-pattern",
   "file": "fwd_server.go",
-  "find": "Pattern: check.MatchedPattern, Origin: check.Origin}",
-  "replace": "Origin: check.Origin}"
+  "find": "Pattern: check.MatchedPattern, Origin: optionalString(check.Origin)}",
+  "replace": "Origin: optionalString(check.Origin)}"
  },
  {
   "name": "sv-deny-reason",
@@ -1058,8 +1058,8 @@
  {
   "name": "in-origin",
   "file": "subagent_inherited.go",
-  "find": "Origin: \"inherited\"}",
-  "replace": "Origin: \"local\"}"
+  "find": "Origin: RegistrationInherited}",
+  "replace": "Origin: RegistrationLocal}"
  },
  {
   "name": "in-formatter-local",

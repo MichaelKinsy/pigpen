@@ -220,8 +220,8 @@ m("ec-default-review", "extconfig.go", "PermissionReviewLog: true, DoublePressTo
 m("ec-default-double", "extconfig.go", "PermissionReviewLog: true, DoublePressToConfirm: true}", "PermissionReviewLog: true, DoublePressToConfirm: false}")
 m("ec-misplaced", "extconfig.go", "if permissionPolicyKeys[k] {", "if !permissionPolicyKeys[k] {")
 m("ec-misplaced-keys", "extconfig.go", '"special": true, ', "")
-m("ec-chmod", "extconfig.go", "_ = os.Chmod(logsDir, ownerOnlyDirectoryMode)", "")
-m("ec-mkdir-mode", "extconfig.go", "os.MkdirAll(logsDir, ownerOnlyDirectoryMode)", "os.MkdirAll(logsDir, 0o755)")
+m("ec-chmod", "extconfig.go", "_ = os.Chmod(logsDir, OwnerOnlyDirectoryMode)", "")
+m("ec-mkdir-mode", "extconfig.go", "os.MkdirAll(logsDir, OwnerOnlyDirectoryMode)", "os.MkdirAll(logsDir, 0o755)")
 m("ec-mkdir-message", "extconfig.go", '"Failed to create permission-system log directory \'"', '"Failed to create log directory \'"')
 m("ec-length", "extconfig.go", "if la, lb := utf16Len(a), utf16Len(b); la != lb {", "if la, lb := len(a), len(b); la != lb {")
 

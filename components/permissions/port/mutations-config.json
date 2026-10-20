@@ -1136,13 +1136,13 @@
  {
   "name": "ec-chmod",
   "file": "extconfig.go",
-  "find": "_ = os.Chmod(logsDir, ownerOnlyDirectoryMode)",
+  "find": "_ = os.Chmod(logsDir, OwnerOnlyDirectoryMode)",
   "replace": ""
  },
  {
   "name": "ec-mkdir-mode",
   "file": "extconfig.go",
-  "find": "os.MkdirAll(logsDir, ownerOnlyDirectoryMode)",
+  "find": "os.MkdirAll(logsDir, OwnerOnlyDirectoryMode)",
   "replace": "os.MkdirAll(logsDir, 0o755)"
  },
  {
