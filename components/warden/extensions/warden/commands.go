@@ -74,6 +74,10 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 		w.unmuteCommand(ctx, rest)
 	case "recommend": // learning lane
 		w.recommendCommand(ctx)
+	case "audit": // AUDIT-LANE HOOK (audit_cmd.go)
+		return w.audit(ctx)
+	case "bench": // AUDIT-LANE HOOK (bench_cmd.go)
+		return w.bench(ctx, rest)
 	default:
 		w.show(ctx, "unknown subcommand "+sub+".\n\n"+help)
 	}

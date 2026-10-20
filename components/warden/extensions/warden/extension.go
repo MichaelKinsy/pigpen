@@ -87,6 +87,8 @@ type warden struct {
 	context contextState
 	// learn is the hold feedback, the learning store and the judge cooldown (learning_wire.go).
 	learn *learningState
+	// auditState is the /warden audit running flag (audit_cmd.go).
+	auditState auditState
 }
 
 // Extension returns the guard.
