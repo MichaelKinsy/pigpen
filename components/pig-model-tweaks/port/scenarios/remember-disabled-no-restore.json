@@ -1,0 +1,24 @@
+{
+  "name": "remember-disabled-no-restore",
+  "description": "With remembering off nothing is restored at startup.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": "eq-openai-key"
+  },
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": false, \"last\": {\"provider\": \"openai\", \"modelId\": \"gpt-4o-mini\"}}}"
+  },
+  "steps": [
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    }
+  ]
+}

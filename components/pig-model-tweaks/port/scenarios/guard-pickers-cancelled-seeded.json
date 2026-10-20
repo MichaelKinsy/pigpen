@@ -1,0 +1,35 @@
+{
+  "name": "guard-pickers-cancelled-seeded",
+  "description": "Same with preferences already saved: the bare command opens the toggle picker without the first-time notice.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"modelGuard\": {\"enabled\": true, \"allowedModels\": [{\"provider\": \"eq-llm\", \"model\": \"eq-1\"}]}}"
+  },
+  "steps": [
+    {
+      "name": "add",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref add"
+      }
+    },
+    {
+      "name": "remove",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref remove"
+      }
+    },
+    {
+      "name": "bare",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref"
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "guard-commands-empty",
+  "description": "Guard commands with no preferences: the session_start hint, list, on, off, toggle.",
+  "steps": [
+    {
+      "name": "list",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref list"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref off"
+      }
+    },
+    {
+      "name": "on",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref on"
+      }
+    },
+    {
+      "name": "toggle",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref toggle"
+      }
+    },
+    {
+      "name": "toggle-again",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref toggle"
+      }
+    },
+    {
+      "name": "list-upper",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref LIST "
+      }
+    }
+  ]
+}

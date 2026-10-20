@@ -1,0 +1,39 @@
+{
+  "name": "remember-new-session-b4",
+  "description": "KNOWN PiG BUG B4: the original defers its remembered-model toast with setTimeout(0). Under Pi the new_session response comes first; under PiG's Node extension host the toast comes first. Expected to fail the pig-ts host check until B4 is fixed.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": "eq-openai-key"
+  },
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": true, \"last\": {\"provider\": \"openai\", \"modelId\": \"gpt-4o-mini\"}}, \"modelGuard\": {\"enabled\": false, \"allowedModels\": []}}",
+    "settings.json": "{}\n"
+  },
+  "steps": [
+    {
+      "name": "switch-away",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o"
+      }
+    },
+    {
+      "name": "new-session",
+      "rpc": {
+        "type": "new_session"
+      }
+    },
+    {
+      "name": "status-after-new",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    }
+  ]
+}

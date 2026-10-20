@@ -1,0 +1,15 @@
+{"kind":"header","scenario":"remember-commands","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:fc767afcbeedf603d53e87866cd0a3437464faecb902e8c13e062532ef237e93","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"message":"💡 No model preferences set. Run /pt-model-guard-pref to choose preferred models.","method":"notify","notifyType":"info"}}
+{"step":"01-status","ch":"ui","data":{"message":"remember-model: on\nlast: acme/m1\nUsage: /pt-remember-model [on|off|clear]","method":"notify","notifyType":"info"}}
+{"step":"01-status","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-off","ch":"ui","data":{"message":"remember-model disabled","method":"notify","notifyType":"info"}}
+{"step":"02-off","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-on","ch":"ui","data":{"message":"remember-model enabled","method":"notify","notifyType":"info"}}
+{"step":"03-on","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"04-clear","ch":"ui","data":{"message":"Cleared remembered model","method":"notify","notifyType":"info"}}
+{"step":"04-clear","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"05-status-after-clear","ch":"ui","data":{"message":"remember-model: on\nlast: (none)\nUsage: /pt-remember-model [on|off|clear]","method":"notify","notifyType":"info"}}
+{"step":"05-status-after-clear","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"06-odd-case","ch":"ui","data":{"message":"remember-model disabled","method":"notify","notifyType":"info"}}
+{"step":"06-odd-case","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

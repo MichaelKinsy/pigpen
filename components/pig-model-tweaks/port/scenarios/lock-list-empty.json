@@ -1,0 +1,20 @@
+{
+  "name": "lock-list-empty",
+  "description": "No locks.",
+  "steps": [
+    {
+      "name": "list",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider list"
+      }
+    },
+    {
+      "name": "clear",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider clear"
+      }
+    }
+  ]
+}

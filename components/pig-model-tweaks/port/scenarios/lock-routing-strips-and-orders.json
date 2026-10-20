@@ -1,0 +1,40 @@
+{
+  "name": "lock-routing-strips-and-orders",
+  "description": "The :free suffix matches a lock, so it is stripped and the lock becomes provider.order.",
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"openrouterModelProviderPref\": {\"enabled\": true, \"locks\": {\"cohere/north-mini-code\": \"free\"}}}",
+    "models.json": "{\"providers\": {\"openrouter\": {\"baseUrl\": \"{{server:or}}/api/v1\", \"apiKey\": \"eq-or-key\"}}}"
+  },
+  "args": [
+    "--provider",
+    "openrouter",
+    "--model",
+    "cohere/north-mini-code:free",
+    "--system-prompt",
+    "eq",
+    "--no-tools"
+  ],
+  "servers": {
+    "or": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/api/v1/chat/completions",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "body": "data: {\"id\": \"c1\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {\"role\": \"assistant\", \"content\": \"ok\"}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c1\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"stop\"}]}\n\ndata: [DONE]\n\n"
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}
