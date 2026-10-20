@@ -813,6 +813,14 @@ func optNumber(f *float64) any {
 
 // ---- registration ----
 
+// proposeDraftGuidelines are the prompt guidelines of propose_goal_draft.
+var proposeDraftGuidelines = []string{
+	"Use only during a /goal, /sisyphus, or /goal-tweak guided draft.",
+	"Clarify ambiguity before proposing. Include tasks when the work naturally decomposes into trackable milestones; omit them for genuinely simple work.",
+	"Set token_budget only when the user explicitly asked for a token budget or a spend limit. Never invent, estimate, or infer one from the objective's size; omitting it creates a goal with no budget.",
+	"Confirmation creates or revises the goal atomically. Continue Chatting leaves drafting active for refinement.",
+}
+
 // registerDraftingTools is registerDraftingTools(core).
 func registerDraftingTools(c *core) {
 	e := c.pi.e
@@ -855,16 +863,11 @@ func registerDraftingTools(c *core) {
 		RenderResult: draftRenderResult(c),
 	})
 	e.RegisterTool(sdk.ToolDefinition{
-		Name:          proposeDraftToolName,
-		Label:         "Propose Goal Draft",
-		Description:   "Present the drafted objective and agent-selected task plan for explicit user confirmation.",
-		PromptSnippet: "Confirm the proposed goal and any useful task tree in one dialog.",
-		PromptGuidelines: []string{
-			"Use only during a /goal, /sisyphus, or /goal-tweak guided draft.",
-			"Clarify ambiguity before proposing. Include tasks when the work naturally decomposes into trackable milestones; omit them for genuinely simple work.",
-			"Set token_budget only when the user explicitly asked for a token budget or a spend limit. Never invent, estimate, or infer one from the objective's size; omitting it creates a goal with no budget.",
-			"Confirmation creates or revises the goal atomically. Continue Chatting leaves drafting active for refinement.",
-		},
+		Name:             proposeDraftToolName,
+		Label:            "Propose Goal Draft",
+		Description:      "Present the drafted objective and agent-selected task plan for explicit user confirmation.",
+		PromptSnippet:    "Confirm the proposed goal and any useful task tree in one dialog.",
+		PromptGuidelines: proposeDraftGuidelines,
 		Parameters: draftSchemaObject(map[string]any{
 			"objective":        map[string]any{"type": "string", "description": "Complete proposed objective; preserve it exactly for budget-only tweaks."},
 			"token_budget":     map[string]any{"anyOf": []any{map[string]any{"type": "integer", "minimum": 1}, map[string]any{"type": "null"}}, "description": "Only on user request: positive whole-token lifetime limit; null removes it. Omit to retain the current tweak budget or create without one."},

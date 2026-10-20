@@ -204,7 +204,7 @@ func (d *dialogDriver) selectFn(title string, options []string) (string, bool) {
 	}
 	d.have = false
 	for _, o := range options {
-		if a.choice != "" && strings.HasSuffix(o, a.choice) {
+		if a.choice != "" && strings.Contains(o, ". "+a.choice) {
 			return o, true
 		}
 	}

@@ -136,3 +136,6 @@ func DiffGoalRefreshState(beforeIDs []string, beforeEvents, beforeMalformed int,
 
 // PoolIDs are the ids of the active goal files on disk (a cold read).
 func PoolIDs(cwd string) []string { return poolIDs(storage{cwd: cwd}.readActiveGoalPool()) }
+
+// ProposeDraftGuidelines are the registered prompt guidelines of propose_goal_draft.
+func ProposeDraftGuidelines() []string { return append([]string(nil), proposeDraftGuidelines...) }
