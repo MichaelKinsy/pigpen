@@ -810,10 +810,10 @@
   "replace": "math.Trunc(s)-101"
  },
  {
-  "name": "openai-keeps-foreign-utm-source",
+  "name": "openai-utm-source-check-inverted",
   "file": "openai.go",
   "find": "if !found || value != \"openai\" {",
-  "replace": "if !found {"
+  "replace": "if !found || value == \"openai\" {"
  },
  {
   "name": "openai-pro-tier-allowed",
