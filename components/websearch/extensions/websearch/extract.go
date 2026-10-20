@@ -2,6 +2,7 @@ package websearch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -306,9 +307,22 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 				return withDeclared(*r)
 			}
 		case "gemini":
-			// Gemini URL context and Gemini Web belong to a later slice: keep the refusal.
-			if fetchProviderRequested(p) {
-				return failed(rawURL, unsupported(ProviderLabel(p)+" fetch provider").Error())
+			// extract.ts:1011-1022: URL context, then Gemini Web; only an abort, a credential
+			// failure or an unreadable config ends the fetch, anything else tries the next provider.
+			r, err := ExtractWithURLContext(ctx, rawURL)
+			if err == nil && r == nil {
+				r, err = ExtractWithGeminiWeb(ctx, rawURL)
+			}
+			if err != nil {
+				var credErr *CredentialResolutionError
+				switch {
+				case isAbortError(err) || ctx.Err() != nil:
+					return abortedResult(rawURL)
+				case errors.As(err, &credErr) || isConfigParseError(err.Error()):
+					return failed(rawURL, err.Error())
+				}
+			} else if r != nil {
+				return withDeclared(*r)
 			}
 		default:
 			if !isHostedFetchProvider(p) {

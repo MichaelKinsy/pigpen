@@ -210,7 +210,3 @@ func unportedFetchFeature(rawURL string, o ExtractOptions) (string, error) {
 type plainError struct{ msg string }
 
 func (e *plainError) Error() string { return e.msg }
-
-// fetchProviderRequested reports whether the original would call the Gemini fetch provider here:
-// its availability check (a credential source). The Gemini providers are a later slice.
-func fetchProviderRequested(p string) bool { return isProviderAvailable(p) }
