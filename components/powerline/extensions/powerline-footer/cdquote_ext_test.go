@@ -586,3 +586,22 @@ func TestLastPromptIsLaidOutAgainWhenTheTerminalResizes(t *testing.T) {
 	}
 	t.Errorf("the line was not laid out again at 40 cells: %v", calls[len(calls)-1].Args)
 }
+
+func TestLastPromptIsClearedWhenTheTerminalIsTooNarrowForIt(t *testing.T) {
+	r := &cdRig{sessionFile: "<new>"}
+	h := r.start(t)
+	beforeAgentStart(h, "a prompt")
+	if calls := lastPromptCalls(h); calls[len(calls)-1].Args["content"] == nil {
+		t.Fatal("no widget to start with")
+	}
+	h.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "width_change", "args": map[string]any{"width": 12}}}) // 12 - 3 < 10 free cells
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		calls := lastPromptCalls(h)
+		if calls[len(calls)-1].Args["content"] == nil {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Error("the widget was not cleared when no room is left for the text")
+}

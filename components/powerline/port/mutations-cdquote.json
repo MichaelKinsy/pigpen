@@ -936,12 +936,6 @@
   "replace": "left := borderLength / 3"
  },
  {
-  "name": "picker-clamps-selection",
-  "file": "quote_picker.go",
-  "find": "p.selectedIdx = min(p.selectedIdx, len(filtered)-1)",
-  "replace": "p.selectedIdx = p.selectedIdx"
- },
- {
   "name": "picker-search-placeholder",
   "file": "quote_picker.go",
   "find": "\"type to filter messages...\"",
@@ -982,12 +976,6 @@
   "file": "last_prompt.go",
   "find": "if !s.show || s.prompt == \"\" {",
   "replace": "if s.prompt == \"\" {"
- },
- {
-  "name": "lastprompt-empty-ignored",
-  "file": "last_prompt.go",
-  "find": "if !s.show || s.prompt == \"\" {",
-  "replace": "if !s.show {"
  },
  {
   "name": "lastprompt-cache-width",

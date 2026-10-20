@@ -566,3 +566,15 @@ func TestPickerStyling(t *testing.T) {
 		t.Errorf("top border\n got %q\nwant %q", lines[0], want)
 	}
 }
+
+func TestPickerWindowStartsHalfAWindowBeforeTheSelection(t *testing.T) {
+	p := newTestPicker()
+	for range 6 {
+		p.HandleInput("\x1b[B")
+	}
+	got := strings.Join(p.Render(90), "\n")
+	// row 7 of 12 is selected: the window starts at index 6-4 = 2 and shows 8 rows
+	if !strings.Contains(got, "id02") || strings.Contains(got, "id10") || !strings.Contains(got, "id09") || strings.Contains(got, "id01 ") {
+		t.Errorf("window around row 7:\n%s", got)
+	}
+}
