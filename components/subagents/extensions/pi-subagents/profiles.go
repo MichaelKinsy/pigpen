@@ -822,7 +822,7 @@ func (m catalogModel) observedCost() *float64 {
 	return combinedCost(m.Cost, "input", "output", "cacheRead", "cacheWrite")
 }
 
-func b2i(b *bool) int {
+func boolInt(b *bool) int {
 	if b != nil && *b {
 		return 1
 	}
@@ -838,7 +838,7 @@ func derefOr0(f *float64) float64 {
 
 func dominates(a, b catalogModel) bool {
 	ca, cb := a.observedCost(), b.observedCost()
-	if ca == nil || cb == nil || *ca > *cb || a.Derived.ProfileRank < b.Derived.ProfileRank || b2i(a.Reasoning) < b2i(b.Reasoning) ||
+	if ca == nil || cb == nil || *ca > *cb || a.Derived.ProfileRank < b.Derived.ProfileRank || boolInt(a.Reasoning) < boolInt(b.Reasoning) ||
 		derefOr0(a.Context) < derefOr0(b.Context) || derefOr0(a.MaxTokens) < derefOr0(b.MaxTokens) {
 		return false
 	}

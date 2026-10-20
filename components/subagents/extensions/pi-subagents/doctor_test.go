@@ -26,9 +26,9 @@ func TestDoctor(t *testing.T) {
 	}
 	tw(t, f, "formats a bounded successful environment summary", func(t *testing.T) {
 		root := tmp(t)
-		spawns := &spawnCounters{SessionID: "session-abc123", Count: 3, ConfiguredLimit: new(int), Granted: 1,
-			GrantHistory: []spawnGrant{{SessionID: "session-abc123", Amount: 1, GrantedAt: 0, PreviousLimit: 4, Limit: 5}}}
-		*spawns.ConfiguredLimit = 4
+		state := &subagentState{Spawns: &spawnCounters{SessionID: "session-abc123", Count: 3, ConfiguredLimit: new(int), ConfiguredResolved: true, Granted: 1,
+			GrantHistory: []grantRecord{{SessionID: "session-abc123", Amount: 1, GrantedAt: 0, PreviousLimit: 4, Limit: 5}}}}
+		*state.Spawns.ConfiguredLimit = 4
 		paths := doctorPaths{TempRoot: filepath.Join(root, "temp-root"), Async: filepath.Join(root, "async"), Results: filepath.Join(root, "results"), ChainRuns: filepath.Join(root, "chains")}
 		for _, d := range []string{paths.TempRoot, paths.Async, paths.Results, paths.ChainRuns} {
 			mkdirAll(t, d)
@@ -38,8 +38,8 @@ func TestDoctor(t *testing.T) {
 		t.Setenv("PI_SUBAGENT_MAX_SPAWNS_PER_RUN", "")
 		os.Unsetenv("PI_SUBAGENT_MAX_SPAWNS_PER_RUN")
 		report := buildDoctorReport(doctorInput{
-			Cwd: root, Config: doctorConfig{DefaultSessionDir: "~/subagent-sessions", MaxSubagentSpawnsPerSession: float64(4), MaxActiveAsyncRunsPerSession: float64(2)},
-			Spawns: &spawns, CurrentSessionFile: filepath.Join(root, "sessions", "parent.jsonl"), CurrentSessionID: "session-abc123", OrchestratorTarget: "subagent-chat-abc123",
+			Cwd: root, Config: doctorConfig{DefaultSessionDir: "~/subagent-sessions", MaxActiveAsyncRunsPerSession: float64(2), Spawn: extensionConfig{MaxSubagentSpawnsPerSession: float64(4)}},
+			State: state, CurrentSessionFile: filepath.Join(root, "sessions", "parent.jsonl"), CurrentSessionID: "session-abc123", OrchestratorTarget: "subagent-chat-abc123",
 			ExpandTilde: func(v string) string { return strings.Replace(v, "~/", root+"/home/", 1) }, Paths: &paths,
 			Deps: doctorDeps{
 				IsAsyncAvailable: func() bool { return true },
@@ -84,7 +84,7 @@ func TestDoctor(t *testing.T) {
 	tw(t, f, "reports the effective source when the run fan-out environment value is invalid", func(t *testing.T) {
 		root := tmp(t)
 		t.Setenv("PI_SUBAGENT_MAX_SPAWNS_PER_RUN", "invalid")
-		report := buildDoctorReport(doctorInput{Cwd: root, Config: doctorConfig{MaxSubagentSpawnsPerRun: float64(12)}, Deps: plainDeps(root)})
+		report := buildDoctorReport(doctorInput{Cwd: root, Config: doctorConfig{Spawn: extensionConfig{MaxSubagentSpawnsPerRun: float64(12)}}, Deps: plainDeps(root)})
 		polMatches(t, report, `Run fan-out budget\n- configured limit: 12 \(config\)`)
 	})
 	tw(t, f, "distinguishes dedicated runner forwarding from root state", func(t *testing.T) {

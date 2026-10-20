@@ -201,7 +201,7 @@ func validateAcceptanceInput(input any, pathLabel string) []string {
 				}
 				ids[n] = true
 			}
-			if must, _ := gate.get("must"); !nonEmptyString(must) {
+			if must, _ := gate.get("must"); !isNonEmptyString(must) {
 				add("%s.must is required.", cp)
 			}
 			ev, hasEv := gate.get("evidence")
@@ -256,14 +256,14 @@ func validateAcceptanceInput(input any, pathLabel string) []string {
 				v, ok := cmd.get(k)
 				return v, ok && !isUndefined(v)
 			}
-			if id, _ := cget("id"); !nonEmptyString(id) {
+			if id, _ := cget("id"); !isNonEmptyString(id) {
 				add("%s.id is required.", vp)
 			}
-			if c, _ := cget("command"); !nonEmptyString(c) {
+			if c, _ := cget("command"); !isNonEmptyString(c) {
 				add("%s.command is required.", vp)
 			}
 			if t, ok := cget("timeoutMs"); ok {
-				if f, isNum := asNumber(t); !isNum || !isInteger(t) || f < 1 {
+				if f, isNum := asNumber(t); !isNum || !isIntegerValue(t) || f < 1 {
 					add("%s.timeoutMs must be an integer >= 1.", vp)
 				}
 			}
@@ -347,7 +347,7 @@ func validateAcceptanceInput(input any, pathLabel string) []string {
 	return errors
 }
 
-func nonEmptyString(v any) bool {
+func isNonEmptyString(v any) bool {
 	s, ok := v.(string)
 	return ok && jsTrim(s) != ""
 }

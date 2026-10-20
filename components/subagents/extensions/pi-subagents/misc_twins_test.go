@@ -8,7 +8,7 @@ import (
 
 func TestAgentContractTwin(t *testing.T) {
 	tw(t, "agent-contract", "does not mark interrupted runs successful", func(t *testing.T) {
-		eq(t, buildExecutionProjection(runOutcome{ExitCode: 0, Interrupted: true}), executionProjection{Status: "paused", Success: false, ExitCode: 0, Interrupted: true}, "projection")
+		eq(t, buildExecutionProjection(runProjectionInput{ExitCode: 0, Interrupted: true}), executionProjection{Status: "paused", Success: false, ExitCode: 0, Interrupted: true}, "projection")
 	})
 }
 

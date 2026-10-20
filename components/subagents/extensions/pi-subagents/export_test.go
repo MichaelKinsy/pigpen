@@ -80,3 +80,6 @@ func RewriteExtension(in RewriteInput, out *string, failure *error) *sdk.Extensi
 	})
 	return e
 }
+
+// ErrCancelled is what a cancelled child run returns.
+var ErrCancelled = errCancelled

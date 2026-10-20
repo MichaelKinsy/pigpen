@@ -18,13 +18,6 @@ import (
 // Twins of advertised-agent-refresh and advertisement-barrier: the original drives register() with a hand-made Pi API; these
 // drive the extension through the fake host, so the events cross the real SDK boundary.
 
-func tw(t *testing.T, file, title string, fn func(t *testing.T)) { t.Helper(); t.Run(title, fn) }
-
-func tskip(t *testing.T, file, title, reason string) {
-	t.Helper()
-	t.Run(title, func(t *testing.T) { t.Skip(reason) })
-}
-
 func mustMatch(t *testing.T, text, re string) {
 	t.Helper()
 	if !regexp.MustCompile(re).MatchString(text) {
@@ -363,7 +356,7 @@ func TestAdvertisementBarrier(t *testing.T) {
 		releasePhase("initial")
 		prompt, loader, run, listed := <-firstPrompt, <-enabled, <-firstExecution, <-firstList
 		mustMatch(t, run.raw+run.failure, `global-specialist`)
-		mustNotMatch(t, run.raw+run.failure, `(?i)Unknown agent|not found`)
+		mustNotMatch(t, contentOf(run.raw)+run.failure, `(?i)Unknown agent|not found`)
 		mustMatch(t, listed.raw, `global-specialist`)
 		for _, text := range []string{prompt.sections["advertised_subagents"], contentOf(loader.raw)} {
 			mustMatch(t, text, `<name>global-specialist</name>`)
@@ -404,7 +397,7 @@ func TestAdvertisementBarrier(t *testing.T) {
 		mustMatch(t, string(get), `new-specialist`)
 		merged := <-mergedExecution
 		mustMatch(t, merged.raw+merged.failure, `new-specialist`)
-		mustNotMatch(t, merged.raw+merged.failure, `(?i)Unknown agent|not found`)
+		mustNotMatch(t, contentOf(merged.raw)+merged.failure, `(?i)Unknown agent|not found`)
 		// The runtime agent registry of the original has no counterpart in this port (it registers agents from other extensions).
 
 		releasePhase("old")

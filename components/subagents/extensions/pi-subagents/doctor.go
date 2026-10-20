@@ -2,7 +2,6 @@ package pi_subagents
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,122 +13,12 @@ import (
 
 // The doctor report (src/extension/doctor.ts) and the spawn budget it reports (src/runs/shared/spawn-budget.ts).
 
-const (
-	defaultMaxSubagentSpawnsPerRun = 64
-	maxSpawnGrantHistory           = 20
-)
-
-// doctorConfig is the part of the extension config (config.json) the report reads; nil is unset.
+// doctorConfig is the part of the extension config (config.json) the report reads.
 type doctorConfig struct {
 	DefaultSessionDir            string
-	MaxSubagentSpawnsPerSession  any
-	MaxSubagentSpawnsPerRun      any
 	MaxActiveAsyncRunsPerSession any
-	IntercomBridgeMode           string
-}
-
-type spawnGrant struct {
-	SessionID            string
-	Amount               int
-	GrantedAt            int64
-	PreviousLimit, Limit int
-}
-
-// spawnCounters is SubagentState.subagentSpawns.
-type spawnCounters struct {
-	SessionID       string
-	Count           int
-	ConfiguredLimit *int
-	Granted         int
-	GrantHistory    []spawnGrant
-}
-
-type spawnBudgetSnapshot struct {
-	Used            int
-	ConfiguredLimit *int
-	Granted         int
-	Limit           *int
-	Remaining       *int
-	GrantRemaining  *int
-	GrantHistory    []spawnGrant
-}
-
-// normalizeNonNegativeInteger is types.ts:2883 (a number or a numeric string).
-func normalizeNonNegativeInteger(v any) *int {
-	var f float64
-	switch x := v.(type) {
-	case float64:
-		f = x
-	case int:
-		f = float64(x)
-	case string:
-		t := jsTrim(x)
-		if t == "" {
-			f = 0
-		} else {
-			p, err := strconv.ParseFloat(t, 64)
-			if err != nil {
-				return nil
-			}
-			f = p
-		}
-	default:
-		return nil
-	}
-	if math.IsNaN(f) || math.IsInf(f, 0) || f != math.Trunc(f) || f < 0 {
-		return nil
-	}
-	n := int(f)
-	return &n
-}
-
-// resolveMaxSubagentSpawnsPerSession is types.ts:2939: the environment wins; 0 means unlimited (nil).
-func resolveMaxSubagentSpawnsPerSession(config any) *int {
-	raw, set := os.LookupEnv("PI_SUBAGENT_MAX_SPAWNS_PER_SESSION")
-	if env := normalizeNonNegativeInteger(raw); set && env != nil {
-		if *env == 0 {
-			return nil
-		}
-		return env
-	}
-	c := normalizeNonNegativeInteger(config)
-	if c != nil && *c == 0 {
-		return nil
-	}
-	return c
-}
-
-func normalizeMaxSubagentSpawnsPerRun(v any) *int {
-	n := normalizeNonNegativeInteger(v)
-	if n != nil && *n > 0 {
-		return n
-	}
-	return nil
-}
-
-// spawnBudgetSnapshotOf is getSpawnBudgetSnapshot: counters of another session are replaced by fresh ones.
-func spawnBudgetSnapshotOf(counters **spawnCounters, config doctorConfig, sessionID string) spawnBudgetSnapshot {
-	c := *counters
-	if c == nil || c.SessionID != sessionID {
-		c = &spawnCounters{SessionID: sessionID, ConfiguredLimit: resolveMaxSubagentSpawnsPerSession(config.MaxSubagentSpawnsPerSession)}
-		*counters = c
-	}
-	s := spawnBudgetSnapshot{Used: c.Count, ConfiguredLimit: c.ConfiguredLimit, GrantHistory: append([]spawnGrant(nil), c.GrantHistory...)}
-	if c.ConfiguredLimit != nil {
-		s.Granted = c.Granted
-		limit := *c.ConfiguredLimit + c.Granted
-		remaining := max(0, limit-c.Count)
-		grantRemaining := max(0, *c.ConfiguredLimit-c.Granted)
-		s.Limit, s.Remaining, s.GrantRemaining = &limit, &remaining, &grantRemaining
-	}
-	return s
-}
-
-func formatSpawnBudgetSummary(s spawnBudgetSnapshot) string {
-	if s.Limit == nil {
-		return "unlimited"
-	}
-	return fmt.Sprintf("%d/%d used, %d remaining (configured %d; granted %d; grant allowance %d)", s.Used, *s.Limit, *s.Remaining, *s.ConfiguredLimit, s.Granted, *s.GrantRemaining)
+	AbandonedSlotReleaseAfterMs  any
+	Spawn                        extensionConfig
 }
 
 // intercomDiagnostic is IntercomBridgeDiagnostic.
@@ -153,7 +42,7 @@ type doctorDeps struct {
 type doctorInput struct {
 	Cwd                 string
 	Config              doctorConfig
-	Spawns              **spawnCounters
+	State               *subagentState
 	CurrentSessionID    string
 	Context             string
 	RequestedSessionDir string
@@ -330,12 +219,11 @@ func buildDoctorReport(in doctorInput) string {
 			return fmt.Sprintf("- skills: total %d (%s)", len(skills), formatSkillSourceCounts(skills)), nil
 		}),
 		"", "Spawn budget")
-	var holder *spawnCounters
-	spawns := in.Spawns
-	if spawns == nil {
-		spawns = &holder
+	state := in.State
+	if state == nil {
+		state = &subagentState{}
 	}
-	snap := spawnBudgetSnapshotOf(spawns, in.Config, sessionID)
+	snap := getSpawnBudgetSnapshot(state, in.Config.Spawn, sessionID, osEnv)
 	grants := "none"
 	if len(snap.GrantHistory) > 0 {
 		var g []string
@@ -346,24 +234,32 @@ func buildDoctorReport(in doctorInput) string {
 	}
 	lines = append(lines, "- usage: "+formatSpawnBudgetSummary(snap), "- recent grants: "+grants, "- reset boundary: a new parent session resets usage and grants; compaction does not")
 
-	configured := defaultMaxSubagentSpawnsPerRun
+	configured := resolveMaxSubagentSpawnsPerRun(in.Config.Spawn.MaxSubagentSpawnsPerRun, osEnv)
 	source := "default"
-	if n := normalizeMaxSubagentSpawnsPerRun(os.Getenv("PI_SUBAGENT_MAX_SPAWNS_PER_RUN")); n != nil {
-		configured, source = *n, "environment"
-	} else if n := normalizeMaxSubagentSpawnsPerRun(in.Config.MaxSubagentSpawnsPerRun); n != nil {
-		configured, source = *n, "config"
+	if v, set := osEnv("PI_SUBAGENT_MAX_SPAWNS_PER_RUN"); set && isNormalizedRunLimit(v) {
+		source = "environment"
+	} else if isNormalizedRunLimit(in.Config.Spawn.MaxSubagentSpawnsPerRun) {
+		source = "config"
 	}
 	lines = append(lines, "", "Run fan-out budget", fmt.Sprintf("- configured limit: %d (%s)", configured, source), "- usage: available after a run starts",
 		"- reset boundary: cumulative claims are never released; a new top-level run creates a new budget")
 
 	limit := resolveMaxActiveAsyncRunsPerSession(in.Config.MaxActiveAsyncRunsPerSession)
+	used := 0
+	if sessionID != "" {
+		release, disabled := resolveAbandonedSlotReleaseAfterMs(in.Config.AbandonedSlotReleaseAfterMs)
+		opts := CapacityOptions{AbandonedSlotReleaseAfterMs: release}
+		if disabled {
+			opts.AbandonedSlotReleaseAfterMs = false
+		}
+		used = getActiveAsyncCapacitySnapshot(sessionID, limit, opts).Used
+	}
 	limitText := "unlimited"
-	if limit > 0 {
-		limitText = strconv.Itoa(limit)
+	if limit != nil {
+		limitText = strconv.Itoa(*limit)
 	}
 	lines = append(lines, "", "Active async capacity",
-		// The port runs no background runs, so no slot is ever used.
-		"- usage: 0/"+limitText+" used",
+		fmt.Sprintf("- usage: %d/%s used", used, limitText),
 		"- scope: top-level async runs in the current parent session; foreground and nested workflow children are not charged again",
 		"- release: terminal state plus matching observed process-terminal proof, or abandoned-timeout for failed runs with a dead runner PID and stale activity when enabled; false keeps unknown-proof slots",
 		"", "Workflow script",
@@ -396,9 +292,9 @@ func buildDoctorReport(in doctorInput) string {
 	if diag.Reason != "" {
 		reason = " (" + diag.Reason + ")"
 	}
-	state := "inactive"
+	bridge := "inactive"
 	if diag.Active {
-		state = "active"
+		bridge = "active"
 	}
 	ctxText := in.Context
 	if ctxText == "" {
@@ -412,28 +308,19 @@ func buildDoctorReport(in doctorInput) string {
 	if diag.SupervisorChannelAvailable {
 		channel = "available"
 	}
-	lines = append(lines, fmt.Sprintf("- bridge: %s%s", state, reason), fmt.Sprintf("- mode: %s; context: %s", diag.Mode, ctxText),
+	lines = append(lines, fmt.Sprintf("- bridge: %s%s", bridge, reason), fmt.Sprintf("- mode: %s; context: %s", diag.Mode, ctxText),
 		"- orchestrator target: "+target, fmt.Sprintf("- supervisor channel: %s (%s)", channel, diag.ExtensionDir))
 	return strings.Join(lines, "\n")
 }
 
-// resolveMaxActiveAsyncRunsPerSession is active-async-capacity.ts:81 (0 is unlimited).
-func resolveMaxActiveAsyncRunsPerSession(v any) int {
-	f, ok := v.(float64)
-	if !ok {
-		if i, isInt := v.(int); isInt {
-			f, ok = float64(i), true
-		}
-	}
-	if !ok || f != math.Trunc(f) || f < 0 {
-		return 0
-	}
-	return int(f)
+func isNormalizedRunLimit(v any) bool {
+	_, ok := normalizeMaxSubagentSpawnsPerRun(v)
+	return ok
 }
 
 // loadDoctorConfig reads the extension config file for the report (an unreadable file is an empty config).
 func loadDoctorConfig() doctorConfig {
-	var c doctorConfig
+	c := doctorConfig{Spawn: loadExtensionConfig()}
 	b, err := os.ReadFile(subagentConfigPath())
 	if err != nil {
 		return c
@@ -444,11 +331,9 @@ func loadDoctorConfig() doctorConfig {
 		return c
 	}
 	c.DefaultSessionDir, _ = o.str("defaultSessionDir")
-	c.MaxSubagentSpawnsPerSession = o.vals["maxSubagentSpawnsPerSession"]
-	c.MaxSubagentSpawnsPerRun = o.vals["maxSubagentSpawnsPerRun"]
 	c.MaxActiveAsyncRunsPerSession = o.vals["maxActiveAsyncRunsPerSession"]
-	if bridge := o.obj("intercomBridge"); bridge != nil {
-		c.IntercomBridgeMode, _ = bridge.str("mode")
+	if capacity := o.obj("capacity"); capacity != nil {
+		c.AbandonedSlotReleaseAfterMs = capacity.vals["abandonedSlotReleaseAfterMs"]
 	}
 	return c
 }
@@ -468,18 +353,15 @@ func expandTilde(p string) string {
 func doctorReport(ctx sdk.Context, context, sessionDir string) (string, spawnBudgetSnapshot) {
 	cfg := loadDoctorConfig()
 	sessionID, serr := ctx.GetSessionID()
-	in := doctorInput{Cwd: ctx.Cwd(), Config: cfg, Spawns: &doctorSpawns, CurrentSessionID: sessionID, Context: context, RequestedSessionDir: sessionDir, ExpandTilde: expandTilde}
+	in := doctorInput{Cwd: ctx.Cwd(), Config: cfg, State: runState, CurrentSessionID: sessionID, Context: context, RequestedSessionDir: sessionDir, ExpandTilde: expandTilde}
 	if serr != nil {
 		in.SessionError = errorText(serr)
 	}
 	if f, err := ctx.GetSessionFile(); err == nil && f != nil {
 		in.CurrentSessionFile = *f
 	}
-	return buildDoctorReport(in), spawnBudgetSnapshotOf(&doctorSpawns, cfg, sessionID)
+	return buildDoctorReport(in), getSpawnBudgetSnapshot(runState, cfg.Spawn, sessionID, osEnv)
 }
-
-// doctorSpawns is the session's spawn counters (the port starts no budgeted children, so they stay at zero).
-var doctorSpawns *spawnCounters
 
 func init() {
 	registerAction("doctor", []string{"context", "sessionDir"}, func(ctx sdk.Context, params map[string]any) (any, error) {
@@ -507,7 +389,7 @@ func init() {
 			history = append(history, obj("sessionId", g.SessionID, "amount", float64(g.Amount), "grantedAt", float64(g.GrantedAt), "previousLimit", float64(g.PreviousLimit), "limit", float64(g.Limit)))
 		}
 		budget.set("grantHistory", history)
-		return manageOutcome(manageResult{text: report, details: obj("spawnBudget", budget, "activeAsyncCapacity", obj("used", float64(0), "limit", float64(resolveMaxActiveAsyncRunsPerSession(loadDoctorConfig().MaxActiveAsyncRunsPerSession))))})
+		return manageOutcome(manageResult{text: report, details: obj("spawnBudget", budget, "activeAsyncCapacity", capacityDetails(loadDoctorConfig(), sessionIDOf(ctx)))})
 	})
 	registerAction("guide", []string{"topic"}, func(ctx sdk.Context, params map[string]any) (any, error) {
 		topic := "overview"
@@ -520,4 +402,22 @@ func init() {
 		}
 		return manageOutcome(manageResult{text: text})
 	})
+}
+
+// capacityDetails is the activeAsyncCapacity detail of the doctor result.
+func capacityDetails(cfg doctorConfig, sessionID string) *jsObject {
+	limit := resolveMaxActiveAsyncRunsPerSession(cfg.MaxActiveAsyncRunsPerSession)
+	used, shown := 0, 0
+	if limit != nil {
+		shown = *limit
+	}
+	if sessionID != "" {
+		release, disabled := resolveAbandonedSlotReleaseAfterMs(cfg.AbandonedSlotReleaseAfterMs)
+		opts := CapacityOptions{AbandonedSlotReleaseAfterMs: release}
+		if disabled {
+			opts.AbandonedSlotReleaseAfterMs = false
+		}
+		used = getActiveAsyncCapacitySnapshot(sessionID, limit, opts).Used
+	}
+	return obj("used", float64(used), "limit", float64(shown))
 }

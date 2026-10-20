@@ -14,15 +14,15 @@ type executionProjection struct {
 	Detached    bool   `json:"detached,omitempty"`
 }
 
-// runOutcome is the part of a single result the projection reads.
-type runOutcome struct {
+// runProjectionInput is the part of a single result the projection reads.
+type runProjectionInput struct {
 	ExitCode                                 int
 	Error                                    string
 	Interrupted, TimedOut, Stopped, Detached bool
 }
 
 // buildExecutionProjection never marks a detached, stopped or interrupted run successful.
-func buildExecutionProjection(r runOutcome) executionProjection {
+func buildExecutionProjection(r runProjectionInput) executionProjection {
 	switch {
 	case r.Detached:
 		return executionProjection{Status: "detached", ExitCode: r.ExitCode, Detached: true, Error: r.Error}

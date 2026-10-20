@@ -276,11 +276,6 @@ func (a *advertisement) prompt(sessionID string) string {
 	return buildAdvertisedAgentPrompt(a.snapshot(), resolveCurrentSubagentCapabilityCeiling(sessionID))
 }
 
-func sessionIDOf(ctx sdk.Context) string {
-	id, _ := ctx.GetSessionID()
-	return id
-}
-
 func init() {
 	extensionHooks = append(extensionHooks, func(e *sdk.Extension) {
 		e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {

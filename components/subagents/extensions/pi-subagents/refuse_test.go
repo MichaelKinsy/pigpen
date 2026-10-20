@@ -35,7 +35,9 @@ func TestRefusalMessage(t *testing.T) {
 
 // every parameter of the original's schema that a run does not honor is refused, one test case each
 func TestEveryUnportedParameterIsRefused(t *testing.T) {
-	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true}
+	// ported by the run policy (policy_run.go): twins and behavior tests are in policy_run_test.go
+	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true,
+		"output": true, "outputMode": true, "artifacts": true, "acceptance": true, "gate": true, "agentContract": true, "timeoutMs": true, "maxRuntimeMs": true, "includeProgress": true}
 	special := map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true}
 	names := sub.ToolParamNames()
 	sort.Strings(names)
@@ -59,21 +61,9 @@ func TestEveryUnportedParameterIsRefused(t *testing.T) {
 
 func TestSeveralUnportedParametersAreNamedTogether(t *testing.T) {
 	h, calls := refusedHost(t)
-	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "output": true, "acceptance": "checked"})
-	wantRefusal(t, failure, "the `acceptance`, `output` options")
+	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "outputSchema": true, "toolBudget": "checked"})
+	wantRefusal(t, failure, "the `outputSchema`, `toolBudget` options")
 	eq(t, len(*calls), 0, "no child started")
-}
-
-func TestAsyncRunsAreRefusedAndForegroundStillRuns(t *testing.T) {
-	h, calls := refusedHost(t)
-	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": true})
-	wantRefusal(t, failure, "async (background) runs (`async: true`)")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": "yes"})
-	wantRefusal(t, failure, "async (background) runs (`async: yes`)")
-	eq(t, len(*calls), 0, "no child started")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": false})
-	eq(t, failure, "", "async false is the port's foreground run")
-	eq(t, len(*calls), 1, "it ran")
 }
 
 func TestWorkflowRunsAreRefused(t *testing.T) {
@@ -112,12 +102,18 @@ func TestParallelAndChainRunsAreRefused(t *testing.T) {
 
 func TestUnportedManagementAndControlActionsAreRefused(t *testing.T) {
 	h, _ := refusedHost(t)
-	actions := []string{"status", "doctor", "guide", "interrupt", "stop", "resume", "steer", "debug.run", "validate", "schedule.create", "single", "append-step", "unheard-of"}
+	actions := []string{"steer", "debug.run", "validate", "schedule.create", "append-step"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
 			wantRefusal(t, failure, "the `"+a+"` action")
 		})
+	}
+	for _, a := range []string{"single", "unheard-of"} { // not actions of the original: its recovery text, not a refusal
+		_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
+		if !strings.HasPrefix(failure, "Unknown action: "+a+".") {
+			t.Errorf("%s: %q", a, failure)
+		}
 	}
 	_, failure := h.Tool("subagent", map[string]any{"action": "get", "agent": "helper", "capabilities": true})
 	wantRefusal(t, failure, "the `capabilities` option")
@@ -151,21 +147,24 @@ func TestTaskAndActionErrorsAreTheOriginals(t *testing.T) {
 
 func TestUnportedToolsRefuse(t *testing.T) {
 	h, _ := refusedHost(t)
-	_, failure := h.Tool("bg_wait", map[string]any{})
-	wantRefusal(t, failure, "waiting for background work (`bg_wait`)")
-	_, failure = h.Tool("subagent_supervisor", map[string]any{"action": "pending"})
+	_, failure := h.Tool("subagent_supervisor", map[string]any{"action": "pending"})
 	wantRefusal(t, failure, "the supervisor channel (`subagent_supervisor`)")
 }
 
 // The original's other slash commands are not registered: a command the port lacks is not offered, and the README says so.
 func TestTheOriginalsOtherCommandsAreNotRegistered(t *testing.T) {
 	h, _ := refusedHost(t)
-	for _, name := range []string{"subagents", "run", "subagent-cost", "subagents-doctor", "subagents-guide", "subagents-fleet", "subagents-stop", "subagents-steer", "subagents-watchdog", "prompt-workflow"} {
+	for _, name := range []string{"run", "subagent-cost", "subagents-fleet", "subagents-stop", "subagents-steer", "subagents-watchdog", "prompt-workflow"} {
 		if h.cmds[name] {
 			t.Errorf("/%s is registered", name)
 		}
 	}
 	if !h.cmds["run-chain"] {
 		t.Error("the port's own /run-chain is gone")
+	}
+	for _, name := range []string{"subagents", "subagents-models", "subagents-profiles", "subagents-load-profile", "subagents-refresh-provider-models", "subagents-generate-profiles", "subagents-check-profile", "subagents-doctor", "subagents-guide", "subagents-refine"} {
+		if !h.cmds[name] {
+			t.Errorf("/%s is not registered", name)
+		}
 	}
 }

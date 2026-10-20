@@ -107,7 +107,7 @@ func profileNameCompletions(prefix string) ([]sdk.AutocompleteItem, error) {
 
 var forceSuffixRe = regexp.MustCompile(`(?:^|\s)(?:--force|force)$`)
 
-func plural(n int, one, many string) string {
+func pluralForm(n int, one, many string) string {
 	if n == 1 {
 		return one
 	}
@@ -280,7 +280,7 @@ func registerAdminCommands(e *sdk.Extension) {
 				lines := []string{"Provider model catalog", "Provider: " + provider, "Status: " + status, "File: " + r.FilePath,
 					fmt.Sprintf("Models: %d", len(r.Catalog.Models)), "Refreshed at: " + r.Catalog.RefreshedAt}
 				if n := r.HeuristicFallbackCount; n > 0 {
-					lines = append(lines, fmt.Sprintf("Warning: %d model%s classified with name heuristics fallback.", n, plural(n, " was", "s were")))
+					lines = append(lines, fmt.Sprintf("Warning: %d model%s classified with name heuristics fallback.", n, pluralForm(n, " was", "s were")))
 				}
 				slashText(ctx, strings.Join(lines, "\n"))
 			})
@@ -305,9 +305,9 @@ func registerAdminCommands(e *sdk.Extension) {
 					"  cheap=" + r.QuotaModels.Cheap, "  medium=" + r.QuotaModels.Medium, "  strong=" + r.QuotaModels.Strong,
 					"Quality: " + r.QualityPath, "  cheap=" + r.QualityModels.Cheap, "  medium=" + r.QualityModels.Medium, "  strong=" + r.QualityModels.Strong}
 				if n := r.SelectedHeuristicFallbackCount; n > 0 {
-					lines = append(lines, fmt.Sprintf("Warning: generated profiles depend on heuristic-only classification for %d selected model%s.", n, plural(n, "", "s")))
+					lines = append(lines, fmt.Sprintf("Warning: generated profiles depend on heuristic-only classification for %d selected model%s.", n, pluralForm(n, "", "s")))
 				} else if n := r.HeuristicFallbackCount; n > 0 {
-					lines = append(lines, fmt.Sprintf("Warning: provider catalog still contains %d heuristic-classified model%s.", n, plural(n, "", "s")))
+					lines = append(lines, fmt.Sprintf("Warning: provider catalog still contains %d heuristic-classified model%s.", n, pluralForm(n, "", "s")))
 				}
 				slashText(ctx, strings.Join(lines, "\n"))
 			})

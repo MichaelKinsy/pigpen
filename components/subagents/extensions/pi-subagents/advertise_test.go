@@ -40,7 +40,7 @@ func TestAdvertisedAgentPrompt(t *testing.T) {
 		var agents []AgentConfig
 		for i := 0; i < 18; i++ {
 			i := i
-			agents = append(agents, advAgent("agent-"+pad2(i), func(a *AgentConfig) {
+			agents = append(agents, advAgent("agent-"+pad2digits(i), func(a *AgentConfig) {
 				advertised(a)
 				a.Description = "agent " + strconvItoa(i)
 				if i == 0 {
@@ -83,7 +83,7 @@ func TestAdvertisedAgentPrompt(t *testing.T) {
 	tw(t, "advertised-agent-prompt", "bounds the section body by the same wrapped byte budget", func(t *testing.T) {
 		var agents []AgentConfig
 		for i := 0; i < 40; i++ {
-			agents = append(agents, advAgent("agent-"+pad2(i), func(a *AgentConfig) { advertised(a); a.Description = strings.Repeat("🦜界", 200) }))
+			agents = append(agents, advAgent("agent-"+pad2digits(i), func(a *AgentConfig) { advertised(a); a.Description = strings.Repeat("🦜界", 200) }))
 		}
 		body := buildAdvertisedAgentCatalog(agents, nil)
 		wrapped := buildAdvertisedAgentPrompt(agents, nil)
@@ -95,7 +95,7 @@ func TestAdvertisedAgentPrompt(t *testing.T) {
 	})
 }
 
-func pad2(i int) string {
+func pad2digits(i int) string {
 	if i < 10 {
 		return "0" + strconvItoa(i)
 	}

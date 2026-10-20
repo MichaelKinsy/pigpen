@@ -48,7 +48,7 @@ func (e ejectEnv) agents(t *testing.T) []AgentConfig { return dAgents(t, e.dir, 
 
 func fileExists2(p string) bool { _, err := os.Stat(p); return err == nil }
 
-func readJSONFile(t *testing.T, p string) *jsObject {
+func readJSONFileT(t *testing.T, p string) *jsObject {
 	t.Helper()
 	b, err := os.ReadFile(p)
 	if err != nil {
@@ -63,7 +63,7 @@ func readJSONFile(t *testing.T, p string) *jsObject {
 
 func overrideOf(t *testing.T, settingsPath, name string) *jsObject {
 	t.Helper()
-	return readJSONFile(t, settingsPath).obj("subagents").obj("agentOverrides").obj(name)
+	return readJSONFileT(t, settingsPath).obj("subagents").obj("agentOverrides").obj(name)
 }
 
 func TestAgentEjectDisable(t *testing.T) {
@@ -184,7 +184,7 @@ func TestAgentEjectDisable(t *testing.T) {
 		eq(t, r.isError, false, "error")
 		hasRe(t, r.text, "Enabled agent 'reviewer'")
 		eq(t, findAgent(e.agents(t), "reviewer") != nil, true, "restored")
-		sub := readJSONFile(t, e.userSettings()).obj("subagents")
+		sub := readJSONFileT(t, e.userSettings()).obj("subagents")
 		eq(t, sub == nil || sub.obj("agentOverrides") == nil || sub.obj("agentOverrides").obj("reviewer") == nil, true, "override removed")
 	})
 	tw(t, f, "preserves other override fields when removing the disabled flag", func(t *testing.T) {
@@ -235,7 +235,7 @@ func TestAgentEjectDisable(t *testing.T) {
 		eq(t, r.isError, false, "error")
 		hasRe(t, r.text, "Removed user settings override")
 		eq(t, findAgent(e.agents(t), "reviewer") != nil, true, "restored")
-		eq(t, readJSONFile(t, e.userSettings()).has("subagents"), false, "subagents")
+		eq(t, readJSONFileT(t, e.userSettings()).has("subagents"), false, "subagents")
 	})
 	tw(t, f, "retains machine placement while clearing other settings customization", func(t *testing.T) {
 		e := newEjectEnv(t)

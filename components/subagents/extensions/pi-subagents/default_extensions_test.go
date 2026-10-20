@@ -159,15 +159,6 @@ func TestDefaultExtensions(t *testing.T) {
 	})
 }
 
-func contains(list []string, s string) bool {
-	for _, x := range list {
-		if x == s {
-			return true
-		}
-	}
-	return false
-}
-
 func readFileText(t *testing.T, p string) string {
 	t.Helper()
 	b, err := os.ReadFile(p)

@@ -2,7 +2,9 @@ package pi_subagents
 
 import (
 	"math"
+	"regexp"
 	"sort"
+	"strconv"
 )
 
 // The policy modules validate values that arrive as decoded JSON, as the original's validators do with `unknown`. A value is one
@@ -73,7 +75,7 @@ func asNumber(v any) (float64, bool) {
 }
 
 // isInteger is Number.isInteger on a value.
-func isInteger(v any) bool {
+func isIntegerValue(v any) bool {
 	f, ok := asNumber(v)
 	return ok && !math.IsInf(f, 0) && !math.IsNaN(f) && f == math.Trunc(f)
 }
@@ -81,7 +83,7 @@ func isInteger(v any) bool {
 // isSafeInteger is Number.isSafeInteger on a value.
 func isSafeInteger(v any) bool {
 	f, ok := asNumber(v)
-	return ok && isInteger(v) && math.Abs(f) <= 1<<53-1
+	return ok && isIntegerValue(v) && math.Abs(f) <= 1<<53-1
 }
 
 // hasOwn is Object.hasOwn(object, key) for a key that is not undefined.
@@ -100,4 +102,30 @@ func stringsOf(v any) []string {
 		}
 	}
 	return out
+}
+
+var (
+	jsDecimalLiteral = regexp.MustCompile(`^[+-]?(?:\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?)$`)
+	jsRadixLiteral   = regexp.MustCompile(`^0(?:[xX][0-9a-fA-F]+|[oO][0-7]+|[bB][01]+)$`)
+)
+
+// jsStringToNumber is Number(string): an empty or blank string is 0, a decimal, hexadecimal, octal or binary literal is its
+// value, "Infinity" with an optional sign is infinite, anything else is NaN.
+func jsStringToNumber(s string) float64 {
+	t := jsTrim(s)
+	switch {
+	case t == "":
+		return 0
+	case jsDecimalLiteral.MatchString(t):
+		f, _ := strconv.ParseFloat(t, 64)
+		return f
+	case jsRadixLiteral.MatchString(t):
+		n, _ := strconv.ParseUint(t[2:], map[byte]int{'x': 16, 'X': 16, 'o': 8, 'O': 8, 'b': 2, 'B': 2}[t[1]], 64)
+		return float64(n)
+	case t == "Infinity" || t == "+Infinity":
+		return math.Inf(1)
+	case t == "-Infinity":
+		return math.Inf(-1)
+	}
+	return math.NaN()
 }

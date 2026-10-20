@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-const ceilingFile = "capability-ceiling"
-
 func ceilingOf(t *testing.T, s string) *resolvedCeiling {
 	t.Helper()
 	c, err := parseSubagentCapabilityCeiling(js(t, s), "capability ceiling")
@@ -19,7 +17,7 @@ func ceilingOf(t *testing.T, s string) *resolvedCeiling {
 }
 
 func TestSubagentCapabilityCeiling(t *testing.T) {
-	tw(t, ceilingFile, "intersects active registrations for an exact session", func(t *testing.T) {
+	tw(t, "capability-ceiling", "intersects active registrations for an exact session", func(t *testing.T) {
 		sid := "cap-1"
 		first, err := registerSubagentCapabilityCeiling(sid, "plan", js(t, `{"allowedTools":["read","grep","write"]}`))
 		if err != nil {
@@ -33,7 +31,7 @@ func TestSubagentCapabilityCeiling(t *testing.T) {
 		second.dispose()
 		first.dispose()
 	})
-	tw(t, ceilingFile, "keeps explicit empty allowlists distinct from unrestricted state", func(t *testing.T) {
+	tw(t, "capability-ceiling", "keeps explicit empty allowlists distinct from unrestricted state", func(t *testing.T) {
 		c := intersectSubagentCapabilityCeilings(ceilingOf(t, `{"version":1,"allowedTools":[],"denyExtensions":false,"sources":["test"]}`))
 		equal(t, c.AllowedTools, []string{}, "empty list")
 		if !c.HasAllowedTools {
@@ -43,7 +41,7 @@ func TestSubagentCapabilityCeiling(t *testing.T) {
 			t.Error("no ceilings must give undefined")
 		}
 	})
-	tw(t, ceilingFile, "rejects malformed policy and disposed updates", func(t *testing.T) {
+	tw(t, "capability-ceiling", "rejects malformed policy and disposed updates", func(t *testing.T) {
 		_, err := registerSubagentCapabilityCeiling("x", "x", js(t, `{}`))
 		if err == nil {
 			t.Fatal("empty ceiling accepted")
@@ -57,7 +55,7 @@ func TestSubagentCapabilityCeiling(t *testing.T) {
 		}
 		polMatches(t, err.Error(), `disposed`)
 	})
-	tw(t, ceilingFile, "round-trips inherited policy and rejects malformed payloads", func(t *testing.T) {
+	tw(t, "capability-ceiling", "round-trips inherited policy and rejects malformed payloads", func(t *testing.T) {
 		input := ceilingOf(t, `{"version":1,"allowedTools":["read"],"denyExtensions":true,"sources":["plan"]}`)
 		got, err := decodeSubagentCapabilityCeiling(encodeSubagentCapabilityCeiling(input))
 		if err != nil {
@@ -80,7 +78,7 @@ func TestSubagentCapabilityCeiling(t *testing.T) {
 		}
 		polMatches(t, err.Error(), `version`)
 	})
-	tw(t, ceilingFile, "combines the inherited child runtime ceiling with exact-session registrations", func(t *testing.T) {
+	tw(t, "capability-ceiling", "combines the inherited child runtime ceiling with exact-session registrations", func(t *testing.T) {
 		sid := "current-1"
 		h, _ := registerSubagentCapabilityCeiling(sid, "local", js(t, `{"allowedTools":["grep","read"]}`))
 		defer h.dispose()
@@ -94,8 +92,7 @@ func TestSubagentCapabilityCeiling(t *testing.T) {
 }
 
 func TestCapabilityCeilingAgentAllowlist(t *testing.T) {
-	const file = "capability-ceiling-agent-allowlist"
-	tw(t, file, "parses, round-trips, and intersects allowedAgents", func(t *testing.T) {
+	tw(t, "capability-ceiling-agent-allowlist", "parses, round-trips, and intersects allowedAgents", func(t *testing.T) {
 		parsed := ceilingOf(t, `{"version":1,"allowedAgents":["worker","reviewer","worker"],"denyExtensions":false,"sources":["plan"]}`)
 		equal(t, parsed.AllowedAgents, []string{"reviewer", "worker"}, "allowedAgents")
 		back, err := decodeSubagentCapabilityCeiling(encodeSubagentCapabilityCeiling(parsed))
