@@ -79,6 +79,10 @@ func TestUpstream_summary_opencode_headers(t *testing.T) {
 
 	tw(t, F, "direct summary completion merges OpenCode attribution with provider headers", func(t *testing.T) {
 		side, _ := openCodeSummarySide(openCodeModel())
+		providerHeaders := map[string]any{"x-existing": "kept"}
+		side.reg.authFn = func(map[string]any) (map[string]any, error) {
+			return map[string]any{"ok": true, "apiKey": "test-key", "headers": providerHeaders}, nil
+		}
 		calls := 0
 		draft, err := GenerateSummaryDraft(bg(), summaryResults, side, SummaryOptions{
 			ModelOverride: "opencode-go/deepseek-v4-flash",
@@ -91,8 +95,8 @@ func TestUpstream_summary_opencode_headers(t *testing.T) {
 			},
 		})
 		noErr(t, err)
-		if *draft.Meta.Model != "opencode-go/deepseek-v4-flash" || calls != 1 {
-			t.Fatalf("%+v %d", draft.Meta, calls)
+		if *draft.Meta.Model != "opencode-go/deepseek-v4-flash" || calls != 1 || len(providerHeaders) != 1 {
+			t.Fatalf("%+v %d %v", draft.Meta, calls, providerHeaders)
 		}
 	})
 

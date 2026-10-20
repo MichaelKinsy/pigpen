@@ -267,12 +267,24 @@ func TestPageQueryInputBudgetAndFailures(t *testing.T) {
 	_, err = AnswerFromPage(bg(), PageAnswerInput{Question: "Q", PageText: "P", SourceURL: "https://example.com", Model: "test/absent"}, none)
 	wantErr(t, err, "^Answer model not found: test/absent$")
 
+	// The input budget is 60 percent of the window before the output and safety reserve: 100,000 tokens give 180,000 characters.
+	side.model["contextWindow"] = 100000.0
+	result, err = AnswerFromPage(bg(), PageAnswerInput{Question: "Q", PageText: strings.Repeat("x", 200000), SourceURL: "https://a.test"}, side)
+	noErr(t, err)
+	if result.InputChars != 180000 {
+		t.Fatalf("%+v", result)
+	}
+	side.model["contextWindow"] = 10000.0
+	reg.completeFn = func(context.Context, map[string]any, map[string]any, CompleteOptions) (map[string]any, error) {
+		return stopText("a"), nil
+	}
+
 	// A selector needs a provider and an id, and a model needs a key.
 	for _, bad := range []string{"/id", "provider/"} {
 		_, err = AnswerFromPage(bg(), PageAnswerInput{Question: "Q", PageText: "P", SourceURL: "https://example.com", Model: bad}, none)
 		wantErr(t, err, "^Invalid answerModel: "+bad+`\. Use provider/model-id\.$`)
 	}
-	for _, auth := range []map[string]any{{"ok": true}, {"ok": true, "apiKey": ""}} {
+	for _, auth := range []map[string]any{{"ok": true}, {"ok": true, "apiKey": ""}, {"ok": false, "apiKey": "k"}} {
 		reg.authFn = func(map[string]any) (map[string]any, error) { return auth, nil }
 		_, err = AnswerFromPage(bg(), PageAnswerInput{Question: "Q", PageText: "P", SourceURL: "https://example.com"}, side)
 		wantErr(t, err, "^No API key available for answer model test/page-model$")

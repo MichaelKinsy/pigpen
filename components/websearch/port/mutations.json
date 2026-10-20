@@ -267,13 +267,13 @@
   "name": "answer-skips-scope-check",
   "file": "page_query.go",
   "find": "if !IsModelInScope(model, scoped) {",
-  "replace": "if false {"
+  "replace": "if !IsModelInScope(model, scoped) && false {"
  },
  {
   "name": "answer-auth-not-checked",
   "file": "page_query.go",
   "find": "!ok || auth[\"apiKey\"] == nil",
-  "replace": "false || auth[\"apiKey\"] == nil"
+  "replace": "ok && false || auth[\"apiKey\"] == nil"
  },
  {
   "name": "answer-empty-key-accepted",
@@ -303,7 +303,7 @@
   "name": "answer-truncation-note",
   "file": "page_query.go",
   "find": "Note: The source page was truncated to %d of %d characters for model context.",
-  "replace": "Note: truncated."
+  "replace": "Note: truncated to %d of %d."
  },
  {
   "name": "answer-error-default-message",
@@ -339,19 +339,13 @@
   "name": "answer-image-pages-answered",
   "file": "fetch_answer.go",
   "find": "if page.Thumbnail != nil || strings.HasPrefix(page.MimeType, \"image/\") {",
-  "replace": "if page.Thumbnail != nil {"
+  "replace": "if page.Thumbnail != nil || strings.HasPrefix(page.MimeType, \"image/\") && false {"
  },
  {
   "name": "answer-presentation-replaces-store",
   "file": "tool_fetch.go",
   "find": "data := &StoredSearchData{ID: responseID, Type: \"fetch\", Timestamp: nowMs(), URLs: stripThumbnails(fetched)}",
   "replace": "data := &StoredSearchData{ID: responseID, Type: \"fetch\", Timestamp: nowMs(), URLs: stripThumbnails(presented)}"
- },
- {
-  "name": "answer-extractor-gets-prompt",
-  "file": "tool_fetch.go",
-  "find": "if mode != \"answer\" {\n\t\t// Answer mode keeps",
-  "replace": "if true {\n\t\t// Answer mode keeps"
  },
  {
   "name": "answer-failure-prefix",
@@ -387,7 +381,7 @@
   "name": "rewrite-ignores-scope",
   "file": "query_rewrite.go",
   "find": "if !IsModelInScope(model, scoped) {",
-  "replace": "if false {"
+  "replace": "if !IsModelInScope(model, scoped) && false {"
  },
  {
   "name": "summary-default-deadline",
@@ -414,12 +408,6 @@
   "replace": "{\"openai-codex\", \"gpt-5.6-luna\"},\n\t{\"anthropic\", \"claude-haiku-4-5\"},"
  },
  {
-  "name": "summary-deadline-not-aborting-completion",
-  "file": "summary_review.go",
-  "find": "\t\tr.expire()\n",
-  "replace": ""
- },
- {
   "name": "summary-expired-check-removed",
   "file": "summary_review.go",
   "find": "if r.expired.Load() || summaryClock().Sub(r.started) >= r.deadline {",
@@ -435,7 +423,7 @@
   "name": "summary-scope-ignored",
   "file": "summary_review.go",
   "find": "if !IsModelInScope(model, scoped) {\n\t\t\tproblems",
-  "replace": "if false {\n\t\t\tproblems"
+  "replace": "if !IsModelInScope(model, scoped) && false {\n\t\t\tproblems"
  },
  {
   "name": "summary-direct-headers-unmerged",

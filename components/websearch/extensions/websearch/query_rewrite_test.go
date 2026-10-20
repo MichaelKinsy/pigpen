@@ -72,6 +72,16 @@ func TestRewriteSearchQueryFallbacks(t *testing.T) {
 		t.Fatalf("%q %v", result, reg.lastCall().model)
 	}
 
+	// Text parts are joined without a separator.
+	reg.completeFn = func(context.Context, map[string]any, map[string]any, CompleteOptions) (map[string]any, error) {
+		return map[string]any{"stopReason": "stop", "content": []any{map[string]any{"type": "text", "text": "ab"}, map[string]any{"type": "text", "text": "cd"}}}, nil
+	}
+	result, err = RewriteSearchQuery(bg(), "q", &fakeSide{reg: reg})
+	noErr(t, err)
+	if result != "abcd" {
+		t.Fatal(result)
+	}
+
 	_, err = RewriteSearchQuery(bg(), "q", &fakeSide{reg: &fakeSideRegistry{}})
 	wantErr(t, err, `^No enabled model available: anthropic/claude-haiku-4-5, google/gemini-3\.6-flash, openai/gpt-5-mini$`)
 

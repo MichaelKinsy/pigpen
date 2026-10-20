@@ -90,6 +90,7 @@ func TestUpstream_summary_model_scope(t *testing.T) {
 		defer close(never)
 		ctx, cancel := context.WithCancel(bg())
 		time.AfterFunc(10*time.Millisecond, cancel)
+		started := time.Now()
 		_, err := GenerateSummaryDraft(ctx, summaryResults, side, SummaryOptions{
 			DeadlineMs: 1000,
 			Complete: func(context.Context, map[string]any, map[string]any, CompleteOptions) (map[string]any, error) {
@@ -98,6 +99,9 @@ func TestUpstream_summary_model_scope(t *testing.T) {
 			},
 		})
 		wantErr(t, err, "Aborted")
+		if time.Since(started) >= 500*time.Millisecond {
+			t.Fatal("the cancellation waited for the deadline")
+		}
 	})
 
 	tw(t, F, "summary generation only uses models in the host's resolved scope", func(t *testing.T) {

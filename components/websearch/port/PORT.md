@@ -86,6 +86,7 @@ Deliberate differences:
   behaviour they stand for (a never-settling completion is cut at the deadline and its context aborted, a caller
   cancellation wins, no first-available fallback, the order of the summary and rewrite lists, the config values and the
   README text). The call sites in the curator and the order of its model picker are the curator slice's.
+- **Equivalent mutants dropped**: `answer-extractor-gets-prompt` (the prompt only reaches the YouTube extractor, which is refused until the video slice, so no test can see it) and `summary-deadline-not-aborting-completion` (the deadline's cancel and the deferred cancel leave the completion context in the same state once the call returns).
 - **`ctx.model`** is the registry's model for the session's provider and id (the SDK gives the pair, not the object).
 - **JSON parse errors** in `web-search.json` carry Go's decoder text where the original shows V8's, as for the rest of the config.
 - **Provider `null`** in a stored query result reads as "unknown" only when it is empty (a Go string has no `undefined`).
