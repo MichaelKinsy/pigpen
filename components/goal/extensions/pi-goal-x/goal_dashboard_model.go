@@ -2,12 +2,12 @@ package pi_goal_x
 
 import (
 	"math"
+	"strconv"
 	"strings"
 )
 
 // ported from widgets/goal-dashboard-model.ts: the shared dashboard view model, pure data derivation (no TUI).
-// Optional TS fields are "" / nil here. The TS taskIndex memo cache is not ported (it is not observable); the tree is
-// walked directly.
+// Optional TS fields are "" / nil here.
 
 type dashboardStatusCode = string
 
@@ -439,6 +439,75 @@ func dashUsageNum(goal *jsObject, k string) float64 {
 	return gnum(u, k)
 }
 
+type dashPresentation struct {
+	taskProgress *taskProgress
+	taskTree     []dashboardTaskNode
+	currentTask  *dashboardCurrentTask
+	taskTitles   map[string]string
+}
+
+type dashPresentationEntries struct {
+	byKey map[string]*dashPresentation
+	order []string
+}
+
+var (
+	dashPresentationCache = map[*goalTaskIndex]*dashPresentationEntries{}
+	dashPresentationOrder []*goalTaskIndex
+)
+
+// dashTaskPresentation is taskPresentation(): task-derived presentation memoized per taskIndex snapshot (so a usage-only
+// change reuses the very same tree) and per `disabled:currentTaskId`; 64 entries per index, 64 indexes. The returned
+// values are shared and must not be mutated.
+func dashTaskPresentation(goal *jsObject, disabled bool) *dashPresentation {
+	var source []any
+	if !disabled {
+		source = dashTaskList(goal)
+	}
+	index := taskIndex(source)
+	entries := dashPresentationCache[index]
+	if entries == nil {
+		entries = &dashPresentationEntries{byKey: map[string]*dashPresentation{}}
+		dashPresentationCache[index] = entries
+		dashPresentationOrder = append(dashPresentationOrder, index)
+		for len(dashPresentationOrder) > 64 {
+			delete(dashPresentationCache, dashPresentationOrder[0])
+			dashPresentationOrder = dashPresentationOrder[1:]
+		}
+	}
+	key := strconv.FormatBool(disabled) + ":" + gstr(goal, "currentTaskId")
+	if hit := entries.byKey[key]; hit != nil {
+		return hit
+	}
+	v := &dashPresentation{taskTree: []dashboardTaskNode{}}
+	if !disabled {
+		v.taskProgress = deriveTopLevelTaskProgress(goal)
+		tree := flattenTaskTree(index.tasks, "")
+		v.currentTask = deriveCurrentTask(goal, tree)
+		if v.currentTask != nil {
+			for i := range tree {
+				if tree[i].id == v.currentTask.id {
+					tree[i].isCurrent = true
+				}
+			}
+		}
+		if tree != nil {
+			v.taskTree = tree
+		}
+	}
+	v.taskTitles = make(map[string]string, len(v.taskTree))
+	for _, n := range v.taskTree {
+		v.taskTitles[n.id] = n.title
+	}
+	if len(entries.order) >= 64 {
+		delete(entries.byKey, entries.order[0])
+		entries.order = entries.order[1:]
+	}
+	entries.byKey[key] = v
+	entries.order = append(entries.order, key)
+	return v
+}
+
 // deriveGoalDashboardModel derives the unified dashboard model for one goal; nil when there is no goal.
 func deriveGoalDashboardModel(goal *jsObject, options goalDashboardModelOptions) *goalDashboardModel {
 	if goal == nil {
@@ -449,28 +518,8 @@ func deriveGoalDashboardModel(goal *jsObject, options goalDashboardModelOptions)
 		status.code, status.label, status.footerLabel = dashIdle, "Waiting", "waiting"
 	}
 	// With tasks disabled, task sections are omitted entirely.
-	var progress *taskProgress
-	var tree []dashboardTaskNode
-	var current *dashboardCurrentTask
-	if !options.tasksDisabled {
-		progress = deriveTopLevelTaskProgress(goal)
-		tree = flattenTaskTree(dashTaskList(goal), "")
-		current = deriveCurrentTask(goal, tree)
-		if current != nil {
-			for i := range tree {
-				if tree[i].id == current.id {
-					tree[i].isCurrent = true
-				}
-			}
-		}
-	}
-	if tree == nil {
-		tree = []dashboardTaskNode{}
-	}
-	taskTitles := make(map[string]string, len(tree))
-	for _, n := range tree {
-		taskTitles[n.id] = n.title
-	}
+	pres := dashTaskPresentation(goal, options.tasksDisabled)
+	progress, tree, current, taskTitles := pres.taskProgress, pres.taskTree, pres.currentTask, pres.taskTitles
 
 	tokensUsed := dashUsageNum(goal, "tokensUsed")
 	activeSeconds := dashUsageNum(goal, "activeSeconds")
