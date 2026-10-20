@@ -216,15 +216,6 @@ func getCdArgumentCompletions(argumentPrefix, cwd, homeDir string) []cdCompletio
 
 const currentSessionVersion = 3
 
-// nodeBasename is path.basename(p) for a posix path.
-func nodeBasename(p string) string {
-	p = strings.TrimRight(p, "/")
-	if idx := strings.LastIndex(p, "/"); idx >= 0 {
-		return p[idx+1:]
-	}
-	return p
-}
-
 // sessionDirName is the directory name Pi gives a cwd: `--${cwd.replace(/^[/\\]/, "").replace(/[/\\:]/g, "-")}--`.
 func sessionDirName(cwd string) string {
 	if len(cwd) > 0 && (cwd[0] == '/' || cwd[0] == '\\') {
