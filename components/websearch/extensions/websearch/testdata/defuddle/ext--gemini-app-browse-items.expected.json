@@ -1,0 +1,6 @@
+{
+ "url": "https://gemini.google.com/app/src1",
+ "title": null,
+ "content": null,
+ "error": "Defuddle failed to process document: HTMLAnchorElement is not defined"
+}
