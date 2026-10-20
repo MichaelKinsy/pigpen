@@ -140,9 +140,22 @@ func TestGuidance(t *testing.T) {
 
 func TestI18nBridgeAndRuntimeMechanics(t *testing.T) {
 	const fBridge, fShim, fLazy = "state/i18n-bridge", "state/i18n-bridge.shim", "lazy-overlay.regression"
-	tw(t, fBridge, "returns English when no locale is active", func(t *testing.T) { eq(t, formatStatusLabel(statusInProgress), "in progress", "label") })
-	tskip(t, fBridge, "returns localized value when locale is set", "locales need @juicesharp/rpiv-i18n, which has no Go counterpart; English only by the owner's ruling E1 (approved exclusion, PORT.md)")
-	tskip(t, fBridge, "falls back to English literal when key missing in active locale", "same as the localized-value case: there is no active locale to miss a key in (owner ruling E1: English only)")
+	tw(t, fBridge, "returns English when no locale is active", func(t *testing.T) {
+		useTables(t, bridgeTestTables())
+		eq(t, formatStatusLabel(statusInProgress), "in progress", "label")
+		eq(t, formatStatusLabel(statusCompleted), "completed", "label")
+	})
+	tw(t, fBridge, "returns localized value when locale is set", func(t *testing.T) {
+		useTables(t, bridgeTestTables())
+		setLocale("de")
+		eq(t, formatStatusLabel(statusInProgress), "in Bearbeitung", "in progress")
+		eq(t, formatStatusLabel(statusCompleted), "erledigt", "completed")
+	})
+	tw(t, fBridge, "falls back to English literal when key missing in active locale", func(t *testing.T) {
+		useTables(t, bridgeTestTables())
+		setLocale("de")
+		eq(t, formatStatusLabel(statusPending), "pending", "pending")
+	})
 	tw(t, fBridge, "`t` falls back to the inline English literal for unknown keys", func(t *testing.T) { eq(t, tr("no.such.key", "fallback"), "fallback", "t") })
 	tw(t, fBridge, "namespace constant is the canonical package name", func(t *testing.T) { eq(t, i18nNamespace, "@juicesharp/rpiv-todo", "namespace") })
 

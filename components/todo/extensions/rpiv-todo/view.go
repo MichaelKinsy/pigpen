@@ -9,14 +9,6 @@ type themer interface {
 	Strikethrough(text string) string
 }
 
-// i18nNamespace is the namespace the original registers its locale strings under.
-// upstream: state/i18n-bridge.ts:23.
-const i18nNamespace = "@juicesharp/rpiv-todo"
-
-// tr is the original's `t(key, fallback)`. Without @juicesharp/rpiv-i18n the original returns the inline
-// English literal at every call site, and so does this port (locales are an open exclusion, PORT.md E1).
-func tr(_, fallback string) string { return fallback }
-
 // formatStatusLabel is the status word every view shares. upstream: state/i18n-bridge.ts:55-64.
 func formatStatusLabel(status string) string {
 	switch status {

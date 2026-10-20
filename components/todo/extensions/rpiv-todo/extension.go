@@ -389,6 +389,8 @@ func (a *app) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) {
 		}
 		return nil, err
 	}
+	// The original translates only with rpiv-i18n installed; otherwise every string is its English literal.
+	setI18nInstalled(ctx.Cwd())
 	if !ctx.HasUI() {
 		return nil, nil
 	}
