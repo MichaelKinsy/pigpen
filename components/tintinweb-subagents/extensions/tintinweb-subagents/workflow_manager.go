@@ -150,3 +150,30 @@ func wfUID() string {
 	}
 	return "0"
 }
+
+// workflowChildBlock tells a workflow's own child that its final text is a return value. A workflow child's final text
+// is not read by a human: it is the value agent() resolves to, and the script interpolates it straight into the next
+// stage's prompt. Not applied to every subagent: an ordinary agent's output IS read by a human, so terse raw data would
+// be the wrong answer there. upstream: prompts.ts PromptExtras.workflowChild.
+const workflowChildBlock = "\n\n<workflow_child>\n" +
+	"Your final message IS the return value of this task. A workflow script captures it and passes it to the next stage; no person reads it.\n" +
+	"Return only the answer, in exactly the shape the prompt asks for — no preamble, no summary of what you did, no offer to continue.\n" +
+	"</workflow_child>"
+
+// withWorkflowChildBlock puts the workflow_child block where buildAgentPrompt puts it: straight after the environment
+// block (and the worktree block, in the original), before the agent's own instructions. It is spliced into the text
+// buildAgentPrompt built, rather than passed to it, so the prompt builder stays the one file other slices edit; when
+// the builder takes extras, this becomes `extras.workflowChild`.
+func withWorkflowChildBlock(system string, cfg *agentConfig, cwd string, env envInfo) string {
+	repo := "Not a git repository"
+	if env.IsGitRepo {
+		repo = "Git repository: yes\nBranch: " + env.Branch
+	}
+	envBlock := "# Environment\nWorking directory: " + cwd + "\n" + repo + "\nPlatform: " + env.Platform
+	i := strings.Index(system, envBlock)
+	if i < 0 {
+		return system
+	}
+	end := i + len(envBlock)
+	return system[:end] + workflowChildBlock + system[end:]
+}

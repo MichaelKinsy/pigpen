@@ -106,7 +106,11 @@ func (a *app) startOwned(ctx sdk.Context, owner, typ, prompt, description, name,
 	if cfg.PromptMode == "append" {
 		parentPrompt, _ = ctx.GetSystemPrompt()
 	}
-	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt)
+	env := detectEnv(ctx, cwd)
+	system := buildAgentPrompt(cfg, cwd, env, parentPrompt)
+	if owner != "" {
+		system = withWorkflowChildBlock(system, cfg, cwd, env)
+	}
 	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
 	if cfg.IsDefault && cfg.Name == "Explore" {
 		spec.Model = "" // the original's haiku default falls back to the parent's model when it is not available; this port never forces it

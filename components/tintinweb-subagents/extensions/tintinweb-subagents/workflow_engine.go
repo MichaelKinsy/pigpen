@@ -79,8 +79,8 @@ type workflowWorker struct {
 	finished     bool
 	response     goja.Callable
 	done         chan struct{}
-	// exitedUnreported is set when the worker goroutine ran out of work before the script reported (the original's
-	// worker `exit` event: a promise nothing will ever settle).
+	// exitedUnreported is set when the worker goroutine crashed before the script reported (the original's worker
+	// `exit` event without a result).
 	exitedUnreported bool
 }
 
@@ -122,17 +122,22 @@ func (w *workflowWorker) terminate() {
 	<-w.done
 }
 
+// loop runs the worker's tasks until it is terminated. Like the original's worker (whose parentPort listener keeps its
+// event loop alive), it never ends by running out of work: a script that awaits a promise nothing will settle stays
+// parked until the run is aborted. It ends early only on a crash.
 func (w *workflowWorker) loop() {
+	defer func() {
+		if r := recover(); r != nil {
+			// A crash, not a termination: the original's worker `exit` without a report.
+			w.mu.Lock()
+			w.closed = true
+			w.exitedUnreported = !w.finished
+			w.mu.Unlock()
+		}
+	}()
 	for {
 		w.mu.Lock()
 		for len(w.queue) == 0 && !w.closed {
-			// Out of work: nothing queued, no call waiting for a response. A script that is not finished by now never
-			// will be (it awaits a promise nothing can settle): the worker would exit.
-			if w.vm != nil && w.pendingCalls == 0 {
-				w.closed = true
-				w.exitedUnreported = !w.finished
-				break
-			}
 			w.cond.Wait()
 		}
 		if w.closed {
