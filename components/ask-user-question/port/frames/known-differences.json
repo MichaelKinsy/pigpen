@@ -1,138 +1,76 @@
 {
- "input-external-editor-key": {
-  "status": "known",
-  "reason": "The external editor. In the recorder the original's editor launch fails on the fake TUI (`tui.stop is not a function`, the recorder cannot stop a terminal it does not own), so the notification carries that message. The Go port cannot stop the host's TUI (SDK lacks tui.stop/start) and reports its own refusal text (editInput in questionnaire.go). The draft is kept in both: every frame is identical.",
-  "diffs": [
-   {
-    "scenario": "input-external-editor-key",
-    "kind": "notifications",
-    "step": -1,
-    "line": -1,
-    "golden": "\"[{\\\"message\\\":\\\"External editor failed: tui.stop is not a function\\\",\\\"level\\\":\\\"error\\\"}]\"",
-    "go": "\"[{\\\"message\\\":\\\"External editor failed: @pi-in-go/pigpen-ask-user-question (Go port) does not support the external editor for custom answers yet. Install the original extension, npm:@juicesharp/rpiv-ask-user-question@2.11.0, which runs unchanged in PiG.\\\",\\\"level\\\":\\\"error\\\"}]\""
-   }
-  ]
- },
- "keybindings-external-editor-remap": {
-  "status": "known",
-  "reason": "Same as input-external-editor-key, with app.editor.external remapped to ctrl+q: the key routes identically, only the notification text differs.",
-  "diffs": [
-   {
-    "scenario": "keybindings-external-editor-remap",
-    "kind": "notifications",
-    "step": -1,
-    "line": -1,
-    "golden": "\"[{\\\"message\\\":\\\"External editor failed: tui.stop is not a function\\\",\\\"level\\\":\\\"error\\\"}]\"",
-    "go": "\"[{\\\"message\\\":\\\"External editor failed: @pi-in-go/pigpen-ask-user-question (Go port) does not support the external editor for custom answers yet. Install the original extension, npm:@juicesharp/rpiv-ask-user-question@2.11.0, which runs unchanged in PiG.\\\",\\\"level\\\":\\\"error\\\"}]\""
-   }
-  ]
- },
- "preview-code-fence-languages": {
-  "status": "known",
-  "reason": "Pi colours a fenced code block whose language highlight.js knows through cli-highlight (syntaxKeyword, syntaxString, ... tokens); the Go port does not highlight (internal/ui/markdown_theme.go, deviation recorded there: every code line goes through the mdCodeBlock colour, as pi does for a block without a valid language). The ```text fence is identical in both. Only the lines inside ts/go/json fences differ.",
-  "diffs": [
-   {
-    "scenario": "preview-code-fence-languages",
-    "kind": "lines",
-    "step": 0,
-    "line": 7,
-    "golden": "     <fg:muted>ts fence</fg>                                        <fg:accent>│</fg>   <fg:syntaxKeyword>const</fg> x: <fg:syntaxType>number</fg> = <fg:syntaxNumber>1</fg>;                      <fg:accent>│</fg>",
-    "go": "     <fg:muted>ts fence</fg>                                        <fg:accent>│</fg>   <fg:mdCodeBlock>const x: number = 1;</fg>                      <fg:accent>│</fg>"
-   },
-   {
-    "scenario": "preview-code-fence-languages",
-    "kind": "lines",
-    "step": 0,
-    "line": 8,
-    "golden": "  2. Go                                              <fg:accent>│</fg>   <fg:syntaxComment>// comment</fg>                                <fg:accent>│</fg>",
-    "go": "  2. Go                                              <fg:accent>│</fg>   <fg:mdCodeBlock>// comment</fg>                                <fg:accent>│</fg>"
-   },
-   {
-    "scenario": "preview-code-fence-languages",
-    "kind": "lines",
-    "step": 0,
-    "line": 9,
-    "golden": "     <fg:muted>go fence</fg>                                        <fg:accent>│</fg>   <fg:syntaxKeyword>function</fg><fg:syntaxFunction> </fg><fg:syntaxFunction>f</fg><fg:syntaxFunction>(</fg><fg:syntaxVariable>a: </fg><fg:syntaxType>string</fg><fg:syntaxFunction>) </fg>{ <fg:syntaxKeyword>return</fg> <fg:syntaxString>`</fg><fg:text>${a}</fg><fg:syntaxString>!`</fg>; } <fg:accent>│</fg>",
-    "go": "     <fg:muted>go fence</fg>                                        <fg:accent>│</fg>   <fg:mdCodeBlock>function f(a: string) { return `${a}!`; }</fg> <fg:accent>│</fg>"
-   },
-   {
-    "scenario": "preview-code-fence-languages",
-    "kind": "lines",
-    "step": 1,
-    "line": 7,
-    "golden": "     <fg:muted>ts fence</fg>                                           <fg:accent>│</fg>   <fg:syntaxKeyword>func</fg><fg:syntaxFunction> </fg><fg:syntaxFunction>main</fg><fg:syntaxVariable>()</fg> {                         <reset> <fg:accent>│</fg>",
-    "go": "     <fg:muted>ts fence</fg>                                           <fg:accent>│</fg>   <fg:mdCodeBlock>func main() {</fg>                         <reset> <fg:accent>│</fg>"
-   },
-   {
-    "scenario": "preview-code-fence-languages",
-    "kind": "lines",
-    "step": 1,
-    "line": 8,
-    "golden": "<fg:accent><b>❯ 2. Go</b></fg>                                                 <fg:accent>│</fg>      fmt.Println(<fg:syntaxString>\"hi\"</fg>, <fg:syntaxNumber>42</fg>)              <reset> <fg:accent>│</fg>",
-    "go": "<fg:accent><b>❯ 2. Go</b></fg>                                                 <fg:accent>│</fg>   <fg:mdCodeBlock>   fmt.Println(\"hi\", 42)</fg>              <reset> <fg:accent>│</fg>"
-   },
-   {
-    "scenario": "preview-code-fence-languages",
-    "kind": "lines",
-    "step": 1,
-    "line": 9,
-    "golden": "     <fg:muted>go fence</fg>                                           <fg:accent>│</fg>   }                                     <reset> <fg:accent>│</fg>",
-    "go": "     <fg:muted>go fence</fg>                                           <fg:accent>│</fg>   <fg:mdCodeBlock>}</fg>                                     <reset> <fg:accent>│</fg>"
-   },
-   {
-    "scenario": "preview-code-fence-languages",
-    "kind": "lines",
-    "step": 2,
-    "line": 7,
-    "golden": "     <fg:muted>ts fence</fg>                                           <fg:accent>│</fg>   {<fg:syntaxVariable>\"a\"</fg>: [<fg:syntaxNumber>1</fg>, <fg:syntaxNumber>true</fg>, <fg:syntaxNumber>null</fg>], <fg:syntaxVariable>\"b\"</fg>: <fg:syntaxString>\"x\"</fg>}      <reset> <fg:accent>│</fg>",
-    "go": "     <fg:muted>ts fence</fg>                                           <fg:accent>│</fg>   <fg:mdCodeBlock>{\"a\": [1, true, null], \"b\": \"x\"}</fg>      <reset> <fg:accent>│</fg>"
-   }
-  ]
- },
- "input-kitty-text": {
-  "status": "known",
-  "reason": "PiG divergence D<N> (number pending, reported by Main): Kitty CSI-u Shift+letter without a shifted alternate (ESC[97;2u) inserts 'A' in PiG's editor and in this port, 'a' in the original under Pi 1402973a (pi-tui decodeKittyPrintable has no uppercase fallback). Lives in components/pitui keys_decode.go, restored to PiG's behaviour by owner decision.",
-  "diffs": [
-   {
-    "scenario": "input-kitty-text",
-    "kind": "lines",
-    "step": 6,
-    "line": 12,
-    "golden": "<fg:accent><b>❯ 4. aba\u001b_pi:c\u0007<inv> </inv></b></fg>",
-    "go": "<fg:accent><b>❯ 4. abA\u001b_pi:c\u0007<inv> </inv></b></fg>"
-   },
-   {
-    "scenario": "input-kitty-text",
-    "kind": "lines",
-    "step": 7,
-    "line": 12,
-    "golden": "<fg:accent><b>❯ 4. aba\u001b_pi:c\u0007<inv> </inv></b></fg>",
-    "go": "<fg:accent><b>❯ 4. abA\u001b_pi:c\u0007<inv> </inv></b></fg>"
-   },
-   {
-    "scenario": "input-kitty-text",
-    "kind": "result",
-    "step": -1,
-    "line": -1,
-    "golden": "{\"answers\":[{\"answer\":\"aba\",\"kind\":\"custom\",\"question\":\"Which library should we use for date formatting?\",\"questionIndex\":0}],\"cancelled\":false}",
-    "go": "{\"answers\":[{\"answer\":\"abA\",\"kind\":\"custom\",\"question\":\"Which library should we use for date formatting?\",\"questionIndex\":0}],\"cancelled\":false}"
-   },
-   {
-    "scenario": "input-kitty-text",
-    "kind": "tool-text",
-    "step": -1,
-    "line": -1,
-    "golden": "\"User has answered your questions: \\\"Which library should we use for date formatting?\\\"=\\\"aba\\\". You can now continue with the user's answers in mind.\"",
-    "go": "\"User has answered your questions: \\\"Which library should we use for date formatting?\\\"=\\\"abA\\\". You can now continue with the user's answers in mind.\""
-   },
-   {
-    "scenario": "input-kitty-text",
-    "kind": "tool-details",
-    "step": -1,
-    "line": -1,
-    "golden": "{\"answers\":[{\"answer\":\"aba\",\"kind\":\"custom\",\"question\":\"Which library should we use for date formatting?\",\"questionIndex\":0}],\"cancelled\":false}",
-    "go": "{\"answers\":[{\"answer\":\"abA\",\"kind\":\"custom\",\"question\":\"Which library should we use for date formatting?\",\"questionIndex\":0}],\"cancelled\":false}"
-   }
-  ]
- }
+	"input-external-editor-key": {
+		"status": "known",
+		"reason": "The external editor. In the recorder the original's editor launch fails on the fake TUI (`tui.stop is not a function`, the recorder cannot stop a terminal it does not own), so the notification carries that message. The Go port cannot stop the host's TUI (SDK lacks tui.stop/start) and reports its own refusal text (editInput in questionnaire.go). The draft is kept in both: every frame is identical.",
+		"diffs": [
+			{
+				"scenario": "input-external-editor-key",
+				"kind": "notifications",
+				"step": -1,
+				"line": -1,
+				"golden": "\"[{\\\"message\\\":\\\"External editor failed: tui.stop is not a function\\\",\\\"level\\\":\\\"error\\\"}]\"",
+				"go": "\"[{\\\"message\\\":\\\"External editor failed: @pi-in-go/pigpen-ask-user-question (Go port) does not support the external editor for custom answers yet. Install the original extension, npm:@juicesharp/rpiv-ask-user-question@2.11.0, which runs unchanged in PiG.\\\",\\\"level\\\":\\\"error\\\"}]\""
+			}
+		]
+	},
+	"keybindings-external-editor-remap": {
+		"status": "known",
+		"reason": "Same as input-external-editor-key, with app.editor.external remapped to ctrl+q: the key routes identically, only the notification text differs.",
+		"diffs": [
+			{
+				"scenario": "keybindings-external-editor-remap",
+				"kind": "notifications",
+				"step": -1,
+				"line": -1,
+				"golden": "\"[{\\\"message\\\":\\\"External editor failed: tui.stop is not a function\\\",\\\"level\\\":\\\"error\\\"}]\"",
+				"go": "\"[{\\\"message\\\":\\\"External editor failed: @pi-in-go/pigpen-ask-user-question (Go port) does not support the external editor for custom answers yet. Install the original extension, npm:@juicesharp/rpiv-ask-user-question@2.11.0, which runs unchanged in PiG.\\\",\\\"level\\\":\\\"error\\\"}]\""
+			}
+		]
+	},
+	"input-kitty-text": {
+		"status": "known",
+		"reason": "PiG divergence D<N> (number pending, reported by Main): Kitty CSI-u Shift+letter without a shifted alternate (ESC[97;2u) inserts 'A' in PiG's editor and in this port, 'a' in the original under Pi 1402973a (pi-tui decodeKittyPrintable has no uppercase fallback). Lives in components/pitui keys_decode.go, restored to PiG's behaviour by owner decision.",
+		"diffs": [
+			{
+				"scenario": "input-kitty-text",
+				"kind": "lines",
+				"step": 6,
+				"line": 12,
+				"golden": "<fg:accent><b>❯ 4. aba\u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"go": "<fg:accent><b>❯ 4. abA\u001b_pi:c\u0007<inv> </inv></b></fg>"
+			},
+			{
+				"scenario": "input-kitty-text",
+				"kind": "lines",
+				"step": 7,
+				"line": 12,
+				"golden": "<fg:accent><b>❯ 4. aba\u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"go": "<fg:accent><b>❯ 4. abA\u001b_pi:c\u0007<inv> </inv></b></fg>"
+			},
+			{
+				"scenario": "input-kitty-text",
+				"kind": "result",
+				"step": -1,
+				"line": -1,
+				"golden": "{\"answers\":[{\"answer\":\"aba\",\"kind\":\"custom\",\"question\":\"Which library should we use for date formatting?\",\"questionIndex\":0}],\"cancelled\":false}",
+				"go": "{\"answers\":[{\"answer\":\"abA\",\"kind\":\"custom\",\"question\":\"Which library should we use for date formatting?\",\"questionIndex\":0}],\"cancelled\":false}"
+			},
+			{
+				"scenario": "input-kitty-text",
+				"kind": "tool-text",
+				"step": -1,
+				"line": -1,
+				"golden": "\"User has answered your questions: \\\"Which library should we use for date formatting?\\\"=\\\"aba\\\". You can now continue with the user's answers in mind.\"",
+				"go": "\"User has answered your questions: \\\"Which library should we use for date formatting?\\\"=\\\"abA\\\". You can now continue with the user's answers in mind.\""
+			},
+			{
+				"scenario": "input-kitty-text",
+				"kind": "tool-details",
+				"step": -1,
+				"line": -1,
+				"golden": "{\"answers\":[{\"answer\":\"aba\",\"kind\":\"custom\",\"question\":\"Which library should we use for date formatting?\",\"questionIndex\":0}],\"cancelled\":false}",
+				"go": "{\"answers\":[{\"answer\":\"abA\",\"kind\":\"custom\",\"question\":\"Which library should we use for date formatting?\",\"questionIndex\":0}],\"cancelled\":false}"
+			}
+		]
+	}
 }

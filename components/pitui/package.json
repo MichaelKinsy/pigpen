@@ -24,6 +24,8 @@
     "access": "public"
   },
   "files": [
+    "internal",
+    "jsarray",
     "jsnumber",
     "jsstring",
     "latex",

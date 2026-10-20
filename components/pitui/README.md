@@ -30,9 +30,9 @@ markers; `OnChange` fires once per input chunk.
 
 | Group | Files | Lines |
 |---|---|---|
-| Root code, copied from PiG v0.5.0 and pruned/adapted | 19 files | 9050 |
+| Root code, copied from PiG v0.5.0 and pruned/adapted | 20 files | 9465 |
 | Root code, rewritten from pi-tui / pi-coding-agent | 8 files | 432 |
-| Root tests (PiG v0.5.0 tests, adapted) + shims | 75 files | 9770 |
+| Root tests (PiG v0.5.0 tests, adapted) + shims | 76 files | 9906 |
 | `widthx/` code (PiG v0.5.0 copy) | 12 files | 5506 |
 | `widthx/` tests | 25 files | 2193 |
 | `widthx/` data, generators and notes | 24 files | 5762 |
@@ -49,6 +49,12 @@ markers; `OnChange` fires once per input chunk.
 | `latex/` code (PiG v0.5.0 copy) | 4 files | 2031 |
 | `latex/` tests | 3 files | 900 |
 | `latex/` data, generators and notes | 4 files | 1047 |
+| `jsarray/` code (PiG v0.5.0 copy) | 1 files | 492 |
+| `jsarray/` tests | 1 files | 45 |
+| `jsarray/` data, generators and notes | 1 files | 1 |
+| `internal/hljs/` code (PiG v0.5.0 copy) | 10 files | 4363 |
+| `internal/hljs/` tests | 8 files | 1179 |
+| `internal/hljs/` data, generators and notes | 6 files | 5491 |
 | `testdata/` (PiG v0.5.0 goldens the kept tests read) | 4 files | 2985 |
 | `port/oracle/pi/` (Pi sources, unmodified) | 47 files | 19565 |
 

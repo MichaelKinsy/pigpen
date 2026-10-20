@@ -11,7 +11,9 @@ import (
 func isolateLocale(t *testing.T) string {
 	t.Helper()
 	SetLocale("")
-	t.Cleanup(func() { SetLocale("") })
+	// The resolution under test is the SDK's, which applies only with rpiv-i18n installed.
+	SetI18nInstalled(true)
+	t.Cleanup(func() { SetLocale(""); SetI18nInstalled(false) })
 	dir := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", dir)
 	t.Setenv("LANG", "")
@@ -140,4 +142,29 @@ func TestLocales(t *testing.T) {
 			}
 		}
 	})
+}
+
+// Without rpiv-i18n the original's bridge returns the inline English fallback at every call site: neither
+// locale.json nor LANG nor LC_ALL changes a string. Only an explicit override (tests, the --locale stand-in) does.
+func TestI18nIsEnglishWithoutRpivI18n(t *testing.T) {
+	dir := isolateLocale(t)
+	SetI18nInstalled(false)
+	t.Setenv("LANG", "uk_UA.UTF-8")
+	t.Setenv("LC_ALL", "de_DE.UTF-8")
+	if err := os.MkdirAll(filepath.Join(dir, "rpiv-i18n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	os.WriteFile(filepath.Join(dir, "rpiv-i18n", "locale.json"), []byte(`{"locale":"pt-BR"}`), 0o644)
+	if got := DisplayLabel(KindNext); got != "Next" {
+		t.Fatalf("not installed: %q, want English", got)
+	}
+	SetI18nInstalled(true)
+	if got := DisplayLabel(KindNext); got == "Next" {
+		t.Fatalf("installed: still English (%q)", got)
+	}
+	SetI18nInstalled(false)
+	SetLocale("uk")
+	if got := DisplayLabel(KindNext); got != "Далі" {
+		t.Fatalf("the override still applies: %q", got)
+	}
 }

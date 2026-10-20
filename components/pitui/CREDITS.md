@@ -23,6 +23,14 @@ Modified paths: each copied file below, as `doc.go` describes (pruned applicatio
 `NewEditor`, `GetCursor`, `OnChange` timing, `Keybindings`, markdown theme and hyperlink handling, the jsnumber/jsstring/
 wordsegmenter dependency cuts). The Pi sources under `port/oracle/pi/` are not modified.
 
+- **highlight.js** 10.7.3 (tag `10.7.3`, commit `0c4cc8a1c3aa373aee06796433c1389e4d2a3a45`), <https://github.com/highlightjs/highlight.js>, by
+  **Ivan Sagalaev** and contributors (BSD-3-Clause, Copyright (c) 2006, Ivan Sagalaev; [licenses/highlight.js-LICENSE](licenses/highlight.js-LICENSE)).
+  `internal/hljs/` is PiG's Go port of its highlighter (`lib/core.js`) and carries a snapshot of the language
+  grammars Pi's `syntax-highlight.ts` registers (`grammars_eager.json.gz`, `grammars_all.json.gz`, generated from the
+  highlight.js package by PiG's `generate-highlight-grammars.mjs`); `highlight.go` is PiG's port of Pi's
+  `syntax-highlight.ts` without PiG's memo and active-theme wrappers, and `jsarray/` is PiG's V8 `Array.prototype.sort`
+  (the highlighter's `highlightAuto` ordering depends on it).
+
 It also depends on `github.com/clipperhouse/uax29/v2` (MIT), `github.com/dlclark/regexp2` (MIT) and
 `golang.org/x/text` (BSD-3-Clause), as PiG does.
 
@@ -49,6 +57,7 @@ Copied from PiG v0.5.0:
   - `markdown_resume.go` (200 lines)
   - `markdown_spans.go` (456 lines)
   - `markdown_style.go` (120 lines)
+  - `highlight.go` (410 lines)
 
 Rewritten from Pi:
 
@@ -61,7 +70,7 @@ Rewritten from Pi:
   - `sgr.go` (78 lines)
   - `base.go` (19 lines)
 
-Root tests (PiG v0.5.0 tests of the kept code, adapted; `compat_test.go`, `extras_test.go` and `markdown_fixture_test.go` and `pi_parity_test.go` are written here):
+Root tests (PiG v0.5.0 tests of the kept code, adapted; `compat_test.go`, `extras_test.go`, `markdown_fixture_test.go` and `pi_parity_test.go` are written here, `highlight_test.go` is adapted from PiG's):
 
   - `compat_test.go`
   - `components_grapheme_test.go`
@@ -88,6 +97,7 @@ Root tests (PiG v0.5.0 tests of the kept code, adapted; `compat_test.go`, `extra
   - `editor_word_segments_upstream_test.go`
   - `editor_wrapping_upstream_test.go`
   - `extras_test.go`
+  - `highlight_test.go`
   - `key_cache_test.go`
   - `key_csiu_text_test.go`
   - `key_event_type_upstream_test.go`
@@ -139,6 +149,6 @@ Root tests (PiG v0.5.0 tests of the kept code, adapted; `compat_test.go`, `extra
   - `word_navigation_sea_test.go`
   - `word_navigation_upstream_test.go`
 
-Subpackage directories copied from PiG v0.5.0 (code, tests, data): `widthx/`, `jsstring/`, `jsnumber/`, `wordsegmenter/`, `lazyregexp/`, `latex/`.
+Subpackage directories copied from PiG v0.5.0 (code, tests, data): `widthx/`, `jsstring/`, `jsnumber/`, `wordsegmenter/`, `lazyregexp/`, `latex/`, `jsarray/`, `internal/hljs/`.
 Test data copied from PiG v0.5.0: `testdata/markdown-latex-corpus.txt`, `testdata/markdown-latex-golden.jsonl`, `testdata/markdown-marked-corpus.json`, `testdata/markdown-marked-golden.jsonl`.
 Pi sources: every file under [`port/oracle/pi/`](port/oracle/pi) is the unmodified Pi file at the pinned commit.

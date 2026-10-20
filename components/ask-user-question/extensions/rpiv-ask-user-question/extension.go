@@ -1,6 +1,8 @@
 package ask_user_question
 
 import (
+	"os"
+
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 
 	"github.com/MichaelKinsy/pigpen/ask-user-question/internal/ui"
@@ -53,6 +55,9 @@ func (a *app) run(h host, args map[string]any) (any, error) {
 	if v := validateQuestionnaire(typed); !v.OK {
 		return toResult(buildToolResult(v.Message, questionnaireResult{Cancelled: true, Error: v.Error}))
 	}
+	// The original translates only with rpiv-i18n installed; otherwise every string is its English fallback.
+	cwd, _ := os.Getwd()
+	ui.SetI18nInstalled(rpivI18nInstalled(cwd))
 	h.Emit(promptEvent, promptEventPayload(typed))
 	// RPC hosts (VSCode pendant, ACP clients like Zed/Paseo, issue #78) cannot render a custom component, but the
 	// select and input dialogs work there: the sequential dialog walker. See rpc.go.

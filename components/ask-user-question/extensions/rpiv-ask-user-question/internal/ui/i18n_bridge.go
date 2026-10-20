@@ -10,7 +10,9 @@ import (
 )
 
 // i18n bridge. upstream: state/i18n-bridge.ts, backed here by a port of the resolution of @juicesharp/rpiv-i18n
-// 2.13.9 (i18n.ts, loader.ts) as if that SDK were installed.
+// 2.13.9 (i18n.ts, loader.ts). Like the original, which translates only when that optional peer is installed and
+// otherwise returns the inline English fallback at every call site, the bridge resolves a locale only after the root
+// package reports rpiv-i18n installed (SetI18nInstalled); until then every string is English.
 
 // I18nNamespace is the translation namespace. upstream: I18N_NAMESPACE.
 const I18nNamespace = "@juicesharp/rpiv-ask-user-question"
@@ -31,7 +33,17 @@ var (
 	// localeOverride overrides locale detection when non-empty (stands in for the --locale flag; tests and the
 	// root package set it through SetLocale).
 	localeOverride string
+	// i18nInstalled is whether the original's optional peer rpiv-i18n is installed; without it no locale is resolved.
+	i18nInstalled bool
 )
+
+// SetI18nInstalled records whether rpiv-i18n is installed. Without it the locale resolves to English, as the original's
+// bridge does when its dynamic import of the SDK fails. The override of SetLocale (tests, the --locale stand-in) still applies.
+func SetI18nInstalled(installed bool) {
+	i18nMu.Lock()
+	i18nInstalled = installed
+	i18nMu.Unlock()
+}
 
 // SetLocale sets the locale override ("" clears it).
 func SetLocale(code string) {
@@ -88,11 +100,14 @@ func parseLangEnv(value string) string {
 	return lang
 }
 
-// activeLocale resolves the locale: override, then ~/.config/rpiv-i18n/locale.json, then LANG, then LC_ALL;
-// "" is English. upstream: detectLocaleFromConfigAndEnv.
+// activeLocale resolves the locale: override, then (only with rpiv-i18n installed) ~/.config/rpiv-i18n/locale.json,
+// then LANG, then LC_ALL; "" is English. upstream: detectLocaleFromConfigAndEnv.
 func activeLocale() string {
 	if localeOverride != "" {
 		return localeOverride
+	}
+	if !i18nInstalled {
+		return ""
 	}
 	if dir := configHome(); dir != "" {
 		if data, err := os.ReadFile(filepath.Join(dir, "rpiv-i18n", "locale.json")); err == nil {

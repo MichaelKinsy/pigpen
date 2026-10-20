@@ -4,7 +4,7 @@ A Go extension for PiG: the `ask_user_question` tool, which lets the model put u
 (2-4 options each, single or multiple choice, an optional markdown preview per option) to you when it would otherwise guess.
 In a terminal you get the original's interactive questionnaire: a tab per question and a Submit tab, per-option and global
 notes (`n`), multi-select toggles, an inline "Type something." answer with paste and multi-line editing, a side-by-side
-markdown preview pane, the collapse key, and nine locales. On RPC hosts it asks with native select and input dialogs, as the
+markdown preview pane with syntax highlighting, the collapse key, and nine locales (with `rpiv-i18n` installed, as in the original). On RPC hosts it asks with native select and input dialogs, as the
 original does.
 
 It is a port of `@juicesharp/rpiv-ask-user-question` 2.11.0 (see [CREDITS.md](CREDITS.md)), made with the
@@ -24,9 +24,11 @@ Each item names the capability the PiG SDK lacks; none is silent.
   and keeps your draft.
 - **No terminal bell** before the questionnaire waits (the SDK has no terminal write).
 - **Keybinding overrides** are read from `keybindings.json` in the agent directory (the SDK offers no `KeybindingsManager`).
-- **No syntax highlighting in fenced code blocks of a preview** (Pi colours them through cli-highlight).
-- **Locales** follow `rpiv-i18n`'s resolution as if it were installed: `$XDG_CONFIG_HOME/rpiv-i18n/locale.json`, then `LANG`, then
-  `LC_ALL`; English when none applies. (Without `rpiv-i18n` the original is English only.)
+- **Locales: English unless `rpiv-i18n` is installed,** as in the original. The original asks the optional npm package
+  `@juicesharp/rpiv-i18n` for its strings and falls back to English when the import fails. A Go extension cannot import it,
+  so "installed" means that Pi's settings name it: a `packages` or `extensions` entry containing `rpiv-i18n` in the agent
+  directory's `settings.json` or the project's `.pi/settings.json`. Only then does the port resolve a locale the way that
+  package does: `$XDG_CONFIG_HOME/rpiv-i18n/locale.json`, then `LANG`, then `LC_ALL`.
 
 See [port/PORT.md](port/PORT.md) for the proof and the full list.
 

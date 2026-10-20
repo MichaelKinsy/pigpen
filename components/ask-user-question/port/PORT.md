@@ -31,10 +31,14 @@ Differences (all SDK-bound, none silent; `port/frames/known-differences.json` pi
 - **Keybindings.** The factory's `KeybindingsManager` is stood in for by pi-tui's defaults plus `keybindings.json` of the agent
   directory (legacy names migrated). Needs-SDK: `KeybindingsManager.matches`.
 - **Bell (G10).** No terminal write from a subprocess; 5 upstream cases are named skips. Needs-SDK: `Context.Bell()`.
-- **Syntax highlighting** of fenced code in previews: Pi's `highlightCode` uses cli-highlight; `HighlightCode` is nil. Owner decision
-  needed (port a highlighter, or accept).
-- **Locales (E1 lifted).** The nine locales are ported with rpiv-i18n 2.13.9's resolution (locale.json, LANG, LC_ALL; `--locale` is
-  not available). Owner decision pending: the original is English without `rpiv-i18n` installed.
+- **Syntax highlighting** of fenced code in previews (owner decision, 2026-10-20: match the original). Pi's `highlightCode`
+  runs cli-highlight with highlight.js 10.7.3; the port uses PiG's Go port of that highlighter (`components/pitui`:
+  `internal/hljs`, `highlight.go`, with provenance) and the theme mapping of `buildCliHighlightTheme`
+  (`internal/ui/markdown_theme.go`). The frame scenarios that carry fenced code in a language highlight.js knows (for
+  example `preview-code-fence-languages`) now match the original frame for frame.
+- **Locales (owner decision, 2026-10-20: match the original exactly).** English unless the original's optional peer
+  `rpiv-i18n` is installed. `@juicesharp/rpiv-i18n` cannot be imported from Go, so "installed" is read from Pi's settings
+  (`i18n_installed.go`); only then does the port apply that package's resolution (`locale.json`, `LANG`, `LC_ALL`).
 - **Pitui bugs open when this was written:** see the PR body.
 
 ## Mapping
@@ -71,12 +75,12 @@ Host: xd670, CPUs 64-127, Pi built from commit 1402973a (`pi 1.3.0`, the Pi that
 
 - **Twins.** `pigeq twins check`: 624 exact twins and 23 named skips of the original's 647 cases (`port/upstream-tests.json`);
   `slices.json` is `{}`. The 23 skips each name why the case cannot be ported (the terminal bell, the overlay handle, the
-  external editor, reference identity in JavaScript, highlight.js).
+  external editor, reference identity in JavaScript).
 - **Frames.** `TestFramesAgainstOriginal` replays 173 scenarios (1,276 frames) recorded from the unmodified original
   under Pi 1402973a through the Go component and compares every frame, the notifications, the result and the tool text.
-  Four scenarios carry pinned known differences (`port/frames/known-differences.json`): the external-editor notification
-  text (two scenarios), syntax highlighting in fenced previews, and the Shift+letter Kitty decode (a PiG divergence,
-  number pending: PiG decodes `ESC[97;2u` as `A`, pi-tui as `a`; pitui follows PiG).
+  Three scenarios carry pinned known differences (`port/frames/known-differences.json`): the external-editor notification
+  text (two scenarios) and the Shift+letter Kitty decode (a PiG divergence, number pending: PiG decodes `ESC[97;2u` as `A`,
+  pi-tui as `a`; pitui follows PiG).
 - **RPC scenarios.** The 16 goldens in `port/golden` are re-recorded from the original under Pi 1402973a (only the header
   changed; the traces equal the Pi 1.0.0 ones). `pigeq check`: 15 of 16 pass on both lanes (pig-ts == pi-ts and
   pig-go == pi-ts). **`two-calls` differs between PiG and Pi**: in Pi the first `tool_execution_end` and the first

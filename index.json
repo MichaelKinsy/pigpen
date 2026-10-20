@@ -405,7 +405,7 @@
       "id": "pig-popular",
       "kind": "piglet",
       "name": "pig-popular",
-      "description": "PiG with Go ports of popular Pi extensions: the rpiv-todo task list (tool, /todos, live overlay), the ask_user_question tool (dialog walker; the tabbed questionnaire is not ported), the powerline status bar (no custom editor), pi-goal-x's goal files and direct commands (no scheduler or drafting), a permission gate (rules for tool calls: no approval dialog, full bash parsing or path rules) and subagents (agent and chain definitions, list and get, single-agent and chain runs through a child pig; no parallel, async or workflow runs).",
+      "description": "PiG with Go ports of popular Pi extensions: the rpiv-todo task list (tool, /todos, live overlay), the ask_user_question tool (the tabbed questionnaire with notes, previews and locales; the collapse key shows a one-line row and the external editor key reports a refusal), the powerline status bar (no custom editor), pi-goal-x's goal files and direct commands (no scheduler or drafting), a permission gate (rules for tool calls: no approval dialog, full bash parsing or path rules) and subagents (agent and chain definitions, list and get, single-agent and chain runs through a child pig; no parallel, async or workflow runs).",
       "maintainer": "MichaelKinsy",
       "official": false,
       "featured": false,
@@ -419,7 +419,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-popular"
       },
-      "manifestSha256": "4f6152b1f06a4701b8fe3c6646d033d0f1b36cab6a9974f59bfd01c2bb72cc5b",
+      "manifestSha256": "41000ff19cd84c7355247cea13abd3adf7b947f8236aab5aec12728a55a5a6d5",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
