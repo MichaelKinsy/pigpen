@@ -361,7 +361,9 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 	}
 	defer func() { <-childSlots }()
 	depth, _ := subagentDepth(os.Getenv)
-	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)})
+	launch := *a
+	launch.SystemPrompt = appendAgentRefinementOverlay(a.SystemPrompt, cwd, a.Name)
+	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(&launch, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)})
 	switch {
 	case errors.Is(err, errCancelled):
 		return res.Stdout, fmt.Errorf("%s was cancelled", a.Name)
