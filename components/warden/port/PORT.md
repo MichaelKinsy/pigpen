@@ -30,7 +30,14 @@
 | `done.ts` (evidence, `checkSummary`, UI proof, `evaluateDone`, `doneNudge`) | `done.go` | glob matcher from `rules.ts` `globToRegExp` |
 | `shape.ts` `taskSpine` | `spine.go` | |
 | `widget.ts` templates and tokens (action, stuck, done) | `widget.go` | `toFixed` rounds ties up like JavaScript |
-| `redact.ts` | `redact.go` | `VALUE_AMPERSAND` lookahead written as a scan |
+| `redact.ts` `redact` | `redact.go` | `VALUE_AMPERSAND` lookahead written as a scan |
+| `redact.ts` detection: `findSecrets`, `looksLikeSecretValue`, `syntheticish`, `partitionSecrets`, `maskSecrets`, `secretFingerprint`, `secretIds` | `redact_secrets.go` | the credential-assignment rule is a scan like `redact` (no lookahead); signed-URL spans are byte offsets, not UTF-16 units |
+| `output.ts` security half: `evaluateOutput`, `buildOutputRequest`, `outputQuestions`, `securityNotice`, `OutputVerdict` | `output_security.go` | the retention and format half (`compressOutput`, `retentionQuestion`, learner) belongs to the context lane (`output_context.go`); `evaluateOutput` reaches it through `retentionQuestions`, `applyRetention`, `learnerSuggest` |
+| `runaway.ts` | `runaway.go` | `RunawayMonitor` is used under one mutex by the message handlers; strings are measured in UTF-16 units |
+| `prose.ts` (prose check, `ProseTrend`, `RestatementWindow`, `proseNudge`) | `prose.go` | the check runs in a goroutine beside the done check (upstream starts both promises, then awaits prose first) |
+| `notify.ts` | `notify.go` | commands run through `os/exec` in the extension process, as upstream's `execFile` does (D12) |
+| `extension.ts` `slopSteer`, `SLOP_FIXES`, the slop content note | `slop.go` | the note is a `callNotes` content note of the rules lane's combined steer |
+| `extension.ts` security hooks (`message_start`/`message_update` runaway, `agent_end` slots 3, 5 and the prose check, `notifyDesktop`, the security-write steer) | `security_wiring.go` (one call each from `extension.go`, `results.go`, `toolcall.go`, `commands.go`) | the tool-output masking path (`tool_result`) is the context lane's `tool_output.go`, which calls `MaskSecrets`, `EvaluateOutput` and `SecurityNotice` |
 | `tools.ts` | `tools.go` | |
 | `config.ts` (the carried sections) | `config.go`, `configfile.go` | |
 | `extension.ts` (`tool_call`, `tool_result`, `agent_end`, `agent_start`, `before_agent_start`, `turn_end`, steer delivery, hold, dialog) | `extension.go`, `toolcall.go`, `results.go`, `steer.go` | events are PiG's; results are `{block, reason}` |
@@ -100,6 +107,7 @@ input, compaction, agent_settled).
 | D9 | user rules are JavaScript regexps | Go (RE2) regexps; a pattern that does not compile is skipped | language |
 | D10 | request state keys in insertion order | sorted | Go maps |
 | D11 | the stuck and done requests send the user's request as typed (`stuck.ts` `buildStuckRequest`, `done.ts` `buildDoneRequest`) | redacted, like the action request's task | the disclosure promises a redacted request; a secret pasted into a prompt must not leave on a stuck or done check (review) |
+| D12 | desktop notifier commands run with Node's `execFile` (title and body in `PI_WARDEN_TITLE` / `PI_WARDEN_BODY` for PowerShell and configured commands) | the same, through `os/exec` in the extension process; a configured command is spawned inside the hook and only the wait for its exit is off the handler, the probe chain and built-in notifiers run in a goroutine | the host's `Context.Exec` takes no environment (an SDK need: `ExecOptions.Env`), and `execFile` is what the original does |
 
 ## Results
 

@@ -251,6 +251,10 @@ func TestRunawayGuardAbortsRecoversOnceAndNeedsNoTypeSafe(t *testing.T) {
 		t.Fatalf("nudge %q", steers[0].Content)
 	}
 
+	h.host.Fire("agent_end", map[string]any{"messages": []any{}}) // a second agent_end has nothing pending
+	if len(h.steers()) != 1 {
+		t.Fatal("the recovery follow-up is sent once")
+	}
 	h.host.Fire("agent_start", nil) // the recovery turn begins
 	// The recovery turn loops again: stop it, but do not restart a second time for this prompt.
 	h.streamReply(strings.Repeat(runawayLoop, 30), "text", 1)

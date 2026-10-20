@@ -98,8 +98,8 @@
  {
   "name": "sql-delete-local-held",
   "file": "sqltarget.go",
-  "find": "Severity: SeverityRisky, Label: \"SQL DELETE FROM \u2026 WHERE on a loopback database\"",
-  "replace": "Severity: SeverityDestructive, Label: \"SQL DELETE FROM \u2026 WHERE on a loopback database\""
+  "find": "Severity: SeverityRisky, Label: \"SQL DELETE FROM … WHERE on a loopback database\"",
+  "replace": "Severity: SeverityDestructive, Label: \"SQL DELETE FROM … WHERE on a loopback database\""
  },
  {
   "name": "sql-hosted-write-only-warns",
@@ -130,5 +130,65 @@
   "file": "authorize.go",
   "find": "if scope.Segments != nil {",
   "replace": "if false {"
+ },
+ {
+  "name": "sec-prose-question-text",
+  "file": "prose.go",
+  "find": "Is `reply` longer than its content requires",
+  "replace": "Is `reply` longer than needed"
+ },
+ {
+  "name": "sec-prose-audience-description",
+  "file": "prose.go",
+  "find": "a software developer who knows this codebase and its tools",
+  "replace": "a developer"
+ },
+ {
+  "name": "sec-prose-nudge-as-steer",
+  "file": "security_wiring.go",
+  "find": "SteerOptions{DeliverAs: \"nextTurn\"}",
+  "replace": "SteerOptions{DeliverAs: \"steer\"}"
+ },
+ {
+  "name": "sec-prose-trend-strict",
+  "file": "prose.go",
+  "find": "\t\tif n >= trend {",
+  "replace": "\t\tif n > trend {"
+ },
+ {
+  "name": "sec-prose-disabled-ignored",
+  "file": "security_wiring.go",
+  "find": "!cfg.Slop.Enabled || !cfg.Slop.Prose.Enabled || ",
+  "replace": "!cfg.Slop.Enabled || "
+ },
+ {
+  "name": "sec-prose-short-replies-judged",
+  "file": "security_wiring.go",
+  "find": " || utf16Len(final) < cfg.Slop.Prose.MinChars",
+  "replace": ""
+ },
+ {
+  "name": "sec-write-steer-text",
+  "file": "security_wiring.go",
+  "find": "the proposed write may introduce a security weakness. Check for",
+  "replace": "the proposed write may be insecure. Check for"
+ },
+ {
+  "name": "sec-slop-fix-text",
+  "file": "slop.go",
+  "find": "replace stubs, placeholders, and hard-coded fake data with the working implementation",
+  "replace": "replace stubs with the working implementation"
+ },
+ {
+  "name": "sec-slop-steer-label",
+  "file": "slop.go",
+  "find": "the content just written to ",
+  "replace": "the file "
+ },
+ {
+  "name": "sec-notify-disabled-notifies",
+  "file": "security_wiring.go",
+  "find": "if !ctx.HasUI() || !cfg.Notify.Enabled {",
+  "replace": "if !ctx.HasUI() {"
  }
 ]

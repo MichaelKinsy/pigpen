@@ -131,11 +131,15 @@ M = [
  ("sql-ids-not-exemptable", "patterns.go", "\"sql-delete-local\", \"sql-hosted\", \"sql-hosted-write\", ", ""),
  ("authorize-force-push-verb", "authorize.go", "\"git-force-push\":                {\"force push\", \"force-push\"},", "\"git-force-push\":                {\"push\"},"),
 ]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mutate_security import SECURITY_M, SECURITY_EQUIVALENT  # security lane
+M += SECURITY_M
 EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth",
  "sensitive-violations-escalate": "unreachable: only rm-family hits yield violations (hitViolations), and none is sensitive; the filter is upstream's defence in depth",
  "large-output-any-tool": "unreachable: BuildRequest asks the large_output question of bash only, so no other tool has an answer to read",
  "scratch-moves-in-ignored": "the stripped command is read too (`unquoted(command)`); the raw text only adds a case where data text hid a move-in word",
  "large-output-memory-lost": "the steer repeat window drops the identical second text, so the memory is a second line of defence (checked at the unit level by the notice twin)"}
+EQUIVALENT.update(SECURITY_EQUIVALENT)
 only = set(sys.argv[1:])
 out = []
 for mid, f, old, new in M:
@@ -146,9 +150,12 @@ for mid, f, old, new in M:
     shutil.copy(p, p + ".orig")
     try:
         open(p, "w").write(src.replace(old, new))
-        r = subprocess.run(["go", "test", "-count=1", "-failfast", "."], cwd=ext, capture_output=True, text=True, timeout=600)
+        try:
+            r = subprocess.run(["go", "test", "-count=1", "-failfast", "-timeout=120s", "."], cwd=ext, capture_output=True, text=True, timeout=300)
+        except subprocess.TimeoutExpired:
+            out.append(f"{mid}: KILLED (the mutant hangs: the test binary timed out)"); print(out[-1], flush=True); continue
         killed = r.returncode != 0
-        first = next((l for l in (r.stdout + r.stderr).splitlines() if l.startswith("--- FAIL") or "build failed" in l or "[setup failed]" in l), "")
+        first = next((l for l in (r.stdout + r.stderr).splitlines() if l.startswith("--- FAIL") or "build failed" in l or "[setup failed]" in l or "panic: test timed out" in l), "")
         out.append(f"{mid}: {'KILLED' if killed else 'SURVIVED (equivalent mutant: ' + EQUIVALENT[mid] + ')' if mid in EQUIVALENT else 'SURVIVED'} {first}".rstrip())
     finally:
         shutil.move(p + ".orig", p)
