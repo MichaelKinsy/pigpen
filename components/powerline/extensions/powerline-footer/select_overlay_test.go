@@ -23,7 +23,7 @@ func TestSelectOverlayTitleIsBold(t *testing.T) {
 func TestSelectListDescriptionNeedsMoreThanTenCells(t *testing.T) {
 	l := &selectList{items: []selectItem{{Value: "x", Label: "x", Description: "abcdefghijklmnop"}, {Value: "y"}}, selectedIndex: 1, maxVisible: 5, theme: tagTheme{}}
 	eq(t, l.render(46)[0], "  x", "10 cells left: no description")
-	eq(t, l.render(47)[0], "  x"+strings.Repeat(" ", 31)+"abcdefghijk", "11 cells left: the description, cut to them")
+	eq(t, l.render(47)[0], "  x"+strings.Repeat(" ", 31)+"abcdefghijk\x1b[0m", "11 cells left: the description, cut to them (pi-tui ends a cut with a reset)")
 }
 
 func TestBuildStashPreview(t *testing.T) {
