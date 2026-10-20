@@ -18,6 +18,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/ahp/internal/live"
 	"github.com/MichaelKinsy/pigpen/ahp/internal/pi"
 	"github.com/MichaelKinsy/pigpen/ahp/internal/settings"
+	"github.com/MichaelKinsy/pigpen/ahp/internal/tunnel"
 	"github.com/MichaelKinsy/pigpen/ahp/internal/wire"
 	"github.com/MichaelKinsy/pigpen/ahp/internal/ws"
 )
@@ -35,6 +36,14 @@ type runtime struct {
 	addr    string
 	ctx     sdk.Context
 	haveCtx bool
+	// tunnel is the running `devtunnel host` and tunnelID its tunnel; tunnelStarting is set while
+	// /ahp tunnel is still talking to the CLI. A tunnel excludes the direct listener: it owns the
+	// fixed port and serves without a token.
+	tunnel         *hostedTunnel
+	tunnelID       string
+	tunnelStarting bool
+	// devtunnel runs the CLI; nil runs the real one (a test substitutes it).
+	devtunnel tunnel.Runner
 }
 
 func newRuntime() *runtime { return &runtime{live: live.New()} }
@@ -42,7 +51,10 @@ func newRuntime() *runtime { return &runtime{live: live.New()} }
 func (rt *runtime) status() string {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
-	if rt.server == nil {
+	switch {
+	case rt.tunnelStarting:
+		return "AHP dev tunnel is starting"
+	case rt.server == nil:
 		return "AHP listener is off. /ahp start opens it (settings: " + settingsPath(nil) + ")"
 	}
 	return rt.addr
@@ -105,7 +117,18 @@ func (rt *runtime) onSessionShutdown(ctx sdk.Context, reason string) {
 	if v, err := ctx.GetFlag(flagStart); err == nil {
 		restarts, _ = v.(bool)
 	}
-	if notice := replacementNotice(reason, rt.stop(), restarts); notice != "" {
+	rt.mu.Lock()
+	tunnelled := rt.tunnel != nil || rt.tunnelStarting
+	rt.mu.Unlock()
+	stopped := rt.stop()
+	if tunnelled {
+		// --ahp opens the direct listener, never a tunnel: a tunnel is always asked for again.
+		if stopped && reason != "quit" {
+			ctx.Notify("AHP dev tunnel stopped: the session was replaced ("+reason+"). /ahp tunnel serves the new session.", "warning")
+		}
+		return
+	}
+	if notice := replacementNotice(reason, stopped, restarts); notice != "" {
 		ctx.Notify(notice, "warning")
 	}
 }
@@ -133,9 +156,13 @@ func isLoopback(host string) bool {
 // start opens the listener and returns the notice to show (listenNotice). It is only ever called on the user's explicit request.
 func (rt *runtime) start(ctx sdk.Context) (string, error) {
 	rt.mu.Lock()
-	if rt.server != nil {
+	if rt.server != nil || rt.tunnelStarting {
 		addr := rt.addr
+		starting := rt.tunnelStarting
 		rt.mu.Unlock()
+		if starting {
+			return "", errors.New("the dev tunnel is still starting; /ahp stop cancels it")
+		}
 		return addr, nil
 	}
 	rt.mu.Unlock()
@@ -158,7 +185,12 @@ func (rt *runtime) start(ctx sdk.Context) (string, error) {
 	if err := requireTokenOffLoopback(path, direct.Host, token); err != nil {
 		return "", err
 	}
+	return rt.listen(ctx, access, direct.Host, direct.Port, token)
+}
 
+// listen builds the host for the running session and serves it on host:port; it returns the notice
+// to show. The caller has checked that nothing is listening.
+func (rt *runtime) listen(ctx sdk.Context, access settings.Access, host string, port int, token string) (string, error) {
 	cwd := rt.live.WorkingDirectory()
 	sessionRoot := sessionRootOf(ctx)
 	opts := compose.Options{
@@ -183,7 +215,7 @@ func (rt *runtime) start(ctx sdk.Context) (string, error) {
 		return "", err
 	}
 	server, err := ws.Serve(built.Host, ws.Options{
-		Addr: net.JoinHostPort(direct.Host, strconv.Itoa(direct.Port)), Token: token, AllowedOrigins: access.AllowedOrigins,
+		Addr: net.JoinHostPort(host, strconv.Itoa(port)), Token: token, AllowedOrigins: access.AllowedOrigins,
 	})
 	if err != nil {
 		built.Close()
@@ -196,14 +228,20 @@ func (rt *runtime) start(ctx sdk.Context) (string, error) {
 	return addr, nil
 }
 
-// stop closes the listener and the services behind it; false when nothing was running.
+// stop closes the dev tunnel, the listener and the services behind them; false when nothing was
+// running. The tunnel goes first, as in `pi-ahp-tunnel`: `devtunnel host` must not outlive the
+// listener it forwards to, or the tunnel looks hosted by a process that is gone.
 func (rt *runtime) stop() bool {
 	rt.mu.Lock()
-	server, built := rt.server, rt.built
+	server, built, hosted, starting := rt.server, rt.built, rt.tunnel, rt.tunnelStarting
 	rt.server, rt.built, rt.addr = nil, nil, ""
+	rt.tunnel, rt.tunnelID, rt.tunnelStarting = nil, "", false
 	rt.mu.Unlock()
+	if hosted != nil {
+		hosted.stop()
+	}
 	if server == nil {
-		return false
+		return starting || hosted != nil
 	}
 	_ = server.Close()
 	built.Close()

@@ -22,7 +22,7 @@ session. The equivalence method is therefore three layers, not the scenario harn
 
 1. **Twins.** Every one of the 430 upstream test cases has a Go test named after it
    (`internal/twin`; the gate `extensions/ahp/twins_test.go` fails when a case has neither a test nor
-   a named skip). **390 run, 40 are named skips** (below). Upstream inputs and expectations are kept;
+   a named skip). **410 run, 20 are named skips** (below). Upstream inputs and expectations are kept;
    where the Go form had to differ the test says why.
 2. **Real host.** `extensions/ahp/realpig_test.go` builds the extension with a real `pig`, serves a real PiG
    session backed by a scripted local model (`tools/fakellm`), and drives it with a WebSocket AHP
@@ -52,17 +52,18 @@ session. The equivalence method is therefore three layers, not the scenario harn
 | `pi/resource-*.ts` | `internal/svc` (`resource.go`, `watch.go`, `glob.go`, `watchpolicy.go`) | resource 23, resource-watch 28, policy 9, watch-events 4 |
 | `host/terminal-service.ts` | `internal/svc` (`terminal.go`, `pty*.go`) | terminal-service 14, pty 2 |
 | `pi/changeset-uri.ts`, `git-changes.ts`, `changeset-service.ts` | `internal/changeset` | changeset 8, changeset-lifecycle 5, changeset-uri 2 |
+| `tunnel/discovery.ts`, `tunnel/devtunnel.ts` | `internal/tunnel` | tunnel 20 |
+| `bin/tunnel.ts` | root package: `/ahp tunnel`, `tunnelhost.go` | unit tests (`tunnelhost_test.go`) |
 | `pi/image-input.ts` | `internal/pi/imageinput.go` | image-input 2 |
 | `host/pi-host.ts` | `internal/compose` | pi-host 1 |
 | `host/direct-settings.ts` | `internal/settings` | direct-settings 3 |
 | `pi/in-process-backend.ts` | `internal/live` (adapter over the SDK; not a port) | real-pig scenarios |
 | (none) | root package: flags, `/ahp`, listener lifecycle | real-pig scenarios |
 
-## Named skipped twins (40)
+## Named skipped twins (20)
 
 | Family | Count | Why |
 |---|---|---|
-| `tunnel` | 20 | The dev tunnel (Microsoft `devtunnel` CLI management) is not bundled: owner decision, ACP, AHP and A2A are separate extensions |
 | `pi-replay` | 15 | Replays provider streams through a live embedded Pi agent loop. Covered by the recorded-stream twins (`mapper-fixtures`) and the real-pig scenarios |
 | `image-session` | 1 | Needs Pi's `InProcessPiBackend` and a faux model |
 | `model-discovery` | 2 | Needs an embedded Pi model registry with extension providers; the adapter reads models through the SDK |
@@ -128,6 +129,15 @@ session. The equivalence method is therefore three layers, not the scenario harn
     (`PathForBlob`); with the filesystem opted in its roots also authorize the working directory and each blob path, as
     upstream's `authorizeResource` does. (c) File ordering uses the same approximated `localeCompare` as the other services
     (deviation 12). (d) The MIME type of a blob comes from the same subset table as deviation 10.
+17. **Dev tunnel.** `pi-ahp-tunnel` is a program with its own `main`; here it is the command `/ahp tunnel [name]`. The `devtunnel` CLI
+    is run exactly as upstream runs it (same argument lists, same decoders and messages; `exec:devtunnel`, and only that program).
+    Differences: the CLI runs with the command's context and setup happens in the background with notices instead of lines on
+    standard error; `devtunnel host` has its output captured and shown as notices (upstream inherits the terminal); `--cwd`
+    and `--verbose` do not exist (the session's directory is served, and the extension logs to standard error); `name` may be
+    the rest of the line, where the program takes only the next argument. Like upstream, the listener is on `127.0.0.1:31546`
+    without a token, and an exiting `devtunnel host` shuts the listener down. On Windows `devtunnel host` is stopped with Kill, as
+    Windows has no polite signal for a child. The sequence "login, list, create, port" and the stop order are proven by unit tests with a
+    scripted CLI and a substituted host process, not against Microsoft's service (no account was used).
 
 ## Build notes
 
