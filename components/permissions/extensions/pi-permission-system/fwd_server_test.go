@@ -428,7 +428,7 @@ func TestProcessInboxChildPayload(t *testing.T) {
 
 func TestProcessInboxBoundedDelegation(t *testing.T) {
 	const f = "authority/forwarded-request-server"
-	query, log := new(int), new(int)
+	query, log := PermissionQuery(nopQuery{}), AuthorizerLog(nopAuthLog{})
 	allowingLink := func(*PromptPermissionDetails, PermissionQuery, AuthorizerLog) (AuthorizerVerdict, error) {
 		return AuthorizerVerdict{Kind: "allow"}, nil
 	}

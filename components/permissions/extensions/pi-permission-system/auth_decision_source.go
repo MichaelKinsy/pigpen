@@ -159,4 +159,3 @@ func (s DecisionSource) JS() *jsObject {
 	}
 	return o
 }
-

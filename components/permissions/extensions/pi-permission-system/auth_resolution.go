@@ -39,4 +39,3 @@ func ResolutionFor(decidedBy DecisionSource, outcome DecisionOutcome) Permission
 	}
 	return "user_approved"
 }
-
