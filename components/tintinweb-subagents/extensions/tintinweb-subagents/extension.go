@@ -243,6 +243,12 @@ func (a *app) onSettle(r *agentRecord) {
 		}
 	}
 	_ = ctx.Events().Emit(channel, data)
+	// Persist the final record for cross-extension history reconstruction. upstream: index.ts:584-589.
+	a.mgr.mu.Lock()
+	rec := map[string]any{"id": r.ID, "type": r.Type, "description": r.Description, "status": r.Status, "result": r.Result,
+		"error": r.Error, "startedAt": r.StartedAt.UnixMilli(), "completedAt": r.CompletedAt.UnixMilli()}
+	a.mgr.mu.Unlock()
+	_ = ctx.AppendEntry("subagents:record", rec)
 	if consumed { // the result was already delivered
 		return
 	}

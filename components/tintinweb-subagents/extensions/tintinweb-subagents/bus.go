@@ -2,7 +2,6 @@ package tintinweb_subagents
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -89,6 +88,7 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 // as the model's, and a model override is resolved and scope-checked like Agent({ model }). It returns the agent's id.
 // upstream: index.ts spawnTopLevel and spawnResolved, cross-extension-rpc.ts (the model override).
 func (a *app) spawnTopLevel(ctx sdk.Context, typ, prompt string, options map[string]any) (string, error) {
+	a.reregisterAgents() // an agent file added mid-session is spawnable here too. upstream: index.ts spawnResolved reloadCustomAgents.
 	opts := stripInternalSpawnOptions(options)
 	if feature := unportedSpawnOption(opts); feature != "" {
 		return "", refusal(feature)
@@ -117,7 +117,10 @@ func (a *app) spawnTopLevel(ctx sdk.Context, typ, prompt string, options map[str
 		}
 		model = str(found["provider"]) + "/" + str(found["id"])
 	}
-	r, err := a.start(ctx, typ, prompt, description, model, thinking, maxTurns, false, spawnOptions{Name: name, Background: true})
+	// Like the original, only isBackground: true makes the spawn a pooled background one; absent or false is detached,
+	// holds no pool slot and is not announced to the model (agent-manager.ts:520-540, :969).
+	background, _ := opts["isBackground"].(bool)
+	r, err := a.start(ctx, typ, prompt, description, model, thinking, maxTurns, false, spawnOptions{Name: name, Background: background})
 	if err != nil {
 		return "", err
 	}
@@ -150,7 +153,11 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, model, thinking s
 	resolved := res.Type
 	cfg := getAgentConfig(resolved)
 	if cfg == nil {
-		return nil, fmt.Errorf("Unknown agent type: %q", typ)
+		// The unset fallback names general-purpose even when it was removed from the registry: run the built-in one under
+		// the resolved name. upstream: agent-runner.ts runAgent (DEFAULT_AGENTS fallback).
+		fallback := *defaultAgents().get("general-purpose")
+		fallback.Name = resolved
+		cfg = &fallback
 	}
 	if feature := unportedAgentFeature(cfg); feature != "" {
 		return nil, refusal(feature)

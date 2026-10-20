@@ -158,15 +158,9 @@ func notFound(ref string) sdk.ToolResult {
 	return textResult(`Agent not found: "` + ref + `". It may have been cleaned up.`)
 }
 
-func displayName(a *app, typ string) string {
-	if c := getAgentConfig(typ); c != nil {
-		if c.DisplayName != "" {
-			return c.DisplayName
-		}
-		return c.Name
-	}
-	return typ
-}
+// displayName is the display name of a type; an unknown or disabled one reads as general-purpose's.
+// upstream: ui/agent-widget.ts getDisplayName over agent-types.ts getConfig.
+func displayName(typ string) string { return getConfig(typ).DisplayName }
 
 // agentTool runs the Agent tool. upstream: index.ts Agent execute.
 func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
@@ -190,7 +184,11 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	// upstream: index.ts:1796-1798.
 	fallbackNote := ""
 	if resolveEnabledTypeIn(reg, strings.TrimSpace(typ)) == "" {
-		fallbackNote = `Note: Unknown agent type "` + fellBack + `" — using ` + resolved + ".\n\n"
+		using := "the fallback agent config"
+		if resolveType(resolved) != "" {
+			using = resolved
+		}
+		fallbackNote = `Note: Unknown agent type "` + fellBack + `" — using ` + using + ".\n\n"
 	}
 	cfg := reg.get(resolved)
 	cfgModel := ""
@@ -264,11 +262,10 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 		}
 		return textResult(fmt.Sprintf("%sAgent %s in background.\nAgent ID: %s\nType: %s\nDescription: %s\n%s\nYou will be notified when this agent completes.\n"+
 			"Use get_subagent_result to retrieve full results, or steer_subagent to send it messages.\nDo not duplicate this agent's work.",
-			fallbackNote, state, r.ID, displayName(a, resolved), description, pos)), nil
+			fallbackNote, state, r.ID, displayName(resolved), description, pos)), nil
 	}
 	// Foreground: the call blocks. It is charged to the foreground pool (maxConcurrentForeground, unlimited unless
 	// set); a queued call waits for its slot, and an aborted one comes back as a stopped result, never an error.
-	_ = ctx.Events().Emit("subagents:created", map[string]any{"id": r.ID, "type": resolved, "description": description, "isBackground": false})
 	a.mgr.wait(r)
 	a.mgr.mu.Lock()
 	status, result, errText, tokens, uses, dur := r.Status, r.Result, r.Error, r.Tokens, r.ToolUses, r.CompletedAt.Sub(r.StartedAt).Milliseconds()
@@ -338,7 +335,7 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 		stats = append(stats, t)
 	}
 	stats = append(stats, "Duration: "+duration)
-	out := fmt.Sprintf("Agent: %s\nType: %s | Status: %s%s | %s\nDescription: %s\n\n", r.ID, displayName(a, r.Type), status, statusNote(status), strings.Join(stats, " | "), r.Description)
+	out := fmt.Sprintf("Agent: %s\nType: %s | Status: %s%s | %s\nDescription: %s\n\n", r.ID, displayName(r.Type), status, statusNote(status), strings.Join(stats, " | "), r.Description)
 	switch status {
 	case statusRunning:
 		out += "Agent is still running. Use wait: true or check back later."
@@ -422,7 +419,7 @@ func (a *app) agentsCommand(ctx sdk.Context, _ string) error {
 	sort.SliceStable(recs, func(i, j int) bool { return recs[i].StartedAt.Before(recs[j].StartedAt) })
 	for _, r := range recs {
 		a.mgr.mu.Lock()
-		lines = append(lines, fmt.Sprintf("  %s %s %s — %s", r.ID, displayName(a, r.Type), r.Status, r.Description))
+		lines = append(lines, fmt.Sprintf("  %s %s %s — %s", r.ID, displayName(r.Type), r.Status, r.Description))
 		a.mgr.mu.Unlock()
 	}
 	ctx.Notify(strings.Join(lines, "\n"), "info")

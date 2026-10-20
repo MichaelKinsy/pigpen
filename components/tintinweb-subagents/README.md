@@ -86,7 +86,7 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
   `allowed_subagents`, `ext:` tool selectors, `disallowed_tools`, an `extensions` list, `exclude_extensions`, `skills` as
   `false` or a list, `persist_session: true`, `output_transcript: true`, `session_dir`.
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel` and
-  `isBackground: true`.
+  `isBackground`.
 - `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
   `workflowsEnabled: true`, `worktreeIsolation: true`, `widgetMode` other than `off`, and so on). The settings the
   port matches are not flagged: `false` for the switches the port does not have, and the ones it honors.

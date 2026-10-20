@@ -157,6 +157,15 @@ Behavior that changed against the first release, each because the original does 
   (`parentAgentId`, `workflowId`, `depth`, `maxSubagentDepth`, `configCwd`, `rootSessionId`, `resumeSessionFile`, `reclaim`,
   `blocking`) are dropped from an RPC or registry spawn, as the original drops them, instead of being refused. `stop`
   and `consume` leave an owned child alone.
+- An RPC or registry spawn reloads the agent files first (`spawnResolved`, `index.ts:666-674`), and without
+  `isBackground: true` it is detached: it runs at once, holds no pool slot and is not announced to the model, as in
+  `agent-manager.ts:520-540`, `:969` (`TestRPCSpawnReloadsAgentFiles`, `TestRPCSpawnWithoutIsBackgroundIsDetached`).
+  `isBackground: false` is honored, no longer refused.
+- A top-level agent's final record is appended to the session as a `subagents:record` entry (`index.ts:584-589`;
+  `TestSubagentsRecordEntry`), `subagents:created` is emitted for background spawns only (`index.ts:2104`;
+  `TestCreatedEventIsBackgroundOnly`), an unknown type falling back to a removed `general-purpose` still runs under the
+  built-in definition with the note "using the fallback agent config" (`agent-runner.ts:675-683`; `index.ts:1797`), and a
+  type's display name comes from `getConfig` (a disabled or removed type reads as the fallback's).
 - The manager registry (`registry.go`) is the original's `Symbol.for("pi-subagents:manager")` for other packages of the
   same process (a fused Piglet Binary): the first activation owns it, only the owner's shutdown releases it.
 
@@ -173,6 +182,10 @@ their reasons are in the twin files; the ones that have no Go form:
   which this port refuses before any lookup.
 - `tool-description-mode`: the example template is not in the vendored oracle (it vendors `src` and `test`); the pinned
   commit's `examples/agent-tool-description.md` is kept byte for byte in `port/upstream-extra/` and the twin runs on it.
+
+The `subagents:record` entry has no scenario: it exists only once an agent has run to completion, and a child run is not
+comparable (F2), so the entry is proved on the host channel instead (`TestSubagentsRecordEntry` reads the `appendEntry` host
+call; a nested child leaves none).
 
 What the harness cannot show: a child run is not comparable (F2), so the join modes, the pools and the background default
 are proved by their twins and `policy_test.go`, not by a scenario. Scenarios cover the model-facing text of every mode

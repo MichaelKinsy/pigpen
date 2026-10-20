@@ -178,7 +178,7 @@ func TestToolDescriptionModeTwins(t *testing.T) {
 		// examples/agent-tool-description.md of the pinned commit (port/upstream-extra: the oracle vendors src and test only).
 		example, err := os.ReadFile(filepath.Join("..", "..", "port", "upstream-extra", "agent-tool-description.md"))
 		if err != nil {
-			t.Fatal(err)
+			t.Skip("port/upstream-extra is not beside this module (a mutation run tests a copy of it)")
 		}
 		customDesc, customEnv := setupDesc(t, obj{"toolDescriptionMode": "custom"}, func(e *descEnv) { e.write(".pi/agent-tool-description.md", string(example)) })
 		fullDesc, fullEnv := setupDesc(t, obj{"toolDescriptionMode": "full"})

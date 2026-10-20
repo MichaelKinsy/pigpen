@@ -224,9 +224,12 @@ func agentDescription(f descriptionFlags, d descriptionContext) string {
 // Agent tool, isolationParam, scheduleParam.
 func agentSchemaFor(f descriptionFlags, d descriptionContext, spec toolSpec) sdk.Schema {
 	raw, _ := json.Marshal(spec.Parameters)
-	text := strings.NewReplacer("{{TYPES}}", strings.Join(d.reg.availableTypes(), ", "), "{{AGENTDIR}}", d.agentDir).Replace(string(raw))
 	var out sdk.Schema
-	_ = json.Unmarshal([]byte(text), &out)
+	_ = json.Unmarshal(raw, &out)
+	// Substituted in the decoded strings, never in the JSON text: a quote or backslash in the agent dir or a type name
+	// would break the text.
+	fill := strings.NewReplacer("{{TYPES}}", strings.Join(d.reg.availableTypes(), ", "), "{{AGENTDIR}}", d.agentDir)
+	substitute(out, fill)
 	props, _ := out["properties"].(map[string]any)
 	if f.worktreeIsolation {
 		props["isolation"] = texts.IsolationParam
@@ -239,3 +242,25 @@ func agentSchemaFor(f descriptionFlags, d descriptionContext, spec toolSpec) sdk
 
 // descriptionWarn reports a custom template's problems (the original's console.warn). A test replaces it.
 var descriptionWarn = func(msg string) { fmt.Fprintln(os.Stderr, msg) }
+
+// substitute applies r to every string value of a decoded JSON tree, in place.
+func substitute(v any, r *strings.Replacer) {
+	switch t := v.(type) {
+	case map[string]any:
+		for k, e := range t {
+			if s, ok := e.(string); ok {
+				t[k] = r.Replace(s)
+			} else {
+				substitute(e, r)
+			}
+		}
+	case []any:
+		for i, e := range t {
+			if s, ok := e.(string); ok {
+				t[i] = r.Replace(s)
+			} else {
+				substitute(e, r)
+			}
+		}
+	}
+}

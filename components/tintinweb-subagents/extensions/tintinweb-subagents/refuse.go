@@ -93,7 +93,7 @@ func skillsSupported(v any) bool {
 }
 
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
-// Honored: description, model, maxTurns, name, thinkingLevel, isBackground (true only). upstream: agent-manager.ts SpawnOptions.
+// Honored: description, model, maxTurns, name, thinkingLevel, isBackground. upstream: agent-manager.ts SpawnOptions.
 func unportedSpawnOption(opts map[string]any) string {
 	keys := make([]string, 0, len(opts))
 	for k := range opts {
@@ -106,11 +106,7 @@ func unportedSpawnOption(opts map[string]any) string {
 			continue
 		}
 		switch k {
-		case "description", "model", "maxTurns", "name", "thinkingLevel":
-		case "isBackground":
-			if b, _ := v.(bool); !b {
-				return "foreground agents through the spawn RPC (isBackground: false)"
-			}
+		case "description", "model", "maxTurns", "name", "thinkingLevel", "isBackground":
 		default:
 			return "the spawn RPC option \"" + k + "\""
 		}

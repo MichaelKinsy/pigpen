@@ -25,11 +25,14 @@ func readJSONFile(t *testing.T, path string) map[string]any {
 }
 
 func TestRefusalMessageNamesThisPackageAndThePinnedOriginal(t *testing.T) {
+	eq(t, refusalText("x"), "@pi-in-go/pigpen-tintinweb-subagents (Go port) does not support x yet. Install the original extension, npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.")
+	if _, err := os.Stat("../../package.json"); err != nil {
+		t.Skip("the package files are not beside this module (a mutation run tests a copy of it)")
+	}
 	pkg := readJSONFile(t, "../../package.json")
 	orig := readJSONFile(t, "../../port/oracle/package.json")
 	eq(t, portName, pkg["name"])
 	eq(t, originalSpec, "npm:"+orig["name"].(string)+"@"+orig["version"].(string))
-	eq(t, refusalText("x"), "@pi-in-go/pigpen-tintinweb-subagents (Go port) does not support x yet. Install the original extension, npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.")
 }
 
 func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
@@ -127,7 +130,6 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		{"isolation", obj{"isolation": "worktree"}, `the spawn RPC option "isolation"`},
 		{"inheritContext", obj{"inheritContext": true}, `the spawn RPC option "inheritContext"`},
 		{"bypassQueue", obj{"bypassQueue": true}, `the spawn RPC option "bypassQueue"`},
-		{"foreground", obj{"isBackground": false}, "foreground agents through the spawn RPC (isBackground: false)"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -147,6 +149,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		reply := r.request("subagents:rpc:spawn", obj{"type": "Plan", "prompt": "p", "options": obj{"description": "d", "name": "scout", "thinkingLevel": "low", "maxTurns": 3.0, "isBackground": true, "model": nil}})
 		eq(t, reply["success"], true)
 		c := r.fleet.wait(t, 1)[0]
+		eq(t, r.app.mgr.list()[0].Alias, "scout") // the name option is honored
 		eq(t, c.spec.Thinking, "low")
 		eq(t, c.spec.MaxTurns, 3)
 	})

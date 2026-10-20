@@ -282,12 +282,6 @@
   "replace": "return \"Error\""
  },
  {
-  "name": "spawn-not-background",
-  "file": "bus.go",
-  "find": "spawnOptions{Name: name, Background: true})",
-  "replace": "spawnOptions{Name: name, Background: false})"
- },
- {
   "name": "stop-error-text",
   "file": "bus.go",
   "find": "errors.New(\"Agent not found\")",
@@ -428,8 +422,8 @@
  {
   "name": "fallback-note-text",
   "file": "tools.go",
-  "find": "`Note: Unknown agent type \"` + fellBack + `\" — using ` + resolved",
-  "replace": "`Note: agent type \"` + fellBack + `\" is unknown; using ` + resolved"
+  "find": "`Note: Unknown agent type \"` + fellBack + `\" — using ` + using",
+  "replace": "`Note: agent type \"` + fellBack + `\" is unknown; using ` + using"
  },
  {
   "name": "harness-pig-ignored",
@@ -664,12 +658,6 @@
   "file": "refuse.go",
   "find": "default:\n\t\t\treturn \"the spawn RPC option",
   "replace": "default:\n\t\t\tcontinue\n\t\t\treturn \"the spawn RPC option"
- },
- {
-  "name": "rpc-foreground-accepted",
-  "file": "refuse.go",
-  "find": "if b, _ := v.(bool); !b {",
-  "replace": "if b, _ := v.(bool); b {"
  },
  {
   "name": "setting-bool-direction",
@@ -1491,7 +1479,7 @@
   "name": "rpc-not-unsubscribed",
   "file": "extension.go",
   "find": "for _, f := range off {\n\t\tf()\n\t}",
-  "replace": ""
+  "replace": "_ = off"
  },
  {
   "name": "registry-kept-after-shutdown",
@@ -1575,7 +1563,7 @@
   "name": "wait-cancel-swallowed",
   "file": "tools.go",
   "find": "return nil, context.Canceled",
-  "replace": "return textResult(\"cancelled\"), nil"
+  "replace": "_ = context.Canceled\n\t\t\t\treturn textResult(\"cancelled\"), nil"
  },
  {
   "name": "queued-result-reads-running",
@@ -1612,5 +1600,53 @@
   "file": "tools.go",
   "find": "case \"error\":\n\t\treturn textResult(v.message), nil",
   "replace": "case \"error-off\":\n\t\treturn textResult(v.message), nil"
+ },
+ {
+  "name": "record-entry-dropped",
+  "file": "extension.go",
+  "find": "_ = ctx.AppendEntry(\"subagents:record\", rec)",
+  "replace": "_ = rec"
+ },
+ {
+  "name": "created-event-for-foreground",
+  "file": "tools.go",
+  "find": "a.mgr.wait(r)\n\ta.mgr.mu.Lock()\n\tstatus, result, errText",
+  "replace": "_ = ctx.Events().Emit(\"subagents:created\", map[string]any{\"id\": r.ID})\n\ta.mgr.wait(r)\n\ta.mgr.mu.Lock()\n\tstatus, result, errText"
+ },
+ {
+  "name": "rpc-spawn-no-reload",
+  "file": "bus.go",
+  "find": "a.reregisterAgents() // an agent file added",
+  "replace": "_ = a // an agent file added"
+ },
+ {
+  "name": "rpc-spawn-always-background",
+  "file": "bus.go",
+  "find": "background, _ := opts[\"isBackground\"].(bool)",
+  "replace": "background, _ := true, opts"
+ },
+ {
+  "name": "schema-not-substituted",
+  "file": "description.go",
+  "find": "substitute(out, fill)",
+  "replace": "_ = fill"
+ },
+ {
+  "name": "removed-general-purpose-refused",
+  "file": "bus.go",
+  "find": "if cfg == nil {\n\t\t// The unset fallback",
+  "replace": "if cfg == nil && false {\n\t\t// The unset fallback"
+ },
+ {
+  "name": "fallback-note-names-type",
+  "file": "tools.go",
+  "find": "if resolveType(resolved) != \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "display-name-of-disabled-type",
+  "file": "tools.go",
+  "find": "func displayName(typ string) string { return getConfig(typ).DisplayName }",
+  "replace": "func displayName(typ string) string {\n\tif c := getAgentConfig(typ); c != nil {\n\t\treturn c.Name\n\t}\n\treturn typ\n}"
  }
 ]

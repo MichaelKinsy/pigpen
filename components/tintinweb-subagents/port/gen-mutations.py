@@ -68,7 +68,6 @@ m("wrapped-up-unmarked", "extension.go", 'return " (wrapped up at the turn limit
 m("error-status-text", "extension.go", 'return "Error: " + e', 'return "Error"')
 
 # bus.go: the cross-extension protocol and spawn defaults
-m("spawn-not-background", "bus.go", "spawnOptions{Name: name, Background: true})", "spawnOptions{Name: name, Background: false})")
 m("stop-error-text", "bus.go", 'errors.New("Agent not found")', 'errors.New("Not found")')
 m("default-model-ignores-availability", "bus.go", "(reg.GetAvailable == nil || findModel(reg.GetAvailable(), provider, id) != nil)", "true")
 m("default-max-turns-ignored", "bus.go", "if rt := a.runtime(); rt.defaultMaxTurns != nil {", "if rt := a.runtime(); rt.defaultMaxTurns != nil && false {")
@@ -95,7 +94,7 @@ m("foreground-note-missing", "tools.go", "strings.Join(stats, \", \"), foregroun
 m("partial-output-dropped", "tools.go", '"%sAgent failed: %s%s", fallbackNote, errText, partialOutputSuffix(result)', '"%sAgent failed: %s%s", fallbackNote, errText, ""')
 m("tool-use-id-missing", "extension.go", "if r.ToolCallID != \"\" {", "if r.ToolCallID != \"\" && false {")
 m("stopped-note-mild", "extension.go", 'return " (STOPPED BY THE USER before completion — output is partial; the task was NOT finished)"', 'return " (stopped)"')
-m("fallback-note-text", "tools.go", "`Note: Unknown agent type \"` + fellBack + `\" — using ` + resolved", "`Note: agent type \"` + fellBack + `\" is unknown; using ` + resolved")
+m("fallback-note-text", "tools.go", "`Note: Unknown agent type \"` + fellBack + `\" — using ` + using", "`Note: agent type \"` + fellBack + `\" is unknown; using ` + using")
 m("harness-pig-ignored", "runner.go", 'if b := os.Getenv("PIG_HARNESS_BINARY"); b != "" {', 'if b := os.Getenv("PIG_HARNESS_BINARY"); b != "" && false {')
 m("probe-keeps-ext-socket", "runner.go", 'return strings.HasPrefix(kv, "PIG_EXT_")', 'return strings.HasPrefix(kv, "PIG_EXT_NONE_")')
 m("terminate-no-group-signal", "proc_unix.go", "_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)", "_ = cmd.Process.Signal(syscall.SIGTERM)")
@@ -141,7 +140,6 @@ m("disallowed-tools-accepted", "refuse.go", 'case len(cfg.DisallowedTools) > 0:'
 m("skills-false-accepted", "refuse.go", "return v == nil || (ok && b)", "return true")
 m("extension-list-accepted", "refuse.go", "case nil, bool:\n\t\treturn true", "case nil, bool, []string:\n\t\treturn true")
 m("rpc-option-accepted", "refuse.go", 'default:\n\t\t\treturn "the spawn RPC option', 'default:\n\t\t\tcontinue\n\t\t\treturn "the spawn RPC option')
-m("rpc-foreground-accepted", "refuse.go", 'if b, _ := v.(bool); !b {', 'if b, _ := v.(bool); b {')
 m("setting-bool-direction", "refuse.go", "return ok && b != r.okBool", "return ok && b == r.okBool")
 m("setting-int-ok-values", "refuse.go", "if n == o {\n\t\t\t\treturn false", "if n != o {\n\t\t\t\treturn false")
 m("setting-enum-default-refused", "refuse.go", "return !inList(r.okEnum, s)", "return true")
@@ -290,7 +288,7 @@ m("session-start-wipes-unread", "extension.go", "a.mgr.clearCompleted(true)\n\t\
 m("session-switch-keeps-records", "extension.go", "e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {\n\t\ta.mgr.clearCompleted(true)", "e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {\n\t\t_ = a")
 m("rpc-announced-every-session", "extension.go", "first := a.rpcOff == nil", "first := true")
 m("settings-loaded-never-announced", "extension.go", "if loaded != nil {\n\t\t_ = ctx.Events()", "if false {\n\t\t_ = ctx.Events()")
-m("rpc-not-unsubscribed", "extension.go", "for _, f := range off {\n\t\tf()\n\t}", "")
+m("rpc-not-unsubscribed", "extension.go", "for _, f := range off {\n\t\tf()\n\t}", "_ = off")
 m("registry-kept-after-shutdown", "extension.go", "releaseManagerRegistry(a.entry)\n\ta.mgr.abortAll()", "a.mgr.abortAll()")
 m("owned-child-announced", "extension.go", "if !r.topLevel() { // an owned child reports through its owner", "if false { // an owned child reports through its owner")
 m("rpc-stop-owned-child", "bus.go", "if !r.topLevel() {\n\t\t\treturn nil, errors.New(\"Agent is owned", "if false {\n\t\t\treturn nil, errors.New(\"Agent is owned")
@@ -304,13 +302,23 @@ m("file-model-error-surfaced", "tools.go", "if inv.modelFromParams {\n\t\t\t\tre
 m("pinned-model-refused", "tools.go", "callerSupplied: inv.modelFromParams, agentLabel: label", "callerSupplied: true, agentLabel: label")
 m("agent-files-not-reloaded", "tools.go", "a.reregisterAgents()\n\tres := resolveSpawnType(typ)", "res := resolveSpawnType(typ)")
 m("join-mode-ignored", "tools.go", "joinMode := resolveJoinMode(rt.defaultJoinMode, true)", 'joinMode := resolveJoinMode("async", true)')
-m("wait-cancel-swallowed", "tools.go", "return nil, context.Canceled", 'return textResult("cancelled"), nil')
+m("wait-cancel-swallowed", "tools.go", "return nil, context.Canceled", '_ = context.Canceled\n\t\t\t\treturn textResult("cancelled"), nil')
 m("queued-result-reads-running", "tools.go", "case statusRunning:\n\t\tout += \"Agent is still running", "case statusRunning, statusQueued:\n\t\tout += \"Agent is still running")
 m("steer-queued-text", "tools.go", '"Steering message queued for agent "', '"Steering message sent to agent "')
 m("foreground-not-blocking", "tools.go", "Blocking: !background}", "Blocking: false}")
 m("foreground-signal-dropped", "tools.go", "opts.Signal = ctx.Done()", "_ = ctx")
 m("pinned-model-notification", "tools.go", 'ctx.Notify(v.message, "warning")', "_ = v")
 m("model-scope-skipped", "tools.go", "case \"error\":\n\t\treturn textResult(v.message), nil", "case \"error-off\":\n\t\treturn textResult(v.message), nil")
+
+# review fixes: the session record, the created event, the RPC spawn, the schema, the fallback config
+m("record-entry-dropped", "extension.go", '_ = ctx.AppendEntry("subagents:record", rec)', "_ = rec")
+m("created-event-for-foreground", "tools.go", "a.mgr.wait(r)\n\ta.mgr.mu.Lock()\n\tstatus, result, errText", '_ = ctx.Events().Emit("subagents:created", map[string]any{"id": r.ID})\n\ta.mgr.wait(r)\n\ta.mgr.mu.Lock()\n\tstatus, result, errText')
+m("rpc-spawn-no-reload", "bus.go", "a.reregisterAgents() // an agent file added", "_ = a // an agent file added")
+m("rpc-spawn-always-background", "bus.go", 'background, _ := opts["isBackground"].(bool)', "background, _ := true, opts")
+m("schema-not-substituted", "description.go", "substitute(out, fill)", "_ = fill")
+m("removed-general-purpose-refused", "bus.go", "if cfg == nil {\n\t\t// The unset fallback", "if cfg == nil && false {\n\t\t// The unset fallback")
+m("fallback-note-names-type", "tools.go", 'if resolveType(resolved) != "" {', "if true {")
+m("display-name-of-disabled-type", "tools.go", "func displayName(typ string) string { return getConfig(typ).DisplayName }", "func displayName(typ string) string {\n\tif c := getAgentConfig(typ); c != nil {\n\t\treturn c.Name\n\t}\n\treturn typ\n}")
 
 M = [x for x in M if x]
 by_file = {}
