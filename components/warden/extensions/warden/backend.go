@@ -33,6 +33,9 @@ type EvaluatorJudge struct {
 	// Budget caps the attempts per session (nil: no cap). It outlives one judge: the own-model judge is rebuilt
 	// for each call from the session's current model.
 	Budget *Budget
+	// CheckAnswers applies pi-typesafe's `validResult` to the response (the TypeSafe backend; the own-model backend
+	// builds its answers itself).
+	CheckAnswers bool
 }
 
 // Budget counts the requests a session may make.
@@ -140,6 +143,10 @@ func (j *EvaluatorJudge) Evaluate(ctx context.Context, r Request) (Evaluation, e
 	if err != nil {
 		return Evaluation{}, j.safeError(err)
 	}
+	if j.CheckAnswers && !validResult(res, r.Questions) {
+		// pi-typesafe client.js: the request was submitted and counts; its failure is the original's own.
+		return Evaluation{}, &IntegrationError{Code: "response", Message: unexpectedAnswerMessage}
+	}
 	out := Evaluation{Model: res.Model, ElapsedMs: int(time.Since(start).Milliseconds()), Answers: map[string]Answer{}}
 	for name, a := range res.Answers {
 		switch v := a.(type) {
@@ -209,7 +216,7 @@ func (j *EvaluatorJudge) safeError(err error) error {
 		case 400, 422:
 			advice = "Check the question format and model limits."
 		}
-		return &IntegrationError{Code: "http", Message: label + " returned HTTP " + strconv.Itoa(api.Status) + ". " + advice + " No automatic retry was made."}
+		return &IntegrationError{Code: "http", Message: label + " returned HTTP " + strconv.Itoa(api.Status) + ". " + advice + " No automatic retry was made.", Status: api.Status}
 	}
 	var conn *typesafe.APIConnectionError
 	if errors.As(err, &conn) {
@@ -230,7 +237,7 @@ func NewTypeSafeJudge(timeout time.Duration, budget *Budget, getenv func(string)
 	if err != nil {
 		return nil, &IntegrationError{Code: "configuration", Message: "TypeSafe is not configured: set TYPESAFE_API_KEY in the environment PiG runs in."}
 	}
-	return &EvaluatorJudge{Evaluator: client, Budget: budget}, nil
+	return &EvaluatorJudge{Evaluator: client, Budget: budget, CheckAnswers: true}, nil
 }
 
 // NewOwnModelJudge is the own-model backend: the session's model, called through PiG's model registry, answers
