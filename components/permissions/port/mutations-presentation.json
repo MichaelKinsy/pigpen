@@ -1,0 +1,2354 @@
+[
+ {
+  "name": "dr-default-rows",
+  "file": "dialogrenderer.go",
+  "find": "MaxRows: 24, FieldMaxWidth: 400",
+  "replace": "MaxRows: 25, FieldMaxWidth: 400"
+ },
+ {
+  "name": "dr-default-field",
+  "file": "dialogrenderer.go",
+  "find": "MaxRows: 24, FieldMaxWidth: 400",
+  "replace": "MaxRows: 24, FieldMaxWidth: 401"
+ },
+ {
+  "name": "dr-resolve-rows",
+  "file": "dialogrenderer.go",
+  "find": "budget.MaxRows = *config.PromptMaxRows",
+  "replace": "budget.MaxRows = DefaultRenderBudget.MaxRows"
+ },
+ {
+  "name": "dr-resolve-field",
+  "file": "dialogrenderer.go",
+  "find": "budget.FieldMaxWidth = *config.PromptFieldMaxWidth",
+  "replace": "budget.FieldMaxWidth = DefaultRenderBudget.FieldMaxWidth"
+ },
+ {
+  "name": "dr-complete-rows",
+  "file": "dialogrenderer.go",
+  "find": "RenderBudget{MaxRows: math.Inf(1), FieldMaxWidth: math.Inf(1)}",
+  "replace": "RenderBudget{MaxRows: 1000, FieldMaxWidth: math.Inf(1)}"
+ },
+ {
+  "name": "dr-complete-field",
+  "file": "dialogrenderer.go",
+  "find": "RenderBudget{MaxRows: math.Inf(1), FieldMaxWidth: math.Inf(1)}",
+  "replace": "RenderBudget{MaxRows: math.Inf(1), FieldMaxWidth: 1000}"
+ },
+ {
+  "name": "dr-marker",
+  "file": "dialogrenderer.go",
+  "find": "elisionMarker     = \"\\u2026\"",
+  "replace": "elisionMarker     = \"...\""
+ },
+ {
+  "name": "dr-marker-rows",
+  "file": "dialogrenderer.go",
+  "find": "elisionMarkerRows = 1",
+  "replace": "elisionMarkerRows = 2"
+ },
+ {
+  "name": "dr-cap-boundary",
+  "file": "dialogrenderer.go",
+  "find": "if float64(utf16LenWTF(fact.text)) <= fieldMaxWidth {",
+  "replace": "if float64(utf16LenWTF(fact.text)) < fieldMaxWidth {"
+ },
+ {
+  "name": "dr-cap-units",
+  "file": "dialogrenderer.go",
+  "find": "if float64(utf16LenWTF(fact.text)) <= fieldMaxWidth {",
+  "replace": "if float64(len(fact.text)) <= fieldMaxWidth {"
+ },
+ {
+  "name": "dr-cap-slice",
+  "file": "dialogrenderer.go",
+  "find": "utf16Prefix(fact.text, end) + elisionMarker",
+  "replace": "fact.text[:min(len(fact.text), int(fieldMaxWidth))] + elisionMarker"
+ },
+ {
+  "name": "dr-cap-no-mark",
+  "file": "dialogrenderer.go",
+  "find": "return cappedFact{promptFact{fact.label, utf16Prefix(fact.text, end) + elisionMarker}, true}",
+  "replace": "return cappedFact{promptFact{fact.label, utf16Prefix(fact.text, end) + elisionMarker}, false}"
+ },
+ {
+  "name": "dr-evidence-capped",
+  "file": "dialogrenderer.go",
+  "find": "for _, fact := range evidenceFacts(payload) {\n\t\tfacts = append(facts, capField(fact, budget.FieldMaxWidth))",
+  "replace": "for _, fact := range evidenceFacts(payload) {\n\t\tfacts = append(facts, cappedFact{fact, false})"
+ },
+ {
+  "name": "dr-core-capped",
+  "file": "dialogrenderer.go",
+  "find": "for _, fact := range coreFacts(payload) {\n\t\tfacts = append(facts, capField(fact, budget.FieldMaxWidth))",
+  "replace": "for _, fact := range coreFacts(payload) {\n\t\tfacts = append(facts, cappedFact{fact, false})"
+ },
+ {
+  "name": "dr-wrap",
+  "file": "dialogrenderer.go",
+  "find": "return FitLinesToWidth(layoutFact(f.promptFact, width, flagged, paint), budget.Width)",
+  "replace": "return layoutFact(f.promptFact, width, flagged, paint)"
+ },
+ {
+  "name": "dr-elided-clip",
+  "file": "dialogrenderer.go",
+  "find": "elided = elided || f.clipped",
+  "replace": "elided = elided"
+ },
+ {
+  "name": "dr-elided-drop",
+  "file": "dialogrenderer.go",
+  "find": "Elided: elided || dropped}",
+  "replace": "Elided: elided}"
+ },
+ {
+  "name": "dr-rows-fit",
+  "file": "dialogrenderer.go",
+  "find": "len(evidence) == entries && float64(len(core)+total) <= maxRows {",
+  "replace": "len(evidence) == entries && float64(len(core)+total) < maxRows {"
+ },
+ {
+  "name": "dr-rows-limit",
+  "file": "dialogrenderer.go",
+  "find": "limit := maxRows - elisionMarkerRows",
+  "replace": "limit := maxRows"
+ },
+ {
+  "name": "dr-rows-block-whole",
+  "file": "dialogrenderer.go",
+  "find": "if float64(len(lines)+len(block)) > limit {\n\t\t\tbreak\n\t\t}",
+  "replace": "if float64(len(lines)) > limit {\n\t\t\tbreak\n\t\t}"
+ },
+ {
+  "name": "dr-rows-block-stop",
+  "file": "dialogrenderer.go",
+  "find": "if float64(len(lines)+len(block)) > limit {\n\t\t\tbreak\n\t\t}",
+  "replace": "if float64(len(lines)+len(block)) > limit {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "dr-rows-marker",
+  "file": "dialogrenderer.go",
+  "find": "if float64(len(lines)) < maxRows {\n\t\tlines = append(lines, elisionMarker)",
+  "replace": "if float64(len(lines)) <= maxRows {\n\t\tlines = append(lines, elisionMarker)"
+ },
+ {
+  "name": "dr-core-exempt",
+  "file": "dialogrenderer.go",
+  "find": "lines, dropped := fitToRows(coreLines, evidence, len(facts)-coreCount, budget.MaxRows)",
+  "replace": "lines, dropped := fitToRows(nil, evidence, len(facts)-coreCount, budget.MaxRows)"
+ },
+ {
+  "name": "dr-requester-agent",
+  "file": "dialogrenderer.go",
+  "find": "return promptFact{\"agent\", *requester.AgentName}, true",
+  "replace": "return promptFact{\"agents\", *requester.AgentName}, true"
+ },
+ {
+  "name": "dr-requester-empty",
+  "file": "dialogrenderer.go",
+  "find": "if requester.AgentName != nil && *requester.AgentName != \"\" {\n\t\t\treturn promptFact{\"agent\"",
+  "replace": "if requester.AgentName != nil {\n\t\t\treturn promptFact{\"agent\""
+ },
+ {
+  "name": "dr-requester-unknown",
+  "file": "dialogrenderer.go",
+  "find": "name := \"unknown\"",
+  "replace": "name := \"anonymous\""
+ },
+ {
+  "name": "dr-requester-session",
+  "file": "dialogrenderer.go",
+  "find": "\"subagent\", name + \" \\u00b7 session \" + *requester.SessionID",
+  "replace": "\"subagent\", name + \" session \" + *requester.SessionID"
+ },
+ {
+  "name": "dr-requester-session-empty",
+  "file": "dialogrenderer.go",
+  "find": "if requester.SessionID != nil && *requester.SessionID != \"\" {",
+  "replace": "if requester.SessionID != nil {"
+ },
+ {
+  "name": "dr-requester-name-empty",
+  "file": "dialogrenderer.go",
+  "find": "if requester.AgentName != nil && *requester.AgentName != \"\" {\n\t\tname = *requester.AgentName",
+  "replace": "if requester.AgentName != nil {\n\t\tname = *requester.AgentName"
+ },
+ {
+  "name": "dr-tool-fact",
+  "file": "dialogrenderer.go",
+  "find": "if request.ToolName != nil {\n\t\tfacts = append(facts, promptFact{\"tool\", toolText(payload)})",
+  "replace": "if request.ToolName != nil && false {\n\t\tfacts = append(facts, promptFact{\"tool\", toolText(payload)})"
+ },
+ {
+  "name": "dr-tool-invoked",
+  "file": "dialogrenderer.go",
+  "find": "return toolName + \" (invoked as \" + *invoked + \")\"",
+  "replace": "return toolName"
+ },
+ {
+  "name": "dr-surface-tool",
+  "file": "dialogrenderer.go",
+  "find": "(request.ToolName == nil || request.Surface != *request.ToolName) && request.Surface != label",
+  "replace": "request.Surface != label"
+ },
+ {
+  "name": "dr-surface-label",
+  "file": "dialogrenderer.go",
+  "find": "(request.ToolName == nil || request.Surface != *request.ToolName) && request.Surface != label",
+  "replace": "(request.ToolName == nil || request.Surface != *request.ToolName)"
+ },
+ {
+  "name": "dr-rule",
+  "file": "dialogrenderer.go",
+  "find": "if request.MatchedPattern != nil {\n\t\tfacts = append(facts, promptFact{\"rule\", *request.MatchedPattern})",
+  "replace": "if request.MatchedPattern != nil && *request.MatchedPattern != \"*\" {\n\t\tfacts = append(facts, promptFact{\"rule\", *request.MatchedPattern})"
+ },
+ {
+  "name": "dr-value-empty",
+  "file": "dialogrenderer.go",
+  "find": "if request.Value != \"\" && (request.ToolName == nil || request.Value != *request.ToolName) {",
+  "replace": "if (request.ToolName == nil || request.Value != *request.ToolName) {"
+ },
+ {
+  "name": "dr-value-tool",
+  "file": "dialogrenderer.go",
+  "find": "if request.Value != \"\" && (request.ToolName == nil || request.Value != *request.ToolName) {",
+  "replace": "if request.Value != \"\" {"
+ },
+ {
+  "name": "dr-runs",
+  "file": "dialogrenderer.go",
+  "find": "promptFact{\"runs\", *request.ExecutedUnit}",
+  "replace": "promptFact{\"run\", *request.ExecutedUnit}"
+ },
+ {
+  "name": "dr-context",
+  "file": "dialogrenderer.go",
+  "find": "promptFact{\"context\", context}",
+  "replace": "promptFact{\"context\", *request.CommandContext}"
+ },
+ {
+  "name": "dr-detail-arrow",
+  "file": "dialogrenderer.go",
+  "find": "text = entry.Text + \" \\u2192 \" + *entry.Detail",
+  "replace": "text = entry.Text + \" -> \" + *entry.Detail"
+ },
+ {
+  "name": "dr-detail-drop",
+  "file": "dialogrenderer.go",
+  "find": "if entry.Detail != nil {\n\t\t\ttext =",
+  "replace": "if false {\n\t\t\ttext ="
+ },
+ {
+  "name": "dr-pad-units",
+  "file": "dialogrenderer.go",
+  "find": "if pad := n - utf16LenWTF(s); pad > 0 {",
+  "replace": "if pad := n - len(s); pad > 0 {"
+ },
+ {
+  "name": "dr-width-units",
+  "file": "dialogrenderer.go",
+  "find": "if n := utf16LenWTF(f.label); n > width {",
+  "replace": "if n := len(f.label); n > width {"
+ },
+ {
+  "name": "dr-indent",
+  "file": "dialogrenderer.go",
+  "find": "indent := strings.Repeat(\" \", width+3)",
+  "replace": "indent := strings.Repeat(\" \", width+2)"
+ },
+ {
+  "name": "dr-sep",
+  "file": "dialogrenderer.go",
+  "find": "\" : \" + highlight(line)",
+  "replace": "\": \" + highlight(line)"
+ },
+ {
+  "name": "dr-continuation-paint",
+  "file": "dialogrenderer.go",
+  "find": "block[j] = indent + highlight(line)",
+  "replace": "block[j] = indent + line"
+ },
+ {
+  "name": "dr-flagged-whole",
+  "file": "dialogrenderer.go",
+  "find": "isFlagged := inStrings(flagged, fact.text)",
+  "replace": "isFlagged := false"
+ },
+ {
+  "name": "dr-flagged-tokens",
+  "file": "dialogrenderer.go",
+  "find": "\t\treturn paintTokens(line, flagged, paint)",
+  "replace": "\t\treturn line"
+ },
+ {
+  "name": "dr-token-before",
+  "file": "dialogrenderer.go",
+  "find": "(at == 0 || !isTokenCharacter(line[at-1])) && (end >= len(line) || !isTokenCharacter(line[end]))",
+  "replace": "(end >= len(line) || !isTokenCharacter(line[end]))"
+ },
+ {
+  "name": "dr-token-after",
+  "file": "dialogrenderer.go",
+  "find": "(at == 0 || !isTokenCharacter(line[at-1])) && (end >= len(line) || !isTokenCharacter(line[end]))",
+  "replace": "(at == 0 || !isTokenCharacter(line[at-1]))"
+ },
+ {
+  "name": "dr-token-class-dash",
+  "file": "dialogrenderer.go",
+  "find": "c == '/' || c == '.' || c == '-'",
+  "replace": "c == '/' || c == '.'"
+ },
+ {
+  "name": "dr-token-class-underscore",
+  "file": "dialogrenderer.go",
+  "find": "c >= '0' && c <= '9' || c == '_' ||",
+  "replace": "c >= '0' && c <= '9' ||"
+ },
+ {
+  "name": "dr-token-class-dot",
+  "file": "dialogrenderer.go",
+  "find": "c == '/' || c == '.' || c == '-'",
+  "replace": "c == '/' || c == '-'"
+ },
+ {
+  "name": "dr-paint-newline-needle",
+  "file": "dialogrenderer.go",
+  "find": "if needle == \"\" || strings.Contains(needle, \"\\n\") {",
+  "replace": "if needle == \"\" {"
+ },
+ {
+  "name": "dr-paint-empty-needle",
+  "file": "dialogrenderer.go",
+  "find": "if needle == \"\" || strings.Contains(needle, \"\\n\") {",
+  "replace": "if strings.Contains(needle, \"\\n\") {"
+ },
+ {
+  "name": "dr-paint-repeat",
+  "file": "dialogrenderer.go",
+  "find": "cursor = end\n\t}\n\tresult.WriteString(line[cursor:])",
+  "replace": "cursor = end\n\t\tbreak\n\t}\n\tresult.WriteString(line[cursor:])"
+ },
+ {
+  "name": "dr-wellformed",
+  "file": "dialogrenderer.go",
+  "find": "lines[i] = toWellFormed(lines[i])",
+  "replace": "lines[i] = lines[i]"
+ },
+ {
+  "name": "dr-default-paint",
+  "file": "dialogrenderer.go",
+  "find": "paint = func(text string) string { return text }",
+  "replace": "paint = func(text string) string { return \"[\" + text + \"]\" }"
+ },
+ {
+  "name": "dr-lazy-break",
+  "file": "dialogrenderer.go",
+  "find": "if float64(len(coreLines)+total) > budget.MaxRows {\n\t\t\tbreak\n\t\t}",
+  "replace": "if float64(len(coreLines)+total) > budget.MaxRows+3 {\n\t\t\tbreak\n\t\t}"
+ },
+ {
+  "name": "dr-lazy-complete",
+  "file": "dialogrenderer.go",
+  "find": "len(evidence) == entries && float64",
+  "replace": "float64"
+ },
+ {
+  "name": "dr-lazy-first-overrun",
+  "file": "dialogrenderer.go",
+  "find": "if float64(len(coreLines)+total) > budget.MaxRows {\n\t\t\tbreak\n\t\t}",
+  "replace": "if float64(len(coreLines)+total) >= budget.MaxRows {\n\t\t\tbreak\n\t\t}"
+ },
+ {
+  "name": "lf-width-guard",
+  "file": "linefitting.go",
+  "find": "if width <= 0 {",
+  "replace": "if width < 0 {"
+ },
+ {
+  "name": "lf-wrap",
+  "file": "linefitting.go",
+  "find": "for _, wrapped := range widthx.WrapTextWithAnsi(line, width) {",
+  "replace": "for _, wrapped := range []string{line} {"
+ },
+ {
+  "name": "lf-truncate",
+  "file": "linefitting.go",
+  "find": "out = append(out, widthx.TruncateToWidth(wrapped, width, \"...\", false))",
+  "replace": "out = append(out, wrapped)"
+ },
+ {
+  "name": "lf-ellipsis",
+  "file": "linefitting.go",
+  "find": "widthx.TruncateToWidth(wrapped, width, \"...\", false)",
+  "replace": "widthx.TruncateToWidth(wrapped, width, \"\\u2026\", false)"
+ },
+ {
+  "name": "ar-tag",
+  "file": "agentrenderer.go",
+  "find": "const ExtensionTag = \"[\" + extensionID + \"]\"",
+  "replace": "const ExtensionTag = \"(\" + extensionID + \")\""
+ },
+ {
+  "name": "ar-default-budget",
+  "file": "agentrenderer.go",
+  "find": "AgentRenderBudget{FieldMaxWidth: DefaultRenderBudget.FieldMaxWidth}",
+  "replace": "AgentRenderBudget{FieldMaxWidth: 40}"
+ },
+ {
+  "name": "ar-refusal-forwarded",
+  "file": "agentrenderer.go",
+  "find": "decidedElsewhere := decidedBy.Kind == \"forwarded\"",
+  "replace": "decidedElsewhere := false"
+ },
+ {
+  "name": "ar-refusal-decider",
+  "file": "agentrenderer.go",
+  "find": "decider := EffectiveDecider(decidedBy)",
+  "replace": "decider := decidedBy"
+ },
+ {
+  "name": "ar-refusal-authorizer",
+  "file": "agentrenderer.go",
+  "find": "return RenderAuthorizerDenial(payload, decider.Name, denialReason, budget)",
+  "replace": "return RenderUserDenial(payload, denialReason, budget)"
+ },
+ {
+  "name": "ar-refusal-unavailable",
+  "file": "agentrenderer.go",
+  "find": "return RenderUnavailableDenial(payload, denialReason, budget)\n\tcase \"rule\":",
+  "replace": "return RenderUserDenial(payload, denialReason, budget)\n\tcase \"rule\":"
+ },
+ {
+  "name": "ar-refusal-rule-pattern",
+  "file": "agentrenderer.go",
+  "find": "EscalatedRule{Pattern: decider.Pattern, DecidedElsewhere: decidedElsewhere}",
+  "replace": "EscalatedRule{Pattern: nil, DecidedElsewhere: decidedElsewhere}"
+ },
+ {
+  "name": "ar-refusal-gate-budget",
+  "file": "agentrenderer.go",
+  "find": "GateFailure{Reason: reason, DecidedElsewhere: decidedElsewhere}, DefaultAgentRenderBudget)",
+  "replace": "GateFailure{Reason: reason, DecidedElsewhere: decidedElsewhere}, budget)"
+ },
+ {
+  "name": "ar-refusal-gate-reason",
+  "file": "agentrenderer.go",
+  "find": "reason := \"\"\n\t\tif decider.Reason != nil {\n\t\t\treason = *decider.Reason\n\t\t}",
+  "replace": "reason := \"\""
+ },
+ {
+  "name": "ar-policy-text",
+  "file": "agentrenderer.go",
+  "find": "\"Denied by policy: \"+identification(payload, budget, \"\", askRuleClause(payload))",
+  "replace": "\"Denied: \"+identification(payload, budget, \"\", askRuleClause(payload))"
+ },
+ {
+  "name": "ar-policy-boundary",
+  "file": "agentrenderer.go",
+  "find": "return taggedReason(\"Denied by policy: \"+identification(payload, budget, \"\", askRuleClause(payload))+boundaryClause(payload)+provenanceClause(payload)+\".\", ruleReason)",
+  "replace": "return taggedReason(\"Denied by policy: \"+identification(payload, budget, \"\", askRuleClause(payload))+provenanceClause(payload)+\".\", ruleReason)"
+ },
+ {
+  "name": "ar-policy-provenance",
+  "file": "agentrenderer.go",
+  "find": "return taggedReason(\"Denied by policy: \"+identification(payload, budget, \"\", askRuleClause(payload))+boundaryClause(payload)+provenanceClause(payload)+\".\", ruleReason)",
+  "replace": "return taggedReason(\"Denied by policy: \"+identification(payload, budget, \"\", askRuleClause(payload))+boundaryClause(payload)+\".\", ruleReason)"
+ },
+ {
+  "name": "ar-user-text",
+  "file": "agentrenderer.go",
+  "find": "\"The user denied this \"+identification(payload, budget, \"call\"",
+  "replace": "\"The user refused this \"+identification(payload, budget, \"call\""
+ },
+ {
+  "name": "ar-user-callword",
+  "file": "agentrenderer.go",
+  "find": "\"The user denied this \"+identification(payload, budget, \"call\"",
+  "replace": "\"The user denied this \"+identification(payload, budget, \"\""
+ },
+ {
+  "name": "ar-authorizer-text",
+  "file": "agentrenderer.go",
+  "find": "\"The '\"+linkName+\"' authorizer denied this \"",
+  "replace": "\"The \"+linkName+\" authorizer denied this \""
+ },
+ {
+  "name": "ar-escalated-rule",
+  "file": "agentrenderer.go",
+  "find": "decidedRule := ruleClause(rule.Pattern, payload.Request.CommandContext)",
+  "replace": "decidedRule := askRuleClause(payload)"
+ },
+ {
+  "name": "ar-escalated-context",
+  "file": "agentrenderer.go",
+  "find": "decidedRule := ruleClause(rule.Pattern, payload.Request.CommandContext)",
+  "replace": "decidedRule := ruleClause(rule.Pattern, nil)"
+ },
+ {
+  "name": "ar-escalated-text",
+  "file": "agentrenderer.go",
+  "find": "\"A policy rule\"+servingClause(rule.DecidedElsewhere)+\" denied this \"",
+  "replace": "\"A policy rule\"+servingClause(rule.DecidedElsewhere)+\" refused this \""
+ },
+ {
+  "name": "ar-gate-text",
+  "file": "agentrenderer.go",
+  "find": "\" failed to answer this \"",
+  "replace": "\" did not answer this \""
+ },
+ {
+  "name": "ar-gate-failclosed",
+  "file": "agentrenderer.go",
+  "find": "\", so it was blocked (fail-closed).\"",
+  "replace": "\", so it was blocked.\""
+ },
+ {
+  "name": "ar-gate-boundary",
+  "file": "agentrenderer.go",
+  "find": "+identification(payload, budget, \"call\", askRuleClause(payload))+\", so it was blocked (fail-closed).\", &reason)",
+  "replace": "+identification(payload, budget, \"call\", askRuleClause(payload))+boundaryClause(payload)+\", so it was blocked (fail-closed).\", &reason)"
+ },
+ {
+  "name": "ar-unavailable-text",
+  "file": "agentrenderer.go",
+  "find": "\" requires approval, but no interactive UI is available.\"",
+  "replace": "\" requires approval, but no UI is available.\""
+ },
+ {
+  "name": "ar-unavailable-boundary",
+  "file": "agentrenderer.go",
+  "find": "+identification(payload, budget, \"call\", askRuleClause(payload))+\" requires approval",
+  "replace": "+identification(payload, budget, \"call\", askRuleClause(payload))+boundaryClause(payload)+\" requires approval"
+ },
+ {
+  "name": "ar-serving-text",
+  "file": "agentrenderer.go",
+  "find": "\" in the session serving this request\"",
+  "replace": "\" in the parent session\""
+ },
+ {
+  "name": "ar-serving-flag",
+  "file": "agentrenderer.go",
+  "find": "if decidedElsewhere {\n\t\treturn \" in the session",
+  "replace": "if !decidedElsewhere {\n\t\treturn \" in the session"
+ },
+ {
+  "name": "ar-identification-filter",
+  "file": "agentrenderer.go",
+  "find": "if clause != \"\" {\n\t\t\tkept = append(kept, clause)",
+  "replace": "if true {\n\t\t\tkept = append(kept, clause)"
+ },
+ {
+  "name": "ar-identification-surface",
+  "file": "agentrenderer.go",
+  "find": "\"'\" + payload.Request.Surface + \"'\",",
+  "replace": "\"'\" + payload.Request.Surface,"
+ },
+ {
+  "name": "ar-tool-clause",
+  "file": "agentrenderer.go",
+  "find": "if request.ToolName == nil || *request.ToolName == request.Surface {\n\t\treturn \"\"",
+  "replace": "if request.ToolName == nil {\n\t\treturn \"\""
+ },
+ {
+  "name": "ar-tool-clause-text",
+  "file": "agentrenderer.go",
+  "find": "\"for tool '\" + *request.ToolName + \"'\"",
+  "replace": "\"for tool \" + *request.ToolName"
+ },
+ {
+  "name": "ar-invoked-clause",
+  "file": "agentrenderer.go",
+  "find": "\"(invoked as '\" + *payload.Request.InvokedToolName + \"')\"",
+  "replace": "\"(invoked as \" + *payload.Request.InvokedToolName + \")\""
+ },
+ {
+  "name": "ar-agent-clause",
+  "file": "agentrenderer.go",
+  "find": "\"for agent '\" + *agentName + \"'\"",
+  "replace": "\"agent '\" + *agentName + \"'\""
+ },
+ {
+  "name": "ar-agent-empty",
+  "file": "agentrenderer.go",
+  "find": "agentName != nil && *agentName != \"\" {\n\t\treturn \"for agent",
+  "replace": "agentName != nil {\n\t\treturn \"for agent"
+ },
+ {
+  "name": "ar-flagged-bash",
+  "file": "agentrenderer.go",
+  "find": "if payload.Kind == \"bash\" || payload.Kind == \"forwarded\" {",
+  "replace": "if payload.Kind == \"forwarded\" {"
+ },
+ {
+  "name": "ar-flagged-forwarded",
+  "file": "agentrenderer.go",
+  "find": "if payload.Kind == \"bash\" || payload.Kind == \"forwarded\" {",
+  "replace": "if payload.Kind == \"bash\" {"
+ },
+ {
+  "name": "ar-flagged-tool",
+  "file": "agentrenderer.go",
+  "find": "if payload.Request.ToolName == nil || element != *payload.Request.ToolName {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ar-flagged-plural",
+  "file": "agentrenderer.go",
+  "find": "if len(elements) != 1 {\n\t\tnoun = label + \"s\"",
+  "replace": "if len(elements) > 2 {\n\t\tnoun = label + \"s\""
+ },
+ {
+  "name": "ar-flagged-join",
+  "file": "agentrenderer.go",
+  "find": "strings.Join(rendered, \", \")",
+  "replace": "strings.Join(rendered, \",\")"
+ },
+ {
+  "name": "ar-flagged-cap",
+  "file": "agentrenderer.go",
+  "find": "rendered[i] = \"'\" + capElement(element, budget) + \"'\" + resolvedAlias(payload, element)",
+  "replace": "rendered[i] = \"'\" + element + \"'\" + resolvedAlias(payload, element)"
+ },
+ {
+  "name": "ar-alias-resolves",
+  "file": "agentrenderer.go",
+  "find": "FindEvidence(payload, \"resolves to\"); entry != nil {",
+  "replace": "FindEvidence(payload, \"resolves\"); entry != nil {"
+ },
+ {
+  "name": "ar-alias-external",
+  "file": "agentrenderer.go",
+  "find": "AllEvidence(payload, \"external path\") {\n\t\t\tif entry.Text == element {",
+  "replace": "AllEvidence(payload, \"external path\") {\n\t\t\tif true {"
+ },
+ {
+  "name": "ar-alias-text",
+  "file": "agentrenderer.go",
+  "find": "\" (resolves to '\" + resolved + \"')\"",
+  "replace": "\" (resolves to \" + resolved + \")\""
+ },
+ {
+  "name": "ar-alias-first",
+  "file": "agentrenderer.go",
+  "find": "\t\t\t\tbreak\n\t\t\t}\n\t\t}\n\t}\n\tif resolved == \"\" {",
+  "replace": "\t\t\t}\n\t\t}\n\t}\n\tif resolved == \"\" {"
+ },
+ {
+  "name": "ar-rule-clause",
+  "file": "agentrenderer.go",
+  "find": "parts = append(parts, \"rule '\"+*pattern+\"'\")",
+  "replace": "parts = append(parts, \"rule \"+*pattern)"
+ },
+ {
+  "name": "ar-rule-context",
+  "file": "agentrenderer.go",
+  "find": "parts = append(parts, \"inside \"+context)",
+  "replace": "parts = append(parts, context)"
+ },
+ {
+  "name": "ar-rule-parens",
+  "file": "agentrenderer.go",
+  "find": "return \"(\" + strings.Join(parts, \", \") + \")\"",
+  "replace": "return \"[\" + strings.Join(parts, \", \") + \"]\""
+ },
+ {
+  "name": "ar-rule-join",
+  "file": "agentrenderer.go",
+  "find": "return \"(\" + strings.Join(parts, \", \") + \")\"",
+  "replace": "return \"(\" + strings.Join(parts, \" \") + \")\""
+ },
+ {
+  "name": "ar-boundary",
+  "file": "agentrenderer.go",
+  "find": "\": outside working directory '\" + entry.Text + \"'\"",
+  "replace": "\": outside '\" + entry.Text + \"'\""
+ },
+ {
+  "name": "ar-boundary-empty",
+  "file": "agentrenderer.go",
+  "find": "if entry := FindEvidence(payload, \"working directory\"); entry != nil && entry.Text != \"\" {",
+  "replace": "if entry := FindEvidence(payload, \"working directory\"); entry != nil {"
+ },
+ {
+  "name": "ar-provenance",
+  "file": "agentrenderer.go",
+  "find": "\", reached via '\" + entry.Text + \"'\"",
+  "replace": "\", via '\" + entry.Text + \"'\""
+ },
+ {
+  "name": "ar-provenance-label",
+  "file": "agentrenderer.go",
+  "find": "FindEvidence(payload, \"read path\"); entry != nil && entry.Text != \"\" {",
+  "replace": "FindEvidence(payload, \"full command\"); entry != nil && entry.Text != \"\" {"
+ },
+ {
+  "name": "ar-reason",
+  "file": "agentrenderer.go",
+  "find": "\" Reason: \" + *reason + \".\"",
+  "replace": "\" Reason: \" + *reason"
+ },
+ {
+  "name": "ar-reason-empty",
+  "file": "agentrenderer.go",
+  "find": "if reason != nil && *reason != \"\" {\n\t\treturn \" Reason: \"",
+  "replace": "if reason != nil {\n\t\treturn \" Reason: \""
+ },
+ {
+  "name": "ar-cap-boundary",
+  "file": "agentrenderer.go",
+  "find": "if float64(n) <= budget.FieldMaxWidth {\n\t\treturn text",
+  "replace": "if float64(n) < budget.FieldMaxWidth {\n\t\treturn text"
+ },
+ {
+  "name": "ar-cap-slice",
+  "file": "agentrenderer.go",
+  "find": "utf16Prefix(text, jsSliceEnd(budget.FieldMaxWidth, n)) + \"\\u2026\"",
+  "replace": "utf16Prefix(text, jsSliceEnd(budget.FieldMaxWidth, n)) + \"...\""
+ },
+ {
+  "name": "ar-wellformed",
+  "file": "agentrenderer.go",
+  "find": "return toWellFormed(ExtensionTag",
+  "replace": "return (ExtensionTag"
+ },
+ {
+  "name": "pn-bell",
+  "file": "promptnotification.go",
+  "find": "bel = \"\\x07\"",
+  "replace": "bel = \"\\x08\""
+ },
+ {
+  "name": "pn-osc",
+  "file": "promptnotification.go",
+  "find": "osc = \"\\x1b]\"",
+  "replace": "osc = \"\\x1b[\""
+ },
+ {
+  "name": "pn-title-dash",
+  "file": "promptnotification.go",
+  "find": "notice.Title = \"pi \\u2014 \" + label",
+  "replace": "notice.Title = \"pi - \" + label"
+ },
+ {
+  "name": "pn-title-bare",
+  "file": "promptnotification.go",
+  "find": "notice := PromptNotice{Title: \"pi\", Body: dialogTitle}",
+  "replace": "notice := PromptNotice{Title: \"pi \", Body: dialogTitle}"
+ },
+ {
+  "name": "pn-body-colon",
+  "file": "promptnotification.go",
+  "find": "notice.Body = dialogTitle + \": \" + subject",
+  "replace": "notice.Body = dialogTitle + \" \" + subject"
+ },
+ {
+  "name": "pn-label-name-empty",
+  "file": "promptnotification.go",
+  "find": "if session.Name != nil && *session.Name != \"\" {",
+  "replace": "if session.Name != nil {"
+ },
+ {
+  "name": "pn-label-basename",
+  "file": "promptnotification.go",
+  "find": "return HostPath.Basename(session.Cwd)",
+  "replace": "return session.Cwd"
+ },
+ {
+  "name": "pn-subject-tool",
+  "file": "promptnotification.go",
+  "find": "if request.ToolName != nil {\n\t\twhat = *request.ToolName\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "pn-subject-agent-fmt",
+  "file": "promptnotification.go",
+  "find": "return what + \" (\" + who + \")\"",
+  "replace": "return what + \" \" + who"
+ },
+ {
+  "name": "pn-subject-agent-only",
+  "file": "promptnotification.go",
+  "find": "\treturn who\n}",
+  "replace": "\treturn \"\"\n}"
+ },
+ {
+  "name": "pn-subject-both",
+  "file": "promptnotification.go",
+  "find": "if what != \"\" && who != \"\" {",
+  "replace": "if what != \"\" || who != \"\" {"
+ },
+ {
+  "name": "pn-channel-order",
+  "file": "promptnotification.go",
+  "find": "for _, channel := range channels {\n\t\tout.WriteString(renderChannel(channel, clean))",
+  "replace": "for i := len(channels) - 1; i >= 0; i-- {\n\t\tout.WriteString(renderChannel(channels[i], clean))"
+ },
+ {
+  "name": "pn-clean-title",
+  "file": "promptnotification.go",
+  "find": "clean := PromptNotice{Title: withoutControlCharacters(notice.Title), Body: withoutControlCharacters(notice.Body)}",
+  "replace": "clean := PromptNotice{Title: notice.Title, Body: withoutControlCharacters(notice.Body)}"
+ },
+ {
+  "name": "pn-clean-body",
+  "file": "promptnotification.go",
+  "find": "clean := PromptNotice{Title: withoutControlCharacters(notice.Title), Body: withoutControlCharacters(notice.Body)}",
+  "replace": "clean := PromptNotice{Title: withoutControlCharacters(notice.Title), Body: notice.Body}"
+ },
+ {
+  "name": "pn-osc9-format",
+  "file": "promptnotification.go",
+  "find": "return osc + \"9;\" + notice.Title + \": \" + notice.Body + bel",
+  "replace": "return osc + \"9;\" + notice.Body + bel"
+ },
+ {
+  "name": "pn-osc777-format",
+  "file": "promptnotification.go",
+  "find": "osc + \"777;notify;\" + osc777Field(notice.Title) + \";\" + osc777Field(notice.Body) + bel",
+  "replace": "osc + \"777;notify;\" + osc777Field(notice.Body) + \";\" + osc777Field(notice.Title) + bel"
+ },
+ {
+  "name": "pn-osc777-title",
+  "file": "promptnotification.go",
+  "find": "osc777Field(notice.Title) + \";\"",
+  "replace": "notice.Title + \";\""
+ },
+ {
+  "name": "pn-osc777-body",
+  "file": "promptnotification.go",
+  "find": "\";\" + osc777Field(notice.Body) + bel",
+  "replace": "\";\" + notice.Body + bel"
+ },
+ {
+  "name": "pn-osc777-semicolon",
+  "file": "promptnotification.go",
+  "find": "strings.ReplaceAll(text, \";\", \":\")",
+  "replace": "strings.ReplaceAll(text, \";\", \",\")"
+ },
+ {
+  "name": "pn-control-low",
+  "file": "promptnotification.go",
+  "find": "if c := value[i]; c > 31 && c != 127 {",
+  "replace": "if c := value[i]; c >= 31 && c != 127 {"
+ },
+ {
+  "name": "pn-control-del",
+  "file": "promptnotification.go",
+  "find": "if c := value[i]; c > 31 && c != 127 {",
+  "replace": "if c := value[i]; c > 31 {"
+ },
+ {
+  "name": "pn-control-c0",
+  "file": "promptnotification.go",
+  "find": "if c := value[i]; c > 31 && c != 127 {",
+  "replace": "if c := value[i]; c > 8 && c != 127 {"
+ },
+ {
+  "name": "ps-bash-trim",
+  "file": "patternsuggest.go",
+  "find": "trimmed := jsTrim(command)",
+  "replace": "trimmed := command"
+ },
+ {
+  "name": "ps-bash-comments",
+  "file": "patternsuggest.go",
+  "find": "stripped := bashanalysis.StripBashCommentLines(trimmed)",
+  "replace": "stripped := trimmed"
+ },
+ {
+  "name": "ps-bash-single",
+  "file": "patternsuggest.go",
+  "find": "if len(tokens) == 1 {\n\t\treturn stripped",
+  "replace": "if len(tokens) == 0 {\n\t\treturn stripped"
+ },
+ {
+  "name": "ps-bash-cover",
+  "file": "patternsuggest.go",
+  "find": "if len(meaningful) >= len(tokens) {",
+  "replace": "if len(meaningful) > len(tokens) {"
+ },
+ {
+  "name": "ps-bash-star",
+  "file": "patternsuggest.go",
+  "find": "return stripped + \"*\"",
+  "replace": "return stripped + \" *\""
+ },
+ {
+  "name": "ps-bash-join",
+  "file": "patternsuggest.go",
+  "find": "return strings.Join(meaningful, \" \") + \" *\"",
+  "replace": "return strings.Join(meaningful, \" \") + \"*\""
+ },
+ {
+  "name": "ps-split-ws",
+  "file": "patternsuggest.go",
+  "find": "if isJSSpace(r) {\n\t\t\tif start >= 0 {",
+  "replace": "if r == ' ' || r == '\\t' || r == '\\n' {\n\t\t\tif start >= 0 {"
+ },
+ {
+  "name": "ps-mcp-colon",
+  "file": "patternsuggest.go",
+  "find": "if i := strings.Index(trimmed, \":\"); i > 0 {",
+  "replace": "if i := strings.Index(trimmed, \":\"); i >= 0 {"
+ },
+ {
+  "name": "ps-mcp-colon-star",
+  "file": "patternsuggest.go",
+  "find": "return trimmed[:i] + \":*\"",
+  "replace": "return trimmed[:i] + \":\""
+ },
+ {
+  "name": "ps-mcp-underscore",
+  "file": "patternsuggest.go",
+  "find": "if i := strings.Index(trimmed, \"_\"); i > 0 {",
+  "replace": "if i := strings.Index(trimmed, \"_\"); i >= 0 {"
+ },
+ {
+  "name": "ps-mcp-order",
+  "file": "patternsuggest.go",
+  "find": "if i := strings.Index(trimmed, \":\"); i > 0 {\n\t\treturn trimmed[:i] + \":*\"\n\t}\n\tif i := strings.Index(trimmed, \"_\"); i > 0 {",
+  "replace": "if i := strings.Index(trimmed, \"_\"); i > 0 {\n\t\treturn trimmed[:i] + \"_*\"\n\t}\n\tif i := strings.Index(trimmed, \":\"); i > 0 {"
+ },
+ {
+  "name": "ps-mcp-trim",
+  "file": "patternsuggest.go",
+  "find": "trimmed := jsTrim(target)",
+  "replace": "trimmed := target"
+ },
+ {
+  "name": "ps-target-single",
+  "file": "patternsuggest.go",
+  "find": "if len(targets) == 1 {",
+  "replace": "if len(targets) <= 1 {"
+ },
+ {
+  "name": "ps-target-quote",
+  "file": "patternsuggest.go",
+  "find": "return `\"` + targets[0] + `\"`",
+  "replace": "return targets[0]"
+ },
+ {
+  "name": "ps-target-paths",
+  "file": "patternsuggest.go",
+  "find": "jsNumber(float64(len(targets))) + \" paths\"",
+  "replace": "jsNumber(float64(len(grants))) + \" paths\""
+ },
+ {
+  "name": "ps-dir-read",
+  "file": "patternsuggest.go",
+  "find": "\"read\": \"reads\", \"write\": \"writes\"",
+  "replace": "\"read\": \"writes\", \"write\": \"reads\""
+ },
+ {
+  "name": "ps-dir-label",
+  "file": "patternsuggest.go",
+  "find": "SessionLabel: \"Yes, allow \" + directionNouns[direction] + \" to \"",
+  "replace": "SessionLabel: \"Yes, allow \" + directionNouns[\"read\"] + \" to \""
+ },
+ {
+  "name": "ps-dir-widened",
+  "file": "patternsuggest.go",
+  "find": "WidenedLabel: \"Yes, allow \" + directionNouns[\"read\"] + \" and \" + directionNouns[\"write\"] + \" to \"",
+  "replace": "WidenedLabel: \"Yes, allow \" + directionNouns[\"write\"] + \" and \" + directionNouns[\"read\"] + \" to \""
+ },
+ {
+  "name": "ps-access-empty",
+  "file": "patternsuggest.go",
+  "find": "if len(grants) == 0 {\n\t\treturn nil\n\t}\n\tfor _, grant",
+  "replace": "for _, grant"
+ },
+ {
+  "name": "ps-access-family",
+  "file": "patternsuggest.go",
+  "find": "if _, ok := SurfaceFamilyMembers(SurfaceFamilyOf(grant.Surface)); !ok {",
+  "replace": "if _, ok := SurfaceFamilyMembers(grant.Surface); !ok {"
+ },
+ {
+  "name": "ps-access-label",
+  "file": "patternsuggest.go",
+  "find": "\"Yes, allow access to \" + DescribeGrantTarget(grants) + \" for this session\"",
+  "replace": "\"Yes, allow \" + DescribeGrantTarget(grants) + \" for this session\""
+ },
+ {
+  "name": "ps-fwd-anon",
+  "file": "patternsuggest.go",
+  "find": "subagentLabel := \"This subagent only\"",
+  "replace": "subagentLabel := \"This subagent\""
+ },
+ {
+  "name": "ps-fwd-name",
+  "file": "patternsuggest.go",
+  "find": "\"This subagent ('\" + *agentName + \"') only\"",
+  "replace": "\"This subagent (\" + *agentName + \") only\""
+ },
+ {
+  "name": "ps-fwd-empty",
+  "file": "patternsuggest.go",
+  "find": "if agentName != nil && *agentName != \"\" {\n\t\tsubagentLabel",
+  "replace": "if agentName != nil {\n\t\tsubagentLabel"
+ },
+ {
+  "name": "ps-fwd-dash",
+  "file": "patternsuggest.go",
+  "find": "\"The whole session \\u2014 allow \"",
+  "replace": "\"The whole session - allow \""
+ },
+ {
+  "name": "ps-fwd-family",
+  "file": "patternsuggest.go",
+  "find": "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = family + \" \" + granted",
+  "replace": "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = granted"
+ },
+ {
+  "name": "ps-shared-empty",
+  "file": "patternsuggest.go",
+  "find": "if len(grants) == 0 {\n\t\treturn \"\", false\n\t}\n\tfamily := SurfaceFamilyOf(grants[0].Surface)",
+  "replace": "family := SurfaceFamilyOf(grants[0].Surface)"
+ },
+ {
+  "name": "ps-shared-every",
+  "file": "patternsuggest.go",
+  "find": "if SurfaceFamilyOf(grant.Surface) != family {\n\t\t\treturn \"\", false",
+  "replace": "if false {\n\t\t\treturn \"\", false"
+ },
+ {
+  "name": "ps-shared-direction",
+  "file": "patternsuggest.go",
+  "find": "family := SurfaceFamilyOf(grants[0].Surface)\n\tfor _, grant := range grants {\n\t\tif SurfaceFamilyOf(grant.Surface) != family {",
+  "replace": "family := grants[0].Surface\n\tfor _, grant := range grants {\n\t\tif grant.Surface != family {"
+ },
+ {
+  "name": "ps-label-bash",
+  "file": "patternsuggest.go",
+  "find": "`Yes, allow bash \"` + pattern",
+  "replace": "`Yes, allow command \"` + pattern"
+ },
+ {
+  "name": "ps-label-mcp",
+  "file": "patternsuggest.go",
+  "find": "`Yes, allow mcp tool \"` + pattern",
+  "replace": "`Yes, allow mcp \"` + pattern"
+ },
+ {
+  "name": "ps-label-skill",
+  "file": "patternsuggest.go",
+  "find": "`Yes, allow skill \"` + pattern",
+  "replace": "`Yes, allow skills \"` + pattern"
+ },
+ {
+  "name": "ps-label-external",
+  "file": "patternsuggest.go",
+  "find": "`Yes, allow access to external directory \"` + pattern",
+  "replace": "`Yes, allow external directory \"` + pattern"
+ },
+ {
+  "name": "ps-label-path",
+  "file": "patternsuggest.go",
+  "find": "`Yes, allow path \"` + pattern",
+  "replace": "`Yes, allow paths \"` + pattern"
+ },
+ {
+  "name": "ps-label-pathbearing",
+  "file": "patternsuggest.go",
+  "find": "if PathBearingTools[surface] && pattern != \"*\" {",
+  "replace": "if PathBearingTools[surface] {"
+ },
+ {
+  "name": "ps-label-pathbearing-set",
+  "file": "patternsuggest.go",
+  "find": "if PathBearingTools[surface] && pattern != \"*\" {",
+  "replace": "if pattern != \"*\" {"
+ },
+ {
+  "name": "ps-label-tool",
+  "file": "patternsuggest.go",
+  "find": "`Yes, allow tool \"` + surface + `\" for this session`",
+  "replace": "`Yes, allow \"` + surface + `\" for this session`"
+ },
+ {
+  "name": "ps-session-bash",
+  "file": "patternsuggest.go",
+  "find": "case \"bash\":\n\t\tpattern = SuggestBashPattern(value)",
+  "replace": "case \"bash\":\n\t\tpattern = value"
+ },
+ {
+  "name": "ps-session-mcp",
+  "file": "patternsuggest.go",
+  "find": "case \"mcp\":\n\t\tpattern = SuggestMcpPattern(value)",
+  "replace": "case \"mcp\":\n\t\tpattern = value"
+ },
+ {
+  "name": "ps-session-skill",
+  "file": "patternsuggest.go",
+  "find": "case \"skill\":\n\t\tpattern = value",
+  "replace": "case \"skill\":\n\t\tpattern = \"*\""
+ },
+ {
+  "name": "ps-session-default",
+  "file": "patternsuggest.go",
+  "find": "default:\n\t\t// Extension tools, and path-bearing tools invoked without a path.\n\t\tpattern = \"*\"",
+  "replace": "default:\n\t\tpattern = value"
+ },
+ {
+  "name": "ps-path-targets",
+  "file": "patternsuggest.go",
+  "find": "Label:    buildLabel(strings.Join(GrantTargets(grants), `\", \"`), surface),",
+  "replace": "Label:    buildLabel(strings.Join(approvalPatterns, `\", \"`), surface),"
+ },
+ {
+  "name": "ps-path-join",
+  "file": "patternsuggest.go",
+  "find": "strings.Join(GrantTargets(grants), `\", \"`)",
+  "replace": "strings.Join(GrantTargets(grants), `, `)"
+ },
+ {
+  "name": "ps-exact",
+  "file": "patternsuggest.go",
+  "find": "func SuggestExactSessionPattern(surface, pattern string) SessionApprovalSuggestion {\n\treturn SessionApprovalSuggestion{Surface: surface, Pattern: pattern,",
+  "replace": "func SuggestExactSessionPattern(surface, pattern string) SessionApprovalSuggestion {\n\treturn SessionApprovalSuggestion{Surface: surface, Pattern: \"*\","
+ },
+ {
+  "name": "gt-sibling",
+  "file": "fwd_stub_authority.go",
+  "find": "if hasContentsSibling(g, grants) || seen[g.Pattern] {",
+  "replace": "if seen[g.Pattern] {"
+ },
+ {
+  "name": "gt-seen",
+  "file": "fwd_stub_authority.go",
+  "find": "if hasContentsSibling(g, grants) || seen[g.Pattern] {",
+  "replace": "if hasContentsSibling(g, grants) {"
+ },
+ {
+  "name": "gt-surface",
+  "file": "fwd_stub_authority.go",
+  "find": "if other.Surface != g.Surface {\n\t\t\tcontinue\n\t\t}\n\t\tfor _, suffix := range contentsSuffixes {",
+  "replace": "for _, suffix := range contentsSuffixes {"
+ },
+ {
+  "name": "gt-suffix-win",
+  "file": "fwd_stub_authority.go",
+  "find": "var contentsSuffixes = []string{\"/*\", \"\\\\*\"}",
+  "replace": "var contentsSuffixes = []string{\"/*\"}"
+ },
+ {
+  "name": "gt-suffix-posix",
+  "file": "fwd_stub_authority.go",
+  "find": "var contentsSuffixes = []string{\"/*\", \"\\\\*\"}",
+  "replace": "var contentsSuffixes = []string{\"\\\\*\"}"
+ },
+ {
+  "name": "pp-local-requester",
+  "file": "promptpayload.go",
+  "find": "return PromptRequester{AgentName: agentName}",
+  "replace": "return PromptRequester{AgentName: agentName, Forwarded: true}"
+ },
+ {
+  "name": "pp-find-evidence",
+  "file": "promptpayload.go",
+  "find": "for i := range payload.Evidence {\n\t\tif payload.Evidence[i].Label == label {",
+  "replace": "for i := len(payload.Evidence) - 1; i >= 0; i-- {\n\t\tif payload.Evidence[i].Label == label {"
+ },
+ {
+  "name": "pp-all-evidence",
+  "file": "promptpayload.go",
+  "find": "for _, e := range payload.Evidence {\n\t\tif e.Label == label {\n\t\t\tout = append(out, e)",
+  "replace": "for _, e := range payload.Evidence {\n\t\tif e.Label != label {\n\t\t\tout = append(out, e)"
+ },
+ {
+  "name": "ta-bash-kind",
+  "file": "toolaskpayload.go",
+  "find": "bash := ClassifyToolKind(check.ToolName) == ToolKindBash",
+  "replace": "bash := check.ToolName == \"bash \""
+ },
+ {
+  "name": "ta-mcp-target",
+  "file": "toolaskpayload.go",
+  "find": "mcp := IsMcpCheck(mcpFields) && check.Target != nil",
+  "replace": "mcp := IsMcpCheck(mcpFields)"
+ },
+ {
+  "name": "ta-mcp-check",
+  "file": "toolaskpayload.go",
+  "find": "mcp := IsMcpCheck(mcpFields) && check.Target != nil",
+  "replace": "mcp := check.Target != nil"
+ },
+ {
+  "name": "ta-kind-mcp",
+  "file": "toolaskpayload.go",
+  "find": "kind := \"tool\"\n\tif bash {\n\t\tkind = \"bash\"\n\t} else if mcp {\n\t\tkind = \"mcp\"\n\t}",
+  "replace": "kind := \"tool\"\n\tif bash {\n\t\tkind = \"bash\"\n\t}"
+ },
+ {
+  "name": "ta-surface",
+  "file": "toolaskpayload.go",
+  "find": "Surface:         facts.Surface,",
+  "replace": "Surface:         check.ToolName,"
+ },
+ {
+  "name": "ta-value-bash",
+  "file": "toolaskpayload.go",
+  "find": "case bash:\n\t\tif check.Command != nil {\n\t\t\treturn *check.Command\n\t\t}\n\t\treturn \"\"",
+  "replace": "case bash:\n\t\treturn check.ToolName"
+ },
+ {
+  "name": "ta-value-mcp",
+  "file": "toolaskpayload.go",
+  "find": "case mcp:\n\t\treturn *check.Target",
+  "replace": "case mcp:\n\t\treturn check.ToolName"
+ },
+ {
+  "name": "ta-invoked-same",
+  "file": "toolaskpayload.go",
+  "find": "if facts.InvokedToolName == nil || *facts.InvokedToolName == facts.Check.ToolName {",
+  "replace": "if facts.InvokedToolName == nil {"
+ },
+ {
+  "name": "ta-context",
+  "file": "toolaskpayload.go",
+  "find": "if check.CommandContext != \"\" {\n\t\tc := string(check.CommandContext)\n\t\tcommandContext = &c\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ta-unit",
+  "file": "toolaskpayload.go",
+  "find": "ExecutedUnit:    check.ExecutedUnit,",
+  "replace": "ExecutedUnit:    nil,"
+ },
+ {
+  "name": "ta-pattern",
+  "file": "toolaskpayload.go",
+  "find": "MatchedPattern:  check.MatchedPattern,",
+  "replace": "MatchedPattern:  nil,"
+ },
+ {
+  "name": "ta-requester",
+  "file": "toolaskpayload.go",
+  "find": "Requester:       LocalRequester(facts.AgentName),",
+  "replace": "Requester:       LocalRequester(nil),"
+ },
+ {
+  "name": "ta-full-command-same",
+  "file": "toolaskpayload.go",
+  "find": "if !ok || (facts.Check.Command != nil && fullCommand == *facts.Check.Command) {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "ta-full-command-label",
+  "file": "toolaskpayload.go",
+  "find": "{Label: \"full command\", Text: fullCommand}",
+  "replace": "{Label: \"command\", Text: fullCommand}"
+ },
+ {
+  "name": "ta-input-formatter-nil",
+  "file": "toolaskpayload.go",
+  "find": "if facts.Formatter == nil {\n\t\treturn []PromptEvidence{}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ta-input-proxy",
+  "file": "toolaskpayload.go",
+  "find": "if proxyMcp {\n\t\ttoolName = \"mcp\"\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ta-input-label",
+  "file": "toolaskpayload.go",
+  "find": "{Label: \"input\", Text: preview}",
+  "replace": "{Label: \"preview\", Text: preview}"
+ },
+ {
+  "name": "ta-input-empty",
+  "file": "toolaskpayload.go",
+  "find": "preview != \"\" {",
+  "replace": "true {"
+ },
+ {
+  "name": "ta-bash-evidence",
+  "file": "toolaskpayload.go",
+  "find": "if bash {\n\t\tevidence = fullCommandEvidence(facts)\n\t} else {",
+  "replace": "if false {\n\t\tevidence = fullCommandEvidence(facts)\n\t} else {"
+ },
+ {
+  "name": "pa-path-kind",
+  "file": "pathaskpayload.go",
+  "find": "return pathPayload(\"path\", facts,",
+  "replace": "return pathPayload(\"external_directory\", facts,"
+ },
+ {
+  "name": "pa-extdir-order",
+  "file": "pathaskpayload.go",
+  "find": "evidence := append(resolvedAliasEvidence(facts.ResolvedPath), workingDirectoryEvidence(facts.Cwd))",
+  "replace": "evidence := append([]PromptEvidence{workingDirectoryEvidence(facts.Cwd)}, resolvedAliasEvidence(facts.ResolvedPath)...)"
+ },
+ {
+  "name": "pa-extdir-kind",
+  "file": "pathaskpayload.go",
+  "find": "return pathPayload(\"external_directory\", facts.PathAskFacts, evidence)",
+  "replace": "return pathPayload(\"path\", facts.PathAskFacts, evidence)"
+ },
+ {
+  "name": "pa-bash-kind",
+  "file": "pathaskpayload.go",
+  "find": "Kind: \"bash_external_directory\",",
+  "replace": "Kind: \"external_directory\","
+ },
+ {
+  "name": "pa-bash-order",
+  "file": "pathaskpayload.go",
+  "find": "evidence := []PromptEvidence{workingDirectoryEvidence(facts.Cwd)}\n\tfor _, external := range facts.ExternalPaths {\n\t\tevidence = append(evidence, externalPathEvidence(external))\n\t}",
+  "replace": "evidence := []PromptEvidence{}\n\tfor _, external := range facts.ExternalPaths {\n\t\tevidence = append(evidence, externalPathEvidence(external))\n\t}\n\tevidence = append(evidence, workingDirectoryEvidence(facts.Cwd))"
+ },
+ {
+  "name": "pa-bash-value",
+  "file": "pathaskpayload.go",
+  "find": "Value:          facts.Command,",
+  "replace": "Value:          facts.ToolName,"
+ },
+ {
+  "name": "pa-bash-tool",
+  "file": "pathaskpayload.go",
+  "find": "ToolName:       &toolName,\n\t\t\tValue:          facts.Command,",
+  "replace": "ToolName:       nil,\n\t\t\tValue:          facts.Command,"
+ },
+ {
+  "name": "pa-path-value",
+  "file": "pathaskpayload.go",
+  "find": "Value:          facts.PathValue,",
+  "replace": "Value:          facts.ToolName,"
+ },
+ {
+  "name": "pa-path-pattern",
+  "file": "pathaskpayload.go",
+  "find": "MatchedPattern: facts.MatchedPattern,\n\t\t},\n\t\tEvidence:    evidence,\n\t\tAnnotations: []PromptAnnotation{},\n\t}\n}\n\n// resolvedAlias",
+  "replace": "MatchedPattern: nil,\n\t\t},\n\t\tEvidence:    evidence,\n\t\tAnnotations: []PromptAnnotation{},\n\t}\n}\n\n// resolvedAlias"
+ },
+ {
+  "name": "pa-alias-label",
+  "file": "pathaskpayload.go",
+  "find": "{Label: \"resolves to\", Text: *resolvedPath}",
+  "replace": "{Label: \"resolved\", Text: *resolvedPath}"
+ },
+ {
+  "name": "pa-alias-nil",
+  "file": "pathaskpayload.go",
+  "find": "if resolvedPath == nil {\n\t\treturn []PromptEvidence{}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "pa-cwd-label",
+  "file": "pathaskpayload.go",
+  "find": "PromptEvidence{Label: \"working directory\", Text: cwd}",
+  "replace": "PromptEvidence{Label: \"cwd\", Text: cwd}"
+ },
+ {
+  "name": "pa-external-detail",
+  "file": "pathaskpayload.go",
+  "find": "Detail: external.ResolvedPath}",
+  "replace": "Detail: nil}"
+ },
+ {
+  "name": "pa-external-label",
+  "file": "pathaskpayload.go",
+  "find": "PromptEvidence{Label: \"external path\", Text: external.Path",
+  "replace": "PromptEvidence{Label: \"path\", Text: external.Path"
+ },
+ {
+  "name": "sk-kind",
+  "file": "skillaskpayload.go",
+  "find": "return skillPayload(\"skill\", skillName",
+  "replace": "return skillPayload(\"skill_read\", skillName"
+ },
+ {
+  "name": "sk-path-kind",
+  "file": "skillaskpayload.go",
+  "find": "return skillPayload(\"skill_read\", skill.Name",
+  "replace": "return skillPayload(\"skill\", skill.Name"
+ },
+ {
+  "name": "sk-path-value",
+  "file": "skillaskpayload.go",
+  "find": "skillPayload(\"skill_read\", skill.Name, agentName, []PromptEvidence{{Label: \"read path\", Text: readPath}})",
+  "replace": "skillPayload(\"skill_read\", readPath, agentName, []PromptEvidence{{Label: \"read path\", Text: skill.Name}})"
+ },
+ {
+  "name": "sk-evidence-label",
+  "file": "skillaskpayload.go",
+  "find": "{Label: \"read path\", Text: readPath}",
+  "replace": "{Label: \"path\", Text: readPath}"
+ },
+ {
+  "name": "sk-surface",
+  "file": "skillaskpayload.go",
+  "find": "Surface:   \"skill\",",
+  "replace": "Surface:   \"skill_read\","
+ },
+ {
+  "name": "sk-requester",
+  "file": "skillaskpayload.go",
+  "find": "Requester: LocalRequester(agentName),",
+  "replace": "Requester: LocalRequester(nil),"
+ },
+ {
+  "name": "fw-forwarded",
+  "file": "forwardedaskpayload.go",
+  "find": "requester := PromptRequester{AgentName: &agentName, Forwarded: true, SessionID: &sessionID}",
+  "replace": "requester := PromptRequester{AgentName: &agentName, Forwarded: false, SessionID: &sessionID}"
+ },
+ {
+  "name": "fw-session",
+  "file": "forwardedaskpayload.go",
+  "find": "SessionID: &sessionID}",
+  "replace": "SessionID: nil}"
+ },
+ {
+  "name": "fw-agent",
+  "file": "forwardedaskpayload.go",
+  "find": "AgentName: &agentName, Forwarded",
+  "replace": "AgentName: request.Payload.Request.Requester.AgentName, Forwarded"
+ },
+ {
+  "name": "fw-payload",
+  "file": "forwardedaskpayload.go",
+  "find": "if request.Payload != nil {\n\t\tpayload := *request.Payload\n\t\tpayload.Request.Requester = requester\n\t\treturn payload\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "fw-degraded-kind",
+  "file": "forwardedaskpayload.go",
+  "find": "Kind: \"forwarded\",",
+  "replace": "Kind: \"bash\","
+ },
+ {
+  "name": "fw-degraded-surface",
+  "file": "forwardedaskpayload.go",
+  "find": "Surface: display(request.Surface),",
+  "replace": "Surface: \"\","
+ },
+ {
+  "name": "fw-degraded-value",
+  "file": "forwardedaskpayload.go",
+  "find": "Value:   display(request.Value),",
+  "replace": "Value:   \"\","
+ },
+ {
+  "name": "fw-display-null",
+  "file": "forwardedaskpayload.go",
+  "find": "if d.Set && d.Value != nil {\n\t\t\treturn *d.Value\n\t\t}",
+  "replace": "if d.Value != nil {\n\t\t\treturn *d.Value\n\t\t}\n\t\tif d.Set {\n\t\t\treturn \"null\"\n\t\t}"
+ },
+ {
+  "name": "pr-missing",
+  "file": "permissionprompts.go",
+  "find": "\"Tool call was blocked because no tool name was provided.",
+  "replace": "\"Tool call blocked: no tool name was provided."
+ },
+ {
+  "name": "pr-cap",
+  "file": "permissionprompts.go",
+  "find": "if len(preview) > 10 {\n\t\tpreview = preview[:10]\n\t}",
+  "replace": "if len(preview) > 11 {\n\t\tpreview = preview[:11]\n\t}"
+ },
+ {
+  "name": "pr-suffix",
+  "file": "permissionprompts.go",
+  "find": "suffix = \", ...\"",
+  "replace": "suffix = \"...\""
+ },
+ {
+  "name": "pr-suffix-cond",
+  "file": "permissionprompts.go",
+  "find": "if len(availableToolNames) > len(preview) {",
+  "replace": "if len(availableToolNames) >= len(preview) {"
+ },
+ {
+  "name": "pr-none",
+  "file": "permissionprompts.go",
+  "find": "availableList := \"none\"",
+  "replace": "availableList := \"\""
+ },
+ {
+  "name": "pr-join",
+  "file": "permissionprompts.go",
+  "find": "availableList = strings.Join(preview, \", \") + suffix",
+  "replace": "availableList = strings.Join(preview, \",\") + suffix"
+ },
+ {
+  "name": "pr-hint-mcp",
+  "file": "permissionprompts.go",
+  "find": "if kind != ToolKindMcp && kind != ToolKindMcpTool {",
+  "replace": "if kind != ToolKindMcp {"
+ },
+ {
+  "name": "pr-hint-tool",
+  "file": "permissionprompts.go",
+  "find": "if kind != ToolKindMcp && kind != ToolKindMcpTool {",
+  "replace": "if kind != ToolKindMcpTool {"
+ },
+ {
+  "name": "pr-text",
+  "file": "permissionprompts.go",
+  "find": "\" Registered tools: \" + availableList + \".\"",
+  "replace": "\" Available tools: \" + availableList + \".\""
+ },
+ {
+  "name": "ip-preview-len",
+  "file": "toolinputpreview.go",
+  "find": "ToolInputPreviewMaxLength = 200",
+  "replace": "ToolInputPreviewMaxLength = 201"
+ },
+ {
+  "name": "ip-summary-len",
+  "file": "toolinputpreview.go",
+  "find": "ToolTextSummaryMaxLength  = 80",
+  "replace": "ToolTextSummaryMaxLength  = 81"
+ },
+ {
+  "name": "ip-truncate-boundary",
+  "file": "toolinputpreview.go",
+  "find": "if float64(n) <= maxLength {\n\t\treturn value",
+  "replace": "if float64(n) < maxLength {\n\t\treturn value"
+ },
+ {
+  "name": "ip-truncate-units",
+  "file": "toolinputpreview.go",
+  "find": "n := utf16LenWTF(value)\n\tif float64(n)",
+  "replace": "n := len(value)\n\tif float64(n)"
+ },
+ {
+  "name": "ip-truncate-mark",
+  "file": "toolinputpreview.go",
+  "find": "jsSliceEnd(maxLength, n)) + \"\\u2026\"",
+  "replace": "jsSliceEnd(maxLength, n)) + \"...\""
+ },
+ {
+  "name": "ip-lines-empty",
+  "file": "toolinputpreview.go",
+  "find": "if value == \"\" {\n\t\treturn 0\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ip-lines-crlf",
+  "file": "toolinputpreview.go",
+  "find": "if i+1 < len(value) && value[i+1] == '\\n' {\n\t\t\t\ti++\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "ip-lines-cr",
+  "file": "toolinputpreview.go",
+  "find": "case '\\r':",
+  "replace": "case '\\x00':"
+ },
+ {
+  "name": "ip-count-singular",
+  "file": "toolinputpreview.go",
+  "find": "if value == 1 {\n\t\tword = singular",
+  "replace": "if value == 2 {\n\t\tword = singular"
+ },
+ {
+  "name": "ip-serialize-redacted",
+  "file": "toolinputpreview.go",
+  "find": "return normalizeSerializedPreview(RedactedJSONStringify(input))",
+  "replace": "return normalizeSerializedPreview(safeJSONStringify(input))"
+ },
+ {
+  "name": "ip-serialize-prompt",
+  "file": "toolinputpreview.go",
+  "find": "return normalizeSerializedPreview(safeJSONStringify(input))",
+  "replace": "return normalizeSerializedPreview(RedactedJSONStringify(input))"
+ },
+ {
+  "name": "ip-normalize-empty-object",
+  "file": "toolinputpreview.go",
+  "find": "serialized == \"{}\" || ",
+  "replace": ""
+ },
+ {
+  "name": "ip-normalize-null",
+  "file": "toolinputpreview.go",
+  "find": " || serialized == \"null\"",
+  "replace": ""
+ },
+ {
+  "name": "ip-normalize-undefined",
+  "file": "toolinputpreview.go",
+  "find": "if !ok || serialized == \"\"",
+  "replace": "if serialized == \"\""
+ },
+ {
+  "name": "ip-normalize-collapse",
+  "file": "toolinputpreview.go",
+  "find": "return jsTrim(collapseJSWhitespace(serialized))",
+  "replace": "return jsTrim(serialized)"
+ },
+ {
+  "name": "ip-collapse-run",
+  "file": "toolinputpreview.go",
+  "find": "if !inSpace {\n\t\t\t\tb.WriteByte(' ')\n\t\t\t}",
+  "replace": "b.WriteByte(' ')"
+ },
+ {
+  "name": "ip-collapse-js",
+  "file": "toolinputpreview.go",
+  "find": "r, size := utf8.DecodeRuneInString(s[i:])\n\t\tif isJSSpace(r) {",
+  "replace": "r, size := utf8.DecodeRuneInString(s[i:])\n\t\tif r == ' ' || r == '\\n' || r == '\\t' || r == '\\r' {"
+ },
+ {
+  "name": "pf-path-file",
+  "file": "toolinputpromptformatters.go",
+  "find": "return recordString(input, \"file_path\")",
+  "replace": "return \"\", false"
+ },
+ {
+  "name": "pf-path-first",
+  "file": "toolinputpromptformatters.go",
+  "find": "if path, ok := recordString(input, \"path\"); ok {\n\t\treturn path, true\n\t}\n\treturn recordString(input, \"file_path\")",
+  "replace": "if path, ok := recordString(input, \"file_path\"); ok {\n\t\treturn path, true\n\t}\n\treturn recordString(input, \"path\")"
+ },
+ {
+  "name": "pf-edit-array",
+  "file": "toolinputpromptformatters.go",
+  "find": "if edits, ok := input.vals[\"edits\"].([]any); ok {",
+  "replace": "if edits, ok := input.vals[\"edits\"].([]any); ok && len(edits) > 0 {"
+ },
+ {
+  "name": "pf-edit-fallback",
+  "file": "toolinputpromptformatters.go",
+  "find": "if okOld && okNew {\n\t\t\tpair := newObject()",
+  "replace": "if okOld || okNew {\n\t\t\tpair := newObject()"
+ },
+ {
+  "name": "pf-edit-filter",
+  "file": "toolinputpromptformatters.go",
+  "find": "if okOld && okNew {\n\t\t\tedits = append(edits, edit{oldText, newText})",
+  "replace": "if okOld || okNew {\n\t\t\tedits = append(edits, edit{oldText, newText})"
+ },
+ {
+  "name": "pf-edit-nopath",
+  "file": "toolinputpromptformatters.go",
+  "find": "return \"with edit input\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "pf-edit-pathonly",
+  "file": "toolinputpromptformatters.go",
+  "find": "return pathPart + \" with edit input\"",
+  "replace": "return pathPart"
+ },
+ {
+  "name": "pf-edit-first",
+  "file": "toolinputpromptformatters.go",
+  "find": "first := edits[0]",
+  "replace": "first := edits[len(edits)-1]"
+ },
+ {
+  "name": "pf-edit-lines",
+  "file": "toolinputpromptformatters.go",
+  "find": "\"edit #1 replaces \" + FormatCount(CountTextLines(first.oldText), \"line\", \"lines\") + \" with \" +\n\t\tFormatCount(CountTextLines(first.newText), \"line\", \"lines\")",
+  "replace": "\"edit #1 replaces \" + FormatCount(CountTextLines(first.newText), \"line\", \"lines\") + \" with \" +\n\t\tFormatCount(CountTextLines(first.oldText), \"line\", \"lines\")"
+ },
+ {
+  "name": "pf-edit-extra",
+  "file": "toolinputpromptformatters.go",
+  "find": "if len(edits) > 1 {\n\t\textraEdits",
+  "replace": "if len(edits) > 2 {\n\t\textraEdits"
+ },
+ {
+  "name": "pf-edit-extra-count",
+  "file": "toolinputpromptformatters.go",
+  "find": "FormatCount(len(edits)-1, \"additional edit\", \"additional edits\")",
+  "replace": "FormatCount(len(edits), \"additional edit\", \"additional edits\")"
+ },
+ {
+  "name": "pf-edit-count",
+  "file": "toolinputpromptformatters.go",
+  "find": "FormatCount(len(edits), \"replacement\", \"replacements\") + \": \"",
+  "replace": "FormatCount(len(edits)-1, \"replacement\", \"replacements\") + \": \""
+ },
+ {
+  "name": "pf-edit-path-format",
+  "file": "toolinputpromptformatters.go",
+  "find": "pathPart = \"for '\" + path + \"'\"",
+  "replace": "pathPart = \"for \" + path"
+ },
+ {
+  "name": "pf-write-units",
+  "file": "toolinputpromptformatters.go",
+  "find": "FormatCount(utf16LenWTF(content), \"character\", \"characters\")",
+  "replace": "FormatCount(len(content), \"character\", \"characters\")"
+ },
+ {
+  "name": "pf-write-lines",
+  "file": "toolinputpromptformatters.go",
+  "find": "FormatCount(CountTextLines(content), \"line\", \"lines\") + \", \"",
+  "replace": "FormatCount(len(strings.Split(content, \"\\n\")), \"line\", \"lines\") + \", \""
+ },
+ {
+  "name": "pf-write-path",
+  "file": "toolinputpromptformatters.go",
+  "find": "return \"for '\" + path + \"' \" + summary",
+  "replace": "return summary"
+ },
+ {
+  "name": "pf-read-offset",
+  "file": "toolinputpromptformatters.go",
+  "find": "parts = append(parts, \"offset \"+jsNumber(offset))",
+  "replace": "parts = append(parts, \"offset \"+jsNumber(offset+1))"
+ },
+ {
+  "name": "pf-read-limit",
+  "file": "toolinputpromptformatters.go",
+  "find": "parts = append(parts, \"limit \"+jsNumber(limit))",
+  "replace": "parts = append(parts, \"limit \"+jsNumber(limit+1))"
+ },
+ {
+  "name": "pf-read-join",
+  "file": "toolinputpromptformatters.go",
+  "find": "return \"for \" + strings.Join(parts, \", \")",
+  "replace": "return \"for \" + strings.Join(parts, \" \")"
+ },
+ {
+  "name": "pf-read-path",
+  "file": "toolinputpromptformatters.go",
+  "find": "parts = append(parts, \"path '\"+path+\"'\")",
+  "replace": "parts = append(parts, \"path \"+path)"
+ },
+ {
+  "name": "bi-summary-len",
+  "file": "builtintoolinputformatters.go",
+  "find": "mcpArgsSummaryMaxLength = 160",
+  "replace": "mcpArgsSummaryMaxLength = 161"
+ },
+ {
+  "name": "bi-value-len",
+  "file": "builtintoolinputformatters.go",
+  "find": "mcpArgValueMaxLength = 60",
+  "replace": "mcpArgValueMaxLength = 61"
+ },
+ {
+  "name": "bi-string-quote",
+  "file": "builtintoolinputformatters.go",
+  "find": "return `\"` + TruncateInlineText(v, mcpArgValueMaxLength) + `\"`",
+  "replace": "return TruncateInlineText(v, mcpArgValueMaxLength)"
+ },
+ {
+  "name": "bi-bool",
+  "file": "builtintoolinputformatters.go",
+  "find": "case bool:\n\t\tif v {\n\t\t\treturn \"true\"\n\t\t}\n\t\treturn \"false\"",
+  "replace": "case bool:\n\t\treturn \"yes\""
+ },
+ {
+  "name": "bi-array",
+  "file": "builtintoolinputformatters.go",
+  "find": "\"[\" + jsNumber(float64(len(v))) + \" items]\"",
+  "replace": "\"[\" + jsNumber(float64(len(v))) + \"]\""
+ },
+ {
+  "name": "bi-null",
+  "file": "builtintoolinputformatters.go",
+  "find": "case nil:\n\t\treturn \"null\"",
+  "replace": "case nil:\n\t\treturn \"\""
+ },
+ {
+  "name": "bi-object",
+  "file": "builtintoolinputformatters.go",
+  "find": "return \"{\\u2026}\"",
+  "replace": "return \"{}\""
+ },
+ {
+  "name": "bi-empty",
+  "file": "builtintoolinputformatters.go",
+  "find": "if len(keys) == 0 {\n\t\treturn \"\", false\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "bi-prefix",
+  "file": "builtintoolinputformatters.go",
+  "find": "return \"with \" + TruncateInlineText(strings.Join(parts, \", \"), mcpArgsSummaryMaxLength), true",
+  "replace": "return TruncateInlineText(strings.Join(parts, \", \"), mcpArgsSummaryMaxLength), true"
+ },
+ {
+  "name": "bi-join",
+  "file": "builtintoolinputformatters.go",
+  "find": "strings.Join(parts, \", \"), mcpArgsSummaryMaxLength)",
+  "replace": "strings.Join(parts, \",\"), mcpArgsSummaryMaxLength)"
+ },
+ {
+  "name": "bi-key-order",
+  "file": "builtintoolinputformatters.go",
+  "find": "keys := args.order()",
+  "replace": "keys := args.keys"
+ },
+ {
+  "name": "bi-register-name",
+  "file": "builtintoolinputformatters.go",
+  "find": "registry.Register(\"mcp\", FormatMcpInputForPrompt)",
+  "replace": "registry.Register(\"mcp2\", FormatMcpInputForPrompt)"
+ },
+ {
+  "name": "tp-limits-preview",
+  "file": "toolpreviewformatter.go",
+  "find": "ToolInputPreviewMaxLength: ToolInputPreviewMaxLength, ToolTextSummaryMaxLength: ToolTextSummaryMaxLength}\n}",
+  "replace": "ToolInputPreviewMaxLength: ToolTextSummaryMaxLength, ToolTextSummaryMaxLength: ToolInputPreviewMaxLength}\n}"
+ },
+ {
+  "name": "tp-sanitize-override",
+  "file": "toolpreviewformatter.go",
+  "find": "if maxLength != nil {\n\t\tlimit = *maxLength\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tp-sanitize-empty",
+  "file": "toolpreviewformatter.go",
+  "find": "if normalized == \"\" {\n\t\treturn \"empty text\"",
+  "replace": "if normalized == \"\" {\n\t\treturn \"\""
+ },
+ {
+  "name": "tp-sanitize-collapse",
+  "file": "toolpreviewformatter.go",
+  "find": "normalized := jsTrim(collapseJSWhitespace(value))",
+  "replace": "normalized := jsTrim(value)"
+ },
+ {
+  "name": "tp-json-prefix",
+  "file": "toolpreviewformatter.go",
+  "find": "return \"with input \" + TruncateInlineText(inline, f.options.ToolInputPreviewMaxLength)",
+  "replace": "return \"input \" + TruncateInlineText(inline, f.options.ToolInputPreviewMaxLength)"
+ },
+ {
+  "name": "tp-json-truncate",
+  "file": "toolpreviewformatter.go",
+  "find": "TruncateInlineText(inline, f.options.ToolInputPreviewMaxLength)",
+  "replace": "inline"
+ },
+ {
+  "name": "tp-json-limit",
+  "file": "toolpreviewformatter.go",
+  "find": "TruncateInlineText(inline, f.options.ToolInputPreviewMaxLength)",
+  "replace": "TruncateInlineText(inline, f.options.ToolTextSummaryMaxLength)"
+ },
+ {
+  "name": "tp-search-pattern",
+  "file": "toolpreviewformatter.go",
+  "find": "parts = append(parts, \"pattern '\"+f.SanitizeInlineText(pattern, nil)+\"'\")",
+  "replace": "parts = append(parts, \"pattern '\"+pattern+\"'\")"
+ },
+ {
+  "name": "tp-search-glob",
+  "file": "toolpreviewformatter.go",
+  "find": "parts = append(parts, \"glob '\"+f.SanitizeInlineText(glob, nil)+\"'\")",
+  "replace": "parts = append(parts, \"glob '\"+glob+\"'\")"
+ },
+ {
+  "name": "tp-search-path",
+  "file": "toolpreviewformatter.go",
+  "find": "parts = append(parts, \"path '\"+path+\"'\")\n\t} else if",
+  "replace": "parts = append(parts, \"path \"+path)\n\t} else if"
+ },
+ {
+  "name": "tp-search-cwd",
+  "file": "toolpreviewformatter.go",
+  "find": "} else if toolName == \"find\" || toolName == \"grep\" || toolName == \"ls\" {",
+  "replace": "} else if toolName == \"find\" || toolName == \"grep\" {"
+ },
+ {
+  "name": "tp-search-cwd-text",
+  "file": "toolpreviewformatter.go",
+  "find": "\"current working directory\"",
+  "replace": "\"cwd\""
+ },
+ {
+  "name": "tp-search-join",
+  "file": "toolpreviewformatter.go",
+  "find": "return \"for \" + strings.Join(parts, \", \")",
+  "replace": "return \"for \" + strings.Join(parts, \" \")"
+ },
+ {
+  "name": "tp-custom",
+  "file": "toolpreviewformatter.go",
+  "find": "if f.customFormatters != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tp-custom-decline",
+  "file": "toolpreviewformatter.go",
+  "find": "if rendered, ok := custom.Format(inputRecord); ok {",
+  "replace": "if rendered, _ := custom.Format(inputRecord); true {"
+ },
+ {
+  "name": "tp-dispatch-edit",
+  "file": "toolpreviewformatter.go",
+  "find": "case \"edit\":\n\t\treturn FormatEditInputForPrompt(inputRecord)",
+  "replace": "case \"edit\":\n\t\treturn FormatWriteInputForPrompt(inputRecord)"
+ },
+ {
+  "name": "tp-dispatch-read",
+  "file": "toolpreviewformatter.go",
+  "find": "case \"read\":\n\t\treturn FormatReadInputForPrompt(inputRecord)",
+  "replace": "case \"read\":\n\t\treturn f.FormatJSONInputForPrompt(input)"
+ },
+ {
+  "name": "tp-dispatch-search",
+  "file": "toolpreviewformatter.go",
+  "find": "case \"find\", \"grep\", \"ls\":",
+  "replace": "case \"find\", \"grep\":"
+ },
+ {
+  "name": "tp-dispatch-mcp",
+  "file": "toolpreviewformatter.go",
+  "find": "case \"mcp\":\n\t\t// The MCP target",
+  "replace": "case \"mcp2\":\n\t\t// The MCP target"
+ },
+ {
+  "name": "tp-log-prefix",
+  "file": "toolpreviewformatter.go",
+  "find": "return \"input \" + inline, true",
+  "replace": "return inline, true"
+ },
+ {
+  "name": "tp-log-redacted",
+  "file": "toolpreviewformatter.go",
+  "find": "inline := SerializeRedactedToolInputPreview(input)",
+  "replace": "inline := SerializeToolInputPreview(input)"
+ },
+ {
+  "name": "tp-logpreview-bash",
+  "file": "toolpreviewformatter.go",
+  "find": "if ClassifyToolKind(result.ToolName) == ToolKindBash || IsProxyMcpCheck(",
+  "replace": "if IsProxyMcpCheck("
+ },
+ {
+  "name": "tp-logpreview-mcp",
+  "file": "toolpreviewformatter.go",
+  "find": "ClassifyToolKind(result.ToolName) == ToolKindBash || IsProxyMcpCheck(McpKindFields{ToolName: result.ToolName, Source: result.Source}) {",
+  "replace": "ClassifyToolKind(result.ToolName) == ToolKindBash {"
+ },
+ {
+  "name": "tp-logpreview-source",
+  "file": "toolpreviewformatter.go",
+  "find": "IsProxyMcpCheck(McpKindFields{ToolName: result.ToolName, Source: result.Source})",
+  "replace": "IsProxyMcpCheck(McpKindFields{ToolName: result.ToolName})"
+ },
+ {
+  "name": "tp-logpreview-pathbearing",
+  "file": "toolpreviewformatter.go",
+  "find": "if pathBearingTools[result.ToolName] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tp-logpreview-empty",
+  "file": "toolpreviewformatter.go",
+  "find": "return preview, preview != \"\"",
+  "replace": "return preview, true"
+ },
+ {
+  "name": "tp-context-command",
+  "file": "toolpreviewformatter.go",
+  "find": "Command: result.Command, Target: result.Target, Origin: result.Origin}",
+  "replace": "Command: nil, Target: result.Target, Origin: result.Origin}"
+ },
+ {
+  "name": "tp-context-target",
+  "file": "toolpreviewformatter.go",
+  "find": "Command: result.Command, Target: result.Target, Origin: result.Origin}",
+  "replace": "Command: result.Command, Target: nil, Origin: result.Origin}"
+ },
+ {
+  "name": "tp-context-origin",
+  "file": "toolpreviewformatter.go",
+  "find": "Command: result.Command, Target: result.Target, Origin: result.Origin}",
+  "replace": "Command: result.Command, Target: result.Target, Origin: \"\"}"
+ },
+ {
+  "name": "rf-duplicate",
+  "file": "toolinputformatterregistry.go",
+  "find": "if _, dup := r.formatters[toolName]; dup {",
+  "replace": "if _, dup := r.formatters[toolName]; false && dup {"
+ },
+ {
+  "name": "rf-guard",
+  "file": "toolinputformatterregistry.go",
+  "find": "if r.formatters[toolName] == f {\n\t\t\tdelete",
+  "replace": "if true {\n\t\t\tdelete"
+ },
+ {
+  "name": "rf-delete",
+  "file": "toolinputformatterregistry.go",
+  "find": "delete(r.formatters, toolName)",
+  "replace": "_ = toolName"
+ },
+ {
+  "name": "rf-message",
+  "file": "toolinputformatterregistry.go",
+  "find": "return \"A \" + e.what + \" is already registered for '\" + e.tool + \"'.\"",
+  "replace": "return \"A \" + e.what + \" is already registered.\""
+ },
+ {
+  "name": "rf-wrapper",
+  "file": "toolinputformatterregistry.go",
+  "find": "return &funcToolInputFormatter{fn: fn}",
+  "replace": "return &funcToolInputFormatter{fn: func(input *jsObject) (string, bool) { return fn(input) }}"
+ },
+ {
+  "name": "re-duplicate",
+  "file": "toolaccessextractorregistry.go",
+  "find": "if _, dup := r.extractors[toolName]; dup {",
+  "replace": "if _, dup := r.extractors[toolName]; false && dup {"
+ },
+ {
+  "name": "re-guard",
+  "file": "toolaccessextractorregistry.go",
+  "find": "if r.extractors[toolName] == e {\n\t\t\tdelete",
+  "replace": "if true {\n\t\t\tdelete"
+ },
+ {
+  "name": "re-origin",
+  "file": "toolaccessextractorregistry.go",
+  "find": "Origin: RegistrationLocal}",
+  "replace": "Origin: RegistrationInherited}"
+ },
+ {
+  "name": "re-nil",
+  "file": "toolaccessextractorregistry.go",
+  "find": "if e, ok := r.extractors[toolName]; ok && e != nil {",
+  "replace": "if e, ok := r.extractors[toolName]; ok {"
+ },
+ {
+  "name": "tr-read-name",
+  "file": "toolregistry.go",
+  "find": "name, ok := GetToolNameFromValue(tool)\n\t\tif !ok {\n\t\t\tcontinue\n\t\t}\n\t\tregistered.Names",
+  "replace": "name, ok := GetToolNameFromValue(tool)\n\t\t_ = ok\n\t\tregistered.Names"
+ },
+ {
+  "name": "tr-read-guidelines",
+  "file": "toolregistry.go",
+  "find": "if guidelines := GetToolPromptGuidelinesFromValue(tool); len(guidelines) > 0 {",
+  "replace": "if guidelines := GetToolPromptGuidelinesFromValue(tool); true {"
+ },
+ {
+  "name": "tr-normalize-alias",
+  "file": "toolregistry.go",
+  "find": "if canonical := aliases[toolName]; canonical != \"\" {",
+  "replace": "if canonical := aliases[toolName]; false {"
+ },
+ {
+  "name": "tr-reverse-alias",
+  "file": "toolregistry.go",
+  "find": "if !inStrings(existing, alias) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "tr-variants-value",
+  "file": "toolregistry.go",
+  "find": "names[value] = true\n\n\tnormalized",
+  "replace": "\n\tnormalized"
+ },
+ {
+  "name": "tr-variants-canonical",
+  "file": "toolregistry.go",
+  "find": "if canonicalFromAlias := aliases[value]; canonicalFromAlias != \"\" {\n\t\tnames[canonicalFromAlias] = true\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tr-variants-reverse-value",
+  "file": "toolregistry.go",
+  "find": "for _, alias := range reverseAliases[value] {\n\t\tnames[alias] = true\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tr-variants-reverse-normalized",
+  "file": "toolregistry.go",
+  "find": "for _, alias := range reverseAliases[normalized] {\n\t\tnames[alias] = true\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tr-name-direct",
+  "file": "toolregistry.go",
+  "find": "if direct, ok := GetNonEmptyString(value); ok {\n\t\treturn direct, true\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tr-name-order",
+  "file": "toolregistry.go",
+  "find": "[]string{\"toolName\", \"name\", \"tool\"}",
+  "replace": "[]string{\"name\", \"toolName\", \"tool\"}"
+ },
+ {
+  "name": "tr-name-tool",
+  "file": "toolregistry.go",
+  "find": "[]string{\"toolName\", \"name\", \"tool\"}",
+  "replace": "[]string{\"toolName\", \"name\"}"
+ },
+ {
+  "name": "tr-guidelines-array",
+  "file": "toolregistry.go",
+  "find": ".vals[\"promptGuidelines\"].([]any)\n\tif !ok {",
+  "replace": ".vals[\"promptGuidelines\"].([]any)\n\tif ok {"
+ },
+ {
+  "name": "tr-guidelines-trim",
+  "file": "toolregistry.go",
+  "find": "if bullet, ok := GetNonEmptyString(entry); ok {\n\t\t\tbullets = append(bullets, bullet)",
+  "replace": "if bullet, ok := entry.(string); ok {\n\t\t\tbullets = append(bullets, bullet)"
+ },
+ {
+  "name": "tr-check-missing",
+  "file": "toolregistry.go",
+  "find": "if !ok {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}",
+  "replace": "if false {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}"
+ },
+ {
+  "name": "tr-check-requested",
+  "file": "toolregistry.go",
+  "find": "if registeredLookup[requested] || registeredLookup[normalizedToolName] {",
+  "replace": "if registeredLookup[normalizedToolName] {"
+ },
+ {
+  "name": "tr-check-normalized",
+  "file": "toolregistry.go",
+  "find": "if registeredLookup[requested] || registeredLookup[normalizedToolName] {",
+  "replace": "if registeredLookup[requested] {"
+ },
+ {
+  "name": "tr-check-dedupe",
+  "file": "toolregistry.go",
+  "find": "if !availableSeen[name] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "tr-check-sort",
+  "file": "toolregistry.go",
+  "find": "return icuCompare(available[i], available[j]) < 0",
+  "replace": "return available[i] < available[j]"
+ },
+ {
+  "name": "tr-check-sort-desc",
+  "file": "toolregistry.go",
+  "find": "return icuCompare(available[i], available[j]) < 0",
+  "replace": "return icuCompare(available[i], available[j]) > 0"
+ },
+ {
+  "name": "tr-check-normalized-out",
+  "file": "toolregistry.go",
+  "find": "Status: \"registered\", RequestedToolName: requested, NormalizedToolName: normalizedToolName}",
+  "replace": "Status: \"registered\", RequestedToolName: requested, NormalizedToolName: requested}"
+ },
+ {
+  "name": "ts-universal-1",
+  "file": "toolsurfaceprompt.go",
+  "find": "\"Be concise in your responses\"",
+  "replace": "\"Be brief in your responses\""
+ },
+ {
+  "name": "ts-universal-2",
+  "file": "toolsurfaceprompt.go",
+  "find": "\"Show file paths clearly when working with files\"",
+  "replace": "\"Show paths clearly when working with files\""
+ },
+ {
+  "name": "ts-universal-order",
+  "file": "toolsurfaceprompt.go",
+  "find": "var universalGuidelines = []string{\"Be concise in your responses\", \"Show file paths clearly when working with files\"}",
+  "replace": "var universalGuidelines = []string{\"Show file paths clearly when working with files\", \"Be concise in your responses\"}"
+ },
+ {
+  "name": "ts-tools-empty",
+  "file": "toolsurfaceprompt.go",
+  "find": "if len(tools) == 0 {\n\t\treturn ToolSurfaceSections{Rules: rules}",
+  "replace": "if false {\n\t\treturn ToolSurfaceSections{Rules: rules}"
+ },
+ {
+  "name": "ts-tools-format",
+  "file": "toolsurfaceprompt.go",
+  "find": "bullets = append(bullets, \"- \"+toolName+\": \"+snippet)",
+  "replace": "bullets = append(bullets, \"- \"+toolName+\" \"+snippet)"
+ },
+ {
+  "name": "ts-tools-snippet",
+  "file": "toolsurfaceprompt.go",
+  "find": "if snippet := inputs.ToolSnippets[toolName]; snippet != \"\" {",
+  "replace": "if snippet := inputs.ToolSnippets[toolName]; true {"
+ },
+ {
+  "name": "ts-rules-trim",
+  "file": "toolsurfaceprompt.go",
+  "find": "normalized := jsTrim(guideline)",
+  "replace": "normalized := guideline"
+ },
+ {
+  "name": "ts-rules-empty",
+  "file": "toolsurfaceprompt.go",
+  "find": "if normalized == \"\" || seen[normalized] {",
+  "replace": "if seen[normalized] {"
+ },
+ {
+  "name": "ts-rules-dedupe",
+  "file": "toolsurfaceprompt.go",
+  "find": "if normalized == \"\" || seen[normalized] {",
+  "replace": "if normalized == \"\" {"
+ },
+ {
+  "name": "ts-rules-prefix",
+  "file": "toolsurfaceprompt.go",
+  "find": "bullets[i] = \"- \" + bullet",
+  "replace": "bullets[i] = \"* \" + bullet"
+ },
+ {
+  "name": "ts-rules-order-file",
+  "file": "toolsurfaceprompt.go",
+  "find": "if fileOperations, ok := fileExplorationGuideline(allowed); ok {\n\t\taddGuideline(fileOperations)\n\t}\n\tfor _, toolName",
+  "replace": "for _, toolName"
+ },
+ {
+  "name": "ts-rules-allowed-only",
+  "file": "toolsurfaceprompt.go",
+  "find": "for _, guideline := range inputs.GuidelinesByTool[toolName] {",
+  "replace": "for _, guideline := range inputs.GuidelinesByTool[\"read\"] {"
+ },
+ {
+  "name": "ts-ext-trim",
+  "file": "toolsurfaceprompt.go",
+  "find": "toolGuidelines[jsTrim(guideline)] = true",
+  "replace": "toolGuidelines[guideline] = true"
+ },
+ {
+  "name": "ts-ext-trim-input",
+  "file": "toolsurfaceprompt.go",
+  "find": "if !toolGuidelines[jsTrim(guideline)] {",
+  "replace": "if !toolGuidelines[guideline] {"
+ },
+ {
+  "name": "ts-ext-filter",
+  "file": "toolsurfaceprompt.go",
+  "find": "if !toolGuidelines[jsTrim(guideline)] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ts-file-both",
+  "file": "toolsurfaceprompt.go",
+  "find": "case hasBash && hasPowerShell:",
+  "replace": "case hasBash && !hasPowerShell:"
+ },
+ {
+  "name": "ts-file-ps",
+  "file": "toolsurfaceprompt.go",
+  "find": "case hasPowerShell:",
+  "replace": "case !hasPowerShell:"
+ },
+ {
+  "name": "ts-file-exploration",
+  "file": "toolsurfaceprompt.go",
+  "find": "hasExplorationTool := allowedTools[\"grep\"] || allowedTools[\"find\"] || allowedTools[\"ls\"]",
+  "replace": "hasExplorationTool := allowedTools[\"grep\"] || allowedTools[\"find\"]"
+ },
+ {
+  "name": "ts-file-none",
+  "file": "toolsurfaceprompt.go",
+  "find": "if (!hasBash && !hasPowerShell) || hasExplorationTool {",
+  "replace": "if hasExplorationTool {"
+ },
+ {
+  "name": "ts-file-text",
+  "file": "toolsurfaceprompt.go",
+  "find": "\"Use bash for file operations like ls, rg, find\"",
+  "replace": "\"Use bash for file operations like ls, grep, find\""
+ },
+ {
+  "name": "ss-cache",
+  "file": "skillpromptsanitizer.go",
+  "find": "if state, ok := cache[skillName]; ok && state != \"\" {\n\t\treturn state\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ss-cache-store",
+  "file": "skillpromptsanitizer.go",
+  "find": "cache[skillName] = state\n\treturn state",
+  "replace": "return state"
+ },
+ {
+  "name": "ss-surface",
+  "file": "skillpromptsanitizer.go",
+  "find": "checker.CheckPermission(\"skill\", skillNameInput(skillName), agentName)",
+  "replace": "checker.CheckPermission(\"tool\", skillNameInput(skillName), agentName)"
+ },
+ {
+  "name": "ss-input-name",
+  "file": "skillpromptsanitizer.go",
+  "find": "input.set(\"name\", skillName)",
+  "replace": "input.set(\"skill\", skillName)"
+ },
+ {
+  "name": "ss-visible-deny",
+  "file": "skillpromptsanitizer.go",
+  "find": "if state == \"deny\" {\n\t\t\t\tcontinue\n\t\t\t}",
+  "replace": "if state != \"allow\" {\n\t\t\t\tcontinue\n\t\t\t}"
+ },
+ {
+  "name": "ss-visible-state",
+  "file": "skillpromptsanitizer.go",
+  "find": "Location: entry.Location, State: state,",
+  "replace": "Location: entry.Location, State: \"allow\","
+ },
+ {
+  "name": "ss-visible-location",
+  "file": "skillpromptsanitizer.go",
+  "find": "NormalizedLocation: normalizer.ComparableValue(entry.Location),",
+  "replace": "NormalizedLocation: entry.Location,"
+ },
+ {
+  "name": "ss-visible-basedir",
+  "file": "skillpromptsanitizer.go",
+  "find": "NormalizedBaseDir:  normalizer.ComparableValue(HostPath.Dirname(entry.Location)),",
+  "replace": "NormalizedBaseDir:  normalizer.ComparableValue(entry.Location),"
+ },
+ {
+  "name": "ss-without-deny",
+  "file": "skillpromptsanitizer.go",
+  "find": "if resolveSkillState(nameOf(skill), checker, agentName, cache) != \"deny\" {",
+  "replace": "if resolveSkillState(nameOf(skill), checker, agentName, cache) == \"allow\" {"
+ },
+ {
+  "name": "ss-match-empty",
+  "file": "skillpromptsanitizer.go",
+  "find": "if normalizedPath == \"\" || len(entries) == 0 {",
+  "replace": "if len(entries) == 0 {"
+ },
+ {
+  "name": "ss-match-exact",
+  "file": "skillpromptsanitizer.go",
+  "find": "if entries[i].NormalizedLocation != \"\" && normalizedPath == entries[i].NormalizedLocation {",
+  "replace": "if normalizedPath == entries[i].NormalizedLocation {"
+ },
+ {
+  "name": "ss-match-basedir-empty",
+  "file": "skillpromptsanitizer.go",
+  "find": "if entry.NormalizedBaseDir == \"\" || !normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {",
+  "replace": "if !normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {"
+ },
+ {
+  "name": "ss-match-within",
+  "file": "skillpromptsanitizer.go",
+  "find": "|| !normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {",
+  "replace": "|| normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {"
+ },
+ {
+  "name": "ss-match-longest",
+  "file": "skillpromptsanitizer.go",
+  "find": "utf16LenWTF(entry.NormalizedBaseDir) > utf16LenWTF(best.NormalizedBaseDir)",
+  "replace": "utf16LenWTF(entry.NormalizedBaseDir) < utf16LenWTF(best.NormalizedBaseDir)"
+ },
+ {
+  "name": "ss-match-first",
+  "file": "skillpromptsanitizer.go",
+  "find": "best == nil || utf16LenWTF",
+  "replace": "true || utf16LenWTF"
+ },
+ {
+  "name": "ss-parse-order",
+  "file": "skillpromptsanitizer.go",
+  "find": "sections := []SkillPromptSection{}\n\tfor _, parsed := range parseAllSkillPromptSections(prompt) {",
+  "replace": "sections := []SkillPromptSection{}\n\tfor _, parsed := range parseAllSkillPromptSections(prompt)[:0] {"
+ }
+]
