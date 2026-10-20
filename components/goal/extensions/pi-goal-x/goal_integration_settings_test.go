@@ -4,6 +4,7 @@ package pi_goal_x_test
 // completion transaction hardening and the capability parity cases.
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -384,13 +385,12 @@ func TestGoalIntegrationSettings(t *testing.T) {
 		t.Helper()
 		fx := newIntFixture(t, false)
 		started := make(chan struct{})
-		release := make(chan struct{})
 		var once sync.Once
 		r := intRig(t, fx, intOpts{hasUI: true,
 			custom: func(map[string]any) map[string]any { return map[string]any{"ok": true, "result": choice} },
-			auditor: func(map[string]any, string, string) goal.RigAuditResult {
+			auditor: func(ctx context.Context, _ map[string]any, _, _ string) goal.RigAuditResult {
 				once.Do(func() { close(started) })
-				<-release
+				<-ctx.Done() // the audit runs until the user's Escape aborts it
 				return goal.RigAuditResult{Output: "Auditor aborted.", Err: "Auditor aborted."}
 			}})
 		startInt(r)
@@ -410,7 +410,6 @@ func TestGoalIntegrationSettings(t *testing.T) {
 		}
 		// The widget's Escape handler matches the raw ESC byte.
 		r.terminalInput(escapeKey)
-		close(release)
 		call.wait(t)
 		return fx, r, out, terminate
 	}
@@ -580,7 +579,7 @@ func TestGoalIntegrationSettings(t *testing.T) {
 	tw(t, f, "completion_summary reaches the auditor as an untrusted claim and cannot approve", func(t *testing.T) {
 		fx := newIntFixture(t, false)
 		var gotCompletion string
-		r := intRig(t, fx, intOpts{auditor: func(_ map[string]any, _, completion string) goal.RigAuditResult {
+		r := intRig(t, fx, intOpts{auditor: func(_ context.Context, _ map[string]any, _, completion string) goal.RigAuditResult {
 			gotCompletion = completion
 			return goal.RigAuditResult{Disapproved: true, Output: "Still missing evidence\n<disapproved/>", Model: "fixture"}
 		}})

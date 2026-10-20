@@ -4,6 +4,7 @@ package pi_goal_x_test
 // events run through the real SDK and the fake host, with an injected auditor fixture.
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -92,7 +93,7 @@ type intOpts struct {
 	entries  []any
 	settings string // the settings file content; "" none
 	env      map[string]string
-	auditor  func(goal map[string]any, detailed, completion string) goal.RigAuditResult
+	auditor  func(ctx context.Context, goal map[string]any, detailed, completion string) goal.RigAuditResult
 	select_  func(string, []string) (string, bool)
 	input    func(string, string) (string, bool)
 	confirm  func(string, string) bool
@@ -202,7 +203,7 @@ func hasNoticeLevel(r *goalRig, level, sub string) bool {
 	return false
 }
 
-func auditApproved(_ map[string]any, _, _ string) goal.RigAuditResult {
+func auditApproved(_ context.Context, _ map[string]any, _, _ string) goal.RigAuditResult {
 	return goal.RigAuditResult{Approved: true, Output: "All good\n<approved/>", Model: "fixture"}
 }
 
@@ -325,7 +326,7 @@ func TestGoalIntegrationExtension(t *testing.T) {
 
 	tw(t, f, "update_goal(complete) with a disapproved auditor fixture stays open with feedback", func(t *testing.T) {
 		fx := newIntFixture(t, false)
-		r := intRig(t, fx, intOpts{auditor: func(map[string]any, string, string) goal.RigAuditResult {
+		r := intRig(t, fx, intOpts{auditor: func(context.Context, map[string]any, string, string) goal.RigAuditResult {
 			return goal.RigAuditResult{Disapproved: true, Output: "Missing requirement\n<disapproved/>", Model: "fixture"}
 		}})
 		startInt(r)
@@ -341,7 +342,7 @@ func TestGoalIntegrationExtension(t *testing.T) {
 	tw(t, f, "update_goal(complete) with settings.disabled skips the auditor and records audit_skipped", func(t *testing.T) {
 		fx := newIntFixture(t, false)
 		called := 0
-		r := intRig(t, fx, intOpts{settings: `{"disabled": true}`, auditor: func(map[string]any, string, string) goal.RigAuditResult {
+		r := intRig(t, fx, intOpts{settings: `{"disabled": true}`, auditor: func(context.Context, map[string]any, string, string) goal.RigAuditResult {
 			called++
 			panic("must not run")
 		}})
@@ -368,7 +369,7 @@ func TestGoalIntegrationExtension(t *testing.T) {
 	tw(t, f, "update_goal(complete) honors a legacy persisted skipAuditor record", func(t *testing.T) {
 		fx := newIntFixture(t, true)
 		called := 0
-		r := intRig(t, fx, intOpts{auditor: func(map[string]any, string, string) goal.RigAuditResult {
+		r := intRig(t, fx, intOpts{auditor: func(context.Context, map[string]any, string, string) goal.RigAuditResult {
 			called++
 			panic("must not run")
 		}})

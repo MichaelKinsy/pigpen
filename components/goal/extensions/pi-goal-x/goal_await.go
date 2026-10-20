@@ -1,21 +1,12 @@
 package pi_goal_x
 
-// awaiting is `await` for a blocking host call made inside a handler: the original yields the event loop there, so terminal input and
-// other events run while a dialog is open. It lets the UI update the handler queued run, releases the core's lock for the call, and
-// takes it back with the entry's own host bound again (another entry may have bound its context meanwhile). A core driven directly,
-// without a handler holding its lock (the unit tests), has nothing to release.
+// awaiting wraps a blocking host dialog (Select, Confirm, Input, Custom) in a handler. The host call itself releases the core's lock
+// while it waits (sdkHost.await), so key events that answer the dialog run; awaiting adds the two things the original's `await` also
+// does: the UI update the handler queued runs first (the microtask), and after the wait the entry's own host is bound again (another
+// entry may have bound its context meanwhile). A wait that is not a host dialog (an auditor or model run) uses core.await.
 func (c *core) awaiting(fn func()) {
 	h, st := c.h, c.st
 	c.flush()
-	if c.mu.TryLock() {
-		c.mu.Unlock()
-		fn()
-		return
-	}
-	c.mu.Unlock()
-	defer func() {
-		c.mu.Lock()
-		c.h, c.st = h, st
-	}()
 	fn()
+	c.h, c.st = h, st
 }
