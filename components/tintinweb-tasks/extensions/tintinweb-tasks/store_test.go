@@ -349,8 +349,9 @@ func TestTaskStoreInMemory(t *testing.T) {
 func TestTaskStoreFileBacked(t *testing.T) {
 	const f = "task-store"
 	listID := "test-" + strconv.FormatInt(time.Now().UnixNano(), 36)
-	t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir()) // named lists live under <agent dir>/tasks (the original's ~/.pi/tasks)
-	filePath := func() string { return filepath.Join(agentDir(), "tasks", listID+".json") }
+	home := t.TempDir()
+	t.Setenv("HOME", home) // named lists live under ~/.pi/tasks, as in the original
+	filePath := func() string { return filepath.Join(home, ".pi", "tasks", listID+".json") }
 	tw(t, f, "persists tasks to disk", func(t *testing.T) {
 		newTaskStore(listID).create("Persistent task", "Should survive reload", "", nil)
 		tasks := newTaskStore(listID).list(nil) // a new store instance pointing to the same file
@@ -450,12 +451,14 @@ func TestTaskStoreAbsolutePath(t *testing.T) {
 
 func TestTaskStoreListIDResolution(t *testing.T) {
 	tw(t, "task-store", "resolves a bare list ID under the user's home directory, not the working directory", func(t *testing.T) {
-		// PI_TASKS=my-list is a shared-list name, not a path: it must land in <agent dir>/tasks/ (the original's
-		// ~/.pi/tasks/, moved under PiG's agent directory), not under the working directory.
+		// PI_TASKS=my-list is a shared-list name, not a path: it must land in ~/.pi/tasks/, not under the
+		// working directory and not under the agent directory.
 		dir := scratch(t)
-		t.Setenv("PIG_CODING_AGENT_DIR", dir)
+		t.Setenv("HOME", dir)
+		t.Setenv("PIG_CODING_AGENT_DIR", filepath.Join(dir, "agent"))
 		newTaskStore("my-list").create("Shared list task", "d", "", nil)
-		eq(t, fileExists(filepath.Join(dir, "tasks", "my-list.json")), true)
+		eq(t, fileExists(filepath.Join(dir, ".pi", "tasks", "my-list.json")), true)
+		eq(t, fileExists(filepath.Join(dir, "agent", "tasks", "my-list.json")), false)
 	})
 }
 

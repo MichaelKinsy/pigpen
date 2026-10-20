@@ -33,7 +33,7 @@ and completed tasks are cleared a few turns after the list is done (`autoClearCo
 ## Storage and configuration
 
 Each key of `taskScope` (`memory`, `session` (default), `session-global`, `project`) and the `PI_TASKS`
-override (`off`, a list name under `<agent dir>/tasks/`, an absolute path, or a path relative to the workspace)
+override (`off`, a list name under `~/.pi/tasks/`, an absolute path, or a path relative to the workspace)
 behave as in the original; shared lists use a lock file with stale-lock detection. Settings live in
 `<agent dir>/tasks-config.json` (global) and `<workspace>/.pi/tasks-config.json` (project overrides, written by
 `/tasks` → Settings): `taskScope`, `autoCascade`, `autoClearCompleted`, `collapseCompleted`, `showAll`,
@@ -48,7 +48,7 @@ behave as in the original; shared lists use a lock file with stale-lock detectio
 - **`/tasks` → Settings is a chain of selects**, not a `SettingsList` panel: picking a row cycles its value and
   saves it.
 - **Agent directory.** `<agent dir>` is PiG's (`PIG_CODING_AGENT_DIR`, else `<PIG_HOME or ~/.pig>/agent`;
-  `PIG_USE_PI_DIRS=1` selects Pi's), not Pi's fixed `~/.pi/agent`. Named lists (`PI_TASKS=<name>`) live under `<agent dir>/tasks/`, where the original uses `~/.pi/tasks/`. If `PI_TASKS` names a list that exists only at the original's location, the tools and `/tasks` refuse with an error that gives both paths instead of starting an empty list.
+  `PIG_USE_PI_DIRS=1` selects Pi's), not Pi's fixed `~/.pi/agent`. Named lists (`PI_TASKS=<name>`) stay under `~/.pi/tasks/`, as in the original.
 - **Pinging pi-subagents.** The original pings while it loads. Here the ping waits for the first `session_start`
   (a ping sent while the extension loads deadlocks the host when pi-subagents is built into the same Binary), and
   is repeated on the `subagents:ready` broadcast and when `TaskExecute` runs without having found it. The protocol (version 2) is unchanged.

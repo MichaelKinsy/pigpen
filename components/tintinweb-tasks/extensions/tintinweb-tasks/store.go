@@ -75,7 +75,8 @@ type taskStore struct {
 }
 
 // newTaskStore opens a store: "" is in memory, an absolute path is that file, anything else a list name under
-// <agent dir>/tasks (the original's ~/.pi/tasks, moved under PiG's agent directory). The directory is created lazily, on the first write. upstream: task-store.ts:101-112.
+// ~/.pi/tasks, where the original keeps shared lists (its TASKS_DIR is homedir()/.pi/tasks, not the agent
+// directory). The directory is created lazily, on the first write. upstream: task-store.ts:15,101-112.
 func newTaskStore(listIDOrPath string) *taskStore {
 	s := &taskStore{nextID: 1, tasks: map[string]*task{}}
 	if listIDOrPath == "" {
@@ -83,7 +84,8 @@ func newTaskStore(listIDOrPath string) *taskStore {
 	}
 	path := listIDOrPath
 	if !filepath.IsAbs(path) {
-		path = filepath.Join(agentDir(), "tasks", listIDOrPath+".json")
+		home, _ := os.UserHomeDir()
+		path = filepath.Join(home, ".pi", "tasks", listIDOrPath+".json")
 	}
 	s.filePath = path
 	s.lockPath = path + ".lock"

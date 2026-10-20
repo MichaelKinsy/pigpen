@@ -52,7 +52,7 @@ bridged in PiG 0.4 (`Context.Events()`).
 ## Differences and findings
 
 **Deliberate differences (also in README):** the widget is pre-rendered rows; `/tasks` Settings is a chain of selects;
-`<agent dir>` follows PiG's rule (D2), and named lists (`PI_TASKS=<name>`) live under `<agent dir>/tasks/` instead of `~/.pi/tasks/`; the ping to pi-subagents is sent on the first `session_start`, on `subagents:ready` and from
+`<agent dir>` follows PiG's rule (D2), while named lists (`PI_TASKS=<name>`) stay under `~/.pi/tasks/` as in the original; the ping to pi-subagents is sent on the first `session_start`, on `subagents:ready` and from
 `TaskExecute`; task metadata keys are sorted.
 
 **Named skips (3):**
