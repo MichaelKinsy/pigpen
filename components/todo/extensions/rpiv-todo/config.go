@@ -2,6 +2,7 @@ package rpiv_todo
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -180,4 +181,17 @@ func validateGuidanceFields(fields any) guidanceFields {
 		out.Description = s
 	}
 	return out
+}
+
+// maxSupportedWidgetLines is the largest explicit maxWidgetLines the port accepts: the original's default
+// budget. The port draws pre-rendered host rows, so a larger budget cannot be honoured.
+const maxSupportedWidgetLines = 12
+
+// refuseUnportedConfig reports a configured maxWidgetLines above maxSupportedWidgetLines instead of capping
+// it silently. It reads the config fresh, like getMaxWidgetLines.
+func refuseUnportedConfig() error {
+	if n, ok := loadConfig().MaxWidgetLines.(float64); ok && n > maxSupportedWidgetLines {
+		return fmt.Errorf("@pi-in-go/pigpen-todo (Go port) does not support maxWidgetLines above %d yet. Install the original extension, npm:@juicesharp/rpiv-todo@2.11.0, which runs unchanged in PiG.", maxSupportedWidgetLines)
+	}
+	return nil
 }

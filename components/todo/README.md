@@ -25,7 +25,7 @@ The tool is `todo` (actions `create`, `update`, `list`, `get`, `delete`, `clear`
 `/todos` shows the list. The overlay collapses with `ctrl+shift+t`.
 
 Configuration is `~/.config/rpiv-todo/config.json` (or `$XDG_CONFIG_HOME/rpiv-todo/config.json`), read on
-every use: `maxWidgetLines` (default 12, at least 3), `collapseKey` (a key like `alt+o`, or `off`), and
+every use: `maxWidgetLines` (default 12, at least 3; a value above 12 is refused by the `todo` tool and `/todos` with an error that names the original extension), `collapseKey` (a key like `alt+o`, or `off`), and
 `guidance.promptSnippet` and `guidance.promptGuidelines` to replace the tool's prompt copy.
 
 ## Differences from the original
