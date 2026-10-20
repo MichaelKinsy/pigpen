@@ -367,7 +367,7 @@ func TestBuildStuckRequestSendsNumberedAttemptsWithOutcomesAndATask(t *testing.T
 	w := NewAttemptWindow(12)
 	push(w, "bash", cmd("npm test"), "boom", true)
 	push(w, "edit", map[string]any{"path": "a.ts", "edits": []any{}}, "ok", false)
-	r := BuildStuckRequest(w.Attempts, "fix it")
+	r := BuildStuckRequest(w.Attempts, "fix it", true)
 	if r.State["task"] != "fix it" {
 		t.Errorf("task %v", r.State["task"])
 	}
@@ -380,7 +380,7 @@ func TestBuildStuckRequestSendsNumberedAttemptsWithOutcomesAndATask(t *testing.T
 		ids = append(ids, id)
 	}
 	mustEqual(t, sortedStrings(ids), []string{"approach_change", "progress", "same_strategy"}, "questions")
-	if BuildStuckRequest(nil, "").State["task"] != "(no user request recorded in this session)" {
+	if BuildStuckRequest(nil, "", true).State["task"] != "(no user request recorded in this session)" {
 		t.Error("empty task text")
 	}
 }
@@ -457,10 +457,4 @@ func TestLineDiffEmitsTwoHunksForDifferencesAtLine5AndLine50(t *testing.T) {
 	for _, p := range []string{`- line-5`, `\+ FIRST-CHANGE`, `- line-50`, `\+ SECOND-CHANGE`} {
 		mustMatch(t, r, p, "hunk")
 	}
-}
-
-// Skipped twins (stuck evidence, tests/stuck-evidence.test.ts, 12 cases): the port runs in the
-// documented `stuck.evidence: false` state (docs/guards.md "Stuck": "restores the tails-only state").
-func TestSkippedTwinsStuckEvidence(t *testing.T) {
-	t.Skip("stuck.evidence (parsed failures, edit diffs, digest for the judge) is deferred: owner decision needed; the port ships the tails-only state upstream documents as stuck.evidence:false")
 }
