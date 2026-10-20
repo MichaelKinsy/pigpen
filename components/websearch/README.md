@@ -33,7 +33,9 @@ Piglet Binary (it is part of `pig-with-batteries`). It is a Package:
 ## Providers in this slice
 
 Exa (keyed, and the keyless Exa MCP), Brave, Tavily (numbered key pool), Perplexity,
-DuckDuckGo, SERPdive, Kagi. Selection, `auto` order, `"all"`, provider arrays,
+DuckDuckGo, SERPdive, Kagi, OpenAI (hosted search through an API key or the Codex/OpenAI login of the model
+registry, alpha/search, `openaiUseProviderBaseUrl`, OpenCode attribution), xAI (Grok subscription or key, web and X
+search), Kimi (Kimi Code login) and Mistral. Selection, `auto` order, `"all"`, provider arrays,
 `searchRouting` fallback and `webSearch.allowedProviders` follow the original. The other
 providers of the original are in the provider table; selecting one (or reaching a configured
 one in `auto`, `"all"` or `searchRouting`) is refused as a whole.
@@ -46,7 +48,7 @@ never falls back or runs part of the call:
 > @pi-in-go/pigpen-websearch (Go port) does not support `<feature>` yet. Install the original
 > extension, npm:pi-web-access@0.33.0, which runs unchanged in PiG.
 
-- the 26 search providers not listed above (a provider that is selected, listed, configured, or
+- the 22 search providers not listed above (a provider that is selected, listed, configured, or
   reached in `auto`, `"all"` or `searchRouting` with a credential set);
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
 - `fetch_content` `mode: "answer"` and `auth` (authenticated fetch);
