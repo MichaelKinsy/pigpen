@@ -11,7 +11,7 @@ import (
 
 // The wire proof for the model-backed providers. Their endpoints are fixed (api.x.ai,
 // api.kimi.com, api.mistral.ai, api.openai.com, chatgpt.com), so a pigeq scenario server cannot
-// receive their traffic under the unmodified original. port/record-provider-requests.mjs runs the
+// receive their traffic under the unmodified original. port/record-model-requests.mjs runs the
 // original modules with a recording `fetch` and checks in what they sent and returned; this test
 // replays the same inputs against the port and requires the same requests (method, URL, headers,
 // raw body) and the same result or error.

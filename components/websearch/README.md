@@ -38,10 +38,11 @@ Valyu, Bocha, Baizhi (MCP over HTTP), You.com, AnySearch (works without a key), 
 SearXNG (your own instance, through the SSRF guard) and Jina Search, Gemini (API key, Cloudflare AI Gateway, or Google Application
 Default Credentials on Vertex AI; the Gemini API also serves the `gemini` fetch provider, URL
 context, and PDF transcription), and the hosted providers TinyFish, Search1API, Searchinfinity, Querit,
-Parallel, Parallel MCP, Ollama, Firecrawl (a configured instance) and Bright Data (SERP zone). Selection, `auto` order,
+Parallel, Parallel MCP, Ollama, Firecrawl (a configured instance) and Bright Data (SERP zone), and the model-backed providers OpenAI (hosted search through an
+API key or the Codex/OpenAI login of the model registry, alpha/search, `openaiUseProviderBaseUrl`, OpenCode
+attribution), xAI (Grok subscription or key, web and X search), Kimi (Kimi Code login) and Mistral. Selection, `auto` order,
 `"all"`, provider arrays, `searchRouting` fallback and `webSearch.allowedProviders` follow the
-original. The other providers of the original are in the provider table; selecting one (or
-reaching a configured one in `auto`, `"all"` or `searchRouting`) is refused as a whole.
+original; every search provider of the original is ported.
 
 | Provider (`provider` value) | Credential (config key, environment variable) | Notes |
 |---|---|---|
@@ -66,8 +67,6 @@ never falls back or runs part of the call:
 > @pi-in-go/pigpen-websearch (Go port) does not support `<feature>` yet. Install the original
 > extension, npm:pi-web-access@0.33.0, which runs unchanged in PiG.
 
-- the 4 search providers not listed above (OpenAI, Kimi, xAI, Mistral; a provider that is selected, listed, configured, or
-  reached in `auto`, `"all"` or `searchRouting` with a credential set);
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
 - `fetch_content` `mode: "answer"` and `auth` (authenticated fetch);
 - `fetch_content` URLs the original hands to an extractor: YouTube, local video files, video

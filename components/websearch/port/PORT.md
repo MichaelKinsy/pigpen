@@ -13,7 +13,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; fetch `answer` mode and query rewrite (need a model-completion call); activity widget and shortcut; TUI render hooks |
-| Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | The other 4 providers (OpenAI/Codex hosted search, Kimi, xAI, Mistral): in the provider table; selecting or reaching one is refused (see "Refusals") |
+| Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
 | SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, authenticated fetch, Gemini Web and browser cookies |
 
 ## Refusals (until the slices above are ported)
@@ -24,7 +24,6 @@ Every unported option, mode or URL kind is refused with one message and returns 
 
 | Feature | When | Where |
 |---|---|---|
-| `<Label> search provider` | a provider this port lacks is selected, listed, configured, reached in `auto`, in `searchRouting`, or configured (credential set) for `"all"`; never a fallback, and a list or `"all"` is refused before any provider is contacted | `search.go` |
 | `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
 | `fetch_content mode answer` | `mode: "answer"` | `tool_fetch.go` |
 | `authenticated fetch` | any `auth` value | `tool_fetch.go` |
@@ -33,8 +32,7 @@ Every unported option, mode or URL kind is refused with one message and returns 
 | `the RSC payload and Defuddle fallback extractors` | readable extraction failed, where the original tries these before giving up (the message follows the original's verdict) | `extract.go` |
 
 A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
-`/google-account`, the shortcuts and the activity widget. Known approximation: whether an unported provider is available
-uses its credential names (OAuth and login availability of OpenAI, xAI and Kimi is not known here). Gemini is exact: see "Slice: Gemini".
+`/google-account`, the shortcuts and the activity widget. Provider availability follows the original for every provider (OpenAI, xAI and Kimi read the model registry, see slice 4a; Gemini: see "Slice: Gemini").
 
 ## Slice 2: the REST search providers
 
@@ -164,6 +162,63 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   objects, so key order is the SDK's, not the original's.
 - The tool descriptions are kept identical to the original even where they mention unported capabilities (YouTube, GitHub,
   PDF, video, Node fetch): the original's own compatibility test pins their hashes.
+
+## Slice 4a: model-backed providers (OpenAI, xAI, Kimi, Mistral)
+
+Ported from `openai-search.ts`, `opencode-session-headers.ts`, `xai-search.ts`, `kimi-search.ts` and `mistral-search.ts` into
+`openai.go`, `opencode_headers.go`, `xai.go`, `kimi.go`, `mistral.go`, with `model_providers.go` (shared helpers) and
+`extensioncontext.go` (the seam below). Their rows are gone from the "Refusals" table: `openai`, `xai`, `kimi` and `mistral` run
+like the other ported providers. 91 upstream titles are twinned (`openai-alpha-search` 42, `openai-origin` 1,
+`openai-search-opencode-headers` 5, `xai-provider` 14, `kimi-provider` 14, `mistral-provider` 11, and three of the four of
+`provider-credential-source`), plus `auto still uses provider fallback when no provider is configured` of `provider-precedence`.
+
+**Credentials, mapped to the public Go SDK.** The originals call `ctx.modelRegistry.getAll()`, `.find(provider, id)` and
+`.getApiKeyAndHeaders(model)` and read `ctx.model` and `ctx.sessionManager.getSessionId()`. The port reads the same through
+`Context.ModelRegistry()` (`GetAll`, `Find`, `GetApiKeyAndHeaders`, which the host answers with `ok`, `apiKey`, `headers`,
+`baseUrl`), `Context.Model()` with `Context.ModelProvider()` and `ModelRegistry().Find` for `ctx.model`, and
+`Context.SessionManager().GetSessionID()`. A tool call carries them in its `context.Context` (`WithExtensionContext`,
+`ExtensionContextFrom`): the Go counterpart of the original's `options.extensionContext`. Nothing reads `auth.json`: the original
+does not either, the OAuth refresh and the login belong to the host. Standalone keys (`openaiApiKey`, `xaiApiKey`,
+`mistralApiKey`, `OPENAI_API_KEY`, ...) use the shared credential sources. No SDK capability is missing. The SDK also has
+`Context.GetModelInfo` (0.5.0); the module still requires SDK 0.4.1, so `ctx.model` is read with `Model`, `ModelProvider` and
+`Find`, which is the same object the registry holds.
+
+**Fixed endpoints and how they are proven.** `api.x.ai`, `api.kimi.com`, `api.mistral.ai`, `api.openai.com` and `chatgpt.com`
+cannot be redirected to a pigeq server under the unmodified original; only OpenAI has a configurable endpoint
+(`openaiResponsesUrl`). So: pigeq scenarios cover OpenAI through a fake server (`web-search-openai-responses`,
+`-alpha`, `-registry-key` (the key held in `auth.json` reaches the request under Pi and PiG alike), `-http-error`) and the
+credential and configuration errors of all four providers (`web-search-model-providers-unavailable`, `-bad-config`).
+For the fixed endpoints, `port/record-provider-requests.mjs` runs the original modules with a recording `fetch` and checks in
+`port/fixtures/model-provider-requests.json` (18 cases: method, URL, headers, raw body, result or error);
+`TestModelProviderWireFixtures` replays every case against the port and requires the same.
+
+**Deliberate differences**
+
+- Parallel queries of one `web_search` call reach the endpoint in no fixed order, so the twin of `alpha executes through
+  registered web_search ...` compares the two queries as a set (the upstream asserts start order).
+- `configured routing does not fall back when the caller cancels Kimi` cancels while the request is in flight; the upstream
+  case aborts before the call and still reaches `fetch`, while `Search` here answers a caller that is already gone before any work
+  (a first-slice behaviour).
+- `JSON.parse` messages are V8's; the port reports Go's decoder text after `returned invalid JSON:` (the prefix and the
+  classification are the same).
+- xAI, Kimi and Mistral call plain `fetch`, which follows up to 20 redirects and drops `Authorization` across origins; the port
+  uses the API redirect helper (5 redirects, `Authorization`, `Cookie` and `Proxy-Authorization` dropped across origins).
+- A registry's extra headers are applied in alphabetical order: the host's JSON object does not keep Pi's insertion order. It
+  matters only when two header names differ in case, which the port joins with `, ` like `Headers` does.
+- `pickSearchModel` sorts with `localeCompare(..., {numeric: true})`; Go has no ICU, so `compareNumericLocale` implements the
+  ordering for model ids (digit runs by value, punctuation before digits before letters, case-insensitive first and lower case
+  first among equals). It is exact for ASCII ids.
+- A non-object `web-search.json` root fails every provider with `Invalid config in <path>: expected a JSON object`; the original
+  does that for Mistral only.
+- The activity monitor (`activityMonitor.logStart/logComplete`) is not driven: the activity widget is the curator slice.
+- Provider timeouts take the classification of the first slice (see "Provider timeouts" above), except Kimi, whose own
+  `Kimi Code search API timed out` message is ported.
+- Not changed here: the shared "No search provider available" text of `auto`, which still lists the ported providers only.
+
+**Named skips kept** (no Go counterpart): `curator page exposes xAI as a manual provider` and `Curator page exposes Mistral as an
+available manual provider` (the curator page is the curator slice); `Cloudflare gateway response redacts the credential used by
+the request` (the Gemini API slice). `provider-credential-source` is twinned over the providers present
+(`credentialSourceRedactionAttempts`); a slice that ports another provider adds its row.
 
 ## Security posture
 
