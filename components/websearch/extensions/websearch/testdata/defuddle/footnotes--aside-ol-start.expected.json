@@ -1,6 +1,0 @@
-{
- "url": "https://aside-ol-start",
- "title": "Article with Aside Footnotes",
- "content": "We built a new library.[^1]\n\nIf that was enough of a pitch, [check it out here](https://example.com/docs).\n\nIf not, let me explain why it matters.\n\n## What is property-based testing?\n\nThe main[^2] benefits are:\n\n- High-quality generators for building test inputs.\n- Automatic shrinking to minimal failing examples.[^3]\n- A test database that replays failures fast.\n\nShrinking is remarkably useful in practice.\n\n[^1]: It's a philosophy joke.\n\n[^2]: There are other benefits too, but these are the ones you notice first.\n\n[^3]: Shrinking finds the smallest input that triggers the bug. See [this post](https://example.com/shrinking) for details.",
- "error": null
-}

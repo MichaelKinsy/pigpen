@@ -1,6 +1,0 @@
-{
- "url": "https://www.example.com/blog/",
- "title": "Blog Posts",
- "content": "This is a list of blog posts. One of the titles contains angle brackets that look like an HTML tag, which must be escaped so a Markdown reader does not treat it as raw HTML and swallow everything that follows it on the page.\n\n[![blog cover](https://www.example.com/blog/first-post/cover.png)](https://www.example.com/blog/first-post)\n\n[An Ordinary First Post](https://www.example.com/blog/first-post)\n\nA gentle introduction with nothing unusual in its title at all.\n\nby author\n\n[![blog cover](https://www.example.com/blog/monte-video/cover.png)](https://www.example.com/blog/monte-video)\n\n[Monte\\<video>: A Real Place](https://www.example.com/blog/monte-video)\n\nA post whose title embeds a tag-like token. Reach us at <hello@example.com>.\n\nby author\n\n[![blog cover](https://www.example.com/blog/third-post/cover.png)](https://www.example.com/blog/third-post)\n\n[A Third Post Worth Reading](https://www.example.com/blog/third-post)\n\nThe final entry, included so there is content after the tricky title.\n\nby author",
- "error": null
-}

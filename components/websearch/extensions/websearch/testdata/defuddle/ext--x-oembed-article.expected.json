@@ -1,6 +1,0 @@
-{
- "url": "https://twitter.com/user/article/123456",
- "title": "Shell article",
- "content": "The article URL without rendered article content falls through the same way, to the generic pipeline.\n\nMore text.",
- "error": null
-}

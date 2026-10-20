@@ -1,6 +1,0 @@
-{
- "url": "https://bold-sup-trailing",
- "title": "Loose footnotes: bold-wrapped sup with trailing content",
- "content": "The protocol handles mobility transparently.[^1]\n\nSome care is needed to prevent session hijacking.[^2]\n\nThere are several candidate protocols.[^3]\n\nIn conclusion, the approach is promising.\n\n**Update 2024-06-01:** A follow-up discussion has been posted on the project blog.\n\n[^1]: **Note 2024-01-15:** This also works with legacy addressing and NAT traversal.\n\n[^2]: **Note 2024-01-10:** A simple challenge-response exchange during handshake is sufficient to prevent hijacking by outside attackers.\n\n[^3]: **Note 2024-03-20:** Besides the primary candidate, there are several other proposals with similar properties.",
- "error": null
-}

@@ -1,6 +1,0 @@
-{
- "url": "https://nested-prose",
- "title": "Loose footnotes: nested prose div",
- "content": "The first claim is well-established.[^1]\n\nThe second claim is more contested.[^2]\n\nThe conclusion follows from both claims.\n\n[^1]: Supporting evidence for the first claim.\n\n[^2]: Counterarguments and rebuttal for the second claim.",
- "error": null
-}

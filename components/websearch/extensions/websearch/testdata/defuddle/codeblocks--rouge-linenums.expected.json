@@ -1,6 +1,0 @@
-{
- "url": "https://rouge-linenums",
- "title": "Sample C++ Post",
- "content": "### User-friendly assert in C++26\n\nHere is a code example using the new assert features:\n\n```cpp\n// https://godbolt.org/z/9sqM7PvWh\nusing Int = int;\nint x = 1, y = 2;\n\nassert(std::is_same<int, Int>::value);\nassert([x, y]() { return x < y; }() == 1);\nassert(std::vector<int>{1, 2, 3}.size() == 3);\n```\n\nThe assert macro now provides better diagnostics.",
- "error": null
-}

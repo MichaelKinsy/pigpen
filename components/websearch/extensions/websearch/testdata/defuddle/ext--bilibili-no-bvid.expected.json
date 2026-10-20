@@ -1,6 +1,0 @@
-{
- "url": "https://www.bilibili.com/read/cv123",
- "title": "Article",
- "content": "## A column\n\nThis is not a video page so the extractor declines and the generic pipeline reads the column text.\n\nSecond paragraph for length.",
- "error": null
-}

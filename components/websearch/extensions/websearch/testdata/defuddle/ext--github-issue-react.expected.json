@@ -1,6 +1,0 @@
-{
- "url": "https://github.com/acme/widgets/issues/77",
- "title": "Crash on start · Issue #77 · acme/widgets",
- "content": "It crashes.\n\n```js\nlet a = 1;\n```\n```\nplain\n```\n\n---\n\n## Comments\n\n> **bob** · 2025-03-03\n> \n> Me too.\n\n> **Unknown** ·\n> \n> No author.",
- "error": null
-}

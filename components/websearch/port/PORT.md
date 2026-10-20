@@ -8,13 +8,13 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (781 exact twins, 94 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (777 exact twins, 98 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
-| Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; activity widget and shortcut; TUI render hooks |
+| Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | (none of the curator, commands, widget, shortcuts and renderers is missing any more: see Slice 11) |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
-| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | None: the Defuddle fallback is ported (Slice 12) |
+| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | Defuddle fallback |
 
 ## Refusals (until the slices above are ported)
 
@@ -25,6 +25,7 @@ Every unported option, mode or URL kind is refused with one message and returns 
 | Feature | When | Where |
 |---|---|---|
 | `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
+| `the Defuddle fallback extractor` | readable extraction failed or was short and the RSC payload gave nothing, where the original tries Defuddle before giving up (the refusal follows the original's verdict) | `extract.go`, `defuddle.go` |
 
 A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
 `/google-account`, the shortcuts and the activity widget. Provider availability follows the original for every provider (OpenAI, xAI and Kimi read the model registry, see slice 4a; Gemini: see "Slice: Gemini").
@@ -247,8 +248,11 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   and loses the table); an article whose `articleContent` is non-null but empty reads as null here (no fixture reaches it);
   JSON lone surrogates in an RSC chunk become U+FFFD; a non-string RSC `href` is not the TypeError it is upstream.
 - **RSC payload fallback** (`rsc-extract.ts`) is ported (`rsc_extract.go`), proven on four recorded fixtures (main chunk,
-  fallback chunks with ordering and de-duplication, short, malformed). **The Defuddle fallback** is ported (see "Slice 12:
-  Defuddle fallback" below); the four upstream `rsc-fallback` cases that reach it are twins.
+  fallback chunks with ordering and de-duplication, short, malformed). **The Defuddle fallback is not ported**: no Go port tracks
+  Defuddle 0.19.3 (dotcommander/defuddle and kaptinlin/defuddle-go build the Markdown with html-to-markdown and score
+  differently, vaayne/go-defuddle runs the JavaScript in an embedded engine) and its removal, scoring, standardization and
+  Markdown steps are several thousand lines. A page the original would give to Defuddle is reported with the original's verdict
+  followed by the refusal (`the Defuddle fallback extractor`); four upstream `rsc-fallback` cases stay named skips.
 - **Provider timeouts** are aborts, as in the original (`searchcommon.go timeoutFix`: a provider's own deadline reads "The operation
   was aborted due to timeout", so `searchRouting` does not fall through and the search stops). Twins: `timeout_test.go`. Providers
   with their own timeout text (SerpApi, Serply, You.com, XCrawl, Jina, Querit, Kimi) keep it. The provider slices of the stack
@@ -420,10 +424,10 @@ Each logs `ADAPTED:` when run.
 
 | Layer | Result |
 |---|---|
-| Twins | `pigeq twins check`: 781 exact + 94 named skips = 875 titles; exit 0 |
+| Twins | `pigeq twins check`: 777 exact + 98 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
-| Mutation | `mutations.json`: 452 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, answer mode, PDF, GitHub, browser cookies, video, and the decoder, body read and domain fast paths, video, extract fidelity, the Defuddle port); each slice's own mutants were all killed (`pigeq mutate --unit`) at its stack position, and the whole file again at this head (cumulative run) |
+| Mutation | `mutations.json`: 404 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, answer mode, PDF, GitHub, browser cookies, video, and the decoder, body read and domain fast paths, video, extract fidelity); each slice's own mutants were all killed (`pigeq mutate --unit`) at its stack position, and the whole file again at this head (cumulative run) |
 | Binary | a Piglet Binary with only this extension fused (a temporary Piglet, deleted after the run) builds with PiG 0.3.0 and passes the process-global safety check; replaying the 5 scenarios on it (`pigeq record --self --builtin`) gives tool results and events identical to the Pi golden traces. `pig-with-batteries` itself cannot build a Binary yet because of the Node herdr extension (documented in its README) |
 | Go tests | 477 passing subtests, 572 skipped (570 ledger skips + 2 environment skips), coverage 86% |
 
@@ -664,157 +668,28 @@ Deliberate differences:
   `web-search.json` while it is unchanged; an edit is seen on the next call.
 - The activity monitor is not ported, so nothing is logged around extraction.
 
-## Slice 12: Defuddle fallback
+## Slice 11: the search curator, commands, widget, shortcuts and renderers (W9, W10)
 
-The original's `extract.ts` hands a page to Defuddle (`extractWithDefuddle`: a linkedom document, Defuddle 0.19.3 with
-`{ markdown: true, useAsync: false }`) when Readability found nothing or its Markdown is shorter than 500 characters and the
-RSC payload gave nothing. No Go port tracks Defuddle 0.19.3 byte for byte (the Go ports that exist build the Markdown with
-html-to-markdown and score differently; one runs the JavaScript in an embedded engine), so the pipeline is a hand port, file by file
-of `defuddle/dist`, proven against the original on a recorded corpus. The refusal (`the Defuddle fallback extractor`) is gone.
+Ported: `curator-page.ts` (the page is the original's bytes, `curator_page.html` derived by
+`port/record-curator-page.mjs`; `curator_page_test.go` compares 17 renderings with the original's SHA-256 and
+the minimal one byte for byte), `curator-server.ts` (`curator_server.go`), `curator-run.ts`, the curated and
+auto-summary branches of `web_search`, `/websearch`, `/curator`, `/google-account`, `activity.ts` with the call
+sites of the ported providers and fetches, the two shortcuts, and the tool renderers (`render.go`,
+`render_search_error.go`, as kit views). The `web_search workflow` refusal is removed.
 
-| Original (defuddle 0.19.3 and its dependencies) | Go |
-|---|---|
-| `extract.ts extractWithDefuddle` (console capture, the error message) | `defuddle.go` |
-| `linkedom` 0.16.11 document, selectors (css-select), `URL` | `ldom*.go`, `whatwgurl.go` |
-| `defuddle.js`, `constants.js`, `metadata.js`, `removals/*`, `scoring`, `standardize*`, `elements/*`, `footnotes*`, `math*` | `dfd_core.go`, `defuddle_constants.go` (generated by `port/gen-defuddle-constants.mjs`), `dfd_metadata.go`, `dfd_removals.go`, `dfd_scoring.go`, `dfd_standardize.go`, `dfd_elements.go`, `dfd_footnotes_a.go`, `dfd_footnotes_b.go`, `dfd_content_patterns.go`, `dfd_math.go` |
-| `markdown.js` and `turndown` as Defuddle configures it | `dfd_markdown.go`, `dfd_markdown2.go`, `dfd_td_engine.go`, `dfd_td_parse.go` |
-| `extractor-registry.js`, `extractors/_base.js`, `_conversation.js`, comments, 25 extractors (X, Twitter, X oEmbed, Gmail, Reddit, YouTube, Bilibili, Hacker News, ChatGPT, Claude, Grok, Gemini, GitHub, LinkedIn, Threads, Bluesky, Medium, C2 Wiki, Substack, NYTimes, Wikipedia, Mastodon, Discourse, LeetCode, LWN) and the BBCode data extractor | `dfd_ext_*.go`, `dfd_js_uri.go`, `dfd_json.go`, `dfd_util.go`, `dfd_re.go`, `dfd_jsre.go` (a JavaScript-flavoured backtracking regular expression engine for the patterns RE2 cannot run) |
-| `mathml-to-latex` 1.8.0, `@xmldom/xmldom` 0.9.12, `temml` 0.13.4 with mhchem | `dfd_mathml.go`, `dfd_xmldom.go`, `dfd_tm_*.go`; their lookup tables and the HTML named character references are the gzipped files of `tables/`, decoded on first use by `dfd_tables.go` |
+Deliberate differences, for owner veto:
+- macOS: the original opens a Glimpse window when the optional `glimpseui` package is installed; a Go extension
+  cannot load it, so the port always uses `open`. Linux and Windows are the original's (`xdg-open` detached with a
+  100 ms grace, `cmd /c start`).
+- The server answers a JSON body that is falsy (`null`, `0`, `false`, `""`) with 400 "Invalid body"; the original
+  never answers it (the request hangs).
+- The curator server keeps the original's provider list, which has no `serpapi`: POST /provider and /search with
+  `serpapi` answer "Provider unavailable" (an upstream omission, reported rather than fixed).
+- Invalid-JSON messages of the server differ in wording from V8's.
+- `/google-account` reaches the cookie reader through `SetGoogleAccountSource`; without the authenticated-fetch
+  slice it answers the opt-in state or the refusal. The integrator installs the S9 reader.
+- `currentModelHostedSearchEligible` (curator default provider) is a seam for the OpenAI slice; without it no
+  model is eligible.
 
-Only the synchronous path exists: `extract.ts` passes `useAsync: false`, so `findAsyncExtractor`, `canExtractAsync`, `prefersAsync`,
-`extractAsync`, the extractors' `fetch` (FxTwitter and oEmbed, the c2.com JSON, Reddit's Atom feed, the YouTube caption and player
-requests, the Bilibili subtitle file) and everything reachable only through them are not ported, and are not reachable in the
-original either: the Go port and the original agree on what these pages give. The same holds for the options extract.ts does not
-set (`debug`, `profile`, `contentSelector`), media-query evaluation (linkedom has no `styleSheets`), `getComputedStyle` (the window is
-a Proxy over Node's globals) and shadow DOM flattening (linkedom sets `shadowRoot` only from `attachShadow`).
-
-**Proof.** `port/record-defuddle.mjs` runs the original's `extractWithDefuddle` over every HTML fixture and records the title, the
-Markdown and the error; `TestDefuddleFixturesEqualTheOriginal` runs the port on the same bytes and compares them (445 fixtures of
-`testdata/defuddle`: the fixtures of the Defuddle project (MIT), the 102 `ext--` pages of the extractors and 116 hand-made
-`port--` pages from `port/gen-defuddle-fixtures.mjs` for removals, scoring, standardization, footnotes, code blocks, callouts,
-malformed markup, large pages, invalid bytes and empty pages; plus the 25 Readability fixtures of `testdata/html`, recorded as
-`<name>.defuddle.json`): 470 fixtures, 14 of them errors of the original that the port reproduces (the message included). The
-fixture-count guard fails the test below 470. The four `rsc-fallback` cases that reach Defuddle are twins (the fifth, the processing failure, is a twin
-and a scenario too), and four scenarios (`fetch-defuddle-null-readability`, `fetch-defuddle-short-readability`, `fetch-defuddle-rich-page`,
-`fetch-defuddle-processing-failure`) record the tool result under Pi.
-`decodeText` (the charset handling that feeds the pipeline) is proven on 806 recorded `TextDecoder` cases (`testdata/decode-text.json`).
-The Markdown stage is also proven on its own: `port/record-defuddle-markdown.mjs` records the original's `createMarkdownContent` for 20 HTML
-snippets (`testdata/defuddle-markdown.json`) and `TestDefuddleMarkdownStageEqualsTheOriginal` compares `dfdCreateMarkdownContent` with them. A page
-run through the whole pipeline never reaches some of the rules (standardization strips every class but a few, and it collapses blank lines in
-code blocks), so the snippets cover the task list markers (`checked` counts only when it has a value), runs of blank lines, leading and
-trailing whitespace of the result and block math with `&` or `\\`.
-Mutations of the key decisions of the pipeline, the registry, the Markdown rules and the math helpers are in `mutations.json`
-(`dfd-*`, `decode-text-*`, `extract-defuddle-*`): 49 mutants of this slice (452 in the file), all killed by `pigeq mutate --unit`. One mutant was judged equivalent and
-is not in the file: swapping the title and the description in the call of `dfdRemoveByContentPattern`. The title only decides which element
-`dfdFindContentStart` names as the start of the content, and as the port's comment on that function says, the original's tree walker always
-starts at the first element, so the title anchor decides only whether the search is repeated with an empty title, and the repeat walks the
-same elements and gives the same answer; the loop that compares each short element with the title and the description stops at the first match
-of either, so their order does not matter.
-
-Defuddle 0.19.3 calls three third-party pieces for math, and all three are ported to Go and compared with the
-original byte for byte on recorded fixtures.
-
-**mathml-to-latex 1.8.0** (`dfd_mathml.go`, `dfd_mathml_tables.go`, `dfd_xmldom.go`). `dfdMathMLToLatex` is
-`MathMLToLaTeX.convert(mathml)` inside the try/catch of its two callers (`false` where the original throws). The
-library parses with `@xmldom/xmldom` 0.9.12 (`DOMParser`, `text/xml`, an `onError` callback that repairs value-less
-attributes and re-parses), so the parser is ported too: the sax loop with its error recovery, the entity rules of
-XML mode, namespaces and prefixes (an undeclared prefix is a `DOMException`, hence an empty result), comments, CDATA,
-processing instructions and DOCTYPE with an internal subset (a regular expression port of the grammar). The lookup
-tables are generated by `port/gen-defuddle-mathml-tables.mjs`.
-
-**temml 0.13.4** (`dfd_tm_*.go`, `dfd_temml_tables.go`, `dfd_jsre.go`). `dfdRenderLatexToMathML` is
-`temml.renderToString(latex, {displayMode, throwOnError: false})`. The executed code is `dist/temml.cjs`, which is
-`src/` plus three things that are not in `src/`: mhchem (`\ce`, `\pu`, `\tripleDash` and friends), the texvc macros and
-the physics package macros. All of it is ported: lexer, macro expander, namespaces, parser, the function and
-environment tables (every `defineFunction` / `defineEnvironment`), `buildMathML`, the MathML tree, the style object, units,
-`replace.js`/`stretchy.js`, `\ce` and `\pu` (the parser state machines are generated from the original tables, the
-actions and the texify stage are ported by hand, on a small JavaScript-flavoured backtracking regular expression
-engine because mhchem needs lookahead). The symbol, unicode and macro tables are generated by
-`port/gen-defuddle-temml-tables.mjs` from the original sources.
-
-Parse nodes are dynamic objects (`map[string]any`), as in the original, so a handler stays next to its JavaScript. Two
-original quirks are reproduced on purpose because they show in the output: `new MathNode("mtd", [], [], style)` takes the
-`Style` object itself as the CSS dictionary (array.js does it for padding cells, so a short row prints
-`style="level:1;color:undefined;font:;..."`), and the style of those cells is one shared object that later assignments
-(`paddingLeft`, `borderTop`) modify.
-
-An error that Temml reports (a `ParseError`) comes back as the `<span class="temml-error">` the original builds,
-message and position included. A JavaScript exception of the original (a `TypeError`, a thrown mhchem array) or a Go
-run-time error standing for one comes back as the empty string; the caller finds no `<math>` element in both cases.
-
-**decodeURI / decodeURIComponent / encodeURI** (`dfd_js_uri.go`): ECMA-262 `Decode` and `Encode`, including the URIError rules (bad hex, a
-truncated or overlong or surrogate UTF-8 sequence), with the reserved set of `decodeURI`; the extractors share them.
-
-**Evidence of the math helpers.**
-
-`port/record-defuddle-math.mjs` (Node 24, the oracle's `node_modules`: mathml-to-latex 1.8.0, temml 0.13.4,
-@xmldom/xmldom 0.9.12) records `testdata/defuddle-math/{mathml,latex,uri}-expected.json` (the 6.8 MB temml file is stored as `latex-expected.json.gz`, 370 KB, read by the test) from the input lists built by
-`port/build-defuddle-math-inputs.mjs`:
-
-- 25 082 temml renders (12 541 LaTeX strings, inline and display): 1 040 hand-written samples (formulas of the kind math
-  pages carry, every command family, `\ce`/`\pu`, malformed input), the LaTeX of the Defuddle fixtures (data-latex,
-  annotations, math scripts, latex images), every symbol, function, environment and macro of the original tables (also
-  the texvc and physics macros) with arguments, and 4 000 seeded random token strings that exercise the error paths.
-- 315 MathML documents (every converter, fences and tables, attribute and entity problems, namespaces, DOCTYPE,
-  malformed XML, MathJax/KaTeX/LaTeXML/Wikipedia shapes, prototype-name tags, deep nesting).
-- 61 URI strings for both decoders.
-
-`TestMathMLToLatexEqualsTheOriginal`, `TestTemmlRenderEqualsTheOriginal` and `TestDecodeURIEqualsTheOriginal` compare
-every case; `dfd_jsre_test.go` covers the regular expression engine. The fixtures were recorded twice (the developer
-machine and the tern-ci container) with identical bytes.
-
-**Differences of the math helpers that remain.**
-
-- A lone surrogate cannot exist in a Go string. `&#xD800;` in MathML, `\char"D800` and similar come out as U+FFFD
-  where the original has the lone surrogate.
-- mhchem (`\ce`, `\pu`) counts characters outside the BMP as one where the original counts two UTF-16 units; the
-  patterns decide on the same characters, so only a formula with such a character after a position-sensitive match can
-  differ. The same holds for the `\Braket`/`\Set` helpers, which do use UTF-16 offsets.
-- A `ParseError` message underlines a token per UTF-16 unit in the original; a surrogate pair is underlined once here.
-  The message only ever lands in the discarded error span.
-- A Go run-time error stands in for a JavaScript `TypeError` in the places where the original dereferences an
-  undefined value. Every such place met by the 25 082 cases is reproduced; a rare path that does not throw in Go but
-  would throw in JavaScript (or the reverse) is possible in code the corpus does not reach.
-- `\includegraphics`, `\class`, `\id`, `\style`, `\data` and `\href`-like commands need `trust`, which Temml's defaults
-  deny; they stop at the same ParseError after the same argument checks, and the image node is never built (the
-  original's `Img` class is commented out as well).
-
-**Differences from the original that remain** (each with the check that bounds it):
-
-- **Stack depth.** The original runs out of stack on a page nested a few thousand elements deep ("Maximum call stack size exceeded" from
-  the list or the Markdown stage, or turndown's "Partial conversion completed with errors"; 3000 nested lists and 3000 nested inline pairs
-  were recorded and removed because the limit is a property of the Node stack). Go has no such limit. Pages nested 600 (lists, inline) and 2000
-  (`div`) deep are recorded and equal (`port--malformed-deep-*`). A page nested 6000 deep did not finish in the original within 10 minutes (the work is quadratic) and was not recorded.
-- **The Markdown stage's HTML parser.** The original uses domino, which has no depth limit; `x/net/html` refuses a tree nested more than 512
-  elements deep. Such markup is parsed by the linkedom-like parser and copied (`dfd_td_parse.go`); on well-formed markup the trees agree (the
-  600-deep fixtures), on misnested tables or formatting elements at that depth they could differ (no fixture reaches it). The same limit
-  still applies to the Readability path of this port (`htmlmd.go`, `x/net/html` through go-readability: see "HTML to Markdown").
-- **Legacy multi-byte charsets.** `decodeText` follows the Encoding Standard for UTF-8 (BOM, maximal invalid subparts), UTF-16 and the single-byte
-  encodings (C1 controls). For Shift_JIS, EUC-JP, EUC-KR, Big5, GBK and gb18030 it uses `golang.org/x/text`, which decodes text of that
-  encoding identically but replaces other bytes (another encoding's bytes, malformed input) and the private-use areas differently
-  (`decodeTextRecordedDifference` in `decodetext_test.go`; 15 of 806 recorded cases, the test fails if they stop differing).
-- **Lone surrogates and UTF-16 offsets.** A Go string cannot hold a lone surrogate: where the original has one (a numeric character reference
-  to U+D800 to U+DFFF, `\char"D800`) the port has U+FFFD. Lengths and offsets are UTF-16 units where the original's code takes them
-  (`jsLen`, `jsSlice`); the Temml and mhchem remainders are listed above.
-- **Console output.** The port writes nothing to the console. `extractWithDefuddle` of the original swallows the Defuddle-prefixed `console.error`
-  lines and turns "Error processing document" into the thrown error (reproduced); other console lines of Defuddle would go to the host's stderr
-  and are not reproduced. The `rsc-fallback` case that asserts `console.warn` stays silent holds trivially.
-- **The failure checklist.** An error of the Defuddle run ends in the hosted-provider "Fallback options" list of `extract.ts`; the list is complete in
-  this stack (the hosted, Gemini and cookie slices are ported), and the scenario `fetch-defuddle-processing-failure` records the error line and the
-  list under Pi (the `rsc-fallback` twin and `testdata/defuddle` pin the error line as well).
-- **Timing.** The original's Defuddle run is synchronous and cannot be interrupted; the port checks the request's context before and after it.
-
-**Speed and size.** The first Go build of this slice was 1.4 to 1.9 times slower than the original under Node on four of five pages and started
-the process 18 ms later. A profile (pprof, the allocation counts) found the causes, all fixed without a change of output (the 470 fixtures stay
-byte-equal): (a) every attribute selector that css-select compiles with a regular expression (`[class~=x]`, `[x*=y i]`) compiled it again on every
-query, 70 percent of the allocations: expressions are cached by pattern (`cssRegexp`) and `[class~=x]` is a search for the token (`cssHasToken`;
-non-ASCII text under the `i` flag still takes the expression, whose folding is Unicode's); the selector parse cache is now behind a mutex, since two
-`fetch_content` calls may run Defuddle at once; (b) the 550 partial selectors were one alternation tested against every class and id: the 543 plain ASCII ones
-are found by their first two characters (`dfdPartialSet`), only the 4 expressions and non-ASCII text use the regexp engine; (c) `dfdIsProseBlock`
-ran the date and byline expressions on the text of every container before it looked at the word count, and the sentence test is a search for three bytes;
-(d) expressions that were compiled in the middle of a function are package variables. Start-up: the ~400 package-level expressions are `lazyRE` values
-(`lazyre.go`, compiled at first use; `TestLazyExpressionsCompile` compiles all of them) and the symbol, accent, macro, mhchem and entity
-tables are embedded gzip files decoded at first use (`dfd_tables.go`; the generators `port/gen-defuddle-temml-tables.mjs`,
-`port/gen-defuddle-mathml-tables.mjs` and `port/gen-html-entities.py` write them; a one-off comparison of all 22 decoded tables with the old
-map literals found them equal). Binary size: the ported pipeline is hand-written code (the Defuddle pipeline and its 26 extractors, the linkedom-like DOM and css-select,
-Temml and mhchem, mathml-to-latex, the JavaScript regular expression engine): see the PR body for the numbers.
+Not done in this run (see the lane report): pigeq goldens for the seven new scenarios, mutations, the
+accepted-gaps and Performance sections, and the remaining activity call sites of providers other slices add.

@@ -76,6 +76,8 @@ func extractFixture(t *testing.T, name string) htmlExpected {
 	got := htmlExpected{Title: res.Title, Content: res.Content}
 	if res.Error != nil {
 		msg, _, _ := strings.Cut(*res.Error, "\n\nFallback options:")
+		// The Defuddle fallback is not ported: its refusal follows the original's verdict.
+		msg, _, _ = strings.Cut(msg, "\n\n"+portPackage+" (Go port)")
 		got.Error = &msg
 	}
 	return got

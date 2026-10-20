@@ -1,6 +1,0 @@
-{
- "url": "https://www.reddit.com/r/golang/comments/abc123/title_here/",
- "title": "Title here",
- "content": "The post text with [a link](https://go.dev/).\n\n![pic](https://i.redd.it/x.png)\n\n---\n\n## Comments\n\n> **alice** · [2024-01-02](https://reddit.com/r/golang/comments/abc123/title_here/c1/) · 12 points\n> \n> Top comment\n> \n> > **bob** · [2024-01-03](https://reddit.com/r/golang/comments/abc123/title_here/c2/) · 3 points\n> > \n> > Reply comment\n\n> **carol** · · 0 points\n> \n> No depth, no date",
- "error": null
-}

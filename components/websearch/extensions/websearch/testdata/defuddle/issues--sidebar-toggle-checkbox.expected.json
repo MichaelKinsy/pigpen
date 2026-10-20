@@ -1,6 +1,0 @@
-{
- "url": "https://sidebar-toggle-checkbox",
- "title": "Article With Sidebar Toggle",
- "content": "The first paragraph introduces the topic with enough text to score as the main content of the page so that the body extractor will pick this section.\n\nA second paragraph keeps the prose flowing and ensures the article has more than one block of substantive text to anchor the content score.\n\n![Storage migration: SD to NVMe](https://sidebar-toggle-checkbox/media/orangepi-storage-migration.svg)\n\nStorage migration: SD to NVMe\n\nA closing paragraph after the diagram explains what the figure shows and gives the article a tidy conclusion that should survive extraction.",
- "error": null
-}

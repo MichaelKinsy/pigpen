@@ -1,6 +1,0 @@
-{
- "url": "https://lean-lang.org/theorem_proving_in_lean4/Dependent-Type-Theory/",
- "title": "Dependent Type Theory",
- "content": "This fixture verifies that heading permalink widgets are removed from heading text while preserving the heading title itself. The extra prose ensures stable content selection.\n\n## 2.6. Variables and Sections\n\nThis section introduces variables and sections in Lean. Any permalink icon should be excluded from the extracted markdown heading.",
- "error": null
-}

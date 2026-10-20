@@ -66,10 +66,14 @@ func SearchWithSerpdive(ctx context.Context, query string, o SearchOptions) (*Se
 	payload, _ := json.Marshal(body)
 	tctx, cancel := withTimeout(ctx, serpdiveTimeout)
 	defer cancel()
+	act := logAPIStart(query)
 	resp, err := FetchWithCredentialRedirects(tctx, serpdiveAPIURL, RequestInit{Method: "POST", Body: payload,
 		Header: http.Header{"Authorization": {"Bearer " + apiKey}, "Content-Type": {"application/json"}}}, nil)
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		act.complete(resp.StatusCode)
 	}
 	text, err := readBody(resp)
 	if err != nil {
@@ -87,8 +91,10 @@ func SearchWithSerpdive(ctx context.Context, query string, o SearchOptions) (*Se
 		} `json:"results"`
 	}
 	if err := json.Unmarshal([]byte(text), &data); err != nil {
+		act.complete(resp.StatusCode)
 		return nil, fmt.Errorf("SERPdive API returned invalid JSON: %v", err)
 	}
+	act.complete(resp.StatusCode)
 	// SERPdive has no domain parameter: the filter narrows what came back, no more.
 	passes := func(u string) bool {
 		if len(filters.allowed) == 0 && len(filters.blocked) == 0 {

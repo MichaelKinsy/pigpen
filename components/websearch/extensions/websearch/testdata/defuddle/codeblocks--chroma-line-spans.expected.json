@@ -1,6 +1,0 @@
-{
- "url": "https://chroma-line-spans",
- "title": "Chroma Code Block",
- "content": "Example Go code.\n\n```go\npackage main\n\ntype Person struct {\n    Name string\n    Age  int\n}\n\nfunc (p *Person) Sleep() int {\n    p.Age += 1\n    return p.Age\n}\n```",
- "error": null
-}

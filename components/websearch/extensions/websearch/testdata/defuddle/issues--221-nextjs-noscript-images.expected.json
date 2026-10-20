@@ -1,6 +1,0 @@
-{
- "url": "https://www.example.com/blog/example-post",
- "title": "Example Post",
- "content": "Here is an architecture diagram:\n\n![Architecture diagram.](https://www.example.com/images/architecture.png?imwidth=3840)\n\nArchitecture diagram.\n\nAnd here is a second diagram:\n\n![Flow diagram.](https://www.example.com/images/flow.png?imwidth=3840)\n\nFlow diagram.\n\nThat concludes our overview.",
- "error": null
-}

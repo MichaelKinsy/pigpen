@@ -1,6 +1,0 @@
-{
- "url": "https://hugo-admonitions",
- "title": "Hugo admonitions test",
- "content": "Here is some content before the admonitions.\n\n> [!info] Note\n> This is an informational note about the topic.\n\n> [!warning] Warning\n> Be careful when modifying these settings.\n\n> [!danger] Danger\n> This action cannot be undone.\n\n> [!tip] Helpful tip\n> Use this shortcut to save time.\n\nHere is some content after the admonitions.",
- "error": null
-}

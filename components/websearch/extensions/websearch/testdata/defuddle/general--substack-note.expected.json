@@ -1,6 +1,0 @@
-{
- "url": "https://substack.com/@testuser/note/c-123456789",
- "title": "Test User (@testuser)",
- "content": "Sample note text for testing the Substack extractor.\n\nIt has multiple paragraphs to verify the content is captured correctly.\n\n![](https://example.com/image/full-res.jpg)",
- "error": null
-}

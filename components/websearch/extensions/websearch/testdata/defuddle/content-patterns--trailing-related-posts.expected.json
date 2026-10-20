@@ -1,6 +1,0 @@
-{
- "url": "https://content-patterns--trailing-related-posts",
- "title": "Coffee Cooling Article",
- "content": "## How Coffee Cools\n\nCoffee cools following Newton's law of cooling. The rate of heat loss is proportional to the temperature difference between the coffee and its surroundings.\n\nMost models fit two exponential decay terms: a fast rate from heat flow into the mug, and a slow rate from mug to air. They were kind enough to charge me for that service.",
- "error": null
-}

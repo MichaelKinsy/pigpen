@@ -1,6 +1,0 @@
-{
- "url": "https://news.ycombinator.com/item?id=12345678",
- "title": "A Sample Article",
- "content": "[https://example.com/article](https://example.com/article)\n\n---\n\n## Comments\n\n> **commenter\\_one** · [2025-01-15](https://news.ycombinator.com/item?id=12345679) · 25 points\n> \n> This is a really interesting article. The key insight about distributed systems is worth exploring further.\n> \n> > **commenter\\_two** · [2025-01-15](https://news.ycombinator.com/item?id=12345680)\n> > \n> > I agree. The author makes a compelling case for eventual consistency over strong consistency in this context.\n> > \n> > > **commenter\\_one** · [2025-01-15](https://news.ycombinator.com/item?id=12345681)\n> > > \n> > > Exactly. And the benchmarks in section 3 back this up nicely.\n\n> **commenter\\_three** · [2025-01-15](https://news.ycombinator.com/item?id=12345682) · 10 points\n> \n> We tried a similar approach at our company. The tradeoffs are real but manageable if you plan for them.",
- "error": null
-}

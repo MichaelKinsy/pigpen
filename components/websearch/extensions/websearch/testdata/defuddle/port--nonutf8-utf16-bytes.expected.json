@@ -1,6 +1,0 @@
-{
- "url": "https://nonutf8-utf16-bytes",
- "title": null,
- "content": null,
- "error": "Cannot destructure property 'firstElementChild' of 'documentElement' as it is null."
-}

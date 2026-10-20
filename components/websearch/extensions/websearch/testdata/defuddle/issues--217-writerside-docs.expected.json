@@ -1,6 +1,0 @@
-{
- "url": "https://www.example.com/help/docs/api-reference.html",
- "title": "API Reference",
- "content": "## Methods\n\nUse these methods to interact with the API.\n\n[getItems()](https://developer.example.com/docs/getItems)\n\nReturns a list of items. For example:\n\n```http\nGET https://api.example.com/items\n\n> {%\n    console.log(response.status)\n%}\n```\n\n[createItem(data)](https://developer.example.com/docs/createItem)\n\nCreates a new item with the provided data.\n\nSee the full reference for more details.",
- "error": null
-}

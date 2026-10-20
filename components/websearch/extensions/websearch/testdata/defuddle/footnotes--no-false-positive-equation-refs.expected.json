@@ -1,6 +1,0 @@
-{
- "url": "https://no-false-positive-equation-refs",
- "title": "Equation cross-references should not become footnotes",
- "content": "By the residue theorem (see [1](#thm-residue)), the contour integral can be evaluated. Combined with the Bernstein expansion ([2](#bernstein-exp)), this yields the bound.\n\nA stronger result follows from the triangle inequality ([3](#triangle-ineq)) applied to the decomposition below.\n\n### Theorem 1 (Residue Theorem)\n\nFor any meromorphic function f and a contour C...\n\n### Lemma 2 (Bernstein Expansion)\n\nLet P be a polynomial of degree n. Then for any z with |z| = 1...\n\n- Exercise 3. Use the triangle inequality to show that...",
- "error": null
-}

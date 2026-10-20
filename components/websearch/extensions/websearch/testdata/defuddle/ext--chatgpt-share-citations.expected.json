@@ -1,6 +1,0 @@
-{
- "url": "https://chatgpt.com/share/abc-123",
- "title": "Rust ownership explained",
- "content": "**You said**\n\nExplain Rust ownership with sources.\n\n---\n\n**ChatGPT said**\n\nOwnership means each value has one owner.[^1]\n\nSee also the reference.[^2] and again [^1]\n\n```rust\nlet s = String::from(\"hi\");\n```\n- one\n- two\n\n---\n\n**You said**\n\nThanks & goodbye\n\n[^1]: [rust-lang.org](https://www.rust-lang.org/learn#:~:text=ownership%20rules,borrowing) — ownership rules...\n\n[^2]: [doc.rust-lang.org](https://doc.rust-lang.org/reference/)",
- "error": null
-}

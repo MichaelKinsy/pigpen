@@ -1,6 +1,0 @@
-{
- "url": "https://example.com/article/roundup",
- "title": "Weekly Roundup",
- "content": "Here are some recommended items from this week, with enough content to be considered meaningful by the scoring algorithm.\n\n## 1\\. First Item\n\nA short description of the first item and why it is worth checking out.\n\n## 2\\. Second Item\n\nA short description of the second item and why it is worth checking out.\n\n## 3\\. Third Item\n\nA short description of the third item and why it is worth checking out.\n\n## 4\\. Fourth Item\n\nA short description of the fourth item and why it is worth checking out.\n\n## 5\\. Fifth Item\n\nThis heading has a real permalink anchor that should be stripped, but the heading text should remain.",
- "error": null
-}

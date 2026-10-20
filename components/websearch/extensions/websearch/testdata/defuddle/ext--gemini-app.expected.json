@@ -1,6 +1,0 @@
-{
- "url": "https://gemini.google.com/app/abc123",
- "title": "What is a table?",
- "content": "**You**\n\nWhat is a table?\n\n---\n\n**Gemini**\n\nA `table` is:\n\n| a |\n| --- |\n| 1 |\n\ndone\n\n---\n\n**You**\n\nSecond question?\n\n---\n\n**Gemini**\n\nSecond answer.",
- "error": null
-}

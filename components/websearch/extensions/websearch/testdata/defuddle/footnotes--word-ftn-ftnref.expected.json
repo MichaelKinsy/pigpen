@@ -1,6 +1,0 @@
-{
- "url": "https://word-ftn-ftnref",
- "title": "Word HTML footnotes: _ftn/_ftnref pattern",
- "content": "The initiative is aligned with the Action Plan [^1], a community-led alternative to traditional publishing.\n\nThe consortium includes members from multiple countries [^2].\n\n[^1]: [https://example.org/action-plan/](https://example.org/action-plan/)\n\n[^2]: Country A, Country B, Country C.",
- "error": null
-}

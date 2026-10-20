@@ -1,6 +1,0 @@
-{
- "url": "https://pulldown-cmark-footnote-definition",
- "title": "Example post with a footnote",
- "content": "Example bit-shift analysis: a common simplification is to replace `x & ~0` with `x`[^1]. Other paragraph content follows that explains the broader idea in more detail.\n\nThis is an additional paragraph with more prose to give the post enough weight for the content detection scoring. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nThanks to everyone for reading. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\n[^1]: Possibly with masking of the top bit if our IR semantics have defined wrapping/truncation behavior: `x & 0x7fff..ffff`.",
- "error": null
-}

@@ -1,6 +1,0 @@
-{
- "url": "https://publish.example.com/help/callouts",
- "title": "Callouts",
- "content": "To create a callout, add `[!info]` to the first line of a blockquote.\n\n```markdown\n> [!info] A callout title\n> Here is the callout **body** content.\n```\n\n> [!info] A callout title\n> Here is the callout **body** content.\n\n### Foldable callouts\n\nA minus sign collapses the callout.\n\n```markdown\n> [!faq]- Is this foldable?\n> Yes, the content is hidden when collapsed.\n```\n\n> [!faq]- Is this foldable?\n> Yes, the content is hidden when collapsed.\n\n### Supported types\n\nEach type has a different color and icon.\n\n> [!note] Note\n> ```md\n> > [!note]\n> > Lorem ipsum dolor sit amet\n> ```\n\n---\n\n> [!abstract]- Abstract\n> ```md\n> > [!abstract]\n> > Lorem ipsum dolor sit amet\n> ```\n\nAliases: `summary`, `tldr`\n\n---\n\n> [!tip]- Tip\n> ```md\n> > [!tip]\n> > Lorem ipsum dolor sit amet\n> ```\n\nAliases: `hint`, `important`",
- "error": null
-}

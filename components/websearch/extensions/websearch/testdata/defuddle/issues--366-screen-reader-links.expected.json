@@ -1,6 +1,0 @@
-{
- "url": "https://example.com/article",
- "title": "Screen-reader links",
- "content": "Accessible pages often describe links for people using screen readers, and those descriptions should not leak into the visible link text once the article has been extracted into a cleaner format for reading later.\n\n[An evaluation of the scheme](https://example.org/report) found that most participants would have bought a home anyway, while [the published guide](https://example.org/guide) explains the method in detail.\n\nSome links have no visible text at all, such as , and others show only an arrow like , so their screen-reader text is the only description available.\n\nResearchers interviewed several hundred households across different regions over two years, asking how their plans changed as interest rates rose and fell during the study period and how those changes affected their savings.\n\nMany respondents said that the size of the deposit mattered more than the monthly repayment, especially for first-time buyers who had been renting for a long time and had limited savings to draw on.\n\nThe authors caution that the sample was not designed to be representative of every region, and that further work would be needed before drawing firm conclusions about the wider housing market or future policy.",
- "error": null
-}

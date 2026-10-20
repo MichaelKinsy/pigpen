@@ -1,6 +1,0 @@
-{
- "url": "https://bootstrap-alerts",
- "title": "Bootstrap alerts test",
- "content": "Here is some content before the alerts.\n\n> [!info] Important\n> This is an informational alert.\n\n> [!warning] Warning\n> This is a warning without a title.\n\n> [!danger] Danger\n> Something went wrong.\n\n> [!success] Success\n> Operation completed successfully.\n\nHere is some content after the alerts.",
- "error": null
-}

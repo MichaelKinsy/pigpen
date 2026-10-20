@@ -1,6 +1,0 @@
-{
- "url": "https://whitespace-newlines",
- "title": "Whitespace and newline handling",
- "content": "## Newlines in paragraphs\n\nThis is a paragraph with newlines between sentences. Browsers collapse these to spaces.\n\nThis paragraph has multiple blank lines that should also collapse to spaces.\n\n## Whitespace-preserving code\n\n```\n/ip address\nadd address=192.168.88.1/24 interface=bridge1\nadd address=172.16.0.1/24 interface=ether1\n```\n\nThe code above uses white-space: pre on a code element without a pre wrapper.\n\n```\nThis is a normal pre+code block.\nIt should be preserved as-is.\n  Including indentation.\n```",
- "error": null
-}

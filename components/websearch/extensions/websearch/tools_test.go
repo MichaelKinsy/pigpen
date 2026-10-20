@@ -276,8 +276,16 @@ func TestUpstream_tool_registration_config(t *testing.T) {
 			t.Fatal(got)
 		}
 	})
-	tskip(t, F, "command registration gates default to enabled",
-		"websearch, curator and google-account are the curator UI and Gemini account commands (deferred, docs/PORT.md); TestCommandRegistrationGates pins the ported commands")
+	tw(t, F, "command registration gates default to enabled", func(t *testing.T) {
+		r, _ := newRuntime(t, `{}`)
+		if !reflect.DeepEqual(r.Commands(), []string{"websearch", "curator", "google-account", "search"}) {
+			t.Fatal(r.Commands())
+		}
+		r, _ = newRuntime(t, `{"commands":{"websearch":{"enabled":false},"search":{"enabled":false}}}`)
+		if !reflect.DeepEqual(r.Commands(), []string{"curator", "google-account"}) {
+			t.Fatal(r.Commands())
+		}
+	})
 	tw(t, F, "fetch_content schema exposes auth profile opt-in", func(t *testing.T) {
 		r, _ := newRuntime(t, `{}`)
 		schema := prop(t, mustTool(t, r, "fetch_content"), "auth")
@@ -295,8 +303,22 @@ func TestUpstream_tool_registration_config(t *testing.T) {
 		matchRE(t, `retrieval tool is not registered`, s.Description)
 		noMatchRE(t, `get_search_content`, s.Description)
 	})
-	tskip(t, F, "web activity shortcut renders through the supported string-array API",
-		"the activity monitor widget and its shortcut are deferred (docs/PORT.md)")
+	tw(t, F, "web activity shortcut renders through the supported string-array API", func(t *testing.T) {
+		r, _ := newRuntime(t, `{}`)
+		if r.Config().ActivityShortcut != "ctrl+shift+w" || r.Config().CurateShortcut != "ctrl+shift+s" {
+			t.Fatalf("%q %q", r.Config().ActivityShortcut, r.Config().CurateShortcut)
+		}
+		ui := &fakeWidgetUI{}
+		r.ToggleActivityWidget(ui)
+		first := ui.last()
+		if first.key != "web-activity" || first.lines == nil || len(first.lines) == 0 {
+			t.Fatalf("%+v", first)
+		}
+		r.ToggleActivityWidget(ui)
+		if cleared := ui.last(); cleared.key != "web-activity" || cleared.lines != nil {
+			t.Fatalf("the second toggle did not clear the widget: %+v", cleared)
+		}
+	})
 	tw(t, F, "tool names can be configured without changing defaults", func(t *testing.T) {
 		if got := names(t, `{}`); !reflect.DeepEqual(got, all) {
 			t.Fatal(got)
@@ -332,12 +354,12 @@ func jsonNoEscape(v any) string {
 }
 
 func TestCommandRegistrationGates(t *testing.T) {
-	r, _ := newRuntime(t, `{}`)
+	r, _ := newRuntime(t, `{"commands":{"websearch":{"enabled":false},"curator":{"enabled":false},"google-account":{"enabled":false}}}`)
 	if !reflect.DeepEqual(r.Commands(), []string{"search"}) {
 		t.Fatal(r.Commands())
 	}
 	r, _ = newRuntime(t, `{"commands":{"search":{"enabled":false}}}`)
-	if len(r.Commands()) != 0 {
+	if !reflect.DeepEqual(r.Commands(), []string{"websearch", "curator", "google-account"}) {
 		t.Fatal(r.Commands())
 	}
 }

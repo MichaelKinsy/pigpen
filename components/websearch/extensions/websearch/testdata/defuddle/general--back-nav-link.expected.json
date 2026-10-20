@@ -1,6 +1,0 @@
-{
- "url": "https://example.com/articles/sorting",
- "title": "An Article About Sorting",
- "content": "Sorting algorithms are fundamental to computer science. The most widely used general-purpose sorting algorithm is Quicksort, discovered in 1962.\n\nQuicksort works by selecting a pivot element and partitioning the array around it. Elements smaller than the pivot move left; elements larger move right. The process then recurses on both partitions.\n\nThe expected time complexity of Quicksort is O(n log n), which makes it extremely fast in practice despite its worst-case O(n²) behavior.",
- "error": null
-}

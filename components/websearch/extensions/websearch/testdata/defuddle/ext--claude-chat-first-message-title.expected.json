@@ -1,6 +1,0 @@
-{
- "url": "https://claude.ai/chat/abcd",
- "title": "Claude Conversation",
- "content": "**You**\n\nThis is a very long first message that should be truncated at fifty characters for the title\n\n---\n\n**Claude**\n\nAnswer.",
- "error": null
-}

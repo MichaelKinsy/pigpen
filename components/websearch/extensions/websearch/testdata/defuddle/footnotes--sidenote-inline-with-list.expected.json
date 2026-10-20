@@ -1,6 +1,0 @@
-{
- "url": "https://sidenote-inline-with-list",
- "title": "Sample Post with Sidenotes",
- "content": "## Sample post title\n\nThis is the first paragraph with a note about roundness[^1] and some more text about design trends.\n\nThis paragraph has another note about influence[^2] on the broader industry.\n\n[^1]: One of the ugliest roundness examples is the YouTube UI\n\n[^2]: That's to say, contagious from inwards",
- "error": null
-}

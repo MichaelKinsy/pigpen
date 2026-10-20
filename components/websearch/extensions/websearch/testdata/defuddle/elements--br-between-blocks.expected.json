@@ -1,6 +1,0 @@
-{
- "url": "https://br-between-blocks",
- "title": "BR between blocks test",
- "content": "## Article title\n\nFirst paragraph with some introductory text.\n\nSecond paragraph after a br spacer.\n\n![](https://example.com/image.jpg)\n\nA sample figure.\n\nThird paragraph after a figure and br.\n\nFourth paragraph with trailing br inside.\n\nFifth paragraph after a p-with-inner-br.\n\n## Section heading\n\nSixth paragraph after a heading and br.\n\n---\n\nSeventh paragraph after an hr and br.",
- "error": null
-}

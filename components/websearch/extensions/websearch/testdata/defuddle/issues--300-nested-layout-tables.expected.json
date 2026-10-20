@@ -1,6 +1,0 @@
-{
- "url": "https://www.example.org/cheatsheet.html",
- "title": "Overview of shortcuts",
- "content": "## Overview of the editor's shortcuts\n\n### The keystrokes and their functions\n\n**File handling**\n\n| Ctrl+S | Save current file |\n| --- | --- |\n| Ctrl+O | Offer to write file (\"Save as\") |\n| Ctrl+R | Insert a file into current one |\n| Ctrl+X | Close buffer, exit from the editor |\n\n  \n**Editing**\n\n| Ctrl+K | Cut current line into cutbuffer |\n| --- | --- |\n| Alt+6 | Copy current line into cutbuffer |\n| Ctrl+U | Paste contents of cutbuffer |\n\n**Moving around**\n\n| Ctrl+A | To start of line |\n| --- | --- |\n| Ctrl+E | To end of line |\n| Ctrl+P | One line up |\n| Ctrl+N | One line down |\n\n  \n**Information**\n\n| Ctrl+C | Report cursor position |\n| --- | --- |\n| Alt+D | Report line/word/character count |",
- "error": null
-}

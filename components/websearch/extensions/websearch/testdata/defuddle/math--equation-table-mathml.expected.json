@@ -1,6 +1,0 @@
-{
- "url": "https://example.com/equations",
- "title": "Equation representations",
- "content": "This article describes three mathematical expressions. Each equation includes its structured representation or its original source.\n\n$$\nx\n$$\n \n$$\ny\n$$\n \n$$\nz\n$$\n\nThe expressions appear in order, with each equation occurring once. Structured MathML should remain available, while annotation-only equations retain a visible fallback.",
- "error": null
-}

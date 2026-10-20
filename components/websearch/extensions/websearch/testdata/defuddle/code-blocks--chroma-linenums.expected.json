@@ -1,6 +1,0 @@
-{
- "url": "https://code-blocks--chroma-linenums",
- "title": "Sample Technical Post",
- "content": "### A typical solution\n\nHere is a function that processes an array:\n\n```cpp\nauto process_values(const std::vector<uint8_t> &vec)\n{\n    return std::count_if(\n        vec.begin(),\n        vec.end(),\n         { return x % 2 == 0; }\n    );\n}\n```\n\nLet's look at the generated assembly:\n\n```nasm\nprocess_values():\n    vpbroadcastb    xmm1, byte ptr [rip + .LCPI0_1]\n    vmovd   xmm2, dword ptr [rsi + rax]\n    vpandn  xmm2, xmm2, xmm1\n    add     rax, 4\n    cmp     r8, rax\n    jne     .LBB0_6\n```\n\nThe compiler generates vectorized code that processes four values at a time.",
- "error": null
-}

@@ -1,6 +1,0 @@
-{
- "url": "https://grok.com/chat/aaaa",
- "title": "How tall is Everest?",
- "content": "**You**\n\nHow tall is Everest?\n\n---\n\n**Grok**\n\nAbout 8,849 m, see Everest[^1] and again[^1] or [rel](https://grok.com/rel) or and other[^2].\n\n[^1]: [example.com](https://www.example.com/everest)\n\n[^2]: [other.org](https://other.org/x?a=1&b=2)",
- "error": null
-}

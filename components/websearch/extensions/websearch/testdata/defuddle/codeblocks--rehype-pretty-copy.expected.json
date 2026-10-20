@@ -1,6 +1,0 @@
-{
- "url": "https://rehype-pretty-copy",
- "title": "Weekly Project Review",
- "content": "Some intro text here to make the article long enough for defuddle to pick it up as content. This is a test article with enough words to pass the word count threshold. We need to make sure defuddle picks this up properly so we can test the code block behavior with rehype-pretty-copy output.\n\nThe rehype-pretty-copy plugin injects a copy button and a style element directly inside the code element. These should be stripped from the extracted content.\n\n```yaml\ntags:\n  - Projects/Open       # status: Open, Inbox, Hold, Dropped, Done\narea: next-act           # life area the project belongs to\nreview-cycle: 7          # days before the project is considered stale\nstart-date: 2026-01-15\ncomplete-date:            # set when marked done\n```\n\nEach project file uses YAML front matter to track status and review cadence.",
- "error": null
-}

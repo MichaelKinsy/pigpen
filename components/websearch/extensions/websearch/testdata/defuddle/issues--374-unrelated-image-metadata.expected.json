@@ -1,6 +1,0 @@
-{
- "url": "https://example.com/article",
- "title": "Unrelated image metadata",
- "content": "Working image sources should take precedence over unrelated or undocumented attributes. Responsive images should also retain their own source sets.\n\n![First](https://example.com/backup.jpg)\n\n![Second](https://example.com/alternate.jpg)\n\n![Third](https://example.com/original.jpg)\n\n![Responsive](https://example.com/unrelated.jpg)\n\nThe accompanying text explains why metadata must not replace a working source merely because it contains another image URL.",
- "error": null
-}

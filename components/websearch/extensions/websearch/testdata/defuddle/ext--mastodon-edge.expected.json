@@ -1,6 +1,0 @@
-{
- "url": "https://mastodon.example/@u/55",
- "title": "Post by U on Fedi",
- "content": "only a span\n\n[https://e.test/c](https://e.test/c)\n\nNo title or image\n\n---\n\n## Comments\n\n> **@x** ·\n> \n> > **@y** ·",
- "error": null
-}

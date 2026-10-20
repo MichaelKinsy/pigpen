@@ -1,6 +1,0 @@
-{
- "url": "https://example.com/article",
- "title": "Lazy image sources",
- "content": "Lazy images use explicit source attributes to replace placeholders. Metadata that merely resembles an image URL should not override those sources.\n\n![data-src](https://example.com/wiki/File:metadata.png)\n\n![original](https://example.com/spacer.png)\n\n![gif](https://example.com/wiki/File:metadata.png)\n\n![lazy-src](https://example.com/blank.png)\n\n![large-preview](https://example.com/wiki/File:metadata.png)\n\nAll photographs should retain their real source after extraction, including images with an external placeholder, a small GIF, or a large inline preview.",
- "error": null
-}

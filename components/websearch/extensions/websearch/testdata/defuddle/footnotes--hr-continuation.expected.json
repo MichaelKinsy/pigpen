@@ -1,6 +1,0 @@
-{
- "url": "https://hr-continuation",
- "title": "Loose footnotes: continuation paragraphs",
- "content": "The first approach has notable trade-offs.[^1]\n\nThe second approach handles scale differently.[^2]\n\nBoth have merit depending on context.\n\n[^1]: The first approach introduces complexity:\n\n- Higher operational overhead.\n- More failure modes to handle.\n\nDespite this, teams often prefer it for its flexibility.\n\n[^2]: The second approach favors simplicity at the cost of expressiveness.\n\nIt performs well under load but limits customization.",
- "error": null
-}

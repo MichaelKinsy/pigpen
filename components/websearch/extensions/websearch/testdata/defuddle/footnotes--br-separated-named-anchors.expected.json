@@ -1,6 +1,0 @@
-{
- "url": "https://br-separated-named-anchors",
- "title": "Thoughts on Open Models",
- "content": "Everyone remembers the famous open letter, written in 2010, because it started the long, slow decline of a key technology of that era.[^1]\n\nA handful of large labs signed on early — but the notable one is obviously the market leader.[^2]\n\nThe stated reasoning was safety, which is the same rationale invoked every time.[^3] Whether that reasoning holds up is another matter entirely.\n\n[^1]: It's genuinely odd that the company no longer hosts these pivotal posts on its own site.\n\n[^2]: Other absences from the list [include](https://example.com/thread) several large database vendors, though none of them train their own frontier models.\n\n[^3]: It is still not *entirely* clear that everyone is on board, given that [reporting suggests otherwise](https://example.com/report).",
- "error": null
-}

@@ -1,6 +1,0 @@
-{
- "url": "https://wiki.c2.com/?WelcomeVisitors",
- "title": "Welcome Visitors",
- "content": "The extractor only works through a fetch, so with synchronous extraction the generic pipeline handles the page.\n\nSecond paragraph of the page.",
- "error": null
-}

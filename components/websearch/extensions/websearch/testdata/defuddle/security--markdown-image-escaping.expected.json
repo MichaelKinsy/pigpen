@@ -1,6 +1,0 @@
-{
- "url": "https://example.com/article",
- "title": "Markdown image escaping",
- "content": "This example article contains an image with literal brackets in its description.\n\n![Photo [one]](https://example.com/photo.png)\n\nThe description should remain plain image text when the article is converted to Markdown.",
- "error": null
-}

@@ -1,6 +1,0 @@
-{
- "url": "https://small-equation-image",
- "title": "Small equation images",
- "content": "You can obtain all the elementary functions from just the function\n\n$$\n\\operatorname{fn}(x,y) = \\exp(x) - \\log(y)\n$$\n\nand the constant 1. The following equations show how to bootstrap addition and subtraction.\n\n$$\n\\begin{align*} \\exp(z) &\\mapsto \\operatorname{fn}(z,1) \\\\ \\log(z) &\\mapsto \\operatorname{fn}(1,\\exp(\\operatorname{fn}(1,z))) \\end{align*}\n$$\n\nSee the paper for more details.",
- "error": null
-}

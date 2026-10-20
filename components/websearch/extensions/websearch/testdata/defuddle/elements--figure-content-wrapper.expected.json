@@ -1,6 +1,0 @@
-{
- "url": "https://figure-content-wrapper",
- "title": "Figure Content Wrapper Test",
- "content": "## Example Article Title\n\nFirst paragraph with some content about the topic.\n\nSecond paragraph continuing the discussion.\n\n![A diagram](https://example.com/diagram.png)\n\nThird paragraph after the image.\n\nFourth paragraph wrapping up the section.\n\nAuthor Name\n\nAuthor bio goes here.",
- "error": null
-}

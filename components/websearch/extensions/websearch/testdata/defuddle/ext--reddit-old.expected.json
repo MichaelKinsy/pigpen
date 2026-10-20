@@ -1,6 +1,0 @@
-{
- "url": "https://old.reddit.com/r/programming/comments/zzz999/old_post/",
- "title": "Old post title",
- "content": "Self text of the old post.\n\n---\n\n## Comments\n\n> **c1** · [2023-12-31](https://reddit.com/r/programming/comments/zzz999/old_post/k1/) · 5 points\n> \n> First comment\n> \n> > **c2** ·\n> > \n> > Child comment\n\n> **c3** ·\n> \n> Second top comment",
- "error": null
-}

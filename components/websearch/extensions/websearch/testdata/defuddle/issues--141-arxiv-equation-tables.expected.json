@@ -1,6 +1,0 @@
-{
- "url": "https://141-arxiv-equation-tables",
- "title": "arXiv Equation Tables",
- "content": "## Scaled Dot-Product Attention\n\nWe call the attention function on a set of queries simultaneously.\n\n$$\n\\mathrm{Attention}(Q,K,V)=\\mathrm{softmax}(\\frac{QK^{T}}{\\sqrt{d_{k}}})V\n$$\n\nThe two most commonly used attention functions are additive attention and dot-product attention.\n\n$$\n\\mathrm{MultiHead}(Q,K,V)=\\mathrm{Concat}(\\mathrm{head}_{1},...,\\mathrm{head}_{h})W^{O}\n$$",
- "error": null
-}

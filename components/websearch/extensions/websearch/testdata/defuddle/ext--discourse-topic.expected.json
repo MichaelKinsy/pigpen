@@ -1,6 +1,0 @@
-{
- "url": "https://meta.example.org/t/how-to-foo/1234/2",
- "title": "How to foo?",
- "content": "How do I foo?\n\n## Heading\n\n---\n\n## Comments\n\n> **bob** · [2023-11-15](https://meta.example.org/t/how-to-foo/1234/2) · 3 likes\n> \n> Try bar.\n\n> **Carol** ·\n> \n> No date.",
- "error": null
-}

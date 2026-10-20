@@ -1,6 +1,0 @@
-{
- "url": "https://react-syntax-highlighter-linenums",
- "title": "Sample Java Post",
- "content": "### BuildConfig example\n\nHere is the decompiled BuildConfig class:\n\n```java\n// sources/gov/whitehouse/app/BuildConfig.java\n\npublic final class BuildConfig {\n    public static final String APPLICATION_ID = \"gov.whitehouse.app\";\n    public static final String BUILD_TYPE = \"release\";\n    public static final boolean DEBUG = false;\n    public static final int VERSION_CODE = 20;\n    public static final String VERSION_NAME = \"47.0.1\";\n}\n```\n\nThe app targets Android and uses the new architecture.",
- "error": null
-}

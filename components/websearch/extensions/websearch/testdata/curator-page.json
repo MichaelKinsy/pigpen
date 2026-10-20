@@ -1,0 +1,741 @@
+{
+ "markers": {
+  "timeout": "@@CURATOR_TIMEOUT@@",
+  "providerButtons": "@@CURATOR_PROVIDER_BUTTONS@@",
+  "inlineData": "@@CURATOR_INLINE_DATA@@"
+ },
+ "cases": [
+  {
+   "id": "minimal",
+   "queries": [],
+   "sessionToken": "t",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ]
+   ],
+   "defaultProvider": "exa",
+   "searchProvider": "auto",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115546,
+   "sha256": "69198b61165522775033a9c763cb75badb4651bc2b8974cee32eef123897061e"
+  },
+  {
+   "id": "one-query-exa-loading",
+   "queries": [
+    "test query"
+   ],
+   "sessionToken": "test-token",
+   "timeout": 1,
+   "available": [
+    [
+     "all",
+     true
+    ],
+    [
+     "openai",
+     false
+    ],
+    [
+     "brave",
+     false
+    ],
+    [
+     "exa",
+     true
+    ]
+   ],
+   "defaultProvider": "exa",
+   "searchProvider": "exa",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115825,
+   "sha256": "0c8350379057cb003af607e46d45ebb8721af2d4215590775438b779e4f867a8"
+  },
+  {
+   "id": "no-initial-queries-default-idle",
+   "queries": [],
+   "sessionToken": "test-token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     true
+    ],
+    [
+     "exa",
+     true
+    ],
+    [
+     "brave",
+     true
+    ]
+   ],
+   "defaultProvider": "brave",
+   "searchProvider": "auto",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115889,
+   "sha256": "6420916a2ade782ee894f8d4b6efdb251ce677623d87c246ea0a62250af4a251"
+  },
+  {
+   "id": "all-providers-available",
+   "queries": [
+    "a",
+    "b"
+   ],
+   "sessionToken": "00000000-0000-4000-8000-000000000000",
+   "timeout": 60,
+   "available": [
+    [
+     "all",
+     true
+    ],
+    [
+     "openai",
+     true
+    ],
+    [
+     "brave",
+     true
+    ],
+    [
+     "parallel",
+     true
+    ],
+    [
+     "parallel-mcp",
+     true
+    ],
+    [
+     "tinyfish",
+     true
+    ],
+    [
+     "search1api",
+     true
+    ],
+    [
+     "searchinfinity",
+     true
+    ],
+    [
+     "querit",
+     true
+    ],
+    [
+     "tavily",
+     true
+    ],
+    [
+     "you",
+     true
+    ],
+    [
+     "firecrawl",
+     true
+    ],
+    [
+     "jina",
+     true
+    ],
+    [
+     "serpdive",
+     true
+    ],
+    [
+     "kagi",
+     true
+    ],
+    [
+     "bocha",
+     true
+    ],
+    [
+     "ollama",
+     true
+    ],
+    [
+     "searxng",
+     true
+    ],
+    [
+     "duckduckgo",
+     true
+    ],
+    [
+     "perplexity",
+     true
+    ],
+    [
+     "exa",
+     true
+    ],
+    [
+     "gemini",
+     true
+    ],
+    [
+     "kimi",
+     true
+    ],
+    [
+     "anysearch",
+     true
+    ],
+    [
+     "xcrawl",
+     true
+    ],
+    [
+     "xai",
+     true
+    ],
+    [
+     "mistral",
+     true
+    ],
+    [
+     "brightdata",
+     true
+    ],
+    [
+     "serpbase",
+     true
+    ],
+    [
+     "serpapi",
+     true
+    ],
+    [
+     "serper",
+     true
+    ],
+    [
+     "serply",
+     true
+    ],
+    [
+     "baizhi",
+     true
+    ],
+    [
+     "valyu",
+     true
+    ]
+   ],
+   "defaultProvider": "searxng",
+   "searchProvider": "all",
+   "summaryModels": [
+    {
+     "value": "anthropic/claude-haiku-4-5",
+     "label": "anthropic/claude-haiku-4-5"
+    }
+   ],
+   "defaultSummaryModel": "anthropic/claude-haiku-4-5",
+   "bytes": 119799,
+   "sha256": "87a4c131eddc8ed7f4112182910a00be6c42aa0be73ebfb4a79a7e277a104fca"
+  },
+  {
+   "id": "hostile-strings",
+   "queries": [
+    "</script><script>alert(1)</script>",
+    "a & b < c > d",
+    "line sep para",
+    "quote \" and \\ backslash",
+    "emoji 🔍 and é",
+    ""
+   ],
+   "sessionToken": "tok</script>",
+   "timeout": 600,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "tavily",
+     true
+    ]
+   ],
+   "defaultProvider": "tavily",
+   "searchProvider": "tavily",
+   "summaryModels": [
+    {
+     "value": "a/b:high",
+     "label": "<b>x</b> & y"
+    }
+   ],
+   "defaultSummaryModel": "a/b:high",
+   "bytes": 115966,
+   "sha256": "05c6b36edd857a55dc1656c7d8f19624d2fcc935ab4c4d8b4e5d2b8e5728293f"
+  },
+  {
+   "id": "sparse-baizhi",
+   "queries": [
+    "q"
+   ],
+   "sessionToken": "token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "baizhi",
+     true
+    ]
+   ],
+   "defaultProvider": "baizhi",
+   "searchProvider": "baizhi",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115702,
+   "sha256": "ad7dd86580c53a8a1c7b79edb2a1951e06f249546b0c468f61991be105c9d171"
+  },
+  {
+   "id": "sparse-serpapi",
+   "queries": [
+    "query"
+   ],
+   "sessionToken": "token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "serpapi",
+     true
+    ]
+   ],
+   "defaultProvider": "serpapi",
+   "searchProvider": "serpapi",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115711,
+   "sha256": "9c44fcee2f4afcfb597a15b25b28095b9a25a4ec53174da55e6432ffdf1f0aa7"
+  },
+  {
+   "id": "sparse-serply",
+   "queries": [
+    "query"
+   ],
+   "sessionToken": "token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "serply",
+     true
+    ]
+   ],
+   "defaultProvider": "serply",
+   "searchProvider": "serply",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115706,
+   "sha256": "d9f309bf4535fa0653aa5a730ee235fe739b9d86d8221b52be4a0692480aba58"
+  },
+  {
+   "id": "sparse-you",
+   "queries": [
+    "query"
+   ],
+   "sessionToken": "token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "you",
+     true
+    ]
+   ],
+   "defaultProvider": "you",
+   "searchProvider": "you",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115695,
+   "sha256": "cdb2772aa28ff07989e85c9a08e39fe42a8b9a9aa43fd9d0123eae872bda6452"
+  },
+  {
+   "id": "serper-and-valyu",
+   "queries": [
+    "query"
+   ],
+   "sessionToken": "session-token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "openai",
+     false
+    ],
+    [
+     "brave",
+     false
+    ],
+    [
+     "serper",
+     true
+    ],
+    [
+     "valyu",
+     true
+    ]
+   ],
+   "defaultProvider": "serper",
+   "searchProvider": "valyu",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115857,
+   "sha256": "95b9c9f7ba6b01a7ca779b7ed110bc0d4a8a1ad9c1421e59c01489bb4cff6e68"
+  },
+  {
+   "id": "parallel-mcp",
+   "queries": [
+    "query"
+   ],
+   "sessionToken": "session-token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "parallel-mcp",
+     true
+    ]
+   ],
+   "defaultProvider": "parallel-mcp",
+   "searchProvider": "parallel-mcp",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115744,
+   "sha256": "05da9abdc655834cb97200782f2feb051671036cafc903ebe447175505458d5c"
+  },
+  {
+   "id": "brightdata",
+   "queries": [
+    "brightdata query"
+   ],
+   "sessionToken": "session-token",
+   "timeout": 20,
+   "available": [
+    [
+     "openai",
+     false
+    ],
+    [
+     "brave",
+     false
+    ],
+    [
+     "parallel",
+     false
+    ],
+    [
+     "tinyfish",
+     false
+    ],
+    [
+     "tavily",
+     false
+    ],
+    [
+     "serpdive",
+     false
+    ],
+    [
+     "brightdata",
+     true
+    ]
+   ],
+   "defaultProvider": "brightdata",
+   "searchProvider": "brightdata",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115829,
+   "sha256": "a7ae1a886f3e6d35df1a0cfa2495de96d87704e80e9a16284dd29770637899cf"
+  },
+  {
+   "id": "jina",
+   "queries": [
+    "jina query"
+   ],
+   "sessionToken": "session-token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "jina",
+     true
+    ]
+   ],
+   "defaultProvider": "jina",
+   "searchProvider": "jina",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115709,
+   "sha256": "320fd4f1f7915b3f9bfc4736bbadc707b3fb9505566230d9041b114e1b4edd2c"
+  },
+  {
+   "id": "mistral-and-xai",
+   "queries": [
+    "query"
+   ],
+   "sessionToken": "token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "mistral",
+     true
+    ],
+    [
+     "xai",
+     true
+    ]
+   ],
+   "defaultProvider": "mistral",
+   "searchProvider": "xai",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115816,
+   "sha256": "23f5fefbd2c6e71b9af39c1aef2a0f88eeadb099dc2ec61cb4ae9c7fa5cfe047"
+  },
+  {
+   "id": "bocha",
+   "queries": [
+    "bocha query"
+   ],
+   "sessionToken": "session-token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "bocha",
+     true
+    ]
+   ],
+   "defaultProvider": "bocha",
+   "searchProvider": "bocha",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 115715,
+   "sha256": "f6ed196ab783ac3cd80a33298e3668557a0d10e66f943f7e7b147aaa698cbeb9"
+  },
+  {
+   "id": "querit-search1api-searchinfinity-tinyfish",
+   "queries": [
+    "q"
+   ],
+   "sessionToken": "session-token",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     false
+    ],
+    [
+     "tinyfish",
+     true
+    ],
+    [
+     "search1api",
+     true
+    ],
+    [
+     "searchinfinity",
+     true
+    ],
+    [
+     "querit",
+     true
+    ]
+   ],
+   "defaultProvider": "querit",
+   "searchProvider": "querit",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 116106,
+   "sha256": "d20888050b4e0959ffb6d0114f1878ac64ab3bb3cb0cf92ffd91f341c9a9697f"
+  },
+  {
+   "id": "unknown-default-provider",
+   "queries": [
+    "q"
+   ],
+   "sessionToken": "t",
+   "timeout": 20,
+   "available": [
+    [
+     "all",
+     true
+    ],
+    [
+     "openai",
+     true
+    ],
+    [
+     "exa",
+     true
+    ],
+    [
+     "brave",
+     true
+    ],
+    [
+     "parallel",
+     true
+    ],
+    [
+     "parallel-mcp",
+     true
+    ],
+    [
+     "tinyfish",
+     true
+    ],
+    [
+     "search1api",
+     true
+    ],
+    [
+     "searchinfinity",
+     true
+    ],
+    [
+     "querit",
+     true
+    ],
+    [
+     "tavily",
+     true
+    ],
+    [
+     "firecrawl",
+     true
+    ],
+    [
+     "jina",
+     true
+    ],
+    [
+     "serpdive",
+     true
+    ],
+    [
+     "kagi",
+     true
+    ],
+    [
+     "bocha",
+     true
+    ],
+    [
+     "ollama",
+     true
+    ],
+    [
+     "searxng",
+     true
+    ],
+    [
+     "duckduckgo",
+     true
+    ],
+    [
+     "perplexity",
+     true
+    ],
+    [
+     "gemini",
+     true
+    ],
+    [
+     "kimi",
+     true
+    ],
+    [
+     "anysearch",
+     true
+    ],
+    [
+     "xcrawl",
+     true
+    ],
+    [
+     "xai",
+     true
+    ],
+    [
+     "mistral",
+     true
+    ],
+    [
+     "brightdata",
+     true
+    ],
+    [
+     "serpbase",
+     true
+    ],
+    [
+     "serpapi",
+     true
+    ],
+    [
+     "serper",
+     true
+    ],
+    [
+     "serply",
+     true
+    ],
+    [
+     "you",
+     true
+    ],
+    [
+     "baizhi",
+     true
+    ],
+    [
+     "valyu",
+     true
+    ]
+   ],
+   "defaultProvider": "not-a-provider",
+   "searchProvider": "auto",
+   "summaryModels": [],
+   "defaultSummaryModel": null,
+   "bytes": 119643,
+   "sha256": "12d7fc846884e085c33bb6f7774e22feb3576cf91c1ea8b28ea56cfe2b00e623"
+  }
+ ]
+}

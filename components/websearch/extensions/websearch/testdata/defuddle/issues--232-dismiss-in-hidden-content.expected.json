@@ -1,6 +1,0 @@
-{
- "url": "https://example.com/posts/sample/",
- "title": "Sample Post",
- "content": "From: Example <hello@example.com>\n\nTo: You\n\nSubject: Sample Post\n\nWe are excited to share an update on our work. Over the past several months the team has been focused on building tools that are simple, reliable, and open.\n\nOur goal is to create software that earns trust over time. We believe in building in the open, sharing progress publicly, and making decisions legible. This post outlines what we have been working on and where we are headed next.\n\n\\--\n\n[example.com](https://example.com/)",
- "error": null
-}

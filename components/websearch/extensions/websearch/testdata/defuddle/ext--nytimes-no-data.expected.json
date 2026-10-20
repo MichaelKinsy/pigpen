@@ -1,6 +1,0 @@
-{
- "url": "https://www.nytimes.com/2024/07/07/us/none.html",
- "title": "No data",
- "content": "## No preloaded data\n\nThis page has no preloaded script, so the generic pipeline reads the article text as it is, keeping the paragraphs.\n\nA second paragraph for good measure.",
- "error": null
-}

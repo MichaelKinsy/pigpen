@@ -7,7 +7,7 @@ import (
 )
 
 // Twins of test/rsc-fallback. The RSC payload extractor is ported (rsc_extract.go, proven on the fixtures of
-// testdata/html); the Defuddle fallback is ported (defuddle.go and dfd_*.go, proven on testdata/defuddle).
+// testdata/html); the Defuddle fallback is not (defuddle.go), so the cases that need its content are named skips.
 
 func rscPage(title, body, payload string) string {
 	script := ""
@@ -43,48 +43,10 @@ func TestUpstream_rsc_fallback(t *testing.T) {
 			t.Fatalf("%+v", r)
 		}
 	})
-	tw(t, F, "null Readability output falls back to local Defuddle extraction", func(t *testing.T) {
-		article := strings.Repeat("Useful local Defuddle fallback content with enough detail. ", 20)
-		page := "<!doctype html><html><head><title>Defuddle article</title></head><body><aside><main>" + article + "</main></aside></body></html>"
-		calls := 0
-		extractEnv(t, "")
-		useNet(t, func(netCall) netReply {
-			calls++
-			return netReply{Status: 200, Body: page, Header: hdr("content-type", "text/html", "link", `</openapi.json>; rel="service-desc"`)}
-		})
-		r := ExtractContent(bg(), "https://example.com/defuddle-null", pageOpts())
-		if calls != 1 {
-			t.Fatalf("Defuddle attempted a hidden network request: %d calls", calls)
-		}
-		if r.Error != nil || r.Title != "Defuddle article" || !strings.Contains(r.Content, "Useful local Defuddle fallback content") || !strings.Contains(r.Content, "https://example.com/openapi.json") {
-			t.Fatalf("%+v", r)
-		}
-	})
-	tw(t, F, "Defuddle fallback resolves relative canonical URLs against the fetched URL", func(t *testing.T) {
-		article := strings.Repeat("Defuddle content with a relative canonical URL stays quiet. ", 20)
-		page := `<!doctype html><html><head><title>Relative canonical</title><link rel="canonical" href="/relative-canonical"></head><body><aside><main>` + article + `</main></aside></body></html>`
-		r := fetch(t, page, nil)
-		if r.Error != nil || !strings.Contains(r.Content, "Defuddle content with a relative canonical URL stays quiet.") {
-			t.Fatalf("%+v", r)
-		}
-		// The original asserts that console.warn stays silent; the port has no console, and the page is also a recorded
-		// fixture (testdata/defuddle/port--rsc-fallback-relative-canonical) whose Markdown is the original's.
-	})
-	tw(t, F, "short Readability output falls back to useful Defuddle content", func(t *testing.T) {
-		article := strings.Repeat("Useful Defuddle content after the short Readability article. ", 20)
-		r := fetch(t, `<!doctype html><html><head><title>Short article fallback</title></head><body><article>Loading...</article><aside><main>`+article+`</main></aside></body></html>`, nil)
-		if r.Error != nil || r.Title != "Short article fallback" || !strings.Contains(r.Content, "Useful Defuddle content after the short Readability article") {
-			t.Fatalf("%+v", r)
-		}
-	})
-	tw(t, F, "Defuddle processing failures stay contained and do not return the fallback body", func(t *testing.T) {
-		paragraph := "This is substantial article text that should be extracted as the page's main content. "
-		page := `<!doctype html><html><head><title>Defuddle selector failure</title></head><body><nav><a href="/">Home</a></nav><template id="B:0"></template><div hidden id="S:a"><h1>Defuddle selector failure</h1><p>` + strings.Repeat(paragraph, 20) + `</p></div><template id="P:a"></template><footer><p>Copyright 2026 Example Inc. All rights reserved.</p></footer></body></html>`
-		r := fetch(t, page, nil)
-		if r.Error == nil || !strings.Contains(*r.Error, "Defuddle failed to process document: Unknown pseudo-class :a") || strings.Contains(r.Content, "Copyright 2026") {
-			t.Fatalf("%+v", r)
-		}
-	})
+	tskip(t, F, "null Readability output falls back to local Defuddle extraction", "the Defuddle fallback is not ported (defuddle.go: no Go port tracks Defuddle 0.19.3 and its pipeline is several thousand lines); the page is reported with the original's verdict and the refusal (TestDefuddleFallbackIsRefused)")
+	tskip(t, F, "Defuddle fallback resolves relative canonical URLs against the fetched URL", "the Defuddle fallback is not ported (defuddle.go); the case observes Defuddle's own console warnings")
+	tskip(t, F, "short Readability output falls back to useful Defuddle content", "the Defuddle fallback is not ported (defuddle.go); the page is reported with the original's verdict and the refusal")
+	tskip(t, F, "Defuddle processing failures stay contained and do not return the fallback body", "the Defuddle fallback is not ported (defuddle.go): the failure is css-select's own \"Unknown pseudo-class :a\" from Defuddle's hidden-content retry")
 	tw(t, F, "short non-RSC pages remain incomplete", func(t *testing.T) {
 		r := fetch(t, "<!doctype html><html><head><title>Short</title></head><body><article>Loading...</article></body></html>", nil)
 		if r.Error == nil {
@@ -98,4 +60,21 @@ func TestUpstream_rsc_fallback(t *testing.T) {
 		}
 	})
 	tskip(t, F, "background fetch notification distinguishes full, partial, and failed content", "the upstream case greps the TypeScript source of index.ts for its notification strings; the Go extension has no such source (the notification text is covered by the background-fetch twins)")
+}
+
+// Until the Defuddle fallback is ported, a page the original would hand to it is reported with the original's verdict
+// followed by the refusal: never a silent skip.
+func TestDefuddleFallbackIsRefused(t *testing.T) {
+	extractEnv(t, "")
+	useNet(t, func(netCall) netReply {
+		return netReply{Status: 200, Body: "<!doctype html><html><head><title>App</title></head><body><div id=\"root\"></div></body></html>", Header: hdr("content-type", "text/html")}
+	})
+	r := ExtractContent(bg(), "https://example.com/app", pageOpts())
+	msg := errOf(r)
+	if !strings.HasPrefix(msg, "Could not extract readable content from HTML structure") || !strings.Contains(msg, "the Defuddle fallback extractor") {
+		t.Fatalf("%q", msg)
+	}
+	if strings.Contains(msg, "RSC payload") {
+		t.Fatalf("the RSC extractor is ported: %q", msg)
+	}
 }

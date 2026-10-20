@@ -1,6 +1,0 @@
-{
- "url": "https://www.example.com/article/base64-test",
- "title": "Base64 Placeholder Image Handling",
- "content": "## Base64 Placeholder Images\n\nThis article tests removal of unresolvable base64 placeholder images while preserving resolvable ones.\n\nSome article text between images with enough words for content detection to function properly here.\n\n![Resolvable from picture source.](https://www.example.com/images/resolved.webp)\n\nResolvable from picture source. Photo credit.\n\nMore article text with enough content for the parser to work with on this test article page.\n\n![Resolvable from data-src.](https://www.example.com/images/lazy-loaded.jpg) ![A real image.](https://www.example.com/images/real-image.jpg)\n\nFinal paragraph with concluding article text for the content detection scoring algorithm.",
- "error": null
-}

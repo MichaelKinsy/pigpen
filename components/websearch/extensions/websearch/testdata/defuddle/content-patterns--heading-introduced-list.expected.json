@@ -1,6 +1,0 @@
-{
- "url": "https://content-patterns--heading-introduced-list",
- "title": "Sample Plugin",
- "content": "## sample-plugin\n\nA fast and flexible plugin for editing configuration files.\n\n## Features\n\n- Written in `Lua`\n- Asynchronous execution\n- Buffer locking\n- Opt-in default configurations\n- Conditional formatting\n- Before/after hooks\n\n## Install\n\nUse your preferred package manager:\n\n```\nuse 'user/sample-plugin'\n```\n\n## Configuration\n\nThe plugin can be configured by passing a table to the setup function. Below is an example with the default values.\n\n```\nrequire('sample-plugin').setup({\n  logging = true,\n  filetype = {},\n})\n```\n\n## Usage\n\nThe plugin provides a single command to format the current buffer. Run it manually or bind it to a key.",
- "error": null
-}
