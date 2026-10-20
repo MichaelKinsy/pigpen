@@ -179,24 +179,10 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if f, ok := p["max_turns"].(float64); ok {
 		maxTurns = int(f)
 	}
-	if v, _ := p["inherit_context"].(bool); v {
-		return textResult("inherit_context is not supported by this port: an agent runs as a separate pig process and cannot fork this conversation. Put what it needs to know into the prompt."), nil
+	if feature := unportedCallParam(p); feature != "" {
+		return nil, refusal(feature)
 	}
 	isolated, _ := p["isolated"].(bool)
-	if resume, _ := p["resume"].(string); resume != "" {
-		prev := a.mgr.resolve(resume)
-		if prev == nil {
-			return notFound(resume), nil
-		}
-		a.mgr.mu.Lock()
-		status, result := prev.Status, prev.Result
-		a.mgr.mu.Unlock()
-		if status == statusRunning || status == statusQueued {
-			return textResult(fmt.Sprintf("Agent %s is still running; use steer_subagent to reach it, or wait for it to finish before resuming.", prev.ID)), nil
-		}
-		// A child's session is not kept, so a resumed agent starts afresh with its earlier answer in the prompt.
-		prompt = fmt.Sprintf("You are continuing earlier work. Your previous run ended with this answer:\n\n%s\n\nContinue with this: %s", strings.TrimSpace(result), prompt)
-	}
 	res := resolveSpawnType(typ)
 	if !res.OK {
 		return textResult(res.Message), nil

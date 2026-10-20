@@ -68,7 +68,7 @@ m("wrapped-up-unmarked", "extension.go", 'return " (wrapped up at the turn limit
 m("error-status-text", "extension.go", 'return "Error: " + e', 'return "Error"')
 
 # bus.go: the cross-extension protocol and spawn defaults
-m("spawn-not-background", "bus.go", 'a.start(ctx, typ, prompt, description, "", model, "", maxTurns, true, false)', 'a.start(ctx, typ, prompt, description, "", model, "", maxTurns, false, false)')
+m("spawn-not-background", "bus.go", 'a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, true, false)', 'a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, false, false)')
 m("stop-error-text", "bus.go", 'errors.New("Agent not found")', 'errors.New("Not found")')
 m("explore-model-forced", "bus.go", 'spec.Model = "" // the original', 'spec.Model = cfg.Model // the original')
 m("default-max-turns-ignored", "bus.go", "if a.defaultMaxTurns != nil {", "if a.defaultMaxTurns != nil && false {")
@@ -108,8 +108,6 @@ m("version-probe-any", "runner.go", "err == nil && version.Match(bytes.TrimSpace
 # tools.go: the tools
 m("tools-suffix-no-builtins", "tools.go", 'return "no built-ins, extension tools only"', 'return "none"')
 m("model-label-date", "tools.go", "-\\d{8}$`", "-\\d{9}$`")
-m("resume-prompt", "tools.go", "You are continuing earlier work. Your previous run ended with this answer:", "Earlier answer:")
-m("inherit-context-allowed", "tools.go", 'if v, _ := p["inherit_context"].(bool); v {', "if false {")
 m("wait-ignored", "tools.go", 'if wait, _ := p["wait"].(bool); wait {', "if false {")
 m("foreground-failure-text", "tools.go", '"%sAgent failed: %s%s"', '"%sFailure: %s%s"')
 m("duration-format", "tools.go", 'fmt.Sprintf("%.1fs", float64(ms)/1000)', 'fmt.Sprintf("%.2fs", float64(ms)/1000)')
@@ -129,6 +127,30 @@ m("settings-project-wins", "settings.go", "if p.MaxConcurrent != 0 {\n\t\ts.MaxC
 m("settings-ceiling", "settings.go", "n <= maxConcurrentCeiling {", "n <= maxConcurrentCeiling+1 {")
 m("fallback-false-spelling", "settings.go", "if !v { // `false` is a spelling of \"none\"", "if v {")
 m("fallback-trimmed", "settings.go", "if s := strings.TrimSpace(v); s != \"\" {", "if s := strings.TrimLeft(v, \" \"); s != \"\" {")
+
+# refuse.go: what is not ported is refused
+m("refusal-wrong-original", "refuse.go", 'originalSpec = "npm:@tintinweb/pi-subagents@0.19.0"', 'originalSpec = "npm:@tintinweb/pi-subagents"')
+m("refusal-drops-install-advice", "refuse.go", '", which runs unchanged in PiG."', '"."')
+m("schedule-accepted", "refuse.go", 'if v, ok := p["schedule"]; ok && v != nil {', 'if v, ok := p["schedule"]; ok && v == nil {')
+m("worktree-param-accepted", "refuse.go", 'v != "" && v != "off" {', 'v != "" && v != "worktree" {')
+m("inherit-context-accepted", "refuse.go", 'if v, _ := p["inherit_context"].(bool); v {', 'if v, _ := p["inherit_context"].(bool); !v {')
+m("resume-accepted", "refuse.go", 'if v, _ := p["resume"].(string); v != "" {', 'if v, _ := p["resume"].(string); v == "never" {')
+m("memory-field-accepted", "refuse.go", 'case cfg.Memory != "":', 'case false:')
+m("nested-field-accepted", "refuse.go", 'case cfg.AllowedSubagents != nil:', 'case false:')
+m("disallowed-tools-accepted", "refuse.go", 'case len(cfg.DisallowedTools) > 0:', 'case false:')
+m("skills-false-accepted", "refuse.go", "return v == nil || (ok && b)", "return true")
+m("extension-list-accepted", "refuse.go", "case nil, bool:\n\t\treturn true", "case nil, bool, []string:\n\t\treturn true")
+m("rpc-option-accepted", "refuse.go", 'default:\n\t\t\treturn "the spawn RPC option', 'default:\n\t\t\tcontinue\n\t\t\treturn "the spawn RPC option')
+m("rpc-foreground-accepted", "refuse.go", 'if b, _ := v.(bool); !b {', 'if b, _ := v.(bool); b {')
+m("setting-bool-direction", "refuse.go", "return ok && b != r.okBool", "return ok && b == r.okBool")
+m("setting-int-ok-values", "refuse.go", "if n == o {\n\t\t\t\treturn false", "if n != o {\n\t\t\t\treturn false")
+m("setting-enum-default-refused", "refuse.go", "return !inList(r.okEnum, s)", "return true")
+m("setting-notice-repeats", "extension.go", "if text != \"\" && !same {", "if text != \"\" {")
+m("setting-notice-silent", "extension.go", 'ctx.Notify(text, "warning")', "_ = text")
+m("start-skips-agent-file-check", "bus.go", 'if feature := unportedAgentFeature(cfg); feature != "" {', "if false {")
+m("rpc-skips-option-check", "bus.go", 'if feature := unportedSpawnOption(opts); feature != "" {', "if false {")
+m("rpc-name-dropped", "bus.go", 'name, _ := opts["name"].(string)', 'name := ""')
+m("rpc-thinking-dropped", "bus.go", 'thinking, _ := opts["thinkingLevel"].(string)', 'thinking := ""')
 
 M = [x for x in M if x]
 by_file = {}
