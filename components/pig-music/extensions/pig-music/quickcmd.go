@@ -29,6 +29,12 @@ var quickWords = map[string]bool{
 const quickQueueLines = 8
 
 func (a *app) quickCommand(ctx sdk.Context, words []string) error {
+	if _, settings, err := a.load(); err == nil {
+		if err := a.refuseNativeEngine(settings); err != nil {
+			ctx.Notify("pig-music: "+err.Error(), "warning")
+			return nil
+		}
+	}
 	a.foot.capture(ctx)
 	cctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
@@ -53,8 +59,8 @@ func (a *app) quickCommand(ctx sdk.Context, words []string) error {
 
 // cliEnv is the command line's environment as this extension has it (the tests' fakes included).
 func (a *app) cliEnv() cli.Env {
-	// The /music player drives mpv whatever "engine" says (the engine choice is wired into pigmusic only), so its quick
-	// commands do too: a native player started here would be invisible to the overlay, the footer and stopOnExit.
+	// "native" is refused before this point (refuseNativeEngine); "auto" means mpv here, so a native player is never started
+	// that the overlay, the footer and stopOnExit would not see.
 	getenv := func(k string) string {
 		if k == "PIG_MUSIC_ENGINE" {
 			return "mpv"

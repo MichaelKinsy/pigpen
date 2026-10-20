@@ -129,17 +129,22 @@ func TestSlashMusicPlayMakesThisPiGTheOwnerOfTheMusic(t *testing.T) {
 	}
 }
 
-// The /music player always drives mpv (the engine setting is wired into pigmusic only), but the quick commands ran the
-// command line's engine choice: with "engine": "native" (offered by /music settings) /music play went to a native player that
-// the overlay, the footer and stopOnExit never see, or failed where the player plays. Inside PiG the quick commands use the
-// player's engine.
-func TestQuickCommandsUseTheSameEngineAsThePlayer(t *testing.T) {
-	h, _, env, p := playerEnv(t)
+// The /music player and its quick commands only drive mpv. With engine "native" they are refused, not run on mpv anyway.
+func TestNativeEngineIsRefusedByTheQuickCommands(t *testing.T) {
+	h, _, env, _ := playerEnv(t)
 	writeSettings(t, env, `{"engine": "native"}`)
-	if out := say(t, h, "play", "night"); !strings.Contains(out, "playing") {
+	out := say(t, h, "play", "night")
+	if !strings.Contains(out, "does not support the native engine in the /music player yet") {
 		t.Fatalf("play with engine native: %q", out)
 	}
-	waitFor(t, "the player's mpv playing", func() bool { st := p.State(); return st.Track != nil })
+}
+
+func TestNativeEngineIsRefusedByTheEnvironmentToo(t *testing.T) {
+	h, _, _, _ := playerEnvWith(t, map[string]string{"PIG_MUSIC_ENGINE": "Native"})
+	out := say(t, h, "play", "night")
+	if !strings.Contains(out, "does not support the native engine in the /music player yet") {
+		t.Fatalf("play with PIG_MUSIC_ENGINE=native: %q", out)
+	}
 }
 
 // /music settings must not promise that the engine takes effect after /reload: the /music player does not use it yet.

@@ -129,6 +129,9 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := a.refuseNativeEngine(settings); err != nil {
+		return nil, err
+	}
 	a.foot.setEnabled(settings.FooterStatusOrDefault())
 	a.foot.setMode(settings.NowPlayingMode())
 	a.foot.calm.Store(settings.CalmOrDefault())
@@ -289,6 +292,18 @@ func (a *app) requestRedraw() {
 }
 
 func lookPath(name string) (string, error) { return exec.LookPath(name) }
+
+// refuseNativeEngine refuses to start the in-PiG player while the native engine is selected: the /music player and its quick
+// commands only drive mpv, so running them anyway would silently ignore the choice.
+func (a *app) refuseNativeEngine(s music.Settings) error {
+	engine := first(a.d.Getenv("PIG_MUSIC_ENGINE"), s.Engine)
+	if strings.EqualFold(strings.TrimSpace(engine), "native") {
+		return errNativeEngine
+	}
+	return nil
+}
+
+var errNativeEngine = errors.New("pig-music does not support the native engine in the /music player yet (engine is \"native\" in settings.json or PIG_MUSIC_ENGINE); it only drives mpv here. Set engine to \"mpv\" or \"auto\", or use the pigmusic program, which supports the native engine")
 
 func (a *app) load() (music.Paths, music.Settings, error) {
 	paths, err := music.DefaultPaths(a.d.Getenv)
