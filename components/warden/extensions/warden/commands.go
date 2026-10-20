@@ -20,7 +20,9 @@ const help = `warden — guardrails that steer instead of interrupt
   /warden trace               the last things warden decided
   /warden rules [check|audit|calibrate|tune]   the project rules in force; judge, audit or tune them
   /warden report [--days N]   how often each rule was judged and fired
-  /warden init [--force]      have the agent write this project's pi-warden.md`
+  /warden init [--force]      have the agent write this project's pi-warden.md
+  /warden recommend           what the hold history says about the thresholds and the steers
+  /warden unmute <kind> [model]   send a trace-only steer kind again`
 
 func (w *warden) command(ctx sdk.Context, args string) error {
 	fields := strings.Fields(args)
@@ -64,6 +66,10 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 		return w.reportCommand(ctx, rest)
 	case "init":
 		return w.initCommand(ctx, rest)
+	case "unmute": // learning lane
+		w.unmuteCommand(ctx, rest)
+	case "recommend": // learning lane
+		w.recommendCommand(ctx)
 	default:
 		w.show(ctx, "unknown subcommand "+sub+".\n\n"+help)
 	}
@@ -115,6 +121,9 @@ func (w *warden) showStatus(ctx sdk.Context) {
 	fmt.Fprintf(&b, "  judge requests this session: %d of %d\n", w.budget.Used(), cfg.MaxRequests)
 	if arming := w.gcArmingStatus(cfg); arming != "" {
 		b.WriteString("  " + arming + "\n")
+	}
+	for _, line := range w.learningStatusLines(ctx, cfg) { // learning lane: steers kept in the trace, learning, holds
+		b.WriteString("  " + line + "\n")
 	}
 	b.WriteString("  " + w.rulesStatusLine(ctx, cfg) + " (" + strconv.Itoa(s.RuleViolations) + "/" + strconv.Itoa(s.RuleChecks) + " rule violations, " + strconv.Itoa(s.PathNotes) + " sensitive-path notes)\n\n")
 	b.WriteString(Disclosure(cfg.Backend, target))

@@ -37,11 +37,11 @@ func traceLine(v Verdict, outcome string) string {
 }
 
 // recordVerdict records an action verdict in the trace; a read-only call leaves no line.
-func (w *warden) recordVerdict(ctx sdk.Context, cfg Config, v Verdict, outcome string) {
+func (w *warden) recordVerdict(ctx sdk.Context, cfg Config, v Verdict, outcome string) *TraceEntry {
 	if v.Source == "read-only" {
-		return
+		return nil
 	}
-	w.record(ctx, cfg, GuardAction, traceLine(v, outcome), nil, actionTokens(v, w.opts.Now()))
+	return w.record(ctx, cfg, GuardAction, traceLine(v, outcome), nil, actionTokens(v, w.opts.Now()))
 }
 
 // refresh repaints with the current configuration.
