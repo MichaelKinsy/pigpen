@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
-import { createServer, type Server } from "node:net";
+import { createServer, type Server, type Socket } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, describe, it } from "node:test";
@@ -21,7 +21,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../
 const pigBin = requirePig();
 execFileSync(process.execPath, [path.join(repoRoot, "scripts/stage-piglets.mjs")], { stdio: "pipe" });
 
-// Both Piglets that select the reporter Package must behave the same, from source and as a Binary.
+// Both Piglets that select the reporter Package must behave the same as a Binary. pig-with-batteries strips the Go
+// extension SDK (strip.features), so pig 0.5.0 cannot build its Go Packages when run from source: it runs as a Binary only.
 const piglets = ["herdr", "pig-with-batteries"];
 // The manifests list every release platform; pig builds only the machine it runs on.
 const hostTarget = `${{ linux: "linux", darwin: "darwin", win32: "windows" }[process.platform as string]}/${{ x64: "amd64", arm64: "arm64" }[process.arch as string]}`;
@@ -29,7 +30,7 @@ const sourceRoot = process.env.PIG_SOURCE_ROOT;
 // The prompt-based blocked state is opt-in (PIGPEN_HERDR_UI_PROMPTS=1): every run has it on, and one source run has it off.
 const runs = [
 	...piglets.flatMap((piglet) => [
-		{ piglet, binary: false, prompts: true },
+		...(piglet === "herdr" ? [{ piglet, binary: false, prompts: true }] : []),
 		...(sourceRoot ? [{ piglet, binary: true, prompts: true }] : []),
 	]),
 	{ piglet: "herdr", binary: false, prompts: false },
@@ -37,6 +38,8 @@ const runs = [
 let session = "";
 let dir: string;
 let server: Server;
+// Open connections to the fake herdr: net.Server has no closeAllConnections (http.Server does).
+const connections = new Set<Socket>();
 // Every request line the fake herdr received, parsed.
 let received: { method: string; params: Record<string, unknown> }[] = [];
 
@@ -66,6 +69,8 @@ for (const { piglet, binary, prompts } of runs) describe(`real pig in a herdr pa
 		// A unix socket path is limited to about 104 bytes: keep it short.
 		const socket = path.join(mkdtempSync(path.join(tmpdir(), "hd")), "s");
 		server = createServer((conn) => {
+			connections.add(conn);
+			conn.on("close", () => connections.delete(conn));
 			let buffer = "";
 			conn.on("error", () => {});
 			conn.on("data", (chunk) => {
@@ -111,7 +116,7 @@ for (const { piglet, binary, prompts } of runs) describe(`real pig in a herdr pa
 	});
 
 	after(async () => {
-		await new Promise<void>((resolve) => { server.closeAllConnections(); server.close(() => resolve()); });
+		await new Promise<void>((resolve) => { for (const conn of connections) conn.destroy(); server.close(() => resolve()); });
 		try {
 			tmux("kill-session", "-t", session);
 		} catch {
