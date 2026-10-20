@@ -41,8 +41,8 @@ func refuseHooks(opts sdk.ProviderStreamOptions) error {
 		feature = "the onPayload hook"
 	case opts.OnResponse != nil:
 		feature = "the onResponse hook"
-	case opts.TransformHeaders != nil:
-		feature = "the transformHeaders hook"
+	case opts.OnProviderStreamEvent != nil:
+		feature = "the onProviderStreamEvent hook"
 	default:
 		return nil
 	}

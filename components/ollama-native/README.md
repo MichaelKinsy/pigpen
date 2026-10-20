@@ -69,7 +69,7 @@ Run `/ollama refresh` again after `ollama pull` or `ollama rm`.
   so they are sent in name order, not PiG's authored order. The text is all there.
 - The catalog's `maxTokens` is 8,192 (or the context window if smaller); PiG sends a
   limit only when you set one.
-- The `onPayload`, `onResponse` and `transformHeaders` caller hooks are not run. A request that carries one is refused with an error and nothing is sent. Stream options other than temperature, max tokens, thinking and the API key are not sent to Ollama.
+- The `onPayload`, `onResponse` and `onProviderStreamEvent` caller hooks are not run. A request that carries one is refused with an error and nothing is sent. Stream options other than temperature, max tokens, thinking and the API key are not sent to Ollama.
 - Only chat is covered: no embeddings, no model management (pull, delete).
 
 ## Tests

@@ -288,9 +288,9 @@ func TestAPIKeyOnlyWhenOneIsConfigured(t *testing.T) {
 
 func TestStreamRefusesUnportedHooks(t *testing.T) {
 	cases := map[string]sdk.ProviderStreamOptions{
-		"the onPayload hook":        {OnPayload: func(v any, _ map[string]any) (any, error) { return v, nil }},
-		"the onResponse hook":       {OnResponse: func(map[string]any, map[string]any) error { return nil }},
-		"the transformHeaders hook": {TransformHeaders: func(h map[string]string) (map[string]string, error) { return h, nil }},
+		"the onPayload hook":             {OnPayload: func(v any, _ map[string]any) (any, error) { return v, nil }},
+		"the onResponse hook":            {OnResponse: func(map[string]any, map[string]any) error { return nil }},
+		"the onProviderStreamEvent hook": {OnProviderStreamEvent: func(any, map[string]any) error { return nil }},
 	}
 	for feature, opts := range cases {
 		stream, err := (&client{}).stream(map[string]any{"id": "m"}, map[string]any{}, opts)
