@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -329,7 +330,7 @@ func (rt *asyncRuntime) restoreActiveJobs() {
 }
 
 func (rt *asyncRuntime) hooks() runHooks {
-	return runHooks{OnProgress: func(dir string) { rt.refreshJob(dir); rt.refreshWidget() }, OnComplete: rt.onRunComplete}
+	return runHooks{OnProgress: func(dir string) { rt.refreshJob(dir); rt.refreshWidget() }, OnComplete: rt.onRunComplete, OnProcessTerminal: rt.onProcessTerminal}
 }
 
 func (rt *asyncRuntime) refreshJob(asyncDir string) {
@@ -406,6 +407,28 @@ func widgetLines(jobs []*AsyncJobState) []string {
 		lines = append(lines, line)
 	}
 	return lines
+}
+
+// staleExtensionContext is extension-context.ts isStaleExtensionContextError's message test.
+var staleExtensionContext = regexp.MustCompile(`(?i)extension ctx is stale|extension context no longer active|stale after session replacement or reload`)
+
+// logAsyncError reports a failure the background code survives (the original's console.error).
+var logAsyncError = func(args ...any) { fmt.Fprintln(os.Stderr, args...) }
+
+// emitProcessTerminalEvent publishes the process-terminal proof (async-execution.ts emitProcessTerminalEvent): a stale context
+// drops it silently, any other failure is logged, none throws.
+func emitProcessTerminalEvent(emit func(channel string, payload any) error, proof any) {
+	if err := emit(subagentProcessTerminalEvt, proof); err != nil && !staleExtensionContext.MatchString(err.Error()) {
+		logAsyncError("Failed to emit subagent process-terminal event:", err)
+	}
+}
+
+func (rt *asyncRuntime) onProcessTerminal(proof *ProcessTerminal) {
+	ctx, ok := rt.context()
+	if !ok {
+		return
+	}
+	emitProcessTerminalEvent(ctx.Events().Emit, proof)
 }
 
 // ── results: delivery of what finished ──

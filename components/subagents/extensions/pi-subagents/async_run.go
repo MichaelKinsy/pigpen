@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -435,6 +436,8 @@ type runHooks struct {
 	OnProgress func(asyncDir string)
 	// OnComplete is called with the result payload after the result file and the status are published.
 	OnComplete func(cfg *RunConfig, result map[string]any, st *AsyncStatus)
+	// OnProcessTerminal is called with the process-terminal proof once it is persisted (the original's onProcessTerminal).
+	OnProcessTerminal func(proof *ProcessTerminal)
 }
 
 func stepStatusOf(state string) string {
@@ -458,6 +461,34 @@ type launchSpec struct {
 	Agent    *AgentConfig
 	Digest   string
 	Recovery *RecoveryDescriptor
+}
+
+// gitRoutingVariables is git-environment.ts GIT_ROUTING_VARIABLES: inherited values that can route Git commands away from the
+// child's cwd.
+var gitRoutingVariables = map[string]bool{
+	"GIT_ALTERNATE_OBJECT_DIRECTORIES": true, "GIT_COMMON_DIR": true, "GIT_CONFIG": true, "GIT_CONFIG_COUNT": true, "GIT_CONFIG_PARAMETERS": true,
+	"GIT_DIR": true, "GIT_GRAFT_FILE": true, "GIT_IMPLICIT_WORK_TREE": true, "GIT_INDEX_FILE": true, "GIT_NAMESPACE": true, "GIT_NO_REPLACE_OBJECTS": true,
+	"GIT_OBJECT_DIRECTORY": true, "GIT_PREFIX": true, "GIT_REPLACE_REF_BASE": true, "GIT_SHALLOW_FILE": true, "GIT_WORK_TREE": true,
+}
+
+var gitConfigIndexed = regexp.MustCompile(`^GIT_CONFIG_(?:KEY|VALUE)_[0-9]+$`)
+
+func isGitRoutingVariable(name string) bool {
+	// Windows environment names are case-insensitive, and Git for Windows reads them that way.
+	upper := strings.ToUpper(name)
+	return gitRoutingVariables[upper] || gitConfigIndexed.MatchString(upper)
+}
+
+// omitGitRoutingEnv removes the inherited values that can route Git commands away from the child cwd (omitGitRoutingEnv).
+func omitGitRoutingEnv(env []string) []string {
+	out := make([]string, 0, len(env))
+	for _, kv := range env {
+		name, _, _ := strings.Cut(kv, "=")
+		if !isGitRoutingVariable(name) {
+			out = append(out, kv)
+		}
+	}
+	return out
 }
 
 // startBackgroundRun writes the run directory, starts the child and supervises it on a goroutine.
@@ -491,7 +522,7 @@ func startBackgroundRun(spec launchSpec, hooks runHooks) (*RunHandle, error) {
 	if err := initializeProcessTerminal(cfg.AsyncDir, cfg.ID, cfg.RunnerProcessInstanceID); err != nil {
 		return nil, fmt.Errorf("Failed to establish async runner lifecycle sidecar: %s", err.Error())
 	}
-	child, err := startBgChild(bgChildSpec{Bin: spec.Bin, Args: spec.Args, Env: spec.Env, Cwd: cfg.Cwd, StdinPath: stdinPath,
+	child, err := startBgChild(bgChildSpec{Bin: spec.Bin, Args: spec.Args, Env: omitGitRoutingEnv(spec.Env), Cwd: cfg.Cwd, StdinPath: stdinPath,
 		OutPath: filepath.Join(cfg.AsyncDir, "output-0.log"), ErrPath: filepath.Join(cfg.AsyncDir, "runner.stderr.log"), ExitPath: filepath.Join(cfg.AsyncDir, "exit-0")})
 	if err != nil {
 		msg := fmt.Sprintf("Failed to start async run '%s': %s", cfg.ID, err.Error())
@@ -951,7 +982,9 @@ func finalizeRun(cfg *RunConfig, t *progressTracker, out superviseOutcome, hooks
 		}
 	}
 	_ = writeStatus(cfg.AsyncDir, st)
-	finalizeProcessTerminal(cfg.AsyncDir, cfg.ID, rc)
+	if proof := finalizeProcessTerminal(cfg.AsyncDir, cfg.ID, rc); proof != nil && hooks.OnProcessTerminal != nil {
+		hooks.OnProcessTerminal(proof)
+	}
 	_ = updateActiveRunIndex(cfg.AsyncDir, st.State, st.ToolCallID, indexOptions{terminalIndexBeforeRelease: true})
 	appendJSONLine(filepath.Join(cfg.AsyncDir, "events.jsonl"), map[string]any{"type": stepEventType(shape), "ts": endedAt, "runId": cfg.ID, "stepIndex": 0, "agent": cfg.Agent, "exitCode": shape.exitCode, "durationMs": durationMs})
 	appendJSONLine(filepath.Join(cfg.AsyncDir, "events.jsonl"), map[string]any{"type": "subagent.run.completed", "lifecycleArtifactVersion": lifecycleArtifactVersion, "ts": endedAt, "runId": cfg.ID, "status": st.State, "durationMs": durationMs})
