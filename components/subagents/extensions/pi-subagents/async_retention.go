@@ -99,25 +99,31 @@ type AsyncRetentionResult struct {
 
 // ── loose JSON ──
 
-// readLooseJSON reads a JSON object the way JSON.parse would: a number out of float64's range is an infinity, not an error.
+// parseLooseJSON parses JSON the way JSON.parse would: a number out of float64's range is an infinity, not an error.
+func parseLooseJSON(b []byte) (any, error) {
+	dec := json.NewDecoder(bytes.NewReader(b))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return nil, err
+	}
+	if dec.More() {
+		return nil, errors.New("unexpected data after the JSON value")
+	}
+	return looseValue(v), nil
+}
+
+// readLooseJSON reads a JSON object file loosely; nil when it is missing, unparsable or not an object.
 func readLooseJSON(path string) jm {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil
 	}
-	dec := json.NewDecoder(bytes.NewReader(b))
-	dec.UseNumber()
-	var v any
-	if dec.Decode(&v) != nil {
+	v, err := parseLooseJSON(b)
+	if err != nil {
 		return nil
 	}
-	if dec.More() {
-		return nil
-	}
-	m, ok := looseValue(v).(map[string]any)
-	if !ok {
-		return nil
-	}
+	m, _ := v.(map[string]any)
 	return m
 }
 

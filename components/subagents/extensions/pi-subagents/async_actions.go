@@ -681,183 +681,35 @@ func (rt *asyncRuntime) resumeAction(ctx sdk.Context, p map[string]any) (any, er
 	return res, err
 }
 
-// resumeTarget is a finished child chosen for revival.
+// resumeTarget is the child a resume revives (kind "revive") or the live child it points at (kind "live").
 type resumeTarget struct {
-	runID       string
-	asyncDir    string
-	agent       string
-	index       int
-	cwd         string
-	sessionFile string
-	model       string
-	live        bool
-	descriptor  *RecoveryDescriptor
-	unsupported []string
+	kind                 string
+	runID                string
+	asyncDir             string
+	state                string
+	mode                 string
+	agent                string
+	sessionName          string
+	index                int
+	cwd                  string
+	sessionFile          string
+	model                string
+	thinking             string
+	launchContractDigest string
+	live                 bool
+	descriptor           *RecoveryDescriptor
+	unsupported          []string
+	// carriesCeiling is whether the run recorded a capability ceiling (a slice the port does not have).
+	carriesCeiling bool
 }
 
-// resolveResumeTarget is resolveAsyncResumeTarget for single-child runs: it validates the run, its session file and its
-// recovery descriptor, and refuses a stopped, ambiguous or foreign run.
-func (rt *asyncRuntime) resolveResumeTarget(asyncDir, id string, p map[string]any, sessionID string) (*resumeTarget, error) {
-	loc, err := resolveAsyncRunLocation(RunLocationParams{ID: strParam(p, "id"), RunID: strParam(p, "runId"), Dir: strParam(p, "dir")}, rt.dirs.Async, rt.dirs.Results)
-	if err != nil {
-		return nil, err
+// resolveResumeTarget is resolveAsyncResumeTarget bound to the runtime's directories and the active session.
+func (rt *asyncRuntime) resolveResumeTarget(_, _ string, p map[string]any, sessionID string) (*resumeTarget, error) {
+	rp := resumeParams{ID: strParam(p, "id"), RunID: strParam(p, "runId"), Dir: strParam(p, "dir")}
+	if v, ok := p["index"].(float64); ok {
+		rp.Index = &v
 	}
-	if loc.AsyncDir == "" && loc.ResultPath == "" {
-		return nil, errRunNotFound
-	}
-	var st *AsyncStatus
-	if loc.AsyncDir != "" {
-		rec, rerr := reconcileAsyncRun(loc.AsyncDir, ReconcileOptions{ResultsDir: rt.dirs.Results})
-		if rerr != nil {
-			return nil, rerr
-		}
-		st = rec.Status
-	}
-	desc, derr := readAsyncRecoveryDescriptor(loc.AsyncDir)
-	if derr != nil {
-		return nil, derr
-	}
-	var result map[string]any
-	if loc.ResultPath != "" {
-		if err := readJSONFile(loc.ResultPath, &result); err != nil {
-			return nil, fmt.Errorf("Failed to read async result file '%s': %s", loc.ResultPath, err.Error())
-		}
-	}
-	runID := firstNonEmpty(func() string {
-		if st != nil {
-			return st.RunID
-		}
-		return ""
-	}(), nonEmptyString(result["runId"]), nonEmptyString(result["id"]), loc.ResolvedID)
-	if sessionID != "" && ((st != nil && st.SessionID != sessionID) || (result != nil && nonEmptyString(result["sessionId"]) != sessionID)) {
-		return nil, fmt.Errorf("Async run '%s' was not found in the active session.", runID)
-	}
-	if desc != nil && desc.SourceRunID != runID {
-		return nil, fmt.Errorf("Async run '%s' has a recovery descriptor for a different source run.", runID)
-	}
-	state := ""
-	if st != nil {
-		state = st.State
-	} else if result != nil {
-		state = nonEmptyString(result["state"])
-		if state == "" {
-			state = "failed"
-			if result["success"] == true {
-				state = "complete"
-			}
-		}
-	}
-	if state == "" {
-		return nil, fmt.Errorf("Status file not found for async run '%s'.", runID)
-	}
-	if state == "stopped" {
-		return nil, fmt.Errorf("Async run '%s' was stopped and cannot be resumed. Start a new run instead.", runID)
-	}
-	var steps []AsyncStep
-	if st != nil {
-		steps = st.Steps
-	}
-	var rsteps []map[string]any
-	if arr, ok := result["results"].([]any); ok {
-		for _, e := range arr {
-			if m, ok := e.(map[string]any); ok {
-				rsteps = append(rsteps, m)
-			}
-		}
-	}
-	count := len(steps)
-	if count == 0 {
-		count = len(rsteps)
-	}
-	if count == 0 && nonEmptyString(result["agent"]) != "" {
-		count = 1
-	}
-	index := 0
-	if v, has := p["index"]; has && v != nil {
-		f, ok := v.(float64)
-		if !ok || f != float64(int(f)) {
-			return nil, fmt.Errorf("Async run '%s' index must be an integer.", runID)
-		}
-		index = int(f)
-	} else if count > 1 {
-		return nil, fmt.Errorf("Async run '%s' has %d children. Provide index to choose one.", runID, count)
-	}
-	if state == "running" {
-		if len(steps) > index && index >= 0 && steps[index].Status == "running" {
-			return &resumeTarget{runID: runID, asyncDir: loc.AsyncDir, agent: steps[index].Agent, index: index, live: true}, nil
-		}
-		if len(steps) > index && steps[index].Status == "pending" {
-			return nil, fmt.Errorf("Async run '%s' child %d is pending and has not started yet. Wait for it to run or complete before resuming.", runID, index)
-		}
-		if len(steps) <= 1 {
-			return &resumeTarget{runID: runID, asyncDir: loc.AsyncDir, agent: steps0Agent(steps), index: 0, live: true}, nil
-		}
-	}
-	if index < 0 || index >= count {
-		return nil, fmt.Errorf("Async run '%s' has %d children. Index %d is out of range.", runID, count, index)
-	}
-	if index < len(steps) && (steps[index].Status == "stopped" || (steps[index].Stopped != nil && *steps[index].Stopped)) {
-		return nil, fmt.Errorf("Async run '%s' child %d was stopped and cannot be resumed. Start a new run instead.", runID, index)
-	}
-	agent := ""
-	switch {
-	case index < len(steps):
-		agent = steps[index].Agent
-	case index < len(rsteps):
-		agent = nonEmptyString(rsteps[index]["agent"])
-	}
-	agent = firstNonEmpty(agent, nonEmptyString(result["agent"]))
-	if agent == "" {
-		return nil, fmt.Errorf("Could not determine child agent for async run '%s'.", runID)
-	}
-	if desc != nil && desc.Agent != agent {
-		return nil, fmt.Errorf("Async run '%s' has a recovery descriptor for '%s', not '%s'.", runID, desc.Agent, agent)
-	}
-	sessionFile := ""
-	if index < len(steps) {
-		sessionFile = steps[index].SessionFile
-	}
-	if sessionFile == "" && index < len(rsteps) {
-		sessionFile = nonEmptyString(rsteps[index]["sessionFile"])
-	}
-	if sessionFile == "" && count == 1 {
-		if st != nil {
-			sessionFile = st.SessionFile
-		}
-		sessionFile = firstNonEmpty(sessionFile, nonEmptyString(result["sessionFile"]))
-	}
-	if sessionFile == "" {
-		return nil, fmt.Errorf("Async run '%s' child %d does not have a persisted session file to resume from.", runID, index)
-	}
-	if filepath.Ext(sessionFile) != ".jsonl" {
-		return nil, fmt.Errorf("Async run '%s' session file must be a .jsonl file: %s", runID, sessionFile)
-	}
-	abs, _ := filepath.Abs(sessionFile)
-	if _, err := os.Stat(abs); err != nil {
-		return nil, fmt.Errorf("Async run '%s' session file does not exist: %s", runID, sessionFile)
-	}
-	cwd := ""
-	if st != nil {
-		cwd = st.Cwd
-	}
-	cwd = firstNonEmpty(cwd, nonEmptyString(result["cwd"]))
-	if cwd == "" && desc != nil {
-		cwd = desc.Cwd
-	}
-	if cwd != "" {
-		if fi, err := os.Stat(cwd); err != nil || !fi.IsDir() {
-			return nil, fmt.Errorf("Async run '%s' required cwd does not exist: %s", runID, cwd)
-		}
-	}
-	model := ""
-	if index < len(steps) {
-		model = steps[index].Model
-	}
-	t := &resumeTarget{runID: runID, asyncDir: loc.AsyncDir, agent: agent, index: index, cwd: cwd, sessionFile: abs, model: model, descriptor: desc}
-	if desc != nil {
-		t.unsupported = resumeUnsupportedFields(desc)
-	}
-	return t, nil
+	return resolveAsyncResumeTarget(rp, rt.dirs, resumeOptions{SessionID: sessionID})
 }
 
 func steps0Agent(s []AsyncStep) string {
