@@ -140,6 +140,18 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   parsed file and serves it while a stat (size, mtime in nanoseconds, file identity) still matches. A file modified within the
   last 2 seconds is never cached (the racy-write guard), an edit is picked up on the next call, and `ResetCaches` drops the entry.
   The returned map is shared, so callers treat it as read-only. Twins: `config_cache_test.go`; mutants `config-cache-*`.
+- **Config reads of the Gemini files** go through the same cache (`readConfigValue` keeps the decoded document whatever its root
+  type; `ReadConfigRoot` rejects a non-object root, the Gemini files read it as empty like `gemini-api.ts`). They used to open,
+  read and parse the file several times per search. The directory and the file path are memoized together. Twins:
+  `config_gemini_cache_test.go`; mutants `gemini-config-non-object-root-ignored`, `config-cache-stores-no-value`.
+- **Provider responses are decoded by a direct parser** (`unmarshalAny`, `fastjson.go`) into the generic values the callers read
+  with `jsonPath` and type assertions. `encoding/json` decodes into an interface through reflection and allocated 78 percent of the
+  bytes of a Gemini search. The parser takes the well-formed common case; a syntax error, a repeated key, invalid UTF-8, a lone
+  surrogate, a number out of range or nesting beyond 200 levels goes to `encoding/json`, so value and error text are the standard
+  ones by construction. `fastjson_test.go` compares both on the recorded provider fixtures, an edge-case table and a seeded random
+  corpus (with damaged and truncated copies) and has a fuzz target; mutants `fast-json-*`. Response bodies are read into one
+  buffer sized from the announced length (`readBody`; mutants `read-body-*`), and a plain host name in a domain filter skips the
+  URL parse (`NormalizeDomain`, `fastpaths_test.go`; mutants `domain-shape-*`, `numeric-label-*`).
 - **Tool errors**: where the original returns `isError: true` inside the result object (Pi ignores it), PiG marks the result as an
   error, so the model sees `web_enable` failures as failures.
 - **Invalid `web-search.json`** makes the original throw at registration; an extension cannot fail its load here, so nothing is
@@ -276,7 +288,7 @@ Each logs `ADAPTED:` when run.
 | Twins | `pigeq twins check`: 620 exact + 255 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
-| Mutation | `mutations.json`: 166 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini and the model providers), all killed (`pigeq mutate --unit`) |
+| Mutation | `mutations.json`: 179 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, and the decoder, body read and domain fast paths), all killed (`pigeq mutate --unit`) |
 | Binary | a Piglet Binary with only this extension fused (a temporary Piglet, deleted after the run) builds with PiG 0.3.0 and passes the process-global safety check; replaying the 5 scenarios on it (`pigeq record --self --builtin`) gives tool results and events identical to the Pi golden traces. `pig-with-batteries` itself cannot build a Binary yet because of the Node herdr extension (documented in its README) |
 | Go tests | 477 passing subtests, 572 skipped (570 ledger skips + 2 environment skips), coverage 86% |
 

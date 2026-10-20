@@ -384,6 +384,84 @@
   "replace": "if false && configEntryMatches(e, path, info) {"
  },
  {
+  "name": "fast-json-accepts-repeated-keys",
+  "file": "fastjson.go",
+  "find": "if len(m) == n {",
+  "replace": "if false {"
+ },
+ {
+  "name": "fast-json-accepts-trailing-data",
+  "file": "fastjson.go",
+  "find": "return v, p.i == len(p.s)",
+  "replace": "return v, true"
+ },
+ {
+  "name": "fast-json-accepts-invalid-utf8",
+  "file": "fastjson.go",
+  "find": "if r == utf8.RuneError && size == 1 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "fast-json-accepts-numbers-out-of-range",
+  "file": "fastjson.go",
+  "find": "f, err := strconv.ParseFloat(s[p.i:j], 64)",
+  "replace": "f, err := strconv.ParseFloat(s[p.i:j], 64); err = nil"
+ },
+ {
+  "name": "fast-json-depth-unbounded",
+  "file": "fastjson.go",
+  "find": "const fastJSONMaxDepth = 200",
+  "replace": "const fastJSONMaxDepth = 100000"
+ },
+ {
+  "name": "fast-json-empty-array-is-nil",
+  "file": "fastjson.go",
+  "find": "a := make([]any, 0, 4)",
+  "replace": "var a []any"
+ },
+ {
+  "name": "fast-json-repairs-lone-surrogate",
+  "file": "fastjson.go",
+  "find": "lo < 0xDC00 || lo > 0xDFFF",
+  "replace": "false"
+ },
+ {
+  "name": "read-body-limit-ignored",
+  "file": "searchcommon.go",
+  "find": "if len(buf)+len(room) > maxProviderBody {",
+  "replace": "if false {"
+ },
+ {
+  "name": "read-body-drops-read-error",
+  "file": "searchcommon.go",
+  "find": "if err == io.EOF {",
+  "replace": "if err != nil {"
+ },
+ {
+  "name": "gemini-config-non-object-root-ignored",
+  "file": "gemini_adc.go",
+  "find": "return &geminiCfg{root: map[string]any{}, nonObject: true}",
+  "replace": "return &geminiCfg{root: map[string]any{}, nonObject: false}"
+ },
+ {
+  "name": "config-cache-stores-no-value",
+  "file": "config.go",
+  "find": "configCache = &configEntry{path: path, info: info, value: parsed}",
+  "replace": "configCache = &configEntry{path: path, info: info, value: nil}"
+ },
+ {
+  "name": "domain-shape-accepts-one-letter-top-label",
+  "file": "searchcommon.go",
+  "find": "len(s)-dot-1 < 2",
+  "replace": "len(s)-dot-1 < 1"
+ },
+ {
+  "name": "numeric-label-counts-the-empty-final-label",
+  "file": "urlutil.go",
+  "find": "end-- // the empty label after a final dot does not count; the one before it does",
+  "replace": "_ = end"
+ },
+ {
   "name": "tinyfish-per-url-cap-raised",
   "file": "tinyfish.go",
   "find": "tinyfishMaxPerURLTimeoutMs = 110000",
