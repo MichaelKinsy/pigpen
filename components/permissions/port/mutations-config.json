@@ -1178,8 +1178,14 @@
  {
   "name": "icu-accent",
   "file": "icucompare.go",
-  "find": "e.primary, e.accent = w, int(r)",
+  "find": "e.primary, e.accent = w, int(unicode.ToLower(r))",
   "replace": "e.primary, e.accent = w, 0"
+ },
+ {
+  "name": "icu-accent-case",
+  "file": "icucompare.go",
+  "find": "e.primary, e.accent = w, int(unicode.ToLower(r))",
+  "replace": "e.primary, e.accent = w, int(r)"
  },
  {
   "name": "icu-symbols",
