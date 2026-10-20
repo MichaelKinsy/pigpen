@@ -8,7 +8,7 @@ func TestDecodeKittyPrintable_ShiftAndText(t *testing.T) {
 		in   string
 		want string // "" means ok==false (not plain text)
 	}{
-		{"shift+a base only (uppercase fallback) -> A", "\x1b[97;2u", "A"},
+		{"shift+a base only -> a (pi-tui decodeKittyPrintable has no uppercase fallback)", "\x1b[97;2u", "a"},
 		{"shift+a with shifted alternate -> A", "\x1b[97:65;2u", "A"},
 		{"plain a (report-all mode) -> a", "\x1b[97u", "a"},
 		{"shift+1 with layout alternate -> !", "\x1b[49:33;2u", "!"},
@@ -68,10 +68,15 @@ func TestDecodePrintableKey_ModifyOtherKeysShift(t *testing.T) {
 // could be typed.
 func TestEditor_InsertsCapitalFromKittyCSIu(t *testing.T) {
 	e := newTestEditor()
-	e.HandleInput("h")           // plain lowercase byte
-	e.HandleInput("\x1b[105;2u") // Shift+i reported as CSI-u (base 105 'i' + shift)
+	e.HandleInput("h")              // plain lowercase byte
+	e.HandleInput("\x1b[105:73;2u") // Shift+i reported as CSI-u with the shifted alternate 73 'I'
 	if got := e.GetText(); got != "hI" {
 		t.Fatalf("editor text = %q, want %q (Shift+i must insert capital I)", got, "hI")
+	}
+	// Without the shifted alternate pi-tui's decodeKittyPrintable keeps the base key (no uppercase fallback).
+	e.HandleInput("\x1b[105;2u")
+	if got := e.GetText(); got != "hIi" {
+		t.Fatalf("editor text = %q, want %q", got, "hIi")
 	}
 }
 

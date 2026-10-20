@@ -30,9 +30,9 @@ markers; `OnChange` fires once per input chunk.
 
 | Group | Files | Lines |
 |---|---|---|
-| Root code, copied from PiG v0.5.0 and pruned/adapted | 19 files | 9055 |
+| Root code, copied from PiG v0.5.0 and pruned/adapted | 19 files | 9050 |
 | Root code, rewritten from pi-tui / pi-coding-agent | 8 files | 432 |
-| Root tests (PiG v0.5.0 tests, adapted) + shims | 74 files | 9721 |
+| Root tests (PiG v0.5.0 tests, adapted) + shims | 75 files | 9770 |
 | `widthx/` code (PiG v0.5.0 copy) | 12 files | 5506 |
 | `widthx/` tests | 25 files | 2193 |
 | `widthx/` data, generators and notes | 24 files | 5762 |

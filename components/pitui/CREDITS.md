@@ -61,7 +61,7 @@ Rewritten from Pi:
   - `sgr.go` (78 lines)
   - `base.go` (19 lines)
 
-Root tests (PiG v0.5.0 tests of the kept code, adapted; `compat_test.go`, `extras_test.go` and `markdown_fixture_test.go` are written here):
+Root tests (PiG v0.5.0 tests of the kept code, adapted; `compat_test.go`, `extras_test.go` and `markdown_fixture_test.go` and `pi_parity_test.go` are written here):
 
   - `compat_test.go`
   - `components_grapheme_test.go`
@@ -126,6 +126,7 @@ Root tests (PiG v0.5.0 tests of the kept code, adapted; `compat_test.go`, `extra
   - `markdown_theme_test.go`
   - `markdown_upstream_test.go`
   - `markdown_width_test.go`
+  - `pi_parity_test.go`
   - `restored_editor_border_regression_test.go`
   - `restored_editor_edit_state_regression_test.go`
   - `restored_editor_kill_undo_upstream_test.go`
