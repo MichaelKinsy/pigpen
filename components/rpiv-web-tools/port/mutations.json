@@ -1281,7 +1281,7 @@
   "name": "gh-resolve-symlink-fast-path",
   "file": "github_interceptor.go",
   "find": "fi.Mode()&os.ModeSymlink != 0",
-  "replace": "false"
+  "replace": "fi.Mode()&os.ModeSymlink != 0 && false"
  },
  {
   "name": "js-ascii-run-limit",
