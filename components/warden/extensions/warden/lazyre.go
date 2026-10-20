@@ -11,6 +11,8 @@ import (
 // expression the first time it is used, so a pig that never enables warden never pays.
 type lazyRegexp struct {
 	expr string
+	// js marks a JavaScript source pattern: jsPattern translates it on first use (context_jsre.go).
+	js   bool
 	once sync.Once
 	re   *regexp.Regexp
 }
@@ -43,7 +45,11 @@ func lazyExpressions() []*lazyRegexp {
 func (l *lazyRegexp) get() *regexp.Regexp {
 	l.once.Do(func() {
 		lazyCompiled.Add(1)
-		l.re = regexp.MustCompile(l.expr)
+		expr := l.expr
+		if l.js {
+			expr = jsPattern(expr)
+		}
+		l.re = regexp.MustCompile(expr)
 	})
 	return l.re
 }

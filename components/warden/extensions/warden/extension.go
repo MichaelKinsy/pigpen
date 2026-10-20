@@ -65,6 +65,8 @@ type warden struct {
 	adaptor steerAdaptor
 	// tools is the state of the prefs, loops and recall tools (tools_wiring.go).
 	tools toolsState
+	// context is the state of the context saver (context_wiring.go).
+	context contextState
 }
 
 // Extension returns the guard.
@@ -84,15 +86,18 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	if o.Now == nil {
 		o.Now = time.Now
 	}
-	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}}
+	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, context: newContextState()}
+	w.tools.ledger = w.context.ledger // CONTEXT-LANE HOOK: the stored outputs the compaction snapshot and warden_recall read
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
 	e.OnEvent(sdk.EventBeforeAgentStart, w.onBeforeAgentStart)
 	e.OnEvent(sdk.EventAgentStart, w.onAgentStart)
-	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) { w.guard.TurnEnd(); return nil, nil })
+	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) { w.contextTurnEnd(); w.guard.TurnEnd(); return nil, nil })
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
+	e.OnEvent(sdk.EventMessageEnd, w.onMessageEnd)                     // CONTEXT-LANE HOOK (context_wiring.go)
+	e.OnEvent(sdk.EventSessionBeforeCompact, w.onSessionBeforeCompact) // CONTEXT-LANE HOOK (context_compaction.go)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); return nil, nil })
 	// TOOLS-LANE HOOK: the three tools and the compaction evidence appendix (tools_wiring.go).
@@ -280,6 +285,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, data map[string]any) (any, erro
 		w.disclose(ctx)
 	}
 	w.refresh(ctx)
+	w.contextSessionStart()        // CONTEXT-LANE HOOK: the stored outputs and the ledger start over
 	w.toolsSessionStart(ctx, data) // TOOLS-LANE HOOK: prefs injection, resume announcement, search probe
 	return nil, nil
 }
