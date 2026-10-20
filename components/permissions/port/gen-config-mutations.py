@@ -229,7 +229,8 @@ m("ec-length", "extconfig.go", "if la, lb := utf16Len(a), utf16Len(b); la != lb 
 m("icu-upper", "icucompare.go", "e.upper = 1", "e.upper = 0")
 m("icu-letters", "icucompare.go", "return (letters + (i-letters)/2) * 2, true", "return (letters + (i - letters)) * 2, true")
 m("icu-punct-order", "icucompare.go", 'const icuASCIIOrder = " _-,;:', 'const icuASCIIOrder = " -_,;:')
-m("icu-accent", "icucompare.go", "e.primary, e.accent = w, int(r)", "e.primary, e.accent = w, 0")
+m("icu-accent", "icucompare.go", "e.primary, e.accent = w, int(unicode.ToLower(r))", "e.primary, e.accent = w, 0")
+m("icu-accent-case", "icucompare.go", "e.primary, e.accent = w, int(unicode.ToLower(r))", "e.primary, e.accent = w, int(r)")
 m("icu-symbols", "icucompare.go", "e.primary = digits*2 - 1", "e.primary = digits*2 + 100")
 m("icu-levels", "icucompare.go", "func(e collationElement) int { return e.accent },\n\t\tfunc(e collationElement) int { return e.upper },", "func(e collationElement) int { return e.upper },\n\t\tfunc(e collationElement) int { return e.accent },")
 

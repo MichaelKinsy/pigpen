@@ -97,15 +97,15 @@
  },
  {
   "name": "surface-path",
-  "file": "rule.go",
-  "find": "\"path\": true, \"external_directory\": true,\n\t\"path_read\"",
-  "replace": "\"external_directory\": true,\n\t\"path_read\""
+  "file": "pathsurfaces.go",
+  "find": "[]string{\"path\", \"external_directory\"}",
+  "replace": "[]string{\"external_directory\"}"
  },
  {
   "name": "surface-options-only-path",
   "file": "rule.go",
-  "find": "if pathSurfaces[surface] {\n\t\treturn f.MatchOptions",
-  "replace": "if !pathSurfaces[surface] {\n\t\treturn f.MatchOptions"
+  "find": "if PathSurfaces[surface] {\n\t\treturn f.MatchOptions",
+  "replace": "if !PathSurfaces[surface] {\n\t\treturn f.MatchOptions"
  },
  {
   "name": "rule-surface-match",
@@ -332,20 +332,20 @@
  {
   "name": "yolo-flag",
   "file": "config.go",
-  "find": "c.Yolo, _ = root.vals[\"yoloMode\"].(bool)",
-  "replace": "c.Yolo = false"
+  "find": "Yolo: r.Config.YoloMode != nil && *r.Config.YoloMode}",
+  "replace": "Yolo: false}"
  },
  {
   "name": "config-permission-object",
   "file": "config.go",
-  "find": "if perm := root.obj(\"permission\"); perm != nil {",
-  "replace": "if perm := root.obj(\"permissionx\"); perm != nil {"
+  "find": "c := Config{Permission: r.Config.Permission,",
+  "replace": "c := Config{Permission: nil,"
  },
  {
   "name": "config-issue",
   "file": "config.go",
-  "find": "return Config{Issue: \"Failed to read config at '\" + path + \"': \" + err.Error()}\n\t}\n\tif issues",
-  "replace": "return Config{}\n\t}\n\tif issues"
+  "find": "if len(r.Issues) > 0 {\n\t\treturn Config{Issue: strings.Join(r.Issues, \"\\n\")}",
+  "replace": "if len(r.Issues) > 0 {\n\t\treturn Config{}"
  },
  {
   "name": "permissive-value",
@@ -577,33 +577,33 @@
  },
  {
   "name": "status-yolo",
-  "file": "extension.go",
-  "find": "ctx.SetStatus(extensionID, \"yolo\")",
-  "replace": "ctx.SetStatus(extensionID, \"YOLO\")"
+  "file": "cfgstore.go",
+  "find": "permissionSystemYoloStatusValue = \"yolo\"",
+  "replace": "permissionSystemYoloStatusValue = \"YOLO\""
  },
  {
   "name": "status-clear",
-  "file": "extension.go",
-  "find": "\tctx.SetStatus(extensionID, \"\")\n}",
-  "replace": "\tctx.SetStatus(extensionID, \"x\")\n}"
+  "file": "cfgstore.go",
+  "find": "\treturn \"\"\n}\n\nfunc syncPermissionSystemStatus",
+  "replace": "\treturn \"x\"\n}\n\nfunc syncPermissionSystemStatus"
  },
  {
   "name": "start-issue",
   "file": "extension.go",
-  "find": "if st.config.Issue != \"\" {",
-  "replace": "if st.config.Issue == \"\" {"
+  "find": "st.store.LogResolvedPaths(ctx.Cwd())\n\t\tst.reporter.Report()",
+  "replace": "st.store.LogResolvedPaths(ctx.Cwd())"
  },
  {
   "name": "start-permissive",
-  "file": "extension.go",
-  "find": "if msg := detectPermissiveBashFallback(st.config.Permission); msg != \"\" {",
-  "replace": "if msg := \"\"; msg != \"\" {"
+  "file": "cfgloader.go",
+  "find": "if issue := detectPermissiveBashFallback(merged.Permission); issue != \"\" {",
+  "replace": "if issue := \"\"; issue != \"\" {"
  },
  {
   "name": "shutdown-status",
   "file": "extension.go",
-  "find": "ctx.SetStatus(extensionID, \"\")\n\t\treturn nil, nil\n\t})\n\te.OnEvent(sdk.EventToolCall",
-  "replace": "return nil, nil\n\t})\n\te.OnEvent(sdk.EventToolCall"
+  "find": "ctx.SetStatus(extensionID, \"\")\n\t\tst.notifier.unbind()",
+  "replace": "st.notifier.unbind()"
  },
  {
   "name": "tool-call-name",
@@ -638,8 +638,8 @@
  {
   "name": "agent-start-reload",
   "file": "extension.go",
-  "find": "p := st.reload()\n\t\tsyncStatus(ctx, p)\n\t\t// The skills",
-  "replace": "p := st.current()\n\t\tsyncStatus(ctx, p)\n\t\t// The skills"
+  "find": "p := st.reload()\n\t\t// Turn preparation",
+  "replace": "p := st.current()\n\t\t// Turn preparation"
  },
  {
   "name": "wrap-basename",
@@ -883,21 +883,21 @@
  },
  {
   "name": "schema-issues-used",
-  "file": "config.go",
-  "find": "if issues := validateUnifiedConfig(v); len(issues) > 0 {",
-  "replace": "if issues := validateUnifiedConfig(v); false && len(issues) > 0 {"
+  "file": "cfgloader.go",
+  "find": "if issues := validateUnifiedConfig(parsed); len(issues) > 0 {",
+  "replace": "if issues := validateUnifiedConfig(parsed); false && len(issues) > 0 {"
  },
  {
   "name": "config-comments",
-  "file": "config.go",
-  "find": "parseJSON([]byte(stripJSONComments(string(data))))",
-  "replace": "parseJSON(data)"
+  "file": "cfgloader.go",
+  "find": "stripped := stripJSONComments(text)",
+  "replace": "stripped := text"
  },
  {
   "name": "shelltools-read",
   "file": "config.go",
-  "find": "c.ShellTools = tools.order()",
-  "replace": "_ = tools"
+  "find": "c.ShellTools = r.Config.ShellTools.order()",
+  "replace": "c.ShellTools = nil"
  },
  {
   "name": "shelltools-decide",
@@ -913,15 +913,21 @@
  },
  {
   "name": "schema-order",
-  "file": "config.go",
+  "file": "cfgloader.go",
   "find": "c.Permission = schemaPermission(perm)",
   "replace": "c.Permission = perm"
  },
  {
   "name": "schema-proto",
   "file": "schema.go",
-  "find": "if !inShape[k] && k != \"__proto__\" {",
-  "replace": "if !inShape[k] {"
+  "find": "if !inShape[k] && k != \"__proto__\" {\n\t\t\tout.set(",
+  "replace": "if !inShape[k] {\n\t\t\tout.set("
+ },
+ {
+  "name": "schema-proto-validate",
+  "file": "schema.go",
+  "find": "if !inShape[k] && k != \"__proto__\" { // zod ignores a \"__proto__\" key",
+  "replace": "if !inShape[k] { // zod ignores a \"__proto__\" key"
  },
  {
   "name": "schema-proto-map",
@@ -931,9 +937,9 @@
  },
  {
   "name": "load-unreadable",
-  "file": "config.go",
-  "find": "if errors.Is(err, fs.ErrNotExist) {\n\t\t\treturn Config{}",
-  "replace": "if err != nil || errors.Is(err, fs.ErrNotExist) {\n\t\t\treturn Config{}"
+  "file": "cfgloader.go",
+  "find": "if err != nil {\n\t\treturn UnifiedConfigLoadResult{Issues: []string{\"Failed to read config at '\" + path + \"': \" + err.Error()}}\n\t}\n\treturn parseUnifiedText(text, path)",
+  "replace": "if err != nil {\n\t\treturn UnifiedConfigLoadResult{}\n\t}\n\treturn parseUnifiedText(text, path)"
  },
  {
   "name": "skill-deny-filter",
@@ -1010,8 +1016,14 @@
  {
   "name": "skill-reset",
   "file": "extension.go",
-  "find": "st.skills = nil\n",
-  "replace": "\n"
+  "find": "st.baseline.reset()\n\t\tst.skills = nil\n",
+  "replace": "st.baseline.reset()\n\n"
+ },
+ {
+  "name": "skill-reset-discover",
+  "file": "extension.go",
+  "find": "st.mu.Lock()\n\t\tst.skills = nil\n\t\tst.mu.Unlock()\n\t\tif !trusted {",
+  "replace": "st.mu.Lock()\n\n\t\tst.mu.Unlock()\n\t\tif !trusted {"
  },
  {
   "name": "skill-gate",
@@ -1166,8 +1178,8 @@
  {
   "name": "options-false-quiet",
   "file": "unported.go",
-  "find": "case bool:\n\t\t\tif !x {\n\t\t\t\tcontinue\n\t\t\t}",
-  "replace": "case bool:\n\t\t\tif x {\n\t\t\t\tcontinue\n\t\t\t}"
+  "find": "on := func(b *bool) bool { return b != nil && *b }",
+  "replace": "on := func(b *bool) bool { return b != nil }"
  },
  {
   "name": "input-registered",
