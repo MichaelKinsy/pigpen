@@ -1,0 +1,34 @@
+--- FAIL: TestSessionIsolation (0.08s)
+    --- FAIL: TestSessionIsolation/the_render_pointer_stays_on_the_parent_slot_even_after_a_child_creates_tasks_(creator-ownership) (0.01s)
+        extension_test.go:197: overlay rows = [], want the parent's task only
+    --- FAIL: TestSessionIsolation/first_hasUI_session_start_claims_the_foreground_and_renders_its_slot (0.00s)
+        extension_test.go:211: "" does not contain "first"
+    --- FAIL: TestSessionIsolation/a_child_todo_call_writes_the_child's_slot;_the_overlay_still_shows_the_parent's_todos (0.00s)
+        extension_test.go:232: "" does not contain "parent task"
+    --- FAIL: TestSessionIsolation/the_foreground's_own_session_shutdown_disposes_the_overlay_and_clears_foreground (0.00s)
+        extension_test.go:256: "" does not contain "next task"
+    --- FAIL: TestSessionIsolation/foreground_shutdown_still_clears_the_pointer_+_evicts_the_slot_when_dispose()_throws_(try/finally) (0.01s)
+        extension_test.go:272: "" does not contain "next task"
+--- FAIL: TestSessionLifecycleReplay (0.02s)
+    --- FAIL: TestSessionLifecycleReplay/a_compact_refreshes_the_overlay_of_the_foreground (0.00s)
+        extension_test.go:311: "" does not contain "two"
+    --- FAIL: TestSessionLifecycleReplay/agent_start_hides_the_completed_tasks_of_the_previous_turn (0.00s)
+        extension_test.go:326: "" does not contain "done"
+--- FAIL: TestShortcut (0.03s)
+    --- FAIL: TestShortcut/handler_toggles_the_overlay_when_it_is_registered_(render_shape_flips_to_the_collapsed_hint) (0.00s)
+        extension_test.go:386: collapsed rows: got 0, want 3
+--- FAIL: TestOverlayPushFailureDoesNotFailTheTool (0.00s)
+    extension_test.go:452: "" does not contain "two"
+--- FAIL: TestOverlayPlacementAndRowBudget (0.00s)
+    extension_test.go:500: 0 rows pushed, the host shows 10
+--- FAIL: TestOverlayIsAComponentViewWidget (0.00s)
+    widget_view_test.go:35: the overlay went out as a list of rows the host caps and wraps: map[content:[● Todos (0/2) ├─ ○ one └─ ○ two ] key:rpiv-todos options:map[placement:aboveEditor]]
+--- FAIL: TestOverlayShowsTheOriginalsFullRowBudget (0.00s)
+    widget_view_test.go:53: rows at the default maxWidgetLines of 12: got 0, want 13
+--- FAIL: TestMaxWidgetLinesAboveTwelveIsHonoured (0.01s)
+    widget_view_test.go:70: heading, 25 tasks, spacer: got 0, want 27
+--- FAIL: TestOverlayIsLaidOutAgainAfterAResize (5.01s)
+    widget_view_test.go:95: only 1 widget calls, want 2
+FAIL
+FAIL	github.com/MichaelKinsy/pigpen/rpiv-todo	6.292s
+FAIL

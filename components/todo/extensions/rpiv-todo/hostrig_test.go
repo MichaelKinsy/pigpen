@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	rpiv_todo "github.com/MichaelKinsy/pigpen/rpiv-todo"
 )
@@ -65,7 +66,7 @@ func startRig(t *testing.T, opts HostOptions) *rig {
 			if r.failWidget {
 				return nil, "widget refused"
 			}
-			if _, hasRows := args["content"].([]any); !hasRows && r.failClear {
+			if _, hasView := args["view"]; !hasView && r.failClear {
 				return nil, "dispose failed"
 			}
 		case "ui.getToolsExpanded":
@@ -131,14 +132,41 @@ func (r *rig) notifies() []map[string]any {
 	return out
 }
 
+// rowsOf is the rows of the widget a setWidget call installs: the overlay is a component widget (a kit view
+// of verbatim rows), as in the original (todo-overlay.ts:99-110). A clear, or a call that is not a view, has none.
 func rowsOf(call map[string]any) []string {
 	var out []string
-	if l, ok := call["content"].([]any); ok {
+	view, _ := call["view"].(map[string]any)
+	root, _ := view["root"].(map[string]any)
+	if root["kind"] != "lines" {
+		return nil
+	}
+	if l, ok := root["content"].([]any); ok {
 		for _, s := range l {
 			out = append(out, s.(string))
 		}
 	}
 	return out
+}
+
+// widthChange tells the extension the terminal was resized, as the host does.
+func (r *rig) widthChange(width int) {
+	r.Host.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "width_change", "args": map[string]any{"width": width}}})
+}
+
+// waitWidgetCalls waits until the extension has made n widget calls (a width change is delivered on its own goroutine).
+func (r *rig) waitWidgetCalls(n int) []map[string]any {
+	r.t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if calls := r.widgetCalls(); len(calls) >= n {
+			return calls
+		}
+		if time.Now().After(deadline) {
+			r.t.Fatalf("only %d widget calls, want %d", len(r.widgetCalls()), n)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
 }
 
 // call runs the todo tool and returns its text and details.
