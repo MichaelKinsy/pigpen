@@ -50,6 +50,11 @@ type ActionConfig struct {
 	EscalationThreshold float64       `json:"escalationThreshold"`
 	// Floor: "evidence" (default) or "level".
 	Floor string `json:"floor"`
+	// FeedbackLog writes each judged call and what the user did next to an owner-only per-session file.
+	FeedbackLog bool `json:"feedbackLog"`
+	// PathRules and ArmingRules are user-file-only rules (config_rules.go).
+	PathRules   []PathRule   `json:"pathRules"`
+	ArmingRules []ArmingRule `json:"armingRules"`
 }
 
 // StuckConfig is the stuck guard's configuration.
@@ -94,17 +99,34 @@ type Config struct {
 	// need no consent). A different Backend without a matching Consent is not used until /warden enable.
 	Consent string `json:"consent"`
 	// Backend names where judgments go: "" (none: offline patterns only), "typesafe" or "own-model".
-	Backend     string       `json:"backend"`
-	Mode        string       `json:"mode"` // steer | confirm | advise
-	TimeoutMs   int          `json:"timeoutMs"`
-	MaxRequests int          `json:"maxRequests"`
-	Action      ActionConfig `json:"action"`
-	Stuck       StuckConfig  `json:"stuck"`
-	Done        DoneConfig   `json:"done"`
+	Backend     string         `json:"backend"`
+	Mode        string         `json:"mode"` // steer | confirm | advise
+	TimeoutMs   int            `json:"timeoutMs"`
+	MaxRequests int            `json:"maxRequests"`
+	Action      ActionConfig   `json:"action"`
+	Stuck       StuckConfig    `json:"stuck"`
+	Done        DoneConfig     `json:"done"`
+	Slop        SlopConfig     `json:"slop"`
+	Security    SecurityConfig `json:"security"`
+	Rules       RulesConfig    `json:"rules"`
+	Context     ContextConfig  `json:"context"`
+	Runaway     RunawayConfig  `json:"runaway"`
+	Notify      NotifyConfig   `json:"notify"`
+	Judge       JudgeConfig    `json:"judge"`
+	Subagent    SubagentConfig `json:"subagent"`
+	Widget      WidgetConfig   `json:"widget"`
 	// SteerVisible shows steers in the transcript; Notices notify the user of each finding.
-	SteerVisible bool `json:"steerVisible"`
-	Notices      bool `json:"notices"`
-	SteerBudget  int  `json:"steerBudget"`
+	SteerVisible bool             `json:"steerVisible"`
+	Notices      bool             `json:"notices"`
+	SteerBudget  int              `json:"steerBudget"`
+	Steers       SteersConfig     `json:"steers"`
+	Learning     LearningConfig   `json:"learning"`
+	Conscience   ConscienceConfig `json:"conscience"`
+	Prefs        PrefsConfig      `json:"prefs"`
+	Waste        WasteConfig      `json:"waste"`
+	Compaction   CompactionConfig `json:"compaction"`
+	// Warnings are config values not applied as written, one message each (never serialized).
+	Warnings []string `json:"-"`
 }
 
 // DefaultUIFiles: files whose change shows on screen (`{a,b}` alternatives, `!` excludes).
@@ -149,11 +171,29 @@ func DefaultConfig() Config {
 			ShouldProceed:       ShouldProceed{Threshold: 0.6, Steer: false},
 			EscalationThreshold: 0.85,
 			Floor:               "evidence",
+			FeedbackLog:         true,
+			PathRules:           []PathRule{},
+			ArmingRules:         []ArmingRule{},
 		},
 		Stuck:        StuckConfig{Enabled: true, Window: 12, MinFailures: 3, Cooldown: 3, SameStrategy: 0.7, ChurnThreshold: 5, Nudge: true, RepeatSteer: true, Evidence: false, DiffLimit: 3000, TailLimit: 1000},
 		Done:         DoneConfig{Enabled: true, ClaimsDone: 0.7, Nudge: true, UIProof: true, UIFiles: append([]string{}, DefaultUIFiles...), VisualTools: DefaultVisualTools()},
+		Slop:         defaultSlopConfig(),
+		Security:     defaultSecurityConfig(),
+		Rules:        defaultRulesConfig(),
+		Context:      defaultContextConfig(),
+		Runaway:      defaultRunawayConfig(),
+		Notify:       defaultNotifyConfig(),
+		Judge:        defaultJudgeConfig(),
+		Subagent:     defaultSubagentConfig(),
+		Widget:       defaultWidgetConfig(),
 		SteerVisible: true,
 		Notices:      true,
 		SteerBudget:  3,
+		Steers:       defaultSteersConfig(),
+		Learning:     defaultLearningConfig(),
+		Conscience:   defaultConscienceConfig(),
+		Prefs:        defaultPrefsConfig(),
+		Waste:        defaultWasteConfig(),
+		Compaction:   defaultCompactionConfig(),
 	}
 }
