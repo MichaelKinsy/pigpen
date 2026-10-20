@@ -2,7 +2,15 @@ package pi_subagents
 
 import (
 	"context"
-
+	"errors"
+	"fmt"
+	"io/fs"
+	"math"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"syscall"
 	"time"
 )
 
@@ -22,7 +30,13 @@ const (
 	WorkflowFailureRuntime             = "runtime"
 )
 
-func isWorkflowFailureKind(k string) bool { panic("not implemented") }
+func isWorkflowFailureKind(k string) bool {
+	switch k {
+	case WorkflowFailureValidation, WorkflowFailureScript, WorkflowFailureChild, WorkflowFailureReturnSerialization, WorkflowFailureTimeout, WorkflowFailureDetachedChild, WorkflowFailureRuntime:
+		return true
+	}
+	return false
+}
 
 const workflowAssemblyFlushTimeout = 5 * time.Second // WORKFLOW_ASSEMBLY_FLUSH_TIMEOUT_MS
 
@@ -68,8 +82,8 @@ type WorkflowScriptError struct {
 	Cause   error
 }
 
-func (e *WorkflowScriptError) Error() string { panic("not implemented") }
-func (e *WorkflowScriptError) Unwrap() error { panic("not implemented") }
+func (e *WorkflowScriptError) Error() string { return e.Message }
+func (e *WorkflowScriptError) Unwrap() error { return e.Cause }
 
 // workflowKindError is an error that carries a failure kind (taggedWorkflowError, scripted-workflow.ts:1197).
 type workflowKindError struct {
@@ -77,11 +91,17 @@ type workflowKindError struct {
 	kind string
 }
 
-func (e *workflowKindError) Error() string { panic("not implemented") }
+func (e *workflowKindError) Error() string { return e.msg }
 
-func taggedWorkflowError(msg, kind string) error { panic("not implemented") }
+func taggedWorkflowError(msg, kind string) error { return &workflowKindError{msg, kind} }
 
-func workflowErrorKind(err error) string { panic("not implemented") }
+func workflowErrorKind(err error) string {
+	var k *workflowKindError
+	if errors.As(err, &k) {
+		return k.kind
+	}
+	return ""
+}
 
 // WorkflowAdmission tells a launch whether the call was admitted as part of a runs.all batch.
 type WorkflowAdmission struct {
@@ -133,7 +153,34 @@ type WorkflowSteerResult struct {
 	Error          string `json:"error,omitempty"`
 }
 
-func (r WorkflowSteerResult) object() *jsObject { panic("not implemented") }
+func (r WorkflowSteerResult) object() *jsObject {
+	o := newObject()
+	o.set("key", r.Key)
+	o.set("state", r.State)
+	if r.RequestID != "" {
+		o.set("requestId", r.RequestID)
+	}
+	if r.DeliveryStatus != "" {
+		o.set("deliveryStatus", r.DeliveryStatus)
+	}
+	if r.Targets != nil {
+		ts := make([]any, len(r.Targets))
+		for i, t := range r.Targets {
+			to := newObject()
+			to.set("index", float64(t.Index))
+			to.set("state", t.State)
+			if t.Reason != "" {
+				to.set("reason", t.Reason)
+			}
+			ts[i] = to
+		}
+		o.set("targets", ts)
+	}
+	if r.Error != "" {
+		o.set("error", r.Error)
+	}
+	return o
+}
 
 // WorkflowHostCommandParams is a validated runs.host call (host-command.ts:17).
 type WorkflowHostCommandParams struct {
@@ -157,7 +204,26 @@ type WorkflowHostCommandResult struct {
 	Error      string
 }
 
-func (r WorkflowHostCommandResult) object() *jsObject { panic("not implemented") }
+func (r WorkflowHostCommandResult) object() *jsObject {
+	o := newObject()
+	o.set("key", r.Key)
+	o.set("kind", "command")
+	o.set("ok", r.OK)
+	o.set("state", r.State)
+	if r.ExitCode != nil {
+		o.set("exitCode", float64(*r.ExitCode))
+	} else {
+		o.set("exitCode", nil)
+	}
+	o.set("stdout", r.Stdout)
+	o.set("stderr", r.Stderr)
+	o.set("outputPath", r.OutputPath)
+	o.set("durationMs", float64(r.DurationMs))
+	if r.Error != "" {
+		o.set("error", r.Error)
+	}
+	return o
+}
 
 // WorkflowHostStepNode is the progress row of a host command (host-step-status.ts, HostStepNode).
 type WorkflowHostStepNode struct {
@@ -264,36 +330,234 @@ type WorkflowStateStore interface {
 }
 
 // UseLauncher fills the callbacks of o from a launcher and the optional interfaces it implements.
-func (o *RunWorkflowScriptOptions) UseLauncher(l WorkflowLauncher) { panic("not implemented") }
+func (o *RunWorkflowScriptOptions) UseLauncher(l WorkflowLauncher) {
+	o.Launch = l.Launch
+	o.Status = l.Status
+	if a, ok := l.(WorkflowAdmitter); ok {
+		o.Admit = a.Admit
+	}
+	if a, ok := l.(WorkflowResumeResolver); ok {
+		o.ResolveResume = a.ResolveResume
+	}
+	if a, ok := l.(WorkflowSteerer); ok {
+		o.Steer = a.Steer
+	}
+	if a, ok := l.(WorkflowHostRunner); ok {
+		o.Host = a.Host
+	}
+	if a, ok := l.(WorkflowStateStore); ok {
+		o.State = &WorkflowState{Get: a.GetState, Set: a.SetState}
+	}
+}
 
 // ---- Go-side JSON data helpers (assertWorkflowJsonValue, omitUndefinedWorkflowValues) ----
 
-func goTypeof(v any) string { panic("not implemented") }
+func goTypeof(v any) string {
+	switch v.(type) {
+	case nil:
+		return "object"
+	case undef:
+		return "undefined"
+	case string:
+		return "string"
+	case bool:
+		return "boolean"
+	case float64, float32, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return "number"
+	}
+	return "other"
+}
 
-func goFloat(v any) (float64, bool) { panic("not implemented") }
+func goFloat(v any) (float64, bool) {
+	switch x := v.(type) {
+	case float64:
+		return x, true
+	case float32:
+		return float64(x), true
+	case int:
+		return float64(x), true
+	case int64:
+		return float64(x), true
+	case int32:
+		return float64(x), true
+	}
+	return 0, false
+}
 
 // assertWorkflowJSONValue is assertWorkflowJsonValue (scripted-workflow.ts:1451).
-func assertWorkflowJSONValue(v any, path string, seen map[any]bool) error { panic("not implemented") }
+func assertWorkflowJSONValue(v any, path string, seen map[any]bool) error {
+	switch x := v.(type) {
+	case nil, string, bool:
+		return nil
+	case undef:
+		return fmt.Errorf("%s must be a JSON value; received undefined.", path)
+	case func():
+		return fmt.Errorf("%s must be a JSON value; received function.", path)
+	case []any:
+		for i, e := range x {
+			if err := assertWorkflowJSONValue(e, fmt.Sprintf("%s[%d]", path, i), seen); err != nil {
+				return err
+			}
+		}
+		return nil
+	case *jsObject:
+		if seen[x] {
+			return fmt.Errorf("%s must not contain cycles.", path)
+		}
+		seen[x] = true
+		defer delete(seen, x)
+		for _, k := range x.order() {
+			if err := assertWorkflowJSONValue(x.vals[k], path+"."+k, seen); err != nil {
+				return err
+			}
+		}
+		return nil
+	case map[string]any:
+		keys := make([]string, 0, len(x))
+		for k := range x {
+			keys = append(keys, k)
+		}
+		sortStrings(keys)
+		for _, k := range keys {
+			if err := assertWorkflowJSONValue(x[k], path+"."+k, seen); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if f, ok := goFloat(v); ok {
+		if math.IsNaN(f) || math.IsInf(f, 0) {
+			return fmt.Errorf("%s must contain only finite JSON numbers.", path)
+		}
+		return nil
+	}
+	if goTypeof(v) == "number" {
+		return nil
+	}
+	return fmt.Errorf("%s must contain only plain JSON objects.", path)
+}
 
 // omitUndefinedGo is omitUndefinedWorkflowValues on host data: undefined properties are dropped and undefined array entries become null.
-func omitUndefinedGo(v any) any { panic("not implemented") }
+func omitUndefinedGo(v any) any { return omitUndefinedSeen(v, map[*jsObject]bool{}) }
 
-func omitUndefinedSeen(v any, seen map[*jsObject]bool) any { panic("not implemented") }
+func omitUndefinedSeen(v any, seen map[*jsObject]bool) any {
+	switch x := v.(type) {
+	case []any:
+		out := make([]any, len(x))
+		for i, e := range x {
+			if _, u := e.(undef); u {
+				out[i] = nil
+			} else {
+				out[i] = omitUndefinedSeen(e, seen)
+			}
+		}
+		return out
+	case *jsObject:
+		if seen[x] {
+			return x
+		}
+		seen[x] = true
+		defer delete(seen, x)
+		o := newObject()
+		for _, k := range x.keys {
+			e := x.vals[k]
+			if _, u := e.(undef); u {
+				continue
+			}
+			o.set(k, omitUndefinedSeen(e, seen))
+		}
+		return o
+	case map[string]any:
+		o := newObject()
+		keys := make([]string, 0, len(x))
+		for k := range x {
+			keys = append(keys, k)
+		}
+		sortStrings(keys)
+		for _, k := range keys {
+			if _, u := x[k].(undef); u {
+				continue
+			}
+			o.set(k, omitUndefinedSeen(x[k], seen))
+		}
+		return o
+	}
+	return v
+}
 
 // omitNonJSONChildMetadata is omitNonJsonWorkflowResultMetadata: a `results` field that is not JSON is dropped.
-func omitNonJSONChildMetadata(v any) any { panic("not implemented") }
+func omitNonJSONChildMetadata(v any) any {
+	n := omitUndefinedGo(v)
+	o, ok := n.(*jsObject)
+	if !ok {
+		return n
+	}
+	if _, has := o.vals["results"]; !has {
+		return n
+	}
+	if err := assertWorkflowJSONValue(o.vals["results"], "runs.run result.results", map[any]bool{}); err != nil {
+		c := newObject()
+		for _, k := range o.keys {
+			if k != "results" {
+				c.set(k, o.vals[k])
+			}
+		}
+		return c
+	}
+	return n
+}
 
 // ---- accessors on child results ----
 
-func objStr(o *jsObject, k string) string { panic("not implemented") }
+func objStr(o *jsObject, k string) string {
+	if o == nil {
+		return ""
+	}
+	s, _ := o.vals[k].(string)
+	return s
+}
 
-func objBool(o *jsObject, k string) bool { panic("not implemented") }
+func objBool(o *jsObject, k string) bool {
+	if o == nil {
+		return false
+	}
+	b, _ := o.vals[k].(bool)
+	return b
+}
 
-func objTruthy(o *jsObject, k string) bool { panic("not implemented") }
+func objTruthy(o *jsObject, k string) bool {
+	if o == nil {
+		return false
+	}
+	switch x := o.vals[k].(type) {
+	case nil, undef:
+		return false
+	case bool:
+		return x
+	case string:
+		return x != ""
+	case float64:
+		return x != 0 && x == x
+	}
+	return true
+}
 
-func objHasString(o *jsObject, k string) (string, bool) { panic("not implemented") }
+func objHasString(o *jsObject, k string) (string, bool) {
+	if o == nil {
+		return "", false
+	}
+	s, ok := o.vals[k].(string)
+	return s, ok
+}
 
-func (r *wfHost) abortReasonText(ctx context.Context) string { panic("not implemented") }
+func (r *wfHost) abortReasonText(ctx context.Context) string {
+	cause := context.Cause(ctx)
+	switch {
+	case cause == nil || cause == context.Canceled:
+		return "Workflow script aborted."
+	}
+	return cause.Error()
+}
 
 // wfOutcome is what finish() receives.
 type wfOutcome struct {
@@ -364,92 +628,574 @@ type wfHost struct {
 
 // RunWorkflowScript runs a script to its end and returns what it returned, or a *WorkflowScriptError.
 func RunWorkflowScript(options RunWorkflowScriptOptions) (WorkflowScriptResult, error) {
-	panic("not implemented")
+	empty := func() WorkflowScriptResult { return WorkflowScriptResult{} }
+	if jsTrim(options.Script) == "" {
+		return WorkflowScriptResult{}, &WorkflowScriptError{Message: "workflowScript must not be empty.", Partial: empty(), Kind: WorkflowFailureValidation}
+	}
+	if options.TimeoutMs != nil && (*options.TimeoutMs != math.Trunc(*options.TimeoutMs) || *options.TimeoutMs < 1 || math.IsInf(*options.TimeoutMs, 0)) {
+		return WorkflowScriptResult{}, &WorkflowScriptError{Message: "workflow script timeout must be a positive integer.", Partial: empty(), Kind: WorkflowFailureRuntime}
+	}
+	limit := 20.0 // DEFAULT_GLOBAL_CONCURRENCY_LIMIT
+	if options.GlobalConcurrencyLimit != nil {
+		l := *options.GlobalConcurrencyLimit
+		if l != math.Trunc(l) || l < 1 || l > 9007199254740991 {
+			return WorkflowScriptResult{}, &WorkflowScriptError{Message: "workflow script global concurrency limit must be a positive integer.", Partial: empty(), Kind: WorkflowFailureRuntime}
+		}
+		limit = l
+	}
+	if options.ProcessCwd != "" {
+		if err := workflowCheckProcessCwd(options.ProcessCwd); err != nil {
+			return WorkflowScriptResult{}, &WorkflowScriptError{Message: fmt.Sprintf("Workflow process cwd is unavailable: %s: %s", options.ProcessCwd, err.Error()), Partial: empty(), Kind: WorkflowFailureRuntime, Cause: err}
+		}
+	}
+	h := &wfHost{
+		opt: &options, loop: newWorkflowLoop(), launchSem: NewParallelSemaphore(limit),
+		children: map[string]*jsObject{}, launches: map[string]*wfLaunch{}, steers: map[int]*wfSteerCall{}, hostCalls: map[int]*wfHostCall{},
+		stoppedLaunches: map[string]bool{}, stopControllers: map[string]context.CancelCauseFunc{}, batchAdmissions: map[string]*WorkflowFuture[struct{}]{},
+		observedRunCalls: map[int]bool{}, observedSteerCalls: map[int]bool{}, observedHostCalls: map[int]bool{},
+		startedAt: time.Now(),
+	}
+	h.childCtx, h.childCancel = context.WithCancelCause(context.Background())
+	h.sbQ = newWorkflowLoop()
+	h.sb = newWfSandbox(wfHostPort{h}, h.sbQ)
+	go h.runSandbox()
+
+	if options.RegisterStopChild != nil {
+		options.RegisterStopChild(h.stopChild)
+	}
+	h.loop.postMacro(h.begin)
+	h.done = make(chan struct{})
+	go h.loop.run()
+	<-h.done
+	if h.resultErr != nil {
+		return WorkflowScriptResult{}, h.resultErr
+	}
+	return *h.result, nil
 }
 
-// DEFAULT_GLOBAL_CONCURRENCY_LIMIT
-
 // runSandbox is the worker thread: it runs the script's jobs one after another and checks, after each, whether the script is done.
-func (h *wfHost) runSandbox() { panic("not implemented") }
+func (h *wfHost) runSandbox() {
+	defer func() {
+		if r := recover(); r != nil {
+			h.loop.postMacro(func() {
+				h.finish(wfOutcome{err: taggedWorkflowError(fmt.Sprintf("Workflow worker failed: %v", r), WorkflowFailureRuntime)})
+			})
+		}
+	}()
+	for {
+		job, ok := h.sbQ.next()
+		if !ok {
+			return
+		}
+		job()
+		h.sb.afterJob()
+	}
+}
 
-func (h *wfHost) terminate() { panic("not implemented") }
+func (h *wfHost) terminate() {
+	h.sbQ.close()
+	h.sb.vm.Interrupt("workflow terminated")
+}
 
 // wfHostPort is the host's end of the worker's channel: every message is queued to the host goroutine.
 type wfHostPort struct{ h *wfHost }
 
-func (p wfHostPort) call(id int, method string, args *jsObject) { panic("not implemented") }
+func (p wfHostPort) call(id int, method string, args *jsObject) {
+	p.h.loop.postMacro(func() { p.h.onCall(id, method, args) })
+}
 
-func (p wfHostPort) observed(id int, key, op string) { panic("not implemented") }
+func (p wfHostPort) observed(id int, key, op string) {
+	p.h.loop.postMacro(func() { p.h.onObserved(id, key, op) })
+}
 
-func (p wfHostPort) emit(v any) { panic("not implemented") }
+func (p wfHostPort) emit(v any) { p.h.loop.postMacro(func() { p.h.onEmit(v) }) }
 
-func (p wfHostPort) console(level, text string) { panic("not implemented") }
+func (p wfHostPort) console(level, text string) {
+	p.h.loop.postMacro(func() {
+		if p.h.settled {
+			return
+		}
+		p.h.console = append(p.h.console, WorkflowConsoleEntry{Level: level, Text: text})
+	})
+}
 
-func (p wfHostPort) lanePlan(lanes any) { panic("not implemented") }
+func (p wfHostPort) lanePlan(lanes any) {
+	p.h.loop.postMacro(func() {
+		if p.h.settled {
+			return
+		}
+		if list, ok := lanes.([]any); ok {
+			p.h.lanePlanChanged(list)
+		}
+	})
+}
 
-func (p wfHostPort) complete(v any) { panic("not implemented") }
+func (p wfHostPort) complete(v any) { p.h.loop.postMacro(func() { p.h.onComplete(v) }) }
 
-func (p wfHostPort) fail(message, kind, phase string) { panic("not implemented") }
+func (p wfHostPort) fail(message, kind, phase string) {
+	p.h.loop.postMacro(func() { p.h.onError(message, kind, phase) })
+}
 
 // ---- host-side callbacks that must not decide the outcome ----
 
-func safely(fn func()) { panic("not implemented") }
+func safely(fn func()) {
+	defer func() { _ = recover() }()
+	fn()
+}
 
-func (h *wfHost) traceChanged() { panic("not implemented") }
+func (h *wfHost) traceChanged() {
+	if h.opt.OnTrace == nil {
+		return
+	}
+	cp := append([]WorkflowScriptTraceEntry(nil), h.trace...)
+	safely(func() { h.opt.OnTrace(cp) })
+	h.pollAbort() // an abort the callback caused is seen at once, as an AbortSignal listener sees it
+}
 
-// an abort the callback caused is seen at once, as an AbortSignal listener sees it
+func (h *wfHost) lanePlanChanged(lanes []any) {
+	if h.opt.OnLanePlan != nil {
+		safely(func() { h.opt.OnLanePlan(lanes) })
+		h.pollAbort()
+	}
+}
 
-func (h *wfHost) lanePlanChanged(lanes []any) { panic("not implemented") }
+func (h *wfHost) hostStepChanged(step WorkflowHostStepNode) {
+	if h.opt.OnHostStep != nil {
+		safely(func() { h.opt.OnHostStep(step) })
+		h.pollAbort()
+	}
+}
 
-func (h *wfHost) hostStepChanged(step WorkflowHostStepNode) { panic("not implemented") }
+func (h *wfHost) partial() WorkflowScriptResult {
+	var children []*jsObject
+	for _, k := range h.order {
+		if c, ok := h.children[k]; ok {
+			children = append(children, c)
+		}
+	}
+	return WorkflowScriptResult{Emits: h.emits, Console: h.console, Trace: h.trace, Children: children}
+}
 
-func (h *wfHost) partial() WorkflowScriptResult { panic("not implemented") }
+func stoppedChildResult(key, message string) *jsObject {
+	o := newObject()
+	o.set("key", key)
+	o.set("ok", false)
+	o.set("stopped", true)
+	o.set("output", message)
+	o.set("error", message)
+	o.set("artifactPaths", []any{})
+	return o
+}
 
-func stoppedChildResult(key, message string) *jsObject { panic("not implemented") }
+func responseBoundaryFailure(key string, err error) *jsObject {
+	o := newObject()
+	o.set("key", key)
+	o.set("ok", false)
+	o.set("output", err.Error())
+	o.set("error", err.Error())
+	o.set("artifactPaths", []any{})
+	return o
+}
 
-func responseBoundaryFailure(key string, err error) *jsObject { panic("not implemented") }
+func (h *wfHost) lastStarted(key string) *WorkflowScriptTraceEntry {
+	for i := len(h.trace) - 1; i >= 0; i-- {
+		e := h.trace[i]
+		if e.Operation == "run" && e.Key == key && e.State == "started" {
+			return &h.trace[i]
+		}
+	}
+	return nil
+}
 
-func (h *wfHost) lastStarted(key string) *WorkflowScriptTraceEntry { panic("not implemented") }
-
-func (h *wfHost) pushStopped(key, message string) { panic("not implemented") }
+func (h *wfHost) pushStopped(key, message string) {
+	started := h.lastStarted(key)
+	e := WorkflowScriptTraceEntry{Operation: "run", Key: key, State: "stopped", Error: message}
+	if started != nil {
+		e.Agent, e.Phase, e.Label, e.GeneratedLaneKey = started.Agent, started.Phase, started.Label, started.GeneratedLaneKey
+	}
+	h.trace = append(h.trace, e)
+}
 
 // stopChild stops one keyed child (scripted-workflow.ts:2188).
-func (h *wfHost) stopChild(key, message string) bool { panic("not implemented") }
+func (h *wfHost) stopChild(key, message string) bool {
+	if message == "" {
+		message = "Workflow child '" + key + "' stopped by user."
+	}
+	if _, launched := h.launches[key]; !launched {
+		return false
+	}
+	if _, done := h.children[key]; done {
+		return false
+	}
+	h.stoppedLaunches[key] = true
+	h.children[key] = stoppedChildResult(key, message)
+	if cancel := h.stopControllers[key]; cancel != nil {
+		cancel(errors.New(message))
+	}
+	h.pushStopped(key, message)
+	h.traceChanged()
+	return true
+}
 
-func (h *wfHost) notifyChildSettled(key string, result *jsObject) { panic("not implemented") }
+func (h *wfHost) notifyChildSettled(key string, result *jsObject) {
+	if objStr(result, "state") == "running" || h.opt.OnChildSettled == nil || h.opt.WorkflowRunID == "" {
+		return
+	}
+	outcome := "failed"
+	switch {
+	case objBool(result, "ok"):
+		outcome = "completed"
+	case objTruthy(result, "stopped"):
+		outcome = "stopped"
+	case objTruthy(result, "detached"):
+		outcome = "paused"
+	}
+	ref := objStr(result, "outputReference")
+	if ref == "" {
+		ref = objStr(result, "outputArtifactPath")
+	}
+	n := WorkflowChildSettledNotification{WorkflowRunID: h.opt.WorkflowRunID, ChildKey: key, ChildRunID: objStr(result, "runId"), Outcome: outcome, OutputReference: ref, WorkflowRunning: !h.settled && !h.finishing}
+	if !objBool(result, "ok") {
+		n.Error = objStr(result, "error")
+	}
+	safely(func() { h.opt.OnChildSettled(n) })
+	h.pollAbort()
+}
 
 // ---- start, finish, abort ----
 
-func (h *wfHost) begin() { panic("not implemented") }
+func (h *wfHost) begin() {
+	if h.opt.TimeoutMs != nil {
+		d := time.Duration(*h.opt.TimeoutMs) * time.Millisecond
+		ms := *h.opt.TimeoutMs
+		h.timer = time.AfterFunc(d, func() {
+			h.loop.postMacro(func() {
+				h.finish(wfOutcome{err: taggedWorkflowError(fmt.Sprintf("Workflow script timed out after %sms.", jsNumber(ms)), WorkflowFailureTimeout)})
+			})
+		})
+	}
+	if ctx := h.opt.Ctx; ctx != nil {
+		if ctx.Err() != nil {
+			h.onAbort()
+			return
+		}
+		h.abortStop = context.AfterFunc(ctx, func() { h.loop.postMacro(h.onAbort) })
+	}
+	h.sbQ.post(func() {
+		h.sb.start(wfStart{script: h.opt.Script, args: h.opt.Args, stateEnabled: h.opt.State != nil})
+	})
+}
 
-func (h *wfHost) finish(outcome wfOutcome) { panic("not implemented") }
+func (h *wfHost) finish(outcome wfOutcome) {
+	if h.settled || h.finishing {
+		return
+	}
+	h.finishing = true
+	if h.flushTimer != nil {
+		h.flushTimer.Stop()
+		h.flushTimer = nil
+	}
+	if outcome.err != nil {
+		h.childCancel(outcome.err)
+	} else {
+		h.childCancel(errors.New("Workflow script completed."))
+	}
+	// Steering and host commands still in flight are awaited before the run ends (Promise.allSettled).
+	var pending []func(func())
+	for _, id := range h.steerOrder {
+		f := h.steers[id].promise
+		pending = append(pending, func(done func()) { onSettle(h.loop, f, func(*jsObject, error) { done() }) })
+	}
+	for _, id := range h.hostOrder {
+		f := h.hostCalls[id].promise
+		pending = append(pending, func(done func()) { onSettle(h.loop, f, func(*jsObject, error) { done() }) })
+	}
+	remaining := len(pending)
+	complete := func() { h.complete(outcome) }
+	if remaining == 0 {
+		h.loop.post(complete)
+		return
+	}
+	for _, p := range pending {
+		p(func() {
+			remaining--
+			if remaining == 0 {
+				complete()
+			}
+		})
+	}
+}
 
-// Steering and host commands still in flight are awaited before the run ends (Promise.allSettled).
-
-func (h *wfHost) complete(outcome wfOutcome) { panic("not implemented") }
-
-// What is still waiting (a child that settles after the end) gets its callbacks, as the original's event loop would deliver
-// them after the promise returned; a child that never settles does not keep the loop for more than the grace.
+func (h *wfHost) complete(outcome wfOutcome) {
+	if h.settled {
+		return
+	}
+	h.settled = true
+	if h.opt.RegisterStopChild != nil {
+		h.opt.RegisterStopChild(nil)
+	}
+	if h.timer != nil {
+		h.timer.Stop()
+	}
+	if h.abortStop != nil {
+		h.abortStop()
+	}
+	h.terminate()
+	var unobserved []string
+	if outcome.hasValue {
+		for _, k := range h.launchOrder {
+			if !h.launches[k].observed {
+				unobserved = append(unobserved, k)
+			}
+		}
+	}
+	quote := func(keys []string) string {
+		q := make([]string, len(keys))
+		for i, k := range keys {
+			q[i] = "'" + k + "'"
+		}
+		return strings.Join(q, ", ")
+	}
+	var completionError string
+	switch {
+	case len(unobserved) > 0:
+		completionError = "workflowScript completed with unawaited runs.run launch(es): " + quote(unobserved) + ". For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches."
+	case outcome.hasValue:
+		var us []string
+		for _, id := range h.steerOrder {
+			if !h.steers[id].observed {
+				us = append(us, h.steers[id].key)
+			}
+		}
+		if len(us) > 0 {
+			completionError = "workflowScript completed with unawaited runs.steer call(s): " + quote(us) + ". Await or return each call."
+			break
+		}
+		var uh []string
+		for _, id := range h.hostOrder {
+			if !h.hostCalls[id].observed {
+				uh = append(uh, h.hostCalls[id].key)
+			}
+		}
+		if len(uh) > 0 {
+			completionError = "workflowScript completed with unawaited runs.host call(s): " + quote(uh) + ". Await or return each call."
+		}
+	}
+	switch {
+	case outcome.err != nil:
+		kind := workflowErrorKind(outcome.err)
+		if !isWorkflowFailureKind(kind) {
+			kind = ""
+		}
+		h.resultErr = &WorkflowScriptError{Message: outcome.err.Error(), Partial: h.partial(), Kind: kind, Cause: outcome.err}
+	case completionError != "":
+		h.resultErr = &WorkflowScriptError{Message: completionError, Partial: h.partial(), Kind: WorkflowFailureValidation}
+	default:
+		r := h.partial()
+		r.Value = outcome.value
+		h.result = &r
+	}
+	// What is still waiting (a child that settles after the end) gets its callbacks, as the original's event loop would deliver
+	// them after the promise returned; a child that never settles does not keep the loop for more than the grace.
+	h.loop.lingerThenClose(workflowLateEventsGrace)
+	close(h.done)
+}
 
 func (h *wfHost) onAbort() {
-	panic(
-		// the abort listener fires once ({ once: true } in the original)
-		"not implemented")
+	// the abort listener fires once ({ once: true } in the original)
+	if h.abortSeen {
+		return
+	}
+	h.abortSeen = true
+	reason := context.Cause(h.opt.Ctx)
+	var err error
+	switch {
+	case reason == nil || reason == context.Canceled:
+		err = errors.New("This operation was aborted")
+		if reason == nil {
+			err = errors.New("Workflow script aborted.")
+		}
+	default:
+		err = reason
+	}
+	if h.finishing {
+		return
+	}
+	h.abortError = err
+	allSettled := len(h.launches) > 0
+	for k := range h.launches {
+		if _, ok := h.children[k]; !ok {
+			allSettled = false
+		}
+	}
+	mayFlush := false
+	if h.opt.ContinueAfterAbortWhenChildrenSettled != nil {
+		var cbErr any
+		func() {
+			defer func() { cbErr = recover() }()
+			mayFlush = h.opt.ContinueAfterAbortWhenChildrenSettled(err)
+		}()
+		if cbErr != nil {
+			h.finish(wfOutcome{err: taggedWorkflowError(fmt.Sprintf("Workflow assembly flush eligibility failed: %v", cbErr), WorkflowFailureRuntime)})
+			return
+		}
+	}
+	if mayFlush && allSettled {
+		h.assemblyAbortRequested = true
+		h.childCancel(err)
+		h.flushTimer = time.AfterFunc(workflowAssemblyFlushTimeout, func() { h.loop.postMacro(func() { h.finish(wfOutcome{err: err}) }) })
+		return
+	}
+	for _, k := range h.launchOrder {
+		if _, ok := h.children[k]; ok {
+			continue
+		}
+		h.stoppedLaunches[k] = true
+		h.pushStopped(k, err.Error())
+	}
+	h.traceChanged()
+	h.finish(wfOutcome{err: err})
 }
 
 // ---- messages from the script ----
 
-func (h *wfHost) onEmit(v any) { panic("not implemented") }
+func (h *wfHost) onEmit(v any) {
+	if h.settled {
+		return
+	}
+	if err := assertWorkflowJSONValue(v, "emit", map[any]bool{}); err != nil {
+		h.finish(wfOutcome{err: taggedWorkflowError("Workflow emit could not be persisted: "+err.Error(), WorkflowFailureRuntime)})
+		return
+	}
+	h.emits = append(h.emits, v)
+	if h.opt.OnEmit != nil {
+		cp := append([]any(nil), h.emits...)
+		var err error
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					err = fmt.Errorf("%v", r)
+				}
+			}()
+			err = h.opt.OnEmit(cp)
+		}()
+		if err != nil {
+			h.emits = h.emits[:len(h.emits)-1]
+			h.finish(wfOutcome{err: taggedWorkflowError("Workflow emit could not be persisted: "+err.Error(), WorkflowFailureRuntime)})
+		}
+	}
+}
 
-func (h *wfHost) onComplete(v any) { panic("not implemented") }
+func (h *wfHost) onComplete(v any) {
+	if h.settled {
+		return
+	}
+	if err := assertWorkflowJSONValue(v, "return", map[any]bool{}); err != nil {
+		h.finish(wfOutcome{err: taggedWorkflowError("Workflow return could not be persisted: "+err.Error(), WorkflowFailureReturnSerialization)})
+		return
+	}
+	h.finish(wfOutcome{value: v, hasValue: true})
+}
 
-func (h *wfHost) onError(message, kind, phase string) { panic("not implemented") }
+func (h *wfHost) onError(message, kind, phase string) {
+	if h.settled {
+		return
+	}
+	text := message
+	if phase == "return-serialization" {
+		text += workflowReturnRecoveryHint(h.partial().Children)
+	}
+	if isWorkflowFailureKind(kind) {
+		h.finish(wfOutcome{err: taggedWorkflowError(text, kind)})
+		return
+	}
+	h.finish(wfOutcome{err: errors.New(text)})
+}
 
-func (h *wfHost) onObserved(callID int, key, op string) { panic("not implemented") }
+func (h *wfHost) onObserved(callID int, key, op string) {
+	if h.settled {
+		return
+	}
+	switch op {
+	case "run":
+		if l, ok := h.launches[key]; ok && key != "" {
+			l.observed = true
+		} else {
+			h.observedRunCalls[callID] = true
+		}
+	case "steer":
+		if s, ok := h.steers[callID]; ok {
+			s.observed = true
+		} else {
+			h.observedSteerCalls[callID] = true
+		}
+	case "host":
+		if c, ok := h.hostCalls[callID]; ok {
+			c.observed = true
+		} else {
+			h.observedHostCalls[callID] = true
+		}
+	}
+}
 
 // workflowReturnRecoveryHint is workflowReturnRecoveryHint (scripted-workflow.ts:1486).
-func workflowReturnRecoveryHint(children []*jsObject) string { panic("not implemented") }
+func workflowReturnRecoveryHint(children []*jsObject) string {
+	if len(children) == 0 {
+		return " Return only plain JSON data. For a child result, select fields such as { runId: child.runId, ok: child.ok, outputReference: child.outputReference }."
+	}
+	var refs []string
+	for _, c := range children[:min(len(children), 10)] {
+		var fields []string
+		if id := objStr(c, "runId"); id != "" {
+			fields = append(fields, "runId="+string(utf16Slice(id, 500)))
+		}
+		if ref := objStr(c, "outputReference"); ref != "" {
+			fields = append(fields, "outputReference="+string(utf16Slice(ref, 500)))
+		}
+		if paths, ok := c.vals["artifactPaths"].([]any); ok && len(paths) > 0 {
+			if p, ok := paths[0].(string); ok && p != "" {
+				fields = append(fields, "artifact="+string(utf16Slice(p, 500)))
+			}
+		}
+		s := "'" + objStr(c, "key") + "'"
+		if len(fields) > 0 {
+			s += " (" + strings.Join(fields, ", ") + ")"
+		}
+		refs = append(refs, s)
+	}
+	running := false
+	for _, c := range children {
+		if objStr(c, "state") == "running" {
+			running = true
+		}
+	}
+	head := "Child work completed before return serialization failed."
+	if running {
+		head = "Child calls returned before return serialization failed; launch receipts do not prove completion."
+	}
+	more := ""
+	if len(children) > len(refs) {
+		more = fmt.Sprintf(", and %d more", len(children)-len(refs))
+	}
+	return " " + head + " Recover outputs from: " + strings.Join(refs, ", ") + more + ". Return a plain projection such as { runId: child.runId, ok: child.ok, outputReference: child.outputReference }."
+}
 
 // workflowCheckProcessCwd is the validation of processCwd (scripted-workflow.ts:2086-2110): the real path must be a directory
 // the process can enter.
-func workflowCheckProcessCwd(dir string) error { panic("not implemented") }
+func workflowCheckProcessCwd(dir string) error {
+	target, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		return err
+	}
+	info, err := os.Stat(target)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return &fs.PathError{Op: "access", Path: target, Err: syscall.ENOTDIR}
+	}
+	if runtime.GOOS != "windows" && info.Mode().Perm()&0o111 == 0 {
+		return &fs.PathError{Op: "access", Path: target, Err: fs.ErrPermission}
+	}
+	return nil
+}
