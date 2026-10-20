@@ -29,7 +29,7 @@
 	},
 	"input-kitty-text": {
 		"status": "known",
-		"reason": "PiG divergence D<N> (number pending, reported by Main): Kitty CSI-u Shift+letter without a shifted alternate (ESC[97;2u) inserts 'A' in PiG's editor and in this port, 'a' in the original under Pi 1402973a (pi-tui decodeKittyPrintable has no uppercase fallback). Lives in components/pitui keys_decode.go, restored to PiG's behaviour by owner decision.",
+		"reason": "PiG divergence D185: Kitty CSI-u Shift+letter without a shifted alternate (ESC[97;2u) inserts 'A' in PiG's editor and in this port, 'a' in the original under Pi 1402973a (pi-tui decodeKittyPrintable has no uppercase fallback). Lives in components/pitui keys_decode.go, restored to PiG's behaviour by owner decision.",
 		"diffs": [
 			{
 				"scenario": "input-kitty-text",

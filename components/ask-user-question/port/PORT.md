@@ -79,7 +79,7 @@ Host: xd670, CPUs 64-127, Pi built from commit 1402973a (`pi 1.3.0`, the Pi that
 - **Frames.** `TestFramesAgainstOriginal` replays 173 scenarios (1,276 frames) recorded from the unmodified original
   under Pi 1402973a through the Go component and compares every frame, the notifications, the result and the tool text.
   Three scenarios carry pinned known differences (`port/frames/known-differences.json`): the external-editor notification
-  text (two scenarios) and the Shift+letter Kitty decode (a PiG divergence, number pending: PiG decodes `ESC[97;2u` as `A`,
+  text (two scenarios) and the Shift+letter Kitty decode (PiG divergence D185: PiG decodes `ESC[97;2u` as `A`,
   pi-tui as `a`; pitui follows PiG).
 - **RPC scenarios.** The 16 goldens in `port/golden` are re-recorded from the original under Pi 1402973a (only the header
   changed; the traces equal the Pi 1.0.0 ones). `pigeq check`: 15 of 16 pass on both lanes (pig-ts == pi-ts and
