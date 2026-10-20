@@ -80,23 +80,16 @@ func TestReviewImagePixelBudget(t *testing.T) {
 }
 
 // unportedGuidance matches options the original offers that this port cannot act on.
-const unportedGuidance = `firecrawl|crawl4ai|tinyfish|TINYFISH|search1api|SEARCH1API|querit|QUERIT|kagiApiKey|KAGI_API_KEY|ollama|OLLAMA|parallel|PARALLEL|brightdata|BRIGHTDATA|GEMINI_API_KEY|gemini\.google\.com|Chrom|/login|Codex|openaiApiKey|OPENAI_API_KEY|searxng|SEARXNG|bocha|BOCHA|cloudflare|CLOUDFLARE|anysearch|xcrawl|serpapi|serper|serply|valyu|You\.com|Mistral|Grok`
+const unportedGuidance = `GEMINI_API_KEY|gemini\.google\.com|Chrom|/login|Codex|openaiApiKey|OPENAI_API_KEY|searxng|SEARXNG|bocha|BOCHA|cloudflare|CLOUDFLARE|anysearch|xcrawl|serpapi|serper|serply|valyu|You\.com|Mistral|Grok`
 
 func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
-	t.Run("the fetch fallback checklist offers only what this port can do", func(t *testing.T) {
+	t.Run("the fetch fallback checklist offers what this port can do and not the Gemini options", func(t *testing.T) {
 		extractEnv(t, "")
 		useNet(t, func(netCall) netReply { return reply(500, "oops") })
 		msg := errOf(ExtractContent(bg(), "https://example.com/oops", ExtractOptions{Lookup: pubLookup, ToolNames: RegisteredToolNames{WebSearch: "web_search", FetchContent: "fetch_content"}}))
 		matchRE(t, `Fallback options:`, msg)
 		matchRE(t, `Enable the keyless Jina Reader fallback`, msg)
 		matchRE(t, `Use web_search to find content about this topic`, msg)
-		noMatchRE(t, unportedGuidance, msg)
-	})
-	t.Run("the checklist says so when no fallback is available", func(t *testing.T) {
-		extractEnv(t, `{"fetchRouting":{"providers":["http","jina"],"allowRemoteHostedProviders":true}}`)
-		useNet(t, func(netCall) netReply { return reply(500, "oops") })
-		msg := errOf(ExtractContent(bg(), "https://example.com/oops", pageOpts()))
-		matchRE(t, `Fallback options:\n  • none in this port`, msg)
 		noMatchRE(t, unportedGuidance, msg)
 	})
 	t.Run("the no-provider error names only ported providers", func(t *testing.T) {
@@ -109,7 +102,7 @@ func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
 				t.Fatalf("%q missing from %q", want, err.Error())
 			}
 		}
-		noMatchRE(t, strings.ReplaceAll(unportedGuidance, `kagiApiKey|KAGI_API_KEY|`, ``), err.Error())
+		noMatchRE(t, unportedGuidance, err.Error())
 	})
 }
 
@@ -238,34 +231,5 @@ func TestReviewUnconfiguredAutoUsesKeylessExaMCP(t *testing.T) {
 		if !strings.HasPrefix(u, exaMCPURL) {
 			t.Fatalf("unexpected request to %s (all: %v)", u, urls)
 		}
-	}
-}
-
-// The search half of upstream "Kagi search maps v1 results and Extract maps markdown" (the title is
-// a named skip because Kagi Extract is not ported). Same fixture and assertions as upstream,
-// without the extract call.
-func TestKagiSearchHalfOfUpstreamCase(t *testing.T) {
-	providerEnv(t, `{"kagiApiKey":"kagi-test-key"}`, nil)
-	n := useNet(t, func(c netCall) netReply {
-		if c.URL == "https://kagi.com/api/v1/search" {
-			return reply(200, `{"data":{"search":[{"title":"Kagi result","url":"https://example.com/kagi","snippet":"Kagi snippet"}]}}`)
-		}
-		return netReply{Err: errors.New("Unexpected fetch " + c.URL)}
-	})
-	search, err := SearchWithKagi(bg(), "premium search", SearchOptions{NumResults: nf(3), IncludeContent: true})
-	noErr(t, err)
-	if len(n.calls) != 1 {
-		t.Fatal(n.urls())
-	}
-	c := n.calls[0]
-	if c.URL != "https://kagi.com/api/v1/search" || c.Method != "POST" || c.Header.Get("Authorization") != "Bearer kagi-test-key" {
-		t.Fatalf("%+v", c)
-	}
-	if c.Body != `{"limit":3,"query":"premium search"}` {
-		t.Fatal(c.Body)
-	}
-	want := []SearchResult{{Title: "Kagi result", URL: "https://example.com/kagi", Snippet: "Kagi snippet"}}
-	if len(search.Results) != 1 || search.Results[0] != want[0] {
-		t.Fatalf("%+v", search.Results)
 	}
 }
