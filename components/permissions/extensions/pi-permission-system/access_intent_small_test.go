@@ -106,12 +106,12 @@ func TestToolKindTwins(t *testing.T) {
 
 func TestEffectTwins(t *testing.T) {
 	const f = "access-intent/effect"
-	syntaxRead := TokenEffect{EffectRead, SourceSyntax}
-	coreRead := TokenEffect{EffectRead, SourceCore}
-	syntaxWrite := TokenEffect{EffectWrite, SourceSyntax}
-	retracted := TokenEffect{EffectUnproven, SourceRetracted}
+	syntaxRead := TokenEffect{Effect: EffectRead, Source: SourceSyntax}
+	coreRead := TokenEffect{Effect: EffectRead, Source: SourceCore}
+	syntaxWrite := TokenEffect{Effect: EffectWrite, Source: SourceSyntax}
+	retracted := TokenEffect{Effect: EffectUnproven, Source: SourceRetracted}
 	tw(t, f, "is the fail-closed base case, unproven on both fields", func(t *testing.T) {
-		eqv(t, UnprovenEffect, TokenEffect{EffectUnproven, SourceUnproven})
+		eqv(t, UnprovenEffect, TokenEffect{Effect: EffectUnproven, Source: SourceUnproven})
 	})
 	t.Run("when the two attributions agree", func(t *testing.T) {
 		tw(t, f, "keeps the effect and the first attribution's source", func(t *testing.T) { eqv(t, MergeTokenEffects(syntaxRead, coreRead), syntaxRead) })

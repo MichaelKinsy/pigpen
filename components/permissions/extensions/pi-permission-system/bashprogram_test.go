@@ -966,8 +966,8 @@ func TestBashProgramEffectAttribution(t *testing.T) {
 			t.Errorf("got %#v, want %#v", got, want)
 		}
 	}
-	readCore := TokenEffect{EffectRead, SourceCore}
-	writeSyntax := TokenEffect{EffectWrite, SourceSyntax}
+	readCore := TokenEffect{Effect: EffectRead, Source: SourceCore}
+	writeSyntax := TokenEffect{Effect: EffectWrite, Source: SourceSyntax}
 
 	tw(t, bpFile, "carries a core word's read onto its external access", func(t *testing.T) {
 		eqJSON(t, externalsWithEffect(bpParse(t, "cat /etc/hosts", n(t))), []pe{{"/etc/hosts", readCore}})
@@ -989,7 +989,7 @@ func TestBashProgramEffectAttribution(t *testing.T) {
 	})
 	tw(t, bpFile, "reaches the command's retraction guards", func(t *testing.T) {
 		eqJSON(t, externalsWithEffect(bpParse(t, "find /tmp/x 2>/dev/null -delete", n(t))),
-			[]pe{{"/tmp/x", TokenEffect{EffectUnproven, SourceRetracted}}})
+			[]pe{{"/tmp/x", TokenEffect{Effect: EffectUnproven, Source: SourceRetracted}}})
 	})
 	tw(t, bpFile, "proves nothing for a token a non-core command owns", func(t *testing.T) {
 		c := mustRuleCandidate(t, bpParse(t, "rm -rf /tmp/gone", n(t)), "/tmp/gone")

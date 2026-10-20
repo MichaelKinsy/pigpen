@@ -48,7 +48,7 @@ func TestBashProgramExternalAccesses(t *testing.T) {
 
 	// the rest of a heredoc's line
 	tw(t, bpxFile, "projects a tail redirect's target with its operator's effect", func(t *testing.T) {
-		eqExt(t, externalsOf(t, "cat <<EOF > /tmp/o\nb\nEOF"), pe{"/tmp/o", TokenEffect{EffectWrite, SourceSyntax}})
+		eqExt(t, externalsOf(t, "cat <<EOF > /tmp/o\nb\nEOF"), pe{"/tmp/o", TokenEffect{Effect: EffectWrite, Source: SourceSyntax}})
 	})
 	tw(t, bpxFile, "folds a current-shell cd in a list after a piped tail", func(t *testing.T) {
 		// Unfolded, `../secret` would resolve against the cwd instead: `/projects/secret`.
@@ -56,7 +56,7 @@ func TestBashProgramExternalAccesses(t *testing.T) {
 	})
 	// the words after a heredoc
 	tw(t, bpxFile, "projects a word as the command's own operand", func(t *testing.T) {
-		eqExt(t, externalsOf(t, "cat <<EOF ~/x/in\nb\nEOF"), pe{join(homePath(), "x/in"), TokenEffect{EffectRead, SourceCore}})
+		eqExt(t, externalsOf(t, "cat <<EOF ~/x/in\nb\nEOF"), pe{join(homePath(), "x/in"), TokenEffect{Effect: EffectRead, Source: SourceCore}})
 	})
 
 	// a redirect's target is projected by its role (#609)
@@ -110,7 +110,7 @@ func TestBashProgramExternalAccesses(t *testing.T) {
 		eqExt(t, externalsOf(t, "cat <<EOF ; HOME=/etc\nx\nEOF\ncat \"$HOME/shadow\""))
 	})
 	tw(t, bpxFile, "projects a for loop's word list but not the loop variable's reference", func(t *testing.T) {
-		eqExt(t, externalsOf(t, `for HOME in /etc; do cat "$HOME/shadow"; done`), pe{"/etc", TokenEffect{EffectUnproven, SourceUnproven}})
+		eqExt(t, externalsOf(t, `for HOME in /etc; do cat "$HOME/shadow"; done`), pe{"/etc", TokenEffect{Effect: EffectUnproven, Source: SourceUnproven}})
 	})
 	tw(t, bpxFile, "withdraws find's read claim for a reassigned $HOME that may spell an option", func(t *testing.T) {
 		eqExt(t, externalsOf(t, `HOME=-delete; find /etc "$HOME"`), externalsOf(t, `find /etc "$X"`)...)
@@ -122,7 +122,7 @@ func TestBashProgramExternalAccesses(t *testing.T) {
 	tw(t, bpxFile, "withdraws find's read claim for a tilde", func(t *testing.T) {
 		t.Setenv("HOME", "-delete")
 		got := externalsOf(t, "find /etc ~")
-		if len(got) != 1 || got[0].Effect != (TokenEffect{EffectUnproven, SourceRetracted}) {
+		if len(got) != 1 || got[0].Effect != (TokenEffect{Effect: EffectUnproven, Source: SourceRetracted}) {
 			t.Errorf("got %#v", got)
 		}
 	})
@@ -141,10 +141,10 @@ func TestBashProgramExternalAccesses(t *testing.T) {
 		}
 	})
 	tw(t, bpxFile, "still proves sed's read of a tilde path", func(t *testing.T) {
-		eqExt(t, externalsOf(t, "sed -n p ~/x"), pe{join(homePath(), "x"), TokenEffect{EffectRead, SourceCore}})
+		eqExt(t, externalsOf(t, "sed -n p ~/x"), pe{join(homePath(), "x"), TokenEffect{Effect: EffectRead, Source: SourceCore}})
 	})
 	tw(t, bpxFile, "still proves find's read of $HOME", func(t *testing.T) {
-		eqExt(t, externalsOf(t, `find "$HOME/other"`), pe{join(homePath(), "other"), TokenEffect{EffectRead, SourceCore}})
+		eqExt(t, externalsOf(t, `find "$HOME/other"`), pe{join(homePath(), "other"), TokenEffect{Effect: EffectRead, Source: SourceCore}})
 	})
 
 	// operands a statement names directly (#839)
