@@ -13,6 +13,10 @@ import (
 // caches each file for the session; this port reads it when asked.
 
 type goalSettings struct {
+	disableTasks            bool
+	showAutonomousRuns      bool
+	hideUnfocusedBanner     bool
+	hideUnfocusedPrompt     bool
 	maxAutonomousRuns       *float64
 	disableContracts        bool
 	autoSelectSingle        bool
