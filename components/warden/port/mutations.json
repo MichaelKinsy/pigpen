@@ -100,5 +100,11 @@
   "file": "rules_wire.go",
   "find": "\tif len(n.notes) == 0 {\n\t\treturn\n\t}\n\tdelivered := w.steer(",
   "replace": "\tif false {\n\t\treturn\n\t}\n\tdelivered := w.steer("
+ },
+ {
+  "name": "rules-sensitive-note-not-sent",
+  "file": "rules_wire.go",
+  "find": "\t\t\tcn.pathNotes = append(cn.pathNotes, told)\n",
+  "replace": "\t\t\t_ = told\n"
  }
 ]

@@ -26,8 +26,7 @@
     "message_end"
   ],
   "agentFiles": {
-    "pi-warden/config.json": "{\"rules\": {\"enabled\": true, \"sensitivePaths\": {\"migrations/**\": \"Tell the user this touches a migration and add a rollback\"}}}",
-    "../pighome/pigpen-warden/config.json": "{\"rules\": {\"enabled\": true, \"sensitivePaths\": {\"migrations/**\": \"Tell the user this touches a migration and add a rollback\"}}}"
+    "pi-warden/config.json": "{\"rules\": {\"enabled\": true, \"sensitivePaths\": {\"migrations/**\": \"Tell the user this touches a migration and add a rollback\"}}}"
   },
   "llm": [
     {
@@ -64,5 +63,8 @@
         "message": "add the migration"
       }
     }
-  ]
+  ],
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\"rules\": {\"enabled\": true, \"sensitivePaths\": {\"migrations/**\": \"Tell the user this touches a migration and add a rollback\"}}}"
+  }
 }
