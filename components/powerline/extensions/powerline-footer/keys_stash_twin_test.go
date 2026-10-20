@@ -36,6 +36,7 @@ type fakeKeys struct {
 	notes         []noteCall
 	overlayInputs [][]string
 	titles        []string
+	items         [][]selectItem
 	selectAnswer  func(title string, options []string) string
 	clipboard     []string
 	clipboardErr  error
@@ -61,6 +62,7 @@ func (f *fakeKeys) Select(title string, options []string) string {
 }
 func (f *fakeKeys) SelectOverlay(title, hint string, items []selectItem, maxVisible int) *selectItem {
 	f.titles = append(f.titles, title)
+	f.items = append(f.items, items)
 	component := newSelectOverlay(keysPlainTheme{}, title, hint, items, maxVisible)
 	component.Render(80)
 	inputs := []string{"\r"}
@@ -532,6 +534,12 @@ func TestStashShortcutTwins(t *testing.T) {
 		if got := strings.Join(f.titles, "|"); got != "Prompt history|Stash history" {
 			t.Errorf("titles = %q", got)
 		}
+		if got := f.items[0]; len(got) != 2 || got[0] != (selectItem{"stash", "Stashed prompts", "1 saved"}) || got[1] != (selectItem{"project", "Recent project prompts", "load on demand"}) {
+			t.Errorf("source items = %+v", got)
+		}
+		if got := f.items[1]; len(got) != 1 || got[0] != (selectItem{"0", "#1 saved stash", ""}) {
+			t.Errorf("stash items = %+v", got)
+		}
 		if f.text != "saved stash" {
 			t.Errorf("text = %q", f.text)
 		}
@@ -607,6 +615,15 @@ func TestStashStates(t *testing.T) {
 	if f.text != "second" || f.lastNote() != "Stash restored" {
 		t.Errorf("restore: note %q text %q", f.lastNote(), f.text)
 	}
+	f.text = ""
+	k.stashOrRestoreEditorText(f)
+	if f.text != "" || f.lastNote() != "Nothing to stash" {
+		t.Errorf("a restored stash is gone: note %q text %q", f.lastNote(), f.text)
+	}
+	f.text = "second"
+	k.stashOrRestoreEditorText(f)
+	k.stashOrRestoreEditorText(f)
+	f.text = "second"
 	if got := readPersistedStashHistory(); len(got) != 2 || got[0] != "second" || got[1] != "first" {
 		t.Errorf("persisted history = %q", got)
 	}
@@ -879,7 +896,7 @@ func TestCopyAndCutShortcuts(t *testing.T) {
 	f := &fakeKeys{text: "  "}
 	k := newKeysState(map[string]any{}, false)
 	k.run(f, actionCopyEditor)
-	if f.lastNote() != "Editor is empty" || len(f.clipboard) != 0 {
+	if f.lastNote() != "Editor is empty" || f.notes[len(f.notes)-1].level != "info" || len(f.clipboard) != 0 {
 		t.Errorf("an empty editor: note %q clipboard %q", f.lastNote(), f.clipboard)
 	}
 
@@ -988,7 +1005,7 @@ func TestClipboard(t *testing.T) {
 		t.Errorf("windows: %v %+v", err, calls)
 	}
 	err, calls := run(envOf("linux", map[string]string{"WAYLAND_DISPLAY": "w", "DISPLAY": ":0"}), func(c string) bool { return c == "xsel" })
-	if err != nil || len(calls) != 3 || calls[0].cmd != "wl-copy" || calls[1].cmd != "xclip" || calls[2].cmd != "xsel" {
+	if err != nil || len(calls) != 3 || calls[0].cmd != "wl-copy" || calls[1].cmd != "xclip" || strings.Join(calls[1].args, " ") != "-selection clipboard" || calls[2].cmd != "xsel" || strings.Join(calls[2].args, " ") != "--clipboard --input" {
 		t.Errorf("linux fallback order: %v %+v", err, calls)
 	}
 	if err, calls := run(envOf("linux", map[string]string{"TERMUX_VERSION": "1"}), all); err != nil || calls[0].cmd != "termux-clipboard-set" {

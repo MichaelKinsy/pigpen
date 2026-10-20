@@ -462,12 +462,6 @@
   "replace": "false"
  },
  {
-  "name": "ext-disabled-guard",
-  "file": "keys_ext.go",
-  "find": "if !k.enabled.Load() || !ctx.HasUI() ||",
-  "replace": "if !ctx.HasUI() ||"
- },
- {
   "name": "ext-consume",
   "file": "keys_ext.go",
   "find": "state.stashOrRestoreEditorText(h)\n\t\t\tk.dismiss(ctx)\n\t\t\treturn sdk.TerminalInputResult{Consume: true}",

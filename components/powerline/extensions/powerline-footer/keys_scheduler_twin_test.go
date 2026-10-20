@@ -145,6 +145,8 @@ func TestQuitCursorTwins(t *testing.T) {
 			{"reload", true, "tui", false},
 			{"startup", false, "tui", false},
 			{"startup", true, "rpc", false},
+			{"startup", true, "print", false},
+			{"startup", true, "", false},
 		} {
 			if got := shouldShowStartupWelcome(c.reason, c.enabled, c.mode); got != c.want {
 				t.Errorf("shouldShowStartupWelcome(%q, %v, %q) = %v, want %v", c.reason, c.enabled, c.mode, got, c.want)

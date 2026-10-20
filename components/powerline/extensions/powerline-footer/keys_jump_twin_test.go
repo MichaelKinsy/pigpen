@@ -151,6 +151,9 @@ func TestShortcutMatching(t *testing.T) {
 		{"\x1bOP", "f1", true},
 		{"\x1b[66;6u", "ctrl+shift+b", true},
 		{"\x1b[98;6u", "ctrl+shift+b", true},
+		{"\x1b[65;6u", "ctrl+shift+a", true},
+		{"\x1b[27;6;65~", "ctrl+shift+a", true},
+		{"\x1b[27;5;97~", "ctrl+shift+a", false},
 		{"\x1bx", "alt+s", false},
 		{"\x1b", "alt+s", false},
 		{"\x1b[104;71u", "ctrl+alt+h", true}, // caps lock and num lock do not count
@@ -164,6 +167,9 @@ func TestShortcutMatching(t *testing.T) {
 	}
 	if !isKeyRelease("\x1b[104;7:3u") || isKeyRelease("\x1b[104;7u") || isKeyRelease("\x1b[200~x:3u") || isKeyRelease("\x1b[200~x:3u\x1b[201~") {
 		t.Error("isKeyRelease")
+	}
+	if !matchesCtrlSStashInput("\x13") || !matchesCtrlSStashInput("\x1b[115;5u") || matchesCtrlSStashInput("\x1b[115;5:3u") || matchesCtrlSStashInput("s") {
+		t.Error("matchesCtrlSStashInput")
 	}
 	if matchesConfiguredShortcut("x", nil) || matchesConfiguredShortcut("x", new("")) {
 		t.Error("a missing shortcut matches nothing")
@@ -240,6 +246,9 @@ func TestShortcutConflictsFallBackToTheOwnDefault(t *testing.T) {
 	r = resolveShortcutConfig(settingsFrom(t, `{"powerlineShortcuts":{"cutEditor":"ctrl+alt+c"}}`))
 	wantBinding(t, r.CutEditor, "ctrl+alt+x", "cutEditor")
 	wantBinding(t, r.CopyEditor, "ctrl+alt+c", "copyEditor")
+	// Pi's own editor keys are reserved too (ctrl+k deletes to the line end).
+	r = resolveShortcutConfig(settingsFrom(t, `{"powerlineShortcuts":{"copyEditor":"ctrl+k"}}`))
+	wantBinding(t, r.CopyEditor, "ctrl+alt+c", "copyEditor on ctrl+k")
 	// Two actions on one new shortcut: the first keeps it, the second falls back.
 	r = resolveShortcutConfig(settingsFrom(t, `{"powerlineShortcuts":{"copyEditor":"ctrl+alt+y","cutEditor":"ctrl+alt+y"}}`))
 	wantBinding(t, r.CopyEditor, "ctrl+alt+y", "copyEditor")
@@ -264,6 +273,9 @@ func TestBashModeSettings(t *testing.T) {
 	wantBinding(t, d.ToggleShortcut, "ctrl+shift+b", "toggle")
 	if d.TranscriptMaxLines != 2000 || d.TranscriptMaxBytes != 512*1024 || d.Completions {
 		t.Errorf("defaults = %+v", d)
+	}
+	if small := parseBashModeSettings(settingsFrom(t, `{"bashMode":{"transcriptMaxLines":250.9,"transcriptMaxBytes":2000}}`), nil); small.TranscriptMaxLines != 250 || small.TranscriptMaxBytes != 16*1024 {
+		t.Errorf("floor and minimum: %+v", small)
 	}
 	s := parseBashModeSettings(settingsFrom(t, `{"bashMode":{"transcriptMaxLines":7.9,"transcriptMaxBytes":99999.5,"toggleShortcut":"ctrl+alt+b"}}`), nil)
 	if s.TranscriptMaxLines != 100 || s.TranscriptMaxBytes != 99999 {
