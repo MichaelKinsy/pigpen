@@ -19,12 +19,13 @@ var (
 	cacheMu     sync.Mutex
 	cachedDir   string
 	cachedDirOK bool
+	cachedPath  string
 )
 
 // ResetCaches forgets the memoized config directory and the parsed config (tests, and reload).
 func ResetCaches() {
 	cacheMu.Lock()
-	cachedDir, cachedDirOK = "", false
+	cachedDir, cachedDirOK, cachedPath = "", false, ""
 	cacheMu.Unlock()
 	configMu.Lock()
 	configCache = nil
@@ -60,11 +61,16 @@ func pigHome() string {
 func ConfigDir() string {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
-	if cachedDirOK {
-		return cachedDir
-	}
-	cachedDir, cachedDirOK = resolveConfigDir(), true
+	resolveCachedLocked()
 	return cachedDir
+}
+
+// resolveCachedLocked fills the memoized directory and the file path in it; cacheMu is held.
+func resolveCachedLocked() {
+	if !cachedDirOK {
+		cachedDir, cachedDirOK = resolveConfigDir(), true
+		cachedPath = filepath.Join(cachedDir, configFileName)
+	}
 }
 
 func resolveConfigDir() string {
@@ -90,7 +96,12 @@ func resolveConfigDir() string {
 }
 
 // ConfigPath is the full path of web-search.json.
-func ConfigPath() string { return filepath.Join(ConfigDir(), configFileName) }
+func ConfigPath() string {
+	cacheMu.Lock()
+	defer cacheMu.Unlock()
+	resolveCachedLocked()
+	return cachedPath
+}
 
 // configRacyWindow is how recent a file's modification time may be before the cache refuses to
 // trust a stat match: a second write inside the clock granularity can keep size and mtime, so an
@@ -98,11 +109,12 @@ func ConfigPath() string { return filepath.Join(ConfigDir(), configFileName) }
 // index uses for the same reason).
 const configRacyWindow = 2 * time.Second
 
-// configEntry is a parsed web-search.json together with the stat that validated it.
+// configEntry is a parsed web-search.json together with the stat that validated it. value is the
+// decoded document whatever its type; the callers decide what a non-object root means.
 type configEntry struct {
-	path string
-	info os.FileInfo
-	root map[string]any
+	path  string
+	info  os.FileInfo
+	value any
 }
 
 var (
@@ -124,20 +136,36 @@ func configEntryMatches(e *configEntry, path string, info os.FileInfo) bool {
 // call. The returned map is shared between callers and MUST be treated as read-only.
 func ReadConfigRoot() (map[string]any, error) {
 	path := ConfigPath()
+	parsed, exists, err := readConfigValue(path)
+	if err != nil || !exists {
+		return nil, err
+	}
+	root, ok := parsed.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("Invalid config in %s: expected a JSON object", path)
+	}
+	return root, nil
+}
+
+// readConfigValue is the cached read and parse of the file at path: the decoded document, whether
+// the file exists, or the read or parse error. The value is shared and read-only.
+func readConfigValue(path string) (any, bool, error) {
 	if info, err := os.Stat(path); err == nil {
 		configMu.Lock()
 		e := configCache
 		configMu.Unlock()
 		if configEntryMatches(e, path, info) {
-			return e.root, nil
+			return e.value, true, nil
 		}
+	} else if errors.Is(err, os.ErrNotExist) {
+		return nil, false, nil
 	}
 	f, err := os.Open(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, nil
+			return nil, false, nil
 		}
-		return nil, err
+		return nil, false, err
 	}
 	defer f.Close()
 	// The stat comes from the open descriptor, taken before the read: a write that lands after it
@@ -145,25 +173,21 @@ func ReadConfigRoot() (map[string]any, error) {
 	info, statErr := f.Stat()
 	data, err := io.ReadAll(f)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	var parsed any
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		return nil, fmt.Errorf("Failed to parse %s: %s", path, jsonErrorText(err))
-	}
-	root, ok := parsed.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("Invalid config in %s: expected a JSON object", path)
+	parsed, err := unmarshalAny(bytesToString(data))
+	if err != nil {
+		return nil, false, fmt.Errorf("Failed to parse %s: %s", path, jsonErrorText(err))
 	}
 	configMu.Lock()
 	configParses++
 	if statErr == nil && time.Since(info.ModTime()) >= configRacyWindow {
-		configCache = &configEntry{path: path, info: info, root: root}
+		configCache = &configEntry{path: path, info: info, value: parsed}
 	} else {
 		configCache = nil
 	}
 	configMu.Unlock()
-	return root, nil
+	return parsed, true, nil
 }
 
 func jsonErrorText(err error) string { return err.Error() }
