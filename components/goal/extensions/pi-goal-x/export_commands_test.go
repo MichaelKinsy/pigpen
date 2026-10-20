@@ -139,3 +139,27 @@ func PoolIDs(cwd string) []string { return poolIDs(storage{cwd: cwd}.readActiveG
 
 // ProposeDraftGuidelines are the registered prompt guidelines of propose_goal_draft.
 func ProposeDraftGuidelines() []string { return append([]string(nil), proposeDraftGuidelines...) }
+
+// RawExternalGoal writes a goal file and its goal_created ledger line with raw file operations, bypassing the extension's own cache
+// invalidation (the original's writeFileSync/appendFileSync in the refresh test). It returns the goal id.
+func RawExternalGoal(cwd, objective string, autoContinue bool, nowMs int64) string {
+	st := storage{cwd: cwd}
+	g := createGoal(objective, autoContinue, false, false, nowMs)
+	file := st.mustPath(activePathForGoal(st, g))
+	if err := os.WriteFile(file, []byte(serializeGoalFile(g)), 0o644); err != nil {
+		panic(err)
+	}
+	line := marshalJSON(ledgerEvent("goal_created", "goalId", gstr(g, "id"), "objective", objective, "sisyphus", false, "autoContinue", autoContinue, "at", nowIso()), "") + "\n"
+	f, err := os.OpenFile(goalLedgerPath(st), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if _, err := f.WriteString(line); err != nil {
+		panic(err)
+	}
+	return gstr(g, "id")
+}
+
+// LifecyclePolicyBlock is the lifecycle policy the goal prompt carries for an autonomous, non-strict goal.
+func LifecyclePolicyBlock() string { return lifecyclePolicyBlock(true, false) }
