@@ -116,5 +116,7 @@ func hostedFallbackOptions() []string {
 		"  • Set ollamaApiKey in " + path + " or OLLAMA_API_KEY",
 		"  • Set parallelApiKey in " + path + " or PARALLEL_API_KEY",
 		"  • Set brightdataApiKey and brightdataUnlockerZone in " + path + " or BRIGHTDATA_API_KEY and BRIGHTDATA_UNLOCKER_ZONE",
+		"  • Set GEMINI_API_KEY in " + path,
+		"  • Sign into gemini.google.com in Chrome",
 	}
 }
