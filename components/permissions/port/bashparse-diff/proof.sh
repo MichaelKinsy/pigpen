@@ -17,12 +17,7 @@ for n in 1 2 3 4; do
   fi
 done
 echo "== (3) mutations (the bp-* ones)"
-python3 - <<'PY'
-import json
-m = json.load(open("port/mutations.json"))
-json.dump([x for x in m if x["name"].startswith("bp-")], open("/tmp/bpmut.json", "w"))
-PY
-/home/kinsy/pigeq-bin-bp mutate --unit-only --go extensions/pi-permission-system --mutations /tmp/bpmut.json --sdk-dir "${PIG_SDK_DIR:-/pigsrc}" --jobs 4 2>&1 | tail -25
+bash /work/components/permissions/port/bashparse-diff/mut.sh
 cd /work/components/permissions/extensions/pi-permission-system
 echo "== (4) performance (interleaved rounds, one pinned CPU set; see bench-rounds.sh)"
 bash /work/components/permissions/port/bashparse-diff/bench-rounds.sh 12 4
