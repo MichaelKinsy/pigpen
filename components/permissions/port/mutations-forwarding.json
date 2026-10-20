@@ -1,0 +1,1082 @@
+[
+ {
+  "name": "pf-poll-interval",
+  "file": "fwd_permission_forwarding.go",
+  "find": "PermissionForwardingPollIntervalMs = 250",
+  "replace": "PermissionForwardingPollIntervalMs = 251"
+ },
+ {
+  "name": "pf-timeout",
+  "file": "fwd_permission_forwarding.go",
+  "find": "PermissionForwardingTimeoutMs      = 10 * 60 * 1000",
+  "replace": "PermissionForwardingTimeoutMs      = 10 * 60 * 100"
+ },
+ {
+  "name": "pf-grace",
+  "file": "fwd_permission_forwarding.go",
+  "find": "8 * PermissionForwardingPollIntervalMs",
+  "replace": "7 * PermissionForwardingPollIntervalMs"
+ },
+ {
+  "name": "pf-candidates-order",
+  "file": "fwd_permission_forwarding.go",
+  "find": "\"PI_AGENT_ROUTER_PARENT_SESSION_ID\",\n\t// Shared convention",
+  "replace": "\"PI_SUBAGENT_PARENT_SESSION\",\n\t// Shared convention"
+ },
+ {
+  "name": "pf-hint-depth",
+  "file": "fwd_permission_forwarding.go",
+  "find": "\"PI_SUBAGENT_CHILD_AGENT\", \"PI_SUBAGENT_DEPTH\",",
+  "replace": "\"PI_SUBAGENT_CHILD_AGENT\","
+ },
+ {
+  "name": "pf-normalize-unknown-case",
+  "file": "fwd_permission_forwarding.go",
+  "find": "strings.ToLower(trimmed) == \"unknown\"",
+  "replace": "trimmed == \"unknown\""
+ },
+ {
+  "name": "pf-normalize-trim",
+  "file": "fwd_permission_forwarding.go",
+  "find": "trimmed := jsTrim(value)",
+  "replace": "trimmed := value"
+ },
+ {
+  "name": "pf-encode-unreserved",
+  "file": "fwd_permission_forwarding.go",
+  "find": "strings.ContainsRune(\"-_.!~*'()\", r)",
+  "replace": "strings.ContainsRune(\"-_.~*'()\", r)"
+ },
+ {
+  "name": "pf-encode-hex-case",
+  "file": "fwd_permission_forwarding.go",
+  "find": "const uriHex = \"0123456789ABCDEF\"",
+  "replace": "const uriHex = \"0123456789abcdef\""
+ },
+ {
+  "name": "pf-location-label",
+  "file": "fwd_permission_forwarding.go",
+  "find": "Label:          \"primary\",",
+  "replace": "Label:          \"secondary\","
+ },
+ {
+  "name": "pf-location-requests-dir",
+  "file": "fwd_permission_forwarding.go",
+  "find": "RequestsDir:    filepath.Join(sessionRootDir, sessionForwardingRequestsDirectoryName),",
+  "replace": "RequestsDir:    filepath.Join(sessionRootDir, sessionForwardingResponsesDirectoryName),"
+ },
+ {
+  "name": "pf-target-own-session",
+  "file": "fwd_permission_forwarding.go",
+  "find": "return !hasOwn || candidate != own",
+  "replace": "return true"
+ },
+ {
+  "name": "pf-target-registry-skipped",
+  "file": "fwd_permission_forwarding.go",
+  "find": "if o.Registry != nil && o.SessionID != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pf-target-registry-own",
+  "file": "fwd_permission_forwarding.go",
+  "find": "ok && namesAnotherSession(resolved) {\n\t\t\t\treturn PermissionForwardingTarget{SessionID: resolved, Source: TargetSourceRegistry}",
+  "replace": "ok {\n\t\t\t\treturn PermissionForwardingTarget{SessionID: resolved, Source: TargetSourceRegistry}"
+ },
+ {
+  "name": "pf-target-not-subagent",
+  "file": "fwd_permission_forwarding.go",
+  "find": "if !o.IsSubagent {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pf-target-process-env",
+  "file": "fwd_permission_forwarding.go",
+  "find": "if o.Env != nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "pf-route-current",
+  "file": "fwd_permission_forwarding.go",
+  "find": "return okRequest && okCurrent && requestID == current",
+  "replace": "return okRequest && okCurrent"
+ },
+ {
+  "name": "pf-source-registry-name",
+  "file": "fwd_permission_forwarding.go",
+  "find": "TargetSourceRegistry PermissionForwardingTargetSource = \"registry\"",
+  "replace": "TargetSourceRegistry PermissionForwardingTargetSource = \"registr\""
+ },
+ {
+  "name": "pf-response-key-order",
+  "file": "fwd_permission_forwarding.go",
+  "find": "o.set(\"responderSessionId\", r.ResponderSessionID)\n\to.set(\"respondedAt\", r.RespondedAt)",
+  "replace": "o.set(\"respondedAt\", r.RespondedAt)\n\to.set(\"responderSessionId\", r.ResponderSessionID)"
+ },
+ {
+  "name": "io-dir-mode",
+  "file": "fwd_io.go",
+  "find": "ownerOnlyDirectoryMode os.FileMode = 0o700",
+  "replace": "ownerOnlyDirectoryMode os.FileMode = 0o755"
+ },
+ {
+  "name": "io-file-mode",
+  "file": "fwd_io.go",
+  "find": "ownerOnlyFileMode      os.FileMode = 0o600",
+  "replace": "ownerOnlyFileMode      os.FileMode = 0o644"
+ },
+ {
+  "name": "io-request-id-optional",
+  "file": "fwd_io.go",
+  "find": "if !okID || !okAt ||",
+  "replace": "if !okAt ||"
+ },
+ {
+  "name": "io-request-source-list",
+  "file": "fwd_io.go",
+  "find": "var uiPromptSources = []string{\"tool_call\", \"skill_input\", \"skill_read\"}",
+  "replace": "var uiPromptSources = []string{\"tool_call\", \"skill_input\"}"
+ },
+ {
+  "name": "io-grant-empty-surface",
+  "file": "fwd_io.go",
+  "find": "if !okS || surface == \"\" || !okP {",
+  "replace": "if !okS || !okP {"
+ },
+ {
+  "name": "io-grants-nonempty",
+  "file": "fwd_io.go",
+  "find": "if !ok || len(raw) == 0 {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "io-intent-boundary",
+  "file": "fwd_io.go",
+  "find": "if !okSurface || !okValues || !okBoundary || !okCwd || !okPrincipal {",
+  "replace": "if !okSurface || !okValues || !okCwd || !okPrincipal {"
+ },
+ {
+  "name": "io-error-empty-message",
+  "file": "fwd_io.go",
+  "find": "return \"Error\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "io-warning-debug",
+  "file": "fwd_io.go",
+  "find": "\tlogger.Debug(\"permission_forwarding.warning\", warnDetails(message, err))",
+  "replace": ""
+ },
+ {
+  "name": "io-error-debug",
+  "file": "fwd_io.go",
+  "find": "\tlogger.Debug(\"permission_forwarding.error\", warnDetails(message, err))",
+  "replace": ""
+ },
+ {
+  "name": "io-warning-event",
+  "file": "fwd_io.go",
+  "find": "logger.Review(\"permission_forwarding.warning\", warnDetails(message, err))",
+  "replace": "logger.Review(\"permission_forwarding.warn\", warnDetails(message, err))"
+ },
+ {
+  "name": "io-mkdir-retry-record",
+  "file": "fwd_io.go",
+  "find": "\trecordFsRetry(logger, \"mkdir\", path, record)",
+  "replace": ""
+ },
+ {
+  "name": "io-cleanup-responses-order",
+  "file": "fwd_io.go",
+  "find": "if requestsGone {",
+  "replace": "if true {"
+ },
+ {
+  "name": "io-remove-absent",
+  "file": "fwd_io.go",
+  "find": "if !pathExists(path) {\n\t\treturn true\n\t}",
+  "replace": "if !pathExists(path) {\n\t\treturn false\n\t}"
+ },
+ {
+  "name": "io-delete-enoent",
+  "file": "fwd_io.go",
+  "find": "if IsErrnoCode(err, \"ENOENT\") {\n\t\t\treturn\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "io-write-temp-cleanup",
+  "file": "fwd_io.go",
+  "find": "\tSafeDeleteFile(logger, tempPath, \"temporary permission-forwarding\")",
+  "replace": ""
+ },
+ {
+  "name": "io-rename-retry-record",
+  "file": "fwd_io.go",
+  "find": "\t\t\trecordFsRetry(logger, \"rename\", filePath, record)",
+  "replace": ""
+ },
+ {
+  "name": "io-list-json-filter",
+  "file": "fwd_io.go",
+  "find": "if strings.HasSuffix(e.Name(), \".json\") {",
+  "replace": "if true {"
+ },
+ {
+  "name": "io-width-validated",
+  "file": "fwd_io.go",
+  "find": "ok && IsSessionGrantWidth(width) {",
+  "replace": "ok {"
+ },
+ {
+  "name": "io-existing-location",
+  "file": "fwd_io.go",
+  "find": "if err != nil || !pathExists(location.RequestsDir) {",
+  "replace": "if err != nil {"
+ },
+ {
+  "name": "io-response-time-default",
+  "file": "fwd_io.go",
+  "find": "response.RespondedAt = float64(time.Now().UnixMilli())",
+  "replace": "response.RespondedAt = 0"
+ },
+ {
+  "name": "io-json-message",
+  "file": "fwd_io.go",
+  "find": "if msg := v8JSONError(string(raw)); msg != \"\" {",
+  "replace": "if msg := \"\"; msg != \"\" {"
+ },
+ {
+  "name": "io-open-wrap",
+  "file": "fwd_io.go",
+  "find": "return nil, wrapFsError(err, \"open\", filePath)",
+  "replace": "return nil, err"
+ },
+ {
+  "name": "retry-delays",
+  "file": "fwd_fs_retry.go",
+  "find": "var defaultRetryDelaysMs = []int{10, 20, 30}",
+  "replace": "var defaultRetryDelaysMs = []int{10, 20}"
+ },
+ {
+  "name": "retry-set-busy",
+  "file": "fwd_fs_retry.go",
+  "find": "map[string]bool{\"EPERM\": true, \"EBUSY\": true, \"EACCES\": true}",
+  "replace": "map[string]bool{\"EPERM\": true, \"EACCES\": true}"
+ },
+ {
+  "name": "retry-set-eacces",
+  "file": "fwd_fs_retry.go",
+  "find": "map[string]bool{\"EPERM\": true, \"EBUSY\": true, \"EACCES\": true}",
+  "replace": "map[string]bool{\"EPERM\": true, \"EBUSY\": true}"
+ },
+ {
+  "name": "retry-budget",
+  "file": "fwd_fs_retry.go",
+  "find": "attempts >= len(delays)",
+  "replace": "attempts > len(delays)"
+ },
+ {
+  "name": "retry-code",
+  "file": "fwd_fs_retry.go",
+  "find": "\t\tcode = transient\n",
+  "replace": ""
+ },
+ {
+  "name": "retry-sleep-delay",
+  "file": "fwd_fs_retry.go",
+  "find": "sleep(delays[attempts])",
+  "replace": "sleep(delays[0])"
+ },
+ {
+  "name": "retry-nil-delays",
+  "file": "fwd_fs_retry.go",
+  "find": "if options.DelaysMs != nil {",
+  "replace": "if len(options.DelaysMs) > 0 {"
+ },
+ {
+  "name": "errno-enotempty",
+  "file": "fwd_fs_retry.go",
+  "find": "case syscall.ENOTEMPTY:\n\t\t\treturn \"ENOTEMPTY\"",
+  "replace": "case syscall.ENOTEMPTY:\n\t\t\treturn \"\""
+ },
+ {
+  "name": "errno-enotdir",
+  "file": "fwd_fs_retry.go",
+  "find": "case syscall.ENOTDIR:\n\t\t\treturn \"ENOTDIR\"",
+  "replace": "case syscall.ENOTDIR:\n\t\t\treturn \"\""
+ },
+ {
+  "name": "node-rename-dest",
+  "file": "fwd_fs_retry.go",
+  "find": "return FsErrnoCode(e.Err) + \": \" + text + \", \" + e.Call + \" '\" + e.Path + \"' -> '\" + e.Dest + \"'\"",
+  "replace": "return FsErrnoCode(e.Err) + \": \" + text + \", \" + e.Call + \" '\" + e.Path + \"'\""
+ },
+ {
+  "name": "node-message-text",
+  "file": "fwd_fs_retry.go",
+  "find": "\"ENOENT\":       \"no such file or directory\",",
+  "replace": "\"ENOENT\":       \"no such file\","
+ },
+ {
+  "name": "lv-refresh",
+  "file": "fwd_liveness.go",
+  "find": "ServingHeartbeatRefreshMs = 4 * PermissionForwardingPollIntervalMs",
+  "replace": "ServingHeartbeatRefreshMs = 1 * PermissionForwardingPollIntervalMs"
+ },
+ {
+  "name": "lv-stale",
+  "file": "fwd_liveness.go",
+  "find": "ServingHeartbeatStaleMs = 5 * ServingHeartbeatRefreshMs",
+  "replace": "ServingHeartbeatStaleMs = 1 * ServingHeartbeatRefreshMs"
+ },
+ {
+  "name": "lv-dir-name",
+  "file": "fwd_liveness.go",
+  "find": "const servingHeartbeatDirectoryName = \"serving\"",
+  "replace": "const servingHeartbeatDirectoryName = \"serve\""
+ },
+ {
+  "name": "lv-judge-registry",
+  "file": "fwd_liveness.go",
+  "find": "return j.deps.Registry.IsServing(target.SessionID), true",
+  "replace": "return j.deps.Heartbeats.Read(target.SessionID) == HeartbeatAlive, true"
+ },
+ {
+  "name": "lv-judge-env",
+  "file": "fwd_liveness.go",
+  "find": "return j.deps.Heartbeats.Read(target.SessionID) == HeartbeatAlive, true",
+  "replace": "return j.deps.Registry.IsServing(target.SessionID), true"
+ },
+ {
+  "name": "lv-classify-dead",
+  "file": "fwd_liveness.go",
+  "find": "if !s.isProcessAlive(record.PID) {\n\t\treturn HeartbeatDeadPID",
+  "replace": "if false {\n\t\treturn HeartbeatDeadPID"
+ },
+ {
+  "name": "lv-classify-stale",
+  "file": "fwd_liveness.go",
+  "find": "float64(s.now())-record.UpdatedAt >= ServingHeartbeatStaleMs",
+  "replace": "float64(s.now())-record.UpdatedAt > ServingHeartbeatStaleMs"
+ },
+ {
+  "name": "lv-throttle-window",
+  "file": "fwd_liveness.go",
+  "find": "at-s.published.at < ServingHeartbeatRefreshMs",
+  "replace": "at-s.published.at <= ServingHeartbeatRefreshMs"
+ },
+ {
+  "name": "lv-throttle-session",
+  "file": "fwd_liveness.go",
+  "find": "s.published != nil && s.published.sessionID == sessionID && at",
+  "replace": "s.published != nil && at"
+ },
+ {
+  "name": "lv-sweep-once",
+  "file": "fwd_liveness.go",
+  "find": "if s.hasSweptDeadRecords {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "lv-sweep-alive",
+  "file": "fwd_liveness.go",
+  "find": "if entry.record != nil && s.isProcessAlive(entry.record.PID) {",
+  "replace": "if entry.record != nil {"
+ },
+ {
+  "name": "lv-pid-positive",
+  "file": "fwd_liveness.go",
+  "find": "pid <= 0 ||",
+  "replace": "pid < 0 ||"
+ },
+ {
+  "name": "lv-session-nonempty",
+  "file": "fwd_liveness.go",
+  "find": "if !okS || sessionID == \"\" ||",
+  "replace": "if !okS ||"
+ },
+ {
+  "name": "lv-clear-published",
+  "file": "fwd_liveness.go",
+  "find": "\t\ts.published = nil\n",
+  "replace": ""
+ },
+ {
+  "name": "lv-clear-delete",
+  "file": "fwd_liveness.go",
+  "find": "\tSafeDeleteFile(s.logger, ServingHeartbeatPath(s.forwardingDir, sessionID), \"permission forwarding serving heartbeat\")",
+  "replace": ""
+ },
+ {
+  "name": "lv-published-set",
+  "file": "fwd_liveness.go",
+  "find": "\ts.published = &publishedHeartbeat{sessionID: sessionID, at: at}",
+  "replace": ""
+ },
+ {
+  "name": "lv-sweep-before-write",
+  "file": "fwd_liveness.go",
+  "find": "\ts.sweepDeadRecordsOnce()\n",
+  "replace": ""
+ },
+ {
+  "name": "lv-heartbeat-pid",
+  "file": "fwd_liveness.go",
+  "find": "heartbeat.set(\"pid\", float64(s.pid))",
+  "replace": "heartbeat.set(\"pid\", float64(0))"
+ },
+ {
+  "name": "lv-ids-alive",
+  "file": "fwd_liveness.go",
+  "find": "s.classify(*entry.record) == HeartbeatAlive",
+  "replace": "true"
+ },
+ {
+  "name": "sr-compose-mark",
+  "file": "fwd_serving_registry.go",
+  "find": "func (c composedAnnouncer) MarkServing(sessionID string) {\n\tfor _, a := range c {",
+  "replace": "func (c composedAnnouncer) MarkServing(sessionID string) {\n\tfor _, a := range c[:1] {"
+ },
+ {
+  "name": "sr-compose-clear",
+  "file": "fwd_serving_registry.go",
+  "find": "func (c composedAnnouncer) ClearServing(sessionID string) {\n\tfor _, a := range c {",
+  "replace": "func (c composedAnnouncer) ClearServing(sessionID string) {\n\tfor _, a := range c[:1] {"
+ },
+ {
+  "name": "sr-order",
+  "file": "fwd_serving_registry.go",
+  "find": "return r.serving[ids[i]] < r.serving[ids[j]]",
+  "replace": "return r.serving[ids[i]] > r.serving[ids[j]]"
+ },
+ {
+  "name": "sr-remark",
+  "file": "fwd_serving_registry.go",
+  "find": "if _, ok := r.serving[sessionID]; !ok {",
+  "replace": "if true {"
+ },
+ {
+  "name": "sr-clear",
+  "file": "fwd_serving_registry.go",
+  "find": "\tdelete(r.serving, sessionID)\n",
+  "replace": ""
+ },
+ {
+  "name": "sr-global",
+  "file": "fwd_serving_registry.go",
+  "find": "if servingRegistrySlot == nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "sa-global",
+  "file": "subagent_registry.go",
+  "find": "if subagentRegistrySlot == nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "sa-unregister",
+  "file": "subagent_registry.go",
+  "find": "\tdelete(r.sessions, sessionID)\n",
+  "replace": ""
+ },
+ {
+  "name": "sa-register",
+  "file": "subagent_registry.go",
+  "find": "\tr.sessions[sessionID] = info\n",
+  "replace": ""
+ },
+ {
+  "name": "mg-no-ui",
+  "file": "fwd_manager.go",
+  "find": "if !ctx.HasUI {\n\t\tm.Stop()",
+  "replace": "if false {\n\t\tm.Stop()"
+ },
+ {
+  "name": "mg-idempotent",
+  "file": "fwd_manager.go",
+  "find": "if m.stopTimer != nil {\n\t\treturn\n\t}\n\tm.stopTimer = ",
+  "replace": "m.stopTimer = "
+ },
+ {
+  "name": "mg-processing-guard",
+  "file": "fwd_manager.go",
+  "find": "if m.context == nil || m.processing {",
+  "replace": "if m.context == nil {"
+ },
+ {
+  "name": "mg-refresh-call",
+  "file": "fwd_manager.go",
+  "find": "\tm.refreshServing()\n\tif m.context",
+  "replace": "\tif m.context"
+ },
+ {
+  "name": "mg-refresh-changed",
+  "file": "fwd_manager.go",
+  "find": "if ok && live != m.servingSessionID {",
+  "replace": "if ok {"
+ },
+ {
+  "name": "mg-announce-guard",
+  "file": "fwd_manager.go",
+  "find": "if !ok || (m.serving && m.servingSessionID == served) {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "mg-announce-unreachable",
+  "file": "fwd_manager.go",
+  "find": "if !ok || (m.serving",
+  "replace": "if false || (m.serving"
+ },
+ {
+  "name": "mg-withdraw-guard",
+  "file": "fwd_manager.go",
+  "find": "if !m.serving {\n\t\treturn\n\t}\n\tsessionID := m.servingSessionID",
+  "replace": "sessionID := m.servingSessionID"
+ },
+ {
+  "name": "mg-stop-processing",
+  "file": "fwd_manager.go",
+  "find": "\tm.context = nil\n\tm.processing = false\n",
+  "replace": "\tm.context = nil\n"
+ },
+ {
+  "name": "mg-stop-withdraw",
+  "file": "fwd_manager.go",
+  "find": "\tm.withdrawServing()\n\tm.context = nil",
+  "replace": "\tm.context = nil"
+ },
+ {
+  "name": "mg-interval",
+  "file": "fwd_manager.go",
+  "find": "PermissionForwardingPollIntervalMs*time.Millisecond)",
+  "replace": "PermissionForwardingPollIntervalMs*2*time.Millisecond)"
+ },
+ {
+  "name": "mg-ticker-stop",
+  "file": "fwd_manager.go",
+  "find": "return func() { once.Do(func() { close(done) }) }",
+  "replace": "return func() {}"
+ },
+ {
+  "name": "mg-drain-reset",
+  "file": "fwd_manager.go",
+  "find": "\t\tm.mu.Lock()\n\t\tm.processing = false\n\t\tm.mu.Unlock()\n",
+  "replace": ""
+ },
+ {
+  "name": "mg-live-id",
+  "file": "fwd_manager.go",
+  "find": "live, ok := NormalizePermissionForwardingSessionID(GetSessionID(*m.context))",
+  "replace": "live, ok := m.servingSessionID, true"
+ },
+ {
+  "name": "ctx-session-trim",
+  "file": "fwd_context.go",
+  "find": "if t := jsTrim(id); t != \"\" {",
+  "replace": "if t := id; t != \"\" {"
+ },
+ {
+  "name": "ctx-session-unknown",
+  "file": "fwd_context.go",
+  "find": "return \"unknown\"\n}\n",
+  "replace": "return \"\"\n}\n"
+ },
+ {
+  "name": "sv-grant-state",
+  "file": "fwd_server.go",
+  "find": "if decision.State != DecisionApprovedForServingSess {\n\t\treturn decision",
+  "replace": "if decision.State == DecisionApprovedForServingSess {\n\t\treturn decision"
+ },
+ {
+  "name": "sv-grant-width-default",
+  "file": "fwd_server.go",
+  "find": "width = \"proven\"",
+  "replace": "width = \"family\""
+ },
+ {
+  "name": "sv-grant-translate",
+  "file": "fwd_server.go",
+  "find": "PermissionPromptDecision{Approved: true, State: DecisionApproved, DecidedBy: decision.DecidedBy}",
+  "replace": "PermissionPromptDecision{Approved: true, State: decision.State, DecidedBy: decision.DecidedBy}"
+ },
+ {
+  "name": "sv-grant-decider",
+  "file": "fwd_server.go",
+  "find": "PermissionPromptDecision{Approved: true, State: DecisionApproved, DecidedBy: decision.DecidedBy}",
+  "replace": "PermissionPromptDecision{Approved: true, State: DecisionApproved}"
+ },
+ {
+  "name": "sv-grant-record",
+  "file": "fwd_server.go",
+  "find": "\t\ts.deps.Recorder.RecordSessionApproval(approval)\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-grant-log",
+  "file": "fwd_server.go",
+  "find": "\t\ts.deps.Logger.Review(\"forwarded_permission.session_recorded\", details)\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-grant-needs-approval",
+  "file": "fwd_server.go",
+  "find": "if request.SessionApproval != nil {\n\t\twidth",
+  "replace": "if true {\n\t\twidth"
+ },
+ {
+  "name": "sv-policy-ask",
+  "file": "fwd_server.go",
+  "find": "if check.State != \"ask\" {",
+  "replace": "if check.State == \"deny\" {"
+ },
+ {
+  "name": "sv-policy-skipped",
+  "file": "fwd_server.go",
+  "find": "if request.AccessIntent != nil {\n\t\tcheck :=",
+  "replace": "if false {\n\t\tcheck :="
+ },
+ {
+  "name": "sv-rule-surface",
+  "file": "fwd_server.go",
+  "find": "Surface: request.AccessIntent.Surface, Pattern: check.MatchedPattern",
+  "replace": "Surface: check.ToolName, Pattern: check.MatchedPattern"
+ },
+ {
+  "name": "sv-rule-pattern",
+  "file": "fwd_server.go",
+  "find": "Pattern: check.MatchedPattern, Origin: check.Origin}",
+  "replace": "Origin: check.Origin}"
+ },
+ {
+  "name": "sv-deny-reason",
+  "file": "fwd_server.go",
+  "find": "denied := CreateDeniedPermissionDecision(check.Reason)",
+  "replace": "denied := CreateDeniedPermissionDecision(nil)"
+ },
+ {
+  "name": "sv-deny-decider",
+  "file": "fwd_server.go",
+  "find": "\t\t\tdenied.DecidedBy = decidedBy\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-auto-event",
+  "file": "fwd_server.go",
+  "find": "event := \"forwarded_permission.auto_denied\"",
+  "replace": "event := \"forwarded_permission.auto_approved\""
+ },
+ {
+  "name": "sv-broadcast",
+  "file": "fwd_server.go",
+  "find": "\ts.deps.Broadcaster.EmitDecision(buildServedDecisionEvent(details, decision))\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-escalate-closed",
+  "file": "fwd_server.go",
+  "find": "return PermissionPromptDecision{Approved: false, State: DecisionDenied, DecidedBy: DecisionSource{Kind: \"gate_error\", Reason: &reason}}",
+  "replace": "return PermissionPromptDecision{Approved: true, State: DecisionApproved, DecidedBy: DecisionSource{Kind: \"gate_error\", Reason: &reason}}"
+ },
+ {
+  "name": "sv-escalate-kind",
+  "file": "fwd_server.go",
+  "find": "DecisionSource{Kind: \"gate_error\", Reason: &reason}",
+  "replace": "DecisionSource{Kind: \"unavailable\", Reason: &reason}"
+ },
+ {
+  "name": "sv-escalate-log",
+  "file": "fwd_server.go",
+  "find": "\tLogPermissionForwardingError(s.deps.Logger, fmt.Sprintf(\"Failed to escalate forwarded permission request '%s'\", details.RequestID), err)\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-multihop-self",
+  "file": "fwd_server.go",
+  "find": "|| *info.ParentSessionID == currentSessionID {",
+  "replace": "{"
+ },
+ {
+  "name": "sv-multihop-nil",
+  "file": "fwd_server.go",
+  "find": "if !ok || info.ParentSessionID == nil ||",
+  "replace": "if !ok ||"
+ },
+ {
+  "name": "sv-multihop-registered",
+  "file": "fwd_server.go",
+  "find": "if !ok || info.ParentSessionID == nil",
+  "replace": "if info.ParentSessionID == nil"
+ },
+ {
+  "name": "sv-mismatch-delete",
+  "file": "fwd_server.go",
+  "find": "\t\tSafeDeleteFile(s.deps.Logger, requestPath, location.Label+\" forwarded permission request\")\n\t\treturn\n\t}\n\ts.warnOnMultiHop",
+  "replace": "\t\treturn\n\t}\n\ts.warnOnMultiHop"
+ },
+ {
+  "name": "sv-write-fail-keeps",
+  "file": "fwd_server.go",
+  "find": "responsePath), err)\n\t\treturn\n\t}",
+  "replace": "responsePath), err)\n\t}"
+ },
+ {
+  "name": "sv-request-deleted",
+  "file": "fwd_server.go",
+  "find": "\tSafeDeleteFile(s.deps.Logger, requestPath, location.Label+\" forwarded permission request\")\n}\n\n// resolveDecision",
+  "replace": "}\n\n// resolveDecision"
+ },
+ {
+  "name": "sv-responses-dir",
+  "file": "fwd_server.go",
+  "find": "\tif !EnsureDirectoryExists(s.deps.Logger, location.ResponsesDir, \"permission forwarding responses\") {\n\t\treturn\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-invalid-deleted",
+  "file": "fwd_server.go",
+  "find": "\t\t\tSafeDeleteFile(s.deps.Logger, requestPath, location.Label+\" forwarded permission request\")\n\t\t\tcontinue",
+  "replace": "\t\t\tcontinue"
+ },
+ {
+  "name": "sv-cleanup",
+  "file": "fwd_server.go",
+  "find": "\tCleanupPermissionForwardingLocationIfEmpty(s.deps.Logger, location)\n}",
+  "replace": "}"
+ },
+ {
+  "name": "sv-empty-inbox",
+  "file": "fwd_server.go",
+  "find": "if len(requestFiles) == 0 {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "sv-details-source",
+  "file": "fwd_server.go",
+  "find": "source = \"tool_call\"",
+  "replace": "source = \"skill_read\""
+ },
+ {
+  "name": "sv-details-agent",
+  "file": "fwd_server.go",
+  "find": "AgentName: nonEmptyOrNil(request.RequesterAgentName),\n\t\tPayload:",
+  "replace": "AgentName: &request.RequesterAgentName,\n\t\tPayload:"
+ },
+ {
+  "name": "sv-facts-boundary",
+  "file": "fwd_server.go",
+  "find": "BoundaryValue: intent.BoundaryValue}",
+  "replace": "BoundaryValue: nil}"
+ },
+ {
+  "name": "sv-payload-forwarded",
+  "file": "fwd_server.go",
+  "find": "requester := PromptRequester{AgentName: &agent, Forwarded: true, SessionID: &session}",
+  "replace": "requester := PromptRequester{AgentName: &agent, Forwarded: false, SessionID: &session}"
+ },
+ {
+  "name": "sv-payload-kind",
+  "file": "fwd_server.go",
+  "find": "Kind: \"forwarded\",",
+  "replace": "Kind: \"tool\","
+ },
+ {
+  "name": "sv-payload-restamp",
+  "file": "fwd_server.go",
+  "find": "\t\tpayload.Request.Requester = requester\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-event-display",
+  "file": "fwd_server.go",
+  "find": "if details.Surface != nil {\n\t\tsurface = *details.Surface",
+  "replace": "if false {\n\t\tsurface = *details.Surface"
+ },
+ {
+  "name": "sv-event-for-session",
+  "file": "fwd_server.go",
+  "find": "ForSession: decision.State == DecisionApprovedForSession || decision.State == DecisionApprovedForServingSess,",
+  "replace": "ForSession: decision.State == DecisionApprovedForSession,"
+ },
+ {
+  "name": "sv-event-result",
+  "file": "fwd_server.go",
+  "find": "result := \"deny\"",
+  "replace": "result := \"allow\""
+ },
+ {
+  "name": "sv-event-forwarding",
+  "file": "fwd_server.go",
+  "find": "\tif details.Forwarding != nil {\n\t\tevent.Forwarding",
+  "replace": "\tif false {\n\t\tevent.Forwarding"
+ },
+ {
+  "name": "sv-response-decider",
+  "file": "fwd_server.go",
+  "find": "\t\tDecidedBy: &decidedBy,\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-response-width",
+  "file": "fwd_server.go",
+  "find": "\t\tSessionGrantWidth: decision.SessionGrantWidth,\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-response-responder",
+  "file": "fwd_server.go",
+  "find": "ResponderSessionID: currentSessionID,",
+  "replace": "ResponderSessionID: \"\","
+ },
+ {
+  "name": "sv-approved-event",
+  "file": "fwd_server.go",
+  "find": "event := \"forwarded_permission.denied\"",
+  "replace": "event := \"forwarded_permission.approved\""
+ },
+ {
+  "name": "sc-registry-skipped",
+  "file": "subagent_context.go",
+  "find": "if registry != nil && IsRegisteredSubagentChild(ctx, registry) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "sc-env-trim",
+  "file": "subagent_context.go",
+  "find": "if jsTrim(os.Getenv(key)) != \"\" {",
+  "replace": "if os.Getenv(key) != \"\" {"
+ },
+ {
+  "name": "sc-env-skipped",
+  "file": "subagent_context.go",
+  "find": "for _, key := range SubagentEnvHintKeys {",
+  "replace": "for _, key := range []string{} {"
+ },
+ {
+  "name": "sc-registered-id",
+  "file": "subagent_context.go",
+  "find": "return ok && registry.Has(sessionID)",
+  "replace": "return registry.Has(sessionID)"
+ },
+ {
+  "name": "sc-read-session-empty",
+  "file": "subagent_context.go",
+  "find": "if err != nil || id == \"\" {",
+  "replace": "if err != nil {"
+ },
+ {
+  "name": "sc-read-session-error",
+  "file": "subagent_context.go",
+  "find": "if err != nil || id == \"\" {",
+  "replace": "if id == \"\" {"
+ },
+ {
+  "name": "sc-within",
+  "file": "subagent_context.go",
+  "find": "return flavor.IsWithin(normalizedSessionDir, normalizedSubagentRoot), nil",
+  "replace": "return strings.HasPrefix(normalizedSessionDir, normalizedSubagentRoot), nil"
+ },
+ {
+  "name": "sc-dir-error",
+  "file": "subagent_context.go",
+  "find": "if err != nil {\n\t\treturn false, err\n\t}",
+  "replace": "if err != nil {\n\t\treturn false, nil\n\t}"
+ },
+ {
+  "name": "sd-delegate",
+  "file": "subagent_detection.go",
+  "find": "return IsSubagentExecutionContext(ctx, d.deps.SubagentSessionsDir, d.deps.Flavor, d.deps.Registry)",
+  "replace": "return IsSubagentExecutionContext(ctx, d.deps.SubagentSessionsDir, d.deps.Flavor, nil)"
+ },
+ {
+  "name": "lc-created-channel",
+  "file": "subagent_lifecycle.go",
+  "find": "SubagentChildSessionCreated = \"subagents:child:session-created\"",
+  "replace": "SubagentChildSessionCreated = \"subagents:child:created\""
+ },
+ {
+  "name": "lc-bound-channel",
+  "file": "subagent_lifecycle.go",
+  "find": "SubagentChildBound = \"subagents:child:bound\"",
+  "replace": "SubagentChildBound = \"subagents:child:bind\""
+ },
+ {
+  "name": "lc-disposed-channel",
+  "file": "subagent_lifecycle.go",
+  "find": "SubagentChildDisposed = \"subagents:child:disposed\"",
+  "replace": "SubagentChildDisposed = \"subagents:child:dispose\""
+ },
+ {
+  "name": "lc-register",
+  "file": "subagent_lifecycle.go",
+  "find": "\t\tregistry.Register(sessionID, info)\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-parent",
+  "file": "subagent_lifecycle.go",
+  "find": "\t\t\tinfo.ParentSessionID = &parent\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-bound-parent",
+  "file": "subagent_lifecycle.go",
+  "find": "\t\t\tchild.ParentSessionID = &parent\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-bound-audit",
+  "file": "subagent_lifecycle.go",
+  "find": "\t\taudit.AuditBoundChild(child)\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-unregister",
+  "file": "subagent_lifecycle.go",
+  "find": "\t\t\tregistry.Unregister(sessionID)\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-detach",
+  "file": "subagent_lifecycle.go",
+  "find": "\t\tfor _, u := range unsubs {\n\t\t\tu()\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-partial-detach",
+  "file": "subagent_lifecycle.go",
+  "find": "\t\tif err != nil {\n\t\t\tdetach()\n\t\t\treturn err\n\t\t}",
+  "replace": "\t\tif err != nil {\n\t\t\treturn err\n\t\t}"
+ },
+ {
+  "name": "au-has-node",
+  "file": "subagent_audit.go",
+  "find": "if a.hasNode(child.SessionID) {\n\t\treturn",
+  "replace": "if !a.hasNode(child.SessionID) {\n\t\treturn"
+ },
+ {
+  "name": "au-warn-once",
+  "file": "subagent_audit.go",
+  "find": "first := !a.warned",
+  "replace": "first := true"
+ },
+ {
+  "name": "au-warn-latch",
+  "file": "subagent_audit.go",
+  "find": "\ta.warned = true\n",
+  "replace": ""
+ },
+ {
+  "name": "au-review",
+  "file": "subagent_audit.go",
+  "find": "\ta.log.Review(\"child_node_absent\", d)\n",
+  "replace": ""
+ },
+ {
+  "name": "au-parent-null",
+  "file": "subagent_audit.go",
+  "find": "d.set(\"parentSessionId\", strOrNull(child.ParentSessionID))",
+  "replace": "d.set(\"parentSessionId\", \"\")"
+ },
+ {
+  "name": "au-message-setting",
+  "file": "subagent_audit.go",
+  "find": "pi-subagents' excludedExtensionPackages",
+  "replace": "pi-subagents' excluded packages"
+ },
+ {
+  "name": "au-message-event",
+  "file": "subagent_audit.go",
+  "find": "permission review log as child_node_absent.",
+  "replace": "permission review log as child_absent."
+ },
+ {
+  "name": "en-path-family",
+  "file": "fwd_envelope.go",
+  "find": "\"external_directory\": true, \"path\": true",
+  "replace": "\"external_directory\": true"
+ },
+ {
+  "name": "en-external-family",
+  "file": "fwd_envelope.go",
+  "find": "\"external_directory\": true, \"path\": true",
+  "replace": "\"path\": true"
+ },
+ {
+  "name": "en-allow-only",
+  "file": "fwd_envelope.go",
+  "find": "verdict.Kind == \"allow\" && isExcludedSurface(details)",
+  "replace": "verdict.Kind != \"deny\" && isExcludedSurface(details) && false"
+ },
+ {
+  "name": "en-excluded-or",
+  "file": "fwd_envelope.go",
+  "find": "verdict.Kind == \"allow\" && isExcludedSurface(details)",
+  "replace": "verdict.Kind == \"allow\" || isExcludedSurface(details)"
+ },
+ {
+  "name": "en-intent-first",
+  "file": "fwd_envelope.go",
+  "find": "case details.AccessIntent != nil:",
+  "replace": "case details.AccessIntent != nil && details.Surface == nil:"
+ },
+ {
+  "name": "en-failsafe",
+  "file": "fwd_envelope.go",
+  "find": "\t}\n\treturn true\n}",
+  "replace": "\t}\n\treturn false\n}"
+ },
+ {
+  "name": "en-family-fold",
+  "file": "fwd_envelope.go",
+  "find": "DelegationExcludedSurfaces[SurfaceFamilyOf(details.AccessIntent.Surface)]",
+  "replace": "DelegationExcludedSurfaces[details.AccessIntent.Surface]"
+ },
+ {
+  "name": "en-error",
+  "file": "fwd_envelope.go",
+  "find": "if err != nil {\n\t\t\treturn verdict, err\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "in-walk-on-decline",
+  "file": "subagent_inherited.go",
+  "find": "if answer := pick(service); answer != nil {",
+  "replace": "if answer := pick(service); true {"
+ },
+ {
+  "name": "in-unpublished",
+  "file": "subagent_inherited.go",
+  "find": "if service := a.locate(parent); service != nil {",
+  "replace": "if service := a.locate(parent); true {"
+ },
+ {
+  "name": "in-parent-undefined",
+  "file": "subagent_inherited.go",
+  "find": "if !found || info.ParentSessionID == nil {\n\t\t\treturn nil\n\t\t}",
+  "replace": "if !found {\n\t\t\treturn nil\n\t\t}"
+ },
+ {
+  "name": "in-local-first",
+  "file": "subagent_inherited.go",
+  "find": "if own := l.local.Resolve(toolName); own != nil {",
+  "replace": "if own := l.local.Resolve(toolName); false {"
+ },
+ {
+  "name": "in-origin",
+  "file": "subagent_inherited.go",
+  "find": "Origin: \"inherited\"}",
+  "replace": "Origin: \"local\"}"
+ },
+ {
+  "name": "in-formatter-local",
+  "file": "subagent_inherited.go",
+  "find": "if own := l.local.Get(toolName); own != nil {",
+  "replace": "if own := l.local.Get(toolName); false {"
+ },
+ {
+  "name": "in-no-session",
+  "file": "subagent_inherited.go",
+  "find": "for ok && !visited[sessionID] {",
+  "replace": "for !visited[sessionID] {"
+ }
+]
