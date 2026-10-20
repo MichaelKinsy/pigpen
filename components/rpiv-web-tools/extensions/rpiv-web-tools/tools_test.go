@@ -268,7 +268,8 @@ func TestFetchTool(t *testing.T) {
 		fetchURL(t, "https://example.com/p", false)
 		eq(t, n.Requests[0].Header.Get("User-Agent"), "Mozilla/5.0 (compatible; rpiv-pi/1.0)")
 		eq(t, n.Requests[0].Header.Get("Accept"), fetchAcceptHeader)
-		eq(t, httpClient.CheckRedirect == nil, true) // the default policy follows up to ten redirects
+		// fetch's redirect: "follow" has a limit of 20 redirects (TestRedirectLimit pins both sides of it).
+		eq(t, httpClient.CheckRedirect != nil, true)
 	})
 	tw(t, f, "coerces content-length to numeric details.contentLength", func(t *testing.T) {
 		clearEnv(t)
