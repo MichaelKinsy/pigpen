@@ -1,6 +1,8 @@
 package pi_subagents
 
 import (
+	"sync"
+
 	"github.com/dlclark/regexp2/v2"
 )
 
@@ -8,24 +10,41 @@ import (
 // acceptance metadata only a review child that is explicitly read-only may follow. The heuristic is the original's, pattern for
 // pattern (workflow_recovery_patterns.go).
 
-func recoveryReplaceAll(text string, patterns ...*regexp2.Regexp) string {
+// lazyRe is a regular expression compiled on first use: compiling the 38 patterns of this heuristic with regexp2's ECMAScript and
+// IgnoreCase options costs about 370 ms and 9 MB at package initialization, paid by every process that loads the extension, while
+// the heuristic runs only after a child returned rejected acceptance metadata.
+type lazyRe struct {
+	once sync.Once
+	src  string
+	opts regexp2.RegexOptions
+	re   *regexp2.Regexp
+}
+
+func lazyRegexp(src string, opts regexp2.RegexOptions) *lazyRe { return &lazyRe{src: src, opts: opts} }
+
+func (l *lazyRe) get() *regexp2.Regexp {
+	l.once.Do(func() { l.re = regexp2.MustCompile(l.src, l.opts) })
+	return l.re
+}
+
+func recoveryReplaceAll(text string, patterns ...*lazyRe) string {
 	for _, re := range patterns {
-		if out, err := re.Replace(text, " ", -1, -1); err == nil {
+		if out, err := re.get().Replace(text, " ", -1, -1); err == nil {
 			text = out
 		}
 	}
 	return text
 }
 
-func recoveryTest(re *regexp2.Regexp, text string) bool {
-	ok, err := re.MatchString(text)
+func recoveryTest(re *lazyRe, text string) bool {
+	ok, err := re.get().MatchString(text)
 	return err == nil && ok
 }
 
 // recoveryReReadOnlyAll is the read-only pattern with the global flag, which the original builds with new RegExp(source, "gi").
-var recoveryReReadOnlyAll = regexp2.MustCompile(recoveryReReadOnlyPattern.String(), regexp2.ECMAScript|regexp2.IgnoreCase)
+var recoveryReReadOnlyAll = lazyRegexp(recoveryReReadOnlyPattern.src, regexp2.ECMAScript|regexp2.IgnoreCase)
 
-var recoveryAgentRe = regexp2.MustCompile(`\b(?:advisor|oracle|review|reviewer)\b`, regexp2.ECMAScript|regexp2.IgnoreCase)
+var recoveryAgentRe = lazyRegexp(`\b(?:advisor|oracle|review|reviewer)\b`, regexp2.ECMAScript|regexp2.IgnoreCase)
 
 func isExplicitReadOnlyRecoveryReview(params *jsObject) bool {
 	agent := jsTrim(objStr(params, "agent"))

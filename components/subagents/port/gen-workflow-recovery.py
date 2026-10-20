@@ -15,7 +15,7 @@ for i in range(1284, 1320):
     opts = ["regexp2.ECMAScript"]
     if "i" in flags: opts.append("regexp2.IgnoreCase")
     if "m" in flags: opts.append("regexp2.Multiline")
-    out.append("\t%s = regexp2.MustCompile(%s, %s)" % (go, json.dumps(pat, ensure_ascii=False), "|".join(opts)))
+    out.append("\t%s = lazyRegexp(%s, %s)" % (go, json.dumps(pat, ensure_ascii=False), "|".join(opts)))
     n += 1
 out.append(")")
 out.append("")
