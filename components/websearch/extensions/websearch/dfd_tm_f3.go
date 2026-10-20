@@ -817,7 +817,10 @@ func init() {
 			if isCharacterBox {
 				body = tmOrdArgument(args[0])
 				b0 := body[0].(tmObj)
-				text := tmStr(b0, "text")
+				text, hasText := b0["text"].(string)
+				if !hasText {
+					panic(&tmJSError{"Cannot read properties of undefined (reading 'charAt')"})
+				}
 				if strings.HasPrefix(text, "\\") {
 					text = tmSymbolsMath[text].replace
 				}
