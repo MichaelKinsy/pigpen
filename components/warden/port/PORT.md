@@ -108,24 +108,26 @@ input, agent_settled; the compaction relevance hook `session_before_compact`).
 
 ## Performance (tools slice, 0.1.3)
 
-Measured on imladris (Intel Xeon 6746E, CPU set 96-151 shared with other lanes; load average 68 to 300 during the runs, so the CPU set was not idle and the figures are upper bounds on noise-free latency). Go: `go test -bench . -benchmem -count=10` (`extensions/warden/tools_bench_test.go`), median of 10; original under Node 24.19: `port/bench-original.ts`, median of 11 runs (sequential after the Go runs, not interleaved).
+Measured on imladris (Intel Xeon 6746E, CPU set 96-151 shared with other lanes; load average 68 to 300 during the runs, so the CPU set was not idle and the figures are not noise-free). Go: `go test -bench . -benchmem -count=10` (`extensions/warden/tools_bench_test.go`), median of 10; original under Node 24.19: `port/bench-original.ts`, median of 11 runs (sequential after the Go runs, not interleaved).
 
-| Path (same input) | Go port | Original under PiG's Node (tsx) |
-|---|---|---|
-| `warden_loops` add then list, through the file | 250 us, 73.4 KB, 979 allocs | 443 us |
-| `warden_remember` (`recordLesson`, no file) | 84.5 us, 4.9 KB, 93 allocs | 16.2 us |
-| `extractPreferences` of a two-sentence message | 122.8 us, 6.3 KB, 133 allocs | 14.2 us |
-| `warden_recall` (`recallText`) | 79.1 us, 4.5 KB, 213 allocs | 12.1 us |
-| construct the extension and register its tools (`New`) | 23.3 us, 16.6 KB, 111 allocs | import 1.66 to 1.83 s (cold TypeScript load through tsx of 1.18 MB of source), factory 4.8 ms median |
+A first profile put about two thirds of the time in `Redact` and most of the rest in patterns that cannot match a text without their trigger words (Go's `regexp` has no literal scan; 80% of the time was `tryBacktrack`/`bitState`, 7% `unicode.SimpleFold`). `prefs_fast.go` adds necessary-condition prefilters (`redactFast` skips the fifteen Redact passes when no rule's trigger is present; trigger words and first-letter tests guard the question, imperative, `I said`, `next time`, temporary, past-form and task-reference patterns; `startsNegation` replaces a case-folded regexp). Each is a superset test, so the 5,594-message and 2,500-clause differential still agrees and `TestRedactFastEqualsRedact` compares `redactFast` with `Redact` on the original's 2,552 commands and the messages. A rule added to `Redact` must add its trigger to `credentialTriggers`.
 
-- Binary: a `package main` that only runs `warden.Extension()` (linux/amd64, `-s -w`) is 9,081,095 bytes, against 8,761,607 for 0.1.2 (the refusal release): +319,488 bytes (+3.6%). The original ships no binary (its `src` is 1,178,572 bytes of TypeScript).
-- The Go port is 5 to 9 times slower than the original on the three pure paths, which is over the 10% bar. A CPU profile of the three benchmarks puts about 80% in Go's `regexp` backtracker (`tryBacktrack`, `bitState`) and 7% in `unicode.SimpleFold` (the `(?i)` patterns), against V8's compiled regexps. Absolute cost is 0.08 to 0.12 ms per tool call or per scanned user message; the scan is bounded (200 files, 30 days, a 250 ms read budget) and runs once per session start. No fix is made here: owner decision needed (a cheaper trigger-word precheck before the regexps is the lever). `warden_loops` through the file is faster than the original.
+| Path (same input) | Go before | Go now | Original under PiG's Node (tsx) |
+|---|---|---|---|
+| `warden_loops` add then list, through the file | 250 us, 979 allocs | 311 us, 71 KB, 939 allocs (load was higher in this run) | 443 us |
+| `warden_remember` (`recordLesson`, no file) | 84.5 us, 93 allocs | 13.1 us, 2.3 KB, 48 allocs | 16.2 us |
+| `extractPreferences` of a two-sentence message | 122.8 us, 133 allocs | 15.8 us, 2.3 KB, 49 allocs | 14.2 us |
+| `warden_recall` (`recallText`) | 79.1 us, 213 allocs | 4.9 us, 1.2 KB, 15 allocs | 12.1 us |
+| construct the extension and register its tools (`New`) | 23.3 us, 111 allocs | (unchanged) | import 1.66 to 1.83 s (cold TypeScript load through tsx of 1.18 MB of source), factory 4.8 ms median |
+
+- `extractPreferences` is 11% above the original at the median (15.8 against 14.2 us): at the edge of the 10% bar and inside the noise of a host at load 180; the remaining cost is the regexps that do match and the sentence splitting. The other three paths are at or below the original.
+- Binary: a `package main` that only runs `warden.Extension()` (linux/amd64, `-s -w`) is 9,081,095 bytes, against 8,761,607 for 0.1.2 (the refusal release): +319,488 bytes (+3.6%), measured before the prefilters (they add a few hundred bytes of code). The original ships no binary (its `src` is 1,178,572 bytes of TypeScript).
 - Package init allocation is held under the existing limit by `TestPackageInitDoesNotCompileRegexps` (a `lazyREBuilt` assembles prefs patterns on first use). The previous release's tool latencies do not exist (it registered no tool); its construction was not benchmarked.
-- No blocking host call on the input or render path: the scan, the loops file and the lesson file are read in the `session_start`, `agent_end`, `session_compact` and tool/command handlers only; the recall probe runs in a goroutine started at session start.
+- No blocking host call on the input or render path: the scan (200 files, 30 days, a 250 ms read budget), the loops file and the lesson file are read in the `session_start`, `agent_end`, `session_compact` and tool/command handlers only; the recall probe runs in a goroutine started at session start.
 
 ## Equivalence (live: Pi original vs Go port)
 
-`port/scenarios` holds 24 offline scenarios (19 for the guards, 5 for the tools slice; a sixth is in `port/scenarios-b4`, see below), `port/golden` their traces recorded **from the original under Pi 1.3.0.1402973a (the 19 earlier ones under Pi 0.87.1/1.0.1)**
+`port/scenarios` holds 26 offline scenarios (19 for the guards, 7 for the tools slice; a sixth is in `port/scenarios-b4`, see below), `port/golden` their traces recorded **from the original under Pi 1.3.0.1402973a (the 19 earlier ones under Pi 0.87.1/1.0.1)**
 (`port/eq-entry.ts` loads the vendored, unmodified `port/oracle` from source; `npm ci --ignore-scripts` in
 `port/oracle` first). Every scenario sets `"env": {"PIGPEN_WARDEN_ENABLED": "1", "PIGPEN_WARDEN_STEER_VISIBLE": "0"}` (the
 per-scenario `env` map of pigeq; the original ignores both), declares `git` as missing and passes
@@ -156,12 +158,12 @@ What the scenarios deliberately do not pin, and why (each is the parity claim's 
   `warden_remember`, `warden_loops` and `warden_recall`, and PiG's default set adds `powershell`, `grep`, `find`,
   `ls` (a host difference). The six scenarios of the tools slice list the three tools in `--tools` explicitly, so
   their descriptions and JSON schemas are compared in the model request.
-- Not reachable through pigeq for these tools: the disabled replies (`not available: pi-warden is off`, `not recorded:
-  standing preferences are off`) and `prefs.enabled: false`, because the original is on by default and reads its
-  config from `<agent dir>/pi-warden/config.json`, while the port is off until enabled (D1) and reads
-  `<PIG_HOME>/pigpen-warden/config.json`, which a scenario cannot write; `/warden prefs` output and the `pi-warden-prefs`
-  message of a project with earlier sessions of known content (the scan reads Pi's own session files, whose names and
-  dates a scenario does not control; `/warden prefs` prints real dates). The fake-host tests
+- The disabled replies (`not available: pi-warden is off`, `not recorded: standing preferences are off`) and
+  `prefs.enabled: false` are compared in `tools-disabled-replies` and `remember-with-prefs-disabled`: the original's config
+  goes in `agentFiles` (`pi-warden/config.json`), the port's in `homeFiles` (`pigpen-warden/config.json` under
+  `PIG_HOME`), which needs the pigeq with the `homeFiles` field. Not reachable through pigeq: `/warden prefs` output and
+  the `pi-warden-prefs` message of a project with earlier sessions of known content (the scan reads Pi's own session
+  files, whose names and dates a scenario does not control; `/warden prefs` prints real dates). The fake-host tests
   (`tools_extension_test.go`, with a fixed clock) and the twins cover them.
 - The port is off unless enabled (D1); the disabled default is proved by `TestWardenIsOffUntilYouEnableIt`.
 

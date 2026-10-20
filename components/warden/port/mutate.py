@@ -57,7 +57,10 @@ M = [
  # Tools slice: loops, prefs, lessons, recall, the compaction appendix (tools_wiring.go, loops.go, prefs*.go, compact.go).
  ("loops-open-cap-off-by-one", "loops.go", "len(openLoops(store)) >= maxOpenLoops", "len(openLoops(store)) > maxOpenLoops"),
  ("loops-drop-without-reason-allowed", "loops.go", 'if action == "drop" && reason == "" {', "if false {"),
- ("loops-text-not-redacted", "loops.go", "func oneLine(text string) string { return Redact(jsTrim(jsCollapseSpace(text))) }", "func oneLine(text string) string { return jsTrim(jsCollapseSpace(text)) }"),
+ ("loops-text-not-redacted", "loops.go", "func oneLine(text string) string { return redactFast(jsTrim(jsCollapseSpace(text))) }", "func oneLine(text string) string { return jsTrim(jsCollapseSpace(text)) }"),
+ ("redactfast-misses-token-rule", "prefs_fast.go", '"-----", "authorization", "bearer", "key", "secret", "passw", "passphrase", "token", "credential"', '"-----", "authorization", "bearer", "key", "secret", "passw", "passphrase", "credential"'),
+ ("question-prefilter-drops-do", "prefs_fast.go", "case 'w', 'h', 'c', 's', 'i', 'a', 'd':", "case 'w', 'h', 'c', 's', 'i', 'a':"),
+ ("negation-prefilter-drops-never", "prefs_fast.go", '[...]string{"never", "stop", "not", "no"}', '[...]string{"stop", "not", "no"}'),
  ("loops-session-id-escapes-folder", "loops.go", 'safeSessionID(session)+".json"', 'session+".json"'),
  ("loops-reminder-repeats", "tools_wiring.go", "same := fingerprint == w.tools.loopsReminded", "same := false"),
  ("loops-reminder-starts-a-turn", "tools_wiring.go", 'SteerOptions{DeliverAs: "nextTurn"}', 'SteerOptions{DeliverAs: "followUp", TriggerTurn: true}'),
