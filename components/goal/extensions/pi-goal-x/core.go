@@ -91,6 +91,7 @@ type core struct {
 	widgetRegistered bool
 	widgetLines      []string
 	widgetWidthOff   func()
+	widgetTUI        *coreWidgetTUI
 	// widgetPushTap observes the widget lines the SDK host forwards (tests).
 	widgetPushTap func(key string, lines []string)
 }
@@ -136,6 +137,15 @@ func (c *core) locked(fn func()) {
 	defer c.mu.Unlock()
 	fn()
 	c.flush()
+}
+
+// await runs fn, a wait for something outside the core (an auditor run, a model call), with the core's lock released: the original's
+// other handlers run at an `await`, and the key that aborts the wait must not queue behind it. Code after await revalidates what it read
+// before. A host dialog (host.Confirm, Select, Input, Custom) already does this.
+func (c *core) await(fn func()) {
+	c.mu.Unlock()
+	defer c.mu.Lock()
+	fn()
 }
 
 func (c *core) state() *jsObject { return focusedGoalFromPool(c.goals, c.focused) }
@@ -734,7 +744,8 @@ func (c *core) ensureWidget() {
 		componentRef: &c.widgetRef,
 	})
 	c.widgetRegistered = true
-	factory(&coreWidgetTUI{c: c}, c.h.Theme())
+	c.widgetTUI = &coreWidgetTUI{c: c}
+	factory(c.widgetTUI, c.h.Theme())
 	c.pushWidget()
 	if c.widgetWidthOff == nil {
 		c.widgetWidthOff = c.h.OnWidthChange(func(int) {
@@ -749,6 +760,9 @@ func (c *core) pushWidget() {
 	if comp == nil {
 		return
 	}
+	// The terminal height the component reads while it renders is the host's now: a render kept past the host's lifetime (a deferred
+	// one) must not reach back into it.
+	c.widgetTUI.rows, c.widgetTUI.hasRows = c.h.Height()
 	lines := comp.Render(c.h.Width())
 	if lines == nil {
 		lines = []string{}
@@ -765,12 +779,16 @@ func (c *core) invalidateWidget() {
 }
 
 // coreWidgetTUI is the TUI object the dashboard factory gets: a render request lays the lines out again and pushes them.
-type coreWidgetTUI struct{ c *core }
+type coreWidgetTUI struct {
+	c       *core
+	rows    int
+	hasRows bool
+}
 
 func (t *coreWidgetTUI) getShowHardwareCursor() bool { return false }
 func (t *coreWidgetTUI) setShowHardwareCursor(bool)  {}
 func (t *coreWidgetTUI) requestRender()              { t.c.pushWidget() }
-func (t *coreWidgetTUI) terminalRows() (int, bool)   { return t.c.h.Height() }
+func (t *coreWidgetTUI) terminalRows() (int, bool)   { return t.rows, t.hasRows }
 func (t *coreWidgetTUI) previousLinesLen() (int, bool) {
 	return len(t.c.widgetLines), t.c.widgetLines != nil
 }
@@ -826,8 +844,14 @@ func resolveSessionFocus(pool *goalPool, entry *focusEntry, legacy *jsObject, au
 }
 
 // loadState reads the pool and resolves the session's focus from the branch's focus entry (or the legacy state entry).
-func (c *core) loadState() {
+func (c *core) loadState() error {
 	c.clearGoalWidget()
+	// The pool root is resolved here and pinned for the session; an invalid goalsRoot fails the load instead of falling back.
+	st, err := newGoalStorage(&goalStorageContext{cwd: c.h.Cwd(), sessionManager: coreSession{c}})
+	if err != nil {
+		return err
+	}
+	c.st = st
 	root := c.st.root()
 	defaultRoot := defaultGoalRoot(c.h.Cwd())
 	c.focusStorageRoot = root
@@ -898,6 +922,15 @@ func (c *core) loadState() {
 	c.clearStoppedRuntimeState()
 	c.runningGoalID = nil
 	c.updateUI()
+	return nil
+}
+
+// coreSession is the session manager the pinned pool root is keyed on: one per core, with the host's current session id.
+type coreSession struct{ c *core }
+
+func (s coreSession) getSessionId() (string, bool) {
+	id := s.c.h.SessionID()
+	return id, id != ""
 }
 
 // ---- state operations ----
@@ -1112,9 +1145,12 @@ func (c *core) shutdown() {
 
 // sessionStart is the session_start handler's work: load the goals, let the queued UI update run (the original awaits the load),
 // then start accounting and restore the scheduler.
-func (c *core) sessionStart() {
-	c.loadState()
+func (c *core) sessionStart() error {
+	if err := c.loadState(); err != nil {
+		return err
+	}
 	c.flush()
 	c.beginAccounting()
 	c.scheduler.restore()
+	return nil
 }

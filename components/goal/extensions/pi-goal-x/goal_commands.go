@@ -4,17 +4,27 @@ package pi_goal_x
 // /goal-unfocus. Every other command of the original answers with the refusal (refusal.go). registerGoalCommands is the seam the
 // GoalCommands slice fills with the rest of goal-commands.ts and goal-drafting.ts.
 
-// registerGoalCommands registers the commands on the core's extension.
+// goalCommandOrder is the registration order of the original's 16 commands (pinned by goal-surface-baseline).
+var goalCommandOrder = []string{"goal", "sisyphus", "goal-cancel", "goal-direct", "sisyphus-direct", "goal-list", "goal-status", "goal-refresh",
+	"goal-recovery", "goal-focus", "goal-unfocus", "goal-settings", "goal-tweak", "goal-clear", "goal-pause", "goal-resume"}
+
+// registerGoalCommands registers the commands on the core's extension, in the original's order.
 func registerGoalCommands(c *core) {
-	for _, d := range commandDefs {
-		c.pi.command(d.name, d.desc, d.fn)
-	}
-	for _, d := range unportedCommands {
-		feature := d.feature
-		c.pi.command(d.name, d.desc, func(c *core, _ string) error {
-			c.h.Notify(refusal(feature), "error")
-			return nil
-		})
+	for _, name := range goalCommandOrder {
+		for _, d := range commandDefs {
+			if d.name == name {
+				c.pi.command(d.name, d.desc, d.fn)
+			}
+		}
+		for _, d := range unportedCommands {
+			if d.name == name {
+				feature := d.feature
+				c.pi.command(d.name, d.desc, func(c *core, _ string) error {
+					c.h.Notify(refusal(feature), "error")
+					return nil
+				})
+			}
+		}
 	}
 }
 
