@@ -1,9 +1,6 @@
 package powerline_footer
 
-import (
-	"os"
-	"strings"
-)
+import "os"
 
 // What the original does that this port does not do yet. Each such command or setting is refused with one message that names the
 // working alternative; nothing is accepted and then ignored. The feature names are the ones in port/slices.json.
@@ -28,7 +25,6 @@ var refusedCommands = []struct{ name, description, feature string }{
 	{"bash-mode", "Toggle bash mode", "bash mode (/bash-mode)"},
 	{"bash-reset", "Restart the bash mode shell session", "bash mode (/bash-reset)"},
 	{"powerline-perf", "Show or reset the editor performance counters", "the editor performance profiler (/powerline-perf)"},
-	{"vibe", "Configure the working-message vibes", "working vibes (/vibe)"},
 	{"cd", "Change the session working directory", "the /cd command"},
 }
 
@@ -52,12 +48,6 @@ func unsupportedSettings(settings map[string]any, cfg powerlineConfig, env func(
 		if cfg.StashSharpSShortcut {
 			add("the prompt stash shortcut (powerline.stashSharpSShortcut)")
 		}
-		if rawPowerline.vals["workingVibes"] != nil {
-			add("working vibes (powerline.workingVibes)")
-		}
-	}
-	if theme, ok := settings["workingVibe"].(string); ok && !strings.EqualFold(theme, "off") {
-		add("working vibes (workingVibe)")
 	}
 	if settings["bashMode"] != nil {
 		add("bash mode (bashMode)")

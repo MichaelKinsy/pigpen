@@ -38,7 +38,6 @@ func TestEveryUnportedCommandIsRefused(t *testing.T) {
 		"bash-mode":      "bash mode (/bash-mode)",
 		"bash-reset":     "bash mode (/bash-reset)",
 		"powerline-perf": "the editor performance profiler (/powerline-perf)",
-		"vibe":           "working vibes (/vibe)",
 		"cd":             "the /cd command",
 	}
 	for name, feature := range commands {
@@ -62,8 +61,6 @@ func TestEveryUnportedSettingIsRefusedAtSessionStart(t *testing.T) {
 		"sendDelayMs":         {`{"powerline":{"sendDelayMs":1500}}`, "delayed send (powerline.sendDelayMs)"},
 		"autoFollowUp":        {`{"powerline":{"autoFollowUp":true}}`, "auto follow-up (powerline.autoFollowUp)"},
 		"stashSharpSShortcut": {`{"powerline":{"stashSharpSShortcut":true}}`, "the prompt stash shortcut (powerline.stashSharpSShortcut)"},
-		"workingVibes":        {`{"powerline":{"workingVibes":{"color":"accent"}}}`, "working vibes (powerline.workingVibes)"},
-		"workingVibe":         {`{"workingVibe":"pirate"}`, "working vibes (workingVibe)"},
 		"bashMode":            {`{"bashMode":{"completions":true}}`, "bash mode (bashMode)"},
 		"powerlineShortcuts":  {`{"powerlineShortcuts":{"copyEditor":"ctrl+alt+y"}}`, "the editor shortcuts (powerlineShortcuts)"},
 		"showLastPrompt":      {`{"showLastPrompt":true}`, "the last-prompt line (showLastPrompt)"},
