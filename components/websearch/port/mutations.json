@@ -134,8 +134,8 @@
  {
   "name": "fallback-guidance-unported",
   "file": "extract.go",
-  "find": "\"  • none in this port: the other fetch providers of pi-web-access are not ported yet\"",
-  "replace": "\"  • Set firecrawlBaseUrl to a self-hosted Firecrawl instance\""
+  "find": "\"  \u2022 none in this port: the other fetch providers of pi-web-access are not ported yet\"",
+  "replace": "\"  \u2022 Set firecrawlBaseUrl to a self-hosted Firecrawl instance\""
  },
  {
   "name": "kagi-limit-key",
@@ -148,65 +148,275 @@
   "file": "kagi.go",
   "find": "{\"Bearer \" + apiKey}",
   "replace": "{\"Bot \" + apiKey}"
-},
-{
+ },
+ {
   "name": "refusal-wording",
   "file": "refusal.go",
   "find": "\" (Go port) does not support \" + e.Feature",
   "replace": "\" (Go port) does not handle \" + e.Feature"
-},
-{
+ },
+ {
   "name": "refusal-install-advice",
   "file": "refusal.go",
   "find": "\", which runs unchanged in PiG.\"",
   "replace": "\".\""
-},
-{
+ },
+ {
   "name": "refusal-fetch-auth-dropped",
   "file": "tool_fetch.go",
   "find": "return ToolOutput{}, unsupported(\"authenticated fetch (auth profiles read local browser cookies)\")",
   "replace": "_ = 0"
-},
-{
+ },
+ {
   "name": "refusal-fetch-answer-dropped",
   "file": "tool_fetch.go",
   "find": "return ToolOutput{}, unsupported(\"fetch_content mode answer (answering from a page needs a model call)\")",
   "replace": "_ = 0"
-},
-{
+ },
+ {
   "name": "refusal-workflow-dropped",
   "file": "tool_search.go",
   "find": "if workflow != \"none\" {",
   "replace": "if workflow != \"none\" && workflow == \"\" {"
-},
-{
+ },
+ {
   "name": "refusal-provider-list-fan-out",
   "file": "search.go",
   "find": "if d := providerTable[p]; d == nil || d.search == nil {",
   "replace": "if d := providerTable[p]; d == nil && false {"
-},
-{
+ },
+ {
   "name": "refusal-fetch-extractor-dropped",
   "file": "extract.go",
   "find": "return failed(rawURL, unsupported(feature).Error())",
   "replace": "return failed(rawURL, \"\")"
-},
-{
+ },
+ {
   "name": "refusal-hosted-provider-skipped",
   "file": "extract.go",
   "find": "if fetchProviderRequested(p) {",
   "replace": "if false && fetchProviderRequested(p) {"
-},
-{
+ },
+ {
   "name": "refusal-pdf-message",
   "file": "extract.go",
   "find": "return fail(unsupported(\"PDF text extraction\").Error())",
   "replace": "return fail(\"PDF extraction failed\")"
-},
-{
+ },
+ {
   "name": "refusal-fallback-extractors-unnamed",
   "file": "extract.go",
   "find": "msg += \"\\n\\n\" + unsupported(\"the RSC payload and Defuddle fallback extractors\").Error()",
   "replace": "msg += \"\""
-}
+ },
+ {
+  "name": "tinyfish-per-url-cap-raised",
+  "file": "tinyfish.go",
+  "find": "tinyfishMaxPerURLTimeoutMs = 110000",
+  "replace": "tinyfishMaxPerURLTimeoutMs = 1100000"
+ },
+ {
+  "name": "tinyfish-week-minutes",
+  "file": "tinyfish.go",
+  "find": "\"week\": 10080",
+  "replace": "\"week\": 10081"
+ },
+ {
+  "name": "tinyfish-single-page",
+  "file": "tinyfish.go",
+  "find": "if numResults > 10 {",
+  "replace": "if numResults > 100 {"
+ },
+ {
+  "name": "tinyfish-batch-size",
+  "file": "tinyfish.go",
+  "find": "tinyfishMaxFetchURLs       = 10",
+  "replace": "tinyfishMaxFetchURLs       = 11"
+ },
+ {
+  "name": "search1api-paid-crawl-always",
+  "file": "search1api.go",
+  "find": "crawl = n",
+  "replace": "crawl = n + 1"
+ },
+ {
+  "name": "search1api-crawl-timeout-ignored",
+  "file": "search1api.go",
+  "find": "timeout = time.Duration(max(int64(1), *o.TimeoutMs)) * time.Millisecond",
+  "replace": "timeout = search1apiCrawlTimeout"
+ },
+ {
+  "name": "searchinfinity-site-cap",
+  "file": "searchinfinity.go",
+  "find": "len(*target) < 5",
+  "replace": "len(*target) < 50"
+ },
+ {
+  "name": "searchinfinity-quota-status",
+  "file": "searchinfinity.go",
+  "find": "\t\tif searchinfinityQuotaRE.MatchString(message) {\n\t\t\treturn 429\n\t\t}\n\t\treturn 403",
+  "replace": "\t\treturn 403"
+ },
+ {
+  "name": "searchinfinity-week-range",
+  "file": "searchinfinity.go",
+  "find": "\"week\": \"OneWeek\"",
+  "replace": "\"week\": \"OneMonth\""
+ },
+ {
+  "name": "querit-batch-size",
+  "file": "querit.go",
+  "find": "queritMaxContentURLs = 10",
+  "replace": "queritMaxContentURLs = 11"
+ },
+ {
+  "name": "querit-crawl-timeout-cap",
+  "file": "querit.go",
+  "find": "math.Min(math.Ceil(float64(*ms)/1000), 60)",
+  "replace": "math.Min(math.Ceil(float64(*ms)/1000), 600)"
+ },
+ {
+  "name": "querit-api-code-ignored",
+  "file": "querit.go",
+  "find": "if isNum && code == 200 {",
+  "replace": "if isNum || code == 200 {"
+ },
+ {
+  "name": "parallel-short-content-threshold",
+  "file": "parallel.go",
+  "find": "parallelMinUseful     = 500",
+  "replace": "parallelMinUseful     = 5"
+ },
+ {
+  "name": "parallel-placeholder-length",
+  "file": "parallel.go",
+  "find": "parallelMinKeyLength  = 8",
+  "replace": "parallelMinKeyLength  = 1"
+ },
+ {
+  "name": "parallel-retry-without-full-content",
+  "file": "parallel.go",
+  "find": "body[\"advanced_settings\"] = map[string]any{\"full_content\": true}",
+  "replace": "body[\"advanced_settings\"] = map[string]any{\"full_content\": false}"
+ },
+ {
+  "name": "parallel-mcp-fetch-excerpts-only",
+  "file": "parallelmcp.go",
+  "find": "\"urls\": []string{rawURL}, \"full_content\": true}",
+  "replace": "\"urls\": []string{rawURL}}"
+ },
+ {
+  "name": "parallel-mcp-snippet-length",
+  "file": "parallelmcp.go",
+  "find": "jsSlice(collapseWS(r.Excerpts[0]), 0, 200)",
+  "replace": "jsSlice(collapseWS(r.Excerpts[0]), 0, 20)"
+ },
+ {
+  "name": "ollama-count-cap",
+  "file": "ollama.go",
+  "find": "math.Min(math.Floor(*v), 10)",
+  "replace": "math.Min(math.Floor(*v), 20)"
+ },
+ {
+  "name": "kagi-extract-body",
+  "file": "kagi.go",
+  "find": "map[string]any{\"pages\": []any{map[string]any{\"url\": rawURL}}}",
+  "replace": "map[string]any{\"pages\": []any{rawURL}}"
+ },
+ {
+  "name": "firecrawl-lockdown-off",
+  "file": "firecrawl.go",
+  "find": "\tif !fresh {\n\t\tbody[\"lockdown\"] = true\n\t}",
+  "replace": "\tif fresh {\n\t\tbody[\"lockdown\"] = true\n\t}"
+ },
+ {
+  "name": "firecrawl-default-version",
+  "file": "firecrawl.go",
+  "find": "firecrawlDefaultVersion = \"v2\"",
+  "replace": "firecrawlDefaultVersion = \"v1\""
+ },
+ {
+  "name": "firecrawl-week-filter",
+  "file": "firecrawl.go",
+  "find": "\"week\": \"qdr:w\"",
+  "replace": "\"week\": \"qdr:d\""
+ },
+ {
+  "name": "crawl4ai-markdown-filter",
+  "file": "crawl4ai.go",
+  "find": "crawl4aiMarkdownFilter = \"fit\"",
+  "replace": "crawl4aiMarkdownFilter = \"raw\""
+ },
+ {
+  "name": "crawl4ai-see-other-resurrects-post",
+  "file": "crawl4ai.go",
+  "find": "\t\t\t\tseeOther = true\n",
+  "replace": "\t\t\t\tseeOther = false\n"
+ },
+ {
+  "name": "crawl4ai-cross-origin-followed",
+  "file": "crawl4ai.go",
+  "find": "if Origin(a.To) != origin {",
+  "replace": "if Origin(a.To) == origin+\"x\" {"
+ },
+ {
+  "name": "brightdata-serp-headroom",
+  "file": "brightdata.go",
+  "find": "min(n+5, 20)",
+  "replace": "min(n+6, 20)"
+ },
+ {
+  "name": "brightdata-no-brd-json",
+  "file": "brightdata.go",
+  "find": "params = append(params, \"brd_json=1\")",
+  "replace": "params = append(params, \"brd_json=0\")"
+ },
+ {
+  "name": "brightdata-status-rewrite-off",
+  "file": "brightdata.go",
+  "find": "t = brightdataStatusShaped.ReplaceAllString(t, \"upstream ${1}\")",
+  "replace": "t = brightdataStatusShaped.ReplaceAllString(t, \"${0}\")"
+ },
+ {
+  "name": "brightdata-quota-rewrite-off",
+  "file": "brightdata.go",
+  "find": "return brightdataQuotaShaped.ReplaceAllString(t, \"upstream rate-limit notice\")",
+  "replace": "return t"
+ },
+ {
+  "name": "brightdata-serp-data-format",
+  "file": "brightdata.go",
+  "find": "\"data_format\": \"parsed_light\"",
+  "replace": "\"data_format\": \"parsed\""
+ },
+ {
+  "name": "brightdata-unlocker-data-format",
+  "file": "brightdata_unlocker.go",
+  "find": "\"data_format\": \"markdown\"",
+  "replace": "\"data_format\": \"html\""
+ },
+ {
+  "name": "hosted-redirect-keeps-credentials",
+  "file": "hosted.go",
+  "find": "for _, k := range []string{\"Authorization\", \"Cookie\", \"X-Api-Key\"} {",
+  "replace": "for _, k := range []string{\"Cookie\"} {"
+ },
+ {
+  "name": "hosted-redirect-limit",
+  "file": "hosted.go",
+  "find": "if redirects == defaultMaxRedirects {",
+  "replace": "if redirects == defaultMaxRedirects+5 {"
+ },
+ {
+  "name": "hosted-guidance-order",
+  "file": "fetch_hosted.go",
+  "find": "{\"querit\", \"Querit\"}, {\"kagi\", \"Kagi\"}",
+  "replace": "{\"kagi\", \"Kagi\"}, {\"querit\", \"Querit\"}"
+ },
+ {
+  "name": "hosted-abort-crawl4ai-by-message",
+  "file": "fetch_hosted.go",
+  "find": "return ctx.Err() != nil || errors.Is(err, context.DeadlineExceeded)",
+  "replace": "return isAbortError(err)"
+ }
 ]
