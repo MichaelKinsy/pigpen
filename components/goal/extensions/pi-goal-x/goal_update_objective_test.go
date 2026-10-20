@@ -1,6 +1,19 @@
 package pi_goal_x
 
-import "testing"
+import (
+	"os"
+	"strings"
+	"testing"
+)
+
+func guoSource(t *testing.T, name string) string {
+	t.Helper()
+	b, err := os.ReadFile(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
 
 const guoF = "goal-update-objective"
 
@@ -8,8 +21,31 @@ func TestGoalUpdateObjectiveTwins(t *testing.T) {
 	mk := func(objective string, kv ...any) *jsObject {
 		return gtpMakeGoal(ms(2026, 6, 2, 10, 0, 0), objective, kv...)
 	}
-	tskip(t, guoF, "update_goal schema has additionalProperties: false and no updatedObjective", "asserts the TypeScript source text of goal-core-tools.ts; the Go tool registration (goal-core-tools, wave 2) does not exist in the package yet")
-	tskip(t, guoF, "update_goal routes complete directly to the shared completion flow", "asserts the TypeScript source text of goal-core-tools.ts; the Go tool registration (goal-core-tools, wave 2) does not exist in the package yet")
+	tw(t, guoF, "update_goal schema has additionalProperties: false and no updatedObjective", func(t *testing.T) {
+		// The original asserts the TypeScript source text of goal-core-tools.ts; this twin asserts the same properties of the Go source.
+		core := guoSource(t, "goal_core_tools.go")
+		tools := guoSource(t, "goal_tools.go")
+		idx := strings.Index(core, "Name:             updateGoalToolName")
+		assertTrue(t, idx >= 0, "must find update_goal tool registration")
+		block := core[idx:]
+		if len(block) > 4000 {
+			block = block[:4000]
+		}
+		assertTrue(t, strings.Contains(block, "schemaObject("), "update_goal schema is an object schema")
+		assertTrue(t, strings.Contains(tools, `"additionalProperties": false`), "schemaObject must have additionalProperties: false")
+		assertTrue(t, !strings.Contains(block, "updatedObjective"), "update_goal schema must not contain updatedObjective")
+		assertTrue(t, !strings.Contains(core, "updatedObjective"), "updatedObjective must not appear anywhere in goal_core_tools.go")
+		assertTrue(t, !strings.Contains(core, `"complete_goal"`), "complete_goal tool registration must be removed")
+	})
+	tw(t, guoF, "update_goal routes complete directly to the shared completion flow", func(t *testing.T) {
+		core := guoSource(t, "goal_core_tools.go")
+		assertTrue(t, !strings.Contains(core, "params.updatedObjective"), "Phase 1 updatedObjective handling must be removed")
+		assertTrue(t, strings.Contains(core, `"completion_summary": schemaString(`), "public schema carries the scalar completion_summary claim")
+		assertTrue(t, !strings.Contains(core, "verificationSummary"), "internal options type must not carry verificationSummary")
+		assertTrue(t, !strings.Contains(core, "confirmBypassAuditor"), "internal options type must not carry confirmBypassAuditor")
+		assertTrue(t, strings.Contains(core, "return runGoalCompletionFlow(c, summary)"), "executor must route status=complete to the completion flow with the scalar claim")
+		assertTrue(t, !strings.Contains(core, "updatedObjective"), "handler must not reference updatedObjective in error messages")
+	})
 	tw(t, guoF, "update_goal(complete) with status=complete still works (completion flow unchanged)", func(t *testing.T) {
 		s := tempStore(t)
 		active := mustWrite(t, s, mk("Original objective: build feature X"))
