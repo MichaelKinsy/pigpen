@@ -78,6 +78,9 @@ type FetchRemoteOptions struct {
 	// MaxRedirects <= 0 means the default of 5.
 	MaxRedirects int
 	OnRedirect   func(RedirectArgs) RequestInit
+	// OnRedirectErr is OnRedirect for a callback that may throw (crawl4ai.ts refuses a
+	// cross-origin hop): the error ends the fetch before the next hop is sent.
+	OnRedirectErr func(RedirectArgs) (RequestInit, error)
 }
 
 func defaultLookup(ctx context.Context, hostname string) ([]LookupAddress, error) {
@@ -220,6 +223,11 @@ func FetchRemoteURL(ctx context.Context, raw string, init RequestInit, o FetchRe
 		}
 		if o.OnRedirect != nil {
 			requestInit = o.OnRedirect(RedirectArgs{From: from, To: current, Init: requestInit, Response: resp})
+		}
+		if o.OnRedirectErr != nil {
+			if requestInit, err = o.OnRedirectErr(RedirectArgs{From: from, To: current, Init: requestInit, Response: resp}); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return nil, fmt.Errorf("Too many redirects fetching %s", current.String())
