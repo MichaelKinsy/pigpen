@@ -1,0 +1,73 @@
+{
+ "name": "fetch-hosted-failure-guidance",
+ "description": "When every configured hosted provider fails, fetch_content reports each failure and the Fallback options list.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"firecrawlBaseUrl\": \"{{server:fc}}\", \"crawl4aiBaseUrl\": \"{{server:c4a}}\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/blocked"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/blocked",
+     "status": 403,
+     "headers": {
+      "content-type": "text/plain"
+     },
+     "body": "blocked"
+    }
+   ]
+  },
+  "fc": {
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/v2/scrape",
+     "status": 502,
+     "body": "firecrawl gateway"
+    }
+   ]
+  },
+  "c4a": {
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/md",
+     "json": {
+      "success": false,
+      "error": "browser crashed"
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "\\b[0-9a-z]{14}\\b",
+   "replacement": "<response-id>"
+  }
+ ]
+}

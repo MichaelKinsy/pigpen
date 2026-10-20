@@ -1,0 +1,69 @@
+{
+ "name": "fetch-crawl4ai-fallback",
+ "description": "fetch_content falls back to a configured Crawl4AI instance: the fit markdown request and the title from the first heading.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"crawl4aiBaseUrl\": \"{{server:c4a}}\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/blocked"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/blocked",
+     "status": 403,
+     "headers": {
+      "content-type": "text/plain"
+     },
+     "body": "blocked"
+    }
+   ]
+  },
+  "c4a": {
+   "recordHeaders": [
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/md",
+     "json": {
+      "success": true,
+      "markdown": "# Crawl4AI Title\n\nRendered by Crawl4AI.\n"
+     }
+    }
+   ]
+  }
+ },
+ "env": {
+  "CRAWL4AI_API_TOKEN": "c4a-test-token"
+ },
+ "normalize": [
+  {
+   "pattern": "\\b[0-9a-z]{14}\\b",
+   "replacement": "<response-id>"
+  }
+ ]
+}
