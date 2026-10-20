@@ -8,3 +8,6 @@ func SetTransport(rt http.RoundTripper) func() {
 	httpClient.Transport = rt
 	return func() { httpClient.Transport = prev }
 }
+
+// ResetInterceptors drops the active interceptor chain, which Extension() builds from the config.
+func ResetInterceptors() { resetWebToolsInterceptors() }

@@ -19,6 +19,7 @@ import (
 type execCall struct {
 	Name string
 	Args []string
+	Opts execOptions
 }
 
 type fakeExec struct {
@@ -27,9 +28,9 @@ type fakeExec struct {
 	fn    func(name string, args []string) (string, error)
 }
 
-func (f *fakeExec) run(_ context.Context, name string, args []string, _ execOptions) (string, error) {
+func (f *fakeExec) run(_ context.Context, name string, args []string, o execOptions) (string, error) {
 	f.mu.Lock()
-	f.calls = append(f.calls, execCall{name, append([]string(nil), args...)})
+	f.calls = append(f.calls, execCall{name, append([]string(nil), args...), o})
 	f.mu.Unlock()
 	return f.fn(name, args)
 }

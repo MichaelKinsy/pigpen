@@ -2,7 +2,6 @@ package rpiv_web_tools
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -363,16 +362,21 @@ func fetchTool(ctx context.Context, rawURL string, raw bool, onUpdate func(text 
 	if err != nil {
 		return "", nil, err
 	}
-	// The original asks its URL interceptors first (web-tools.ts:449). This port has none: a URL the
-	// enabled GitHub interceptor would answer is refused, not fetched as a page.
-	if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {
-		return "", nil, errors.New(refusal(githubInterceptorFeature))
-	}
+	// Three-way dispatch as in the original (web-tools.ts:441-459): the URL interceptors first, then the
+	// provider's own fetch, then the built-in page fetch.
 	var resp *fetchResponse
-	if fp, ok := p.(fetchProvider); ok {
-		resp, err = fp.fetch(ctx, rawURL, raw)
-	} else {
-		resp, err = fetchViaGenericHTML(ctx, target.Href, rawURL, raw)
+	for _, ic := range getInterceptors() {
+		if r := ic.intercept(ctx, rawURL, raw); r != nil {
+			resp = r
+			break
+		}
+	}
+	if resp == nil {
+		if fp, ok := p.(fetchProvider); ok {
+			resp, err = fp.fetch(ctx, rawURL, raw)
+		} else {
+			resp, err = fetchViaGenericHTML(ctx, target.Href, rawURL, raw)
+		}
 	}
 	if err != nil {
 		return "", nil, err
