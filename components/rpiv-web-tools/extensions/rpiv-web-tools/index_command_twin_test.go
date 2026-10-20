@@ -253,8 +253,6 @@ func TestIndexCommandInterceptorsAndSource(t *testing.T) {
 			t.Fatal(msg)
 		}
 	})
-	tskip(t, f, "--show lists 'github: enabled' with token + clonePath when opted in",
-		"the enabled line reports the interceptor's resolved options (GITHUB_TOKEN, maxRepoSizeMB, clonePath) and the interceptor is the GitHub slice (R1, R2); until it lands --show says it is enabled in config and refused (TestRefusalShowNamesTheInterceptor)")
 	tw(t, f, "reports source: env when WEB_SEARCH_PROVIDER is set", func(t *testing.T) {
 		home(t)
 		t.Setenv("WEB_SEARCH_PROVIDER", "tavily")
