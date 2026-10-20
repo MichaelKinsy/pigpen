@@ -59,7 +59,10 @@ func TestRefusalNamesThePackageAndTheOriginal(t *testing.T) {
 	}
 	var prov struct{ Upstreams []struct{ Name string } }
 	if readJSONFile(t, "../../provenance.json", &prov) {
-		eq(t, len(prov.Upstreams), 1, "one upstream")
+		// The original first; the tree-sitter runtime and grammar the bash parser is ported from follow it.
+		if len(prov.Upstreams) == 0 {
+			t.Fatal("provenance.json lists no upstream")
+		}
 		eq(t, prov.Upstreams[0].Name, id.OriginalName, "provenance.json names the original")
 	}
 }
