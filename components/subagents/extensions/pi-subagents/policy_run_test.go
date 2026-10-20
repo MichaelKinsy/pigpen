@@ -385,3 +385,22 @@ func TestCapabilityCeilingAppliesToTheRun(t *testing.T) {
 		t.Errorf("tools are narrowed to the ceiling: %v", req.Args)
 	}
 }
+
+// The original's runSync returns a result record (exitCode 1, error, the ceiling that applied); here the same refusal is the tool's
+// error text, and the check that nothing was spawned is the fake runner's call list.
+func TestForegroundLaunchOfARestrictedAgent(t *testing.T) {
+	tw(t, "capability-ceiling-agent-allowlist", "rejects a non-allowlisted foreground launch before spawning", func(t *testing.T) {
+		p := policyHostWith(t, echo("x"), HostOptions{OnCall: func(method string, args map[string]any) (map[string]any, string) {
+			if method == "getSessionID" {
+				return map[string]any{"sessionId": "session-allowlist"}, ""
+			}
+			return map[string]any{}, ""
+		}})
+		sub.RegisterCeilingForTest(t, "session-allowlist", "plan-mode", `{"allowedAgents":["reviewer"]}`)
+		_, failure := p.run(map[string]any{"agent": "worker", "task": "Do work"})
+		if !strings.Contains(failure, "does not allow agent 'worker'") {
+			t.Errorf("failure: %q", failure)
+		}
+		eq(t, len(*p.calls), 0, "no child started")
+	})
+}

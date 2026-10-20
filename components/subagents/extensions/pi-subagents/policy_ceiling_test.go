@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 )
 
 func ceilingOf(t *testing.T, s string) *resolvedCeiling {
@@ -110,6 +111,40 @@ func TestCapabilityCeilingAgentAllowlist(t *testing.T) {
 		)
 		equal(t, none.AllowedAgents, []string{}, "empty agents")
 	})
+
+	tw(t, "capability-ceiling-agent-allowlist", "marks non-allowlisted agents as restricted in list output", func(t *testing.T) {
+		e := newMgmtEnv(t)
+		sessionID := fmt.Sprintf("allowlist-list-%d", time.Now().UnixNano())
+		handle, err := registerSubagentCapabilityCeiling(sessionID, "plan-mode", js(t, `{"allowedAgents":["reviewer"]}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer handle.dispose()
+		ctx := e.ctx()
+		ctx.sessionID = sessionID
+		text := handleManagementAction("list", map[string]any{}, ctx).text
+		polMatches(t, text, `Executable agents:`)
+		polMatches(t, text, `- reviewer `)
+		polMatches(t, text, `Restricted agents \(not executable in this session; capability ceiling: plan-mode\):`)
+		polMatches(t, text, `- worker `)
+	})
+
+	tw(t, "capability-ceiling-agent-allowlist", "rejects a non-allowlisted agent in preflight launch resolution", func(t *testing.T) {
+		e := newPfEnv(t)
+		r := pfResolve(t, launchContractInput{Agent: "worker", Cwd: e.dir("repo"),
+			CapabilityCeiling: ceilingOf(t, `{"version":1,"allowedAgents":["reviewer"],"denyExtensions":false,"sources":["plan-mode"]}`)})
+		equal(t, r.OK, false, "refused")
+		equal(t, r.Code, "restricted_agent", "code")
+		polMatches(t, r.Message, `does not allow agent 'worker'`)
+		polMatches(t, r.Message, `Allowed agents: reviewer`)
+	})
+
+	tskip(t, "capability-ceiling-agent-allowlist", "includes allowedAgents in the child runtime config and audit metadata",
+		"belongs to another slice, not ported: buildInProcessChildLaunch (runs/shared/child-launch.ts) builds the in-process child session's runtime config; the port starts a pig process and has no such launch builder yet (see port/deferred-skips.md)")
+	tskip(t, "capability-ceiling-agent-allowlist", "applies the selected agent's descendant ceiling only after its parent-authorized launch",
+		"belongs to another slice, not ported: buildInProcessChildLaunch (runs/shared/child-launch.ts) applies descendantAllowedAgents to the child runtime config (see port/deferred-skips.md)")
+	tskip(t, "capability-ceiling-agent-allowlist", "propagates the detached runner step snapshot through the common launch seam",
+		"belongs to another slice, not ported: buildRunnerChildLaunch (runs/background/runner-child-launch.ts), the detached runner's launch seam over the child launch builder (see port/deferred-skips.md)")
 }
 
 func TestNormalizeCapabilityCeilingAllowedAgents(t *testing.T) {
