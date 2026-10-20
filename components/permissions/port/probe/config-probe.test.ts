@@ -1,7 +1,7 @@
 // Config-system probe: runs port/probe/config-system-cases.json through the original's config functions and writes what they decide,
 // for the Go differential (extensions/pi-permission-system/testdata/config-oracle.json). It is copied into an installed copy of the
 // original by port/record-config-probe.sh and never runs from here; the port itself has no Node.
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { Key, matchesKey } from "@earendil-works/pi-tui";
@@ -62,7 +62,10 @@ it("records the original's config-system decisions", async () => {
       const cwd = join(tmp, "project");
       const ext = join(tmp, "ext");
       put(agentDir, "extensions/pi-permission-system/config.json", c.global);
+      if (c.globalIsDir) mkdirSync(join(agentDir, "extensions/pi-permission-system/config.json"), { recursive: true });
+      if (c.globalMode !== undefined) chmodSync(join(agentDir, "extensions/pi-permission-system/config.json"), c.globalMode);
       put(cwd, ".pi/extensions/pi-permission-system/config.json", c.project);
+      if (c.projectIsDir) mkdirSync(join(cwd, ".pi/extensions/pi-permission-system/config.json"), { recursive: true });
       put(agentDir, "pi-permissions.jsonc", c.legacyGlobal);
       put(cwd, ".pi/agent/pi-permissions.jsonc", c.legacyProject);
       put(ext, "config.json", c.legacyExt);

@@ -58,12 +58,10 @@ against the original without a person: the rules and the tool gate for what they
 - a tool that `shellTools` routes through the bash surface (the aliases are not ported);
 - MCP and skill tools.
 
-**Not ported at all:** project and agent scopes (the project scope is withheld in the original until the project is trusted;
-the port reads the global scope only), session approvals and rules, the review and debug logs, forwarding and subagent authority,
-the config modal, the cross-extension service, removing denied skills from the system prompt (`withoutDeniedSkills`: a denied
-skill stays listed, and its files are not gated by the skill-read gate, as in the original). A file that does not parse warns
-with the original's lead text but Go's parse error, not JavaScript's; a schema violation warns once with the original's
-messages, where the original warns twice. PiG's `powershell` tool is a shell the original does not know: it is decided by its own
+**Not ported at all:** the project and agent scopes of the permission policy itself (the config system reads them, see "The config
+system" below; the policy that consumes `FilePolicyLoader` is the policy lane's), session approvals and rules, the review and debug logs, forwarding and subagent authority,
+the cross-extension service, removing denied skills from the system prompt (`withoutDeniedSkills`: a denied
+skill stays listed, and its files are not gated by the skill-read gate, as in the original). A file that does not parse warns with the original's text, V8's JSON.parse message included. PiG's `powershell` tool is a shell the original does not know: it is decided by its own
 name (or the `*` fallback), not by the bash rules; deny it, or name it in `shellTools`, which makes the port refuse it.
 
 ## Mapping
@@ -77,7 +75,8 @@ name (or the `*` fallback), not by the bash rules; deny it, or name it in `shell
 | M5 | `index.ts`, `handlers/lifecycle.ts` | `extension.go` | scenarios; `adapter_test.go` (a fake interactive host) |
 | M6 | JavaScript semantics: ordered objects, UTF-16 units, numbers beyond the double range | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that merges or normalizes |
 | M7 | `access-intent/bash/wrapper-analysis.ts` (`classifyWrapperWords`), `handlers/gates/bash-command.ts` (units, floors, most restrictive) | `bash.go` | 4 twins and the upstream tables; 646 recorded decisions (`oracle_test.go`) |
-| M8 | `config/config-loader.ts` (`stripJsonComments`, `validateUnifiedConfig`), `config/config-schema.ts` | `schema.go`, `config.go` | 91 recorded files (`oracle_test.go`); scenario `config-comments` |
+| M8 | `config/config-loader.ts` (`stripJsonComments`, `validateUnifiedConfig`), `config/config-schema.ts` | `schema.go`, `config.go`, `jsonerr.go` | 91 recorded files (`oracle_test.go`); 1061 more (`cfg_oracle_test.go`); scenario `config-comments` |
+| M10 | `config/*` (loader, merge, scopes, paths, store, issue reporter, reporter, status, yaml frontmatter, dialog keys, extension config and paths, policy loader, modal), the config parts of `index.ts`, `handlers/lifecycle.ts`, `session/permission-session.ts`, `handlers/session-turn-prep.ts` | `cfg*.go`, `policyloader.go`, `extconfig.go`, `yamlfm.go`, `dialogkeys.go`, `icucompare.go`, `schemas.go`, `extension.go` | 305 twins + 6 named skips in 15 files; `cfg_oracle_test.go` (recorded decisions); `cfg_adapter_test.go`; `cfg_modal_component_test.go`; `mutations-config.json` |
 | M9 | `handlers/gates/skill-read.ts`, `exposure/skill-prompt-sanitizer.ts` (parsing, visibility, path match) | `skills.go` | 15 twins; `skills_test.go`; `adapter_test.go` |
 
 ## Process: what was written before its tests
@@ -134,7 +133,7 @@ recorded by `port/record-probe.sh`, not with the port.
    The original runs `npm root -g` when it starts from a checkout; declaring `npm` as `missing` keeps `exec-coverage` green and
    leaves no event in the trace.
 2. **The project scope is withheld without trust.** A scenario that writes the config into the project sees no rules at all; the
-   original needs a trusted project. The Go SDK has no project-trust query, so the port reads only the global scope.
+   original needs a trusted project. `Context.IsProjectTrusted()` (PiG 0.5) is the query; the config system uses it, the permission policy still reads the global scope only.
 3. **A fully denied tool is not "denied", it is missing.** The original removes it from the model's tools, so a call to it never
    reaches the gate ("Tool write not found"). A scenario cannot show a denial of a path tool that is denied outright; the
    exposure had to be ported (`SetActiveTools`, `GetAllTools`) for the model request to match.
@@ -159,3 +158,68 @@ recorded by `port/record-probe.sh`, not with the port.
 - The JS helper layer again (`jsjson.go`, `jsutil.go`: 375 lines copied from the powerline port).
 - The twin ledger (203 titles by hand, from a `twins list` that cannot see `test.each`) and the slice file (170 entries by hand).
 - The fake interactive host: `adapter_test.go` could be generated from the registered events.
+
+## The config system (lane PermConfig)
+
+Everything under `src/config` is ported, with the original's own tests as twins and its own functions as the oracle.
+
+**Files.** `cfgpaths.go` (config-paths, extension-paths), `jsonerr.go` (the wording of V8's `JSON.parse` errors, because the loader reports
+`error.message`), `cfgfs.go` (UTF-8 decoding as Node's `readFileSync` does it, Node's error wording, `String(mtimeMs)` stamps),
+`schema.go` (the zod schema, extended: zod 4's safe-integer bound, the second issue zod reports for an empty array where a string is
+expected, and its silence about a `__proto__` key), `schemas.go` (the committed JSON Schema, embedded), `cfgloader.go` (`UnifiedConfig`,
+`loadUnifiedConfig`, `mergeUnifiedConfigs`, `loadAndMergeConfigs`, the three detectors), `extconfig.go`, `dialogkeys.go`, `yamlfm.go`,
+`policyloader.go` (`PolicyLoader`, `FilePolicyLoader`), `cfgstore.go` (`ConfigStore`, `ConfigIssueReporter`, the resolved-paths log entry,
+status), `cfgmodal.go` (`/permission-system`), `icucompare.go` (`localeCompare` for the MCP server name order).
+
+**Lifecycle (`extension.go`).** `session_start` asks the host `IsProjectTrusted()` (a failed answer is not trust) and reads the merged
+config for the session's cwd, with the project scope only when trusted (#644); then it syncs the status bar, logs the resolved paths,
+says what is wrong with the config once per issue (`ConfigIssueReporter`, #933) and, for an untrusted project, warns that only the global
+policy applies. `before_agent_start` re-reads the config under the current trust and reports what is new; `resources_discover` with
+reason `reload` rebuilds the loader paths. The factory-time priming load reads no project. What this does not yet do is feed the
+project, agent and project-agent scopes into the permission decision: `Policy` still composes the global scope only, until the policy
+lane consumes `FilePolicyLoader`.
+
+**Exported Go API for the policy lane.** `PolicyLoader` (`LoadGlobalConfig`, `LoadProjectConfig`, `LoadAgentConfig(name)`,
+`LoadProjectAgentConfig(name)`, `GetConfiguredMcpServerNames`, `GetCacheStamp(name)`, `GetConfigIssues`, `GetResolvedPolicyPaths`),
+`FilePolicyLoader` built by `NewFilePolicyLoader(PolicyLoaderOptions)` (`derivePolicyLoaderOptions(agentDir, cwd)` gives the manager's
+paths, `cwd == ""` for a withheld project), `ScopeConfig{Permission *jsObject, Invalid bool}` (`Invalid` drives the fail-closed
+allow-to-ask clamp), `ResolvedPolicyPaths`, `ConfigStore` (`NewConfigStore`, `Refresh(cwd, trusted)`, `Current()`, `GetConfigIssues()`,
+`Save`, `LogResolvedPaths`), `PermissionSystemExtensionConfig`, `UnifiedConfig`, `loadAndMergeConfigs`, `resolveDialogKeys`.
+
+**Checked against the original.** `port/record-config-probe.sh` runs `port/probe/config-system-cases.json` (generated by
+`gen-config-system-cases.py`) through the original's `loadUnifiedConfig`, `loadAndMergeConfigs`, `FilePolicyLoader`, `ConfigStore.save`,
+the `/permission-system` handlers, `resolveDialogKeys` and the frontmatter parser and records `testdata/config-oracle.json`:
+1061 config files (every field with edge values, JSONC, duplicate keys, key order, `__proto__`, huge numbers, unicode, raw invalid UTF-8
+bytes, every prefix of a document, a seeded fuzz), 86 loader scenarios (project and agent scopes, trust on and off, invalid scopes,
+legacy files, MCP name discovery and its collation order), 94 frontmatter texts, 426 dialog-key maps, 17 saves, 12 command scenarios, and
+pi-tui's key facts. Zero unexplained differences.
+
+**Explained differences.**
+
+1. A lone UTF-16 surrogate in a string (a `"\ud800"` escape) is held as U+FFFD, since a Go string is UTF-8; the original's
+   `JSON.stringify` would write the escape back. The recorded case is skipped for that field only.
+2. The frontmatter parser drops a `__proto__` key where the original, for a nested one (`__proto__:` with children), would change the
+   object's prototype and could make `parsed.permission` read an inherited value. The agent file's author holds the same authority
+   either way.
+3. `localeCompare` (the order of same-length MCP server names) is ICU's root collation in the original; the port reproduces it for
+   ASCII and Latin-1 accents and approximates other scripts (`icucompare.go`). The order of two same-length names never changes a decision.
+4. The legacy extension config (`<npm package>/config.json`) has no Go counterpart: there is no install directory, so `extensionRoot`
+   is empty and that file is not looked for. `loadAndMergeConfigs` takes the root as an argument and the twins pass one.
+5. An astral character at the position of a `JSON.parse` error shows as U+FFFD in the message (V8 shows its lone surrogate).
+6. `ConfigStore.Save` takes the typed config, so the original's `normalizePermissionSystemConfig(next)` on an untyped object is the
+   caller's.
+
+**Upstream quirks kept.** `save()` writes only `debugLog`, `permissionReviewLog` and `yoloMode`, so the modal's double-press toggle is
+not persisted; an existing key keeps its place in the file and a missing one is appended. A rejected existing global file is replaced by
+`{ debugLog, permissionReviewLog, yoloMode }` alone (it loads as empty), dropping what the file held.
+
+**SDK gaps.** Project trust: `Context.IsProjectTrusted()` exists and is used. `ctx.ui.custom`: `Context.Custom` takes a
+`ViewComponent`; the modal is a `kit.SettingsList` in an overlay with the original's options (`anchor: center`, `width: 82`,
+`maxHeight: 85%`, `margin: 1`, 10 visible rows). Partial: the host owns a settings list's values, so the original's
+`syncSettingValues` (`SettingsList.updateValue` after a save, which reverts a row when the save failed) has no counterpart; the next
+frame shows `ConfigStore.Current()`, but a failed save leaves the row on the value the user chose until the modal closes. The input
+and rendering of the modal are the host's, so the fake host cannot drive them: the component is tested directly
+(`cfg_modal_component_test.go`), the command's routing through `Context.Custom` by the twins.
+
+**Mutations.** `port/mutations-config.json` (`gen-config-mutations.py`), judged by the Go tests alone
+(`pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-config.json`).

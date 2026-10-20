@@ -382,6 +382,24 @@ func jsAtLeast(v any, min float64) bool {
 		return x && 1 >= min
 	case nil:
 		return 0 >= min
+	case []any:
+		// ToPrimitive of an array is its join: empty is "", one element is that element's string, more is not a number
+		switch len(x) {
+		case 0:
+			return 0 >= min
+		case 1:
+			if _, nested := x[0].(*jsObject); nested {
+				return false
+			}
+			if e, isArr := x[0].([]any); isArr && len(e) > 0 {
+				return jsAtLeast(e, min)
+			}
+			if x[0] == nil {
+				return 0 >= min
+			}
+			return jsAtLeast(x[0], min)
+		}
+		return false
 	case string:
 		t := jsTrim(x)
 		if t == "" {

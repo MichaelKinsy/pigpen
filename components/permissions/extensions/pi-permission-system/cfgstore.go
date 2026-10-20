@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 // Port of src/config/config-store.ts, config-issue-reporter.ts, config-reporter.ts and status.ts.
@@ -71,8 +72,10 @@ func defaultStoreHooks() configStoreHooks {
 // ConfigStore owns the mutable extension config and the operations that read and write it, and the issue list the last load
 // produced.
 type ConfigStore struct {
-	deps         ConfigStoreDeps
-	hooks        configStoreHooks
+	deps  ConfigStoreDeps
+	hooks configStoreHooks
+
+	mu           sync.Mutex // guards config and configIssues: handlers of one session may run concurrently
 	config       PermissionSystemExtensionConfig
 	configIssues []string
 }
@@ -83,28 +86,38 @@ func NewConfigStore(deps ConfigStoreDeps) *ConfigStore {
 }
 
 // Current returns the current extension config.
-func (s *ConfigStore) Current() PermissionSystemExtensionConfig { return s.config }
+func (s *ConfigStore) Current() PermissionSystemExtensionConfig {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.config
+}
 
 // GetConfigIssues is what is wrong with the config as of the last Refresh: a legacy-file notice, a schema violation, and the
 // cross-cutting detectors. The store answers; ConfigIssueReporter decides whether the operator has heard it yet (#933).
-func (s *ConfigStore) GetConfigIssues() []string { return s.configIssues }
+func (s *ConfigStore) GetConfigIssues() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.configIssues
+}
 
 // Refresh reloads the merged config from disk. cwd scopes the project-level lookup ("" when no session cwd is known yet); with
 // projectTrusted false the project scope is withheld so an untrusted repository cannot loosen the operator's global config (#644).
 // It takes no UI on purpose: a load that holds one acquires side effects it cannot honor when there is no session yet (#933).
 func (s *ConfigStore) Refresh(cwd string, projectTrusted bool) {
 	merge := s.hooks.loadAndMerge(s.deps.AgentDir, cwd, extensionRoot, MergeOptions{IncludeProjectScope: &projectTrusted})
-	s.config = normalizePermissionSystemConfig(merge.Merged)
-	s.configIssues = merge.Issues
+	config := normalizePermissionSystemConfig(merge.Merged)
+	s.mu.Lock()
+	s.config, s.configIssues = config, merge.Issues
+	s.mu.Unlock()
 	details := newObject()
 	if len(merge.Issues) > 0 {
 		details.set("warning", strings.Join(merge.Issues, "\n"))
 	} else {
 		details.set("warning", nil)
 	}
-	details.set("debugLog", s.config.DebugLog)
-	details.set("permissionReviewLog", s.config.PermissionReviewLog)
-	details.set("yoloMode", s.config.YoloMode)
+	details.set("debugLog", config.DebugLog)
+	details.set("permissionReviewLog", config.PermissionReviewLog)
+	details.set("yoloMode", config.YoloMode)
 	details.set("projectTrusted", projectTrusted)
 	s.deps.Logger.Debug("config.loaded", details)
 }
@@ -137,7 +150,9 @@ func (s *ConfigStore) Save(next PermissionSystemExtensionConfig, ui ConfigUI) {
 		ui.Notify("Failed to save permission-system config at '"+globalPath+"': "+failure, "error")
 		return
 	}
+	s.mu.Lock()
 	s.config = normalized
+	s.mu.Unlock()
 	s.hooks.syncStatus(ui, normalized)
 	details := newObject()
 	details.set("debugLog", normalized.DebugLog)
@@ -230,8 +245,10 @@ type ConfigIssueReporting interface {
 // per issue and the delivery per report; `reported` is replaced on every report, so an issue fixed and then reintroduced is
 // announced again.
 type ConfigIssueReporter struct {
-	source   ConfigIssueSource
-	log      ConfigIssueWarner
+	source ConfigIssueSource
+	log    ConfigIssueWarner
+
+	mu       sync.Mutex
 	reported map[string]bool
 }
 
@@ -241,18 +258,20 @@ func NewConfigIssueReporter(source ConfigIssueSource, log ConfigIssueWarner) *Co
 
 func (r *ConfigIssueReporter) Report() {
 	current := r.source.GetConfigIssues()
+	r.mu.Lock()
 	var unreported []string
 	for _, issue := range current {
 		if !r.reported[issue] {
 			unreported = append(unreported, issue)
 		}
 	}
-	if len(unreported) > 0 {
-		r.log.Warn(strings.Join(unreported, "\n"))
-	}
 	r.reported = map[string]bool{}
 	for _, issue := range current {
 		r.reported[issue] = true
+	}
+	r.mu.Unlock()
+	if len(unreported) > 0 {
+		r.log.Warn(strings.Join(unreported, "\n"))
 	}
 }
 

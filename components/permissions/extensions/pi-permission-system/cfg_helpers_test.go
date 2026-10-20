@@ -88,3 +88,13 @@ func sameAsVendored(t *testing.T, copyPath, vendoredRel string) {
 		t.Errorf("%s differs from the vendored original %s", copyPath, vendoredRel)
 	}
 }
+
+func writeTestFileB(b *testing.B, path, content string) {
+	b.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		b.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		b.Fatal(err)
+	}
+}

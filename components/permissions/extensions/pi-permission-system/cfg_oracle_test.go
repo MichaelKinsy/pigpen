@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -34,6 +35,9 @@ type cfgOracle struct {
 			MCPGlobal      *string           `json:"mcpGlobal"`
 			MCPProject     *string           `json:"mcpProject"`
 			IncludeProject *bool             `json:"includeProject"`
+			GlobalIsDir    bool              `json:"globalIsDir"`
+			GlobalMode     *int              `json:"globalMode"`
+			ProjectIsDir   bool              `json:"projectIsDir"`
 			Agents         map[string]string `json:"agents"`
 			ProjectAgents  map[string]string `json:"projectAgents"`
 			AgentNames     []string          `json:"agentNames"`
@@ -278,7 +282,22 @@ func TestConfigLoadersAgainstOriginal(t *testing.T) {
 			}
 		}
 		put(agentDir, "extensions/pi-permission-system/config.json", c.Global)
+		if c.GlobalIsDir {
+			if err := os.MkdirAll(filepath.Join(agentDir, "extensions/pi-permission-system/config.json"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if c.GlobalMode != nil && runtime.GOOS != "windows" {
+			if err := os.Chmod(filepath.Join(agentDir, "extensions/pi-permission-system/config.json"), os.FileMode(*c.GlobalMode)); err != nil {
+				t.Fatal(err)
+			}
+		}
 		put(cwd, ".pi/extensions/pi-permission-system/config.json", c.Project)
+		if c.ProjectIsDir {
+			if err := os.MkdirAll(filepath.Join(cwd, ".pi/extensions/pi-permission-system/config.json"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
 		put(agentDir, "pi-permissions.jsonc", c.LegacyGlobal)
 		put(cwd, ".pi/agent/pi-permissions.jsonc", c.LegacyProject)
 		put(ext, "config.json", c.LegacyExt)

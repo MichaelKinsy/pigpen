@@ -22,7 +22,7 @@ for key in ["debugLog", "permissionReviewLog", "yoloMode", "doublePressToConfirm
 for j, v in enumerate(['"https://example.com/s.json"', '""', "null", "1", "[]", '"\\u00e9"', '"\ud83d\ude00"']):
     f(f"schemakey-{j}", '{"$schema":%s}' % v)
 lists = ["[]", '["a"]', '["a","a"]', '[""]', '["a",""]', '["a",1]', '["a",null]', "[[]]", '"a"', "{}", "null", '[" "]', '["\\u00e9"]', '["\ud83d\ude00"]',
-         '["/x","/y"]', '[1]', '[true]', '[{"length":0}]', '[{"length":1}]', '[[1]]', '[[""]]', '["a",[]]', '[{}]', '[[],[]]', '[{"length":"x"}]', '[{"length":-1}]']
+         '["/x","/y"]', '[1]', '[true]', '[{"length":0}]', '[{"length":1}]', '[[1]]', '[[""]]', '["a",[]]', '[{}]', '[[],[]]', '[{"length":"x"}]', '[{"length":-1}]', '[{"length":null}]', '[{"length":true}]', '[{"length":false}]', '[{"length":"5"}]', '[{"length":" "}]', '[{"length":[]}]', '[{"length":[5]}]', '[{"length":"1"}]', '[{"length":1}]', '[{"length":0.5}]']
 for key in ["piInfrastructureReadPaths", "authorizerChain"]:
     for j, v in enumerate(lists):
         f(f"list-{key}-{j}", '{"%s":%s}' % (key, v))
@@ -132,6 +132,12 @@ jsonc = [
     '{"a":1}\n{"b":2}', '{"a":1} x', 'x {"a":1}', '\u00e9', '{"\u00e9": 1}', '{"yoloMode": \u00e9}', '\ud83d\ude00', '{"yoloMode": \ud83d\ude00}', '{"\ud83d\ude00": x}',
     '{ "yoloMode": true }\u00a0', '\u00a0{}', '\u2028{}', '{\u00a0}', '\u000b{}', '{}\u0000', '\u0000', '{"a":"\u0001"}',
 ]
+jsonc += ['{\r\n"a" 1}', '{\n"a" 1}', '{\r"a" 1}', '{\r\n\r\n"a" 1}', '[\r\n1 2]', '{\n\n  "a" 1}', '{"a":"\u001f"}', '{"a":"\u0020"}', '{"$schema":"a\\/b"}',
+          '{"$schema":"\\b\\f\\n\\r\\t\\"\\\\"}', '{"$schema":"\\u00E9\\uABCD\\uabcd"}', '{"$schema":"\\u00G9"}', '{"$schema":"\\u00g9"}', '{"$schema":"\\uFFFF"}']
+for L in (14, 19, 20, 21, 22, 25, 30):
+    for p in sorted({0, 1, 2, 8, 9, 10, 11, 12, L - 12, L - 11, L - 10, L - 9, L - 8, L - 2, L - 1}):
+        if 0 <= p < L:
+            jsonc.append(" " * p + "x" + " " * (L - p - 1))
 for j, raw in enumerate(jsonc):
     f(f"text-{j}", raw)
 
@@ -157,6 +163,10 @@ f("bytes-f4-bad", b=b'{"$schema":"\xf4\x90\x80\x80"}')
 f("bytes-key", b=b'{"\xff":1}')
 f("bytes-value-error", b=b'{"yoloMode": \xff}')
 f("bytes-nul", b=b'{"yoloMode":true}\x00')
+f("bytes-e0-valid-shape", b=b'{"$schema":"\xe0\x90\x80"}')
+f("bytes-f0-bad", b=b'{"$schema":"\xf0\x80\x80\x80"}')
+f("bytes-eof-truncated", b=b'{"yoloMode":true}\xe2\x82')
+f("bytes-eof-lead", b=b'{"yoloMode":true}\xf0')
 f("bytes-empty", b=b'')
 f("bytes-crlf", b=b'{\r\n"yoloMode": x\r\n}')
 f("bytes-cr-only", b=b'{\r"yoloMode": x\r}')
@@ -200,6 +210,11 @@ L("numbers-merge", **{"global": '{"promptMaxRows":24,"forwardingTimeoutMs":1000}
 L("perm-merge-order", **{"global": g({"bash": {"a": "allow", "b": "ask"}, "read": "allow", "path": "deny"}), "project": g({"bash": {"b": "deny", "c": "allow"}, "path_read": "allow", "write": "ask"}), "includeProject": True})
 L("perm-sugar", **{"global": g({"path": {"*": "deny"}, "path_read": {"~/x": "allow"}}), "project": g({"path": {"*": "ask"}}), "includeProject": True})
 L("comments", **{"global": '{\n// c\n"permission": {"*":"ask" /* x */}\n}'})
+L("legacy-global-and-ext", legacyGlobal='{"debugLog":true,"yoloMode":true}', legacyExt='{"debugLog":false,"promptMaxRows":3}')
+L("legacy-ext-and-new", legacyExt='{"debugLog":true,"yoloMode":true}', **{"global": '{"debugLog":false}'})
+L("global-is-directory", globalIsDir=True)
+L("global-unreadable", **{"global": '{"yoloMode":true}'}, globalMode=0)
+L("project-is-directory", **{"global": g({"*": "ask"})}, projectIsDir=True, includeProject=True)
 L("bom-global", **{"global": '\ufeff{"yoloMode":true}'})
 
 md = lambda body: "---\n" + body + "\n---\n# Agent\n"
@@ -256,7 +271,7 @@ mcps = [
     ("bad-json", '{"mcpServers":'), ("top-array", '[1]'), ("top-null", 'null'), ("trailing", '{"mcpServers":{"a":{},}}'),
     ("ties", '{"mcpServers":{"bb":{},"aa":{},"Ab":{},"ab":{},"b_":{},"b-":{},"b1":{},"b.":{},"B2":{},"b ":{}}}'),
     ("ties-punct", '{"mcpServers":{"a_":{},"a-":{},"a,":{},"a;":{},"a:":{},"a!":{},"a?":{},"a.":{},"a\'":{},"a\\"":{},"a(":{},"a)":{},"a[":{},"a]":{},"a{":{},"a}":{},"a@":{},"a*":{},"a/":{},"a\\\\":{},"a&":{},"a#":{},"a%":{},"a`":{},"a^":{},"a+":{},"a<":{},"a=":{},"a>":{},"a|":{},"a~":{},"a$":{},"a0":{},"a9":{},"aa":{},"aZ":{}}}'),
-    ("case", '{"mcpServers":{"abc":{},"ABC":{},"Abc":{},"aBc":{},"abC":{}}}'),
+    ("accent-case", '{"mcpServers":{"Ea":{},"\u00e9a":{},"ea":{},"\u00c9a":{},"eA":{},"\u00e9A":{}}}'), ("case", '{"mcpServers":{"abc":{},"ABC":{},"Abc":{},"aBc":{},"abC":{}}}'),
     ("lengths", '{"mcpServers":{"a":{},"bbb":{},"cc":{},"dddd":{},"ee":{}}}'),
     ("unicode", '{"mcpServers":{"caf\u00e9":{},"cafe":{},"\u00e9":{},"e":{},"f":{}}}'),
     ("astral", '{"mcpServers":{"\ud83d\ude00":{},"ab":{},"abc":{}}}'),
@@ -277,7 +292,7 @@ for i, m in enumerate(["", "---", "---\n", "---\n---", "---\n---\n", "---\na: 1\
                        " a: 1", "\ta: 1", "a : 1", "a:1", "a: 1 # c", "# a: 1", "  # a: 1", "'a': 1", '"a": 1', "'a\": 1", "\"a: 1", "a'': 1", "a\u00a0: 1", "\u00a0a: 1",
                        "a: \u00a0", "a:\n  b:\n    c: 1\n  d: 2\ne: 3", "a:\n    b: 1\n  c: 2", "a:\n  b: 1\n a: 2", "a:\n b:\n  c: 1\n   d: 2",
                        "a: 1\r\nb: 2\r\n", "a: 1\rb: 2", "a: 1\n\n\n\nb: 2", "x:y: 1", "a: b: c", "a:: 1", "a: :", ": 1", "a:  \n  b: 1", "a: \"\n", "\u2028a: 1",
-                       "a: 1\u2028b: 2", "a: \"x\" ", "a: \"x\" y\"", "constructor: 1", "__proto__:\n  a: 1\nb: 2", "toString: x", "a:\n  __proto__: 1\n  b: 2", "1: a\n0: b\nx: c"]):
+                       "a: 1\u2028b: 2", "a: \"x\" ", "a: \"x\" y\"", "constructor: 1", "__proto__:\n  a: 1\nb: 2", "toString: x", "a:\n  __proto__: 1\n  b: 2", "1: a\n0: b\nx: c", "a:\n\u00a0b:\n  c: 1", "a:\n  b:\n\u00a0\u00a0c: 1", "a:\n\u2003b: 1\n c: 2"]):
     Y(f"text-{i}", m)
 
 dialog = []
@@ -288,7 +303,7 @@ for a in ["approve", "approveSession", "approveSessionBoth", "deny", "denyWithRe
         D(f"{a}-{v!r}", {a: v})
 import random
 rnd = random.Random(7)
-pool = ["1", "2", "3", "y", "s", "b", "n", "r", "j", "k", "a", "q", "A", "+", "", "x"]
+pool = ["1", "2", "3", "y", "s", "b", "n", "r", "j", "k", "a", "q", "A", "+", "", "x", "ab", "12", "ef", "yy", "0123"]
 acts = ["approve", "approveSession", "approveSessionBoth", "deny", "denyWithReason"]
 for i in range(300):
     o = {}

@@ -141,3 +141,38 @@ func TestPermissionSystemCommandInTheHost(t *testing.T) {
 	st := r.statuses()
 	eq(t, st[len(st)-1], "", "the status follows the saved config")
 }
+
+func TestFactoryTimeLoadReadsNoProject(t *testing.T) {
+	// with no cwd the project config path is relative: the process directory's own .pi must not be read before a session exists
+	agent, cwd := t.TempDir(), t.TempDir()
+	t.Setenv("PI_CODING_AGENT_DIR", agent)
+	p := filepath.Join(cwd, ".pi", "extensions", "pi-permission-system", "config.json")
+	os.MkdirAll(filepath.Dir(p), 0o755)
+	os.WriteFile(p, []byte(`{"yoloMode":true}`), 0o644)
+	t.Chdir(cwd)
+	h := StartHost(t, pps.Extension(), HostOptions{Cwd: cwd})
+	eq(t, h.Command("permission-system", "show"), "", "show")
+	n := h.CallsTo("ui.notify")
+	eq(t, strings.HasPrefix(n[len(n)-1].Args["message"].(string), "permission-system: yoloMode=off"), true, "no yolo from a project that was never trusted")
+}
+
+func TestUntrustedSessionLoadsNoProjectPolicyPaths(t *testing.T) {
+	agent, cwd := t.TempDir(), t.TempDir()
+	t.Setenv("PI_CODING_AGENT_DIR", agent)
+	trusted := false
+	e, paths := pps.NewExtensionForTest()
+	h := StartHost(t, e, HostOptions{Cwd: cwd, OnCall: func(method string, _ map[string]any) (map[string]any, string) {
+		if method == "isProjectTrusted" {
+			return map[string]any{"trusted": trusted}, ""
+		}
+		return map[string]any{}, ""
+	}})
+	h.Fire("session_start", map[string]any{})
+	p := paths()
+	eq(t, p.ProjectConfigPath == nil && p.ProjectAgentsDir == nil, true, "an untrusted project has no policy scope paths")
+	trusted = true
+	h.Fire("session_start", map[string]any{})
+	p = paths()
+	eq(t, p.ProjectConfigPath != nil && *p.ProjectConfigPath == filepath.Join(cwd, ".pi", "extensions", "pi-permission-system", "config.json"), true, "a trusted one does")
+	eq(t, p.ProjectAgentsDir != nil && *p.ProjectAgentsDir == filepath.Join(cwd, ".pi", "agents"), true, "and its agents")
+}

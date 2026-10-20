@@ -117,6 +117,12 @@ func (s *state) current() *Policy {
 
 // Extension returns the permission gate.
 func Extension() *sdk.Extension {
+	e, _ := newExtension()
+	return e
+}
+
+// newExtension builds the extension and the state its handlers share (the tests read the state).
+func newExtension() (*sdk.Extension, *state) {
 	e := sdk.New(extensionID)
 	st := &state{notifier: &sessionNotifier{}}
 	st.loader = NewFilePolicyLoader(derivePolicyLoaderOptions(agentDir(), ""))
@@ -230,5 +236,5 @@ func Extension() *sdk.Extension {
 		}
 		return nil, nil
 	})
-	return e
+	return e, st
 }

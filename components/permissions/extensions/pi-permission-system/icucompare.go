@@ -50,7 +50,7 @@ func icuElements(s string) []collationElement {
 		}
 		if base, ok := latinBase[r]; ok {
 			w, _ := weight(base)
-			e.primary, e.accent = w, int(r)
+			e.primary, e.accent = w, int(unicode.ToLower(r)) // the same accent in either case: the case is a tertiary difference
 		} else if w, ok := weight(r); ok {
 			e.primary = w
 		} else if unicode.IsLetter(r) || unicode.IsDigit(r) {
