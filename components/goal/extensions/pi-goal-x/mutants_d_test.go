@@ -575,7 +575,7 @@ type mdRenderContainer struct {
 	lines int
 }
 
-func (c *mdRenderContainer) dockChildren() []any    { return c.kids }
+func (c *mdRenderContainer) dockChildren() []any { return c.kids }
 func (c *mdRenderContainer) render(int) []string { return make([]string, c.lines) }
 
 func TestMutantsDWidget(t *testing.T) {

@@ -350,8 +350,7 @@ NOW = {"pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\
 # bundle where Pi's names its source tree (D22, masked by HOSTDOCS), so the estimate differs by a constant (12 tokens in every scenario
 # that shows it); the number and its percentage are masked, the line itself is compared.
 CTX = {"pattern": "Context snapshot: \\d+/(\\d+) tokens \\(\\d+%\\)", "replacement": "Context snapshot: <tokens>/${1} tokens (<pct>)"}
-IDS.append(NOW)
-IDS.append(CTX)
+IDS_CMD = IDS + [NOW, CTX]  # the commands block; the other blocks keep the base IDS
 
 
 def val(v):
@@ -435,47 +434,47 @@ scenario("draft-goal-confirm", "/goal: the model asks one question (select), pro
               propose(PARSER, tasks=[{"id": "task-1", "title": "Extract the tokenizer"}, {"id": "task-2", "title": "Rewrite the AST builder", "verification_contract": "the builder tests pass"},
                                      {"id": "task-3", "title": "Update the callers", "parent_id": "task-2"}], block_completion=True),
               turn(text="unused")],
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("draft-questionnaire-custom", "A questionnaire with a custom answer (input dialog), a free-text question and a dismissed selector.",
          [draft("/goal Plan the release", [val("3. Write your own answer..."), val("  weekly  "), val("Ship notes"), {"cancelled": True}])],
          llm=[turn(call("goal_questionnaire", questions=[{"id": "cadence", "question": "Release cadence?", "context": "Pick the rhythm.", "options": ["daily", "monthly"]},
                                                          {"id": "notes", "question": "What goes in the notes?", "options": []}])),
               turn(call("goal_question", question="Which channel?", options=["web", "mail"], allow_custom=False)),
               turn(text="Drafting continues.")],
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("draft-sisyphus", "/sisyphus: a proposal whose mode does not match is refused, the right one is confirmed with the auditor disabled.",
          [draft("/sisyphus Port the module", [val(DISABLED), val(CONFIRM)]), step("/goal-status verbose")],
          llm=[propose("1) read the code, done when the module is understood. 2) write the port, done when the tests pass.", sisyphus=False),
               propose("1) read the code, done when the module is understood. 2) write the port, done when the tests pass.", sisyphus=True),
               turn(text="unused")],
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("draft-bad-proposals", "Proposal checks: empty objective, a proposal whose mode does not match /goal, then a valid goal with a token budget and no auto-continue.",
          [draft("/goal Tidy the repo", [val(ENABLED), val(CONFIRM)]), step("/goal-status")],
          llm=[propose("   "), propose("Tidy the repo", sisyphus=True), propose("Tidy the repo", token_budget=2000, auto_continue=False), turn(text="unused")],
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("draft-sisyphus-steps-needed", "A Sisyphus draft whose proposal has no ordered steps is refused with the guidance text.",
          [draft("/sisyphus Tidy", [val(ENABLED), val(CONFIRM)])],
          llm=[propose("tidy up", sisyphus=True), propose("1) read it, done when read. 2) fix it, done when fixed.", sisyphus=True), turn(text="unused")],
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("draft-refine-then-cancel", "Continue chatting keeps the draft active and keeps the auditor choice; a later Cancel discards it; /goal-cancel then finds nothing.",
          [draft("/goal Improve the docs", [val(DISABLED), val(CONTINUE), val(DISABLED), val(CANCEL)]), step("/goal-cancel"), step("/goal-status")],
          llm=[propose("Improve the docs"), propose("Improve the docs for the CLI"), turn(text="Cancelled.")],
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("draft-active-choices", "A second /goal while a draft is active: replace it, resume it, or cancel the new start; /goal-cancel discards the draft.",
          [draft("/goal Build a thing"), draft("/goal Another thing", [val("Replace it with a new draft")]), step("/goal Third thing", [val("Resume the existing draft")]),
           step("/goal Fourth thing", [val("Cancel")]), step("/goal-cancel"), step("/goal-cancel")],
          llm=[turn(text="What do you want to build?"), turn(text="Tell me more about it.")],
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("draft-tweak", "/goal-tweak on a focused goal with a budget: the proposal removes the budget and is confirmed.",
          [step("/goal-focus"), draft("/goal-tweak remove the token budget", [val(ENABLED), val(CONFIRM)]), step("/goal-status verbose")],
          llm=[propose("First goal", token_budget=None), turn(text="unused")],
          files_=files(("seed-a", "First goal", {"usage": {"tokensUsed": 1200, "activeSeconds": 60}, "extra": {"tokenBudget": 5000}, "tasks": TASKS})),
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("draft-tweak-paused", "Tweaking a paused goal while maxAutonomousRuns=0: the goal is revised, stays paused, and keeps its task progress.",
          [step("/goal-focus"), draft("/goal-tweak make the objective concrete", [val(ENABLED), val(CONFIRM)]), step("/goal-status")],
          llm=[propose("Ship the parser with full tests", tasks=[{"id": "task-1", "title": "Read the code"}, {"id": "task-4", "title": "Add tests"}]), turn(text="unused")],
          files_=files(("seed-p", "Ship the parser", {"status": "paused", "auto": False, "extra": {"stopReason": "user", "tokenBudget": 9000}, "tasks": TASKS})),
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("tweak-guards", "/goal-tweak with no goal at all (with and without a change).",
          [step("/goal-tweak"), step("/goal-tweak remove the budget")],
          files_=files(settings=True))
@@ -496,7 +495,7 @@ scenario("refresh-external", "Files edited behind the extension's back (a goal a
          files_=dict(files(GA), **{"spare/" + spare_name: SPARE_BODY,
                                    "spare/ledger.jsonl": ledger({"type": "goal_created", "goalId": "seed-new", "objective": "Added", "sisyphus": False, "autoContinue": True, "at": T0}) + "not json\n",
                                    "spare/settings.json": json.dumps({"maxAutonomousRuns": 0, "disableContracts": True})}),
-         normalize=IDS)
+         normalize=IDS_CMD)
 scenario("recovery-healthy", "/goal-recovery on clean storage, and repair with nothing to repair.",
          [step("/goal-recovery"), step("/goal-recovery repair")], files(GA))
 scenario("recovery-issues", "A malformed goal file, a malformed ledger line, a dead-pid lock and an unreadable lock: the report, a declined repair, a confirmed repair, then a clean report.",
@@ -509,7 +508,7 @@ GB3 = ("seed-b", "Second goal", {"created": "2026-01-03T00:00:00.000Z"})
 scenario("recovery-orphan", "A goal file removed behind the extension's back leaves an orphaned snapshot entry: the report, a confirmed repair.",
          [prompt("Remove a goal."), step("/goal-recovery"), step("/goal-recovery repair", yes), step("/goal-recovery")],
          llm=[turn(call("bash", command="rm .pi/goals/%s" % seed(*GB3[:2], **GB3[2])[0].split("/")[-1])), turn(text="Done.")],
-         files_=files(GA, GB3), normalize=IDS + [BACKUP])
+         files_=files(GA, GB3), normalize=IDS_CMD + [BACKUP])
 # Not generated: resume-runs (/goal-resume with maxAutonomousRuns=1 and a scripted continuation turn). Under PiG the Go lane's first model request of the
 # resumed run reached the scripted server with the whole base system prompt removed (system delta inserted ""), where Pi's carries the extension's
 # tool list; it is reproducible on 3 of 3 runs and not understood, so it is listed in PORT.md instead of being recorded.
