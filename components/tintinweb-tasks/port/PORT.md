@@ -48,19 +48,42 @@ bridged in PiG 0.4 (`Context.Events()`).
   tell apart from the original (finding 8); they had no test of their own until `TestLaunchResultAndCadenceEdges`,
   `TestTaskPaths`, `TestTaskExecuteRefusesAMissingBlocker` and the `/tasks` auto-clear case were written.
   `port/gen-mutations.py` writes `port/mutations.json` and checks every `find` string is unique.
-- **PR 2 (this revision), run on xd670 in the tern-ci:v3 container, `nice -n 10` on cpus 64-127, oracle `~/pp-askuser/bin/pig`
-  0.5.0+1.3.0.1402973a and Pi 1.3.0.1402973a:** `go vet` for linux, windows and darwin clean; `go test -race -count=3 ./...`
-  pass; `pigeq twins check`: 388 exact twins, 1 skipped; `pigeq check`: 11 of 17 scenarios printed identical to Pi, with
-  `reminder-cap` and `reminder-stale` (and others that call the `read` tool) differing only because that pig's built-in
-  `read` result carries `"structuredContent"` where Pi's does not (the imladris `~/pp-shared-pig/bin/pig` does not: the
-  three new scenarios and the re-recorded `reminder-sanitized` were checked there, identical); `pigeq mutate --unit`:
-  146 mutations, 145 killed by the port's own tests or scenarios, 1 invalid (`command-row-parsed-from-label` no longer
-  built after `slices` lost its other user; rewritten, not re-run). Kills by the `read` scenarios on that pig are not
-  trusted; `settings-panel-error-swallowed` was killed only by such a scenario until `TestSettingsPanelFailureIsReportedByTheCommand`.
-  `npm run generate` leaves index.json and ports/README.md unchanged and `npm run check` passes (in a copy of the repo
-  with `.git`, `npm ci --ignore-scripts`).
-- `pig package validate components/tintinweb-tasks` and `pig install <extension dir> --validate-only --json` (`form:
-  factory`, `language: go`): valid.
+- **PR 2 and 0.2.1 (this revision), run on imladris in the tern-ci:v2 container (go 1.27.2, node 24.19.0, cpus 96-151, `nice -n 15`),
+  oracle pig `~/pp-shared-pig/bin/pig` 0.5.0+1.3.0.1402973a (source v0.5.0), Pi 1402973a, `pigeq` built from the branch
+  `pigeq-normalize`:** `go vet` for linux, windows and darwin clean; `go test -race -count=3 ./...` pass (36 s);
+  `pigeq twins check`: 388 exact twins, 1 skipped; `pigeq check`: **17 of 17 scenarios identical to Pi**, twice in a row on
+  a host at load 80; `pigeq mutate`: 146 mutations, all killed: 141 by the port's own tests (`--unit-only`; this includes
+  `command-row-parsed-from-label`, the one that had stopped building, and `settings-panel-error-swallowed` by
+  `TestSettingsPanelFailureIsReportedByTheCommand`) and the other 5 (`reminder-overflow-text`, `shutdown-clears-widget`,
+  `tasklist-order-by-id`, `taskget-no-unescape`, `taskupdate-not-found-text`) by scenarios, run alone with `--jobs 1`;
+  `npm ci --ignore-scripts`, `npm run check` and `npm run generate` (no diff) pass. `pig package validate` and
+  `pig install <extension dir> --validate-only --json` (`form: factory`, `language: go`): valid.
+- **The two `read` goldens were stale, not a PiG difference.** `reminder-cap` and `reminder-stale` had been recorded under
+  Pi 1.0.3, whose built-in `read` result is `{"content":[...]}`. Pi 1402973a's built-in `read` result also carries
+  `"structuredContent":"hello\n"` (recorded: the re-recorded Pi trace has it), and the oracle PiG 0.5.0 pig prints the
+  same, so Pi and PiG agree and the port was never the cause. All 17 goldens were re-recorded from the original under Pi
+  1402973a; except for those two goldens only the header's `host` field changed.
+- **Fused Piglet build** (`npm run build:piglet -- pig-essentials`, pig 0.5.0 on the v0.5.0 source): built, 71 983 367 bytes,
+  `--version` 0.5.0+1.3.0.1402973a. The Binary cannot pass `pigeq check --builtin` as is (its other members, ponytail's
+  start-up status and notify, and `tintinweb-subagents` change events and the model request), so the 17 scenarios were
+  recorded from the Binary (`record --self --builtin`) and the tasks events (every `Task*` tool result, every `tasks`
+  widget, every `notify`, `select` and `input` of `/tasks`) compared with the Pi goldens: identical in 16 scenarios, and
+  the seven `Task*` tool definitions identical in the model request. The 17th, `tool-errors`, differs where it should:
+  `TaskExecute` runs on `tintinweb-subagents` (built into the same Binary), so it answers `Skipped: #1: no agentType set`
+  where the standalone build says subagent execution is unavailable (`task-execute-unavailable` is likewise not
+  applicable in the Binary).
+- **Performance** (imladris, cpus 96-151, `nice -n 15`, 11 to 12 interleaved runs, medians; previous release = 0.1.0 on
+  `main`, original = `port/oracle/src/index.ts` under the same pig's Node runtime):
+  extension binary (wrapper `main`): 9 105 356 bytes before, 9 195 909 after (+1.0%; stripped 6 230 279 and 6 291 719).
+  In-process round trips through the fake host (ns/op, B/op, allocs/op): construct 548 us and 554 us (+1.0%);
+  TaskCreate 2 453 us to 2 337 us, 272 618 to 283 693 B, 3 589 to 3 599 allocs; TaskList 888 to 752 us, 148 155 to
+  147 778 B, 2 295 to 2 296 allocs; TaskGet 805 to 745 us, 2 122 to 2 116 allocs; TaskUpdate 23.5 ms to 23.5 ms (50 tasks;
+  a TaskUpdate reloads and parses the store file two or three times through the widget, as the original does, so it
+  grows with the list: the same in both versions). Process level, `pig --mode rpc` with each extension: ready (get_state)
+  prev 915 ms, new 842 ms, original under Node 2 194 ms; `/tasks` to the first dialog with 50 tasks 2.49, 2.03 and
+  2.72 ms. Per tool through a scripted model turn loop (start to end event as the RPC client sees it, 60 to 120 samples):
+  TaskCreate 0.96, 0.83 and 1.73 ms (prev, new, original); TaskUpdate 0.85, 0.79, 1.84; TaskList 0.77, 0.77, 1.47;
+  TaskGet 0.77, 0.73, 1.70. No regression over 10%; no host call was added to a render or input path.
 
 ## Differences and findings
 
@@ -110,5 +133,6 @@ ellipsis) and back at 130; starting a task showed the spinner and elapsed time a
 
 ## Piglet build
 
-`piglets/pig-essentials` selects this Package. `npm run build:piglet -- pig-essentials` fuses it (see that
-Piglet's README and the progress note for the build and cold-start numbers).
+`piglets/pig-essentials` selects this Package. `npm run build:piglet -- pig-essentials` fuses it; the 0.2.1 head was
+built that way and checked (see Results: 71 983 367 bytes, the tasks events identical to Pi's goldens in 16 of 17
+scenarios, `TaskExecute` live through the built-in `tintinweb-subagents`). The Piglet's README has the start-up numbers.
