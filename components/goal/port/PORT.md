@@ -166,3 +166,11 @@ The review's own changes went red first: the tests in one commit, the fixes in t
   "invisible over RPC" ports would have saved the most here.
 - The twin ledger (41 titles by hand) and the slice file (76 deferred entries) are tedious to produce by hand: `twins list`
   could write the first draft.
+
+## Refusals (0.1.1)
+
+Until the rest is ported (the inventory is in the owner's parity status file for this component), each unported command,
+setting and mode is refused with `@pi-in-go/pigpen-goal (Go port) does not support <feature> yet. Install the original
+extension, npm:pi-goal-x@0.32.3, which runs unchanged in PiG.` (`refusal.go`; one test per refused option in
+`refusal_test.go`). The earlier notice that a goal "is stored and ready but will not start by itself" is gone: a goal that would
+need a run is not created.
