@@ -148,16 +148,28 @@ func (j *EvaluatorJudge) Evaluate(ctx context.Context, r Request) (Evaluation, e
 		case *typesafe.NoulAnswer:
 			out.Answers[name] = Answer{Type: "noul", Noul: v.Noul}
 		case typesafe.ChoiceAnswer:
-			out.Answers[name] = Answer{Type: "choice", Choice: v.Choice, Confidence: v.Confidence}
+			out.Answers[name] = Answer{Type: "choice", Choice: v.Choice, Confidence: v.Confidence, Probabilities: v.Probabilities}
 		case *typesafe.ChoiceAnswer:
-			out.Answers[name] = Answer{Type: "choice", Choice: v.Choice, Confidence: v.Confidence}
+			out.Answers[name] = Answer{Type: "choice", Choice: v.Choice, Confidence: v.Confidence, Probabilities: v.Probabilities}
 		case typesafe.ScoreAnswer:
-			out.Answers[name] = Answer{Type: "score", Score: v.Score, Confidence: v.Confidence}
+			out.Answers[name] = Answer{Type: "score", Score: v.Score, Confidence: v.Confidence, Probabilities: scoreProbabilities(v.Probabilities)}
 		case *typesafe.ScoreAnswer:
-			out.Answers[name] = Answer{Type: "score", Score: v.Score, Confidence: v.Confidence}
+			out.Answers[name] = Answer{Type: "score", Score: v.Score, Confidence: v.Confidence, Probabilities: scoreProbabilities(v.Probabilities)}
 		}
 	}
 	return out, nil
+}
+
+// scoreProbabilities keys a score answer's level distribution by the level number, as a string.
+func scoreProbabilities(levels map[int]float64) map[string]float64 {
+	if levels == nil {
+		return nil
+	}
+	out := make(map[string]float64, len(levels))
+	for level, p := range levels {
+		out[strconv.Itoa(level)] = p
+	}
+	return out
 }
 
 // safeError classifies an error into a message safe to display: never an upstream body, a header, a key or the
