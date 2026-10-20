@@ -35,13 +35,13 @@ func buildBashProgramFixture(t testing.TB) (base, root, out string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// The root sits 16 directories below the base, so no `..` chain of the corpus climbs out of the base (whose own ancestors
+	// The root and the outside directory sit 16 directories below the base, so no `..` chain of the corpus climbs out of the base (whose own ancestors
 	// differ from host to host).
 	deep := base
 	for range 16 {
 		deep = filepath.Join(deep, "d")
 	}
-	root, out = filepath.Join(deep, "r"), filepath.Join(base, "o")
+	root, out = filepath.Join(deep, "r"), filepath.Join(deep, "o")
 	must := func(err error) {
 		t.Helper()
 		if err != nil {
@@ -152,7 +152,23 @@ func withFixtureFS(t testing.TB, root, out string) {
 		}
 		return p, nil
 	}
-	lstatSync = func(p string) bool { return inFixture(p) && oldLstat(p) }
+	// The recording host's filesystem is case sensitive; the entry must exist under exactly the spelling asked for (macOS and Windows
+	// answer for `A` when `a` exists).
+	lstatSync = func(p string) bool {
+		if !inFixture(p) || !oldLstat(p) {
+			return false
+		}
+		entries, err := os.ReadDir(filepath.Dir(p))
+		if err != nil {
+			return false
+		}
+		for _, e := range entries {
+			if e.Name() == filepath.Base(p) {
+				return true
+			}
+		}
+		return false
+	}
 	t.Cleanup(func() { realpathSync, lstatSync = oldReal, oldLstat })
 }
 

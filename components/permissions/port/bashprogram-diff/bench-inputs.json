@@ -1,0 +1,7 @@
+{
+ "short": "cat /etc/hosts",
+ "cd-redirect": "cd src && cat ../x.ts > /tmp/out.txt",
+ "chain": "cd /repo && git add -A . && git commit -m \"x\" 2>&1 | tail -3 ; sudo xargs grep -rn foo /etc > $HOME/out.txt",
+ "heredoc": "cat <<'EOF' > notes.txt\nhello $(date)\nEOF",
+ "substitution": "echo $(cat /etc/shadow) && for f in ~/a ~/b; do ls \"$f\"; done"
+}

@@ -47,7 +47,7 @@ function buildFixture(real: (p: string) => string): { base: string; root: string
   const base = real(mkdtempSync(join(tmpdir(), "pbp-")));
   const deep = join(base, ...Array.from({ length: 16 }, () => "d"));
   const root = join(deep, "r");
-  const out = join(base, "o");
+  const out = join(deep, "o");
   mkdirSync(deep, { recursive: true });
   mkdirSync(root);
   mkdirSync(out);
