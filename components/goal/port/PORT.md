@@ -31,7 +31,7 @@ questionnaire. Not fixed (listed in the status file): a failing authoritative wr
 **pigeq:** scenarios are recorded under Pi 1402973a (`port/scenarios`, `port/golden`, `port/gen-scenarios.py`); the new
 scripted-model scenarios cover the goal tools. The host's own system-prompt documentation block (`Pi documentation ...` against `PiG
 documentation ...`) differs between the hosts and falls inside the delta of a request that adds tool snippets; the scenarios mask it with
-a scenario-level normalize rule (`HOSTDOCS`) and it is reported as a pigeq/PiG item.
+a scenario-level normalize rule (`HOSTDOCS`); the difference is PiG's documented additive difference D22 (PiG's docs bundle named in the system prompt).
 
 ## Mapping
 

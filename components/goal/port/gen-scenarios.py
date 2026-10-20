@@ -92,9 +92,9 @@ scenario("direct-limit-unset-is-not-run", "Settings with an unknown key: the ori
 # ---- scripted-model scenarios (the port runs the original's tools, scheduler and commands; the model is the harness's scripted server) ----
 
 # Values the extension makes up on every run (goal ids from the clock and Math.random, timestamps): not text a port is expected to produce.
-# The host words its own documentation block differently ("Pi documentation ... /work/pi-src/..." against "PiG documentation ..."), and
-# the system-prompt delta of a request that adds tool snippets spans that block (eq.systemDelta keeps the longest common prefix and
-# suffix only). This is the host's text, not the extension's: it is masked here and reported to the PiG team as a harness limit.
+# HOSTDOCS: PiG's system prompt names PiG's own documentation bundle ("PiG documentation ... <home>/docs/bundle-...") where Pi names
+# its source tree. That is PiG's documented additive difference D22, not an extension difference, and it falls inside the
+# system-prompt delta of every request that adds tool snippets. The scenario-level rule masks only that block (cf. D22).
 HOSTDOCS = {"pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*", "replacement": "<docs>"}
 IDS = [HOSTDOCS, {"pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b", "replacement": "${1}<goal-id>"},
        {"pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z", "replacement": "<iso>"},
