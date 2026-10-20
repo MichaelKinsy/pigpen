@@ -100,6 +100,22 @@ func TestUpstream_pdf_config(t *testing.T) {
 		_, err = loadPDFConfig()
 		wantErr(t, err, `Failed to parse datalab mode: expected "fast", "balanced", or "accurate", got "ultra"`)
 	})
-	tskip(t, F, "PDF streamed byte enforcement allows the exact limit", "PDF text extraction is deferred (docs/PORT.md); the streamed size limit ships with it")
-	tskip(t, F, "PDF streamed byte enforcement rejects a headerless response above the limit", "PDF text extraction is deferred (docs/PORT.md); the streamed size limit ships with it")
+	// readPDFResponseBuffer upstream is the size-limited body read of the PDF branch of fetch_content.
+	streamed := func(t *testing.T, body string) ExtractedContent {
+		t.Helper()
+		extractEnv(t, `{"pdf":{"maxSizeMB":0.0000019073486328125}}`)
+		useNet(t, func(netCall) netReply {
+			return netReply{Status: 200, Header: hdr("content-type", "application/pdf"), Body: body}
+		})
+		return ExtractContent(bg(), "https://example.com/limit.pdf", pageOpts())
+	}
+	tw(t, F, "PDF streamed byte enforcement allows the exact limit", func(t *testing.T) {
+		// Two bytes are exactly the limit: the read succeeds and only the extraction fails.
+		if got := errOf(streamed(t, "\x01\x02")); got != "PDF extraction failed: Invalid PDF structure." {
+			t.Fatal(got)
+		}
+	})
+	tw(t, F, "PDF streamed byte enforcement rejects a headerless response above the limit", func(t *testing.T) {
+		matchRE(t, `^PDF exceeds configured pdf\.maxSizeMB limit \(`, errOf(streamed(t, "\x01\x02\x03")))
+	})
 }

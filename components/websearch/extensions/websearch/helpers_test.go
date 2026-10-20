@@ -80,3 +80,10 @@ func noErr(t *testing.T, err error) {
 }
 
 func bg() context.Context { return context.Background() }
+
+// contextCanceled is a context that is already cancelled.
+func contextCanceled() (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(bg())
+	cancel()
+	return ctx, cancel
+}
