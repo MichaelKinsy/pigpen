@@ -375,7 +375,7 @@
   "name": "event-before-validation",
   "file": "extension.go",
   "find": "if v := validateQuestionnaire(typed); !v.OK {",
-  "replace": "emit(ctx, promptEvent, promptEventPayload(typed))\n\tif v := validateQuestionnaire(typed); !v.OK {"
+  "replace": "h.Emit(promptEvent, promptEventPayload(typed))\n\tif v := validateQuestionnaire(typed); !v.OK {"
  },
  {
   "name": "has-preview-always",
@@ -579,7 +579,7 @@
   "name": "collapse-announced-every-time",
   "file": "questionnaire.go",
   "find": "if hd.IsHidden() && !hasAnnouncedHide {",
-  "replace": "if hd.IsHidden() {"
+  "replace": "if hd.IsHidden() && !hasAnnouncedHide || hd.IsHidden() {"
  },
  {
   "name": "collapse-any-key",
