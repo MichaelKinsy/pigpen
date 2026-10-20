@@ -439,8 +439,8 @@ func (svc *dfdTurndown) turndown(input string) string {
 	if input == "" {
 		return ""
 	}
-	doc, err := html.Parse(strings.NewReader(`<x-turndown id="turndown-root">` + input + `</x-turndown>`))
-	if err != nil {
+	doc := dfdParseHTMLDocument(`<x-turndown id="turndown-root">` + input + `</x-turndown>`)
+	if doc == nil {
 		return ""
 	}
 	var root *html.Node

@@ -153,3 +153,8 @@ put("rsc-fallback-null-readability", `<!doctype html><html><head><title>Defuddle
 put("rsc-fallback-relative-canonical", `<!doctype html><html><head><title>Relative canonical</title><link rel="canonical" href="/relative-canonical"></head><body><aside><main>${rep("Defuddle content with a relative canonical URL stays quiet. ", 20)}</main></aside></body></html>`);
 put("rsc-fallback-short-readability", `<!doctype html><html><head><title>Short article fallback</title></head><body><article>Loading...</article><aside><main>${rep("Useful Defuddle content after the short Readability article. ", 20)}</main></aside></body></html>`);
 put("rsc-fallback-selector-failure", `<!doctype html><html><head><title>Defuddle selector failure</title></head><body><nav><a href="/">Home</a></nav><template id="B:0"></template><div hidden id="S:a"><h1>Defuddle selector failure</h1><p>${rep("This is substantial article text that should be extracted as the page's main content. ", 20)}</p></div><template id="P:a"></template><footer><p>Copyright 2026 Example Inc. All rights reserved.</p></footer></body></html>`);
+
+// nesting deep enough to reach the limits of the original's recursion (the Node stack)
+for (const n of [2000]) put(`malformed-deep-nesting-${n}`, page("Deeper", `${"<div>".repeat(n)}<p>${lorem(40)}</p>${"</div>".repeat(n)}`));
+put("malformed-deep-inline-nesting", article(`<p>${"<span><b>".repeat(600)}${lorem(30)}${"</b></span>".repeat(600)}</p>${body(2)}`));
+put("malformed-deep-list-nesting", article(`${"<ul><li>x".repeat(600)}${"</li></ul>".repeat(600)}${body(2)}`));
