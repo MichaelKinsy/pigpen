@@ -1,0 +1,1376 @@
+[
+ {
+  "name": "syn-default-layer",
+  "file": "synthesize.go",
+  "find": "Layer: \"default\", Origin: origin",
+  "replace": "Layer: \"builtin\", Origin: origin"
+ },
+ {
+  "name": "syn-default-origin",
+  "file": "synthesize.go",
+  "find": "origin = \"builtin\"",
+  "replace": "origin = \"global\""
+ },
+ {
+  "name": "syn-default-empty-origin",
+  "file": "synthesize.go",
+  "find": "if origin == \"\" {",
+  "replace": "if origin != \"\" {"
+ },
+ {
+  "name": "syn-baseline-surface",
+  "file": "synthesize.go",
+  "find": "r.Surface == \"mcp\" && r.Action == \"allow\"",
+  "replace": "r.Surface == \"mcp\" || r.Action == \"allow\""
+ },
+ {
+  "name": "syn-baseline-action",
+  "file": "synthesize.go",
+  "find": "r.Surface == \"mcp\" && r.Action == \"allow\"",
+  "replace": "r.Surface == \"mcp\" && r.Action != \"deny\""
+ },
+ {
+  "name": "syn-baseline-targets",
+  "file": "synthesize.go",
+  "find": "\"mcp_describe\", \"mcp_connect\"}",
+  "replace": "\"mcp_describe\"}"
+ },
+ {
+  "name": "syn-baseline-target-first",
+  "file": "synthesize.go",
+  "find": "{\"mcp_status\", \"mcp_list\",",
+  "replace": "{\"mcp_list\","
+ },
+ {
+  "name": "syn-baseline-layer",
+  "file": "synthesize.go",
+  "find": "Action: \"allow\", Layer: \"baseline\", Origin: \"baseline\"",
+  "replace": "Action: \"allow\", Layer: \"config\", Origin: \"baseline\""
+ },
+ {
+  "name": "syn-baseline-origin",
+  "file": "synthesize.go",
+  "find": "Layer: \"baseline\", Origin: \"baseline\"",
+  "replace": "Layer: \"baseline\", Origin: \"builtin\""
+ },
+ {
+  "name": "syn-baseline-empty",
+  "file": "synthesize.go",
+  "find": "if !hasAnyMcpAllow {\n\t\treturn Ruleset{}\n\t}",
+  "replace": "if !hasAnyMcpAllow {\n\t\treturn Ruleset{{Surface: \"mcp\", Pattern: \"mcp_status\", Action: \"allow\", Layer: \"baseline\", Origin: \"baseline\"}}\n\t}"
+ },
+ {
+  "name": "syn-compose-order",
+  "file": "synthesize.go",
+  "find": "out = append(out, defaults...)\n\tout = append(out, baseline...)",
+  "replace": "out = append(out, baseline...)\n\tout = append(out, defaults...)"
+ },
+ {
+  "name": "syn-compose-config-first",
+  "file": "synthesize.go",
+  "find": "return append(out, config...)",
+  "replace": "return append(config, out...)"
+ },
+ {
+  "name": "pm-fallback-allow",
+  "file": "permissionmanager.go",
+  "find": "const defaultUniversalFallback = \"ask\"",
+  "replace": "const defaultUniversalFallback = \"allow\""
+ },
+ {
+  "name": "pm-fallback-deny",
+  "file": "permissionmanager.go",
+  "find": "const defaultUniversalFallback = \"ask\"",
+  "replace": "const defaultUniversalFallback = \"deny\""
+ },
+ {
+  "name": "pm-universal-ignored",
+  "file": "permissionmanager.go",
+  "find": "state, ok := isPermissionState(merged.Permission.vals[\"*\"]); ok {",
+  "replace": "state, ok := isPermissionState(merged.Permission.vals[\"*\"]); ok && false {"
+ },
+ {
+  "name": "pm-universal-origin",
+  "file": "permissionmanager.go",
+  "find": "universalFallbackOrigin := \"builtin\"",
+  "replace": "universalFallbackOrigin := \"global\""
+ },
+ {
+  "name": "pm-universal-origin-lookup",
+  "file": "permissionmanager.go",
+  "find": "o, ok := merged.Origins[\"*\"][\"*\"]; ok {",
+  "replace": "o, ok := merged.Origins[\"*\"][\"*\"]; ok && false {"
+ },
+ {
+  "name": "pm-scope-project-dropped",
+  "file": "permissionmanager.go",
+  "find": "\t\t{Name: \"project\", Permission: projectConfig.Permission},\n",
+  "replace": ""
+ },
+ {
+  "name": "pm-scope-agent-dropped",
+  "file": "permissionmanager.go",
+  "find": "\t\t{Name: \"agent\", Permission: agentConfig.Permission},\n",
+  "replace": ""
+ },
+ {
+  "name": "pm-scope-project-agent-dropped",
+  "file": "permissionmanager.go",
+  "find": "\t\t{Name: \"project-agent\", Permission: projectAgentConfig.Permission},\n",
+  "replace": ""
+ },
+ {
+  "name": "pm-scope-global-dropped",
+  "file": "permissionmanager.go",
+  "find": "\t\t{Name: \"global\", Permission: globalConfig.Permission},\n",
+  "replace": ""
+ },
+ {
+  "name": "pm-scope-order",
+  "file": "permissionmanager.go",
+  "find": "\t\t{Name: \"project\", Permission: projectConfig.Permission},\n\t\t{Name: \"agent\", Permission: agentConfig.Permission},\n",
+  "replace": "\t\t{Name: \"agent\", Permission: agentConfig.Permission},\n\t\t{Name: \"project\", Permission: projectConfig.Permission},\n"
+ },
+ {
+  "name": "pm-scope-agent-order",
+  "file": "permissionmanager.go",
+  "find": "\t\t{Name: \"agent\", Permission: agentConfig.Permission},\n\t\t{Name: \"project-agent\", Permission: projectAgentConfig.Permission},\n",
+  "replace": "\t\t{Name: \"project-agent\", Permission: projectAgentConfig.Permission},\n\t\t{Name: \"agent\", Permission: agentConfig.Permission},\n"
+ },
+ {
+  "name": "pm-scope-name-project",
+  "file": "permissionmanager.go",
+  "find": "{Name: \"project\", Permission: projectConfig.Permission}",
+  "replace": "{Name: \"global\", Permission: projectConfig.Permission}"
+ },
+ {
+  "name": "pm-scope-name-agent",
+  "file": "permissionmanager.go",
+  "find": "{Name: \"agent\", Permission: agentConfig.Permission}",
+  "replace": "{Name: \"project\", Permission: agentConfig.Permission}"
+ },
+ {
+  "name": "pm-scope-name-project-agent",
+  "file": "permissionmanager.go",
+  "find": "{Name: \"project-agent\", Permission: projectAgentConfig.Permission}",
+  "replace": "{Name: \"agent\", Permission: projectAgentConfig.Permission}"
+ },
+ {
+  "name": "pm-baseline-from-relocated",
+  "file": "permissionmanager.go",
+  "find": "SynthesizeBaseline(configRules), relocation.Rules)",
+  "replace": "SynthesizeBaseline(relocation.Rules), relocation.Rules)"
+ },
+ {
+  "name": "pm-baseline-dropped",
+  "file": "permissionmanager.go",
+  "find": "SynthesizeBaseline(configRules), relocation.Rules)",
+  "replace": "Ruleset{}, relocation.Rules)"
+ },
+ {
+  "name": "pm-relocation-dropped",
+  "file": "permissionmanager.go",
+  "find": "SynthesizeBaseline(configRules), relocation.Rules)",
+  "replace": "SynthesizeBaseline(configRules), configRules)"
+ },
+ {
+  "name": "pm-compose-order",
+  "file": "permissionmanager.go",
+  "find": "ComposeRuleset(SynthesizeDefaults(universalFallback, universalFallbackOrigin), SynthesizeBaseline(configRules), relocation.Rules)",
+  "replace": "ComposeRuleset(SynthesizeDefaults(universalFallback, universalFallbackOrigin), relocation.Rules, SynthesizeBaseline(configRules))"
+ },
+ {
+  "name": "pm-failclosed-project",
+  "file": "permissionmanager.go",
+  "find": "if projectConfig.Invalid {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pm-failclosed-agent",
+  "file": "permissionmanager.go",
+  "find": "if agentConfig.Invalid {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pm-failclosed-project-agent",
+  "file": "permissionmanager.go",
+  "find": "if projectAgentConfig.Invalid {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pm-failclosed-global",
+  "file": "permissionmanager.go",
+  "find": "if projectConfig.Invalid {",
+  "replace": "if projectConfig.Invalid || globalConfig.Invalid {"
+ },
+ {
+  "name": "pm-failclosed-name-project",
+  "file": "permissionmanager.go",
+  "find": "failClosedScopes = append(failClosedScopes, \"project\")",
+  "replace": "failClosedScopes = append(failClosedScopes, \"project-agent\")"
+ },
+ {
+  "name": "pm-failclosed-name-agent",
+  "file": "permissionmanager.go",
+  "find": "failClosedScopes = append(failClosedScopes, \"agent\")",
+  "replace": "failClosedScopes = append(failClosedScopes, \"project\")"
+ },
+ {
+  "name": "pm-failclosed-name-project-agent",
+  "file": "permissionmanager.go",
+  "find": "failClosedScopes = append(failClosedScopes, \"project-agent\")",
+  "replace": "failClosedScopes = append(failClosedScopes, \"agent\")"
+ },
+ {
+  "name": "pm-failclosed-floor",
+  "file": "permissionmanager.go",
+  "find": "if len(failClosedScopes) > 0 {\n\t\tcomposed = FloorAllowsToAsk(composed)",
+  "replace": "if len(failClosedScopes) > 1 {\n\t\tcomposed = FloorAllowsToAsk(composed)"
+ },
+ {
+  "name": "pm-failclosed-floor-dropped",
+  "file": "permissionmanager.go",
+  "find": "composed = FloorAllowsToAsk(composed)",
+  "replace": "composed = composed"
+ },
+ {
+  "name": "pm-config-layer",
+  "file": "permissionmanager.go",
+  "find": "rules[i].Layer = \"config\"",
+  "replace": "rules[i].Layer = \"\""
+ },
+ {
+  "name": "pm-config-universal-kept",
+  "file": "permissionmanager.go",
+  "find": "if k != \"*\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "pm-config-origin",
+  "file": "permissionmanager.go",
+  "find": "if o, ok := origins[rules[i].Surface][rules[i].Pattern]; ok {",
+  "replace": "if o, ok := origins[rules[i].Surface][rules[i].Pattern]; ok && false {"
+ },
+ {
+  "name": "pm-cache-clear",
+  "file": "permissionmanager.go",
+  "find": "\tm.cache = map[string]resolvedCacheEntry{}\n}\n\nfunc agentNameOrEmpty",
+  "replace": "\t_ = m.cache\n}\n\nfunc agentNameOrEmpty"
+ },
+ {
+  "name": "pm-cache-stamp",
+  "file": "permissionmanager.go",
+  "find": "ok && cached.stamp == stamp {",
+  "replace": "ok {"
+ },
+ {
+  "name": "pm-cache-key-agent",
+  "file": "permissionmanager.go",
+  "find": "cacheKey = *agentName",
+  "replace": "cacheKey = \"__global__\""
+ },
+ {
+  "name": "pm-cache-key-global",
+  "file": "permissionmanager.go",
+  "find": "cacheKey := \"__global__\"",
+  "replace": "cacheKey := \"\""
+ },
+ {
+  "name": "pm-cwd-rebuild",
+  "file": "permissionmanager.go",
+  "find": "derivePolicyLoaderOptions(m.agentDir, cwd))",
+  "replace": "derivePolicyLoaderOptions(m.agentDir, \"\"))"
+ },
+ {
+  "name": "pm-cwd-agentdir-guard",
+  "file": "permissionmanager.go",
+  "find": "\tif m.agentDir != \"\" {\n\t\tm.loader =",
+  "replace": "\tif false {\n\t\tm.loader ="
+ },
+ {
+  "name": "pm-ctor-agentdir",
+  "file": "permissionmanager.go",
+  "find": "case o.AgentDir != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "pm-ctor-loader",
+  "file": "permissionmanager.go",
+  "find": "case o.PolicyLoader != nil:",
+  "replace": "case false:"
+ },
+ {
+  "name": "pm-issues-failclosed",
+  "file": "permissionmanager.go",
+  "find": "if len(resolved.failClosedScopes) > 0 {\n\t\tissues",
+  "replace": "if len(resolved.failClosedScopes) > 1 {\n\t\tissues"
+ },
+ {
+  "name": "pm-issues-failclosed-join",
+  "file": "permissionmanager.go",
+  "find": "strings.Join(resolved.failClosedScopes, \", \")",
+  "replace": "strings.Join(resolved.failClosedScopes, \",\")"
+ },
+ {
+  "name": "pm-issues-failclosed-text",
+  "file": "permissionmanager.go",
+  "find": "\"failing closed: 'allow' rules are clamped to 'ask' for this session \"",
+  "replace": "\"failing closed: 'allow' rules are clamped to 'deny' for this session \""
+ },
+ {
+  "name": "pm-issues-mcp-notice",
+  "file": "permissionmanager.go",
+  "find": "if len(resolved.legacyMcpToolKeys) > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pm-issues-resolve-first",
+  "file": "permissionmanager.go",
+  "find": "\tresolved := m.resolvePermissions(agentName)\n\tissues := m.currentLoader().GetConfigIssues()",
+  "replace": "\tissues := m.currentLoader().GetConfigIssues()\n\tresolved := m.resolvePermissions(agentName)"
+ },
+ {
+  "name": "pm-notice-quote",
+  "file": "permissionmanager.go",
+  "find": "named[i] = \"\\\"\" + k + \"\\\"\"",
+  "replace": "named[i] = k"
+ },
+ {
+  "name": "pm-composed-config-only",
+  "file": "permissionmanager.go",
+  "find": "if r.Layer == \"config\" {\n\t\t\tout = append(out, r)",
+  "replace": "if r.Layer != \"\" {\n\t\t\tout = append(out, r)"
+ },
+ {
+  "name": "pm-toolperm-trim",
+  "file": "permissionmanager.go",
+  "find": "func (m *PermissionManager) GetToolPermission(toolName string, agentName *string) string {\n\tcomposed := m.resolvePermissions(agentName).composedRules\n\tname := jsTrim(toolName)",
+  "replace": "func (m *PermissionManager) GetToolPermission(toolName string, agentName *string) string {\n\tcomposed := m.resolvePermissions(agentName).composedRules\n\tname := toolName"
+ },
+ {
+  "name": "pm-toolperm-mcp-tool",
+  "file": "permissionmanager.go",
+  "find": "if ClassifyToolKind(name) == ToolKindMcpTool {\n\t\treturn m.resolvePiMcpTool(name, composed)\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "pm-toolperm-catchall",
+  "file": "permissionmanager.go",
+  "find": "return Evaluate(name, \"*\", composed, m.flavor, \"\").Action",
+  "replace": "return Evaluate(name, \"\", composed, m.flavor, \"\").Action"
+ },
+ {
+  "name": "pm-denied-trim",
+  "file": "permissionmanager.go",
+  "find": "func (m *PermissionManager) IsToolFullyDenied(toolName string, agentName *string) bool {\n\tcomposed := m.resolvePermissions(agentName).composedRules\n\tname := jsTrim(toolName)",
+  "replace": "func (m *PermissionManager) IsToolFullyDenied(toolName string, agentName *string) bool {\n\tcomposed := m.resolvePermissions(agentName).composedRules\n\tname := toolName"
+ },
+ {
+  "name": "pm-denied-mcp-tool",
+  "file": "permissionmanager.go",
+  "find": "return m.resolvePiMcpTool(name, composed) == \"deny\"",
+  "replace": "return m.resolvePiMcpTool(name, composed) != \"allow\""
+ },
+ {
+  "name": "pm-denied-surface",
+  "file": "permissionmanager.go",
+  "find": "return IsSurfaceFullyDenied(name, composed, m.flavor)",
+  "replace": "return Evaluate(name, \"*\", composed, m.flavor, \"\").Action == \"deny\""
+ },
+ {
+  "name": "pm-pi-mcp-values",
+  "file": "permissionmanager.go",
+  "find": "return EvaluateAnyValue(n.Surface, n.Values, composed, m.flavor).Rule.Action",
+  "replace": "return Evaluate(n.Surface, n.Values[0], composed, m.flavor, \"\").Action"
+ },
+ {
+  "name": "pm-check-agent",
+  "file": "permissionmanager.go",
+  "find": "m.resolvePermissions(intentAgentName(intent)).composedRules",
+  "replace": "m.resolvePermissions(nil).composedRules"
+ },
+ {
+  "name": "pm-check-session-appended",
+  "file": "permissionmanager.go",
+  "find": "if len(sessionRules) > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pm-check-session-order",
+  "file": "permissionmanager.go",
+  "find": "fullRules = append(append(fullRules, composed...), sessionRules...)",
+  "replace": "fullRules = append(append(fullRules, sessionRules...), composed...)"
+ },
+ {
+  "name": "pm-check-session-threshold",
+  "file": "permissionmanager.go",
+  "find": "if len(sessionRules) > 0 {",
+  "replace": "if len(sessionRules) > 1 {"
+ },
+ {
+  "name": "pm-check-yolo",
+  "file": "permissionmanager.go",
+  "find": "\tif m.yolo() {\n",
+  "replace": "\tif false {\n"
+ },
+ {
+  "name": "pm-yolo-nil",
+  "file": "permissionmanager.go",
+  "find": "return m.isYoloEnabled != nil && m.isYoloEnabled()",
+  "replace": "return m.isYoloEnabled == nil || m.isYoloEnabled()"
+ },
+ {
+  "name": "pm-yolo-always",
+  "file": "permissionmanager.go",
+  "find": "return m.isYoloEnabled != nil && m.isYoloEnabled()",
+  "replace": "return true"
+ },
+ {
+  "name": "pm-check-tool-trim",
+  "file": "permissionmanager.go",
+  "find": "toolName := jsTrim(it.Surface)",
+  "replace": "toolName := it.Surface"
+ },
+ {
+  "name": "pm-check-tool-reported-name",
+  "file": "permissionmanager.go",
+  "find": "n.ResultExtras, toolName, it.Surface, fullRules, m.flavor)",
+  "replace": "n.ResultExtras, toolName, toolName, fullRules, m.flavor)"
+ },
+ {
+  "name": "pm-check-tool-mcp-servers",
+  "file": "permissionmanager.go",
+  "find": "n := NormalizeInput(toolName, it.Input, m.currentLoader().GetConfiguredMcpServerNames())",
+  "replace": "n := NormalizeInput(toolName, it.Input, nil)"
+ },
+ {
+  "name": "pm-check-path-values-empty",
+  "file": "permissionmanager.go",
+  "find": "if len(lookup) == 0 {\n\t\t\tlookup = []string{\"*\"}\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "pm-check-bash-spellings",
+  "file": "permissionmanager.go",
+  "find": "n := NormalizeBashCommand(it.Command, it.Spellings)",
+  "replace": "n := NormalizeBashCommand(it.Command, nil)"
+ },
+ {
+  "name": "pm-result-reason",
+  "file": "permissionmanager.go",
+  "find": "\t\tReason:   rule.Reason,\n",
+  "replace": ""
+ },
+ {
+  "name": "pm-result-origin",
+  "file": "permissionmanager.go",
+  "find": "\t\tOrigin:   rule.Origin,\n",
+  "replace": ""
+ },
+ {
+  "name": "pm-result-pattern-config",
+  "file": "permissionmanager.go",
+  "find": "if rule.Layer == \"config\" || rule.Layer == \"session\" {",
+  "replace": "if rule.Layer == \"session\" {"
+ },
+ {
+  "name": "pm-result-pattern-session",
+  "file": "permissionmanager.go",
+  "find": "if rule.Layer == \"config\" || rule.Layer == \"session\" {",
+  "replace": "if rule.Layer == \"config\" {"
+ },
+ {
+  "name": "pm-result-pattern-always",
+  "file": "permissionmanager.go",
+  "find": "if rule.Layer == \"config\" || rule.Layer == \"session\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "pm-result-command",
+  "file": "permissionmanager.go",
+  "find": "if c, ok := resultExtras.vals[\"command\"].(string); ok {",
+  "replace": "if c, ok := resultExtras.vals[\"command\"].(string); ok && false {"
+ },
+ {
+  "name": "pm-result-target",
+  "file": "permissionmanager.go",
+  "find": "if t, ok := resultExtras.vals[\"target\"].(string); ok {",
+  "replace": "if t, ok := resultExtras.vals[\"target\"].(string); ok && false {"
+ },
+ {
+  "name": "pm-result-mcp-target",
+  "file": "permissionmanager.go",
+  "find": "if ClassifyToolKind(surface) == ToolKindMcp {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pm-result-mcp-target-all",
+  "file": "permissionmanager.go",
+  "find": "if ClassifyToolKind(surface) == ToolKindMcp {",
+  "replace": "if true {"
+ },
+ {
+  "name": "pm-source-session",
+  "file": "permissionmanager.go",
+  "find": "if rule.Layer == \"session\" {\n\t\treturn \"session\"",
+  "replace": "if false {\n\t\treturn \"session\""
+ },
+ {
+  "name": "pm-source-special-ext",
+  "file": "permissionmanager.go",
+  "find": "family == \"external_directory\" || family == \"path\"",
+  "replace": "family == \"external_directory\""
+ },
+ {
+  "name": "pm-source-special-path",
+  "file": "permissionmanager.go",
+  "find": "family == \"external_directory\" || family == \"path\"",
+  "replace": "family == \"path\""
+ },
+ {
+  "name": "pm-source-mcp-default",
+  "file": "permissionmanager.go",
+  "find": "case ToolKindMcp, ToolKindMcpTool:\n\t\tif rule.Layer == \"default\" {",
+  "replace": "case ToolKindMcp, ToolKindMcpTool:\n\t\tif false {"
+ },
+ {
+  "name": "pm-source-mcp-tool-kind",
+  "file": "permissionmanager.go",
+  "find": "case ToolKindMcp, ToolKindMcpTool:",
+  "replace": "case ToolKindMcp:"
+ },
+ {
+  "name": "pm-source-skill",
+  "file": "permissionmanager.go",
+  "find": "case ToolKindSkill:\n\t\treturn \"skill\"",
+  "replace": "case ToolKindSkill:\n\t\treturn \"tool\""
+ },
+ {
+  "name": "pm-source-bash",
+  "file": "permissionmanager.go",
+  "find": "case ToolKindBash:\n\t\treturn \"bash\"",
+  "replace": "case ToolKindBash:\n\t\treturn \"tool\""
+ },
+ {
+  "name": "pm-source-path",
+  "file": "permissionmanager.go",
+  "find": "case ToolKindPath:\n\t\treturn \"tool\"",
+  "replace": "case ToolKindPath:\n\t\treturn \"default\""
+ },
+ {
+  "name": "pm-source-extension-default",
+  "file": "permissionmanager.go",
+  "find": "// Extension tools distinguish a synthesized-default match from a rule.\n\tif rule.Layer == \"default\" {",
+  "replace": "// Extension tools distinguish a synthesized-default match from a rule.\n\tif false {"
+ },
+ {
+  "name": "pm-source-extension-tool",
+  "file": "permissionmanager.go",
+  "find": "\t\treturn \"default\"\n\t}\n\treturn \"tool\"\n}",
+  "replace": "\t\treturn \"default\"\n\t}\n\treturn \"mcp\"\n}"
+ },
+ {
+  "name": "rs-fold-skipped",
+  "file": "permissionresolver.go",
+  "find": "if !ok {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)",
+  "replace": "if true {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)"
+ },
+ {
+  "name": "rs-fold-first-only",
+  "file": "permissionresolver.go",
+  "find": "results := make([]PermissionCheckResult, len(members))\n\tfor i, surface := range members {",
+  "replace": "results := make([]PermissionCheckResult, len(members))\n\tfor i, surface := range members[:1] {"
+ },
+ {
+  "name": "rs-fold-surface",
+  "file": "permissionresolver.go",
+  "find": "results[i] = r.permissionManager.Check(intentWithSurface(resolved, surface), sessionRuleset)",
+  "replace": "results[i] = r.permissionManager.Check(resolved, sessionRuleset)"
+ },
+ {
+  "name": "rs-fold-restrictive-state",
+  "file": "permissionresolver.go",
+  "find": "func(c PermissionCheckResult) string { return c.State })",
+  "replace": "func(c PermissionCheckResult) string { return \"ask\" })"
+ },
+ {
+  "name": "rs-session-rules",
+  "file": "permissionresolver.go",
+  "find": "sessionRuleset := r.sessionRules.GetRuleset()",
+  "replace": "var sessionRuleset Ruleset"
+ },
+ {
+  "name": "rs-unwrap-values",
+  "file": "permissionresolver.go",
+  "find": "Values: it.Path.MatchValues()",
+  "replace": "Values: []string{it.Path.Value()}"
+ },
+ {
+  "name": "rs-unwrap-agent",
+  "file": "permissionresolver.go",
+  "find": "AgentName: it.AgentName}\n\tcase ToolAccessIntent:",
+  "replace": "AgentName: nil}\n\tcase ToolAccessIntent:"
+ },
+ {
+  "name": "rs-unwrap-surface",
+  "file": "permissionresolver.go",
+  "find": "PathValuesAccessIntent{Surface: it.Surface, Values: it.Path.MatchValues()",
+  "replace": "PathValuesAccessIntent{Surface: \"path_read\", Values: it.Path.MatchValues()"
+ },
+ {
+  "name": "rs-with-surface-tool",
+  "file": "permissionresolver.go",
+  "find": "case ToolAccessIntent:\n\t\tit.Surface = surface\n\t\treturn it",
+  "replace": "case ToolAccessIntent:\n\t\treturn it"
+ },
+ {
+  "name": "rs-with-surface-values",
+  "file": "permissionresolver.go",
+  "find": "case PathValuesAccessIntent:\n\t\tit.Surface = surface\n\t\treturn it",
+  "replace": "case PathValuesAccessIntent:\n\t\treturn it"
+ },
+ {
+  "name": "rs-with-surface-bash",
+  "file": "permissionresolver.go",
+  "find": "case BashCommandAccessIntent:\n\t\tit.Surface = surface\n\t\treturn it",
+  "replace": "case BashCommandAccessIntent:\n\t\treturn it"
+ },
+ {
+  "name": "rs-check-permission-agent",
+  "file": "permissionresolver.go",
+  "find": "Input: input, AgentName: agentName}, sessionRules)",
+  "replace": "Input: input}, sessionRules)"
+ },
+ {
+  "name": "rs-check-permission-session",
+  "file": "permissionresolver.go",
+  "find": "Input: input, AgentName: agentName}, sessionRules)",
+  "replace": "Input: input, AgentName: agentName}, nil)"
+ },
+ {
+  "name": "rs-tool-permission-agent",
+  "file": "permissionresolver.go",
+  "find": "return r.permissionManager.GetToolPermission(toolName, agentName)",
+  "replace": "return r.permissionManager.GetToolPermission(toolName, nil)"
+ },
+ {
+  "name": "rs-denied-agent",
+  "file": "permissionresolver.go",
+  "find": "return r.permissionManager.IsToolFullyDenied(toolName, agentName)",
+  "replace": "return r.permissionManager.IsToolFullyDenied(toolName, nil)"
+ },
+ {
+  "name": "rs-issues-agent",
+  "file": "permissionresolver.go",
+  "find": "return r.permissionManager.GetConfigIssues(agentName)",
+  "replace": "return r.permissionManager.GetConfigIssues(nil)"
+ },
+ {
+  "name": "rule-restrictive-tie",
+  "file": "rule.go",
+  "find": "if restrictiveness[state(r)] > restrictiveness[state(worst)] {",
+  "replace": "if restrictiveness[state(r)] >= restrictiveness[state(worst)] {"
+ },
+ {
+  "name": "rule-restrictive-order",
+  "file": "rule.go",
+  "find": "var restrictiveness = map[string]int{\"allow\": 0, \"ask\": 1, \"deny\": 2}",
+  "replace": "var restrictiveness = map[string]int{\"allow\": 0, \"ask\": 2, \"deny\": 1}"
+ },
+ {
+  "name": "gate-deny",
+  "file": "permissiongate.go",
+  "find": "if p.State == \"deny\" {",
+  "replace": "if p.State == \"denied\" {"
+ },
+ {
+  "name": "gate-deny-log-event",
+  "file": "permissiongate.go",
+  "find": "p.WriteLog(\"permission_request.blocked\", extra)",
+  "replace": "p.WriteLog(\"permission_request.denied\", extra)"
+ },
+ {
+  "name": "gate-deny-log-resolution",
+  "file": "permissiongate.go",
+  "find": "extra.set(\"resolution\", \"policy_denied\")",
+  "replace": "extra.set(\"resolution\", \"policy_deny\")"
+ },
+ {
+  "name": "gate-deny-log-decider",
+  "file": "permissiongate.go",
+  "find": "extra.set(\"decidedBy\", p.DecidedByRule.JS())",
+  "replace": "extra.set(\"decidedBy\", \"rule\")"
+ },
+ {
+  "name": "gate-deny-log-context",
+  "file": "permissiongate.go",
+  "find": "extra = p.LogContext.clone()",
+  "replace": "extra = newObject()"
+ },
+ {
+  "name": "gate-deny-reason",
+  "file": "permissiongate.go",
+  "find": "return PermissionGateResult{Action: \"block\", DecidedBy: p.DecidedByRule, Reason: p.Messages.DenyReason}, nil\n\t}\n\n\tif p.State == \"ask\"",
+  "replace": "return PermissionGateResult{Action: \"block\", DecidedBy: p.DecidedByRule, Reason: \"\"}, nil\n\t}\n\n\tif p.State == \"ask\""
+ },
+ {
+  "name": "gate-deny-decider",
+  "file": "permissiongate.go",
+  "find": "return PermissionGateResult{Action: \"block\", DecidedBy: p.DecidedByRule, Reason: p.Messages.DenyReason}, nil\n\t}\n\n\tif p.State == \"ask\"",
+  "replace": "return PermissionGateResult{Action: \"block\", DecidedBy: DecisionSource{}, Reason: p.Messages.DenyReason}, nil\n\t}\n\n\tif p.State == \"ask\""
+ },
+ {
+  "name": "gate-ask",
+  "file": "permissiongate.go",
+  "find": "if p.State == \"ask\" {",
+  "replace": "if p.State == \"asks\" {"
+ },
+ {
+  "name": "gate-ask-error",
+  "file": "permissiongate.go",
+  "find": "if err != nil {\n\t\t\treturn PermissionGateResult{}, err\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "gate-refused-decider",
+  "file": "permissiongate.go",
+  "find": "return PermissionGateResult{Action: \"block\", DecidedBy: decidedBy, Reason: p.Messages.RefusedReason(decision)}, nil",
+  "replace": "return PermissionGateResult{Action: \"block\", DecidedBy: p.DecidedByRule, Reason: p.Messages.RefusedReason(decision)}, nil"
+ },
+ {
+  "name": "gate-refused-reason",
+  "file": "permissiongate.go",
+  "find": "Reason: p.Messages.RefusedReason(decision)}, nil",
+  "replace": "Reason: p.Messages.DenyReason}, nil"
+ },
+ {
+  "name": "gate-approved-check",
+  "file": "permissiongate.go",
+  "find": "if !decision.Approved {",
+  "replace": "if decision.Approved {"
+ },
+ {
+  "name": "gate-session-state",
+  "file": "permissiongate.go",
+  "find": "decision.State == DecisionApprovedForSession && p.CanGrantForSession",
+  "replace": "decision.State == DecisionApprovedForSession || p.CanGrantForSession"
+ },
+ {
+  "name": "gate-session-needs-suggestion",
+  "file": "permissiongate.go",
+  "find": "decision.State == DecisionApprovedForSession && p.CanGrantForSession",
+  "replace": "decision.State == DecisionApprovedForSession"
+ },
+ {
+  "name": "gate-session-state-only",
+  "file": "permissiongate.go",
+  "find": "decision.State == DecisionApprovedForSession && p.CanGrantForSession",
+  "replace": "p.CanGrantForSession"
+ },
+ {
+  "name": "gate-session-width-default",
+  "file": "permissiongate.go",
+  "find": "width = \"proven\"",
+  "replace": "width = \"family\""
+ },
+ {
+  "name": "gate-session-width",
+  "file": "permissiongate.go",
+  "find": "width := decision.SessionGrantWidth",
+  "replace": "width := SessionGrantWidth(\"\")"
+ },
+ {
+  "name": "gate-ask-decider",
+  "file": "permissiongate.go",
+  "find": "return PermissionGateResult{Action: \"allow\", DecidedBy: decidedBy}, nil\n\t}\n\n\tif p.State != \"allow\"",
+  "replace": "return PermissionGateResult{Action: \"allow\", DecidedBy: p.DecidedByRule}, nil\n\t}\n\n\tif p.State != \"allow\""
+ },
+ {
+  "name": "gate-fail-closed",
+  "file": "permissiongate.go",
+  "find": "if p.State != \"allow\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gate-allow-decider",
+  "file": "permissiongate.go",
+  "find": "return PermissionGateResult{Action: \"allow\", DecidedBy: p.DecidedByRule}, nil\n}",
+  "replace": "return PermissionGateResult{Action: \"allow\", DecidedBy: DecisionSource{}}, nil\n}"
+ },
+ {
+  "name": "sr-expand",
+  "file": "sessionrules.go",
+  "find": "if members, ok := SurfaceFamilyMembers(surface); ok {",
+  "replace": "if members, ok := SurfaceFamilyMembers(surface); ok && false {"
+ },
+ {
+  "name": "sr-expand-one",
+  "file": "sessionrules.go",
+  "find": "targets = members[:]",
+  "replace": "targets = members[:1]"
+ },
+ {
+  "name": "sr-action",
+  "file": "sessionrules.go",
+  "find": "Action: \"allow\", Layer: \"session\", Origin: \"session\"",
+  "replace": "Action: \"ask\", Layer: \"session\", Origin: \"session\""
+ },
+ {
+  "name": "sr-layer",
+  "file": "sessionrules.go",
+  "find": "Action: \"allow\", Layer: \"session\", Origin: \"session\"",
+  "replace": "Action: \"allow\", Layer: \"config\", Origin: \"session\""
+ },
+ {
+  "name": "sr-origin",
+  "file": "sessionrules.go",
+  "find": "Action: \"allow\", Layer: \"session\", Origin: \"session\"",
+  "replace": "Action: \"allow\", Layer: \"session\", Origin: \"global\""
+ },
+ {
+  "name": "sr-pattern",
+  "file": "sessionrules.go",
+  "find": "Surface: target, Pattern: pattern,",
+  "replace": "Surface: target, Pattern: surface,"
+ },
+ {
+  "name": "sr-ruleset-copy",
+  "file": "sessionrules.go",
+  "find": "return append(Ruleset{}, s.rules...)",
+  "replace": "return s.rules"
+ },
+ {
+  "name": "sr-ruleset-nil",
+  "file": "sessionrules.go",
+  "find": "return append(Ruleset{}, s.rules...)",
+  "replace": "return append(Ruleset(nil), s.rules...)"
+ },
+ {
+  "name": "sr-record",
+  "file": "sessionrules.go",
+  "find": "for _, g := range approval.Grants {\n\t\ts.Approve(g.Surface, g.Pattern)",
+  "replace": "for _, g := range approval.Grants[:min(1, len(approval.Grants))] {\n\t\ts.Approve(g.Surface, g.Pattern)"
+ },
+ {
+  "name": "sr-record-surface",
+  "file": "sessionrules.go",
+  "find": "s.Approve(g.Surface, g.Pattern)",
+  "replace": "s.Approve(SurfaceFamilyOf(g.Surface), g.Pattern)"
+ },
+ {
+  "name": "sr-clear",
+  "file": "sessionrules.go",
+  "find": "func (s *SessionRules) Clear() { s.rules = nil }",
+  "replace": "func (s *SessionRules) Clear() {}"
+ },
+ {
+  "name": "ag-width-proven",
+  "file": "sessionapprovalgrant.go",
+  "find": "v == \"proven\" || v == \"family\"",
+  "replace": "v == \"family\""
+ },
+ {
+  "name": "ag-width-family",
+  "file": "sessionapprovalgrant.go",
+  "find": "v == \"proven\" || v == \"family\"",
+  "replace": "v == \"proven\""
+ },
+ {
+  "name": "ag-width-any",
+  "file": "sessionapprovalgrant.go",
+  "find": "v == \"proven\" || v == \"family\"",
+  "replace": "v == \"proven\" || v == \"family\" || v == \"wide\""
+ },
+ {
+  "name": "ag-widen",
+  "file": "sessionapprovalgrant.go",
+  "find": "family := SurfaceFamilyOf(g.Surface); family != g.Surface {",
+  "replace": "family := SurfaceFamilyOf(g.Surface); family == g.Surface {"
+ },
+ {
+  "name": "ag-widen-pattern",
+  "file": "sessionapprovalgrant.go",
+  "find": "return ApprovalGrant{Surface: family, Pattern: g.Pattern}",
+  "replace": "return ApprovalGrant{Surface: family, Pattern: family}"
+ },
+ {
+  "name": "ag-direction-empty",
+  "file": "sessionapprovalgrant.go",
+  "find": "if len(grants) == 0 {\n\t\treturn \"\", false",
+  "replace": "if len(grants) < 0 {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "ag-direction-first",
+  "file": "sessionapprovalgrant.go",
+  "find": "direction, ok := CapabilityDirectionOf(grants[0].Surface)\n\tif !ok {",
+  "replace": "direction, ok := CapabilityDirectionOf(grants[0].Surface)\n\tif false {"
+ },
+ {
+  "name": "ag-direction-agree",
+  "file": "sessionapprovalgrant.go",
+  "find": "if d, ok := CapabilityDirectionOf(g.Surface); !ok || d != direction {",
+  "replace": "if d, ok := CapabilityDirectionOf(g.Surface); !ok {"
+ },
+ {
+  "name": "ag-direction-nondirectional",
+  "file": "sessionapprovalgrant.go",
+  "find": "if d, ok := CapabilityDirectionOf(g.Surface); !ok || d != direction {",
+  "replace": "if d, ok := CapabilityDirectionOf(g.Surface); ok && d != direction {"
+ },
+ {
+  "name": "ag-targets-dedupe",
+  "file": "sessionapprovalgrant.go",
+  "find": "if hasContentsSibling(g, grants) || seen[g.Pattern] {",
+  "replace": "if hasContentsSibling(g, grants) {"
+ },
+ {
+  "name": "ag-targets-sibling",
+  "file": "sessionapprovalgrant.go",
+  "find": "if hasContentsSibling(g, grants) || seen[g.Pattern] {",
+  "replace": "if seen[g.Pattern] {"
+ },
+ {
+  "name": "ag-targets-nonnil",
+  "file": "sessionapprovalgrant.go",
+  "find": "targets := []string{}",
+  "replace": "var targets []string"
+ },
+ {
+  "name": "ag-sibling-surface",
+  "file": "sessionapprovalgrant.go",
+  "find": "if other.Surface != g.Surface {\n\t\t\tcontinue",
+  "replace": "if false {\n\t\t\tcontinue"
+ },
+ {
+  "name": "ag-sibling-slash",
+  "file": "sessionapprovalgrant.go",
+  "find": "var contentsSuffixes = []string{\"/*\", \"\\\\*\"}",
+  "replace": "var contentsSuffixes = []string{\"\\\\*\"}"
+ },
+ {
+  "name": "ag-sibling-backslash",
+  "file": "sessionapprovalgrant.go",
+  "find": "var contentsSuffixes = []string{\"/*\", \"\\\\*\"}",
+  "replace": "var contentsSuffixes = []string{\"/*\"}"
+ },
+ {
+  "name": "ag-sibling-suffix",
+  "file": "sessionapprovalgrant.go",
+  "find": "other.Pattern == g.Pattern+suffix",
+  "replace": "strings.HasPrefix(other.Pattern, g.Pattern)"
+ },
+ {
+  "name": "sa-single",
+  "file": "sessionapproval.go",
+  "find": "Grants: []ApprovalGrant{{Surface: surface, Pattern: pattern}}",
+  "replace": "Grants: []ApprovalGrant{{Surface: pattern, Pattern: surface}}"
+ },
+ {
+  "name": "sa-patterns",
+  "file": "sessionapproval.go",
+  "find": "grants[i] = ApprovalGrant{Surface: surface, Pattern: p}",
+  "replace": "grants[i] = ApprovalGrant{Surface: surface, Pattern: patterns[0]}"
+ },
+ {
+  "name": "sa-copy",
+  "file": "sessionapproval.go",
+  "find": "return &SessionApproval{Grants: append([]ApprovalGrant{}, grants...)}",
+  "replace": "return &SessionApproval{Grants: grants}"
+ },
+ {
+  "name": "sa-recordable",
+  "file": "sessionapproval.go",
+  "find": "return len(a.Grants) > 0",
+  "replace": "return len(a.Grants) >= 0"
+ },
+ {
+  "name": "sa-width-proven",
+  "file": "sessionapproval.go",
+  "find": "if w == \"proven\" {\n\t\treturn a",
+  "replace": "if w != \"proven\" {\n\t\treturn a"
+ },
+ {
+  "name": "sa-width-widen",
+  "file": "sessionapproval.go",
+  "find": "out[i] = WidenGrant(g)",
+  "replace": "out[i] = g"
+ },
+ {
+  "name": "sa-forwarded-copy",
+  "file": "sessionapproval.go",
+  "find": "return ForwardedSessionApproval{Grants: append([]ApprovalGrant{}, a.Grants...)}",
+  "replace": "return ForwardedSessionApproval{Grants: a.Grants}"
+ },
+ {
+  "name": "aa-regex-fold",
+  "file": "sessionactiveagent.go",
+  "find": "`(?i)<active_agent",
+  "replace": "`<active_agent"
+ },
+ {
+  "name": "aa-regex-space",
+  "file": "sessionactiveagent.go",
+  "find": "\\x{feff}]+name=",
+  "replace": "\\x{feff}]*name="
+ },
+ {
+  "name": "aa-regex-unicode-space",
+  "file": "sessionactiveagent.go",
+  "find": "\\x{00a0}\\x{1680}\\x{2000}-\\x{200a}\\x{2028}\\x{2029}\\x{202f}\\x{205f}\\x{3000}\\x{feff}]+name=",
+  "replace": "]+name="
+ },
+ {
+  "name": "aa-regex-name",
+  "file": "sessionactiveagent.go",
+  "find": "[\"']([^\"']+)[\"']",
+  "replace": "[\"']([^\"']*)[\"']"
+ },
+ {
+  "name": "aa-regex-tail",
+  "file": "sessionactiveagent.go",
+  "find": "[^>]*>`)",
+  "replace": "[^>]*`)"
+ },
+ {
+  "name": "aa-normalize-trim",
+  "file": "sessionactiveagent.go",
+  "find": "trimmed := jsTrim(s)",
+  "replace": "trimmed := s"
+ },
+ {
+  "name": "aa-normalize-empty",
+  "file": "sessionactiveagent.go",
+  "find": "if trimmed == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "aa-entry-type",
+  "file": "sessionactiveagent.go",
+  "find": "if t, _ := entry[\"type\"].(string); t != \"custom\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "aa-entry-custom-type",
+  "file": "sessionactiveagent.go",
+  "find": "if ct, _ := entry[\"customType\"].(string); ct != \"active_agent\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "aa-order",
+  "file": "sessionactiveagent.go",
+  "find": "for i := len(entries) - 1; i >= 0; i-- {\n\t\tentry := entries[i]",
+  "replace": "for i := 0; i < len(entries); i++ {\n\t\tentry := entries[i]"
+ },
+ {
+  "name": "aa-null-reset",
+  "file": "sessionactiveagent.go",
+  "find": "if present && name == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "aa-null-absent",
+  "file": "sessionactiveagent.go",
+  "find": "if present && name == nil {",
+  "replace": "if name == nil {"
+ },
+ {
+  "name": "aa-error",
+  "file": "sessionactiveagent.go",
+  "find": "if err != nil {\n\t\treturn nil, err\n\t}\n\tfor i := len(entries)",
+  "replace": "if err != nil {\n\t\treturn nil, nil\n\t}\n\tfor i := len(entries)"
+ },
+ {
+  "name": "aa-prompt-empty",
+  "file": "sessionactiveagent.go",
+  "find": "if systemPrompt == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "aa-prompt-group",
+  "file": "sessionactiveagent.go",
+  "find": "if m == nil || m[1] == \"\" {",
+  "replace": "if m == nil {"
+ },
+ {
+  "name": "aa-prompt-normalize",
+  "file": "sessionactiveagent.go",
+  "find": "if n, ok := NormalizeAgentName(m[1]); ok {",
+  "replace": "if n, ok := m[1], true; ok {"
+ },
+ {
+  "name": "aa-field-object",
+  "file": "sessionactiveagent.go",
+  "find": "case *jsObject:\n\t\tif o == nil {",
+  "replace": "case *jsObject:\n\t\tif true {"
+ },
+ {
+  "name": "sp-activate-normalizer",
+  "file": "sessionpermission.go",
+  "find": "s.pathNormalizer = NewPathNormalizer(s.flavor, ctx.Cwd)",
+  "replace": ""
+ },
+ {
+  "name": "sp-activate-context",
+  "file": "sessionpermission.go",
+  "find": "s.context = &ctx",
+  "replace": ""
+ },
+ {
+  "name": "sp-activate-forwarding",
+  "file": "sessionpermission.go",
+  "find": "s.forwarding.Start(ctx.ForwarderContext)",
+  "replace": ""
+ },
+ {
+  "name": "sp-activate-selection",
+  "file": "sessionpermission.go",
+  "find": "s.authorizerSelection.Activate(ctx)",
+  "replace": ""
+ },
+ {
+  "name": "sp-deactivate-context",
+  "file": "sessionpermission.go",
+  "find": "s.context = nil\n\ts.mu.Unlock()\n\ts.forwarding.Stop()",
+  "replace": "s.mu.Unlock()\n\ts.forwarding.Stop()"
+ },
+ {
+  "name": "sp-deactivate-forwarding",
+  "file": "sessionpermission.go",
+  "find": "s.forwarding.Stop()",
+  "replace": ""
+ },
+ {
+  "name": "sp-deactivate-selection",
+  "file": "sessionpermission.go",
+  "find": "s.authorizerSelection.Deactivate()",
+  "replace": ""
+ },
+ {
+  "name": "sp-notify-level",
+  "file": "sessionpermission.go",
+  "find": "ctx.Notifier.Notify(message, \"warning\")",
+  "replace": "ctx.Notifier.Notify(message, \"error\")"
+ },
+ {
+  "name": "sp-notify-context",
+  "file": "sessionpermission.go",
+  "find": "if ctx := s.GetRuntimeContext(); ctx != nil && ctx.Notifier != nil {",
+  "replace": "if ctx := s.GetRuntimeContext(); ctx != nil && ctx.Notifier != nil && false {"
+ },
+ {
+  "name": "sp-reset-trusted",
+  "file": "sessionpermission.go",
+  "find": "cwd := \"\"\n\tif projectTrusted {\n\t\tcwd = ctx.Cwd\n\t}\n\ts.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n\ts.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()",
+  "replace": "cwd := ctx.Cwd\n\ts.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n\ts.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()"
+ },
+ {
+  "name": "sp-reset-untrusted-always",
+  "file": "sessionpermission.go",
+  "find": "cwd := \"\"\n\tif projectTrusted {\n\t\tcwd = ctx.Cwd\n\t}\n\ts.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n\ts.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()",
+  "replace": "cwd := \"\"\n\ts.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n\ts.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()"
+ },
+ {
+  "name": "sp-reset-skills",
+  "file": "sessionpermission.go",
+  "find": "func (s *PermissionSession) ResetForNewSession(ctx SessionContext, projectTrusted bool) {\n\tcwd := \"\"\n\tif projectTrusted {\n\t\tcwd = ctx.Cwd\n\t}\n\ts.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n\ts.skillEntries = nil\n",
+  "replace": "func (s *PermissionSession) ResetForNewSession(ctx SessionContext, projectTrusted bool) {\n\tcwd := \"\"\n\tif projectTrusted {\n\t\tcwd = ctx.Cwd\n\t}\n\ts.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n"
+ },
+ {
+  "name": "sp-reset-baseline",
+  "file": "sessionpermission.go",
+  "find": "s.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n\ts.Activate(ctx)",
+  "replace": "s.skillEntries = nil\n\ts.mu.Unlock()\n\ts.Activate(ctx)"
+ },
+ {
+  "name": "sp-reset-activate",
+  "file": "sessionpermission.go",
+  "find": "s.mu.Unlock()\n\ts.Activate(ctx)",
+  "replace": "s.mu.Unlock()"
+ },
+ {
+  "name": "sp-shutdown-rules",
+  "file": "sessionpermission.go",
+  "find": "s.sessionRules.Clear()",
+  "replace": ""
+ },
+ {
+  "name": "sp-shutdown-skills",
+  "file": "sessionpermission.go",
+  "find": "s.sessionRules.Clear()\n\ts.mu.Lock()\n\ts.skillEntries = nil",
+  "replace": "s.sessionRules.Clear()\n\ts.mu.Lock()"
+ },
+ {
+  "name": "sp-shutdown-baseline",
+  "file": "sessionpermission.go",
+  "find": "s.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n\ts.Deactivate()",
+  "replace": "s.skillEntries = nil\n\ts.mu.Unlock()\n\ts.Deactivate()"
+ },
+ {
+  "name": "sp-shutdown-deactivate",
+  "file": "sessionpermission.go",
+  "find": "s.mu.Unlock()\n\ts.Deactivate()",
+  "replace": "s.mu.Unlock()"
+ },
+ {
+  "name": "sp-reload-trusted",
+  "file": "sessionpermission.go",
+  "find": "cwd := \"\"\n\tif projectTrusted {\n\t\tif ctx := s.GetRuntimeContext(); ctx != nil {",
+  "replace": "cwd := \"\"\n\tif true {\n\t\tif ctx := s.GetRuntimeContext(); ctx != nil {"
+ },
+ {
+  "name": "sp-reload-skills",
+  "file": "sessionpermission.go",
+  "find": "s.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n\ts.skillEntries = nil\n\ts.mu.Unlock()\n}\n\n// ResolveExposedTools",
+  "replace": "s.permissionManager.ConfigureForCwd(cwd)\n}\n\n// ResolveExposedTools"
+ },
+ {
+  "name": "sp-reload-baseline",
+  "file": "sessionpermission.go",
+  "find": "s.skillEntries = nil\n\ts.mu.Unlock()\n}\n\n// ResolveExposedTools",
+  "replace": "s.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n}\n\n// ResolveExposedTools"
+ },
+ {
+  "name": "sp-reload-configure",
+  "file": "sessionpermission.go",
+  "find": "func (s *PermissionSession) Reload(projectTrusted bool) {\n\tcwd := \"\"",
+  "replace": "func (s *PermissionSession) Reload(projectTrusted bool) {\n\tdefer func() {}()\n\tcwd := \"\""
+ },
+ {
+  "name": "sp-resolve-exposed",
+  "file": "sessionpermission.go",
+  "find": "return s.toolSurfaceBaseline.resolveExposed(observation.Active, observation.Registered, isExposed)",
+  "replace": "return surfaceResolution{exposed: observation.Active}"
+ },
+ {
+  "name": "sp-skills-set",
+  "file": "sessionpermission.go",
+  "find": "s.skillEntries = entries\n\ts.mu.Unlock()",
+  "replace": "s.mu.Unlock()"
+ },
+ {
+  "name": "sp-agent-order",
+  "file": "sessionpermission.go",
+  "find": "if fromSession != nil {\n\t\ts.knownAgentName = fromSession\n\t\treturn fromSession, nil\n\t}",
+  "replace": "if fromSession != nil && s.knownAgentName == nil {\n\t\ts.knownAgentName = fromSession\n\t\treturn fromSession, nil\n\t}"
+ },
+ {
+  "name": "sp-agent-error",
+  "file": "sessionpermission.go",
+  "find": "if err != nil {\n\t\treturn nil, err\n\t}\n\ts.mu.Lock()",
+  "replace": "if err != nil {\n\t\treturn nil, nil\n\t}\n\ts.mu.Lock()"
+ },
+ {
+  "name": "sp-agent-known-session",
+  "file": "sessionpermission.go",
+  "find": "s.knownAgentName = fromSession\n",
+  "replace": ""
+ },
+ {
+  "name": "sp-agent-known-prompt",
+  "file": "sessionpermission.go",
+  "find": "s.knownAgentName = fromPrompt\n",
+  "replace": ""
+ },
+ {
+  "name": "sp-agent-prompt",
+  "file": "sessionpermission.go",
+  "find": "if fromPrompt := s.promptAgentNameLookup(systemPrompt); fromPrompt != nil {",
+  "replace": "if fromPrompt := s.promptAgentNameLookup(systemPrompt); fromPrompt != nil && false {"
+ },
+ {
+  "name": "sp-agent-fallback",
+  "file": "sessionpermission.go",
+  "find": "return s.knownAgentName, nil\n}",
+  "replace": "return nil, nil\n}"
+ },
+ {
+  "name": "sp-refresh-cwd",
+  "file": "sessionpermission.go",
+  "find": "cwd = ctx.Cwd\n\t}\n\ts.configStore.Refresh(cwd, projectTrusted)",
+  "replace": "}\n\ts.configStore.Refresh(cwd, projectTrusted)"
+ },
+ {
+  "name": "sp-refresh-trust",
+  "file": "sessionpermission.go",
+  "find": "s.configStore.Refresh(cwd, projectTrusted)",
+  "replace": "s.configStore.Refresh(cwd, true)"
+ },
+ {
+  "name": "sp-refresh-ui",
+  "file": "sessionpermission.go",
+  "find": "if ctx != nil && ctx.HasUI && ctx.Notifier != nil {",
+  "replace": "if ctx != nil && ctx.Notifier != nil {"
+ },
+ {
+  "name": "sp-refresh-sync",
+  "file": "sessionpermission.go",
+  "find": "syncPermissionSystemStatus(ctx.Notifier, s.configStore.Current())",
+  "replace": "syncPermissionSystemStatus(ctx.Notifier, defaultExtensionConfig())"
+ },
+ {
+  "name": "sp-log-cwd",
+  "file": "sessionpermission.go",
+  "find": "if ctx := s.GetRuntimeContext(); ctx != nil {\n\t\tcwd = ctx.Cwd\n\t}\n\ts.configStore.LogResolvedPaths(cwd)",
+  "replace": "if ctx := s.GetRuntimeContext(); ctx != nil {\n\t}\n\ts.configStore.LogResolvedPaths(cwd)"
+ },
+ {
+  "name": "sp-infra-config",
+  "file": "sessionpermission.go",
+  "find": "dirs = append(dirs, s.Config().PiInfrastructureReadPaths...)",
+  "replace": ""
+ },
+ {
+  "name": "sp-infra-excluded",
+  "file": "sessionpermission.go",
+  "find": "ExcludedDirs: s.paths.PiInfrastructureExcludedDirs}",
+  "replace": "ExcludedDirs: nil}"
+ },
+ {
+  "name": "sp-infra-copy",
+  "file": "sessionpermission.go",
+  "find": "dirs := append([]string{}, s.paths.PiInfrastructureDirs...)",
+  "replace": "dirs := s.paths.PiInfrastructureDirs[:len(s.paths.PiInfrastructureDirs):len(s.paths.PiInfrastructureDirs)]"
+ },
+ {
+  "name": "sp-preview-input",
+  "file": "sessionpermission.go",
+  "find": "ToolInputPreviewMaxLength: 200,",
+  "replace": "ToolInputPreviewMaxLength: 201,"
+ },
+ {
+  "name": "sp-preview-text",
+  "file": "sessionpermission.go",
+  "find": "ToolTextSummaryMaxLength: 80}",
+  "replace": "ToolTextSummaryMaxLength: 81}"
+ },
+ {
+  "name": "sp-shell-nil",
+  "file": "sessionpermission.go",
+  "find": "if raw == nil {\n\t\treturn nil\n\t}",
+  "replace": "if raw == nil {\n\t\treturn ShellToolsConfig{}\n\t}"
+ },
+ {
+  "name": "sp-shell-command",
+  "file": "sessionpermission.go",
+  "find": "cmd, ok := entry.str(\"commandArgument\")",
+  "replace": "cmd, ok := entry.str(\"workdirArgument\")"
+ },
+ {
+  "name": "sp-shell-workdir",
+  "file": "sessionpermission.go",
+  "find": "workdir, _ := entry.str(\"workdirArgument\")",
+  "replace": "workdir := \"\""
+ },
+ {
+  "name": "sp-shell-skip",
+  "file": "sessionpermission.go",
+  "find": "if !ok {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir",
+  "replace": "if false {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir"
+ },
+ {
+  "name": "sp-entries-no-manager",
+  "file": "sessionpermission.go",
+  "find": "if c.SessionManager == nil {\n\t\treturn nil, errors.New(\"the session context has no session manager\")\n\t}",
+  "replace": "if c.SessionManager == nil {\n\t\treturn nil, nil\n\t}"
+ }
+]
