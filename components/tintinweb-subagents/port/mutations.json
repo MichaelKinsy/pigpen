@@ -759,7 +759,7 @@
   "name": "journal-read-keeps-unsorted",
   "file": "workflow_journal.go",
   "find": "sort.SliceStable(entries, func(i, j int) bool { return entries[i].Index < entries[j].Index })",
-  "replace": ""
+  "replace": "sort.SliceStable(entries, func(i, j int) bool { return false })"
  },
  {
   "name": "journal-read-keeps-blank-line",
@@ -783,7 +783,7 @@
   "name": "journal-entry-resumed-false",
   "file": "workflow_journal.go",
   "find": "if !isBool || !b {",
-  "replace": "if !isBool {"
+  "replace": "if !isBool || (b && false) {"
  },
  {
   "name": "journal-append-escapes",
@@ -879,7 +879,7 @@
   "name": "meta-template-substitution-allowed",
   "file": "workflow_meta.go",
   "find": "if sawInterpolation {",
-  "replace": "if false {"
+  "replace": "if sawInterpolation && false {"
  },
  {
   "name": "meta-escape-not-skipped",
@@ -915,7 +915,7 @@
   "name": "meta-when-to-use-any",
   "file": "workflow_meta.go",
   "find": "if !isString {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")",
-  "replace": "if false {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")"
+  "replace": "if false && !isString {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")"
  },
  {
   "name": "meta-phase-title-optional",
@@ -939,7 +939,7 @@
   "name": "meta-regex-after-value",
   "file": "workflow_meta.go",
   "find": "return !(isWord || prev == ')' || prev == ']')",
-  "replace": "return true"
+  "replace": "return !(isWord || prev == ')' || prev == ']') || true"
  },
  {
   "name": "progress-collapse-first-wins",
@@ -1011,7 +1011,7 @@
   "name": "progress-unphased-hidden",
   "file": "workflow_progress.go",
   "find": "if !anyTotal {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))",
-  "replace": "if false {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))"
+  "replace": "if false && !anyTotal {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))"
  },
  {
   "name": "progress-stats-queued-started",
@@ -1083,7 +1083,7 @@
   "name": "task-pause-keeps-clock",
   "file": "workflow_task.go",
   "find": "task.TotalPausedMs += max(0, now-pausedAt)",
-  "replace": ""
+  "replace": "task.TotalPausedMs += max(0, now-pausedAt) * 0"
  },
  {
   "name": "task-pause-twice",
@@ -1095,7 +1095,7 @@
   "name": "task-pause-does-not-tell-run",
   "file": "workflow_task.go",
   "find": "control.Pause()",
-  "replace": ""
+  "replace": "_ = control"
  },
  {
   "name": "task-complete-keeps-control",

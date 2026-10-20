@@ -158,11 +158,11 @@ m("journal-key-gate-ignored", "workflow_journal.go", "wfJSQuoteOrNull(in.Gate), 
 m("journal-key-schema-unconditional", "workflow_journal.go", "if in.Schema != nil {\n\t\tparts = append(parts, wfJSQuote(*in.Schema))\n\t}", "parts = append(parts, wfJSQuoteOrNull(in.Schema))")
 m("journal-key-short", "workflow_journal.go", "[:32]", "[:31]")
 m("journal-quote-escapes-html", "workflow_journal.go", "\tcase '\\b':\n", "\tcase '<':\n\t\t\tb.WriteString(`\\u003c`)\n\t\tcase '\\b':\n")
-m("journal-read-keeps-unsorted", "workflow_journal.go", "sort.SliceStable(entries, func(i, j int) bool { return entries[i].Index < entries[j].Index })", "")
+m("journal-read-keeps-unsorted", "workflow_journal.go", "sort.SliceStable(entries, func(i, j int) bool { return entries[i].Index < entries[j].Index })", "sort.SliceStable(entries, func(i, j int) bool { return false })")
 m("journal-read-keeps-blank-line", "workflow_journal.go", "if strings.TrimSpace(line) == \"\" {\n\t\t\tcontinue\n\t\t}", "")
 m("journal-entry-negative-index", "workflow_journal.go", "index != math.Trunc(index) || index < 0 ||", "index != math.Trunc(index) ||")
 m("journal-entry-text-any-type", "workflow_journal.go", "if !isString {\n\t\t\treturn workflowJournalEntry{}, false\n\t\t}\n\t\tentry.Text = &s", "entry.Text = &s\n\t\t_ = isString")
-m("journal-entry-resumed-false", "workflow_journal.go", "if !isBool || !b {", "if !isBool {")
+m("journal-entry-resumed-false", "workflow_journal.go", "if !isBool || !b {", "if !isBool || (b && false) {")
 m("journal-append-escapes", "workflow_journal.go", "enc.SetEscapeHTML(false)", "")
 
 # workflow_jsonschema.go: the validator behind agent({ schema })
@@ -182,17 +182,17 @@ m("schema-check-panics-escape", "workflow_jsonschema.go", "if r := recover(); r 
 
 # workflow_meta.go: the meta block
 m("meta-string-brace-counted", "workflow_meta.go", "} else if mode == double && c == '\"' {", "} else if mode == double && c == '\\'' {")
-m("meta-template-substitution-allowed", "workflow_meta.go", "if sawInterpolation {", "if false {")
+m("meta-template-substitution-allowed", "workflow_meta.go", "if sawInterpolation {", "if sawInterpolation && false {")
 m("meta-escape-not-skipped", "workflow_meta.go", "if c == '\\\\' {\n\t\t\t\ti += 2\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tif mode == single", "if mode == single")
 m("meta-line-comment-never-ends", "workflow_meta.go", "if c == '\\n' {\n\t\t\t\tmode = code\n\t\t\t}\n\t\t\ti++\n\t\t\tcontinue\n\t\tcase blockComment:", "i++\n\t\t\tcontinue\n\t\tcase blockComment:")
 m("meta-no-timeout", "workflow_meta.go", "timer := time.AfterFunc(workflowMetaEvalTimeout, func() { vm.Interrupt(\"timeout\") })", "timer := time.AfterFunc(time.Hour, func() { vm.Interrupt(\"timeout\") })")
 m("meta-name-blank-accepted", "workflow_meta.go", "if !isString || strings.TrimSpace(name) == \"\" {", "if !isString {")
 m("meta-description-optional", "workflow_meta.go", "if !isString || strings.TrimSpace(description) == \"\" {", "if false {")
-m("meta-when-to-use-any", "workflow_meta.go", "if !isString {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")", "if false {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")")
+m("meta-when-to-use-any", "workflow_meta.go", "if !isString {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")", "if false && !isString {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")")
 m("meta-phase-title-optional", "workflow_meta.go", "if !isString || strings.TrimSpace(title) == \"\" {", "if !isString {")
 m("meta-body-keeps-export", "workflow_meta.go", "body := source[:exportAt] + strings.Repeat(\" \", 6) + source[exportAt+6:]", "body := source[:exportAt] + source[exportAt+6:]")
 m("meta-declaration-anywhere", "workflow_meta.go", "`(^|[\\r\\n])[ \\t]*export[ \\t\\r\\n]+const[ \\t\\r\\n]+meta[ \\t\\r\\n]*=`", "`export[ \\t\\r\\n]+const[ \\t\\r\\n]+meta[ \\t\\r\\n]*=`")
-m("meta-regex-after-value", "workflow_meta.go", "return !(isWord || prev == ')' || prev == ']')", "return true")
+m("meta-regex-after-value", "workflow_meta.go", "return !(isWord || prev == ')' || prev == ']')", "return !(isWord || prev == ')' || prev == ']') || true")
 
 # workflow_progress.go: the progress model
 m("progress-collapse-first-wins", "workflow_progress.go", "case *workflowAgentEntry:\n\t\t\tbyIndex[e.Index] = e", "case *workflowAgentEntry:\n\t\t\tif byIndex[e.Index] == nil {\n\t\t\t\tbyIndex[e.Index] = e\n\t\t\t}")
@@ -206,7 +206,7 @@ m("progress-merge-consumes-twice", "workflow_progress.go", "if consumed[g] {\n\t
 m("progress-title-case-sensitive", "workflow_progress.go", "return strings.ToLower(strings.TrimSpace(title))", "return strings.TrimSpace(title)")
 m("progress-failed-status-lost", "workflow_progress.go", "if failed > 0 {\n\t\t\tstatus = \"failed\"\n\t\t}", "")
 m("progress-duration-sum", "workflow_progress.go", "duration = maxProgress - minStart", "duration = maxProgress")
-m("progress-unphased-hidden", "workflow_progress.go", "if !anyTotal {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))", "if false {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))")
+m("progress-unphased-hidden", "workflow_progress.go", "if !anyTotal {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))", "if false && !anyTotal {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))")
 m("progress-stats-queued-started", "workflow_progress.go", "if e.StartedAt != nil || e.QueuedAt == nil {", "if true {")
 m("progress-stats-complete-live", "workflow_progress.go", "Complete: !anyLive && seen > 0 && done+failed >= total}", "Complete: seen > 0 && done+failed >= total}")
 m("progress-elapsed-ignores-pause", "workflow_progress.go", "d := end - task.StartTime - task.TotalPausedMs", "d := end - task.StartTime")
@@ -220,9 +220,9 @@ m("progress-gerund-ie", "workflow_progress.go", "case strings.HasSuffix(lower, \
 m("progress-footer-truncate", "workflow_progress.go", "keep := width - 1", "keep := width")
 
 # workflow_task.go: the run's record
-m("task-pause-keeps-clock", "workflow_task.go", "task.TotalPausedMs += max(0, now-pausedAt)", "")
+m("task-pause-keeps-clock", "workflow_task.go", "task.TotalPausedMs += max(0, now-pausedAt)", "task.TotalPausedMs += max(0, now-pausedAt) * 0")
 m("task-pause-twice", "workflow_task.go", "if task.Status != runRunning || task.Control == nil {\n\t\ttask.mu.Unlock()\n\t\treturn false", "if task.Control == nil {\n\t\ttask.mu.Unlock()\n\t\treturn false")
-m("task-pause-does-not-tell-run", "workflow_task.go", "control.Pause()", "")
+m("task-pause-does-not-tell-run", "workflow_task.go", "control.Pause()", "_ = control")
 m("task-complete-keeps-control", "workflow_task.go", "task.Control = nil\n\ttask.Status = result.Status", "task.Status = result.Status")
 m("task-complete-drops-open-pause", "workflow_task.go", "if task.PausedAt != nil {\n\t\ttask.TotalPausedMs += max(0, wfNowMs()-*task.PausedAt)", "if false {\n\t\ttask.TotalPausedMs += max(0, wfNowMs()-*task.PausedAt)")
 m("task-batch-counts-reemits", "workflow_task.go", "tokens += *a.Tokens", "tokens += *a.Tokens * 2")
