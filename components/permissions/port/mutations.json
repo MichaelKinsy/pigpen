@@ -1024,5 +1024,47 @@
   "file": "extension.go",
   "find": "st.skills, st.cwd = skills, ctx.Cwd()",
   "replace": "st.skills, st.cwd = skills, \"/\""
+ },
+ {
+  "name": "bp-health-predecessor",
+  "file": "bashparse/parsehealth.go",
+  "find": "node.hasError || (node.prev != nil && node.prev.hasError)",
+  "replace": "node.hasError"
+ },
+ {
+  "name": "bp-rewrite-failed-statement",
+  "file": "bashparse/parseview.go",
+  "find": "if node.typ == \"redirected_statement\" && !ParseUnresolvedWithin(node) {",
+  "replace": "if node.typ == \"redirected_statement\" {"
+ },
+ {
+  "name": "bp-hoist-pipe-after-operator",
+  "file": "bashparse/heredoctails.go",
+  "find": "case child.typ == \"pipeline\" && operator == nil:",
+  "replace": "case child.typ == \"pipeline\":"
+ },
+ {
+  "name": "bp-join-pipe-extends-pipeline",
+  "file": "bashparse/heredoctails.go",
+  "find": "if isPipe && statement.typ == \"pipeline\" {",
+  "replace": "if isPipe && statement.typ == \"pipelinex\" {"
+ },
+ {
+  "name": "bp-reattach-only-after-trailing",
+  "file": "bashparse/redirectarguments.go",
+  "find": "if i >= trailing && LiteralNodeTypes[child.typ] {",
+  "replace": "if LiteralNodeTypes[child.typ] {"
+ },
+ {
+  "name": "bp-reattach-pipeline-last-stage",
+  "file": "bashparse/redirectarguments.go",
+  "find": "if body.typ != \"list\" && body.typ != \"pipeline\" {",
+  "replace": "if body.typ != \"list\" {"
+ },
+ {
+  "name": "bp-free-lines-blanks",
+  "file": "bashparse/heredocfreelines.go",
+  "find": "for start > lineStart && isBlank(source, start-1-offset) {",
+  "replace": "for start > lineStart && false {"
  }
 ]

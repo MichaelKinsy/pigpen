@@ -296,4 +296,3 @@ func TestTrailingArgumentIndex(t *testing.T) {
 		}
 	})
 }
-

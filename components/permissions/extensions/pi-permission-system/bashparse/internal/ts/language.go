@@ -14,10 +14,9 @@
 // Left out because a one-shot parse of a string never reaches it: incremental reuse of an old tree
 // (reusable_node, edits, included range differences), included ranges other than the whole text,
 // cancellation and progress callbacks, logging and dot graphs, subtree reference counting and
-// pooling (the garbage collector owns subtrees; a "mutable" subtree is a copy), tree balancing
-// (ts_parser__balance_subtree rewrites only hidden repetition nodes, which the node API flattens,
-// so no accessor can tell), and the lookahead-bytes and column-dependence bookkeeping that only
-// incremental reuse reads.
+// pooling (the garbage collector owns subtrees; a "mutable" subtree is a copy; balancing counts
+// references itself, see balance.go), and the column-dependence bookkeeping that only incremental
+// reuse reads.
 //
 // Positions are UTF-16: the input is the UTF-16 code units of a JavaScript string and a Length's
 // bytes are UTF-16LE bytes (two per code unit, four per surrogate pair), as web-tree-sitter feeds
