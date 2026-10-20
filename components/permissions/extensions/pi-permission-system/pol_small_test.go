@@ -110,7 +110,6 @@ func TestSynthesizeTwins(t *testing.T) {
 
 var (
 	policyRuleSource = DecisionSource{Kind: "rule", Surface: "bash", Pattern: sp("*"), Origin: sp("global")}
-	decidedByHuman   = DecisionSource{Kind: "user", Via: "dialog"}
 	decidedByAbsent  = DecisionSource{Kind: "unavailable", Reason: sp("No live authority was reachable for this session")}
 )
 
@@ -553,12 +552,15 @@ func (f *fakeForwarding) Start(ctx ForwarderContext) { f.started = append(f.star
 func (f *fakeForwarding) Stop()                      { f.stopped++ }
 
 type fakeAuthSelection struct {
-	activated   []SessionContext
+	activated   []AuthorityContext
 	deactivated int
 }
 
-func (a *fakeAuthSelection) Activate(ctx SessionContext) { a.activated = append(a.activated, ctx) }
-func (a *fakeAuthSelection) Deactivate()                 { a.deactivated++ }
+func (a *fakeAuthSelection) Activate(ctx AuthorityContext) error {
+	a.activated = append(a.activated, ctx)
+	return nil
+}
+func (a *fakeAuthSelection) Deactivate() { a.deactivated++ }
 
 type fakeConfigStore struct {
 	current   PermissionSystemExtensionConfig
@@ -592,7 +594,7 @@ func (n *fakeNotifier) SetStatus(key, text string) {
 
 func makeSessionCtx(cwd string, hasUI bool) (SessionContext, *fakeNotifier) {
 	n := &fakeNotifier{}
-	return SessionContext{ForwarderContext: ForwarderContext{Cwd: cwd, HasUI: hasUI}, Notifier: n}, n
+	return SessionContext{AuthorityContext: AuthorityContext{ForwarderContext: ForwarderContext{Cwd: cwd, HasUI: hasUI}}, Notifier: n}, n
 }
 
 type sessionRig struct {

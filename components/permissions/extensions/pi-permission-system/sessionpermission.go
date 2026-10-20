@@ -7,22 +7,11 @@ import (
 
 // Port of src/session/permission-session.ts: all mutable session state behind operations instead of fields.
 
-// SkillPromptEntry is a skill listed in the system prompt with the policy state resolved for it (exposure/skill-prompt-sanitizer.ts
-// SkillPromptEntry).
-type SkillPromptEntry struct {
-	Name               string
-	Description        string
-	Location           string
-	State              string
-	NormalizedLocation string
-	NormalizedBaseDir  string
-}
-
-// SessionContext is the slice of the host's ExtensionContext a PermissionSession reads: the forwarder context (cwd, hasUI, the dialog
-// UI and the session manager, whose entries the active-agent lookup reads) and the notify and status UI. Notifier is nil when the host
-// has no UI.
+// SessionContext is the slice of the host's ExtensionContext a PermissionSession reads: the authority context (the forwarder context
+// with cwd, hasUI, the dialog UI and the session manager whose entries the active-agent lookup reads, plus the run mode, the prompt UI
+// and the system-prompt accessor the authorizer selection reads) and the notify and status UI. Notifier is nil when the host has no UI.
 type SessionContext struct {
-	ForwarderContext
+	AuthorityContext
 	Notifier ConfigUI
 }
 
@@ -41,12 +30,6 @@ type SessionConfigStore interface {
 	Current() PermissionSystemExtensionConfig
 	Refresh(cwd string, projectTrusted bool)
 	LogResolvedPaths(cwd string)
-}
-
-// AuthorizerSelectionLifecycle is the authorizer-selection lifecycle forwarded through activate and deactivate.
-type AuthorizerSelectionLifecycle interface {
-	Activate(ctx SessionContext)
-	Deactivate()
 }
 
 // ToolSurfaceObservation is what the host reports about the tool surface this turn.
@@ -97,13 +80,14 @@ func NewPermissionSession(paths ExtensionPaths, forwarding ForwardingController,
 // Activate stores the current context, rebuilds the path normalizer for its cwd, starts forwarding and activates the gateway. The
 // normalizer is rebuilt here so it always tracks the active context's cwd, which closes the fail-open gap if a tool call ever arrives
 // before session_start.
-func (s *PermissionSession) Activate(ctx SessionContext) {
+// The error is a failing subagent detection the authorizer selection raises, which the original lets propagate out of activate.
+func (s *PermissionSession) Activate(ctx SessionContext) error {
 	s.mu.Lock()
 	s.context = &ctx
 	s.pathNormalizer = NewPathNormalizer(s.flavor, ctx.Cwd)
 	s.mu.Unlock()
 	s.forwarding.Start(ctx.ForwarderContext)
-	s.authorizerSelection.Activate(ctx)
+	return s.authorizerSelection.Activate(ctx.AuthorityContext)
 }
 
 // Deactivate clears the context, stops forwarding and deactivates the authorizer selection.
@@ -132,7 +116,7 @@ func (s *PermissionSession) Notify(message string) {
 // ResetForNewSession resets all mutable state for a new session: it configures the manager for ctx.Cwd (or global-only when
 // projectTrusted is false, withholding the project cwd so an untrusted project's policy scopes are not loaded, #644), clears the skill
 // entries and the tool-surface baseline, and activates the new context.
-func (s *PermissionSession) ResetForNewSession(ctx SessionContext, projectTrusted bool) {
+func (s *PermissionSession) ResetForNewSession(ctx SessionContext, projectTrusted bool) error {
 	cwd := ""
 	if projectTrusted {
 		cwd = ctx.Cwd
@@ -142,7 +126,7 @@ func (s *PermissionSession) ResetForNewSession(ctx SessionContext, projectTruste
 	s.skillEntries = nil
 	s.toolSurfaceBaseline.reset()
 	s.mu.Unlock()
-	s.Activate(ctx)
+	return s.Activate(ctx)
 }
 
 // Shutdown clears the session rules, the skill entries and the tool-surface baseline, and deactivates context and forwarding.
@@ -261,19 +245,6 @@ func (s *PermissionSession) GetPathNormalizer() *PathNormalizer {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.pathNormalizer
-}
-
-// ToolPreviewFormatterOptions are the limits of the tool-input preview (tool-input/tool-preview-formatter.ts).
-type ToolPreviewFormatterOptions struct {
-	ToolInputPreviewMaxLength int
-	ToolTextSummaryMaxLength  int
-}
-
-// ResolveToolPreviewLimits is resolveToolPreviewLimits: the built-in limits (TOOL_INPUT_PREVIEW_MAX_LENGTH 200 and
-// TOOL_TEXT_SUMMARY_MAX_LENGTH 80). It takes no config: an operator's toolInputPreviewMaxLength and toolTextSummaryMaxLength are
-// subsumed by the renderer budgets.
-func ResolveToolPreviewLimits() ToolPreviewFormatterOptions {
-	return ToolPreviewFormatterOptions{ToolInputPreviewMaxLength: 200, ToolTextSummaryMaxLength: 80}
 }
 
 // GetToolPreviewLimits is the resolved tool-preview formatter options, the built-in limits regardless of config.
