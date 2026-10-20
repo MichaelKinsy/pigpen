@@ -307,6 +307,7 @@ func TestConscienceLoweredThresholdDeliversOneMessageViaHookReturn(t *testing.T)
 }
 
 // twin: tests/extension.test.ts:3067
+// twin: tests/conscience-gunner.test.ts:739
 func TestConscienceSteerBudgetExhaustedBlocksDelivery(t *testing.T) {
 	e := newCsExt(t, csOpts{cfg: func(c *Config) { c.SteerBudget = 0 }})
 	e.set(csAdvance(3))
@@ -371,6 +372,7 @@ func TestConscienceNoAgentEndReminderAfterTheRunEndedWithAFinalTextReply(t *test
 }
 
 // twin: tests/extension.test.ts:3125
+// twin: tests/conscience-gunner.test.ts:745
 func TestConscienceSessionStartDuringAssessmentProducesStaleTrace(t *testing.T) {
 	e := newCsExt(t, csOpts{})
 	e.set(csAdvance(3))
@@ -478,6 +480,7 @@ func TestConscienceToolCallAndToolResultAreTracedForSelectedCapability(t *testin
 }
 
 // twin: tests/extension.test.ts:3231
+// twin: tests/conscience-gunner.test.ts:751
 func TestConscienceMaxAssessmentsBlocksFurtherAssessments(t *testing.T) {
 	e := newCsExt(t, csOpts{conscience: func(c *ConscienceConfig) { c.MaxAssessments = 1 }})
 	e.set(csAdvance(3))
@@ -544,6 +547,7 @@ func TestConscienceOrdinaryReadDoesNotTriggerReadObserved(t *testing.T) {
 }
 
 // twin: tests/extension.test.ts:3307
+// twin: tests/conscience-gunner.test.ts:377
 func TestConscienceAQueuedPromptIsAssessedWithTheTaskSpine(t *testing.T) {
 	e := newCsExt(t, csOpts{})
 	e.set(map[string]any{"conscience_disposition": "no_gap"})
@@ -692,6 +696,7 @@ func TestConscienceRecommendModeNeverReadsSkillFiles(t *testing.T) {
 }
 
 // twin: tests/extension.test.ts:3473
+// twin: tests/conscience-gunner.test.ts:346
 func TestConscienceLoadDeliversBodyAndSetsInstructionsSupplied(t *testing.T) {
 	path := csWriteSkill(t, "my-skill", "---\nname: my-skill\ndescription: My skill\n---\n\nBody text.")
 	e := newCsExt(t, csOpts{conscience: csLoadMode})
@@ -735,10 +740,10 @@ func TestConscienceOversizedSkillBodyRejected(t *testing.T) {
 	}
 }
 
-// twin: tests/extension.test.ts:3544
-// twin: tests/extension.test.ts:3548
-// twin: tests/extension.test.ts:3552
-// twin: tests/extension.test.ts:3556
+// twin: tests/extension.test.ts:3539
+// twin: tests/extension.test.ts:3543
+// twin: tests/extension.test.ts:3547
+// twin: tests/extension.test.ts:3551
 func TestActivationGateIsAPureFunctionOfPolicyHashAndModel(t *testing.T) {
 	if policyMatches(nil, "fb2d35042f667b3c", "jev-1.13.0") {
 		t.Error("no policy never matches")
@@ -916,5 +921,27 @@ func TestInputWaitsWhileTheIndexIsBeingBuilt(t *testing.T) {
 	e.w.setIndexRunning(false, nil)
 	if raw := e.host.Fire("input", map[string]any{"text": "hello"}); strings.Contains(string(raw), "handled") {
 		t.Errorf("input passes when no index run is on: %s", raw)
+	}
+}
+
+// Go-only: without consent the assessment is traced no_consent (the second half of the case at extension.test.ts line 4417; the
+// first half, a saved rejected key, is a named skip: the port keeps no saved key state).
+func TestConscienceMissingConsentTracesNoConsent(t *testing.T) {
+	e := newCsExt(t, csOpts{cfg: func(c *Config) { c.Consent = "" }})
+	e.prompt("design a landing page", csDefaultSkillEvents())
+	tr := e.traceText()
+	if !strings.Contains(tr, "skipReason: no_consent") || strings.Contains(tr, "key_rejected") {
+		t.Errorf("trace:\n%s", tr)
+	}
+}
+
+// Go-only: a missing key for the chosen backend is traced no_key, not no_consent.
+func TestConscienceMissingKeyTracesNoKey(t *testing.T) {
+	e := newCsExt(t, csOpts{})
+	e.w.opts.NewJudge = nil
+	e.w.opts.Getenv = func(string) string { return "" }
+	e.prompt("design a landing page", csDefaultSkillEvents())
+	if tr := e.traceText(); !strings.Contains(tr, "skipReason: no_key") {
+		t.Errorf("trace:\n%s", tr)
 	}
 }

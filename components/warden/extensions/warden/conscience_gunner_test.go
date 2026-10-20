@@ -420,6 +420,7 @@ func TestRule2UserInvokedSkillYieldsAlreadySupplied(t *testing.T) {
 }
 
 // twin: tests/conscience-gunner.test.ts:855
+// twin: tests/extension.test.ts:3600
 func TestRule3PathRuleBlocksLoadYieldingLoadDenied(t *testing.T) {
 	s := gnSkillFile(t, t.TempDir(), "r3-path", fm("r3-path", "Path test")+"Body.", "Path test")
 	rules := []PathRule{{ID: "block-skills", Paths: []string{"**/skills/**"}, Access: "none", Tools: []string{"read"}, Action: "confirm"}}
@@ -461,6 +462,7 @@ func TestRule2DisableModelInvocationSkillYieldsNotEligible(t *testing.T) {
 }
 
 // twin: tests/conscience-gunner.test.ts:977
+// twin: tests/extension.test.ts:3612
 func TestRule5CumulativeMaxLoadedBytesLimitsSecondLoad(t *testing.T) {
 	s := gnSkillFile(t, t.TempDir(), "r5-cumul-a", fm("r5-cumul-a", "A")+"Body A.", "A")
 	cfg := gnLoadConfig(func(c *ConscienceConfig) { c.MaxLoadedBytes = 100 })
