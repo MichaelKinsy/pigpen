@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"strings"
-	"unicode/utf16"
 	"unicode/utf8"
 )
 
@@ -12,14 +11,31 @@ import (
 // strings count UTF-16 code units, Buffer decodes UTF-8 and base64 leniently, and path.extname, toFixed and
 // the default sort have their own rules.
 
-// utf16Len is `s.length`.
+// asciiRun is the number of leading ASCII bytes of s that can be skipped eight at a time, at most limit.
+func asciiRun(s string, limit int) int {
+	i := 0
+	for i+8 <= len(s) && i+8 <= limit {
+		w := uint64(s[i]) | uint64(s[i+1])<<8 | uint64(s[i+2])<<16 | uint64(s[i+3])<<24 |
+			uint64(s[i+4])<<32 | uint64(s[i+5])<<40 | uint64(s[i+6])<<48 | uint64(s[i+7])<<56
+		if w&0x8080808080808080 != 0 {
+			break
+		}
+		i += 8
+	}
+	return i
+}
+
+// utf16Len is `s.length` of a valid UTF-8 string, counted over the bytes: an ASCII byte and a lead byte of a
+// 2- or 3-byte rune is one code unit, the lead byte of a 4-byte rune two, a continuation byte none.
 func utf16Len(s string) int {
-	n := 0
-	for _, r := range s {
-		if r >= 0x10000 {
-			n += 2
-		} else {
+	i := asciiRun(s, len(s))
+	n := i
+	for ; i < len(s); i++ {
+		switch b := s[i]; {
+		case b < 0x80, b >= 0xC0 && b < 0xF0:
 			n++
+		case b >= 0xF0:
+			n += 2
 		}
 	}
 	return n
@@ -27,23 +43,25 @@ func utf16Len(s string) int {
 
 // utf16Prefix is `s.slice(0, n)`: a cut inside a surrogate pair leaves a lone surrogate, which Node writes as U+FFFD.
 func utf16Prefix(s string, n int) string {
-	var b strings.Builder
-	units := 0
-	for _, r := range s {
+	units := asciiRun(s, n)
+	for i := units; i < len(s); i++ {
+		b := s[i]
 		w := 1
-		if r >= 0x10000 {
+		switch {
+		case b >= 0x80 && b < 0xC0:
+			continue
+		case b >= 0xF0:
 			w = 2
 		}
 		if units+w > n {
 			if w == 2 && units < n {
-				b.WriteRune(utf8.RuneError)
+				return s[:i] + "\ufffd"
 			}
-			break
+			return s[:i]
 		}
-		b.WriteRune(r)
 		units += w
 	}
-	return b.String()
+	return s
 }
 
 // decodeUTF8Lossy is Buffer#toString("utf-8"): invalid input becomes U+FFFD by the WHATWG decoder's rules (one
@@ -198,16 +216,36 @@ func posixExtname(p string) string {
 
 // compareUTF16 orders strings as Array#sort does by default: by UTF-16 code unit.
 func compareUTF16(a, b string) int {
-	ua, ub := utf16.Encode([]rune(a)), utf16.Encode([]rune(b))
-	for i := 0; i < len(ua) && i < len(ub); i++ {
-		if ua[i] != ub[i] {
-			if ua[i] < ub[i] {
+	for len(a) > 0 && len(b) > 0 {
+		ra, wa := utf8.DecodeRuneInString(a)
+		rb, wb := utf8.DecodeRuneInString(b)
+		if ra != rb {
+			ua, ub := utf16Unit(ra), utf16Unit(rb)
+			if ua == ub {
+				ua, ub = ra, rb // the same high surrogate: the low surrogates order as the code points do
+			}
+			if ua < ub {
 				return -1
 			}
 			return 1
 		}
+		a, b = a[wa:], b[wb:]
 	}
-	return len(ua) - len(ub)
+	switch {
+	case len(a) == 0 && len(b) == 0:
+		return 0
+	case len(a) == 0:
+		return -1
+	}
+	return 1
+}
+
+// utf16Unit is the first UTF-16 code unit of r.
+func utf16Unit(r rune) rune {
+	if r < 0x10000 {
+		return r
+	}
+	return 0xD800 + (r-0x10000)>>10
 }
 
 // jsParseInt10 is parseInt(s, 10): the leading integer, or ok false for NaN.

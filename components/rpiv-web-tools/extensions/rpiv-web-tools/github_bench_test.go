@@ -12,6 +12,19 @@ import (
 // Benchmarks of the interceptor with a canned command runner: the cost of the port's own work (URL parsing, the
 // flow, rendering), without a process. `go test -run xxx -bench GitHub -benchmem`.
 
+var (
+	benchTree   = benchTreeText()
+	benchReadme = ghB64(strings.Repeat("# Readme line\n", 200))
+)
+
+func benchTreeText() string {
+	var sb strings.Builder
+	for i := range 300 {
+		fmt.Fprintf(&sb, "src/file%03d.go\n", i)
+	}
+	return sb.String()
+}
+
 func benchGhAPI(_ string, args []string) (string, error) {
 	if args[0] == "--version" {
 		return "gh version 2", nil
@@ -22,13 +35,9 @@ func benchGhAPI(_ string, args []string) (string, error) {
 	case ".default_branch":
 		return "main\n", nil
 	case ".tree[].path":
-		var sb strings.Builder
-		for i := range 300 {
-			fmt.Fprintf(&sb, "src/file%03d.go\n", i)
-		}
-		return sb.String(), nil
+		return benchTree, nil
 	}
-	return ghB64(strings.Repeat("# Readme line\n", 200)), nil
+	return benchReadme, nil
 }
 
 func BenchmarkGitHubParseURL(b *testing.B) {

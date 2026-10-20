@@ -43,6 +43,16 @@ gives the same mode). The final run: **97 mutations, all killed** (90 by the uni
 parser and of the request going to the parsed URL: **107 mutations, all killed** (100 by the unit tests, the same 7 by
 the scenarios, re-run one at a time).
 
+Slice 3 (the GitHub interceptor, `gh-*` and `js-*` in `gen-mutations.py`) replaced the nine refusal mutants with 107
+(URL parsing and normalization, option resolution, every timeout and buffer, the clone and API command lines, the size
+threshold and its rounding, the cache, cut limits, rendering strings, the Node helpers, the chain, the host adapter and the
+`--show` line). The first run killed 206 of 217; 3 did not compile and 8 survived. Five got a test (a case-folded and an
+unknown action, an absolute path, a killed command, the exact buffer limit, the default buffer), the three that did not
+compile were rewritten, and two were removed as equivalent: `gh-size-parse-untrimmed` (`parseInt` skips surrounding white
+space itself) and `gh-path-escape` (the symlink check that follows it rejects an existing file outside the clone, and a
+missing one reads as missing either way); the case-folding mutant of the non-code segment list (`gh-noncode-case`) is
+equivalent too, because the action check rejects every segment the list names. Final run: **214 mutations, all killed**.
+
 ## Deliberate differences and findings
 
 1. **The GitHub interceptor (opt-in) is ported (slice 3).** `github_interceptor.go` is `providers/interceptors/github.ts`
@@ -56,9 +66,11 @@ the scenarios, re-run one at a time).
      output past `maxBuffer` (Node's 1 MiB default, 5 MiB for the tree, 2 MiB for a file) and the host's own error are
      one failure, as `err` is for `execFile` (`github_host_test.go`). The twins replace the original's `execFile` mock with a
      canned runner carried in the tool's context (`withExec`), so nothing is global.
-   - **The API view reads the tree, then the README.** The original starts both at once (`Promise.all`); two concurrent
-     host calls would reach the host in no fixed order, and the harness compares the command sequence, so they run in the
-     original's start order. It costs one `gh api` round trip on that path only.
+   - **The tree and README reads of the API view run at once**, as the original's `Promise.all` does. Their commands reach
+     the host in no fixed order, and the original's own order under the harness is a race too (the recorded exec and
+     exec_end events interleave differently from run to run), so no scenario fetches a root or tree URL through the API
+     view: `github-api-view` uses blob URLs, whose single `gh api` call is ordered; the root and tree views are covered by
+     the twins and `TestGitHubCommandsAndLimits`.
    - **JavaScript string and Node buffer semantics are reproduced where output depends on them** (`jscompat.go`,
      `TestJSCompat`, expected values from Node 24.19): lengths and cuts in UTF-16 units (a README of 4500 emoji is cut at
      8192 units), `Buffer.from(x, "base64")` leniency, WHATWG UTF-8 decoding, `decodeURIComponent` failing on bad
