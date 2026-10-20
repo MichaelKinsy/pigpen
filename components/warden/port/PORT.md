@@ -106,6 +106,23 @@ input, agent_settled; the compaction relevance hook `session_before_compact`).
   `prefs.inject` ignored, injection repeated on resume, weakening / one-session / stale / unconfirmed / forgotten preferences, `prefs.enabled` ignored by the tool,
   forget not persisted, the current session read by the scan, `compactAppendix` ignored, saved outputs uncapped, recall listing checks, the error line chosen from the front): **21 of 21 killed**, none equivalent.
 
+## Performance (tools slice, 0.1.3)
+
+Measured on imladris (Intel Xeon 6746E, CPU set 96-151 shared with other lanes; load average 68 to 300 during the runs, so the CPU set was not idle and the figures are upper bounds on noise-free latency). Go: `go test -bench . -benchmem -count=10` (`extensions/warden/tools_bench_test.go`), median of 10; original under Node 24.19: `port/bench-original.ts`, median of 11 runs (sequential after the Go runs, not interleaved).
+
+| Path (same input) | Go port | Original under PiG's Node (tsx) |
+|---|---|---|
+| `warden_loops` add then list, through the file | 250 us, 73.4 KB, 979 allocs | 443 us |
+| `warden_remember` (`recordLesson`, no file) | 84.5 us, 4.9 KB, 93 allocs | 16.2 us |
+| `extractPreferences` of a two-sentence message | 122.8 us, 6.3 KB, 133 allocs | 14.2 us |
+| `warden_recall` (`recallText`) | 79.1 us, 4.5 KB, 213 allocs | 12.1 us |
+| construct the extension and register its tools (`New`) | 23.3 us, 16.6 KB, 111 allocs | import 1.66 to 1.83 s (cold TypeScript load through tsx of 1.18 MB of source), factory 4.8 ms median |
+
+- Binary: a `package main` that only runs `warden.Extension()` (linux/amd64, `-s -w`) is 9,081,095 bytes, against 8,761,607 for 0.1.2 (the refusal release): +319,488 bytes (+3.6%). The original ships no binary (its `src` is 1,178,572 bytes of TypeScript).
+- The Go port is 5 to 9 times slower than the original on the three pure paths, which is over the 10% bar. A CPU profile of the three benchmarks puts about 80% in Go's `regexp` backtracker (`tryBacktrack`, `bitState`) and 7% in `unicode.SimpleFold` (the `(?i)` patterns), against V8's compiled regexps. Absolute cost is 0.08 to 0.12 ms per tool call or per scanned user message; the scan is bounded (200 files, 30 days, a 250 ms read budget) and runs once per session start. No fix is made here: owner decision needed (a cheaper trigger-word precheck before the regexps is the lever). `warden_loops` through the file is faster than the original.
+- Package init allocation is held under the existing limit by `TestPackageInitDoesNotCompileRegexps` (a `lazyREBuilt` assembles prefs patterns on first use). The previous release's tool latencies do not exist (it registered no tool); its construction was not benchmarked.
+- No blocking host call on the input or render path: the scan, the loops file and the lesson file are read in the `session_start`, `agent_end`, `session_compact` and tool/command handlers only; the recall probe runs in a goroutine started at session start.
+
 ## Equivalence (live: Pi original vs Go port)
 
 `port/scenarios` holds 24 offline scenarios (19 for the guards, 5 for the tools slice; a sixth is in `port/scenarios-b4`, see below), `port/golden` their traces recorded **from the original under Pi 1.3.0.1402973a (the 19 earlier ones under Pi 0.87.1/1.0.1)**
