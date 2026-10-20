@@ -288,3 +288,23 @@ func TestConscienceMaxNudgesZeroAllowsNoReminder(t *testing.T) {
 		t.Errorf("%v", r)
 	}
 }
+
+// The conscience is off unless conscience.enabled: no assessment, no request, no trace line, with the judge ready.
+func TestConscienceDisabledDoesNothing(t *testing.T) {
+	e := newCsExt(t, csOpts{conscience: func(c *ConscienceConfig) { c.Enabled = false }})
+	e.set(csAdvance(3))
+	if _, _, ok := csMessage(e.prompt("design a landing page", csDefaultSkillEvents())); ok {
+		t.Error("nothing is recommended")
+	}
+	csAgentEndToolCall(e)
+	e.host.Fire("agent_settled", nil)
+	lines := 0
+	for _, entry := range e.w.trace.Entries() {
+		if entry.Guard == GuardConscience {
+			lines++
+		}
+	}
+	if len(e.requests()) != 0 || lines != 0 || len(e.reminders()) != 0 {
+		t.Errorf("%d requests, %d conscience trace lines:\n%s", len(e.requests()), lines, e.traceText())
+	}
+}

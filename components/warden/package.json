@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-warden",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Go port of DevMortimer's pi-warden: guardrails that steer instead of interrupt. Holds irreversible tool calls, flags off-task and off-plan calls, breaks stuck loops and asks for verification of unverified done claims. Opt-in, discloses what leaves the machine, and judges with TypeSafe or the session's own model.",
   "keywords": [
     "pig-package",
