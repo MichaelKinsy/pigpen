@@ -372,12 +372,6 @@
   "replace": "if msg := l.opts.EnsureLogsDirectory(); msg != \"\" {\n\t\treturn \"\""
  },
  {
-  "name": "lg-serialize-warning",
-  "file": "logging.go",
-  "find": "if !ok || line == \"\" {",
-  "replace": "if _ = ok; line == \"x\" {"
- },
- {
   "name": "lg-write-warning",
   "file": "logging.go",
   "find": "if werr != nil {\n\t\treturn fmt.Sprintf",
