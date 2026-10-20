@@ -30,7 +30,9 @@ func paste(content string) string { return "\x1b[200~" + content + "\x1b[201~" }
 
 type expandKeys struct{ key string }
 
-func (k expandKeys) Matches(data, action string) bool { return action == "app.tools.expand" && data == k.key }
+func (k expandKeys) Matches(data, action string) bool {
+	return action == "app.tools.expand" && data == k.key
+}
 
 type recordingTUI struct {
 	mu      sync.Mutex

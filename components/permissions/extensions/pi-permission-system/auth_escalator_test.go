@@ -129,7 +129,9 @@ func TestParentAuthorizerTwins(t *testing.T) {
 		return ctx
 	}
 	forwardedAsk := func() *PromptPermissionDetails {
-		return authDetails(func(d *PromptPermissionDetails) { d.RequestID, d.AgentName, d.ToolName = "perm-child-request", sp("Explore"), sp("bash") })
+		return authDetails(func(d *PromptPermissionDetails) {
+			d.RequestID, d.AgentName, d.ToolName = "perm-child-request", sp("Explore"), sp("bash")
+		})
 	}
 	// exchangeWith drives one forwarded exchange to completion: escalate, wait for the request file, answer it with response.
 	exchangeWith := func(t *testing.T, response string) PermissionPromptDecision {
@@ -247,14 +249,18 @@ func TestParentAuthorizerTwins(t *testing.T) {
 		})
 	})
 	tw(t, f, "omits accessIntent from the request when the details carry none", func(t *testing.T) {
-		roundTrip(t, childContext(), authDetails(func(d *PromptPermissionDetails) { d.RequestID, d.AgentName, d.ToolName = "perm-child-request", sp("Explore"), sp("read") }), func(r *jsObject) {
+		roundTrip(t, childContext(), authDetails(func(d *PromptPermissionDetails) {
+			d.RequestID, d.AgentName, d.ToolName = "perm-child-request", sp("Explore"), sp("read")
+		}), func(r *jsObject) {
 			if r.has("accessIntent") {
 				t.Error("accessIntent present")
 			}
 		})
 	})
 	tw(t, f, "omits sessionApproval from the request when the details carry none", func(t *testing.T) {
-		roundTrip(t, childContext(), authDetails(func(d *PromptPermissionDetails) { d.RequestID, d.AgentName, d.ToolName = "perm-child-request", sp("Explore"), sp("read") }), func(r *jsObject) {
+		roundTrip(t, childContext(), authDetails(func(d *PromptPermissionDetails) {
+			d.RequestID, d.AgentName, d.ToolName = "perm-child-request", sp("Explore"), sp("read")
+		}), func(r *jsObject) {
 			if r.has("sessionApproval") {
 				t.Error("sessionApproval present")
 			}
@@ -264,7 +270,9 @@ func TestParentAuthorizerTwins(t *testing.T) {
 		fwClearHintEnv(t)
 		dir := fwCreateTempDir(t, "parent-session", true)
 		a := makeParentAuthorizer(childContext(), parentOpts{forwardingDir: dir.forwardingDir, registry: childRegistry("parent-session")})
-		e := authorizeAsync(a, authDetails(func(d *PromptPermissionDetails) { d.RequestID, d.AgentName, d.ToolName = "perm-child-request", sp("Explore"), sp("read") }))
+		e := authorizeAsync(a, authDetails(func(d *PromptPermissionDetails) {
+			d.RequestID, d.AgentName, d.ToolName = "perm-child-request", sp("Explore"), sp("read")
+		}))
 		request, _ := waitForRequestFile(t, dir.location.RequestsDir)
 		id, _ := request.str("id")
 		respond(t, dir, id, `{"approved":false,"state":"denied","responderSessionId":"parent-session"}`)

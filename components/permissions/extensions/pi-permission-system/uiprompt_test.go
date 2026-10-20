@@ -41,7 +41,9 @@ func TestBuildUiPromptTwins(t *testing.T) {
 		}
 	})
 	tw(t, f, "derives surface and value from direct fields and defaults forwarding to null", func(t *testing.T) {
-		payload := payloadWith(func(r *PromptRequestFacts) { r.Surface, r.ToolName, r.Value, r.MatchedPattern = "bash", sp("bash"), "git push", sp("git *") })
+		payload := payloadWith(func(r *PromptRequestFacts) {
+			r.Surface, r.ToolName, r.Value, r.MatchedPattern = "bash", sp("bash"), "git push", sp("git *")
+		})
 		got := BuildUiPrompt(UiPromptInput{RequestID: "req-u1", Source: "tool_call", AgentName: sp("Explore"), Payload: payload, ToolName: sp("bash"), Command: sp("git push")})
 		eq(t, eventJSON(got), want("req-u1", "tool_call", "bash", "git push", "Explore", payload, "null"), "event")
 	})
