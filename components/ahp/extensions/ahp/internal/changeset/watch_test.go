@@ -14,11 +14,17 @@ import (
 )
 
 type eventLog struct {
-	mu    sync.Mutex
-	paths []string
+	mu      sync.Mutex
+	paths   []string
+	history []string // every event, never reset
 }
 
-func (l *eventLog) add(p string) { l.mu.Lock(); l.paths = append(l.paths, p); l.mu.Unlock() }
+func (l *eventLog) add(p string) {
+	l.mu.Lock()
+	l.paths = append(l.paths, p)
+	l.history = append(l.history, p)
+	l.mu.Unlock()
+}
 
 func (l *eventLog) seen(p string) bool {
 	l.mu.Lock()
@@ -103,7 +109,10 @@ func TestPollWatch(t *testing.T) {
 	write(t, filepath.Join(ignored, "other.js"), "y")
 	write(t, filepath.Join(root, "after-ignored.txt"), "z")
 	waitFor("a file next to the ignored directory", filepath.Join(root, "after-ignored.txt"))
-	for _, p := range events.all() {
+	events.mu.Lock()
+	history := append([]string(nil), events.history...)
+	events.mu.Unlock()
+	for _, p := range history {
 		if strings.HasPrefix(p, ignored) {
 			t.Fatalf("event for an ignored path: %s", p)
 		}

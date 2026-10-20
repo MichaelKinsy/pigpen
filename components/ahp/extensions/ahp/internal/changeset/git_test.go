@@ -145,8 +145,14 @@ func TestGitChangesBackend(t *testing.T) {
 	if _, ok := backend.PathForBlob(*ws, changeset.BlobRef{Path: "../x"}); ok {
 		t.Fatal("a path that leaves the repository must be refused")
 	}
-	if _, ok := backend.PathForBlob(*ws, changeset.BlobRef{Path: "a/../../x"}); ok {
-		t.Fatal("a path with a dot-dot segment must be refused")
+	for _, path := range []string{"a/../../x", "a/../tracked.txt", "./tracked.txt", "a//b", "/abs"} {
+		if _, ok := backend.PathForBlob(*ws, changeset.BlobRef{Path: path}); ok {
+			t.Fatalf("path %q must be refused", path)
+		}
+	}
+	// An object id is a hash and nothing else: a revision expression would read any object.
+	if _, err := backend.ReadBlob(ctx, *ws, changeset.BlobRef{SessionID: "sid", OID: "HEAD:tracked.txt", Path: "tracked.txt"}); err == nil {
+		t.Fatal("a revision expression is not an object id")
 	}
 	if _, err := backend.ReadBlob(ctx, *ws, changeset.BlobRef{SessionID: "sid", OID: "not-an-oid", Path: "tracked.txt"}); err == nil {
 		t.Fatal("a malformed object id must be refused")

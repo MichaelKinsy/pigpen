@@ -148,5 +148,227 @@
   "file": "runtime.go",
   "find": "if !running || restarts || reason == \"quit\" {",
   "replace": "if true || !running || restarts || reason == \"quit\" {"
+ },
+ {
+  "name": "changeset-uri-kind-unchecked",
+  "file": "internal/changeset/uri.go",
+  "find": "if kind != LatestCommit && kind != Uncommitted {",
+  "replace": "if false {"
+ },
+ {
+  "name": "changeset-uri-canonical-form-unchecked",
+  "file": "internal/changeset/uri.go",
+  "find": "if URI(id, kind) != uri {",
+  "replace": "if false {"
+ },
+ {
+  "name": "changeset-uri-encoded-slash-allowed",
+  "file": "internal/changeset/uri.go",
+  "find": "if !ok || id == \"\" || strings.Contains(id, \"/\") {",
+  "replace": "if !ok || id == \"\" {"
+ },
+ {
+  "name": "changeset-catalogue-latest-commit-always",
+  "file": "internal/changeset/uri.go",
+  "find": "\tif hasCommit {",
+  "replace": "\tif true || hasCommit {"
+ },
+ {
+  "name": "git-ambient-repository-overrides-kept",
+  "file": "internal/changeset/git.go",
+  "find": "if gitContextOverrides[key] ||",
+  "replace": "if false ||"
+ },
+ {
+  "name": "git-renames-not-detected",
+  "file": "internal/changeset/git.go",
+  "find": "\"--find-renames\", ",
+  "replace": "\"--no-renames\", "
+ },
+ {
+  "name": "git-untracked-ignore-rules-dropped",
+  "file": "internal/changeset/git.go",
+  "find": "listArgs = append(listArgs, \"--others\", \"--exclude-standard\", \"-z\", \"--\", workspace.Pathspec)",
+  "replace": "listArgs = append(listArgs, \"--others\", \"-z\", \"--\", workspace.Pathspec)"
+ },
+ {
+  "name": "git-changes-outside-cwd-listed",
+  "file": "internal/changeset/git.go",
+  "find": "if haveNew && isInside(workspace.Cwd, newAbsolute) {",
+  "replace": "if haveNew {"
+ },
+ {
+  "name": "git-pathspec-dropped",
+  "file": "internal/changeset/git.go",
+  "find": "args := append(append([]string{\"diff\"}, diffFlags...), workspace.Head, \"--\", workspace.Pathspec)",
+  "replace": "args := append(append([]string{\"diff\"}, diffFlags...), workspace.Head, \"--\", \".\")"
+ },
+ {
+  "name": "git-blob-outside-cwd-readable",
+  "file": "internal/changeset/git.go",
+  "find": "if ok && isInside(workspace.Cwd, absolute) {\n\t\treturn absolute, true",
+  "replace": "if ok {\n\t\treturn absolute, true"
+ },
+ {
+  "name": "git-binary-line-count-invented",
+  "file": "internal/changeset/git.go",
+  "find": "if !utf8.Valid(buffer) || bytes.IndexByte(buffer, 0) >= 0 {\n\t\treturn -1",
+  "replace": "if !utf8.Valid(buffer) {\n\t\treturn -1"
+ },
+ {
+  "name": "git-file-url-hash-unescaped",
+  "file": "internal/changeset/git.go",
+  "find": "\"\\\"#%<>?[\\\\]^`{|}~\"",
+  "replace": "\"\\\"%<>?[\\\\]^`{|}~\""
+ },
+ {
+  "name": "git-latest-before-side-dropped",
+  "file": "internal/changeset/git.go",
+  "find": "\t\t\tif beforeBlob != \"\" {",
+  "replace": "\t\t\tif false && beforeBlob != \"\" {"
+ },
+ {
+  "name": "git-uncommitted-baseline-not-a-blob",
+  "file": "internal/changeset/git.go",
+  "find": "Content: ahptypes.ContentRef{Uri: gitBlobURI(sessionID, change.oldOID, oldPath, oldAbsolute)},",
+  "replace": "Content: ahptypes.ContentRef{Uri: fileURL(oldAbsolute)},"
+ },
+ {
+  "name": "changeset-blob-text-forced-utf8",
+  "file": "internal/changeset/service.go",
+  "find": "if (params.Encoding != nil && *params.Encoding == ahptypes.ContentEncodingBase64) || !text {",
+  "replace": "if !text {"
+ },
+ {
+  "name": "changeset-blob-binary-as-utf8",
+  "file": "internal/changeset/service.go",
+  "find": "if (params.Encoding != nil && *params.Encoding == ahptypes.ContentEncodingBase64) || !text {",
+  "replace": "if params.Encoding != nil && *params.Encoding == ahptypes.ContentEncodingBase64 {"
+ },
+ {
+  "name": "changeset-blob-path-not-authorized",
+  "file": "internal/changeset/service.go",
+  "find": "if err := s.opts.AuthorizeResource(fileURL(blobPath)); err != nil {",
+  "replace": "if err := s.opts.AuthorizeResource(fileURL(blobPath)); false && err != nil {"
+ },
+ {
+  "name": "changeset-working-directory-not-authorized",
+  "file": "internal/changeset/service.go",
+  "find": "if err := s.opts.AuthorizeResource(fileURL(cwd)); err != nil {",
+  "replace": "if err := s.opts.AuthorizeResource(fileURL(cwd)); false && err != nil {"
+ },
+ {
+  "name": "changeset-client-actions-accepted",
+  "file": "internal/changeset/service.go",
+  "find": "if _, ok := ParseURI(channel); ok {\n\t\t\t\treturn \"This host exposes read-only changesets\"",
+  "replace": "if _, ok := ParseURI(channel); false && ok {\n\t\t\t\treturn \"This host exposes read-only changesets\""
+ },
+ {
+  "name": "changeset-turn-end-not-refreshed",
+  "file": "internal/changeset/service.go",
+  "find": "case *ahptypes.ChatTurnCompleteAction, *ahptypes.ChatTurnCancelledAction, *ahptypes.ChatErrorAction:\n\tdefault:\n\t\treturn\n\t}",
+  "replace": "case *ahptypes.ChatTurnStartedAction:\n\tdefault:\n\t\treturn\n\t}"
+ },
+ {
+  "name": "changeset-state-never-evicted",
+  "file": "internal/changeset/service.go",
+  "find": "if s.host.SubscriberCount(channel) == 0 {\n\t\t\ts.host.DeleteChannel(channel)",
+  "replace": "if false && s.host.SubscriberCount(channel) == 0 {\n\t\t\ts.host.DeleteChannel(channel)"
+ },
+ {
+  "name": "changeset-unobserved-watcher-kept",
+  "file": "internal/changeset/service.go",
+  "find": "\t\tgo s.closeWatcher(e)\n",
+  "replace": "\t\t_ = e\n"
+ },
+ {
+  "name": "changeset-ignore-rule-change-not-noticed",
+  "file": "internal/changeset/service.go",
+  "find": "\t\t\te.watcherNeedsRestart = true\n",
+  "replace": "\t\t\t_ = e\n"
+ },
+ {
+  "name": "changeset-watcher-not-rebuilt",
+  "file": "internal/changeset/service.go",
+  "find": "\tif restart {\n\t\ts.closeWatcher(e)\n\t}",
+  "replace": "\t_ = restart"
+ },
+ {
+  "name": "changeset-error-type-renamed",
+  "file": "internal/changeset/service.go",
+  "find": "ErrorType: \"gitChangesFailed\"",
+  "replace": "ErrorType: \"gitChangeFailed\""
+ },
+ {
+  "name": "changeset-ignored-failure-recursive-watch",
+  "file": "internal/changeset/service.go",
+  "find": "\tignored, err := s.git.IgnoredDirectories(ctx, workspace)\n\tif err != nil {\n\t\tif ctx.Err() == nil {\n\t\t\ts.logf(\"cannot watch changes for %s: %v\", s.sessionURI(e), err)\n\t\t}\n\t\treturn\n\t}",
+  "replace": "\tignored, err := s.git.IgnoredDirectories(ctx, workspace)\n\tif err != nil {\n\t\tignored = nil\n\t}"
+ },
+ {
+  "name": "changeset-resume-after-failed-delete-lost",
+  "file": "internal/changeset/service.go",
+  "find": "\te.suspended = false\n\tneedsProbe",
+  "replace": "\te.suspended = true\n\tneedsProbe"
+ },
+ {
+  "name": "changeset-removed-session-keeps-channel",
+  "file": "internal/changeset/service.go",
+  "find": "\tfor _, kind := range Kinds {\n\t\ts.disposeChannel(URI(sessionID, kind))\n\t}",
+  "replace": "\t_ = Kinds"
+ },
+ {
+  "name": "changeset-suspend-does-not-drain",
+  "file": "internal/changeset/service.go",
+  "find": "\tprobe.wait()\n\trefresh.wait()\n}",
+  "replace": "\t_, _ = probe, refresh\n}"
+ },
+ {
+  "name": "changeset-first-subscribe-state-missing",
+  "file": "internal/changeset/service.go",
+  "find": "\tif !s.host.Store().Has(channel) {\n\t\t_ = s.host.Store().Create(",
+  "replace": "\tif false {\n\t\t_ = s.host.Store().Create("
+ },
+ {
+  "name": "changeset-unadvertised-channel-hydrated",
+  "file": "internal/changeset/service.go",
+  "find": "\tif !advertised {\n\t\treturn false, nil\n\t}",
+  "replace": "\t_ = advertised"
+ },
+ {
+  "name": "changeset-refresh-skips-computing-status",
+  "file": "internal/changeset/service.go",
+  "find": "if state == nil || state.Status != ahptypes.ChangesetStatusComputing {",
+  "replace": "if false && (state == nil || state.Status != ahptypes.ChangesetStatusComputing) {"
+ },
+ {
+  "name": "poll-watch-ignores-deletions",
+  "file": "internal/changeset/watch.go",
+  "find": "if _, still := next[path]; !still {",
+  "replace": "if _, still := next[path]; false && !still {"
+ },
+ {
+  "name": "git-path-dot-dot-allowed",
+  "file": "internal/changeset/git.go",
+  "find": "if segment == \"\" || segment == \".\" || segment == \"..\" {",
+  "replace": "if segment == \"\" || segment == \".\" {"
+ },
+ {
+  "name": "git-blob-oid-unvalidated",
+  "file": "internal/changeset/git.go",
+  "find": "if _, ok := g.PathForBlob(workspace, blob); !validOID(blob.OID) || !ok {",
+  "replace": "if _, ok := g.PathForBlob(workspace, blob); !ok {"
+ },
+ {
+  "name": "poll-watch-ignores-additions",
+  "file": "internal/changeset/watch.go",
+  "find": "if old, existed := snapshot[path]; !existed || old != sig {",
+  "replace": "if old, existed := snapshot[path]; existed && old != sig {"
+ },
+ {
+  "name": "poll-watch-ignores-ignore-rule",
+  "file": "internal/changeset/watch.go",
+  "find": "\t\t\tif ignored(childPath) {\n\t\t\t\tcontinue\n\t\t\t}",
+  "replace": "\t\t\t_ = ignored"
  }
 ]
