@@ -1,0 +1,68 @@
+{
+  "name": "recovery-issues",
+  "description": "A malformed goal file, a malformed ledger line, a dead-pid lock and an unreadable lock: the report, a declined repair, a confirmed repair, then a clean report.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-recovery"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-recovery repair"
+      },
+      "ui": [
+        {
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-recovery repair"
+      },
+      "ui": [
+        {
+          "confirmed": true
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-recovery"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-a.md": "{\n  \"version\": 3,\n  \"id\": \"seed-a\",\n  \"objective\": \"First goal\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 12500,\n    \"activeSeconds\": 3725\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-a.md\"\n}\n\n# Goal Prompt\n\nFirst goal\n\n## Progress\n\n- Status: active\n",
+    ".pi/goals/active_goal_broken.md": "not a goal file",
+    ".pi/goals/goal_events.jsonl": "{\"type\": \"goal_created\", \"goalId\": \"seed-a\", \"objective\": \"First goal\", \"sisyphus\": false, \"autoContinue\": true, \"at\": \"2020-01-02T03:04:05.000Z\"}\n{broken\n",
+    ".pi/goals/.locks/seed-a.lock": "{\"pid\": 2147483000, \"startedAt\": \"2026-01-01T00:00:00.000Z\"}",
+    ".pi/goals/.locks/junk.lock": "not json",
+    ".pi/goals/.locks/notes.txt": "ignored"
+  },
+  "normalize": [
+    {
+      "pattern": "\\(pid (\\d+), \\d+s old\\)",
+      "replacement": "(pid ${1}, <age>s old)"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d-\\d\\d-\\d\\d-\\d{3}Z",
+      "replacement": "<backup-stamp>"
+    }
+  ]
+}
