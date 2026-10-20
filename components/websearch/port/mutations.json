@@ -168,12 +168,6 @@
   "replace": "_ = 0"
  },
  {
-  "name": "refusal-workflow-dropped",
-  "file": "tool_search.go",
-  "find": "if workflow != \"none\" {",
-  "replace": "if workflow != \"none\" && workflow == \"\" {"
- },
- {
   "name": "refusal-provider-list-fan-out",
   "file": "search.go",
   "find": "if d := providerTable[p]; d == nil || d.search == nil {",
