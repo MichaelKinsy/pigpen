@@ -1,6 +1,7 @@
 #!/bin/sh
 # Real-host proof: a fused pig-warden Binary, a scripted model that asks for `git push --force origin main`, warden
-# enabled offline. Expects the call to be HELD with the agent-facing message and the status line to count it.
+# enabled offline. Expects the call to be HELD with the agent-facing message, the status line to count it and the
+# learning database (holds.db, the embedded SQLite engine) to exist.
 # Usage: PIG_WARDEN_BIN=/path/to/pig-warden sh smoke.sh   (runs entirely in a temporary directory; no network)
 set -eu
 BIN=${PIG_WARDEN_BIN:?set PIG_WARDEN_BIN to a pig-warden Binary}
@@ -18,4 +19,6 @@ out=$( (printf '{"type":"prompt","message":"tidy up the readme","id":"1"}\n'; sl
   "$BIN" --mode rpc --no-session --offline --provider eq-llm --model eq-1 2>&1 )
 echo "$out" | grep -q 'pi-warden held this bash call before it ran: destructive: git force push' || { echo "FAIL: not held"; exit 1; }
 echo "$out" | grep -q 'warden: offline · steer · 1 checked, 1 held' || { echo "FAIL: status line"; exit 1; }
-echo "PASS: force push held, agent told why, status line counted it"
+# The learning database is the pure-Go SQLite engine inside the fused Binary: the session start created it.
+[ -s "$T/pighome/pigpen-warden/holds.db" ] || { echo "FAIL: no learning database"; exit 1; }
+echo "PASS: force push held, agent told why, status line counted it, learning database created"
