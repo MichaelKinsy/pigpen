@@ -45,7 +45,9 @@ type AgentConfig struct {
 	SystemPrompt          string
 	Source                AgentSource
 	FilePath              string
-	discoveryPriority     int
+	// Machine pins the agent to a herdr machine (the frontmatter `machine`): its cwd belongs to that machine, not to this host.
+	Machine           string
+	discoveryPriority int
 }
 
 // Runner is the `runner:` frontmatter block; only the type and the command are read.
