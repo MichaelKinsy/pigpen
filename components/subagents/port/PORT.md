@@ -192,3 +192,34 @@ runs) and take this port's definitions, discovery and activation. Nothing of the
 - The twin ledger and slice file (264 entries by name, grouped by hand) and the 41 twins' file layout.
 - The mutation generator (116 pairs by hand, 42 of them the review's) and the scenario generator.
 - A tool-definition importer that reads a recorded request would replace `gen-tooldefs.py`.
+
+## Run policy lane, second pass (subagents-policy-2)
+
+Merged into this lane: the agent settings lane (discovery engine, model resolution, skills) and the background runs lane
+(`origin/subagents-async-1`), whose result files this lane twins. Where both lanes ported the same helper one copy was kept (the
+temp scope, run fan-out descriptor and capacity predicate stay here, with their test seams; the index segments, display helpers,
+recovery projection and git refs stay with the background runs).
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| M10 | `runs/background/result-files.ts` (indexes, pending promotion, cleanup, mission observer index) | `async_results.go` (fault seams `resultReadFile`, `resultReadDir`, `resultStat`, `resultRename`) | 23 twins (`policy_resultfiles_test.go`) |
+| M11 | `runs/shared/readonly-drain-observation.ts`, `runs/background/auto-drain.ts` (observation), `async-status.ts` (raw status observer) | `policy_readonlydrain.go`, `async_wait.go`, `async_list.go`, `async_status.go` | 5 twins and 1 skip (the in-process child hook factory) |
+| M12 | `runs/foreground/foreground-control.ts`, live prompt registry of `prompt-audit.ts` | `policy_foreground.go` | 2 twins + 1 host test |
+| M13 | `tui/running-tone.ts` (thinking level reader), `shared/extension-context.ts` (stale and unbound runtime tests) | `policy_tone.go` | 1 twin |
+
+Changes to the background runs' status code made for the observation: `readStatus` inspects before it reads and wraps the cause,
+the reconciler reports the raw status it read first (before any repair), `updateActiveRunIndex` and the active index listing
+report status errors as `Failed to list async runs`. A background run (`async` unset or true) refuses the policy options that
+only a foreground run applies (`output` other than the default, `outputMode`, `artifacts`, `acceptance`, `gate`,
+`agentContract`, `includeProgress`) instead of ignoring them; the policy reads the real `config.json`.
+
+**Still open (named in `port/slices.json`):** preflight (31 cases), delegation-api (17), the 6 capability-ceiling allowlist cases
+that need preflight, writer-budget-guidance (1; the original's docs, skill and prompt are not shipped), usage-reconciliation-owners
+(2). `outputSchema`, the `structured_output` tool and `acceptance.report` stay refused.
+
+**Finding for the child role (item 2):** `pig --mode json` writes one JSON event per line (`message_end` with the message and its
+usage, `tool_execution_end`), so a child run in json mode would give usage, turns and tool results without an in-process session;
+`-e <path>` loads an explicit extension under `--no-extensions`; `--tools` and `--session-dir` exist. What is missing is the
+child role of this extension (a `structured_output` tool that ends the step, `contact_supervisor`, the watchdog diff tool) and the
+launch code that passes `-e <this extension>` with a role in the environment; nothing in pig blocks it, so the refusal is kept
+only until that is written.
