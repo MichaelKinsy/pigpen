@@ -93,9 +93,7 @@ never falls back or runs part of the call:
 > @pi-in-go/pigpen-websearch (Go port) does not support `<feature>` yet. Install the original
 > extension, npm:pi-web-access@0.33.0, which runs unchanged in PiG.
 
-- `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
-- a page the original would hand to its RSC payload and Defuddle fallbacks after the readable
-  extraction fails.
+- `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries).
 
 Not registered, and so not advertised: the original's commands `/websearch`, `/curator` and
 `/google-account`, its activity widget and its shortcuts (they belong to the curator and the
