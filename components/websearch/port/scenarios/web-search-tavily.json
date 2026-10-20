@@ -56,5 +56,11 @@
     }
    ]
   }
- }
+ },
+ "normalize": [
+  {
+   "pattern": "\\b[0-9a-z]{14}\\b",
+   "replacement": "<response-id>"
+  }
+ ]
 }
