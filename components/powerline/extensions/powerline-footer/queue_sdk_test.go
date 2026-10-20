@@ -166,9 +166,21 @@ func TestQueueSendToABusySessionIsAFollowUp(t *testing.T) {
 // The host may start the message, and so deliver before_agent_start, before it answers the sendUserMessage call. The queue must
 // not hold its lock across that call, or the event handler waits for the lock the call is waiting to release.
 func TestQueueDeliveryDoesNotDeadlockWhenTheHostStartsTheMessageFirst(t *testing.T) {
-	var r *queueSDKRig
-	r = startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{inboxLine("cccc3333", "start me", 1, "")},
-		onSend: func(r *queueSDKRig, text string) { r.h.Fire("before_agent_start", agentStart(text)) }})
+	// The host delivers the event to every handler of the extension while the sendUserMessage call is open; the test ends only after
+	// that, or the delivery would outlive the host.
+	started := make(chan struct{})
+	r := startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{inboxLine("cccc3333", "start me", 1, "")},
+		onSend: func(r *queueSDKRig, text string) {
+			defer close(started)
+			r.h.Fire("before_agent_start", agentStart(text))
+		}})
+	defer func() {
+		select {
+		case <-started:
+		case <-time.After(8 * time.Second):
+			t.Error("the host never finished delivering before_agent_start")
+		}
+	}()
 	done := make(chan string, 1)
 	go func() { done <- r.h.Command("queue", "send") }()
 	select {
