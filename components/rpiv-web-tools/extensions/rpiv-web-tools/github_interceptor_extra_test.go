@@ -558,6 +558,19 @@ func TestGitHubMoreCases(t *testing.T) {
 		r := ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/tree/main")
 		ghHas(t, r.Text, "p199\n\nThis is an API-only view")
 	})
+	t.Run("blank lines of the tree are no entries, whether or not the tree is cut", func(t *testing.T) {
+		ctx, _ := ghExec(t, ghAPIMock([2]string{".tree[].path", "a\n\nb\n\n\nc"}))
+		r := ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/tree/main")
+		ghHas(t, r.Text, "## Structure\na\nb\nc\n\nThis is an API-only view")
+		var paths []string
+		for i := range 201 {
+			paths = append(paths, "p"+pad3(i))
+		}
+		ctx, _ = ghExec(t, ghAPIMock([2]string{".tree[].path", strings.Join(paths, "\n\n")}))
+		r = ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/tree/main")
+		ghHas(t, r.Text, "p199\n... (201 total entries)\n")
+		ghHasNot(t, r.Text, "p200")
+	})
 	t.Run("a blob URL without a path shows the tree view", func(t *testing.T) {
 		ctx, _ := ghExec(t, ghAPIMock([2]string{".tree[].path", "a"}))
 		r := ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/blob/main")
