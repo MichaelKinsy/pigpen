@@ -267,7 +267,7 @@
   "name": "github-env-expansion",
   "file": "github_extract.go",
   "find": "if v, ok := os.LookupEnv(m[1:]); ok {",
-  "replace": "if false {"
+  "replace": "if v, ok := os.LookupEnv(m[1:]); ok && v == \"\\u0000\" {"
  },
  {
   "name": "github-truncated-file-note",
