@@ -117,26 +117,26 @@ func init() {
 	def("duckduckgo", "DuckDuckGo", IsDuckDuckGoAvailable, SearchWithDuckDuckGo)
 	def("serpdive", "SERPdive", IsSerpdiveAvailable, SearchWithSerpdive)
 	def("kagi", "Kagi", IsKagiAvailable, SearchWithKagi)
+	def("parallel", "Parallel", IsParallelAvailable, SearchWithParallel)
+	def("parallel-mcp", "Parallel MCP", IsParallelMCPAvailable, SearchWithParallelMCP)
+	def("tinyfish", "TinyFish", IsTinyFishAvailable, SearchWithTinyFish)
+	def("search1api", "Search1API", IsSearch1APIAvailable, SearchWithSearch1API)
+	def("searchinfinity", "Searchinfinity", IsSearchinfinityAvailable, SearchWithSearchinfinity)
+	def("querit", "Querit", IsQueritAvailable, SearchWithQuerit)
+	def("firecrawl", "Firecrawl", IsFirecrawlAvailable, SearchWithFirecrawl)
+	def("ollama", "Ollama", IsOllamaAvailable, SearchWithOllama)
+	def("brightdata", "Bright Data", IsBrightDataAvailable, SearchWithBrightData)
 	// Not ported yet: label and credential names as in the original.
 	for _, p := range []struct{ name, label, cfg, env string }{
 		{"openai", "OpenAI", "openaiApiKey", "OPENAI_API_KEY"},
-		{"parallel", "Parallel", "parallelApiKey", "PARALLEL_API_KEY"},
-		{"parallel-mcp", "Parallel MCP", "", ""},
-		{"tinyfish", "TinyFish", "tinyfishApiKey", "TINYFISH_API_KEY"},
-		{"search1api", "Search1API", "search1apiApiKey", "SEARCH1API_KEY"},
-		{"searchinfinity", "Searchinfinity", "searchinfinityApiKey", "SEARCHINFINITY_API_KEY"},
-		{"querit", "Querit", "queritApiKey", "QUERIT_API_KEY"},
 		{"you", "You.com", "youApiKey", "YOU_API_KEY"},
-		{"firecrawl", "Firecrawl", "firecrawlApiKey", "FIRECRAWL_API_KEY"},
 		{"jina", "Jina", "jinaApiKey", "JINA_API_KEY"},
 		{"searxng", "SearXNG", "searxngBaseUrl", "SEARXNG_BASE_URL"},
 		{"gemini", "Gemini", "geminiApiKey", "GEMINI_API_KEY"},
 		{"kimi", "Kimi", "kimiApiKey", "KIMI_API_KEY"},
-		{"ollama", "Ollama", "ollamaApiKey", "OLLAMA_API_KEY"},
 		{"anysearch", "Anysearch", "", ""},
 		{"xai", "xAI", "xaiApiKey", "XAI_API_KEY"},
 		{"mistral", "Mistral", "mistralApiKey", "MISTRAL_API_KEY"},
-		{"brightdata", "Bright Data", "brightdataApiKey", "BRIGHTDATA_API_KEY"},
 		{"serpbase", "SerpBase", "serpbaseApiKey", "SERPBASE_API_KEY"},
 		{"serpapi", "SerpApi", "serpapiApiKey", "SERPAPI_API_KEY"},
 		{"serper", "Serper", "serperApiKey", "SERPER_API_KEY"},

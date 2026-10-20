@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-// Port of kagi.ts (search only; Kagi Extract is one of the hosted fetch providers that are not
-// ported yet).
+// Port of kagi.ts: search and Kagi Extract.
 
 const (
 	kagiSearchURL     = "https://kagi.com/api/v1/search"
+	kagiExtractURL    = "https://kagi.com/api/v1/extract"
 	kagiSearchTimeout = 60 * time.Second
 )
 
@@ -148,4 +148,76 @@ func SearchWithKagi(ctx context.Context, query string, o SearchOptions) (*Search
 		}
 	}
 	return out, nil
+}
+
+// IsKagiExtractAvailable is isKagiExtractAvailable.
+func IsKagiExtractAvailable() bool { return IsKagiAvailable() }
+
+func kagiRequireKey(ctx context.Context) (string, error) {
+	return requireProviderKey(ctx, "Kagi", "Kagi", "kagiApiKey", "KAGI_API_KEY", "Create a key at https://kagi.com/settings?p=api")
+}
+
+// ExtractWithKagi fetches one URL through Kagi Extract, after the SSRF guard (kagi.ts
+// extractWithKagi).
+func ExtractWithKagi(ctx context.Context, rawURL string, o ExtractOptions, ssrf SsrfConfig) (*ExtractedContent, error) {
+	if err := validateTarget(ctx, rawURL, ssrf, o.Lookup, true); err != nil {
+		return nil, err
+	}
+	key, err := kagiRequireKey(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resp, tctx, cancel, err := guardedAPI(ctx, kagiExtractURL, RequestInit{Method: "POST", Body: jsonBytes(map[string]any{"pages": []any{map[string]any{"url": rawURL}}}),
+		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}, "Accept": {"application/json"}}},
+		timeoutMsOr(o.TimeoutMs, kagiSearchTimeout), FetchRemoteOptions{ValidationOptions: ssrfValidation(ssrf, o.Lookup, false), OnRedirect: redirectKeepsOnlyJSON(true)})
+	defer cancel()
+	if err != nil {
+		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
+	}
+	body, err := readBody(resp)
+	if err != nil {
+		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("Kagi Extract API error %d: %s", resp.StatusCode, slice300(RedactCredential(body, key)))
+	}
+	var raw any
+	if err := json.Unmarshal([]byte(body), &raw); err != nil {
+		return nil, fmt.Errorf("Kagi Extract API returned invalid JSON: %v", err)
+	}
+	env, ok := raw.(map[string]any)
+	if !ok {
+		return nil, kagiInvalidResponse("expected extract object envelope")
+	}
+	if msg := kagiErrors(env); msg != "" {
+		return nil, kagiInvalidResponse(msg)
+	}
+	candidates, isList := env["data"].([]any)
+	if !isList {
+		if d, ok := env["data"]; ok && d != nil {
+			candidates = []any{d}
+		} else {
+			candidates = []any{env}
+		}
+	}
+	for _, c := range candidates {
+		item, ok := c.(map[string]any)
+		if !ok {
+			continue
+		}
+		content := firstString(item["markdown"], item["content"], item["text"])
+		if content == "" {
+			continue
+		}
+		u := firstString(item["url"], item["href"], item["link"])
+		if u == "" {
+			u = rawURL
+		}
+		title := firstString(item["title"], item["name"])
+		if title == "" {
+			title = rawURL
+		}
+		return &ExtractedContent{URL: u, Title: title, Content: content}, nil
+	}
+	return nil, nil
 }

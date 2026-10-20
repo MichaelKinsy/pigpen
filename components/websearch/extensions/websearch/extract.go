@@ -19,10 +19,11 @@ import (
 
 // Port of extract.ts: fetch one URL and return readable text. What is ported here is the direct
 // HTTP path (SSRF-checked, redirect-limited, size-capped, raw and readable modes, images,
-// Cloudflare challenge detection), the keyless Jina Reader fallback (opt-in), the fetch routing
-// configuration, and the failure guidance. The hosted extraction providers, PDF text, video,
-// YouTube and GitHub-clone extraction are named gaps (docs/PORT.md): their routing entries exist
-// so configuration validates, but they are never called.
+// Cloudflare challenge detection), the hosted fetch providers (the keyless Jina Reader, and
+// Firecrawl, Crawl4AI, TinyFish, Search1API, Querit, Kagi, Ollama, Parallel, Parallel MCP and Bright
+// Data), the fetch routing configuration, and the failure guidance. Gemini URL context, PDF text,
+// video, YouTube and GitHub-clone extraction are named gaps (docs/PORT.md): their routing entries
+// exist so configuration validates, but they are not called.
 
 const (
 	minUsefulContent  = 500
@@ -247,6 +248,15 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 
 	var httpResult *ExtractedContent
 	var declared []DeclaredWebLink
+	failures := map[string]string{}
+	parseError := func(msg string) ExtractedContent {
+		if httpResult != nil {
+			r := *httpResult
+			r.Error = &msg
+			return r
+		}
+		return failed(rawURL, msg)
+	}
 	withDeclared := func(r ExtractedContent) ExtractedContent {
 		r.Content = AppendDeclaredWebLinks(r.Content, declared)
 		return r
@@ -295,10 +305,28 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 			if r := extractWithJinaReader(ctx, rawURL, timeout, o.Lookup); r != nil {
 				return withDeclared(*r)
 			}
-		default:
-			// A hosted fetch provider the original would call here; this port has none of them.
+		case "gemini":
+			// Gemini URL context and Gemini Web belong to a later slice: keep the refusal.
 			if fetchProviderRequested(p) {
-				return failed(rawURL, unsupported(fetchProviderLabel(p)+" fetch provider").Error())
+				return failed(rawURL, unsupported(ProviderLabel(p)+" fetch provider").Error())
+			}
+		default:
+			if !isHostedFetchProvider(p) {
+				continue
+			}
+			r, err := runHostedFetch(ctx, p, rawURL, o)
+			if err != nil {
+				if hostedAborted(ctx, p, err) {
+					return abortedResult(rawURL)
+				}
+				failures[p] = err.Error()
+				if isConfigParseError(failures[p]) {
+					return parseError(failures[p])
+				}
+				continue
+			}
+			if r != nil {
+				return withDeclared(*r)
 			}
 		}
 	}
@@ -320,19 +348,14 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 	if httpResult != nil && httpResult.Error != nil {
 		first = *httpResult.Error
 	}
-	lines := []string{first, "", "Fallback options:"}
+	lines := append([]string{first}, hostedGuidanceLines(failures)...)
+	lines = append(lines, "", "Fallback options:")
 	if hint := jinaReaderGuidance(routing, order, remote != nil && !routing.AllowRemoteHostedProviders); hint != "" {
 		lines = append(lines, hint)
 	}
-	// The original also lists Firecrawl, Crawl4AI, TinyFish, Search1API, Querit, Kagi, Ollama,
-	// Parallel, Bright Data, the Gemini API and Gemini Web (browser cookies). None of them is a
-	// fetch provider in this port, so suggesting them would send the user to settings that do
-	// nothing (docs/PORT.md, deliberate differences).
+	lines = append(lines, hostedFallbackOptions()...)
 	if o.ToolNames.WebSearch != "" {
 		lines = append(lines, "  • Use "+o.ToolNames.WebSearch+" to find content about this topic")
-	}
-	if len(lines) == 3 {
-		lines = append(lines, "  • none in this port: the other fetch providers of pi-web-access are not ported yet")
 	}
 	base := ExtractedContent{URL: rawURL}
 	if httpResult != nil {

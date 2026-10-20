@@ -211,28 +211,6 @@ type plainError struct{ msg string }
 
 func (e *plainError) Error() string { return e.msg }
 
-// fetchProviderRequested reports whether the original would call the hosted fetch provider p at
-// this point: its availability check (a base URL, a key, or always for the keyless ones).
-func fetchProviderRequested(p string) bool {
-	cfgString := func(key string) string {
-		root, _ := readLenientConfig()
-		s, _ := root[key].(string)
-		return strings.TrimSpace(s)
-	}
-	switch p {
-	case "firecrawl":
-		return strings.TrimSpace(os.Getenv("FIRECRAWL_BASE_URL")) != "" || cfgString("firecrawlBaseUrl") != ""
-	case "crawl4ai":
-		return strings.TrimSpace(os.Getenv("CRAWL4AI_BASE_URL")) != "" || cfgString("crawl4aiBaseUrl") != ""
-	case "parallel-mcp":
-		return true
-	}
-	return isProviderAvailable(p)
-}
-
-func fetchProviderLabel(p string) string {
-	if p == "crawl4ai" {
-		return "Crawl4AI"
-	}
-	return ProviderLabel(p)
-}
+// fetchProviderRequested reports whether the original would call the Gemini fetch provider here:
+// its availability check (a credential source). The Gemini providers are a later slice.
+func fetchProviderRequested(p string) bool { return isProviderAvailable(p) }
