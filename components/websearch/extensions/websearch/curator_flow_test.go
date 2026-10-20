@@ -211,7 +211,7 @@ func TestUpstream_curator_fallback(t *testing.T) {
 		}
 	})
 	tw(t, F, "README documents manual browser fallback", func(t *testing.T) {
-		readme := readFile(t, readmePath)
+		readme := readReadme(t)
 		matchRE(t, `Docker, WSL, SSH, or headless environments`, readme)
 		matchRE(t, `Copy it into a browser that can reach the Pi host`, readme)
 		matchRE(t, `Remote curator sessions print the URL instead of trying to open a browser by default`, readme)

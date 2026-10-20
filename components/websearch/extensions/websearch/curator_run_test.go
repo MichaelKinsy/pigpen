@@ -122,7 +122,7 @@ func TestUpstream_auto_summary_source(t *testing.T) {
 		noURL(t, e.opened)
 	})
 	tw(t, F, "README documents auto-summary", func(t *testing.T) {
-		readme := readFile(t, readmePath)
+		readme := readReadme(t)
 		matchRE(t, `workflow: "auto-summary"`, readme)
 		matchRE(t, `generate a summary without opening the curator`, readme)
 	})

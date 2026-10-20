@@ -1,8 +1,8 @@
 {
  "name": "curator-command-workflow",
- "description": "/curator writes the configured workflow and the next web_search, which names none, reads it on that call: toggle, explicit values, an unknown option, then a search that inherits auto-summary.",
+ "description": "/curator writes the configured workflow and the next web_search, which names none, reads it on that call: toggle, explicit values, an unknown option, then a search that inherits summary-review (curator, no browser launch) and ends by the idle minimum with the deterministic summary.",
  "agentFiles": {
-  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"tavily\", \"tavilyApiKey\": \"tvly-test-key\", \"tavilyBaseUrl\": \"{{server:tavily}}\", \"curatorTimeoutSeconds\": 1, \"workflow\": \"summary-review\"}"
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"tavily\", \"tavilyApiKey\": \"tvly-test-key\", \"tavilyBaseUrl\": \"{{server:tavily}}\", \"curatorTimeoutSeconds\": 1, \"workflow\": \"summary-review\", \"autoOpenBrowser\": false}"
  },
  "commands": {
   "xdg-open": {
@@ -62,10 +62,10 @@
    "wait": "response"
   },
   {
-   "name": "auto-summary",
+   "name": "summary-review",
    "rpc": {
     "type": "prompt",
-    "message": "/curator auto-summary"
+    "message": "/curator summary-review"
    },
    "wait": "response"
   },
