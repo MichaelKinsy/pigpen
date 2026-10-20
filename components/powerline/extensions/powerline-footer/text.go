@@ -120,6 +120,9 @@ func truncateToWidth(s string, maxWidth int, ellipsis string) string {
 		return s
 	}
 	const reset = "\x1b[0m"
+	if ellipsis == "" {
+		return result.String() + reset // finalizeTruncatedResult adds the ellipsis and its reset only when there is one
+	}
 	return result.String() + reset + ellipsis + reset
 }
 
