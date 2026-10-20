@@ -49,8 +49,21 @@ can do all of the following, so treat the token like a shell login:
 - List and read the stored history of **every** PiG session under the session directory, from all
   projects, not only the running one.
 - Get `@` completions, which list file names under the working directory.
+- Read the git changesets of the working directory (the diff of the last commit and the uncommitted work, with the content of the changed
+  files from git) through `git-blob:` references. These are served without the filesystem opt-in because they are read-only and confined to
+  the working directory's subtree; with `filesystem.enabled` the filesystem roots limit them too.
 
 The token is shown in the `/ahp` status and in the "listening" notice.
+
+## Git changesets
+
+Like pi-ahp, the host runs the `git` command line (it must be on `PATH`; without it, or outside a work tree, no changesets are advertised)
+to compute two changesets per session: **Latest Commit** (HEAD against its parent, or the root commit) and **Uncommitted Changes**
+(tracked changes against HEAD plus untracked files that git does not ignore). Nothing in the repository or its index is modified:
+git runs with `GIT_OPTIONAL_LOCKS=0`, the ambient `GIT_DIR`/`GIT_INDEX_FILE`/`GIT_WORK_TREE`-style overrides are removed, and each
+call is limited to 30 seconds and 32 MiB of output. A changeset is computed when a client subscribes, again after every turn, and
+while it stays subscribed whenever the working directory, the git index, HEAD, the refs or the ignore rules change (the watcher
+polls once a second and does not descend into ignored directories). Unsubscribed changesets are dropped after 30 seconds.
 
 ## Commands and flags
 
@@ -112,7 +125,9 @@ What to expect, and the limits that apply to this port:
   [proof/PORT.md](proof/PORT.md), deviation 15). A browser `Origin` that is not allowed also gets 403.
 - The host serves **the one running session** as one agent (`pi`). Other sessions are readable from their files; they are not
   running agents. If the session is replaced (new, resume, fork, reload) clients are dropped (see Commands and flags).
-- No git changeset channels: VS Code's change views will have nothing to show (the changeset service of pi-ahp is not ported).
+- Git changesets: when the session's working directory is inside a git work tree, the session advertises two changesets, **Latest Commit**
+  (once the repository has a commit) and **Uncommitted Changes**, which VS Code's change views show. They are read-only, limited to the
+  working directory's subtree, and refreshed while a client has them open (see Git changesets above).
 - The remote filesystem, watches, terminals and session deletion are off until you opt in (see Safe by default).
 - No dev tunnel is bundled, and project trust cannot be gated from an extension (see [proof/PORT.md](proof/PORT.md)).
 

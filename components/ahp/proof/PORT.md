@@ -22,7 +22,7 @@ session. The equivalence method is therefore three layers, not the scenario harn
 
 1. **Twins.** Every one of the 430 upstream test cases has a Go test named after it
    (`internal/twin`; the gate `extensions/ahp/twins_test.go` fails when a case has neither a test nor
-   a named skip). **375 run, 55 are named skips** (below). Upstream inputs and expectations are kept;
+   a named skip). **390 run, 40 are named skips** (below). Upstream inputs and expectations are kept;
    where the Go form had to differ the test says why.
 2. **Real host.** `extensions/ahp/realpig_test.go` builds the extension with a real `pig`, serves a real PiG
    session backed by a scripted local model (`tools/fakellm`), and drives it with a WebSocket AHP
@@ -49,19 +49,19 @@ session. The equivalence method is therefore three layers, not the scenario harn
 | Pi `SessionManager` (JSONL v3) | `internal/pisession` | used by the above |
 | `pi/resource-*.ts` | `internal/svc` (`resource.go`, `watch.go`, `glob.go`, `watchpolicy.go`) | resource 23, resource-watch 28, policy 9, watch-events 4 |
 | `host/terminal-service.ts` | `internal/svc` (`terminal.go`, `pty*.go`) | terminal-service 14, pty 2 |
+| `pi/changeset-uri.ts`, `git-changes.ts`, `changeset-service.ts` | `internal/changeset` | changeset 8, changeset-lifecycle 5, changeset-uri 2 |
 | `pi/image-input.ts` | `internal/pi/imageinput.go` | image-input 2 |
 | `host/pi-host.ts` | `internal/compose` | pi-host 1 |
 | `host/direct-settings.ts` | `internal/settings` | direct-settings 3 |
 | `pi/in-process-backend.ts` | `internal/live` (adapter over the SDK; not a port) | real-pig scenarios |
 | (none) | root package: flags, `/ahp`, listener lifecycle | real-pig scenarios |
 
-## Named skipped twins (55)
+## Named skipped twins (40)
 
 | Family | Count | Why |
 |---|---|---|
 | `tunnel` | 20 | The dev tunnel (Microsoft `devtunnel` CLI management) is not bundled: owner decision, ACP, AHP and A2A are separate extensions |
 | `pi-replay` | 15 | Replays provider streams through a live embedded Pi agent loop. Covered by the recorded-stream twins (`mapper-fixtures`) and the real-pig scenarios |
-| `changeset`, `changeset-lifecycle`, `changeset-uri` | 15 | The git changeset service (`git-changes.ts`, `changeset-service.ts`) is not ported in this release; the host advertises no changeset channels. Documented gap, candidate for the next release |
 | `image-session` | 1 | Needs Pi's `InProcessPiBackend` and a faux model |
 | `model-discovery` | 2 | Needs an embedded Pi model registry with extension providers; the adapter reads models through the SDK |
 | `live-turn` | 1 | Upstream skips it itself without a real model |
@@ -116,6 +116,16 @@ session. The equivalence method is therefore three layers, not the scenario harn
     writes 401. The AHP spec leaves endpoint access to the transport, upstream's twin only asserts the refusal, and no
     client tells the two apart (a browser WebSocket reports either as one error); a 401 would also owe a `WWW-Authenticate`
     challenge that a query token has no scheme for. A browser `Origin` that is not allowed is 403 as before.
+
+16. **Changesets.** Ported from `changeset-uri.ts`, `git-changes.ts` and `changeset-service.ts`; git is run with the same
+    argument lists, environment scrubbing, limits and parsers. (a) The watcher polls a snapshot (default every second) where
+    chokidar uses native events; the upstream `ignored` rule is kept, so ignored directories and most of `.git` are not walked.
+    (b) Upstream's resource service is always on and its `readVirtual` serves `git-blob:`; here the filesystem services exist only
+    when opted in, so `git-blob:` is served by a front handler in `internal/compose` that is always present and otherwise
+    answers MethodNotFound for every resource command. The blobs are read-only and limited to the session working directory
+    (`PathForBlob`); with the filesystem opted in its roots also authorize the working directory and each blob path, as
+    upstream's `authorizeResource` does. (c) File ordering uses the same approximated `localeCompare` as the other services
+    (deviation 12). (d) The MIME type of a blob comes from the same subset table as deviation 10.
 
 ## Build notes
 
