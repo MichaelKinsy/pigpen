@@ -391,8 +391,9 @@ func registerGoalEvents(c *core) {
 				byLabel[labels[i]] = gstr(item, "id")
 			}
 			c.enterGoalModal()
-			selected, ok := c.h.Select("Focus open goal", labels)
-			c.flush()
+			var selected string
+			var ok bool
+			c.awaiting(func() { selected, ok = c.h.Select("Focus open goal", labels) })
 			if ok && selected != "" {
 				if id, found := byLabel[selected]; found && id != "" {
 					c.setFocusedGoalId(&id, "selected", true)
@@ -403,8 +404,8 @@ func registerGoalEvents(c *core) {
 		}
 		// Codex behavior: prompt before reactivating a paused goal on resume.
 		if g := c.state(); resume && g != nil && gstr(g, "status") == "paused" && c.h.HasUI() {
-			shouldResume := c.h.Confirm("Resume paused goal?", "Goal: "+gstr(g, "objective"))
-			c.flush()
+			var shouldResume bool
+			c.awaiting(func() { shouldResume = c.h.Confirm("Resume paused goal?", "Goal: "+gstr(g, "objective")) })
 			if shouldResume {
 				c.scheduler.resume()
 			}
