@@ -92,8 +92,23 @@ func TestUpstream_provider_precedence(t *testing.T) {
 		noErr(t, err)
 		wantCalls(t, n, "https://api.perplexity.ai/chat/completions")
 	})
-	tskip(t, F, "auto still uses provider fallback when no provider is configured",
-		"the fixture's only credential is OPENAI_API_KEY and OpenAI hosted search is not ported (docs/PORT.md); TestAutoOrderIsFixed in routing_test.go covers the ported order")
+	tw(t, F, "auto still uses provider fallback when no provider is configured", func(t *testing.T) {
+		// The only credential is OPENAI_API_KEY and there is no config file: auto reaches OpenAI.
+		providerEnv(t, "", map[string]string{"OPENAI_API_KEY": "openai-test-key"})
+		ClearResults()
+		t.Cleanup(ClearResults)
+		r, err := NewRuntime(&fakeHost{})
+		noErr(t, err)
+		n := useNet(t, func(c netCall) netReply {
+			if c.URL == "https://api.openai.com/v1/responses" {
+				return reply(200, `{"output":[{"type":"web_search_call","action":{"sources":[]}},{"type":"message","content":[{"type":"output_text","text":"openai answer"}]}]}`)
+			}
+			return netReply{Err: fmt.Errorf("Unexpected fetch: %s", c.URL)}
+		})
+		_, err = mustTool(t, r, "web_search").Execute(bg(), map[string]any{"query": "provider precedence", "workflow": "none", "provider": "auto"}, nil)
+		noErr(t, err)
+		wantCalls(t, n, "https://api.openai.com/v1/responses")
+	})
 	tskip(t, F, "configured explicit-only SerpBase fails instead of falling back",
 		"SerpBase is not ported; TestUnportedProviderFailsWithoutFallback pins the equivalent behaviour for every unported provider")
 	tw(t, F, "legacy Gemini Web profile config does not block unrelated configured providers", func(t *testing.T) {
