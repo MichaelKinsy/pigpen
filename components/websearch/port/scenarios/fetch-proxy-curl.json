@@ -1,0 +1,64 @@
+{
+ "name": "fetch-proxy-curl",
+ "description": "fetch_content with a per-call proxy runs curl with the original's arguments; the fake server is the HTTP proxy and answers the proxied request.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\"}"
+ },
+ "commands": {
+  "curl": {
+   "mode": "real"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "http://93.184.216.34/page",
+      "proxy": "{{server:proxy}}"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "proxy": {
+   "routes": [
+    {
+     "path": "/page",
+     "headers": {
+      "content-type": "text/plain"
+     },
+     "body": "Plain page served through the proxy.\n"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "pi-web-access-proxy-[A-Za-z0-9]{6,12}",
+   "replacement": "pi-web-access-proxy-<id>"
+  }
+ ]
+}

@@ -2,6 +2,8 @@ package websearch
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -512,5 +514,135 @@ func TestProxyNormalizationMatchesTheURLClass(t *testing.T) {
 		if got != want {
 			t.Errorf("%q: got %q, want %q", in, got, want)
 		}
+	}
+}
+
+// proxyCurlCase is one recorded request of the original (port/record-proxy-curl.mjs): its
+// input, the curl invocations it made and what fetch resolved to.
+type proxyCurlCase struct {
+	Name     string          `json:"name"`
+	Proxy    string          `json:"proxy"`
+	URL      string          `json:"url"`
+	Method   *string         `json:"method"`
+	Headers  json.RawMessage `json:"headers"`
+	Body     json.RawMessage `json:"body"`
+	Redirect *string         `json:"redirect"`
+	Calls    []struct {
+		Args              []string `json:"args"`
+		RequestBodyBase64 *string  `json:"requestBodyBase64"`
+	} `json:"calls"`
+	Result struct {
+		Status   int     `json:"status"`
+		URL      string  `json:"url"`
+		Location *string `json:"location"`
+		Text     string  `json:"text"`
+		Error    string  `json:"error"`
+	} `json:"result"`
+}
+
+// recordedRoutes are the answers of the recorder's fake curl.
+var recordedRoutes = map[string]curlRoute{
+	"https://93.184.216.34/page":   {Status: 200, StatusText: "OK", Body: "page body"},
+	"https://93.184.216.34/post":   {Status: 201, StatusText: "Created", Body: "created"},
+	"https://93.184.216.34/gone":   {Status: 404, StatusText: "Not Found", Body: "gone"},
+	"https://93.184.216.34/nobody": {Status: 204, StatusText: "No Content", Body: "ignored"},
+	"https://93.184.216.34/start":  {Status: 302, StatusText: "Found", Location: "https://other.example/final"},
+	"https://other.example/final":  {Status: 200, StatusText: "OK", Body: "final"},
+}
+
+func (c proxyCurlCase) init(t *testing.T) RequestInit {
+	t.Helper()
+	init := RequestInit{}
+	if c.Method != nil {
+		init.Method = *c.Method
+	}
+	if len(c.Headers) > 0 && string(c.Headers) != "null" {
+		init.Header = http.Header{}
+		var object map[string]string
+		if json.Unmarshal(c.Headers, &object) == nil {
+			for k, v := range object {
+				init.Header[k] = append(init.Header[k], v)
+			}
+		} else {
+			var pairs [][2]string
+			noErr(t, json.Unmarshal(c.Headers, &pairs))
+			for _, p := range pairs {
+				// Raw keys: the original's Headers merges names that differ only in case.
+				init.Header[p[0]] = append(init.Header[p[0]], p[1])
+			}
+		}
+	}
+	if len(c.Body) > 0 && string(c.Body) != "null" {
+		var text string
+		var structured struct {
+			URLSearchParams *string `json:"urlSearchParams"`
+			Bytes           []byte  `json:"bytes"`
+		}
+		switch {
+		case json.Unmarshal(c.Body, &text) == nil:
+			init.Body = []byte(text)
+		case json.Unmarshal(c.Body, &structured) == nil && structured.URLSearchParams != nil:
+			init.Body = []byte(*structured.URLSearchParams)
+		case json.Unmarshal(c.Body, &structured) == nil:
+			init.Body = structured.Bytes
+		default:
+			t.Fatalf("body %s", c.Body)
+		}
+	}
+	return init
+}
+
+func TestCurlArgumentsEqualTheOriginals(t *testing.T) {
+	data, err := os.ReadFile("testdata/proxy-curl.json")
+	noErr(t, err)
+	var cases []proxyCurlCase
+	noErr(t, json.Unmarshal(data, &cases))
+	if len(cases) < 15 {
+		t.Fatalf("%d recorded cases", len(cases))
+	}
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			extractEnv(t, "")
+			f := useCurl(t, recordedRoutes)
+			proxy, _, err := NormalizeProxyURL(c.Proxy, "proxy")
+			noErr(t, err)
+			u := mustURL(t, c.URL)
+			resp, err := curlFetchOnce(bg(), u, c.init(t), proxy)
+			calls := f.snapshot()
+			if len(calls) != len(c.Calls) {
+				t.Fatalf("%d curl calls, the original made %d", len(calls), len(c.Calls))
+			}
+			for i, want := range c.Calls {
+				got := make([]string, len(calls[i].Args))
+				for j, a := range calls[i].Args {
+					got[j] = strings.ReplaceAll(a, calls[i].Dir, "<dir>")
+				}
+				if !reflect.DeepEqual(got, want.Args) {
+					t.Fatalf("call %d\n got  %q\n want %q", i, got, want.Args)
+				}
+				switch {
+				case want.RequestBodyBase64 == nil && calls[i].RequestBody != nil:
+					t.Fatalf("an unexpected request body %q", *calls[i].RequestBody)
+				case want.RequestBodyBase64 != nil:
+					wantBody, _ := base64.StdEncoding.DecodeString(*want.RequestBodyBase64)
+					if calls[i].RequestBody == nil || *calls[i].RequestBody != string(wantBody) {
+						t.Fatalf("request body %v, want %q", calls[i].RequestBody, wantBody)
+					}
+				}
+			}
+			if c.Result.Error != "" {
+				if err == nil || err.Error() != c.Result.Error {
+					t.Fatalf("error %v, want %q", err, c.Result.Error)
+				}
+				return
+			}
+			noErr(t, err)
+			body, _ := io.ReadAll(resp.Body)
+			loc := resp.Header.Get("Location")
+			if resp.StatusCode != c.Result.Status || string(body) != c.Result.Text || resp.Request.URL.String() != c.Result.URL ||
+				(c.Result.Location != nil && loc != *c.Result.Location) {
+				t.Fatalf("%d %q %s %q, want %+v", resp.StatusCode, body, resp.Request.URL, loc, c.Result)
+			}
+		})
 	}
 }

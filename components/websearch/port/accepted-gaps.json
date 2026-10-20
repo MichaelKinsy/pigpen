@@ -1,4 +1,3 @@
 {
-  "exec:curl": "utils.ts runs curl only to fetch through a proxy; the port uses net/http with the same proxy and its twins record each proxied request instead of curl arguments (port/PORT.md)",
   "exec:taskkill": "Windows process-tree kill of a timed-out clone (github_extract.go via procgroup_windows.go, like taskkill in github-extract.ts:511): the harness runs on Linux and macOS only, so no scenario reaches it"
 }
