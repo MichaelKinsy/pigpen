@@ -1,0 +1,110 @@
+{
+  "name": "manage-reset",
+  "description": "Change a builtin agent's model through an override, then reset it.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "subagents_enable",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "update",
+            "agent": "scout",
+            "config": {
+              "model": "claude-x"
+            },
+            "agentScope": "project"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "get",
+            "agent": "scout"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "reset",
+            "agent": "scout",
+            "agentScope": "project"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "get",
+            "agent": "scout"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "delegate the work"
+      }
+    }
+  ],
+  "files": {
+    ".pi/keep": ""
+  },
+  "commands": {
+    "git": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "npm": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "ps": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "gh": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "powershell.exe": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    }
+  }
+}

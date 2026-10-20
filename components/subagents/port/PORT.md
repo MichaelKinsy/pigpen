@@ -56,9 +56,11 @@ The pig to start is `PIG_SUBAGENT_PIG_BINARY`, else the pig running this extensi
 to this program, else `PATH`. A Piglet Binary as the child refuses `--system-prompt`, so a `replace`-mode agent cannot run in one
 (finding 9).
 
-**Not ported:** parallel, async and background runs and their status; scripted workflows (they need the original's JavaScript
+**Background runs (async_*.go).** An omitted `async` runs in the background (`asyncByDefault`, config key in `~/.pi/agent/extensions/subagent/config.json`); `async: false` or `asyncByDefault: false` blocks the parent. The child stays a detached `pig` process (own process group) supervised by goroutines of the extension; the state lives in the original's layout (`status.json`, `events.jsonl`, `output-N.log`, `process-terminal.json`, `recovery-descriptor.json`, result files) so a later session adopts a run (stale-run reconciliation, `async_state.go`/`async_resume.go`). Ported: the actions `status`, `interrupt`, `resume`, `stop`, the `bg_wait` tool, the completion notification (batched, deduplicated, replayed, delivered with `SendCustomMessage` + triggerTurn), the `subagent-async` widget with suspension during compaction, the active-capacity slots, auto-drain at `agent_end`, retention, and unknown-action recovery. On platforms without detachable children (Windows) the child is started directly and a run ends with its supervisor.
+
+**Not ported:** parallel runs; scripted workflows (they need the original's JavaScript
 workflow runtime, which no Package may carry); council mode; worktree isolation and lanes; the fleet and status views, slash
-commands other than `/run-chain`; steering, the supervisor channel and `bg_wait` (declared so the model sees the same tools; they
+commands other than `/run-chain`; steering and the supervisor channel (declared so the model sees the same tools; they
 answer that they are not ported); the watchdog; missions; profiles, settings overrides and model scopes; the agent serializer and
 the management actions create, update, delete, eject and disable; `.chain.json` chains and the acceptance, tool-budget and
 dynamic fan-out validators they need; external CLI and external job runners (their agents are listed, not run); the advertised
@@ -67,14 +69,12 @@ document features that are not ported); the original's session-resume memory of 
 
 **Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
 accepted and ignored: a call to `subagent` that sets a parameter the port does not honor (anything but `agent`, `task`,
-`agentScope`, `cwd`, `model` and `async: false`; for `list` and `get`, `action`, `agent` and `agentScope`), `async` other than
-`false`, `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
-other than `list` and `get`, a run without `task`, and the tools `bg_wait` and `subagent_supervisor` (declared, as the
-original's request shows them). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
+`agentScope`, `cwd`, `model`, `async` and the parameters of the background actions; for `list` and `get`, `action`, `agent` and `agentScope`), `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
+other than `list`, `get`, `status`, `interrupt`, `resume` and `stop`, a run without `task`, and the tool `subagent_supervisor` (declared, as the
+original's request shows it). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
 <feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.`; a tool refuses with an error. The
 original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
-`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. One difference stays until the async slice:
-the original runs in the background unless `async: false` (`asyncByDefault`); an omitted `async` runs in the foreground here.
+`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. The `asyncByDefault` difference is gone: an omitted `async` runs in the background as in the original.
 
 ## Mapping
 
@@ -88,6 +88,15 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
 | M7 | (addition) child process runs | `run.go`, `child_*.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
+| M9 | `agents/advertised-agent-prompt.ts`, `extension/index.ts` (advertisement state, `before_agent_start`, `session_start`) | `advertise.go`, `extension.go` | `advertise_test.go`, `advertise_host_test.go` (6 + 2 + 1 twins) |
+| M10 | `runs/shared/agent-contract.ts`, `runtime-acknowledged-extensions.ts`, `fast-mode-extension.ts`, `extension-bindings.ts`, `shared/launch-contract.ts` (digest) | `contract.go`, `runtimeack.go`, `fastmode.go`, `extbindings.go` | `misc_twins_test.go` |
+| M11 | `runs/foreground/prompt-audit.ts`, `shared/opencode-session-headers.ts` | `promptaudit.go` | `misc_twins_test.go`, `promptaudit_host_test.go` |
+| M12 | `agents/agent-refinements.ts` | `agentmgmt_refine.go` | `agentmgmt_refine_test.go` |
+| M13 | `extension/doctor.ts`, `extension/subagent-guide.ts` | `doctor.go`, `guide.go` (the guide topics are embedded from the original: `guide/`) | `doctor_test.go`, `guide_test.go` |
+| M14 | `profiles/profiles.ts` | `profiles.go` | `profiles_test.go` |
+| M15 | `slash/slash-commands.ts` (the administration commands), `slash/subagents-admin.ts` | `slash_commands.go`, `slash_admin.go` | `slash_admin_test.go` |
+| M16 | `runs/shared/subagent-prompt-runtime.ts` (prompt rewriting and fork context cleaning), `child-tool-plan.ts` (extension plan, fast mode, thinking suffix) | `child_prompt.go`, `extension_plan.go` | `child_prompt_test.go`, `default_extensions_test.go` |
+| M17 | `slash/prompt-template-bridge.ts`, `delegation-request.ts`, `delegation-adapters.ts`, `api/delegation.ts` | `delegation.go` | `delegation_test.go` |
 
 ## Process: what was written before its tests
 

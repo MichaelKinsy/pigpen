@@ -1,0 +1,107 @@
+{
+  "name": "manage-disable-enable",
+  "description": "Disable a builtin agent, see it hidden from the list, enable it again.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "subagents_enable",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "disable",
+            "agent": "scout",
+            "agentScope": "project"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "list",
+            "agentScope": "both"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "enable",
+            "agent": "scout",
+            "agentScope": "project"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "list",
+            "agentScope": "both"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "delegate the work"
+      }
+    }
+  ],
+  "files": {
+    ".pi/keep": ""
+  },
+  "commands": {
+    "git": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "npm": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "ps": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "gh": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "powershell.exe": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    }
+  }
+}

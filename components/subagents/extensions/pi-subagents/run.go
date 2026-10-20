@@ -259,7 +259,17 @@ func childEnv(base []string, depth int, role string) []string {
 		}
 		out = append(out, kv)
 	}
-	return append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
+	out = append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
+	// child-cache-retention.ts: PI_SUBAGENT_CACHE_RETENTION pins the children's tier (the last duplicate key wins)
+	baseMap := map[string]string{}
+	for _, kv := range base {
+		k, v, _ := strings.Cut(kv, "=")
+		baseMap[k] = v
+	}
+	for k, v := range childCacheRetentionEnv(baseMap) {
+		out = append(out, k+"="+v)
+	}
+	return out
 }
 
 func nonNegativeInt(s string) (int, bool) {
@@ -354,6 +364,35 @@ func (e *childExit) Error() string {
 }
 
 func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string) (string, error) {
+	return runAgentOpts(done, cwd, a, task, model, runOptions{})
+}
+
+// runOptions are what the run policy asks of one child (policy_run.go).
+type runOptions struct {
+	// TimeoutMs ends the child (SIGTERM, then a kill) after that long and reports a timeoutError; 0 is no deadline.
+	TimeoutMs int
+}
+
+// timeoutError is a child stopped by its deadline; Stdout is what it had printed.
+type timeoutError struct {
+	Agent     string
+	TimeoutMs int
+	Stdout    string
+}
+
+func (e *timeoutError) Error() string {
+	return fmt.Sprintf("Subagent timed out after %dms.", e.TimeoutMs)
+}
+
+func runAgentOpts(done <-chan struct{}, cwd string, a *AgentConfig, task, model string, opts runOptions) (string, error) {
+	expired := make(chan struct{})
+	if opts.TimeoutMs > 0 {
+		t := time.AfterFunc(time.Duration(opts.TimeoutMs)*time.Millisecond, func() { close(expired) })
+		defer t.Stop()
+		var stop func()
+		done, stop = eitherDone(done, expired)
+		defer stop()
+	}
 	select {
 	case childSlots <- struct{}{}:
 	case <-done:
@@ -361,9 +400,16 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 	}
 	defer func() { <-childSlots }()
 	depth, _ := subagentDepth(os.Getenv)
-	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)})
+	launch := *a
+	launch.SystemPrompt = appendAgentRefinementOverlay(a.SystemPrompt, cwd, a.Name)
+	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(&launch, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)})
 	switch {
 	case errors.Is(err, errCancelled):
+		select {
+		case <-expired:
+			return res.Stdout, &timeoutError{Agent: a.Name, TimeoutMs: opts.TimeoutMs, Stdout: res.Stdout}
+		default:
+		}
 		return res.Stdout, fmt.Errorf("%s was cancelled", a.Name)
 	case err != nil:
 		return "", fmt.Errorf("could not start %s: %w", a.Name, err)

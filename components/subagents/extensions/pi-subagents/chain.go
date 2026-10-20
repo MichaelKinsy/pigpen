@@ -45,7 +45,9 @@ type ChainConfig struct {
 	Source                                    AgentSource
 	FilePath                                  string
 	Steps                                     []ChainStep
-	ExtraFields                               *jsObject
+	// JSONSteps are the steps of a .chain.json file, as decoded (the original keeps them as written).
+	JSONSteps   []any
+	ExtraFields *jsObject
 }
 
 // validateToolBudget is the original's validateToolBudgetConfig; it returns the message of the first problem.

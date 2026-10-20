@@ -1,0 +1,127 @@
+{
+  "name": "manage-create-update",
+  "description": "Create an agent, read it back, update its description and read it again.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "subagents_enable",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "create",
+            "config": {
+              "name": "scribe",
+              "description": "Writes notes",
+              "systemPrompt": "Write notes.",
+              "scope": "project"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "get",
+            "agent": "scribe"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "update",
+            "agent": "scribe",
+            "config": {
+              "description": "Writes better notes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "get",
+            "agent": "scribe"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "update",
+            "agent": "scribe",
+            "config": {
+              "advertise": "yes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "delegate the work"
+      }
+    }
+  ],
+  "files": {
+    ".pi/keep": ""
+  },
+  "commands": {
+    "git": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "npm": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "ps": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "gh": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "powershell.exe": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    }
+  }
+}

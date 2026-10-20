@@ -1,0 +1,73 @@
+{
+  "name": "advertise-catalog",
+  "description": "An agent that opts in with advertise: true is listed in the system prompt once the subagent tool is active.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "subagents_enable",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "action": "list",
+            "capabilities": true
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "delegate the work"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agents/specialist.md": "---\nname: specialist\ndescription: Narrow specialist\nadvertise: true\n---\n\nAct narrowly.\n",
+    ".pi/agents/helper.md": "---\nname: helper\ndescription: Helps with things\nmodel: claude-x\ntools: read, grep\n---\n\nYou help.\n"
+  },
+  "commands": {
+    "git": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "npm": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "ps": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "gh": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "powershell.exe": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    }
+  }
+}

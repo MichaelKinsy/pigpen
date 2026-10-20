@@ -109,14 +109,12 @@ func refuseUnsupported(params map[string]any, name string) string {
 	if name != "" {
 		a := actions[name]
 		if a == nil {
+			if !isKnownSubagentAction(name) {
+				return unknownSubagentActionMessage(name)
+			}
 			return refusal("the `" + name + "` action")
 		}
 		allowed = a.params
-	}
-	if name == "" {
-		if v, ok := params["async"]; ok && v != nil && v != false {
-			return refusal("async (background) runs (`async: " + fmt.Sprint(v) + "`)")
-		}
 	}
 	for _, k := range present(params) {
 		if !allowed[k] {

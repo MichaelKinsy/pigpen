@@ -79,37 +79,17 @@ func textResult(text string, isError bool) sdk.ToolResult {
 	return sdk.ToolResult{Content: text, IsError: isError}
 }
 
-func init() {
-	registerAction("list", []string{"agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
-		return manageOutcome(listAgents(ctx.Cwd(), params))
-	})
-	registerAction("get", []string{"agent", "agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
-		return manageOutcome(getAgent(ctx.Cwd(), params))
-	})
-}
-
 // extensionHooks add what a slice registers (tools, commands, events, flags) to the extension. A slice appends its hook from
 // an init() in its own file, so no slice edits Extension() for another.
 var extensionHooks []func(e *sdk.Extension)
-
-// manageOutcome is the tool result of a management action.
-func manageOutcome(r manageResult) (any, error) {
-	if r.isError {
-		// Pi reports a refused action as a failed tool call: the content, empty details, the error flag on the event
-		return nil, sdk.NewToolError(r.text)
-	}
-	return explicitOK{Content: r.text, Details: map[string]any{"mode": "management", "results": []any{}}}, nil
-}
 
 // Extension returns the subagents extension.
 func Extension() *sdk.Extension {
 	e := sdk.New(extensionID)
 	defs := toolDefs()
 
-	// The tools the original registers besides subagent: a wait tool and the supervisor channel are declared so the
-	// model sees the same tools, and refuse (refuse.go).
-	e.RegisterTool(sdk.ToolDefinition{Name: "bg_wait", Label: "Wait for Background Work", Description: defs["bg_wait"].Description, Parameters: defs["bg_wait"].Parameters,
-		Execute: refuseTool("waiting for background work (`bg_wait`)")})
+	// The supervisor channel is declared so the model sees the same tools, and refuses (refuse.go); bg_wait is the
+	// background runs' (async_actions.go).
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: loaderName, Label: "Enable Subagents", Description: defs[loaderName].Description, Parameters: defs[loaderName].Parameters,
 		PromptSnippet: "pi-subagents is installed. For authorized specialist, independent-review, or parallel work, call subagents_enable, then subagent. Authorization must come from the current request or applicable instructions; complexity alone is not authorization.",
@@ -125,8 +105,15 @@ func Extension() *sdk.Extension {
 			if !ok {
 				return sdk.ToolResult{Content: "Activation failed: subagent.", IsError: true, Details: map[string]any{"missing": []string{subagentName}}}, nil
 			}
+			if err := adv.wait(ctx.Done()); err != nil {
+				return nil, sdk.NewToolError(err.Error())
+			}
+			text := "Enabled: subagent. On the next model request, call subagent({action:\"list\",capabilities:true}) for current capabilities. Some providers, such as bridges to another agent SDK, fix the tool list for a whole prompt. With those, subagent appears only after the next user prompt, so do not retry it in this one. The operator can start Pi with --exclude-tools subagents_enable to keep subagent always available."
+			if prompt := adv.prompt(sessionIDOf(ctx)); prompt != "" {
+				text += "\n\n" + prompt
+			}
 			return sdk.ToolResult{
-				Content: "Enabled: subagent. On the next model request, call subagent({action:\"list\",capabilities:true}) for current capabilities. Some providers, such as bridges to another agent SDK, fix the tool list for a whole prompt. With those, subagent appears only after the next user prompt, so do not retry it in this one. The operator can start Pi with --exclude-tools subagents_enable to keep subagent always available.",
+				Content: text,
 				Details: map[string]any{"enabled": []string{subagentName}},
 			}, nil
 		},
@@ -174,8 +161,12 @@ func Extension() *sdk.Extension {
 	return e
 }
 
-// executeSubagent runs a management action (list, get) or one agent; every other input is refused (refuse.go).
+// executeSubagent runs a management action or one agent. What the port does not run is refused first (refuse.go); the public
+// boundary (policy_publicexec.go) then checks and normalizes the call with the original's messages.
 func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
+	if err := adv.wait(ctx.Done()); err != nil {
+		return nil, sdk.NewToolError(err.Error())
+	}
 	action := ""
 	if v := params["action"]; v != nil {
 		s, isString := v.(string)
@@ -187,10 +178,14 @@ func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
 	if msg := refuseUnsupported(params, action); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
-	if action == "" {
-		return runOne(ctx, params)
+	norm := normalizePublicSubagentExecution(params)
+	if !norm.OK {
+		return nil, sdk.NewToolError(norm.Error)
 	}
-	return actions[action].run(ctx, params)
+	if action == "" {
+		return runOne(ctx, norm.Params)
+	}
+	return actions[action].run(ctx, norm.Params)
 }
 
 // explicitOK is a successful result that says so (the original's tool results carry isError: false).
@@ -249,7 +244,10 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError(msg)
 	}
 	scope := ResolveExecutionAgentScope(params["agentScope"])
-	d := DiscoverAgents(ctx.Cwd(), scope)
+	d, derr := discoverAgents(ctx.Cwd(), scope, ctx.ModelProvider(), adv.options())
+	if derr != nil {
+		return nil, sdk.NewToolError(derr.Error())
+	}
 	a, msg := ResolveAgentName(name, d.Agents)
 	if a == nil {
 		if diag := blockingDiagnostic(name, nil, d.Diagnostics); diag != nil {
@@ -265,13 +263,22 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError(err.Error())
 	}
 	model, _ := params["model"].(string)
-	done, stop := cancellation(ctx)
-	defer stop()
-	out, err := runAgent(done, cwd, a, task, model)
+	if cfg := loadAsyncConfig(); wantsAsync(params, cfg) {
+		if p := asyncUnsupportedPolicyParam(params); p != "" {
+			return nil, sdk.NewToolError(refusal("the `" + p + "` option of a background (async) run; pass async: false to run in the foreground"))
+		}
+		return bgRT.launchBackground(ctx, params, a, task, cwd, model, cfg)
+	}
+	pol, err := applyRunPolicy(ctx, params, a, task, cwd)
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
-	return explicitOK{Content: out, Details: map[string]any{"mode": "single", "agent": a.Name}}, nil
+	pol.writeInputArtifact()
+	done, stop := cancellation(ctx)
+	defer stop()
+	defer activeRunStart()()
+	out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})
+	return finishRun(pol, runOutcome{Stdout: out, Err: err})
 }
 
 // runChainCommand is `/run-chain <chain> <task>`: the chain files are the original's format; running them this way is an

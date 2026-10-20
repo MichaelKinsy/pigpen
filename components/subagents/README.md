@@ -23,6 +23,7 @@ original); then:
 
 - `subagent {action: "list"}` lists the agents (`agentScope`: user, project or both), `{action: "get", agent: "helper"}` shows one;
 - `subagent {agent: "helper", task: "..."}` runs one agent in a child `pig --print` process and returns its answer;
+- `subagent {agent, task}` without `async` runs in the background (the original's `asyncByDefault`): the call returns at once, the result arrives as a message that wakes the session, `{action: "status"}`, `interrupt`, `resume` and `stop` manage runs, and the `bg_wait` tool waits for them. `async: false` runs in the foreground. A run survives its session and is adopted by the next one;
 - `/run-chain <chain> <task>` runs a `.chain.md` chain (`.pi/chains/` or `~/.pi/agent/chains/`): each step's answer flows into the
   next as `{previous}`, the request as `{task}`.
 
@@ -42,6 +43,16 @@ Frontmatter parsing, agent and chain definitions (discovery in the project, the 
 precedence project over user over builtin, packages, aliases, name resolution), markdown chain files (parse and write), the
 `subagent` tool's `list` and `get`, the `subagents_enable` loader, and running one agent or a chain through a child process (a Go
 addition: the original runs children through its own executor and scripted workflows).
+
+**Also ported (agent administration):** the system-prompt advertisement of agents that opt in with `advertise: true` (an
+`advertised_subagents` prompt section, refreshed by management mutations, held back until the global package catalog is complete),
+agent refinements (`refine`, `refine.show`, `refine.rollback`), the `doctor` and `guide` actions, subagent profiles, the commands
+`/subagents` (inspect, model, thinking, system prompt), `/subagents-models`, `/subagents-profiles`, `/subagents-load-profile`,
+`/subagents-refresh-provider-models`, `/subagents-generate-profiles`, `/subagents-check-profile`, `/subagents-doctor`,
+`/subagents-guide` and `/subagents-refine`, the prompt-template delegation bridge on the event bus (a text result of one child; the
+options a port child cannot honor fail with the refusal text), and the child prompt rewriting, extension plan, extension bindings,
+fast-mode and prompt-audit helpers. The runtime agent registry (`registerAgent`), the selector overlay and the live slash result
+widget are not ported.
 
 **Not ported, and refused:** parallel, async and background runs, scripted workflows (`workflow`, `workflowScript`,
 `workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet and status views, steering and

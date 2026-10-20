@@ -56,3 +56,23 @@ scenario("get-builtin", "Detail of a builtin agent with a runner and one with a 
          [ENABLE, call("subagent", action="get", agent="worker"), call("subagent", action="get", agent="claude-code")], {}, to="host-bound/scenarios")
 scenario("enable-only", "Enable twice: the second call finds the tool already active.",
          [ENABLE, ENABLE], {})
+
+# agent management and the advertisement (AgentMgmt lane)
+ADVERTISED = "---\nname: specialist\ndescription: Narrow specialist\nadvertise: true\n---\n\nAct narrowly.\n"
+scenario("manage-create-update", "Create an agent, read it back, update its description and read it again.",
+         [ENABLE, call("subagent", action="create", config={"name": "scribe", "description": "Writes notes", "systemPrompt": "Write notes.", "scope": "project"}),
+          call("subagent", action="get", agent="scribe"),
+          call("subagent", action="update", agent="scribe", config={"description": "Writes better notes"}),
+          call("subagent", action="get", agent="scribe"),
+          call("subagent", action="update", agent="scribe", config={"advertise": "yes"})], {".pi/keep": ""})
+scenario("manage-delete", "Delete a project agent, then list: it is gone; deleting it again fails.",
+         [ENABLE, call("subagent", action="delete", agent="helper", agentScope="project"), call("subagent", action="list", agentScope="project"),
+          call("subagent", action="delete", agent="helper", agentScope="project")], PROJECT)
+scenario("manage-disable-enable", "Disable a builtin agent, see it hidden from the list, enable it again.",
+         [ENABLE, call("subagent", action="disable", agent="scout", agentScope="project"), call("subagent", action="list", agentScope="both"),
+          call("subagent", action="enable", agent="scout", agentScope="project"), call("subagent", action="list", agentScope="both")], {".pi/keep": ""})
+scenario("manage-reset", "Change a builtin agent's model through an override, then reset it.",
+         [ENABLE, call("subagent", action="update", agent="scout", config={"model": "claude-x"}, agentScope="project"), call("subagent", action="get", agent="scout"),
+          call("subagent", action="reset", agent="scout", agentScope="project"), call("subagent", action="get", agent="scout")], {".pi/keep": ""})
+scenario("advertise-catalog", "An agent that opts in with advertise: true is listed in the system prompt once the subagent tool is active.",
+         [ENABLE, call("subagent", action="list", capabilities=True)], {".pi/agents/specialist.md": ADVERTISED, ".pi/agents/helper.md": HELPER})
