@@ -1,6 +1,6 @@
 {
   "name": "audit-report-not-updated",
-  "description": "/warden audit with a report from an earlier run that the agent does not rewrite: the outcome is stale (no new write).",
+  "description": "/warden audit with a report from an earlier run: the audit's own prompt is handled by its input handler (PORT.md A1), nothing rewrites the report, the outcome is stale.",
   "env": {
     "PIGPEN_WARDEN_ENABLED": "1",
     "PIGPEN_WARDEN_STEER_VISIBLE": "0"
@@ -23,18 +23,14 @@
     "turn_end",
     "tool_execution_start",
     "tool_execution_end",
-    "message_end"
+    "message_end",
+    "extension_ui_request"
   ],
   "files": {
     "package.json": "{\"name\":\"demo\"}\n",
     "src/classify.ts": "export function kind(t: string) { return /error/.test(t) ? \"bad\" : \"ok\"; }\n",
     ".pi-warden/audit-report.html": "<html>old</html>"
   },
-  "llm": [
-    {
-      "text": "Findings are in chat."
-    }
-  ],
   "steps": [
     {
       "name": "audit",

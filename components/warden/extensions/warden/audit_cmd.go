@@ -54,9 +54,12 @@ func (w *warden) audit(ctx sdk.Context) error {
 	return nil
 }
 
-// onAuditInput blocks new user messages while /warden audit runs. The audit's own prompt (source "extension") passes.
-func (w *warden) onAuditInput(ctx sdk.Context, data map[string]any) (any, error) {
-	if data["source"] == "extension" || !w.auditState.running.Load() {
+// onAuditInput blocks new user messages while /warden audit runs (extension.ts 2258-2268). Like the original it does
+// not look at the message's source: a host that emits `input` for the audit's own prompt (Pi 1.3.0 does) has that prompt
+// handled here too, and the audit then ends with "Agent did not write an audit report". That is the original's behavior
+// on such a host and is kept (port/PORT.md, finding A1).
+func (w *warden) onAuditInput(ctx sdk.Context, _ map[string]any) (any, error) {
+	if !w.auditState.running.Load() {
 		return nil, nil
 	}
 	ctx.Notify("pi-warden is running an audit. Please wait...", "warning")
