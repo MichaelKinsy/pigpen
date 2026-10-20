@@ -1471,6 +1471,7 @@ func TestMutantsACoreArchiveStop(t *testing.T) {
 		h.core.stopActiveGoal("blocked", "because")
 		eq(t, h.status(), "blocked", "status")
 		eq(t, len(mxaLedgerType(h, "goal_paused")), 0, "no goal_paused for a block")
+		eq(t, readGoalLedger(storage{cwd: h.cwd}).malformed, 0, "no ledger line was written for a block (one would be malformed: status is not paused)")
 		h2 := newSchedFx(t, fxOpts{})
 		h2.core.stopActiveGoal("paused", "")
 		ev := mxaLedgerType(h2, "goal_paused")
