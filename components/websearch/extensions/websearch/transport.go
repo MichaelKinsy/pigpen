@@ -34,9 +34,13 @@ func SetHTTP(d HTTPDoer) func() {
 // guardedFetch sends one request over a transport that checks the resolved address when it
 // connects (so a name that changes between validation and connection cannot reach an internal
 // address) and that never follows redirects. Requests through an explicit proxy skip the dial
-// check, because the proxy resolves the target; the URL was validated before.
+// check, because the proxy resolves the target; the URL was validated before. A proxied request
+// runs curl, as utils.ts fetchViaCurl does; localhost and NO_PROXY hosts are fetched directly
+// (isProxyBypassedUrl) and so stay behind the dial-time check.
 func guardedFetch(ctx context.Context, u *url.URL, init RequestInit, o ValidationOptions) (*http.Response, error) {
-	proxy := activeProxy(ctx)
+	if proxy := activeProxy(ctx); proxy != "" && !isProxyBypassedURL(u) {
+		return curlFetchOnce(ctx, u, init, proxy)
+	}
 	ranges, err := ParseAllowRanges(o.AllowRanges)
 	if err != nil {
 		return nil, err
@@ -52,13 +56,6 @@ func guardedFetch(ctx context.Context, u *url.URL, init RequestInit, o Validatio
 		ForceAttemptHTTP2:     true,
 	}
 	switch {
-	case proxy != "":
-		p, err := url.Parse(proxy)
-		if err != nil {
-			return nil, err
-		}
-		tr.Proxy = http.ProxyURL(p)
-		tr.DialContext = (&net.Dialer{Timeout: 20 * time.Second}).DialContext
 	case o.TrustEnvProxy && !hasScopedProxyDecision(ctx):
 		tr.Proxy = http.ProxyFromEnvironment
 		tr.DialContext = (&net.Dialer{Timeout: 20 * time.Second}).DialContext
@@ -198,33 +195,15 @@ func doAPI(ctx context.Context, u *url.URL, init RequestInit) (*http.Response, e
 }
 
 // apiClientFor returns the transport for provider API calls: the scoped proxy applies to every
-// outbound request of a call (search APIs included), like the original's proxied fetch.
+// outbound request of a call (search APIs included) and runs curl, like the original's proxied
+// fetch. An injected transport (a test double) is never replaced.
 func apiClientFor(ctx context.Context) HTTPDoer {
 	if proxy := activeProxy(ctx); proxy != "" {
 		if _, isDefault := httpDoer.(*http.Client); isDefault {
-			if p, err := url.Parse(proxy); err == nil {
-				return &http.Client{
-					Transport:     &http.Transport{Proxy: func(r *http.Request) (*url.URL, error) { return proxyOrBypass(r, p) }},
-					CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-				}
-			}
+			return &curlDoer{proxy: proxy, direct: httpDoer}
 		}
 	}
 	return httpDoer
-}
-
-// proxyOrBypass keeps localhost and NO_PROXY hosts off the proxy (isProxyBypassedUrl upstream).
-func proxyOrBypass(r *http.Request, proxy *url.URL) (*url.URL, error) {
-	host := strings.ToLower(strings.Trim(r.URL.Hostname(), "[]"))
-	if host == "localhost" || strings.HasSuffix(host, ".localhost") || host == "127.0.0.1" || host == "::1" {
-		return nil, nil
-	}
-	for _, entry := range strings.Split(envNoProxy(), ",") {
-		if noProxyEntryMatches(host, strings.TrimSpace(entry)) {
-			return nil, nil
-		}
-	}
-	return proxy, nil
 }
 
 func noProxyEntryMatches(hostname, entry string) bool {
