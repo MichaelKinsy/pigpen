@@ -493,3 +493,7 @@ func copyTree(source, destination string) error {
 		}
 	})
 }
+
+// LocaleLess orders two strings the way the services sort names (an approximation of
+// localeCompare, see PORT.md deviation 12).
+func LocaleLess(a, b string) bool { return localeLess(a, b) }

@@ -35,3 +35,26 @@ func contentTypeOf(path string, textFallback bool) string {
 	}
 	return ""
 }
+
+// MimeType is the `mime` package's getType(path): the content type of the last extension of the
+// path's file name, lower-cased. A file name without a dot has no type when the path has a
+// directory part; a bare name is looked up as if it were an extension ("Makefile" asks for
+// "makefile").
+func MimeType(path string) (string, bool) {
+	last := path
+	if i := strings.LastIndexAny(last, `/\`); i >= 0 {
+		last = last[i+1:]
+	}
+	last = strings.ToLower(last)
+	ext := last
+	if i := strings.LastIndexByte(last, '.'); i >= 0 {
+		ext = last[i+1:]
+	}
+	hasPath := len(last) < len(path)
+	hasDot := len(ext) < len(last)-1
+	if !hasDot && hasPath {
+		return "", false
+	}
+	t, ok := mimeTypes[ext]
+	return t, ok
+}

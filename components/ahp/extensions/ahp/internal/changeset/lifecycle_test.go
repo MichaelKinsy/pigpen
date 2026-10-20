@@ -299,3 +299,36 @@ func TestChangesetLifecycle(t *testing.T) {
 		}
 	})
 }
+
+// A turn that ends may have changed files the watcher missed, so each way a turn ends refreshes
+// a changeset somebody is looking at (changeset-service.ts, the onActionCommitted hook).
+func TestChangesetRefreshesWhenATurnEnds(t *testing.T) {
+	ends := map[string]func(turn string) ahptypes.StateAction{
+		"complete": func(turn string) ahptypes.StateAction {
+			return ahptypes.StateAction{Value: &ahptypes.ChatTurnCompleteAction{Type: ahptypes.ActionTypeChatTurnComplete, TurnId: turn}}
+		},
+		"cancelled": func(turn string) ahptypes.StateAction {
+			return ahptypes.StateAction{Value: &ahptypes.ChatTurnCancelledAction{Type: ahptypes.ActionTypeChatTurnCancelled, TurnId: turn}}
+		},
+		"error": func(turn string) ahptypes.StateAction {
+			return ahptypes.StateAction{Value: &ahptypes.ChatErrorAction{Type: ahptypes.ActionTypeChatError, TurnId: turn}}
+		},
+	}
+	for name, end := range ends {
+		t.Run(name, func(t *testing.T) {
+			c := startControlled(t, controlledOptions{})
+			c.client.Subscribe(c.channel)
+			eventually(t, "the initial changeset", func() bool { return c.status() == ahptypes.ChangesetStatusReady })
+			initial, _ := c.git.calls()
+			c.host.DispatchServerAction(c.chat, ahptypes.StateAction{Value: &ahptypes.ChatTurnStartedAction{
+				Type: ahptypes.ActionTypeChatTurnStarted, TurnId: "t1", StartedAt: "2025-01-01T00:00:00.000Z",
+				Message: ahptypes.Message{Text: "go", Origin: ahptypes.MessageOrigin{Kind: ahptypes.MessageKindUser}},
+			}})
+			if n, _ := c.git.calls(); n != initial {
+				t.Fatalf("starting a turn must not recompute (%d -> %d)", initial, n)
+			}
+			c.host.DispatchServerAction(c.chat, end("t1"))
+			eventually(t, "the changeset to be recomputed after the turn", func() bool { n, _ := c.git.calls(); return n > initial })
+		})
+	}
+}
