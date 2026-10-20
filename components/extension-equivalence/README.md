@@ -96,7 +96,10 @@ messages, every tool's full definition, and the extension's part of the system p
 its difference from the same host's baseline prompt without the extension), tool
 executions and results, agent and turn lifecycle, `extension_error`, command responses,
 and the host exit. After the last step a final quiet period (`tailMs`, default 1000 ms)
-records late effects instead of losing them at shutdown. The normalizer removes only values that differ on every run
+records late effects instead of losing them at shutdown. Every lane runs in a scratch directory of one fixed length (`<tmp>/eq` and eight hex digits), so an extension that
+quotes a path and counts its characters gets the same number in every lane. The loopback address of each fake server and of
+the scripted model server (a `set_model` response echoes the model's base URL) is normalized to `<server:NAME>` and `<llm>`.
+The normalizer removes only values that differ on every run
 (paths, UUIDs, timestamps, host session ids, the bash tool's measured wall time); its rules N1 to N6 are listed in
 [normalize.go](extensions/extension-equivalence/eq/normalize.go) and versioned, and a
 golden trace recorded under another version is refused. Rule N7 is the scenario's own `normalize` list
