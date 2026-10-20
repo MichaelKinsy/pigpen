@@ -3,6 +3,7 @@ package websearch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -159,7 +160,7 @@ func TestUpstream_pdf_extract(t *testing.T) {
 		ctx, cancel := context.WithCancel(bg())
 		cancel()
 		r := runChain(t, ctx, "abort", "none", "")
-		if r.err == nil || strings.Contains(r.content, "Hello PDF") || r.net.count() != 0 {
+		if !errors.Is(r.err, context.Canceled) || strings.Contains(r.content, "Hello PDF") {
 			t.Fatalf("content %q error %v", r.content, r.err)
 		}
 	})
@@ -255,9 +256,20 @@ func loadUnpdfRecording(t *testing.T) unpdfRecording {
 	return rec
 }
 
-// knownPDFDifferences are the fixtures on which the Go extractor's output differs from the
-// original's; each is pinned here and explained in docs/PORT.md ("Deliberate differences").
-var knownPDFDifferences = map[string]string{}
+// pdfDifference pins the Go outcome of a fixture on which it differs from the original's.
+type pdfDifference struct {
+	reason  string
+	wantErr string
+}
+
+// knownPDFDifferences are the fixtures on which the Go extractor's outcome differs from the
+// original's, each pinned and explained in port/PORT.md ("Slice: PDF text extraction").
+var knownPDFDifferences = map[string]pdfDifference{
+	"encrypted-aes256-empty.pdf": {
+		reason:  "the library reads encryption up to AES-128 (V4); unpdf's PDF.js needs Math.sumPrecise for AES-256, which PiG's Node 24 lacks, so the original fails here too, with another message",
+		wantErr: "Invalid PDF structure.",
+	},
+}
 
 // Every fixture of testdata/pdf through the local extractor against what the original made of it.
 func TestPDFCorpusAgainstUnpdf(t *testing.T) {
@@ -279,8 +291,12 @@ func TestPDFCorpusAgainstUnpdf(t *testing.T) {
 			noErr(t, err)
 			out := t.TempDir()
 			got, err := ExtractPDFToMarkdown(bg(), data, "https://example.test/docs/"+name, PDFExtractOptions{OutputDir: out})
-			if _, known := knownPDFDifferences[name]; known {
-				t.Skip("recorded difference: " + knownPDFDifferences[name])
+			if diff, known := knownPDFDifferences[name]; known {
+				if err == nil || err.Error() != diff.wantErr {
+					t.Fatalf("pinned difference: error = %v, want %q (%s)", err, diff.wantErr, diff.reason)
+				}
+				t.Log("recorded difference: " + diff.reason)
+				return
 			}
 			if want.Error != "" {
 				if err == nil || err.Error() != want.Error {
@@ -362,5 +378,42 @@ func TestPDFCancelDuringLocalExtraction(t *testing.T) {
 	_, err = ExtractPDFToMarkdown(ctx, data, "https://example.test/many.pdf", PDFExtractOptions{OutputDir: t.TempDir()})
 	if err == nil || !strings.Contains(err.Error(), "canceled") {
 		t.Fatal(err)
+	}
+}
+
+// The chain stops on the errors the original rethrows: a bad Datalab processing location (a
+// config parse error) and a failing credential command, instead of falling back to local text.
+func TestPDFChainRethrowsFatalDatalabErrors(t *testing.T) {
+	_, agentDir := isolate(t)
+	t.Setenv("DATALAB_API_KEY", "synthetic-datalab-key")
+	useNet(t, func(netCall) netReply { return netReply{Err: errors.New("must not be reached")} })
+	t.Setenv("DATALAB_PROCESSING_LOCATION", "mars")
+	_, err := ExtractPDFToMarkdown(bg(), makePDF("x"), "https://example.test/x.pdf", PDFExtractOptions{OutputDir: t.TempDir()})
+	wantErr(t, err, `^Failed to parse DATALAB_PROCESSING_LOCATION`)
+	unsetenv(t, "DATALAB_PROCESSING_LOCATION", "DATALAB_API_KEY")
+	writeConfig(t, agentDir, `{"datalabApiKey":"!exit 3"}`)
+	_, err = ExtractPDFToMarkdown(bg(), makePDF("x"), "https://example.test/x.pdf", PDFExtractOptions{OutputDir: t.TempDir()})
+	var credErr *CredentialResolutionError
+	if !errors.As(err, &credErr) {
+		t.Fatalf("error %v", err)
+	}
+}
+
+// maxPages is clamped to at least one page, and a document with exactly maxPages pages is whole.
+func TestPDFMaxPagesBounds(t *testing.T) {
+	_, agentDir := isolate(t)
+	writeConfig(t, agentDir, `{"pdf":{"provider":"unpdf"}}`)
+	data, err := os.ReadFile("testdata/pdf/multipage.pdf")
+	noErr(t, err)
+	zero, three := 0, 3
+	r, err := ExtractPDFToMarkdown(bg(), data, "https://example.test/m.pdf", PDFExtractOptions{OutputDir: t.TempDir(), MaxPages: &zero})
+	noErr(t, err)
+	if !strings.Contains(r.Content, "> Pages: 3 (extracted first 1)") {
+		t.Fatal(r.Content)
+	}
+	r, err = ExtractPDFToMarkdown(bg(), data, "https://example.test/m.pdf", PDFExtractOptions{OutputDir: t.TempDir(), MaxPages: &three})
+	noErr(t, err)
+	if strings.Contains(r.Content, "Truncated") || strings.Contains(r.Content, "extracted first") {
+		t.Fatal(r.Content)
 	}
 }

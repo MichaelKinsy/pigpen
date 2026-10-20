@@ -13,7 +13,9 @@ import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixtures = join(here, "..", "extensions", "websearch", "testdata", "pdf");
+// An optional directory argument records other documents (exploratory comparison; the URL table is
+// only written for the fixture corpus).
+const fixtures = process.argv[2] ?? join(here, "..", "extensions", "websearch", "testdata", "pdf");
 const agentDir = mkdtempSync(join(tmpdir(), "pdf-record-"));
 process.env.PI_CODING_AGENT_DIR = agentDir;
 for (const k of ["GEMINI_API_KEY", "DATALAB_API_KEY", "GOOGLE_GEMINI_BASE_URL", "CLOUDFLARE_API_KEY", "DATALAB_MODE"]) delete process.env[k];
@@ -34,6 +36,10 @@ for (const file of readdirSync(fixtures).filter((f) => f.endsWith(".pdf")).sort(
 		result.pdfs[file] = { error: err instanceof Error ? err.message : String(err), name: err?.name };
 	}
 }
+if (process.argv[2]) {
+	console.log(JSON.stringify(result, null, "\t"));
+	process.exit(0);
+}
 // The title and file name the original derives from a URL when the document has no title.
 const plain = readFileSync(join(fixtures, "text.pdf"));
 const plainBuffer = plain.buffer.slice(plain.byteOffset, plain.byteOffset + plain.byteLength);
@@ -51,6 +57,9 @@ for (const url of [
 	"https://example.com/download?id=7",
 	"https://example.com/report.pdf?x=1#frag",
 	"not a url",
+	`https://example.com/${"a".repeat(130)}.pdf`,
+	"https://example.com/-lead--and-trail-.pdf",
+	"https://example.com/Docs%20%26%20Notes%20(v2).pdf",
 ]) {
 	const outputDir = mkdtempSync(join(tmpdir(), "pdf-record-out-"));
 	const r = await extractPDFToMarkdown(plainBuffer.slice(0), url, { outputDir });

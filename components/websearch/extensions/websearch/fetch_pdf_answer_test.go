@@ -103,7 +103,9 @@ func TestPDFAnswerModeExtractionBatchKeepsOwnBody(t *testing.T) {
 func TestPDFAnswerModeExtractionHTMLBody(t *testing.T) {
 	extractEnv(t, `{"fetchRouting":{"providers":["http"]}}`)
 	page := `<!doctype html><html><head><title>HTML page</title></head><body><article><h1>HTML page</h1><p>` + strings.Repeat("HTML original body. ", 80) + `</p></article></body></html>`
-	useNet(t, func(netCall) netReply { return netReply{Status: 200, Header: hdr("content-type", "text/html"), Body: page} })
+	useNet(t, func(netCall) netReply {
+		return netReply{Status: 200, Header: hdr("content-type", "text/html"), Body: page}
+	})
 	res := ExtractContent(bg(), "https://93.184.216.34/page", answerOpts())
 	if res.Error != nil || !strings.Contains(res.Content, "HTML original body") {
 		t.Fatalf("%+v", res)

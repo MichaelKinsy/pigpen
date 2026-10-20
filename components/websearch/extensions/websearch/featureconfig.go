@@ -82,23 +82,16 @@ func normalizeDatalabMode(raw string) (string, error) {
 	return "", fmt.Errorf(`Failed to parse datalab mode: expected "fast", "balanced", or "accurate", got "%s"`, raw)
 }
 
-// loadPDFConfig ports loadPDFConfig (pdf-extract.ts:59): every value is validated and falls back
-// to its default. Only enabled and maxSizeMB are used until PDF text extraction is ported.
+// loadPDFConfig ports loadPDFConfig (pdf-extract.ts:69): every value is validated and falls back
+// to its default. The environment's DATALAB_MODE is only read, and only validated, when the
+// config does not give a valid pdf.datalabMode.
 func loadPDFConfig() (pdfConfig, error) {
 	cfg := pdfConfig{Enabled: true, MaxSizeMB: defaultPDFMaxSizeMB, MaxPages: defaultPDFMaxPages, Provider: "auto", DatalabTimeoutMs: defaultDatalabTimeoutMs}
-	envMode, err := normalizeDatalabMode(os.Getenv("DATALAB_MODE"))
-	if err != nil {
-		return cfg, err
-	}
-	cfg.DatalabMode = envMode
 	root, err := readLenientConfig()
 	if err != nil {
 		return cfg, err
 	}
 	pdf, _ := root["pdf"].(map[string]any)
-	if pdf == nil {
-		return cfg, nil
-	}
 	positive := func(v any) (float64, bool) {
 		f, ok := v.(float64)
 		return f, ok && !math.IsInf(f, 0) && !math.IsNaN(f) && f > 0
@@ -115,13 +108,15 @@ func loadPDFConfig() (pdfConfig, error) {
 	if p, ok := pdf["provider"].(string); ok && sliceHas([]string{"auto", "gemini", "datalab", "unpdf"}, p) {
 		cfg.Provider = p
 	}
-	if m, ok := pdf["datalabMode"].(string); ok && sliceHas([]string{"fast", "balanced", "accurate"}, m) {
-		cfg.DatalabMode = m
-	}
 	if f, ok := positive(pdf["datalabTimeoutMs"]); ok {
 		cfg.DatalabTimeoutMs = math.Min(f, maxDatalabTimeoutMs)
 	}
-	return cfg, nil
+	if m, ok := pdf["datalabMode"].(string); ok && sliceHas([]string{"fast", "balanced", "accurate"}, m) {
+		cfg.DatalabMode = m
+		return cfg, nil
+	}
+	cfg.DatalabMode, err = normalizeDatalabMode(os.Getenv("DATALAB_MODE"))
+	return cfg, err
 }
 
 // ResolveFetchTimeoutMs is the direct HTTP/Jina fetch budget: an explicit per-call value wins over
