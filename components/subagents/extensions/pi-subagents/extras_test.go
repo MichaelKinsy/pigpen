@@ -169,7 +169,7 @@ func TestAgentFields(t *testing.T) {
 		hasDiag = hasDiag || (x.Name == "bad" && strings.Contains(x.Error, "invalid async frontmatter"))
 	}
 	eq(t, hasDiag, true, "and says why")
-	if c, err := parseRunner("type: external-cli\ncommand: ", "x"); err == nil || c != nil {
+	if c, err := parseAgentRunnerFrontmatter("type: external-cli\ncommand: ", "x"); err == nil || c != nil {
 		t.Errorf("an external-cli runner needs a command: %v", err)
 	}
 }
