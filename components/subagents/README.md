@@ -45,13 +45,16 @@ addition: the original runs children through its own executor and scripted workf
 
 **Not ported, and refused:** parallel, async and background runs, scripted workflows (`workflow`, `workflowScript`,
 `workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet and status views, steering and
-the supervisor channel, the watchdog, missions, profiles and settings overrides, `.chain.json` chains, the management actions other
-than `list` and `get`. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model` and
-`async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope`. Any other
+the supervisor channel, the watchdog, profiles and settings overrides, `.chain.json` chains, the management actions other
+than `list`, `get` and the `mission.*` actions. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model`, `mission`, `missionId` and
+`async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope`.
+**Missions** work as in the original: every task launch records a mission (disable with `mission: false` or
+`config.missions.enabled: false` in `~/.pi/agent/extensions/subagent/config.json`), and `subagent {action: "mission.create" | "mission.list" | "mission.show" | "mission.update" | "mission.resolve-decision" | "mission.attach-run" | "mission.close"}` manages them.
+`/prompt-workflow <name> [args]` lists and resolves prompt templates; running one needs the workflow runtime and answers with the refusal above until it is wired. Any other
 parameter or action, and the tools `bg_wait` and `subagent_supervisor` (declared so the model sees the original's tools), is refused
 with one message and nothing runs:
 
 > @pi-in-go/pigpen-subagents (Go port) does not support async (background) runs (`async: true`) yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.
 
-The original's slash commands other than the port's own `/run-chain` (`/run`, `/subagents`, `/subagents-stop`, `/prompt-workflow`, ...) are not
-registered, and neither are its skills and prompt templates. See [port/PORT.md](port/PORT.md).
+The original's slash commands other than the port's own `/run-chain` (`/run`, `/subagents`, `/subagents-stop`, ...) are not
+registered (`/prompt-workflow` is), and neither are its skills and prompt templates. See [port/PORT.md](port/PORT.md).

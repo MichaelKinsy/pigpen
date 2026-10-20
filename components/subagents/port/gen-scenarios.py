@@ -56,3 +56,36 @@ scenario("get-builtin", "Detail of a builtin agent with a runner and one with a 
          [ENABLE, call("subagent", action="get", agent="worker"), call("subagent", action="get", agent="claude-code")], {}, to="host-bound/scenarios")
 scenario("enable-only", "Enable twice: the second call finds the tool already active.",
          [ENABLE, ENABLE], {})
+
+# The mission and schedule actions refuse bad input with the original's own text; no child model is needed (nothing launches).
+scenario("mission-validation", "Every mission action refuses malformed input with the original's text.",
+         [ENABLE, call("subagent", action="mission.create"),
+          call("subagent", action="mission.create", mission={"title": "a", "summary": "b"}),
+          call("subagent", action="mission.create", mission={"title": "Goal", "goal": True}),
+          call("subagent", action="mission.create", mission={"title": "Bad", "extra": 1}),
+          call("subagent", action="mission.create", mission={"title": "Bad", "budget": {"tokens": 0}}),
+          call("subagent", action="mission.create", mission={"title": "Bad", "labels": [""]}),
+          call("subagent", action="mission.show"),
+          call("subagent", action="mission.show", missionId="../escape"),
+          call("subagent", action="mission.list", missionScope="everywhere"),
+          call("subagent", action="mission.update", missionId="m1", missionUpdate={}),
+          call("subagent", action="mission.update", missionId="m1", missionUpdate={"unknown": 1}),
+          call("subagent", action="mission.update", missionId="m1", missionUpdate={"goal": {"paused": "yes"}}),
+          call("subagent", action="mission.update", missionId="m1", missionUpdate={"receipts": [{"kind": "ci", "status": "ready", "title": "t", "url": "relative"}]}),
+          call("subagent", action="mission.close", missionId="m1", missionStatus="active"),
+          call("subagent", action="mission.attach-run", missionId="m1"),
+          call("subagent", action="mission.resolve-decision", missionId="m1", id="d1")], {})
+scenario("mission-launch-validation", "A launch with a malformed mission or missionId is refused before any child starts.",
+         [ENABLE, call("subagent", agent="helper", task="Look", mission=True),
+          call("subagent", agent="helper", task="Look", mission={"title": " "}),
+          call("subagent", agent="helper", task="Look", mission={"title": "Goal", "goal": False}),
+          call("subagent", agent="helper", task="Look", mission={"title": "Goal", "goal": True}),
+          call("subagent", agent="helper", task="Look", missionId="../escape"),
+          call("subagent", agent="helper", task="Look", missionId="m1", mission=False)], PROJECT)
+scenario("schedule-validation", "The schedule actions refuse malformed triggers and ids with the original's text.",
+         [ENABLE, call("subagent", action="schedule.create", at="soon", workflowScript="return 1;"),
+          call("subagent", action="schedule.create", at="+0m", workflowScript="return 1;"),
+          call("subagent", action="schedule.create", every="5x", workflowScript="return 1;"),
+          call("subagent", action="schedule.pause", id="bad id!"),
+          call("subagent", action="schedule.run"),
+          call("subagent", action="schedule.delete")], {})

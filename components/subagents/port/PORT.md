@@ -27,6 +27,14 @@ takes what can be checked against the original by running it, and one execution 
 - the tool the model sees: `subagents_enable` (the `subagent` tool is not offered until it is called), `subagent` and the two
   tools the original registers beside them, with the original's descriptions and JSON Schemas (read from the request the original
   made, `port/gen-tooldefs.py`); `subagent {action: "list"}` and `{action: "get"}` with the original's text;
+- missions (`mission_*.go`, 28 twins of `mission-store`, `mission-lifecycle` and `mission-goal-driver`): the mission store and its
+  global index, retention, the workflow state file and its lock (also offered to a workflow script's `state` global through
+  `WorkflowStateStore`), the seven `mission.*` actions, the `mission` and `missionId` launch parameters of a single-agent run
+  (every task launch records a mission unless `config.missions.enabled` is false or `mission: false`; the result text ends
+  with `Mission: <id> (<status>)`), the completion of a mission from an async result file, and the goal-mission notice after
+  each turn (`agent_end`);
+- `/prompt-workflow` (`workflow_prompt.go`, 4 twins): template discovery (package, user, project), argument substitution and the
+  generated workflow script;
 - the startup behavior the trace shows: the git root probe and the clear of the `subagent-async` widget.
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
@@ -59,7 +67,7 @@ to this program, else `PATH`. A Piglet Binary as the child refuses `--system-pro
 **Not ported:** parallel, async and background runs and their status; scripted workflows (they need the original's JavaScript
 workflow runtime, which no Package may carry); council mode; worktree isolation and lanes; the fleet and status views, slash
 commands other than `/run-chain`; steering, the supervisor channel and `bg_wait` (declared so the model sees the same tools; they
-answer that they are not ported); the watchdog; missions; profiles, settings overrides and model scopes; the agent serializer and
+answer that they are not ported); the watchdog; profiles, settings overrides and model scopes; the agent serializer and
 the management actions create, update, delete, eject and disable; `.chain.json` chains and the acceptance, tool-budget and
 dynamic fan-out validators they need; external CLI and external job runners (their agents are listed, not run); the advertised
 agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
@@ -87,7 +95,26 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M5 | `agents/agent-management.ts` (list, get) | `management.go` | 5 Pi scenarios, `builtin_test.go` (the original's recorded text), `extras_test.go` |
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
 | M7 | (addition) child process runs | `run.go`, `child_*.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go` |
+| M10 | `missions/store.ts`, `types.ts`, `workflow-state.ts` | `mission_types.go`, `mission_store.go`, `mission_update.go`, `mission_state.go`, `mission_fsutil.go`, `mission_proc_*.go`, `mission_dyn.go` | 16 twins (`mission_store_test.go`, two with a second process) |
+| M11 | `missions/actions.ts` (+ the executor's `mission.*` dispatch) | `mission_actions.go`, `mission_register.go`, `mission_config.go` | `mission_host_test.go` (tool boundary), 3 pigeq scenarios (`mission-validation`, `mission-launch-validation`, `schedule-validation`) |
+| M12 | `missions/lifecycle.ts` (+ the executor's launch binding) | `mission_lifecycle.go`, `mission_run.go` | 7 twins |
+| M13 | `missions/goal-driver.ts`, `extension/index.ts` (`agent_end`) | `mission_goal.go`, `mission_register.go` | 5 twins |
+| M14 | `slash/prompt-workflows.ts` | `workflow_prompt.go`, `prompts/` | 4 twins, `mission_host_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
+
+## Differences from the original (missions and prompt workflows)
+
+- `config.json` is read for its `missions` key only (`mission_config.go`); the original drops the whole config when any key of it
+  is invalid, the port drops `missions` only. The configuration slice replaces this reader.
+- The `/prompt-workflow list` message is sent with the custom type `prompt-workflow` (the original sets none; the SDK needs
+  one). The package's own prompt templates (`prompts/*.md`, byte for byte) are carried inside the binary and listed under
+  `pigpen-subagents:prompts/<name>.md`, not a file path. Running a template calls the workflow runtime; until a launcher is
+  wired (`promptWorkflowRunner`) it answers with the port's standard refusal of `workflowScript`.
+- The goal notice cannot name retained children until the background-run slice fills `goalRetainedChildren`.
+- The ISO-timestamp check of mission records accepts the ECMAScript format and the common legacy forms of `Date.parse`
+  (`jsDateParses`), not every string V8 would parse.
+- The mission atomic write and retry ladder (`mission_fsutil.go`) cover what the missions call of `atomic-json.ts` and
+  `file-system-retry.ts`; the integration branch replaces them with that slice's port.
 
 ## Process: what was written before its tests
 
