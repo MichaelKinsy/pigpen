@@ -3,6 +3,7 @@ package warden
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 	"os"
 	"unicode/utf8"
 )
@@ -12,12 +13,43 @@ import (
 
 // fileContentHash is the hash of a file's content read as UTF-8, or "missing" when it cannot be read.
 func fileContentHash(path string) string {
-	raw, err := os.ReadFile(path)
+	raw, err := readWholeFile(path)
 	if err != nil {
 		return "missing"
 	}
 	sum := sha256.Sum256([]byte(nodeUTF8(raw)))
 	return hex.EncodeToString(sum[:])[:16]
+}
+
+// readWholeFile reads a file with the four system calls of Node's readFileSync (open, fstat, one read of the stated
+// size, close); os.ReadFile adds a read that finds the end.
+func readWholeFile(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	st, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	size := st.Size()
+	if !st.Mode().IsRegular() || size <= 0 {
+		return io.ReadAll(f)
+	}
+	buf := make([]byte, size)
+	n := 0
+	for n < len(buf) {
+		m, err := f.Read(buf[n:])
+		n += m
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+	}
+	return buf[:n], nil
 }
 
 // toolSourceHash is the sourceHash of a tool: it has no file, so the name and the description are hashed.
