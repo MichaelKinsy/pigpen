@@ -101,9 +101,7 @@ The unmodified Skills tree stays at `port/oracle/skills`; `port/adapt.py` regene
   `bootstrap-tool-loop` (two model requests in one run, both carry the bootstrap), `bootstrap-new-session`,
   `bootstrap-after-compact` (the summarising request has no bootstrap; the next request has it after the compaction summary).
 - `pigeq record` then `pigeq check`: 5 of 5 against goldens recorded from the original under Pi 1.3.0.
-- `pigeq mutate --unit` (`port/mutations.json`): **34 of 34 killed**: 26 by the layer-1 tests (the flag and its events, the marker guard, the
-  placement, the message shape, the trim set, the host-derived directory), 8 by the scenarios (the text of the model request, the
-  summary placement, the reset on a new session and on compaction). The first run left 3 alive (`skill-paths-key`,
+- `pigeq mutate --unit` (`port/mutations.json`): **34 of 34 killed**: with `--unit` the layer-1 tests judge first, so 32 are killed by them (the flag and its events, the marker guard, the placement, the message shape, the trim set, the host-derived directory) and the 2 mutants of the embedded data files (`mapping-text-changed`, `skill-text-changed`) by the scenarios, which see the text of the model request. The first run left 3 alive (`skill-paths-key`,
   `frontmatter-needs-no-newline`, `trim-range-short`); each got a test and is killed now. The harness's mutation kinds that need
   a UI call or an `exec` (reordered or extra dialogs, a started command) do not apply: the extension makes neither.
 - `go test -race -count=24`, `go vet` and `gofmt`: clean; `GOOS=windows|darwin|linux go vet`: clean.
