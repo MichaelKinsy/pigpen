@@ -691,11 +691,7 @@ func (m *vibeManager) setStyledWorkingMessage(setWorkingMessage func(string), me
 		setWorkingMessage(message)
 		return
 	}
-	if color == "rainbow" {
-		setWorkingMessage(rainbow(message))
-		return
-	}
-	setWorkingMessage(applyColor(th, color, message))
+	setWorkingMessage(applyColor(th, color, message)) // "rainbow" included: applyColor delegates to the gradient
 }
 
 // generateVibe asks the model for one message. A model, auth or credential failure the original reports through console.debug

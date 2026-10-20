@@ -121,6 +121,8 @@ func TestVibeParseResponse(t *testing.T) {
 		{"……", "Working..."},
 		{"This message is far too long for the limit...", "This message is f..."},
 		{"Cloaking up", "Cloaking up..."},
+		{"abcdefghijklmnopq...", "abcdefghijklmnopq..."},  // exactly the limit: kept
+		{"abcdefghijklmnopqr...", "abcdefghijklmnopq..."}, // one over: cut to limit-3 and re-ellipsised
 	} {
 		if got := m.parseVibeResponse(c.in, "Working"); got != c.want {
 			t.Errorf("parseVibeResponse(%q) = %q, want %q", c.in, got, c.want)
@@ -213,6 +215,12 @@ func TestVibeRateLimitAndHints(t *testing.T) {
 	now += 1 // exactly the interval: allowed (the original skips only when now - last < interval)
 	m.onToolCall("read", map[string]any{"path": "/a"}, noop, "")
 	m.wait()
+	eq(t, len(prompts), 2, "the call at the interval is allowed")
+	now += 29999 // the allowed call restarted the interval
+	m.onToolCall("read", map[string]any{"path": "/a"}, noop, "")
+	m.wait()
+	eq(t, len(prompts), 2, "the interval restarts at every refresh")
+	now += 1
 	hints := map[string]struct {
 		tool  string
 		input map[string]any
@@ -243,7 +251,7 @@ func TestVibeRateLimitAndHints(t *testing.T) {
 
 func TestVibeRecentVibesAreExcludedAndFallbackIsNotTracked(t *testing.T) {
 	_, m := vibeHome(t)
-	replies := []string{"One...", "Two...", "One...", "Three...", "Four...", "Five...", "Six..."}
+	replies := []string{"One...", "Two...", "One...", "Three...", "Four...", "Five...", "Six...", "Seven..."}
 	var prompts []string
 	m.initVibeManager(scriptedRegistry{
 		find: testProvider("test-model"),
@@ -257,14 +265,21 @@ func TestVibeRecentVibesAreExcludedAndFallbackIsNotTracked(t *testing.T) {
 	m.setTheme(new("numbers"))
 	m.setModel("test-provider/test-model")
 	m.onAgentStart()
-	for range 7 {
+	for range 8 {
 		m.onBeforeAgentStart("count", func(string) {})
 		m.wait()
 	}
+	excluded := func(i int) string {
+		_, after, _ := strings.Cut(prompts[i], "Don't use: ")
+		line, _, _ := strings.Cut(after, "\n")
+		return line
+	}
 	eq(t, strings.Contains(prompts[0], "Don't use"), false, "no exclusion at first")
-	eq(t, strings.Contains(prompts[1], "Don't use: One..."), true, "second prompt excludes the first")
-	eq(t, strings.Contains(prompts[3], "Don't use: One..., Two..."), true, "a repeat moves to the front")
-	eq(t, strings.Contains(prompts[6], "Don't use: Five..., Four..., Three..., One..., Two..."), true, "at most five")
+	eq(t, excluded(1), "One...", "second prompt excludes the first")
+	eq(t, excluded(2), "Two..., One...", "newest first")
+	eq(t, excluded(3), "One..., Two...", "a repeat moves to the front without a duplicate")
+	eq(t, excluded(6), "Five..., Four..., Three..., One..., Two...", "five at most")
+	eq(t, excluded(7), "Six..., Five..., Four..., Three..., One...", "the oldest drops out")
 	m.setTheme(new("other"))
 	eq(t, len(m.recentVibes), 0, "a theme change clears the list")
 }
@@ -585,4 +600,61 @@ func TestVibeGenerateArgsOverflowIsNotACount(t *testing.T) {
 	eq(t, []any{theme, count, ok}, []any{"a", 7, true}, "leading zeros")
 	theme, count, ok = parseVibeGenerateArgs([]string{"42"})
 	eq(t, []any{theme, count, ok}, []any{"42", 100, true}, "a lone number is the theme")
+}
+
+func TestVibeFileLinesNeedAThreeDotOrEllipsisSuffix(t *testing.T) {
+	home, m := vibeHome(t)
+	dir := filepath.Join(home, ".pi", "agent", "vibes")
+	_ = os.MkdirAll(dir, 0o755)
+	write := func(theme, content string) {
+		if err := os.WriteFile(filepath.Join(dir, toVibeFileSlug(theme)+".txt"), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("dots", "Two dots..\nFour dots....\nOne dot.\n\ufeffBom first...\n\u0085Nel...\nok…\n")
+	// JavaScript's trim strips U+FEFF but not U+0085 (Go's TrimSpace is the other way round).
+	eq(t, m.loadVibesFromFile("dots"), []string{"Four dots...", "Bom first...", "\u0085Nel...", "ok..."}, "accepted lines")
+	// The cache follows the theme.
+	write("first", "From first...")
+	write("second", "From second...")
+	m.initVibeManager(scriptedRegistry{})
+	m.setMode(vibeModeFile)
+	m.setTheme(new("first"))
+	var rec vibeRecorder
+	m.onBeforeAgentStart("x", rec.set)
+	m.setTheme(new("second"))
+	m.onBeforeAgentStart("x", rec.set)
+	eq(t, rec.all(), []string{"Channeling first...", "From first...", "Channeling second...", "From second..."}, "a theme change reloads the file")
+}
+
+func TestVibeEveryThinkingLevelSuffixResolves(t *testing.T) {
+	_, m := vibeHome(t)
+	var levels []any
+	m.initVibeManager(scriptedRegistry{
+		find: testProvider("test-model"),
+		complete: func(_, _, options map[string]any) map[string]any {
+			levels = append(levels, options["reasoning"])
+			return vibeText("Thinking...")
+		},
+	})
+	var want []any
+	for _, level := range vibeThinkingLevels {
+		m.setModel("test-provider/test-model:" + level)
+		res, _ := m.generateVibesBatch("t", 1)
+		eq(t, res.Success, true, level)
+		want = append(want, level)
+	}
+	eq(t, levels, want, "reasoning levels")
+	m.setModel("test-provider/test-model:ultra")
+	res, _ := m.generateVibesBatch("t", 1)
+	eq(t, res.Error, "Model not found: test-provider/test-model:ultra", "an unknown suffix stays part of the id")
+}
+
+func TestVibeCommandSplitsOnJavaScriptWhitespace(t *testing.T) {
+	_, m := vibeHome(t)
+	var notes []string
+	notify := func(message, level string) { notes = append(notes, level+": "+message) }
+	// U+FEFF separates words in JavaScript (\s) but not in Go's strings.Fields.
+	_ = m.command("model\ufeffa/b\u3000c", notify)
+	eq(t, notes, []string{"info: Vibe model set to: a/b c"}, "words split on U+FEFF and U+3000")
 }

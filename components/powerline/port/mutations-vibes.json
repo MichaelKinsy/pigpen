@@ -318,12 +318,6 @@
   "replace": "if message == \"\" || color == \"\" {"
  },
  {
-  "name": "vibe-style-rainbow",
-  "file": "working_vibes.go",
-  "find": "if color == \"rainbow\" {\n\t\tsetWorkingMessage(rainbow(message))",
-  "replace": "if color == \"rainbowx\" {\n\t\tsetWorkingMessage(rainbow(message))"
- },
- {
   "name": "vibe-placeholder",
   "file": "working_vibes.go",
   "find": "normalizeEllipsis(\"Channeling \" + *m.config.Theme)",
@@ -364,12 +358,6 @@
   "file": "working_vibes.go",
   "find": "utf16Len(agentContext) > 10",
   "replace": "utf16Len(agentContext) >= 10"
- },
- {
-  "name": "vibe-agent-context-cut",
-  "file": "working_vibes.go",
-  "find": "utf16Head(agentContext, 150)",
-  "replace": "utf16Head(agentContext, 149)"
  },
  {
   "name": "vibe-hint-bash-cut",
@@ -525,7 +513,7 @@
   "name": "vibe-batch-prompt-count",
   "file": "working_vibes.go",
   "find": "jsReplaceAll(vibeBatchPrompt, \"{theme}\", theme), \"{count}\", strconv.Itoa(safeCount)",
-  "replace": "jsReplaceAll(vibeBatchPrompt, \"{theme}\", theme), \"{count}\", strconv.Itoa(count)"
+  "replace": "jsReplaceAll(vibeBatchPrompt, \"{theme}\", theme), \"{count}\", strconv.Itoa(safeCount+1)"
  },
  {
   "name": "vibe-batch-file-join",
