@@ -188,7 +188,7 @@ func (t *ArmingTracker) Arm(tool, path, cwd string, sinkTargets []string) []stri
 	seen := map[string]bool{}
 	matches := func(rule ArmingRule, candidates []string) bool {
 		for _, candidate := range candidates {
-			abs := resolveFrom(cwd, expandHome(candidate))
+			abs := resolvePath(cwd, expandHome(candidate))
 			if editedMatches(rule, candidate) || editedMatches(rule, abs) {
 				return true
 			}

@@ -17,7 +17,7 @@ var gitRepo struct {
 	err           error
 }
 
-func gitIn(dir string, args ...string) error {
+func gitStateIn(dir string, args ...string) error {
 	cmd := exec.Command("git", append([]string{"-c", "user.name=t", "-c", "user.email=t@example.com"}, args...)...)
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
@@ -56,7 +56,7 @@ func gitFixture(t *testing.T) (repo, notRepo string) {
 			{"update-ref", "refs/remotes/origin/trunk", "HEAD"}, {"update-ref", "refs/remotes/origin/feature", "HEAD"},
 			{"symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk"},
 		} {
-			if err := gitIn(gitRepo.repo, args...); err != nil {
+			if err := gitStateIn(gitRepo.repo, args...); err != nil {
 				gitRepo.err = err
 				return
 			}
@@ -70,7 +70,7 @@ func gitFixture(t *testing.T) (repo, notRepo string) {
 
 func git(t *testing.T, repo string, args ...string) {
 	t.Helper()
-	if err := gitIn(repo, args...); err != nil {
+	if err := gitStateIn(repo, args...); err != nil {
 		t.Fatalf("git %v: %v", args, err)
 	}
 }

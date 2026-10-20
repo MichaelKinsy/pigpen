@@ -386,7 +386,7 @@ func scratchCandidates(tool string, input map[string]any, cwd, platform string) 
 	if view, ok := CommandOf(tool, input); ok && tool == "bash" && view.Command != "" {
 		paths = mkdirTargets(view.Command)
 	} else if path, ok := input["path"].(string); ok && tool == "write" && !strings.HasPrefix(path, "~") {
-		paths = []string{resolveFrom(cwd, path)}
+		paths = []string{resolvePath(cwd, path)}
 	}
 	roots := tempRoots()
 	var missing []string
@@ -411,14 +411,6 @@ func scratchCandidates(tool string, input map[string]any, cwd, platform string) 
 		}
 	}
 	return missing
-}
-
-// resolvePath is node's path.resolve(cwd, path).
-func resolveFrom(cwd, path string) string {
-	if isAbsPath(path) {
-		return filepath.Clean(path)
-	}
-	return filepath.Join(cwd, path)
 }
 
 // scratchOutputLimit: at most this many temp paths are read from one tool result.

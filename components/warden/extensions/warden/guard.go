@@ -67,10 +67,6 @@ type GuardExtras struct {
 	Platform string
 }
 
-// resolveRulesFile resolves the rules file the active config names for a directory: the content that rides every judged
-// action request and the source it came from. The rules guard sets it; nil sends no rules content.
-var resolveRulesFile func(cwd string, cfg *RulesConfig) (content, source string)
-
 // BuildExtras are the optional parts of a judgment request.
 type BuildExtras struct {
 	Slop, Approval, Security, LargeOutput bool
@@ -301,7 +297,7 @@ func EvaluateAction(ctx context.Context, action ActionInput, opts EvaluateOption
 	}
 	inHost := false
 	if p, ok := action.Input["path"].(string); ok && summary.Location == "outside_project" {
-		inHost = inHostPath(resolveFrom(action.Cwd, p), opts.HostPaths)
+		inHost = inHostPath(resolvePath(action.Cwd, p), opts.HostPaths)
 	}
 	if summary.Location == "outside_project" && !inHost {
 		exists := summary.Exists != nil && *summary.Exists
@@ -342,8 +338,15 @@ func EvaluateAction(ctx context.Context, action ActionInput, opts EvaluateOption
 	// Resolve the rules file once per call for the request state. With the rules guard off, no rules content leaves the
 	// machine at all: no question names the field, so an absent one costs nothing.
 	var rulesContent, rulesSource string
-	if (opts.Rules == nil || opts.Rules.Enabled) && resolveRulesFile != nil {
-		rulesContent, rulesSource = resolveRulesFile(action.Cwd, opts.Rules)
+	if opts.Rules == nil || opts.Rules.Enabled {
+		var files []string
+		fallback := true
+		if opts.Rules != nil {
+			files, fallback = opts.Rules.Files, opts.Rules.Fallback
+		}
+		if resolved, ok := resolveRulesFile(action.Cwd, files, fallback); ok {
+			rulesContent, rulesSource = resolved.Content, resolved.Source
+		}
 	}
 	floorHits := "none"
 	if len(builtInHits) > 0 {

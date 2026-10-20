@@ -66,7 +66,7 @@ type sqlSegment struct {
 	stdin bool
 }
 
-type pendingHeredoc struct {
+type sqlPendingHeredoc struct {
 	segment   *sqlSegment
 	delimiter string
 	tabs      bool
@@ -79,7 +79,7 @@ func sqlSegments(command string) []*sqlSegment {
 	var segments []*sqlSegment
 	segment := &sqlSegment{}
 	var word *shellWordSQL
-	var pending []pendingHeredoc
+	var pending []sqlPendingHeredoc
 	endWord := func() {
 		if word != nil {
 			segment.words = append(segment.words, *word)
@@ -206,7 +206,7 @@ func sqlSegments(command string) []*sqlSegment {
 			}
 			_, hasUnquoted := group(4)
 			dash, _ := group(1)
-			pending = append(pending, pendingHeredoc{segment: segment, delimiter: delimiter, tabs: dash == "-", literal: !hasUnquoted || strings.Contains(rest[m[0]:m[1]], "\\")})
+			pending = append(pending, sqlPendingHeredoc{segment: segment, delimiter: delimiter, tabs: dash == "-", literal: !hasUnquoted || strings.Contains(rest[m[0]:m[1]], "\\")})
 			index += m[1]
 			continue
 		case char == '<':

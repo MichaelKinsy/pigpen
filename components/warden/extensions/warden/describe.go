@@ -48,6 +48,24 @@ func DescribeAction(tool string, input map[string]any, cwd string) ActionSummary
 		if StripDataText(view.Command).Stripped {
 			s.DataText = dataTextNote
 		}
+		// The judge sees the full text; this names what a bash command writes with content literal in the command.
+		if tool == "bash" {
+			home, err := os.UserHomeDir()
+			scan := shellWrites(view.Command, ShellWritesOptions{Home: home, HasHome: err == nil})
+			if written := mergeWrites(scan.Writes); len(written) > 0 {
+				var contents []string
+				for _, w := range written {
+					verb := "writes "
+					if w.Append {
+						verb = "appends to "
+					}
+					path, _ := displayPath(w.Path, cwd)
+					s.Writes = append(s.Writes, verb+path)
+					contents = append(contents, w.Content)
+				}
+				s.Excerpt = Redact(sample(strings.Join(contents, "\n"), excerptLimit))
+			}
+		}
 	}
 	if p, ok := input["path"].(string); ok && jsTrim(p) != "" && tool != "ctx_execute_file" {
 		s.Path, s.Location = displayPath(p, cwd)

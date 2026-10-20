@@ -123,16 +123,6 @@ func TestRulesEnabledFalseKeepsTheRulesFileOut(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(project, "pi-warden.md"), []byte("# Rules\n\n- Never commit secrets.\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	// The rules guard owns the resolution; this stands in for it with the one file the test writes.
-	saved := resolveRulesFile
-	defer func() { resolveRulesFile = saved }()
-	resolveRulesFile = func(dir string, _ *RulesConfig) (string, string) {
-		b, err := os.ReadFile(filepath.Join(dir, "pi-warden.md"))
-		if err != nil {
-			return "", ""
-		}
-		return string(b), "pi-warden.md"
-	}
 	state := func(rules *RulesConfig) map[string]any {
 		spy := actionJudge(0.1, 0.1, "", nil)
 		eval(ActionInput{Tool: "bash", Input: map[string]any{"command": "npm test"}, Cwd: project, Task: "run the tests"}, EvaluateOptions{Config: cfg(), Judge: spy, GuardExtras: GuardExtras{Rules: rules}})

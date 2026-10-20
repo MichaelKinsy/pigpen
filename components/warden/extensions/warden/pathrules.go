@@ -282,11 +282,11 @@ func matchPathRules(tool string, input map[string]any, cwd string, rules []PathR
 				continue
 			}
 			if (rule.OnlyIfExists == nil || *rule.OnlyIfExists) && cwd != "" {
-				if _, err := os.Stat(resolveFrom(cwd, path)); err != nil {
+				if _, err := os.Stat(resolvePath(cwd, path)); err != nil {
 					continue
 				}
 			}
-			if pathRuleMatches(rule, path) || (cwd != "" && pathRuleMatches(rule, resolveFrom(cwd, path))) {
+			if pathRuleMatches(rule, path) || (cwd != "" && pathRuleMatches(rule, resolvePath(cwd, path))) {
 				fire(rule, isWriteTool(tool), labelOr(rule, "touches "+rule.ID))
 			}
 		}

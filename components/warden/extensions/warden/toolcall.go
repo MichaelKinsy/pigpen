@@ -105,6 +105,8 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	conv := conversationOf(w.branchOf(ctx), id, fallback, call)
 	// guardcore: a write/edit to a protected path arms matching command patterns before the guard looks at the call.
 	w.gcArm(ctx, cfg, tool, input)
+	w.rulesFirstRunNotice(ctx, cfg)                            // rules hook: the first-run notice
+	plan := w.rulesStart(ctx, cfg, call, conv.Siblings, judge) // rules hook: the rules requests start beside the action request
 	verdict := w.guard.Inspect(newContext(), call, conv, InspectOptions{Config: cfg.Action, Cwd: ctx.Cwd(), Judge: judge, Timeout: w.timeout(cfg), Git: w.opts.Git, GuardExtras: w.gcExtras(cfg)})
 	// guardcore: armed rules fire as deterministic hits on top of the verdict.
 	verdict = w.gcArmed(cfg, tool, input, verdict)
@@ -138,20 +140,24 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		notes = append(notes, ShouldProceedMessage(verdict))
 	}
 	// guardcore: the large-output steer, once per command family per session (never holds).
+	var noteKinds []SteerKind
 	if note := w.gcLargeOutput(verdict); note != "" && w.adaptiveSend(ctx, cfg, SteerKindLargeOutput) {
 		notes = append(notes, note)
+		noteKinds = append(noteKinds, SteerKindLargeOutput)
 	}
-	deliverNotes := func() {
-		if len(notes) > 0 {
-			w.steer(cfg, []SteerGuard{SteerGuardAction}, ctx, strings.Join(notes, "\n\n"), SteerOptions{DeliverAs: "steer"})
-		}
+	// One combined steer per call: the action notes, then the rules findings, then the sensitive-path notes.
+	cn := &callNotes{notes: notes, kinds: noteKinds}
+	if len(notes) > 0 {
+		cn.addGuard(SteerGuardAction)
 	}
+	w.rulesVerdicts(ctx, cfg, plan, tool, verdict.Summary, cn) // rules hook: await the rules requests, log, trace, path notes
+	deliverNotes := func(proceeds bool) { w.deliverCallNotes(ctx, cfg, cn, proceeds, notePathOf(verdict.Summary, plan)) }
 	reasons := strings.Join(verdict.Reasons, "; ")
 	deliveredReasons := strings.Join(dv.Reasons, "; ")
 
 	switch verdict.Level {
 	case LevelWarn:
-		deliverNotes()
+		deliverNotes(true)
 		w.bump(func(s *stats) { s.Warned++ })
 		w.recordVerdict(ctx, cfg, verdict, "warned")
 		if cfg.Notices && ctx.HasUI() {
@@ -161,7 +167,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		}
 		return nil, nil
 	case LevelDeny:
-		deliverNotes()
+		deliverNotes(false)
 		w.bump(func(s *stats) { s.Held++ })
 		w.recordVerdict(ctx, cfg, verdict, "blocked")
 		if cfg.Notices && ctx.HasUI() {
@@ -170,7 +176,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		return blockResult("pi-warden blocked this " + tool + " call (" + deliveredReasons + "). A deny rule matched; this command is not allowed to run. Ask the user if this is genuinely required."), nil
 	case LevelConfirm:
 	default:
-		deliverNotes()
+		deliverNotes(true)
 		w.recordVerdict(ctx, cfg, verdict, "allowed")
 		return nil, nil
 	}
@@ -187,7 +193,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		deliverNotes()
+		deliverNotes(allowed)
 		if allowed {
 			w.recordVerdict(ctx, cfg, verdict, "allowed by you")
 			return nil, nil
@@ -201,7 +207,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	}
 	switch mode {
 	case "advise":
-		deliverNotes()
+		deliverNotes(true)
 		w.bump(func(s *stats) { s.Warned++ })
 		w.recordVerdict(ctx, cfg, verdict, "advised")
 		if cfg.Notices && ctx.HasUI() {
@@ -213,7 +219,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	case "confirm":
 		return askUser()
 	}
-	deliverNotes()
+	deliverNotes(false)
 	w.bump(func(s *stats) { s.Held++ })
 	w.guard.Hold(conv.Task)
 	w.recordVerdict(ctx, cfg, verdict, "held")

@@ -101,7 +101,7 @@ func escalateRulesViolation(v Violation, jev ViolationJudgmentAnswer, escalation
 	return SeverityDestructive
 }
 
-var severityRank = map[Severity]int{SeverityRisky: 1, SeverityDestructive: 2, SeveritySensitive: 1, SeverityDeny: 3}
+var violationSeverityRank = map[Severity]int{SeverityRisky: 1, SeverityDestructive: 2, SeveritySensitive: 1, SeverityDeny: 3}
 
 // aggregateLevel: the final level is the highest severity among all remaining violations.
 func aggregateLevel(violations []EscalatedViolation) Level {
@@ -110,7 +110,7 @@ func aggregateLevel(violations []EscalatedViolation) Level {
 	}
 	maxSeverity := 0
 	for _, v := range violations {
-		maxSeverity = max(maxSeverity, severityRank[v.EscalatedSeverity])
+		maxSeverity = max(maxSeverity, violationSeverityRank[v.EscalatedSeverity])
 	}
 	switch {
 	case maxSeverity >= 3:
