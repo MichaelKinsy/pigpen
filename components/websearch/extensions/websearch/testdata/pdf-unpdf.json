@@ -30,11 +30,11 @@
 			"name": "InvalidPDFException"
 		},
 		"encrypted-aes-empty.pdf": {
-			"title": "AES doc",
+			"title": "AES doc 0123456",
 			"pages": 1,
-			"chars": 106,
-			"file": "aes-doc.md",
-			"content": "# AES doc\n\n> Source: https://example.test/docs/encrypted-aes-empty.pdf\n> Pages: 1\n\n---\n\nEncrypted with AES"
+			"chars": 114,
+			"file": "aes-doc-0123456.md",
+			"content": "# AES doc 0123456\n\n> Source: https://example.test/docs/encrypted-aes-empty.pdf\n> Pages: 1\n\n---\n\nEncrypted with AES"
 		},
 		"encrypted-aes256-empty.pdf": {
 			"error": "Math.sumPrecise is not a function",
@@ -131,6 +131,13 @@
 			"chars": 78,
 			"file": "scan.md",
 			"content": "# Scan\n\n> Source: https://example.test/docs/scanned-empty.pdf\n> Pages: 2\n\n---\n"
+		},
+		"spacing-ops.pdf": {
+			"title": "spacing ops",
+			"pages": 1,
+			"chars": 122,
+			"file": "spacing-ops.md",
+			"content": "# spacing ops\n\n> Source: https://example.test/docs/spacing-ops.pdf\n> Pages: 1\n\n---\n\ns p a c e d twowords a b Hel lo Wor ld"
 		},
 		"text.pdf": {
 			"title": "text",

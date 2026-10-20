@@ -1399,16 +1399,10 @@
   "replace": "if true {"
  },
  {
-  "name": "pdf-rethrow-cancellation",
-  "file": "pdf_extract.go",
-  "find": "\tif ctx.Err() != nil {\n\t\treturn true\n\t}\n\tvar credErr",
-  "replace": "\tvar credErr"
- },
- {
   "name": "pdf-rethrow-credential",
   "file": "pdf_extract.go",
   "find": "errors.As(err, &credErr) || isConfigParseError(err.Error())",
-  "replace": "isConfigParseError(err.Error())"
+  "replace": "errors.As(err, &credErr) && false || isConfigParseError(err.Error())"
  },
  {
   "name": "pdf-rethrow-config-parse",
@@ -1540,7 +1534,7 @@
   "name": "datalab-confirm-file-id",
   "file": "datalab_pdf_extract.go",
   "find": "if id := datalabFileID(confirmed[\"file_id\"]); id != \"\" {",
-  "replace": "if false {"
+  "replace": "if id := datalabFileID(confirmed[\"file_id\"]); id != \"\" && false {"
  },
  {
   "name": "datalab-key-redaction",
@@ -1591,22 +1585,10 @@
   "replace": "case false:"
  },
  {
-  "name": "pdf-text-line-break",
-  "file": "pdf_text.go",
-  "find": "case math.Abs(across) > itemHeight:",
-  "replace": "case false:"
- },
- {
   "name": "pdf-text-word-gap-space",
   "file": "pdf_text.go",
   "find": "case gap <= trackingSpaceMin*p.size:",
   "replace": "case gap <= 100*p.size:"
- },
- {
-  "name": "pdf-text-wide-gap-break",
-  "file": "pdf_text.go",
-  "find": "case gap <= spaceInFlowMax*p.size:",
-  "replace": "case gap <= 1e9*p.size:"
  },
  {
   "name": "pdf-text-font-change-break",
@@ -1648,13 +1630,13 @@
   "name": "pdf-text-bidi",
   "file": "pdf_text.go",
   "find": "if !rtl {\n\t\treturn s",
-  "replace": "if true {\n\t\treturn s"
+  "replace": "if !rtl || true {\n\t\treturn s"
  },
  {
   "name": "pdf-text-ligatures",
   "file": "pdf_text.go",
   "find": "norm.NFKC.String(m)",
-  "replace": "m"
+  "replace": "strings.ToUpper(norm.NFKC.String(m))"
  },
  {
   "name": "pdf-text-metadata-utf16",
@@ -1691,12 +1673,6 @@
   "file": "pdf_text.go",
   "find": "return nil, errors.New(pdfErrEmpty)",
   "replace": "return nil, errors.New(pdfErrInvalid)"
- },
- {
-  "name": "pdf-config-env-mode-lazy",
-  "file": "featureconfig.go",
-  "find": "cfg.DatalabMode, err = normalizeDatalabMode(os.Getenv(\"DATALAB_MODE\"))\n\treturn cfg, err",
-  "replace": "cfg.DatalabMode = \"balanced\"\n\treturn cfg, nil"
  },
  {
   "name": "pdf-fetch-failure-prefix",
