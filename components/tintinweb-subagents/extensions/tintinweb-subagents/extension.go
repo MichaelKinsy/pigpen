@@ -1,7 +1,6 @@
 package tintinweb_subagents
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -262,14 +261,12 @@ func (a *app) scheduleNudge(key string, send func()) {
 	if stop := a.timers[key]; stop != nil {
 		stop()
 	}
-	var stop func()
-	stop = a.after(nudgeHold, func() {
+	a.timers[key] = a.after(nudgeHold, func() {
 		a.mu.Lock()
 		delete(a.timers, key)
 		a.mu.Unlock()
 		send()
 	})
-	a.timers[key] = stop
 }
 
 // cancelNudge cancels a held notification, as a read of the result does.
@@ -369,5 +366,3 @@ func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
 		"</task-notification>",
 	), "\n")
 }
-
-var _ = context.Background

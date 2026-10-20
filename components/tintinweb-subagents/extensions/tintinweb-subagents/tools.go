@@ -438,5 +438,3 @@ func firstLine(s string) string {
 	}
 	return s
 }
-
-var _ = context.Background
