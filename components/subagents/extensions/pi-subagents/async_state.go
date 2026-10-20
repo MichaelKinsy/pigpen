@@ -46,13 +46,28 @@ type completedStore interface {
 	Prune(now, ttlMs int64)
 }
 
-type mapCompletedStore struct{ m map[string]completedResult }
+// mapCompletedStore is safe for concurrent use: the result watcher records completions while bg_wait reads them.
+type mapCompletedStore struct {
+	mu sync.Mutex
+	m  map[string]completedResult
+}
 
 func newCompletedStore() completedStore { return &mapCompletedStore{m: map[string]completedResult{}} }
 
-func (s *mapCompletedStore) Get(id string) (completedResult, bool) { v, ok := s.m[id]; return v, ok }
-func (s *mapCompletedStore) Set(id string, v completedResult)      { s.m[id] = v }
+func (s *mapCompletedStore) Get(id string) (completedResult, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	v, ok := s.m[id]
+	return v, ok
+}
+func (s *mapCompletedStore) Set(id string, v completedResult) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.m[id] = v
+}
 func (s *mapCompletedStore) Prune(now, ttl int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for k, e := range s.m {
 		if now-e.SeenAt > ttl {
 			delete(s.m, k)

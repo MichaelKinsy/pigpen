@@ -546,6 +546,13 @@ func (rt *asyncRuntime) processResult(file string, triggerTurn bool) {
 		return
 	}
 	rt.mu.Lock()
+	// A result is the run's end: the session must not read the job as active once it has delivered the completion, whichever
+	// of the result and the supervisor's own bookkeeping got there first.
+	if j := rt.state.AsyncJobs[runID]; j != nil && isActiveAsyncState(j.Status) {
+		if state := resultStateOf(data); isTerminalAsyncState(state) {
+			j.Status, j.UpdatedAt = state, nowMs()
+		}
+	}
 	recordWaitCompletion(rt.state, runID, data, nowMs(), completionSendTTLMs, &struct{ ResultsDir, SessionID string }{rt.dirs.Results, sessionID})
 	rt.mu.Unlock()
 	rt.bus.Emit(subagentAsyncCompleteEvent, data)
