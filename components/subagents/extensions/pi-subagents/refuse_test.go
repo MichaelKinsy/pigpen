@@ -169,3 +169,11 @@ func TestTheOriginalsOtherCommandsAreNotRegistered(t *testing.T) {
 		t.Error("the port's own /run-chain is gone")
 	}
 }
+
+// a JSON null is an unset parameter, not an option the port ignores
+func TestNullParametersAreUnset(t *testing.T) {
+	h, calls := refusedHost(t)
+	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "output": nil, "acceptance": nil, "workflowScript": nil, "async": false})
+	eq(t, failure, "", "nulls are ignored")
+	eq(t, len(*calls), 1, "it ran")
+}

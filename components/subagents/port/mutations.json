@@ -723,7 +723,7 @@
   "name": "ref-option",
   "file": "refuse.go",
   "find": "if !allowed[k] {",
-  "replace": "if false {"
+  "replace": "if !allowed[k] && false {"
  },
  {
   "name": "ref-option-plural",
@@ -735,7 +735,7 @@
   "name": "ref-null",
   "file": "refuse.go",
   "find": "if v != nil {\n\t\t\tkeys",
-  "replace": "if true {\n\t\t\tkeys"
+  "replace": "if v != nil || true {\n\t\t\tkeys"
  },
  {
   "name": "ref-action",
