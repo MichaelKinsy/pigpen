@@ -107,9 +107,16 @@ func jsDateParse(s string) float64 {
 	case m[4] != "":
 		loc = localZone
 	}
+	midnightNext := hour == 24 // T24:00:00 is the start of the next day
+	if midnightNext {
+		hour = 0
+	}
 	t := time.Date(year, time.Month(month), day, hour, min, sec, ms*1e6, loc)
 	if t.Day() != day { // 02-30 style overflow: JS rejects days past the month's end
 		return math.NaN()
+	}
+	if midnightNext {
+		t = t.AddDate(0, 0, 1)
 	}
 	return float64(t.UnixMilli())
 }
