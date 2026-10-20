@@ -135,46 +135,7 @@ func TestProviderWireFixtures(t *testing.T) {
 			noErr(t, json.Unmarshal(c.Args[len(c.Args)-1], &o))
 			so := SearchOptions{NumResults: o.NumResults, RecencyFilter: o.RecencyFilter, DomainFilter: o.DomainFilter, IncludeContent: o.IncludeContent}
 			eo := ExtractOptions{Prompt: o.Prompt, TimeoutMs: o.TimeoutMs, Lookup: pubLookup}
-			ctx := context.Background()
-			var got any
-			switch c.Fn {
-			case "searchWithTinyFish":
-				got, err = searchWire(SearchWithTinyFish(ctx, first, so))
-			case "searchWithSearch1API":
-				got, err = searchWire(SearchWithSearch1API(ctx, first, so))
-			case "searchWithSearchinfinity":
-				got, err = searchWire(SearchWithSearchinfinity(ctx, first, so))
-			case "searchWithQuerit":
-				got, err = searchWire(SearchWithQuerit(ctx, first, so))
-			case "searchWithParallel":
-				got, err = searchWire(SearchWithParallel(ctx, first, so))
-			case "searchWithParallelMcp":
-				got, err = searchWire(SearchWithParallelMCP(ctx, first, so))
-			case "searchWithOllama":
-				got, err = searchWire(SearchWithOllama(ctx, first, so))
-			case "searchWithKagi":
-				got, err = searchWire(SearchWithKagi(ctx, first, so))
-			case "searchWithBrightData":
-				got, err = searchWire(SearchWithBrightData(ctx, first, so))
-			case "extractWithTinyFish":
-				got, err = extractWire(ExtractWithTinyFish(ctx, first, eo))
-			case "extractWithSearch1API":
-				got, err = extractWire(ExtractWithSearch1API(ctx, first, eo))
-			case "extractWithQuerit":
-				got, err = extractWire(ExtractWithQuerit(ctx, first, eo))
-			case "extractWithParallel":
-				got, err = extractWire(ExtractWithParallel(ctx, first, eo))
-			case "extractWithParallelMcp":
-				got, err = extractWire(ExtractWithParallelMCP(ctx, first, eo))
-			case "extractWithOllama":
-				got, err = extractWire(ExtractWithOllama(ctx, first, eo, SsrfConfig{}))
-			case "extractWithKagi":
-				got, err = extractWire(ExtractWithKagi(ctx, first, eo, SsrfConfig{}))
-			case "extractWithBrightDataUnlocker":
-				got, err = extractWire(ExtractWithBrightDataUnlocker(ctx, first, eo, SsrfConfig{}))
-			default:
-				t.Fatalf("unknown function %s", c.Fn)
-			}
+			got, err := wireCall(t, c.Fn, first, so, eo)
 			if c.Expect.Error != nil {
 				if err == nil || err.Error() != *c.Expect.Error {
 					t.Fatalf("error = %v, want %q", err, *c.Expect.Error)
@@ -215,3 +176,50 @@ func TestProviderWireFixtures(t *testing.T) {
 func searchWire(r *SearchResponse, err error) (any, error) { return wireSearchResult(r), err }
 
 func extractWire(r *ExtractedContent, err error) (any, error) { return wireExtractResult(r), err }
+
+// wireCall runs one recorded function of the port.
+func wireCall(tb testing.TB, fn, first string, so SearchOptions, eo ExtractOptions) (any, error) {
+	tb.Helper()
+	ctx := context.Background()
+	var got any
+	var err error
+	switch fn {
+	case "searchWithTinyFish":
+		got, err = searchWire(SearchWithTinyFish(ctx, first, so))
+	case "searchWithSearch1API":
+		got, err = searchWire(SearchWithSearch1API(ctx, first, so))
+	case "searchWithSearchinfinity":
+		got, err = searchWire(SearchWithSearchinfinity(ctx, first, so))
+	case "searchWithQuerit":
+		got, err = searchWire(SearchWithQuerit(ctx, first, so))
+	case "searchWithParallel":
+		got, err = searchWire(SearchWithParallel(ctx, first, so))
+	case "searchWithParallelMcp":
+		got, err = searchWire(SearchWithParallelMCP(ctx, first, so))
+	case "searchWithOllama":
+		got, err = searchWire(SearchWithOllama(ctx, first, so))
+	case "searchWithKagi":
+		got, err = searchWire(SearchWithKagi(ctx, first, so))
+	case "searchWithBrightData":
+		got, err = searchWire(SearchWithBrightData(ctx, first, so))
+	case "extractWithTinyFish":
+		got, err = extractWire(ExtractWithTinyFish(ctx, first, eo))
+	case "extractWithSearch1API":
+		got, err = extractWire(ExtractWithSearch1API(ctx, first, eo))
+	case "extractWithQuerit":
+		got, err = extractWire(ExtractWithQuerit(ctx, first, eo))
+	case "extractWithParallel":
+		got, err = extractWire(ExtractWithParallel(ctx, first, eo))
+	case "extractWithParallelMcp":
+		got, err = extractWire(ExtractWithParallelMCP(ctx, first, eo))
+	case "extractWithOllama":
+		got, err = extractWire(ExtractWithOllama(ctx, first, eo, SsrfConfig{}))
+	case "extractWithKagi":
+		got, err = extractWire(ExtractWithKagi(ctx, first, eo, SsrfConfig{}))
+	case "extractWithBrightDataUnlocker":
+		got, err = extractWire(ExtractWithBrightDataUnlocker(ctx, first, eo, SsrfConfig{}))
+	default:
+		tb.Fatalf("unknown function %s", fn)
+	}
+	return got, err
+}

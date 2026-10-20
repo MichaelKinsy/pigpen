@@ -24,7 +24,7 @@ func IsQueritAvailable() bool {
 }
 
 func queritKey(ctx context.Context) (string, error) {
-	return requireProviderKey(ctx, "Querit", "Querit", "queritApiKey", "QUERIT_API_KEY", "Create a key at https://www.querit.ai/en/dashboard/api-keys")
+	return requireProviderKey(ctx, "Querit API", "Querit", "queritApiKey", "QUERIT_API_KEY", "Create a key at https://www.querit.ai/en/dashboard/api-keys")
 }
 
 var queritRecency = map[string]string{"day": "d1", "week": "w1", "month": "m1", "year": "y1"}

@@ -86,7 +86,7 @@ func bdKey(ctx context.Context, root map[string]any) (string, error) {
 		return "", err
 	}
 	if key == "" {
-		return "", missingKey("Bright Data", "brightdataApiKey", "BRIGHTDATA_API_KEY", "Get a key at https://brightdata.com/cp/setting/users")
+		return "", missingKey("Bright Data API", "brightdataApiKey", "BRIGHTDATA_API_KEY", "Get a key at https://brightdata.com/cp/setting/users")
 	}
 	return key, nil
 }
