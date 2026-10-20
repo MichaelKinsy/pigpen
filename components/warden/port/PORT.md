@@ -292,17 +292,17 @@ Inputs: a 200 KB build log (3,500 lines, one error line), a 100 KB `tsc` log (2,
 
 | Path | Go port | Original (Node) | Before the fixes |
 |---|---|---|---|
-| compress a 200 KB output, head, diagnostics, tail | 2.1 ms, 14 allocs, 68 KB | 0.40 ms | 19 ms |
-| compress a 100 KB `tsc` log with the parser | 0.76 ms, 37 allocs | 0.36 ms | 7.9 ms |
-| content key of a 200 KB output | 0.51 ms | 0.61 ms | 0.94 ms |
-| repeated-run index and find, 5,000 lines | 5.0 ms, 105 allocs | 4.5 ms | 5.2 ms |
-| filter chunks and batches, 200 KB (redacts every chunk) | 5.6 ms, 5.3k allocs | 10.8 ms | 235 ms |
-| relevance requests, 120 calls | 30 ms | 507 ms | 511 ms |
-| relevance summary render, 120 calls | 4.9 ms, 3 MB | 1.6 ms | 21 ms |
+| compress a 200 KB output, head, diagnostics, tail | 0.91 ms, 15 allocs, 101 KB | 0.40 ms | 19 ms |
+| compress a 100 KB `tsc` log with the parser | 0.68 ms, 37 allocs | 0.36 ms | 7.9 ms |
+| content key of a 200 KB output | 0.45 ms | 0.61 ms | 0.94 ms |
+| repeated-run index and find, 5,000 lines | 4.1 ms, 105 allocs | 4.5 ms | 5.2 ms |
+| filter chunks and batches, 200 KB (redacts every chunk) | 5.1 ms, 5.3k allocs | 10.8 ms | 235 ms |
+| relevance requests, 120 calls | 26.5 ms | 507 ms | 511 ms |
+| relevance summary render, 120 calls | 2.8 ms, 3 MB | 1.6 ms | 21 ms |
 
-The fixes (each tested against the code it replaces): `Redact` returns early for a text none of its rules can match (`redact_prefilter.go`; it was 1 µs a character of regexp scanning on any large text, so it also speeds up every judged request of every guard), the ASCII fast paths of `utf16Len` and `utf16Slice`, the whole-word scan that replaces the diagnostic regexp, a literal gate in front of each per-line pattern of the excerpt parsers, and the dedupe index without a slice per hash. Four paths are still slower than the original by more than 10% (generic compress +1.7 ms per 200 KB, `tsc` parser +0.4 ms, repeated-run index +0.5 ms, summary render +3.3 ms per compaction); each is milliseconds beside the judge request that follows it in the same code path (hundreds of milliseconds) and none runs on the input or render path. OWNER DECISION NEEDED whether that is accepted or the remaining regexp-bound parsers are rewritten by hand.
+The fixes (each tested against the code it replaces): `Redact` returns early for a text none of its rules can match (`redact_prefilter.go`; it was 1 µs a character of regexp scanning on any large text, so it also speeds up every judged request of every guard), the ASCII fast paths of `utf16Len` and `utf16Slice` (eight bytes a step), a one-pass byte scan in place of the diagnostic regexp, a literal gate in front of each per-line pattern of the excerpt parsers, and the dedupe index without a slice per hash. Three paths are still slower than the original by more than 10%, each by about a millisecond: the generic compress (+0.5 ms; of its 0.91 ms, 0.35 ms is the byte scan for the seven diagnostic words, 0.1 ms the ASCII checks, 0.05 ms the line split), the `tsc` parser (+0.3 ms; half of it the literal gates' `strings.Index` calls, the rest the patterns on the lines that carry a diagnostic) and the summary render (+1.2 ms; 3 MB of string concatenation for 120 results of 5 KB). Each sits beside the judge request that follows it in the same code path (hundreds of milliseconds) and none runs on the input or render path. OWNER DECISION NEEDED whether that is accepted or the remaining parsers are rewritten by hand.
 
-Against the previous release (`origin/main`, 0.1.1; a probe `main` that calls `warden.Extension()`, stripped, 31 interleaved runs): binary 8,446,215 to 9,175,303 bytes (+8.6%, this branch also holds the tools, steering-core and security slices); package init 83 KB, 427 allocs, 0.34 ms to 165 KB, 839 allocs, 1.4 ms; process start to a built extension 6.97 ms to 7.12 ms (+2%); `Extension()` itself 15 to 43 µs. The original's module load under Node (`registration-original.ts`; the factory call fails against the stand-in, so only the load is timed) is about 350 ms of wall time per process, of which about 40 ms is Node's own start. `TestPackageInitDoesNotCompileRegexps` fails at 165 KB against its 150 KB limit with the slices merged (this slice declares about 44 of the roughly 190 lazy patterns); the limit is Main's call.
+Against the previous release (`origin/main`, 0.1.1; a probe `main` that calls `warden.Extension()`, stripped, 31 interleaved runs): binary 8,446,215 to 9,171,207 bytes (+8.6%, this branch also holds the tools, steering-core and security slices); package init 83 KB, 426 allocs to 61 KB, 451 allocs, 0.16 ms (the regexp translation of `jsRE` and `prefsRE` and the parse of `questions.json` now happen on first use, which is what keeps `TestPackageInitDoesNotCompileRegexps` green: it failed at 165 KB with the slices merged); process start to a built extension 7.34 ms to 6.12 ms (noise: the box is shared); `Extension()` itself 14 to 52 µs. The original's module load under Node (`registration-original.ts`; the factory call fails against the stand-in, so only the load is timed) is about 350 ms of wall time per process, of which about 40 ms is Node's own start.
 
 ## Named gaps
 

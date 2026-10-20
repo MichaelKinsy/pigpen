@@ -511,7 +511,7 @@ func BuildDoneRequest(task, finalMessage string, e *RunEvidence) Request {
 	}
 	return Request{
 		State:     map[string]any{"task": taskText, "final_message": Redact(msg), "run": map[string]any{"file_changes": mutations, "checks_run": ran}},
-		Questions: build(qs.Done),
+		Questions: build(questionSetsOnce().Done),
 	}
 }
 
