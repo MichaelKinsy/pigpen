@@ -173,9 +173,12 @@ func TestReplyOverlayRendersWithTheHostTheme(t *testing.T) {
 			t.Errorf("rendered picker lacks %q:\n%s", want, lines)
 		}
 	}
+	// The overlay is laid out at its own width: the SDK 0.4.1 hands the component the terminal width, 0.5.0 the overlay's
+	// (85% of the terminal, at least the 72 cells minWidth asks for). Either way every row has the same width in [72, 80].
+	first := powerline.VisibleWidth(s.renders[0][0])
 	for i, line := range s.renders[0] {
-		if w := powerline.VisibleWidth(line); w != 80 {
-			t.Errorf("line %d is %d cells wide, want the terminal width 80", i, w)
+		if w := powerline.VisibleWidth(line); w != first || w < 72 || w > 80 {
+			t.Errorf("line %d is %d cells wide, want %d (between 72 and 80)", i, w, first)
 		}
 	}
 }
