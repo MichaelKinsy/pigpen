@@ -46,6 +46,9 @@ func TestGitChangesBackend(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "untracked.bin"), []byte{0, 255}, 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile(filepath.Join(root, "nul.dat"), []byte("a\x00b\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.Symlink("tracked.txt", filepath.Join(root, "link.txt")); err != nil {
 		t.Skip("symlinks are not available")
 	}
@@ -72,7 +75,7 @@ func TestGitChangesBackend(t *testing.T) {
 	for _, f := range files {
 		byName[fileName(t, f)] = f
 	}
-	want := []string{"empty.txt", "in.txt", "tracked.bin", "tracked.txt", "untracked.bin", "we ird#name%.txt"}
+	want := []string{"empty.txt", "in.txt", "nul.dat", "tracked.bin", "tracked.txt", "untracked.bin", "we ird#name%.txt"}
 	if got := fileNames(t, &ahptypes.ChangesetState{Files: files}); !reflect.DeepEqual(got, want) {
 		t.Fatalf("files = %v, want %v (ignored files, symlinks and the build directory stay out)", got, want)
 	}
@@ -84,7 +87,7 @@ func TestGitChangesBackend(t *testing.T) {
 	if empty := byName["empty.txt"]; added(empty) != 0 {
 		t.Fatalf("an empty untracked file has no lines, diff = %+v", empty.Edit.Diff)
 	}
-	if byName["untracked.bin"].Edit.Diff != nil || byName["tracked.bin"].Edit.Diff != nil {
+	if byName["untracked.bin"].Edit.Diff != nil || byName["tracked.bin"].Edit.Diff != nil || byName["nul.dat"].Edit.Diff != nil {
 		t.Fatal("binary files have no line counts")
 	}
 	if d := byName["tracked.txt"].Edit.Diff; d == nil || *d.Added != 2 || *d.Removed != 0 {
@@ -141,6 +144,9 @@ func TestGitChangesBackend(t *testing.T) {
 	}
 	if _, ok := backend.PathForBlob(*ws, changeset.BlobRef{Path: "../x"}); ok {
 		t.Fatal("a path that leaves the repository must be refused")
+	}
+	if _, ok := backend.PathForBlob(*ws, changeset.BlobRef{Path: "a/../../x"}); ok {
+		t.Fatal("a path with a dot-dot segment must be refused")
 	}
 	if _, err := backend.ReadBlob(ctx, *ws, changeset.BlobRef{SessionID: "sid", OID: "not-an-oid", Path: "tracked.txt"}); err == nil {
 		t.Fatal("a malformed object id must be refused")
@@ -247,4 +253,75 @@ func TestGitChangesetsFollowTheFilesystemPolicy(t *testing.T) {
 	oid := strings.TrimSpace(git(t, repo, "rev-parse", "HEAD:a.txt"))
 	meta, _ := json.Marshal(map[string]any{"sessionId": strings.TrimPrefix(other, "ahp-session:/"), "oid": oid, "path": "a.txt"})
 	g.client.ExpectError("resourceRead", obj{"channel": wire.RootChannel, "uri": "git-blob:/x?" + base64.RawURLEncoding.EncodeToString(meta)}, wire.CodeNotFound)
+}
+
+// A blob is authorized by the path it names: once a directory of the work tree is replaced by a
+// link out of the filesystem roots, the blobs that were under it are no longer readable.
+func TestGitBlobsAreAuthorizedByTheirPath(t *testing.T) {
+	requireGit(t)
+	repo := realDir(t, t.TempDir())
+	initRepo(t, repo)
+	if err := os.Mkdir(filepath.Join(repo, "d"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(repo, "d", "f.txt"), "one\n")
+	git(t, repo, "add", ".")
+	git(t, repo, "commit", "-qm", "base")
+	appendTo(t, filepath.Join(repo, "d", "f.txt"), "two\n")
+	git(t, repo, "commit", "-qam", "edit")
+
+	root := t.TempDir()
+	built, err := compose.Build(compose.Options{
+		ServerInfo: &ahptypes.Implementation{Name: "pi-ahp"}, WorkingDirectory: repo, SessionRoot: root,
+		CreateSessionManager: pi.PersistentStorage(filepath.Join(root, "created")),
+		CreateBackend:        func(*pi.LiveSession) (pi.Backend, error) { return nullBackend{}, nil },
+		Filesystem:           &compose.FilesystemOptions{Roots: []string{repo}},
+		TuneChangesets:       func(c *changeset.Options) { c.PollInterval, c.Debounce = 20*time.Millisecond, 5*time.Millisecond },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := testkit.Connect(t, built.Host)
+	client.Initialize("policy-client", nil)
+	t.Cleanup(func() { client.Close(); built.Close() })
+	f := &fixture{t: t, built: built, client: client, workspace: repo}
+	session := f.createSession(obj{})
+	channel := changeset.URI(strings.TrimPrefix(session, "ahp-session:/"), changeset.LatestCommit)
+	eventually(t, "the catalogue", func() bool { return len(f.session(session).Changesets) == 2 })
+	client.Subscribe(channel)
+	state := f.readyState(channel)
+	file := findFile(t, state, "f.txt")
+	if file == nil {
+		t.Fatalf("files = %v", fileNames(t, state))
+	}
+	uri := file.Edit.After.Content.Uri
+	if got := f.readBlob(uri); got.Data != "one\ntwo\n" {
+		t.Fatalf("blob = %q", got.Data)
+	}
+	outside := t.TempDir()
+	if err := os.RemoveAll(filepath.Join(repo, "d")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(repo, "d")); err != nil {
+		t.Skip("symlinks are not available")
+	}
+	client.ExpectError("resourceRead", obj{"channel": wire.RootChannel, "uri": uri, "encoding": "utf-8"}, wire.CodePermissionDenied)
+}
+
+// The Latest Commit channel exists only when the session advertises it: a repository without a
+// commit has no such changeset to subscribe to.
+func TestUnadvertisedChangesetsAreNotFound(t *testing.T) {
+	requireGit(t)
+	empty := realDir(t, t.TempDir())
+	git(t, empty, "init", "-q")
+	write(t, filepath.Join(empty, "first.txt"), "first\n")
+	f := startFixture(t, empty, fixtureOptions{deleteFile: okDelete})
+	session := f.createSession(obj{})
+	f.attach(session)
+	id := strings.TrimPrefix(session, "ahp-session:/")
+	f.client.ExpectError("subscribe", obj{"channel": changeset.URI(id, changeset.LatestCommit)}, wire.CodeNotFound)
+	if f.built.Host.Store().Has(changeset.URI(id, changeset.LatestCommit)) {
+		t.Fatal("an unadvertised changeset must not be created")
+	}
+	f.client.Subscribe(changeset.URI(id, changeset.Uncommitted))
 }

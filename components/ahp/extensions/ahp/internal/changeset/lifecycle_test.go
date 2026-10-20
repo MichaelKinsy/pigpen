@@ -63,6 +63,7 @@ type controlledGit struct {
 	gateOnce       sync.Once
 
 	mu             sync.Mutex
+	inflight       int
 	computeCalls   int
 	ignoredCalls   int
 	failCompute    bool
@@ -87,12 +88,20 @@ func (g *controlledGit) Inspect(context.Context, string) (*changeset.Workspace, 
 	return &ws, nil
 }
 
+func (g *controlledGit) running() int {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.inflight
+}
+
 func (g *controlledGit) Compute(ctx context.Context, _ changeset.Workspace, _ string, _ changeset.Kind) ([]ahptypes.ChangesetFile, error) {
 	g.mu.Lock()
 	g.computeCalls++
+	g.inflight++
 	version := g.computeCalls
 	fail, block := g.failCompute, g.blockFirstCall
 	g.mu.Unlock()
+	defer func() { g.mu.Lock(); g.inflight--; g.mu.Unlock() }()
 	if fail {
 		return nil, errors.New("Git diff failed")
 	}
@@ -324,11 +333,60 @@ func TestChangesetRefreshesWhenATurnEnds(t *testing.T) {
 				Type: ahptypes.ActionTypeChatTurnStarted, TurnId: "t1", StartedAt: "2025-01-01T00:00:00.000Z",
 				Message: ahptypes.Message{Text: "go", Origin: ahptypes.MessageOrigin{Kind: ahptypes.MessageKindUser}},
 			}})
+			time.Sleep(150 * time.Millisecond)
 			if n, _ := c.git.calls(); n != initial {
 				t.Fatalf("starting a turn must not recompute (%d -> %d)", initial, n)
 			}
 			c.host.DispatchServerAction(c.chat, end("t1"))
 			eventually(t, "the changeset to be recomputed after the turn", func() bool { n, _ := c.git.calls(); return n > initial })
 		})
+	}
+}
+
+// Removing a session returns only when the scan that was in flight has ended, so nothing of it can
+// touch the host afterwards.
+func TestChangesetRemoveSessionWaitsForTheScan(t *testing.T) {
+	c := startControlled(t, controlledOptions{blockFirstCompute: true})
+	c.client.Subscribe(c.channel)
+	<-c.git.computeStarted
+	if c.git.running() != 1 {
+		t.Fatalf("running scans = %d", c.git.running())
+	}
+	c.service.RemoveSession(c.session.SessionID)
+	if n := c.git.running(); n != 0 {
+		t.Fatalf("a scan is still running after the session was removed: %d", n)
+	}
+}
+
+// A refresh of a changeset somebody is watching says so: the status goes to computing before the
+// new content arrives (changeset-service.ts, refreshOnce).
+func TestChangesetRefreshAnnouncesComputing(t *testing.T) {
+	c := startControlled(t, controlledOptions{})
+	c.client.Subscribe(c.channel)
+	eventually(t, "the initial changeset", func() bool { return c.status() == ahptypes.ChangesetStatusReady })
+	initial, _ := c.git.calls()
+	before := len(c.client.Notifications())
+	c.watches.current(t).changed(filepath.Join(c.workspace, "x.ts"))
+	eventually(t, "the refresh", func() bool {
+		n, _ := c.git.calls()
+		s := c.state()
+		return n > initial && s != nil && s.Status == ahptypes.ChangesetStatusReady && added(s.Files[0]) > int64(initial)
+	})
+	var order []string
+	for _, note := range c.client.Notifications()[before:] {
+		env, ok := note.Envelope()
+		if !ok || env.Channel != c.channel {
+			continue
+		}
+		switch a := env.Action.Value.(type) {
+		case *ahptypes.ChangesetStatusChangedAction:
+			order = append(order, "status:"+string(a.Status))
+		case *ahptypes.ChangesetContentChangedAction:
+			order = append(order, "content")
+		}
+	}
+	want := []string{"status:computing", "content", "status:ready"}
+	if len(order) < 3 || order[0] != want[0] || order[1] != want[1] || order[2] != want[2] {
+		t.Fatalf("actions of a refresh = %v, want %v first", order, want)
 	}
 }
