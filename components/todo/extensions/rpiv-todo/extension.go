@@ -86,6 +86,7 @@ type app struct {
 	bound  bool              // a foreground session with a UI is attached (the original's uiCtx)
 	rebind bool              // the overlay must attach to the UI again before its next update
 	unsub  func()            // ends the terminal-resize subscription made when the overlay was bound
+	sink   widgetSink        // where the bound UI shows widgets: the original's captured uiCtx, usable by the teardown after its ctx went stale
 	order  sequencer         // commits tool calls in the order they started
 	held   map[string]func() // tool call id -> release of its place, until the host reports the call ended
 }
@@ -194,6 +195,24 @@ func isStaleCtxError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "stale after session replacement")
 }
 
+// ctxSid is the original's sid(ctx) for a handler's context: reading `ctx.sessionManager` of an invalidated
+// context throws the stale message in Pi (runner.ts assertActive). The Go SDK throws that message from its
+// own getters and answers session reads regardless, so the context is asked first. Only the stale panic is
+// converted to an error; any other panic propagates.
+func ctxSid(ctx sdk.Context) (id string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			e, ok := r.(error)
+			if !ok || !isStaleCtxError(e) {
+				panic(r)
+			}
+			id, err = "", e
+		}
+	}()
+	ctx.Cwd()
+	return sid(ctx.SessionManager())
+}
+
 // guidanceFromConfig reads the user's prompt overrides. upstream: todo.ts:67.
 func guidanceFromConfig() guidanceFields { return validateGuidanceFields(loadConfig().Guidance) }
 
@@ -255,7 +274,7 @@ func (a *app) execute(ctx sdk.Context, p map[string]any) (any, error) {
 			release()
 		}
 	}()
-	id, err := sid(ctx.SessionManager())
+	id, err := ctxSid(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +300,7 @@ func (a *app) commandHandler(ctx sdk.Context, _ string) error {
 		ctx.Notify(tr("command.requires_interactive", errRequiresInteractive), "error")
 		return nil
 	}
-	id, err := sid(ctx.SessionManager())
+	id, err := ctxSid(ctx)
 	if err != nil {
 		return err
 	}
@@ -344,7 +363,7 @@ func (a *app) updateOverlay(ctx sdk.Context, resetCompletedDisplayState bool) {
 // replay re-keys a session's slot from its branch. A stale ctx keeps the current state (the replacement
 // session's session_start replays it); other errors are real replay bugs and propagate.
 func (a *app) replay(ctx sdk.Context) (id string, err error) {
-	id, err = sid(ctx.SessionManager())
+	id, err = ctxSid(ctx)
 	if err == nil {
 		var branch []map[string]any
 		if branch, err = ctx.SessionManager().GetBranch(nil); err == nil {
@@ -390,7 +409,7 @@ func (a *app) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) {
 		return nil, nil
 	}
 	a.mu.Lock()
-	a.bound, a.rebind = true, true
+	a.bound, a.rebind, a.sink = true, true, sinkFor(ctx)
 	if a.unsub == nil {
 		// Pi draws a component widget at the current width on every frame: a resize lays the rows out again.
 		if unsub, err := ctx.OnWidthChange(a.onWidthChange); err == nil {
@@ -413,7 +432,7 @@ func (a *app) onWidthChange(ctx sdk.Context, _ int) {
 }
 
 func (a *app) onSessionShutdown(ctx sdk.Context, _ map[string]any) (any, error) {
-	id, err := sid(ctx.SessionManager())
+	id, err := ctxSid(ctx)
 	if err != nil {
 		if !isStaleCtxError(err) {
 			return nil, err
@@ -428,8 +447,8 @@ func (a *app) onSessionShutdown(ctx sdk.Context, _ map[string]any) (any, error) 
 		return nil, nil
 	}
 	a.mu.Lock()
-	ov, unsub := a.ov, a.unsub
-	a.ov, a.bound, a.rebind, a.unsub = nil, false, false, nil
+	ov, unsub, sink := a.ov, a.unsub, a.sink
+	a.ov, a.bound, a.rebind, a.unsub, a.sink = nil, false, false, nil, nil
 	a.mu.Unlock()
 	if unsub != nil {
 		unsub()
@@ -438,7 +457,7 @@ func (a *app) onSessionShutdown(ctx sdk.Context, _ map[string]any) (any, error) 
 	// not leave the foreground pointing at an evicted slot.
 	var derr error
 	if ov != nil {
-		derr = ov.dispose(sinkFor(ctx))
+		derr = ov.dispose(sink)
 	}
 	a.st.clearActiveRenderSession()
 	return nil, derr
