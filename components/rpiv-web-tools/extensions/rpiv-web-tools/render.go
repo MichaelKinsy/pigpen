@@ -100,10 +100,6 @@ func renderFetchResultText(details map[string]any, content string, hasContent, e
 	return text
 }
 
-// textLines is what pi-tui's `new Text(text, 0, 0).render(width)` returns, which is what the original's renderers
-// return: the lines the host draws.
-func textLines(text string, width int) []string { return wrapText(text, width) }
-
 func renderSearchCall(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContext, width int) ([]string, error) {
 	return textLines(renderSearchCallText(args, ctx.UITheme()), width), nil
 }
