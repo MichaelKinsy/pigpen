@@ -528,7 +528,9 @@ func TestMutantsCServiceUpdateTaskInTurn(t *testing.T) {
 	f.service.beginTurn(f.ctx, id)
 	out := gsMust(f.service.updateTask(f.ctx, goalTaskUpdateSpec{
 		taskId: "t1",
-		update: func(task *jsObject) (*jsObject, goalGate) { return goalWith(task, "status", "complete"), goalGate{ok: true} },
+		update: func(task *jsObject) (*jsObject, goalGate) {
+			return goalWith(task, "status", "complete"), goalGate{ok: true}
+		},
 		ledger: func(written, updated *jsObject) ([]*jsObject, error) { return nil, os.ErrInvalid },
 	}))
 	eq(t, out.ok, true, "the update stands")
@@ -1253,7 +1255,9 @@ func TestMutantsCServiceTaskLedger(t *testing.T) {
 	id := mcSvcID(f)
 	out := gsMust(f.service.updateTask(f.ctx, goalTaskUpdateSpec{
 		taskId: "t1",
-		update: func(task *jsObject) (*jsObject, goalGate) { return goalWith(task, "status", "complete"), goalGate{ok: true} },
+		update: func(task *jsObject) (*jsObject, goalGate) {
+			return goalWith(task, "status", "complete"), goalGate{ok: true}
+		},
 		ledger: func(written, updated *jsObject) ([]*jsObject, error) {
 			return []*jsObject{ledgerEvent("task_complete", "goalId", id, "taskId", "t1", "at", nowIso())}, nil
 		},
