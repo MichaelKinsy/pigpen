@@ -1,0 +1,1682 @@
+[
+ {
+  "name": "np-normalize-dot",
+  "file": "nodepath.go",
+  "find": "if lastSlash == i-1 || dots == 1 {",
+  "replace": "if lastSlash == i-1 || dots == 3 {"
+ },
+ {
+  "name": "np-normalize-dotdot-pop",
+  "file": "nodepath.go",
+  "find": "lastSlashIndex := len(res) - lastSegmentLength - 1",
+  "replace": "lastSlashIndex := len(res) - lastSegmentLength"
+ },
+ {
+  "name": "np-normalize-dotdot-keep",
+  "file": "nodepath.go",
+  "find": "if len(res) < 2 || lastSegmentLength != 2 ||",
+  "replace": "if len(res) < 3 || lastSegmentLength != 2 ||"
+ },
+ {
+  "name": "np-normalize-dots-run",
+  "file": "nodepath.go",
+  "find": "} else if code == '.' && dots != -1 {",
+  "replace": "} else if code == '.' {"
+ },
+ {
+  "name": "np-normalize-above-root",
+  "file": "nodepath.go",
+  "find": "if allowAboveRoot {\n\t\t\t\t\tif len(res) > 0 {",
+  "replace": "if !allowAboveRoot {\n\t\t\t\t\tif len(res) > 0 {"
+ },
+ {
+  "name": "np-posix-resolve-stop",
+  "file": "nodepath.go",
+  "find": "for i := len(args) - 1; i >= 0 && !resolvedAbsolute; i-- {",
+  "replace": "for i := len(args) - 1; i >= 0; i-- {"
+ },
+ {
+  "name": "np-posix-resolve-cwd",
+  "file": "nodepath.go",
+  "find": "resolvedPath = cwd + \"/\" + resolvedPath",
+  "replace": "resolvedPath = resolvedPath"
+ },
+ {
+  "name": "np-posix-resolve-empty",
+  "file": "nodepath.go",
+  "find": "\tif len(resolvedPath) > 0 {\n\t\treturn resolvedPath\n\t}\n\treturn \".\"\n}",
+  "replace": "\treturn resolvedPath\n}"
+ },
+ {
+  "name": "np-posix-normalize-trailing",
+  "file": "nodepath.go",
+  "find": "\tif trailing {\n\t\tpath += \"/\"\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "np-posix-normalize-dot-slash",
+  "file": "nodepath.go",
+  "find": "if trailing {\n\t\t\treturn \"./\"",
+  "replace": "if trailing {\n\t\t\treturn \".\""
+ },
+ {
+  "name": "np-posix-normalize-root",
+  "file": "nodepath.go",
+  "find": "if isAbsolute {\n\t\t\treturn \"/\"\n\t\t}\n\t\tif trailing",
+  "replace": "if isAbsolute {\n\t\t\treturn \"\"\n\t\t}\n\t\tif trailing"
+ },
+ {
+  "name": "np-posix-join-sep",
+  "file": "nodepath.go",
+  "find": "joined += \"/\" + a",
+  "replace": "joined += a"
+ },
+ {
+  "name": "np-posix-join-skip-empty",
+  "file": "nodepath.go",
+  "find": "\t\tif len(a) > 0 {\n\t\t\tif !have {\n\t\t\t\tjoined = a",
+  "replace": "\t\tif len(a) >= 0 {\n\t\t\tif !have {\n\t\t\t\tjoined = a"
+ },
+ {
+  "name": "np-posix-relative-base",
+  "file": "nodepath.go",
+  "find": "if to[toStart+i] == '/' {\n\t\t\t\treturn to[toStart+i+1:]",
+  "replace": "if to[toStart+i] == '/' {\n\t\t\t\treturn to[toStart+i:]"
+ },
+ {
+  "name": "np-posix-relative-root",
+  "file": "nodepath.go",
+  "find": "if i == 0 {\n\t\t\t\treturn to[toStart+i:]",
+  "replace": "if i == 1 {\n\t\t\t\treturn to[toStart+i:]"
+ },
+ {
+  "name": "np-posix-relative-up",
+  "file": "nodepath.go",
+  "find": "out += \"/..\"",
+  "replace": "out += \"/.\""
+ },
+ {
+  "name": "np-posix-relative-tonroot",
+  "file": "nodepath.go",
+  "find": "} else if i == 0 {\n\t\t\t\tlastCommonSep = 0",
+  "replace": "} else if i == 1 {\n\t\t\t\tlastCommonSep = 0"
+ },
+ {
+  "name": "np-posix-dirname-double",
+  "file": "nodepath.go",
+  "find": "if hasRoot && end == 1 {\n\t\treturn \"//\"",
+  "replace": "if hasRoot && end == 1 {\n\t\treturn \"/\""
+ },
+ {
+  "name": "np-posix-dirname-root",
+  "file": "nodepath.go",
+  "find": "\t\tif hasRoot {\n\t\t\treturn \"/\"\n\t\t}\n\t\treturn \".\"\n\t}\n\tif hasRoot && end",
+  "replace": "\t\treturn \".\"\n\t}\n\tif hasRoot && end"
+ },
+ {
+  "name": "np-posix-basename",
+  "file": "nodepath.go",
+  "find": "start = i + 1\n\t\t\t\tbreak\n\t\t\t}\n\t\t} else if end == -1 {\n\t\t\tmatchedSlash = false\n\t\t\tend = i + 1\n\t\t}\n\t}\n\tif end == -1 {\n\t\treturn \"\"\n\t}\n\treturn path[start:end]\n}\n\nfunc win32Basename",
+  "replace": "start = i\n\t\t\t\tbreak\n\t\t\t}\n\t\t} else if end == -1 {\n\t\t\tmatchedSlash = false\n\t\t\tend = i + 1\n\t\t}\n\t}\n\tif end == -1 {\n\t\treturn \"\"\n\t}\n\treturn path[start:end]\n}\n\nfunc win32Basename"
+ },
+ {
+  "name": "np-posix-root",
+  "file": "nodepath.go",
+  "find": "if len(path) > 0 && path[0] == '/' {\n\t\t\treturn \"/\"",
+  "replace": "if len(path) > 1 && path[0] == '/' {\n\t\t\treturn \"/\""
+ },
+ {
+  "name": "np-sep-win",
+  "file": "nodepath.go",
+  "find": "func isWinSep(c byte) bool   { return c == '/' || c == '\\\\' }",
+  "replace": "func isWinSep(c byte) bool   { return c == '\\\\' }"
+ },
+ {
+  "name": "np-win-device-root-lower",
+  "file": "nodepath.go",
+  "find": "return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')\n}",
+  "replace": "return (c >= 'A' && c <= 'Z')\n}"
+ },
+ {
+  "name": "np-win-resolve-device-roots",
+  "file": "nodepath.go",
+  "find": "if first != \".\" && first != \"?\" {",
+  "replace": "if first != \".\" {"
+ },
+ {
+  "name": "np-win-resolve-other-device",
+  "file": "nodepath.go",
+  "find": "if jsToLowerCase(device) != jsToLowerCase(resolvedDevice) {",
+  "replace": "if device != resolvedDevice {"
+ },
+ {
+  "name": "np-win-resolve-abs",
+  "file": "nodepath.go",
+  "find": "resolvedTail = path[rootEnd:] + `\\` + resolvedTail\n\t\t\tresolvedAbsolute = isAbsolute",
+  "replace": "resolvedTail = path[rootEnd:] + `\\` + resolvedTail\n\t\t\tresolvedAbsolute = false"
+ },
+ {
+  "name": "np-win-resolve-drive-cwd",
+  "file": "nodepath.go",
+  "find": "strings.ToLower(sliceUnits(path, 0, 2)) != strings.ToLower(resolvedDevice) && path[2] == '\\\\'",
+  "replace": "strings.ToLower(sliceUnits(path, 0, 2)) == strings.ToLower(resolvedDevice) && path[2] == '\\\\'"
+ },
+ {
+  "name": "np-win-resolve-relative-dot",
+  "file": "nodepath.go",
+  "find": "\tif s := resolvedDevice + resolvedTail; s != \"\" {\n\t\treturn s\n\t}\n\treturn \".\"",
+  "replace": "\treturn resolvedDevice + resolvedTail"
+ },
+ {
+  "name": "np-win-normalize-single",
+  "file": "nodepath.go",
+  "find": "if isPosixSep(code) {\n\t\t\treturn `\\`",
+  "replace": "if isPosixSep(code) {\n\t\t\treturn `/`"
+ },
+ {
+  "name": "np-win-normalize-unc-only",
+  "file": "nodepath.go",
+  "find": "return `\\\\` + first + `\\` + path[shareStart:] + `\\`",
+  "replace": "return `\\\\` + first + `\\` + path[shareStart:]"
+ },
+ {
+  "name": "np-win-normalize-device",
+  "file": "nodepath.go",
+  "find": "if first == \".\" || first == \"?\" {\n\t\t\t\t\tdevice",
+  "replace": "if first == \".\" {\n\t\t\t\t\tdevice"
+ },
+ {
+  "name": "np-win-normalize-reserved-device",
+  "file": "nodepath.go",
+  "find": "device = `\\\\?\\` + possible",
+  "replace": "device = `\\\\.\\` + possible"
+ },
+ {
+  "name": "np-win-normalize-reserved-colon",
+  "file": "nodepath.go",
+  "find": "} else if isWindowsReservedName(path, colon) {\n\t\t\tdevice = path[:colon+1]",
+  "replace": "} else if !isWindowsReservedName(path, colon) {\n\t\t\tdevice = path[:colon+1]"
+ },
+ {
+  "name": "np-win-normalize-trailing",
+  "file": "nodepath.go",
+  "find": "if len(tail) > 0 && isWinSep(path[n-1]) {\n\t\ttail += `\\`",
+  "replace": "if len(tail) > 0 && path[n-1] == '/' {\n\t\ttail += `\\`"
+ },
+ {
+  "name": "np-win-normalize-cve-colon",
+  "file": "nodepath.go",
+  "find": "if index == n-1 || isWinSep(path[index+1]) {",
+  "replace": "if index == n-1 {"
+ },
+ {
+  "name": "np-win-normalize-reserved-last",
+  "file": "nodepath.go",
+  "find": "if isWindowsReservedName(path, strings.IndexByte(path, ':')) {\n\t\treturn `.\\` + device + tail",
+  "replace": "if false {\n\t\treturn `.\\` + device + tail"
+ },
+ {
+  "name": "np-win-reserved-negative",
+  "file": "nodepath.go",
+  "find": "if colonIndex < 0 {\n\t\trs := []rune(path)\n\t\tif len(rs) == 0 {\n\t\t\treturn false\n\t\t}\n\t\tpart = string(rs[:len(rs)-1])",
+  "replace": "if colonIndex < 0 {\n\t\treturn false"
+ },
+ {
+  "name": "np-win-reserved-upper",
+  "file": "nodepath.go",
+  "find": "return windowsReservedNames[strings.ToUpper(part)]",
+  "replace": "return windowsReservedNames[part]"
+ },
+ {
+  "name": "np-win-reserved-names",
+  "file": "nodepath.go",
+  "find": "\"LPT\\u00b9\": true, \"LPT\\u00b2\": true, \"LPT\\u00b3\": true,",
+  "replace": "\"LPT\\u00b2\": true, \"LPT\\u00b3\": true,"
+ },
+ {
+  "name": "np-win-join-unc",
+  "file": "nodepath.go",
+  "find": "needsReplace = false\n\t\t\t\t}",
+  "replace": "needsReplace = true\n\t\t\t\t}"
+ },
+ {
+  "name": "np-win-join-slashes",
+  "file": "nodepath.go",
+  "find": "if slashCount >= 2 {\n\t\t\tjoined = `\\` + joined[slashCount:]",
+  "replace": "if slashCount >= 3 {\n\t\t\tjoined = `\\` + joined[slashCount:]"
+ },
+ {
+  "name": "np-win-join-reserved",
+  "file": "nodepath.go",
+  "find": "return strings.ReplaceAll(joined, \"/\", `\\`)\n\t\t}\n\t}\n\treturn win32Normalize(joined)",
+  "replace": "return joined\n\t\t}\n\t}\n\treturn win32Normalize(joined)"
+ },
+ {
+  "name": "np-win-join-sep",
+  "file": "nodepath.go",
+  "find": "joined := strings.Join(parts, `\\`)",
+  "replace": "joined := strings.Join(parts, `/`)"
+ },
+ {
+  "name": "np-win-isabs-drive",
+  "file": "nodepath.go",
+  "find": "return isWinSep(code) || (n > 2 && isWinDeviceRoot(code) && path[1] == ':' && isWinSep(path[2]))",
+  "replace": "return isWinSep(code) || (n > 1 && isWinDeviceRoot(code) && path[1] == ':')"
+ },
+ {
+  "name": "np-win-relative-lower",
+  "file": "nodepath.go",
+  "find": "fromS, toS := jsToLowerCase(fromOrigS), jsToLowerCase(toOrigS)",
+  "replace": "fromS, toS := fromOrigS, toOrigS"
+ },
+ {
+  "name": "np-win-relative-length-branch",
+  "file": "nodepath.go",
+  "find": "if jsLen(fromOrigS) != jsLen(fromS) || jsLen(toOrigS) != jsLen(toS) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "np-win-relative-length-segments",
+  "file": "nodepath.go",
+  "find": "return strings.Repeat(`..\\`, fromLen-i) + strings.Join(toSplit[i:], `\\`)",
+  "replace": "return strings.Join(toSplit[i:], `\\`)"
+ },
+ {
+  "name": "np-win-relative-zero",
+  "file": "nodepath.go",
+  "find": "\t\tif i == 0 {\n\t\t\treturn toOrigS\n\t\t} else if i == length {",
+  "replace": "\t\tif i == 1 {\n\t\t\treturn toOrigS\n\t\t} else if i == length {"
+ },
+ {
+  "name": "np-win-relative-mismatch",
+  "file": "nodepath.go",
+  "find": "\tif i != length {\n\t\tif lastCommonSep == -1 {\n\t\t\treturn toOrigS",
+  "replace": "\tif i != length {\n\t\tif lastCommonSep == -1 {\n\t\t\treturn fromOrigS"
+ },
+ {
+  "name": "np-win-relative-up",
+  "file": "nodepath.go",
+  "find": "out += `\\..`",
+  "replace": "out += `..`"
+ },
+ {
+  "name": "np-win-root-unc",
+  "file": "nodepath.go",
+  "find": "} else if j != shareStart {\n\t\t\t\t\trootEnd = j + 1",
+  "replace": "} else if j != shareStart {\n\t\t\t\t\trootEnd = j"
+ },
+ {
+  "name": "np-win-root-drive",
+  "file": "nodepath.go",
+  "find": "\t\tif n <= 2 {\n\t\t\treturn path\n\t\t}\n\t\trootEnd = 2\n\t\tif isWinSep(path[2]) {\n\t\t\tif n == 3 {",
+  "replace": "\t\tif n <= 1 {\n\t\t\treturn path\n\t\t}\n\t\trootEnd = 2\n\t\tif isWinSep(path[2]) {\n\t\t\tif n == 3 {"
+ },
+ {
+  "name": "np-win-dirname-unc",
+  "file": "nodepath.go",
+  "find": "rootEnd = j + 1\n\t\t\t\t\t\toffset = j + 1",
+  "replace": "rootEnd = j\n\t\t\t\t\t\toffset = j"
+ },
+ {
+  "name": "np-win-basename-drive",
+  "file": "nodepath.go",
+  "find": "if len(path) >= 2 && isWinDeviceRoot(path[0]) && path[1] == ':' {\n\t\tstart = 2",
+  "replace": "if len(path) >= 2 && isWinDeviceRoot(path[0]) && path[1] == ':' {\n\t\tstart = 0"
+ },
+ {
+  "name": "np-cwd-win-slash",
+  "file": "nodepath.go",
+  "find": "path = strings.ReplaceAll(path, \"/\", `\\`)",
+  "replace": "path = path"
+ },
+ {
+  "name": "lower-final-sigma",
+  "file": "jscase.go",
+  "find": "if finalSigma(rs, i) {\n\t\t\t\tb.WriteRune(0x3c2)",
+  "replace": "if !finalSigma(rs, i) {\n\t\t\t\tb.WriteRune(0x3c2)"
+ },
+ {
+  "name": "lower-dotted-i",
+  "file": "jscase.go",
+  "find": "b.WriteString(\"i\\u0307\")",
+  "replace": "b.WriteString(\"i\")"
+ },
+ {
+  "name": "lower-sigma-before",
+  "file": "jscase.go",
+  "find": "\t\tbefore = isCased(rs[j])\n\t\tbreak",
+  "replace": "\t\tbefore = true\n\t\tbreak"
+ },
+ {
+  "name": "lower-sigma-after",
+  "file": "jscase.go",
+  "find": "\t\treturn !isCased(rs[j])\n\t}\n\treturn true",
+  "replace": "\t\treturn true\n\t}\n\treturn true"
+ },
+ {
+  "name": "lower-ignorable",
+  "file": "jscase.go",
+  "find": "return unicode.In(r, unicode.Mn, unicode.Me, unicode.Cf, unicode.Lm, unicode.Sk)",
+  "replace": "return false"
+ },
+ {
+  "name": "url-scheme",
+  "file": "fileurl.go",
+  "find": "if strings.ToLower(input[:colon]) != \"file\" {",
+  "replace": "if input[:colon] != \"file\" {"
+ },
+ {
+  "name": "url-trim",
+  "file": "fileurl.go",
+  "find": "input = strings.TrimFunc(input, isC0OrSpace)",
+  "replace": ""
+ },
+ {
+  "name": "url-tab",
+  "file": "fileurl.go",
+  "find": "input = strings.NewReplacer(\"\\t\", \"\", \"\\n\", \"\", \"\\r\", \"\").Replace(input)",
+  "replace": ""
+ },
+ {
+  "name": "url-backslash",
+  "file": "fileurl.go",
+  "find": "isSlash := func(r rune) bool { return r == '/' || r == '\\\\' }",
+  "replace": "isSlash := func(r rune) bool { return r == '/' }"
+ },
+ {
+  "name": "url-localhost",
+  "file": "fileurl.go",
+  "find": "if h == \"localhost\" {\n\t\t\t\t\th = \"\"",
+  "replace": "if h == \"localhost-x\" {\n\t\t\t\t\th = \"\""
+ },
+ {
+  "name": "url-drive-host",
+  "file": "fileurl.go",
+  "find": "if isWHATWGDriveLetter(buf) {\n\t\t\t\t// the buffer",
+  "replace": "if false {\n\t\t\t\t// the buffer"
+ },
+ {
+  "name": "url-dotdot",
+  "file": "fileurl.go",
+  "find": "case \"..\", \".%2e\", \"%2e.\", \"%2e%2e\":",
+  "replace": "case \"..\":"
+ },
+ {
+  "name": "url-dot",
+  "file": "fileurl.go",
+  "find": "return l == \".\" || l == \"%2e\"",
+  "replace": "return l == \".\""
+ },
+ {
+  "name": "url-dotdot-drive",
+  "file": "fileurl.go",
+  "find": "if !(len(path) == 1 && isNormalizedDriveLetter(path[0])) && len(path) > 0 {",
+  "replace": "if len(path) > 0 {"
+ },
+ {
+  "name": "url-drive-normalize",
+  "file": "fileurl.go",
+  "find": "enc = seg[:1] + \":\"",
+  "replace": "enc = seg"
+ },
+ {
+  "name": "url-posix-host",
+  "file": "fileurl.go",
+  "find": "if host != \"\" {\n\t\treturn \"\", errInvalidFileURL\n\t}\n\tfor n := 0; n < len(pathname); n++ {",
+  "replace": "if host == \"x\" {\n\t\treturn \"\", errInvalidFileURL\n\t}\n\tfor n := 0; n < len(pathname); n++ {"
+ },
+ {
+  "name": "url-posix-slash",
+  "file": "fileurl.go",
+  "find": "pathname[n+1] == '2' && n+2 < len(pathname) && pathname[n+2]|0x20 == 'f'",
+  "replace": "pathname[n+1] == '2' && n+2 < len(pathname) && pathname[n+2] == 'f'"
+ },
+ {
+  "name": "url-win-backslash",
+  "file": "fileurl.go",
+  "find": "(pathname[n+1] == '5' && third == 'c')",
+  "replace": "false"
+ },
+ {
+  "name": "url-win-slash-swap",
+  "file": "fileurl.go",
+  "find": "pathname = strings.ReplaceAll(pathname, \"/\", `\\`)",
+  "replace": "pathname = pathname"
+ },
+ {
+  "name": "url-win-unc",
+  "file": "fileurl.go",
+  "find": "return `\\\\` + host + pathname, nil",
+  "replace": "return host + pathname, nil"
+ },
+ {
+  "name": "url-win-drive",
+  "file": "fileurl.go",
+  "find": "if letter < 'a' || letter > 'z' || pathname[2] != ':' {",
+  "replace": "if letter < 'a' || letter > 'z' {"
+ },
+ {
+  "name": "url-decode",
+  "file": "fileurl.go",
+  "find": "func decodeURIComponent(s string) (string, error) {\n\tif !strings.Contains(s, \"%\") {",
+  "replace": "func decodeURIComponent(s string) (string, error) {\n\tif true {"
+ },
+ {
+  "name": "url-decode-overlong",
+  "file": "fileurl.go",
+  "find": "if _, size := utf8.DecodeRune(seq); size != n {",
+  "replace": "if _, size := utf8.DecodeRune(seq); size < 0 {"
+ },
+ {
+  "name": "url-host-localhost-fold",
+  "file": "fileurl.go",
+  "find": "mapped := jsToLowerCase(norm.NFKC.String(b.String()))",
+  "replace": "mapped := jsToLowerCase(norm.NFC.String(b.String()))"
+ },
+ {
+  "name": "url-host-ignored",
+  "file": "fileurl.go",
+  "find": "if uts46Ignored(r) {\n\t\t\tcontinue",
+  "replace": "if false {\n\t\t\tcontinue"
+ },
+ {
+  "name": "url-host-forbidden",
+  "file": "fileurl.go",
+  "find": "case '#', '/', ':', '<', '>', '?', '@', '[', '\\\\', ']', '^', '|', '%':",
+  "replace": "case '#', '/', ':', '<', '>', '?', '[', '\\\\', ']', '^', '|', '%':"
+ },
+ {
+  "name": "url-host-number",
+  "file": "fileurl.go",
+  "find": "if endsInANumber(domain) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "url-host-ipv4-last",
+  "file": "fileurl.go",
+  "find": "if last >= limit {",
+  "replace": "if last > limit {"
+ },
+ {
+  "name": "url-host-ipv4-part",
+  "file": "fileurl.go",
+  "find": "for _, v := range nums[:len(nums)-1] {\n\t\tif v > 255 {",
+  "replace": "for _, v := range nums[:len(nums)-1] {\n\t\tif v > 256 {"
+ },
+ {
+  "name": "url-host-ipv6",
+  "file": "fileurl.go",
+  "find": "addr, ok := parseIPv6(s[1 : len(s)-1])\n\t\tif !ok {\n\t\t\treturn \"\", errInvalidFileURL\n\t\t}",
+  "replace": "addr, _ := parseIPv6(s[1 : len(s)-1])"
+ },
+ {
+  "name": "url-host-ipv6-compress",
+  "file": "fileurl.go",
+  "find": "if j-i > bestLen && j-i > 1 {",
+  "replace": "if j-i > bestLen && j-i > 2 {"
+ },
+ {
+  "name": "url-host-punycode",
+  "file": "fileurl.go",
+  "find": "dec, ok := punycodeDecode(l[4:])\n\t\t\tif !ok {\n\t\t\t\treturn \"\", false\n\t\t\t}\n\t\t\tlabels[i] = dec",
+  "replace": "labels[i] = l"
+ },
+ {
+  "name": "flavor-fold",
+  "file": "pathflavor.go",
+  "find": "if f.windows() {\n\t\treturn jsToLowerCase(value)",
+  "replace": "if false {\n\t\treturn jsToLowerCase(value)"
+ },
+ {
+  "name": "flavor-comparable-fold",
+  "file": "pathflavor.go",
+  "find": "return f.Fold(f.impl().Normalize(f.impl().Resolve(base, pathValue)))",
+  "replace": "return f.impl().Normalize(f.impl().Resolve(base, pathValue))"
+ },
+ {
+  "name": "flavor-within-empty",
+  "file": "pathflavor.go",
+  "find": "if pathValue == \"\" || directory == \"\" {",
+  "replace": "if pathValue == \"\" && directory == \"\" {"
+ },
+ {
+  "name": "flavor-within-same",
+  "file": "pathflavor.go",
+  "find": "if pathValue == directory {\n\t\treturn true",
+  "replace": "if pathValue == directory+\"x\" {\n\t\treturn true"
+ },
+ {
+  "name": "flavor-within-dotdot",
+  "file": "pathflavor.go",
+  "find": "rel != \"\" && rel != \"..\" && !strings.HasPrefix(rel, \"..\"+p.Sep) && !p.IsAbsolute(rel)",
+  "replace": "rel != \"\" && !strings.HasPrefix(rel, \"..\"+p.Sep) && !p.IsAbsolute(rel)"
+ },
+ {
+  "name": "flavor-within-prefix",
+  "file": "pathflavor.go",
+  "find": "&& !strings.HasPrefix(rel, \"..\"+p.Sep) &&",
+  "replace": "&& !strings.HasPrefix(rel, \"..x\") &&"
+ },
+ {
+  "name": "flavor-within-abs",
+  "file": "pathflavor.go",
+  "find": "&& !p.IsAbsolute(rel)",
+  "replace": ""
+ },
+ {
+  "name": "flavor-separator-win",
+  "file": "pathflavor.go",
+  "find": "last = max(last, strings.LastIndexByte(value, '\\\\'))",
+  "replace": "last = last"
+ },
+ {
+  "name": "flavor-bash-shape",
+  "file": "pathflavor.go",
+  "find": "if f.windows() {\n\t\treturn ClassifyWin32BashToken(token)",
+  "replace": "if false {\n\t\treturn ClassifyWin32BashToken(token)"
+ },
+ {
+  "name": "flavor-tool-shell",
+  "file": "pathflavor.go",
+  "find": "if f.windows() {\n\t\treturn toWindowsDrivePath(value)",
+  "replace": "if false {\n\t\treturn toWindowsDrivePath(value)"
+ },
+ {
+  "name": "flavor-platform",
+  "file": "pathflavor.go",
+  "find": "if goos == \"windows\" || goos == \"win32\" {",
+  "replace": "if goos == \"windows\" {"
+ },
+ {
+  "name": "flavor-drive-mnt",
+  "file": "pathflavor.go",
+  "find": "for _, prefix := range []string{\"mnt/\", \"cygdrive/\", \"\"} {",
+  "replace": "for _, prefix := range []string{\"mnt/\", \"\"} {"
+ },
+ {
+  "name": "flavor-drive-backslash",
+  "file": "pathflavor.go",
+  "find": "|| strings.Contains(value, `\\`) {",
+  "replace": "{"
+ },
+ {
+  "name": "flavor-drive-tail",
+  "file": "pathflavor.go",
+  "find": "if tail[0] != '/' || hasLineTerminator(tail[1:]) {",
+  "replace": "if tail[0] != '/' {"
+ },
+ {
+  "name": "flavor-drive-upper",
+  "file": "pathflavor.go",
+  "find": "return strings.ToUpper(string(letter)) + `:\\` + strings.ReplaceAll(tail[1:], \"/\", `\\`)",
+  "replace": "return string(letter) + `:\\` + strings.ReplaceAll(tail[1:], \"/\", `\\`)"
+ },
+ {
+  "name": "msys-device",
+  "file": "msysbash.go",
+  "find": "if IsSafeSystemPath(token) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "msys-letter",
+  "file": "msysbash.go",
+  "find": "isASCIIAlpha(rune(token[1]))",
+  "replace": "(token[1] >= 'a' && token[1] <= 'z')"
+ },
+ {
+  "name": "msys-tail",
+  "file": "msysbash.go",
+  "find": "(rest[0] == '/' && !hasLineTerminator(rest[1:]))",
+  "replace": "rest[0] == '/'"
+ },
+ {
+  "name": "msys-upper",
+  "file": "msysbash.go",
+  "find": "drive := strings.ToUpper(token[1:2]) + \":\"",
+  "replace": "drive := token[1:2] + \":\""
+ },
+ {
+  "name": "msys-root",
+  "file": "msysbash.go",
+  "find": "return BashTokenShape{Kind: BashTokenDriveMount, WindowsPath: drive + `\\`}",
+  "replace": "return BashTokenShape{Kind: BashTokenDriveMount, WindowsPath: drive}"
+ },
+ {
+  "name": "msys-posix",
+  "file": "msysbash.go",
+  "find": "if strings.HasPrefix(token, \"/\") {\n\t\treturn BashTokenShape{Kind: BashTokenPosixAbsolute}",
+  "replace": "if strings.HasPrefix(token, \"//\") {\n\t\treturn BashTokenShape{Kind: BashTokenPosixAbsolute}"
+ },
+ {
+  "name": "safe-stdin",
+  "file": "safepaths.go",
+  "find": "\"/dev/stdin\":  true,",
+  "replace": ""
+ },
+ {
+  "name": "safe-null",
+  "file": "safepaths.go",
+  "find": "\"/dev/null\":   true,",
+  "replace": ""
+ },
+ {
+  "name": "canon-error-class",
+  "file": "canonicalize.go",
+  "find": "if !isENOENTorENOTDIR(err) {\n\t\t\t\treturn absolutePath",
+  "replace": "if false {\n\t\t\t\treturn absolutePath"
+ },
+ {
+  "name": "canon-notdir",
+  "file": "canonicalize.go",
+  "find": "|| errors.Is(err, syscall.ENOTDIR)",
+  "replace": ""
+ },
+ {
+  "name": "canon-enoent",
+  "file": "canonicalize.go",
+  "find": "return errors.Is(err, fs.ErrNotExist) || errors.Is(err, syscall.ENOENT) ||",
+  "replace": "return false ||"
+ },
+ {
+  "name": "canon-tail",
+  "file": "canonicalize.go",
+  "find": "return impl.Join(append([]string{real}, tail...)...)",
+  "replace": "return real"
+ },
+ {
+  "name": "canon-walk",
+  "file": "canonicalize.go",
+  "find": "for i := len(parts); i >= 0; i-- {",
+  "replace": "for i := len(parts); i > 0; i-- {"
+ },
+ {
+  "name": "canon-root",
+  "file": "canonicalize.go",
+  "find": "root := impl.Root(absolutePath)",
+  "replace": "root := \"\""
+ },
+ {
+  "name": "canon-empty-candidate",
+  "file": "canonicalize.go",
+  "find": "if p == \"\" {\n\t\treturn \"\", &fs.PathError",
+  "replace": "if p == \"x\" {\n\t\treturn \"\", &fs.PathError"
+ },
+ {
+  "name": "canon-abs",
+  "file": "canonicalize.go",
+  "find": "abs, err := filepath.Abs(p)",
+  "replace": "abs, err := p, error(nil)"
+ },
+ {
+  "name": "native-spaces",
+  "file": "nativetarget.go",
+  "find": "spaced := unicodeSpaces.ReplaceAllString(rawPath, \" \")",
+  "replace": "spaced := rawPath"
+ },
+ {
+  "name": "native-at",
+  "file": "nativetarget.go",
+  "find": "unprefixed := strings.TrimPrefix(spaced, \"@\")",
+  "replace": "unprefixed := spaced"
+ },
+ {
+  "name": "native-rewritten",
+  "file": "nativetarget.go",
+  "find": "rewritten = spaced != rawPath || driveMapped != unprefixed",
+  "replace": "rewritten = spaced != rawPath"
+ },
+ {
+  "name": "native-home-bare",
+  "file": "nativetarget.go",
+  "find": "if value == \"~\" {\n\t\treturn homeDir(), true",
+  "replace": "if value == \"~x\" {\n\t\treturn homeDir(), true"
+ },
+ {
+  "name": "native-home-backslash",
+  "file": "nativetarget.go",
+  "find": "prefixes = []string{\"~/\", `~\\`}",
+  "replace": "prefixes = []string{\"~/\"}"
+ },
+ {
+  "name": "native-file-url",
+  "file": "nativetarget.go",
+  "find": "if strings.HasPrefix(driveMapped, \"file://\") {",
+  "replace": "if strings.HasPrefix(driveMapped, \"file:///\") {"
+ },
+ {
+  "name": "native-file-rewritten",
+  "file": "nativetarget.go",
+  "find": "return p, true\n\t\t}\n\t\t// Pi's tool throws",
+  "replace": "return p, false\n\t\t}\n\t\t// Pi's tool throws"
+ },
+ {
+  "name": "native-fallback-flag",
+  "file": "nativetarget.go",
+  "find": "if options.ReadFallbacks {\n\t\tif fallback",
+  "replace": "if !options.ReadFallbacks {\n\t\tif fallback"
+ },
+ {
+  "name": "native-fallback-rewritten",
+  "file": "nativetarget.go",
+  "find": "return NativeToolTarget{Target: fallback, Rewritten: true}",
+  "replace": "return NativeToolTarget{Target: fallback}"
+ },
+ {
+  "name": "native-relative",
+  "file": "nativetarget.go",
+  "find": "if !flavor.impl().IsAbsolute(value) {\n\t\tout.RelativeSpelling = &value",
+  "replace": "if flavor.impl().IsAbsolute(value) {\n\t\tout.RelativeSpelling = &value"
+ },
+ {
+  "name": "native-variant-exists",
+  "file": "nativetarget.go",
+  "find": "if exists(resolved) {\n\t\treturn \"\", false",
+  "replace": "if false {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "native-variant-order",
+  "file": "nativetarget.go",
+  "find": "\t\tamPm.ReplaceAllString(resolved, narrowNoBreakSpace+\"${1}.\"),\n\t\tnfd,",
+  "replace": "\t\tnfd,\n\t\tamPm.ReplaceAllString(resolved, narrowNoBreakSpace+\"${1}.\"),"
+ },
+ {
+  "name": "native-variant-nfd",
+  "file": "nativetarget.go",
+  "find": "nfd := norm.NFD.String(resolved)",
+  "replace": "nfd := norm.NFC.String(resolved)"
+ },
+ {
+  "name": "native-variant-curly",
+  "file": "nativetarget.go",
+  "find": "func toCurlyQuotes(value string) string { return strings.ReplaceAll(value, \"'\", \"\\u2019\") }",
+  "replace": "func toCurlyQuotes(value string) string { return value }"
+ },
+ {
+  "name": "native-variant-ampm",
+  "file": "nativetarget.go",
+  "find": "var amPm = regexp.MustCompile(`(?i) (AM|PM)\\.`)",
+  "replace": "var amPm = regexp.MustCompile(`(?i) (AM)\\.`)"
+ },
+ {
+  "name": "native-spaces-class",
+  "file": "nativetarget.go",
+  "find": "[\\u00A0\\u2000-\\u200A\\u202F\\u205F\\u3000]",
+  "replace": "[\\u00A0\\u2000-\\u200A\\u202F\\u3000]"
+ },
+ {
+  "name": "approval-dir",
+  "file": "approvalpattern.go",
+  "find": "if !isDirectory {\n\t\treturn []string{parentScopePattern",
+  "replace": "if isDirectory {\n\t\treturn []string{parentScopePattern"
+ },
+ {
+  "name": "approval-parent",
+  "file": "approvalpattern.go",
+  "find": "return pathValue[:last+1] + \"*\"",
+  "replace": "return pathValue[:last] + \"*\""
+ },
+ {
+  "name": "approval-fallback",
+  "file": "approvalpattern.go",
+  "find": "return \".\" + flavor.impl().Sep + \"*\"",
+  "replace": "return \"*\""
+ },
+ {
+  "name": "approval-contents",
+  "file": "approvalpattern.go",
+  "find": "if last == len(pathValue)-1 {\n\t\treturn pathValue + \"*\"",
+  "replace": "if last == len(pathValue) {\n\t\treturn pathValue + \"*\""
+ },
+ {
+  "name": "approval-own-separator",
+  "file": "approvalpattern.go",
+  "find": "sep = pathValue[last : last+1]",
+  "replace": "sep = flavor.impl().Sep"
+ },
+ {
+  "name": "containment-empty",
+  "file": "pathcontainment.go",
+  "find": "if canonicalCwd == \"\" || canonicalPath == \"\" {",
+  "replace": "if canonicalCwd == \"\" && canonicalPath == \"\" {"
+ },
+ {
+  "name": "containment-safe",
+  "file": "pathcontainment.go",
+  "find": "if IsSafeSystemPath(canonicalPath) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "containment-within",
+  "file": "pathcontainment.go",
+  "find": "return !flavor.IsWithin(canonicalPath, canonicalCwd)",
+  "replace": "return flavor.IsWithin(canonicalPath, canonicalCwd)"
+ },
+ {
+  "name": "infra-read-only",
+  "file": "infraread.go",
+  "find": "if !ReadOnlyPathBearingTools[toolName] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "infra-excluded",
+  "file": "infraread.go",
+  "find": "if flavor.IsWithin(normalizedPath, expandHomePath(dir)) {\n\t\t\treturn false",
+  "replace": "if flavor.IsWithin(normalizedPath, expandHomePath(dir)) && false {\n\t\t\treturn false"
+ },
+ {
+  "name": "infra-excluded-first",
+  "file": "infraread.go",
+  "find": "\tfor _, dir := range excludedDirs {",
+  "replace": "\tfor _, dir := range excludedDirs[:0] {"
+ },
+ {
+  "name": "infra-glob",
+  "file": "infraread.go",
+  "find": "if containsGlobChars(dir) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "infra-glob-chars",
+  "file": "infraread.go",
+  "find": "strings.ContainsAny(value, \"*?\")",
+  "replace": "strings.ContainsAny(value, \"*\")"
+ },
+ {
+  "name": "infra-glob-options",
+  "file": "infraread.go",
+  "find": "WildcardMatch(dir, normalizedPath, flavor.MatchOptions)",
+  "replace": "WildcardMatch(dir, normalizedPath, nil)"
+ },
+ {
+  "name": "infra-dir-home",
+  "file": "infraread.go",
+  "find": "} else if flavor.IsWithin(normalizedPath, expandHomePath(dir)) {",
+  "replace": "} else if flavor.IsWithin(normalizedPath, dir) {"
+ },
+ {
+  "name": "infra-project-npm",
+  "file": "infraread.go",
+  "find": "HostPath.Join(cwd, \".pi\", \"npm\")",
+  "replace": "HostPath.Join(cwd, \".pi\", \"npmx\")"
+ },
+ {
+  "name": "infra-project-git",
+  "file": "infraread.go",
+  "find": "HostPath.Join(cwd, \".pi\", \"git\")",
+  "replace": "HostPath.Join(cwd, \".pi\", \"gitx\")"
+ },
+ {
+  "name": "norm-empty",
+  "file": "pathnormalization.go",
+  "find": "if cleaned == \"\" {\n\t\treturn \"\"\n\t}\n\treturn flavor.Comparable",
+  "replace": "if cleaned == \"x\" {\n\t\treturn \"\"\n\t}\n\treturn flavor.Comparable"
+ },
+ {
+  "name": "norm-trim",
+  "file": "pathnormalization.go",
+  "find": "trimmed := jsTrim(pathValue)",
+  "replace": "trimmed := pathValue"
+ },
+ {
+  "name": "norm-quote-lead",
+  "file": "pathnormalization.go",
+  "find": "if len(trimmed) > 0 && (trimmed[0] == '\\'' || trimmed[0] == '\"') {\n\t\ttrimmed = trimmed[1:]",
+  "replace": "if len(trimmed) > 0 && trimmed[0] == '\"' {\n\t\ttrimmed = trimmed[1:]"
+ },
+ {
+  "name": "norm-quote-trail",
+  "file": "pathnormalization.go",
+  "find": "trimmed[len(trimmed)-1] == '\\'' || trimmed[len(trimmed)-1] == '\"')",
+  "replace": "trimmed[len(trimmed)-1] == '\"')"
+ },
+ {
+  "name": "norm-at",
+  "file": "pathnormalization.go",
+  "find": "expandHomePath(strings.TrimPrefix(trimmed, \"@\"))",
+  "replace": "expandHomePath(strings.TrimPrefix(trimmed, \"@@\"))"
+ },
+ {
+  "name": "norm-star",
+  "file": "pathnormalization.go",
+  "find": "if literal == \"*\" {\n\t\treturn []string{\"*\"}",
+  "replace": "if literal == \"**\" {\n\t\treturn []string{\"*\"}"
+ },
+ {
+  "name": "norm-literal-empty",
+  "file": "pathnormalization.go",
+  "find": "if literal == \"\" {\n\t\treturn []string{}",
+  "replace": "if literal == \"x\" {\n\t\treturn []string{}"
+ },
+ {
+  "name": "norm-base",
+  "file": "pathnormalization.go",
+  "find": "if resolveBase == nil {\n\t\tresolveBase = options.Cwd",
+  "replace": "if resolveBase == nil {\n\t\tresolveBase = nil"
+ },
+ {
+  "name": "norm-base-empty",
+  "file": "pathnormalization.go",
+  "find": "if resolveBase == nil || *resolveBase == \"\" {",
+  "replace": "if resolveBase == nil {"
+ },
+ {
+  "name": "norm-relative-alias",
+  "file": "pathnormalization.go",
+  "find": "if options.Cwd != nil && *options.Cwd != \"\" {\n\t\tout = append(out, CwdRelativePolicyValues",
+  "replace": "if false {\n\t\tout = append(out, CwdRelativePolicyValues"
+ },
+ {
+  "name": "norm-relative-empty",
+  "file": "pathnormalization.go",
+  "find": "if rel == \"\" {\n\t\treturn []string{}",
+  "replace": "if rel == \"x\" {\n\t\treturn []string{}"
+ },
+ {
+  "name": "norm-canonical-fold",
+  "file": "pathnormalization.go",
+  "find": "return flavor.Fold(CanonicalizePath(lexical, flavor))",
+  "replace": "return CanonicalizePath(lexical, flavor)"
+ },
+ {
+  "name": "norm-unique",
+  "file": "pathnormalization.go",
+  "find": "return uniqueStrings(append(getAbsolutePathPolicyValues(pathValue, options, flavor), literal))",
+  "replace": "return append(getAbsolutePathPolicyValues(pathValue, options, flavor), literal)"
+ },
+ {
+  "name": "ap-match-canonical",
+  "file": "accesspath.go",
+  "find": "if a.canonical != \"\" {\n\t\treturn uniqueStrings(append(append([]string{}, a.matchAliases...), a.canonical))",
+  "replace": "if false {\n\t\treturn uniqueStrings(append(append([]string{}, a.matchAliases...), a.canonical))"
+ },
+ {
+  "name": "ap-match-unique",
+  "file": "accesspath.go",
+  "find": "return uniqueStrings(append(append([]string{}, a.matchAliases...), a.canonical))",
+  "replace": "return append(append([]string{}, a.matchAliases...), a.canonical)"
+ },
+ {
+  "name": "ap-alias-canonical",
+  "file": "accesspath.go",
+  "find": "if a.canonical != \"\" && a.canonical != a.lexical {",
+  "replace": "if a.canonical != \"\" {"
+ },
+ {
+  "name": "ap-alias-rewritten",
+  "file": "accesspath.go",
+  "find": "if a.rewritten {\n\t\treturn a.lexical, true",
+  "replace": "if false {\n\t\treturn a.lexical, true"
+ },
+ {
+  "name": "ap-for-path-base",
+  "file": "accesspath.go",
+  "find": "resolveBase := cwd\n\tif options.ResolveBase != nil {",
+  "replace": "resolveBase := cwd\n\tif false {"
+ },
+ {
+  "name": "ap-for-path-lexical",
+  "file": "accesspath.go",
+  "find": "lexical:      NormalizePathForComparison(pathValue, resolveBase, flavor),",
+  "replace": "lexical:      NormalizePathForComparison(pathValue, cwd, flavor),"
+ },
+ {
+  "name": "ap-for-path-canonical",
+  "file": "accesspath.go",
+  "find": "canonical:    CanonicalNormalizePathForComparison(pathValue, resolveBase, flavor),",
+  "replace": "canonical:    CanonicalNormalizePathForComparison(pathValue, cwd, flavor),"
+ },
+ {
+  "name": "ap-native-relative",
+  "file": "accesspath.go",
+  "find": "if native.RelativeSpelling != nil && *native.RelativeSpelling != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ap-native-cwd-relative",
+  "file": "accesspath.go",
+  "find": "aliases := append([]string{lexical}, CwdRelativePolicyValues(lexical, cwd, flavor)...)",
+  "replace": "aliases := []string{lexical}"
+ },
+ {
+  "name": "ap-native-rewritten",
+  "file": "accesspath.go",
+  "find": "rewritten:    native.Rewritten,",
+  "replace": "rewritten:    false,"
+ },
+ {
+  "name": "ap-native-fold",
+  "file": "accesspath.go",
+  "find": "canonical:    flavor.Fold(CanonicalizePath(lexical, flavor)),",
+  "replace": "canonical:    CanonicalizePath(lexical, flavor),"
+ },
+ {
+  "name": "ap-literal",
+  "file": "accesspath.go",
+  "find": "return &AccessPath{lexical: literal, matchAliases: []string{literal}}",
+  "replace": "return &AccessPath{lexical: literal, matchAliases: []string{literal}, canonical: literal}"
+ },
+ {
+  "name": "ap-literal-empty",
+  "file": "accesspath.go",
+  "find": "if literal == \"\" {\n\t\treturn &AccessPath{matchAliases: []string{}}",
+  "replace": "if literal == \"x\" {\n\t\treturn &AccessPath{matchAliases: []string{}}"
+ },
+ {
+  "name": "ap-device",
+  "file": "accesspath.go",
+  "find": "return &AccessPath{lexical: devicePath, matchAliases: []string{devicePath}, canonical: devicePath}",
+  "replace": "return &AccessPath{lexical: devicePath, matchAliases: []string{devicePath}}"
+ },
+ {
+  "name": "pn-tool-kind",
+  "file": "pathnormalizer.go",
+  "find": "if ClassifyToolKind(toolName) != ToolKindPath {\n\t\treturn n.ForPath(rawPath, nil)",
+  "replace": "if false {\n\t\treturn n.ForPath(rawPath, nil)"
+ },
+ {
+  "name": "pn-tool-read",
+  "file": "pathnormalizer.go",
+  "find": "ReadFallbacks: jsTrim(toolName) == \"read\",",
+  "replace": "ReadFallbacks: true,"
+ },
+ {
+  "name": "pn-tool-trim",
+  "file": "pathnormalizer.go",
+  "find": "ReadFallbacks: jsTrim(toolName) == \"read\",",
+  "replace": "ReadFallbacks: toolName == \"read\","
+ },
+ {
+  "name": "pn-bash-device",
+  "file": "pathnormalizer.go",
+  "find": "case BashTokenDevice:\n\t\treturn AccessPathForDevice(token)",
+  "replace": "case BashTokenDevice:\n\t\treturn n.ForPath(token, resolveBase)"
+ },
+ {
+  "name": "pn-bash-mount",
+  "file": "pathnormalizer.go",
+  "find": "return n.ForPath(shape.WindowsPath, resolveBase)",
+  "replace": "return n.ForPath(token, resolveBase)"
+ },
+ {
+  "name": "pn-bash-posix",
+  "file": "pathnormalizer.go",
+  "find": "return n.ForLiteral(NormalizePathPolicyLiteral(token))",
+  "replace": "return n.ForPath(token, resolveBase)"
+ },
+ {
+  "name": "pn-dir-probe",
+  "file": "pathnormalizer.go",
+  "find": "if accessPath.BoundaryValue() == \"\" {\n\t\treturn false",
+  "replace": "if false {\n\t\treturn false"
+ },
+ {
+  "name": "pn-dir-isdir",
+  "file": "pathnormalizer.go",
+  "find": "return err == nil && st.IsDir()",
+  "replace": "return err == nil && (st.IsDir() || true)"
+ },
+ {
+  "name": "pn-cd-mount",
+  "file": "pathnormalizer.go",
+  "find": "case BashTokenDriveMount:\n\t\treturn BashCdTarget{Kind: \"absolute\", Value: shape.WindowsPath}",
+  "replace": "case BashTokenDriveMount:\n\t\treturn BashCdTarget{Kind: \"unknown\"}"
+ },
+ {
+  "name": "pn-cd-unknown",
+  "file": "pathnormalizer.go",
+  "find": "case BashTokenDevice, BashTokenPosixAbsolute:\n\t\treturn BashCdTarget{Kind: \"unknown\"}",
+  "replace": "case BashTokenDevice, BashTokenPosixAbsolute:\n\t\treturn BashCdTarget{Kind: \"relative\"}"
+ },
+ {
+  "name": "pn-cd-absolute",
+  "file": "pathnormalizer.go",
+  "find": "if n.Flavor.impl().IsAbsolute(target) {",
+  "replace": "if !n.Flavor.impl().IsAbsolute(target) {"
+ },
+ {
+  "name": "pn-resolve-base",
+  "file": "pathnormalizer.go",
+  "find": "return n.Flavor.impl().Resolve(n.cwd, offset)",
+  "replace": "return n.Flavor.impl().Resolve(offset)"
+ },
+ {
+  "name": "pn-join-base",
+  "file": "pathnormalizer.go",
+  "find": "return n.Flavor.impl().Join(offset, target)",
+  "replace": "return n.Flavor.impl().Join(target, offset)"
+ },
+ {
+  "name": "pn-canonical-cwd",
+  "file": "pathnormalizer.go",
+  "find": "canonicalCwd: CanonicalNormalizePathForComparison(cwd, cwd, flavor)",
+  "replace": "canonicalCwd: cwd"
+ },
+ {
+  "name": "pn-infra-boundary",
+  "file": "pathnormalizer.go",
+  "find": "return IsPiInfrastructureRead(toolName, accessPath.BoundaryValue(),",
+  "replace": "return IsPiInfrastructureRead(toolName, accessPath.Value(),"
+ },
+ {
+  "name": "pn-entry-lstat",
+  "file": "pathnormalizer.go",
+  "find": "_, err := os.Lstat(absolutePath)",
+  "replace": "_, err := os.Stat(absolutePath)"
+ },
+ {
+  "name": "pn-approval-value",
+  "file": "pathnormalizer.go",
+  "find": "return DeriveApprovalPatterns(accessPath.Value(), n.Flavor,",
+  "replace": "return DeriveApprovalPatterns(accessPath.BoundaryValue(), n.Flavor,"
+ },
+ {
+  "name": "surf-tools",
+  "file": "pathsurfaces.go",
+  "find": "var ReadOnlyPathBearingTools = map[string]bool{\"read\": true, \"find\": true, \"grep\": true, \"ls\": true}",
+  "replace": "var ReadOnlyPathBearingTools = map[string]bool{\"read\": true, \"find\": true, \"grep\": true}"
+ },
+ {
+  "name": "surf-edit",
+  "file": "pathsurfaces.go",
+  "find": "var PathBearingTools = map[string]bool{\"read\": true, \"write\": true, \"edit\": true,",
+  "replace": "var PathBearingTools = map[string]bool{\"read\": true, \"write\": true,"
+ },
+ {
+  "name": "surf-directional",
+  "file": "pathsurfaces.go",
+  "find": "m[f+\"_\"+string(d)] = true",
+  "replace": "_ = d"
+ },
+ {
+  "name": "surf-family-suffix",
+  "file": "pathsurfaces.go",
+  "find": "family, ok := strings.CutSuffix(surface, \"_\"+string(d))\n\t\tif ok && isDirectionalFamily(family) {",
+  "replace": "family, ok := strings.CutSuffix(surface, \"_\"+string(d))\n\t\tif ok {"
+ },
+ {
+  "name": "surf-direction-null",
+  "file": "pathsurfaces.go",
+  "find": "if SurfaceFamilyOf(surface) == surface {\n\t\treturn \"\", false",
+  "replace": "if false {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "surf-members-order",
+  "file": "pathsurfaces.go",
+  "find": "return [2]string{surface + \"_read\", surface + \"_write\"}, true",
+  "replace": "return [2]string{surface + \"_write\", surface + \"_read\"}, true"
+ },
+ {
+  "name": "surf-effect-read",
+  "file": "pathsurfaces.go",
+  "find": "case EffectRead:\n\t\treturn family + \"_read\"",
+  "replace": "case EffectRead:\n\t\treturn family"
+ },
+ {
+  "name": "surf-effect-write",
+  "file": "pathsurfaces.go",
+  "find": "case EffectWrite:\n\t\treturn family + \"_write\"",
+  "replace": "case EffectWrite:\n\t\treturn family + \"_read\""
+ },
+ {
+  "name": "surf-tool-write",
+  "file": "pathsurfaces.go",
+  "find": "if toolName == \"write\" {\n\t\treturn EffectWrite",
+  "replace": "if toolName == \"write\" {\n\t\treturn EffectRead"
+ },
+ {
+  "name": "surf-tool-readonly",
+  "file": "pathsurfaces.go",
+  "find": "if ReadOnlyPathBearingTools[toolName] {\n\t\treturn EffectRead",
+  "replace": "if false {\n\t\treturn EffectRead"
+ },
+ {
+  "name": "kind-trim",
+  "file": "toolkind.go",
+  "find": "name := jsTrim(toolName)\n\tswitch {",
+  "replace": "name := toolName\n\tswitch {"
+ },
+ {
+  "name": "kind-mcp-tool",
+  "file": "toolkind.go",
+  "find": "case IsPiMcpToolName(name):",
+  "replace": "case false:"
+ },
+ {
+  "name": "kind-path",
+  "file": "toolkind.go",
+  "find": "case PathBearingTools[name]:",
+  "replace": "case false:"
+ },
+ {
+  "name": "kind-skill",
+  "file": "toolkind.go",
+  "find": "case name == \"skill\":",
+  "replace": "case name == \"skills\":"
+ },
+ {
+  "name": "shell-bash",
+  "file": "toolkind.go",
+  "find": "if name == \"bash\" {\n\t\tcmd, _ := recordString(record, \"command\")",
+  "replace": "if name == \"bashx\" {\n\t\tcmd, _ := recordString(record, \"command\")"
+ },
+ {
+  "name": "shell-aliases-nil",
+  "file": "toolkind.go",
+  "find": "if aliases == nil {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "shell-proto",
+  "file": "toolkind.go",
+  "find": "if !objectPrototypeKeys[name] {\n\t\t\treturn nil",
+  "replace": "if true {\n\t\t\treturn nil"
+ },
+ {
+  "name": "shell-workdir",
+  "file": "toolkind.go",
+  "find": "if alias.WorkdirArgument != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "shell-workdir-trim",
+  "file": "toolkind.go",
+  "find": "if w, ok := recordString(record, alias.WorkdirArgument); ok {\n\t\t\tinv.Workdir = &w",
+  "replace": "if w, ok := record.str(alias.WorkdirArgument); ok {\n\t\t\tinv.Workdir = &w"
+ },
+ {
+  "name": "mcpcheck-source",
+  "file": "toolkind.go",
+  "find": "if check.Source == \"mcp\" {\n\t\treturn true",
+  "replace": "if false {\n\t\treturn true"
+ },
+ {
+  "name": "mcpcheck-proxy",
+  "file": "toolkind.go",
+  "find": "return IsMcpCheck(check) && ClassifyToolKind(check.ToolName) != ToolKindMcpTool",
+  "replace": "return IsMcpCheck(check)"
+ },
+ {
+  "name": "effect-disagree",
+  "file": "effect.go",
+  "find": "if a.Effect != b.Effect {\n\t\treturn UnprovenEffect",
+  "replace": "if a.Effect != b.Effect {\n\t\treturn a"
+ },
+ {
+  "name": "effect-source",
+  "file": "effect.go",
+  "find": "if a.Source == SourceUnproven {\n\t\treturn b",
+  "replace": "if a.Source == SourceUnproven {\n\t\treturn a"
+ },
+ {
+  "name": "effect-unproven",
+  "file": "effect.go",
+  "find": "var UnprovenEffect = TokenEffect{Effect: EffectUnproven, Source: SourceUnproven}",
+  "replace": "var UnprovenEffect = TokenEffect{Effect: EffectUnproven, Source: SourceRetracted}"
+ },
+ {
+  "name": "mcp-add-empty",
+  "file": "mcptargets.go",
+  "find": "func (l *McpTargetList) Add(value string) {\n\tif value == \"\" {",
+  "replace": "func (l *McpTargetList) Add(value string) {\n\tif value == \"x\" {"
+ },
+ {
+  "name": "mcp-add-dup",
+  "file": "mcptargets.go",
+  "find": "\tfor _, t := range l.targets {\n\t\tif t == value {\n\t\t\treturn\n\t\t}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "mcp-copy",
+  "file": "mcptargets.go",
+  "find": "return append([]string{}, l.targets...)",
+  "replace": "return l.targets"
+ },
+ {
+  "name": "mcp-qualified-parts",
+  "file": "mcptargets.go",
+  "find": "server := jsTrim(trimmed[:colon])\n\ttool := jsTrim(trimmed[colon+1:])",
+  "replace": "server := trimmed[:colon]\n\ttool := trimmed[colon+1:]"
+ },
+ {
+  "name": "mcp-longest",
+  "file": "mcptargets.go",
+  "find": "if !found || jsLen(t) > jsLen(longest) {",
+  "replace": "if !found || jsLen(t) < jsLen(longest) {"
+ },
+ {
+  "name": "mcp-prefix-skip",
+  "file": "mcptargets.go",
+  "find": "if t == \"\" || !strings.HasPrefix(toolName, t+\"_\") {",
+  "replace": "if t == \"\" || !strings.HasPrefix(toolName, t) {"
+ },
+ {
+  "name": "mcp-suffix",
+  "file": "mcptargets.go",
+  "find": "if server == \"\" || !strings.HasSuffix(tool, \"_\"+server) {",
+  "replace": "if server == \"\" || !strings.HasSuffix(tool, server) {"
+ },
+ {
+  "name": "mcp-prefix-returns",
+  "file": "mcptargets.go",
+  "find": "\t\ttargets.Add(tool)\n\t\ttargets.Add(prefix)\n\t\treturn\n\t}",
+  "replace": "\t\ttargets.Add(tool)\n\t\ttargets.Add(prefix)\n\t}"
+ },
+ {
+  "name": "mcp-hint",
+  "file": "mcptargets.go",
+  "find": "if !haveServer && isQualified {",
+  "replace": "if isQualified {"
+ },
+ {
+  "name": "mcp-reprefix",
+  "file": "mcptargets.go",
+  "find": "if strings.HasPrefix(tool, server+\"_\") {\n\t\t\ttargets.Add(tool)",
+  "replace": "if false {\n\t\t\ttargets.Add(tool)"
+ },
+ {
+  "name": "mcp-raw",
+  "file": "mcptargets.go",
+  "find": "targets.Add(tool)\n\ttargets.Add(rawReference)\n}",
+  "replace": "targets.Add(tool)\n}"
+ },
+ {
+  "name": "mcp-call",
+  "file": "mcptargets.go",
+  "find": "pushMcpToolPermissionTargets(tool, server, hasServer, configuredServerNames, targets)\n\t\ttargets.Add(\"mcp_call\")",
+  "replace": "pushMcpToolPermissionTargets(tool, server, hasServer, configuredServerNames, targets)"
+ },
+ {
+  "name": "mcp-connect",
+  "file": "mcptargets.go",
+  "find": "targets.Add(\"mcp_connect_\" + connect)",
+  "replace": "targets.Add(\"mcp_connect\" + connect)"
+ },
+ {
+  "name": "mcp-describe",
+  "file": "mcptargets.go",
+  "find": "targets.Add(\"mcp_describe\")",
+  "replace": "targets.Add(\"mcp_describe_x\")"
+ },
+ {
+  "name": "mcp-search-server",
+  "file": "mcptargets.go",
+  "find": "targets.Add(\"mcp_server_\" + server)\n\t\t\ttargets.Add(server)\n\t\t}\n\t\ttargets.Add(search)",
+  "replace": "\n\t\t}\n\t\ttargets.Add(search)"
+ },
+ {
+  "name": "mcp-list",
+  "file": "mcptargets.go",
+  "find": "targets.Add(\"mcp_list\")",
+  "replace": "targets.Add(\"mcp_status\")"
+ },
+ {
+  "name": "mcp-status",
+  "file": "mcptargets.go",
+  "find": "targets.Add(\"mcp_status\")\n\t}\n\treturn targets.ToArray()",
+  "replace": "}\n\treturn targets.ToArray()"
+ },
+ {
+  "name": "mcp-pi-rest",
+  "file": "mcptargets.go",
+  "find": "rest := jsSlice(jsTrim(toolName), len(PiMcpToolPrefix), jsEnd)",
+  "replace": "rest := jsSlice(jsTrim(toolName), len(PiMcpToolPrefix)+1, jsEnd)"
+ },
+ {
+  "name": "mcp-pi-longest",
+  "file": "mcptargets.go",
+  "find": "if !haveServer || jsLen(sanitized) > jsLen(sanitizedServer) {",
+  "replace": "if !haveServer || jsLen(sanitized) >= jsLen(sanitizedServer) {"
+ },
+ {
+  "name": "mcp-pi-same",
+  "file": "mcptargets.go",
+  "find": "} else if sanitized == sanitizedServer {",
+  "replace": "} else if false {"
+ },
+ {
+  "name": "mcp-pi-split",
+  "file": "mcptargets.go",
+  "find": "sanitizedServer = jsSlice(rest, 0, jsIndexOf(rest, \"__\"))",
+  "replace": "sanitizedServer = jsSlice(rest, 0, jsIndexOf(rest, \"_\"))"
+ },
+ {
+  "name": "mcp-pi-tool",
+  "file": "mcptargets.go",
+  "find": "jsSlice(rest, jsLen(sanitizedServer)+2, jsEnd)",
+  "replace": "jsSlice(rest, jsLen(sanitizedServer)+1, jsEnd)"
+ },
+ {
+  "name": "mcp-pi-order",
+  "file": "mcptargets.go",
+  "find": "\t\ttargets.Add(server + \"_\" + tool)\n\t\ttargets.Add(server + \":\" + tool)\n\t\ttargets.Add(server)\n\t}\n\ttargets.Add(tool)\n\ttargets.Add(jsTrim(toolName))",
+  "replace": "\t\ttargets.Add(server)\n\t\ttargets.Add(server + \"_\" + tool)\n\t\ttargets.Add(server + \":\" + tool)\n\t}\n\ttargets.Add(tool)\n\ttargets.Add(jsTrim(toolName))"
+ },
+ {
+  "name": "mcp-pi-sanitize",
+  "file": "mcptargets.go",
+  "find": "if u < 0x80 && (u == '_' || (u >= '0' && u <= '9') || (u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z')) {",
+  "replace": "if u < 0x80 && (u == '_' || (u >= '0' && u <= '9') || (u >= 'a' && u <= 'z')) {"
+ },
+ {
+  "name": "mcp-pi-units",
+  "file": "mcptargets.go",
+  "find": "units := utf16.Encode([]rune(name))\n\tvar b strings.Builder\n\tfor _, u := range units {",
+  "replace": "_ = utf16.Encode\n\tvar b strings.Builder\n\tfor _, r := range []rune(name) {\n\t\tu := uint16(r)"
+ },
+ {
+  "name": "in-comment",
+  "file": "inputnormalizer.go",
+  "find": "if !strings.HasPrefix(strings.TrimLeftFunc(line, isJSSpace), \"#\") {",
+  "replace": "if !strings.HasPrefix(line, \"#\") {"
+ },
+ {
+  "name": "in-comment-trim",
+  "file": "inputnormalizer.go",
+  "find": "return jsTrim(strings.Join(meaningful, \"\\n\"))",
+  "replace": "return strings.Join(meaningful, \"\\n\")"
+ },
+ {
+  "name": "in-surface-path",
+  "file": "inputnormalizer.go",
+  "find": "if hasPath && PathSurfaces[surface] {",
+  "replace": "if hasPath && PathSurfaces[surface] && false {"
+ },
+ {
+  "name": "in-surface-mcp",
+  "file": "inputnormalizer.go",
+  "find": "if hasPath && surface == \"mcp\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "in-surface-value",
+  "file": "inputnormalizer.go",
+  "find": "pathValue, hasPath := GetNonEmptyString(raw)",
+  "replace": "pathValue, hasPath := raw.(string)"
+ },
+ {
+  "name": "in-resolved-path",
+  "file": "inputnormalizer.go",
+  "find": "if PathSurfaces[surface] || surface == \"mcp\" {\n\t\treturn PathValuesAccessIntent",
+  "replace": "if surface == \"mcp\" {\n\t\treturn PathValuesAccessIntent"
+ },
+ {
+  "name": "in-resolved-copy",
+  "file": "inputnormalizer.go",
+  "find": "Values: append([]string{}, matchValues...), AgentName: &name}",
+  "replace": "Values: matchValues, AgentName: &name}"
+ },
+ {
+  "name": "in-resolved-first",
+  "file": "inputnormalizer.go",
+  "find": "first = &matchValues[0]",
+  "replace": "first = &matchValues[len(matchValues)-1]"
+ },
+ {
+  "name": "in-input-bash",
+  "file": "inputnormalizer.go",
+  "find": "case surface == \"bash\":\n\t\to.set(\"command\", v)",
+  "replace": "case surface == \"bash\":\n\t\to.set(\"cmd\", v)"
+ },
+ {
+  "name": "in-input-skill",
+  "file": "inputnormalizer.go",
+  "find": "case surface == \"skill\":\n\t\to.set(\"name\", v)",
+  "replace": "case surface == \"skill\":\n\t\to.set(\"skill\", v)"
+ },
+ {
+  "name": "in-input-extdir",
+  "file": "inputnormalizer.go",
+  "find": "case SurfaceFamilyOf(surface) == \"external_directory\":",
+  "replace": "case surface == \"external_directory\":"
+ },
+ {
+  "name": "in-skill-default",
+  "file": "inputnormalizer.go",
+  "find": "lookup := \"*\"",
+  "replace": "lookup := \"\""
+ },
+ {
+  "name": "in-skill-string",
+  "file": "inputnormalizer.go",
+  "find": "if s, ok := v.(string); ok {\n\t\t\t\tlookup = s",
+  "replace": "if s, ok := v.(string); ok && s != \"\" {\n\t\t\t\tlookup = s"
+ },
+ {
+  "name": "in-bash-nonstring",
+  "file": "inputnormalizer.go",
+  "find": "if s, ok := v.(string); ok {\n\t\t\t\tcommand = s",
+  "replace": "if s, ok := v.(string); ok && false {\n\t\t\t\tcommand = s"
+ },
+ {
+  "name": "in-mcp-proxy",
+  "file": "inputnormalizer.go",
+  "find": "case ToolKindMcp:\n\t\treturn normalizeMcpTargets(CreateMcpPermissionTargets(input, configuredMcpServerNames))",
+  "replace": "case ToolKindMcp:\n\t\treturn normalizeMcpTargets(CreatePiMcpToolTargets(toolName, configuredMcpServerNames))"
+ },
+ {
+  "name": "in-mcp-catchall",
+  "file": "inputnormalizer.go",
+  "find": "values := append(append([]string{}, targets...), \"mcp\")",
+  "replace": "values := append([]string{}, targets...)"
+ },
+ {
+  "name": "in-mcp-target",
+  "file": "inputnormalizer.go",
+  "find": "extras.set(\"target\", values[0])",
+  "replace": "extras.set(\"target\", values[len(values)-1])"
+ },
+ {
+  "name": "in-bash-fallback",
+  "file": "inputnormalizer.go",
+  "find": "if matchValue == \"\" {\n\t\tmatchValue = command",
+  "replace": "if matchValue == \"\" {\n\t\tmatchValue = \"\""
+ },
+ {
+  "name": "in-bash-unique",
+  "file": "inputnormalizer.go",
+  "find": "Values: uniqueStrings(append([]string{matchValue}, spellings...))",
+  "replace": "Values: append([]string{matchValue}, spellings...)"
+ },
+ {
+  "name": "in-bash-extras",
+  "file": "inputnormalizer.go",
+  "find": "extras.set(\"command\", command)",
+  "replace": "extras.set(\"command\", matchValue)"
+ },
+ {
+  "name": "in-default",
+  "file": "inputnormalizer.go",
+  "find": "return NormalizedInput{Surface: toolName, Values: []string{\"*\"}, ResultExtras: newObject()}",
+  "replace": "return NormalizedInput{Surface: toolName, Values: []string{toolName}, ResultExtras: newObject()}"
+ },
+ {
+  "name": "tip-kind",
+  "file": "toolinputpath.go",
+  "find": "if ClassifyToolKind(toolName) != ToolKindPath {\n\t\treturn \"\", false",
+  "replace": "if false {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "tip-bash",
+  "file": "toolinputpath.go",
+  "find": "case ToolKindBash:\n\t\treturn byConvention(\"\", false)",
+  "replace": "case ToolKindBash:\n\t\treturn byConvention(recordString(record, \"path\"))"
+ },
+ {
+  "name": "tip-mcp-arguments",
+  "file": "toolinputpath.go",
+  "find": "return byConvention(recordString(ToRecord(args), \"path\"))",
+  "replace": "_ = args\n\t\treturn byConvention(recordString(record, \"path\"))"
+ },
+ {
+  "name": "tip-extractor-origin",
+  "file": "toolinputpath.go",
+  "find": "if custom.Origin == RegistrationInherited {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tip-extractor-trim",
+  "file": "toolinputpath.go",
+  "find": "p, ok = GetNonEmptyString(p)",
+  "replace": ""
+ },
+ {
+  "name": "tip-extractor-nil",
+  "file": "toolinputpath.go",
+  "find": "if extractors != nil {\n\t\tif custom := extractors.Resolve(toolName); custom != nil {",
+  "replace": "if extractors != nil {\n\t\tif custom := extractors.Resolve(toolName); custom == nil {"
+ },
+ {
+  "name": "tip-default",
+  "file": "toolinputpath.go",
+  "find": "return byConvention(recordString(record, \"path\"))\n}",
+  "replace": "return byConvention(\"\", false)\n}"
+ },
+ {
+  "name": "vg-trim",
+  "file": "valueguards.go",
+  "find": "t := jsTrim(s)\n\treturn t, t != \"\"",
+  "replace": "t := s\n\treturn t, t != \"\""
+ },
+ {
+  "name": "vg-empty",
+  "file": "valueguards.go",
+  "find": "return t, t != \"\"",
+  "replace": "return t, true"
+ },
+ {
+  "name": "vg-record-array",
+  "file": "valueguards.go",
+  "find": "case *jsObject:\n\t\tif v != nil {\n\t\t\treturn v\n\t\t}",
+  "replace": "case *jsObject:\n\t\treturn newObject()"
+ },
+ {
+  "name": "vg-plain",
+  "file": "valueguards.go",
+  "find": "case *jsObject:\n\t\treturn v != nil\n\tcase map[string]any:\n\t\treturn v != nil",
+  "replace": "case *jsObject:\n\t\treturn false\n\tcase map[string]any:\n\t\treturn v != nil"
+ },
+ {
+  "name": "types-state",
+  "file": "types.go",
+  "find": "_, ok := isPermissionState(value)\n\treturn ok",
+  "replace": "return value != nil"
+ },
+ {
+  "name": "types-deny",
+  "file": "types.go",
+  "find": "_, ok := denyWithReason(value)\n\treturn ok",
+  "replace": "return value != nil"
+ },
+ {
+  "name": "reqid-prefix",
+  "file": "requestid.go",
+  "find": "return fmt.Sprintf(\"perm-%x-%x",
+  "replace": "return fmt.Sprintf(\"req-%x-%x"
+ },
+ {
+  "name": "reqid-random",
+  "file": "requestid.go",
+  "find": "b[6] = b[6]&0x0f | 0x40",
+  "replace": "b[6] = b[6]&0x0f | 0x40\n\tb = [16]byte{}"
+ }
+]

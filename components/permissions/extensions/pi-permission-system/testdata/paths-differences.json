@@ -1,0 +1,7 @@
+{
+  "normalization.posix": {
+    "canonical \"/dev/stdin\"": "host filesystem: on the Linux host that recorded the probe /dev/stdin is a symlink into /proc and realpath resolved it; the replay uses the identity realpath, so it cannot follow it",
+    "accessPath \"/dev/stdin\"": "host filesystem: the same /dev/stdin symlink target, as above",
+    "bashToken \"/dev/stdin\"": "host filesystem: the same /dev/stdin symlink target, as above"
+  }
+}

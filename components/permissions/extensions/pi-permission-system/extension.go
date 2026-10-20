@@ -4,6 +4,7 @@
 package pi_permission_system
 
 import (
+	"strings"
 	"sync"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -22,6 +23,8 @@ type state struct {
 	loader   *FilePolicyLoader
 	reporter *ConfigIssueReporter
 	notifier *sessionNotifier
+	// agentName is the last known active agent (session.resolveAgentName's knownAgentName).
+	agentName string
 }
 
 // sessionNotifier is the log seam the config system writes to: warnings reach the operator through the session's context
@@ -151,6 +154,7 @@ func newExtension() (*sdk.Extension, *state) {
 		st.mu.Lock()
 		st.baseline.reset()
 		st.skills = nil
+		st.agentName = ""
 		st.mu.Unlock()
 		// The project cwd is withheld for an untrusted project so its policy scopes are not loaded (#644). The notifier is bound
 		// first: it activates the session, so the warnings below have a UI to reach (#933).
@@ -165,6 +169,12 @@ func newExtension() (*sdk.Extension, *state) {
 		st.reporter.Report()
 		if !trusted {
 			st.warnProjectUntrusted()
+		}
+		if len(st.config.Unported) > 0 {
+			ctx.Notify(refusal("the config option(s) '"+strings.Join(st.config.Unported, "', '")+"' (they are accepted and ignored)"), "warning")
+		}
+		if feature := st.unportedScope(ctx); feature != "" {
+			ctx.Notify(refusal(feature)+" Until then every call the port would allow is blocked.", "warning")
 		}
 		return nil, nil
 	})
@@ -196,6 +206,18 @@ func newExtension() (*sdk.Extension, *state) {
 		// The skills the prompt lists, for the skill-read gate (before-agent-start.ts setActiveSkillEntries).
 		// PiG 0.5 hands the handler a *sdk.SystemPrompt in data["systemPrompt"], not a string; GetSystemPrompt reads its rendered text.
 		prompt, _ := ctx.GetSystemPrompt()
+		agent := ""
+		if entries, err := ctx.GetEntries(); err == nil {
+			agent = agentFromEntries(entries)
+		}
+		if agent == "" {
+			agent = agentFromSystemPrompt(prompt)
+		}
+		if agent != "" {
+			st.mu.Lock()
+			st.agentName = agent
+			st.mu.Unlock()
+		}
 		skills := p.visibleSkillEntries(prompt, ctx.Cwd())
 		st.mu.Lock()
 		st.skills, st.cwd = skills, ctx.Cwd()
@@ -231,10 +253,16 @@ func newExtension() (*sdk.Extension, *state) {
 			v = skillRead(name, input, st.skills, st.cwd)
 			st.mu.Unlock()
 		}
+		if !v.Block {
+			if feature := st.unportedScope(ctx); feature != "" {
+				v = unsupported(feature)
+			}
+		}
 		if v.Block {
 			return map[string]any{"block": true, "reason": v.Reason}, nil
 		}
 		return nil, nil
 	})
+	e.OnEvent(sdk.EventInput, st.skillInput)
 	return e, st
 }
