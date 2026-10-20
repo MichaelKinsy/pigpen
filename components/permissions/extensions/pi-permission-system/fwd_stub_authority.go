@@ -5,52 +5,6 @@ package pi_permission_system
 // lane's code and twins need. Whichever lane owns the real declaration replaces the matching one here; at integration delete the
 // duplicates and keep the owner's.
 
-// ── session/approval-grant.ts ──────────────────────────────────────────────
-
-// ApprovalGrant is one session-approval grant: a wildcard pattern approved on one surface.
-type ApprovalGrant struct{ Surface, Pattern string }
-
-// SessionGrantWidth is how wide a session grant is recorded: "proven" or "family".
-type SessionGrantWidth string
-
-// IsSessionGrantWidth is isSessionGrantWidth.
-func IsSessionGrantWidth(v any) bool { return v == "proven" || v == "family" }
-
-// WidenGrant is widenGrant: the same grant on its bare family surface.
-func WidenGrant(g ApprovalGrant) ApprovalGrant {
-	if family := SurfaceFamilyOf(g.Surface); family != g.Surface {
-		return ApprovalGrant{Surface: family, Pattern: g.Pattern}
-	}
-	return g
-}
-
-// ── session/session-approval.ts, session-approval-recorder.ts ──────────────
-
-// SessionApproval is the value object of one or more grants (SessionApproval.forGrants / atWidth).
-type SessionApproval struct{ Grants []ApprovalGrant }
-
-// SessionApprovalForGrants is SessionApproval.forGrants.
-func SessionApprovalForGrants(grants []ApprovalGrant) *SessionApproval {
-	return &SessionApproval{Grants: append([]ApprovalGrant(nil), grants...)}
-}
-
-// AtWidth is atWidth: "proven" is the approval itself, any other width folds each grant to its family.
-func (a *SessionApproval) AtWidth(w SessionGrantWidth) *SessionApproval {
-	if w == "proven" {
-		return a
-	}
-	out := make([]ApprovalGrant, len(a.Grants))
-	for i, g := range a.Grants {
-		out[i] = WidenGrant(g)
-	}
-	return &SessionApproval{Grants: out}
-}
-
-// SessionApprovalRecorder records a granted session-scoped approval into the session ruleset.
-type SessionApprovalRecorder interface {
-	RecordSessionApproval(approval *SessionApproval)
-}
-
 // ── authority/decision-source.ts ───────────────────────────────────────────
 
 // DecisionSource is what decided a permission request, recorded at the site that decided it. Kind selects which fields mean
@@ -438,31 +392,4 @@ func errAlreadyRegistered(what, tool string) error { return registrationError{wh
 type PermissionsService interface {
 	GetToolAccessExtractor(toolName string) ToolAccessExtractor
 	GetToolInputFormatter(toolName string) ToolInputFormatter
-}
-
-// ── session/session-rules.ts ───────────────────────────────────────────────
-
-// SessionRules is the session-scoped allow rules recorded by approvals (session lane: SessionRules). Only what the serving node and
-// its twins use: approve, the ruleset, and the SessionApprovalRecorder implementation. Not safe for concurrent use, as the original.
-type SessionRules struct{ rules Ruleset }
-
-// Approve is approve: an allow rule per surface, a directional family sugar-expanded onto both of its members (ADR 0013 section 4).
-func (s *SessionRules) Approve(surface, pattern string) {
-	targets := []string{surface}
-	if members, ok := SurfaceFamilyMembers(surface); ok {
-		targets = members[:]
-	}
-	for _, target := range targets {
-		s.rules = append(s.rules, Rule{Surface: target, Pattern: pattern, Action: "allow", Layer: "session", Origin: "session"})
-	}
-}
-
-// GetRuleset is getRuleset: a copy of the recorded rules.
-func (s *SessionRules) GetRuleset() Ruleset { return append(Ruleset(nil), s.rules...) }
-
-// RecordSessionApproval implements SessionApprovalRecorder.
-func (s *SessionRules) RecordSessionApproval(approval *SessionApproval) {
-	for _, g := range approval.Grants {
-		s.Approve(g.Surface, g.Pattern)
-	}
 }
