@@ -12,7 +12,7 @@ import (
 
 // The providers below call fixed endpoints, so no scenario server can receive their traffic under
 // the original. port/record-hosted-requests.mjs runs the vendored original with a recording
-// `fetch` and writes port/provider-wire.json; this test replays the same inputs against the port
+// `fetch` and writes testdata/provider-wire.json; this test replays the same inputs against the port
 // and compares every request (method, URL, headers, body) and the result.
 
 type wireCase struct {
@@ -102,10 +102,10 @@ func wireExtractResult(r *ExtractedContent) any {
 }
 
 func TestProviderWireFixtures(t *testing.T) {
-	data, err := os.ReadFile(filepath.FromSlash("../../port/provider-wire.json"))
+	data, err := os.ReadFile(filepath.FromSlash("testdata/provider-wire.json"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			t.Skip("port/provider-wire.json is not beside this module (a mutation run copies the module alone); the repository run checks it")
+			t.Skip("testdata/provider-wire.json is not beside this module (a mutation run copies the module alone); the repository run checks it")
 		}
 		t.Fatal(err)
 	}

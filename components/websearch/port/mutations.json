@@ -603,6 +603,6 @@
   "name": "hosted-abort-crawl4ai-by-message",
   "file": "fetch_hosted.go",
   "find": "return ctx.Err() != nil || errors.Is(err, context.DeadlineExceeded)",
-  "replace": "return isAbortError(err)"
+  "replace": "return ctx.Err() != nil || errors.Is(err, context.DeadlineExceeded) || isAbortError(err)"
  }
 ]
