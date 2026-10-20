@@ -49,12 +49,12 @@ func TestUpstream_summary_model_scope(t *testing.T) {
 		side, _, _ := summarySide()
 		never := make(chan struct{})
 		defer close(never)
-		var completion context.Context
+		completions := make(chan context.Context, 1)
 		started := time.Now()
 		draft, err := GenerateSummaryDraft(bg(), summaryResults, side, SummaryOptions{
 			DeadlineMs: 20,
 			Complete: func(ctx context.Context, _, _ map[string]any, _ CompleteOptions) (map[string]any, error) {
-				completion = ctx
+				completions <- ctx
 				<-never
 				return nil, nil
 			},
@@ -66,7 +66,7 @@ func TestUpstream_summary_model_scope(t *testing.T) {
 		if !draft.Meta.FallbackUsed || draft.Meta.FallbackReason != "summary-generation-timeout" || draft.Meta.Phase != "deterministic-fallback" {
 			t.Fatalf("%+v", draft.Meta)
 		}
-		if completion == nil || completion.Err() == nil {
+		if completion := <-completions; completion.Err() == nil {
 			t.Fatal("the completion's signal was not aborted")
 		}
 	})

@@ -168,12 +168,6 @@
   "replace": "_ = 0"
  },
  {
-  "name": "refusal-fetch-answer-dropped",
-  "file": "tool_fetch.go",
-  "find": "return ToolOutput{}, unsupported(\"fetch_content mode answer (answering from a page needs a model call)\")",
-  "replace": "_ = 0"
- },
- {
   "name": "refusal-workflow-dropped",
   "file": "tool_search.go",
   "find": "if workflow != \"none\" {",
