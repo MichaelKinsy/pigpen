@@ -19,9 +19,9 @@ func TestGoalAuditorProgressFromEvents(t *testing.T) {
 		l(auditorSessionEvent{typ: "tool_execution_start", toolName: "read", args: "plain"})
 		l(auditorSessionEvent{typ: "message_update", streamType: "thinking_start"})
 		l(auditorSessionEvent{typ: "message_update", streamType: "thinking_end"})
-		l(auditorSessionEvent{typ: "message_update", message: &auditorMessage{role: "assistant", content: []auditorContentPart{{"text", strp("a\n\nb\nc\nd\ne\nf\ng")}}}})
-		l(auditorSessionEvent{typ: "message_end", message: &auditorMessage{role: "user", content: []auditorContentPart{{"text", strp("ignored")}}}})
-		l(auditorSessionEvent{typ: "message_end", message: &auditorMessage{role: "assistant", content: []auditorContentPart{{"text", strp("Report\n<approved/>")}}}})
+		l(auditorSessionEvent{typ: "message_update", message: &auditorMessage{role: "assistant", content: []auditorContentPart{{"text", new("a\n\nb\nc\nd\ne\nf\ng")}}}})
+		l(auditorSessionEvent{typ: "message_end", message: &auditorMessage{role: "user", content: []auditorContentPart{{"text", new("ignored")}}}})
+		l(auditorSessionEvent{typ: "message_end", message: &auditorMessage{role: "assistant", content: []auditorContentPart{{"text", new("Report\n<approved/>")}}}})
 		return nil
 	}
 	res := runGoalCompletionAuditor(runGoalCompletionAuditorArgs{

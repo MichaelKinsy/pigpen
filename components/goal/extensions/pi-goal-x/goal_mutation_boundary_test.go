@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var gsImplementationFiles = []string{"extension.go", "core.go", "goal_tools.go", "goal_commands.go", "goal_events.go", "goal_widget.go", "format.go"}
+var gsImplementationFiles = []string{"goal.go", "extension.go", "core.go", "goal_scheduler.go", "goal_tools.go", "goal_commands.go", "goal_events.go", "goal_widget.go", "goal_widget_keys.go", "format.go"}
 
 // gsImplementationSources joins the implementation files that exist (Go twin of the TS IMPLEMENTATION_MODULES).
 func gsImplementationSources(t *testing.T) string {
@@ -65,37 +65,43 @@ func TestGoalMutationBoundary(t *testing.T) {
 	})
 
 	tw(t, "goal-mutation-boundary", "goal.ts is a thin installer with no direct mutation or ledger calls", func(t *testing.T) {
-		ext, err := os.ReadFile("extension.go")
+		ext, err := os.ReadFile("goal.go")
 		if err != nil {
 			t.Fatal(err)
 		}
 		for _, p := range gsForbiddenCallSites {
 			if strings.Contains(string(ext), p) {
-				t.Errorf("extension.go must not call %s", p)
+				t.Errorf("goal.go must not call %s", p)
 			}
 		}
 		if strings.Contains(string(ext), "goalService.") {
-			t.Error("extension.go must not reference the service directly")
+			t.Error("goal.go must not reference the service directly")
 		}
 		if strings.Contains(string(ext), "appendEvents") {
-			t.Error("extension.go must not append ledger events")
+			t.Error("goal.go must not append ledger events")
 		}
 	})
 
 	tw(t, "goal-mutation-boundary", "keeps pure serializers and readers importable (no mutation)", func(t *testing.T) {
-		ext, err := os.ReadFile("extension.go")
+		ext, err := os.ReadFile("goal.go")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !strings.Contains(string(ext), "newCore(") {
-			t.Error("extension.go must install the core")
+		if !strings.Contains(string(ext), "newGoalCore(") {
+			t.Error("goal.go must install the core")
 		}
 		widget, err := os.ReadFile(filepath.Join("goal_widget.go"))
 		if err != nil {
 			t.Fatalf("goal_widget.go (owned by GoalWidgets) is missing: %v", err)
 		}
-		if !strings.Contains(string(widget), "serializeGoalFile") {
-			t.Error("goal_widget.go may use the pure serializer")
+		// The debug panel of widgets/goal-widget.ts reads the pure serializer; the extension's goal-widget.ts (the debug writer) is
+		// goal_widget_keys.go.
+		keys, err := os.ReadFile("goal_widget_keys.go")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(widget)+string(keys), "serializeGoalFile") {
+			t.Error("the widget files may use the pure serializer")
 		}
 	})
 }
