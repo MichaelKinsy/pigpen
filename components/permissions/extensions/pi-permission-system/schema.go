@@ -103,6 +103,12 @@ func (s *schemaIssues) str(path []string, v any, min int) {
 	switch {
 	case !ok:
 		s.at(path, expected("string", v))
+		// zod still runs the min-length check on a value that has a length: an empty array is too small as well
+		if a, isArr := v.([]any); isArr && min > 0 && len(a) < min {
+			s.at(path, "Too small: expected array to have >="+strconv.Itoa(min)+" items")
+		} else if o, isObj := v.(*jsObject); isObj && min > 0 && o.has("length") && !jsAtLeast(o.vals["length"], float64(min)) {
+			s.at(path, "Too small: expected unknown to be >="+strconv.Itoa(min))
+		}
 	case min > 0 && len(utf16.Encode([]rune(t))) < min:
 		s.at(path, "Too small: expected string to have >="+strconv.Itoa(min)+" characters")
 	}
@@ -114,6 +120,9 @@ func (s *schemaIssues) boolean(path []string, v any) {
 	}
 }
 
+// maxSafeInteger is Number.MAX_SAFE_INTEGER: zod 4 `.int()` is a safe-integer check.
+const maxSafeInteger = 9007199254740991
+
 // positiveInt is z.number().int().min(1).
 func (s *schemaIssues) positiveInt(path []string, v any) {
 	f, ok := v.(float64)
@@ -122,6 +131,11 @@ func (s *schemaIssues) positiveInt(path []string, v any) {
 		s.at(path, expected("number", v))
 	case f != math.Trunc(f):
 		s.at(path, "Invalid input: expected int, received number")
+	case f > maxSafeInteger:
+		s.at(path, "Too big: expected int to be <=9007199254740991")
+	case f < -maxSafeInteger:
+		s.at(path, "Too small: expected int to be >=-9007199254740991")
+		s.at(path, "Too small: expected number to be >=1")
 	case f < 1:
 		s.at(path, "Too small: expected number to be >=1")
 	}
@@ -156,7 +170,8 @@ func (s *schemaIssues) strictObject(path []string, v any, fields []string, check
 	}
 	var extra []string
 	for _, k := range o.order() {
-		if !known[k] {
+		// zod ignores a "__proto__" key (JSON.parse makes it an own property, which the object checks never see)
+		if !known[k] && k != "__proto__" {
 			extra = append(extra, k)
 		}
 	}
@@ -215,6 +230,9 @@ func (s *schemaIssues) shellTools(path []string, v any) {
 		return
 	}
 	for _, k := range o.order() {
+		if k == "__proto__" {
+			continue // ignored, as a record key
+		}
 		if k == "" {
 			s.at(sub(path, k), "Invalid key in record")
 			continue
@@ -242,7 +260,7 @@ func (s *schemaIssues) permission(path []string, v any) {
 		}
 	}
 	for _, k := range o.order() {
-		if !inShape[k] {
+		if !inShape[k] && k != "__proto__" { // zod ignores a "__proto__" key
 			order = append(order, k)
 		}
 	}
@@ -319,6 +337,9 @@ func surfaceValueFaults(v any) (long []string, ok bool) {
 		return nil, false
 	}
 	for _, pattern := range m.order() {
+		if pattern == "__proto__" {
+			continue // ignored, as a record key
+		}
 		if pattern == "" {
 			return nil, false
 		}
@@ -350,4 +371,42 @@ func surfaceValueFaults(v any) (long []string, ok bool) {
 		}
 	}
 	return long, true
+}
+
+// jsAtLeast is `value >= min` for a JSON value: numbers compare, null, booleans and numeric strings convert, anything else is NaN.
+func jsAtLeast(v any, min float64) bool {
+	switch x := v.(type) {
+	case float64:
+		return x >= min
+	case bool:
+		return x && 1 >= min
+	case nil:
+		return 0 >= min
+	case []any:
+		// ToPrimitive of an array is its join: empty is "", one element is that element's string, more is not a number
+		switch len(x) {
+		case 0:
+			return 0 >= min
+		case 1:
+			if _, nested := x[0].(*jsObject); nested {
+				return false
+			}
+			if e, isArr := x[0].([]any); isArr && len(e) > 0 {
+				return jsAtLeast(e, min)
+			}
+			if x[0] == nil {
+				return 0 >= min
+			}
+			return jsAtLeast(x[0], min)
+		}
+		return false
+	case string:
+		t := jsTrim(x)
+		if t == "" {
+			return 0 >= min
+		}
+		f, err := strconv.ParseFloat(t, 64)
+		return err == nil && f >= min
+	}
+	return false
 }

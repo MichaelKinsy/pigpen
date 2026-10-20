@@ -1,0 +1,1448 @@
+[
+ {
+  "name": "cfgp-subagent-dir",
+  "file": "cfgpaths.go",
+  "find": "\"subagent-sessions\"",
+  "replace": "\"subagent-session\""
+ },
+ {
+  "name": "cfgp-forwarding-dir",
+  "file": "cfgpaths.go",
+  "find": "\"permission-forwarding\"",
+  "replace": "\"permission_forwarding\""
+ },
+ {
+  "name": "cfgp-project-agents",
+  "file": "cfgpaths.go",
+  "find": "filepath.Join(cwd, \".pi\", \"agents\")",
+  "replace": "filepath.Join(cwd, \".pi\", \"agent\")"
+ },
+ {
+  "name": "cfgp-legacy-project",
+  "file": "cfgpaths.go",
+  "find": "filepath.Join(cwd, \".pi\", \"agent\", \"pi-permissions.jsonc\")",
+  "replace": "filepath.Join(cwd, \".pi\", \"pi-permissions.jsonc\")"
+ },
+ {
+  "name": "cfgp-legacy-global",
+  "file": "cfgpaths.go",
+  "find": "filepath.Join(agentDir, \"pi-permissions.jsonc\")",
+  "replace": "filepath.Join(agentDir, \"permissions.jsonc\")"
+ },
+ {
+  "name": "cfgp-excluded-logs",
+  "file": "cfgpaths.go",
+  "find": "PiInfrastructureExcludedDirs: []string{globalLogsDir},",
+  "replace": "PiInfrastructureExcludedDirs: []string{},"
+ },
+ {
+  "name": "cfgp-pi-package-dir",
+  "file": "cfgpaths.go",
+  "find": "if piPackageDir != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cfgp-node-modules",
+  "file": "cfgpaths.go",
+  "find": "if root := nodeModulesRootDiscovery(); root != \"\" {",
+  "replace": "if root := nodeModulesRootDiscovery(); root == \"\" {"
+ },
+ {
+  "name": "cfgp-harness-entries",
+  "file": "cfgpaths.go",
+  "find": "\"APPEND_SYSTEM.md\", \"AGENTS.md\"}",
+  "replace": "\"APPEND_SYSTEM.md\"}"
+ },
+ {
+  "name": "cfgp-global-config-name",
+  "file": "cfgpaths.go",
+  "find": "filepath.Join(getGlobalConfigDir(agentDir), \"config.json\")",
+  "replace": "filepath.Join(getGlobalConfigDir(agentDir), \"config.jsonc\")"
+ },
+ {
+  "name": "yaml-colon-zero",
+  "file": "yamlfm.go",
+  "find": "if sep <= 0 {",
+  "replace": "if sep < 0 {"
+ },
+ {
+  "name": "yaml-pop-equal",
+  "file": "yamlfm.go",
+  "find": "indent <= stack[len(stack)-1].indent {",
+  "replace": "indent < stack[len(stack)-1].indent {"
+ },
+ {
+  "name": "yaml-comment",
+  "file": "yamlfm.go",
+  "find": "strings.HasPrefix(startTrimmed, \"#\")",
+  "replace": "strings.HasPrefix(startTrimmed, \";\")"
+ },
+ {
+  "name": "yaml-frontmatter-open",
+  "file": "yamlfm.go",
+  "find": "strings.HasPrefix(normalized, \"---\\n\")",
+  "replace": "strings.HasPrefix(normalized, \"--\\n\")"
+ },
+ {
+  "name": "yaml-frontmatter-end",
+  "file": "yamlfm.go",
+  "find": "strings.Index(normalized[4:], \"\\n---\")",
+  "replace": "strings.Index(normalized[4:], \"---\")"
+ },
+ {
+  "name": "yaml-frontmatter-slice",
+  "file": "yamlfm.go",
+  "find": "return normalized[4 : 4+end]",
+  "replace": "return normalized[3 : 4+end]"
+ },
+ {
+  "name": "yaml-unquote",
+  "file": "yamlfm.go",
+  "find": "scalar = scalar[1 : len(scalar)-1]",
+  "replace": "scalar = scalar[1:]"
+ },
+ {
+  "name": "yaml-key-unquote",
+  "file": "yamlfm.go",
+  "find": "key = stripOneQuotePair(key)",
+  "replace": "key = key"
+ },
+ {
+  "name": "yaml-nested",
+  "file": "yamlfm.go",
+  "find": "if rawValue == \"\" {",
+  "replace": "if rawValue == \"x\" {"
+ },
+ {
+  "name": "yaml-proto-key",
+  "file": "yamlfm.go",
+  "find": "if key == \"__proto__\" {",
+  "replace": "if key == \"__proto\" {"
+ },
+ {
+  "name": "yaml-crlf",
+  "file": "yamlfm.go",
+  "find": "crlfRe.ReplaceAllString(markdown, \"\\n\")",
+  "replace": "markdown"
+ },
+ {
+  "name": "yaml-indent-units",
+  "file": "yamlfm.go",
+  "find": "indent := utf16Len(rawLine) - utf16Len(startTrimmed)",
+  "replace": "indent := len(rawLine) - len(startTrimmed) + 1"
+ },
+ {
+  "name": "dk-single-char",
+  "file": "dialogkeys.go",
+  "find": "return len(value) == 1 &&",
+  "replace": "return len(value) >= 1 &&"
+ },
+ {
+  "name": "dk-reserved",
+  "file": "dialogkeys.go",
+  "find": "[]string{\"j\", \"k\"}",
+  "replace": "[]string{\"j\"}"
+ },
+ {
+  "name": "dk-settle-rounds",
+  "file": "dialogkeys.go",
+  "find": "for round := len(actionOrder); round > 0; round-- {",
+  "replace": "for round := 1; round > 0; round-- {"
+ },
+ {
+  "name": "dk-contested",
+  "file": "dialogkeys.go",
+  "find": "if seen[value] {\n\t\t\tcontested[value] = true",
+  "replace": "if false {\n\t\t\tcontested[value] = true"
+ },
+ {
+  "name": "dk-default-b",
+  "file": "dialogkeys.go",
+  "find": "ActionApproveSessionBoth: \"b\"",
+  "replace": "ActionApproveSessionBoth: \"x\""
+ },
+ {
+  "name": "dk-default-n",
+  "file": "dialogkeys.go",
+  "find": "ActionDeny: \"n\"",
+  "replace": "ActionDeny: \"d\""
+ },
+ {
+  "name": "dk-symbol-tilde",
+  "file": "dialogkeys.go",
+  "find": "|~{}:<>?",
+  "replace": "|{}:<>?"
+ },
+ {
+  "name": "dk-digits",
+  "file": "dialogkeys.go",
+  "find": "\"abcdefghijklmnopqrstuvwxyz0123456789\"",
+  "replace": "\"abcdefghijklmnopqrstuvwxyz012345678\""
+ },
+ {
+  "name": "dk-restore-default-check",
+  "file": "dialogkeys.go",
+  "find": "value, ok := accepted[action]\n\t\tif !ok {\n\t\t\tvalue = defaults[action]",
+  "replace": "value, ok := accepted[action]\n\t\tif !ok {\n\t\t\tvalue = \"\""
+ },
+ {
+  "name": "dk-reason-text",
+  "file": "dialogkeys.go",
+  "find": "is reserved for moving the dialog's highlight",
+  "replace": "is reserved"
+ },
+ {
+  "name": "dk-issue-order",
+  "file": "dialogkeys.go",
+  "find": "for _, action := range actionOrder {\n\t\t\tvalue, ok := accepted[action]\n\t\t\tif !ok || !contested[value] {",
+  "replace": "for _, action := range []PromptAction{ActionDenyWithReason, ActionDeny, ActionApproveSessionBoth, ActionApproveSession, ActionApprove} {\n\t\t\tvalue, ok := accepted[action]\n\t\t\tif !ok || !contested[value] {"
+ },
+ {
+  "name": "cl-normalize-deny",
+  "file": "cfgloader.go",
+  "find": "if _, ok := denyWithReason(action); ok {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cl-normalize-map-any",
+  "file": "cfgloader.go",
+  "find": "if mapHasAny {",
+  "replace": "if mapHasAny || len(val.order()) > 0 {"
+ },
+ {
+  "name": "cl-legacy-ext-order",
+  "file": "cfgloader.go",
+  "find": "\t\tmerged = mergeUnifiedConfigs(merged, legacy.Config)\n\t}\n\tglobalResult",
+  "replace": "\t\tmerged = mergeUnifiedConfigs(legacy.Config, merged)\n\t}\n\tglobalResult"
+ },
+ {
+  "name": "cl-normalize-state",
+  "file": "cfgloader.go",
+  "find": "} else if _, ok := isPermissionState(action); ok {",
+  "replace": "} else if false {"
+ },
+ {
+  "name": "cl-or-bool",
+  "file": "cfgloader.go",
+  "find": "func orBool(a, b *bool) *bool {\n\tif a != nil {",
+  "replace": "func orBool(a, b *bool) *bool {\n\tif a == nil {"
+ },
+ {
+  "name": "cl-or-num",
+  "file": "cfgloader.go",
+  "find": "func orNum(a, b *float64) *float64 {\n\tif a != nil {",
+  "replace": "func orNum(a, b *float64) *float64 {\n\tif a == nil {"
+ },
+ {
+  "name": "cl-or-list",
+  "file": "cfgloader.go",
+  "find": "func orList(a, b []string) []string {\n\tif a != nil {",
+  "replace": "func orList(a, b []string) []string {\n\tif len(a) > 0 {"
+ },
+ {
+  "name": "cl-merge-notifications",
+  "file": "cfgloader.go",
+  "find": "m.PromptNotifications = orList(override.PromptNotifications, base.PromptNotifications)",
+  "replace": "m.PromptNotifications = orList(base.PromptNotifications, override.PromptNotifications)"
+ },
+ {
+  "name": "cl-merge-dialog-keys",
+  "file": "cfgloader.go",
+  "find": "m.PermissionDialogKeys = override.PermissionDialogKeys\n\tif m.PermissionDialogKeys == nil {\n\t\tm.PermissionDialogKeys = base.PermissionDialogKeys\n\t}",
+  "replace": "m.PermissionDialogKeys = base.PermissionDialogKeys"
+ },
+ {
+  "name": "cl-merge-shell",
+  "file": "cfgloader.go",
+  "find": "m.ShellTools = base.ShellTools.clone()",
+  "replace": "m.ShellTools = override.ShellTools.clone()"
+ },
+ {
+  "name": "cl-merge-shell-only-base",
+  "file": "cfgloader.go",
+  "find": "case base.ShellTools != nil:\n\t\tm.ShellTools = base.ShellTools",
+  "replace": "case base.ShellTools != nil:\n\t\tm.ShellTools = nil"
+ },
+ {
+  "name": "cl-merge-permission",
+  "file": "cfgloader.go",
+  "find": "m.Permission = MergeFlatPermissions(base.Permission, override.Permission)",
+  "replace": "m.Permission = override.Permission"
+ },
+ {
+  "name": "cl-merge-arrays",
+  "file": "cfgloader.go",
+  "find": "m.AuthorizerChain = orList(override.AuthorizerChain, base.AuthorizerChain)",
+  "replace": "m.AuthorizerChain = orList(base.AuthorizerChain, override.AuthorizerChain)"
+ },
+ {
+  "name": "cl-merge-width",
+  "file": "cfgloader.go",
+  "find": "m.ReviewLogFieldMaxWidth = orNum(override.ReviewLogFieldMaxWidth, base.ReviewLogFieldMaxWidth)",
+  "replace": "m.ReviewLogFieldMaxWidth = base.ReviewLogFieldMaxWidth"
+ },
+ {
+  "name": "cl-merge-caps",
+  "file": "cfgloader.go",
+  "find": "m.ToolInputPreviewMaxLength = orNum(override.ToolInputPreviewMaxLength, base.ToolInputPreviewMaxLength)",
+  "replace": "m.ToolInputPreviewMaxLength = override.ToolInputPreviewMaxLength"
+ },
+ {
+  "name": "cl-include-project",
+  "file": "cfgloader.go",
+  "find": "includeProject := opts.IncludeProjectScope == nil || *opts.IncludeProjectScope",
+  "replace": "includeProject := opts.IncludeProjectScope != nil && *opts.IncludeProjectScope"
+ },
+ {
+  "name": "cl-legacy-ext-same-path",
+  "file": "cfgloader.go",
+  "find": "filepath.Clean(legacyExtConfigPath) != filepath.Clean(newGlobalPath)",
+  "replace": "filepath.Clean(legacyExtConfigPath) == filepath.Clean(newGlobalPath)"
+ },
+ {
+  "name": "cl-legacy-ext-root",
+  "file": "cfgloader.go",
+  "find": "extensionRoot != \"\" && filepath.Clean",
+  "replace": "filepath.Clean"
+ },
+ {
+  "name": "cl-legacy-project-trust",
+  "file": "cfgloader.go",
+  "find": "if includeProject && pathExists(legacyProjectPolicyPath) {",
+  "replace": "if pathExists(legacyProjectPolicyPath) {"
+ },
+ {
+  "name": "cl-project-trust",
+  "file": "cfgloader.go",
+  "find": "if includeProject {\n\t\tprojectResult = loadUnifiedConfig(newProjectPath)",
+  "replace": "if true {\n\t\tprojectResult = loadUnifiedConfig(newProjectPath)"
+ },
+ {
+  "name": "cl-global-over-legacy",
+  "file": "cfgloader.go",
+  "find": "merged = mergeUnifiedConfigs(merged, globalResult.Config)",
+  "replace": "merged = mergeUnifiedConfigs(globalResult.Config, merged)"
+ },
+ {
+  "name": "cl-project-over-global",
+  "file": "cfgloader.go",
+  "find": "merged = mergeUnifiedConfigs(merged, projectResult.Config)",
+  "replace": "merged = mergeUnifiedConfigs(projectResult.Config, merged)"
+ },
+ {
+  "name": "cl-legacy-issue-global",
+  "file": "cfgloader.go",
+  "find": "\"Legacy global policy found at '\"",
+  "replace": "\"Legacy policy found at '\""
+ },
+ {
+  "name": "cl-bash-fallback",
+  "file": "cfgloader.go",
+  "find": "if issue := detectPermissiveBashFallback(merged.Permission); issue != \"\" {",
+  "replace": "if issue := detectPermissiveBashFallback(merged.Permission); issue == \"\" {"
+ },
+ {
+  "name": "cl-caps-notice",
+  "file": "cfgloader.go",
+  "find": "if issue := detectDeprecatedPreviewCaps(merged); issue != \"\" {",
+  "replace": "if issue := detectDeprecatedPreviewCaps(merged); issue == \"\" {"
+ },
+ {
+  "name": "cl-dialog-notice",
+  "file": "cfgloader.go",
+  "find": "if issue := detectUnusableDialogKeys(merged); issue != \"\" {",
+  "replace": "if issue := detectUnusableDialogKeys(merged); issue == \"\" {"
+ },
+ {
+  "name": "cl-caps-join",
+  "file": "cfgloader.go",
+  "find": "strings.Join(set, \" and \")",
+  "replace": "strings.Join(set, \", \")"
+ },
+ {
+  "name": "cl-caps-text",
+  "file": "cfgloader.go",
+  "find": "which is deprecated and ignored.",
+  "replace": "which is deprecated."
+ },
+ {
+  "name": "cl-dialog-join",
+  "file": "cfgloader.go",
+  "find": "return strings.Join(issues, \" \")",
+  "replace": "return issues[0]"
+ },
+ {
+  "name": "cl-missing-file",
+  "file": "cfgloader.go",
+  "find": "if !pathExists(path) {",
+  "replace": "if pathExists(path) {"
+ },
+ {
+  "name": "cl-parse-message",
+  "file": "cfgloader.go",
+  "find": "\"': \" + msg}}",
+  "replace": "\"': \" + \"invalid\"}}"
+ },
+ {
+  "name": "cl-comments",
+  "file": "cfgloader.go",
+  "find": "stripped := stripJSONComments(text)",
+  "replace": "stripped := text"
+ },
+ {
+  "name": "cl-save-order",
+  "file": "cfgloader.go",
+  "find": "bl(\"yoloMode\", c.YoloMode)\n\tbl(\"doublePressToConfirm\", c.DoublePressToConfirm)",
+  "replace": "bl(\"doublePressToConfirm\", c.DoublePressToConfirm)\n\tbl(\"yoloMode\", c.YoloMode)"
+ },
+ {
+  "name": "cl-shell-proto",
+  "file": "cfgloader.go",
+  "find": "if k == \"__proto__\" {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\talias",
+  "replace": "if false {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\talias"
+ },
+ {
+  "name": "cl-tools-order",
+  "file": "cfgloader.go",
+  "find": "list(\"promptNotifications\", c.PromptNotifications)\n\tnm(\"forwardingTimeoutMs\"",
+  "replace": "nm(\"forwardingTimeoutMs\", c.ForwardingTimeoutMs)\n\tlist(\"promptNotifications\", c.PromptNotifications)\n\tnm(\"forwardingTimeoutMs\""
+ },
+ {
+  "name": "cl-empty-lists",
+  "file": "cfgloader.go",
+  "find": "out := make([]string, 0, len(arr))",
+  "replace": "var out []string"
+ },
+ {
+  "name": "sc-safe-int",
+  "file": "schema.go",
+  "find": "case f > maxSafeInteger:",
+  "replace": "case f > 1e300:"
+ },
+ {
+  "name": "sc-safe-const",
+  "file": "schema.go",
+  "find": "const maxSafeInteger = 9007199254740991",
+  "replace": "const maxSafeInteger = 9007199254740992"
+ },
+ {
+  "name": "sc-neg-safe",
+  "file": "schema.go",
+  "find": "case f < -maxSafeInteger:",
+  "replace": "case f < -maxSafeInteger-2:"
+ },
+ {
+  "name": "sc-empty-array-min",
+  "file": "schema.go",
+  "find": "isArr && min > 0 && len(a) < min {",
+  "replace": "isArr && min > 0 && len(a) <= min {"
+ },
+ {
+  "name": "sc-length-object",
+  "file": "schema.go",
+  "find": "isObj && min > 0 && o.has(\"length\") && !jsAtLeast",
+  "replace": "isObj && min > 100 && o.has(\"length\") && !jsAtLeast"
+ },
+ {
+  "name": "sc-unrecognized-proto",
+  "file": "schema.go",
+  "find": "if !known[k] && k != \"__proto__\" {",
+  "replace": "if !known[k] {"
+ },
+ {
+  "name": "sc-record-proto",
+  "file": "schema.go",
+  "find": "if pattern == \"__proto__\" {\n\t\t\tcontinue",
+  "replace": "if pattern == \"__proto_\" {\n\t\t\tcontinue"
+ },
+ {
+  "name": "sc-permission-proto",
+  "file": "schema.go",
+  "find": "if !inShape[k] && k != \"__proto__\" { // zod",
+  "replace": "if !inShape[k] { // zod"
+ },
+ {
+  "name": "sc-shell-proto",
+  "file": "schema.go",
+  "find": "if k == \"__proto__\" {\n\t\t\tcontinue // ignored, as a record key",
+  "replace": "if k == \"__proto_\" {\n\t\t\tcontinue // ignored, as a record key"
+ },
+ {
+  "name": "sc-at-least-null",
+  "file": "schema.go",
+  "find": "case nil:\n\t\treturn 0 >= min",
+  "replace": "case nil:\n\t\treturn true"
+ },
+ {
+  "name": "sc-at-least-string",
+  "file": "schema.go",
+  "find": "return err == nil && f >= min",
+  "replace": "return err != nil || f >= min"
+ },
+ {
+  "name": "je-context",
+  "file": "jsonerr.go",
+  "find": "jsonMaxContext      = 10",
+  "replace": "jsonMaxContext      = 9"
+ },
+ {
+  "name": "je-short-limit",
+  "file": "jsonerr.go",
+  "find": "jsonMinContextLen   = jsonMaxContext*2 + 1",
+  "replace": "jsonMinContextLen   = jsonMaxContext*2"
+ },
+ {
+  "name": "je-surround",
+  "file": "jsonerr.go",
+  "find": "case pos < n-jsonMaxContext:",
+  "replace": "case pos <= n-jsonMaxContext:"
+ },
+ {
+  "name": "je-start",
+  "file": "jsonerr.go",
+  "find": "case pos < jsonMaxContext:",
+  "replace": "case pos <= jsonMaxContext:"
+ },
+ {
+  "name": "je-special",
+  "file": "jsonerr.go",
+  "find": "case \"NaN\", \"Infinity\", \"undefined\", \"[object Object]\":",
+  "replace": "case \"NaN\", \"Infinity\", \"undefined\":"
+ },
+ {
+  "name": "je-eos",
+  "file": "jsonerr.go",
+  "find": "jsonUnexpectedEOS   = \"Unexpected end of JSON input\"",
+  "replace": "jsonUnexpectedEOS   = \"Unexpected end of JSON\""
+ },
+ {
+  "name": "je-line-break-crlf",
+  "file": "jsonerr.go",
+  "find": "if c == '\\r' && i+1 < len(p.src) && p.src[i+1] == '\\n' {\n\t\t\ti++",
+  "replace": "if false {\n\t\t\ti++"
+ },
+ {
+  "name": "je-column",
+  "file": "jsonerr.go",
+  "find": "strconv.Itoa(pos-lastBreak+1)",
+  "replace": "strconv.Itoa(pos-lastBreak)"
+ },
+ {
+  "name": "je-trailing",
+  "file": "jsonerr.go",
+  "find": "p.atRaw(\"Unexpected non-whitespace character after JSON\", p.pos)",
+  "replace": "p.at(\"Unexpected non-whitespace character after JSON\")"
+ },
+ {
+  "name": "je-control",
+  "file": "jsonerr.go",
+  "find": "case c < 0x20:",
+  "replace": "case c < 0x1f:"
+ },
+ {
+  "name": "je-escape",
+  "file": "jsonerr.go",
+  "find": "case '\"', '\\\\', '/', 'b', 'f', 'n', 'r', 't':",
+  "replace": "case '\"', '\\\\', 'b', 'f', 'n', 'r', 't':"
+ },
+ {
+  "name": "je-escape-eos",
+  "file": "jsonerr.go",
+  "find": "case jsonEOSChar:\n\t\t\t\tp.err = jsonUnexpectedEOS",
+  "replace": "case jsonEOSChar:\n\t\t\t\tp.at(\"Unterminated string\")"
+ },
+ {
+  "name": "je-hex",
+  "file": "jsonerr.go",
+  "find": "h >= 'a' && h <= 'f' || h >= 'A' && h <= 'F'",
+  "replace": "h >= 'a' && h <= 'f'"
+ },
+ {
+  "name": "je-minus",
+  "file": "jsonerr.go",
+  "find": "p.at(\"No number after minus sign\")",
+  "replace": "p.at(\"No number\")"
+ },
+ {
+  "name": "je-leading-zero",
+  "file": "jsonerr.go",
+  "find": "p.at(\"Unexpected number\")",
+  "replace": "p.at(\"Unexpected token\")"
+ },
+ {
+  "name": "je-fraction",
+  "file": "jsonerr.go",
+  "find": "p.at(\"Unterminated fractional number\")",
+  "replace": "p.at(\"Unterminated number\")"
+ },
+ {
+  "name": "je-exponent",
+  "file": "jsonerr.go",
+  "find": "p.at(\"Exponent part is missing a number\")",
+  "replace": "p.at(\"Exponent is missing a number\")"
+ },
+ {
+  "name": "je-exp-sign",
+  "file": "jsonerr.go",
+  "find": "if c := p.cur(); c == '+' || c == '-' {",
+  "replace": "if c := p.cur(); c == '+' {"
+ },
+ {
+  "name": "je-first-key",
+  "file": "jsonerr.go",
+  "find": "p.at(\"Expected property name or '}'\")",
+  "replace": "p.at(\"Expected double-quoted property name\")"
+ },
+ {
+  "name": "je-colon",
+  "file": "jsonerr.go",
+  "find": "p.at(\"Expected ':' after property name\")",
+  "replace": "p.at(\"Expected ':'\")"
+ },
+ {
+  "name": "je-after-value",
+  "file": "jsonerr.go",
+  "find": "p.at(\"Expected ',' or '}' after property value\")",
+  "replace": "p.at(\"Expected ',' or '}'\")"
+ },
+ {
+  "name": "je-array",
+  "file": "jsonerr.go",
+  "find": "p.at(\"Expected ',' or ']' after array element\")",
+  "replace": "p.at(\"Expected ',' or ']'\")"
+ },
+ {
+  "name": "je-literal",
+  "file": "jsonerr.go",
+  "find": "p.pos += i\n\t\t\tp.unexpected()",
+  "replace": "p.unexpected()"
+ },
+ {
+  "name": "je-ws-tab",
+  "file": "jsonerr.go",
+  "find": "case ' ', '\\t', '\\n', '\\r':",
+  "replace": "case ' ', '\\n', '\\r':"
+ },
+ {
+  "name": "fs-e0",
+  "file": "cfgfs.go",
+  "find": "lower = 0xA0",
+  "replace": "lower = 0x90"
+ },
+ {
+  "name": "fs-ed",
+  "file": "cfgfs.go",
+  "find": "upper = 0x9F",
+  "replace": "upper = 0xBF"
+ },
+ {
+  "name": "fs-f0",
+  "file": "cfgfs.go",
+  "find": "lower = 0x90",
+  "replace": "lower = 0x80"
+ },
+ {
+  "name": "fs-f4",
+  "file": "cfgfs.go",
+  "find": "upper = 0x8F",
+  "replace": "upper = 0xBF"
+ },
+ {
+  "name": "fs-c2",
+  "file": "cfgfs.go",
+  "find": "case c >= 0xC2 && c <= 0xDF:",
+  "replace": "case c >= 0xC0 && c <= 0xDF:"
+ },
+ {
+  "name": "fs-truncated",
+  "file": "cfgfs.go",
+  "find": "\tif needed != 0 {\n\t\tout.WriteRune(utf8.RuneError)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "fs-reprocess",
+  "file": "cfgfs.go",
+  "find": "continue // reprocess the byte",
+  "replace": "i++\n\t\t\tcontinue"
+ },
+ {
+  "name": "fs-message",
+  "file": "cfgfs.go",
+  "find": "m := e.code + \": \" + e.desc + \", \" + syscallName",
+  "replace": "m := e.code + \": \" + e.desc + \" \" + syscallName"
+ },
+ {
+  "name": "fs-message-path",
+  "file": "cfgfs.go",
+  "find": "if path != \"\" {\n\t\t\t\tm += \" '\" + path + \"'\"",
+  "replace": "if path == \"\" {\n\t\t\t\tm += \" '\" + path + \"'\""
+ },
+ {
+  "name": "fs-dir",
+  "file": "cfgfs.go",
+  "find": "st.IsDir()",
+  "replace": "!st.IsDir()"
+ },
+ {
+  "name": "fs-missing",
+  "file": "cfgfs.go",
+  "find": "return \"missing\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "fs-stamp-ms",
+  "file": "cfgfs.go",
+  "find": "float64(t.Unix())*1e3 + float64(t.Nanosecond())/1e6",
+  "replace": "float64(t.Unix())*1e3"
+ },
+ {
+  "name": "pl-issue-dedupe",
+  "file": "policyloader.go",
+  "find": "found = found || have == issue",
+  "replace": "found = found && have == issue"
+ },
+ {
+  "name": "pl-empty-agent",
+  "file": "policyloader.go",
+  "find": "if dir == \"\" || agentName == \"\" {",
+  "replace": "if dir == \"\" && agentName == \"\" {"
+ },
+ {
+  "name": "pl-missing-agent",
+  "file": "policyloader.go",
+  "find": "if stamp == \"missing\" {",
+  "replace": "if stamp == \"missing!\" {"
+ },
+ {
+  "name": "pl-project-invalid",
+  "file": "policyloader.go",
+  "find": "Invalid: len(r.Issues) > 0}",
+  "replace": "Invalid: false}"
+ },
+ {
+  "name": "pl-agent-unreadable",
+  "file": "policyloader.go",
+  "find": "value = &ScopeConfig{Invalid: true}",
+  "replace": "value = &ScopeConfig{}"
+ },
+ {
+  "name": "pl-agent-permission",
+  "file": "policyloader.go",
+  "find": "parseSimpleYamlMap(frontmatter).vals[\"permission\"]",
+  "replace": "parseSimpleYamlMap(frontmatter).vals[\"permissions\"]"
+ },
+ {
+  "name": "pl-global-cache",
+  "file": "policyloader.go",
+  "find": "l.globalConfigCache.stamp == stamp",
+  "replace": "l.globalConfigCache.stamp != stamp"
+ },
+ {
+  "name": "pl-project-cache",
+  "file": "policyloader.go",
+  "find": "l.projectGlobalConfigCache.stamp == stamp",
+  "replace": "l.projectGlobalConfigCache.stamp != stamp"
+ },
+ {
+  "name": "pl-agent-cache",
+  "file": "policyloader.go",
+  "find": "cached.stamp == stamp {",
+  "replace": "cached.stamp != stamp {"
+ },
+ {
+  "name": "pl-mcp-cache",
+  "file": "policyloader.go",
+  "find": "l.mcpNamesCache.stamp == stamp",
+  "replace": "l.mcpNamesCache.stamp != stamp"
+ },
+ {
+  "name": "pl-no-project",
+  "file": "policyloader.go",
+  "find": "if l.projectGlobalConfigPath == \"\" {\n\t\treturn &ScopeConfig{}",
+  "replace": "if l.projectGlobalConfigPath != \"\" {\n\t\treturn &ScopeConfig{}"
+ },
+ {
+  "name": "pl-mcp-override-empty",
+  "file": "policyloader.go",
+  "find": "if o.McpServerNames != nil {",
+  "replace": "if len(o.McpServerNames) > 0 {"
+ },
+ {
+  "name": "pl-mcp-override-trim",
+  "file": "policyloader.go",
+  "find": "n = jsTrim(n)\n\t\t\tif n != \"\" && !seen[n] {",
+  "replace": "if n != \"\" && !seen[n] {"
+ },
+ {
+  "name": "pl-mcp-override-dedupe",
+  "file": "policyloader.go",
+  "find": "if n != \"\" && !seen[n] {",
+  "replace": "if n != \"\" {"
+ },
+ {
+  "name": "pl-mcp-dash",
+  "file": "policyloader.go",
+  "find": "servers = root.vals[\"mcp-servers\"]",
+  "replace": "servers = nil"
+ },
+ {
+  "name": "pl-mcp-null",
+  "file": "policyloader.go",
+  "find": "if !present || servers == nil {",
+  "replace": "if !present {"
+ },
+ {
+  "name": "pl-mcp-trim",
+  "file": "policyloader.go",
+  "find": "if name := jsTrim(k); name != \"\" {",
+  "replace": "if name := k; name != \"\" {"
+ },
+ {
+  "name": "pl-mcp-project",
+  "file": "policyloader.go",
+  "find": "if l.projectMcpConfigPath != \"\" {\n\t\tpaths",
+  "replace": "if l.projectMcpConfigPath == \"\" {\n\t\tpaths"
+ },
+ {
+  "name": "ec-sort-length",
+  "file": "extconfig.go",
+  "find": "\t\treturn la > lb\n\t}",
+  "replace": "\t\treturn la < lb\n\t}"
+ },
+ {
+  "name": "pl-mcp-tiebreak",
+  "file": "extconfig.go",
+  "find": "return icuCompare(a, b) < 0",
+  "replace": "return icuCompare(a, b) > 0"
+ },
+ {
+  "name": "pl-mcp-dedupe",
+  "file": "policyloader.go",
+  "find": "if !seen[n] {\n\t\t\t\tseen[n] = true\n\t\t\t\tnames = append(names, n)",
+  "replace": "if true {\n\t\t\t\tseen[n] = true\n\t\t\t\tnames = append(names, n)"
+ },
+ {
+  "name": "pl-stamp-agent",
+  "file": "policyloader.go",
+  "find": "agentStamp = fileStamp(filepath.Join(l.agentsDir, agentName+\".md\"))",
+  "replace": "agentStamp = \"missing\""
+ },
+ {
+  "name": "pl-stamp-none",
+  "file": "policyloader.go",
+  "find": "projectStamp := \"none\"",
+  "replace": "projectStamp := \"missing\""
+ },
+ {
+  "name": "pl-paths-exists",
+  "file": "policyloader.go",
+  "find": "GlobalConfigExists: pathExists(l.globalConfigPath),",
+  "replace": "GlobalConfigExists: false,"
+ },
+ {
+  "name": "pl-paths-project",
+  "file": "policyloader.go",
+  "find": "r.ProjectConfigPath, r.ProjectConfigExists = &p, pathExists(p)",
+  "replace": "r.ProjectConfigPath, r.ProjectConfigExists = &p, false"
+ },
+ {
+  "name": "pl-derive-mcp",
+  "file": "policyloader.go",
+  "find": "filepath.Join(cwd, \".pi\", \"mcp.json\")",
+  "replace": "filepath.Join(cwd, \"mcp.json\")"
+ },
+ {
+  "name": "pl-derive-agents",
+  "file": "policyloader.go",
+  "find": "AgentsDir:           filepath.Join(agentDir, \"agents\"),",
+  "replace": "AgentsDir:           filepath.Join(agentDir, \"agent\"),"
+ },
+ {
+  "name": "pl-derive-cwd",
+  "file": "policyloader.go",
+  "find": "if cwd != \"\" {\n\t\to.ProjectGlobalConfigPath",
+  "replace": "if cwd == \"\" {\n\t\to.ProjectGlobalConfigPath"
+ },
+ {
+  "name": "cs-save-existing",
+  "file": "cfgstore.go",
+  "find": "merged := existing.Config.toObject()",
+  "replace": "merged := newObject()\n\t_ = existing"
+ },
+ {
+  "name": "cs-trust",
+  "file": "cfgstore.go",
+  "find": "MergeOptions{IncludeProjectScope: &projectTrusted})",
+  "replace": "MergeOptions{})"
+ },
+ {
+  "name": "cs-issues",
+  "file": "cfgstore.go",
+  "find": "s.config, s.configIssues = config, merge.Issues",
+  "replace": "s.config, s.configIssues = config, []string{}"
+ },
+ {
+  "name": "cs-warning-join",
+  "file": "cfgstore.go",
+  "find": "strings.Join(merge.Issues, \"\\n\")",
+  "replace": "strings.Join(merge.Issues, \" \")"
+ },
+ {
+  "name": "cs-warning-null",
+  "file": "cfgstore.go",
+  "find": "details.set(\"warning\", nil)",
+  "replace": "details.set(\"warning\", \"\")"
+ },
+ {
+  "name": "cs-trusted-log",
+  "file": "cfgstore.go",
+  "find": "details.set(\"projectTrusted\", projectTrusted)",
+  "replace": "details.set(\"projectTrusted\", true)"
+ },
+ {
+  "name": "cs-save-yolo",
+  "file": "cfgstore.go",
+  "find": "merged.set(\"yoloMode\", normalized.YoloMode)",
+  "replace": ""
+ },
+ {
+  "name": "cs-save-debug",
+  "file": "cfgstore.go",
+  "find": "merged.set(\"debugLog\", normalized.DebugLog)",
+  "replace": ""
+ },
+ {
+  "name": "cs-save-review",
+  "file": "cfgstore.go",
+  "find": "merged.set(\"permissionReviewLog\", normalized.PermissionReviewLog)",
+  "replace": ""
+ },
+ {
+  "name": "cs-save-tmp",
+  "file": "cfgstore.go",
+  "find": "tmpPath := globalPath + \".tmp\"",
+  "replace": "tmpPath := globalPath + \".tm\""
+ },
+ {
+  "name": "cs-save-newline",
+  "file": "cfgstore.go",
+  "find": "marshalJSON(merged, \"  \")+\"\\n\"",
+  "replace": "marshalJSON(merged, \"  \")"
+ },
+ {
+  "name": "cs-save-indent",
+  "file": "cfgstore.go",
+  "find": "marshalJSON(merged, \"  \")",
+  "replace": "marshalJSON(merged, \"\\t\")"
+ },
+ {
+  "name": "cs-save-cleanup",
+  "file": "cfgstore.go",
+  "find": "if s.hooks.exists(tmpPath) {",
+  "replace": "if !s.hooks.exists(tmpPath) {"
+ },
+ {
+  "name": "cs-save-error-level",
+  "file": "cfgstore.go",
+  "find": "+failure, \"error\")",
+  "replace": "+failure, \"warning\")"
+ },
+ {
+  "name": "cs-save-error-return",
+  "file": "cfgstore.go",
+  "find": "\t\treturn\n\t}\n\ts.mu.Lock()\n\ts.config = normalized",
+  "replace": "\t}\n\ts.mu.Lock()\n\ts.config = normalized"
+ },
+ {
+  "name": "cs-save-current",
+  "file": "cfgstore.go",
+  "find": "\ts.config = normalized\n\ts.mu.Unlock()",
+  "replace": "\t_ = normalized\n\ts.mu.Unlock()"
+ },
+ {
+  "name": "cs-save-status",
+  "file": "cfgstore.go",
+  "find": "s.hooks.syncStatus(ui, normalized)",
+  "replace": ""
+ },
+ {
+  "name": "cs-save-saved-log",
+  "file": "cfgstore.go",
+  "find": "s.deps.Logger.Debug(\"config.saved\", details)",
+  "replace": ""
+ },
+ {
+  "name": "cs-log-project-legacy",
+  "file": "cfgstore.go",
+  "find": "legacyProject := cwd != \"\" &&",
+  "replace": "legacyProject := cwd == \"\" &&"
+ },
+ {
+  "name": "cs-log-review",
+  "file": "cfgstore.go",
+  "find": "s.deps.Logger.Review(\"config.resolved\", entry.toObject())",
+  "replace": ""
+ },
+ {
+  "name": "cs-log-debug",
+  "file": "cfgstore.go",
+  "find": "s.deps.Logger.Debug(\"config.resolved\", entry.toObject())",
+  "replace": ""
+ },
+ {
+  "name": "cs-entry-null",
+  "file": "cfgstore.go",
+  "find": "if p == nil {\n\t\t\treturn nil\n\t\t}",
+  "replace": "if p == nil {\n\t\t\treturn \"\"\n\t\t}"
+ },
+ {
+  "name": "cs-entry-legacy-ext",
+  "file": "cfgstore.go",
+  "find": "return ResolvedConfigLogEntry{o.PolicyPaths, o.LegacyGlobalPolicyDetected, o.LegacyProjectPolicyDetected, o.LegacyExtensionConfigDetected}",
+  "replace": "return ResolvedConfigLogEntry{o.PolicyPaths, o.LegacyGlobalPolicyDetected, o.LegacyProjectPolicyDetected, false}"
+ },
+ {
+  "name": "cs-reporter-latch",
+  "file": "cfgstore.go",
+  "find": "if !r.reported[issue] {",
+  "replace": "if r.reported[issue] {"
+ },
+ {
+  "name": "cs-reporter-replace",
+  "file": "cfgstore.go",
+  "find": "\tr.reported = map[string]bool{}\n\tfor _, issue := range current {",
+  "replace": "\tfor _, issue := range current {"
+ },
+ {
+  "name": "cs-reporter-join",
+  "file": "cfgstore.go",
+  "find": "strings.Join(unreported, \"\\n\")",
+  "replace": "strings.Join(unreported, \" \")"
+ },
+ {
+  "name": "cs-reporter-empty",
+  "file": "cfgstore.go",
+  "find": "if len(unreported) > 0 {",
+  "replace": "if len(unreported) >= 0 {"
+ },
+ {
+  "name": "cs-status-yolo",
+  "file": "cfgstore.go",
+  "find": "return permissionSystemYoloStatusValue",
+  "replace": "return \"on\""
+ },
+ {
+  "name": "cs-status-key",
+  "file": "cfgstore.go",
+  "find": "permissionSystemStatusKey       = extensionID",
+  "replace": "permissionSystemStatusKey       = \"permission\""
+ },
+ {
+  "name": "ec-debug",
+  "file": "extconfig.go",
+  "find": "DebugLog:                  raw.DebugLog != nil && *raw.DebugLog,",
+  "replace": "DebugLog:                  raw.DebugLog != nil || *raw.DebugLog,"
+ },
+ {
+  "name": "ec-review",
+  "file": "extconfig.go",
+  "find": "raw.PermissionReviewLog == nil || *raw.PermissionReviewLog",
+  "replace": "raw.PermissionReviewLog == nil && *raw.PermissionReviewLog"
+ },
+ {
+  "name": "ec-yolo",
+  "file": "extconfig.go",
+  "find": "YoloMode:                  raw.YoloMode != nil && *raw.YoloMode,",
+  "replace": "YoloMode:                  raw.YoloMode == nil || *raw.YoloMode,"
+ },
+ {
+  "name": "ec-double",
+  "file": "extconfig.go",
+  "find": "raw.DoublePressToConfirm == nil || *raw.DoublePressToConfirm",
+  "replace": "raw.DoublePressToConfirm != nil && *raw.DoublePressToConfirm"
+ },
+ {
+  "name": "ec-forwarding",
+  "file": "extconfig.go",
+  "find": "ForwardingTimeoutMs:       raw.ForwardingTimeoutMs,",
+  "replace": ""
+ },
+ {
+  "name": "ec-shell-tools",
+  "file": "extconfig.go",
+  "find": "ShellTools:                raw.ShellTools,",
+  "replace": ""
+ },
+ {
+  "name": "ec-notifications",
+  "file": "extconfig.go",
+  "find": "PromptNotifications:       raw.PromptNotifications,",
+  "replace": ""
+ },
+ {
+  "name": "ec-dialog-keys",
+  "file": "extconfig.go",
+  "find": "PermissionDialogKeys:      raw.PermissionDialogKeys,",
+  "replace": ""
+ },
+ {
+  "name": "ec-chain",
+  "file": "extconfig.go",
+  "find": "AuthorizerChain:           raw.AuthorizerChain,",
+  "replace": ""
+ },
+ {
+  "name": "ec-infra",
+  "file": "extconfig.go",
+  "find": "PiInfrastructureReadPaths: raw.PiInfrastructureReadPaths,",
+  "replace": ""
+ },
+ {
+  "name": "ec-budget",
+  "file": "extconfig.go",
+  "find": "PromptFieldMaxWidth:       raw.PromptFieldMaxWidth,",
+  "replace": ""
+ },
+ {
+  "name": "ec-log-width",
+  "file": "extconfig.go",
+  "find": "ReviewLogFieldMaxWidth:    raw.ReviewLogFieldMaxWidth,",
+  "replace": ""
+ },
+ {
+  "name": "ec-default-review",
+  "file": "extconfig.go",
+  "find": "PermissionReviewLog: true, DoublePressToConfirm: true}",
+  "replace": "PermissionReviewLog: false, DoublePressToConfirm: true}"
+ },
+ {
+  "name": "ec-default-double",
+  "file": "extconfig.go",
+  "find": "PermissionReviewLog: true, DoublePressToConfirm: true}",
+  "replace": "PermissionReviewLog: true, DoublePressToConfirm: false}"
+ },
+ {
+  "name": "ec-misplaced",
+  "file": "extconfig.go",
+  "find": "if permissionPolicyKeys[k] {",
+  "replace": "if !permissionPolicyKeys[k] {"
+ },
+ {
+  "name": "ec-misplaced-keys",
+  "file": "extconfig.go",
+  "find": "\"special\": true, ",
+  "replace": ""
+ },
+ {
+  "name": "ec-chmod",
+  "file": "extconfig.go",
+  "find": "_ = os.Chmod(logsDir, ownerOnlyDirectoryMode)",
+  "replace": ""
+ },
+ {
+  "name": "ec-mkdir-mode",
+  "file": "extconfig.go",
+  "find": "os.MkdirAll(logsDir, ownerOnlyDirectoryMode)",
+  "replace": "os.MkdirAll(logsDir, 0o755)"
+ },
+ {
+  "name": "ec-mkdir-message",
+  "file": "extconfig.go",
+  "find": "\"Failed to create permission-system log directory '\"",
+  "replace": "\"Failed to create log directory '\""
+ },
+ {
+  "name": "ec-length",
+  "file": "extconfig.go",
+  "find": "if la, lb := utf16Len(a), utf16Len(b); la != lb {",
+  "replace": "if la, lb := len(a), len(b); la != lb {"
+ },
+ {
+  "name": "icu-upper",
+  "file": "icucompare.go",
+  "find": "e.upper = 1",
+  "replace": "e.upper = 0"
+ },
+ {
+  "name": "icu-letters",
+  "file": "icucompare.go",
+  "find": "return (letters + (i-letters)/2) * 2, true",
+  "replace": "return (letters + (i - letters)) * 2, true"
+ },
+ {
+  "name": "icu-punct-order",
+  "file": "icucompare.go",
+  "find": "const icuASCIIOrder = \" _-,;:",
+  "replace": "const icuASCIIOrder = \" -_,;:"
+ },
+ {
+  "name": "icu-accent",
+  "file": "icucompare.go",
+  "find": "e.primary, e.accent = w, int(r)",
+  "replace": "e.primary, e.accent = w, 0"
+ },
+ {
+  "name": "icu-symbols",
+  "file": "icucompare.go",
+  "find": "e.primary = digits*2 - 1",
+  "replace": "e.primary = digits*2 + 100"
+ },
+ {
+  "name": "icu-levels",
+  "file": "icucompare.go",
+  "find": "func(e collationElement) int { return e.accent },\n\t\tfunc(e collationElement) int { return e.upper },",
+  "replace": "func(e collationElement) int { return e.upper },\n\t\tfunc(e collationElement) int { return e.accent },"
+ },
+ {
+  "name": "cm-rule-layer",
+  "file": "cfgmodal.go",
+  "find": "if r.Layer != \"config\" || r.Origin == \"\" {",
+  "replace": "if r.Layer != \"config\" && r.Origin == \"\" {"
+ },
+ {
+  "name": "cm-rule-pattern",
+  "file": "cfgmodal.go",
+  "find": "if r.Pattern != \"*\" {\n\t\t\tkey",
+  "replace": "if r.Pattern == \"*\" {\n\t\t\tkey"
+ },
+ {
+  "name": "cm-rule-format",
+  "file": "cfgmodal.go",
+  "find": "formatted = append(formatted, key+\"=\"+r.Action+\" (\"+r.Origin+\")\")",
+  "replace": "formatted = append(formatted, key+\"=\"+r.Action)"
+ },
+ {
+  "name": "cm-rules-prefix",
+  "file": "cfgmodal.go",
+  "find": "return \"\\n  rules: \" + strings.Join(formatted, \", \")",
+  "replace": "return \"\\n  rules: \" + strings.Join(formatted, \"; \")"
+ },
+ {
+  "name": "cm-summary",
+  "file": "cfgmodal.go",
+  "find": "\", permissionReviewLog=\" + toOnOff(c.PermissionReviewLog) + \", debugLog=\"",
+  "replace": "\", debugLog=\" + toOnOff(c.DebugLog) + \", permissionReviewLog=\""
+ },
+ {
+  "name": "cm-completion-case",
+  "file": "cfgmodal.go",
+  "find": "normalized := strings.ToLower(jsTrim(argumentPrefix))",
+  "replace": "normalized := jsTrim(argumentPrefix)"
+ },
+ {
+  "name": "cm-completion-trim",
+  "file": "cfgmodal.go",
+  "find": "normalized := strings.ToLower(jsTrim(argumentPrefix))",
+  "replace": "normalized := strings.ToLower(argumentPrefix)"
+ },
+ {
+  "name": "cm-completion-prefix",
+  "file": "cfgmodal.go",
+  "find": "if strings.HasPrefix(item.Value, normalized) {",
+  "replace": "if strings.Contains(item.Value, normalized) {"
+ },
+ {
+  "name": "cm-apply-yolo",
+  "file": "cfgmodal.go",
+  "find": "case \"yoloMode\":\n\t\tc.YoloMode = value == \"on\"",
+  "replace": "case \"yoloMode\":\n\t\tc.YoloMode = value != \"on\""
+ },
+ {
+  "name": "cm-apply-review",
+  "file": "cfgmodal.go",
+  "find": "c.PermissionReviewLog = value == \"on\"",
+  "replace": "c.PermissionReviewLog = value != \"on\""
+ },
+ {
+  "name": "cm-apply-debug",
+  "file": "cfgmodal.go",
+  "find": "c.DebugLog = value == \"on\"",
+  "replace": "c.DebugLog = value != \"on\""
+ },
+ {
+  "name": "cm-apply-double",
+  "file": "cfgmodal.go",
+  "find": "c.DoublePressToConfirm = value == \"on\"",
+  "replace": "c.DoublePressToConfirm = value != \"on\""
+ },
+ {
+  "name": "cm-reset",
+  "file": "cfgmodal.go",
+  "find": "controller.Config.Save(cloneDefaultConfig(), ui)",
+  "replace": "controller.Config.Save(controller.Config.Current(), ui)"
+ },
+ {
+  "name": "cm-reset-message",
+  "file": "cfgmodal.go",
+  "find": "\"Permission system settings reset to defaults.\"",
+  "replace": "\"Permission system settings reset.\""
+ },
+ {
+  "name": "cm-usage-level",
+  "file": "cfgmodal.go",
+  "find": "ui.Notify(usageText, \"warning\")",
+  "replace": "ui.Notify(usageText, \"info\")"
+ },
+ {
+  "name": "cm-help",
+  "file": "cfgmodal.go",
+  "find": "case \"help\":\n\t\tui.Notify(usageText, \"info\")",
+  "replace": "case \"help\":\n\t\tui.Notify(usageText, \"warning\")"
+ },
+ {
+  "name": "cm-path",
+  "file": "cfgmodal.go",
+  "find": "\"permission-system config: \"",
+  "replace": "\"permission-system: \""
+ },
+ {
+  "name": "cm-no-ui",
+  "file": "cfgmodal.go",
+  "find": "if !ctx.HasUI() {",
+  "replace": "if ctx.HasUI() {"
+ },
+ {
+  "name": "cm-no-ui-text",
+  "file": "cfgmodal.go",
+  "find": "\"/permission-system requires interactive TUI mode.\"",
+  "replace": "\"/permission-system requires a UI.\""
+ },
+ {
+  "name": "cm-args-case",
+  "file": "cfgmodal.go",
+  "find": "normalized := strings.ToLower(jsTrim(args))",
+  "replace": "normalized := jsTrim(args)"
+ },
+ {
+  "name": "cm-args-trim",
+  "file": "cfgmodal.go",
+  "find": "normalized := strings.ToLower(jsTrim(args))",
+  "replace": "normalized := strings.ToLower(args)"
+ },
+ {
+  "name": "cm-cancel",
+  "file": "cfgmodal.go",
+  "find": "return sdk.RemoteComponentResult{Done: true}, nil",
+  "replace": "return sdk.RemoteComponentResult{}, nil"
+ },
+ {
+  "name": "cm-resync",
+  "file": "cfgmodal.go",
+  "find": "m.current = m.controller.Config.Current()",
+  "replace": ""
+ },
+ {
+  "name": "cm-save-on-change",
+  "file": "cfgmodal.go",
+  "find": "m.controller.Config.Save(m.current, m.ctx)",
+  "replace": ""
+ },
+ {
+  "name": "cm-width",
+  "file": "cfgmodal.go",
+  "find": "sdk.OverlayCells(82)",
+  "replace": "sdk.OverlayCells(80)"
+ },
+ {
+  "name": "cm-height",
+  "file": "cfgmodal.go",
+  "find": "sdk.OverlayPercent(85)",
+  "replace": "sdk.OverlayPercent(80)"
+ },
+ {
+  "name": "cm-anchor",
+  "file": "cfgmodal.go",
+  "find": "Anchor: \"center\"",
+  "replace": "Anchor: \"top-left\""
+ },
+ {
+  "name": "cm-overlay",
+  "file": "cfgmodal.go",
+  "find": "Overlay: true,\n\t\tOverlayOptions",
+  "replace": "Overlay: false,\n\t\tOverlayOptions"
+ },
+ {
+  "name": "cm-max-visible",
+  "file": "cfgmodal.go",
+  "find": "buildSettingItems(m.current), 10)",
+  "replace": "buildSettingItems(m.current), 5)"
+ },
+ {
+  "name": "cm-items-double",
+  "file": "cfgmodal.go",
+  "find": "ID: \"doublePressToConfirm\", Label: \"Double-press to confirm\"",
+  "replace": "ID: \"doublePress\", Label: \"Double-press to confirm\""
+ },
+ {
+  "name": "ex-session-trust",
+  "file": "extension.go",
+  "find": "st.refreshConfig(ctx, trusted)\n\t\tst.store.LogResolvedPaths",
+  "replace": "st.refreshConfig(ctx, true)\n\t\tst.store.LogResolvedPaths"
+ },
+ {
+  "name": "ex-turn-trust",
+  "file": "extension.go",
+  "find": "st.refreshConfig(ctx, projectTrusted(ctx))",
+  "replace": "st.refreshConfig(ctx, true)"
+ },
+ {
+  "name": "ex-session-warn",
+  "file": "extension.go",
+  "find": "st.reporter.Report()\n\t\tif !trusted {",
+  "replace": "st.reporter.Report()\n\t\tif trusted {"
+ },
+ {
+  "name": "ex-turn-report",
+  "file": "extension.go",
+  "find": "st.refreshConfig(ctx, projectTrusted(ctx))\n\t\tst.reporter.Report()",
+  "replace": "st.refreshConfig(ctx, projectTrusted(ctx))"
+ },
+ {
+  "name": "ex-reload-only",
+  "file": "extension.go",
+  "find": "reason != \"reload\"",
+  "replace": "reason == \"reload\""
+ },
+ {
+  "name": "ex-reload-warn",
+  "file": "extension.go",
+  "find": "\t\tif !trusted {\n\t\t\tst.warnProjectUntrusted()\n\t\t}\n\t\treturn nil, nil\n\t})\n\te.OnEvent(sdk.EventBeforeAgentStart",
+  "replace": "\t\treturn nil, nil\n\t})\n\te.OnEvent(sdk.EventBeforeAgentStart"
+ },
+ {
+  "name": "ex-status",
+  "file": "extension.go",
+  "find": "if ctx.HasUI() {\n\t\tsyncPermissionSystemStatus(ctx, s.store.Current())",
+  "replace": "if !ctx.HasUI() {\n\t\tsyncPermissionSystemStatus(ctx, s.store.Current())"
+ },
+ {
+  "name": "ex-untrusted-message",
+  "file": "extension.go",
+  "find": "skipping project-scoped",
+  "replace": "skipping project"
+ },
+ {
+  "name": "ex-priming-trust",
+  "file": "extension.go",
+  "find": "st.store.Refresh(\"\", false)",
+  "replace": "st.store.Refresh(\"\", true)"
+ },
+ {
+  "name": "ex-cwd-untrusted",
+  "file": "extension.go",
+  "find": "st.configureForCwd(\"\")\n\t\t}\n\t\tst.refreshConfig(ctx, trusted)",
+  "replace": "st.configureForCwd(ctx.Cwd())\n\t\t}\n\t\tst.refreshConfig(ctx, trusted)"
+ },
+ {
+  "name": "ex-command",
+  "file": "extension.go",
+  "find": "ConfigPath: getGlobalConfigPath(agentDir()),",
+  "replace": "ConfigPath: \"config.json\","
+ },
+ {
+  "name": "ex-bind",
+  "file": "extension.go",
+  "find": "st.notifier.bind(ctx)\n\t\tif trusted {",
+  "replace": "if trusted {"
+ }
+]

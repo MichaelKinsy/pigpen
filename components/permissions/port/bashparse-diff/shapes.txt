@@ -1,0 +1,694 @@
+ls
+ls -la /tmp
+echo "a b" 'c d' $x ${x} ${x:-d} ${x%%y} ${!x} ${#x} ${x[@]} ${x//a/b} "$x" "${x}" $((1+2)) $(( x * 2 )) $[1+2]
+echo $(ls) `ls` "$(ls)" "`ls`" $(( $(ls) )) "$((1))"
+echo <(ls) >(cat) <(<(ls))
+echo {a,b,c} {1..3} a{b,c}d {x}
+echo ~ ~/x ~root/x ~+ ~-
+echo *.txt ? [a-z] **/x
+echo $'a\nb' $"x" 'it''s' "a"'b'c
+x=1 y=2 cmd
+x=1
+x=$(ls) cmd
+x+=1
+x[1]=2
+declare -a x=(1 2 3)
+declare -A m=([a]=1)
+export X=1 Y
+local x
+readonly x=1
+unset x
+a=(1 2 3)
+a=( $(ls) )
+a && b
+a || b
+a ; b
+a & b
+a &
+a | b
+a |& b
+a && b | c || d ; e &
+! a
+! a | b
+a ;; b
+;;
+;
+&
+&&
+||
+|
+()
+{}
+( a )
+( a; b )
+(( a ))
+(( a = 1 + 2 ))
+(( 1 ))
+{ a; }
+{ a; b; } > o
+{ a; } 2>/dev/null b
+( a ) > o
+( a ) 2>&1
+if a; then b; fi
+if a; then b; else c; fi
+if a; then b; elif c; then d; else e; fi
+if a; then b; fi > o
+@@
+if a
+then
+b
+fi
+@@@
+while a; do b; done
+until a; do b; done
+while read x; do echo $x; done < in
+@@
+while read x; do echo $x; done <<EOF
+a
+EOF
+@@@
+for i in 1 2 3; do echo $i; done
+for i in $(ls); do echo $i; done
+for ((i=0;i<3;i++)); do echo $i; done
+for i; do :; done
+select x in a b; do echo $x; done
+case $x in a) echo a;; b|c) echo b;; *) echo c;; esac
+case $x in a) echo a ;& b) echo b ;;& esac
+case x in esac
+case x in (a) b;; esac
+function f { echo hi; }
+function f() { echo hi; }
+f() { echo hi; }
+f() ( echo hi )
+@@
+f() { cat <<EOF
+x
+EOF
+}
+@@@
+f() { :; } > o
+[[ -f x ]]
+[[ -f x && -d y ]]
+[[ $x == a* ]]
+[[ $x =~ ^a.*b$ ]]
+[[ ! -z $x ]]
+[[ a < b ]]
+[ -f x ]
+[ -f x ] && echo y
+test -f x
+time ls
+time -p ls
+coproc ls
+coproc foo { ls; }
+a=1 b=2
+echo a # comment
+# comment
+echo a#b
+echo "a # b"
+echo \# x
+@@
+echo a \
+b
+@@@
+@@
+echo a\
+b
+@@@
+ls ;# c
+ls <<< word
+ls <<< "$x"
+ls <<< $(x)
+cat <<< a > o
+cat <<< a | b
+cat <<< a arg
+cat <<< a 2>&1
+cat a <<< b c
+cat < in
+cat < in > out
+cat < in arg
+cat arg < in arg2
+cat > o arg
+cat > o arg1 arg2
+cat >> o arg
+cat 2> o arg
+cat 2>&1 arg
+cat >&2 arg
+cat >&- arg
+cat <&- arg
+cat &> o arg
+cat &>> o arg
+cat >| o arg
+cat <> o arg
+cat <> ~/o
+cat <> o
+cat 3<> o
+cat {fd}> o
+cat {fd}>&- arg
+cat 10> o
+cat 10>&1
+cat 2>/dev/null f 2>&1 g
+cat > a > b c
+cat > a b > c d
+cat > "a b" c
+cat > $x c
+cat > $(x) c
+cat > ~/o c
+cat > o | tee x
+cat > o && ls
+cat > o; ls
+cat > o &
+cat >
+cat >>
+cat <
+cat 2>
+cat <<
+cat <<EOF
+@@
+cat <<EOF
+cat <<EOF
+body
+@@@
+@@
+cat <<-EOF
+	body
+	EOF
+@@@
+@@
+cat <<'EOF'
+$x $(rm -rf /)
+EOF
+@@@
+@@
+cat <<"EOF"
+$x
+EOF
+@@@
+@@
+cat <<\EOF
+$x
+EOF
+@@@
+@@
+cat <<E"O"F
+x
+EOF
+@@@
+@@
+cat <<-'E F'
+x
+E F
+@@@
+@@
+cat << EOF
+x
+EOF
+@@@
+@@
+cat <<EOF
+$(rm x)
+${y}
+`z`
+EOF
+@@@
+@@
+cat <<EOF
+EOF
+@@@
+@@
+cat <<EOF
+
+EOF
+@@@
+@@
+cat <<EOF
+x
+  EOF
+@@@
+@@
+cat <<-EOF
+x
+		EOF
+@@@
+@@
+cat <<EOF
+x
+EOFX
+EOF
+@@@
+@@
+cat <<EOF
+x
+cat <<EOF2
+y
+EOF2
+EOF
+@@@
+@@
+cat <<A <<B
+a
+A
+b
+B
+@@@
+@@
+cat <<A | cat <<B
+a
+A
+b
+B
+@@@
+@@
+cat <<A && cat <<B
+a
+A
+b
+B
+@@@
+@@
+cat <<EOF; ls
+x
+EOF
+@@@
+@@
+cat <<EOF && ls
+x
+EOF
+@@@
+@@
+cat <<EOF || ls
+x
+EOF
+@@@
+@@
+cat <<EOF | ls
+x
+EOF
+@@@
+@@
+cat <<EOF |& ls
+x
+EOF
+@@@
+@@
+cat <<EOF > o
+x
+EOF
+@@@
+@@
+cat <<EOF >> o
+x
+EOF
+@@@
+@@
+cat <<EOF 2>&1
+x
+EOF
+@@@
+@@
+cat <<EOF 2>&1 | tail -4
+x
+EOF
+@@@
+@@
+cat <<EOF arg
+x
+EOF
+@@@
+@@
+cat <<EOF arg > o
+x
+EOF
+@@@
+@@
+cat <<EOF > o arg
+x
+EOF
+@@@
+@@
+cat <<EOF 2>/dev/null arg
+x
+EOF
+@@@
+@@
+cat <<EOF ; rm x
+x
+EOF
+@@@
+@@
+cat <<EOF && a | b | c > o
+x
+EOF
+@@@
+@@
+cat <<EOF | a && b
+x
+EOF
+@@@
+@@
+cat <<EOF | a | b
+x
+EOF
+@@@
+@@
+cat <<EOF && a > o | b
+x
+EOF
+@@@
+@@
+cat <<EOF && a && b
+x
+EOF
+@@@
+@@
+cat <<EOF && a ; b
+x
+EOF
+@@@
+@@
+cat <<EOF &
+x
+EOF
+@@@
+@@
+cat <<EOF )
+x
+EOF
+@@@
+@@
+git commit -F - <<'MSG' 2>&1 | tail -4
+msg
+MSG
+@@@
+@@
+git commit -F - <<'MSG'
+msg
+MSG
+@@@
+@@
+git <<EOF push --force
+x
+EOF
+@@@
+@@
+xargs grep foo <<EOF && a | b | c > o
+x
+EOF
+@@@
+@@
+cat 0<<EOF | rm x
+x
+EOF
+@@@
+@@
+cat 0<<EOF
+x
+EOF
+@@@
+@@
+cat 3<<EOF
+x
+EOF
+@@@
+@@
+cat <<EOF <in
+x
+EOF
+@@@
+@@
+cat <in <<EOF
+x
+EOF
+@@@
+@@
+cat >o <<EOF
+x
+EOF
+@@@
+@@
+cat >o <<EOF >p
+x
+EOF
+@@@
+@@
+cat <<EOF >o <p arg
+x
+EOF
+@@@
+@@
+if true; then cat <<EOF ; rm x
+x
+EOF
+fi
+@@@
+@@
+if true; then cat <<EOF
+x
+EOF
+fi
+@@@
+@@
+(cat <<EOF
+x
+EOF
+)
+@@@
+@@
+$(cat <<EOF
+x
+EOF
+)
+@@@
+@@
+echo $(cat <<EOF
+x
+EOF
+)
+@@@
+@@
+echo "$(cat <<EOF
+x
+EOF
+)"
+@@@
+@@
+a <<EOF; b <<EOF2
+x
+EOF
+y
+EOF2
+@@@
+@@
+a <<EOF
+$(b <<EOF2
+y
+EOF2
+)
+EOF
+@@@
+@@
+echo ${x:-$(cat <<EOF
+y
+EOF
+)}
+@@@
+@@
+bash -c 'cat <<EOF
+x
+EOF'
+@@@
+bash -c "ls; rm x"
+sh -c 'rm -rf /' > o
+sudo rm x
+env A=1 rm x
+xargs rm
+find . -exec rm {} \;
+find . -exec rm {} +
+awk '{print $1}' f
+sed -i 's/a/b/' f
+sed -n '1,3p' < f
+tee o < i
+nohup ls &
+ls 'unterminated
+ls "unterminated
+ls $(unterminated
+ls `unterminated
+ls <(unterminated
+echo ${unterminated
+echo $((unterminated
+echo ((
+echo )
+echo }
+echo {
+echo ]]
+echo [[
+if
+fi
+then
+do
+done
+esac
+case
+for
+while
+function
+function f
+f(
+f()
+f() {
+{
+(
+((
+[[
+[[ a
+$(
+`
+"
+'
+$
+$$
+$!
+$?
+$-
+$0
+$1
+$@
+$*
+$#
+\
+\\
+a\\nb
+echo $'unterminated
+echo $"x
+echo "$(echo "x")"
+echo "a${b:-"c"}d"
+echo $(echo $(echo $(echo x)))
+echo ${a:-${b:-${c}}}
+echo "${a[@]}" "${a[*]}" "${!a[@]}"
+echo $((a ? b : c))
+echo $((a<<2))
+echo $((a<<EOF))
+x=$((1<<2))
+echo ${x/#a/b} ${x/%a/b} ${x^^} ${x,,} ${x@Q} ${x:1:2} ${x: -1}
+echo $0 $1 $10 ${10}
+echo "$@" "$*"
+{ echo a; echo b; } | cat
+{ echo a; echo b; } > o
+echo a > o | cat
+echo a | cat > o
+echo a >o|cat
+echo a 2>&1|cat
+echo a 2>&1 >o
+echo a>o
+echo a>>o
+echo a<o
+echo a<<<b
+echo a>&2
+echo a|&cat
+echo a;echo b
+echo a&&echo b
+echo a||echo b
+echo a&echo b
+echo a&>o
+echo a>&o
+echo 2>&1
+2>&1
+> o
+>> o
+< i
+<<< x
+@@
+<<EOF
+x
+EOF
+@@@
+> o cmd
+> o cmd arg
+< i cmd arg
+2>&1 cmd arg
+>o <i cmd
+cmd >o <i
+cmd >o arg <i arg2
+cmd <i >o arg
+cmd >o 2>&1 arg
+cmd 2>&1 >o arg
+cmd arg >o 2>p q >r s
+cmd >&2 arg >&3 b
+a | b >o arg
+a | b arg >o
+a && b >o arg
+a && b arg >o
+a && b >o arg && c
+a ; b >o arg ; c
+a | b >o arg | c
+a | b >o | c arg
+a >o | b arg
+a >o && b arg
+(a >o arg)
+$(a >o arg)
+echo $(a >o arg b)
+a >o arg &
+a >o arg;
+@@
+a >o arg
+b
+@@@
+@@
+a >o arg \
+b
+@@@
+a >o ; b
+a ># o
+a >o # c
+a > "o p" "q r"
+a > 'o' b
+a > $o b
+a > ${o} b
+a > $(o) b
+a > `o` b
+a > <(o) b
+a > o{1,2} b
+a > {1..3} b
+a > ~/o b
+a > */x b
+a > $((1)) b
+a > $'x' b
+a > $"x" b
+a > "a"b"c" d
+a > a"b" d
+a > a\ b d
+@@
+a > a\
+b d
+@@@
+a >& 2 b
+a >&2b
+a >& $x b
+a >&- b
+a >&-b
+a <&- b
+a <&0 b
+a <& $x b
+a <& 3 b
+a 3>&- b
+a {x}>&- b
+a {x}<&- b
+a {x}>o b
+a {x }>o b
+a {1}>o b
+a 1>o b
+a 12>o b
+a x2>o b
+a 2>o b c
+a 2>>o b c
+a 2<o b c
+@@
+a 2<<EOF b c
+x
+EOF
+@@@
+a 2<<<x b c
+a 2>|o b c
+a 2<>o b c
+a &>o b c
+a &>>o b c
+a |& b > o

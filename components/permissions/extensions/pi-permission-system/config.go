@@ -1,8 +1,6 @@
 package pi_permission_system
 
 import (
-	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,40 +30,27 @@ type Config struct {
 	Yolo       bool
 	ShellTools []string // the tools `shellTools` routes through the bash surface
 	Issue      string   // the reason the file could not be used, "" when it could
+	Unported   []string // the options set in the file that the port accepts and does not read yet (unported.go)
 }
 
 // loadConfig reads the global config. A missing file is an empty config; a file that cannot be read, parsed or validated is an
 // empty config with an Issue (config-loader.ts loadUnifiedConfig).
-func loadConfig() Config {
-	path := globalConfigPath()
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return Config{}
-		}
-		return Config{Issue: "Failed to read config at '" + path + "': " + err.Error()}
-	}
-	return parseConfig(data, path)
-}
+func loadConfig() Config { return configFromUnified(loadUnifiedConfig(globalConfigPath())) }
 
 // parseConfig reads the contents of the config file at path: comments are stripped, and a file the schema rejects is not used.
 func parseConfig(data []byte, path string) Config {
-	v, err := parseJSON([]byte(stripJSONComments(string(data))))
-	if err != nil {
-		return Config{Issue: "Failed to read config at '" + path + "': " + err.Error()}
+	return configFromUnified(parseUnifiedText(decodeUTF8Lossy(data), path))
+}
+
+func configFromUnified(r UnifiedConfigLoadResult) Config {
+	if len(r.Issues) > 0 {
+		return Config{Issue: strings.Join(r.Issues, "\n")}
 	}
-	if issues := validateUnifiedConfig(v); len(issues) > 0 {
-		return Config{Issue: strings.Join(issues, "\n")}
+	c := Config{Permission: r.Config.Permission, Yolo: r.Config.YoloMode != nil && *r.Config.YoloMode}
+	if r.Config.ShellTools != nil {
+		c.ShellTools = r.Config.ShellTools.order()
 	}
-	root := v.(*jsObject)
-	c := Config{}
-	c.Yolo, _ = root.vals["yoloMode"].(bool)
-	if perm := root.obj("permission"); perm != nil {
-		c.Permission = schemaPermission(perm)
-	}
-	if tools := root.obj("shellTools"); tools != nil {
-		c.ShellTools = tools.order()
-	}
+	c.Unported = unportedOptions(r.Config)
 	return c
 }
 
@@ -180,12 +165,14 @@ func (p *Policy) constant(surface string) Rule {
 	return Evaluate(surface, "*", p.rules, PosixPathFlavor, "")
 }
 
-func unsupported(tool, why string) Verdict {
-	return Verdict{Block: true, Reason: tagged("(Go port) cannot evaluate this '" + tool + "' call: " + why + ". It was blocked (fail-closed).")}
+// unsupported refuses a call the port cannot decide yet (refusal.go). The call is blocked, never allowed.
+func unsupported(feature string) Verdict {
+	return Verdict{Block: true, Reason: refusal(feature)}
 }
 
+// asked refuses a call the policy asks about: the approval dialog and its session approvals are not ported.
 func asked(tool string) Verdict {
-	return Verdict{Block: true, Reason: tagged("(Go port) this '" + tool + "' call requires approval, but the approval dialog is not ported. It was blocked.")}
+	return unsupported("the approval dialog (the '" + tool + "' call needs approval)")
 }
 
 func (p *Policy) outcome(surface string, r Rule) Verdict {
@@ -212,10 +199,10 @@ func (p *Policy) outcome(surface string, r Rule) Verdict {
 func (p *Policy) pathFamilyAllows(tool string) (bool, string) {
 	for _, s := range []string{"path_read", "path_write", "external_directory_read", "external_directory_write"} {
 		if p.valuePatterns(s) {
-			return false, "the path rules have value patterns, and path matching is not ported"
+			return false, "path rules with value patterns"
 		}
 		if p.constant(s).Action != "allow" {
-			return false, "the " + s + " surface does not allow every path, and path gating is not ported"
+			return false, "a '" + s + "' surface that does not allow every path"
 		}
 	}
 	return true, ""
@@ -228,19 +215,19 @@ func (p *Policy) Decide(tool string, input map[string]any) Verdict {
 	case name == "bash":
 		cmd, _ := input["command"].(string)
 		if ok, why := p.pathFamilyAllows(name); !ok {
-			return unsupported(name, why)
+			return unsupported("path checks for the 'bash' tool (" + why + ")")
 		}
 		return p.decideBash(cmd)
 	case p.shellTools[name]:
-		return unsupported(name, "the config routes it through the bash surface (shellTools), and shell-tool aliases are not ported")
+		return unsupported("the 'shellTools' option (the '" + name + "' tool routed through the bash surface)")
 	case name == "mcp", name == "skill", isPiMcpToolName(name):
-		return unsupported(name, "MCP and skill surfaces are not ported")
+		return unsupported("permissions for the '" + name + "' tool (the MCP and skill surfaces)")
 	case pathBearingTools[name]:
 		if p.valuePatterns(name) {
-			return unsupported(name, "the rules for it have value patterns, and path matching is not ported")
+			return unsupported("path rules with value patterns for the '" + name + "' tool (path matching)")
 		}
 		if ok, why := p.pathFamilyAllows(name); !ok {
-			return unsupported(name, why)
+			return unsupported("path checks for the '" + name + "' tool (" + why + ")")
 		}
 		return p.outcome(name, p.constant(name))
 	}

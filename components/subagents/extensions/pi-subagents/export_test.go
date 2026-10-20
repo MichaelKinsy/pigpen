@@ -21,3 +21,15 @@ func SetRunChild(t *testing.T, f func(done <-chan struct{}, req ChildRequest) (C
 	t.Cleanup(func() { runChild = old })
 	runChild = f
 }
+
+// ToolParamNames are the parameters of the subagent tool's schema (the original's), and OriginalCommands its commands.
+func ToolParamNames() []string {
+	props, _ := toolDefs()[subagentName].Parameters["properties"].(map[string]any)
+	var names []string
+	for k := range props {
+		names = append(names, k)
+	}
+	return names
+}
+
+var Refusal = refusal

@@ -15,22 +15,8 @@ type Rule struct {
 // Ruleset is an ordered list of rules; later rules win.
 type Ruleset []Rule
 
-// PathFlavor is the part of the original's path flavor the rule engine reads: how path-surface patterns are folded.
-type PathFlavor struct{ MatchOptions *MatchOptions }
-
-var (
-	PosixPathFlavor = PathFlavor{}
-	Win32PathFlavor = PathFlavor{MatchOptions: &MatchOptions{CaseInsensitive: true, WindowsSeparators: true}}
-)
-
-var pathSurfaces = map[string]bool{
-	"read": true, "write": true, "edit": true, "find": true, "grep": true, "ls": true,
-	"path": true, "external_directory": true,
-	"path_read": true, "path_write": true, "external_directory_read": true, "external_directory_write": true,
-}
-
 func pathMatchOptions(surface string, f PathFlavor) *MatchOptions {
-	if pathSurfaces[surface] {
+	if PathSurfaces[surface] {
 		return f.MatchOptions
 	}
 	return nil
