@@ -23,7 +23,7 @@ func writeTree(t *testing.T, root string, files map[string]string) {
 	}
 }
 
-func contains(list []string, s string) bool {
+func hasString(list []string, s string) bool {
 	for _, x := range list {
 		if x == s {
 			return true
@@ -38,11 +38,11 @@ func TestDiscoverRootLayout(t *testing.T) {
 	writeTree(t, p, map[string]string{"index.ts": "x", "utils.py": "x", "main.go": "x", "README.md": "x"})
 	files := DiscoverSourceFiles(p, 200)
 	for _, w := range []string{"index.ts", "utils.py", "main.go"} {
-		if !contains(files, w) {
+		if !hasString(files, w) {
 			t.Fatalf("missing %s in %v", w, files)
 		}
 	}
-	if contains(files, "README.md") {
+	if hasString(files, "README.md") {
 		t.Fatal("non-source included")
 	}
 }
@@ -52,7 +52,7 @@ func TestDiscoverNested(t *testing.T) {
 	p := t.TempDir()
 	writeTree(t, p, map[string]string{"packages/server/handler.rs": "x", "packages/client/App.vue": "x", "packages/server/Cargo.toml": "x"})
 	files := DiscoverSourceFiles(p, 200)
-	if !contains(files, "packages/server/handler.rs") || !contains(files, "packages/client/App.vue") || contains(files, "packages/server/Cargo.toml") {
+	if !hasString(files, "packages/server/handler.rs") || !hasString(files, "packages/client/App.vue") || hasString(files, "packages/server/Cargo.toml") {
 		t.Fatalf("got %v", files)
 	}
 }
@@ -115,7 +115,7 @@ func TestDiscoverMissingDir(t *testing.T) {
 func TestFindProjectsRoot(t *testing.T) {
 	w := t.TempDir()
 	writeTree(t, w, map[string]string{"package.json": "{}"})
-	if !contains(FindProjects(w), w) {
+	if !hasString(FindProjects(w), w) {
 		t.Fatal("root not a project")
 	}
 }
@@ -125,7 +125,7 @@ func TestFindProjectsSub(t *testing.T) {
 	w := t.TempDir()
 	writeTree(t, w, map[string]string{"a/package.json": "{}", "b/Cargo.toml": "[package]"})
 	got := FindProjects(w)
-	if !contains(got, filepath.Join(w, "a")) || !contains(got, filepath.Join(w, "b")) {
+	if !hasString(got, filepath.Join(w, "a")) || !hasString(got, filepath.Join(w, "b")) {
 		t.Fatalf("got %v", got)
 	}
 }
@@ -140,7 +140,7 @@ func TestFindProjectsSkips(t *testing.T) {
 			t.Fatalf("got %v", got)
 		}
 	}
-	if !contains(got, filepath.Join(w, "real")) {
+	if !hasString(got, filepath.Join(w, "real")) {
 		t.Fatalf("got %v", got)
 	}
 }

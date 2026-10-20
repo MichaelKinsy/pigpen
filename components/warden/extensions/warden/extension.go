@@ -67,7 +67,7 @@ type warden struct {
 	noted         map[string]bool
 	stats         stats
 	trace         []traceEntry
-	audit         auditState // audit lane: /warden audit running flag
+	auditState    auditState // audit lane: /warden audit running flag
 }
 
 // Extension returns the guard.

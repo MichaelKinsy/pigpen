@@ -34,10 +34,10 @@ func (w *warden) audit(ctx sdk.Context) error {
 	prompt := BuildAuditPrompt(cwd, FindProjects(cwd))
 	reportPath := AuditReportPath(cwd)
 	before := SnapshotReport(reportPath)
-	w.audit.running.Store(true)
+	w.auditState.running.Store(true)
 	ctx.Notify("pi-warden: Running workspace audit...", "info")
 	func() {
-		defer w.audit.running.Store(false)
+		defer w.auditState.running.Store(false)
 		for attempt := 0; attempt < 40; attempt++ {
 			if idle, err := ctx.IsIdle(); err != nil || idle {
 				break
@@ -65,7 +65,7 @@ func (w *warden) audit(ctx sdk.Context) error {
 
 // onAuditInput blocks new user messages while /warden audit runs. The audit's own prompt (source "extension") passes.
 func (w *warden) onAuditInput(ctx sdk.Context, data map[string]any) (any, error) {
-	if data["source"] == "extension" || !w.audit.running.Load() {
+	if data["source"] == "extension" || !w.auditState.running.Load() {
 		return nil, nil
 	}
 	ctx.Notify("pi-warden is running an audit. Please wait...", "warning")
