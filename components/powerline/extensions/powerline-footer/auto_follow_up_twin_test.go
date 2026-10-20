@@ -3,6 +3,7 @@ package powerline_footer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -42,8 +43,10 @@ type followUpRig struct {
 	headers   []http.Header
 	sent      []recordedSend
 	warnings  []string
+	sendErr   error
 	notices   []string
 	editor    string
+	editorErr error
 	branch    []map[string]any
 	hasUI     bool
 	signal    context.Context
@@ -65,7 +68,7 @@ func (r *followUpRig) Notify(message, level string) {
 func (r *followUpRig) EditorText() (string, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.editor, nil
+	return r.editor, r.editorErr
 }
 func (r *followUpRig) SetEditorText(text string) {
 	r.mu.Lock()
@@ -78,10 +81,14 @@ func (r *followUpRig) SendUserMessage(content any, deliverAs string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sent = append(r.sent, recordedSend{content, deliverAs})
-	return nil
+	return r.sendErr
 }
 
-func (r *followUpRig) editorText() string { v, _ := r.EditorText(); return v }
+func (r *followUpRig) editorText() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.editor
+}
 
 func (r *followUpRig) sentMessages() []recordedSend {
 	r.mu.Lock()
@@ -763,5 +770,80 @@ func TestRecentAgentContext(t *testing.T) {
 				t.Errorf("recentAgentContext = %q, want %q", got, c.want)
 			}
 		})
+	}
+}
+
+func TestAutoFollowUpAcceptsAnySuccessStatus(t *testing.T) {
+	h := newFollowUpRig(t, func(w http.ResponseWriter) {
+		w.WriteHeader(201)
+		jevRoute("follow_up", 0.95)(w)
+	})
+	if got := h.input(steerInput("also lint")); !reflect.DeepEqual(got, handledResult()) {
+		t.Errorf("result = %#v, warnings = %q", got, h.warningsSeen())
+	}
+}
+
+func TestAutoFollowUpARedirectWithoutALocationIsAFailure(t *testing.T) {
+	h := newFollowUpRig(t, jevStatus(302, "moved"))
+	h.input(steerInput("also lint"))
+	want := []string{"Auto follow-up unavailable (Jev returned 302: moved); sent as steering"}
+	if !reflect.DeepEqual(h.warningsSeen(), want) {
+		t.Errorf("warnings = %q, want %q", h.warningsSeen(), want)
+	}
+}
+
+func TestAutoFollowUpSendsTheMessageAsWritten(t *testing.T) {
+	// JSON.stringify leaves < > & alone; a Go encoder would write \u003c.
+	h := newFollowUpRig(t, jevRoute("steer", 0.9))
+	h.input(steerInput("a<b && c>d"))
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if !strings.Contains(h.rawBodies[0], `"new_message":"a<b && c>d"`) {
+		t.Errorf("body = %s", h.rawBodies[0])
+	}
+}
+
+func TestAutoFollowUpLeavesTheEditorAloneWhenItCannotBeRead(t *testing.T) {
+	h := newFollowUpRig(t, jevRoute("follow_up", 0.95))
+	h.release = make(chan struct{})
+	pending := asyncInput(h, steerInput("also lint"))
+	waitFor(t, "the message to be routing", func() bool { return h.fu.routingCount() == 1 })
+	h.mu.Lock()
+	h.editor, h.editorErr = "draft", errors.New("no host")
+	h.mu.Unlock()
+	h.pressEsc()
+	time.Sleep(50 * time.Millisecond)
+	close(h.release)
+	result(t, pending)
+	if got := h.editorText(); got != "draft" {
+		t.Errorf("editor = %q: a draft that could not be read was overwritten", got)
+	}
+}
+
+func TestAutoFollowUpSendFailureStaysAsSteering(t *testing.T) {
+	h := newFollowUpRig(t, jevRoute("follow_up", 0.95))
+	h.sendErr = errors.New("host refused")
+	if got := h.input(steerInput("also lint")); got != nil {
+		t.Errorf("result = %#v, want nil: the message must not be lost", got)
+	}
+	want := []string{"Auto follow-up unavailable (host refused); sent as steering"}
+	if !reflect.DeepEqual(h.warningsSeen(), want) {
+		t.Errorf("warnings = %q, want %q", h.warningsSeen(), want)
+	}
+}
+
+func TestRecentAgentContextEdges(t *testing.T) {
+	text := func(s string) map[string]any { return map[string]any{"type": "text", "text": s} }
+	assistant := func(blocks ...any) map[string]any {
+		return map[string]any{"type": "message", "message": map[string]any{"role": "assistant", "content": blocks}}
+	}
+	plain := map[string]any{"type": "message", "message": map[string]any{"role": "assistant", "content": "plain string"}}
+	got := recentAgentContext([]map[string]any{assistant(text("earlier")), plain})
+	if got != "earlier" {
+		t.Errorf("a message whose content is a string is skipped, not the end of the search: got %q", got)
+	}
+	notText := map[string]any{"type": "thinking", "text": "private"}
+	if got := recentAgentContext([]map[string]any{assistant(notText, text("answer"))}); got != "answer" {
+		t.Errorf("only text blocks count: got %q", got)
 	}
 }

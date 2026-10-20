@@ -1,0 +1,890 @@
+[
+ {
+  "name": "jev-endpoint",
+  "file": "auto_follow_up.go",
+  "find": "\"https://api.typesafe.ai/v1/systemone\"",
+  "replace": "\"https://api.typesafe.ai/v1/systemtwo\""
+ },
+ {
+  "name": "jev-timeout-longer",
+  "file": "auto_follow_up.go",
+  "find": "jevTimeout = 1500 * time.Millisecond",
+  "replace": "jevTimeout = 15000 * time.Millisecond"
+ },
+ {
+  "name": "jev-timeout-shorter",
+  "file": "auto_follow_up.go",
+  "find": "jevTimeout = 1500 * time.Millisecond",
+  "replace": "jevTimeout = 150 * time.Millisecond"
+ },
+ {
+  "name": "jev-confidence-threshold",
+  "file": "auto_follow_up.go",
+  "find": "minFollowUpConfidence = 0.8",
+  "replace": "minFollowUpConfidence = 0.9"
+ },
+ {
+  "name": "jev-confidence-strict",
+  "file": "auto_follow_up.go",
+  "find": "confidence >= minFollowUpConfidence",
+  "replace": "confidence > minFollowUpConfidence"
+ },
+ {
+  "name": "jev-follow-up-choice",
+  "file": "auto_follow_up.go",
+  "find": "return choice == \"follow_up\" &&",
+  "replace": "return choice == \"steer\" &&"
+ },
+ {
+  "name": "jev-model",
+  "file": "auto_follow_up.go",
+  "find": "Model: \"jev-latest\"",
+  "replace": "Model: \"jev\""
+ },
+ {
+  "name": "jev-task-default",
+  "file": "auto_follow_up.go",
+  "find": "orDefault(state.CurrentTask, \"Unknown\")",
+  "replace": "orDefault(state.CurrentTask, \"unknown\")"
+ },
+ {
+  "name": "jev-latest-text-default",
+  "file": "auto_follow_up.go",
+  "find": "orDefault(state.AgentLatestText, \"None yet\")",
+  "replace": "orDefault(state.AgentLatestText, \"None\")"
+ },
+ {
+  "name": "jev-new-message",
+  "file": "auto_follow_up.go",
+  "find": "NewMessage:      state.NewMessage,",
+  "replace": "NewMessage:      state.CurrentTask,"
+ },
+ {
+  "name": "jev-question-type",
+  "file": "auto_follow_up.go",
+  "find": "Type:         \"choice\",",
+  "replace": "Type:         \"select\","
+ },
+ {
+  "name": "jev-instructions",
+  "file": "auto_follow_up.go",
+  "find": "Should `new_message` be delivered now",
+  "replace": "Should `new_message` be delivered later"
+ },
+ {
+  "name": "jev-steer-criterion",
+  "file": "auto_follow_up.go",
+  "find": "Includes messages that mix a change to the current task with a later request.",
+  "replace": "Includes messages that mix a change."
+ },
+ {
+  "name": "jev-follow-up-criterion",
+  "file": "auto_follow_up.go",
+  "find": "so it can wait until the current task finishes.\"",
+  "replace": "so it waits.\""
+ },
+ {
+  "name": "jev-bearer",
+  "file": "auto_follow_up.go",
+  "find": "\"Bearer \"+apiKey",
+  "replace": "\"Token \"+apiKey"
+ },
+ {
+  "name": "jev-content-type",
+  "file": "auto_follow_up.go",
+  "find": "request.Header.Set(\"Content-Type\", \"application/json\")",
+  "replace": "request.Header.Set(\"Content-Type\", \"text/plain\")"
+ },
+ {
+  "name": "jev-method",
+  "file": "auto_follow_up.go",
+  "find": "http.MethodPost",
+  "replace": "http.MethodPut"
+ },
+ {
+  "name": "jev-html-escape",
+  "file": "auto_follow_up.go",
+  "find": "encoder.SetEscapeHTML(false) // JSON.stringify leaves < > & alone",
+  "replace": "_ = encoder"
+ },
+ {
+  "name": "jev-status-range-low",
+  "file": "auto_follow_up.go",
+  "find": "response.StatusCode < 200 ||",
+  "replace": "response.StatusCode < 201 ||"
+ },
+ {
+  "name": "jev-status-range-high",
+  "file": "auto_follow_up.go",
+  "find": "response.StatusCode > 299",
+  "replace": "response.StatusCode > 399"
+ },
+ {
+  "name": "jev-error-text",
+  "file": "auto_follow_up.go",
+  "find": "\"Jev returned %d: %s\"",
+  "replace": "\"Jev answered %d: %s\""
+ },
+ {
+  "name": "jev-error-slice",
+  "file": "auto_follow_up.go",
+  "find": "jsSliceUnits(string(raw), 200)",
+  "replace": "jsSliceUnits(string(raw), 199)"
+ },
+ {
+  "name": "jev-null-body",
+  "file": "auto_follow_up.go",
+  "find": "\"Cannot read properties of null (reading 'answers')\"",
+  "replace": "\"Jev returned an unexpected route answer\""
+ },
+ {
+  "name": "jev-unexpected-text",
+  "file": "auto_follow_up.go",
+  "find": "\"Jev returned an unexpected route answer\")\n\t}\n\treturn choice",
+  "replace": "\"Jev returned an unexpected answer\")\n\t}\n\treturn choice"
+ },
+ {
+  "name": "jev-accepts-any-choice",
+  "file": "auto_follow_up.go",
+  "find": "isString && (c == \"steer\" || c == \"follow_up\") && isNumber",
+  "replace": "isString && isNumber"
+ },
+ {
+  "name": "jev-accepts-missing-confidence",
+  "file": "auto_follow_up.go",
+  "find": "isString && (c == \"steer\" || c == \"follow_up\") && isNumber",
+  "replace": "isString && (c == \"steer\" || c == \"follow_up\")"
+ },
+ {
+  "name": "jev-timeout-text",
+  "file": "auto_follow_up.go",
+  "find": "jevAbortedByTimeout = \"The operation was aborted due to timeout\"",
+  "replace": "jevAbortedByTimeout = \"timeout\""
+ },
+ {
+  "name": "jev-fetch-failed-text",
+  "file": "auto_follow_up.go",
+  "find": "jevFetchFailed      = \"fetch failed\"",
+  "replace": "jevFetchFailed      = \"network error\""
+ },
+ {
+  "name": "jev-timeout-detect",
+  "file": "auto_follow_up.go",
+  "find": "if errors.Is(ctx.Err(), context.DeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "jev-slice-units",
+  "file": "auto_follow_up.go",
+  "find": "units := utf16.Encode([]rune(s))\n\tif len(units) <= n {",
+  "replace": "units := utf16.Encode([]rune(s))\n\tif len(units) < n {"
+ },
+ {
+  "name": "fu-disabled",
+  "file": "follow_up.go",
+  "find": "if !enabled || ev.Source",
+  "replace": "if ev.Source"
+ },
+ {
+  "name": "fu-source",
+  "file": "follow_up.go",
+  "find": "ev.Source != \"interactive\"",
+  "replace": "ev.Source == \"interactive\""
+ },
+ {
+  "name": "fu-source-extension",
+  "file": "follow_up.go",
+  "find": "ev.Source != \"interactive\" ||",
+  "replace": "ev.Source == \"extension\" ||"
+ },
+ {
+  "name": "fu-streaming",
+  "file": "follow_up.go",
+  "find": "ev.StreamingBehavior != \"steer\"",
+  "replace": "ev.StreamingBehavior == \"\""
+ },
+ {
+  "name": "fu-slash",
+  "file": "follow_up.go",
+  "find": "strings.HasPrefix(strings.TrimLeftFunc(ev.Text, isJSSpace), \"/\")",
+  "replace": "strings.HasPrefix(ev.Text, \"/\")"
+ },
+ {
+  "name": "fu-slash-contains",
+  "file": "follow_up.go",
+  "find": "strings.HasPrefix(strings.TrimLeftFunc(ev.Text, isJSSpace), \"/\")",
+  "replace": "strings.Contains(ev.Text, \"/\")"
+ },
+ {
+  "name": "fu-api-key-trim",
+  "file": "follow_up.go",
+  "find": "jsTrim(f.getenv(\"TYPESAFE_API_KEY\"))",
+  "replace": "f.getenv(\"TYPESAFE_API_KEY\")"
+ },
+ {
+  "name": "fu-api-key-name",
+  "file": "follow_up.go",
+  "find": "f.getenv(\"TYPESAFE_API_KEY\")",
+  "replace": "f.getenv(\"JEV_API_KEY\")"
+ },
+ {
+  "name": "fu-no-key-text",
+  "file": "follow_up.go",
+  "find": "\"Auto follow-up needs TYPESAFE_API_KEY; sent as steering\"",
+  "replace": "\"Auto follow-up needs a key\""
+ },
+ {
+  "name": "fu-no-key-level",
+  "file": "follow_up.go",
+  "find": "sent as steering\", \"warning\")\n\t\treturn nil\n\t}\n\n\tf.mu.Lock()",
+  "replace": "sent as steering\", \"info\")\n\t\treturn nil\n\t}\n\n\tf.mu.Lock()"
+ },
+ {
+  "name": "fu-failure-text",
+  "file": "follow_up.go",
+  "find": "h.Notify(\"Auto follow-up unavailable (\"+err.Error()+\"); sent as steering\", \"warning\")\n\t\treturn nil\n\t}\n\tif !followUp",
+  "replace": "h.Notify(\"Auto follow-up failed (\"+err.Error()+\"); sent as steering\", \"warning\")\n\t\treturn nil\n\t}\n\tif !followUp"
+ },
+ {
+  "name": "fu-failure-level",
+  "file": "follow_up.go",
+  "find": "sent as steering\", \"warning\")\n\t\treturn nil\n\t}\n\tif !followUp",
+  "replace": "sent as steering\", \"error\")\n\t\treturn nil\n\t}\n\tif !followUp"
+ },
+ {
+  "name": "fu-send-failure-silent",
+  "file": "follow_up.go",
+  "find": "if err := h.SendUserMessage(content, \"followUp\"); err != nil {\n\t\th.Notify(\"Auto follow-up unavailable (\"+err.Error()+\"); sent as steering\", \"warning\")\n\t\treturn nil\n\t}",
+  "replace": "_ = h.SendUserMessage(content, \"followUp\")"
+ },
+ {
+  "name": "fu-deliver-as",
+  "file": "follow_up.go",
+  "find": "h.SendUserMessage(content, \"followUp\")",
+  "replace": "h.SendUserMessage(content, \"steer\")"
+ },
+ {
+  "name": "fu-not-follow-up",
+  "file": "follow_up.go",
+  "find": "if !followUp {\n\t\treturn nil\n\t}",
+  "replace": "if false {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "fu-handled-action",
+  "file": "follow_up.go",
+  "find": "return map[string]any{\"action\": \"handled\"}\n}\n\n// watchAbort",
+  "replace": "return map[string]any{\"action\": \"continue\"}\n}\n\n// watchAbort"
+ },
+ {
+  "name": "fu-restored-handled",
+  "file": "follow_up.go",
+  "find": "if restored {\n\t\treturn map[string]any{\"action\": \"handled\"}\n\t}",
+  "replace": "if restored {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "fu-restored-ignored",
+  "file": "follow_up.go",
+  "find": "if restored {",
+  "replace": "if false {"
+ },
+ {
+  "name": "fu-generation-guard",
+  "file": "follow_up.go",
+  "find": "if generation != current {",
+  "replace": "if false {"
+ },
+ {
+  "name": "fu-generation-start",
+  "file": "follow_up.go",
+  "find": "func (f *autoFollowUp) sessionStart() {\n\tf.mu.Lock()\n\tdefer f.mu.Unlock()\n\tf.generation++",
+  "replace": "func (f *autoFollowUp) sessionStart() {\n\tf.mu.Lock()\n\tdefer f.mu.Unlock()"
+ },
+ {
+  "name": "fu-generation-shutdown",
+  "file": "follow_up.go",
+  "find": "func (f *autoFollowUp) sessionShutdown() {\n\tf.mu.Lock()\n\tdefer f.mu.Unlock()\n\tf.generation++",
+  "replace": "func (f *autoFollowUp) sessionShutdown() {\n\tf.mu.Lock()\n\tdefer f.mu.Unlock()"
+ },
+ {
+  "name": "fu-generation-abort",
+  "file": "follow_up.go",
+  "find": "if routing.removed || generation != f.generation {",
+  "replace": "if routing.removed {"
+ },
+ {
+  "name": "fu-session-start-clears-task",
+  "file": "follow_up.go",
+  "find": "f.generation++\n\tf.lastPrompt = \"\"",
+  "replace": "f.generation++"
+ },
+ {
+  "name": "fu-before-agent-start",
+  "file": "follow_up.go",
+  "find": "f.lastPrompt = prompt",
+  "replace": "f.lastPrompt = f.lastPrompt"
+ },
+ {
+  "name": "fu-images",
+  "file": "follow_up.go",
+  "find": "if len(ev.Images) > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "fu-images-empty",
+  "file": "follow_up.go",
+  "find": "if len(ev.Images) > 0 {",
+  "replace": "if ev.Images != nil {"
+ },
+ {
+  "name": "fu-image-order",
+  "file": "follow_up.go",
+  "find": "append([]any{map[string]any{\"type\": \"text\", \"text\": ev.Text}}, ev.Images...)",
+  "replace": "append(ev.Images, map[string]any{\"type\": \"text\", \"text\": ev.Text})"
+ },
+ {
+  "name": "fu-ui-gate",
+  "file": "follow_up.go",
+  "find": "if h.HasUI() {\n\t\tif signal",
+  "replace": "if true {\n\t\tif signal"
+ },
+ {
+  "name": "fu-routing-removed",
+  "file": "follow_up.go",
+  "find": "\t\trouting.removed = true\n",
+  "replace": ""
+ },
+ {
+  "name": "fu-routing-remove",
+  "file": "follow_up.go",
+  "find": "\t\t\t\tf.routing = append(f.routing[:i], f.routing[i+1:]...)\n",
+  "replace": ""
+ },
+ {
+  "name": "fu-aborted-listener",
+  "file": "follow_up.go",
+  "find": "if routing.signal.Err() == nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "fu-chain",
+  "file": "follow_up.go",
+  "find": "\t\t<-previous\n",
+  "replace": ""
+ },
+ {
+  "name": "fu-chain-close",
+  "file": "follow_up.go",
+  "find": "\t\tdefer close(mine)\n",
+  "replace": ""
+ },
+ {
+  "name": "fu-restore-signal-match",
+  "file": "follow_up.go",
+  "find": "if input.signal == signal && !input.restored {",
+  "replace": "if !input.restored {"
+ },
+ {
+  "name": "fu-restore-once",
+  "file": "follow_up.go",
+  "find": "if input.signal == signal && !input.restored {",
+  "replace": "if input.signal == signal {"
+ },
+ {
+  "name": "fu-restore-mark",
+  "file": "follow_up.go",
+  "find": "\t\t\tinput.restored = true\n",
+  "replace": ""
+ },
+ {
+  "name": "fu-restore-join",
+  "file": "follow_up.go",
+  "find": "strings.Join(parts, \"\\n\\n\")",
+  "replace": "strings.Join(parts, \"\\n\")"
+ },
+ {
+  "name": "fu-restore-draft-first",
+  "file": "follow_up.go",
+  "find": "append(texts, draft)",
+  "replace": "append([]string{draft}, texts...)"
+ },
+ {
+  "name": "fu-restore-blank",
+  "file": "follow_up.go",
+  "find": "if jsTrim(text) != \"\" {",
+  "replace": "if text != \"\" {"
+ },
+ {
+  "name": "fu-restore-draft-error",
+  "file": "follow_up.go",
+  "find": "if err != nil {\n\t\treturn // upstream",
+  "replace": "if false {\n\t\treturn // upstream"
+ },
+ {
+  "name": "fu-task",
+  "file": "follow_up.go",
+  "find": "currentTask, generation := f.lastPrompt, f.generation",
+  "replace": "currentTask, generation := \"\", f.generation"
+ },
+ {
+  "name": "fu-agent-context",
+  "file": "follow_up.go",
+  "find": "AgentLatestText: recentAgentContext(h.Branch())",
+  "replace": "AgentLatestText: \"\""
+ },
+ {
+  "name": "fu-recent-role",
+  "file": "follow_up.go",
+  "find": "if message[\"role\"] != \"assistant\" {",
+  "replace": "if message[\"role\"] != \"user\" {"
+ },
+ {
+  "name": "fu-recent-type",
+  "file": "follow_up.go",
+  "find": "if entry[\"type\"] != \"message\" {",
+  "replace": "if entry[\"type\"] == \"\" {"
+ },
+ {
+  "name": "fu-recent-text-type",
+  "file": "follow_up.go",
+  "find": "if block[\"type\"] != \"text\" {",
+  "replace": "if block[\"type\"] == \"\" {"
+ },
+ {
+  "name": "fu-recent-trim",
+  "file": "follow_up.go",
+  "find": "if text = jsTrim(text); text != \"\" {",
+  "replace": "if text != \"\" {"
+ },
+ {
+  "name": "fu-recent-limit",
+  "file": "follow_up.go",
+  "find": "return jsSliceUnits(text, 200)",
+  "replace": "return jsSliceUnits(text, 100)"
+ },
+ {
+  "name": "fu-recent-latest",
+  "file": "follow_up.go",
+  "find": "for i := len(branch) - 1; i >= 0; i-- {",
+  "replace": "for i := 0; i < len(branch); i++ {"
+ },
+ {
+  "name": "fu-recent-skip-nonarray",
+  "file": "follow_up.go",
+  "find": "if !ok {\n\t\t\tcontinue\n\t\t}\n\t\tfor _, item",
+  "replace": "if !ok {\n\t\t\treturn \"\"\n\t\t}\n\t\tfor _, item"
+ },
+ {
+  "name": "fu-lock-restore",
+  "file": "follow_up.go",
+  "find": "\tf.mu.Lock()\n\tdefer f.mu.Unlock()\n\tif routing.removed",
+  "replace": "\tif routing.removed"
+ },
+ {
+  "name": "ext-input-event",
+  "file": "followup_ext.go",
+  "find": "e.OnEvent(sdk.EventInput,",
+  "replace": "e.OnEvent(sdk.EventUserBash,"
+ },
+ {
+  "name": "ext-before-agent-start",
+  "file": "followup_ext.go",
+  "find": "e.OnEvent(sdk.EventBeforeAgentStart,",
+  "replace": "e.OnEvent(sdk.EventAgentStart,"
+ },
+ {
+  "name": "ext-prompt-key",
+  "file": "followup_ext.go",
+  "find": "data[\"prompt\"].(string)",
+  "replace": "data[\"text\"].(string)"
+ },
+ {
+  "name": "ext-session-start",
+  "file": "followup_ext.go",
+  "find": "e.OnEvent(sdk.EventSessionStart, func(sdk.Context, map[string]any) (any, error) {\n\t\tfu.sessionStart()",
+  "replace": "e.OnEvent(sdk.EventSessionStart, func(sdk.Context, map[string]any) (any, error) {\n\t\tfu.sessionShutdown()"
+ },
+ {
+  "name": "ext-session-shutdown",
+  "file": "followup_ext.go",
+  "find": "\t\tfu.sessionShutdown()\n\t\treturn nil, nil\n\t})\n\te.OnEvent(sdk.EventBeforeAgentStart",
+  "replace": "\t\treturn nil, nil\n\t})\n\te.OnEvent(sdk.EventBeforeAgentStart"
+ },
+ {
+  "name": "ext-enabled",
+  "file": "followup_ext.go",
+  "find": "enabled := a.core(ctx).config.AutoFollowUp",
+  "replace": "enabled := true"
+ },
+ {
+  "name": "ext-text-key",
+  "file": "followup_ext.go",
+  "find": "ev.Text, _ = data[\"text\"].(string)",
+  "replace": "ev.Text, _ = data[\"prompt\"].(string)"
+ },
+ {
+  "name": "ext-source-key",
+  "file": "followup_ext.go",
+  "find": "ev.Source, _ = data[\"source\"].(string)",
+  "replace": "ev.Source = \"interactive\""
+ },
+ {
+  "name": "ext-streaming-key",
+  "file": "followup_ext.go",
+  "find": "ev.StreamingBehavior, _ = data[\"streamingBehavior\"].(string)",
+  "replace": "ev.StreamingBehavior = \"steer\""
+ },
+ {
+  "name": "ext-images-key",
+  "file": "followup_ext.go",
+  "find": "ev.Images, _ = data[\"images\"].([]any)",
+  "replace": ""
+ },
+ {
+  "name": "ext-branch",
+  "file": "followup_ext.go",
+  "find": "GetBranch(nil)",
+  "replace": "GetBranch(new(string))"
+ },
+ {
+  "name": "ext-signal",
+  "file": "followup_ext.go",
+  "find": "return h.ctx.Signal()",
+  "replace": "return nil"
+ },
+ {
+  "name": "ext-editor-text",
+  "file": "followup_ext.go",
+  "find": "return h.ctx.GetEditorText()",
+  "replace": "return \"\", nil"
+ },
+ {
+  "name": "ext-set-editor-text",
+  "file": "followup_ext.go",
+  "find": "h.ctx.SetEditorText(text)",
+  "replace": ""
+ },
+ {
+  "name": "ext-notify",
+  "file": "followup_ext.go",
+  "find": "h.ctx.Notify(message, level)",
+  "replace": ""
+ },
+ {
+  "name": "ext-deliver-as",
+  "file": "followup_ext.go",
+  "find": "return h.ctx.SendUserMessage(content, deliverAs)",
+  "replace": "return h.ctx.SendUserMessage(content, \"steer\")"
+ },
+ {
+  "name": "wire-follow-up",
+  "file": "extension.go",
+  "find": "\tregisterFollowUp(e, a)\n",
+  "replace": ""
+ },
+ {
+  "name": "refusal-perf-enabled",
+  "file": "refusal.go",
+  "find": "if readEditorPerfOptions(env).Enabled {",
+  "replace": "if false {"
+ },
+ {
+  "name": "perf-enabled-value",
+  "file": "editor_performance.go",
+  "find": "enabled := env(\"POWERLINE_DEBUG_PERF\") == \"1\"",
+  "replace": "enabled := env(\"POWERLINE_DEBUG_PERF\") != \"\""
+ },
+ {
+  "name": "perf-switch-only-zero",
+  "file": "editor_performance.go",
+  "find": "return !enabled || env(name) != \"0\"",
+  "replace": "return !enabled || env(name) == \"1\""
+ },
+ {
+  "name": "perf-switch-without-profiling",
+  "file": "editor_performance.go",
+  "find": "return !enabled || env(name) != \"0\"",
+  "replace": "return env(name) != \"0\""
+ },
+ {
+  "name": "perf-fast-render-name",
+  "file": "editor_performance.go",
+  "find": "on(\"POWERLINE_PERF_FAST_RENDER\")",
+  "replace": "on(\"POWERLINE_PERF_EDITOR_CHROME\")"
+ },
+ {
+  "name": "perf-editor-chrome-name",
+  "file": "editor_performance.go",
+  "find": "on(\"POWERLINE_PERF_EDITOR_CHROME\")",
+  "replace": "on(\"POWERLINE_PERF_WIDGETS\")"
+ },
+ {
+  "name": "perf-widgets-name",
+  "file": "editor_performance.go",
+  "find": "on(\"POWERLINE_PERF_WIDGETS\")",
+  "replace": "on(\"POWERLINE_PERF_BASH_WIDGETS\")"
+ },
+ {
+  "name": "perf-bash-widgets-name",
+  "file": "editor_performance.go",
+  "find": "on(\"POWERLINE_PERF_BASH_WIDGETS\")",
+  "replace": "on(\"POWERLINE_PERF_LAST_PROMPT\")"
+ },
+ {
+  "name": "perf-last-prompt-name",
+  "file": "editor_performance.go",
+  "find": "on(\"POWERLINE_PERF_LAST_PROMPT\")",
+  "replace": "on(\"POWERLINE_PERF_FAST_RENDER\")"
+ },
+ {
+  "name": "perf-nil-env",
+  "file": "editor_performance.go",
+  "find": "if env == nil {\n\t\tenv = os.Getenv\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "perf-measure-defer",
+  "file": "editor_performance.go",
+  "find": "defer func() { p.record(name, p.perfMs()-startedAt) }()\n\treturn operation()",
+  "replace": "result := operation()\n\tp.record(name, p.perfMs()-startedAt)\n\treturn result"
+ },
+ {
+  "name": "perf-count-adds-time",
+  "file": "editor_performance.go",
+  "find": "func (p *editorPerfProfiler) count(name string) { p.metric(name).count++ }",
+  "replace": "func (p *editorPerfProfiler) count(name string) { p.record(name, 1) }"
+ },
+ {
+  "name": "perf-draft-sampling",
+  "file": "editor_performance.go",
+  "find": "p.draftObservationCount%32 != 1",
+  "replace": "p.draftObservationCount%32 != 0"
+ },
+ {
+  "name": "perf-draft-sampling-period",
+  "file": "editor_performance.go",
+  "find": "p.draftObservationCount%32 != 1",
+  "replace": "p.draftObservationCount%16 != 1"
+ },
+ {
+  "name": "perf-draft-single-line",
+  "file": "editor_performance.go",
+  "find": "if len(lines) > 1 &&",
+  "replace": "if len(lines) > 0 &&"
+ },
+ {
+  "name": "perf-draft-newlines",
+  "file": "editor_performance.go",
+  "find": "chars := max(0, len(lines)-1)",
+  "replace": "chars := len(lines)"
+ },
+ {
+  "name": "perf-draft-units",
+  "file": "editor_performance.go",
+  "find": "chars += utf16Len(line)",
+  "replace": "chars += len(line)"
+ },
+ {
+  "name": "perf-draft-max",
+  "file": "editor_performance.go",
+  "find": "p.maxDraftChars = max(p.maxDraftChars, chars)",
+  "replace": "p.maxDraftChars = chars"
+ },
+ {
+  "name": "perf-reset-metrics",
+  "file": "editor_performance.go",
+  "find": "func (p *editorPerfProfiler) reset() {\n\tp.metrics = map[string]*editorPerfMetric{}",
+  "replace": "func (p *editorPerfProfiler) reset() {"
+ },
+ {
+  "name": "perf-reset-clock",
+  "file": "editor_performance.go",
+  "find": "\tp.startedAt = p.nowMs()\n\tp.maxDraftChars = 0",
+  "replace": "\tp.maxDraftChars = 0"
+ },
+ {
+  "name": "perf-reset-draft",
+  "file": "editor_performance.go",
+  "find": "\tp.maxDraftChars = 0\n\tp.draftObservationCount = 0\n}",
+  "replace": "\tp.draftObservationCount = 0\n}"
+ },
+ {
+  "name": "perf-reset-observations",
+  "file": "editor_performance.go",
+  "find": "\tp.maxDraftChars = 0\n\tp.draftObservationCount = 0\n}",
+  "replace": "\tp.maxDraftChars = 0\n}"
+ },
+ {
+  "name": "perf-input-metric",
+  "file": "editor_performance.go",
+  "find": "p.metrics[\"input.total\"]",
+  "replace": "p.metrics[\"input.base-editor\"]"
+ },
+ {
+  "name": "perf-render-metric",
+  "file": "editor_performance.go",
+  "find": "p.metrics[\"editor.render.total\"]",
+  "replace": "p.metrics[\"editor.render.base\"]"
+ },
+ {
+  "name": "perf-per-input",
+  "file": "editor_performance.go",
+  "find": "jsToFixed(float64(renderCount)/float64(inputCount), 2)",
+  "replace": "jsToFixed(float64(renderCount)/float64(inputCount), 1)"
+ },
+ {
+  "name": "perf-elapsed",
+  "file": "editor_performance.go",
+  "find": "jsToFixed((p.nowMs()-p.startedAt)/1000, 1)",
+  "replace": "jsToFixed((p.nowMs()-p.startedAt)/100, 1)"
+ },
+ {
+  "name": "perf-title",
+  "file": "editor_performance.go",
+  "find": "\"Powerline editor perf (\"",
+  "replace": "\"Editor perf (\""
+ },
+ {
+  "name": "perf-ab-line",
+  "file": "editor_performance.go",
+  "find": "\"A/B: fast-render=\"",
+  "replace": "\"A/B: fast=\""
+ },
+ {
+  "name": "perf-ab-chrome",
+  "file": "editor_performance.go",
+  "find": "\", editor-chrome=\" + onOff(o.EditorChrome)",
+  "replace": "\", editor-chrome=\" + onOff(o.FastRender)"
+ },
+ {
+  "name": "perf-ab-widgets",
+  "file": "editor_performance.go",
+  "find": "\", widgets=\" + onOff(o.Widgets)",
+  "replace": "\", widgets=\" + onOff(o.BashWidgets)"
+ },
+ {
+  "name": "perf-ab-bash",
+  "file": "editor_performance.go",
+  "find": "\", bash-widgets=\" + onOff(o.BashWidgets)",
+  "replace": "\", bash-widgets=\" + onOff(o.Widgets)"
+ },
+ {
+  "name": "perf-ab-last",
+  "file": "editor_performance.go",
+  "find": "\", last-prompt=\" + onOff(o.LastPrompt)",
+  "replace": "\", last-prompt=\" + onOff(o.Widgets)"
+ },
+ {
+  "name": "perf-counts-line",
+  "file": "editor_performance.go",
+  "find": "\", editor-renders=\"",
+  "replace": "\", renders=\""
+ },
+ {
+  "name": "perf-zero-form",
+  "file": "editor_performance.go",
+  "find": "if m.totalMs == 0 && m.maxMs == 0 {",
+  "replace": "if m.totalMs == 0 || m.maxMs == 0 {"
+ },
+ {
+  "name": "perf-zero-form-and",
+  "file": "editor_performance.go",
+  "find": "if m.totalMs == 0 && m.maxMs == 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "perf-avg",
+  "file": "editor_performance.go",
+  "find": "jsToFixed(m.totalMs/float64(m.count), 3)",
+  "replace": "jsToFixed(m.totalMs, 3)"
+ },
+ {
+  "name": "perf-max-digits",
+  "file": "editor_performance.go",
+  "find": "jsToFixed(m.maxMs, 3)",
+  "replace": "jsToFixed(m.maxMs, 1)"
+ },
+ {
+  "name": "perf-total-digits",
+  "file": "editor_performance.go",
+  "find": "jsToFixed(m.totalMs, 1)+\"ms\")",
+  "replace": "jsToFixed(m.totalMs, 3)+\"ms\")"
+ },
+ {
+  "name": "perf-sort",
+  "file": "editor_performance.go",
+  "find": "slices.SortFunc(names, jsLocaleCompare)",
+  "replace": "slices.Sort(names)"
+ },
+ {
+  "name": "perf-record-max",
+  "file": "editor_performance.go",
+  "find": "m.maxMs = max(m.maxMs, durationMs)",
+  "replace": "m.maxMs = durationMs"
+ },
+ {
+  "name": "perf-record-total",
+  "file": "editor_performance.go",
+  "find": "m.totalMs += durationMs",
+  "replace": "m.totalMs = durationMs"
+ },
+ {
+  "name": "perf-locale-case",
+  "file": "editor_performance.go",
+  "find": "if unicode.IsLower(ra[i]) {\n\t\t\t\treturn -1",
+  "replace": "if unicode.IsUpper(ra[i]) {\n\t\t\t\treturn -1"
+ },
+ {
+  "name": "perf-locale-length",
+  "file": "editor_performance.go",
+  "find": "if c := cmp.Compare(len(ra), len(rb)); c != 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "perf-locale-order",
+  "file": "editor_performance.go",
+  "find": "const localeOrder = \" _-,;:!?.",
+  "replace": "const localeOrder = \" _,-;:!?."
+ },
+ {
+  "name": "perf-locale-fold",
+  "file": "editor_performance.go",
+  "find": "weights[r] = weights[unicode.ToLower(r)]",
+  "replace": "next++\n\t\t\tweights[r] = next"
+ },
+ {
+  "name": "comp-needs-apply",
+  "file": "editor_composition.go",
+  "find": "candidate == nil || candidate.GetSuggestions == nil || candidate.ApplyCompletion == nil",
+  "replace": "candidate == nil || candidate.GetSuggestions == nil"
+ },
+ {
+  "name": "comp-needs-suggestions",
+  "file": "editor_composition.go",
+  "find": "candidate == nil || candidate.GetSuggestions == nil || candidate.ApplyCompletion == nil",
+  "replace": "candidate == nil || candidate.ApplyCompletion == nil"
+ },
+ {
+  "name": "comp-no-candidate",
+  "file": "editor_composition.go",
+  "find": "candidate == nil || candidate.GetSuggestions",
+  "replace": "candidate.GetSuggestions"
+ },
+ {
+  "name": "comp-setter-not-called",
+  "file": "editor_composition.go",
+  "find": "\tsetter.SetAutocompleteProvider(provider)\n",
+  "replace": ""
+ },
+ {
+  "name": "comp-setter-fallback",
+  "file": "editor_composition.go",
+  "find": "\t\tif held := getEditorAutocompleteProvider(previousEditor); held != nil {\n\t\t\treturn held\n\t\t}\n\t\treturn provider",
+  "replace": "\t\treturn provider"
+ },
+ {
+  "name": "comp-held-after-set",
+  "file": "editor_composition.go",
+  "find": "\tif held := getEditorAutocompleteProvider(previousEditor); held != nil {\n\t\treturn held\n\t}\n\treturn provider\n}",
+  "replace": "\treturn provider\n}"
+ }
+]

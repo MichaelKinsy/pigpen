@@ -66,6 +66,8 @@ type followUpHostRig struct {
 	editor  string
 	branch  []any
 	setText []string
+	// branchArgs are the arguments of the getBranch reads.
+	branchArgs []any
 }
 
 func startFollowUp(t *testing.T, settings string) *followUpHostRig {
@@ -84,6 +86,7 @@ func startFollowUp(t *testing.T, settings string) *followUpHostRig {
 			if args["method"] == "getBranch" {
 				rig.mu.Lock()
 				defer rig.mu.Unlock()
+				rig.branchArgs = append(rig.branchArgs, args["args"])
 				return append([]any{}, rig.branch...), ""
 			}
 			return nil, "unsupported"
@@ -165,6 +168,13 @@ func TestAutoFollowUpMovesAConfidentMessageToTheFollowUpQueue(t *testing.T) {
 	if !reflect.DeepEqual(sends[0].Args["content"], wantContent) || !reflect.DeepEqual(sends[0].Args["options"], map[string]any{"deliverAs": "followUp"}) {
 		t.Errorf("sendUserMessage args = %#v", sends[0].Args)
 	}
+	h.mu.Lock()
+	for _, args := range h.branchArgs {
+		if m, _ := args.(map[string]any); m == nil || m["fromId"] != nil {
+			t.Errorf("getBranch args = %v, want fromId null (the leaf)", args)
+		}
+	}
+	h.mu.Unlock()
 	reqs := jev.seen()
 	state, _ := reqs[0]["state"].(map[string]any)
 	if len(reqs) != 1 || state["current_task"] != "Fix the checkout bug" || state["agent_latest_text"] != "Reading the code." || state["new_message"] != "What is the weather in Lisbon?" {
