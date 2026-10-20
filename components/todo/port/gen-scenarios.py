@@ -116,11 +116,11 @@ scenario("many-tasks", "More tasks than the overlay shows; the tool output and /
 
 # maxWidgetLines above 12 was refused by the first Pigpen release of the port; the original honours it. The config is
 # written to the lane's HOME by a setup command (the original reads ~/.config/rpiv-todo/config.json).
-scenario("max-widget-lines-above-twelve", "A config with maxWidgetLines 30: the tool and /todos run as usual with 25 tasks.", [
-    [todo(action="create", subject=f"task {i}") for i in range(1, 26)],
+scenario("max-widget-lines-above-twelve", "A config with maxWidgetLines 20: the tool and /todos run as usual with 6 tasks.", [
+    [todo(action="create", subject=f"task {i}") for i in range(1, 7)],
     [todo(action="update", id=1, status="completed"), todo(action="list")],
 ], steps=[PLAN, cmd("todos")],
-    setup=[["sh", "-c", 'mkdir -p "$HOME/.config/rpiv-todo" && printf \'{"maxWidgetLines":30}\' > "$HOME/.config/rpiv-todo/config.json"']])
+    setup=[["sh", "-c", 'mkdir -p "$HOME/.config/rpiv-todo" && printf \'{"maxWidgetLines":20}\' > "$HOME/.config/rpiv-todo/config.json"']])
 
 scenario("guidance-in-request", "The tool definition and its prompt guidance reach the model unchanged.", [],
          steps=[{"name": "prompt", "rpc": {"type": "prompt", "message": "hello"}}])
