@@ -33,6 +33,7 @@ export const SINGLES = {
   // Packages no Piglet selects; measured so every extension in components/ has a row.
   'dirty-repo-guard': { packages: ['dirty-repo-guard'], origin: 'dirty-repo-guard' },
   ahp: { packages: ['ahp'], origin: 'ahp' },
+  'ask-user-question': { packages: ['pitui', 'ask-user-question'], origin: 'ask-user-question' },
 };
 
 const args = process.argv.slice(2);

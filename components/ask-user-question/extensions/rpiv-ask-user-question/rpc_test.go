@@ -205,3 +205,13 @@ func TestRPCPreviewCutNeverSplitsAnAstralCharacter(t *testing.T) {
 	r.ask(askArgs(questionArg("Which?", "H", false, map[string]any{"label": "A", "description": "a", "preview": preview}, optArg("B", "b"))))
 	eq(t, r.dialogAt(0).Title, "[H] Which?\n\n--- 1. A preview ---\n"+strings.Repeat("x", 599), "title")
 }
+
+// The multi-select dialog states the answer format in its title (rpc-fallback.ts): the exact English fallback
+// text, because it is what the model's user reads and types against.
+func TestRPCMultiSelectDialogTitleStatesTheAnswerFormat(t *testing.T) {
+	r := startRig(t, rpcOpts(), pick("1"))
+	r.ask(multiArgs())
+	eq(t, r.dialogAt(0).Title,
+		"[Colors] Pick colors?\n\n1. red — r\n2. green — g\n3. blue — b\n\n"+
+			`Enter the numbers of all that apply, comma-separated (e.g. "1,3"), or type a custom answer as plain text.`, "title")
+}
