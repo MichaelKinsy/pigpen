@@ -1,0 +1,2057 @@
+[
+ {
+  "name": "preview-queued",
+  "description": "one queued global item: the bar says q 1 and the preview row shows its text with white space collapsed",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "a1b2c3d4",
+    "text": "run   the\n tests  after lunch",
+    "createdAt": 100,
+    "updatedAt": 100,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ]
+ },
+ {
+  "name": "preview-blocked-leads",
+  "description": "a blocked item leads the preview and the count; a failed one counts as blocked; a sent one is gone",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "a0000001",
+    "text": "queued first",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000002",
+    "text": "needs a retry",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "blocked",
+    "error": "Compaction cancelled"
+   },
+   {
+    "id": "a0000003",
+    "text": "broke",
+    "createdAt": 3,
+    "updatedAt": 3,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "failed",
+    "error": "boom"
+   },
+   {
+    "id": "a0000004",
+    "text": "done",
+    "createdAt": 4,
+    "updatedAt": 1767323045000,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "sent"
+   }
+  ]
+ },
+ {
+  "name": "preview-delivering",
+  "description": "a delivering item reads sending:",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "b0000001",
+    "text": "on its way",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "delivering"
+   }
+  ]
+ },
+ {
+  "name": "scope-other-session",
+  "description": "items of another session or project are not shown, a project item shows in its own directory",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "c0000001",
+    "text": "other session",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s2"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c0000002",
+    "text": "this session",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c0000003",
+    "text": "other project",
+    "createdAt": 3,
+    "updatedAt": 3,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "/elsewhere/proj"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c0000004",
+    "text": "this project",
+    "createdAt": 4,
+    "updatedAt": 4,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}",
+     "alias": "here"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ]
+ },
+ {
+  "name": "compacting-count",
+  "description": "during a compaction the segment reads compact q",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "d0000001",
+    "text": "one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "d0000002",
+    "text": "two",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "steps": [
+   {
+    "event": "session_before_compact"
+   }
+  ]
+ },
+ {
+  "name": "empty-queue",
+  "description": "no items: no segment, no preview",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  }
+ },
+ {
+  "name": "cmd-usage",
+  "description": "/queue with an unknown action and the usage lines",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "steps": [
+   {
+    "command": "queue",
+    "args": "bogus"
+   },
+   {
+    "command": "queue",
+    "args": "alias"
+   },
+   {
+    "command": "queue",
+    "args": "clear"
+   },
+   {
+    "command": "queue",
+    "args": "target"
+   },
+   {
+    "command": "queue",
+    "args": "target a1"
+   },
+   {
+    "command": "queue",
+    "args": "send"
+   },
+   {
+    "command": "queue",
+    "args": "retry"
+   }
+  ]
+ },
+ {
+  "name": "cmd-alias",
+  "description": "aliases: set with a path, default path, a path with spaces, invalid names",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "steps": [
+   {
+    "command": "queue",
+    "args": "alias work {CWD}/sub"
+   },
+   {
+    "command": "queue",
+    "args": "alias   home"
+   },
+   {
+    "command": "queue",
+    "args": "alias spaced {CWD}/a    b"
+   },
+   {
+    "command": "queue",
+    "args": "alias bad! x"
+   },
+   {
+    "command": "queue",
+    "args": "alias 7 /tmp/seven"
+   },
+   {
+    "command": "queue",
+    "args": "alias work {CWD}/other"
+   }
+  ],
+  "aliases": {
+   "existing": "{CWD}/old"
+  }
+ },
+ {
+  "name": "cmd-clear",
+  "description": "/queue clear by id prefix, unknown id, and all",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "e1000001",
+    "text": "one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "e1000002",
+    "text": "two",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "e2000003",
+    "text": "three",
+    "createdAt": 3,
+    "updatedAt": 3,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "steps": [
+   {
+    "command": "queue",
+    "args": "clear e1000001"
+   },
+   {
+    "command": "queue",
+    "args": "clear e1"
+   },
+   {
+    "command": "queue",
+    "args": "clear nosuch"
+   },
+   {
+    "command": "queue",
+    "args": "clear all"
+   },
+   {
+    "command": "queue",
+    "args": "clear all"
+   }
+  ]
+ },
+ {
+  "name": "cmd-target",
+  "description": "/queue target: current, global, aliases (known and unknown)",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "f1000001",
+    "text": "retarget me",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "aliases": {
+   "work": "{CWD}/sub"
+  },
+  "steps": [
+   {
+    "command": "queue",
+    "args": "target f1 @work"
+   },
+   {
+    "command": "queue",
+    "args": "target f1 global"
+   },
+   {
+    "command": "queue",
+    "args": "target f1 current"
+   },
+   {
+    "command": "queue",
+    "args": "target f1 @nowhere"
+   },
+   {
+    "command": "queue",
+    "args": "target f1 work"
+   },
+   {
+    "command": "queue",
+    "args": "target zz global"
+   }
+  ]
+ },
+ {
+  "name": "cmd-send-idle",
+  "description": "/queue send and retry in an idle session: sent without options, acknowledged by the host",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "91000001",
+    "text": "first prompt",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "91000002",
+    "text": "second prompt",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "failed",
+    "error": "old"
+   }
+  ],
+  "idle": true,
+  "ack": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "send"
+   },
+   {
+    "command": "queue",
+    "args": "retry 9100000"
+   },
+   {
+    "command": "queue",
+    "args": "retry 91000002"
+   },
+   {
+    "command": "queue",
+    "args": "send 91000002"
+   }
+  ]
+ },
+ {
+  "name": "cmd-send-busy",
+  "description": "a busy session takes follow-up items as follow-ups and steer items as steering",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "92000001",
+    "text": "a follow up",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "92000002",
+    "text": "steer this",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "steer",
+    "status": "queued"
+   },
+   {
+    "id": "92000003",
+    "text": "after compaction",
+    "createdAt": 3,
+    "updatedAt": 3,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   }
+  ],
+  "idle": false,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "send 92000001"
+   },
+   {
+    "command": "queue",
+    "args": "send 92000002"
+   },
+   {
+    "command": "queue",
+    "args": "send 92000003"
+   }
+  ]
+ },
+ {
+  "name": "cmd-send-fails",
+  "description": "a message the host refuses: the item fails and the error is shown",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "93000001",
+    "text": "refused",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "idle": true,
+  "sendError": "boom",
+  "steps": [
+   {
+    "command": "queue",
+    "args": "send 93000001"
+   }
+  ]
+ },
+ {
+  "name": "cmd-send-no-ack",
+  "description": "a message the host never starts stays delivering, and a shutdown queues it again with a reason",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "94000001",
+    "text": "never starts",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "idle": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "send"
+   }
+  ]
+ },
+ {
+  "name": "cmd-send-while-compacting",
+  "description": "a send during a compaction keeps the item queued",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "95000001",
+    "text": "wait for it",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "idle": true,
+  "steps": [
+   {
+    "event": "session_before_compact"
+   },
+   {
+    "command": "queue",
+    "args": "send 95000001"
+   }
+  ]
+ },
+ {
+  "name": "picker-empty",
+  "description": "an empty queue: a notice, no overlay",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "steps": [
+   {
+    "command": "queue",
+    "args": ""
+   }
+  ]
+ },
+ {
+  "name": "picker-navigation",
+  "description": "the list: wrapping up from the top, down, a scroll window of twelve rows, then cancel",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "a0000001",
+    "text": "prompt number 1 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000002",
+    "text": "prompt number 2 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000003",
+    "text": "prompt number 3 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 3,
+    "updatedAt": 3,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "a0000004",
+    "text": "prompt number 4 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 4,
+    "updatedAt": 4,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "blocked"
+   },
+   {
+    "id": "a0000005",
+    "text": "prompt number 5 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 5,
+    "updatedAt": 5,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000006",
+    "text": "prompt number 6 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 6,
+    "updatedAt": 6,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "a0000007",
+    "text": "prompt number 7 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 7,
+    "updatedAt": 7,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000008",
+    "text": "prompt number 8 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 8,
+    "updatedAt": 8,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000009",
+    "text": "prompt number 9 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 9,
+    "updatedAt": 9,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "a0000010",
+    "text": "prompt number 10 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 10,
+    "updatedAt": 10,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000011",
+    "text": "prompt number 11 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 11,
+    "updatedAt": 11,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000012",
+    "text": "prompt number 12 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 12,
+    "updatedAt": 12,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "a0000013",
+    "text": "prompt number 13 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 13,
+    "updatedAt": 13,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000014",
+    "text": "prompt number 14 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 14,
+    "updatedAt": 14,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000015",
+    "text": "prompt number 15 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 15,
+    "updatedAt": 15,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "b0000009",
+    "text": "project one",
+    "createdAt": 20,
+    "updatedAt": 20,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}",
+     "alias": "proj"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "b0000010",
+    "text": "project two",
+    "createdAt": 21,
+    "updatedAt": 21,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "steps": [
+   {
+    "command": "queue",
+    "args": "",
+    "levels": [
+     {
+      "widths": [
+       30,
+       41,
+       60,
+       100
+      ],
+      "keys": [
+       "\u001b[A",
+       "\u001b[A",
+       "\u001b[B",
+       "\u001b[B",
+       "\u001b[B",
+       "\u001b[B",
+       "\u001b[B",
+       "\u001b[B",
+       "\u001b"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "picker-cancel-ctrl-c",
+  "description": "ctrl+c cancels the list",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "a0000001",
+    "text": "prompt number 1 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000002",
+    "text": "prompt number 2 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "a0000003",
+    "text": "prompt number 3 with some longer text to be shortened when the row is narrow, again and again",
+    "createdAt": 3,
+    "updatedAt": 3,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   }
+  ],
+  "steps": [
+   {
+    "command": "queue",
+    "args": "",
+    "levels": [
+     {
+      "widths": [
+       60
+      ],
+      "keys": [
+       "\u0003"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "picker-action-send",
+  "description": "the picker, the second item, then the action: send",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "c1000001",
+    "text": "first one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c1000002",
+    "text": "second\none",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}",
+     "alias": "proj"
+    },
+    "intent": "follow-up",
+    "status": "blocked",
+    "error": "e"
+   }
+  ],
+  "idle": true,
+  "ack": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "",
+    "levels": [
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\r"
+      ]
+     },
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\r"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "picker-action-edit",
+  "description": "the picker, the second item, then the action: edit in prompt",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "c1000001",
+    "text": "first one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c1000002",
+    "text": "second\none",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}",
+     "alias": "proj"
+    },
+    "intent": "follow-up",
+    "status": "blocked",
+    "error": "e"
+   }
+  ],
+  "idle": true,
+  "ack": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "",
+    "levels": [
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\r"
+      ]
+     },
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\r"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "picker-action-retry",
+  "description": "the picker, the second item, then the action: retry",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "c1000001",
+    "text": "first one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c1000002",
+    "text": "second\none",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}",
+     "alias": "proj"
+    },
+    "intent": "follow-up",
+    "status": "blocked",
+    "error": "e"
+   }
+  ],
+  "idle": true,
+  "ack": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "",
+    "levels": [
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\r"
+      ]
+     },
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\u001b[B",
+       "\r"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "picker-action-clear",
+  "description": "the picker, the second item, then the action: clear",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "c1000001",
+    "text": "first one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c1000002",
+    "text": "second\none",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}",
+     "alias": "proj"
+    },
+    "intent": "follow-up",
+    "status": "blocked",
+    "error": "e"
+   }
+  ],
+  "idle": true,
+  "ack": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "",
+    "levels": [
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\r"
+      ]
+     },
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\u001b[B",
+       "\u001b[B",
+       "\r"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "picker-action-cancel",
+  "description": "the picker, the second item, then the action: cancel (wraps from the top)",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "c1000001",
+    "text": "first one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c1000002",
+    "text": "second\none",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}",
+     "alias": "proj"
+    },
+    "intent": "follow-up",
+    "status": "blocked",
+    "error": "e"
+   }
+  ],
+  "idle": true,
+  "ack": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "",
+    "levels": [
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\r"
+      ]
+     },
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[A",
+       "\r"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "picker-action-escape",
+  "description": "the picker, the second item, then the action: escape in the action list",
+  "sessionId": "s1",
+  "widths": [
+   60
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "c1000001",
+    "text": "first one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   },
+   {
+    "id": "c1000002",
+    "text": "second\none",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "project",
+     "cwd": "{CWD}",
+     "alias": "proj"
+    },
+    "intent": "follow-up",
+    "status": "blocked",
+    "error": "e"
+   }
+  ],
+  "idle": true,
+  "ack": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "",
+    "levels": [
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b[B",
+       "\r"
+      ]
+     },
+     {
+      "widths": [
+       41,
+       100
+      ],
+      "keys": [
+       "\u001b"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "post-compaction-delivery",
+  "description": "after session_compact the queued post-compaction items are sent one by one, each acknowledged by the host",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "d1000001",
+    "text": "after the compaction one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "d1000002",
+    "text": "after the compaction two",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   }
+  ],
+  "idle": true,
+  "ack": true,
+  "steps": [
+   {
+    "event": "session_before_compact"
+   },
+   {
+    "event": "session_compact"
+   },
+   {
+    "wait": 300
+   }
+  ]
+ },
+ {
+  "name": "post-compaction-busy",
+  "description": "a busy session is not interrupted: nothing is sent until it is idle",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "d1000001",
+    "text": "after the compaction one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "d1000002",
+    "text": "after the compaction two",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   }
+  ],
+  "idle": false,
+  "ack": true,
+  "steps": [
+   {
+    "event": "session_before_compact"
+   },
+   {
+    "event": "session_compact"
+   },
+   {
+    "wait": 200
+   },
+   {
+    "idle": true
+   },
+   {
+    "event": "agent_settled"
+   },
+   {
+    "wait": 300
+   }
+  ]
+ },
+ {
+  "name": "post-compaction-failed",
+  "description": "a failed compaction blocks the queued post-compaction items with its message",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "d1000001",
+    "text": "after the compaction one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "d1000002",
+    "text": "after the compaction two",
+    "createdAt": 2,
+    "updatedAt": 2,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   },
+   {
+    "id": "d1000003",
+    "text": "a plain follow up",
+    "createdAt": 3,
+    "updatedAt": 3,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "steps": [
+   {
+    "event": "session_before_compact"
+   },
+   {
+    "event": "session_compact_failed",
+    "data": {
+     "errorMessage": "model refused"
+    }
+   },
+   {
+    "wait": 150
+   }
+  ]
+ },
+ {
+  "name": "post-compaction-failed-default",
+  "description": "a failed compaction without a message reads Compaction cancelled",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "d1000001",
+    "text": "after the compaction one",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}",
+     "sessionId": "s1"
+    },
+    "target": {
+     "kind": "current-session"
+    },
+    "intent": "post-compact",
+    "status": "queued"
+   }
+  ],
+  "steps": [
+   {
+    "event": "session_before_compact"
+   },
+   {
+    "event": "session_compact_failed",
+    "data": {}
+   }
+  ]
+ },
+ {
+  "name": "delivery-ack-by-message-start",
+  "description": "a user message_start with the same text acknowledges the delivery",
+  "sessionId": "s1",
+  "widths": [
+   24,
+   41,
+   60,
+   120
+  ],
+  "powerline": {
+   "layout": {
+    "left": [
+     "queue"
+    ],
+    "right": [],
+    "secondary": []
+   }
+  },
+  "inbox": [
+   {
+    "id": "e5000001",
+    "text": "fix   the tests",
+    "createdAt": 1,
+    "updatedAt": 1,
+    "source": {
+     "cwd": "{CWD}"
+    },
+    "target": {
+     "kind": "global"
+    },
+    "intent": "follow-up",
+    "status": "queued"
+   }
+  ],
+  "idle": true,
+  "steps": [
+   {
+    "command": "queue",
+    "args": "send e5"
+   },
+   {
+    "event": "message_start",
+    "data": {
+     "message": {
+      "role": "assistant",
+      "content": "fix the tests"
+     }
+    }
+   },
+   {
+    "event": "message_start",
+    "data": {
+     "message": {
+      "role": "user",
+      "content": [
+       {
+        "type": "text",
+        "text": "fix the "
+       },
+       {
+        "type": "text",
+        "text": "tests"
+       }
+      ]
+     }
+    }
+   }
+  ]
+ }
+]
