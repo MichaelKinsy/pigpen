@@ -121,8 +121,10 @@ func TestVibeParseResponse(t *testing.T) {
 		{"……", "Working..."},
 		{"This message is far too long for the limit...", "This message is f..."},
 		{"Cloaking up", "Cloaking up..."},
-		{"abcdefghijklmnopq...", "abcdefghijklmnopq..."},  // exactly the limit: kept
-		{"abcdefghijklmnopqr...", "abcdefghijklmnopq..."}, // one over: cut to limit-3 and re-ellipsised
+		{"abcdefghijklmnopq...", "abcdefghijklmnopq..."},                 // exactly the limit: kept
+		{"abcdefghijklmnopqr...", "abcdefghijklmnopq..."},                // one over: cut to limit-3 and re-ellipsised
+		{strings.Repeat("日", 18) + "……", strings.Repeat("日", 18) + "……"}, // exactly the limit with the two-unit ellipsis: kept
+		{strings.Repeat("日", 19) + "……", strings.Repeat("日", 17) + "……"}, // one over: the cut leaves 17 units, then the ellipsis again
 	} {
 		if got := m.parseVibeResponse(c.in, "Working"); got != c.want {
 			t.Errorf("parseVibeResponse(%q) = %q, want %q", c.in, got, c.want)
@@ -430,12 +432,12 @@ func TestVibeGenerateBatchEdges(t *testing.T) {
 	})
 	res, _ = m.generateVibesBatch("x", 5)
 	eq(t, res.Error, "Empty response from model", "empty")
-	reply = "...\nab\n  \n3) 'Okay...'\n\"Wow\"\n.5.Counted"
+	reply = "...\nab\nx\n  \n3) 'Okay...'\n\"Wow\"\n.5.Counted"
 	res, _ = m.generateVibesBatch("It's $& {count}", 700)
 	eq(t, res.Success, true, "success")
 	eq(t, strings.Contains(asked, "Generate 500 unique 2-4 word loading messages for a \"It's {theme} 500\" theme."), true, "count clamped to 500; $& expands to the match, and {count} is replaced in the theme too: "+asked)
 	data, _ := os.ReadFile(res.FilePath)
-	eq(t, string(data), "ab...\nOkay...\nWow...\nCounted...", "cleaned lines (leading bullets, trailing quote, length filter)")
+	eq(t, string(data), "ab...\nx...\nOkay...\nWow...\nCounted...", "cleaned lines (leading bullets, trailing quote, length filter)")
 	eq(t, res.FilePath, filepath.Join(home, ".pi", "agent", "vibes", "it-s-count.txt"), "path")
 
 	reply = "..\n--\n1."
@@ -638,7 +640,7 @@ func TestVibeEveryThinkingLevelSuffixResolves(t *testing.T) {
 		},
 	})
 	var want []any
-	for _, level := range vibeThinkingLevels {
+	for _, level := range []string{"off", "minimal", "low", "medium", "high", "xhigh", "max"} {
 		m.setModel("test-provider/test-model:" + level)
 		res, _ := m.generateVibesBatch("t", 1)
 		eq(t, res.Success, true, level)
@@ -657,4 +659,21 @@ func TestVibeCommandSplitsOnJavaScriptWhitespace(t *testing.T) {
 	// U+FEFF separates words in JavaScript (\s) but not in Go's strings.Fields.
 	_ = m.command("model\ufeffa/b\u3000c", notify)
 	eq(t, notes, []string{"info: Vibe model set to: a/b c"}, "words split on U+FEFF and U+3000")
+}
+
+func TestVibeBatchClearsTheCacheOfItsTheme(t *testing.T) {
+	_, m := vibeHome(t)
+	m.initVibeManager(scriptedRegistry{
+		find:     testProvider("test-model"),
+		complete: func(_, _, _ map[string]any) map[string]any { return vibeText("Fresh one...") },
+	})
+	m.setModel("test-provider/test-model")
+	m.setMode(vibeModeFile)
+	m.setTheme(new("cached"))
+	var rec vibeRecorder
+	m.onBeforeAgentStart("x", rec.set) // no file yet: the fallback, and an empty cache for "cached"
+	res, _ := m.generateVibesBatch("cached", 1)
+	eq(t, res.Success, true, "batch")
+	m.onBeforeAgentStart("x", rec.set)
+	eq(t, rec.all(), []string{"Channeling cached...", "Working...", "Channeling cached...", "Fresh one..."}, "the next use loads the new file")
 }

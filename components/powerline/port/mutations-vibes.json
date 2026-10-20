@@ -42,12 +42,6 @@
   "replace": "raw != \"off\""
  },
  {
-  "name": "vibe-mode-validation",
-  "file": "working_vibes.go",
-  "find": "raw == \"file\" || raw == \"generate\"",
-  "replace": "raw == \"file\""
- },
- {
   "name": "vibe-timeout",
   "file": "working_vibes.go",
   "find": "TimeoutMs:       3000,",
@@ -338,8 +332,8 @@
  {
   "name": "vibe-rate-limit-boundary",
   "file": "working_vibes.go",
-  "find": "float64(now-m.lastVibeTime) < m.config.RefreshInterval",
-  "replace": "float64(now-m.lastVibeTime) <= m.config.RefreshInterval"
+  "find": "return float64(now-m.lastVibeTime) >= m.config.RefreshInterval",
+  "replace": "return float64(now-m.lastVibeTime) > m.config.RefreshInterval"
  },
  {
   "name": "vibe-rate-limit-updates-time",
@@ -350,8 +344,8 @@
  {
   "name": "vibe-tool-call-needs-streaming",
   "file": "working_vibes.go",
-  "find": "|| m.registry == nil || !m.isStreaming {",
-  "replace": "|| m.registry == nil {"
+  "find": "|| m.registry == nil || !m.isStreaming {\n\t\treturn false",
+  "replace": "|| m.registry == nil {\n\t\treturn false"
  },
  {
   "name": "vibe-agent-context-min",
@@ -688,5 +682,11 @@
   "file": "working_vibes_ext.go",
   "find": "return a.pl != nil && a.pl.frame.Load() != nil",
   "replace": "return true"
+ },
+ {
+  "name": "vibe-tool-call-branch-only-when-due",
+  "file": "working_vibes_ext.go",
+  "find": "if m.toolCallDue() {",
+  "replace": "if true {"
  }
 ]

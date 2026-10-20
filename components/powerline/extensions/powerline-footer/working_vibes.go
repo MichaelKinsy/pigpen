@@ -886,15 +886,28 @@ func (m *vibeManager) onAgentStart() {
 	m.isStreaming = true
 }
 
+// refreshDueLocked is onToolCall's guard: a theme, an extension context, a streaming agent and the rate limit (skipped when
+// not enough time has passed).
+func (m *vibeManager) refreshDueLocked(now int64) bool {
+	if m.config.Theme == nil || *m.config.Theme == "" || m.registry == nil || !m.isStreaming {
+		return false
+	}
+	return float64(now-m.lastVibeTime) >= m.config.RefreshInterval
+}
+
+// toolCallDue reports whether a tool call would refresh the vibe now. The handler asks the host for the session branch (the
+// agent context) only then: the original reads it on every tool call and discards it when the guard fails.
+func (m *vibeManager) toolCallDue() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.refreshDueLocked(m.now())
+}
+
 // onToolCall refreshes the vibe when the rate limit allows. agentContext is the recent assistant text ("" when there is none).
 func (m *vibeManager) onToolCall(toolName string, toolInput map[string]any, setWorkingMessage func(string), agentContext string) {
 	m.mu.Lock()
-	if m.config.Theme == nil || *m.config.Theme == "" || m.registry == nil || !m.isStreaming {
-		m.mu.Unlock()
-		return
-	}
 	now := m.now()
-	if float64(now-m.lastVibeTime) < m.config.RefreshInterval {
+	if !m.refreshDueLocked(now) {
 		m.mu.Unlock()
 		return
 	}

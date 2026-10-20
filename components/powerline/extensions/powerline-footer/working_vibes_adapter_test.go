@@ -402,3 +402,26 @@ func TestVibeColorWaitsForTheBarsFirstRender(t *testing.T) {
 		t.Errorf("working messages = %q, want the first unstyled", got)
 	}
 }
+
+func TestVibeToolCallAsksForTheBranchOnlyWhenARefreshIsDue(t *testing.T) {
+	settings := strings.Replace(vibeSettings, `"workingVibeRefreshInterval":0`, `"workingVibeRefreshInterval":3600`, 1)
+	h := vibeRig{settings: settings}.start(t)
+	branchReads := func() int {
+		n := 0
+		for _, c := range h.CallsTo("sessionRead") {
+			if c.Args["method"] == "getBranch" {
+				n++
+			}
+		}
+		return n
+	}
+	h.FireAll("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/x"}}) // not streaming
+	h.FireAll("agent_start", nil)
+	h.FireAll("before_agent_start", beforeStart("go"))
+	waitFor(t, "the first request", func() bool { return len(h.requests()) == 1 })
+	before := branchReads()
+	h.FireAll("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/x"}}) // inside the interval
+	if got := branchReads(); got != before {
+		t.Errorf("a tool call that cannot refresh read the branch (%d reads, was %d)", got, before)
+	}
+}

@@ -81,7 +81,10 @@ func registerVibes(e *sdk.Extension, a *app) {
 	e.OnEvent(sdk.EventToolCall, func(ctx sdk.Context, data map[string]any) (any, error) {
 		if ctx.HasUI() {
 			styled(ctx)
-			branch, _ := ctx.SessionManager().GetBranch(nil)
+			var branch []map[string]any
+			if m.toolCallDue() {
+				branch, _ = ctx.SessionManager().GetBranch(nil)
+			}
 			toolName, _ := data["toolName"].(string)
 			input, _ := data["input"].(map[string]any)
 			m.onToolCall(toolName, input, ctx.SetWorkingMessage, getRecentAgentContext(branch))
