@@ -2,8 +2,8 @@ package websearch
 
 import (
 	"math"
-	"regexp"
 	"strings"
+	"sync"
 )
 
 // Port of defuddle 0.19.3 dist/removals/selectors.js, hidden.js, small-images.js and metadata-block.js.
@@ -11,24 +11,57 @@ import (
 // ---- the partial selectors -------------------------------------------------------------------------------------
 
 // The partial selectors are one case-insensitive alternation in the original. Three of its alternatives use
-// lookbehind or lookahead, which RE2 lacks: they are matched by hand (dfdPartialLookaround) and the rest is
-// compiled.
-var (
-	dfdPartialRE         *regexp.Regexp
-	dfdPartialAnchoredRE *regexp.Regexp
-)
+// lookbehind or lookahead, which RE2 lacks: they are matched by hand (dfdPartialLookaround). Of the others 543 are
+// plain ASCII text, and testing a class or an id against an alternation of that size is the slowest step of the
+// pipeline in Go's regexp: those are looked up by their first two characters, and only the few that are expressions
+// (and any text that is not ASCII, whose case folding is Unicode's) go through the expression.
+type dfdPartialSet struct {
+	all, allAnchored   *lazyRE // every alternative without lookaround, as the original compiles them
+	rest, restAnchored *lazyRE // the alternatives that are expressions
+	plain              map[string]bool
+	pair               [128][128]bool
+	byPair             map[uint16][]string
+}
 
-func init() {
-	var alts []string
+const dfdRegexpMeta = `\^$.*+?()[]{}|`
+
+var dfdPartials = sync.OnceValue(func() *dfdPartialSet {
+	set := &dfdPartialSet{plain: map[string]bool{}, byPair: map[uint16][]string{}}
+	var alts, rest []string
 	for _, p := range dfdPartialSelectors {
 		if strings.Contains(p, "(?<") || strings.Contains(p, "(?!") {
 			continue
 		}
 		alts = append(alts, p)
+		if len(p) < 2 || !cssIsASCII(p) || strings.ContainsAny(p, dfdRegexpMeta) {
+			rest = append(rest, p)
+			continue
+		}
+		lp := strings.ToLower(p)
+		set.plain[lp] = true
+		set.pair[lp[0]][lp[1]] = true
+		key := uint16(lp[0])<<8 | uint16(lp[1])
+		set.byPair[key] = append(set.byPair[key], lp)
 	}
 	joined := strings.Join(alts, "|")
-	dfdPartialRE = regexp.MustCompile("(?i)" + joined)
-	dfdPartialAnchoredRE = regexp.MustCompile("(?i)^(?:" + joined + ")$")
+	set.all, set.allAnchored = mustRE("(?i)"+joined), mustRE("(?i)^(?:"+joined+")$")
+	restJoined := strings.Join(rest, "|")
+	set.rest, set.restAnchored = mustRE("(?i)"+restJoined), mustRE("(?i)^(?:"+restJoined+")$")
+	return set
+})
+
+// containsPlain reports whether the lower-case ASCII text holds one of the plain alternatives.
+func (set *dfdPartialSet) containsPlain(ls string) bool {
+	for i := 0; i+1 < len(ls); i++ {
+		if set.pair[ls[i]][ls[i+1]] {
+			for _, p := range set.byPair[uint16(ls[i])<<8|uint16(ls[i+1])] {
+				if strings.HasPrefix(ls[i:], p) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func dfdIsWordOrDash(c byte) bool {
@@ -75,11 +108,22 @@ func dfdPartialLookaround(s string) bool {
 	return false
 }
 
-func dfdPartialMatch(s string) bool { return dfdPartialRE.MatchString(s) || dfdPartialLookaround(s) }
+func dfdPartialMatch(s string) bool {
+	set := dfdPartials()
+	if !cssIsASCII(s) {
+		return set.all.MatchString(s) || dfdPartialLookaround(s)
+	}
+	return set.containsPlain(strings.ToLower(s)) || set.rest.MatchString(s) || dfdPartialLookaround(s)
+}
 
 // dfdPartialMatchAnchored is the anchored variant: the whole string must be one selector token.
 func dfdPartialMatchAnchored(s string) bool {
-	if dfdPartialAnchoredRE.MatchString(s) {
+	set := dfdPartials()
+	if cssIsASCII(s) {
+		if set.plain[strings.ToLower(s)] || set.restAnchored.MatchString(s) {
+			return true
+		}
+	} else if set.allAnchored.MatchString(s) {
 		return true
 	}
 	switch strings.ToLower(s) {
@@ -282,7 +326,7 @@ var (
 	reViewBoxSplit = jsRE(`[\s,]+`, "")
 	reOneX         = jsRE(`(\S+)\s+1x`, "")
 	reLooksLatex   = jsRE(`\\[a-zA-Z]{2,}`, "")
-	reB64DataURL   = regexp.MustCompile(`^data:image/([^;]+);base64,`)
+	reB64DataURL   = mustRE(`^data:image/([^;]+);base64,`)
 )
 
 func dfdElementIdentifier(el *ldNode) (string, bool) {
@@ -396,7 +440,7 @@ func orZero(s string) string {
 }
 
 // firstSubmatch is `s.match(re)?.[1]`, "" when there is no match.
-func firstSubmatch(re *regexp.Regexp, s string) string {
+func firstSubmatch(re *lazyRE, s string) string {
 	if m := re.FindStringSubmatch(s); m != nil {
 		return m[1]
 	}

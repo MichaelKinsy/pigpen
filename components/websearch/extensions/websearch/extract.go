@@ -7,7 +7,6 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -392,7 +391,7 @@ func ExtractHeadingTitle(text string) (string, bool) {
 	return cleaned, cleaned != ""
 }
 
-var headingRE = regexp.MustCompile(`(?m)^#{1,2}\s+(.+)`)
+var headingRE = mustRE(`(?m)^#{1,2}\s+(.+)`)
 
 func lastPathSegment(u string) string {
 	parsed, err := ParseURL(u, nil)
@@ -457,12 +456,12 @@ func isPDF(u, contentType string) bool {
 }
 
 var (
-	cfTitleRE = regexp.MustCompile(`(?i)<title>\s*Just a moment\.\.\.\s*</title>`)
-	bodyRE    = regexp.MustCompile(`(?is)<body[^>]*>(.*?)</body>`)
-	scriptRE  = regexp.MustCompile(`(?is)<script.*?</script>`)
-	styleRE   = regexp.MustCompile(`(?is)<style.*?</style>`)
-	tagRE     = regexp.MustCompile(`<[^>]+>`)
-	scriptTag = regexp.MustCompile(`(?i)<script`)
+	cfTitleRE = mustRE(`(?i)<title>\s*Just a moment\.\.\.\s*</title>`)
+	bodyRE    = mustRE(`(?is)<body[^>]*>(.*?)</body>`)
+	scriptRE  = mustRE(`(?is)<script.*?</script>`)
+	styleRE   = mustRE(`(?is)<style.*?</style>`)
+	tagRE     = mustRE(`<[^>]+>`)
+	scriptTag = mustRE(`(?i)<script`)
 )
 
 // isCloudflareChallenge: the cf-mitigated header is authoritative for any 200 text response; the

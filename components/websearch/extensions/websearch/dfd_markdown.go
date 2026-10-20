@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -11,32 +10,32 @@ import (
 // Port of defuddle 0.19.3 dist/markdown.js: the rules Defuddle adds to turndown and createMarkdownContent.
 
 var (
-	reWidthDesc    = regexp.MustCompile(`^(\d+)w,?$`)
-	reDensityDesc  = regexp.MustCompile(`^\d+(?:\.\d+)?x,?$`)
+	reWidthDesc    = mustRE(`^(\d+)w,?$`)
+	reDensityDesc  = mustRE(`^\d+(?:\.\d+)?x,?$`)
 	reTitleNL      = jsRE(`(\n+\s*)+`, "")
-	reTrailingNLs  = regexp.MustCompile(`\n+$`)
-	reInputTag     = regexp.MustCompile(`<input[^>]*>`)
-	reLangClass    = regexp.MustCompile(`language-(\w+)`)
-	reYouTube      = regexp.MustCompile(`(?:youtube\.com|youtube-nocookie\.com|youtu\.be)`)
-	reTwitter      = regexp.MustCompile(`(?:twitter\.com|x\.com)`)
-	reYouTubeID    = regexp.MustCompile(`(?:https?://)?(?:www\.)?(?:youtube\.com|youtube-nocookie\.com|youtu\.be)/(?:embed/|watch\?v=)?([a-zA-Z0-9_-]+)`)
-	reTweetDirect  = regexp.MustCompile(`(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com)/([^/]+)/status/([0-9]+)`)
-	reTweetEmbed   = regexp.MustCompile(`(?:https?://)?(?:platform\.)?twitter\.com/embed/Tweet\.html\?.*?id=([0-9]+)`)
+	reTrailingNLs  = mustRE(`\n+$`)
+	reInputTag     = mustRE(`<input[^>]*>`)
+	reLangClass    = mustRE(`language-(\w+)`)
+	reYouTube      = mustRE(`(?:youtube\.com|youtube-nocookie\.com|youtu\.be)`)
+	reTwitter      = mustRE(`(?:twitter\.com|x\.com)`)
+	reYouTubeID    = mustRE(`(?:https?://)?(?:www\.)?(?:youtube\.com|youtube-nocookie\.com|youtu\.be)/(?:embed/|watch\?v=)?([a-zA-Z0-9_-]+)`)
+	reTweetDirect  = mustRE(`(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com)/([^/]+)/status/([0-9]+)`)
+	reTweetEmbed   = mustRE(`(?:https?://)?(?:platform\.)?twitter\.com/embed/Tweet\.html\?.*?id=([0-9]+)`)
 	reMathInCap    = jsRE(`<math.*?>(.*?)</math>`, "")
 	reTagPrefixH1  = jsRE(`^# .+\n+`, "")
-	reEmptyLink    = regexp.MustCompile(`\[\]\([^)]+\)`)
-	reNL3Run       = regexp.MustCompile(`\n{3,}`)
-	reBlankQuote   = regexp.MustCompile(`(?m)^([ \t]*>[ \t>]*)(?:\n[ \t]*>[ \t>]*)+$`)
+	reEmptyLink    = mustRE(`\[\]\([^)]+\)`)
+	reNL3Run       = mustRE(`\n{3,}`)
+	reBlankQuote   = mustRE(`(?m)^([ \t]*>[ \t>]*)(?:\n[ \t]*>[ \t>]*)+$`)
 	reWbr          = jsRE(`<wbr\s*/?>`, "i")
-	reOLTag        = regexp.MustCompile(`^<span class="ltx_tag ltx_tag_item">\d+\.</span>\s*`)
+	reOLTag        = mustRE(`^<span class="ltx_tag ltx_tag_item">\d+\.</span>\s*`)
 	reTrailingBack = jsRE(`\s*\x{21a9}\x{fe0e}$`, "")
 	reCiteNoteID   = jsRE(`cite_note-(.+)`, "")
-	reLatexBegin2  = regexp.MustCompile(`\\begin\{[^}]+\}`)
+	reLatexBegin2  = mustRE(`\\begin\{[^}]+\}`)
 	reBareMatrix   = jsRE(`^\\begin\{matrix\}([\s\S]*?)\\end\{matrix\}$`, "")
 	reLatexSource  = jsRE(`\\[a-zA-Z]+|[_^{}]|[$&]|\\\\|\\begin\{`, "")
 	reHyphenWord   = jsRE(`[a-zA-Z]{3,}-[a-zA-Z]{2,}`, "")
-	reNbspEntity   = regexp.MustCompile(`&nbsp;`)
-	reAmpNbsp      = regexp.MustCompile(`&amp;nbsp;`)
+	reNbspEntity   = mustRE(`&nbsp;`)
+	reAmpNbsp      = mustRE(`&amp;nbsp;`)
 )
 
 func dfdFormatMarkdownLinkDestination(href string) string {

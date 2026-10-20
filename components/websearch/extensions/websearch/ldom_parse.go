@@ -765,12 +765,12 @@ func ldDecodeEntity(s string, i int, attr bool) ([]rune, int) {
 	}
 	name := s[j:k]
 	if k < len(s) && s[k] == ';' {
-		if val, ok := ldEntities[name]; ok {
+		if val, ok := ldEntities()[name]; ok {
 			return []rune(val), k + 1 - i
 		}
 	}
 	l := len(name)
-	for l > 0 && !ldLegacyEntities[name[:l]] {
+	for l > 0 && !ldLegacyEntities()[name[:l]] {
 		l--
 	}
 	if l == 0 {
@@ -779,7 +779,7 @@ func ldDecodeEntity(s string, i int, attr bool) ([]rune, int) {
 	if attr && (l < len(name) || (k < len(s) && s[k] == '=')) {
 		return nil, 0
 	}
-	return []rune(ldEntities[name[:l]]), 1 + l
+	return []rune(ldEntities()[name[:l]]), 1 + l
 }
 
 // ---- parser callbacks ------------------------------------------------------------------------------------------

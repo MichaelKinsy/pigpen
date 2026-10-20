@@ -2,7 +2,6 @@ package websearch
 
 import (
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -215,11 +214,11 @@ var tmArrowComponent = map[string][2]string{
 // ---- color.js ----------------------------------------------------------------------------------------------------
 
 var (
-	tmHtmlRe       = regexp.MustCompile(`(?i)^(#[a-f0-9]{3}|#?[a-f0-9]{6})$`)
-	tmHtmlOrNameRe = regexp.MustCompile(`(?i)^(#[a-f0-9]{3}|#?[a-f0-9]{6}|[a-z]+)$`)
-	tmRGBRe        = regexp.MustCompile(`^ *\d{1,3} *(?:, *\d{1,3} *){2}$`)
-	tmRgbRe        = regexp.MustCompile(`^ *[10](?:\.\d*)? *(?:, *[10](?:\.\d*)? *){2}$`)
-	tmXColorHtmlRe = regexp.MustCompile(`(?i)^[a-f0-9]{6}$`)
+	tmHtmlRe       = mustRE(`(?i)^(#[a-f0-9]{3}|#?[a-f0-9]{6})$`)
+	tmHtmlOrNameRe = mustRE(`(?i)^(#[a-f0-9]{3}|#?[a-f0-9]{6}|[a-z]+)$`)
+	tmRGBRe        = mustRE(`^ *\d{1,3} *(?:, *\d{1,3} *){2}$`)
+	tmRgbRe        = mustRE(`^ *[10](?:\.\d*)? *(?:, *[10](?:\.\d*)? *){2}$`)
+	tmXColorHtmlRe = mustRE(`(?i)^[a-f0-9]{6}$`)
 )
 
 func tmToHex(num float64) string {
@@ -277,7 +276,7 @@ func tmValidateColor(color string, macros *tmNamespace, token *tmToken) string {
 	} else if macros.has(macroName) {
 		def := macros.get(macroName).(*tmMacroDef)
 		return def.tokens[0].text
-	} else if c, ok := tmXColors[color]; ok && c != "" {
+	} else if c, ok := tmXColors()[color]; ok && c != "" {
 		return c
 	}
 	return color
@@ -325,10 +324,10 @@ var tmGlobalMap = map[string]string{
 }
 
 var (
-	tmControlSeqRe = regexp.MustCompile(`^(?:[\\{}$&#^_]|EOF)$`)
-	tmDigit19Re    = regexp.MustCompile(`^[1-9]$`)
-	tmDigit09Re    = regexp.MustCompile(`^[0-9]$`)
-	tmLatinNameRe  = regexp.MustCompile(`^[A-Za-z]+$`)
+	tmControlSeqRe = mustRE(`^(?:[\\{}$&#^_]|EOF)$`)
+	tmDigit19Re    = mustRE(`^[1-9]$`)
+	tmDigit09Re    = mustRE(`^[0-9]$`)
+	tmLatinNameRe  = mustRE(`^[A-Za-z]+$`)
 )
 
 func tmCheckControlSequence(tok *tmToken) string {

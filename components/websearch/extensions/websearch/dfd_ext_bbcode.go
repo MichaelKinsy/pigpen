@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 )
 
@@ -45,7 +44,7 @@ var (
 	reBBUnknownTag = jsRE(`\[[^\]]+\]`, "")
 )
 
-func bbWrap(re *regexp.Regexp, s, open, close string) string {
+func bbWrap(re *lazyRE, s, open, close string) string {
 	return jsReplaceAll(re, s, func(m []string) string { return open + m[1] + close })
 }
 

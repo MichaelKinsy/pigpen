@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 )
 
@@ -18,7 +17,7 @@ var ldEmptyAttributes = map[string]bool{
 	"style": true, "truespeed": true,
 }
 
-var ldVoidRE = regexp.MustCompile(`(?i)^(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)$`)
+var ldVoidRE = mustRE(`(?i)^(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)$`)
 
 // ldEscape is the text escaper: &, <, > and the no-break space.
 func ldEscape(s string) string {

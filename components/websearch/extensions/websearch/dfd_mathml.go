@@ -2,13 +2,12 @@ package websearch
 
 import (
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 )
 
 // Port of mathml-to-latex 1.8.0 (MIT): MathMLToLaTeX.convert(mathml) for dist/index.cjs. The parser is the
-// xmldom port of dfd_xmldom.go; the lookup tables are generated (dfd_mathml_tables.go, port/gen-defuddle-mathml-tables.mjs).
+// xmldom port of dfd_xmldom.go; the lookup tables are generated (tables/ml-*.gz, decoded by dfd_tables.go; port/gen-defuddle-mathml-tables.mjs).
 
 type mlEl struct {
 	name     string
@@ -50,9 +49,9 @@ func dfdMathMLToLatex(mathml string) (out string, ok bool) {
 // ---- parsing (XmlToMathMLAdapter, ErrorHandler, ElementsToMathMLAdapter) ----------------------------------------
 
 var (
-	reMLLineBreaks   = regexp.MustCompile(`[\r\n]`)
-	reMLMissingAttr  = regexp.MustCompile(`attribute "([^"]+)" missed value`)
-	reMLGenericValue = regexp.MustCompile(`(<[^\n\r\x{2028}\x{2029}]* )(\w+=)((?:[^"'\n\r\x{2028}\x{2029}][^\n\r\x{2028}\x{2029}]*>|>))`)
+	reMLLineBreaks   = mustRE(`[\r\n]`)
+	reMLMissingAttr  = mustRE(`attribute "([^"]+)" missed value`)
+	reMLGenericValue = mustRE(`(<[^\n\r\x{2028}\x{2029}]* )(\w+=)((?:[^"'\n\r\x{2028}\x{2029}][^\n\r\x{2028}\x{2029}]*>|>))`)
 )
 
 func mlParse(xml string) []*mlEl {
@@ -452,7 +451,7 @@ func mlConvertNode(e *mlEl, memo map[*mlEl]string) string {
 		return mlOperate(jsTrim(jsCollapseWS(e.value)))
 	case "mn":
 		v := jsTrim(jsCollapseWS(e.value))
-		if c := dfdMLNumberByGlyph[v]; c != "" {
+		if c := dfdMLNumberByGlyph()[v]; c != "" {
 			return c
 		}
 		return v
@@ -545,45 +544,45 @@ func mlWrapIfMoreThanOneChar(s string) string {
 	return "\\left(" + s + "\\right)"
 }
 
-var reMLAlnum = regexp.MustCompile(`[a-zA-Z0-9]`)
+var reMLAlnum = mustRE(`[a-zA-Z0-9]`)
 
 func mlUTF8Convert(char string) string {
 	if reMLAlnum.MatchString(char) {
 		return char
 	}
-	if ac, ok := dfdMLVowelsWithAccents[char]; ok {
-		if cmd, ok := dfdMLAccentToCmd[ac.accent]; ok && cmd != "" {
+	if ac, ok := dfdMLVowelsWithAccents()[char]; ok {
+		if cmd, ok := dfdMLAccentToCmd()[ac.accent]; ok && cmd != "" {
 			return "\\" + cmd + "{" + ac.char + "}"
 		}
 		return char
 	}
-	if sf, ok := dfdMLSpecialFontChars[char]; ok {
+	if sf, ok := dfdMLSpecialFontChars()[char]; ok {
 		return "\\" + sf.fontCmd + "{" + sf.letter + "}"
 	}
 	return char
 }
 
 func mlCharacter(v string) string {
-	if r, ok := dfdMLSymbolsByChar[v]; ok {
+	if r, ok := dfdMLSymbolsByChar()[v]; ok {
 		return r
 	}
-	if r, ok := dfdMLSymbolsByGlyph[v]; ok {
+	if r, ok := dfdMLSymbolsByGlyph()[v]; ok {
 		return r
 	}
-	if r, ok := dfdMLNumberByGlyph[v]; ok {
+	if r, ok := dfdMLNumberByGlyph()[v]; ok {
 		return r
 	}
 	return mlUTF8Convert(v)
 }
 
 func mlOperate(v string) string {
-	if r, ok := dfdMLOperatorsByChar[v]; ok {
+	if r, ok := dfdMLOperatorsByChar()[v]; ok {
 		return r
 	}
-	if r, ok := dfdMLOperatorsByGlyph[v]; ok {
+	if r, ok := dfdMLOperatorsByGlyph()[v]; ok {
 		return r
 	}
-	if r, ok := dfdMLNumberByGlyph[v]; ok {
+	if r, ok := dfdMLNumberByGlyph()[v]; ok {
 		return r
 	}
 	return mlUTF8Convert(v)

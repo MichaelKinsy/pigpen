@@ -2,7 +2,6 @@ package websearch
 
 import (
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf16"
@@ -111,17 +110,17 @@ const (
 )
 
 var (
-	xQNameExact   = regexp.MustCompile(`^` + xQName + `$`)
-	xEntityReg    = regexp.MustCompile(`&#?\w+;?`)
-	xReference    = regexp.MustCompile(`(?:&` + xName + `;|&#[0-9]+;|&#x[0-9a-fA-F]+;)`)
-	xEndTagStrict = regexp.MustCompile(`^(` + xQName + `)[\x{20}\x{9}\x{D}\x{A}]*$`)
-	xEndTagLead   = regexp.MustCompile(`^(` + xQName + `)`)
-	xCommentRe    = regexp.MustCompile(`^<!--(?:` + xCharNoDsh + `|-` + xCharNoDsh + `)*-->`)
-	xCDSectRe     = regexp.MustCompile(`^<!\[CDATA\[` + xChar + `*?\]\]>`)
-	xSOptRe       = regexp.MustCompile(`[\x{20}\x{9}\x{D}\x{A}]*`)
-	xNameAt       = regexp.MustCompile(`^` + xName)
-	xPEReference  = regexp.MustCompile(`^%` + xName + `;`)
-	xXMLDecl      = regexp.MustCompile(`^<\?xml[\x{20}\x{9}\x{D}\x{A}]+version[\x{20}\x{9}\x{D}\x{A}]*=[\x{20}\x{9}\x{D}\x{A}]*(?:'1[.]\d+'|"1[.]\d+")(?:[\x{20}\x{9}\x{D}\x{A}]+encoding[\x{20}\x{9}\x{D}\x{A}]*=[\x{20}\x{9}\x{D}\x{A}]*(?:"[A-Za-z][-A-Za-z0-9._]*"|'[A-Za-z][-A-Za-z0-9._]*'))?(?:[\x{20}\x{9}\x{D}\x{A}]+standalone[\x{20}\x{9}\x{D}\x{A}]*=[\x{20}\x{9}\x{D}\x{A}]*(?:'(?:yes|no)'|"(?:yes|no)"))?[\x{20}\x{9}\x{D}\x{A}]*\?>`)
+	xQNameExact   = mustRE(`^` + xQName + `$`)
+	xEntityReg    = mustRE(`&#?\w+;?`)
+	xReference    = mustRE(`(?:&` + xName + `;|&#[0-9]+;|&#x[0-9a-fA-F]+;)`)
+	xEndTagStrict = mustRE(`^(` + xQName + `)[\x{20}\x{9}\x{D}\x{A}]*$`)
+	xEndTagLead   = mustRE(`^(` + xQName + `)`)
+	xCommentRe    = mustRE(`^<!--(?:` + xCharNoDsh + `|-` + xCharNoDsh + `)*-->`)
+	xCDSectRe     = mustRE(`^<!\[CDATA\[` + xChar + `*?\]\]>`)
+	xSOptRe       = mustRE(`[\x{20}\x{9}\x{D}\x{A}]*`)
+	xNameAt       = mustRE(`^` + xName)
+	xPEReference  = mustRE(`^%` + xName + `;`)
+	xXMLDecl      = mustRE(`^<\?xml[\x{20}\x{9}\x{D}\x{A}]+version[\x{20}\x{9}\x{D}\x{A}]*=[\x{20}\x{9}\x{D}\x{A}]*(?:'1[.]\d+'|"1[.]\d+")(?:[\x{20}\x{9}\x{D}\x{A}]+encoding[\x{20}\x{9}\x{D}\x{A}]*=[\x{20}\x{9}\x{D}\x{A}]*(?:"[A-Za-z][-A-Za-z0-9._]*"|'[A-Za-z][-A-Za-z0-9._]*'))?(?:[\x{20}\x{9}\x{D}\x{A}]+standalone[\x{20}\x{9}\x{D}\x{A}]*=[\x{20}\x{9}\x{D}\x{A}]*(?:'(?:yes|no)'|"(?:yes|no)"))?[\x{20}\x{9}\x{D}\x{A}]*\?>`)
 )
 
 const xS = `[\x{20}\x{9}\x{D}\x{A}]+`
@@ -140,18 +139,18 @@ var (
 	xNmtoken       = xNameChar + `+`
 	xMixed         = `(?:\(` + xSO + `#PCDATA(?:` + xSO + `\|` + xSO + xQName + `)*` + xSO + `\)\*|\(` + xSO + `#PCDATA` + xSO + `\))`
 	xContentSpec   = `(?:EMPTY|ANY|` + xMixed + `|\([^>]+\)[?*+]?)`
-	xElementDecl   = regexp.MustCompile(`^<!ELEMENT` + xS + `(?:` + xQName + `|` + xPERef + `)` + xS + `(?:` + xContentSpec + `|` + xPERef + `)` + xSO + `>`)
+	xElementDecl   = mustRE(`^<!ELEMENT` + xS + `(?:` + xQName + `|` + xPERef + `)` + xS + `(?:` + xContentSpec + `|` + xPERef + `)` + xSO + `>`)
 	xNotationType  = `NOTATION` + xS + `\(` + xSO + xName + `(?:` + xSO + `\|` + xSO + xName + `)*` + xSO + `\)`
 	xEnumeration   = `\(` + xSO + xNmtoken + `(?:` + xSO + `\|` + xSO + xNmtoken + `)*` + xSO + `\)`
 	xAttType       = `(?:CDATA|ID|IDREF|IDREFS|ENTITY|ENTITIES|NMTOKEN|NMTOKENS|` + xNotationType + `|` + xEnumeration + `)`
 	xDefaultDecl   = `(?:#REQUIRED|#IMPLIED|(?:#FIXED` + xS + `)?` + xAttValue + `)`
 	xAttDef        = `(?:` + xS + xName + xS + xAttType + xS + xDefaultDecl + `)`
-	xAttlistDecl   = regexp.MustCompile(`^<!ATTLIST` + xS + xName + xAttDef + `*` + xSO + `>`)
+	xAttlistDecl   = mustRE(`^<!ATTLIST` + xS + xName + xAttDef + `*` + xSO + `>`)
 	xGEDecl        = `<!ENTITY` + xS + xName + xS + `(?:` + xEntityValue + `|` + xExternalID + `(?:` + xS + `NDATA` + xS + xName + `)?)` + xSO + `>`
 	xPEDecl        = `<!ENTITY` + xS + `%` + xS + xName + xS + `(?:` + xEntityValue + `|` + xExternalID + `)` + xSO + `>`
-	xEntityDecl    = regexp.MustCompile(`^(?:` + xGEDecl + `|` + xPEDecl + `)`)
-	xNotationDecl  = regexp.MustCompile(`^<!NOTATION` + xS + xName + xS + `(?:` + xExternalID + `|PUBLIC` + xS + xPubidLiteral + `)` + xSO + `>`)
-	xExternalIDRe  = regexp.MustCompile(`^(?:SYSTEM` + xS + `(?P<SystemLiteralOnly>` + xSystemLiteral + `)|PUBLIC` + xS + `(?P<PubidLiteral>` + xPubidLiteral + `)` + xS + `(?P<SystemLiteral>` + xSystemLiteral + `))`)
+	xEntityDecl    = mustRE(`^(?:` + xGEDecl + `|` + xPEDecl + `)`)
+	xNotationDecl  = mustRE(`^<!NOTATION` + xS + xName + xS + `(?:` + xExternalID + `|PUBLIC` + xS + xPubidLiteral + `)` + xSO + `>`)
+	xExternalIDRe  = mustRE(`^(?:SYSTEM` + xS + `(?P<SystemLiteralOnly>` + xSystemLiteral + `)|PUBLIC` + xS + `(?P<PubidLiteral>` + xPubidLiteral + `)` + xS + `(?P<SystemLiteral>` + xSystemLiteral + `))`)
 )
 
 func xIsSpaceRune(r rune) bool { return r == ' ' || r == '\t' || r == '\r' || r == '\n' }
@@ -317,8 +316,8 @@ func xParse(source string, onError func(level, msg string)) (doc *xNode) {
 	return h.doc
 }
 
-var xLineEndA = regexp.MustCompile("\r[\n\u0085]")
-var xLineEndB = regexp.MustCompile("[\r\u0085\u2028\u2029]")
+var xLineEndA = mustRE("\r[\n\u0085]")
+var xLineEndB = mustRE("[\r\u0085\u2028\u2029]")
 
 func xNormalizeLineEndings(s string) string {
 	return xLineEndB.ReplaceAllLiteralString(xLineEndA.ReplaceAllLiteralString(s, "\n"), "\n")
@@ -510,7 +509,7 @@ func xSaxParse(src []rune, defaultNS *xNSScope, h *xHandler) {
 					h.fatalError("unclosed xml tag(s): " + strings.Join(unclosedTags, ", "))
 				}
 				rest := sub(start, len(src))
-				if !regexp.MustCompile(`^[` + dfdWS + `]*$`).MatchString(rest) {
+				if !xBlankRe.MatchString(rest) {
 					text := &xNode{kind: xText, data: rest}
 					if xDocumentElement(h.doc) {
 						h.error("Extra content at the end of the document")
@@ -554,7 +553,7 @@ func xSaxParse(src []rune, defaultNS *xNSScope, h *xHandler) {
 					if end > 0 {
 						lead = xEndTagLead.FindStringSubmatch(tagNameRaw)
 					}
-					if lead != nil && regexp.MustCompile(`(?m)^(`+xQName+`)[\x{20}\x{9}\x{D}\x{A}]*$`).MatchString(tagNameRaw) {
+					if lead != nil && xEndTagLineBreakRe.MatchString(tagNameRaw) {
 						h.error("end tag name is followed by a line break and trailing content: \"" + tagNameRaw + "\"")
 						tagNameMatch = lead
 					} else {
@@ -689,7 +688,7 @@ const (
 	xsTagClose
 )
 
-var xTabNLCR = regexp.MustCompile(`[\t\n\r]`)
+var xTabNLCR = mustRE(`[\t\n\r]`)
 
 func xParseElementStartPart(src []rune, start int, el *xElAttrs, h *xHandler, replaceEntities func(string) string) int {
 	sub := func(a, b int) string {
@@ -861,7 +860,7 @@ func xParseElementStartPart(src []rune, start int, el *xElAttrs, h *xHandler, re
 }
 
 // xGetMatch applies re (anchored with ^) to the source from index i; it returns the match length in runes.
-func xGetMatch(src []rune, i int, re *regexp.Regexp) (string, bool) {
+func xGetMatch(src []rune, i int, re *lazyRE) (string, bool) {
 	rest := string(src[min(i, len(src)):])
 	loc := re.FindStringIndex(rest)
 	if loc == nil {
@@ -910,7 +909,7 @@ func xMatchPI(s string) (target, data string, n int, ok bool) {
 			if i+1 < len(rs) && rs[i] == '?' && rs[i+1] == '>' {
 				return target, string(rs[w:i]), consumed + i + 2, true
 			}
-			if i >= len(rs) || !regexp.MustCompile(`^`+xChar+`$`).MatchString(string(rs[i])) {
+			if i >= len(rs) || !xCharExactRe.MatchString(string(rs[i])) {
 				break
 			}
 			i++
@@ -1065,3 +1064,9 @@ func xParseDoctype(src []rune, start int, h *xHandler) int {
 	h.appendNode(&xNode{kind: xDocType, name: name})
 	return idx
 }
+
+var (
+	xBlankRe           = mustRE(`^[` + dfdWS + `]*$`)
+	xEndTagLineBreakRe = mustRE(`(?m)^(` + xQName + `)[\x{20}\x{9}\x{D}\x{A}]*$`)
+	xCharExactRe       = mustRE(`^` + xChar + `$`)
+)
