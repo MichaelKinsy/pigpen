@@ -94,7 +94,7 @@ func (r vibeRig) start(t *testing.T) *vibeHost {
 	if r.state != nil {
 		vh.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "state_update", "args": map[string]any{"state": r.state}}})
 	}
-	vh.FireAll("session_start", map[string]any{"reason": "startup"})
+	vh.Fire("session_start", map[string]any{"reason": "startup"})
 	return vh
 }
 
@@ -155,8 +155,8 @@ func TestVibeIsNoLongerRefused(t *testing.T) {
 
 func TestVibeTurnShowsThePlaceholderThenTheGeneratedMessage(t *testing.T) {
 	h := vibeRig{settings: vibeSettings}.start(t)
-	h.FireAll("agent_start", nil)
-	h.FireAll("before_agent_start", beforeStart("fix a bug"))
+	h.Fire("agent_start", nil)
+	h.Fire("before_agent_start", beforeStart("fix a bug"))
 	waitFor(t, "the generated vibe", func() bool { return len(workingMessages(h.Host)) >= 2 })
 
 	want := []string{"Channeling star trek...", "Engaging warp drive..."}
@@ -186,7 +186,7 @@ func TestVibeTurnShowsThePlaceholderThenTheGeneratedMessage(t *testing.T) {
 		t.Errorf("model baseUrl = %v, want the credential's", model["baseUrl"])
 	}
 
-	h.FireAll("agent_end", nil)
+	h.Fire("agent_end", nil)
 	if last := workingMessages(h.Host); last[len(last)-1] != "" {
 		t.Errorf("agent_end sets %q, want the default message (empty)", last[len(last)-1])
 	}
@@ -199,11 +199,11 @@ func TestVibeToolCallsRefreshWithAToolHintOrTheAgentText(t *testing.T) {
 		map[string]any{"type": "message", "message": map[string]any{"role": "user", "content": []any{map[string]any{"type": "text", "text": "ignored"}}}},
 	}
 	h := vibeRig{settings: vibeSettings, branch: branch}.start(t)
-	h.FireAll("agent_start", nil)
-	h.FireAll("before_agent_start", beforeStart("go"))
+	h.Fire("agent_start", nil)
+	h.Fire("before_agent_start", beforeStart("go"))
 	waitFor(t, "the first request", func() bool { return len(h.requests()) == 1 })
 
-	h.FireAll("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/etc/hosts"}})
+	h.Fire("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/etc/hosts"}})
 	waitFor(t, "the tool-hint request", func() bool { return len(h.requests()) == 2 })
 	if text := userText(h.requests()[1]["request"].(map[string]any)); !strings.Contains(text, "Task: reading file: /etc/hosts") {
 		t.Errorf("tool hint prompt = %q", text)
@@ -218,10 +218,10 @@ func TestVibeToolCallUsesTheRecentAssistantText(t *testing.T) {
 		}}},
 	}
 	h := vibeRig{settings: vibeSettings, branch: branch}.start(t)
-	h.FireAll("agent_start", nil)
-	h.FireAll("before_agent_start", beforeStart("go"))
+	h.Fire("agent_start", nil)
+	h.Fire("before_agent_start", beforeStart("go"))
 	waitFor(t, "the first request", func() bool { return len(h.requests()) == 1 })
-	h.FireAll("tool_call", map[string]any{"toolName": "bash", "input": map[string]any{"command": "ls"}})
+	h.Fire("tool_call", map[string]any{"toolName": "bash", "input": map[string]any{"command": "ls"}})
 	waitFor(t, "the second request", func() bool { return len(h.requests()) == 2 })
 	if text := userText(h.requests()[1]["request"].(map[string]any)); !strings.Contains(text, "Task: Compiling the warp core now\n") {
 		t.Errorf("agent text prompt = %q", text)
@@ -231,10 +231,10 @@ func TestVibeToolCallUsesTheRecentAssistantText(t *testing.T) {
 func TestVibeToolCallRespectsTheRefreshInterval(t *testing.T) {
 	settings := strings.Replace(vibeSettings, `"workingVibeRefreshInterval":0`, `"workingVibeRefreshInterval":3600`, 1)
 	h := vibeRig{settings: settings}.start(t)
-	h.FireAll("agent_start", nil)
-	h.FireAll("before_agent_start", beforeStart("go"))
+	h.Fire("agent_start", nil)
+	h.Fire("before_agent_start", beforeStart("go"))
 	waitFor(t, "the first request", func() bool { return len(h.requests()) == 1 })
-	h.FireAll("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/x"}})
+	h.Fire("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/x"}})
 	time.Sleep(200 * time.Millisecond)
 	if n := len(h.requests()); n != 1 {
 		t.Errorf("model requests = %d, want 1 (the interval has not passed)", n)
@@ -249,10 +249,10 @@ func TestVibeDoesNothingWithoutAThemeOrWithoutUI(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			h := rig.start(t)
-			h.FireAll("agent_start", nil)
-			h.FireAll("before_agent_start", beforeStart("go"))
-			h.FireAll("tool_call", map[string]any{"toolName": "read", "input": map[string]any{}})
-			h.FireAll("agent_end", nil)
+			h.Fire("agent_start", nil)
+			h.Fire("before_agent_start", beforeStart("go"))
+			h.Fire("tool_call", map[string]any{"toolName": "read", "input": map[string]any{}})
+			h.Fire("agent_end", nil)
 			time.Sleep(100 * time.Millisecond)
 			// agent_end resets Pi's default message whenever there is a UI, theme or not (onVibeAgentEnd).
 			want := []string{""}
@@ -274,9 +274,9 @@ func TestVibeFileModeNeedsNoModelCall(t *testing.T) {
 	dir := filepath.Join(h.agent, "vibes")
 	_ = os.MkdirAll(dir, 0o755)
 	_ = os.WriteFile(filepath.Join(dir, "pirate.txt"), []byte("Hoisting the sails...\nSwabbing decks..."), 0o644)
-	h.FireAll("session_start", map[string]any{"reason": "reload"}) // initVibeManager again: the settings and files are read afresh
-	h.FireAll("agent_start", nil)
-	h.FireAll("before_agent_start", beforeStart("go"))
+	h.Fire("session_start", map[string]any{"reason": "reload"}) // initVibeManager again: the settings and files are read afresh
+	h.Fire("agent_start", nil)
+	h.Fire("before_agent_start", beforeStart("go"))
 	got := workingMessages(h.Host)
 	if len(got) != 2 || got[0] != "Channeling pirate..." || (got[1] != "Hoisting the sails..." && got[1] != "Swabbing decks...") {
 		t.Errorf("working messages = %q", got)
@@ -383,8 +383,8 @@ func vibeTheme() map[string]any {
 func TestVibeColorUsesThePiThemeOnceTheBarHasDrawn(t *testing.T) {
 	settings := `{"workingVibe":"star trek","workingVibeMode":"file","powerline":{"workingVibes":{"color":"warning"}}}`
 	h := vibeRig{settings: settings, state: vibeTheme()}.start(t)
-	h.FireAll("agent_start", nil)
-	h.FireAll("before_agent_start", beforeStart("go"))
+	h.Fire("agent_start", nil)
+	h.Fire("before_agent_start", beforeStart("go"))
 	got := workingMessages(h.Host)
 	if len(got) == 0 || !strings.HasPrefix(got[0], "\x1b[38;5;214m") || !strings.Contains(got[0], "Channeling star trek...") {
 		t.Errorf("working messages = %q, want the first drawn with the warning color", got)
@@ -396,8 +396,8 @@ func TestVibeColorWaitsForTheBarsFirstRender(t *testing.T) {
 	// the footer's render) and shows it unstyled.
 	settings := `{"workingVibe":"star trek","workingVibeMode":"file","powerline":{"workingVibes":{"color":"warning"}}}`
 	h := vibeRig{settings: settings, state: vibeTheme(), mode: "rpc"}.start(t)
-	h.FireAll("agent_start", nil)
-	h.FireAll("before_agent_start", beforeStart("go"))
+	h.Fire("agent_start", nil)
+	h.Fire("before_agent_start", beforeStart("go"))
 	if got := workingMessages(h.Host); len(got) == 0 || got[0] != "Channeling star trek..." {
 		t.Errorf("working messages = %q, want the first unstyled", got)
 	}
@@ -415,12 +415,12 @@ func TestVibeToolCallAsksForTheBranchOnlyWhenARefreshIsDue(t *testing.T) {
 		}
 		return n
 	}
-	h.FireAll("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/x"}}) // not streaming
-	h.FireAll("agent_start", nil)
-	h.FireAll("before_agent_start", beforeStart("go"))
+	h.Fire("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/x"}}) // not streaming
+	h.Fire("agent_start", nil)
+	h.Fire("before_agent_start", beforeStart("go"))
 	waitFor(t, "the first request", func() bool { return len(h.requests()) == 1 })
 	before := branchReads()
-	h.FireAll("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/x"}}) // inside the interval
+	h.Fire("tool_call", map[string]any{"toolName": "read", "input": map[string]any{"path": "/x"}}) // inside the interval
 	if got := branchReads(); got != before {
 		t.Errorf("a tool call that cannot refresh read the branch (%d reads, was %d)", got, before)
 	}

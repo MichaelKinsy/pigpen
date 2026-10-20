@@ -81,8 +81,8 @@ type Host struct {
 	calls    []HostCall
 	pending  map[string]chan json.RawMessage
 	failures map[string]string
-	// allHandlers keeps every handler an extension registered for an event, in registration order: handlers maps an event to the
-	// last one, and an extension may register several for one event (FireAll reaches them all).
+	// allHandlers keeps every handler an extension registered for an event, in registration order (Fire reaches them all);
+	// handlers maps an event to the last one and answers "is the event registered".
 	allHandlers map[string][]int
 	handlers    map[string]int
 	tools       map[string]bool
@@ -363,15 +363,16 @@ func CustomResult(result map[string]any) map[string]any {
 	return map[string]any{"ok": true, "result": result}
 }
 
-// Fire delivers one event the way PiG's host does (waiting for the handler)
-// and returns the handler's result. An event the extension did not register
-// for is not delivered and returns nil. A handler error fails the test.
+// Fire delivers one event the way PiG's host does: to every handler the extension registered for it, in registration order,
+// waiting for each, as Pi's runner does. It returns the last handler's result; for tool_call it returns the first handler's
+// block, if any handler blocks, since the runner stops there. An event the extension did not register for is not delivered and
+// returns nil. A handler error fails the test.
 func (h *Host) Fire(event string, data map[string]any) json.RawMessage {
 	h.t.Helper()
 	h.mu.Lock()
-	id, ok := h.handlers[event]
+	ids := append([]int(nil), h.allHandlers[event]...)
 	h.mu.Unlock()
-	if !ok {
+	if len(ids) == 0 {
 		return nil
 	}
 	if data == nil {
@@ -379,33 +380,23 @@ func (h *Host) Fire(event string, data map[string]any) json.RawMessage {
 	}
 	data["type"] = event
 	args, _ := json.Marshal(data)
-	result, failure := h.roundTrip(map[string]any{"method": "event", "event": event, "handler_id": id, "args": json.RawMessage(args)})
-	if failure != "" {
-		h.t.Errorf("%s handler failed: %s", event, failure)
-	}
-	if event == "tool_call" {
-		return h.toolCallResult(result)
-	}
-	return result
-}
-
-// FireAll delivers one event to every handler the extension registered for it, in registration order, as the host does, and
-// fails the test when one of them fails. Fire reaches only the last handler registered for the event.
-func (h *Host) FireAll(event string, data map[string]any) {
-	h.t.Helper()
-	if data == nil {
-		data = map[string]any{}
-	}
-	data["type"] = event
-	args, _ := json.Marshal(data)
-	h.mu.Lock()
-	ids := append([]int(nil), h.allHandlers[event]...)
-	h.mu.Unlock()
+	var last json.RawMessage
 	for _, id := range ids {
-		if _, failure := h.roundTrip(map[string]any{"method": "event", "event": event, "handler_id": id, "args": json.RawMessage(args)}); failure != "" {
+		result, failure := h.roundTrip(map[string]any{"method": "event", "event": event, "handler_id": id, "args": json.RawMessage(args)})
+		if failure != "" {
 			h.t.Errorf("%s handler %d failed: %s", event, id, failure)
+			continue
 		}
+		if event == "tool_call" {
+			if verdict := h.toolCallResult(result); len(verdict) > 0 && string(verdict) != "null" {
+				return verdict
+			}
+			last = nil
+			continue
+		}
+		last = result
 	}
+	return last
 }
 
 // toolCallResult unwraps the handler's {block, reason} from the host reply. The SDK carries it
