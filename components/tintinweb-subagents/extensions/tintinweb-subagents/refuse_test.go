@@ -157,6 +157,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		c := r.fleet.wait(t, 1)[0]
 		eq(t, c.spec.Thinking, "low")
 		eq(t, c.spec.MaxTurns, 3)
+		eq(t, r.app.mgr.resolve("scout") != nil, true) // the name reaches the record
 	})
 }
 
