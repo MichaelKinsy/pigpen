@@ -202,7 +202,7 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 ### `pi-powerline-footer`: pi-powerline-footer (Nico Bailon)
 
 - Kind: port. Powerline-style status bar: a configurable footer of segments (model, path, git, tokens, cost, context, time) with presets and separators.
-- Notes: Partial: the status bar (segments, layout, presets, config, git, tokens, cost, context, /powerline) is ported; the bash-mode editor, prompt queue, welcome header, vibes, quote reply, /cd and editor composition are not. 82 twins and 25 named skips of 107 slice cases, 6 Pi-recorded scenarios, 178 render states from the original, 152 mutations killed. MIT as declared in package.json (the repository has no LICENSE file; the owner approved).
+- Notes: Partial: the status bar (segments, layout, presets, config, git, tokens, cost, context, /powerline) and auto follow-up are ported; the bash-mode editor, prompt queue, welcome header, vibes, quote reply, /cd and the editor chrome are refused with the install spec of the original. 92 twins and 25 named skips of 117 slice cases, 9 Pi-recorded scenarios, 178 render states from the original, 146 follow-up mutations killed. MIT as declared in package.json (the repository has no LICENSE file; the owner approved).
 
 ### `pi-goal-x`: pi-goal-x (tmonk)
 
