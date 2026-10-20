@@ -72,6 +72,19 @@ original uses unpdf. `pdf.enabled`, `pdf.maxSizeMB` (20, at most 50), `pdf.maxPa
 local extractor's text differs from unpdf's, `port/PORT.md` ("Slice: PDF text extraction") lists the
 fixture that shows it.
 
+## GitHub URLs
+
+`fetch_content` treats `github.com` URLs as the original does. A repository, `tree` or `blob` URL
+is cloned (`gh repo clone`, else `git clone`, shallow and single-branch, into a private
+directory under `githubClone.clonePath`, default `/tmp/pi-github-repos`) and answered with the
+tree, the README, a directory listing or the file; a repository over `githubClone.maxRepoSizeMB`
+(350), a commit SHA and a clone that fails or exceeds `githubClone.cloneTimeoutSeconds` (30) fall
+back to the `gh api` view, and `forceClone: true` clones a large repository anyway. An issue or
+pull request URL is rendered from `gh issue view` / `gh pr view` and the review comments, or from
+the REST API of `api.github.com` when `gh` is missing or fails. `githubClone.enabled` and
+`githubPrIssue.enabled` switch the two extractors off. `gh` and `git` run as child processes of
+this extension, with prompts disabled; see [`port/PORT.md`](port/PORT.md).
+
 ## What is refused until it is ported
 
 Each of these returns a tool error with one message, which names the working alternative, and
@@ -83,8 +96,7 @@ never falls back or runs part of the call:
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
 - `fetch_content` `auth` (authenticated fetch);
 - `fetch_content` URLs the original hands to an extractor: YouTube, local video files, video
-  `frames` and `timestamp`, GitHub repositories, issues and pull requests (while their config
-  sections are not disabled);
+  `frames` and `timestamp` (while their config sections are not disabled);
 - Gemini Web (browser cookies) when browser cookie access is switched on (`PI_ALLOW_BROWSER_COOKIES`, `allowBrowserCookies`): the Gemini API is ported, the browser path is not;
 - a page the original would hand to its RSC payload and Defuddle fallbacks after the readable
   extraction fails.

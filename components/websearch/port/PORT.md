@@ -14,7 +14,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; activity widget and shortcut; TUI render hooks |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
-| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, authenticated fetch, Gemini Web and browser cookies |
+| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | YouTube/video/frames, RSC/Defuddle fallbacks, authenticated fetch, Gemini Web and browser cookies |
 
 ## Refusals (until the slices above are ported)
 
@@ -26,7 +26,7 @@ Every unported option, mode or URL kind is refused with one message and returns 
 |---|---|---|
 | `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
 | `authenticated fetch` | any `auth` value | `tool_fetch.go` |
-| `YouTube video extraction`, `local video file analysis`, `video frame and timestamp extraction`, `GitHub repository extraction (clone)`, `GitHub issue and pull request extraction` | the URL (or `frames`/`timestamp`) the original sends to that extractor and the matching config section (`youtube`, `video`, `githubClone`, `githubPrIssue`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
+| `YouTube video extraction`, `local video file analysis`, `video frame and timestamp extraction` | the URL (or `frames`/`timestamp`) the original sends to that extractor and the matching config section (`youtube`, `video`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
 | `the RSC payload and Defuddle fallback extractors` | readable extraction failed, where the original tries these before giving up (the message follows the original's verdict) | `extract.go` |
 
 A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
@@ -173,11 +173,65 @@ Deliberate differences:
 - **JSON parse errors** in `web-search.json` carry Go's decoder text where the original shows V8's, as for the rest of the config.
 - **Provider `null`** in a stored query result reads as "unknown" only when it is empty (a Go string has no `undefined`).
 
+## Slice: GitHub repositories, issues and pull requests
+
+Ports `github-extract.ts`, `github-api.ts` and `github-issue-pr.ts` and their call site in `extract.ts` (`extract.ts:719-742`).
+Files: `github_extract.go` (URL parsing, settings, the clone runtime and its cleanup, the views of a clone),
+`github_api.go` (the `gh api` view), `github_issue_pr.go` (issue and pull request documents: `gh` and the REST fallback),
+`procrun.go`, `procgroup_unix.go`, `procgroup_windows.go` (child processes) and `nodedecode.go` (Node's lenient base64 and
+UTF-8 decoding, `parseInt`). The `GitHub repository extraction (clone)` and `GitHub issue and pull request extraction` refusals are gone;
+`githubClone.enabled` and `githubPrIssue.enabled` work as upstream.
+
+Programs: `gh` (`--version`, `api`, `repo clone`, `issue view`, `pr view`) and `git clone`, with the original's arguments, timeouts
+(5 s probe, 10 s and 15 s API calls, 20 s for a whole issue or pull request, `githubClone.cloneTimeoutSeconds` for a clone) and
+buffers. The extractor state of the original's module variables (the clone cache, the settings, whether `gh` works) is one
+`githubState`; the extension has one for the process and the tests make more to stand for other processes.
+
+Proof:
+- twins for `github-extract` (16) and `github-issue-pr` (16): every upstream title, with fake `gh` and `git` programs (`/bin/sh`
+  scripts ahead of `PATH`) where the upstream tests use Node scripts. A "process" of the upstream tests that share a clone directory
+  is a `githubState` in the Go twins. Red commit first (30 of 32 failed against the stubs).
+- `port/record-github-wire.mjs` runs the vendored original with the same fake programs and records 44 cases (clone views of every
+  kind, the cache and concurrent callers, the size threshold, forceClone, commit SHAs, clone failure and timeout, configuration
+  errors, issue and pull request documents through `gh`, the REST fallback with a recording `fetch`, direct renderer cases and
+  Node's decoders): the commands started (arguments, and the environment a clone sets) and the documents returned.
+  `extensions/websearch/testdata/github-wire.json` holds the recording and `github_wire_test.go` replays it against the port
+  (`node record-github-wire.mjs --check` fails when a fresh recording differs).
+- three pigeq scenarios with `gh` and `git` declared in `commands`: `fetch-github-clone` (`git clone` through the shim, the cache),
+  `fetch-github-api` (the size threshold, a commit SHA and `forceClone` through a canned `gh`) and `fetch-github-pr` (a pull request and
+  an issue through a canned `gh`). The shims cannot give a clone content (the harness forbids `GIT_*` variables, so no `insteadOf`
+  redirect reaches `git`, and a canned program answers every call alike), so the clone views are proven by the recording above.
+  `exec:gh` is no longer an accepted gap; `exec:taskkill` (the Windows process-tree kill, which no Linux or macOS scenario reaches) is.
+- `github_route_test.go`: the routing inside `ExtractContent`, the session hooks that clear the clone cache and edge cases of URL parsing.
+
+Deliberate differences:
+- **os/exec, not Context.Exec.** The original starts `gh` and `git` with Node's `child_process`, not `pi.exec`: it adds `GIT_TERMINAL_PROMPT=0`,
+  `GCM_INTERACTIVE=Never` and `GH_PROMPT_DISABLED=1` to the environment (so a credential helper never reads the terminal) and kills the whole
+  process group of a clone that times out (SIGTERM, then SIGKILL after 3 s; `taskkill /T /F` on Windows). `Context.Exec` takes neither an
+  environment nor a process group, so the port runs them with `os/exec` like `credential.go`. SDK request for a later switch: `ExecOptions.Env`
+  and termination of the process tree, as Node's `spawn` with `detached` provides.
+- **Cancellation reaches the `gh api` calls.** The original starts them without the caller's signal, so a cancelled fetch lets them finish
+  (up to 15 s) and returns their result; here they are cancelled with the call and the result is the usual "Aborted".
+- **A child's pipes are not waited for forever.** After a killed or exited child the call waits 0.5 s for its pipes (a killed shell script
+  leaves its `sleep` holding them); execFile's callback fires on abort without waiting, and otherwise waits for them.
+- **Timer limit.** `githubClone.cloneTimeoutSeconds` above 2,147,483.647 (Node's `setTimeout` maximum) is that maximum; Node would fire the timer after 1 ms.
+- **File views read a bounded prefix.** A file or README is read for the first 100,001 (8,193) UTF-16 units only (three bytes cover a unit),
+  where the original reads the whole file before cutting it; the output is the same.
+- **Messages that quote a platform error** are Go's: the REST fallback's `GitHub REST fallback failed: <message>` for a transport or JSON error
+  (`fetch failed`, `Unexpected token ...` upstream), a configuration that does not parse (`Failed to parse <path>: <message>`, only the prefix
+  is compared), and `Could not inspect <path>: <message>`.
+- **No activity log.** The original opens an activity entry around a clone (the activity widget belongs to the curator slice).
+- **The runtime directory sweep on Windows** only removes a runtime whose process id `OpenProcess` reports as nonexistent; Linux and macOS
+  follow the original (boot id and start time on Linux, `kill(pid, 0)` elsewhere). The directory names (`runtime-` and six letters or
+  digits), the owner file and the clone digest are the original's, so the original and the port can share a clone directory.
+- **The hint** for a missing `gh` goes to stderr once, as `console.error` does.
+- **Large API responses** read through `restJson` are capped at 16 MB (the provider body cap); upstream reads the body whole.
+
 ## Mapping (original file -> Go)
 
 `storage.ts` storage.go - `utils.ts`/`ssrf-protection.ts`/`credential-source.ts` config.go, credential.go, ssrf.go, proxy.go,
 transport.go - `pdf-extract.ts` pdf_extract.go, featureconfig.go (`pdf.*`), pdf_text.go (the unpdf extraction) - `datalab-pdf-extract.ts` datalab_pdf_extract.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi/serper/serpapi/serpbase/serply/valyu/bocha/baizhi/you/anysearch/xcrawl/searxng.ts`
-same names (`jina-search.ts` jinasearch.go; the shared mechanics of the keyed REST providers are in restcommon.go; the hosted providers are listed in "Slice: hosted search and fetch providers") - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
+same names (`jina-search.ts` jinasearch.go; the shared mechanics of the keyed REST providers are in restcommon.go; the hosted providers are listed in "Slice: hosted search and fetch providers") - `github-extract/github-api/github-issue-pr.ts` github_extract.go, github_api.go, github_issue_pr.go (and procrun.go, nodedecode.go) - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
 find.go, sourcecheck.go, fetchparams.go - `data-uri-sanitize.ts` datauri.go - `index.ts` tools.go, tool_*.go, toolconfig.go,
 schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enable.go - `page-query.ts` page_query.go, fetch_answer.go -
 `query-rewrite.ts` query_rewrite.go - `summary-model-scope.ts` summary_model_scope.go - `summary-review.ts` (generation) summary_review.go -
@@ -230,7 +284,7 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   Piglet Binary this extension runs inside the agent process.
 - Tool schemas are hash-identical to the original's (`tools-default.json` in `golden/`); on the wire the SDK carries them as JSON
   objects, so key order is the SDK's, not the original's.
-- The tool descriptions are kept identical to the original even where they mention unported capabilities (YouTube, GitHub,
+- The tool descriptions are kept identical to the original even where they mention unported capabilities (YouTube,
   PDF, video, Node fetch): the original's own compatibility test pins their hashes.
 
 ## Slice 4a: model-backed providers (OpenAI, xAI, Kimi, Mistral)

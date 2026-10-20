@@ -1685,5 +1685,329 @@
   "file": "extract.go",
   "find": "if o.Mode == \"answer\" {\n\t\t\tcontent = result.Content",
   "replace": "if false {\n\t\t\tcontent = result.Content"
+},
+ {
+  "name": "github-size-note-wording",
+  "file": "github_extract.go",
+  "find": "\"Note: Repository is %sMB (threshold: %sMB). \"",
+  "replace": "\"Repository is %sMB (limit: %sMB). \""
+ },
+ {
+  "name": "github-sha-length",
+  "file": "github_extract.go",
+  "find": "^[0-9a-f]{40}$",
+  "replace": "^[0-9a-f]{41}$"
+ },
+ {
+  "name": "github-readme-cap",
+  "file": "github_extract.go",
+  "find": "readmeMaxChars            = 8192",
+  "replace": "readmeMaxChars            = 8193"
+ },
+ {
+  "name": "github-noise-marker",
+  "file": "github_extract.go",
+  "find": "\"/  [skipped]\"",
+  "replace": "\"/ [skipped]\""
+ },
+ {
+  "name": "github-outside-marker",
+  "file": "github_extract.go",
+  "find": "\"  [outside repo skipped]\"",
+  "replace": "\" [outside repo skipped]\""
+ },
+ {
+  "name": "github-tree-truncation-note",
+  "file": "github_extract.go",
+  "find": "\"... (truncated at %d entries)\"",
+  "replace": "\"... (cut at %d entries)\""
+ },
+ {
+  "name": "github-binary-wording",
+  "file": "github_extract.go",
+  "find": "\"Binary file (\"",
+  "replace": "\"Binary: (\""
+ },
+ {
+  "name": "github-megabyte-boundary",
+  "file": "github_extract.go",
+  "find": "case bytes < 1024*1024:",
+  "replace": "case bytes <= 1024*1024:"
+ },
+ {
+  "name": "github-utf16-name-order",
+  "file": "github_extract.go",
+  "find": "return a[k] < b[k]",
+  "replace": "return a[k] > b[k]"
+ },
+ {
+  "name": "github-env-expansion",
+  "file": "github_extract.go",
+  "find": "if v, ok := os.LookupEnv(m[1:]); ok {",
+  "replace": "if false {"
+ },
+ {
+  "name": "github-truncated-file-note",
+  "file": "github_extract.go",
+  "find": "\"[File truncated at 100K chars. Full file: \"",
+  "replace": "\"[File truncated. Full file: \""
+ },
+ {
+  "name": "github-read-prefix-bound",
+  "file": "github_extract.go",
+  "find": "limit := int64(maxUnits)*readPrefixBytesPerUnit + 10",
+  "replace": "limit := int64(maxUnits)*2 + 10"
+ },
+ {
+  "name": "github-cache-key-ref",
+  "file": "github_extract.go",
+  "find": "return owner + \"/\" + repo + \"@\" + ref",
+  "replace": "return owner + \"/\" + repo"
+ },
+ {
+  "name": "github-sha-uses-clone",
+  "file": "github_extract.go",
+  "find": "if info.RefIsFullSHA {",
+  "replace": "if false {"
+ },
+ {
+  "name": "github-force-clone-ignored",
+  "file": "github_extract.go",
+  "find": "if !forceClone {",
+  "replace": "if true {"
+ },
+ {
+  "name": "github-size-threshold-direction",
+  "file": "github_extract.go",
+  "find": "sizeMB > cfg.MaxRepoSizeMB",
+  "replace": "sizeMB < cfg.MaxRepoSizeMB"
+ },
+ {
+  "name": "github-clone-depth",
+  "file": "github_extract.go",
+  "find": "dest.localPath, \"--\", \"--depth\", \"1\", \"--single-branch\"}",
+  "replace": "dest.localPath, \"--\", \"--depth\", \"2\", \"--single-branch\"}"
+ },
+ {
+  "name": "github-git-url-suffix",
+  "file": "github_extract.go",
+  "find": "\"https://github.com/\"+owner+\"/\"+repo+\".git\"",
+  "replace": "\"https://github.com/\"+owner+\"/\"+repo"
+ },
+ {
+  "name": "github-clone-prompt-env",
+  "file": "procrun.go",
+  "find": "\"GIT_TERMINAL_PROMPT=0\", \"GCM_INTERACTIVE=Never\"",
+  "replace": "\"GIT_TERMINAL_PROMPT=1\", \"GCM_INTERACTIVE=Never\""
+ },
+ {
+  "name": "github-clone-process-group",
+  "file": "procgroup_unix.go",
+  "find": "Setpgid: true",
+  "replace": "Setpgid: false"
+ },
+ {
+  "name": "github-route-result-ignored",
+  "file": "extract.go",
+  "find": "extractGitHubURL(ctx, rawURL, o); done {",
+  "replace": "extractGitHubURL(ctx, rawURL, o); !done {"
+ },
+ {
+  "name": "github-force-clone-option-dropped",
+  "file": "github_extract.go",
+  "find": "return step(extractGitHub(ctx, rawURL, o.ForceClone))",
+  "replace": "return step(extractGitHub(ctx, rawURL, false))"
+ },
+ {
+  "name": "github-session-start-keeps-clones",
+  "file": "tool_search.go",
+  "find": "\tclearCloneCache()\n\tr.mu.Lock()",
+  "replace": "\tr.mu.Lock()"
+ },
+ {
+  "name": "github-session-shutdown-keeps-clones",
+  "file": "tool_search.go",
+  "find": "\tclearCloneCache()\n\tClearResults()",
+  "replace": "\tClearResults()"
+ },
+ {
+  "name": "github-api-tree-cap",
+  "file": "github_api.go",
+  "find": "maxTreeEntries     = 200",
+  "replace": "maxTreeEntries     = 201"
+ },
+ {
+  "name": "github-api-total-entries-note",
+  "file": "github_api.go",
+  "find": "\"\\n... (%d total entries)\"",
+  "replace": "\"\\n... (%d entries)\""
+ },
+ {
+  "name": "github-api-only-view-note",
+  "file": "github_api.go",
+  "find": "\"This is an API-only view. Clone the repo or use `read`/`bash` for deeper exploration.\"",
+  "replace": "\"This is an API-only view.\""
+ },
+ {
+  "name": "github-api-file-truncation-note",
+  "file": "github_api.go",
+  "find": "\"\\n[File truncated at 100K chars]\"",
+  "replace": "\"\\n[File truncated]\""
+ },
+ {
+  "name": "github-api-default-branch-field",
+  "file": "github_api.go",
+  "find": "\".default_branch\"",
+  "replace": "\".defaultBranch\""
+ },
+ {
+  "name": "github-comment-cap",
+  "file": "github_issue_pr.go",
+  "find": "maxInlineComments  = 15",
+  "replace": "maxInlineComments  = 16"
+ },
+ {
+  "name": "github-review-verdict-cap",
+  "file": "github_issue_pr.go",
+  "find": "maxInlineReviews   = 10",
+  "replace": "maxInlineReviews   = 11"
+ },
+ {
+  "name": "github-check-cap",
+  "file": "github_issue_pr.go",
+  "find": "maxInlineChecks    = 15",
+  "replace": "maxInlineChecks    = 16"
+ },
+ {
+  "name": "github-file-cap",
+  "file": "github_issue_pr.go",
+  "find": "maxInlineFiles     = 50",
+  "replace": "maxInlineFiles     = 51"
+ },
+ {
+  "name": "github-commit-cap",
+  "file": "github_issue_pr.go",
+  "find": "maxInlineCommits   = 20",
+  "replace": "maxInlineCommits   = 21"
+ },
+ {
+  "name": "github-review-thread-cap",
+  "file": "github_issue_pr.go",
+  "find": "maxInlineThreads   = 30",
+  "replace": "maxInlineThreads   = 31"
+ },
+ {
+  "name": "github-body-cap",
+  "file": "github_issue_pr.go",
+  "find": "bodyInlineChars    = 4_000",
+  "replace": "bodyInlineChars    = 4_001"
+ },
+ {
+  "name": "github-comment-text-cap",
+  "file": "github_issue_pr.go",
+  "find": "commentInlineChars = 700",
+  "replace": "commentInlineChars = 701"
+ },
+ {
+  "name": "github-document-cap",
+  "file": "github_issue_pr.go",
+  "find": "maxDocChars        = 150_000",
+  "replace": "maxDocChars        = 150_001"
+ },
+ {
+  "name": "github-escalation-heading",
+  "file": "github_issue_pr.go",
+  "find": "\"## Escalation commands\"",
+  "replace": "\"## Escalation\""
+ },
+ {
+  "name": "github-rate-limit-guidance",
+  "file": "github_issue_pr.go",
+  "find": "Authenticate the gh CLI and retry:",
+  "replace": "Authenticate gh and retry:"
+ },
+ {
+  "name": "github-rate-limit-header",
+  "file": "github_issue_pr.go",
+  "find": "resp.Header.Get(\"x-ratelimit-remaining\") == \"0\"",
+  "replace": "resp.Header.Get(\"x-ratelimit-remaining\") == \"1\""
+ },
+ {
+  "name": "github-rest-user-agent",
+  "file": "github_issue_pr.go",
+  "find": "\"User-Agent\": {\"pi-web-access\"}",
+  "replace": "\"User-Agent\": {\"pi-web\"}"
+ },
+ {
+  "name": "github-review-page-size",
+  "file": "github_issue_pr.go",
+  "find": "if len(list) < 100 {",
+  "replace": "if len(list) <= 100 {"
+ },
+ {
+  "name": "github-review-page-limit",
+  "file": "github_issue_pr.go",
+  "find": "if page == 3 {",
+  "replace": "if page == 4 {"
+ },
+ {
+  "name": "github-core-field-note",
+  "file": "github_issue_pr.go",
+  "find": "retried with the core field set.",
+  "replace": "retried with core fields."
+ },
+ {
+  "name": "github-association-scheme",
+  "file": "github_issue_pr.go",
+  "find": "u.Scheme != \"https\" || strings.ToLower(u.Hostname()) != \"api.github.com\"",
+  "replace": "u.Scheme != \"http\" || strings.ToLower(u.Hostname()) != \"api.github.com\""
+ },
+ {
+  "name": "github-association-host",
+  "file": "github_issue_pr.go",
+  "find": "!= \"api.github.com\"",
+  "replace": "!= \"api.github.org\""
+ },
+ {
+  "name": "github-pr-field-list",
+  "file": "github_issue_pr.go",
+  "find": "\"reviews\", \"statusCheckRollup\", \"comments\", \"body\", \"closingIssuesReferences\", \"url\"}",
+  "replace": "\"reviews\", \"comments\", \"body\", \"closingIssuesReferences\", \"url\"}"
+ },
+ {
+  "name": "github-utf8-overlong-lead",
+  "file": "nodedecode.go",
+  "find": "case c >= 0xC2 && c <= 0xDF:",
+  "replace": "case c >= 0xC0 && c <= 0xDF:"
+ },
+ {
+  "name": "github-utf8-surrogate-range",
+  "file": "nodedecode.go",
+  "find": "upper = 0x9F",
+  "replace": "upper = 0xBF"
+ },
+ {
+  "name": "github-base64-urlsafe",
+  "file": "nodedecode.go",
+  "find": "case c == '+' || c == '-':",
+  "replace": "case c == '+':"
+ },
+ {
+  "name": "github-base64-padding-stops",
+  "file": "nodedecode.go",
+  "find": "if s[i] == '=' {",
+  "replace": "if false {"
+ },
+ {
+  "name": "github-rounding-half-up",
+  "file": "nodedecode.go",
+  "find": "n := (bytes*20 + divisor) / (2 * divisor)",
+  "replace": "n := (bytes * 20) / (2 * divisor)"
+ },
+ {
+  "name": "github-parse-int-sign",
+  "file": "nodedecode.go",
+  "find": "neg = s[0] == '-'",
+  "replace": "neg = false"
  }
 ]
