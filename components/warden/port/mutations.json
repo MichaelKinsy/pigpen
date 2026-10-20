@@ -170,8 +170,8 @@
  {
   "name": "sql-delete-local-held",
   "file": "sqltarget.go",
-  "find": "Severity: SeverityRisky, Label: \"SQL DELETE FROM … WHERE on a loopback database\"",
-  "replace": "Severity: SeverityDestructive, Label: \"SQL DELETE FROM … WHERE on a loopback database\""
+  "find": "Severity: SeverityRisky, Label: \"SQL DELETE FROM \u2026 WHERE on a loopback database\"",
+  "replace": "Severity: SeverityDestructive, Label: \"SQL DELETE FROM \u2026 WHERE on a loopback database\""
  },
  {
   "name": "sql-hosted-write-only-warns",
@@ -262,5 +262,83 @@
   "file": "security_wiring.go",
   "find": "if !ctx.HasUI() || !cfg.Notify.Enabled {",
   "replace": "if !ctx.HasUI() {"
+ },
+ {
+  "name": "waste-sleep-needs-two",
+  "file": "waste.go",
+  "find": "if polls < 2 {",
+  "replace": "if polls < 1 {"
+ },
+ {
+  "name": "waste-paging-min-reads",
+  "file": "waste.go",
+  "find": "minReads      = 3",
+  "replace": "minReads      = 2"
+ },
+ {
+  "name": "waste-search-overlap-never",
+  "file": "waste.go",
+  "find": "if PatternsOverlap(l.search.Pattern, r.search.Pattern) {",
+  "replace": "if PatternsOverlap(l.search.Pattern, r.search.Pattern) && false {"
+ },
+ {
+  "name": "waste-far-apart-reads-fire",
+  "file": "waste.go",
+  "find": "if r.Start > furthest+adjacentGap {",
+  "replace": "if r.Start > furthest+adjacentGap && false {"
+ },
+ {
+  "name": "waste-sleep-chain-is-a-poll",
+  "file": "waste.go",
+  "find": "\t\tif s.sep != \"\" && s.sep != \"|\" {",
+  "replace": "\t\tif s.sep != \"\" && s.sep != \"|\" && false {"
+ },
+ {
+  "name": "waste-note-before-result",
+  "file": "supervision.go",
+  "find": "m[\"text\"] = text + \"\\n\\n\" + note",
+  "replace": "m[\"text\"] = note + \"\\n\\n\" + text"
+ },
+ {
+  "name": "waste-sleep-note-wording",
+  "file": "waste.go",
+  "find": "\"You have waited \"",
+  "replace": "\"You waited \""
+ },
+ {
+  "name": "waste-paging-note-offset",
+  "file": "waste.go",
+  "find": "\" without a gap. One `read` with offset=\"",
+  "replace": "\" without a gap. One `read` with start=\""
+ },
+ {
+  "name": "evidence-same-failure-not-linked",
+  "file": "evidence.go",
+  "find": "if c.failed && c.signature == sig {",
+  "replace": "if c.failed && c.signature == sig && false {"
+ },
+ {
+  "name": "evidence-line-numbers-not-normalised",
+  "file": "evidence.go",
+  "find": "{lazyRE(`:\\d+(?::\\d+)?\\b`), \":#\"},",
+  "replace": ""
+ },
+ {
+  "name": "evidence-off-by-default",
+  "file": "config.go",
+  "find": "RepeatSteer: true, Evidence: true,",
+  "replace": "RepeatSteer: true, Evidence: false,"
+ },
+ {
+  "name": "stuck-diff-context-lines",
+  "file": "stuckdiff.go",
+  "find": "const context = 3",
+  "replace": "const context = 2"
+ },
+ {
+  "name": "stuck-diff-never-replaces",
+  "file": "supervision.go",
+  "find": "if len(note) < len(joinedText(content)) {",
+  "replace": "if len(note) < 0 {"
  }
 ]

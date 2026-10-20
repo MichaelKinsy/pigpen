@@ -38,6 +38,9 @@ type Options struct {
 	NotifierPlatform string
 	// ScratchPlatform overrides the platform the session-scratch exemption decides for (tests; "" is the running one).
 	ScratchPlatform string
+	// setup runs after the warden state is built and before the events are subscribed: tests register pieces
+	// of the supervision registries there.
+	setup func(*warden)
 }
 
 type warden struct {
@@ -77,6 +80,9 @@ type warden struct {
 	gc guardcoreState
 	// rules is the project rules guard's state (rules_wire.go).
 	rules *rulesState
+	// sup is the supervision module: subagent triage, call waste, the stuck-loop diff memory, and the piece
+	// registries of the message, input and agent_settled events (supervision.go).
+	sup *supervision
 }
 
 // Extension returns the guard.
@@ -96,7 +102,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	if o.Now == nil {
 		o.Now = time.Now
 	}
-	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, rules: newRulesState(), gc: newGuardcoreState(), sec: newSecurityState()}
+	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, rules: newRulesState(), gc: newGuardcoreState(), sec: newSecurityState(), sup: newSupervision()}
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
@@ -105,14 +111,21 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) { w.guard.TurnEnd(); w.rulesTurnEnd(); return nil, nil })
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
-	// SECURITY: runaway guard (assistant stream). Supervision's message registry takes these two over when it lands.
-	e.OnEvent(sdk.EventMessageStart, w.onRunawayMessageStart)
-	e.OnEvent(sdk.EventMessageUpdate, w.onRunawayMessageUpdate)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); w.rulesShutdown(); return nil, nil })
 	// TOOLS-LANE HOOK: the three tools and the compaction evidence appendix (tools_wiring.go).
 	w.registerWardenTools(e)
 	e.OnEvent(sdk.EventSessionCompact, w.onSessionCompact)
+	// Pieces of the message, input and agent_settled events, in upstream's order (supervision.go lists the whole
+	// order). Each lane adds its own line here, above registerSupervisionEvents.
+	w.sup.onMessageStart(w.onRunawayMessageStart)                                 // security: the runaway guard resets per assistant message
+	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                               // security: the runaway guard feeds on the stream
+	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...") // rules: /warden init and rules tune
+	w.sup.onSettled(w.checkSubagentReports)                                       // supervision: subagent triage
+	if o.setup != nil {
+		o.setup(w)
+	}
+	w.registerSupervisionEvents(e)
 	return e, w
 }
 
@@ -285,6 +298,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, data map[string]any) (any, erro
 	w.steersThisRun, w.doneNudged, w.continuation, w.lastPrompt = 0, false, false, ""
 	w.repeats.Reset()
 	w.budget.Reset()
+	w.sup.reset()
 	loadErr, enabled := w.loadErr, w.cfg.Enabled
 	w.mu.Unlock()
 	w.guard.Reset()
@@ -310,6 +324,8 @@ func (w *warden) disclose(ctx sdk.Context) {
 }
 
 func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, error) {
+	// ── supervision: the call-waste tip rides every run's system prompt, a continuation included ──
+	w.wasteTip(ctx, w.config(ctx), data)
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if p, ok := data["prompt"].(string); ok && strings.TrimSpace(p) != "" {
@@ -323,6 +339,7 @@ func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, 
 		w.window.Reset()
 	}
 	w.repeats.Reset()
+	w.sup.fullOutputs = map[string]fullOutput{}
 	w.doneNudged = false
 	w.sec.resetPrompt() // SECURITY: restatement window, runaway budget
 	w.steersThisRun = 0

@@ -8,7 +8,7 @@ import (
 )
 
 // Tests of the steering and trace core (extension.ts steer 834-925, record 734-760, noteError 654; trace.ts).
-// The Pi-harness case tests/steer-delivery.test.ts:61 (a steer sent from tool_call or tool_result for the last
+// The Pi-harness case at steer-delivery.test.ts line 61 (a steer sent from tool_call or tool_result for the last
 // call of a turn rides the request the tool result needs) is a property of Pi's agent loop, not of the
 // extension, and stays skipped.
 
