@@ -594,6 +594,7 @@ func TestTheSheriffLeaderWearsAHatAndNoFollowerDoes(t *testing.T) {
 	hatColour := sprites.Shared("sheriff").Palette(0)['H']
 	for _, size := range []int{8, 6, 4} {
 		g := snake.New(10, 6, snake.Walls, 0, fixedRand{})
+		g.Start() // a waiting game has a card over the leader
 		g.Body = append(g.Body, snake.Point{X: g.Body[0].X - 1, Y: g.Body[0].Y})
 		w, h := 10*size+4, 6*size+4
 		ox, oy := BoardOrigin(w, h, g.W, g.H, size)
@@ -625,6 +626,7 @@ func TestTheHatStaysOnTheHeadAndLeavesTheEyesAlone(t *testing.T) {
 	src := sprites.Shared("sheriff")
 	pal := src.Palette(0)
 	g := snake.New(10, 6, snake.Walls, 0, fixedRand{})
+	g.Start() // a waiting game has a card over the leader
 	for _, size := range []int{8, 6, 4} {
 		var c pixel.Canvas
 		c.Resize(10*size+4, 6*size+4)
