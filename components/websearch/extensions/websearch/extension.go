@@ -9,6 +9,7 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/PiG/extensions/sdk/kit"
 )
 
 // Extension returns the websearch extension: the tools, the /search command and the session
@@ -41,6 +42,24 @@ func Extension() *sdk.Extension {
 		return e
 	}
 
+	// registerCuratorRunLifecycle: these runs end the approval of the remaining searches.
+	for _, event := range curatorRunResetEvents {
+		e.OnEvent(event, func(ctx sdk.Context, _ map[string]any) (any, error) {
+			rt.CuratorRun().Reset()
+			return nil, nil
+		})
+	}
+	e.Shortcut(rt.Config().CurateShortcut, "Review search results", func(ctx sdk.Context) error {
+		h.set(ctx)
+		rt.CurateShortcut(ctx)
+		return nil
+	})
+	e.Shortcut(rt.Config().ActivityShortcut, "Toggle web search activity", func(ctx sdk.Context) error {
+		h.set(ctx)
+		rt.ToggleActivityWidget(ctxWidgetUI{ctx})
+		return nil
+	})
+
 	for _, spec := range rt.Tools() {
 		spec := spec
 		e.RegisterTool(sdk.ToolDefinition{
@@ -53,11 +72,32 @@ func Extension() *sdk.Extension {
 				h.set(ctx)
 				cctx, cancel := bridgeContext(ctx)
 				defer cancel()
+				cctx = WithToolCallID(cctx, ctx.ToolCallID())
 				out, err := spec.Execute(cctx, params, func(partial ToolOutput) { _ = ctx.OnUpdate(toToolResult(partial)) })
 				if err != nil {
 					return nil, err
 				}
 				return toToolResult(out), nil
+			},
+		})
+	}
+
+	for _, name := range rt.RenderedTools() {
+		name := name
+		e.SetToolRenderers(name, sdk.ToolRenderers{
+			CallView: func(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContext, _ int) (kit.View, error) {
+				text, err := rt.callText(name, args, ctx.UITheme())
+				if err != nil {
+					return kit.View{}, err
+				}
+				return kit.View{Root: kit.NewText(text, 0, 0)}, nil
+			},
+			ResultView: func(ctx sdk.Context, result sdk.ToolRenderResult, opts sdk.ToolRenderResultOptions, _ sdk.ToolRenderContext, _ int) (kit.View, error) {
+				node, err := rt.RenderResult(name, result.Content, result.Details, opts.Expanded, opts.IsPartial, ctx.UITheme())
+				if err != nil {
+					return kit.View{}, err
+				}
+				return kit.View{Root: node}, nil
 			},
 		})
 	}
@@ -72,6 +112,7 @@ func Extension() *sdk.Extension {
 			ctx.Notify("websearch: could not restore stored results: "+err.Error(), "warning")
 		}
 		rt.SessionStarted(entries)
+		rt.ResetActivity(ctxWidgetUI{ctx})
 		if sc, err := ctx.SessionManager().BuildSessionContext(); err != nil {
 			ctx.Notify("websearch: could not read the session transcript: "+err.Error(), "warning")
 		} else {
@@ -88,21 +129,65 @@ func Extension() *sdk.Extension {
 	})
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		rt.SessionShutdown()
+		rt.ShutdownActivity()
 		return nil, nil
 	})
 
 	for _, name := range rt.Commands() {
-		e.RegisterCommand(name, sdk.CommandOptions{
-			Description: "Browse stored web search results",
-			Handler: func(ctx sdk.Context, _ string) error {
-				h.set(ctx)
-				rt.SearchCommand(ctxUI{ctx})
-				return nil
-			},
-		})
+		switch name {
+		case "websearch":
+			e.RegisterCommand(name, sdk.CommandOptions{
+				Description: "Open web search curator",
+				Handler: func(ctx sdk.Context, args string) error {
+					h.set(ctx)
+					return rt.WebsearchCommand(sdkSideCall{ctx}, args)
+				},
+			})
+		case "curator":
+			e.RegisterCommand(name, sdk.CommandOptions{
+				Description: "Toggle or configure the search curator workflow",
+				Handler: func(ctx sdk.Context, args string) error {
+					h.set(ctx)
+					rt.CuratorCommand(args)
+					return nil
+				},
+			})
+		case "google-account":
+			e.RegisterCommand(name, sdk.CommandOptions{
+				Description: "Show the active Google account for Gemini Web",
+				Handler: func(ctx sdk.Context, _ string) error {
+					h.set(ctx)
+					cctx, cancel := bridgeContext(ctx)
+					defer cancel()
+					return rt.GoogleAccountCommand(cctx)
+				},
+			})
+		case "search":
+			e.RegisterCommand(name, sdk.CommandOptions{
+				Description: "Browse stored web search results",
+				Handler: func(ctx sdk.Context, _ string) error {
+					h.set(ctx)
+					rt.SearchCommand(ctxUI{ctx})
+					return nil
+				},
+			})
+		}
 	}
 	return e
 }
+
+// ctxWidgetUI adapts an SDK context to WidgetUI.
+type ctxWidgetUI struct{ ctx sdk.Context }
+
+func (u ctxWidgetUI) SetWidget(key string, lines []string) {
+	if lines == nil {
+		_ = u.ctx.SetWidget(key, nil)
+		return
+	}
+	_ = u.ctx.SetWidget(key, lines)
+}
+
+func (u ctxWidgetUI) Theme() WidgetTheme { return u.ctx.UITheme() }
 
 // ctxUI adapts an SDK context to CommandUI.
 type ctxUI struct{ ctx sdk.Context }
@@ -266,4 +351,36 @@ func (h *sdkHost) exec(_ context.Context, command string, args []string, timeout
 		return ExecResult{Code: 1}, nil
 	}
 	return ExecResult{Stdout: res.Stdout, Stderr: res.Stderr, Code: res.ExitCode, Killed: res.Killed}, nil
+// Notify, SendCustomMessage and Exec make sdkHost a CuratorHost.
+func (h *sdkHost) Notify(message, level string) {
+	if ctx, ok := h.get(); ok {
+		ctx.Notify(message, level)
+	}
+}
+
+func (h *sdkHost) SendCustomMessage(customType string, content []map[string]any, details map[string]any, triggerTurn bool, deliverAs string) {
+	ctx, ok := h.get()
+	if !ok {
+		return
+	}
+	msg := sdk.CustomMessage{CustomType: customType, Content: content, Display: true}
+	if details != nil {
+		msg.Details = details
+	}
+	_ = ctx.SendCustomMessage(msg, sdk.SendMessageOptions{TriggerTurn: &triggerTurn, DeliverAs: deliverAs})
+}
+
+func (h *sdkHost) Exec(command string, args []string) (int, string, error) {
+	ctx, ok := h.get()
+	if !ok {
+		return 0, "", errors.New("no session to run the command in")
+	}
+	res, err := ctx.Exec(command, args)
+	if err != nil {
+		return 0, "", err
+	}
+	if res == nil {
+		return 0, "", nil
+	}
+	return res.ExitCode, res.Stderr, nil
 }

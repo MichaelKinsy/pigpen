@@ -12,7 +12,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
-| Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; activity widget and shortcut; TUI render hooks |
+| Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | (none of the curator, commands, widget, shortcuts and renderers is missing any more: see Slice 11) |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
 | SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | None: the Defuddle fallback is ported (Slice 12) |
 
@@ -818,3 +818,28 @@ tables are embedded gzip files decoded at first use (`dfd_tables.go`; the genera
 `port/gen-defuddle-mathml-tables.mjs` and `port/gen-html-entities.py` write them; a one-off comparison of all 22 decoded tables with the old
 map literals found them equal). Binary size: the ported pipeline is hand-written code (the Defuddle pipeline and its 26 extractors, the linkedom-like DOM and css-select,
 Temml and mhchem, mathml-to-latex, the JavaScript regular expression engine): see the PR body for the numbers.
+## Slice 11: the search curator, commands, widget, shortcuts and renderers (W9, W10)
+
+Ported: `curator-page.ts` (the page is the original's bytes, `curator_page.html` derived by
+`port/record-curator-page.mjs`; `curator_page_test.go` compares 17 renderings with the original's SHA-256 and
+the minimal one byte for byte), `curator-server.ts` (`curator_server.go`), `curator-run.ts`, the curated and
+auto-summary branches of `web_search`, `/websearch`, `/curator`, `/google-account`, `activity.ts` with the call
+sites of the ported providers and fetches, the two shortcuts, and the tool renderers (`render.go`,
+`render_search_error.go`, as kit views). The `web_search workflow` refusal is removed.
+
+Deliberate differences, for owner veto:
+- macOS: the original opens a Glimpse window when the optional `glimpseui` package is installed; a Go extension
+  cannot load it, so the port always uses `open`. Linux and Windows are the original's (`xdg-open` detached with a
+  100 ms grace, `cmd /c start`).
+- The server answers a JSON body that is falsy (`null`, `0`, `false`, `""`) with 400 "Invalid body"; the original
+  never answers it (the request hangs).
+- The curator server keeps the original's provider list, which has no `serpapi`: POST /provider and /search with
+  `serpapi` answer "Provider unavailable" (an upstream omission, reported rather than fixed).
+- Invalid-JSON messages of the server differ in wording from V8's.
+- `/google-account` reaches the cookie reader through `SetGoogleAccountSource`; without the authenticated-fetch
+  slice it answers the opt-in state or the refusal. The integrator installs the S9 reader.
+- `currentModelHostedSearchEligible` (curator default provider) is a seam for the OpenAI slice; without it no
+  model is eligible.
+
+Not done in this run (see the lane report): pigeq goldens for the seven new scenarios, mutations, the
+accepted-gaps and Performance sections, and the remaining activity call sites of providers other slices add.

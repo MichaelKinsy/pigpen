@@ -60,7 +60,9 @@ func SearchWithBrave(ctx context.Context, query string, o SearchOptions) (*Searc
 	if len(o.DomainFilter) > 0 {
 		count = 20
 	}
-	params := "q=" + formEscape(buildBraveQuery(query, filters)) + "&count=" + strconv.Itoa(count)
+	searchQuery := buildBraveQuery(query, filters)
+	act := logAPIStart(searchQuery)
+	params := "q=" + formEscape(searchQuery) + "&count=" + strconv.Itoa(count)
 	if o.RecencyFilter != "" {
 		if f, ok := map[string]string{"day": "pd", "week": "pw", "month": "pm", "year": "py"}[o.RecencyFilter]; ok {
 			params += "&freshness=" + f
@@ -71,14 +73,17 @@ func SearchWithBrave(ctx context.Context, query string, o SearchOptions) (*Searc
 	resp, err := FetchWithCredentialRedirects(tctx, base+"/web/search?"+params, RequestInit{Method: "GET",
 		Header: http.Header{"X-Subscription-Token": {apiKey}, "Accept": {"application/json"}}}, []string{"X-Subscription-Token"})
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		act.logError(fmt.Sprintf("HTTP %d", resp.StatusCode))
 	}
 	body, err := readBody(resp)
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("Brave Search API error %d: %s", resp.StatusCode, slice300(RedactCredential(body, apiKey)))
+		return nil, act.failedErr(fmt.Errorf("Brave Search API error %d: %s", resp.StatusCode, slice300(RedactCredential(body, apiKey))))
 	}
 	var data struct {
 		Web struct {
@@ -90,8 +95,9 @@ func SearchWithBrave(ctx context.Context, query string, o SearchOptions) (*Searc
 		} `json:"web"`
 	}
 	if err := json.Unmarshal([]byte(body), &data); err != nil {
-		return nil, fmt.Errorf("Brave Search API returned invalid JSON: %v", err)
+		return nil, act.failedErr(fmt.Errorf("Brave Search API returned invalid JSON: %v", err))
 	}
+	act.complete(resp.StatusCode)
 	results := []SearchResult{}
 	for _, item := range data.Web.Results {
 		if item.URL == "" || !filters.matches(item.URL) {
