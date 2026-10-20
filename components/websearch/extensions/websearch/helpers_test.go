@@ -11,8 +11,8 @@ import (
 	"testing"
 )
 
-// adapted marks a twin whose upstream fixture uses a provider this port does not have (OpenAI,
-// XCrawl, AnySearch, SerpBase): the behaviour under test is provider-independent, so the case runs
+// adapted marks a twin whose upstream fixture uses a provider this port does not have (OpenAI):
+// the behaviour under test is provider-independent, so the case runs
 // with a ported provider and `note` says what changed. Every adapted case is listed in PORT.md.
 func adapted(t *testing.T, note string) {
 	t.Helper()
