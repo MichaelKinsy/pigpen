@@ -67,12 +67,24 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 		if !state.RememberModel.Enabled {
 			return nil, nil
 		}
-		// Only a genuinely new session is restored here. A restarted session that
-		// already has a conversation carries its own model, and overriding it
-		// would change the model mid-history. The startup case needs no restore:
-		// the model written into settings.json below is already host-resolvable.
-		if sdk.Param[string](data, "reason") != "new" {
+		reason := sdk.Param[string](data, "reason")
+		if reason != "new" && reason != "startup" {
 			return nil, nil
+		}
+		// A continued session already carries its own model; leave it alone.
+		// When the branch cannot be read, assume it has messages rather than
+		// override a model mid-history.
+		if reason == "startup" {
+			branch, err := ctx.GetBranch()
+			if err != nil {
+				logf("read session branch: %v", err)
+				return nil, nil
+			}
+			for _, entry := range branch {
+				if entry.Type == "message" {
+					return nil, nil
+				}
+			}
 		}
 		last := state.RememberModel.Last
 		if last == nil {
