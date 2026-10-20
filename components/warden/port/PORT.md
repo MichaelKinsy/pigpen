@@ -264,8 +264,12 @@ Mutations: 21 layer-1 rows (`port/mutate.py`, `port/mutation-results.txt`, all k
 The hot paths (rule matching, the store cache, shell writes) are benchmarked in `rules_bench_test.go`.
 
 Judged rules behaviour (the rules request to the judge, steers, `rules check|audit|calibrate`) is proven by the twins and the
-fake-server layer-1 tests only: the original cannot be pointed at a fake judge from the hermetic host (G1), so no pigeq
-scenario can script its verdicts.
+fake-server layer-1 tests only. G1 is disproved for the judge itself (a pigeq `servers` fixture plus `TYPESAFE_BASE_URL` and
+the original's `typesafeBackend` config reach the original; recipe from the learning lane), but a write's rules request is
+sent concurrently with the action request (upstream's design, kept by the port), so the fake server would see the two
+requests in an order that is not fixed and its in-order `times` routes would answer the wrong question set. No judged rules
+scenario was written for that reason; `rules check|audit|calibrate` send one request at a time and could be scripted, which
+was not done.
 
 `sensitive-path-note-steered` carries the original's config in `agentFiles` (`pi-warden/config.json`) and the port's in
 `homeFiles` (`pigpen-warden/config.json` under `<PIG_HOME>`, D5), the pigeq `homeFiles` field of branch `pigeq-harness-gaps`:
