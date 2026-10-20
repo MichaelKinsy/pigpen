@@ -113,46 +113,6 @@ func TestDeferred_gemini_web_header_overflow(t *testing.T) {
 	tskip(t, F, "resolveGeminiFetch surfaces dedicated agent construction errors", "Gemini is a later slice (docs/PORT.md); this case (resolveGeminiFetch surfaces dedicated agent construction errors) ships with the feature")
 }
 
-func TestDeferred_github_extract(t *testing.T) {
-	const F = "github-extract"
-	tskip(t, F, "parseGitHubUrl rejects malformed identifiers and preserves normal GitHub paths", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (parseGitHubUrl rejects malformed identifiers and preserves normal GitHub paths) ships with the feature")
-	tskip(t, F, "malformed GitHub identifiers cannot delete outside the clone cache", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (malformed GitHub identifiers cannot delete outside the clone cache) ships with the feature")
-	tskip(t, F, "clearCloneCache removes only its runtime directory", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (clearCloneCache removes only its runtime directory) ships with the feature")
-	tskip(t, F, "clone cleanup unlinks a direct-child symlink without deleting its target", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (clone cleanup unlinks a direct-child symlink without deleting its target) ships with the feature")
-	tskip(t, F, "a failed clone cannot clean up another process's in-flight destination", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (a failed clone cannot clean up another process's in-flight destination) ships with the feature")
-	tskip(t, F, "runtime cache reuse and cleanup stay isolated across processes", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (runtime cache reuse and cleanup stay isolated across processes) ships with the feature")
-	tskip(t, F, "clone runtime creation proceeds while background cleanup is gated", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (clone runtime creation proceeds while background cleanup is gated) ships with the feature")
-	tskip(t, F, "background cleanup removes dead runtimes after unrelated files and ownerless directories", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (background cleanup removes dead runtimes after unrelated files and ownerless directories) ships with the feature")
-	tskip(t, F, "oversized malformed owner metadata is preserved during extraction", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (oversized malformed owner metadata is preserved during extraction) ships with the feature")
-	tskip(t, F, "clone runtime initialization preserves live, unknown, and symlink runtimes", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (clone runtime initialization preserves live, unknown, and symlink runtimes) ships with the feature")
-	tskip(t, F, "normalizeClonePath expands ~ to HOME", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (normalizeClonePath expands ~ to HOME) ships with the feature")
-	tskip(t, F, "normalizeClonePath expands $HOME and other env vars", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (normalizeClonePath expands $HOME and other env vars) ships with the feature")
-	tskip(t, F, "normalizeClonePath handles absolute paths without expansion", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (normalizeClonePath handles absolute paths without expansion) ships with the feature")
-	tskip(t, F, "GitHub clones disable interactive credential prompts", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (GitHub clones disable interactive credential prompts) ships with the feature")
-	tskip(t, F, "GitHub clone timeout force-kills the SIGTERM-resistant process group", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (GitHub clone timeout force-kills the SIGTERM-resistant process group) ships with the feature")
-	tskip(t, F, "githubClone.enabled false skips GitHub clone/API specialization", "GitHub repository cloning/extraction is deferred (docs/PORT.md); this case (githubClone.enabled false skips GitHub clone/API specialization) ships with the feature")
-}
-
-func TestDeferred_github_issue_pr(t *testing.T) {
-	const F = "github-issue-pr"
-	tskip(t, F, "parseGitHubIssuePrUrl accepts PR and issue variants without changing repo parsing", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (parseGitHubIssuePrUrl accepts PR and issue variants without changing repo parsing) ships with the feature")
-	tskip(t, F, "renderer orders sections, marks truncation, and forces anchored comments inline", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (renderer orders sections, marks truncation, and forces anchored comments inline) ships with the feature")
-	tskip(t, F, "renderer marks truncated review verdicts", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (renderer marks truncated review verdicts) ships with the feature")
-	tskip(t, F, "extractGitHubIssuePr retries gh view with core fields on unknown --json field", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (extractGitHubIssuePr retries gh view with core fields on unknown --json field) ships with the feature")
-	tskip(t, F, "gh path fetches an anchored review comment beyond fetched pages", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (gh path fetches an anchored review comment beyond fetched pages) ships with the feature")
-	tskip(t, F, "gh path rejects anchored review comments from another pull request", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (gh path rejects anchored review comments from another pull request) ships with the feature")
-	tskip(t, F, "gh path still attempts an anchored review comment after page failure", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (gh path still attempts an anchored review comment after page failure) ships with the feature")
-	tskip(t, F, "gh review thread page failure renders unavailable instead of none", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (gh review thread page failure renders unavailable instead of none) ships with the feature")
-	tskip(t, F, "extractGitHubIssuePr aborts active gh work with the caller signal", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (extractGitHubIssuePr aborts active gh work with the caller signal) ships with the feature")
-	tskip(t, F, "extractGitHubIssuePr aborts a hung gh availability probe", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (extractGitHubIssuePr aborts a hung gh availability probe) ships with the feature")
-	tskip(t, F, "REST fallback preserves caller cancellation", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (REST fallback preserves caller cancellation) ships with the feature")
-	tskip(t, F, "extractContent returns an actionable GitHub rate-limit result instead of HTML fall-through", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (extractContent returns an actionable GitHub rate-limit result instead of HTML fall-through) ships with the feature")
-	tskip(t, F, "REST fallback fetches an anchored issue comment outside the first page", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (REST fallback fetches an anchored issue comment outside the first page) ships with the feature")
-	tskip(t, F, "REST fallback rejects anchored issue comments from another work item", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (REST fallback rejects anchored issue comments from another work item) ships with the feature")
-	tskip(t, F, "REST fallback fetches an anchored PR review comment outside the first page", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (REST fallback fetches an anchored PR review comment outside the first page) ships with the feature")
-	tskip(t, F, "REST fallback does not render positive changedFiles as none when files are missing", "GitHub issue/PR extraction is deferred (docs/PORT.md); this case (REST fallback does not render positive changedFiles as none when files are missing) ships with the feature")
-}
-
 func TestDeferred_jina_search(t *testing.T) {
 	const F = "jina-search"
 	tskip(t, F, "curator page exposes Jina Search as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Jina Search as a manual provider) ships with the feature")
