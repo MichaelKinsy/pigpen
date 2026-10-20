@@ -1,0 +1,10 @@
+{
+ "test-pi-extension": [
+  "package.json declares a pi package with skills and extension resources",
+  "extension registers lifecycle hooks without pre-compaction injection",
+  "resources_discover contributes the bundled skills directory",
+  "startup context injects the bootstrap as one user message until agent_end",
+  "session_compact injects bootstrap after compaction summaries, not before compaction",
+  "pi tools reference documents pi-specific mappings"
+ ]
+}

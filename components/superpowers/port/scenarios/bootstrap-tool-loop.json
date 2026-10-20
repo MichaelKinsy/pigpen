@@ -1,0 +1,12 @@
+{
+  "name": "bootstrap-tool-loop",
+  "description": "A run with a tool call makes two model requests before agent_end; both carry the bootstrap, once each.",
+  "files": {"notes.txt": "remember the milk\n"},
+  "llm": [
+    {"toolCalls": [{"name": "read", "arguments": {"path": "notes.txt"}}]},
+    {"text": "done"}
+  ],
+  "steps": [
+    {"name": "prompt", "rpc": {"type": "prompt", "message": "read notes.txt"}}
+  ]
+}
