@@ -52,6 +52,14 @@
       "replacement": "active_goal_<stamp>_"
     },
     {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    },
+    {
+      "pattern": "Context snapshot: \\d+/(\\d+) tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <tokens>/${1} tokens (<pct>)"
+    },
+    {
       "pattern": "archived/goal_\\d{16}_",
       "replacement": "archived/goal_<stamp>_"
     }
