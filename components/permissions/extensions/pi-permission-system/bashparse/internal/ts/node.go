@@ -14,6 +14,10 @@ type Node struct {
 	alias uint16
 }
 
+// NodeCount is the number of nodes the node API reaches from the root: the root and its visible
+// descendants.
+func (t *Tree) NodeCount() int { return int(t.root.visibleDescendants()) + 1 }
+
 // Root is the tree's root node (ts_tree_root_node).
 func (t *Tree) Root() Node {
 	return Node{tree: t, id: &t.root, sub: t.root, pos: t.root.padding}
@@ -133,11 +137,11 @@ type Child struct {
 	Field string
 }
 
-// Children are the node's visible children in order, each with ts_node_field_name_for_child's
-// answer: flattening the hidden nodes between a node and its visible descendants, as ts_node_child
-// does, and carrying the field of the nearest hidden ancestor that has one.
-func (n Node) Children() []Child {
-	var out []Child
+// AppendChildren appends the node's visible children in order, each with
+// ts_node_field_name_for_child's answer: flattening the hidden nodes between a node and its
+// visible descendants, as ts_node_child does, and carrying the field of the nearest hidden
+// ancestor that has one.
+func (n Node) AppendChildren(out []Child) []Child {
 	n.collect("", &out)
 	return out
 }

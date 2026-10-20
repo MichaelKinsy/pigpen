@@ -1,47 +1,47 @@
 {
- "origin": "ported",
- "authors": [
-  "Michael Kinsy"
- ],
- "license": "MIT",
- "licenseFile": "LICENSE",
- "upstreams": [
-  {
-   "name": "@gotgenes/pi-permission-system",
-   "authors": [
-    "MasuRii and Christopher D. Lasher"
-   ],
-   "url": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system",
-   "revision": "c5bc74712cd2fe808d70246d93d26a092f736676",
-   "path": "port/oracle/packages/pi-permission-system",
-   "license": "MIT",
-   "licenseFile": "port/oracle/packages/pi-permission-system/LICENSE",
-   "attributionFile": "CREDITS.md"
-  },
-  {
-   "name": "tree-sitter-bash",
-   "authors": [
-    "Max Brunsfeld",
-    "Amaan Qureshi"
-   ],
-   "url": "https://github.com/tree-sitter/tree-sitter-bash",
-   "revision": "v0.25.1",
-   "path": "extensions/pi-permission-system/bashparse/internal/ts",
-   "license": "MIT",
-   "licenseFile": "extensions/pi-permission-system/bashparse/internal/ts/LICENSE-tree-sitter-bash",
-   "attributionFile": "CREDITS.md"
-  },
-  {
-   "name": "tree-sitter",
-   "authors": [
-    "Max Brunsfeld"
-   ],
-   "url": "https://github.com/tree-sitter/tree-sitter",
-   "revision": "7f534862c3ec939c3a6ee147f7600ef5c1bf900f",
-   "path": "extensions/pi-permission-system/bashparse/internal/ts",
-   "license": "MIT",
-   "licenseFile": "extensions/pi-permission-system/bashparse/internal/ts/LICENSE-tree-sitter",
-   "attributionFile": "CREDITS.md"
-  }
- ]
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "@gotgenes/pi-permission-system",
+      "authors": [
+        "MasuRii and Christopher D. Lasher"
+      ],
+      "url": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system",
+      "revision": "c5bc74712cd2fe808d70246d93d26a092f736676",
+      "path": "port/oracle/packages/pi-permission-system",
+      "license": "MIT",
+      "licenseFile": "port/oracle/packages/pi-permission-system/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "tree-sitter-bash",
+      "authors": [
+        "Max Brunsfeld",
+        "Amaan Qureshi"
+      ],
+      "url": "https://github.com/tree-sitter/tree-sitter-bash",
+      "revision": "a06c2e4415e9bc0346c6b86d401879ffb44058f7",
+      "path": "extensions/pi-permission-system/bashparse/internal/ts",
+      "license": "MIT",
+      "licenseFile": "extensions/pi-permission-system/bashparse/internal/ts/LICENSE-tree-sitter-bash",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "tree-sitter",
+      "authors": [
+        "Max Brunsfeld"
+      ],
+      "url": "https://github.com/tree-sitter/tree-sitter",
+      "revision": "7f534862c3ec939c3a6ee147f7600ef5c1bf900f",
+      "path": "extensions/pi-permission-system/bashparse/internal/ts",
+      "license": "MIT",
+      "licenseFile": "extensions/pi-permission-system/bashparse/internal/ts/LICENSE-tree-sitter",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
 }

@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"sync/atomic"
 )
 
 //go:embed bash_tables.bin.gz
@@ -104,6 +105,17 @@ type Language struct {
 	externalSymbols  []uint16
 	externalStates   []bool
 	externalStateRow uint32
+
+	// dense caches, per small state, its table as one value per symbol (0 where the state has no
+	// entry): row i is dense[i*symbolCount:(i+1)*symbolCount] for small state largeStateCount+i,
+	// filled the first time the state is looked up. The small-state format is a list of
+	// (value, symbols...) groups, searched linearly; a parse looks the same few states up again
+	// and again. One pointer-free array, so the collector never scans it, and the operating
+	// system commits only the rows a process touches. rowBuilt[i] is 1 once row i is complete
+	// (set after the writes, read before them); rowMu serializes the builders.
+	dense    []uint16
+	rowBuilt []atomic.Uint32
+	rowMu    sync.Mutex
 }
 
 var (
@@ -138,13 +150,38 @@ func (r *reader) u16() uint16 { return binary.LittleEndian.Uint16(r.take(2)) }
 func (r *reader) u32() uint32 { return binary.LittleEndian.Uint32(r.take(4)) }
 func (r *reader) str() string { n := int(r.u16()); return string(r.take(n)) }
 
+// u16s reads n little-endian uint16 values with one bounds check.
+func (r *reader) u16s(n int) []uint16 {
+	b := r.take(2 * n)
+	out := make([]uint16, n)
+	for i := range out {
+		out[i] = binary.LittleEndian.Uint16(b[2*i:])
+	}
+	return out
+}
+
+// u32s reads n little-endian uint32 values with one bounds check.
+func (r *reader) u32s(n int) []uint32 {
+	b := r.take(4 * n)
+	out := make([]uint32, n)
+	for i := range out {
+		out[i] = binary.LittleEndian.Uint32(b[4*i:])
+	}
+	return out
+}
+
 func loadLanguage() (*Language, error) {
 	zr, err := gzip.NewReader(bytes.NewReader(tablesGz))
 	if err != nil {
 		return nil, err
 	}
-	data, err := io.ReadAll(zr)
-	if err != nil {
+	// The gzip trailer holds the uncompressed size (the tables are far below 4 GiB): read into a
+	// buffer of exactly that size instead of growing one.
+	if len(tablesGz) < 4 {
+		return nil, fmt.Errorf("ts: truncated tables")
+	}
+	data := make([]byte, binary.LittleEndian.Uint32(tablesGz[len(tablesGz)-4:]))
+	if _, err := io.ReadFull(zr, data); err != nil {
 		return nil, err
 	}
 	r := &reader{b: data}
@@ -191,22 +228,16 @@ func loadLanguage() (*Language, error) {
 	for i := uint32(0); i < l.stateCount; i++ {
 		l.lexModes = append(l.lexModes, lexMode{r.u16(), r.u16(), r.u16()})
 	}
-	l.parseTable = make([]uint16, l.largeStateCount*l.symbolCount)
-	for i := range l.parseTable {
-		l.parseTable[i] = r.u16()
-	}
-	l.smallParseTable = make([]uint16, smallLen)
-	for i := range l.smallParseTable {
-		l.smallParseTable[i] = r.u16()
-	}
-	l.smallParseMap = make([]uint32, l.stateCount-l.largeStateCount)
-	for i := range l.smallParseMap {
-		l.smallParseMap[i] = r.u32()
-	}
+	l.parseTable = r.u16s(int(l.largeStateCount * l.symbolCount))
+	l.smallParseTable = r.u16s(int(smallLen))
+	l.smallParseMap = r.u32s(int(l.stateCount - l.largeStateCount))
+	l.rowBuilt = make([]atomic.Uint32, l.stateCount-l.largeStateCount)
+	l.dense = make([]uint16, (l.stateCount-l.largeStateCount)*l.symbolCount)
 	l.rawActions = make([][8]byte, actionCount)
 	l.actions = make([]parseAction, actionCount)
+	raw := r.take(8 * int(actionCount))
 	for i := range l.rawActions {
-		copy(l.rawActions[i][:], r.take(8))
+		copy(l.rawActions[i][:], raw[8*i:])
 		l.actions[i] = decodeAction(l.rawActions[i])
 	}
 	for i := uint32(0); i < l.externalTokenCount; i++ {
@@ -244,6 +275,50 @@ func decodeAction(b [8]byte) parseAction {
 // lookup is ts_language_lookup: the table value for a state and symbol (a successor state for a
 // non-terminal, an action index for a terminal).
 func (l *Language) lookup(state uint16, symbol uint16) uint16 {
+	if uint32(state) >= l.largeStateCount {
+		i := uint32(state) - l.largeStateCount
+		if l.rowBuilt[i].Load() == 0 {
+			l.buildRow(i)
+		}
+		if uint32(symbol) >= l.symbolCount {
+			return 0
+		}
+		return l.dense[i*l.symbolCount+uint32(symbol)]
+	}
+	return l.parseTable[uint32(state)*l.symbolCount+uint32(symbol)]
+}
+
+// buildRow expands the small state at index (state - largeStateCount) to a value per symbol.
+func (l *Language) buildRow(index uint32) {
+	l.rowMu.Lock()
+	defer l.rowMu.Unlock()
+	if l.rowBuilt[index].Load() != 0 {
+		return
+	}
+	row := l.dense[index*l.symbolCount : (index+1)*l.symbolCount]
+	seen := make([]bool, l.symbolCount)
+	data := l.smallParseTable[l.smallParseMap[index]:]
+	groupCount := data[0]
+	data = data[1:]
+	for i := uint16(0); i < groupCount; i++ {
+		sectionValue := data[0]
+		symbolCount := data[1]
+		data = data[2:]
+		for j := uint16(0); j < symbolCount; j++ {
+			// The first group naming a symbol wins, as the linear search returns at its first match.
+			if sym := data[j]; uint32(sym) < l.symbolCount && !seen[sym] {
+				seen[sym] = true
+				row[sym] = sectionValue
+			}
+		}
+		data = data[symbolCount:]
+	}
+	l.rowBuilt[index].Store(1)
+}
+
+// lookupLinear is ts_language_lookup as the C writes it, kept as the reference the dense rows are
+// tested against.
+func (l *Language) lookupLinear(state uint16, symbol uint16) uint16 {
 	if uint32(state) >= l.largeStateCount {
 		index := l.smallParseMap[uint32(state)-l.largeStateCount]
 		data := l.smallParseTable[index:]

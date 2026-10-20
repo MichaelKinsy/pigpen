@@ -40,7 +40,7 @@ against the original without a person: the rules and the tool gate for what they
 - withholding tools the policy denies outright from the model at `before_agent_start`, and restoring them (the tool-surface
   baseline), the `yolo` status, and the permissive-`*` warning at session start.
 
-**Blocked, fail-closed, with a visible reason** (the original decides these by machinery that is not ported):
+**Refused, fail-closed** (the original decides these by machinery that is not ported). Each is blocked with the Package's one refusal text, `@pi-in-go/pigpen-permissions (Go port) does not support <feature> yet. Install the original extension, npm:@gotgenes/pi-permission-system@39.0.3, which runs unchanged in PiG.` (`refusal.go`; `refusal_test.go` has one exact-text test per refused option and checks the Package name and the pinned original):
 
 - an `ask`: the approval dialog (and its session grants) is not ported, so the call is refused and the message says so.
   `yoloMode` turns asks into allows, as in the original;
@@ -56,7 +56,17 @@ against the original without a person: the rules and the tool gate for what they
   reads by its own rule (`ssh`, `su`, `source`, `command`, `bash script.sh`, ...) is refused when allowed. Both are listed with
   every other refusal in `testdata/port-differences.json`;
 - a tool that `shellTools` routes through the bash surface (the aliases are not ported);
-- MCP and skill tools.
+- MCP and skill tools;
+- the project scope while the project is trusted (`ctx.IsProjectTrusted`; unknown counts as trusted) and a project config file exists,
+  and the agent scope while the active agent (the last `active_agent` session entry, else the `<active_agent name="...">` tag of the
+  system prompt) has a definition file with a `permission` frontmatter block: every call the port would allow is refused
+  (`unported.go`, `scope_test.go`); a deny the global scope gives stays a deny. Before this the scopes were ignored, which let a call
+  through that a project or agent rule denies;
+- a `/skill:<name>` input: the `input` handler decides it by the skill surface (allow continues, deny is `handled` with the original's
+  notice, an ask or an unreadable scope is `handled` with the refusal text). Before this every input continued, so a denied skill
+  could be invoked;
+- config options the schema accepts and nothing reads yet (dialog, forwarding, logging, limits, `piInfrastructureReadPaths`,
+  `authorizerChain`): a warning at session start names the ones that are set.
 
 **Not ported at all:** project and agent scopes (the project scope is withheld in the original until the project is trusted;
 the port reads the global scope only), session approvals and rules, the review and debug logs, forwarding and subagent authority,
@@ -129,6 +139,34 @@ recorded by `port/record-probe.sh`, not with the port.
   `nice rm important.txt` is asked about (blocked), `ls && /bin/sh -c 'rm important.txt'` is refused, `ls | wc -l` runs.
 - Size: 2120 hand-written Go lines (non-test, 379 of them copied helpers; the review added 682 in `bash.go`, `schema.go`,
   `skills.go`), 2528 test lines; recorded, not written: `testdata/oracle.json`.
+
+## Bash parser: performance (M8)
+
+`bashparse` is new in this release, so there is no earlier release to compare with; the baseline is the original's WASM parser
+(web-tree-sitter 0.26.9 + tree-sitter-bash 0.25.1) under Node 24.19. Latency is the median of 12 interleaved rounds (a Go round,
+then a WASM round) of `bench-rounds.sh`, both pinned to the same four CPUs of one host (`port/bashparse-diff/bench-inputs.json`;
+the Go figure is `BenchmarkParse`, tree conversion and both corrections included):
+
+| input | Go ns/op | WASM ns/op | Go / WASM | Go B/op | Go allocs/op |
+|---|---|---|---|---|---|
+| 41-byte command | 16 297 | 47 966 | 0.34 | 2 322 | 7 |
+| 509-byte pipeline with a heredoc | 653 837 | 1 010 090 | 0.65 | 34 378 | 112 |
+| 5.2 KB script | 1 950 225 | 2 162 238 | 0.90 | 252 693 | 397 |
+
+Cold start (tables load, then the first parse): 6.3 ms against 40 ms (median of 12) for the WASM parser's init, load and first
+parse. Binary: +1.42 MiB (1 490 944 bytes) over an empty `main` (`-ldflags="-s -w"`, linux/amd64), of which 142 KB are the
+gzipped tables.
+
+Before the change recorded here the 509-byte and 5.2 KB inputs ran at 3.9 times the WASM time on a comparable idle four-CPU set
+of the same host (3 882 us and 8 283 us, 6 721 and 24 162 allocations per parse, 10 interleaved rounds): the cost was the garbage collector's work on the
+parse's garbage (the same code ran 2 to 2.6 times faster given 56 CPUs than given four; the new code with the collector off is a quarter to a
+third faster than with it on). The fix keeps a parser's subtrees, stack nodes and
+child arrays in slabs it reuses between parses (parsers come from a `sync.Pool`; a tree is converted before its parser is handed
+back, and a parser lets go of slabs a one-off huge input grew), builds the node tree in two allocations sized from the tree,
+expands a small parse state to a dense row on first use, counts references for balancing in a field instead of a map, and copies
+children in the correction walk only where something changed. Every step was held to the differential: zero differences on every
+corpus, the twins green, the `bp-*` mutations killed. `TestTreeSurvivesTheNextParse` and `TestParallelParsesMatchSerialOnes`
+(under `-race`) pin the two things reuse could break: a tree held while another parse runs, and parallel callers.
 
 ## Findings (to file against PiG, and notes on the porter)
 

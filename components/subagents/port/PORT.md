@@ -65,6 +65,17 @@ dynamic fan-out validators they need; external CLI and external job runners (the
 agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
 document features that are not ported); the original's session-resume memory of whether `subagent` was enabled.
 
+**Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
+accepted and ignored: a call to `subagent` that sets a parameter the port does not honor (anything but `agent`, `task`,
+`agentScope`, `cwd`, `model` and `async: false`; for `list` and `get`, `action`, `agent` and `agentScope`), `async` other than
+`false`, `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
+other than `list` and `get`, a run without `task`, and the tools `bg_wait` and `subagent_supervisor` (declared, as the
+original's request shows them). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
+<feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.`; a tool refuses with an error. The
+original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
+`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. One difference stays until the async slice:
+the original runs in the background unless `async: false` (`asyncByDefault`); an omitted `async` runs in the foreground here.
+
 ## Mapping
 
 | ID | Original | Go | Checked by |

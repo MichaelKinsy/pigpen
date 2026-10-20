@@ -39,6 +39,8 @@ type subtree struct {
 	productionID                         uint16
 	firstLeafSymbol, firstLeafParseState uint16
 	externalScannerState                 []byte // an external leaf's serialized scanner state
+	// refs is how many parents hold this subtree, counted over the finished tree by balance.
+	refs uint32
 }
 
 func (s *subtree) childCount() uint32 { return uint32(len(s.children)) }
@@ -96,12 +98,14 @@ func (s *subtree) repeatDepthOf() uint32 {
 }
 
 // clone is ts_subtree_clone: a mutable copy sharing the children.
-func (s *subtree) clone() *subtree {
-	c := *s
+func (a *arenas) clone(s *subtree) *subtree {
+	c := a.subs.alloc()
+	*c = *s
 	if len(s.children) > 0 {
-		c.children = append([]*subtree(nil), s.children...)
+		c.children = a.arrays.alloc(len(s.children))
+		copy(c.children, s.children)
 	}
-	return &c
+	return c
 }
 
 // externalState is ts_subtree_external_scanner_state: empty unless the subtree is an external leaf.
@@ -169,9 +173,10 @@ func samePtr(a, b *subtree) bool {
 }
 
 // newLeaf is ts_subtree_new_leaf.
-func newLeaf(l *Language, symbol uint16, padding, size Length, lookaheadBytes uint32, parseState uint16, hasExternalTokens, isKeyword bool) *subtree {
+func (a *arenas) newLeaf(l *Language, symbol uint16, padding, size Length, lookaheadBytes uint32, parseState uint16, hasExternalTokens, isKeyword bool) *subtree {
 	md := l.metadata(symbol)
-	return &subtree{
+	s := a.subs.alloc()
+	*s = subtree{
 		lookaheadBytes:    lookaheadBytes,
 		inline:            symbol <= 255 && !hasExternalTokens && canInline(padding, size, lookaheadBytes),
 		symbol:            symbol,
@@ -184,19 +189,20 @@ func newLeaf(l *Language, symbol uint16, padding, size Length, lookaheadBytes ui
 		hasExternalTokens: hasExternalTokens,
 		isKeyword:         isKeyword,
 	}
+	return s
 }
 
 // newErrorLeaf is ts_subtree_new_error.
-func newErrorLeaf(l *Language, padding, size Length, lookaheadBytes uint32, parseState uint16) *subtree {
-	s := newLeaf(l, builtinSymError, padding, size, lookaheadBytes, parseState, false, false)
+func (a *arenas) newErrorLeaf(l *Language, padding, size Length, lookaheadBytes uint32, parseState uint16) *subtree {
+	s := a.newLeaf(l, builtinSymError, padding, size, lookaheadBytes, parseState, false, false)
 	s.fragileLeft = true
 	s.fragileRight = true
 	return s
 }
 
 // newMissingLeaf is ts_subtree_new_missing_leaf.
-func newMissingLeaf(l *Language, symbol uint16, padding Length, lookaheadBytes uint32) *subtree {
-	s := newLeaf(l, symbol, padding, Length{}, lookaheadBytes, 0, false, false)
+func (a *arenas) newMissingLeaf(l *Language, symbol uint16, padding Length, lookaheadBytes uint32) *subtree {
+	s := a.newLeaf(l, symbol, padding, Length{}, lookaheadBytes, 0, false, false)
 	s.isMissing = true
 	return s
 }
@@ -210,10 +216,17 @@ func (s *subtree) setSymbol(l *Language, symbol uint16) {
 }
 
 // newNode is ts_subtree_new_node: a parent over children, which it takes ownership of.
-func newNode(l *Language, symbol uint16, children []*subtree, productionID uint16) *subtree {
+func (a *arenas) newNode(l *Language, symbol uint16, children []*subtree, productionID uint16) *subtree {
+	s := a.subs.alloc()
+	initNode(s, l, symbol, children, productionID)
+	return s
+}
+
+// initNode is newNode into a subtree the caller owns (a scratch one on the stack, for a comparison).
+func initNode(s *subtree, l *Language, symbol uint16, children []*subtree, productionID uint16) {
 	md := l.metadata(symbol)
 	fragile := symbol == builtinSymError || symbol == builtinSymErrorRepeat
-	s := &subtree{
+	*s = subtree{
 		symbol:       symbol,
 		children:     children,
 		visible:      md.visible,
@@ -223,12 +236,11 @@ func newNode(l *Language, symbol uint16, children []*subtree, productionID uint1
 		productionID: productionID,
 	}
 	s.summarizeChildren(l)
-	return s
 }
 
 // newErrorNode is ts_subtree_new_error_node.
-func newErrorNode(l *Language, children []*subtree, extra bool) *subtree {
-	s := newNode(l, builtinSymError, children, 0)
+func (a *arenas) newErrorNode(l *Language, children []*subtree, extra bool) *subtree {
+	s := a.newNode(l, builtinSymError, children, 0)
 	s.extra = extra
 	return s
 }

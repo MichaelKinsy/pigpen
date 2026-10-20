@@ -148,7 +148,7 @@ func newDifferentialWorker(t testing.TB) *differentialWorker {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := &grammarParser{parser: ts.NewParser(lang)}
+	g := newGrammarParser(lang)
 	return &differentialWorker{g, &correctingParser{g}}
 }
 

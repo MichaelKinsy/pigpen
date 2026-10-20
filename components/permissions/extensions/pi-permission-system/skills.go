@@ -146,8 +146,7 @@ func skillRead(tool string, input map[string]any, entries []skillEntry, cwd stri
 	if m == nil || m.state == "allow" {
 		return Verdict{}
 	}
-	return Verdict{Block: true, Reason: tagged("(Go port) reading a file of the skill '" + m.name +
-		"' requires approval, but the approval dialog is not ported. It was blocked.")}
+	return unsupported("the approval dialog (reading a file of the skill '" + m.name + "' needs approval)")
 }
 
 // promptText is the system prompt of a before_agent_start event, a string or a list of strings.
