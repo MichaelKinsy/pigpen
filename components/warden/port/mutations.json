@@ -166,5 +166,143 @@
   "file": "rules_wire.go",
   "find": "\t\t\tcn.pathNotes = append(cn.pathNotes, told)\n",
   "replace": "\t\t\t_ = told\n"
+ },
+ {
+  "name": "conscience-threshold-ignored",
+  "file": "conscience.go",
+  "find": "if best.usefulness < cfg.RecommendThreshold || pAdvance < cfg.AdvanceThreshold {",
+  "replace": "if false {"
+ },
+ {
+  "name": "conscience-advance-threshold-ignored",
+  "file": "conscience.go",
+  "find": "best.usefulness < cfg.RecommendThreshold || pAdvance < cfg.AdvanceThreshold",
+  "replace": "best.usefulness < cfg.RecommendThreshold"
+ },
+ {
+  "name": "gate-model-ignored",
+  "file": "conscience_load.go",
+  "find": "policy.QuestionHash == questionHash && policy.Model == model",
+  "replace": "policy.QuestionHash == questionHash"
+ },
+ {
+  "name": "gate-hash-ignored",
+  "file": "conscience_load.go",
+  "find": "policy.QuestionHash == questionHash && policy.Model == model",
+  "replace": "policy.Model == model"
+ },
+ {
+  "name": "state-activation-gate-skipped",
+  "file": "conscience_state.go",
+  "find": "if !policyMatches(conscienceBetaPolicy, result.QuestionHash, model) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "state-explicit-skill-assessed",
+  "file": "conscience_state.go",
+  "find": "if m := reExplicitSkill.FindStringSubmatch(prompt); m != nil {",
+  "replace": "if m := reExplicitSkill.FindStringSubmatch(prompt); m != nil && false {"
+ },
+ {
+  "name": "load-credential-body-loads",
+  "file": "conscience_load.go",
+  "find": "if findSecretsInBody(body) || rePathInBody.MatchString(body) {",
+  "replace": "if rePathInBody.MatchString(body) {"
+ },
+ {
+  "name": "load-path-in-body-loads",
+  "file": "conscience_load.go",
+  "find": "if findSecretsInBody(body) || rePathInBody.MatchString(body) {",
+  "replace": "if findSecretsInBody(body) {"
+ },
+ {
+  "name": "load-read-bound-off-by-one",
+  "file": "conscience_load.go",
+  "find": "if n >= effectiveMax {",
+  "replace": "if n > effectiveMax {"
+ },
+ {
+  "name": "conscience-user-only-skill-offered",
+  "file": "conscience.go",
+  "find": "isExcluded(s.Name, cfg.Skills.Exclude) || s.DisableModelInvocation || containsString(supplied, s.Name)",
+  "replace": "isExcluded(s.Name, cfg.Skills.Exclude) || containsString(supplied, s.Name)"
+ },
+ {
+  "name": "conscience-skip-tools-ignored",
+  "file": "conscience.go",
+  "find": "containsString(cfg.SkipTools, t.Name)",
+  "replace": "false"
+ },
+ {
+  "name": "conscience-awaiting-user-selects",
+  "file": "conscience.go",
+  "find": "\tif disposition != DispositionAdvance {\n\t\tr := AssessmentResult",
+  "replace": "\tif false {\n\t\tr := AssessmentResult"
+ },
+ {
+  "name": "state-message-customtype-renamed",
+  "file": "conscience_state.go",
+  "find": "const conscienceType = \"pi-warden-conscience\"",
+  "replace": "const conscienceType = \"pigpen-warden-conscience\""
+ },
+ {
+  "name": "conscience-usefulness-first-level-only",
+  "file": "conscience.go",
+  "find": "pUseful := s.probabilities[2] + s.probabilities[3]",
+  "replace": "pUseful := s.probabilities[3]"
+ },
+ {
+  "name": "state-load-failure-sends-nothing",
+  "file": "conscience_state.go",
+  "find": "\t\tif !already {\n\t\t\tif msg, ok := w.conscienceLoad(ctx, cfg, data, result, effectiveTimeout, start); ok {\n\t\t\t\treturn msg, nil\n\t\t\t}\n\t\t}",
+  "replace": "\t\tif !already {\n\t\t\tif msg, ok := w.conscienceLoad(ctx, cfg, data, result, effectiveTimeout, start); ok {\n\t\t\t\treturn msg, nil\n\t\t\t}\n\t\t\treturn nil, nil\n\t\t}"
+ },
+ {
+  "name": "load-consent-not-required",
+  "file": "conscience_load.go",
+  "find": "case !cfg.Enabled, cfg.Skills.Mode != \"load\", !opts.ConsentGiven, !opts.ProjectTrusted:",
+  "replace": "case !cfg.Enabled, cfg.Skills.Mode != \"load\", !opts.ProjectTrusted:"
+ },
+ {
+  "name": "load-off-mode-loads",
+  "file": "conscience_load.go",
+  "find": "case !cfg.Enabled, cfg.Skills.Mode != \"load\", !opts.ConsentGiven, !opts.ProjectTrusted:",
+  "replace": "case !cfg.Enabled, !opts.ConsentGiven, !opts.ProjectTrusted:"
+ },
+ {
+  "name": "conscience-recommendation-wording",
+  "file": "conscience_state.go",
+  "find": "\"Consider using the \\\"\"",
+  "replace": "\"Try the \\\"\""
+ },
+ {
+  "name": "conscience-load-message-format",
+  "file": "conscience_load.go",
+  "find": "return \"Skill: \" + r.SkillName",
+  "replace": "return \"Skill - \" + r.SkillName"
+ },
+ {
+  "name": "conscience-disposition-question-wording",
+  "file": "conscience.go",
+  "find": "\"The assistant has already asked for information and must wait.\"",
+  "replace": "\"The assistant is waiting for the user.\""
+ },
+ {
+  "name": "conscience-opaque-ids-named",
+  "file": "conscience.go",
+  "find": "func opaqueID(index int) string { return \"c\" + itoaInt(index+1) }",
+  "replace": "func opaqueID(index int) string { return \"k\" + itoaInt(index+1) }"
+ },
+ {
+  "name": "conscience-excluded-skill-offered",
+  "file": "conscience.go",
+  "find": "isExcluded(s.Name, cfg.Skills.Exclude) || s.DisableModelInvocation || containsString(supplied, s.Name)",
+  "replace": "s.DisableModelInvocation || containsString(supplied, s.Name)"
+ },
+ {
+  "name": "conscience-indexed-flag-dropped",
+  "file": "conscience.go",
+  "find": "\"unindexed\": true}",
+  "replace": "\"unindexed\": false}"
  }
 ]

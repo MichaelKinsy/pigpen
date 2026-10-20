@@ -63,7 +63,7 @@ RULES_CASES = {
 CONSCIENCE_CASES = {
     ("conscience-gunner.test.ts", 672): "config loader case: applyProjectOverrides ignoring conscience in a project file is the config lane's (the port has no project config file at all: D5)",
     ("conscience-gunner.test.ts", 702): "config loader case: completeConfig reporting a missing conscience section is the config lane's (the Go config merges defaults over the JSON file: a missing section is the defaults, conscience off)",
-    ("extension.test.ts", 4417): "the first half needs a saved key rejection (a 401 kept in the TypeSafe auth state file); the port reads the key from the environment and keeps no such state, so key_rejected is never traced (D8); the no_consent half is TestConscienceMissingConsentTracesNoConsent, a missing key is no_key (TestConscienceMissingKeyTracesNoKey)",
+    ("extension.test.ts", 4417): "the first half needs a saved key rejection (a 401 kept in the TypeSafe auth state file); the port reads the key from the environment and keeps no such state, so key_rejected is never traced (D16); the no_consent half is TestConscienceMissingConsentTracesNoConsent, a missing key is no_key (TestConscienceMissingKeyTracesNoKey)",
 }
 
 def reason(f, name, line=0):

@@ -181,6 +181,7 @@ M = [
  ('state-index-nudged-every-prompt', 'conscience_state.go', '\t\ts.indexNudged = true\n', ''),
  ('state-context-all-messages', 'conscience_state.go', 'if len(lines) >= 4 {', 'if false {'),
  ('state-load-failure-sends-nothing', 'conscience_state.go', '\t\tif !already {\n\t\t\tif msg, ok := w.conscienceLoad(ctx, cfg, data, result, effectiveTimeout, start); ok {\n\t\t\t\treturn msg, nil\n\t\t\t}\n\t\t}', '\t\tif !already {\n\t\t\tif msg, ok := w.conscienceLoad(ctx, cfg, data, result, effectiveTimeout, start); ok {\n\t\t\t\treturn msg, nil\n\t\t\t}\n\t\t\treturn nil, nil\n\t\t}'),
+ ('state-conscience-off-still-runs', 'conscience_state.go', 'func conscienceOn(cfg Config) bool { return cfg.Enabled && cfg.Conscience.Enabled }', 'func conscienceOn(cfg Config) bool { return cfg.Enabled }'),
  ('state-message-customtype-renamed', 'conscience_state.go', 'const conscienceType = "pi-warden-conscience"', 'const conscienceType = "pigpen-warden-conscience"'),
 ]
 EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth",

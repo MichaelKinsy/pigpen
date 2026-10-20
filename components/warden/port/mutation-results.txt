@@ -170,3 +170,4 @@ state-index-nudged-every-prompt: KILLED --- FAIL: TestConscienceIndexNudgeIsSaid
 state-context-all-messages: KILLED --- FAIL: TestConsciencePromptCarriesTheRecentContext (0.01s)
 state-load-failure-sends-nothing: KILLED --- FAIL: TestConscienceOversizedSkillBodyRejected (0.00s)
 state-message-customtype-renamed: KILLED --- FAIL: TestConscienceLoweredThresholdDeliversOneMessageViaHookReturn (0.01s)
+state-conscience-off-still-runs: KILLED --- FAIL: TestConscienceDisabledDoesNothing (0.00s)
