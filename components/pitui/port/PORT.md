@@ -20,7 +20,7 @@ licence in `port/oracle/LICENSE`). PiG's code is not vendored as an oracle: it i
 |---|---|---|
 | Tests of the kept code | `go vet ./... && go test ./...` in the Package root | pass |
 | PiG tests carried over | 74 root test files and the subpackage tests, from PiG v0.5.0 | pass |
-| Pi behaviours pinned | `pi_parity_test.go` (bare `www.` autolink, indented code block, image alt text, Kitty Shift+letter decode) | pass |
+| Pi behaviours pinned | `pi_parity_test.go` (bare `www.` autolink, indented code block, image alt text) | pass |
 | Consumer | the `ask-user-question` extension (`internal/ui` and the frame harness against the unmodified TypeScript) | see that Package's `port/PORT.md` |
 
 Tests that need Node, Pi's own oracle or PiG internals (the `*_oracle` tests, terminal-grid simulators, `testenv`,

@@ -91,6 +91,11 @@ func DecodeKittyPrintable(data string) (string, bool) {
 	if modifier&kittyModifierShift != 0 {
 		if hasShiftedKey {
 			effectiveCodepoint = shiftedKey
+		} else if codepoint >= 'a' && codepoint <= 'z' {
+			// Shift+letter is layout-independent: uppercase the base when the
+			// terminal reports the base codepoint without a shifted alternate
+			// (e.g. \x1b[97;2u for Shift+a). Otherwise capital letters are lost.
+			effectiveCodepoint = codepoint - 32
 		}
 	}
 	effectiveCodepoint = normalizeKittyFunctionalCodepoint(effectiveCodepoint)

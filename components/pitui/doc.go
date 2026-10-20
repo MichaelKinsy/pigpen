@@ -63,8 +63,9 @@
 //     importing internal/jsparity; jsstring drops Stringify and its tests (they
 //     need PiG's SDK JSON); wordsegmenter drops the pigstrip dictionary
 //     switch and the dictionary-size budget test.
-//   - DecodeKittyPrintable matches pi-tui's decodeKittyPrintable: Shift+letter without a shifted
-//     alternate ("\x1b[97;2u") yields the base key, not PiG's uppercase fallback.
+//   - DecodeKittyPrintable keeps PiG's Shift+letter fallback ("\x1b[97;2u" decodes to "A"); pi-tui's
+//     decodeKittyPrintable yields the base key "a". This is a numbered PiG divergence (number pending), kept
+//     here so pitui behaves as the PiG tui it is copied from.
 //   - Text, Container, Spacer, DynamicBorder, keys.go, hyperlink.go and sgr.go
 //     are pi-tui's, not PiG's.
 //   - Tests: PiG's tests of the kept code are carried over; those that need
