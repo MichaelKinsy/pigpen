@@ -36,8 +36,10 @@ func (c *core) withCtx(ctx sdk.Context, fn func()) {
 	})
 }
 
-// Extension is pi-goal-x.
-func Extension() *sdk.Extension { return newGoalExtension(goalDeps{}) }
+// Extension is pi-goal-x; its nested audit sessions are child pig processes (goal_audit_session.go).
+func Extension() *sdk.Extension {
+	return newGoalExtension(goalDeps{createSession: newPigAuditorSessionFactory()})
+}
 
 // newGoalExtension is goalExtension(pi, dependencies).
 func newGoalExtension(deps goalDeps) *sdk.Extension {
