@@ -94,5 +94,65 @@
   "file": "stuck.go",
   "find": "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {",
   "replace": "if prev.Failed != l.Failed {"
+ },
+ {
+  "name": "waste-sleep-needs-two",
+  "file": "waste.go",
+  "find": "if polls < 2 {",
+  "replace": "if polls < 1 {"
+ },
+ {
+  "name": "waste-paging-min-reads",
+  "file": "waste.go",
+  "find": "minReads      = 3",
+  "replace": "minReads      = 2"
+ },
+ {
+  "name": "waste-search-overlap-never",
+  "file": "waste.go",
+  "find": "if PatternsOverlap(l.search.Pattern, r.search.Pattern) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "waste-recheck-never",
+  "file": "waste.go",
+  "find": "if !ok || !trigger.HasFilter {",
+  "replace": "if true {"
+ },
+ {
+  "name": "waste-far-apart-reads-fire",
+  "file": "waste.go",
+  "find": "if r.Start > furthest+adjacentGap {",
+  "replace": "if false {"
+ },
+ {
+  "name": "waste-sleep-chain-is-a-poll",
+  "file": "waste.go",
+  "find": "\t\tif s.sep != \"\" && s.sep != \"|\" {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "waste-note-before-result",
+  "file": "supervision.go",
+  "find": "m[\"text\"] = text + \"\\n\\n\" + note",
+  "replace": "m[\"text\"] = note + \"\\n\\n\" + text"
+ },
+ {
+  "name": "waste-sleep-note-wording",
+  "file": "waste.go",
+  "find": "\"You have waited \"",
+  "replace": "\"You waited \""
+ },
+ {
+  "name": "waste-recheck-note-wording",
+  "file": "waste.go",
+  "find": "times and filtered the output each time. Run it once without a pipe;",
+  "replace": "times; run it once without a pipe;"
+ },
+ {
+  "name": "waste-paging-note-offset",
+  "file": "waste.go",
+  "find": "\" without a gap. One `read` with offset=\"",
+  "replace": "\" without a gap. One `read` with start=\""
  }
 ]

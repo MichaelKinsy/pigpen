@@ -102,6 +102,7 @@ func (w *warden) showStatus(ctx sdk.Context) {
 	}
 	fmt.Fprintf(&b, "  checked %d calls, judged %d, held %d, warned %d, approved %d; %d steers sent (%d skipped as repeats or over budget), %d stuck, %d done-checks (%d unverified), %d judge errors\n",
 		s.Inspected, s.Judged, s.Held, s.Warned, s.Approved, s.Steers, s.SteersSkipped, s.Stuck, s.DoneChecks, s.Unverified, s.Errors)
+	fmt.Fprintf(&b, "  %d/%d subagent reports woken\n", s.SubagentWoken, s.SubagentReports)
 	fmt.Fprintf(&b, "  judge requests this session: %d of %d\n\n", w.budget.Used(), cfg.MaxRequests)
 	b.WriteString(Disclosure(cfg.Backend, target))
 	w.show(ctx, b.String())

@@ -8,6 +8,12 @@
   "commands": {
     "git": {
       "mode": "missing"
+    },
+    "sleep": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
     }
   },
   "args": [

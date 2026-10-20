@@ -411,6 +411,15 @@ func TestSubagentReportsSilentAppendByDefaultOneBatchedWakeForAReportThatNamesTr
 	if s.SubagentWoken != 1 || s.SubagentReports != 4 {
 		t.Errorf("1/4 subagent reports woken: %d/%d", s.SubagentWoken, s.SubagentReports)
 	}
+	before = len(h.messages())
+	h.host.Command("warden", "status")
+	var status string
+	for _, m := range h.messages()[before:] {
+		if m.Type == statusType {
+			status = m.Content
+		}
+	}
+	mustMatch(t, status, `1/4 subagent reports woken`, "status counts the reports")
 	h.w.mu.Lock()
 	h.w.cfg.Subagent.CooldownMs = 0
 	h.w.mu.Unlock()
