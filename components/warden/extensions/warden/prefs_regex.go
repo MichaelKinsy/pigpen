@@ -67,7 +67,9 @@ func prefsRE(flags, expr string) *lazyRegexp {
 	if flags != "" {
 		prefix = "(?" + flags + ")"
 	}
-	return lazyRE(prefix + prefsPattern(expr))
+	l := lazyRE(expr)
+	l.prefix, l.prep = prefix, prefsPattern
+	return l
 }
 
 // jsLower is String.prototype.toLowerCase for the characters the detectors can see: Go's simple mapping, except

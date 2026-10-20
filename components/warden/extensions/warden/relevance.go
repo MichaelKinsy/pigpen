@@ -862,13 +862,15 @@ func BuildRequests(units []*Unit, in RelevanceInput, questionsPerRequest int) []
 
 func fence(label, text string) string {
 	longest := 0
-	run := 0
-	for i := 0; i < len(text); i++ {
-		if text[i] == '`' {
-			run++
-			longest = max(longest, run)
-		} else {
-			run = 0
+	if strings.IndexByte(text, '`') >= 0 {
+		run := 0
+		for i := 0; i < len(text); i++ {
+			if text[i] == '`' {
+				run++
+				longest = max(longest, run)
+			} else {
+				run = 0
+			}
 		}
 	}
 	ticks := strings.Repeat("`", max(3, longest+1))

@@ -11,10 +11,12 @@ import (
 // expression the first time it is used, so a pig that never enables warden never pays.
 type lazyRegexp struct {
 	expr string
-	// js marks a JavaScript source pattern: jsPattern translates it on first use (context_jsre.go).
-	js   bool
-	once sync.Once
-	re   *regexp.Regexp
+	// prefix and prep build the final expression on first use: prep translates a JavaScript source pattern (jsPattern,
+	// prefsPattern), prefix is a flag group put in front. Translating at package init allocated tens of kilobytes.
+	prefix string
+	prep   func(string) string
+	once   sync.Once
+	re     *regexp.Regexp
 }
 
 // lazyCompiled counts compilations, for the test that no expression is compiled at start.
@@ -45,13 +47,18 @@ func lazyExpressions() []*lazyRegexp {
 func (l *lazyRegexp) get() *regexp.Regexp {
 	l.once.Do(func() {
 		lazyCompiled.Add(1)
-		expr := l.expr
-		if l.js {
-			expr = jsPattern(expr)
-		}
-		l.re = regexp.MustCompile(expr)
+		l.re = regexp.MustCompile(l.final())
 	})
 	return l.re
+}
+
+// final is the expression handed to the engine.
+func (l *lazyRegexp) final() string {
+	expr := l.expr
+	if l.prep != nil {
+		expr = l.prep(expr)
+	}
+	return l.prefix + expr
 }
 
 func (l *lazyRegexp) MatchString(s string) bool            { return l.get().MatchString(s) }

@@ -256,6 +256,60 @@ func diagnosticLine(line string) bool {
 	return false
 }
 
+// diagnosticFlags marks the lines of an ASCII text that diagnosticLine accepts, scanning the whole lower-cased text once
+// per stem instead of every line once per stem (nil for a text with other characters: the caller asks line by line).
+func diagnosticFlags(text string, lines []string) []bool {
+	if !isASCII(text) {
+		return nil
+	}
+	starts := make([]int, len(lines))
+	offset := 0
+	for i, l := range lines {
+		starts[i] = offset
+		offset += len(l) + 1
+	}
+	flags := make([]bool, len(lines))
+	line := 0
+	for i := 0; i < len(text); i++ {
+		first := text[i] | 0x20 // lower case for a letter; a byte that is no letter never becomes one
+		if first != 'e' && first != 'f' && first != 'w' && first != 's' {
+			continue
+		}
+		if i > 0 && isWordByte(text[i-1]) {
+			continue
+		}
+		for _, d := range diagnosticStems {
+			if d.stem[0] != first || !hasPrefixFold(text[i:], d.stem) {
+				continue
+			}
+			after := text[i+len(d.stem):]
+			for _, end := range d.ends {
+				if hasPrefixFold(after, end) && (len(after) == len(end) || !isWordByte(after[len(end)])) {
+					for line+1 < len(starts) && starts[line+1] <= i {
+						line++
+					}
+					flags[line] = true
+					break
+				}
+			}
+		}
+	}
+	return flags
+}
+
+// hasPrefixFold reports whether s starts with lit, which is lower-case ASCII letters, ignoring the case of s.
+func hasPrefixFold(s, lit string) bool {
+	if len(s) < len(lit) {
+		return false
+	}
+	for k := 0; k < len(lit); k++ {
+		if s[k]|0x20 != lit[k] {
+			return false
+		}
+	}
+	return true
+}
+
 // reDiagnostic is the pattern diagnosticLine implements (the test compares them).
 var reDiagnostic = jsRE(`(?i)\b(?:error|fail(?:ed|ure)?|warn(?:ing)?|fatal|exception|exit(?:ed)?|summary)\b`)
 
@@ -287,9 +341,14 @@ func CompressOutput(text string, retention Retention, format OutputFormat) (stri
 	}
 	var diagnostics []string
 	diagnosticChars := 0
+	flags := diagnosticFlags(text, lines)
 	// Keep diagnostic evidence even if the classifier selected summary_only for a failed run.
-	for _, line := range lines {
-		if !diagnosticLine(line) {
+	for i, line := range lines {
+		if flags != nil {
+			if !flags[i] {
+				continue
+			}
+		} else if !diagnosticLine(line) {
 			continue
 		}
 		clipped := utf16Slice(line, 0, 500)

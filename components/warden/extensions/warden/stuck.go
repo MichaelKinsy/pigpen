@@ -319,7 +319,7 @@ func BuildStuckRequest(attempts []Attempt, task string) Request {
 		}
 		list = append(list, map[string]any{"n": i + 1, "tool": a.Tool, "call": a.Call, "outcome": outcome, "output": a.Output})
 	}
-	return Request{State: map[string]any{"task": taskText, "attempts": list}, Questions: build(qs.Stuck)}
+	return Request{State: map[string]any{"task": taskText, "attempts": list}, Questions: build(questionSetsOnce().Stuck)}
 }
 
 // StuckOptions configure EvaluateStuck.

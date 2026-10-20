@@ -57,7 +57,7 @@ func jsPattern(src string) string {
 // pattern, `(?i)` for JavaScript's `i`, `(?m)` for `m`.
 func jsRE(src string) *lazyRegexp {
 	l := lazyRE(src)
-	l.js = true
+	l.prep = jsPattern
 	return l
 }
 

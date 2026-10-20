@@ -88,20 +88,20 @@ func BuildRequest(summary ActionSummary, task string, extras BuildExtras) Reques
 	if extras.FloorHits != "" {
 		state["floor_hits"] = extras.FloorHits
 	}
-	sets := []Questions{buildBase(), build(qs.ShouldProceed)}
+	sets := []Questions{buildBase(), build(questionSetsOnce().ShouldProceed)}
 	if summary.Command != "" {
-		sets = append(sets, build(qs.Visible))
+		sets = append(sets, build(questionSetsOnce().Visible))
 	}
 	if plan != "" {
-		sets = append(sets, build(qs.Intent))
+		sets = append(sets, build(questionSetsOnce().Intent))
 	}
 	if extras.Approval {
-		sets = append(sets, build(qs.Approval))
+		sets = append(sets, build(questionSetsOnce().Approval))
 	}
 	return Request{State: state, Questions: mergeQuestions(sets...)}
 }
 
-func buildBase() Questions { return build(qs.Base) }
+func buildBase() Questions { return build(questionSetsOnce().Base) }
 
 var builtInIDs = func() map[string]bool {
 	m := map[string]bool{}
