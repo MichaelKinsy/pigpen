@@ -1,0 +1,2414 @@
+[
+ {
+  "name": "bashanalysis-js-space-nbsp",
+  "file": "bashanalysis/jsutil.go",
+  "find": "0xa0, 0x1680,",
+  "replace": "0x1680,"
+ },
+ {
+  "name": "bashanalysis-js-space-range",
+  "file": "bashanalysis/jsutil.go",
+  "find": "r >= 0x2000 && r <= 0x200a",
+  "replace": "r >= 0x2000 && r <= 0x2009"
+ },
+ {
+  "name": "bashanalysis-slice-clamp-end",
+  "file": "bashanalysis/jsutil.go",
+  "find": "start, end = clampIndex(start, n), clampIndex(end, n)",
+  "replace": "start, end = clampIndex(start, n), end"
+ },
+ {
+  "name": "bashanalysis-slice-negative",
+  "file": "bashanalysis/jsutil.go",
+  "find": "if i < 0 {\n\t\ti += n",
+  "replace": "if i < 0 {\n\t\ti = 0 * n"
+ },
+ {
+  "name": "bashanalysis-slice-ascii-shortcut",
+  "file": "bashanalysis/jsutil.go",
+  "find": "if n == len(s) {\n\t\treturn s[start:end]",
+  "replace": "if false {\n\t\treturn s[start:end]"
+ },
+ {
+  "name": "bashanalysis-utf16-astral",
+  "file": "bashanalysis/jsutil.go",
+  "find": "if r >= 0x10000 {\n\t\t\tn += 2",
+  "replace": "if r >= 0x1000000 {\n\t\t\tn += 2"
+ },
+ {
+  "name": "bashanalysis-byte-offset-astral",
+  "file": "bashanalysis/jsutil.go",
+  "find": "if r >= 0x10000 {\n\t\t\tunit += 2",
+  "replace": "if r >= 0x1000000 {\n\t\t\tunit += 2"
+ },
+ {
+  "name": "bashanalysis-lower-dotted-i",
+  "file": "bashanalysis/jsutil.go",
+  "find": "strings.ReplaceAll(s, \"\\u0130\", \"i\\u0307\")",
+  "replace": "strings.ReplaceAll(s, \"\\u0130\", \"i\")"
+ },
+ {
+  "name": "bashanalysis-wrap-eval",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if name == \"eval\" {",
+  "replace": "if name == \"evalx\" {"
+ },
+ {
+  "name": "bashanalysis-wrap-shell-needs-c",
+  "file": "bashanalysis/wrapper.go",
+  "find": "shellWrapperNames[name] && shortFlagCIndex(args) != -1",
+  "replace": "shellWrapperNames[name]"
+ },
+ {
+  "name": "bashanalysis-wrap-indirection-table",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if indirectionWrapperNames[name] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bashanalysis-wrap-exec-flag",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if execFlagIndex(name, args) != -1 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bashanalysis-wrap-table-flock",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"watch\", \"flock\",\n)",
+  "replace": "\"watch\",\n)"
+ },
+ {
+  "name": "bashanalysis-wrap-table-time",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"sudo\", \"env\", \"xargs\", \"time\",",
+  "replace": "\"sudo\", \"env\", \"xargs\","
+ },
+ {
+  "name": "bashanalysis-wrap-shell-ksh",
+  "file": "bashanalysis/wrapper.go",
+  "find": "setOf(\"bash\", \"sh\", \"dash\", \"zsh\", \"ksh\")",
+  "replace": "setOf(\"bash\", \"sh\", \"dash\", \"zsh\")"
+ },
+ {
+  "name": "bashanalysis-wrap-exec-fd-batch",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"--exec\", \"-X\", \"--exec-batch\"",
+  "replace": "\"--exec\", \"-X\""
+ },
+ {
+  "name": "bashanalysis-wrap-exec-ok",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"-exec\", \"-execdir\", \"-ok\", \"-okdir\"",
+  "replace": "\"-exec\", \"-execdir\", \"-ok\""
+ },
+ {
+  "name": "bashanalysis-payload-offset",
+  "file": "bashanalysis/wrapper.go",
+  "find": "return flagIndex + 2",
+  "replace": "return flagIndex + 1"
+ },
+ {
+  "name": "bashanalysis-payload-eval-without-c",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if isShell && flagIndex == -1 {",
+  "replace": "if flagIndex == -1 {"
+ },
+ {
+  "name": "bashanalysis-payload-non-shell",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if name != \"eval\" && !isShell {",
+  "replace": "if name != \"eval\" && isShell {"
+ },
+ {
+  "name": "bashanalysis-payload-peel-base",
+  "file": "bashanalysis/wrapper.go",
+  "find": "base += start\n",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-payload-peel-only-indirection",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if ClassifyWrapperWords(current) != WrapperIndirection {\n\t\t\treturn -1",
+  "replace": "if ClassifyWrapperWords(current) == WrapperIndirection {\n\t\t\treturn -1"
+ },
+ {
+  "name": "bashanalysis-payload-peel-terminator",
+  "file": "bashanalysis/wrapper.go",
+  "find": "end := execTerminatorIndex(current, start)\n\t\tbase += start",
+  "replace": "end := len(current)\n\t\tbase += start"
+ },
+ {
+  "name": "bashanalysis-unwrap-depth",
+  "file": "bashanalysis/wrapper.go",
+  "find": "const maxUnwrapDepth = 4",
+  "replace": "const maxUnwrapDepth = 3"
+ },
+ {
+  "name": "bashanalysis-executed-opaque",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if unwrapped.opaque {\n\t\treturn nothingNew(unwrapped.payload",
+  "replace": "if false {\n\t\treturn nothingNew(unwrapped.payload"
+ },
+ {
+  "name": "bashanalysis-executed-repeat",
+  "file": "bashanalysis/wrapper.go",
+  "find": "text == \"\" || text == unitText {",
+  "replace": "text == \"\" {"
+ },
+ {
+  "name": "bashanalysis-executed-dash",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if strings.HasPrefix(text, \"-\") {\n\t\treturn \"\", false",
+  "replace": "if false {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "bashanalysis-executed-trim",
+  "file": "bashanalysis/wrapper.go",
+  "find": "text = jsTrimEnd(sliceWords(text, current, start, end))",
+  "replace": "text = sliceWords(text, current, start, end)"
+ },
+ {
+  "name": "bashanalysis-transparent-redirect",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if writesViaRedirect {\n\t\treturn false\n\t}\n\tif ClassifyWrapperWords",
+  "replace": "if false {\n\t\treturn false\n\t}\n\tif ClassifyWrapperWords"
+ },
+ {
+  "name": "bashanalysis-transparent-head",
+  "file": "bashanalysis/wrapper.go",
+  "find": "head = unwrapped.words[0].Text",
+  "replace": "head = \"\""
+ },
+ {
+  "name": "bashanalysis-transparent-args",
+  "file": "bashanalysis/wrapper.go",
+  "find": "args = argWordsOf(unwrapped.words[1:])",
+  "replace": "args = nil"
+ },
+ {
+  "name": "bashanalysis-opaque-payload-vacant",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if index == -1 || index >= len(words) {\n\t\treturn \"\", false",
+  "replace": "if index == -1 {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "bashanalysis-unquote-single",
+  "file": "bashanalysis/wrapper.go",
+  "find": "text[0] != '\\'' && text[0] != '\"'",
+  "replace": "text[0] != '\"'"
+ },
+ {
+  "name": "bashanalysis-unquote-length",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if utf16Len(text) >= 2 && strings.HasSuffix",
+  "replace": "if utf16Len(text) >= 1 && strings.HasSuffix"
+ },
+ {
+  "name": "bashanalysis-unquote-suffix",
+  "file": "bashanalysis/wrapper.go",
+  "find": "strings.HasSuffix(text, text[:1])",
+  "replace": "strings.HasSuffix(text, \"'\")"
+ },
+ {
+  "name": "bashanalysis-inner-exec-flag",
+  "file": "bashanalysis/wrapper.go",
+  "find": "return execFlag + 2",
+  "replace": "return execFlag + 1"
+ },
+ {
+  "name": "bashanalysis-inner-dashdash",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if word == \"--\" {\n\t\t\treturn index + 1",
+  "replace": "if word == \"--\" {\n\t\t\treturn index + 2"
+ },
+ {
+  "name": "bashanalysis-inner-env",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if isEnvironmentAssignment(word) {\n\t\t\tindex++",
+  "replace": "if false {\n\t\t\tindex++"
+ },
+ {
+  "name": "bashanalysis-inner-value-flag",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if valueTaking[word] {\n\t\t\t\tindex += 2",
+  "replace": "if valueTaking[word] {\n\t\t\t\tindex += 1"
+ },
+ {
+  "name": "bashanalysis-inner-operand",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if operandPending {\n\t\t\toperandPending = false",
+  "replace": "if operandPending && false {\n\t\t\toperandPending = false"
+ },
+ {
+  "name": "bashanalysis-inner-operand-table",
+  "file": "bashanalysis/wrapper.go",
+  "find": "setOf(\"timeout\", \"flock\")",
+  "replace": "setOf(\"timeout\")"
+ },
+ {
+  "name": "bashanalysis-inner-option-prefix",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if strings.HasPrefix(word, \"-\") {\n\t\t\tif valueTaking",
+  "replace": "if strings.HasPrefix(word, \"--\") {\n\t\t\tif valueTaking"
+ },
+ {
+  "name": "bashanalysis-value-flags-sudo-u",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"sudo\":    setOf(\"-u\", \"-g\",",
+  "replace": "\"sudo\":    setOf(\"-g\","
+ },
+ {
+  "name": "bashanalysis-value-flags-xargs-i",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"xargs\":   setOf(\"-n\", \"-P\", \"-I\",",
+  "replace": "\"xargs\":   setOf(\"-n\", \"-P\","
+ },
+ {
+  "name": "bashanalysis-value-flags-timeout",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"timeout\": setOf(\"-s\", \"-k\",",
+  "replace": "\"timeout\": setOf(\"-k\","
+ },
+ {
+  "name": "bashanalysis-value-flags-nice",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"nice\":    setOf(\"-n\", \"--adjustment\"),",
+  "replace": "\"nice\":    setOf(\"--adjustment\"),"
+ },
+ {
+  "name": "bashanalysis-value-flags-watch",
+  "file": "bashanalysis/wrapper.go",
+  "find": "\"watch\":   setOf(\"-n\", \"--interval\"),",
+  "replace": "\"watch\":   setOf(\"--interval\"),"
+ },
+ {
+  "name": "bashanalysis-exec-terminator-plus",
+  "file": "bashanalysis/wrapper.go",
+  "find": "setOf(\";\", \"+\")",
+  "replace": "setOf(\";\")"
+ },
+ {
+  "name": "bashanalysis-exec-terminator-escape",
+  "file": "bashanalysis/wrapper.go",
+  "find": "strings.TrimPrefix(words[index].Text, `\\`)",
+  "replace": "words[index].Text"
+ },
+ {
+  "name": "bashanalysis-exec-terminator-start",
+  "file": "bashanalysis/wrapper.go",
+  "find": "for index := start; index < len(words); index++ {",
+  "replace": "for index := 0; index < len(words); index++ {"
+ },
+ {
+  "name": "bashanalysis-slice-last",
+  "file": "bashanalysis/wrapper.go",
+  "find": "return slice16From(unitText, from)",
+  "replace": "return \"\""
+ },
+ {
+  "name": "bashanalysis-rebase-origin",
+  "file": "bashanalysis/wrapper.go",
+  "find": "word.Offset -= origin",
+  "replace": "word.Offset -= origin * 0"
+ },
+ {
+  "name": "bashanalysis-env-assignment-start",
+  "file": "bashanalysis/wrapper.go",
+  "find": "word == \"\" || !(word[0] == '_' || isASCIILetter(word[0]))",
+  "replace": "word == \"\""
+ },
+ {
+  "name": "bashanalysis-env-assignment-digit",
+  "file": "bashanalysis/wrapper.go",
+  "find": "c == '_' || isASCIILetter(c) || (c >= '0' && c <= '9')",
+  "replace": "c == '_' || isASCIILetter(c)"
+ },
+ {
+  "name": "bashanalysis-flag-c-dashdash",
+  "file": "bashanalysis/wrapper.go",
+  "find": "if arg == \"--\" {\n\t\t\treturn -1",
+  "replace": "if arg == \"--\" {\n\t\t\tcontinue"
+ },
+ {
+  "name": "bashanalysis-flag-c-long",
+  "file": "bashanalysis/wrapper.go",
+  "find": "&& !strings.HasPrefix(arg, \"--\") && strings.Contains(arg, \"c\")",
+  "replace": "&& strings.Contains(arg, \"c\")"
+ },
+ {
+  "name": "bashanalysis-flag-c-single",
+  "file": "bashanalysis/wrapper.go",
+  "find": "strings.HasPrefix(arg, \"-\") && !strings.HasPrefix(arg, \"--\")",
+  "replace": "strings.HasPrefix(arg, \"--\")"
+ },
+ {
+  "name": "bashanalysis-wrapper-basename",
+  "file": "bashanalysis/wrapper.go",
+  "find": "name = name[slash+1:]",
+  "replace": "name = name[slash:]"
+ },
+ {
+  "name": "bashanalysis-effects-core-sed",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "{[]string{\"sed\"}, \"Read-only until",
+  "replace": "{[]string{\"sedx\"}, \"Read-only until"
+ },
+ {
+  "name": "bashanalysis-effects-core-cd",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "{[]string{\"echo\", \"which\", \"cd\"}",
+  "replace": "{[]string{\"echo\", \"which\"}"
+ },
+ {
+  "name": "bashanalysis-effects-guard-applied",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "withdraws != nil && withdraws(argWords)",
+  "replace": "withdraws != nil && !withdraws(argWords)"
+ },
+ {
+  "name": "bashanalysis-effects-retracted-source",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "Effect: bashparse.EffectUnproven, Source: bashparse.SourceRetracted",
+  "replace": "Effect: bashparse.EffectUnproven, Source: bashparse.SourceUnproven"
+ },
+ {
+  "name": "bashanalysis-effects-core-effect",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "Effect: bashparse.EffectRead, Source: bashparse.SourceCore",
+  "replace": "Effect: bashparse.EffectRead, Source: bashparse.SourceSyntax"
+ },
+ {
+  "name": "bashanalysis-effects-computed",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "if word.MayLeadWithDash {\n\t\t\t\t\treturn true",
+  "replace": "if !word.MayLeadWithDash {\n\t\t\t\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-effects-computed-skip",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "} else if guard.retractsClaim(word.Value) {",
+  "replace": "} else if false {"
+ },
+ {
+  "name": "bashanalysis-effects-find-delete",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "\"-exec\", \"-execdir\", \"-ok\", \"-okdir\", \"-delete\", \"-fprint\", \"-fprint0\", \"-fprintf\", \"-fls\",",
+  "replace": "\"-exec\", \"-execdir\", \"-ok\", \"-okdir\", \"-fprint\", \"-fprint0\", \"-fprintf\", \"-fls\","
+ },
+ {
+  "name": "bashanalysis-effects-find-fls",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "\"-fprintf\", \"-fls\",",
+  "replace": "\"-fprintf\","
+ },
+ {
+  "name": "bashanalysis-effects-find-fprint0",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "\"-fprint\", \"-fprint0\",",
+  "replace": "\"-fprint\","
+ },
+ {
+  "name": "bashanalysis-effects-fd-letters",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "shortLetters: []string{\"x\", \"X\"}",
+  "replace": "shortLetters: []string{\"x\"}"
+ },
+ {
+  "name": "bashanalysis-effects-fd-stems",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "longStems: []string{\"--exec\", \"--exec-batch\"}",
+  "replace": "longStems: []string{\"--exec\"}"
+ },
+ {
+  "name": "bashanalysis-effects-sort-letter",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "longStems: []string{\"--output\"}, shortLetters: []string{\"o\"}",
+  "replace": "longStems: []string{\"--output\"}"
+ },
+ {
+  "name": "bashanalysis-effects-sort-stem",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "longStems: []string{\"--output\"}, shortLetters",
+  "replace": "shortLetters"
+ },
+ {
+  "name": "bashanalysis-effects-stem-prefix",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "strings.HasPrefix(stem, name)",
+  "replace": "stem == name"
+ },
+ {
+  "name": "bashanalysis-effects-stem-bare",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "utf16Len(name) <= 2 {",
+  "replace": "utf16Len(name) < 2 {"
+ },
+ {
+  "name": "bashanalysis-effects-stem-equals",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "name, _, _ := strings.Cut(word, \"=\")",
+  "replace": "name := word"
+ },
+ {
+  "name": "bashanalysis-effects-stem-prefix-dashes",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "!strings.HasPrefix(name, \"--\") || utf16Len(name)",
+  "replace": "strings.HasPrefix(name, \"--\") || utf16Len(name)"
+ },
+ {
+  "name": "bashanalysis-effects-cluster-long",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "!strings.HasPrefix(word, \"-\") || strings.HasPrefix(word, \"--\") || utf16Len(word) < 2",
+  "replace": "!strings.HasPrefix(word, \"-\") || utf16Len(word) < 2"
+ },
+ {
+  "name": "bashanalysis-effects-sed-guard",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "\"sed\":  SedWithdrawsReadClaim,",
+  "replace": "\"sed\":  nil,"
+ },
+ {
+  "name": "bashanalysis-effects-awk-guard",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "\"awk\":  AwkWithdrawsReadClaim,",
+  "replace": "\"awk\":  nil,"
+ },
+ {
+  "name": "bashanalysis-effects-roster-copy",
+  "file": "bashanalysis/commandeffects.go",
+  "find": "out := make(map[string]bool, len(pureReaderCore))\n\tfor w := range pureReaderCore {\n\t\tout[w] = true\n\t}\n\treturn out",
+  "replace": "return pureReaderCore"
+ },
+ {
+  "name": "bashanalysis-awk-computed",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "if w.Computed {\n\t\t\treturn true",
+  "replace": "if false {\n\t\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-awk-no-program",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "return !ok || !awkProvesReadOnlyProgram(program)",
+  "replace": "return !awkProvesReadOnlyProgram(program) && ok"
+ },
+ {
+  "name": "bashanalysis-awk-first-positional",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "if !have {\n\t\t\t\tprogram, have = value, true",
+  "replace": "program, have = value, true\n\t\t\tif false {"
+ },
+ {
+  "name": "bashanalysis-awk-option-after-program",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "if have {\n\t\t\treturn \"\", false",
+  "replace": "if false {\n\t\t\treturn \"\", false"
+ },
+ {
+  "name": "bashanalysis-awk-dashdash",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "if value == \"--\" {\n\t\t\toptionsEnded = true",
+  "replace": "if value == \"--\" {\n\t\t\toptionsEnded = false"
+ },
+ {
+  "name": "bashanalysis-awk-value-option",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "if awkValueOptions[value] {\n\t\t\tif i+1 >= len(values) {\n\t\t\t\treturn \"\", false\n\t\t\t}\n\t\t\ti++",
+  "replace": "if awkValueOptions[value] {\n\t\t\tif i+1 >= len(values) {\n\t\t\t\treturn \"\", false\n\t\t\t}\n\t\t\t"
+ },
+ {
+  "name": "bashanalysis-awk-stdin-dash",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "strings.HasPrefix(value, \"-\") && value != \"-\"",
+  "replace": "strings.HasPrefix(value, \"-\")"
+ },
+ {
+  "name": "bashanalysis-awk-redirect-text",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "[]string{\">\", \"|\", \"system\", \"@\"}",
+  "replace": "[]string{\"|\", \"system\", \"@\"}"
+ },
+ {
+  "name": "bashanalysis-awk-pipe-text",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "[]string{\">\", \"|\", \"system\", \"@\"}",
+  "replace": "[]string{\">\", \"system\", \"@\"}"
+ },
+ {
+  "name": "bashanalysis-awk-system-text",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "[]string{\">\", \"|\", \"system\", \"@\"}",
+  "replace": "[]string{\">\", \"|\", \"@\"}"
+ },
+ {
+  "name": "bashanalysis-awk-at-text",
+  "file": "bashanalysis/awkinvocation.go",
+  "find": "[]string{\">\", \"|\", \"system\", \"@\"}",
+  "replace": "[]string{\">\", \"|\", \"system\"}"
+ },
+ {
+  "name": "bashanalysis-sed-computed",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if w.Computed {\n\t\t\treturn true",
+  "replace": "if false {\n\t\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-sed-no-script",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "scripts, ok := sedSelectScripts(values)\n\tif !ok {\n\t\treturn true\n\t}",
+  "replace": "scripts, _ := sedSelectScripts(values)"
+ },
+ {
+  "name": "bashanalysis-sed-every-script",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if !sedProvesReadOnlyScript(script) {\n\t\t\treturn true",
+  "replace": "if sedProvesReadOnlyScript(script) {\n\t\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-sed-flag-letters",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "const sedFlagLetters = \"nErsuz\"",
+  "replace": "const sedFlagLetters = \"nErsu\""
+ },
+ {
+  "name": "bashanalysis-sed-flag-n",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "const sedFlagLetters = \"nErsuz\"",
+  "replace": "const sedFlagLetters = \"Ersuz\""
+ },
+ {
+  "name": "bashanalysis-sed-flag-words",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "\"--quiet\", \"--silent\", \"--regexp-extended\",",
+  "replace": "\"--silent\", \"--regexp-extended\","
+ },
+ {
+  "name": "bashanalysis-sed-flag-sandbox",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "\"--debug\", \"--sandbox\",\n)",
+  "replace": "\"--debug\",\n)"
+ },
+ {
+  "name": "bashanalysis-sed-dashdash",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if value == \"--\" {\n\t\t\toptionsEnded = true",
+  "replace": "if value == \"--\" {\n\t\t\toptionsEnded = false"
+ },
+ {
+  "name": "bashanalysis-sed-e-after-positional",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if reading.hasScript && havePositional {\n\t\t\treturn nil, false",
+  "replace": "if false {\n\t\t\treturn nil, false"
+ },
+ {
+  "name": "bashanalysis-sed-consumes-next",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if reading.consumesNext {\n\t\t\ti++",
+  "replace": "if false {\n\t\t\ti++"
+ },
+ {
+  "name": "bashanalysis-sed-first-positional",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if !havePositional {\n\t\t\t\tfirstPositional, havePositional = value, true",
+  "replace": "firstPositional, havePositional = value, true\n\t\t\tif false {"
+ },
+ {
+  "name": "bashanalysis-sed-no-positional",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if !havePositional {\n\t\treturn nil, false\n\t}\n\treturn []string{firstPositional}, true",
+  "replace": "return []string{firstPositional}, true"
+ },
+ {
+  "name": "bashanalysis-sed-e-wins",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if len(scripts) > 0 {\n\t\treturn scripts, true",
+  "replace": "if len(scripts) > 0 && !havePositional {\n\t\treturn scripts, true"
+ },
+ {
+  "name": "bashanalysis-sed-e-attached",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if attached := value[j+1:]; attached != \"\" {",
+  "replace": "if attached := \"\"; attached != \"\" {"
+ },
+ {
+  "name": "bashanalysis-sed-e-next",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if !haveNext {\n\t\t\t\treturn sedOptionReading{}, false\n\t\t\t}\n\t\t\treturn sedOptionReading{script: next, hasScript: true, consumesNext: true}, true\n\t\t}\n\t\tif !strings",
+  "replace": "return sedOptionReading{script: next, hasScript: true, consumesNext: true}, true\n\t\t}\n\t\tif !strings"
+ },
+ {
+  "name": "bashanalysis-sed-long-expression",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if strings.HasPrefix(value, sedExpressionOption+\"=\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bashanalysis-sed-long-expression-next",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if value != sedExpressionOption || !haveNext {",
+  "replace": "if value != sedExpressionOption {"
+ },
+ {
+  "name": "bashanalysis-sed-long-unknown",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "value != sedExpressionOption ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "bashanalysis-sed-commands-d",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "const sedReadOnlyCommands = \"pPdDnNgGhHx=zFlqQ\"",
+  "replace": "const sedReadOnlyCommands = \"pPnNgGhHx=zFlqQ\""
+ },
+ {
+  "name": "bashanalysis-sed-commands-write",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "const sedReadOnlyCommands = \"pPdDnNgGhHx=zFlqQ\"",
+  "replace": "const sedReadOnlyCommands = \"pPdDnNgGhHx=zFlqQw\""
+ },
+ {
+  "name": "bashanalysis-sed-commands-r",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "const sedReadOnlyCommands = \"pPdDnNgGhHx=zFlqQ\"",
+  "replace": "const sedReadOnlyCommands = \"pPdDnNgGhHx=zFlqQr\""
+ },
+ {
+  "name": "bashanalysis-sed-commands-e",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "const sedReadOnlyCommands = \"pPdDnNgGhHx=zFlqQ\"",
+  "replace": "const sedReadOnlyCommands = \"pPdDnNgGhHx=zFlqQe\""
+ },
+ {
+  "name": "bashanalysis-sed-numbered",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "const sedNumberedCommands = \"lqQ\"",
+  "replace": "const sedNumberedCommands = \"lq\""
+ },
+ {
+  "name": "bashanalysis-sed-labels",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "const sedLabelCommands = \"bTt:\"",
+  "replace": "const sedLabelCommands = \"bTt\""
+ },
+ {
+  "name": "bashanalysis-sed-label-colon",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return command != ':' || s.position > start",
+  "replace": "return s.position >= start"
+ },
+ {
+  "name": "bashanalysis-sed-subst-flags",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "\"gpiImM0123456789\"",
+  "replace": "\"gpiImM0123456789w\""
+ },
+ {
+  "name": "bashanalysis-sed-subst-flag-e",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "\"gpiImM0123456789\"",
+  "replace": "\"gpiImM0123456789e\""
+ },
+ {
+  "name": "bashanalysis-sed-subst-flag-digits",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "\"gpiImM0123456789\"",
+  "replace": "\"gpiImM\""
+ },
+ {
+  "name": "bashanalysis-sed-open-block",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return s.openBlocks == 0\n}",
+  "replace": "return true\n}"
+ },
+ {
+  "name": "bashanalysis-sed-block-open",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if command == '{' {\n\t\ts.openBlocks++",
+  "replace": "if command == '{' {\n\t\ts.openBlocks += 0"
+ },
+ {
+  "name": "bashanalysis-sed-close-underflow",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return s.openBlocks >= 0",
+  "replace": "return true"
+ },
+ {
+  "name": "bashanalysis-sed-after-command",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return s.atEnd() || s.atSeparator() || s.closesBlock()",
+  "replace": "return true"
+ },
+ {
+  "name": "bashanalysis-sed-closes-block",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "func (s *sedScriptScanner) closesBlock() bool { return s.peek() == '}' }",
+  "replace": "func (s *sedScriptScanner) closesBlock() bool { return false }"
+ },
+ {
+  "name": "bashanalysis-sed-comment",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if s.peek() == '#' {\n\t\treturn s.skipComment()",
+  "replace": "if false {\n\t\treturn s.skipComment()"
+ },
+ {
+  "name": "bashanalysis-sed-bang",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "for s.peek() == '!' {",
+  "replace": "if s.peek() == '!' {"
+ },
+ {
+  "name": "bashanalysis-sed-no-command",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if command == sedNone {\n\t\treturn false",
+  "replace": "if command == sedNone {\n\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-sed-address-dollar",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if next == '$' {\n\t\ts.position++\n\t\treturn addressRead",
+  "replace": "if false {\n\t\ts.position++\n\t\treturn addressRead"
+ },
+ {
+  "name": "bashanalysis-sed-address-step",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if s.peek() == '~' {\n\t\ts.position++\n\t\ts.skipDigits()\n\t}\n\treturn addressRead",
+  "replace": "return addressRead"
+ },
+ {
+  "name": "bashanalysis-sed-address-invalid",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if first == addressInvalid {\n\t\treturn false",
+  "replace": "if first == addressInvalid {\n\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-sed-range-comma",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if s.peek() != ',' {\n\t\treturn true",
+  "replace": "return true\n\tif s.peek() != ',' {\n\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-sed-second-address",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return s.readAddress() == addressRead",
+  "replace": "return true"
+ },
+ {
+  "name": "bashanalysis-sed-second-plus",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if sign == '+' || sign == '~' {\n\t\ts.position++\n\t\treturn s.skipDigits()",
+  "replace": "if sign == '+' || sign == '~' {\n\t\ts.position++\n\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-sed-regex-flags",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "for s.peek() == 'I' || s.peek() == 'M' {",
+  "replace": "for s.peek() == 'I' {"
+ },
+ {
+  "name": "bashanalysis-sed-regex-address-backslash",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if s.peek() == '\\\\' {\n\t\ts.position++\n\t}\n\tdelimiter, ok := s.takeDelimiter()\n\tif !ok || !s.readRegex(delimiter) {\n\t\treturn addressInvalid",
+  "replace": "delimiter, ok := s.takeDelimiter()\n\tif !ok || !s.readRegex(delimiter) {\n\t\treturn addressInvalid"
+ },
+ {
+  "name": "bashanalysis-sed-subst-regex",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if !s.readRegex(delimiter) || !s.readLiteral(delimiter) {\n\t\treturn false\n\t}\n\tfor isSub",
+  "replace": "if !s.readRegex(delimiter) {\n\t\treturn false\n\t}\n\tfor isSub"
+ },
+ {
+  "name": "bashanalysis-sed-subst-replacement",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if !s.readRegex(delimiter) || !s.readLiteral(delimiter) {",
+  "replace": "if !s.readLiteral(delimiter) || !s.readRegex(delimiter) {"
+ },
+ {
+  "name": "bashanalysis-sed-translit",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return s.readLiteral(delimiter) && s.readLiteral(delimiter)",
+  "replace": "return s.readLiteral(delimiter)"
+ },
+ {
+  "name": "bashanalysis-sed-delimiter-alpha",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "(c >= '!' && c <= '/') || (c >= ':' && c <= '@')",
+  "replace": "(c >= '!' && c <= '/') || (c >= '0' && c <= '@')"
+ },
+ {
+  "name": "bashanalysis-sed-delimiter-backslash",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if d == sedNone || !isDelimiterChar(d) || d == '\\\\' {",
+  "replace": "if d == sedNone || !isDelimiterChar(d) {"
+ },
+ {
+  "name": "bashanalysis-sed-delimiter-brackets",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "(c >= '[' && c <= '`') || (c >= '{' && c <= '~')",
+  "replace": "(c >= ']' && c <= '`') || (c >= '{' && c <= '~')"
+ },
+ {
+  "name": "bashanalysis-sed-delimiter-tilde",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "(c >= '{' && c <= '~')",
+  "replace": "(c >= '{' && c <= '}')"
+ },
+ {
+  "name": "bashanalysis-sed-regex-newline",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "next := s.peek()\n\t\tif next == '\\n' {\n\t\t\treturn false\n\t\t}\n\t\tif next == delimiter {\n\t\t\ts.position++\n\t\t\treturn true\n\t\t}\n\t\tif next == '\\\\' {\n\t\t\ts.position += 2\n\t\t\tcontinue",
+  "replace": "next := s.peek()\n\t\tif next == delimiter {\n\t\t\ts.position++\n\t\t\treturn true\n\t\t}\n\t\tif next == '\\\\' {\n\t\t\ts.position += 2\n\t\t\tcontinue"
+ },
+ {
+  "name": "bashanalysis-sed-regex-escape",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if next == '\\\\' {\n\t\t\ts.position += 2\n\t\t\tcontinue",
+  "replace": "if next == '\\\\' {\n\t\t\ts.position += 1\n\t\t\tcontinue"
+ },
+ {
+  "name": "bashanalysis-sed-regex-bracket",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if next == '[' {\n\t\t\tif !s.readBracket(delimiter) {\n\t\t\t\treturn false\n\t\t\t}\n\t\t\tcontinue",
+  "replace": "if false {\n\t\t\tcontinue"
+ },
+ {
+  "name": "bashanalysis-sed-bracket-caret",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if s.peek() == '^' {\n\t\ts.position++\n\t}\n\tif s.peek() == ']'",
+  "replace": "if s.peek() == ']'"
+ },
+ {
+  "name": "bashanalysis-sed-bracket-first-close",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if s.peek() == ']' {\n\t\ts.position++\n\t}\n\tfor !s.atEnd() {\n\t\tnext := s.peek()\n\t\tif next == ']' {",
+  "replace": "for !s.atEnd() {\n\t\tnext := s.peek()\n\t\tif next == ']' {"
+ },
+ {
+  "name": "bashanalysis-sed-bracket-delimiter",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if next == delimiter || next == '\\n' {\n\t\t\treturn false\n\t\t}\n\t\tif next == '[' && s.opens",
+  "replace": "if next == '\\n' {\n\t\t\treturn false\n\t\t}\n\t\tif next == '[' && s.opens"
+ },
+ {
+  "name": "bashanalysis-sed-bracket-newline",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if next == delimiter || next == '\\n' {\n\t\t\treturn false",
+  "replace": "if next == delimiter {\n\t\t\treturn false"
+ },
+ {
+  "name": "bashanalysis-sed-bracket-class",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if next == '[' && s.opensBracketClass() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bashanalysis-sed-class-markers",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return marker == ':' || marker == '.' || marker == '='",
+  "replace": "return marker == ':' || marker == '.'"
+ },
+ {
+  "name": "bashanalysis-sed-class-unterminated",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if close == -1 {\n\t\treturn false",
+  "replace": "if close == -1 {\n\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-sed-class-delimiter",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if int(u) == delimiter {\n\t\t\treturn false",
+  "replace": "if false {\n\t\t\treturn false"
+ },
+ {
+  "name": "bashanalysis-sed-class-skip",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "s.position = close + 2",
+  "replace": "s.position = close + 1"
+ },
+ {
+  "name": "bashanalysis-sed-literal-newline",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "for !s.atEnd() {\n\t\tnext := s.peek()\n\t\tif next == '\\n' {\n\t\t\treturn false\n\t\t}\n\t\tif next == delimiter {\n\t\t\ts.position++\n\t\t\treturn true\n\t\t}\n\t\tif next == '\\\\' {\n\t\t\ts.position += 2\n\t\t} else",
+  "replace": "for !s.atEnd() {\n\t\tnext := s.peek()\n\t\tif next == delimiter {\n\t\t\ts.position++\n\t\t\treturn true\n\t\t}\n\t\tif next == '\\\\' {\n\t\t\ts.position += 2\n\t\t} else"
+ },
+ {
+  "name": "bashanalysis-sed-literal-escape",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "\t\t\ts.position += 2\n\t\t} else {\n\t\t\ts.position++\n\t\t}",
+  "replace": "\t\t\ts.position += 1\n\t\t} else {\n\t\t\ts.position++\n\t\t}"
+ },
+ {
+  "name": "bashanalysis-sed-separators",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return next == ';' || next == '\\n'",
+  "replace": "return next == ';'"
+ },
+ {
+  "name": "bashanalysis-sed-blank-tab",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "func isBlank(c int) bool { return c == ' ' || c == '\\t' }",
+  "replace": "func isBlank(c int) bool { return c == ' ' }"
+ },
+ {
+  "name": "bashanalysis-sed-digits",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "c >= '0' && c <= '9'; c = s.peek() {",
+  "replace": "c >= '1' && c <= '9'; c = s.peek() {"
+ },
+ {
+  "name": "bashanalysis-sed-digits-result",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "return s.position > start\n}\n\nfunc (s *sedScriptScanner) atSeparator",
+  "replace": "return true\n}\n\nfunc (s *sedScriptScanner) atSeparator"
+ },
+ {
+  "name": "bashanalysis-sed-numbered-skip",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if strings.ContainsRune(sedNumberedCommands, rune(command)) {\n\t\ts.skipBlanks()\n\t\ts.skipDigits()",
+  "replace": "if strings.ContainsRune(sedNumberedCommands, rune(command)) {\n\t\ts.skipBlanks()"
+ },
+ {
+  "name": "bashanalysis-sed-close-block",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "if command == '}' {\n\t\treturn s.closeBlock()",
+  "replace": "if command == '}' {\n\t\treturn true"
+ },
+ {
+  "name": "bashanalysis-sed-utf16",
+  "file": "bashanalysis/sedinvocation.go",
+  "find": "source: utf16.Encode([]rune(script))",
+  "replace": "source: utf16.Encode([]rune(script))[:0]"
+ },
+ {
+  "name": "bashanalysis-arity-longest",
+  "file": "bashanalysis/basharity.go",
+  "find": "for n := len(tokens); n >= 1; n-- {",
+  "replace": "for n := 1; n <= len(tokens); n++ {"
+ },
+ {
+  "name": "bashanalysis-arity-clamp",
+  "file": "bashanalysis/basharity.go",
+  "find": "return tokens[:min(arity, len(tokens))]",
+  "replace": "return tokens[:arity]"
+ },
+ {
+  "name": "bashanalysis-arity-default",
+  "file": "bashanalysis/basharity.go",
+  "find": "return []string{tokens[0]}",
+  "replace": "return tokens[:min(2, len(tokens))]"
+ },
+ {
+  "name": "bashanalysis-arity-lower",
+  "file": "bashanalysis/basharity.go",
+  "find": "lowered[i] = jsLower(t)",
+  "replace": "lowered[i] = t"
+ },
+ {
+  "name": "bashanalysis-arity-empty",
+  "file": "bashanalysis/basharity.go",
+  "find": "if len(tokens) == 0 {\n\t\treturn []string{}",
+  "replace": "if len(tokens) == 0 {\n\t\treturn nil"
+ },
+ {
+  "name": "bashanalysis-arity-constructor",
+  "file": "bashanalysis/basharity.go",
+  "find": "if key == \"constructor\" || key == \"__proto__\" {",
+  "replace": "if key == \"__proto__\" {"
+ },
+ {
+  "name": "bashanalysis-arity-proto",
+  "file": "bashanalysis/basharity.go",
+  "find": "if key == \"constructor\" || key == \"__proto__\" {",
+  "replace": "if key == \"constructor\" {"
+ },
+ {
+  "name": "bashanalysis-arity-npm-run",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"npm run\": 3,",
+  "replace": "\"npm run\": 2,"
+ },
+ {
+  "name": "bashanalysis-arity-docker-compose",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"docker compose\": 3,",
+  "replace": "\"docker compose\": 2,"
+ },
+ {
+  "name": "bashanalysis-arity-aws",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"aws\": 3,",
+  "replace": "\"aws\": 2,"
+ },
+ {
+  "name": "bashanalysis-arity-gh-pr",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"gh pr\": 3,",
+  "replace": "\"gh pr\": 2,"
+ },
+ {
+  "name": "bashanalysis-arity-bun-x",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"bun x\": 3,",
+  "replace": "\"bun x\": 2,"
+ },
+ {
+  "name": "bashanalysis-arity-make",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"make\": 1,",
+  "replace": "\"make\": 2,"
+ },
+ {
+  "name": "bashanalysis-arity-bazel",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"bazel\": 2,",
+  "replace": "\"bazel\": 1,"
+ },
+ {
+  "name": "bashanalysis-arity-apt-get",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"apt-get\": 2,",
+  "replace": "\"apt-get\": 1,"
+ },
+ {
+  "name": "bashanalysis-arity-systemctl",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"systemctl\": 2,",
+  "replace": "\"systemctl\": 1,"
+ },
+ {
+  "name": "bashanalysis-arity-rm",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"rm\": 1,",
+  "replace": "\"rm\": 2,"
+ },
+ {
+  "name": "bashanalysis-arity-kubectl",
+  "file": "bashanalysis/basharity.go",
+  "find": "\"kubectl\": 2,",
+  "replace": "\"kubectl\": 1,"
+ },
+ {
+  "name": "bashanalysis-strip-trim",
+  "file": "bashanalysis/basharity.go",
+  "find": "return jsTrim(strings.Join(meaningful, \"\\n\"))",
+  "replace": "return strings.Join(meaningful, \"\\n\")"
+ },
+ {
+  "name": "bashanalysis-strip-split",
+  "file": "bashanalysis/basharity.go",
+  "find": "lines := strings.Split(command, \"\\n\")",
+  "replace": "lines := strings.Split(command, \"\\r\\n\")"
+ },
+ {
+  "name": "bashanalysis-strip-comment",
+  "file": "bashanalysis/basharity.go",
+  "find": "if r == '#' {\n\t\t\treturn true",
+  "replace": "if r == '#' {\n\t\t\treturn false"
+ },
+ {
+  "name": "bashanalysis-strip-space",
+  "file": "bashanalysis/basharity.go",
+  "find": "if !isJSSpace(r) {\n\t\t\treturn false",
+  "replace": "if r != ' ' && r != '\\t' {\n\t\t\treturn false"
+ },
+ {
+  "name": "bashanalysis-strip-join",
+  "file": "bashanalysis/basharity.go",
+  "find": "strings.Join(meaningful, \"\\n\")",
+  "replace": "strings.Join(meaningful, \" \")"
+ },
+ {
+  "name": "bashanalysis-strip-filter",
+  "file": "bashanalysis/basharity.go",
+  "find": "if !isCommentLine(line) {",
+  "replace": "if isCommentLine(line) {"
+ },
+ {
+  "name": "bashanalysis-enum-named",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if !node.IsNamed() {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-enum-skip",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "var commandEnumSkip = setOf(\"comment\", \"heredoc_end\")",
+  "replace": "var commandEnumSkip = setOf(\"comment\")"
+ },
+ {
+  "name": "bashanalysis-enum-skip-comment",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "var commandEnumSkip = setOf(\"comment\", \"heredoc_end\")",
+  "replace": "var commandEnumSkip = setOf(\"heredoc_end\")"
+ },
+ {
+  "name": "bashanalysis-enum-command-hosted",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "// inner commands of command/process substitutions.\n\t\tcollectHostedCommands(node, scope, out)",
+  "replace": "// inner commands of command/process substitutions."
+ },
+ {
+  "name": "bashanalysis-enum-redirected",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "descendCommandChildren(node, redirectedScope(node, scope), out)",
+  "replace": "descendCommandChildren(node, scope, out)"
+ },
+ {
+  "name": "bashanalysis-enum-host",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "case bashparse.ExecutionHostTypes[typ]:\n\t\t// Not a command itself, but its subtree can host one that really runs (`> $(rm x)`,\n\t\t// `< <(rm c)`). Emit only what it hosts (#741).\n\t\tcollectHostedCommands(node, scope, out)",
+  "replace": "case bashparse.ExecutionHostTypes[typ]:"
+ },
+ {
+  "name": "bashanalysis-enum-subshell-whole",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "*out = append(*out, makeUnit(node.Text(), scope, unitFacts{})) // never-weaker whole emit\n\t\tsub := scope",
+  "replace": "sub := scope"
+ },
+ {
+  "name": "bashanalysis-enum-subshell-context",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "sub.context = bashparse.ContextSubshell",
+  "replace": "sub.context = bashparse.ContextCommandSubstitution"
+ },
+ {
+  "name": "bashanalysis-enum-compound-whole",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "*out = append(*out, makeUnit(node.Text(), scope, unitFacts{})) // never-weaker whole emit\n\t\tdescendStatementChildren(node, scope, out)\n\tcase statementGroupTypes",
+  "replace": "descendStatementChildren(node, scope, out)\n\tcase statementGroupTypes"
+ },
+ {
+  "name": "bashanalysis-enum-compound-descend",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "descendStatementChildren(node, scope, out)\n\tcase statementGroupTypes[typ]:\n\t\tdescendStatementChildren(node, scope, out)",
+  "replace": "\n\tcase statementGroupTypes[typ]:\n\t\tdescendStatementChildren(node, scope, out)"
+ },
+ {
+  "name": "bashanalysis-enum-group-descend",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "case statementGroupTypes[typ]:\n\t\tdescendStatementChildren(node, scope, out)",
+  "replace": "case statementGroupTypes[typ]:"
+ },
+ {
+  "name": "bashanalysis-enum-error",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "case typ == \"ERROR\":",
+  "replace": "case typ == \"ERRORX\":"
+ },
+ {
+  "name": "bashanalysis-enum-default-hosted",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "*out = append(*out, makeUnit(node.Text(), scope, unitFacts{}))\n\t\tcollectHostedCommands(node, scope, out)\n\t}",
+  "replace": "*out = append(*out, makeUnit(node.Text(), scope, unitFacts{}))\n\t}"
+ },
+ {
+  "name": "bashanalysis-enum-unresolved-containers",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if scope.parseUnresolved || commandEnumDescend[node.Type()] {",
+  "replace": "if scope.parseUnresolved {"
+ },
+ {
+  "name": "bashanalysis-enum-unresolved",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if bashparse.ParseUnresolvedWithin(node) {\n\t\tscope.parseUnresolved = true",
+  "replace": "if false {\n\t\tscope.parseUnresolved = true"
+ },
+ {
+  "name": "bashanalysis-enum-salvaged-scope",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "unitScope{parseUnresolved: true, salvaged: true, words: words}",
+  "replace": "unitScope{parseUnresolved: true, words: words}"
+ },
+ {
+  "name": "bashanalysis-enum-salvaged-unresolved",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "unitScope{parseUnresolved: true, salvaged: true, words: words}",
+  "replace": "unitScope{salvaged: true, words: words}"
+ },
+ {
+  "name": "bashanalysis-enum-statement-types",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "\"test_command\", \"unset_command\", \"ERROR\")",
+  "replace": "\"unset_command\", \"ERROR\")"
+ },
+ {
+  "name": "bashanalysis-enum-statement-operands",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if statementTypes[child.Type()] {\n\t\t\tcollectCommandsInto(child, scope, out)\n\t\t} else {\n\t\t\tcollectHostedCommands(child, scope, out)\n\t\t}",
+  "replace": "if statementTypes[child.Type()] {\n\t\t\tcollectCommandsInto(child, scope, out)\n\t\t}"
+ },
+ {
+  "name": "bashanalysis-enum-statement-named",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if !child.IsNamed() {\n\t\t\tcontinue\n\t\t}\n\t\tif statementTypes",
+  "replace": "if statementTypes"
+ },
+ {
+  "name": "bashanalysis-enum-hosted-fresh",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "descendCommandChildren(contextNode, unitScope{context: context, salvaged: scope.salvaged, words: scope.words}, out)",
+  "replace": "descendCommandChildren(contextNode, unitScope{context: context, writesViaRedirect: scope.writesViaRedirect, parseUnresolved: scope.parseUnresolved, salvaged: scope.salvaged, words: scope.words}, out)"
+ },
+ {
+  "name": "bashanalysis-enum-hosted-salvaged",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "unitScope{context: context, salvaged: scope.salvaged, words: scope.words}",
+  "replace": "unitScope{context: context, words: scope.words}"
+ },
+ {
+  "name": "bashanalysis-enum-redirect-write",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if bashparse.RedirectMayWriteFile(child) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bashanalysis-enum-redirect-type",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if child.Type() != \"file_redirect\" {",
+  "replace": "if child.Type() != \"heredoc_redirect\" {"
+ },
+ {
+  "name": "bashanalysis-enum-redirect-inherited",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if scope.writesViaRedirect {\n\t\treturn scope\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-enum-unit-spelling",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if spelling, ok := scope.words.SpellHomeAtStart(text); ok {\n\t\tfacts.spellings",
+  "replace": "if spelling, ok := \"\", false; ok {\n\t\tfacts.spellings"
+ },
+ {
+  "name": "bashanalysis-enum-unit-executed",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "facts.executedUnit, _ = ExecutedUnitOf(text, words)",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-enum-unit-exemption",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "facts.floorExemption = FloorExemptionCoreReader",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-enum-unit-scope-redirect",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "IsTransparentWrapper(words, redirectedScope(node, scope).writesViaRedirect)",
+  "replace": "IsTransparentWrapper(words, scope.writesViaRedirect)"
+ },
+ {
+  "name": "bashanalysis-enum-unit-kind",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "facts := unitFacts{wrapperKind: ClassifyWrapperWords(words)}",
+  "replace": "facts := unitFacts{}"
+ },
+ {
+  "name": "bashanalysis-enum-words-empty",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if len(nodes) == 0 {\n\t\treturn node.Text(), nil",
+  "replace": "if len(nodes) == 0 {\n\t\treturn \"\", nil"
+ },
+ {
+  "name": "bashanalysis-enum-gap-redirect",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "return \" \"\n\t\t}\n\t}\n\treturn slice16",
+  "replace": "return \"\"\n\t\t}\n\t}\n\treturn slice16"
+ },
+ {
+  "name": "bashanalysis-enum-gap-start",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "redirect.StartIndex() >= before.EndIndex() && redirect.StartIndex() < after.StartIndex()",
+  "replace": "redirect.StartIndex() >= before.EndIndex()"
+ },
+ {
+  "name": "bashanalysis-enum-gap-end",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "redirect.StartIndex() >= before.EndIndex() && redirect.StartIndex() < after.StartIndex()",
+  "replace": "redirect.StartIndex() < after.StartIndex()"
+ },
+ {
+  "name": "bashanalysis-enum-offsets",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "Text: wordText, Offset: textLen})",
+  "replace": "Text: wordText, Offset: 0})"
+ },
+ {
+  "name": "bashanalysis-enum-offset-utf16",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "textLen += utf16Len(wordText)",
+  "replace": "textLen += len(wordText)"
+ },
+ {
+  "name": "bashanalysis-enum-gap-utf16",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "textLen += utf16Len(gap)",
+  "replace": "textLen += len(gap)"
+ },
+ {
+  "name": "bashanalysis-enum-word-prefix",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "|| child.Type() == \"variable_assignment\" || bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue",
+  "replace": "|| bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue"
+ },
+ {
+  "name": "bashanalysis-enum-word-redirect",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "|| child.Type() == \"variable_assignment\" || bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue",
+  "replace": "|| child.Type() == \"variable_assignment\" {\n\t\t\tcontinue"
+ },
+ {
+  "name": "bashanalysis-enum-payload-index",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "Offset: node.StartIndex()}\n\t}\n\tindex :=",
+  "replace": "Offset: 0}\n\t}\n\tindex :="
+ },
+ {
+  "name": "bashanalysis-enum-payload-bounds",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "if index == -1 || index >= len(nodes) {\n\t\treturn nil",
+  "replace": "if index == -1 {\n\t\treturn nil"
+ },
+ {
+  "name": "bashanalysis-enum-payload-words",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "commandWords[i] = CommandWord{ArgWord: words.ArgWord(node), Text:",
+  "replace": "commandWords[i] = CommandWord{Text:"
+ },
+ {
+  "name": "bashanalysis-enum-make-unit-context",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "Context:         scope.context,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-enum-make-unit-salvaged",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "Salvaged:        scope.salvaged,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-enum-make-unit-unresolved",
+  "file": "bashanalysis/commandenumeration.go",
+  "find": "ParseUnresolved: scope.parseUnresolved,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-sync-cold",
+  "file": "bashanalysis/synccommands.go",
+  "find": "if parser == nil {\n\t\treturn nil, false",
+  "replace": "if parser == nil {\n\t\treturn []BashCommand{}, true"
+ },
+ {
+  "name": "bashanalysis-sync-unparsed",
+  "file": "bashanalysis/synccommands.go",
+  "find": "if tree == nil {\n\t\treturn []BashCommand{}, true",
+  "replace": "if tree == nil {\n\t\treturn nil, false"
+ },
+ {
+  "name": "bashanalysis-sync-salvage",
+  "file": "bashanalysis/synccommands.go",
+  "find": "commands = append(commands, CollectSalvagedCommands(root, words)...)",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-sync-variables-roots",
+  "file": "bashanalysis/synccommands.go",
+  "find": "append([]*bashparse.Node{tree.Root}, salvaged...)",
+  "replace": "[]*bashparse.Node{tree.Root}"
+ },
+ {
+  "name": "bashanalysis-sync-variables-primary",
+  "file": "bashanalysis/synccommands.go",
+  "find": "append([]*bashparse.Node{tree.Root}, salvaged...)",
+  "replace": "salvaged"
+ },
+ {
+  "name": "bashanalysis-sync-primary-first",
+  "file": "bashanalysis/synccommands.go",
+  "find": "commands := CollectCommands(tree.Root, words)",
+  "replace": "var commands []BashCommand"
+ },
+ {
+  "name": "bashanalysis-class-prefix-tilde",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "strings.HasPrefix(token, \"~/\") || hasParentTraversal(token) || isWindowsDrivePath(token) {\n\t\treturn token, true\n\t}\n\treturn \"\", false\n}\n\n// ClassifyTokenAsRuleCandidate",
+  "replace": "hasParentTraversal(token) || isWindowsDrivePath(token) {\n\t\treturn token, true\n\t}\n\treturn \"\", false\n}\n\n// ClassifyTokenAsRuleCandidate"
+ },
+ {
+  "name": "bashanalysis-class-strict-slash",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "if strings.HasPrefix(token, \"/\") || strings.HasPrefix(token, \"~/\")",
+  "replace": "if strings.HasPrefix(token, \"~/\")"
+ },
+ {
+  "name": "bashanalysis-class-strict-traversal",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "strings.HasPrefix(token, \"~/\") || hasParentTraversal(token) || isWindowsDrivePath(token) {\n\t\treturn token, true\n\t}\n\treturn \"\", false\n}\n\n// ClassifyTokenAsRuleCandidate",
+  "replace": "strings.HasPrefix(token, \"~/\") || isWindowsDrivePath(token) {\n\t\treturn token, true\n\t}\n\treturn \"\", false\n}\n\n// ClassifyTokenAsRuleCandidate"
+ },
+ {
+  "name": "bashanalysis-class-strict-drive",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "strings.HasPrefix(token, \"~/\") || hasParentTraversal(token) || isWindowsDrivePath(token) {\n\t\treturn token, true\n\t}\n\treturn \"\", false\n}\n\n// ClassifyTokenAsRuleCandidate",
+  "replace": "strings.HasPrefix(token, \"~/\") || hasParentTraversal(token) {\n\t\treturn token, true\n\t}\n\treturn \"\", false\n}\n\n// ClassifyTokenAsRuleCandidate"
+ },
+ {
+  "name": "bashanalysis-class-rule-dot",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "if strings.HasPrefix(token, \".\") || flavor.HasPathSeparator(token)",
+  "replace": "if flavor.HasPathSeparator(token)"
+ },
+ {
+  "name": "bashanalysis-class-rule-separator",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "|| flavor.HasPathSeparator(token) ||",
+  "replace": "||"
+ },
+ {
+  "name": "bashanalysis-class-rule-traversal",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "flavor.HasPathSeparator(token) || hasParentTraversal(token) || isWindowsDrivePath(token) {",
+  "replace": "flavor.HasPathSeparator(token) || isWindowsDrivePath(token) {"
+ },
+ {
+  "name": "bashanalysis-class-rule-drive",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "flavor.HasPathSeparator(token) || hasParentTraversal(token) || isWindowsDrivePath(token) {",
+  "replace": "flavor.HasPathSeparator(token) || hasParentTraversal(token) {"
+ },
+ {
+  "name": "bashanalysis-class-win32-separator",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "return strings.ContainsAny(token, `/\\`)\n\t}\n\treturn strings.Contains(token, \"/\")",
+  "replace": "return strings.Contains(token, \"/\")\n\t}\n\treturn strings.Contains(token, \"/\")"
+ },
+ {
+  "name": "bashanalysis-class-posix-separator",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "return strings.ContainsAny(token, `/\\`)\n\t}\n\treturn strings.Contains(token, \"/\")",
+  "replace": "return strings.ContainsAny(token, `/\\`)\n\t}\n\treturn strings.ContainsAny(token, `/\\`)"
+ },
+ {
+  "name": "bashanalysis-class-bare-prelude",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "if rejectNonPathToken(token) {\n\t\treturn \"\", false\n\t}\n\treturn token, true",
+  "replace": "return token, true"
+ },
+ {
+  "name": "bashanalysis-class-traversal-before",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "before := i == 0 || token[i-1] == '/' || token[i-1] == '\\\\'",
+  "replace": "before := i == 0 || token[i-1] == '/'"
+ },
+ {
+  "name": "bashanalysis-class-traversal-after",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "after := i+2 == len(token) || token[i+2] == '/' || token[i+2] == '\\\\'",
+  "replace": "after := i+2 == len(token) || token[i+2] == '/'"
+ },
+ {
+  "name": "bashanalysis-class-traversal-edge",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "before := i == 0 ||",
+  "replace": "before := "
+ },
+ {
+  "name": "bashanalysis-class-traversal-end",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "after := i+2 == len(token) ||",
+  "replace": "after := "
+ },
+ {
+  "name": "bashanalysis-class-drive-length",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "len(token) >= 3 && isASCIILetter(token[0])",
+  "replace": "len(token) >= 2 && isASCIILetter(token[0])"
+ },
+ {
+  "name": "bashanalysis-class-drive-separator",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "(token[2] == '/' || token[2] == '\\\\')",
+  "replace": "token[2] == '/'"
+ },
+ {
+  "name": "bashanalysis-class-drive-letter",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "isASCIILetter(token[0]) && token[1] == ':'",
+  "replace": "token[1] == ':'"
+ },
+ {
+  "name": "bashanalysis-class-url-scheme",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "if token == \"\" || !isASCIILetter(token[0]) {\n\t\treturn false",
+  "replace": "if token == \"\" {\n\t\treturn false"
+ },
+ {
+  "name": "bashanalysis-class-url-slashes",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "return strings.HasPrefix(token[i:], \"://\")",
+  "replace": "return true"
+ },
+ {
+  "name": "bashanalysis-class-url-chars",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "c == '+' || c == '.' || c == '-')",
+  "replace": "c == '+' || c == '.')"
+ },
+ {
+  "name": "bashanalysis-class-reject-empty",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "if token == \"\" || strings.HasPrefix(token, \"-\") {",
+  "replace": "if strings.HasPrefix(token, \"-\") {"
+ },
+ {
+  "name": "bashanalysis-class-reject-flag",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "if token == \"\" || strings.HasPrefix(token, \"-\") {",
+  "replace": "if token == \"\" {"
+ },
+ {
+  "name": "bashanalysis-class-reject-assignment",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "if eq != -1 && (slash == -1 || eq < slash) {",
+  "replace": "if eq != -1 && slash == -1 {"
+ },
+ {
+  "name": "bashanalysis-class-reject-assignment-order",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "if eq != -1 && (slash == -1 || eq < slash) {",
+  "replace": "if eq != -1 {"
+ },
+ {
+  "name": "bashanalysis-class-reject-scope",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "return strings.HasPrefix(token, \"@\") && !strings.HasPrefix(token, \"@/\")",
+  "replace": "return strings.HasPrefix(token, \"@\")"
+ },
+ {
+  "name": "bashanalysis-class-reject-scope-allowed",
+  "file": "bashanalysis/tokenclassification.go",
+  "find": "return strings.HasPrefix(token, \"@\") && !strings.HasPrefix(token, \"@/\")",
+  "replace": "return false"
+ },
+ {
+  "name": "bashanalysis-tok-command",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case typ == \"command\":\n\t\treturn CollectCommandTokens(node, words)",
+  "replace": "case typ == \"commandx\":\n\t\treturn CollectCommandTokens(node, words)"
+ },
+ {
+  "name": "bashanalysis-tok-redirect",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case typ == \"file_redirect\":",
+  "replace": "case typ == \"file_redirectx\":"
+ },
+ {
+  "name": "bashanalysis-tok-for",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case typ == \"for_statement\":\n\t\treturn collectStatementOperandTokens(node, afterIn, words)",
+  "replace": "case typ == \"for_statementx\":\n\t\treturn collectStatementOperandTokens(node, afterIn, words)"
+ },
+ {
+  "name": "bashanalysis-tok-case",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "collectStatementOperandTokens(node, beforeIn, words)",
+  "replace": "collectStatementOperandTokens(node, afterIn, words)"
+ },
+ {
+  "name": "bashanalysis-tok-for-side",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "collectStatementOperandTokens(node, afterIn, words)",
+  "replace": "collectStatementOperandTokens(node, beforeIn, words)"
+ },
+ {
+  "name": "bashanalysis-tok-host",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case bashparse.ExecutionHostTypes[typ]:\n\t\treturn collectHostedExecutionTokens(node, words)\n\tcase bashparse.SkipSubtreeTypes[typ]:",
+  "replace": "case bashparse.SkipSubtreeTypes[typ]:"
+ },
+ {
+  "name": "bashanalysis-tok-skip",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case bashparse.SkipSubtreeTypes[typ]:\n\t\treturn nil",
+  "replace": "case bashparse.SkipSubtreeTypes[typ]:"
+ },
+ {
+  "name": "bashanalysis-tok-head-word",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "head, _ := ExtractCommandWord(node, words)\n\teffect := ProveCommandEffect(head,",
+  "replace": "_, _ = ExtractCommandWord(node, words)\n\teffect := ProveCommandEffect(\"\","
+ },
+ {
+  "name": "bashanalysis-tok-args",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "ProveCommandEffect(head, commandArgumentWords(node, words))",
+  "replace": "ProveCommandEffect(head, nil)"
+ },
+ {
+  "name": "bashanalysis-tok-pattern-config",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if config, found := patternFirstCommands[name]; found {",
+  "replace": "if config, found := patternFirstCommands[name]; found && false {"
+ },
+ {
+  "name": "bashanalysis-tok-embedded",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "return append(tokens, collectEmbeddedOptionValues(node, effect, words)...)",
+  "replace": "return tokens"
+ },
+ {
+  "name": "bashanalysis-tok-redirect-target",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if hasTarget && i == target && provesTarget(effect, child, token, words) {",
+  "replace": "if hasTarget && provesTarget(effect, child, token, words) {"
+ },
+ {
+  "name": "bashanalysis-tok-redirect-has-target",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if hasTarget && i == target &&",
+  "replace": "if i == target &&"
+ },
+ {
+  "name": "bashanalysis-tok-redirect-hosted",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "tokens = append(tokens, collectHostedExecutionTokens(child, words)...)\n\t}\n\treturn tokens\n}\n\n// provesTarget",
+  "replace": "}\n\treturn tokens\n}\n\n// provesTarget"
+ },
+ {
+  "name": "bashanalysis-tok-redirect-arg",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if bashparse.ArgNodeTypes[child.Type()] {\n\t\t\tif effect, ok := bashparse.RedirectEffectForDestination",
+  "replace": "if true {\n\t\t\tif effect, ok := bashparse.RedirectEffectForDestination"
+ },
+ {
+  "name": "bashanalysis-tok-proves-syntax",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "effect.Source == bashparse.SourceSyntax && !words.IsComputed(destination) && token != \"\"",
+  "replace": "!words.IsComputed(destination) && token != \"\""
+ },
+ {
+  "name": "bashanalysis-tok-proves-computed",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "effect.Source == bashparse.SourceSyntax && !words.IsComputed(destination) && token != \"\"",
+  "replace": "effect.Source == bashparse.SourceSyntax && token != \"\""
+ },
+ {
+  "name": "bashanalysis-tok-proves-empty",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "effect.Source == bashparse.SourceSyntax && !words.IsComputed(destination) && token != \"\"",
+  "replace": "effect.Source == bashparse.SourceSyntax && !words.IsComputed(destination)"
+ },
+ {
+  "name": "bashanalysis-tok-hosted",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "tokens = append(tokens, CollectPathCandidateTokens(contextNode, words)...)\n\t})",
+  "replace": "_ = contextNode\n\t})"
+ },
+ {
+  "name": "bashanalysis-tok-statement-in",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if child.Type() == \"in\" {",
+  "replace": "if child.Type() == \"inx\" {"
+ },
+ {
+  "name": "bashanalysis-tok-statement-named",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !child.IsNamed() {\n\t\t\tif child.Type() == \"in\"",
+  "replace": "if false {\n\t\t\tif child.Type() == \"in\""
+ },
+ {
+  "name": "bashanalysis-tok-statement-side",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if side != operandSide_ || !bashparse.ArgNodeTypes[child.Type()] {",
+  "replace": "if !bashparse.ArgNodeTypes[child.Type()] {"
+ },
+ {
+  "name": "bashanalysis-tok-statement-arg",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if side != operandSide_ || !bashparse.ArgNodeTypes[child.Type()] {",
+  "replace": "if side != operandSide_ {"
+ },
+ {
+  "name": "bashanalysis-tok-statement-effect",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "PathToken{words.Text(child), bashparse.UnprovenEffect, RoleOperand}",
+  "replace": "PathToken{words.Text(child), coreReadEffect, RoleOperand}"
+ },
+ {
+  "name": "bashanalysis-tok-statement-hosted",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "tokens = append(tokens, PathToken{words.Text(child), bashparse.UnprovenEffect, RoleOperand})\n\t\ttokens = append(tokens, collectHostedExecutionTokens(child, words)...)",
+  "replace": "tokens = append(tokens, PathToken{words.Text(child), bashparse.UnprovenEffect, RoleOperand})"
+ },
+ {
+  "name": "bashanalysis-tok-name-basename",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "return posixBasename(word), true",
+  "replace": "return word, true"
+ },
+ {
+  "name": "bashanalysis-tok-basename-trailing",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "p = strings.TrimRight(p, \"/\")",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-word-empty",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "return text, text != \"\"",
+  "replace": "return text, true"
+ },
+ {
+  "name": "bashanalysis-tok-word-type",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if child.Type() == \"command_name\" {\n\t\t\ttext := words.Text(child)",
+  "replace": "if child.Type() == \"word\" {\n\t\t\ttext := words.Text(child)"
+ },
+ {
+  "name": "bashanalysis-tok-argwords-named",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !child.IsNamed() || CommandPrefixTypes[child.Type()] || bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\targWords",
+  "replace": "if CommandPrefixTypes[child.Type()] || bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\targWords"
+ },
+ {
+  "name": "bashanalysis-tok-argwords-redirect",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "|| bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\targWords",
+  "replace": "{\n\t\t\tcontinue\n\t\t}\n\t\targWords"
+ },
+ {
+  "name": "bashanalysis-tok-argwords-prefix",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "!child.IsNamed() || CommandPrefixTypes[child.Type()] || bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\targWords",
+  "replace": "!child.IsNamed() || bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\targWords"
+ },
+ {
+  "name": "bashanalysis-tok-prefix-types",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var CommandPrefixTypes = setOf(\"command_name\", \"variable_assignment\")",
+  "replace": "var CommandPrefixTypes = setOf(\"command_name\")"
+ },
+ {
+  "name": "bashanalysis-tok-embedded-prefix",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if CommandPrefixTypes[child.Type()] || !bashparse.ArgNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\tif m := optionValuePattern",
+  "replace": "if !bashparse.ArgNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\tif m := optionValuePattern"
+ },
+ {
+  "name": "bashanalysis-tok-option-dashes",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "`^-{1,2}[^=`",
+  "replace": "`^-{1,3}[^=`"
+ },
+ {
+  "name": "bashanalysis-tok-option-one-dash",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "`^-{1,2}[^=`",
+  "replace": "`^-{2}[^=`"
+ },
+ {
+  "name": "bashanalysis-tok-option-dot",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var optionValuePattern = regexp.MustCompile(`^-{1,2}[^=` + jsSpaceClass + `]+=(` + jsDot + `+)$`)",
+  "replace": "var optionValuePattern = regexp.MustCompile(`^-{1,2}[^=` + jsSpaceClass + `]+=(.+)$`)"
+ },
+ {
+  "name": "bashanalysis-tok-option-space",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var optionValuePattern = regexp.MustCompile(`^-{1,2}[^=` + jsSpaceClass + `]+=(",
+  "replace": "var optionValuePattern = regexp.MustCompile(`^-{1,2}[^=]+=("
+ },
+ {
+  "name": "bashanalysis-tok-long-option-space",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var longOptionValuePattern = regexp.MustCompile(`^(--[^=` + jsSpaceClass + `]+)=(",
+  "replace": "var longOptionValuePattern = regexp.MustCompile(`^(--[^=]+)=("
+ },
+ {
+  "name": "bashanalysis-tok-long-option-dot",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "`]+)=(` + jsDot + `+)$`)\n\n// collectEmbedded",
+  "replace": "`]+)=(.+)$`)\n\n// collectEmbedded"
+ },
+ {
+  "name": "bashanalysis-tok-space-class",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "const jsSpaceClass = `\\t\\n\\v\\f\\r \\x{a0}",
+  "replace": "const jsSpaceClass = `\\t\\n\\v\\f\\r \\x{a1}"
+ },
+ {
+  "name": "bashanalysis-tok-dot-class",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "const jsDot = `[^\\n\\r\\x{2028}\\x{2029}]`",
+  "replace": "const jsDot = `[^\\n]`"
+ },
+ {
+  "name": "bashanalysis-tok-embedded-effect",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "values = append(values, PathToken{m[1], effect, RoleOperand})",
+  "replace": "values = append(values, PathToken{m[1], bashparse.UnprovenEffect, RoleOperand})"
+ },
+ {
+  "name": "bashanalysis-tok-token-effect",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "return []PathToken{{m[1], effect, RoleOperand}}",
+  "replace": "return []PathToken{{m[1], bashparse.UnprovenEffect, RoleOperand}}"
+ },
+ {
+  "name": "bashanalysis-tok-flags-grep-e",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-e\", roleScript, \"--regexp\", roleScript,\n\t\"-f\", roleScriptFile, \"--file\", roleScriptFile,\n\t\"-A\"",
+  "replace": "\"--regexp\", roleScript,\n\t\"-f\", roleScriptFile, \"--file\", roleScriptFile,\n\t\"-A\""
+ },
+ {
+  "name": "bashanalysis-tok-flags-grep-f",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-f\", roleScriptFile, \"--file\", roleScriptFile,\n\t\"-A\"",
+  "replace": "\"--file\", roleScriptFile,\n\t\"-A\""
+ },
+ {
+  "name": "bashanalysis-tok-flags-grep-a",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-A\", roleValue, \"--after-context\", roleValue,",
+  "replace": "\"--after-context\", roleValue,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-grep-b",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-B\", roleValue, \"--before-context\", roleValue,",
+  "replace": "\"--before-context\", roleValue,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-grep-c",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-C\", roleValue,\n\t\"-m\"",
+  "replace": "\"-m\""
+ },
+ {
+  "name": "bashanalysis-tok-flags-grep-m",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-m\", roleValue, \"--max-count\", roleValue,\n)",
+  "replace": "\"--max-count\", roleValue,\n)"
+ },
+ {
+  "name": "bashanalysis-tok-flags-sed-i",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-i\", roleSuffix,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-flags-sed-suffix",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-i\", roleSuffix,",
+  "replace": "\"-i\", roleValue,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-sed-f",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-f\", roleScriptFile, \"--file\", roleScriptFile,\n\t\"-i\", roleSuffix,",
+  "replace": "\"-f\", roleValue, \"--file\", roleValue,\n\t\"-i\", roleSuffix,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-sed-expression",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-e\", roleScript, \"--expression\", roleScript,",
+  "replace": "\"-e\", roleScript,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-awk-f",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-e\", roleScript, \"-f\", roleScriptFile, \"-F\", roleValue, \"-v\", roleValue,",
+  "replace": "\"-e\", roleScript, \"-f\", roleScriptFile, \"-v\", roleValue,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-awk-v",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-F\", roleValue, \"-v\", roleValue,\n\t\"--source\", roleUnknownArity",
+  "replace": "\"-F\", roleValue,\n\t\"--source\", roleUnknownArity"
+ },
+ {
+  "name": "bashanalysis-tok-flags-awk-long",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"--source\", roleUnknownArity, \"--file\", roleUnknownArity,\n\t\"--field-separator\", roleUnknownArity, \"--assign\", roleUnknownArity,\n)}",
+  "replace": "\"--source\", roleValue, \"--file\", roleValue,\n\t\"--field-separator\", roleValue, \"--assign\", roleValue,\n)}"
+ },
+ {
+  "name": "bashanalysis-tok-flags-gawk-long",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"--source\", roleScript, \"--file\", roleScriptFile,\n\t\"--field-separator\", roleValue, \"--assign\", roleValue,",
+  "replace": "\"--source\", roleUnknownArity, \"--file\", roleUnknownArity,\n\t\"--field-separator\", roleUnknownArity, \"--assign\", roleUnknownArity,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-rg-context",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"--context\", roleValue, \"-g\", roleValue,",
+  "replace": "\"-g\", roleValue,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-rg-glob",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-g\", roleValue, \"--glob\", roleValue, \"-t\", roleValue,",
+  "replace": "\"--glob\", roleValue, \"-t\", roleValue,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-rg-type",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-t\", roleValue, \"--type\", roleValue,\n\t\"-T\"",
+  "replace": "\"--type\", roleValue,\n\t\"-T\""
+ },
+ {
+  "name": "bashanalysis-tok-flags-rg-replace",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-r\", roleValue, \"--replace\", roleValue,",
+  "replace": "\"--replace\", roleValue,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-sd-f",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-f\", roleValue, \"--flags\", roleValue, \"-n\", roleValue,",
+  "replace": "\"--flags\", roleValue, \"-n\", roleValue,"
+ },
+ {
+  "name": "bashanalysis-tok-flags-sd-n",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-n\", roleValue, \"--max-replacements\", roleValue,\n)}",
+  "replace": "\"--max-replacements\", roleValue,\n)}"
+ },
+ {
+  "name": "bashanalysis-tok-sd-positionals",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var sdConfig = patternCommandConfig{patternPositionals: 2,",
+  "replace": "var sdConfig = patternCommandConfig{patternPositionals: 1,"
+ },
+ {
+  "name": "bashanalysis-tok-interpreter-positionals",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var nodeConfig = patternCommandConfig{patternPositionals: 0,",
+  "replace": "var nodeConfig = patternCommandConfig{patternPositionals: 1,"
+ },
+ {
+  "name": "bashanalysis-tok-python-positionals",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var pythonConfig = patternCommandConfig{patternPositionals: 0,",
+  "replace": "var pythonConfig = patternCommandConfig{patternPositionals: 1,"
+ },
+ {
+  "name": "bashanalysis-tok-ruby-positionals",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var rubyConfig = patternCommandConfig{patternPositionals: 0,",
+  "replace": "var rubyConfig = patternCommandConfig{patternPositionals: 1,"
+ },
+ {
+  "name": "bashanalysis-tok-bun-positionals",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var bunConfig = patternCommandConfig{patternPositionals: 0,",
+  "replace": "var bunConfig = patternCommandConfig{patternPositionals: 1,"
+ },
+ {
+  "name": "bashanalysis-tok-perl-positionals",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "var perlConfig = patternCommandConfig{patternPositionals: 0,",
+  "replace": "var perlConfig = patternCommandConfig{patternPositionals: 1,"
+ },
+ {
+  "name": "bashanalysis-tok-perl-E",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-e\", roleScript, \"-E\", roleScript)}",
+  "replace": "\"-e\", roleScript)}"
+ },
+ {
+  "name": "bashanalysis-tok-ruby-E",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "flagsOf(\"-e\", roleScript)}\n\n// patternFirst",
+  "replace": "flagsOf(\"-e\", roleScript, \"-E\", roleScript)}\n\n// patternFirst"
+ },
+ {
+  "name": "bashanalysis-tok-node-print",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-e\", roleScript, \"--eval\", roleScript, \"-p\", roleScript, \"--print\", roleScript,\n)}\n\n// bunConfig",
+  "replace": "\"-e\", roleScript, \"--eval\", roleScript, \"-p\", roleScript,\n)}\n\n// bunConfig"
+ },
+ {
+  "name": "bashanalysis-tok-bun-eval",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"-e\", roleScript, \"--eval\", roleScript, \"-p\", roleScript, \"--print\", roleScript,\n)}\n\n// pythonConfig",
+  "replace": "\"-e\", roleScript, \"-p\", roleScript, \"--print\", roleScript,\n)}\n\n// pythonConfig"
+ },
+ {
+  "name": "bashanalysis-tok-python-c",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "flagsOf(\"-c\", roleScript)}",
+  "replace": "flagsOf()}"
+ },
+ {
+  "name": "bashanalysis-tok-table-gawk",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"gawk\": gawkConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-nawk",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"nawk\": awkConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-egrep",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"egrep\": grepConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-fgrep",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"fgrep\": grepConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-sd",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"sd\": sdConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-rg",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"rg\": rgConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-python3",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"python3\": pythonConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-python",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"python\": pythonConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-bun",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"bun\": bunConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-perl",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"perl\": perlConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-ruby",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"ruby\": rubyConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-awk",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"awk\": awkConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-table-sed",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "\"sed\": sedConfig,",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-flag-endflags",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if text == \"--\" {\n\t\treturn patternCommandFlagDirective{kind: directiveEndOfFlags}",
+  "replace": "if text == \"--x\" {\n\t\treturn patternCommandFlagDirective{kind: directiveEndOfFlags}"
+ },
+ {
+  "name": "bashanalysis-tok-flag-exact",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if role, ok := config.flags[text]; ok {\n\t\treturn patternCommandFlagDirective{kind: directiveConsumeNext, role: role}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-flag-long-inline",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "return patternCommandFlagDirective{kind: directiveInlineValue, role: role, value: m[2]}",
+  "replace": "return patternCommandFlagDirective{kind: directiveRegularFlag}"
+ },
+ {
+  "name": "bashanalysis-tok-flag-long-unknown",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !ok {\n\t\t\treturn patternCommandFlagDirective{kind: directiveRegularFlag}\n\t\t}\n\t\treturn patternCommandFlagDirective{kind: directiveInlineValue, role: role, value: m[2]}",
+  "replace": "if !ok {\n\t\t\treturn patternCommandFlagDirective{kind: directiveEndOfFlags}\n\t\t}\n\t\treturn patternCommandFlagDirective{kind: directiveInlineValue, role: role, value: m[2]}"
+ },
+ {
+  "name": "bashanalysis-tok-flag-glued",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "!strings.HasPrefix(text, \"--\") && len(text) > 2 {",
+  "replace": "!strings.HasPrefix(text, \"--\") && len(text) > 3 {"
+ },
+ {
+  "name": "bashanalysis-tok-flag-glued-long",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "!strings.HasPrefix(text, \"--\") && len(text) > 2 {",
+  "replace": "len(text) > 2 {"
+ },
+ {
+  "name": "bashanalysis-tok-flag-glued-value",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "role: role, value: text[2:]}",
+  "replace": "role: role, value: text[1:]}"
+ },
+ {
+  "name": "bashanalysis-tok-prefix-hosted",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "// Supplies no operand of its own, but may host one that really runs.\n\t\t\ttokens = append(tokens, collectHostedExecutionTokens(child, words)...)\n\t\t\tcontinue\n\t\t}\n\n\t\tisArgNode",
+  "replace": "// Supplies no operand of its own, but may host one that really runs.\n\t\t\tcontinue\n\t\t}\n\n\t\tisArgNode"
+ },
+ {
+  "name": "bashanalysis-tok-arg-hosted",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if isArgNode {\n\t\t\ttokens = append(tokens, collectHostedExecutionTokens(child, words)...)\n\t\t}\n\n\t\t// Handle",
+  "replace": "// Handle"
+ },
+ {
+  "name": "bashanalysis-tok-pending-non-arg",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !isArgNode {\n\t\t\t\ttokens = append(tokens, CollectPathCandidateTokens(child, words)...)\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tconsumed",
+  "replace": "if !isArgNode {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tconsumed"
+ },
+ {
+  "name": "bashanalysis-tok-pending-discharge",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if consumed {\n\t\t\t\tcontinue\n\t\t\t}",
+  "replace": "if false {\n\t\t\t\tcontinue\n\t\t\t}"
+ },
+ {
+  "name": "bashanalysis-tok-pending-token",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if token != nil {\n\t\t\t\ttokens = append(tokens, *token)\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-non-arg-positional",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !bashparse.ExecutionHostTypes[child.Type()] && !hasExplicitScript && positionalsSeen < config.patternPositionals {\n\t\t\t\tpositionalsSeen++\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-non-arg-host",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !bashparse.ExecutionHostTypes[child.Type()] && !hasExplicitScript &&",
+  "replace": "if !hasExplicitScript &&"
+ },
+ {
+  "name": "bashanalysis-tok-non-arg-script",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !bashparse.ExecutionHostTypes[child.Type()] && !hasExplicitScript &&",
+  "replace": "if !bashparse.ExecutionHostTypes[child.Type()] &&"
+ },
+ {
+  "name": "bashanalysis-tok-non-arg-recurse",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "tokens = append(tokens, CollectPathCandidateTokens(child, words)...)\n\t\t\tcontinue\n\t\t}\n\n\t\t// Flag detection",
+  "replace": "continue\n\t\t}\n\n\t\t// Flag detection"
+ },
+ {
+  "name": "bashanalysis-tok-flag-end-of-flags",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !pastEndOfFlags && strings.HasPrefix(text, \"-\") && len(text) > 1 {",
+  "replace": "if strings.HasPrefix(text, \"-\") && len(text) > 1 {"
+ },
+ {
+  "name": "bashanalysis-tok-flag-lone-dash",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "strings.HasPrefix(text, \"-\") && len(text) > 1 {",
+  "replace": "strings.HasPrefix(text, \"-\") {"
+ },
+ {
+  "name": "bashanalysis-tok-flag-concatenation",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if child.Type() == \"word\" || (directive.kind != directiveRegularFlag && hasUnquotedLeadingDash(child)) {",
+  "replace": "if child.Type() == \"word\" || hasUnquotedLeadingDash(child) {"
+ },
+ {
+  "name": "bashanalysis-tok-flag-word",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if child.Type() == \"word\" || (directive.kind",
+  "replace": "if (directive.kind"
+ },
+ {
+  "name": "bashanalysis-tok-flag-quoted-whole",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "(directive.kind != directiveRegularFlag && hasUnquotedLeadingDash(child))",
+  "replace": "(directive.kind != directiveRegularFlag)"
+ },
+ {
+  "name": "bashanalysis-tok-flag-end",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case directiveEndOfFlags:\n\t\t\t\t\tpastEndOfFlags = true",
+  "replace": "case directiveEndOfFlags:"
+ },
+ {
+  "name": "bashanalysis-tok-flag-consume",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "pendingConsumption = directive.role\n",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-flag-consume-script",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case directiveConsumeNext:\n\t\t\t\t\tpendingConsumption = directive.role\n\t\t\t\t\tif suppliesScript(directive.role) {\n\t\t\t\t\t\thasExplicitScript = true\n\t\t\t\t\t}",
+  "replace": "case directiveConsumeNext:\n\t\t\t\t\tpendingConsumption = directive.role"
+ },
+ {
+  "name": "bashanalysis-tok-flag-inline-file",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if directive.role == roleScriptFile {\n\t\t\t\t\t\ttokens = append(tokens, PathToken{directive.value, effect, RoleOperand})\n\t\t\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-flag-inline-script",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case directiveInlineValue:\n\t\t\t\t\tif directive.role == roleScriptFile {\n\t\t\t\t\t\ttokens = append(tokens, PathToken{directive.value, effect, RoleOperand})\n\t\t\t\t\t}\n\t\t\t\t\tif suppliesScript(directive.role) {\n\t\t\t\t\t\thasExplicitScript = true\n\t\t\t\t\t}",
+  "replace": "case directiveInlineValue:\n\t\t\t\t\tif directive.role == roleScriptFile {\n\t\t\t\t\t\ttokens = append(tokens, PathToken{directive.value, effect, RoleOperand})\n\t\t\t\t\t}"
+ },
+ {
+  "name": "bashanalysis-tok-flag-regular",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "tokens = append(tokens, embeddedOptionValueToken(text, effect)...)\n\t\t\t\t}\n\t\t\t\tcontinue",
+  "replace": "}\n\t\t\t\tcontinue"
+ },
+ {
+  "name": "bashanalysis-tok-flag-continue",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "}\n\t\t\t\tcontinue\n\t\t\t}\n\t\t}\n\n\t\t// Positional argument.",
+  "replace": "}\n\t\t\t}\n\t\t}\n\n\t\t// Positional argument."
+ },
+ {
+  "name": "bashanalysis-tok-positional-skip",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !hasExplicitScript && positionalsSeen < config.patternPositionals {\n\t\t\tpositionalsSeen++ // Skip: this is an inline pattern/script.",
+  "replace": "if positionalsSeen < config.patternPositionals {\n\t\t\tpositionalsSeen++ // Skip: this is an inline pattern/script."
+ },
+ {
+  "name": "bashanalysis-tok-positional-count",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "positionalsSeen++ // Skip: this is an inline pattern/script.",
+  "replace": "positionalsSeen += 0 // Skip: this is an inline pattern/script."
+ },
+ {
+  "name": "bashanalysis-tok-positional-embedded",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "// A quoted token that did not act as a flag above has its embedded value split here instead.\n\t\ttokens = append(tokens, embeddedOptionValueToken(text, effect)...)",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-positional-effect",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "tokens = append(tokens, PathToken{text, effect, RoleOperand})\n\t\t}\n\t\t// A quoted",
+  "replace": "tokens = append(tokens, PathToken{text, bashparse.UnprovenEffect, RoleOperand})\n\t\t}\n\t\t// A quoted"
+ },
+ {
+  "name": "bashanalysis-tok-unquoted-dash-type",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if child.Type() != \"concatenation\" {\n\t\treturn false",
+  "replace": "if child.Type() != \"string\" {\n\t\treturn false"
+ },
+ {
+  "name": "bashanalysis-tok-unquoted-dash-head",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "head != nil && head.Type() == \"word\" && strings.HasPrefix(head.Text(), \"-\")",
+  "replace": "head != nil && strings.HasPrefix(head.Text(), \"-\")"
+ },
+ {
+  "name": "bashanalysis-tok-unquoted-dash-prefix",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "head.Type() == \"word\" && strings.HasPrefix(head.Text(), \"-\")",
+  "replace": "head.Type() == \"word\""
+ },
+ {
+  "name": "bashanalysis-tok-supplies-unknown",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "role == roleScript || role == roleScriptFile || role == roleUnknownArity",
+  "replace": "role == roleScript || role == roleScriptFile"
+ },
+ {
+  "name": "bashanalysis-tok-supplies-file",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "role == roleScript || role == roleScriptFile || role == roleUnknownArity",
+  "replace": "role == roleScript || role == roleUnknownArity"
+ },
+ {
+  "name": "bashanalysis-tok-supplies-script",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "role == roleScript || role == roleScriptFile || role == roleUnknownArity",
+  "replace": "role == roleScriptFile || role == roleUnknownArity"
+ },
+ {
+  "name": "bashanalysis-tok-discharge-file",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case roleScriptFile:\n\t\treturn true, &PathToken{text, effect, RoleOperand}",
+  "replace": "case roleScriptFile:\n\t\treturn true, nil"
+ },
+ {
+  "name": "bashanalysis-tok-discharge-script",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case roleScript, roleValue:\n\t\treturn true, nil",
+  "replace": "case roleValue:\n\t\treturn true, nil"
+ },
+ {
+  "name": "bashanalysis-tok-discharge-value",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "case roleScript, roleValue:\n\t\treturn true, nil",
+  "replace": "case roleScript:\n\t\treturn true, nil"
+ },
+ {
+  "name": "bashanalysis-tok-discharge-suffix",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "return text == \"\", nil",
+  "replace": "return true, nil"
+ },
+ {
+  "name": "bashanalysis-tok-discharge-suffix-empty",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "return text == \"\", nil",
+  "replace": "return text != \"\", nil"
+ },
+ {
+  "name": "bashanalysis-tok-generic-seen-name",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if child.Type() == \"command_name\" {\n\t\t\t\tseenCommandName = true\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-generic-prefix-hosted",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "seenCommandName = true\n\t\t\t}\n\t\t\ttokens = append(tokens, collectHostedExecutionTokens(child, words)...)\n\t\t\tcontinue\n\t\t}\n\t\tisArg",
+  "replace": "seenCommandName = true\n\t\t\t}\n\t\t\tcontinue\n\t\t}\n\t\tisArg"
+ },
+ {
+  "name": "bashanalysis-tok-generic-arg-hosted",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if isArg {\n\t\t\ttokens = append(tokens, collectHostedExecutionTokens(child, words)...)\n\t\t}\n\t\t// If there",
+  "replace": "// If there"
+ },
+ {
+  "name": "bashanalysis-tok-generic-first-word",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "if !seenCommandName && isArg {\n\t\t\tseenCommandName = true\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-generic-recurse",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "// Recurse into other children (e.g. command_substitution nested in args).\n\t\ttokens = append(tokens, CollectPathCandidateTokens(child, words)...)",
+  "replace": ""
+ },
+ {
+  "name": "bashanalysis-tok-generic-token",
+  "file": "bashanalysis/tokencollection.go",
+  "find": "tokens = append(tokens, PathToken{words.Text(child), effect, RoleOperand})\n\t\t\tcontinue",
+  "replace": "tokens = append(tokens, PathToken{words.Text(child), bashparse.UnprovenEffect, RoleOperand})\n\t\t\tcontinue"
+ }
+]
