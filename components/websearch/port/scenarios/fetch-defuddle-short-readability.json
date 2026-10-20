@@ -1,0 +1,54 @@
+{
+ "name": "fetch-defuddle-short-readability",
+ "description": "fetch_content on a page whose Readability article is too short: the Defuddle fallback finds the aside/main content (the third case of test/rsc-fallback).",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/short"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/short",
+     "headers": {
+      "content-type": "text/html"
+     },
+     "body": "<!doctype html><html><head><title>Short article fallback</title></head><body><article>Loading...</article><aside><main>Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. Useful Defuddle content after the short Readability article. </main></aside></body></html>"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}
