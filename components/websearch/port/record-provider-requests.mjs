@@ -2,7 +2,7 @@
 // whose endpoints are fixed (no configurable base URL), so a pigeq scenario server cannot receive
 // their traffic. Each case runs the vendored original module in a child process with
 // `globalThis.fetch` replaced by a recorder that answers canned responses, then the inputs and the
-// observed requests and results are written to port/provider-wire.json. The Go twin
+// observed requests and results are written to extensions/websearch/testdata/provider-wire.json. The Go twin
 // (provider_wire_test.go) replays the same inputs against the port and compares request for request.
 //
 //   cd components/websearch/port && node record-provider-requests.mjs          # rewrites provider-wire.json
@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const oracle = join(here, "oracle");
-const outFile = join(here, "provider-wire.json");
+const outFile = join(here, "..", "extensions", "websearch", "testdata", "provider-wire.json");
 
 const ok = (body, status = 200) => ({ status, body });
 const mcp = (result) => ok({ jsonrpc: "2.0", id: 1, result });

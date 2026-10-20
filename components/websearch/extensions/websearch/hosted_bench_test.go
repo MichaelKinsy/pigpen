@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// The hosted providers on the inputs recorded in port/provider-wire.json, with the network replaced by
+// The hosted providers on the inputs recorded in testdata/provider-wire.json, with the network replaced by
 // canned responses. port/bench-provider-requests.mjs times the original on the same inputs.
 //
 //	go test -run xxx -bench HostedWire -benchmem -count 10
@@ -32,9 +32,9 @@ func (d *cannedDoer) Do(r *http.Request) (*http.Response, error) {
 }
 
 func BenchmarkHostedWire(b *testing.B) {
-	data, err := os.ReadFile(filepath.FromSlash("../../port/provider-wire.json"))
+	data, err := os.ReadFile(filepath.FromSlash("testdata/provider-wire.json"))
 	if err != nil {
-		b.Skip("port/provider-wire.json is not beside this module")
+		b.Skip("testdata/provider-wire.json is not beside this module")
 	}
 	var cases []wireCase
 	if err := json.Unmarshal(data, &cases); err != nil {

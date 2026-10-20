@@ -1,4 +1,4 @@
-// Times the ORIGINAL hosted providers on the inputs of port/provider-wire.json with `fetch` replaced by
+// Times the ORIGINAL hosted providers on the inputs of extensions/websearch/testdata/provider-wire.json with `fetch` replaced by
 // canned responses (the network is not part of the measurement), for the performance section of the
 // port's PR: warm (one process, median and p90 of N calls) and cold (a fresh node process per run: module
 // import plus the first call; median of COLD runs). Run it beside `go test -bench HostedWire` on the same host.
@@ -11,7 +11,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const cases = JSON.parse(readFileSync(join(here, "provider-wire.json"), "utf8")).filter((c) => c.expect.error === null);
+const cases = JSON.parse(readFileSync(join(here, "..", "extensions", "websearch", "testdata", "provider-wire.json"), "utf8")).filter((c) => c.expect.error === null);
 const warmRuns = Number(process.argv[2] ?? 200);
 const coldRuns = Number(process.argv[3] ?? 10);
 const modules = {

@@ -56,7 +56,7 @@ Proof:
   (`fetch-firecrawl-fallback`, `fetch-crawl4ai-fallback`, `fetch-hosted-failure-guidance`, `web-search-firecrawl`).
 - every other provider calls a fixed endpoint that no scenario server can receive under the unmodified original, so
   `port/record-provider-requests.mjs` runs the vendored original with a recording `fetch` and checks in the requests and results
-  (`port/provider-wire.json`, 20 cases); `provider_wire_test.go` replays the same inputs against the port and compares every
+  (`extensions/websearch/testdata/provider-wire.json`, 20 cases); `provider_wire_test.go` replays the same inputs against the port and compares every
   request (method, URL, headers, body) and the result. `web-search-hosted-missing-credentials` compares the pre-network
   guidance of the fixed-endpoint providers.
 
