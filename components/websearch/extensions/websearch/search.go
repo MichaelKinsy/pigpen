@@ -88,9 +88,10 @@ var validRoutingKinds = []string{"transient", "quota", "network", "invalid-respo
 
 type providerDef struct {
 	name, label string
-	// available approximates the original's availability check for providers that are not ported
-	// yet (a credential source of the original's names is configured).
-	available func() bool
+	// available is the original's availability check. It receives the call's context and options
+	// because some checks read the session's model and login (OpenAI, xAI, Kimi) or the browser
+	// (Gemini Web). Providers that are not ported yet approximate it with their credential names.
+	available func(ctx context.Context, o FullSearchOptions) bool
 	// availableErr, when set, replaces available for a provider whose availability check can
 	// fail on its own configuration (SearXNG reads the ssrf settings): the failure is the
 	// caller's error, never "unavailable".
@@ -102,11 +103,19 @@ func credAvail(provider, cfgKey, env string) func() bool {
 	return func() bool { return hasProviderCredential(provider, cfgKey, env) }
 }
 
+// plainAvail adapts an availability check that needs neither context nor options.
+func plainAvail(f func() bool) func(context.Context, FullSearchOptions) bool {
+	return func(context.Context, FullSearchOptions) bool { return f() }
+}
+
 var providerTable = map[string]*providerDef{}
 
 func init() {
-	def := func(name, label string, avail func() bool, search func(context.Context, string, SearchOptions) (*SearchResponse, error)) {
+	defCtx := func(name, label string, avail func(context.Context, FullSearchOptions) bool, search func(context.Context, string, SearchOptions) (*SearchResponse, error)) {
 		providerTable[name] = &providerDef{name: name, label: label, available: avail, search: search}
+	}
+	def := func(name, label string, avail func() bool, search func(context.Context, string, SearchOptions) (*SearchResponse, error)) {
+		defCtx(name, label, plainAvail(avail), search)
 	}
 	def("brave", "Brave", IsBraveAvailable, SearchWithBrave)
 	def("tavily", "Tavily", IsTavilyAvailable, SearchWithTavily)
@@ -437,14 +446,16 @@ func ClassifyProviderError(provider string, err error) *SearchProviderError {
 	return &SearchProviderError{Provider: provider, Kind: kind, Status: status, Message: message, Cause: err}
 }
 
+// isProviderAvailable is the availability check outside a search call (fetch routing); a
+// configuration failure counts as unavailable here.
 func isProviderAvailable(provider string) bool {
-	ok, _ := providerAvailable(provider)
+	ok, _ := providerAvailable(context.Background(), provider, FullSearchOptions{})
 	return ok
 }
 
-// providerAvailable is the original's availability check; its error is the provider's own
+// providerAvailable is isResolvedProviderAvailable upstream; its error is the provider's own
 // configuration failing to load and ends the search.
-func providerAvailable(provider string) (bool, error) {
+func providerAvailable(ctx context.Context, provider string, o FullSearchOptions) (bool, error) {
 	d := providerTable[provider]
 	if d == nil {
 		return false, nil
@@ -452,7 +463,7 @@ func providerAvailable(provider string) (bool, error) {
 	if d.availableErr != nil {
 		return d.availableErr()
 	}
-	return d.available(), nil
+	return d.available(ctx, o), nil
 }
 
 func searchWithResolvedProvider(ctx context.Context, provider, query string, o FullSearchOptions) (*ProviderSearchResponse, error) {
@@ -478,7 +489,7 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 			if !sliceHas(allowed, p) {
 				continue
 			}
-			ok, err := providerAvailable(p)
+			ok, err := providerAvailable(ctx, p, o)
 			if err != nil {
 				return nil, err
 			}
@@ -571,7 +582,7 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 func searchWithConfiguredRouting(ctx context.Context, query string, o FullSearchOptions, routing *SearchRouting) (*AttributedSearchResponse, error) {
 	var diagnostics []string
 	for _, provider := range routing.Providers {
-		ok, err := providerAvailable(provider)
+		ok, err := providerAvailable(ctx, provider, o)
 		if err != nil {
 			return nil, err
 		}
@@ -655,7 +666,7 @@ func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *sea
 		if !sliceHas(allowed, p) {
 			continue
 		}
-		if ok, err := providerAvailable(p); err != nil {
+		if ok, err := providerAvailable(ctx, p, o); err != nil {
 			return nil, err
 		} else if !ok {
 			continue

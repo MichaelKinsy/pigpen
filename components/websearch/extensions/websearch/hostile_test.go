@@ -180,9 +180,9 @@ func TestSearchWithProvidersRecoversProviderPanic(t *testing.T) {
 			providerTable[n] = d
 		}
 	})
-	providerTable["exa"] = &providerDef{name: "exa", label: "Exa", available: func() bool { return true },
+	providerTable["exa"] = &providerDef{name: "exa", label: "Exa", available: func(context.Context, FullSearchOptions) bool { return true },
 		search: func(context.Context, string, SearchOptions) (*SearchResponse, error) { panic("provider exploded") }}
-	providerTable["perplexity"] = &providerDef{name: "perplexity", label: "Perplexity", available: func() bool { return true },
+	providerTable["perplexity"] = &providerDef{name: "perplexity", label: "Perplexity", available: func(context.Context, FullSearchOptions) bool { return true },
 		search: func(context.Context, string, SearchOptions) (*SearchResponse, error) {
 			return &SearchResponse{Answer: "fine"}, nil
 		}}
