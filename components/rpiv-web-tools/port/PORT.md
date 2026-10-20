@@ -51,7 +51,7 @@ unknown action, an absolute path, a killed command, the exact buffer limit, the 
 compile were rewritten, and two were removed as equivalent: `gh-size-parse-untrimmed` (`parseInt` skips surrounding white
 space itself) and `gh-path-escape` (the symlink check that follows it rejects an existing file outside the clone, and a
 missing one reads as missing either way); the case-folding mutant of the non-code segment list (`gh-noncode-case`) is
-equivalent too, because the action check rejects every segment the list names. Final run of the slice: **214 mutations, all killed**; the stack at this PR (slices 1 to 3) holds **231**, all killed.
+equivalent too, because the action check rejects every segment the list names. Final run of the slice: **214 mutations, all killed**; the stack at this PR (slices 1 to 3) holds **233** (the API view got a table-driven base64 decoder and a tree cut that does not split the listing: two more mutants for the cut), all killed.
 
 ## Deliberate differences and findings
 

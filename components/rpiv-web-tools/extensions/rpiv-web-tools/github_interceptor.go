@@ -438,19 +438,43 @@ func (g *githubInterceptor) fetchTreeViaAPI(ctx context.Context, owner, repo, re
 	if !ok {
 		return "", false
 	}
-	var paths []string
-	for _, p := range strings.Split(jsTrim(out), "\n") {
-		if p != "" {
-			paths = append(paths, p)
-		}
-	}
-	if len(paths) == 0 {
+	t := jsTrim(out)
+	if t == "" {
 		return "", false
 	}
-	if len(paths) > githubMaxTreeEntries {
-		return strings.Join(paths[:githubMaxTreeEntries], "\n") + fmt.Sprintf("\n... (%d total entries)", len(paths)), true
+	if strings.Contains(t, "\n\n") {
+		t = dropEmptyLines(t)
 	}
-	return strings.Join(paths, "\n"), true
+	n := strings.Count(t, "\n") + 1
+	if n > githubMaxTreeEntries {
+		return firstLines(t, githubMaxTreeEntries) + fmt.Sprintf("\n... (%d total entries)", n), true
+	}
+	return t, true
+}
+
+// dropEmptyLines removes the empty lines of s (the tree lists a path per line, and a blank one is no entry).
+func dropEmptyLines(s string) string {
+	lines := strings.Split(s, "\n")
+	kept := lines[:0]
+	for _, l := range lines {
+		if l != "" {
+			kept = append(kept, l)
+		}
+	}
+	return strings.Join(kept, "\n")
+}
+
+// firstLines is the first n lines of s, without the newline that ends the last.
+func firstLines(s string, n int) string {
+	end := 0
+	for range n {
+		j := strings.IndexByte(s[end:], '\n')
+		if j < 0 {
+			return s
+		}
+		end += j + 1
+	}
+	return s[:end-1]
 }
 
 func truncateREADME(s string) string {

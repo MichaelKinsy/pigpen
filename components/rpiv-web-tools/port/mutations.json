@@ -908,8 +908,20 @@
  {
   "name": "gh-tree-cut",
   "file": "github_interceptor.go",
-  "find": "if len(paths) > githubMaxTreeEntries {",
-  "replace": "if len(paths) >= githubMaxTreeEntries {"
+  "find": "if n > githubMaxTreeEntries {",
+  "replace": "if n >= githubMaxTreeEntries {"
+ },
+ {
+  "name": "gh-tree-blank-lines-kept",
+  "file": "github_interceptor.go",
+  "find": "if strings.Contains(t, \"\\n\\n\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gh-tree-first-lines-off-by-one",
+  "file": "github_interceptor.go",
+  "find": "return s[:end-1]",
+  "replace": "return s[:end]"
  },
  {
   "name": "gh-tree-limit",
@@ -1208,20 +1220,20 @@
  {
   "name": "js-base64-stop-at-pad",
   "file": "jscompat.go",
-  "find": "case c == '=':\n\t\t\tbreak loop",
-  "replace": "case c == '=':\n\t\t\tif false {\n\t\t\t\tbreak loop\n\t\t\t}\n\t\t\tcontinue"
+  "find": "if v == -2 {\n\t\t\t\tbreak",
+  "replace": "if v == -2 {\n\t\t\t\tcontinue"
  },
  {
   "name": "js-base64-urlsafe",
   "file": "jscompat.go",
-  "find": "case c == '/' || c == '_':",
-  "replace": "case c == '/':"
+  "find": "\tt['_'] = 63\n",
+  "replace": ""
  },
  {
   "name": "js-base64-plus",
   "file": "jscompat.go",
-  "find": "case c == '+' || c == '-':",
-  "replace": "case c == '-':"
+  "find": "\tt['+'] = 62\n",
+  "replace": ""
  },
  {
   "name": "js-uri-validity",

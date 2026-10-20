@@ -125,40 +125,48 @@ func decodeUTF8Lossy(b []byte) string {
 	return sb.String()
 }
 
+// b64Value maps a byte to its sextet: -1 is skipped (whitespace and every other stray character), -2 is the padding
+// that ends the data.
+var b64Value = func() (t [256]int8) {
+	for i := range t {
+		t[i] = -1
+	}
+	for i, c := range []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") {
+		t[c] = int8(i)
+	}
+	t['+'] = 62
+	t['-'] = 62
+	t['/'] = 63
+	t['_'] = 63
+	t['='] = -2
+	return t
+}()
+
 // decodeBase64Lenient is Buffer.from(s, "base64"): both alphabets, whitespace and other stray characters are
 // skipped, decoding stops at the first "=", and a missing padding is accepted.
 func decodeBase64Lenient(s string) []byte {
-	out := make([]byte, 0, len(s)*3/4)
+	out := make([]byte, len(s)*3/4+1)
+	n := 0
 	var acc uint32
 	bits := 0
-loop:
-	for i := 0; i < len(s); i++ {
-		var v byte
-		switch c := s[i]; {
-		case c >= 'A' && c <= 'Z':
-			v = c - 'A'
-		case c >= 'a' && c <= 'z':
-			v = c - 'a' + 26
-		case c >= '0' && c <= '9':
-			v = c - '0' + 52
-		case c == '+' || c == '-':
-			v = 62
-		case c == '/' || c == '_':
-			v = 63
-		case c == '=':
-			break loop
-		default:
+	for i := range len(s) {
+		v := b64Value[s[i]]
+		if v < 0 {
+			if v == -2 {
+				break
+			}
 			continue
 		}
 		acc = acc<<6 | uint32(v)
 		bits += 6
 		if bits >= 8 {
 			bits -= 8
-			out = append(out, byte(acc>>uint(bits)))
+			out[n] = byte(acc >> uint(bits))
+			n++
 			acc &= 1<<uint(bits) - 1
 		}
 	}
-	return out
+	return out[:n]
 }
 
 // decodeURIComponent is the JavaScript function; ok is false where it throws a URIError.
