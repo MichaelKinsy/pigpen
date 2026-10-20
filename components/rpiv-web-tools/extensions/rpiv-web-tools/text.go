@@ -251,25 +251,32 @@ func (t *ansiTracker) update(text string) {
 
 // active is the sequence that restores the styling in force, "" when there is none.
 func (t *ansiTracker) active() string {
-	var codes []string
-	for _, a := range []struct {
+	var buf [64]byte
+	b := append(buf[:0], 0x1b, '[')
+	n := len(b)
+	for _, a := range [...]struct {
 		on   bool
-		code string
-	}{{t.bold, "1"}, {t.dim, "2"}, {t.italic, "3"}, {t.underline, "4"}, {t.blink, "5"}, {t.inverse, "7"}, {t.hidden, "8"}, {t.strike, "9"}} {
+		code byte
+	}{{t.bold, '1'}, {t.dim, '2'}, {t.italic, '3'}, {t.underline, '4'}, {t.blink, '5'}, {t.inverse, '7'}, {t.hidden, '8'}, {t.strike, '9'}} {
 		if a.on {
-			codes = append(codes, a.code)
+			if len(b) > n {
+				b = append(b, ';')
+			}
+			b = append(b, a.code)
 		}
 	}
-	if t.fg != "" {
-		codes = append(codes, t.fg)
+	for _, c := range [...]string{t.fg, t.bg} {
+		if c != "" {
+			if len(b) > n {
+				b = append(b, ';')
+			}
+			b = append(b, c...)
+		}
 	}
-	if t.bg != "" {
-		codes = append(codes, t.bg)
-	}
-	if len(codes) == 0 {
+	if len(b) == n {
 		return ""
 	}
-	return "\x1b[" + strings.Join(codes, ";") + "m"
+	return string(append(b, 'm'))
 }
 
 // lineEndReset is what a line gets at its end: underline is the only attribute that would show in the padding.
@@ -295,7 +302,7 @@ func isCJKBreak(g string) bool {
 // escape sequence with the visible character after it (the sequences before the end of the line go with the last
 // token). Every token is a slice of text. upstream: pi-tui utils.js splitIntoTokensWithAnsi.
 func splitTokens(text string) []string {
-	var tokens []string
+	tokens := make([]string, 0, len(text)/6+2)
 	start, end, kind := -1, 0, 0 // the token being built: its bounds and what it is made of (1 spaces, 2 other)
 	lastStart := 0               // where the last emitted token starts
 	flush := func() {
@@ -406,6 +413,7 @@ func wrapSingleLine(line string, width int) []string {
 	var wrapped []string
 	t := &ansiTracker{}
 	var current strings.Builder
+	current.Grow(width + 32)
 	currentWidth := 0
 	for _, token := range splitTokens(line) {
 		tokenWidth := visibleWidth(token)
@@ -417,6 +425,7 @@ func wrapSingleLine(line string, width int) []string {
 			broken := breakLongWord(token, width, t)
 			wrapped = append(wrapped, broken[:len(broken)-1]...)
 			current.Reset()
+			current.Grow(width + 32)
 			current.WriteString(broken[len(broken)-1])
 			currentWidth = visibleWidth(broken[len(broken)-1])
 			continue
@@ -424,6 +433,7 @@ func wrapSingleLine(line string, width int) []string {
 		if currentWidth+tokenWidth > width && currentWidth > 0 {
 			wrapped = append(wrapped, jsTrimEnd(current.String())+t.lineEndReset())
 			current.Reset()
+			current.Grow(width + 32)
 			current.WriteString(t.active())
 			currentWidth = 0
 			if !isSpace {
@@ -478,8 +488,15 @@ func textLines(text string, width int) []string {
 	lines := wrapTextWithAnsi(strings.ReplaceAll(text, "\t", "   "), max(1, width))
 	for i, l := range lines {
 		if pad := width - visibleWidth(l); pad > 0 {
-			lines[i] = l + strings.Repeat(" ", pad)
+			if pad <= len(blanks) {
+				lines[i] = l + blanks[:pad]
+			} else {
+				lines[i] = l + strings.Repeat(" ", pad)
+			}
 		}
 	}
 	return lines
 }
+
+// blanks is the padding of a line, sliced instead of built for any width a terminal has.
+const blanks = "                                                                                                                                                                                                                                                                "
