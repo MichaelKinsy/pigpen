@@ -1,0 +1,129 @@
+package pi_goal_x
+
+// Copied into the 0.1.1 checkout (origin/goal-honest-refusal, extensions/pi-goal-x) as perf_bench_test.go by port/perf/run.sh: the
+// same operations as perf_bench_test.go of the port, for the commands the release implemented (it has no tools, no dashboard and no
+// scheduler). Fixture: five goals made with /goal-direct (no task trees: the release has none), settings {"maxAutonomousRuns": 0}.
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+type perfFixture struct {
+	b       *testing.B
+	cwd     string
+	h       *fakeHost
+	co      *core
+	files   map[string]string
+	entries []any
+}
+
+func (f *perfFixture) command(name, args string) {
+	for _, d := range commandDefs {
+		if d.name == name {
+			if err := d.fn(f.co, args); err != nil {
+				f.b.Fatalf("/%s: %v", name, err)
+			}
+			f.co.flush()
+			return
+		}
+	}
+	f.b.Fatalf("no command %s", name)
+}
+
+func (f *perfFixture) boot() {
+	invalidateGoalPoolCache()
+	f.h.events = nil
+	f.h.entries = append([]any(nil), f.entries...)
+	f.co = newCore(f.h)
+	f.co.sessionStart()
+	f.co.flush()
+	f.h.events = f.h.events[:0]
+}
+
+func (f *perfFixture) restore() {
+	if err := os.RemoveAll(filepath.Join(f.cwd, ".pi")); err != nil {
+		f.b.Fatal(err)
+	}
+	for rel, text := range f.files {
+		p := filepath.Join(f.cwd, filepath.FromSlash(rel))
+		_ = os.MkdirAll(filepath.Dir(p), 0o755)
+		if err := os.WriteFile(p, []byte(text), 0o644); err != nil {
+			f.b.Fatal(err)
+		}
+	}
+	f.boot()
+}
+
+func newPerfFixture(b *testing.B) *perfFixture {
+	b.Helper()
+	b.Setenv("PI_CODING_AGENT_DIR", b.TempDir())
+	cwd := b.TempDir()
+	if err := os.MkdirAll(filepath.Join(cwd, ".pi"), 0o755); err != nil {
+		b.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cwd, ".pi", "pi-goal-x-settings.json"), []byte(`{"maxAutonomousRuns": 0}`), 0o644); err != nil {
+		b.Fatal(err)
+	}
+	f := &perfFixture{b: b, cwd: cwd, h: &fakeHost{cwd: cwd}}
+	f.boot()
+	for i := 1; i <= 5; i++ {
+		f.command("goal-direct", fmt.Sprintf("Write the quarterly report %d\nSuccess criteria: three sections, each reviewed, with the figures checked against the ledger.", i))
+	}
+	f.files = map[string]string{}
+	_ = filepath.Walk(filepath.Join(cwd, ".pi"), func(p string, fi os.FileInfo, err error) error {
+		if err != nil || fi.IsDir() {
+			return nil
+		}
+		rel, _ := filepath.Rel(cwd, p)
+		data, _ := os.ReadFile(p)
+		f.files[filepath.ToSlash(rel)] = string(data)
+		return nil
+	})
+	f.entries = append([]any(nil), f.h.entries...)
+	f.restore()
+	return f
+}
+
+func benchRead(b *testing.B, op func(f *perfFixture)) {
+	f := newPerfFixture(b)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		f.h.events = f.h.events[:0]
+		op(f)
+	}
+}
+
+func benchWrite(b *testing.B, op func(f *perfFixture)) {
+	f := newPerfFixture(b)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		b.StopTimer()
+		f.restore()
+		b.StartTimer()
+		op(f)
+	}
+}
+
+func BenchmarkSessionStart(b *testing.B) {
+	f := newPerfFixture(b)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		f.boot()
+	}
+}
+
+func BenchmarkCmdGoalList(b *testing.B) {
+	benchRead(b, func(f *perfFixture) { f.command("goal-list", "") })
+}
+
+func BenchmarkCmdGoalDirect(b *testing.B) {
+	benchWrite(b, func(f *perfFixture) {
+		f.command("goal-direct", "Ship the release\nSuccess criteria: tagged and published.")
+	})
+}
