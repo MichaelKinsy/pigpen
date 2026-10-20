@@ -12,7 +12,7 @@ import (
 // redacted there as well (the action request already redacts it: guard.go BuildRequest).
 func TestTheStuckAndDoneRequestsRedactTheUsersRequest(t *testing.T) {
 	task := "deploy with TOKEN=supersecretvalue1"
-	stuck, _ := json.Marshal(BuildStuckRequest(nil, task).State)
+	stuck, _ := json.Marshal(BuildStuckRequest(nil, task, true).State)
 	if strings.Contains(string(stuck), "supersecretvalue1") {
 		t.Errorf("the stuck request carries the secret: %s", stuck)
 	}

@@ -67,7 +67,7 @@ type StuckConfig struct {
 	ChurnThreshold int     `json:"churnThreshold"`
 	Nudge          bool    `json:"nudge"`
 	RepeatSteer    bool    `json:"repeatSteer"`
-	// Evidence is off in this port (the documented `stuck.evidence: false` state): see PORT.md.
+	// Evidence sends the judge the parsed failures, edit diffs and a digest (default on, as upstream).
 	Evidence  bool `json:"evidence"`
 	DiffLimit int  `json:"diffLimit"`
 	TailLimit int  `json:"tailLimit"`
@@ -150,7 +150,7 @@ var CommandTools = []string{"bash", "powershell", "ctx_execute", "ctx_batch_exec
 
 // DefaultConfig returns pi-warden's defaults for the carried sections (config.ts defaultConfig),
 // except: Enabled is false (the port is opt-in), steers and notices are shown (SteerVisible,
-// Notices), and stuck evidence is off.
+// Notices).
 func DefaultConfig() Config {
 	return Config{
 		Enabled:     false,
@@ -175,7 +175,7 @@ func DefaultConfig() Config {
 			PathRules:           []PathRule{},
 			ArmingRules:         []ArmingRule{},
 		},
-		Stuck:        StuckConfig{Enabled: true, Window: 12, MinFailures: 3, Cooldown: 3, SameStrategy: 0.7, ChurnThreshold: 5, Nudge: true, RepeatSteer: true, Evidence: false, DiffLimit: 3000, TailLimit: 1000},
+		Stuck:        StuckConfig{Enabled: true, Window: 12, MinFailures: 3, Cooldown: 3, SameStrategy: 0.7, ChurnThreshold: 5, Nudge: true, RepeatSteer: true, Evidence: true, DiffLimit: 3000, TailLimit: 1000},
 		Done:         DoneConfig{Enabled: true, ClaimsDone: 0.7, Nudge: true, UIProof: true, UIFiles: append([]string{}, DefaultUIFiles...), VisualTools: DefaultVisualTools()},
 		Slop:         defaultSlopConfig(),
 		Security:     defaultSecurityConfig(),
