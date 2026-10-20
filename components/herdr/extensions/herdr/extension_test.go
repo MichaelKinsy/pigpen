@@ -396,7 +396,9 @@ func TestBlocked(t *testing.T) {
 	t.Run("stays blocked until every holder let go, and keeps the latest label", func(t *testing.T) {
 		host, h := startSession(t)
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "A"})
+		h.waitFor(2)
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "B"})
+		h.waitFor(3)
 		host.emit("herdr:blocked", map[string]any{"active": false})
 		settle()
 		all := h.requests()
@@ -426,7 +428,9 @@ func TestBlocked(t *testing.T) {
 	t.Run("returns to working, not idle, while a turn runs", func(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("agent_start", nil)
+		h.waitFor(2)
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "A"})
+		h.waitFor(3)
 		host.emit("herdr:blocked", map[string]any{"active": false})
 		equalStrings(t, states(h.waitFor(4)), []string{"idle", "working", "blocked", "working"})
 	})

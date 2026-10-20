@@ -1,0 +1,2535 @@
+[
+ {
+  "name": "outside-herdr",
+  "handlers": [],
+  "bus": [],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "env-not-1",
+  "handlers": [],
+  "bus": [],
+  "steps": [
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "env-true",
+  "handlers": [],
+  "bus": [],
+  "steps": [
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "no-pane-id",
+  "handlers": [],
+  "bus": [],
+  "steps": [
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "empty-pane-id",
+  "handlers": [],
+  "bus": [],
+  "steps": [
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "no-socket-path",
+  "handlers": [],
+  "bus": [],
+  "steps": [
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "empty-socket-path",
+  "handlers": [],
+  "bus": [],
+  "steps": [
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "bin-path-not-needed",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "other-pane-id",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w9:p3\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "mode-rpc",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "mode-json",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "mode-print",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "startup-idle",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "turn",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "turn-repeated-events",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "start-twice",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "start-mid-turn",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "settled-while-running",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "settled-idle-throws",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "throws",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "start-idle-throws",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "throws",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "events-before-start",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-changes-mid-turn",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/two.jsonl\"]}}"
+   },
+   {
+    "conn": 3,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":3,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/two.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-posix-file",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/h/s.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-windows-file",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"C:\\\\Users\\\\u\\\\s.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-windows-forward",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"D:/u/s.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-unc",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"\\\\\\\\srv\\\\share\\\\s.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-relative",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"abc\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-drive-relative",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"abc\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-apostrophe",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"abc\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-control",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"abc\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-tab",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"abc\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-del",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"abc\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-c1",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/h/ab.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-line-separator",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/h/a b.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-quote-and-unicode",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/h/\\\"q\\\" é 😀.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-in-memory",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"abc\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-file-throws",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"abc\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-id-throws",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/h/s.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-both-throw",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-unsafe-both",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-none",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-empty-id",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-id-with-space",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"a b\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "resume-long-file",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/h/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-basic",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"approve command\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-while-working",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 3,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":3,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 4,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":4,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-counter",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"B\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 3,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":3,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 4,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"C\",\"seq\":4,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 5,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":5,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-same-label-twice",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"same\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-object-label-twice",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":{\"k\":1},\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":{\"k\":1},\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 3,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":3,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-array-label",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":[1,\"a\"],\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-null-then-missing",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":null,\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 3,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":3,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-empty",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-number",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":7,\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-fraction",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":1.5,\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-big",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":12345678901234567000,\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-negative-zero",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":0,\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-true",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":true,\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-specials",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"a<b>&c\\nd\\te f g\\u0001hi\\\"j\\\\k\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-unicode",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"é 😀\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-label-long",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-true",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"L\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-one",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"L\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-string",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"L\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-object",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"L\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-array",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"L\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-zero",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-empty-string",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-null",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-false",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-negative",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"L\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-active-text-false",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"L\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-no-active",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-payload-string",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-payload-number",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-payload-null",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-payload-array",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-payload-true",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-release-with-nothing",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "bus-in-rpc",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "shutdown-reload",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "shutdown-new",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "shutdown-resume",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "shutdown-fork",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "shutdown-other",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "shutdown-no-reason",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "quit",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:release:<ms>:<rand>\",\"method\":\"pane.release_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"seq\":2}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "quit-after-resume-shutdown",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:release:<ms>:<rand>\",\"method\":\"pane.release_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"seq\":1}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "quit-never-started",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [],
+  "seqFromClock": true
+ },
+ {
+  "name": "quit-blocked",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"A\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 3,
+    "line": "{\"id\":\"pig:release:<ms>:<rand>\",\"method\":\"pane.release_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"seq\":3}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "fresh-session",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"blocked\",\"message\":\"stale\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":2,\"resume_argv\":[\"pig\",\"--session\",\"/x/s2.jsonl\"]}}"
+   },
+   {
+    "conn": 3,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":3,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "retry-after-close",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "retry-after-silence",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "both-attempts-fail",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "both-close",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "quit-behind-hung-herdr",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:release:<ms>:<rand>\",\"method\":\"pane.release_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"seq\":1}}"
+   },
+   {
+    "conn": 2,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 3,
+    "line": "{\"id\":\"pig:release:<ms>:<rand>\",\"method\":\"pane.release_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"seq\":1}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "coalesce-behind-slow-herdr",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "queued-resume-at-send",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"working\",\"seq\":1,\"resume_argv\":[\"pig\",\"--session\",\"/h/two.jsonl\"]}}"
+   }
+  ],
+  "seqFromClock": true
+ },
+ {
+  "name": "quit-drops-queued",
+  "handlers": [
+   "agent_settled",
+   "agent_start",
+   "session_shutdown",
+   "session_start"
+  ],
+  "bus": [
+   "herdr:blocked"
+  ],
+  "steps": [
+   "ok",
+   "ok",
+   "ok"
+  ],
+  "requests": [
+   {
+    "conn": 0,
+    "line": "{\"id\":\"pig:state:<ms>:<rand>\",\"method\":\"pane.report_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"state\":\"idle\",\"seq\":0,\"resume_argv\":[\"pig\",\"--session\",\"/home/user/.pig/agent/sessions/one.jsonl\"]}}"
+   },
+   {
+    "conn": 1,
+    "line": "{\"id\":\"pig:release:<ms>:<rand>\",\"method\":\"pane.release_agent\",\"params\":{\"pane_id\":\"w1:p1\",\"source\":\"pig\",\"agent\":\"pig\",\"seq\":1}}"
+   }
+  ],
+  "seqFromClock": true
+ }
+]

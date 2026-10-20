@@ -32,6 +32,7 @@ import (
 
 // herdrRequest is one request line a connection delivered.
 type herdrRequest struct {
+	Conn   int
 	Raw    string
 	ID     string
 	Method string
@@ -64,6 +65,17 @@ type fakeHerdr struct {
 // (the original's own test uses the pane id w1:p1).
 func installFakeHerdr(t *testing.T) *fakeHerdr {
 	t.Helper()
+	h := newFakeHerdr(t)
+	t.Setenv("HERDR_ENV", "1")
+	t.Setenv("HERDR_SOCKET_PATH", h.path)
+	t.Setenv("HERDR_PANE_ID", "w1:p1")
+	t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "")
+	return h
+}
+
+// newFakeHerdr listens on a fresh unix socket and leaves the environment alone.
+func newFakeHerdr(t *testing.T) *fakeHerdr {
+	t.Helper()
 	if runtime.GOOS == "windows" {
 		t.Skip("the fake herdr listens on a unix socket; Windows uses a named pipe")
 	}
@@ -80,10 +92,6 @@ func installFakeHerdr(t *testing.T) *fakeHerdr {
 	}
 	t.Cleanup(func() { _ = h.ln.Close() })
 	go h.accept()
-	t.Setenv("HERDR_ENV", "1")
-	t.Setenv("HERDR_SOCKET_PATH", h.path)
-	t.Setenv("HERDR_PANE_ID", "w1:p1")
-	t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "")
 	return h
 }
 
@@ -114,7 +122,7 @@ func (h *fakeHerdr) serve(conn net.Conn, n int) {
 	for {
 		line, err := r.ReadString('\n')
 		if line = strings.TrimSuffix(line, "\n"); line != "" {
-			req := herdrRequest{Raw: line}
+			req := herdrRequest{Conn: n, Raw: line}
 			var msg struct {
 				ID     string         `json:"id"`
 				Method string         `json:"method"`

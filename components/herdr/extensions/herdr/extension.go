@@ -131,9 +131,9 @@ type herdrEnv struct {
 }
 
 // readEnv reports whether this process runs inside a herdr pane (ts:20-27): HERDR_ENV=1, a socket path and a pane id.
-func readEnv() (herdrEnv, bool) {
-	socket, pane := os.Getenv("HERDR_SOCKET_PATH"), os.Getenv("HERDR_PANE_ID")
-	if os.Getenv("HERDR_ENV") != "1" || socket == "" || pane == "" {
+func readEnv(getenv func(string) string) (herdrEnv, bool) {
+	socket, pane := getenv("HERDR_SOCKET_PATH"), getenv("HERDR_PANE_ID")
+	if getenv("HERDR_ENV") != "1" || socket == "" || pane == "" {
 		return herdrEnv{}, false
 	}
 	return herdrEnv{endpoint: endpointFor(runtime.GOOS, socket), paneID: pane}, true
@@ -230,13 +230,42 @@ func encodeLine(req request) ([]byte, error) {
 	if err := enc.Encode(req); err != nil {
 		return nil, err
 	}
-	return buf.Bytes(), nil
+	return rawLineSeparators(buf.Bytes()), nil
+}
+
+// rawLineSeparators writes U+2028 and U+2029 as themselves: Go's encoder escapes them, JSON.stringify does not, and the
+// request line is meant to be the same bytes. A backslash escapes the next character, so `\\u2028` is left alone.
+func rawLineSeparators(b []byte) []byte {
+	if !bytes.Contains(b, []byte(`\u202`)) {
+		return b
+	}
+	out := make([]byte, 0, len(b))
+	for i := 0; i < len(b); i++ {
+		switch {
+		case b[i] == '\\' && i+1 < len(b) && b[i+1] == '\\':
+			out = append(out, '\\', '\\')
+			i++
+		case b[i] == '\\' && i+5 < len(b) && string(b[i+1:i+5]) == "u202" && (b[i+5] == '8' || b[i+5] == '9'):
+			if b[i+5] == '8' {
+				out = append(out, "\u2028"...)
+			} else {
+				out = append(out, "\u2029"...)
+			}
+			i += 5
+		default:
+			out = append(out, b[i])
+		}
+	}
+	return out
 }
 
 // Extension is the conventional Go factory. Outside a herdr pane it registers nothing.
-func Extension() *sdk.Extension {
+func Extension() *sdk.Extension { return extensionFor(os.Getenv) }
+
+// extensionFor is Extension over an environment lookup, so a test can run several in one process.
+func extensionFor(getenv func(string) string) *sdk.Extension {
 	e := sdk.New("herdr")
-	env, ok := readEnv()
+	env, ok := readEnv(getenv)
 	if !ok {
 		return e
 	}
@@ -245,7 +274,7 @@ func Extension() *sdk.Extension {
 	// PiG-only: PiG tells every extension when a blocking UI prompt (select, confirm, input, editor, custom) opens and
 	// settles. Pi has no such event and herdr-pig never reports a prompt, so this is opt-in: by default the port reports
 	// exactly what the original reports in the same session.
-	if os.Getenv(promptsEnv) == "1" {
+	if getenv(promptsEnv) == "1" {
 		e.OnEvent(sdk.EventUIPromptStart, func(_ sdk.Context, data map[string]any) (any, error) {
 			title, _ := data["title"].(string)
 			if title == "" {
