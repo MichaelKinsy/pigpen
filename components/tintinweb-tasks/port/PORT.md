@@ -64,9 +64,8 @@ bridged in PiG 0.4 (`Context.Events()`).
 
 ## Differences and findings
 
-**Deliberate differences (also in README):** the widget is pre-rendered rows; `/tasks` Settings is a chain of selects;
-`<agent dir>` follows PiG's rule (D2), while named lists (`PI_TASKS=<name>`) stay under `~/.pi/tasks/` as in the original; the ping to pi-subagents is sent on the first `session_start`, on `subagents:ready` and from
-`TaskExecute`; task metadata keys are sorted.
+**Deliberate differences (also in README):** the widget is a `kit` lines view, not a host-drawn component factory (same rows, uncapped, re-laid out on resize); `<agent dir>` follows PiG's rule, divergence D2 (owner decision 2026-10-20: the global `tasks-config.json` and the `session-global` lists live in PiG's agent directory and nothing is read from `~/.pi/agent`; named lists (`PI_TASKS=<name>`) stay under `~/.pi/tasks/` as in the original); the ping to pi-subagents is sent on the first `session_start`, on `subagents:ready` and from
+`TaskExecute`; metadata keys other than array-index keys are written in byte order (tool arguments reach Go as a map); Create task sends `placeholder: ""`.
 
 **Named skip (1):**
 1. `keeps an in-memory store when the context cwd changes`: the Go SDK fixes the workspace of an extension process (the

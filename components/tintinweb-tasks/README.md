@@ -49,7 +49,12 @@ behave as in the original; shared lists use a lock file with stale-lock detectio
   mode drops a component widget.
 - **Agent directory.** `<agent dir>` is PiG's (`PIG_CODING_AGENT_DIR`, else `<PIG_HOME or ~/.pig>/agent`;
   `PIG_USE_PI_DIRS=1` selects Pi's), not Pi's fixed `~/.pi/agent`. It holds `tasks-config.json` and the
-  `session-global` lists. Named lists (`PI_TASKS=<name>`) stay under `~/.pi/tasks/`, as in the original.
+  `session-global` lists. This is PiG's identity rule (divergence D2: PiG keeps its own state apart from Pi's), and
+  the owner decided on 2026-10-20 that the global tasks config and the session-global lists use it. Nothing is read
+  from or copied out of `~/.pi/agent`: a Pi user who wants the same files copies `tasks-config.json` and
+  `tasks/sessions/` into PiG's agent directory, or runs PiG with `PIG_USE_PI_DIRS=1`. Named lists
+  (`PI_TASKS=<name>`) stay under `~/.pi/tasks/`, as in the original (it reads them from the home directory, not from
+  its agent directory).
 - **Pinging pi-subagents.** The original pings while it loads. Here the ping waits for the first `session_start`
   (the SDK cannot emit on the event bus before the extension is connected, and a ping sent right after connecting
   deadlocked the host when pi-subagents is built into the same Binary), and is repeated on the `subagents:ready`
