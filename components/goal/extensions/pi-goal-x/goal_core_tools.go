@@ -143,14 +143,16 @@ func executeGetGoal(c *core, params map[string]any) (goalAgentResult, error) {
 			return goalAgentResult{text: "Unknown goal section.", details: goalDetails(view, "")}, nil
 		}
 		var events []*jsObject
+		var historyRevision *ledgerRevision
 		if section == "history" {
-			events = readGoalLedger(c.st).events
+			history := readGoalLedger(c.st)
+			events, historyRevision = history.events, history.revision
 		}
 		q := goalDetailQuery{section: section, cursor: cursor}
 		if hasTaskID {
 			q.taskId = &taskID
 		}
-		page := goalDetailPage(view, q, events)
+		page := goalDetailPage(view, q, events, historyRevision)
 		details := goalDetails(view, "")
 		if page.ok {
 			pg := newObject()

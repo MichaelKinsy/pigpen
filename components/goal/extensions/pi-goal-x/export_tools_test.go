@@ -175,3 +175,8 @@ func (p *Probe) RejectMutations(message string) (restore func()) {
 	})
 	return func() { p.c.locked(func() { p.c.goalService.applyOverride = nil }) }
 }
+
+// DetailCacheLen is the number of entries in the shared goal-detail page cache; ResetDetailCache empties it.
+func DetailCacheLen() int { return len(goalDetailCache) }
+
+func ResetDetailCache() { goalDetailCache, goalDetailCachedUnit = nil, 0 }
