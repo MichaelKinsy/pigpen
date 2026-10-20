@@ -642,51 +642,645 @@
   "replace": "fetchViaGenericHTML(ctx, target.Href[:0]+rawURL, rawURL, raw)"
  },
  {
-  "name": "refusal-wording",
-  "file": "refusal.go",
-  "find": "\" (Go port) does not support \" + feature",
-  "replace": "\" (Go port) does not handle \" + feature"
- },
- {
-  "name": "refusal-install-advice",
-  "file": "refusal.go",
-  "find": "\", which runs unchanged in PiG.\"",
-  "replace": "\".\""
- },
- {
-  "name": "refusal-github-gate-dropped",
-  "file": "webtools.go",
-  "find": "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {",
-  "replace": "if false {"
- },
- {
-  "name": "refusal-github-enabled-ignored",
-  "file": "webtools.go",
-  "find": "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {",
-  "replace": "if githubCodeURL(target.Href) {"
- },
- {
-  "name": "refusal-github-any-url",
-  "file": "webtools.go",
-  "find": "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {",
-  "replace": "if githubInterceptorEnabled(cfg) {"
- },
- {
-  "name": "refusal-github-www-host",
-  "file": "refusal.go",
+  "name": "gh-www-host",
+  "file": "github_interceptor.go",
   "find": "host != \"github.com\" && host != \"www.github.com\"",
   "replace": "host != \"github.com\""
  },
  {
-  "name": "refusal-github-root-url",
-  "file": "refusal.go",
-  "find": "if len(segments) == 2 {\n\t\treturn true\n\t}",
-  "replace": "if len(segments) == 2 {\n\t\treturn false\n\t}"
+  "name": "gh-git-suffix-kept",
+  "file": "github_interceptor.go",
+  "find": "strings.TrimSuffix(segments[1], \".git\")",
+  "replace": "segments[1]"
  },
  {
-  "name": "refusal-show-line",
+  "name": "gh-sha-length",
+  "file": "github_interceptor.go",
+  "find": "^[0-9a-f]{40}$",
+  "replace": "^[0-9a-f]{39}$"
+ },
+ {
+  "name": "gh-action-unchecked",
+  "file": "github_interceptor.go",
+  "find": "if action != \"blob\" && action != \"tree\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gh-segment-not-decoded",
+  "file": "github_interceptor.go",
+  "find": "if d, ok := decodeURIComponent(p); ok {",
+  "replace": "if d, ok := p, false; ok {"
+ },
+ {
+  "name": "gh-backslash-kept",
+  "file": "github_interceptor.go",
+  "find": "head = strings.ReplaceAll(head, \"\\\\\", \"/\")",
+  "replace": "head = head"
+ },
+ {
+  "name": "gh-single-dot-literal",
+  "file": "github_interceptor.go",
+  "find": "case \".\", \"%2e\":",
+  "replace": "case \"%2e\":"
+ },
+ {
+  "name": "gh-double-dot-forms",
+  "file": "github_interceptor.go",
+  "find": "case \"..\", \".%2e\", \"%2e.\", \"%2e%2e\":",
+  "replace": "case \"..\":"
+ },
+ {
+  "name": "gh-double-dot-no-pop",
+  "file": "github_interceptor.go",
+  "find": "if len(parts) > 0 {\n\t\t\t\t\tparts = parts[:len(parts)-1]\n\t\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "gh-default-size",
+  "file": "github_interceptor.go",
+  "find": "MaxRepoSizeMB: 350,",
+  "replace": "MaxRepoSizeMB: 3500,"
+ },
+ {
+  "name": "gh-default-timeout",
+  "file": "github_interceptor.go",
+  "find": "CloneTimeoutSeconds: 30,",
+  "replace": "CloneTimeoutSeconds: 300,"
+ },
+ {
+  "name": "gh-default-clone-path",
+  "file": "github_interceptor.go",
+  "find": "\"pi-github-repos\"",
+  "replace": "\"github-repos\""
+ },
+ {
+  "name": "gh-user-bool-consumer",
+  "file": "github_interceptor.go",
+  "find": "r.Enabled = u\n\t\treturn r",
+  "replace": "r.Enabled = u || (consumer != nil && *consumer)\n\t\treturn r"
+ },
+ {
+  "name": "gh-object-no-optin",
+  "file": "github_interceptor.go",
+  "find": "r.Enabled = true\n\t\tif u.Enabled != nil {",
+  "replace": "r.Enabled = false\n\t\tif u.Enabled != nil {"
+ },
+ {
+  "name": "gh-consumer-ignored",
+  "file": "github_interceptor.go",
+  "find": "r.Enabled = consumer != nil && *consumer",
+  "replace": "r.Enabled = false"
+ },
+ {
+  "name": "gh-object-size-ignored",
+  "file": "github_interceptor.go",
+  "find": "r.MaxRepoSizeMB = *u.MaxRepoSizeMB",
+  "replace": "_ = u.MaxRepoSizeMB"
+ },
+ {
+  "name": "gh-object-timeout-ignored",
+  "file": "github_interceptor.go",
+  "find": "r.CloneTimeoutSeconds = *u.CloneTimeoutSeconds",
+  "replace": "_ = u.CloneTimeoutSeconds"
+ },
+ {
+  "name": "gh-object-path-ignored",
+  "file": "github_interceptor.go",
+  "find": "r.ClonePath = *u.ClonePath",
+  "replace": "_ = u.ClonePath"
+ },
+ {
+  "name": "gh-config-size-ignored",
+  "file": "github_interceptor.go",
+  "find": "g[\"maxRepoSizeMB\"].(float64); ok {",
+  "replace": "g[\"maxRepoSizeMB\"].(float64); ok && false {"
+ },
+ {
+  "name": "gh-config-timeout-ignored",
+  "file": "github_interceptor.go",
+  "find": "g[\"cloneTimeoutSeconds\"].(float64); ok {",
+  "replace": "g[\"cloneTimeoutSeconds\"].(float64); ok && false {"
+ },
+ {
+  "name": "gh-config-path-ignored",
+  "file": "github_interceptor.go",
+  "find": "g[\"clonePath\"].(string); ok {",
+  "replace": "g[\"clonePath\"].(string); ok && false {"
+ },
+ {
+  "name": "gh-config-enabled-ignored",
+  "file": "github_interceptor.go",
+  "find": "g[\"enabled\"].(bool); ok {",
+  "replace": "g[\"enabled\"].(bool); ok && false {"
+ },
+ {
+  "name": "gh-cache-key-ref",
+  "file": "github_interceptor.go",
+  "find": "return owner + \"/\" + repo + \"@\" + ref",
+  "replace": "return owner + \"/\" + repo"
+ },
+ {
+  "name": "gh-clone-dir-ref",
+  "file": "github_interceptor.go",
+  "find": "dirName = repo + \"@\" + ref",
+  "replace": "dirName = repo"
+ },
+ {
+  "name": "gh-probe-not-cached",
+  "file": "github_interceptor.go",
+  "find": "if g.ghAvailable != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gh-probe-cancel-cached",
+  "file": "github_interceptor.go",
+  "find": "if !avail && ctx.Err() != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gh-probe-timeout",
+  "file": "github_interceptor.go",
+  "find": "execOptions{Timeout: 5 * time.Second}",
+  "replace": "execOptions{Timeout: 50 * time.Second}"
+ },
+ {
+  "name": "gh-api-without-gh",
+  "file": "github_interceptor.go",
+  "find": "if !g.checkGhAvailable(ctx) {\n\t\treturn \"\", false\n\t}\n\tout, err := runExec(ctx, \"gh\", []string{\"api\"",
+  "replace": "out, err := runExec(ctx, \"gh\", []string{\"api\""
+ },
+ {
+  "name": "gh-size-timeout",
+  "file": "github_interceptor.go",
+  "find": "\".size\", 10*time.Second, 0)",
+  "replace": "\".size\", 20*time.Second, 0)"
+ },
+ {
+  "name": "gh-branch-timeout",
+  "file": "github_interceptor.go",
+  "find": "\".default_branch\", 10*time.Second, 0)",
+  "replace": "\".default_branch\", 20*time.Second, 0)"
+ },
+ {
+  "name": "gh-branch-untrimmed",
+  "file": "github_interceptor.go",
+  "find": "b := jsTrim(out)",
+  "replace": "b := out"
+ },
+ {
+  "name": "gh-tree-timeout",
+  "file": "github_interceptor.go",
+  "find": "15*time.Second, 5*1024*1024)",
+  "replace": "15*time.Second, 5*1024)"
+ },
+ {
+  "name": "gh-readme-timeout",
+  "file": "github_interceptor.go",
+  "find": "\"/readme?ref=\"+ref, \".content\", 10*time.Second, 0)",
+  "replace": "\"/readme?ref=\"+ref, \".content\", 20*time.Second, 0)"
+ },
+ {
+  "name": "gh-file-buffer",
+  "file": "github_interceptor.go",
+  "find": "10*time.Second, 2*1024*1024)",
+  "replace": "10*time.Second, 2*1024)"
+ },
+ {
+  "name": "gh-tree-cut",
+  "file": "github_interceptor.go",
+  "find": "if len(paths) > githubMaxTreeEntries {",
+  "replace": "if len(paths) >= githubMaxTreeEntries {"
+ },
+ {
+  "name": "gh-tree-limit",
+  "file": "github_interceptor.go",
+  "find": "githubMaxTreeEntries     = 200",
+  "replace": "githubMaxTreeEntries     = 201"
+ },
+ {
+  "name": "gh-readme-limit",
+  "file": "github_interceptor.go",
+  "find": "githubReadmeChars        = 8192",
+  "replace": "githubReadmeChars        = 8193"
+ },
+ {
+  "name": "gh-inline-limit",
+  "file": "github_interceptor.go",
+  "find": "githubMaxInlineFileChars = 100_000",
+  "replace": "githubMaxInlineFileChars = 100_001"
+ },
+ {
+  "name": "gh-sha-via-api-dropped",
+  "file": "github_interceptor.go",
+  "find": "if info.RefIsFullSha {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gh-sha-note",
+  "file": "github_interceptor.go",
+  "find": "\"Note: Commit SHA URLs use the GitHub API instead of cloning.\"",
+  "replace": "\"Commit SHA URLs use the GitHub API instead of cloning.\""
+ },
+ {
+  "name": "gh-blob-pathless",
+  "file": "github_interceptor.go",
+  "find": "if info.Type == \"blob\" && info.Path != \"\" {",
+  "replace": "if info.Type == \"blob\" {"
+ },
+ {
+  "name": "gh-empty-file-accepted",
+  "file": "github_interceptor.go",
+  "find": "if !ok || content == \"\" {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "gh-force-clone-ignored",
+  "file": "github_interceptor.go",
+  "find": "if !forceClone {",
+  "replace": "if true {"
+ },
+ {
+  "name": "gh-size-units",
+  "file": "github_interceptor.go",
+  "find": "sizeMB := kb / 1024",
+  "replace": "sizeMB := kb / 1000"
+ },
+ {
+  "name": "gh-size-threshold-inclusive",
+  "file": "github_interceptor.go",
+  "find": "if sizeMB > g.options.MaxRepoSizeMB {",
+  "replace": "if sizeMB >= g.options.MaxRepoSizeMB {"
+ },
+ {
+  "name": "gh-size-unrounded",
+  "file": "jscompat.go",
+  "find": "return math.Floor(x + 0.5)",
+  "replace": "return math.Floor(x)"
+ },
+ {
+  "name": "gh-failed-clone-kept",
+  "file": "github_interceptor.go",
+  "find": "g.dropCache(key, promise)\n\t\treturn g.fetchViaAPI(ctx, owner, repo, info, \"\")",
+  "replace": "return g.fetchViaAPI(ctx, owner, repo, info, \"\")"
+ },
+ {
+  "name": "gh-stale-clone-kept",
+  "file": "github_interceptor.go",
+  "find": "os.RemoveAll(localPath)\n\ttimeout :=",
+  "replace": "timeout :="
+ },
+ {
+  "name": "gh-failed-clone-dir-kept",
+  "file": "github_interceptor.go",
+  "find": "os.RemoveAll(localPath)\n\t\treturn \"\", false",
+  "replace": "return \"\", false"
+ },
+ {
+  "name": "gh-clone-depth",
+  "file": "github_interceptor.go",
+  "find": "\"--\", \"--depth\", \"1\", \"--single-branch\"}",
+  "replace": "\"--\", \"--depth\", \"2\", \"--single-branch\"}"
+ },
+ {
+  "name": "gh-git-single-branch",
+  "file": "github_interceptor.go",
+  "find": "args := []string{\"clone\", \"--depth\", \"1\", \"--single-branch\"}",
+  "replace": "args := []string{\"clone\", \"--depth\", \"1\"}"
+ },
+ {
+  "name": "gh-gh-branch",
+  "file": "github_interceptor.go",
+  "find": "args = append(args, \"--branch\", ref)\n\t\t}\n\t\treturn g.execClone(ctx, \"gh\"",
+  "replace": "args = append(args, \"--branch\", \"main\")\n\t\t}\n\t\treturn g.execClone(ctx, \"gh\""
+ },
+ {
+  "name": "gh-git-url",
+  "file": "github_interceptor.go",
+  "find": "\".git\", localPath)",
+  "replace": "\"\", localPath)"
+ },
+ {
+  "name": "gh-clone-timeout-unit",
+  "file": "github_interceptor.go",
+  "find": "float64(time.Second))",
+  "replace": "float64(time.Millisecond))"
+ },
+ {
+  "name": "gh-cached-failed-used",
+  "file": "github_interceptor.go",
+  "find": "if c.promise.ok {",
+  "replace": "if true {"
+ },
+ {
+  "name": "gh-hint-every-time",
+  "file": "github_interceptor.go",
+  "find": "if !shown {",
+  "replace": "if !shown || true {"
+ },
+ {
+  "name": "gh-tree-git-dir",
+  "file": "github_interceptor.go",
+  "find": "if item == \".git\" {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\trel := item\n\t\t\tif relPath",
+  "replace": "if false {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\trel := item\n\t\t\tif relPath"
+ },
+ {
+  "name": "gh-noise-dirs",
+  "file": "github_interceptor.go",
+  "find": "stringSet(\"node_modules\", \"vendor\"",
+  "replace": "stringSet(\"vendor\""
+ },
+ {
+  "name": "gh-noise-vscode",
+  "file": "github_interceptor.go",
+  "find": ", \".idea\", \".vscode\")",
+  "replace": ", \".idea\")"
+ },
+ {
+  "name": "gh-tree-cut-note",
+  "file": "github_interceptor.go",
+  "find": "if len(entries) >= githubMaxTreeEntries {\n\t\tentries = append",
+  "replace": "if len(entries) > githubMaxTreeEntries {\n\t\tentries = append"
+ },
+ {
+  "name": "gh-outside-tree",
+  "file": "github_interceptor.go",
+  "find": "\"  [outside repo skipped]\"",
+  "replace": "\"  [outside]\""
+ },
+ {
+  "name": "gh-outside-listing",
+  "file": "github_interceptor.go",
+  "find": "\"  (outside repo)\"",
+  "replace": "\"  (outside)\""
+ },
+ {
+  "name": "gh-unreadable-listing",
+  "file": "github_interceptor.go",
+  "find": "\"  (unreadable)\"",
+  "replace": "\"  (unreadable entry)\""
+ },
+ {
+  "name": "gh-binary-null-bytes",
+  "file": "github_interceptor.go",
+  "find": "return slices.Contains(buf[:n], 0)",
+  "replace": "return slices.Contains(buf[:n], 0) && false"
+ },
+ {
+  "name": "gh-binary-ext-case",
+  "file": "github_interceptor.go",
+  "find": "githubBinaryExtensions[strings.ToLower(posixExtname(filepath.ToSlash(filePath)))]",
+  "replace": "githubBinaryExtensions[posixExtname(filepath.ToSlash(filePath))]"
+ },
+ {
+  "name": "gh-binary-dmg",
+  "file": "github_interceptor.go",
+  "find": "\".war\", \".iso\", \".img\", \".dmg\")",
+  "replace": "\".war\", \".iso\", \".img\")"
+ },
+ {
+  "name": "gh-readme-candidates",
+  "file": "github_interceptor.go",
+  "find": "\"README\", \"README.txt\", \"README.rst\"}",
+  "replace": "\"README\", \"README.rst\"}"
+ },
+ {
+  "name": "gh-readme-skip-unreadable",
+  "file": "github_interceptor.go",
+  "find": "data, err := os.ReadFile(p)\n\t\tif err != nil {\n\t\t\tcontinue\n\t\t}",
+  "replace": "data, _ := os.ReadFile(p)"
+ },
+ {
+  "name": "gh-absolute-rel",
+  "file": "github_interceptor.go",
+  "find": "if filepath.IsAbs(rel) {\n\t\tcandidate = filepath.Clean(rel)",
+  "replace": "if false {\n\t\tcandidate = filepath.Clean(rel)"
+ },
+ {
+  "name": "gh-symlink-escape",
+  "file": "github_interceptor.go",
+  "find": "if strings.HasPrefix(realCandidate, realPrefix) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "gh-truncate-notice",
+  "file": "github_interceptor.go",
+  "find": "\"\\n[File truncated at 100K chars. Full file: \"+full+\"]\"",
+  "replace": "\"\\n[File truncated at 100K chars]\""
+ },
+ {
+  "name": "gh-binary-message",
+  "file": "github_interceptor.go",
+  "find": "\"). Use `read` or `bash` tools at the path above to inspect.\"",
+  "replace": "\").\""
+ },
+ {
+  "name": "gh-missing-path-note",
+  "file": "github_interceptor.go",
+  "find": "dirPath+\"` not found in clone.",
+  "replace": "dirPath+\"` not found"
+ },
+ {
+  "name": "gh-missing-file-note",
+  "file": "github_interceptor.go",
+  "find": "filePath+\"` not found in clone.",
+  "replace": "filePath+\"` not found"
+ },
+ {
+  "name": "gh-sort-order",
+  "file": "github_interceptor.go",
+  "find": "slices.SortFunc(names, compareUTF16)",
+  "replace": "slices.Sort(names)"
+ },
+ {
+  "name": "gh-title-path",
+  "file": "github_interceptor.go",
+  "find": "title += \" - \" + info.Path\n\t}\n\treturn &fetchResponse{Text: generateCloneContent",
+  "replace": "title += \"\"\n\t}\n\treturn &fetchResponse{Text: generateCloneContent"
+ },
+ {
+  "name": "js-size-tie",
+  "file": "jscompat.go",
+  "find": "t := (bytes*10 + 512) / 1024",
+  "replace": "t := (bytes*10 + 511) / 1024"
+ },
+ {
+  "name": "js-size-tie-mb",
+  "file": "jscompat.go",
+  "find": "t := (bytes*10 + 524288) / 1048576",
+  "replace": "t := (bytes*10 + 524287) / 1048576"
+ },
+ {
+  "name": "js-size-kb-bound",
+  "file": "jscompat.go",
+  "find": "case bytes < 1024:",
+  "replace": "case bytes <= 1024:"
+ },
+ {
+  "name": "js-utf8-e0",
+  "file": "jscompat.go",
+  "find": "if c == 0xE0 {\n\t\t\t\tlo = 0xA0",
+  "replace": "if c == 0xE0 {\n\t\t\t\tlo = 0x80"
+ },
+ {
+  "name": "js-utf8-ed",
+  "file": "jscompat.go",
+  "find": "hi = 0x9F",
+  "replace": "hi = 0xBF"
+ },
+ {
+  "name": "js-utf8-f0",
+  "file": "jscompat.go",
+  "find": "lo = 0x90",
+  "replace": "lo = 0x80"
+ },
+ {
+  "name": "js-utf8-f4",
+  "file": "jscompat.go",
+  "find": "hi = 0x8F",
+  "replace": "hi = 0xBF"
+ },
+ {
+  "name": "js-utf8-retry-byte",
+  "file": "jscompat.go",
+  "find": "sb.WriteRune(utf8.RuneError) // the offending byte is read again\n\t\t\tcontinue",
+  "replace": "sb.WriteRune(utf8.RuneError)\n\t\t\ti++\n\t\t\tcontinue"
+ },
+ {
+  "name": "js-base64-stop-at-pad",
+  "file": "jscompat.go",
+  "find": "case c == '=':\n\t\t\tbreak loop",
+  "replace": "case c == '=':\n\t\t\tif false {\n\t\t\t\tbreak loop\n\t\t\t}\n\t\t\tcontinue"
+ },
+ {
+  "name": "js-base64-urlsafe",
+  "file": "jscompat.go",
+  "find": "case c == '/' || c == '_':",
+  "replace": "case c == '/':"
+ },
+ {
+  "name": "js-base64-plus",
+  "file": "jscompat.go",
+  "find": "case c == '+' || c == '-':",
+  "replace": "case c == '-':"
+ },
+ {
+  "name": "js-uri-validity",
+  "file": "jscompat.go",
+  "find": "if !utf8.Valid(b) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "js-uri-short",
+  "file": "jscompat.go",
+  "find": "if i+2 >= len(s) {",
+  "replace": "if i+2 > len(s) {"
+ },
+ {
+  "name": "js-extname-dotdot",
+  "file": "jscompat.go",
+  "find": "if i <= 0 || p == \"..\" {",
+  "replace": "if i <= 0 {"
+ },
+ {
+  "name": "js-extname-trailing-slash",
+  "file": "jscompat.go",
+  "find": "p = strings.TrimRight(p, \"/\")",
+  "replace": ""
+ },
+ {
+  "name": "js-prefix-split-pair",
+  "file": "jscompat.go",
+  "find": "if w == 2 && units < n {",
+  "replace": "if false {"
+ },
+ {
+  "name": "js-parseint-sign",
+  "file": "jscompat.go",
+  "find": "neg = s[0] == '-'",
+  "replace": "neg = false"
+ },
+ {
+  "name": "gh-chain-built-disabled",
+  "file": "interceptors.go",
+  "find": "if resolved.Enabled {",
+  "replace": "if true {"
+ },
+ {
+  "name": "gh-chain-consumer-dropped",
+  "file": "interceptors.go",
+  "find": "readUserGitHubConfig(readConfig()), consumerGitHub)",
+  "replace": "readUserGitHubConfig(readConfig()), nil)"
+ },
+ {
+  "name": "gh-chain-config-ignored",
+  "file": "interceptors.go",
+  "find": "readUserGitHubConfig(readConfig()), consumerGitHub)",
+  "replace": "nil, consumerGitHub)"
+ },
+ {
+  "name": "gh-chain-first-match",
+  "file": "webtools.go",
+  "find": "if r := ic.intercept(ctx, rawURL, raw); r != nil {",
+  "replace": "if r := ic.intercept(ctx, rawURL, raw); r == nil {"
+ },
+ {
+  "name": "gh-register-chain",
+  "file": "extension.go",
+  "find": "\tbuildInterceptors(nil)\n",
+  "replace": ""
+ },
+ {
+  "name": "gh-host-exec-dropped",
+  "file": "extension.go",
+  "find": "fetchTool(withExec(toolContext(ctx), hostExec(ctx)), u, raw, partial(ctx))",
+  "replace": "fetchTool(toolContext(ctx), u, raw, partial(ctx))"
+ },
+ {
+  "name": "gh-exec-exit-code",
+  "file": "hostexec.go",
+  "find": "if r.Killed || r.ExitCode != 0 {",
+  "replace": "if r.Killed {"
+ },
+ {
+  "name": "gh-exec-killed",
+  "file": "hostexec.go",
+  "find": "if r.Killed || r.ExitCode != 0 {",
+  "replace": "if r.ExitCode != 0 {"
+ },
+ {
+  "name": "gh-exec-buffer-edge",
+  "file": "hostexec.go",
+  "find": "if len(r.Stdout) > limit {",
+  "replace": "if len(r.Stdout) >= limit {"
+ },
+ {
+  "name": "gh-exec-default-buffer",
+  "file": "hostexec.go",
+  "find": "const defaultMaxBuffer = 1024 * 1024",
+  "replace": "const defaultMaxBuffer = 4 * 1024 * 1024"
+ },
+ {
+  "name": "gh-exec-timeout-unit",
+  "file": "hostexec.go",
+  "find": "float64(o.Timeout / time.Millisecond)",
+  "replace": "float64(o.Timeout / time.Second)"
+ },
+ {
+  "name": "gh-show-line",
   "file": "command.go",
-  "find": "\"  github: enabled in config. \" + refusal(githubInterceptorFeature)",
-  "replace": "\"  github: enabled in config. \""
+  "find": "\"  github: enabled (%s: %s, maxRepoSizeMB: %s, clonePath: %s)\"",
+  "replace": "\"  github: enabled (%s: %s, maxRepoSizeMB: %s, path: %s)\""
+ },
+ {
+  "name": "gh-show-token-mask",
+  "file": "command.go",
+  "find": "maskAPIKey(token, token != \"\")",
+  "replace": "token"
+ },
+ {
+  "name": "gh-show-token-untrimmed",
+  "file": "command.go",
+  "find": "token := envTrim(githubTokenEnvVar)",
+  "replace": "token := os.Getenv(githubTokenEnvVar)"
  }
 ]

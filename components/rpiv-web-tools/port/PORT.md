@@ -5,7 +5,7 @@
 | Original | `@juicesharp/rpiv-web-tools` 2.12.0 by juicesharp, https://github.com/juicesharp/rpiv-mono (`packages/rpiv-web-tools`), commit `7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f`, MIT |
 | Oracle | Pi 1.0.3, Node 24.19.0, with the unmodified package at `port/oracle` (its dependency `@juicesharp/rpiv-config` from npm) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
-| Original's tests | the `it` cases in the vitest files listed in `port/upstream-tests.json`: **82 exact twins, 2 named skips, 190 deferred by name** (`index` 106, GitHub interceptor 78, interceptor chain 6; `port/slices.json`) |
+| Original's tests | the `it` cases in the vitest files listed in `port/upstream-tests.json`: **167 exact twins, 2 named skips, 105 deferred by name** (`index` 105; `port/slices.json`). The 84 GitHub interceptor and chain cases are twinned |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
 ## Mapping
@@ -20,12 +20,14 @@
 | M5 | `/web-tools` (picker, per-provider flows, `--show`) | `command.go` | `command-cancelled`, `command-pick-key`, `command-searxng`, `command-show`, `command-show-configured`; `command_test.go` |
 | M6 | tool call and result renderers | `render.go` | layer-1 render tests |
 | M7 | registration, session wiring | `extension.go` | all scenarios |
+| M8 | `providers/interceptors/github.ts`: `parseGitHubUrl`, `resolveGitHubOptions`, `GitHubInterceptor` (size probe, shallow clone, clone cache, API view, local tree, README and file rendering, binary and size limits) | `github_interceptor.go`, `jscompat.go`, `hostexec.go` | `github-api-view`, `github-clone-gh`, `github-clone-git`; `github_interceptor_test.go` (78 twins), `github_interceptor_extra_test.go`, `github_host_test.go` |
+| M9 | `providers/interceptors/index.ts`, `types.ts`, the chain in `web-tools.ts:441-459` and the `--show` block `web-tools.ts:561-572` | `interceptors.go`, `webtools.go`, `command.go` | `command-show-github`; `interceptor_chain_test.go` (6 twins), `github_host_test.go` |
 
 ## Results (this revision)
 
 - `pigeq check` against goldens **recorded from the original under Pi 1.0.3**: 14 of 14 scenarios, plus `port-gaps`
-  and `exec-coverage`; the record-host check passes. The scenarios put the API config into the lane HOME with `setup`
-  and declare `gh` and `git` as missing.
+  and `exec-coverage`; the record-host check passes. The scenarios put the API config into the lane HOME with `setup`.
+  The GitHub scenarios declare `gh` and `git` as canned; the others declare both missing.
 - `go test -race ./...`: pass.
 - `pigeq mutate --unit`: 107 mutations (see below).
 - `pig package validate components/rpiv-web-tools` and `pig install <extension dir> --validate-only --json`: valid.
@@ -43,10 +45,38 @@ the scenarios, re-run one at a time).
 
 ## Deliberate differences and findings
 
-1. **The GitHub interceptor (890 lines, opt-in) is not ported.** It answers `github.com` URLs from a cached shallow
-   clone made with `gh` or `git`. Slice 2: the 84 interceptor cases are deferred by name. With the option on, a
-   repository root, blob or tree URL is refused (`refusal.go`, `refusal_test.go`: the message names the package and
-   the original, `npm:@juicesharp/rpiv-web-tools@2.12.0`) and `/web-tools --show` says so; with it off nothing changes.
+1. **The GitHub interceptor (opt-in) is ported (slice 3).** `github_interceptor.go` is `providers/interceptors/github.ts`
+   (parse, options, probes, clone cache, API view, local rendering), `interceptors.go` is `index.ts` and `types.ts`
+   (`buildInterceptors`, `getInterceptors`, `getActiveGitHubInterceptor`), `hostexec.go` is the process seam, and
+   `jscompat.go` holds the Node behaviours the output depends on. The 78 cases of `github.test.ts` and the 6 of
+   `chain.test.ts` are twins under the upstream titles (`github_interceptor_test.go`, `interceptor_chain_test.go`), written
+   first and shown failing in a commit of their own. Differences, each with its test:
+   - **Commands run through the host.** The original starts `gh` and `git` with `execFile`; here `Context.Exec` runs them
+     (no shell; the request's cancellation aborts them). A command that cannot start, a non-zero exit, a timeout, an
+     output past `maxBuffer` (Node's 1 MiB default, 5 MiB for the tree, 2 MiB for a file) and the host's own error are
+     one failure, as `err` is for `execFile` (`github_host_test.go`). The twins replace the original's `execFile` mock with a
+     canned runner carried in the tool's context (`withExec`), so nothing is global.
+   - **The API view reads the tree, then the README.** The original starts both at once (`Promise.all`); two concurrent
+     host calls would reach the host in no fixed order, and the harness compares the command sequence, so they run in the
+     original's start order. It costs one `gh api` round trip on that path only.
+   - **JavaScript string and Node buffer semantics are reproduced where output depends on them** (`jscompat.go`,
+     `TestJSCompat`, expected values from Node 24.19): lengths and cuts in UTF-16 units (a README of 4500 emoji is cut at
+     8192 units), `Buffer.from(x, "base64")` leniency, WHATWG UTF-8 decoding, `decodeURIComponent` failing on bad
+     escapes, `path.extname`, `toFixed(1)` rounding a tie up, `Math.round`, `parseInt`, and the default sort by UTF-16 unit.
+     The path of a URL is read as `new URL` reads it (backslashes, `%2e` dot segments, tabs and newlines;
+     `TestGitHubURLNormalization`).
+   - **The install hint** (`console.error` in the original) is written to the extension's stderr, once per interceptor.
+   - **The consumer default** (`registerWebTools(pi, { interceptors: { github: true } })`) is reachable only through
+     `buildInterceptors(consumer)`; the Pi package manifest cannot pass options, so the extension passes none. The twins of
+     `chain.test.ts` use it.
+   - **A URL of a scheme other than http(s)** is not parsed by `parseGitHubURL` (the original would read `ftp://github.com/...`
+     as a repository); the tool refuses such a URL before the chain runs, so the tool never sees the difference.
+   - **A probe that failed only because the request was cancelled is not remembered**, where the original's probe was never
+     cancelled; and a waiting request returns when it is cancelled instead of when the other clone ends (both null).
+   - **No real git.** The scenarios cannot put a local repository behind `url.<base>.insteadOf` (the harness fixes
+     `GIT_CONFIG_GLOBAL`, `GIT_CONFIG_NOSYSTEM` and `GIT_CONFIG_COUNT`, and `git clone` reads no repository-local config), so
+     `gh` and `git` are canned in the scenarios and a populated clone is rendered only by the twins and the layer-1 tests
+     (`github_interceptor_extra_test.go`: exact texts, UTF-16 cuts, sorting, symlinks, listings).
 2. **Order of work.** Unlike the tintinweb-tasks port, the implementation was written before the twins, so there is no
    red commit. The substitute proof is the 14 Pi-recorded scenarios, the differential test and the mutation run.
 3. **106 cases of `index.test.ts` are deferred** (the per-provider matrix, the `--show` variants and so on). Their

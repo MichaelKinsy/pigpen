@@ -124,7 +124,11 @@ func (l *execLog) on(handler func(command string, args []any) (stdout string, co
 		cmd, _ := args["command"].(string)
 		list, _ := args["args"].([]any)
 		out, code := handler(cmd, list)
-		return map[string]any{"stdout": out, "stderr": "", "code": code, "killed": false}, ""
+		killed := code == -1 // -1 stands for a command the host killed (timeout or cancellation), exit code 0
+		if killed {
+			code = 0
+		}
+		return map[string]any{"stdout": out, "stderr": "", "code": code, "killed": killed}, ""
 	}
 }
 
@@ -212,6 +216,57 @@ func TestInterceptorThroughHost(t *testing.T) {
 		raw, _ := host.Tool("web_fetch", map[string]any{"url": "https://github.com/o/r/blob/abcdefabcdefabcdefabcdefabcdefabcdefabcd/x.go"})
 		if text := toolText(t, raw); !strings.Contains(text, "the page") {
 			t.Fatal(text[:200])
+		}
+	})
+	t.Run("a killed command is a failure even with exit code 0", func(t *testing.T) {
+		h := home(t)
+		t.Cleanup(rpiv_web_tools.ResetInterceptors)
+		ghConfig(t, h, `{"provider":"brave","interceptors":{"github":true}}`)
+		t.Setenv("BRAVE_SEARCH_API_KEY", "k")
+		defer rpiv_web_tools.SetTransport(page)()
+		var log execLog
+		host := StartHost(t, rpiv_web_tools.Extension(), HostOptions{OnCall: log.on(func(string, []any) (string, int) { return "gh", -1 })})
+		raw, _ := host.Tool("web_fetch", map[string]any{"url": "https://github.com/o/r"})
+		if text := toolText(t, raw); !strings.Contains(text, "the page") {
+			t.Fatal(text)
+		}
+	})
+	t.Run("a file read of exactly 2 MiB is accepted", func(t *testing.T) {
+		h := home(t)
+		t.Cleanup(rpiv_web_tools.ResetInterceptors)
+		ghConfig(t, h, `{"provider":"brave","interceptors":{"github":true}}`)
+		t.Setenv("BRAVE_SEARCH_API_KEY", "k")
+		defer rpiv_web_tools.SetTransport(page)()
+		var log execLog
+		host := StartHost(t, rpiv_web_tools.Extension(), HostOptions{OnCall: log.on(func(cmd string, args []any) (string, int) {
+			if args[0] == "--version" {
+				return "gh", 0
+			}
+			return strings.Repeat("QQ==", 2*1024*1024/4), 0
+		})})
+		raw, _ := host.Tool("web_fetch", map[string]any{"url": "https://github.com/o/r/blob/abcdefabcdefabcdefabcdefabcdefabcdefabcd/x.go"})
+		if text := toolText(t, raw); strings.Contains(text, "the page") || !strings.Contains(text, "## x.go") {
+			t.Fatal(text[:200])
+		}
+	})
+	t.Run("an output of more than 1 MiB fails a command with the default buffer", func(t *testing.T) {
+		h := home(t)
+		t.Cleanup(rpiv_web_tools.ResetInterceptors)
+		ghConfig(t, h, `{"provider":"brave","interceptors":{"github":true}}`)
+		t.Setenv("BRAVE_SEARCH_API_KEY", "k")
+		defer rpiv_web_tools.SetTransport(page)()
+		var log execLog
+		host := StartHost(t, rpiv_web_tools.Extension(), HostOptions{OnCall: log.on(func(cmd string, args []any) (string, int) {
+			if args[0] == "--version" {
+				return strings.Repeat("x", 1024*1024+1), 0
+			}
+			return "", 1
+		})})
+		host.Tool("web_fetch", map[string]any{"url": "https://github.com/o/r"})
+		log.mu.Lock()
+		defer log.mu.Unlock()
+		if len(log.calls) < 2 || log.calls[1]["command"] != "git" {
+			t.Fatalf("gh was taken as available: %v", log.calls)
 		}
 	})
 	t.Run("the interceptor is off by default: no command is run", func(t *testing.T) {

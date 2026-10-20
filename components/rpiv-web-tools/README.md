@@ -40,15 +40,29 @@ with its own fetch (Tavily, Exa, You.com, Jina, Firecrawl, Ollama) uses it; othe
 HTML is turned into text and large bodies are truncated to 2000 lines or 50 KB, the full text being written to a temp
 file whose path is in the result.
 
+### GitHub URLs (opt-in)
+
+With `"interceptors": { "github": true }` (or an object with `maxRepoSizeMB`, `cloneTimeoutSeconds` and `clonePath`, which
+implies the opt-in; `"enabled": false` inside it turns it off), `web_fetch` answers a `github.com` repository root,
+`/tree/<ref>/...` or `/blob/<ref>/...` URL itself instead of fetching the page. It reads the repository size with
+`gh api repos/<owner>/<repo>`; a repository over `maxRepoSizeMB` (350), and any URL naming a commit SHA, get an API view
+(tree, README or file, through `gh api`); anything else is shallow-cloned (`gh repo clone`, else `git clone --depth 1`,
+into `clonePath`, default `<tmp>/pi-github-repos`, with `cloneTimeoutSeconds`, 30) and shown as a tree and README, a
+directory listing, or the file (binary files and files over 100K characters are summarised or cut). A clone is kept
+for the session and reused. When nothing works the URL is fetched like any other page. Issues, pull requests and the
+other non-code pages of a repository are never intercepted. `GITHUB_TOKEN` is the token `gh` reads; `/web-tools --show`
+prints it masked with the active limits. The interceptor is built when the extension loads, so a change to the
+option takes effect on the next session.
+
 ## Differences from the original
 
-- **No GitHub interceptor yet.** The original can answer a `github.com` URL from a cached shallow clone (opt-in,
-  `interceptors.github`). This port does not implement it, so while the option is on, `web_fetch` of a repository
-  root, blob or tree URL is refused with a tool error, not fetched like any other page:
-  `@pi-in-go/pigpen-rpiv-web-tools (Go port) does not support the GitHub URL interceptor (interceptors.github) yet.
-  Install the original extension, npm:@juicesharp/rpiv-web-tools@2.12.0, which runs unchanged in PiG.`
-  `/web-tools --show` says so too. With the option off (the default) nothing changes. See
-  [port/PORT.md](port/PORT.md) (slice 2).
+- **The GitHub interceptor runs `gh` and `git` through the host.** The original starts them with Node's `execFile`; this
+  port asks the host to run them (`Context.Exec`, no shell), so a command that cannot start, a non-zero exit, a
+  timeout, an output past Node's buffer limit and a cancelled request are all the same failure, as they are for
+  `execFile`. Smaller differences: the one-time "install `gh`" hint goes to the extension's stderr; the original's
+  programmatic consumer opt-in (`registerWebTools(pi, { interceptors: { github: true } })`) has no counterpart in the Pi
+  package manifest, so only the user's config switches the interceptor on; and a URL of a scheme other than http(s)
+  never reaches the interceptor (the tool refuses it first); the tree and README reads of an API view run one after the other, where the original starts them together, so that the host sees its commands in the original's order. See [port/PORT.md](port/PORT.md).
 - **Renderers return lines** (the Go SDK cannot return a TUI component), laid out at the width the host gives.
 - **Network failures read as in Node.** A transport failure reads `fetch failed`, as Node's fetch reports it.
 
