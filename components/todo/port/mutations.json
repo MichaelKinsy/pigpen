@@ -729,7 +729,7 @@
   "name": "locale-install-not-recorded",
   "file": "i18n.go",
   "find": "i18nInstalled = installed",
-  "replace": "i18nInstalled = false"
+  "replace": "i18nInstalled = installed && false"
  },
  {
   "name": "locale-json-skipped",
@@ -759,7 +759,7 @@
   "name": "locale-no-english-fallback",
   "file": "i18n.go",
   "find": "if v := tables[defaultFallbackLocale][key]; v != \"\" {",
-  "replace": "if false {"
+  "replace": "if v := tables[defaultFallbackLocale][key]; v == \"x\" {"
  },
  {
   "name": "locale-empty-value-wins",
@@ -783,7 +783,7 @@
   "name": "settings-object-source-ignored",
   "file": "i18n.go",
   "find": "source, _ = object[\"source\"].(string)",
-  "replace": "source = \"\""
+  "replace": "_ = object"
  },
  {
   "name": "settings-project-skipped",
