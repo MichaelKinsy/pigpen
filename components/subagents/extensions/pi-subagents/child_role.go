@@ -38,6 +38,9 @@ type childRoleConfig struct {
 	// appends its status events to, one JSON line each; the watchdog slice reads both (watchdog_child.go).
 	Watchdog           json.RawMessage `json:"watchdog,omitempty"`
 	WatchdogStatusFile string          `json:"watchdogStatusFile,omitempty"`
+	// Supervisor is the supervisor channel metadata of the child (childSupervisorMetadata, JSON): the child registers `contact_supervisor`
+	// when it is set (supervisor_channel.go).
+	Supervisor json.RawMessage `json:"supervisor,omitempty"`
 	// RequiredTools are the tool names the child's runtime must register besides structured_output (`watchdog_diff`, ...).
 	RequiredTools []string `json:"requiredTools,omitempty"`
 	// Err is why the role file could not be read (the child then registers nothing it cannot honor).

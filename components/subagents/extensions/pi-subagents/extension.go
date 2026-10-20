@@ -91,8 +91,8 @@ func Extension() *sdk.Extension {
 	e := sdk.New(extensionID)
 	defs := toolDefs()
 
-	// The supervisor channel is declared so the model sees the same tools, and refuses (refuse.go); bg_wait is the
-	// background runs' (async_actions.go).
+	// bg_wait is the background runs' (async_actions.go); the supervisor channel's `subagent_supervisor` is registered by
+	// supervisor_register.go.
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: loaderName, Label: "Enable Subagents", Description: defs[loaderName].Description, Parameters: defs[loaderName].Parameters,
 		PromptSnippet: "pi-subagents is installed. For authorized specialist, independent-review, or parallel work, call subagents_enable, then subagent. Authorization must come from the current request or applicable instructions; complexity alone is not authorization.",
@@ -121,8 +121,6 @@ func Extension() *sdk.Extension {
 			}, nil
 		},
 	})
-	e.RegisterTool(sdk.ToolDefinition{Name: "subagent_supervisor", Label: "Subagent Supervisor", Description: defs["subagent_supervisor"].Description, Parameters: defs["subagent_supervisor"].Parameters,
-		Execute: refuseTool("the supervisor channel (`subagent_supervisor`)")})
 	// The description follows the extension config's toolDescriptionMode (tool-description.ts); the split prompt metadata is
 	// registered only while no mode is configured.
 	mode := configuredToolDescriptionMode()

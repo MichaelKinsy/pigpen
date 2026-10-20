@@ -16,11 +16,15 @@ type ForegroundChildControl struct {
 // ForegroundControl is one live foreground run.
 type ForegroundControl struct {
 	RunID string
+	// SessionID is the session the run belongs to (control.sessionId).
+	SessionID string
 	// ParentWorkflowRunID and WorkflowKey are set on a workflow child's control.
 	ParentWorkflowRunID string
 	WorkflowKey         string
 	// NestedRootRunID is the root run of the nested route the run inherited ("" at depth 0).
 	NestedRootRunID string
+	// NestedRoute is the nested route the run inherited (control.nestedRoute); nil at depth 0.
+	NestedRoute *nestedRoute
 	// ActiveChildren are the children running now by step index.
 	ActiveChildren map[int]*ForegroundChildControl
 }

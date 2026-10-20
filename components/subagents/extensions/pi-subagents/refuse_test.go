@@ -102,7 +102,7 @@ func TestParallelAndChainRunsAreRefused(t *testing.T) {
 
 func TestUnportedManagementAndControlActionsAreRefused(t *testing.T) {
 	h, _ := refusedHost(t)
-	actions := []string{"steer", "debug.run", "schedule.create", "append-step"}
+	actions := []string{"debug.run", "schedule.create", "append-step"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
@@ -145,19 +145,26 @@ func TestTaskAndActionErrorsAreTheOriginals(t *testing.T) {
 	eq(t, len(*calls), 0, "no child started")
 }
 
-func TestUnportedToolsRefuse(t *testing.T) {
+// The supervisor channel is ported (supervisor_channel.go): its tool answers instead of refusing.
+func TestSupervisorToolAnswers(t *testing.T) {
 	h, _ := refusedHost(t)
-	_, failure := h.Tool("subagent_supervisor", map[string]any{"action": "pending"})
-	wantRefusal(t, failure, "the supervisor channel (`subagent_supervisor`)")
+	raw, failure := h.Tool("subagent_supervisor", map[string]any{"action": "pending"})
+	eq(t, failure, "", "failure")
+	if !strings.Contains(string(raw), "No pending supervisor requests.") {
+		t.Errorf("pending: %s", raw)
+	}
 }
 
 // The original's other slash commands are not registered: a command the port lacks is not offered, and the README says so.
 func TestTheOriginalsOtherCommandsAreNotRegistered(t *testing.T) {
 	h, _ := refusedHost(t)
-	for _, name := range []string{"run", "subagent-cost", "subagents-fleet", "subagents-stop", "subagents-steer", "subagents-watchdog"} {
+	for _, name := range []string{"run", "subagent-cost", "subagents-fleet", "subagents-stop", "subagents-watchdog"} {
 		if h.cmds[name] {
 			t.Errorf("/%s is registered", name)
 		}
+	}
+	if !h.cmds["subagents-steer"] {
+		t.Error("/subagents-steer is not registered")
 	}
 	if !h.cmds["run-chain"] {
 		t.Error("the port's own /run-chain is gone")

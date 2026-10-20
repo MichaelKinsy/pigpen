@@ -24,6 +24,11 @@ type ForegroundChildRecord struct {
 	CurrentTool     string
 	CurrentToolArgs string
 	TranscriptPath  string
+	// LastActivityAt, CurrentToolStartedAt and UpdatedAt are ms (0 unset): the supervisor channel stamps them on a detached child
+	// that waits for a reply.
+	LastActivityAt       int64
+	CurrentToolStartedAt int64
+	UpdatedAt            int64
 }
 
 // ForegroundRunRecord is a foreground run remembered for bg_wait and resume.
@@ -31,6 +36,7 @@ type ForegroundRunRecord struct {
 	RunID     string
 	SessionID string
 	Children  []ForegroundChildRecord
+	UpdatedAt int64
 }
 
 // completedResult is a terminal payload the result watcher observed, kept until its TTL ends.
@@ -88,6 +94,9 @@ type SubagentState struct {
 	CompletionSeen   map[string]int64
 	ForegroundRuns   map[string]*ForegroundRunRecord
 	WidgetsSuspended bool
+	// SupervisorOwnerSessionID is the runtime id of the session that owns the supervisor channel (supervisorOwnerSessionId): a
+	// request is the parent's only when it names this id.
+	SupervisorOwnerSessionID string
 	// CompletionOwnerID is the owner of the session's async completions (state.completionOwnerId).
 	CompletionOwnerID string
 	// WorkflowControllers are the live scripted workflows of this process by run id: cancelling one stops the workflow
