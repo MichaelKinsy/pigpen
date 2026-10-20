@@ -1,0 +1,932 @@
+[
+ {
+  "name": "desc-precheck-first",
+  "file": "gatedescriptor.go",
+  "find": "\tif d.PreCheck != nil {\n\t\treturn d.PreCheck\n\t}",
+  "replace": "\tif d.PreCheck != nil && d.PreResolved == nil {\n\t\treturn d.PreCheck\n\t}"
+ },
+ {
+  "name": "desc-preresolved-source",
+  "file": "gatedescriptor.go",
+  "find": "Source: \"tool\", Origin: \"builtin\"}",
+  "replace": "Source: \"special\", Origin: \"builtin\"}"
+ },
+ {
+  "name": "desc-preresolved-origin",
+  "file": "gatedescriptor.go",
+  "find": "Source: \"tool\", Origin: \"builtin\"}",
+  "replace": "Source: \"tool\", Origin: \"global\"}"
+ },
+ {
+  "name": "desc-preresolved-toolname",
+  "file": "gatedescriptor.go",
+  "find": "ToolName: d.Surface,",
+  "replace": "ToolName: \"skill\","
+ },
+ {
+  "name": "desc-deny-state",
+  "file": "gatedescriptor.go",
+  "find": "check.State == \"deny\" && check.Source != \"session\"",
+  "replace": "check.State != \"allow\" && check.Source != \"session\""
+ },
+ {
+  "name": "desc-deny-session",
+  "file": "gatedescriptor.go",
+  "find": "check.State == \"deny\" && check.Source != \"session\"",
+  "replace": "check.State == \"deny\""
+ },
+ {
+  "name": "desc-deny-nilcheck",
+  "file": "gatedescriptor.go",
+  "find": "return check != nil && check.State",
+  "replace": "return check == nil || check.State"
+ },
+ {
+  "name": "desc-order-keep",
+  "file": "gatedescriptor.go",
+  "find": "\tif len(denying) == 0 {\n\t\treturn gates\n\t}\n\treturn append(denying, rest...)",
+  "replace": "\treturn append(rest, denying...)"
+ },
+ {
+  "name": "desc-order-denying-first",
+  "file": "gatedescriptor.go",
+  "find": "\treturn append(denying, rest...)",
+  "replace": "\treturn append(append([]GateResult{}, rest...), denying...)"
+ },
+ {
+  "name": "desc-bypass-only-descriptor",
+  "file": "gatedescriptor.go",
+  "find": "\td, ok := gate.(*GateDescriptor)\n\tif !ok {\n\t\treturn false\n\t}",
+  "replace": "\td, ok := gate.(*GateDescriptor)\n\tif !ok {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "help-extractor-source",
+  "file": "gatehelpers.go",
+  "find": "if pathSource == ToolPathInheritedExtractor {",
+  "replace": "if pathSource != ToolPathInheritedExtractor {"
+ },
+ {
+  "name": "help-log-source",
+  "file": "gatehelpers.go",
+  "find": "o.set(\"source\", \"tool_call\")",
+  "replace": "o.set(\"source\", \"skill_read\")"
+ },
+ {
+  "name": "help-log-path",
+  "file": "gatehelpers.go",
+  "find": "o.set(\"path\", path)",
+  "replace": "o.set(\"path\", \"\")"
+ },
+ {
+  "name": "help-prompt-source",
+  "file": "gatehelpers.go",
+  "find": "Source:       \"tool_call\",",
+  "replace": "Source:       \"skill_read\","
+ },
+ {
+  "name": "help-boundary-null",
+  "file": "gatehelpers.go",
+  "find": "if boundary := path.BoundaryValue(); boundary != \"\" {",
+  "replace": "if boundary := path.BoundaryValue(); boundary == \"\" {"
+ },
+ {
+  "name": "help-value-facts",
+  "file": "gatehelpers.go",
+  "find": "MatchValues: []string{value}}",
+  "replace": "MatchValues: []string{}}"
+ },
+ {
+  "name": "help-bash-fallback",
+  "file": "gatehelpers.go",
+  "find": "\t\tif check.Command != nil {\n\t\t\treturn *check.Command\n\t\t}\n\t\treturn toolName\n\tcase ToolKindMcp",
+  "replace": "\t\treturn toolName\n\tcase ToolKindMcp"
+ },
+ {
+  "name": "help-mcp-fallback",
+  "file": "gatehelpers.go",
+  "find": "\t\tif check.Target != nil {\n\t\t\treturn *check.Target\n\t\t}\n\t\treturn toolName\n\t}",
+  "replace": "\t\treturn toolName\n\t}"
+ },
+ {
+  "name": "help-path-empty",
+  "file": "gatehelpers.go",
+  "find": "\tif path != \"\" {\n\t\treturn path\n\t}",
+  "replace": "\tif path == \"\" {\n\t\treturn path\n\t}"
+ },
+ {
+  "name": "help-origin-null",
+  "file": "gatehelpers.go",
+  "find": "\tif check.Origin != \"\" {\n\t\to := check.Origin\n\t\torigin = &o\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "help-yolo-allow-origin",
+  "file": "gatehelpers.go",
+  "find": "if check.State == \"allow\" && check.Origin == \"yolo\" {",
+  "replace": "if check.State == \"allow\" {"
+ },
+ {
+  "name": "help-yolo-ask",
+  "file": "gatehelpers.go",
+  "find": "if check.State == \"ask\" && yoloEnabled {",
+  "replace": "if check.State != \"allow\" && yoloEnabled {"
+ },
+ {
+  "name": "help-yolo-enabled",
+  "file": "gatehelpers.go",
+  "find": "if check.State == \"ask\" && yoloEnabled {",
+  "replace": "if check.State == \"ask\" {"
+ },
+ {
+  "name": "help-yolo-grant-origin",
+  "file": "gatehelpers.go",
+  "find": "grant.State, grant.Origin = \"allow\", \"yolo\"",
+  "replace": "grant.State = \"allow\""
+ },
+ {
+  "name": "run-null-allow",
+  "file": "gaterunner.go",
+  "find": "\tif gate == nil {\n\t\treturn GateOutcome{Action: \"allow\"}, nil\n\t}",
+  "replace": "\tif gate == nil {\n\t\treturn GateOutcome{Action: \"block\"}, nil\n\t}"
+ },
+ {
+  "name": "run-bypass-decider",
+  "file": "gaterunner.go",
+  "find": "details.set(\"decidedBy\", bypass.DecidedBy.JS())",
+  "replace": ""
+ },
+ {
+  "name": "run-bypass-requestid",
+  "file": "gaterunner.go",
+  "find": "\t\t\tdetails.set(\"requestId\", requestID)\n\t\t\tdetails.set(\"decidedBy\"",
+  "replace": "\t\t\tdetails.set(\"decidedBy\""
+ },
+ {
+  "name": "run-bypass-decision",
+  "file": "gaterunner.go",
+  "find": "\t\tif bypass.Decision != nil {\n\t\t\tr.emitDecision(requestID, *bypass.Decision)\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "run-bypass-log",
+  "file": "gaterunner.go",
+  "find": "\t\tif bypass.Log != nil {",
+  "replace": "\t\tif bypass.Log != nil && false {"
+ },
+ {
+  "name": "run-preresolved",
+  "file": "gaterunner.go",
+  "find": "\tif pre := PreResolvedCheckOf(d); pre != nil {\n\t\tcheck = *pre\n\t} else {",
+  "replace": "\tif pre := PreResolvedCheckOf(d); false && pre != nil {\n\t\tcheck = *pre\n\t} else {"
+ },
+ {
+  "name": "run-resolve-agent",
+  "file": "gaterunner.go",
+  "find": "Input: d.Input, AgentName: agentName})",
+  "replace": "Input: d.Input})"
+ },
+ {
+  "name": "run-resolve-surface",
+  "file": "gaterunner.go",
+  "find": "ToolAccessIntent{Surface: d.Surface,",
+  "replace": "ToolAccessIntent{Surface: \"tool\","
+ },
+ {
+  "name": "run-logctx-agent",
+  "file": "gaterunner.go",
+  "find": "logContext.set(\"agentName\", strOrNull(agentName))",
+  "replace": ""
+ },
+ {
+  "name": "run-logctx-requestid",
+  "file": "gaterunner.go",
+  "find": "logContext.set(\"requestId\", requestID)\n",
+  "replace": ""
+ },
+ {
+  "name": "run-logctx-facts",
+  "file": "gaterunner.go",
+  "find": "\tfor _, k := range facts.keys {\n\t\tlogContext.set(k, facts.vals[k])\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "run-session-source",
+  "file": "gaterunner.go",
+  "find": "if check.Source == \"session\" {",
+  "replace": "if check.Source == \"session\" && check.State == \"allow\" {"
+ },
+ {
+  "name": "run-session-resolution",
+  "file": "gaterunner.go",
+  "find": "entry.set(\"resolution\", \"session_approved\")",
+  "replace": "entry.set(\"resolution\", \"policy_allow\")"
+ },
+ {
+  "name": "run-session-pattern",
+  "file": "gaterunner.go",
+  "find": "entry.setOpt(\"sessionApprovalPattern\", strOrNull(check.MatchedPattern))",
+  "replace": ""
+ },
+ {
+  "name": "run-session-decider",
+  "file": "gaterunner.go",
+  "find": "DecisionSource{Kind: \"session_approval\", Surface: d.Surface, Pattern: check.MatchedPattern}.JS()",
+  "replace": "DecisionSource{Kind: \"session_approval\", Surface: d.Surface}.JS()"
+ },
+ {
+  "name": "run-session-event",
+  "file": "gaterunner.go",
+  "find": "BuildDecisionEvent(d.Decision, check, agentName, \"allow\", \"session_approved\"))",
+  "replace": "BuildDecisionEvent(d.Decision, check, agentName, \"allow\", \"policy_allow\"))"
+ },
+ {
+  "name": "run-yolo-read",
+  "file": "gaterunner.go",
+  "find": "ResolveYoloGrant(check, r.isYoloEnabled())",
+  "replace": "ResolveYoloGrant(check, true)"
+ },
+ {
+  "name": "run-yolo-pattern",
+  "file": "gaterunner.go",
+  "find": "decidedByYolo := DecisionSource{Kind: \"yolo\", Pattern: check.MatchedPattern}",
+  "replace": "decidedByYolo := DecisionSource{Kind: \"yolo\"}"
+ },
+ {
+  "name": "run-yolo-resolution",
+  "file": "gaterunner.go",
+  "find": "entry.set(\"resolution\", \"auto_approved\")",
+  "replace": "entry.set(\"resolution\", \"policy_allow\")"
+ },
+ {
+  "name": "run-yolo-event",
+  "file": "gaterunner.go",
+  "find": "BuildDecisionEvent(d.Decision, *yoloGrant, agentName",
+  "replace": "BuildDecisionEvent(d.Decision, check, agentName"
+ },
+ {
+  "name": "run-deny-reason",
+  "file": "gaterunner.go",
+  "find": "DenyReason: RenderPolicyDenial(payload, check.Reason, DefaultAgentRenderBudget),",
+  "replace": "DenyReason: RenderPolicyDenial(payload, nil, DefaultAgentRenderBudget),"
+ },
+ {
+  "name": "run-refusal",
+  "file": "gaterunner.go",
+  "find": "return RenderRefusal(payload, decision.DecidedBy, decision.DenialReason, DefaultAgentRenderBudget)",
+  "replace": "return RenderRefusal(payload, decision.DecidedBy, nil, DefaultAgentRenderBudget)"
+ },
+ {
+  "name": "run-rule-pattern",
+  "file": "gaterunner.go",
+  "find": "Pattern: check.MatchedPattern, Origin: origin}",
+  "replace": "Origin: origin}"
+ },
+ {
+  "name": "run-can-grant",
+  "file": "gaterunner.go",
+  "find": "CanGrantForSession: d.SessionApproval != nil && d.SessionApproval.IsRecordable(),",
+  "replace": "CanGrantForSession: false,"
+ },
+ {
+  "name": "run-prompt-requestid",
+  "file": "gaterunner.go",
+  "find": "\t\t\tdetails.RequestID = requestID\n",
+  "replace": ""
+ },
+ {
+  "name": "run-prompt-payload",
+  "file": "gaterunner.go",
+  "find": "\t\t\tdetails.Payload = payload\n",
+  "replace": ""
+ },
+ {
+  "name": "run-prompt-approval",
+  "file": "gaterunner.go",
+  "find": "\t\t\tif d.SessionApproval != nil {\n\t\t\t\tforwarded",
+  "replace": "\t\t\tif false {\n\t\t\t\tforwarded"
+ },
+ {
+  "name": "run-error-propagates",
+  "file": "gaterunner.go",
+  "find": "\tif err != nil {\n\t\treturn GateOutcome{}, err\n\t}\n\n\t// 4.",
+  "replace": "\t_ = err\n\n\t// 4."
+ },
+ {
+  "name": "run-grant-only-allow",
+  "file": "gaterunner.go",
+  "find": "\tif gateResult.Action == \"allow\" {\n\t\tsessionGrant = gateResult.SessionGrant\n\t}",
+  "replace": "\tsessionGrant = gateResult.SessionGrant"
+ },
+ {
+  "name": "run-event-result",
+  "file": "gaterunner.go",
+  "find": "\tresult := \"deny\"\n\tif gateResult.Action == \"allow\" {\n\t\tresult = \"allow\"\n\t}",
+  "replace": "\tresult := \"allow\""
+ },
+ {
+  "name": "run-event-resolution",
+  "file": "gaterunner.go",
+  "find": "ForSession: sessionGrant != nil})))",
+  "replace": "ForSession: false})))"
+ },
+ {
+  "name": "run-record-width",
+  "file": "gaterunner.go",
+  "find": "r.recorder.RecordSessionApproval(d.SessionApproval.AtWidth(sessionGrant.Width))",
+  "replace": "r.recorder.RecordSessionApproval(d.SessionApproval)"
+ },
+ {
+  "name": "run-record-skip",
+  "file": "gaterunner.go",
+  "find": "\tif sessionGrant != nil && d.SessionApproval != nil {",
+  "replace": "\tif false && sessionGrant != nil && d.SessionApproval != nil {"
+ },
+ {
+  "name": "run-block-reason",
+  "file": "gaterunner.go",
+  "find": "return GateOutcome{Action: \"block\", Reason: gateResult.Reason}, nil",
+  "replace": "return GateOutcome{Action: \"block\"}, nil"
+ },
+ {
+  "name": "path-nopath",
+  "file": "gatepath.go",
+  "find": "\tif !found.HasPath || found.Path == \"\" {\n\t\treturn nil\n\t}",
+  "replace": "\tif !found.HasPath {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "path-surface",
+  "file": "gatepath.go",
+  "find": "surface := CapabilitySurfaceForTool(\"path\", tcc.ToolName)",
+  "replace": "surface := \"path\""
+ },
+ {
+  "name": "path-allow",
+  "file": "gatepath.go",
+  "find": "\tif check.State == \"allow\" {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "path-default-skip",
+  "file": "gatepath.go",
+  "find": "\tif check.MatchedPattern == nil {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "path-agent",
+  "file": "gatepath.go",
+  "find": "Path: accessPath, AgentName: tcc.AgentName})",
+  "replace": "Path: accessPath})"
+ },
+ {
+  "name": "path-precheck",
+  "file": "gatepath.go",
+  "find": "\t\tPreCheck:        &check,\n",
+  "replace": ""
+ },
+ {
+  "name": "path-decision-value",
+  "file": "gatepath.go",
+  "find": "Decision:        GateDecision{Surface: surface, Value: filePath},",
+  "replace": "Decision:        GateDecision{Surface: surface, Value: \"path\"},"
+ },
+ {
+  "name": "path-resolved",
+  "file": "gatepath.go",
+  "find": "ResolvedPath: resolvedPath,",
+  "replace": ""
+ },
+ {
+  "name": "path-patterns",
+  "file": "gatepath.go",
+  "find": "SessionApproval: SessionApprovalForPatterns(surface, patterns),",
+  "replace": "SessionApproval: nil,"
+ },
+ {
+  "name": "path-source",
+  "file": "gatepath.go",
+  "find": "BuildPathGateLogContext(tcc.RequestFacts(), filePath, found.Source)",
+  "replace": "BuildPathGateLogContext(tcc.RequestFacts(), filePath, ToolPathConvention)"
+ },
+ {
+  "name": "ext-boundary",
+  "file": "gateexternaldirectory.go",
+  "find": "if !normalizer.IsBoundaryOutsideWorkingDirectory(accessPath.BoundaryValue()) {",
+  "replace": "if normalizer.IsBoundaryOutsideWorkingDirectory(accessPath.BoundaryValue()) {"
+ },
+ {
+  "name": "ext-surface",
+  "file": "gateexternaldirectory.go",
+  "find": "surface := CapabilitySurfaceForTool(\"external_directory\", tcc.ToolName)",
+  "replace": "surface := \"external_directory\""
+ },
+ {
+  "name": "ext-bypass-infra",
+  "file": "gateexternaldirectory.go",
+  "find": "if normalizer.IsInfrastructureRead(tcc.ToolName, accessPath, infraScope) && !isTargetedDeny(preCheck) {",
+  "replace": "if normalizer.IsInfrastructureRead(tcc.ToolName, accessPath, infraScope) {"
+ },
+ {
+  "name": "ext-bypass-deny",
+  "file": "gateexternaldirectory.go",
+  "find": "&& !isTargetedDeny(preCheck) {",
+  "replace": "&& preCheck.State != \"deny\" {"
+ },
+ {
+  "name": "ext-bypass-decider",
+  "file": "gateexternaldirectory.go",
+  "find": "DecidedBy: DecisionSource{Kind: \"infrastructure_read\"},",
+  "replace": "DecidedBy: DecisionSource{Kind: \"yolo\"},"
+ },
+ {
+  "name": "ext-bypass-event",
+  "file": "gateexternaldirectory.go",
+  "find": "Event:   \"permission_request.infrastructure_auto_allowed\",",
+  "replace": "Event:   \"permission_request.session_approved\","
+ },
+ {
+  "name": "ext-bypass-resolution",
+  "file": "gateexternaldirectory.go",
+  "find": "Result: \"allow\", Resolution: \"infrastructure_auto_allowed\",",
+  "replace": "Result: \"allow\", Resolution: \"policy_allow\","
+ },
+ {
+  "name": "ext-bypass-surface",
+  "file": "gateexternaldirectory.go",
+  "find": "Surface: tcc.ToolName, Value: externalDirectoryPath, Result",
+  "replace": "Surface: surface, Value: externalDirectoryPath, Result"
+ },
+ {
+  "name": "ext-targeted-deny-state",
+  "file": "gateexternaldirectory.go",
+  "find": "return check.State == \"deny\" && check.MatchedPattern != nil",
+  "replace": "return check.State != \"allow\" && check.MatchedPattern != nil"
+ },
+ {
+  "name": "ext-targeted-nil",
+  "file": "gateexternaldirectory.go",
+  "find": "check.MatchedPattern != nil && !isCatchAllPattern",
+  "replace": "!isCatchAllPattern"
+ },
+ {
+  "name": "ext-catchall-empty",
+  "file": "gateexternaldirectory.go",
+  "find": "\tif pattern == \"\" {\n\t\treturn false\n\t}",
+  "replace": "\tif pattern == \"\" {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "ext-catchall-chars",
+  "file": "gateexternaldirectory.go",
+  "find": "if pattern[i] != '*' {",
+  "replace": "if pattern[i] != '*' && pattern[i] != '?' {"
+ },
+ {
+  "name": "ext-precheck",
+  "file": "gateexternaldirectory.go",
+  "find": "\t\tPreCheck:        &preCheck,\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-input",
+  "file": "gateexternaldirectory.go",
+  "find": "\t\tInput:           newObject(),",
+  "replace": "\t\tInput:           tcc.Input,"
+ },
+ {
+  "name": "ext-cwd",
+  "file": "gateexternaldirectory.go",
+  "find": "\t\tCwd: tcc.Cwd,",
+  "replace": ""
+ },
+ {
+  "name": "ext-patterns",
+  "file": "gateexternaldirectory.go",
+  "find": "SessionApproval: SessionApprovalForPatterns(surface, patterns),",
+  "replace": "SessionApproval: nil,"
+ },
+ {
+  "name": "pol-agent",
+  "file": "gateexternaldirectorypolicy.go",
+  "find": "Path: path, AgentName: agentName})",
+  "replace": "Path: path})"
+ },
+ {
+  "name": "pol-surface-effect",
+  "file": "gateexternaldirectorypolicy.go",
+  "find": "CapabilitySurfaceForEffect(\"external_directory\", access.Effect.Effect)",
+  "replace": "\"external_directory\""
+ },
+ {
+  "name": "pol-allow-filter",
+  "file": "gateexternaldirectorypolicy.go",
+  "find": "if check.State != \"allow\" {\n\t\t\tcoverage.Uncovered",
+  "replace": "if check.State == \"deny\" {\n\t\t\tcoverage.Uncovered"
+ },
+ {
+  "name": "pol-session-covered",
+  "file": "gateexternaldirectorypolicy.go",
+  "find": "} else if check.Source == \"session\" {",
+  "replace": "} else if check.Source != \"session\" {"
+ },
+ {
+  "name": "pol-worst",
+  "file": "gateexternaldirectorypolicy.go",
+  "find": "if len(coverage.Uncovered) > 0 {",
+  "replace": "if len(coverage.Uncovered) > 1 {"
+ },
+ {
+  "name": "pol-worst-first",
+  "file": "gateexternaldirectorypolicy.go",
+  "find": "mostRestrictiveOf(coverage.Uncovered, func(u UncoveredExternalPath) string { return u.Check.State }).Check",
+  "replace": "coverage.Uncovered[0].Check"
+ },
+ {
+  "name": "sr-tool",
+  "file": "gateskillread.go",
+  "find": "tcc.ToolName != \"read\" ||",
+  "replace": "tcc.ToolName == \"read\" ||"
+ },
+ {
+  "name": "sr-empty-entries",
+  "file": "gateskillread.go",
+  "find": "|| len(activeSkillEntries) == 0 {",
+  "replace": "|| len(activeSkillEntries) == 1 {"
+ },
+ {
+  "name": "sr-path-empty",
+  "file": "gateskillread.go",
+  "find": "\tif path == \"\" {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "sr-comparable",
+  "file": "gateskillread.go",
+  "find": "normalizedReadPath := normalizer.ComparableValue(path)",
+  "replace": "normalizedReadPath := path"
+ },
+ {
+  "name": "sr-match",
+  "file": "gateskillread.go",
+  "find": "\tif matchedSkill == nil {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "sr-state",
+  "file": "gateskillread.go",
+  "find": "PreResolved: &GatePreResolved{State: matchedSkill.State},",
+  "replace": "PreResolved: &GatePreResolved{State: \"allow\"},"
+ },
+ {
+  "name": "sr-source",
+  "file": "gateskillread.go",
+  "find": "Source: \"skill_read\", AgentName",
+  "replace": "Source: \"skill_input\", AgentName"
+ },
+ {
+  "name": "sr-surface",
+  "file": "gateskillread.go",
+  "find": "Surface: \"skill\",\n\t\tInput:   input,",
+  "replace": "Surface: \"read\",\n\t\tInput:   input,"
+ },
+ {
+  "name": "si-precheck",
+  "file": "gateskillinput.go",
+  "find": "\t\tPreCheck: &preCheck,\n",
+  "replace": ""
+ },
+ {
+  "name": "si-source",
+  "file": "gateskillinput.go",
+  "find": "Source: \"skill_input\", AgentName: agentName, SkillName",
+  "replace": "Source: \"skill_read\", AgentName: agentName, SkillName"
+ },
+ {
+  "name": "si-decision",
+  "file": "gateskillinput.go",
+  "find": "Decision:   GateDecision{Surface: \"skill\", Value: skillName},",
+  "replace": "Decision:   GateDecision{Surface: \"skill\", Value: \"skill\"},"
+ },
+ {
+  "name": "sip-deny-warn",
+  "file": "gateskillinputpipeline.go",
+  "find": "if check.State == \"deny\" {",
+  "replace": "if check.State != \"allow\" {"
+ },
+ {
+  "name": "sip-surface",
+  "file": "gateskillinputpipeline.go",
+  "find": "p.inputs.CheckPermission(\"skill\",",
+  "replace": "p.inputs.CheckPermission(\"read\","
+ },
+ {
+  "name": "sip-agent",
+  "file": "gateskillinputpipeline.go",
+  "find": "skillInputObject(skillName), agentName)",
+  "replace": "skillInputObject(skillName), nil)"
+ },
+ {
+  "name": "sip-notice-agent",
+  "file": "gateskillinputpipeline.go",
+  "find": "if agentName != nil && *agentName != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "sip-no-session",
+  "file": "gateskillinputpipeline.go",
+  "find": "r.Resolver.CheckPermission(surface, input, agentName, nil)",
+  "replace": "r.Resolver.CheckPermission(surface, input, agentName, r.Resolver.sessionRules.GetRuleset())"
+ },
+ {
+  "name": "tool-mcp-suggest",
+  "file": "gatetool.go",
+  "find": "\t\tif check.Target != nil {\n\t\t\treturn *check.Target\n\t\t}\n\t\treturn \"mcp\"",
+  "replace": "\t\treturn \"mcp\""
+ },
+ {
+  "name": "tool-bash-suggest",
+  "file": "gatetool.go",
+  "find": "\t\tif check.Command != nil {\n\t\t\treturn *check.Command\n\t\t}\n\t\treturn \"\"",
+  "replace": "\t\treturn \"\""
+ },
+ {
+  "name": "tool-shell-surface",
+  "file": "gatetool.go",
+  "find": "\tif shell != nil {\n\t\treturn \"bash\"\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tool-mcp-surface",
+  "file": "gatetool.go",
+  "find": "if ClassifyToolKind(toolName) == ToolKindMcpTool {\n\t\treturn \"mcp\"",
+  "replace": "if ClassifyToolKind(toolName) == ToolKindMcp {\n\t\treturn \"mcp\""
+ },
+ {
+  "name": "tool-mcp-exact",
+  "file": "gatetool.go",
+  "find": "s = SuggestExactSessionPattern(gateSurface, jsTrim(toolName))",
+  "replace": "s = SuggestSessionPattern(gateSurface, deriveSuggestionValue(gateSurface, check))"
+ },
+ {
+  "name": "tool-path-option",
+  "file": "gatetool.go",
+  "find": "if pathAccess != nil {\n\t\toption = pathSessionOption",
+  "replace": "if false {\n\t\toption = pathSessionOption"
+ },
+ {
+  "name": "tool-invoked",
+  "file": "gatetool.go",
+  "find": "InvokedToolName: &toolName,",
+  "replace": ""
+ },
+ {
+  "name": "tool-path-value",
+  "file": "gatetool.go",
+  "find": "decisionValue := DeriveDecisionValue(gateSurface, check, pathValue)",
+  "replace": "decisionValue := DeriveDecisionValue(gateSurface, check, \"\")"
+ },
+ {
+  "name": "tool-facts-path",
+  "file": "gatetool.go",
+  "find": "accessIntent = AccessFactsFromPath(gateSurface, pathAccess.Path)",
+  "replace": "accessIntent = AccessFactsFromValue(gateSurface, decisionValue)"
+ },
+ {
+  "name": "tool-log-toolname",
+  "file": "gatetool.go",
+  "find": "logContext.set(\"toolName\", tcc.ToolName)",
+  "replace": "logContext.set(\"toolName\", gateSurface)"
+ },
+ {
+  "name": "tool-log-floor",
+  "file": "gatetool.go",
+  "find": "\tif check.FloorExemption != \"\" {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "tool-source",
+  "file": "gatetool.go",
+  "find": "Source: \"tool_call\", AgentName: tcc.AgentName, ToolCallID",
+  "replace": "Source: \"skill_read\", AgentName: tcc.AgentName, ToolCallID"
+ },
+ {
+  "name": "tool-label",
+  "file": "gatetool.go",
+  "find": "SessionLabel: &label,",
+  "replace": ""
+ },
+ {
+  "name": "tool-input",
+  "file": "gatetool.go",
+  "find": "Input:           tcc.Input,",
+  "replace": "Input:           newObject(),"
+ },
+ {
+  "name": "pipe-parse-once",
+  "file": "gatetoolcallpipeline.go",
+  "find": "if shell != nil && shell.Command != \"\" {",
+  "replace": "if shell != nil {"
+ },
+ {
+  "name": "pipe-workdir",
+  "file": "gatetoolcallpipeline.go",
+  "find": "&BashProgramOptions{Workdir: shell.Workdir}",
+  "replace": "&BashProgramOptions{}"
+ },
+ {
+  "name": "pipe-parse-error",
+  "file": "gatetoolcallpipeline.go",
+  "find": "\t\tif err != nil {\n\t\t\treturn GateOutcome{}, err\n\t\t}\n\t\tbashProgram = program",
+  "replace": "\t\tbashProgram = program"
+ },
+ {
+  "name": "pipe-extractors-path",
+  "file": "gatetoolcallpipeline.go",
+  "find": "return DescribePathGate(tcc, p.resolver, normalizer, p.customExtractors)",
+  "replace": "return DescribePathGate(tcc, p.resolver, normalizer, nil)"
+ },
+ {
+  "name": "pipe-extractors-ext",
+  "file": "gatetoolcallpipeline.go",
+  "find": "DescribeExternalDirectoryGate(tcc, infraScope, p.resolver, normalizer, p.customExtractors)",
+  "replace": "DescribeExternalDirectoryGate(tcc, infraScope, p.resolver, normalizer, nil)"
+ },
+ {
+  "name": "pipe-deny-first",
+  "file": "gatetoolcallpipeline.go",
+  "find": "for _, gate := range OrderDenyFirst(gates) {",
+  "replace": "for _, gate := range gates {"
+ },
+ {
+  "name": "pipe-first-block",
+  "file": "gatetoolcallpipeline.go",
+  "find": "\t\tif outcome.Action == \"block\" {\n\t\t\treturn outcome, nil\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "pipe-run-error",
+  "file": "gatetoolcallpipeline.go",
+  "find": "\t\toutcome, err := runner.Run(gate, tcc.AgentName)\n\t\tif err != nil {\n\t\t\treturn GateOutcome{}, err\n\t\t}",
+  "replace": "\t\toutcome, _ := runner.Run(gate, tcc.AgentName)"
+ },
+ {
+  "name": "pipe-lazy",
+  "file": "gatetoolcallpipeline.go",
+  "find": "\tgates := make([]GateResult, 0, len(producers))\n\tfor _, produce := range producers {\n\t\tgates = append(gates, produce())\n\t}",
+  "replace": "\tgates := make([]GateResult, 0, len(producers))\n\tfor _, produce := range producers[:len(producers)-1] {\n\t\tgates = append(gates, produce())\n\t}\n\tgates = append(gates, producers[len(producers)-1]())"
+ },
+ {
+  "name": "pipe-skill-nil",
+  "file": "gatetoolcallpipeline.go",
+  "find": "if d := DescribeSkillReadGate(tcc, normalizer, p.inputs.GetActiveSkillEntries); d != nil {\n\t\t\t\treturn d\n\t\t\t}\n\t\t\treturn nil",
+  "replace": "return nil"
+ },
+ {
+  "name": "pipe-precheck",
+  "file": "gatetoolcallpipeline.go",
+  "find": "toolDescriptor.PreCheck = &toolCheck",
+  "replace": "toolDescriptor.PreCheck = nil"
+ },
+ {
+  "name": "pipe-shell-parsed",
+  "file": "gatetoolcallpipeline.go",
+  "find": "\t\tif bashProgram != nil {\n\t\t\treturn p.bashCommandCheck",
+  "replace": "\t\tif bashProgram == nil {\n\t\t\treturn p.bashCommandCheck"
+ },
+ {
+  "name": "pipe-shell-surface",
+  "file": "gatetoolcallpipeline.go",
+  "find": "ToolAccessIntent{Surface: \"bash\", Input: input, AgentName: tcc.AgentName}",
+  "replace": "ToolAccessIntent{Surface: tcc.ToolName, Input: input, AgentName: tcc.AgentName}"
+ },
+ {
+  "name": "pipe-shell-command",
+  "file": "gatetoolcallpipeline.go",
+  "find": "input.set(\"command\", shell.Command)",
+  "replace": "input.set(\"command\", \"\")"
+ },
+ {
+  "name": "pipe-path-intent",
+  "file": "gatetoolcallpipeline.go",
+  "find": "AccessPathAccessIntent{Surface: tcc.ToolName, Path: accessPath, AgentName: tcc.AgentName}), access",
+  "replace": "ToolAccessIntent{Surface: tcc.ToolName, Input: tcc.Input, AgentName: tcc.AgentName}), access"
+ },
+ {
+  "name": "pipe-path-access",
+  "file": "gatetoolcallpipeline.go",
+  "find": "access := &ToolPathAccess{Path: accessPath, ApprovalPatterns: normalizer.ApprovalPatternsFor(accessPath)}",
+  "replace": "var access *ToolPathAccess"
+ },
+ {
+  "name": "pipe-agent",
+  "file": "gatetoolcallpipeline.go",
+  "find": "return p.resolver.Resolve(ToolAccessIntent{Surface: tcc.ToolName, Input: tcc.Input, AgentName: tcc.AgentName}), nil",
+  "replace": "return p.resolver.Resolve(ToolAccessIntent{Surface: tcc.ToolName, Input: tcc.Input}), nil"
+ },
+ {
+  "name": "h-activate",
+  "file": "permissiongatehandler.go",
+  "find": "\tif err := h.session.Activate(ctx); err != nil {\n\t\treturn GateOutcome{}, err\n\t}\n\n\tvalidation",
+  "replace": "\tvalidation"
+ },
+ {
+  "name": "h-activate-input",
+  "file": "permissiongatehandler.go",
+  "find": "\tif err := h.session.Activate(ctx); err != nil {\n\t\treturn InputEventResult{}, err\n\t}\n\n\tskillName",
+  "replace": "\tskillName"
+ },
+ {
+  "name": "h-validate",
+  "file": "permissiongatehandler.go",
+  "find": "\tif validation.Status == \"block\" {",
+  "replace": "\tif validation.Status == \"ok\" {"
+ },
+ {
+  "name": "h-agent-error",
+  "file": "permissiongatehandler.go",
+  "find": "\tagentName, err := h.session.ResolveAgentName(ctx, \"\")\n\tif err != nil {\n\t\treturn GateOutcome{}, err\n\t}",
+  "replace": "\tagentName, _ := h.session.ResolveAgentName(ctx, \"\")"
+ },
+ {
+  "name": "h-agent-error-input",
+  "file": "permissiongatehandler.go",
+  "find": "\tagentName, err := h.session.ResolveAgentName(ctx, \"\")\n\tif err != nil {\n\t\treturn InputEventResult{}, err\n\t}",
+  "replace": "\tagentName, _ := h.session.ResolveAgentName(ctx, \"\")"
+ },
+ {
+  "name": "h-toolcallid",
+  "file": "permissiongatehandler.go",
+  "find": "ToRecord(event).str(\"toolCallId\")",
+  "replace": "ToRecord(event).str(\"id\")"
+ },
+ {
+  "name": "h-cwd",
+  "file": "permissiongatehandler.go",
+  "find": "Input: input, ToolCallID: toolCallID, Cwd: ctx.Cwd}",
+  "replace": "Input: input, ToolCallID: toolCallID}"
+ },
+ {
+  "name": "h-input-block",
+  "file": "permissiongatehandler.go",
+  "find": "\tif outcome.Action == \"block\" {\n\t\treturn InputEventResult{Action: \"handled\"}, nil",
+  "replace": "\tif outcome.Action != \"block\" {\n\t\treturn InputEventResult{Action: \"handled\"}, nil"
+ },
+ {
+  "name": "h-input-error",
+  "file": "permissiongatehandler.go",
+  "find": "\toutcome, err := h.skillInputPipeline.Evaluate(skillName, agentName, ctxNotifier{ctx: ctx}, h.runner)\n\tif err != nil {\n\t\treturn InputEventResult{}, err\n\t}",
+  "replace": "\toutcome, _ := h.skillInputPipeline.Evaluate(skillName, agentName, ctxNotifier{ctx: ctx}, h.runner)"
+ },
+ {
+  "name": "h-notify-ui",
+  "file": "permissiongatehandler.go",
+  "find": "if n.ctx.HasUI && n.ctx.Notifier != nil {",
+  "replace": "if n.ctx.Notifier != nil {"
+ },
+ {
+  "name": "h-notify-level",
+  "file": "permissiongatehandler.go",
+  "find": "n.ctx.Notifier.Notify(message, \"warning\")",
+  "replace": "n.ctx.Notifier.Notify(message, \"info\")"
+ },
+ {
+  "name": "h-reason-missing",
+  "file": "permissiongatehandler.go",
+  "find": "case \"missing-tool-name\":\n\t\treturn RequestedToolValidation{Status: \"block\", Reason: FormatMissingToolNameReason()}",
+  "replace": "case \"missing-tool-name\":\n\t\treturn RequestedToolValidation{Status: \"ok\", ToolName: toolName}"
+ },
+ {
+  "name": "h-unregistered",
+  "file": "permissiongatehandler.go",
+  "find": "\tcase \"unregistered\":\n\t\treturn RequestedToolValidation{Status: \"block\", Reason: FormatUnknownToolReason(check.RequestedToolName, check.AvailableToolNames)}",
+  "replace": "\tcase \"unregistered\":\n\t\treturn RequestedToolValidation{Status: \"ok\", ToolName: toolName}"
+ },
+ {
+  "name": "h-input-prefer",
+  "file": "permissiongatehandler.go",
+  "find": "[]string{\"input\", \"arguments\"}",
+  "replace": "[]string{\"arguments\", \"input\"}"
+ },
+ {
+  "name": "h-input-default",
+  "file": "permissiongatehandler.go",
+  "find": "\treturn newObject()\n}\n\n// ExtractSkillNameFromInput",
+  "replace": "\treturn nil\n}\n\n// ExtractSkillNameFromInput"
+ },
+ {
+  "name": "h-skill-prefix",
+  "file": "permissiongatehandler.go",
+  "find": "const prefix = \"/skill:\"",
+  "replace": "const prefix = \"/skill\""
+ },
+ {
+  "name": "h-skill-trim",
+  "file": "permissiongatehandler.go",
+  "find": "trimmed := jsTrim(text)",
+  "replace": "trimmed := text"
+ },
+ {
+  "name": "h-skill-ws",
+  "file": "permissiongatehandler.go",
+  "find": "if isJSSpace(r) {\n\t\t\tend = i",
+  "replace": "if r == ' ' {\n\t\t\tend = i"
+ }
+]
