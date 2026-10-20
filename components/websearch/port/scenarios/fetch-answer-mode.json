@@ -1,0 +1,71 @@
+{
+ "name": "fetch-answer-mode",
+ "description": "fetch_content mode answer: the page is fetched from a fake server and the scripted model answers the question from it (the side call is the second model request). The side call replaces the whole system prompt, so the trace's removed text is each host's own baseline prompt: a normalize rule reduces it to a placeholder, which also reduces the system-prompt diff of the main requests in this scenario (the other scenarios cover the extension's prompt snippets); the side call's own system prompt, messages and the answer are compared as they are.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/page",
+      "mode": "answer",
+      "prompt": "What does the page say?"
+     }
+    }
+   ]
+  },
+  {
+   "text": "The page says it is served by the fake web server."
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/page",
+     "headers": {
+      "content-type": "text/plain"
+     },
+     "body": "Plain page served by the fake web server.\n"
+    },
+    {
+     "path": "/gone",
+     "status": 404,
+     "headers": {
+      "content-type": "text/html"
+     },
+     "body": "<html>exact raw body</html>"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "(?s)^You are an expert coding assistant operating inside pig?, a coding agent harness.*$",
+   "replacement": "<host baseline system prompt>"
+  }
+ ]
+}
