@@ -7,7 +7,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"net/http"
-	"net/url"
 	"strings"
 	"testing"
 )
@@ -66,39 +65,6 @@ func TestBraveKeyMissingNamesBothSources(t *testing.T) {
 	wantErr(t, err, `(?s)Brave Search API key not found.*braveApiKey.*BRAVE_API_KEY`)
 }
 
-func TestProxyBypassRules(t *testing.T) {
-	proxy, _ := url.Parse("http://proxy.example:8080")
-	unsetenv(t, "NO_PROXY", "no_proxy")
-	t.Setenv("NO_PROXY", "internal.example, .corp.test:8443,[::1],*.skipped")
-	for target, wantProxy := range map[string]bool{
-		"https://api.example.com/x":   true,
-		"http://localhost:8080/":      false,
-		"http://a.localhost/":         false,
-		"http://127.0.0.1/":           false,
-		"http://[::1]:9/":             false,
-		"https://internal.example/":   false,
-		"https://x.internal.example/": false,
-		"https://x.corp.test/":        false,
-		"https://corp.test/":          true, // ".corp.test" only matches subdomains
-		"https://notinternal.example": true,
-	} {
-		req, _ := http.NewRequest("GET", target, nil)
-		got, err := proxyOrBypass(req, proxy)
-		noErr(t, err)
-		if (got != nil) != wantProxy {
-			t.Errorf("%s: proxied=%v, want %v", target, got != nil, wantProxy)
-		}
-	}
-	t.Setenv("NO_PROXY", "*")
-	req, _ := http.NewRequest("GET", "https://anything.example/", nil)
-	if got, _ := proxyOrBypass(req, proxy); got != nil {
-		t.Error("NO_PROXY=* must bypass every host")
-	}
-	if noProxyEntryMatches("a.example", "") {
-		t.Error("an empty entry matches nothing")
-	}
-}
-
 func TestAPIClientForScopesTheProxy(t *testing.T) {
 	restore := SetHTTP(&http.Client{})
 	defer restore()
@@ -107,16 +73,12 @@ func TestAPIClientForScopesTheProxy(t *testing.T) {
 	} else if _, ok := c.(*http.Client); !ok {
 		t.Fatalf("%T", c)
 	}
-	ctx := WithProxy(bg(), "http://proxy.example:8080")
-	c := apiClientFor(ctx).(*http.Client)
-	tr := c.Transport.(*http.Transport)
-	req, _ := http.NewRequest("GET", "https://api.example.com/", nil)
-	got, err := tr.Proxy(req)
-	noErr(t, err)
-	if got == nil || got.Host != "proxy.example:8080" {
-		t.Fatalf("%v", got)
+	ctx := WithProxy(bg(), "http://proxy.example:8080/")
+	d, ok := apiClientFor(ctx).(*curlDoer)
+	if !ok || d.proxy != "http://proxy.example:8080/" {
+		t.Fatalf("%T %+v", apiClientFor(ctx), d)
 	}
-	// A test double keeps precedence over the proxy client.
+	// A test double keeps precedence over the curl transport.
 	fake := &fakeNet{fn: func(netCall) netReply { return reply(200, "") }}
 	defer SetHTTP(fake)()
 	if apiClientFor(ctx) != HTTPDoer(fake) {
