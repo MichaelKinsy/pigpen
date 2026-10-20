@@ -6,6 +6,5 @@
   "exec:powershell.exe": "browser cookie extraction (chrome-cookies.ts); the port has no browser-cookie access: deferred in the first slice (port/PORT.md); no scenario reaches it",
   "exec:security": "browser cookie extraction (chrome-cookies.ts); the port has no browser-cookie access: deferred in the first slice (port/PORT.md); no scenario reaches it",
   "exec:sqlite3": "browser cookie extraction (chrome-cookies.ts); the port has no browser-cookie access: deferred in the first slice (port/PORT.md); no scenario reaches it",
-  "exec:python3": "browser cookie extraction (chrome-cookies.ts); the port has no browser-cookie access: deferred in the first slice (port/PORT.md); no scenario reaches it",
-  "exec:curl": "utils.ts runs curl only to fetch through a proxy; the port uses net/http with the same proxy and its twins record each proxied request instead of curl arguments (port/PORT.md)"
+  "exec:python3": "browser cookie extraction (chrome-cookies.ts); the port has no browser-cookie access: deferred in the first slice (port/PORT.md); no scenario reaches it"
 }

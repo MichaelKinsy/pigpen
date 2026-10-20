@@ -1,0 +1,755 @@
+[
+ {
+  "name": "http proxy, GET with headers",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": {
+   "User-Agent": "ua",
+   "Accept": "text/html,*/*",
+   "Cache-Control": "no-cache",
+   "X-Empty": ""
+  },
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "-H",
+     "accept: text/html,*/*",
+     "-H",
+     "cache-control: no-cache",
+     "-H",
+     "user-agent: ua",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "http proxy with credentials and a path",
+  "proxy": "http://user:pw@proxy.example:3128/tunnel",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://user:pw@proxy.example:3128/tunnel",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "https proxy, default port and mixed case host",
+  "proxy": "https://Proxy.Example:443",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "https://proxy.example/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "socks4 proxy",
+  "proxy": "socks4://proxy.example:9050",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "socks4://proxy.example:9050",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "socks4a proxy",
+  "proxy": "socks4a://proxy.example:9050",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "socks4a://proxy.example:9050",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "socks5 proxy",
+  "proxy": "socks5://proxy.example:9050",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "socks5://proxy.example:9050",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "socks5h proxy",
+  "proxy": "socks5h://proxy.example:9050",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "socks5h://proxy.example:9050",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "proxy URL with a query and a fragment",
+  "proxy": "socks5h://proxy.example:9050?x=1#frag",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "socks5h://proxy.example:9050",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "POST with a JSON body",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/post",
+  "method": "POST",
+  "headers": {
+   "Content-Type": "application/json",
+   "Authorization": "Bearer k"
+  },
+  "body": "{\"q\":\"x\"}",
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "-X",
+     "POST",
+     "-H",
+     "authorization: Bearer k",
+     "-H",
+     "content-type: application/json",
+     "--data-binary",
+     "@<dir>/request-body",
+     "https://93.184.216.34/post"
+    ],
+    "requestBodyBase64": "eyJxIjoieCJ9"
+   }
+  ],
+  "result": {
+   "status": 201,
+   "statusText": "Created",
+   "url": "https://93.184.216.34/post",
+   "redirected": false,
+   "location": null,
+   "text": "created"
+  }
+ },
+ {
+  "name": "POST with URLSearchParams",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/post",
+  "method": "post",
+  "headers": {
+   "content-type": "application/x-www-form-urlencoded"
+  },
+  "body": {
+   "urlSearchParams": "a=1&b=two+words"
+  },
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "-X",
+     "POST",
+     "-H",
+     "content-type: application/x-www-form-urlencoded",
+     "--data-binary",
+     "@<dir>/request-body",
+     "https://93.184.216.34/post"
+    ],
+    "requestBodyBase64": "YT0xJmI9dHdvK3dvcmRz"
+   }
+  ],
+  "result": {
+   "status": 201,
+   "statusText": "Created",
+   "url": "https://93.184.216.34/post",
+   "redirected": false,
+   "location": null,
+   "text": "created"
+  }
+ },
+ {
+  "name": "PUT with bytes",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/post",
+  "method": "PUT",
+  "headers": null,
+  "body": {
+   "bytes": [
+    1,
+    2,
+    3,
+    255
+   ]
+  },
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "-X",
+     "PUT",
+     "--data-binary",
+     "@<dir>/request-body",
+     "https://93.184.216.34/post"
+    ],
+    "requestBodyBase64": "AQID/w=="
+   }
+  ],
+  "result": {
+   "status": 201,
+   "statusText": "Created",
+   "url": "https://93.184.216.34/post",
+   "redirected": false,
+   "location": null,
+   "text": "created"
+  }
+ },
+ {
+  "name": "GET with a body",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/page",
+  "method": "GET",
+  "headers": null,
+  "body": "x",
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "-X",
+     "GET",
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "--data-binary",
+     "@<dir>/request-body",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": "eA=="
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "HEAD",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/page",
+  "method": "HEAD",
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "headers given with different case merge",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/page",
+  "method": null,
+  "headers": [
+   [
+    "Accept",
+    "a"
+   ],
+   [
+    "accept",
+    "b"
+   ],
+   [
+    "X-B",
+    "2"
+   ],
+   [
+    "x-a",
+    "1"
+   ]
+  ],
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "-H",
+     "accept: a, b",
+     "-H",
+     "x-a: 1",
+     "-H",
+     "x-b: 2",
+     "https://93.184.216.34/page"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 200,
+   "statusText": "OK",
+   "url": "https://93.184.216.34/page",
+   "redirected": false,
+   "location": null,
+   "text": "page body"
+  }
+ },
+ {
+  "name": "404 status",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/gone",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/gone"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 404,
+   "statusText": "Not Found",
+   "url": "https://93.184.216.34/gone",
+   "redirected": false,
+   "location": null,
+   "text": "gone"
+  }
+ },
+ {
+  "name": "204 has no body",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/nobody",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/nobody"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 204,
+   "statusText": "No Content",
+   "url": "https://93.184.216.34/nobody",
+   "redirected": false,
+   "location": null,
+   "text": ""
+  }
+ },
+ {
+  "name": "manual redirect",
+  "proxy": "http://proxy.example:8080",
+  "url": "https://93.184.216.34/start",
+  "method": null,
+  "headers": {
+   "Authorization": "Bearer secret"
+  },
+  "body": null,
+  "redirect": "manual",
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "-H",
+     "authorization: Bearer secret",
+     "https://93.184.216.34/start"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "status": 302,
+   "statusText": "Found",
+   "url": "https://93.184.216.34/start",
+   "redirected": false,
+   "location": "https://other.example/final",
+   "text": ""
+  }
+ },
+ {
+  "name": "unknown url (curl exits 1)",
+  "proxy": "http://user:secret@proxy.example:8080",
+  "url": "https://93.184.216.34/missing",
+  "method": null,
+  "headers": null,
+  "body": null,
+  "redirect": null,
+  "calls": [
+   {
+    "args": [
+     "--silent",
+     "--show-error",
+     "--compressed",
+     "--connect-timeout",
+     "20",
+     "-x",
+     "http://user:secret@proxy.example:8080/",
+     "-D",
+     "<dir>/headers",
+     "--output",
+     "<dir>/body",
+     "--write-out",
+     "%{json}",
+     "https://93.184.216.34/missing"
+    ],
+    "requestBodyBase64": null
+   }
+  ],
+  "result": {
+   "error": "curl exited with code 1 via http://redacted:redacted@proxy.example:8080/: unexpected url https://93.184.216.34/missing"
+  }
+ }
+]
