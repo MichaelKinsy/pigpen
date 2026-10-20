@@ -356,7 +356,12 @@ func TestObserverBuildsTheSurfacesState(t *testing.T) {
 	streaming := msgs[1]
 	u.observe(obj{"type": "message_update", "assistantMessageEvent": obj{"type": "text_delta", "contentIndex": float64(0), "delta": "lo"}}, nil)
 	u.observe(obj{"type": "message_update", "assistantMessageEvent": obj{"type": "toolcall_start", "contentIndex": float64(1), "toolName": "read"}}, nil)
-	eqStr(t, textOf(streaming["content"]), "hello") // the message is updated in place
+	eqStr(t, textOf(streaming["content"]), "hel") // a copy already handed out is never changed under its reader
+	updated := u.Messages()[1]
+	eqStr(t, textOf(updated["content"]), "hello")
+	if updated[viewerIDKey] != streaming[viewerIDKey] {
+		t.Errorf("the message changed identity while it streamed: %v then %v", streaming[viewerIDKey], updated[viewerIDKey])
+	}
 	if got := u.snapshotActivity().ResponseText; got != "hello" {
 		t.Errorf("response text %q", got)
 	}

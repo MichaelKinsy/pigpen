@@ -73,7 +73,6 @@ func TestFleetWiringTwins(t *testing.T) {
 		id := spawnBackground(r, "live one")
 		// The child has a session once it reports an event.
 		r.uiAgentOf(id).observe(obj{"type": "agent_start"}, nil)
-		r.app.ui.fleet.update()
 
 		var reg []HostCall
 		for _, c := range r.widgetCalls("fleet") {
@@ -114,7 +113,11 @@ func TestWidgetAndStatusReachTheHost(t *testing.T) {
 
 	// The agent finishes: it lingers for one turn, then the widget and the status clear.
 	r.fleet.wait(t, 1)[0].finish("done")
-	r.waitFor("the agent to settle", func() bool { return r.app.mgr.get(id).Status == statusCompleted })
+	r.waitFor("the agent to settle", func() bool {
+		r.app.mgr.mu.Lock()
+		defer r.app.mgr.mu.Unlock()
+		return r.app.mgr.records[id].Status == statusCompleted
+	})
 	r.Fire("tool_execution_start", obj{}) // a turn passes
 	r.waitFor("the status to clear", func() bool { s := r.statusCalls(); return s[len(s)-1] == "" })
 	calls := r.widgetCalls("agents")

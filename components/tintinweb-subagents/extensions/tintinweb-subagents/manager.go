@@ -156,7 +156,7 @@ func (m *manager) spawn(typ, description, name string, spec childSpec, backgroun
 	}
 	r.Status = statusRunning
 	m.mu.Unlock()
-	go m.run(r)
+	safeGo("agent run", func() { m.run(r) })
 	return r
 }
 
@@ -167,7 +167,11 @@ func (m *manager) run(r *agentRecord) {
 	r.cancel = cancel // abort reads it under the lock
 	r.StartedAt = time.Now()
 	m.mu.Unlock()
-	c, err := m.start(ctx, r.spec)
+	var c child
+	var err error
+	if perr := catch("starting the child", func() { c, err = m.start(ctx, r.spec) }); perr != nil {
+		c, err = nil, perr
+	}
 	close(r.started)
 	var res *childResult
 	if err == nil {
@@ -176,9 +180,11 @@ func (m *manager) run(r *agentRecord) {
 		stop := r.stopped
 		m.mu.Unlock()
 		if stop {
-			c.abort()
+			safeCall("aborting the child", c.abort)
 		}
-		res, err = c.wait()
+		if perr := catch("waiting for the child", func() { res, err = c.wait() }); perr != nil {
+			res, err = nil, perr
+		}
 	}
 	m.mu.Lock()
 	r.CompletedAt = time.Now()
@@ -220,10 +226,10 @@ func (m *manager) run(r *agentRecord) {
 	cancel()
 	close(r.done)
 	if m.onSettle != nil {
-		m.onSettle(r)
+		safeCall("settling an agent", func() { m.onSettle(r) })
 	}
 	if next != nil {
-		go m.run(next)
+		safeGo("agent run", func() { m.run(next) })
 	}
 }
 
@@ -255,7 +261,7 @@ func (m *manager) abort(r *agentRecord) bool {
 		close(r.started)
 		close(r.done)
 		if m.onSettle != nil {
-			m.onSettle(r)
+			safeCall("settling an agent", func() { m.onSettle(r) })
 		}
 		return true
 	case statusRunning:
@@ -264,7 +270,7 @@ func (m *manager) abort(r *agentRecord) bool {
 		cancel := r.cancel
 		m.mu.Unlock()
 		if c != nil {
-			c.abort()
+			safeCall("aborting the child", c.abort)
 		} else if cancel != nil {
 			cancel()
 		}
@@ -282,7 +288,11 @@ func (m *manager) steer(r *agentRecord, message string) error {
 	if status != statusRunning || c == nil {
 		return fmt.Errorf("Agent %s is not running (status: %s).", r.ID, status)
 	}
-	return c.steer(message)
+	var err error
+	if perr := catch("steering the child", func() { err = c.steer(message) }); perr != nil {
+		return perr
+	}
+	return err
 }
 
 // consume marks a finished agent's result as handed to the model, so its notification is not sent. It reports

@@ -651,7 +651,7 @@
   "name": "skills-false-accepted",
   "file": "refuse.go",
   "find": "return v == nil || (ok && b)",
-  "replace": "return true"
+  "replace": "return v == nil || (ok && b) || true"
  },
  {
   "name": "extension-list-accepted",
@@ -693,7 +693,7 @@
   "name": "setting-notice-repeats",
   "file": "extension.go",
   "find": "if text != \"\" && !same {",
-  "replace": "if text != \"\" {"
+  "replace": "if text != \"\" && (!same || true) {"
  },
  {
   "name": "setting-notice-silent",
@@ -705,13 +705,13 @@
   "name": "start-skips-agent-file-check",
   "file": "bus.go",
   "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedAgentFeature(cfg); feature != \"\" && false {"
  },
  {
   "name": "rpc-skips-option-check",
   "file": "bus.go",
   "find": "if feature := unportedSpawnOption(opts); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedSpawnOption(opts); feature != \"\" && false {"
  },
  {
   "name": "rpc-name-dropped",
@@ -831,7 +831,7 @@
   "name": "nested-style-not-restored",
   "file": "ui_usage.go",
   "find": "return reset + styleStart",
-  "replace": "return reset"
+  "replace": "return reset + styleStart[:0]"
  },
  {
   "name": "turns-limit-dropped",
@@ -915,7 +915,7 @@
   "name": "widget-status-plural",
   "file": "agent_widget.go",
   "find": "plural(total, \"\", \"s\")",
-  "replace": "\"s\""
+  "replace": "plural(total+1000, \"\", \"s\")"
  },
  {
   "name": "widget-status-repeated",
@@ -927,13 +927,13 @@
   "name": "widget-never-clears",
   "file": "agent_widget.go",
   "find": "if clearWidget {",
-  "replace": "if false {"
+  "replace": "if clearWidget && false {"
  },
  {
   "name": "widget-status-never-clears",
   "file": "agent_widget.go",
   "find": "if clearStatus {",
-  "replace": "if false {"
+  "replace": "if clearStatus && false {"
  },
  {
   "name": "widget-queued-not-reserved",
@@ -1053,7 +1053,7 @@
   "name": "fleet-activates-over-text",
   "file": "fleet_list.go",
   "find": "&& ui.GetEditorText() == \"\" {",
-  "replace": "{"
+  "replace": "&& (ui.GetEditorText() == \"\" || true) {"
  },
  {
   "name": "fleet-up-top-stays",
@@ -1089,7 +1089,7 @@
   "name": "fleet-cursor-not-restored",
   "file": "fleet_list.go",
   "find": "f.selectedIndex = i\n\t\t\t\tbreak",
-  "replace": "break"
+  "replace": "_ = i\n\t\t\t\tbreak"
  },
  {
   "name": "fleet-selected-badge-not-bold",
@@ -1118,7 +1118,7 @@
  {
   "name": "fleet-no-width-clamp",
   "file": "fleet_list.go",
-  "find": "return widthx.TruncateToWidth(leftClamped+strings.Repeat(\" \", gap)+right, width, ellipsis, false)",
+  "find": "return widthx.TruncateToWidth(leftClamped+strings.Repeat(\" \", gap)+right, width, \"...\", false)",
   "replace": "return leftClamped + strings.Repeat(\" \", gap) + right"
  },
  {
@@ -1161,13 +1161,13 @@
   "name": "fleet-dispose-keeps-widget",
   "file": "fleet_list.go",
   "find": "if ui != nil && registered {\n\t\tui.SetWidget(fleetKey, nil, \"\")",
-  "replace": "if false {\n\t\tui.SetWidget(fleetKey, nil, \"\")"
+  "replace": "if ui != nil && registered && false {\n\t\tui.SetWidget(fleetKey, nil, \"\")"
  },
  {
   "name": "fleet-workflow-open-ignored",
   "file": "fleet_list.go",
   "find": "open(id, f.clearViewer)",
-  "replace": "f.clearViewer()"
+  "replace": "_ = id\n\t\t\tf.clearViewer()"
  },
  {
   "name": "viewer-result-cap",
@@ -1244,8 +1244,8 @@
  {
   "name": "viewer-mode-persist-dropped",
   "file": "conversation_viewer.go",
-  "find": "if v.opts.OnMarkdownMode != nil {\n\t\t\tv.opts.OnMarkdownMode(next)",
-  "replace": "if false {\n\t\t\tv.opts.OnMarkdownMode(next)"
+  "find": "if f := v.opts.OnMarkdownMode; f != nil {",
+  "replace": "if f := v.opts.OnMarkdownMode; f != nil && false {"
  },
  {
   "name": "viewer-retry-never",
@@ -1454,8 +1454,8 @@
  {
   "name": "notification-no-details-rendered",
   "file": "ui_render.go",
-  "find": "if d == nil {\n\t\t\treturn nil, nil\n\t\t}",
-  "replace": "if d == nil {\n\t\t\td = &notificationDetails{}\n\t\t}"
+  "find": "if d == nil {\n\t\t\t\treturn nil, nil\n\t\t\t}",
+  "replace": "if d == nil {\n\t\t\t\td = &notificationDetails{}\n\t\t\t}"
  },
  {
   "name": "details-preview-limit",
@@ -1473,7 +1473,7 @@
   "name": "details-turns-reported",
   "file": "ui_details.go",
   "find": "d.TurnCount, d.MaxTurns = &tc, act.MaxTurns",
-  "replace": "d.TurnCount, d.MaxTurns = nil, nil"
+  "replace": "_ = tc\n\td.TurnCount, d.MaxTurns = nil, nil"
  },
  {
   "name": "details-running-status",
@@ -1551,19 +1551,19 @@
   "name": "model-list-unsorted",
   "file": "ui_invocation.go",
   "find": "sort.Strings(list)",
-  "replace": ""
+  "replace": "_ = sort.Strings"
  },
  {
   "name": "model-asked-same-model",
   "file": "ui_invocation.go",
-  "find": "} else if model == nil || msgStr(m[\"provider\"]) != msgStr(model[\"provider\"]) || msgStr(m[\"id\"]) != msgStr(model[\"id\"]) {",
-  "replace": "} else if true {"
+  "find": "if won == nil ||",
+  "replace": "if true || won == nil ||"
  },
  {
   "name": "model-asked-unresolved",
   "file": "ui_invocation.go",
-  "find": "if m, msg := resolveModelAmong(asked, available); msg != \"\" {\n\t\t\tinv.RequestedModel = asked",
-  "replace": "if m, msg := resolveModelAmong(asked, available); msg == \"\" && false {\n\t\t\tinv.RequestedModel = asked"
+  "find": "if msg != \"\" {\n\t\treturn asked\n\t}",
+  "replace": "if msg != \"\" && false {\n\t\treturn asked\n\t}"
  },
  {
   "name": "model-parent-fallback",
@@ -1587,7 +1587,7 @@
   "name": "observer-tool-end-removes",
   "file": "ui_observer.go",
   "find": "u.act.ActiveTools = append(u.act.ActiveTools[:i], u.act.ActiveTools[i+1:]...)",
-  "replace": ""
+  "replace": "_ = i"
  },
  {
   "name": "observer-turns",
@@ -1599,7 +1599,7 @@
   "name": "observer-cost",
   "file": "ui_observer.go",
   "find": "u.usage.Cost += t",
-  "replace": ""
+  "replace": "_ = t"
  },
  {
   "name": "observer-cache-write",
@@ -1674,12 +1674,6 @@
   "replace": "return u"
  },
  {
-  "name": "hub-settle-keeps-tools",
-  "file": "ui_runtime.go",
-  "find": "u.act.ActiveTools = nil",
-  "replace": ""
- },
- {
   "name": "hub-settle-no-finish-mark",
   "file": "ui_runtime.go",
   "find": "h.widget.markFinished(r.ID)\n\th.fleet.onAgentFinished(r.ID)",
@@ -1688,20 +1682,20 @@
  {
   "name": "hub-viewer-persist",
   "file": "ui_runtime.go",
-  "find": "if cwd != \"\" && !persistViewerMarkdown(cwd, mode) {",
-  "replace": "if false {"
+  "find": "persisted := persistViewerMarkdown(cwd, mode)",
+  "replace": "persisted := true"
  },
  {
   "name": "hub-dispose-keeps-fleet",
   "file": "ui_runtime.go",
-  "find": "h.widget.dispose()\n\th.fleet.dispose()",
-  "replace": "h.widget.dispose()"
+  "find": "h.fleet.dispose()\n\th.mu.Lock()",
+  "replace": "h.mu.Lock()"
  },
  {
   "name": "hub-bind-without-ui",
   "file": "ui_runtime.go",
-  "find": "if h.bound || !safeHasUI(ctx) {",
-  "replace": "if h.bound {"
+  "find": "if !safeHasUI(ctx) {",
+  "replace": "if false {"
  },
  {
   "name": "ui-widget-placement-dropped",
@@ -1778,13 +1772,13 @@
  {
   "name": "runner-observer-hook",
   "file": "runner.go",
-  "find": "if c.observer != nil {\n\t\tc.observer.observe(m, c.query)\n\t}",
+  "find": "safeCall(\"agent observer\", func() { c.observer.observe(m, c.query) })",
   "replace": ""
  },
  {
   "name": "settle-no-ui",
   "file": "extension.go",
-  "find": "a.ui.onSettle(r)\n",
+  "find": "safeCall(\"settle surfaces\", func() { a.ui.onSettle(r) })\n",
   "replace": ""
  },
  {
@@ -1828,5 +1822,287 @@
   "file": "tools.go",
   "find": "finalDetails := a.ui.recordDetails(r, status, dur)",
   "replace": "finalDetails := agentDetails{}"
+ },
+ {
+  "name": "viewer-shares-live-maps",
+  "file": "ui_observer.go",
+  "find": "c := cloneMap(m)\n",
+  "replace": "c := m\n"
+ },
+ {
+  "name": "viewer-copy-reused-never",
+  "file": "ui_observer.go",
+  "find": "if u.snaps[i] == nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "viewer-copy-never-refreshed",
+  "file": "ui_observer.go",
+  "find": "func (u *uiAgent) changedLastLocked() { u.snaps[len(u.snaps)-1] = nil }",
+  "replace": "func (u *uiAgent) changedLastLocked() {}"
+ },
+ {
+  "name": "viewer-copy-without-id",
+  "file": "ui_observer.go",
+  "find": "c[viewerIDKey] = u.ids[i]\n",
+  "replace": ""
+ },
+ {
+  "name": "catch-swallows-the-error",
+  "file": "guard.go",
+  "find": "err = fmt.Errorf(\"internal error in %s: %v\", where, v)",
+  "replace": "err = nil"
+ },
+ {
+  "name": "panic-notice-every-time",
+  "file": "guard.go",
+  "find": "if _, seen := panicSeen.LoadOrStore(where, struct{}{}); seen {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ticker-unguarded",
+  "file": "ui_clock.go",
+  "find": "safeCall(\"ticker\", f)",
+  "replace": "f()"
+ },
+ {
+  "name": "overlay-render-no-fallback",
+  "file": "ui_runtime.go",
+  "find": "return []string{\"(the agent viewer failed to render; Esc closes it)\"}",
+  "replace": "return nil"
+ },
+ {
+  "name": "overlay-dispose-unguarded",
+  "file": "ui_runtime.go",
+  "find": "safeCall(\"viewer dispose\", o.component.Dispose)",
+  "replace": "o.component.Dispose()"
+ },
+ {
+  "name": "subscriber-unguarded",
+  "file": "ui_observer.go",
+  "find": "safeCall(\"transcript subscriber\", f)",
+  "replace": "f()"
+ },
+ {
+  "name": "first-event-unguarded",
+  "file": "ui_observer.go",
+  "find": "safeCall(\"first agent event\", u.onFirstEvent)",
+  "replace": "u.onFirstEvent()"
+ },
+ {
+  "name": "settle-hook-unguarded",
+  "file": "manager.go",
+  "find": "safeCall(\"settling an agent\", func() { m.onSettle(r) })\n\t}\n\tif next != nil",
+  "replace": "m.onSettle(r)\n\t}\n\tif next != nil"
+ },
+ {
+  "name": "child-start-panic-kept",
+  "file": "manager.go",
+  "find": "c, err = nil, perr",
+  "replace": "c, err = nil, nil"
+ },
+ {
+  "name": "tool-unguarded",
+  "file": "tools.go",
+  "find": "Execute:          protect(\"Agent\", a.agentTool),",
+  "replace": "Execute:          a.agentTool,"
+ },
+ {
+  "name": "result-tool-unguarded",
+  "file": "tools.go",
+  "find": "Execute:       protect(\"get_subagent_result\", a.getResultTool),",
+  "replace": "Execute:       a.getResultTool,"
+ },
+ {
+  "name": "fleet-read-unguarded",
+  "file": "fleet_list.go",
+  "find": "valueOf(\"agent list\", f.manager.listAgents)",
+  "replace": "f.manager.listAgents()"
+ },
+ {
+  "name": "widget-read-unguarded",
+  "file": "agent_widget.go",
+  "find": "valueOf(\"agent list\", w.manager.listAgents)",
+  "replace": "w.manager.listAgents()"
+ },
+ {
+  "name": "widget-ellipsis",
+  "file": "agent_widget.go",
+  "find": "widthx.TruncateToWidth(line, columns, \"...\", false)",
+  "replace": "widthx.TruncateToWidth(line, columns, \"…\", false)"
+ },
+ {
+  "name": "fleet-left-ellipsis",
+  "file": "fleet_list.go",
+  "find": "widthx.TruncateToWidth(left, maxLeft, \"...\", false)",
+  "replace": "widthx.TruncateToWidth(left, maxLeft, \"…\", false)"
+ },
+ {
+  "name": "fleet-hint-ellipsis",
+  "file": "fleet_list.go",
+  "find": "widthx.TruncateToWidth(\"  \"+th.Fg(\"dim\", hint), width, \"...\", false)",
+  "replace": "widthx.TruncateToWidth(\"  \"+th.Fg(\"dim\", hint), width, \"…\", false)"
+ },
+ {
+  "name": "viewer-ellipsis",
+  "file": "conversation_viewer.go",
+  "find": "return widthx.TruncateToWidth(s, width, \"...\", false)",
+  "replace": "return widthx.TruncateToWidth(s, width, \"…\", false)"
+ },
+ {
+  "name": "viewer-markdown-mode-under-lock",
+  "file": "conversation_viewer.go",
+  "find": "v.after = append(v.after, func() { f(next) })",
+  "replace": "f(next)"
+ },
+ {
+  "name": "steer-input-no-paste",
+  "file": "viewer_input.go",
+  "find": "if strings.Contains(data, pasteStart) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "steer-input-no-kitty",
+  "file": "viewer_input.go",
+  "find": "if printable, ok := tui.DecodeKittyPrintable(data); ok {",
+  "replace": "if printable, ok := tui.DecodeKittyPrintable(data); ok && false {"
+ },
+ {
+  "name": "steer-input-c1-accepted",
+  "file": "viewer_input.go",
+  "find": "(r >= 0x80 && r <= 0x9f)",
+  "replace": "false"
+ },
+ {
+  "name": "steer-input-cursor-by-unit",
+  "file": "viewer_input.go",
+  "find": "in.cursor -= lastGraphemeLen(slice16(in.value, 0, in.cursor))",
+  "replace": "in.cursor--"
+ },
+ {
+  "name": "steer-input-undo-not-coalesced",
+  "file": "viewer_input.go",
+  "find": "if isWhitespaceChar(char) || in.lastAction != \"type-word\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "steer-input-kill-not-accumulated",
+  "file": "viewer_input.go",
+  "find": "in.killRing.Push(slice16(in.value, deleteFrom, in.cursor), true, wasKill)",
+  "replace": "in.killRing.Push(slice16(in.value, deleteFrom, in.cursor), true, wasKill && false)"
+ },
+ {
+  "name": "steer-input-paste-keeps-newlines",
+  "file": "viewer_input.go",
+  "find": "strings.NewReplacer(\"\\r\\n\", \"\", \"\\r\", \"\", \"\\n\", \"\", \"\\t\", \"    \")",
+  "replace": "strings.NewReplacer(\"\\t\", \"    \")"
+ },
+ {
+  "name": "steer-input-no-cursor-marker",
+  "file": "viewer_input.go",
+  "find": "marker = tui.CursorMarker",
+  "replace": "marker = \"\""
+ },
+ {
+  "name": "steer-input-no-scroll",
+  "file": "viewer_input.go",
+  "find": "if totalWidth < availableWidth {",
+  "replace": "if true {"
+ },
+ {
+  "name": "cost-foreground-missing",
+  "file": "tools.go",
+  "find": "stats = append(stats, c)\n\t}\n\tout := strings.TrimSpace(result)",
+  "replace": "_ = c\n\t}\n\tout := strings.TrimSpace(result)"
+ },
+ {
+  "name": "cost-result-unlabelled",
+  "file": "tools.go",
+  "find": "stats = append(stats, \"Cost: \"+c)",
+  "replace": "stats = append(stats, c)"
+ },
+ {
+  "name": "cost-steer-missing",
+  "file": "tools.go",
+  "find": "state = append(state, c)",
+  "replace": "_ = c"
+ },
+ {
+  "name": "cost-text-ignores-setting",
+  "file": "ui_details.go",
+  "find": "if !h.getShowCost() {\n\t\treturn \"\"",
+  "replace": "if false {\n\t\treturn \"\""
+ },
+ {
+  "name": "cost-xml-ignores-setting",
+  "file": "extension.go",
+  "find": "if showCost {\n\t\tif cost := getLifetimeCost(usage); cost > 0 {",
+  "replace": "if true {\n\t\tif cost := getLifetimeCost(usage); cost > 0 {"
+ },
+ {
+  "name": "cost-xml-zero-shown",
+  "file": "extension.go",
+  "find": "cost := getLifetimeCost(usage); cost > 0 {",
+  "replace": "cost := getLifetimeCost(usage); cost >= 0 {"
+ },
+ {
+  "name": "settled-keeps-live-activity",
+  "file": "ui_runtime.go",
+  "find": "if u == nil || u.isSettled() {",
+  "replace": "if u == nil {"
+ },
+ {
+  "name": "first-event-no-fleet-update",
+  "file": "ui_runtime.go",
+  "find": "u.onFirstEvent = func() { h.fleet.ensureTimer(); h.fleet.update() }",
+  "replace": "u.onFirstEvent = func() {}"
+ },
+ {
+  "name": "no-rebind-after-shutdown",
+  "file": "ui_runtime.go",
+  "find": "h.widget.setUI(h.ui)\n\th.fleet.setUI(h.ui)\n\th.mu.Lock()\n\tsubscribe",
+  "replace": "h.mu.Lock()\n\tsubscribe"
+ },
+ {
+  "name": "stop-blocks-input",
+  "file": "fleet_list.go",
+  "find": "safeGo(\"viewer stop\", func() {",
+  "replace": "safeCall(\"viewer stop\", func() {"
+ },
+ {
+  "name": "stop-notice-escaped",
+  "file": "fleet_list.go",
+  "find": "ui.Notify(\"Stopped \\\"\"+description+\"\\\".\", \"info\")",
+  "replace": "ui.Notify(fmt.Sprintf(\"Stopped %q.\", description), \"info\")"
+ },
+ {
+  "name": "viewer-activity-not-held",
+  "file": "fleet_list.go",
+  "find": "\t\t\theld = cur\n",
+  "replace": ""
+ },
+ {
+  "name": "max-turns-zero-disclosed",
+  "file": "ui_invocation.go",
+  "find": "if res.maxTurns != nil && *res.maxTurns > 0 {",
+  "replace": "if res.maxTurns != nil {"
+ },
+ {
+  "name": "persist-failure-text",
+  "file": "ui_runtime.go",
+  "find": "\" (session only; failed to persist)\"",
+  "replace": "\" (could not be saved)\""
+ },
+ {
+  "name": "persist-no-event",
+  "file": "ui_runtime.go",
+  "find": "_ = ctx.Events().Emit(\"subagents:settings_changed\", map[string]any{\"settings\": snapshot.asMap(), \"persisted\": persisted})",
+  "replace": "_ = snapshot"
+ },
+ {
+  "name": "shutdown-keeps-nudges",
+  "file": "extension.go",
+  "find": "a.stopNudges()\n",
+  "replace": ""
  }
 ]

@@ -123,30 +123,30 @@ func TestNotificationText(t *testing.T) {
 	start := time.Now()
 	rec := &agentRecord{ID: "abc", Description: `say "hi" <now>`, Status: statusCompleted, Result: "a < b & c > d", ToolUses: 2, Tokens: 5,
 		StartedAt: start, CompletedAt: start.Add(1500 * time.Millisecond)}
-	n := formatTaskNotification(rec, 500)
+	n := formatTaskNotification(rec, 500, false, lifetimeUsage{})
 	// upstream: index.ts formatTaskNotification, getStatusLabel; xml.ts escapes &, < and > only.
 	eq(t, n, "<task-notification>\n<task-id>abc</task-id>\n<status>Done</status>\n"+
 		"<summary>Agent \"say \"hi\" &lt;now&gt;\" completed</summary>\n"+
 		"<result>a &lt; b &amp; c &gt; d</result>\n"+
 		"<usage><total_tokens>5</total_tokens><tool_uses>2</tool_uses><duration_ms>1500</duration_ms></usage>\n</task-notification>")
 	rec.Result = strings.Repeat("x", 600)
-	n = formatTaskNotification(rec, 500)
+	n = formatTaskNotification(rec, 500, false, lifetimeUsage{})
 	eq(t, strings.Contains(n, strings.Repeat("x", 500)+"\n...(truncated, use get_subagent_result for full output)</result>"), true)
 	eq(t, strings.Contains(n, strings.Repeat("x", 501)), false)
 	rec.Result = ""
-	eq(t, strings.Contains(formatTaskNotification(rec, 500), "<result>No output.</result>"), true)
+	eq(t, strings.Contains(formatTaskNotification(rec, 500, false, lifetimeUsage{}), "<result>No output.</result>"), true)
 	rec.Status, rec.Error, rec.Result = statusError, "boom", ""
-	eq(t, strings.Contains(formatTaskNotification(rec, 500), "<status>Error: boom</status>"), true)
+	eq(t, strings.Contains(formatTaskNotification(rec, 500, false, lifetimeUsage{}), "<status>Error: boom</status>"), true)
 	rec.Error = ""
-	eq(t, strings.Contains(formatTaskNotification(rec, 500), "<status>Error: unknown</status>"), true)
+	eq(t, strings.Contains(formatTaskNotification(rec, 500, false, lifetimeUsage{}), "<status>Error: unknown</status>"), true)
 	rec.Status = statusSteered
-	eq(t, strings.Contains(formatTaskNotification(rec, 500), "<status>Wrapped up (turn limit)</status>\n<summary>Agent \"say \"hi\" &lt;now&gt;\" steered (wrapped up at the turn limit — output may be partial)</summary>"), true)
+	eq(t, strings.Contains(formatTaskNotification(rec, 500, false, lifetimeUsage{}), "<status>Wrapped up (turn limit)</status>\n<summary>Agent \"say \"hi\" &lt;now&gt;\" steered (wrapped up at the turn limit — output may be partial)</summary>"), true)
 	rec.Status = statusAborted
-	eq(t, strings.Contains(formatTaskNotification(rec, 500), "<status>Aborted (max turns exceeded)</status>\n<summary>Agent \"say \"hi\" &lt;now&gt;\" aborted (aborted — hit the turn limit before completion; output may be incomplete)</summary>"), true)
+	eq(t, strings.Contains(formatTaskNotification(rec, 500, false, lifetimeUsage{}), "<status>Aborted (max turns exceeded)</status>\n<summary>Agent \"say \"hi\" &lt;now&gt;\" aborted (aborted — hit the turn limit before completion; output may be incomplete)</summary>"), true)
 	rec.Status = statusStopped
-	eq(t, strings.Contains(formatTaskNotification(rec, 500), "<status>Stopped</status>\n<summary>Agent \"say \"hi\" &lt;now&gt;\" stopped (STOPPED BY THE USER before completion — output is partial; the task was NOT finished)</summary>"), true)
+	eq(t, strings.Contains(formatTaskNotification(rec, 500, false, lifetimeUsage{}), "<status>Stopped</status>\n<summary>Agent \"say \"hi\" &lt;now&gt;\" stopped (STOPPED BY THE USER before completion — output is partial; the task was NOT finished)</summary>"), true)
 	rec.ToolCallID = "call<1>"
-	eq(t, strings.Contains(formatTaskNotification(rec, 500), "<task-id>abc</task-id>\n<tool-use-id>call&lt;1&gt;</tool-use-id>\n<status>"), true)
+	eq(t, strings.Contains(formatTaskNotification(rec, 500, false, lifetimeUsage{}), "<task-id>abc</task-id>\n<tool-use-id>call&lt;1&gt;</tool-use-id>\n<status>"), true)
 }
 
 func TestNotificationIsAFollowUpThatStartsATurn(t *testing.T) {

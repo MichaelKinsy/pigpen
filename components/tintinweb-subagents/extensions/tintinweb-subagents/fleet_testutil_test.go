@@ -27,9 +27,14 @@ type stubFleetManager struct {
 	steered [][2]string
 	aborted []string
 	session viewerSession
+	// abortGate, when set, holds every abort until it is closed (an abort is a round trip to the child).
+	abortGate chan struct{}
 }
 
 func (m *stubFleetManager) abort(id string) bool {
+	if m.abortGate != nil {
+		<-m.abortGate
+	}
 	m.mu.Lock()
 	m.aborted = append(m.aborted, id)
 	m.mu.Unlock()

@@ -21,7 +21,6 @@ const (
 	widgetTickMs      = 80
 	aboveEditor       = "aboveEditor"
 	belowEditor       = "belowEditor"
-	ellipsis          = "…"
 	widgetFinishedAge = 1
 )
 
@@ -78,7 +77,7 @@ func newAgentWidget(m agentLister, a activitySource, mode func() widgetMode, sho
 // but agents known to be foreground; every agent for all.
 func (w *agentWidget) widgetAgents() []*agentView {
 	var all []*agentView
-	for _, a := range w.manager.listAgents() {
+	for _, a := range valueOf("agent list", w.manager.listAgents) {
 		if isTopLevelAgent(a) {
 			all = append(all, a)
 		}
@@ -231,7 +230,7 @@ func (w *agentWidget) renderWidget(columns int, th uiTheme) []string {
 		return nil
 	}
 
-	truncate := func(line string) string { return widthx.TruncateToWidth(line, columns, ellipsis, false) }
+	truncate := func(line string) string { return widthx.TruncateToWidth(line, columns, "...", false) }
 	headingColor, headingIcon := "dim", "○"
 	if hasActive {
 		headingColor, headingIcon = "accent", "●"

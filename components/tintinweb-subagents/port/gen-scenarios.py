@@ -30,7 +30,13 @@ scenario("agent-unknown-type-strict", "With fallbackSubagent none an unknown typ
 # agent's header, environment block and prompt) and the same user message; the harness's "removed" part is the host's
 # own default system prompt, which says "pi" under Pi and "pig" under PiG, so that comparison cannot pass. PORT.md.
 
-# A background Agent call: the result carries the details the call's renderer draws (displayName, model label, tags,
-# status "background"). The agent runs on in the background; the scenario ends when the parent's turn does.
-scenario("agent-background-details", "A background Agent call returns the text and the details its renderer reads.",
-         [[call("Agent", prompt="say hi", description="greet", subagent_type="general-purpose", run_in_background=True)]])
+# Not generated: a background Agent call. Pi's reply carries an `Output file:` line (output transcripts are not
+# ported), a nanoid-shaped id and a trailing notification turn with `<output-file>`, and Pi's rpc mode draws no widget
+# where this port sends the widget rows, so the trace can only differ (PORT.md, "Display surfaces"). The renderers
+# the call feeds are covered by the layer-1 RenderTool checks and the twins instead.
+
+# showCost and showModel are accepted settings (they only add to what is displayed and to the texts the model reads),
+# not refused: with both on, a session that never starts an agent must produce the same trace as the original, with
+# no refusal notice.
+scenario("agent-not-found-showcost", "showCost and showModel on: accepted without a notice; an unknown agent id is reported.",
+         [[call("get_subagent_result", agent_id="nope")]], settings={**SETTINGS, "showCost": True, "showModel": True})

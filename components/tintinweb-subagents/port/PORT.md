@@ -119,8 +119,8 @@ Go.) The Agent tool's `renderCall`/`renderResult` and the notification renderer 
    `PIG_HARNESS_BINARY`, and the extension's own executable with the extension's socket in its environment; (e) had no
    test that a stop reaches the child's process group (a mutant that removed the signals survived). Each is fixed with a
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
-   The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
-   features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+   The remaining differences of the notification: no `<output-file>`, `<context_percent>` or `<compactions>` (their
+   features are deferred; `<estimated_cost_usd>` is ported, under `showCost` only), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
 
 ## Display surfaces (widget, fleet list, conversation viewer, renderers, colors)
 
@@ -137,7 +137,10 @@ Go.) The Agent tool's `renderCall`/`renderResult` and the notification renderer 
 How it differs from the original, and why:
 
 - **The transcript is built from the child's rpc event stream** (`childSpec.Observer`, `ui_observer.go`): a message is
-  one map updated in place while it streams, so the viewer's per-message Markdown cache keeps working. Usage, tool use,
+  one map updated in place while it streams, under the agent's lock. The viewer never sees that map: `Messages()` hands
+  out deep copies (reused while a message is unchanged) that carry a stable id (`viewerIDKey`), which keys the viewer's
+  per-message Markdown cache. (The original is single-threaded; here the child's reader goroutine writes while the
+  viewer renders, and a concurrent map read and write is a fatal error no `recover` can catch.) Usage, tool use,
   turn count, compactions and the effective model come from the same stream (`get_state`, `get_session_stats`).
 - **Widgets are drawn as pre-rendered rows at the terminal width** (a `kit.Lines` view), re-sent only when the rows change
   and on a resize. The original's component factory re-renders every frame; the SDK has no factory form across the
@@ -155,6 +158,34 @@ How it differs from the original, and why:
 - **Agent file precedence.** The original lets an agent file's model, thinking level and turn limit outrank the call's
   (`resolveAgentInvocationConfig`); the port previously let the call win. `bus.go` now follows the original, and the
   model display discloses the call's value as `(asked X)`.
+- **No panic leaves the extension** (`guard.go`). One unrecovered panic in any goroutine ends the process and every
+  agent in it, so every entry the host or the runtime calls into (event handlers, the three tools, `/agents`, the
+  renderers, bus handlers, terminal input, the overlay component, tickers, timers) and every goroutine recovers, logs
+  the stack on stderr and tells the user once per place. The original has no such concern (a thrown error in a handler
+  is Pi's to catch). A panic while a surface holds its own lock cannot be unwound, so the reads those surfaces make
+  under a lock (`listAgents`, the workflow source) are guarded where they are made.
+- **The steer composer is pi-tui's `Input`** (`viewer_input.go`): bracketed paste, Kitty CSI-u printable keys, undo,
+  kill ring, word and grapheme movement, C1 rejection, the cursor marker and width-aware scrolling. pitui carries no
+  `Input` yet, so the port lives here, built on pitui's keybindings, `KillRing`, word navigation, Kitty decoder and
+  width helpers; it belongs in pitui when that package takes it (not ported: the placeholder and the mouse handler,
+  which the viewer never uses).
+- **Truncation is pi-tui's default `"..."`** everywhere the original calls `truncateToWidth` without an ellipsis.
+- **`showCost`** adds `~$X` to the foreground result (after the tokens, comma-joined), `Cost: ~$X` to the
+  `get_subagent_result` header, `~$X` to the steer reply and `<estimated_cost_usd>` to the notification, and only
+  then (it is LLM context). The original's `Context:` and `Compactions:` fields that sit beside them are deferred
+  with the observability slice.
+- **`activity` follows the agent's life as in the original**: the widget and the list read the live activity, which is
+  gone once the agent has settled (finished rows show no `↻N`); a viewer holds the activity it had when it opened,
+  frozen at the last state when the agent settles. The final result and the notification still read the settled
+  turn count.
+- **The fleet list is bound again** on every session's first event after a shutdown (as `setUICtx` is on every
+  `session_start` and `tool_execution_start`), and the widget is not disposed on shutdown.
+- **A stop from the viewer** runs off the input path (the abort is a round trip to the child; the original's is
+  synchronous and instant).
+- **Packaging.** `go.work` uses `../../../pitui`, which PiG's resolver reads to add the require and replace; the
+  component must be in the tree (`components/pitui`, branch `pitui-package-3` until it is merged).
 - **Persisting `m`.** The viewer's `m` writes `viewerMarkdown` into the project `subagents.json` (the original writes the
-  whole settings snapshot); a settings writer that owns the snapshot replaces `persistViewerMarkdown`.
+  whole settings snapshot) and emits `subagents:settings_changed` with the five display settings and `persisted`; a
+  failed write warns `Viewer markdown set to <mode> (session only; failed to persist)`. A settings writer that owns the
+  snapshot replaces `persistViewerMarkdown`.
 - **Skipped twin:** "renders the reopened session's settings, not the resume call's": `resume` is refused by this port.

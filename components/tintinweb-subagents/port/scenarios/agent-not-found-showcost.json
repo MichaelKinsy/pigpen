@@ -1,0 +1,43 @@
+{
+  "name": "agent-not-found-showcost",
+  "description": "showCost and showModel on: accepted without a notice; an unknown agent id is reported.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "get_subagent_result",
+          "arguments": {
+            "agent_id": "nope"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false, \"showCost\": true, \"showModel\": true}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

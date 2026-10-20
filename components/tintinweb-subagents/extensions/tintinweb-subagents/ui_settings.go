@@ -22,6 +22,12 @@ func defaultUISettings() uiSettings {
 	return uiSettings{widgetMode: widgetModeBackground, fleetView: true, viewerMarkdown: viewerMarkdownAssistant}
 }
 
+// asMap is the settings as the `subagents:settings_changed` event carries them.
+func (s uiSettings) asMap() map[string]any {
+	return map[string]any{"widgetMode": string(s.widgetMode), "fleetView": s.fleetView, "showCost": s.showCost,
+		"showModel": s.showModel, "viewerMarkdown": string(s.viewerMarkdown)}
+}
+
 func (s *uiSettings) apply(raw map[string]any) {
 	if v, ok := raw["widgetMode"].(string); ok {
 		switch m := widgetMode(v); m {

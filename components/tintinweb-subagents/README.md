@@ -55,8 +55,9 @@ Claude Code-style fleet list below the editor (`fleetView`, on by default: ↓ o
 opens the agent's live conversation overlay, Esc returns), the conversation viewer (scroll, `x` twice to stop, Enter to
 steer, `m` to cycle `viewerMarkdown` raw / assistant / all), the agent name colors, and the renderers of the `Agent`
 tool call and result and of the completion notification are the original's, drawn through `components/pitui`. The
-transcript, activity and usage they show come from the child's event stream. `showCost` and `showModel` only add to what
-is displayed.
+transcript, activity and usage they show come from the child's event stream. `showModel` only adds to what is
+displayed; `showCost` also adds the cost to the foreground result, `get_subagent_result`, the steer reply and the completion
+notification the model reads. Nothing a handler or a surface does can panic the extension process.
 
 ## What is not ported, and how it answers
 

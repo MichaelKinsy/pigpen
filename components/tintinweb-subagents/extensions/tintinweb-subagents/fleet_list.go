@@ -113,9 +113,9 @@ func formatFleetTokens(count int) string {
 func rightAlign(left, right string, width int) string {
 	rightW := widthx.VisibleWidth(right)
 	maxLeft := max(0, width-rightW-1)
-	leftClamped := widthx.TruncateToWidth(left, maxLeft, ellipsis, false)
+	leftClamped := widthx.TruncateToWidth(left, maxLeft, "...", false)
 	gap := max(1, width-widthx.VisibleWidth(leftClamped)-rightW)
-	return widthx.TruncateToWidth(leftClamped+strings.Repeat(" ", gap)+right, width, ellipsis, false)
+	return widthx.TruncateToWidth(leftClamped+strings.Repeat(" ", gap)+right, width, "...", false)
 }
 
 type fleetList struct {
@@ -286,7 +286,7 @@ func (f *fleetList) update() {
 func (f *fleetList) agentRecords() []*agentView {
 	now := nowMs()
 	var out []*agentView
-	for _, a := range f.manager.listAgents() {
+	for _, a := range valueOf("agent list", f.manager.listAgents) {
 		if isTopLevelAgent(a) && a.HasSession && (a.Status == "running" || a.Status == "queued" ||
 			a.ID == f.viewingAgentID || (a.CompletedAt != 0 && now-a.CompletedAt < finishedLingerMs)) {
 			out = append(out, a)
@@ -311,7 +311,7 @@ func (f *fleetList) workflows() []fleetWorkflow {
 	}
 	now := nowMs()
 	var out []fleetWorkflow
-	for _, run := range f.workflowSource() {
+	for _, run := range valueOf("workflow list", f.workflowSource) {
 		if run.Status == "running" || run.Status == "paused" || (run.CompletedAt != 0 && now-run.CompletedAt < finishedLingerMs) {
 			out = append(out, run)
 		}
@@ -491,10 +491,13 @@ func (f *fleetList) openSelected() {
 		f.viewerClose = done
 		f.mu.Unlock()
 		return newConversationViewer(host, f.manager.sessionOf(id), f.recordOf(id), f.activityOfFn(id), th, done, viewerOptions{
+			// The abort is a round trip to the child: it runs off the viewer's input path.
 			OnStop: func() {
-				if f.manager.abort(id) {
-					ui.Notify(fmt.Sprintf("Stopped %q.", description), "info")
-				}
+				safeGo("viewer stop", func() {
+					if f.manager.abort(id) {
+						ui.Notify("Stopped \""+description+"\".", "info")
+					}
+				})
 			},
 			Keybindings:    kb,
 			OnSteer:        func(message string) { _ = f.manager.steer(id, message) },
@@ -517,8 +520,23 @@ func (f *fleetList) recordOf(id string) func() agentView {
 	}
 }
 
+// activityOfFn is the activity the overlay holds: the one the agent has when the overlay opens (none for an agent that has
+// already settled), kept live while it runs and frozen at its last state once it settles. upstream: the viewer is
+// constructed with `agentActivity.get(id)`, an object the map's deletion does not take from the viewer.
 func (f *fleetList) activityOfFn(id string) func() *agentActivity {
-	return func() *agentActivity { return f.activity.activityOf(id) }
+	var mu sync.Mutex
+	held := f.activity.activityOf(id)
+	return func() *agentActivity {
+		mu.Lock()
+		defer mu.Unlock()
+		if held == nil {
+			return nil
+		}
+		if cur := f.activity.activityOf(id); cur != nil {
+			held = cur
+		}
+		return held
+	}
 }
 
 // clearViewer resets the overlay state and returns to the list (on close, auto-close or error). The cursor stays on
@@ -562,9 +580,9 @@ func (f *fleetList) renderBar(width int, th uiTheme) []string {
 		hint = "↑↓ select · enter view · esc back"
 	}
 	lines := []string{
-		widthx.TruncateToWidth("  "+th.Fg("dim", hint), width, ellipsis, false),
+		widthx.TruncateToWidth("  "+th.Fg("dim", hint), width, "...", false),
 		"",
-		widthx.TruncateToWidth("  "+f.bullet(0, sel, th)+" main", width, ellipsis, false),
+		widthx.TruncateToWidth("  "+f.bullet(0, sel, th)+" main", width, "...", false),
 	}
 
 	// Window the rows so the selected one stays visible.

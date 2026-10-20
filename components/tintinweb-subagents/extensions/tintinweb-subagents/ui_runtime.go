@@ -19,7 +19,9 @@ type uiHub struct {
 	mu       sync.Mutex
 	agents   map[string]*uiAgent
 	settings uiSettings
-	bound    bool
+	// widthBound: the width-change subscription is taken; dispose clears it, so the next session subscribes again.
+	widthBound bool
+	unsubWidth func()
 
 	widget *agentWidget
 	fleet  *fleetList
@@ -29,8 +31,8 @@ type uiHub struct {
 func newUIHub(a *app) *uiHub {
 	h := &uiHub{app: a, agents: map[string]*uiAgent{}, settings: defaultUISettings()}
 	h.ui = &ctxUI{hub: h, widgets: map[string]*uiWidgetState{}}
-	h.widget = newAgentWidget(h, h, h.getWidgetMode, h.getShowCost, h.getShowModel)
-	h.fleet = newFleetList(h, h, h.getShowCost, h.getViewerMarkdown, h.chooseViewerMarkdown)
+	h.widget = newAgentWidget(h, liveActivities{h}, h.getWidgetMode, h.getShowCost, h.getShowModel)
+	h.fleet = newFleetList(h, liveActivities{h}, h.getShowCost, h.getViewerMarkdown, h.chooseViewerMarkdown)
 	return h
 }
 
@@ -45,14 +47,24 @@ func (h *uiHub) getViewerMarkdown() viewerMarkdownMode { return h.get().viewerMa
 func (h *uiHub) chooseViewerMarkdown(mode viewerMarkdownMode) {
 	h.mu.Lock()
 	h.settings.viewerMarkdown = mode
+	snapshot := h.settings
 	h.mu.Unlock()
 	h.app.mu.Lock()
 	cwd := h.app.cwd
 	h.app.mu.Unlock()
-	if cwd != "" && !persistViewerMarkdown(cwd, mode) {
-		if ctx, ok := h.app.context(); ok {
-			ctx.Notify("Viewer markdown set to "+string(mode)+" (could not be saved)", "warning")
-		}
+	if cwd == "" {
+		return
+	}
+	persisted := persistViewerMarkdown(cwd, mode)
+	ctx, ok := h.app.context()
+	if !ok {
+		return
+	}
+	// The event fires whatever the write's outcome, so listeners see the in-memory change.
+	_ = ctx.Events().Emit("subagents:settings_changed", map[string]any{"settings": snapshot.asMap(), "persisted": persisted})
+	// Silent on success (the overlay is the feedback); a failed write still speaks.
+	if !persisted {
+		ctx.Notify("Viewer markdown set to "+string(mode)+" (session only; failed to persist)", "warning")
 	}
 }
 
@@ -66,20 +78,29 @@ func (h *uiHub) loadSettings(cwd string) {
 	h.widget.update()
 }
 
-// bind hands the surfaces the UI, once a context with one exists.
+// bind hands the surfaces the UI on every context that has one: a list disposed with its session is bound again by
+// the next session's first event, as the original's setUICtx is called on every session_start and tool_execution_start
+// (setUI is a no-op for a UI the surface already holds).
 func (h *uiHub) bind(ctx sdk.Context) {
-	h.mu.Lock()
-	if h.bound || !safeHasUI(ctx) {
-		h.mu.Unlock()
+	if !safeHasUI(ctx) {
 		return
 	}
-	h.bound = true
-	h.mu.Unlock()
 	h.widget.setUI(h.ui)
 	h.fleet.setUI(h.ui)
-	if unsub, err := ctx.OnWidthChange(func(sdk.Context, int) { h.ui.RequestRender() }); err == nil {
-		_ = unsub
+	h.mu.Lock()
+	subscribe := !h.widthBound
+	h.widthBound = true
+	h.mu.Unlock()
+	if !subscribe {
+		return
 	}
+	var unsub func()
+	guard(func() {
+		unsub, _ = ctx.OnWidthChange(func(sdk.Context, int) { safeCall("width change", h.ui.RequestRender) })
+	})
+	h.mu.Lock()
+	h.unsubWidth = unsub
+	h.mu.Unlock()
 }
 
 func safeHasUI(ctx sdk.Context) (ok bool) {
@@ -92,6 +113,20 @@ func safeHasUI(ctx sdk.Context) (ok bool) {
 }
 
 // ---- agentLister / fleetManager / activitySource ----
+
+// liveActivities is the activitySource of the surfaces: an agent's activity while it runs. upstream: the activity Map
+// the widget and the fleet list read, from which index.ts deletes an entry the moment its agent finishes.
+type liveActivities struct{ h *uiHub }
+
+func (l liveActivities) activityOf(id string) *agentActivity {
+	l.h.mu.Lock()
+	u := l.h.agents[id]
+	l.h.mu.Unlock()
+	if u == nil || u.isSettled() {
+		return nil
+	}
+	return u.snapshotActivity()
+}
 
 func (h *uiHub) listAgents() []*agentView {
 	h.app.mgr.mu.Lock()
@@ -138,6 +173,8 @@ func (h *uiHub) listAgents() []*agentView {
 	return out
 }
 
+// activityOf is the activity of an agent, running or settled (the final result and notification read the turn count and
+// limit after the agent has finished; upstream holds them in the state object the closure keeps).
 func (h *uiHub) activityOf(id string) *agentActivity {
 	h.mu.Lock()
 	u := h.agents[id]
@@ -159,7 +196,7 @@ func (h *uiHub) steer(id, message string) error {
 		return fmt.Errorf("Agent %s is not running.", id)
 	}
 	// The steer is a round trip to the child; the viewer does not wait for it (the original ignores its promise).
-	go func() { _ = h.app.mgr.steer(r, message) }()
+	safeGo("viewer steer", func() { _ = h.app.mgr.steer(r, message) })
 	return nil
 }
 
@@ -182,7 +219,9 @@ func (h *uiHub) newObserver(inv *invocation, maxTurns int) *uiAgent {
 		mt = &maxTurns
 	}
 	u := newUIAgent(inv, mt)
-	u.onChange = func() {}
+	// The first event is the session coming up: the fleet list lists the agent from then on (upstream: the
+	// session-created callback of a foreground agent, `fleet.ensureTimer(); fleet.update()`).
+	u.onFirstEvent = func() { h.fleet.ensureTimer(); h.fleet.update() }
 	return u
 }
 
@@ -204,9 +243,7 @@ func (h *uiHub) onSettle(r *agentRecord) {
 	u := h.agents[r.ID]
 	h.mu.Unlock()
 	if u != nil {
-		u.mu.Lock()
-		u.act.ActiveTools = nil
-		u.mu.Unlock()
+		u.settle()
 	}
 	h.widget.markFinished(r.ID)
 	h.fleet.onAgentFinished(r.ID)
@@ -216,10 +253,17 @@ func (h *uiHub) onSettle(r *agentRecord) {
 // onTurnStart ages the finished agents. upstream: widget.onTurnStart, from the tool_execution_start handler.
 func (h *uiHub) onTurnStart() { h.widget.onTurnStart() }
 
-// dispose tears the surfaces down (the session ends).
+// dispose tears the fleet list down (the session ends). The widget stays: upstream only disposes the list, and the next
+// session's context binds both again.
 func (h *uiHub) dispose() {
-	h.widget.dispose()
 	h.fleet.dispose()
+	h.mu.Lock()
+	unsub := h.unsubWidth
+	h.unsubWidth, h.widthBound = nil, false
+	h.mu.Unlock()
+	if unsub != nil {
+		guard(unsub)
+	}
 }
 
 // ---- the SDK adapter ----
@@ -245,7 +289,8 @@ func (u *ctxUI) ctx() (ctx sdk.Context, ok bool) {
 	return u.hub.app.context()
 }
 
-// guard runs f, swallowing the panic a context stale after a session replacement raises.
+// guard runs f, swallowing the panic a context stale after a session replacement raises. It is for host calls only: a
+// panic of this package's own code goes through safeCall, which reports it.
 func guard(f func()) {
 	defer func() { _ = recover() }()
 	f()
@@ -304,12 +349,23 @@ func (u *ctxUI) push(key string) {
 	if w == nil {
 		return
 	}
+	var width int
+	var theme uiTheme
 	guard(func() {
-		width := ctx.Width()
+		width = ctx.Width()
 		if width <= 0 {
 			width = 80
 		}
-		lines := w.render(width, sdkTheme{ctx.UITheme()})
+		theme = sdkTheme{ctx.UITheme()}
+	})
+	if theme == nil {
+		return
+	}
+	var lines []string
+	if err := catch("widget "+key+" render", func() { lines = w.render(width, theme) }); err != nil {
+		return // keep the rows on screen: a render bug must not blank or crash the widget
+	}
+	guard(func() {
 		u.mu.Lock()
 		same := w.pushed && equalLines(w.last, lines)
 		w.last, w.pushed = lines, true
@@ -340,11 +396,14 @@ func (u *ctxUI) OnTerminalInput(handler func(data string) *inputResult) func() {
 	}
 	var unsub func()
 	guard(func() {
-		unsub, _ = ctx.OnTerminalInput(func(data string) sdk.TerminalInputResult {
-			if r := handler(data); r != nil {
-				return sdk.TerminalInputResult{Consume: r.Consume}
-			}
-			return sdk.TerminalInputResult{}
+		unsub, _ = ctx.OnTerminalInput(func(data string) (out sdk.TerminalInputResult) {
+			// A panic must never swallow a key or end the process: the key passes through.
+			safeCall("terminal input", func() {
+				if r := handler(data); r != nil {
+					out = sdk.TerminalInputResult{Consume: r.Consume}
+				}
+			})
+			return out
 		})
 	})
 	if unsub == nil {
@@ -378,7 +437,11 @@ func (u *ctxUI) Custom(factory viewerFactory, opts overlayOptions, onClose func(
 	}
 	overlay := &overlayComponent{ui: u}
 	var done func() = overlay.close
-	overlay.component = factory(overlay, sdkTheme{ctx.UITheme()}, nil, done)
+	if err := catch("opening the viewer", func() { overlay.component = factory(overlay, sdkTheme{ctx.UITheme()}, nil, done) }); err != nil {
+		u.Notify("Could not open the agent viewer: "+err.Error(), "error")
+		onClose()
+		return
+	}
 	go func() {
 		defer onClose()
 		guard(func() {
@@ -425,13 +488,23 @@ func (o *overlayComponent) RequestRender() {
 	}
 }
 
-func (o *overlayComponent) Render(width int) []string { return o.component.Render(width) }
+func (o *overlayComponent) Render(width int) (lines []string) {
+	if err := catch("viewer render", func() { lines = o.component.Render(width) }); err != nil {
+		return []string{"(the agent viewer failed to render; Esc closes it)"}
+	}
+	return lines
+}
 
 func (o *overlayComponent) HandleInput(data string) (sdk.RemoteComponentResult, error) {
 	o.mu.Lock()
 	o.inInput = true
 	o.mu.Unlock()
-	o.component.HandleInput(data)
+	if err := catch("viewer input", func() { o.component.HandleInput(data) }); err != nil {
+		// The viewer is in an unknown state: close it rather than leave an overlay that cannot answer.
+		o.mu.Lock()
+		o.closing = true
+		o.mu.Unlock()
+	}
 	o.mu.Lock()
 	o.inInput = false
 	closing := o.closing
@@ -445,7 +518,7 @@ func (o *overlayComponent) SetInvalidate(f func()) {
 	o.mu.Unlock()
 }
 
-func (o *overlayComponent) Dispose() { o.component.Dispose() }
+func (o *overlayComponent) Dispose() { safeCall("viewer dispose", o.component.Dispose) }
 
 func (o *overlayComponent) setHandle(h *sdk.OverlayHandle) {
 	o.mu.Lock()

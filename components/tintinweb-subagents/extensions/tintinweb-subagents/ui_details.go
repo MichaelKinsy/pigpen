@@ -25,6 +25,22 @@ func (h *uiHub) usageOf(id string) (lifetimeUsage, int) {
 	return u.usage, u.compactions
 }
 
+// usageOfAgent is the lifetime usage of an agent.
+func (h *uiHub) usageOfAgent(id string) lifetimeUsage {
+	usage, _ := h.usageOf(id)
+	return usage
+}
+
+// costText is the cost of an agent as `~$0.0123`, or "" when showCost is off or the model has no pricing data (an
+// unpriced model reports 0, and `$0.00` would claim the run was measured and free). upstream: the
+// `showCost` + formatCost(getLifetimeCost(record.lifetimeUsage)) of index.ts.
+func (h *uiHub) costText(id string) string {
+	if !h.getShowCost() {
+		return ""
+	}
+	return formatCost(getLifetimeCost(h.usageOfAgent(id)))
+}
+
 // invocationOf is a copy of an agent's invocation snapshot (nil when it has none).
 func (h *uiHub) invocationOf(id string) *invocation {
 	h.mu.Lock()

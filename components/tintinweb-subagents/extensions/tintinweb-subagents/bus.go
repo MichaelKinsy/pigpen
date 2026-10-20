@@ -18,7 +18,11 @@ func (a *app) registerRPC(bus sdk.EventBus) {
 			params, _ := raw.(map[string]any)
 			requestID, _ := params["requestId"].(string)
 			reply := map[string]any{"success": true}
-			data, err := fn(ctx, params)
+			var data any
+			var err error
+			if perr := catch("rpc "+channel, func() { data, err = fn(ctx, params) }); perr != nil {
+				err = perr
+			}
 			if err != nil {
 				reply = map[string]any{"success": false, "error": err.Error()}
 			} else if data != nil {

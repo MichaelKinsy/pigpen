@@ -128,7 +128,12 @@ func resolveModelAmong(input string, available []map[string]any) (map[string]any
 // agent file or the call names (resolved against the available models), else the parent's; a spelling the caller used
 // that names a different model than the one that won is kept as requestedModel.
 func buildInvocation(ctx sdk.Context, res resolvedInvocation, background, isolated bool) *invocation {
-	inv := &invocation{Thinking: res.thinking, RequestedThinking: res.overriddenThinking, MaxTurns: res.maxTurns, Isolated: isolated, RunInBackground: background}
+	inv := &invocation{Thinking: res.thinking, RequestedThinking: res.overriddenThinking, Isolated: isolated, RunInBackground: background}
+	// Explicit values only, and 0 (unlimited) is no limit to disclose rather than a misleading "max turns: 0".
+	// upstream: index.ts normalizeMaxTurns(resolvedConfig.maxTurns).
+	if res.maxTurns != nil && *res.maxTurns > 0 {
+		inv.MaxTurns = res.maxTurns
+	}
 	var available []map[string]any
 	guard(func() { available, _ = ctx.ModelRegistry().GetAvailable() })
 	var model map[string]any
@@ -151,14 +156,23 @@ func buildInvocation(ctx sdk.Context, res resolvedInvocation, background, isolat
 			}
 		})
 	}
-	// What the caller SPELLED, kept only if it names a different model than the one that won. A spelling that
-	// resolves to nothing is still worth disclosing: it cannot have taken effect.
-	if asked := res.overriddenModel; asked != "" {
-		if m, msg := resolveModelAmong(asked, available); msg != "" {
-			inv.RequestedModel = asked
-		} else if model == nil || msgStr(m["provider"]) != msgStr(model["provider"]) || msgStr(m["id"]) != msgStr(model["id"]) {
-			inv.RequestedModel = asked
-		}
-	}
+	inv.RequestedModel = requestedModel(res.overriddenModel, available, model)
 	return inv
+}
+
+// requestedModel is what the caller SPELLED, kept only if it names a different model than the one that won ("" when
+// there is nothing to disclose). A spelling that resolves to nothing is still worth disclosing: it cannot have taken
+// effect.
+func requestedModel(asked string, available []map[string]any, won map[string]any) string {
+	if asked == "" {
+		return ""
+	}
+	m, msg := resolveModelAmong(asked, available)
+	if msg != "" {
+		return asked
+	}
+	if won == nil || msgStr(m["provider"]) != msgStr(won["provider"]) || msgStr(m["id"]) != msgStr(won["id"]) {
+		return asked
+	}
+	return ""
 }

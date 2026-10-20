@@ -306,18 +306,24 @@ func toolResultText(r sdk.ToolRenderResult) string {
 // registerRenderers registers the notification renderer; the Agent tool's renderers are part of its definition.
 func (a *app) registerRenderers(e *sdk.Extension) {
 	e.MessageRenderer("subagent-notification", func(ctx sdk.Context, message map[string]any, opts sdk.MessageRenderOptions, width int) ([]string, error) {
-		d := decodeDetails[notificationDetails](message["details"])
-		if d == nil {
-			return nil, nil
-		}
-		return renderNotification(*d, opts.Expanded, sdkTheme{ctx.UITheme()}, a.ui.getShowCost(), width), nil
+		return protectLines("notification renderer", func() ([]string, error) {
+			d := decodeDetails[notificationDetails](message["details"])
+			if d == nil {
+				return nil, nil
+			}
+			return renderNotification(*d, opts.Expanded, sdkTheme{ctx.UITheme()}, a.ui.getShowCost(), width), nil
+		})
 	})
 }
 
 func (a *app) renderAgentCall(ctx sdk.Context, args map[string]any, render sdk.ToolRenderContext, width int) ([]string, error) {
-	return renderAgentCall(args, render.IsPartial, render.IsError, sdkTheme{ctx.UITheme()}, width), nil
+	return protectLines("Agent call renderer", func() ([]string, error) {
+		return renderAgentCall(args, render.IsPartial, render.IsError, sdkTheme{ctx.UITheme()}, width), nil
+	})
 }
 
 func (a *app) renderAgentResult(ctx sdk.Context, result sdk.ToolRenderResult, opts sdk.ToolRenderResultOptions, render sdk.ToolRenderContext, width int) ([]string, error) {
-	return renderAgentResult(toolResultText(result), decodeDetails[agentDetails](result.Details), opts.Expanded, opts.IsPartial, render.IsError, sdkTheme{ctx.UITheme()}, a.ui.getShowCost(), width), nil
+	return protectLines("Agent result renderer", func() ([]string, error) {
+		return renderAgentResult(toolResultText(result), decodeDetails[agentDetails](result.Details), opts.Expanded, opts.IsPartial, render.IsError, sdkTheme{ctx.UITheme()}, a.ui.getShowCost(), width), nil
+	})
 }

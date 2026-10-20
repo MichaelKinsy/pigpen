@@ -17,7 +17,7 @@ var startTicker = func(d time.Duration, f func()) (stop func()) {
 		for {
 			select {
 			case <-t.C:
-				f()
+				safeCall("ticker", f)
 			case <-done:
 				return
 			}

@@ -115,7 +115,7 @@ func (a *app) registerTools(e *sdk.Extension) {
 	specs := loadToolSpecs()
 	// The workspace is fixed for an extension process, so the custom agents can be read before the tool is registered.
 	if wd, err := os.Getwd(); err == nil {
-		a.reload(wd)
+		safeCall("loading the agent files", func() { a.reload(wd) })
 	}
 	reg := currentRegistry()
 	var guidelines []string
@@ -125,7 +125,7 @@ func (a *app) registerTools(e *sdk.Extension) {
 		PromptSnippet:    "Launch autonomous sub-agents for complex multi-step tasks",
 		PromptGuidelines: guidelines,
 		Parameters:       agentToolSchema(reg, specs["Agent"]),
-		Execute:          a.agentTool,
+		Execute:          protect("Agent", a.agentTool),
 		RenderCall:       a.renderAgentCall,
 		RenderResult:     a.renderAgentResult,
 	})
@@ -133,13 +133,13 @@ func (a *app) registerTools(e *sdk.Extension) {
 		Name: "get_subagent_result", Label: "Get Agent Result", Description: *specs["get_subagent_result"].Description,
 		PromptSnippet: "Check status and retrieve results from a background agent",
 		Parameters:    sdk.Schema(specs["get_subagent_result"].Parameters),
-		Execute:       a.getResultTool,
+		Execute:       protect("get_subagent_result", a.getResultTool),
 	})
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: "steer_subagent", Label: "Steer Agent", Description: *specs["steer_subagent"].Description,
 		PromptSnippet: "Send a steering message to redirect a running background agent",
 		Parameters:    sdk.Schema(specs["steer_subagent"].Parameters),
-		Execute:       a.steerTool,
+		Execute:       protect("steer_subagent", a.steerTool),
 	})
 }
 
@@ -254,6 +254,9 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if t := formatTokens(tokens); t != "" {
 		stats = append(stats, t)
 	}
+	if c := a.ui.costText(r.ID); c != "" {
+		stats = append(stats, c)
+	}
 	out := strings.TrimSpace(result)
 	if out == "" {
 		out = "No output."
@@ -288,6 +291,9 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 	stats := []string{fmt.Sprintf("Tool uses: %d", uses)}
 	if t := formatTokens(tokens); t != "" {
 		stats = append(stats, t)
+	}
+	if c := a.ui.costText(r.ID); c != "" {
+		stats = append(stats, "Cost: "+c)
 	}
 	stats = append(stats, "Duration: "+duration)
 	out := fmt.Sprintf("Agent: %s\nType: %s | Status: %s%s | %s\nDescription: %s\n\n", r.ID, displayName(a, r.Type), status, statusNote(status), strings.Join(stats, " | "), r.Description)
@@ -341,6 +347,9 @@ func (a *app) steerTool(ctx sdk.Context, p map[string]any) (any, error) {
 	var state []string
 	if t := formatTokens(tokens); t != "" {
 		state = append(state, t)
+	}
+	if c := a.ui.costText(r.ID); c != "" {
+		state = append(state, c)
 	}
 	use := "uses"
 	if uses == 1 {

@@ -20,12 +20,20 @@ type uiAgent struct {
 	act         agentActivity
 	percent     *float64 // the child's context-window utilization, nil when unknown
 	messages    []map[string]any
+	// ids and snaps are parallel to messages: a stable id per message, and the deep copy handed to readers (nil while
+	// the message has changed since the last copy was taken).
+	ids         []int
+	snaps       []map[string]any
+	nextMsgID   int
 	open        bool // the last message is still streaming
 	nextSub     int
 	turns       int
 	subs        map[int]func()
-	// onChange runs (outside the lock) after any change, for the hub to repaint.
+	settled bool // the agent has finished: it no longer has live activity
+	// onChange runs (outside the lock) after any change.
 	onChange func()
+	// onFirstEvent runs once, when the child's first event arrives (the session exists).
+	onFirstEvent func()
 }
 
 func newUIAgent(inv *invocation, maxTurns *int) *uiAgent {
@@ -39,12 +47,67 @@ func (u *uiAgent) GetSessionStats() (sessionStats, error) {
 	return sessionStats{ContextPercent: u.percent}, nil
 }
 
-// uiAgent is the viewer's session.
+// viewerIDKey is the reserved key of a message copy that carries the message's stable id, so the viewer's Markdown
+// cache survives the copy being replaced as the message streams.
+const viewerIDKey = "\x00id"
+
+// Messages is the viewer's transcript: deep copies, because the child's reader goroutine keeps mutating the live
+// maps under u.mu while the viewer reads on another goroutine (a concurrent map read and write is a fatal error, not a
+// panic). A copy is reused until its message changes, and the viewer must not modify it.
 func (u *uiAgent) Messages() []map[string]any {
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	return append([]map[string]any(nil), u.messages...)
+	out := make([]map[string]any, len(u.messages))
+	for i, m := range u.messages {
+		if u.snaps[i] == nil {
+			c := cloneMap(m)
+			c[viewerIDKey] = u.ids[i]
+			u.snaps[i] = c
+		}
+		out[i] = u.snaps[i]
+	}
+	return out
 }
+
+// cloneValue copies the maps and slices of a decoded JSON value (strings and numbers are immutable).
+func cloneValue(v any) any {
+	switch x := v.(type) {
+	case map[string]any:
+		return cloneMap(x)
+	case []any:
+		out := make([]any, len(x))
+		for i, e := range x {
+			out[i] = cloneValue(e)
+		}
+		return out
+	case []map[string]any:
+		out := make([]map[string]any, len(x))
+		for i, e := range x {
+			out[i] = cloneMap(e)
+		}
+		return out
+	}
+	return v
+}
+
+func cloneMap(m map[string]any) map[string]any {
+	out := make(map[string]any, len(m)+1)
+	for k, v := range m {
+		out[k] = cloneValue(v)
+	}
+	return out
+}
+
+// appendMessageLocked adds a live message.
+func (u *uiAgent) appendMessageLocked(m map[string]any) {
+	u.messages = append(u.messages, m)
+	u.ids = append(u.ids, u.nextMsgID)
+	u.snaps = append(u.snaps, nil)
+	u.nextMsgID++
+}
+
+// changedLastLocked marks the last message's copy stale.
+func (u *uiAgent) changedLastLocked() { u.snaps[len(u.snaps)-1] = nil }
 
 func (u *uiAgent) Subscribe(f func()) func() {
 	u.mu.Lock()
@@ -68,11 +131,25 @@ func (u *uiAgent) notify() {
 	onChange := u.onChange
 	u.mu.Unlock()
 	for _, f := range subs {
-		f()
+		safeCall("transcript subscriber", f)
 	}
 	if onChange != nil {
-		onChange()
+		safeCall("agent change", onChange)
 	}
+}
+
+func (u *uiAgent) isSettled() bool {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	return u.settled
+}
+
+// settle marks the agent finished: its activity is dropped from the live surfaces.
+func (u *uiAgent) settle() {
+	u.mu.Lock()
+	u.settled = true
+	u.act.ActiveTools = nil
+	u.mu.Unlock()
 }
 
 // snapshotActivity is a copy of the activity (the renderers read it while events keep arriving).
@@ -94,7 +171,7 @@ func (u *uiAgent) observe(ev map[string]any, query func(cmd string) (map[string]
 	}
 	u.mu.Unlock()
 	if first && query != nil {
-		go u.refreshModel(query)
+		safeGo("model refresh", func() { u.refreshModel(query) })
 	}
 	switch ev["type"] {
 	case "message_start":
@@ -125,7 +202,7 @@ func (u *uiAgent) observe(ev map[string]any, query func(cmd string) (map[string]
 		u.act.TurnCount = max(1, u.turns)
 		u.mu.Unlock()
 		if query != nil {
-			go u.refreshStats(query)
+			safeGo("stats refresh", func() { u.refreshStats(query) })
 		}
 	case "compaction_end":
 		if r, _ := ev["result"].(map[string]any); r != nil {
@@ -137,6 +214,9 @@ func (u *uiAgent) observe(ev map[string]any, query func(cmd string) (map[string]
 		}
 	}
 	u.notify()
+	if first && u.onFirstEvent != nil {
+		safeCall("first agent event", u.onFirstEvent)
+	}
 }
 
 // refreshModel reads the model and thinking level the child resolved and writes them over the pre-session snapshot
@@ -188,8 +268,8 @@ func (u *uiAgent) refreshStats(query func(cmd string) (map[string]any, error)) {
 	u.mu.Unlock()
 }
 
-// onMessage records a message_start/message_end. The message map is updated in place so the viewer's per-message
-// Markdown cache (keyed by identity) keeps its component while the text streams.
+// onMessage records a message_start/message_end. The message map is updated in place and keeps its id, so the viewer's
+// per-message Markdown cache keeps its component while the text streams.
 func (u *uiAgent) onMessage(ev map[string]any, end bool) {
 	msg, _ := ev["message"].(map[string]any)
 	if msg == nil {
@@ -203,12 +283,13 @@ func (u *uiAgent) onMessage(ev map[string]any, end bool) {
 		for k, v := range msg {
 			cur[k] = v
 		}
+		u.changedLastLocked()
 	} else {
 		cur = map[string]any{}
 		for k, v := range msg {
 			cur[k] = v
 		}
-		u.messages = append(u.messages, cur)
+		u.appendMessageLocked(cur)
 	}
 	u.open = !end
 	if !end {
@@ -239,9 +320,10 @@ func (u *uiAgent) onUpdate(ev map[string]any) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	if !u.open || len(u.messages) == 0 {
-		u.messages = append(u.messages, map[string]any{"role": "assistant", "content": []any{}})
+		u.appendMessageLocked(map[string]any{"role": "assistant", "content": []any{}})
 		u.open = true
 	}
+	u.changedLastLocked()
 	cur := u.messages[len(u.messages)-1]
 	content, _ := cur["content"].([]any)
 	idx := asInt(e["contentIndex"])

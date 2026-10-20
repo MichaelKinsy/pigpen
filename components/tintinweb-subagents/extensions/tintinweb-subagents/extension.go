@@ -9,6 +9,7 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/components/pitui/jsstring"
 )
 
 const (
@@ -36,6 +37,12 @@ func newApp(e *sdk.Extension, start childStarter) *app {
 	a := &app{e: e, timers: map[string]*time.Timer{}}
 	a.mgr = newManager(start, a.onSettle)
 	a.ui = newUIHub(a)
+	notice := func(message string) {
+		if ctx, ok := a.context(); ok {
+			guard(func() { ctx.Notify(message, "error") })
+		}
+	}
+	panicNotice.Store(&notice)
 	return a
 }
 
@@ -105,38 +112,42 @@ func Extension() *sdk.Extension {
 		return e
 	}
 	a := newApp(e, startRPCChild)
-	a.register(e)
+	safeCall("registering the extension", func() { a.register(e) })
 	return e
 }
 
 func (a *app) register(e *sdk.Extension) {
 	a.registerRPC(e.Events())
-	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
+	e.OnEvent(sdk.EventSessionStart, protect("session_start", func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
 		a.refuseSettings(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
 		return nil, nil
-	})
-	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
-	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
+	}))
+	e.OnEvent(sdk.EventBeforeAgentStart, protect("before_agent_start", func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil }))
+	e.OnEvent(sdk.EventToolExecutionStart, protect("tool_execution_start", func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.touch(ctx)
 		a.ui.onTurnStart()
 		return nil, nil
-	})
-	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
+	}))
+	e.OnSessionShutdown(protect("session_shutdown", func(ctx sdk.Context, _ map[string]any) (any, error) {
+		// Pending completion nudges die with the session (upstream clears pendingNudges), then the agents and the list.
+		a.stopNudges()
 		a.mgr.abortAll()
 		a.ui.dispose()
 		return nil, nil
-	})
+	}))
 	a.registerTools(e)
 	a.registerRenderers(e)
-	e.Command("agents", "List the agent types and the running agents", a.agentsCommand)
+	e.Command("agents", "List the agent types and the running agents", protectCommand("/agents", a.agentsCommand))
 }
 
 // onSettle announces a finished agent on the bus and, for a background one, to the model. upstream: index.ts:560-600.
 func (a *app) onSettle(r *agentRecord) {
+	// The surfaces learn of the end whether or not a context exists to announce it on.
+	safeCall("settle surfaces", func() { a.ui.onSettle(r) })
 	ctx, ok := a.context()
 	if !ok {
 		return
@@ -154,7 +165,6 @@ func (a *app) onSettle(r *agentRecord) {
 		}
 	}
 	_ = ctx.Events().Emit(channel, data)
-	a.ui.onSettle(r)
 	if !r.Background {
 		return
 	}
@@ -166,7 +176,7 @@ func (a *app) onSettle(r *agentRecord) {
 			return
 		}
 		turn := true
-		_ = ctx.SendCustomMessage(sdk.CustomMessage{CustomType: "subagent-notification", Content: formatTaskNotification(r, 500), Display: true, Details: a.ui.notificationDetails(r, 500)},
+		_ = ctx.SendCustomMessage(sdk.CustomMessage{CustomType: "subagent-notification", Content: formatTaskNotification(r, 500, a.ui.getShowCost(), a.ui.usageOfAgent(r.ID)), Display: true, Details: a.ui.notificationDetails(r, 500)},
 			sdk.SendMessageOptions{DeliverAs: "followUp", TriggerTurn: &turn})
 	})
 }
@@ -177,12 +187,22 @@ func (a *app) scheduleNudge(key string, send func()) {
 	if t := a.timers[key]; t != nil {
 		t.Stop()
 	}
-	a.timers[key] = time.AfterFunc(nudgeHold, func() {
+	a.timers[key] = afterFunc(nudgeHold, "completion notice", func() {
 		a.mu.Lock()
 		delete(a.timers, key)
 		a.mu.Unlock()
 		send()
 	})
+}
+
+// stopNudges cancels every held completion notice. upstream: the session_shutdown clearTimeout of pendingNudges.
+func (a *app) stopNudges() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for key, t := range a.timers {
+		t.Stop()
+		delete(a.timers, key)
+	}
 }
 
 // escapeXML escapes &, < and >, as the original does. upstream: src/xml.ts.
@@ -251,7 +271,7 @@ func partialOutputSuffix(result string) string {
 }
 
 // formatTaskNotification is the completion notice the model receives. upstream: index.ts formatTaskNotification.
-func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
+func formatTaskNotification(r *agentRecord, resultMaxLen int, showCost bool, usage lifetimeUsage) string {
 	preview := "No output."
 	if r.Result != "" {
 		preview = r.Result
@@ -260,6 +280,14 @@ func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
 		}
 	}
 	dur := r.CompletedAt.Sub(r.StartedAt).Milliseconds()
+	// Only under showCost: this is LLM context, and a figure the orchestrator did not ask for is a figure it may start
+	// reporting unprompted.
+	costXML := ""
+	if showCost {
+		if cost := getLifetimeCost(usage); cost > 0 {
+			costXML = "<estimated_cost_usd>" + jsstring.ToFixed(cost, 4) + "</estimated_cost_usd>"
+		}
+	}
 	lines := []string{"<task-notification>", "<task-id>" + r.ID + "</task-id>"}
 	if r.ToolCallID != "" {
 		lines = append(lines, "<tool-use-id>"+escapeXML(r.ToolCallID)+"</tool-use-id>")
@@ -268,7 +296,7 @@ func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
 		"<status>"+escapeXML(statusLabel(r))+"</status>",
 		fmt.Sprintf("<summary>Agent \"%s\" %s%s</summary>", escapeXML(r.Description), r.Status, statusNote(r.Status)),
 		"<result>"+escapeXML(preview)+"</result>",
-		fmt.Sprintf("<usage><total_tokens>%d</total_tokens><tool_uses>%d</tool_uses><duration_ms>%d</duration_ms></usage>", r.Tokens, r.ToolUses, dur),
+		fmt.Sprintf("<usage><total_tokens>%d</total_tokens><tool_uses>%d</tool_uses>%s<duration_ms>%d</duration_ms></usage>", r.Tokens, r.ToolUses, costXML, dur),
 		"</task-notification>",
 	), "\n")
 }

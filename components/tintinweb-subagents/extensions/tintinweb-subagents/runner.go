@@ -211,7 +211,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		for {
 			select {
 			case cmd := <-c.limits:
-				_, _ = c.call(cmd)
+				safeCall("child turn-limit command", func() { _, _ = c.call(cmd) })
 			case <-c.exited:
 				return
 			}
@@ -225,7 +225,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 			if json.Unmarshal(sc.Bytes(), &m) != nil {
 				continue
 			}
-			c.handle(m)
+			safeCall("child event", func() { c.handle(m) })
 		}
 		err := cmd.Wait()
 		close(c.exited)
@@ -255,7 +255,8 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 
 func (c *rpcChild) handle(m map[string]any) {
 	if c.observer != nil {
-		c.observer.observe(m, c.query)
+		// A bug in the surfaces must not stop the protocol: the settle below still has to be seen.
+		safeCall("agent observer", func() { c.observer.observe(m, c.query) })
 	}
 	switch m["type"] {
 	case "response":

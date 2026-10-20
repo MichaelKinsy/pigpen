@@ -38,8 +38,8 @@ type viewerHost interface {
 	RequestRender()
 }
 
-// viewerSession is a session's transcript: the messages (each a map the session updates in place as it streams) and
-// a change subscription. upstream: AgentSession.messages and AgentSession.subscribe.
+// viewerSession is a session's transcript: the messages (each a map the viewer only reads; the session either updates
+// it in place or hands out a fresh copy, with viewerIDKey, per change) and a change subscription. upstream: AgentSession.messages and AgentSession.subscribe.
 type viewerSession interface {
 	Messages() []map[string]any
 	Subscribe(onChange func()) (unsubscribe func())
@@ -97,7 +97,7 @@ type conversationViewer struct {
 	// stopArmed is the two-press confirm guard for the stop key, so a stray key cannot kill the agent.
 	stopArmed bool
 	// composer is the steering composer, present while the user is typing a message to the agent.
-	composer *inputLine
+	composer *steerInput
 	// after are handlers to run once the lock is released.
 	after []func()
 	// markdownTheme is resolved once; markdownModeOverride is set by the `m` key and wins over the setting.
@@ -105,7 +105,7 @@ type conversationViewer struct {
 	markdownModeOverride viewerMarkdownMode
 	// markdownCache holds one Markdown per message, so its own text/width cache does the work: a fresh instance per
 	// render would re-parse the whole transcript on every keystroke.
-	markdownCache map[uintptr]*markdownEntry
+	markdownCache map[any]*markdownEntry
 
 	// wrap and newMarkdown are the leaf renderers (a test counts or breaks them).
 	wrap        func(text string, width int) []string
@@ -119,7 +119,7 @@ func newConversationViewer(host viewerHost, session viewerSession, record func()
 	v := &conversationViewer{
 		host: host, session: session, record: record, activity: activity, theme: th, done: done, opts: opts,
 		keys: createViewerKeys(opts.Keybindings), autoScroll: true, markdownTheme: fallbackMarkdownTheme(th),
-		markdownCache: map[uintptr]*markdownEntry{},
+		markdownCache: map[any]*markdownEntry{},
 		wrap:          widthx.WrapTextWithAnsi,
 		newMarkdown: func(text string, theme *tui.MarkdownTheme, style *tui.DefaultTextStyle) markdownComponent {
 			return tui.NewMarkdownWithOptions(text, 0, 0, theme, style, &tui.MarkdownOptions{PreserveOrderedListMarkers: true, PreserveBackslashEscapes: true})
@@ -194,11 +194,14 @@ func truncationNote(elided int) string {
 // ---- input ----
 
 func (v *conversationViewer) HandleInput(data string) {
-	v.mu.Lock()
-	render := v.handleInputLocked(data)
-	after := v.after
-	v.after = nil
-	v.mu.Unlock()
+	var render bool
+	var after []func()
+	func() {
+		v.mu.Lock()
+		defer v.mu.Unlock() // a panic below must not leave the viewer locked
+		render = v.handleInputLocked(data)
+		after, v.after = v.after, nil
+	}()
 	// The stop and steer handlers run outside the lock: they call into the manager.
 	for _, f := range after {
 		f()
@@ -212,7 +215,8 @@ func (v *conversationViewer) HandleInput(data string) {
 func (v *conversationViewer) handleInputLocked(data string) bool {
 	// While composing a steer message, the input owns all keys (Enter sends, Esc cancels).
 	if v.composer != nil {
-		return v.composer.handleInput(data)
+		v.composer.handleInput(data)
+		return true
 	}
 	if tui.MatchesKey(data, "escape") || tui.MatchesKey(data, "ctrl+c") || tui.MatchesKey(data, "q") {
 		v.closed = true
@@ -245,8 +249,9 @@ func (v *conversationViewer) handleInputLocked(data string) bool {
 		v.stopArmed = false
 		next := markdownModes[(indexOfMode(v.markdownMode())+1)%len(markdownModes)]
 		v.markdownModeOverride = next
-		if v.opts.OnMarkdownMode != nil {
-			v.opts.OnMarkdownMode(next)
+		if f := v.opts.OnMarkdownMode; f != nil {
+			// Persisting writes a file: not under the lock, not on the key path's critical section.
+			v.after = append(v.after, func() { f(next) })
 		}
 		return true
 	}
@@ -312,7 +317,7 @@ func (v *conversationViewer) canSteer() bool { return v.opts.OnSteer != nil && v
 
 // openComposer opens the inline steering composer and routes subsequent input to it.
 func (v *conversationViewer) openComposer() {
-	in := &inputLine{}
+	in := newSteerInput()
 	in.onSubmit = func(value string) {
 		message := jsstring.Trim(value)
 		v.composer = nil
@@ -521,7 +526,14 @@ func (v *conversationViewer) rawLines(text string, width int, dim bool) []string
 	return out
 }
 
-func msgKey(m map[string]any) uintptr { return reflect.ValueOf(m).Pointer() }
+// msgKey identifies a message across renders: its stable id when the session provides one (a session that hands out
+// copies), else the identity of its map (a session that updates its messages in place).
+func msgKey(m map[string]any) any {
+	if id, ok := m[viewerIDKey]; ok {
+		return id
+	}
+	return reflect.ValueOf(m).Pointer()
+}
 
 // markdownLines renders text as Markdown, reusing this message's component instance.
 func (v *conversationViewer) markdownLines(msg map[string]any, text string, width int, dim bool) []string {
@@ -610,11 +622,11 @@ func (v *conversationViewer) buildContentLines(width int) []string {
 	if len(messages) == 0 {
 		return []string{th.Fg("dim", "(waiting for first message...)")}
 	}
-	trunc := func(s string) string { return widthx.TruncateToWidth(s, width, ellipsis, false) }
+	trunc := func(s string) string { return widthx.TruncateToWidth(s, width, "...", false) }
 
 	mode := v.markdownMode()
 	needsSeparator := false
-	seen := map[uintptr]bool{}
+	seen := map[any]bool{}
 	for _, msg := range messages {
 		seen[msgKey(msg)] = true
 		switch role := msgStr(msg["role"]); role {
@@ -714,79 +726,4 @@ func (v *conversationViewer) buildContentLines(width int) []string {
 		out[i] = trunc(l)
 	}
 	return out
-}
-
-// ---- the steering composer's input ----
-
-// inputLine is a single-line text input: the viewer's steering composer. upstream: pi-tui Input.
-type inputLine struct {
-	value    []rune
-	cursor   int
-	onSubmit func(value string)
-	onEscape func()
-}
-
-// handleInput handles one key and reports whether a redraw is wanted.
-func (in *inputLine) handleInput(data string) bool {
-	switch {
-	case tui.MatchesKey(data, "enter"):
-		if in.onSubmit != nil {
-			in.onSubmit(string(in.value))
-		}
-	case tui.MatchesKey(data, "escape"):
-		if in.onEscape != nil {
-			in.onEscape()
-		}
-	case tui.MatchesKey(data, "backspace"):
-		if in.cursor > 0 {
-			in.value = append(in.value[:in.cursor-1], in.value[in.cursor:]...)
-			in.cursor--
-		}
-	case tui.MatchesKey(data, "delete"):
-		if in.cursor < len(in.value) {
-			in.value = append(in.value[:in.cursor], in.value[in.cursor+1:]...)
-		}
-	case tui.MatchesKey(data, "left"):
-		in.cursor = maxInt(0, in.cursor-1)
-	case tui.MatchesKey(data, "right"):
-		in.cursor = min(len(in.value), in.cursor+1)
-	case tui.MatchesKey(data, "home"):
-		in.cursor = 0
-	case tui.MatchesKey(data, "end"):
-		in.cursor = len(in.value)
-	default:
-		// Printable text (a typed key or a pasted chunk); control sequences are ignored.
-		var typed []rune
-		for _, r := range data {
-			if r >= 0x20 && r != 0x7f {
-				typed = append(typed, r)
-			} else {
-				return true
-			}
-		}
-		if len(typed) > 0 {
-			in.value = append(in.value[:in.cursor], append(typed, in.value[in.cursor:]...)...)
-			in.cursor += len(typed)
-		}
-	}
-	return true
-}
-
-// render is the prompt, the text around the cursor (the cursor cell inverse) scrolled to keep the cursor visible.
-func (in *inputLine) render(width int) string {
-	const prompt = "> "
-	avail := maxInt(1, width-len(prompt)-1)
-	text := in.value
-	start := 0
-	if in.cursor >= avail {
-		start = in.cursor - avail + 1
-	}
-	end := min(len(text), start+avail)
-	before := string(text[start:in.cursor])
-	at, after := " ", ""
-	if in.cursor < len(text) {
-		at = string(text[in.cursor])
-		after = string(text[in.cursor+1 : end])
-	}
-	return widthx.TruncateToWidth(prompt+before+"\x1b[7m"+at+"\x1b[27m"+after, width, "", false)
 }
