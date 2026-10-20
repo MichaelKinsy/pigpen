@@ -432,13 +432,6 @@ func (d MissionDecision) toObject() *jsObject {
 	return o
 }
 
-func anyStrings(in []string) []any {
-	out := make([]any, len(in))
-	for i, s := range in {
-		out[i] = s
-	}
-	return out
-}
 
 func parseMissionWorkflowChild(v any, label string) (MissionWorkflowChild, error) {
 	var c MissionWorkflowChild

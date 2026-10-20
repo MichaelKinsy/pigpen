@@ -14,7 +14,7 @@ func goalMission(t *testing.T, f missionFixture, title, objective string) *Missi
 	return mkMission(t, f.loc, MissionCreateInput{Title: title, Objective: objective, Goal: true, Budget: &MissionTokenBudget{Tokens: 100}, Status: "active", OwnerSessionID: "session-1"})
 }
 
-func notices(t *testing.T, f missionFixture, children []GoalRetainedChild, turn int) []GoalContinuationNotice {
+func missionNotices(t *testing.T, f missionFixture, children []GoalRetainedChild, turn int) []GoalContinuationNotice {
 	t.Helper()
 	n, err := collectGoalContinuationNotices(f.loc, "session-1", children, turn, 0)
 	if err != nil {
@@ -23,7 +23,7 @@ func notices(t *testing.T, f missionFixture, children []GoalRetainedChild, turn 
 	return n
 }
 
-func contains(t *testing.T, text, want string) {
+func mustContain(t *testing.T, text, want string) {
 	t.Helper()
 	if !strings.Contains(text, want) {
 		t.Errorf("%q does not contain %q", text, want)
@@ -36,27 +36,27 @@ func TestMissionGoalDriverTwins(t *testing.T) {
 		mission := mkMission(t, f.loc, MissionCreateInput{Title: "Ship auth refresh", Objective: "Implement and validate token refresh", Goal: true, Budget: &MissionTokenBudget{Tokens: 100}, Status: "active", OwnerSessionID: "session-1"})
 		statePath, _ := missionStatePath(f.loc, mission.ID)
 		writeFile(t, statePath, `{"lanes":{"review":{"status":"ready","action":"Review the token refresh diff"}}}`)
-		first := notices(t, f, nil, 1)
+		first := missionNotices(t, f, nil, 1)
 		eq(t, len(first), 1, "first notice")
-		contains(t, first[0].Message, "Remaining budget: 100 tokens")
-		contains(t, first[0].Message, "Next ready action: Review the token refresh diff")
+		mustContain(t, first[0].Message, "Remaining budget: 100 tokens")
+		mustContain(t, first[0].Message, "Next ready action: Review the token refresh diff")
 
 		asyncDir := filepath.Join(f.root, "run-1")
 		os.Mkdir(asyncDir, 0o755)
 		writeFile(t, filepath.Join(asyncDir, "status.json"), `{"state":"running","totalTokens":{"input":10,"output":5,"total":15}}`)
 		updMission(t, f.loc, mission.ID, MissionUpdateInput{AddRuns: []MissionRunLink{{RunID: "workflow-1", Mode: "workflow", AsyncDir: asyncDir, Status: "running"}}})
-		eq(t, len(notices(t, f, nil, 2)), 0, "no notice while a run is active")
+		eq(t, len(missionNotices(t, f, nil, 2)), 0, "no notice while a run is active")
 
 		writeFile(t, filepath.Join(asyncDir, "status.json"), `{"state":"complete","totalTokens":{"input":25,"output":15,"total":40}}`)
-		resumed := notices(t, f, []GoalRetainedChild{{RunID: "child-review", ParentRunID: "workflow-1", Agent: "reviewer", Resumable: true}}, 3)
+		resumed := missionNotices(t, f, []GoalRetainedChild{{RunID: "child-review", ParentRunID: "workflow-1", Agent: "reviewer", Resumable: true}}, 3)
 		eq(t, len(resumed), 1, "resumed notice")
-		contains(t, resumed[0].Message, "Remaining budget: 60 tokens")
-		contains(t, resumed[0].Message, "Resume retained child child-review (reviewer)")
+		mustContain(t, resumed[0].Message, "Remaining budget: 60 tokens")
+		mustContain(t, resumed[0].Message, "Resume retained child child-review (reviewer)")
 		read, _ := readMission(f.loc, mission.ID)
 		eq(t, read.Usage.Tokens, int64(40), "usage")
 
 		writeFile(t, filepath.Join(asyncDir, "status.json"), `{"state":"complete","totalTokens":{"input":60,"output":40,"total":100}}`)
-		eq(t, len(notices(t, f, nil, 4)), 0, "budget spent")
+		eq(t, len(missionNotices(t, f, nil, 4)), 0, "budget spent")
 		read, _ = readMission(f.loc, mission.ID)
 		eq(t, read.Goal.Status, "budget-exhausted", "goal status")
 		eq(t, read.Status, "active", "mission status")
@@ -66,12 +66,12 @@ func TestMissionGoalDriverTwins(t *testing.T) {
 		f := newMissionFixture(t)
 		mission := goalMission(t, f, "Ship auth refresh", "Implement and validate token refresh")
 		updMission(t, f.loc, mission.ID, MissionUpdateInput{AddRuns: []MissionRunLink{{RunID: "workflow-old", Mode: "workflow", Status: "complete"}, {RunID: "workflow-new", Mode: "workflow", Status: "complete"}}})
-		n := notices(t, f, []GoalRetainedChild{
+		n := missionNotices(t, f, []GoalRetainedChild{
 			{RunID: "child-old", ParentRunID: "workflow-old", Agent: "reviewer", Resumable: true},
 			{RunID: "child-new", ParentRunID: "workflow-new", Agent: "reviewer", Resumable: true},
 		}, 1)
 		eq(t, len(n), 1, "one notice")
-		contains(t, n[0].Message, "Resume retained child child-new (reviewer)")
+		mustContain(t, n[0].Message, "Resume retained child child-new (reviewer)")
 		eq(t, strings.Contains(n[0].Message, "child-old"), false, "older child")
 	})
 
@@ -85,10 +85,10 @@ func TestMissionGoalDriverTwins(t *testing.T) {
 			retained = append(retained, GoalRetainedChild{RunID: "child-" + jsNumber(float64(index)), ParentRunID: "workflow-unrelated-" + jsNumber(float64(index)), Agent: "worker", Resumable: true})
 		}
 		retained = append(retained, GoalRetainedChild{RunID: "child-0", ParentRunID: "workflow-mission", Agent: "worker", Resumable: true})
-		n := notices(t, f, retained, 1)
+		n := missionNotices(t, f, retained, 1)
 		eq(t, len(retained), 11, "children")
 		eq(t, len(n), 1, "one notice")
-		contains(t, n[0].Message, "Resume retained child child-0 (worker)")
+		mustContain(t, n[0].Message, "Resume retained child child-0 (worker)")
 		eq(t, strings.Contains(n[0].Message, "child-10"), false, "unrelated child")
 	})
 
@@ -96,10 +96,10 @@ func TestMissionGoalDriverTwins(t *testing.T) {
 		f := newMissionFixture(t)
 		mission := goalMission(t, f, "Ship auth refresh", "Implement and validate token refresh")
 		updMission(t, f.loc, mission.ID, MissionUpdateInput{AddRuns: []MissionRunLink{{RunID: "workflow-stopped", Mode: "workflow", Status: "complete"}}})
-		n := notices(t, f, []GoalRetainedChild{{RunID: "child-stopped", ParentRunID: "workflow-stopped", Agent: "worker", Resumable: false}}, 1)
+		n := missionNotices(t, f, []GoalRetainedChild{{RunID: "child-stopped", ParentRunID: "workflow-stopped", Agent: "worker", Resumable: false}}, 1)
 		eq(t, len(n), 1, "one notice")
 		eq(t, strings.Contains(n[0].Message, "Resume retained child"), false, "no resume")
-		contains(t, n[0].Message, "Next ready action: Continue objective: Implement and validate token refresh")
+		mustContain(t, n[0].Message, "Next ready action: Continue objective: Implement and validate token refresh")
 	})
 
 	tw(t, missionGoalFile, "supports pause, resume, and opt-out through mission.update", func(t *testing.T) {
@@ -111,7 +111,7 @@ func TestMissionGoalDriverTwins(t *testing.T) {
 			return detailMission(runAction(t, "mission.update", jo("missionId", missionID, "missionUpdate", jo("goal", goal)), ctx))
 		}
 		eq(t, update(jo("paused", true)).Goal.Status, "paused", "paused")
-		eq(t, len(notices(t, f, nil, 1)), 0, "no notice while paused")
+		eq(t, len(missionNotices(t, f, nil, 1)), 0, "no notice while paused")
 		eq(t, update(jo("paused", false)).Goal.Status, "active", "resumed")
 		eq(t, update(false).Goal == nil, true, "opted out")
 	})

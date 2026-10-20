@@ -49,7 +49,7 @@ func utimes(t *testing.T, p string, ms int64) {
 	}
 }
 
-func writeJSONFile(t *testing.T, p string, v any) {
+func writeJSONTest(t *testing.T, p string, v any) {
 	t.Helper()
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -73,7 +73,7 @@ func writeOldRun(t *testing.T, asyncDirRoot, runID string, overrides jm) string 
 		}
 	}
 	statusPath := filepath.Join(runDir, "status.json")
-	writeJSONFile(t, statusPath, status)
+	writeJSONTest(t, statusPath, status)
 	utimes(t, statusPath, oldRet)
 	utimes(t, runDir, oldRet)
 	return runDir
@@ -86,7 +86,7 @@ func writeOldResult(t *testing.T, resultsDir, runID string, overrides jm) string
 	for k, v := range overrides {
 		data[k] = v
 	}
-	writeJSONFile(t, p, data)
+	writeJSONTest(t, p, data)
 	utimes(t, p, oldRet)
 	return p
 }
@@ -102,7 +102,7 @@ func writeTestTombstoneMarker(t *testing.T, r retRoots, runID, tombstone string)
 		t.Fatal(err)
 	}
 	p := filepath.Join(dir, encodeIndexSegment(runID)+".json")
-	writeJSONFile(t, p, jm{"version": 1, "runId": runID, "tombstonePath": tombstone, "createdAt": oldRet})
+	writeJSONTest(t, p, jm{"version": 1, "runId": runID, "tombstonePath": tombstone, "createdAt": oldRet})
 	return p
 }
 
@@ -196,12 +196,12 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		topLevelRoute := writeOldRun(t, r.asyncDirRoot, "top-level-route", jm{"isNested": false})
 		nonResumable := writeOldRun(t, r.asyncDirRoot, "missing-session", nil)
 		descriptorPath := filepath.Join(nonResumable, "recovery-descriptor.json")
-		writeJSONFile(t, descriptorPath, jm{"sourceRunId": "missing-session", "sessionFile": filepath.Join(r.root, "missing.jsonl")})
+		writeJSONTest(t, descriptorPath, jm{"sourceRunId": "missing-session", "sessionFile": filepath.Join(r.root, "missing.jsonl")})
 		utimes(t, descriptorPath, oldRet)
 		utimes(t, nonResumable, oldRet)
 		resolvedHandoff := writeOldRun(t, r.asyncDirRoot, "resolved-handoff", nil)
 		handoffPath := filepath.Join(resolvedHandoff, "handoff.json")
-		writeJSONFile(t, handoffPath, jm{"version": 1, "groups": []any{jm{"cleanup": jm{"state": "complete"}}}})
+		writeJSONTest(t, handoffPath, jm{"version": 1, "groups": []any{jm{"cleanup": jm{"state": "complete"}}}})
 		utimes(t, handoffPath, oldRet)
 		utimes(t, resolvedHandoff, oldRet)
 		resultPath := writeOldResult(t, r.resultsDir, "orphan-result", nil)
@@ -251,7 +251,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		resumable := writeOldRun(t, r.asyncDirRoot, "resumable", nil)
 		sessionFile := filepath.Join(r.root, "resumable.jsonl")
 		writeFile(t, sessionFile, "{}\n")
-		writeJSONFile(t, filepath.Join(resumable, "recovery-descriptor.json"), jm{"sourceRunId": "resumable", "sessionFile": sessionFile})
+		writeJSONTest(t, filepath.Join(resumable, "recovery-descriptor.json"), jm{"sourceRunId": "resumable", "sessionFile": sessionFile})
 		statusSession := filepath.Join(r.root, "status-session.jsonl")
 		writeFile(t, statusSession, "{}\n")
 		writeOldRun(t, r.asyncDirRoot, "status-session", jm{"sessionFile": statusSession})
@@ -273,7 +273,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		writeOldRun(t, r.asyncDirRoot, "nested", jm{"isNested": true})
 		writeOldRun(t, r.asyncDirRoot, "handoff", jm{"parallelHandoff": jm{"path": "/tmp/handoff.json"}})
 		writeOldRun(t, r.asyncDirRoot, "waited", nil)
-		writeJSONFile(t, filepath.Join(r.waitsDir, "wait.json"), jm{"runId": "waited", "expiresAt": nowRet + dayMs})
+		writeJSONTest(t, filepath.Join(r.waitsDir, "wait.json"), jm{"runId": "waited", "expiresAt": nowRet + dayMs})
 		writeOldRun(t, r.asyncDirRoot, "runtime", nil)
 
 		o := retOptions(r)
@@ -300,7 +300,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		eq(t, locked.Skipped["lock-busy"], 1, "lock-busy")
 		_ = os.RemoveAll(lock)
 		_ = os.Mkdir(lock, 0o755)
-		writeJSONFile(t, filepath.Join(lock, "owner.json"), jm{"pid": os.Getpid(), "startedAt": nowRet - 6*60*1000})
+		writeJSONTest(t, filepath.Join(lock, "owner.json"), jm{"pid": os.Getpid(), "startedAt": nowRet - 6*60*1000})
 		live := mustCleanup(t, retOptions(r))
 		eq(t, live.Acquired, false, "live lock acquired")
 		eq(t, live.Skipped["lock-busy"], 1, "live lock-busy")
@@ -311,11 +311,11 @@ func TestAsyncRetentionTwins(t *testing.T) {
 			o.GetProcessStartIdentity = func(int) string { return "current-process" }
 			return o
 		}
-		writeJSONFile(t, filepath.Join(lock, "owner.json"), jm{"version": 1, "token": "old-token", "pid": os.Getpid(), "hostname": "test-host", "processStartIdentity": "old-process", "startedAt": nowRet - 60_000})
+		writeJSONTest(t, filepath.Join(lock, "owner.json"), jm{"version": 1, "token": "old-token", "pid": os.Getpid(), "hostname": "test-host", "processStartIdentity": "old-process", "startedAt": nowRet - 60_000})
 		reused := mustCleanup(t, host(retOptions(r)))
 		eq(t, reused.Acquired, true, "reused pid lock acquired")
 		_ = os.Mkdir(lock, 0o755)
-		writeJSONFile(t, filepath.Join(lock, "owner.json"), jm{"version": 1, "token": "other-token", "pid": os.Getpid(), "hostname": "test-host", "processStartIdentity": "current-process", "startedAt": nowRet - 60_000})
+		writeJSONTest(t, filepath.Join(lock, "owner.json"), jm{"version": 1, "token": "other-token", "pid": os.Getpid(), "hostname": "test-host", "processStartIdentity": "current-process", "startedAt": nowRet - 60_000})
 		prot := mustCleanup(t, host(retOptions(r)))
 		eq(t, prot.Acquired, false, "protected lock acquired")
 		owner := readLooseJSON(filepath.Join(lock, "owner.json"))
@@ -326,7 +326,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		before, _ := os.ReadFile(cursorPath)
 		o := host(retOptions(r))
 		o.RandomID = func() string { return "owned-token" }
-		o.ProtectedRunIDs = func() []string { writeJSONFile(t, filepath.Join(lock, "owner.json"), replacement); return nil }
+		o.ProtectedRunIDs = func() []string { writeJSONTest(t, filepath.Join(lock, "owner.json"), replacement); return nil }
 		changed := mustCleanup(t, o)
 		eq(t, changed.Acquired, true, "changed owner acquired")
 		eq(t, changed.Skipped["lock-owner-changed"], 1, "lock-owner-changed")
@@ -335,7 +335,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		eq(t, readLooseJSON(filepath.Join(lock, "owner.json"))["token"], "successor-token", "successor owner")
 		_ = os.RemoveAll(lock)
 		_ = os.Mkdir(lock, 0o755)
-		writeJSONFile(t, filepath.Join(lock, "owner.json"), jm{"startedAt": nowRet - 25*60*60*1000})
+		writeJSONTest(t, filepath.Join(lock, "owner.json"), jm{"startedAt": nowRet - 25*60*60*1000})
 		utimes(t, lock, nowRet-25*60*60*1000)
 		stale := mustCleanup(t, retOptions(r))
 		eq(t, stale.Acquired, true, "stale lock acquired")
@@ -365,7 +365,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		ownerPath := filepath.Join(lock, "owner.json")
 		replacement := jm{"version": 1, "token": "replacement-token", "pid": reusedPid, "hostname": "test-host", "processStartIdentity": "replacement-process", "startedAt": nowRet}
 		_ = os.Mkdir(lock, 0o755)
-		writeJSONFile(t, ownerPath, jm{"version": 1, "token": "old-token", "pid": reusedPid, "hostname": "test-host", "processStartIdentity": "old-process", "startedAt": nowRet})
+		writeJSONTest(t, ownerPath, jm{"version": 1, "token": "old-token", "pid": reusedPid, "hostname": "test-host", "processStartIdentity": "old-process", "startedAt": nowRet})
 		currentIdentity := "old-process"
 		o := retOptions(r)
 		o.Hostname, o.ProcessStartIdentity = "test-host", "cleaner-process"
@@ -379,7 +379,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		first := mustCleanup(t, o)
 		eq(t, first.Acquired, false, "first acquired")
 		eq(t, first.Skipped["lock-busy"], 1, "first lock-busy")
-		writeJSONFile(t, ownerPath, replacement)
+		writeJSONTest(t, ownerPath, replacement)
 		currentIdentity = "replacement-process"
 		second := mustCleanup(t, o)
 		eq(t, second.Acquired, false, "second acquired")
@@ -422,14 +422,14 @@ func TestAsyncRetentionTwins(t *testing.T) {
 			for i := 0; i < 13; i++ {
 				runID := fmt.Sprintf("recent-%d-%d", s, i)
 				file := filepath.Join(dir, runID+".json")
-				writeJSONFile(t, file, jm{"runId": runID, "sessionId": sessionID, "success": true, "state": "complete", "endedAt": nowRet - dayMs})
+				writeJSONTest(t, file, jm{"runId": runID, "sessionId": sessionID, "success": true, "state": "complete", "endedAt": nowRet - dayMs})
 				utimes(t, file, nowRet-dayMs)
 			}
 		}
 		replayDir := filepath.Join(r.resultsDir, "completion-replay")
 		_ = os.MkdirAll(replayDir, 0o755)
 		replay := filepath.Join(replayDir, "stale-replay.json")
-		writeJSONFile(t, replay, jm{"version": 1, "runId": "stale-replay", "createdAt": oldRet, "expiresAt": oldRet, "completion": jm{"runId": "stale-replay", "mode": "single"}})
+		writeJSONTest(t, replay, jm{"version": 1, "runId": "stale-replay", "createdAt": oldRet, "expiresAt": oldRet, "completion": jm{"runId": "stale-replay", "mode": "single"}})
 		utimes(t, replay, oldRet)
 		res := mustCleanup(t, retOptions(r))
 		eq(t, exists(replay), false, "stale replay")
@@ -478,7 +478,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 	tw(t, f, "wraps a cursor and makes progress when no usable entries are after it", func(t *testing.T) {
 		r := makeRetRoots(t)
 		runDir := writeOldRun(t, r.asyncDirRoot, "cursor-wrap", nil)
-		writeJSONFile(t, filepath.Join(r.root, ".async-retention-cursor.json"), jm{"version": 1, "runAfter": "zzzz"})
+		writeJSONTest(t, filepath.Join(r.root, ".async-retention-cursor.json"), jm{"version": 1, "runAfter": "zzzz"})
 		one := 1
 		o := retOptions(r)
 		o.BatchSize = &one
@@ -515,7 +515,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		dir := filepath.Join(r.resultsDir, "result-pending", sessionID)
 		_ = os.MkdirAll(dir, 0o755)
 		file := filepath.Join(dir, runID+".json")
-		writeJSONFile(t, file, jm{"runId": runID, "sessionId": sessionID, "success": true, "state": "complete", "endedAt": endedAt})
+		writeJSONTest(t, file, jm{"runId": runID, "sessionId": sessionID, "success": true, "state": "complete", "endedAt": endedAt})
 		utimes(t, file, endedAt)
 		return file
 	}
@@ -560,9 +560,9 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		live := filepath.Join(r.resultsDir, "result-pending", "live-session")
 		_ = os.MkdirAll(live, 0o755)
 		file := filepath.Join(live, "zz-live.json")
-		writeJSONFile(t, file, jm{"runId": "zz-live", "sessionId": "live-session", "success": true, "state": "complete", "endedAt": nowRet - dayMs})
+		writeJSONTest(t, file, jm{"runId": "zz-live", "sessionId": "live-session", "success": true, "state": "complete", "endedAt": nowRet - dayMs})
 		utimes(t, file, nowRet-dayMs)
-		writeJSONFile(t, filepath.Join(r.root, ".async-retention-cursor.json"), jm{"version": 1, "resultPendingAfterBySession": jm{
+		writeJSONTest(t, filepath.Join(r.root, ".async-retention-cursor.json"), jm{"version": 1, "resultPendingAfterBySession": jm{
 			"live-session": "result-pending/live-session/live.json", "removed-session": "result-pending/removed-session/stale.json"}})
 		mustCleanup(t, retOptions(r))
 		cursor := readLooseJSON(filepath.Join(r.root, ".async-retention-cursor.json"))
@@ -576,7 +576,7 @@ func TestAsyncRetentionTwins(t *testing.T) {
 	tw(t, f, "keeps orphan results with recoverability or durable references", func(t *testing.T) {
 		r := makeRetRoots(t)
 		writeOldResult(t, r.resultsDir, "waited-result", nil)
-		writeJSONFile(t, filepath.Join(r.waitsDir, "wait.json"), jm{"runId": "waited-result", "expiresAt": nowRet + dayMs})
+		writeJSONTest(t, filepath.Join(r.waitsDir, "wait.json"), jm{"runId": "waited-result", "expiresAt": nowRet + dayMs})
 		writeOldResult(t, r.resultsDir, "workflow-result", jm{"mode": "workflow"})
 		sessionFile := filepath.Join(r.root, "result-session.jsonl")
 		writeFile(t, sessionFile, "{}\n")
@@ -601,8 +601,8 @@ func TestAsyncRetentionTwins(t *testing.T) {
 		_ = os.MkdirAll(replayDir, 0o755)
 		_ = os.MkdirAll(archiveDir, 0o755)
 		replay, archive := filepath.Join(replayDir, "workflow-replay.json"), filepath.Join(archiveDir, "workflow-replay.json")
-		writeJSONFile(t, replay, jm{"version": 1, "runId": "workflow-replay", "createdAt": oldRet, "expiresAt": oldRet, "completion": jm{"runId": "workflow-replay", "mode": "workflow"}})
-		writeJSONFile(t, archive, jm{"version": 1, "runId": "workflow-replay", "createdAt": oldRet, "entries": []any{}})
+		writeJSONTest(t, replay, jm{"version": 1, "runId": "workflow-replay", "createdAt": oldRet, "expiresAt": oldRet, "completion": jm{"runId": "workflow-replay", "mode": "workflow"}})
+		writeJSONTest(t, archive, jm{"version": 1, "runId": "workflow-replay", "createdAt": oldRet, "entries": []any{}})
 		utimes(t, replay, oldRet)
 		utimes(t, archive, oldRet)
 		o := retOptions(r)

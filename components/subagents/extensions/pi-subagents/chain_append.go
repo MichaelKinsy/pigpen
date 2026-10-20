@@ -301,7 +301,7 @@ func truncateDisplay(value string, maxLength int) string {
 }
 
 func previewDisplay(value string, maxLength int) string {
-	n := wfSanitizeDisplayText(value)
+	n := sanitizeDisplayText(value)
 	if jsLength(n) <= maxLength {
 		return n
 	}

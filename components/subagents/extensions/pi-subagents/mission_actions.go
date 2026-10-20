@@ -39,19 +39,6 @@ type MissionActionResult struct {
 	Details map[string]any
 }
 
-func truthy(v any) bool {
-	switch x := v.(type) {
-	case nil:
-		return false
-	case bool:
-		return x
-	case string:
-		return x != ""
-	case float64:
-		return x != 0
-	}
-	return true
-}
 
 func validateMissionStatus(v any, label string) (string, error) { return missionStatusOf(v, label) }
 

@@ -111,131 +111,6 @@ type projectionContext struct {
 
 // ── display-text.ts ──
 
-func u16CodePointAt(u []uint16, i int) (cp rune, width int) {
-	c := rune(u[i])
-	if c >= 0xd800 && c <= 0xdbff && i+1 < len(u) {
-		if d := rune(u[i+1]); d >= 0xdc00 && d <= 0xdfff {
-			return 0x10000 + (c-0xd800)<<10 + (d - 0xdc00), 2
-		}
-	}
-	return c, 1
-}
-
-func displayIsWhitespaceOrControl(cp rune) bool {
-	if cp <= 0x20 || (cp >= 0x7f && cp <= 0x9f) {
-		return true
-	}
-	if cp >= 0xd800 && cp <= 0xdfff {
-		return true
-	}
-	return jsTrim(string(cp)) == ""
-}
-
-func consumeControlString(u []uint16, i int, osc bool) int {
-	for i < len(u) {
-		cp, w := u16CodePointAt(u, i)
-		if osc && cp == 0x07 {
-			return i + w
-		}
-		if cp == 0x9c {
-			return i + w
-		}
-		if cp == 0x1b && i+1 < len(u) && u[i+1] == 0x5c {
-			return i + 2
-		}
-		i += w
-	}
-	return len(u)
-}
-
-func consumeCsi(u []uint16, i int) int {
-	for i < len(u) {
-		cp, w := u16CodePointAt(u, i)
-		if cp >= 0x40 && cp <= 0x7e {
-			return i + w
-		}
-		i += w
-	}
-	return len(u)
-}
-
-// sanitizeDisplayText strips terminal escapes and folds whitespace and control characters into single spaces.
-func sanitizeDisplayText(u []uint16) string {
-	var out strings.Builder
-	pendingSpace := false
-	appendSpace := func() {
-		if out.Len() > 0 {
-			pendingSpace = true
-		}
-	}
-	for i := 0; i < len(u); {
-		cp, w := u16CodePointAt(u, i)
-		if cp == 0x1b {
-			var next uint16
-			if i+1 < len(u) {
-				next = u[i+1]
-			}
-			appendSpace()
-			switch {
-			case next == 0x5b:
-				i = consumeCsi(u, i+2)
-			case next == 0x5d || next == 0x50 || next == 0x58 || next == 0x5e || next == 0x5f:
-				i = consumeControlString(u, i+2, next == 0x5d)
-			case next != 0:
-				i += 2
-			default:
-				i++
-			}
-			continue
-		}
-		if cp == 0x9b {
-			appendSpace()
-			i = consumeCsi(u, i+w)
-			continue
-		}
-		if cp == 0x90 || cp == 0x98 || cp == 0x9d || cp == 0x9e || cp == 0x9f {
-			appendSpace()
-			i = consumeControlString(u, i+w, cp == 0x9d)
-			continue
-		}
-		if displayIsWhitespaceOrControl(cp) {
-			appendSpace()
-		} else {
-			if pendingSpace {
-				out.WriteByte(' ')
-			}
-			out.WriteRune(cp)
-			pendingSpace = false
-		}
-		i += w
-	}
-	return out.String()
-}
-
-// truncateDisplayText cuts value to at most maxLength UTF-16 units without splitting a character.
-func truncateDisplayText(value string, maxLength int) string {
-	if maxLength <= 0 {
-		return ""
-	}
-	if len(jsUTF16(value)) <= maxLength {
-		return value
-	}
-	n := 0
-	var out strings.Builder
-	for _, r := range value {
-		w := 1
-		if r > 0xffff {
-			w = 2
-		}
-		if n+w > maxLength {
-			break
-		}
-		out.WriteRune(r)
-		n += w
-	}
-	return out.String()
-}
-
 // ── host-step-status.ts ──
 
 const (
@@ -256,7 +131,7 @@ var hostStepFields = map[string]bool{"version": true, "kind": true, "monitorKind
 
 var freshnessFields = map[string]bool{"expectedRef": true, "observedRef": true, "stale": true}
 
-func isSafeInteger(v any) (int64, bool) {
+func safeIntegerOf(v any) (int64, bool) {
 	f, ok := v.(float64)
 	if !ok || f != math.Trunc(f) || math.Abs(f) > 9007199254740991 {
 		return 0, false
@@ -297,7 +172,7 @@ func assertTimestamp(m jm, key, source string, required bool) error {
 	if !has && !required {
 		return nil
 	}
-	if n, ok := isSafeInteger(v); !ok || n < 0 {
+	if n, ok := safeIntegerOf(v); !ok || n < 0 {
 		return fmt.Errorf("Invalid host step '%s': %s must be a non-negative safe integer.", source, key)
 	}
 	return nil
@@ -401,7 +276,7 @@ func assertHostStepNode(value any, source string) error {
 	}
 	if ec, has := m["exitCode"]; has {
 		if ec != nil {
-			if n, ok := isSafeInteger(ec); !ok || n < 0 {
+			if n, ok := safeIntegerOf(ec); !ok || n < 0 {
 				return fmt.Errorf("Invalid host step '%s': exitCode must be a non-negative safe integer or null.", source)
 			}
 		}
@@ -520,11 +395,10 @@ func publicText(value any, fallback string, maxLength int) string {
 	if !ok {
 		return fallback
 	}
-	u := jsUTF16(s)
-	if n := max(0, maxLength*4); len(u) > n {
-		u = u[:n]
+	if n := max(0, maxLength*4); jsLen(s) > n {
+		s = string(utf16Slice(s, n))
 	}
-	normalized := sanitizeDisplayText(u)
+	normalized := sanitizeDisplayText(s)
 	if normalized == "" {
 		normalized = fallback
 	}
@@ -536,11 +410,10 @@ func publicOptionalText(value any, maxLength int) string {
 	if !ok {
 		return ""
 	}
-	u := jsUTF16(s)
-	if n := max(0, maxLength*4); len(u) > n {
-		u = u[:n]
+	if n := max(0, maxLength*4); jsLen(s) > n {
+		s = string(utf16Slice(s, n))
 	}
-	normalized := sanitizeDisplayText(u)
+	normalized := sanitizeDisplayText(s)
 	if normalized == "" {
 		return ""
 	}
@@ -548,7 +421,7 @@ func publicOptionalText(value any, maxLength int) string {
 }
 
 func publicTime(v any) *int64 {
-	if n, ok := isSafeInteger(v); ok && n >= 0 {
+	if n, ok := safeIntegerOf(v); ok && n >= 0 {
 		return &n
 	}
 	return nil
@@ -624,20 +497,20 @@ func appendBoundedChildren(children []*SnapshotNode, source []*SnapshotNode, ctx
 	return children
 }
 
-func truthyString(v any) (string, bool) {
+func truthyText(v any) (string, bool) {
 	s, ok := v.(string)
 	return s, ok && s != ""
 }
 
 func stepIdentity(step jm, index int, ctx *projectionContext) (id, label string) {
 	idv := any(fmt.Sprintf("step:%d", index))
-	if s, ok := truthyString(step["workflowKey"]); ok {
+	if s, ok := truthyText(step["workflowKey"]); ok {
 		idv = s
-	} else if s, ok := truthyString(step["runId"]); ok {
+	} else if s, ok := truthyText(step["runId"]); ok {
 		idv = s
 	}
 	labelv := step["agent"]
-	if s, ok := truthyString(step["label"]); ok {
+	if s, ok := truthyText(step["label"]); ok {
 		labelv = s
 	}
 	return publicText(idv, fmt.Sprintf("step:%d", index), ctx.caps.MaxStringLength), publicText(labelv, "step", ctx.caps.MaxStringLength)
@@ -708,11 +581,11 @@ func projectNestedRun(child jm, index, depth int, ctx *projectionContext) *Snaps
 		updatedAt = startedAt
 	}
 	label := ""
-	if s, ok := truthyString(child["agent"]); ok {
+	if s, ok := truthyText(child["agent"]); ok {
 		label = publicText(s, "subagent", ctx.caps.MaxStringLength)
 	} else {
 		fb := "subagent"
-		if m, ok := truthyString(child["mode"]); ok {
+		if m, ok := truthyText(child["mode"]); ok {
 			fb = m
 		}
 		label = labelForAgents(child["agents"], fb, ctx.caps.MaxStringLength)
@@ -760,16 +633,16 @@ func projectHostStep(hs jm, ctx *projectionContext) *SnapshotNode {
 	meta := &SnapshotHostStep{Kind: strOf(hs["monitorKind"]), State: strOf(hs["state"]), Verdict: verdict, Detail: publicOptionalText(hs["detail"], ctx.caps.MaxStringLength),
 		Report: publicOptionalText(hostStepReportName(hs["reportPath"]), ctx.caps.MaxStringLength)}
 	n := ctx.caps.MaxStringLength
-	if s, ok := truthyString(hs["provider"]); ok {
+	if s, ok := truthyText(hs["provider"]); ok {
 		meta.Provider = publicText(s, "provider", n)
 	}
-	if s, ok := truthyString(hs["role"]); ok {
+	if s, ok := truthyText(hs["role"]); ok {
 		meta.Role = publicText(s, "role", n)
 	}
-	if s, ok := truthyString(hs["reasonCode"]); ok {
+	if s, ok := truthyText(hs["reasonCode"]); ok {
 		meta.ReasonCode = publicText(s, "reason", n)
 	}
-	if s, ok := truthyString(hs["target"]); ok {
+	if s, ok := truthyText(hs["target"]); ok {
 		meta.Target = publicText(s, "target", n)
 	}
 	if f, ok := hs["freshness"].(map[string]any); ok {
@@ -777,7 +650,7 @@ func projectHostStep(hs jm, ctx *projectionContext) *SnapshotNode {
 			meta.Stale = &b
 		}
 	}
-	updated, _ := isSafeInteger(hs["updatedAt"])
+	updated, _ := safeIntegerOf(hs["updatedAt"])
 	node := &SnapshotNode{ID: publicText(hs["id"], "host-step", n), Kind: "host-step", Label: publicText(hs["label"], "host step", n), State: state, UpdatedAt: &updated, HostStep: meta}
 	if snapshotTerminal(state) {
 		node.EndedAt = &updated
@@ -892,7 +765,7 @@ func assignMaterializedChildren(lanes []lane, children []*projJob) map[int]*proj
 		return nil
 	}
 	for i, l := range lanes {
-		runID, ok := truthyString(l.step["runId"])
+		runID, ok := truthyText(l.step["runId"])
 		if !ok {
 			continue
 		}
@@ -904,7 +777,7 @@ func assignMaterializedChildren(lanes []lane, children []*projJob) map[int]*proj
 		if _, done := assigned[i]; done {
 			continue
 		}
-		key, ok := truthyString(l.step["workflowKey"])
+		key, ok := truthyText(l.step["workflowKey"])
 		if !ok {
 			continue
 		}
@@ -979,7 +852,7 @@ func projectRun(job *projJob, ctx *projectionContext, depth int, m materialized,
 		updatedAt = startedAt
 	}
 	mode := "subagent"
-	if s, ok := truthyString(job.m["mode"]); ok {
+	if s, ok := truthyText(job.m["mode"]); ok {
 		mode = s
 	}
 	node := &SnapshotNode{ID: publicText(job.m["asyncId"], "async", ctx.caps.MaxStringLength), Kind: kindForMode(job.m["mode"]), Label: labelForAgents(job.m["agents"], mode, ctx.caps.MaxStringLength),
@@ -1006,14 +879,14 @@ func projectRun(job *projJob, ctx *projectionContext, depth int, m materialized,
 	}
 	loadedKeys := map[string]bool{}
 	for _, s := range steps {
-		if k, ok := truthyString(s["workflowKey"]); ok {
+		if k, ok := truthyText(s["workflowKey"]); ok {
 			loadedKeys[k] = true
 		}
 	}
 	var lanes []lane
 	for i, s := range steps {
 		idx := i
-		if n, ok := isSafeInteger(s["index"]); ok {
+		if n, ok := safeIntegerOf(s["index"]); ok {
 			idx = int(n)
 		}
 		lanes = append(lanes, lane{s, idx})
@@ -1028,7 +901,7 @@ func projectRun(job *projJob, ctx *projectionContext, depth int, m materialized,
 				agent = n["label"]
 			}
 			idx := i
-			if f, ok := isSafeInteger(n["flatIndex"]); ok {
+			if f, ok := safeIntegerOf(n["flatIndex"]); ok {
 				idx = int(f)
 			}
 			lanes = append(lanes, lane{jm{"agent": agent, "status": workflowGraphStepStatus(strOf(n["status"])), "workflowKey": n["id"], "label": n["label"]}, idx})

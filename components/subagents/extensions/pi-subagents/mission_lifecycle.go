@@ -16,9 +16,6 @@ import (
 // MissionBindingFile is MISSION_BINDING_FILE.
 const MissionBindingFile = "mission.json"
 
-// promptRedacted is PROMPT_REDACTED: what a mission is titled when its objective is the user's prompt.
-const promptRedacted = "[prompt redacted]"
-
 // MissionLaunchBinding ties a launch to its mission.
 type MissionLaunchBinding struct {
 	MissionID         string

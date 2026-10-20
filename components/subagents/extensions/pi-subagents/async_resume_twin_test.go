@@ -344,17 +344,17 @@ func TestAsyncResumeTwins(t *testing.T) {
 	tw(t, f, "frames the revived follow-up with original run context", func(t *testing.T) {
 		task := buildRevivedAsyncTask("run-old", "worker", "/tmp/session.jsonl", "What changed?")
 		for _, want := range []string{"Original run: run-old", "Original agent: worker", "Original session file: /tmp/session.jsonl", "Follow-up:\nWhat changed?"} {
-			if !contains(task, want) {
+			if !strContains(task, want) {
 				t.Errorf("task lacks %q: %s", want, task)
 			}
 		}
-		if contains(task, "async subagent conversation") {
+		if strContains(task, "async subagent conversation") {
 			t.Error("task names an async subagent conversation")
 		}
 	})
 }
 
-func contains(s, sub string) bool { return strings.Contains(s, sub) }
+func strContains(s, sub string) bool { return strings.Contains(s, sub) }
 
 func TestResumeRefusesWhatItCannotHonor(t *testing.T) {
 	t.Setenv("PI_SUBAGENTS_TEMP_ROOT", tmp(t))

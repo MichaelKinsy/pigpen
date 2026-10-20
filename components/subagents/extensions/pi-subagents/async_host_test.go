@@ -143,7 +143,7 @@ func eventually(t *testing.T, what string, ok func() bool) {
 	t.Fatalf("timed out waiting for %s", what)
 }
 
-func notices(h *Host) []map[string]any {
+func sentNotices(h *Host) []map[string]any {
 	var out []map[string]any
 	for _, c := range h.CallsTo("sendMessage") {
 		m, _ := c.Args["message"].(map[string]any)
@@ -178,8 +178,8 @@ func TestOmittedAsyncRunsInTheBackgroundAndWakesTheSession(t *testing.T) {
 	if !strings.Contains(text, "The async run is detached and running in the background.") || !strings.Contains(text, "Return control to the user now") {
 		t.Errorf("launch text: %s", text)
 	}
-	eventually(t, "the completion notice", func() bool { return len(notices(h)) > 0 })
-	n := notices(h)[0]
+	eventually(t, "the completion notice", func() bool { return len(sentNotices(h)) > 0 })
+	n := sentNotices(h)[0]
 	eq(t, n["customType"], "subagent-notify", "custom type")
 	content := n["content"].(string)
 	if !strings.HasPrefix(content, "Background task completed: **helper**\n\nhelper:\nbuilt it: Task: build the thing") {
@@ -276,8 +276,8 @@ func TestStopAndInterruptABackgroundRun(t *testing.T) {
 	raw, failure := h.Tool("subagent", map[string]any{"action": "stop", "id": id})
 	eq(t, failure, "", "stop")
 	eq(t, toolText(t, raw), "Stop requested for async run "+id+".", "stop text")
-	eventually(t, "the stopped notice", func() bool { return len(notices(h)) > 0 })
-	content := notices(h)[0]["content"].(string)
+	eventually(t, "the stopped notice", func() bool { return len(sentNotices(h)) > 0 })
+	content := sentNotices(h)[0]["content"].(string)
 	if !strings.HasPrefix(content, "Background task stopped: **helper**") || !strings.Contains(content, "Subagent stopped by user.") {
 		t.Errorf("stop notice: %q", content)
 	}
@@ -290,8 +290,8 @@ func TestStopAndInterruptABackgroundRun(t *testing.T) {
 	raw, failure = h.Tool("subagent", map[string]any{"action": "interrupt", "id": id2})
 	eq(t, failure, "", "interrupt")
 	eq(t, toolText(t, raw), "Interrupt requested for async run "+id2+".", "interrupt text")
-	eventually(t, "the paused notice", func() bool { return len(notices(h)) > 1 })
-	content = notices(h)[1]["content"].(string)
+	eventually(t, "the paused notice", func() bool { return len(sentNotices(h)) > 1 })
+	content = sentNotices(h)[1]["content"].(string)
 	if !strings.HasPrefix(content, "Background task paused: **helper**") || !strings.Contains(content, "Paused after interrupt.") {
 		t.Errorf("interrupt notice: %q", content)
 	}
@@ -305,8 +305,8 @@ func TestARunOutlivesItsSessionAndTheNextSessionAdoptsIt(t *testing.T) {
 	h.FireAll("session_shutdown", nil) // the session ends; the detached child keeps going
 	h2 := e.host(t)
 	h2.FireAll("session_start", map[string]any{"reason": "resume"})
-	eventually(t, "the adopted run's notice", func() bool { return len(notices(h2)) > 0 })
-	content := notices(h2)[0]["content"].(string)
+	eventually(t, "the adopted run's notice", func() bool { return len(sentNotices(h2)) > 0 })
+	content := sentNotices(h2)[0]["content"].(string)
 	if !strings.HasPrefix(content, "Background task completed: **helper**") {
 		t.Errorf("notice: %q", content)
 	}
@@ -319,19 +319,19 @@ func TestResumeRevivesAFinishedChildFromItsSession(t *testing.T) {
 	e := newAsyncEnv(t)
 	h := e.host(t)
 	id, _ := launch(t, h, map[string]any{})
-	eventually(t, "the first notice", func() bool { return len(notices(h)) > 0 })
+	eventually(t, "the first notice", func() bool { return len(sentNotices(h)) > 0 })
 	raw, failure := h.Tool("subagent", map[string]any{"action": "resume", "id": id, "message": "now polish it"})
 	eq(t, failure, "", "resume")
 	text := toolText(t, raw)
 	if !strings.Contains(text, "Revived helper run "+id+" from its persisted session as async run ") {
 		t.Errorf("resume text: %s", text)
 	}
-	eventually(t, "the revived run's notice", func() bool { return len(notices(h)) > 1 })
+	eventually(t, "the revived run's notice", func() bool { return len(sentNotices(h)) > 1 })
 	args, _ := os.ReadFile(e.argsFile)
 	if !strings.Contains(string(args), "--session ") || !strings.Contains(string(args), "fake-session.jsonl") {
 		t.Errorf("revived child args: %s", args)
 	}
-	content := notices(h)[1]["content"].(string)
+	content := sentNotices(h)[1]["content"].(string)
 	if !strings.Contains(content, "You are reviving a previous subagent conversation.") && !strings.Contains(content, "built it: Task: You are reviving a previous subagent conversation.") {
 		t.Errorf("revived notice: %q", content)
 	}
@@ -365,8 +365,8 @@ func TestTimeoutAndCapacity(t *testing.T) {
 		t.Errorf("alias check: %q", failure)
 	}
 	id, _ := launch(t, h, map[string]any{"maxRuntimeMs": 700})
-	eventually(t, "the timeout notice", func() bool { return len(notices(h)) > 0 })
-	content := notices(h)[0]["content"].(string)
+	eventually(t, "the timeout notice", func() bool { return len(sentNotices(h)) > 0 })
+	content := sentNotices(h)[0]["content"].(string)
 	if !strings.HasPrefix(content, "Background task failed: **helper**") || !strings.Contains(content, "Subagent timed out after 700ms.") {
 		t.Errorf("timeout notice: %q", content)
 	}

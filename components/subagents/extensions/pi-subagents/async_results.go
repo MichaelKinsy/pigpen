@@ -35,7 +35,6 @@ var (
 const (
 	observerIndexDirNm = "observers"
 	missionObserver    = "mission"
-	missionBindingFile = "mission.json"
 )
 
 // ResultIndexEntry points an index file at a result payload.

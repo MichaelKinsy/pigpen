@@ -11,7 +11,7 @@ import (
 // Twins of async-status-snapshot.test.ts and async-status-projection.test.ts.
 
 // js parses a JSON literal into the JSON-shaped value the projection reads.
-func js(t *testing.T, s string) jm {
+func jmOf(t *testing.T, s string) jm {
 	t.Helper()
 	var m jm
 	if err := json.Unmarshal([]byte(s), &m); err != nil {
@@ -56,7 +56,7 @@ func TestAsyncStatusSnapshotTwins(t *testing.T) {
 	const needle = "PRIVATE_LEAK_NEEDLE"
 	body := func(s *AsyncStatusSnapshot) string { b, _ := json.Marshal(s); return string(b) }
 	tw(t, f, "projects current async jobs with a versioned safe shape", func(t *testing.T) {
-		snap := snapAt([]jm{js(t, `{"asyncId":"run-1","asyncDir":"/tmp/`+needle+`/run","cwd":"/repo/`+needle+`","sessionRoot":"/sessions/`+needle+`","sessionDir":"/session-dir/`+needle+`",
+		snap := snapAt([]jm{jmOf(t, `{"asyncId":"run-1","asyncDir":"/tmp/`+needle+`/run","cwd":"/repo/`+needle+`","sessionRoot":"/sessions/`+needle+`","sessionDir":"/session-dir/`+needle+`",
 			"outputFile":"/output/`+needle+`.log","sessionFile":"/session-file/`+needle+`.jsonl","sessionId":"session-a","status":"running","mode":"parallel","agents":["worker"],
 			"description":"task `+needle+`","startedAt":100,"updatedAt":150,"currentTool":"bash\n\u001b]8;;bad\u0007","currentPath":"/current/`+needle+`",
 			"steps":[{"index":0,"agent":"worker","status":"running","startedAt":110,"currentTool":"read","currentToolArgs":"args `+needle+`","recentOutput":["output `+needle+`"],
@@ -65,7 +65,7 @@ func TestAsyncStatusSnapshotTwins(t *testing.T) {
 		eq(t, snap.Version, asyncStatusSnapshotVersion, "version")
 		eq(t, snap.GeneratedAt, int64(200), "generatedAt")
 		eq(t, len(snap.Runs), 1, "runs")
-		want := js(t, `{"id":"run-1","kind":"subagent","label":"worker","state":"running","startedAt":100,"updatedAt":150,"activity":{"currentTool":"bash"},
+		want := jmOf(t, `{"id":"run-1","kind":"subagent","label":"worker","state":"running","startedAt":100,"updatedAt":150,"activity":{"currentTool":"bash"},
 			"children":[{"id":"step:0","kind":"step","label":"worker","state":"running","startedAt":110,"updatedAt":110,"activity":{"currentTool":"read"}}]}`)
 		if got := generic(t, snap.Runs[0]); !reflect.DeepEqual(got, any(want)) {
 			t.Errorf("run %v\nwant %v", got, want)
@@ -77,14 +77,14 @@ func TestAsyncStatusSnapshotTwins(t *testing.T) {
 		}
 	})
 	tw(t, f, "normalizes pending child steps to queued", func(t *testing.T) {
-		snap := snapAt([]jm{js(t, `{"asyncId":"run","asyncDir":"/tmp/run","status":"queued","agents":["worker"],"steps":[{"agent":"worker","status":"pending"}]}`)}, 1)
+		snap := snapAt([]jm{jmOf(t, `{"asyncId":"run","asyncDir":"/tmp/run","status":"queued","agents":["worker"],"steps":[{"agent":"worker","status":"pending"}]}`)}, 1)
 		eq(t, snap.Runs[0].Children[0].State, "queued", "state")
 	})
 	tw(t, f, "projects loaded host CI/gate nodes with bounded provider-neutral metadata", func(t *testing.T) {
-		snap := snapAt([]jm{js(t, `{"asyncId":"workflow-1","asyncDir":"/tmp/workflow-1","status":"running","mode":"workflow","agents":[],"hostSteps":[{"version":1,"kind":"host-step","monitorKind":"gate",
+		snap := snapAt([]jm{jmOf(t, `{"asyncId":"workflow-1","asyncDir":"/tmp/workflow-1","status":"running","mode":"workflow","agents":[],"hostSteps":[{"version":1,"kind":"host-step","monitorKind":"gate",
 			"id":"gate-1","label":"Gate","provider":"opaque-provider","state":"done","verdict":"inconclusive","reasonCode":"stale-head",
 			"freshness":{"expectedRef":"old","observedRef":"new","stale":true},"reportPath":"/private/reports/gate.json","updatedAt":100}]}`)}, 200)
-		want := []any{js(t, `{"id":"gate-1","kind":"host-step","label":"Gate","state":"partial","updatedAt":100,"endedAt":100,
+		want := []any{jmOf(t, `{"id":"gate-1","kind":"host-step","label":"Gate","state":"partial","updatedAt":100,"endedAt":100,
 			"hostStep":{"kind":"gate","provider":"opaque-provider","state":"done","verdict":"inconclusive","reasonCode":"stale-head","stale":true,"report":"gate.json"}}`)}
 		if got := generic(t, snap.Runs[0].Children); !reflect.DeepEqual(got, any(want)) {
 			t.Errorf("children %v\nwant %v", got, want)
@@ -168,7 +168,7 @@ func TestAsyncStatusSnapshotTwins(t *testing.T) {
 
 func TestAsyncStatusProjectionTwins(t *testing.T) {
 	const f = "async-status-projection"
-	job := func(t *testing.T, s string) jm { return js(t, s) }
+	job := func(t *testing.T, s string) jm { return jmOf(t, s) }
 	merge := func(base jm, over jm) jm {
 		out := jm{}
 		for k, v := range base {
@@ -283,7 +283,7 @@ func TestAsyncStatusProjectionTwins(t *testing.T) {
 		eq(t, got, []ikls{{"rev-core", "step", "rev-core", "complete"}, {"rev-r", "step", "rev-r", "running"}, {"rev-parity", "step", "rev-parity", "queued"}}, "children")
 		running := snap.Runs[0].Children[1]
 		eq(t, *running.StartedAt, int64(1700), "startedAt")
-		eq(t, generic(t, running.Activity), any(js(t, `{"currentTool":"read","toolCount":3,"turnCount":1}`)), "activity")
+		eq(t, generic(t, running.Activity), any(jmOf(t, `{"currentTool":"read","toolCount":3,"turnCount":1}`)), "activity")
 		eq(t, len(running.Children), 0, "children of the running lane")
 		eq(t, snap.Omitted, omitted(0, 0), "omitted")
 	})

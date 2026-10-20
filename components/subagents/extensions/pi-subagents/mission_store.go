@@ -46,18 +46,7 @@ func missionUUID() string {
 	return h[0:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:]
 }
 
-func sha256Hex(s string) string {
-	sum := sha256.Sum256([]byte(s))
-	return hex.EncodeToString(sum[:])
-}
 
-// nodeResolve is path.resolve(base, p) for a base that is already absolute.
-func nodeResolve(base, p string) string {
-	if filepath.IsAbs(p) {
-		return filepath.Clean(p)
-	}
-	return filepath.Join(base, p)
-}
 
 func expandConfiguredPath(value, projectRoot string) string {
 	expanded := value

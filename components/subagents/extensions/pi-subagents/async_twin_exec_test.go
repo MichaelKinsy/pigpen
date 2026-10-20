@@ -90,8 +90,8 @@ func TestAsyncExecutionTwins(t *testing.T) {
 	})
 }
 
-// createRunFanoutBudget is run-fanout-budget.ts createRunFanoutBudget (the port only validates a persisted descriptor).
-func createRunFanoutBudget(t *testing.T, rootRunID string, limit int) map[string]any {
+// testFanoutBudget is run-fanout-budget.ts createRunFanoutBudget (the port only validates a persisted descriptor).
+func testFanoutBudget(t *testing.T, rootRunID string, limit int) map[string]any {
 	t.Helper()
 	root := runFanoutRoot()
 	if err := os.MkdirAll(root, 0o700); err != nil {
@@ -114,7 +114,7 @@ func TestAsyncRecoveryDescriptorTwins(t *testing.T) {
 	const f = "async-recovery-descriptor"
 	// baseDescriptor is the descriptor every case of the test file starts from.
 	baseDescriptor := func(t *testing.T, root, runID string) map[string]any {
-		return map[string]any{"version": 1, "runFanoutBudget": createRunFanoutBudget(t, runID, 64), "sourceRunId": runID, "agent": "worker", "cwd": root,
+		return map[string]any{"version": 1, "runFanoutBudget": testFanoutBudget(t, runID, 64), "sourceRunId": runID, "agent": "worker", "cwd": root,
 			"systemPromptMode": "replace", "inheritGlobalContext": false, "inheritProjectContext": false, "inheritSkills": false, "outputMode": "inline", "maxSubagentDepth": 2, "share": false}
 	}
 	write := func(t *testing.T, root string, d map[string]any) {

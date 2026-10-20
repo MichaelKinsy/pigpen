@@ -4,7 +4,6 @@ import (
 	"math"
 	"regexp"
 	"strings"
-	"unicode/utf8"
 )
 
 // Port of src/workflows/workflow-checklist.ts: the checklist a status surface shows for a workflow, fused from the graph, the
@@ -135,7 +134,7 @@ var checklistSpaceRe = regexp.MustCompile(`[\s\x{feff}\x{a0}]+`)
 
 // checklistText is text(): display-safe, one line, at most 160 UTF-16 units; "" when nothing is left.
 func checklistText(value string) string {
-	clean := jsTrim(checklistSpaceRe.ReplaceAllString(wfSanitizeDisplayText(value), " "))
+	clean := jsTrim(checklistSpaceRe.ReplaceAllString(sanitizeDisplayText(value), " "))
 	if clean == "" {
 		return ""
 	}
@@ -904,81 +903,3 @@ func formatWorkflowChecklistText(p WorkflowChecklistProjection, indent string, i
 	return lines
 }
 
-// wfSanitizeDisplayText is sanitizeDisplayText (display-text.ts): whitespace, control characters and terminal escape sequences
-// (CSI, OSC and the other control strings) collapse to single spaces; the ends are trimmed.
-func wfSanitizeDisplayText(value string) string {
-	var out strings.Builder
-	pending := false
-	space := func() {
-		if out.Len() > 0 {
-			pending = true
-		}
-	}
-	consumeControlString := func(i int, osc bool) int {
-		for i < len(value) {
-			cp, w := utf8.DecodeRuneInString(value[i:])
-			switch {
-			case osc && cp == 0x07, cp == 0x9c:
-				return i + w
-			case cp == 0x1b && i+1 < len(value) && value[i+1] == 0x5c:
-				return i + 2
-			}
-			i += w
-		}
-		return len(value)
-	}
-	consumeCsi := func(i int) int {
-		for i < len(value) {
-			cp, w := utf8.DecodeRuneInString(value[i:])
-			if cp >= 0x40 && cp <= 0x7e {
-				return i + w
-			}
-			i += w
-		}
-		return len(value)
-	}
-	for i := 0; i < len(value); {
-		cp, w := utf8.DecodeRuneInString(value[i:])
-		if cp == 0x1b {
-			var next byte
-			if i+1 < len(value) {
-				next = value[i+1]
-			}
-			space()
-			switch next {
-			case 0x5b:
-				i = consumeCsi(i + 2)
-			case 0x5d, 0x50, 0x58, 0x5e, 0x5f:
-				i = consumeControlString(i+2, next == 0x5d)
-			default:
-				if next != 0 {
-					i += 2
-				} else {
-					i++
-				}
-			}
-			continue
-		}
-		switch cp {
-		case 0x9b:
-			space()
-			i = consumeCsi(i + w)
-			continue
-		case 0x90, 0x98, 0x9d, 0x9e, 0x9f:
-			space()
-			i = consumeControlString(i+w, cp == 0x9d)
-			continue
-		}
-		if cp <= 0x20 || (cp >= 0x7f && cp <= 0x9f) || (cp >= 0xd800 && cp <= 0xdfff) || isJSSpace(cp) {
-			space()
-		} else {
-			if pending {
-				out.WriteByte(' ')
-			}
-			out.WriteRune(cp)
-			pending = false
-		}
-		i += w
-	}
-	return out.String()
-}

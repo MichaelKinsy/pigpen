@@ -149,7 +149,7 @@ func finiteNum(v any) (float64, bool) {
 	return f, ok && !math.IsInf(f, 0) && !math.IsNaN(f)
 }
 
-func hasKey(m jm, k string) bool { _, ok := m[k]; return ok }
+func jmHas(m jm, k string) bool { _, ok := m[k]; return ok }
 
 func compactError(err error) string {
 	return truncateRunes(strings.Join(strings.Fields(err.Error()), " "), 240)
@@ -163,7 +163,6 @@ func truncateRunes(s string, utf16Units int) string {
 	return string(utf16Runes(u[:utf16Units]))
 }
 
-func mtimeMs(info fs.FileInfo) float64 { return float64(info.ModTime().UnixNano()) / 1e6 }
 
 func isNotFoundErr(err error) bool { return err != nil && errors.Is(err, fs.ErrNotExist) }
 
@@ -213,7 +212,7 @@ func validRunID(id string) bool {
 func statusTimestamp(status jm, runDir string) (float64, bool) {
 	var logical *float64
 	for _, k := range []string{"endedAt", "lastUpdate"} {
-		if !hasKey(status, k) {
+		if !jmHas(status, k) {
 			continue
 		}
 		f, ok := finiteNum(status[k])
