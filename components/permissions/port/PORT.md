@@ -426,13 +426,13 @@ code, then a differential against the original's own functions.
 | R3 | `presentation/dialog-renderer.ts` | `dialogrenderer.go` | 28 twins; 1,332 recorded renders (widths -1 to 200, row budgets -1 to Infinity, field caps -1 to Infinity, 3 paints, unicode width, ANSI, CJK, ZWJ, very long and multi-line fields) |
 | R4 | `presentation/agent-renderer.ts` | `agentrenderer.go` | 48 twins; 800 recorded refusals (7 renderers, 16 decisions, 9 payload kinds, 8 field budgets) |
 | R5 | `presentation/prompt-notification.ts` | `promptnotification.go` | 20 twins; 450 recorded notices with their bytes |
-| R6 | `presentation/pattern-suggest.ts` (and `session/approval-grant.ts` `grantTargets`) | `patternsuggest.go`, `GrantTargets` in `fwd_stub_authority.go` | 46 twins; 1,550 recorded suggestions and labels |
+| R6 | `presentation/pattern-suggest.ts` (and `session/approval-grant.ts` `grantTargets`) | `patternsuggest.go`, `GrantTargets` in `fwd_stub_authority.go` | 46 twins; 1,355 suggestions and labels in the corpus |
 | R7 | `presentation/{tool,path,skill,forwarded}-ask-payload.ts`, `permission-prompts.ts` | `toolaskpayload.go`, `pathaskpayload.go`, `skillaskpayload.go`, `forwardedaskpayload.go`, `permissionprompts.go` | 37 twins; 830 recorded payloads, each also rendered |
 | R8 | `tool-input/{tool-input-preview,tool-input-prompt-formatters,builtin-tool-input-formatters,tool-preview-formatter}.ts` | `toolinputpreview.go`, `toolinputpromptformatters.go`, `builtintoolinputformatters.go`, `toolpreviewformatter.go` | 85 twins; 561 inputs through the prompt, built-in-registry and log previews, 165 MCP argument sets, 357 sanitized texts, 360 truncations, 350 log previews |
 | R9 | `tool-input/{tool-input-formatter-registry,tool-access-extractor-registry}.ts` | `toolinputformatterregistry.go`, `toolaccessextractorregistry.go` (replace the stand-ins in `fwd_stub_authority.go`) | 14 twins (the forwarding twins stay green) |
-| R10 | `exposure/{tool-registry,tool-surface-prompt,skill-prompt-sanitizer}.ts` (`tool-surface-baseline.ts` was ported with the first slice) | `toolregistry.go`, `toolsurfaceprompt.go`, `skillpromptsanitizer.go` | 73 twins; 1,016 recorded registry checks, 500 surfaces, 720 skill-prompt cases |
+| R10 | `exposure/{tool-registry,tool-surface-prompt,skill-prompt-sanitizer}.ts` (`tool-surface-baseline.ts` was ported with the first slice) | `toolregistry.go`, `toolsurfaceprompt.go`, `skillpromptsanitizer.go` | 73 twins; 1,062 registry cases, 500 surfaces, 720 skill-prompt cases in the corpus |
 
-How it is checked:
+How it is checked (STATUS at this commit: the probe, the cases and the Go test are written, but `testdata/presentation-oracle.json` is not recorded yet because the imladris lane lock was held by other jobs, so the differential, the mutation run, the race/vet run and the benchmarks have NOT been run; the counts below are the corpus sizes, not results):
 
 - `port/record-presentation-probe.sh <installed oracle>` runs `port/probe/presentation-probe.test.ts` inside the original's package on
   `port/probe/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
@@ -466,8 +466,7 @@ Differences from the original, on purpose:
 - **Inherited object properties.** The original's `aliases[toolName] || toolName` and `toolSnippets[toolName]` read a plain object, so
   a tool named `constructor`, `toString`, `__proto__` and the like with no own alias answers a function or the prototype instead of a
   name. In `checkRequestedToolRegistration` it changes only `normalizedToolName` (not a string there, and no caller reads it: the
-  status and the `requestedToolName` the callers read are equal), and 700 recorded cases include 17 of them (the differential maps the
-  original's value to `<non-string>` and the port's to the same marker for exactly those, counted in the test log). In
+  status and the `requestedToolName` the callers read are equal). The differential maps the original's value to `<non-string>` and the port's to the same marker for exactly those cases (counted in the test log). In
   `renderToolSurfaceSections` such a tool would list `- constructor: function Object() { [native code] }` in the system prompt; the
   port lists it with no snippet, i.e. not at all. Neither can make a tool registered or exposed that was not.
 - The sort of the available tool names (it orders the list shown in the "unknown tool" block reason) uses the module's own `icuCompare`,
