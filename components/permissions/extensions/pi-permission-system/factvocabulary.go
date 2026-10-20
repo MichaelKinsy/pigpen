@@ -2,17 +2,6 @@ package pi_permission_system
 
 // Port of src/presentation/fact-vocabulary.ts: the render vocabulary shared by every renderer over a PromptPayload.
 
-// AllEvidence is every evidence entry carrying the given label, in payload order (allEvidence).
-func AllEvidence(payload PromptPayload, label string) []PromptEvidence {
-	out := []PromptEvidence{}
-	for _, e := range payload.Evidence {
-		if e.Label == label {
-			out = append(out, e)
-		}
-	}
-	return out
-}
-
 // FlaggedElements is what the ask is flagging: the decision-relevant value, except that a bash ask that escaped the working
 // directory flags the paths it referenced.
 func FlaggedElements(payload PromptPayload) []string {

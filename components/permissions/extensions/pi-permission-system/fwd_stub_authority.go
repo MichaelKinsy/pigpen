@@ -24,6 +24,39 @@ func WidenGrant(g ApprovalGrant) ApprovalGrant {
 	return g
 }
 
+// contentsSuffixes are a separator (either alphabet) followed by the wildcard.
+var contentsSuffixes = []string{"/*", "\\*"}
+
+// GrantTargets is grantTargets: the distinct targets an approval covers, for naming it in a prompt. A directory's exact grant folds
+// into its contents grant, and identical patterns collapse to one. (Same declaration as the policy lane's sessionapprovalgrant.go.)
+func GrantTargets(grants []ApprovalGrant) []string {
+	targets := []string{}
+	seen := map[string]bool{}
+	for _, g := range grants {
+		if hasContentsSibling(g, grants) || seen[g.Pattern] {
+			continue
+		}
+		seen[g.Pattern] = true
+		targets = append(targets, g.Pattern)
+	}
+	return targets
+}
+
+// hasContentsSibling reports whether grants also holds g's contents pattern on the same surface.
+func hasContentsSibling(g ApprovalGrant, grants []ApprovalGrant) bool {
+	for _, other := range grants {
+		if other.Surface != g.Surface {
+			continue
+		}
+		for _, suffix := range contentsSuffixes {
+			if other.Pattern == g.Pattern+suffix {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // ── session/session-approval.ts, session-approval-recorder.ts ──────────────
 
 // SessionApproval is the value object of one or more grants (SessionApproval.forGrants / atWidth).
