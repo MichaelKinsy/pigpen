@@ -152,7 +152,7 @@ func TestAutoFollowUpMovesAConfidentMessageToTheFollowUpQueue(t *testing.T) {
 	t.Setenv("TYPESAFE_API_KEY", "test-key")
 	h := startFollowUp(t, followUpSettings)
 	h.branch = []any{map[string]any{"type": "message", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "Reading the code."}}}}}
-	h.FireAll("before_agent_start", map[string]any{"prompt": "Fix the checkout bug", "systemPromptOptions": map[string]any{}})
+	h.Fire("before_agent_start", map[string]any{"prompt": "Fix the checkout bug", "systemPromptOptions": map[string]any{}})
 	h.runSignal(false)
 
 	image := map[string]any{"type": "image", "data": "AAAA", "mimeType": "image/png"}
@@ -269,7 +269,7 @@ func TestAutoFollowUpSessionSwitchDuringTheCallDropsTheMessage(t *testing.T) {
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
-	h.FireAll("session_start", map[string]any{"reason": "new"})
+	h.Fire("session_start", map[string]any{"reason": "new"})
 	close(jev.release)
 	if got := <-result; len(got) != 0 && string(got) != "null" {
 		t.Errorf("result = %s, want none", got)
@@ -293,7 +293,7 @@ func TestAutoFollowUpShutdownDuringTheCallDropsTheMessage(t *testing.T) {
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
-	h.FireAll("session_shutdown", map[string]any{"reason": "quit"})
+	h.Fire("session_shutdown", map[string]any{"reason": "quit"})
 	close(jev.release)
 	if got := <-result; len(got) != 0 && string(got) != "null" {
 		t.Errorf("result = %s, want none", got)
@@ -304,8 +304,8 @@ func TestAutoFollowUpSessionStartClearsTheTask(t *testing.T) {
 	jev := newJevServer(t, "steer", 0.9)
 	t.Setenv("TYPESAFE_API_KEY", "test-key")
 	h := startFollowUp(t, followUpSettings)
-	h.FireAll("before_agent_start", map[string]any{"prompt": "old task", "systemPromptOptions": map[string]any{}})
-	h.FireAll("session_start", map[string]any{"reason": "new"})
+	h.Fire("before_agent_start", map[string]any{"prompt": "old task", "systemPromptOptions": map[string]any{}})
+	h.Fire("session_start", map[string]any{"reason": "new"})
 	fireInput(h.Host, "also lint", nil)
 	state, _ := jev.seen()[0]["state"].(map[string]any)
 	if state["current_task"] != "Unknown" {
