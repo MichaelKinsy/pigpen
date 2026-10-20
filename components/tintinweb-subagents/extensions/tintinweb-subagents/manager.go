@@ -258,17 +258,7 @@ func (m *manager) run(r *agentRecord) {
 	if res != nil {
 		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Tokens, res.Turns, res.WrappedUp
 	}
-	if r.Background {
-		m.running--
-	}
-	var next *agentRecord
-	if len(m.queue) > 0 && m.running < m.maxConcurrent {
-		next = m.queue[0]
-		m.queue = m.queue[1:]
-		m.running++
-		next.Status = statusRunning
-		next.fromQueue = true
-	}
+	next := m.releaseSlotLocked(r)
 	m.mu.Unlock()
 	cancel()
 	close(r.done)
@@ -378,17 +368,7 @@ func (m *manager) failStartup(r *agentRecord, err error) {
 			}
 		}
 	}
-	if r.Background {
-		m.running--
-	}
-	var next *agentRecord
-	if len(m.queue) > 0 && m.running < m.maxConcurrent {
-		next = m.queue[0]
-		m.queue = m.queue[1:]
-		m.running++
-		next.Status = statusRunning
-		next.fromQueue = true
-	}
+	next := m.releaseSlotLocked(r)
 	m.mu.Unlock()
 	r.setupOnce.Do(func() { close(r.setup) })
 	close(r.started)
@@ -432,4 +412,21 @@ func (m *manager) pruneAll(cwd string) {
 	for _, repo := range repos {
 		pruneWorktrees(m.git, repo)
 	}
+}
+
+// releaseSlotLocked hands back the concurrency slot of a settled agent and takes the next queued agent into it (the
+// caller starts it). The caller holds m.mu.
+func (m *manager) releaseSlotLocked(r *agentRecord) *agentRecord {
+	if r.Background {
+		m.running--
+	}
+	var next *agentRecord
+	if len(m.queue) > 0 && m.running < m.maxConcurrent {
+		next = m.queue[0]
+		m.queue = m.queue[1:]
+		m.running++
+		next.Status = statusRunning
+		next.fromQueue = true
+	}
+	return next
 }

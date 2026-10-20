@@ -1,0 +1,53 @@
+{
+  "name": "agent-memory-project",
+  "description": "An agent with memory: project gets the memory block with its MEMORY.md in its system prompt.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "Recall.",
+            "description": "recall",
+            "subagent_type": "mem",
+            "run_in_background": false
+          }
+        }
+      ]
+    },
+    {
+      "text": "REMEMBERED"
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"fleetView\": false, \"widgetMode\": \"off\"}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "real"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agents/mem.md": "---\ndescription: Remembers\nmemory: project\n---\nRemember things.\n",
+    ".pi/agent-memory/mem/MEMORY.md": "# Memory\n- the build needs RUN_ME=1\n"
+  }
+}

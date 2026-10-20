@@ -1,0 +1,33 @@
+{
+  "name": "tool-tools-isolation",
+  "description": "With worktree isolation on (the default) the Agent tool carries the isolation parameter and its guideline.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"fleetView\": false, \"widgetMode\": \"off\"}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "real"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}
