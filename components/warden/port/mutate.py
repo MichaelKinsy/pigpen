@@ -183,7 +183,9 @@ M = [
  ('state-load-failure-sends-nothing', 'conscience_state.go', '\t\tif !already {\n\t\t\tif msg, ok := w.conscienceLoad(ctx, cfg, data, result, effectiveTimeout, start); ok {\n\t\t\t\treturn msg, nil\n\t\t\t}\n\t\t}', '\t\tif !already {\n\t\t\tif msg, ok := w.conscienceLoad(ctx, cfg, data, result, effectiveTimeout, start); ok {\n\t\t\t\treturn msg, nil\n\t\t\t}\n\t\t\treturn nil, nil\n\t\t}'),
  ('state-message-customtype-renamed', 'conscience_state.go', 'const conscienceType = "pi-warden-conscience"', 'const conscienceType = "pigpen-warden-conscience"'),
 ]
-EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
+EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth",
+              "state-reminder-while-awaiting-user": "redundant in the original too: assess selects nothing unless the disposition is advance, so a fresh assessment that awaits the user has no selection and the earlier test of the selection already stops the reminder",
+              "state-loaded-bytes-not-counted": "the counter is read only by the next load of the same prompt, and the original loads at most once a prompt (before_agent_start); it starts again at 0 for every prompt"}
 only = set(sys.argv[1:])
 out = []
 for mid, f, old, new in M:

@@ -91,3 +91,4 @@ rules-clear-not-detected: KILLED --- FAIL: TestFlagThenFixOnTheSamePathIsCleared
 rules-heredoc-expansion-judged: KILLED --- FAIL: TestShellSkippedFormsGiveNoWriteAndAReason (0.00s)
 rules-sed-in-place-judged: KILLED --- FAIL: TestRulesAHeredocWriteInBashIsJudgedAsAWriteAndASkippedFormIsTraced (0.01s)
 rules-extract-collapses-to-empty: KILLED --- FAIL: TestExtractRulesLargeFirstBlockStillReturnsNonEmptyOutput (0.00s)
+state-reminder-while-awaiting-user: SURVIVED (equivalent mutant: redundant in the original too: assess selects nothing unless the disposition is advance, so a fresh assessment that awaits the user has no selection and the earlier test of the selection already stops the reminder)

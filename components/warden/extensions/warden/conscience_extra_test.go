@@ -235,3 +235,56 @@ func TestAssessPacksEveryCandidateIntoExactlyOneRequest(t *testing.T) {
 		}
 	}
 }
+
+// What leaves the machine is redacted twice: the hook redacts the prompt before it cuts it to 2000 characters (a
+// token cut in half would escape redaction), and buildState redacts the task, the context and the spine again.
+func TestConsciencePromptIsRedactedBeforeItIsCut(t *testing.T) {
+	e := newCsExt(t, csOpts{})
+	e.set(map[string]any{"conscience_disposition": "no_gap"})
+	prompt := strings.Repeat("x", 1990) + " ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef1234567890 tail"
+	e.prompt(prompt, csDefaultSkillEvents())
+	for _, r := range e.requests() {
+		if task := r.State["task"].(string); strings.Contains(task, "ghp_") {
+			t.Errorf("a token cut in half by the 2000-character limit reached the judge: %q", task[1980:])
+		}
+	}
+}
+
+func TestBuildStateRedactsTaskContextAndSpine(t *testing.T) {
+	secret := "Authorization: Bearer abcdef0123456789abcdef"
+	url := "postgres://admin:s3cretpass9@db.internal/app"
+	spine := &TaskSpine{Goal: secret, Task: "t", History: []string{url}}
+	st := buildState("run "+secret, "context "+url, nil, nil, nil, spine)
+	text := jsonCompact(st)
+	for _, leak := range []string{"abcdef0123456789abcdef", "s3cretpass9"} {
+		if strings.Contains(text, leak) {
+			t.Errorf("%q reached the state: %s", leak, text)
+		}
+	}
+}
+
+// The reminder is gated by the fresh assessment too: a run whose capability the judge no longer wants (the user
+// is being asked something) gets no reminder.
+func TestConscienceReminderNotSentWhenTheFreshAssessmentAwaitsTheUser(t *testing.T) {
+	e := newCsExt(t, csOpts{})
+	e.set(csAdvance(3))
+	if _, _, ok := csMessage(e.prompt("design a landing page", csDefaultSkillEvents())); !ok {
+		t.Fatal("the first recommendation is delivered")
+	}
+	e.set(map[string]any{"conscience_disposition": "awaiting_user", "c1": 3})
+	csAgentEndToolCall(e)
+	if r := e.reminders(); len(r) != 0 {
+		t.Errorf("%v", r)
+	}
+}
+
+// maxNudges is a cap on reminders: 0 allows none.
+func TestConscienceMaxNudgesZeroAllowsNoReminder(t *testing.T) {
+	e := newCsExt(t, csOpts{conscience: func(c *ConscienceConfig) { c.MaxNudges = 0 }})
+	e.set(csAdvance(3))
+	e.prompt("design a landing page", csDefaultSkillEvents())
+	csAgentEndToolCall(e)
+	if r := e.reminders(); len(r) != 0 {
+		t.Errorf("%v", r)
+	}
+}
