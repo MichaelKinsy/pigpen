@@ -203,6 +203,11 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 			eq(t, notices(r), []string{refusalText("these subagents.json settings (" + c.listed + ")")})
 		})
 	}
+	t.Run("the same notice is not repeated by a second session_start", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.Fire("session_start", obj{"reason": "reload"})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
+	})
 	t.Run("two settings are listed in one notice", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true, "reportUsage": true}`)
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true, showCost: true)")})

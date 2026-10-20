@@ -119,3 +119,31 @@ func TestFallbackToARemovedGeneralPurposeStillRuns(t *testing.T) {
 	eq(t, contains(out, "Type: Agent\n"), true) // getConfig's absolute fallback display name
 	eq(t, contains(r.childFor("go").spec.SystemPrompt, `<active_agent name="general-purpose"/>`), true)
 }
+
+// agent-runner.ts resolveDefaultModel: the agent file's model is used only when it is an available one (auth configured).
+func TestAgentFileModelWithoutAuthFallsBackToTheParent(t *testing.T) {
+	r := modelRig(t, `{}`)
+	r.modelState.(obj)["providers"] = obj{"anthropic": obj{"configured": true}, "openai": obj{"configured": false}}
+	writeSettings(t, filepath.Join(r.Host.opts.Cwd, ".pi", "agents", "noauth.md"), "---\ndescription: No auth\nmodel: openai/gpt-4o\n---\nBody.\n")
+	r.must("Agent", obj{"prompt": "go", "description": "d", "subagent_type": "noauth"})
+	eq(t, r.childFor("go").spec.Model != "openai/gpt-4o", true)
+}
+
+// index.ts:592-598: a result already delivered (a foreground agent's) is not handed to the group join or the nudge timer.
+func TestDeliveredResultSchedulesNoNotification(t *testing.T) {
+	r := startRig(t)
+	call := r.fgCall("fg")
+	r.childFor("fg").finish("done")
+	call.result()
+	r.app.mu.Lock()
+	n := len(r.app.timers)
+	r.app.mu.Unlock()
+	eq(t, n, 0)
+}
+
+// agent-manager.ts resolveMention compares the handle without case, also a handle that is not lowercase (a reclaimed one).
+func TestHandleResolutionIgnoresCase(t *testing.T) {
+	r := startRig(t)
+	rec := r.app.mgr.spawnWith("general-purpose", "d", childSpec{Prompt: "x"}, spawnOptions{Background: true, Reclaim: &reclaim{Handle: "Mixed-Case"}})
+	eq(t, r.app.mgr.resolve("mixed-case"), rec)
+}
