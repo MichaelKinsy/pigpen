@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -334,15 +335,16 @@ func TestPickerMarksAModelWithoutAKey(t *testing.T) {
 }
 
 func TestPickerWrapsALongLabelUnderItsPrefix(t *testing.T) {
-	// 20 columns, a 2-column prefix: "☐ acme/a-very-long-model-name-indeed" wraps at 18.
+	// 20 columns, a 2-column prefix: the 34-column word does not fit a line, so pi-tui
+	// puts the checkbox alone and breaks the word at 18 columns.
 	picker := newGuardPicker("T", []modelRef{{"acme", "a-very-long-model-name-indeed"}}, nil)
 	lines := picker.Render(20)
 	if len(lines) < 7 {
 		t.Fatalf("frame = %q", lines)
 	}
 	rows := lines[5:]
-	want := []string{"> ☐ acme/a-very-long-", "  model-name-indeed"}
-	if len(rows) < 2 || !reflect.DeepEqual(rows[:2], want) {
+	want := []string{"> ☐", "  acme/a-very-long-m", "  odel-name-indeed"}
+	if len(rows) < 3 || !reflect.DeepEqual(rows[:3], want) {
 		t.Fatalf("rows = %q, want the label wrapped to %q", rows, want)
 	}
 }
@@ -385,8 +387,8 @@ func TestPickerSearchFiltersAndEscapeClearsThenCancels(t *testing.T) {
 
 func TestPickerBackspaceEditsTheSearch(t *testing.T) {
 	picker := newGuardPicker("T", catalog, nil)
-	press(t, picker, "a", "c", "x", "\x7f")
-	if !strings.Contains(strings.Join(picker.Render(60), "\n"), " 🔍 ac_") {
+	press(t, picker, "m", "c", "x", "\x7f")
+	if !strings.Contains(strings.Join(picker.Render(60), "\n"), " 🔍 mc_") {
 		t.Fatal("backspace did not remove the last search character")
 	}
 }
@@ -412,8 +414,8 @@ func TestPickerAllAndNoneApplyToTheFilteredRowsOnlyWithoutASearch(t *testing.T) 
 
 func TestPickerSearchTypedSpaceIsNotASearchCharacter(t *testing.T) {
 	picker := newGuardPicker("T", catalog, nil)
-	press(t, picker, "a", " ")
-	if !strings.Contains(strings.Join(picker.Render(60), "\n"), " 🔍 a_") {
+	press(t, picker, "m", " ")
+	if !strings.Contains(strings.Join(picker.Render(60), "\n"), " 🔍 m_") {
 		t.Fatal("Space went into the search instead of toggling")
 	}
 }
@@ -466,14 +468,12 @@ func TestRememberModelStatusNamesTheLastModel(t *testing.T) {
 // The original defers its toast one tick so it lands after the host's own
 // "Model: ..." status. The handler must have returned before the toast is sent.
 func TestRememberedToastIsSentAfterTheHandlerReturns(t *testing.T) {
-	p := startParityHost(t, "tui", nil, nil, nil)
+	p := startParityHost(t, "tui", guardSettings(false), nil, nil)
 	if err := os.WriteFile(filepath.Join(p.home, "agent", "settings.json"), []byte("{}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	p.start(t, "resume")
-	if failure := fire(p.Host, "model_select", selectModel()); failure != "" {
-		t.Fatal(failure)
-	}
+	p.FireAll("model_select", selectModel())
 	want := rememberModelName + ": remembered model: acme/model-1 in settings.json"
 	deadline := time.Now().Add(2 * time.Second)
 	for {
@@ -489,16 +489,14 @@ func TestRememberedToastIsSentAfterTheHandlerReturns(t *testing.T) {
 }
 
 func TestRememberedToastIsNotSentInsideTheHandler(t *testing.T) {
-	p := startParityHost(t, "tui", nil, nil, nil)
+	p := startParityHost(t, "tui", guardSettings(false), nil, nil)
 	if err := os.WriteFile(filepath.Join(p.home, "agent", "settings.json"), []byte("{}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	p.start(t, "resume")
 	// fire returns when the handler's result reached the host; the toast is a
 	// separate, later call, so it cannot already be in the call log.
-	if failure := fire(p.Host, "model_select", selectModel()); failure != "" {
-		t.Fatal(failure)
-	}
+	p.FireAll("model_select", selectModel())
 	if got := notes(p.Host); len(got) != 0 {
 		t.Fatalf("%d notifications were sent before the handler returned: %q", len(got), got)
 	}
@@ -636,7 +634,7 @@ func TestLockPickerFlowAsksForTheProviderWithTheCurrentOneAsPlaceholder(t *testi
 	var asked map[string]any
 	p := lockPickerHost(t, map[string]string{"vendor/a": "alpha"}, []modelRef{{"openrouter", "vendor/a"}},
 		func() any { return "vendor/a" },
-		func() map[string]any { return map[string]any{"value": "  beta "} })
+		func() map[string]any { return map[string]any{"ok": true, "text": "  beta "} })
 	got := p.run(t, lockProviderName, "")
 	wantNotes(t, got, info("OpenRouter provider lock for vendor/a: beta"))
 	for _, call := range p.CallsTo("ui.input") {
@@ -654,7 +652,7 @@ func TestLockPickerFlowAsksForTheProviderWithTheCurrentOneAsPlaceholder(t *testi
 func TestLockPickerFlowEmptyInputClearsAndPlaceholderDefaultsToDeepseek(t *testing.T) {
 	p := lockPickerHost(t, map[string]string{"vendor/a": "alpha"}, []modelRef{{"openrouter", "vendor/a"}, {"openrouter", "vendor/c"}},
 		func() any { return "vendor/a" },
-		func() map[string]any { return map[string]any{"value": "  "} })
+		func() map[string]any { return map[string]any{"ok": true, "text": "  "} })
 	wantNotes(t, p.run(t, lockProviderName, ""), info("Cleared provider lock for vendor/a"))
 	if state := readSettings(filepath.Join(p.home, "agent", settingsFileName)); len(state.OpenRouterModelProviderPref.Locks) != 0 {
 		t.Fatalf("locks = %v, want none", state.OpenRouterModelProviderPref.Locks)
@@ -664,7 +662,7 @@ func TestLockPickerFlowEmptyInputClearsAndPlaceholderDefaultsToDeepseek(t *testi
 func TestLockPickerFlowCancelledInputChangesNothing(t *testing.T) {
 	p := lockPickerHost(t, nil, []modelRef{{"openrouter", "vendor/c"}},
 		func() any { return "vendor/c" },
-		func() map[string]any { return map[string]any{"cancelled": true} })
+		func() map[string]any { return map[string]any{"ok": false} })
 	if got := p.run(t, lockProviderName, ""); len(got) != 0 {
 		t.Fatalf("a cancelled input said %q", got)
 	}
@@ -672,5 +670,61 @@ func TestLockPickerFlowCancelledInputChangesNothing(t *testing.T) {
 		if call.Args["placeholder"] != "deepseek" {
 			t.Fatalf("placeholder = %v, want deepseek for a model with no lock", call.Args["placeholder"])
 		}
+	}
+}
+
+func TestPickerTitlesForEachWayOfOpeningIt(t *testing.T) {
+	want := map[string]string{
+		guardTitle("add", false):    "Select models to ADD to preferences",
+		guardTitle("remove", false): "Select models to REMOVE from preferences",
+		guardTitle("", true):        "Select your PREFERRED models",
+		guardTitle("", false):       "Toggle model preferences (checked = allowed)",
+	}
+	if len(want) != 4 {
+		t.Fatalf("titles collide: %v", want)
+	}
+	for got, text := range want {
+		if got != text {
+			t.Fatalf("title = %q, want %q", got, text)
+		}
+	}
+}
+
+func TestLockPickerRowsAreAvailableOpenRouterModelsPlusLockedIdsSorted(t *testing.T) {
+	got := lockPickerItems(
+		[]modelRef{{"openrouter", "vendor/b"}, {"acme", "not-openrouter"}, {"openrouter", "vendor/a"}},
+		map[string]string{"vendor/z": "zeta", "vendor/a": "alpha"})
+	want := []lockItem{
+		{"vendor/a", "provider: alpha"},
+		{"vendor/b", "no provider lock"},
+		{"vendor/z", "provider: zeta"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("rows = %v, want %v", got, want)
+	}
+}
+
+// Pi's getAgentDir(): when the host says where the agent directory is, the
+// settings live there, not under PIG_HOME.
+func TestSettingsLiveInTheHostsAgentDirectory(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("PIG_HOME", home)
+	agent := filepath.Join(t.TempDir(), "elsewhere")
+	if err := os.MkdirAll(agent, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PIG_EXT_HOST_INFO", `{"agentDir":`+strconv.Quote(agent)+`}`)
+	h := StartHost(t, Extension(), HostOptions{})
+	if failure := fire(h, "session_start", map[string]any{"reason": "resume"}); failure != "" {
+		t.Fatal(failure)
+	}
+	if failure := h.Command(modelGuardName, "off"); failure != "" {
+		t.Fatal(failure)
+	}
+	if _, err := os.Stat(filepath.Join(agent, settingsFileName)); err != nil {
+		t.Fatalf("the settings were not written under the host's agent directory: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(home, "agent", settingsFileName)); err == nil {
+		t.Fatal("the settings were also written under PIG_HOME")
 	}
 }
