@@ -44,8 +44,9 @@ the scenarios, re-run one at a time).
 ## Deliberate differences and findings
 
 1. **The GitHub interceptor (890 lines, opt-in) is not ported.** It answers `github.com` URLs from a cached shallow
-   clone made with `gh` or `git`. Slice 2: the 84 interceptor cases are deferred by name. With the option on, such a URL
-   is fetched like any page and `/web-tools --show` says so.
+   clone made with `gh` or `git`. Slice 2: the 84 interceptor cases are deferred by name. With the option on, a
+   repository root, blob or tree URL is refused (`refusal.go`, `refusal_test.go`: the message names the package and
+   the original, `npm:@juicesharp/rpiv-web-tools@2.12.0`) and `/web-tools --show` says so; with it off nothing changes.
 2. **Order of work.** Unlike the tintinweb-tasks port, the implementation was written before the twins, so there is no
    red commit. The substitute proof is the 14 Pi-recorded scenarios, the differential test and the mutation run.
 3. **106 cases of `index.test.ts` are deferred** (the per-provider matrix, the `--show` variants and so on). Their

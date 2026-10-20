@@ -131,6 +131,17 @@ m("host-idna-skipped", "util.go", "if ascii, err = idnaProfile.ToASCII(h); err !
 m("host-port-dropped", "util.go", 'u.Host = host + ":" + port', "u.Host = host")
 m("fetch-raw-url-requested", "webtools.go", "fetchViaGenericHTML(ctx, target.Href, rawURL, raw)", "fetchViaGenericHTML(ctx, target.Href[:0]+rawURL, rawURL, raw)")
 
+# refusal.go, webtools.go, command.go: the refusal of the unported GitHub interceptor
+m("refusal-wording", "refusal.go", '" (Go port) does not support " + feature', '" (Go port) does not handle " + feature')
+m("refusal-install-advice", "refusal.go", '", which runs unchanged in PiG."', '"."')
+m("refusal-github-gate-dropped", "webtools.go", "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {", "if false {")
+m("refusal-github-enabled-ignored", "webtools.go", "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {", "if githubCodeURL(target.Href) {")
+m("refusal-github-any-url", "webtools.go", "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {", "if githubInterceptorEnabled(cfg) {")
+m("refusal-github-www-host", "refusal.go", 'host != "github.com" && host != "www.github.com"', 'host != "github.com"')
+m("refusal-github-root-url", "refusal.go", "if len(segments) == 2 {\n\t\treturn true\n\t}", "if len(segments) == 2 {\n\t\treturn false\n\t}")
+m("refusal-github-issues-url", "refusal.go", "if len(segments) > 2 {\n\t\tfor _, n := range githubNonCodeSegments {", "if len(segments) > 2 && false {\n\t\tfor _, n := range githubNonCodeSegments {")
+m("refusal-show-line", "command.go", '"  github: enabled in config. " + refusal(githubInterceptorFeature)', '"  github: enabled in config. "')
+
 M = [x for x in M if x]
 for x in M:
     by_file.setdefault(x["file"], open(os.path.join(root, x["file"])).read())
