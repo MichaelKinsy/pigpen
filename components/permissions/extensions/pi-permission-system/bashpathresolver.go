@@ -196,7 +196,7 @@ func (r *BashPathResolver) walkForCandidates(node *bashparse.Node, base effectiv
 // the background operator (`&`) runs in a subshell, so its folded base is discarded.
 func (r *BashPathResolver) walkCurrentShellSequence(seqNode *bashparse.Node, base effectiveBase, out *[]pathCandidate) effectiveBase {
 	current := base
-	for i := 0; i < seqNode.ChildCount(); i++ {
+	for i := range seqNode.ChildCount() {
 		child := seqNode.Child(i)
 		if !child.IsNamed() || bashparse.SkipSubtreeTypes[child.Type()] {
 			continue
@@ -221,7 +221,7 @@ func (r *BashPathResolver) walkCurrentShellSequence(seqNode *bashparse.Node, bas
 func (r *BashPathResolver) walkPipeline(node *bashparse.Node, base effectiveBase, out *[]pathCandidate) effectiveBase {
 	current := base
 	first := true
-	for i := 0; i < node.ChildCount(); i++ {
+	for i := range node.ChildCount() {
 		child := node.Child(i)
 		if !child.IsNamed() || bashparse.SkipSubtreeTypes[child.Type()] {
 			continue
@@ -247,7 +247,7 @@ func (r *BashPathResolver) foldPipelineFirstStage(node *bashparse.Node, base eff
 	}
 	if node.Type() == "redirected_statement" {
 		current := base
-		for i := 0; i < node.ChildCount(); i++ {
+		for i := range node.ChildCount() {
 			child := node.Child(i)
 			if !child.IsNamed() {
 				continue
@@ -272,7 +272,7 @@ func (r *BashPathResolver) foldPipelineFirstStage(node *bashparse.Node, base eff
 // through the leading current-shell commands; the terminal child is the real pipe stage and is collected without folding.
 func (r *BashPathResolver) foldListExceptTerminal(node *bashparse.Node, base effectiveBase, out *[]pathCandidate) effectiveBase {
 	var namedChildren []*bashparse.Node
-	for i := 0; i < node.ChildCount(); i++ {
+	for i := range node.ChildCount() {
 		child := node.Child(i)
 		if child.IsNamed() && !bashparse.SkipSubtreeTypes[child.Type()] {
 			namedChildren = append(namedChildren, child)
@@ -537,7 +537,7 @@ func recordExternal(accessPath *AccessPath, effect TokenEffect, dedupKey string,
 // cdLiteralTarget is the literal target of a `cd` command, or ok=false when the first argument is not a static literal (it holds
 // an expansion or command substitution) or cannot be resolved against the working directory (`cd -`, `cd ~...`, bare `cd`).
 func cdLiteralTarget(commandNode *bashparse.Node) (string, bool) {
-	for i := 0; i < commandNode.ChildCount(); i++ {
+	for i := range commandNode.ChildCount() {
 		child := commandNode.Child(i)
 		if bashanalysis.CommandPrefixTypes[child.Type()] {
 			continue

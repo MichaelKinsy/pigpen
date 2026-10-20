@@ -32,6 +32,13 @@ var existsSync = func(p string) bool {
 	return err == nil
 }
 
+// lstatSync is Node's fs.lstatSync (the original's entryExists reads it; a differential replaces it): true when the entry exists,
+// a dangling symlink included.
+var lstatSync = func(p string) bool {
+	_, err := os.Lstat(p)
+	return err == nil
+}
+
 // isENOENTorENOTDIR is `code === "ENOENT" || code === "ENOTDIR"` of the caught error.
 func isENOENTorENOTDIR(err error) bool {
 	return errors.Is(err, fs.ErrNotExist) || errors.Is(err, syscall.ENOENT) || errors.Is(err, syscall.ENOTDIR)
