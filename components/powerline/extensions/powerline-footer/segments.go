@@ -114,6 +114,9 @@ func pathSegment(ctx *segmentContext) renderedSegment {
 		mode = *opts.Mode
 	}
 	pwd := ctx.CWD
+	if ctx.Shell.Active && ctx.Shell.Cwd != "" {
+		pwd = ctx.Shell.Cwd
+	}
 	if pwd == "" {
 		pwd, _ = os.Getwd()
 	}
@@ -530,7 +533,7 @@ func renderSegment(id string, c segmentContext) renderedSegment {
 	case "model":
 		return modelSegment(ctx)
 	case "shell_mode":
-		return notVisible() // the bash-mode editor is not ported, so shell mode is never active
+		return shellModeSegment(ctx)
 	case "path":
 		return pathSegment(ctx)
 	case "git":

@@ -1,0 +1,32 @@
+{
+ "name": "keys-stash-history-empty",
+ "description": "/stash-history with no stashed prompts and no earlier sessions says so; with the bar disabled it says that instead.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "empty",
+   "rpc": {
+    "type": "prompt",
+    "message": "/stash-history"
+   }
+  },
+  {
+   "name": "disable",
+   "rpc": {
+    "type": "prompt",
+    "message": "/powerline"
+   }
+  },
+  {
+   "name": "disabled",
+   "rpc": {
+    "type": "prompt",
+    "message": "/stash-history"
+   }
+  }
+ ]
+}
