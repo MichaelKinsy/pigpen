@@ -160,6 +160,16 @@ func TestStateReports(t *testing.T) {
 		eq(t, states(h.calls()), []string{"idle", "working"})
 	})
 
+	t.Run("does not report idle when the idle check fails (herdr-pig requires isIdle() === true)", func(t *testing.T) {
+		host, h := startSession(t)
+		host.fire("agent_start", nil)
+		h.waitForCalls(2)
+		host.setState(func(s *hostState) { s.idleFailure = true })
+		host.fire("agent_settled", nil)
+		settle()
+		eq(t, states(h.calls()), []string{"idle", "working"})
+	})
+
 	t.Run("starts as working when a reload lands mid-turn", func(t *testing.T) {
 		host, h := startTUI(t)
 		host.setState(func(s *hostState) { s.idle = false })

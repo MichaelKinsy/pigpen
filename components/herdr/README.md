@@ -15,6 +15,8 @@ The local install references this checkout; keep it at its installed path and re
 
 `PIG_BIN=/path/to/pig npm run test:go` runs `go test` in `extensions/herdr` against a fake `HERDR_BIN_PATH` (with `HERDR_SOCKET_PATH`) and a wire-level fake PiG host that also dispatches `pi.events`; it needs a Go toolchain and PiG's SDK (`PIG_SDK_DIR`, `PIG_SOURCE_ROOT` or `PIG_BIN` selects it). The tests are a port of the earlier TypeScript suite, case for case.
 
+**Divergences from herdr-pig.** The Go extension is not yet proven equivalent to herdr-pig (no `pigeq` goldens or mutation run), and it differs in transport, source identity, retry and resume fallback. [`port/PORT.md`](port/PORT.md) lists every difference. The original is not on npm; install it from GitHub, `git:github.com/Hai-Fai-Solutions/herdr-pig@3ec680471e82`, if you need its exact behavior.
+
 **`herdr:blocked`.** Besides UI prompts (`ui_prompt_start` and `ui_prompt_end`), the extension listens for `herdr:blocked` on `pi.events` (`{ active, label }`), the bus herdr's own Pi integration handles, so another extension can mark a block that is not a UI prompt. It uses PiG's Go SDK bridge (`Extension.Events()`, PiG 0.4.0 and later). The listener is ported from [herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and Hai-Fai Solutions (Apache-2.0). It does not run on Pi: Pi users keep herdr's own Pi integration.
 
 To install it from herdr instead, use the herdr plugin in [`piglets/herdr/herdr-plugin`](../../piglets/herdr/README.md#install-from-herdr).

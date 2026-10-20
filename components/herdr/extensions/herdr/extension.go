@@ -155,7 +155,8 @@ func Extension() *sdk.Extension {
 		if !r.isRoot() {
 			return nil, nil
 		}
-		if idle, err := ctx.IsIdle(); err == nil && !idle {
+		// herdr-pig requires isIdle() === true: a failed check is not idle.
+		if idle, err := ctx.IsIdle(); err != nil || !idle {
 			return nil, nil
 		}
 		r.agentSettled()
