@@ -2,6 +2,8 @@ package powerline_footer
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -379,4 +381,71 @@ func TestCommandSendsAfterItReturns(t *testing.T) {
 	cleared := r.q.gate == nil
 	r.q.mu.Unlock()
 	eq(t, cleared, true, "the gate is cleared when the command returns")
+}
+
+func TestPostCompactionDeliversOnlyPostCompactionItems(t *testing.T) {
+	r := newQueueRig(t)
+	r.emit("session_start", map[string]any{"reason": "startup"})
+	r.host.sendHook = func(text, _ string) error {
+		r.emit("before_agent_start", map[string]any{"prompt": text})
+		return nil
+	}
+	follow := r.item("plain follow up", intentFollowUp, queueTarget{Kind: targetCurrentSession})
+	post := r.item("after compaction", intentPostCompact, queueTarget{Kind: targetCurrentSession})
+	r.host.idle = true
+	r.emit("session_compact", nil)
+	r.clock.tick(time.Second)
+	eq(t, r.host.texts(), []string{"after compaction"}, "only the post-compaction item is sent")
+	eq(t, r.get(follow.ID).Status, statusQueued, "a follow-up is left alone")
+	eq(t, r.get(post.ID).Status, statusSent, "the post-compaction item is sent")
+}
+
+func TestSettledAndAgentEndWakeAPendingPostCompactionDelivery(t *testing.T) {
+	for _, event := range []string{"agent_settled", "agent_end"} {
+		r := newQueueRig(t)
+		r.emit("session_start", map[string]any{"reason": "startup"})
+		r.q.mu.Lock()
+		r.q.postCompaction = &postCompactionDelivery{generation: r.q.sessionGeneration, context: r.q.context()}
+		r.q.mu.Unlock()
+		eq(t, r.clock.active(), 0, event+": no timer yet")
+		r.dispatch(event, nil)
+		eq(t, r.clock.active(), 1, event+" schedules the delivery")
+	}
+}
+
+func TestFailedCompactionCancelsThePendingDelivery(t *testing.T) {
+	r := newQueueRig(t)
+	r.emit("session_start", map[string]any{"reason": "startup"})
+	r.item("x", intentPostCompact, queueTarget{Kind: targetCurrentSession})
+	r.emit("session_compact", nil)
+	eq(t, r.clock.active(), 1, "scheduled")
+	r.emit("session_compact_failed", map[string]any{"errorMessage": "no"})
+	eq(t, r.clock.active(), 0, "cancelled")
+	r.clock.tick(time.Second)
+	eq(t, r.host.texts(), []string(nil), "nothing sent")
+}
+
+func TestSummaryCacheKeyIncludesTheSession(t *testing.T) {
+	r := newQueueRig(t)
+	r.item("mine", intentFollowUp, queueTarget{Kind: targetCurrentSession}) // queued by session "readiness"
+	s, err := r.q.summary()
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, s.QueueCount, 1, "its own session sees it")
+	r.host.sessionID = "someone-else"
+	s, err = r.q.summary()
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, s.QueueCount, 0, "another session does not, cache or not")
+}
+
+func TestSegmentSummaryOfAnUnreadableInboxKeepsTheCompactionState(t *testing.T) {
+	r := newQueueRig(t)
+	if err := os.MkdirAll(filepath.Join(r.root, "powerline-footer", "inbox.jsonl"), 0o755); err != nil { // a directory where the inbox belongs
+		t.Fatal(err)
+	}
+	r.p.compacting = true
+	eq(t, r.q.segmentSummary([]string{"queue"}), queueSummary{Compacting: true}, "a store that cannot be read leaves the bar without a queue")
 }

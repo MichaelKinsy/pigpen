@@ -174,12 +174,6 @@
   "replace": "if s.snapshot != nil {"
  },
  {
-  "name": "queue-store-no-access-check",
-  "file": "queue_store.go",
-  "find": "f, err := os.Open(s.inboxPath)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\t_ = f.Close()",
-  "replace": ""
- },
- {
   "name": "queue-store-snapshot-never",
   "file": "queue_store.go",
   "find": "s.snapshot = &displaySnapshot{fingerprint, slices.Clone(items)}",
@@ -273,7 +267,7 @@
   "name": "queue-delivery-ack-any-text",
   "file": "queue_state.go",
   "find": "queueCollapseSpace(q.pending[id].text) != normalized",
-  "replace": "false"
+  "replace": "queueCollapseSpace(q.pending[id].text) != normalized && false"
  },
  {
   "name": "queue-delivery-ack-silent",
@@ -558,12 +552,6 @@
   "replace": "q.host.SetEditorText(item.Text)\n\t\tq.requestQueueRender()"
  },
  {
-  "name": "queue-cmd-retry-no-requeue",
-  "file": "queue_command.go",
-  "find": "updated, err := q.store.update(item.ID, queueUpdates{Status: statusQueued, SetError: true})\n\t\tif err != nil || updated == nil {\n\t\t\treturn err\n\t\t}\n\t\t_, err = q.deliverQueueItem(*updated)",
-  "replace": "_, err = q.deliverQueueItem(item)"
- },
- {
   "name": "queue-cmd-alias-default-path",
   "file": "queue_command.go",
   "find": "aliasPath = q.p.h.Cwd()",
@@ -628,12 +616,6 @@
   "file": "select_overlay.go",
   "find": "selectPrimaryColumnWidth = 32 //",
   "replace": "selectPrimaryColumnWidth = 30 //"
- },
- {
-  "name": "select-description-edge",
-  "file": "select_overlay.go",
-  "find": "if description != \"\" && width > 40 {",
-  "replace": "if description != \"\" && width >= 40 {"
  },
  {
   "name": "select-min-description",

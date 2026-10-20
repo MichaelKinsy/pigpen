@@ -223,3 +223,13 @@ func TestCompactStartErrorIsIgnoredForALaterOperationOrSession(t *testing.T) {
 	fail(r)
 	eq(t, r.p.compacting, true, "an error from before the session was replaced is ignored")
 }
+
+func TestInterruptDuringAutocompleteLeavesTheWaitingPrompt(t *testing.T) {
+	r := newDelayRig(t, 4000)
+	r.submit("waiting")
+	r.q.mu.Lock()
+	verdict := r.q.interceptEditorInput(r.ed, editorInput{Interrupt: true, AutocompleteShowing: true})
+	r.q.mu.Unlock()
+	eq(t, verdict, editorContinue, "Esc closes the autocomplete first")
+	eq(t, r.q.pendingSend != nil, true, "the prompt still waits")
+}
