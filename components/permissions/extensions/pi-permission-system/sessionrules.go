@@ -5,9 +5,12 @@ import "sync"
 // Port of src/session/session-rules.ts.
 
 // SessionRules is the ephemeral in-memory store of session-scoped permission approvals. Each approval is a Rule with action "allow",
-// so the ruleset is directly usable with Evaluate. Cleared on session shutdown, never persisted. Not safe for concurrent use, as the
-// original.
-type SessionRules struct{ rules Ruleset }
+// so the ruleset is directly usable with Evaluate. Cleared on session shutdown, never persisted. Unlike the original's single-threaded
+// one it is safe for concurrent use: the approval path writes it while the resolver reads it.
+type SessionRules struct {
+	mu    sync.Mutex
+	rules Ruleset
+}
 
 // Approve is approve: record a wildcard pattern as approved for the surface. A bare family surface expands to one rule per
 // directional member (ADR 0013 section 4); a directional surface stays a single rule.
