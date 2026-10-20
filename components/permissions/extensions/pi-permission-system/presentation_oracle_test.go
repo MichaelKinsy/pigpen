@@ -3,7 +3,6 @@ package pi_permission_system
 import (
 	"os"
 	"sort"
-	"strings"
 	"testing"
 )
 
@@ -42,15 +41,6 @@ func pcOK(v any) *jsObject {
 func (s *pcSuite) compare(section string, i int, got any, want any, spec any) {
 	s.t.Helper()
 	s.checked++
-	if o, ok := got.(*jsObject); ok && o.vals["ok"] == pcOKSame {
-		return
-	}
-	// The recording host's home directory: a `~` location expands to it. Read the recorded answer on this host's home.
-	if section == "skills visible" {
-		if home, err := os.UserHomeDir(); err == nil {
-			want = pcHome(want, "/home/kinsy", home)
-		}
-	}
 	g, w := marshalJSON(got, ""), marshalJSON(want, "")
 	if g != w {
 		s.failed++
@@ -60,36 +50,12 @@ func (s *pcSuite) compare(section string, i int, got any, want any, spec any) {
 	}
 }
 
-// pcHome replaces the recording host's home directory inside every string of an answer.
-func pcHome(v any, from, to string) any {
-	switch x := v.(type) {
-	case string:
-		return strings.ReplaceAll(x, from, to)
-	case []any:
-		out := make([]any, len(x))
-		for i, e := range x {
-			out[i] = pcHome(e, from, to)
-		}
-		return out
-	case *jsObject:
-		out := newObject()
-		for _, k := range x.keys {
-			out.set(k, pcHome(x.vals[k], from, to))
-		}
-		return out
-	}
-	return v
-}
-
 func clip(s string, n int) string {
 	if len(s) > n {
 		return s[:n] + "..."
 	}
 	return s
 }
-
-// pcOKSame marks an answer the test takes from the oracle itself (see its use).
-var pcOKSame any = "<same>"
 
 func pcNum(v any) float64 { return lgWidth(v) }
 
@@ -384,11 +350,6 @@ func TestPresentationOracle(t *testing.T) {
 			return out
 		})
 		run("mcpinput", s.list(cases, "mcpinput"), s.list(oracle, "mcpinput"), func(c any) any {
-			if strings.Contains(marshalJSON(c, ""), "$fn") {
-				// A function-valued argument cannot come from a JSON tool input, and String(fn) is its source text: not reproducible.
-				// Newer cases (gen-presentation-cases.py) no longer carry one; this recorded file does, until it is re-recorded.
-				return pcOKSame
-			}
 			summary, ok := FormatMcpInputForPrompt.Format(ToRecord(build(obj(c).vals["input"])))
 			if !ok {
 				u := newObject()
