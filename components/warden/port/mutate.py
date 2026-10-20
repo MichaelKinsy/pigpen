@@ -496,6 +496,8 @@ EQUIVALENT = {"learn-offtask-not-gated": "unreachable: every off-task steer is t
  "large-output-memory-lost": "the steer repeat window drops the identical second text, so the memory is a second line of defence (checked at the unit level by the notice twin)"}
 EQUIVALENT["banner-only-on-first-block"] = "a notice and several text blocks never meet outside the per-block path: more than one block means judged per block, and a block that is not judged (a duplicate or a recall) has no verdict, so no notice"
 EQUIVALENT.update(SECURITY_EQUIVALENT)
+EQUIVALENT["state-reminder-while-awaiting-user"] = "redundant in the original too: assess selects nothing unless the disposition is advance, so a fresh assessment that awaits the user has no selection and the earlier test of the selection already stops the reminder"
+EQUIVALENT["state-loaded-bytes-not-counted"] = "the counter is read only by the next load of the same prompt, and the original loads at most once a prompt (before_agent_start); it starts again at 0 for every prompt"
 only = set(sys.argv[1:])
 out = []
 for mid, f, old, new in M:
