@@ -648,10 +648,10 @@
   "replace": "Do not spawn more agents for these tasks."
  },
  {
-  "name": "named-list-under-home",
+  "name": "named-list-under-agent-dir",
   "file": "store.go",
-  "find": "path = filepath.Join(agentDir(), \"tasks\", listIDOrPath+\".json\")",
-  "replace": "path = filepath.Join(os.Getenv(\"HOME\"), \".pi\", \"tasks\", listIDOrPath+\".json\")"
+  "find": "path = filepath.Join(home, \".pi\", \"tasks\", listIDOrPath+\".json\")",
+  "replace": "path = filepath.Join(agentDir(), \"tasks\", listIDOrPath+\".json\"); _ = home"
  },
  {
   "name": "ping-while-loading",
@@ -700,5 +700,179 @@
   "file": "command.go",
   "find": "actions = append(actions, \"✗ Delete\", \"← Back\")",
   "replace": "actions = append(actions, \"✗ Delete\")"
+ },
+ {
+  "name": "widget-rows-sent-as-strings",
+  "file": "extension.go",
+  "find": "kit.View{Root: kit.NewLines(lines)}",
+  "replace": "lines"
+ },
+ {
+  "name": "widget-view-without-placement",
+  "file": "extension.go",
+  "find": "kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{\"placement\": widgetPlacement})",
+  "replace": "kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{})"
+ },
+ {
+  "name": "widget-rpc-sends-rows",
+  "file": "extension.go",
+  "find": "if u.ctx.Mode() == \"rpc\" {\n\t\treturn\n\t}\n\t_ = u.ctx.SetWidget(key, kit.View",
+  "replace": "if false {\n\t\treturn\n\t}\n\t_ = u.ctx.SetWidget(key, kit.View"
+ },
+ {
+  "name": "widget-resize-not-watched",
+  "file": "extension.go",
+  "find": "if !a.watchingWidth && ctx.HasUI() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "widget-limit-capped-at-ten",
+  "file": "widget.go",
+  "find": "limit = max(limit, 0)",
+  "replace": "limit = min(max(limit, 0), 10)"
+ },
+ {
+  "name": "widget-removed-list-keeps-view",
+  "file": "extension.go",
+  "find": "if lines == nil {\n\t\t_ = u.ctx.SetWidget(key, nil)\n\t\treturn\n\t}",
+  "replace": "if lines == nil {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "settings-title-not-bold",
+  "file": "settings.go",
+  "find": "theme.Bold(theme.Fg(\"accent\", \"⚙  Task Settings\"))",
+  "replace": "theme.Fg(\"accent\", \"⚙  Task Settings\")"
+ },
+ {
+  "name": "settings-title-text",
+  "file": "settings.go",
+  "find": "\"⚙  Task Settings\"",
+  "replace": "\"⚙ Task Settings\""
+ },
+ {
+  "name": "settings-no-spacer",
+  "file": "settings.go",
+  "find": "kit.NewSpacer(1),\n",
+  "replace": ""
+ },
+ {
+  "name": "settings-max-visible-rows",
+  "file": "settings.go",
+  "find": "const settingsMaxVisible = 10",
+  "replace": "const settingsMaxVisible = 5"
+ },
+ {
+  "name": "settings-focus-missing",
+  "file": "settings.go",
+  "find": "Focus: settingsListID,",
+  "replace": ""
+ },
+ {
+  "name": "settings-change-not-saved",
+  "file": "settings.go",
+  "find": "_ = saveTasksConfig(p.a.cfg, p.cwd, p.agentDir)",
+  "replace": "_ = p.agentDir"
+ },
+ {
+  "name": "settings-change-not-applied",
+  "file": "settings.go",
+  "find": "r.apply(p.a.cfg, event.Value)",
+  "replace": "_ = r"
+ },
+ {
+  "name": "settings-cancel-keeps-open",
+  "file": "settings.go",
+  "find": "return sdk.RemoteComponentResult{Done: true}, nil",
+  "replace": "return sdk.RemoteComponentResult{}, nil"
+ },
+ {
+  "name": "settings-input-closes",
+  "file": "settings.go",
+  "find": "func (p *settingsPanel) HandleInput(string) (sdk.RemoteComponentResult, error) {\n\treturn sdk.RemoteComponentResult{}, nil",
+  "replace": "func (p *settingsPanel) HandleInput(string) (sdk.RemoteComponentResult, error) {\n\treturn sdk.RemoteComponentResult{Done: true}, nil"
+ },
+ {
+  "name": "settings-maxvisible-values-short",
+  "file": "settings.go",
+  "find": "[]string{\"5\", \"10\", \"15\", \"20\", \"30\", \"50\", \"100\"}",
+  "replace": "[]string{\"5\", \"10\"}"
+ },
+ {
+  "name": "settings-cascade-inverted",
+  "file": "settings.go",
+  "find": "c[\"autoCascade\"] = v == \"on\"",
+  "replace": "c[\"autoCascade\"] = v == \"off\""
+ },
+ {
+  "name": "settings-maxvisible-saved-as-text",
+  "file": "settings.go",
+  "find": "n, _ := strconv.Atoi(v); c[\"maxVisible\"] = float64(n)",
+  "replace": "c[\"maxVisible\"] = v"
+ },
+ {
+  "name": "settings-scope-values",
+  "file": "settings.go",
+  "find": "[]string{\"memory\", \"session\", \"session-global\", \"project\"}",
+  "replace": "[]string{\"memory\", \"session\", \"project\"}"
+ },
+ {
+  "name": "settings-delay-text",
+  "file": "settings.go",
+  "find": "\"Clearing lags ~\" + strconv.Itoa(autoClearDelay) + \" turns",
+  "replace": "\"Clearing lags ~\" + strconv.Itoa(autoClearDelay+1) + \" turns"
+ },
+ {
+  "name": "settings-description-text",
+  "file": "settings.go",
+  "find": "Takes effect on next session start.",
+  "replace": "Takes effect immediately."
+ },
+ {
+  "name": "settings-custom-shown-in-cycle",
+  "file": "settings.go",
+  "find": "}, builtInSortOrders, func",
+  "replace": "}, append([]string{\"custom\"}, builtInSortOrders...), func"
+ },
+ {
+  "name": "settings-opened-as-overlay",
+  "file": "settings.go",
+  "find": "ctx.Custom(a.newSettingsPanel(ctx.Cwd(), agentDir(), ctx.UITheme()), nil)",
+  "replace": "ctx.Custom(a.newSettingsPanel(ctx.Cwd(), agentDir(), ctx.UITheme()), sdk.RemoteOverlayOptions{Overlay: true})"
+ },
+ {
+  "name": "settings-panel-error-swallowed",
+  "file": "settings.go",
+  "find": "_, err := ctx.Custom(a.newSettingsPanel(ctx.Cwd(), agentDir(), ctx.UITheme()), nil)\n\treturn err",
+  "replace": "_, _ = ctx.Custom(a.newSettingsPanel(ctx.Cwd(), agentDir(), ctx.UITheme()), nil)\n\treturn nil"
+ },
+ {
+  "name": "command-settings-not-back-to-menu",
+  "file": "command.go",
+  "find": "if err := a.settingsMenu(ctx); err != nil {\n\t\t\treturn err\n\t\t}\n\t\treturn mainMenu()",
+  "replace": "return a.settingsMenu(ctx)"
+ },
+ {
+  "name": "taskoutput-wait-ignores-abort",
+  "file": "tools.go",
+  "find": "case <-timer.C:\n\t\tcase <-ctx.Done():\n\t\t}",
+  "replace": "case <-timer.C:\n\t\t}"
+ },
+ {
+  "name": "json-stringify-html-escaped",
+  "file": "extension.go",
+  "find": "sdkjson.MarshalStringify(v)",
+  "replace": "sdkjson.Marshal(v)"
+ },
+ {
+  "name": "store-file-not-stringify",
+  "file": "store.go",
+  "find": "sdkjson.MarshalStringify(data)",
+  "replace": "json.Marshal(data)"
+ },
+ {
+  "name": "store-file-indent",
+  "file": "store.go",
+  "find": "json.Indent(&buf, compact, \"\", \"  \")",
+  "replace": "json.Indent(&buf, compact, \"\", \"\\t\")"
  }
 ]

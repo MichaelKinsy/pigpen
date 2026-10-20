@@ -1,0 +1,69 @@
+{
+  "name": "max-visible-above-ten",
+  "description": "A maxVisible above ten is honoured, not refused: the tools and /tasks work as with the default.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "One",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskCreate",
+          "arguments": {
+            "subject": "Two",
+            "description": "d"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "TaskList",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "work on it"
+      }
+    },
+    {
+      "name": "tasks",
+      "rpc": {
+        "type": "prompt",
+        "message": "/tasks"
+      },
+      "ui": [
+        {
+          "value": "View all tasks (2)"
+        },
+        {
+          "cancelled": true
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ],
+  "agentFiles": {
+    "tasks-config.json": "{\"maxVisible\": 50, \"showAll\": false}"
+  }
+}
