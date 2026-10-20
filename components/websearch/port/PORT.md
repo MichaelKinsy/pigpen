@@ -8,7 +8,7 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (305 exact twins, 570 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (330 exact twins, 545 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
@@ -35,7 +35,7 @@ Every unported option, mode or URL kind is refused with one message and returns 
 
 A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
 `/google-account`, the shortcuts and the activity widget. Known approximation: whether an unported provider is available
-uses its credential names (OAuth, ADC and browser-cookie availability of OpenAI, Gemini, xAI and Kimi is not known here).
+uses its credential names (OAuth and login availability of OpenAI, xAI and Kimi is not known here). Gemini is exact: see "Slice: Gemini".
 
 ## Mapping (original file -> Go)
 
@@ -136,7 +136,7 @@ Each logs `ADAPTED:` when run.
 
 | Layer | Result |
 |---|---|
-| Twins | `pigeq twins check`: 305 exact + 570 named skips = 875 titles; exit 0 |
+| Twins | `pigeq twins check`: 330 exact + 545 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
 | Mutation | `mutations.json`: 15 mutants, all killed (`pigeq mutate --unit`) |
@@ -160,3 +160,36 @@ The golden traces were recorded again from the original under Pi 1.0.1 (host che
 `0.3.1+1.0.1`) and normalizer v3, because Pi 1.0.x changed the trace format: a `prompt` response now carries
 `data.disposition` (Pi 0.99.0, #9098). An event-by-event diff against the previous traces shows no other
 difference, and `pigeq check` passes on the Go port. Details: `docs/plan/progress/porter-verify.md`.
+
+## Slice: Gemini (gemini-api, gemini-adc, gemini-search, gemini-url-context, gemini-pdf-extract)
+
+Provider `gemini` is ported (`gemini_api.go`, `gemini_adc.go`, `gemini_search.go`, `gemini_url_context.go`,
+`gemini_pdf_extract.go`, `gemini_web_client.go`), its refusal is removed, and the `gemini` fetch provider and the Gemini PDF
+transcription are real. What each file carries:
+
+- **Transport** (`gemini_api.go`): the three auth modes of `fetchGeminiApi` (key header, Cloudflare AI Gateway header, ADC bearer on
+  `aiplatform.googleapis.com`), the origin allow-list, the credential-in-query rejection, redaction of the key, the gateway key
+  and the ADC token from every error, and the video-capable availability (`IsGeminiAPIAvailableWithVideo`: ADC does not count).
+- **ADC** (`gemini_adc.go`): `authorized_user` refresh-token and `service_account` JWT (RS256) exchanges with the original's
+  error messages, token caching with the 60 s skew, and the credential-rejection classification (400, 401, 403 are a
+  `CredentialResolutionError`, everything else a plain error so fallbacks keep working).
+- **Search and routing** (`gemini_search.go`, `search.go`): explicit, `all` (API only), arrays, `searchRouting` and `auto`.
+  Gemini has no availability gate in `auto`: it answers or reports nothing, and only a credential failure or an abort is shown
+  (`searchWithGemini` with `strictErrors` false). The availability of the other providers now receives the call context and
+  options (`providerDef.available`) so the model-backed providers can read the session.
+- **Fetch** (`extract.go`): the `gemini` fetch provider tries URL context, then Gemini Web, as in `extract.ts:1011`.
+- **PDF** (`gemini_pdf_extract.go`): `ExtractPDFViaGemini` for the PDF slice (prompt, fence stripping, page-marker validation).
+- **Gemini Web** (`gemini_web_client.go`): the cookie client is another slice. This port defines the interface the original's
+  `gemini-web.ts` calls (`GeminiWebClient`: `Available`, `Diagnostic`, `Query`) and a default client that reports Gemini Web as
+  unavailable while browser cookie access is off (the original's default) and refuses with the port's refusal message when
+  it is switched on. The cookie slice installs its client with `SetGeminiWebClient`.
+
+Deliberate differences:
+
+- Provider timeouts follow the port-wide classification (network, so routing can fall through); the original treats them as aborts.
+- The activity monitor (curator slice) is not ported, so no activity is logged around Gemini calls.
+- The fetch "Fallback options" checklist names the Gemini API (`GEMINI_API_KEY`) now; the Gemini Web bullet comes with the cookie slice.
+- `gemini-api-transport` drives video-extract.ts upload, status and delete; those two twins run the generate call and the
+  upload base of the same transport (ADAPTED) until the video slice ships the rest.
+- Config is read at each call (the original caches it for the process), so an edit to `web-search.json` is seen without a restart.
+- The grounding-redirect lookup (`HEAD`, no redirect following, 5 s) goes through the provider transport, so a configured proxy applies.
