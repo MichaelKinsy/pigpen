@@ -87,7 +87,13 @@ func TestTemmlRenderEqualsTheOriginal(t *testing.T) {
 		t.Fatalf("%d recorded cases", len(cases))
 	}
 	failures := 0
-	for i, c := range cases {
+	// The race detector makes the renderer about ten times slower: every sixth case then (the plain run takes all).
+	stride := 1
+	if raceEnabled {
+		stride = 6
+	}
+	for i := 0; i < len(cases); i += stride {
+		c := cases[i]
 		got := dfdRenderLatexToMathML(c.Latex, c.Display)
 		want := ""
 		if c.Out != nil {
