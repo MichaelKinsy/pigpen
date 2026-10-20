@@ -152,8 +152,15 @@ func TestIndexCommandBuildsTheIndexAndTellsWhatItBuilt(t *testing.T) {
 	// The conscience reads the new index at once: the candidate for the skill now carries its entry.
 	r.set(csAdvance(3))
 	r.prompt("design a landing page", r.skills)
-	state := r.requests()[len(r.requests())-1].State["candidates"].(map[string]any)["c1"].(map[string]any)
-	if state["lead"] != "Search the graph" || state["unindexed"] != nil {
+	var state map[string]any
+	for _, req := range r.requests() {
+		for _, c := range req.State["candidates"].(map[string]any) {
+			if m := c.(map[string]any); m["name"] == "impeccable" {
+				state = m
+			}
+		}
+	}
+	if state == nil || state["lead"] != "Search the graph" || state["unindexed"] != nil {
 		t.Errorf("candidate state %v", state)
 	}
 	if st, err := os.Stat(idx.path("global", "")); err != nil || st.Mode().Perm() != 0o600 && os.PathSeparator == '/' {
