@@ -91,6 +91,12 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	if input == nil {
 		input = map[string]any{}
 	}
+	if cfg.Enabled {
+		w.conscienceToolCall(ctx, cfg, tool, input) // CONSCIENCE-LANE HOOK: the selected capability was reached for
+	}
+	if !cfg.Enabled || !cfg.Action.Enabled || !toolGuarded(cfg.Action, tool) {
+		return nil, nil
+	}
 	id, _ := data["toolCallId"].(string)
 	if cfg.Enabled {
 		// guardcore: temp paths this call may create (session scratch) and the one-time rule notices.
@@ -104,6 +110,9 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	fallback := w.lastPrompt
 	w.stats.Inspected++
 	w.mu.Unlock()
+	if w.conscienceIndexWrite(ctx, cfg, tool, input) { // CONSCIENCE-LANE HOOK: /warden index writes its own files
+		return nil, nil
+	}
 	call := ToolCallRef{ID: id, Tool: tool, Input: input}
 	conv := conversationOf(w.branchOf(ctx), id, fallback, call)
 	// guardcore: a write/edit to a protected path arms matching command patterns before the guard looks at the call.

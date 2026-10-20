@@ -85,6 +85,7 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	details, _ := data["details"].(map[string]any)
 	failed := ResultFailed(isError, details, content)
 	text := out.text
+	w.conscienceToolResult(ctx, cfg, tool, failed) // CONSCIENCE-LANE HOOK: the selected capability's outcome
 
 	// ── supervision: call waste. Every finished call enters the window; a note, when one fires, is attached to
 	// this result below, and never reaches a hold, the judge, or the steer budget.
@@ -288,6 +289,7 @@ func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 	}
 	final, ok := FinalAssistantText(messages)
 	w.restatement(ctx, cfg, final)                  // SECURITY slot 5: restatement, recorded only
+	w.conscienceAgentEnd(ctx, cfg, data)            // CONSCIENCE-LANE HOOK (slot 6): the one reminder of an unused recommendation
 	w.rulesAgentEnd(ctx, cfg, w.judgeFor(ctx, cfg)) // rules hook (slot 7): the end-of-run pass
 	if !ok || final == "" {
 		return nil, nil

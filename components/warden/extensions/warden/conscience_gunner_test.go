@@ -421,20 +421,19 @@ func TestRule2UserInvokedSkillYieldsAlreadySupplied(t *testing.T) {
 
 // twin: tests/conscience-gunner.test.ts:855
 func TestRule3PathRuleBlocksLoadYieldingLoadDenied(t *testing.T) {
-	// The path-rule matcher is the guard-core lane's; the test installs one that matches `**/skills/**` for reads.
-	saved := matchReadPathRules
-	t.Cleanup(func() { matchReadPathRules = saved })
-	matchReadPathRules = func(path string, rules []PathRule, _ map[string]bool) []PatternHit {
-		if len(rules) > 0 && strings.Contains(path, "/skills/") {
-			return []PatternHit{{ID: "path:block-skills", Severity: SeverityDeny, Label: "block-skills"}}
-		}
-		return nil
-	}
 	s := gnSkillFile(t, t.TempDir(), "r3-path", fm("r3-path", "Path test")+"Body.", "Path test")
 	rules := []PathRule{{ID: "block-skills", Paths: []string{"**/skills/**"}, Access: "none", Tools: []string{"read"}, Action: "confirm"}}
 	r := loadSkillBody(s, gnLoadConfig(), gnOpts("r3-path", "Path test", func(o *LoadOpts) { o.PathRules = rules }))
 	if r.SkipReason != "load_denied" {
 		t.Errorf("%+v", r)
+	}
+	// An exempt rule does not block, and a rule for other tools or paths does not either.
+	exempt := loadSkillBody(s, gnLoadConfig(), gnOpts("r3-path", "Path test", func(o *LoadOpts) { o.PathRules = rules; o.ExemptRules = []string{"block-skills"} }))
+	other := loadSkillBody(s, gnLoadConfig(), gnOpts("r3-path", "Path test", func(o *LoadOpts) {
+		o.PathRules = []PathRule{{ID: "w", Paths: []string{"**/skills/**"}, Access: "none", Tools: []string{"write"}, Action: "block"}, {ID: "p", Paths: []string{"**/elsewhere/**"}, Access: "none", Tools: []string{"read"}, Action: "block"}}
+	}))
+	if exempt.SkipReason == "load_denied" || other.SkipReason == "load_denied" {
+		t.Errorf("exempt %+v other %+v", exempt, other)
 	}
 }
 
