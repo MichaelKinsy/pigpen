@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -461,16 +460,13 @@ func widgetLines(jobs []*AsyncJobState) []string {
 	return lines
 }
 
-// staleExtensionContext is extension-context.ts isStaleExtensionContextError's message test.
-var staleExtensionContext = regexp.MustCompile(`(?i)extension ctx is stale|extension context no longer active|stale after session replacement or reload`)
-
 // logAsyncError reports a failure the background code survives (the original's console.error).
 var logAsyncError = func(args ...any) { fmt.Fprintln(os.Stderr, args...) }
 
 // emitProcessTerminalEvent publishes the process-terminal proof (async-execution.ts emitProcessTerminalEvent): a stale context
 // drops it silently, any other failure is logged, none throws.
 func emitProcessTerminalEvent(emit func(channel string, payload any) error, proof any) {
-	if err := emit(subagentProcessTerminalEvt, proof); err != nil && !staleExtensionContext.MatchString(err.Error()) {
+	if err := emit(subagentProcessTerminalEvt, proof); err != nil && !isStaleExtensionContextError(err) {
 		logAsyncError("Failed to emit subagent process-terminal event:", err)
 	}
 }
