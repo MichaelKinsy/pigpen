@@ -62,7 +62,7 @@ func (r *cdRig) startWithAgentDir(t *testing.T, home string) *Host {
 		r.mode = "tui"
 	}
 	var h *Host
-	hasUI := !r.noUI
+	hasUI := !r.noUI && (r.mode == "tui" || r.mode == "rpc")
 	h = StartHost(t, powerline.Extension(), HostOptions{Mode: r.mode, Cwd: r.cwd, HasUI: &hasUI, OnCallValue: func(method string, args map[string]any) (any, string) {
 		switch method {
 		case "getSessionFile":

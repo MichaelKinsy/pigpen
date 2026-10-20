@@ -344,15 +344,20 @@ func decodeKittyPrintable(m []string) (string, bool) {
 // QuotePicker. upstream: quote-reply.ts class QuotePicker.
 
 type quotePicker struct {
-	mu           sync.Mutex
-	query        string
-	selectedIdx  int
-	candidates   []quoteCandidate
-	theme        pickerTheme
-	now          func() time.Time
-	onSelect     func(quoteCandidate)
-	onCancel     func()
-	lastSelected *quoteCandidate
+	mu          sync.Mutex
+	query       string
+	selectedIdx int
+	candidates  []quoteCandidate
+	theme       pickerTheme
+	now         func() time.Time
+	onSelect    func(quoteCandidate)
+	onCancel    func()
+
+	// The filtered list of the last query: a key press asks for it twice (the render and the handler), and the filter is the
+	// costly part of both.
+	filteredFor string
+	filtered    []quoteCandidate
+	haveFilter  bool
 }
 
 func newQuotePicker(candidates []quoteCandidate, theme pickerTheme, now func() time.Time, onSelect func(quoteCandidate), onCancel func()) *quotePicker {
@@ -445,12 +450,20 @@ func (p *quotePicker) help() string {
 	return p.theme.Fg("dim", i("↑↓")+" navigate  "+i("enter")+" quote  "+i("esc")+" cancel  "+i("⌫")+" edit")
 }
 
+// filter is filterCandidates(p.candidates, p.query), kept until the query changes.
+func (p *quotePicker) filter() []quoteCandidate {
+	if !p.haveFilter || p.filteredFor != p.query {
+		p.filtered, p.filteredFor, p.haveFilter = filterCandidates(p.candidates, p.query), p.query, true
+	}
+	return p.filtered
+}
+
 // Render draws the picker at width.
 func (p *quotePicker) Render(width int) []string {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	innerWidth := max(0, width-2)
-	filtered := filterCandidates(p.candidates, p.query)
+	filtered := p.filter()
 	if len(filtered) == 0 {
 		p.selectedIdx = 0
 	} else {
@@ -480,7 +493,7 @@ func (p *quotePicker) Render(width int) []string {
 func (p *quotePicker) HandleInput(data string) (selected *quoteCandidate, cancelled bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	filtered := filterCandidates(p.candidates, p.query)
+	filtered := p.filter()
 	switch {
 	case matchesPickerKey(data, "up"):
 		if len(filtered) == 0 {
