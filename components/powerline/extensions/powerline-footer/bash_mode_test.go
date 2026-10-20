@@ -135,7 +135,7 @@ func TestRenderGhostLine(t *testing.T) {
 
 	// A suffix wider than the room is cut (and padded to the room).
 	got = renderGhostLine(rows, 10, "git st", g, 0, 6, true)
-	eq(t, got[1], "git st\x1b[7m \x1b[0m\x1b[38;5;244matu\x1b[0m\x1b[0m\x1b[0m", "cut suffix")
+	eq(t, got[1], "git st\x1b[7m \x1b[0m\x1b[38;5;244matu\x1b[0m\x1b[0m", "cut suffix") // pi-tui finalizeTruncatedResult: one reset when there is no ellipsis, then the ghost's own
 	for name, c := range map[string]struct {
 		width       int
 		text        string
