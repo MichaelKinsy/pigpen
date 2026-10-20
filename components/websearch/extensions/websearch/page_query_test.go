@@ -268,6 +268,9 @@ func TestPageQueryInputBudgetAndFailures(t *testing.T) {
 	wantErr(t, err, "^Answer model not found: test/absent$")
 
 	// The input budget is 60 percent of the window before the output and safety reserve: 100,000 tokens give 180,000 characters.
+	reg.completeFn = func(context.Context, map[string]any, map[string]any, CompleteOptions) (map[string]any, error) {
+		return stopText("a"), nil
+	}
 	side.model["contextWindow"] = 100000.0
 	result, err = AnswerFromPage(bg(), PageAnswerInput{Question: "Q", PageText: strings.Repeat("x", 200000), SourceURL: "https://a.test"}, side)
 	noErr(t, err)
@@ -275,9 +278,6 @@ func TestPageQueryInputBudgetAndFailures(t *testing.T) {
 		t.Fatalf("%+v", result)
 	}
 	side.model["contextWindow"] = 10000.0
-	reg.completeFn = func(context.Context, map[string]any, map[string]any, CompleteOptions) (map[string]any, error) {
-		return stopText("a"), nil
-	}
 
 	// A selector needs a provider and an id, and a model needs a key.
 	for _, bad := range []string{"/id", "provider/"} {
