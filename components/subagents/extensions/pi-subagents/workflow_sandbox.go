@@ -326,7 +326,7 @@ func (s *wfSandbox) toGo(v goja.Value) any {
 		}
 		return obj
 	}
-	switch jsTypeof(v) {
+	switch realmTypeof(v) {
 	case "string":
 		return v.String()
 	case "boolean":
@@ -342,7 +342,7 @@ func (s *wfSandbox) assertJsonValue(v goja.Value, path string, seen map[*goja.Ob
 	if goja.IsNull(v) {
 		return ""
 	}
-	t := jsTypeof(v)
+	t := realmTypeof(v)
 	switch t {
 	case "string", "boolean":
 		return ""

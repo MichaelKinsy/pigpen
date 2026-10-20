@@ -15,8 +15,6 @@ import (
 // preflightWorktreeSource): a read-only check, before any child launches, that every managed-worktree source is a clean git
 // repository. Allocating the worktrees themselves is the worktree slice's.
 
-const projectSubagentsRelativeDir = ".pi/subagents" // PROJECT_SUBAGENTS_RELATIVE_DIR
-
 const setupCommandMaxBuffer = 1024 * 1024
 
 // gitProbe runs `git -C cwd args...` and returns its stdout. A status outside accepted is an error carrying git's stderr.

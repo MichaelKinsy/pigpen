@@ -72,10 +72,6 @@ func TestStructuredOutputValidation(t *testing.T) {
 	})
 }
 
-func itoa(i int) string {
-	return jsNumber(float64(i))
-}
-
 func TestStructuredOutputRejection(t *testing.T) {
 	msgs := func(t *testing.T, vs ...string) []any {
 		var out []any

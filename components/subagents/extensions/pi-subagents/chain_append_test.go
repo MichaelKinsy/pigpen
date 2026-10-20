@@ -15,7 +15,7 @@ func caWriteStatus(t *testing.T, asyncDir string, status string) {
 }
 
 func caRunnerStep(t *testing.T, agent string) *jsObject {
-	return obj(t, `{"agent":"`+agent+`","task":"Use {previous}","inheritProjectContext":false,"inheritSkills":false}`)
+	return jobj(t, `{"agent":"`+agent+`","task":"Use {previous}","inheritProjectContext":false,"inheritSkills":false}`)
 }
 
 func caReadStatus(t *testing.T, asyncDir string) *jsObject {
@@ -100,7 +100,7 @@ func TestChainAppendTwins(t *testing.T) {
 		rcFails(t, err, "no running or pending chain steps left")
 	})
 	tw(t, f, "extends async chain status, parallel groups, and workflow graph", func(t *testing.T) {
-		status := obj(t, `{"runId":"run-graph","mode":"chain","state":"running","startedAt":100,"currentStep":0,"chainStepCount":1,"steps":[{"agent":"scout","status":"complete"}],"parallelGroups":[],
+		status := jobj(t, `{"runId":"run-graph","mode":"chain","state":"running","startedAt":100,"currentStep":0,"chainStepCount":1,"steps":[{"agent":"scout","status":"complete"}],"parallelGroups":[],
 			"workflowGraph":{"runId":"run-graph","mode":"chain","phases":[],"nodes":[{"id":"step-0","kind":"step","agent":"scout","label":"scout","status":"completed","flatIndex":0,"stepIndex":0}]}}`)
 		appended := []*jsObject{caRunnerStep(t, "worker"), joOf(jo("parallel", []any{caRunnerStep(t, "reviewer"), caRunnerStep(t, "auditor")}), "concurrency", float64(2))}
 		chain, flat := AppendRunnerStepsToStatus(status, appended, n64(300), 0)

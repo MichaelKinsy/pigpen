@@ -29,18 +29,6 @@ func isRuntimeAcknowledgedExtensionID(v any) bool {
 		!strings.Contains(s, "..")
 }
 
-// jsLen is String.prototype.length (UTF-16 units).
-func jsLen(s string) int {
-	n := 0
-	for _, r := range s {
-		n++
-		if r >= 0x10000 {
-			n++
-		}
-	}
-	return n
-}
-
 // projectRuntimeAcknowledgedExtensions deduplicates, caps and counts the omitted valid ids; nil when none is valid.
 func projectRuntimeAcknowledgedExtensions(ids []any) *runtimeAcknowledgedExtensions {
 	var unique []string

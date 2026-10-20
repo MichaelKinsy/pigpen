@@ -136,7 +136,7 @@ func (r *wfRealm) symbolKeys(o *goja.Object) []goja.Value {
 func isUndef(v goja.Value) bool { return v == nil || goja.IsUndefined(v) }
 
 // jsTypeof is the typeof operator.
-func jsTypeof(v goja.Value) string {
+func realmTypeof(v goja.Value) string {
 	if isUndef(v) {
 		return "undefined"
 	}
@@ -177,7 +177,7 @@ func isJSString(v goja.Value) (string, bool) {
 	if _, isObj := v.(*goja.Object); isObj {
 		return "", false
 	}
-	if jsTypeof(v) == "string" {
+	if realmTypeof(v) == "string" {
 		return v.String(), true
 	}
 	return "", false
@@ -190,7 +190,7 @@ func isJSNumber(v goja.Value) (float64, bool) {
 	if _, isObj := v.(*goja.Object); isObj {
 		return 0, false
 	}
-	if jsTypeof(v) == "number" {
+	if realmTypeof(v) == "number" {
 		return v.ToFloat(), true
 	}
 	return 0, false
@@ -203,7 +203,7 @@ func isJSBool(v goja.Value) (bool, bool) {
 	if _, isObj := v.(*goja.Object); isObj {
 		return false, false
 	}
-	if jsTypeof(v) == "boolean" {
+	if realmTypeof(v) == "boolean" {
 		return v.ToBoolean(), true
 	}
 	return false, false
@@ -270,7 +270,7 @@ func (c *inspectCtx) primitive(v goja.Value) string {
 	if sym, ok := v.(*goja.Symbol); ok {
 		return c.r.call(c.r.symToString, sym).String()
 	}
-	switch jsTypeof(v) {
+	switch realmTypeof(v) {
 	case "string":
 		return c.str(v.String())
 	case "number":
@@ -891,13 +891,6 @@ func (c *inspectCtx) setEntries(obj *goja.Object, recurse int) []string {
 	return output
 }
 
-func plural(n int) string {
-	if n == 1 {
-		return ""
-	}
-	return "s"
-}
-
 func (c *inspectCtx) mapEntries(obj *goja.Object, recurse int) []string {
 	var output []string
 	c.indentLvl += 2
@@ -1040,7 +1033,7 @@ func (c *inspectCtx) groupArrayElements(output []string, obj *goja.Object) []str
 			// numbers and bigints are right aligned
 			allNum := true
 			for idx := 0; idx < int(obj.Get("length").ToInteger()) && idx < outputLength; idx++ {
-				t := jsTypeof(obj.Get(strconv.Itoa(idx)))
+				t := realmTypeof(obj.Get(strconv.Itoa(idx)))
 				if t != "number" && t != "bigint" {
 					allNum = false
 					break

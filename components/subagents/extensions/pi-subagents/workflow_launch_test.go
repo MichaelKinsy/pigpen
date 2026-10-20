@@ -7,7 +7,7 @@ import (
 
 // Twins of test/unit/workflow-launch-params.test.ts.
 // obj parses a JSON literal into ordered host data (an object literal of the original's tests).
-func obj(t *testing.T, text string) *jsObject {
+func jobj(t *testing.T, text string) *jsObject {
 	t.Helper()
 	v, err := parseJSON([]byte(text))
 	if err != nil {
@@ -22,7 +22,7 @@ func prep(t *testing.T, defaults, child, key string, opt ...WorkflowLaunchOption
 	if len(opt) > 0 {
 		o = opt[0]
 	}
-	out, err := prepareWorkflowLaunchParams(obj(t, defaults), obj(t, child), "workflow-run", key, o)
+	out, err := prepareWorkflowLaunchParams(jobj(t, defaults), jobj(t, child), "workflow-run", key, o)
 	if err != nil {
 		t.Fatalf("prepareWorkflowLaunchParams: %v", err)
 	}
@@ -46,9 +46,9 @@ func TestWorkflowLaunchParamsTwins(t *testing.T) {
 			calls = append(calls, cwd)
 			return []AgentConfig{pinned}
 		}
-		eq(t, resolveWorkflowChildLocalCwd(workflowCwd, discover, nil, nil, obj(t, `{"agent":"worker","machine":"workmac","cwd":"/remote/repo"}`)), workflowCwd, "explicit machine")
+		eq(t, resolveWorkflowChildLocalCwd(workflowCwd, discover, nil, nil, jobj(t, `{"agent":"worker","machine":"workmac","cwd":"/remote/repo"}`)), workflowCwd, "explicit machine")
 		eq(t, len(calls), 0, "no discovery")
-		eq(t, resolveWorkflowChildLocalCwd(workflowCwd, discover, nil, nil, obj(t, `{"agent":"pinned","cwd":"/remote/repo"}`)), workflowCwd, "pinned agent")
+		eq(t, resolveWorkflowChildLocalCwd(workflowCwd, discover, nil, nil, jobj(t, `{"agent":"pinned","cwd":"/remote/repo"}`)), workflowCwd, "pinned agent")
 		eq(t, calls, []string{workflowCwd}, "discovery")
 	})
 	tw(t, f, "preserves omitted workflow child async defaults and awaits background resolution", func(t *testing.T) {
@@ -160,17 +160,17 @@ func TestWorkflowLaunchParamsTwins(t *testing.T) {
 			`{"action":"resume","id":"retained-run","message":"Continue","workflowParentRunId":"workflow-run","workflowKey":"continue","worktree":true}`)
 	})
 	tw(t, f, "rejects gate defaults on retained resume items", func(t *testing.T) {
-		_, err := prepareWorkflowLaunchParams(obj(t, `{"gate":"npm test"}`), obj(t, `{"resume":"retained-run","task":"Continue"}`), "workflow-run", "continue", WorkflowLaunchOptions{})
+		_, err := prepareWorkflowLaunchParams(jobj(t, `{"gate":"npm test"}`), jobj(t, `{"resume":"retained-run","task":"Continue"}`), "workflow-run", "continue", WorkflowLaunchOptions{})
 		hasMatch(t, err, "gate is not supported with retained resume")
-		_, err = prepareWorkflowLaunchParams(obj(t, `{}`), obj(t, `{"resume":"retained-run","task":"Continue","gate":"npm test"}`), "workflow-run", "continue", WorkflowLaunchOptions{})
+		_, err = prepareWorkflowLaunchParams(jobj(t, `{}`), jobj(t, `{"resume":"retained-run","task":"Continue","gate":"npm test"}`), "workflow-run", "continue", WorkflowLaunchOptions{})
 		hasMatch(t, err, "gate is not supported with retained resume")
 	})
 	tw(t, f, "rejects extension binding amendments on retained resume items", func(t *testing.T) {
-		_, err := prepareWorkflowLaunchParams(obj(t, `{"extensionBindings":{"defaults.policy/1":true}}`), obj(t, `{"resume":"retained-run","task":"Continue"}`), "workflow-run", "continue", WorkflowLaunchOptions{})
+		_, err := prepareWorkflowLaunchParams(jobj(t, `{"extensionBindings":{"defaults.policy/1":true}}`), jobj(t, `{"resume":"retained-run","task":"Continue"}`), "workflow-run", "continue", WorkflowLaunchOptions{})
 		hasMatch(t, err, "original retained child binding")
 	})
 	tw(t, f, "preserves execution limits and fan-out identity when routing retained resume items", func(t *testing.T) {
-		budget := obj(t, `{"version":1,"rootRunId":"root-run","directory":"/tmp/fanout","limit":64,"parentPath":"parent"}`)
+		budget := jobj(t, `{"version":1,"rootRunId":"root-run","directory":"/tmp/fanout","limit":64,"parentPath":"parent"}`)
 		jsonEq(t, prep(t, `{"toolBudget":{"hard":12,"block":["read"]}}`, `{"resume":" retained-run ","task":"Continue carefully","maxRuntimeMs":5000,"toolBudget":{"soft":2,"hard":4,"block":"*"}}`, "continue", WorkflowLaunchOptions{MissionDetached: true, RunFanoutBudget: budget}),
 			`{"action":"resume","id":"retained-run","message":"Continue carefully","workflowParentRunId":"workflow-run","workflowKey":"continue","runFanoutBudget":{"version":1,"rootRunId":"root-run","directory":"/tmp/fanout","limit":64,"parentPath":"parent/workflow[continue]"},"mission":false,"timeoutMs":5000,"toolBudget":{"soft":2,"hard":4,"block":"*"}}`)
 	})

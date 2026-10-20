@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"unicode/utf16"
 )
 
 // Port of the launch-parameter half of src/runs/foreground/subagent-executor.ts (prepareWorkflowLaunchParams,
@@ -179,11 +178,14 @@ func prepareWorkflowLaunchParams(defaults, child *jsObject, parentWorkflowRunID,
 		launch.set("capabilityCeiling", ceiling)
 	}
 	if bindings, ok := lpGet(launch, "extensionBindings"); ok {
-		normalized, err := normalizeWorkflowExtensionBindings(bindings)
+		if bindings == nil {
+			return nil, errors.New("extensionBindings must be a plain JSON object.")
+		}
+		normalized, err := normalizeExtensionBindings(bindings)
 		if err != nil {
 			return nil, err
 		}
-		launch.set("extensionBindings", normalized)
+		launch.set("extensionBindings", normalized.value)
 	}
 	return normalizeWorkflowGateParams(launch)
 }
@@ -338,9 +340,15 @@ func normalizeWorkflowGateParams(params *jsObject) (*jsObject, error) {
 		}
 	}
 	acceptanceValue, hasAcceptance := lpGet(params, "acceptance")
-	normalized, err := normalizeGateAcceptance(gate, hasGate, acceptanceValue, hasAcceptance)
-	if err != nil {
-		return nil, err
+	if !hasGate {
+		gate = undef{}
+	}
+	if !hasAcceptance {
+		acceptanceValue = undef{}
+	}
+	normalized, msg := normalizeGateAcceptance(gate, acceptanceValue)
+	if msg != "" {
+		return nil, errors.New(msg)
 	}
 	if !hasGate {
 		return params, nil
@@ -350,164 +358,6 @@ func normalizeWorkflowGateParams(params *jsObject) (*jsObject, error) {
 		rest.set("acceptance", normalized)
 	}
 	return rest, nil
-}
-
-// normalizeGateAcceptance: the acceptance policy a gate stands for, the acceptance itself normalized when there is no gate,
-// nil when neither is set.
-func normalizeGateAcceptance(gate any, hasGate bool, acceptance any, hasAcceptance bool) (any, error) {
-	if !hasGate {
-		if !hasAcceptance {
-			return nil, nil
-		}
-		return normalizeAcceptanceValue(acceptance, "acceptance")
-	}
-	if msg := workflowGateShapeErrorGo(gate); msg != "" {
-		return nil, errors.New(msg)
-	}
-	if hasAcceptance && acceptance != false {
-		return nil, errors.New("gate cannot be combined with acceptance; use one gate command or acceptance.verify." + workflowGateAcceptanceConflictGo(gate, acceptance))
-	}
-	verify := jo("id", "gate")
-	switch g := gate.(type) {
-	case string:
-		verify.set("command", jsTrim(g))
-	case *jsObject:
-		cmd, _ := g.vals["command"].(string)
-		verify.set("command", jsTrim(cmd))
-		if g.vals["output"] == "json" {
-			verify.set("output", "json")
-		}
-		if sc, ok := lpGet(g, "schema"); ok {
-			verify.set("schema", sc)
-		}
-		if to, ok := lpGet(g, "timeoutMs"); ok {
-			verify.set("timeoutMs", to)
-		}
-	}
-	return jo("level", "verified", "verify", []any{verify}), nil
-}
-
-// normalizeAcceptanceValue is normalizeAcceptanceValue (acceptance.ts:127): a JSON-encoded acceptance object string is decoded.
-func normalizeAcceptanceValue(input any, pathLabel string) (any, error) {
-	s, ok := input.(string)
-	if !ok {
-		return input, nil
-	}
-	trimmed := jsTrim(s)
-	if !strings.HasPrefix(trimmed, "{") && !strings.HasPrefix(trimmed, "[") {
-		return input, nil
-	}
-	if msg := workflowJSONError(trimmed); msg != "" {
-		return nil, fmt.Errorf("%s JSON string must encode a valid acceptance object: %s", pathLabel, msg)
-	}
-	parsed, err := parseJSON([]byte(trimmed))
-	if err != nil {
-		return nil, fmt.Errorf("%s JSON string must encode a valid acceptance object: %s", pathLabel, err.Error())
-	}
-	if _, isObj := parsed.(*jsObject); !isObj {
-		kind := "an array"
-		if parsed == nil {
-			kind = "null"
-		}
-		return nil, fmt.Errorf("%s JSON string must encode an object; got %s.", pathLabel, kind)
-	}
-	return parsed, nil
-}
-
-// ---- extension bindings (extension-bindings.ts) ----
-
-var (
-	extensionBindingNamespace = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,62})/[1-9][0-9]{0,8}$`)
-)
-
-const (
-	maxExtensionBindingNamespaces = 16
-	maxExtensionBindingsBytes     = 16 * 1024
-	maxExtensionBindingsDepth     = 16
-	maxExtensionBindingsProps     = 256
-)
-
-func canonicalBindingJSON(v any, path string, depth int, props *int) (any, error) {
-	switch x := v.(type) {
-	case nil, string, bool:
-		return v, nil
-	case float64:
-		if math.IsNaN(x) || math.IsInf(x, 0) {
-			return nil, fmt.Errorf("%s must contain only finite JSON numbers.", path)
-		}
-		return v, nil
-	case []any:
-		if depth > maxExtensionBindingsDepth {
-			return nil, fmt.Errorf("%s exceeds the maximum nesting depth of %d.", path, maxExtensionBindingsDepth)
-		}
-		out := make([]any, len(x))
-		for i, e := range x {
-			c, err := canonicalBindingJSON(e, fmt.Sprintf("%s[%d]", path, i), depth+1, props)
-			if err != nil {
-				return nil, err
-			}
-			out[i] = c
-		}
-		return out, nil
-	case *jsObject:
-		if depth > maxExtensionBindingsDepth {
-			return nil, fmt.Errorf("%s exceeds the maximum nesting depth of %d.", path, maxExtensionBindingsDepth)
-		}
-		keys := append([]string(nil), x.order()...)
-		sort.Slice(keys, func(i, j int) bool { return jsLess(keys[i], keys[j]) })
-		out := newObject()
-		for _, k := range keys {
-			*props++
-			if *props > maxExtensionBindingsProps {
-				return nil, fmt.Errorf("extensionBindings exceeds %d total properties.", maxExtensionBindingsProps)
-			}
-			c, err := canonicalBindingJSON(x.vals[k], path+"."+k, depth+1, props)
-			if err != nil {
-				return nil, err
-			}
-			out.set(k, c)
-		}
-		return out, nil
-	}
-	return nil, fmt.Errorf("%s must contain only plain JSON values.", path)
-}
-
-// jsLess is the default Array.prototype.sort order of strings: by UTF-16 code unit.
-func jsLess(a, b string) bool {
-	ua, ub := utf16.Encode([]rune(a)), utf16.Encode([]rune(b))
-	for i := 0; i < len(ua) && i < len(ub); i++ {
-		if ua[i] != ub[i] {
-			return ua[i] < ub[i]
-		}
-	}
-	return len(ua) < len(ub)
-}
-
-// normalizeWorkflowExtensionBindings is normalizeExtensionBindings(...).value: the canonical (key-sorted) bindings.
-func normalizeWorkflowExtensionBindings(input any) (*jsObject, error) {
-	o, ok := input.(*jsObject)
-	if !ok || o == nil {
-		return nil, errors.New("extensionBindings must be a plain JSON object.")
-	}
-	keys := o.order()
-	if len(keys) > maxExtensionBindingNamespaces {
-		return nil, fmt.Errorf("extensionBindings supports at most %d namespaces.", maxExtensionBindingNamespaces)
-	}
-	for _, k := range keys {
-		if !extensionBindingNamespace.MatchString(k) {
-			return nil, fmt.Errorf("extensionBindings namespace '%s' must use a package-like name followed by '/<positive-version>'.", k)
-		}
-	}
-	props := 0
-	c, err := canonicalBindingJSON(o, "extensionBindings", 0, &props)
-	if err != nil {
-		return nil, err
-	}
-	canonical := c.(*jsObject)
-	if n := len(marshalJSON(canonical, "")); n > maxExtensionBindingsBytes {
-		return nil, fmt.Errorf("extensionBindings canonical JSON is %d bytes; maximum is %d.", n, maxExtensionBindingsBytes)
-	}
-	return canonical, nil
 }
 
 // ---- capability ceilings (capability-ceiling.ts) ----
@@ -557,7 +407,7 @@ func intersectCapabilityCeilings(ceilings ...*jsObject) *jsObject {
 				out = append(out, k)
 			}
 		}
-		sort.Slice(out, func(i, j int) bool { return jsLess(out[i], out[j]) })
+		sort.Slice(out, func(i, j int) bool { return compareUTF16(out[i], out[j]) < 0 })
 		res := make([]any, len(out))
 		for i, s := range out {
 			res[i] = s
@@ -590,7 +440,7 @@ func intersectCapabilityCeilings(ceilings ...*jsObject) *jsObject {
 	for s := range srcSet {
 		sources = append(sources, s)
 	}
-	sort.Slice(sources, func(i, j int) bool { return jsLess(sources[i], sources[j]) })
+	sort.Slice(sources, func(i, j int) bool { return compareUTF16(sources[i], sources[j]) < 0 })
 	arr := make([]any, len(sources))
 	for i, s := range sources {
 		arr[i] = s

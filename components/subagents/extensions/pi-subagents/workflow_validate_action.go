@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -29,28 +28,6 @@ func validationFailure(message string) (any, error) {
 func positiveSafeInt(v any) (float64, bool) {
 	f, ok := v.(float64)
 	return f, ok && f == math.Trunc(f) && f > 0 && f <= 9007199254740991
-}
-
-// resolveMaxSubagentSpawnsPerRun is resolveMaxSubagentSpawnsPerRun (types.ts:2953): the environment, then the config, then 64.
-func resolveMaxSubagentSpawnsPerRun(config any) int {
-	for _, v := range []any{envNumber("PI_SUBAGENT_MAX_SPAWNS_PER_RUN"), config} {
-		if f, ok := positiveSafeInt(v); ok {
-			return int(f)
-		}
-	}
-	return defaultMaxSubagentSpawnsPerRun
-}
-
-func envNumber(name string) any {
-	s := jsTrim(os.Getenv(name))
-	if s == "" {
-		return nil
-	}
-	f, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return nil
-	}
-	return f
 }
 
 // configMaxSpawns reads maxSubagentSpawnsPerRun of the extension config.
@@ -222,7 +199,7 @@ func validateAction(ctx sdk.Context, params map[string]any) (any, error) {
 	}
 	scope := ResolveExecutionAgentScope(params["agentScope"])
 	agents := DiscoverAgents(cwd, scope).Agents
-	budget := resolveMaxSubagentSpawnsPerRun(configMaxSpawns())
+	budget := resolveMaxSubagentSpawnsPerRun(configMaxSpawns(), osEnv)
 	if f, ok := positiveSafeInt(params["maxSubagentSpawnsPerRun"]); ok {
 		budget = int(f)
 	}

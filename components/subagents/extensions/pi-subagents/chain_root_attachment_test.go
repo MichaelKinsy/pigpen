@@ -110,7 +110,7 @@ func TestChainRootAttachmentTwins(t *testing.T) {
 					craWriteJSON(t, root.ResultPath, jmap{"state": "complete", "success": true, "results": []any{jmap{"agent": "worker", "output": "published after step completion", "success": true}}})
 				}
 			}})
-			eq(t, result.vals["success"], true, "success "+jsString(result.vals["error"]))
+			eq(t, result.vals["success"], true, "success "+resultString(result.vals["error"]))
 			eq(t, result.vals["output"], "published after step completion", "output")
 		})
 	}
@@ -179,7 +179,7 @@ func TestChainRootAttachmentTwins(t *testing.T) {
 			result := craWait(t, root, ImportedAsyncRootOptions{PollIntervalMs: i64p(1), TerminalResultGraceMs: i64p(0)})
 			eq(t, result.vals["agent"], "worker", fixture.name+" agent")
 			eq(t, result.vals["exitCode"], 1.0, fixture.name+" exitCode")
-			if !regexp.MustCompile(`ended without a result file`).MatchString(jsString(result.vals["error"])) {
+			if !regexp.MustCompile(`ended without a result file`).MatchString(resultString(result.vals["error"])) {
 				t.Errorf("%s: error = %v", fixture.name, result.vals["error"])
 			}
 			if _, has := result.vals["importedPublication"]; has {
@@ -208,4 +208,4 @@ func TestChainRootAttachmentTwins(t *testing.T) {
 	})
 }
 
-func jsString(v any) string { s, _ := v.(string); return s }
+func resultString(v any) string { s, _ := v.(string); return s }

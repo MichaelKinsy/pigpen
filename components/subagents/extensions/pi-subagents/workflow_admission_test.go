@@ -25,10 +25,10 @@ func TestWorkflowWorktreeAdmissionTwins(t *testing.T) {
 		writeFile(t, filepath.Join(repo, ".pi", "subagents", "runtime.json"), "{}")
 		ctx := context.Background()
 		calls := []WorkflowAdmissionCall{
-			{Key: "a", Params: obj(t, `{"agent":"worker","task":"Inspect"}`)},
-			{Key: "b", Params: obj(t, `{"agent":"worker","task":"Inspect","cwd":"./repo"}`)},
+			{Key: "a", Params: jobj(t, `{"agent":"worker","task":"Inspect"}`)},
+			{Key: "b", Params: jobj(t, `{"agent":"worker","task":"Inspect","cwd":"./repo"}`)},
 		}
-		defaults := obj(t, `{"cwd":"repo","worktree":true}`)
+		defaults := jobj(t, `{"cwd":"repo","worktree":true}`)
 		if err := preflightWorkflowWorktrees(ctx, WorkflowWorktreeAdmission{CtxCwd: root, WorkflowDefaults: defaults, Calls: calls}); err != nil {
 			t.Fatalf("clean source: %v", err)
 		}
@@ -37,8 +37,8 @@ func TestWorkflowWorktreeAdmissionTwins(t *testing.T) {
 		if err == nil || !regexp.MustCompile(`a.*b.*clean git working tree`).MatchString(err.Error()) {
 			t.Fatalf("dirty source: %v", err)
 		}
-		retained := []WorkflowAdmissionCall{{Key: "retained", Params: obj(t, `{"resume":"original-run","task":"Continue"}`)}}
-		if err := preflightWorkflowWorktrees(ctx, WorkflowWorktreeAdmission{CtxCwd: root, WorkflowDefaults: obj(t, `{"worktree":true}`), Calls: retained}); err != nil {
+		retained := []WorkflowAdmissionCall{{Key: "retained", Params: jobj(t, `{"resume":"original-run","task":"Continue"}`)}}
+		if err := preflightWorkflowWorktrees(ctx, WorkflowWorktreeAdmission{CtxCwd: root, WorkflowDefaults: jobj(t, `{"worktree":true}`), Calls: retained}); err != nil {
 			t.Fatalf("retained resume: %v", err)
 		}
 	})

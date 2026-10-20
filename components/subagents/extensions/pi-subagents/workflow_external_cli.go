@@ -133,7 +133,6 @@ func unknownFields(o *jsObject, allowed ...string) []string {
 	return out
 }
 
-func nonBlankString(v any) bool { s, ok := v.(string); return ok && jsTrim(s) != "" }
 
 func parseExternalCliMachine(value any, label string) error {
 	m, ok := recordOf(value)

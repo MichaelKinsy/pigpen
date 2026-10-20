@@ -637,4 +637,3 @@ func TestWorkflowLateCallAfterAbortIsIgnored(t *testing.T) {
 	}
 }
 
-func nan() float64 { var z float64; return z / z }

@@ -2,8 +2,6 @@ package pi_subagents
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"regexp"
@@ -19,12 +17,6 @@ const (
 	workflowMaxArgsBytes   = 16 * 1024
 	workflowMaxStringBytes = 16 * 1024
 )
-
-// stableJSONDigest is stableJsonDigest (launch-contract.ts:24): the SHA-256 of the key-sorted JSON of a value.
-func stableJSONDigest(v any) string {
-	sum := sha256.Sum256([]byte(stableJSON(v)))
-	return hex.EncodeToString(sum[:])
-}
 
 // WorkflowResourceHostAuthority is one host command a resolved resource may run.
 type WorkflowResourceHostAuthority struct {

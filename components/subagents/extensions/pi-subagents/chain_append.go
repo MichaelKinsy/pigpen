@@ -196,18 +196,6 @@ func EnqueueChainAppendRequest(asyncDir, runID string, steps []*jsObject, now *i
 	return ChainAppendResult{Request: request, PendingCount: pending, BookkeepingError: strings.Join(bookkeeping, "; ")}, nil
 }
 
-func appendJSONL(path, line string) error {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return err
-	}
-	_, werr := f.WriteString(line + "\n")
-	if cerr := f.Close(); werr == nil {
-		werr = cerr
-	}
-	return werr
-}
-
 func readAppendRequest(filePath string) (*ChainAppendRequest, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {

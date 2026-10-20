@@ -118,8 +118,8 @@ const typedVerifyOutputSchemaConflict = `a typed verify command (output: "json")
 func describeGateAcceptanceConflict(gate, acceptance any) string {
 	render := func(v any) string {
 		enc := marshalJSON(v, "")
-		if u := []rune(enc); len(u) > 120 {
-			return string(u[:120]) + "..."
+		if jsLen(enc) > 120 {
+			return string(utf16Slice(enc, 120)) + "..."
 		}
 		return enc
 	}

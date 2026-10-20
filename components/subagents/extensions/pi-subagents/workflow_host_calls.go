@@ -597,13 +597,13 @@ func (h *wfHost) onRun(callID int, args *jsObject) {
 		}
 	}
 	if has("gate") {
-		if msg := workflowGateShapeErrorGo(params.vals["gate"]); msg != "" {
+		if _, msg := parseGateInput(params.vals["gate"]); msg != "" {
 			reject("runs.run('%s') %s", key, msg)
 			return
 		}
 	}
 	if has("gate") && has("acceptance") && params.vals["acceptance"] != false {
-		reject("runs.run('%s') gate cannot be combined with acceptance; use one gate command or acceptance.verify.%s", key, workflowGateAcceptanceConflictGo(params.vals["gate"], params.vals["acceptance"]))
+		reject("runs.run('%s') gate cannot be combined with acceptance; use one gate command or acceptance.verify.%s", key, describeGateAcceptanceConflict(params.vals["gate"], params.vals["acceptance"]))
 		return
 	}
 	if has("gate") && has("resume") {
@@ -989,63 +989,6 @@ func parseWorkflowResumeReference(v any) (*WorkflowResumeRef, string) {
 		return nil, "keyed resume requires latest: true."
 	}
 	return &WorkflowResumeRef{WorkflowRunID: jsTrim(id), Key: key}, ""
-}
-
-func workflowGateShapeErrorGo(gate any) string {
-	shape := "gate must be a non-empty command string or { command, output?: \"json\", schema?, timeoutMs? }."
-	if s, ok := gate.(string); ok {
-		if jsTrim(s) != "" {
-			return ""
-		}
-		return shape
-	}
-	o, ok := gate.(*jsObject)
-	if !ok {
-		return shape
-	}
-	for _, k := range o.order() {
-		if !wfGateKeys[k] {
-			return "gate." + k + " is not supported."
-		}
-	}
-	if c, ok := o.vals["command"].(string); !ok || jsTrim(c) == "" {
-		return shape
-	}
-	if out, has := o.vals["output"]; has {
-		if _, u := out.(undef); !u && out != "json" {
-			return "gate.output must be \"json\" when present."
-		}
-	}
-	if sc, has := o.vals["schema"]; has {
-		if _, u := sc.(undef); !u {
-			if o.vals["output"] != "json" {
-				return "gate.schema requires gate.output: \"json\"."
-			}
-			if _, isObj := sc.(*jsObject); !isObj {
-				return "gate.schema must be a JSON Schema object."
-			}
-		}
-	}
-	if to, has := o.vals["timeoutMs"]; has {
-		if _, u := to.(undef); !u {
-			f, ok := to.(float64)
-			if !ok || f != float64(int64(f)) || f < 1 {
-				return "gate.timeoutMs must be an integer >= 1."
-			}
-		}
-	}
-	return ""
-}
-
-func workflowGateAcceptanceConflictGo(gate, acceptance any) string {
-	render := func(v any) string {
-		e := marshalJSON(v, "")
-		if jsLen(e) > 120 {
-			e = string(utf16Slice(e, 120)) + "..."
-		}
-		return e
-	}
-	return " Both fields were present: gate=" + render(gate) + " acceptance=" + render(acceptance) + "."
 }
 
 var workflowAutoResumeParamKeys = []string{"acceptance", "agentContract", "baseRef", "index", "intercomBridge", "label", "lane", "maxRuntimeMs", "output", "outputMode", "outputSchema", "phase", "skill", "skills", "task", "timeoutMs", "toolBudget", "worktree"}

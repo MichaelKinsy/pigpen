@@ -68,12 +68,5 @@ func builtinAgents() ([]AgentConfig, []Diagnostic) {
 	return loadAgentsFromDefinitionFiles(files, SourceBuiltin, nil, nil)
 }
 
-// localeLess approximates String.prototype.localeCompare for file and agent names: case-insensitive first,
-// lower case before upper case on a tie.
-func localeLess(a, b string) bool {
-	la, lb := strings.ToLower(a), strings.ToLower(b)
-	if la != lb {
-		return la < lb
-	}
-	return a > b
-}
+// localeLess is String.prototype.localeCompare(a, b) < 0 (localeCompare, parallel_handoff.go).
+func localeLess(a, b string) bool { return localeCompare(a, b) < 0 }

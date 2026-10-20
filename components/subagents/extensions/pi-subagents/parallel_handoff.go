@@ -557,34 +557,6 @@ func handoffDigestString(value any, label string) (string, error) {
 	return n, nil
 }
 
-// stableJSON is stableJson (launch-contract.ts:12): JSON with the keys sorted by localeCompare and undefined entries dropped.
-func stableJSON(v any) string {
-	switch x := v.(type) {
-	case []any:
-		parts := make([]string, len(x))
-		for i, e := range x {
-			parts[i] = stableJSON(e)
-		}
-		return "[" + strings.Join(parts, ",") + "]"
-	case *jsObject:
-		var keys []string
-		for _, k := range x.order() {
-			if _, u := x.vals[k].(undef); !u {
-				keys = append(keys, k)
-			}
-		}
-		sort.SliceStable(keys, func(i, j int) bool { return localeCompare(keys[i], keys[j]) < 0 })
-		parts := make([]string, len(keys))
-		for i, k := range keys {
-			parts[i] = marshalJSON(k, "") + ":" + stableJSON(x.vals[k])
-		}
-		return "{" + strings.Join(parts, ",") + "}"
-	case undef:
-		return "null"
-	}
-	return marshalJSON(v, "")
-}
-
 // icuPunctuationOrder is the order of ASCII punctuation in the root collation, which sorts before digits and letters.
 const icuPunctuationOrder = "_-,;:!?.'\"()[]{}@*/\\&#%`^+<=>|~$"
 

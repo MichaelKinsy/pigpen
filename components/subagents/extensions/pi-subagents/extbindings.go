@@ -202,7 +202,7 @@ func stableJSON(value any) string {
 				keys = append(keys, k)
 			}
 		}
-		sort.SliceStable(keys, func(i, j int) bool { return localeLess(keys[i], keys[j]) })
+		sort.SliceStable(keys, func(i, j int) bool { return localeCompare(keys[i], keys[j]) < 0 })
 		parts := make([]string, len(keys))
 		for i, k := range keys {
 			parts[i] = marshalJSON(k, "") + ":" + stableJSON(v[k])
@@ -215,12 +215,14 @@ func stableJSON(value any) string {
 				keys = append(keys, k)
 			}
 		}
-		sort.SliceStable(keys, func(i, j int) bool { return localeLess(keys[i], keys[j]) })
+		sort.SliceStable(keys, func(i, j int) bool { return localeCompare(keys[i], keys[j]) < 0 })
 		parts := make([]string, len(keys))
 		for i, k := range keys {
 			parts[i] = marshalJSON(k, "") + ":" + stableJSON(v.vals[k])
 		}
 		return "{" + strings.Join(parts, ",") + "}"
+	case undef:
+		return "null"
 	}
 	return marshalJSON(value, "")
 }
