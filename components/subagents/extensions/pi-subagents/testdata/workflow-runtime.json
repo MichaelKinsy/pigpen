@@ -1,0 +1,6357 @@
+[
+ {
+  "script": "return 1 + 1;",
+  "expected": {
+   "ok": true,
+   "value": 2,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return undefined;",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return { a: undefined, b: [undefined, 1], c: null };",
+  "expected": {
+   "ok": true,
+   "value": {
+    "b": [
+     null,
+     1
+    ],
+    "c": null
+   },
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return { a: 1 };\n",
+  "expected": {
+   "ok": true,
+   "value": {
+    "a": 1
+   },
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript must not be empty.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const r = await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return r.output;",
+  "expected": {
+   "ok": true,
+   "value": "out-a",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return String(r);",
+  "expected": {
+   "ok": true,
+   "value": "out-a",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return runs.ref(r) + \"|\" + runs.refs([r, r]);",
+  "expected": {
+   "ok": true,
+   "value": "[run a; id=id-a-123]|[run a; id=id-a-123]\n[run a; id=id-a-123]",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return runs.ref(null);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.ref(result) requires a run result object.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return runs.refs(1);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.refs(results) requires an array.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const r = await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return Object.keys(r);",
+  "expected": {
+   "ok": true,
+   "value": [
+    "key",
+    "ok",
+    "output",
+    "runId",
+    "artifactPaths"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return JSON.stringify(r);",
+  "expected": {
+   "ok": true,
+   "value": "{\"key\":\"a\",\"ok\":true,\"output\":\"out-a\",\"runId\":\"id-a-12345678\",\"artifactPaths\":[]}",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const rs = await runs.all([{ key: \"a\", agent: \"w\", task: \"x\" }, { key: \"b\", agent: \"w\", task: \"y\" }]); return rs.map((r) => r.output);",
+  "expected": {
+   "ok": true,
+   "value": [
+    "out-a",
+    "out-b"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const rs = await runs.all([{ key: \"a\", agent: \"w\", task: \"x\" }, { key: \"fail1\", agent: \"w\", task: \"y\" }]); return rs.map((r) => [r.key, r.ok, r.error]);",
+  "expected": {
+   "ok": true,
+   "value": [
+    [
+     "a",
+     true,
+     null
+    ],
+    [
+     "fail1",
+     false,
+     "child failed fail1"
+    ]
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "fail1"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "failed",
+     "durationMs": "n",
+     "agent": "w",
+     "error": "child failed fail1"
+    }
+   ],
+   "launches": [
+    "a",
+    "fail1"
+   ]
+  }
+ },
+ {
+  "script": "const rs = await runs.all([{ key: \"a\", agent: \"w\", task: \"x\" }]); return rs.analysis;",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: Cannot read runs.all result property 'analysis'. runs.all resolves to an ordered array, not a key map. Use results[0], array destructuring, or results.map((result) => result.output), not results.analysis.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const rs = await runs.all([{ key: \"a\", agent: \"w\", task: \"x\" }]); const [one] = rs; return [one.key, Array.isArray(rs), rs.length, typeof rs.then, JSON.stringify(rs)];",
+  "expected": {
+   "ok": true,
+   "value": [
+    "a",
+    true,
+    1,
+    "undefined",
+    "[{\"key\":\"a\",\"ok\":true,\"output\":\"out-a\",\"runId\":\"id-a-12345678\",\"artifactPaths\":[]}]"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const rs = await runs.all([{ key: \"a\", agent: \"w\", task: \"x\" }]); emit(rs); return rs.length;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [
+    [
+     {
+      "key": "a",
+      "ok": true,
+      "output": "out-a",
+      "runId": "id-a-12345678",
+      "artifactPaths": []
+     }
+    ]
+   ],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"fail1\", { agent: \"w\", task: \"x\" }); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "child",
+   "message": "Error: Run 'fail1' failed: child failed fail1",
+   "emits": [],
+   "console": [],
+   "children": [
+    "fail1"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "failed",
+     "durationMs": "n",
+     "agent": "w",
+     "error": "child failed fail1"
+    }
+   ],
+   "launches": [
+    "fail1"
+   ]
+  }
+ },
+ {
+  "script": "try { await runs.run(\"fail1\", { agent: \"w\", task: \"x\" }); } catch (e) { return e.message; } return 2;",
+  "expected": {
+   "ok": true,
+   "value": "Run 'fail1' failed: child failed fail1",
+   "emits": [],
+   "console": [],
+   "children": [
+    "fail1"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "failed",
+     "durationMs": "n",
+     "agent": "w",
+     "error": "child failed fail1"
+    }
+   ],
+   "launches": [
+    "fail1"
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"detach1\", { agent: \"w\", task: \"x\" }); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "detached-child",
+   "message": "Error: Run 'detach1' detached: detached detach1",
+   "emits": [],
+   "console": [],
+   "children": [
+    "detach1"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "detach1",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "detach1",
+     "state": "detached",
+     "durationMs": "n",
+     "agent": "w",
+     "error": "detached detach1"
+    }
+   ],
+   "launches": [
+    "detach1"
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.run(\"run1\", { agent: \"w\", task: \"x\" }); return r;",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "run1",
+    "ok": true,
+    "state": "running",
+    "output": "",
+    "artifactPaths": [],
+    "runId": "run-run1"
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "run1"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "run1",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "run1",
+     "state": "started",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "run-run1"
+    }
+   ],
+   "launches": [
+    "run1"
+   ]
+  }
+ },
+ {
+  "script": "const r = await runs.run(\"stop1\", { agent: \"w\", task: \"x\" }); return r.stopped;",
+  "expected": {
+   "ok": true,
+   "value": true,
+   "emits": [],
+   "console": [],
+   "children": [
+    "stop1"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "stop1",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "stop1",
+     "state": "stopped",
+     "durationMs": "n",
+     "agent": "w",
+     "error": "stopped stop1"
+    }
+   ],
+   "launches": [
+    "stop1"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", null);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run requires a params object.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", []);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run requires a params object.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { action: \"list\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run accepts one child via { agent, task } and execution controls only; use runs.all(...) and JavaScript control flow for orchestration.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { workflowScript: \"x\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run accepts one child via { agent, task } and execution controls only; use runs.all(...) and JavaScript control flow for orchestration.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { tasks: [] });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run accepts one child via { agent, task } and execution controls only; use runs.all(...) and JavaScript control flow for orchestration.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { clarify: true });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run does not support clarify UI.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { worktree: \"yes\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run worktree must be true or false.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { baseRef: \"HEAD~1\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run baseRef must be a valid Git ref: use HEAD or a supported named ref (for example, refs/heads/main). Full 40/64-character commit IDs and revision expressions are unsupported.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { lane: { version: 2, key: \"k\" } });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run lane.version must be 1.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { lane: { version: 1, key: \"other\" } });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run lane.key must match workflow key 'k'.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { lane: { version: 1, key: \"k\", mode: \"x\" } });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run lane.mode is invalid.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { lane: { version: 1, key: \"k\", extra: 1 } });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run lane has unsupported fields: extra.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { gate: \"\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run gate must be a non-empty command string or { command, output?: \"json\", schema?, timeoutMs? }.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { gate: { command: \"x\", output: \"yaml\" } });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run gate.output must be \"json\" when present.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { gate: { command: \"x\", schema: {} } });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run gate.schema requires gate.output: \"json\".",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { gate: \"x\", acceptance: true });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run gate cannot be combined with acceptance; use one gate command or acceptance.verify. Both fields were present: gate=\"x\" acceptance=true.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { gate: \"x\", resume: \"r\", task: \"t\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run gate is not supported with retained resume.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { resume: \"r\", agent: \"w\", task: \"t\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run resume and agent are mutually exclusive.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { resume: \"r\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run resume requires a non-empty task follow-up.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { resume: \"\" , task: \"t\"});",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run resume must be a non-empty retained run id.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { resume: { workflowRunId: \"w\", key: \"k\", latest: false }, task: \"t\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run keyed resume requires latest: true.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { resume: { workflowRunId: \"\", key: \"k\", latest: true }, task: \"t\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run keyed resume workflowRunId must be non-empty.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { resume: { workflowRunId: \"w\", key: \"bad key\", latest: true }, task: \"t\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run keyed resume key is invalid.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { resume: { extra: 1 }, task: \"t\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run keyed resume contains unsupported fields.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { resume: 5, task: \"t\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run resume must be a retained run id or keyed workflow receipt reference.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { extensionBindings: [] });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run extensionBindings must be a plain JSON object.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { extensionBindings: { \"bad\": {} } });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run extensionBindings namespace 'bad' must use a package-like name followed by '/<positive-version>'.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { extensionBindings: { \"ns/1\": 1 }, resume: \"r\", task: \"t\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run extensionBindings is not supported with retained resume; resume uses the original retained child binding.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { agent: \"w\", task: () => 1 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run params.task must be a JSON value; received function.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { agent: \"w\", task: undefined });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run params.task must be a JSON value; received undefined.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { agent: \"w\", nested: { a: [1, , 2] } });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run params.nested.a must not contain sparse array entries.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { agent: \"w\", d: new Date(0) });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run params.d must contain only plain JSON objects.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { agent: \"w\", n: NaN });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run params.n must contain only finite JSON numbers.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { agent: \"w\", b: 1n });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run params.b must be a JSON value; received bigint.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"k\", { agent: \"w\", [Symbol(\"s\")]: 1 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run params must not contain symbol keys.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(\"bad key\", { agent: \"w\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run has an invalid key.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.run(5, { agent: \"w\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.run has an invalid key.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "await runs.host(\"h1\", { kind: \"command\", command: \"x\", timeoutMs: 5 }); return await runs.run(\"h1\", { agent: \"w\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: Workflow key 'h1' is already used by runs.host.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [
+    {
+     "operation": "host",
+     "key": "h1",
+     "state": "started"
+    },
+    {
+     "operation": "host",
+     "key": "h1",
+     "state": "completed",
+     "durationMs": "n"
+    }
+   ],
+   "launches": []
+  }
+ },
+ {
+  "script": "const a = runs.run(\"dup\", { agent: \"worker\", task: \"t-dup\" }); const b = runs.run(\"dup\", { agent: \"worker\", task: \"other\" }); return [await a, await b];",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: Duplicate workflow key 'dup' used with incompatible launch params.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "dup"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "dup",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "dup",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-dup-12345678"
+    }
+   ],
+   "launches": [
+    "dup"
+   ]
+  }
+ },
+ {
+  "script": "const a = runs.run(\"dup\", { agent: \"worker\", task: \"t-dup\" }); const b = runs.run(\"dup\", { agent: \"worker\", task: \"t-dup\" }); const [x, y] = await Promise.all([a, b]); return [x.key, y.key, x === y];",
+  "expected": {
+   "ok": true,
+   "value": [
+    "dup",
+    "dup",
+    false
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "dup"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "dup",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "dup",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-dup-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "dup",
+     "state": "reused",
+     "agent": "worker"
+    }
+   ],
+   "launches": [
+    "dup"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.all(\"x\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.all(items) requires an array.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.all([1]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.all item 0 must be an object.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.all([[]]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.all item 0 must be an object.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.all([ , { key: \"a\", agent: \"w\" }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.all items must not contain sparse entries.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.all([{ key: \"a\", agent: \"w\" }, { key: \"a\", agent: \"w\", task: \"other\" }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: Duplicate workflow key 'a' used with incompatible launch params.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.all([{ key: \"a\", agent: \"w\", task: \"x\" }, { key: \"a\", agent: \"w\", task: \"x\" }]);",
+  "expected": {
+   "ok": true,
+   "value": [
+    {
+     "key": "a",
+     "ok": true,
+     "output": "out-a",
+     "runId": "id-a-12345678",
+     "artifactPaths": []
+    },
+    {
+     "key": "a",
+     "ok": true,
+     "output": "out-a",
+     "runId": "id-a-12345678",
+     "artifactPaths": []
+    }
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "reused",
+     "agent": "w"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"w\", task: \"x\" }); return await runs.all([{ key: \"a\", agent: \"w\", task: \"other\" }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: Duplicate workflow key 'a' used with incompatible launch params.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.steer(\"a\", \"m\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.steer('a') requires a prior runs.run/runs.all launch with that key.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [
+    {
+     "operation": "steer",
+     "key": "a",
+     "state": "started"
+    },
+    {
+     "operation": "steer",
+     "key": "a",
+     "state": "failed",
+     "durationMs": "n",
+     "error": "runs.steer('a') requires a prior runs.run/runs.all launch with that key."
+    }
+   ],
+   "launches": []
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const s = await runs.steer(\"a\", \"  go  \", { mode: \"steer\" }); await p; return s;",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "state": "delivered",
+    "requestId": "req-1"
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "steer",
+     "key": "a",
+     "state": "started"
+    },
+    {
+     "operation": "steer",
+     "key": "a",
+     "state": "delivered",
+     "durationMs": "n"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return runs.steer(5, \"m\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.steer has an invalid key.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return runs.steer(\"a\", \"\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.steer message must be a non-empty string.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return runs.steer(\"a\", \"m\", []);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.steer options must be an object.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return runs.steer(\"a\", \"m\", { x: 1 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.steer options contain unsupported field 'x'.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return runs.steer(\"a\", \"m\", { mode: \"x\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.steer mode must be 'steer', 'follow_up', or 'auto'.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return runs.steer(\"a\", \"m\", { index: -1 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.steer index must be an integer between 0 and 1000000.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return runs.steer(\"a\", \"m\", { ackTimeoutMs: 0 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.steer ackTimeoutMs must be a positive integer.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.status(\"\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.status(keyOrRunId) requires a non-empty string.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const s = await runs.status(\"a\"); return s.output;",
+  "expected": {
+   "ok": true,
+   "value": "status id-a-12345678",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "status",
+     "key": "a",
+     "state": "started",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "status",
+     "key": "a",
+     "state": "completed"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.status(\"fail1\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: Status 'fail1' failed: no run fail1",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [
+    {
+     "operation": "status",
+     "key": "fail1",
+     "state": "started"
+    },
+    {
+     "operation": "status",
+     "key": "fail1",
+     "state": "failed",
+     "error": "no run fail1"
+    }
+   ],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.status(5);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.status(keyOrRunId) requires a non-empty string.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5 });",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "t",
+    "kind": "command",
+    "ok": true,
+    "state": "passed",
+    "exitCode": 0,
+    "stdout": "o",
+    "stderr": "",
+    "outputPath": "/tmp/x/out.log",
+    "durationMs": 3
+   },
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "started"
+    },
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "completed",
+     "durationMs": "n"
+    }
+   ],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"t\", { kind: \"command\", command: \"fail\", timeoutMs: 5 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: Host command 't' failed: failed bad",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "started"
+    },
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "failed",
+     "durationMs": "n",
+     "error": "failed"
+    }
+   ],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"bad key\", { kind: \"command\", command: \"x\", timeoutMs: 5 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.host key must be 1-128 characters using letters, numbers, '.', '_' or '-', and start with a letter or number.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"t\", { kind: \"x\", command: \"x\", timeoutMs: 5 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.host('t') kind must be 'command'.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5, cwd: \"/tmp\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.host('t') params have unsupported fields: cwd. The host step does not accept per-step cwd; commands and relative output paths use the workflow cwd. Set cwd on the outer subagent request, or put a trusted directory change in command (for example, 'cd /path/to/worktree && npm test').",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 0 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.host('t') timeoutMs must be an integer from 1 to 86400000.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5, output: \"../x\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.host('t') output must be a bounded relative path without traversal or control characters.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5, role: \"bad\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.host('t') role must be 'ci' or 'gate'.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5, provider: \"\" });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.host('t') provider must be a non-empty single-line string of at most 64 bytes.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5 }); return await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: Workflow key 't' is already in use.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "started"
+    },
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "completed",
+     "durationMs": "n"
+    }
+   ],
+   "launches": []
+  }
+ },
+ {
+  "script": "runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5 }); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.host call(s): 't'. Await or return each call.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "started"
+    },
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "completed",
+     "durationMs": "n"
+    }
+   ],
+   "launches": []
+  }
+ },
+ {
+  "script": "const h = await runs.host(\"t\", { kind: \"command\", command: \"x\", timeoutMs: 5, role: \"ci\" }); return Object.keys(h);",
+  "expected": {
+   "ok": true,
+   "value": [
+    "key",
+    "kind",
+    "ok",
+    "state",
+    "exitCode",
+    "stdout",
+    "stderr",
+    "outputPath",
+    "durationMs"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "started"
+    },
+    {
+     "operation": "host",
+     "key": "t",
+     "state": "completed",
+     "durationMs": "n"
+    }
+   ],
+   "launches": []
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { agent: \"worker\", task: \"t-a\" });",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "ok": true,
+    "output": "out-a",
+    "runId": "id-a-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" });",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "ok": true,
+    "output": "out-a",
+    "runId": "id-a-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return await p;",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "ok": true,
+    "output": "out-a",
+    "runId": "id-a-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); await 1; return await p;",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "ok": true,
+    "output": "out-a",
+    "runId": "id-a-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const q = runs.run(\"b\", { agent: \"worker\", task: \"t-b\" }); return await Promise.all([p, q]);",
+  "expected": {
+   "ok": true,
+   "value": [
+    {
+     "key": "a",
+     "ok": true,
+     "output": "out-a",
+     "runId": "id-a-12345678",
+     "artifactPaths": []
+    },
+    {
+     "key": "b",
+     "ok": true,
+     "output": "out-b",
+     "runId": "id-b-12345678",
+     "artifactPaths": []
+    }
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const q = runs.run(\"b\", { agent: \"worker\", task: \"t-b\" }); return await Promise.race([p, q]);",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "ok": true,
+    "output": "out-a",
+    "runId": "id-a-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const q = runs.run(\"b\", { agent: \"worker\", task: \"t-b\" }); await Promise.race([p, q]); await p; await q; return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const q = runs.run(\"b\", { agent: \"worker\", task: \"t-b\" }); await Promise.race([p, q]); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const q = runs.run(\"b\", { agent: \"worker\", task: \"t-b\" }); return await Promise.allSettled([p, q]);",
+  "expected": {
+   "ok": true,
+   "value": [
+    {
+     "status": "fulfilled",
+     "value": {
+      "key": "a",
+      "ok": true,
+      "output": "out-a",
+      "runId": "id-a-12345678",
+      "artifactPaths": []
+     }
+    },
+    {
+     "status": "fulfilled",
+     "value": {
+      "key": "b",
+      "ok": true,
+      "output": "out-b",
+      "runId": "id-b-12345678",
+      "artifactPaths": []
+     }
+    }
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const q = runs.run(\"fail1\", { agent: \"worker\", task: \"t-fail1\" }); const r = await Promise.allSettled([p, q]); return r.map((x) => x.status);",
+  "expected": {
+   "ok": true,
+   "value": [
+    "fulfilled",
+    "rejected"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "fail1"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "failed",
+     "durationMs": "n",
+     "agent": "worker",
+     "error": "child failed fail1"
+    }
+   ],
+   "launches": [
+    "a",
+    "fail1"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const q = runs.run(\"b\", { agent: \"worker\", task: \"t-b\" }); return await Promise.any([p, q]);",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "ok": true,
+    "output": "out-a",
+    "runId": "id-a-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "return await Promise.all([runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }), runs.run(\"b\", { agent: \"worker\", task: \"t-b\" })].map((p) => p.then((r) => r.key)));",
+  "expected": {
+   "ok": true,
+   "value": [
+    "a",
+    "b"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then((r) => r.key);",
+  "expected": {
+   "ok": true,
+   "value": "a",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then((r) => r.key);",
+  "expected": {
+   "ok": true,
+   "value": "a",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.run(\"fail1\", { agent: \"worker\", task: \"t-fail1\" }).catch((e) => e.message);",
+  "expected": {
+   "ok": true,
+   "value": "Run 'fail1' failed: child failed fail1",
+   "emits": [],
+   "console": [],
+   "children": [
+    "fail1"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "fail1",
+     "state": "failed",
+     "durationMs": "n",
+     "agent": "worker",
+     "error": "child failed fail1"
+    }
+   ],
+   "launches": [
+    "fail1"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).finally(() => {});",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "ok": true,
+    "output": "out-a",
+    "runId": "id-a-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then((r) => runs.run(\"b\", { agent: \"worker\", task: \"t-b\" }));",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "b",
+    "ok": true,
+    "output": "out-b",
+    "runId": "id-b-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then((r) => runs.run(\"b\", { agent: \"worker\", task: \"t-b\" })).then((r) => r.key);",
+  "expected": {
+   "ok": true,
+   "value": "b",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const x = await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then((r) => runs.run(\"b\", { agent: \"worker\", task: \"t-b\" })); return x.key;",
+  "expected": {
+   "ok": true,
+   "value": "b",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then((r) => runs.run(\"b\", { agent: \"worker\", task: \"t-b\" })); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then(() => {}); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).catch(() => {}); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).finally(() => {}); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); p.then(() => {}); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); await p.then(() => {}); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); p.then(() => {}); await p; return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "Promise.all([runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })]); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await Promise.all([runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })]); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "Promise.race([runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })]); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "Promise.allSettled([runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })]); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "Promise.any([runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })]); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "Promise.resolve(runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await Promise.resolve(runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "new Promise((resolve) => resolve(runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }))); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await new Promise((resolve) => resolve(runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }))); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await new Promise((resolve, reject) => { resolve(1); resolve(runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })); }); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await new Promise((resolve) => { resolve(\"done\"); Promise.resolve().then(() => resolve(runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }))); }); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await Promise.resolve(); runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then(() => {}); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await Promise.resolve(); await runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await 1; runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "function helper(k) { return runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); } const c = await helper(); return c.key;",
+  "expected": {
+   "ok": true,
+   "value": "a",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "function helper(k) { return runs.run(k, { agent: \"w\", task: \"t\" }); } const cs = await Promise.all([\"a\", \"b\"].map(helper)); return cs.map((c) => c.key);",
+  "expected": {
+   "ok": true,
+   "value": [
+    "a",
+    "b"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "function helper(k) { return runs.run(k, { agent: \"w\", task: \"t\" }); } [\"a\", \"b\"].map(helper); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a', 'b'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const ps = [\"a\", \"b\"].map((k) => runs.run(k, { agent: \"w\", task: \"t\" })); return (await Promise.all(ps)).length;",
+  "expected": {
+   "ok": true,
+   "value": 2,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const ps = [\"a\", \"b\"].map((k) => runs.run(k, { agent: \"w\", task: \"t\" })); await ps[0]; return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'b'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const ps = [\"a\", \"b\"].map((k) => runs.run(k, { agent: \"w\", task: \"t\" })); for (const p of ps) await p; return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "for (const k of [\"a\", \"b\"]) { await runs.run(k, { agent: \"w\", task: \"t\" }); } return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "w"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const pending = [{ key: \"a\", promise: runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).then((r) => ({ key: \"a\", result: r })) }, { key: \"b\", promise: runs.run(\"b\", { agent: \"worker\", task: \"t-b\" }).then((r) => ({ key: \"b\", result: r })) }]; const first = await Promise.race(pending.map((p) => p.promise)); const rest = pending.filter((p) => p.key !== first.key); await Promise.all(rest.map((p) => p.promise)); return first.key;",
+  "expected": {
+   "ok": true,
+   "value": "a",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a",
+    "b"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "b",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-b-12345678"
+    }
+   ],
+   "launches": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); try { await p; } finally { }; return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); if (false) { await p; } return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const f = async () => { await p; }; return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "Error: workflowScript validation failed before child launch; no children launched. workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains so workflows stay portable across Node and Bun. Parallel plus sequential rewrite: const a = runs.run(\"a\", { agent: \"worker\", task: \"A\" }); const writer = await runs.run(\"writer\", { agent: \"worker\", task: \"Write\" }); const review = await runs.run(\"review\", { agent: \"reviewer\", task: writer.output }); const [aResult] = await Promise.all([a]); return { a: aResult.output, issue: { writerRunId: writer.runId, reviewRunId: review.runId } };",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return { p };",
+  "expected": {
+   "ok": false,
+   "kind": "return-serialization",
+   "message": "Error: return.p must contain only plain JSON objects.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return [p];",
+  "expected": {
+   "ok": false,
+   "kind": "return-serialization",
+   "message": "Error: return[0] must contain only plain JSON objects.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }).output;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); emit(p); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit must contain only plain JSON objects.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); const r = await p; return r.then;",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }); return [typeof p.then, typeof p.catch, typeof p.finally, p instanceof Promise, Object.prototype.toString.call(p)];",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'a'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "const p = Promise.resolve(1); return [p instanceof Promise, typeof Promise.all, Promise.name, typeof Promise.withResolvers];",
+  "expected": {
+   "ok": true,
+   "value": [
+    true,
+    "function",
+    "Promise",
+    "function"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const { promise, resolve } = Promise.withResolvers(); resolve(runs.run(\"a\", { agent: \"worker\", task: \"t-a\" })); await promise; return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "return await Promise.try(() => runs.run(\"a\", { agent: \"worker\", task: \"t-a\" }));",
+  "expected": {
+   "ok": true,
+   "value": {
+    "key": "a",
+    "ok": true,
+    "output": "out-a",
+    "runId": "id-a-12345678",
+    "artifactPaths": []
+   },
+   "emits": [],
+   "console": [],
+   "children": [
+    "a"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "started",
+     "agent": "worker"
+    },
+    {
+     "operation": "run",
+     "key": "a",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "worker",
+     "runId": "id-a-12345678"
+    }
+   ],
+   "launches": [
+    "a"
+   ]
+  }
+ },
+ {
+  "script": "await Promise.reject(new Error(\"x\")).catch((e) => e.message); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "await Promise.all([]); return await Promise.race([Promise.resolve(3)]);",
+  "expected": {
+   "ok": true,
+   "value": 3,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "class P extends Promise {} return typeof P;",
+  "expected": {
+   "ok": true,
+   "value": "function",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"lane\", stages: [{ key: \"w\", agent: \"w\", task: \"t\" }, { key: \"r\", agent: \"r\", task: \"u\" }] }]);",
+  "expected": {
+   "ok": true,
+   "value": [
+    {
+     "key": "lane",
+     "state": "complete",
+     "stages": [
+      {
+       "key": "w",
+       "runId": "id-lane.w-12345678",
+       "ok": true,
+       "state": "completed"
+      },
+      {
+       "key": "r",
+       "runId": "id-lane.r-12345678",
+       "ok": true,
+       "state": "completed"
+      }
+     ]
+    }
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "lane.w",
+    "lane.r"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "lane.w",
+     "state": "started",
+     "agent": "w",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.w",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.w-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "lane.r",
+     "state": "started",
+     "agent": "r",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.r",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "r",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.r-12345678"
+    }
+   ],
+   "launches": [
+    "lane.w",
+    "lane.r"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"lane\", stages: [{ key: \"w\", agent: \"w\", task: \"t\" }, { key: \"r\", resume: \"previous\", task: \"u\" }] }]);",
+  "expected": {
+   "ok": true,
+   "value": [
+    {
+     "key": "lane",
+     "state": "complete",
+     "stages": [
+      {
+       "key": "w",
+       "runId": "id-lane.w-12345678",
+       "ok": true,
+       "state": "completed"
+      },
+      {
+       "key": "r",
+       "runId": "id-lane.r-12345678",
+       "ok": true,
+       "state": "completed"
+      }
+     ]
+    }
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "lane.w",
+    "lane.r"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "lane.w",
+     "state": "started",
+     "agent": "w",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.w",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.w-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "lane.r",
+     "state": "started",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.r",
+     "state": "completed",
+     "durationMs": "n",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.r-12345678"
+    }
+   ],
+   "launches": [
+    "lane.w",
+    "lane.r"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l1\", stages: [{ key: \"w\", agent: \"w\", task: \"t\" }] }, { key: \"l2\", stages: [{ key: \"w\", agent: \"w\", task: \"t\" }, { key: \"r\", agent: \"r\", task: \"u\" }] }]);",
+  "expected": {
+   "ok": true,
+   "value": [
+    {
+     "key": "l1",
+     "state": "complete",
+     "stages": [
+      {
+       "key": "w",
+       "runId": "id-l1.w-12345678",
+       "ok": true,
+       "state": "completed"
+      }
+     ]
+    },
+    {
+     "key": "l2",
+     "state": "complete",
+     "stages": [
+      {
+       "key": "w",
+       "runId": "id-l2.w-12345678",
+       "ok": true,
+       "state": "completed"
+      },
+      {
+       "key": "r",
+       "runId": "id-l2.r-12345678",
+       "ok": true,
+       "state": "completed"
+      }
+     ]
+    }
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "l1.w",
+    "l2.w",
+    "l2.r"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "l1.w",
+     "state": "started",
+     "agent": "w",
+     "generatedLaneKey": "l1"
+    },
+    {
+     "operation": "run",
+     "key": "l1.w",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "generatedLaneKey": "l1",
+     "runId": "id-l1.w-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "l2.w",
+     "state": "started",
+     "agent": "w",
+     "generatedLaneKey": "l2"
+    },
+    {
+     "operation": "run",
+     "key": "l2.w",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "generatedLaneKey": "l2",
+     "runId": "id-l2.w-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "l2.r",
+     "state": "started",
+     "agent": "r",
+     "generatedLaneKey": "l2"
+    },
+    {
+     "operation": "run",
+     "key": "l2.r",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "r",
+     "generatedLaneKey": "l2",
+     "runId": "id-l2.r-12345678"
+    }
+   ],
+   "launches": [
+    "l1.w",
+    "l2.w",
+    "l2.r"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"lane\", stages: [{ key: \"w\", agent: \"w\", task: \"t\" }, { key: \"r\", agent: \"r\", task: \"u\" }] }]).then((b) => b[0].state);",
+  "expected": {
+   "ok": true,
+   "value": "complete",
+   "emits": [],
+   "console": [],
+   "children": [
+    "lane.w",
+    "lane.r"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "lane.w",
+     "state": "started",
+     "agent": "w",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.w",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.w-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "lane.r",
+     "state": "started",
+     "agent": "r",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.r",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "r",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.r-12345678"
+    }
+   ],
+   "launches": [
+    "lane.w",
+    "lane.r"
+   ]
+  }
+ },
+ {
+  "script": "runs.lanes([{ key: \"lane\", stages: [{ key: \"w\", agent: \"w\", task: \"t\" }] }]); return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "workflowScript completed with unawaited runs.run launch(es): 'lane.w'. For ordinary parallel fanout use await runs.all([{key, agent, task}, ...]); do not read .output from unawaited launches.",
+   "emits": [],
+   "console": [],
+   "children": [
+    "lane.w"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "lane.w",
+     "state": "started",
+     "agent": "w",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.w",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.w-12345678"
+    }
+   ],
+   "launches": [
+    "lane.w"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"lane\", stages: [{ key: \"fail1\", agent: \"w\", task: \"t\" }, { key: \"r\", agent: \"r\", task: \"u\" }] }]);",
+  "expected": {
+   "ok": true,
+   "value": [
+    {
+     "key": "lane",
+     "state": "complete",
+     "stages": [
+      {
+       "key": "fail1",
+       "runId": "id-lane.fail1-12345678",
+       "ok": true,
+       "state": "completed"
+      },
+      {
+       "key": "r",
+       "runId": "id-lane.r-12345678",
+       "ok": true,
+       "state": "completed"
+      }
+     ]
+    }
+   ],
+   "emits": [],
+   "console": [],
+   "children": [
+    "lane.fail1",
+    "lane.r"
+   ],
+   "trace": [
+    {
+     "operation": "run",
+     "key": "lane.fail1",
+     "state": "started",
+     "agent": "w",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.fail1",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "w",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.fail1-12345678"
+    },
+    {
+     "operation": "run",
+     "key": "lane.r",
+     "state": "started",
+     "agent": "r",
+     "generatedLaneKey": "lane"
+    },
+    {
+     "operation": "run",
+     "key": "lane.r",
+     "state": "completed",
+     "durationMs": "n",
+     "agent": "r",
+     "generatedLaneKey": "lane",
+     "runId": "id-lane.r-12345678"
+    }
+   ],
+   "launches": [
+    "lane.fail1",
+    "lane.r"
+   ]
+  }
+ },
+ {
+  "script": "return await runs.lanes([]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes(lanes) requires at least one lane.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes(\"x\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes(lanes) requires an array.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [] }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes lane 0 stages must contain at least one stage.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", extra: 1, stages: [{ key: \"s\", agent: \"w\" }] }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes lane 0 contains unsupported fields.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [{ key: \"s\", agent: \"w\" }, { key: \"s\", agent: \"w\" }] }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes lane 0 contains duplicate stage key 's'.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [{ key: \"s\", resume: \"r1\", task: \"t\" }] }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes lane 0 stage 0 cannot resume a retained run id in runs.lanes; use runs.run(key, { resume: id }) outside lanes, or start the lane with an agent stage and use resume: \"previous\" later.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [{ key: \"s\", resume: \"previous\", task: \"t\" }] }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes lane 0 stage 0 cannot resume previous without a predecessor stage.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: [{ key: \"s\", agent: \"w\", task: \"t\" }, { key: \"t\", resume: \"x\", task: \"t\" }] }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes lane 0 stage 1 resume must be 'previous'.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"bad key\", stages: [{ key: \"s\", agent: \"w\" }] }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes lane 0 key must be 1-128 characters using letters, numbers, '.', '_' or '-', and start with a letter or number.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes(Array.from({ length: 33 }, (_, i) => ({ key: \"l\" + i, stages: [{ key: \"s\", agent: \"w\", task: \"t\" }] })));",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes supports at most 32 lanes.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await runs.lanes([{ key: \"l\", stages: Array.from({ length: 17 }, (_, i) => ({ key: \"s\" + i, agent: \"w\", task: \"t\" })) }]);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: runs.lanes lane 0 supports at most 16 stages.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit({ a: 1 }); emit([1, 2]); emit(\"s\"); emit(null); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [
+    {
+     "a": 1
+    },
+    [
+     1,
+     2
+    ],
+    "s",
+    null
+   ],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit(undefined);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit must be a JSON value; received undefined.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit(() => 1);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit must be a JSON value; received function.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit({ a: NaN });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit.a must contain only finite JSON numbers.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit(new Date(0));",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit must contain only plain JSON objects.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit({ a: [1, , 3] });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit.a must not contain sparse array entries.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const o = {}; o.self = o; emit(o);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "RangeError: Maximum call stack size exceeded",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit(new Map());",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit must contain only plain JSON objects.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit(1n);",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit must be a JSON value; received bigint.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit(Symbol(\"s\"));",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit must be a JSON value; received symbol.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "emit({ [Symbol(\"s\")]: 1 });",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: emit must not contain symbol keys.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(\"a\", 1, { b: 2 }); console.info(\"i\"); console.warn(\"w\"); console.error(\"e\"); return typeof console.debug;",
+  "expected": {
+   "ok": true,
+   "value": "undefined",
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "a 1 { b: 2 }"
+    },
+    {
+     "level": "info",
+     "text": "i"
+    },
+    {
+     "level": "warn",
+     "text": "w"
+    },
+    {
+     "level": "error",
+     "text": "e"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log([1, 2, 3], new Set([1, 2]), new Map([[\"a\", 1]]), null, undefined, true, 5n, Symbol(\"x\"));",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[ 1, 2, 3 ] Set(2) { 1, 2 } Map(1) { 'a' => 1 } null undefined true 5n Symbol(x)"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(function foo() {}, class A {}, () => 1, new Date(0), /x/gi, new Error(\"boom\").message);",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[Function: foo] [class A] [Function (anonymous)] 1970-01-01T00:00:00.000Z /x/gi boom"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log({ a: { b: { c: { d: { e: 1 } } } } });",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "{\n  a: {\n    b: { c: { d: { e: 1 } } }\n  }\n}"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(\"x\".repeat(200), [\"y\".repeat(100), \"z\".repeat(100)]);",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx [\n  'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy',\n  'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'\n]"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(Array.from({ length: 30 }, (_, i) => i));",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[\n   0,  1,  2,  3,  4,  5,  6,  7,  8,\n   9, 10, 11, 12, 13, 14, 15, 16, 17,\n  18, 19, 20, 21, 22, 23, 24, 25, 26,\n  27, 28, 29\n]"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(Array.from({ length: 120 }, (_, i) => i));",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[\n   0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,\n  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,\n  24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,\n  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,\n  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,\n  60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,\n  72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83,\n  84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,\n  96, 97, 98, 99,\n  ... 20 more items\n]"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log({ \"a-b\": 1, 2: 3, c: undefined, d: () => 1, e: Symbol(\"s\") });",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "{ '2': 3, 'a-b': 1, c: undefined, d: [Function: d], e: Symbol(s) }"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log([, 1, , , 2]);",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[ <1 empty item>, 1, <2 empty items>, 2 ]"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(Object.create(null), Object.create({ x: 1 }), new (class Foo { constructor() { this.a = 1; } })());",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[Object: null prototype] {} {} Foo { a: 1 }"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(\"%s %d\", \"a\", 1);",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "%s %d a 1"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log({ get a() { return 1; }, set b(v) {}, get c() { return 1; }, set c(v) {} });",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "{ a: [Getter], b: [Setter], c: [Getter/Setter] }"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const o = { a: 1 }; o.self = o; console.log(o);",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "<ref *1> { a: 1, self: [Circular *1] }"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(new Error(\"e\") instanceof Error, [new Error(\"x\")].length);",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "true 1"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(Promise.resolve(1), (async () => 1)());",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "Error: workflowScript validation failed before child launch; no children launched. workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains so workflows stay portable across Node and Bun. Parallel plus sequential rewrite: const a = runs.run(\"a\", { agent: \"worker\", task: \"A\" }); const writer = await runs.run(\"writer\", { agent: \"worker\", task: \"Write\" }); const review = await runs.run(\"review\", { agent: \"reviewer\", task: writer.output }); const [aResult] = await Promise.all([a]); return { a: aResult.output, issue: { writerRunId: writer.runId, reviewRunId: review.runId } };",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log([\"a\\nb\", \"it's\", 'say \"hi\"', \"back`tick\", \"both ' \\\" \"]);",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[ 'a\\nb', \"it's\", 'say \"hi\"', 'back`tick', `both ' \" ` ]"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(\"multi\\nline\", { s: \"line1\\nline2\\nline3 that is long enough to be split across lines in the inspect output okay\" });",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "multi\nline { s: 'line1\\nline2\\nline3 that is long enough to be split across lines in the inspect output okay' }"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(-0, 0, 1e21, 1e-7, 0.1 + 0.2, [-0]);",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "-0 0 1e+21 1e-7 0.30000000000000004 [ -0 ]"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(new Number(1), new String(\"s\"), new Boolean(false));",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[Number: 1] [String: 's'] [Boolean: false]"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(Object.assign(() => {}, { a: 1 }));",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[Function (anonymous)] { a: 1 }"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(new Uint8Array([1, 2, 3]));",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "Uint8Array(3) [ 1, 2, 3 ]"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log([[[[[1]]]]], { a: [[[[1]]]] });",
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "[\n  [\n    [ [ [ 1 ] ] ]\n  ]\n] {\n  a: [\n    [ [ [ 1 ] ] ]\n  ]\n}"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "console.log(args);",
+  "args": {
+   "a": [
+    1,
+    {
+     "b": 2
+    }
+   ],
+   "s": "x"
+  },
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [
+    {
+     "level": "log",
+     "text": "{ a: [ 1, { b: 2 } ], s: 'x' }"
+    }
+   ],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [Object.isFrozen(args), Object.isFrozen(args.a), Object.isFrozen(args.a[1]), args.a[1].b];",
+  "args": {
+   "a": [
+    1,
+    {
+     "b": 2
+    }
+   ]
+  },
+  "expected": {
+   "ok": true,
+   "value": [
+    true,
+    true,
+    true,
+    2
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "args.x = 1; return args;",
+  "args": {
+   "a": 1
+  },
+  "expected": {
+   "ok": true,
+   "value": {
+    "a": 1
+   },
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "\"use strict\"; args.x = 1; return args;",
+  "args": {
+   "a": 1
+  },
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "TypeError: Cannot add property x, object is not extensible",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return args;",
+  "expected": {
+   "ok": true,
+   "value": {},
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return args.constructor.constructor(\"return 1\")();",
+  "args": {
+   "a": 1
+  },
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "EvalError: Code generation from strings disallowed for this context",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return Object.keys(args.a.__proto__.constructor);",
+  "args": {
+   "a": {}
+  },
+  "expected": {
+   "ok": true,
+   "value": [],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return typeof state;",
+  "expected": {
+   "ok": true,
+   "value": "undefined",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await state.get(\"k\");",
+  "state": true,
+  "expected": {
+   "ok": true,
+   "value": null,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "await state.set(\"k\", { a: 1 }); return await state.get(\"k\");",
+  "state": true,
+  "expected": {
+   "ok": true,
+   "value": {
+    "a": 1
+   },
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await state.get(\"bad key\");",
+  "state": true,
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: state key must be 1-128 characters using letters, numbers, '.', '_' or '-', and start with a letter or number.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await state.set(\"k\", () => 1);",
+  "state": true,
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: state.set('k') value must be a JSON value; received function.",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "state.set(\"k\", 1); return 1;",
+  "state": true,
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [typeof require, typeof process, typeof module, typeof setTimeout, typeof setInterval, typeof setImmediate, typeof queueMicrotask, typeof fetch, typeof structuredClone, typeof Buffer, typeof TextEncoder, typeof URL, typeof globalThis, typeof window, typeof self];",
+  "expected": {
+   "ok": true,
+   "value": [
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "undefined",
+    "object",
+    "undefined",
+    "undefined"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [typeof Object, typeof Array, typeof JSON, typeof Math, typeof Date, typeof Map, typeof Set, typeof WeakMap, typeof RegExp, typeof Symbol, typeof Proxy, typeof Reflect, typeof BigInt, typeof Uint8Array, typeof WeakRef];",
+  "expected": {
+   "ok": true,
+   "value": [
+    "function",
+    "function",
+    "object",
+    "object",
+    "function",
+    "function",
+    "function",
+    "function",
+    "function",
+    "function",
+    "function",
+    "object",
+    "function",
+    "function",
+    "function"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return eval(\"1\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "EvalError: Code generation from strings disallowed for this context",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return new Function(\"return 1\")();",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "EvalError: Code generation from strings disallowed for this context",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return (function () {}).constructor(\"return 1\")();",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "EvalError: Code generation from strings disallowed for this context",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return (async function () {}).constructor(\"return 1\")();",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "Error: workflowScript validation failed before child launch; no children launched. workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains so workflows stay portable across Node and Bun. Parallel plus sequential rewrite: const a = runs.run(\"a\", { agent: \"worker\", task: \"A\" }); const writer = await runs.run(\"writer\", { agent: \"worker\", task: \"Write\" }); const review = await runs.run(\"review\", { agent: \"reviewer\", task: writer.output }); const [aResult] = await Promise.all([a]); return { a: aResult.output, issue: { writerRunId: writer.runId, reviewRunId: review.runId } };",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return (function* () {}).constructor(\"return 1\")();",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "EvalError: Code generation from strings disallowed for this context",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [].map.constructor(\"return 1\")();",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "EvalError: Code generation from strings disallowed for this context",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return globalThis.eval(\"1\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "EvalError: Code generation from strings disallowed for this context",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return (0, eval)(\"1\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "EvalError: Code generation from strings disallowed for this context",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return Object.getPrototypeOf(async function () {}).constructor(\"return 1\")();",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "Error: workflowScript validation failed before child launch; no children launched. workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains so workflows stay portable across Node and Bun. Parallel plus sequential rewrite: const a = runs.run(\"a\", { agent: \"worker\", task: \"A\" }); const writer = await runs.run(\"writer\", { agent: \"worker\", task: \"Write\" }); const review = await runs.run(\"review\", { agent: \"reviewer\", task: writer.output }); const [aResult] = await Promise.all([a]); return { a: aResult.output, issue: { writerRunId: writer.runId, reviewRunId: review.runId } };",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return Object.isFrozen(runs) + \"|\" + Object.keys(runs).join(\",\") + \"|\" + Object.isFrozen(console) + \"|\" + Object.keys(console).join(\",\");",
+  "expected": {
+   "ok": true,
+   "value": "true|run,all,lanes,host,steer,status,ref,refs|true|log,info,warn,error",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "runs.run = 1; return typeof runs.run;",
+  "expected": {
+   "ok": true,
+   "value": "function",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return Object.getOwnPropertyNames(globalThis).filter((k) => [\"runs\", \"emit\", \"console\", \"args\", \"state\", \"Promise\"].includes(k)).sort();",
+  "expected": {
+   "ok": true,
+   "value": [
+    "Promise",
+    "args",
+    "console",
+    "emit",
+    "runs"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return this === globalThis;",
+  "expected": {
+   "ok": true,
+   "value": true,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return typeof this;",
+  "expected": {
+   "ok": true,
+   "value": "object",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return (() => { return typeof arguments; })();",
+  "expected": {
+   "ok": true,
+   "value": "undefined",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "throw new Error(\"boom\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: boom",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "throw \"str\";",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "str",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "throw { a: 1 };",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "[object Object]",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "throw null;",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "null",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "throw new TypeError(\"tt\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "TypeError: tt",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "class E extends Error { constructor(m) { super(m); this.name = \"E\"; } } throw new E(\"custom\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "E: custom",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "undefined.x;",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "TypeError: Cannot read properties of undefined (reading 'x')",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const o = {}; o.f();",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "TypeError: o.f is not a function",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const o = {}; o.a.b;",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "TypeError: Cannot read properties of undefined (reading 'b')",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "undefinedFn();",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "ReferenceError: undefinedFn is not defined",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const n = 1; n();",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "TypeError: n is not a function",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse(\"bad\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Unexpected token 'b', \"bad\" is not valid JSON",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse(\"\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Unexpected end of JSON input",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse(\"{\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse('{\"a\":1,}');",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Expected double-quoted property name in JSON at position 7 (line 1 column 8)",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse(\"[1,]\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Unexpected token ']', \"[1,]\" is not valid JSON",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse(\"undefined\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: \"undefined\" is not valid JSON",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse('{\"a\":}');",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Unexpected token '}', \"{\"a\":}\" is not valid JSON",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse(\"{'a':1}\");",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse('{\"a\":1} x');",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Unexpected non-whitespace character after JSON at position 8 (line 1 column 9)",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "JSON.parse('{\"aaaaaaaaaaaaaaaaaaaaaa\": tru}');",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nSyntaxError: Unexpected token '}', ...\"aaaa\": tru}\" is not valid JSON",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "try { JSON.parse(\"{\"); } catch (e) { return [e.name, e.message]; }",
+  "expected": {
+   "ok": true,
+   "value": [
+    "SyntaxError",
+    "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "try { undefinedFn(); } catch (e) { return [e.name, e.message]; }",
+  "expected": {
+   "ok": true,
+   "value": [
+    "ReferenceError",
+    "undefinedFn is not defined"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "try { new Array(-1); } catch (e) { return [e.name, e.message]; }",
+  "expected": {
+   "ok": true,
+   "value": [
+    "RangeError",
+    "Invalid array length"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "try { Object.freeze({a:1}).a = 2; return \"no throw\"; } catch (e) { return [e.name, e.message]; }",
+  "expected": {
+   "ok": true,
+   "value": "no throw",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "try { Symbol() + \"\"; } catch (e) { return [e.name, e.message]; }",
+  "expected": {
+   "ok": true,
+   "value": [
+    "TypeError",
+    "Cannot convert a Symbol value to a string"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "try { 1n + 1; } catch (e) { return [e.name, e.message]; }",
+  "expected": {
+   "ok": true,
+   "value": [
+    "TypeError",
+    "Cannot mix BigInt and other types, use explicit conversions"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await Promise.reject(new TypeError(\"tt\"));",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "TypeError: tt",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "await Promise.reject(new Error(\"later\"));",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "Error: later",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "Promise.reject(new Error(\"unhandled\")); await new Promise((r) => r(1)); return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [1, 2, 3].at(-1) + [1, [2]].flat().length + Object.groupBy([1, 2], (x) => x % 2 ? \"o\" : \"e\").o.length + \"x\".at(0).length;",
+  "expected": {
+   "ok": true,
+   "value": 7,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [new Date(0).toISOString(), [3, 1, 2].toSorted().join(), Object.fromEntries([[\"a\", 1]]), \"a-b\".replaceAll(\"-\", \"+\"), structuredClone === undefined];",
+  "expected": {
+   "ok": false,
+   "kind": "script",
+   "message": "ReferenceError: structuredClone is not defined",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return (1234567.891).toLocaleString();",
+  "expected": {
+   "ok": true,
+   "value": "1,234,567.891",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [\"b\", \"a\", \"C\"].sort((x, y) => x.localeCompare(y));",
+  "expected": {
+   "ok": true,
+   "value": [
+    "a",
+    "b",
+    "C"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return JSON.stringify({ d: new Date(0), u: undefined, n: null, f() {} });",
+  "expected": {
+   "ok": true,
+   "value": "{\"d\":\"1970-01-01T00:00:00.000Z\",\"n\":null}",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return String(Symbol(\"x\")) + [1, [2, 3]].toString() + String(null) + `${1 + 1}`;",
+  "expected": {
+   "ok": true,
+   "value": "Symbol(x)1,2,3null2",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const { a, ...rest } = { a: 1, b: 2, c: 3 }; return [a, rest, [...[1, 2]], { ...{ x: 1 } }];",
+  "expected": {
+   "ok": true,
+   "value": [
+    1,
+    {
+     "b": 2,
+     "c": 3
+    },
+    [
+     1,
+     2
+    ],
+    {
+     "x": 1
+    }
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "label: for (const i of [1, 2]) { for (const j of [1, 2]) { if (j === 2) continue label; } } return 1;",
+  "expected": {
+   "ok": true,
+   "value": 1,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [typeof Symbol.asyncIterator, typeof Array.fromAsync, typeof Object.hasOwn, typeof structuredClone];",
+  "expected": {
+   "ok": true,
+   "value": [
+    "symbol",
+    "function",
+    "function",
+    "undefined"
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return await (async () => 1)();",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "Error: workflowScript validation failed before child launch; no children launched. workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains so workflows stay portable across Node and Bun. Parallel plus sequential rewrite: const a = runs.run(\"a\", { agent: \"worker\", task: \"A\" }); const writer = await runs.run(\"writer\", { agent: \"worker\", task: \"Write\" }); const review = await runs.run(\"review\", { agent: \"reviewer\", task: writer.output }); const [aResult] = await Promise.all([a]); return { a: aResult.output, issue: { writerRunId: writer.runId, reviewRunId: review.runId } };",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const f = async () => 1; return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "Error: workflowScript validation failed before child launch; no children launched. workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains so workflows stay portable across Node and Bun. Parallel plus sequential rewrite: const a = runs.run(\"a\", { agent: \"worker\", task: \"A\" }); const writer = await runs.run(\"writer\", { agent: \"worker\", task: \"Write\" }); const review = await runs.run(\"review\", { agent: \"reviewer\", task: writer.output }); const [aResult] = await Promise.all([a]); return { a: aResult.output, issue: { writerRunId: writer.runId, reviewRunId: review.runId } };",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "function* g() { yield 1; } return [...g()];",
+  "expected": {
+   "ok": true,
+   "value": [
+    1
+   ],
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "const it = { async *[Symbol.asyncIterator]() { yield 1; } }; return 1;",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "Error: workflowScript validation failed before child launch; no children launched. workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains so workflows stay portable across Node and Bun. Parallel plus sequential rewrite: const a = runs.run(\"a\", { agent: \"worker\", task: \"A\" }); const writer = await runs.run(\"writer\", { agent: \"worker\", task: \"Write\" }); const review = await runs.run(\"review\", { agent: \"reviewer\", task: writer.output }); const [aResult] = await Promise.all([a]); return { a: aResult.output, issue: { writerRunId: writer.runId, reviewRunId: review.runId } };",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "for await (const x of [Promise.resolve(1), 2]) { if (x === 2) return x; }",
+  "expected": {
+   "ok": true,
+   "value": 2,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "let i = 0; while (true) { i++; if (i > 100000) break; } return i;",
+  "expected": {
+   "ok": true,
+   "value": 100001,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "let s = 0; for (let i = 0; i < 1e6; i++) s += i; return s;",
+  "expected": {
+   "ok": true,
+   "value": 499999500000,
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ },
+ {
+  "script": "return [1, 2, 3].map(async (x) => x);",
+  "expected": {
+   "ok": false,
+   "kind": "validation",
+   "message": "Error: workflowScript validation failed before child launch; no children launched. workflowScript does not support nested async functions. Use top-level await, plain helper functions that return runs.run(...), or explicit Promise chains so workflows stay portable across Node and Bun. Parallel plus sequential rewrite: const a = runs.run(\"a\", { agent: \"worker\", task: \"A\" }); const writer = await runs.run(\"writer\", { agent: \"worker\", task: \"Write\" }); const review = await runs.run(\"review\", { agent: \"reviewer\", task: writer.output }); const [aResult] = await Promise.all([a]); return { a: aResult.output, issue: { writerRunId: writer.runId, reviewRunId: review.runId } };",
+   "emits": [],
+   "console": [],
+   "children": [],
+   "trace": [],
+   "launches": []
+  }
+ }
+]
