@@ -106,6 +106,10 @@ func TestSessionDirNameAndBasename(t *testing.T) {
 }
 
 func TestNewUUIDv7(t *testing.T) {
+	// The generator is monotonic over the whole process (pi-ai's uuidv7 too): start from a clean state.
+	uuidMu.Lock()
+	uuidState.lastTimestamp, uuidState.seeded = 0, false
+	uuidMu.Unlock()
 	ms := time.Date(2026, 10, 20, 14, 39, 28, 230_000_000, time.UTC).UnixMilli()
 	a, err := newUUIDv7(ms)
 	if err != nil {
