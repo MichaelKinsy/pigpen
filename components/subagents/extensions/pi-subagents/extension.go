@@ -174,7 +174,8 @@ func Extension() *sdk.Extension {
 	return e
 }
 
-// executeSubagent runs a management action (list, get) or one agent; every other input is refused (refuse.go).
+// executeSubagent runs a management action or one agent. What the port does not run is refused first (refuse.go); the public
+// boundary (policy_publicexec.go) then checks and normalizes the call with the original's messages.
 func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
 	action := ""
 	if v := params["action"]; v != nil {
@@ -187,10 +188,14 @@ func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
 	if msg := refuseUnsupported(params, action); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
-	if action == "" {
-		return runOne(ctx, params)
+	norm := normalizePublicSubagentExecution(params)
+	if !norm.OK {
+		return nil, sdk.NewToolError(norm.Error)
 	}
-	return actions[action].run(ctx, params)
+	if action == "" {
+		return runOne(ctx, norm.Params)
+	}
+	return actions[action].run(ctx, norm.Params)
 }
 
 // explicitOK is a successful result that says so (the original's tool results carry isError: false).
@@ -265,13 +270,16 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError(err.Error())
 	}
 	model, _ := params["model"].(string)
-	done, stop := cancellation(ctx)
-	defer stop()
-	out, err := runAgent(done, cwd, a, task, model)
+	pol, err := applyRunPolicy(ctx, params, a, task, cwd)
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
-	return explicitOK{Content: out, Details: map[string]any{"mode": "single", "agent": a.Name}}, nil
+	pol.writeInputArtifact()
+	done, stop := cancellation(ctx)
+	defer stop()
+	defer activeRunStart()()
+	out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})
+	return finishRun(pol, runOutcome{Stdout: out, Err: err})
 }
 
 // runChainCommand is `/run-chain <chain> <task>`: the chain files are the original's format; running them this way is an

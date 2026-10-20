@@ -35,7 +35,9 @@ func TestRefusalMessage(t *testing.T) {
 
 // every parameter of the original's schema that a run does not honor is refused, one test case each
 func TestEveryUnportedParameterIsRefused(t *testing.T) {
-	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true}
+	// ported by the run policy (policy_run.go): twins and behavior tests are in policy_run_test.go
+	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true,
+		"output": true, "outputMode": true, "artifacts": true, "acceptance": true, "gate": true, "agentContract": true, "timeoutMs": true, "maxRuntimeMs": true, "includeProgress": true}
 	special := map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true}
 	names := sub.ToolParamNames()
 	sort.Strings(names)
@@ -59,8 +61,8 @@ func TestEveryUnportedParameterIsRefused(t *testing.T) {
 
 func TestSeveralUnportedParametersAreNamedTogether(t *testing.T) {
 	h, calls := refusedHost(t)
-	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "output": true, "acceptance": "checked"})
-	wantRefusal(t, failure, "the `acceptance`, `output` options")
+	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "outputSchema": true, "toolBudget": "checked"})
+	wantRefusal(t, failure, "the `outputSchema`, `toolBudget` options")
 	eq(t, len(*calls), 0, "no child started")
 }
 

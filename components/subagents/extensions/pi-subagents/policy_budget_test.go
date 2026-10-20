@@ -1,6 +1,7 @@
 package pi_subagents
 
 import (
+	"math"
 	"testing"
 )
 
@@ -268,9 +269,7 @@ func TestToolTimeout(t *testing.T) {
 	})
 }
 
-func mathNaN() float64 { return nan }
-
-var nan = func() float64 { var z float64; return z / z }()
+func mathNaN() float64 { return math.NaN() }
 
 func TestUsage(t *testing.T) {
 	live := usage{Input: 20, Output: 10, CacheRead: 3, CacheWrite: 4, Cost: 2, Turns: 9}

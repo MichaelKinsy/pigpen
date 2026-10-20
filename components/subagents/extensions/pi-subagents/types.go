@@ -34,6 +34,9 @@ type AgentConfig struct {
 	AcceptanceRole        string
 	DefaultReads          []string
 	DefaultProgress       bool
+	Output                string // the agent's default output file (frontmatter `output`)
+	OutputMode            string // "inline" or "file-only" (frontmatter `outputMode`)
+	DefaultTimeoutMs      int    // frontmatter `timeoutMs`
 	DefaultAsync          *bool
 	Runner                *Runner
 	Skills                []string

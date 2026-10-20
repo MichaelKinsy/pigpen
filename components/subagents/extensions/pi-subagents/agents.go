@@ -180,6 +180,9 @@ func loadAgent(f definitionFile, source AgentSource, priority int) (*AgentConfig
 		a.DefaultReads = reads
 	}
 	a.DefaultProgress = fm.Get("defaultProgress") == "true"
+	if err := parsePolicyFrontmatter(fm, a, local); err != nil {
+		return nil, diag(err.Error())
+	}
 	return a, nil
 }
 

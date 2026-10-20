@@ -33,3 +33,6 @@ func ToolParamNames() []string {
 }
 
 var Refusal = refusal
+
+// ErrCancelled is what a cancelled child run returns.
+var ErrCancelled = errCancelled
