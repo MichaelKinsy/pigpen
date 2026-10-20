@@ -125,6 +125,7 @@ change, so a run is refused with the exact message rather than half-run.
 Helpers this slice carries that the run-policy and agent-management slices also port (to merge into one): `normalizeGateAcceptance`,
 `normalizeExtensionBindings`, `intersectSubagentCapabilityCeilings` (workflow_launch.go), `sanitizeDisplayText` (workflow_checklist.go),
 `validGitRef` (one copy is kept, the async slice's duplicate was removed), `schemaViolations` (jsonschema_validate.go).
+**The async lane's twins.** All 26 ledger files of the background runs are covered by `tw` or an individual `tskip` (title-exact check against `port/upstream-tests.json`). The cases that need the workflow runtime, steering, the Fleet views, managed worktrees, capability ceilings, acceptance gates, tool budgets, external runners or Node/Bun loader internals are skipped one by one with their reason (each names the slice that owns it). Added behavior to match the original: the stale-run retention cleaner (`async_retention.go`, one bounded pass 60 s after the session starts, never deleting a run the session tracks), the bounded async status snapshot an RPC host reads as the widget (`async_projection.go`), retained fleet jobs, `resolveAsyncResumeTarget` with the original's validation (`async_resume_target.go`), the process-terminal event on the bus, Git routing variables removed from a background child's environment, and the refusal of an interrupt for external or workflow runs. `stop` honors `childId` and `resume` honors `index`.
 
 ## Mapping
 

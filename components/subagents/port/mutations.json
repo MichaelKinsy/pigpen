@@ -2158,5 +2158,329 @@
   "file": "workflow_prompt.go",
   "find": "case '$':\n\t\t\t\tb.WriteByte('$')\n\t\t\t\tj++",
   "replace": "case 'Z':\n\t\t\t\tb.WriteByte('$')\n\t\t\t\tj++"
+ },
+ {
+  "name": "ret-recent",
+  "file": "async_retention.go",
+  "find": "\tif ts > in.cutoff {\n\t\treturn \"recent\"\n\t}\n\treturn \"\"\n}\n\nfunc truthy",
+  "replace": "\tif false {\n\t\treturn \"recent\"\n\t}\n\treturn \"\"\n}\n\nfunc truthy"
+ },
+ {
+  "name": "ret-paused-terminal",
+  "file": "async_retention.go",
+  "find": "\"stopped\": true, \"rejected\": true}\n\tresultTimestampFields",
+  "replace": "\"stopped\": true, \"rejected\": true, \"paused\": true}\n\tresultTimestampFields"
+ },
+ {
+  "name": "ret-run-budget",
+  "file": "async_retention.go",
+  "find": "runBudget := (batch + 1) / 2",
+  "replace": "runBudget := batch"
+ },
+ {
+  "name": "ret-run-wait-reference",
+  "file": "async_retention.go",
+  "find": "\tif in.waitRunIDs[runID] {\n\t\treturn \"wait-reference\"\n\t}\n\tif activeMarkerExists(in.asyncDirRoot, runID) {\n\t\treturn \"active-index\"\n\t}\n\tif state",
+  "replace": "\tif false {\n\t\treturn \"wait-reference\"\n\t}\n\tif activeMarkerExists(in.asyncDirRoot, runID) {\n\t\treturn \"active-index\"\n\t}\n\tif state"
+ },
+ {
+  "name": "ret-active-marker",
+  "file": "async_retention.go",
+  "find": "return pathExists(filepath.Join(asyncDirRoot, activeRunIndexDir, runID))",
+  "replace": "return false"
+ },
+ {
+  "name": "ret-mission",
+  "file": "async_retention.go",
+  "find": "if pathExists(filepath.Join(in.runDir, missionBindingFile)) ||",
+  "replace": "if false && pathExists(filepath.Join(in.runDir, missionBindingFile)) ||"
+ },
+ {
+  "name": "ret-tombstone-grace",
+  "file": "async_retention.go",
+  "find": "\t\tif float64(currentTime)-mtimeMs(info) < float64(grace) {\n\t\t\tincrement(res.Skipped, \"tombstone-grace\")\n\t\t\treturn\n\t\t}\n\t\tfresh, freshSafe := parseWaitRunIDs(waitDir)\n\t\tfinal := \"wait-references-unknown\"\n\t\tif freshSafe {\n\t\t\tin.waitRunIDs = fresh\n\t\t\tfinal = runSkipReason(in)",
+  "replace": "\t\tif float64(currentTime)-mtimeMs(info) > float64(grace) {\n\t\t\tincrement(res.Skipped, \"tombstone-grace\")\n\t\t\treturn\n\t\t}\n\t\tfresh, freshSafe := parseWaitRunIDs(waitDir)\n\t\tfinal := \"wait-references-unknown\"\n\t\tif freshSafe {\n\t\t\tin.waitRunIDs = fresh\n\t\t\tfinal = runSkipReason(in)"
+ },
+ {
+  "name": "ret-lock-stale-age",
+  "file": "async_retention.go",
+  "find": "return float64(now)-mtimeMs(info) >= retentionLockStaleMs, \"\"",
+  "replace": "return float64(now)-mtimeMs(info) <= retentionLockStaleMs, \"\""
+ },
+ {
+  "name": "ret-lock-host",
+  "file": "async_retention.go",
+  "find": "if owner.Hostname != p.hostname {",
+  "replace": "if owner.Hostname == p.hostname {"
+ },
+ {
+  "name": "ret-cursor-wrap",
+  "file": "async_retention.go",
+  "find": "cleared := after != nil && len(next) == 0",
+  "replace": "cleared := false"
+ },
+ {
+  "name": "ret-marker-blocks",
+  "file": "async_retention.go",
+  "find": "\tif pathExists(m.tombstonePath) {\n\t\treturn true\n\t}\n\tremoveRunTombstoneMarker(root, runID)\n\treturn false\n}",
+  "replace": "\tremoveRunTombstoneMarker(root, runID)\n\treturn false\n}"
+ },
+ {
+  "name": "ret-stray-marker",
+  "file": "async_retention.go",
+  "find": "\tremoveRunTombstoneMarker(root, runID)\n\treturn false\n}\n\nfunc unresolvedHandoff",
+  "replace": "\treturn false\n}\n\nfunc unresolvedHandoff"
+ },
+ {
+  "name": "ret-finite",
+  "file": "async_retention.go",
+  "find": "return f, ok && !math.IsInf(f, 0) && !math.IsNaN(f)",
+  "replace": "return f, ok"
+ },
+ {
+  "name": "ret-uninspectable-session",
+  "file": "async_retention.go",
+  "find": "\t\t\treturn !isNotFoundErr(err)\n\t\t}\n\t\treturn info.Mode().IsRegular()",
+  "replace": "\t\t\treturn false\n\t\t}\n\t\treturn info.Mode().IsRegular()"
+ },
+ {
+  "name": "ret-repaired",
+  "file": "async_retention.go",
+  "find": "\t\t\tif rec.Repaired {\n\t\t\t\tres.RepairedRuns++\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "ret-discovery-run-candidate",
+  "file": "async_retention.go",
+  "find": "if !validRunID(c.Name) || c.Relative != c.Name {",
+  "replace": "if false {"
+ },
+ {
+  "name": "run-git-env",
+  "file": "async_run.go",
+  "find": "Env: omitGitRoutingEnv(spec.Env),",
+  "replace": "Env: spec.Env,"
+ },
+ {
+  "name": "run-git-env-indexed",
+  "file": "async_run.go",
+  "find": "return gitRoutingVariables[upper] || gitConfigIndexed.MatchString(upper)",
+  "replace": "return gitRoutingVariables[upper]"
+ },
+ {
+  "name": "run-git-env-dir",
+  "file": "async_run.go",
+  "find": "\"GIT_DIR\": true, \"GIT_GRAFT_FILE\"",
+  "replace": "\"GIT_DIRX\": true, \"GIT_GRAFT_FILE\""
+ },
+ {
+  "name": "run-terminal-event-hook",
+  "file": "async_runtime.go",
+  "find": "OnComplete: rt.onRunComplete, OnProcessTerminal: rt.onProcessTerminal}",
+  "replace": "OnComplete: rt.onRunComplete}"
+ },
+ {
+  "name": "run-terminal-event-stale",
+  "file": "async_runtime.go",
+  "find": "err != nil && !staleExtensionContext.MatchString(err.Error())",
+  "replace": "err != nil"
+ },
+ {
+  "name": "run-terminal-event-channel",
+  "file": "async_core.go",
+  "find": "subagentProcessTerminalEvt  = \"subagent:process-terminal\"",
+  "replace": "subagentProcessTerminalEvt  = \"subagent:process-terminalx\""
+ },
+ {
+  "name": "run-launch-text",
+  "file": "async_runtime.go",
+  "find": "\"The async run is detached and running in the background.\",",
+  "replace": "\"The async run is running.\","
+ },
+ {
+  "name": "run-launch-headless",
+  "file": "async_runtime.go",
+  "find": "\"This is a non-interactive run: Pi auto-drains",
+  "replace": "\"This is an interactive run: Pi auto-drains"
+ },
+ {
+  "name": "int-workflow",
+  "file": "async_actions.go",
+  "find": "\tif st.Mode == \"workflow\" {\n\t\treturn nil, mgmtError(fmt.Sprintf(\"Interrupt is unsupported for async workflow",
+  "replace": "\tif false {\n\t\treturn nil, mgmtError(fmt.Sprintf(\"Interrupt is unsupported for async workflow"
+ },
+ {
+  "name": "int-external",
+  "file": "async_actions.go",
+  "find": "return running > 0 && running == external",
+  "replace": "return false"
+ },
+ {
+  "name": "int-external-job",
+  "file": "async_actions.go",
+  "find": "(runner.Type == \"external-cli\" || runner.Type == \"external-job\")",
+  "replace": "(runner.Type == \"external-cli\")"
+ },
+ {
+  "name": "int-probe",
+  "file": "async_actions.go",
+  "find": "rec, err := reconcileAsyncRun(asyncDir, ReconcileOptions{ResultsDir: rt.dirs.Results, Kill: asyncKill})\n\tif err != nil {\n\t\treturn nil, mgmtError(err.Error())\n\t}\n\tst := rec.Status\n\tif st == nil || st.State != \"running\" || st.PID == nil {",
+  "replace": "rec, err := reconcileAsyncRun(asyncDir, ReconcileOptions{ResultsDir: rt.dirs.Results})\n\tif err != nil {\n\t\treturn nil, mgmtError(err.Error())\n\t}\n\tst := rec.Status\n\tif st == nil || st.State != \"running\" || st.PID == nil {"
+ },
+ {
+  "name": "stop-child-param",
+  "file": "async_runtime.go",
+  "find": "[]string{\"id\", \"runId\", \"dir\", \"childId\"}",
+  "replace": "[]string{\"id\", \"runId\", \"dir\"}"
+ },
+ {
+  "name": "resume-index-param",
+  "file": "async_runtime.go",
+  "find": "[]string{\"id\", \"runId\", \"dir\", \"index\", \"message\", \"task\"}",
+  "replace": "[]string{\"id\", \"runId\", \"dir\", \"message\", \"task\"}"
+ },
+ {
+  "name": "resume-stopped",
+  "file": "async_resume_target.go",
+  "find": "\tif state == \"stopped\" {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "resume-owner",
+  "file": "async_resume_target.go",
+  "find": "strOf(status[\"sessionId\"]) != o.SessionID",
+  "replace": "strOf(status[\"sessionId\"]) == o.SessionID"
+ },
+ {
+  "name": "resume-jsonl",
+  "file": "async_resume_target.go",
+  "find": "filepath.Ext(sessionFile) != \".jsonl\"",
+  "replace": "filepath.Ext(sessionFile) == \".jsonl\""
+ },
+ {
+  "name": "resume-needs-index",
+  "file": "async_resume_target.go",
+  "find": "if stepCount > 1 && !hasIndex {",
+  "replace": "if false {"
+ },
+ {
+  "name": "resume-pending",
+  "file": "async_resume_target.go",
+  "find": "case status == \"pending\":",
+  "replace": "case status == \"pendingx\":"
+ },
+ {
+  "name": "resume-one-live",
+  "file": "async_resume_target.go",
+  "find": "if len(running) != 1 {",
+  "replace": "if len(running) != 0 {"
+ },
+ {
+  "name": "resume-result-only",
+  "file": "async_resume_target.go",
+  "find": "if stepCount == 0 && strOf(result[\"agent\"]) != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "resume-stopped-child",
+  "file": "async_resume_target.go",
+  "find": "sel[\"status\"] == \"stopped\" || sel[\"stopped\"] == true",
+  "replace": "sel[\"status\"] == \"stopped\""
+ },
+ {
+  "name": "resume-descriptor-run",
+  "file": "async_resume_target.go",
+  "find": "if desc != nil && desc.SourceRunID != runID {",
+  "replace": "if false {"
+ },
+ {
+  "name": "resume-descriptor-agent",
+  "file": "async_resume_target.go",
+  "find": "if desc != nil && desc.Agent != agent {",
+  "replace": "if false {"
+ },
+ {
+  "name": "resume-ceiling",
+  "file": "async_resume_target.go",
+  "find": "\t\tif carriesCapabilityCeiling(status, result) {\n\t\t\tu = append(u, \"capabilityCeiling\")\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "resume-status-validation",
+  "file": "async_resume_target.go",
+  "find": "\tfor _, f := range []string{\"sessionId\", \"cwd\", \"sessionFile\"} {",
+  "replace": "\tfor _, f := range []string{\"cwd\", \"sessionFile\"} {"
+ },
+ {
+  "name": "proj-byte-limit",
+  "file": "async_projection.go",
+  "find": "\tif snapshotBytes(s) <= s.Caps.MaxSerializedBytes {\n\t\treturn\n\t}\n\ts.Omitted.ByteLimitExceeded = true",
+  "replace": "\tif true {\n\t\treturn\n\t}\n\ts.Omitted.ByteLimitExceeded = true"
+ },
+ {
+  "name": "proj-queued-rank",
+  "file": "async_projection.go",
+  "find": "\tcase \"queued\":\n\t\treturn 1\n\t}\n\treturn 2",
+  "replace": "\tcase \"queued\":\n\t\treturn 2\n\t}\n\treturn 2"
+ },
+ {
+  "name": "proj-pending-state",
+  "file": "async_projection.go",
+  "find": "\tcase \"pending\":\n\t\treturn \"queued\"\n\tcase \"queued\", \"running\"",
+  "replace": "\tcase \"pending\":\n\t\treturn \"partial\"\n\tcase \"queued\", \"running\""
+ },
+ {
+  "name": "proj-unknown-state",
+  "file": "async_projection.go",
+  "find": "\treturn \"partial\"\n}\n\nfunc snapshotTerminal",
+  "replace": "\treturn value\n}\n\nfunc snapshotTerminal"
+ },
+ {
+  "name": "proj-end-overflow",
+  "file": "async_projection.go",
+  "find": "sum <= 9007199254740991",
+  "replace": "true"
+ },
+ {
+  "name": "proj-host-no-verdict",
+  "file": "async_projection.go",
+  "find": "\tcase verdict == \"\" || verdict == \"inconclusive\":\n\t\treturn \"partial\"",
+  "replace": "\tcase verdict == \"\" || verdict == \"inconclusive\":\n\t\treturn \"complete\""
+ },
+ {
+  "name": "proj-host-capacity",
+  "file": "async_projection.go",
+  "find": "retainedOrdinary := ordinary[:max(0, min(len(ordinary), ctx.caps.MaxChildrenPerNode-len(retainedHost)))]",
+  "replace": "retainedOrdinary := ordinary"
+ },
+ {
+  "name": "proj-escape",
+  "file": "async_projection.go",
+  "find": "\t\tif cp == 0x1b {\n\t\t\tvar next uint16",
+  "replace": "\t\tif cp == 0x1c {\n\t\t\tvar next uint16"
+ },
+ {
+  "name": "proj-cycle",
+  "file": "async_projection.go",
+  "find": "\t\tif seen[parentID] {\n\t\t\treturn true\n\t\t}",
+  "replace": "\t\tif seen[parentID] {\n\t\t\treturn false\n\t\t}"
+ },
+ {
+  "name": "proj-live-root",
+  "file": "async_projection.go",
+  "find": "keepLiveRoot := (status == \"running\" || status == \"queued\") && (parent == nil || parent.str(\"status\") != \"running\")",
+  "replace": "keepLiveRoot := false"
+ },
+ {
+  "name": "proj-run-precedence",
+  "file": "async_projection.go",
+  "find": "\tfor i, l := range lanes {\n\t\trunID, ok := truthyString(l.step[\"runId\"])",
+  "replace": "\tfor i, l := range lanes[:0] {\n\t\trunID, ok := truthyString(l.step[\"runId\"])"
+ },
+ {
+  "name": "fleet-limit",
+  "file": "async_state.go",
+  "find": "const maxRecentFleetJobs = 20",
+  "replace": "const maxRecentFleetJobs = 21"
  }
 ]

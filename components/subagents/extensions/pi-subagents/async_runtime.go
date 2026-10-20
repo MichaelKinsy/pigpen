@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -33,8 +34,8 @@ func init() {
 	registerRunParams("async", "timeoutMs", "maxRuntimeMs")
 	registerAction("status", []string{"id", "runId", "dir"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.statusAction(ctx, p) })
 	registerAction("interrupt", []string{"id", "runId", "dir"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.interruptAction(ctx, p) })
-	registerAction("stop", []string{"id", "runId", "dir"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.stopAction(ctx, p) })
-	registerAction("resume", []string{"id", "runId", "dir", "message", "task"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.resumeAction(ctx, p) })
+	registerAction("stop", []string{"id", "runId", "dir", "childId"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.stopAction(ctx, p) })
+	registerAction("resume", []string{"id", "runId", "dir", "index", "message", "task"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.resumeAction(ctx, p) })
 	extensionHooks = append(extensionHooks, installAsyncRuntime)
 }
 
@@ -99,8 +100,11 @@ type asyncRuntime struct {
 	capacity map[string]*ActiveAsyncCapacityHandle
 	notifier *CompletionNotifier
 	scanStop chan struct{}
-	closed   bool
-	hasUI    bool
+	// retentionTimer starts the delayed retention pass once per runtime; retentionCancel ends a pass that is running (index.ts asyncRetentionTimer/Abort).
+	retentionTimer  *time.Timer
+	retentionCancel chan struct{}
+	closed          bool
+	hasUI           bool
 }
 
 func installAsyncRuntime(e *sdk.Extension) {
@@ -172,12 +176,50 @@ func (rt *asyncRuntime) onSessionStart(ctx sdk.Context, _ map[string]any) (any, 
 	rt.state.BaseCwd = ctx.Cwd()
 	rt.state.CurrentSessionID = currentSessionID(ctx)
 	rt.state.AsyncJobs = map[string]*AsyncJobState{}
+	rt.state.FleetJobs = map[string]*AsyncJobState{}
 	rt.state.WidgetsSuspended = false // resetSessionState (index.ts:1122)
 	rt.mu.Unlock()
+	rt.startRetention()
 	rt.restoreActiveJobs()
 	rt.startResultScan()
 	rt.refreshWidget()
 	return nil, nil
+}
+
+// startRetention schedules the one delayed pass of the retention cleaner (startSessionMaintenance in index.ts). It never
+// deletes a run this session tracks.
+func (rt *asyncRuntime) startRetention() {
+	rt.mu.Lock()
+	defer rt.mu.Unlock()
+	if rt.retentionTimer != nil {
+		return
+	}
+	cancel := make(chan struct{})
+	rt.retentionCancel = cancel
+	rt.retentionTimer = time.AfterFunc(asyncRetentionDelayMs*time.Millisecond, func() {
+		_, err := cleanupAsyncRetention(AsyncRetentionOptions{AsyncDirRoot: rt.dirs.Async, ResultsDir: rt.dirs.Results, Cancel: cancel,
+			ProtectedRunIDs: func() []string {
+				rt.mu.Lock()
+				defer rt.mu.Unlock()
+				return sortedKeys(rt.state.AsyncJobs)
+			}})
+		if err != nil {
+			logAsyncError("Failed to clean retained async subagent state:", err)
+		}
+	})
+}
+
+func (rt *asyncRuntime) stopRetention() {
+	rt.mu.Lock()
+	defer rt.mu.Unlock()
+	if rt.retentionTimer != nil {
+		rt.retentionTimer.Stop()
+		rt.retentionTimer = nil
+	}
+	if rt.retentionCancel != nil {
+		close(rt.retentionCancel)
+		rt.retentionCancel = nil
+	}
 }
 
 func (rt *asyncRuntime) onSessionShutdown(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -197,6 +239,7 @@ func (rt *asyncRuntime) onSessionShutdown(ctx sdk.Context, _ map[string]any) (an
 	for _, h := range handles {
 		h.Detach() // the children live on; the next session adopts them
 	}
+	rt.stopRetention()
 	rt.notifier.Dispose()
 	_ = ctx.SetWidget(widgetKeyAsync, nil)
 	return nil, nil
@@ -311,6 +354,7 @@ func (rt *asyncRuntime) restoreActiveJobs() {
 	for _, r := range runs {
 		rt.mu.Lock()
 		rt.state.AsyncJobs[r.ID] = jobFromSummary(r)
+		rt.state.rememberFleetJob(rt.state.AsyncJobs[r.ID])
 		_, owned := rt.handles[r.ID]
 		rt.mu.Unlock()
 		if owned || !backgroundSupported {
@@ -329,7 +373,7 @@ func (rt *asyncRuntime) restoreActiveJobs() {
 }
 
 func (rt *asyncRuntime) hooks() runHooks {
-	return runHooks{OnProgress: func(dir string) { rt.refreshJob(dir); rt.refreshWidget() }, OnComplete: rt.onRunComplete}
+	return runHooks{OnProgress: func(dir string) { rt.refreshJob(dir); rt.refreshWidget() }, OnComplete: rt.onRunComplete, OnProcessTerminal: rt.onProcessTerminal}
 }
 
 func (rt *asyncRuntime) refreshJob(asyncDir string) {
@@ -339,9 +383,12 @@ func (rt *asyncRuntime) refreshJob(asyncDir string) {
 	}
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
-	if j := rt.state.AsyncJobs[st.RunID]; j != nil {
+	// A progress refresh reads the status before it takes the lock: it must not bring a job back from the terminal state that the
+	// completion (onRunComplete) recorded in between.
+	if j := rt.state.AsyncJobs[st.RunID]; j != nil && !isTerminalAsyncState(j.Status) {
 		sum := statusToSummary(asyncDir, st)
 		*j = *jobFromSummary(sum)
+		rt.state.rememberFleetJob(j)
 	}
 }
 
@@ -355,10 +402,16 @@ func (rt *asyncRuntime) refreshWidget() {
 	suspended := rt.state.WidgetsSuspended
 	var jobs []*AsyncJobState
 	for _, id := range sortedKeys(rt.state.AsyncJobs) {
-		jobs = append(jobs, rt.state.AsyncJobs[id])
+		cp := *rt.state.AsyncJobs[id] // the progress hooks rewrite the tracked job under the lock: draw from a copy
+		jobs = append(jobs, &cp)
 	}
 	rt.mu.Unlock()
 	if suspended {
+		return
+	}
+	if ctx.Mode() == "rpc" && len(jobs) > 0 {
+		// renderWidget (render.ts): an RPC host reads the versioned snapshot, not terminal lines
+		_ = ctx.SetWidget(widgetKeyAsync, encodeAsyncStatusSnapshotWidget(jobs, SnapshotOptions{}))
 		return
 	}
 	lines := widgetLines(jobs)
@@ -408,6 +461,28 @@ func widgetLines(jobs []*AsyncJobState) []string {
 	return lines
 }
 
+// staleExtensionContext is extension-context.ts isStaleExtensionContextError's message test.
+var staleExtensionContext = regexp.MustCompile(`(?i)extension ctx is stale|extension context no longer active|stale after session replacement or reload`)
+
+// logAsyncError reports a failure the background code survives (the original's console.error).
+var logAsyncError = func(args ...any) { fmt.Fprintln(os.Stderr, args...) }
+
+// emitProcessTerminalEvent publishes the process-terminal proof (async-execution.ts emitProcessTerminalEvent): a stale context
+// drops it silently, any other failure is logged, none throws.
+func emitProcessTerminalEvent(emit func(channel string, payload any) error, proof any) {
+	if err := emit(subagentProcessTerminalEvt, proof); err != nil && !staleExtensionContext.MatchString(err.Error()) {
+		logAsyncError("Failed to emit subagent process-terminal event:", err)
+	}
+}
+
+func (rt *asyncRuntime) onProcessTerminal(proof *ProcessTerminal) {
+	ctx, ok := rt.context()
+	if !ok {
+		return
+	}
+	emitProcessTerminalEvent(ctx.Events().Emit, proof)
+}
+
 // ── results: delivery of what finished ──
 
 func (rt *asyncRuntime) onRunComplete(cfg *RunConfig, result map[string]any, st *AsyncStatus) {
@@ -415,6 +490,7 @@ func (rt *asyncRuntime) onRunComplete(cfg *RunConfig, result map[string]any, st 
 	delete(rt.handles, cfg.ID)
 	if j := rt.state.AsyncJobs[cfg.ID]; j != nil && st != nil {
 		*j = *jobFromSummary(statusToSummary(cfg.AsyncDir, st))
+		rt.state.rememberFleetJob(j)
 	}
 	cap := rt.capacity[cfg.ID]
 	delete(rt.capacity, cfg.ID)
@@ -470,6 +546,13 @@ func (rt *asyncRuntime) processResult(file string, triggerTurn bool) {
 		return
 	}
 	rt.mu.Lock()
+	// A result is the run's end: the session must not read the job as active once it has delivered the completion, whichever
+	// of the result and the supervisor's own bookkeeping got there first.
+	if j := rt.state.AsyncJobs[runID]; j != nil && isActiveAsyncState(j.Status) {
+		if state := resultStateOf(data); isTerminalAsyncState(state) {
+			j.Status, j.UpdatedAt = state, nowMs()
+		}
+	}
 	recordWaitCompletion(rt.state, runID, data, nowMs(), completionSendTTLMs, &struct{ ResultsDir, SessionID string }{rt.dirs.Results, sessionID})
 	rt.mu.Unlock()
 	rt.bus.Emit(subagentAsyncCompleteEvent, data)
@@ -656,6 +739,7 @@ func (rt *asyncRuntime) launchBackground(ctx sdk.Context, params map[string]any,
 	if st, _ := readStatusQuiet(asyncDir); st != nil {
 		rt.mu.Lock()
 		rt.state.AsyncJobs[id] = jobFromSummary(statusToSummary(asyncDir, st))
+		rt.state.rememberFleetJob(rt.state.AsyncJobs[id])
 		rt.mu.Unlock()
 	}
 	rt.refreshWidget()

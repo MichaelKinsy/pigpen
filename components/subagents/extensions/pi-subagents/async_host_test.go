@@ -377,3 +377,5 @@ func TestTimeoutAndCapacity(t *testing.T) {
 	_, failure = h2.Tool("subagent", map[string]any{"agent": "helper", "task": "second", "async": true})
 	eq(t, failure, "Active async run capacity exhausted: 1/1 used.", "capacity")
 }
+
+func time_now() int64 { return time.Now().UnixMilli() }

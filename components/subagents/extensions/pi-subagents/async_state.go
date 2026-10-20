@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -45,13 +46,28 @@ type completedStore interface {
 	Prune(now, ttlMs int64)
 }
 
-type mapCompletedStore struct{ m map[string]completedResult }
+// mapCompletedStore is safe for concurrent use: the result watcher records completions while bg_wait reads them.
+type mapCompletedStore struct {
+	mu sync.Mutex
+	m  map[string]completedResult
+}
 
 func newCompletedStore() completedStore { return &mapCompletedStore{m: map[string]completedResult{}} }
 
-func (s *mapCompletedStore) Get(id string) (completedResult, bool) { v, ok := s.m[id]; return v, ok }
-func (s *mapCompletedStore) Set(id string, v completedResult)      { s.m[id] = v }
+func (s *mapCompletedStore) Get(id string) (completedResult, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	v, ok := s.m[id]
+	return v, ok
+}
+func (s *mapCompletedStore) Set(id string, v completedResult) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.m[id] = v
+}
 func (s *mapCompletedStore) Prune(now, ttl int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for k, e := range s.m {
 		if now-e.SeenAt > ttl {
 			delete(s.m, k)
@@ -65,6 +81,8 @@ type SubagentState struct {
 	BaseCwd          string
 	CurrentSessionID string
 	AsyncJobs        map[string]*AsyncJobState
+	// FleetJobs are the jobs kept after the widget drops them: every job seen, with at most maxRecentFleetJobs terminal ones.
+	FleetJobs        map[string]*AsyncJobState
 	CompletedResults completedStore
 	CompletionSeen   map[string]int64
 	ForegroundRuns   map[string]*ForegroundRunRecord
@@ -72,7 +90,28 @@ type SubagentState struct {
 }
 
 func newSubagentState() *SubagentState {
-	return &SubagentState{AsyncJobs: map[string]*AsyncJobState{}, CompletionSeen: map[string]int64{}}
+	return &SubagentState{AsyncJobs: map[string]*AsyncJobState{}, FleetJobs: map[string]*AsyncJobState{}, CompletionSeen: map[string]int64{}}
+}
+
+const maxRecentFleetJobs = 20
+
+// rememberFleetJob is async-job-tracker.ts rememberFleetJob: the job joins the retained set, whose terminal members are
+// limited to the most recent maxRecentFleetJobs.
+func (s *SubagentState) rememberFleetJob(j *AsyncJobState) {
+	if s.FleetJobs == nil {
+		s.FleetJobs = map[string]*AsyncJobState{}
+	}
+	s.FleetJobs[j.AsyncID] = j
+	var terminal []*AsyncJobState
+	for _, id := range sortedKeys(s.FleetJobs) {
+		if c := s.FleetJobs[id]; isTerminalAsyncState(c.Status) {
+			terminal = append(terminal, c)
+		}
+	}
+	sort.SliceStable(terminal, func(a, b int) bool { return terminal[a].UpdatedAt > terminal[b].UpdatedAt })
+	for i := maxRecentFleetJobs; i < len(terminal); i++ {
+		delete(s.FleetJobs, terminal[i].AsyncID)
+	}
 }
 
 // AsyncJobState is a run the session tracks (the original's AsyncJobState, for single-child runs).
