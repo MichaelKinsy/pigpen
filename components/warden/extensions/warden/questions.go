@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"sync"
 )
 
 // The question texts are the upstream ones, dumped verbatim from pi-warden@a12b270 (src/guard.ts,
@@ -61,7 +62,8 @@ func loadQuestions() questionSets {
 	return s
 }
 
-var qs = loadQuestions()
+// questionSetsOnce parses questions.json on first use: at package init it allocated 66 KB in every pig that selects warden.
+var questionSetsOnce = sync.OnceValue(loadQuestions)
 
 func build(m map[string]rawQuestion) Questions {
 	out := Questions{}

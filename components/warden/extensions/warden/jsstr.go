@@ -10,13 +10,11 @@ import (
 // (truncation limits) so a cut lands where the original's does.
 
 func utf16Len(s string) int {
-	for i := 0; i < len(s); i++ {
-		if s[i] >= 0x80 {
-			return utf16LenRunes(s)
-		}
+	if isASCII(s) {
+		// One byte is one UTF-16 unit.
+		return len(s)
 	}
-	// ASCII (the common case for tool output): one byte is one UTF-16 unit.
-	return len(s)
+	return utf16LenRunes(s)
 }
 
 func utf16LenRunes(s string) int {
@@ -54,7 +52,14 @@ func utf16Slice(s string, from, to int) string {
 }
 
 func isASCII(s string) bool {
-	for i := 0; i < len(s); i++ {
+	i := 0
+	// Eight bytes at a time: tool output is long and almost always ASCII.
+	for ; i+8 <= len(s); i += 8 {
+		if (s[i]|s[i+1]|s[i+2]|s[i+3]|s[i+4]|s[i+5]|s[i+6]|s[i+7])&0x80 != 0 {
+			return false
+		}
+	}
+	for ; i < len(s); i++ {
 		if s[i] >= 0x80 {
 			return false
 		}

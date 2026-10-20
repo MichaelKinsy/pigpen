@@ -55,11 +55,7 @@ func jsPattern(src string) string {
 
 // jsRE compiles a JavaScript source pattern lazily (see lazyre.go). Flags are RE2 flag groups written in the
 // pattern, `(?i)` for JavaScript's `i`, `(?m)` for `m`.
-func jsRE(src string) *lazyRegexp {
-	l := lazyRE(src)
-	l.js = true
-	return l
-}
+func jsRE(src string) *lazyRegexp { return lazyREBuilt(func() string { return jsPattern(src) }) }
 
 // jsStringify is JSON.stringify for a value json can marshal: no HTML escaping, and U+2028/U+2029 literal.
 func jsStringify(v any) string {

@@ -140,12 +140,12 @@ func BuildRequest(summary ActionSummary, task string, extras BuildExtras) Reques
 		state["floor_hits"] = extras.FloorHits
 	}
 	writesContent := (summary.Tool == "write" || summary.Tool == "edit" || summary.Writes != nil) && hasContent(summary)
-	sets := []Questions{buildBase(), build(qs.ShouldProceed)}
+	sets := []Questions{buildBase(), build(questionSetsOnce().ShouldProceed)}
 	if summary.Command != "" {
-		sets = append(sets, build(qs.Visible))
+		sets = append(sets, build(questionSetsOnce().Visible))
 	}
 	if plan != "" {
-		sets = append(sets, build(qs.Intent))
+		sets = append(sets, build(questionSetsOnce().Intent))
 	}
 	if extras.LargeOutput && summary.Tool == "bash" {
 		sets = append(sets, build(gq().LargeOutput))
@@ -154,7 +154,7 @@ func BuildRequest(summary ActionSummary, task string, extras BuildExtras) Reques
 		sets = append(sets, build(gq().Slop))
 	}
 	if extras.Approval {
-		sets = append(sets, build(qs.Approval))
+		sets = append(sets, build(questionSetsOnce().Approval))
 	}
 	if extras.Security && writesContent {
 		sets = append(sets, build(gq().Security))
@@ -184,7 +184,7 @@ func hasContent(s ActionSummary) bool {
 	return false
 }
 
-func buildBase() Questions { return build(qs.Base) }
+func buildBase() Questions { return build(questionSetsOnce().Base) }
 
 var builtInIDs = func() map[string]bool {
 	m := map[string]bool{}

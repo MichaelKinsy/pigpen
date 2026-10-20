@@ -342,7 +342,7 @@ func BuildStuckRequest(attempts []Attempt, task string, evidence bool) Request {
 	if evidence {
 		state["evidence"] = BuildStuckEvidence(attempts, EvidenceLimit)
 	}
-	return Request{State: state, Questions: build(qs.Stuck)}
+	return Request{State: state, Questions: build(questionSetsOnce().Stuck)}
 }
 
 // StuckOptions configure EvaluateStuck.
