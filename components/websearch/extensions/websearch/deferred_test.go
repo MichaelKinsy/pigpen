@@ -323,11 +323,6 @@ func TestDeferred_page_query(t *testing.T) {
 	tskip(t, F, "answerFromPage preserves configured model auth checks", "fetch_content answer mode (a model call over fetched content) is deferred; it returns a visible 'Page answer failed: ... not available' error (docs/PORT.md); this case (answerFromPage preserves configured model auth checks) ships with the feature")
 }
 
-func TestDeferred_parallel(t *testing.T) {
-	const F = "parallel"
-	tskip(t, F, "fetch_content continues to Gemini when Parallel extract fails", "Gemini is a later slice (docs/PORT.md); this case (fetch_content continues to Gemini when Parallel extract fails) ships with the feature")
-}
-
 func TestDeferred_parallel_curator_state(t *testing.T) {
 	const F = "parallel-curator-state"
 	tskip(t, F, "web_search curator state is keyed per tool call for parallel calls", "the search curator UI is deferred (docs/PORT.md); this case (web_search curator state is keyed per tool call for parallel calls) ships with the feature")

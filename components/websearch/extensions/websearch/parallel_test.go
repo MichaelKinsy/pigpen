@@ -1,6 +1,8 @@
 package websearch
 
 import (
+	"errors"
+	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
@@ -66,6 +68,36 @@ func TestUpstream_parallel(t *testing.T) {
 		noErr(t, err)
 		if len(fn.calls) != 2 || !reflect.DeepEqual(jsonBody(t, fn.calls[1])["advanced_settings"], map[string]any{"full_content": true}) || res.Title != "Full" || res.Error != nil || !strings.HasPrefix(res.Content, "# Full") {
 			t.Fatalf("%v %+v", fn.calls, res)
+		}
+	})
+
+	// test/parallel.test.mjs:165: Parallel is a hosted fetch provider, Gemini the next one after it.
+	tw(t, f, "fetch_content continues to Gemini when Parallel extract fails", func(t *testing.T) {
+		extractEnv(t, `{"geminiApiKey":"gemini-test-key","fetchRouting":{"allowRemoteHostedProviders":true}}`)
+		t.Setenv("PARALLEL_API_KEY", "pk_live_parallel_test_key")
+		fn := useNet(t, func(c netCall) netReply {
+			switch {
+			case c.URL == "https://example.com/app":
+				return netReply{Status: 200, Header: http.Header{"Content-Type": {"text/html"}}, Body: "<html><body><script></script><script></script><script></script><script></script>Loading</body></html>"}
+			case strings.HasPrefix(c.URL, "https://r.jina.ai/"):
+				return reply(503, "")
+			case c.URL == "https://api.parallel.ai/v1/extract":
+				return reply(500, "parallel exploded")
+			case strings.Contains(c.URL, "generativelanguage.googleapis.com"):
+				return geminiText("# Gemini fallback\n" + strings.Repeat("Recovered content ", 20))
+			}
+			return netReply{Err: errors.New("Unexpected fetch " + c.URL)}
+		})
+		r := ExtractContent(bg(), "https://example.com/app", pageOpts())
+		if !sliceHas(fn.urls(), "https://api.parallel.ai/v1/extract") {
+			t.Fatalf("Parallel was not called: %v", fn.urls())
+		}
+		gemini := false
+		for _, u := range fn.urls() {
+			gemini = gemini || strings.Contains(u, "generativelanguage.googleapis.com")
+		}
+		if !gemini || r.Error != nil || !regexp.MustCompile(`Gemini fallback`).MatchString(r.Content) {
+			t.Fatalf("%v %+v", fn.urls(), r)
 		}
 	})
 }
