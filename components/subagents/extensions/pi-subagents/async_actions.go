@@ -872,9 +872,6 @@ func (rt *asyncRuntime) launchBackgroundResume(ctx sdk.Context, p map[string]any
 	if cfg.ConfigErr != nil {
 		return nil, mgmtError(cfg.ConfigErr.Error())
 	}
-	if !backgroundSupported {
-		return nil, mgmtError(refusal("resuming a run on this platform"))
-	}
 	sessionID := currentSessionID(ctx)
 	timeout, err := timeoutParams(p, firstInt64(cfg.DefaultTimeoutMs, asyncDefaultTimeoutMs))
 	if err != nil {

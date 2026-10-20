@@ -66,5 +66,6 @@ func groupHasMembers(pgid int) bool {
 	return err == nil || errors.Is(err, errNotPermitted)
 }
 
-// backgroundSupported reports whether a run can outlive this process (a detached runner whose exit is recorded).
+// backgroundSupported reports whether a run's child can outlive this process with its exit recorded for the next session to
+// adopt (a detached shell wrapper). Elsewhere the child is started directly and a run ends with its supervisor.
 const backgroundSupported = true
