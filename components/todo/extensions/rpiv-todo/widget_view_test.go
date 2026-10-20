@@ -148,3 +148,18 @@ func TestRestartedSessionIsSubscribedOnce(t *testing.T) {
 	settled()
 	eq(t, len(r.widgetCalls()), n+1, "widget calls after one resize")
 }
+
+// An overlay whose widget was cleared (every task gone) is not registered: a resize pushes nothing.
+func TestResizeWhileTheWidgetIsClearedPushesNothing(t *testing.T) {
+	r := startRig(t, HostOptions{})
+	r.setBranch(snapshot(2, jtask(1, "one")))
+	r.Fire("session_start", nil)
+	r.call(map[string]any{"action": "clear"})
+	r.fireTool("tool_execution_end", map[string]any{"toolName": "todo", "isError": false})
+	n := len(r.widgetCalls())
+	last := at(r.widgetCalls(), n-1)
+	eq(t, len(rowsOf(last)), 0, "the clear call")
+	r.widthChange(30)
+	settled()
+	eq(t, len(r.widgetCalls()), n, "widget calls after the resize")
+}

@@ -462,10 +462,10 @@
   "replace": "return []string{heading, truncate(theme.Fg(\"dim\", \"└─\") + \" \" + theme.Fg(\"dim\", hint))}"
  },
  {
-  "name": "overlay-is-a-row-list",
+  "name": "overlay-is-a-text-node",
   "file": "extension.go",
-  "find": "kit.View{Root: kit.NewLines(lines)}",
-  "replace": "lines"
+  "find": "kit.NewLines(lines)",
+  "replace": "kit.NewText(strings.Join(lines, \"\\n\"), 0, 0)"
  },
  {
   "name": "budget-capped-at-ten",
@@ -513,7 +513,7 @@
   "name": "teardown-through-the-dead-ctx",
   "file": "extension.go",
   "find": "derr = ov.dispose(sink)",
-  "replace": "derr = ov.dispose(sinkFor(ctx))"
+  "replace": "derr = ov.dispose(sinkFor(ctx)); _ = sink"
  },
  {
   "name": "order-by-arrival-always",

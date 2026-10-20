@@ -617,6 +617,23 @@ func TestCallsOfOneMessageDoNotWaitForAnotherMessage(t *testing.T) {
 	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-n", "toolName": "todo", "isError": false})
 }
 
+// Without a leaf that lists the calls the arrival order holds the end order too: the second call answers only
+// after the first call's end event.
+func TestArrivalOrderHoldsTheEndOrder(t *testing.T) {
+	r := startRig(t, HostOptions{})
+	first := r.sendTool("call-a", "todo", map[string]any{"action": "create", "subject": "a"})
+	eq(t, within(t, first), "Created #1: a (pending)", "first call")
+	second := r.sendTool("call-b", "todo", map[string]any{"action": "list"})
+	select {
+	case got := <-second:
+		t.Fatalf("the second call answered before the first ended: %q", got)
+	case <-time.After(150 * time.Millisecond):
+	}
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-a", "toolName": "todo", "isError": false})
+	eq(t, within(t, second), "[pending] #1 a", "second call")
+	r.fireTool("tool_execution_end", map[string]any{"toolCallId": "call-b", "toolName": "todo", "isError": false})
+}
+
 // A host failure while reading the session id is an error of the call, not an empty session: the model sees
 // the failure instead of a list that silently went to the wrong slot.
 func TestToolReportsAHostFailure(t *testing.T) {

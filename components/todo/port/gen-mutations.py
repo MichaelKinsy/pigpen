@@ -102,7 +102,7 @@ m("empty-render-kept", "overlay.go", 'if len(lines) == 0 {\n\t\tlines = nil\n\t}
 m("nextid-reset-lost", "overlay.go", 'if o.lastNextIDKnown && state.NextID < o.lastNextID {', 'if false {')
 m("collapse-spacer-lost", "overlay.go", 'return withTrailingSpacer([]string{heading, truncate(theme.Fg("dim", "└─") + " " + theme.Fg("dim", hint))})', 'return []string{heading, truncate(theme.Fg("dim", "└─") + " " + theme.Fg("dim", hint))}')
 
-m("overlay-is-a-row-list", "extension.go", 'kit.View{Root: kit.NewLines(lines)}', 'lines')
+m("overlay-is-a-text-node", "extension.go", 'kit.NewLines(lines)', 'kit.NewText(strings.Join(lines, "\\n"), 0, 0)')
 m("budget-capped-at-ten", "overlay.go", 'budget := getMaxWidgetLines() - 1', 'budget := min(getMaxWidgetLines(), 10) - 1')
 m("expanded-budget-capped", "overlay.go", 'budget = len(tasks)', 'budget = min(len(tasks), 9)')
 m("resize-not-subscribed", "extension.go", 'ctx.OnWidthChange(a.onWidthChange)', 'ctx.OnWidthChange(nil)')
@@ -110,7 +110,7 @@ m("resize-pushes-unregistered", "overlay.go", 'defer o.mu.Unlock()\n\tif o.regis
 m("resize-subscription-leaks", "extension.go", 'if unsub != nil {\n\t\tunsub()\n\t}', 'if false {\n\t\tunsub()\n\t}')
 m("resize-subscribes-every-start", "extension.go", 'if a.unsub == nil {', 'if true {')
 m("stale-probe-lost", "extension.go", '\tctx.Cwd()\n\treturn sid(ctx.SessionManager())', '\treturn sid(ctx.SessionManager())')
-m("teardown-through-the-dead-ctx", "extension.go", 'derr = ov.dispose(sink)', 'derr = ov.dispose(sinkFor(ctx))')
+m("teardown-through-the-dead-ctx", "extension.go", 'derr = ov.dispose(sink)', 'derr = ov.dispose(sinkFor(ctx)); _ = sink')
 m("order-by-arrival-always", "extension.go", 'if prev, listed := a.predecessor(ctx, callID); listed {', 'if prev, listed := a.predecessor(ctx, callID); false && listed {')
 m("other-tools-are-waited-for", "sequencer.go", 'if m["type"] != "toolCall" || m["name"] != toolName {', 'if m["type"] != "toolCall" {')
 m("predecessor-lost", "sequencer.go", '\t\tprev = id\n', '\t\t_ = id\n')
