@@ -833,3 +833,26 @@ func TestLoadScenarioReadsNormalizeAndRejectsABadPattern(t *testing.T) {
 		t.Error("an unknown rule field was accepted")
 	}
 }
+
+// An extension may quote a path from the run directory and count its characters (pi-web-access's
+// originalChars in a config error), so every lane's run root must have the same length.
+func TestNewRunRootHasOneLengthAndIsPrivate(t *testing.T) {
+	t.Setenv("TMPDIR", t.TempDir())
+	seen := map[string]bool{}
+	for i := 0; i < 300; i++ {
+		root, err := newRunRoot()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if seen[root] {
+			t.Fatalf("run root %s handed out twice", root)
+		}
+		seen[root] = true
+		if want := len(os.TempDir()) + 1 + len("eq") + 8; len(root) != want {
+			t.Errorf("run root %q has %d characters, want %d", root, len(root), want)
+		}
+		if info, err := os.Stat(root); err != nil || !info.IsDir() || info.Mode().Perm() != 0o700 {
+			t.Errorf("run root %q: %v %v", root, info, err)
+		}
+	}
+}

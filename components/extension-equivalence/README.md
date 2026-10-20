@@ -20,7 +20,7 @@ code):
 | `equivalence_diff` / `pigeq diff` | First difference between two traces. |
 | `equivalence_twins` / `pigeq twins list\|check` | The twin contract: `list` writes the ledger of upstream test titles per file; `check` requires each title to have a Go `tw(...)` twin or a named `tskip(...)` (for a Go original: a test function of the same name, or one that skips first, directly or through a skip helper, as a named skip), rejects unknown titles and one reason shared by many skips, and prints the `N exact twins, M skipped` line for `PORT.md`. Helpers: the Skill's `references/twin_test.go.txt`. |
 | `pigeq llm --script turns.json [--log F]` | Serves the scenarios' scripted OpenAI-compatible model on a loopback port (prints its base URL; stops when stdin closes) and logs each request as a JSON line. For a port's own end-to-end run, for example an adapter driven by a real client. |
-| `pigeq env`, `pigeq source` | Session setup (CLI only). `env --root DIR --pig PIG --pi PI --source DIR --module EXTDIR` prints an isolated shell environment to source (temporary `HOME`, `PIG_HOME`, agent directories; the real `go` and `node` first on `PATH`; `GOCACHE` and `GOMODCACHE` kept; `PIG_SDK_GO_ROOT` unset) and, with `--pig` and `--module`, writes a `go.work` that resolves PiG's SDK. `source --from PIG-REPO --rev COMMIT --out DIR` exports a PiG revision as a one-commit git checkout for `PIG_SOURCE_ROOT`. |
+| `pigeq env`, `pigeq source` | Session setup (CLI only). `env --root DIR --pig PIG --pi PI [--pi-source DIR] [--sdk-dir DIR] --source DIR --module EXTDIR` prints an isolated shell environment to source (temporary `HOME`, `PIG_HOME`, agent directories; the real `go` and `node` first on `PATH`; `GOCACHE` and `GOMODCACHE` kept; `PIG_SDK_GO_ROOT` unset) and, with `--pig` and `--module`, writes a `go.work` that resolves PiG's SDK. `source --from PIG-REPO --rev COMMIT --out DIR` exports a PiG revision as a one-commit git checkout for `PIG_SOURCE_ROOT`. | A PiG that pins an untagged Pi commit reports `0.5.0+1.3.0.1402973a`; `env` then accepts a Pi that prints `1.3.0` and whose source checkout (the git tree above the `pi` executable, or `--pi-source`) is at that commit, and rejects any other commit.
 
 **Go source** is scanned too: `pigeq gaps --go DIR` (tool: `equivalence_gaps` with `go`) reports
 `MISSING` for an import of a PiG package other than the public SDK and for the process-global
@@ -96,7 +96,10 @@ messages, every tool's full definition, and the extension's part of the system p
 its difference from the same host's baseline prompt without the extension), tool
 executions and results, agent and turn lifecycle, `extension_error`, command responses,
 and the host exit. After the last step a final quiet period (`tailMs`, default 1000 ms)
-records late effects instead of losing them at shutdown. The normalizer removes only values that differ on every run
+records late effects instead of losing them at shutdown. Every lane runs in a scratch directory of one fixed length (`<tmp>/eq` and eight hex digits), so an extension that
+quotes a path and counts its characters gets the same number in every lane. The loopback address of each fake server and of
+the scripted model server (a `set_model` response echoes the model's base URL) is normalized to `<server:NAME>` and `<llm>`.
+The normalizer removes only values that differ on every run
 (paths, UUIDs, timestamps, host session ids, the bash tool's measured wall time); its rules N1 to N6 are listed in
 [normalize.go](extensions/extension-equivalence/eq/normalize.go) and versioned, and a
 golden trace recorded under another version is refused. Rule N7 is the scenario's own `normalize` list

@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-extension-equivalence",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "Differential harness that proves a Go port of a Pi extension behaves like the TypeScript original, plus a static check for Pi APIs the Go SDK lacks",
   "keywords": [
     "pig-package",

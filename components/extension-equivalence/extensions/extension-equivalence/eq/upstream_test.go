@@ -374,11 +374,11 @@ func TestScenarioValidatesServerReferencesInTheLLMScript(t *testing.T) {
 // The whole path in one lane: RunLane starts the scenario's fake servers, expands the LLM script with
 // their URLs, and records the model request through the scenario's N7 rules. The host is a script that
 // asks the scripted model once, like a real host would.
-func TestRunLaneExpandsTheScriptAndAppliesNormalizeRules(t *testing.T) {
+func TestRunLaneExpandsTheScriptNormalizesRulesAndTheModelAddress(t *testing.T) {
 	if _, err := exec.LookPath("curl"); err != nil {
 		t.Skip("the fake host needs curl")
 	}
-	sc := &Scenario{Name: "wire", Steps: []Step{{RPC: map[string]any{"type": "prompt", "message": "go"}}},
+	sc := &Scenario{Name: "wire", Steps: []Step{{RPC: map[string]any{"type": "set_model", "provider": "eq-llm", "modelId": "eq-1"}}, {RPC: map[string]any{"type": "prompt", "message": "go"}}},
 		Servers: map[string]ServerSpec{"web": {Routes: []Route{{Path: "/page", Body: "ok"}}}},
 		LLM:     []Turn{{Text: "see {{server:web}}", ToolCalls: []ToolCall{{Name: "fetch_content", Arguments: map[string]any{"url": "{{server:web}}/page"}}}}},
 		TailMs:  -1, SettleMs: 10, Normalize: []NormalizeRule{{Pattern: `r-[0-9a-f]{6}`, Replacement: "<rid>"}}}
@@ -391,11 +391,13 @@ func TestRunLaneExpandsTheScriptAndAppliesNormalizeRules(t *testing.T) {
 		// A minimal RPC host: it answers get_state, and on a prompt asks the scripted model once and ends the run.
 		script := `#!/bin/sh
 [ "$1" = "--version" ] && exit 0
+printf '%s' "$PI_CODING_AGENT_DIR" > '` + dir + `'/agentdir.$$
 base=$(sed -n 's/.*"baseUrl":"\([^"]*\)".*/\1/p' "$PI_CODING_AGENT_DIR/models.json")
 while IFS= read -r line; do
   id=$(printf '%s' "$line" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
   case "$line" in
     *'"type":"get_state"'*) printf '{"type":"response","id":"%s","command":"get_state","success":true}\n' "$id" ;;
+    *'"type":"set_model"'*) printf '{"type":"response","id":"%s","command":"set_model","success":true,"data":{"id":"eq-1","baseUrl":"%s","note":"dial %s"}}\n' "$id" "$base" "${base#http://}" ;;
     *'"type":"prompt"'*)
       printf '{"type":"response","id":"%s","command":"prompt","success":true}\n' "$id"
       curl -s -X POST "$base/chat/completions" -d '{"messages":[{"role":"user","content":"responseId r-1a2b3c"}]}' > '` + dir + `'/answer.$$
@@ -409,6 +411,17 @@ done
 		tr, err := RunLane(sc, Lane{Name: host + "-lane", Host: host, Bin: bin}, Options{})
 		if err != nil {
 			t.Fatalf("%s: %v", host, err)
+		}
+		// Every host start (the baseline run included) sees an agent directory of the same shape and length.
+		dirs, _ := filepath.Glob(filepath.Join(dir, "agentdir.*"))
+		if len(dirs) < 2 {
+			t.Errorf("%s: expected the lane and its baseline run, got %d host starts", host, len(dirs))
+		}
+		for _, f := range dirs {
+			b, _ := os.ReadFile(f)
+			if !regexp.MustCompile(`/eq[0-9a-f]{8}/agent$`).Match(b) {
+				t.Errorf("%s: agent directory %q is not <tmp>/eq<8 hex>/agent", host, b)
+			}
 		}
 		var answers string
 		files, _ := filepath.Glob(filepath.Join(dir, "answer.*"))
@@ -424,6 +437,16 @@ done
 			if e.Ch == ChLLM {
 				llm = append(llm, string(e.Data))
 			}
+		}
+		// The host echoes the model's base URL in a set_model response; each lane's scripted model has its own port.
+		var setModel string
+		for _, e := range tr.Events {
+			if e.Ch == ChResponse && strings.Contains(string(e.Data), `"set_model"`) {
+				setModel = string(e.Data)
+			}
+		}
+		if !strings.Contains(setModel, `"baseUrl":"<llm>/v1"`) || !strings.Contains(setModel, `"note":"dial <llm>/v1"`) || strings.Contains(setModel, "127.0.0.1") {
+			t.Errorf("%s: the scripted model's address was not normalized: %s", host, setModel)
 		}
 		if len(llm) != 1 || !strings.Contains(llm[0], "responseId <rid>") || strings.Contains(llm[0], "r-1a2b3c") {
 			t.Errorf("%s: the model request was not normalized by the scenario's rule: %q", host, llm)

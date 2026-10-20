@@ -33,6 +33,9 @@ const NormalizerVersion = "v3"
 //
 //	N1  literal roots: the workspace, the run's temp root and HOME become
 //	    <cwd>, <tmp> and <home> (longest first).
+//	    The loopback address of each fake server and of the scripted model
+//	    server (http://127.0.0.1:PORT, and 127.0.0.1:PORT) becomes
+//	    <server:NAME> and <llm>: every lane draws its own ports.
 //	N2  UUIDs become <uuid>.
 //	N3  ISO-8601 timestamps become <time>.
 //	N4  in an RPC response's data only, keys that carry clocks or host

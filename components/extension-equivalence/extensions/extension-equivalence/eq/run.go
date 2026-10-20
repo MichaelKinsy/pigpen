@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
@@ -121,6 +122,28 @@ func detectToolchain() toolchain {
 	return tcVal
 }
 
+// newRunRoot makes the lane's scratch directory. It is deliberately short (Unix socket paths are limited)
+// and always the same length: os.MkdirTemp appends a decimal number of one to ten digits, and a path that an
+// extension measures (a tool result quoting the agent directory and its character count) would then differ
+// between lanes by the length of that number.
+func newRunRoot() (string, error) {
+	var b [4]byte
+	for i := 0; i < 100; i++ {
+		if _, err := rand.Read(b[:]); err != nil {
+			return "", err
+		}
+		root := filepath.Join(os.TempDir(), "eq"+hex.EncodeToString(b[:]))
+		err := os.Mkdir(root, 0o700)
+		if err == nil {
+			return root, nil
+		}
+		if !os.IsExist(err) {
+			return "", err
+		}
+	}
+	return "", errors.New("could not create a run directory")
+}
+
 type recorder struct {
 	mu     sync.Mutex
 	step   string
@@ -228,8 +251,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 		}
 		baseSystem = b
 	}
-	// The run root is deliberately short: Unix socket paths are limited.
-	root, err := os.MkdirTemp("", "eq")
+	root, err := newRunRoot()
 	if err != nil {
 		return nil, err
 	}
@@ -313,6 +335,10 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 			return nil, err
 		}
 		defer llm.close()
+		// The model server's port differs per lane and reaches the trace wherever the host echoes the model's
+		// base URL (a set_model response), so its address is normalized like a fake server's.
+		rec.norm.AddReplacement("http://"+llm.ln.Addr().String(), "<llm>")
+		rec.norm.AddReplacement(llm.ln.Addr().String(), "<llm>")
 		if capture := opt.baseline; capture != nil {
 			llm.system = func(text string) (any, bool) {
 				capture.once.Do(func() { capture.text = rec.norm.str(text) })
