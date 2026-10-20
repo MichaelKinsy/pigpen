@@ -72,9 +72,13 @@ type usageStats struct {
 	Input, Output, CacheRead, CacheWrite, Cost, SubagentCost float64
 }
 
+// queueSummary is QueueSummary of queue/types.ts; an empty leading field is the original's null.
 type queueSummary struct {
 	QueueCount, BlockedCount int
 	Compacting               bool
+	LeadingText              string
+	LeadingIntent            queueIntent
+	LeadingStatus            queueStatus
 }
 
 type modelInfo struct {
