@@ -54,9 +54,7 @@ never falls back or runs part of the call:
   `frames` and `timestamp`, GitHub repositories, issues and pull requests (while their config
   sections are not disabled), and PDFs;
 - a hosted fetch provider the original would call (Firecrawl and Crawl4AI with a base URL, TinyFish,
-  Search1API, Querit, Kagi, Ollama, Parallel, Bright Data, Gemini with a key);
-- a page the original would hand to its RSC payload and Defuddle fallbacks after the readable
-  extraction fails.
+  Search1API, Querit, Kagi, Ollama, Parallel, Bright Data, Gemini with a key).
 
 Not registered, and so not advertised: the original's commands `/websearch`, `/curator` and
 `/google-account`, its activity widget and its shortcuts (they belong to the curator and the
