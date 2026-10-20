@@ -12,3 +12,5 @@ type goalAuditMessage struct {
 func (c *core) syncTerminalInputPause() {}
 func (c *core) rehydrateDraft()         {}
 func (c *core) hasActiveDraft() bool    { return false }
+
+func (c *core) toggleTaskViaService(goalID, taskID string) (bool, string) { return false, "" }
