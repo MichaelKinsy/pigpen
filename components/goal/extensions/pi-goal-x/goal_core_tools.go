@@ -428,7 +428,7 @@ func runGoalBlockedFlow(c *core, reasonInput string, _ bool, attemptedActions []
 		if !result.ok {
 			return c.textResult(fmt.Sprintf("Goal blocked state update failed: %s. The goal was NOT marked blocked. Retry after resolving the conflict.", mutationMessage(result))), nil
 		}
-		c.clearContinuationState(false)
+		c.clearContinuationState(true)
 		c.clearActiveAccounting()
 		if result.goal != nil {
 			c.runtime.markTurnStopped(gstr(result.goal, "id"))
@@ -582,7 +582,7 @@ func runGoalAgentPauseFlow(c *core, reason string, _ bool, suggestedAction strin
 		return goalAgentResult{}, err
 	}
 	if result.ok {
-		c.clearContinuationState(false)
+		c.clearContinuationState(true)
 		c.clearActiveAccounting()
 		if result.goal != nil {
 			c.runtime.markTurnStopped(gstr(result.goal, "id"))
