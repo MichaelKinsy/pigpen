@@ -4,13 +4,18 @@
 // Inputs:  extensions/websearch/testdata/defuddle-math/{mathml,latex,uri}-inputs.json
 // Outputs: extensions/websearch/testdata/defuddle-math/{mathml,latex,uri}-expected.json
 import fs from 'node:fs'
+import zlib from 'node:zlib'
 import { createRequire } from 'node:module'
 const require = createRequire((process.env.DFD_MATH_NODE_MODULES || new URL('./oracle/node_modules', import.meta.url).pathname) + '/')
 const dir = new URL('../extensions/websearch/testdata/defuddle-math/', import.meta.url).pathname
 const { MathMLToLaTeX } = require('mathml-to-latex')
 const temml = require('temml')
 const read = (n) => JSON.parse(fs.readFileSync(dir + n, 'utf8'))
-const write = (n, v) => fs.writeFileSync(dir + n, JSON.stringify(v, null, 1) + '\n')
+const write = (n, v) => {
+  const text = JSON.stringify(v, null, 1) + '\n'
+  // the 6.8 MB temml file is stored gzipped
+  fs.writeFileSync(dir + n + (n === 'latex-expected.json' ? '.gz' : ''), n === 'latex-expected.json' ? zlib.gzipSync(text, { level: 9 }) : text)
+}
 
 // mathml-to-latex as Defuddle calls it: a throw is recorded as null.
 write('mathml-expected.json', read('mathml-inputs.json').map((xml) => {
