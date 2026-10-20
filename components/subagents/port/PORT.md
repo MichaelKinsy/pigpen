@@ -88,6 +88,15 @@ original's own errors for an empty call, a blank agent, a non-string task and a 
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
 | M7 | (addition) child process runs | `run.go`, `child_*.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
+| M9 | `agents/advertised-agent-prompt.ts`, `extension/index.ts` (advertisement state, `before_agent_start`, `session_start`) | `advertise.go`, `extension.go` | `advertise_test.go`, `advertise_host_test.go` (6 + 2 + 1 twins) |
+| M10 | `runs/shared/agent-contract.ts`, `runtime-acknowledged-extensions.ts`, `fast-mode-extension.ts`, `extension-bindings.ts`, `shared/launch-contract.ts` (digest) | `contract.go`, `runtimeack.go`, `fastmode.go`, `extbindings.go` | `misc_twins_test.go` |
+| M11 | `runs/foreground/prompt-audit.ts`, `shared/opencode-session-headers.ts` | `promptaudit.go` | `misc_twins_test.go`, `promptaudit_host_test.go` |
+| M12 | `agents/agent-refinements.ts` | `agentmgmt_refine.go` | `agentmgmt_refine_test.go` |
+| M13 | `extension/doctor.ts`, `extension/subagent-guide.ts` | `doctor.go`, `guide.go` (the guide topics are embedded from the original: `guide/`) | `doctor_test.go`, `guide_test.go` |
+| M14 | `profiles/profiles.ts` | `profiles.go` | `profiles_test.go` |
+| M15 | `slash/slash-commands.ts` (the administration commands), `slash/subagents-admin.ts` | `slash_commands.go`, `slash_admin.go` | `slash_admin_test.go` |
+| M16 | `runs/shared/subagent-prompt-runtime.ts` (prompt rewriting and fork context cleaning), `child-tool-plan.ts` (extension plan, fast mode, thinking suffix) | `child_prompt.go`, `extension_plan.go` | `child_prompt_test.go`, `default_extensions_test.go` |
+| M17 | `slash/prompt-template-bridge.ts`, `delegation-request.ts`, `delegation-adapters.ts`, `api/delegation.ts` | `delegation.go` | `delegation_test.go` |
 
 ## Process: what was written before its tests
 
