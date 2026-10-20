@@ -6,7 +6,7 @@
 | Judge seam | `DevMortimer/pi-typesafe` commit `ed439f834665ad6fc652787f5ba7c23852566d49` (`ask`, questions, `errors.ts`), MIT |
 | Oracle | Pi 0.87.1 hosting the original; Node 24.19.0 |
 | Target | PiG 0.3.0+0.87.1, SDK of a 0.3.0 pre-release build (`63c6ba456`) (host getters return `(value, error)`), go1.27.1; shared client `components/typesafe` |
-| Original's tests | 1,264 cases in `port/oracle/tests`; 164 have a Go twin, 1,100 are named skipped subtests with a reason (see below) |
+| Original's tests | 1,264 cases in `port/oracle/tests`; 507 have a Go twin, 757 are named skipped subtests with a reason (see below) |
 
 ## File-to-file mapping
 
