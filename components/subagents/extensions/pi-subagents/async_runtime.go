@@ -34,8 +34,8 @@ func init() {
 	registerRunParams("async", "timeoutMs", "maxRuntimeMs")
 	registerAction("status", []string{"id", "runId", "dir"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.statusAction(ctx, p) })
 	registerAction("interrupt", []string{"id", "runId", "dir"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.interruptAction(ctx, p) })
-	registerAction("stop", []string{"id", "runId", "dir"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.stopAction(ctx, p) })
-	registerAction("resume", []string{"id", "runId", "dir", "message", "task"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.resumeAction(ctx, p) })
+	registerAction("stop", []string{"id", "runId", "dir", "childId"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.stopAction(ctx, p) })
+	registerAction("resume", []string{"id", "runId", "dir", "index", "message", "task"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.resumeAction(ctx, p) })
 	extensionHooks = append(extensionHooks, installAsyncRuntime)
 }
 

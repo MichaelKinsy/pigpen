@@ -7,6 +7,7 @@ package pi_subagents
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -461,13 +462,19 @@ func (rt *asyncRuntime) interruptAction(ctx sdk.Context, p map[string]any) (any,
 	if why == "foreground" || asyncDir == "" {
 		return nil, mgmtError("No interrupt-capable run found in this session.")
 	}
-	rec, err := reconcileAsyncRun(asyncDir, ReconcileOptions{ResultsDir: rt.dirs.Results})
+	rec, err := reconcileAsyncRun(asyncDir, ReconcileOptions{ResultsDir: rt.dirs.Results, Kill: asyncKill})
 	if err != nil {
 		return nil, mgmtError(err.Error())
 	}
 	st := rec.Status
 	if st == nil || st.State != "running" || st.PID == nil {
 		return nil, mgmtError(fmt.Sprintf("No running async run with an interrupt-capable pid was found for '%s'.", firstNonEmpty(id, "current")))
+	}
+	if external := runningStepsAreExternal(st); external {
+		return nil, mgmtError(fmt.Sprintf("Interrupt is unsupported for external async run %s; use stop instead.", id))
+	}
+	if st.Mode == "workflow" {
+		return nil, mgmtError(fmt.Sprintf("Interrupt is unsupported for async workflow %s; use stop instead.", id))
 	}
 	if _, err := requestAsyncInterrupt(asyncDir, "interrupt-action"); err != nil {
 		return nil, mgmtError(fmt.Sprintf("Failed to interrupt async run %s: %s", id, err.Error()))
@@ -481,6 +488,27 @@ func (rt *asyncRuntime) interruptAction(ctx sdk.Context, p map[string]any) (any,
 }
 
 const stopMessageText = stopMessage
+
+// asyncKill is the process probe the control actions give the reconciler (nil: the system's); a test replaces it.
+var asyncKill killFunc
+
+// runningStepsAreExternal is whether every running step is an external CLI or job runner, which cannot be interrupted.
+func runningStepsAreExternal(st *AsyncStatus) bool {
+	running, external := 0, 0
+	for _, s := range st.Steps {
+		if s.Status != "running" {
+			continue
+		}
+		running++
+		var runner struct {
+			Type string `json:"type"`
+		}
+		if raw, ok := s.Extra["runner"]; ok && json.Unmarshal(raw, &runner) == nil && (runner.Type == "external-cli" || runner.Type == "external-job") {
+			external++
+		}
+	}
+	return running > 0 && running == external
+}
 
 func (rt *asyncRuntime) stopAction(ctx sdk.Context, p map[string]any) (any, error) {
 	asyncDir, id, why := rt.targetRun(ctx, p)
@@ -499,7 +527,7 @@ func (rt *asyncRuntime) stopAction(ctx sdk.Context, p map[string]any) (any, erro
 		}
 		return nil, mgmtError("No stoppable async run found in this session.")
 	}
-	rec, err := reconcileAsyncRun(asyncDir, ReconcileOptions{ResultsDir: rt.dirs.Results})
+	rec, err := reconcileAsyncRun(asyncDir, ReconcileOptions{ResultsDir: rt.dirs.Results, Kill: asyncKill})
 	if err != nil {
 		return nil, mgmtError(err.Error())
 	}
