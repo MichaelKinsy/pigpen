@@ -5,10 +5,8 @@ import (
 	"testing"
 )
 
-const permissionsFile = "permissions"
-
 func TestNativeChildPermissions(t *testing.T) {
-	tw(t, permissionsFile, "defaults every unconfigured tool and bash to pass-through", func(t *testing.T) {
+	tw(t, "permissions", "defaults every unconfigured tool and bash to pass-through", func(t *testing.T) {
 		equal(t, permissionDecision(nil, "write"), "allow", "write")
 		equal(t, permissionDecision(permissionRules{"write": "deny"}, "unknown_tool"), "allow", "unknown")
 		equal(t, permissionDecision(permissionRules{"write": "deny"}, "bash"), "allow", "bash")
@@ -16,11 +14,11 @@ func TestNativeChildPermissions(t *testing.T) {
 			t.Error("want undefined")
 		}
 	})
-	tw(t, permissionsFile, "merges explicit global and agent rules while removing explicit allow rules", func(t *testing.T) {
+	tw(t, "permissions", "merges explicit global and agent rules while removing explicit allow rules", func(t *testing.T) {
 		got := resolvePermissionRules(&permissionConfig{Rules: permissionRules{"write": "ask", "edit": "deny"}}, permissionRules{"write": "allow", "read": "deny"})
 		equal(t, got, permissionRules{"edit": "deny", "read": "deny"}, "merged")
 	})
-	tw(t, permissionsFile, "rejects bash and coordination-tool rules", func(t *testing.T) {
+	tw(t, "permissions", "rejects bash and coordination-tool rules", func(t *testing.T) {
 		_, err := validatePermissionRules(js(t, `{"bash":"ask"}`), "permissions")
 		if err == nil {
 			t.Fatal("bash accepted")
@@ -37,7 +35,7 @@ func TestNativeChildPermissions(t *testing.T) {
 		}
 		polMatches(t, err.Error(), `allow, ask, or deny`)
 	})
-	tw(t, permissionsFile, "redacts bounded argument previews", func(t *testing.T) {
+	tw(t, "permissions", "redacts bounded argument previews", func(t *testing.T) {
 		preview := permissionArgsPreview(js(t, marshalJSON(map[string]any{"token": "secret-value", "content": "Bearer abcdefghijklmnop " + strings.Repeat("x", 3000)}, "")))
 		polNotMatches(t, preview, `secret-value|abcdefghijklmnop`)
 		if len(preview) > 2048 {

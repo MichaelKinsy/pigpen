@@ -76,7 +76,6 @@ func (f *fakeAtomicFS) Remove(path string) error {
 func boolPtr(b bool) *bool { return &b }
 
 func TestFileSystemRetryBudget(t *testing.T) {
-	const f = "file-system-retry"
 	base := []int{10, 25, 50, 100, 200, 500, 1000, 2000, 4000}
 	total := func(d []int) int {
 		s := 0
@@ -86,19 +85,19 @@ func TestFileSystemRetryBudget(t *testing.T) {
 		return s
 	}
 	resolve := func(env map[string]string) ([]int, error) { return resolveFileSystemRetryDelays(envOf(env), base) }
-	tw(t, f, "is unchanged when the environment variable is unset or blank", func(t *testing.T) {
+	tw(t, "file-system-retry", "is unchanged when the environment variable is unset or blank", func(t *testing.T) {
 		for _, env := range []map[string]string{{}, {fsRetryMaxTotalMsEnv: ""}, {fsRetryMaxTotalMsEnv: "   "}} {
 			d, err := resolve(env)
 			equal(t, err, nil, "error")
 			equal(t, d, base, "delays")
 		}
 	})
-	tw(t, f, "clamps the total sleep to the configured budget", func(t *testing.T) {
+	tw(t, "file-system-retry", "clamps the total sleep to the configured budget", func(t *testing.T) {
 		d, _ := resolve(map[string]string{fsRetryMaxTotalMsEnv: "1000"})
 		equal(t, total(d), 1000, "total")
 		equal(t, d, []int{10, 25, 50, 100, 200, 500, 115, 0, 0}, "delays")
 	})
-	tw(t, f, "keeps the ladder length, because callers use it as an attempt budget", func(t *testing.T) {
+	tw(t, "file-system-retry", "keeps the ladder length, because callers use it as an attempt budget", func(t *testing.T) {
 		for _, b := range []string{"0", "1", "250", "100000"} {
 			d, _ := resolve(map[string]string{fsRetryMaxTotalMsEnv: b})
 			equal(t, len(d), len(base), "length for "+b)
@@ -109,11 +108,11 @@ func TestFileSystemRetryBudget(t *testing.T) {
 			}
 		}
 	})
-	tw(t, f, "never exceeds the base ladder, even for a huge budget", func(t *testing.T) {
+	tw(t, "file-system-retry", "never exceeds the base ladder, even for a huge budget", func(t *testing.T) {
 		d, _ := resolve(map[string]string{fsRetryMaxTotalMsEnv: "99999999"})
 		equal(t, d, base, "delays")
 	})
-	tw(t, f, "supports a zero budget as retry-without-sleeping", func(t *testing.T) {
+	tw(t, "file-system-retry", "supports a zero budget as retry-without-sleeping", func(t *testing.T) {
 		d, _ := resolve(map[string]string{fsRetryMaxTotalMsEnv: "0"})
 		equal(t, total(d), 0, "total")
 		attempts := 0
@@ -127,7 +126,7 @@ func TestFileSystemRetryBudget(t *testing.T) {
 			equal(t, s, 0, "no non-zero sleep is requested")
 		}
 	})
-	tw(t, f, "rejects values that are not a non-negative integer", func(t *testing.T) {
+	tw(t, "file-system-retry", "rejects values that are not a non-negative integer", func(t *testing.T) {
 		for _, v := range []string{"-1", "abc", "1.5", "NaN", "1e3ms"} {
 			_, err := resolve(map[string]string{fsRetryMaxTotalMsEnv: v})
 			if err == nil || !strings.Contains(err.Error(), fsRetryMaxTotalMsEnv) {
@@ -138,7 +137,6 @@ func TestFileSystemRetryBudget(t *testing.T) {
 }
 
 func TestWriteAtomicJSON(t *testing.T) {
-	const f = "atomic-json"
 	target := filepath.Join("/tmp", "status.json")
 	payload := newObject()
 	payload.set("state", "running")
@@ -148,7 +146,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 		return createAtomicJSONWriter(o)
 	}
 	std := atomicJSONOptions{RetryRenameErrors: boolPtr(true), RetryDelaysMs: []int{1, 2, 3}, HasRetryDelays: true}
-	tw(t, f, "retries transient rename failures before replacing the target", func(t *testing.T) {
+	tw(t, "atomic-json", "retries transient rename failures before replacing the target", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		fk.failRename = []string{"EPERM", "EBUSY"}
 		var waits []int
@@ -161,7 +159,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 		equal(t, fk.files[target], want, "contents")
 		equal(t, len(fk.files), 1, "files")
 	})
-	tw(t, f, "retries transient directory creation failures before writing", func(t *testing.T) {
+	tw(t, "atomic-json", "retries transient directory creation failures before writing", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		fk.failMkdir = []string{"EPERM", "EACCES"}
 		var waits []int
@@ -173,7 +171,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 		equal(t, len(fk.madeDirs), 3, "mkdir calls")
 		equal(t, fk.files[target], want, "contents")
 	})
-	tw(t, f, "writes the temporary descriptor with the requested private mode", func(t *testing.T) {
+	tw(t, "atomic-json", "writes the temporary descriptor with the requested private mode", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		var waits []int
 		mode := os.FileMode(0o600)
@@ -185,7 +183,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 			equal(t, m, "utf-8 mode -rw-------", "mode")
 		}
 	})
-	tw(t, f, "keeps temporary names below the component limit for long target names", func(t *testing.T) {
+	tw(t, "atomic-json", "keeps temporary names below the component limit for long target names", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		var waits []int
 		long := filepath.Join("/tmp", strings.Repeat("x", 250)+".json")
@@ -197,7 +195,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 		}
 		equal(t, fk.files[long], want, "contents")
 	})
-	tw(t, f, "uses longer default retries for transient Windows rename locks", func(t *testing.T) {
+	tw(t, "atomic-json", "uses longer default retries for transient Windows rename locks", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		fk.failRename = []string{"EPERM", "EPERM", "EPERM", "EPERM", "EPERM", "EPERM"}
 		var waits []int
@@ -207,7 +205,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 		equal(t, fk.renameCalls, 7, "renames")
 		equal(t, waits, []int{10, 25, 50, 100, 200, 500}, "waits")
 	})
-	tw(t, f, "throws non-retryable rename failures without retrying", func(t *testing.T) {
+	tw(t, "atomic-json", "throws non-retryable rename failures without retrying", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		fk.failRename = []string{"ENOENT"}
 		var waits []int
@@ -219,7 +217,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 		equal(t, len(waits), 0, "waits")
 		equal(t, len(fk.files), 0, "files")
 	})
-	tw(t, f, "does not let cleanup failures mask a write failure", func(t *testing.T) {
+	tw(t, "atomic-json", "does not let cleanup failures mask a write failure", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		fk.failRename = []string{"ENOSPC"}
 		fk.failCleanup = true
@@ -229,7 +227,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-	tw(t, f, "can ignore cleanup failures after the target is atomically published", func(t *testing.T) {
+	tw(t, "atomic-json", "can ignore cleanup failures after the target is atomically published", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		fk.failCleanup = true
 		var waits []int
@@ -241,7 +239,7 @@ func TestWriteAtomicJSON(t *testing.T) {
 		}
 		equal(t, fk.files[filepath.Join("/tmp", "runner-startup-proceed.json")], "{\n  \"action\": \"proceed\",\n  \"token\": \"runner\"\n}", "contents")
 	})
-	tw(t, f, "cleans up the temp file after retryable failures are exhausted", func(t *testing.T) {
+	tw(t, "atomic-json", "cleans up the temp file after retryable failures are exhausted", func(t *testing.T) {
 		fk := newFakeAtomicFS()
 		fk.failRename = []string{"EPERM", "EPERM", "EPERM", "EPERM"}
 		var waits []int
@@ -295,10 +293,9 @@ func (f *fakeTimers) runAll() {
 }
 
 func TestCapacityResilientJSONWriter(t *testing.T) {
-	const f = "capacity-resilient-json"
 	cap := func(code string) error { return newFSError(code, code) }
 	state := func(s string) any { o := newObject(); o.set("state", s); return o }
-	tw(t, f, "retains only the latest payload and retries after capacity recovers", func(t *testing.T) {
+	tw(t, "capacity-resilient-json", "retains only the latest payload and retries after capacity recovers", func(t *testing.T) {
 		timers := &fakeTimers{}
 		var writes []any
 		available := false
@@ -320,7 +317,7 @@ func TestCapacityResilientJSONWriter(t *testing.T) {
 		equal(t, w.PendingCount(), 0, "pending after")
 		equal(t, len(timers.tasks), 0, "timers after")
 	})
-	tw(t, f, "handles every storage-capacity code without escaping the retry timer", func(t *testing.T) {
+	tw(t, "capacity-resilient-json", "handles every storage-capacity code without escaping the retry timer", func(t *testing.T) {
 		for _, code := range []string{"ENOSPC", "EDQUOT", "EMFILE", "ENFILE"} {
 			timers := &fakeTimers{}
 			attempts := 0
@@ -340,14 +337,14 @@ func TestCapacityResilientJSONWriter(t *testing.T) {
 			equal(t, w.PendingCount(), 0, code+" pending")
 		}
 	})
-	tw(t, f, "preserves synchronous throwing for non-capacity failures", func(t *testing.T) {
+	tw(t, "capacity-resilient-json", "preserves synchronous throwing for non-capacity failures", func(t *testing.T) {
 		w := newCapacityResilientJSONWriter(capacityResilientJSONOptions{Write: func(string, any) error { return errors.New("invalid path") }})
 		err := w.Write("status.json", newObject(), nil)
 		if err == nil || !strings.Contains(err.Error(), "invalid path") {
 			t.Fatal(err)
 		}
 	})
-	tw(t, f, "does not let error callbacks escape a retry timer", func(t *testing.T) {
+	tw(t, "capacity-resilient-json", "does not let error callbacks escape a retry timer", func(t *testing.T) {
 		timers := &fakeTimers{}
 		w := newCapacityResilientJSONWriter(capacityResilientJSONOptions{Timers: timers, OnError: func(error, string) { panic("reporting failed") }, Write: func(p string, _ any) error {
 			if p == "status.json" {
@@ -360,7 +357,7 @@ func TestCapacityResilientJSONWriter(t *testing.T) {
 		equal(t, w.PendingCount(), 1, "pending")
 		w.Dispose()
 	})
-	tw(t, f, "notifies only after a write succeeds, including a deferred retry", func(t *testing.T) {
+	tw(t, "capacity-resilient-json", "notifies only after a write succeeds, including a deferred retry", func(t *testing.T) {
 		timers := &fakeTimers{}
 		var ok []string
 		available := false
@@ -376,7 +373,7 @@ func TestCapacityResilientJSONWriter(t *testing.T) {
 		timers.runNext()
 		equal(t, ok, []string{`{"state":"running"}`}, "after")
 	})
-	tw(t, f, "orders deferred index work after authoritative status recovery", func(t *testing.T) {
+	tw(t, "capacity-resilient-json", "orders deferred index work after authoritative status recovery", func(t *testing.T) {
 		timers := &fakeTimers{}
 		statusAvailable := false
 		indexUpdates := 0
@@ -395,7 +392,7 @@ func TestCapacityResilientJSONWriter(t *testing.T) {
 		status.Dispose()
 		index.Dispose()
 	})
-	tw(t, f, "reports non-capacity failures from a retry without throwing from the timer", func(t *testing.T) {
+	tw(t, "capacity-resilient-json", "reports non-capacity failures from a retry without throwing from the timer", func(t *testing.T) {
 		timers := &fakeTimers{}
 		var errs []error
 		attempts := 0
@@ -416,8 +413,7 @@ func TestCapacityResilientJSONWriter(t *testing.T) {
 }
 
 func TestFileCoalescer(t *testing.T) {
-	const f = "file-coalescer"
-	tw(t, f, "coalesces duplicate schedule calls per file", func(t *testing.T) {
+	tw(t, "file-coalescer", "coalesces duplicate schedule calls per file", func(t *testing.T) {
 		var events []string
 		timers := &fakeTimers{}
 		c := createFileCoalescer(func(file string) { events = append(events, file) }, 50, timers)
@@ -428,7 +424,7 @@ func TestFileCoalescer(t *testing.T) {
 		equal(t, events, []string{"a.json"}, "events")
 		equal(t, c.Schedule("a.json", -1), true, "again")
 	})
-	tw(t, f, "allows different files to schedule independently", func(t *testing.T) {
+	tw(t, "file-coalescer", "allows different files to schedule independently", func(t *testing.T) {
 		var events []string
 		timers := &fakeTimers{}
 		c := createFileCoalescer(func(file string) { events = append(events, file) }, 50, timers)
@@ -438,7 +434,7 @@ func TestFileCoalescer(t *testing.T) {
 		timers.runAll()
 		equal(t, events, []string{"a.json", "b.json"}, "events")
 	})
-	tw(t, f, "flushes a pending file immediately without a duplicate timer write", func(t *testing.T) {
+	tw(t, "file-coalescer", "flushes a pending file immediately without a duplicate timer write", func(t *testing.T) {
 		var events []string
 		timers := &fakeTimers{}
 		c := createFileCoalescer(func(file string) { events = append(events, file) }, 50, timers)
@@ -452,7 +448,7 @@ func TestFileCoalescer(t *testing.T) {
 		equal(t, events, []string{"status.json"}, "events after run")
 		equal(t, c.Flush("status.json"), false, "flush again")
 	})
-	tw(t, f, "clear cancels all pending handlers", func(t *testing.T) {
+	tw(t, "file-coalescer", "clear cancels all pending handlers", func(t *testing.T) {
 		var events []string
 		timers := &fakeTimers{}
 		c := createFileCoalescer(func(file string) { events = append(events, file) }, 50, timers)
@@ -497,18 +493,17 @@ func (m *mockStream) emitDrain() {
 }
 
 func TestJSONLWriter(t *testing.T) {
-	const f = "jsonl-writer"
 	deps := func(s *mockStream) jsonlWriterDeps {
 		return jsonlWriterDeps{CreateWriteStream: func(string) (jsonlWriteStream, error) { return s, nil }}
 	}
-	tw(t, f, "writes lines with trailing newline", func(t *testing.T) {
+	tw(t, "jsonl-writer", "writes lines with trailing newline", func(t *testing.T) {
 		src, s := &mockSource{}, &mockStream{}
 		w := createJSONLWriter("/tmp/out.jsonl", src, deps(s))
 		w.WriteLine(`{"type":"a"}`)
 		w.WriteLine(`{"type":"b"}`)
 		equal(t, s.writes, []string{"{\"type\":\"a\"}\n", "{\"type\":\"b\"}\n"}, "writes")
 	})
-	tw(t, f, "pauses on backpressure and resumes on drain", func(t *testing.T) {
+	tw(t, "jsonl-writer", "pauses on backpressure and resumes on drain", func(t *testing.T) {
 		src, s := &mockSource{}, &mockStream{results: []bool{false, true}}
 		w := createJSONLWriter("/tmp/out.jsonl", src, deps(s))
 		w.WriteLine(`{"type":"a"}`)
@@ -519,7 +514,7 @@ func TestJSONLWriter(t *testing.T) {
 		w.WriteLine(`{"type":"b"}`)
 		equal(t, s.writes, []string{"{\"type\":\"a\"}\n", "{\"type\":\"b\"}\n"}, "writes")
 	})
-	tw(t, f, "closes stream once", func(t *testing.T) {
+	tw(t, "jsonl-writer", "closes stream once", func(t *testing.T) {
 		src, s := &mockSource{}, &mockStream{}
 		w := createJSONLWriter("/tmp/out.jsonl", src, deps(s))
 		w.Close()
@@ -527,14 +522,14 @@ func TestJSONLWriter(t *testing.T) {
 		w.Close()
 		equal(t, s.ended, true, "ended again")
 	})
-	tw(t, f, "returns no-op writer when file path is undefined", func(t *testing.T) {
+	tw(t, "jsonl-writer", "returns no-op writer when file path is undefined", func(t *testing.T) {
 		src := &mockSource{}
 		w := createJSONLWriter("", src, jsonlWriterDeps{})
 		w.WriteLine(`{"type":"a"}`)
 		w.Close()
 		equal(t, [2]int{src.paused, src.resumed}, [2]int{0, 0}, "source")
 	})
-	tw(t, f, "stops writing when maxBytes exceeded without pausing source", func(t *testing.T) {
+	tw(t, "jsonl-writer", "stops writing when maxBytes exceeded without pausing source", func(t *testing.T) {
 		src, s := &mockSource{}, &mockStream{}
 		d := deps(s)
 		d.MaxBytes, d.HasMaxBytes = 30, true
@@ -545,7 +540,7 @@ func TestJSONLWriter(t *testing.T) {
 		equal(t, s.writes, []string{"{\"type\":\"a\"}\n", "{\"type\":\"b\"}\n"}, "writes")
 		equal(t, src.paused, 0, "paused")
 	})
-	tw(t, f, "allows writes up to exactly maxBytes", func(t *testing.T) {
+	tw(t, "jsonl-writer", "allows writes up to exactly maxBytes", func(t *testing.T) {
 		src, s := &mockSource{}, &mockStream{}
 		line := `{"x":"a"}`
 		d := deps(s)
@@ -588,12 +583,11 @@ func (f *fakeAccessFS) Access(dir string) error {
 }
 
 func TestEnsureAccessibleDirRetry(t *testing.T) {
-	const f = "accessible-dir"
 	opts := func(fk *fakeAccessFS, waits *[]int) accessibleDirOptions {
 		return accessibleDirOptions{FS: fk, RetryDirectoryErrors: boolPtr(true), RetryDelaysMs: []int{1, 2, 3}, HasRetryDelays: true, Wait: func(ms int) { *waits = append(*waits, ms) }}
 	}
 	dir := "/tmp/pi-subagents-user/async-subagent-results"
-	tw(t, f, "retries transient shared-directory mkdir failures before validating access", func(t *testing.T) {
+	tw(t, "accessible-dir", "retries transient shared-directory mkdir failures before validating access", func(t *testing.T) {
 		fk := &fakeAccessFS{failMkdir: []string{"EPERM", "EBUSY"}}
 		var waits []int
 		if _, err := ensureAccessibleDir(dir, opts(fk, &waits)); err != nil {
@@ -602,7 +596,7 @@ func TestEnsureAccessibleDirRetry(t *testing.T) {
 		equal(t, [2]int{fk.mkdirCalls, fk.accessCalls}, [2]int{3, 1}, "calls")
 		equal(t, waits, []int{1, 2}, "waits")
 	})
-	tw(t, f, "retries transient shared-directory access failures without recreating the directory", func(t *testing.T) {
+	tw(t, "accessible-dir", "retries transient shared-directory access failures without recreating the directory", func(t *testing.T) {
 		fk := &fakeAccessFS{failAccess: []string{"EPERM", "EACCES"}}
 		var waits []int
 		if _, err := ensureAccessibleDir(dir, opts(fk, &waits)); err != nil {
@@ -611,7 +605,7 @@ func TestEnsureAccessibleDirRetry(t *testing.T) {
 		equal(t, [2]int{fk.mkdirCalls, fk.accessCalls}, [2]int{1, 3}, "calls")
 		equal(t, waits, []int{1, 2}, "waits")
 	})
-	tw(t, f, "throws non-retryable access failures without retrying", func(t *testing.T) {
+	tw(t, "accessible-dir", "throws non-retryable access failures without retrying", func(t *testing.T) {
 		fk := &fakeAccessFS{failAccess: []string{"ENOENT"}}
 		var waits []int
 		_, err := ensureAccessibleDir(dir, opts(fk, &waits))
@@ -624,32 +618,31 @@ func TestEnsureAccessibleDirRetry(t *testing.T) {
 }
 
 func TestEnsureAccessibleDirFallback(t *testing.T) {
-	const f = "ensure-accessible-dir"
 	opts := func(fk accessibleDirFS) accessibleDirOptions {
 		return accessibleDirOptions{FS: fk, PID: 12345, RetryDirectoryErrors: boolPtr(true), RetryDelaysMs: []int{}, HasRetryDelays: true, Wait: func(int) {}}
 	}
-	tw(t, f, "returns the requested path when it is usable", func(t *testing.T) {
+	tw(t, "ensure-accessible-dir", "returns the requested path when it is usable", func(t *testing.T) {
 		fk := &fakeAccessFS{}
 		dir := "/tmp/pi-subagents-ok/results"
 		got, _ := ensureAccessibleDir(dir, opts(fk))
 		equal(t, got, dir, "result")
 		equal(t, fk.created, []string{dir}, "created")
 	})
-	tw(t, f, "falls back to a pid-scoped sibling when mkdir is persistently blocked", func(t *testing.T) {
+	tw(t, "ensure-accessible-dir", "falls back to a pid-scoped sibling when mkdir is persistently blocked", func(t *testing.T) {
 		dir := "/tmp/pi-subagents-mkdir-eperm/results"
 		fk := &fakeAccessFS{blockedMkdir: map[string]bool{dir: true}}
 		got, _ := ensureAccessibleDir(dir, opts(fk))
 		equal(t, got, dir+"-12345", "result")
 		equal(t, fk.created, []string{dir + "-12345"}, "created")
 	})
-	tw(t, f, "falls back to a pid-scoped sibling when access is persistently blocked", func(t *testing.T) {
+	tw(t, "ensure-accessible-dir", "falls back to a pid-scoped sibling when access is persistently blocked", func(t *testing.T) {
 		dir := "/tmp/pi-subagents-access-eperm/results"
 		fk := &fakeAccessFS{blocked: map[string]bool{dir: true}}
 		got, _ := ensureAccessibleDir(dir, opts(fk))
 		equal(t, got, dir+"-12345", "result")
 		equal(t, fk.created, []string{dir, dir + "-12345"}, "created")
 	})
-	tw(t, f, "does not delete existing primary directory contents when falling back", func(t *testing.T) {
+	tw(t, "ensure-accessible-dir", "does not delete existing primary directory contents when falling back", func(t *testing.T) {
 		root := t.TempDir()
 		dir := filepath.Join(root, "async-subagent-runs")
 		status := filepath.Join(dir, "run-1", "status.json")
@@ -662,7 +655,7 @@ func TestEnsureAccessibleDirFallback(t *testing.T) {
 		b, _ := os.ReadFile(status)
 		equal(t, string(b), "{}", "status kept")
 	})
-	tw(t, f, "allows runtime reassignment for live async and results paths", func(t *testing.T) {
+	tw(t, "ensure-accessible-dir", "allows runtime reassignment for live async and results paths", func(t *testing.T) {
 		origResults, origAsync := DIRS.Results, DIRS.Async
 		defer func() { DIRS.Results, DIRS.Async = origResults, origAsync }()
 		DIRS.Results, DIRS.Async = "/tmp/fallback-results", "/tmp/fallback-async"

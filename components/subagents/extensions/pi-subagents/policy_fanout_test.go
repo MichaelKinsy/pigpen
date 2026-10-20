@@ -19,10 +19,9 @@ func budgetFor(t *testing.T, limit int) runFanoutBudgetDescriptor {
 }
 
 func TestRunFanoutBudget(t *testing.T) {
-	const f = "run-fanout-budget"
-	tskip(t, f, "degrades status projection when persisted budget state is removed", "projects through summarizeAsyncStatus of the original's background status module (async-status.ts), which the SubAsync lane ports; the fan-out snapshot fallback it tests lives there")
-	tskip(t, f, "keeps nested status projection when persisted budget state is removed", "projects through listAsyncRuns and the nested-events route files of the original's background status modules (async-status.ts, nested-events.ts), which other lanes port")
-	tw(t, f, "persists claims and rejects the responsible next path at the exact cap", func(t *testing.T) {
+	tskip(t, "run-fanout-budget", "degrades status projection when persisted budget state is removed", "projects through summarizeAsyncStatus of the original's background status module (async-status.ts), which the SubAsync lane ports; the fan-out snapshot fallback it tests lives there")
+	tskip(t, "run-fanout-budget", "keeps nested status projection when persisted budget state is removed", "projects through listAsyncRuns and the nested-events route files of the original's background status modules (async-status.ts, nested-events.ts), which other lanes port")
+	tw(t, "run-fanout-budget", "persists claims and rejects the responsible next path at the exact cap", func(t *testing.T) {
 		d := budgetFor(t, 2)
 		s, err := claimRunFanoutBatch(d, []string{"tasks[0]", "tasks[1]"})
 		equal(t, [2]any{s, err}, [2]any{runFanoutBudgetSnapshot{2, 2, 0}, error(nil)}, "claim")
@@ -38,7 +37,7 @@ func TestRunFanoutBudget(t *testing.T) {
 		equal(t, le.Rejection.Remaining, 0, "remaining")
 		equal(t, le.Error(), "Run fan-out limit reached at tasks[2] (2/2 used; 1 requested, 0 remaining). No children from this admission group were started. Start a new top-level run or raise config.maxSubagentSpawnsPerRun.", "message")
 	})
-	tw(t, f, "rolls back only the failed admission batch", func(t *testing.T) {
+	tw(t, "run-fanout-budget", "rolls back only the failed admission batch", func(t *testing.T) {
 		d := budgetFor(t, 2)
 		claimRunFanoutBatch(d, []string{"single"})
 		_, err := claimRunFanoutBatch(d, []string{"chain[0]", "chain[1]"})
@@ -49,7 +48,7 @@ func TestRunFanoutBudget(t *testing.T) {
 		s, _ := getRunFanoutBudgetSnapshot(d)
 		equal(t, s, runFanoutBudgetSnapshot{1, 2, 1}, "snapshot")
 	})
-	tw(t, f, "rolls back a batch when its commit fails", func(t *testing.T) {
+	tw(t, "run-fanout-budget", "rolls back a batch when its commit fails", func(t *testing.T) {
 		d := budgetFor(t, 2)
 		claimRunFanoutBatch(d, []string{"existing"})
 		err := claimRunFanoutBatchWithCommit(d, []string{"append"}, func() error { return errors.New("enqueue failed") })
@@ -57,7 +56,7 @@ func TestRunFanoutBudget(t *testing.T) {
 		s, _ := getRunFanoutBudgetSnapshot(d)
 		equal(t, s, runFanoutBudgetSnapshot{1, 2, 1}, "snapshot")
 	})
-	tw(t, f, "reports claims-directory I/O errors instead of ordinary exhaustion", func(t *testing.T) {
+	tw(t, "run-fanout-budget", "reports claims-directory I/O errors instead of ordinary exhaustion", func(t *testing.T) {
 		d := budgetFor(t, 2)
 		claims := filepath.Join(d.Directory, "claims")
 		os.RemoveAll(claims)
@@ -68,7 +67,7 @@ func TestRunFanoutBudget(t *testing.T) {
 		}
 		polMatches(t, err.Error(), `claims directory is unreadable.*ENOTDIR`)
 	})
-	tw(t, f, "admits exactly one simultaneous two-slot batch at limit two", func(t *testing.T) {
+	tw(t, "run-fanout-budget", "admits exactly one simultaneous two-slot batch at limit two", func(t *testing.T) {
 		for i := 0; i < 12; i++ {
 			d := budgetFor(t, 2)
 			results := make([]string, 2)
@@ -92,7 +91,7 @@ func TestRunFanoutBudget(t *testing.T) {
 			equal(t, s, runFanoutBudgetSnapshot{2, 2, 0}, "snapshot")
 		}
 	})
-	tw(t, f, "fails closed when descriptor identity or managed-root containment is invalid", func(t *testing.T) {
+	tw(t, "run-fanout-budget", "fails closed when descriptor identity or managed-root containment is invalid", func(t *testing.T) {
 		d := budgetFor(t, 2)
 		bad := d.object()
 		bad.set("limit", 3.0)

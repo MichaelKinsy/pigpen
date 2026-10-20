@@ -757,5 +757,8 @@ func nodeFSErrorText(err error, op, path string) string {
 			return err.Error()
 		}
 	}
+	if path == "" {
+		return fmt.Sprintf("%s: %s, %s", code, desc, op)
+	}
 	return fmt.Sprintf("%s: %s, %s '%s'", code, desc, op, path)
 }

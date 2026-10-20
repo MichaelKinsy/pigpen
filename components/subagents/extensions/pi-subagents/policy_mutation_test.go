@@ -32,8 +32,7 @@ func withRepo(t *testing.T, run func(repo string)) {
 }
 
 func TestTrackedMutationEvidence(t *testing.T) {
-	const f = "mutation-evidence"
-	tw(t, f, "detects edits to a tracked file that was already dirty at child start", func(t *testing.T) {
+	tw(t, "mutation-evidence", "detects edits to a tracked file that was already dirty at child start", func(t *testing.T) {
 		withRepo(t, func(repo string) {
 			writeFile(t, filepath.Join(repo, "tracked.txt"), "dirty before child\n")
 			snapshot := snapshotTrackedMutations(repo)
@@ -44,7 +43,7 @@ func TestTrackedMutationEvidence(t *testing.T) {
 			equal(t, ev.ChangedFiles, []string{"tracked.txt"}, "changedFiles")
 		})
 	})
-	tw(t, f, "detects a child reverting a tracked file that was dirty at child start", func(t *testing.T) {
+	tw(t, "mutation-evidence", "detects a child reverting a tracked file that was dirty at child start", func(t *testing.T) {
 		withRepo(t, func(repo string) {
 			writeFile(t, filepath.Join(repo, "tracked.txt"), "dirty before child\n")
 			snapshot := snapshotTrackedMutations(repo)
@@ -54,7 +53,7 @@ func TestTrackedMutationEvidence(t *testing.T) {
 			equal(t, ev.ChangedFiles, []string{"tracked.txt"}, "changedFiles")
 		})
 	})
-	tw(t, f, "detects staged edits to a tracked file that was already staged dirty at child start", func(t *testing.T) {
+	tw(t, "mutation-evidence", "detects staged edits to a tracked file that was already staged dirty at child start", func(t *testing.T) {
 		withRepo(t, func(repo string) {
 			writeFile(t, filepath.Join(repo, "tracked.txt"), "staged before child\n")
 			gitIn(t, repo, "add", "tracked.txt")
@@ -66,7 +65,7 @@ func TestTrackedMutationEvidence(t *testing.T) {
 			equal(t, ev.ChangedFiles, []string{"tracked.txt"}, "changedFiles")
 		})
 	})
-	tw(t, f, "distinguishes unchanged and changed tracked diffs that exceed the fast buffer", func(t *testing.T) {
+	tw(t, "mutation-evidence", "distinguishes unchanged and changed tracked diffs that exceed the fast buffer", func(t *testing.T) {
 		withRepo(t, func(repo string) {
 			writeFile(t, filepath.Join(repo, "tracked.txt"), strings.Repeat("before\n", 180000)+"before-tail\n")
 			snapshot := snapshotTrackedMutations(repo)
@@ -79,7 +78,7 @@ func TestTrackedMutationEvidence(t *testing.T) {
 			equal(t, ev.ChangedFiles, []string{"tracked.txt"}, "changedFiles")
 		})
 	})
-	tw(t, f, "does not invoke repository fsmonitor while collecting mutation evidence", func(t *testing.T) {
+	tw(t, "mutation-evidence", "does not invoke repository fsmonitor while collecting mutation evidence", func(t *testing.T) {
 		if runtime.GOOS == "windows" {
 			t.Skip("the hook is a POSIX shell script")
 		}
@@ -107,7 +106,7 @@ func TestTrackedMutationEvidence(t *testing.T) {
 			}
 		})
 	})
-	tw(t, f, "formats bounded timeout recovery data", func(t *testing.T) {
+	tw(t, "mutation-evidence", "formats bounded timeout recovery data", func(t *testing.T) {
 		s := buildTimeoutRecoverySummary(timeoutRecoveryInput{
 			Termination: "timed-out",
 			Evidence:    trackedMutationEvidence{ChangedFiles: []string{"tracked.txt"}, AttemptedMutation: true},
@@ -118,7 +117,7 @@ func TestTrackedMutationEvidence(t *testing.T) {
 		polMatches(t, s.Message, `changed tracked files: tracked\.txt`)
 		polMatches(t, s.Message, `active tool: edit`)
 	})
-	tw(t, f, "classifies dirty timeouts with a missing requested report as recovery-needed", func(t *testing.T) {
+	tw(t, "mutation-evidence", "classifies dirty timeouts with a missing requested report as recovery-needed", func(t *testing.T) {
 		var files []string
 		for i := 1; i <= 25; i++ {
 			files = append(files, "src/file-"+pad2(i)+".ts")

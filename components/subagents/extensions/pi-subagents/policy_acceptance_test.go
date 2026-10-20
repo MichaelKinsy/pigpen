@@ -2,10 +2,8 @@ package pi_subagents
 
 import "testing"
 
-const acceptanceFile = "acceptance"
-
 func TestAcceptanceValidation(t *testing.T) {
-	tw(t, acceptanceFile, "normalizes JSON-encoded acceptance objects before existing validation", func(t *testing.T) {
+	tw(t, "acceptance", "normalizes JSON-encoded acceptance objects before existing validation", func(t *testing.T) {
 		inline := js(t, `{"level":"checked","evidence":["commands-run","changed-files"]}`)
 		encoded := marshalJSON(inline, "")
 		got, err := normalizeAcceptanceInput(encoded)
@@ -18,7 +16,7 @@ func TestAcceptanceValidation(t *testing.T) {
 		polMatches(t, joinLines(validateAcceptanceInput(`{"level":"checked"`, "acceptance")), `acceptance JSON string must encode a valid acceptance object`, "i")
 		polMatches(t, joinLines(validateAcceptanceInput(`["checked"]`, "acceptance")), `acceptance JSON string must encode an object`, "i")
 	})
-	tw(t, acceptanceFile, "validates invalid disable and verify shapes", func(t *testing.T) {
+	tw(t, "acceptance", "validates invalid disable and verify shapes", func(t *testing.T) {
 		v := func(in any) []string { return validateAcceptanceInput(in, "acceptance") }
 		j := func(s string) []string { return v(js(t, s)) }
 		equal(t, j(`{"level":"none"}`), []string{"acceptance.reason is required when level is none."}, "none without reason")
@@ -53,7 +51,7 @@ func TestAcceptanceValidation(t *testing.T) {
 		polMatches(t, joinLines(j(`{"stopRules":[123]}`)), `acceptance\.stopRules\[0\] must be a string`)
 		polMatches(t, joinLines(j(`{"surprise":true}`)), `acceptance\.surprise is not supported`)
 	})
-	tw(t, acceptanceFile, "validates explicit reviewed acceptance at every execution nesting level", func(t *testing.T) {
+	tw(t, "acceptance", "validates explicit reviewed acceptance at every execution nesting level", func(t *testing.T) {
 		rev := js(t, `{"level":"reviewed"}`)
 		errors := validateExecutionAcceptance(executionAcceptanceInput{
 			Acceptance: "reviewed",
@@ -72,7 +70,7 @@ func TestAcceptanceValidation(t *testing.T) {
 		}
 		polMatches(t, joinLines(errors), `acceptance\.review\.required`)
 	})
-	tw(t, acceptanceFile, "rejects transport-permitted true acceptance before execution, including nested inputs", func(t *testing.T) {
+	tw(t, "acceptance", "rejects transport-permitted true acceptance before execution, including nested inputs", func(t *testing.T) {
 		errors := validateExecutionAcceptance(executionAcceptanceInput{
 			Acceptance: true,
 			Tasks:      []executionAcceptanceInput{{Acceptance: true}},
@@ -93,7 +91,7 @@ func TestAcceptanceValidation(t *testing.T) {
 			}
 		}
 	})
-	tw(t, acceptanceFile, "requires outputSchema for explicit structured acceptance report mode", func(t *testing.T) {
+	tw(t, "acceptance", "requires outputSchema for explicit structured acceptance report mode", func(t *testing.T) {
 		schema := js(t, `{"type":"object"}`)
 		on := func() any { return js(t, `{"level":"checked","report":"on"}`) }
 		off := func() any { return js(t, `{"level":"checked","report":"off"}`) }
@@ -120,7 +118,7 @@ func TestAcceptanceValidation(t *testing.T) {
 			"chain[3].parallel.acceptance.report requires outputSchema.",
 		}, "report mode errors")
 	})
-	tw(t, acceptanceFile, "resolves structured acceptance report capture without changing the omitted default", func(t *testing.T) {
+	tw(t, "acceptance", "resolves structured acceptance report capture without changing the omitted default", func(t *testing.T) {
 		for _, c := range []struct {
 			in   any
 			want string
