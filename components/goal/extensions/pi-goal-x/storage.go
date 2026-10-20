@@ -129,9 +129,10 @@ func (s storage) ensureDir(logical string, verifyDefault bool) error {
 var localZone = time.Local
 
 func timestampForFile(iso string) string {
-	t, err := time.Parse("2006-01-02T15:04:05.000Z", iso)
-	if err != nil {
-		t = time.UnixMilli(clockMs())
+	// new Date(iso): any ISO form Date.parse reads; NaN falls back to the current time.
+	t := time.UnixMilli(clockMs())
+	if ms := jsDateParse(iso); ms == ms {
+		t = time.UnixMilli(int64(ms))
 	}
 	t = t.In(localZone)
 	return fmt.Sprintf("%04d%02d%02d%02d%02d%02d%02d", t.Year(), int(t.Month()), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond()/1e6/10)
