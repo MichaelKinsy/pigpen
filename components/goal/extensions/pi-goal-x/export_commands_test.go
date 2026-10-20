@@ -163,3 +163,6 @@ func RawExternalGoal(cwd, objective string, autoContinue bool, nowMs int64) stri
 
 // LifecyclePolicyBlock is the lifecycle policy the goal prompt carries for an autonomous, non-strict goal.
 func LifecyclePolicyBlock() string { return lifecyclePolicyBlock(true, false) }
+
+// LedgerPathFor is goalLedgerPath({cwd}).
+func LedgerPathFor(cwd string) string { return goalLedgerPath(storage{cwd: cwd}) }
