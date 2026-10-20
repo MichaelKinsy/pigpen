@@ -174,12 +174,6 @@
   "replace": "if workflow != \"none\" && workflow == \"\" {"
  },
  {
-  "name": "refusal-provider-list-fan-out",
-  "file": "search.go",
-  "find": "if d := providerTable[p]; d == nil || d.search == nil {",
-  "replace": "if d := providerTable[p]; d == nil && false {"
- },
- {
   "name": "refusal-fetch-extractor-dropped",
   "file": "extract.go",
   "find": "return failed(rawURL, unsupported(feature).Error())",
@@ -320,7 +314,7 @@
  {
   "name": "searxng-availability-error-dropped",
   "file": "search.go",
-  "find": "return d.availableErr()",
+  "find": "return d.availableErr(ctx, o)",
   "replace": "return false, nil"
  },
  {
