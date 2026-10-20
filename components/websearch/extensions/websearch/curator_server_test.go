@@ -339,7 +339,9 @@ func TestUpstream_curator_server_timeout(t *testing.T) {
 
 func TestCuratorServerRequestValidation(t *testing.T) {
 	cbs := newCuratorCallbacks()
-	h := startCurator(t, curatorBaseOptions(20), cbs.cb)
+	opts := curatorBaseOptions(20)
+	opts.AvailableProviders.Set("serpapi", true) // available, yet the original's check never lists it
+	h := startCurator(t, opts, cbs.cb)
 	u := func(p string) string { return curatorURL(t, h, p) }
 
 	// The page and the event stream need the session token.

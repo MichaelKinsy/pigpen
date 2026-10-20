@@ -2715,13 +2715,13 @@
   "name": "curator-sse-done-not-replayed",
   "file": "curator_server.go",
   "find": "if replayed && s.searchStreamDone {",
-  "replace": "if false {"
+  "replace": "if replayed && s.searchStreamDone && false {"
  },
  {
   "name": "curator-sse-events-not-replayed",
   "file": "curator_server.go",
   "find": "if !client.write(sseFrame(item.event, item.data)) {",
-  "replace": "if false {"
+  "replace": "if item.event != \"\" {"
  },
  {
   "name": "curator-no-browser-timeout-too-short",
