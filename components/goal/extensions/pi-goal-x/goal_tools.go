@@ -3,8 +3,8 @@ package pi_goal_x
 import (
 	"encoding/json"
 
-	pitui "github.com/MichaelKinsy/pigpen/components/pitui"
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	pitui "github.com/MichaelKinsy/pigpen/components/pitui"
 )
 
 // The tools (goal-tools.ts): the core tools (goal_core_tools.go), the two task tools (goal_task_tools.go) and the shared completion
