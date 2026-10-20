@@ -1,0 +1,94 @@
+// Manager probe: runs the original's PermissionManager over a corpus of worlds (config files, agent files, session rules, yolo, MCP
+// servers) and writes every verdict it returns, for the Go differential test
+// (extensions/pi-permission-system/testdata/manager-oracle.json). It is copied into an installed copy of the original by
+// port/record-manager-probe.sh and never runs from here; the port itself has no Node.
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { join } from "node:path";
+import { it } from "vitest";
+import type { ResolvedAccessIntent } from "#src/access-intent/access-intent";
+import { PermissionManager } from "#src/policy/permission-manager";
+import type { Ruleset } from "#src/policy/rule";
+
+const must = (v: string | undefined, name: string): string => {
+  if (!v) throw new Error(`${name} is required`);
+  return v;
+};
+
+type World = {
+  id: string;
+  global: string | null;
+  project: string | null;
+  agents: Record<string, string>;
+  projectAgents: Record<string, string>;
+  unreadableAgents: string[];
+  unreadableProjectAgents: string[];
+  mcp: string[];
+  yolo: boolean;
+  sessionRules: Ruleset;
+  agentNames: (string | null)[];
+  tools: string[];
+  intents: (ResolvedAccessIntent & { agentName?: string })[];
+};
+
+const scrub = (v: unknown, base: string): unknown => JSON.parse(JSON.stringify(v).split(base).join("<BASE>"));
+
+it("records the manager corpus", () => {
+  const cases: World[] = JSON.parse(
+    readFileSync(must(process.env.PROBE_CASES, "PROBE_CASES"), "utf8"),
+  );
+  const worlds: unknown[] = [];
+  for (const w of cases) {
+    const base = mkdtempSync(join(tmpdir(), "pp-manager-probe-"));
+    try {
+      const globalConfigPath = join(base, "pi-permissions.jsonc");
+      const agentsDir = join(base, "agents");
+      const projectRoot = join(base, "project");
+      const projectConfigPath = join(projectRoot, "pi-permissions.jsonc");
+      const projectAgentsDir = join(projectRoot, "agents");
+      mkdirSync(agentsDir, { recursive: true });
+      mkdirSync(projectAgentsDir, { recursive: true });
+      if (w.global !== null) writeFileSync(globalConfigPath, w.global);
+      if (w.project !== null) writeFileSync(projectConfigPath, w.project);
+      for (const [n, c] of Object.entries(w.agents)) writeFileSync(join(agentsDir, `${n}.md`), c);
+      for (const [n, c] of Object.entries(w.projectAgents)) writeFileSync(join(projectAgentsDir, `${n}.md`), c);
+      for (const n of w.unreadableAgents) mkdirSync(join(agentsDir, `${n}.md`));
+      for (const n of w.unreadableProjectAgents) mkdirSync(join(projectAgentsDir, `${n}.md`));
+
+      const manager = new PermissionManager({
+        globalConfigPath,
+        agentsDir,
+        projectGlobalConfigPath: projectConfigPath,
+        projectAgentsDir,
+        mcpServerNames: w.mcp,
+        isYoloEnabled: () => w.yolo,
+      });
+
+      const results = w.intents.map((intent) => {
+        try {
+          return { result: manager.check(intent, w.sessionRules) };
+        } catch (e) {
+          return { throws: String(e) };
+        }
+      });
+      const display: Record<string, unknown> = {};
+      for (const agent of w.agentNames) {
+        const key = agent ?? "<none>";
+        const a = agent ?? undefined;
+        display[key] = {
+          toolPermission: Object.fromEntries(w.tools.map((t) => [t, manager.getToolPermission(t, a)])),
+          fullyDenied: Object.fromEntries(w.tools.map((t) => [t, manager.isToolFullyDenied(t, a)])),
+          issues: manager.getConfigIssues(a),
+          composed: manager.getComposedConfigRules(a),
+        };
+      }
+      worlds.push(scrub({ id: w.id, results, display }, base));
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  }
+  writeFileSync(
+    must(process.env.PROBE_OUT, "PROBE_OUT"),
+    `${JSON.stringify({ home: homedir(), worlds })}\n`,
+  );
+});
