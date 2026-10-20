@@ -157,9 +157,8 @@ func NewTracePanel(trace *Trace, theme ThemeLike, actions panelActions) *TracePa
 // Dispose stops listening to the trace.
 func (p *TracePanel) Dispose() { p.unsub() }
 
-func (p *TracePanel) lines(width int) []string {
+func (p *TracePanel) lines(width int, entries []TraceEntry) []string {
 	theme := p.theme
-	entries := p.trace.Entries()
 	modeLabel := "compact"
 	if !p.compact {
 		modeLabel = "detailed"
@@ -241,9 +240,12 @@ func (p *TracePanel) lines(width int) []string {
 
 // Render draws the panel: a left border makes the overlay read as a pane; the content column is two cells narrower.
 func (p *TracePanel) Render(width int) []string {
+	// The snapshot is taken before the panel's lock: the trace calls its listeners (which ask this panel to render)
+	// while it holds its own lock, so holding both in the other order could deadlock.
+	entries := p.trace.Entries()
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	return p.frame(p.lines(max(10, width-2)), width, "end of trace")
+	return p.frame(p.lines(max(10, width-2), entries), width, "end of trace")
 }
 
 // HandleInput implements sdk.RemoteComponent.
