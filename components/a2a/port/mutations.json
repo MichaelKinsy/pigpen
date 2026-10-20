@@ -157,19 +157,19 @@
  },
  {
   "name": "file-parts-dropped",
-  "file": "executor.go",
-  "find": "\t\tif _, ok := p.Content.(a2a.Text); !ok {",
-  "replace": "\t\tif _, ok := p.Content.(a2a.Text); false && !ok {"
+  "file": "parts.go",
+  "find": "\t\tcase a2a.URL:\n\t\t\treturn \"\", nil, fmt.Errorf(\"part %d is a URL",
+  "replace": "\t\tcase a2a.URL:\n\t\t\tcontinue\n\t\t\treturn \"\", nil, fmt.Errorf(\"part %d is a URL"
  },
  {
   "name": "empty-prompt-accepted",
-  "file": "executor.go",
+  "file": "parts.go",
   "find": "\tif strings.TrimSpace(prompt) == \"\" {",
   "replace": "\tif false {"
  },
  {
   "name": "prompt-size-unbounded",
-  "file": "executor.go",
+  "file": "parts.go",
   "find": "\tif len(prompt) > maxPromptBytes {",
   "replace": "\tif false {"
  },
@@ -218,14 +218,14 @@
  {
   "name": "version-not-enforced",
   "file": "server.go",
-  "find": "!ok || !versionsOK(v)",
-  "replace": "false && (!ok || !versionsOK(v))"
+  "find": "\tif err := checkVersion(v); err != nil {",
+  "replace": "\tif err := checkVersion(v); false && err != nil {"
  },
  {
   "name": "absent-version-accepted",
   "file": "server.go",
-  "find": "if v, ok := callCtx.ServiceParams().Get(a2a.SvcParamVersion); !ok || !versionsOK(v) {",
-  "replace": "if v, ok := callCtx.ServiceParams().Get(a2a.SvcParamVersion); ok && !versionsOK(v) {"
+  "find": "\tif n == 0 {",
+  "replace": "\tif false {"
  },
  {
   "name": "minor-versions-accepted",
@@ -236,8 +236,8 @@
  {
   "name": "mixed-version-values-accepted",
   "file": "server.go",
-  "find": "\t\t\tif !versionOK(strings.TrimSpace(one)) {\n\t\t\t\treturn false\n\t\t\t}",
-  "replace": "\t\t\tif !versionOK(strings.TrimSpace(one)) {\n\t\t\t\tcontinue\n\t\t\t}"
+  "find": "\t\t\tif !versionOK(one) {\n\t\t\t\treturn refuse(a2a.ErrVersionNotSupported, \"A2A protocol version \"+oneLine(one, 32), detail)\n\t\t\t}",
+  "replace": "\t\t\tif !versionOK(one) {\n\t\t\t\tcontinue\n\t\t\t}"
  },
  {
   "name": "tenant-not-enforced",
@@ -542,7 +542,7 @@
  {
   "name": "agent-dir-ignored",
   "file": "extension.go",
-  "find": "\tif d := m.getenv(\"PIG_CODING_AGENT_DIR\"); d != \"\" {\n\t\treturn d\n\t}\n",
+  "find": "\tif d := m.getenv(\"PIG_CODING_AGENT_DIR\"); d != \"\" {\n\t\treturn d, nil\n\t}\n",
   "replace": ""
  },
  {
@@ -584,14 +584,14 @@
  {
   "name": "task-action-unchecked",
   "file": "extension.go",
-  "find": "\treturn nil, sdk.NewToolError(fmt.Sprintf(\"a2a: unknown action %q (get, cancel or list)\", action))",
+  "find": "\treturn nil, sdk.NewToolError(fmt.Sprintf(\"a2a: unknown action %q (get, cancel, list or wait)\", action))",
   "replace": "\treturn \"ok\", nil"
  },
  {
   "name": "send-drops-context",
   "file": "extension.go",
-  "find": "SendArgs{Agent: agent, Message: message, ContextID: contextID, TaskID: taskID}",
-  "replace": "SendArgs{Agent: agent, Message: message, ContextID: contextID[:0], TaskID: taskID}"
+  "find": "SendArgs{Agent: agent, Message: message, ContextID: contextID, TaskID: taskID, Detach: !wait}",
+  "replace": "SendArgs{Agent: agent, Message: message, ContextID: contextID[:0], TaskID: taskID, Detach: !wait}"
  },
  {
   "name": "tls-load-failure-ignored",
@@ -602,8 +602,8 @@
  {
   "name": "subscribe-ownership-unchecked",
   "file": "server.go",
-  "find": "\t\tif _, err := g.store.Get(ctx, sub.ID); err != nil {",
-  "replace": "\t\tif _, err := g.store.Get(ctx, sub.ID); false && err != nil {"
+  "find": "\t\tif _, err := g.store.Get(ctx, named); err != nil {",
+  "replace": "\t\tif _, err := g.store.Get(ctx, named); false && err != nil {"
  },
  {
   "name": "queued-cancel-ignored-at-slot",
@@ -729,7 +729,7 @@
   "name": "store-task-id-in-file-name",
   "file": "taskstore.go",
   "find": "hex.EncodeToString(sum[:])+\".json\"",
-  "replace": "string(id)+\".json\""
+  "replace": "hex.EncodeToString(sum[:])[:0]+string(id)+\".json\""
  },
  {
   "name": "store-stale-update-accepted",
@@ -825,7 +825,7 @@
   "name": "attachment-name-unsanitised",
   "file": "parts.go",
   "find": "unicode.IsControl(r) || r == '`' || r == utf8.RuneError",
-  "replace": "false"
+  "replace": "false && (unicode.IsControl(r) || r == '`' || r == utf8.RuneError)"
  },
  {
   "name": "attachment-name-uncapped",
@@ -856,12 +856,6 @@
   "file": "parts.go",
   "find": "\t\t\t\tif len(images) > maxImages {",
   "replace": "\t\t\t\tif false {"
- },
- {
-  "name": "attachment-escapes-prompt-limit",
-  "file": "parts.go",
-  "find": "\tif len(prompt) > maxPromptBytes {",
-  "replace": "\tif false {"
  },
  {
   "name": "svg-image-accepted-as-text",
@@ -897,7 +891,7 @@
   "name": "remote-binary-pasted-to-model",
   "file": "client.go",
   "find": "err == nil && isTextType(mt) && utf8.Valid(c) && bytes.IndexByte(c, 0) < 0",
-  "replace": "true"
+  "replace": "err == nil && (true || isTextType(mt) && utf8.Valid(c) && bytes.IndexByte(c, 0) < 0)"
  },
  {
   "name": "remote-data-part-hidden",
@@ -922,12 +916,6 @@
   "file": "server.go",
   "find": "\tcase *a2a.GetExtendedAgentCardRequest:\n\t\treturn refuse",
   "replace": "\tcase *a2a.GetExtendedAgentCardRequest:\n\t\treturn nil\n\t\treturn refuse"
- },
- {
-  "name": "missing-version-header-accepted",
-  "file": "server.go",
-  "find": "\tif n == 0 {",
-  "replace": "\tif false {"
  },
  {
   "name": "followup-ownership-unchecked",
