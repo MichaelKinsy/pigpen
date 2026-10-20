@@ -143,7 +143,7 @@ Size and cold start (bytes, ms):
 
 | | original | 0.1.1 | port | port over 0.1.1 |
 |---|---|---|---|---|
-| extension binary (PiG-built runner) | TypeScript, 0.6 MB of sources | 6,213,792 | 15,519,904 | +150% |
+| extension binary (PiG-built runner) | TypeScript, 807,526 bytes of sources (`du -sb`) | 6,213,792 | 15,519,904 | +150% |
 | single-extension Piglet Binary (control 70,861,063) | not a binary | 71,192,839 | 73,347,335 | +3.0% (+2.15 MB) |
 | cold start, `pig -e <extension>` | 683.5 (first start 2,064: jiti) | 51.4 (first start 410: build) | 121.8 (first start 593: build) | +70.4 ms |
 | cold start, fused Piglet (control 33.9) | not applicable | 40.9 | 50.1 | +9.2 ms |
@@ -160,7 +160,7 @@ do; in the fused Piglet the extension's own span is 3.0 ms against 2.0 ms and th
 the 1 ms of the registration allowance, so it is stated here: it is the larger Go program (more type data and package initialisers) and
 the registration of 16 commands and 8 tools.
 
-Per-call cost through pig (ms; port in the `-e` form, the fused form is about 10-20% lower):
+Per-call cost through pig (ms; port in the `-e` form, the fused Piglet form is between 24% lower and 4% higher, see `results.md`):
 
 | operation | original | port | |
 |---|---|---|---|
