@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -20,11 +21,14 @@ var (
 	cachedDirOK bool
 )
 
-// ResetCaches forgets the memoized config directory (tests, and reload).
+// ResetCaches forgets the memoized config directory and the parsed config (tests, and reload).
 func ResetCaches() {
 	cacheMu.Lock()
 	cachedDir, cachedDirOK = "", false
 	cacheMu.Unlock()
+	configMu.Lock()
+	configCache = nil
+	configMu.Unlock()
 	resetProviderState()
 }
 
@@ -88,15 +92,59 @@ func resolveConfigDir() string {
 // ConfigPath is the full path of web-search.json.
 func ConfigPath() string { return filepath.Join(ConfigDir(), configFileName) }
 
+// configRacyWindow is how recent a file's modification time may be before the cache refuses to
+// trust a stat match: a second write inside the clock granularity can keep size and mtime, so an
+// entry is stored only for a file that has been quiet for this long (the racy-write guard git's
+// index uses for the same reason).
+const configRacyWindow = 2 * time.Second
+
+// configEntry is a parsed web-search.json together with the stat that validated it.
+type configEntry struct {
+	path string
+	info os.FileInfo
+	root map[string]any
+}
+
+var (
+	configMu    sync.Mutex
+	configCache *configEntry
+	// configParses counts the reads that missed the cache (tests prove a hit by its absence).
+	configParses int
+)
+
+func configEntryMatches(e *configEntry, path string, info os.FileInfo) bool {
+	return e != nil && e.path == path && e.info.Size() == info.Size() &&
+		e.info.ModTime().UnixNano() == info.ModTime().UnixNano() && os.SameFile(e.info, info)
+}
+
 // ReadConfigRoot parses web-search.json. A missing file gives (nil, nil); invalid JSON or a
-// non-object root fail with the original's messages.
+// non-object root fail with the original's messages. The original reads the file on every call;
+// this port skips the read and the parse while a stat of the file (size, modification time and
+// file identity) matches the entry parsed from it, so an edit is still picked up on the next
+// call. The returned map is shared between callers and MUST be treated as read-only.
 func ReadConfigRoot() (map[string]any, error) {
 	path := ConfigPath()
-	data, err := os.ReadFile(path)
+	if info, err := os.Stat(path); err == nil {
+		configMu.Lock()
+		e := configCache
+		configMu.Unlock()
+		if configEntryMatches(e, path, info) {
+			return e.root, nil
+		}
+	}
+	f, err := os.Open(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil, nil
 		}
+		return nil, err
+	}
+	defer f.Close()
+	// The stat comes from the open descriptor, taken before the read: a write that lands after it
+	// changes the next stat, so the cached entry can only be older than the file, never newer.
+	info, statErr := f.Stat()
+	data, err := io.ReadAll(f)
+	if err != nil {
 		return nil, err
 	}
 	var parsed any
@@ -107,6 +155,14 @@ func ReadConfigRoot() (map[string]any, error) {
 	if !ok {
 		return nil, fmt.Errorf("Invalid config in %s: expected a JSON object", path)
 	}
+	configMu.Lock()
+	configParses++
+	if statErr == nil && time.Since(info.ModTime()) >= configRacyWindow {
+		configCache = &configEntry{path: path, info: info, root: root}
+	} else {
+		configCache = nil
+	}
+	configMu.Unlock()
 	return root, nil
 }
 

@@ -364,5 +364,41 @@
   "file": "restcommon.go",
   "find": "return &redactedError{\"terminated\", err}",
   "replace": "return &redactedError{\"cut\", err}"
+},
+{
+  "name": "config-cache-trusts-recent-file",
+  "file": "config.go",
+  "find": "statErr == nil && time.Since(info.ModTime()) >= configRacyWindow",
+  "replace": "statErr == nil"
+},
+{
+  "name": "config-cache-ignores-size",
+  "file": "config.go",
+  "find": "e.info.Size() == info.Size() &&",
+  "replace": "true &&"
+},
+{
+  "name": "config-cache-ignores-mtime",
+  "file": "config.go",
+  "find": "e.info.ModTime().UnixNano() == info.ModTime().UnixNano() && os.SameFile(e.info, info)",
+  "replace": "os.SameFile(e.info, info)"
+},
+{
+  "name": "config-cache-ignores-identity",
+  "file": "config.go",
+  "find": "e.info.ModTime().UnixNano() == info.ModTime().UnixNano() && os.SameFile(e.info, info)",
+  "replace": "e.info.ModTime().UnixNano() == info.ModTime().UnixNano()"
+},
+{
+  "name": "config-cache-survives-reset",
+  "file": "config.go",
+  "find": "\tconfigMu.Lock()\n\tconfigCache = nil\n\tconfigMu.Unlock()\n\tresetProviderState()",
+  "replace": "\tresetProviderState()"
+},
+{
+  "name": "config-cache-never-hits",
+  "file": "config.go",
+  "find": "if configEntryMatches(e, path, info) {",
+  "replace": "if false && configEntryMatches(e, path, info) {"
 }
 ]

@@ -102,6 +102,10 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   between validation and connect cannot reach an internal address); IPv6 multicast, NAT64 and 6to4-embedded IPv4 are blocked.
 - **Config directory** is PiG-first (`PIG_CODING_AGENT_DIR`, then `PI_CODING_AGENT_DIR`, XDG `pig`, `$PIG_HOME/agent`), with Pi's
   locations as read fallbacks; a new config is written under `$PIG_HOME/agent`.
+- **Config reads are cached**: the original reads `web-search.json` with `readFileSync` on every call; `ReadConfigRoot` keeps the
+  parsed file and serves it while a stat (size, mtime in nanoseconds, file identity) still matches. A file modified within the
+  last 2 seconds is never cached (the racy-write guard), an edit is picked up on the next call, and `ResetCaches` drops the entry.
+  The returned map is shared, so callers treat it as read-only. Twins: `config_cache_test.go`; mutants `config-cache-*`.
 - **Tool errors**: where the original returns `isError: true` inside the result object (Pi ignores it), PiG marks the result as an
   error, so the model sees `web_enable` failures as failures.
 - **Invalid `web-search.json`** makes the original throw at registration; an extension cannot fail its load here, so nothing is
