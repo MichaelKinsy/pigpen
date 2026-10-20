@@ -1,0 +1,344 @@
+[
+ {
+  "name": "hook-payload-not-run",
+  "file": "chat.go",
+  "find": "if opts.OnPayload != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-payload-replacement-dropped",
+  "file": "chat.go",
+  "find": "\t\tif replaced != nil {\n\t\t\trequest = replaced\n\t\t}",
+  "replace": "\t\t_ = replaced"
+ },
+ {
+  "name": "hook-payload-nil-replaces",
+  "file": "chat.go",
+  "find": "\t\tif replaced != nil {",
+  "replace": "\t\tif replaced == nil {"
+ },
+ {
+  "name": "hook-payload-error-swallowed",
+  "file": "chat.go",
+  "find": "\t\treplaced, err := opts.OnPayload(request, modelInfo)\n\t\tif err != nil {\n\t\t\tfail(err)\n\t\t\treturn\n\t\t}",
+  "replace": "\t\treplaced, _ := opts.OnPayload(request, modelInfo)"
+ },
+ {
+  "name": "hook-response-not-run",
+  "file": "chat.go",
+  "find": "if opts.OnResponse != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-response-status-missing",
+  "file": "chat.go",
+  "find": "map[string]any{\"status\": resp.StatusCode, \"headers\": headers}",
+  "replace": "map[string]any{\"headers\": headers}"
+ },
+ {
+  "name": "hook-response-headers-not-lowercased",
+  "file": "chat.go",
+  "find": "headers[strings.ToLower(name)]",
+  "replace": "headers[name]"
+ },
+ {
+  "name": "hook-response-error-swallowed",
+  "file": "chat.go",
+  "find": "\t\tif err := opts.OnResponse(map[string]any{\"status\": resp.StatusCode, \"headers\": headers}, modelInfo); err != nil {\n\t\t\tfail(err)\n\t\t\treturn\n\t\t}",
+  "replace": "\t\t_ = opts.OnResponse(map[string]any{\"status\": resp.StatusCode, \"headers\": headers}, modelInfo)"
+ },
+ {
+  "name": "hook-event-not-run",
+  "file": "chat.go",
+  "find": "if opts.OnProviderStreamEvent != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-event-error-swallowed",
+  "file": "chat.go",
+  "find": "\t\t\t\tif err := opts.OnProviderStreamEvent(event, modelInfo); err != nil {\n\t\t\t\t\tfail(err)\n\t\t\t\t\treturn\n\t\t\t\t}",
+  "replace": "\t\t\t\t_ = opts.OnProviderStreamEvent(event, modelInfo)"
+ },
+ {
+  "name": "sampling-params-dropped",
+  "file": "options.go",
+  "find": "\t\tfor k, v := range sp {\n\t\t\toptions[k] = v\n\t\t}",
+  "replace": "\t\t_ = sp"
+ },
+ {
+  "name": "sampling-params-lose-to-named",
+  "file": "options.go",
+  "find": "\t\t\toptions[k] = v\n",
+  "replace": "\t\t\tif _, set := options[k]; !set {\n\t\t\t\toptions[k] = v\n\t\t\t}\n"
+ },
+ {
+  "name": "max-tokens-zero-sent",
+  "file": "options.go",
+  "find": "ok && v > 0 {",
+  "replace": "ok && v >= 0 {"
+ },
+ {
+  "name": "think-level-ignored",
+  "file": "options.go",
+  "find": "for _, key := range []string{\"reasoning\", \"reasoningEffort\", \"effort\"} {",
+  "replace": "for _, key := range []string{\"reasoningEffort\", \"effort\"} {"
+ },
+ {
+  "name": "think-effort-before-reasoning",
+  "file": "options.go",
+  "find": "[]string{\"reasoning\", \"reasoningEffort\", \"effort\"}",
+  "replace": "[]string{\"effort\", \"reasoningEffort\", \"reasoning\"}"
+ },
+ {
+  "name": "think-off-sent-as-on",
+  "file": "options.go",
+  "find": "on = level != \"off\" && level != \"none\"",
+  "replace": "on = level != \"none\""
+ },
+ {
+  "name": "think-none-is-on",
+  "file": "options.go",
+  "find": "on = level != \"off\" && level != \"none\"",
+  "replace": "on = level != \"off\""
+ },
+ {
+  "name": "think-enabled-not-explicit",
+  "file": "options.go",
+  "find": "\tif !on {\n\t\treturn false, true\n\t}",
+  "replace": "\tif !on && level == \"\" {\n\t\treturn false, true\n\t}"
+ },
+ {
+  "name": "gpt-oss-gets-bool",
+  "file": "options.go",
+  "find": "strings.HasPrefix(id, \"gpt-oss\")",
+  "replace": "strings.HasPrefix(id, \"gpt-ossx\")"
+ },
+ {
+  "name": "gpt-oss-minimal-passes-through",
+  "file": "options.go",
+  "find": "case \"minimal\", \"low\":",
+  "replace": "case \"low\":"
+ },
+ {
+  "name": "gpt-oss-xhigh-passes-through",
+  "file": "options.go",
+  "find": "case \"high\", \"xhigh\", \"max\":",
+  "replace": "case \"high\":"
+ },
+ {
+  "name": "gpt-oss-default-high",
+  "file": "options.go",
+  "find": "\t\t\treturn \"medium\", true",
+  "replace": "\t\t\treturn \"high\", true"
+ },
+ {
+  "name": "tool-choice-none-ignored",
+  "file": "request.go",
+  "find": "if offer := toolChoice(opts) != \"none\"; !offer {",
+  "replace": "if offer := toolChoice(opts) != \"never\"; !offer {"
+ },
+ {
+  "name": "tool-choice-any-accepted",
+  "file": "options.go",
+  "find": "if c != \"auto\" && c != \"none\" {",
+  "replace": "if c != \"auto\" && c != \"none\" && c != \"any\" {"
+ },
+ {
+  "name": "tool-choice-object-accepted",
+  "file": "options.go",
+  "find": "\t\treturn refuse(\"a specific toolChoice\")",
+  "replace": "\t\treturn nil"
+ },
+ {
+  "name": "deferred-true-accepted",
+  "file": "options.go",
+  "find": "\t\tif d {\n\t\t\treturn refuse(\"deferred generation\")\n\t\t}",
+  "replace": "\t\tif d {\n\t\t\treturn nil\n\t\t}"
+ },
+ {
+  "name": "deferred-window-accepted",
+  "file": "options.go",
+  "find": "\tdefault:\n\t\treturn refuse(\"deferred generation\")",
+  "replace": "\tdefault:\n\t\treturn nil"
+ },
+ {
+  "name": "deferred-false-refused",
+  "file": "options.go",
+  "find": "\t\tif d {\n\t\t\treturn refuse(\"deferred generation\")",
+  "replace": "\t\tif !d {\n\t\t\treturn refuse(\"deferred generation\")"
+ },
+ {
+  "name": "refusal-says-sent",
+  "file": "options.go",
+  "find": "The request was not sent.",
+  "replace": "The request was sent."
+ },
+ {
+  "name": "headers-not-applied",
+  "file": "chat.go",
+  "find": "\tapplyHeaders(req.Header, opts.Values)\n",
+  "replace": ""
+ },
+ {
+  "name": "headers-applied-before-defaults",
+  "file": "chat.go",
+  "find": "\treq.Header.Set(\"Content-Type\", \"application/json\")\n\tif key := apiKey(opts); key != \"\" {\n\t\treq.Header.Set(\"Authorization\", \"Bearer \"+key)\n\t}\n\tapplyHeaders(req.Header, opts.Values)",
+  "replace": "\tapplyHeaders(req.Header, opts.Values)\n\treq.Header.Set(\"Content-Type\", \"application/json\")\n\tif key := apiKey(opts); key != \"\" {\n\t\treq.Header.Set(\"Authorization\", \"Bearer \"+key)\n\t}"
+ },
+ {
+  "name": "null-header-keeps-default",
+  "file": "options.go",
+  "find": "\t\tcase nil:\n\t\t\th.Del(name)",
+  "replace": "\t\tcase nil:"
+ },
+ {
+  "name": "env-host-ignored",
+  "file": "chat.go",
+  "find": "envValue(opts.Values, \"OLLAMA_HOST\"); host != \"\"",
+  "replace": "envValue(opts.Values, \"OLLAMA_HOST\"); host == \"\""
+ },
+ {
+  "name": "env-key-ignored",
+  "file": "chat.go",
+  "find": "\treturn envValue(opts.Values, \"OLLAMA_API_KEY\")",
+  "replace": "\treturn \"\""
+ },
+ {
+  "name": "env-key-beats-api-key",
+  "file": "chat.go",
+  "find": "\tif key, _ := opts.Values[\"apiKey\"].(string); key != \"\" && key != localKey {\n\t\treturn key\n\t}\n\treturn envValue(opts.Values, \"OLLAMA_API_KEY\")",
+  "replace": "\tif key := envValue(opts.Values, \"OLLAMA_API_KEY\"); key != \"\" {\n\t\treturn key\n\t}\n\tkey, _ := opts.Values[\"apiKey\"].(string)\n\tif key == localKey {\n\t\treturn \"\"\n\t}\n\treturn key"
+ },
+ {
+  "name": "local-key-sent",
+  "file": "chat.go",
+  "find": "key != \"\" && key != localKey",
+  "replace": "key != \"\""
+ },
+ {
+  "name": "retries-default-on",
+  "file": "chat.go",
+  "find": "\tretries := 0",
+  "replace": "\tretries := 2"
+ },
+ {
+  "name": "retries-ignored",
+  "file": "chat.go",
+  "find": "ok && n > 0 {\n\t\tretries = int(n)",
+  "replace": "ok && n > 0 {\n\t\tretries = 0"
+ },
+ {
+  "name": "retry-400",
+  "file": "chat.go",
+  "find": "status == http.StatusRequestTimeout ||",
+  "replace": "status == http.StatusBadRequest || status == http.StatusRequestTimeout ||"
+ },
+ {
+  "name": "no-retry-429",
+  "file": "chat.go",
+  "find": " || status == http.StatusTooManyRequests",
+  "replace": ""
+ },
+ {
+  "name": "no-retry-5xx",
+  "file": "chat.go",
+  "find": "|| status >= 500",
+  "replace": "|| status >= 600"
+ },
+ {
+  "name": "retry-no-retry-limit",
+  "file": "chat.go",
+  "find": "attempt < retries:",
+  "replace": "true:"
+ },
+ {
+  "name": "retry-after-ignored",
+  "file": "chat.go",
+  "find": "wait = retryAfter(resp.Header, time.Now())",
+  "replace": "wait = -1"
+ },
+ {
+  "name": "retry-after-ms-ignored",
+  "file": "chat.go",
+  "find": "h.Get(\"Retry-After-Ms\")",
+  "replace": "h.Get(\"X-None\")"
+ },
+ {
+  "name": "retry-after-seconds-as-ms",
+  "file": "chat.go",
+  "find": "time.Duration(secs * float64(time.Second))",
+  "replace": "time.Duration(secs * float64(time.Millisecond))"
+ },
+ {
+  "name": "retry-after-date-ignored",
+  "file": "chat.go",
+  "find": "if t, err := http.ParseTime(v); err == nil {",
+  "replace": "if t, err := http.ParseTime(v); err != nil {"
+ },
+ {
+  "name": "max-delay-ignored",
+  "file": "chat.go",
+  "find": "if maxDelay > 0 && wait > maxDelay {",
+  "replace": "if false {"
+ },
+ {
+  "name": "max-delay-zero-caps",
+  "file": "chat.go",
+  "find": "if maxDelay > 0 && wait > maxDelay {",
+  "replace": "if wait > maxDelay {"
+ },
+ {
+  "name": "max-delay-default-unbounded",
+  "file": "chat.go",
+  "find": "maxDelay := 60 * time.Second",
+  "replace": "maxDelay := 600 * time.Second"
+ },
+ {
+  "name": "backoff-not-doubling",
+  "file": "chat.go",
+  "find": "500 * time.Millisecond << min(attempt, 4)",
+  "replace": "500 * time.Millisecond"
+ },
+ {
+  "name": "backoff-uncapped",
+  "file": "chat.go",
+  "find": "return min(d, 8*time.Second)",
+  "replace": "return d"
+ },
+ {
+  "name": "retry-wait-ignores-signal",
+  "file": "chat.go",
+  "find": "\t\tcase <-ctx.Done():\n\t\t\ttimer.Stop()\n\t\t\treturn nil, nil, \"\", ctx.Err()",
+  "replace": "\t\tcase <-ctx.Done():"
+ },
+ {
+  "name": "connection-errors-not-retried",
+  "file": "chat.go",
+  "find": "\t\t\tif ctx.Err() != nil || attempt >= retries {",
+  "replace": "\t\t\tif true {"
+ },
+ {
+  "name": "timeout-ignored",
+  "file": "chat.go",
+  "find": "if hasTimeout && timeout > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "timeout-covers-stream",
+  "file": "chat.go",
+  "find": "\tif timer != nil {\n\t\ttimer.Stop()\n\t}\n",
+  "replace": "\t_ = timer\n"
+ },
+ {
+  "name": "timeout-reported-as-failure",
+  "file": "chat.go",
+  "find": "timed out after %d ms",
+  "replace": "failed after %d ms"
+ },
+ {
+  "name": "note-dropped",
+  "file": "chat.go",
+  "find": "text, note))",
+  "replace": "text, \"\"))"
+ }
+]

@@ -63,6 +63,11 @@ func TestThinkingLevels(t *testing.T) {
 		{"reasoningEffort is a level too", gptoss, map[string]any{"reasoningEffort": "medium"}, "medium"},
 		{"effort is a level too", gptoss, map[string]any{"effort": "low"}, "low"},
 		{"level wins over effort", gptoss, map[string]any{"reasoning": "high", "effort": "low"}, "high"},
+		{"thinkingEnabled true on gpt-oss uses the level", gptoss, map[string]any{"thinkingEnabled": true, "reasoning": "low"}, "low"},
+		{"thinkingEnabled true on gpt-oss without a level", gptoss, map[string]any{"thinkingEnabled": true}, "medium"},
+		{"thinkingEnabled true on a bool model", qwen, map[string]any{"thinkingEnabled": true}, true},
+		{"none is off", qwen, map[string]any{"reasoningEffort": "none"}, false},
+		{"an unknown effort turns thinking on", gptoss, map[string]any{"effort": "extreme"}, "medium"},
 		{"nothing asked", qwen, map[string]any{}, nil},
 		{"non-thinking model", graniteModel, map[string]any{"reasoning": "high"}, nil},
 	}

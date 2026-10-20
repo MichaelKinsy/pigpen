@@ -2,13 +2,16 @@ package ollamanative
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -18,7 +21,7 @@ import (
 // as PiG model events. It returns at once; the work runs on its own goroutine,
 // and every failure becomes an error event on the stream.
 func (c *client) stream(model, transcript map[string]any, opts sdk.ProviderStreamOptions) (*sdk.ModelEventStream, error) {
-	if err := refuseHooks(opts); err != nil {
+	if err := refuseOptions(opts); err != nil {
 		return nil, err
 	}
 	out := sdk.CreateAssistantMessageEventStream()
@@ -26,35 +29,27 @@ func (c *client) stream(model, transcript map[string]any, opts sdk.ProviderStrea
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	id, _ := model["id"].(string)
-	go c.run(ctx, out, id, chatRequest(model, transcript, opts), apiKey(opts))
+	go c.run(ctx, out, model, chatRequest(model, transcript, opts), opts)
 	return out, nil
 }
 
-// refuseHooks rejects the caller hooks this provider does not run. Running a
-// request without them would silently drop a payload rewrite, a response
-// observer or a header transform the caller asked for.
-func refuseHooks(opts sdk.ProviderStreamOptions) error {
-	var feature string
-	switch {
-	case opts.OnPayload != nil:
-		feature = "the onPayload hook"
-	case opts.OnResponse != nil:
-		feature = "the onResponse hook"
-	case opts.OnProviderStreamEvent != nil:
-		feature = "the onProviderStreamEvent hook"
-	default:
-		return nil
+// apiKey is the bearer token to send, or "" for none: the resolved API key
+// unless it is the placeholder PiG wants for every provider, else the
+// provider-scoped OLLAMA_API_KEY.
+func apiKey(opts sdk.ProviderStreamOptions) string {
+	if key, _ := opts.Values["apiKey"].(string); key != "" && key != localKey {
+		return key
 	}
-	return fmt.Errorf("@pi-in-go/pigpen-ollama-native does not support %s yet. The request was not sent.", feature)
+	return envValue(opts.Values, "OLLAMA_API_KEY")
 }
 
-func apiKey(opts sdk.ProviderStreamOptions) string {
-	key, _ := opts.Values["apiKey"].(string)
-	if key == localKey {
-		return ""
+// streamBase is the provider-scoped OLLAMA_HOST when the caller gave one, else
+// the process's.
+func (c *client) streamBase(opts sdk.ProviderStreamOptions) string {
+	if host := envValue(opts.Values, "OLLAMA_HOST"); host != "" {
+		return normalizeHost(host)
 	}
-	return key
+	return c.baseURL()
 }
 
 // reply is the assistant message under construction. Each event carries a
@@ -109,7 +104,8 @@ type chunk struct {
 	EvalCount       int    `json:"eval_count"`
 }
 
-func (c *client) run(ctx context.Context, out *sdk.ModelEventStream, model string, request map[string]any, key string) {
+func (c *client) run(ctx context.Context, out *sdk.ModelEventStream, modelInfo map[string]any, request any, opts sdk.ProviderStreamOptions) {
+	model, _ := modelInfo["id"].(string)
 	r := &reply{model: model, usage: zeroUsage(), stop: "stop", now: time.Now}
 	out.Push(map[string]any{"type": "start", "partial": r.snapshot()})
 
@@ -124,26 +120,48 @@ func (c *client) run(ctx context.Context, out *sdk.ModelEventStream, model strin
 		out.Push(map[string]any{"type": "error", "reason": reason, "error": msg})
 	}
 
-	base := c.baseURL()
-	resp, cancel, err := c.doChat(ctx, request, key)
-	if err != nil {
-		if isDialFailure(err) {
-			err = unreachable(base, err)
-		} else if ctx.Err() == nil {
-			err = fmt.Errorf("request to Ollama at %s failed: %w", base, rootCause(err))
+	// onPayload may replace the request; nil keeps it (Pi: undefined).
+	if opts.OnPayload != nil {
+		replaced, err := opts.OnPayload(request, modelInfo)
+		if err != nil {
+			fail(err)
+			return
 		}
+		if replaced != nil {
+			request = replaced
+		}
+	}
+	body, err := json.Marshal(request)
+	if err != nil {
+		fail(fmt.Errorf("the request for Ollama cannot be encoded: %w", err))
+		return
+	}
+
+	base := c.streamBase(opts)
+	resp, cancel, note, err := c.send(ctx, base, body, opts)
+	if err != nil {
 		fail(err)
 		return
 	}
 	defer cancel()
 	defer resp.Body.Close()
+	if opts.OnResponse != nil {
+		headers := make(map[string]string, len(resp.Header))
+		for name, values := range resp.Header {
+			headers[strings.ToLower(name)] = strings.Join(values, ", ")
+		}
+		if err := opts.OnResponse(map[string]any{"status": resp.StatusCode, "headers": headers}, modelInfo); err != nil {
+			fail(err)
+			return
+		}
+	}
 	if resp.StatusCode != http.StatusOK {
 		text := apiError(resp)
 		if resp.StatusCode == http.StatusNotFound && strings.Contains(strings.ToLower(text), "not found") {
 			fail(fmt.Errorf("Ollama has no model %q (%s). Install it with: ollama pull %s", model, text, model))
 			return
 		}
-		fail(fmt.Errorf("Ollama at %s answered %d: %s", base, resp.StatusCode, text))
+		fail(fmt.Errorf("Ollama at %s answered %d: %s%s", base, resp.StatusCode, text, note))
 		return
 	}
 
@@ -184,6 +202,17 @@ func (c *client) run(ctx context.Context, out *sdk.ModelEventStream, model strin
 			if err := json.Unmarshal(line, &ch); err != nil {
 				fail(fmt.Errorf("Ollama sent a line that is not JSON: %.80q", line))
 				return
+			}
+			if opts.OnProviderStreamEvent != nil {
+				var event map[string]any
+				if err := json.Unmarshal(line, &event); err != nil {
+					fail(fmt.Errorf("Ollama sent a line that is not a JSON object: %.80q", line))
+					return
+				}
+				if err := opts.OnProviderStreamEvent(event, modelInfo); err != nil {
+					fail(err)
+					return
+				}
 			}
 			if ch.Error != "" {
 				fail(errors.New(ch.Error))
@@ -236,26 +265,119 @@ func (c *client) run(ctx context.Context, out *sdk.ModelEventStream, model strin
 			return
 		}
 	}
+
 }
 
-func (c *client) doChat(ctx context.Context, request map[string]any, key string) (*http.Response, context.CancelFunc, error) {
-	body, err := json.Marshal(request)
-	if err != nil {
-		return nil, nil, err
+// send posts the request and returns the first response that is final: a
+// success, an error that retrying cannot fix, or the last one once the retries
+// asked for with maxRetries are used up. Retried are connection failures,
+// timeouts and the statuses Pi's provider SDKs retry (408, 409, 429, 5xx),
+// waiting as the server asks (Retry-After) or 0.5 s doubling to 8 s, and
+// failing at once, with the requested delay in the message, when that wait is
+// more than maxRetryDelayMs (default 60 s, 0 for no cap). timeoutMs bounds the
+// wait for the response headers of each attempt, as the SDKs' request timeout
+// does; the body then streams for as long as it takes.
+func (c *client) send(ctx context.Context, base string, body []byte, opts sdk.ProviderStreamOptions) (resp *http.Response, cancel context.CancelFunc, note string, err error) {
+	retries := 0
+	if n, ok := number(opts.Values["maxRetries"]); ok && n > 0 {
+		retries = int(n)
 	}
+	maxDelay := 60 * time.Second
+	if n, ok := number(opts.Values["maxRetryDelayMs"]); ok && n >= 0 {
+		maxDelay = time.Duration(n) * time.Millisecond
+	}
+	for attempt := 0; ; attempt++ {
+		resp, cancel, err = c.doChat(ctx, base, body, opts)
+		var wait time.Duration
+		switch {
+		case err != nil:
+			if ctx.Err() != nil || attempt >= retries {
+				return nil, nil, "", err
+			}
+			wait = backoff(attempt)
+		case retryable(resp.StatusCode) && attempt < retries:
+			wait = retryAfter(resp.Header, time.Now())
+			if wait < 0 {
+				wait = backoff(attempt)
+			}
+			if maxDelay > 0 && wait > maxDelay {
+				// Fail now and let the caller's own retry logic decide, as Pi does.
+				note = fmt.Sprintf(" (Ollama asked to retry in %ds, more than maxRetryDelayMs %d)", int(wait.Seconds()), maxDelay.Milliseconds())
+				return resp, cancel, note, nil
+			}
+			resp.Body.Close()
+			cancel()
+		default:
+			return resp, cancel, note, nil
+		}
+		timer := time.NewTimer(wait)
+		select {
+		case <-timer.C:
+		case <-ctx.Done():
+			timer.Stop()
+			return nil, nil, "", ctx.Err()
+		}
+	}
+}
+
+func retryable(status int) bool {
+	return status == http.StatusRequestTimeout || status == http.StatusConflict || status == http.StatusTooManyRequests || status >= 500
+}
+
+func backoff(attempt int) time.Duration {
+	d := 500 * time.Millisecond << min(attempt, 4)
+	return min(d, 8*time.Second)
+}
+
+// retryAfter reads Retry-After (seconds or an HTTP date) or the millisecond
+// form retry-after-ms; -1 means the server did not say.
+func retryAfter(h http.Header, now time.Time) time.Duration {
+	if ms, err := strconv.ParseFloat(h.Get("Retry-After-Ms"), 64); err == nil && ms >= 0 {
+		return time.Duration(ms * float64(time.Millisecond))
+	}
+	v := strings.TrimSpace(h.Get("Retry-After"))
+	if secs, err := strconv.ParseFloat(v, 64); err == nil && secs >= 0 {
+		return time.Duration(secs * float64(time.Second))
+	}
+	if t, err := http.ParseTime(v); err == nil {
+		return max(t.Sub(now), 0)
+	}
+	return -1
+}
+
+func (c *client) doChat(ctx context.Context, base string, body []byte, opts sdk.ProviderStreamOptions) (*http.Response, context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(ctx)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL()+"/api/chat", strings.NewReader(string(body)))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, base+"/api/chat", bytes.NewReader(body))
 	if err != nil {
 		cancel()
 		return nil, nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if key != "" {
+	if key := apiKey(opts); key != "" {
 		req.Header.Set("Authorization", "Bearer "+key)
 	}
+	applyHeaders(req.Header, opts.Values)
+
+	var timedOut atomic.Bool
+	var timer *time.Timer
+	timeout, hasTimeout := number(opts.Values["timeoutMs"])
+	if hasTimeout && timeout > 0 {
+		timer = time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() { timedOut.Store(true); cancel() })
+	}
 	resp, err := c.http.Do(req)
+	if timer != nil {
+		timer.Stop()
+	}
 	if err != nil {
 		cancel()
+		switch {
+		case timedOut.Load():
+			return nil, nil, fmt.Errorf("request to Ollama at %s timed out after %d ms", base, int(timeout))
+		case isDialFailure(err):
+			return nil, nil, unreachable(base, err)
+		case ctx.Err() == nil:
+			return nil, nil, fmt.Errorf("request to Ollama at %s failed: %w", base, rootCause(err))
+		}
 		return nil, nil, err
 	}
 	return resp, cancel, nil

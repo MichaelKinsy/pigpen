@@ -120,21 +120,17 @@ func chatRequest(model, transcript map[string]any, opts sdk.ProviderStreamOption
 		req["tools"] = offered
 	}
 
-	options := map[string]any{}
-	if v, ok := opts.Values["temperature"].(float64); ok {
-		options["temperature"] = v
+	if offer := toolChoice(opts) != "none"; !offer {
+		delete(req, "tools")
 	}
-	if v, ok := opts.Values["maxTokens"].(float64); ok && v > 0 {
-		options["num_predict"] = int(v)
-	}
-	if len(options) > 0 {
+	if options := chatOptions(opts.Values); len(options) > 0 {
 		req["options"] = options
 	}
 	// Ollama refuses `think` for a model without the capability, so it is sent
 	// only to models the catalog marked as reasoning, and only when asked for.
 	if reasoning, _ := model["reasoning"].(bool); reasoning {
-		if on, ok := opts.Values["thinkingEnabled"].(bool); ok {
-			req["think"] = on
+		if think, ok := thinkParam(model, opts.Values); ok {
+			req["think"] = think
 		}
 	}
 	return req
@@ -182,7 +178,3 @@ func textAndImages(content any) (string, []string) {
 	}
 	return strings.Join(text, "\n"), images
 }
-
-// optionDisposition says what the provider does with each key the host puts
-// in ProviderStreamOptions.Values.
-var optionDisposition = map[string]string{}
