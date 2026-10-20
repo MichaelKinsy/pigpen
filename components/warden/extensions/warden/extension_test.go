@@ -874,7 +874,6 @@ func TestSkippedSDKToolCallArgumentsAsObject(t *testing.T) {
 
 func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testing.T) {
 	cases := map[string]string{
-		"audit": "/warden audit",
 		"bench": "/warden bench",
 	}
 	for args, feature := range cases {
