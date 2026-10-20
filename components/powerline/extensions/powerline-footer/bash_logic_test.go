@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -30,6 +31,12 @@ func init() {
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "branch":
+			if n, err := strconv.Atoi(os.Getenv("PL_BASH_FAKE_GIT_BRANCHES")); err == nil {
+				for i := 0; i < n; i++ {
+					_, _ = os.Stdout.WriteString("many-" + strconv.Itoa(1000+i) + "\n")
+				}
+				os.Exit(0)
+			}
 			_, _ = os.Stdout.WriteString("main\n  feature\n\nfeature-two\n")
 		case "tag":
 			_, _ = os.Stdout.WriteString("v1\nfeature\n")
@@ -89,6 +96,9 @@ func TestBashProjectHistory(t *testing.T) {
 
 	for i := 0; i < 600; i++ {
 		appendProjectHistory(cwd, "cmd "+bashItoa(i), cwd)
+		if want := min(i+3, 500); len(readProjectHistory(cwd)) != want { // two commands were there before the loop, "cmd 0" makes three
+			t.Fatalf("after %d more appends: %d entries, want %d", i+1, len(readProjectHistory(cwd)), want)
+		}
 	}
 	eq(t, len(readProjectHistory(cwd)), 500, "history is capped at 500")
 	eq(t, readProjectHistory(cwd)[0].Command, "cmd 599", "newest of the cap")
@@ -216,6 +226,7 @@ func TestBashTranscriptStore(t *testing.T) {
 	eq(t, store.getSnapshot().Commands[0].Output[3], "", "a chunk of only a carriage return is one empty line")
 
 	// A snapshot is a copy.
+	snap = store.getSnapshot()
 	snap.Commands[0].Output[0] = "changed"
 	eq(t, store.getSnapshot().Commands[0].Output[0], "h\u00e9", "snapshot output copy")
 
@@ -261,7 +272,7 @@ func TestBashCompareLocale(t *testing.T) {
 	}{
 		{"a", "A", -1}, {"A", "b", -1}, {"B", "a", 1}, {"a", "a", 0}, {"a", "ab", -1}, {"_", "a", -1}, {"1", "a", -1},
 		{"a-b", "a b", 1}, {"My Folder/", "dev/", 1}, {"dev/", "Dev/", -1}, {"z", "\u00e9", 1},
-		{"\u00e9", "f", -1}, {"e", "\u00e9", -1}, {"\u00e9", "E", 1},
+		{"\u00e9", "f", -1}, {"e", "\u00e9", -1}, {"\u00e9", "E", 1}, {"\u00e9", "\u00c9", -1}, {"\u00c9", "\u00e9", 1},
 	}
 	for _, c := range cases {
 		if got := compareLocale(c.a, c.b); got != c.want {
@@ -387,9 +398,18 @@ func TestBashGitCompletions(t *testing.T) {
 	cancel()
 	eq(t, (&bashCompletionEngine{}).getGhostSuggestion(ctx, "git checkout fe", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "cancelled")
 
+	// A ref beats a path of the same prefix (git 50, file 40, directory 44).
+	bashMustMkdir(t, filepath.Join(cwd, "fe-dir"))
+	bashWantGhost(t, bashGhost(t, "git checkout fe", cwd, "/bin/zsh"), "git checkout feature", "git")
+
+	// At most 100 refs are offered.
+	setenv(t, "PL_BASH_FAKE_GIT_BRANCHES", s("150"))
+	tc := getTokenContext("git checkout many", len("git checkout many"))
+	eq(t, len(getGitSuggestions(context.Background(), tc, cwd)), 100, "ref cap")
+
 	// Not a git repository state: no git at all.
 	setenv(t, "PATH", s(t.TempDir()))
-	eq(t, bashGhost(t, "git checkout fe", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "git missing")
+	bashWantGhost(t, bashGhost(t, "git checkout fe", cwd, "/bin/zsh"), "git checkout fe-dir/", "path") // only the directory is left
 }
 
 func TestBashGhostEdgeCases(t *testing.T) {
@@ -403,6 +423,10 @@ func TestBashGhostEdgeCases(t *testing.T) {
 	// A path candidate equal to the typed text is no ghost.
 	bashMustMkdir(t, filepath.Join(cwd, "dev"))
 	eq(t, bashGhost(t, "cd dev/", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "nothing left to complete")
+	if err := os.WriteFile(filepath.Join(cwd, "x.txt"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	eq(t, bashGhost(t, "cat x.txt", cwd, "/bin/zsh"), (*ghostSuggestion)(nil), "a candidate equal to the typed word is no ghost")
 	// Command position falls back to the curated list only for the stems.
 	bashWantGhost(t, bashGhost(t, "cd", cwd, "/bin/zsh"), "cd ..", "path")
 	bashWantGhost(t, bashGhost(t, "  gi", cwd, "/bin/zsh"), "git status", "git")
@@ -420,6 +444,7 @@ func TestBashOneOffContextShouldTrigger(t *testing.T) {
 		{[]string{"!!git"}, 0, 1, false, "between the bangs"},
 		{[]string{"!!git"}, 0, 2, true, "behind a double bang"},
 		{[]string{"hello", "!git"}, 1, 4, false, "second line"},
+		{[]string{"!git", "x"}, 1, 1, false, "second line below a bang line"},
 		{[]string{"git"}, 0, 3, false, "no bang"},
 		{[]string{}, 0, 0, false, "no lines"},
 	} {
@@ -439,12 +464,27 @@ func TestBashApplyExtendedCompletion(t *testing.T) {
 	// The range is clamped to the line.
 	eq(t, applyExtendedCompletion([]string{"ab"}, 0, extendedCompletionItem{Replacement: "X", StartCol: 9, EndCol: 12}),
 		sdk.AutocompleteCompletion{Lines: []string{"abX"}, CursorLine: 0, CursorCol: 3}, "clamped")
+	eq(t, applyExtendedCompletion([]string{"abcdef"}, 0, extendedCompletionItem{Replacement: "X", StartCol: 4, EndCol: 2}),
+		sdk.AutocompleteCompletion{Lines: []string{"abcdXef"}, CursorLine: 0, CursorCol: 5}, "an end before the start inserts")
+	eq(t, applyExtendedCompletion([]string{"ab"}, 0, extendedCompletionItem{Replacement: "\u00e9\U0001F642", StartCol: 2, EndCol: 2}),
+		sdk.AutocompleteCompletion{Lines: []string{"ab\u00e9\U0001F642"}, CursorLine: 0, CursorCol: 5}, "the cursor counts UTF-16 units of the replacement")
 	eq(t, applyExtendedCompletion([]string{"ab"}, 0, extendedCompletionItem{Replacement: "X", StartCol: -5, EndCol: -1}),
 		sdk.AutocompleteCompletion{Lines: []string{"Xab"}, CursorLine: 0, CursorCol: 1}, "negative")
 	lines := []string{"one", "two"}
 	out := applyExtendedCompletion(lines, 1, extendedCompletionItem{Replacement: "2", StartCol: 2, EndCol: 3})
 	eq(t, lines, []string{"one", "two"}, "the input is not modified")
 	eq(t, out.Lines, []string{"one", "tw2"}, "other lines kept")
+
+	for name, p := range map[string]*sdk.AutocompleteProvider{"bash": newBashAutocompleteProvider()} {
+		got, err := p.ShouldTriggerFileCompletion(sdk.Context{}, []string{"cd d"}, 0, 4)
+		if err != nil || got {
+			t.Errorf("%s provider triggers file completion: %v, %v", name, got, err)
+		}
+	}
+	modeAware := newModeAwareAutocompleteProvider(nil, newBashAutocompleteProvider(), newOneOffBashAutocompleteProvider(), func() bool { return true })
+	if got, err := modeAware.ShouldTriggerFileCompletion(sdk.Context{}, []string{"cd d"}, 0, 4); err != nil || got {
+		t.Errorf("in bash mode the bash provider decides: %v, %v", got, err)
+	}
 
 	// Through the SDK shape an item cannot carry a range: both providers reject it as upstream does a foreign item.
 	_, err := newBashAutocompleteProvider().ApplyCompletion(sdk.Context{}, []string{"x"}, 0, 1, sdk.AutocompleteItem{Value: "v"}, "")

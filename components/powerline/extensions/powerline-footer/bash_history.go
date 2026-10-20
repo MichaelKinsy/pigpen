@@ -53,13 +53,13 @@ var (
 func bashHistoryDir() string { return getAgentPath("powerline-footer", "bash-history") }
 
 var (
-	bashProjectKeyEdges = regexp.MustCompile(`^[/\\]+|[/\\]+$`)
-	bashProjectKeySeps  = regexp.MustCompile(`[\\/]+`)
+	bashProjectKeyEdges = sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile(`^[/\\]+|[/\\]+$`) })
+	bashProjectKeySeps  = sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile(`[\\/]+`) })
 )
 
 // bashProjectKey upstream: history.ts:38.
 func bashProjectKey(cwd string) string {
-	key := bashProjectKeySeps.ReplaceAllString(bashProjectKeyEdges.ReplaceAllString(cwd, ""), "-")
+	key := bashProjectKeySeps().ReplaceAllString(bashProjectKeyEdges().ReplaceAllString(cwd, ""), "-")
 	if key == "" {
 		return "root"
 	}
@@ -231,12 +231,12 @@ const (
 	fishCommandPattern = `(?:\A|[` + jsLineTerminators + `])[` + jsWhitespaceClass + `]*-[` + jsWhitespaceClass + `]*cmd:[` + jsWhitespaceClass + `]*([^` + jsLineTerminators + `]+)`
 )
 
-var fishCommandRe = regexp.MustCompile(fishCommandPattern)
+var fishCommandRe = sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile(fishCommandPattern) })
 
 // parseFishHistory is /^\s*-\s*cmd:\s*(.+)$/gm over the whole file. upstream: history.ts:141.
 func parseFishHistory(raw string) []string {
 	var commands []string
-	for _, m := range fishCommandRe.FindAllStringSubmatch(raw, -1) {
+	for _, m := range fishCommandRe().FindAllStringSubmatch(raw, -1) {
 		if command := jsTrim(m[1]); command != "" {
 			commands = append(commands, command)
 		}

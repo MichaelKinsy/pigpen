@@ -372,12 +372,6 @@
   "replace": "[]string{\"branch\", \"--list\"}"
  },
  {
-  "name": "git-hidden-window-dropped",
-  "file": "bash_completion.go",
-  "find": "hideConsoleWindow(cmd)\n\tout, err",
-  "replace": "out, err"
- },
- {
   "name": "git-ref-cap",
   "file": "bash_completion.go",
   "find": "if len(items) == 100 {\n\t\t\tbreak\n\t\t}\n\t\titems = append(items, extendedCompletionItem{Value: ref",
@@ -417,7 +411,7 @@
   "name": "session-interrupt-while-idle",
   "file": "bash_shell_session.go",
   "find": "if cmd == nil || !running {",
-  "replace": "if cmd == nil {"
+  "replace": "if cmd == nil || (!running && false) {"
  },
  {
   "name": "session-dispose-leaves-process",
@@ -537,7 +531,7 @@
   "name": "mode-reenable-not-skipped",
   "file": "bash_mode.go",
   "find": "if value == current {\n\t\treturn\n\t}",
-  "replace": "if false {\n\t\treturn\n\t}"
+  "replace": "if value == current && false {\n\t\treturn\n\t}"
  },
  {
   "name": "mode-leave-while-running",
@@ -573,19 +567,19 @@
   "name": "mode-start-failure-keeps-session",
   "file": "bash_mode.go",
   "find": "b.session, b.active = nil, false\n\t\t\tb.mu.Unlock()\n\t\t\tif old != nil {\n\t\t\t\told.dispose()\n\t\t\t}\n\t\t\tb.env.RequestStatusRender()",
-  "replace": "b.active = false\n\t\t\tb.mu.Unlock()\n\t\t\tb.env.RequestStatusRender()"
+  "replace": "b.active = false\n\t\t\tb.mu.Unlock()\n\t\t\t_ = old\n\t\t\tb.env.RequestStatusRender()"
  },
  {
   "name": "mode-reset-keeps-transcript",
   "file": "bash_mode.go",
   "find": "transcript.clear()\n\tif active {",
-  "replace": "if active {"
+  "replace": "_ = transcript\n\tif active {"
  },
  {
   "name": "mode-reset-no-restart",
   "file": "bash_mode.go",
   "find": "if active {\n\t\tif _, err := b.ensureShellSession(ctx)",
-  "replace": "if false {\n\t\tif _, err := b.ensureShellSession(ctx)"
+  "replace": "if active && false {\n\t\tif _, err := b.ensureShellSession(ctx)"
  },
  {
   "name": "mode-reset-text",
@@ -675,7 +669,7 @@
   "name": "transcript-hidden-outside-mode",
   "file": "bash_mode.go",
   "find": "if !active {\n\t\treturn nil, nil\n\t}",
-  "replace": "if false {\n\t\treturn nil, nil\n\t}"
+  "replace": "if !active && false {\n\t\treturn nil, nil\n\t}"
  },
  {
   "name": "transcript-five-commands",
@@ -744,12 +738,6 @@
   "replace": "code < 0x7f"
  },
  {
-  "name": "editor-printable-surrogates",
-  "file": "bash_editor_logic.go",
-  "find": "(code < 0xd800 || code > 0xdfff)",
-  "replace": "true"
- },
- {
   "name": "editor-undo-encoding",
   "file": "bash_editor_logic.go",
   "find": "\"\\x1b[122;9u\", \"\\x1b[122;9:1u\", \"\\x1b[122;9:2u\", \"\\x1b[27;9;122~\"",
@@ -771,7 +759,7 @@
   "name": "editor-file-host",
   "file": "bash_editor_logic.go",
   "find": "if host != \"\" && !strings.EqualFold(host, \"localhost\") {",
-  "replace": "if false {"
+  "replace": "if host != \"\" && !strings.EqualFold(host, \"localhost\") && false {"
  },
  {
   "name": "editor-file-encoded-slash",
@@ -783,7 +771,7 @@
   "name": "editor-file-invalid-utf8",
   "file": "bash_editor_logic.go",
   "find": "if err != nil || !utf8.ValidString(decoded) {",
-  "replace": "if err != nil {"
+  "replace": "if err != nil || (!utf8.ValidString(decoded) && false) {"
  },
  {
   "name": "editor-file-dot-segments",
@@ -796,12 +784,6 @@
   "file": "bash_editor_logic.go",
   "find": "if field != \"\" && !strings.HasPrefix(field, \"#\") {",
   "replace": "if field != \"\" {"
- },
- {
-  "name": "editor-uri-mixed-list",
-  "file": "bash_editor_logic.go",
-  "find": "if !strings.HasPrefix(entry, \"file://\") {\n\t\t\treturn \"\", false",
-  "replace": "if false {\n\t\t\treturn \"\", false"
  },
  {
   "name": "editor-drop-single-char",
@@ -934,18 +916,6 @@
   "file": "bash_editor_logic.go",
   "find": "if !isPlainASCIIAt(units, cursorCol-2) || !isPlainASCIIAt(units, cursorCol-1) {",
   "replace": "if !isPlainASCIIAt(units, cursorCol-1) {"
- },
- {
-  "name": "editor-fast-delete-end",
-  "file": "bash_editor_logic.go",
-  "find": "if cursorCol >= len(units) || len(units) < fastASCIILineColumnThreshold {",
-  "replace": "if len(units) < fastASCIILineColumnThreshold {"
- },
- {
-  "name": "editor-fast-move-edge",
-  "file": "bash_editor_logic.go",
-  "find": "if cursorCol <= 0 || !isPlainASCIICursorMove(units, cursorCol-1) {",
-  "replace": "if !isPlainASCIICursorMove(units, cursorCol-1) {"
  },
  {
   "name": "editor-fast-neighbour-edge",

@@ -30,14 +30,14 @@ const (
 )
 
 var (
-	ansiCSI     = regexp.MustCompile("\x1b\\[[0-9;?]*[ -/]*[@-~]")
-	ansiOSC     = regexp.MustCompile("\x1b\\][^\x07]*(?:\x07|\x1b\\\\)")
-	controlByte = regexp.MustCompile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+	ansiCSI     = sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile("\x1b\\[[0-9;?]*[ -/]*[@-~]") })
+	ansiOSC     = sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile("\x1b\\][^\x07]*(?:\x07|\x1b\\\\)") })
+	controlByte = sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]") })
 )
 
 // stripShellAnsi upstream: shell-session.ts:12: CSI and OSC sequences and C0 controls (except tab and line feed) removed.
 func stripShellAnsi(value string) string {
-	return controlByte.ReplaceAllString(ansiOSC.ReplaceAllString(ansiCSI.ReplaceAllString(value, ""), ""), "")
+	return controlByte().ReplaceAllString(ansiOSC().ReplaceAllString(ansiCSI().ReplaceAllString(value, ""), ""), "")
 }
 
 // quoteShellArg upstream: shell-session.ts:19.

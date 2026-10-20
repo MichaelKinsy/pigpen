@@ -254,6 +254,25 @@ func TestGhostUpdaterCoalescesUpdates(t *testing.T) {
 	eq(t, slow.current().Value, "fresh", "the newer result wins")
 	bashWaitFor(t, cancelled.Load)
 
+	// clear cancels the context of an update that is in flight.
+	inflight := make(chan context.Context, 1)
+	hold := make(chan struct{})
+	clearing := newGhostUpdater(func(ctx context.Context, text string) (*ghostSuggestion, error) {
+		inflight <- ctx
+		<-hold
+		return nil, nil
+	}, nil)
+	clearing.debounce = time.Millisecond
+	clearing.schedule(true, "x")
+	pending := <-inflight
+	clearing.clear()
+	select {
+	case <-pending.Done():
+	case <-time.After(2 * time.Second):
+		t.Error("clear did not cancel the update in flight")
+	}
+	close(hold)
+
 	// A resolver error is reported and leaves the ghost alone.
 	var reported atomic.Int32
 	old := bashDebug
@@ -285,10 +304,11 @@ func TestFastASCIIEdits(t *testing.T) {
 		line string
 		col  int
 	}{
-		"short line":     {strings.Repeat("x", 1199), 1199},
-		"cursor inside":  {long, 4000},
-		"wide neighbour": {long[:4998] + "x\u6f22", 4999},
-		"control":        {long[:4998] + "x\t", 5000},
+		"short line":            {strings.Repeat("x", 1199), 1199},
+		"cursor inside":         {long, 4000},
+		"wide neighbour":        {long[:4998] + "\u6f22x", 5000},
+		"cursor before the end": {long[:4998] + "x\u6f22", 4999},
+		"control":               {long[:4998] + "x\t", 5000},
 	} {
 		if _, ok := fastASCIIBackspace(c.line, c.col); ok {
 			t.Errorf("backspace fast path taken: %s", name)
@@ -402,6 +422,10 @@ func TestBashModeToggle(t *testing.T) {
 	}
 	f.mode.handleBashModeCommand(ctx, "toggle")
 	eq(t, f.mode.isActive(), true, "toggle on again, reusing the shell")
+	f.mode.handleBashModeCommand(ctx, "  ")
+	eq(t, f.mode.isActive(), false, "a blank argument toggles: off")
+	f.mode.handleBashModeCommand(ctx, "")
+	eq(t, f.mode.isActive(), true, "and on")
 }
 
 func TestBashRunShellCommandWhileRunning(t *testing.T) {
@@ -448,6 +472,22 @@ func TestBashModeHistoryRecording(t *testing.T) {
 	g = f.mode.resolveGhostSuggestion(ctx, "tr")
 	eq(t, g, &ghostSuggestion{Value: "true", Source: bashSourceProjectHistory}, "plain ghost")
 	eq(t, f.mode.resolveGhostSuggestion(ctx, "!zzz"), (*ghostSuggestion)(nil), "no ghost, no bang")
+}
+
+func TestBashModeHistoryEntriesOrder(t *testing.T) {
+	cwd, histfile := bashTestEnv(t, nil)
+	appendProjectHistory(cwd, "make test", cwd)
+	appendProjectHistory(cwd, "make build", cwd)
+	if err := os.WriteFile(histfile, []byte(": 1:0;make lint\n: 2:0;make build\n: 3:0;ls\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mode := newBashMode(bashModeEnv{
+		Cwd: func() string { return cwd }, ShellPath: func() string { return "/bin/zsh" },
+		RequestStatusRender: func() {}, Notify: func(string, string) {},
+	}, bashTranscriptLimits{MaxLines: 10, MaxBytes: 1000})
+	eq(t, mode.shellHistoryEntries("make"), []string{"make build", "make test", "make lint"},
+		"the project's commands first (newest first), then global ones, each command once")
+	eq(t, mode.shellHistoryEntries(""), []string{"make build", "make test", "ls", "make lint"}, "an empty prefix matches everything")
 }
 
 func TestBashResetCommand(t *testing.T) {
@@ -586,7 +626,7 @@ func TestRenderBashTranscriptLines(t *testing.T) {
 	transcript.startCommand("4", strings.Repeat("c", 100), "/w")
 	transcript.appendOutput("4", strings.Repeat("o", 100))
 	lines, _ = mode.renderBashTranscriptLines(20, th)
-	eq(t, visibleWidth(strings.NewReplacer("<accent>", "", "<dim>", "", "</>", "").Replace(lines[0])) <= 20+len(" (running)")+0, true, "command cut")
+	eq(t, lines[0], " <accent>$</> "+truncateToWidth(strings.Repeat("c", 100), 12, "\u2026")+" <dim>(</><accent>running</><dim>)</>", "command cut to width-8")
 	eq(t, lines[1], "   "+truncateToWidth(strings.Repeat("o", 100), 17, "\u2026"), "output cut to width-3")
 
 	// More than four commands: only the last four, and a notice for truncated ones.
@@ -601,6 +641,7 @@ func TestRenderBashTranscriptLines(t *testing.T) {
 	}
 	lines, _ = small.renderBashTranscriptLines(40, th)
 	eq(t, lines[0], " <dim>\u2026 4 earlier commands truncated</>", "truncation notice")
+	eq(t, len(lines), 1+2*2, "the notice and the two commands that are kept (two lines each)")
 	one := newBashMode(mode.env, bashTranscriptLimits{MaxLines: 1, MaxBytes: 1 << 20})
 	one.active = true
 	one.transcript.startCommand("a", "a", "/w")
@@ -634,9 +675,7 @@ func TestShellModeSegment(t *testing.T) {
 		t.Errorf("content %q", got.Content)
 	}
 	ctx.Shell = shellSegmentData{Active: true, Running: true}
-	if got := shellModeSegment(ctx); !strings.Contains(got.Content, "shell"+sepDot+"run") || strings.Contains(got.Content, "proj") {
-		t.Errorf("no shell yet: %q", got.Content)
-	}
+	eq(t, shellModeSegment(ctx).Content, "<accent>shell"+sepDot+"run</>", "no shell yet")
 	ctx.Shell = shellSegmentData{Active: true, Name: "fish", Cwd: "/"}
 	eq(t, shellModeSegment(ctx).Content, "<accent>fish"+sepDot+"idle</>", "the root has no base name")
 

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 )
@@ -136,20 +135,9 @@ func TestBashShellSessionEnvironmentAndInterruptWhileIdle(t *testing.T) {
 	out := store.getSnapshot().Commands[0].Output
 	eq(t, out, []string{"true/true"}, "environment")
 
-	// dispose kills the shell process.
-	session.mu.Lock()
-	pid := session.cmd.Process.Pid
-	session.mu.Unlock()
+	// dispose kills the shell: the close handler (process exited, pipes closed) clears the ready flag.
 	session.dispose()
-	deadline := time.Now().Add(3 * time.Second)
-	for syscall.Kill(pid, 0) == nil && time.Now().Before(deadline) {
-		time.Sleep(20 * time.Millisecond)
-	}
-	if syscall.Kill(pid, 0) == nil {
-		// a zombie answers signal 0 until it is reaped: wait for the close handler
-		bashWaitFor(t, func() bool { return !session.State().Ready })
-	}
-	eq(t, session.State().Ready, false, "not ready after dispose")
+	bashWaitFor(t, func() bool { return !session.State().Ready })
 }
 
 func TestBashShellSessionIDsAreDistinct(t *testing.T) {
@@ -174,6 +162,25 @@ func TestBashShellSessionIDsAreDistinct(t *testing.T) {
 	eq(t, []string{snap.Commands[0].ID, snap.Commands[1].ID}, []string{"cmd-1", "cmd-2"}, "command ids")
 	eq(t, snap.Commands[0].Output, []string{"one"}, "first output")
 	eq(t, snap.Commands[1].Output, []string{"two"}, "second output")
+}
+
+func TestBashShellSessionMarkerEdgeCases(t *testing.T) {
+	store := newBashTranscriptStore(bashTranscriptLimits{MaxLines: 100, MaxBytes: 1 << 20})
+	session, err := newManagedShellSession("/bin/bash", "/start", store, func() {}, func(string, string) {})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer session.dispose()
+	session.handleChunk("__PI_READY__\n")
+	eq(t, session.State().Ready, false, "a ready marker needs its colon")
+	session.handleChunk("__PI_READY__:/here\n")
+	eq(t, session.State().Ready, true, "ready")
+
+	store.startCommand("cmd-1", "echo", "/here")
+	session.handleChunk("__PI_CMD_START__:cmd-1:/here\nprogress\rdone\n")
+	eq(t, store.getSnapshot().Commands[0].Output, []string{"progressdone"}, "carriage returns are removed, not turned into breaks")
+	session.handleChunk("__PI_CMD_START__::/here\nlost\n")
+	eq(t, store.getSnapshot().Commands[0].Output, []string{"progressdone"}, "after a start marker with an empty id there is no current command")
 }
 
 func TestBashShellSessionReadyLine(t *testing.T) {

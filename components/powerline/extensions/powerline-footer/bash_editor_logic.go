@@ -139,8 +139,8 @@ func decodeFileUriList(text string) (string, bool) {
 }
 
 var (
-	droppedControl = regexp.MustCompile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-	droppedPathRe  = regexp.MustCompile(`^(?:/|~/|\.\.?/)`)
+	droppedControl = sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]") })
+	droppedPathRe  = sync.OnceValue(func() *regexp.Regexp { return regexp.MustCompile(`^(?:/|~/|\.\.?/)`) })
 )
 
 // droppedPathTextFromInput upstream: editor.ts:90: the path text a terminal drop or paste stands for: file:// URIs decoded, or a
@@ -154,10 +154,10 @@ func droppedPathTextFromInput(data string) (string, bool) {
 		return list, true
 	}
 	trimmed := strings.Trim(text, "\r\n")
-	if utf16Len(trimmed) <= 1 || droppedControl.MatchString(trimmed) {
+	if utf16Len(trimmed) <= 1 || droppedControl().MatchString(trimmed) {
 		return "", false
 	}
-	if droppedPathRe.MatchString(trimmed) && !strings.ContainsAny(trimmed, "\r\n") {
+	if droppedPathRe().MatchString(trimmed) && !strings.ContainsAny(trimmed, "\r\n") {
 		return trimmed, true
 	}
 	return "", false

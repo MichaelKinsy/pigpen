@@ -159,22 +159,22 @@ func compareLocale(a, b string) int {
 // cldrAsciiSymbolOrder is the root collation order of the ASCII characters that are not letters or digits.
 const cldrAsciiSymbolOrder = " _-,;:!?.'\"()[]{}@*/\\&#%`^+<=>|~$"
 
-// latin1Base maps the Latin-1 letters to their base letter: "\u00c0" is "A" with a grave accent, and so on.
-var latin1Base = map[rune]rune{}
-
-func init() {
+// latin1Base maps the Latin-1 letters to their base letter: "\u00c0" is "A" with a grave accent, and so on. Built on first use.
+var latin1Base = sync.OnceValue(func() map[rune]rune {
+	m := map[rune]rune{}
 	for base, accented := range map[rune]string{
 		'a': "\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5", 'c': "\u00e7", 'e': "\u00e8\u00e9\u00ea\u00eb", 'i': "\u00ec\u00ed\u00ee\u00ef",
 		'n': "\u00f1", 'o': "\u00f2\u00f3\u00f4\u00f5\u00f6", 'u': "\u00f9\u00fa\u00fb\u00fc", 'y': "\u00fd\u00ff",
 	} {
 		for _, r := range accented {
-			latin1Base[r] = base
+			m[r] = base
 			if r != 0xff { // \u00ff has no Latin-1 capital
-				latin1Base[r-0x20] = base
+				m[r-0x20] = base
 			}
 		}
 	}
-}
+	return m
+})
 
 // collationKeys is the (primary, secondary, tertiary) weight of each rune.
 func collationKeys(s string) [][3]int {
@@ -187,7 +187,7 @@ func collationKeys(s string) [][3]int {
 
 func collationKey(r rune) [3]int {
 	upper := 0
-	if base, ok := latin1Base[r]; ok {
+	if base, ok := latin1Base()[r]; ok {
 		if r < 0xe0 {
 			upper = 1
 		}
@@ -288,10 +288,12 @@ func bashPathBase(token, cwd string) bashPathBaseResult {
 	return bashPathBaseResult{dir: resolvedDir, prefix: prefix, displayPrefix: displayPrefix}
 }
 
-var shellPathEscape = regexp.MustCompile("([\\\\" + jsWhitespaceClass + "\"'`$&|;<>()\\[\\]{}?!*])")
+var shellPathEscape = sync.OnceValue(func() *regexp.Regexp {
+	return regexp.MustCompile("([\\\\" + jsWhitespaceClass + "\"'`$&|;<>()\\[\\]{}?!*])")
+})
 
 func escapeShellPath(value string) string {
-	return shellPathEscape.ReplaceAllString(value, `\$1`)
+	return shellPathEscape().ReplaceAllString(value, `\$1`)
 }
 
 // getPathSuggestions lists the directory the token points into, at most 100 entries (directories get a trailing "/").
