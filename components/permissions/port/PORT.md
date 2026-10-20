@@ -432,11 +432,11 @@ code, then a differential against the original's own functions.
 | R9 | `tool-input/{tool-input-formatter-registry,tool-access-extractor-registry}.ts` | `toolinputformatterregistry.go`, `toolaccessextractorregistry.go` (replace the stand-ins in `fwd_stub_authority.go`) | 14 twins (the forwarding twins stay green) |
 | R10 | `exposure/{tool-registry,tool-surface-prompt,skill-prompt-sanitizer}.ts` (`tool-surface-baseline.ts` was ported with the first slice) | `toolregistry.go`, `toolsurfaceprompt.go`, `skillpromptsanitizer.go` | 73 twins; 1,062 registry cases, 500 surfaces, 720 skill-prompt cases in the corpus |
 
-How it is checked (STATUS at this commit: the probe, the cases and the Go test are written, but `testdata/presentation-oracle.json` is not recorded yet because the imladris lane lock was held by other jobs, so the differential, the mutation run, the race/vet run and the benchmarks have NOT been run; the counts below are the corpus sizes, not results):
+How it is checked (STATUS at this commit: the differential ran: 9,209 answers compared with the original's own, 0 differences. The mutation run, the race/vet/npm run and the Node-vs-Go benchmarks are queued on imladris and have NOT been run; the counts below are corpus sizes):
 
 - `port/record-presentation-probe.sh <installed oracle>` runs `port/probe/presentation-probe.test.ts` inside the original's package on
   `port/probe/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
-  `presentation_oracle_test.go` replays it and compares each answer as compact JSON. Every string is well-formed on both sides
+  `presentation_oracle_test.go` replays it and compares each answer as compact JSON. Two kinds of recorded answer are not compared byte for byte, on purpose: one function-valued MCP argument (`String(fn)` is source text; not reachable from a JSON tool input) and the home directory inside `~` skill locations (read on the host running the test). `gen-presentation-cases.py` no longer produces either, so the next recording needs neither exception; the committed oracle was recorded from the previous corpus. Every string is well-formed on both sides
   (the probe applies `toWellFormed()`; see "Differences" for why).
 - Mutations: `port/gen-mutations-presentation.py` writes `port/mutations-presentation.json` (392 mutations, one per behaviour of
   the files above); run `pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-presentation.json --jobs 4`.
