@@ -13,5 +13,6 @@ https://github.com/juicesharp/rpiv-mono, by **juicesharp** (MIT, Copyright (c) 2
 
 The Go code, the scenarios and the tests were written for this Package by Michael Kinsy. Wording, tool
 schema, prompt guidance and behavior follow the original. Modified paths: none of the original is
-modified; the port is a separate implementation. Not ported: the locales (see [port/PORT.md](port/PORT.md),
-E1: English only, approved by the owner).
+modified; the port is a separate implementation. The nine locale files in
+`extensions/rpiv-todo/locales` are copies of the original's `locales/` (MIT, juicesharp). Not ported: the live `/languages`
+switch and the `--locale` flag (see [port/PORT.md](port/PORT.md), E1).

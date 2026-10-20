@@ -35,8 +35,13 @@ every use: `maxWidgetLines` (default 12, at least 3), `collapseKey` (a key like 
   rows out again. Pi redraws the original's widget on every frame, so a change of the theme or of Pi's
   tool-output expansion (the expand key) shows in it at once; here it shows at the next refresh (the next
   `todo` call, turn or resize), because the SDK sends an extension neither change.
-- **No locales.** The original translates its text with `@juicesharp/rpiv-i18n` when that is installed.
-  Without it, and in this port, the text is English.
+- **Locales: installed-gated, no live switch.** Like the original, the port is English unless
+  `@juicesharp/rpiv-i18n` is installed; "installed" is read from Pi's settings (a `packages` or `extensions`
+  entry naming `rpiv-i18n` in the agent directory's `settings.json` or the project's `.pi/settings.json`). Then
+  the nine locale files of the original are used, the locale coming from `~/.config/rpiv-i18n/locale.json`
+  (under `$XDG_CONFIG_HOME` when set), then `LANG`, then `LC_ALL`, as the original's SDK resolves it. Two things
+  need in-process JavaScript state a Go process cannot reach and stay documented: the live `/languages` switch
+  and the `--locale` command-line flag (the host does not hand flags to an extension process).
 - **Parallel calls.** Calls to `todo` in one model turn are applied in the order the model wrote them and
   report their results in that order, as they do in Pi.
 

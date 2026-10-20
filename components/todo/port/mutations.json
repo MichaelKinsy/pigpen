@@ -724,5 +724,89 @@
   "file": "extension.go",
   "find": "e.OnEvent(sdk.EventSessionCompact, a.replayAndRefresh)",
   "replace": "_ = a.replayAndRefresh"
+ },
+ {
+  "name": "locale-install-not-recorded",
+  "file": "i18n.go",
+  "find": "i18nInstalled = installed",
+  "replace": "i18nInstalled = false"
+ },
+ {
+  "name": "locale-json-skipped",
+  "file": "i18n.go",
+  "find": "if data, err := os.ReadFile(filepath.Join(resolveConfigDir(), \"rpiv-i18n\", \"locale.json\")); err == nil {",
+  "replace": "if data, err := os.ReadFile(filepath.Join(resolveConfigDir(), \"rpiv-i18n\", \"locale.json\")); err != nil {"
+ },
+ {
+  "name": "locale-lang-skipped",
+  "file": "i18n.go",
+  "find": "if l := parseLangEnv(os.Getenv(\"LANG\")); l != \"\" {",
+  "replace": "if l := parseLangEnv(os.Getenv(\"LANG\")); l == \"\" {"
+ },
+ {
+  "name": "locale-lcall-skipped",
+  "file": "i18n.go",
+  "find": "return parseLangEnv(os.Getenv(\"LC_ALL\"))",
+  "replace": "return \"\""
+ },
+ {
+  "name": "locale-region-cut",
+  "file": "i18n.go",
+  "find": "lang := strings.SplitN(value, \"_\", 2)[0]",
+  "replace": "lang := strings.SplitN(value, \"-\", 2)[0]"
+ },
+ {
+  "name": "locale-no-english-fallback",
+  "file": "i18n.go",
+  "find": "if v := tables[defaultFallbackLocale][key]; v != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "locale-empty-value-wins",
+  "file": "i18n.go",
+  "find": "if v := tables[loc][key]; v != \"\" {",
+  "replace": "if v, ok := tables[loc][key]; ok {"
+ },
+ {
+  "name": "locale-file-not-loaded",
+  "file": "i18n.go",
+  "find": "localeFS.ReadFile(\"locales/\" + code + \".json\")",
+  "replace": "localeFS.ReadFile(\"locales/en.json\")"
+ },
+ {
+  "name": "settings-extensions-ignored",
+  "file": "i18n.go",
+  "find": "for _, key := range []string{\"packages\", \"extensions\"} {",
+  "replace": "for _, key := range []string{\"packages\"} {"
+ },
+ {
+  "name": "settings-object-source-ignored",
+  "file": "i18n.go",
+  "find": "source, _ = object[\"source\"].(string)",
+  "replace": "source = \"\""
+ },
+ {
+  "name": "settings-project-skipped",
+  "file": "i18n.go",
+  "find": "if cwd != \"\" {\n\t\tpaths = append",
+  "replace": "if false {\n\t\tpaths = append"
+ },
+ {
+  "name": "settings-wrong-name",
+  "file": "i18n.go",
+  "find": "const i18nPackageName = \"rpiv-i18n\"",
+  "replace": "const i18nPackageName = \"rpiv-i18\"+\"x\""
+ },
+ {
+  "name": "agent-dir-ignores-env",
+  "file": "i18n.go",
+  "find": "if dir := os.Getenv(\"PIG_CODING_AGENT_DIR\"); dir != \"\" {",
+  "replace": "if dir := os.Getenv(\"PIG_CODING_AGENT_DIR\"); dir == \"x\" {"
+ },
+ {
+  "name": "session-start-no-install-check",
+  "file": "extension.go",
+  "find": "\tsetI18nInstalled(ctx.Cwd())\n",
+  "replace": ""
  }
 ]

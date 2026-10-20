@@ -5,7 +5,7 @@
 | Original | `@juicesharp/rpiv-todo` 2.11.0, `packages/rpiv-todo` of https://github.com/juicesharp/rpiv-mono, commit `61904e69e1a50e12585bdf15f0310e633a62ba36`, MIT (juicesharp) |
 | Oracle | Pi 1.0.0, Node 24.19.0, with the unmodified package at `port/oracle` (dependency `@juicesharp/rpiv-config` 2.12.0 from npm; its `config.ts` is identical to the pinned commit's) |
 | Target | PiG 0.4.0+1.0.0 (build `76022638`), go1.27.1 |
-| Original's tests | 231 cases in `port/oracle/**/*.test.ts` (vitest), ported as twins: 209 exact, 22 named skips (below) |
+| Original's tests | 231 cases in `port/oracle/**/*.test.ts` (vitest), ported as twins: 211 exact, 20 named skips (below) |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
 ## Mapping
@@ -22,11 +22,11 @@
 | M8 | `config.ts` via `@juicesharp/rpiv-config` | `config.go` (XDG, legacy fallback, validation, read on every use) | `config_test.go` |
 | M9 | `index.ts` session hooks: `session_start`, `session_compact`, `session_tree` (replay + refresh), `session_shutdown` (dispose), `tool_execution_end`, `agent_start`; the stale-context handling of `sid(ctx)` | `extension.go` (`ctxSid`: asks the context before the session read, as Pi's `ctx.sessionManager` getter throws when stale) | `extension_test.go`, `stale_ctx_test.go` (fake host), `new-session-resets` |
 | M11 | `agent-loop.ts:619-647`: the calls of a parallel batch start in source order, the synchronous reducer commits in that order and the calls end in that order | `sequencer.go`, `extension.go` (`execute`, `onToolExecutionEnd`): a call waits for the end of the todo call ahead of it in the assistant message that is the session's leaf; arrival ticket when the leaf does not list the call | `TestParallelCallsCommitInSourceOrderWhicheverArrivesFirst` and the four cases beside it, `TestParallelCallsCommitInStartOrder`; every scenario with several calls in a turn |
-| M10 | Locales via `@juicesharp/rpiv-i18n` | **not ported** (exclusion E1, below) | 3 named skips |
+| M10 | Locales via `@juicesharp/rpiv-i18n` | `i18n.go` + embedded `locales/*.json`: English unless Pi's settings name rpiv-i18n, then locale.json / LANG / LC_ALL (live `/languages` and `--locale` not ported, E1 below) | `i18n_test.go`, `i18n_wiring_test.go`, 2 twins |
 
 Twins: `pigeq twins check --ledger port/upstream-tests.json --go extensions/rpiv-todo` lists all 231 upstream
-titles: 209 exact twins. The 22 skips, each with its reason in the ledger: 8 for the lazy overlay import and its
-jiti failure modes (Go has no lazy module graph), 1 for the npm `files` manifest, 2 for localized lookups (E1),
+titles: 211 exact twins. The 20 skips, each with its reason in the ledger: 8 for the lazy overlay import and its
+jiti failure modes (Go has no lazy module graph), 1 for the npm `files` manifest,
 5 for the shape of the i18n bridge and entry imports (TypeScript source text), 2 for the JavaScript module
 loader, 1 for a null session id (a Go string cannot be null), 2 for `requestRender` and `setUICtx` identity
 (a subprocess extension has no TUI handle).
@@ -85,19 +85,20 @@ source of PiG commit `6af0806f7a`), the original under Pi 1402973a.
   the header line changed (`host`, `extension` hash), the traces equal the Pi 1.0.0 ones. New scenario
   `max-widget-lines-above-twelve` (config written by a `setup` command into the lane HOME).
 
-**Differences from the original (also in README):** locales are not ported (owner decision pending, below); a change
+**Differences from the original (also in README):** the live `/languages` switch and the `--locale` flag are not ported (E1, below); a change
 of the theme or of Pi's tool-output expansion shows in the overlay at the next refresh, not at once (SDK items
 below); metadata key order in the details and in the replayed state follows Go's sorted maps where JS keeps
 insertion order (SDK item below).
 
-**Exclusion E1 (written owner approval not located): locales.** `@juicesharp/rpiv-i18n` (2.13.9 inspected) resolves
-the locale in process: `--locale`, `~/.config/rpiv-i18n/locale.json`, `LANG`/`LC_ALL`, else English, and `/languages`
-switches it live through `globalThis[Symbol.for("rpiv-i18n.runtime")]`, which a Go extension process cannot read.
-The 9 locale files of this extension are 7 KB. PORT.md recorded "English only" as an owner ruling; the program
-requires it in writing. **Question for the Tern lead:** (a) approve English-only in writing (and say whether a
-notice is wanted when `~/.config/rpiv-i18n/locale.json` exists), or (b) have the port embed the 9 locale files and
-resolve the locale at `session_start` from `locale.json`/`LANG`/`LC_ALL` (no live `/languages` switch without an SDK
-channel from rpiv-i18n)? Not ported meanwhile, as instructed.
+**E1: locales (ported; the live switch and `--locale` are not).** `@juicesharp/rpiv-i18n` (2.13.9 inspected) resolves the
+locale in process: `--locale`, `~/.config/rpiv-i18n/locale.json`, `LANG`/`LC_ALL`, else English, and `/languages`
+switches it live through `globalThis[Symbol.for("rpiv-i18n.runtime")]`. The port follows the owner's ruling (same as
+ask-user-question): English unless rpiv-i18n is installed (read from Pi's settings, since a Go process cannot import the
+SDK), then the 9 embedded locale files with locale.json, then `LANG`, then `LC_ALL`, resolved on every lookup. Still
+documented, not ported: the live `/languages` switch (in-process JS state) and `--locale` (not passed to extension
+processes). The scenarios do not cover locales: the original resolves `@juicesharp/rpiv-i18n` from its own module path,
+which the oracle lane does not install; the Go tests assert the resolution and the 9 files against the original's
+`locales/` instead.
 
 **Host and SDK findings:**
 1. **G1 closed** (kit view widget). Remaining differences: the widget is not re-rendered per frame (below).
