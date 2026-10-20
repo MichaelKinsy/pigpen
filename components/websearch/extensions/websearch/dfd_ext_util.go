@@ -1,8 +1,10 @@
 package websearch
 
+import "strings"
+
 // Small helpers the extractors share: the optional-chaining reads of the original as functions that accept nil.
 
-// extText is `el?.textContent?.trim() || ''`.
+// extText is `el?.textContent?.trim() || ”`.
 func extText(el *ldNode) string {
 	if el == nil {
 		return ""
@@ -10,7 +12,7 @@ func extText(el *ldNode) string {
 	return jsTrim(el.textContent())
 }
 
-// extRawText is `el?.textContent || ''`.
+// extRawText is `el?.textContent || ”`.
 func extRawText(el *ldNode) string {
 	if el == nil {
 		return ""
@@ -18,7 +20,7 @@ func extRawText(el *ldNode) string {
 	return el.textContent()
 }
 
-// extAttr is `el?.getAttribute(name) || ''`.
+// extAttr is `el?.getAttribute(name) || ”`.
 func extAttr(el *ldNode, name string) string {
 	if el == nil {
 		return ""
@@ -50,4 +52,20 @@ func extTruncate50(text string) string {
 		return jsSlice(text, 0, 50) + "..."
 	}
 	return text
+}
+
+// classListRemove is el.classList.remove(token) on a freshly read list (linkedom's DOMTokenList is a Set of the
+// tokens of the class attribute): the attribute is rewritten as the remaining distinct tokens joined by a space,
+// and made if it was missing.
+func (n *ldNode) classListRemove(token string) {
+	seen := map[string]bool{}
+	var kept []string
+	for _, t := range reWSRun.Split(n.attr("class"), -1) {
+		if t == "" || t == token || seen[t] {
+			continue
+		}
+		seen[t] = true
+		kept = append(kept, t)
+	}
+	n.setAttribute("class", strings.Join(kept, " "))
 }

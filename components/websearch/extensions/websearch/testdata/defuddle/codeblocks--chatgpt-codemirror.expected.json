@@ -1,0 +1,6 @@
+{
+ "url": "https://chatgpt.com/share/example-12345",
+ "title": "Fibonacci in Python",
+ "content": "Here is a generator-based implementation:\n\n```python\ndef fibonacci_generator(n):\n    a, b = 0, 1\n    for _ in range(n):\n        yield a\n        a, b = b, a + b\n\nfor num in fibonacci_generator(10):\n    print(num)\n```\n\nThis uses Python's `yield` keyword to lazily produce each number.",
+ "error": null
+}

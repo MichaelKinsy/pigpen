@@ -1,0 +1,6 @@
+{
+ "url": "https://claude.ai/share/1234",
+ "title": "Debugging a segfault",
+ "content": "**You**\n\nMy program segfaults.\n\n---\n\n**Claude**\n\nCheck pointer lifetimes.\n\n```\nint *p = NULL;\n```\n\n---\n\n**Claude**\n\nPlain response without a markdown wrapper.",
+ "error": null
+}
