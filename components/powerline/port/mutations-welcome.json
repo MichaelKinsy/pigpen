@@ -24,22 +24,10 @@
   "replace": "leftPad := (width - visLen + 1) / 2"
  },
  {
-  "name": "welcome-center-truncates-at-width",
-  "file": "welcome.go",
-  "find": "visLen := visibleWidth(text)\n\tif visLen > width {",
-  "replace": "visLen := visibleWidth(text)\n\tif visLen >= width {"
- },
- {
   "name": "welcome-center-ellipsis",
   "file": "welcome.go",
   "find": "return truncateToWidth(text, width, \"\u2026\")",
   "replace": "return truncateToWidth(text, width, \"...\")"
- },
- {
-  "name": "welcome-fit-truncates-at-width",
-  "file": "welcome.go",
-  "find": "func fitToWidth(str string, width int) string {\n\tvisLen := visibleWidth(str)\n\tif visLen > width {",
-  "replace": "func fitToWidth(str string, width int) string {\n\tvisLen := visibleWidth(str)\n\tif visLen >= width {"
  },
  {
   "name": "welcome-fit-ellipsis",
@@ -100,12 +88,6 @@
   "file": "welcome.go",
   "find": "const title = \" pi agent \"",
   "replace": "const title = \" pi-agent \""
- },
- {
-  "name": "welcome-after-title",
-  "file": "welcome.go",
-  "find": "if afterTitle > 0 {",
-  "replace": "if afterTitle > 1 {"
  },
  {
   "name": "welcome-countdown-text",
@@ -438,12 +420,6 @@
   "replace": "msg[\"role\"] == \"user\""
  },
  {
-  "name": "welcome-can-show-aborted",
-  "file": "welcome_ext.go",
-  "find": "if !current || req.ctx.Err() != nil ||",
-  "replace": "if !current ||"
- },
- {
   "name": "welcome-model-name-id",
   "file": "welcome_ext.go",
   "find": "} else if m.ID != \"\" {\n\t\tmodelName = m.ID",
@@ -484,12 +460,6 @@
   "file": "welcome_ext.go",
   "find": "if readSettings(ctx.Cwd())[\"quietStartup\"] == true {",
   "replace": "if readSettings(ctx.Cwd())[\"quietStartup\"] != true {"
- },
- {
-  "name": "welcome-session-start-decision",
-  "file": "welcome_ext.go",
-  "find": "if !pl.enabled || !ctx.HasUI() {\n\t\treturn\n\t}\n\tif shouldShow",
-  "replace": "if !ctx.HasUI() {\n\t\treturn\n\t}\n\tif shouldShow"
  },
  {
   "name": "welcome-overlay-capturing",

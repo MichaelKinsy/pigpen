@@ -134,6 +134,56 @@
   "countdown": 30
  },
  {
+  "name": "overlay-five-sessions",
+  "kind": "overlay",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   },
+   {
+    "name": "fourth",
+    "timeAgo": "3d ago"
+   },
+   {
+    "name": "fifth",
+    "timeAgo": "4d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ],
+  "countdown": 30
+ },
+ {
   "name": "overlay-long-model",
   "kind": "overlay",
   "model": "A very long model name that does not fit the left column at all",
@@ -621,6 +671,55 @@
   "counts": {
    "contextFiles": 0,
    "skills": 12,
+   "promptTemplates": 0
+  },
+  "tokens": null,
+  "widths": [
+   0,
+   20,
+   43,
+   44,
+   45,
+   60,
+   76,
+   78,
+   79,
+   96,
+   98,
+   100,
+   200
+  ]
+ },
+ {
+  "name": "header-five-sessions",
+  "kind": "header",
+  "model": "Claude Sonnet 4.5",
+  "provider": "anthropic",
+  "sessions": [
+   {
+    "name": "pigpen",
+    "timeAgo": "just now"
+   },
+   {
+    "name": "my-dashed-project",
+    "timeAgo": "5m ago"
+   },
+   {
+    "name": "third",
+    "timeAgo": "2d ago"
+   },
+   {
+    "name": "fourth",
+    "timeAgo": "3d ago"
+   },
+   {
+    "name": "fifth",
+    "timeAgo": "4d ago"
+   }
+  ],
+  "counts": {
+   "contextFiles": 0,
+   "skills": 0,
    "promptTemplates": 0
   },
   "tokens": null,

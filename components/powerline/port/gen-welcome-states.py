@@ -29,6 +29,7 @@ for kind in ("overlay", "header"):
     render(kind + "-full", kind, sessions=three, counts={"contextFiles": 2, "skills": 3, "promptTemplates": 1}, tokens=1900)
     render(kind + "-singular", kind, sessions=three[:1], counts={"contextFiles": 1, "skills": 1, "promptTemplates": 1}, tokens=1)
     render(kind + "-plural-only-skills", kind, counts={"contextFiles": 0, "skills": 12, "promptTemplates": 0})
+    render(kind + "-five-sessions", kind, sessions=three + [{"name": "fourth", "timeAgo": "3d ago"}, {"name": "fifth", "timeAgo": "4d ago"}])
     render(kind + "-long-model", kind, model="A very long model name that does not fit the left column at all", provider="a-provider-with-a-long-name-too", sessions=three)
     render(kind + "-wide-chars", kind, model="模型名称很长很长很长很长很长", provider="提供者😀", sessions=[{"name": "项目名称项目名称", "timeAgo": "1h ago"}])
     render(kind + "-empty-names", kind, model="", provider="")
