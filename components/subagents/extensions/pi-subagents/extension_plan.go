@@ -1,6 +1,9 @@
 package pi_subagents
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // The extension part of the child launch plan (src/runs/shared/child-tool-plan.ts resolvePiLaunchToolPlan): which extensions a
 // child loads and whether ambient extension discovery is switched off. The rest of the plan (tool allowlists, MCP selection,
@@ -63,4 +66,41 @@ func resolveExtensionLaunchPlan(a AgentConfig, denyExtensions bool) extensionLau
 		plan.ExtensionArgs = uniqueJoin(toolExt, a.SubagentOnlyExtensions)
 	}
 	return plan
+}
+
+const fastModeProviderPrefix = "openai-codex/"
+
+// applyThinkingSuffix appends a thinking level to a model unless it already carries one (replaceExisting swaps it); a model
+// without a level request, and a thinking that is off or unset, are returned unchanged.
+func applyThinkingSuffix(model string, thinking any, replaceExisting bool) string {
+	level, ok := thinking.(string)
+	if model == "" || !ok || level == "" {
+		return model
+	}
+	if base, suffix := splitKnownThinkingSuffix(model); suffix != "" {
+		if replaceExisting {
+			return base + ":" + level
+		}
+		return model
+	}
+	return model + ":" + level
+}
+
+// resolveFastModeExtension says whether a child needs the fast mode runtime extension: only native OpenAI-Codex models support it.
+func resolveFastModeExtension(fast bool, model, agentName string) (needed bool, err error) {
+	if !fast {
+		return false, nil
+	}
+	if model == "" {
+		label := ""
+		if agentName != "" {
+			label = " for agent '" + agentName + "'"
+		}
+		return false, fmt.Errorf("fast mode requires an explicit supported native OpenAI-Codex model%s.", label)
+	}
+	base, _ := splitKnownThinkingSuffix(model)
+	if !strings.HasPrefix(base, fastModeProviderPrefix) {
+		return false, fmt.Errorf("fast mode supports only native %s* models; unsupported model: %s.", fastModeProviderPrefix, base)
+	}
+	return true, nil
 }

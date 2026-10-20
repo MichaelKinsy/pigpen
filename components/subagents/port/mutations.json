@@ -386,8 +386,8 @@
  {
   "name": "run-task-argv",
   "file": "run.go",
-  "find": "Args: buildChildArgs(a, model), Stdin: childPrompt(task)",
-  "replace": "Args: append(buildChildArgs(a, model), task), Stdin: childPrompt(task)"
+  "find": "Args: buildChildArgs(&launch, model), Stdin: childPrompt(task)",
+  "replace": "Args: append(buildChildArgs(&launch, model), task), Stdin: childPrompt(task)"
  },
  {
   "name": "run-prompt-prefix",
@@ -666,12 +666,6 @@
   "replace": "if msg := refuseUnsupported(params, action); msg != \"\" && false {"
  },
  {
-  "name": "ext-bgwait",
-  "file": "extension.go",
-  "find": "refuseTool(\"waiting for background work (`bg_wait`)\")",
-  "replace": "refuseTool(\"waiting\")"
- },
- {
   "name": "ext-supervisor",
   "file": "extension.go",
   "find": "refuseTool(\"the supervisor channel (`subagent_supervisor`)\")",
@@ -688,18 +682,6 @@
   "file": "refuse.go",
   "find": "portPackageName  = \"@pi-in-go/pigpen-subagents\"",
   "replace": "portPackageName  = \"pigpen-subagents\""
- },
- {
-  "name": "ref-async-true",
-  "file": "refuse.go",
-  "find": "v != nil && v != false",
-  "replace": "v != nil && v != true"
- },
- {
-  "name": "ref-async-text",
-  "file": "refuse.go",
-  "find": "\"async (background) runs (`async: \"",
-  "replace": "\"async runs (`async: \""
  },
  {
   "name": "ref-workflow-list",
@@ -788,8 +770,8 @@
  {
   "name": "ext-run-model",
   "file": "extension.go",
-  "find": "out, err := runAgent(done, cwd, a, task, model)",
-  "replace": "out, err := runAgent(done, cwd, a, task, \"\")\n\t_ = model"
+  "find": "runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions",
+  "replace": "runAgentOpts(done, cwd, pol.Agent, pol.Task, \"\", runOptions"
  },
  {
   "name": "ext-chain-task",
@@ -898,5 +880,635 @@
   "file": "policy_jsonparse.go",
   "find": "\tif specific != \"\" {\n\t\tp.withPos(specific, pos)\n\t\treturn\n\t}\n\tif pos >= len(p.src) {",
   "replace": "\tif pos >= len(p.src) {"
+ },
+ {
+  "name": "adv-cap-agents",
+  "file": "advertise.go",
+  "find": "maxAdvertisedAgents = 16",
+  "replace": "maxAdvertisedAgents = 17"
+ },
+ {
+  "name": "adv-cap-bytes",
+  "file": "advertise.go",
+  "find": "maxCatalogBytes     = 12288",
+  "replace": "maxCatalogBytes     = 12289"
+ },
+ {
+  "name": "adv-cap-description",
+  "file": "advertise.go",
+  "find": "if len(text) > maxDescriptionBytes {",
+  "replace": "if len(text) > maxDescriptionBytes+1 {"
+ },
+ {
+  "name": "adv-sort",
+  "file": "advertise.go",
+  "find": "return localeLess(advertised[i].Name, advertised[j].Name)",
+  "replace": "return localeLess(advertised[j].Name, advertised[i].Name)"
+ },
+ {
+  "name": "adv-disabled",
+  "file": "advertise.go",
+  "find": "(a.Disabled == nil || !*a.Disabled)",
+  "replace": "true"
+ },
+ {
+  "name": "adv-runtime",
+  "file": "advertise.go",
+  "find": "a.Source != SourceRuntime &&",
+  "replace": "true &&"
+ },
+ {
+  "name": "adv-ceiling",
+  "file": "advertise.go",
+  "find": "isAgentAllowedByCapabilityCeiling(a.Name, ceiling)",
+  "replace": "true"
+ },
+ {
+  "name": "adv-escape",
+  "file": "advertise.go",
+  "find": "\"&\", \"&amp;\", \"<\"",
+  "replace": "\"&\", \"&\", \"<\""
+ },
+ {
+  "name": "adv-omitted",
+  "file": "advertise.go",
+  "find": "if len(advertised) > len(entries) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "adv-huge-name",
+  "file": "advertise.go",
+  "find": "if len(a.Name) > maxCatalogBytes {",
+  "replace": "if false {"
+ },
+ {
+  "name": "adv-stale-generation",
+  "file": "advertise.go",
+  "find": "if gen != a.generation {",
+  "replace": "if false {"
+ },
+ {
+  "name": "adv-wait-error",
+  "file": "advertise.go",
+  "find": "if same {\n\t\t\treturn err",
+  "replace": "if same {\n\t\t\treturn nil"
+ },
+ {
+  "name": "adv-refresh-cache",
+  "file": "advertise.go",
+  "find": "\tclearAgentDiscoveryCache()\n\td, err := discoverAgents(a.cwd",
+  "replace": "\td, err := discoverAgents(a.cwd"
+ },
+ {
+  "name": "adv-section",
+  "file": "advertise.go",
+  "find": "sections.Set(advertisedTag, catalog)",
+  "replace": "_ = sections"
+ },
+ {
+  "name": "adv-selected",
+  "file": "advertise.go",
+  "find": "has = has || n == subagentName",
+  "replace": "has = true"
+ },
+ {
+  "name": "adv-loader-catalog",
+  "file": "extension.go",
+  "find": "text += \"\\n\\n\" + prompt",
+  "replace": "_ = prompt"
+ },
+ {
+  "name": "adv-tool-barrier",
+  "file": "extension.go",
+  "find": "\tif err := adv.wait(ctx.Done()); err != nil {\n\t\treturn nil, sdk.NewToolError(err.Error())\n\t}\n\taction := \"\"",
+  "replace": "\taction := \"\""
+ },
+ {
+  "name": "adv-mutation-refresh",
+  "file": "agentmgmt_actions.go",
+  "find": "c.onAgentsChanged = adv.refresh",
+  "replace": "c.onAgentsChanged = nil"
+ },
+ {
+  "name": "adv-global-root",
+  "file": "agentmgmt_actions.go",
+  "find": "return discoverAgentsAll(cwd, provider, adv.options())",
+  "replace": "return discoverAgentsAll(cwd, provider, DiscoveryOptions{})"
+ },
+ {
+  "name": "contract-interrupted",
+  "file": "contract.go",
+  "find": "case r.Interrupted:",
+  "replace": "case false:"
+ },
+ {
+  "name": "contract-detached",
+  "file": "contract.go",
+  "find": "case r.Detached:",
+  "replace": "case false:"
+ },
+ {
+  "name": "contract-timeout",
+  "file": "contract.go",
+  "find": "success := r.ExitCode == 0 && r.Error == \"\" && !r.TimedOut",
+  "replace": "success := r.ExitCode == 0 && r.Error == \"\""
+ },
+ {
+  "name": "ack-cap",
+  "file": "runtimeack.go",
+  "find": "out.IDs = unique[:maxRuntimeAcknowledgedExtensionIDs]",
+  "replace": "out.IDs = unique"
+ },
+ {
+  "name": "ack-omitted",
+  "file": "runtimeack.go",
+  "find": "out.Omitted = len(unique) - maxRuntimeAcknowledgedExtensionIDs",
+  "replace": "out.Omitted = 0"
+ },
+ {
+  "name": "ack-dotdot",
+  "file": "runtimeack.go",
+  "find": "&&\n\t\t!strings.Contains(s, \"..\")",
+  "replace": ""
+ },
+ {
+  "name": "ack-dedupe",
+  "file": "runtimeack.go",
+  "find": "if !isRuntimeAcknowledgedExtensionID(id) || seen[id.(string)] {",
+  "replace": "if !isRuntimeAcknowledgedExtensionID(id) {"
+ },
+ {
+  "name": "ack-source",
+  "file": "runtimeack.go",
+  "find": "if s, _ := raw.str(\"source\"); s != \"child-runtime\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ack-finalized",
+  "file": "child_prompt.go",
+  "find": "func (c *runtimeAckCollector) acknowledge(id any) {\n\tif c.finalized {\n\t\treturn\n\t}",
+  "replace": "func (c *runtimeAckCollector) acknowledge(id any) {"
+ },
+ {
+  "name": "fast-tier",
+  "file": "fastmode.go",
+  "find": "out[\"service_tier\"] = \"priority\"",
+  "replace": "out[\"service_tier\"] = \"default\""
+ },
+ {
+  "name": "fast-copy",
+  "file": "fastmode.go",
+  "find": "out := make(map[string]any, len(p)+1)\n\t\tfor k, v := range p {\n\t\t\tout[k] = v\n\t\t}",
+  "replace": "out := p"
+ },
+ {
+  "name": "bindings-namespace-limit",
+  "file": "extbindings.go",
+  "find": "if len(keys) > maxExtensionBindingNamespaces {",
+  "replace": "if len(keys) > maxExtensionBindingNamespaces+1 {"
+ },
+ {
+  "name": "bindings-cycles",
+  "file": "extbindings.go",
+  "find": "\t\tif seen[p] {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "bindings-finite",
+  "file": "extbindings.go",
+  "find": "if math.IsNaN(v) || math.IsInf(v, 0) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bindings-bytes",
+  "file": "extbindings.go",
+  "find": "if len(text) > maxExtensionBindingsBytes {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bindings-sort",
+  "file": "extbindings.go",
+  "find": "return compareUTF16(keys[i], keys[j]) < 0",
+  "replace": "return compareUTF16(keys[i], keys[j]) > 0"
+ },
+ {
+  "name": "bindings-env-parent",
+  "file": "extbindings.go",
+  "find": "if host != \"runner\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bindings-omit",
+  "file": "extbindings.go",
+  "find": "if k != extensionBindingsEnv {",
+  "replace": "if true {"
+ },
+ {
+  "name": "bindings-digest-version",
+  "file": "extbindings.go",
+  "find": "launchBindingProjectionVersion = 2",
+  "replace": "launchBindingProjectionVersion = 3"
+ },
+ {
+  "name": "audit-opencode-host",
+  "file": "promptaudit.go",
+  "find": "u.Hostname() != \"opencode.ai\"",
+  "replace": "u.Hostname() != \"example.com\""
+ },
+ {
+  "name": "audit-session-header",
+  "file": "promptaudit.go",
+  "find": "if sessionID == \"\" {\n\t\treturn nil\n\t}",
+  "replace": "if false {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "audit-additions",
+  "file": "promptaudit.go",
+  "find": "return \"(runtime additions unavailable)\"",
+  "replace": "return \"(none)\""
+ },
+ {
+  "name": "audit-auth-failure",
+  "file": "promptaudit.go",
+  "find": "if ok, has := auth[\"ok\"].(bool); has && !ok {",
+  "replace": "if false {"
+ },
+ {
+  "name": "audit-update",
+  "file": "promptaudit.go",
+  "find": "p.RuntimeAdditions = promptRuntimeAdditions(p.AuthoredTask, effectivePrompt)",
+  "replace": ""
+ },
+ {
+  "name": "child-strip-project",
+  "file": "child_prompt.go",
+  "find": "if !o.InheritProjectContext {",
+  "replace": "if false {"
+ },
+ {
+  "name": "child-strip-global",
+  "file": "child_prompt.go",
+  "find": "if !o.InheritGlobalContext {",
+  "replace": "if false {"
+ },
+ {
+  "name": "child-strip-skills",
+  "file": "child_prompt.go",
+  "find": "if !o.InheritSkills {",
+  "replace": "if false {"
+ },
+ {
+  "name": "child-fanout-boundary",
+  "file": "child_prompt.go",
+  "find": "if o.FanoutChild {\n\t\tboundary = childFanoutBoundaryInstructions",
+  "replace": "if false {\n\t\tboundary = childFanoutBoundaryInstructions"
+ },
+ {
+  "name": "child-structured",
+  "file": "child_prompt.go",
+  "find": "if o.StructuredOutput {",
+  "replace": "if false {"
+ },
+ {
+  "name": "child-global-dir",
+  "file": "child_prompt.go",
+  "find": "== canonicalDirectory(agentDir())",
+  "replace": "!= canonicalDirectory(agentDir())"
+ },
+ {
+  "name": "child-case-insensitive",
+  "file": "child_prompt.go",
+  "find": "globalContextFileNames[strings.ToLower(base)]",
+  "replace": "globalContextFileNames[base]"
+ },
+ {
+  "name": "child-tool-id-length",
+  "file": "child_prompt.go",
+  "find": "const maxPortableToolIDLength = 64",
+  "replace": "const maxPortableToolIDLength = 640"
+ },
+ {
+  "name": "child-fanout-history",
+  "file": "child_prompt.go",
+  "find": "if !preserveFanoutToolHistory {\n\t\t\tstripped = stripAssistantSubagentToolCallBlocks(m)",
+  "replace": "if false {\n\t\t\tstripped = stripAssistantSubagentToolCallBlocks(m)"
+ },
+ {
+  "name": "child-composite-apis",
+  "file": "child_prompt.go",
+  "find": "\"cursor-native\": true, ",
+  "replace": ""
+ },
+ {
+  "name": "child-watchdog-warning",
+  "file": "child_prompt.go",
+  "find": "ct == subagentWatchdogWarningType ||",
+  "replace": ""
+ },
+ {
+  "name": "plan-ambient",
+  "file": "extension_plan.go",
+  "find": "disable := denyExtensions || a.Extensions != nil",
+  "replace": "disable := denyExtensions"
+ },
+ {
+  "name": "plan-deny",
+  "file": "extension_plan.go",
+  "find": "if !denyExtensions {\n\t\tfor _, t := range a.Tools {",
+  "replace": "if true {\n\t\tfor _, t := range a.Tools {"
+ },
+ {
+  "name": "plan-fast-prefix",
+  "file": "extension_plan.go",
+  "find": "const fastModeProviderPrefix = \"openai-codex/\"",
+  "replace": "const fastModeProviderPrefix = \"openai/\""
+ },
+ {
+  "name": "plan-thinking-suffix",
+  "file": "extension_plan.go",
+  "find": "if base, suffix := splitKnownThinkingSuffix(model); suffix != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "refine-evidence-cap",
+  "file": "agentmgmt_refine.go",
+  "find": "maxEvidenceItems        = 8",
+  "replace": "maxEvidenceItems        = 9"
+ },
+ {
+  "name": "refine-age",
+  "file": "agentmgmt_refine.go",
+  "find": "maxEvidenceAgeDays      = 14",
+  "replace": "maxEvidenceAgeDays      = 140"
+ },
+ {
+  "name": "refine-edits-cap",
+  "file": "agentmgmt_refine.go",
+  "find": "if len(edits) > 3 {",
+  "replace": "if len(edits) > 4 {"
+ },
+ {
+  "name": "refine-citations",
+  "file": "agentmgmt_refine.go",
+  "find": "if len(cited) == 0 || unknown {",
+  "replace": "if len(cited) == 0 {"
+ },
+ {
+  "name": "refine-blocked",
+  "file": "agentmgmt_refine.go",
+  "find": "|| blockedGuidanceRe.MatchString(guidance) {",
+  "replace": "{"
+ },
+ {
+  "name": "refine-fence",
+  "file": "agentmgmt_refine.go",
+  "find": "strings.Contains(guidance, \"```\") ||",
+  "replace": ""
+ },
+ {
+  "name": "refine-traversal",
+  "file": "agentmgmt_refine.go",
+  "find": "strings.Contains(trimmed, \"..\")",
+  "replace": "false"
+ },
+ {
+  "name": "refine-no-evidence",
+  "file": "agentmgmt_refine.go",
+  "find": "if len(evidence) == 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "refine-rollback-revision",
+  "file": "agentmgmt_refine.go",
+  "find": "next := newRefinementFile(agent, existing.Revision+1, now)",
+  "replace": "next := newRefinementFile(agent, existing.Revision, now)"
+ },
+ {
+  "name": "refine-overlay-order",
+  "file": "agentmgmt_refine.go",
+  "find": "return systemPrompt + \"\\n\\n\" + overlay",
+  "replace": "return overlay + \"\\n\\n\" + systemPrompt"
+ },
+ {
+  "name": "refine-run-overlay",
+  "file": "run.go",
+  "find": "launch.SystemPrompt = appendAgentRefinementOverlay(a.SystemPrompt, cwd, a.Name)",
+  "replace": "launch.SystemPrompt = a.SystemPrompt"
+ },
+ {
+  "name": "doctor-fanout-source",
+  "file": "doctor.go",
+  "find": "source = \"environment\"",
+  "replace": "source = \"config\""
+ },
+ {
+  "name": "doctor-child-parent",
+  "file": "doctor.go",
+  "find": "case isChild && parent != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "doctor-legacy-parent",
+  "file": "doctor.go",
+  "find": "case parent != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "doctor-grants",
+  "file": "doctor.go",
+  "find": "grants = strings.Join(g, \"; \")",
+  "replace": "grants = \"none\""
+ },
+ {
+  "name": "doctor-async-unlimited",
+  "file": "doctor.go",
+  "find": "limitText := \"unlimited\"",
+  "replace": "limitText := \"0\""
+ },
+ {
+  "name": "doctor-skill-order",
+  "file": "doctor.go",
+  "find": "skillSourceOrder = []skillSource{skillProject, skillProjectSettings,",
+  "replace": "skillSourceOrder = []skillSource{skillProjectSettings, skillProject,"
+ },
+ {
+  "name": "guide-topic",
+  "file": "guide.go",
+  "find": "\"models\", \"watchdog\"",
+  "replace": "\"watchdog\""
+ },
+ {
+  "name": "guide-council",
+  "file": "guide.go",
+  "find": "fmt.Sprintf(\"<!-- %s -->\\n\\n%s\", f[0], text)",
+  "replace": "text"
+ },
+ {
+  "name": "profile-safe-name",
+  "file": "profiles.go",
+  "find": "if !safePathTokenRe.MatchString(t) || t == \".\" ||",
+  "replace": "if false || t == \".\" ||"
+ },
+ {
+  "name": "profile-fallback-models",
+  "file": "profiles.go",
+  "find": "if o.has(\"fallbackModels\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-machine",
+  "file": "profiles.go",
+  "find": "if cur != nil && cur.has(\"machine\") {",
+  "replace": "if true {"
+ },
+ {
+  "name": "profile-heuristic",
+  "file": "profiles.go",
+  "find": "return has(\"heuristic-name\") && !has(\"official-metadata\")",
+  "replace": "return has(\"heuristic-name\")"
+ },
+ {
+  "name": "profile-fast-penalty",
+  "file": "profiles.go",
+  "find": "penalty = 125",
+  "replace": "penalty = 0"
+ },
+ {
+  "name": "profile-quota-pool",
+  "file": "profiles.go",
+  "find": "if quota && len(models) > 1 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-dominated",
+  "file": "profiles.go",
+  "find": "if i != j && dominates(o, c) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "profile-stale",
+  "file": "profiles.go",
+  "find": "return float64(time.Since(t).Milliseconds()) > maxAgeDays*24*60*60*1000",
+  "replace": "return false"
+ },
+ {
+  "name": "profile-probe-cache",
+  "file": "profiles.go",
+  "find": "probe, ok := cache[probeID]\n\t\tif !ok {",
+  "replace": "probe, ok := cache[probeID]\n\t\tif true {"
+ },
+ {
+  "name": "profile-suffix",
+  "file": "profiles.go",
+  "find": "probeID = info.FullID + suffix",
+  "replace": "probeID = info.FullID"
+ },
+ {
+  "name": "admin-refresh-warn",
+  "file": "slash_admin.go",
+  "find": "case aborted:\n\t\t\th.notify(\"Model registry refresh timed out; using the currently loaded choices.\", \"warning\")",
+  "replace": "case aborted:"
+ },
+ {
+  "name": "admin-ownership",
+  "file": "slash_admin.go",
+  "find": "return a.Model != base.Model",
+  "replace": "return false"
+ },
+ {
+  "name": "admin-promote",
+  "file": "slash_admin.go",
+  "find": "if a.Source == SourceProject && a.Override.Scope == \"user\" && all.ProjectSettingsPath != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "admin-shadow",
+  "file": "slash_admin.go",
+  "find": "if shadows && (value == nil || baseFieldEquals(base, field, value)) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "admin-unchanged",
+  "file": "slash_admin.go",
+  "find": "&& !(throughSettings && projectOwns) {",
+  "replace": "{"
+ },
+ {
+  "name": "admin-hidden-disabled",
+  "file": "slash_admin.go",
+  "find": "if a.Disabled == nil || !*a.Disabled {",
+  "replace": "if true {"
+ },
+ {
+  "name": "slash-force-flag",
+  "file": "slash_commands.go",
+  "find": "force := forceSuffixRe.MatchString(trimmed)",
+  "replace": "force := false"
+ },
+ {
+  "name": "slash-guide-usage",
+  "file": "slash_commands.go",
+  "find": "if strings.Contains(topic, \" \") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "deleg-id-length",
+  "file": "delegation.go",
+  "find": "jsLen(s) > 256",
+  "replace": "jsLen(s) > 2560"
+ },
+ {
+  "name": "deleg-unsupported",
+  "file": "delegation.go",
+  "find": "if !delegationSupportedFields[k] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "deleg-timeout-max",
+  "file": "delegation.go",
+  "find": "if f > 2147483647 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "deleg-schema-bytes",
+  "file": "delegation.go",
+  "find": "maxDelegationSchemaBytes  = 64 * 1024",
+  "replace": "maxDelegationSchemaBytes  = 640 * 1024"
+ },
+ {
+  "name": "deleg-duplicate-node",
+  "file": "delegation.go",
+  "find": "if b.activeNodes[nodeKey(ownerRunID, nodeID)] != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "deleg-pending-cancel",
+  "file": "delegation.go",
+  "find": "if b.pendingAttempt[key] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "deleg-heartbeat",
+  "file": "delegation.go",
+  "find": "if k == \"durationMs\" {\n\t\t\tcontinue",
+  "replace": "if false {\n\t\t\tcontinue"
+ },
+ {
+  "name": "deleg-text-result",
+  "file": "delegation.go",
+  "find": "projected = obj(\"kind\", \"text\", \"text\", text)",
+  "replace": "projected = obj(\"kind\", \"text\", \"text\", \"\")"
+ },
+ {
+  "name": "deleg-terminal-once",
+  "file": "delegation.go",
+  "find": "if b.disposed || b.settled[key] {",
+  "replace": "if b.disposed {"
+ },
+ {
+  "name": "deleg-legacy-reject",
+  "file": "delegation.go",
+  "find": "if o.has(\"tasks\") || o.has(\"worktree\") {",
+  "replace": "if false {"
  }
 ]
