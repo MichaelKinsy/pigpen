@@ -110,16 +110,16 @@ func TestParallelAndChainRunsAreRefused(t *testing.T) {
 	eq(t, len(*calls), 0, "nothing ran")
 }
 
-func TestManagementActionsOtherThanListAndGetAreRefused(t *testing.T) {
+func TestUnportedManagementAndControlActionsAreRefused(t *testing.T) {
 	h, _ := refusedHost(t)
-	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "status", "doctor", "guide", "interrupt", "stop", "resume", "steer", "debug.run", "validate", "schedule.create", "single", "append-step", "unheard-of"}
+	actions := []string{"status", "doctor", "guide", "interrupt", "stop", "resume", "steer", "debug.run", "validate", "schedule.create", "single", "append-step", "unheard-of"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
 			wantRefusal(t, failure, "the `"+a+"` action")
 		})
 	}
-	_, failure := h.Tool("subagent", map[string]any{"action": "list", "capabilities": true})
+	_, failure := h.Tool("subagent", map[string]any{"action": "get", "agent": "helper", "capabilities": true})
 	wantRefusal(t, failure, "the `capabilities` option")
 	_, failure = h.Tool("subagent", map[string]any{"action": "get", "agent": "helper", "config": map[string]any{}})
 	wantRefusal(t, failure, "the `config` option")

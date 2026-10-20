@@ -145,3 +145,16 @@ func diffValues(t *testing.T, path string, got, want reflect.Value) {
 func strconvItoa(n int) string { return fmt.Sprint(n) }
 
 func regexpMatch(pattern, s string) bool { return regexp.MustCompile(pattern).MatchString(s) }
+
+// testMgmtCtx is the management context of the original's tests: the cwd and an empty model registry.
+func testMgmtCtx(cwd string) mgmtContext {
+	return mgmtContext{cwd: cwd, available: func() []ModelInfo { return nil }}
+}
+
+func getAgent(cwd string, params map[string]any) manageResult {
+	return handleManagementAction("get", params, testMgmtCtx(cwd))
+}
+
+func listAgents(cwd string, params map[string]any) manageResult {
+	return handleManagementAction("list", params, testMgmtCtx(cwd))
+}
