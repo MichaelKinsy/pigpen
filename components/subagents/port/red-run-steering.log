@@ -1,0 +1,9 @@
+# Red run of the steering slice twins (batch 1: steering ledger, control channel, subagent control, control and steering notices,
+# steering action, intercom bridge). Command: go vet ./... on the tree with the twin test files only (no steer_*, control_*,
+# subagent_control, intercom_bridge, nested_path sources). The package's tests do not build: every symbol they call is missing.
+# github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+./control_channel_test.go:59:2: undefined: osControlFS
+./control_channel_test.go:116:54: undefined: steerRequest
+./control_channel_test.go:661:10: undefined: realControlTimers
+./control_notices_test.go:17:34: undefined: messageSender
+./control_notices_test.go:25:23: undefined: controlEvent
