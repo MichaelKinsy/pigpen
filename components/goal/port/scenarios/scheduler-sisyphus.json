@@ -1,0 +1,65 @@
+{
+  "name": "scheduler-sisyphus",
+  "description": "A Sisyphus goal with ordered steps and a task list and a run allowance of 3: the continuation prompts carry the step and task state.",
+  "llm": [
+    {
+      "text": "Reading."
+    },
+    {
+      "text": "Writing."
+    },
+    {
+      "text": "Testing."
+    },
+    {
+      "text": "Done reading."
+    }
+  ],
+  "steps": [
+    {
+      "name": "user",
+      "rpc": {
+        "type": "prompt",
+        "message": "Get going."
+      },
+      "settleMs": 5000
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 3, \"autoSelectSingleGoal\": true}",
+    ".pi/goals/active_goal_20260102030405_seed-t.md": "{\n  \"version\": 3,\n  \"id\": \"seed-t\",\n  \"objective\": \"1) read the code. 2) write the fix. 3) run the tests.\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": true,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-t.md\",\n  \"currentTaskId\": \"step-2\",\n  \"taskList\": {\n    \"tasks\": [\n      {\n        \"id\": \"step-1\",\n        \"title\": \"read the code.\",\n        \"status\": \"complete\",\n        \"evidence\": \"read it\"\n      },\n      {\n        \"id\": \"step-2\",\n        \"title\": \"write the fix.\",\n        \"status\": \"pending\"\n      },\n      {\n        \"id\": \"step-3\",\n        \"title\": \"run the tests.\",\n        \"status\": \"pending\",\n        \"verificationContract\": \"all tests pass\"\n      }\n    ],\n    \"blockCompletion\": false,\n    \"proposedAt\": \"2026-01-02T03:04:05.000Z\"\n  }\n}\n\n# Goal Prompt\n\n1) read the code. 2) write the fix. 3) run the tests.\n\n## Progress\n\n- Status: active\n"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "Context snapshot: \\d{4,}/100000 tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <estimate>/100000 tokens"
+    }
+  ],
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end"
+  ]
+}

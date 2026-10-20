@@ -33,6 +33,30 @@ scripted-model scenarios cover the goal tools. The host's own system-prompt docu
 documentation ...`) differs between the hosts and falls inside the delta of a request that adds tool snippets; the scenarios mask it with
 a scenario-level normalize rule (`HOSTDOCS`); the difference is PiG's documented additive difference D22 (PiG's docs bundle named in the system prompt).
 
+**pigeq, tasks and scheduler (GoalScenTasksSched):** `tools-tasks`, `tools-tasks-edge`, `tools-tasks-disabled` and nine `scheduler-*` scenarios
+(`gen-scenarios.py`, block `GoalScenTasksSched`; goldens recorded under Pi 1402973a). The earlier note that `set_goal_tasks` never asked its select
+dialog under Pi was a scenario error: `create_goal` ends the model's turn (`terminate: true`), so the scripted `set_goal_tasks` call answered the next prompt
+and never ran. Under Pi's RPC mode `ctx.hasUI` is true and `ctx.mode` is `"rpc"` (`rpc-mode.ts:319-321`, `runner.ts:572-574`, `:628-630`), so
+`showTaskConfirmation` skips `ui.custom` and asks `ui.select("Task list confirmation\n\n<proposal>", ["Confirm task list", "Keep current tasks"])`; PiG binds the
+same (`coding/cli/rpc_mode_runtime.go:196`, `coding/extension/host/inproc/runner.go:736-741`), the original under PiG asks the identical select, and the Go port
+(`goal_task_confirmation.go`) asks it too: no difference. Nine of the twelve scenarios pass `pigeq check` (3 runs in a row). Findings, all PiG against Pi, none normalized
+except where stated:
+
+- **PiG core bug, first run.** A run that an extension starts with `pi.sendMessage(msg, {triggerTurn: true, deliverAs: "followUp"})` as the *first run of a session* sends the
+  model no system prompt under PiG (Pi sends it). Reproduced without the goal extension (a one-tool probe; `before_agent_start` and `turn_start` still see a 2715-character
+  `ctx.getSystemPrompt()`): the request's system text is empty for that run and correct for every later user-started run. Scenario `scheduler-direct-first-run` (the kickoff run of
+  `/goal-direct` is the first run) therefore differs from the Pi golden in the llm channel's `system` field (`inserted ""`, `removed <host prompt>` against the tool snippets).
+- **PiG core bug, stale snippets.** A run started by `sendMessage(triggerTurn)` after a previous run's tool changed the active tools (`pi.setActiveTools` in `execute`, what `create_goal` does) sends the
+  tool list correctly but the system prompt of the previous run: the new tool's snippet is missing (probe: `late_tool` absent from the system text, present in `tools`). A user-started run is
+  correct. Scenario `scheduler-budget` (create_goal, then the scheduler's continuation run) differs the same way (`update_goal` and `set_goal_tasks` snippets missing) and in the same request's `Context snapshot` figure (733 against 1200; not explained, not masked).
+  The other scheduler scenarios keep the goal focused before the first run and start with a user prompt, so no run changes the tool set and they pass.
+- **D22 consequence, masked (`CTXEST`).** The extension prints the host's context estimate (`Context snapshot: N/100000 tokens`). Before the model has reported a usage it includes the host's system prompt, whose wording differs between
+  the hosts (D22; 2666 against 2715 characters in the probe, `pi` against `pig` in the first line and the documentation block), so the figure differs by 12 tokens (2527 against 2539). Only estimates of four or more digits are masked; the figures after a model reply (the
+  scripted usage) are compared exactly.
+- Epoch milliseconds (the checkpoint message's `details.timestamp`, the scheduler's `claimedAt` and `nextCheckAt` in goal tool results) are different in every run and no normalize rule can reach a number, so the scheduler scenarios capture
+  neither `message_end` nor `tool_execution_end`; the model request, the notifications and `tool_execution_start` still show every continuation prompt, scheduler message and tool call.
+- Existing scenarios `tools-create-get`, `tools-blocked` and `tools-pause-and-bad-args` script turns after `create_goal` that are never requested (the turn ends); they only exercise `create_goal`.
+
 ## Mapping
 
 | ID | Original | Go | Checked by |
