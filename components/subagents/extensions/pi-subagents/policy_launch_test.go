@@ -272,7 +272,8 @@ func TestIntercomBridge(t *testing.T) {
 		st := resolveIntercomBridge(nil, &over, c.context, c.target)
 		equal(t, st.Active, false, c.cfg+" "+c.target)
 		equal(t, st.OrchestratorTarget, "", "no target when inactive")
-		equal(t, strings.Contains(st.Instruction, "{orchestratorTarget}"), true, "placeholder kept when inactive")
+		// the original builds the inactive instruction from the default template, which names no session
+		equal(t, st.Instruction, resolveIntercomBridge(nil, nil, "fresh", "main").Instruction, "default instruction when inactive")
 	}
 	fork, _ := validateIntercomBridgeConfig(js(t, `{"mode":"fork-only"}`), "b")
 	equal(t, resolveIntercomBridge(nil, &fork, "fork", "main").Active, true, "fork-only with a fork")
@@ -407,7 +408,7 @@ func TestEffectiveSystemPromptOrder(t *testing.T) {
 	baseIndex, skillIndex, outputIndex := strings.Index(got, "Base."), strings.Index(got, "skill"), strings.Index(got, "Runtime output path override:")
 	equal(t, baseIndex == 0 && skillIndex > baseIndex && outputIndex > skillIndex, true, "base, skills, output path: "+got)
 	equal(t, buildEffectiveSystemPrompt(agent, nil, cwd, ""), "Base.", "trimmed base prompt")
-	equal(t, strings.HasPrefix(buildEffectiveSystemPrompt(AgentConfig{Name: "w"}, skills, cwd, ""), "<"), true, "skills alone")
+	equal(t, strings.HasPrefix(buildEffectiveSystemPrompt(AgentConfig{Name: "w"}, skills, cwd, ""), "The following configured skills are available to this subagent.\n"), true, "skills alone")
 }
 
 func TestMcpDirectToolGrant(t *testing.T) {
@@ -433,13 +434,13 @@ func TestMcpDirectToolGrant(t *testing.T) {
 		}
 		return out
 	}
-	equal(t, names(grant("my-server")), []string{"my_2d_server_do_it=my-server/do.it", "my_2d_server_my-server_other=my-server/my-server_other", "my_2d_server_read=my-server/read", "my_2d_server_get_my_doc_1=my-server/get_my_doc_1"}, "whole server, server prefix")
+	equal(t, names(grant("my-server")), []string{"my-server_do_it=my-server/do.it", "my-server_other=my-server/my-server_other", "my-server_read=my-server/read", "my-server_get_my_doc_1=my-server/get_my_doc_1"}, "whole server, server prefix (a hyphen is kept; a tool already named with the prefix is unchanged)")
 	equal(t, names(grant("my-server/read")), []string{"my-server_read=my-server/read"}, "one tool")
 	equal(t, names(grant("docs")), []string{"search=docs/search", "get_get_me=docs/get_get_me"}, "include and exclude globs, no prefix")
 	equal(t, names(grant("bigmcp")), []string{"big_t=bigmcp/t"}, "short prefix, resources hidden")
-	equal(t, grant("nothing", "my-server/missing", "my-server/read/extra").UnresolvedSelectors, []string{"nothing", "my-server/missing"}, "unresolved")
+	equal(t, grant("nothing", "my-server/missing", "my-server/read/extra").UnresolvedSelectors, []string{"nothing", "my-server/missing", "my-server/read/extra"}, "unresolved (a selector with a third part names no tool)")
 	equal(t, len(grant("").Selections), 0, "empty selector")
-	equal(t, grant("my-server//").UnresolvedSelectors == nil, true, "trailing slashes are dropped")
+	equal(t, len(grant("my-server//").UnresolvedSelectors), 0, "trailing slashes are dropped")
 	equal(t, normalizeMcpDirectToolSelectors([]string{"a/", "a", "", "b//", "b"}), []string{"a", "b"}, "normalized")
 	sel := parseMcpDirectToolSelectors([]string{"a", "b/c", "b/d", "e/", "/f", "g/h/i"})
 	equal(t, [3]any{sel.Servers["a"] && sel.Servers["e"], len(sel.Tools["b"]), sel.Tools["g"]["h"]}, [3]any{true, 2, true}, "parsed selectors")
@@ -516,7 +517,10 @@ func TestMcpConfigSources(t *testing.T) {
 	e.writeJSON(filepath.Join(e.home, ".cursor", "mcp.json"), `{"mcpServers":{"imp":{"command":"cursor"},"fromcursor":{"command":"c"}}}`)
 	fresh("fromcursor", def(`{"command":"c"}`), "t")
 	names, _ = selections("fromcursor")
-	equal(t, names, []string{"fromcursor_t"}, "imported server (the adapter's own settings do not set a prefix here)")
+	equal(t, names, []string{"t"}, "imported server: the project file's settings.toolPrefix none applies")
+	e.writeJSON(filepath.Join(cwd, ".mcp.json"), `{"mcp-servers":{"proj":{"command":"p"}}}`)
+	names, _ = selections("fromcursor")
+	equal(t, names, []string{"fromcursor_t"}, "imported server: no settings set a prefix, so the server prefix")
 	cfg, err := loadMcpConfig(cwd)
 	if err != nil {
 		t.Fatal(err)
@@ -549,6 +553,7 @@ func TestMcpConfigSources(t *testing.T) {
 		"e":{"type":"stdio","command":"run","env":{"PLUGIN_ROOT":"x"}},
 		"f":{"type":"stdio","command":"run","extra":1},
 		"g":{"type":"sse","url":"http://127.0.0.1:1/x","headers":{"A":"1","a":"2"}}}}`)
+	os.Remove(filepath.Join(e.agentDir, "mcp-adapter.json")) // its servers (and the import) are not under test here
 	e.writeJSON(filepath.Join(cwd, ".mcp.json"), `{"settings":{"agentPluginPaths":[`+strconv.Quote(plugin)+`]}}`)
 	cfg, err = loadMcpConfig(cwd)
 	if err != nil {

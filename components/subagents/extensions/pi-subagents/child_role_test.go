@@ -45,7 +45,7 @@ func TestChildRoleStructuredOutput(t *testing.T) {
 	_, err = executeStructuredOutput(rt, capture, map[string]any{"value": map[string]any{"ok": true}, "acceptanceReport": "nope"})
 	polMatches(t, err.Error(), `^Invalid structured output acceptance report: `)
 
-	report := map[string]any{}
+	report := map[string]any{"notes": "checked"}
 	res, err := executeStructuredOutput(rt, capture, map[string]any{"value": map[string]any{"ok": true}, "acceptanceReport": report})
 	if err != nil {
 		t.Fatal(err)
