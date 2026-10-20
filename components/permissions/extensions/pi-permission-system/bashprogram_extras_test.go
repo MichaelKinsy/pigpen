@@ -52,3 +52,10 @@ func TestBashProgramEmptyCommand(t *testing.T) {
 		t.Error("an empty program holds nil slices")
 	}
 }
+
+func TestBashProgramPipelineRedirectFollowsTheFold(t *testing.T) {
+	// tree-sitter groups `cd /tmp/q && echo hi > ../out | cat` as `(cd /tmp/q && echo hi > ../out) | cat`: the redirect is part of
+	// the first stage, whose leading `cd` folds, so its target resolves against /tmp/q.
+	n := bpNormalizer(t, bpCwd)
+	eqStrings(t, externalValues(bpParse(t, "cd /tmp/q && echo hi > ../out | cat", n)), "/tmp/q", "/tmp/out")
+}

@@ -260,10 +260,20 @@ func TestBashProgramDifferential(t *testing.T) {
 			}
 		}()
 	}
+	// PP_DIFF_STRIDE=n compares every nth record: the mutation pass runs the differential under a time limit that the full
+	// recording does not fit on a loaded host. Unset (the default) compares all of them.
+	stride := 1
+	if v := os.Getenv("PP_DIFF_STRIDE"); v != "" {
+		if _, err := fmt.Sscanf(v, "%d", &stride); err != nil || stride < 1 {
+			t.Fatalf("PP_DIFF_STRIDE=%q", v)
+		}
+	}
 	for sc.Scan() {
-		line := append([]byte(nil), sc.Bytes()...)
 		total++
-		jobs <- job{line}
+		if (total-1)%stride != 0 {
+			continue
+		}
+		jobs <- job{append([]byte(nil), sc.Bytes()...)}
 	}
 	close(jobs)
 	wg.Wait()

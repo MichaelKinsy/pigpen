@@ -31,7 +31,7 @@ m("resolve-no-seed", R, "initialBase = r.deriveBaseFromCdTarget(cwdBase, *r.work
 m("resolve-salvage-known-base", R, "r.walkForCandidates(salvaged, unknownBase, &collected)", "r.walkForCandidates(salvaged, initialBase, &collected)")
 m("resolve-rebound-home-kept", R, "if !r.words.SpellsReboundHome(c.token) {", "if true {")
 m("resolve-externals-skip-workdir", R, "ExternalAccesses: r.withWorkdirExternal(r.projectExternalPaths(candidates)),", "ExternalAccesses: r.projectExternalPaths(candidates),")
-m("workdir-always-external", R, "if !isExternal {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)", "if false {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)")
+m("workdir-always-external", R, "if !isExternal {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)", "if !isExternal && false {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)")
 m("workdir-no-canonical-gate", R, "canonical := wdPath.BoundaryValue()\n\tisExternal := true\n\tif canonical != \"\" {\n\t\tisExternal = r.normalizer.IsBoundaryOutsideWorkingDirectory(canonical)\n\t}\n", "canonical := wdPath.BoundaryValue()\n\tisExternal := true\n")
 m("workdir-literal-only-internal", R, "canonical := wdPath.BoundaryValue()\n\tisExternal := true", "canonical := wdPath.BoundaryValue()\n\tisExternal := false")
 m("workdir-key-lexical", R, "key := canonical\n\tif key == \"\" {\n\t\tkey = wdPath.Value()\n\t}\n\tfor", "key := wdPath.Value()\n\tfor")
@@ -150,7 +150,7 @@ m("relative-home", R, "return !r.normalizer.IsAbsolute(candidate) && !strings.Ha
 m("tag-effect", R, "pathCandidate{token: t.Token, base: base, effect: t.Effect, role: t.Role}", "pathCandidate{token: t.Token, base: base, effect: UnprovenEffect, role: t.Role}")
 m("tag-role", R, "pathCandidate{token: t.Token, base: base, effect: t.Effect, role: t.Role}", "pathCandidate{token: t.Token, base: base, effect: t.Effect, role: bashanalysis.RoleOperand}")
 m("tag-base", R, "pathCandidate{token: t.Token, base: base, effect: t.Effect, role: t.Role}", "pathCandidate{token: t.Token, base: cwdBase, effect: t.Effect, role: t.Role}")
-m("pipe-redirect-collector", R, "tagTokens(bashanalysis.CollectRedirectTokens(child, r.words), current, out)\n\t\t\t\tcontinue", "tagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), base, out)\n\t\t\t\tcontinue")
+m("pipe-redirect-base", R, "tagTokens(bashanalysis.CollectRedirectTokens(child, r.words), current, out)", "tagTokens(bashanalysis.CollectRedirectTokens(child, r.words), base, out)")
 
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mutations-bashprogram.json")
 bad = 0

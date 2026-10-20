@@ -81,7 +81,7 @@
   "name": "bashprogram-workdir-always-external",
   "file": "bashpathresolver.go",
   "find": "if !isExternal {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)",
-  "replace": "if false {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)"
+  "replace": "if !isExternal && false {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)"
  },
  {
   "name": "bashprogram-workdir-no-canonical-gate",
@@ -732,9 +732,9 @@
   "replace": "pathCandidate{token: t.Token, base: cwdBase, effect: t.Effect, role: t.Role}"
  },
  {
-  "name": "bashprogram-pipe-redirect-collector",
+  "name": "bashprogram-pipe-redirect-base",
   "file": "bashpathresolver.go",
-  "find": "tagTokens(bashanalysis.CollectRedirectTokens(child, r.words), current, out)\n\t\t\t\tcontinue",
-  "replace": "tagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), base, out)\n\t\t\t\tcontinue"
+  "find": "tagTokens(bashanalysis.CollectRedirectTokens(child, r.words), current, out)",
+  "replace": "tagTokens(bashanalysis.CollectRedirectTokens(child, r.words), base, out)"
  }
 ]
