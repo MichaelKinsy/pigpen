@@ -76,7 +76,9 @@
 | `rules-file.ts` | `rules_file.go` | `resolveRulesFile(cwd, files, fallback)` is for the guard lane's escalation request |
 | `rules-lint.ts` | `rules_lint.go` | chunks run concurrently (upstream `Promise.all`) |
 | `rules-log.ts`, `rules-report.ts` | `rules_log.go`, `rules_report.go` | the log is `<warden data dir>/rules/<sha256(cwd)[:12]>.jsonl`, the data dir being the directory of `pigpen-warden/config.json` (D5) |
-| `rules-audit.ts` (audit and `runBench`) | `rules_audit.go` | `DiscoverSourceFiles` is the audit lane's `discover.go`; `/warden bench` wiring is theirs, `runBench` is ready |
+| `rules-audit.ts` (audit and `runBench`) | `rules_audit.go` | `DiscoverSourceFiles` is `discover.go` (audit lane); `/warden bench` is wired in `bench_cmd.go` |
+| `discover.ts`, `audit.ts` | `discover.go`, `audit.go` | `SkipDirs`, `SourceRE`, `DiscoverSourceFiles`, `FindProjects`; `BuildAuditPrompt` (checked byte for byte against the original, `testdata/audit-prompt.txt`), `SnapshotReport`, `ReportOutcome` |
+| `extension.ts` `/warden audit`, `/warden bench`, the `input` block while an audit runs | `audit_cmd.go`, `bench_cmd.go` | one hook each in `commands.go` and `extension.go` (`AUDIT-LANE HOOK`) |
 | `rules-calibrate.ts` | `rules_calibrate.go` | |
 | `turn-rules.ts` | `turn_rules.go` | every git call is its own process under a timeout and a 1 MiB output cap (Node's `execFile` default) |
 | `shell-writes.ts` | `shell_writes.go` | `shellWrites` and `mergeWrites` are ready for `describeAction`'s `writes` (guard lane) |
@@ -432,8 +434,7 @@ Deviations in this lane:
   (no consent: run `/warden enable`, or set `PIGPEN_WARDEN_ENABLED=1` and `PIGPEN_WARDEN_BACKEND` headless; a backend that
   cannot start; the spent request budget) where the original names its key and `/typesafe login` (D1, D3).
 - The rules log lives under `<PIG_HOME>/pigpen-warden/rules/` (D5), the audit report stays at `<project>/.pi-warden/rules-audit.md`.
-- `/warden bench` stays refused until the audit lane wires it; `runBench` takes an optional usage-counter callback, and
-  the Go judges expose none, so the bench says "unknown (no usage counters)" for tokens and cost.
+- `/warden bench` is wired by the audit lane (`bench_cmd.go`); the usage counters it diffs are `Budget.Usage()` (audit lane, `backend.go`).
 - The `rules.*` hook `holds.recordRules` is the func variable `holdsRecordRules`; the learning lane installs it (`learning_wire.go`).
 - `/warden` argument completion for `rules check|audit|calibrate|tune` is not registered (the SDK command takes no completion
   callback in this port).
@@ -786,3 +787,33 @@ Against the previous slice (`port/warden-learning-3`; a `package main` that only
 | G13 | The config loader clamps `maxSkillBytes` and `maxLoadedBytes` to 1024..262144 (`config.ts` 1144); the port reads them as written | the config loader is the config lane's | `applyUserOverrides` lands |
 
 Stacked on the other lanes: load mode calls guard core's `matchPathRules` (rule 3, for the advertised and the resolved path) and security's `FindSecrets` (rule 7) directly; the package variables of the first branch are gone. The conscience's pieces of the shared events are the supervision module's registries: `w.sup.onMessageStart(w.conscienceMessageStart)` after security's runaway reset, `w.sup.blockInput(w.conscienceIndexBusy, ...)` after the rules block, `w.sup.onInputPass(w.conscienceInputPass)` for the generation bump, `w.sup.onSettled(w.conscienceSettled)` after the subagent triage; the agent_end reminder is slot 6, between the restatement record and the rules pass. The conscience reads the judge through `judgeFor`, so the learning lane's cooldown wrapper (`watchJudge`) sees its failures and a cooldown makes the judge absent; the skip reason is then `no_consent`, as upstream (no reason passed). It records its trace through `w.record` and steers through `w.steer`, `w.adaptiveSend` and `w.watchSteer`.
+## Audit lane (port/warden-audit-2, stacked on port/warden-rules-2)
+
+Ported: `discover.ts` (`discover.go`), `audit.ts` (`audit.go`), `/warden audit` (`audit_cmd.go`), `/warden bench` (`bench_cmd.go`, over the rules lane's
+`runBench`), and the session usage counters pi-typesafe's `getUsage()` returns, which the bench diffs: `Budget.Usage()` (`backend.go`) counts
+requests started, input and output tokens, and the input-token cost at pi-typesafe's default $0.042 per million input tokens, rounded to a
+micro-dollar. The Go port does not read pi-typesafe's price override.
+
+- `/warden audit` asks for confirmation (`Run workspace audit?`, the original's text with the redacted cwd), sends the audit prompt as a user
+  message, waits for the agent, and reports `written`, `stale` or `missing` by the report file's mtime (`.pi-warden/audit-report.html`). Headless:
+  "Audit needs an interactive session to run." A send failure is reported as `pi-warden audit failed: ...` and the outcome is still checked.
+- `console.warn` lines of `discover.ts` / `audit.ts` (an unreadable directory) are not reproduced; the port never writes to stdout/stderr.
+  `DiscoverSourceFiles` returns names in sorted order (Go's `os.ReadDir`); Node returns directory order, which only matters when the 200-file cap cuts.
+
+**A1 (finding about the original, kept): the audit blocks its own prompt on Pi 1.3.0.** The original's `input` handler answers `{action: "handled"}` for every
+message while `auditRunning`, without looking at `source`, and Pi 1.3.0.1402973a (and PiG's Node host) emit `input` for the extension's own
+`sendUserMessage`. Recorded from the original under Pi (`port/golden`, `audit-prompt-blocked-by-its-own-input-handler`): the notice `pi-warden is running an
+audit. Please wait...` appears, no model request is made, and the outcome is `Agent did not write an audit report. ...`. The port keeps that
+behavior (`onAuditInput` does not look at `source`), so on such a host `/warden audit` ends the same way; on a host that does not emit `input` for
+extension messages (the layer-1 fake host) the audit runs. Fixing it means checking `source == "extension"`; that is a deviation for the owner to
+decide, not taken here. Consequently the `written` outcome and the prompt reaching the model are not reachable through pigeq; they are
+proved by layer-1 tests and by the byte-for-byte prompt check.
+
+Input registry: the supervision lane owns the single `input` handler (`w.sup.blockInput`). It is not on this stack, so `audit_cmd.go` registers its own
+`EventInput` handler (`onAuditInput`, one marked line in `extension.go`). When supervision stacks, replace that line with
+`w.sup.blockInput(w.auditRunning, "pi-warden is running an audit. Please wait...")` (order: init, audit, index) and delete `onAuditInput`.
+
+Not Go twins, by design (named skips with a per-case reason that names the script, generated by `port/gen-skipped-twins.py`): the 48 cases of
+`eval-env`, `eval-score`, `eval-turn`, `eval-waste`, `eval-weak` and the 13 of `judge-bench`. They import `../eval/*.mjs` (research scripts of the
+upstream repository: `npm run eval:*`), and `package.json` `files` is `dist, extensions, examples, README, CHANGELOG, LICENSE`, so `eval/` is neither
+published nor vendored in `port/oracle`. `/warden bench` is `runBench` in `src/rules-audit.ts` and imports none of them.
