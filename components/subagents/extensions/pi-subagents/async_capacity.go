@@ -43,8 +43,11 @@ type ActiveAsyncCapacityOwner struct {
 // ActiveAsyncCapacityError is the refusal when the cap is reached.
 type ActiveAsyncCapacityError struct{ Snapshot ActiveAsyncCapacitySnapshot }
 
+// capacityRefusalPrefix starts every ActiveAsyncCapacityError message (the launch turns the error into a tool error, text only).
+const capacityRefusalPrefix = "Active async run capacity exhausted: "
+
 func (e *ActiveAsyncCapacityError) Error() string {
-	return fmt.Sprintf("Active async run capacity exhausted: %d/%d used.", e.Snapshot.Used, e.Snapshot.Limit)
+	return fmt.Sprintf(capacityRefusalPrefix+"%d/%d used.", e.Snapshot.Used, e.Snapshot.Limit)
 }
 
 // CapacityOptions are the seams of the capacity module.
