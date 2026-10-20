@@ -347,3 +347,12 @@ func wfToInt(v any) (int, bool) {
 	}
 	return 0, false
 }
+
+// compileWorkerSource compiles the worker JavaScript and the prelude, so a syntax error in either is a test failure
+// rather than a failed run. upstream: the "parses as JavaScript" test of worker-source.ts.
+func compileWorkerSource() (*goja.Program, error) {
+	if _, err := goja.Compile("workflow-prelude.js", "(async () => {"+workflowPrelude+"\n})", true); err != nil {
+		return nil, err
+	}
+	return goja.Compile("workflow-worker.js", workflowWorkerSource, true)
+}
