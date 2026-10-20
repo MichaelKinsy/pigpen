@@ -1,0 +1,1476 @@
+[
+ {
+  "name": "tinyfish search with filters, recency and inline content",
+  "kind": "search",
+  "fn": "searchWithTinyFish",
+  "env": {
+   "TINYFISH_API_KEY": "wire-tinyfish-key"
+  },
+  "args": [
+   "tinyfish docs",
+   {
+    "includeContent": true,
+    "numResults": 2,
+    "recencyFilter": "week",
+    "domainFilter": [
+     "docs.tinyfish.ai",
+     "-example.com"
+    ]
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "query": "tinyfish docs",
+     "results": [
+      {
+       "title": "TinyFish Docs",
+       "snippet": "  Search   and fetch  ",
+       "url": "https://docs.tinyfish.ai/"
+      },
+      {
+       "title": "",
+       "snippet": "x",
+       "url": "https://docs.tinyfish.ai/"
+      },
+      {
+       "snippet": "no title",
+       "url": "https://example.org/b"
+      }
+     ]
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "results": [
+      {
+       "url": "https://docs.tinyfish.ai/",
+       "final_url": "https://docs.tinyfish.ai/",
+       "title": "TinyFish Docs",
+       "text": "# Full"
+      },
+      {
+       "url": "https://example.org/b",
+       "text": {
+        "a": 1,
+        "b": [
+         2
+        ]
+       }
+      }
+     ],
+     "errors": []
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "GET",
+     "url": "https://api.search.tinyfish.ai?query=tinyfish+docs&include_domains=docs.tinyfish.ai&exclude_domains=example.com&recency_minutes=10080",
+     "headers": {
+      "x-api-key": "wire-tinyfish-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://api.fetch.tinyfish.ai",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "wire-tinyfish-key"
+     },
+     "body": {
+      "urls": [
+       "https://docs.tinyfish.ai/",
+       "https://example.org/b"
+      ],
+      "format": "markdown",
+      "per_url_timeout_ms": 110000
+     }
+    }
+   ],
+   "result": {
+    "answer": "Search and fetch\nSource: TinyFish Docs (https://docs.tinyfish.ai/)\n\nno title\nSource: https://example.org/b (https://example.org/b)",
+    "results": [
+     {
+      "title": "TinyFish Docs",
+      "url": "https://docs.tinyfish.ai/",
+      "snippet": "Search and fetch"
+     },
+     {
+      "title": "https://example.org/b",
+      "url": "https://example.org/b",
+      "snippet": "no title"
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://docs.tinyfish.ai/",
+      "title": "TinyFish Docs",
+      "content": "# Full",
+      "error": null
+     },
+     {
+      "url": "https://example.org/b",
+      "title": "",
+      "content": "{\n  \"a\": 1,\n  \"b\": [\n    2\n  ]\n}",
+      "error": null
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "tinyfish fetch with a purpose and a timeout",
+  "kind": "extract",
+  "fn": "extractWithTinyFish",
+  "env": {
+   "TINYFISH_API_KEY": "wire-tinyfish-key"
+  },
+  "args": [
+   "https://example.com/good",
+   {
+    "prompt": "  Read the article  ",
+    "timeoutMs": 45000
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "results": [
+      {
+       "url": "https://example.com/good",
+       "final_url": "https://example.com/good",
+       "title": " Good ",
+       "text": "  # Rendered body  "
+      }
+     ],
+     "errors": []
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.fetch.tinyfish.ai",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "wire-tinyfish-key"
+     },
+     "body": {
+      "urls": [
+       "https://example.com/good"
+      ],
+      "format": "markdown",
+      "per_url_timeout_ms": 45000,
+      "purpose": "Read the article"
+     }
+    }
+   ],
+   "result": {
+    "url": "https://example.com/good",
+    "title": "Good",
+    "content": "# Rendered body",
+    "error": null
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "search1api search with deep crawling",
+  "kind": "search",
+  "fn": "searchWithSearch1API",
+  "env": {
+   "SEARCH1API_KEY": "wire-search1api-key"
+  },
+  "args": [
+   "search1api docs",
+   {
+    "includeContent": true,
+    "numResults": 3,
+    "recencyFilter": "month",
+    "domainFilter": [
+     "https://www.search1api.com/docs",
+     "-example.com"
+    ]
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "searchParameters": {},
+     "results": [
+      {
+       "title": "Docs",
+       "link": "https://www.search1api.com/docs",
+       "snippet": " a   b ",
+       "content": "# Full"
+      },
+      {
+       "link": "  ",
+       "title": "dropped"
+      }
+     ]
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.search1api.com/search",
+     "headers": {
+      "authorization": "Bearer wire-search1api-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "query": "search1api docs",
+      "max_results": 3,
+      "crawl_results": 3,
+      "include_sites": [
+       "www.search1api.com"
+      ],
+      "exclude_sites": [
+       "example.com"
+      ],
+      "time_range": "month"
+     }
+    }
+   ],
+   "result": {
+    "answer": "a b\nSource: Docs (https://www.search1api.com/docs)",
+    "results": [
+     {
+      "title": "Docs",
+      "url": "https://www.search1api.com/docs",
+      "snippet": "a b"
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://www.search1api.com/docs",
+      "title": "Docs",
+      "content": "# Full",
+      "error": null
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "search1api crawl",
+  "kind": "extract",
+  "fn": "extractWithSearch1API",
+  "env": {
+   "SEARCH1API_KEY": "wire-search1api-key"
+  },
+  "args": [
+   "https://example.com/article",
+   {
+    "timeoutMs": 45000
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "crawlParameters": {
+      "url": "https://example.com/article"
+     },
+     "results": {
+      "title": " Example article ",
+      "link": "https://example.com/article",
+      "content": " # Article body "
+     }
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.search1api.com/crawl",
+     "headers": {
+      "authorization": "Bearer wire-search1api-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "url": "https://example.com/article"
+     }
+    }
+   ],
+   "result": {
+    "url": "https://example.com/article",
+    "title": "Example article",
+    "content": "# Article body",
+    "error": null
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "searchinfinity search with filters and a business error",
+  "kind": "search",
+  "fn": "searchWithSearchinfinity",
+  "env": {
+   "SEARCHINFINITY_API_KEY": "wire-searchinfinity-key"
+  },
+  "args": [
+   "searchinfinity docs",
+   {
+    "numResults": 2,
+    "recencyFilter": "year",
+    "domainFilter": [
+     "https://www.byteplus.com/docs",
+     "a.example.com",
+     "-example.com",
+     "-b.example.com"
+    ]
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "ResponseMetadata": {
+      "RequestId": "r"
+     },
+     "Result": {
+      "WebResults": [
+       {
+        "Title": "Docs",
+        "Url": "https://www.byteplus.com/docs",
+        "Snippet": " short ",
+        "Summary": " Model   summary "
+       },
+       {
+        "Url": "https://x.example/y",
+        "Snippet": "only snippet"
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://torchlight.byteintlapi.com/search_api/web_search",
+     "headers": {
+      "authorization": "Bearer wire-searchinfinity-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "Query": "searchinfinity docs",
+      "Count": 2,
+      "Filter": {
+       "Sites": "www.byteplus.com|a.example.com",
+       "BlockHosts": "example.com|b.example.com"
+      },
+      "TimeRange": "OneYear"
+     }
+    }
+   ],
+   "result": {
+    "answer": "Model summary\nSource: Docs (https://www.byteplus.com/docs)\n\nonly snippet\nSource: https://x.example/y (https://x.example/y)",
+    "results": [
+     {
+      "title": "Docs",
+      "url": "https://www.byteplus.com/docs",
+      "snippet": "Model summary"
+     },
+     {
+      "title": "https://x.example/y",
+      "url": "https://x.example/y",
+      "snippet": "only snippet"
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "searchinfinity business error",
+  "kind": "search",
+  "fn": "searchWithSearchinfinity",
+  "env": {
+   "SEARCHINFINITY_API_KEY": "wire-searchinfinity-key"
+  },
+  "args": [
+   "bad key",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "ResponseMetadata": {
+      "Error": {
+       "CodeN": 700429,
+       "Code": "700429",
+       "Message": "QPS Exceeded"
+      }
+     },
+     "Result": null
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://torchlight.byteintlapi.com/search_api/web_search",
+     "headers": {
+      "authorization": "Bearer wire-searchinfinity-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "Query": "bad key",
+      "Count": 5
+     }
+    }
+   ],
+   "result": null,
+   "error": "Searchinfinity Search API error 429: QPS Exceeded (code 700429 700429)"
+  }
+ },
+ {
+  "name": "querit search and contents",
+  "kind": "search",
+  "fn": "searchWithQuerit",
+  "env": {
+   "QUERIT_API_KEY": "wire-querit-key"
+  },
+  "args": [
+   "querit docs",
+   {
+    "includeContent": true,
+    "numResults": 2,
+    "recencyFilter": "day",
+    "domainFilter": [
+     "https://www.querit.ai/docs",
+     "-example.com"
+    ]
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "error_code": 200,
+     "error_msg": "",
+     "results": {
+      "result": [
+       {
+        "title": "Querit docs",
+        "url": "https://www.querit.ai/en/docs",
+        "snippet": " Real-time   search "
+       },
+       {
+        "url": "https://www.querit.ai/two"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "error_code": 200,
+     "error_msg": "",
+     "results": [
+      {
+       "id": "a",
+       "url": "https://www.querit.ai/en/docs",
+       "content": "# Doc",
+       "extrasMeta": {
+        "title": "Doc title"
+       }
+      },
+      {
+       "id": "b",
+       "url": "https://www.querit.ai/two",
+       "content": "  "
+      }
+     ],
+     "statuses": [
+      {
+       "id": "a",
+       "status": "success"
+      },
+      {
+       "id": "b",
+       "status": "failed"
+      }
+     ]
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.querit.ai/v1/search",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer wire-querit-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "query": "querit docs",
+      "count": 2,
+      "filters": {
+       "sites": {
+        "include": [
+         "www.querit.ai"
+        ],
+        "exclude": [
+         "example.com"
+        ]
+       },
+       "timeRange": {
+        "date": "d1"
+       }
+      }
+     }
+    },
+    {
+     "method": "POST",
+     "url": "https://api.querit.ai/v1/contents",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer wire-querit-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "urls": [
+       "https://www.querit.ai/en/docs",
+       "https://www.querit.ai/two"
+      ],
+      "format": "markdown",
+      "crawlTimeout": 10,
+      "extrasMeta": true
+     }
+    }
+   ],
+   "result": {
+    "answer": "Real-time search\nSource: Querit docs (https://www.querit.ai/en/docs)\n\nSource: https://www.querit.ai/two (https://www.querit.ai/two)",
+    "results": [
+     {
+      "title": "Querit docs",
+      "url": "https://www.querit.ai/en/docs",
+      "snippet": "Real-time search"
+     },
+     {
+      "title": "https://www.querit.ai/two",
+      "url": "https://www.querit.ai/two",
+      "snippet": ""
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://www.querit.ai/en/docs",
+      "title": "Doc title",
+      "content": "# Doc",
+      "error": null
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "querit contents extraction",
+  "kind": "extract",
+  "fn": "extractWithQuerit",
+  "env": {
+   "QUERIT_API_KEY": "wire-querit-key"
+  },
+  "args": [
+   "https://example.com/article",
+   {
+    "timeoutMs": 45000
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "error_code": 200,
+     "error_msg": "",
+     "results": [
+      {
+       "id": "x",
+       "url": "https://example.com/article",
+       "content": "# Article body",
+       "extrasMeta": {
+        "title": "Example article"
+       }
+      }
+     ],
+     "statuses": [
+      {
+       "id": "x",
+       "status": "success"
+      }
+     ]
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.querit.ai/v1/contents",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer wire-querit-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "urls": [
+       "https://example.com/article"
+      ],
+      "format": "markdown",
+      "crawlTimeout": 45,
+      "extrasMeta": true
+     }
+    }
+   ],
+   "result": {
+    "url": "https://example.com/article",
+    "title": "Example article",
+    "content": "# Article body",
+    "error": null
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "querit API-level failure",
+  "kind": "search",
+  "fn": "searchWithQuerit",
+  "env": {
+   "QUERIT_API_KEY": "wire-querit-key"
+  },
+  "args": [
+   "quota",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "error_code": 429,
+     "error_msg": "quota exceeded",
+     "search_id": 301
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.querit.ai/v1/search",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer wire-querit-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "query": "quota",
+      "count": 5
+     }
+    }
+   ],
+   "result": null,
+   "error": "Querit Search API returned error 429: quota exceeded"
+  }
+ },
+ {
+  "name": "parallel search with a source policy",
+  "kind": "search",
+  "fn": "searchWithParallel",
+  "env": {
+   "PARALLEL_API_KEY": "pk_live_wire_parallel_key"
+  },
+  "args": [
+   "parallel docs",
+   {
+    "includeContent": true,
+    "numResults": 3,
+    "domainFilter": [
+     "docs.parallel.ai",
+     "-example.com"
+    ]
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "results": [
+      {
+       "title": "Parallel Docs",
+       "url": "https://docs.parallel.ai/search",
+       "excerpts": [
+        "First excerpt",
+        "Second"
+       ]
+      },
+      {
+       "url": "https://x.example/none",
+       "excerpts": []
+      }
+     ]
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.parallel.ai/v1/search",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "pk_live_wire_parallel_key"
+     },
+     "body": {
+      "objective": "parallel docs",
+      "search_queries": [
+       "parallel docs"
+      ],
+      "advanced_settings": {
+       "max_results": 3,
+       "source_policy": {
+        "include_domains": [
+         "docs.parallel.ai"
+        ],
+        "exclude_domains": [
+         "example.com"
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "result": {
+    "answer": "First excerpt Second\nSource: Parallel Docs (https://docs.parallel.ai/search)",
+    "results": [
+     {
+      "title": "Parallel Docs",
+      "url": "https://docs.parallel.ai/search",
+      "snippet": "First excerpt"
+     },
+     {
+      "title": "Source 2",
+      "url": "https://x.example/none",
+      "snippet": ""
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://docs.parallel.ai/search",
+      "title": "Parallel Docs",
+      "content": "First excerpt\n\nSecond",
+      "error": null
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "parallel extract retries for full content",
+  "kind": "extract",
+  "fn": "extractWithParallel",
+  "env": {
+   "PARALLEL_API_KEY": "pk_live_wire_parallel_key"
+  },
+  "args": [
+   "https://example.com",
+   {
+    "prompt": " Read it "
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "results": [
+      {
+       "url": "https://example.com",
+       "title": "Short",
+       "excerpts": [
+        "too short"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "results": [
+      {
+       "url": "https://example.com",
+       "title": "Full",
+       "full_content": "# Full\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ]
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.parallel.ai/v1/extract",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "pk_live_wire_parallel_key"
+     },
+     "body": {
+      "urls": [
+       "https://example.com"
+      ],
+      "objective": "Read it"
+     }
+    },
+    {
+     "method": "POST",
+     "url": "https://api.parallel.ai/v1/extract",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "pk_live_wire_parallel_key"
+     },
+     "body": {
+      "urls": [
+       "https://example.com"
+      ],
+      "objective": "Read it",
+      "advanced_settings": {
+       "full_content": true
+      }
+     }
+    }
+   ],
+   "result": {
+    "url": "https://example.com",
+    "title": "Full",
+    "content": "# Full\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "error": null
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "parallel mcp search anonymous with filters",
+  "kind": "search",
+  "fn": "searchWithParallelMcp",
+  "env": {},
+  "args": [
+   "docs",
+   {
+    "numResults": 2,
+    "domainFilter": [
+     "example.com",
+     "-private.docs.example.com"
+    ],
+    "recencyFilter": "week",
+    "includeContent": true
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "result": {
+      "structuredContent": {
+       "results": [
+        {
+         "title": "Allowed",
+         "url": "https://docs.example.com/a",
+         "excerpts": [
+          "Allowed excerpt"
+         ]
+        },
+        {
+         "title": "Excluded",
+         "url": "https://private.docs.example.com/b",
+         "excerpts": [
+          "x"
+         ]
+        },
+        {
+         "title": "Outside",
+         "url": "https://example.net/c",
+         "excerpts": [
+          "y"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://search.parallel.ai/mcp",
+     "headers": {
+      "accept": "application/json, text/event-stream",
+      "content-type": "application/json"
+     },
+     "body": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "tools/call",
+      "params": {
+       "name": "web_search",
+       "arguments": {
+        "objective": "docs",
+        "search_queries": [
+         "docs site:example.com -site:private.docs.example.com past week"
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "result": {
+    "answer": "Allowed excerpt\nSource: Allowed (https://docs.example.com/a)",
+    "results": [
+     {
+      "title": "Allowed",
+      "url": "https://docs.example.com/a",
+      "snippet": "Allowed excerpt"
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://docs.example.com/a",
+      "title": "Allowed",
+      "content": "Allowed excerpt",
+      "error": null
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "parallel mcp text blocks with a key",
+  "kind": "search",
+  "fn": "searchWithParallelMcp",
+  "env": {
+   "PARALLEL_API_KEY": "pk_live_wire_parallel_key"
+  },
+  "args": [
+   "text",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "result": {
+      "content": [
+       {
+        "type": "text",
+        "text": "Title: One\nURL: https://example.com/1\nText: First result\n---\nTitle: Two\nURL: https://example.com/2\nText: Second result\n---"
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://search.parallel.ai/mcp",
+     "headers": {
+      "accept": "application/json, text/event-stream",
+      "authorization": "Bearer pk_live_wire_parallel_key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "tools/call",
+      "params": {
+       "name": "web_search",
+       "arguments": {
+        "objective": "text",
+        "search_queries": [
+         "text"
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "result": {
+    "answer": "First result\nSource: One (https://example.com/1)\n\nSecond result\nSource: Two (https://example.com/2)",
+    "results": [
+     {
+      "title": "One",
+      "url": "https://example.com/1",
+      "snippet": "First result"
+     },
+     {
+      "title": "Two",
+      "url": "https://example.com/2",
+      "snippet": "Second result"
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "parallel mcp web_fetch",
+  "kind": "extract",
+  "fn": "extractWithParallelMcp",
+  "env": {},
+  "args": [
+   "https://example.com/article",
+   {
+    "prompt": "  find the price  "
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "result": {
+      "structuredContent": {
+       "results": [
+        {
+         "url": "https://example.com/article",
+         "title": "Article",
+         "excerpts": [],
+         "full_content": "# Full article\n\nUseful content."
+        }
+       ]
+      }
+     }
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://search.parallel.ai/mcp",
+     "headers": {
+      "accept": "application/json, text/event-stream",
+      "content-type": "application/json"
+     },
+     "body": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "tools/call",
+      "params": {
+       "name": "web_fetch",
+       "arguments": {
+        "urls": [
+         "https://example.com/article"
+        ],
+        "objective": "find the price",
+        "full_content": true
+       }
+      }
+     }
+    }
+   ],
+   "result": {
+    "url": "https://example.com/article",
+    "title": "Article",
+    "content": "# Full article\n\nUseful content.",
+    "error": null
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "ollama search and fetch",
+  "kind": "search",
+  "fn": "searchWithOllama",
+  "env": {
+   "OLLAMA_API_KEY": "wire-ollama-key"
+  },
+  "args": [
+   "cloud search",
+   {
+    "numResults": 20,
+    "includeContent": true
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "results": [
+      {
+       "title": "Ollama result",
+       "url": "https://example.com/ollama",
+       "content": "Ollama snippet"
+      },
+      {
+       "title": "Empty",
+       "url": "https://example.com/empty",
+       "content": "  "
+      }
+     ]
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://ollama.com/api/web_search",
+     "headers": {
+      "authorization": "Bearer wire-ollama-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "query": "cloud search",
+      "max_results": 10
+     }
+    }
+   ],
+   "result": {
+    "answer": "Ollama snippet\nSource: Ollama result (https://example.com/ollama)\n\n  \nSource: Empty (https://example.com/empty)",
+    "results": [
+     {
+      "title": "Ollama result",
+      "url": "https://example.com/ollama",
+      "snippet": "Ollama snippet"
+     },
+     {
+      "title": "Empty",
+      "url": "https://example.com/empty",
+      "snippet": "  "
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://example.com/ollama",
+      "title": "Ollama result",
+      "content": "Ollama snippet",
+      "error": null
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "ollama web fetch",
+  "kind": "extract",
+  "fn": "extractWithOllama",
+  "env": {
+   "OLLAMA_API_KEY": "wire-ollama-key"
+  },
+  "args": [
+   "https://example.com/ollama",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "title": "Fetched",
+     "content": "  Fetched markdown ",
+     "links": []
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://ollama.com/api/web_fetch",
+     "headers": {
+      "authorization": "Bearer wire-ollama-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "url": "https://example.com/ollama"
+     }
+    }
+   ],
+   "result": {
+    "url": "https://example.com/ollama",
+    "title": "Fetched",
+    "content": "Fetched markdown",
+    "error": null
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "kagi search",
+  "kind": "search",
+  "fn": "searchWithKagi",
+  "env": {
+   "KAGI_API_KEY": "wire-kagi-key"
+  },
+  "args": [
+   "premium search",
+   {
+    "numResults": 3,
+    "includeContent": true
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "data": {
+      "search": [
+       {
+        "title": "Kagi result",
+        "url": "https://example.com/kagi",
+        "snippet": "Kagi snippet",
+        "markdown": "Body"
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://kagi.com/api/v1/search",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer wire-kagi-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "query": "premium search",
+      "limit": 3
+     }
+    }
+   ],
+   "result": {
+    "answer": "Kagi snippet\nSource: Kagi result (https://example.com/kagi)",
+    "results": [
+     {
+      "title": "Kagi result",
+      "url": "https://example.com/kagi",
+      "snippet": "Kagi snippet"
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://example.com/kagi",
+      "title": "Kagi result",
+      "content": "Body",
+      "error": null
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "kagi extract",
+  "kind": "extract",
+  "fn": "extractWithKagi",
+  "env": {
+   "KAGI_API_KEY": "wire-kagi-key"
+  },
+  "args": [
+   "https://example.com/kagi",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "data": [
+      {
+       "url": "https://example.com/kagi",
+       "title": "Kagi extract",
+       "markdown": "Kagi markdown"
+      }
+     ]
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://kagi.com/api/v1/extract",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer wire-kagi-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "pages": [
+       {
+        "url": "https://example.com/kagi"
+       }
+      ]
+     }
+    }
+   ],
+   "result": {
+    "url": "https://example.com/kagi",
+    "title": "Kagi extract",
+    "content": "Kagi markdown",
+    "error": null
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "brightdata serp with filters",
+  "kind": "search",
+  "fn": "searchWithBrightData",
+  "env": {
+   "BRIGHTDATA_API_KEY": "wire-bd-key",
+   "BRIGHTDATA_SERP_ZONE": "pi_serp"
+  },
+  "args": [
+   "vector databases",
+   {
+    "numResults": 3,
+    "recencyFilter": "week",
+    "domainFilter": [
+     "github.com",
+     "example.com",
+     "-gist.github.com"
+    ]
+   }
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "organic": [
+      {
+       "link": "https://github.com/a/b",
+       "title": "Repo",
+       "description": "repo   description"
+      },
+      {
+       "link": "https://gist.github.com/x",
+       "title": "Gist"
+      },
+      {
+       "link": "https://example.com/c"
+      },
+      {
+       "title": "no link"
+      }
+     ]
+    }
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.brightdata.com/request",
+     "headers": {
+      "authorization": "Bearer wire-bd-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "url": "https://www.google.com/search?q=vector+databases+site%3Agithub.com+OR+site%3Aexample.com+-site%3Agist.github.com&num=8&tbs=qdr%3Aw&brd_json=1",
+      "zone": "pi_serp",
+      "format": "raw",
+      "data_format": "parsed_light"
+     }
+    }
+   ],
+   "result": {
+    "answer": "repo description\nSource: Repo (https://github.com/a/b)\n\nSource: Source 2 (https://example.com/c)",
+    "results": [
+     {
+      "title": "Repo",
+      "url": "https://github.com/a/b",
+      "snippet": "repo description"
+     },
+     {
+      "title": "Source 2",
+      "url": "https://example.com/c",
+      "snippet": ""
+     }
+    ]
+   },
+   "error": null
+  }
+ },
+ {
+  "name": "brightdata unlocker",
+  "kind": "extract",
+  "fn": "extractWithBrightDataUnlocker",
+  "env": {
+   "BRIGHTDATA_API_KEY": "wire-bd-key",
+   "BRIGHTDATA_UNLOCKER_ZONE": "pi_unlocker"
+  },
+  "args": [
+   "https://example.com/article",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "body": "# Unlocked Title\n\nUnlocked body.\n"
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://api.brightdata.com/request",
+     "headers": {
+      "authorization": "Bearer wire-bd-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "url": "https://example.com/article",
+      "zone": "pi_unlocker",
+      "format": "raw",
+      "data_format": "markdown"
+     }
+    }
+   ],
+   "result": {
+    "url": "https://example.com/article",
+    "title": "Unlocked Title",
+    "content": "# Unlocked Title\n\nUnlocked body.",
+    "error": null
+   },
+   "error": null
+  }
+ }
+]

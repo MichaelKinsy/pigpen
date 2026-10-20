@@ -33,6 +33,8 @@ func jsonReply(v any) netReply {
 	return reply(200, string(b))
 }
 
+func (r netReply) withStatus(status int) netReply { r.Status = status; return r }
+
 func urlsOf(rs []SearchResult) []string {
 	out := []string{}
 	for _, r := range rs {
