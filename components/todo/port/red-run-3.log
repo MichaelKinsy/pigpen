@@ -1,0 +1,14 @@
+--- FAIL: TestStaleContextReadsNothingFromTheDeadSession (0.02s)
+    --- FAIL: TestStaleContextReadsNothingFromTheDeadSession/session_compact_keeps_the_state_and_reads_nothing_from_the_dead_session (0.00s)
+        stale_ctx_test.go:57: session_compact failed: handler panicked: This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(),
+    --- FAIL: TestStaleContextReadsNothingFromTheDeadSession/session_tree_is_the_same (0.00s)
+        stale_ctx_test.go:68: session reads: got 2, want 0
+    --- FAIL: TestStaleContextReadsNothingFromTheDeadSession/session_start_has_nothing_to_bind (0.00s)
+        stale_ctx_test.go:75: session_start failed: handler panicked: This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), c
+    --- FAIL: TestStaleContextReadsNothingFromTheDeadSession/session_shutdown_treats_an_unknown_session_as_the_foreground_and_clears_the_widget (0.00s)
+        stale_ctx_test.go:87: session_shutdown failed: handler panicked: This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession()
+    --- FAIL: TestStaleContextReadsNothingFromTheDeadSession/the_tool_fails_with_the_stale_message_instead_of_touching_the_dead_session (0.01s)
+        stale_ctx_test.go:101: failure = "", want the stale message
+FAIL
+FAIL	github.com/MichaelKinsy/pigpen/rpiv-todo	0.300s
+FAIL
