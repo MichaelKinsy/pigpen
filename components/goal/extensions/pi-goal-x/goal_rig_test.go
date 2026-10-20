@@ -467,3 +467,24 @@ func (r *goalRig) ToolResult(name string, params map[string]any) rigToolResult {
 	}
 	return decodeToolResult(r.t, raw)
 }
+
+// rigToolOutcome is a tool call's wire result or failure.
+type rigToolOutcome struct {
+	Raw     json.RawMessage
+	Failure string
+}
+
+// ToolAsync starts a tool call and returns at once: the original's tests start `tool.execute(...)` without awaiting it, act on
+// the session meanwhile (a command, a dialog answer) and await the call afterwards.
+func (r *goalRig) ToolAsync(name string, params map[string]any) <-chan rigToolOutcome {
+	if !r.Host.tools[name] {
+		r.t.Fatalf("tool %q is not registered", name)
+	}
+	argv, _ := json.Marshal(params)
+	out := make(chan rigToolOutcome, 1)
+	go func() {
+		raw, failure := r.Host.roundTrip(map[string]any{"method": "tool_call", "tool": name, "tool_call_id": "call-1", "args": json.RawMessage(argv)})
+		out <- rigToolOutcome{raw, failure}
+	}()
+	return out
+}
