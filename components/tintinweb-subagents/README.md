@@ -48,11 +48,21 @@ the original's `custom-agents` tests are twinned). Settings come from `<agent di
 `<workspace>/.pi/subagents.json`: `maxConcurrent` (default 10), `defaultMaxTurns`, `graceTurns`, `fallbackSubagent` (an
 unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused) and `disableDefaultAgents`.
 
+## The display surfaces
+
+The above-editor agent widget (`widgetMode`: `background` by default, `all` or `off`; `showModel`, `showCost`), the
+Claude Code-style fleet list below the editor (`fleetView`, on by default: ↓ or ← at an empty prompt moves into it, Enter
+opens the agent's live conversation overlay, Esc returns), the conversation viewer (scroll, `x` twice to stop, Enter to
+steer, `m` to cycle `viewerMarkdown` raw / assistant / all), the agent name colors, and the renderers of the `Agent`
+tool call and result and of the completion notification are the original's, drawn through `components/pitui`. The
+transcript, activity and usage they show come from the child's event stream. `showCost` and `showModel` only add to what
+is displayed.
+
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
 [port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, `@name`
-mentions, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, `inherit_context`,
+mentions, persistent agent memory, nested delegation, `inherit_context`,
 resuming a finished agent's session, the settings menu, and output transcripts. The `Agent` tool is advertised with the
 original's text and schema as it is with workflows, scheduling and worktree isolation switched off, and
 `SubagentWorkflow` is not registered.
@@ -70,9 +80,8 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel` and
   `isBackground: true`.
 - `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
-  `workflowsEnabled: true`, `worktreeIsolation: true`, `scopeModels: true`, `defaultJoinMode: "group"`, `widgetMode`
-  other than `off`, and so on). The settings the port matches are not flagged: `false` for the switches the port does
-  not have, and the five it honors.
+  `workflowsEnabled: true`, `worktreeIsolation: true`, `scopeModels: true`, `defaultJoinMode: "group"`, and so on). The settings the port matches are not flagged: `false` for the switches the port does not have, the five
+  it honors for the run, and the five display settings below.
 
 `isolated: true` starts the child with no extensions. The proof that the shipped slice matches the original is in
 [port/PORT.md](port/PORT.md).

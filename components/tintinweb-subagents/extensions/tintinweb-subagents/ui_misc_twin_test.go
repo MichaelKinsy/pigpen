@@ -233,7 +233,8 @@ func TestAgentToolErrorRenderingTwins(t *testing.T) {
 		hasStr(t, out, `Cannot run with isolation: "worktree" — Git probe failed.`)
 		lacksStr(t, out, "Aborted (max turns exceeded)")
 	})
-	tw(t, file, "shows the real result text for %s", func(t *testing.T) {
+	// The original's it.each (four cases) is not in the ledger: the cases run as plain subtests.
+	t.Run("shows the real result text for %s", func(t *testing.T) {
 		for _, c := range []struct {
 			name    string
 			details *agentDetails

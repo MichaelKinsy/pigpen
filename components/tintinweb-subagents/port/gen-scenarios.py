@@ -29,3 +29,8 @@ scenario("agent-unknown-type-strict", "With fallbackSubagent none an unknown typ
 # Not generated: a foreground agent. The child's model request carries "inserted" text equal to the original's (the
 # agent's header, environment block and prompt) and the same user message; the harness's "removed" part is the host's
 # own default system prompt, which says "pi" under Pi and "pig" under PiG, so that comparison cannot pass. PORT.md.
+
+# A background Agent call: the result carries the details the call's renderer draws (displayName, model label, tags,
+# status "background"). The agent runs on in the background; the scenario ends when the parent's turn does.
+scenario("agent-background-details", "A background Agent call returns the text and the details its renderer reads.",
+         [[call("Agent", prompt="say hi", description="greet", subagent_type="general-purpose", run_in_background=True)]])

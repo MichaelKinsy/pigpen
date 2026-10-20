@@ -46,8 +46,9 @@ original advertises it with workflows, scheduling and worktree isolation switche
 
 One `MISSING`: `ctx.ui.custom(options.onHandle)` (`ui/workflow-menu.ts`), the workflow menu of the deferred slice. It
 is accepted in `port/accepted-gaps.json` with the approval it rests on: the lane lead's instruction of 2026-10-05 20:56
-MDT to ship a tested slice and defer the rest by name. `PARTIAL tool.renderResult`: the original's renderers return TUI
-components; this port registers none.
+MDT to ship a tested slice and defer the rest by name. (The Go SDK of PiG 0.5.0 does have `RemoteOverlayOptions.OnHandle`
+and `OverlayHandle`, which the display surfaces use to close an overlay from outside; its `pigeq gaps` table is stale for
+Go.) The Agent tool's `renderCall`/`renderResult` and the notification renderer are ported (see "Display surfaces").
 
 ## Results (this revision)
 
@@ -91,8 +92,8 @@ components; this port registers none.
    ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
    port does not honor, are refused the same way.
 6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
-   widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
-   settings menu, usage and cost display, model scope and fuzzy model resolution (the child resolves `--model`).
+   agent memory, nested delegation, output transcripts, structured output, the settings menu, model scope (the child
+   resolves `--model`; the display only resolves a spelling against the available models to label it).
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
    commit for this port; the substitute proof is the 122 twins (two of them found real defects: an empty frontmatter
    block panicked the parser, and a plain value with `: ` was accepted where the original refuses it), the recorded
@@ -120,3 +121,40 @@ components; this port registers none.
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
    The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
    features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+
+## Display surfaces (widget, fleet list, conversation viewer, renderers, colors)
+
+| ID | Original | Go | Proof |
+|---|---|---|---|
+| U1 | `ui/agent-widget.ts` AgentWidget, `widgetMode`, `showModel`, `showCost` | `agent_widget.go`, `ui_usage.go`, `ui_model.go` | 34 twins (`agent_widget_twin_test.go`), `ui_extra_test.go` |
+| U2 | `ui/fleet-list.ts`, `fleetView`, key handling through `OnTerminalInput` | `fleet_list.go` | 50 twins, 2 `fleet-wiring` twins (layer 1) |
+| U3 | `ui/conversation-viewer.ts`, `ui/viewer-keys.ts`, `viewerMarkdown`, `m` | `conversation_viewer.go`, `viewer_keys.go` | 61 + 8 twins |
+| U4 | `agent-color.ts` | `agent_color.go` | 7 + 4 twins |
+| U5 | the Agent tool `renderCall`/`renderResult`, `AgentDetails`, the notification renderer and `NotificationDetails` | `ui_render.go`, `ui_details.go`, `tools.go` | twins of `agent-tool-error-rendering`, `cost-display` (renderer group), layer 1 (`RenderTool`, `render_message`) |
+| U6 | the invocation snapshot (`resolveAgentInvocationConfig` precedence, `resolveModel`, `describeModel`) | `ui_invocation.go`, `ui_observer.go` | `agent-model-display` twins, `ui_extra_test.go` |
+| U7 | `ui/select-item.ts` | `select_item.go` | `ui_extra_test.go` |
+
+How it differs from the original, and why:
+
+- **The transcript is built from the child's rpc event stream** (`childSpec.Observer`, `ui_observer.go`): a message is
+  one map updated in place while it streams, so the viewer's per-message Markdown cache keeps working. Usage, tool use,
+  turn count, compactions and the effective model come from the same stream (`get_state`, `get_session_stats`).
+- **Widgets are drawn as pre-rendered rows at the terminal width** (a `kit.Lines` view), re-sent only when the rows change
+  and on a resize. The original's component factory re-renders every frame; the SDK has no factory form across the
+  process boundary. Under Pi's rpc mode a factory is ignored, so the widget produces no frame there; the status text
+  (`setStatus("subagents", ...)`) is a string and does.
+- **Focus.** Pi's fleet list asks the TUI which component is focused (an `Editor` means the prompt). The SDK exposes no
+  focus accessor, so unknowable focus counts as the editor, as the original does when it has no TUI yet; the overlay
+  the list opens is tracked by the list itself. The twins of the #123 cases drive a probe in place of `instanceof Editor`.
+- **Keybindings.** `Context.Custom` does not hand the component the user's keybindings, so the viewer uses the defaults
+  (`tui.select.*` as Pi ships them, plus k/j and shift+arrows); the twins drive a keybindings manager directly.
+- **Markdown theme.** Pi's own markdown theme (syntax-highlighted fences) is not reachable; the viewer builds the
+  original's fallback theme from the host theme, which the original does itself where Pi's theme is not initialised.
+- **`perf/no-fs-on-render`** mocks `node:fs`; Go cannot interpose on `os.ReadFile`, so the twin is a static guard that
+  the files a frame runs through import nothing that reaches the disk.
+- **Agent file precedence.** The original lets an agent file's model, thinking level and turn limit outrank the call's
+  (`resolveAgentInvocationConfig`); the port previously let the call win. `bus.go` now follows the original, and the
+  model display discloses the call's value as `(asked X)`.
+- **Persisting `m`.** The viewer's `m` writes `viewerMarkdown` into the project `subagents.json` (the original writes the
+  whole settings snapshot); a settings writer that owns the snapshot replaces `persistViewerMarkdown`.
+- **Skipped twin:** "renders the reopened session's settings, not the resume call's": `resume` is refused by this port.

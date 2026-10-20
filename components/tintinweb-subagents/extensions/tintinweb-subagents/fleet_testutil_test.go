@@ -88,8 +88,12 @@ func (u *fakeFleetUI) OnTerminalInput(h func(string) *inputResult) func() {
 }
 
 func (u *fakeFleetUI) GetEditorText() string { u.mu.Lock(); defer u.mu.Unlock(); return u.editorText }
-func (u *fakeFleetUI) Notify(m, _ string)    { u.mu.Lock(); u.notices = append(u.notices, m); u.mu.Unlock() }
-func (u *fakeFleetUI) RequestRender()        { u.mu.Lock(); u.rerender++; u.mu.Unlock() }
+func (u *fakeFleetUI) Notify(m, _ string) {
+	u.mu.Lock()
+	u.notices = append(u.notices, m)
+	u.mu.Unlock()
+}
+func (u *fakeFleetUI) RequestRender() { u.mu.Lock(); u.rerender++; u.mu.Unlock() }
 
 func (u *fakeFleetUI) Custom(factory viewerFactory, _ overlayOptions, onClose func()) {
 	host, th := u.host, u.theme
