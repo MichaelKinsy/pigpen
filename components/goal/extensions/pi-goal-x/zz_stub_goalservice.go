@@ -24,35 +24,3 @@ func appendGoalEvent(ctx storage, event *jsObject) goalAppendResult {
 
 func goalLedgerPath(ctx storage) string { return ctx.mustPath(ledgerFile) }
 
-// owned by GoalTasksPolicy (goal-policy.ts, goal-pool.ts)
-func findTaskInTree(tasks []any, id string) *jsObject {
-	for _, t := range tasks {
-		o := t.(*jsObject)
-		if gstr(o, "id") == id {
-			return o
-		}
-		if subs, ok := o.vals["subtasks"].([]any); ok {
-			if r := findTaskInTree(subs, id); r != nil {
-				return r
-			}
-		}
-	}
-	return nil
-}
-
-func updateTaskInTree(tasks []any, id string, fn func(*jsObject) *jsObject) []any {
-	out := make([]any, len(tasks))
-	for i, t := range tasks {
-		o := t.(*jsObject)
-		if gstr(o, "id") == id {
-			out[i] = fn(o)
-		} else {
-			out[i] = o
-		}
-	}
-	return out
-}
-
-func mergeFocusedGoalWithDisk(memoryGoal, diskGoal *jsObject) *jsObject {
-	panic("stub: owned by GoalTasksPolicy")
-}
