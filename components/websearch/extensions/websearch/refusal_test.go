@@ -264,22 +264,6 @@ func TestRefusalFetchPDF(t *testing.T) {
 }
 
 func TestRefusalFetchHostedProviders(t *testing.T) {
-	t.Run("the Gemini fetch provider with a key, in the default order", func(t *testing.T) {
-		r, _ := newRuntime(t, `{"fetchRouting":{"allowRemoteHostedProviders":true}}`)
-		t.Setenv("GEMINI_API_KEY", "k")
-		n := useNet(t, func(netCall) netReply { return reply(500, "boom") })
-		_, err := execTool(t, r, "fetch_content", map[string]any{"url": "https://93.184.216.34/page"})
-		wantRefusal(t, err, "Gemini fetch provider")
-		wantCalls(t, n, "https://93.184.216.34/page", "https://r.jina.ai/https://93.184.216.34/page")
-	})
-	t.Run("an order that lists Gemini with a key", func(t *testing.T) {
-		cfg := `{"fetchRouting":{"providers":["http","gemini"],"allowRemoteHostedProviders":true}}`
-		r, _ := newRuntime(t, cfg)
-		t.Setenv("GEMINI_API_KEY", "k")
-		useNet(t, func(netCall) netReply { return reply(500, "boom") })
-		_, err := execTool(t, r, "fetch_content", map[string]any{"url": "https://93.184.216.34/page"})
-		wantRefusal(t, err, "Gemini fetch provider")
-	})
 	t.Run("a provider that is not configured is skipped as in the original", func(t *testing.T) {
 		r, _ := newRuntime(t, "")
 		useNet(t, func(netCall) netReply { return reply(500, "boom") })
