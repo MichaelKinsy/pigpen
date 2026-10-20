@@ -20,8 +20,9 @@ protocol bytes to the host's stdout (roadmap, "Packaging boundary"). So the port
   running executable and the declared capability limits. A Piglet needs at least one extension to build a Binary,
   and this one belongs to the feature.
 
-Because the source has no Pi extension API, the Skill's differential harness (`pigeq run/record/check`) has nothing to
-host: the original and the port are compared by **ported tests** (exact twins), a **scripted ACP client against the
+Because the source has no Pi extension API, the Skill's scenario harness (`pigeq run/record/check`) has nothing to
+host: the original and the port are compared by **ported tests** (exact twins), a **wire differential** (below: one scripted ACP
+client drives pi-acp under Pi and pig-acp under PiG, and the normalized transcripts are compared), a **scripted ACP client against the
 protocol schema**, and the **ACP reference client** (`@agentclientprotocol/sdk` `ClientSideConnection`) against a real
 built Piglet Binary. See "Results" below.
 
@@ -74,9 +75,9 @@ built Piglet Binary. See "Results" below.
   `session_events_test.go` names the gap). Showing a notice for the new names would add behavior the original does not have in practice, so it
   stays pending the owner. Recommendation: map `compaction_start`/`compaction_end` with reason `threshold` or `overflow` to the same two
   texts (a `manual` compaction is already announced by the `/compact` reply).
-- **F2: update notice (ported, D12).** The original asks npm whether a newer Pi exists. The port asks the npm registry whether a newer PiG
-  (`@pi-in-go/pig`) exists and points at `pig update`. PiG's own startup check reads a signed release manifest that only pig can verify
-  and offers no check-only command, so that source is not available to a companion; the registry is. It honors PiG's offline switches.
+- **F2: update notice (ported, D12).** The original asks npm whether a newer Pi exists. The port runs `npm view @pi-in-go/pig version` the same way to learn whether a newer PiG
+  exists and points at `pig update`. PiG's own startup check reads a signed release manifest that only pig can verify
+  and offers no check-only command, so that source is not available to a companion; npm is. It honors PiG's offline switches.
 - **F3: `/changelog` (SDK need).** pi-acp reads the installed Pi package's `CHANGELOG.md`. PiG embeds its changelog in the binary
   (`pig.Changelog`, shown by the interactive `/changelog`) and exposes no way to print it: `pig --help`, `pig docs list` and `pig version`
   show none, and `get_commands` over RPC lists no built-in `/changelog`. The port reads a `CHANGELOG.md` beside the pig binary (or one directory
@@ -90,8 +91,12 @@ built Piglet Binary. See "Results" below.
 ## Architecture decisions
 
 - **Kind of port:** Skill kind 4 (a protocol adapter). `pigeq gaps` says NOT AN EXTENSION for the original. There is no
-  scenario/golden equivalence lane: the proof is the twin ledger, the protocol tests, the end-to-end scenarios, the reference client
-  with schema validation, and mutations (`port/mutate.mjs`, because `pigeq mutate` replays scenarios).
+  `pigeq` scenario/golden lane: the proof is the twin ledger, the wire differential, the protocol tests, the end-to-end scenarios, the
+  reference client with schema validation, and mutations (`port/mutate.mjs`, because `pigeq mutate` replays scenarios).
+- **Architecture mapping (what the embedded session becomes):** pi-acp starts one `pi --mode rpc` per ACP session and owns the ACP
+  connection; the port does the same with `pig --mode rpc` (or a Piglet Binary), so a session is a pig process with PiG's single
+  session inside it, and nothing of Pi's embedding is lost. Lost against Pi: the `~/.pi` directories (PiG's are used, D7), the npm
+  package of Pi (the update notice and `/changelog` follow PiG, D12, D13), and `fs/*`/`terminal/*` delegation (absent in both).
 - **Who starts whom:** the editor starts `pig-acp`, and `pig-acp` starts `pig --mode rpc` per session (as upstream). The Skill's
   kind-4 row suggests the Piglet's extension starts and supervises the companion. That is not possible for ACP: the client, not the
   agent, owns the process, and the protocol runs on the companion's stdio. The extension therefore only reports the
@@ -115,13 +120,60 @@ built Piglet Binary. See "Results" below.
 | D9 | `PI_ACP_PI_COMMAND`, `PI_ACP_ENABLE_EMBEDDED_CONTEXT` | `PIG_ACP_PIG_COMMAND`, `PIG_ACP_ENABLE_EMBEDDED_CONTEXT`; the `PI_ACP_*` names are still read | migration |
 | D10 | no flags beyond `--terminal-login` | `--pig`, `--piglet`, `--pig-arg`, `--version`, `--help`; the advertised terminal auth method repeats them, so a login starts the agent the sessions use | drive a Piglet Binary; explicit entrypoint |
 | D11 | `startupInfo` header `pi v<version>` from `pi --version` | `pig v<version>` from `pig --version` (`0.3.0+0.87.1`) | identity |
-| D12 | `spawnSync('pi', ['--version'])`, then `npm view @earendil-works/pi-coding-agent version` (800 ms); notice "New version available: v<latest> (installed v<installed>). Run: `npm i -g @earendil-works/pi-coding-agent`", also under `quietStartup` | `pig --version`, then GET `<registry>/@pi-in-go%2Fpig/latest` (800 ms; registry from `npm_config_registry` or `NPM_CONFIG_REGISTRY`, default `https://registry.npmjs.org`; no Node or npm needed); notice "... Run: `pig update` (installed with npm: `npm i -g @pi-in-go/pig`)", also under `quietStartup`. No request, and no notice, under `PIG_OFFLINE` (1, true, yes), `PI_OFFLINE`, `PI_SKIP_VERSION_CHECK`, or `--offline` among the pig arguments | the agent is PiG; `pig update` verifies a signed manifest the companion cannot check, so the notice only points at it (F2) |
+| D12 | `spawnSync('pi', ['--version'])`, then `spawnSync('npm', ['view', '@earendil-works/pi-coding-agent', 'version'], {timeout: 800})`; notice "New version available: v<latest> (installed v<installed>). Run: `npm i -g @earendil-works/pi-coding-agent`", also under `quietStartup`; no offline switch | `pig --version`, then `npm view @pi-in-go/pig version` (800 ms, the same way; npm applies the user's registry and proxy settings, and the companion carries no HTTP client); notice "... Run: `pig update` (installed with npm: `npm i -g @pi-in-go/pig`)", also under `quietStartup`. No npm process, and no notice, under `PIG_OFFLINE` (1, true, yes), `PI_OFFLINE`, `PI_SKIP_VERSION_CHECK`, or `--offline` among the pig arguments. Without npm on the PATH there is no notice, as for pi-acp | the agent is PiG; `pig update` verifies a signed manifest the companion cannot check, so the notice only points at it (F2). An HTTP client in the companion nearly doubled its size (5.7 to 11.1 MB), so the lookup runs npm as the original does |
 | D13 | `/changelog` finds the npm package's file and otherwise says "Changelog not found (couldn't locate pi installation)." | looks for `CHANGELOG.md` beside the executable (one level up first); otherwise the refusal naming `@pi-in-go/pigpen-acp` and the pinned original | PiG binaries embed their changelog and expose no accessor (F3, SDK need) |
 | D14 | version comparison splits on `.` and `-`, so `0.5.1+1.3.0.1402973a` has a `NaN` patch and a patch release is never noticed | splits on `+` as well; the notice shows the PiG version before the `+` | PiG's `--version` is `<pig>+<pi>` |
 
 Named gaps (skipped tests, never silent): the simulated-Windows `.cmd` spawn twin (Go cannot fake `runtime.GOOS`; the shell
 predicate is tested with an explicit `goos`, Windows execution only with `GOOS=windows go vet`); the compaction event names (F1, owner
 decision pending). Not verified in a real Windows or macOS run; `go vet` passes for both.
+
+## Wire differential (`port/differential/`)
+
+`run.mjs` starts one adapter process per scenario and drives it with a raw newline-delimited JSON-RPC client (so it checks the wire, not an SDK):
+the original, `pi-acp` 0.0.34 bundled with esbuild from `port/oracle/pi-acp` and running on Node 24 against the Pi oracle (pi-mono
+`1402973a`, 1.3.0), and the port, `pig-acp` running `pig` 0.5.0+1.3.0.1402973a. Both agents get the same scripted model (`pigeq llm`, the same
+turns), the same `models.json` and `settings.json`, and their own temporary `HOME`, `PIG_HOME` and agent directory. `scenarios.mjs` has 29
+scenarios: initialize (three variants), unknown methods, new session (startup block, quiet, update notice, context/skills/prompts, invalid
+params), prompts (text, every input kind, bash ok and failing, write/edit/read, tool errors, queueing), every built-in command, `/compact` on a
+session large enough to compact, `/changelog`, prompt templates, config options and modes, list/load/delete, history replay, unknown sessions,
+cancel, no model (auth required), MCP servers, and two performance scenarios.
+
+Normalization is limited to what cannot be equal: temporary paths (`<CWD>`, `<AGENT>`, `<PIGHOME>`, `<ROOT>`, the cwd-encoded session directory),
+uuids (in order of first appearance), timestamps, the agent name and the agent version line (N1 to N3, D8, D11), and the text of the update notice
+(N4: package, command and installed version differ by design). The report counts how often each rule fired. Everything else is compared field by
+field. Each remaining difference is in `findings.json` with its exact values on both sides, or the run fails; a finding that no longer occurs
+fails it too.
+
+Run (inside the `tern-ci:v2` image, with the shared oracle mounted):
+
+```sh
+node port/differential/run.mjs --oracle-cmd 'node <oracle>/dist/index.mjs' --port-cmd 'pig-acp --pig <pig>' \
+  --pigeq <pigeq> --pi <real pi> --out <dir>            # --only a,b selects scenarios
+node port/differential/run.mjs ... --bench 11 --sides oracle,port,prev --prev-cmd '<previous pig-acp> --pig <pig>' --only bench-session
+```
+
+Findings (all differences of the last run; 45 entries in 7 groups):
+
+| Group | Difference | Decision |
+|---|---|---|
+| F01 | agent title and version, login label say pi-acp/pi against pig-acp/PiG | identity, D8, D11 |
+| F02 | the terminal login repeats `--pig <pig>` (and Piglet arguments) | D10 |
+| F03 | built-in command descriptions say `pig` where the original says `pi` | identity, D8 |
+| F04 | invalid-params errors carry their text in `message`; the original puts it in `data` and shows only "Invalid params" | D1 |
+| F05 | `/changelog`: "Changelog not found" against the refusal naming the original | D13, SDK need (F3) |
+| F06 | `session/set_model`: the original (SDK 0.26.0) answers Method not found, the port serves it and publishes the resulting mode/config/usage updates | the port offers one method more than the original; recommendation: keep (README lists it); owner may ask for removal |
+| F07 | project skills are read from `.pig/skills` (PiG), `.pi/skills` (Pi) | D7 |
+
+No other difference remains: every update, tool call, terminal output, diff, usage update, queue notice, `/session`, `/name`, `/steering`,
+`/follow-up`, `/autocompact`, `/export`, `/compact`, template expansion, list/load/delete and history replay transcript is identical after
+normalization. `/compact` runs a real compaction on both sides; neither shows a compaction notice (Pi and PiG emit `compaction_start/end`,
+which pi-acp ignores, F1). A PiG-versus-Pi host difference, if one had appeared, would be a PiG core bug, not a finding; none did.
+
+Harness corrections found while building it (not port differences): the original's `pi --version` check needs a plain semver, so the oracle's
+`pi` is a shim that prints one; the original has no offline switch, so "offline" for it is an `npm` that fails; the original reads prompts from a
+fixed `~/.pi/agent/prompts`, so they are mirrored there for the oracle; a bash command that writes to both streams needs a pause between them to
+produce the same number of terminal updates on both sides.
 
 ## Results (this revision, PiG 0.3.0+0.87.1 `63c6ba456`, go1.27.1)
 
@@ -132,8 +184,9 @@ decision pending). Not verified in a real Windows or macOS run; `go vet` passes 
 | End to end against real `pig` 0.3.0 | 11 of 11 |
 | End to end against the built `acp` Piglet Binary (57.6 MB, `pig piglet build ... --format binary`, fused Go extension, 44 s) | 11 of 11 |
 | Reference client run (`port/interop/run.mjs`) against `pig-acp` and the Piglet Binary | 12 checks, 30 messages schema-valid, exit 0 |
-| Mutations (`port/mutate.mjs`) | 105 mutants (100 from the port, 5 from its review): 104 killed, 1 equivalent (`state-auth-error-ignored`: the same error is caught again by the configuration branch below), 0 survived, 0 invalid |
+| Mutations (`port/mutate.mjs`) | 124 mutants (100 from the port, 5 from its review, 19 for the update notice and /changelog): 123 killed, 1 equivalent (`state-auth-error-ignored`: the same error is caught again by the configuration branch below), 0 survived, 0 invalid |
 | `GOOS=windows|darwin|linux go vet ./...` | pass |
+| Wire differential (`port/differential/run.mjs`, 29 scenarios, original under Pi 1402973a against the port under PiG 0.5.0) | 0 unrecorded differences, 45 recorded findings in 7 groups (F01 to F07), 0 stale |
 
 The first mutation run left 10 mutants alive; six needed a new test (`internal/acp/mutation_extra_test.go`), two needed a corrected
 mutant, and one exposed racy twins (a test read `proc.prompts` before the session's goroutine had made the call; fixed with a wait).

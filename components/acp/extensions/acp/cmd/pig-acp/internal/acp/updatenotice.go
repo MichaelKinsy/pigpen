@@ -3,34 +3,30 @@ package acp
 // The update notice: the original's buildUpdateNotice (agent.ts), a best-effort "New version
 // available" line that session/new surfaces even under quietStartup. The original compares
 // `pi --version` with `npm view @earendil-works/pi-coding-agent version` and tells the user to
-// run `npm i -g`. Here the agent is PiG, which is published to npm as @pi-in-go/pig, so the
-// lookup asks the npm registry for that package's `latest` document. It makes the request itself
-// (no Node or npm needed) and honors the registry setting npm uses, npm_config_registry. PiG's
-// own `pig update` checks a signed release manifest that only pig can verify; there is no
-// check-only command to ask, so this notice only points the user at it.
+// run `npm i -g`. Here the agent is PiG, which is published to npm as @pi-in-go/pig, so the lookup
+// runs `npm view @pi-in-go/pig version` the same way (npm applies the user's registry, proxy and
+// auth settings, and the companion carries no HTTP or TLS client; PiG users without npm get no
+// notice, as pi-acp users without npm get none). PiG's own `pig update` checks a signed release
+// manifest that only pig can verify and offers no check-only command, so the notice only points
+// at it.
 //
-// It is skipped, with no request, under PiG's offline switches (see updateLookupOff).
+// It is skipped, with no process started for the lookup, under PiG's offline switches (see
+// updateLookupOff).
 
 import (
 	"context"
-	"encoding/json"
-	"io"
 	"math"
-	"net/http"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const (
-	updatePackage      = "@pi-in-go/pig"
-	defaultNpmRegistry = "https://registry.npmjs.org"
-	maxLatestDocBytes  = 1 << 20
-)
+const updatePackage = "@pi-in-go/pig"
 
-// updateLookupTimeout is the original's 800 ms budget for the registry, kept fast so
+// updateLookupTimeout is the original's 800 ms budget for `npm view`, kept fast so
 // session/new is not slowed down.
 var updateLookupTimeout = 800 * time.Millisecond
 
@@ -100,44 +96,24 @@ func updateLookupOff(piArgs []string) bool {
 	return false
 }
 
-func npmRegistry() string {
-	for _, k := range []string{"npm_config_registry", "NPM_CONFIG_REGISTRY"} {
-		if v := strings.TrimSpace(os.Getenv(k)); v != "" {
-			return strings.TrimRight(v, "/")
-		}
-	}
-	return defaultNpmRegistry
-}
-
-// latestPigVersion is the registry's `latest` version of PiG, or "" on any failure.
+// latestPigVersion is what `npm view @pi-in-go/pig version` prints, or "" when npm is missing,
+// fails or is too slow.
 func latestPigVersion() string {
 	ctx, cancel := context.WithTimeout(context.Background(), updateLookupTimeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, npmRegistry()+"/"+strings.Replace(updatePackage, "/", "%2F", 1)+"/latest", nil)
+	cmd := exec.CommandContext(ctx, "npm", "view", updatePackage, "version")
+	// A wrapper script's child may hold the pipe after the kill; do not wait for it.
+	cmd.WaitDelay = 100 * time.Millisecond
+	out, err := cmd.Output()
 	if err != nil {
 		return ""
 	}
-	req.Header.Set("Accept", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return ""
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return ""
-	}
-	var doc struct {
-		Version string `json:"version"`
-	}
-	if err := json.NewDecoder(io.LimitReader(resp.Body, maxLatestDocBytes)).Decode(&doc); err != nil {
-		return ""
-	}
-	return leadingV.ReplaceAllString(jsTrim(doc.Version), "")
+	return leadingV.ReplaceAllString(jsTrim(string(out)), "")
 }
 
 // BuildUpdateNotice returns the "New version available" line, or "" when there is nothing to say:
-// the lookup is switched off, pig does not report a semver version, the registry does not answer in
-// time or names no semver version, or the installed one is not older.
+// the lookup is switched off, pig does not report a semver version, npm does not answer in
+// time or prints no semver version, or the installed one is not older.
 func BuildUpdateNotice(piCommand string, piArgs []string) string {
 	if updateLookupOff(piArgs) {
 		return ""
