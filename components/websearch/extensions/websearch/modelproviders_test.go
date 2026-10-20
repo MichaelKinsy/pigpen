@@ -2,6 +2,7 @@ package websearch
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"reflect"
@@ -182,37 +183,57 @@ func TestOpenAISnippetsAndSourceURLs(t *testing.T) {
 }
 
 func TestOpenAIAutoOrderFollowsTheSelectedModel(t *testing.T) {
+	const openaiURL, exaURL, braveURL = "https://api.openai.com/v1/responses", "https://api.exa.ai/search", "https://api.search.brave.com/"
 	cases := []struct {
 		name  string
 		model map[string]any
 		ext   bool
 		want  []string
 	}{
-		{"no session context: OpenAI first", nil, false, []string{"https://api.openai.com/v1/responses", "https://api.exa.ai/search"}},
-		{"a Codex model: OpenAI first", map[string]any{"provider": "openai-codex", "id": "gpt-5"}, true, []string{"https://api.openai.com/v1/responses", "https://api.exa.ai/search"}},
-		{"another model: Exa first", map[string]any{"provider": "anthropic", "id": "claude"}, true, []string{"https://api.exa.ai/search", "https://api.openai.com/v1/responses"}},
+		{"no session context: OpenAI before Exa", nil, false, []string{openaiURL, exaURL, braveURL}},
+		{"a Codex model: OpenAI before Exa", map[string]any{"provider": "openai-codex", "id": "gpt-5"}, true, []string{openaiURL, exaURL, braveURL}},
+		{"another model: Exa, then OpenAI, then the rest", map[string]any{"provider": "anthropic", "id": "claude"}, true, []string{exaURL, openaiURL, braveURL}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, dir := isolate(t)
-			writeConfig(t, dir, `{"openaiApiKey":"openai-key","exaApiKey":"exa-key"}`)
+			writeConfig(t, dir, `{"openaiApiKey":"openai-key","exaApiKey":"exa-key","braveApiKey":"brave-key"}`)
 			fn := useNet(t, func(netCall) netReply { return netReply{Err: errors.New("fetch failed")} })
 			ctx := bg()
 			if tc.ext {
 				ctx = withExt(&fakeExt{model: tc.model, reg: &fakeRegistry{auth: staticAuth(map[string]any{"ok": false})}})
 			}
-			_, err := Search(ctx, "order", FullSearchOptions{Provider: Auto})
-			if err == nil {
+			if _, err := Search(ctx, "order", FullSearchOptions{Provider: Auto}); err == nil {
 				t.Fatal("expected failures")
 			}
 			got := fn.urls()
-			for i := range got {
-				got[i] = strings.SplitN(got[i], "?", 2)[0]
+			if len(got) != 3 {
+				t.Fatalf("calls %v", got)
 			}
-			if len(got) < 2 || !strings.HasPrefix(got[0], tc.want[0]) || !strings.HasPrefix(got[1], tc.want[1]) {
-				t.Fatalf("calls %v, want %v first", got, tc.want)
+			for i, want := range tc.want {
+				if !strings.HasPrefix(got[i], want) {
+					t.Fatalf("calls %v, want %v", got, tc.want)
+				}
 			}
 		})
+	}
+}
+
+func TestOpenAIAlphaNotImplementedFallsBackOnlyAsUnsupported(t *testing.T) {
+	// 501 is "unsupported" for alpha/search: routing that falls back on unsupported alone continues,
+	// and a status that were merely transient would stop it.
+	for _, status := range []int{404, 405, 501} {
+		cfg := map[string]any{"tavilyApiKey": "tavily-test-key", "searchRouting": json.RawMessage(`{"providers":["openai","tavily"],"fallbackOn":["unsupported"]}`)}
+		out := runOpenAI(t, oaScenario{route: true, status: status, raw: strp("no"), config: cfg})
+		out.mustOK(t)
+		if out.result.(*AttributedSearchResponse).Provider != "tavily" {
+			t.Fatalf("%d: %+v", status, out.result)
+		}
+	}
+	cfg := map[string]any{"tavilyApiKey": "tavily-test-key", "searchRouting": json.RawMessage(`{"providers":["openai","tavily"],"fallbackOn":["unsupported"]}`)}
+	out := runOpenAI(t, oaScenario{route: true, status: 503, raw: strp("no"), config: cfg})
+	if out.kind != "transient" {
+		t.Fatalf("503 on alpha is transient, not unsupported: %q %v", out.kind, out.err)
 	}
 }
 
