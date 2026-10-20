@@ -234,3 +234,18 @@ const (
 	continueAnswer = "Continue chatting — keep refining"
 	cancelAnswer   = "Cancel — discard this draft"
 )
+
+// terminalInput delivers raw terminal input to the extension's listeners the way the host does (waiting for the verdict) and reports
+// whether the input was consumed.
+func (r *goalRig) terminalInput(data string) (consumed bool) {
+	r.t.Helper()
+	raw, failure := r.Host.roundTrip(map[string]any{"method": "terminal_input", "args": map[string]any{"data": data}})
+	if failure != "" {
+		r.t.Fatalf("terminal_input: %s", failure)
+	}
+	var v struct {
+		Consume bool `json:"consume"`
+	}
+	_ = json.Unmarshal(raw, &v)
+	return v.Consume
+}
