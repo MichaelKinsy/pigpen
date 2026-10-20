@@ -52,34 +52,79 @@ Differences (all SDK-bound, none silent; `port/frames/known-differences.json` pi
 | M9 | `buildItemsForQuestion`, `sentinelsToAppend` | `buildItemsForQuestion` | `items_test.go` (7 twins) |
 | M10 | the interactive questionnaire (`state/`, `view/`, `QuestionnaireSession`, the factory and collapse listener) | `internal/ui/*`, `questionnaire.go`, `host.go`, `keybindings.go` | the twins of `state/*`, `view/*`, `factory`, `ask-user-question.listener`; `port/frames` |
 
-## SDK gap check (`pigeq gaps --ts port/oracle`)
+## SDK gap check (`pigeq gaps --go extensions/rpiv-ask-user-question`, and `pigeq record` on the original)
 
-5 gaps, 1 blocking: `ctx.ui.custom(options.onHandle)` MISSING (E2); `ctx.ui.custom` and `overlayOptions` PARTIAL
-(a `RemoteComponent` stands in for the host component); `tool.promptSnippet` PARTIAL (it did not bite: the
-`guidance-in-request` scenario shows the same system prompt delta as Pi).
+`pigeq gaps --go`: 4 gaps, none blocking: `Context.Custom` and `RemoteOverlayOptions.OverlayOptions` are PARTIAL (a
+`RemoteComponent` renders lines and handles input inside the extension; the host overlay owns focus, and a dynamic
+overlay options function cannot cross the process boundary), and `ToolDefinition.PromptSnippet` is PARTIAL (the host's
+system prompt does not list extension tools' snippets; the `guidance-in-request` scenario shows the same system prompt
+delta as Pi).
+
+`pigeq record` (pigeq from `pigeq-pinned-commit`, which checks the Pi by commit) scans the original and reports
+`sdk-gaps` FAIL: `ctx.ui.custom(options.onHandle)` is MISSING from the Go SDK. This is G5, the overlay handle, and it is
+**pending PiG SDK** (core item in `core-items.md`); it is not marked as a reviewed exception. The other three entries
+are the PARTIAL ones above.
 
 ## Results (this revision)
 
-- `go test -race ./...`: pass.
-- `pigeq check` against the golden traces **recorded from the original under Pi 1.0.0**: 15 of 16 scenarios pass on
-  every run, plus `port-gaps` and `exec-coverage`; host check pig-ts == pi-ts on all 16 (no widget difference this
-  time). **`two-calls` is flaky**: it failed 5 of 26 review runs at `655be0b` (G11 below); the 16 of 16 reported at
-  `f21360f` was a lucky run.
-- `pigeq mutate --unit`: 87 mutations. At `655be0b` 86 were killed: `preview-cut-at-runes` survived (the 598-unit
-  test cannot tell a rune cut from a UTF-16 cut); review added `TestRPCPreviewCutNeverSplitsAnAstralCharacter`, which
-  kills it. First run 89: 79 killed, 2 invalid (rewritten so they build), 8
-  survivors: 6 got tests (a `selected: []` that must survive decoding, the UTF-16 preview cut, `parseInt` sign and leading
-  space, a custom answer that must not be trimmed, the tool label) and 2 were equivalent mutants and removed (the lone-CR
-  deletion makes the CRLF replacement redundant in the original too; an integer overflow reads as NaN or as out of range, both
-  decline). `port/gen-mutations.py` generates `port/mutations.json` and checks every find string is unique.
-- `pig install ... --validate-only --json`: valid (tool `ask_user_question`, handler `before_agent_start`).
-  `pig package validate components/ask-user-question`: valid.
-- Piglet: `piglets/pig-popular` now selects both ports; `pig-0.4.0 piglet build` fuses both ("Preparing fused Go members
-  — rpiv-todo, rpiv-ask-user-question"). The Binary's own traces (`record --self --builtin`, `check --builtin`) pass 16 of
-  16 and equal the Pi goldens in every event outside the `llm` channel (the `llm` events differ by the Binary's default tool set).
-- tmux: `scripts/tmux-demo.sh ask ... port/demo/turns.json 'type:ask me' 'wait:1' 'grab:select' 'key:Enter' 'grab:input' 'type:1,3' 'wait:2' 'grab:answered'` ran the extension in an interactive `pig-0.4.0`:
-  `port/demo/pane-select.txt` (the select dialog with the appended "Type something." row), `pane-input.txt` (the multi-select input dialog) and
-  `pane-answered.txt` (the model receives `"Which database?"="Postgres". "Which features?"="Auth, Queue".`).
+Host: xd670, CPUs 64-127, Pi built from commit 1402973a (`pi 1.3.0`, the Pi that PiG v0.5.0 targets), `pig 0.5.0+1.3.0.1402973a`.
+
+- **Twins.** `pigeq twins check`: 624 exact twins and 23 named skips of the original's 647 cases (`port/upstream-tests.json`);
+  `slices.json` is `{}`. The 23 skips each name why the case cannot be ported (the terminal bell, the overlay handle, the
+  external editor, reference identity in JavaScript, highlight.js).
+- **Frames.** `TestFramesAgainstOriginal` replays 173 scenarios (1,276 frames) recorded from the unmodified original
+  under Pi 1402973a through the Go component and compares every frame, the notifications, the result and the tool text.
+  Four scenarios carry pinned known differences (`port/frames/known-differences.json`): the external-editor notification
+  text (two scenarios), syntax highlighting in fenced previews, and the Shift+letter Kitty decode (a PiG divergence,
+  number pending: PiG decodes `ESC[97;2u` as `A`, pi-tui as `a`; pitui follows PiG).
+- **RPC scenarios.** The 16 goldens in `port/golden` are re-recorded from the original under Pi 1402973a (only the header
+  changed; the traces equal the Pi 1.0.0 ones). `pigeq check`: 15 of 16 pass on both lanes (pig-ts == pi-ts and
+  pig-go == pi-ts). **`two-calls` differs between PiG and Pi**: in Pi the first `tool_execution_end` and the first
+  select dialog belong to "First?", under PiG to "Second?" (event 11 of the original under PiG, event 9 of the port).
+  It is the host: PiG core bug B3 (order of concurrent tool calls, their dialog requests and `tool_execution_end`
+  events), fixed on PiG's `fix/parallel-tool-ui-order`. The scenario is kept un-normalized and is excluded from mutation
+  kill counts until the fix lands.
+- **Mutations.** `pigeq mutate --unit`: 111 mutations, 0 not killed, with `two-calls` excluded (a mutant that only makes
+  `two-calls` fail is not a kill). With the earlier runs counting `two-calls`, 6 mutants had survived undetected; each
+  now has a unit test: the multi-select dialog title (the mutation now targets `en.json`, where the English text lives;
+  the constant in `rpc.go` is only the fallback for a key a table lacks), key releases at the component, the external
+  editor notification, keybinding values given as a string, legacy keybinding names, and the headerless tab label
+  (`Q<n>`). `port/gen-mutations.py` generates `port/mutations.json` and checks every find string is unique.
+- **Vet and race.** `go vet ./...` clean for linux, windows and darwin (amd64); `go test -race -count=1 ./...` passes for
+  the extension and for `components/pitui` (scoped runner, xd670).
+- **Repo gates** at the branch head: `npm run check` exit 0, `npm run generate` leaves no diff, `npm test` 357 tests with 2
+  failures, both in `scripts/perf/perf-harness.test.mjs` (they launch an interactive pig in the container and time out
+  after 30 s; they do not touch this Package).
+- **Piglet.** `piglets/pig-popular` selects the port and the `pitui` library Package; the Binary builds, and `pigeq check
+  --builtin` on it passes (see the PR body for the run).
+- `pig install ... --validate-only --json` and `pig package validate components/ask-user-question`: valid.
+
+## Performance (xd670, CPUs 64-79; medians of 10 to 20 interleaved runs)
+
+Compared with the previous Pigpen release (0.1.0, `main` at bee2966: the dialog walker only) and with the original under
+PiG's Node runtime (`pig -e port/oracle/index.ts`, PiG's TypeScript extension host).
+
+| Measure | original under PiG (Node) | 0.1.0 | 0.2.0 |
+|---|---|---|---|
+| Binary, single-extension Piglet (bytes) | not a binary; TypeScript sources 617 KB | 70,947,079 (control `seed-check` 70,861,063: +86,016) | 71,987,463 (+1,126,400 over the control; +1,040,384 over 0.1.0, +1.47%) |
+| Start up, `pig -p` with the extension (ms) | 1053.7 | 47.4 | 44.9 (control 45.3, plain pig 23.4) |
+| Scenario `mixed-questions` through `pigeq lane` (ms, includes loading the extension and the scenario's 20 events) | 2909.5 | 2210.5 | 2304.0 (+4.2%) |
+| RPC walker, 1 question, in process (ns, B, allocs per call) | not measured | 420,269 / 41,512 / 682 | 421,146 / 41,547 / 682 (+0.2%) |
+| RPC walker, 3 questions, in process | not measured | 726,236 / 87,981 / 1,369 | 726,289 / 87,985 / 1,369 (0.0%) |
+| Questionnaire render at width 120 | 1,101 µs | not present | 192 µs, 44 KB, 977 allocs |
+| One key (Down) and render, twice | 1,630 µs | not present | 285 µs, 71 KB, 1,629 allocs |
+| Full flow (open, 8 keys, submit, a render after each) | 3,222 µs | not present | 820 µs, 216 KB, 5,046 allocs |
+
+Notes. The start-up row is `scripts/perf/measure.mjs startup --mode print`; the tmux mode cannot run in the container
+(the same limitation as the two failing perf-harness tests). The 0.2.0 row of `mixed-questions` is 94 ms over 0.1.0,
+the larger Go module that `pig` loads for the run; the in-process walker numbers show no per-call change. The Node
+numbers are `port/perf/bench-original.mjs` (the original's `QuestionnaireSession` loaded with Pi's jiti, Pi's real dark
+theme for the preview's markdown, the identity theme elsewhere, V8 allocations not counted) against
+`internal/ui/bench_test.go` on the same three-question input and flow; the Go numbers use the identity theme. Input
+and render run on the TUI path and do bounded work per key: no host call is made from a render or a key (the session
+calls the host only to close the overlay and on the collapse listener). The one-time cost of the 1.04 MB growth in the
+Binary is pitui (the markdown parser with `regexp2`, the width tables and the word dictionaries); it is under the 10%
+rule for total size and has no per-call cost.
 
 ## Findings
 
@@ -96,16 +141,13 @@ Differences (all SDK-bound, none silent; `port/frames/known-differences.json` pi
    the extension's register frame in `tooldef_test.go`; at `655be0b` it had edited the template copy, which failed `npm test`),
    and `before_agent_start` needs `systemPromptOptions` in the event data.
 6. **`pigeq twins check`** rejects a skip whose reason or title is not a string literal (`<not a literal>`); a shared constant does not work.
-7. **G11 A parallel batch shows one dialog at a time.** Pi starts every call of a batch before it handles any dialog
-   answer (pi-agent-core 1.0.0 `agent-loop.js:411-453`; each execute runs synchronously up to its first await), so an
-   RPC client sees both dialogs of `two-calls` before the first call ends. A Go call reaches its dialog after two
-   `pi.events` round trips to the host (the prompt and blocked events), so a quick first answer can end the first
-   call before the second asks: `two-calls` fails about one run in five. Holding a call's result until the later
-   calls are about to ask narrows the window but cannot close it (the SDK exposes no point at which a dialog request
-   has been written; 2 of 32 runs still failed), so the port does not carry that. Needs the Go SDK: a synchronous or
-   fire-and-forget `Events().Emit`, or a dialog-sent hook. `TestParallelCallsAskEveryDialogBeforeTheFirstEnds`
-   states Pi's order and is skipped until then. `pigeq gaps` does not flag it (it reports `pi.events.emit` as
-   supported).
+7. **B3 (PiG core): the order of concurrent tool calls differs from Pi.** Pi starts every call of a batch before it
+   handles any dialog answer, so the first dialog and the first `tool_execution_end` belong to the first call. Under
+   PiG, for the original TypeScript extension as well as for the port, the second call's dialog and result come first
+   (`two-calls`: `pig-ts` differs from `pi-ts` at event 11, `pig-go` from `pi-ts` at event 9). Earlier runs read this as a
+   flake of the port (G11, 5 of 26 runs); with the real Pi build it is deterministic and the same for both
+   extensions, so it is the host. Fix: PiG `fix/parallel-tool-ui-order`. `TestParallelCallsAskEveryDialogBeforeTheFirstEnds`
+   states Pi's order and stays skipped until the fix is released.
 8. **Twins check at `655be0b`** exited 1: three `ask-user-question.normalize` cases were MISSING and five execute
    skips shared one reason. Review added the two the slice covers (normalized prompt event, normalized RPC dialog
    lines), a named skip for the TUI render, and a reason per skip. Two skip reasons named Go tests that did not exist.
