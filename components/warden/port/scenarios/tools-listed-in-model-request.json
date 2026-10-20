@@ -1,0 +1,50 @@
+{
+  "name": "tools-listed-in-model-request",
+  "description": "The three tools reach the model with the original's descriptions and JSON schemas, and warden_recall answers an empty session.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write,warden_remember,warden_loops,warden_recall"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "warden_recall",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "nothing yet"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "what was already tried?"
+      }
+    }
+  ]
+}

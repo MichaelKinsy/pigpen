@@ -1,0 +1,212 @@
+{
+  "name": "loops-add-list-done-drop",
+  "description": "warden_loops add, list, done and drop through the tool; /warden loops shows the session's loops to the user; a closed list reminds nothing at the end of the run.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write,warden_remember,warden_loops,warden_recall"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "Bump the version",
+            "when": "after CI passes"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "Rerun the flaky upload test"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "Answer the review thread"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "done",
+            "id": 2
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "drop",
+            "id": 3
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "drop",
+            "id": 3,
+            "reason": "the thread was resolved"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "done",
+            "id": 2
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "done",
+            "id": 9
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "  "
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "frobnicate"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "done",
+            "id": 1
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "text": "noted"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "keep track of what I promise"
+      }
+    },
+    {
+      "name": "loops-command",
+      "rpc": {
+        "type": "prompt",
+        "message": "/warden loops"
+      }
+    }
+  ]
+}

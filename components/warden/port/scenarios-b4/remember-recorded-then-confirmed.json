@@ -1,0 +1,148 @@
+{
+  "name": "remember-recorded-then-confirmed",
+  "description": "warden_remember records a lesson, refuses a weakened check, a task-bound note and a non-standing one, confirms the lesson in a second session, and the third session starts with it quoted as a standing preference.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write,warden_remember,warden_loops,warden_recall"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "Always use Firefox for the vendor site"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "Always skip the tests when the build is slow"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "Don't commit or stage it"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "The vendor site blocks Chrome"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "Don't touch the schema yet"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "Never write long notes write long notes write long notes write long notes write long notes write long notes write long notes write long notes write long notes write long notes write long notes write long notes "
+          }
+        }
+      ]
+    },
+    {
+      "text": "recorded"
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_remember",
+          "arguments": {
+            "lesson": "always use firefox for the vendor site"
+          }
+        }
+      ]
+    },
+    {
+      "text": "confirmed"
+    },
+    {
+      "text": "third session"
+    }
+  ],
+  "steps": [
+    {
+      "name": "first-session",
+      "rpc": {
+        "type": "prompt",
+        "message": "add the export button"
+      }
+    },
+    {
+      "name": "second-session",
+      "rpc": {
+        "type": "prompt",
+        "message": "/eq-new"
+      },
+      "settleMs": 500
+    },
+    {
+      "name": "second-prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "check the vendor invoices"
+      }
+    },
+    {
+      "name": "third-session",
+      "rpc": {
+        "type": "prompt",
+        "message": "/eq-new"
+      },
+      "settleMs": 500
+    },
+    {
+      "name": "third-prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "open the vendor portal"
+      }
+    }
+  ]
+}

@@ -110,4 +110,3 @@ var jsUpperFull = []struct {
 	{0xfb16, "ՎՆ"},
 	{0xfb17, "ՄԽ"},
 }
-

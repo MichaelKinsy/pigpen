@@ -1,0 +1,85 @@
+{
+  "name": "compact-evidence-appendix",
+  "description": "After a compaction the evidence warden holds comes back as one message: the failed attempt, the last passing check, and the open loops.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write,warden_remember,warden_loops,warden_recall"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo 'error: boom' >&2; exit 1"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "Rerun the build",
+            "when": "after the type fix"
+          }
+        }
+      ]
+    },
+    {
+      "text": "working on it"
+    },
+    {
+      "text": "SUMMARY of the session so far."
+    },
+    {
+      "text": "continuing"
+    }
+  ],
+  "steps": [
+    {
+      "name": "work",
+      "rpc": {
+        "type": "prompt",
+        "message": "fix the build"
+      }
+    },
+    {
+      "name": "compact",
+      "rpc": {
+        "type": "compact"
+      },
+      "wait": "response",
+      "settleMs": 800
+    },
+    {
+      "name": "after",
+      "rpc": {
+        "type": "prompt",
+        "message": "go on"
+      }
+    }
+  ]
+}

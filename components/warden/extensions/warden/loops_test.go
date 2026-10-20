@@ -254,3 +254,32 @@ func TestLoopsConcurrentOperationsNeitherThrowNorLoseAnUpdate(t *testing.T) {
 		t.Fatalf("dropped %d", dropped)
 	}
 }
+
+// A session with 30 open loops is tracking tasks, not promises: the 31st is refused until some close (loops.ts MAX_OPEN).
+func TestLoopsThirtyOpenLoopsRefuseTheThirtyFirst(t *testing.T) {
+	store := emptyLoopStore()
+	for i := range 30 {
+		r := applyLoop(store, map[string]any{"action": "add", "text": "Follow up on item " + itoaInt(i+1)})
+		if r.Store == nil {
+			t.Fatalf("loop %d refused: %s", i+1, r.Reply)
+		}
+		store = *r.Store
+	}
+	r := applyLoop(store, map[string]any{"action": "add", "text": "One more"})
+	if r.Store != nil || r.Reply != "not added: 30 loops are open; close the finished ones with done or drop first" {
+		t.Fatalf("31st: %+v", r)
+	}
+	closed := applyLoop(store, map[string]any{"action": "done", "id": float64(1)}).Store
+	if r := applyLoop(*closed, map[string]any{"action": "add", "text": "One more"}); r.Store == nil {
+		t.Fatalf("after closing one: %s", r.Reply)
+	}
+}
+
+// Every character outside [\w.-] of a session id becomes `_`, one per UTF-16 unit, so an id cannot leave the folder.
+func TestLoopsSafeSessionID(t *testing.T) {
+	for in, want := range map[string]string{"abc-1.2_x": "abc-1.2_x", "../../escape": ".._.._escape", "a b/c": "a_b_c", "é": "_", "😀": "__"} {
+		if got := safeSessionID(in); got != want {
+			t.Errorf("safeSessionID(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

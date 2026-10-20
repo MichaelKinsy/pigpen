@@ -1,0 +1,84 @@
+{
+  "name": "recall-after-a-failure",
+  "description": "warden_recall lists the failed call with its error line and whether the last passing check still covers the code.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write,warden_remember,warden_loops,warden_recall"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo 'src/a.ts(3,7): error TS2322: Type string is not assignable to type number.' >&2; echo 'Found 1 error.' >&2; exit 1"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo 'all 42 tests passed'; exit 0"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "src/a.ts",
+            "content": "export const a = 1;\n"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_recall",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "recalled"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "fix the build"
+      }
+    }
+  ],
+  "files": {
+    "src/keep.txt": "keep\n"
+  }
+}

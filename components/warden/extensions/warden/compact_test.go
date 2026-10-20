@@ -382,3 +382,17 @@ func TestLoopsRecallPrintsTheAppendixSectionsWordForWord(t *testing.T) {
 		t.Fatalf("empty recall %q", got)
 	}
 }
+
+// The error line of a failed output is the last specific one (compact.ts errorLine), not the first.
+func TestCompactErrorLineIsTheLastSpecificErrorLine(t *testing.T) {
+	for output, want := range map[string]string{
+		"error: first\nnoise\nerror: second\nFound 2 errors.": "error: second",
+		"plain first line\nplain last line":                   "plain last line",
+		"":                                                    "",
+		"-----\n=====":                                        "",
+	} {
+		if got := compactErrorLine(output); got != want {
+			t.Errorf("compactErrorLine(%q) = %q, want %q", output, got, want)
+		}
+	}
+}

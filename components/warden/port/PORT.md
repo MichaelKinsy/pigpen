@@ -102,10 +102,13 @@ input, agent_settled; the compaction relevance hook `session_before_compact`).
   cancellation, error reporting, ...; 8 added by the review: redaction of the stuck/done task, the write excerpt and the
   earlier messages, own-model budget, no retry, environment consent not persisted, status line); 30 killed, 1 equivalent
   mutant kept with its reason (`judge-when-disabled`).
+  The tools slice adds 21 (loops cap, drop without a reason, redaction, session id escaping the folder, reminder repeated / starting a turn / not remembered,
+  `prefs.inject` ignored, injection repeated on resume, weakening / one-session / stale / unconfirmed / forgotten preferences, `prefs.enabled` ignored by the tool,
+  forget not persisted, the current session read by the scan, `compactAppendix` ignored, saved outputs uncapped, recall listing checks, the error line chosen from the front): **21 of 21 killed**, none equivalent.
 
 ## Equivalence (live: Pi original vs Go port)
 
-`port/scenarios` holds 25 offline scenarios (19 for the guards, 6 for the tools slice), `port/golden` their traces recorded **from the original under Pi 0.87.1**
+`port/scenarios` holds 24 offline scenarios (19 for the guards, 5 for the tools slice; a sixth is in `port/scenarios-b4`, see below), `port/golden` their traces recorded **from the original under Pi 1.3.0.1402973a (the 19 earlier ones under Pi 0.87.1/1.0.1)**
 (`port/eq-entry.ts` loads the vendored, unmodified `port/oracle` from source; `npm ci --ignore-scripts` in
 `port/oracle` first). Every scenario sets `"env": {"PIGPEN_WARDEN_ENABLED": "1", "PIGPEN_WARDEN_STEER_VISIBLE": "0"}` (the
 per-scenario `env` map of pigeq; the original ignores both), declares `git` as missing and passes
@@ -117,8 +120,14 @@ the three tools in the model request; `warden_loops` add, list, done, drop and e
 open-loop reminder (once per unchanged list, for the next turn); `warden_remember` recorded, refused (weakens a check,
 task-bound, not standing, too long), confirmed in a second session and quoted at the start of a third; `warden_recall` after a failure;
 the compaction evidence appendix after `/compact`.
-Results: see "Tools slice" below for the six new scenarios; **the 19 guard scenarios: the original under Pi == the original under PiG's Node runtime (host check) == the Go
-port under PiG (Go directory) == the built `pig-warden` Binary (`check --builtin`)**, event for event.
+Results: **the 19 guard scenarios: the original under Pi == the original under PiG's Node runtime (host check) == the Go
+port under PiG (Go directory) == the built `pig-warden` Binary (`check --builtin`)**, event for event. **The five tools-slice scenarios in `port/scenarios`
+(`tools-listed-in-model-request` 17 events, `loops-add-list-done-drop` 116, `loops-reminder-once-per-list` 72, `recall-after-a-failure` 38,
+`compact-evidence-appendix` 34) pass `pigeq run`: Pi == PiG Node == Go port, goldens recorded from the original.** (Under a heavily loaded host a
+run can reorder a `turn_end` and the next model request in the original's own two lanes; the host check then refuses to record, and the run is repeated.)
+The sixth, `port/scenarios-b4/remember-recorded-then-confirmed` (golden in `port/golden-b4`, recorded with `--skip-host-check`), fails the host check
+and `pigeq check`: a message the extension sends from `session_start` after an async scan reaches the trace before the response of the
+`/eq-new` command under PiG and after it under Pi (PiG bug B4, reported to the PiG owners). It stays out of `port/scenarios` until B4 is fixed.
 
 What the scenarios deliberately do not pin, and why (each is the parity claim's edge, not a normalizer change):
 

@@ -1,0 +1,127 @@
+{
+  "name": "loops-reminder-once-per-list",
+  "description": "An open loop is named once at the end of the run, for the next turn, and not again until the open list changes; closing every loop silences it.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write,warden_remember,warden_loops,warden_recall"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "Bump the version",
+            "when": "after CI passes"
+          }
+        }
+      ]
+    },
+    {
+      "text": "CI is running; I will bump the version after it passes."
+    },
+    {
+      "text": "still waiting"
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "add",
+            "text": "Tag the release"
+          }
+        }
+      ]
+    },
+    {
+      "text": "waiting"
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "done",
+            "id": 1
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "warden_loops",
+          "arguments": {
+            "action": "done",
+            "id": 2
+          }
+        }
+      ]
+    },
+    {
+      "text": "all done"
+    },
+    {
+      "text": "nothing left"
+    }
+  ],
+  "steps": [
+    {
+      "name": "first",
+      "rpc": {
+        "type": "prompt",
+        "message": "ship the release"
+      }
+    },
+    {
+      "name": "same-list",
+      "rpc": {
+        "type": "prompt",
+        "message": "status?"
+      }
+    },
+    {
+      "name": "changed-list",
+      "rpc": {
+        "type": "prompt",
+        "message": "go on"
+      }
+    },
+    {
+      "name": "closed",
+      "rpc": {
+        "type": "prompt",
+        "message": "done?"
+      }
+    },
+    {
+      "name": "silent",
+      "rpc": {
+        "type": "prompt",
+        "message": "anything else?"
+      }
+    }
+  ]
+}
