@@ -77,15 +77,19 @@ components; this port registers none.
    environment block and the agent's prompt), after a fix this comparison found (a blank line in the replace-mode header).
    The harness's `removed` part is the host's own default system prompt, which says `pi` under Pi and `pig` under PiG, so
    that comparison cannot pass and the scenario is not kept (`port/gen-scenarios.py` says so).
-3. **Unsupported parameters of `Agent`.** `inherit_context: true` is refused with a message (a child cannot fork the
-   parent's conversation); `resume` starts a new agent with the earlier agent's answer in its prompt (a child's session is
-   not kept); `isolated` starts the child with `--no-extensions`. The tool text is the original's, so the model is told
-   about these.
+3. **Unsupported parameters of `Agent` are refused.** `inherit_context: true`, `resume`, `schedule` and
+   `isolation: "worktree"` are tool errors with the message in the README (`refuse.go`; the first version answered
+   `inherit_context` with plain text and emulated `resume` by starting a new agent with the old answer in its prompt, a
+   partial run, now removed). `isolated` starts the child with `--no-extensions`. The tool text is the original's, so the
+   model is told about these; a call that uses one gets the refusal.
 4. **Agent files are read at start-up for the tool text** (the workspace of an extension process is fixed), and again when
    the session starts and when the workspace differs. A file added later reaches `/agents` and the `subagent_type`
    check on the next session event, not the tool description of the running session.
-5. **Settings.** Only five of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
-   `fallbackSubagent`, `disableDefaultAgents`); the rest are ignored silently, as a malformed field is in the original.
+5. **Settings.** Five of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
+   `fallbackSubagent`, `disableDefaultAgents`). A value of any other field that asks for an unported feature is
+   announced once when a session starts, with the refusal message (`refuse.go`, `settingRules`); a malformed value is
+   ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
+   port does not honor, are refused the same way.
 6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
    widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
    settings menu, usage and cost display, model scope and fuzzy model resolution (the child resolves `--model`).

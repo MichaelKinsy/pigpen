@@ -74,8 +74,8 @@ func TestTheChildGetsTheAgentsPromptAndEnvironment(t *testing.T) {
 func TestIsolationFollowsTheAgentFile(t *testing.T) {
 	r := startRig(t)
 	tr := true
-	registerAgents(reg(mk("solo", func(c *agentConfig) { c.Isolated = &tr; c.Extensions = true }), mk("noext", func(c *agentConfig) { c.Extensions = false }),
-		mk("open", func(c *agentConfig) { c.Extensions = true })))
+	registerAgents(reg(mk("solo", func(c *agentConfig) { c.Isolated = &tr; c.Extensions = true; c.Skills = true }), mk("noext", func(c *agentConfig) { c.Extensions = false; c.Skills = true }),
+		mk("open", func(c *agentConfig) { c.Extensions = true; c.Skills = true })))
 	for i, name := range []string{"solo", "noext", "open"} {
 		r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": name, "run_in_background": true})
 		eq(t, r.fleet.wait(t, i+1)[i].spec.Isolated, name != "open")

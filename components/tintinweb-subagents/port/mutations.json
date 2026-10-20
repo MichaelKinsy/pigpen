@@ -284,8 +284,8 @@
  {
   "name": "spawn-not-background",
   "file": "bus.go",
-  "find": "a.start(ctx, typ, prompt, description, \"\", model, \"\", maxTurns, true, false)",
-  "replace": "a.start(ctx, typ, prompt, description, \"\", model, \"\", maxTurns, false, false)"
+  "find": "a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, true, false)",
+  "replace": "a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, false, false)"
  },
  {
   "name": "stop-error-text",
@@ -492,18 +492,6 @@
   "replace": "-\\d{9}$`"
  },
  {
-  "name": "resume-prompt",
-  "file": "tools.go",
-  "find": "You are continuing earlier work. Your previous run ended with this answer:",
-  "replace": "Earlier answer:"
- },
- {
-  "name": "inherit-context-allowed",
-  "file": "tools.go",
-  "find": "if v, _ := p[\"inherit_context\"].(bool); v {",
-  "replace": "if false {"
- },
- {
   "name": "wait-ignored",
   "file": "tools.go",
   "find": "if wait, _ := p[\"wait\"].(bool); wait {",
@@ -604,5 +592,137 @@
   "file": "settings.go",
   "find": "if s := strings.TrimSpace(v); s != \"\" {",
   "replace": "if s := strings.TrimLeft(v, \" \"); s != \"\" {"
+ },
+ {
+  "name": "refusal-wrong-original",
+  "file": "refuse.go",
+  "find": "originalSpec = \"npm:@tintinweb/pi-subagents@0.19.0\"",
+  "replace": "originalSpec = \"npm:@tintinweb/pi-subagents\""
+ },
+ {
+  "name": "refusal-drops-install-advice",
+  "file": "refuse.go",
+  "find": "\", which runs unchanged in PiG.\"",
+  "replace": "\".\""
+ },
+ {
+  "name": "schedule-accepted",
+  "file": "refuse.go",
+  "find": "if v, ok := p[\"schedule\"]; ok && v != nil {",
+  "replace": "if v, ok := p[\"schedule\"]; ok && v == nil {"
+ },
+ {
+  "name": "worktree-param-accepted",
+  "file": "refuse.go",
+  "find": "v != \"\" && v != \"off\" {",
+  "replace": "v != \"\" && v != \"worktree\" {"
+ },
+ {
+  "name": "inherit-context-accepted",
+  "file": "refuse.go",
+  "find": "if v, _ := p[\"inherit_context\"].(bool); v {",
+  "replace": "if v, _ := p[\"inherit_context\"].(bool); !v {"
+ },
+ {
+  "name": "resume-accepted",
+  "file": "refuse.go",
+  "find": "if v, _ := p[\"resume\"].(string); v != \"\" {",
+  "replace": "if v, _ := p[\"resume\"].(string); v == \"never\" {"
+ },
+ {
+  "name": "memory-field-accepted",
+  "file": "refuse.go",
+  "find": "case cfg.Memory != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "nested-field-accepted",
+  "file": "refuse.go",
+  "find": "case cfg.AllowedSubagents != nil:",
+  "replace": "case false:"
+ },
+ {
+  "name": "disallowed-tools-accepted",
+  "file": "refuse.go",
+  "find": "case len(cfg.DisallowedTools) > 0:",
+  "replace": "case false:"
+ },
+ {
+  "name": "skills-false-accepted",
+  "file": "refuse.go",
+  "find": "return v == nil || (ok && b)",
+  "replace": "return true"
+ },
+ {
+  "name": "extension-list-accepted",
+  "file": "refuse.go",
+  "find": "case nil, bool:\n\t\treturn true",
+  "replace": "case nil, bool, []string:\n\t\treturn true"
+ },
+ {
+  "name": "rpc-option-accepted",
+  "file": "refuse.go",
+  "find": "default:\n\t\t\treturn \"the spawn RPC option",
+  "replace": "default:\n\t\t\tcontinue\n\t\t\treturn \"the spawn RPC option"
+ },
+ {
+  "name": "rpc-foreground-accepted",
+  "file": "refuse.go",
+  "find": "if b, _ := v.(bool); !b {",
+  "replace": "if b, _ := v.(bool); b {"
+ },
+ {
+  "name": "setting-bool-direction",
+  "file": "refuse.go",
+  "find": "return ok && b != r.okBool",
+  "replace": "return ok && b == r.okBool"
+ },
+ {
+  "name": "setting-int-ok-values",
+  "file": "refuse.go",
+  "find": "if n == o {\n\t\t\t\treturn false",
+  "replace": "if n != o {\n\t\t\t\treturn false"
+ },
+ {
+  "name": "setting-enum-default-refused",
+  "file": "refuse.go",
+  "find": "return !inList(r.okEnum, s)",
+  "replace": "return true"
+ },
+ {
+  "name": "setting-notice-repeats",
+  "file": "extension.go",
+  "find": "if text != \"\" && !same {",
+  "replace": "if text != \"\" {"
+ },
+ {
+  "name": "setting-notice-silent",
+  "file": "extension.go",
+  "find": "ctx.Notify(text, \"warning\")",
+  "replace": "_ = text"
+ },
+ {
+  "name": "start-skips-agent-file-check",
+  "file": "bus.go",
+  "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rpc-skips-option-check",
+  "file": "bus.go",
+  "find": "if feature := unportedSpawnOption(opts); feature != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rpc-name-dropped",
+  "file": "bus.go",
+  "find": "name, _ := opts[\"name\"].(string)",
+  "replace": "name := \"\""
+ },
+ {
+  "name": "rpc-thinking-dropped",
+  "file": "bus.go",
+  "find": "thinking, _ := opts[\"thinkingLevel\"].(string)",
+  "replace": "thinking := \"\""
  }
 ]
