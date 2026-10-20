@@ -216,3 +216,63 @@ func (f *FakeClock) Restore() {
 	clockMs = f.oldNow
 	f.core.afterBase = f.oldAfter
 }
+
+// SetGoalField sets a top-level field of the focused goal in memory (the original's tests assign to core.state.goal).
+func (p *Probe) SetGoalField(key string, value any) {
+	p.c.locked(func() {
+		if g := p.c.state(); g != nil {
+			g.set(key, jsonValue(value))
+		}
+	})
+}
+
+// SetGoalTokensUsed sets usage.tokensUsed of the focused goal in memory.
+func (p *Probe) SetGoalTokensUsed(n float64) {
+	p.c.locked(func() {
+		if g := p.c.state(); g != nil {
+			u := goalUsageCopy(g)
+			u.set("tokensUsed", n)
+			g.set("usage", u)
+		}
+	})
+}
+
+// SchedulerRollbackProtection is the "scheduler cloning protects rollback" half of the scheduler twin: a clone of the goal does not
+// share its scheduler, and a normalized goal keeps it; an invalid scheduler normalizes to interrupted with the allowance spent.
+func SchedulerRollbackProtection(goal map[string]any) []string {
+	var problems []string
+	g, _ := jsonValue(goal).(*jsObject)
+	before := marshalJSON(g.obj("scheduler"), "")
+	clone := cloneGoal(g)
+	clone.obj("scheduler").set("used", 999.0)
+	if marshalJSON(g.obj("scheduler"), "") != before {
+		problems = append(problems, "cloneGoal shares the scheduler")
+	}
+	if n := normalizeGoalRecord(g); n == nil || marshalJSON(n.obj("scheduler"), "") != before {
+		problems = append(problems, "normalizeGoalRecord changes the scheduler")
+	}
+	bad := deepClone(g.obj("scheduler")).(*jsObject)
+	bad.set("used", -1.0)
+	invalid, _ := normalizeGoalScheduler(bad).(*jsObject)
+	if phase, _ := invalid.str("phase"); phase != "interrupted" {
+		problems = append(problems, "an invalid scheduler is not interrupted")
+	}
+	if used, _ := invalid.num("used"); used != 9007199254740991 {
+		problems = append(problems, "an invalid scheduler does not spend the allowance")
+	}
+	return problems
+}
+
+// PatchGoal applies {...goal, ...patch} to the focused goal through the service (goalService.apply with a mutate).
+func (p *Probe) PatchGoal(patch map[string]any) (ok bool) {
+	p.c.locked(func() {
+		result, err := p.c.goalService.apply(p.c.st, goalMutationSpec{mutate: func(g *jsObject) *jsObject {
+			for k, v := range patch {
+				g.set(k, jsonValue(v))
+			}
+			return g
+		}})
+		ok = err == nil && result.ok
+	})
+	return ok
+}
