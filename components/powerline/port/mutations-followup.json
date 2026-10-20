@@ -468,12 +468,6 @@
   "replace": "if !ok {\n\t\t\treturn \"\"\n\t\t}\n\t\tfor _, item"
  },
  {
-  "name": "fu-lock-restore",
-  "file": "follow_up.go",
-  "find": "\tf.mu.Lock()\n\tdefer f.mu.Unlock()\n\tif routing.removed",
-  "replace": "\tif routing.removed"
- },
- {
   "name": "ext-input-event",
   "file": "followup_ext.go",
   "find": "e.OnEvent(sdk.EventInput,",
