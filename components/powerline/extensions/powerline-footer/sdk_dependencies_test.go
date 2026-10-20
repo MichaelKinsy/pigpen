@@ -1,0 +1,39 @@
+package powerline_footer_test
+
+import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+)
+
+// The Go SDK has no keybinding lookup, no getEditorComponent and no tui.hasOverlay(), and its SetEditorComponent refuses every
+// component. Nothing in the extension may depend on them: a call would fail or silently return nil at run time, so a feature
+// that needs one has to be refused (see refusal_test.go) instead of half working. This test reads every non-test source file,
+// drops the comments, and fails when the code reaches for one of those host capabilities.
+func TestNoCodePathDependsOnAnEditorOrKeybindingCapabilityTheSdkLacks(t *testing.T) {
+	forbidden := regexp.MustCompile(`(?i)\b(SetEditorComponent|GetEditorComponent|getEditorComponent|hasOverlay|KeybindingsManager|keybindings\.matches|GetKeybindings|Keybinding(s)?\w*)\b`)
+	files, err := filepath.Glob("*.go")
+	if err != nil || len(files) == 0 {
+		t.Fatalf("no sources found: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		src, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i, line := range strings.Split(string(src), "\n") {
+			code := line
+			if at := strings.Index(code, "//"); at >= 0 {
+				code = code[:at]
+			}
+			if loc := forbidden.FindString(code); loc != "" {
+				t.Errorf("%s:%d uses %q, which the Go SDK does not offer; refuse the feature instead", file, i+1, loc)
+			}
+		}
+	}
+}
