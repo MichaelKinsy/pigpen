@@ -272,9 +272,9 @@ func newRefinementFile(a *AgentConfig, revision int, now string) *refinementFile
 // refinementEvidence is RefinementEvidenceItem.
 type refinementEvidence struct {
 	ID, Source, RunID, Agent, At, Status, Model, Thinking, AcceptanceStatus string
-	ReviewFindings, ResidualRisks, Errors, ControlSignals                  []string
-	OutputTail                                                             string
-	Refs                                                                   []string
+	ReviewFindings, ResidualRisks, Errors, ControlSignals                   []string
+	OutputTail                                                              string
+	Refs                                                                    []string
 }
 
 func (e refinementEvidence) object() *jsObject {
