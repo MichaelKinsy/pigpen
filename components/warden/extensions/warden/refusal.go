@@ -26,7 +26,7 @@ func unportedAction(sub string, rest []string) string {
 			}
 		}
 		return "/warden rules"
-	case "report", "config", "init", "audit", "index", "prefs", "loops", "recommend", "unmute", "bench":
+	case "report", "init", "audit", "index", "prefs", "loops", "recommend", "unmute", "bench":
 		return "/warden " + sub
 	}
 	return ""

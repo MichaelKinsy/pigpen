@@ -34,7 +34,68 @@ MODULES = {
     "subagent": "subagent supervision", "waste": "call-waste guard",
 }
 
+
+# Per-case reasons for the cases that stay skipped in the configuration, host and backend files (each case says why).
+CASES = {
+    "config.test.ts": [
+        ("the tracker reads a string duration", "needs the arming tracker, which the guard-core lane ports with arming.ts (the config half, ParseDuration, is twinned by TestParseDuration and config.test.ts:417)"),
+    ],
+    "shape.test.ts": [
+        ("the 0.9.0 live crash", "guardCurrentSections guards the extension against a stale shape module in Node's module graph; the Go package is one unit, so a stale shape module cannot exist (the completeConfig half is twinned)"),
+    ],
+    "host-dirs.test.ts": [
+        ("indexDir:", "indexDir belongs to the conscience lane (index-cmd.ts); the port's index directory is under DataDir and is pinned by that lane's tests, not by PI_CODING_AGENT_DIR precedence"),
+        ("every path function places", "each lane pins its own path function under DataDir (loops, prefs, holds, rules log, steer stats, index); the config and project paths of this case are twinned by TestLoadConfigReadUserConfigAndSetUserSettingHonourInjectedDirs"),
+        ("gated on the marker", "legacyDataNotice migrates data from Pi's agent directory to Oh My Pi's; the port's data has always lived under the PiG config home (D5) and has no legacy location to migrate from"),
+        ("the same directory under another spelling", "legacyDataNotice (Pi to Oh My Pi migration): the port has no migration, so there is no spelling of a legacy directory to compare"),
+        ("quoting survives a path with a space", "legacyDataNotice (Pi to Oh My Pi migration): the port prints no shell command to run, so there is no quoting to check"),
+    ],
+    "host-compat.test.ts": [
+        ("keep the host's `this` binding", "a JavaScript Proxy binding `this` of the host API; Go method values have no `this` to lose"),
+        ("gets the API back unchanged", "adaptHost returns Pi's API unchanged; PiG registers the extension through the SDK directly, so there is no adapter to bypass"),
+        ("before_agent_start sees the active skills", "Oh My Pi's before_agent_start lacks systemPromptOptions; PiG's event carries them natively (the conscience lane reads them there)"),
+        ("appendSystemPrompt set by the handler becomes", "Oh My Pi wants the system prompt as an array result; PiG takes Pi's result shape (the conscience lane's appendSystemPrompt path)"),
+        ("keeps the rest of the handler result", "Oh My Pi's systemPrompt array result merge; PiG takes Pi's result shape, so no merge is needed"),
+        ("marked handled for the host", "Oh My Pi reads an input result as { handled }; PiG reads Pi's { action: \"handled\" }"),
+        ("waits for both agent_end handlers", "Oh My Pi has no agent_settled event, so the adapter fakes one after agent_end; PiG delivers EventAgentSettled itself (the supervision lane wires it)"),
+        ("runs after an agent_end registered first", "the stand-in agent_settled ordering against another extension's agent_end; PiG's own EventAgentSettled has no such ordering to reproduce"),
+        ("will continue does not settle", "willContinue handling of the Oh My Pi stand-in; PiG's EventAgentSettled fires once per prompt itself"),
+        ("cancelled async work settles after draining", "Oh My Pi async-job snapshot polling for the stand-in settle; PiG exposes no getAsyncJobSnapshot and needs none"),
+        ("cancellation during an earlier agent_end handler", "Oh My Pi async-job snapshot taken before later agent_end handlers; no counterpart on PiG"),
+        ("cancellation in an earlier extension can drain", "Oh My Pi async-job drain by an earlier extension; no counterpart on PiG"),
+        ("empty async snapshot does not settle a continuation", "the grace period of Oh My Pi's stand-in settle; no counterpart on PiG"),
+        ("queued and delivering async results delay", "Oh My Pi async delivery state in the stand-in settle; no counterpart on PiG"),
+        ("async work watcher does not settle after a later", "Oh My Pi async-work watcher generation counter; no counterpart on PiG"),
+        ("followed by a continuation does not settle", "Oh My Pi continuation detection by the stand-in settle; PiG's EventAgentSettled is host-decided"),
+        ("checked for idle after agent_end returns", "Oh My Pi idle check by the stand-in settle; PiG's EventAgentSettled is host-decided"),
+        ("continuation starting before the deferred idle check", "Oh My Pi deferred idle check; PiG's EventAgentSettled is host-decided"),
+        ("rejected agent_end handler leaves host error handling", "Oh My Pi error reporting around the stand-in settle; PiG reports handler errors itself (host_errors_test.go)"),
+        ("host timeout advances to settle", "Oh My Pi per-callback timeouts around the stand-in settle; PiG owns handler deadlines"),
+        ("command contexts get getSystemPromptOptions", "Oh My Pi command contexts lack getSystemPromptOptions; PiG's command context has it natively"),
+    ],
+    "backend.test.ts": [
+        ("names pass through, junk is refused", "D3: resolves openrouter and commandcode, which the port does not have (typesafe and own-model only); the refusal of junk values is twinned by config.test.ts:307"),
+        ("an endpoint object is kept as written", "D3: endpoint objects are not a backend of the port; the loader refuses them (config.test.ts:307 twin)"),
+        ("loginStoresKey", "the port has no TypeSafe login store: the key comes from TYPESAFE_API_KEY only (D2)"),
+        ("backendName shows", "D3: names registry and endpoint backends; the port names its two backends in describeBackend"),
+        ("describeBackend names the label", "D3: its cases are commandcode and an endpoint object; the port's typesafe and own-model lines are pinned by the disclosure tests"),
+        ("typesafe returns the original text unchanged", "the port has no disclosureFor host rewriting: Disclosure(backend, target) builds each backend's text (disclosure tests)"),
+        ("openrouter replaces the host", "D3: openrouter is not a backend of the port"),
+        ("an endpoint object replaces the host", "D3: endpoint objects are not a backend of the port"),
+        ("typesafe backend omits the backend field", "judgeOptions builds pi-typesafe's createTypeSafe options; the Go client is components/typesafe, which takes no such options"),
+        ("commandcode and openrouter are forwarded", "D3: commandcode and openrouter are not backends of the port"),
+        ("reaches createTypeSafe unchanged", "D3: endpoint objects are not a backend of the port; createTypeSafe is pi-typesafe's"),
+        ("backend hosts come from pi-typesafe's registry", "pi-typesafe's DECISIONS_BACKENDS registry; the Go client's endpoints live in components/typesafe"),
+    ],
+    "extension-omp-notice.test.ts": [
+        ("notice once, marker written", "the Oh My Pi migration notice (legacy data under Pi's agent directory moved to Oh My Pi's); PiG is not Oh My Pi and the port's data never lived in Pi's directory (D5)"),
+    ],
+}
+
 def reason(f, name):
+    for needle, why in CASES.get(f, []):
+        if needle in name:
+            return why
     base = f[:-len(".test.ts")]
     n = name.lower()
     if f == "guard.test.ts":

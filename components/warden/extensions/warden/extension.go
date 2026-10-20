@@ -58,6 +58,12 @@ type warden struct {
 	cfgSig         string
 	shapeMissing   []string
 
+	// The panels, the session's trace file and its trace subscription (panel_open.go, trace_session.go).
+	tracePanel, configPanel *panelRun
+	traceFile               *TraceFile
+	unsubTraceFile          func()
+	unsubWidth              func()
+
 	steersThisRun int
 	doneNudged    bool
 	continuation  bool
@@ -93,6 +99,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}}
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
+	w.registerShortcut(e) // the trace sidebar's toggle (trace_session.go)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
 	e.OnEvent(sdk.EventBeforeAgentStart, w.onBeforeAgentStart)
 	e.OnEvent(sdk.EventAgentStart, w.onAgentStart)
@@ -187,6 +194,7 @@ func (w *warden) update(ctx sdk.Context, change func(*Config)) (Config, error) {
 // judgeFor is the judge for the configured backend, or nil for offline operation (no backend, no consent, or a
 // backend that cannot start: the reason is noted once).
 func (w *warden) judgeFor(ctx sdk.Context, cfg Config) Judge {
+	w.noteJudgments(cfg) // the trace file records a change of the judgment state (trace_session.go)
 	if !cfg.Enabled || cfg.Backend == BackendNone {
 		return nil
 	}
@@ -288,7 +296,8 @@ func (w *warden) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) 
 	if enabled && !ctx.HasUI() {
 		w.disclose(ctx)
 	}
-	w.config(ctx) // says once what the configuration could not apply (config_runtime.go)
+	w.config(ctx)           // says once what the configuration could not apply (config_runtime.go)
+	w.openSessionTrace(ctx) // panels of the last session closed, trace file opened (trace_session.go)
 	w.refresh(ctx)
 	return nil, nil
 }

@@ -80,7 +80,13 @@ enable`, or, when the chosen judge is not in use, `warden: offline (typesafe: no
 | `/warden mode steer\|confirm\|advise` | `steer`: hold and tell the agent; `confirm`: ask **you** in a dialog; `advise`: never hold, only warn |
 | `/warden backend typesafe\|own-model\|offline` | change the judge (asks for consent again if it sends somewhere new) |
 | `/warden test` | run synthetic dangerous calls through the guard; executes nothing |
-| `/warden trace` | the recent decisions and why |
+| `/warden trace` | the trace sidebar: the recent decisions and why (a second `/warden trace`, or the shortcut, closes it) |
+| `/warden config get <key>` / `set <key> <value>` | read or write one setting of the config file by dotted path (`action.irreversible.confirm 0.8`); a bare `/warden config` opens the editor panel |
+
+The sidebar also toggles with `widget.shortcut` (default `ctrl+shift+w`, read once at load; a value that is not a key
+shape is not registered). In the sidebar: ↑↓/j/k, PgUp/PgDn, Home/End scroll, `d` switches compact and detailed, `c`
+clears, Esc gives the keyboard back to the editor, `q` closes. The editor panel edits the user file only
+(enter toggles or edits, `s` saves).
 
 Headless runs (no UI) cannot answer the consent dialog, so they use environment variables. Setting
 `PIGPEN_WARDEN_BACKEND` (with `PIGPEN_WARDEN_ENABLED=1`) **is** the consent to that backend, for runs with that
@@ -94,7 +100,14 @@ environment only: the variables are never written to the config file.
 | `PIGPEN_WARDEN_STEER_VISIBLE=0\|1` | hide or show the steer messages in the transcript (default shown) |
 | `TYPESAFE_API_KEY`, `TYPESAFE_BASE_URL` | the TypeSafe key and endpoint (the key is never written to disk) |
 
-Settings live in `<PIG_HOME>/pigpen-warden/config.json` (mode 0600, contains no key).
+Settings live in `<PIG_HOME>/pigpen-warden/config.json` (mode 0600, contains no key). It is read the way the original
+reads its own: an unknown key is ignored and an invalid value falls back to the default, so a hostile or half-edited
+file never breaks warden (a file that is not valid JSON is reported and the defaults, which are off, apply). The file is
+re-read when it changes on disk. A **trusted** project's `.pig/pi-warden.json` (`.pi/` when PiG shares Pi's directories) is
+layered on top: a project may tune the guards and make the action guard and security stricter, never weaker, and it
+cannot set consent, the backend or the mode, raise a budget, declare rules, unmask output, or turn warden on; whatever
+it asks for that is refused is listed in `/warden status` and said once per session. `PIGPEN_WARDEN_TRACE_DIR=/abs/dir`
+also appends the trace to `<dir>/<session>.jsonl` (one JSON object per line) for hosts without a terminal UI.
 
 ## What happens when a call is held
 
@@ -121,7 +134,9 @@ required) or fuses into a Piglet Binary (see `piglets/pig-warden`). It shares th
 ## What is and is not ported
 
 Ported: the four guards above, the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
-`exemptRules`, the steer budget, and both judge backends. Not ported (rules file, slop, secret masking, context
+`exemptRules`, the steer budget, both judge backends, the configuration loader (user and trusted project files, with the
+original's validation and warnings), `/warden config`, the trace sidebar and its shortcut, the status widget's rendering,
+the trace file and the config schema completion. Not ported (rules file, slop, secret masking, context
 saver, conscience, subagent supervision, …) and every deliberate deviation are listed in
 [`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test. The upstream `/warden` actions that are not ported are refused with an error that names the original (`npm:pi-warden@0.80.0`); the tools `warden_remember`, `warden_loops` and `warden_recall` are not yet ported and are not registered.
 

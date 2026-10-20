@@ -359,13 +359,18 @@ func TestWardenTraceCommandReadsTheStore(t *testing.T) {
 	if msg := r.h.Command("warden", "trace"); msg != "" {
 		t.Fatal(msg)
 	}
+	// With a UI the command mounts the sidebar; this fake host never mounts an overlay, so (as in the original, whose
+	// `built()` is false then) the trace arrives as text in a notification once the overlay call has returned.
 	var shown string
-	for _, c := range r.h.CallsTo("sendMessage") {
-		m, _ := c.Args["message"].(map[string]any)
-		if m["customType"] == statusType {
-			shown, _ = m["content"].(string)
+	waitUntil(t, func() bool {
+		for _, c := range r.h.CallsTo("ui.notify") {
+			if m, _ := c.Args["message"].(string); strings.HasSuffix(m, " warden · done-check · ok") {
+				shown = m
+				return true
+			}
 		}
-	}
+		return false
+	})
 	if !strings.HasSuffix(shown, " warden · done-check · ok") {
 		t.Errorf("trace shows %q", shown)
 	}

@@ -11,7 +11,7 @@ M = [
  ("irreversible-never-confirms", "guard.go", "if j.Irreversible >= config.Irreversible.Confirm {", "if j.Irreversible >= config.Irreversible.Confirm+1 {"),
  ("hold-does-not-block", "toolcall.go", '"block": true', '"block": false'),
  ("bearer-not-redacted", "redact.go", '\tout = reBearer.ReplaceAllString(out, "${1}"+redacted)\n', ''),
- ("config-world-readable", "configfile.go", "0o600); err != nil", "0o644); err != nil"),
+ ("config-world-readable", "atomic.go", "os.Chmod(tmp, 0o600)", "os.Chmod(tmp, 0o644)"),
  ("budget-off-by-one", "backend.go", "b.used >= b.Max", "b.used > b.Max"),
  ("steer-budget-off-by-one", "steer_core.go", "w.steersThisRun >= cfg.SteerBudget", "w.steersThisRun > cfg.SteerBudget"),
  ("repeat-window-empty", "guard.go", "window: 3}", "window: 0}"),
@@ -28,7 +28,7 @@ M = [
  ("differing-output-still-repeat", "stuck.go", "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {", "if prev.Failed != l.Failed {"),
  ("steer-hidden-flag-ignored", "extension.go", 'cfg.SteerVisible = truthy(v)', '_ = v'),
  ("steer-type-renamed", "extension.go", '"pi-warden-steer"', '"pigpen-warden-steer"'),
- ("tmp-file-left-behind", "configfile.go", "\t\t_ = os.Remove(tmp)\n", ""),
+ ("tmp-file-left-behind", "atomic.go", "if err := os.Rename(tmp, path); err != nil {\n\t\t_ = os.Remove(tmp)\n", "if err := os.Rename(tmp, path); err != nil {\n"),
  # Added by the review (rev-pigpen-warden).
  ("stuck-task-not-redacted", "stuck.go", "taskText = headText(Redact(t), 1500)", "taskText = headText(t, 1500)"),
  ("done-task-not-redacted", "done.go", "\t\tt = Redact(t)\n", ""),
@@ -36,7 +36,7 @@ M = [
  ("context-not-redacted", "guard.go", '"text": truncate(Redact(m.Text), 750)', '"text": truncate(m.Text, 750)'),
  ("own-model-unbudgeted", "backend.go", 'Label: "The session model", Budget: budget}', 'Label: "The session model"}'),
  ("typesafe-retries", "backend.go", "none := 0", "none := 2"),
- ("env-consent-persisted", "extension.go", "\tfile := w.fileCfg\n", "\tfile := w.cfg\n"),
+ ("env-consent-persisted", "extension.go", "\tbefore, file := w.fileCfg, w.fileCfg\n", "\tbefore, file := w.fileCfg, w.cfg\n"),
  ("status-claims-unready-judge", "steer.go", "w.statusBackend(cfg), cfg.Mode", "describeBackendShort(cfg.Backend), cfg.Mode"),
  # Steering and trace core (steer_core.go).
  ("steer-critical-set-narrowed", "steer_core.go", "SteerGuardStuck: true, SteerGuardDone: true, SteerGuardRunaway: true, SteerGuardSubagent: true", "SteerGuardStuck: true, SteerGuardDone: true, SteerGuardRunaway: true"),

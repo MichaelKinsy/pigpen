@@ -16,7 +16,8 @@ const help = `warden — guardrails that steer instead of interrupt
   /warden mode <m>            steer (hold and tell the agent) | confirm (ask you) | advise (warn only)
   /warden backend <b>         change where judgments go: typesafe | own-model | offline
   /warden test                run a few synthetic dangerous calls through it; nothing is executed
-  /warden trace               the last things warden decided`
+  /warden config [set|get]    config: get <key>, set <key> <value>, or the editor panel
+  /warden trace               the trace sidebar: the last things warden decided (the shortcut toggles it too)`
 
 func (w *warden) command(ctx sdk.Context, args string) error {
 	fields := strings.Fields(args)
@@ -52,6 +53,8 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 		return w.setMode(ctx, rest)
 	case "test":
 		w.selfTest(ctx)
+	case "config":
+		return w.configCommand(ctx, rest)
 	case "trace":
 		w.showTrace(ctx)
 	default:
@@ -89,6 +92,7 @@ func (w *warden) showStatus(ctx sdk.Context) {
 	var b strings.Builder
 	if !cfg.Enabled {
 		b.WriteString("warden is off.\n\n" + OfflineNote + "\n\nRun /warden enable to turn it on; it shows exactly what leaves this machine before anything does.")
+		b.WriteString(w.configStatusLines(cfg))
 		w.show(ctx, b.String())
 		return
 	}
@@ -104,19 +108,26 @@ func (w *warden) showStatus(ctx sdk.Context) {
 		s.Inspected, s.Judged, s.Held, s.Warned, s.Approved, s.Steers, s.SteersSkipped, s.Stuck, s.DoneChecks, s.Unverified, s.Errors)
 	fmt.Fprintf(&b, "  judge requests this session: %d of %d\n\n", w.budget.Used(), cfg.MaxRequests)
 	b.WriteString(Disclosure(cfg.Backend, target))
+	b.WriteString(w.configStatusLines(cfg))
 	w.show(ctx, b.String())
 }
 
 func (w *warden) showTrace(ctx sdk.Context) {
-	var lines []string
-	for _, t := range w.trace.Entries() {
-		lines = append(lines, t.At.Format("15:04:05")+" "+t.Line)
-	}
-	if len(lines) == 0 {
-		w.show(ctx, "warden has not decided anything yet this session.")
+	cfg := w.config(ctx)
+	w.mu.Lock()
+	file := w.traceFile
+	w.mu.Unlock()
+	if !ctx.HasUI() {
+		w.say(ctx, w.traceText(file), "info")
 		return
 	}
-	w.show(ctx, strings.Join(lines, "\n"))
+	// A host that asked for the trace file has no terminal UI, so it gets the text whether or not the sidebar was built;
+	// so does one that never mounted the overlay (the SDK calls onHandle when the host mounts it).
+	w.toggleTrace(ctx, cfg, func(run *panelRun) {
+		if TraceDir(w.opts.Getenv) != "" || !run.isBuilt() {
+			ctx.Notify(w.traceText(file), "info")
+		}
+	})
 }
 
 // enable turns warden on. A backend that sends anything anywhere shows its data flow first and needs a yes.

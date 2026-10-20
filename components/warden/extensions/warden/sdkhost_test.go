@@ -60,7 +60,9 @@ type Host struct {
 	handlers map[string]int
 	tools    map[string]bool
 	cmds     map[string]bool
-	nextID   int
+	// shortcuts maps each registered shortcut key to its description.
+	shortcuts map[string]string
+	nextID    int
 }
 
 type frame struct {
@@ -77,6 +79,10 @@ type frame struct {
 		Commands []struct {
 			Name string `json:"name"`
 		} `json:"commands"`
+		Shortcuts []struct {
+			Key         string `json:"key"`
+			Description string `json:"description"`
+		} `json:"shortcuts"`
 	} `json:"register,omitempty"`
 	Response *struct {
 		Result json.RawMessage `json:"result"`
@@ -107,7 +113,7 @@ func StartHost(t *testing.T, ext *sdk.Extension, opts HostOptions) *Host {
 	h := &Host{
 		t: t, nc: hostSide, opts: opts, runDone: make(chan error, 1),
 		pending: map[string]chan json.RawMessage{}, failures: map[string]string{},
-		handlers: map[string]int{}, tools: map[string]bool{}, cmds: map[string]bool{},
+		handlers: map[string]int{}, tools: map[string]bool{}, cmds: map[string]bool{}, shortcuts: map[string]string{},
 	}
 	go func() { h.runDone <- ext.RunWithConn(extSide) }()
 	first := h.read()
@@ -122,6 +128,9 @@ func StartHost(t *testing.T, ext *sdk.Extension, opts HostOptions) *Host {
 	}
 	for _, c := range first.Register.Commands {
 		h.cmds[c.Name] = true
+	}
+	for _, sc := range first.Register.Shortcuts {
+		h.shortcuts[sc.Key] = sc.Description
 	}
 	state, _ := json.Marshal(map[string]any{"hasUI": hasUI})
 	h.write(map[string]any{"type": "ready", "ready": map[string]any{
@@ -311,6 +320,19 @@ func (h *Host) Command(name, args string) string {
 	// sent {name, args}, which the SDK answers with "unknown command: " (see pigpen-warden-FRICTION.md).
 	argv, _ := json.Marshal(args)
 	_, failure := h.roundTrip(map[string]any{"method": "command", "tool": name, "args": json.RawMessage(argv)})
+	return failure
+}
+
+// Shortcuts is the registered shortcut keys and their descriptions.
+func (h *Host) Shortcuts() map[string]string { return h.shortcuts }
+
+// Shortcut presses a registered shortcut and returns its error text ("" on success).
+func (h *Host) Shortcut(key string) string {
+	h.t.Helper()
+	if _, ok := h.shortcuts[key]; !ok {
+		h.t.Fatalf("shortcut %q is not registered", key)
+	}
+	_, failure := h.roundTrip(map[string]any{"method": "shortcut", "tool": key})
 	return failure
 }
 

@@ -834,7 +834,7 @@ func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testi
 	cases := map[string]string{
 		"rules": "/warden rules", "rules check": "/warden rules check", "rules audit src": "/warden rules audit",
 		"rules calibrate --yes": "/warden rules calibrate", "rules tune": "/warden rules tune", "report": "/warden report",
-		"config get x": "/warden config", "init": "/warden init", "audit": "/warden audit", "index": "/warden index",
+		"init": "/warden init", "audit": "/warden audit", "index": "/warden index",
 		"prefs": "/warden prefs", "loops": "/warden loops", "recommend": "/warden recommend", "unmute": "/warden unmute", "bench": "/warden bench",
 	}
 	for args, feature := range cases {
