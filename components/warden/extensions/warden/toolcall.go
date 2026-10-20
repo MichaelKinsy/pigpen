@@ -131,7 +131,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	}
 	deliverNotes := func() {
 		if len(notes) > 0 {
-			w.steer(ctx, cfg, false, strings.Join(notes, "\n\n"), "steer", false)
+			w.steer(cfg, []SteerGuard{SteerGuardAction}, ctx, strings.Join(notes, "\n\n"), SteerOptions{DeliverAs: "steer"})
 		}
 	}
 	reasons := strings.Join(verdict.Reasons, "; ")
@@ -141,17 +141,17 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	case LevelWarn:
 		deliverNotes()
 		w.bump(func(s *stats) { s.Warned++ })
-		w.record(ctx, verdict, "warned")
+		w.recordVerdict(ctx, cfg, verdict, "warned")
 		if cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · "+tool+": "+reasons, "warning")
 		} else if !ctx.HasUI() && len(dv.Reasons) > 0 {
-			w.steer(ctx, cfg, false, "pi-warden: this "+tool+" call ran with a warning ("+deliveredReasons+"). Nobody sees this in a headless run, so it is on you: if the flagged risk is expected, continue; otherwise fix it or ask the user before going on.", "steer", false)
+			w.steer(cfg, []SteerGuard{SteerGuardAction}, ctx, "pi-warden: this "+tool+" call ran with a warning ("+deliveredReasons+"). Nobody sees this in a headless run, so it is on you: if the flagged risk is expected, continue; otherwise fix it or ask the user before going on.", SteerOptions{DeliverAs: "steer"})
 		}
 		return nil, nil
 	case LevelDeny:
 		deliverNotes()
 		w.bump(func(s *stats) { s.Held++ })
-		w.record(ctx, verdict, "blocked")
+		w.recordVerdict(ctx, cfg, verdict, "blocked")
 		if cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · blocked "+tool+": "+reasons, "error")
 		}
@@ -159,7 +159,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	case LevelConfirm:
 	default:
 		deliverNotes()
-		w.record(ctx, verdict, "allowed")
+		w.recordVerdict(ctx, cfg, verdict, "allowed")
 		return nil, nil
 	}
 
@@ -177,11 +177,11 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		}
 		deliverNotes()
 		if allowed {
-			w.record(ctx, verdict, "allowed by you")
+			w.recordVerdict(ctx, cfg, verdict, "allowed by you")
 			return nil, nil
 		}
 		w.bump(func(s *stats) { s.Held++ })
-		w.record(ctx, verdict, "declined by you")
+		w.recordVerdict(ctx, cfg, verdict, "declined by you")
 		return blockResult("pi-warden: the user declined this " + tool + " call (" + deliveredReasons + "). Do not retry it unchanged; ask the user how to proceed."), nil
 	}
 	if dialogRule && ctx.HasUI() {
@@ -191,11 +191,11 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	case "advise":
 		deliverNotes()
 		w.bump(func(s *stats) { s.Warned++ })
-		w.record(ctx, verdict, "advised")
+		w.recordVerdict(ctx, cfg, verdict, "advised")
 		if cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · "+tool+" (advise mode, not held): "+reasons, "warning")
 		} else if !ctx.HasUI() {
-			w.steer(ctx, cfg, false, "pi-warden: this "+tool+" call ran with a warning ("+deliveredReasons+"). Nobody sees this in a headless run, so it is on you: if the flagged risk is expected, continue; otherwise fix it or ask the user before going on.", "steer", false)
+			w.steer(cfg, []SteerGuard{SteerGuardAction}, ctx, "pi-warden: this "+tool+" call ran with a warning ("+deliveredReasons+"). Nobody sees this in a headless run, so it is on you: if the flagged risk is expected, continue; otherwise fix it or ask the user before going on.", SteerOptions{DeliverAs: "steer"})
 		}
 		return nil, nil
 	case "confirm":
@@ -204,7 +204,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	deliverNotes()
 	w.bump(func(s *stats) { s.Held++ })
 	w.guard.Hold(conv.Task)
-	w.record(ctx, verdict, "held")
+	w.recordVerdict(ctx, cfg, verdict, "held")
 	if cfg.Notices && ctx.HasUI() {
 		ctx.Notify("warden · held "+tool+": "+reasons+". The agent was told why and asked to re-plan or ask you.", "warning")
 	}

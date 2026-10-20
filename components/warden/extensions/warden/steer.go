@@ -8,39 +8,6 @@ import (
 	"github.com/MichaelKinsy/pigpen/components/typesafe/libraries/typesafe"
 )
 
-// steer sends the agent one notice. A notice delivered once is already in its context, so a repeat is
-// recorded only; notices past the per-run budget are skipped too (each one asks the agent for a reply
-// sentence, and a closing run that collects six notices collects six restatements). Critical notices (stuck,
-// done) always deliver: they start the turn. followUp with triggerTurn continues a run that has ended.
-func (w *warden) steer(ctx sdk.Context, cfg Config, critical bool, content, deliverAs string, triggerTurn bool) bool {
-	w.mu.Lock()
-	over := cfg.SteerBudget > 0 && w.steersThisRun >= cfg.SteerBudget
-	repeat := w.repeats.Seen(content)
-	if !critical && (over || repeat) {
-		w.stats.SteersSkipped++
-		w.mu.Unlock()
-		return false
-	}
-	w.stats.Steers++
-	w.steersThisRun++
-	if triggerTurn {
-		w.continuation = true
-	}
-	w.mu.Unlock()
-	opts := sdk.SendMessageOptions{DeliverAs: deliverAs}
-	if triggerTurn {
-		yes := true
-		opts.TriggerTurn = &yes
-	}
-	if err := ctx.SendMessage(steerType, content, cfg.SteerVisible, opts); err != nil {
-		w.mu.Lock()
-		w.continuation = false
-		w.mu.Unlock()
-		return false
-	}
-	return true
-}
-
 // ---------------------------------------------------------------------------
 // The trace: one line per verdict, in the widget and /warden trace.
 
@@ -69,29 +36,27 @@ func traceLine(v Verdict, outcome string) string {
 	return strings.Join(parts, " · ")
 }
 
-func (w *warden) record(ctx sdk.Context, v Verdict, outcome string) {
+// recordVerdict records an action verdict in the trace; a read-only call leaves no line.
+func (w *warden) recordVerdict(ctx sdk.Context, cfg Config, v Verdict, outcome string) {
 	if v.Source == "read-only" {
 		return
 	}
-	w.addTrace(ctx, traceLine(v, outcome))
+	w.record(ctx, cfg, GuardAction, traceLine(v, outcome), nil, actionTokens(v, w.opts.Now()))
 }
 
-func (w *warden) addTrace(ctx sdk.Context, line string) {
-	w.mu.Lock()
-	w.trace = append(w.trace, traceEntry{At: w.opts.Now(), Line: line})
-	if len(w.trace) > 30 {
-		w.trace = w.trace[len(w.trace)-30:]
-	}
-	w.mu.Unlock()
-	w.refresh(ctx)
-}
-
-// refresh redraws the status line and the recent-verdicts widget.
+// refresh repaints with the current configuration.
 func (w *warden) refresh(ctx sdk.Context) {
 	if !ctx.HasUI() {
 		return
 	}
-	cfg := w.config(ctx)
+	w.paint(ctx, w.config(ctx))
+}
+
+// paint redraws the status line and the widget: the latest line of each guard, most recent last.
+func (w *warden) paint(ctx sdk.Context, cfg Config) {
+	if !ctx.HasUI() {
+		return
+	}
 	if !cfg.Enabled {
 		ctx.SetStatus(statusKey, "warden: off · /warden enable")
 		_ = ctx.SetWidget(widgetKey, []string(nil))
@@ -100,14 +65,17 @@ func (w *warden) refresh(ctx sdk.Context) {
 	w.mu.Lock()
 	s := w.stats
 	var lines []string
-	from := max(0, len(w.trace)-4)
-	for _, t := range w.trace[from:] {
-		lines = append(lines, t.At.Format("15:04:05")+" "+t.Line)
+	if cfg.Widget.Enabled {
+		for _, wl := range w.widget {
+			lines = append(lines, wl.line)
+		}
 	}
 	w.mu.Unlock()
 	ctx.SetStatus(statusKey, fmt.Sprintf("warden: %s · %s · %d checked, %d held", w.statusBackend(cfg), cfg.Mode, s.Inspected, s.Held))
 	if len(lines) > 0 {
 		_ = ctx.SetWidget(widgetKey, lines)
+	} else {
+		_ = ctx.SetWidget(widgetKey, []string(nil))
 	}
 }
 
