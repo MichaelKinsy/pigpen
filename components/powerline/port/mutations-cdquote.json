@@ -782,7 +782,7 @@
  {
   "name": "picker-key-enter-kp",
   "file": "quote_picker.go",
-  "find": "|| matchesKitty(data, cpKpEnter, 0)",
+  "find": "|| qpMatchesKitty(data, qpCpKpEnter, 0)",
   "replace": ""
  },
  {
@@ -812,7 +812,7 @@
  {
   "name": "picker-key-escape-kitty",
   "file": "quote_picker.go",
-  "find": "return data == \"\\x1b\" || matchesKitty(data, cpEscape, 0) ||",
+  "find": "return data == \"\\x1b\" || qpMatchesKitty(data, qpCpEscape, 0) ||",
   "replace": "return data == \"\\x1b\" ||"
  },
  {
@@ -848,14 +848,14 @@
  {
   "name": "picker-kitty-shift",
   "file": "quote_picker.go",
-  "find": "if modifier&modShift != 0 && shifted != nil {",
+  "find": "if modifier&qpModShift != 0 && shifted != nil {",
   "replace": "if false {"
  },
  {
   "name": "picker-kitty-ctrl-alt",
   "file": "quote_picker.go",
-  "find": "if modifier&^kittyAllowMods != 0 || modifier&(modAlt|modCtrl) != 0 {",
-  "replace": "if modifier&^kittyAllowMods != 0 {"
+  "find": "if modifier&^qpKittyAllowMods != 0 || modifier&(qpModAlt|qpModCtrl) != 0 {",
+  "replace": "if modifier&^qpKittyAllowMods != 0 {"
  },
  {
   "name": "picker-kitty-low-codepoint",
