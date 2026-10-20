@@ -122,7 +122,16 @@ func BoardOrigin(canvasW, canvasH, cols, rows, size int) (x, y int) {
 // Render draws the game in a viewW x viewH view. ok is false when nothing is drawn there to point at: the view is too small for
 // the board, or the cell is on the HUD lines or outside the view.
 func PointerOffset(g *snake.Game, src sprites.Source, viewW, viewH, cx, cy int) (dx, dy int, ok bool) {
-	return 0, 0, false
+	viewW, viewH = max(viewW, 1), max(viewH, 1)
+	pixelH := (viewH - HUDLines) * 2
+	size, fits := Fit(src.Sizes(), g.W, g.H, viewW, pixelH)
+	if !fits || cx < 0 || cx >= viewW || cy < 0 || cy*2 >= pixelH {
+		return 0, 0, false
+	}
+	ox, oy := BoardOrigin(viewW, pixelH, g.W, g.H, size)
+	lead := g.Body[0]
+	// A text row is two pixel rows; the pointer is taken at the upper one.
+	return cx - (ox + lead.X*size + size/2), cy*2 - (oy + lead.Y*size + size/2), true
 }
 
 // Buffers are the reusable buffers of one view.
@@ -213,6 +222,7 @@ func draw(c *pixel.Canvas, g *snake.Game, src sprites.Source, size int, p *palet
 		c.Blit(ox+g.Food.X*size+off, oy+g.Food.Y*size+off, art, applePal)
 	}
 	head := src.Head(size)
+	hatter, _ := src.(sprites.Hatted)
 	for member := len(g.Body) - 1; member >= 0; member-- {
 		pos := g.Body[member]
 		pal := p.member(src, member)
@@ -220,6 +230,11 @@ func draw(c *pixel.Canvas, g *snake.Game, src sprites.Source, size int, p *palet
 			pal = crashed(pal)
 		}
 		c.Blit(ox+pos.X*size, oy+pos.Y*size, head, pal)
+		if member == 0 && hatter != nil {
+			if hat := hatter.Hat(size); len(hat) > 0 {
+				c.Blit(ox+pos.X*size, oy+pos.Y*size, hat, pal) // the leader's hat, in the leader's palette
+			}
+		}
 	}
 	switch g.Status {
 	case snake.Waiting:

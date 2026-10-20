@@ -65,8 +65,8 @@ darwin.
 | Upstream file (PiG d86eb93) | Cases | Exact or adapted twins | Named skipped twins |
 |---|---:|---|---|
 | `pigrunner/extension_test.go` | 6 | 6 (registration, timer, controls and quit, restart keeps high score and sprite, strict state, wire scores), adapted to this game's names; expectations kept | 0 |
-| `internal/pixel/pixel_test.go` | 6 | 6, same inputs and expectations | 0 |
-| `internal/termgame/termgame_test.go` | 3 | 2 (`ParseKey` gained four keys: WASD text, empty, LF; `Viewport`/`Overlay` unchanged) | 1: `TestParseMouseDecodesSGRReports` (keyboard only) |
+| `internal/pixel/pixel_test.go` | 6 | 6, same inputs and expectations (now in `pig-play`, `libraries/pixel`) | 0 |
+| `internal/termgame/termgame_test.go` | 3 | 2 (`ParseKey` gained four keys: WASD text, empty, LF; `Viewport`/`Overlay` unchanged) | 0 (`ParseMouse` is the shared library's, tested in `pig-play`) |
 | `internal/arcade/arcade_test.go` | 3 | 2 in spirit: `TestHUDLinesShareOneLayout` -> `TestHUDLinesAreExactlyTheRequestedWidth` + `TestHUDShows...`; `TestDrawCardCentersTheTitleOrDeclines` -> same name | 1: `TestHillsMatchTheRunnerProfiles` |
 | `pigrunner/pigrunner_test.go` | 23 | 14 in spirit (new game, render output and fill at every size, downsampling, pause, pig sprite uniformity, speed, variant palette, component pause/resume, resize width, height redraw, Kitty and legacy keys, steady-state allocations, title and game-over screens) | 9: `TestJump`, `TestDuck`, `TestJumpClearsGroundObstacleAtApex`, `TestDuckClearsAirObstacle`, `TestObstacleDensityRisesWithSpeed`, `TestUpdate_ScoreAdvances`, `TestPieSpritesHaveUniformWidth`, `TestCustomVariantRunnerSprites`, `TestTallViewKeepsTheGameBandAtTheBottom` |
 | `pigrunner/{human_bot,bot_playthrough}_test.go` | 2 | 1 in spirit: bots play whole games (`internal/snake/playthrough_test.go`) | 1: `TestHumanLikeBotDiesWithinABoundedScore` |
@@ -149,16 +149,25 @@ inferred from a wire score, `Mode` without a UI).
 
 ## Gaps (named, not silent)
 
-- **Mini mode / footer widget** (roadmap "Mode contract"): not built. Neither upstream game has it, and the roadmap
-  assigns it to the shared game shell. The Go SDK's `SetWidget` takes string lines only (0.3.0 and the 0.99.1 surface
-  table), and a widget cannot take keys without a focus-handoff design, so a faithful mini mode needs that shell first.
-- **Background-work proof** for the shared shell (roadmap "Required proof before more games"): only the Pig Snake
-  slice is shown (an agent stream continues under the overlay and completes; a real-terminal test). The full PTY scenario
-  with a slow tool, a question dialog and 100 ms restoration is the shared shell's, not this game's.
-- **Mouse** steering, **sprite hat art** for the Sheriff pig, **sound**: not built.
-- The shared sprite package from lane `pigpen-games` did not exist when this was written; the seam is
-  `sprites.Source` plus `newSprites` in `extension.go` (see README).
+- **Mini mode / footer widget** (roadmap "Mode contract"): needs a PiG SDK capability. `Context.SetWidget` can show a
+  `kit.View` since 0.5.0, but a widget takes no keys; a snake you cannot steer is not a game. Mirrors Pi's
+  `ctx.ui.setWidget` plus a focus handoff (the editor's keys go to the widget on a toggle key). Recorded in the
+  parity program's `core-items.md`. Not built, not refused: no option exists to refuse.
+- **Sound**: needs a PiG SDK capability (a terminal bell or an audio call from an extension; `ui.custom` renders lines only,
+  and the SDK has no bell or audio call). No upstream game has sound. Recorded in `core-items.md`.
+- **Background-work proof** for the shared shell (roadmap "Required proof before more games"): the Pig Snake slice is shown
+  (an agent stream continues under the overlay and completes; a real-terminal test). The full PTY scenario with a slow tool,
+  a question dialog and 100 ms restoration is not built: the test provider has a slow tool ("Run: sleep for a while") but no
+  scenario that opens a question dialog, so the scenario cannot be driven from a Pigpen test. Recorded in `core-items.md`.
 - Windows and macOS execution: `go vet` only.
+
+Closed in this release: **mouse steering** (`HandleMouse`, `mouse_test.go`), the **Sheriff's hat** (`sprites.Hatted`, three
+hat drawings, tests in `sprites` and `scene`), and the **shared libraries**: the pixel canvas, the terminal plumbing and the
+sprite catalogue are `pig-play`'s (`libraries/pixel`, `libraries/termgame`, `libraries/sprite`); the cases Pig Snake had
+added to its copies are `internal/scene/shared_pixel_test.go` and `shared_keys_test.go`, and the twin table's pixel and termgame
+rows are now exercised in `pig-play`. The named skipped twin `TestParseMouseDecodesSGRReports` is gone with the copy; the mouse
+twin `TestMouseDragPullsAndReleaseFires` stays skipped (no slingshot). The mutation list lost the five mutants of the removed
+copies and gained 16 for the mouse and the hat.
 
 ## PiG 0.4.0 (Pi 0.99.1) notes
 

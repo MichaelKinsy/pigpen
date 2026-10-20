@@ -6,7 +6,9 @@ It is marked `origin: "ported"` in `provenance.json` because it adapts code and 
 
 PiG's games are Go extensions that use helper packages under `piglets/standard/internal/`.
 A Piglet extension cannot import them (Go `internal` rule, and Pigpen extensions use only the
-public SDK), so the pieces Pig Snake needs were **adapted** into `extensions/pig-snake/internal/`.
+public SDK), so the pieces Pig Snake needs were **adapted**: first into `extensions/pig-snake/internal/`, and now the pixel canvas,
+terminal plumbing and sprite catalogue are the shared libraries of the `pig-play` Package (`libraries/pixel`,
+`libraries/termgame`, `libraries/sprite`; the same adaptation, credited in `../pig-play/CREDITS.md`) that Pig Snake imports.
 The upstream files are kept, byte for byte, as evidence under
 [`port/upstream/`](port/upstream) (suffix `.go.txt` so they are not compiled) with PiG's license,
 with one exception: in `piglogin-variants.go.txt` (upstream blob `9fae5733`) one comment line no
@@ -17,12 +19,11 @@ same rename is made in the Pigpen copies of those files). Code, colors and every
 
 | Pig Snake file | Adapted from (PiG `piglets/standard/`) | What changed |
 |---|---|---|
-| `internal/pixel/pixel.go`, `text.go` | `internal/pixel/pixel.go`, `text.go` | `Blend`, `BlitMirrored`, `Scale` dropped; the rest unchanged (canvas, half-block encoder, 256-color mapping, `FitLine`, the 3x5 pixel font). |
-| `internal/termgame/termgame.go` | `internal/termgame/termgame.go` | Mouse decoding dropped; overlay, viewport and `ParseKey` unchanged. |
-| `internal/sprites/sprites.go` | `extensions/angrypigs/art.go` (`pigBall`), `extensions/piglogin/variants.go` and `art.go` | The 8x8 pig is verbatim; the sprite catalogue colors are copied (Sheriff hat art not used); the 6x6 and 4x4 pigs are new drawings of the same pig. |
+| (shared, in `../pig-play/libraries/`) | `internal/pixel`, `internal/termgame`, `extensions/piglogin` | Pig Snake's former copies of `pixel`, `termgame` and the sprite catalogue were replaced by imports of the shared libraries; the only differences between the copies and the libraries were dropped helpers and the mouse decoding, which the libraries keep. |
+| `internal/sprites/sprites.go` | `extensions/angrypigs/art.go` (`pigBall`) | The 8x8 pig is verbatim; the colours come from the shared sprite library; the 6x6 and 4x4 pigs and the Sheriff's three hats are new drawings. |
 | `internal/scene/scene.go` | `internal/arcade/arcade.go` and `extensions/pigrunner/render.go` | Same night palette, HUD layout, title cards and 256-color fallback, reimplemented for a snake board. |
 | `extension.go`, `component.go`, `state.go` | `extensions/pigrunner/{extension,component,state}.go` | Same conventions (command, full-terminal overlay, fixed clock, strict 0600 state file, `Done` result); different game. |
-| tests | `pigrunner/extension_test.go`, `internal/pixel/pixel_test.go`, `internal/termgame/termgame_test.go` | Twins with the same inputs and expectations, listed in `port/PORT.md`. |
+| tests | `pigrunner/extension_test.go`, `internal/pixel/pixel_test.go`, `internal/termgame/termgame_test.go` | Twins with the same inputs and expectations, listed in `port/PORT.md` (the pixel and termgame twins now run in `pig-play`). |
 
 The Pig Snake rules, the apple and small-pig art (6x6, 4x4), the herd coloring, the resize and
 too-small behavior, and everything under `port/` other than `port/upstream/` were written for this

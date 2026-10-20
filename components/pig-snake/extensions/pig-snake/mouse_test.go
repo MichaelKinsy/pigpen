@@ -198,7 +198,7 @@ func TestThePointerOffsetIsMeasuredFromTheMiddleOfTheLeader(t *testing.T) {
 	ox, oy := scene.BoardOrigin(viewW, (viewH-scene.HUDLines)*2, g.W, g.H, size)
 	hx, hy := ox+g.Body[0].X*size+size/2, (oy+g.Body[0].Y*size+size/2)/2
 	dx, dy, ok := scene.PointerOffset(g, src, viewW, viewH, hx+3, hy)
-	if !ok || dx != 3 || dy != 0 {
+	if !ok || dx != 3 || (dy != 0 && dy != -1) { // a text row is two pixel rows; the pointer is taken at the upper one
 		t.Fatalf("offset = %d, %d, %v", dx, dy, ok)
 	}
 	if _, _, ok := scene.PointerOffset(g, src, viewW, viewH, hx, viewH-1); ok {

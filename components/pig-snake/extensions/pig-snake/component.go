@@ -48,10 +48,14 @@ type component struct {
 	speed      float64
 	carry      time.Duration
 	lastHeight int
-	invalidate func()
-	stop       chan struct{}
-	stopped    chan struct{}
-	stopOnce   sync.Once
+	// viewW and viewH are the content area of the last frame, and drawn says whether the board was drawn in it (not the
+	// too-small hint): where a pointer press means a cell of the board (HandleMouse).
+	viewW, viewH int
+	drawn        bool
+	invalidate   func()
+	stop         chan struct{}
+	stopped      chan struct{}
+	stopOnce     sync.Once
 }
 
 func newComponent(highs highScores, src sprites.Source, height func() int) *component {
@@ -155,9 +159,11 @@ func (c *component) Render(width int) []string {
 	// A running game whose board no longer fits is paused, not left to run: the
 	// player enlarges the window and resumes with p instead of finding the herd
 	// crashed into a wall.
-	if _, fits := scene.Fit(c.src.Sizes(), c.game.W, c.game.H, viewW, pixelH); !fits && c.game.Status == snake.Playing {
+	_, fits := scene.Fit(c.src.Sizes(), c.game.W, c.game.H, viewW, pixelH)
+	if !fits && c.game.Status == snake.Playing {
 		c.game.TogglePause()
 	}
+	c.viewW, c.viewH, c.drawn = viewW, viewH, fits
 	return scene.Render(&c.buffers, c.game, c.src, viewW, viewH, make([]string, 0, viewH))
 }
 
@@ -222,9 +228,59 @@ func direction(key termgame.Key, letter rune) (snake.Dir, bool) {
 	return 0, false
 }
 
-// HandleMouse steers the leader toward a left press on the board.
+// HandleMouse steers the leader toward a left press on the board, as the arrow key for that direction would: it starts a game
+// that is waiting, turns one that is running (never into the herd, at most twice between steps, as with keys), and does nothing
+// while the game is paused or over, for another button or event, on the pig itself, on the HUD lines, or when no board was
+// drawn. PiG forwards the mouse to a component that implements sdk.MouseHandler in fullscreen mode; event X and Y count from the
+// component's first rendered cell, which is the first cell of the content area.
 func (c *component) HandleMouse(event sdk.MouseEvent) (sdk.RemoteComponentResult, error) {
+	if event.Type != sdk.MousePress || event.Button != sdk.MouseButtonLeft {
+		return sdk.RemoteComponentResult{}, nil
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	g := c.game
+	if !c.drawn || (g.Status != snake.Waiting && g.Status != snake.Playing) {
+		return sdk.RemoteComponentResult{}, nil
+	}
+	dx, dy, ok := scene.PointerOffset(g, c.src, c.viewW, c.viewH, event.X, event.Y)
+	if !ok {
+		return sdk.RemoteComponentResult{}, nil
+	}
+	dir, steer := pointerDirection(dx, dy, c.pigSizeLocked())
+	switch {
+	case !steer:
+	case g.Status == snake.Waiting:
+		g.StartFacing(dir)
+	default:
+		g.Turn(dir)
+	}
 	return sdk.RemoteComponentResult{}, nil
+}
+
+// pointerDirection is the heading toward a pointer dx, dy pixels from the middle of the leader (a half-block pixel is square):
+// the larger offset decides; a pointer within half a pig of the middle is on the pig and steers nothing.
+func pointerDirection(dx, dy, size int) (snake.Dir, bool) {
+	ax, ay := max(dx, -dx), max(dy, -dy)
+	if ax < size/2 && ay < size/2 {
+		return 0, false
+	}
+	switch {
+	case ax >= ay && dx > 0:
+		return snake.Right, true
+	case ax >= ay:
+		return snake.Left, true
+	case dy > 0:
+		return snake.Down, true
+	}
+	return snake.Up, true
+}
+
+// pigSizeLocked is the head size the last frame drew the board with.
+func (c *component) pigSizeLocked() int {
+	pixelH := (c.viewH - scene.HUDLines) * 2
+	size, _ := scene.Fit(c.src.Sizes(), c.game.W, c.game.H, c.viewW, pixelH)
+	return size
 }
 
 func (c *component) SetInvalidate(invalidate func()) {

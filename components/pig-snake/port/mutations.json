@@ -284,8 +284,8 @@
  {
   "name": "chosen-sprite-ignored",
   "file": "extension.go",
-  "find": "sprites.Builtin(sprites.LoadVariantID(configHome))",
-  "replace": "sprites.Builtin(\"\")"
+  "find": "sprites.Shared(sprites.LoadVariantID(configHome))",
+  "replace": "sprites.Shared(\"\")"
  },
  {
   "name": "state-file-world-readable",
@@ -440,14 +440,14 @@
  {
   "name": "unknown-sprite-picks-another",
   "file": "internal/sprites/sprites.go",
-  "find": "return 0\n}\n\n// The pig heads",
-  "replace": "return 1\n}\n\n// The pig heads"
+  "find": "\treturn &shared{}\n}",
+  "replace": "\treturn &shared{leader: 1}\n}"
  },
  {
   "name": "login-state-path",
   "file": "internal/sprites/sprites.go",
-  "find": "\"pig-standard\", \"login.json\"",
-  "replace": "\"pig-standard\", \"state.json\""
+  "find": "return sprite.ActiveVariant(configHome).ID",
+  "replace": "return sprite.Default().ID"
  },
  {
   "name": "eight-pixel-pig-altered",
@@ -458,38 +458,8 @@
  {
   "name": "followers-include-the-leader",
   "file": "internal/sprites/sprites.go",
-  "find": "i := (member - 1) % (len(variants) - 1)",
-  "replace": "i := (member - 1) % len(variants)"
- },
- {
-  "name": "viewport-forgets-the-box",
-  "file": "internal/termgame/termgame.go",
-  "find": "max(termWidth-2, 1)",
-  "replace": "max(termWidth-1, 1)"
- },
- {
-  "name": "key-release-taken-as-press",
-  "file": "internal/termgame/termgame.go",
-  "find": "strings.Contains(params, \":3\")",
-  "replace": "strings.Contains(params, \":9\")"
- },
- {
-  "name": "overlay-half-height",
-  "file": "internal/termgame/termgame.go",
-  "find": "HeightFraction: 1",
-  "replace": "HeightFraction: 0.5"
- },
- {
-  "name": "colors-emitted-every-cell",
-  "file": "internal/pixel/pixel.go",
-  "find": "if !fgSet || top != lastFG {",
-  "replace": "if !fgSet || top != lastFG || true {"
- },
- {
-  "name": "24bit-not-recognised",
-  "file": "internal/pixel/pixel.go",
-  "find": "case \"truecolor\", \"24bit\":",
-  "replace": "case \"truecolor\":"
+  "find": "i := (member - 1) % (n - 1)",
+  "replace": "i := (member - 1) % n"
  },
  {
   "name": "too-small-does-not-pause",
@@ -538,5 +508,101 @@
   "file": "internal/scene/scene.go",
   "find": "frame = dimStar",
   "replace": "frame = accent"
+ },
+ {
+  "name": "mouse-ignores-the-button",
+  "file": "component.go",
+  "find": "event.Type != sdk.MousePress || event.Button != sdk.MouseButtonLeft",
+  "replace": "event.Type != sdk.MousePress"
+ },
+ {
+  "name": "mouse-steers-on-release",
+  "file": "component.go",
+  "find": "event.Type != sdk.MousePress ||",
+  "replace": "event.Type != sdk.MouseRelease ||"
+ },
+ {
+  "name": "mouse-steers-a-paused-game",
+  "file": "component.go",
+  "find": "(g.Status != snake.Waiting && g.Status != snake.Playing)",
+  "replace": "(g.Status == snake.Over)"
+ },
+ {
+  "name": "mouse-before-first-frame",
+  "file": "component.go",
+  "find": "if !c.drawn ||",
+  "replace": "if false ||"
+ },
+ {
+  "name": "mouse-turn-ignored",
+  "file": "component.go",
+  "find": "\tdefault:\n\t\tg.Turn(dir)\n\t}\n\treturn sdk.RemoteComponentResult{}, nil\n}",
+  "replace": "\tdefault:\n\t}\n\treturn sdk.RemoteComponentResult{}, nil\n}"
+ },
+ {
+  "name": "mouse-waiting-game-not-started",
+  "file": "component.go",
+  "find": "\tcase g.Status == snake.Waiting:\n\t\tg.StartFacing(dir)",
+  "replace": "\tcase g.Status == snake.Waiting:\n\t\t_ = dir"
+ },
+ {
+  "name": "mouse-on-the-pig-steers",
+  "file": "component.go",
+  "find": "if ax < size/2 && ay < size/2 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mouse-vertical-wins-ties",
+  "file": "component.go",
+  "find": "case ax >= ay && dx > 0:",
+  "replace": "case ax > ay && dx > 0:"
+ },
+ {
+  "name": "mouse-left-is-right",
+  "file": "component.go",
+  "find": "\tcase ax >= ay:\n\t\treturn snake.Left, true",
+  "replace": "\tcase ax >= ay:\n\t\treturn snake.Right, true"
+ },
+ {
+  "name": "mouse-down-is-up",
+  "file": "component.go",
+  "find": "\tcase dy > 0:\n\t\treturn snake.Down, true",
+  "replace": "\tcase dy > 0:\n\t\treturn snake.Up, true"
+ },
+ {
+  "name": "pointer-hud-rows-count",
+  "file": "internal/scene/scene.go",
+  "find": "cy*2 >= pixelH",
+  "replace": "cy*2 >= pixelH+4"
+ },
+ {
+  "name": "pointer-measured-from-the-corner",
+  "file": "internal/scene/scene.go",
+  "find": "cx - (ox + lead.X*size + size/2)",
+  "replace": "cx - (ox + lead.X*size)"
+ },
+ {
+  "name": "hat-on-every-pig",
+  "file": "internal/scene/scene.go",
+  "find": "if member == 0 && hatter != nil {",
+  "replace": "if hatter != nil {"
+ },
+ {
+  "name": "hat-never-drawn",
+  "file": "internal/scene/scene.go",
+  "find": "if hat := hatter.Hat(size); len(hat) > 0 {",
+  "replace": "if hat := hatter.Hat(size); len(hat) > 99 {"
+ },
+ {
+  "name": "hat-for-every-leader",
+  "file": "internal/sprites/sprites.go",
+  "find": "if sprite.Variants[s.leader].ID != sheriffID {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hat-hides-the-eyes-at-four-pixels",
+  "file": "internal/sprites/sprites.go",
+  "find": "\that4 = []string{\n\t\t\"HHHH\",\n\t}",
+  "replace": "\that4 = []string{\n\t\t\"HHHH\",\n\t\t\"HHHH\",\n\t}"
  }
 ]
