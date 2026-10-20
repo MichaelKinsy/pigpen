@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -296,9 +297,26 @@ func TestPermissionSessionOracleDifferential(t *testing.T) {
 				differences++
 				t.Errorf("%s op %d %+v: calls\n  port     %v\n  original %v", c.ID, j, o, gotLog, wantLog)
 			}
-			if !reflect.DeepEqual(normalizeJSON(value), normalizeJSON(w.Value)) {
+			gotValue, wantValue := normalizeJSON(value), normalizeJSON(w.Value)
+			if o.Op == "normalizer" {
+				// a cwd that is not absolute under the flavor (a drive path on POSIX) resolves against the process's own working
+				// directory, which differs by process: the recording ran in the original's package directory
+				wd, err := os.Getwd()
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, v := range []struct {
+					m   map[string]any
+					dir string
+				}{{gotValue.(map[string]any), wd}, {wantValue.(map[string]any), "/work/components/permissions/port/oracle/packages/pi-permission-system"}} {
+					for _, dir := range []string{v.dir, strings.ReplaceAll(v.dir, "/", `\`)} {
+						v.m["resolveBase"] = strings.Replace(v.m["resolveBase"].(string), dir, "<PROCESS-CWD>", 1)
+					}
+				}
+			}
+			if !reflect.DeepEqual(gotValue, wantValue) {
 				differences++
-				t.Errorf("%s op %d %+v: value\n  port     %v\n  original %v", c.ID, j, o, normalizeJSON(value), w.Value)
+				t.Errorf("%s op %d %+v: value\n  port     %v\n  original %v", c.ID, j, o, gotValue, wantValue)
 			}
 		}
 	}

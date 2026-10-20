@@ -423,11 +423,11 @@ swaps it for this layer.
 |---|---|---|---|
 | Y1 | `policy/synthesize.ts` | `synthesize.go` | 21 twins |
 | Y2 | `policy/permission-manager.ts` (agent scopes, session rules, fail-closed floor, MCP baseline, yolo, the Pi MCP tool relocation) | `permissionmanager.go` | 227 twins in 3 files; the differential below |
-| Y3 | `policy/permission-resolver.ts` | `permissionresolver.go` | 22 twins |
+| Y3 | `policy/permission-resolver.ts` | `permissionresolver.go` | 22 twins; the resolver differential (`resolve` of every manager-corpus intent, `ResolvePrefixed` and the access-path unwrap included) |
 | Y4 | `policy/permission-gate.ts` | `permissiongate.go` | 19 twins |
 | Y5 | `session/active-agent.ts`, `session-identity.ts` | `sessionactiveagent.go` (`ReadSessionID` was already in `subagent_context.go`) | 23 twins; 4,003 prompts and 602 entry lists against the original |
 | Y6 | `session/approval-grant.ts`, `session-approval.ts`, `session-approval-recorder.ts`, `session-rules.ts` | `sessionapprovalgrant.go`, `sessionapproval.go`, `sessionrules.go` (they replace the forwarding lane's stand-ins in `fwd_stub_authority.go`) | 54 twins |
-| Y7 | `session/permission-session.ts` | `sessionpermission.go` | 45 twins |
+| Y7 | `session/permission-session.ts` | `sessionpermission.go` | 45 twins; the session differential (400 operation scripts) |
 
 ### API for the gate lane
 
@@ -446,6 +446,9 @@ swaps it for this layer.
   `SessionContext` (a `ForwarderContext` plus a `Notifier` with `Notify` and `SetStatus`; its `GetEntries` makes it an `ActiveAgentContext`).
   `AuthorizerSelectionLifecycle` is `Activate(SessionContext)` and `Deactivate()`; the authority lane's selection type must satisfy it
   (or the session takes its adapter). `ToolSurfaceResolution` is the exposure baseline's answer (`exposure.go`).
+- **The gate lane must refuse on an agent-name error.** If `GetActiveAgentName` or `PermissionSession.ResolveAgentName` returns an error, the
+  gate lane must block the tool call (or ask), never continue with a nil agent name: the nil agent is the global scope, the least
+  restrictive one, and an agent scope can only tighten it. The original lets the session manager's throw propagate out of the handler.
 - **Errors are not "no agent".** `GetActiveAgentName` and `PermissionSession.ResolveAgentName` return the session manager's error (the
   original's throw). A caller must refuse the call on an error: reading it as "no agent" would apply the global scope, which an agent
   scope can only tighten.
@@ -455,7 +458,8 @@ swaps it for this layer.
 ### Differences from the original (on purpose)
 
 - `ApplyPermissionGate`: a state other than `allow`, `deny` or `ask` blocks with the deny reason (the original's types admit only the three
-  and would allow). Fail closed.
+  and would allow). Fail closed: where the original allows an unknown state, the port refuses. It is the only deliberate difference in the
+  decision path and it can only turn an allow into a block; a twin and a mutant cover it.
 - `SessionRules` is safe for concurrent use (the original is single-threaded): the approval path writes it while the resolver reads it.
 - The agent-name lookups take an interface and return the manager's error (above); the original lets the throw propagate.
 - Harness: `createManager` pins `McpServerNames: []` when a test gives none, where the original reads the host's `mcp.json`; the two
@@ -475,6 +479,16 @@ swaps it for this layer.
   and writes `testdata/manager-oracle.json` (the full `PermissionCheckResult` of every intent, and per agent the tool permission, the
   fully-denied answer, the config issues and the composed config rules). `manager_oracle_test.go` replays it: zero differences. The same
   probe records `testdata/active-agent-oracle.json`.
+- `port/record-session-probe.sh <installed oracle>` runs `port/probe/session-probe.test.ts` over the 400 operation scripts of
+  `testdata/session-cases.json` (`port/probe/gen-session-cases.py`; 7,679 operations: activate, deactivate, reset, reload, shutdown, notify,
+  agent-name resolution from entries and prompts including a throwing session manager, skill entries, the tool-surface baseline, config
+  refresh and status sync, infrastructure scope, shell aliases, path normalizer, session rules) against the original's real
+  `PermissionSession`, recording each return value and each collaborator call (forwarding, authorizer selection, manager, config store, UI).
+  `session_oracle_test.go` replays them: zero differences. The manager probe also records the original's `PermissionResolver` over the
+  manager corpus (`resolved`): `Resolve` of every tool, bash and path-values intent, and each path-values intent again as an access-path
+  intent whose `matchValues()` is the same list; `manager_oracle_test.go` replays them through `Resolve` and `ResolvePrefixed`.
+  Not differential-tested: `GetShellToolAliases` for a config the schema rejects (the port drops an entry without a string
+  `commandArgument`; the schema never lets one through) and the unknown-intent panic (the original's TypeError).
 - Mutations: `port/gen-mutations-policy.py` writes `port/mutations-policy.json`; run `pigeq mutate --unit-only --go
   extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-policy.json --jobs 4`.
 - Performance: `port/bench-manager.sh <installed oracle>` interleaves `go test -bench` (`pol_bench_test.go`) with
