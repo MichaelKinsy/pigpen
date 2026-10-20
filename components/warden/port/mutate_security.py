@@ -48,7 +48,7 @@ SECURITY_M = [
  ("sec-redact-candidate-word-missing", "redact_fast.go", '"private", "pass", "token", "credential"}', '"private", "pass", "token"}'),
  ("sec-redact-single-quote-skipped", "redact.go", "[]byte{'\"', '\\''}", "[]byte{'\"'}"),
  ("sec-redact-boundary-ignored", "redact_fast.go", "if boundary && s > 0 && isWordByte(text[s-1]) {", "if false && boundary && s > 0 && isWordByte(text[s-1]) {"),
- ("sec-restate-bits-ignored", "prose.go", "shared += bits.OnesCount64(s.bits[i] & old.bits[i])", "shared += 0"),
+ ("sec-restate-bits-ignored", "prose.go", "shared += bits.OnesCount64(s.bits[i] & old.bits[i])", "shared += bits.OnesCount64(0 & s.bits[i] & old.bits[i])"),
  ("sec-runaway-start-keeps-text", "runaway.go", "\tif event.Type == \"start\" {\n\t\tm.Reset()", "\tif event.Type == \"start\" {\n\t\t_ = m"),
  ("sec-runaway-halt-text-restarts", "runaway.go", "The run was stopped again for this prompt and was not restarted. Wait for the user.", "The run was stopped again."),
  ("sec-runaway-recovers-every-time", "security_wiring.go", "recover := cfg.Runaway.Recover && s.stops == 1", "recover := cfg.Runaway.Recover"),

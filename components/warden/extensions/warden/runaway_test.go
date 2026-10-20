@@ -220,3 +220,16 @@ func TestNudgeAndWidgetLineNameTheRepeatAndTheOutcome(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestRepeatedTailIgnoresShortUnitsInNonASCIIText(t *testing.T) {
+	// The unit "ab é " is five characters: shorter than a paragraph, so it counts once however often it repeats.
+	if got := RepeatedTail(strings.Repeat("ab é ", 40), PhraseChars, BlockMinChars); got.Count != 1 {
+		t.Fatalf("non-ASCII text takes the UTF-16 path: %+v", got)
+	}
+	if got := RepeatedTail(strings.Repeat("ab c ", 40), PhraseChars, BlockMinChars); got.Count != 1 {
+		t.Fatalf("ASCII text takes the byte path: %+v", got)
+	}
+	if got := RepeatedTail(strings.Repeat("All checks passed on the PR — merging and watching. ", 6), PhraseChars, BlockMinChars); got.Count < 5 {
+		t.Fatalf("a long unit counts: %+v", got)
+	}
+}

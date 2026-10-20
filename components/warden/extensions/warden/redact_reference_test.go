@@ -363,7 +363,7 @@ func generateRunOn(r *rand.Rand) string {
 	units := []string{"All checks passed on the PR — merging and watching the deploy. ", "Stop. PR green. Merge.\n\n```bash\ngh pr merge 1234\n```\n\n", "same thing again ", "ÄÖÜ unit ünït ", "|---", "Done.\n\n", "x"}
 	var b strings.Builder
 	unit := units[r.Intn(len(units))]
-	for n := r.Intn(9); n > 0; n-- {
+	for n := r.Intn(16); n > 0; n-- {
 		b.WriteString(unit)
 	}
 	for n := r.Intn(4); n > 0; n-- {
