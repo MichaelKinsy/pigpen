@@ -1,10 +1,8 @@
 package tintinweb_tasks
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -17,6 +15,7 @@ import (
 	"unicode/utf16"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	sdkjson "github.com/MichaelKinsy/PiG/extensions/sdk/json"
 	"github.com/MichaelKinsy/PiG/extensions/sdk/kit"
 )
 
@@ -55,15 +54,14 @@ func debug(args ...any) {
 	}
 }
 
-// jsonString is JSON.stringify: compact, with no HTML escaping.
+// jsonString is JSON.stringify: compact, no HTML escaping, numbers as JavaScript writes them and array-index keys
+// ahead of the others (the other keys stay in byte order: a Go map keeps no insertion order).
 func jsonString(v any) string {
-	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetEscapeHTML(false)
-	if err := enc.Encode(v); err != nil {
+	out, err := sdkjson.MarshalStringify(v)
+	if err != nil {
 		return "null"
 	}
-	return strings.TrimRight(buf.String(), "\n")
+	return string(out)
 }
 
 // jsSlice is s.slice(0, n) for JavaScript strings, which count UTF-16 code units.

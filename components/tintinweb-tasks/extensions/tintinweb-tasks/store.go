@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	sdkjson "github.com/MichaelKinsy/PiG/extensions/sdk/json"
 )
 
 // File-backed task store with CRUD, dependency management and file locking. upstream: task-store.ts.
@@ -259,15 +261,17 @@ func (s *taskStore) save() error {
 	if err := os.MkdirAll(filepath.Dir(s.filePath), 0o755); err != nil {
 		return err
 	}
+	// JSON.stringify(data, null, 2)
+	compact, err := sdkjson.MarshalStringify(data)
+	if err != nil {
+		return err
+	}
 	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetEscapeHTML(false)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(data); err != nil {
+	if err := json.Indent(&buf, compact, "", "  "); err != nil {
 		return err
 	}
 	tmp := s.filePath + ".tmp"
-	if err := os.WriteFile(tmp, bytes.TrimRight(buf.Bytes(), "\n"), 0o644); err != nil {
+	if err := os.WriteFile(tmp, buf.Bytes(), 0o644); err != nil {
 		return err
 	}
 	if h := renameHookFn.Load(); h != nil {
