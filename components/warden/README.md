@@ -123,11 +123,13 @@ required) or fuses into a Piglet Binary (see `piglets/pig-warden`). It shares th
 ## What is and is not ported
 
 Ported: the four guards above, the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
-`exemptRules`, the steer budget, and both judge backends. Not ported (rules file, slop, secret masking, context
-saver, conscience, subagent supervision, …) and every deliberate deviation are listed in
+`exemptRules`, the steer budget, and both judge backends. Not ported (rules file, slop, conscience, subagent
+supervision, …) and every deliberate deviation are listed in
 [`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test. The upstream `/warden` actions that are not ported are refused with an error that names the original (`npm:pi-warden@0.80.0`).
 
 Also ported, and registered as agent tools: **`warden_remember`** (a standing lesson for the project, recorded only in a standing form, confirmed in a later session before it is injected), **`warden_loops`** (open loops: promises the agent makes to do something later, kept per session and project, shown again after compaction, at the end of a run and on resume) and **`warden_recall`** (what was already tried in this session: failed attempts with their error lines, the last passing check, saved outputs). With them: standing preferences (the corrections you repeated in earlier sessions of the project, injected as one quoted message only when they pass seven rules), the compaction evidence appendix, `/warden prefs [forget <n>]` and `/warden loops`. They send nothing to any judge and make no model call.
+
+Also ported: the **context saver**. A large tool output is judged (with a judge selected) for how much of it the agent needs: the rest is replaced by an exact excerpt (a parser's for test runs, compiler and linter output, diffs, logs and installs; otherwise head, diagnostics and tail) and the full text is stored in an owner-only file the footer points to. An output identical to an earlier one becomes a one-line duplicate note, and a block of lines the agent already has in context is cut to one pointer line (opt-in for messages: `context.dedupeMessages`). Credentials in tool output are masked before the model reads them, with a banner that says so (offline, no judge needed); injection and exfiltration are judged and flagged in the banner, never steered. The opt-in context filter (`context.filter.enabled`) keeps the passages that matter to the current task instead of the blind excerpt, and the opt-in relevance compaction (`compaction.enabled`) replaces the host's own summary with the exact parts of the discarded span the task still needs. `/warden status` adds the saver's ledger line. Every excerpt and summary is exact text from the output; nothing is paraphrased.
 
 ## Proof
 

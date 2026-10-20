@@ -154,3 +154,38 @@ func TestSeenItemReadsUserAssistantToolAndCustomTextsNeverImages(t *testing.T) {
 		t.Error("a compaction summary is not indexed")
 	}
 }
+
+// Go-only: the two thresholds apart (the upstream cases keep a 19-line run that is also under 1,500 characters, so a
+// threshold changed on lines alone would not show).
+func TestDedupeRunBoundariesAreTwentyLinesAndFifteenHundredCharacters(t *testing.T) {
+	long := func(n int, tag string) string {
+		l := make([]string, n)
+		for i := range l {
+			l[i] = fmt.Sprintf("%s line %d: %s", tag, i, strings.Repeat("w", 90))
+		}
+		return strings.Join(l, "\n")
+	}
+	seen := NewSeenText()
+	seen.Add(long(19, "nineteen"), "an earlier bash result")
+	seen.Add(long(20, "twenty"), "an earlier read result")
+	if got := seen.Find(long(19, "nineteen") + "\n" + dedupeFresh(2500)); len(got) != 0 {
+		t.Errorf("19 lines of 1,900 characters are kept: %+v", got)
+	}
+	if got := seen.Find(long(20, "twenty") + "\n" + dedupeFresh(2500)); len(got) != 1 || got[0].Lines != 20 {
+		t.Errorf("20 lines of 2,000 characters are cut: %+v", got)
+	}
+}
+
+// Go-only: a stored text keeps its trailing spaces out of the match as well as the new one.
+func TestDedupeTrailingSpacesOfTheStoredTextDoNotBreakAMatch(t *testing.T) {
+	lines := strings.Split(dedupeReport(40, "report"), "\n")
+	spaced := make([]string, len(lines))
+	for i, l := range lines {
+		spaced[i] = l + "  "
+	}
+	seen := NewSeenText()
+	seen.Add(strings.Join(spaced, "\n"), "an earlier bash result")
+	if got := seen.Find(strings.Join(lines, "\n") + "\n" + dedupeFresh(2500)); len(got) != 1 {
+		t.Errorf("%+v", got)
+	}
+}

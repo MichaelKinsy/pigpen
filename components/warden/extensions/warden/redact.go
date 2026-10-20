@@ -39,6 +39,14 @@ var (
 
 // Redact returns text with credential-shaped values replaced by [redacted].
 func Redact(text string) string {
+	if !mayHaveCredential(text) { // redact_prefilter.go: no rule can match
+		return text
+	}
+	return redactRules(text)
+}
+
+// redactRules applies every rule, in order.
+func redactRules(text string) string {
 	out := rePrivateKey.ReplaceAllString(text, redacted)
 	out = reAuthorization.ReplaceAllString(out, "${1}"+redacted)
 	out = reBearer.ReplaceAllString(out, "${1}"+redacted)

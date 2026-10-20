@@ -54,8 +54,50 @@ M = [
  ("adaptive-trace-only-sent", "steer_core.go", "if w.adaptor.request(model, kind, cfg.Steers) != SteerTraceOnly {", "if true {"),
  ("adaptive-muted-not-counted", "steer_core.go", "w.bump(func(s *stats) { s.SteersMuted++ })", ""),
  ("note-error-budget-flag-lost", "steer_core.go", "w.budgetExhausted = true", "_ = code"),
+ # Context saver (saver.go, dedupe.go, excerpt.go, filter.go, relevance.go, output_context.go, tool_output.go, context_wiring.go, context_compaction.go).
+ ("ledger-recall-counted-twice", "saver.go", "\t\tif !state.recalled {\n\t\t\tstate.recalled = true", "\t\tif true {\n\t\t\tstate.recalled = true"),
+ ("ledger-whole-file-recall-keeps-saving", "saver.go", "if kind == RecallFull && !state.restored {", "if false && !state.restored {"),
+ ("ledger-duplicate-bytes-lost", "saver.go", "\tl.duplicates++\n\tl.bytesSaved += bytesSaved", "\tl.duplicates++"),
+ ("ledger-turn-end-not-counted", "saver.go", "\tl.turns++\n", ""),
+ ("ledger-windows-path-json-form-missed", "saver.go", "return strings.Contains(text, quoted[1:len(quoted)-1])", "return strings.Contains(text, quoted[1:len(quoted)-1]) && quoted == \"\""),
+ ("dedupe-tail-cut", "dedupe.go", "cutoff := utf16Len(text) - TailKeepChars", "cutoff := utf16Len(text)"),
+ ("dedupe-short-runs-cut", "dedupe.go", "RunMinLines = 20", "RunMinLines = 5"),
+ ("dedupe-trailing-space-significant", "dedupe.go", "normalized := jsTrimEnd(line)", "normalized := line"),
+ ("dedupe-pointer-wording", "dedupe.go", "omitted; full text: %s]", "omitted; text: %s]"),
+ ("excerpt-summary-tail-lost", "excerpt.go", "if format != FormatGitDiff && format != FormatGitLog && len(tail) > 0 {", "if false {"),
+ ("excerpt-cap-ignored", "excerpt.go", "if size+utf16Len(clipped)+1 > formatExcerptLimit-400 {", "if false {"),
+ ("filter-tail-dropped", "filter.go", "FilterTailChars = 1000", "FilterTailChars = 0"),
+ ("filter-threshold-exclusive", "filter.go", "if scores[i] >= minScore && own(i) > 0 {", "if scores[i] > minScore && own(i) > 0 {"),
+ ("filter-failed-batch-ignored", "filter.go", "\t\tif result.OK {\n\t\t\tcontinue\n\t\t}", "\t\tif true {\n\t\t\tcontinue\n\t\t}"),
+ ("filter-chunks-not-redacted", "filter.go", "field := Redact(chunk)", "field := chunk"),
+ ("filter-question-limit-ignored", "filter.go", "len(batch.IDs) < FilterMaxQuestions", "true"),
+ ("relevance-flagged-result-kept", "relevance.go", "u.Flagged = strings.Contains(result, injectionBanner)", "u.Flagged = false"),
+ ("relevance-reserve-ignored", "relevance.go", "left-len(requests) < RequestReserve", "left-len(requests) < 0"),
+ ("relevance-wrapper-not-escaped", "relevance.go", "safe := escapeWrapperTags(body)", "safe := body"),
+ ("relevance-fence-not-longer", "relevance.go", "ticks := strings.Repeat(\"`\", max(3, longest+1))", "ticks := \"```\""),
+ ("relevance-labels-not-redacted", "relevance.go", "label := relClip(u.Label, labelChars)", "label := u.Label"),
+ ("relevance-threshold-never-raised", "relevance.go", "if raised > threshold {", "if false {"),
+ ("relevance-unbounded-requests", "relevance.go", "if cap := opts.Config.MaxRequests; len(requests) > cap {", "if cap := opts.Config.MaxRequests; false && len(requests) > cap {"),
+ ("compress-all-compresses", "output_context.go", "if retention == RetentionAll {", "if false {"),
+ ("compress-confidence-ignored", "output_context.go", "if confidence >= cfg.Confidence && (", "if (")
+ ,("output-key-keeps-colour", "output_context.go", "reANSI.ReplaceAllString(text, \"\")", "text"),
+ ("stored-output-world-readable", "output_context.go", "os.O_EXCL, 0o600)", "os.O_EXCL, 0o644)"),
+ ("learner-never-forgets-recalled", "output_context.go", "\t\tif o.Recalled {\n\t\t\tc.Recalled++\n\t\t}", ""),
+ ("duplicate-is-judged", "tool_output.go", "case hasEarlier || recallRead:", "case recallRead:"),
+ ("multi-block-flattened", "tool_output.go", "multiBlock := len(textBlocks) > 1 && !hasEarlier && !recallRead", "multiBlock := false"),
+ ("banner-only-on-first-block", "tool_output.go", "if index == len(textBlocks) {", "if false {"),
+ ("masking-skipped", "tool_output.go", "\tif maskOutput {\n\t\tfor _, raw := range rawTexts {", "\tif false {\n\t\tfor _, raw := range rawTexts {"),
+ ("secret-announced-every-time", "tool_output.go", "\tfor _, id := range unseenSecrets {\n\t\tst.secretsSeen[id] = true\n\t}", ""),
+ ("dedupe-runs-switch-ignored", "tool_output.go", "cfg.Context.DedupeRuns && !hasEarlier", "!hasEarlier"),
+ ("message-dedupe-default-on", "context_wiring.go", "!cfg.Context.DedupeRuns || !cfg.Context.DedupeMessages", "!cfg.Context.DedupeRuns"),
+ ("turn-end-ledger-lost", "context_wiring.go", "\tst.ledger.TurnEnd()\n", ""),
+ ("recall-not-recorded", "context_wiring.go", "recalled, ok := st.ledger.NoteAccess(serialized, kind)", "recalled, ok := \"\", false"),
+ ("compaction-skip-providers-ignored", "context_compaction.go", "slices.Contains(cfg.Compaction.SkipProviders, provider)", "slices.Contains(cfg.Compaction.SkipProviders, provider+\"-\")"),
+ ("compaction-cut-point-lost", "context_compaction.go", '"firstKeptEntryId": asString(preparation["firstKeptEntryId"]),', '"firstKeptEntryId": "",'),
+ ("compaction-judge-error-silent", "context_compaction.go", "case FallbackReasonJudgeError:\n\t\t\tdetail := result.Detail", "case \"never\":\n\t\t\tdetail := result.Detail"),
 ]
-EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth"}
+EQUIVALENT = {"judge-when-disabled": "unreachable: toolcall.go returns before judgeFor when warden is off; the check stays as defence in depth",
+              "banner-only-on-first-block": "a notice and several text blocks never meet outside the per-block path: more than one block means judged per block, and a block that is not judged (a duplicate or a recall) has no verdict, so no notice"}
 only = set(sys.argv[1:])
 out = []
 for mid, f, old, new in M:
@@ -66,7 +108,7 @@ for mid, f, old, new in M:
     shutil.copy(p, p + ".orig")
     try:
         open(p, "w").write(src.replace(old, new))
-        r = subprocess.run(["go", "test", "-count=1", "-failfast", "."], cwd=ext, capture_output=True, text=True, timeout=600)
+        r = subprocess.run(["go", "test", "-count=1", "-failfast"] + (["-run", os.environ["MUTATE_RUN"]] if os.environ.get("MUTATE_RUN") else []) + ["."], cwd=ext, capture_output=True, text=True, timeout=600)
         killed = r.returncode != 0
         first = next((l for l in (r.stdout + r.stderr).splitlines() if l.startswith("--- FAIL") or "build failed" in l or "[setup failed]" in l), "")
         out.append(f"{mid}: {'KILLED' if killed else 'SURVIVED (equivalent mutant: ' + EQUIVALENT[mid] + ')' if mid in EQUIVALENT else 'SURVIVED'} {first}".rstrip())

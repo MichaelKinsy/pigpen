@@ -46,6 +46,8 @@ def reason(f, name):
             if re.search(pat, n):
                 return why
         return "not ported: owner decision needed"
+    if f in ("filter.test.ts", "relevance.test.ts") and re.match(r"filter config:|a project file tunes the filter|config: ", n):
+        return "config loader (applyUserOverrides, applyProjectOverrides, completeConfig) is owned by the configui lane; this case asserts the loader's parsing and clamping, not the context module"
     if f == "shape.test.ts":
         return "config schema migration (completeConfig) is not part of this port: the Go config merges defaults over a JSON file"
     if f == "stuck-evidence.test.ts":

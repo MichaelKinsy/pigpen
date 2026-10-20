@@ -56,8 +56,52 @@ func IsParserFormat(f string) bool {
 
 const formatExcerptLimit = 6000
 
+// lineMatch is what the parsers ask of a line pattern.
+type lineMatch interface{ MatchString(string) bool }
+
+// litGate runs its pattern only on lines that contain one of its literals, each a literal every match of the pattern
+// must contain: the engine's per-call cost then falls on the few lines that could match instead of on every line of a
+// 100 KB log (TestExcerptGatesNeverHideAMatch checks each gate against its bare pattern).
+type litGate struct {
+	re   *lazyRegexp
+	lits []string
+}
+
+func gated(re *lazyRegexp, lits ...string) litGate { return litGate{re, lits} }
+
+func (g litGate) MatchString(line string) bool {
+	for _, lit := range g.lits {
+		if strings.Contains(line, lit) {
+			return g.re.MatchString(line)
+		}
+	}
+	return false
+}
+
+// The per-line patterns of the parsers, each behind a gate of the literals its matches contain.
+var (
+	gVitestSummary = gated(reVitestSummary, "Test Files", "Tests", "Test Suites", "Snapshots", "Duration", "Time", "Start at", "Ran all test suites", "FAIL", "PASS")
+	gVitestHeader  = gated(reVitestHeader, "FAIL", "×", "✗", "✕", "●", "❯", "AssertionError")
+	gVitestMark    = gated(reVitestMark, "✓", "✗", "×", "✔", "✖")
+	gNodeSummary   = gated(reNodeSummary, "#", "ℹ")
+	gNodeTap       = gated(reNodeTap, "TAP version")
+	gNodeSpec      = gated(reNodeSpec, "✔", "✖")
+	gNodeHeader    = gated(reNodeHeader, "not ok", "✖")
+	gTscHeader     = gated(reTscHeader, "error TS")
+	gTscFound      = gated(reTscFound, "Found ")
+	gTscSummary    = gated(reTscSummary, "Found ", "error TS")
+	gEslintProblem = gated(reEslintProblem, "error", "warning")
+	gEslintTotal   = gated(reEslintTotal, "problem")
+	gEslintFile    = gated(reEslintFile, ".js", ".ts", ".cjs", ".mjs", ".cts", ".mts", ".vue", ".svelte")
+	gEslintPath    = gated(reEslintPath, ".js", ".ts", ".cjs", ".mjs", ".cts", ".mts", ".vue", ".svelte", ".json", ".md")
+	gEslintKeep    = gated(reEslintKeep, "problem", "potentially fixable")
+	gPytestSummary = gated(rePytestSummary, "passed", "failed", "error", "skipped", "no tests ran", "short test summary", "FAILED", "ERROR")
+	gPytestHeader  = gated(rePytestHeader, "___")
+	gDiffNote      = gated(reDiffNote, "new file mode", "deleted file mode", "rename ", "Binary files")
+)
+
 // capture: header lines start a block; the following non-empty lines up to `depth` are kept with it.
-func capture(lines []string, header, keep *lazyRegexp, depth int, summary *lazyRegexp) ([]string, bool) {
+func capture(lines []string, header, keep lineMatch, depth int, summary lineMatch) ([]string, bool) {
 	var out []string
 	headers, remaining := 0, 0
 	for _, line := range lines {
@@ -82,7 +126,7 @@ func capture(lines []string, header, keep *lazyRegexp, depth int, summary *lazyR
 	return out, headers > 0 || len(out) > 0
 }
 
-func anyLine(lines []string, tests ...*lazyRegexp) bool {
+func anyLine(lines []string, tests ...lineMatch) bool {
 	for _, line := range lines {
 		for _, re := range tests {
 			if re.MatchString(line) {
@@ -101,8 +145,8 @@ var (
 )
 
 func vitestJest(lines []string) ([]string, bool) {
-	out, ok := capture(lines, reVitestHeader, reVitestKeep, 8, reVitestSummary)
-	if ok && anyLine(lines, reVitestSummary, reVitestMark) {
+	out, ok := capture(lines, gVitestHeader, reVitestKeep, 8, gVitestSummary)
+	if ok && anyLine(lines, gVitestSummary, gVitestMark) {
 		return out, true
 	}
 	return nil, false
@@ -117,10 +161,10 @@ var (
 )
 
 func nodeTest(lines []string) ([]string, bool) {
-	if !anyLine(lines, reNodeSummary, reNodeTap, reNodeSpec) {
+	if !anyLine(lines, gNodeSummary, gNodeTap, gNodeSpec) {
 		return nil, false
 	}
-	out, _ := capture(lines, reNodeHeader, reNodeKeep, 10, reNodeSummary)
+	out, _ := capture(lines, gNodeHeader, reNodeKeep, 10, gNodeSummary)
 	return out, true
 }
 
@@ -132,10 +176,10 @@ var (
 )
 
 func tsc(lines []string) ([]string, bool) {
-	if !anyLine(lines, reTscHeader, reTscFound) {
+	if !anyLine(lines, gTscHeader, gTscFound) {
 		return nil, false
 	}
-	return capture(lines, reTscHeader, reTscKeep, 3, reTscSummary)
+	return capture(lines, gTscHeader, reTscKeep, 3, gTscSummary)
 }
 
 var (
@@ -147,17 +191,17 @@ var (
 )
 
 func eslint(lines []string) ([]string, bool) {
-	if !anyLine(lines, reEslintProblem) || !anyLine(lines, reEslintTotal, reEslintFile) {
+	if !anyLine(lines, gEslintProblem) || !anyLine(lines, gEslintTotal, gEslintFile) {
 		return nil, false
 	}
 	out := []string{}
 	file, hasFile := "", false
 	for _, line := range lines {
-		if reEslintPath.MatchString(line) {
+		if gEslintPath.MatchString(line) {
 			file, hasFile = line, true
 			continue
 		}
-		if reEslintProblem.MatchString(line) {
+		if gEslintProblem.MatchString(line) {
 			if hasFile {
 				out = append(out, file)
 				hasFile = false
@@ -165,7 +209,7 @@ func eslint(lines []string) ([]string, bool) {
 			out = append(out, line)
 			continue
 		}
-		if reEslintKeep.MatchString(line) {
+		if gEslintKeep.MatchString(line) {
 			out = append(out, line)
 		}
 	}
@@ -179,10 +223,10 @@ var (
 )
 
 func pytest(lines []string) ([]string, bool) {
-	if !anyLine(lines, rePytestSummary, rePytestHeader) {
+	if !anyLine(lines, gPytestSummary, gPytestHeader) {
 		return nil, false
 	}
-	out, _ := capture(lines, rePytestHeader, rePytestKeep, 12, rePytestSummary)
+	out, _ := capture(lines, gPytestHeader, rePytestKeep, 12, gPytestSummary)
 	return out, true
 }
 
@@ -190,6 +234,14 @@ var (
 	reDiffHeader = jsRE(`^diff --git a/(.+?) b/(.+)$`)
 	reDiffNote   = jsRE(`^(?:new file mode|deleted file mode|rename (?:from|to)|Binary files)`)
 )
+
+// diffHeader is reDiffHeader's submatches of a line, or nil; only lines with `diff --git` reach the pattern.
+func diffHeader(line string) []string {
+	if !strings.Contains(line, "diff --git") {
+		return nil
+	}
+	return reDiffHeader.FindStringSubmatch(line)
+}
 
 func gitDiff(lines []string) ([]string, bool) {
 	type fileStat struct {
@@ -199,7 +251,7 @@ func gitDiff(lines []string) ([]string, bool) {
 	}
 	var files []*fileStat
 	for _, line := range lines {
-		if m := reDiffHeader.FindStringSubmatch(line); m != nil {
+		if m := diffHeader(line); m != nil {
 			files = append(files, &fileStat{name: m[2]})
 			continue
 		}
@@ -208,7 +260,7 @@ func gitDiff(lines []string) ([]string, bool) {
 		}
 		current := files[len(files)-1]
 		switch {
-		case reDiffNote.MatchString(line):
+		case gDiffNote.MatchString(line):
 			if current.note != "" {
 				current.note += "; "
 			}
@@ -284,7 +336,7 @@ func npmInstall(lines []string) ([]string, bool) {
 	return nil, false
 }
 
-func anyOf(lines []string, re *lazyRegexp) bool {
+func anyOf(lines []string, re lineMatch) bool {
 	for _, line := range lines {
 		if re.MatchString(line) {
 			return true

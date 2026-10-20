@@ -2,6 +2,7 @@ package warden
 
 import (
 	"fmt"
+	"math/rand"
 	"sort"
 	"strings"
 	"testing"
@@ -138,6 +139,52 @@ func TestExcerptsAreCappedAndAlwaysEndWithTheLastNonEmptyLines(t *testing.T) {
 	for _, f := range []OutputFormat{FormatVitestJest, FormatNodeTest, FormatTsc, FormatEslint, FormatPytest, FormatGitDiff, FormatGitLog, FormatNpmInstall} {
 		if _, ok := FormatExcerpt("", f); ok {
 			t.Errorf("%s on empty text", f)
+		}
+	}
+}
+
+// TestExcerptGatesNeverHideAMatch: every litGate answers like its bare pattern on lines built from the parsers' own
+// sample texts, their words and random mixes of both.
+func TestExcerptGatesNeverHideAMatch(t *testing.T) {
+	gates := map[string]litGate{
+		"VitestSummary": gVitestSummary, "VitestHeader": gVitestHeader, "VitestMark": gVitestMark, "NodeSummary": gNodeSummary, "NodeTap": gNodeTap,
+		"NodeSpec": gNodeSpec, "NodeHeader": gNodeHeader, "TscHeader": gTscHeader, "TscFound": gTscFound, "TscSummary": gTscSummary,
+		"EslintProblem": gEslintProblem, "EslintTotal": gEslintTotal, "EslintFile": gEslintFile, "EslintPath": gEslintPath, "EslintKeep": gEslintKeep,
+		"PytestSummary": gPytestSummary, "PytestHeader": gPytestHeader, "DiffNote": gDiffNote,
+	}
+	samples := []string{
+		" ✓ tests/b.test.ts (3 tests) 5ms", " ❯ tests/a.test.ts (2 tests | 1 failed) 12ms", "   × adds numbers", " Test Files  1 failed | 1 passed (2)", "      Tests  1 failed | 4 passed (5)", "FAIL  src/b.test.ts", "PASS  src/a.test.ts", "  ● Calculator › adds",
+		"TAP version 13", "not ok 2 - fails", "# tests 2", "ℹ pass 1", "✔ adds (1.2ms)", "✖ fails (0.8ms)", "src/a.ts(12,5): error TS2322: Type", "src/b.ts:3:1 - error TS1005: ';' expected.", "Found 2 errors in 2 files.", "error TS18003: No inputs",
+		"/repo/src/a.ts", "  10:3  error    'x' is assigned", "  12:1  warning  Unexpected console", "✖ 2 problems (1 error, 1 warning)", "3 problems (1 error)", "  1 error and 0 warnings potentially fixable with the `--fix` option.", "src/a.cjs", "lib/x.mts", "app.vue", "a.svelte", "package.json", "README.md",
+		"=== 1 failed, 2 passed in 0.05s ===", "=== short test summary info ===", "FAILED tests/test_a.py::test_add", "ERROR tests/x.py", "___ test_add ___", "new file mode 100644", "deleted file mode 100644", "rename from a", "Binary files a and b differ", "plain progress line", "",
+	}
+	words := []string{"Test", "Tests", "FAIL", "PASS", "error", "warning", "problem", "TS", "Found", "passed", "failed", "ok", "not", "#", "ℹ", "✔", "✖", "×", "❯", "●", ".ts", ".js", ".md", "=", "_", " ", "\t", "12:3", "(1,2)"}
+	rng := rand.New(rand.NewSource(11))
+	lines := append([]string(nil), samples...)
+	for range 6000 {
+		var b strings.Builder
+		for range rng.Intn(6) + 1 {
+			if rng.Intn(3) == 0 {
+				b.WriteString(samples[rng.Intn(len(samples))])
+			} else {
+				b.WriteString(words[rng.Intn(len(words))])
+			}
+		}
+		lines = append(lines, b.String())
+	}
+	for name, g := range gates {
+		matched := 0
+		for _, line := range lines {
+			want := g.re.MatchString(line)
+			if want {
+				matched++
+			}
+			if got := g.MatchString(line); got != want {
+				t.Fatalf("%s on %q: gate %v, pattern %v", name, line, got, want)
+			}
+		}
+		if matched == 0 {
+			t.Errorf("%s never matched a line: the test proves nothing", name)
 		}
 	}
 }

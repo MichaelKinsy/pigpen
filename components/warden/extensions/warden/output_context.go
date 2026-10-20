@@ -224,6 +224,39 @@ func IsGenericExcerpt(excerpt string) bool {
 	return strings.HasSuffix(first, ExcerptNote+"]")
 }
 
+// diagnosticStems are the words of reDiagnostic, lower case, each with the endings that complete an alternative:
+// `fail(?:ed|ure)?`, `warn(?:ing)?`, `exit(?:ed)?`. A line is a diagnostic when it has one whole.
+var diagnosticStems = []struct {
+	stem string
+	ends []string
+}{{"error", []string{""}}, {"fail", []string{"", "ed", "ure"}}, {"warn", []string{"", "ing"}}, {"fatal", []string{""}}, {"exception", []string{""}}, {"exit", []string{"", "ed"}}, {"summary", []string{""}}}
+
+// diagnosticLine is reDiagnostic.MatchString without the regular expression: whole-word, case-insensitive (ASCII)
+// occurrences of the words. The engine's per-call cost on every line of a 200 KB log was most of the compression's time.
+func diagnosticLine(line string) bool {
+	lower := strings.ToLower(line)
+	for _, d := range diagnosticStems {
+		for from := 0; from < len(lower); {
+			i := strings.Index(lower[from:], d.stem)
+			if i < 0 {
+				break
+			}
+			i += from
+			if i == 0 || !isWordByte(lower[i-1]) {
+				after := lower[i+len(d.stem):]
+				for _, end := range d.ends {
+					if strings.HasPrefix(after, end) && (len(after) == len(end) || !isWordByte(after[len(end)])) {
+						return true
+					}
+				}
+			}
+			from = i + 1
+		}
+	}
+	return false
+}
+
+// reDiagnostic is the pattern diagnosticLine implements (the test compares them).
 var reDiagnostic = jsRE(`(?i)\b(?:error|fail(?:ed|ure)?|warn(?:ing)?|fatal|exception|exit(?:ed)?|summary)\b`)
 
 // CompressOutput is the deterministic excerpt, not an AI-written summary: at most 6K characters, including
@@ -256,7 +289,7 @@ func CompressOutput(text string, retention Retention, format OutputFormat) (stri
 	diagnosticChars := 0
 	// Keep diagnostic evidence even if the classifier selected summary_only for a failed run.
 	for _, line := range lines {
-		if !reDiagnostic.MatchString(line) {
+		if !diagnosticLine(line) {
 			continue
 		}
 		clipped := utf16Slice(line, 0, 500)
@@ -286,11 +319,23 @@ var reANSI = jsRE(`\x{1b}\[[0-9;]*[A-Za-z]`)
 // OutputKey is the identity of a text result for duplicate detection: ANSI colour and trailing whitespace do not
 // make a new output.
 func OutputKey(text string) string {
-	lines := strings.Split(reANSI.ReplaceAllString(text, ""), "\n")
-	for i, line := range lines {
-		lines[i] = jsTrimEnd(line)
+	if strings.IndexByte(text, 0x1b) >= 0 {
+		text = reANSI.ReplaceAllString(text, "")
 	}
-	sum := sha256.Sum256([]byte(jsTrim(strings.Join(lines, "\n"))))
+	var b strings.Builder
+	b.Grow(len(text))
+	for rest, first := text, true; ; first = false {
+		line, tail, more := strings.Cut(rest, "\n")
+		if !first {
+			b.WriteByte('\n')
+		}
+		b.WriteString(jsTrimEnd(line))
+		if !more {
+			break
+		}
+		rest = tail
+	}
+	sum := sha256.Sum256([]byte(jsTrim(b.String())))
 	return hex.EncodeToString(sum[:])
 }
 

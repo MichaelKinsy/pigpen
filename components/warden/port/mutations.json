@@ -94,5 +94,65 @@
   "file": "stuck.go",
   "find": "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {",
   "replace": "if prev.Failed != l.Failed {"
+ },
+ {
+  "name": "tool-result-masking-skipped",
+  "file": "tool_output.go",
+  "find": "\tif maskOutput {\n\t\tfor _, raw := range rawTexts {",
+  "replace": "\tif false {\n\t\tfor _, raw := range rawTexts {"
+ },
+ {
+  "name": "credential-banner-not-leading",
+  "file": "tool_output.go",
+  "find": "\t\t\t\t\tout = notice + \"\\n\\n\" + out\n",
+  "replace": "\t\t\t\t\tout = out\n"
+ },
+ {
+  "name": "security-notice-dropped",
+  "file": "tool_output.go",
+  "find": "\t\tnotice = SecurityNotice(v, maskedCount, maskOutput)",
+  "replace": "\t\tnotice = \"\""
+ },
+ {
+  "name": "duplicate-note-wording",
+  "file": "output_context.go",
+  "find": "Nothing changed; the earlier result still applies.",
+  "replace": "Nothing changed."
+ },
+ {
+  "name": "pointer-line-wording",
+  "file": "dedupe.go",
+  "find": "omitted; full text: %s]",
+  "replace": "omitted; text: %s]"
+ },
+ {
+  "name": "compression-footer-missing",
+  "file": "tool_output.go",
+  "find": "\t\t\t\treplacement := body + \"\\n\\n\" + recallInstruction(recallTool, path)",
+  "replace": "\t\t\t\treplacement := body"
+ },
+ {
+  "name": "retention-gate-ignored",
+  "file": "output_context.go",
+  "find": "if confidence >= cfg.Confidence && (",
+  "replace": "if ("
+ },
+ {
+  "name": "format-parser-never-selected",
+  "file": "output_context.go",
+  "find": "if p >= cfg.FormatConfidence {",
+  "replace": "if p >= 2 {"
+ },
+ {
+  "name": "repeated-runs-never-cut",
+  "file": "tool_output.go",
+  "find": "if cfg.Context.Enabled && cfg.Context.DedupeRuns && !hasEarlier",
+  "replace": "if false && !hasEarlier"
+ },
+ {
+  "name": "duplicates-never-noted",
+  "file": "tool_output.go",
+  "find": "\tif key != \"\" {\n\t\tearlierTool, earlierPath, hasEarlier = st.ledger.DuplicateOf(key)",
+  "replace": "\tif false {\n\t\tearlierTool, earlierPath, hasEarlier = st.ledger.DuplicateOf(key)"
  }
 ]

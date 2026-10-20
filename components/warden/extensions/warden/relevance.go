@@ -954,25 +954,28 @@ func leftOutLine(u *Unit) string {
 func escapeWrapperTags(body string) string {
 	var out strings.Builder
 	changed := false
-	for i := 0; i < len(body); i++ {
-		if body[i] != '<' {
-			out.WriteByte(body[i])
-			continue
+	last := 0
+	for from := 0; from < len(body); {
+		j := strings.IndexByte(body[from:], '<')
+		if j < 0 {
+			break
 		}
-		rest := body[i+1:]
-		rest = strings.TrimLeftFunc(rest, isJSSpace)
+		j += from
+		from = j + 1
+		rest := strings.TrimLeftFunc(body[j+1:], isJSSpace)
 		rest = strings.TrimPrefix(rest, "/")
 		rest = strings.TrimLeftFunc(rest, isJSSpace)
 		if len(rest) >= 7 && strings.EqualFold(rest[:7], "summary") && (len(rest) == 7 || !isWordByte(rest[7])) {
+			out.WriteString(body[last:j])
 			out.WriteString("&lt;")
+			last = j + 1
 			changed = true
-			continue
 		}
-		out.WriteByte('<')
 	}
 	if !changed {
 		return body
 	}
+	out.WriteString(body[last:])
 	return out.String()
 }
 

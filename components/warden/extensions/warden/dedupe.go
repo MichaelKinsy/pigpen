@@ -74,12 +74,18 @@ type seenDoc struct {
 
 type windowPos struct{ doc, line int }
 
+// windowSlots holds up to maxPositions earlier positions of one window hash, without a slice per hash.
+type windowSlots struct {
+	n   int
+	pos [maxPositions]windowPos
+}
+
 // SeenText indexes the texts in context.
 type SeenText struct {
 	// lineIDs are the interned normalized lines; ids start at 1 so 0 marks a line never seen.
 	lineIDs map[string]int32
 	docs    []seenDoc
-	windows map[int32][]windowPos
+	windows map[int32]windowSlots
 	keys    map[string]struct{}
 }
 
@@ -94,7 +100,7 @@ func NewSeenText() *SeenText {
 func (s *SeenText) Clear() {
 	s.lineIDs = map[string]int32{}
 	s.docs = nil
-	s.windows = map[int32][]windowPos{}
+	s.windows = map[int32]windowSlots{}
 	s.keys = map[string]struct{}{}
 }
 
@@ -140,8 +146,10 @@ func (s *SeenText) Add(text, where string) {
 	s.docs = append(s.docs, seenDoc{where: where, ids: ids})
 	doc := len(s.docs) - 1
 	for line, hash := range windowHashes(ids) {
-		if positions := s.windows[hash]; len(positions) < maxPositions {
-			s.windows[hash] = append(positions, windowPos{doc, line})
+		if slots := s.windows[hash]; slots.n < maxPositions {
+			slots.pos[slots.n] = windowPos{doc, line}
+			slots.n++
+			s.windows[hash] = slots
 		}
 	}
 }
@@ -170,7 +178,8 @@ func (s *SeenText) Find(text string) []RepeatedRun {
 	var runs []RepeatedRun
 	for index := 0; index+RunMinLines <= limit; {
 		bestDoc, bestLen := -1, 0
-		for _, pos := range s.windows[hashes[index]] {
+		slots := s.windows[hashes[index]]
+		for _, pos := range slots.pos[:slots.n] {
 			seen := s.docs[pos.doc].ids
 			length := 0
 			for index+length < limit && pos.line+length < len(seen) && ids[index+length] != 0 && ids[index+length] == seen[pos.line+length] {
