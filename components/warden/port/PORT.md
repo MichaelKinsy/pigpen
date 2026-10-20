@@ -462,10 +462,13 @@ lane were 45 ms (`maskSecrets`, 58 times the original), 38 ms (`findSecrets`), 3
 97 us (`restatedShare`, 2.9 times); each was profiled (regexp scanning of case-insensitive and `\b` patterns,
 regexp whitespace splitting, map-based word sets) and fixed.
 
-- Extension Binary (`npm run build:piglet -- pig-warden`, imladris): 72,429,728 bytes against 71,540,896 for the previous
-  release (0.1.2): +888,832 bytes (+1.2%), for all lanes stacked below and including this one.
-- Registration time (`port/bench/startup.sh`, the fake host, median of 10 medians of 30 starts): 156.5 us against
-  145.0 us for the previous release (+8%, all stacked lanes).
+- Extension Binary (`npm run build:piglet -- pig-warden`, imladris) on the stacked tree: 72,679,584 bytes against
+  71,540,896 for the previous release (0.1.2): +1,138,688 bytes (+1.6%), for all lanes stacked below this one together
+  (on the first base, this lane alone sat inside +1.2%).
+- Registration time (`port/bench/startup.sh`, the fake host, median of 10 medians of 30 starts): this tree 202 us against
+  221.5 us for `port/warden-guardcore-3` (this lane adds nothing measurable); stacked tree against the previous release
+  222 us against 151.5 us (+47%, from the lanes below; the box was noisy: the same comparison gave 156.5 against
+  145.0 us on the first base).
 - Cold start of the Binary and of the original under Pi were not measured: the original is loaded by Pi's TypeScript
   loader and has no comparable in-process registration point.
 - No new Go dependency. `/warden status` probes the desktop notifier once per session when `notify.enabled` is on
