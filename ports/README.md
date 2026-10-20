@@ -163,7 +163,7 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 ### `skills`: General development Skills (dev-skills)
 
 - Kind: port. Eight general development Skills (tdd, diagnosing-bugs, handoff, research, grilling, prototype, code-review, commit) adapted from public Skills, as one Skills Package. Not in batteries.
-- Notes: Names take the pigpen- prefix the Skill gate requires. The adaptations were made from an earlier upstream revision whose commit was not recorded (see the Package CREDITS.md). Reviewed and merged for the first release.
+- Notes: Names take the pigpen- prefix the Skill gate requires. Release 0.2.0 re-bases every adaptation on the pinned commits (the first release's earlier revision was not recorded); port/upstream-map.json maps each shipped file to its upstream path and blob with its adaptations, and scripts/dev-skills-drift.mjs fails on drift. Whether the Skills should instead be faithful copies is an owner decision (status/dev-skills.md). Reviewed and merged for the first release.
 
 ### `rpiv-todo`: rpiv-todo
 
