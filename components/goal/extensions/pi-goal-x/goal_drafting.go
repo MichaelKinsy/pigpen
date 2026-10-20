@@ -605,7 +605,7 @@ func (c *core) proposeDraftTool(params map[string]any) (any, error) {
 	return c.applyTweak(applyTweakArgs{
 		target: target, token: proposalToken, revision: proposalRevision, taskList: taskList, budget: proposedBudget, budgetPresent: budgetPresent,
 		objective: extractedObjective, contract: extractedContract, skipAuditor: skipAuditor, summary: summary,
-	}), nil
+	})
 }
 
 // proposedBudgetArg is the proposal's token_budget as a pointer (nil for undefined and null).
@@ -640,7 +640,7 @@ func floatOrNull(f *float64) any {
 	return *f
 }
 
-func (c *core) applyTweak(a applyTweakArgs) sdk.ToolResult {
+func (c *core) applyTweak(a applyTweakArgs) (sdk.ToolResult, error) {
 	finalFlushError, ferr := c.goalService.flushForAudit(c.st)
 	if ferr != nil {
 		finalFlushError = ferr.Error()
@@ -648,7 +648,7 @@ func (c *core) applyTweak(a applyTweakArgs) sdk.ToolResult {
 	c.reconcileFocusedGoalFromDisk(false)
 	cur := c.state()
 	if finalFlushError != "" || c.goalService.isTurnBuffered() || !c.isFocusedOperationCurrent(a.token) || cur == nil || gnum(cur, "revision") != a.revision || gstr(cur, "status") == "complete" {
-		return draftResult(c, "Goal tweak was not applied: the goal changed during confirmation. Review and propose again.")
+		return draftResult(c, "Goal tweak was not applied: the goal changed during confirmation. Review and propose again."), nil
 	}
 	now := nowIso()
 	// §7.5 merge: a goal tweak must never change the status of steps that persist across the tweak. The proposed list merges into the
@@ -765,10 +765,11 @@ func (c *core) applyTweak(a applyTweakArgs) sdk.ToolResult {
 		},
 	})
 	if err != nil {
-		return draftResult(c, "Goal tweak was not applied: "+err.Error())
+		// The authoritative file write throws in the original, so the tool call fails with the thrown error.
+		return sdk.ToolResult{}, err
 	}
 	if !result.ok {
-		return draftResult(c, "Goal tweak was not applied: "+result.message)
+		return draftResult(c, "Goal tweak was not applied: "+result.message), nil
 	}
 	if resumed {
 		// A ledger append failure should not crash the tweak.
@@ -801,7 +802,7 @@ func (c *core) applyTweak(a applyTweakArgs) sdk.ToolResult {
 	case "paused":
 		tail = "\nGoal remains paused. Use /goal-resume to continue when scheduling permits."
 	}
-	return sdk.ToolResult{Content: a.summary + "\n\nGoal tweak confirmed and applied.\n" + formatGoalBudget(goalTokenBudget(result.goal)) + schedulingNote + tail, Details: goalDetails(result.goal, ""), Terminate: true}
+	return sdk.ToolResult{Content: a.summary + "\n\nGoal tweak confirmed and applied.\n" + formatGoalBudget(goalTokenBudget(result.goal)) + schedulingNote + tail, Details: goalDetails(result.goal, ""), Terminate: true}, nil
 }
 
 func optNumber(f *float64) any {
