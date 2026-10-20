@@ -1,0 +1,49 @@
+{
+ "name": "vibes-unpersisted",
+ "description": "Settings the file cannot take: when settings.json is not an object a change is applied but reported as not persisted.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "agentFiles": {
+  "settings.json": "[1]"
+ },
+ "steps": [
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe pirate"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe model eq-llm/eq-1"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe mode generate"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe off"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe"
+   }
+  }
+ ]
+}

@@ -1,0 +1,130 @@
+{
+ "name": "vibes-command",
+ "description": "/vibe: status, theme (case kept), model and mode show/set with their validation, off; a new session reloads the persisted settings.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe Star  Trek"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe model"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe model nonsense"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe MODEL eq-llm/eq-1"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe mode"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe mode bogus"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe mode file"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe generate"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe   "
+   }
+  },
+  {
+   "name": "new-session",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-new"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe OFF"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe"
+   }
+  },
+  {
+   "name": "new-session",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-new"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe"
+   }
+  }
+ ]
+}
