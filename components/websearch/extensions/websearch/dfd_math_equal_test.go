@@ -64,3 +64,33 @@ func TestDecodeURIEqualsTheOriginal(t *testing.T) {
 		}
 	}
 }
+
+func TestTemmlRenderEqualsTheOriginal(t *testing.T) {
+	var cases []struct {
+		Latex   string  `json:"latex"`
+		Display bool    `json:"display"`
+		Out     *string `json:"out"`
+		Err     string  `json:"err"`
+	}
+	readMathCases(t, "latex-expected.json", &cases)
+	if len(cases) < 1000 {
+		t.Fatalf("%d recorded cases", len(cases))
+	}
+	failures := 0
+	for i, c := range cases {
+		got := dfdRenderLatexToMathML(c.Latex, c.Display)
+		want := ""
+		if c.Out != nil {
+			want = *c.Out
+		}
+		if got != want {
+			failures++
+			if failures <= 40 {
+				t.Errorf("case %d %q (display %v):\n got %q\nwant %q (%s)", i, c.Latex, c.Display, got, want, c.Err)
+			}
+		}
+	}
+	if failures > 0 {
+		t.Errorf("%d of %d cases differ", failures, len(cases))
+	}
+}
