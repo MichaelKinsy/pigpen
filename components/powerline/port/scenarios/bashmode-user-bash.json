@@ -1,6 +1,32 @@
 {
  "name": "bashmode-user-bash",
  "description": "The user_bash event (the editor's ! and !! commands, RPC bash) reaches the footer: a branch-changing command invalidates the git cache and repaints the bar, an ordinary command does not. Both run under RPC, where no widget rows reach the host.",
+ "files": {
+  "a.txt": "one\n"
+ },
+ "setup": [
+  [
+   "git",
+   "init",
+   "-q"
+  ],
+  [
+   "git",
+   "add",
+   "a.txt"
+  ],
+  [
+   "git",
+   "-c",
+   "user.name=t",
+   "-c",
+   "user.email=t@t",
+   "commit",
+   "-q",
+   "-m",
+   "init"
+  ]
+ ],
  "steps": [
   {
    "name": "branch-changing",
