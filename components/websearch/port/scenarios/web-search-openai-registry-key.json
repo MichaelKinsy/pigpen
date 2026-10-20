@@ -1,0 +1,118 @@
+{
+ "name": "web-search-openai-registry-key",
+ "description": "web_search with the OpenAI credential held by the model registry (auth.json) and an explicit Responses endpoint: the registry key, not the standalone one, is sent.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"openaiSearchProviders\": [\"openai\"], \"openaiSearchModel\": \"gpt-5.6-terra\", \"openaiApiKey\": \"sk-standalone-key\", \"openaiResponsesUrl\": \"{{server:openai}}/v1/responses\"}",
+  "auth.json": "{\"openai\": {\"type\": \"api_key\", \"key\": \"sk-registry-key\"}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "openai",
+      "query": "registry credential"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "openai": {
+   "recordHeaders": [
+    "authorization",
+    "content-type",
+    "openai-beta",
+    "originator"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/v1/responses",
+     "json": {
+      "output": [
+       {
+        "type": "web_search_call",
+        "action": {
+         "sources": [
+          {
+           "url": "https://example.com/source-one",
+           "title": "Source one"
+          }
+         ]
+        }
+       },
+       {
+        "type": "message",
+        "content": [
+         {
+          "type": "output_text",
+          "text": "The hosted search answer cites a source.",
+          "annotations": [
+           {
+            "type": "url_citation",
+            "url": "https://example.com/cited?utm_source=openai",
+            "title": "Cited page",
+            "start_index": 4,
+            "end_index": 10
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId:? \")[a-z0-9]{10,}\"",
+   "replacement": "${1}<response-id>\""
+  },
+  {
+   "pattern": "^[a-z0-9]{13,15}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+   "replacement": "<uuid>"
+  }
+ ],
+ "commands": {
+  "xdg-open": {
+   "mode": "missing"
+  },
+  "open": {
+   "mode": "missing"
+  },
+  "cmd": {
+   "mode": "missing"
+  },
+  "npm": {
+   "mode": "missing"
+  },
+  "sh": {
+   "mode": "real"
+  }
+ },
+ "args": [
+  "--tools",
+  "read,bash,edit,write,web_search,source_check,fetch_content,get_search_content"
+ ]
+}

@@ -1,0 +1,88 @@
+{
+ "name": "web-search-openai-http-error",
+ "description": "web_search when the OpenAI endpoint answers 503: the status and the redacted body come back as the tool error.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"openaiApiKey\": \"sk-standalone-key\", \"openaiResponsesUrl\": \"{{server:openai}}/v1/responses\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "openai",
+      "query": "failing search"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "openai": {
+   "recordHeaders": [
+    "authorization",
+    "content-type",
+    "openai-beta",
+    "originator"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/v1/responses",
+     "json": {
+      "error": "upstream failure for sk-standalone-key"
+     },
+     "status": 503
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId:? \")[a-z0-9]{10,}\"",
+   "replacement": "${1}<response-id>\""
+  },
+  {
+   "pattern": "^[a-z0-9]{13,15}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+   "replacement": "<uuid>"
+  }
+ ],
+ "commands": {
+  "xdg-open": {
+   "mode": "missing"
+  },
+  "open": {
+   "mode": "missing"
+  },
+  "cmd": {
+   "mode": "missing"
+  },
+  "npm": {
+   "mode": "missing"
+  },
+  "sh": {
+   "mode": "real"
+  }
+ },
+ "args": [
+  "--tools",
+  "read,bash,edit,write,web_search,source_check,fetch_content,get_search_content"
+ ]
+}

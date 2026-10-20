@@ -1,0 +1,1313 @@
+{
+ "oracle": "pi-web-access 0.33.0",
+ "cases": [
+  {
+   "name": "xai default body",
+   "provider": "xai",
+   "config": {
+    "xaiApiKey": "xai-key"
+   },
+   "query": "what shipped?",
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "web_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://x.ai/news",
+          "title": "xAI News"
+         }
+        ]
+       }
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "Grok Imagine v1.5 shipped with reference images.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://x.ai/news/grok-imagine",
+           "title": "Grok Imagine",
+           "start_index": 0,
+           "end_index": 12
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "citations": [
+      "https://x.ai/news/grok-imagine",
+      "https://x.ai/citation-only"
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.x.ai/v1/responses",
+     "headers": {
+      "authorization": "Bearer xai-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"grok-4.5\",\"input\":\"Search the web and answer using only what the web results say. Cite your sources inline.\\n\\nwhat shipped?\",\"tools\":[{\"type\":\"web_search\"}]}"
+    }
+   ],
+   "result": {
+    "answer": "Grok Imagine v1.5 shipped with reference images.",
+    "results": [
+     {
+      "title": "Grok Imagine",
+      "url": "https://x.ai/news/grok-imagine",
+      "snippet": "Grok Imagine v1.5 shipped with reference images."
+     },
+     {
+      "title": "xAI News",
+      "url": "https://x.ai/news",
+      "snippet": ""
+     },
+     {
+      "title": "https://x.ai/citation-only",
+      "url": "https://x.ai/citation-only",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "xai web and x tools",
+   "provider": "xai",
+   "config": {
+    "xaiApiKey": "xai-key",
+    "xaiSearchTools": [
+     "web_search",
+     "x_search"
+    ]
+   },
+   "query": "what are people saying?",
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "x_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://x.com/i/status/raw",
+          "title": "Raw X post"
+         },
+         {
+          "ignored": true
+         }
+        ]
+       },
+       "sources": [
+        "https://x.com/i/status/source-string"
+       ]
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "People are discussing the release on X.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://x.com/i/status/answer",
+           "title": "Answer citation",
+           "start_index": 7,
+           "end_index": 15
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "citations": [
+      "https://x.com/i/status/citation-only",
+      {
+       "url": "https://x.com/i/status/citation-object",
+       "title": "Citation object"
+      },
+      42
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.x.ai/v1/responses",
+     "headers": {
+      "authorization": "Bearer xai-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"grok-4.6\",\"input\":\"Search the web and X and answer using only what the search results say. Cite your sources inline.\\n\\nwhat are people saying?\",\"tools\":[{\"type\":\"web_search\"},{\"type\":\"x_search\"}]}"
+    }
+   ],
+   "result": {
+    "answer": "People are discussing the release on X.",
+    "results": [
+     {
+      "title": "Answer citation",
+      "url": "https://x.com/i/status/answer",
+      "snippet": "People are discussing the release on X."
+     },
+     {
+      "title": "Raw X post",
+      "url": "https://x.com/i/status/raw",
+      "snippet": ""
+     },
+     {
+      "title": "https://x.com/i/status/source-string",
+      "url": "https://x.com/i/status/source-string",
+      "snippet": ""
+     },
+     {
+      "title": "https://x.com/i/status/citation-only",
+      "url": "https://x.com/i/status/citation-only",
+      "snippet": ""
+     },
+     {
+      "title": "Citation object",
+      "url": "https://x.com/i/status/citation-object",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "xai filters in the prompt",
+   "provider": "xai",
+   "config": {
+    "xaiApiKey": "xai-key",
+    "xaiSearchModel": " grok-5 "
+   },
+   "query": "filtered",
+   "options": {
+    "recencyFilter": "week",
+    "domainFilter": [
+     "example.com",
+     "-spam.example"
+    ],
+    "numResults": 4
+   },
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "web_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://x.ai/news",
+          "title": "xAI News"
+         }
+        ]
+       }
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "Grok Imagine v1.5 shipped with reference images.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://x.ai/news/grok-imagine",
+           "title": "Grok Imagine",
+           "start_index": 0,
+           "end_index": 12
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "citations": [
+      "https://x.ai/news/grok-imagine",
+      "https://x.ai/citation-only"
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.x.ai/v1/responses",
+     "headers": {
+      "authorization": "Bearer xai-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"grok-5\",\"input\":\"Search the web and answer using only what the web results say. Cite your sources inline. Prefer sources from the past week. Prefer around 4 distinct sources. Only use sources from: example.com. Do not use sources from: spam.example.\\n\\nfiltered\",\"tools\":[{\"type\":\"web_search\"}]}"
+    }
+   ],
+   "result": {
+    "answer": "Grok Imagine v1.5 shipped with reference images.",
+    "results": [
+     {
+      "title": "Grok Imagine",
+      "url": "https://x.ai/news/grok-imagine",
+      "snippet": "Grok Imagine v1.5 shipped with reference images."
+     },
+     {
+      "title": "xAI News",
+      "url": "https://x.ai/news",
+      "snippet": ""
+     },
+     {
+      "title": "https://x.ai/citation-only",
+      "url": "https://x.ai/citation-only",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "xai registry login",
+   "provider": "xai",
+   "config": {},
+   "query": "subscription",
+   "registry": {
+    "models": [
+     {
+      "provider": "xai",
+      "id": "grok-4.5"
+     }
+    ],
+    "auth": {
+     "xai": {
+      "ok": true,
+      "apiKey": "grok-subscription",
+      "headers": {
+       "X-Grok": "yes"
+      }
+     }
+    }
+   },
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "web_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://x.ai/news",
+          "title": "xAI News"
+         }
+        ]
+       }
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "Grok Imagine v1.5 shipped with reference images.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://x.ai/news/grok-imagine",
+           "title": "Grok Imagine",
+           "start_index": 0,
+           "end_index": 12
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "citations": [
+      "https://x.ai/news/grok-imagine",
+      "https://x.ai/citation-only"
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.x.ai/v1/responses",
+     "headers": {
+      "authorization": "Bearer grok-subscription",
+      "content-type": "application/json",
+      "x-grok": "yes"
+     },
+     "body": "{\"model\":\"grok-4.5\",\"input\":\"Search the web and answer using only what the web results say. Cite your sources inline.\\n\\nsubscription\",\"tools\":[{\"type\":\"web_search\"}]}"
+    }
+   ],
+   "result": {
+    "answer": "Grok Imagine v1.5 shipped with reference images.",
+    "results": [
+     {
+      "title": "Grok Imagine",
+      "url": "https://x.ai/news/grok-imagine",
+      "snippet": "Grok Imagine v1.5 shipped with reference images."
+     },
+     {
+      "title": "xAI News",
+      "url": "https://x.ai/news",
+      "snippet": ""
+     },
+     {
+      "title": "https://x.ai/citation-only",
+      "url": "https://x.ai/citation-only",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "xai http error",
+   "provider": "xai",
+   "config": {
+    "xaiApiKey": "xai-secret"
+   },
+   "query": "denied",
+   "response": {
+    "status": 401,
+    "text": "denied for xai-secret"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.x.ai/v1/responses",
+     "headers": {
+      "authorization": "Bearer xai-secret",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"grok-4.5\",\"input\":\"Search the web and answer using only what the web results say. Cite your sources inline.\\n\\ndenied\",\"tools\":[{\"type\":\"web_search\"}]}"
+    }
+   ],
+   "error": "xAI API error 401: denied for [redacted]"
+  },
+  {
+   "name": "kimi registry login",
+   "provider": "kimi",
+   "config": {},
+   "query": "Kimi Code Plan search",
+   "options": {
+    "numResults": 2,
+    "domainFilter": [
+     "example.com",
+     "-ads.example.com"
+    ]
+   },
+   "registry": {
+    "models": [
+     {
+      "provider": "kimi-code",
+      "id": "compat"
+     },
+     {
+      "provider": "kimi-coding",
+      "id": "primary"
+     }
+    ],
+    "auth": {
+     "kimi-coding": {
+      "ok": true,
+      "apiKey": "kimi-token",
+      "headers": {
+       "X-Registry": "forwarded",
+       "X-Nullable": null,
+       "authorization": "Bearer stale",
+       "content-type": "text/plain"
+      }
+     }
+    }
+   },
+   "response": {
+    "json": {
+     "search_results": [
+      {
+       "title": "Kimi result",
+       "url": "https://example.com/one",
+       "snippet": "First snippet"
+      },
+      {
+       "title": "   ",
+       "url": "https://example.com/two"
+      },
+      {
+       "title": "Blocked",
+       "url": "https://ads.example.com/x",
+       "snippet": "blocked"
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.kimi.com/coding/v1/search",
+     "headers": {
+      "authorization": "Bearer kimi-token",
+      "content-type": "application/json",
+      "x-msh-tool-call-id": "<uuid>",
+      "x-registry": "forwarded"
+     },
+     "body": "{\"text_query\":\"Kimi Code Plan search\"}"
+    }
+   ],
+   "result": {
+    "answer": "First snippet\nSource: Kimi result (https://example.com/one)\n\nSource: https://example.com/two (https://example.com/two)",
+    "results": [
+     {
+      "title": "Kimi result",
+      "url": "https://example.com/one",
+      "snippet": "First snippet"
+     },
+     {
+      "title": "https://example.com/two",
+      "url": "https://example.com/two",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "kimi bearer in header only",
+   "provider": "kimi",
+   "config": {},
+   "query": "header auth",
+   "registry": {
+    "models": [
+     {
+      "provider": "kimi-coding",
+      "id": "primary"
+     }
+    ],
+    "auth": {
+     "kimi-coding": {
+      "ok": true,
+      "headers": {
+       "Authorization": "Bearer header-token"
+      }
+     }
+    }
+   },
+   "response": {
+    "json": {
+     "search_results": [
+      {
+       "title": "Kimi result",
+       "url": "https://example.com/one",
+       "snippet": "First snippet"
+      },
+      {
+       "title": "   ",
+       "url": "https://example.com/two"
+      },
+      {
+       "title": "Blocked",
+       "url": "https://ads.example.com/x",
+       "snippet": "blocked"
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.kimi.com/coding/v1/search",
+     "headers": {
+      "authorization": "Bearer header-token",
+      "content-type": "application/json",
+      "x-msh-tool-call-id": "<uuid>"
+     },
+     "body": "{\"text_query\":\"header auth\"}"
+    }
+   ],
+   "result": {
+    "answer": "First snippet\nSource: Kimi result (https://example.com/one)\n\nSource: https://example.com/two (https://example.com/two)\n\nblocked\nSource: Blocked (https://ads.example.com/x)",
+    "results": [
+     {
+      "title": "Kimi result",
+      "url": "https://example.com/one",
+      "snippet": "First snippet"
+     },
+     {
+      "title": "https://example.com/two",
+      "url": "https://example.com/two",
+      "snippet": ""
+     },
+     {
+      "title": "Blocked",
+      "url": "https://ads.example.com/x",
+      "snippet": "blocked"
+     }
+    ]
+   }
+  },
+  {
+   "name": "mistral default",
+   "provider": "mistral",
+   "config": {
+    "mistralApiKey": "mistral-key"
+   },
+   "query": "what shipped?",
+   "response": {
+    "json": {
+     "outputs": [
+      {
+       "type": "tool.execution",
+       "name": "web_search"
+      },
+      {
+       "type": "message.output",
+       "content": [
+        {
+         "type": "text",
+         "text": "Mistral found the answer."
+        },
+        {
+         "type": "tool_reference",
+         "tool": "web_search",
+         "title": "Mistral source",
+         "url": "https://example.com/source",
+         "description": "A useful source."
+        },
+        {
+         "type": "text",
+         "text": "It returned references."
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.mistral.ai/v1/conversations",
+     "headers": {
+      "authorization": "Bearer mistral-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"inputs\":[{\"role\":\"user\",\"content\":\"what shipped?\"}],\"stream\":false,\"model\":\"mistral-small-latest\",\"tools\":[{\"type\":\"web_search\"}]}"
+    }
+   ],
+   "result": {
+    "answer": "Mistral found the answer.\nIt returned references.",
+    "results": [
+     {
+      "title": "Mistral source",
+      "url": "https://example.com/source",
+      "snippet": "A useful source."
+     }
+    ]
+   }
+  },
+  {
+   "name": "mistral premium and filters",
+   "provider": "mistral",
+   "config": {
+    "mistralApiKey": "mistral-key",
+    "mistralSearchModel": " custom ",
+    "mistralSearchTool": "web_search_premium"
+   },
+   "query": "filtered query",
+   "options": {
+    "numResults": 3,
+    "recencyFilter": "week",
+    "domainFilter": [
+     " docs.example.com ",
+     "-ads.example.com"
+    ]
+   },
+   "response": {
+    "json": {
+     "outputs": [
+      {
+       "type": "tool.execution",
+       "name": "web_search"
+      },
+      {
+       "type": "message.output",
+       "content": [
+        {
+         "type": "text",
+         "text": "Mistral found the answer."
+        },
+        {
+         "type": "tool_reference",
+         "tool": "web_search",
+         "title": "Mistral source",
+         "url": "https://example.com/source",
+         "description": "A useful source."
+        },
+        {
+         "type": "text",
+         "text": "It returned references."
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.mistral.ai/v1/conversations",
+     "headers": {
+      "authorization": "Bearer mistral-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"inputs\":[{\"role\":\"user\",\"content\":\"Prefer sources from the past week. Prefer up to 3 distinct sources. Only use sources from: docs.example.com. Do not use sources from: ads.example.com.\\n\\nfiltered query\"}],\"stream\":false,\"model\":\"custom\",\"tools\":[{\"type\":\"web_search_premium\"}]}"
+    }
+   ],
+   "result": {
+    "answer": "Mistral found the answer.\nIt returned references.",
+    "results": []
+   }
+  },
+  {
+   "name": "openai standalone key, default endpoint",
+   "provider": "openai",
+   "config": {
+    "openaiApiKey": "sk-standalone"
+   },
+   "query": "hosted search",
+   "options": {
+    "recencyFilter": "week",
+    "numResults": 3,
+    "domainFilter": [
+     "example.com",
+     "-spam.example"
+    ]
+   },
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "web_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://example.com/raw",
+          "title": "Raw source"
+         }
+        ]
+       }
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "See [the docs](https://example.com/docs) for more.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://example.com/docs?utm_source=openai&x=1",
+           "title": "Docs",
+           "start_index": 4,
+           "end_index": 20
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.openai.com/v1/responses",
+     "headers": {
+      "authorization": "Bearer sk-standalone",
+      "content-type": "application/json",
+      "openai-beta": "responses=experimental"
+     },
+     "body": "{\"model\":\"gpt-5.6-terra\",\"instructions\":\"Search the web and return a concise answer grounded only in the web results. Include clickable source citations in the response text when possible. Prefer sources from the past week. Prefer around 3 distinct sources. Only use sources from: example.com. Do not use sources from: spam.example.\",\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"hosted search\"}]}],\"tools\":[{\"type\":\"web_search\",\"filters\":{\"allowed_domains\":[\"example.com\"],\"blocked_domains\":[\"spam.example\"]}}],\"include\":[\"web_search_call.action.sources\"],\"store\":false,\"stream\":true,\"tool_choice\":\"required\",\"parallel_tool_calls\":true}"
+    }
+   ],
+   "result": {
+    "answer": "See [the docs](https://example.com/docs) for more.",
+    "results": [
+     {
+      "title": "Docs",
+      "url": "https://example.com/docs?x=1",
+      "snippet": "See the docs for more."
+     },
+     {
+      "title": "Raw source",
+      "url": "https://example.com/raw",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "openai streamed response",
+   "provider": "openai",
+   "config": {
+    "openaiApiKey": "sk-standalone"
+   },
+   "query": "stream",
+   "response": {
+    "text": "event: response.created\ndata: {\"type\":\"response.created\"}\n\ndata: {\"type\":\"response.output_item.done\",\"item\":{\"type\":\"web_search_call\"}}\n\ndata: {\"type\":\"response.output_item.done\",\"item\":{\"type\":\"message\",\"content\":[{\"type\":\"output_text\",\"text\":\"Streamed answer\",\"annotations\":[{\"type\":\"url_citation\",\"url\":\"https://example.com/streamed\",\"title\":\"Streamed\",\"start_index\":0,\"end_index\":8}]}]}}\n\ndata: {\"type\":\"response.completed\",\"response\":{\"output\":[]}}\n\ndata: [DONE]\n"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.openai.com/v1/responses",
+     "headers": {
+      "authorization": "Bearer sk-standalone",
+      "content-type": "application/json",
+      "openai-beta": "responses=experimental"
+     },
+     "body": "{\"model\":\"gpt-5.6-terra\",\"instructions\":\"Search the web and return a concise answer grounded only in the web results. Include clickable source citations in the response text when possible.\",\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"stream\"}]}],\"tools\":[{\"type\":\"web_search\"}],\"include\":[\"web_search_call.action.sources\"],\"store\":false,\"stream\":true,\"tool_choice\":\"required\",\"parallel_tool_calls\":true}"
+    }
+   ],
+   "result": {
+    "answer": "Streamed answer",
+    "results": [
+     {
+      "title": "Streamed",
+      "url": "https://example.com/streamed",
+      "snippet": "Streamed answer"
+     }
+    ]
+   }
+  },
+  {
+   "name": "openai alpha default endpoint",
+   "provider": "openai",
+   "config": {
+    "openaiApiKey": "sk-standalone",
+    "openaiUseAlphaSearch": true,
+    "openaiSearchModel": "gpt-5.6-luna"
+   },
+   "query": "alpha",
+   "options": {
+    "recencyFilter": "day",
+    "domainFilter": [
+     "www.example.com"
+    ]
+   },
+   "response": {
+    "json": {
+     "output": "Alpha plaintext",
+     "results": [
+      {
+       "type": "text_result",
+       "url": "https://example.com/alpha?utm_source=openai",
+       "title": "Alpha",
+       "snippet": "Evidence"
+      },
+      {
+       "type": "image_result",
+       "url": "https://ignored.example"
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.openai.com/v1/alpha/search",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer sk-standalone",
+      "content-type": "application/json",
+      "originator": "codex_cli_rs"
+     },
+     "body": "{\"id\":\"<uuid>\",\"model\":\"gpt-5.6-luna\",\"commands\":{\"search_query\":[{\"q\":\"alpha\",\"recency\":1,\"domains\":[\"www.example.com\"]}]}}"
+    }
+   ],
+   "result": {
+    "answer": "Alpha plaintext",
+    "results": [
+     {
+      "title": "Alpha",
+      "url": "https://example.com/alpha",
+      "snippet": "Evidence"
+     }
+    ]
+   }
+  },
+  {
+   "name": "openai registry login picks the terra model",
+   "provider": "openai",
+   "config": {},
+   "query": "registry",
+   "registry": {
+    "models": [
+     {
+      "id": "gpt-5.6-terra",
+      "provider": "openai",
+      "api": "openai-responses",
+      "baseUrl": "https://api.openai.com/v1"
+     },
+     {
+      "id": "gpt-5.7",
+      "provider": "openai",
+      "api": "openai-responses",
+      "baseUrl": "https://api.openai.com/v1"
+     },
+     {
+      "id": "gpt-5.5-pro",
+      "provider": "openai",
+      "api": "openai-responses",
+      "baseUrl": "https://api.openai.com/v1"
+     }
+    ],
+    "auth": {
+     "openai": {
+      "ok": true,
+      "apiKey": "sk-registry",
+      "headers": {
+       "X-Org": "acme"
+      }
+     }
+    }
+   },
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "web_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://example.com/raw",
+          "title": "Raw source"
+         }
+        ]
+       }
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "See [the docs](https://example.com/docs) for more.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://example.com/docs?utm_source=openai&x=1",
+           "title": "Docs",
+           "start_index": 4,
+           "end_index": 20
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.openai.com/v1/responses",
+     "headers": {
+      "authorization": "Bearer sk-registry",
+      "content-type": "application/json",
+      "openai-beta": "responses=experimental",
+      "x-org": "acme"
+     },
+     "body": "{\"model\":\"gpt-5.6-terra\",\"instructions\":\"Search the web and return a concise answer grounded only in the web results. Include clickable source citations in the response text when possible.\",\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"registry\"}]}],\"tools\":[{\"type\":\"web_search\"}],\"include\":[\"web_search_call.action.sources\"],\"store\":false,\"stream\":true,\"tool_choice\":\"required\",\"parallel_tool_calls\":true}"
+    }
+   ],
+   "result": {
+    "answer": "See [the docs](https://example.com/docs) for more.",
+    "results": [
+     {
+      "title": "Docs",
+      "url": "https://example.com/docs?x=1",
+      "snippet": "See the docs for more."
+     },
+     {
+      "title": "Raw source",
+      "url": "https://example.com/raw",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "openai codex login",
+   "provider": "openai",
+   "config": {},
+   "query": "codex",
+   "registry": {
+    "models": [
+     {
+      "provider": "openai-codex",
+      "id": "gpt-5.6-terra",
+      "api": "openai-codex-responses",
+      "baseUrl": "https://chatgpt.com/backend-api"
+     }
+    ],
+    "auth": {
+     "openai-codex": {
+      "ok": true,
+      "apiKey": "header.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoidGVzdC1hY2NvdW50In19.signature",
+      "headers": {}
+     }
+    }
+   },
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "web_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://example.com/raw",
+          "title": "Raw source"
+         }
+        ]
+       }
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "See [the docs](https://example.com/docs) for more.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://example.com/docs?utm_source=openai&x=1",
+           "title": "Docs",
+           "start_index": 4,
+           "end_index": 20
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://chatgpt.com/backend-api/codex/responses",
+     "headers": {
+      "authorization": "Bearer header.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoidGVzdC1hY2NvdW50In19.signature",
+      "chatgpt-account-id": "test-account",
+      "content-type": "application/json",
+      "openai-beta": "responses=experimental",
+      "originator": "pi"
+     },
+     "body": "{\"model\":\"gpt-5.6-terra\",\"instructions\":\"Search the web and return a concise answer grounded only in the web results. Include clickable source citations in the response text when possible.\",\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"codex\"}]}],\"tools\":[{\"type\":\"web_search\"}],\"include\":[\"web_search_call.action.sources\"],\"store\":false,\"stream\":true,\"tool_choice\":\"required\",\"parallel_tool_calls\":true}"
+    }
+   ],
+   "result": {
+    "answer": "See [the docs](https://example.com/docs) for more.",
+    "results": [
+     {
+      "title": "Docs",
+      "url": "https://example.com/docs?x=1",
+      "snippet": "See the docs for more."
+     },
+     {
+      "title": "Raw source",
+      "url": "https://example.com/raw",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "openai codex alpha",
+   "provider": "openai",
+   "config": {
+    "openaiUseAlphaSearch": true
+   },
+   "query": "codex alpha",
+   "registry": {
+    "models": [
+     {
+      "provider": "openai-codex",
+      "id": "gpt-5.6-terra",
+      "api": "openai-codex-responses",
+      "baseUrl": "https://chatgpt.com/backend-api"
+     }
+    ],
+    "auth": {
+     "openai-codex": {
+      "ok": true,
+      "apiKey": "header.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoidGVzdC1hY2NvdW50In19.signature",
+      "headers": {
+       "OpenAI-Beta": "x",
+       "Session_ID": "s"
+      }
+     }
+    }
+   },
+   "response": {
+    "json": {
+     "output": "Alpha plaintext",
+     "results": [
+      {
+       "type": "text_result",
+       "url": "https://example.com/alpha?utm_source=openai",
+       "title": "Alpha",
+       "snippet": "Evidence"
+      },
+      {
+       "type": "image_result",
+       "url": "https://ignored.example"
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://chatgpt.com/backend-api/codex/alpha/search",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer header.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoidGVzdC1hY2NvdW50In19.signature",
+      "chatgpt-account-id": "test-account",
+      "content-type": "application/json",
+      "originator": "codex_cli_rs"
+     },
+     "body": "{\"id\":\"<uuid>\",\"model\":\"gpt-5.6-terra\",\"commands\":{\"search_query\":[{\"q\":\"codex alpha\"}]}}"
+    }
+   ],
+   "result": {
+    "answer": "Alpha plaintext",
+    "results": [
+     {
+      "title": "Alpha",
+      "url": "https://example.com/alpha",
+      "snippet": "Evidence"
+     }
+    ]
+   }
+  },
+  {
+   "name": "openai opencode attribution",
+   "provider": "openai",
+   "config": {
+    "openaiSearchProviders": [
+     "opencode-go"
+    ],
+    "openaiUseProviderBaseUrl": true
+   },
+   "query": "opencode",
+   "sessionId": "session-1",
+   "registry": {
+    "models": [
+     {
+      "provider": "opencode-go",
+      "id": "gpt-6-luna",
+      "api": "openai-responses",
+      "baseUrl": "https://opencode.ai/zen/go/v1"
+     },
+     {
+      "provider": "opencode-go",
+      "id": "gpt-5.6-luna",
+      "api": "openai-responses",
+      "baseUrl": "https://opencode.ai/zen/go/v1"
+     }
+    ],
+    "auth": {
+     "opencode-go": {
+      "ok": true,
+      "apiKey": "oc-key",
+      "headers": {
+       "x-existing": "kept",
+       "X-OpenCode-Session": "stale"
+      }
+     }
+    }
+   },
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "web_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://example.com/raw",
+          "title": "Raw source"
+         }
+        ]
+       }
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "See [the docs](https://example.com/docs) for more.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://example.com/docs?utm_source=openai&x=1",
+           "title": "Docs",
+           "start_index": 4,
+           "end_index": 20
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://opencode.ai/zen/go/v1/responses",
+     "headers": {
+      "authorization": "Bearer oc-key",
+      "content-type": "application/json",
+      "openai-beta": "responses=experimental",
+      "x-existing": "kept",
+      "x-opencode-client": "pi",
+      "x-opencode-session": "session-1"
+     },
+     "body": "{\"model\":\"gpt-6-luna\",\"instructions\":\"Search the web and return a concise answer grounded only in the web results. Include clickable source citations in the response text when possible.\",\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"opencode\"}]}],\"tools\":[{\"type\":\"web_search\"}],\"include\":[\"web_search_call.action.sources\"],\"store\":false,\"stream\":true,\"tool_choice\":\"required\",\"parallel_tool_calls\":true}"
+    }
+   ],
+   "result": {
+    "answer": "See [the docs](https://example.com/docs) for more.",
+    "results": [
+     {
+      "title": "Docs",
+      "url": "https://example.com/docs?x=1",
+      "snippet": "See the docs for more."
+     },
+     {
+      "title": "Raw source",
+      "url": "https://example.com/raw",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "openai current model",
+   "provider": "openai-current",
+   "config": {},
+   "query": "current model",
+   "currentModel": {
+    "id": "gpt-5.6-terra",
+    "provider": "openai",
+    "api": "openai-responses",
+    "baseUrl": "https://api.openai.com/v1"
+   },
+   "registry": {
+    "models": [
+     {
+      "id": "gpt-5.6-terra",
+      "provider": "openai",
+      "api": "openai-responses",
+      "baseUrl": "https://api.openai.com/v1"
+     }
+    ],
+    "auth": {
+     "openai": {
+      "ok": true,
+      "apiKey": "sk-current",
+      "headers": {}
+     }
+    }
+   },
+   "response": {
+    "json": {
+     "output": [
+      {
+       "type": "web_search_call",
+       "action": {
+        "sources": [
+         {
+          "url": "https://example.com/raw",
+          "title": "Raw source"
+         }
+        ]
+       }
+      },
+      {
+       "type": "message",
+       "content": [
+        {
+         "type": "output_text",
+         "text": "See [the docs](https://example.com/docs) for more.",
+         "annotations": [
+          {
+           "type": "url_citation",
+           "url": "https://example.com/docs?utm_source=openai&x=1",
+           "title": "Docs",
+           "start_index": 4,
+           "end_index": 20
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.openai.com/v1/responses",
+     "headers": {
+      "authorization": "Bearer sk-current",
+      "content-type": "application/json",
+      "openai-beta": "responses=experimental"
+     },
+     "body": "{\"model\":\"gpt-5.6-terra\",\"instructions\":\"Search the web and return a concise answer grounded only in the web results. Include clickable source citations in the response text when possible.\",\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"current model\"}]}],\"tools\":[{\"type\":\"web_search\"}],\"include\":[\"web_search_call.action.sources\"],\"store\":false,\"stream\":true,\"tool_choice\":\"required\",\"parallel_tool_calls\":true}"
+    }
+   ],
+   "result": {
+    "answer": "See [the docs](https://example.com/docs) for more.",
+    "results": [
+     {
+      "title": "Docs",
+      "url": "https://example.com/docs?x=1",
+      "snippet": "See the docs for more."
+     },
+     {
+      "title": "Raw source",
+      "url": "https://example.com/raw",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  {
+   "name": "openai http error",
+   "provider": "openai",
+   "config": {
+    "openaiApiKey": "sk-secret"
+   },
+   "query": "denied",
+   "response": {
+    "status": 429,
+    "text": "slow down sk-secret"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.openai.com/v1/responses",
+     "headers": {
+      "authorization": "Bearer sk-secret",
+      "content-type": "application/json",
+      "openai-beta": "responses=experimental"
+     },
+     "body": "{\"model\":\"gpt-5.6-terra\",\"instructions\":\"Search the web and return a concise answer grounded only in the web results. Include clickable source citations in the response text when possible.\",\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"denied\"}]}],\"tools\":[{\"type\":\"web_search\"}],\"include\":[\"web_search_call.action.sources\"],\"store\":false,\"stream\":true,\"tool_choice\":\"required\",\"parallel_tool_calls\":true}"
+    }
+   ],
+   "error": "OpenAI API error 429: slow down [redacted]"
+  }
+ ]
+}

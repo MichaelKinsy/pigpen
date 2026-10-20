@@ -47,11 +47,16 @@ func ExtensionContextFrom(ctx context.Context) ExtensionContext {
 type sdkExtensionContext struct{ ctx sdk.Context }
 
 func (s sdkExtensionContext) Model() map[string]any {
-	id, provider := s.ctx.Model(), s.ctx.ModelProvider()
+	return currentModelOf(s.ctx.Model(), s.ctx.ModelProvider(), s.ctx.ModelRegistry())
+}
+
+// currentModelOf is ctx.model: the registry's object for the selected model, or nil when the host
+// reports none.
+func currentModelOf(id, provider string, reg ModelRegistry) map[string]any {
 	if id == "" || provider == "" {
 		return nil
 	}
-	return s.ctx.ModelRegistry().Find(provider, id)
+	return reg.Find(provider, id)
 }
 
 func (s sdkExtensionContext) ModelRegistry() ModelRegistry { return s.ctx.ModelRegistry() }

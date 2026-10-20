@@ -1,0 +1,92 @@
+{
+ "name": "web-search-model-providers-bad-config",
+ "description": "Invalid xAI, Mistral and OpenAI settings are rejected before any request, with the setting named.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"xaiApiKey\": \"xai-key\", \"xaiSearchTools\": [\"web_search\", \"web_search\"], \"mistralApiKey\": \"mistral-key\", \"mistralSearchTool\": \"nope\", \"openaiApiKey\": \"sk-key\", \"openaiUseProviderBaseUrl\": \"yes\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "xai",
+      "query": "bad config xai"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "mistral",
+      "query": "bad config mistral"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "workflow": "none",
+      "provider": "openai",
+      "query": "bad config openai"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId:? \")[a-z0-9]{10,}\"",
+   "replacement": "${1}<response-id>\""
+  },
+  {
+   "pattern": "^[a-z0-9]{13,15}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+   "replacement": "<uuid>"
+  }
+ ],
+ "commands": {
+  "xdg-open": {
+   "mode": "missing"
+  },
+  "open": {
+   "mode": "missing"
+  },
+  "cmd": {
+   "mode": "missing"
+  },
+  "npm": {
+   "mode": "missing"
+  },
+  "sh": {
+   "mode": "real"
+  }
+ },
+ "args": [
+  "--tools",
+  "read,bash,edit,write,web_search,source_check,fetch_content,get_search_content"
+ ]
+}
