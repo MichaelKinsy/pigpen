@@ -132,12 +132,6 @@
   "replace": "case true:"
  },
  {
-  "name": "fallback-guidance-unported",
-  "file": "extract.go",
-  "find": "\"  \u2022 none in this port: the other fetch providers of pi-web-access are not ported yet\"",
-  "replace": "\"  \u2022 Set firecrawlBaseUrl to a self-hosted Firecrawl instance\""
- },
- {
   "name": "kagi-limit-key",
   "file": "kagi.go",
   "find": "\"query\": query, \"limit\": numResults",
