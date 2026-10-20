@@ -12,7 +12,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
-| Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; fetch `answer` mode and query rewrite (need a model-completion call); activity widget and shortcut; TUI render hooks |
+| Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; activity widget and shortcut; TUI render hooks |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
 | SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, authenticated fetch, Gemini Web and browser cookies |
 
@@ -25,7 +25,6 @@ Every unported option, mode or URL kind is refused with one message and returns 
 | Feature | When | Where |
 |---|---|---|
 | `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
-| `fetch_content mode answer` | `mode: "answer"` | `tool_fetch.go` |
 | `authenticated fetch` | any `auth` value | `tool_fetch.go` |
 | `YouTube video extraction`, `local video file analysis`, `video frame and timestamp extraction`, `GitHub repository extraction (clone)`, `GitHub issue and pull request extraction` | the URL (or `frames`/`timestamp`) the original sends to that extractor and the matching config section (`youtube`, `video`, `githubClone`, `githubPrIssue`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
 | `PDF text extraction` | a PDF response | `extract.go` |
@@ -118,13 +117,69 @@ Deliberate differences (each pinned by a twin):
 - **Search options** `TimeoutMs` and `Lookup` exist on `SearchOptions` for the self-hosted Firecrawl search (the original's
   `FirecrawlSearchOptions`), and `FetchRemoteOptions.OnRedirectErr` carries the Crawl4AI refusal of a cross-origin redirect.
 
+## Slice: answer mode, page query, query rewrite, summary generation
+
+Ported: `fetch_content` `mode: "answer"` with `prompt` and `answerModel`, `page-query.ts` (`page_query.go`),
+`query-rewrite.ts` (`query_rewrite.go`), `summary-model-scope.ts` (`summary_model_scope.go`), the OpenCode attribution
+headers (`opencode_headers.go`, shared with the model-provider slice) and the model-call part of `summary-review.ts`
+(`summary_review.go`: `generateSummaryDraft`, the prompt, the deterministic fallback, the configured deadline). The curator
+workflows that call the last two (`summary-review`, `auto-summary`, the curator page and server, and the model picker of
+`index.ts`) stay refused until the curator slice; that slice passes `GetSummaryGenerationDeadlineMs()` to both workflows
+and calls `RewriteSearchQuery` from the curator's rewrite hook. `fetch-answer-storage`, `lazy-extract-load`,
+`page-query`, `query-cold-abort`, `query-rewrite`, `summary-cold-deadline`, `summary-model-scope`,
+`summary-opencode-headers` and `summary-provider-routing` have no named skip left in the slice (one twin of
+`lazy-extract-load` omits the module-load marker, see below).
+
+Wiring: the session's model state reaches the tools through `SideCallContext` (`sidecall.go`), attached to the request's
+context in `bridgeContext` and read by `answerPages` (`fetch_answer.go`). It carries what the original reads off Pi's
+`ExtensionContext`: `ctx.model`, `ctx.modelRegistry` (`find`, `getAvailable`, `getApiKeyAndHeaders`, `complete`),
+`ctx.scopedModels` and the session id. The SDK implementation uses `Context.ModelRegistry()` (`Find`, `GetAvailable`,
+`GetApiKeyAndHeaders`, `Stream` with `maxTokens`, `reasoning`, `reasoningEffort` and a `transformHeaders` callback) and
+`Context.ScopedModels()`.
+
+SDK gap (reported to the SDK owners, no workaround in the port): `ModelRegistry.Stream` and `Complete` take no abort signal,
+where pi-ai's `stream`/`complete` take `options.signal`. The host serves a `cancelModelStream` call (the SDK sends it for
+provider streams only) but the SDK exposes no way to send it for a model stream. The port ends its own wait when the
+request's context is cancelled (the result is a message with `stopReason: "aborted"`, as a cancelled provider request gives)
+and calls `ModelEventStream.End`; the host's request keeps running until it finishes, so cancelling an answer wastes the
+tokens the original would have saved. A `ModelEventStream.Cancel()` (or a `signal` option carried as a context) would close
+the gap.
+
+Deliberate differences:
+
+- **No second completion path.** The original completes through `ctx.modelRegistry.complete` when the registry has it and
+  otherwise through pi-ai's `complete`/`completeSimple` with the resolved key and headers. The port has the registry path
+  only (the host resolves the credential). `GenerateSummaryDraft` still accepts a `CompleteFunc` that receives the key and
+  merged headers, which is how the "direct" upstream cases run; the `completeSimple` case
+  (`thinking summary completion sends OpenCode attribution headers`) runs through the registry path and checks the same
+  headers and level there.
+- **Cold first use.** The original gates `import("@earendil-works/pi-ai/compat")` and cancels or expires while it is pending
+  (`query-cold-abort`, `summary-cold-deadline`). Nothing loads lazily in Go; the host call that precedes every completion
+  (the credential lookup, which cannot be cancelled either) is gated the same way in the twins, and `awaitWithAbort`
+  (`abortable.ts`) ends the wait with "Aborted" while it is pending. The page answer also races its credential lookup
+  against cancellation, which the original does not (it awaits it and checks the signal afterwards): the result is the same
+  "Aborted", reported earlier.
+- **`lazy-extract-load`.** The twin checks the registration order of the five tools, the command and the first fetch. The
+  module-load marker (extraction not loaded at registration) has no Go counterpart; the `websearch` command and the shortcuts
+  belong to the curator; the session handlers are checked by `TestExtensionRegistersEventsAndCommand`.
+- **Source-text assertions.** Four `summary-model-scope` cases read the TypeScript source (`Promise.race` and the deadline
+  abort, three call sites of the deadline, the absence of `getModel`, the model order in `index.ts`). The twins check the
+  behaviour they stand for (a never-settling completion is cut at the deadline and its context aborted, a caller
+  cancellation wins, no first-available fallback, the order of the summary and rewrite lists, the config values and the
+  README text). The call sites in the curator and the order of its model picker are the curator slice's.
+- **`ctx.model`** is the registry's model for the session's provider and id (the SDK gives the pair, not the object).
+- **JSON parse errors** in `web-search.json` carry Go's decoder text where the original shows V8's, as for the rest of the config.
+- **Provider `null`** in a stored query result reads as "unknown" only when it is empty (a Go string has no `undefined`).
+
 ## Mapping (original file -> Go)
 
 `storage.ts` storage.go - `utils.ts`/`ssrf-protection.ts`/`credential-source.ts` config.go, credential.go, ssrf.go, proxy.go,
 transport.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi/serper/serpapi/serpbase/serply/valyu/bocha/baizhi/you/anysearch/xcrawl/searxng.ts`
 same names (`jina-search.ts` jinasearch.go; the shared mechanics of the keyed REST providers are in restcommon.go; the hosted providers are listed in "Slice: hosted search and fetch providers") - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
 find.go, sourcecheck.go, fetchparams.go - `data-uri-sanitize.ts` datauri.go - `index.ts` tools.go, tool_*.go, toolconfig.go,
-schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enable.go.
+schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enable.go - `page-query.ts` page_query.go, fetch_answer.go -
+`query-rewrite.ts` query_rewrite.go - `summary-model-scope.ts` summary_model_scope.go - `summary-review.ts` (generation) summary_review.go -
+`opencode-session-headers.ts` opencode_headers.go - `abortable.ts` abortable.go.
 
 ## Deliberate differences
 
