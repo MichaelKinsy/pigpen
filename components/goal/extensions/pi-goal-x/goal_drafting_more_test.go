@@ -930,4 +930,3 @@ func TestGoalDraftingMore(t *testing.T) {
 		})
 	})
 }
-

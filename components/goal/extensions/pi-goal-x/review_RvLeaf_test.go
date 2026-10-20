@@ -16,7 +16,7 @@ func TestReviewRvLeaf(t *testing.T) {
 		local := time.Date(2026, 3, 4, 5, 6, 7, 0, time.Local)
 		iso := local.UTC().Format("2006-01-02T15:04:05Z")
 		eq(t, timestampForFile(iso), "2026030405060700", "no milliseconds")
-		eq(t, timestampForFile(local.UTC().Format("2006-01-02T15:04:05.250Z")), "2026030405060725", "hundredths")
+		eq(t, timestampForFile(local.UTC().Format("2006-01-02T15:04:05")+".250Z"), "2026030405060725", "hundredths")
 	})
 	t.Run("task policy messages keep the id verbatim", func(t *testing.T) {
 		g := jo(t, `{"id":"g","taskList":{"tasks":[{"id":"a","title":"A","status":"complete"}]}}`)

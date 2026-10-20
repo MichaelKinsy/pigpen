@@ -7,8 +7,6 @@ package pi_goal_x_test
 import (
 	"fmt"
 	"math"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -506,17 +504,10 @@ func TestGoalTweakStatusPersistence(t *testing.T) {
 		before := firstGoal(t, r.Cwd)
 		pending, out := startProposal(t, r, proposalParams(before["objective"].(string), map[string]any{"token_budget": 123.0}))
 		d.waitOpen(t)
-		// The original mocks goalService.apply to fail with "injected storage failure"; here the storage itself fails: the goal
-		// directory stops accepting writes while the confirmation is open.
-		dir := filepath.Join(r.Cwd, ".pi", "goals")
-		if err := os.Chmod(dir, 0o555); err != nil {
-			t.Fatal(err)
-		}
-		defer func() { _ = os.Chmod(dir, 0o755) }()
+		defer r.Probe.RejectMutations("injected storage failure")() // the original mocks goalService.apply
 		d.result(confirmAnswer, nil)
 		pending.wait(t)
-		_ = os.Chmod(dir, 0o755)
-		matchText(t, toolText(t, *out), `not applied: `, "result")
+		matchText(t, toolText(t, *out), `not applied: injected storage failure`, "result")
 		if after := firstGoal(t, r.Cwd); !reflect.DeepEqual(after, before) {
 			t.Errorf("disk goal changed:\n%v\n%v", before, after)
 		}

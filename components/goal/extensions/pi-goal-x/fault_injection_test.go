@@ -305,4 +305,3 @@ func readFileOrFail(t *testing.T, path string) string {
 	}
 	return string(b)
 }
-
