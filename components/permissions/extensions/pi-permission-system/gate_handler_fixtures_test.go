@@ -180,7 +180,11 @@ type gfHandlerOpts struct {
 	tools           []string
 	toolRegistryAll []any
 	shellTools      *jsObject
-	yolo            bool
+	// managerCheck replaces the manager's check with one that reads the session rules the resolver passes.
+	managerCheck func(ResolvedAccessIntent, Ruleset) PermissionCheckResult
+	// sharedRecorder makes the runner record into the session rules the resolver reads (the session-dedup wiring).
+	sharedRecorder bool
+	yolo           bool
 }
 
 type gfHandlerRig struct {
@@ -209,7 +213,11 @@ func makeHandler(t *testing.T, opts ...gfHandlerOpts) *gfHandlerRig {
 		rig.store.current = cfg
 	}
 	rules := rig.rules
-	resolver := NewPermissionResolver(rig.pm, rules)
+	var manager ScopedPermissionManager = rig.pm
+	if o.managerCheck != nil {
+		manager = gfCheckManager{rig.pm, o.managerCheck}
+	}
+	resolver := NewPermissionResolver(manager, rules)
 	if o.checkPermission != nil {
 		check := o.checkPermission
 		rig.pm.checkFn = func(intent ResolvedAccessIntent) PermissionCheckResult {
@@ -242,6 +250,9 @@ func makeHandler(t *testing.T, opts ...gfHandlerOpts) *gfHandlerRig {
 		registry.all = []any{obj("name", "read", "promptGuidelines", []any{"Use read to examine files."}), obj("name", "bash", "promptGuidelines", []any{"Use bash for file operations."})}
 	}
 	recorder := &SessionRules{}
+	if o.sharedRecorder {
+		recorder = rules
+	}
 	prompter := o.prompter
 	if prompter == nil {
 		prompter = gfAnswer(PermissionPromptDecision{Approved: true, State: DecisionApproved, DecidedBy: gfHuman})
@@ -261,4 +272,15 @@ func (r *gfHandlerRig) toolCall(t *testing.T, event any, ctx SessionContext) Gat
 		t.Fatalf("HandleToolCall: %v", err)
 	}
 	return out
+}
+
+// gfCheckManager answers Check through a function that sees the session rules.
+type gfCheckManager struct {
+	*fakeManager
+	fn func(ResolvedAccessIntent, Ruleset) PermissionCheckResult
+}
+
+func (m gfCheckManager) Check(intent ResolvedAccessIntent, rules Ruleset) PermissionCheckResult {
+	m.fakeManager.checks = append(m.fakeManager.checks, fakeCheck{intent, rules})
+	return m.fn(intent, rules)
 }
