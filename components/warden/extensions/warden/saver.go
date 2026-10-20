@@ -2,8 +2,6 @@ package warden
 
 import (
 	"fmt"
-	"math"
-	"sort"
 	"strings"
 )
 
@@ -28,6 +26,8 @@ type FilterCounts struct {
 	Ms       int `json:"ms"`
 	// Fallbacks counts outputs that got the excerpt instead, by reason.
 	Fallbacks map[string]int `json:"fallbacks"`
+	// Order lists the fallback reasons in the order each first occurred (the status line prints them so).
+	Order []string `json:"-"`
 }
 
 // ContextLedgerSnapshot is the ledger's counters.
@@ -43,9 +43,9 @@ type ContextLedgerSnapshot struct {
 	// Turns completed since the session started.
 	Turns int `json:"turns"`
 	// TokenTurnsSaved is the sum over turns of the bytes no longer in context on that turn, in rough tokens (bytes / 4).
-	TokenTurnsSaved int          `json:"tokenTurnsSaved"`
-	Recalls         int          `json:"recalls"`
-	RecallsFull     int          `json:"recallsFull"`
+	TokenTurnsSaved int               `json:"tokenTurnsSaved"`
+	Recalls         int               `json:"recalls"`
+	RecallsFull     int               `json:"recallsFull"`
 	Excerpt         CompressionCounts `json:"excerpt"`
 	Filter          FilterCounts      `json:"filter"`
 }
@@ -105,13 +105,13 @@ type seenEntry struct {
 type ContextLedger struct {
 	large, compressed, duplicates, repeats, bytesSaved int
 	// bytesAbsent is bytesSaved minus the savings of outputs a whole-file recall put back into context.
-	bytesAbsent                         int
-	turns, tokenTurnsSaved              int
-	recalls, recallsFull                int
-	excerpt                             CompressionCounts
-	filter                              FilterCounts
-	stored                              map[string]*storedState
-	storedOrder                         []string
+	bytesAbsent            int
+	turns, tokenTurnsSaved int
+	recalls, recallsFull   int
+	excerpt                CompressionCounts
+	filter                 FilterCounts
+	stored                 map[string]*storedState
+	storedOrder            []string
 	// seen: every sizeable text result seen this session, by content key, with the tool that produced it and its stored copy if any.
 	seen      map[string]seenEntry
 	seenOrder []string
@@ -158,6 +158,9 @@ func (l *ContextLedger) FilterSpent(requests, ms int, fallback string) {
 	l.filter.Requests += requests
 	l.filter.Ms += ms
 	if fallback != "" {
+		if l.filter.Fallbacks[fallback] == 0 {
+			l.filter.Order = append(l.filter.Order, fallback)
+		}
 		l.filter.Fallbacks[fallback]++
 	}
 }
@@ -199,9 +202,6 @@ func (l *ContextLedger) TurnEnd() {
 	l.turns++
 	l.tokenTurnsSaved += jsRound(float64(l.bytesAbsent) / 4)
 }
-
-// jsRound is Math.round: halves round toward +Infinity.
-func jsRound(x float64) int { return int(math.Floor(x + 0.5)) }
 
 // StoredPathIn is the stored path that `text` (a path, command, or serialized input) mentions, if any.
 func (l *ContextLedger) StoredPathIn(text string) (string, bool) {
@@ -264,27 +264,20 @@ func (l *ContextLedger) Snapshot() ContextLedgerSnapshot {
 	for k, v := range l.filter.Fallbacks {
 		s.Filter.Fallbacks[k] = v
 	}
+	s.Filter.Order = append([]string(nil), l.filter.Order...)
 	return s
 }
 
 // StoredPaths are the paths of the stored copies, for cleanup at session start. Local only: paths never leave the machine.
 func (l *ContextLedger) StoredPaths() []string { return append([]string(nil), l.storedOrder...) }
 
-// StoredOutput is one stored full output.
-type StoredOutput struct {
-	Tool  string
-	Path  string
-	Bytes int
-	// HasBytes is false when the size was not recorded.
-	HasBytes bool
-}
-
-// StoredOutputs are the stored full outputs, oldest first, with the tool that produced each and its size when recorded.
-func (l *ContextLedger) StoredOutputs() []StoredOutput {
-	out := make([]StoredOutput, 0, len(l.storedOrder))
+// storedOutputs are the stored full outputs, oldest first, with the tool that produced each and its size when
+// recorded (the outputLedger the compaction snapshot and warden_recall read). Local only, like StoredPaths.
+func (l *ContextLedger) storedOutputs() []SavedOutput {
+	out := make([]SavedOutput, 0, len(l.storedOrder))
 	for _, path := range l.storedOrder {
 		s := l.stored[path]
-		out = append(out, StoredOutput{Tool: s.tool, Path: path, Bytes: s.bytes, HasBytes: s.hasBytes})
+		out = append(out, SavedOutput{Tool: s.tool, Path: path, Bytes: s.bytes, HasBytes: s.hasBytes})
 	}
 	return out
 }
@@ -301,7 +294,7 @@ func (l *ContextLedger) Reset() {
 	l.seenOrder = nil
 }
 
-func plural(n int, word string) string {
+func pluralWord(n int, word string) string {
 	if n == 1 {
 		return word
 	}
@@ -322,11 +315,11 @@ func FormatLedger(s ContextLedgerSnapshot) string {
 	scoped := s.Recalls - s.RecallsFull
 	repeats := ""
 	if s.Repeats > 0 {
-		repeats = fmt.Sprintf("%d %s cut, ", s.Repeats, plural(s.Repeats, "repeat"))
+		repeats = fmt.Sprintf("%d %s cut, ", s.Repeats, pluralWord(s.Repeats, "repeat"))
 	}
 	return fmt.Sprintf("Context saver: %d large outputs, %d compressed, %d %s dropped, %s%s KB removed (~%d tokens), ~%d token-turns spared over %d turns, %d %s of the full output (%d%%; %d whole-file, %d scoped).",
-		s.Large, s.Compressed, s.Duplicates, plural(s.Duplicates, "duplicate"), repeats, kb, jsRound(float64(s.BytesSaved)/4), s.TokenTurnsSaved, s.Turns,
-		s.Recalls, plural(s.Recalls, "recall"), recallRate, s.RecallsFull, scoped)
+		s.Large, s.Compressed, s.Duplicates, pluralWord(s.Duplicates, "duplicate"), repeats, kb, jsRound(float64(s.BytesSaved)/4), s.TokenTurnsSaved, s.Turns,
+		s.Recalls, pluralWord(s.Recalls, "recall"), recallRate, s.RecallsFull, scoped)
 }
 
 // FormatFilterLedger is the line for /warden status while the context filter is on or has run: filtered outputs
@@ -338,13 +331,8 @@ func FormatFilterLedger(s ContextLedgerSnapshot) string {
 		}
 		return fmt.Sprintf("%d%%", jsRound(float64(c.Recalls)/float64(c.Count)*100))
 	}
-	reasons := make([]string, 0, len(s.Filter.Fallbacks))
-	for r := range s.Filter.Fallbacks {
-		reasons = append(reasons, r)
-	}
-	sort.Strings(reasons)
-	parts := make([]string, 0, len(reasons))
-	for _, r := range reasons {
+	parts := make([]string, 0, len(s.Filter.Order))
+	for _, r := range s.Filter.Order {
 		parts = append(parts, fmt.Sprintf("%s %d", r, s.Filter.Fallbacks[r]))
 	}
 	fallbacks := strings.Join(parts, ", ")
@@ -354,5 +342,5 @@ func FormatFilterLedger(s ContextLedgerSnapshot) string {
 	f, e := s.Filter, s.Excerpt
 	return fmt.Sprintf("Context filter (beta): %d filtered (%d characters kept), %d recalled (%s; %d whole-file, %d scoped); %d excerpts, %d recalled (%s; %d whole-file, %d scoped); %d %s, %d ms; fallbacks: %s.",
 		f.Count, f.KeptChars, f.Recalls, rate(f.CompressionCounts), f.RecallsFull, f.Recalls-f.RecallsFull,
-		e.Count, e.Recalls, rate(e), e.RecallsFull, e.Recalls-e.RecallsFull, f.Requests, plural(f.Requests, "request"), f.Ms, fallbacks)
+		e.Count, e.Recalls, rate(e), e.RecallsFull, e.Recalls-e.RecallsFull, f.Requests, pluralWord(f.Requests, "request"), f.Ms, fallbacks)
 }

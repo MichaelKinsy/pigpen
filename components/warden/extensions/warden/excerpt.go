@@ -54,7 +54,7 @@ func IsParserFormat(f string) bool {
 	return ok
 }
 
-const excerptLimit = 6000
+const formatExcerptLimit = 6000
 
 // capture: header lines start a block; the following non-empty lines up to `depth` are kept with it.
 func capture(lines []string, header, keep *lazyRegexp, depth int, summary *lazyRegexp) ([]string, bool) {
@@ -334,7 +334,7 @@ func FormatExcerpt(text string, format OutputFormat) (string, bool) {
 	size, dropped := 0, 0
 	for _, line := range selected {
 		clipped := clip400(line)
-		if size+utf16Len(clipped)+1 > excerptLimit-400 {
+		if size+utf16Len(clipped)+1 > formatExcerptLimit-400 {
 			dropped++
 			continue
 		}

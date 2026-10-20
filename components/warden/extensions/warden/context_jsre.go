@@ -57,27 +57,6 @@ func jsPattern(src string) string {
 // pattern, `(?i)` for JavaScript's `i`, `(?m)` for `m`.
 func jsRE(src string) *lazyRegexp { return lazyRE(jsPattern(src)) }
 
-// jsTrimEnd is String.prototype.trimEnd.
-func jsTrimEnd(s string) string { return strings.TrimRightFunc(s, isJSSpace) }
-
-// jsCollapseSpace is text.replace(/\s+/g, " ").
-func jsCollapseSpace(s string) string {
-	var b strings.Builder
-	in := false
-	for _, r := range s {
-		if isJSSpace(r) {
-			if !in {
-				b.WriteByte(' ')
-			}
-			in = true
-			continue
-		}
-		in = false
-		b.WriteRune(r)
-	}
-	return b.String()
-}
-
 // jsStringify is JSON.stringify for a value json can marshal: no HTML escaping, and U+2028/U+2029 literal.
 func jsStringify(v any) string {
 	var buf bytes.Buffer
