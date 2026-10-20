@@ -257,11 +257,11 @@ func Extension() *sdk.Extension {
 		})
 	}
 	e.OnSessionStart(a.onSessionStart)
-	registerQueue(e, a)
 	for _, ev := range []string{sdk.EventModelSelect, sdk.EventThinkingLevelSelect, sdk.EventSessionTree, sdk.EventSessionInfoChanged,
 		sdk.EventToolResult, sdk.EventUserBash, sdk.EventAgentStart, sdk.EventMessageUpdate, sdk.EventMessageEnd, sdk.EventTurnEnd,
 		sdk.EventSessionBeforeCompact, sdk.EventSessionCompact, sdk.EventAgentEnd} {
 		e.OnEvent(ev, a.onEvent(ev))
 	}
+	registerQueue(e, a)
 	return e
 }
