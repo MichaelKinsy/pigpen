@@ -51,6 +51,9 @@ func (a *app) reload(cwd string) {
 	a.mu.Unlock()
 	setFallbackSubagent(st.FallbackSubagent)
 	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
+	if st.WorktreeIsolation != nil { // like applySettings: only a key that is present changes the switch
+		setWorktreeIsolationEnabled(*st.WorktreeIsolation)
+	}
 	custom, warnings := loadCustomAgents(cwd)
 	for _, w := range warnings {
 		fmt.Fprintf(os.Stderr, "[pi-subagents] %s\n", w)
@@ -119,6 +122,11 @@ func (a *app) register(e *sdk.Extension) {
 	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.mgr.abortAll()
+		// Prune orphaned git worktrees (crash recovery). upstream: agent-manager.ts dispose.
+		a.mu.Lock()
+		cwd := a.cwd
+		a.mu.Unlock()
+		a.mgr.pruneAll(cwd)
 		return nil, nil
 	})
 	a.registerTools(e)

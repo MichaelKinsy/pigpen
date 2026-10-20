@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// The subagents.json settings this port honors: maxConcurrent, defaultMaxTurns, graceTurns, fallbackSubagent and
-// disableDefaultAgents. The global file (<agent dir>/subagents.json) is read first, the project file
+// The subagents.json settings this port honors: maxConcurrent, defaultMaxTurns, graceTurns, fallbackSubagent,
+// disableDefaultAgents and worktreeIsolation. The global file (<agent dir>/subagents.json) is read first, the project file
 // (<cwd>/.pi/subagents.json) overrides it. A field of the wrong shape is dropped, silently, as in the original.
 // upstream: src/settings.ts (sanitize, loadSettings).
 type settings struct {
@@ -18,6 +18,7 @@ type settings struct {
 	GraceTurns           int // 0: unset
 	FallbackSubagent     *string
 	DisableDefaultAgents *bool
+	WorktreeIsolation    *bool // nil: unset (isolation is allowed)
 }
 
 const (
@@ -51,6 +52,9 @@ func sanitizeSettings(raw any) settings {
 	}
 	if b, ok := r["disableDefaultAgents"].(bool); ok {
 		out.DisableDefaultAgents = &b
+	}
+	if b, ok := r["worktreeIsolation"].(bool); ok {
+		out.WorktreeIsolation = &b
 	}
 	switch v := r["fallbackSubagent"].(type) {
 	case bool:
@@ -96,6 +100,9 @@ func loadSettings(cwd string) settings {
 	}
 	if p.DisableDefaultAgents != nil {
 		s.DisableDefaultAgents = p.DisableDefaultAgents
+	}
+	if p.WorktreeIsolation != nil {
+		s.WorktreeIsolation = p.WorktreeIsolation
 	}
 	return s
 }

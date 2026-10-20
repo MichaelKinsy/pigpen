@@ -40,12 +40,17 @@ type agentRecord struct {
 	WrappedUp                   bool
 	Consumed                    bool
 
-	spec    childSpec
-	child   child
-	done    chan struct{}
-	cancel  context.CancelFunc
-	stopped bool // stopped by the user or the parent (not a failure)
-	started chan struct{}
+	spec childSpec
+	// setup is closed once the agent's startup (the worktree copy, if any) has finished, or failed with startErr.
+	setup     chan struct{}
+	setupOnce sync.Once
+	startErr  error
+	fromQueue bool
+	child     child
+	done      chan struct{}
+	cancel    context.CancelFunc
+	stopped   bool // stopped by the user or the parent (not a failure)
+	started   chan struct{}
 }
 
 func newAgentID() string {
@@ -64,10 +69,13 @@ type manager struct {
 	start         childStarter
 	// onSettle runs once a record has settled (completed, stopped or failed).
 	onSettle func(*agentRecord)
+	// git runs git for worktree isolation; wtRepos are the repositories worktrees were made in (pruned at shutdown).
+	git     gitFn
+	wtRepos map[string]bool
 }
 
 func newManager(start childStarter, onSettle func(*agentRecord)) *manager {
-	return &manager{records: map[string]*agentRecord{}, maxConcurrent: defaultMaxConcurrent, start: start, onSettle: onSettle}
+	return &manager{records: map[string]*agentRecord{}, maxConcurrent: defaultMaxConcurrent, start: start, onSettle: onSettle, git: osGit, wtRepos: map[string]bool{}}
 }
 
 func (m *manager) get(id string) *agentRecord {
@@ -138,7 +146,7 @@ func (m *manager) list() []*agentRecord {
 // a foreground agent is not limited, as `maxConcurrentForeground` defaults to unlimited). upstream: agent-manager.ts spawn.
 func (m *manager) spawn(typ, description, name string, spec childSpec, background bool) *agentRecord {
 	r := &agentRecord{ID: newAgentID(), Type: typ, Description: description, Name: name, Background: background, spec: spec,
-		done: make(chan struct{}), started: make(chan struct{}), Status: statusQueued, StartedAt: time.Now()}
+		done: make(chan struct{}), started: make(chan struct{}), setup: make(chan struct{}), Status: statusQueued, StartedAt: time.Now()}
 	m.mu.Lock()
 	m.records[r.ID] = r
 	m.order = append(m.order, r.ID)
@@ -166,19 +174,63 @@ func (m *manager) run(r *agentRecord) {
 	m.mu.Lock()
 	r.cancel = cancel // abort reads it under the lock
 	r.StartedAt = time.Now()
+	spec := r.spec
 	m.mu.Unlock()
-	c, err := m.start(ctx, r.spec)
-	close(r.started)
-	var res *childResult
-	if err == nil {
-		m.mu.Lock()
-		r.child = c
-		stop := r.stopped
-		m.mu.Unlock()
-		if stop {
-			c.abort()
+	// Worktree isolation is strict: no worktree is a failed start, never a silent run in the main checkout. The switch
+	// is checked here as well as at the tool because the spawn RPC forwards its options unvalidated.
+	// upstream: agent-manager.ts startAgent.
+	var wt *worktreeInfo
+	base := ""
+	if spec.Worktree && isWorktreeIsolationEnabled() {
+		base = spec.Cwd
+		if wt = createWorktree(m.git, base, r.ID); wt == nil {
+			cancel()
+			m.failStartup(r, errors.New(worktreeStartupError))
+			return
 		}
-		res, err = c.wait()
+		m.mu.Lock()
+		m.wtRepos[base] = true
+		m.mu.Unlock()
+		spec.Cwd = wt.Path
+	}
+	r.setupOnce.Do(func() { close(r.setup) })
+	var c child
+	var res *childResult
+	var err error
+	m.mu.Lock()
+	stopped := r.stopped
+	m.mu.Unlock()
+	switch {
+	case stopped && wt != nil:
+		// A stop landed while the copy was being made: nobody is waiting for the work, so the fresh (unchanged)
+		// worktree is discarded instead of launching the run.
+		cleanupWorktree(m.git, base, wt, r.Description)
+		close(r.started)
+	default:
+		if spec.Prepare != nil {
+			err = spec.Prepare(&spec, spec.Cwd, base)
+		}
+		if err == nil {
+			c, err = m.start(ctx, spec)
+		}
+		close(r.started)
+		if err == nil {
+			m.mu.Lock()
+			r.child = c
+			stop := r.stopped
+			m.mu.Unlock()
+			if stop {
+				c.abort()
+			}
+			res, err = c.wait()
+		}
+		if wt != nil {
+			wtRes := cleanupWorktree(m.git, base, wt, r.Description)
+			if res != nil && wtRes.HasChanges && wtRes.Branch != "" {
+				// The branch is in the repository the worktree was made from.
+				res.Text += "\n\n---\nChanges saved to branch `" + wtRes.Branch + "`. Merge with: `git merge " + wtRes.Branch + "`"
+			}
+		}
 	}
 	m.mu.Lock()
 	r.CompletedAt = time.Now()
@@ -215,6 +267,7 @@ func (m *manager) run(r *agentRecord) {
 		m.queue = m.queue[1:]
 		m.running++
 		next.Status = statusRunning
+		next.fromQueue = true
 	}
 	m.mu.Unlock()
 	cancel()
@@ -252,6 +305,7 @@ func (m *manager) abort(r *agentRecord) bool {
 		}
 		r.Status, r.stopped, r.CompletedAt = statusStopped, true, time.Now()
 		m.mu.Unlock()
+		r.setupOnce.Do(func() { close(r.setup) })
 		close(r.started)
 		close(r.done)
 		if m.onSettle != nil {
@@ -302,5 +356,80 @@ func (m *manager) consume(id string) bool {
 func (m *manager) abortAll() {
 	for _, r := range m.list() {
 		m.abort(r)
+	}
+}
+
+// failStartup ends an agent whose startup failed (strict worktree isolation). An agent started at once is dropped, as if
+// the spawn had thrown: no record, and its handle goes back. A queued one started minutes after its caller returned, so
+// the failure lives on the record as an error. Either way the slot is handed back. upstream: agent-manager.ts launch.
+func (m *manager) failStartup(r *agentRecord, err error) {
+	m.mu.Lock()
+	r.startErr = err
+	r.CompletedAt = time.Now()
+	queued := r.fromQueue
+	if queued {
+		r.Status, r.Error = statusError, err.Error()
+	} else {
+		delete(m.records, r.ID)
+		for i, id := range m.order {
+			if id == r.ID {
+				m.order = append(m.order[:i], m.order[i+1:]...)
+				break
+			}
+		}
+	}
+	if r.Background {
+		m.running--
+	}
+	var next *agentRecord
+	if len(m.queue) > 0 && m.running < m.maxConcurrent {
+		next = m.queue[0]
+		m.queue = m.queue[1:]
+		m.running++
+		next.Status = statusRunning
+		next.fromQueue = true
+	}
+	m.mu.Unlock()
+	r.setupOnce.Do(func() { close(r.setup) })
+	close(r.started)
+	close(r.done)
+	if queued && m.onSettle != nil {
+		m.onSettle(r)
+	}
+	if next != nil {
+		go m.run(next)
+	}
+}
+
+// awaitSetup waits until the agent has really started (its worktree is made) and returns the startup failure. A queued
+// agent has not started: it returns at once, as the original's awaitStartup does. upstream: agent-manager.ts awaitStartup.
+func (m *manager) awaitSetup(cancelled <-chan struct{}, r *agentRecord) error {
+	m.mu.Lock()
+	queued := r.Status == statusQueued
+	m.mu.Unlock()
+	if queued {
+		return nil
+	}
+	select {
+	case <-r.setup:
+	case <-r.done:
+	case <-cancelled:
+		return nil
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return r.startErr
+}
+
+// pruneAll prunes orphaned worktrees of the workspace and of every repository an agent made one in (crash recovery).
+func (m *manager) pruneAll(cwd string) {
+	m.mu.Lock()
+	repos := []string{cwd}
+	for repo := range m.wtRepos {
+		repos = append(repos, repo)
+	}
+	m.mu.Unlock()
+	for _, repo := range repos {
+		pruneWorktrees(m.git, repo)
 	}
 }

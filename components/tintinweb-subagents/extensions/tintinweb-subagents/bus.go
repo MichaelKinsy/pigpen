@@ -70,18 +70,23 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	if f, ok := opts["maxTurns"].(float64); ok {
 		maxTurns = int(f)
 	}
-	r, err := a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, true, false)
+	// The option goes straight to the manager: it skips the resolver, the manager's own switch gates it.
+	isolation, _ := opts["isolation"].(string)
+	r, err := a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, true, false, isolation == "worktree")
 	if err != nil {
 		return nil, err
 	}
 	if err := a.mgr.awaitStartup(r, 30*time.Second); err != nil {
 		return nil, err
 	}
+	if err := a.mgr.awaitSetup(ctx.Done(), r); err != nil {
+		return nil, err
+	}
 	return map[string]any{"id": r.ID}, nil
 }
 
 // start builds the child's spec from the agent type and spawns it.
-func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
+func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated, worktree bool) (*agentRecord, error) {
 	a.mu.Lock()
 	cwd := a.cwd
 	a.mu.Unlock()
@@ -101,8 +106,28 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	if cfg.PromptMode == "append" {
 		parentPrompt, _ = ctx.GetSystemPrompt()
 	}
-	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt)
-	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
+	// The environment of an agent that runs in this workspace is read now; one in a worktree copy is read once the
+	// copy exists (it is another directory).
+	var eagerEnv envInfo
+	if !worktree {
+		eagerEnv = detectEnv(ctx, cwd)
+	}
+	spec := childSpec{Prompt: prompt, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false, Worktree: worktree}
+	spec.Prepare = func(spec *childSpec, workCwd, worktreeBase string) error {
+		env := eagerEnv
+		if worktreeBase != "" {
+			env = detectEnvWith(a.mgr.git, workCwd)
+		}
+		extras := promptExtras{WorktreeBase: worktreeBase}
+		if cfg.Memory != "" {
+			var err error
+			if extras.MemoryBlock, spec.Tools, err = memoryExtras(cfg, resolved, spec.Tools, workCwd); err != nil {
+				return err
+			}
+		}
+		spec.SystemPrompt = buildAgentPrompt(cfg, workCwd, env, parentPrompt, extras)
+		return nil
+	}
 	if cfg.IsDefault && cfg.Name == "Explore" {
 		spec.Model = "" // the original's haiku default falls back to the parent's model when it is not available; this port never forces it
 	} else {

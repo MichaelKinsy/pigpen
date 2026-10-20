@@ -28,13 +28,10 @@ func refusalText(feature string) string {
 }
 
 // unportedCallParam names the first Agent parameter of the original that is not ported, or "".
-// upstream: index.ts Agent parameters (schedule, isolation, resume, inherit_context).
+// upstream: index.ts Agent parameters (schedule, resume, inherit_context).
 func unportedCallParam(p map[string]any) string {
 	if v, ok := p["schedule"]; ok && v != nil {
 		return "scheduled agent runs (the schedule parameter)"
-	}
-	if v, _ := p["isolation"].(string); v != "" && v != "off" {
-		return `worktree isolation (isolation: "` + v + `")`
 	}
 	if v, _ := p["inherit_context"].(bool); v {
 		return "inheriting the parent conversation (inherit_context)"
@@ -51,10 +48,6 @@ func unportedAgentFeature(cfg *agentConfig) string {
 	switch {
 	case cfg.InheritContext != nil && *cfg.InheritContext:
 		return "inheriting the parent conversation (inherit_context in the agent file)"
-	case cfg.Isolation == "worktree":
-		return "worktree isolation (isolation: worktree in the agent file)"
-	case cfg.Memory != "":
-		return "persistent agent memory (memory: " + cfg.Memory + ")"
 	case cfg.AllowedSubagents != nil:
 		return "nested delegation (allowed_subagents)"
 	case len(cfg.ExtSelectors) > 0:
@@ -93,7 +86,7 @@ func skillsSupported(v any) bool {
 }
 
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
-// Honored: description, model, maxTurns, name, thinkingLevel, isBackground (true only). upstream: agent-manager.ts SpawnOptions.
+// Honored: description, model, maxTurns, name, thinkingLevel, isolation, isBackground (true only). upstream: agent-manager.ts SpawnOptions.
 func unportedSpawnOption(opts map[string]any) string {
 	keys := make([]string, 0, len(opts))
 	for k := range opts {
@@ -106,7 +99,7 @@ func unportedSpawnOption(opts map[string]any) string {
 			continue
 		}
 		switch k {
-		case "description", "model", "maxTurns", "name", "thinkingLevel":
+		case "description", "model", "maxTurns", "name", "thinkingLevel", "isolation":
 		case "isBackground":
 			if b, _ := v.(bool); !b {
 				return "foreground agents through the spawn RPC (isBackground: false)"
@@ -142,7 +135,6 @@ var settingRules = []settingRule{
 	{key: "rememberAgents", kind: "bool", okBool: false},
 	{key: "widgetMode", kind: "enum", enum: []string{"all", "background", "off"}, okEnum: []string{"off"}},
 	{key: "outputTranscript", kind: "bool", okBool: false},
-	{key: "worktreeIsolation", kind: "bool", okBool: false},
 	{key: "workflowsEnabled", kind: "bool", okBool: false},
 	{key: "maxSubagentDepth", kind: "int", okInts: []int{0, 1}},
 	{key: "reportUsage", kind: "bool", okBool: false},

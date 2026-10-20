@@ -39,7 +39,6 @@ func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
 		feature string
 	}{
 		{"schedule", obj{"schedule": "5m"}, "scheduled agent runs (the schedule parameter)"},
-		{"isolation worktree", obj{"isolation": "worktree"}, `worktree isolation (isolation: "worktree")`},
 		{"inherit_context", obj{"inherit_context": true}, "inheriting the parent conversation (inherit_context)"},
 		{"resume", obj{"resume": "explore"}, "resuming a finished agent's session (resume)"},
 	}
@@ -81,8 +80,6 @@ func agentFileRig(t *testing.T, frontmatter string) *rig {
 func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 	cases := []struct{ name, frontmatter, feature string }{
 		{"inherit_context", "inherit_context: true", "inheriting the parent conversation (inherit_context in the agent file)"},
-		{"isolation", "isolation: worktree", "worktree isolation (isolation: worktree in the agent file)"},
-		{"memory", "memory: project", "persistent agent memory (memory: project)"},
 		{"allowed_subagents", "allowed_subagents: all", "nested delegation (allowed_subagents)"},
 		{"ext selectors", "tools: read, ext:web", "extension tool selectors (ext: in tools)"},
 		{"disallowed_tools", "disallowed_tools: bash", "disallowed_tools"},
@@ -124,7 +121,6 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		feature string
 	}{
 		{"isolated", obj{"isolated": true}, `the spawn RPC option "isolated"`},
-		{"isolation", obj{"isolation": "worktree"}, `the spawn RPC option "isolation"`},
 		{"inheritContext", obj{"inheritContext": true}, `the spawn RPC option "inheritContext"`},
 		{"resumeSessionFile", obj{"resumeSessionFile": "/x"}, `the spawn RPC option "resumeSessionFile"`},
 		{"reclaim", obj{"reclaim": obj{"handle": "a"}}, `the spawn RPC option "reclaim"`},
@@ -194,7 +190,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"rememberAgents", `{"rememberAgents": true}`, "rememberAgents: true"},
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
 		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
-		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
 		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
 		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
 		{"reportUsage", `{"reportUsage": true}`, "reportUsage: true"},

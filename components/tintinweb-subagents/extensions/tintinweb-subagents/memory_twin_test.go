@@ -49,8 +49,6 @@ func mustSymlink(t *testing.T, target, link string) {
 	}
 }
 
-func exists(path string) bool { _, err := os.Stat(path); return err == nil }
-
 func mustDir(t *testing.T) func(name, scope, cwd string) string {
 	return func(name, scope, cwd string) string {
 		t.Helper()

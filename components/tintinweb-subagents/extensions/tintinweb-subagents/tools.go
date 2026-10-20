@@ -27,8 +27,8 @@ var toolSpecsJSON []byte
 var agentGuidelinesJSON []byte
 
 // The model-facing text of the three tools is the original's, extracted from the request Pi sends with the
-// original loaded (port/gen-spec.py). The original's workflow, scheduling and worktree-isolation parts are left
-// out, as they are when those three features are switched off in its settings.
+// original loaded (port/gen-spec.py). The original's workflow and scheduling parts are left out, as they are when those
+// features are switched off in its settings; the worktree-isolation parts are added unless `worktreeIsolation` is false.
 type toolSpec struct {
 	Parameters  map[string]any `json:"parameters"`
 	Description *string        `json:"description"`
@@ -93,7 +93,7 @@ func buildTypeListText(r *agentRegistry) string {
 }
 
 func agentToolDescription(r *agentRegistry) string {
-	return strings.NewReplacer("{{TYPELIST}}", buildTypeListText(r), "{{AGENTDIR}}", agentDir()).Replace(agentDescriptionTemplate)
+	return withIsolationGuideline(strings.NewReplacer("{{TYPELIST}}", buildTypeListText(r), "{{AGENTDIR}}", agentDir()).Replace(agentDescriptionTemplate), isWorktreeIsolationEnabled())
 }
 
 // agentToolSchema is the Agent parameters with the available types and the agent dir filled in.
@@ -102,6 +102,7 @@ func agentToolSchema(r *agentRegistry, spec toolSpec) sdk.Schema {
 	text := strings.NewReplacer("{{TYPES}}", strings.Join(r.availableTypes(), ", "), "{{AGENTDIR}}", agentDir()).Replace(string(raw))
 	var out sdk.Schema
 	_ = json.Unmarshal([]byte(text), &out)
+	withIsolationParam(out, isWorktreeIsolationEnabled())
 	return out
 }
 
@@ -202,8 +203,16 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if b, ok := p["run_in_background"].(bool); ok {
 		background = b
 	}
-	r, err := a.start(ctx, resolved, prompt, description, name, model, thinking, maxTurns, background, isolated)
+	// An agent file's isolation outranks the call's; the project switch drops a requested worktree.
+	allowed := isWorktreeIsolationEnabled()
+	worktree := resolveAgentInvocationConfig(reg.get(resolved), invocationParams{Isolation: p["isolation"]}, resolveOptions{WorktreeAllowed: &allowed}).Isolation == "worktree"
+	r, err := a.start(ctx, resolved, prompt, description, name, model, thinking, maxTurns, background, isolated, worktree)
 	if err != nil {
+		return nil, err
+	}
+	// With isolation the agent is not running yet: the repo copy is a git call. A strict-isolation failure fails THIS
+	// tool call, not an agent that ran. upstream: index.ts (#179).
+	if err := a.mgr.awaitSetup(ctx.Done(), r); err != nil {
 		return nil, err
 	}
 	if background {

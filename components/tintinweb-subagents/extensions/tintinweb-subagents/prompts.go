@@ -54,16 +54,36 @@ You are operating as a sub-agent invoked to handle a specific task.
 - Be concise but complete
 </sub_agent_context>`
 
+// promptExtras are the sections added to an agent's system prompt. upstream: src/prompts.ts PromptExtras.
+type promptExtras struct {
+	// MemoryBlock is the persistent memory section (the first 200 lines of MEMORY.md and the instructions).
+	MemoryBlock string
+	// WorktreeBase is the directory an isolated agent's worktree copy was made from; set only for
+	// `isolation: "worktree"`, it triggers the block that tells the agent not to work there.
+	WorktreeBase string
+}
+
 // buildAgentPrompt is an agent's whole system prompt. In "append" mode it is the parent's system prompt (or a
 // generic base) with the agent's instructions added; in "replace" mode the agent's own. The text is the original's.
-// upstream: src/prompts.ts buildAgentPrompt (without the memory, skill, worktree and workflow extras).
-func buildAgentPrompt(c *agentConfig, cwd string, env envInfo, parentSystemPrompt string) string {
+// upstream: src/prompts.ts buildAgentPrompt (the memory and worktree extras; skills and workflow extras are not part of this port yet).
+func buildAgentPrompt(c *agentConfig, cwd string, env envInfo, parentSystemPrompt string, extras promptExtras) string {
 	tag := "<active_agent name=\"" + c.Name + "\"/>\n\n"
 	repo := "Not a git repository"
 	if env.IsGitRepo {
 		repo = "Git repository: yes\nBranch: " + env.Branch
 	}
 	envBlock := "# Environment\nWorking directory: " + cwd + "\n" + repo + "\nPlatform: " + env.Platform
+	// A worktree agent is told its cwd twice (the env block: the copy; the inherited parent prompt or the task: the
+	// main checkout); it follows the latter and works in the shared tree (#187), so this resolves the contradiction.
+	worktree := ""
+	if extras.WorktreeBase != "" {
+		worktree = "\n\n<worktree_isolation>\nYour working directory is an isolated git worktree copy of " + extras.WorktreeBase +
+			".\nWork only inside it — never in " + extras.WorktreeBase + ", even if other instructions name that path as your working directory.\n</worktree_isolation>"
+	}
+	suffix := ""
+	if extras.MemoryBlock != "" {
+		suffix = "\n\n" + extras.MemoryBlock
+	}
 	if c.PromptMode == "append" {
 		identity := parentSystemPrompt
 		if identity == "" {
@@ -73,8 +93,8 @@ func buildAgentPrompt(c *agentConfig, cwd string, env envInfo, parentSystemPromp
 		if strings.TrimSpace(c.SystemPrompt) != "" {
 			custom = "\n\n<agent_instructions>\n" + c.SystemPrompt + "\n</agent_instructions>"
 		}
-		return identity + "\n\n" + subAgentBridge + "\n\n" + tag + envBlock + custom
+		return identity + "\n\n" + subAgentBridge + "\n\n" + tag + envBlock + worktree + custom + suffix
 	}
 	header := "You are a pi coding agent sub-agent.\nYou have been invoked to handle a specific task autonomously.\n\n" + envBlock
-	return tag + header + "\n\n" + c.SystemPrompt
+	return tag + header + worktree + "\n\n" + c.SystemPrompt + suffix
 }
