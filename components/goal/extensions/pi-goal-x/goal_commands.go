@@ -33,8 +33,8 @@ var commandDefs = []struct {
 	{"goal", "Draft a regular goal with clarification, task planning, and confirmation.", func(c *core, args string) error { c.startGoalDrafting("goal", args, nil); return nil }},
 	{"sisyphus", "Draft a Sisyphus goal with clarification, task planning, and confirmation.", func(c *core, args string) error { c.startGoalDrafting("sisyphus", args, nil); return nil }},
 	{"goal-cancel", "Cancel the in-progress guided draft without creating or modifying a goal.", func(c *core, _ string) error { c.cancelDraftCommand(); return nil }},
-	{"goal-direct", "Create and start a regular goal immediately, without drafting.", func(c *core, args string) error { c.handleDirectGoalSet(args, false); return nil }},
-	{"sisyphus-direct", "Create and start a Sisyphus goal immediately, without drafting.", func(c *core, args string) error { c.handleDirectGoalSet(args, true); return nil }},
+	{"goal-direct", "Create and start a regular goal immediately, without drafting.", func(c *core, args string) error { return c.direct(args, false) }},
+	{"sisyphus-direct", "Create and start a Sisyphus goal immediately, without drafting.", func(c *core, args string) error { return c.direct(args, true) }},
 	{"goal-list", "List all open goals and the current focus.", func(c *core, _ string) error { c.list(); return nil }},
 	{"goal-status", "Show the unified goal dashboard (read-only). Append \"verbose\" for full detail or \"health\" for storage/runtime checks.", func(c *core, args string) error { return c.showGoalStatus(args) }},
 	{"goal-refresh", "Re-read goal storage caches (pool, ledger, settings) from disk and report what changed. Picks up external edits to .pi files — no file watchers needed.", func(c *core, _ string) error { c.runGoalRefresh(); return nil }},
@@ -372,7 +372,8 @@ func (c *core) unfocus() {
 
 // ---- create / list / pause / resume / clear / tweak ----
 
-func (c *core) handleDirectGoalSet(rawObjective string, sisyphus bool) {
+// direct is handleDirectGoalSet.
+func (c *core) direct(rawObjective string, sisyphus bool) error {
 	raw := jsTrim(rawObjective)
 	if raw == "" {
 		cmd := "/goal <objective>"
@@ -380,11 +381,11 @@ func (c *core) handleDirectGoalSet(rawObjective string, sisyphus bool) {
 			cmd = "/sisyphus <objective>"
 		}
 		c.h.Notify("No objective provided. Use "+cmd+".", "warning")
-		return
+		return nil
 	}
 	if sisyphus && !sisyphusObjectiveSufficient(raw) {
 		c.h.Notify("A Sisyphus objective needs ordered steps with per-step done criteria. Use /sisyphus for guided drafting, or provide numbered steps (1) ..., 2) ...) in the objective.", "warning")
-		return
+		return nil
 	}
 	objective, contract := raw, ""
 	if !loadGoalSettings(c.h.Cwd()).disableContracts {
@@ -394,6 +395,7 @@ func (c *core) handleDirectGoalSet(rawObjective string, sisyphus bool) {
 	c.clearContinuationState(true)
 	c.clearActiveAccounting()
 	c.replaceGoal(goalCreationConfig{objective: objective, autoContinue: true, sisyphus: sisyphus}, true, contract, -1)
+	return nil
 }
 
 func (c *core) list() {
@@ -406,7 +408,7 @@ func (c *core) pause() {
 	c.reconcileFocusedGoalFromDisk(false)
 	if c.state() == nil {
 		if otherOpenGoalCount(c.goals, nil) > 0 {
-			if c.chooseOpenGoal("Pause which open goal?") == nil {
+			if c.chooseOpenGoalAwaited("Pause which open goal?") == nil {
 				return
 			}
 		} else {
@@ -432,7 +434,7 @@ func (c *core) pause() {
 func (c *core) handleGoalResume() {
 	c.reconcileFocusedGoalFromDisk(false)
 	if c.state() == nil && otherOpenGoalCount(c.goals, nil) > 0 {
-		if c.chooseOpenGoal("Resume or focus open goal") == nil {
+		if c.chooseOpenGoalAwaited("Resume or focus open goal") == nil {
 			return
 		}
 	}
@@ -452,7 +454,7 @@ func (c *core) handleGoalResume() {
 func (c *core) clear() {
 	c.reconcileFocusedGoalFromDisk(false)
 	if c.state() == nil && otherOpenGoalCount(c.goals, nil) > 0 {
-		if c.chooseOpenGoal("Clear which open goal?") == nil {
+		if c.chooseOpenGoalAwaited("Clear which open goal?") == nil {
 			return
 		}
 	}
@@ -495,7 +497,7 @@ func (c *core) runGoalTweak(replacement string) {
 	c.reconcileFocusedGoalFromDisk(false)
 	if c.state() == nil {
 		if otherOpenGoalCount(c.goals, nil) > 0 {
-			if c.chooseOpenGoal("Tweak which open goal?") == nil {
+			if c.chooseOpenGoalAwaited("Tweak which open goal?") == nil {
 				return
 			}
 		} else {
@@ -551,4 +553,11 @@ func (m statusFlagMatcher) MatchString(s string) bool {
 	}
 	r := after[0]
 	return !(r == '_' || (r >= '0' && r <= '9') || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z'))
+}
+
+// chooseOpenGoalAwaited is `await chooseOpenGoal(...)`: even an immediately settled await lets the UI update queued meanwhile run.
+func (c *core) chooseOpenGoalAwaited(title string) *jsObject {
+	g := c.chooseOpenGoal(title)
+	c.flush()
+	return g
 }

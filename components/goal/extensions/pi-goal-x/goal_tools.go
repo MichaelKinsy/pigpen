@@ -14,6 +14,7 @@ import (
 func registerGoalTools(c *core) {
 	registerCoreTools(c)
 	registerTaskTools(c)
+	registerDraftingTools(c)
 }
 
 // goalToolExec is the body of one tool: it runs under the core's lock with the call's context bound as the core's host, and a
