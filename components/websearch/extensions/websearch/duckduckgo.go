@@ -96,23 +96,34 @@ func decodeDuckDuckGoURL(href string) string {
 
 // SearchWithDuckDuckGo scrapes the DuckDuckGo HTML results page.
 func SearchWithDuckDuckGo(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
+	act := logAPIStart(query)
+	resp, status, err := searchWithDuckDuckGo(ctx, query, o)
+	if err != nil {
+		return nil, act.failedErr(err)
+	}
+	act.complete(status)
+	return resp, nil
+}
+
+// searchWithDuckDuckGo runs the request and returns the HTTP status of the answer.
+func searchWithDuckDuckGo(ctx context.Context, query string, o SearchOptions) (*SearchResponse, int, error) {
 	tctx, cancel := withTimeout(ctx, duckduckgoTimeout)
 	defer cancel()
 	resp, err := FetchWithCredentialRedirects(tctx, duckduckgoSearchURL+"?q="+formEscape(query), RequestInit{Method: "GET",
 		Header: http.Header{"Accept": {"text/html"}, "User-Agent": {"Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"}}}, nil)
 	if err != nil {
-		return nil, timeoutFix(ctx, tctx, err)
+		return nil, 0, timeoutFix(ctx, tctx, err)
 	}
 	body, err := readBody(resp)
 	if err != nil {
-		return nil, timeoutFix(ctx, tctx, err)
+		return nil, 0, timeoutFix(ctx, tctx, err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("DuckDuckGo search error %d: %s", resp.StatusCode, slice300(body))
+		return nil, 0, fmt.Errorf("DuckDuckGo search error %d: %s", resp.StatusCode, slice300(body))
 	}
 	doc, err := html.Parse(strings.NewReader(body))
 	if err != nil {
-		return nil, fmt.Errorf("DuckDuckGo returned no parseable results (invalid response)")
+		return nil, 0, fmt.Errorf("DuckDuckGo returned no parseable results (invalid response)")
 	}
 	filters := normalizeDomainFilters(o.DomainFilter)
 	limit := NormalizeSearchResultCount(o.NumResults)
@@ -151,7 +162,7 @@ func SearchWithDuckDuckGo(ctx context.Context, query string, o SearchOptions) (*
 		}
 	}
 	if parseable == 0 {
-		return nil, fmt.Errorf("DuckDuckGo returned no parseable results (invalid response)")
+		return nil, 0, fmt.Errorf("DuckDuckGo returned no parseable results (invalid response)")
 	}
-	return &SearchResponse{Answer: sourceLines(results), Results: results}, nil
+	return &SearchResponse{Answer: sourceLines(results), Results: results}, resp.StatusCode, nil
 }

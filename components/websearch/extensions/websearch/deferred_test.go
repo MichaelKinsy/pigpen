@@ -6,11 +6,6 @@ import "testing"
 // is not applicable to Go, or is covered by a differently titled test. Generated from the ledger
 // with `pigeq twins check`; the reasons are summarised in docs/PORT.md.
 
-func TestDeferred_allowed_search_providers(t *testing.T) {
-	const F = "allowed-search-providers"
-	tskip(t, F, "Curator represents unavailable auto honestly while keeping explicit Serply immediately selectable", "the search curator UI is deferred (docs/PORT.md); this case (Curator represents unavailable auto honestly while keeping explicit Serply immediately sel) ships with the feature")
-}
-
 func TestDeferred_anysearch_provider(t *testing.T) {
 	const F = "anysearch-provider"
 	tskip(t, F, "AnySearch supports anonymous success with a minimal request and gated content", "the AnySearch provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (AnySearch supports anonymous success with a minimal request and gated content) ships with the feature")
@@ -36,13 +31,6 @@ func TestDeferred_auth_fetch(t *testing.T) {
 	tskip(t, F, "authenticated Cloudflare challenge stays direct-only", "authenticated fetch reads browser cookies, which this port never does; auth profiles return an explicit 'not available' error (docs/PORT.md); this case (authenticated Cloudflare challenge stays direct-only) ships with the feature")
 }
 
-func TestDeferred_auto_summary_source(t *testing.T) {
-	const F = "auto-summary-source"
-	tskip(t, F, "web_search accepts auto-summary workflow in schema and config resolution", "the auto-summary workflow is deferred with the curator (docs/PORT.md); web_search reports workflow != none as not available; this case (web_search accepts auto-summary workflow in schema and config resolution) ships with the feature")
-	tskip(t, F, "auto-summary skips curator and reuses summary model fallback plumbing", "the search curator UI is deferred (docs/PORT.md); this case (auto-summary skips curator and reuses summary model fallback plumbing) ships with the feature")
-	tskip(t, F, "README documents auto-summary", "the auto-summary workflow is deferred with the curator (docs/PORT.md); web_search reports workflow != none as not available; this case (README documents auto-summary) ships with the feature")
-}
-
 func TestDeferred_baizhi_provider(t *testing.T) {
 	const F = "baizhi-provider"
 	tskip(t, F, "Baizhi uses full MCP initialization, session and schema arguments; preserves opaque output", "the Baizhi provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Baizhi uses full MCP initialization, session and schema arguments; preserves opaque output) ships with the feature")
@@ -51,7 +39,6 @@ func TestDeferred_baizhi_provider(t *testing.T) {
 	tskip(t, F, "Baizhi rejects missing credentials, empty query, invalid filter and pre-aborted calls before network", "the Baizhi provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Baizhi rejects missing credentials, empty query, invalid filter and pre-aborted calls befo) ships with the feature")
 	tskip(t, F, "malformed credentials fail locally with a fixed message and never reach HTTP", "the Baizhi provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (malformed credentials fail locally with a fixed message and never reach HTTP) ships with the feature")
 	tskip(t, F, "Baizhi supports shared credential source rules without credential-resolution side effects at availability time", "the Baizhi provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Baizhi supports shared credential source rules without credential-resolution side effects ) ships with the feature")
-	tskip(t, F, "Baizhi is explicit-only, available to provider arrays, labels and the Curator", "the search curator UI is deferred (docs/PORT.md); this case (Baizhi is explicit-only, available to provider arrays, labels and the Curator) ships with the feature")
 	tskip(t, F, "real Pi resource loader, extension binding and agent prompt dispatch Baizhi; includeContent does not guess sources", "the Baizhi provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (real Pi resource loader, extension binding and agent prompt dispatch Baizhi; includeConten) ships with the feature")
 	tskip(t, F, "routing keeps safe HTTP/network classifications and never falls back after caller cancellation", "the Baizhi provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (routing keeps safe HTTP/network classifications and never falls back after caller cancella) ships with the feature")
 }
@@ -89,7 +76,6 @@ func TestDeferred_brightdata_serp(t *testing.T) {
 	tskip(t, F, "organic entries missing fields are mapped, and unparseable links are dropped", "the Bright Data SERP provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (organic entries missing fields are mapped, and unparseable links are dropped) ships with the feature")
 	tskip(t, F, "Bright Data is never selected by auto without explicit routing", "the Bright Data SERP provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Bright Data is never selected by auto without explicit routing) ships with the feature")
 	tskip(t, F, "Bright Data HTTP ${status} is classified as ${kind}", "the Bright Data SERP provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Bright Data HTTP ${status} is classified as ${kind}) ships with the feature")
-	tskip(t, F, "curator page exposes Bright Data as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Bright Data as a manual provider) ships with the feature")
 }
 
 func TestDeferred_brightdata_unlocker(t *testing.T) {
@@ -172,38 +158,6 @@ func TestDeferred_crawl4ai_extraction(t *testing.T) {
 	tskip(t, F, "Crawl4AI keeps the loopback exemption on the configured origin and blocks a pivot to another loopback service", "the Crawl4AI fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (Crawl4AI keeps the loopback exemption on the configured origin and blocks a pivot to anoth) ships with the feature")
 	tskip(t, F, "Crawl4AI blocks a loopback base redirecting to localhost", "the Crawl4AI fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (Crawl4AI blocks a loopback base redirecting to localhost) ships with the feature")
 	tskip(t, F, "Crawl4AI blocks configured base redirects to private targets", "the Crawl4AI fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (Crawl4AI blocks configured base redirects to private targets) ships with the feature")
-}
-
-func TestDeferred_curator_fallback(t *testing.T) {
-	const F = "curator-fallback"
-	tskip(t, F, "web_search curator auto-open failures keep the curator alive with a manual URL", "the search curator UI is deferred (docs/PORT.md); this case (web_search curator auto-open failures keep the curator alive with a manual URL) ships with the feature")
-	tskip(t, F, "curator add-search receives the active extension context", "the search curator UI is deferred (docs/PORT.md); this case (curator add-search receives the active extension context) ships with the feature")
-	tskip(t, F, "curator fallback helper is visible to the browser-open catch block", "the search curator UI is deferred (docs/PORT.md); this case (curator fallback helper is visible to the browser-open catch block) ships with the feature")
-	tskip(t, F, "cancel diagnostics include curator URL and browser-open error", "the search curator UI is deferred (docs/PORT.md); this case (cancel diagnostics include curator URL and browser-open error) ships with the feature")
-	tskip(t, F, "manual websearch command reports browser-open fallback without closing curator", "the search curator UI is deferred (docs/PORT.md); this case (manual websearch command reports browser-open fallback without closing curator) ships with the feature")
-	tskip(t, F, "remote curator mode prints the manual URL unless auto-open is explicit", "the search curator UI is deferred (docs/PORT.md); this case (remote curator mode prints the manual URL unless auto-open is explicit) ships with the feature")
-	tskip(t, F, "Linux curator browser launch detaches xdg-open but keeps immediate failures", "the search curator UI is deferred (docs/PORT.md); this case (Linux curator browser launch detaches xdg-open but keeps immediate failures) ships with the feature")
-	tskip(t, F, "README documents manual browser fallback", "the search curator UI is deferred (docs/PORT.md); this case (README documents manual browser fallback) ships with the feature")
-}
-
-func TestDeferred_curator_run(t *testing.T) {
-	const F = "curator-run"
-	tskip(t, F, "fresh installs default to no curator while configured and explicit workflows keep their meanings", "the search curator UI is deferred (docs/PORT.md); this case (fresh installs default to no curator while configured and explicit workflows keep their me) ships with the feature")
-	tskip(t, F, "approval changes only inherited summary-review workflows for the current prompt", "the search curator UI is deferred (docs/PORT.md); this case (approval changes only inherited summary-review workflows for the current prompt) ships with the feature")
-	tskip(t, F, "registered lifecycle preserves approval across internal turns and resets at run boundaries", "the search curator UI is deferred (docs/PORT.md); this case (registered lifecycle preserves approval across internal turns and resets at run boundaries) ships with the feature")
-}
-
-func TestDeferred_curator_server_timeout(t *testing.T) {
-	const F = "curator-server-timeout"
-	tskip(t, F, "curator times out when searches finish but no browser connects", "the search curator UI is deferred (docs/PORT.md); this case (curator times out when searches finish but no browser connects) ships with the feature")
-	tskip(t, F, "curator replays search events after SSE reconnect", "the search curator UI is deferred (docs/PORT.md); this case (curator replays search events after SSE reconnect) ships with the feature")
-	tskip(t, F, "curator add-search indexes do not collide with reserved initial provider results", "the search curator UI is deferred (docs/PORT.md); this case (curator add-search indexes do not collide with reserved initial provider results) ships with the feature")
-	tskip(t, F, "curator submit rejects contradictory summary metadata", "the search curator UI is deferred (docs/PORT.md); this case (curator submit rejects contradictory summary metadata) ships with the feature")
-	tskip(t, F, "curator assigns one selectable result index per provider", "the search curator UI is deferred (docs/PORT.md); this case (curator assigns one selectable result index per provider) ships with the feature")
-	tskip(t, F, "curator heartbeat timeout finalizes connected idle browser sessions", "the search curator UI is deferred (docs/PORT.md); this case (curator heartbeat timeout finalizes connected idle browser sessions) ships with the feature")
-	tskip(t, F, "curator state replay keeps current results and compacts superseded history", "the search curator UI is deferred (docs/PORT.md); this case (curator state replay keeps current results and compacts superseded history) ships with the feature")
-	tskip(t, F, "curator state replay keeps all-provider entries that share one slot", "the search curator UI is deferred (docs/PORT.md); this case (curator state replay keeps all-provider entries that share one slot) ships with the feature")
-	tskip(t, F, "curator exposes and signals approve remaining searches for this prompt", "the search curator UI is deferred (docs/PORT.md); this case (curator exposes and signals approve remaining searches for this prompt) ships with the feature")
 }
 
 func TestDeferred_datalab_pdf_extract(t *testing.T) {
@@ -357,7 +311,6 @@ func TestDeferred_jina_search(t *testing.T) {
 	tskip(t, F, "configured routing preserves Jina envelope status codes", "the Jina Search provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (configured routing preserves Jina envelope status codes) ships with the feature")
 	tskip(t, F, "configured searchRouting can select Jina Search", "the Jina Search provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (configured searchRouting can select Jina Search) ships with the feature")
 	tskip(t, F, "provider \"all\" includes configured Jina Search alongside zero-config Exa", "the Jina Search provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (provider \"all\" includes configured Jina Search alongside zero-config Exa) ships with the feature")
-	tskip(t, F, "curator page exposes Jina Search as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Jina Search as a manual provider) ships with the feature")
 	tskip(t, F, "README documents Jina Search credentials and routing", "the Jina Search provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (README documents Jina Search credentials and routing) ships with the feature")
 }
 
@@ -398,7 +351,6 @@ func TestDeferred_mistral_provider(t *testing.T) {
 	tskip(t, F, "Mistral propagates caller abort and passes the combined signal to fetch", "the Mistral provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Mistral propagates caller abort and passes the combined signal to fetch) ships with the feature")
 	tskip(t, F, "Mistral works through explicit provider and configured searchRouting", "the Mistral provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Mistral works through explicit provider and configured searchRouting) ships with the feature")
 	tskip(t, F, "Mistral is excluded from zero-config auto and provider all", "the Mistral provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Mistral is excluded from zero-config auto and provider all) ships with the feature")
-	tskip(t, F, "Curator page exposes Mistral as an available manual provider", "the search curator UI is deferred (docs/PORT.md); this case (Curator page exposes Mistral as an available manual provider) ships with the feature")
 }
 
 func TestDeferred_new_search_providers(t *testing.T) {
@@ -407,7 +359,6 @@ func TestDeferred_new_search_providers(t *testing.T) {
 	tskip(t, F, "Kagi search maps v1 results and Extract maps markdown", "Kagi Extract is not ported; the search half (same fixture and assertions) is TestKagiSearchHalfOfUpstreamCase in review_test.go; this case (Kagi search maps v1 results and Extract maps markdown) ships with the feature")
 	tskip(t, F, "SerpBase is explicit-only and maps Google organic results", "the Ollama/Bocha/SerpBase provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (SerpBase is explicit-only and maps Google organic results) ships with the feature")
 	tskip(t, F, "Bocha search filters domains and closes activity on API errors", "the Ollama/Bocha/SerpBase provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Bocha search filters domains and closes activity on API errors) ships with the feature")
-	tskip(t, F, "Curator page exposes Bocha as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (Curator page exposes Bocha as a manual provider) ships with the feature")
 }
 
 func TestDeferred_openai_alpha_search(t *testing.T) {
@@ -483,12 +434,6 @@ func TestDeferred_parallel(t *testing.T) {
 	tskip(t, F, "fetch_content continues to Gemini when Parallel extract fails", "Gemini is a later slice (docs/PORT.md); this case (fetch_content continues to Gemini when Parallel extract fails) ships with the feature")
 }
 
-func TestDeferred_parallel_curator_state(t *testing.T) {
-	const F = "parallel-curator-state"
-	tskip(t, F, "web_search curator state is keyed per tool call for parallel calls", "the search curator UI is deferred (docs/PORT.md); this case (web_search curator state is keyed per tool call for parallel calls) ships with the feature")
-	tskip(t, F, "manual websearch curator command uses a distinct map key", "the search curator UI is deferred (docs/PORT.md); this case (manual websearch curator command uses a distinct map key) ships with the feature")
-}
-
 func TestDeferred_parallel_mcp_provider(t *testing.T) {
 	const F = "parallel-mcp-provider"
 	tskip(t, F, "Parallel MCP searches anonymously, maps filters, and supports explicit routing", "the Parallel MCP provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Parallel MCP searches anonymously, maps filters, and supports explicit routing) ships with the feature")
@@ -496,7 +441,6 @@ func TestDeferred_parallel_mcp_provider(t *testing.T) {
 	tskip(t, F, "Parallel MCP sends optional Bearer auth and redacts it from errors", "the Parallel MCP provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Parallel MCP sends optional Bearer auth and redacts it from errors) ships with the feature")
 	tskip(t, F, "Parallel MCP web_fetch is available only through explicit hosted fetch routing", "the Parallel MCP provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Parallel MCP web_fetch is available only through explicit hosted fetch routing) ships with the feature")
 	tskip(t, F, "Parallel MCP stays outside provider all and the default fetch route", "the Parallel MCP provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Parallel MCP stays outside provider all and the default fetch route) ships with the feature")
-	tskip(t, F, "Curator page exposes a usable Parallel MCP provider entry", "the search curator UI is deferred (docs/PORT.md); this case (Curator page exposes a usable Parallel MCP provider entry) ships with the feature")
 }
 
 func TestDeferred_pdf_extract(t *testing.T) {
@@ -543,7 +487,6 @@ func TestDeferred_querit_provider(t *testing.T) {
 	tskip(t, F, "Querit errors redact credentials and surface API-level failures", "the Querit provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Querit errors redact credentials and surface API-level failures) ships with the feature")
 	tskip(t, F, "configured search routing can select Querit", "the Querit provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (configured search routing can select Querit) ships with the feature")
 	tskip(t, F, "fetch_content uses Querit after local and earlier hosted extraction fail", "the Querit provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (fetch_content uses Querit after local and earlier hosted extraction fail) ships with the feature")
-	tskip(t, F, "curator page exposes Querit as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Querit as a manual provider) ships with the feature")
 	tskip(t, F, "Querit provider timeout continues to the next fetch_content fallback", "the Querit provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Querit provider timeout continues to the next fetch_content fallback) ships with the feature")
 }
 
@@ -559,19 +502,6 @@ func TestDeferred_rsc_fallback(t *testing.T) {
 	tskip(t, F, "background fetch notification distinguishes full, partial, and failed content", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (background fetch notification distinguishes full, partial, and failed content) ships with the feature")
 }
 
-func TestDeferred_search_error_render(t *testing.T) {
-	const F = "search-error-render"
-	tskip(t, F, "cancel/error path is NOT a dead-end single line: expanded plan has >1 line", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (cancel/error path is NOT a dead-end single line: expanded plan has >1 line) ships with the feature")
-	tskip(t, F, "expanded plan surfaces the diagnostics that were previously discarded", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (expanded plan surfaces the diagnostics that were previously discarded) ships with the feature")
-	tskip(t, F, "collapsed view is a short summary WITH a ctrl+o expand hint (Ctrl+O now does something)", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (collapsed view is a short summary WITH a ctrl+o expand hint (Ctrl+O now does something)) ships with the feature")
-	tskip(t, F, "plain (non-cancel) error stays a clean single line — no diagnostic noise", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (plain (non-cancel) error stays a clean single line — no diagnostic noise) ships with the feature")
-	tskip(t, F, "fetch_content-style error (extras, no cancel) is expandable without browser diagnostics", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (fetch_content-style error (extras, no cancel) is expandable without browser diagnostics) ships with the feature")
-	tskip(t, F, "non-search error with extras shows detail without browser diagnostics", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (non-search error with extras shows detail without browser diagnostics) ships with the feature")
-	tskip(t, F, "error with NO extras and NO cancel stays single-line", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (error with NO extras and NO cancel stays single-line) ships with the feature")
-	tskip(t, F, "non-error result yields null so the caller falls through to the success renderer", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (non-error result yields null so the caller falls through to the success renderer) ships with the feature")
-	tskip(t, F, "index.ts imports buildSearchErrorPlan and wires it into the web_search error path", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (index.ts imports buildSearchErrorPlan and wires it into the web_search error path) ships with the feature")
-}
-
 func TestDeferred_search_providers(t *testing.T) {
 	const F = "search-providers"
 	tskip(t, F, "SearXNG search is SSRF-guarded and preferred first when configured", "SearXNG is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (SearXNG search is SSRF-guarded and preferred first when configured) ships with the feature")
@@ -582,7 +512,6 @@ func TestDeferred_search_providers(t *testing.T) {
 	tskip(t, F, "failed Gemini command source is redacted and blocks browser fallback", "Gemini is a later slice (docs/PORT.md); this case (failed Gemini command source is redacted and blocks browser fallback) ships with the feature")
 	tskip(t, F, "OpenAI search requires web_search and maps domain filters", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (OpenAI search requires web_search and maps domain filters) ships with the feature")
 	tskip(t, F, "OpenAI search uses configured Responses endpoint", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (OpenAI search uses configured Responses endpoint) ships with the feature")
-	tskip(t, F, "curator auto default follows the active model provider", "the search curator UI is deferred (docs/PORT.md); this case (curator auto default follows the active model provider) ships with the feature")
 	tskip(t, F, "auto search prefers Codex-backed OpenAI search when the selected model is openai-codex", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (auto search prefers Codex-backed OpenAI search when the selected model is openai-codex) ships with the feature")
 	tskip(t, F, "auto search keeps selected Codex-backed OpenAI for result counts and recency filters", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (auto search keeps selected Codex-backed OpenAI for result counts and recency filters) ships with the feature")
 	tskip(t, F, "auto search falls through to Exa when selected Codex-backed OpenAI fails", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (auto search falls through to Exa when selected Codex-backed OpenAI fails) ships with the feature")
@@ -607,7 +536,6 @@ func TestDeferred_search_routing(t *testing.T) {
 	tskip(t, F, "Hosted authentication errors do not silently fall back", "current-model hosted search routing (OpenAI, xAI) is deferred (docs/PORT.md); this case (Hosted authentication errors do not silently fall back) ships with the feature")
 	tskip(t, F, "a Hosted response without web_search_call is invalid and can fall back", "current-model hosted search routing (OpenAI, xAI) is deferred (docs/PORT.md); this case (a Hosted response without web_search_call is invalid and can fall back) ships with the feature")
 	tskip(t, F, "useCurrentModel is strictly validated", "current-model hosted search routing (OpenAI, xAI) is deferred (docs/PORT.md); this case (useCurrentModel is strictly validated) ships with the feature")
-	tskip(t, F, "Curator auto default follows the same current-model Hosted Search eligibility", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (Curator auto default follows the same current-model Hosted Search eligibility) ships with the feature")
 }
 
 func TestDeferred_search1api(t *testing.T) {
@@ -620,7 +548,6 @@ func TestDeferred_search1api(t *testing.T) {
 	tskip(t, F, "Search1API errors redact credentials", "the Search1API provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Search1API errors redact credentials) ships with the feature")
 	tskip(t, F, "fetch_content uses Search1API after local and Jina extraction fail", "the Search1API provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (fetch_content uses Search1API after local and Jina extraction fail) ships with the feature")
 	tskip(t, F, "configured searchRouting can select Search1API", "the Search1API provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (configured searchRouting can select Search1API) ships with the feature")
-	tskip(t, F, "curator page exposes Search1API as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Search1API as a manual provider) ships with the feature")
 }
 
 func TestDeferred_searchinfinity(t *testing.T) {
@@ -630,7 +557,6 @@ func TestDeferred_searchinfinity(t *testing.T) {
 	tskip(t, F, "Searchinfinity maps business error codes to HTTP semantics", "the SearchInfinity provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Searchinfinity maps business error codes to HTTP semantics) ships with the feature")
 	tskip(t, F, "Searchinfinity errors redact credentials", "the SearchInfinity provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Searchinfinity errors redact credentials) ships with the feature")
 	tskip(t, F, "configured searchRouting can select Searchinfinity", "the SearchInfinity provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (configured searchRouting can select Searchinfinity) ships with the feature")
-	tskip(t, F, "curator page exposes Searchinfinity as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Searchinfinity as a manual provider) ships with the feature")
 }
 
 func TestDeferred_serpapi_provider(t *testing.T) {
@@ -640,7 +566,6 @@ func TestDeferred_serpapi_provider(t *testing.T) {
 	tskip(t, F, "SerpApi provider timeouts can fall through configured routing", "the SerpAPI provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (SerpApi provider timeouts can fall through configured routing) ships with the feature")
 	tskip(t, F, "SerpApi delayed ${status} body honors ${mode} cancellation routing", "the SerpAPI provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (SerpApi delayed ${status} body honors ${mode} cancellation routing) ships with the feature")
 	tskip(t, F, "SerpApi redacts the resolved credential in JSON error envelopes", "the SerpAPI provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (SerpApi redacts the resolved credential in JSON error envelopes) ships with the feature")
-	tskip(t, F, "SerpApi redacts API errors and appears in the Curator", "the search curator UI is deferred (docs/PORT.md); this case (SerpApi redacts API errors and appears in the Curator) ships with the feature")
 }
 
 func TestDeferred_serply_provider(t *testing.T) {
@@ -652,7 +577,6 @@ func TestDeferred_serply_provider(t *testing.T) {
 	tskip(t, F, "Serply provider timeouts can fall through configured routing", "the Serply provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Serply provider timeouts can fall through configured routing) ships with the feature")
 	tskip(t, F, "Serply delayed ${status} body honors ${mode} cancellation routing", "the Serply provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Serply delayed ${status} body honors ${mode} cancellation routing) ships with the feature")
 	tskip(t, F, "Serply redacts the resolved credential in JSON error envelopes", "the Serply provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Serply redacts the resolved credential in JSON error envelopes) ships with the feature")
-	tskip(t, F, "Serply redacts API errors and appears in the Curator", "the search curator UI is deferred (docs/PORT.md); this case (Serply redacts API errors and appears in the Curator) ships with the feature")
 }
 
 func TestDeferred_tinyfish(t *testing.T) {
@@ -664,14 +588,12 @@ func TestDeferred_tinyfish(t *testing.T) {
 	tskip(t, F, "TinyFish API errors redact credentials", "the TinyFish provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (TinyFish API errors redact credentials) ships with the feature")
 	tskip(t, F, "fetch_content uses TinyFish before Parallel after local and Jina extraction fail", "the TinyFish provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (fetch_content uses TinyFish before Parallel after local and Jina extraction fail) ships with the feature")
 	tskip(t, F, "configured searchRouting can select TinyFish", "the TinyFish provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (configured searchRouting can select TinyFish) ships with the feature")
-	tskip(t, F, "curator page exposes TinyFish as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes TinyFish as a manual provider) ships with the feature")
 }
 
 func TestDeferred_valyu_serper_provider(t *testing.T) {
 	const F = "valyu-serper-provider"
 	tskip(t, F, "Valyu sends documented credentials, bounds returned content, and supports explicit routing", "the Valyu and Serper provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Valyu sends documented credentials, bounds returned content, and supports explicit routing) ships with the feature")
 	tskip(t, F, "Serper maps organic results and reads its environment credential", "the Valyu and Serper provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Serper maps organic results and reads its environment credential) ships with the feature")
-	tskip(t, F, "Curator page exposes usable Serper and Valyu provider entries", "the search curator UI is deferred (docs/PORT.md); this case (Curator page exposes usable Serper and Valyu provider entries) ships with the feature")
 	tskip(t, F, "Valyu maps domain and recency filters to documented request fields", "the Valyu and Serper provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Valyu maps domain and recency filters to documented request fields) ships with the feature")
 	tskip(t, F, "Serper maps filters to Google parameters and reapplies domain filtering", "the Valyu and Serper provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Serper maps filters to Google parameters and reapplies domain filtering) ships with the feature")
 	tskip(t, F, "Valyu and Serper can be configured for routing but provider all never calls them", "the Valyu and Serper provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Valyu and Serper can be configured for routing but provider all never calls them) ships with the feature")
@@ -692,7 +614,6 @@ func TestDeferred_xai_provider(t *testing.T) {
 	tskip(t, F, "provider \"all\" does not fan out to xAI", "xAI is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (provider \"all\" does not fan out to xAI) ships with the feature")
 	tskip(t, F, "xAI without any credential explains all three ways to supply one", "xAI is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (xAI without any credential explains all three ways to supply one) ships with the feature")
 	tskip(t, F, "xAI HTTP errors redact the credential", "xAI is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (xAI HTTP errors redact the credential) ships with the feature")
-	tskip(t, F, "curator page exposes xAI as a manual provider", "xAI is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (curator page exposes xAI as a manual provider) ships with the feature")
 	tskip(t, F, "xAI answers with no answer text and no sources fail loudly", "xAI is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (xAI answers with no answer text and no sources fail loudly) ships with the feature")
 }
 
@@ -718,7 +639,6 @@ func TestDeferred_you_provider(t *testing.T) {
 	const F = "you-provider"
 	tskip(t, F, "You.com sends the documented search request and maps web results", "the You.com provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (You.com sends the documented search request and maps web results) ships with the feature")
 	tskip(t, F, "You.com is explicit-only and routing skips it when no key is configured", "the You.com provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (You.com is explicit-only and routing skips it when no key is configured) ships with the feature")
-	tskip(t, F, "You.com redacts API errors and appears in the Curator", "the search curator UI is deferred (docs/PORT.md); this case (You.com redacts API errors and appears in the Curator) ships with the feature")
 }
 
 func TestDeferred_youtube_extract_errors(t *testing.T) {

@@ -3,6 +3,7 @@ package websearch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -127,10 +128,20 @@ func SearchWithTavily(ctx context.Context, query string, o SearchOptions) (*Sear
 	}
 	tctx, cancel := withTimeout(ctx, tavilyTimeout)
 	defer cancel()
+	act := logAPIStart(query)
 	data, err := tavilyWithKeyFailover(ctx, tctx, apiURL, body)
 	if err != nil {
+		switch status := tavilyErrorStatus(err); {
+		case ctx.Err() != nil || errors.Is(err, context.Canceled):
+			act.complete(0)
+		case status > 0:
+			act.complete(status)
+		default:
+			act.logError(err.Error())
+		}
 		return nil, err
 	}
+	act.complete(200)
 	resp := &SearchResponse{Results: []SearchResult{}}
 	if s, ok := data.Answer.(string); ok {
 		resp.Answer = s

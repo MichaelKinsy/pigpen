@@ -312,8 +312,6 @@ func TestUpstream_all_provider(t *testing.T) {
 		wantErr(t, err, `contains an invalid provider: all`)
 	})
 
-	tskip(t, f, `"all" is a Curator provider but remains invalid inside sequential searchRouting`,
-		"needs the Curator page generator (deferred UI); the searchRouting half is covered by TestAllInvalidInsideSearchRouting")
 }
 
 func TestAllProviderStartsEligibleProvidersTogether(t *testing.T) {

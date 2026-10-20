@@ -21,7 +21,6 @@ func TestUpstream_proxy_transport(t *testing.T) {
 	tskip(t, F, "proxy curl redirects keep caller headers on the same origin", "the original spawns a curl child process for proxied requests and Go's net/http speaks the proxy protocol itself, so there is no child process to observe; same-origin header handling is covered by the FetchRemoteURL redirect twins")
 	tskip(t, F, "proxy curl keeps manual redirects as redirect responses", "the original spawns a curl child process for proxied requests and Go's net/http speaks the proxy protocol itself, so there is no child process to observe; the guarded fetch never follows redirects itself")
 	tskip(t, F, "proxy transport does not spawn curl for pre-aborted requests", "the original spawns a curl child process for proxied requests and Go's net/http speaks the proxy protocol itself, so there is no child process to observe; pre-aborted requests are covered by the extraction cancellation twins")
-	tskip(t, F, "websearch command scopes searches but not model callbacks to configured proxy", "the /websearch curator command is deferred (docs/PORT.md)")
 
 	tw(t, F, "configured proxy is scoped to web operations while empty string forces direct access", func(t *testing.T) {
 		extractEnv(t, `{"proxy":"http://global-proxy.example:8080"}`)

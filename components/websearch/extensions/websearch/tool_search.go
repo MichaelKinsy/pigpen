@@ -111,18 +111,16 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 		}
 	}
 	queries := normalizeQueryList(rawQueries)
-	var workflowInput any = params["workflow"]
-	if workflowInput == nil {
-		workflowInput = r.cfg.Root["workflow"]
-	}
-	workflow := resolveWebSearchWorkflow(workflowInput, r.hasUI())
+	// The configured workflow is read on every call: /curator changes it while the session runs.
+	requestedWorkflow, hasRequested := params["workflow"]
+	workflow := r.cur.run.Resolve(requestedWorkflow, hasRequested, currentRoot()["workflow"], r.hasUI())
 	recency := normalizeRecency(params["recencyFilter"])
 
 	if len(queries) == 0 {
 		return textOutput("Error: No query provided. Use 'query' or 'queries' parameter.", map[string]any{"error": "No query provided"}), nil
 	}
-	if workflow != "none" {
-		return ToolOutput{}, unsupported(fmt.Sprintf(`web_search workflow "%s" (the search curator and generated summaries)`, workflow))
+	if workflow == "summary-review" {
+		return r.curatedWebSearch(ctx, params, update, queries, recency)
 	}
 
 	provider, err := ResolveRequestedProvider(params["provider"])
@@ -208,21 +206,30 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 	if proxy != nil {
 		proxyStr = *proxy
 	}
-	return r.buildSearchReturn(searchReturn{queryList: queries, results: results, urls: urls, includeContent: opts.IncludeContent, inline: inline, proxy: proxy, proxyStr: proxyStr}), nil
-}
-
-func resolveWebSearchWorkflow(input any, hasUI bool) string {
-	s, _ := input.(string)
-	n := strings.ToLower(jsTrim(s))
-	switch {
-	case n == "auto-summary":
-		return n
-	case !hasUI:
-		return "none"
-	case n == "none" || n == "summary-review":
-		return n
+	ret := searchReturn{queryList: queries, results: results, urls: urls, includeContent: opts.IncludeContent, inline: inline, proxy: proxy, proxyStr: proxyStr}
+	if workflow == "auto-summary" {
+		sc := SideCallContextFrom(ctx)
+		if sc == nil {
+			return textOutput("Error: Auto-summary requires an active extension context.", map[string]any{"error": "Missing extension context"}), nil
+		}
+		if update != nil {
+			update(textOutput("Generating summary...", map[string]any{"phase": "generating-summary", "progress": 1}))
+		}
+		_, defaultModel, err := loadSummaryModelChoices(sc)
+		if err != nil {
+			return ToolOutput{}, err
+		}
+		override := ""
+		if defaultModel != nil {
+			override = *defaultModel
+		}
+		draft, err := GenerateSummaryDraft(ctx, results, sc, SummaryOptions{ModelOverride: override, DeadlineMs: GetSummaryGenerationDeadlineMs()})
+		if err != nil {
+			return ToolOutput{}, err
+		}
+		ret.workflow, ret.approvedSummary, ret.summaryMeta = "auto-summary", draft.Summary, &draft.Meta
 	}
-	return "none"
+	return r.buildSearchReturn(ret), nil
 }
 
 type searchReturn struct {
@@ -233,6 +240,13 @@ type searchReturn struct {
 	inline         []ExtractedContent
 	proxy          *string
 	proxyStr       string
+
+	// The curator and auto-summary workflows.
+	curated         bool
+	curatedFrom     int
+	workflow        string
+	approvedSummary string
+	summaryMeta     *SummaryMeta
 }
 
 func formatSearchSummary(results []SearchResult, answer string) string {
@@ -297,35 +311,52 @@ func (r *Runtime) buildSearchReturn(o searchReturn) ToolOutput {
 		totalResults += len(res.Results)
 	}
 	maxChars := MaxInlineContentChars(r.cfg.Root)
+	approved := jsTrim(o.approvedSummary)
+	hasApproved := approved != ""
 	var out strings.Builder
-	names := make([]string, len(o.results))
-	for i, res := range o.results {
-		providers := res.Providers
-		if providers == nil && res.Provider != "" {
-			providers = []string{res.Provider}
-		}
-		names[i] = strings.Join(providers, ", ")
-		if names[i] == "" {
-			names[i] = "unknown"
-		}
-	}
-	if len(o.results) == 1 {
-		fmt.Fprintf(&out, "**Provider:** %s\n\n", names[0])
+	if hasApproved {
+		out.WriteString(approved)
 	} else {
-		parts := make([]string, len(names))
-		for i, n := range names {
-			parts[i] = fmt.Sprintf("Query %d: %s", i+1, n)
+		if o.curated {
+			out.WriteString("[These results were manually curated by the user in the browser. Use them as-is — do not re-search or discard.]\n\n")
 		}
-		fmt.Fprintf(&out, "**Providers used:** %s\n\n", strings.Join(parts, "; "))
-	}
-	for _, res := range o.results {
-		if len(o.queryList) > 1 {
-			fmt.Fprintf(&out, "## Query: \"%s\"\n\n", res.Query)
+		names := make([]string, len(o.results))
+		for i, res := range o.results {
+			providers := res.Providers
+			if providers == nil && res.Provider != "" {
+				providers = []string{res.Provider}
+			}
+			names[i] = strings.Join(providers, ", ")
+			if names[i] == "" {
+				names[i] = "unknown"
+			}
 		}
-		if res.Error != nil {
-			out.WriteString("Error: " + *res.Error + "\n\n")
+		if len(o.results) == 1 {
+			fmt.Fprintf(&out, "**Provider:** %s\n\n", names[0])
 		} else {
-			out.WriteString(formatSearchSummary(res.Results, res.Answer) + "\n\n")
+			parts := make([]string, len(names))
+			for i, n := range names {
+				parts[i] = fmt.Sprintf("Query %d: %s", i+1, n)
+			}
+			fmt.Fprintf(&out, "**Providers used:** %s\n\n", strings.Join(parts, "; "))
+		}
+		var duplicates map[string]bool
+		if o.curated {
+			duplicates = duplicateQuerySet(o.results)
+		}
+		for _, res := range o.results {
+			if len(o.queryList) > 1 {
+				if o.curated {
+					out.WriteString(formatQueryHeader(res.Query, res.Provider, duplicates))
+				} else {
+					fmt.Fprintf(&out, "## Query: \"%s\"\n\n", res.Query)
+				}
+			}
+			if res.Error != nil {
+				out.WriteString("Error: " + *res.Error + "\n\n")
+			} else {
+				out.WriteString(formatSearchSummary(res.Results, res.Answer) + "\n\n")
+			}
 		}
 	}
 
@@ -374,6 +405,10 @@ func (r *Runtime) buildSearchReturn(o searchReturn) ToolOutput {
 		return v
 	}
 	p := boundSearchPresentation(unbounded, guidance(false), guidance(true), maxChars)
+	if hasApproved {
+		n := jsLen(unbounded)
+		p = presentation{text: unbounded, originalChars: n, returnedChars: n}
+	}
 
 	queryProviders := make([]map[string]any, len(o.results))
 	for i, res := range o.results {
@@ -397,7 +432,74 @@ func (r *Runtime) buildSearchReturn(o searchReturn) ToolOutput {
 	if background {
 		details["fetchUrls"] = o.urls
 	}
+	if o.curated {
+		details["curated"] = true
+		details["curatedFrom"] = o.curatedFrom
+		curatedQueries := make([]map[string]any, len(o.results))
+		for i, res := range o.results {
+			sources := make([]map[string]any, len(res.Results))
+			for j, src := range res.Results {
+				sources[j] = map[string]any{"title": src.Title, "url": src.URL}
+			}
+			var provider, answer, errValue any
+			if res.Provider != "" {
+				provider = res.Provider
+			}
+			if res.Answer != "" {
+				answer = res.Answer
+			}
+			if res.Error != nil {
+				errValue = *res.Error
+			}
+			curatedQueries[i] = map[string]any{"query": res.Query, "provider": provider, "answer": answer, "sources": sources, "error": errValue}
+		}
+		details["curatedQueries"] = curatedQueries
+	}
+	if o.workflow != "" && hasApproved {
+		meta := o.summaryMeta
+		if meta == nil {
+			meta = &SummaryMeta{}
+		}
+		summary := map[string]any{
+			"text": approved, "workflow": o.workflow, "model": nil, "durationMs": meta.DurationMs,
+			"tokenEstimate": meta.TokenEstimate, "fallbackUsed": meta.FallbackUsed, "edited": meta.Edited,
+		}
+		if meta.Model != nil {
+			summary["model"] = *meta.Model
+		}
+		if meta.FallbackReason != "" {
+			summary["fallbackReason"] = meta.FallbackReason
+		}
+		if meta.Phase != "" {
+			summary["phase"] = meta.Phase
+		}
+		details["summary"] = summary
+	}
 	return textOutput(p.text, details)
+}
+
+// duplicateQuerySet is duplicateQuerySet: the queries that appear more than once.
+func duplicateQuerySet(results []QueryResultData) map[string]bool {
+	counts := map[string]int{}
+	for _, r := range results {
+		counts[r.Query]++
+	}
+	dup := map[string]bool{}
+	for q, n := range counts {
+		if n > 1 {
+			dup[q] = true
+		}
+	}
+	return dup
+}
+
+// formatQueryHeader is formatQueryHeader: a duplicated query names its provider.
+func formatQueryHeader(query, provider string, duplicates map[string]bool) string {
+	suffix := ""
+	if duplicates[query] && provider != "" {
+		suffix = " (" + provider + ")"
+	}
+	return fmt.Sprintf("## Query: \"%s\"%s\n\n", query, suffix)
 }
 
 // startBackgroundFetch fetches result pages after the search returned and reports through a
@@ -480,6 +582,7 @@ func (r *Runtime) fetchInBackground(ctx context.Context, urls []string, proxy *s
 // session are cancelled and the retained results are rebuilt from the session entries.
 func (r *Runtime) SessionStarted(entries []CustomEntry) {
 	r.abortPending()
+	r.CloseCurator("")
 	r.mu.Lock()
 	r.sessionActive = true
 	r.mu.Unlock()
@@ -492,6 +595,7 @@ func (r *Runtime) SessionShutdown() {
 	r.sessionActive = false
 	r.mu.Unlock()
 	r.abortPending()
+	r.CloseCurator("")
 	ClearResults()
 }
 

@@ -346,15 +346,19 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 // same SSRF and domain-policy validation as the direct fetch, and only when the user opted in to
 // remote hosted providers. Any failure means "no result" so routing continues.
 func extractWithJinaReader(ctx context.Context, rawURL string, timeoutMs int64, lookup Lookup) *ExtractedContent {
+	act := logAPIStart("jina: " + rawURL)
 	ssrf, err := LoadSsrfConfig()
 	if err != nil {
+		act.failedErr(err)
 		return nil
 	}
 	policy, err := LoadFetchContentDomainPolicy()
 	if err != nil {
+		act.failedErr(err)
 		return nil
 	}
 	if _, err := ValidateRemoteURL(ctx, rawURL, ValidationOptions{Lookup: lookup, DomainPolicy: &policy, AllowRanges: ssrf.AllowRanges, TrustEnvProxy: ssrf.TrustEnvProxy}); err != nil {
+		act.failedErr(err)
 		return nil
 	}
 	if observeTimeout != nil {
@@ -365,12 +369,19 @@ func extractWithJinaReader(ctx context.Context, rawURL string, timeoutMs int64, 
 	resp, err := FetchWithCredentialRedirects(tctx, jinaReaderBase+rawURL, RequestInit{Method: "GET",
 		Header: http.Header{"Accept": {"text/markdown"}, "X-No-Cache": {"true"}}}, nil)
 	if err != nil {
+		act.failedErr(err)
+		return nil
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		act.complete(resp.StatusCode)
 		return nil
 	}
 	body, err := readBody(resp)
-	if err != nil || resp.StatusCode < 200 || resp.StatusCode > 299 {
+	if err != nil {
+		act.failedErr(err)
 		return nil
 	}
+	act.complete(resp.StatusCode)
 	const marker = "Markdown Content:"
 	start := strings.Index(body, marker)
 	if start < 0 {
@@ -527,14 +538,20 @@ func extractViaHTTP(ctx context.Context, rawURL string, timeoutMs int64, o Extra
 }
 
 func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted {
+	act := logFetchStart(rawURL)
 	fail := func(msg string) httpExtracted { return httpExtracted{ExtractedContent: failed(rawURL, msg)} }
+	// failLogged is a thrown error: the catch block logs it (an abort closes the entry as aborted).
+	failLogged := func(err error) httpExtracted {
+		act.failedErr(err)
+		return fail(err.Error())
+	}
 	ssrf, err := LoadSsrfConfig()
 	if err != nil {
-		return fail(err.Error())
+		return failLogged(err)
 	}
 	policy, err := LoadFetchContentDomainPolicy()
 	if err != nil {
-		return fail(err.Error())
+		return failLogged(err)
 	}
 	trustEnvProxy := o.Proxy == "" && ssrf.TrustEnvProxy
 	resp, err := FetchRemoteURL(ctx, rawURL, RequestInit{Method: "GET", Header: http.Header{
@@ -552,7 +569,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		Fetch:             currentPageFetch(),
 	})
 	if err != nil {
-		return fail(err.Error())
+		return failLogged(err)
 	}
 	defer resp.Body.Close()
 	status := resp.StatusCode
@@ -560,6 +577,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	statusText := http.StatusText(status)
 
 	if (status < 200 || status > 299) && o.Mode != "raw" {
+		act.complete(status)
 		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp(fmt.Sprintf("HTTP %d: %s", status, statusText)), Status: statusPtr}}
 	}
 	contentType := resp.Header.Get("Content-Type")
@@ -569,10 +587,11 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	if isPDFContent {
 		cfg, err := loadPDFConfig()
 		if err != nil {
-			return fail(err.Error())
+			return failLogged(err)
 		}
 		pdf = &cfg
 		if !cfg.Enabled {
+			act.complete(status)
 			return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp("PDF extraction is disabled by pdf.enabled"), MimeType: mime, Status: statusPtr}}
 		}
 	}
@@ -588,6 +607,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	}
 	if cl := resp.Header.Get("Content-Length"); cl != "" {
 		if n, err := strconv.ParseInt(leadingDigits(cl), 10, 64); err == nil && n > maxBytes {
+			act.complete(status)
 			if pdf != nil {
 				return fail(sizeErr().Error())
 			}
@@ -597,6 +617,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 
 	if o.Mode == "raw" {
 		if !isTextContentType(contentType) {
+			act.complete(status)
 			m := mime
 			if m == "" {
 				m = "missing"
@@ -605,25 +626,30 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		}
 		data, err := readLimited(resp.Body, maxBytes, sizeErr)
 		if err != nil {
-			return fail(err.Error())
+			return failLogged(err)
 		}
 		text := decodeText(data, contentType)
+		act.complete(status)
 		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: textTitle(text, rawURL), Content: text, MimeType: mime, Status: statusPtr}}
 	}
 
 	if supportedImageTypes[mime] {
 		if msg := imageGateError(); msg != "" {
+			act.complete(status)
 			return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp(msg), MimeType: mime, Status: statusPtr}}
 		}
 		data, err := readLimited(resp.Body, maxBytes, sizeErr)
 		if err != nil {
+			act.logError(err.Error())
 			return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp(err.Error()), MimeType: mime, Status: statusPtr}}
 		}
 		img, err := resizeImage(data, mime, 2000, 2000)
 		extractHook("processing")
 		if err != nil {
+			act.logError(err.Error())
 			return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp(err.Error()), MimeType: mime, Status: statusPtr}}
 		}
+		act.complete(status)
 		if img == nil {
 			return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp("Could not decode image: " + mime), MimeType: mime, Status: statusPtr}}
 		}
@@ -643,37 +669,43 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 
 	if pdf != nil {
 		if _, err := readLimited(resp.Body, maxBytes, sizeErr); err != nil {
+			act.logError(err.Error())
 			return fail(err.Error())
 		}
+		act.logError(unsupported("PDF text extraction").Error())
 		return fail(unsupported("PDF text extraction").Error())
 	}
 
 	if strings.Contains(contentType, "application/octet-stream") || strings.Contains(contentType, "image/") ||
 		strings.Contains(contentType, "audio/") || strings.Contains(contentType, "video/") || strings.Contains(contentType, "application/zip") {
+		act.complete(status)
 		return fail("Unsupported content type: " + strings.SplitN(contentType, ";", 2)[0])
 	}
 
 	data, err := readLimited(resp.Body, maxBytes, sizeErr)
 	if err != nil {
-		return fail(err.Error())
+		return failLogged(err)
 	}
 	text := decodeText(data, contentType)
 	isHTML := strings.Contains(contentType, "text/html") || strings.Contains(contentType, "application/xhtml+xml")
 
 	if isCloudflareChallenge(resp, text, isHTML) {
+		act.complete(status)
 		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp(fmt.Sprintf("HTTP %d: Blocked by Cloudflare challenge page", status)), Status: statusPtr}}
 	}
 	if !isHTML {
+		act.complete(status)
 		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: textTitle(text, rawURL), Content: text}}
 	}
 
 	extractHook("before-parse")
 	if ctx.Err() != nil {
+		act.complete(0)
 		return fail(abortedByDeadline)
 	}
 	doc, err := html.Parse(strings.NewReader(text))
 	if err != nil {
-		return fail(err.Error())
+		return failLogged(err)
 	}
 	docTitle := documentTitle(doc)
 	var linkHeader *string
@@ -683,6 +715,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	declared := DiscoverDeclaredWebLinks(doc, linkHeader, responseURL(resp, rawURL))
 	articleTitleText, markdown, ok := readableArticle(doc)
 	extractHook("processing")
+	act.complete(status)
 
 	// The original tries an RSC payload and then Defuddle before it reports an incomplete page;
 	// this port has neither, so the error says so instead of passing for the original's verdict.
