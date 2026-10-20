@@ -318,12 +318,6 @@
   "replace": "return renderedSegment{custom.ID, true}"
  },
  {
-  "name": "shell-mode-visible",
-  "file": "segments.go",
-  "find": "return notVisible() // the bash-mode editor",
-  "replace": "return renderedSegment{\"shell\", true} // the bash-mode editor"
- },
- {
   "name": "hex-regex",
   "file": "theme.go",
   "find": "`^#[0-9a-fA-F]{6}$`",
