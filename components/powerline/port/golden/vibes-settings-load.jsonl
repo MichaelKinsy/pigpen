@@ -1,0 +1,31 @@
+{"kind":"header","scenario":"vibes-settings-load","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:b6ab8658d40122733f451a165f9cf01a5c290f46aacef27c418cbdc767dc02fb","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"stash"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"01-cmd","ch":"ui","data":{"message":"Vibe: off | Mode: generate | Model: a/b","method":"notify","notifyType":"info"}}
+{"step":"01-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-cmd","ch":"ui","data":{"message":"Vibe mode set to: file","method":"notify","notifyType":"info"}}
+{"step":"02-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-cmd","ch":"ui","data":{"message":"Vibe set to: 日本語","method":"notify","notifyType":"info"}}
+{"step":"03-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"04-cmd","ch":"ui","data":{"message":"Vibe mode set to: file","method":"notify","notifyType":"info"}}
+{"step":"04-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"05-cmd","ch":"ui","data":{"message":"Vibe: 日本語 | Mode: file | Model: a/b | File: 7 vibes","method":"notify","notifyType":"info"}}
+{"step":"05-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"06-new-session","ch":"ui","data":{"method":"setStatus","statusKey":"stash"}}
+{"step":"06-new-session","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"06-new-session","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"06-new-session","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"06-new-session","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"06-new-session","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"06-new-session","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"06-new-session","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"06-new-session","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"07-cmd","ch":"ui","data":{"message":"Vibe: 日本語 | Mode: file | Model: a/b | File: 7 vibes","method":"notify","notifyType":"info"}}
+{"step":"07-cmd","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

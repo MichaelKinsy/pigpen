@@ -1,0 +1,21 @@
+{
+ "name": "keys-settings",
+ "description": "powerlineShortcuts, bashMode shortcut settings and stashSharpSShortcut are read without a warning (invalid and conflicting shortcuts are silently resolved).",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "prompt",
+   "rpc": {
+    "type": "prompt",
+    "message": "hello"
+   }
+  }
+ ],
+ "agentFiles": {
+  "settings.json": "{\"powerline\": {\"welcome\": false, \"stashSharpSShortcut\": true}, \"powerlineShortcuts\": {\"copyEditor\": \"ctrl+a\", \"cutEditor\": \"hyper+x\", \"reply\": \"ctrl+shift+r\", \"stashHistory\": null, \"queueOpen\": \"Cmd+Shift+Up\"}}"
+ }
+}

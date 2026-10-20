@@ -164,6 +164,7 @@ type app struct {
 	once      sync.Once
 	widthOnce sync.Once
 	cdq       *cdQuote // /cd, /reply and the last-prompt line (cdquote_ext.go)
+	keys      *keysExt
 }
 
 func (a *app) core(ctx sdk.Context) *powerline {
@@ -171,6 +172,9 @@ func (a *app) core(ctx sdk.Context) *powerline {
 		a.host = &sdkHost{ctx: ctx}
 		a.pl = newPowerline(a.host)
 		a.host.pl = a.pl
+		if a.keys != nil {
+			a.pl.keys = a.keys
+		}
 	})
 	a.host.ctx = ctx
 	return a.pl
@@ -240,6 +244,9 @@ func Extension() *sdk.Extension {
 			return nil
 		})
 	}
+	registerKeys(e, a)
+	registerFollowUp(e, a)
+	registerVibes(e, a)
 	e.OnSessionStart(a.onSessionStart)
 	for _, ev := range []string{sdk.EventModelSelect, sdk.EventThinkingLevelSelect, sdk.EventSessionTree, sdk.EventSessionInfoChanged,
 		sdk.EventToolResult, sdk.EventUserBash, sdk.EventAgentStart, sdk.EventMessageUpdate, sdk.EventMessageEnd, sdk.EventTurnEnd,

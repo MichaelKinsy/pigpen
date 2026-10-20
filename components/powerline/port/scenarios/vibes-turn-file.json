@@ -1,0 +1,36 @@
+{
+ "name": "vibes-turn-file",
+ "description": "A turn in file mode: no model request besides the turn itself; the status counts the theme file.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "agentFiles": {
+  "settings.json": "{\"workingVibe\": \"pirate\", \"workingVibeMode\": \"file\"}",
+  "vibes/pirate.txt": "Hoisting the sails...\nSwabbing the deck...\nnot a vibe\n"
+ },
+ "steps": [
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe"
+   }
+  },
+  {
+   "name": "prompt",
+   "rpc": {
+    "type": "prompt",
+    "message": "hello"
+   }
+  },
+  {
+   "name": "cmd",
+   "rpc": {
+    "type": "prompt",
+    "message": "/vibe"
+   }
+  }
+ ]
+}

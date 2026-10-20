@@ -1,0 +1,1022 @@
+[
+ {
+  "name": "transcript-line-limit-inclusive",
+  "file": "bash_transcript.go",
+  "find": "s.totalLines > s.settings.MaxLines",
+  "replace": "s.totalLines >= s.settings.MaxLines"
+ },
+ {
+  "name": "transcript-byte-limit-inclusive",
+  "file": "bash_transcript.go",
+  "find": "s.totalBytes > s.settings.MaxBytes",
+  "replace": "s.totalBytes >= s.settings.MaxBytes"
+ },
+ {
+  "name": "transcript-drops-active-command",
+  "file": "bash_transcript.go",
+  "find": "len(s.commands) > 1 &&",
+  "replace": "len(s.commands) > 0 &&"
+ },
+ {
+  "name": "transcript-byte-count-no-break",
+  "file": "bash_transcript.go",
+  "find": "added += len(line) + 1",
+  "replace": "added += len(line)"
+ },
+ {
+  "name": "transcript-no-truncated-count",
+  "file": "bash_transcript.go",
+  "find": "s.truncatedCommands++\n\t\tremoved.Truncated = true",
+  "replace": "removed.Truncated = true"
+ },
+ {
+  "name": "transcript-keeps-cr",
+  "file": "bash_transcript.go",
+  "find": "strings.ReplaceAll(line, \"\\r\", \"\")",
+  "replace": "line"
+ },
+ {
+  "name": "transcript-empty-chunk-dropped",
+  "file": "bash_transcript.go",
+  "find": "normalized = append(normalized, \"\")\n\t\t\tcontinue",
+  "replace": "continue"
+ },
+ {
+  "name": "transcript-exit-code-lost",
+  "file": "bash_transcript.go",
+  "find": "entry.ExitCode = &exitCode",
+  "replace": "entry.ExitCode = nil"
+ },
+ {
+  "name": "transcript-snapshot-aliases-output",
+  "file": "bash_transcript.go",
+  "find": "copied.Output = append([]string{}, c.Output...)",
+  "replace": "copied.Output = c.Output"
+ },
+ {
+  "name": "transcript-empty-output-recorded",
+  "file": "bash_transcript.go",
+  "find": "if entry == nil || chunk == \"\" {",
+  "replace": "if entry == nil {"
+ },
+ {
+  "name": "transcript-clear-keeps-count",
+  "file": "bash_transcript.go",
+  "find": "s.totalLines, s.totalBytes, s.truncatedCommands = 0, 0, 0",
+  "replace": "s.totalLines, s.totalBytes = 0, 0"
+ },
+ {
+  "name": "history-root-key",
+  "file": "bash_history.go",
+  "find": "return \"root\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "history-key-keeps-trailing-slash",
+  "file": "bash_history.go",
+  "find": "`^[/\\\\]+|[/\\\\]+$`",
+  "replace": "`^[/\\\\]+`"
+ },
+ {
+  "name": "history-accepts-zero-timestamp",
+  "file": "bash_history.go",
+  "find": "command == \"\" || cwd == \"\" || timestamp == 0",
+  "replace": "command == \"\" || cwd == \"\""
+ },
+ {
+  "name": "history-accepts-empty-cwd",
+  "file": "bash_history.go",
+  "find": "command == \"\" || cwd == \"\" || timestamp == 0",
+  "replace": "command == \"\" || timestamp == 0"
+ },
+ {
+  "name": "history-sorts-oldest-first",
+  "file": "bash_history.go",
+  "find": "entries[i].Timestamp > entries[j].Timestamp",
+  "replace": "entries[i].Timestamp < entries[j].Timestamp"
+ },
+ {
+  "name": "history-cap-499",
+  "file": "bash_history.go",
+  "find": "next = next[:500]",
+  "replace": "next = next[:499]"
+ },
+ {
+  "name": "history-keeps-duplicates",
+  "file": "bash_history.go",
+  "find": "if e.Command != normalized {",
+  "replace": "if true {"
+ },
+ {
+  "name": "history-untrimmed-command",
+  "file": "bash_history.go",
+  "find": "normalized := jsTrim(command)",
+  "replace": "normalized := command"
+ },
+ {
+  "name": "history-fingerprint-ignores-mode-and-ctime",
+  "file": "bash_history.go",
+  "find": "ctimeNs: fileCtimeNs(fi), mtimeNs: fi.ModTime().UnixNano(), mode: uint32(fi.Mode()), size: fi.Size()",
+  "replace": "mtimeNs: fi.ModTime().UnixNano(), size: fi.Size()"
+ },
+ {
+  "name": "history-zsh-plain-lines-dropped",
+  "file": "bash_history.go",
+  "find": "if !strings.HasPrefix(trimmed, \":\") {",
+  "replace": "if strings.HasPrefix(trimmed, \":\") {"
+ },
+ {
+  "name": "history-zsh-command-cut-at-semicolon",
+  "file": "bash_history.go",
+  "find": "strings.Join(parts[1:], \";\")",
+  "replace": "parts[1]"
+ },
+ {
+  "name": "history-fish-oldest-first",
+  "file": "bash_history.go",
+  "find": "entries = bashReverseStrings(parseFishHistory(raw))",
+  "replace": "entries = parseFishHistory(raw)"
+ },
+ {
+  "name": "history-bash-oldest-first",
+  "file": "bash_history.go",
+  "find": "entries = bashReverseStrings(parseBashHistory(strings.Split(raw, \"\\n\")))",
+  "replace": "entries = parseBashHistory(strings.Split(raw, \"\\n\"))"
+ },
+ {
+  "name": "history-ignores-histfile",
+  "file": "bash_history.go",
+  "find": "case os.Getenv(\"HISTFILE\") != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "history-zsh-file-name",
+  "file": "bash_history.go",
+  "find": "filepath.Join(home, \".zsh_history\")",
+  "replace": "filepath.Join(home, \".bash_history\")"
+ },
+ {
+  "name": "history-fish-file-path",
+  "file": "bash_history.go",
+  "find": "filepath.Join(home, \".local\", \"share\", \"fish\", \"fish_history\")",
+  "replace": "filepath.Join(home, \".local\", \"fish\", \"fish_history\")"
+ },
+ {
+  "name": "history-global-cache-never-invalidated",
+  "file": "bash_history.go",
+  "find": "ok && cached.fp == fp {\n\t\treturn cached.entries\n\t}\n\tdata, err := os.ReadFile(filePath)\n\tif err != nil {\n\t\tglobalHistoryCache",
+  "replace": "ok {\n\t\treturn cached.entries\n\t}\n\tdata, err := os.ReadFile(filePath)\n\tif err != nil {\n\t\tglobalHistoryCache"
+ },
+ {
+  "name": "history-unreadable-not-cached",
+  "file": "bash_history.go",
+  "find": "globalHistoryCache[cacheKey] = cachedGlobalHistory{fp: fp, entries: nil}",
+  "replace": "delete(globalHistoryCache, cacheKey)"
+ },
+ {
+  "name": "history-project-cache-never-invalidated",
+  "file": "bash_history.go",
+  "find": "ok && cached.fp == fp {\n\t\treturn cached.entries\n\t}\n\tdata, err := os.ReadFile(filePath)\n\tif err != nil {\n\t\tbashDebug(\"[powerline-footer] Failed to read bash project",
+  "replace": "ok {\n\t\treturn cached.entries\n\t}\n\tdata, err := os.ReadFile(filePath)\n\tif err != nil {\n\t\tbashDebug(\"[powerline-footer] Failed to read bash project"
+ },
+ {
+  "name": "history-match-keeps-duplicates",
+  "file": "bash_history.go",
+  "find": "if entry == \"\" || seen[entry] {",
+  "replace": "if entry == \"\" {"
+ },
+ {
+  "name": "history-match-empty-prefix-matches-nothing",
+  "file": "bash_history.go",
+  "find": "if trimmedPrefix != \"\" && !strings.HasPrefix(entry, trimmedPrefix) {",
+  "replace": "if !strings.HasPrefix(entry, trimmedPrefix) || trimmedPrefix == \"\" {"
+ },
+ {
+  "name": "history-match-limit-off-by-one",
+  "file": "bash_history.go",
+  "find": "if len(matches) >= limit {",
+  "replace": "if len(matches) > limit {"
+ },
+ {
+  "name": "history-version-field",
+  "file": "bash_history.go",
+  "find": "doc.set(\"version\", float64(1))",
+  "replace": "doc.set(\"version\", float64(2))"
+ },
+ {
+  "name": "ghost-cd-stem-reversed",
+  "file": "bash_completion.go",
+  "find": "strings.HasPrefix(\"cd\", trimmed)",
+  "replace": "strings.HasPrefix(trimmed, \"cd\")"
+ },
+ {
+  "name": "ghost-git-fallback-source",
+  "file": "bash_completion.go",
+  "find": "return &ghostSuggestion{Value: \"git status\", Source: bashSourceGit}",
+  "replace": "return &ghostSuggestion{Value: \"git status\", Source: bashSourcePath}"
+ },
+ {
+  "name": "ghost-git-head-one-letter",
+  "file": "bash_completion.go",
+  "find": "utf16Len(trimmed) >= 2 &&",
+  "replace": "utf16Len(trimmed) >= 1 &&"
+ },
+ {
+  "name": "ghost-global-head-unchecked",
+  "file": "bash_completion.go",
+  "find": "if commandHead(entry) != head {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ghost-empty-prompt-no-prefix",
+  "file": "bash_completion.go",
+  "find": "Value: line + projectHistory[0]",
+  "replace": "Value: projectHistory[0]"
+ },
+ {
+  "name": "ghost-accepts-unchanged-line",
+  "file": "bash_completion.go",
+  "find": "if !strings.HasPrefix(value, line) || value == line {",
+  "replace": "if !strings.HasPrefix(value, line) {"
+ },
+ {
+  "name": "ghost-global-boost-adds-nothing",
+  "file": "bash_completion.go",
+  "find": "item.Score += boost",
+  "replace": "item.Score += 0"
+ },
+ {
+  "name": "ghost-boost-floor-zero",
+  "file": "bash_completion.go",
+  "find": "boosts[value] = max(1, 4-index)",
+  "replace": "boosts[value] = max(0, 4-index)"
+ },
+ {
+  "name": "tokenizer-quote-never-closes",
+  "file": "bash_completion.go",
+  "find": "if char == quote {\n\t\t\t\tquote = 0",
+  "replace": "if false {\n\t\t\t\tquote = 0"
+ },
+ {
+  "name": "tokenizer-escape-char",
+  "file": "bash_completion.go",
+  "find": "if char == '\\\\' {\n\t\t\tescaped = true",
+  "replace": "if char == '/' {\n\t\t\tescaped = true"
+ },
+ {
+  "name": "tokenizer-ascii-whitespace",
+  "file": "bash_completion.go",
+  "find": "if isJSSpace(char) {\n\t\t\tif current.Len() > 0",
+  "replace": "if char == ' ' {\n\t\t\tif current.Len() > 0"
+ },
+ {
+  "name": "token-index-off-by-one",
+  "file": "bash_completion.go",
+  "find": "tokenIndex: max(0, len(tokens)-1)",
+  "replace": "tokenIndex: len(tokens)"
+ },
+ {
+  "name": "oneoff-bang-offset",
+  "file": "bash_completion.go",
+  "find": "Prefix: \"!!\", Command: line[2:], Offset: 2",
+  "replace": "Prefix: \"!!\", Command: line[2:], Offset: 1"
+ },
+ {
+  "name": "path-home-not-expanded",
+  "file": "bash_completion.go",
+  "find": "expanded = jsPathJoin(os.Getenv(\"HOME\"), token[2:])",
+  "replace": "expanded = token"
+ },
+ {
+  "name": "path-directory-score",
+  "file": "bash_completion.go",
+  "find": "suffix, score = \"/\", 44",
+  "replace": "suffix, score = \"/\", 40"
+ },
+ {
+  "name": "path-entry-cap-101",
+  "file": "bash_completion.go",
+  "find": "if len(items) == 100 {\n\t\t\tbreak\n\t\t}\n\t\tsuffix, score",
+  "replace": "if len(items) == 101 {\n\t\t\tbreak\n\t\t}\n\t\tsuffix, score"
+ },
+ {
+  "name": "path-escape-dropped",
+  "file": "bash_completion.go",
+  "find": "ReplaceAllString(value, `\\$1`)",
+  "replace": "ReplaceAllString(value, `$1`)"
+ },
+ {
+  "name": "path-dir-suffix-lost",
+  "file": "bash_completion.go",
+  "find": "suffix, score = \"/\", 44",
+  "replace": "suffix, score = \"\", 44"
+ },
+ {
+  "name": "unique-keeps-lower-score",
+  "file": "bash_completion.go",
+  "find": "item.Score > best[i].Score",
+  "replace": "item.Score < best[i].Score"
+ },
+ {
+  "name": "unique-sort-ascending",
+  "file": "bash_completion.go",
+  "find": "if best[i].Score != best[j].Score {\n\t\t\treturn best[i].Score > best[j].Score",
+  "replace": "if best[i].Score != best[j].Score {\n\t\t\treturn best[i].Score < best[j].Score"
+ },
+ {
+  "name": "locale-case-order",
+  "file": "bash_completion.go",
+  "find": "upper = 1\n\t\t}\n\t\treturn [3]int{200",
+  "replace": "upper = 0\n\t\t}\n\t\treturn [3]int{200"
+ },
+ {
+  "name": "locale-uppercase-first",
+  "file": "bash_completion.go",
+  "find": "return [3]int{200 + int(r-'A'), 0, 1}",
+  "replace": "return [3]int{200 + int(r-'A'), 0, 0}"
+ },
+ {
+  "name": "locale-symbols-after-digits",
+  "file": "bash_completion.go",
+  "find": "return [3]int{1 + i, 0, 0}",
+  "replace": "return [3]int{300 + i, 0, 0}"
+ },
+ {
+  "name": "git-subcommand-at-first-word",
+  "file": "bash_completion.go",
+  "find": "if tc.tokenIndex <= 1 {",
+  "replace": "if tc.tokenIndex <= 0 {"
+ },
+ {
+  "name": "git-only-git-head",
+  "file": "bash_completion.go",
+  "find": "tokens[0] != \"git\"",
+  "replace": "tokens[0] != \"gi\""
+ },
+ {
+  "name": "git-diff-takes-no-refs",
+  "file": "bash_completion.go",
+  "find": "\"checkout\", \"switch\", \"merge\", \"rebase\", \"branch\", \"show\", \"diff\"}",
+  "replace": "\"checkout\", \"switch\", \"merge\", \"rebase\", \"branch\", \"show\"}"
+ },
+ {
+  "name": "git-ref-score-below-path",
+  "file": "bash_completion.go",
+  "find": "Source: bashSourceGit, Score: 50",
+  "replace": "Source: bashSourceGit, Score: 30"
+ },
+ {
+  "name": "git-no-tags",
+  "file": "bash_completion.go",
+  "find": "[]string{\"tag\", \"--list\"}",
+  "replace": "[]string{\"branch\", \"--list\"}"
+ },
+ {
+  "name": "git-ref-cap",
+  "file": "bash_completion.go",
+  "find": "if len(items) == 100 {\n\t\t\tbreak\n\t\t}\n\t\titems = append(items, extendedCompletionItem{Value: ref",
+  "replace": "if len(items) == 99 {\n\t\t\tbreak\n\t\t}\n\t\titems = append(items, extendedCompletionItem{Value: ref"
+ },
+ {
+  "name": "session-success-on-failure",
+  "file": "bash_shell_session.go",
+  "find": "if exitCode == 0 {",
+  "replace": "if exitCode >= 0 {"
+ },
+ {
+  "name": "session-done-cwd-always",
+  "file": "bash_shell_session.go",
+  "find": "if cwdField != \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "session-control-chars-kept",
+  "file": "bash_shell_session.go",
+  "find": "[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]",
+  "replace": "[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f]"
+ },
+ {
+  "name": "session-keeps-cr",
+  "file": "bash_shell_session.go",
+  "find": "strings.ReplaceAll(stripShellAnsi(chunk), \"\\r\", \"\")",
+  "replace": "stripShellAnsi(chunk)"
+ },
+ {
+  "name": "session-quote-escape",
+  "file": "bash_shell_session.go",
+  "find": "strings.ReplaceAll(value, \"'\", `'\"'\"'`)",
+  "replace": "strings.ReplaceAll(value, \"'\", `\\'`)"
+ },
+ {
+  "name": "session-interrupt-while-idle",
+  "file": "bash_shell_session.go",
+  "find": "if cmd == nil || !running {",
+  "replace": "if cmd == nil || (!running && false) {"
+ },
+ {
+  "name": "session-dispose-leaves-process",
+  "file": "bash_shell_session.go",
+  "find": "_ = signalShellGroup(cmd.Process, shellSignalKill)",
+  "replace": "_ = cmd"
+ },
+ {
+  "name": "session-env-switches-dropped",
+  "file": "bash_shell_session.go",
+  "find": "\"DISABLE_AUTO_UPDATE=true\", \"DISABLE_UPDATE_PROMPT=true\"",
+  "replace": "\"DISABLE_UPDATE_PROMPT=true\""
+ },
+ {
+  "name": "session-id-counter",
+  "file": "bash_shell_session.go",
+  "find": "s.commandCounter++\n\tid :=",
+  "replace": "id :="
+ },
+ {
+  "name": "session-already-running-text",
+  "file": "bash_shell_session.go",
+  "find": "errors.New(\"Shell command already running\")",
+  "replace": "errors.New(\"Shell command is running\")"
+ },
+ {
+  "name": "session-start-failure-text",
+  "file": "bash_shell_session.go",
+  "find": "\"Shell failed to start (exit %d)\"",
+  "replace": "\"Shell failed (exit %d)\""
+ },
+ {
+  "name": "session-ready-cwd-empty",
+  "file": "bash_shell_session.go",
+  "find": "if cwd := line[len(readySentinel)+1:]; cwd != \"\" {",
+  "replace": "if cwd := line[len(readySentinel)+1:]; true {"
+ },
+ {
+  "name": "session-start-marker-empty-id",
+  "file": "bash_shell_session.go",
+  "find": "if len(fields) > 1 {\n\t\t\t\ts.currentCommandID = fields[1]",
+  "replace": "if len(fields) > 1 && fields[1] != \"\" {\n\t\t\t\ts.currentCommandID = fields[1]"
+ },
+ {
+  "name": "session-exit-code-parse",
+  "file": "bash_shell_session.go",
+  "find": "exitCode, ok = jsParseInt10(fields[2])",
+  "replace": "exitCode, ok = 0, true"
+ },
+ {
+  "name": "session-unparsable-exit-code",
+  "file": "bash_shell_session.go",
+  "find": "if !ok {\n\t\t\t\texitCode = 1",
+  "replace": "if !ok {\n\t\t\t\texitCode = 0"
+ },
+ {
+  "name": "session-output-before-ready-kept",
+  "file": "bash_shell_session.go",
+  "find": "if strings.HasPrefix(line, readySentinel+\":\") {",
+  "replace": "if strings.HasPrefix(line, readySentinel) {"
+ },
+ {
+  "name": "session-trailing-space-kept",
+  "file": "bash_shell_session.go",
+  "find": "strings.TrimRightFunc(rawLine, isJSSpace)",
+  "replace": "rawLine"
+ },
+ {
+  "name": "session-enoent-text",
+  "file": "bash_shell_session.go",
+  "find": "fmt.Errorf(\"spawn %s ENOENT\", path)",
+  "replace": "fmt.Errorf(\"spawn %s failed\", path)"
+ },
+ {
+  "name": "session-new-process-group-dropped",
+  "file": "bash_procattr_other.go",
+  "find": "&syscall.SysProcAttr{Setsid: true}",
+  "replace": "&syscall.SysProcAttr{}"
+ },
+ {
+  "name": "session-sigint-exit-code",
+  "file": "bash_procattr_other.go",
+  "find": "case syscall.SIGINT:\n\t\t\treturn 130",
+  "replace": "case syscall.SIGINT:\n\t\t\treturn 129"
+ },
+ {
+  "name": "session-sigterm-exit-code",
+  "file": "bash_procattr_other.go",
+  "find": "return 143",
+  "replace": "return 142"
+ },
+ {
+  "name": "session-sigkill-exit-code",
+  "file": "bash_procattr_other.go",
+  "find": "return 137",
+  "replace": "return 136"
+ },
+ {
+  "name": "session-group-signal-falls-back",
+  "file": "bash_procattr_other.go",
+  "find": "return p.Signal(sig)\n}\n\nvar",
+  "replace": "return nil\n}\n\nvar"
+ },
+ {
+  "name": "session-init-script-bash-ready",
+  "file": "bash_shell_session.go",
+  "find": "printf '%s:%s\\n' '` + readySentinel + `' \"$PWD\"",
+  "replace": "printf '%s\\n' '` + readySentinel + `'"
+ },
+ {
+  "name": "session-fish-detection",
+  "file": "bash_shell_session.go",
+  "find": "if strings.Contains(shellName, \"fish\") {\n\t\treturn `",
+  "replace": "if shellName == \"fishx\" {\n\t\treturn `"
+ },
+ {
+  "name": "mode-reenable-not-skipped",
+  "file": "bash_mode.go",
+  "find": "if value == current {\n\t\treturn\n\t}",
+  "replace": "if value == current && false {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "mode-leave-while-running",
+  "file": "bash_mode.go",
+  "find": "if !value && session != nil && session.State().Running {",
+  "replace": "if !value && session != nil && false {"
+ },
+ {
+  "name": "mode-disabled-text",
+  "file": "bash_mode.go",
+  "find": "\"Bash mode disabled\"",
+  "replace": "\"Bash mode off\""
+ },
+ {
+  "name": "mode-enabled-text",
+  "file": "bash_mode.go",
+  "find": "\"Bash mode enabled (\"",
+  "replace": "\"Bash mode on (\""
+ },
+ {
+  "name": "mode-usage-text",
+  "file": "bash_mode.go",
+  "find": "\"Usage: /bash-mode [on|off|toggle]\"",
+  "replace": "\"Usage: /bash-mode [on|off]\""
+ },
+ {
+  "name": "mode-default-argument",
+  "file": "bash_mode.go",
+  "find": "mode = \"toggle\"\n\t}",
+  "replace": "mode = \"on\"\n\t}"
+ },
+ {
+  "name": "mode-start-failure-keeps-session",
+  "file": "bash_mode.go",
+  "find": "b.session, b.active = nil, false\n\t\t\tb.mu.Unlock()\n\t\t\tif old != nil {\n\t\t\t\told.dispose()\n\t\t\t}\n\t\t\tb.env.RequestStatusRender()",
+  "replace": "b.active = false\n\t\t\tb.mu.Unlock()\n\t\t\t_ = old\n\t\t\tb.env.RequestStatusRender()"
+ },
+ {
+  "name": "mode-reset-keeps-transcript",
+  "file": "bash_mode.go",
+  "find": "transcript.clear()\n\tif active {",
+  "replace": "_ = transcript\n\tif active {"
+ },
+ {
+  "name": "mode-reset-no-restart",
+  "file": "bash_mode.go",
+  "find": "if active {\n\t\tif _, err := b.ensureShellSession(ctx)",
+  "replace": "if active && false {\n\t\tif _, err := b.ensureShellSession(ctx)"
+ },
+ {
+  "name": "mode-reset-text",
+  "file": "bash_mode.go",
+  "find": "\"Bash session reset\"",
+  "replace": "\"Bash reset\""
+ },
+ {
+  "name": "mode-run-error-text",
+  "file": "bash_mode.go",
+  "find": "\"Failed to run shell command: \"",
+  "replace": "\"Failed to run: \""
+ },
+ {
+  "name": "mode-start-error-text",
+  "file": "bash_mode.go",
+  "find": "\"Failed to start shell session: \"",
+  "replace": "\"Failed to start: \""
+ },
+ {
+  "name": "mode-restart-error-text",
+  "file": "bash_mode.go",
+  "find": "\"Failed to restart shell session: \"",
+  "replace": "\"Failed to restart: \""
+ },
+ {
+  "name": "mode-reset-failure-keeps-mode",
+  "file": "bash_mode.go",
+  "find": "b.mu.Lock()\n\t\t\tb.active = false\n\t\t\tb.mu.Unlock()\n\t\t\tb.env.Notify(\"Failed to restart",
+  "replace": "b.env.Notify(\"Failed to restart"
+ },
+ {
+  "name": "mode-session-start-keeps-active",
+  "file": "bash_mode.go",
+  "find": "b.session, b.active, b.limits = nil, false, limits",
+  "replace": "b.session, b.limits = nil, limits"
+ },
+ {
+  "name": "mode-session-start-keeps-transcript",
+  "file": "bash_mode.go",
+  "find": "b.transcript, b.engine = newBashTranscriptStore(limits), &bashCompletionEngine{}",
+  "replace": "b.engine = &bashCompletionEngine{}"
+ },
+ {
+  "name": "mode-shutdown-keeps-active",
+  "file": "bash_mode.go",
+  "find": "b.session, b.active = nil, false\n\tb.mu.Unlock()\n\tif old != nil {\n\t\told.dispose()\n\t}\n}\n\n// powerlineDisabled",
+  "replace": "b.session = nil\n\tb.mu.Unlock()\n\tif old != nil {\n\t\told.dispose()\n\t}\n}\n\n// powerlineDisabled"
+ },
+ {
+  "name": "mode-powerline-off-keeps-transcript",
+  "file": "bash_mode.go",
+  "find": "if old != nil {\n\t\told.dispose()\n\t}\n\ttranscript.clear()\n}",
+  "replace": "if old != nil {\n\t\told.dispose()\n\t}\n\t_ = transcript\n}"
+ },
+ {
+  "name": "mode-oneoff-ghost-prefix",
+  "file": "bash_mode.go",
+  "find": "Value: oneOff.Prefix + ghost.Value",
+  "replace": "Value: \"!\" + ghost.Value"
+ },
+ {
+  "name": "mode-history-not-deduplicated",
+  "file": "bash_mode.go",
+  "find": "if !seen[v] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "mode-history-global-first",
+  "file": "bash_mode.go",
+  "find": "append(project, global...)",
+  "replace": "append(global, project...)"
+ },
+ {
+  "name": "mode-default-shell",
+  "file": "bash_mode.go",
+  "find": "return \"/bin/sh\"",
+  "replace": "return \"/bin/bash\""
+ },
+ {
+  "name": "mode-shell-cwd-ignores-shell",
+  "file": "bash_mode.go",
+  "find": "return session.State().Cwd\n\t}\n\treturn b.env.Cwd()",
+  "replace": "return b.env.Cwd()\n\t}\n\treturn b.env.Cwd()"
+ },
+ {
+  "name": "transcript-hidden-outside-mode",
+  "file": "bash_mode.go",
+  "find": "if !active {\n\t\treturn nil, nil\n\t}",
+  "replace": "if !active && false {\n\t\treturn nil, nil\n\t}"
+ },
+ {
+  "name": "transcript-five-commands",
+  "file": "bash_mode.go",
+  "find": "if len(commands) > 4 {\n\t\tcommands = commands[len(commands)-4:]",
+  "replace": "if len(commands) > 5 {\n\t\tcommands = commands[len(commands)-5:]"
+ },
+ {
+  "name": "transcript-seven-output-lines",
+  "file": "bash_mode.go",
+  "find": "if len(output) > 6 {\n\t\t\toutput = output[len(output)-6:]",
+  "replace": "if len(output) > 7 {\n\t\t\toutput = output[len(output)-7:]"
+ },
+ {
+  "name": "transcript-seventeen-rows",
+  "file": "bash_mode.go",
+  "find": "if len(lines) > 16 {\n\t\tlines = lines[len(lines)-16:]",
+  "replace": "if len(lines) > 17 {\n\t\tlines = lines[len(lines)-17:]"
+ },
+ {
+  "name": "transcript-command-width",
+  "file": "bash_mode.go",
+  "find": "max(8, width-8)",
+  "replace": "max(8, width-7)"
+ },
+ {
+  "name": "transcript-output-width",
+  "file": "bash_mode.go",
+  "find": "max(1, width-3)",
+  "replace": "max(1, width-2)"
+ },
+ {
+  "name": "transcript-fish-glyph",
+  "file": "bash_mode.go",
+  "find": "if shellName == \"fish\" {\n\t\tpromptGlyph = \">\"",
+  "replace": "if shellName == \"fisx\" {\n\t\tpromptGlyph = \">\""
+ },
+ {
+  "name": "transcript-plural-notice",
+  "file": "bash_mode.go",
+  "find": "if snapshot.TruncatedCommands == 1 {\n\t\t\tplural = \"\"",
+  "replace": "if snapshot.TruncatedCommands == 2 {\n\t\t\tplural = \"\""
+ },
+ {
+  "name": "transcript-exit-status-color",
+  "file": "bash_mode.go",
+  "find": "th.Fg(\"error\", \"exit \"+bashItoa(*command.ExitCode))",
+  "replace": "th.Fg(\"warning\", \"exit \"+bashItoa(*command.ExitCode))"
+ },
+ {
+  "name": "transcript-whitespace-collapse",
+  "file": "bash_mode.go",
+  "find": "strings.Join(strings.FieldsFunc(text, isJSSpace), \" \")",
+  "replace": "text"
+ },
+ {
+  "name": "editor-printable-space",
+  "file": "bash_editor_logic.go",
+  "find": "code >= 0x20 &&",
+  "replace": "code > 0x20 &&"
+ },
+ {
+  "name": "editor-printable-c1",
+  "file": "bash_editor_logic.go",
+  "find": "(code < 0x7f || code > 0x9f)",
+  "replace": "code < 0x7f"
+ },
+ {
+  "name": "editor-undo-encoding",
+  "file": "bash_editor_logic.go",
+  "find": "\"\\x1b[122;9u\", \"\\x1b[122;9:1u\", \"\\x1b[122;9:2u\", \"\\x1b[27;9;122~\"",
+  "replace": "\"\\x1b[122;9u\", \"\\x1b[122;9:1u\", \"\\x1b[122;9:2u\""
+ },
+ {
+  "name": "editor-paste-trailing-text",
+  "file": "bash_editor_logic.go",
+  "find": "if end+len(endMarker) != len(data) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "editor-paste-prefix",
+  "file": "bash_editor_logic.go",
+  "find": "if !strings.HasPrefix(data, startMarker) {",
+  "replace": "if !strings.Contains(data, startMarker) {"
+ },
+ {
+  "name": "editor-file-host",
+  "file": "bash_editor_logic.go",
+  "find": "if host != \"\" && !strings.EqualFold(host, \"localhost\") {",
+  "replace": "if host != \"\" && !strings.EqualFold(host, \"localhost\") && false {"
+ },
+ {
+  "name": "editor-file-encoded-slash",
+  "file": "bash_editor_logic.go",
+  "find": "if strings.Contains(strings.ToLower(pathname), \"%2f\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "editor-file-invalid-utf8",
+  "file": "bash_editor_logic.go",
+  "find": "if err != nil || !utf8.ValidString(decoded) {",
+  "replace": "if err != nil || (!utf8.ValidString(decoded) && false) {"
+ },
+ {
+  "name": "editor-file-dot-segments",
+  "file": "bash_editor_logic.go",
+  "find": "case \".\", \"%2e\":\n\t\t\tif last",
+  "replace": "case \"%2e\":\n\t\t\tif last"
+ },
+ {
+  "name": "editor-uri-comment-lines",
+  "file": "bash_editor_logic.go",
+  "find": "if field != \"\" && !strings.HasPrefix(field, \"#\") {",
+  "replace": "if field != \"\" {"
+ },
+ {
+  "name": "editor-drop-single-char",
+  "file": "bash_editor_logic.go",
+  "find": "if utf16Len(trimmed) <= 1 ||",
+  "replace": "if utf16Len(trimmed) <= 0 ||"
+ },
+ {
+  "name": "editor-drop-home-path",
+  "file": "bash_editor_logic.go",
+  "find": "`^(?:/|~/|\\.\\.?/)`",
+  "replace": "`^(?:/|\\.\\.?/)`"
+ },
+ {
+  "name": "editor-drop-multiline",
+  "file": "bash_editor_logic.go",
+  "find": "&& !strings.ContainsAny(trimmed, \"\\r\\n\")",
+  "replace": ""
+ },
+ {
+  "name": "editor-accept-byte-column",
+  "file": "bash_editor_logic.go",
+  "find": "if cursorLine != 0 || cursorCol != utf16Len(text) {\n\t\treturn \"\", false",
+  "replace": "if cursorLine != 0 || cursorCol != len(text) {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "editor-accept-equal-ghost",
+  "file": "bash_editor_logic.go",
+  "find": "if !strings.HasPrefix(ghost.Value, text) || ghost.Value == text {\n\t\treturn \"\", false",
+  "replace": "if !strings.HasPrefix(ghost.Value, text) {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "editor-render-two-rows",
+  "file": "bash_editor_logic.go",
+  "find": "if len(lines) < 3 {",
+  "replace": "if len(lines) < 2 {"
+ },
+ {
+  "name": "editor-render-ghost-colour",
+  "file": "bash_editor_logic.go",
+  "find": "\\x1b[38;5;244m",
+  "replace": "\\x1b[38;5;240m"
+ },
+ {
+  "name": "editor-render-cursor-block",
+  "file": "bash_editor_logic.go",
+  "find": "\"\\x1b[7m \\x1b[0m\"",
+  "replace": "\"\\x1b[7m\\x1b[0m\""
+ },
+ {
+  "name": "editor-render-no-room",
+  "file": "bash_editor_logic.go",
+  "find": "availableWidth := max(0, width-visibleWidth(text)-1)",
+  "replace": "availableWidth := max(0, width-visibleWidth(text))"
+ },
+ {
+  "name": "editor-render-content-row",
+  "file": "bash_editor_logic.go",
+  "find": "out[1] = text",
+  "replace": "out[2] = text"
+ },
+ {
+  "name": "editor-history-up-direction",
+  "file": "bash_editor_logic.go",
+  "find": "b.index = min(len(b.items)-1, b.index+1)",
+  "replace": "b.index = max(len(b.items)-1, b.index+1)"
+ },
+ {
+  "name": "editor-history-no-notice",
+  "file": "bash_editor_logic.go",
+  "find": "return shellHistoryStep{Notify: \"No shell history matches\"}",
+  "replace": "return shellHistoryStep{}"
+ },
+ {
+  "name": "editor-history-draft-ghost",
+  "file": "bash_editor_logic.go",
+  "find": "return shellHistoryStep{SetText: &d, ScheduleGhost: true}",
+  "replace": "return shellHistoryStep{SetText: &d}"
+ },
+ {
+  "name": "editor-history-up-keeps-ghost",
+  "file": "bash_editor_logic.go",
+  "find": "return shellHistoryStep{SetText: itemOrDraft(), ClearGhost: true}\n\t}\n\tb.index--",
+  "replace": "return shellHistoryStep{SetText: itemOrDraft()}\n\t}\n\tb.index--"
+ },
+ {
+  "name": "editor-history-reset-draft",
+  "file": "bash_editor_logic.go",
+  "find": "b.index, b.items, b.draft = -1, []string{}, \"\"",
+  "replace": "b.index, b.items = -1, []string{}"
+ },
+ {
+  "name": "editor-ghost-debounce",
+  "file": "bash_editor_logic.go",
+  "find": "ghostUpdateDebounce = 50 * time.Millisecond",
+  "replace": "ghostUpdateDebounce = 5 * time.Millisecond"
+ },
+ {
+  "name": "editor-ghost-no-cancel",
+  "file": "bash_editor_logic.go",
+  "find": "if g.cancel != nil {\n\t\tg.cancel()\n\t\tg.cancel = nil\n\t}\n\tg.token++",
+  "replace": "g.token++"
+ },
+ {
+  "name": "editor-ghost-stale-result",
+  "file": "bash_editor_logic.go",
+  "find": "if ctx.Err() != nil || g.token != token {\n\t\t\tg.mu.Unlock()\n\t\t\treturn\n\t\t}\n\t\tif err != nil",
+  "replace": "if err != nil"
+ },
+ {
+  "name": "editor-ghost-disabled-schedules",
+  "file": "bash_editor_logic.go",
+  "find": "if !completionsEnabled {\n\t\tg.clearLocked()\n\t\treturn\n\t}",
+  "replace": "if false {\n\t\tg.clearLocked()\n\t\treturn\n\t}"
+ },
+ {
+  "name": "editor-fast-threshold",
+  "file": "bash_editor_logic.go",
+  "find": "fastASCIILineColumnThreshold = 1200",
+  "replace": "fastASCIILineColumnThreshold = 1000"
+ },
+ {
+  "name": "editor-fast-backspace-cursor",
+  "file": "bash_editor_logic.go",
+  "find": "if cursorCol < fastASCIILineColumnThreshold || cursorCol != len(units) {",
+  "replace": "if cursorCol < fastASCIILineColumnThreshold {"
+ },
+ {
+  "name": "editor-fast-backspace-neighbour",
+  "file": "bash_editor_logic.go",
+  "find": "if !isPlainASCIIAt(units, cursorCol-2) || !isPlainASCIIAt(units, cursorCol-1) {",
+  "replace": "if !isPlainASCIIAt(units, cursorCol-1) {"
+ },
+ {
+  "name": "editor-fast-neighbour-edge",
+  "file": "bash_editor_logic.go",
+  "find": "return index < 0 || index >= len(units) || isPlainASCIIAt(units, index)",
+  "replace": "return index >= 0 && index < len(units) && isPlainASCIIAt(units, index)"
+ },
+ {
+  "name": "provider-oneoff-before-bang",
+  "file": "bash_autocomplete.go",
+  "find": "return bang != nil && cursorCol >= bang.Offset, nil",
+  "replace": "return bang != nil && cursorCol > bang.Offset, nil"
+ },
+ {
+  "name": "provider-oneoff-first-line-only",
+  "file": "bash_autocomplete.go",
+  "find": "if cursorLine == 0 {\n\t\t\t\tfirst",
+  "replace": "if true {\n\t\t\t\tfirst"
+ },
+ {
+  "name": "provider-trigger-char-length",
+  "file": "bash_autocomplete.go",
+  "find": "if utf16Len(c) == 1 {",
+  "replace": "if utf16Len(c) >= 1 {"
+ },
+ {
+  "name": "provider-trigger-duplicates",
+  "file": "bash_autocomplete.go",
+  "find": "if !slices.Contains(triggers, c) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "provider-apply-clamp-end",
+  "file": "bash_autocomplete.go",
+  "find": "endCol := max(startCol, min(item.EndCol, length))",
+  "replace": "endCol := min(item.EndCol, length)"
+ },
+ {
+  "name": "provider-apply-cursor-bytes",
+  "file": "bash_autocomplete.go",
+  "find": "CursorCol: startCol + utf16Len(item.Replacement)}",
+  "replace": "CursorCol: startCol + len(item.Replacement)}"
+ },
+ {
+  "name": "provider-bash-error-text",
+  "file": "bash_autocomplete.go",
+  "find": "\"Expected an extended completion item for bash autocomplete\"",
+  "replace": "\"Expected an extended item\""
+ },
+ {
+  "name": "provider-mode-default-first",
+  "file": "bash_autocomplete.go",
+  "find": "if isBashModeActive() {\n\t\t\t\treturn bashProvider.GetSuggestions",
+  "replace": "if !isBashModeActive() {\n\t\t\t\treturn bashProvider.GetSuggestions"
+ },
+ {
+  "name": "provider-bash-file-trigger",
+  "file": "bash_autocomplete.go",
+  "find": "ShouldTriggerFileCompletion: func(sdk.Context, []string, int, int) (bool, error) { return false, nil },",
+  "replace": "ShouldTriggerFileCompletion: func(sdk.Context, []string, int, int) (bool, error) { return true, nil },"
+ },
+ {
+  "name": "segment-run-label",
+  "file": "bash_segment.go",
+  "find": "state = \"run\"",
+  "replace": "state = \"running\""
+ },
+ {
+  "name": "segment-idle-label",
+  "file": "bash_segment.go",
+  "find": "state := \"idle\"",
+  "replace": "state := \"wait\""
+ },
+ {
+  "name": "segment-default-name",
+  "file": "bash_segment.go",
+  "find": "name = \"shell\"",
+  "replace": "name = \"sh\""
+ },
+ {
+  "name": "segment-hidden-when-inactive",
+  "file": "bash_segment.go",
+  "find": "if !ctx.Shell.Active {",
+  "replace": "if false {"
+ },
+ {
+  "name": "segment-color",
+  "file": "bash_segment.go",
+  "find": "segColor(ctx, \"shellMode\", content)",
+  "replace": "segColor(ctx, \"path\", content)"
+ },
+ {
+  "name": "segment-cwd-base",
+  "file": "bash_segment.go",
+  "find": "parts = append(parts, base)",
+  "replace": "parts = append(parts, ctx.Shell.Cwd)"
+ },
+ {
+  "name": "path-segment-ignores-shell",
+  "file": "segments.go",
+  "find": "if ctx.Shell.Active && ctx.Shell.Cwd != \"\" {",
+  "replace": "if false {"
+ }
+]
