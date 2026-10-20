@@ -93,14 +93,6 @@ func TestRefusalSearchWorkflows(t *testing.T) {
 	})
 }
 
-func TestRefusalFetchAnswerMode(t *testing.T) {
-	r, _ := newRuntime(t, "")
-	n := useNet(t, func(netCall) netReply { return reply(200, "x") })
-	_, err := execTool(t, r, "fetch_content", map[string]any{"url": "https://93.184.216.34/page", "mode": "answer", "prompt": "What does it say?"})
-	wantRefusal(t, err, "fetch_content mode answer (answering from a page needs a model call)")
-	wantCalls(t, n)
-}
-
 func TestRefusalFetchAuth(t *testing.T) {
 	r, _ := newRuntime(t, "")
 	n := useNet(t, func(netCall) netReply { return reply(200, "x") })
