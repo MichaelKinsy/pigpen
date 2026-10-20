@@ -163,6 +163,7 @@ type app struct {
 	pl        *powerline
 	once      sync.Once
 	widthOnce sync.Once
+	cdq       *cdQuote // /cd, /reply and the last-prompt line (cdquote_ext.go)
 }
 
 func (a *app) core(ctx sdk.Context) *powerline {
@@ -195,6 +196,7 @@ func (a *app) onSessionStart(ctx sdk.Context, data map[string]any) (any, error) 
 	reason, _ := data["reason"].(string)
 	pl.sessionStart(reason)
 	pl.warnUnsupported()
+	a.cdq.sessionStart(ctx, pl.enabled)
 	a.widthOnce.Do(func() {
 		// The bar's widget rows are laid out at a width; lay them out again when the terminal changes size.
 		_, _ = ctx.OnWidthChange(func(c sdk.Context, _ int) {
@@ -222,6 +224,7 @@ func (a *app) command(ctx sdk.Context, args string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.core(ctx).command(args)
+	a.cdq.sync(ctx, a.pl.enabled, true) // the core clears and installs the widgets again
 	return nil
 }
 
@@ -243,5 +246,6 @@ func Extension() *sdk.Extension {
 		sdk.EventSessionBeforeCompact, sdk.EventSessionCompact, sdk.EventAgentEnd} {
 		e.OnEvent(ev, a.onEvent(ev))
 	}
+	registerCdQuote(e, a)
 	return e
 }

@@ -22,14 +22,12 @@ func refusal(feature string) string {
 
 // refusedCommands are the commands the original registers that the port does not implement: command name, description, feature.
 var refusedCommands = []struct{ name, description, feature string }{
-	{"reply", "Quote a previous user or assistant message into the editor", "quote reply (/reply)"},
 	{"queue", "Manage the powerline prompt queue", "the prompt queue (/queue)"},
 	{"stash-history", "Browse stashed prompts and recent project prompts", "the prompt stash (/stash-history)"},
 	{"bash-mode", "Toggle bash mode", "bash mode (/bash-mode)"},
 	{"bash-reset", "Restart the bash mode shell session", "bash mode (/bash-reset)"},
 	{"powerline-perf", "Show or reset the editor performance counters", "the editor performance profiler (/powerline-perf)"},
 	{"vibe", "Configure the working-message vibes", "working vibes (/vibe)"},
-	{"cd", "Change the session working directory", "the /cd command"},
 }
 
 // unsupportedSettings lists the features the user's settings or environment turn on that the port does not provide, in a fixed
@@ -64,9 +62,6 @@ func unsupportedSettings(settings map[string]any, cfg powerlineConfig, env func(
 	}
 	if settings["powerlineShortcuts"] != nil {
 		add("the editor shortcuts (powerlineShortcuts)")
-	}
-	if settings["showLastPrompt"] == true {
-		add("the last-prompt line (showLastPrompt)")
 	}
 	if env("POWERLINE_DEBUG_PERF") == "1" {
 		add("the editor performance profiler (POWERLINE_DEBUG_PERF)")
