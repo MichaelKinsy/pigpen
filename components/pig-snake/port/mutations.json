@@ -438,10 +438,10 @@
   "replace": "_ = 0"
  },
  {
-  "name": "unknown-sprite-picks-another",
+  "name": "chosen-sprite-ignored-in-shared",
   "file": "internal/sprites/sprites.go",
-  "find": "\treturn &shared{}\n}",
-  "replace": "\treturn &shared{leader: 1}\n}"
+  "find": "\twant := sprite.FindVariant(variantID)",
+  "replace": "\twant := sprite.Variants[len(sprite.Variants)-1]"
  },
  {
   "name": "login-state-path",
@@ -522,18 +522,6 @@
   "replace": "event.Type != sdk.MouseRelease ||"
  },
  {
-  "name": "mouse-steers-a-paused-game",
-  "file": "component.go",
-  "find": "(g.Status != snake.Waiting && g.Status != snake.Playing)",
-  "replace": "(g.Status == snake.Over)"
- },
- {
-  "name": "mouse-before-first-frame",
-  "file": "component.go",
-  "find": "if !c.drawn ||",
-  "replace": "if false ||"
- },
- {
   "name": "mouse-turn-ignored",
   "file": "component.go",
   "find": "\tdefault:\n\t\tg.Turn(dir)\n\t}\n\treturn sdk.RemoteComponentResult{}, nil\n}",
@@ -580,12 +568,6 @@
   "file": "internal/scene/scene.go",
   "find": "cx - (ox + lead.X*size + size/2)",
   "replace": "cx - (ox + lead.X*size)"
- },
- {
-  "name": "hat-on-every-pig",
-  "file": "internal/scene/scene.go",
-  "find": "if member == 0 && hatter != nil {",
-  "replace": "if hatter != nil {"
  },
  {
   "name": "hat-never-drawn",

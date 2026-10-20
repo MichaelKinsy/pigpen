@@ -208,3 +208,20 @@ func TestThePointerOffsetIsMeasuredFromTheMiddleOfTheLeader(t *testing.T) {
 		t.Error("a view too small for the board has no pointer offset")
 	}
 }
+
+func TestPointerDirectionBreaksTiesHorizontallyAndIgnoresThePig(t *testing.T) {
+	for _, tc := range []struct {
+		dx, dy int
+		want   snake.Dir
+		steer  bool
+	}{
+		{5, 5, snake.Right, true}, {-5, 5, snake.Left, true}, {5, -5, snake.Right, true},
+		{2, 9, snake.Down, true}, {-2, -9, snake.Up, true}, {9, 2, snake.Right, true}, {-9, -2, snake.Left, true},
+		{2, -2, 0, false}, {-2, 2, 0, false},
+	} {
+		got, steer := pointerDirection(tc.dx, tc.dy, 6)
+		if steer != tc.steer || (steer && got != tc.want) {
+			t.Errorf("pointerDirection(%d, %d, 6) = %v, %v; want %v, %v", tc.dx, tc.dy, got, steer, tc.want, tc.steer)
+		}
+	}
+}
