@@ -120,7 +120,7 @@ func TestPromptOfRefusesWhatTheWorkerCannotUseAndSaysWhy(t *testing.T) {
 	}{
 		"url":                 {url, "URL"},
 		"binary":              {rawPart("%PDF-1.7", "application/pdf", "r.pdf"), "application/pdf"},
-		"no media type":       {rawPart("abc", "", ""), "media type"},
+		"no media type":       {rawPart("abc", "", ""), "has no media type"},
 		"octet stream":        {rawPart("abc", "application/octet-stream", ""), "application/octet-stream"},
 		"svg":                 {rawPart("<svg/>", "image/svg+xml", ""), "image/svg+xml"},
 		"text that is binary": {rawPart("a\x00b", "text/plain", "x.txt"), "text"},

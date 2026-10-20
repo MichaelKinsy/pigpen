@@ -663,13 +663,13 @@
   "name": "store-get-owner-unchecked",
   "file": "taskstore.go",
   "find": "\tif owner != user {",
-  "replace": "\tif false {"
+  "replace": "\tif false && owner != user {"
  },
  {
   "name": "store-update-owner-unchecked",
   "file": "taskstore.go",
   "find": "\tif rec == nil || rec.user != user {",
-  "replace": "\tif rec == nil {"
+  "replace": "\tif rec == nil || (false && rec.user != user) {"
  },
  {
   "name": "store-list-shows-other-principals",
@@ -795,7 +795,7 @@
   "name": "server-store-in-memory-only",
   "file": "server.go",
   "find": "openTaskStore(storeOptions{Dir: tasksDir,",
-  "replace": "openTaskStore(storeOptions{Dir: \"\","
+  "replace": "openTaskStore(storeOptions{Dir: tasksDir[:0],"
  },
  {
   "name": "retention-default-not-applied",
@@ -903,7 +903,7 @@
   "name": "push-config-in-send-ignored",
   "file": "server.go",
   "find": "\t\tif p != nil && p.Config != nil && p.Config.PushConfig != nil {",
-  "replace": "\t\tif false {"
+  "replace": "\t\tif false && p != nil && p.Config != nil && p.Config.PushConfig != nil {"
  },
  {
   "name": "push-create-not-refused",
