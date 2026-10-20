@@ -240,8 +240,12 @@ rows, the performance section's measurements, and the `go test -race -count=24` 
   (`sql-read-only-wrapper-ignored`, `rm-verb-never-authorizes`, `find-delete-authorized-by-verb`): a warning is a steer
   hidden in these scenarios, so the scenario trace does not tell the two apart; the layer-1 rows of the same names
   (`sql-commit-voids-nothing`, `authorize-segments-ignored`, ...) kill them.
-- `scenarios-blocked/`: the real-git scenarios (host event ordering differs between Pi and PiG's Node runtime) and the
-  config-dependent ones (a scenario cannot write `<PIG_HOME>/pigpen-warden/config.json`).
+- Config-dependent scenarios (pigeq 0.3.0 `homeFiles`, built from branch `pigeq-harness-gaps`; the original's config in
+  `agentFiles` `pi-warden/config.json`, the port's in `homeFiles` `pigpen-warden/config.json`): six scenarios (`path-rule-*`
+  four, `arming-*` two) record from the original under Pi, `pigeq run` identical on all lanes, `pigeq check` passes. In
+  `path-rule-block-read-of-write-only-path` the record step's host check once failed on event order (user `message_end`
+  against the model request), the same host-ordering difference as the real-git scenarios; `run` and `check` pass.
+- `scenarios-blocked/`: the real-git scenarios (host event ordering differs between Pi and PiG's Node runtime).
 - Benchmarks (`guardcore_bench_test.go`, imladris container on cores 96-151, load average 63 over 56 cores at the time, so
   these are upper bounds; repeat when quieter), median of 10 runs: ordinary command 131 us/op, 6.4 KB, 419 allocs;
   the same call with three path rules 238 us/op, 12.5 KB, 777 allocs; a loopback `psql ... DELETE ... WHERE` 361 us/op,

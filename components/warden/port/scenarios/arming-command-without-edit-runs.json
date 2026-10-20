@@ -1,0 +1,58 @@
+{
+  "name": "arming-command-without-edit-runs",
+  "description": "Without a preparation edit the armed command pattern does not fire.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "agentFiles": {
+    "pi-warden/config.json": "{\n \"rules\": {\n  \"enabled\": false\n },\n \"action\": {\n  \"armingRules\": [\n   {\n    \"id\": \"gitops\",\n    \"when\": {\n     \"edited\": [\n      \"**/kustomization.yaml\"\n     ],\n     \"tools\": [\n      \"write\",\n      \"edit\"\n     ]\n    },\n    \"arms\": {\n     \"command\": \"\\\\bflux\\\\b\",\n     \"for\": \"10m\"\n    },\n    \"action\": \"block\",\n    \"message\": \"reconciling applies the edit\"\n   }\n  ]\n }\n}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\n \"rules\": {\n  \"enabled\": false\n },\n \"action\": {\n  \"armingRules\": [\n   {\n    \"id\": \"gitops\",\n    \"when\": {\n     \"edited\": [\n      \"**/kustomization.yaml\"\n     ],\n     \"tools\": [\n      \"write\",\n      \"edit\"\n     ]\n    },\n    \"arms\": {\n     \"command\": \"\\\\bflux\\\\b\",\n     \"for\": \"10m\"\n    },\n    \"action\": \"block\",\n    \"message\": \"reconciling applies the edit\"\n   }\n  ]\n }\n}"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "flux reconcile kustomization apps"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "reconcile"
+      }
+    }
+  ]
+}

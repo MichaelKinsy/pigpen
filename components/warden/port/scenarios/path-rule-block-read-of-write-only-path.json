@@ -1,0 +1,61 @@
+{
+  "name": "path-rule-block-read-of-write-only-path",
+  "description": "A block path rule with access write holds a read of that path.",
+  "files": {
+    "audit/app.log": "entry\n"
+  },
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "agentFiles": {
+    "pi-warden/config.json": "{\n \"rules\": {\n  \"enabled\": false\n },\n \"action\": {\n  \"tools\": [\n   \"bash\",\n   \"write\",\n   \"edit\",\n   \"read\"\n  ],\n  \"pathRules\": [\n   {\n    \"id\": \"audit-log\",\n    \"paths\": [\n     \"audit/app.log\"\n    ],\n    \"access\": \"write\",\n    \"tools\": [\n     \"read\"\n    ],\n    \"action\": \"block\"\n   }\n  ]\n }\n}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\n \"rules\": {\n  \"enabled\": false\n },\n \"action\": {\n  \"tools\": [\n   \"bash\",\n   \"write\",\n   \"edit\",\n   \"read\"\n  ],\n  \"pathRules\": [\n   {\n    \"id\": \"audit-log\",\n    \"paths\": [\n     \"audit/app.log\"\n    ],\n    \"access\": \"write\",\n    \"tools\": [\n     \"read\"\n    ],\n    \"action\": \"block\"\n   }\n  ]\n }\n}"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "audit/app.log"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "show me the audit log"
+      }
+    }
+  ]
+}
