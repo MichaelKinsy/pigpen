@@ -283,3 +283,16 @@ func (p *Probe) PatchGoal(patch map[string]any) (ok bool) {
 	})
 	return ok
 }
+
+// Quiesce ends the session's timers for good (the original's tests call scheduler.shutdown() and clearContinuationState() in t.after):
+// a timer of a finished test must not run into the next test's storage. Later timers never fire.
+func (p *Probe) Quiesce() {
+	p.c.locked(func() {
+		p.c.afterBase = func(time.Duration, func()) *time.Timer { return time.NewTimer(24 * time.Hour) }
+		p.c.scheduler.shutdown()
+		p.c.clearContinuationState(true)
+		if p.c.auditResultTimer != nil {
+			p.c.auditResultTimer.Stop()
+		}
+	})
+}

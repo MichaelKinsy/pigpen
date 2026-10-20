@@ -142,6 +142,7 @@ func newGoalRig(t *testing.T, opts rigOptions) *goalRig {
 	}
 	r.Host = StartHost(t, ext, HostOptions{Mode: mode, HasUI: opts.HasUI, Cwd: cwd, OnCallValue: r.answer})
 	if probe != nil {
+		t.Cleanup(probe.Quiesce)
 		probe.WidgetTap(func(key string, lines []string) {
 			r.mu.Lock()
 			defer r.mu.Unlock()
