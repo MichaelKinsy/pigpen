@@ -72,9 +72,8 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	if f, ok := opts["maxTurns"].(float64); ok {
 		maxTurns = int(f)
 	}
-	isolated, _ := opts["isolated"].(bool)
-	inherit, _ := opts["inheritContext"].(bool)
-	bypass, _ := opts["bypassQueue"].(bool)
+	// The original takes these as truthy values, not as booleans.
+	isolated, inherit, bypass := jsTruthy(opts["isolated"]), jsTruthy(opts["inheritContext"]), jsTruthy(opts["bypassQueue"])
 	r, err := a.start(ctx, startRequest{Type: typ, Prompt: prompt, Description: description, Name: name, Model: model, Thinking: thinking,
 		MaxTurns: maxTurns, Background: true, Isolated: isolated, InheritContext: inherit, BypassQueue: bypass})
 	if err != nil {
@@ -131,15 +130,7 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	if err != nil {
 		return nil, err
 	}
-	prompt := q.Prompt
-	if q.InheritContext {
-		pc, err := parentContext(ctx)
-		if err != nil {
-			return nil, err
-		}
-		prompt = pc + prompt
-	}
-	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: q.Thinking,
+	spec := childSpec{Prompt: q.Prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: q.Thinking,
 		NoExtensions: scope.NoExtensions, ExtensionPaths: scope.ExtensionPaths, AllowTools: scope.AllowTools, ExcludeTools: scope.ExcludeTools,
 		NoSkills: skills != true, Warnings: plan.Warnings}
 	if trusted, err := ctx.IsProjectTrusted(); err == nil {
@@ -154,6 +145,11 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 		if f, err := ctx.GetSessionFile(); err == nil && f != nil {
 			spec.ParentSession = *f
 		}
+	}
+	if q.InheritContext {
+		// The conversation is read when the run starts, not now: an agent queued at the concurrency limit sees what was
+		// said while it waited. upstream: agent-runner.ts:1101-1105.
+		spec.InheritContext = func() (string, error) { return parentContext(ctx) }
 	}
 	spec.SessionName = cfg.Name
 	if cfg.IsDefault && cfg.Name == "Explore" {
@@ -198,4 +194,20 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 		description = strings.Join(strings.Fields(q.Prompt)[:min(5, len(strings.Fields(q.Prompt)))], " ")
 	}
 	return a.mgr.spawnWith(resolved, description, q.Name, spec, spawnOptions{Background: q.Background, BypassQueue: q.BypassQueue}), nil
+}
+
+// jsTruthy is JS truthiness of a decoded JSON value: false, 0, "" and null are falsy; anything else, including an empty
+// array or object, is truthy.
+func jsTruthy(v any) bool {
+	switch x := v.(type) {
+	case nil:
+		return false
+	case bool:
+		return x
+	case float64:
+		return x != 0
+	case string:
+		return x != ""
+	}
+	return true
 }

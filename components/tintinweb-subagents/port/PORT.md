@@ -37,15 +37,15 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M2 | `agent-types.ts`: registry, case-insensitive lookup, defaults, `resolveSpawnType` and `fallbackSubagent` | `agent_types.go` | 46 twins in `agent_types_twin_test.go`; `agent-unknown-type-strict` |
 | M3 | `custom-agents.ts`, `agent-file-toggle.ts` (serializer): agent files, tools field, inherit fields, name rules, warnings | `agents.go`, `frontmatter.go`, `serialize.go` | 76 twins in `custom_agents_twin*_test.go` (the loader reads PiG's agent dir, D2) |
 | M4 | `default-agents.ts`: the three default agents | `defaults_text.go` (extracted byte for byte) | `agent_types_twin_test.go`; `tool-tools` |
-| M5 | `settings.ts`: `subagents.json`, global then project | `settings.go` (five fields) | `settings_test.go`, `turnlimit_test.go` |
+| M5 | `settings.ts`: `subagents.json`, global then project | `settings.go` (six fields) | `settings_test.go`, `turnlimit_test.go` |
 | M6 | `prompts.ts`, `env.ts`: the agent's system prompt and environment block | `prompts.go` | `extra2_test.go` (exact strings), inserted text equal to Pi's in a recorded child run (see F2) |
 | M7 | `agent-manager.ts`: records, limit, queue, handles, abort, steer, consume | `manager.go` | `manager_test.go`, `extra_test.go`, `extra2_test.go` |
-| M8 | `agent-runner.ts`: an agent's run, the turn limit (steer at `maxTurns`, abort at `maxTurns + graceTurns`), `finalTurnError`, `resumeAgent` | `runner.go`: a child `pig --mode rpc` (a session file, or `--no-session`), kept alive after a run only when its conversation is in memory | `runner_test.go`, `runner_twin_test.go`, `turnlimit_test.go`, `proc_unix_test.go` (a fake pig, the test binary re-executed) |
+| M8 | `agent-runner.ts`: an agent's run, the turn limit (steer at `maxTurns`, abort at `maxTurns + graceTurns`), `finalTurnError`, `resumeAgent` | `runner.go`: a child `pig --mode rpc` (a session file, or `--no-session`) bound to a context the manager ends when it closes the child, kept alive after a run only when its conversation is in memory; a stop of such a child is the RPC `abort` alone | `runner_test.go`, `runner_twin_test.go`, `turnlimit_test.go`, `proc_unix_test.go`, `lifecycle_test.go` (a fake pig, the test binary re-executed) |
 | M9 | `cross-extension-rpc.ts`: ping, spawn, stop, consume | `bus.go` | `bus_test.go` |
 | M10 | completion events and the held notification (`index.ts` `formatTaskNotification`, `getStatusLabel`; `status-note.ts`; `xml.ts`) | `extension.go` | `tools_test.go`, `extra_test.go`, `turnlimit_test.go` |
 | M11 | the Agent, result and steer tools' behavior and texts | `tools.go` | `agent-not-found`, `agent-unknown-type-strict`; `tools_test.go` |
-| M12 | `agent-manager.ts` resume, startResume, tombstones, cleanup, `resumeSessionFile`, `reclaim`, `bypassQueue`; `index.ts` Agent `resume` branch and `spawnTopLevel` | `sessions.go`, `sessions_tool.go` | `agent_manager_twin_test.go`, `sessions_test.go`; `agent-resume-not-found` |
-| M13 | `agent-runner.ts` extension and tool scope (`extensionCanonicalName(s)`, `parseExtensionsSpec`, `parseExtSelectors`, the loader filter, `inScope`), `persist_session`, session choice | `scope.go`, `discover.go` (the parent's tool registry and `pig status --json` stand for the loader's extension list) | `scope_twin_test.go`, `sessions_test.go`; probe scenarios `port/probes` |
+| M12 | `agent-manager.ts` resume, startResume, tombstones, cleanup (the 60 s timer), `clearCompleted`, `abortAll`, `dispose`, `resumeSessionFile`, `reclaim`, `bypassQueue`; `index.ts` Agent `resume` branch, `spawnTopLevel`, and the `session_start`, `session_before_switch` and `session_shutdown` handlers | `sessions.go`, `sessions_tool.go`, `extension.go` (timer, shutdown, session boundaries) | `agent_manager_twin_test.go`, `sessions_test.go`, `lifecycle_test.go`; `agent-resume-not-found`, `agent-resume-ignores-type` |
+| M13 | `agent-runner.ts` extension and tool scope (`extensionCanonicalName(s)`, `parseExtensionsSpec`, `parseExtSelectors`, the loader filter, `inScope`), `persist_session`, session choice | `scope.go`, `discover.go` (the parent's tool registry and `pig status --json` stand for the loader's extension list) | `scope_twin_test.go`, `sessions_test.go`, `lifecycle_test.go` (the flags a scope becomes, asserted on `childArgs`) |
 | M14 | `context.ts` (`inherit_context`), `skill-loader.ts` (`skills:`), `env.ts`, `prompts.ts` extras | `context.go`, `skills.go`, `skillfs.go`, `prompts.go` | `context_twin_test.go`, `skills_twin_test.go`, `env_twin_test.go`, `prompts_twin_test.go` |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
@@ -73,8 +73,8 @@ components; this port registers none.
 
 ## Deliberate differences and findings
 
-1. **A child process, not an in-process session.** Each agent is `pig --mode rpc --no-session`; an agent costs a process
-   start. The pig to run is found as described in the README. The child inherits the parent's environment (and so its
+1. **A child process, not an in-process session.** Each agent is a `pig --mode rpc` process (its conversation a session file by default,
+   `--no-session` when it is in memory); an agent costs a process start. The pig to run is found as described in the README. The child inherits the parent's environment (and so its
    credentials and settings) and, unless the call or file sets one, the parent's model and thinking level. A child
    registers nothing (`TINTINWEB_SUBAGENT_DEPTH`): no nesting. `Explore`'s `claude-haiku-4-5` default is not forced on the
    child (the original falls back to the parent's model when it is not available); it is shown in the type list.
@@ -83,16 +83,16 @@ components; this port registers none.
    environment block and the agent's prompt), after a fix this comparison found (a blank line in the replace-mode header).
    The harness's `removed` part is the host's own default system prompt, which says `pi` under Pi and `pig` under PiG, so
    that comparison cannot pass and the scenario is not kept (`port/gen-scenarios.py` says so).
-3. **Unsupported parameters of `Agent` are refused.** `inherit_context: true`, `resume`, `schedule` and
-   `isolation: "worktree"` are tool errors with the message in the README (`refuse.go`; the first version answered
-   `inherit_context` with plain text and emulated `resume` by starting a new agent with the old answer in its prompt, a
-   partial run, now removed). `isolated` starts the child with `--no-extensions`. The tool text is the original's, so the
-   model is told about these; a call that uses one gets the refusal.
+3. **Unsupported parameters of `Agent` are refused.** `schedule` and `isolation: "worktree"` are tool errors with the
+   message in the README (`refuse.go`). `inherit_context`, `resume`, `skills`, `extensions`, `disallowed_tools` and
+   `isolated` are ported (see "Sessions" below); the first version answered `inherit_context` with plain text and
+   emulated `resume` by starting a new agent with the old answer in its prompt, a partial run, now removed. The tool text
+   is the original's, so the model is told about these; a call that uses an unported one gets the refusal.
 4. **Agent files are read at start-up for the tool text** (the workspace of an extension process is fixed), and again when
    the session starts and when the workspace differs. A file added later reaches `/agents` and the `subagent_type`
    check on the next session event, not the tool description of the running session.
-5. **Settings.** Five of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
-   `fallbackSubagent`, `disableDefaultAgents`). A value of any other field that asks for an unported feature is
+5. **Settings.** Six of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
+   `fallbackSubagent`, `disableDefaultAgents`, `rememberAgents`). A value of any other field that asks for an unported feature is
    announced once when a session starts, with the refusal message (`refuse.go`, `settingRules`); a malformed value is
    ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
    port does not honor, are refused the same way.
@@ -126,3 +126,34 @@ components; this port registers none.
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
    The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
    features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+11. **Sessions (reviewed by RvSessions, fixed in this revision).** What differs from the original on purpose or for want
+    of a capability:
+    - **Tool scope is applied at the child's start, over the tools the parent knows (M5).** `ext:` narrowing and
+      `disallowed_tools` become `--exclude-tools` (or a `--tools` allowlist when no extension loads) for the tools the
+      parent's registry lists. The original re-derives the scope on every turn and blocks an out-of-scope call in
+      `beforeToolCall`; tools of an extension the child loads that the parent does not know (a path in `extensions:`,
+      a project extension the parent lacks), or registered after the child started (MCP), are not excluded. A faithful
+      form needs a child-side per-tool gate that PiG does not expose to an extension: the Pi API is
+      `session.agent.beforeToolCall` with `setActiveToolsByName`. Reported to the lane lead.
+    - **Tombstones are created and cleared, but not yet reopened by a tool (M6).** `removeRecord` leaves one for an agent
+      with a handle and a session file; it keeps the handle reserved (`explore-2`), `clearCompleted` forgets it at a
+      session boundary, and the cap and order match the original. `resolveMention`, `listTombstones`, `dropTombstone`,
+      and `spawn` with `resumeSessionFile` and `reclaim` are implemented and tested, and are called by nothing in
+      production until the `@handle` input hook, which is the mention slice (`port/slices.json`, `agent-mention-wiring`).
+    - **A foreground resume of an agent that is still running** answers `Agent failed: Agent is already processing...`
+      (pi's `session.prompt` message) and leaves the running agent alone; the original's rejected prompt also flips the
+      live record to `error` as a side effect, which this port does not copy.
+    - **A stop of an in-memory agent** sends the RPC `abort` and keeps the process, so the conversation stays
+      resumable. If the run does not settle within ten seconds the process is ended (the original's `session.abort()` cannot
+      hang), and the conversation with it.
+    - **The session name** is set with `set_session_name` after `new_session`: PiG applies `--name` to the first session
+      of a process only ("Replacements carry none", `cmd/pig/rpc_mode_runtime.go`), and the persisted child's first
+      session is replaced by `new_session` so that it can record its parent.
+    - **`APPEND_SYSTEM.md`** is kept out of the child with `--append-system-prompt ""`. That an explicit empty append
+      suppresses discovery is read from PiG's `resolvePromptInputs` (`cmd/pig/resource_prompts.go`, covered by its
+      own tests), not shown by a recorded run.
+    - **The spawn RPC drops, as the original does, `parentAgentId`, `workflowId`, `depth`, `maxSubagentDepth`,
+      `configCwd` and `rootSessionId`**; it refused them before. `isolated`, `inheritContext` and `bypassQueue` count when
+      truthy.
+    - **The cleanup timer starts at the first `session_start`** and stops at `session_shutdown`, because an extension
+      process can outlive a session in PiG; the original starts it in the manager's constructor and stops it in `dispose`.

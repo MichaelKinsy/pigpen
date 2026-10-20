@@ -46,6 +46,19 @@ func fakePig(mode string) {
 	}
 	var outMu sync.Mutex
 	enc := json.NewEncoder(os.Stdout)
+	logCmd := func(cmd map[string]any) { // FAKE_PIG_LOG: every command, in order, as `type` or `type name`
+		p := os.Getenv("FAKE_PIG_LOG")
+		if p == "" {
+			return
+		}
+		line, _ := cmd["type"].(string)
+		if n, ok := cmd["name"].(string); ok {
+			line += " " + n
+		}
+		f, _ := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		f.WriteString(line + "\n")
+		f.Close()
+	}
 	out := lockedEncoder{enc: enc, mu: &outMu}
 	var aborted atomic.Bool
 	n := 0 // prompts answered
@@ -53,13 +66,23 @@ func fakePig(mode string) {
 	for sc.Scan() {
 		var cmd map[string]any
 		json.Unmarshal(sc.Bytes(), &cmd)
+		logCmd(cmd)
 		resp := func(data any) {
 			out.Encode(map[string]any{"type": "response", "id": cmd["id"], "command": cmd["type"], "success": true, "data": data})
 		}
 		switch cmd["type"] {
 		case "prompt":
 			resp(nil)
-			if mode == "hang" {
+			if mode == "hang" || mode == "deaf" {
+				continue
+			}
+			if mode == "stoppable" { // the first run hangs until it is aborted; later runs answer, as in "events"
+				n++
+				if n == 1 {
+					continue
+				}
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "stopReason": "stop", "content": []any{map[string]any{"type": "text", "text": "answer " + strconv.Itoa(n) + " to " + cmd["message"].(string)}}}})
+				out.Encode(map[string]any{"type": "agent_settled"})
 				continue
 			}
 			if mode == "hang-grandchild" { // starts a process of its own, as a bash tool call would, and keeps working
@@ -136,6 +159,8 @@ func fakePig(mode string) {
 			out.Encode(map[string]any{"type": "turn_end"})
 			out.Encode(map[string]any{"type": "turn_end"})
 			out.Encode(map[string]any{"type": "agent_settled"})
+		case "set_session_name":
+			resp(nil)
 		case "get_state":
 			resp(map[string]any{"sessionFile": os.Getenv("FAKE_PIG_SESSION")})
 		case "new_session":
@@ -157,6 +182,13 @@ func fakePig(mode string) {
 			resp(nil)
 		case "abort":
 			resp(nil)
+			if mode == "deaf" { // never settles, never exits: only a kill ends it
+				continue
+			}
+			if mode == "stoppable" { // an abort ends the run, not the process
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
 			if mode == "runaway" { // an abort ends the run, not the process
 				aborted.Store(true)
 				if p := os.Getenv("FAKE_PIG_STEER"); p != "" {
@@ -195,7 +227,7 @@ func useFakePig(t *testing.T, mode string) string {
 }
 
 func TestChildArgs(t *testing.T) {
-	base := []string{"--mode", "rpc", "--no-session", "--no-context-files", "--no-prompt-templates", "--no-themes"}
+	base := []string{"--mode", "rpc", "--no-session", "--no-context-files", "--no-prompt-templates", "--no-themes", "--append-system-prompt", ""}
 	eq(t, childArgs(childSpec{}), base)
 	eq(t, childArgs(childSpec{Model: "p/m", Thinking: "high", AllowTools: []string{"read", "grep"}, NoExtensions: true, SystemPrompt: "SP", PromptMode: "replace"}),
 		append(slices.Clone(base), "--no-extensions", "--model", "p/m", "--thinking", "high", "--tools", "read,grep", "--system-prompt", "SP"))
@@ -215,7 +247,7 @@ func TestRPCChildRunsToCompletion(t *testing.T) {
 	eq(t, res.ToolUses, 2)
 	eq(t, res.Turns, 2)
 	got, _ := os.ReadFile(argsFile)
-	eq(t, strings.Contains(string(got), "--no-session\n--no-context-files\n--no-prompt-templates\n--no-themes\n--tools\nread"), true)
+	eq(t, strings.Contains(string(got), "--no-session\n--no-context-files\n--no-prompt-templates\n--no-themes\n--append-system-prompt\n\n--tools\nread"), true)
 	eq(t, strings.HasSuffix(string(got), "DEPTH=1"), true) // a child registers no agent tools
 }
 

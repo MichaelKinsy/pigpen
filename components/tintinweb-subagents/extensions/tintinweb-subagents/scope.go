@@ -50,16 +50,11 @@ func extensionPackageName(extPath string) string {
 			return ""
 		}
 		data, err := os.ReadFile(filepath.Join(dir, "package.json"))
-		var pkg struct {
-			Name any `json:"name"`
-			Pi   struct {
-				Extensions any `json:"extensions"`
-			} `json:"pi"`
-		}
+		var pkg any
 		if err == nil {
 			err = json.Unmarshal(data, &pkg)
 		}
-		if err != nil {
+		if err != nil { // no package.json, or not JSON: keep climbing
 			parent := filepath.Dir(dir)
 			if parent == dir {
 				return ""
@@ -67,16 +62,22 @@ func extensionPackageName(extPath string) string {
 			dir = parent
 			continue
 		}
-		name, _ := pkg.Name.(string)
-		entries, _ := pkg.Pi.Extensions.([]any)
+		// The first package.json that is JSON is the package root, whatever shape it has.
+		manifest, _ := pkg.(map[string]any)
+		name, _ := manifest["name"].(string)
+		pi, _ := manifest["pi"].(map[string]any)
+		entries, _ := pi["extensions"].([]any)
 		for _, e := range entries {
 			s, ok := e.(string)
 			if !ok {
 				continue
 			}
 			p := s
-			if !filepath.IsAbs(p) {
+			if !isRooted(p) {
 				p = filepath.Join(dir, p)
+			}
+			if abs, err := filepath.Abs(p); err == nil {
+				p = abs
 			}
 			if filepath.Clean(p) == entry && name != "" {
 				short := name
@@ -135,7 +136,7 @@ func parseExtensionsSpec(entries []string, cwd string) extensionsSpec {
 			p = home + p[1:]
 		}
 		abs := p
-		if !filepath.IsAbs(p) {
+		if !isRooted(p) {
 			abs = filepath.Join(cwd, p)
 		}
 		spec.Paths = append(spec.Paths, abs)
@@ -291,7 +292,8 @@ func planScope(in scopeInput) scopePlan {
 		if p.LoadAll {
 			p.Survivors = all
 		} else {
-			for _, e := range in.Discovered {
+			// The loader's base set holds the extensions loaded from paths too, which an exclude may name.
+			for _, e := range all {
 				for _, n := range extensionCanonicalNames(e.Path) {
 					discoveredNames[n] = true
 				}

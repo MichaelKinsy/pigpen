@@ -69,6 +69,16 @@ func (c *fakeChild) finish(text string) {
 	c.mu.Unlock()
 	c.releaseNow()
 }
+// die is the process ending because its context ended: the run in progress fails and no more prompts are taken.
+func (c *fakeChild) die() {
+	c.mu.Lock()
+	c.dead = true
+	if c.res == nil {
+		c.err = errors.New("the child exited")
+	}
+	c.mu.Unlock()
+	c.releaseNow()
+}
 func (c *fakeChild) sessionFile() string { return c.session }
 func (c *fakeChild) alive() bool         { c.mu.Lock(); defer c.mu.Unlock(); return !c.dead && !c.closed }
 func (c *fakeChild) close()              { c.mu.Lock(); c.closed = true; c.mu.Unlock() }
@@ -92,7 +102,9 @@ type fleet struct {
 	session  string // the session file every child reports
 }
 
-func (f *fleet) start(_ context.Context, spec childSpec) (child, error) {
+// start is a childStarter whose children are bound to ctx, as a process started with exec.CommandContext is: when the
+// context ends the child dies, whatever it was doing and whether or not a run is in progress.
+func (f *fleet) start(ctx context.Context, spec childSpec) (child, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.failWith != nil {
@@ -100,6 +112,10 @@ func (f *fleet) start(_ context.Context, spec childSpec) (child, error) {
 	}
 	c := &fakeChild{spec: spec, release: make(chan struct{}), session: f.session}
 	f.children = append(f.children, c)
+	go func() {
+		<-ctx.Done()
+		c.die()
+	}()
 	return c, nil
 }
 
@@ -142,17 +158,23 @@ type rig struct {
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
 
 // startRigIn is startRig with the workspace the session starts in.
-func startRigIn(t *testing.T, cwd string) *rig {
+func startRigIn(t *testing.T, cwd string) *rig { return startRigTuned(t, cwd, nil) }
+
+// startRigTuned is startRigIn with a change to the app made before the session starts.
+func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig {
 	t.Helper()
 	resetTypes()
 	t.Cleanup(resetTypes)
 	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
 	e := sdk.New("tintinweb-subagents")
 	r.app = newApp(e, r.fleet.start)
+	if tune != nil {
+		tune(r.app)
+	}
 	r.app.register(e)
 	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
 	r.Fire("session_start", obj{"reason": "startup"})
-	t.Cleanup(func() { r.app.mgr.abortAll() })
+	t.Cleanup(func() { r.app.shutdown() })
 	return r
 }
 

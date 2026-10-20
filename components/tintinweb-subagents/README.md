@@ -35,21 +35,28 @@ Binary, the Binary itself, so agents have the same built-in members), `pig` on `
 An agent with a turn limit (`max_turns`, the agent file's `max_turns` or `defaultMaxTurns`) is told to wrap up when it
 reaches the limit, and aborted if it is still working `graceTurns` turns later (default 5); it then reports as
 `steered` or `aborted`, and a run whose last turn failed (a provider error) reports as an error, as in the original.
-Stopping an agent (or ending the session) stops its process group: SIGTERM, then SIGKILL five seconds later.
+Stopping an agent whose conversation is in a session file, or ending the session, stops its process group: SIGTERM,
+then SIGKILL five seconds later. Stopping an agent whose conversation is in memory (`persist_session: false`, or
+`rememberAgents: false`) only stops its run, as the original's `session.abort()` does: its process, and so the
+conversation, stays for a `resume`; a run that does not stop within ten seconds of the stop has its process ended.
 
 ## Sessions, resume and context
 
 An agent's conversation is a pi session file by default (the original's `rememberAgents` setting, on unless
 `subagents.json` turns it off; the agent file's `persist_session` overrides it either way). The child is started with
 a new session recorded under the parent's (`parentSession`, so pi's `/resume` nests it), in pi's normal session
-directory or the agent file's `session_dir` (`~`, an absolute path, or relative to the workspace); its name is
-`<type>#<first 8 characters of the agent id>`. `Agent({ resume: "<agent id>", prompt })` continues the same
+directory or the agent file's `session_dir` (`~`, an absolute path, or relative to the workspace); the session it runs
+in is named `<type>#<first 8 characters of the agent id>` (set with `set_session_name` after the new session starts,
+because `--name` names only the first session of a pig process). `Agent({ resume: "<agent id>", prompt })` continues the same
 conversation: a persisted agent whose process has ended is reopened with `pig --session <file>` (with the spec it
 started with and no turn limit), an agent whose conversation is in memory (`persist_session: false`) keeps its process
 and takes the prompt into the same session. The call is detached unless `run_in_background: false`, as for a spawn. A
 finished agent's record, and the process that holds an in-memory conversation, are removed ten minutes after it
-finished; a persisted one leaves a tombstone (its handle and session file) that `resolveMention`/`spawn` with
-`resumeSessionFile` and `reclaim` can reopen (the `@handle` input hook that does it is the mention slice).
+finished (a timer looks every minute, as in the original); a persisted one leaves a tombstone (its handle and session
+file) that keeps its handle reserved. A session start or switch removes the finished agents whose result has been read
+and forgets every tombstone, and the end of the session closes every process that holds a conversation. Reopening a
+tombstone by `@handle` (`resolveMention`, `spawn` with `resumeSessionFile` and `reclaim`) waits for the input hook, which
+is the mention slice.
 
 `inherit_context` (the call parameter, or `inherit_context: true` in the agent file, which wins) puts the parent
 conversation in front of the task, as text: the user and assistant messages of the current branch and the compaction
@@ -60,7 +67,9 @@ summaries, as `# Parent Conversation Context ... # Your Task (below)`.
 `--no-skills`. `extensions:` and `exclude_extensions:` choose the extensions the child loads, `tools:` with `ext:`
 selectors and `disallowed_tools` narrow its tools, and `isolated` (the call, the agent file, or the spawn RPC) means no
 extensions, no skills and no `ext:` selectors, exactly as in the original. A child never loads project context files,
-prompt templates or themes, and trusts the project only when the parent does.
+`APPEND_SYSTEM.md`, prompt templates or themes, and trusts the project only when the parent does. `tools:` with `ext:`
+selectors and `disallowed_tools` are applied as pig flags (`--exclude-tools`, `--tools`) over the tools the parent's
+registry knows; see `port/PORT.md` for what that cannot reach.
 
 ## Agent files
 
@@ -91,8 +100,10 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 - Agent file fields that ask for an unported feature: `isolation: worktree`, `memory`, `allowed_subagents`,
   `output_transcript: true`.
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel`, `isolated`,
-  `inheritContext`, `bypassQueue` and `isBackground: true`. (`resumeSessionFile`, `reclaim` and `blocking` are dropped,
-  as the original drops what a caller sends: only the extension itself may set them.)
+  `inheritContext`, `bypassQueue` and `isBackground: true`. (`parentAgentId`, `workflowId`, `depth`, `maxSubagentDepth`,
+  `configCwd`, `rootSessionId`, `resumeSessionFile`, `reclaim` and `blocking` are dropped, as the original drops what a
+  caller sends: only the extension itself may set them. `isolated`, `inheritContext` and `bypassQueue` count when truthy,
+  as in JavaScript.)
 - `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
   `workflowsEnabled: true`, `worktreeIsolation: true`, `scopeModels: true`, `defaultJoinMode: "group"`, `widgetMode`
   other than `off`, and so on). The settings the port matches are not flagged: `false` for the switches the port does

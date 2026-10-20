@@ -282,6 +282,13 @@ func TestExtensionAllowlistTwins(t *testing.T) {
 	tw(t, f, "['*', path] keeps all defaults plus the extra path", func(t *testing.T) {
 		p := scopeOf(list("*", "/abs/foo.ts"), builtins7, false, testExt{"/ext/default.ts", []string{"default_tool"}}, testExt{"/abs/foo.ts", []string{"foo_tool"}})
 		eq(t, hasTool(p, "default_tool") && hasTool(p, "foo_tool"), true)
+		// The loader is given the path whatever else it keeps: the flags are what the child is started with.
+		sp := p.spec([]loadedExtension{{Path: "/ext/default.ts", Tools: []string{"default_tool"}}, {Path: "/abs/foo.ts", Tools: []string{"foo_tool"}}})
+		args := childArgs(childSpec{NoExtensions: sp.NoExtensions, ExtensionPaths: sp.ExtensionPaths})
+		eq(t, slices.Contains(args, "--no-extensions"), false) // every default stays
+		i := slices.Index(args, "--extension")
+		eq(t, i >= 0 && args[i+1] == "/abs/foo.ts", true)
+		eq(t, sp.ExtensionPaths, []string{"/abs/foo.ts"})
 	})
 	tw(t, f, "['mcp', path] keeps exactly those two, drops other defaults (no wildcard)", func(t *testing.T) {
 		p := scopeOf(list("mcp", "/abs/foo.ts"), builtins7, false, testExt{"/ext/mcp.ts", []string{"mcp_tool"}}, testExt{"/abs/foo.ts", []string{"foo_tool"}}, testExt{"/ext/other.ts", []string{"other_tool"}})

@@ -113,7 +113,6 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		feature string
 	}{
 		{"isolation", obj{"isolation": "worktree"}, `the spawn RPC option "isolation"`},
-		{"workflowId", obj{"workflowId": "w"}, `the spawn RPC option "workflowId"`},
 		{"foreground", obj{"isBackground": false}, "foreground agents through the spawn RPC (isBackground: false)"},
 	}
 	for _, c := range cases {

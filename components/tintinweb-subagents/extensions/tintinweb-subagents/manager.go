@@ -46,8 +46,8 @@ type agentRecord struct {
 	spec    childSpec
 	child   child
 	done    chan struct{}
-	cancel  context.CancelFunc
-	stopped bool // stopped by the user or the parent (not a failure)
+	cancel  context.CancelFunc // ends the context the child was started with: its process lives no longer
+	stopped bool               // stopped by the user or the parent (not a failure)
 	started chan struct{}
 
 	// resume is set while a resume of this agent is queued or running. foreground: the caller awaits the run and no
@@ -68,8 +68,10 @@ type manager struct {
 	maxConcurrent int
 	running       int
 	queue         []*agentRecord
-	tombstones    map[string]*tombstone // evicted agents that can still be reopened, by handle
+	tombstones    []*tombstone // evicted agents that can still be reopened, in the order they were evicted
 	start         childStarter
+	// disposed is set when the session ends: a child that settles after it is closed, not kept.
+	disposed bool
 	// onSettle runs once a record has settled (completed, stopped or failed).
 	onSettle func(*agentRecord)
 }
@@ -145,11 +147,67 @@ func (m *manager) spawn(typ, description, name string, spec childSpec, backgroun
 	return m.spawnWith(typ, description, name, spec, spawnOptions{Background: background})
 }
 
-// run executes one agent to completion, then releases its slot and starts the next queued agent.
+// launch runs an agent in a goroutine of its own. A panic in the run settles the agent as failed rather than ending
+// the extension.
+func (m *manager) launch(r *agentRecord) {
+	go func() {
+		if guard("agent run", func() { m.run(r) }) {
+			m.settlePanicked(r)
+		}
+	}()
+}
+
+// settlePanicked settles an agent whose run panicked, releasing what the run held.
+func (m *manager) settlePanicked(r *agentRecord) {
+	m.mu.Lock()
+	if r.Status != statusRunning { // it had settled: the panic was in what announces it
+		m.mu.Unlock()
+		return
+	}
+	r.Status, r.Error, r.CompletedAt, r.resume = statusError, "internal error in the agent run", time.Now(), nil
+	next := m.releaseSlotLocked(r)
+	c, cancel := r.child, r.cancel
+	r.child, r.cancel = nil, nil
+	closeOnce(r.started)
+	closeOnce(r.done)
+	m.mu.Unlock()
+	if c != nil {
+		c.close()
+	}
+	if cancel != nil {
+		cancel()
+	}
+	if next != nil {
+		m.launch(next)
+	}
+}
+
+// releaseSlotLocked gives back the concurrency slot of a settled agent and takes the next queued agent, if any is
+// to run now. The caller holds m.mu and starts the agent returned.
+func (m *manager) releaseSlotLocked(r *agentRecord) *agentRecord {
+	if r.slot {
+		m.running--
+		r.slot = false
+	}
+	if len(m.queue) == 0 || m.running >= m.maxConcurrent {
+		return nil
+	}
+	next := m.queue[0]
+	m.queue = m.queue[1:]
+	m.running++
+	next.slot = true
+	next.Status = statusRunning
+	return next
+}
+
+// run executes one agent to completion, then releases its slot and starts the next queued agent. The child is bound to
+// a context that lives until the child is closed: a child that keeps its conversation in memory outlives the run, so
+// that resume can continue it (the original keeps the AgentSession on the record until cleanup).
 func (m *manager) run(r *agentRecord) {
 	ctx, cancel := context.WithCancel(context.Background())
 	m.mu.Lock()
-	r.cancel = cancel // abort reads it under the lock
+	old, oldCancel := r.child, r.cancel // the child of an earlier run, which a resume may continue
+	r.cancel = cancel                   // abort reads it under the lock, while the child starts
 	r.StartedAt = time.Now()
 	rr := r.resume
 	spec := r.spec
@@ -159,26 +217,57 @@ func (m *manager) run(r *agentRecord) {
 	if rr != nil {
 		c, err = m.reopen(ctx, r, rr)
 	} else {
-		c, err = m.start(ctx, spec)
+		if spec.InheritContext != nil { // built when the run starts, so a queued agent sees the later conversation
+			var pc string
+			if pc, err = spec.InheritContext(); err == nil {
+				spec.Prompt = pc + spec.Prompt
+			}
+		}
+		if err == nil {
+			c, err = m.start(ctx, spec)
+		}
 	}
+	var replaced child
+	var replacedCancel context.CancelFunc
+	unused := cancel // the context of this run when the child it started is not the one the agent holds
 	m.mu.Lock()
-	started := r.started
-	m.mu.Unlock()
-	close(started)
-	var res *childResult
+	switch {
+	case err != nil:
+		r.cancel = oldCancel
+	case c == old: // the same process took the prompt
+		r.cancel = oldCancel
+	default:
+		r.cancel, unused = cancel, nil
+		if old != nil {
+			replaced, replacedCancel = old, oldCancel
+		}
+	}
 	if err == nil {
-		m.mu.Lock()
 		r.child = c
 		if f := c.sessionFile(); f != "" {
 			r.SessionFile = f
 		}
-		stop := r.stopped
-		m.mu.Unlock()
+	}
+	stop := r.stopped
+	closeOnce(r.started)
+	m.mu.Unlock()
+	if replaced != nil {
+		replaced.close()
+	}
+	if replacedCancel != nil {
+		replacedCancel()
+	}
+	if unused != nil {
+		unused()
+	}
+	var res *childResult
+	if err == nil {
 		if stop {
 			c.abort()
 		}
 		res, err = c.wait()
 	}
+	alive := c != nil && err == nil && c.alive() // an in-memory conversation outlives its run
 	m.mu.Lock()
 	r.CompletedAt = time.Now()
 	switch {
@@ -206,27 +295,29 @@ func (m *manager) run(r *agentRecord) {
 		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses+len(spec.Warnings), res.Tokens, res.Turns, res.WrappedUp
 	}
 	r.resume = nil
-	if r.slot {
-		m.running--
-		r.slot = false
+	// The process ends with its run unless the agent still holds a conversation in it (and the session is going on).
+	var closing child
+	var closingCancel context.CancelFunc
+	if c != nil && (!alive || m.disposed) {
+		closingCancel, r.cancel = r.cancel, nil
+		if alive {
+			closing = c
+		}
 	}
-	var next *agentRecord
-	if len(m.queue) > 0 && m.running < m.maxConcurrent {
-		next = m.queue[0]
-		m.queue = m.queue[1:]
-		m.running++
-		next.slot = true
-		next.Status = statusRunning
-	}
-	done := r.done
+	next := m.releaseSlotLocked(r)
+	closeOnce(r.done)
 	m.mu.Unlock()
-	cancel()
-	close(done)
+	if closing != nil {
+		closing.close()
+	}
+	if closingCancel != nil {
+		closingCancel()
+	}
 	if m.onSettle != nil && (rr == nil || rr.background) { // a foreground resume is not announced
 		m.onSettle(r)
 	}
 	if next != nil {
-		go m.run(next)
+		m.launch(next)
 	}
 }
 
@@ -249,7 +340,9 @@ func (m *manager) awaitStartup(r *agentRecord, timeout time.Duration) error {
 	}
 }
 
-// abort stops a running or queued agent; it reports false for one that is not running.
+// abort stops a running or queued agent; it reports false for one that is not running. A child that keeps its
+// conversation in memory is only told to stop its run: the conversation stays resumable, as `session.abort()` leaves
+// it in the original (agent-manager.ts abort); ending the process is up to close.
 func (m *manager) abort(r *agentRecord) bool {
 	m.mu.Lock()
 	switch r.Status {
@@ -261,9 +354,10 @@ func (m *manager) abort(r *agentRecord) bool {
 			}
 		}
 		r.Status, r.stopped, r.CompletedAt, r.resume = statusStopped, true, time.Now(), nil
+		// The channels are closed under the lock: a resume that lands once the record is stopped replaces them.
+		closeOnce(r.started)
+		closeOnce(r.done)
 		m.mu.Unlock()
-		close(r.started)
-		close(r.done)
 		if m.onSettle != nil {
 			m.onSettle(r)
 		}
@@ -308,9 +402,18 @@ func (m *manager) consume(id string) bool {
 	return true
 }
 
-// abortAll stops every agent (the session ends).
+// abortAll stops every running and queued agent.
 func (m *manager) abortAll() {
 	for _, r := range m.list() {
 		m.abort(r)
+	}
+}
+
+// closeOnce closes ch unless it is closed. The caller holds m.mu, which every close of a record's channels is under.
+func closeOnce(ch chan struct{}) {
+	select {
+	case <-ch:
+	default:
+		close(ch)
 	}
 }

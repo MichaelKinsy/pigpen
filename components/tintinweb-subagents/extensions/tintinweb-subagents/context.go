@@ -39,12 +39,12 @@ func buildParentContext(entries []map[string]any) string {
 					blocks, _ := msg["content"].([]any)
 					text = extractText(blocks)
 				}
-				if t := strings.TrimSpace(text); t != "" {
+				if t := jsTrim(text); t != "" {
 					parts = append(parts, "[User]: "+t)
 				}
 			case "assistant":
 				blocks, _ := msg["content"].([]any)
-				if t := strings.TrimSpace(extractText(blocks)); t != "" {
+				if t := jsTrim(extractText(blocks)); t != "" {
 					parts = append(parts, "[Assistant]: "+t)
 				}
 			}

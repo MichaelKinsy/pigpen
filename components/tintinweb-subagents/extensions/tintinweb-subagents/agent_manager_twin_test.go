@@ -45,7 +45,7 @@ func TestAgentManagerResumeTwins(t *testing.T) {
 	tw(t, f, "resume(): a failed final turn on the resumed prompt maps to error too", func(t *testing.T) {
 		m, _, rec, c := settled(t, nil, 0)
 		eq(t, status(m, rec), statusCompleted)
-		eq(t, m.resume(rec, "more", false), true)
+		eq(t, m.resume(rec, "more", false, ""), true)
 		waitFor(t, func() bool { return resumed(c) == 1 })
 		// resumeAgent bounds its fallback to this invocation, so a failed empty resume yields text "": never the
 		// prior turn's answer (#144).
@@ -60,7 +60,7 @@ func TestAgentManagerResumeTwins(t *testing.T) {
 	})
 	tw(t, f, "resume(): partial text produced before the failure is kept as result", func(t *testing.T) {
 		m, _, rec, c := settled(t, nil, 0)
-		eq(t, m.resume(rec, "more", false), true)
+		eq(t, m.resume(rec, "more", false, ""), true)
 		waitFor(t, func() bool { return resumed(c) == 1 })
 		c.mu.Lock()
 		c.res = &childResult{Text: "new partial progress", Failure: "provider died mid-turn"}
@@ -74,7 +74,7 @@ func TestAgentManagerResumeTwins(t *testing.T) {
 		completions := make(chan string, 4)
 		m, _, rec, c := settled(t, func(r *agentRecord) { completions <- r.ID }, 0)
 		<-completions // the spawn's own completion
-		eq(t, m.resume(rec, "keep going", true), true)
+		eq(t, m.resume(rec, "keep going", true, ""), true)
 		// Returned at once: still running, no notification yet.
 		eq(t, status(m, rec), statusRunning)
 		select {
@@ -97,7 +97,7 @@ func TestAgentManagerResumeTwins(t *testing.T) {
 		completions := make(chan string, 4)
 		m, _, rec, c := settled(t, func(r *agentRecord) { completions <- r.ID }, 0)
 		<-completions
-		eq(t, m.resume(rec, "again", true), true)
+		eq(t, m.resume(rec, "again", true, ""), true)
 		waitFor(t, func() bool { return resumed(c) == 1 })
 		c.mu.Lock()
 		c.res = &childResult{Text: "partial", Failure: "provider exploded"}
@@ -120,7 +120,7 @@ func TestAgentManagerResumeTwins(t *testing.T) {
 		blocker := m.spawn("general-purpose", "blocker", "", childSpec{Prompt: "blocker"}, true)
 		fl.wait(t, 2)
 		eq(t, status(m, blocker), statusRunning)
-		eq(t, m.resume(rec, "later", true), true)
+		eq(t, m.resume(rec, "later", true, ""), true)
 		eq(t, status(m, rec), statusQueued)
 		eq(t, resumed(c), 0)
 	})
@@ -128,7 +128,7 @@ func TestAgentManagerResumeTwins(t *testing.T) {
 		completions := make(chan string, 4)
 		m, _, rec, c := settled(t, func(r *agentRecord) { completions <- r.ID }, 0)
 		<-completions
-		eq(t, m.resume(rec, "sync", false), true)
+		eq(t, m.resume(rec, "sync", false, ""), true)
 		waitFor(t, func() bool { return resumed(c) == 1 })
 		c.finish("inline result")
 		<-m.doneOf(rec)
@@ -142,10 +142,10 @@ func TestAgentManagerResumeTwins(t *testing.T) {
 	})
 	tw(t, f, "refuses to background-resume an agent whose run is still in flight", func(t *testing.T) {
 		m, _, rec, c := settled(t, nil, 0)
-		eq(t, m.resume(rec, "go", true), true)
+		eq(t, m.resume(rec, "go", true, ""), true)
 		eq(t, status(m, rec), statusRunning)
 		waitFor(t, func() bool { return resumed(c) == 1 })
-		eq(t, m.resume(rec, "go again", true), false)
+		eq(t, m.resume(rec, "go again", true, ""), false)
 		eq(t, resumed(c), 1)                 // the second prompt never reached the child
 		eq(t, status(m, rec), statusRunning) // the in-flight run is untouched
 		eq(t, m.abort(rec), true)            // and still stoppable
@@ -156,9 +156,9 @@ func TestAgentManagerResumeTwins(t *testing.T) {
 		m, fl, rec, c := settled(t, nil, 1)
 		m.spawn("general-purpose", "blocker", "", childSpec{Prompt: "blocker"}, true)
 		fl.wait(t, 2)
-		eq(t, m.resume(rec, "later", true), true)
+		eq(t, m.resume(rec, "later", true, ""), true)
 		eq(t, status(m, rec), statusQueued)
-		eq(t, m.resume(rec, "later again", true), false)
+		eq(t, m.resume(rec, "later again", true, ""), false)
 		eq(t, resumed(c), 0)
 	})
 	tskip(t, f, "fires onStarted when the run starts, not when a queued resume is registered", "onStarted is the hook the Agent tool hangs output-file streaming on; output transcripts are a separate slice and refused here (output_transcript)")

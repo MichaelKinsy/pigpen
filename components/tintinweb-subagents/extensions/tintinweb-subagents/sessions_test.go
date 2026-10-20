@@ -438,6 +438,21 @@ func TestToolAndExtensionScopeReachTheChildAsFlags(t *testing.T) {
 		eq(t, s.NoExtensions, true)
 		eq(t, s.ExtensionPaths, []string{"/ext/ptool.ts"}) // the only file extension; PiG's built-ins are not named, so not kept
 	})
+	t.Run("a wildcard keeps the defaults and still loads the paths it names", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "extra.ts")
+		write(t, path, "export default () => {};")
+		s := spawn(t, `extensions: ["*", "`+path+`"]`)
+		eq(t, s.NoExtensions, false)
+		eq(t, s.ExtensionPaths, []string{path})
+		args := childArgs(s)
+		i := slices.Index(args, "--extension")
+		eq(t, i >= 0 && args[i+1] == path && !slices.Contains(args, "--no-extensions"), true)
+	})
+	t.Run("a path that is not there is left out", func(t *testing.T) {
+		s := spawn(t, `extensions: ["*", "/nonexistent/extra.ts"]`)
+		eq(t, s.NoExtensions, false)
+		eq(t, len(s.ExtensionPaths), 0)
+	})
 	t.Run("exclude_extensions keeps the rest", func(t *testing.T) {
 		s := spawn(t, "exclude_extensions: ptool")
 		// the other file extension, and PiG's built-in ones, which an exclude list does not name

@@ -31,6 +31,9 @@ type childSpec struct {
 	Cwd          string
 	MaxTurns     int
 	GraceTurns   int // turns allowed after the wrap-up steer before the run is aborted (0: the default, 5)
+	// InheritContext, when set, gives the text of the parent conversation that goes in front of the prompt. It is
+	// called when the run starts. upstream: agent-runner.ts runAgent (options.inheritContext).
+	InheritContext func() (string, error)
 
 	// Tool, extension and skill scope, from planScope.
 	NoExtensions   bool     // --no-extensions: no extension (and so no extension or MCP tool) is loaded
@@ -156,7 +159,9 @@ func childArgs(spec childSpec) []string {
 	if spec.SessionName != "" {
 		args = append(args, "--name", spec.SessionName)
 	}
-	args = append(args, "--no-context-files", "--no-prompt-templates", "--no-themes")
+	// An explicit empty append keeps pig from discovering the global or project APPEND_SYSTEM.md, which the original's
+	// loader suppresses too (appendSystemPromptOverride) so that prompt_mode: replace and isolated are not defeated.
+	args = append(args, "--no-context-files", "--no-prompt-templates", "--no-themes", "--append-system-prompt", "")
 	switch spec.Trust {
 	case "approve":
 		args = append(args, "--approve")
@@ -217,6 +222,8 @@ type rpcChild struct {
 	// limits carries the turn-limit commands (the wrap-up steer, then the abort) to one sender, in order.
 	limits chan map[string]any
 	grace  int
+	// abortWait is abortGrace as it was when the child started.
+	abortWait time.Duration
 
 	// The current run. upstream: agent-runner.ts runAgent / resumeAgent.
 	settled        chan struct{}
@@ -235,7 +242,10 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 	if err != nil {
 		return nil, err
 	}
+	// The child lives as long as ctx: the manager ends the context when it closes the child, not when a run settles, so
+	// that a conversation that exists only in this process outlives the run. A cancel takes the whole process group.
 	cmd := exec.CommandContext(ctx, bin, childArgs(spec)...)
+	cmd.Cancel = func() error { terminate(cmd); return nil }
 	cmd.Dir = spec.Cwd
 	cmd.Env = append(os.Environ(), depthEnv+"=1")
 	setProcessGroup(cmd)
@@ -253,31 +263,35 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		return nil, err
 	}
 	c := &rpcChild{cmd: cmd, stdin: stdin, pending: map[string]chan map[string]any{}, exited: make(chan struct{}), exitErr: make(chan error, 1),
-		grace: spec.GraceTurns, keep: !spec.Persist && spec.ResumeFile == "", first: spec.ResumeFile == ""}
+		grace: spec.GraceTurns, abortWait: abortGrace, keep: !spec.Persist && spec.ResumeFile == "", first: spec.ResumeFile == ""}
 	if c.grace <= 0 {
 		c.grace = defaultGraceTurns
 	}
 	c.begin(spec.MaxTurns)
 	c.limits = make(chan map[string]any, 2) // at most one steer and one abort are ever sent per run
-	go func() {
+	goGuarded("child turn limit", func() {
 		for {
 			select {
 			case cmd := <-c.limits:
-				_, _ = c.call(cmd)
+				guard("child turn limit command", func() { _, _ = c.call(cmd) })
 			case <-c.exited:
 				return
 			}
 		}
-	}()
-	go func() {
+	})
+	goGuarded("child reader", func() {
 		sc := bufio.NewScanner(stdout)
 		sc.Buffer(make([]byte, 1<<20), 64<<20)
-		for sc.Scan() {
-			var m map[string]any
-			if json.Unmarshal(sc.Bytes(), &m) != nil {
-				continue
+		if guard("child output", func() {
+			for sc.Scan() {
+				var m map[string]any
+				if json.Unmarshal(sc.Bytes(), &m) != nil {
+					continue
+				}
+				c.handle(m)
 			}
-			c.handle(m)
+		}) {
+			terminate(cmd) // an output the reader could not handle: end the child, which settles the run with an error
 		}
 		err := cmd.Wait()
 		close(c.exited)
@@ -300,18 +314,23 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 			c.mu.Unlock()
 			close(settled)
 		}
-	}()
+	})
 	// A new persisted conversation is linked to the parent's, which nests it under the parent in pi's /resume.
 	if spec.Persist && spec.ResumeFile == "" && spec.ParentSession != "" {
 		if _, err := c.call(map[string]any{"type": "new_session", "parentSession": spec.ParentSession}); err != nil {
-			c.abort()
+			c.kill()
 			return nil, err
 		}
+	}
+	// The name goes on the session the agent runs in: --name names the process's first session only, and the one
+	// new_session started replaces it. A name that cannot be set does not stop the agent. upstream: agent-runner.ts:1010-1013.
+	if spec.SessionName != "" {
+		_, _ = c.call(map[string]any{"type": "set_session_name", "name": spec.SessionName})
 	}
 	if spec.Persist || spec.ResumeFile != "" {
 		m, err := c.call(map[string]any{"type": "get_state"})
 		if err != nil {
-			c.abort()
+			c.kill()
 			return nil, err
 		}
 		if d, ok := m["data"].(map[string]any); ok {
@@ -319,7 +338,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		}
 	}
 	if _, err := c.call(map[string]any{"type": "prompt", "message": spec.Prompt}); err != nil {
-		c.abort()
+		c.kill()
 		return nil, err
 	}
 	return c, nil
@@ -456,11 +475,42 @@ func (c *rpcChild) steer(message string) error {
 	return err
 }
 
+// abortGrace is how long a child that keeps its conversation in memory has to settle after an abort before its
+// process is ended.
+var abortGrace = 10 * time.Second
+
+// abort stops the current run. A child that keeps its conversation in memory is told to stop and lives on, so that
+// the agent can be resumed (the original's `session.abort()` leaves the session as it is); one whose conversation is in
+// a file, which a resume reopens, is ended. upstream: agent-manager.ts abort.
 func (c *rpcChild) abort() {
+	if !c.keep {
+		c.mu.Lock()
+		c.killed = true // before the abort is sent: the process may exit on it, and the run is then aborted, not lost
+		c.mu.Unlock()
+		_, _ = c.call(map[string]any{"type": "abort"})
+		terminate(c.cmd)
+		return
+	}
+	c.mu.Lock()
+	settled := c.settled
+	c.mu.Unlock()
+	_, _ = c.call(map[string]any{"type": "abort"})
+	// A run that never settles must not hold its agent forever: past the grace the process goes.
+	goGuarded("child abort", func() {
+		select {
+		case <-settled:
+		case <-c.exited:
+		case <-time.After(c.abortWait):
+			c.kill()
+		}
+	})
+}
+
+// kill ends the child's process, and with it its conversation.
+func (c *rpcChild) kill() {
 	c.mu.Lock()
 	c.killed = true
 	c.mu.Unlock()
-	_, _ = c.call(map[string]any{"type": "abort"})
 	terminate(c.cmd)
 }
 

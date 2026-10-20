@@ -51,7 +51,7 @@ func findInRoot(root, name string) (string, bool) {
 		return "", false
 	}
 	if flat, ok := safeReadFile(filepath.Join(root, name+".md")); ok {
-		return strings.TrimSpace(flat), true
+		return jsTrim(flat), true
 	}
 	return findSkillDirectory(root, name)
 }
@@ -81,7 +81,7 @@ func findSkillDirectory(root, name string) (string, bool) {
 			if _, err := os.Stat(skillMd); err == nil { // a skill directory: skills do not nest
 				if entry.Name() == name {
 					if content, ok := safeReadFile(skillMd); ok {
-						return strings.TrimSpace(content), true
+						return jsTrim(content), true
 					}
 				}
 				continue

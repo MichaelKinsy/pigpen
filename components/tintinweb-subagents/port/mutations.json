@@ -164,20 +164,20 @@
  {
   "name": "queue-lifo",
   "file": "manager.go",
-  "find": "next = m.queue[0]\n\t\tm.queue = m.queue[1:]",
-  "replace": "next = m.queue[len(m.queue)-1]\n\t\tm.queue = m.queue[:len(m.queue)-1]"
+  "find": "next := m.queue[0]\n\tm.queue = m.queue[1:]",
+  "replace": "next := m.queue[len(m.queue)-1]\n\tm.queue = m.queue[:len(m.queue)-1]"
  },
  {
   "name": "foreground-queued",
-  "file": "manager.go",
-  "find": "if background && m.running >= m.maxConcurrent {",
-  "replace": "if m.running >= m.maxConcurrent {"
+  "file": "sessions.go",
+  "find": "if opts.Background && !opts.BypassQueue && m.running >= m.maxConcurrent {",
+  "replace": "if !opts.BypassQueue && m.running >= m.maxConcurrent {"
  },
  {
   "name": "slot-not-released",
   "file": "manager.go",
-  "find": "if r.Background {\n\t\tm.running--\n\t}",
-  "replace": "if r.Background {\n\t}"
+  "find": "if r.slot {\n\t\tm.running--\n\t\tr.slot = false\n\t}\n\tif len(m.queue) == 0",
+  "replace": "if r.slot {\n\t\tr.slot = false\n\t}\n\tif len(m.queue) == 0"
  },
  {
   "name": "consume-running-agent",
@@ -284,8 +284,8 @@
  {
   "name": "spawn-not-background",
   "file": "bus.go",
-  "find": "a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, true, false)",
-  "replace": "a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, false, false)"
+  "find": "Background: true, Isolated: isolated",
+  "replace": "Background: false, Isolated: isolated"
  },
  {
   "name": "stop-error-text",
@@ -307,9 +307,9 @@
  },
  {
   "name": "isolated-agent-file-ignored",
-  "file": "bus.go",
-  "find": "|| (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}",
-  "replace": "}"
+  "file": "sessions_tool.go",
+  "find": "file.inherit, file.background, file.isolated = cfg.InheritContext, cfg.RunInBackground, cfg.Isolated",
+  "replace": "file.inherit, file.background, file.isolated = cfg.InheritContext, cfg.RunInBackground, nil"
  },
  {
   "name": "no-session-error",
@@ -618,18 +618,6 @@
   "replace": "v != \"\" && v != \"worktree\" {"
  },
  {
-  "name": "inherit-context-accepted",
-  "file": "refuse.go",
-  "find": "if v, _ := p[\"inherit_context\"].(bool); v {",
-  "replace": "if v, _ := p[\"inherit_context\"].(bool); !v {"
- },
- {
-  "name": "resume-accepted",
-  "file": "refuse.go",
-  "find": "if v, _ := p[\"resume\"].(string); v != \"\" {",
-  "replace": "if v, _ := p[\"resume\"].(string); v == \"never\" {"
- },
- {
   "name": "memory-field-accepted",
   "file": "refuse.go",
   "find": "case cfg.Memory != \"\":",
@@ -640,24 +628,6 @@
   "file": "refuse.go",
   "find": "case cfg.AllowedSubagents != nil:",
   "replace": "case false:"
- },
- {
-  "name": "disallowed-tools-accepted",
-  "file": "refuse.go",
-  "find": "case len(cfg.DisallowedTools) > 0:",
-  "replace": "case false:"
- },
- {
-  "name": "skills-false-accepted",
-  "file": "refuse.go",
-  "find": "return v == nil || (ok && b)",
-  "replace": "return true"
- },
- {
-  "name": "extension-list-accepted",
-  "file": "refuse.go",
-  "find": "case nil, bool:\n\t\treturn true",
-  "replace": "case nil, bool, []string:\n\t\treturn true"
  },
  {
   "name": "rpc-option-accepted",
@@ -724,5 +694,245 @@
   "file": "bus.go",
   "find": "thinking, _ := opts[\"thinkingLevel\"].(string)",
   "replace": "thinking := \"\""
+ },
+ {
+  "name": "kept-child-ended-with-its-run",
+  "file": "manager.go",
+  "find": "if c != nil && (!alive || m.disposed) {",
+  "replace": "if c != nil {"
+ },
+ {
+  "name": "child-context-cancel-leaves-process",
+  "file": "runner.go",
+  "find": "cmd.Cancel = func() error { terminate(cmd); return nil }",
+  "replace": "cmd.Cancel = func() error { return nil }"
+ },
+ {
+  "name": "child-context-cancel-kills-leader-only",
+  "file": "runner.go",
+  "find": "cmd.Cancel = func() error { terminate(cmd); return nil }",
+  "replace": "cmd.Cancel = func() error { return cmd.Process.Kill() }"
+ },
+ {
+  "name": "stop-ends-in-memory-conversation",
+  "file": "runner.go",
+  "find": "\tif !c.keep {\n\t\tc.mu.Lock()\n\t\tc.killed = true",
+  "replace": "\tif true {\n\t\tc.mu.Lock()\n\t\tc.killed = true"
+ },
+ {
+  "name": "stop-grace-missing",
+  "file": "runner.go",
+  "find": "case <-time.After(c.abortWait):\n\t\t\tc.kill()",
+  "replace": "case <-time.After(c.abortWait):"
+ },
+ {
+  "name": "queued-abort-closes-unlocked",
+  "file": "manager.go",
+  "find": "closeOnce(r.started)\n\t\tcloseOnce(r.done)\n\t\tm.mu.Unlock()\n\t\tif m.onSettle != nil {",
+  "replace": "m.mu.Unlock()\n\t\tcloseOnce(r.started)\n\t\tcloseOnce(r.done)\n\t\tif m.onSettle != nil {"
+ },
+ {
+  "name": "run-panic-unrecovered",
+  "file": "manager.go",
+  "find": "if guard(\"agent run\", func() { m.run(r) }) {\n\t\t\tm.settlePanicked(r)\n\t\t}",
+  "replace": "m.run(r)"
+ },
+ {
+  "name": "panicked-run-keeps-its-slot",
+  "file": "manager.go",
+  "find": "next := m.releaseSlotLocked(r)\n\tc, cancel := r.child, r.cancel\n\tr.child, r.cancel = nil, nil",
+  "replace": "var next *agentRecord\n\tc, cancel := r.child, r.cancel\n\tr.child, r.cancel = nil, nil"
+ },
+ {
+  "name": "cleanup-timer-not-started",
+  "file": "extension.go",
+  "find": "\t\ta.startCleanup()\n",
+  "replace": ""
+ },
+ {
+  "name": "cleanup-every-hour",
+  "file": "extension.go",
+  "find": "cleanupEvery    = time.Minute ",
+  "replace": "cleanupEvery    = time.Hour "
+ },
+ {
+  "name": "cleanup-ignores-age",
+  "file": "sessions.go",
+  "find": "|| !r.CompletedAt.Before(cutoff) {",
+  "replace": "{"
+ },
+ {
+  "name": "cleanup-removes-running",
+  "file": "sessions.go",
+  "find": "if r.Status == statusRunning || r.Status == statusQueued || !r.CompletedAt.Before(cutoff) {",
+  "replace": "if !r.CompletedAt.Before(cutoff) {"
+ },
+ {
+  "name": "shutdown-keeps-children",
+  "file": "sessions.go",
+  "find": "if h.c != nil {\n\t\t\th.c.close()\n\t\t}",
+  "replace": "if h.c != nil {\n\t\t}"
+ },
+ {
+  "name": "shutdown-keeps-ticker",
+  "file": "extension.go",
+  "find": "a.stopCleanup = nil\n\t}\n\tfor key, t := range a.timers {",
+  "replace": "}\n\tfor key, t := range a.timers {"
+ },
+ {
+  "name": "shutdown-keeps-notices",
+  "file": "extension.go",
+  "find": "for key, t := range a.timers {\n\t\tt.Stop()\n",
+  "replace": "for key, t := range a.timers {\n\t\t_ = t\n"
+ },
+ {
+  "name": "settle-after-shutdown-keeps-child",
+  "file": "manager.go",
+  "find": "(!alive || m.disposed)",
+  "replace": "(!alive)"
+ },
+ {
+  "name": "session-start-not-reopened",
+  "file": "extension.go",
+  "find": "\t\ta.mgr.open()\n",
+  "replace": ""
+ },
+ {
+  "name": "session-start-keeps-old-agents",
+  "file": "extension.go",
+  "find": "guard(\"session start cleanup\", func() { a.mgr.clearCompleted(true) })",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "session-switch-keeps-old-agents",
+  "file": "extension.go",
+  "find": "guard(\"session switch cleanup\", func() { a.mgr.clearCompleted(true) })",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "clear-completed-reads-unconsumed",
+  "file": "sessions.go",
+  "find": "|| (skipUnconsumed && !r.Consumed) {",
+  "replace": "{"
+ },
+ {
+  "name": "clear-completed-ignores-unconsumed-flag",
+  "file": "sessions.go",
+  "find": "|| (skipUnconsumed && !r.Consumed) {",
+  "replace": "|| !r.Consumed {"
+ },
+ {
+  "name": "clear-completed-removes-running",
+  "file": "sessions.go",
+  "find": "if r.Status == statusRunning || r.Status == statusQueued || (skipUnconsumed && !r.Consumed) {",
+  "replace": "if skipUnconsumed && !r.Consumed {"
+ },
+ {
+  "name": "clear-completed-keeps-tombstones",
+  "file": "sessions.go",
+  "find": "\tm.mu.Lock()\n\tm.tombstones = nil\n\tm.mu.Unlock()",
+  "replace": "\tm.mu.Lock()\n\tm.mu.Unlock()"
+ },
+ {
+  "name": "session-name-not-set",
+  "file": "runner.go",
+  "find": "_, _ = c.call(map[string]any{\"type\": \"set_session_name\", \"name\": spec.SessionName})",
+  "replace": "_ = spec.SessionName"
+ },
+ {
+  "name": "append-system-md-discovered",
+  "file": "runner.go",
+  "find": "\"--no-themes\", \"--append-system-prompt\", \"\")",
+  "replace": "\"--no-themes\")"
+ },
+ {
+  "name": "wildcard-drops-extension-paths",
+  "file": "discover.go",
+  "find": "if inSurvivors && !slices.Contains(s.ExtensionPaths, path) {",
+  "replace": "if false && inSurvivors && !slices.Contains(s.ExtensionPaths, path) {"
+ },
+ {
+  "name": "wildcard-narrows-the-load",
+  "file": "discover.go",
+  "find": "if !p.LoadAll {\n\t\ts.NoExtensions = true",
+  "replace": "if true {\n\t\ts.NoExtensions = true"
+ },
+ {
+  "name": "skill-trim-is-go-trim",
+  "file": "skills.go",
+  "find": "return jsTrim(flat), true",
+  "replace": "return strings.TrimSpace(flat), true"
+ },
+ {
+  "name": "parent-context-trim-is-go-trim",
+  "file": "context.go",
+  "find": "if t := jsTrim(text); t != \"\" {",
+  "replace": "if t := strings.TrimSpace(text); t != \"\" {"
+ },
+ {
+  "name": "rooted-ignores-windows-backslash",
+  "file": "sessions.go",
+  "find": "|| (windows && strings.HasPrefix(p, `\\`))",
+  "replace": "|| false"
+ },
+ {
+  "name": "package-json-shape-keeps-climbing",
+  "file": "scope.go",
+  "find": "return \"\" // the first package.json is the package root: decide here",
+  "replace": "if parent := filepath.Dir(dir); parent != dir {\n\t\t\tdir = parent\n\t\t\tcontinue\n\t\t}\n\t\treturn \"\""
+ },
+ {
+  "name": "tombstone-rewrite-moves-to-end",
+  "file": "sessions.go",
+  "find": "m.tombstones[i] = t",
+  "replace": "m.tombstones = append(slices.Delete(m.tombstones, i, i+1), t)"
+ },
+ {
+  "name": "tombstone-eviction-takes-the-last-tie",
+  "file": "sessions.go",
+  "find": "if o.CompletedAt.Before(m.tombstones[oldest].CompletedAt) {",
+  "replace": "if !o.CompletedAt.After(m.tombstones[oldest].CompletedAt) {"
+ },
+ {
+  "name": "mention-empty-matches-aliasless",
+  "file": "sessions.go",
+  "find": "named := func(s string) bool { return s != \"\" && lower(s) == wanted }",
+  "replace": "named := func(s string) bool { return lower(s) == wanted }"
+ },
+ {
+  "name": "inherit-context-built-at-spawn",
+  "file": "bus.go",
+  "find": "spec.InheritContext = func() (string, error) { return parentContext(ctx) }",
+  "replace": "pc, _ := parentContext(ctx)\n\t\tspec.InheritContext = func() (string, error) { return pc, nil }"
+ },
+ {
+  "name": "rpc-internal-option-refused",
+  "file": "refuse.go",
+  "find": "\"parentAgentId\", \"workflowId\", \"depth\"",
+  "replace": "\"parentAgentId\", \"depth\""
+ },
+ {
+  "name": "rpc-truthy-isolated-needs-bool",
+  "file": "bus.go",
+  "find": "jsTruthy(opts[\"isolated\"])",
+  "replace": "opts[\"isolated\"] == true"
+ },
+ {
+  "name": "exclude-typo-checks-defaults-only",
+  "file": "scope.go",
+  "find": "which an exclude may name.\n\t\t\tfor _, e := range all {",
+  "replace": "which an exclude may name.\n\t\t\tfor _, e := range in.Discovered {"
+ },
+ {
+  "name": "refused-resume-rewrites-tool-call-id",
+  "file": "sessions.go",
+  "find": "if r.Status == statusRunning || r.Status == statusQueued {\n\t\tm.mu.Unlock()\n\t\treturn false\n\t}\n\tr.resume = &resumeRun",
+  "replace": "if r.Status == statusRunning || r.Status == statusQueued {\n\t\tr.ToolCallID = toolCallID\n\t\tm.mu.Unlock()\n\t\treturn false\n\t}\n\tr.resume = &resumeRun"
+ },
+ {
+  "name": "remember-agents-resets-when-unset",
+  "file": "extension.go",
+  "find": "if st.RememberAgents != nil { // a setting that is gone keeps the value last applied. upstream: settings.ts applySettings\n\t\ta.rememberAgents = *st.RememberAgents\n\t}",
+  "replace": "a.rememberAgents = st.RememberAgents == nil || *st.RememberAgents"
  }
 ]

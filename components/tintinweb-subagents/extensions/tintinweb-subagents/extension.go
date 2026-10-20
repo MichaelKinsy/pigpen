@@ -14,6 +14,7 @@ import (
 const (
 	protocolVersion = 2
 	nudgeHold       = 200 * time.Millisecond // a completion notification is held this long for a consume. upstream: index.ts NUDGE_HOLD_MS
+	cleanupEvery    = time.Minute            // how often finished agents are looked at for removal. upstream: agent-manager.ts:428
 )
 
 // app is the extension. upstream: src/index.ts.
@@ -30,13 +31,15 @@ type app struct {
 	settingsNotice  string
 
 	rememberAgents bool // persist agent sessions by default. upstream: settings.ts rememberAgents (default true)
+	cleanupEvery   time.Duration
+	stopCleanup    chan struct{} // closed to end the cleanup timer; nil while none runs
 	disc           discoverCache
 	listExtensions func(ctx context.Context, cwd string) ([]string, error)
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
-	a := &app{e: e, timers: map[string]*time.Timer{}, rememberAgents: true, listExtensions: statusExtensions}
+	a := &app{e: e, timers: map[string]*time.Timer{}, rememberAgents: true, cleanupEvery: cleanupEvery, listExtensions: statusExtensions}
 	a.mgr = newManager(start, a.onSettle)
 	return a
 }
@@ -52,7 +55,9 @@ func (a *app) reload(cwd string) {
 	a.mu.Lock()
 	a.defaultMaxTurns = st.DefaultMaxTurns
 	a.graceTurns = st.GraceTurns
-	a.rememberAgents = st.RememberAgents == nil || *st.RememberAgents
+	if st.RememberAgents != nil { // a setting that is gone keeps the value last applied. upstream: settings.ts applySettings
+		a.rememberAgents = *st.RememberAgents
+	}
 	a.mu.Unlock()
 	setFallbackSubagent(st.FallbackSubagent)
 	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
@@ -116,6 +121,9 @@ func (a *app) register(e *sdk.Extension) {
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
 		a.disc.reset()
+		a.mgr.open()
+		guard("session start cleanup", func() { a.mgr.clearCompleted(true) }) // the agents of the session before are not this one's
+		a.startCleanup()
 		a.refuseSettings(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
@@ -123,12 +131,59 @@ func (a *app) register(e *sdk.Extension) {
 	})
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
+	e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		guard("session switch cleanup", func() { a.mgr.clearCompleted(true) })
+		return nil, nil
+	})
 	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
-		a.mgr.abortAll()
+		guard("session shutdown", a.shutdown)
 		return nil, nil
 	})
 	a.registerTools(e)
 	e.Command("agents", "List the agent types and the running agents", a.agentsCommand)
+}
+
+// startCleanup starts the timer that removes finished agents (once; a session start while it runs keeps it).
+// upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000)).
+func (a *app) startCleanup() {
+	a.mu.Lock()
+	if a.stopCleanup != nil {
+		a.mu.Unlock()
+		return
+	}
+	stop := make(chan struct{})
+	a.stopCleanup = stop
+	every := a.cleanupEvery
+	a.mu.Unlock()
+	goGuarded("cleanup timer", func() {
+		tick := time.NewTicker(every)
+		defer tick.Stop()
+		for {
+			select {
+			case <-tick.C:
+				guard("agent cleanup", func() { a.mgr.cleanup(time.Now()) })
+			case <-stop:
+				return
+			}
+		}
+	})
+}
+
+// shutdown ends the session: the timers stop, every agent is stopped and every process that holds a conversation is
+// closed. upstream: index.ts session_shutdown (abortAll, pending nudges, manager.dispose).
+func (a *app) shutdown() {
+	a.mu.Lock()
+	if a.stopCleanup != nil {
+		close(a.stopCleanup)
+		a.stopCleanup = nil
+	}
+	for key, t := range a.timers {
+		t.Stop()
+		delete(a.timers, key)
+	}
+	a.latest = nil // nothing is announced to a session that is over
+	a.mu.Unlock()
+	a.mgr.dispose()
 }
 
 // onSettle announces a finished agent on the bus and, for a background one, to the model. upstream: index.ts:560-600.
@@ -172,10 +227,12 @@ func (a *app) scheduleNudge(key string, send func()) {
 		t.Stop()
 	}
 	a.timers[key] = time.AfterFunc(nudgeHold, func() {
-		a.mu.Lock()
-		delete(a.timers, key)
-		a.mu.Unlock()
-		send()
+		guard("completion notice", func() {
+			a.mu.Lock()
+			delete(a.timers, key)
+			a.mu.Unlock()
+			send()
+		})
 	})
 }
 

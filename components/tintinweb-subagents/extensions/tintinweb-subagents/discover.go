@@ -184,6 +184,16 @@ func (p *scopePlan) spec(discovered []loadedExtension) scopeSpec {
 				s.ExtensionPaths = append(s.ExtensionPaths, "builtin:"+name)
 			}
 		}
+		return s
+	}
+	// Everything pig discovers loads, and so do the paths the agent names: the original's loader is always given
+	// additionalExtensionPaths (agent-runner.ts:727,751), and pig, like Pi, loads a path that is also discovered once.
+	// A path that does not load is no survivor and is left out.
+	for _, path := range p.AdditionalPaths {
+		inSurvivors := slices.ContainsFunc(p.Survivors, func(e loadedExtension) bool { return filepath.Clean(e.Path) == filepath.Clean(path) })
+		if inSurvivors && !slices.Contains(s.ExtensionPaths, path) {
+			s.ExtensionPaths = append(s.ExtensionPaths, path)
+		}
 	}
 	return s
 }

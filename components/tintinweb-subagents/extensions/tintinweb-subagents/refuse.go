@@ -57,7 +57,8 @@ func unportedAgentFeature(cfg *agentConfig) string {
 
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
 // Honored: description, model, maxTurns, name, thinkingLevel, isolated, inheritContext, bypassQueue, isBackground (true only);
-// dropped, as the original drops them: resumeSessionFile, reclaim, blocking. upstream: agent-manager.ts SpawnOptions.
+// dropped, as the original drops them: parentAgentId, workflowId, depth, maxSubagentDepth, configCwd, rootSessionId,
+// resumeSessionFile, reclaim, blocking. upstream: agent-manager.ts SpawnOptions, index.ts spawnTopLevel.
 func unportedSpawnOption(opts map[string]any) string {
 	keys := make([]string, 0, len(opts))
 	for k := range opts {
@@ -71,7 +72,7 @@ func unportedSpawnOption(opts map[string]any) string {
 		}
 		switch k {
 		case "description", "model", "maxTurns", "name", "thinkingLevel", "isolated", "inheritContext", "bypassQueue":
-		case "resumeSessionFile", "reclaim", "blocking":
+		case "parentAgentId", "workflowId", "depth", "maxSubagentDepth", "configCwd", "rootSessionId", "resumeSessionFile", "reclaim", "blocking":
 			// Internal capabilities: the original drops what a caller sends (index.ts spawnTopLevel), so do we.
 		case "isBackground":
 			if b, _ := v.(bool); !b {
