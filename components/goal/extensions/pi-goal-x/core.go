@@ -835,8 +835,14 @@ func resolveSessionFocus(pool *goalPool, entry *focusEntry, legacy *jsObject, au
 }
 
 // loadState reads the pool and resolves the session's focus from the branch's focus entry (or the legacy state entry).
-func (c *core) loadState() {
+func (c *core) loadState() error {
 	c.clearGoalWidget()
+	// The pool root is resolved here and pinned for the session; an invalid goalsRoot fails the load instead of falling back.
+	st, err := newGoalStorage(&goalStorageContext{cwd: c.h.Cwd(), sessionManager: coreSession{c}})
+	if err != nil {
+		return err
+	}
+	c.st = st
 	root := c.st.root()
 	defaultRoot := defaultGoalRoot(c.h.Cwd())
 	c.focusStorageRoot = root
@@ -907,6 +913,15 @@ func (c *core) loadState() {
 	c.clearStoppedRuntimeState()
 	c.runningGoalID = nil
 	c.updateUI()
+	return nil
+}
+
+// coreSession is the session manager the pinned pool root is keyed on: one per core, with the host's current session id.
+type coreSession struct{ c *core }
+
+func (s coreSession) getSessionId() (string, bool) {
+	id := s.c.h.SessionID()
+	return id, id != ""
 }
 
 // ---- state operations ----
@@ -1121,9 +1136,12 @@ func (c *core) shutdown() {
 
 // sessionStart is the session_start handler's work: load the goals, let the queued UI update run (the original awaits the load),
 // then start accounting and restore the scheduler.
-func (c *core) sessionStart() {
-	c.loadState()
+func (c *core) sessionStart() error {
+	if err := c.loadState(); err != nil {
+		return err
+	}
 	c.flush()
 	c.beginAccounting()
 	c.scheduler.restore()
+	return nil
 }

@@ -192,7 +192,7 @@ func gschPromptCacheRig(t *testing.T) {
 		}
 		return out
 	}
-	request := func(h *rigSched, history []map[string]any) []map[string]any {
+	request := func(t *testing.T, h *rigSched, history []map[string]any) []map[string]any {
 		return ctxMessages(t, h.Fire("context", map[string]any{"messages": asAny(history)}))
 	}
 	cloneMsgs := func(ms []map[string]any) []map[string]any {
@@ -217,7 +217,7 @@ func gschPromptCacheRig(t *testing.T) {
 		if len(preflight) != 0 && string(preflight) != "null" && string(preflight) != "{}" {
 			t.Errorf("goal state never rewrites the system prefix: %s", preflight)
 		}
-		first := request(h, history)
+		first := request(t, h, history)
 		same(t, first[:len(first)-2], original, "stable policy and volatile counters ride as two request-only tails")
 		same(t, liveTails(first), 2, "live tails")
 		reMatch(t, content(first[len(first)-2]), `PI GOAL ACTIVE`, "stable tail")
@@ -245,7 +245,7 @@ func gschPromptCacheRig(t *testing.T) {
 		toolCall := map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "toolCall", "id": "call-1", "name": "read", "arguments": map[string]any{"path": "README.md"}}}, "timestamp": 2.0}
 		toolResult := map[string]any{"role": "toolResult", "toolCallId": "call-1", "toolName": "read", "content": []any{map[string]any{"type": "text", "text": "file contents"}}, "isError": false, "timestamp": 3.0}
 		history = append(history, toolCall, toolResult)
-		second := request(h, history)
+		second := request(t, h, history)
 		same(t, second[:len(first)], first, "the advanced request literally extends the previous one")
 		same(t, second[3:5], []map[string]any{cloneMsgs([]map[string]any{toolCall})[0], cloneMsgs([]map[string]any{toolResult})[0]}, "tool call and result stay adjacent")
 		reMatch(t, content(second[1]), `PI GOAL ACTIVE`, "retained policy block")
@@ -257,7 +257,7 @@ func gschPromptCacheRig(t *testing.T) {
 		// An objective edit changes the stable policy block: retention resets once so no stale objective lingers mid-history, and
 		// the fresh pair anchors the new prefix.
 		h.Probe.SetGoalField("objective", "Changed objective")
-		third := request(h, history)
+		third := request(t, h, history)
 		same(t, liveTails(third), 2, "tails after an objective edit")
 		same(t, third[:3], cloneMsgs(history), "history")
 		reMatch(t, content(third[len(third)-2]), `Changed objective`, "stable tail")
@@ -266,17 +266,17 @@ func gschPromptCacheRig(t *testing.T) {
 		for i := range 4 {
 			history = append(history, map[string]any{"role": "custom", "customType": "pi-goal-event", "content": "legacy full prompt",
 				"details": map[string]any{"goalId": h.Probe.Goal()["id"], "kind": "checkpoint"}, "timestamp": float64(i + 4)})
-			current := request(h, history)
+			current := request(t, h, history)
 			same(t, current[:len(third)-1], third[:len(third)-1], "history stays")
 			same(t, liveTails(current), 2, "retained tails are re-sent in place, never duplicated per request")
 			before := cloneMsgs(current[:len(current)-1])
-			again := request(h, history)
+			again := request(t, h, history)
 			same(t, again[:len(again)-1], before, "a repeated request is stable")
 		}
 		same(t, history[0], original[0], "request transforms never mutate stored history")
 		for _, status := range []string{"paused", "blocked", "budget_limited"} {
 			h.Probe.SetGoalField("status", status)
-			stopped := request(h, history)
+			stopped := request(t, h, history)
 			last := content(stopped[len(stopped)-1])
 			reMatch(t, last, strings.ToUpper(strings.ReplaceAll(status, "_", " ")), status)
 			if strings.Contains(last, "PI GOAL ACTIVE") {
@@ -288,12 +288,12 @@ func gschPromptCacheRig(t *testing.T) {
 	tw(t, gschRigF, "prompt cache: interleaved sessions keep per-session transient sets", func(t *testing.T) {
 		h := newRigSched(t, -1, false)
 		history := []map[string]any{{"role": "user", "content": "Work on the goal", "timestamp": 1.0}}
-		first := request(h, history)
+		first := request(t, h, history)
 		// Session B advances the same goal so its transient set differs from A's.
 		h.Probe.SetGoalTokensUsed(12345)
 		h.Probe.SetGoalField("scheduler", map[string]any{"version": 1.0, "owner": "owner", "generation": "g", "used": 7.0, "phase": "idle", "repairUsed": false})
 		h.SetSession("owner-B")
-		request(h, history)
+		request(t, h, history)
 		h.SetSession("owner")
 		wire := map[string]any{"messages": []any{
 			map[string]any{"role": "user", "content": "Work on the goal"},
@@ -322,7 +322,7 @@ func gschPromptCacheRig(t *testing.T) {
 		h.Probe.SetGoalField("scheduler", map[string]any{"version": 1.0, "owner": "owner", "generation": "g", "used": 0.0, "phase": "waiting", "repairUsed": false,
 			"decision": map[string]any{"kind": "wait"},
 			"wait":     map[string]any{"id": "w1", "token": "t1", "reason": "Publish release v1", "deadline": float64(time.Now().UnixMilli() + 60000)}})
-		first := request(h, history)
+		first := request(t, h, history)
 		found := false
 		for _, m := range first {
 			found = found || strings.Contains(content(m), "Publish release v1")
@@ -331,7 +331,7 @@ func gschPromptCacheRig(t *testing.T) {
 		// Cleared by omission: a plain scheduler with no decision must not re-issue the order.
 		h.Probe.SetGoalField("scheduler", map[string]any{"version": 1.0, "owner": "owner", "generation": "g", "used": 1.0, "phase": "idle", "repairUsed": false})
 		advanced := append(cloneMsgs(history), map[string]any{"role": "assistant", "content": "ack", "timestamp": 2.0})
-		second := request(h, advanced)
+		second := request(t, h, advanced)
 		for _, m := range second {
 			if strings.Contains(content(m), "Publish release v1") {
 				t.Error("no retained tail re-issues the cancelled order")
@@ -343,18 +343,18 @@ func gschPromptCacheRig(t *testing.T) {
 		h := newRigSched(t, -1, false)
 		history := []map[string]any{{"role": "user", "content": "inspect", "timestamp": 1.0}}
 		h.SetModel("provider-a", "model-a")
-		request(h, history)
+		request(t, h, history)
 		h.Probe.SetGoalTokensUsed(123456)
 		for _, model := range [][2]string{{"provider-a", "model-b"}, {"provider-b", "model-b"}} {
 			h.SetModel(model[0], model[1])
-			out := request(h, history)
+			out := request(t, h, history)
 			same(t, liveTails(out), 2, "tails after a model change")
 			reMatch(t, content(out[len(out)-1]), `123456 tokens`, "tokens")
 		}
 		h.SetSession("-")
-		request(h, history)
+		request(t, h, history)
 		h.Probe.SetGoalTokensUsed(234567)
-		next := request(h, history)
+		next := request(t, h, history)
 		same(t, liveTails(next), 2, "tails without an identity")
 		if b, _ := json.Marshal(next); strings.Contains(string(b), "123456 tokens") {
 			t.Error("another request's counters were replayed")
@@ -362,9 +362,8 @@ func gschPromptCacheRig(t *testing.T) {
 		h.SetSession("owner")
 		h.SetModel("provider-a", "model-a")
 		h.Fire("session_shutdown", map[string]any{})
-		restarted := request(h, history)
+		restarted := request(t, h, history)
 		same(t, liveTails(restarted), 2, "tails after a restart")
 		reMatch(t, content(restarted[len(restarted)-1]), `234567 tokens`, "tokens")
 	})
 }
-
