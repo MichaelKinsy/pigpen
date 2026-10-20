@@ -383,7 +383,9 @@ func (rt *asyncRuntime) refreshJob(asyncDir string) {
 	}
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
-	if j := rt.state.AsyncJobs[st.RunID]; j != nil {
+	// A progress refresh reads the status before it takes the lock: it must not bring a job back from the terminal state that the
+	// completion (onRunComplete) recorded in between.
+	if j := rt.state.AsyncJobs[st.RunID]; j != nil && !isTerminalAsyncState(j.Status) {
 		sum := statusToSummary(asyncDir, st)
 		*j = *jobFromSummary(sum)
 		rt.state.rememberFleetJob(j)
