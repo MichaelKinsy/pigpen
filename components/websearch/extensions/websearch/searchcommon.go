@@ -264,10 +264,15 @@ func redactErr(err error, secret string) error {
 	return err
 }
 
+// providerTimeoutOverride shortens every provider deadline for a test; zero (production) keeps them.
+var providerTimeoutOverride time.Duration
+
 // withTimeout bounds one provider request. A request that hit its own deadline (as opposed to
-// the caller's cancellation) becomes a "timed out" error so routing can treat it as a network
-// failure and fall through; the original treats every AbortSignal.timeout as an abort.
+// the caller's cancellation) is told apart by timeoutFix.
 func withTimeout(parent context.Context, d time.Duration) (context.Context, context.CancelFunc) {
+	if providerTimeoutOverride > 0 {
+		d = providerTimeoutOverride
+	}
 	return context.WithTimeout(parent, d)
 }
 
