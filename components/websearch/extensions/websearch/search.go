@@ -126,6 +126,7 @@ func init() {
 	def("duckduckgo", "DuckDuckGo", IsDuckDuckGoAvailable, SearchWithDuckDuckGo)
 	def("serpdive", "SERPdive", IsSerpdiveAvailable, SearchWithSerpdive)
 	def("kagi", "Kagi", IsKagiAvailable, SearchWithKagi)
+	defCtx("gemini", "Gemini", geminiProviderAvailable, searchGeminiExplicit)
 	// Not ported yet: label and credential names as in the original.
 	for _, p := range []struct{ name, label, cfg, env string }{
 		{"openai", "OpenAI", "openaiApiKey", "OPENAI_API_KEY"},
@@ -139,7 +140,6 @@ func init() {
 		{"firecrawl", "Firecrawl", "firecrawlApiKey", "FIRECRAWL_API_KEY"},
 		{"jina", "Jina", "jinaApiKey", "JINA_API_KEY"},
 		{"searxng", "SearXNG", "searxngBaseUrl", "SEARXNG_BASE_URL"},
-		{"gemini", "Gemini", "geminiApiKey", "GEMINI_API_KEY"},
 		{"kimi", "Kimi", "kimiApiKey", "KIMI_API_KEY"},
 		{"ollama", "Ollama", "ollamaApiKey", "OLLAMA_API_KEY"},
 		{"anysearch", "Anysearch", "", ""},
@@ -472,7 +472,11 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 	providers := selected
 	if providers == nil {
 		for _, p := range AllSearchProviders {
-			if sliceHas(allowed, p) && isProviderAvailableFor(ctx, p, o) {
+			if !sliceHas(allowed, p) {
+				continue
+			}
+			// "all" counts Gemini by its API alone: Gemini Web (browser cookies) is not part of it.
+			if (p == "gemini" && IsGeminiAPIAvailable()) || (p != "gemini" && isProviderAvailableFor(ctx, p, o)) {
 				providers = append(providers, p)
 			}
 		}
@@ -495,6 +499,13 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 		go func(i int, p string) {
 			defer wg.Done()
 			defer recoverInto(ProviderLabel(p)+" search", func(err error) { responses[i], errs[i] = nil, err })
+			if selected == nil && p == "gemini" {
+				var r *SearchResponse
+				if r, errs[i] = searchGeminiAllProvider(ctx, query, o.SearchOptions); errs[i] == nil {
+					responses[i] = &ProviderSearchResponse{SearchResponse: *r, Provider: p}
+				}
+				return
+			}
 			responses[i], errs[i] = searchWithResolvedProvider(ctx, p, query, o)
 		}(i, p)
 	}
@@ -638,6 +649,21 @@ func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *sea
 		allowed = ResolvedProviders
 	}
 	for _, p := range autoOrder {
+		if p == "gemini" && sliceHas(allowed, p) {
+			// Unlike the other providers Gemini has no availability gate in auto: it answers, or
+			// reports nothing, and its own failures (other than credentials and aborts) are dropped
+			// (gemini-search.ts searchWithGemini with strictErrors false).
+			r, err := searchWithGemini(ctx, query, o.SearchOptions, false)
+			if err != nil {
+				if isAbortError(err) {
+					return nil, err
+				}
+				fallbackErrors = append(fallbackErrors, "Gemini: "+err.Error())
+			} else if r != nil {
+				return &AttributedSearchResponse{SearchResponse: *r, Provider: p}, nil
+			}
+			continue
+		}
 		if !sliceHas(allowed, p) || !isProviderAvailableFor(ctx, p, o) {
 			continue
 		}
@@ -655,13 +681,14 @@ func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *sea
 	if len(fallbackErrors) > 0 {
 		return nil, fmt.Errorf("Auto provider search failed:\n  - %s", strings.Join(fallbackErrors, "\n  - "))
 	}
-	// The original's list also names OpenAI/Codex, Gemini (API, Cloudflare gateway and Gemini Web
-	// browser cookies) and 20 more providers; none is ported, so only the ported ones are offered
+	// The original's list also names OpenAI/Codex, Gemini Web (browser cookies) and 20 more
+	// providers; those are not ported at this point, so only the ported ones are offered
 	// (docs/PORT.md, deliberate differences).
 	return nil, errors.New("No search provider available. Either:\n" +
-		"  1. Set braveApiKey, tavilyApiKey, serpdiveApiKey, kagiApiKey, perplexityApiKey, or exaApiKey in " + ConfigPath() + "\n" +
-		"  2. Set BRAVE_API_KEY, TAVILY_API_KEY, SERPDIVE_API_KEY, KAGI_API_KEY, PERPLEXITY_API_KEY, or EXA_API_KEY env vars\n" +
-		"  3. Allow \"exa\" in webSearch.allowedProviders to use the keyless Exa MCP (queries go to mcp.exa.ai)\n" +
-		"  4. Explicitly select provider: \"duckduckgo\" for keyless DuckDuckGo search\n" +
+		"  1. Set braveApiKey, tavilyApiKey, serpdiveApiKey, kagiApiKey, perplexityApiKey, exaApiKey, geminiApiKey, or cloudflareApiKey in " + ConfigPath() + "\n" +
+		"  2. Set BRAVE_API_KEY, TAVILY_API_KEY, SERPDIVE_API_KEY, KAGI_API_KEY, PERPLEXITY_API_KEY, EXA_API_KEY, GEMINI_API_KEY, or CLOUDFLARE_API_KEY env vars\n" +
+		"  3. Set GOOGLE_GEMINI_BASE_URL with CLOUDFLARE_API_KEY for Cloudflare AI Gateway routing\n" +
+		"  4. Allow \"exa\" in webSearch.allowedProviders to use the keyless Exa MCP (queries go to mcp.exa.ai)\n" +
+		"  5. Explicitly select provider: \"duckduckgo\" for keyless DuckDuckGo search\n" +
 		"Other pi-web-access providers are not ported to this Go extension yet.")
 }

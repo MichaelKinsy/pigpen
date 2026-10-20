@@ -2,8 +2,7 @@ package websearch
 
 import (
 	"context"
-
-	"errors"
+	"os"
 	"time"
 )
 
@@ -27,7 +26,14 @@ type GeminiWebClient interface {
 var geminiWebClient GeminiWebClient = refusingGeminiWeb{}
 
 // SetGeminiWebClient installs the Gemini Web client and returns a restore function.
-func SetGeminiWebClient(c GeminiWebClient) func() { return *new(func()) }
+func SetGeminiWebClient(c GeminiWebClient) func() {
+	prev := geminiWebClient
+	if c == nil {
+		c = refusingGeminiWeb{}
+	}
+	geminiWebClient = c
+	return func() { geminiWebClient = prev }
+}
 
 // refusingGeminiWeb is the client of a build without browser cookie support: Gemini Web is
 // unavailable while browser cookie access is off (as in the original, where it is off by
@@ -36,15 +42,29 @@ type refusingGeminiWeb struct{}
 
 // geminiBrowserCookiesAllowed is isBrowserCookieAccessAllowed (gemini-web-config.ts).
 func geminiBrowserCookiesAllowed() (bool, error) {
-	return *new(bool), errors.New("websearch-gemini: not implemented")
+	if os.Getenv("PI_ALLOW_BROWSER_COOKIES") == "1" || os.Getenv("FEYNMAN_ALLOW_BROWSER_COOKIES") == "1" {
+		return true, nil
+	}
+	cfg, err := loadGeminiConfig(false)
+	if err != nil {
+		return false, err
+	}
+	return cfg["allowBrowserCookies"] == true, nil
 }
 
 func (refusingGeminiWeb) Available(context.Context) (GeminiWebCookies, error) {
-	return *new(GeminiWebCookies), errors.New("websearch-gemini: not implemented")
+	allowed, err := geminiBrowserCookiesAllowed()
+	if err != nil {
+		return nil, err
+	}
+	if allowed {
+		return nil, unsupported("Gemini Web (browser cookies)")
+	}
+	return nil, nil
 }
 
-func (refusingGeminiWeb) Diagnostic() string { return *new(string) }
+func (refusingGeminiWeb) Diagnostic() string { return "" }
 
 func (refusingGeminiWeb) Query(context.Context, string, GeminiWebCookies, time.Duration) (string, error) {
-	return *new(string), errors.New("websearch-gemini: not implemented")
+	return "", unsupported("Gemini Web (browser cookies)")
 }

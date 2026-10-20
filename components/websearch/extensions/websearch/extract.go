@@ -2,6 +2,7 @@ package websearch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -295,6 +296,24 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 			if r := extractWithJinaReader(ctx, rawURL, timeout, o.Lookup); r != nil {
 				return withDeclared(*r)
 			}
+		case "gemini":
+			// extract.ts:1011-1022: URL context, then Gemini Web; only an abort, a credential
+			// failure or an unreadable config ends the fetch, anything else tries the next provider.
+			r, err := ExtractWithURLContext(ctx, rawURL)
+			if err == nil && r == nil {
+				r, err = ExtractWithGeminiWeb(ctx, rawURL)
+			}
+			if err != nil {
+				var credErr *CredentialResolutionError
+				switch {
+				case isAbortError(err) || ctx.Err() != nil:
+					return abortedResult(rawURL)
+				case errors.As(err, &credErr) || isConfigParseError(err.Error()):
+					return failed(rawURL, err.Error())
+				}
+			} else if r != nil {
+				return withDeclared(*r)
+			}
 		default:
 			// A hosted fetch provider the original would call here; this port has none of them.
 			if fetchProviderRequested(p) {
@@ -325,14 +344,12 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 		lines = append(lines, hint)
 	}
 	// The original also lists Firecrawl, Crawl4AI, TinyFish, Search1API, Querit, Kagi, Ollama,
-	// Parallel, Bright Data, the Gemini API and Gemini Web (browser cookies). None of them is a
-	// fetch provider in this port, so suggesting them would send the user to settings that do
-	// nothing (docs/PORT.md, deliberate differences).
+	// Parallel, Bright Data and Gemini Web (browser cookies). None of them is a fetch provider in
+	// this port, so suggesting them would send the user to settings that do nothing (docs/PORT.md,
+	// deliberate differences). The Gemini API is one (extract.ts:1063).
+	lines = append(lines, "  • Set GEMINI_API_KEY in "+ConfigPath())
 	if o.ToolNames.WebSearch != "" {
 		lines = append(lines, "  • Use "+o.ToolNames.WebSearch+" to find content about this topic")
-	}
-	if len(lines) == 3 {
-		lines = append(lines, "  • none in this port: the other fetch providers of pi-web-access are not ported yet")
 	}
 	base := ExtractedContent{URL: rawURL}
 	if httpResult != nil {

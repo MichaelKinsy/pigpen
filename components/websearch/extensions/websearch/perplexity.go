@@ -31,6 +31,7 @@ func resetProviderState() {
 	perplexityMu.Lock()
 	perplexityTimestamps = nil
 	perplexityMu.Unlock()
+	clearGeminiADCTokenCache()
 }
 
 func checkPerplexityRateLimit() error {
