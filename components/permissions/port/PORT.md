@@ -425,7 +425,7 @@ commit; the forwarding twins pass unchanged.
 | A1 | `decision-source.ts`, `decision-resolution.ts` | `auth_decision_source.go`, `auth_resolution.go` | 10 + 18 twins; the forwarding differential |
 | A2 | `permission-dialog.ts` | `auth_permission_dialog.go` | 31 twins; the differential (975 scripted answers) |
 | A3 | `permission-prompt-decision.ts` | `auth_prompt_model.go` | 32 twins; the differential (7,200 event sequences, 16 configs) |
-| A4 | `permission-prompt-component.ts`, `bracketed-paste.ts`, pi-tui `Input` | `auth_prompt_component.go`, `auth_input.go`, `auth_bracketed_paste.go` | 39 + 8 twins; the differential (304 key-sequence scenarios, every frame at two widths) |
+| A4 | `permission-prompt-component.ts`, `bracketed-paste.ts`, pi-tui `Input` | `auth_prompt_component.go`, `auth_input.go`, `auth_bracketed_paste.go` | 39 + 8 twins; the differential (368 key-sequence scenarios, every frame at two widths; pending the recording) |
 | A5 | `authorizer.ts`, `denying-authorizer.ts`, `authorizer-chain.ts`, `authorizer-chain-audit.ts`, `authorizer-registry.ts`, `authorizer-selection.ts` | `auth_authorizer.go`, `auth_chain.go`, `auth_chain_audit.go`, `auth_registry.go`, `auth_selection.go` | 15 + 2 + 7 + 8 + 12 + 34 twins; the differential (800 chains, 72 selections) |
 | A6 | `local-user-authorizer.ts`, `ask-dialog-queue.ts`, `permission-prompter.ts` | `auth_local_user.go`, `auth_queue.go`, `auth_prompter.go` | 24 + 8 + 17 twins; the differential (458 asks, 180 review entries) |
 | A7 | `approval-escalator.ts` (`ParentAuthorizer`) | `auth_escalator.go` | 26 twins on the real filesystem and clock |
@@ -437,7 +437,7 @@ twins, 0 skips; the 16 `authority/*` entries and `service/permission-ui-prompt` 
 `service/permission-events` is narrowed (its `ui_prompt` cases are twinned, the ready and decision halves are not). The `it.each` rows
 with a `%s` title (malformed decision sources, "returns a %s source unchanged") run as plain subtests.
 
-**Differential against the original's own modules** (`port/probe/gen-authority-cases.py` makes `authority-cases.json`;
+**Differential against the original's own modules (generator, probe and replay written; the recording is pending)** (`port/probe/gen-authority-cases.py` makes `authority-cases.json`;
 `port/record-authority-probe.sh` runs `port/probe/authority-probe.test.ts` inside an installed copy of the oracle and writes
 `testdata/authority_oracle.json`; `auth_oracle_test.go` replays it): the dialog model, the `select`/`input` fallback, the chain, the
 bracketed-paste collapse, `LocalUserAuthorizer` (the `permissions:ui_prompt` event, the notice, the request options), the prompter's
@@ -492,8 +492,7 @@ partial), and the reason editor's keys (cursor, word, kill, yank, undo, wide and
 
 ### Findings
 
-- Pi and PiG differ on nothing observed here: every frame, decision and render request of the 304 key-sequence scenarios equals the
-  original's under the pinned Pi.
+- Not yet established: the differential's recording and replay were queued on the shared CPU set when this section was written (`testdata/authority_oracle.json` and `auth_oracle_test.go` are added by the commit that records them). Until then nothing here claims the port equals the original beyond the twins.
 - Inherited from the original, by design: the decision step opens with `approve` highlighted and Enter confirms the highlight in one
   press even with double-press confirmation on, so a stray Enter at the moment the dialog opens approves. The port keeps it (a
   difference would be a policy change); see the security review in the PR body.
