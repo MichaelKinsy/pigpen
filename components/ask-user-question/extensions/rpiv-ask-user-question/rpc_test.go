@@ -113,9 +113,6 @@ func TestRPCDialogWalker(t *testing.T) {
 		r.ask(askArgs(questionArg("Q1?", "One", false, optArg("A", "a"), optArg("B", "b")), questionArg("Q2?", "Two", false, optArg("x", "x"), optArg("y", "y"))))
 		eq(t, r.dialogAt(1).Title, "[Two] Q2?", "second title")
 	})
-	tskip(t, fRPC, "falls back to the dialog walker when ctx.mode is unset and custom() resolves undefined",
-		"the Go SDK always reports a mode ('print' when the host sends none), so the host-predates-ctx.mode path cannot occur; the undefined-custom backstop belongs to the custom() path, slice B, not ported in this revision")
-	tskip(t, fRPC, "stays on the custom() path when ctx.mode is unset and custom() renders (TUI)", "same: no unset mode in Go; the TUI path is slice B")
 }
 
 func TestRPCHeaderlessQuestionHasNoPrefix(t *testing.T) {

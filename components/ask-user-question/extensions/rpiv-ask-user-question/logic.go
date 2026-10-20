@@ -2,16 +2,13 @@ package ask_user_question
 
 import (
 	"strings"
+
+	"github.com/MichaelKinsy/pigpen/ask-user-question/internal/ui"
 )
 
-// Row labels the questionnaire appends or reserves. upstream: state/row-intent.ts ROW_INTENT_META.
-const (
-	labelOther = "Type something."
-	labelNext  = "Next"
-)
-
-// reservedLabels cannot be used as an option label. upstream: tool/types.ts RESERVED_LABELS.
-var reservedLabels = []string{"Other", labelOther, labelNext}
+// reservedLabels cannot be used as an option label: the canonical English sentinel labels (never the localized
+// ones), plus "Other". upstream: tool/types.ts RESERVED_LABELS.
+var reservedLabels = []string{"Other", ui.RowIntent(ui.KindOther).Label, ui.RowIntent(ui.KindNext).Label}
 
 // Texts of the rejections and the envelope. upstream: tool/validate-questionnaire.ts, tool/response-envelope.ts.
 const (
@@ -32,13 +29,6 @@ type validation struct {
 	OK      bool
 	Error   string
 	Message string
-}
-
-// selectItem is one row of a question's list: its options, then the sentinels the question gets.
-type selectItem struct {
-	Kind        string // "option", "other" or "next"
-	Label       string
-	Description string
 }
 
 // normalizeLineTerminators maps CRLF to LF and deletes a lone CR. upstream: tool/normalize-params.ts.
@@ -104,17 +94,15 @@ func validateQuestionnaire(p questionParams) validation {
 	return validation{OK: true}
 }
 
-// buildItemsForQuestion lists a question's options (preview dropped) and the sentinel rows it gets: "Type
-// something." on every question, and Next on a multi-select. upstream: ask-user-question.ts buildItemsForQuestion,
-// state/row-intent.ts sentinelsToAppend.
-func buildItemsForQuestion(q question) []selectItem {
-	items := make([]selectItem, 0, len(q.Options)+2)
+// buildItemsForQuestion lists a question's options (preview dropped) and the sentinel rows it gets, labelled in the
+// active locale. upstream: ask-user-question.ts buildItemsForQuestion, state/row-intent.ts sentinelsToAppend.
+func buildItemsForQuestion(q question) []ui.WrappingSelectItem {
+	items := make([]ui.WrappingSelectItem, 0, len(q.Options)+2)
 	for _, o := range q.Options {
-		items = append(items, selectItem{Kind: "option", Label: o.Label, Description: o.Description})
+		items = append(items, ui.WrappingSelectItem{Kind: ui.KindOption, Label: o.Label, Description: o.Description})
 	}
-	items = append(items, selectItem{Kind: "other", Label: labelOther})
-	if q.MultiSelect {
-		items = append(items, selectItem{Kind: "next", Label: labelNext})
+	for _, kind := range ui.SentinelsToAppend(uiQuestion(q)) {
+		items = append(items, ui.WrappingSelectItem{Kind: kind, Label: ui.DisplayLabel(kind)})
 	}
 	return items
 }
