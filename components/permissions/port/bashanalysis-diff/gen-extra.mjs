@@ -93,6 +93,6 @@ for (const c of ["if [[ -f x ]]; then ls; fi", "while [[ $x ]]; do :; done", "{ 
   "~/bin/x; git commit -F - <<'MSG' 2>&1 | HOME=/tmp/e rm y\nmsg\nMSG", "git commit -F - <<'MSG' 2>&1 | HOME=/tmp/e ~/bin/x\nmsg\nMSG", "HOME=/x; git commit -F - <<'MSG' 2>&1 | ~/bin/x\nmsg\nMSG",
   "for f in \"$(cat /etc/shadow)\"; do echo; done", "case \"$(cat x)\" in a) :;; esac", "rg \\-g'!docs' pat /etc/passwd", "awk \\-F':' '/k/{print $2}' f", "grep \\-e'x' f", "grep -\\e x f",
   "cat --a=b\u2028c", "cat \"--a=b\u2029c\"", "cat \"--a b=c\"", "cat \"--a\u00a0b=c\"", "cat \"--a\rb=c\"", "cat --a=b\u00a0c", "cat \"--a=b\nc\"", "cat --a=é", "cat --é=a", "cat ---a=/tmp/x", "cat -=x", "cat --=x", "cat -a=", "cat --a=", "cat -a==/x",
-  "cat C:", "cat 1:/x", "cat :/x", "cat 1:\\x", "cat a-b://x", "cat 1a://x", "cat @/x", "cat @x/y", "cat A=b", "cat a/b=c", "cat ..", "cat a..", "cat ...", "cat ..\\x", "cat C:\\x /etc"]) out.push(c);
+  "grep --regexp=a\u2028b pat f", "rg --glob=a\u2029b pat f", "sed --expression=p\u2028q f g", "cat C:", "cat 1:/x", "cat :/x", "cat 1:\\x", "cat a-b://x", "cat 1a://x", "cat @/x", "cat @x/y", "cat A=b", "cat a/b=c", "cat ..", "cat a..", "cat ...", "cat ..\\x", "cat C:\\x /etc"]) out.push(c);
 fs.writeFileSync(process.argv[2], JSON.stringify([...new Set(out)]));
 console.log(`extra=${new Set(out).size}`);

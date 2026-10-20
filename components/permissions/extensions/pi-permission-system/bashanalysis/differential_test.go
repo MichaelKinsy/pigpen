@@ -288,7 +288,7 @@ func TestDifferential(t *testing.T) {
 	if err := sc.Err(); err != nil {
 		t.Fatal(err)
 	}
-	if total < 42000 {
+	if total < 42038 {
 		t.Fatalf("only %d recorded inputs", total)
 	}
 	t.Logf("%d inputs compared, %d differences (fields %v)", total, bad, fields)

@@ -1656,12 +1656,6 @@
   "replace": "if false {\n\t\t\tif child.Type() == \"in\""
  },
  {
-  "name": "bashanalysis-tok-statement-side",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "if side != operandSide_ || !bashparse.ArgNodeTypes[child.Type()] {",
-  "replace": "if (side != operandSide_ && false) || !bashparse.ArgNodeTypes[child.Type()] {"
- },
- {
   "name": "bashanalysis-tok-statement-arg",
   "file": "bashanalysis/tokencollection.go",
   "find": "if side != operandSide_ || !bashparse.ArgNodeTypes[child.Type()] {",
@@ -1744,12 +1738,6 @@
   "file": "bashanalysis/tokencollection.go",
   "find": "var optionValuePattern = regexp.MustCompile(`^-{1,2}[^=` + jsSpaceClass + `]+=(",
   "replace": "var optionValuePattern = regexp.MustCompile(`^-{1,2}[^=]+=("
- },
- {
-  "name": "bashanalysis-tok-long-option-space",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "var longOptionValuePattern = regexp.MustCompile(`^(--[^=` + jsSpaceClass + `]+)=(",
-  "replace": "var longOptionValuePattern = regexp.MustCompile(`^(--[^=]+)=("
  },
  {
   "name": "bashanalysis-tok-long-option-dot",
@@ -2232,12 +2220,6 @@
   "replace": "if child.Type() != \"string\" {\n\t\treturn false"
  },
  {
-  "name": "bashanalysis-tok-unquoted-dash-prefix",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "head.Type() == \"word\" && strings.HasPrefix(head.Text(), \"-\")",
-  "replace": "head.Type() == \"word\""
- },
- {
   "name": "bashanalysis-tok-supplies-unknown",
   "file": "bashanalysis/tokencollection.go",
   "find": "role == roleScript || role == roleScriptFile || role == roleUnknownArity",
@@ -2302,12 +2284,6 @@
   "file": "bashanalysis/tokencollection.go",
   "find": "if isArg {\n\t\t\ttokens = append(tokens, collectHostedExecutionTokens(child, words)...)\n\t\t}\n\t\t// If there",
   "replace": "// If there"
- },
- {
-  "name": "bashanalysis-tok-generic-first-word",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "if !seenCommandName && isArg {",
-  "replace": "if !seenCommandName && isArg && false {"
  },
  {
   "name": "bashanalysis-tok-generic-recurse",
