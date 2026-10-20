@@ -68,7 +68,21 @@ for n in (0, 1, 2, 3):
     for combo in itertools.product(verdicts, repeat=n):
         for term in terminals:
             chain.append({"links": [{"name": f"link{i}", "verdict": v} for i, v in enumerate(combo)], "terminal": term})
+# a link that rejects, or answers undefined: the original's promise rejects (the Go port returns an error), nothing later runs
+rejecting = [{"kind": "allow"}, {"kind": "defer"}, {"throw": "boom"}, {"undefined": True}]
+for n in (1, 2, 3):
+    for combo in itertools.product(rejecting, repeat=n):
+        if not any("throw" in v or "undefined" in v for v in combo):
+            continue
+        for term in terminals:
+            chain.append({"links": [{"name": f"link{i}", "verdict": v} for i, v in enumerate(combo)], "terminal": term})
 cases["chain"] = chain
+
+# the registry's disposer: the original guards by function identity, the port by registration
+cases["registry"] = [
+    {"name": "distinct functions: a stale disposer does not evict a later registration", "first": "a", "second": "b"},
+    {"name": "the same function registered again: a stale disposer evicts it in the original", "first": "a", "second": "a"},
+]
 
 # ── bracketed paste ─────────────────────────────────────────────────────────
 S, E = "\x1b[200~", "\x1b[201~"

@@ -1,5 +1,7 @@
 package pi_permission_system
 
+import "fmt"
+
 // Port of src/authority/authorizer-chain.ts.
 
 // chainAuthorizer is the composed chain: links in order, then the terminal.
@@ -28,6 +30,10 @@ func (c *chainAuthorizer) Authorize(details *PromptPermissionDetails) (Permissio
 		verdict, err := link.Authorize(details, c.query, c.log)
 		if err != nil {
 			return PermissionPromptDecision{}, err
+		}
+		if verdict.Kind == "" {
+			// A link that answers nothing: the original reads `.kind` of undefined and the TypeError rejects the ask. Never a defer.
+			return PermissionPromptDecision{}, fmt.Errorf("authorizer link '%s' returned no verdict", link.Name)
 		}
 		if decision, decided := decideFromVerdict(link.Name, verdict); decided {
 			return decision, nil

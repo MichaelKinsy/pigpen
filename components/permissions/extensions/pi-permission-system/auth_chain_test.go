@@ -138,6 +138,17 @@ func TestAuthorizerChainTwins(t *testing.T) {
 		}
 		eq(t, terminal.callCount(), 0, "terminal calls")
 	})
+	// The original reads `.kind` of an undefined verdict and the TypeError rejects the ask: the port's zero verdict is an error, never a defer.
+	t.Run("a link that answers no verdict rejects the ask: no fall-through, no terminal", func(t *testing.T) {
+		terminal := newTerminal(humanApproved)
+		first, second := newLink(AuthorizerVerdict{}, "silent"), newLink(AuthorizerVerdict{Kind: "allow"}, "after")
+		_, err := ComposeAuthorizerChain([]NamedAuthorizer{first.named(), second.named()}, terminal, &queryFake{}, log).Authorize(authDetails())
+		if err == nil {
+			t.Fatal("no error")
+		}
+		eq(t, len(second.calls), 0, "later link calls")
+		eq(t, terminal.callCount(), 0, "terminal calls")
+	})
 	t.Run("an unknown verdict kind defers", func(t *testing.T) {
 		terminal := newTerminal(humanApproved)
 		link := newLink(AuthorizerVerdict{Kind: "maybe"}, "odd")

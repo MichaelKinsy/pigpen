@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { it, vi } from "vitest";
 import { AskDialogQueue } from "#src/authority/ask-dialog-queue";
 import { selectAuthorizer } from "#src/authority/authorizer";
+import { AuthorizerRegistry } from "#src/authority/authorizer-registry";
 import { composeAuthorizerChain } from "#src/authority/authorizer-chain";
 import { collapsePastedNewlines } from "#src/authority/bracketed-paste";
 import { LocalUserAuthorizer } from "#src/authority/local-user-authorizer";
@@ -115,14 +116,35 @@ it("records the original's authority behaviour for the authority cases", { timeo
       name: l.name,
       authorize: vi.fn(() => {
         consulted.push(l.name);
-        return Promise.resolve(l.verdict);
+        if (l.verdict.throw !== undefined) {
+          return Promise.reject(new Error(l.verdict.throw));
+        }
+        return Promise.resolve(l.verdict.undefined ? undefined : l.verdict);
       }),
     }));
     const terminalCalls: number[] = [];
     const terminal = { authorize: vi.fn(() => { terminalCalls.push(1); return Promise.resolve(c.terminal); }) };
     const composed = composeAuthorizerChain(links, terminal as any, {} as any, {} as any);
-    const decision = await composed.authorize({} as any);
-    out.chain.push({ decision: plain(decision), consulted, terminalCalls: terminalCalls.length, identity: composed === (terminal as any) });
+    let decision: unknown = null;
+    let rejected = false;
+    try {
+      decision = await composed.authorize({} as any);
+    } catch {
+      rejected = true;
+    }
+    out.chain.push({ decision: plain(decision), rejected, consulted, terminalCalls: terminalCalls.length, identity: composed === (terminal as any) });
+  }
+
+  // ── the registry's disposer ──
+  out.registry = [];
+  for (const c of cases.registry as any[]) {
+    const fns: Record<string, any> = { a: () => Promise.resolve({ kind: "defer" }), b: () => Promise.resolve({ kind: "deny" }) };
+    const registry = new AuthorizerRegistry();
+    const disposeFirst = registry.register("link", fns[c.first]);
+    disposeFirst();
+    registry.register("link", fns[c.second]);
+    disposeFirst();
+    out.registry.push({ stillRegistered: registry.get("link") !== undefined });
   }
 
   // ── bracketed paste ──
