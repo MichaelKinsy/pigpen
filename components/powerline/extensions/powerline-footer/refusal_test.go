@@ -33,7 +33,6 @@ func TestRefusalMessageIsExact(t *testing.T) {
 func TestEveryUnportedCommandIsRefused(t *testing.T) {
 	commands := map[string]string{
 		"reply":          "quote reply (/reply)",
-		"queue":          "the prompt queue (/queue)",
 		"stash-history":  "the prompt stash (/stash-history)",
 		"bash-mode":      "bash mode (/bash-mode)",
 		"bash-reset":     "bash mode (/bash-reset)",

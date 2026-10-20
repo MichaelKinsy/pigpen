@@ -23,7 +23,6 @@ func refusal(feature string) string {
 // refusedCommands are the commands the original registers that the port does not implement: command name, description, feature.
 var refusedCommands = []struct{ name, description, feature string }{
 	{"reply", "Quote a previous user or assistant message into the editor", "quote reply (/reply)"},
-	{"queue", "Manage the powerline prompt queue", "the prompt queue (/queue)"},
 	{"stash-history", "Browse stashed prompts and recent project prompts", "the prompt stash (/stash-history)"},
 	{"bash-mode", "Toggle bash mode", "bash mode (/bash-mode)"},
 	{"bash-reset", "Restart the bash mode shell session", "bash mode (/bash-reset)"},

@@ -105,6 +105,18 @@ func (h *sdkHost) ExtensionStatuses() []statusEntry { return nil }
 // ProviderGitBranch: the host's footer-data git branch is not exposed either (G11); git is read directly.
 func (h *sdkHost) ProviderGitBranch() *string { return nil }
 
+// Queue: the host calls the queue needs. upstream: pi.sendUserMessage, ctx.isIdle, ctx.ui.setEditorText, ctx.compact.
+func (h *sdkHost) Sender() func(text, deliverAs string) error {
+	ctx := h.ctx
+	return func(text, deliverAs string) error { return ctx.SendUserMessage(text, deliverAs) }
+}
+
+func (h *sdkHost) IsIdle() (bool, error)     { return h.ctx.IsIdle() }
+func (h *sdkHost) SetEditorText(text string) { h.ctx.SetEditorText(text) }
+func (h *sdkHost) Compact(onError func(error)) {
+	h.ctx.CompactWithOptions(sdk.CompactOptions{OnError: onError})
+}
+
 func (h *sdkHost) Theme() theme { return strictTheme{h.ctx.UITheme()} }
 
 func (h *sdkHost) Notify(message, level string) { h.ctx.Notify(message, level) }
@@ -150,6 +162,12 @@ func (h *sdkHost) Repaint() {
 	if placement, ok := ui.Widgets[widgetStatus]; ok {
 		_ = h.ctx.SetWidget(widgetStatus, h.pl.renderStatus(width), sdk.WidgetOptions{"placement": placement})
 	}
+	if placement, ok := ui.Widgets[widgetPendingSend]; ok {
+		_ = h.ctx.SetWidget(widgetPendingSend, h.pl.renderPendingSend(width), sdk.WidgetOptions{"placement": placement})
+	}
+	if placement, ok := ui.Widgets[widgetQueuePreview]; ok {
+		_ = h.ctx.SetWidget(widgetQueuePreview, h.pl.renderQueuePreview(width), sdk.WidgetOptions{"placement": placement})
+	}
 	if ui.Footer {
 		_ = h.ctx.SetFooterRenderer(h.pl.footerRows)
 	}
@@ -170,6 +188,7 @@ func (a *app) core(ctx sdk.Context) *powerline {
 		a.host = &sdkHost{ctx: ctx}
 		a.pl = newPowerline(a.host)
 		a.host.pl = a.pl
+		a.pl.queue.mu = &a.mu
 	})
 	a.host.ctx = ctx
 	return a.pl
@@ -238,6 +257,7 @@ func Extension() *sdk.Extension {
 		})
 	}
 	e.OnSessionStart(a.onSessionStart)
+	registerQueue(e, a)
 	for _, ev := range []string{sdk.EventModelSelect, sdk.EventThinkingLevelSelect, sdk.EventSessionTree, sdk.EventSessionInfoChanged,
 		sdk.EventToolResult, sdk.EventUserBash, sdk.EventAgentStart, sdk.EventMessageUpdate, sdk.EventMessageEnd, sdk.EventTurnEnd,
 		sdk.EventSessionBeforeCompact, sdk.EventSessionCompact, sdk.EventAgentEnd} {

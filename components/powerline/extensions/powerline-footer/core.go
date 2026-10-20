@@ -45,7 +45,10 @@ type installedUI struct {
 const (
 	widgetTop    = "powerline-top"
 	widgetStatus = "powerline-status"
-	statusStash  = "stash"
+
+	widgetPendingSend  = "powerline-pending-send"
+	widgetQueuePreview = "powerline-queue-preview"
+	statusStash        = "stash"
 )
 
 // widgetKeys are the widgets the original clears before it installs its own, in its order. Some belong to features that are
@@ -67,6 +70,7 @@ type powerline struct {
 
 	branchCache sessionBranchCache
 	usageCache  coreContextUsageCache
+	queue       *queueState
 	ui          installedUI
 	base        *segmentContext
 	left        []string
@@ -89,6 +93,11 @@ func newPowerline(h hostAPI) *powerline {
 	p := &powerline{h: h, enabled: true, sessionStart_: clock(), ui: installedUI{Widgets: map[string]string{}}}
 	cwd, _ := os.Getwd()
 	p.config = parsePowerlineConfig(readSettings(cwd)["powerline"], presetNames)
+	qh, ok := h.(queueHostAPI)
+	if !ok {
+		qh = noQueueHost{}
+	}
+	p.queue = newQueueState(p, qh)
 	return p
 }
 
@@ -204,6 +213,7 @@ func (p *powerline) notify(message string) {
 }
 
 func (p *powerline) sessionStart(reason string) {
+	p.queue.onSessionStart()
 	p.sessionStart_ = clock()
 	invalidateGitStatus()
 	invalidateGitBranch()
@@ -360,12 +370,17 @@ func (p *powerline) setup() {
 	if p.h.Mode() == "tui" {
 		p.ui.Widgets[widgetStatus] = "aboveEditor"
 		p.h.SetWidgetInstalled(widgetStatus, "aboveEditor", true)
+		p.ui.Widgets[widgetPendingSend] = "belowEditor"
+		p.h.SetWidgetInstalled(widgetPendingSend, "belowEditor", true)
+		p.ui.Widgets[widgetQueuePreview] = "belowEditor"
+		p.h.SetWidgetInstalled(widgetQueuePreview, "belowEditor", true)
 	}
 	p.base = nil // taken afresh by Repaint
 	p.h.Repaint()
 }
 
 func (p *powerline) teardown() {
+	p.queue.restorePendingSend()
 	p.h.SetStatus(statusStash, nil)
 	p.h.SetFooterInstalled(false)
 	for _, key := range widgetKeys {
@@ -534,7 +549,7 @@ func (p *powerline) buildContext(d presetDef, all []string) segmentContext {
 		ContextApproximate: false,
 		AutoCompactEnabled: p.h.AutoCompactEnabled(), CustomCompactionEnabled: p.customCompaction,
 		UsingSubscription: model != nil && p.h.UsingOAuth(),
-		Queue:             queueSummary{Compacting: p.compacting},
+		Queue:             p.queue.segmentSummary(all),
 		SessionStart:      p.sessionStart_, Git: git,
 		HiddenStatusKeys: collectHiddenExtensionStatusKeys(p.config.CustomItems), CustomItems: map[string]customItem{},
 		Options: opts, Theme: p.h.Theme(), Colors: colors,
