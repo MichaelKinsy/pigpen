@@ -347,10 +347,10 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 		lines = append(lines, hint)
 	}
 	// The original also lists Firecrawl, Crawl4AI, TinyFish, Search1API, Querit, Kagi, Ollama,
-	// Parallel, Bright Data and Gemini Web (browser cookies). None of them is a fetch provider in
-	// this port, so suggesting them would send the user to settings that do nothing (docs/PORT.md,
-	// deliberate differences). The Gemini API is one (extract.ts:1063).
-	lines = append(lines, "  • Set GEMINI_API_KEY in "+ConfigPath())
+	// Parallel and Bright Data. None of them is a fetch provider in this port, so suggesting them
+	// would send the user to settings that do nothing (docs/PORT.md, deliberate differences). The
+	// Gemini API and Gemini Web are (extract.ts:1063-1064).
+	lines = append(lines, "  • Set GEMINI_API_KEY in "+ConfigPath(), "  • Sign into gemini.google.com in Chrome")
 	if o.ToolNames.WebSearch != "" {
 		lines = append(lines, "  • Use "+o.ToolNames.WebSearch+" to find content about this topic")
 	}

@@ -80,7 +80,7 @@ func TestReviewImagePixelBudget(t *testing.T) {
 }
 
 // unportedGuidance matches options the original offers that this port cannot act on.
-const unportedGuidance = `firecrawl|crawl4ai|tinyfish|TINYFISH|search1api|SEARCH1API|querit|QUERIT|kagiApiKey|KAGI_API_KEY|ollama|OLLAMA|parallel|PARALLEL|brightdata|BRIGHTDATA|gemini\.google\.com|Chrom|/login|Codex|openaiApiKey|OPENAI_API_KEY|searxng|SEARXNG|bocha|BOCHA|anysearch|xcrawl|serpapi|serper|serply|valyu|You\.com|Mistral|Grok`
+const unportedGuidance = `firecrawl|crawl4ai|tinyfish|TINYFISH|search1api|SEARCH1API|querit|QUERIT|kagiApiKey|KAGI_API_KEY|ollama|OLLAMA|parallel|PARALLEL|brightdata|BRIGHTDATA|/login|Codex|openaiApiKey|OPENAI_API_KEY|searxng|SEARXNG|bocha|BOCHA|anysearch|xcrawl|serpapi|serper|serply|valyu|You\.com|Mistral|Grok`
 
 func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
 	t.Run("the fetch fallback checklist offers only what this port can do", func(t *testing.T) {
@@ -92,11 +92,11 @@ func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
 		matchRE(t, `Use web_search to find content about this topic`, msg)
 		noMatchRE(t, unportedGuidance, msg)
 	})
-	t.Run("the checklist names the Gemini API as the one hosted fallback of this port besides Jina", func(t *testing.T) {
+	t.Run("the checklist names the Gemini API and Gemini Web as the hosted fallbacks of this port besides Jina", func(t *testing.T) {
 		extractEnv(t, `{"fetchRouting":{"providers":["http","jina"],"allowRemoteHostedProviders":true}}`)
 		useNet(t, func(netCall) netReply { return reply(500, "oops") })
 		msg := errOf(ExtractContent(bg(), "https://example.com/oops", pageOpts()))
-		matchRE(t, `Fallback options:\n  • Set GEMINI_API_KEY in .*web-search\.json`, msg)
+		matchRE(t, `Fallback options:\n  • Set GEMINI_API_KEY in .*web-search\.json\n  • Sign into gemini\.google\.com in Chrome`, msg)
 		noMatchRE(t, unportedGuidance, msg)
 	})
 	t.Run("the no-provider error names only ported providers", func(t *testing.T) {
