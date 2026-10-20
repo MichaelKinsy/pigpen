@@ -154,9 +154,10 @@ func toToolResult(o ToolOutput) sdk.ToolResult {
 	return res
 }
 
-// bridgeContext gives the runtime a context.Context that is cancelled with the request.
+// bridgeContext gives the runtime a context.Context that is cancelled with the request and carries
+// the session's ExtensionContext (the model registry and the session id for the model providers).
 func bridgeContext(ctx sdk.Context) (context.Context, context.CancelFunc) {
-	c, cancel := context.WithCancel(context.Background())
+	c, cancel := context.WithCancel(WithExtensionContext(context.Background(), sdkExtensionContext{ctx}))
 	done := ctx.Done()
 	if done == nil {
 		return c, cancel
