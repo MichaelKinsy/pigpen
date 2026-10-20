@@ -1,8 +1,6 @@
 package pi_permission_system
 
 import (
-	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,35 +34,20 @@ type Config struct {
 
 // loadConfig reads the global config. A missing file is an empty config; a file that cannot be read, parsed or validated is an
 // empty config with an Issue (config-loader.ts loadUnifiedConfig).
-func loadConfig() Config {
-	path := globalConfigPath()
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return Config{}
-		}
-		return Config{Issue: "Failed to read config at '" + path + "': " + err.Error()}
-	}
-	return parseConfig(data, path)
-}
+func loadConfig() Config { return configFromUnified(loadUnifiedConfig(globalConfigPath())) }
 
 // parseConfig reads the contents of the config file at path: comments are stripped, and a file the schema rejects is not used.
 func parseConfig(data []byte, path string) Config {
-	v, err := parseJSON([]byte(stripJSONComments(string(data))))
-	if err != nil {
-		return Config{Issue: "Failed to read config at '" + path + "': " + err.Error()}
+	return configFromUnified(parseUnifiedText(decodeUTF8Lossy(data), path))
+}
+
+func configFromUnified(r UnifiedConfigLoadResult) Config {
+	if len(r.Issues) > 0 {
+		return Config{Issue: strings.Join(r.Issues, "\n")}
 	}
-	if issues := validateUnifiedConfig(v); len(issues) > 0 {
-		return Config{Issue: strings.Join(issues, "\n")}
-	}
-	root := v.(*jsObject)
-	c := Config{}
-	c.Yolo, _ = root.vals["yoloMode"].(bool)
-	if perm := root.obj("permission"); perm != nil {
-		c.Permission = schemaPermission(perm)
-	}
-	if tools := root.obj("shellTools"); tools != nil {
-		c.ShellTools = tools.order()
+	c := Config{Permission: r.Config.Permission, Yolo: r.Config.YoloMode != nil && *r.Config.YoloMode}
+	if r.Config.ShellTools != nil {
+		c.ShellTools = r.Config.ShellTools.order()
 	}
 	return c
 }

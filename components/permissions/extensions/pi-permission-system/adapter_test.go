@@ -49,6 +49,8 @@ func rigWith(t *testing.T, config string, active ...string) *adapterRig {
 	}
 	r.h = StartHost(t, pps.Extension(), HostOptions{OnCall: func(method string, args map[string]any) (map[string]any, string) {
 		switch method {
+		case "isProjectTrusted":
+			return map[string]any{"trusted": true}, ""
 		case "getActiveTools":
 			return map[string]any{"tools": r.active}, ""
 		case "getAllTools":
