@@ -1,0 +1,136 @@
+{
+  "env": {
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0",
+    "FIXTURE_JUDGE_KEY": "fixture-key-not-real",
+    "TYPESAFE_API_KEY": "fixture-key-not-real",
+    "TYPESAFE_BASE_URL": "{{server:judge}}"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "agentFiles": {
+    "pi-warden/config.json": "{\"typesafe\": true, \"typesafeBackend\": {\"label\": \"Fixture judge\", \"host\": \"{{server:judge}}\", \"keyEnv\": \"FIXTURE_JUDGE_KEY\", \"defaultModel\": \"jev-latest\"}, \"notices\": false, \"rules\": {\"enabled\": false}, \"slop\": {\"enabled\": false}, \"security\": {\"enabled\": false}, \"action\": {\"feedbackLog\": false}}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\"enabled\": true, \"backend\": \"typesafe\", \"consent\": \"typesafe\", \"mode\": \"steer\", \"notices\": false, \"rules\": {\"enabled\": false}, \"slop\": {\"enabled\": false}, \"security\": {\"enabled\": false}, \"action\": {\"feedbackLog\": false}}"
+  },
+  "name": "judge-auth-failure-pauses-the-judge",
+  "description": "One rejected key pauses the judge at once: the next judged call is pattern-only and no request goes out.",
+  "servers": {
+    "judge": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "status": 401,
+          "json": {
+            "error": "bad key"
+          },
+          "times": 1
+        },
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "json": {
+            "model": "jev-fixture",
+            "answers": {
+              "irreversible": {
+                "type": "noul",
+                "noul": 0.1
+              },
+              "large_output": {
+                "type": "noul",
+                "noul": 0.05
+              },
+              "mutates": {
+                "type": "noul",
+                "noul": 0.9
+              },
+              "off_task": {
+                "type": "noul",
+                "noul": 0.05
+              },
+              "should_proceed": {
+                "type": "noul",
+                "noul": 1.0
+              },
+              "visible": {
+                "type": "noul",
+                "noul": 0.1
+              },
+              "scope": {
+                "type": "choice",
+                "choice": "expected_step",
+                "confidence": 0.7,
+                "probabilities": {
+                  "expected_step": 0.7,
+                  "plausible_side_step": 0.1,
+                  "unclear": 0.1,
+                  "unrelated": 0.1
+                }
+              }
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        }
+      ],
+      "recordHeaders": [
+        "authorization"
+      ]
+    }
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "touch a.txt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "touch b.txt"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "run the checks"
+      }
+    }
+  ]
+}
