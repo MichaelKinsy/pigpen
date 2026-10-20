@@ -81,6 +81,8 @@ enable`, or, when the chosen judge is not in use, `warden: offline (typesafe: no
 | `/warden backend typesafe\|own-model\|offline` | change the judge (asks for consent again if it sends somewhere new) |
 | `/warden test` | run synthetic dangerous calls through the guard; executes nothing |
 | `/warden trace` | the recent decisions and why |
+| `/warden prefs [forget <n>]` | the standing preferences read from earlier sessions of the project (and the agent's own lessons), each with its status and why it is or is not injected; `forget <n>` drops one for good |
+| `/warden loops` | the open and closed loops of this session |
 
 Headless runs (no UI) cannot answer the consent dialog, so they use environment variables. Setting
 `PIGPEN_WARDEN_BACKEND` (with `PIGPEN_WARDEN_ENABLED=1`) **is** the consent to that backend, for runs with that
@@ -123,7 +125,9 @@ required) or fuses into a Piglet Binary (see `piglets/pig-warden`). It shares th
 Ported: the four guards above, the offline pattern floor, sibling prejudging, user `commandRules` / `denyRules` /
 `exemptRules`, the steer budget, and both judge backends. Not ported (rules file, slop, secret masking, context
 saver, conscience, subagent supervision, …) and every deliberate deviation are listed in
-[`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test. The upstream `/warden` actions that are not ported are refused with an error that names the original (`npm:pi-warden@0.80.0`); the tools `warden_remember`, `warden_loops` and `warden_recall` are not yet ported and are not registered.
+[`port/PORT.md`](port/PORT.md); every upstream test without a Go twin is a named skipped test. The upstream `/warden` actions that are not ported are refused with an error that names the original (`npm:pi-warden@0.80.0`).
+
+Also ported, and registered as agent tools: **`warden_remember`** (a standing lesson for the project, recorded only in a standing form, confirmed in a later session before it is injected), **`warden_loops`** (open loops: promises the agent makes to do something later, kept per session and project, shown again after compaction, at the end of a run and on resume) and **`warden_recall`** (what was already tried in this session: failed attempts with their error lines, the last passing check, saved outputs). With them: standing preferences (the corrections you repeated in earlier sessions of the project, injected as one quoted message only when they pass seven rules), the compaction evidence appendix, `/warden prefs [forget <n>]` and `/warden loops`. They send nothing to any judge and make no model call.
 
 ## Proof
 
