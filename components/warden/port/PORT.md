@@ -274,6 +274,14 @@ registries of the `message_start`, `message_update`, `message_end`, `input` and 
   `cat` declares it (`commands`, `canned`) or uses shell builtins; an undeclared command's stderr and the stdout of the
   same call arrive in a different order under Pi and PiG.
 
+- **Configuration slice, mutation check** (`port/mutate.py`, 52 mutations of config_load.go, config_runtime.go, configfile.go, trace_file.go,
+  shape.go, widget_render.go, panel.go, trace_session.go, config_cmd.go and the three config-file mutations the slice moved): 52 of 52
+  killed by the layer-1 tests after one round of extra tests for six survivors (compaction and filter project gates, conscience floor, a refused
+  backend over a set one, panel width floor, temporary file after a failed save) and four mutants that did not compile were rewritten. The
+  slice's `mutation-results.txt` lines are merged into `port/mutation-results.txt` (one equivalent mutant remains from before: `judge-when-disabled`).
+  `pigeq mutate` (scenario layer): `cfg-project-removes-tools`, `cfg-project-weaker-switch-taken`, `cfg-file-not-reloaded` and
+  `cfg-stuck-nudge-ignored`, 4 of 4 killed. `go test -race -count=24` over the loader, trace file and `/warden config` tests passes.
+
 ## Equivalence (live: Pi original vs Go port)
 
 `port/scenarios` holds 26 offline scenarios (19 for the guards, 7 for the tools slice; a sixth is in `port/scenarios-b4`, see below), `port/golden` their traces recorded **from the original under Pi 1.3.0.1402973a (the 19 earlier ones under Pi 0.87.1/1.0.1)**
