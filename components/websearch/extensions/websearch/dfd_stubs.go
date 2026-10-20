@@ -34,8 +34,6 @@ func dfdStandardizeExtractorOutput(el *ldNode) {}
 
 func dfdFilterExtractorClasses(v string) string { return "" }
 
-func dfdRenderLatexToMathML(latex string, display bool) string { return "" }
-
 func lastRune(s string) (rune, int) { return utf8.DecodeLastRuneInString(s) }
 
 var _ = strings.ToLower
