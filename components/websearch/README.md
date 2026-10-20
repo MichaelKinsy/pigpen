@@ -35,7 +35,9 @@ Piglet Binary (it is part of `pig-with-batteries`). It is a Package:
 Exa (keyed, and the keyless Exa MCP), Brave, Tavily (numbered key pool), Perplexity,
 DuckDuckGo, SERPdive, Kagi (search and extract), and the keyed REST providers Serper, SerpApi, SerpBase, Serply,
 Valyu, Bocha, Baizhi (MCP over HTTP), You.com, AnySearch (works without a key), XCrawl,
-SearXNG (your own instance, through the SSRF guard) and Jina Search, and the hosted providers TinyFish, Search1API, Searchinfinity, Querit,
+SearXNG (your own instance, through the SSRF guard) and Jina Search, Gemini (API key, Cloudflare AI Gateway, or Google Application
+Default Credentials on Vertex AI; the Gemini API also serves the `gemini` fetch provider, URL
+context, and PDF transcription), and the hosted providers TinyFish, Search1API, Searchinfinity, Querit,
 Parallel, Parallel MCP, Ollama, Firecrawl (a configured instance) and Bright Data (SERP zone). Selection, `auto` order,
 `"all"`, provider arrays, `searchRouting` fallback and `webSearch.allowedProviders` follow the
 original. The other providers of the original are in the provider table; selecting one (or
@@ -64,14 +66,14 @@ never falls back or runs part of the call:
 > @pi-in-go/pigpen-websearch (Go port) does not support `<feature>` yet. Install the original
 > extension, npm:pi-web-access@0.33.0, which runs unchanged in PiG.
 
-- the 5 search providers not listed above (OpenAI, Gemini, Kimi, xAI, Mistral; a provider that is selected, listed, configured, or
+- the 4 search providers not listed above (OpenAI, Kimi, xAI, Mistral; a provider that is selected, listed, configured, or
   reached in `auto`, `"all"` or `searchRouting` with a credential set);
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
 - `fetch_content` `mode: "answer"` and `auth` (authenticated fetch);
 - `fetch_content` URLs the original hands to an extractor: YouTube, local video files, video
   `frames` and `timestamp`, GitHub repositories, issues and pull requests (while their config
   sections are not disabled), and PDFs;
-- the Gemini fetch providers (URL context and Gemini Web) when `gemini` is in the fetch order and a key is set;
+- Gemini Web (browser cookies) when browser cookie access is switched on (`PI_ALLOW_BROWSER_COOKIES`, `allowBrowserCookies`): the Gemini API is ported, the browser path is not;
 - a page the original would hand to its RSC payload and Defuddle fallbacks after the readable
   extraction fails.
 

@@ -2,6 +2,8 @@ package websearch
 
 import (
 	"context"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -60,4 +62,40 @@ func BenchmarkValidateRemoteURL(b *testing.B) {
 			b.Fatal(err)
 		}
 	}
+}
+
+// One Gemini API search against a stubbed transport (key auth, grounding chunks without a redirect
+// lookup): the port's own work around the network call.
+func BenchmarkGeminiSearch(b *testing.B) {
+	b.Setenv("GEMINI_API_KEY", "bench-key")
+	b.Setenv("PIG_CODING_AGENT_DIR", b.TempDir())
+	ResetCaches()
+	body := `{"candidates":[{"content":{"parts":[{"text":"` + strings.Repeat("answer text ", 200) + `"}]},"groundingMetadata":{"groundingChunks":[` +
+		strings.TrimSuffix(strings.Repeat(`{"web":{"uri":"https://example.com/a","title":"A"}},`, 8), ",") + `]}}]}`
+	restore := SetHTTP(benchDoer(body))
+	defer restore()
+	ctx := context.Background()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if _, err := Search(ctx, "benchmark query", FullSearchOptions{Provider: ProviderSelection{Name: "gemini"}}); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// The Gemini PDF prompt and page-marker validation.
+func BenchmarkGeminiPDFPrompt(b *testing.B) {
+	two := 2
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = buildGeminiPDFPrompt(two, true)
+		_ = validateGeminiPageMarkers("<!-- Page 1 -->\na\n<!-- Page 2 -->\nb", 2, true)
+	}
+}
+
+// benchDoer answers every request with one 200 JSON body.
+type benchDoer string
+
+func (d benchDoer) Do(r *http.Request) (*http.Response, error) {
+	return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(string(d))), Request: r}, nil
 }
