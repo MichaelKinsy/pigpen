@@ -7,9 +7,10 @@ package pi_subagents
 type ForegroundChildControl struct {
 	Index int
 	Agent string
-	// Steer delivers a message to the live child (mode steer, follow_up or auto); nil when the child cannot take one. A pig
-	// child started with --print reads no input after its task, so the runs of this port set it nil.
-	Steer func(message, mode string) error
+	// Steer delivers a message to the live child (mode steer, follow_up or auto) and reports delivered, queued or failed with a
+	// reason; nil when the child cannot take one. A pig child started with --print reads no input after its task, so the
+	// foreground runs of this port set it nil.
+	Steer foregroundSteerFunc
 }
 
 // ForegroundControl is one live foreground run.
