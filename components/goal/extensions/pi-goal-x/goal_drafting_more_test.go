@@ -5,7 +5,6 @@ package pi_goal_x_test
 
 import (
 	"encoding/json"
-	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -932,4 +931,3 @@ func TestGoalDraftingMore(t *testing.T) {
 	})
 }
 
-func regexpMatch(pattern, s string) bool { return regexp.MustCompile(pattern).MatchString(s) }

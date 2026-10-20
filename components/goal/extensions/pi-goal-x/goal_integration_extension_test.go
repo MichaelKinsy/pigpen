@@ -403,7 +403,7 @@ func TestGoalIntegrationExtension(t *testing.T) {
 			t.Errorf("task update result: %s", text)
 		}
 		g := goal.ParseGoalFileFor(fx.activeGoalPath(t))
-		if taskByID(g, "t1")["status"] != "complete" || taskByID(g, "t2")["status"] != "pending" {
+		if goalTaskByID(g, "t1")["status"] != "complete" || goalTaskByID(g, "t2")["status"] != "pending" {
 			t.Errorf("task statuses: %v", g["taskList"])
 		}
 	})

@@ -109,17 +109,6 @@ func firstGoal(t *testing.T, cwd string) map[string]any {
 	return goals[0]
 }
 
-func eventsOfType(cwd, typ string) []map[string]any {
-	events, _ := goal.LedgerFor(cwd)
-	var out []map[string]any
-	for _, e := range events {
-		if e["type"] == typ {
-			out = append(out, e)
-		}
-	}
-	return out
-}
-
 func taskIDs(g map[string]any) []string {
 	tl, _ := g["taskList"].(map[string]any)
 	var ids []string

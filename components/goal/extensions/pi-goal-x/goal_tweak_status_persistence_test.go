@@ -59,7 +59,7 @@ func callTaskTool(t *testing.T, r *goalRig, name string, params map[string]any) 
 	return string(out)
 }
 
-func taskByID(g map[string]any, id string) map[string]any {
+func goalTaskByID(g map[string]any, id string) map[string]any {
 	var find func(tasks []any) map[string]any
 	find = func(tasks []any) map[string]any {
 		for _, x := range tasks {
@@ -108,7 +108,7 @@ func TestGoalTweakStatusPersistence(t *testing.T) {
 		if !strings.Contains(g["objective"].(string), "Revised objective") {
 			t.Error("objective updated by the tweak")
 		}
-		a := taskByID(g, "a")
+		a := goalTaskByID(g, "a")
 		if a["status"] != "complete" {
 			t.Errorf("completed status survives the tweak: %v", a["status"])
 		}
@@ -121,10 +121,10 @@ func TestGoalTweakStatusPersistence(t *testing.T) {
 		if a["title"] != "Task A (retitled)" {
 			t.Errorf("structural title comes from the incoming proposal: %v", a["title"])
 		}
-		if taskByID(g, "c")["status"] != "pending" {
+		if goalTaskByID(g, "c")["status"] != "pending" {
 			t.Error("new id starts pending")
 		}
-		if taskByID(g, "b")["status"] != "pending" {
+		if goalTaskByID(g, "b")["status"] != "pending" {
 			t.Error("pending task stays pending")
 		}
 		if g["currentTaskId"] != "b" {
@@ -153,7 +153,7 @@ func TestGoalTweakStatusPersistence(t *testing.T) {
 		if !strings.Contains(g["objective"].(string), "Tightened") {
 			t.Error("objective updated")
 		}
-		a, b := taskByID(g, "a"), taskByID(g, "b")
+		a, b := goalTaskByID(g, "a"), goalTaskByID(g, "b")
 		if a["status"] != "complete" || a["evidence"] != "kept" || a["completedAt"] == nil {
 			t.Errorf("completed task retained: %v", a)
 		}
@@ -179,7 +179,7 @@ func TestGoalTweakStatusPersistence(t *testing.T) {
 		d.result(confirmAnswer, nil)
 		pending.wait(t)
 
-		p1 := taskByID(firstGoal(t, r.Cwd), "p1")
+		p1 := goalTaskByID(firstGoal(t, r.Cwd), "p1")
 		if p1["status"] != "complete" {
 			t.Errorf("subtask completion survives the tweak: %v", p1["status"])
 		}
@@ -223,7 +223,7 @@ func TestGoalTweakStatusPersistence(t *testing.T) {
 		if _, has := g["currentTaskId"]; has {
 			t.Errorf("currentTaskId clears when its task is removed by the tweak: %v", g["currentTaskId"])
 		}
-		if taskByID(g, "x") != nil {
+		if goalTaskByID(g, "x") != nil {
 			t.Error("removed task dropped")
 		}
 	})

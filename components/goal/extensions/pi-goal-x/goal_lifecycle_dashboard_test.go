@@ -103,7 +103,7 @@ func TestGoalLifecycleDashboard(t *testing.T) {
 			t.Errorf("five top-level tasks: %d", len(tasks))
 		}
 		var subIDs []string
-		for _, s := range anySlice(taskByID(g, "t3")["subtasks"]) {
+		for _, s := range anySlice(goalTaskByID(g, "t3")["subtasks"]) {
 			subIDs = append(subIDs, s.(map[string]any)["id"].(string))
 		}
 		if strings.Join(subIDs, ",") != "t3.1,t3.2,t3.3" {
