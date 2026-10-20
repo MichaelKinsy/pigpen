@@ -106,12 +106,3 @@ func TestRefusalFetchHostedProviders(t *testing.T) {
 		}
 	})
 }
-
-func TestRefusalFetchFallbackExtractors(t *testing.T) {
-	r, _ := newRuntime(t, "")
-	useNet(t, func(netCall) netReply {
-		return netReply{Status: 200, Header: hdr("content-type", "text/html"), Body: `<html><head><title>t</title></head><body><div id="root"></div><script>self.__next_f.push([1,"x"])</script></body></html>`}
-	})
-	_, err := execTool(t, r, "fetch_content", map[string]any{"url": "https://93.184.216.34/app"})
-	wantRefusal(t, err, "the RSC payload and Defuddle fallback extractors")
-}

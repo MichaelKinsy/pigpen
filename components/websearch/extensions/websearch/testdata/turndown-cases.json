@@ -1,0 +1,626 @@
+[
+ {
+  "html": "",
+  "markdown": ""
+ },
+ {
+  "html": "plain text",
+  "markdown": "plain text"
+ },
+ {
+  "html": "<p>one</p><p>two</p>",
+  "markdown": "one\n\ntwo"
+ },
+ {
+  "html": "<p>a</p>\n\n\n<p>b</p>",
+  "markdown": "a\n\nb"
+ },
+ {
+  "html": "<div>text<div>nested</div>tail</div>",
+  "markdown": "text\n\nnested\n\ntail"
+ },
+ {
+  "html": "<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>",
+  "markdown": "# One\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### Six"
+ },
+ {
+  "html": "<h2>  spaced   heading </h2>",
+  "markdown": "## spaced heading"
+ },
+ {
+  "html": "<h1></h1><h2> </h2>text",
+  "markdown": "text"
+ },
+ {
+  "html": "<p>*star* _under_ `tick` [br] \\ back</p>",
+  "markdown": "\\*star\\* \\_under\\_ \\`tick\\` \\[br\\] \\\\ back"
+ },
+ {
+  "html": "<p>- dash</p><p>+ plus</p><p>+plus</p><p>=== eq</p><p>== eq</p><p># h</p><p>###### six</p><p>####### seven</p><p>#nospace</p><p>~~~ tilde</p><p>~~ two</p><p>> q</p><p>1. one</p><p>12. twelve</p><p>1.x</p><p>1 . x</p>",
+  "markdown": "\\- dash\n\n\\+ plus\n\n+plus\n\n\\=== eq\n\n\\== eq\n\n\\# h\n\n\\###### six\n\n####### seven\n\n#nospace\n\n\\~~~ tilde\n\n~~ two\n\n\\> q\n\n1\\. one\n\n12\\. twelve\n\n1.x\n\n1 . x"
+ },
+ {
+  "html": "<p>a<br>b<br/>c<br><br>d</p>",
+  "markdown": "a  \nb  \nc  \n  \nd"
+ },
+ {
+  "html": "<p>trailing br<br></p>",
+  "markdown": "trailing br"
+ },
+ {
+  "html": "<p><br>leading br</p>",
+  "markdown": "  \nleading br"
+ },
+ {
+  "html": "<ul><li>a</li><li>b<ul><li>c</li><li>d</li></ul></li><li>e</li></ul>",
+  "markdown": "*   a\n*   b\n    *   c\n    *   d\n*   e"
+ },
+ {
+  "html": "<ul><li>a<ul><li>b</li></ul>tail</li></ul>",
+  "markdown": "*   a\n    *   btail"
+ },
+ {
+  "html": "<ol><li>a</li><li>b</li><li>c</li></ol>",
+  "markdown": "1.  a\n2.  b\n3.  c"
+ },
+ {
+  "html": "<ol start=\"5\"><li>a</li><li>b</li></ol>",
+  "markdown": "5.  a\n6.  b"
+ },
+ {
+  "html": "<ol start=\"abc\"><li>a</li></ol>",
+  "markdown": "NaN.  a"
+ },
+ {
+  "html": "<ol start=\" 7 \"><li>a</li></ol>",
+  "markdown": "7.  a"
+ },
+ {
+  "html": "<ol start=\"0\"><li>a</li><li>b</li></ol>",
+  "markdown": "0.  a\n1.  b"
+ },
+ {
+  "html": "<ol start=\"-2\"><li>a</li><li>b</li></ol>",
+  "markdown": "-2.  a\n-1.  b"
+ },
+ {
+  "html": "<ol start=\"1.5\"><li>a</li></ol>",
+  "markdown": "1.5.  a"
+ },
+ {
+  "html": "<ol start=\"0x10\"><li>a</li></ol>",
+  "markdown": "16.  a"
+ },
+ {
+  "html": "<ol><li><p>para</p></li><li><p>one</p><p>two</p></li></ol>",
+  "markdown": "1.  para\n    \n2.  one\n    \n    two"
+ },
+ {
+  "html": "<ul><li><p>para</p><ul><li>sub</li></ul></li></ul>",
+  "markdown": "*   para\n    \n    *   sub"
+ },
+ {
+  "html": "<ul><li></li><li>x</li></ul>",
+  "markdown": "*   x"
+ },
+ {
+  "html": "<ul><li>one</li>text between<li>two</li></ul>",
+  "markdown": "*   one\ntext between*   two"
+ },
+ {
+  "html": "<ol><li>a</li><ul><li>b</li></ul></ol>",
+  "markdown": "1.  a\n\n*   b"
+ },
+ {
+  "html": "<ul>\n  <li>spaced</li>\n  <li>items</li>\n</ul>",
+  "markdown": "*   spaced\n*   items"
+ },
+ {
+  "html": "<ul><li><ul><li>only nested</li></ul></li></ul>",
+  "markdown": "*   *   only nested"
+ },
+ {
+  "html": "<ul><li>a</li></ul><ul><li>b</li></ul>",
+  "markdown": "*   a\n\n*   b"
+ },
+ {
+  "html": "<dl><dt>t</dt><dd>d</dd></dl>",
+  "markdown": "t\n\nd"
+ },
+ {
+  "html": "<blockquote><p>q1</p><p>q2</p></blockquote>",
+  "markdown": "> q1\n> \n> q2"
+ },
+ {
+  "html": "<blockquote>bare<br>two lines</blockquote>",
+  "markdown": "> bare  \n> two lines"
+ },
+ {
+  "html": "<blockquote><blockquote>nested</blockquote></blockquote>",
+  "markdown": "> > nested"
+ },
+ {
+  "html": "<blockquote>a b</blockquote>",
+  "markdown": "> a > b"
+ },
+ {
+  "html": "<blockquote></blockquote>",
+  "markdown": ""
+ },
+ {
+  "html": "<hr>",
+  "markdown": "* * *"
+ },
+ {
+  "html": "<p>a</p><hr><p>b</p>",
+  "markdown": "a\n\n* * *\n\nb"
+ },
+ {
+  "html": "<pre><code>code\nblock</code></pre>",
+  "markdown": "```\ncode\nblock\n```"
+ },
+ {
+  "html": "<pre><code class=\"language-js\">let a = 1;\n</code></pre>",
+  "markdown": "```js\nlet a = 1;\n```"
+ },
+ {
+  "html": "<pre><code class=\"foo language-python bar\">x</code></pre>",
+  "markdown": "```python\nx\n```"
+ },
+ {
+  "html": "<pre><code class=\"language-\">x</code></pre>",
+  "markdown": "```\nx\n```"
+ },
+ {
+  "html": "<pre><code class=\"language- language-go\">x</code></pre>",
+  "markdown": "```go\nx\n```"
+ },
+ {
+  "html": "<pre><code>```\nfence\n```</code></pre>",
+  "markdown": "````\n```\nfence\n```\n````"
+ },
+ {
+  "html": "<pre><code>````\nfour\n````\n```\nthree</code></pre>",
+  "markdown": "`````\n````\nfour\n````\n```\nthree\n`````"
+ },
+ {
+  "html": "<pre><code>x ```\nnot at line start</code></pre>",
+  "markdown": "```\nx ```\nnot at line start\n```"
+ },
+ {
+  "html": "<pre><code>``\ntwo\n</code></pre>",
+  "markdown": "```\n``\ntwo\n```"
+ },
+ {
+  "html": "<pre><code>a ```\nafter ls</code></pre>",
+  "markdown": "````\na ```\nafter ls\n````"
+ },
+ {
+  "html": "<pre>plain pre</pre>",
+  "markdown": "plain pre"
+ },
+ {
+  "html": "<pre>  indented\n\ttabbed</pre>",
+  "markdown": "  indented\n\ttabbed"
+ },
+ {
+  "html": "<pre><code>a</code> <code>b</code></pre>",
+  "markdown": "```\na\n```"
+ },
+ {
+  "html": "<pre><span>s</span><code>c</code></pre>",
+  "markdown": "s`c`"
+ },
+ {
+  "html": "<pre><code>x</code>tail</pre>",
+  "markdown": "```\nx\n```"
+ },
+ {
+  "html": "<pre>\n\nleading newlines</pre>",
+  "markdown": "leading newlines"
+ },
+ {
+  "html": "<p>inline <code>code</code> here</p>",
+  "markdown": "inline `code` here"
+ },
+ {
+  "html": "<p><code>a `tick`</code></p>",
+  "markdown": "`` a `tick` ``"
+ },
+ {
+  "html": "<p><code>``double``</code></p>",
+  "markdown": "` ``double`` `"
+ },
+ {
+  "html": "<p><code>`lead</code> <code>trail`</code></p>",
+  "markdown": "`` `lead `` `` trail` ``"
+ },
+ {
+  "html": "<p><code> padded </code> <code>  </code> <code> a</code> <code>a </code></p>",
+  "markdown": "`padded` `a` `a`"
+ },
+ {
+  "html": "<p><code>multi\nline\r\ncode</code></p>",
+  "markdown": "`multi line code`"
+ },
+ {
+  "html": "<p><code>a  b </code></p>",
+  "markdown": "`a  b`"
+ },
+ {
+  "html": "<p><code></code>empty code</p>",
+  "markdown": "empty code"
+ },
+ {
+  "html": "<p><code>`</code> <code>``</code> <code>` ``</code></p>",
+  "markdown": "`` ` `` ` `` ` ``` ` `` ```"
+ },
+ {
+  "html": "<p><code>*not escaped* _here_ [x]</code></p>",
+  "markdown": "`*not escaped* _here_ [x]`"
+ },
+ {
+  "html": "<p><em>em</em> <i>i</i> <strong>strong</strong> <b>b</b></p>",
+  "markdown": "_em_ _i_ **strong** **b**"
+ },
+ {
+  "html": "<p><em> </em>x<strong></strong>y<em></em></p>",
+  "markdown": "xy"
+ },
+ {
+  "html": "<p>a<em> spaced </em>b</p>",
+  "markdown": "a _spaced_ b"
+ },
+ {
+  "html": "<p>a <em>sp</em> b <strong> t </strong> c</p>",
+  "markdown": "a _sp_ b **t** c"
+ },
+ {
+  "html": "<p><b>bold </b>after<i> lead</i></p>",
+  "markdown": "**bold** after _lead_"
+ },
+ {
+  "html": "<p>x<em>y</em>z</p>",
+  "markdown": "x_y_z"
+ },
+ {
+  "html": "<p><strong><em>both</em></strong></p>",
+  "markdown": "**_both_**"
+ },
+ {
+  "html": "<p> <em> nb </em> </p>",
+  "markdown": "  _nb_"
+ },
+ {
+  "html": "<p>text <em>  mixed  </em> text</p>",
+  "markdown": "text   _mixed_   text"
+ },
+ {
+  "html": "<p>a <span> </span> b</p>",
+  "markdown": "a b"
+ },
+ {
+  "html": "<p>a<span> </span>b</p>",
+  "markdown": "a b"
+ },
+ {
+  "html": "<p>a<span></span>b</p>",
+  "markdown": "ab"
+ },
+ {
+  "html": "<p><a href=\"https://example.com\">link</a></p>",
+  "markdown": "[link](https://example.com)"
+ },
+ {
+  "html": "<p><a href=\"https://example.com/a(b)c\">parens</a></p>",
+  "markdown": "[parens](https://example.com/a\\(b\\)c)"
+ },
+ {
+  "html": "<p><a href=\"https://example.com/a b\">space</a></p>",
+  "markdown": "[space](<https://example.com/a b>)"
+ },
+ {
+  "html": "<p><a href=\"<x>\">angle</a></p>",
+  "markdown": "[angle](\\<x\\>)"
+ },
+ {
+  "html": "<p><a href=\"/rel\" title=\"say &quot;hi&quot;\">quoted</a></p>",
+  "markdown": "[quoted](/rel \"say \\\"hi\\\"\")"
+ },
+ {
+  "html": "<p><a href=\"/rel\" title=\"two\n\n   lines\">title newlines</a></p>",
+  "markdown": "[title newlines](/rel \"two\nlines\")"
+ },
+ {
+  "html": "<p><a href=\"\">empty</a> <a>none</a> <a href=\"#f\">frag</a></p>",
+  "markdown": "empty none [frag](#f)"
+ },
+ {
+  "html": "<p><a href=\"/x\"></a>after</p>",
+  "markdown": "[](/x)after"
+ },
+ {
+  "html": "<p><a href=\"/x\"> </a>after</p>",
+  "markdown": "[](/x)after"
+ },
+ {
+  "html": "<p><a href=\"/x\"><img src=\"/i.png\" alt=\"i\"></a></p>",
+  "markdown": "[![i](/i.png)](/x)"
+ },
+ {
+  "html": "<p><a href=\"/x\">multi\nline</a></p>",
+  "markdown": "[multi line](/x)"
+ },
+ {
+  "html": "<p><a href=\"/x\"><strong>b</strong> t</a></p>",
+  "markdown": "[**b** t](/x)"
+ },
+ {
+  "html": "<img src=\"/i.png\" alt=\"alt\">",
+  "markdown": "![alt](/i.png)"
+ },
+ {
+  "html": "<img src=\"/i.png\" alt=\"*a* [b] _c_\" title=\"t&quot;q\">",
+  "markdown": "![\\*a\\* \\[b\\] \\_c\\_](/i.png \"t\\\"q\")"
+ },
+ {
+  "html": "<img src=\"/a b.png\" alt=\"\">",
+  "markdown": "![](</a b.png>)"
+ },
+ {
+  "html": "<img src=\"/i(1).png\">",
+  "markdown": "![](/i\\(1\\).png)"
+ },
+ {
+  "html": "<img alt=\"no src\">",
+  "markdown": ""
+ },
+ {
+  "html": "<img src=\"\" alt=\"empty src\">",
+  "markdown": ""
+ },
+ {
+  "html": "<img src=\"/i.png\" alt=\"two\n\n  lines\" title=\"t\n x\">",
+  "markdown": "![two\nlines](/i.png \"t\nx\")"
+ },
+ {
+  "html": "<p>a <img src=\"/i.png\"> b</p>",
+  "markdown": "a ![](/i.png) b"
+ },
+ {
+  "html": "<table><tr><td>a</td><td>b</td></tr></table>",
+  "markdown": "a\n\nb"
+ },
+ {
+  "html": "<table><thead><tr><th>h</th></tr></thead><tbody><tr><td>c</td></tr></tbody></table>",
+  "markdown": "h\n\nc"
+ },
+ {
+  "html": "<table></table>",
+  "markdown": ""
+ },
+ {
+  "html": "<table><tr><td></td></tr></table>x",
+  "markdown": "x"
+ },
+ {
+  "html": "<p>x</p><table><caption>cap</caption><tr><td>1</td></tr></table><p>y</p>",
+  "markdown": "x\n\ncap\n\n1\n\ny"
+ },
+ {
+  "html": "<figure><img src=\"/f.png\" alt=\"F\"><figcaption>cap</figcaption></figure>",
+  "markdown": "![F](/f.png)\n\ncap"
+ },
+ {
+  "html": "<div>a</div>b<div>c</div>",
+  "markdown": "a\n\nb\n\nc"
+ },
+ {
+  "html": "<div></div><div> </div><p></p>text",
+  "markdown": "text"
+ },
+ {
+  "html": "<div><p>a</p></div><div><p>b</p></div>",
+  "markdown": "a\n\nb"
+ },
+ {
+  "html": "<span>a</span><span>b</span>",
+  "markdown": "ab"
+ },
+ {
+  "html": "<p>a</p>   <p>b</p>",
+  "markdown": "a\n\nb"
+ },
+ {
+  "html": "<p>a</p>\n<div>\n  <p>b</p>\n</div>\n",
+  "markdown": "a\n\nb"
+ },
+ {
+  "html": "  leading and trailing  ",
+  "markdown": "leading and trailing"
+ },
+ {
+  "html": "a\n\n\nb",
+  "markdown": "a b"
+ },
+ {
+  "html": "a\tb\r\nc  d",
+  "markdown": "a b c d"
+ },
+ {
+  "html": "<p>tab\tsep   spaces\nnewline</p>",
+  "markdown": "tab sep spaces newline"
+ },
+ {
+  "html": "<p> lead</p><p>trail </p>",
+  "markdown": "lead\n\ntrail"
+ },
+ {
+  "html": "<p>a <br> b</p>",
+  "markdown": "a  \nb"
+ },
+ {
+  "html": "<p>a<br> b</p>",
+  "markdown": "a  \nb"
+ },
+ {
+  "html": "<p>text <img src=\"/i.png\"> <img src=\"/j.png\"> text</p>",
+  "markdown": "text ![](/i.png) ![](/j.png) text"
+ },
+ {
+  "html": "<p>a <input value=x> b</p>",
+  "markdown": "a  b"
+ },
+ {
+  "html": "<p>a<input>b</p>",
+  "markdown": "ab"
+ },
+ {
+  "html": "<iframe src=\"/f\"></iframe>",
+  "markdown": ""
+ },
+ {
+  "html": "<p>x</p><iframe src=\"/f\"></iframe>",
+  "markdown": "x"
+ },
+ {
+  "html": "<video src=\"/v\"></video><audio src=\"/a\"></audio>",
+  "markdown": ""
+ },
+ {
+  "html": "<script>alert(1)</script>after",
+  "markdown": "alert(1)after"
+ },
+ {
+  "html": "<style>.x{}</style>after",
+  "markdown": ".x{}after"
+ },
+ {
+  "html": "<p>a<!-- comment -->b</p>",
+  "markdown": "ab"
+ },
+ {
+  "html": "<!-- only comment -->",
+  "markdown": ""
+ },
+ {
+  "html": "<svg width=\"1\"><circle r=\"1\"></circle></svg>after",
+  "markdown": "after"
+ },
+ {
+  "html": "<p>x<sup>2</sup> y<sub>1</sub> <u>u</u> <s>s</s> <mark>m</mark> <kbd>k</kbd> <q>q</q> <abbr title=\"t\">a</abbr></p>",
+  "markdown": "x2 y1 u s m k q a"
+ },
+ {
+  "html": "<details><summary>sum</summary><p>body</p></details>",
+  "markdown": "sum\n\nbody"
+ },
+ {
+  "html": "<p>emoji 😀 cjk 日本語 combining é</p>",
+  "markdown": "emoji 😀 cjk 日本語 combining é"
+ },
+ {
+  "html": "<p>&lt;tag&gt; &amp; &quot;q&quot; &#39;s&#39; &copy; &nbsp;x</p>",
+  "markdown": "<tag> & \"q\" 's' ©  x"
+ },
+ {
+  "html": "<p>*</p><p>**</p><p>_</p><p>[</p><p>]</p><p>`</p><p>\\</p>",
+  "markdown": "\\*\n\n\\*\\*\n\n\\_\n\n\\[\n\n\\]\n\n\\`\n\n\\\\"
+ },
+ {
+  "html": "<p>a * b _ c [ d ] e ` f \\ g</p>",
+  "markdown": "a \\* b \\_ c \\[ d \\] e \\` f \\\\ g"
+ },
+ {
+  "html": "<p>0. zero</p><p>007. leading zeros</p><p>1.</p><p>1. </p>",
+  "markdown": "0\\. zero\n\n007\\. leading zeros\n\n1.\n\n1."
+ },
+ {
+  "html": "<p>-</p><p>- </p><p>+ </p><p>+</p><p>=</p><p>=x</p><p>#</p><p># </p><p>~~~</p><p>>x</p>",
+  "markdown": "\\-\n\n\\-\n\n+\n\n+\n\n\\=\n\n\\=x\n\n#\n\n#\n\n\\~~~\n\n\\>x"
+ },
+ {
+  "html": "<p>x</p>-\n<p>y</p>",
+  "markdown": "x\n\n\\-\n\ny"
+ },
+ {
+  "html": "<center>centered</center>",
+  "markdown": "centered"
+ },
+ {
+  "html": "<address>addr</address>",
+  "markdown": "addr"
+ },
+ {
+  "html": "<section><article><header><h1>t</h1></header><p>p</p><footer>f</footer></article></section>",
+  "markdown": "# t\n\np\n\nf"
+ },
+ {
+  "html": "<nav><a href=\"/a\">a</a></nav><main>m</main><aside>s</aside>",
+  "markdown": "[a](/a)\n\nm\n\ns"
+ },
+ {
+  "html": "<form><label>l</label><input><button>b</button><select><option>o</option></select><textarea>t</textarea></form>",
+  "markdown": "lbot"
+ },
+ {
+  "html": "<noscript>ns</noscript>",
+  "markdown": "ns"
+ },
+ {
+  "html": "<body><p>full document</p></body>",
+  "markdown": "full document"
+ },
+ {
+  "html": "<html><head><title>t</title></head><body>b</body></html>",
+  "markdown": "tb"
+ },
+ {
+  "html": "<td>orphan cell</td>",
+  "markdown": "orphan cell"
+ },
+ {
+  "html": "<li>orphan item</li>",
+  "markdown": "*   orphan item"
+ },
+ {
+  "html": "</p>stray end",
+  "markdown": "stray end"
+ },
+ {
+  "html": "<p>unclosed <b>bold",
+  "markdown": "unclosed **bold**"
+ },
+ {
+  "html": "<p>one<p>two",
+  "markdown": "one\n\ntwo"
+ },
+ {
+  "html": "<b>1<i>2</b>3</i>",
+  "markdown": "**1_2_**_3_"
+ },
+ {
+  "html": "<ul><li>a<li>b</ul>",
+  "markdown": "*   a\n*   b"
+ },
+ {
+  "html": "<custom-el>custom</custom-el><x-y><p>in</p></x-y>",
+  "markdown": "custom\n\nin"
+ },
+ {
+  "html": "<p>　ideographic space　</p>",
+  "markdown": "　ideographic space"
+ },
+ {
+  "html": "<p>a em space b</p>",
+  "markdown": "a em space b"
+ },
+ {
+  "html": "<p>﻿bom<em>﻿</em></p>",
+  "markdown": "﻿bom"
+ },
+ {
+  "html": "<p>xy</p>",
+  "markdown": "xy"
+ }
+]
