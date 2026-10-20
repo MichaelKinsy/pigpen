@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-superpowers",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The skills of obra/superpowers (Jesse Vincent) at a pinned release, with PiG's Skill names, and a Go port of its Pi extension that injects the using-superpowers bootstrap into the first model request of a session and after each compaction",
   "keywords": [
     "pig-package",
