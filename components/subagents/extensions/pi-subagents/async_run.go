@@ -16,7 +16,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -315,101 +314,6 @@ func (p *progressTracker) apply(line []byte, now int64) {
 			}
 		}
 	}
-}
-
-// ── control inbox (control-channel.ts) ──
-
-func controlInboxDir(asyncDir string) string { return filepath.Join(asyncDir, "control") }
-func interruptRequestPath(asyncDir string) string {
-	return filepath.Join(controlInboxDir(asyncDir), "interrupt.json")
-}
-func timeoutRequestPath(asyncDir string) string {
-	return filepath.Join(controlInboxDir(asyncDir), "timeout.json")
-}
-func stopRequestsDir(asyncDir string) string {
-	return filepath.Join(controlInboxDir(asyncDir), "stop-requests")
-}
-func stopInboxClosedPath(asyncDir string) string {
-	return filepath.Join(controlInboxDir(asyncDir), "stop-inbox-closed.json")
-}
-
-type controlRequest struct {
-	Type        string `json:"type"`
-	TS          int64  `json:"ts,omitempty"`
-	Source      string `json:"source,omitempty"`
-	Reason      string `json:"reason,omitempty"`
-	TargetIndex *int   `json:"targetIndex,omitempty"`
-	ChildID     string `json:"childId,omitempty"`
-}
-
-// requestAsyncInterrupt drops the portable interrupt request the runner's inbox picks up on any OS.
-func requestAsyncInterrupt(asyncDir, source string) (string, error) {
-	p := interruptRequestPath(asyncDir)
-	return p, asyncWriteJSON(p, controlRequest{Type: "interrupt", TS: nowMs(), Source: source})
-}
-
-func requestAsyncTimeout(asyncDir, source, reason string) (string, error) {
-	p := timeoutRequestPath(asyncDir)
-	return p, asyncWriteJSON(p, controlRequest{Type: "timeout", TS: nowMs(), Source: source, Reason: reason})
-}
-
-func closeStopInbox(asyncDir string) error {
-	return asyncWriteJSON(stopInboxClosedPath(asyncDir), map[string]any{"version": 1, "closedAt": nowMs()})
-}
-
-func validStopChildID(id string) bool {
-	return jsTrim(id) != "" && len(id) <= 256 && !strings.ContainsAny(id, "\r\n")
-}
-
-// requestAsyncStop writes a stop request into the inbox; once the runner closed the inbox it is refused.
-func requestAsyncStop(asyncDir, source string, targetIndex *int, childID string) (string, error) {
-	if targetIndex != nil && (*targetIndex < 0 || *targetIndex > 1_000_000) {
-		return "", errors.New("child index must be a non-negative integer.")
-	}
-	if childID != "" && !validStopChildID(childID) {
-		return "", errors.New("stop childId must be a non-empty string without newlines and at most 256 characters.")
-	}
-	closed := stopInboxClosedPath(asyncDir)
-	if regularFileExists(closed) {
-		return "", errors.New(stopInboxClosedMessage)
-	}
-	req := controlRequest{Type: "stop", TS: nowMs(), Source: source, TargetIndex: targetIndex, ChildID: childID}
-	p := filepath.Join(stopRequestsDir(asyncDir), fmt.Sprintf("%013d-%s.json", req.TS, randomToken()))
-	if err := asyncWriteJSON(p, req); err != nil {
-		return "", err
-	}
-	if regularFileExists(closed) {
-		_ = os.Remove(p)
-		return "", errors.New(stopInboxClosedMessage)
-	}
-	return p, nil
-}
-
-// consumeControl reads and removes the pending interrupt, stop and timeout requests of a run.
-func consumeControl(asyncDir string) (interrupt, stop, timeout bool) {
-	take := func(p string) bool {
-		if !regularFileExists(p) {
-			return false
-		}
-		return os.Remove(p) == nil
-	}
-	interrupt = take(interruptRequestPath(asyncDir))
-	timeout = take(timeoutRequestPath(asyncDir))
-	if entries, err := os.ReadDir(stopRequestsDir(asyncDir)); err == nil {
-		var names []string
-		for _, e := range entries {
-			if strings.HasSuffix(e.Name(), ".json") {
-				names = append(names, e.Name())
-			}
-		}
-		sort.Strings(names)
-		for _, n := range names {
-			if take(filepath.Join(stopRequestsDir(asyncDir), n)) {
-				stop = true
-			}
-		}
-	}
-	return
 }
 
 // ── the run ──
