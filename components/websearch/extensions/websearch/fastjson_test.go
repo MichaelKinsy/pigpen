@@ -84,6 +84,9 @@ func fixtureDocuments(t *testing.T) map[string]string {
 	for _, f := range files {
 		raw, err := os.ReadFile(f)
 		if err != nil {
+			if os.IsNotExist(err) && strings.HasPrefix(f, "../../") {
+				continue // a mutation run copies the module alone; the repository run reads the Package fixtures
+			}
 			t.Fatal(err)
 		}
 		docs[f] = string(raw)
