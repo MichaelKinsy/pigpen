@@ -282,22 +282,10 @@
   "replace": "key := p.text[:0]"
  },
  {
-  "name": "dfd-retry-partial-selectors-floor",
-  "file": "dfd_core.go",
-  "find": "if result.wordCount < 200 {",
-  "replace": "if result.wordCount < 20 {"
- },
- {
   "name": "dfd-retry-needs-double",
   "file": "dfd_core.go",
   "find": "if retry.wordCount > result.wordCount*2 {",
   "replace": "if retry.wordCount > result.wordCount {"
- },
- {
-  "name": "dfd-hidden-retry-needs-double",
-  "file": "dfd_core.go",
-  "find": "hiddenRetry.wordCount > result.wordCount*2",
-  "replace": "hiddenRetry.wordCount > result.wordCount*200"
  },
  {
   "name": "dfd-index-retry-floor",
@@ -330,12 +318,6 @@
   "replace": "if !options.removeHiddenElements {"
  },
  {
-  "name": "dfd-content-patterns-args",
-  "file": "dfd_core.go",
-  "find": "dfdRemoveByContentPattern(mainContent, d.url, metadata.title, metadata.description)",
-  "replace": "dfdRemoveByContentPattern(mainContent, d.url, metadata.description, metadata.title)"
- },
- {
   "name": "dfd-standardize-title",
   "file": "dfd_core.go",
   "find": "dfdStandardizeContent(mainContent, metadata.title, d.doc)",
@@ -346,12 +328,6 @@
   "file": "dfd_core.go",
   "find": "if metadata.published != \"\" || metadata.author != \"\" {",
   "replace": "if metadata.published != \"\" && metadata.author != \"\" {"
- },
- {
-  "name": "dfd-extractor-pipeline-options",
-  "file": "dfd_core.go",
-  "find": "pipeline := d.parseInternal(o, nil)",
-  "replace": "pipeline := d.parseInternal(dfdDefaultOptions(), nil)"
  },
  {
   "name": "dfd-extractor-reentry-guard",
@@ -370,18 +346,6 @@
   "file": "dfd_scoring.go",
   "find": "if linkDensity > 0.5 {",
   "replace": "if linkDensity > 0.9 {"
- },
- {
-  "name": "dfd-score-content-class",
-  "file": "dfd_scoring.go",
-  "find": "score += 15",
-  "replace": "score += 0"
- },
- {
-  "name": "dfd-score-table-penalty",
-  "file": "dfd_scoring.go",
-  "find": "len(element.getElementsByTagName(\"table\")) * 5",
-  "replace": "len(element.getElementsByTagName(\"table\")) * 0"
  },
  {
   "name": "dfd-score-best-threshold",
@@ -438,22 +402,10 @@
   "replace": "continue\n\t\t}\n\t\tclassName := element.attr(\"class\")"
  },
  {
-  "name": "dfd-hidden-keeps-math",
-  "file": "dfd_removals.go",
-  "find": "|| element.name == \"math\" {\n\t\t\tcontinue",
-  "replace": "|| element.name == \"nomath\" {\n\t\t\tcontinue"
- },
- {
   "name": "dfd-small-image-min-dimension-test",
   "file": "dfd_removals.go",
   "find": "if effW < minDimension || effH < minDimension {",
   "replace": "if effW < minDimension && effH < minDimension {"
- },
- {
-  "name": "dfd-partial-access-wall-lookbehind",
-  "file": "dfd_removals.go",
-  "find": "if !(i >= 5 && ls[i-5:i] == \"main-\") {",
-  "replace": "if true {"
  },
  {
   "name": "dfd-standardize-h1-to-h2",
@@ -468,28 +420,10 @@
   "replace": "indent := level"
  },
  {
-  "name": "dfd-markdown-task-checked",
-  "file": "dfd_markdown2.go",
-  "find": "taskMarker = \"[x] \"",
-  "replace": "taskMarker = \"[ ] \""
- },
- {
   "name": "dfd-markdown-ol-start",
   "file": "dfd_markdown2.go",
   "find": "jsToNumber(start) + float64(index) - 1",
   "replace": "jsToNumber(start) + float64(index)"
- },
- {
-  "name": "dfd-markdown-blank-line-run",
-  "file": "dfd_markdown2.go",
-  "find": "reNL3Run.ReplaceAllString(markdown, \"\\n\\n\")",
-  "replace": "reNL3Run.ReplaceAllString(markdown, \"\\n\\n\\n\")"
- },
- {
-  "name": "dfd-markdown-trims-result",
-  "file": "dfd_markdown2.go",
-  "find": "return jsTrim(markdown)\n}",
-  "replace": "return markdown\n}"
  },
  {
   "name": "dfd-markdown-drops-leading-h1",
@@ -498,22 +432,10 @@
   "replace": "markdown = markdown[loc[0]:]"
  },
  {
-  "name": "dfd-markdown-block-latex-aligned",
-  "file": "dfd_markdown.go",
-  "find": "if strings.Contains(latex, `\\\\`) || strings.Contains(latex, \"&\") {",
-  "replace": "if strings.Contains(latex, `\\\\`) {"
- },
- {
   "name": "dfd-markdown-latex-attribute-hyphen",
   "file": "dfd_markdown.go",
   "find": "return !reHyphenWord.MatchString(trimmed)",
   "replace": "return reHyphenWord.MatchString(trimmed)"
- },
- {
-  "name": "dfd-math-display-class",
-  "file": "dfd_math.go",
-  "find": "if strings.Contains(classNames, \"display\") || strings.Contains(classNames, \"block\") {",
-  "replace": "if strings.Contains(classNames, \"display\") {"
  },
  {
   "name": "dfd-math-previous-paragraph-block",
@@ -534,18 +456,6 @@
   "replace": "const jsURIReserved = \";/?:@&=+$,\""
  },
  {
-  "name": "dfd-uri-encode-keeps-reserved",
-  "file": "dfd_js_uri.go",
-  "find": "const keep = \";,/?:@&=+$-_.!~*'()#\"",
-  "replace": "const keep = \";,/?:@&=+$-_.!~*'()\""
- },
- {
-  "name": "decode-text-utf8-bom",
-  "file": "textdecode.go",
-  "find": "data = bytes.TrimPrefix(data, []byte(\"\\xef\\xbb\\xbf\"))",
-  "replace": "data = data[:]"
- },
- {
   "name": "decode-text-latin1-c1",
   "file": "textdecode.go",
   "find": "r = rune(i)\n\t\t\tif i < 0x80 || i > 0x9F {",
@@ -562,23 +472,5 @@
   "file": "extract.go",
   "find": "if def != nil && jsLen(def.Content) >= minUsefulContent {",
   "replace": "if def != nil && jsLen(def.Content) >= 1 {"
- },
- {
-  "name": "dfd-deep-tree-fallback",
-  "file": "dfd_td_parse.go",
-  "find": "return dfdFromLdom(ldParseDocument(markup))",
-  "replace": "return nil"
- },
- {
-  "name": "dfd-deep-tree-svg-namespace",
-  "file": "dfd_td_parse.go",
-  "find": "n.Namespace = \"svg\"",
-  "replace": "n.Namespace = \"\""
- },
- {
-  "name": "dfd-deep-tree-text-nodes",
-  "file": "dfd_td_parse.go",
-  "find": "case ldText:\n\t\t\t\tn = &html.Node{Type: html.TextNode, Data: c.data}",
-  "replace": "case ldText:\n\t\t\t\tcontinue"
  }
 ]
