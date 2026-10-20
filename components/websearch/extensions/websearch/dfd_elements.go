@@ -297,12 +297,12 @@ var dfdCodeLanguages = func() map[string]bool {
 }()
 
 var (
-	reLineSelector   = `div[class*="line"], span[class*="line"], .ec-line, [data-line-number], [data-line]`
-	reAllDigits      = jsRE(`^\d+$`, "")
-	reTrimEdgesTab   = jsRE(`^[ \t]+|[ \t]+$`, "")
-	reLeadingNL      = jsRE(`^\n+`, "")
-	reTrailingNL     = jsRE(`\n+$`, "")
-	reNL3            = jsRE(`\n{3,}`, "")
+	reLineSelector = `div[class*="line"], span[class*="line"], .ec-line, [data-line-number], [data-line]`
+	reAllDigits    = jsRE(`^\d+$`, "")
+	reTrimEdgesTab = jsRE(`^[ \t]+|[ \t]+$`, "")
+	reLeadingNL    = jsRE(`^\n+`, "")
+	reTrailingNL   = jsRE(`\n+$`, "")
+	reNL3          = jsRE(`\n{3,}`, "")
 )
 
 func dfdCodeLanguage(element *ldNode) string {

@@ -249,9 +249,13 @@ func (p *jsReParser) parseEscape(inClass bool) func(rune) bool {
 	case 'D':
 		return func(r rune) bool { return !(r >= '0' && r <= '9') }
 	case 'w':
-		return func(r rune) bool { return r == '_' || (r >= '0' && r <= '9') || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') }
+		return func(r rune) bool {
+			return r == '_' || (r >= '0' && r <= '9') || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
+		}
 	case 'W':
-		return func(r rune) bool { return !(r == '_' || (r >= '0' && r <= '9') || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')) }
+		return func(r rune) bool {
+			return !(r == '_' || (r >= '0' && r <= '9') || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z'))
+		}
 	case 'n':
 		return func(r rune) bool { return r == '\n' }
 	case 'u':

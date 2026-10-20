@@ -250,12 +250,12 @@ func (n *mathNode) toText() string {
 // textNode is TextNode of mathMLTree.js and domTree.js.
 type textNode struct{ text string }
 
-func (t *textNode) toMarkup() string        { return tmEscape(t.text) }
-func (t *textNode) toText() string          { return t.text }
-func (t *textNode) childrenPtr() *[]mmNode  { return nil }
-func (t *textNode) classesPtr() *[]string   { return nil }
-func (t *textNode) styleOf() *tmOrd         { return nil }
-func (t *textNode) attrsOf() *tmOrd         { return nil }
+func (t *textNode) toMarkup() string       { return tmEscape(t.text) }
+func (t *textNode) toText() string         { return t.text }
+func (t *textNode) childrenPtr() *[]mmNode { return nil }
+func (t *textNode) classesPtr() *[]string  { return nil }
+func (t *textNode) styleOf() *tmOrd        { return nil }
+func (t *textNode) attrsOf() *tmOrd        { return nil }
 
 // docFragment is DocumentFragment of tree.js.
 type docFragment struct {
@@ -418,14 +418,14 @@ func tmNewStyle(level float64, color any, font, fontFamily string, fontSize floa
 	return &tmStyle{o}
 }
 
-func (s *tmStyle) level() int            { return int(s.o.get("level").(float64)) }
-func (s *tmStyle) color() any            { return s.o.get("color") }
-func (s *tmStyle) font() string          { v, _ := s.o.get("font").(string); return v }
-func (s *tmStyle) fontFamily() string    { v, _ := s.o.get("fontFamily").(string); return v }
-func (s *tmStyle) fontSize() float64     { v, _ := s.o.get("fontSize").(float64); return v }
-func (s *tmStyle) fontWeight() string    { v, _ := s.o.get("fontWeight").(string); return v }
-func (s *tmStyle) fontShape() string     { v, _ := s.o.get("fontShape").(string); return v }
-func (s *tmStyle) maxSize() []float64    { v, _ := s.o.get("maxSize").([]float64); return v }
+func (s *tmStyle) level() int         { return int(s.o.get("level").(float64)) }
+func (s *tmStyle) color() any         { return s.o.get("color") }
+func (s *tmStyle) font() string       { v, _ := s.o.get("font").(string); return v }
+func (s *tmStyle) fontFamily() string { v, _ := s.o.get("fontFamily").(string); return v }
+func (s *tmStyle) fontSize() float64  { v, _ := s.o.get("fontSize").(float64); return v }
+func (s *tmStyle) fontWeight() string { v, _ := s.o.get("fontWeight").(string); return v }
+func (s *tmStyle) fontShape() string  { v, _ := s.o.get("fontShape").(string); return v }
+func (s *tmStyle) maxSize() []float64 { v, _ := s.o.get("maxSize").([]float64); return v }
 
 type tmStyleExt struct {
 	level      *float64
@@ -478,7 +478,7 @@ func (s *tmStyle) inSubOrSup() *tmStyle {
 	return s.withLevel([]int{2, 2, 3, 3}[s.level()])
 }
 
-func (s *tmStyle) withColor(color any) *tmStyle { return s.extend(tmStyleExt{color: &color}) }
+func (s *tmStyle) withColor(color any) *tmStyle  { return s.extend(tmStyleExt{color: &color}) }
 func (s *tmStyle) withFont(font string) *tmStyle { return s.extend(tmStyleExt{font: &font}) }
 func (s *tmStyle) withFontSize(n float64) *tmStyle {
 	return s.extend(tmStyleExt{fontSize: &n})

@@ -305,8 +305,8 @@ func hasCatcode(m map[string]int, k string) bool { _, ok := m[k]; return ok }
 // ---- Namespace -----------------------------------------------------------------------------------------------
 
 type tmNamespace struct {
-	current   map[string]any
-	builtins  map[string]any
+	current    map[string]any
+	builtins   map[string]any
 	undefStack []map[string]any
 }
 
@@ -395,11 +395,11 @@ func tmNewGullet(input string, settings *tmSettings, mode string) *tmGullet {
 	return g
 }
 
-func (g *tmGullet) feed(input string)       { g.lexer = tmNewLexer(input, g.settings) }
-func (g *tmGullet) switchMode(m string)     { g.mode = m }
-func (g *tmGullet) beginGroup()             { g.macros.beginGroup() }
-func (g *tmGullet) endGroup()               { g.macros.endGroup() }
-func (g *tmGullet) pushToken(t *tmToken)    { g.stack = append(g.stack, t) }
+func (g *tmGullet) feed(input string)        { g.lexer = tmNewLexer(input, g.settings) }
+func (g *tmGullet) switchMode(m string)      { g.mode = m }
+func (g *tmGullet) beginGroup()              { g.macros.beginGroup() }
+func (g *tmGullet) endGroup()                { g.macros.endGroup() }
+func (g *tmGullet) pushToken(t *tmToken)     { g.stack = append(g.stack, t) }
 func (g *tmGullet) pushTokens(ts []*tmToken) { g.stack = append(g.stack, ts...) }
 
 func (g *tmGullet) future() *tmToken {

@@ -22,14 +22,14 @@ type dfdResult struct {
 }
 
 type dfdOptions struct {
-	removeExactSelectors  bool
+	removeExactSelectors   bool
 	removePartialSelectors bool
-	removeHiddenElements  bool
-	removeLowScoring      bool
-	removeSmallImages     bool
-	removeContentPatterns bool
-	standardize           bool
-	contentSelector       string
+	removeHiddenElements   bool
+	removeLowScoring       bool
+	removeSmallImages      bool
+	removeContentPatterns  bool
+	standardize            bool
+	contentSelector        string
 }
 
 func dfdDefaultOptions() dfdOptions {
@@ -41,14 +41,14 @@ type dfdDefuddle struct {
 	url      string // options.url
 	location string // document.location.href
 
-	schemaOrg      []any
+	schemaOrg       []any
 	schemaExtracted bool
-	metaTags       []dfdMetaTag
-	haveMeta       bool
-	metadata       dfdMetadata
-	haveMetadata   bool
-	smallImages    map[string]bool
-	haveSmall      bool
+	metaTags        []dfdMetaTag
+	haveMeta        bool
+	metadata        dfdMetadata
+	haveMetadata    bool
+	smallImages     map[string]bool
+	haveSmall       bool
 
 	inExtractorPipelineRun bool
 	processingError        *jsThrow
@@ -746,14 +746,14 @@ func (d *dfdDefuddle) parseInternal(options dfdOptions, _ any) (result dfdResult
 }
 
 var (
-	reHTMLTags    = jsRE(`<[^>]*>`, "")
-	reNbspEnt     = jsRE(`&nbsp;`, "i")
-	reAmpEnt      = jsRE(`&amp;`, "i")
-	reLtEnt       = jsRE(`&lt;`, "i")
-	reGtEnt       = jsRE(`&gt;`, "i")
-	reQuotEnt     = jsRE(`&quot;`, "i")
-	reNumEnt      = jsRE(`&#\d+;`, "")
-	reNamedEnt    = jsRE(`&\w+;`, "")
+	reHTMLTags = jsRE(`<[^>]*>`, "")
+	reNbspEnt  = jsRE(`&nbsp;`, "i")
+	reAmpEnt   = jsRE(`&amp;`, "i")
+	reLtEnt    = jsRE(`&lt;`, "i")
+	reGtEnt    = jsRE(`&gt;`, "i")
+	reQuotEnt  = jsRE(`&quot;`, "i")
+	reNumEnt   = jsRE(`&#\d+;`, "")
+	reNamedEnt = jsRE(`&\w+;`, "")
 )
 
 func (d *dfdDefuddle) countHTMLWords(content string) int {
@@ -999,9 +999,9 @@ func (d *dfdDefuddle) resolveRelativeURLs(element *ldNode) {
 }
 
 var (
-	reQuoteLead   = jsRE(`^\\?["']+`, "")
-	reQuoteTrail  = jsRE(`\\?["']+$`, "")
-	reSrcsetDesc  = jsRE(`(.+?)\s+(\d+(?:\.\d+)?[wx])`, "")
+	reQuoteLead  = jsRE(`^\\?["']+`, "")
+	reQuoteTrail = jsRE(`\\?["']+$`, "")
+	reSrcsetDesc = jsRE(`(.+?)\s+(\d+(?:\.\d+)?[wx])`, "")
 )
 
 func (d *dfdDefuddle) resolveContentURLs(html string) string {
@@ -1107,7 +1107,7 @@ func (d *dfdDefuddle) extractSchemaOrgData(doc *ldNode) []any {
 }
 
 var (
-	reCDATAWrap  = jsRE(`^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$`, "")
+	reCDATAWrap   = jsRE(`^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$`, "")
 	reCommentEdge = jsRE(`^\s*(\*/|/\*)\s*|\s*(\*/|/\*)\s*$`, "")
 )
 
@@ -1118,7 +1118,7 @@ func dfdCleanJSONLD(s string) string {
 	return jsTrim(s)
 }
 
-// dfdStripJSComments is s.replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm, ''): block comments anywhere, and line
+// dfdStripJSComments is s.replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm, ”): block comments anywhere, and line
 // comments that start a line, where a line ends at \n, \r, \u2028 or \u2029.
 func dfdStripJSComments(s string) string {
 	var b strings.Builder

@@ -113,4 +113,3 @@ func (o *jsObj) reorder() {
 	})
 	o.keys = append(ints, rest...)
 }
-

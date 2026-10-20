@@ -152,7 +152,7 @@ func mhMatchPat(input string, pattern any) (string, bool) {
 
 type mhObserveArgs struct {
 	begExcl, begIncl, endIncl, endExcl, beg2Excl, beg2Incl, end2Incl, end2Excl any
-	combine                                                                      bool
+	combine                                                                    bool
 }
 
 func mhFindObserveGroups(input string, a mhObserveArgs) *mhMatch {
@@ -263,24 +263,24 @@ func init() {
 			}
 			return nil
 		},
-		"^{(...)}":       func(in string) *mhMatch { return mhFOG(in, "^{", "", "", "}") },
-		"^($...$)":       func(in string) *mhMatch { return mhFOG(in, "^", "$", "$", "") },
-		"^\\x{}{}":       func(in string) *mhMatch { return mhFOG(in, "^", oxFrag, "}", "", "", "{", "}", "", true) },
-		"^\\x{}":         func(in string) *mhMatch { return mhFOG(in, "^", oxFrag, "}", "") },
-		"_{(...)}":       func(in string) *mhMatch { return mhFOG(in, "_{", "", "", "}") },
-		"_($...$)":       func(in string) *mhMatch { return mhFOG(in, "_", "$", "$", "") },
-		"_\\x{}{}":       func(in string) *mhMatch { return mhFOG(in, "_", oxFrag, "}", "", "", "{", "}", "", true) },
-		"_\\x{}":         func(in string) *mhMatch { return mhFOG(in, "_", oxFrag, "}", "") },
-		"{...}":          func(in string) *mhMatch { return mhFOG(in, "", "{", "}", "") },
-		"{(...)}":        func(in string) *mhMatch { return mhFOG(in, "{", "", "", "}") },
-		"$...$":          func(in string) *mhMatch { return mhFOG(in, "", "$", "$", "") },
-		"${(...)}$":      func(in string) *mhMatch { return mhFOG(in, "${", "", "", "}$") },
-		"$(...)$":        func(in string) *mhMatch { return mhFOG(in, "$", "", "", "$") },
-		"\\bond{(...)}":  func(in string) *mhMatch { return mhFOG(in, "\\bond{", "", "", "}") },
-		"[(...)]":        func(in string) *mhMatch { return mhFOG(in, "[", "", "", "]") },
-		"\\x{}{}":        func(in string) *mhMatch { return mhFOG(in, "", oxFrag, "}", "", "", "{", "}", "", true) },
-		"\\x{}":          func(in string) *mhMatch { return mhFOG(in, "", oxFrag, "}", "") },
-		"\\frac{(...)}":  func(in string) *mhMatch { return mhFOG(in, "\\frac{", "", "", "}", "{", "", "", "}") },
+		"^{(...)}":      func(in string) *mhMatch { return mhFOG(in, "^{", "", "", "}") },
+		"^($...$)":      func(in string) *mhMatch { return mhFOG(in, "^", "$", "$", "") },
+		"^\\x{}{}":      func(in string) *mhMatch { return mhFOG(in, "^", oxFrag, "}", "", "", "{", "}", "", true) },
+		"^\\x{}":        func(in string) *mhMatch { return mhFOG(in, "^", oxFrag, "}", "") },
+		"_{(...)}":      func(in string) *mhMatch { return mhFOG(in, "_{", "", "", "}") },
+		"_($...$)":      func(in string) *mhMatch { return mhFOG(in, "_", "$", "$", "") },
+		"_\\x{}{}":      func(in string) *mhMatch { return mhFOG(in, "_", oxFrag, "}", "", "", "{", "}", "", true) },
+		"_\\x{}":        func(in string) *mhMatch { return mhFOG(in, "_", oxFrag, "}", "") },
+		"{...}":         func(in string) *mhMatch { return mhFOG(in, "", "{", "}", "") },
+		"{(...)}":       func(in string) *mhMatch { return mhFOG(in, "{", "", "", "}") },
+		"$...$":         func(in string) *mhMatch { return mhFOG(in, "", "$", "$", "") },
+		"${(...)}$":     func(in string) *mhMatch { return mhFOG(in, "${", "", "", "}$") },
+		"$(...)$":       func(in string) *mhMatch { return mhFOG(in, "$", "", "", "$") },
+		"\\bond{(...)}": func(in string) *mhMatch { return mhFOG(in, "\\bond{", "", "", "}") },
+		"[(...)]":       func(in string) *mhMatch { return mhFOG(in, "[", "", "", "]") },
+		"\\x{}{}":       func(in string) *mhMatch { return mhFOG(in, "", oxFrag, "}", "", "", "{", "}", "", true) },
+		"\\x{}":         func(in string) *mhMatch { return mhFOG(in, "", oxFrag, "}", "") },
+		"\\frac{(...)}": func(in string) *mhMatch { return mhFOG(in, "\\frac{", "", "", "}", "{", "", "", "}") },
 		"\\overset{(...)}": func(in string) *mhMatch {
 			return mhFOG(in, "\\overset{", "", "", "}", "{", "", "", "}")
 		},
@@ -539,8 +539,14 @@ func tmMhInitActions() {
 	ce["sb=false"] = func(buf mhBuf, m any, opt string) any { buf["sb"] = false; return nil }
 	ce["beginsWithBond=true"] = func(buf mhBuf, m any, opt string) any { buf["beginsWithBond"] = true; return nil }
 	ce["beginsWithBond=false"] = func(buf mhBuf, m any, opt string) any { buf["beginsWithBond"] = false; return nil }
-	ce["parenthesisLevel++"] = func(buf mhBuf, m any, opt string) any { buf["parenthesisLevel"] = buf["parenthesisLevel"].(int) + 1; return nil }
-	ce["parenthesisLevel--"] = func(buf mhBuf, m any, opt string) any { buf["parenthesisLevel"] = buf["parenthesisLevel"].(int) - 1; return nil }
+	ce["parenthesisLevel++"] = func(buf mhBuf, m any, opt string) any {
+		buf["parenthesisLevel"] = buf["parenthesisLevel"].(int) + 1
+		return nil
+	}
+	ce["parenthesisLevel--"] = func(buf mhBuf, m any, opt string) any {
+		buf["parenthesisLevel"] = buf["parenthesisLevel"].(int) - 1
+		return nil
+	}
 	ce["state of aggregation"] = func(buf mhBuf, m any, opt string) any {
 		return mhObj{"type_": "state of aggregation", "p1": mhGo(mhStr(m), "o")}
 	}
@@ -672,8 +678,11 @@ func tmMhInitActions() {
 	ox := map[string]mhAction{"roman-numeral": func(buf mhBuf, m any, opt string) any { return mhObj{"type_": "roman numeral", "p1": mhStr(m)} }}
 	texMath := map[string]mhAction{"output": texOutput}
 	tight := map[string]mhAction{
-		"tight operator": func(buf mhBuf, m any, opt string) any { buf["o"] = mhBufStr(buf, "o") + "{" + mhStr(m) + "}"; return nil },
-		"output":         texOutput,
+		"tight operator": func(buf mhBuf, m any, opt string) any {
+			buf["o"] = mhBufStr(buf, "o") + "{" + mhStr(m) + "}"
+			return nil
+		},
+		"output": texOutput,
 	}
 	nine := map[string]mhAction{"comma": func(buf mhBuf, m any, opt string) any { return mhObj{"type_": "commaDecimal"} }}
 
@@ -764,7 +773,10 @@ func tmMhInitActions() {
 	}
 	pu2 := map[string]mhAction{}
 	pu2["cdot"] = func(buf mhBuf, m any, opt string) any { return mhObj{"type_": "tight cdot"} }
-	pu2["^(-1)"] = func(buf mhBuf, m any, opt string) any { buf["rm"] = mhBufStr(buf, "rm") + "^{" + mhStr(m) + "}"; return nil }
+	pu2["^(-1)"] = func(buf mhBuf, m any, opt string) any {
+		buf["rm"] = mhBufStr(buf, "rm") + "^{" + mhStr(m) + "}"
+		return nil
+	}
 	pu2["space"] = func(buf mhBuf, m any, opt string) any { return mhObj{"type_": "pu-space-2"} }
 	pu2["output"] = func(buf mhBuf, m any, opt string) any {
 		var ret any = []any{}
