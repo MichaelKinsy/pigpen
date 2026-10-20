@@ -318,11 +318,6 @@ func TestAPrejudgmentIsUsedOnceAndDoesNotSurviveTheTurn(t *testing.T) {
 	}
 }
 
-// Skipped twin: tests/action-guard.test.ts:201 "the large-output question rides bash requests ..."
-func TestSkippedTwinLargeOutputQuestion(t *testing.T) {
-	t.Skip("large-output steer (context.largeOutput) is not part of this port: owner decision needed to add it")
-}
-
 func TestActionGuardIsSafeUnderConcurrentInspection(t *testing.T) {
 	g := NewActionGuard()
 	j, _ := newStub()

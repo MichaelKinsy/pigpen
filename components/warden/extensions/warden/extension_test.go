@@ -46,6 +46,8 @@ type harnessOpts struct {
 	env      map[string]string
 	newJudge func(Config, *Budget) (Judge, error)
 	git      GitRunner
+	// scratchPlatform overrides the platform the session-scratch exemption decides for.
+	scratchPlatform string
 	// fail makes host calls of these methods answer with this error message.
 	fail map[string]string
 }
@@ -76,7 +78,7 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 		}
 		return ""
 	}
-	opts := Options{Getenv: getenv, Git: o.git}
+	opts := Options{Getenv: getenv, Git: o.git, ScratchPlatform: o.scratchPlatform}
 	if o.newJudge != nil {
 		opts.NewJudge = func(_ sdk.Context, cfg Config, b *Budget, _ func(string) string) (Judge, error) {
 			return o.newJudge(cfg, b)

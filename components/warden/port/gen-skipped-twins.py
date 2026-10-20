@@ -38,14 +38,14 @@ def reason(f, name):
     base = f[:-len(".test.ts")]
     n = name.lower()
     if f == "guard.test.ts":
-        table = [("findsecrets|syntheticish", "security guard (secret detection) is not part of this port"), ("session scratch", "session scratch (temp-directory rm exemption) is not part of this port"),
-                 ("hostpaths|host path|wardenhostpaths|/warden index|index file", "upstream host paths (its own state directories) are not part of this port"), ("pathrules|path rule", "path rules are not part of this port"),
-                 ("slop", "slop guard is not part of this port"), ("regret", "hold-feedback regret question is not part of this port"), ("rules.enabled", "rules guard is not part of this port"),
-                 ("large output|commandfamily", "large-output steer is not part of this port")]
+        table = [("findsecrets|syntheticish", "security guard (secret detection) is not part of this port"),
+                 ("large output: the score", "the trace-detail half (trace.ts `actionDetails`) belongs to the trace module; the token half is tested in guard_extras_test.go")]
         for pat, why in table:
             if re.search(pat, n):
                 return why
         return "not ported: owner decision needed"
+    if f in ("violation.test.ts", "violation-pipeline.test.ts"):
+        return "rules file resolution, starter rules and the init prompt belong to the rules guard (pi-warden.md)"
     if f == "shape.test.ts":
         return "config schema migration (completeConfig) is not part of this port: the Go config merges defaults over a JSON file"
     if f == "stuck-evidence.test.ts":
