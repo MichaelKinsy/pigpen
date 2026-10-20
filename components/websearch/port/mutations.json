@@ -156,12 +156,6 @@
   "replace": "\".\""
  },
  {
-  "name": "refusal-workflow-dropped",
-  "file": "tool_search.go",
-  "find": "if workflow != \"none\" {",
-  "replace": "if workflow != \"none\" && workflow == \"\" {"
- },
- {
   "name": "rest-google-extra-results",
   "file": "restcommon.go",
   "find": "return numResults + 5",
