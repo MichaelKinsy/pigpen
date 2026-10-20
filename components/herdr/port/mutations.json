@@ -180,12 +180,6 @@
   "replace": "true"
  },
  {
-  "name": "dedupe-ignores-resume-presence",
-  "file": "extension.go",
-  "find": "hasResume == r.hasResume && resume == r.lastResume",
-  "replace": "resume == r.lastResume"
- },
- {
   "name": "objects-equal-by-value",
   "file": "extension.go",
   "find": "\t\treturn a.ref == b.ref\n",
@@ -220,12 +214,6 @@
   "file": "extension.go",
   "find": "r.blockedCount[h] = max(0, r.blockedCount[h]-1)",
   "replace": "r.blockedCount[h]--"
- },
- {
-  "name": "release-keeps-message",
-  "file": "extension.go",
-  "find": "\tif !r.blockedLocked() {\n\t\tr.blockedMessage = jsValue{}\n\t}",
-  "replace": "\tif !r.blockedLocked() {\n\t}"
  },
  {
   "name": "block-ignores-root",
@@ -405,7 +393,7 @@
   "name": "diagnostic-repeats",
   "file": "extension.go",
   "find": "\tif !repeat {",
-  "replace": "\tif true {"
+  "replace": "\tif !repeat || true {"
  },
  {
   "name": "diagnostic-silent",

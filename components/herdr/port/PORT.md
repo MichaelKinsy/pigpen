@@ -115,6 +115,14 @@ Run on xd670 (tern-ci:v3, CPUs 64-127), with `pigeq env`, Pi `1402973a` (`1.3.0.
 - `go test -race -count=4` in `extensions/herdr`: pass (83 s). `GOOS=linux|darwin|windows go vet`: pass.
 - `pig install extensions/herdr --validate-only --json`: `valid: true`, `form: factory`, `language: go`; `pig package validate components/herdr`: valid.
 
+Mutation run on xd670 (`pigeq mutate --unit --jobs 4`, 71 mutants, before the fixes below): 71 mutants, 6 not killed. The last 100 lines of
+that log show 3 survivors and 1 invalid mutant, all handled in the next commit: `dedupe-ignores-resume-presence` and
+`release-keeps-message` are equivalent mutants (a resume argv is never empty; a cleared label is overwritten by the next block) and were
+removed; `backslash-before-separator-ignored` is killed by a new `TestRequestShape` case (a label that spells `\u2028`); `diagnostic-repeats`
+did not build and is rewritten (`if !repeat || true`). The other two not-killed entries scrolled out of the captured tail and are
+unknown: the re-run that prints every non-killed mutant (`~/pp-smallports/herdr/stepH.log` on xd670) had not finished. All mutants
+killed is therefore NOT claimed.
+
 Not yet run when this was written (queued behind other lanes on the shared lock; logs `~/pp-smallports/herdr/stepF.log`, `stepP.log` on
 xd670): `pigeq mutate` over the 71 mutations in `mutations.json` (the unit tests of the unmutated port pass; an earlier attempt stopped
 at a mutation whose find text a refactor had changed, since fixed), the real-pig tmux test (`npm run test:pig`) and the performance

@@ -94,6 +94,7 @@ func TestRequestShape(t *testing.T) {
 		{"a number label", map[string]any{"active": true, "label": 7}, `"message":7,`},
 		{"a missing label", map[string]any{"active": true}, ``},
 		{"a label with markup", map[string]any{"active": true, "label": "a<b>&c\nd"}, `"message":"a<b>&c\nd",`},
+		{"a label that spells a line-separator escape", map[string]any{"active": true, "label": `\u2028`}, `"message":"\\u2028",`},
 	} {
 		t.Run("blocked with "+tc.name, func(t *testing.T) {
 			host, h := startSession(t)
