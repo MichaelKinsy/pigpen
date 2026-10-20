@@ -1,0 +1,47 @@
+{
+  "name": "workflow-saved-name",
+  "description": "A saved workflow runs by name from .pi/workflows and reports its own file as the script.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "SubagentWorkflow",
+          "arguments": {
+            "name": "nightly"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/workflows/nightly.js": "export const meta = { name: \"nightly\", description: \"saved\" };\nreturn \"from the saved file\";"
+  },
+  "tailMs": 2500
+}

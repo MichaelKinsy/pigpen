@@ -5,7 +5,7 @@
 | Original | `@tintinweb/pi-subagents` 0.19.0 by tintinweb, https://github.com/tintinweb/pi-subagents, commit `4f572eaa04c09d3dbc16e4a5f13a16b295e84e14`, MIT |
 | Oracle | Pi 1.0.3, Node 24.19.0, with the unmodified package at `port/oracle` (dependencies from npm: `croner`, `nanoid`, `typebox`) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
-| Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). **122 exact twins** (`agent-types` 46, `custom-agents` 76), no skips; **1907 deferred by name** in `port/slices.json`, each file with its reason |
+| Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). Twins: `agent-types` 46, `custom-agents` 76, and the workflow slice (see "The SubagentWorkflow runtime") 361 exact + 9 named skips; the rest deferred by name in `port/slices.json`, each file with its reason |
 | Kind | 1: an extension, no CLI built-in, no provider |
 | Not this | `nicobailon/pi-subagents`, ported as `components/subagents`. A different project |
 
@@ -41,6 +41,82 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M9 | `cross-extension-rpc.ts`: ping, spawn, stop, consume | `bus.go` | `bus_test.go` |
 | M10 | completion events and the held notification (`index.ts` `formatTaskNotification`, `getStatusLabel`; `status-note.ts`; `xml.ts`) | `extension.go` | `tools_test.go`, `extra_test.go`, `turnlimit_test.go` |
 | M11 | the Agent, result and steer tools' behavior and texts | `tools.go` | `agent-not-found`, `agent-unknown-type-strict`; `tools_test.go` |
+
+## The SubagentWorkflow runtime (gap G1, the non-UI part)
+
+The original runs a user-authored script in a Node worker thread inside a `vm` context. This port runs it in-process, in
+Go, with no Node.
+
+**Engine decision: [goja](https://github.com/dop251/goja)** (`github.com/dop251/goja v0.0.0-20260723142020-b4aef50fa347`,
+MIT, the version `pig-music` already pins; with `dlclark/regexp2` BSD-3-Clause, `go-sourcemap/sourcemap` BSD-2-Clause,
+`google/pprof` Apache-2.0, `golang.org/x/text` BSD-3-Clause as its requirements), a pure-Go ECMAScript engine, required in
+`extensions/tintinweb-subagents/go.mod` with a plain `require` (no `replace`, as `components/a2a` does for a2a-go).
+Spike, before any code (a scratch module, `async`/`await`, `Promise.all`, classes with private fields and statics,
+`Map`/`Set`, `JSON`, optional chaining, object spread, named regex groups, `Array.flat`, `replaceAll`, `BigInt`,
+generators, `class X extends Date` and `globalThis` all ran; `vm.Interrupt` stopped `while(true){}`). What the scripts and
+the original's `worker-source.ts` need, and how each is met:
+
+| Need | Original | Here |
+|---|---|---|
+| async/await, Promises, `Promise.all` | V8 | goja (ES2020); the job queue drains when a resolution returns to the realm |
+| line numbers of errors equal the author's | prelude on its own line + `lineOffset: -1` | goja has no line offset: the prelude is on the first line of the body (`(async () => {PRELUDE` + body), so line N of the file is line N of the stack; only columns of line 1 differ |
+| `Date.now`/`Math.random`/`new Date()` throw | prelude (`const Date = ...`) | the same prelude, byte for byte, in `workflow_engine.go` |
+| `eval`/`Function(...)` throw `EvalError` | `codeGeneration: { strings: false }` | the realm's `eval`, `Function`, `Function.prototype.constructor` and the `AsyncFunction`/`GeneratorFunction` constructors are replaced by a function that throws `EvalError` (`workflow_worker.js banCodeGeneration`); a determinism boundary, as in the original, not a security one |
+| kill a runaway script | `worker.terminate()` | `vm.Interrupt` from the host goroutine, then the worker goroutine ends (`workflowWorker.terminate`); a test checks no goja goroutine is left |
+| the host API a script sees | `agent`, `parallel`, `pipeline`, `phase`, `log`, `workflow`, `budget`, `console`, `meta`, `args` | the same, from `workflow_worker.js`, a line-for-line port of `WORKER_SOURCE` (messages instead of `postMessage`, a `host` object instead of `require`) |
+| JSON boundary (cycle, BigInt, Map, sparse array, NaN, function) | checked in the worker | the same checks, in the realm |
+
+The worker is a goroutine with a task queue (the event loop); the run is the host half (`workflow_runtime.go`), a port of
+`runtime.ts` that keeps the original's single-threaded discipline with a baton (`workflowRunState.mu`): a handler gives it
+up only inside an `await` (a host call, the semaphore, a pause hold), so call order is the order the script made the calls.
+
+Differences from the original (each deliberate or forced by the engine):
+
+1. **No async generators.** goja 20260723 does not parse `async function*`/`for await` over one (`Async generators are not
+   supported yet`). A script that uses one fails to compile with that message. Ordinary async functions, generators and
+   Promises work.
+2. **Syntax error text** is goja's (`Line 2:7 Unexpected token ;`), not V8's; a thrown error's `message` is the script's.
+   Stack frames read `at fn (workflow.js:LINE:COL(pc))` (goja), where V8 prints `at fn (workflow.js:LINE:COL)`.
+3. **Regular expressions** in a *script* are goja's (ECMAScript, with lookahead and back-references through regexp2); the
+   `pattern` of an `agent({ schema })` is a Go RE2 expression (the JSON Schema validator is Go: below).
+4. **JSON Schema validation is a Go validator** (`workflow_jsonschema.go`) of the keywords the original's `typebox` package
+   checks, with typebox's English messages and its keyword order (`must have required properties a, b, c`, `must be >= 1`).
+   A `$ref` other than a local pointer, `format`, `unevaluated*` and `$dynamicRef` are not validated; a lookahead pattern is
+   refused at compile time with the usual "is not a schema this runtime can validate".
+5. **`args` object key order is not kept** (the tool's parameters arrive as a Go map); a script iterating `Object.keys(args)`
+   sees sorted keys. The script's *return value*, the journal and a schema keep the script's key order (they are serialized
+   inside the realm).
+6. **What a child process cannot do yet is refused, and fails the run.** `agent({ isolation: "worktree" })`,
+   `agent({ schema })` (the `StructuredOutput` tool) and `agent({ resume })` of a finished agent's session fail the *run*
+   with the refusal text (`workflowRefusalError`): a script must never be handed a `null` that means "not supported". The
+   runtime, the host, the journal and the twins implement all three; the adapter over today's manager
+   (`workflow_manager.go`) refuses them until the worktree, observability and sessions slices land (hooks assumed below).
+7. **A child's effective model is not read back.** The original reads `record.invocation` (the model its session resolved
+   to, the clamped thinking level). A child here is a process whose session is not observable, so a row keeps the model the
+   script asked for. The host implements the read-back (`onResolved`) and is twinned with a manager that reports it.
+8. **Worker crash.** `Workflow worker exited before completing.` only on a crash of the worker goroutine; like the
+   original's worker (whose `parentPort` listener keeps it alive) a script awaiting a promise nothing settles stays parked
+   until the run is stopped.
+
+Manager hooks assumed (for the lane lead at stacking): `agentRecord.Owner` (a workflow's child is out of `list()`,
+`resolve()` and `onSettle`, in no pool slot as a foreground spawn), `manager.spawnOwned`, `app.startOwned`,
+`childResult.OutputTokens`; `workflowManager` (`SpawnAndWait`, `Abort`, `Resume`, `GetRecord`) with its options
+(`WorkflowID`, `ThinkingLevel`, `Invocation`, `OnSessionCreated`, `StructuredOutput`, `Isolation`, `OnBeforeWorktreeCleanup`);
+the model policy seam `workflowHostDeps.CheckScope` (the settings lane's `checkModelScope`) and `workflowModelRegistry`
+(`wfResolveModel` duplicates `resolveModel` until the settings lane's lands); `withWorkflowChildBlock` splices the
+`<workflow_child>` block into the prompt (becomes `extras.workflowChild` when the prompt builder takes extras).
+
+| ID | Original | Go | Test |
+|---|---|---|---|
+| W1 | `workflow/worker-source.ts` | `workflow_worker.js`, `workflow_engine.go` | `workflow_runtime_twin_test.go` |
+| W2 | `workflow/runtime.ts`: the run, caps, semaphore, pause/skip/retry, journal replay, gate, resume, unawaited launches | `workflow_runtime.go` | `workflow_runtime_twin_test.go`, `workflow_borrowed_twin_test.go`, `workflow_journal_twin_test.go` |
+| W3 | `workflow/host.ts` | `workflow_host.go`, `workflow_manager.go`, `workflow_models.go` | `workflow_host_twin_test.go` |
+| W4 | `workflow/journal.ts`, `meta.ts`, `json-schema.ts`, `progress.ts`, `task.ts`, `saved.ts`, `collisions.ts`, `entry.ts` | `workflow_journal.go`, `workflow_meta.go`, `workflow_jsonschema.go`, `workflow_progress.go`, `workflow_task.go`, `workflow_saved.go`, `workflow_collisions.go`, `workflow_entry.go` | one twin file each |
+| W5 | `workflow/tool-description.ts` | `workflow_tooldesc.go` + `workflow_tool_description.txt` (extracted by `port/gen-workflow-text.mjs`) | `workflow_tooldesc_twin_test.go`; scenario `workflow-tools` |
+| W6 | `index.ts`: the tool, flag, switch, collisions, notification | `workflow_tool.go` | `workflow_tool_twin_test.go`; the `workflow-*` scenarios |
+| W7 | `ui/workflow-menu.ts` (data and actions only) | `workflow_menu.go` | `workflow_command_twin_test.go` |
+
+Twins of the slice: `pigeq twins check --files workflow-borrowed,workflow-claude-code-compat,workflow-command,workflow-effective-config,workflow-examples,workflow-gate-worktree,workflow-journal,workflow-json-schema,workflow-meta,workflow-progress,workflow-runtime,workflow-task,workflow-tool,workflow-tool-description,e2e/workflow.e2e` prints `361 exact twins, 9 skipped`. The nine skips, each with its own reason in the test: the three live-LLM smokes and the `StructuredOutput` e2e (a real provider; structured output is the observability lane's), the overlay options (the UI lane), the fleet row and the UI capture (UI lane), the entry card (UI lane), and the real-git branch assertion (the worktree lane). The workflow UI (card, dialog, menu, renderers: `workflow-dialog`, `workflow-dialog-open-agent`, `workflow-render`) stays in `port/slices.json` for the UI lane, which consumes `workflowProgress` snapshots (`workflow_progress.go`), run records (`workflow_task.go`), the menu plan and dialog actions (`workflow_menu.go`).
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
 

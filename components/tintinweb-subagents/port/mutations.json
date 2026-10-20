@@ -724,5 +724,1673 @@
   "file": "bus.go",
   "find": "thinking, _ := opts[\"thinkingLevel\"].(string)",
   "replace": "thinking := \"\""
+ },
+ {
+  "name": "journal-key-label-slot-dropped",
+  "file": "workflow_journal.go",
+  "find": "wfJSQuoteOrNull(in.Label), ",
+  "replace": ""
+ },
+ {
+  "name": "journal-key-gate-ignored",
+  "file": "workflow_journal.go",
+  "find": "wfJSQuoteOrNull(in.Gate), ",
+  "replace": "wfJSQuote(\"\"), "
+ },
+ {
+  "name": "journal-key-schema-unconditional",
+  "file": "workflow_journal.go",
+  "find": "if in.Schema != nil {\n\t\tparts = append(parts, wfJSQuote(*in.Schema))\n\t}",
+  "replace": "parts = append(parts, wfJSQuoteOrNull(in.Schema))"
+ },
+ {
+  "name": "journal-key-short",
+  "file": "workflow_journal.go",
+  "find": "[:32]",
+  "replace": "[:31]"
+ },
+ {
+  "name": "journal-quote-escapes-html",
+  "file": "workflow_journal.go",
+  "find": "\tcase '\\b':\n",
+  "replace": "\tcase '<':\n\t\t\tb.WriteString(`\\u003c`)\n\t\tcase '\\b':\n"
+ },
+ {
+  "name": "journal-read-keeps-unsorted",
+  "file": "workflow_journal.go",
+  "find": "sort.SliceStable(entries, func(i, j int) bool { return entries[i].Index < entries[j].Index })",
+  "replace": ""
+ },
+ {
+  "name": "journal-read-keeps-blank-line",
+  "file": "workflow_journal.go",
+  "find": "if strings.TrimSpace(line) == \"\" {\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "journal-entry-negative-index",
+  "file": "workflow_journal.go",
+  "find": "index != math.Trunc(index) || index < 0 ||",
+  "replace": "index != math.Trunc(index) ||"
+ },
+ {
+  "name": "journal-entry-text-any-type",
+  "file": "workflow_journal.go",
+  "find": "if !isString {\n\t\t\treturn workflowJournalEntry{}, false\n\t\t}\n\t\tentry.Text = &s",
+  "replace": "entry.Text = &s\n\t\t_ = isString"
+ },
+ {
+  "name": "journal-entry-resumed-false",
+  "file": "workflow_journal.go",
+  "find": "if !isBool || !b {",
+  "replace": "if !isBool {"
+ },
+ {
+  "name": "journal-append-escapes",
+  "file": "workflow_journal.go",
+  "find": "enc.SetEscapeHTML(false)",
+  "replace": ""
+ },
+ {
+  "name": "schema-root-any-type",
+  "file": "workflow_jsonschema.go",
+  "find": "if root[\"type\"] != \"object\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schema-size-limit-off-by",
+  "file": "workflow_jsonschema.go",
+  "find": "len(serialized) > workflowMaxSchemaBytes",
+  "replace": "len(serialized) > workflowMaxSchemaBytes*2"
+ },
+ {
+  "name": "schema-unknown-type-accepted",
+  "file": "workflow_jsonschema.go",
+  "find": "if !workflowSchemaTypes[t] {\n\t\t\treturn fmt.Errorf(\"unknown type %q\", t)",
+  "replace": "if false {\n\t\t\treturn fmt.Errorf(\"unknown type %q\", t)"
+ },
+ {
+  "name": "schema-error-limit",
+  "file": "workflow_jsonschema.go",
+  "find": "if len(reported) >= workflowMaxReportedErrors {",
+  "replace": "if len(reported) >= workflowMaxReportedErrors+3 {"
+ },
+ {
+  "name": "schema-path-pointer-notation",
+  "file": "workflow_jsonschema.go",
+  "find": "where = \"$\" + strings.ReplaceAll(e.path, \"/\", \".\")",
+  "replace": "where = \"$\" + e.path"
+ },
+ {
+  "name": "schema-required-one-error-per-name",
+  "file": "workflow_jsonschema.go",
+  "find": "v.add(path, \"must have required properties \"+strings.Join(missing, \", \"))",
+  "replace": "v.add(path, \"must have required properties \"+missing[0])"
+ },
+ {
+  "name": "schema-integer-accepts-fraction",
+  "file": "workflow_jsonschema.go",
+  "find": "&& f == math.Trunc(f)\n\t}\n\treturn false",
+  "replace": "\n\t}\n\treturn false"
+ },
+ {
+  "name": "schema-minimum-exclusive",
+  "file": "workflow_jsonschema.go",
+  "find": "!(f >= n)",
+  "replace": "!(f > n)"
+ },
+ {
+  "name": "schema-additional-properties-ignored",
+  "file": "workflow_jsonschema.go",
+  "find": "if ap, ok := schema[\"additionalProperties\"]; ok {",
+  "replace": "if ap, ok := schema[\"additionalProperties\"]; ok && false {"
+ },
+ {
+  "name": "schema-anyof-needs-all",
+  "file": "workflow_jsonschema.go",
+  "find": "if !found {\n\t\t\tv.add(path, \"must match a schema in anyOf\")",
+  "replace": "if found {\n\t\t\tv.add(path, \"must match a schema in anyOf\")"
+ },
+ {
+  "name": "schema-enum-ignored",
+  "file": "workflow_jsonschema.go",
+  "find": "if list, ok := schema[\"enum\"].([]any); ok {",
+  "replace": "if list, ok := schema[\"enum\"].([]any); ok && false {"
+ },
+ {
+  "name": "schema-unique-items-ignored",
+  "file": "workflow_jsonschema.go",
+  "find": "if u, ok := schema[\"uniqueItems\"].(bool); ok && u {",
+  "replace": "if u, ok := schema[\"uniqueItems\"].(bool); ok && !u {"
+ },
+ {
+  "name": "schema-check-panics-escape",
+  "file": "workflow_jsonschema.go",
+  "find": "if r := recover(); r != nil {\n\t\t\tverdict = fmt.Sprintf(\"the value could not be validated: %v\", r)",
+  "replace": "if r := recover(); r != nil {\n\t\t\tpanic(r)"
+ },
+ {
+  "name": "meta-string-brace-counted",
+  "file": "workflow_meta.go",
+  "find": "} else if mode == double && c == '\"' {",
+  "replace": "} else if mode == double && c == '\\'' {"
+ },
+ {
+  "name": "meta-template-substitution-allowed",
+  "file": "workflow_meta.go",
+  "find": "if sawInterpolation {",
+  "replace": "if false {"
+ },
+ {
+  "name": "meta-escape-not-skipped",
+  "file": "workflow_meta.go",
+  "find": "if c == '\\\\' {\n\t\t\t\ti += 2\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tif mode == single",
+  "replace": "if mode == single"
+ },
+ {
+  "name": "meta-line-comment-never-ends",
+  "file": "workflow_meta.go",
+  "find": "if c == '\\n' {\n\t\t\t\tmode = code\n\t\t\t}\n\t\t\ti++\n\t\t\tcontinue\n\t\tcase blockComment:",
+  "replace": "i++\n\t\t\tcontinue\n\t\tcase blockComment:"
+ },
+ {
+  "name": "meta-no-timeout",
+  "file": "workflow_meta.go",
+  "find": "timer := time.AfterFunc(workflowMetaEvalTimeout, func() { vm.Interrupt(\"timeout\") })",
+  "replace": "timer := time.AfterFunc(time.Hour, func() { vm.Interrupt(\"timeout\") })"
+ },
+ {
+  "name": "meta-name-blank-accepted",
+  "file": "workflow_meta.go",
+  "find": "if !isString || strings.TrimSpace(name) == \"\" {",
+  "replace": "if !isString {"
+ },
+ {
+  "name": "meta-description-optional",
+  "file": "workflow_meta.go",
+  "find": "if !isString || strings.TrimSpace(description) == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "meta-when-to-use-any",
+  "file": "workflow_meta.go",
+  "find": "if !isString {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")",
+  "replace": "if false {\n\t\t\treturn workflowMeta{}, \"\", workflowMetaFail(\"`meta.whenToUse` must be a string.\")"
+ },
+ {
+  "name": "meta-phase-title-optional",
+  "file": "workflow_meta.go",
+  "find": "if !isString || strings.TrimSpace(title) == \"\" {",
+  "replace": "if !isString {"
+ },
+ {
+  "name": "meta-body-keeps-export",
+  "file": "workflow_meta.go",
+  "find": "body := source[:exportAt] + strings.Repeat(\" \", 6) + source[exportAt+6:]",
+  "replace": "body := source[:exportAt] + source[exportAt+6:]"
+ },
+ {
+  "name": "meta-declaration-anywhere",
+  "file": "workflow_meta.go",
+  "find": "`(^|[\\r\\n])[ \\t]*export[ \\t\\r\\n]+const[ \\t\\r\\n]+meta[ \\t\\r\\n]*=`",
+  "replace": "`export[ \\t\\r\\n]+const[ \\t\\r\\n]+meta[ \\t\\r\\n]*=`"
+ },
+ {
+  "name": "meta-regex-after-value",
+  "file": "workflow_meta.go",
+  "find": "return !(isWord || prev == ')' || prev == ']')",
+  "replace": "return true"
+ },
+ {
+  "name": "progress-collapse-first-wins",
+  "file": "workflow_progress.go",
+  "find": "case *workflowAgentEntry:\n\t\t\tbyIndex[e.Index] = e",
+  "replace": "case *workflowAgentEntry:\n\t\t\tif byIndex[e.Index] == nil {\n\t\t\t\tbyIndex[e.Index] = e\n\t\t\t}"
+ },
+ {
+  "name": "progress-skipped-after-blocked",
+  "file": "workflow_progress.go",
+  "find": "if entry.Skipped {\n\t\t\treturn displaySkipped\n\t\t}\n\t\tif entry.Blocked {\n\t\t\treturn displayBlocked\n\t\t}",
+  "replace": "if entry.Blocked {\n\t\t\treturn displayBlocked\n\t\t}\n\t\tif entry.Skipped {\n\t\t\treturn displaySkipped\n\t\t}"
+ },
+ {
+  "name": "progress-stopped-run-keeps-running",
+  "file": "workflow_progress.go",
+  "find": "if !workflowActive {\n\t\treturn displayInterrupted\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "progress-queued-needs-start",
+  "file": "workflow_progress.go",
+  "find": "if entry.QueuedAt != nil && entry.StartedAt == nil {",
+  "replace": "if entry.QueuedAt != nil {"
+ },
+ {
+  "name": "progress-live-includes-done",
+  "file": "workflow_progress.go",
+  "find": "return entry.State == entryStart || entry.State == entryProgress",
+  "replace": "return entry.State != entryError"
+ },
+ {
+  "name": "progress-phase-title-fallback",
+  "file": "workflow_progress.go",
+  "find": "title = fmt.Sprintf(\"Phase %d\", idx)",
+  "replace": "title = \"Phase\""
+ },
+ {
+  "name": "progress-merge-prefix-one-way",
+  "file": "workflow_progress.go",
+  "find": "actual == wanted || strings.HasPrefix(actual, wanted) || strings.HasPrefix(wanted, actual)",
+  "replace": "actual == wanted || strings.HasPrefix(actual, wanted)"
+ },
+ {
+  "name": "progress-merge-consumes-twice",
+  "file": "workflow_progress.go",
+  "find": "if consumed[g] {\n\t\t\t\tcontinue\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "progress-title-case-sensitive",
+  "file": "workflow_progress.go",
+  "find": "return strings.ToLower(strings.TrimSpace(title))",
+  "replace": "return strings.TrimSpace(title)"
+ },
+ {
+  "name": "progress-failed-status-lost",
+  "file": "workflow_progress.go",
+  "find": "if failed > 0 {\n\t\t\tstatus = \"failed\"\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "progress-duration-sum",
+  "file": "workflow_progress.go",
+  "find": "duration = maxProgress - minStart",
+  "replace": "duration = maxProgress"
+ },
+ {
+  "name": "progress-unphased-hidden",
+  "file": "workflow_progress.go",
+  "find": "if !anyTotal {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))",
+  "replace": "if false {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))"
+ },
+ {
+  "name": "progress-stats-queued-started",
+  "file": "workflow_progress.go",
+  "find": "if e.StartedAt != nil || e.QueuedAt == nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "progress-stats-complete-live",
+  "file": "workflow_progress.go",
+  "find": "Complete: !anyLive && seen > 0 && done+failed >= total}",
+  "replace": "Complete: seen > 0 && done+failed >= total}"
+ },
+ {
+  "name": "progress-elapsed-ignores-pause",
+  "file": "workflow_progress.go",
+  "find": "d := end - task.StartTime - task.TotalPausedMs",
+  "replace": "d := end - task.StartTime"
+ },
+ {
+  "name": "progress-duration-minutes-pad",
+  "file": "workflow_progress.go",
+  "find": "return fmt.Sprintf(\"%dm%02ds\", minutes, seconds)",
+  "replace": "return fmt.Sprintf(\"%dm%ds\", minutes, seconds)"
+ },
+ {
+  "name": "progress-header-no-suffix",
+  "file": "workflow_progress.go",
+  "find": "case runKilled:\n\t\tsuffix = \" · stopped\"",
+  "replace": "case runKilled:\n\t\tsuffix = \"\""
+ },
+ {
+  "name": "progress-header-plural",
+  "file": "workflow_progress.go",
+  "find": "if n == 1 {\n\t\treturn word\n\t}",
+  "replace": "if n == 0 {\n\t\treturn word\n\t}"
+ },
+ {
+  "name": "progress-size-agent-cap",
+  "file": "workflow_progress.go",
+  "find": "overAgents := in.ScheduledAgents > agentCap",
+  "replace": "overAgents := in.ScheduledAgents >= agentCap"
+ },
+ {
+  "name": "progress-size-projection",
+  "file": "workflow_progress.go",
+  "find": "perAgent := float64(assumedTokensPerAgent)",
+  "replace": "perAgent := float64(0)"
+ },
+ {
+  "name": "progress-gerund-doubling-w",
+  "file": "workflow_progress.go",
+  "find": "!strings.ContainsRune(\"wxy\", rune(last))",
+  "replace": "true"
+ },
+ {
+  "name": "progress-gerund-ie",
+  "file": "workflow_progress.go",
+  "find": "case strings.HasSuffix(lower, \"ie\"):\n\t\treturn word[:len(word)-2] + \"ying\"",
+  "replace": "case false:\n\t\treturn word"
+ },
+ {
+  "name": "progress-footer-truncate",
+  "file": "workflow_progress.go",
+  "find": "keep := width - 1",
+  "replace": "keep := width"
+ },
+ {
+  "name": "task-pause-keeps-clock",
+  "file": "workflow_task.go",
+  "find": "task.TotalPausedMs += max(0, now-pausedAt)",
+  "replace": ""
+ },
+ {
+  "name": "task-pause-twice",
+  "file": "workflow_task.go",
+  "find": "if task.Status != runRunning || task.Control == nil {\n\t\ttask.mu.Unlock()\n\t\treturn false",
+  "replace": "if task.Control == nil {\n\t\ttask.mu.Unlock()\n\t\treturn false"
+ },
+ {
+  "name": "task-pause-does-not-tell-run",
+  "file": "workflow_task.go",
+  "find": "control.Pause()",
+  "replace": ""
+ },
+ {
+  "name": "task-complete-keeps-control",
+  "file": "workflow_task.go",
+  "find": "task.Control = nil\n\ttask.Status = result.Status",
+  "replace": "task.Status = result.Status"
+ },
+ {
+  "name": "task-complete-drops-open-pause",
+  "file": "workflow_task.go",
+  "find": "if task.PausedAt != nil {\n\t\ttask.TotalPausedMs += max(0, wfNowMs()-*task.PausedAt)",
+  "replace": "if false {\n\t\ttask.TotalPausedMs += max(0, wfNowMs()-*task.PausedAt)"
+ },
+ {
+  "name": "task-batch-counts-reemits",
+  "file": "workflow_task.go",
+  "find": "tokens += *a.Tokens",
+  "replace": "tokens += *a.Tokens * 2"
+ },
+ {
+  "name": "task-agent-count-walks-back",
+  "file": "workflow_task.go",
+  "find": "if len(c.Agents) > task.AgentCount {",
+  "replace": "if true {"
+ },
+ {
+  "name": "task-result-text-no-output",
+  "file": "workflow_task.go",
+  "find": "return \"No output.\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "task-result-text-compact",
+  "file": "workflow_task.go",
+  "find": "json.Indent(&out, task.ValueJSON, \"\", \"  \") != nil",
+  "replace": "true"
+ },
+ {
+  "name": "task-resume-running-allowed",
+  "file": "workflow_task.go",
+  "find": "if prior.Status == runRunning {",
+  "replace": "if false {"
+ },
+ {
+  "name": "task-resume-no-journal-allowed",
+  "file": "workflow_task.go",
+  "find": "if prior.JournalPath == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "task-resume-unknown-id-listing",
+  "file": "workflow_task.go",
+  "find": "hint = \"Runs this session: \" + strings.Join(known, \", \") + \".\"",
+  "replace": "hint = \"\""
+ },
+ {
+  "name": "task-notification-status-error",
+  "file": "workflow_task.go",
+  "find": "case task.Status == runKilled:\n\t\tstatus = \"Stopped\"",
+  "replace": "case task.Status == runKilled:\n\t\tstatus = \"Done\""
+ },
+ {
+  "name": "task-notification-truncation",
+  "file": "workflow_task.go",
+  "find": "if wfUTF16Len(result) > 4000 {",
+  "replace": "if wfUTF16Len(result) > 40000 {"
+ },
+ {
+  "name": "task-notification-unescaped-script",
+  "file": "workflow_task.go",
+  "find": "\"<script>\"+escapeXML(task.ScriptPath)+\"</script>\"",
+  "replace": "\"<script>\"+task.ScriptPath+\"</script>\""
+ },
+ {
+  "name": "task-notification-replayed-summary",
+  "file": "workflow_task.go",
+  "find": "if task.ReplayedCount > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "task-run-id-prefix",
+  "file": "workflow_task.go",
+  "find": "return \"wf_\" + hex.EncodeToString(b)",
+  "replace": "return \"wf-\" + hex.EncodeToString(b)"
+ },
+ {
+  "name": "saved-unsafe-name-allows-slash",
+  "file": "workflow_saved.go",
+  "find": "`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`",
+  "replace": "`^[a-zA-Z0-9][a-zA-Z0-9._/-]*$`"
+ },
+ {
+  "name": "saved-name-length-limit",
+  "file": "workflow_saved.go",
+  "find": "wfUTF16Len(name) > 128",
+  "replace": "wfUTF16Len(name) > 1280"
+ },
+ {
+  "name": "saved-symlink-followed",
+  "file": "workflow_saved.go",
+  "find": "if _, err := os.Stat(path); err != nil || wfIsSymlink(path) {",
+  "replace": "if _, err := os.Stat(path); err != nil {"
+ },
+ {
+  "name": "saved-agent-dir-first",
+  "file": "workflow_saved.go",
+  "find": "return []string{filepath.Join(cwd, \".pi\", \"workflows\"), filepath.Join(cwd, \".agents\", \"workflows\"), filepath.Join(agentDir(), \"workflows\")}",
+  "replace": "return []string{filepath.Join(agentDir(), \"workflows\"), filepath.Join(cwd, \".pi\", \"workflows\"), filepath.Join(cwd, \".agents\", \"workflows\")}"
+ },
+ {
+  "name": "saved-non-workflow-reached-past",
+  "file": "workflow_saved.go",
+  "find": "if !hasMetaDeclaration(script) {\n\t\t\treturn savedWorkflow{Message:",
+  "replace": "if !hasMetaDeclaration(script) && false {\n\t\t\treturn savedWorkflow{Message:"
+ },
+ {
+  "name": "saved-list-unsorted",
+  "file": "workflow_saved.go",
+  "find": "sort.Strings(out)",
+  "replace": ""
+ },
+ {
+  "name": "saved-list-includes-non-workflows",
+  "file": "workflow_saved.go",
+  "find": "return ok && hasMetaDeclaration(source)",
+  "replace": "return ok"
+ },
+ {
+  "name": "saved-script-path-beats-nothing",
+  "file": "workflow_saved.go",
+  "find": "if path := strings.TrimSpace(p.ScriptPath); path != \"\" {",
+  "replace": "if path := strings.TrimSpace(p.ScriptPath); path != \"\" && strings.TrimSpace(p.Script) == \"\" {"
+ },
+ {
+  "name": "saved-name-beats-script",
+  "file": "workflow_saved.go",
+  "find": "if strings.TrimSpace(p.Script) != \"\" {\n\t\treturn resolvedWorkflowScript{OK: true, Script: p.Script}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "saved-known-names-hidden",
+  "file": "workflow_saved.go",
+  "find": "msg += \" Saved workflows: \" + strings.Join(known, \", \") + \".\"",
+  "replace": ""
+ },
+ {
+  "name": "saved-relative-path-cwd",
+  "file": "workflow_saved.go",
+  "find": "resolved = filepath.Join(cwd, path)",
+  "replace": "resolved = path"
+ },
+ {
+  "name": "worker-effort-levels",
+  "file": "workflow_worker.js",
+  "find": "const EFFORT_LEVELS = [\"minimal\", \"low\", \"medium\", \"high\", \"xhigh\", \"max\"];",
+  "replace": "const EFFORT_LEVELS = [\"low\", \"medium\", \"high\", \"xhigh\", \"max\"];"
+ },
+ {
+  "name": "worker-unknown-option-ignored",
+  "file": "workflow_worker.js",
+  "find": "if (AGENT_OPTIONS.indexOf(key) !== -1) continue;",
+  "replace": "continue;"
+ },
+ {
+  "name": "worker-schema-option-dropped",
+  "file": "workflow_worker.js",
+  "find": "const AGENT_OPTIONS = [\"label\", \"phase\", \"model\", \"agentType\", \"isolation\", \"gate\", \"resume\", \"effort\", \"schema\"];",
+  "replace": "const AGENT_OPTIONS = [\"label\", \"phase\", \"model\", \"agentType\", \"isolation\", \"gate\", \"resume\", \"effort\"];"
+ },
+ {
+  "name": "worker-resume-agenttype-allowed",
+  "file": "workflow_worker.js",
+  "find": "if (agentType !== undefined) {\n        throw new NewError(\n          \"agent() opts.resume and opts.agentType",
+  "replace": "if (false) {\n        throw new NewError(\n          \"agent() opts.resume and opts.agentType"
+ },
+ {
+  "name": "worker-resume-gate-allowed",
+  "file": "workflow_worker.js",
+  "find": "if (gate !== undefined) {\n        throw new NewError(\"agent() opts.gate cannot be combined with opts.resume.\");",
+  "replace": "if (false) {\n        throw new NewError(\"agent() opts.gate cannot be combined with opts.resume.\");"
+ },
+ {
+  "name": "worker-isolation-any",
+  "file": "workflow_worker.js",
+  "find": "if (isolation !== undefined && isolation !== \"worktree\") {",
+  "replace": "if (false) {"
+ },
+ {
+  "name": "worker-prompt-blank-accepted",
+  "file": "workflow_worker.js",
+  "find": "if (typeof value !== \"string\" || value.trim() === \"\") {",
+  "replace": "if (typeof value !== \"string\") {"
+ },
+ {
+  "name": "worker-explicit-phase-moves-ambient",
+  "file": "workflow_worker.js",
+  "find": "const phaseIndex = phaseName !== undefined ? definePhaseIn(scope, phaseName) : scope.ambientPhaseIndex;",
+  "replace": "const phaseIndex = phaseName !== undefined ? (scope.ambientPhaseIndex = definePhaseIn(scope, phaseName)) : scope.ambientPhaseIndex;"
+ },
+ {
+  "name": "worker-parallel-fatal-swallowed",
+  "file": "workflow_worker.js",
+  "find": "          if (isFatal(error)) throw error;\n          return null;\n        }\n      })\n    );\n  }\n\n  /**\n   * No barrier",
+  "replace": "          return null;\n        }\n      })\n    );\n  }\n\n  /**\n   * No barrier"
+ },
+ {
+  "name": "worker-pipeline-keeps-going-after-failure",
+  "file": "workflow_worker.js",
+  "find": "            if (isFatal(error)) throw error;\n            return null;\n          }\n        }\n        return value;",
+  "replace": "            value = null;\n          }\n        }\n        return value;"
+ },
+ {
+  "name": "worker-item-cap-off-by-one",
+  "file": "workflow_worker.js",
+  "find": "if (length > ITEM_CAP) {",
+  "replace": "if (length > ITEM_CAP + 1) {"
+ },
+ {
+  "name": "worker-stage-args",
+  "file": "workflow_worker.js",
+  "find": "value = await stages[s](value, item, index);",
+  "replace": "value = await stages[s](value);"
+ },
+ {
+  "name": "worker-nested-depth",
+  "file": "workflow_worker.js",
+  "find": "if (scope.depth > 0) {",
+  "replace": "if (false) {"
+ },
+ {
+  "name": "worker-nested-cap-not-fatal",
+  "file": "workflow_worker.js",
+  "find": "error.workflowFatal = true;\n      throw error;\n    }\n    nestedCount++;",
+  "replace": "throw error;\n    }\n    nestedCount++;"
+ },
+ {
+  "name": "worker-child-phase-prefix",
+  "file": "workflow_worker.js",
+  "find": "prefix: name === undefined ? \"\" : \"\\u25b8 \" + name,",
+  "replace": "prefix: \"\","
+ },
+ {
+  "name": "worker-budget-total",
+  "file": "workflow_worker.js",
+  "find": "total: null,",
+  "replace": "total: 0,"
+ },
+ {
+  "name": "worker-budget-remaining",
+  "file": "workflow_worker.js",
+  "find": "return Infinity;",
+  "replace": "return 0;"
+ },
+ {
+  "name": "worker-boundary-allows-map",
+  "file": "workflow_worker.js",
+  "find": "if (prototype !== null && prototype !== ObjectPrototype) {",
+  "replace": "if (false) {"
+ },
+ {
+  "name": "worker-boundary-allows-nan",
+  "file": "workflow_worker.js",
+  "find": "if (!isFinite_(value)) throw boundaryError(\"a non-finite number\", path);",
+  "replace": ""
+ },
+ {
+  "name": "worker-boundary-allows-sparse",
+  "file": "workflow_worker.js",
+  "find": "if (!hasOwn.call(value, i)) {",
+  "replace": "if (false) {"
+ },
+ {
+  "name": "worker-boundary-allows-cycle",
+  "file": "workflow_worker.js",
+  "find": "if (seen.has(value)) throw boundaryError(\"a circular structure\", path);",
+  "replace": ""
+ },
+ {
+  "name": "worker-eval-allowed",
+  "file": "workflow_worker.js",
+  "find": "define(globalThis, \"eval\", banned);",
+  "replace": ""
+ },
+ {
+  "name": "worker-function-ctor-allowed",
+  "file": "workflow_worker.js",
+  "find": "define(FunctionPrototype, \"constructor\", banned);",
+  "replace": ""
+ },
+ {
+  "name": "worker-log-unprefixed",
+  "file": "workflow_worker.js",
+  "find": "return scope.prefix === \"\" ? \"\" : scope.prefix + \": \";",
+  "replace": "return \"\";"
+ },
+ {
+  "name": "worker-schema-parse-lost",
+  "file": "workflow_worker.js",
+  "find": "if (schema === undefined) return result;\n    try {\n      return realmParse(result);",
+  "replace": "return result;\n    try {\n      return realmParse(result);"
+ },
+ {
+  "name": "worker-schema-key-order",
+  "file": "workflow_worker.js",
+  "find": "schemaJson: schema === undefined ? undefined : realmStringify(schema),",
+  "replace": "schemaJson: schema === undefined ? undefined : realmStringify(Object.assign({}, schema, { type: schema.type })),"
+ },
+ {
+  "name": "worker-progress-not-flushed-before-call",
+  "file": "workflow_worker.js",
+  "find": "    // Drain first, so the phase() that named this agent reaches the host ahead of the agent entry.\n    flushProgress();",
+  "replace": ""
+ },
+ {
+  "name": "engine-prelude-date-now",
+  "file": "workflow_engine.go",
+  "find": "RealDate.now = function () { return die(\"Date.now()\"); };",
+  "replace": ""
+ },
+ {
+  "name": "engine-prelude-random",
+  "file": "workflow_engine.go",
+  "find": "Math.random = function () { return die(\"Math.random()\"); };",
+  "replace": ""
+ },
+ {
+  "name": "engine-prelude-new-date",
+  "file": "workflow_engine.go",
+  "find": "if (arguments.length === 0) die(\"new Date()\");",
+  "replace": ""
+ },
+ {
+  "name": "engine-prelude-guidance",
+  "file": "workflow_engine.go",
+  "find": " Stamp results after the workflow returns, or pass timestamps via `args`.",
+  "replace": ""
+ },
+ {
+  "name": "engine-call-stack-unbounded",
+  "file": "workflow_engine.go",
+  "find": "const maxWorkflowCallStack = 10_000",
+  "replace": "const maxWorkflowCallStack = 100_000_000"
+ },
+ {
+  "name": "engine-terminate-no-interrupt",
+  "file": "workflow_engine.go",
+  "find": "vm.Interrupt(\"terminated\")",
+  "replace": "_ = vm"
+ },
+ {
+  "name": "runtime-concurrency-floor",
+  "file": "workflow_runtime.go",
+  "find": "return max(1, min(16, cpuCount-2))",
+  "replace": "return min(16, cpuCount-2)"
+ },
+ {
+  "name": "runtime-concurrency-cap",
+  "file": "workflow_runtime.go",
+  "find": "return max(1, min(16, cpuCount-2))",
+  "replace": "return max(1, min(32, cpuCount-2))"
+ },
+ {
+  "name": "runtime-agent-cap-not-fatal",
+  "file": "workflow_runtime.go",
+  "find": "fmt.Sprintf(\"Workflow exceeded its cap of %d agents.\", rt.agentCap), true)",
+  "replace": "fmt.Sprintf(\"Workflow exceeded its cap of %d agents.\", rt.agentCap), false)"
+ },
+ {
+  "name": "runtime-agent-cap-off-by-one",
+  "file": "workflow_runtime.go",
+  "find": "if rt.agentCount >= rt.agentCap {",
+  "replace": "if rt.agentCount > rt.agentCap {"
+ },
+ {
+  "name": "runtime-script-size-limit",
+  "file": "workflow_runtime.go",
+  "find": "n > maxWorkflowScriptLength {",
+  "replace": "n > maxWorkflowScriptLength*2 {"
+ },
+ {
+  "name": "runtime-control-chars-allowed",
+  "file": "workflow_runtime.go",
+  "find": "if workflowControlCharacters.MatchString(script) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "runtime-args-unchecked",
+  "file": "workflow_runtime.go",
+  "find": "if opts.HasArgs {\n\t\tif err := assertBoundarySafe(opts.Args, \"args\"); err != nil {",
+  "replace": "if false {\n\t\tif err := assertBoundarySafe(opts.Args, \"args\"); err != nil {"
+ },
+ {
+  "name": "runtime-semaphore-permit-leak",
+  "file": "workflow_runtime.go",
+  "find": "\t\tclose(next)\n\t\treturn\n\t}\n\ts.active--",
+  "replace": "\t\tclose(next)\n\t\ts.active--\n\t\treturn\n\t}\n\ts.active--"
+ },
+ {
+  "name": "runtime-semaphore-over-limit",
+  "file": "workflow_runtime.go",
+  "find": "if s.active < s.limit {",
+  "replace": "if s.active <= s.limit {"
+ },
+ {
+  "name": "runtime-replay-after-miss",
+  "file": "workflow_runtime.go",
+  "find": "if e.Index != index || e.Key != key || !e.OK {\n\t\trt.prefixIntact = false\n\t\treturn nil\n\t}",
+  "replace": "if e.Index != index || e.Key != key || !e.OK {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "runtime-replay-failure",
+  "file": "workflow_runtime.go",
+  "find": "if e.Index != index || e.Key != key || !e.OK {",
+  "replace": "if e.Index != index || e.Key != key {"
+ },
+ {
+  "name": "runtime-replay-resume-journal",
+  "file": "workflow_runtime.go",
+  "find": "rt.prefixIntact = len(rt.journalEntries) > 0 && !journalResumes",
+  "replace": "rt.prefixIntact = len(rt.journalEntries) > 0"
+ },
+ {
+  "name": "runtime-replay-not-recorded",
+  "file": "workflow_runtime.go",
+  "find": "rt.recordJournal(workflowJournalEntry{Index: index, Key: replayed.Key, OK: true, Text: &replayedText})",
+  "replace": ""
+ },
+ {
+  "name": "runtime-replay-holds-slot",
+  "file": "workflow_runtime.go",
+  "find": "\t\trt.closeLaunch(callID)\n\t\t// Re-recorded",
+  "replace": "\t\trt.sem.acquire(c)\n\t\trt.closeLaunch(callID)\n\t\t// Re-recorded"
+ },
+ {
+  "name": "runtime-replay-uncached",
+  "file": "workflow_runtime.go",
+  "find": "e.Cached = true",
+  "replace": ""
+ },
+ {
+  "name": "runtime-replay-count",
+  "file": "workflow_runtime.go",
+  "find": "rt.replayedCount++\n\t\treplayedText",
+  "replace": "replayedText"
+ },
+ {
+  "name": "runtime-replay-schema-recheck",
+  "file": "workflow_runtime.go",
+  "find": "if replayed != nil && compiledSchema != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "runtime-spent-only-successes",
+  "file": "workflow_runtime.go",
+  "find": "rt.spentOutput += result.OutputTokens",
+  "replace": "if result.OK {\n\t\t\trt.spentOutput += result.OutputTokens\n\t\t}"
+ },
+ {
+  "name": "runtime-skip-not-null",
+  "file": "workflow_runtime.go",
+  "find": "e.State = entryError\n\t\t\te.Skipped = true",
+  "replace": "e.State = entryError\n\t\t\te.Skipped = false"
+ },
+ {
+  "name": "runtime-retry-without-attempt",
+  "file": "workflow_runtime.go",
+  "find": "attempt++\n\t\t\trt.emit(",
+  "replace": "rt.emit("
+ },
+ {
+  "name": "runtime-retry-while-aborted",
+  "file": "workflow_runtime.go",
+  "find": "if live.intent == \"retry\" && !rt.aborted {",
+  "replace": "if live.intent == \"retry\" {"
+ },
+ {
+  "name": "runtime-pause-permit-leak",
+  "file": "workflow_runtime.go",
+  "find": "if rt.paused && !rt.aborted && !rt.settled {\n\t\t\trt.sem.release()\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "runtime-pause-gate-before-slot",
+  "file": "workflow_runtime.go",
+  "find": "\t\trt.pauseGate(c, live)\n\t\tif live.intent == \"skip\" {",
+  "replace": "\t\tif live.intent == \"skip\" {"
+ },
+ {
+  "name": "runtime-skip-held-waits-resume",
+  "file": "workflow_runtime.go",
+  "find": "} else if live.wake != nil {\n\t\tlive.wake()\n\t}",
+  "replace": "}"
+ },
+ {
+  "name": "runtime-skip-twice",
+  "file": "workflow_runtime.go",
+  "find": "if live == nil || live.intent != \"\" {\n\t\treturn false\n\t}\n\tlive.intent = \"skip\"",
+  "replace": "if live == nil {\n\t\treturn false\n\t}\n\tlive.intent = \"skip\""
+ },
+ {
+  "name": "runtime-retry-needs-child",
+  "file": "workflow_runtime.go",
+  "find": "if live == nil || !live.started || live.intent != \"\" {",
+  "replace": "if live == nil || live.intent != \"\" {"
+ },
+ {
+  "name": "runtime-gate-needs-host",
+  "file": "workflow_runtime.go",
+  "find": "if payload.gate != nil && runGate == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "runtime-gate-runs-twice",
+  "file": "workflow_runtime.go",
+  "find": "if result.Gate != nil {\n\t\toutcome = *result.Gate",
+  "replace": "if false {\n\t\toutcome = *result.Gate"
+ },
+ {
+  "name": "runtime-gate-keeps-text",
+  "file": "workflow_runtime.go",
+  "find": "result.Text = \"\"\n\toutput := strings",
+  "replace": "output := strings"
+ },
+ {
+  "name": "runtime-gate-silent-failure",
+  "file": "workflow_runtime.go",
+  "find": "result.Error = \"Gate command failed: \" + command",
+  "replace": "result.Error = \"\""
+ },
+ {
+  "name": "runtime-gate-after-schema",
+  "file": "workflow_runtime.go",
+  "find": "result = applyWorkflowSchema(result, compiledSchema)\n\t\t\t\t}\n\t\t\t\tif result.OK && payload.gate",
+  "replace": "}\n\t\t\t\tif result.OK && payload.gate"
+ },
+ {
+  "name": "runtime-gate-cwd-dropped",
+  "file": "workflow_runtime.go",
+  "find": "runGate.RunGate(rt.runCtx, command, agentID, result.Cwd)",
+  "replace": "runGate.RunGate(rt.runCtx, command, agentID, \"\")"
+ },
+ {
+  "name": "runtime-resume-needs-host",
+  "file": "workflow_runtime.go",
+  "find": "if payload.resume != nil && resumer == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "runtime-resume-failed-child",
+  "file": "workflow_runtime.go",
+  "find": "\t\t\t\tif _, seen := rt.completedByLabel[label]; !seen {",
+  "replace": "\t\t\t\tif _, seen := rt.completedByLabel[label]; !seen && false {"
+ },
+ {
+  "name": "runtime-resume-label-list",
+  "file": "workflow_runtime.go",
+  "find": "known = \"Known labels: \" + strings.Join(quoted, \", \") + \".\"",
+  "replace": "known = \"\""
+ },
+ {
+  "name": "runtime-resume-replayed-blame",
+  "file": "workflow_runtime.go",
+  "find": "if rt.replayedCount > 0 {\n\t\t\t\trt.respond(callID, false, nil, fmt.Sprintf(`agent() opts.resume:",
+  "replace": "if false {\n\t\t\t\trt.respond(callID, false, nil, fmt.Sprintf(`agent() opts.resume:"
+ },
+ {
+  "name": "runtime-resume-keeps-type",
+  "file": "workflow_runtime.go",
+  "find": "if resumed != nil {\n\t\tagentType = resumed.agentType",
+  "replace": "if false {\n\t\tagentType = resumed.agentType"
+ },
+ {
+  "name": "runtime-resume-new-agent-id",
+  "file": "workflow_runtime.go",
+  "find": "if resumed != nil {\n\t\tagentID = resumed.agentID",
+  "replace": "if false {\n\t\tagentID = resumed.agentID"
+ },
+ {
+  "name": "runtime-label-derivation",
+  "file": "workflow_runtime.go",
+  "find": "return wfUTF16Prefix(line, 59) + \"…\"",
+  "replace": "return wfUTF16Prefix(line, 60)"
+ },
+ {
+  "name": "runtime-preview-length",
+  "file": "workflow_runtime.go",
+  "find": "return wfUTF16Prefix(text, workflowPreviewLength-1) + \"…\"",
+  "replace": "return wfUTF16Prefix(text, workflowPreviewLength)"
+ },
+ {
+  "name": "runtime-schema-compile-not-fatal",
+  "file": "workflow_runtime.go",
+  "find": "rt.respond(callID, false, nil, compilation.Message, true)",
+  "replace": "rt.respond(callID, false, nil, compilation.Message, false)"
+ },
+ {
+  "name": "runtime-schema-prose-accepted",
+  "file": "workflow_runtime.go",
+  "find": "if compiledSchema != nil && result.OK {",
+  "replace": "if false {"
+ },
+ {
+  "name": "runtime-unawaited-ignored",
+  "file": "workflow_runtime.go",
+  "find": "if len(rt.openLaunches) > 0 {\n\t\t\tlabels :=",
+  "replace": "if false {\n\t\t\tlabels :="
+ },
+ {
+  "name": "runtime-unawaited-order",
+  "file": "workflow_runtime.go",
+  "find": "labels[i] = \"'\" + rt.openLabels[id] + \"'\"",
+  "replace": "labels[len(labels)-1-i] = \"'\" + rt.openLabels[id] + \"'\""
+ },
+ {
+  "name": "runtime-abort-skips-children",
+  "file": "workflow_runtime.go",
+  "find": "\tfor _, id := range ids {\n\t\trt.host.AbortAgent(id)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "runtime-already-aborted-runs",
+  "file": "workflow_runtime.go",
+  "find": "if ctx.Err() != nil {\n\t\treturn &workflowRunResult{Status: runKilled",
+  "replace": "if false {\n\t\treturn &workflowRunResult{Status: runKilled"
+ },
+ {
+  "name": "runtime-onresolved-after-settle",
+  "file": "workflow_runtime.go",
+  "find": "if !rt.inflight[agentID] {\n\t\t\t\treturn\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "runtime-onresolved-record-id",
+  "file": "workflow_runtime.go",
+  "find": "if info.RecordID != \"\" {\n\t\t\t\tbase.RecordID = info.RecordID\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "runtime-onresolved-model",
+  "file": "workflow_runtime.go",
+  "find": "if info.ModelName != \"\" {\n\t\t\t\tbase.Model = info.ModelName\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "runtime-refusal-not-fatal",
+  "file": "workflow_runtime.go",
+  "find": "rt.respond(callID, false, nil, refusal.Error(), true)",
+  "replace": "rt.respond(callID, true, nil, \"\", false)"
+ },
+ {
+  "name": "runtime-unknown-method-not-fatal",
+  "file": "workflow_runtime.go",
+  "find": "`Unknown workflow host method \"%s\".`, m.Method), true)",
+  "replace": "`Unknown workflow host method \"%s\".`, m.Method), false)"
+ },
+ {
+  "name": "runtime-nested-load-error-fatal",
+  "file": "workflow_runtime.go",
+  "find": "rt.respond(callID, false, nil, source.Message, false)",
+  "replace": "rt.respond(callID, false, nil, source.Message, true)"
+ },
+ {
+  "name": "runtime-nested-no-loader-ok",
+  "file": "workflow_runtime.go",
+  "find": "if loader == nil {\n\t\trt.respond(callID, false, nil, \"This workflow host cannot run nested workflows.\", true)",
+  "replace": "if loader == nil {\n\t\trt.respond(callID, false, nil, \"This workflow host cannot run nested workflows.\", false)"
+ },
+ {
+  "name": "runtime-nested-validate-skipped",
+  "file": "workflow_runtime.go",
+  "find": "meta, body, verr := validateScript(source.Script)\n\tif verr != nil {",
+  "replace": "meta, body, verr := validateScript(source.Script)\n\tif false {"
+ },
+ {
+  "name": "runtime-journal-resume-flag",
+  "file": "workflow_runtime.go",
+  "find": "rt.recordJournal(workflowJournalEntry{Index: index, Key: key, OK: true, Text: &text, Resumed: resumeMark})",
+  "replace": "rt.recordJournal(workflowJournalEntry{Index: index, Key: key, OK: true, Text: &text})"
+ },
+ {
+  "name": "runtime-boundary-undefined-args",
+  "file": "workflow_runtime.go",
+  "find": "case reflect.Float32, reflect.Float64:\n\t\tif f := v.Float(); math.IsNaN(f) || math.IsInf(f, 0) {",
+  "replace": "case reflect.Float32, reflect.Float64:\n\t\tif f := v.Float(); false {"
+ },
+ {
+  "name": "runtime-boundary-struct-ok",
+  "file": "workflow_runtime.go",
+  "find": "return workflowBoundaryError(\"a non-plain object\", path)\n}\n\n// assertBoundarySafe",
+  "replace": "return nil\n}\n\n// assertBoundarySafe"
+ },
+ {
+  "name": "host-model-precedence",
+  "file": "workflow_host.go",
+  "find": "modelInput := req.Model\n\tif modelInput == \"\" && config != nil {",
+  "replace": "modelInput := \"\"\n\tif config != nil {"
+ },
+ {
+  "name": "host-unresolvable-agent-model-error",
+  "file": "workflow_host.go",
+  "find": "\t\t\t\tif req.Model != \"\" {\n\t\t\t\t\treturn workflowSpawnResult{Error: errText}, nil\n\t\t\t\t}",
+  "replace": "\t\t\t\treturn workflowSpawnResult{Error: errText}, nil"
+ },
+ {
+  "name": "host-scope-caller-keyed-on-input",
+  "file": "workflow_host.go",
+  "find": "CallerSupplied: req.Model != \"\"",
+  "replace": "CallerSupplied: modelInput != \"\""
+ },
+ {
+  "name": "host-scope-error-fatal",
+  "file": "workflow_host.go",
+  "find": "if verdict.Kind == \"error\" {\n\t\t\treturn workflowSpawnResult{Error: verdict.Message}, nil",
+  "replace": "if verdict.Kind == \"error\" {\n\t\t\treturn workflowSpawnResult{}, errors.New(verdict.Message)"
+ },
+ {
+  "name": "host-scope-warn-every-child",
+  "file": "workflow_host.go",
+  "find": "first := !h.warnedScope[verdict.Message]",
+  "replace": "first := true"
+ },
+ {
+  "name": "host-workflow-stamp",
+  "file": "workflow_host.go",
+  "find": "WorkflowID: d.WorkflowID,",
+  "replace": ""
+ },
+ {
+  "name": "host-effort-dropped",
+  "file": "workflow_host.go",
+  "find": "ThinkingLevel: req.Effort,",
+  "replace": ""
+ },
+ {
+  "name": "host-effort-not-seeded",
+  "file": "workflow_host.go",
+  "find": "Invocation: workflowInvocation{Thinking: req.Effort},",
+  "replace": ""
+ },
+ {
+  "name": "host-isolation-dropped",
+  "file": "workflow_host.go",
+  "find": "Isolation: req.Isolation,",
+  "replace": ""
+ },
+ {
+  "name": "host-signal-dropped",
+  "file": "workflow_host.go",
+  "find": "opts := workflowSpawnOptions{Ctx: d.Signal,",
+  "replace": "opts := workflowSpawnOptions{Ctx: nil,"
+ },
+ {
+  "name": "host-hook-always",
+  "file": "workflow_host.go",
+  "find": "if command := req.Gate; command != \"\" {",
+  "replace": "if command := \"x\"; command != \"\" {"
+ },
+ {
+  "name": "host-hook-failed-child",
+  "file": "workflow_host.go",
+  "find": "if rec, found := d.Manager.GetRecord(spawnedID); !found || !wfChildSucceeded(rec) {\n\t\t\t\treturn nil\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "host-hook-error-unrecorded",
+  "file": "workflow_host.go",
+  "find": "g = workflowGateResult{Output: err.Error()}\n\t\t\t}\n\t\t\tgate = &g",
+  "replace": "g = workflowGateResult{Output: err.Error()}\n\t\t\t}\n\t\t\tif err == nil {\n\t\t\t\tgate = &g\n\t\t\t}"
+ },
+ {
+  "name": "host-steered-not-success",
+  "file": "workflow_host.go",
+  "find": "return r.Status == statusCompleted || r.Status == statusSteered",
+  "replace": "return r.Status == statusCompleted"
+ },
+ {
+  "name": "host-stopped-failed",
+  "file": "workflow_host.go",
+  "find": "if r.Status == statusStopped {\n\t\tres.Skipped, res.Error = true, r.Error",
+  "replace": "if r.Status == statusStopped && false {\n\t\tres.Skipped, res.Error = true, r.Error"
+ },
+ {
+  "name": "host-error-default",
+  "file": "workflow_host.go",
+  "find": "res.Error = \"Agent \" + r.Status + \".\"",
+  "replace": "res.Error = \"Agent failed.\""
+ },
+ {
+  "name": "host-structured-ignored",
+  "file": "workflow_host.go",
+  "find": "if r.StructuredJSON != \"\" {\n\t\t\tres.Text = r.StructuredJSON\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "host-tokens-output-only",
+  "file": "workflow_host.go",
+  "find": "res.OutputTokens = r.OutputTokens",
+  "replace": "res.OutputTokens = r.LifetimeTokens"
+ },
+ {
+  "name": "host-tool-calls-zero",
+  "file": "workflow_host.go",
+  "find": "if r.ToolUses > 0 {\n\t\tres.ToolCalls = &r.ToolUses",
+  "replace": "if true {\n\t\tres.ToolCalls = &r.ToolUses"
+ },
+ {
+  "name": "host-cwd-stale",
+  "file": "workflow_host.go",
+  "find": "if _, err := os.Stat(r.WorktreePath); err != nil {\n\t\treturn \"\"\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "host-gate-killed-passes",
+  "file": "workflow_host.go",
+  "find": "if res.Killed {\n\t\tif output == \"\" {",
+  "replace": "if res.Killed && false {\n\t\tif output == \"\" {"
+ },
+ {
+  "name": "host-gate-timeout-text",
+  "file": "workflow_host.go",
+  "find": "output = \"Gate command timed out: \" + command",
+  "replace": "output = \"Gate command failed: \" + command"
+ },
+ {
+  "name": "host-gate-stderr-dropped",
+  "file": "workflow_host.go",
+  "find": "for _, s := range []string{res.Stdout, res.Stderr} {",
+  "replace": "for _, s := range []string{res.Stdout} {"
+ },
+ {
+  "name": "host-gate-no-trim",
+  "file": "workflow_host.go",
+  "find": "if t := strings.TrimSpace(s); t != \"\" {\n\t\t\tparts = append(parts, t)",
+  "replace": "if t := s; t != \"\" {\n\t\t\tparts = append(parts, t)"
+ },
+ {
+  "name": "host-gate-exit-code",
+  "file": "workflow_host.go",
+  "find": "return workflowGateResult{OK: res.Code == 0, Output: output}, nil",
+  "replace": "return workflowGateResult{OK: true, Output: output}, nil"
+ },
+ {
+  "name": "host-gate-session-cwd",
+  "file": "workflow_host.go",
+  "find": "if cwd == \"\" {\n\t\tcwd = h.deps.Cwd\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "host-abort-unstarted",
+  "file": "workflow_host.go",
+  "find": "if id, ok := h.record(agentID); ok {\n\t\th.deps.Manager.Abort(id)\n\t}",
+  "replace": "h.deps.Manager.Abort(agentID)"
+ },
+ {
+  "name": "host-resume-unspawned",
+  "file": "workflow_host.go",
+  "find": "if !ok {\n\t\treturn workflowSpawnResult{Error: `Cannot resume",
+  "replace": "if false {\n\t\treturn workflowSpawnResult{Error: `Cannot resume"
+ },
+ {
+  "name": "host-resume-no-report",
+  "file": "workflow_host.go",
+  "find": "onResolved(workflowResolvedInfo{RecordID: id})\n\t\tif info, ok",
+  "replace": "if info, ok"
+ },
+ {
+  "name": "host-record-id-report",
+  "file": "workflow_host.go",
+  "find": "\t\tonResolved(workflowResolvedInfo{RecordID: id})\n\t\treportResolved()",
+  "replace": "\t\treportResolved()"
+ },
+ {
+  "name": "host-config-needs-model",
+  "file": "workflow_host.go",
+  "find": "if !found || r.Invocation == nil || r.Invocation.ModelName == \"\" {",
+  "replace": "if !found || r.Invocation == nil {"
+ },
+ {
+  "name": "host-strict-failure-rejected",
+  "file": "workflow_host.go",
+  "find": "// Strict worktree isolation rejects out of the start: the child never ran. That is this agent's failure, not the\n\t\t// run's: the script sees null and its siblings carry on.\n\t\treturn workflowSpawnResult{Error: err.Error()}, nil",
+  "replace": "return workflowSpawnResult{}, err"
+ },
+ {
+  "name": "models-exact-needs-available",
+  "file": "workflow_models.go",
+  "find": "if available[strings.ToLower(input)] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "models-fuzzy-threshold",
+  "file": "workflow_models.go",
+  "find": "if best != nil && bestScore >= 20 {",
+  "replace": "if best != nil && bestScore >= 60 {"
+ },
+ {
+  "name": "models-dot-normalization",
+  "file": "workflow_models.go",
+  "find": "return strings.ReplaceAll(strings.ToLower(s), \".\", \"-\")",
+  "replace": "return strings.ToLower(s)"
+ },
+ {
+  "name": "models-date-stamp",
+  "file": "workflow_models.go",
+  "find": "wfDateStamp.MatchString(part) ||",
+  "replace": ""
+ },
+ {
+  "name": "models-provider-fallback",
+  "file": "workflow_models.go",
+  "find": "if slash != -1 {\n\t\tif bare, errText",
+  "replace": "if false {\n\t\tif bare, errText"
+ },
+ {
+  "name": "models-list-unsorted",
+  "file": "workflow_models.go",
+  "find": "sort.Strings(list)",
+  "replace": ""
+ },
+ {
+  "name": "models-describe-claude-prefix",
+  "file": "workflow_models.go",
+  "find": "regexp.MustCompile(`(?i)^Claude\\s+`).ReplaceAllString(name, \"\")",
+  "replace": "name"
+ },
+ {
+  "name": "collision-own-tool-foreign",
+  "file": "workflow_collisions.go",
+  "find": "tools[i].Description != ownDescription {",
+  "replace": "true {"
+ },
+ {
+  "name": "collision-pinned-yields",
+  "file": "workflow_collisions.go",
+  "find": "if pinned {\n\t\tif !tookOurName {",
+  "replace": "if false {\n\t\tif !tookOurName {"
+ },
+ {
+  "name": "collision-withdraw-own-name",
+  "file": "workflow_collisions.go",
+  "find": "Withdraw: !tookOurName}",
+  "replace": "Withdraw: true}"
+ },
+ {
+  "name": "collision-pinned-own-name-silent",
+  "file": "workflow_collisions.go",
+  "find": "return workflowCollision{Kind: \"report\",",
+  "replace": "return workflowCollision{Kind: \"none\","
+ },
+ {
+  "name": "collision-source-fallback",
+  "file": "workflow_collisions.go",
+  "find": "source = \"unknown source\"",
+  "replace": "source = \"\""
+ },
+ {
+  "name": "tool-not-background",
+  "file": "workflow_tool.go",
+  "find": "\tgo func() {\n\t\ta.runWorkflowTask(ctx, task)\n\t\ta.notifyWorkflowFinished(task)\n\t}()",
+  "replace": "\ta.runWorkflowTask(ctx, task)\n\ta.notifyWorkflowFinished(task)"
+ },
+ {
+  "name": "tool-resume-ignores-id",
+  "file": "workflow_tool.go",
+  "find": "resumeFrom := resolveResumeTarget(resumeFromRunID, w.tasks)",
+  "replace": "resumeFrom := resolveResumeTarget(\"\", w.tasks)"
+ },
+ {
+  "name": "tool-resume-reuses-script",
+  "file": "workflow_tool.go",
+  "find": "if !hasScript && !hasPath && !hasName && resumeFrom != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tool-meta-checked-late",
+  "file": "workflow_tool.go",
+  "find": "meta, _, err := extractMeta(resolved.Script)\n\tif err != nil {\n\t\treturn textResult(err.Error()), nil\n\t}",
+  "replace": "meta, _, _ := extractMeta(resolved.Script)"
+ },
+ {
+  "name": "tool-script-not-persisted",
+  "file": "workflow_tool.go",
+  "find": "if os.WriteFile(path, []byte(resolved.Script), 0o666) == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tool-script-line",
+  "file": "workflow_tool.go",
+  "find": "text += \"Script: \" + task.ScriptPath + \"\\n\"",
+  "replace": ""
+ },
+ {
+  "name": "tool-resume-line",
+  "file": "workflow_tool.go",
+  "find": "text += \"Resuming \" + task.ResumedFrom + \": \" + itoa(len(task.Replay)) + \" recorded call(s) available to replay.\\n\"",
+  "replace": "text += \"Resuming \" + task.ResumedFrom + \".\\n\""
+ },
+ {
+  "name": "tool-nothing-to-replay",
+  "file": "workflow_tool.go",
+  "find": "text += \"Nothing to replay from \" + resumeFromRunID + \" — every agent runs live.\\n\"",
+  "replace": ""
+ },
+ {
+  "name": "tool-empty-journal-replays",
+  "file": "workflow_tool.go",
+  "find": "if replay := readWorkflowJournal(resumeFrom.JournalPath); len(replay) > 0 {",
+  "replace": "if replay := readWorkflowJournal(resumeFrom.JournalPath); true {"
+ },
+ {
+  "name": "tool-args-presence",
+  "file": "workflow_tool.go",
+  "find": "init.Args, init.HasArgs = p[\"args\"], hasKey(p, \"args\")",
+  "replace": "init.Args, init.HasArgs = p[\"args\"], p[\"args\"] != nil"
+ },
+ {
+  "name": "tool-default-off",
+  "file": "workflow_tool.go",
+  "find": "w.mu.Lock()\n\t\tw.enabled, w.pinned = enabled, pinned",
+  "replace": "w.mu.Lock()\n\t\tw.pinned = pinned"
+ },
+ {
+  "name": "tool-setting-global-only",
+  "file": "workflow_tool.go",
+  "find": "filepath.Join(cwd, \".pi\", \"subagents.json\")}",
+  "replace": "filepath.Join(cwd, \".pi\", \"subagents-x.json\")}"
+ },
+ {
+  "name": "tool-setting-string-pins",
+  "file": "workflow_tool.go",
+  "find": "if b, ok := raw[\"workflowsEnabled\"].(bool); ok {",
+  "replace": "if b, ok := raw[\"workflowsEnabled\"].(bool); ok || raw[\"workflowsEnabled\"] != nil {"
+ },
+ {
+  "name": "tool-registered-when-off",
+  "file": "workflow_tool.go",
+  "find": "if !w.isEnabled() {\n\t\treturn\n\t}\n\te.RegisterTool",
+  "replace": "e.RegisterTool"
+ },
+ {
+  "name": "tool-notification-follow-up",
+  "file": "workflow_tool.go",
+  "find": "sdk.SendMessageOptions{DeliverAs: \"followUp\", TriggerTurn: &turn})\n\t})\n}",
+  "replace": "sdk.SendMessageOptions{DeliverAs: \"steer\", TriggerTurn: &turn})\n\t})\n}"
+ },
+ {
+  "name": "tool-notification-status",
+  "file": "workflow_tool.go",
+  "find": "case runKilled:\n\t\tstatus = \"stopped\"",
+  "replace": "case runKilled:\n\t\tstatus = \"error\""
+ },
+ {
+  "name": "tool-notification-preview-length",
+  "file": "workflow_tool.go",
+  "find": "if wfUTF16Len(result) > 500 {",
+  "replace": "if wfUTF16Len(result) > 5000 {"
+ },
+ {
+  "name": "tool-notification-error-field",
+  "file": "workflow_tool.go",
+  "find": "if task.HasError {\n\t\tdetails[\"error\"] = task.Error\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tool-collision-after-flag",
+  "file": "workflow_tool.go",
+  "find": "a.resolveWorkflowCollisions(ctx)\n\ta.runWorkflowFlag(ctx)",
+  "replace": "a.runWorkflowFlag(ctx)\n\ta.resolveWorkflowCollisions(ctx)"
+ },
+ {
+  "name": "tool-collision-checked-twice",
+  "file": "workflow_tool.go",
+  "find": "if w.collisionsChecked {\n\t\tw.mu.Unlock()\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "tool-collision-off-checked",
+  "file": "workflow_tool.go",
+  "find": "if !w.isEnabled() {\n\t\treturn\n\t}\n\ttools, err := ctx.GetAllTools()",
+  "replace": "tools, err := ctx.GetAllTools()"
+ },
+ {
+  "name": "tool-stand-down-pins",
+  "file": "workflow_tool.go",
+  "find": "w.enabled = false // not setEnabled: this is not the user pinning it",
+  "replace": "w.enabled, w.pinned = false, true"
+ },
+ {
+  "name": "tool-stand-down-not-withdrawn",
+  "file": "workflow_tool.go",
+  "find": "ctx.SetActiveTools(rest)",
+  "replace": "_ = rest"
+ },
+ {
+  "name": "tool-withdraw-drops-others",
+  "file": "workflow_tool.go",
+  "find": "if n != workflowToolName {\n\t\t\t\t\trest = append(rest, n)\n\t\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "flag-read-before-collision",
+  "file": "workflow_tool.go",
+  "find": "if w.flagHandled {",
+  "replace": "if false {"
+ },
+ {
+  "name": "flag-ignored-while-off",
+  "file": "workflow_tool.go",
+  "find": "// The flag is the same machinery by another door, so the master switch has to close it too.\n\tif !w.isEnabled() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "flag-bare-true-read",
+  "file": "workflow_tool.go",
+  "find": "if !isString || strings.TrimSpace(path) == \"\" {",
+  "replace": "if !isString && false {"
+ },
+ {
+  "name": "flag-relative-path",
+  "file": "workflow_tool.go",
+  "find": "path = filepath.Join(ctx.Cwd(), path)",
+  "replace": ""
+ },
+ {
+  "name": "flag-entry-not-appended",
+  "file": "workflow_tool.go",
+  "find": "_ = live.AppendEntry(workflowEntryType, snapshotWorkflowEntry(task))",
+  "replace": ""
+ },
+ {
+  "name": "flag-result-follow-up",
+  "file": "workflow_tool.go",
+  "find": "sdk.SendMessageOptions{DeliverAs: \"nextTurn\"})",
+  "replace": "sdk.SendMessageOptions{DeliverAs: \"followUp\"})"
+ },
+ {
+  "name": "flag-result-displayed",
+  "file": "workflow_tool.go",
+  "find": "CustomType: \"workflow-result\", Content: formatWorkflowNotification(task, wfNowMs()), Display: false}",
+  "replace": "CustomType: \"workflow-result\", Content: formatWorkflowNotification(task, wfNowMs()), Display: true}"
+ },
+ {
+  "name": "shutdown-keeps-runs",
+  "file": "workflow_tool.go",
+  "find": "for _, task := range w.tasks.values() {\n\t\ttask.Abort()\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "setting-write-back-effective",
+  "file": "workflow_tool.go",
+  "find": "return w.enabled, w.pinned\n}",
+  "replace": "return w.enabled, true\n}"
+ },
+ {
+  "name": "workflow-schema-title-required",
+  "file": "workflow_tool.go",
+  "find": "\"title\":       map[string]any{\"type\": \"string\",",
+  "replace": "\"titel\":       map[string]any{\"type\": \"string\","
+ },
+ {
+  "name": "adapter-isolation-accepted",
+  "file": "workflow_manager.go",
+  "find": "case opts.Isolation != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "adapter-schema-accepted",
+  "file": "workflow_manager.go",
+  "find": "case opts.StructuredOutput != nil:",
+  "replace": "case false:"
+ },
+ {
+  "name": "adapter-resume-accepted",
+  "file": "workflow_manager.go",
+  "find": "return workflowRecord{}, false, &workflowRefusalError{\"resuming a finished agent's session (resume)\"}",
+  "replace": "return workflowRecord{}, false, nil"
+ },
+ {
+  "name": "adapter-child-not-owned",
+  "file": "workflow_manager.go",
+  "find": "m.a.startOwned(m.ctx, opts.WorkflowID,",
+  "replace": "m.a.startOwned(m.ctx, \"\","
+ },
+ {
+  "name": "adapter-effort-dropped",
+  "file": "workflow_manager.go",
+  "find": "opts.Model, opts.ThinkingLevel, 0, false, false)",
+  "replace": "opts.Model, \"\", 0, false, false)"
+ },
+ {
+  "name": "adapter-abort-wait",
+  "file": "workflow_manager.go",
+  "find": "case <-ctx.Done():\n\t\tm.a.mgr.abort(r)\n\t\t<-r.done",
+  "replace": "case <-ctx.Done():\n\t\t<-r.done"
+ },
+ {
+  "name": "adapter-output-tokens",
+  "file": "workflow_manager.go",
+  "find": "LifetimeTokens: r.Tokens, OutputTokens: r.OutputTokens}",
+  "replace": "LifetimeTokens: r.Tokens, OutputTokens: r.Tokens}"
+ },
+ {
+  "name": "adapter-workflow-child-block",
+  "file": "workflow_manager.go",
+  "find": "\treturn system[:end] + workflowChildBlock + system[end:]",
+  "replace": "\treturn system"
+ },
+ {
+  "name": "adapter-task-dir-uid",
+  "file": "workflow_manager.go",
+  "find": "\"pi-subagents-\"+wfUID()",
+  "replace": "\"pi-subagents\""
+ },
+ {
+  "name": "adapter-task-dir-encoding",
+  "file": "workflow_manager.go",
+  "find": "encoded = strings.TrimLeft(encoded, \"-\")",
+  "replace": ""
+ },
+ {
+  "name": "owned-agent-listed",
+  "file": "manager.go",
+  "find": "if m.records[id].Owner == \"\" {\n\t\t\tout = append(out, m.records[id])\n\t\t}",
+  "replace": "out = append(out, m.records[id])"
+ },
+ {
+  "name": "owned-agent-addressable",
+  "file": "manager.go",
+  "find": "if r.Owner != \"\" {\n\t\t\tcontinue // an owned agent is not addressable from outside its run\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "owned-agent-announced",
+  "file": "extension.go",
+  "find": "if r.Owner != \"\" {\n\t\treturn // an owned agent reports through its owner",
+  "replace": "if false {\n\t\treturn // an owned agent reports through its owner"
+ },
+ {
+  "name": "abort-all-skips-owned",
+  "file": "manager.go",
+  "find": "all = append(all, m.records[id]) // owned agents too",
+  "replace": "if m.records[id].Owner == \"\" {\n\t\t\tall = append(all, m.records[id])\n\t\t}"
+ },
+ {
+  "name": "runner-output-tokens",
+  "file": "runner.go",
+  "find": "res.OutputTokens = int(out)",
+  "replace": ""
+ },
+ {
+  "name": "bus-workflow-id-forwarded",
+  "file": "refuse.go",
+  "find": "case \"workflowId\":",
+  "replace": "case \"workflowIdX\":"
+ },
+ {
+  "name": "menu-entry-when-off",
+  "file": "workflow_menu.go",
+  "find": "if !w.isEnabled() {\n\t\treturn \"\"\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "menu-oldest-first",
+  "file": "workflow_menu.go",
+  "find": "return sorted[i].StartTime > sorted[j].StartTime",
+  "replace": "return sorted[i].StartTime < sorted[j].StartTime"
+ },
+ {
+  "name": "menu-single-run-picker",
+  "file": "workflow_menu.go",
+  "find": "case 1:\n\t\treturn workflowsMenuPlan{Open: sorted[0]}",
+  "replace": "case 1:\n\t\treturn workflowsMenuPlan{Tasks: sorted, Labels: []string{\"x\"}}"
+ },
+ {
+  "name": "menu-stop-announces-twice",
+  "file": "workflow_menu.go",
+  "find": "if task.Ctx.Err() != nil {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "menu-stop-does-not-abort",
+  "file": "workflow_menu.go",
+  "find": "\ttask.Abort()\n\ttask.mu.Lock()\n\tname := task.ID",
+  "replace": "\ttask.mu.Lock()\n\tname := task.ID"
+ },
+ {
+  "name": "menu-pause-notice",
+  "file": "workflow_menu.go",
+  "find": "notify(\"Paused — running agents finish, no new ones start.\", \"info\")",
+  "replace": "notify(\"Paused.\", \"info\")"
+ },
+ {
+  "name": "menu-skip-notice-always",
+  "file": "workflow_menu.go",
+  "find": "if c := workflowControlOf(task); c == nil || !c.Skip(index) {",
+  "replace": "if c := workflowControlOf(task); true {\n\t\t_ = c"
  }
 ]

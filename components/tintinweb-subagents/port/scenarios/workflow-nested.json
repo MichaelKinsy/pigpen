@@ -1,0 +1,47 @@
+{
+  "name": "workflow-nested",
+  "description": "workflow() runs a saved workflow inline and passes args.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "SubagentWorkflow",
+          "arguments": {
+            "script": "export const meta = { name: \"outer\", description: \"calls inner\" };\nreturn await workflow(\"inner\", { n: 21 });"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/workflows/inner.js": "export const meta = { name: \"inner\", description: \"doubles\" };\nreturn args.n * 2;"
+  },
+  "tailMs": 2500
+}

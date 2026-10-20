@@ -786,7 +786,7 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 	}
 
 	// Compiled before anything is scheduled: a schema the runtime cannot use is a script bug, so it is fatal.
-	var workflowCompiledSchema *workflowCompiledSchema
+	var compiledSchema *workflowCompiledSchema
 	if payload.schemaJSON != nil {
 		var raw any
 		if err := json.Unmarshal([]byte(*payload.schemaJSON), &raw); err != nil {
@@ -798,8 +798,8 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 			rt.respond(callID, false, nil, compilation.Message, true)
 			return
 		}
-		workflowCompiledSchema = compilation.Compiled
-		workflowCompiledSchema.Raw = *payload.schemaJSON
+		compiledSchema = compilation.Compiled
+		compiledSchema.Raw = *payload.schemaJSON
 	}
 
 	if rt.agentCount >= rt.agentCap {
@@ -860,12 +860,12 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 	replayed := rt.replayAt(index, key)
 	// A replayed answer still has to satisfy the schema: the key covers a schema that changed, not a hand-edited
 	// journal, nor the empty text a torn entry leaves behind.
-	if replayed != nil && workflowCompiledSchema != nil {
+	if replayed != nil && compiledSchema != nil {
 		text := ""
 		if replayed.Text != nil {
 			text = *replayed.Text
 		}
-		if recheck := applyWorkflowSchema(workflowSpawnResult{OK: true, Text: text}, workflowCompiledSchema); !recheck.OK {
+		if recheck := applyWorkflowSchema(workflowSpawnResult{OK: true, Text: text}, compiledSchema); !recheck.OK {
 			rt.prefixIntact = false
 			replayed = nil
 		}
@@ -1007,7 +1007,7 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 				})
 			} else {
 				req := &workflowSpawnRequest{Ctx: rt.runCtx, AgentID: agentID, Index: index, Prompt: payload.prompt, Label: label,
-					AgentType: agentType, OnResolved: onResolved, Schema: workflowCompiledSchema, PhaseIndex: payload.phaseIndex}
+					AgentType: agentType, OnResolved: onResolved, Schema: compiledSchema, PhaseIndex: payload.phaseIndex}
 				if model != nil {
 					req.Model = *model
 				}
@@ -1041,8 +1041,8 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 				rt.completedByLabel[label] = &workflowCompletedChild{agentID: agentID, label: label, agentType: agentType, model: model, isolation: isolation}
 				// Re-checked here, not just in the child's tool: before the gate, because a gate verifies work and there
 				// is no work to verify if the shape is wrong.
-				if workflowCompiledSchema != nil && result.OK {
-					result = applyWorkflowSchema(result, workflowCompiledSchema)
+				if compiledSchema != nil && result.OK {
+					result = applyWorkflowSchema(result, compiledSchema)
 				}
 				if result.OK && payload.gate != nil && runGate != nil {
 					result = rt.applyGate(c, result, *payload.gate, agentID, runGate)
