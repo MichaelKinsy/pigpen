@@ -29,7 +29,6 @@
  "async-status-snapshot": "partial: the behavior is implemented (async_*.go) but the upstream cases of this file are not yet twinned one by one in Go; twins and any individual skips are still to be written",
  "binary-async-spawn": "partial: the behavior is implemented (async_*.go) but the upstream cases of this file are not yet twinned one by one in Go; twins and any individual skips are still to be written",
  "binary-pi-spawn": "not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead",
- "capability-ceiling-agent-allowlist": "partial: the allowedAgents parse, encode and intersect twin is ported; the list output, preflight, foreground launch and child-launch cases need preflight (not ported yet) and the in-process child launch",
  "chain-append": "not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)",
  "chain-root-attachment": "not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)",
  "chain-serializer": "partial: the 5 markdown-chain cases are twinned; the JSON chain format (.chain.json) needs the acceptance, dynamic fan-out and chain-output validators of the workflow runtime",
@@ -53,7 +52,6 @@
  "cursor-agent-adapter": "not ported: external CLI and external job runners",
  "cursor-smoke-inputs": "not ported: external CLI and external job runners",
  "default-extensions": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
- "delegation-api": "not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)",
  "doctor": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
  "dynamic-fanout": "not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)",
  "extension-bindings": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
@@ -121,7 +119,6 @@
  "pi-spawn-host-root": "not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead",
  "pi-subagents-policy-guidance": "not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)",
  "pi-web-session-liveness": "not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead",
- "preflight": "not ported: the public launch contract preflight (resolveSubagentLaunchContract) needs the child tool plan, the Intercom bridge, the launch digests and extension bindings",
  "proactive-skills": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
  "process-terminal": "not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead",
  "profiles": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
@@ -175,7 +172,6 @@
  "tool-description": "not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)",
  "ts-loader": "not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)",
  "types-fork-preamble": "not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead",
- "usage-reconciliation-owners": "not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)",
  "wait-subscriptions": "not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)",
  "watch-strategy": "not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)",
  "watchdog-change-signature": "not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel",
@@ -211,6 +207,5 @@
  "workflow-terminal-proof": "not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)",
  "workflow-worktree-admission": "not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)",
  "worktree": "not ported: worktree isolation, lanes and handoffs",
- "worktree-cleanup-plan": "not ported: worktree isolation, lanes and handoffs",
- "writer-budget-guidance": "not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel"
+ "worktree-cleanup-plan": "not ported: worktree isolation, lanes and handoffs"
 }

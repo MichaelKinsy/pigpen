@@ -666,12 +666,6 @@
   "replace": "if msg := refuseUnsupported(params, action); msg != \"\" && false {"
  },
  {
-  "name": "ext-bgwait",
-  "file": "extension.go",
-  "find": "refuseTool(\"waiting for background work (`bg_wait`)\")",
-  "replace": "refuseTool(\"waiting\")"
- },
- {
   "name": "ext-supervisor",
   "file": "extension.go",
   "find": "refuseTool(\"the supervisor channel (`subagent_supervisor`)\")",
@@ -688,18 +682,6 @@
   "file": "refuse.go",
   "find": "portPackageName  = \"@pi-in-go/pigpen-subagents\"",
   "replace": "portPackageName  = \"pigpen-subagents\""
- },
- {
-  "name": "ref-async-true",
-  "file": "refuse.go",
-  "find": "v != nil && v != false",
-  "replace": "v != nil && v != true"
- },
- {
-  "name": "ref-async-text",
-  "file": "refuse.go",
-  "find": "\"async (background) runs (`async: \"",
-  "replace": "\"async runs (`async: \""
  },
  {
   "name": "ref-workflow-list",
@@ -788,8 +770,8 @@
  {
   "name": "ext-run-model",
   "file": "extension.go",
-  "find": "out, err := runAgent(done, cwd, a, task, model)",
-  "replace": "out, err := runAgent(done, cwd, a, task, \"\")\n\t_ = model"
+  "find": "out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})",
+  "replace": "out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, \"\", runOptions{TimeoutMs: pol.TimeoutMs})\n\t_ = model"
  },
  {
   "name": "ext-chain-task",
@@ -898,5 +880,359 @@
   "file": "policy_jsonparse.go",
   "find": "\tif specific != \"\" {\n\t\tp.withPos(specific, pos)\n\t\treturn\n\t}\n\tif pos >= len(p.src) {",
   "replace": "\tif pos >= len(p.src) {"
+ },
+ {
+  "name": "ld-task-digest",
+  "file": "policy_launch.go",
+  "find": "m[\"taskDigest\"] = stableJSONDigest(*in.Task)",
+  "replace": "_ = in.Task"
+ },
+ {
+  "name": "ld-file-digest",
+  "file": "policy_launch.go",
+  "find": "if d, ok := fileDigest(a.FilePath); ok {",
+  "replace": "if d, ok := fileDigest(a.FilePath); ok && false {"
+ },
+ {
+  "name": "ld-definition-overlay",
+  "file": "policy_launch.go",
+  "find": "if a.DefinitionDigest != \"\" {\n\t\treturn a.DefinitionDigest",
+  "replace": "if false {\n\t\treturn a.DefinitionDigest"
+ },
+ {
+  "name": "ld-exclude-bound",
+  "file": "policy_launch.go",
+  "find": "if len(s.ToolPlan.ExcludeTools) > 0 {\n\t\tin.ExcludeTools",
+  "replace": "if false {\n\t\tin.ExcludeTools"
+ },
+ {
+  "name": "ld-undefined-left-out",
+  "file": "policy_launch.go",
+  "find": "if _, u := e.(undef); u {\n\t\t\t\tcontinue",
+  "replace": "if false {\n\t\t\t\tcontinue"
+ },
+ {
+  "name": "eb-namespaces",
+  "file": "policy_launch.go",
+  "find": "maxExtensionBindingNamespaces = 16",
+  "replace": "maxExtensionBindingNamespaces = 160"
+ },
+ {
+  "name": "eb-properties",
+  "file": "policy_launch.go",
+  "find": "*count > maxExtensionBindingsProps",
+  "replace": "*count > maxExtensionBindingsProps+1"
+ },
+ {
+  "name": "eb-sorted",
+  "file": "policy_launch.go",
+  "find": "sort.Strings(keys)\n\t\tout := newObject()",
+  "replace": "_ = sort.Strings\n\t\tout := newObject()"
+ },
+ {
+  "name": "re-duplicate-id",
+  "file": "policy_launch.go",
+  "find": "if ids[e.ID] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "re-duplicate-path",
+  "file": "policy_launch.go",
+  "find": "if paths[p] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "re-dispose-own",
+  "file": "policy_launch.go",
+  "find": "if requiredExtBySession[sessionID] == reg {",
+  "replace": "if true {"
+ },
+ {
+  "name": "re-canonical",
+  "file": "policy_launch.go",
+  "find": "real, err := filepath.EvalSymlinks(nodeResolve(\".\", e.Path))",
+  "replace": "real, err := nodeResolve(\".\", e.Path), error(nil)"
+ },
+ {
+  "name": "ib-marker-once",
+  "file": "policy_launch.go",
+  "find": "if strings.HasPrefix(instruction, intercomBridgeMarker) {\n\t\treturn instruction",
+  "replace": "if false {\n\t\treturn instruction"
+ },
+ {
+  "name": "ib-tool-once",
+  "file": "policy_launch.go",
+  "find": "if len(a.Tools) > 0 && !contains(a.Tools, \"contact_supervisor\") {",
+  "replace": "if len(a.Tools) > 0 {"
+ },
+ {
+  "name": "ib-fork-only",
+  "file": "policy_launch.go",
+  "find": "case mode == \"fork-only\" && context != \"fork\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "fork-explicit",
+  "file": "policy_launch.go",
+  "find": "if explicit != \"\" {\n\t\treturn explicit",
+  "replace": "if false {\n\t\treturn explicit"
+ },
+ {
+  "name": "fork-needs-leaf",
+  "file": "policy_launch.go",
+  "find": "if parentSessionFile == \"\" || leafID == \"\" {",
+  "replace": "if parentSessionFile == \"\" {"
+ },
+ {
+  "name": "step-output-true",
+  "file": "policy_launch.go",
+  "find": "case \"true\", \"\":\n\t\t\treturn nil",
+  "replace": "case \"\":\n\t\t\treturn nil"
+ },
+ {
+  "name": "tp-fast-provider",
+  "file": "policy_toolplan.go",
+  "find": "if m := stripThinkingSuffix(model); !strings.HasPrefix(m, fastModeProviderPrefix) {",
+  "replace": "if m := stripThinkingSuffix(model); false {"
+ },
+ {
+  "name": "tp-fast-needs-model",
+  "file": "policy_toolplan.go",
+  "find": "if model == \"\" {\n\t\tforAgent",
+  "replace": "if false {\n\t\tforAgent"
+ },
+ {
+  "name": "tp-read-ceiling",
+  "file": "policy_toolplan.go",
+  "find": "if in.RequireReadTool && hasAllowed && !allowed[\"read\"] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tp-exclude",
+  "file": "policy_toolplan.go",
+  "find": "if !excluded[t] {\n\t\t\teffectiveDeclared = append(effectiveDeclared, t)",
+  "replace": "if true {\n\t\t\teffectiveDeclared = append(effectiveDeclared, t)"
+ },
+ {
+  "name": "tp-structured-internal",
+  "file": "policy_toolplan.go",
+  "find": "if in.StructuredOutput && !excluded[\"structured_output\"] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tp-required-contact",
+  "file": "policy_toolplan.go",
+  "find": "if t != \"contact_supervisor\" && (!legacyPairing || t != \"intercom\") {",
+  "replace": "if true {"
+ },
+ {
+  "name": "tp-ambient",
+  "file": "policy_toolplan.go",
+  "find": "disableAmbient := denyExt || in.Extensions != nil",
+  "replace": "disableAmbient := denyExt"
+ },
+ {
+  "name": "pf-restricted-agent",
+  "file": "policy_preflight.go",
+  "find": "msg != \"\" {\n\t\treturn launchFail(\"restricted_agent\"",
+  "replace": "false {\n\t\treturn launchFail(\"restricted_agent\""
+ },
+ {
+  "name": "pf-thinking-ceiling",
+  "file": "policy_preflight.go",
+  "find": "thinkingCeiling, err = intersectThinkingCeilings(discovered.MaxThinking, in.ThinkingCeiling, in.InheritedThinkingCeiling)",
+  "replace": "thinkingCeiling, err = \"\", nil"
+ },
+ {
+  "name": "pf-session-dir",
+  "file": "policy_preflight.go",
+  "find": "case in.SessionDir != \"\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "pf-run-placeholder",
+  "file": "policy_preflight.go",
+  "find": "runID = \"preflight\"",
+  "replace": "runID = \"preflight-x\""
+ },
+ {
+  "name": "pf-bridge-target-diagnostic",
+  "file": "policy_preflight.go",
+  "find": "if bridge.Active && bridge.InterpolatesOrchestratorTarget && orchestratorTarget == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pf-empty-target",
+  "file": "policy_preflight.go",
+  "find": "if !ok || jsTrim(s) == \"\" {\n\t\t\treturn launchFail(\"invalid_intercom_bridge\"",
+  "replace": "if !ok {\n\t\t\treturn launchFail(\"invalid_intercom_bridge\""
+ },
+ {
+  "name": "pf-ambiguous-code",
+  "file": "policy_preflight.go",
+  "find": "return launchFail(\"ambiguous_agent\", resolveErr, diagnostics), nil",
+  "replace": "return launchFail(\"missing_agent\", resolveErr, diagnostics), nil"
+ },
+ {
+  "name": "pf-orchestration-skill",
+  "file": "policy_preflight.go",
+  "find": "if contains(missing, \"pi-subagents\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pf-model-snapshot-diagnostic",
+  "file": "policy_preflight.go",
+  "find": "!externalRunner && in.AvailableModels == nil &&",
+  "replace": "!externalRunner && in.AvailableModels != nil &&"
+ },
+ {
+  "name": "pf-external-schema",
+  "file": "policy_preflight.go",
+  "find": "if externalRunner && !isUndefined(behavior.OutputSchema) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pf-workspace-package",
+  "file": "policy_preflight.go",
+  "find": "if !createsPkgRe1.MatchString(text) && !createsPkgRe2.MatchString(text) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pf-fork-diagnostic",
+  "file": "policy_preflight.go",
+  "find": "if context == \"fork\" {\n\t\tdiagnostics",
+  "replace": "if false {\n\t\tdiagnostics"
+ },
+ {
+  "name": "pf-missing-skill-final",
+  "file": "policy_preflight.go",
+  "find": "if len(missing) > 0 {\n\t\treturn launchFail(\"missing_skill\", \"Missing skills: \"",
+  "replace": "if false {\n\t\treturn launchFail(\"missing_skill\", \"Missing skills: \""
+ },
+ {
+  "name": "mcp-first-two",
+  "file": "policy_mcpgrant.go",
+  "find": "server, tool := parts[0], parts[1]",
+  "replace": "server, tool := parts[0], strings.Join(parts[1:], \"/\")"
+ },
+ {
+  "name": "mcp-builtin-names",
+  "file": "policy_mcpgrant.go",
+  "find": "if mcpBuiltinToolNames[name] || seen[name] {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tseen[name] = true\n\t\t\tselections = append(selections, resolvedMcpSelection{Name: name, Selector: serverName + \"/\" + *tool.Name})",
+  "replace": "if seen[name] {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tseen[name] = true\n\t\t\tselections = append(selections, resolvedMcpSelection{Name: name, Selector: serverName + \"/\" + *tool.Name})"
+ },
+ {
+  "name": "mcp-expose-resources",
+  "file": "policy_mcpgrant.go",
+  "find": "if server.ExposeResources != nil && !*server.ExposeResources {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mcp-cache-age",
+  "file": "policy_mcpconfig.go",
+  "find": "mcpCacheMaxAgeMs = 7 * 24 * 60 * 60 * 1000",
+  "replace": "mcpCacheMaxAgeMs = 30 * 24 * 60 * 60 * 1000"
+ },
+ {
+  "name": "mcp-cache-hash",
+  "file": "policy_mcpconfig.go",
+  "find": "if e.ConfigHash == nil || *e.ConfigHash != hash {",
+  "replace": "if e.ConfigHash == nil {"
+ },
+ {
+  "name": "mcp-escaped-bang",
+  "file": "policy_mcpconfig.go",
+  "find": "if strings.HasPrefix(value, \"!!\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mcp-url-missing",
+  "file": "policy_mcpconfig.go",
+  "find": "if len(missing) > 0 {\n\t\tplural :=",
+  "replace": "if false {\n\t\tplural :="
+ },
+ {
+  "name": "rf-source",
+  "file": "policy_refinement.go",
+  "find": "case \"builtin\", \"package\", \"user\", \"project\":",
+  "replace": "case \"builtin\", \"package\", \"user\", \"project\", \"nowhere\":"
+ },
+ {
+  "name": "rf-empty-current",
+  "file": "policy_refinement.go",
+  "find": "if current = jsTrim(current); current == \"\" {",
+  "replace": "if current == \"\" {"
+ },
+ {
+  "name": "dl-pending-cancel",
+  "file": "policy_delegation.go",
+  "find": "b.rememberIdentity(b.pendingAttemptCancels, key)",
+  "replace": "_ = key"
+ },
+ {
+  "name": "dl-duplicate-node",
+  "file": "policy_delegation.go",
+  "find": "if _, active := b.activeOwnedNodes[nodeKey]; active {",
+  "replace": "if _, active := b.activeOwnedNodes[nodeKey]; active && false {"
+ },
+ {
+  "name": "dl-capacity",
+  "file": "policy_delegation.go",
+  "find": "if len(m) >= delegationIdentityCapacity {",
+  "replace": "if len(m) >= delegationIdentityCapacity*2 {"
+ },
+ {
+  "name": "dl-retransmission",
+  "file": "policy_delegation.go",
+  "find": "if b.attempts[key] != nil || b.settledAttempts[key] {",
+  "replace": "if b.attempts[key] != nil {"
+ },
+ {
+  "name": "dl-usage-change",
+  "file": "policy_delegation.go",
+  "find": "return *l.Usage == *r.Usage",
+  "replace": "return true"
+ },
+ {
+  "name": "dl-budget-status",
+  "file": "policy_delegation.go",
+  "find": "case child.ToolBudgetBlocked:",
+  "replace": "case false:"
+ },
+ {
+  "name": "dl-id-length",
+  "file": "policy_delegation.go",
+  "find": "jsLen(s) > 256",
+  "replace": "jsLen(s) > 2560"
+ },
+ {
+  "name": "dl-skill-aggregate",
+  "file": "policy_delegation.go",
+  "find": "if total > delegationMaxSkillAggregate {",
+  "replace": "if false {"
+ },
+ {
+  "name": "dl-thinking-override",
+  "file": "policy_delegation.go",
+  "find": "p[\"delegatedThinkingOverride\"] = v",
+  "replace": "_ = v"
+ },
+ {
+  "name": "cr-terminate",
+  "file": "child_role.go",
+  "find": "Details: map[string]any{}, Terminate: true}",
+  "replace": "Details: map[string]any{}, Terminate: false}"
+ },
+ {
+  "name": "cr-required-report",
+  "file": "child_role.go",
+  "find": "if rt.AcceptanceReportRequired && !hasReport {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cr-validate-first",
+  "file": "child_role.go",
+  "find": "if ok, msg := validateStructuredOutputValue(rt.Schema, value); !ok {",
+  "replace": "if ok, msg := validateStructuredOutputValue(rt.Schema, value); !ok && false {"
  }
 ]
