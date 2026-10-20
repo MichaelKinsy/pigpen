@@ -92,8 +92,8 @@ func dfdPartialMatchAnchored(s string) bool {
 // ---- selectors.js ----------------------------------------------------------------------------------------------
 
 var (
-	reHeadingTag      = jsRE(`^H[1-6]$`, "")
-	reIDDelimiter     = jsRE(`[\s_\-:.]`, "")
+	reHeadingTag  = jsRE(`^H[1-6]$`, "")
+	reIDDelimiter = jsRE(`[\s_\-:.]`, "")
 )
 
 type dfdOrdered struct {

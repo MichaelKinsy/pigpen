@@ -111,7 +111,7 @@ func mlFixMissingAttribute(message, xml string) string {
 	return xml
 }
 
-// mlStripAttribute is xml.replace(new RegExp(`(${a}=(?!("|')))|(${a}(?!("|')))`, 'gm'), ''): the attribute name is
+// mlStripAttribute is xml.replace(new RegExp(`(${a}=(?!("|')))|(${a}(?!("|')))`, 'gm'), ”): the attribute name is
 // used as a pattern, where only "." (any character but a line terminator) is special in a name.
 func mlStripAttribute(xml, attr string) string {
 	rs := []rune(xml)
@@ -377,7 +377,7 @@ func mlLinearSystemMatches(e *mlEl) bool {
 
 func mlAnnotateTables(root *mlEl) {
 	type frame struct {
-		node                *mlEl
+		node                  *mlEl
 		insideMtable, wrapped bool
 	}
 	stack := []frame{{root, false, false}}

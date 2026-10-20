@@ -461,8 +461,8 @@ func dfdConvertDataAsSpans(element *ldNode) {
 }
 
 var (
-	reTWBlock       = jsRE(`(?:^|\s)block(?:\s|$)`, "")
-	reDisplayBlock  = jsRE(`display\s*:\s*block`, "i")
+	reTWBlock      = jsRE(`(?:^|\s)block(?:\s|$)`, "")
+	reDisplayBlock = jsRE(`display\s*:\s*block`, "i")
 )
 
 func dfdConvertBlockSpans(element *ldNode) {
@@ -508,14 +508,14 @@ func dfdUnwrapBareSpans(element *ldNode) {
 // ---- svg colours -----------------------------------------------------------------------------------------------
 
 var (
-	reLightDark  = jsRE(`light-dark\(\s*([^,]+?)\s*,\s*[^)]+?\)`, "")
-	reCSSVar     = jsRE(`var\(--([^,)]+)(?:,\s*([^)]+))?\)`, "")
-	reTWName     = regexp.MustCompile(`(?:^|-)([a-z]+)-(\d{2,3})$`)
-	reCSSVarAll  = jsRE(`var\(--[^,)]+(?:,\s*[^)]+)?\)`, "")
-	reTWColor    = regexp.MustCompile(`^(fill|stroke)-([a-z]+)-(\d{2,3})(?:/(\d+))?$`)
-	reTWSpecial  = regexp.MustCompile(`^(fill|stroke)-(black|white|transparent|current)$`)
+	reLightDark   = jsRE(`light-dark\(\s*([^,]+?)\s*,\s*[^)]+?\)`, "")
+	reCSSVar      = jsRE(`var\(--([^,)]+)(?:,\s*([^)]+))?\)`, "")
+	reTWName      = regexp.MustCompile(`(?:^|-)([a-z]+)-(\d{2,3})$`)
+	reCSSVarAll   = jsRE(`var\(--[^,)]+(?:,\s*[^)]+)?\)`, "")
+	reTWColor     = regexp.MustCompile(`^(fill|stroke)-([a-z]+)-(\d{2,3})(?:/(\d+))?$`)
+	reTWSpecial   = regexp.MustCompile(`^(fill|stroke)-(black|white|transparent|current)$`)
 	reTWArbitrary = jsRE(`^text-\[(.+)\]$`, "")
-	reClosedPath = jsRE(`Z\s*$`, "i")
+	reClosedPath  = jsRE(`Z\s*$`, "i")
 )
 
 var dfdSvgColorAttrs = []string{"fill", "stroke", "color", "stop-color", "flood-color", "lighting-color"}

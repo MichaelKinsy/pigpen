@@ -11,15 +11,15 @@ import (
 type tmRow struct{ cells []any }
 
 type tmArrayParams struct {
-	cols          []any
-	envClasses    []string
-	autoTag       any // bool or nil (undefined)
-	singleRow     bool
+	cols           []any
+	envClasses     []string
+	autoTag        any // bool or nil (undefined)
+	singleRow      bool
 	emptySingleRow bool
-	maxNumCols    int
-	leqno         bool
-	arraystretch  any
-	arraycolsep   any
+	maxNumCols     int
+	leqno          bool
+	arraystretch   any
+	arraycolsep    any
 }
 
 func tmGetHLines(parser *tmParser) []bool {

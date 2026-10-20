@@ -12,18 +12,18 @@ import (
 // errors carry the library's messages: Defuddle's own twin observes "Unknown pseudo-class :a".
 
 const (
-	stDescendant      = "descendant"
-	stChild           = "child"
-	stParent          = "parent"
-	stSibling         = "sibling"
-	stAdjacent        = "adjacent"
-	stColumn          = "column-combinator"
-	stTag             = "tag"
-	stUniversal       = "universal"
-	stAttribute       = "attribute"
-	stPseudo          = "pseudo"
-	stPseudoElement   = "pseudo-element"
-	stFlexDescendant  = "_flexibleDescendant"
+	stDescendant     = "descendant"
+	stChild          = "child"
+	stParent         = "parent"
+	stSibling        = "sibling"
+	stAdjacent       = "adjacent"
+	stColumn         = "column-combinator"
+	stTag            = "tag"
+	stUniversal      = "universal"
+	stAttribute      = "attribute"
+	stPseudo         = "pseudo"
+	stPseudoElement  = "pseudo-element"
+	stFlexDescendant = "_flexibleDescendant"
 )
 
 const (
