@@ -19,7 +19,7 @@ import (
 
 // The differential of BashProgram: testdata/bashprogram-oracle.jsonl.gz is what the original's BashProgram.parse answered (command
 // units, external accesses, path-rule candidates) for every input of the bash analysis differential plus the path-bearing commands
-// of port/bashprogram-diff/gen-paths.mjs, under six path configurations, recorded by port/bashprogram-diff/run.sh. Each record is
+// of port/bashprogram-diff/gen-paths.mjs, under seven path configurations, recorded by port/bashprogram-diff/run.sh. Each record is
 // compared with this package's answer for the same input. The filesystem is the fixture of buildBashProgramFixture (the probe builds
 // the same tree); outside it the fs answers as a host with no symlinks and no files, so the recording is host independent.
 
@@ -187,6 +187,7 @@ func TestBashProgramDifferential(t *testing.T) {
 		{"rootwd", true, NewPathNormalizer(PosixPathFlavor, root), ptr(root + "/nested")},
 		{"fakewd", false, NewPathNormalizer(PosixPathFlavor, fakeCwd), ptr("/etc")},
 		{"winwd", false, NewPathNormalizer(Win32PathFlavor, winCwd), ptr("/c/work")},
+		{"emptywd", false, NewPathNormalizer(PosixPathFlavor, fakeCwd), ptr("")},
 	}
 	place := strings.NewReplacer("@R@", root, "@O@", out)
 	unplace := strings.NewReplacer(root, "@R@", out, "@O@", base, "@B@")

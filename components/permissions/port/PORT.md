@@ -434,8 +434,8 @@ How it is checked:
   differential (42,038: the strings of the original's tests, `port/probe/cases.json`, generated wrapper, command, redirect, sed,
   awk and option shapes, error-recovery variants) plus 41,092 path-bearing commands of `gen-paths.mjs` (redirects of every
   operator, cd chains of every fold shape, wrappers, heredocs and their tails, env assignments, globs, `HOME` and `PWD`
-  spellings, drive paths, symlinks). Each is parsed under six configurations (the fixture root as cwd, a fake POSIX cwd, a win32
-  cwd, and the same three with a `workdir`), and the units, the external accesses (value, boundary, effect, source) and the rule
+  spellings, drive paths, symlinks). Each is parsed under seven configurations (the fixture root as cwd, a fake POSIX cwd, a win32
+  cwd, the same three with a `workdir`, and the fake cwd with an empty `workdir`), and the units, the external accesses (value, boundary, effect, source) and the rule
   candidates (token, value, boundary, match values, effect, source) are written to
   `testdata/bashprogram-oracle.jsonl.gz`. `bashprogram_oracle_test.go` replays it; any difference fails the test.
 - The probe's filesystem is a fixture (files, directories, symlinks to an outside directory, a dangling link, a link whose name

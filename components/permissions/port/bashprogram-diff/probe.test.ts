@@ -1,5 +1,5 @@
 // Records what the original's BashProgram answers (command units, external accesses, path-rule candidates) for a list of bash
-// commands under six path configurations, for the Go differential
+// commands under seven path configurations, for the Go differential
 // (components/permissions/extensions/pi-permission-system/bashprogram_oracle_test.go). Copied into an installed copy of the
 // original for the run by run.sh and removed after; it never lives in port/oracle.
 //
@@ -81,6 +81,8 @@ function scenarios(root: string) {
     { name: "rootwd", placed: true, normalizer: new PathNormalizer(posixPathFlavor, root), workdir: `${root}/nested` },
     { name: "fakewd", placed: false, normalizer: new PathNormalizer(posixPathFlavor, FAKE_CWD), workdir: "/etc" },
     { name: "winwd", placed: false, normalizer: new PathNormalizer(win32PathFlavor, WIN_CWD), workdir: "/c/work" },
+    // An empty workdir is a defined one (`options?.workdir === undefined` is false for "").
+    { name: "emptywd", placed: false, normalizer: new PathNormalizer(posixPathFlavor, FAKE_CWD), workdir: "" },
   ];
 }
 
