@@ -111,7 +111,12 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
 	e.OnEvent(sdk.EventBeforeAgentStart, w.onBeforeAgentStart)
 	e.OnEvent(sdk.EventAgentStart, w.agentStartWithRules)
-	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) { w.contextTurnEnd(); w.guard.TurnEnd(); w.rulesTurnEnd(); return nil, nil })
+	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) {
+		w.contextTurnEnd()
+		w.guard.TurnEnd()
+		w.rulesTurnEnd()
+		return nil, nil
+	})
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventSessionBeforeCompact, w.onSessionBeforeCompact) // CONTEXT-LANE HOOK (context_compaction.go)
