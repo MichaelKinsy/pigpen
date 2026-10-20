@@ -289,4 +289,4 @@ func TestBashProgramDifferential(t *testing.T) {
 }
 
 // bashProgramMinInputs is the size of the recording; a shorter file is a truncated one.
-const bashProgramMinInputs = 80000
+const bashProgramMinInputs = 83000
