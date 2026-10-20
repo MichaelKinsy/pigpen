@@ -140,3 +140,5 @@ func diffValues(t *testing.T, path string, got, want reflect.Value) {
 		t.Errorf("%s: %#v vs %#v", path, got.Interface(), want.Interface())
 	}
 }
+
+func strconvItoa(n int) string { return fmt.Sprint(n) }
