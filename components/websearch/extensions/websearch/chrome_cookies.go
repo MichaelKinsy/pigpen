@@ -147,9 +147,9 @@ type browserPassword struct {
 }
 
 var (
-	cookieStateMu       sync.Mutex
-	lastCookieDetails   *BrowserCookieDiagnosticDetails
-	passwordCacheMu     sync.Mutex
+	cookieStateMu        sync.Mutex
+	lastCookieDetails    *BrowserCookieDiagnosticDetails
+	passwordCacheMu      sync.Mutex
 	browserPasswordCache = map[string][]browserPassword{}
 )
 

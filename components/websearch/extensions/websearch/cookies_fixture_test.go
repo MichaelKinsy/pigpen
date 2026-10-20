@@ -152,7 +152,12 @@ func hostHash(hostKey string) []byte {
 // encryptLinuxCookie is encryptLinuxCookie of the upstream test: v11, AES-128-CBC with the
 // pbkdf2 key of the password, optionally preceded by the host hash Chromium 24+ adds.
 func encryptLinuxCookie(value, password, version, hostKey string) string {
-	key, _ := pbkdf2.Key(sha1.New, password, []byte("saltysalt"), 1, 16)
+	return encryptChromeCookie(value, password, version, hostKey, 1)
+}
+
+// encryptChromeCookie is the same with the iteration count of the platform (1003 on macOS).
+func encryptChromeCookie(value, password, version, hostKey string, iterations int) string {
+	key, _ := pbkdf2.Key(sha1.New, password, []byte("saltysalt"), iterations, 16)
 	plaintext := append(hostHash(hostKey), []byte(value)...)
 	pad := 16 - len(plaintext)%16
 	plaintext = append(plaintext, bytes.Repeat([]byte{byte(pad)}, pad)...)

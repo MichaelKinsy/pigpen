@@ -475,3 +475,15 @@ func powershellDPAPI(s *shims, protectedB64 string, key []byte) {
 		return ExecResult{Stdout: base64.StdEncoding.EncodeToString(key)}
 	})
 }
+
+// Not an upstream case: the macOS key derivation (1003 iterations) with encrypted values.
+func TestChromeCookieMacOSKeychainDecryption(t *testing.T) {
+	home, s := cookieFixtureEnv(t, "darwin")
+	host := ".google.com"
+	createCookieFixture(t, home, "Default", [][]any{
+		{"__Secure-1PSID", "", host, "hex:" + encryptChromeCookie("one", "synthetic-keychain-password", "v10", host, 1003), 1},
+		{"__Secure-1PSIDTS", "", host, "hex:" + encryptChromeCookie("two", "synthetic-keychain-password", "v10", host, 1003), 2},
+	}, fixtureOptions{browser: "Chrome", goos: "darwin"})
+	s.password("security", "synthetic-keychain-password")
+	wantCookies(t, getGoogle(t, GoogleCookieOptions{RequiredCookies: googleRequired}), map[string]string{"__Secure-1PSIDTS": "two", "__Secure-1PSID": "one"})
+}

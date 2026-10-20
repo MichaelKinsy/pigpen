@@ -156,12 +156,6 @@
   "replace": "\".\""
  },
  {
-  "name": "refusal-fetch-auth-dropped",
-  "file": "tool_fetch.go",
-  "find": "return ToolOutput{}, unsupported(\"authenticated fetch (auth profiles read local browser cookies)\")",
-  "replace": "_ = 0"
- },
- {
   "name": "refusal-workflow-dropped",
   "file": "tool_search.go",
   "find": "if workflow != \"none\" {",
@@ -375,7 +369,7 @@
   "name": "fast-json-accepts-repeated-keys",
   "file": "fastjson.go",
   "find": "if len(m) == n {",
-  "replace": "if len(m) == n \u0026\u0026 false {"
+  "replace": "if len(m) == n && false {"
  },
  {
   "name": "fast-json-accepts-trailing-data",
@@ -387,7 +381,7 @@
   "name": "fast-json-accepts-invalid-utf8",
   "file": "fastjson.go",
   "find": "if r == utf8.RuneError && size == 1 {",
-  "replace": "if r == utf8.RuneError \u0026\u0026 size == 1 \u0026\u0026 false {"
+  "replace": "if r == utf8.RuneError && size == 1 && false {"
  },
  {
   "name": "fast-json-accepts-numbers-out-of-range",
@@ -1384,7 +1378,6 @@
   "file": "page_query.go",
   "find": "asciiRun(s[i:], n-units)",
   "replace": "asciiRun(s[i:], len(s))"
-
  },
  {
   "name": "pdf-chain-datalab-gate",
@@ -1685,7 +1678,7 @@
   "file": "extract.go",
   "find": "if o.Mode == \"answer\" {\n\t\t\tcontent = result.Content",
   "replace": "if false {\n\t\t\tcontent = result.Content"
-},
+ },
  {
   "name": "github-size-note-wording",
   "file": "github_extract.go",
@@ -2009,5 +2002,203 @@
   "file": "nodedecode.go",
   "find": "neg = s[0] == '-'",
   "replace": "neg = false"
+ },
+ {
+  "name": "cookies-opt-in-message",
+  "file": "chrome_cookies.go",
+  "find": "Browser cookie access is disabled; enable",
+  "replace": "Browser cookie access is enabled; enable"
+ },
+ {
+  "name": "cookies-keychain-args",
+  "file": "chrome_cookies.go",
+  "find": "\"-w\", \"-a\", account, \"-s\", service",
+  "replace": "\"-a\", account, \"-w\", \"-s\", service"
+ },
+ {
+  "name": "cookies-darwin-iterations",
+  "file": "chrome_cookies.go",
+  "find": "iterations = 1003",
+  "replace": "iterations = 1002"
+ },
+ {
+  "name": "cookies-profile-outside-root",
+  "file": "chrome_cookies.go",
+  "find": "profileReal != baseReal && !strings",
+  "replace": "false && !strings"
+ },
+ {
+  "name": "cookies-profile-name-slash",
+  "file": "chrome_cookies.go",
+  "find": "strings.ContainsAny(v, `/\\`)",
+  "replace": "strings.ContainsAny(v, `\\`)"
+ },
+ {
+  "name": "cookies-failed-password-cached",
+  "file": "chrome_cookies.go",
+  "find": "cacheable = pw.value != \"\"",
+  "replace": "cacheable = true"
+ },
+ {
+  "name": "cookies-preflight-present",
+  "file": "chrome_cookies.go",
+  "find": "if !present {",
+  "replace": "if present {"
+ },
+ {
+  "name": "cookies-windows-v20",
+  "file": "chrome_cookies.go",
+  "find": "[]byte(\"v20\")",
+  "replace": "[]byte(\"v21\")"
+ },
+ {
+  "name": "cookies-decrypt-diagnostic",
+  "file": "chrome_cookies.go",
+  "find": "cookies could not be decrypted.",
+  "replace": "cookies could not be read."
+ },
+ {
+  "name": "cookies-expiry-now",
+  "file": "chrome_cookies.go",
+  "find": "cookieNow().UnixMilli()+chromeEpochMillis",
+  "replace": "cookieNow().UnixMilli()+chromeEpochMillis+1000"
+ },
+ {
+  "name": "cookies-partition-filter",
+  "file": "chrome_cookies.go",
+  "find": "(top_frame_site_key IS NULL OR top_frame_site_key = '')",
+  "replace": "(top_frame_site_key IS NOT NULL)"
+ },
+ {
+  "name": "cookies-header-order",
+  "file": "chrome_cookies.go",
+  "find": "len(entries[i].path) > len(entries[j].path)",
+  "replace": "len(entries[i].path) < len(entries[j].path)"
+ },
+ {
+  "name": "cookies-kwallet-kde-only",
+  "file": "chrome_cookies.go",
+  "find": "if !isKdeSession() ||",
+  "replace": "if isKdeSession() ||"
+ },
+ {
+  "name": "cookies-sqlite-args",
+  "file": "chrome_cookies.go",
+  "find": "[]string{\"-readonly\", \"-json\", db, sql}",
+  "replace": "[]string{\"-json\", db, sql}"
+ },
+ {
+  "name": "cookies-sqlite-unavailable",
+  "file": "chrome_cookies.go",
+  "find": "lookErr != nil",
+  "replace": "lookErr == nil"
+ },
+ {
+  "name": "cookies-linux-fallback-cached",
+  "file": "chrome_cookies.go",
+  "find": "warning: kwallet.warning}, false",
+  "replace": "warning: kwallet.warning}, true"
+ },
+ {
+  "name": "auth-scheme",
+  "file": "auth_fetch.go",
+  "find": "u.Scheme != \"https\"",
+  "replace": "u.Scheme != \"http\""
+ },
+ {
+  "name": "auth-redirect-origin",
+  "file": "auth_fetch.go",
+  "find": "originOf(to) != originOf(from)",
+  "replace": "originOf(to) == originOf(from)"
+ },
+ {
+  "name": "auth-single-profile",
+  "file": "auth_fetch.go",
+  "find": "len(profiles) != 1",
+  "replace": "len(profiles) < 1"
+ },
+ {
+  "name": "auth-host-suffix",
+  "file": "auth_fetch.go",
+  "find": "strings.HasSuffix(hostname, \".\"+allowed)",
+  "replace": "strings.HasSuffix(hostname, allowed)"
+ },
+ {
+  "name": "auth-cache-off",
+  "file": "tool_fetch.go",
+  "find": "authProfile.Cache != \"off\"",
+  "replace": "authProfile.Cache == \"off\""
+ },
+ {
+  "name": "auth-direct-only",
+  "file": "extract.go",
+  "find": "o.AuthProfile != nil || o.Mode == \"raw\"",
+  "replace": "o.Mode == \"raw\""
+ },
+ {
+  "name": "gemini-web-generate-redirect",
+  "file": "gemini_web.go",
+  "find": "Body: []byte(body), Redirect: \"error\"",
+  "replace": "Body: []byte(body), Redirect: \"manual\""
+ },
+ {
+  "name": "gemini-web-upload-redirect",
+  "file": "gemini_web.go",
+  "find": "Body: body.Bytes(), Redirect: \"error\"",
+  "replace": "Body: body.Bytes(), Redirect: \"manual\""
+ },
+ {
+  "name": "gemini-web-cross-origin",
+  "file": "gemini_web.go",
+  "find": "originOf(next) != allowedOrigin",
+  "replace": "originOf(next) == allowedOrigin"
+ },
+ {
+  "name": "gemini-web-header-budget",
+  "file": "gemini_web.go",
+  "find": "GeminiMaxHeaderSize = 4 * 1024 * 1024",
+  "replace": "GeminiMaxHeaderSize = 4 * 1024"
+ },
+ {
+  "name": "gemini-web-http2",
+  "file": "gemini_web.go",
+  "find": "ForceAttemptHTTP2:      false,",
+  "replace": "ForceAttemptHTTP2:      true,"
+ },
+ {
+  "name": "gemini-web-model",
+  "file": "gemini_web.go",
+  "find": "; !ok {\n\t\treturn \"\", fmt.Errorf(\"Gemini Web does not support",
+  "replace": "; ok {\n\t\treturn \"\", fmt.Errorf(\"Gemini Web does not support"
+ },
+ {
+  "name": "gemini-web-proxy-env",
+  "file": "gemini_web.go",
+  "find": "err := ParseURL(v, nil); err != nil",
+  "replace": "err := ParseURL(v, nil); err == nil"
+ },
+ {
+  "name": "gemini-web-config-profile-path",
+  "file": "gemini_web_config.go",
+  "find": "raw[\"profilePath\"]",
+  "replace": "raw[\"profilePat\"]"
+ },
+ {
+  "name": "gemini-web-config-allow",
+  "file": "gemini_web_config.go",
+  "find": "raw[\"allowBrowserCookies\"] == true",
+  "replace": "raw[\"allowBrowserCookies\"] != true"
+ },
+ {
+  "name": "gemini-web-config-feynman",
+  "file": "gemini_web_config.go",
+  "find": "os.Getenv(\"FEYNMAN_ALLOW_BROWSER_COOKIES\") == \"1\"",
+  "replace": "os.Getenv(\"FEYNMAN_ALLOW_BROWSER_COOKIES\") == \"2\""
+ },
+ {
+  "name": "gemini-web-config-legacy",
+  "file": "gemini_web_config.go",
+  "find": "raw[\"chromeProfile\"]; has {",
+  "replace": "raw[\"chromeProfile\"]; !has {"
  }
 ]
