@@ -53,3 +53,12 @@ func FormatSkillDenyNotice(skillName string, agentName *string) string {
 	}
 	return "Skill '" + skillName + "' is not permitted by the current skill policy."
 }
+
+// ResolverSkillInputInputs adapts the resolver's raw check (no session rules) to SkillInputGateInputs: the original's resolver
+// satisfies the interface structurally with an optional fourth argument, which Go spells out here.
+type ResolverSkillInputInputs struct{ Resolver *PermissionResolver }
+
+// CheckPermission is the resolver's raw check with no session rules.
+func (r ResolverSkillInputInputs) CheckPermission(surface string, input any, agentName *string) PermissionCheckResult {
+	return r.Resolver.CheckPermission(surface, input, agentName, nil)
+}

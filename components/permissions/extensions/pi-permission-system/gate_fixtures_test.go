@@ -383,3 +383,5 @@ func (t ToolCallContext) with(mut ...func(*ToolCallContext)) ToolCallContext {
 	}
 	return t
 }
+
+func goos() string { return runtime.GOOS }
