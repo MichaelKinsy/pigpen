@@ -369,7 +369,7 @@ func TestForwardingOracleServer(t *testing.T) {
 						p.Reason = &v
 					}
 					if v, ok := po.str("origin"); ok {
-						p.Origin = &v
+						p.Origin = v
 					}
 				}
 				return p

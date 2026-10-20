@@ -49,10 +49,14 @@ func (r *trustRig) project(config string) {
 	os.WriteFile(p, []byte(config), 0o644)
 }
 
+// notes are the config system's notifications. The refusal notices (refusal.go: the policy still reads the global scope only) are
+// a different layer and are checked by refusal_test.go and scope_test.go.
 func (r *trustRig) notes() []string {
 	var out []string
 	for _, c := range r.h.CallsTo("ui.notify") {
-		out = append(out, c.Args["message"].(string))
+		if m := c.Args["message"].(string); !strings.Contains(m, "(Go port) does not support") {
+			out = append(out, m)
+		}
 	}
 	return out
 }

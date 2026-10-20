@@ -140,7 +140,7 @@ func TestPathLayerEdges(t *testing.T) {
 		eqv(t, r.Values[0], "a")
 	})
 	t.Run("an extractor's path is trimmed", func(t *testing.T) {
-		ex := fakeLookup{"t", func(*jsObject) (string, bool) { return "  /x  ", true }, RegistrationLocal}
+		ex := fakeLookup{"t", NewToolAccessExtractor(func(*jsObject) (string, bool) { return "  /x  ", true }), RegistrationLocal}
 		got := GetToolInputPath("t", newObject(), ex)
 		eqv(t, got.Path, "/x")
 	})

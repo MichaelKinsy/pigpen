@@ -361,38 +361,11 @@ type AuthorizeFunc func(details *PromptPermissionDetails, query PermissionQuery,
 
 // ── types.ts ───────────────────────────────────────────────────────────────
 
-// PermissionCheckResult is the part of types.ts PermissionCheckResult the serving node reads. State is "allow", "deny" or "ask";
-// a nil Reason, MatchedPattern or Origin is undefined.
-type PermissionCheckResult struct {
-	ToolName       string
-	State          string
-	Reason         *string
-	MatchedPattern *string
-	Origin         *string
-}
-
 // ── tool-input registries and service.ts ───────────────────────────────────
-
-// ToolAccessExtractor is a tool's path extractor (tool-access-extractor-registry.ts). An implementation is a pointer, so two
-// registrations compare by identity as the original's functions do.
-type ToolAccessExtractor interface {
-	Extract(input *jsObject) (string, bool)
-}
 
 // ToolInputFormatter is a tool's preview formatter (tool-input-formatter-registry.ts), compared by identity like an extractor.
 type ToolInputFormatter interface {
 	Format(input *jsObject) (string, bool)
-}
-
-// ResolvedToolAccessExtractor is an extractor with its registration origin ("local" or "inherited").
-type ResolvedToolAccessExtractor struct {
-	Extractor ToolAccessExtractor
-	Origin    string
-}
-
-// ToolAccessExtractorLookup is the read side of the extractor registry.
-type ToolAccessExtractorLookup interface {
-	Resolve(toolName string) *ResolvedToolAccessExtractor
 }
 
 // ToolInputFormatterLookup is the read side of the formatter registry.
@@ -424,7 +397,7 @@ func (r *ToolAccessExtractorRegistry) Register(toolName string, e ToolAccessExtr
 // Resolve answers a local registration.
 func (r *ToolAccessExtractorRegistry) Resolve(toolName string) *ResolvedToolAccessExtractor {
 	if e, ok := r.extractors[toolName]; ok && e != nil {
-		return &ResolvedToolAccessExtractor{Extractor: e, Origin: "local"}
+		return &ResolvedToolAccessExtractor{Extractor: e, Origin: RegistrationLocal}
 	}
 	return nil
 }

@@ -210,20 +210,20 @@ func TestToolInputPathTwins(t *testing.T) {
 		eqv(t, r(t, "my-ext", `null`, nil).HasPath, false)
 	})
 	tw(t, f, "uses a registered extractor's path over the default convention", func(t *testing.T) {
-		ex := fakeLookup{"ffgrep", byTarget, RegistrationLocal}
+		ex := fakeLookup{"ffgrep", NewToolAccessExtractor(byTarget), RegistrationLocal}
 		want(t, r(t, "ffgrep", `{"target":"/etc/passwd"}`, ex), "/etc/passwd", true, ToolPathLocalExtractor)
 	})
 	tw(t, f, "returns null when a registered extractor declines", func(t *testing.T) {
-		ex := fakeLookup{"ffgrep", func(*jsObject) (string, bool) { return "", false }, RegistrationLocal}
+		ex := fakeLookup{"ffgrep", NewToolAccessExtractor(func(*jsObject) (string, bool) { return "", false }), RegistrationLocal}
 		eqv(t, r(t, "ffgrep", `{"target":"x"}`, ex).HasPath, false)
 	})
 	t.Run("path source", func(t *testing.T) {
 		tw(t, f, "names an inherited extractor as the source of its path", func(t *testing.T) {
-			ex := fakeLookup{"ffgrep", byTarget, RegistrationInherited}
+			ex := fakeLookup{"ffgrep", NewToolAccessExtractor(byTarget), RegistrationInherited}
 			want(t, r(t, "ffgrep", `{"target":"/etc/passwd"}`, ex), "/etc/passwd", true, ToolPathInheritedExtractor)
 		})
 		tw(t, f, "falls back to the convention when no extractor answers", func(t *testing.T) {
-			ex := fakeLookup{"other-tool", func(*jsObject) (string, bool) { return "/unused", true }, RegistrationLocal}
+			ex := fakeLookup{"other-tool", NewToolAccessExtractor(func(*jsObject) (string, bool) { return "/unused", true }), RegistrationLocal}
 			want(t, r(t, "ffgrep", `{"path":"/work/file.txt"}`, ex), "/work/file.txt", true, ToolPathConvention)
 		})
 	})

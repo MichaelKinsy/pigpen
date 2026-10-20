@@ -14,13 +14,6 @@ import (
 // Port of src/authority/forwarding-io.ts: the filesystem half of permission forwarding (directories, atomic JSON writes, tolerant
 // reads of the files another process wrote, cleanup) and its log helpers.
 
-const (
-	// ownerOnlyDirectoryMode and ownerOnlyFileMode are logging/log-file-permissions.ts OWNER_ONLY_DIRECTORY_MODE and
-	// OWNER_ONLY_FILE_MODE: forwarded requests carry commands and paths.
-	ownerOnlyDirectoryMode os.FileMode = 0o700
-	ownerOnlyFileMode      os.FileMode = 0o600
-)
-
 // The filesystem calls the transient-lock retry guards. Package variables so a test can fail them the way the original's tests mock
 // node:fs; production never reassigns them.
 var (
@@ -161,7 +154,7 @@ func LogPermissionForwardingError(logger DebugReviewLogger, message string, err 
 
 // EnsureDirectoryExists creates path (and its parents) owner-only, retrying a transient lock, and reports whether it exists.
 func EnsureDirectoryExists(logger DebugReviewLogger, path, description string) bool {
-	record, err := RetryOnTransientFsError(func() error { return wrapFsError(mkdirAll(path, ownerOnlyDirectoryMode), "mkdir", path) }, nil)
+	record, err := RetryOnTransientFsError(func() error { return wrapFsError(mkdirAll(path, OwnerOnlyDirectoryMode), "mkdir", path) }, nil)
 	if err != nil {
 		LogPermissionForwardingError(logger, fmt.Sprintf("Failed to create %s directory '%s'", description, path), err)
 		return false
@@ -199,12 +192,6 @@ func GetExistingPermissionForwardingLocation(forwardingDir, sessionID string) (P
 		return PermissionForwardingLocation{}, false
 	}
 	return location, true
-}
-
-// pathExists is existsSync: false on any error.
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
 }
 
 // TryRemoveDirectoryIfEmpty removes a directory if it is empty. It reports true when the directory is absent after the call
@@ -261,7 +248,7 @@ func WriteJSONFileAtomic(logger DebugReviewLogger, filePath string, value any) e
 	tempPath := fmt.Sprintf("%s.%d.%d.%d.tmp", filePath, os.Getpid(), time.Now().UnixMilli(), tempFileSeq.Add(1))
 	// rename preserves the temp file's mode, so setting it here is enough. The temp write is deliberately outside the retry: its
 	// failure shape is a write-denied directory, which no number of attempts resolves.
-	err := wrapFsError(os.WriteFile(tempPath, []byte(marshalJSON(value, "")), ownerOnlyFileMode), "open", tempPath)
+	err := wrapFsError(os.WriteFile(tempPath, []byte(marshalJSON(value, "")), OwnerOnlyFileMode), "open", tempPath)
 	if err == nil {
 		var record TransientFsRetryRecord
 		record, err = RetryOnTransientFsError(func() error { return wrapFsError2(renameFile(tempPath, filePath), "rename", tempPath, filePath) }, nil)

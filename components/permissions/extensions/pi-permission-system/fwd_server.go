@@ -289,7 +289,7 @@ func (s *ForwardedRequestServer) resolveDecision(request *ForwardedPermissionReq
 		if check.State != "ask" {
 			// The rule is carried in full rather than left to the event name: the response file has no surface, pattern, or origin
 			// column for the requester's record to lean on.
-			decidedBy := DecisionSource{Kind: "rule", Surface: request.AccessIntent.Surface, Pattern: check.MatchedPattern, Origin: check.Origin}
+			decidedBy := DecisionSource{Kind: "rule", Surface: request.AccessIntent.Surface, Pattern: check.MatchedPattern, Origin: optionalString(check.Origin)}
 			approved := check.State == "allow"
 			event := "forwarded_permission.auto_denied"
 			if approved {
@@ -347,4 +347,12 @@ func (s *ForwardedRequestServer) warnOnMultiHop(request *ForwardedPermissionRequ
 			"subagent whose parent '%s' is not this "+
 			"serving session '%s' (multi-hop or misrouted).",
 		request.ID, request.RequesterSessionID, *info.ParentSessionID, currentSessionID), nil)
+}
+
+// optionalString maps the check result's "" (the original's undefined origin) to a nil pointer.
+func optionalString(v string) *string {
+	if v == "" {
+		return nil
+	}
+	return &v
 }

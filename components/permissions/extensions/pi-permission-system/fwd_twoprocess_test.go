@@ -24,11 +24,11 @@ type fwdParentPolicy struct{}
 func (fwdParentPolicy) Resolve(intent ForwardedAccessIntent) PermissionCheckResult {
 	switch strings.Join(intent.MatchValues, " ") {
 	case "git status":
-		return fwCheck("allow", func(r *PermissionCheckResult) { r.MatchedPattern = fwSP("git *"); r.Origin = fwSP("global") })
+		return fwCheck("allow", func(r *PermissionCheckResult) { r.MatchedPattern = fwSP("git *"); r.Origin = "global" })
 	case "rm -rf /":
 		return fwCheck("deny", func(r *PermissionCheckResult) {
 			r.MatchedPattern = fwSP("rm *")
-			r.Origin = fwSP("project")
+			r.Origin = "project"
 			r.Reason = fwSP("destructive")
 		})
 	}

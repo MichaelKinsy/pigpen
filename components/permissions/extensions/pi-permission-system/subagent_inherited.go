@@ -85,7 +85,7 @@ func (l *InheritingToolAccessExtractorLookup) Resolve(toolName string) *Resolved
 		return nil
 	})
 	if e, ok := inherited.(ToolAccessExtractor); ok {
-		return &ResolvedToolAccessExtractor{Extractor: e, Origin: "inherited"}
+		return &ResolvedToolAccessExtractor{Extractor: e, Origin: RegistrationInherited}
 	}
 	return nil
 }

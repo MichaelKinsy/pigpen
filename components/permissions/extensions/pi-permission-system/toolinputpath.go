@@ -27,8 +27,22 @@ type ToolInputPathResult struct {
 	Source  ToolPathSource
 }
 
-// ToolAccessExtractor returns the filesystem path a tool will access, ok false to decline (undefined).
-type ToolAccessExtractor func(input *jsObject) (string, bool)
+// ToolAccessExtractor returns the filesystem path a tool will access, ok false to decline (undefined). An implementation is a
+// pointer (NewToolAccessExtractor), so two registrations compare by identity as the original's functions do.
+type ToolAccessExtractor interface {
+	Extract(input *jsObject) (string, bool)
+}
+
+type funcToolAccessExtractor struct {
+	fn func(input *jsObject) (string, bool)
+}
+
+func (e *funcToolAccessExtractor) Extract(input *jsObject) (string, bool) { return e.fn(input) }
+
+// NewToolAccessExtractor wraps a function as an extractor with its own identity.
+func NewToolAccessExtractor(fn func(input *jsObject) (string, bool)) ToolAccessExtractor {
+	return &funcToolAccessExtractor{fn: fn}
+}
 
 // RegistrationOrigin is which node's registration answered a lookup: "local" or "inherited".
 type RegistrationOrigin string
@@ -72,7 +86,7 @@ func GetToolInputPath(toolName string, input any, extractors ToolAccessExtractor
 			if custom.Origin == RegistrationInherited {
 				source = ToolPathInheritedExtractor
 			}
-			p, ok := custom.Extractor(record)
+			p, ok := custom.Extractor.Extract(record)
 			if ok {
 				p, ok = GetNonEmptyString(p)
 			}

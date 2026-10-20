@@ -72,15 +72,13 @@ func normalizePermissionSystemConfig(raw UnifiedConfig) PermissionSystemExtensio
 
 func isYoloModeEnabled(c PermissionSystemExtensionConfig) bool { return c.YoloMode }
 
-const ownerOnlyDirectoryMode = 0o700
-
 // ensurePermissionSystemLogsDirectory creates the logs directory owner-only and tightens one inherited from an earlier version.
 // It returns "" on success, else the message the original reports.
 func ensurePermissionSystemLogsDirectory(logsDir string) string {
-	if err := os.MkdirAll(logsDir, ownerOnlyDirectoryMode); err != nil {
+	if err := os.MkdirAll(logsDir, OwnerOnlyDirectoryMode); err != nil {
 		return "Failed to create permission-system log directory '" + logsDir + "': " + nodeFsMessage(err, "mkdir", logsDir)
 	}
-	_ = os.Chmod(logsDir, ownerOnlyDirectoryMode) // best effort, as restrictExistingPathToOwner
+	_ = os.Chmod(logsDir, OwnerOnlyDirectoryMode) // best effort, as restrictExistingPathToOwner
 	return ""
 }
 

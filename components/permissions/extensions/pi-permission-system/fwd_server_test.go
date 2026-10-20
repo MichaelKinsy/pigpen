@@ -36,7 +36,7 @@ func fwPolicyReturning(result PermissionCheckResult) *fwPolicyFake {
 
 // fwCheck is makeCheckResult: a PermissionCheckResult with the fixture defaults (toolName read, origin builtin).
 func fwCheck(state string, edit ...func(*PermissionCheckResult)) PermissionCheckResult {
-	r := PermissionCheckResult{State: state, ToolName: "read", Origin: fwSP("builtin")}
+	r := PermissionCheckResult{State: state, ToolName: "read", Origin: "builtin"}
 	for _, e := range edit {
 		e(&r)
 	}
@@ -188,7 +188,7 @@ func TestProcessInboxRecordedAuthority(t *testing.T) {
 		env := fwNewServerEnv(t, true)
 		intent := fwBashIntent("git status")
 		env.temp.writeRequest(fwWith("req-allow", "tool_call", "bash", "git status"), fwWithIntent(intent))
-		env.policy = fwPolicyReturning(fwCheck("allow", func(r *PermissionCheckResult) { r.MatchedPattern = fwSP("git *"); r.Origin = fwSP("global") }))
+		env.policy = fwPolicyReturning(fwCheck("allow", func(r *PermissionCheckResult) { r.MatchedPattern = fwSP("git *"); r.Origin = "global" }))
 		env.process()
 		if len(env.policy.calls) != 1 || !reflect.DeepEqual(env.policy.calls[0], intent) {
 			t.Fatalf("policy calls %+v", env.policy.calls)
@@ -210,7 +210,7 @@ func TestProcessInboxRecordedAuthority(t *testing.T) {
 		env := fwNewServerEnv(t, true)
 		intent := fwBashIntent("rm -rf /")
 		env.temp.writeRequest(fwWith("req-deny", "tool_call", "bash", "rm -rf /"), fwWithIntent(intent))
-		env.policy = fwPolicyReturning(fwCheck("deny", func(r *PermissionCheckResult) { r.MatchedPattern = fwSP("rm *"); r.Origin = fwSP("project") }))
+		env.policy = fwPolicyReturning(fwCheck("deny", func(r *PermissionCheckResult) { r.MatchedPattern = fwSP("rm *"); r.Origin = "project" }))
 		env.process()
 		if len(env.policy.calls) != 1 || !reflect.DeepEqual(env.policy.calls[0], intent) || len(env.escalator.calls) != 0 {
 			t.Fatal("policy or escalator calls wrong")
@@ -233,7 +233,7 @@ func TestProcessInboxRecordedAuthority(t *testing.T) {
 		env.temp.writeRequest(fwWith("req-deny-reason", "tool_call", "bash", "git push --force"), fwWithIntent(fwBashIntent("git push --force")))
 		env.policy = fwPolicyReturning(fwCheck("deny", func(r *PermissionCheckResult) {
 			r.MatchedPattern = fwSP("git push --force*")
-			r.Origin = fwSP("project")
+			r.Origin = "project"
 			r.Reason = fwSP("force pushes are blocked")
 		}))
 		env.process()
