@@ -232,6 +232,10 @@ func (cookieGeminiWeb) Query(ctx context.Context, prompt string, cookies GeminiW
 	return QueryGeminiWebWithCookies(ctx, prompt, CookieMap(cookies), GeminiWebOptions{Timeout: timeout})
 }
 
+func (cookieGeminiWeb) QueryWithOptions(ctx context.Context, prompt string, cookies GeminiWebCookies, o GeminiWebOptions) (string, error) {
+	return QueryGeminiWebWithCookies(ctx, prompt, CookieMap(cookies), o)
+}
+
 var errGeminiTimeout = errors.New("The operation was aborted due to timeout")
 
 // geminiWebTimeoutErr reports the original's timeout error when the budget, not the caller, ended

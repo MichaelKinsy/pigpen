@@ -22,9 +22,8 @@ import (
 // HTTP path (SSRF-checked, redirect-limited, size-capped, raw and readable modes, images,
 // Cloudflare challenge detection), the hosted fetch providers (the keyless Jina Reader, and
 // Firecrawl, Crawl4AI, TinyFish, Search1API, Querit, Kagi, Ollama, Parallel, Parallel MCP and Bright
-// Data), the fetch routing configuration, the failure guidance, the PDF extractors, and the GitHub
-// extractors. Video and YouTube extraction are named gaps (docs/PORT.md): their routing entries
-// exist so configuration validates, but they are not called.
+// Data), the fetch routing configuration, the failure guidance, the PDF extractors, the GitHub
+// extractors, and the YouTube and local video extractors.
 
 const (
 	minUsefulContent  = 500
@@ -216,10 +215,8 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 			return failed(rawURL, msg)
 		}
 	}
-	if feature, err := unportedFetchFeature(rawURL, o); err != nil {
-		return failed(rawURL, err.Error())
-	} else if feature != "" {
-		return failed(rawURL, unsupported(feature).Error())
+	if r, handled := extractVideoRoute(ctx, rawURL, o); handled {
+		return r
 	}
 	if remote == nil {
 		if _, err := ParseURL(rawURL, nil); err != nil {
@@ -228,6 +225,9 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 	}
 	if res, done := extractGitHubURL(ctx, rawURL, o); done {
 		return res
+	}
+	if r, handled := extractYouTubeRoute(ctx, rawURL, o); handled {
+		return r
 	}
 	if ctx.Err() != nil {
 		return abortedResult(rawURL)

@@ -39,6 +39,11 @@ func (f *fakeGeminiWeb) Query(_ context.Context, prompt string, _ GeminiWebCooki
 	return f.answer, f.queryErr
 }
 
+func (f *fakeGeminiWeb) QueryWithOptions(_ context.Context, prompt string, _ GeminiWebCookies, _ GeminiWebOptions) (string, error) {
+	f.prompts = append(f.prompts, prompt)
+	return f.answer, f.queryErr
+}
+
 func geminiAuto(t *testing.T, config string) {
 	t.Helper()
 	_, agentDir := geminiEnv(t)

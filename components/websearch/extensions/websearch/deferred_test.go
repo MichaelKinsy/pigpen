@@ -64,13 +64,6 @@ func TestDeferred_jina_search(t *testing.T) {
 	tskip(t, F, "curator page exposes Jina Search as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Jina Search as a manual provider) ships with the feature")
 }
 
-func TestDeferred_local_video_oversize(t *testing.T) {
-	const F = "local-video-oversize"
-	tskip(t, F, "oversized local videos are still recognized for frame extraction", "local video and Gemini/YouTube frame extraction are deferred (docs/PORT.md); this case (oversized local videos are still recognized for frame extraction) ships with the feature")
-	tskip(t, F, "oversized local videos are still recognized for timestamp extraction", "local video and Gemini/YouTube frame extraction are deferred (docs/PORT.md); this case (oversized local videos are still recognized for timestamp extraction) ships with the feature")
-	tskip(t, F, "oversized local video analysis reports the upload size limit", "local video and Gemini/YouTube frame extraction are deferred (docs/PORT.md); this case (oversized local video analysis reports the upload size limit) ships with the feature")
-}
-
 func TestDeferred_new_search_providers(t *testing.T) {
 	const F = "new-search-providers"
 	tskip(t, F, "Curator page exposes Bocha as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (Curator page exposes Bocha as a manual provider) ships with the feature")
@@ -179,9 +172,4 @@ func TestDeferred_tinyfish(t *testing.T) {
 func TestDeferred_valyu_serper_provider(t *testing.T) {
 	const F = "valyu-serper-provider"
 	tskip(t, F, "Curator page exposes usable Serper and Valyu provider entries", "the search curator UI is deferred (docs/PORT.md); this case (Curator page exposes usable Serper and Valyu provider entries) ships with the feature")
-}
-
-func TestDeferred_youtube_extract_errors(t *testing.T) {
-	const F = "youtube-extract-errors"
-	tskip(t, F, "YouTube extraction surfaces Gemini API errors", "Gemini is a later slice (docs/PORT.md); this case (YouTube extraction surfaces Gemini API errors) ships with the feature")
 }
