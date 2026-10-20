@@ -1,0 +1,24 @@
+{"kind":"header","scenario":"queue-alias","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:b6ab8658d40122733f451a165f9cf01a5c290f46aacef27c418cbdc767dc02fb","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"stash"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"01-set","ch":"ui","data":{"message":"Alias @work → /tmp/queue-alias-work","method":"notify","notifyType":"info"}}
+{"step":"01-set","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-default","ch":"ui","data":{"message":"Alias @home → <cwd>","method":"notify","notifyType":"info"}}
+{"step":"02-default","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-relative","ch":"ui","data":{"message":"Alias @sub → ./sub","method":"notify","notifyType":"info"}}
+{"step":"03-relative","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"04-words","ch":"ui","data":{"message":"Alias @spaced → /tmp/a b c","method":"notify","notifyType":"info"}}
+{"step":"04-words","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"05-invalid","ch":"ui","data":{"message":"Alias must contain only letters, numbers, dashes, or underscores","method":"notify","notifyType":"error"}}
+{"step":"05-invalid","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"06-numeric","ch":"ui","data":{"message":"Alias @7 → /tmp/seven","method":"notify","notifyType":"info"}}
+{"step":"06-numeric","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"07-overwrite","ch":"ui","data":{"message":"Alias @work → /tmp/other","method":"notify","notifyType":"info"}}
+{"step":"07-overwrite","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

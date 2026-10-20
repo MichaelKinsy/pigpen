@@ -1,9 +1,15 @@
 {
  "name": "queue-post-compaction",
- "description": "A post-compaction item is delivered by the extension after a manual compaction, without another user action.",
+ "description": "A post-compaction item is delivered by the extension after a manual compaction completes, without another user action, and the host's start of the message marks it sent.",
  "llm": [
   {
-   "text": "ok"
+   "text": "one"
+  },
+  {
+   "text": "two"
+  },
+  {
+   "text": "three"
   },
   {
    "text": "Summary of the conversation."
@@ -13,14 +19,29 @@
   }
  ],
  "agentFiles": {
-  "powerline-footer/inbox.jsonl": "{\"id\":\"b2000001\",\"text\":\"say something after the compaction\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"post-compact\",\"status\":\"queued\"}\n"
+  "powerline-footer/inbox.jsonl": "{\"id\":\"b2000001\",\"text\":\"say something after the compaction\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"post-compact\",\"status\":\"queued\"}\n",
+  "settings.json": "{\"powerline\": {\"welcome\": false}, \"compaction\": {\"keepRecentTokens\": 1}}"
  },
  "steps": [
   {
-   "name": "prompt",
+   "name": "first",
    "rpc": {
     "type": "prompt",
-    "message": "hello"
+    "message": "first question"
+   }
+  },
+  {
+   "name": "second",
+   "rpc": {
+    "type": "prompt",
+    "message": "second question"
+   }
+  },
+  {
+   "name": "third",
+   "rpc": {
+    "type": "prompt",
+    "message": "third question"
    }
   },
   {

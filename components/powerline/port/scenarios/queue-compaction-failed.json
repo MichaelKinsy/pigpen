@@ -1,0 +1,34 @@
+{
+ "name": "queue-compaction-failed",
+ "description": "A compaction Pi refuses (the session is too small) ends in session_compact_failed: the queued post-compaction item is kept blocked and the user is told.",
+ "llm": [
+  {
+   "text": "ok"
+  },
+  {
+   "text": "Summary of the conversation."
+  },
+  {
+   "text": "after compaction"
+  }
+ ],
+ "agentFiles": {
+  "powerline-footer/inbox.jsonl": "{\"id\":\"b2000001\",\"text\":\"say something after the compaction\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"post-compact\",\"status\":\"queued\"}\n"
+ },
+ "steps": [
+  {
+   "name": "prompt",
+   "rpc": {
+    "type": "prompt",
+    "message": "hello"
+   }
+  },
+  {
+   "name": "compact",
+   "rpc": {
+    "type": "compact"
+   },
+   "wait": "agent_end"
+  }
+ ]
+}

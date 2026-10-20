@@ -1,0 +1,28 @@
+{"kind":"header","scenario":"queue-usage","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:b6ab8658d40122733f451a165f9cf01a5c290f46aacef27c418cbdc767dc02fb","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"stash"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-top"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-secondary"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-bash-transcript"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-status"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-pending-send"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-queue-preview"}}
+{"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"powerline-last-prompt"}}
+{"step":"01-bogus","ch":"ui","data":{"message":"Usage: /queue [send|retry|clear|target|alias]","method":"notify","notifyType":"info"}}
+{"step":"01-bogus","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-alias","ch":"ui","data":{"message":"Usage: /queue alias <name> [path]","method":"notify","notifyType":"info"}}
+{"step":"02-alias","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-clear","ch":"ui","data":{"message":"Usage: /queue clear <id|all>","method":"notify","notifyType":"info"}}
+{"step":"03-clear","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"04-target","ch":"ui","data":{"message":"Usage: /queue target <id> @alias|global|current","method":"notify","notifyType":"info"}}
+{"step":"04-target","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"05-target-id","ch":"ui","data":{"message":"Usage: /queue target <id> @alias|global|current","method":"notify","notifyType":"info"}}
+{"step":"05-target-id","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"06-send","ch":"ui","data":{"message":"No queued item to send","method":"notify","notifyType":"info"}}
+{"step":"06-send","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"07-retry","ch":"ui","data":{"message":"No queued item to send","method":"notify","notifyType":"info"}}
+{"step":"07-retry","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"08-picker","ch":"ui","data":{"message":"No queued items","method":"notify","notifyType":"info"}}
+{"step":"08-picker","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"09-clear-all","ch":"ui","data":{"message":"Cleared 0 queued items","method":"notify","notifyType":"info"}}
+{"step":"09-clear-all","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}
