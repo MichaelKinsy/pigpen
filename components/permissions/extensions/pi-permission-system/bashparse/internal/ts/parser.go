@@ -128,7 +128,7 @@ func (p *Parser) Parse(input []uint16) *Tree {
 	if p.finishedTree == nil {
 		return nil
 	}
-	balance(p.lang, p.finishedTree)
+	balance(p.lang, &p.arenas, p.finishedTree)
 	p.tree = Tree{lang: p.lang, root: p.finishedTree}
 	return &p.tree
 }

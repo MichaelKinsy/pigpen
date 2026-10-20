@@ -32,7 +32,7 @@ func countRefs(root *subtree) {
 }
 
 // balance is ts_parser__balance_subtree.
-func balance(l *Language, root *subtree) {
+func balance(l *Language, a *arenas, root *subtree) {
 	countRefs(root)
 	var stack []*subtree
 	if len(root.children) > 0 && root.refs == 1 {
@@ -48,7 +48,7 @@ func balance(l *Language, root *subtree) {
 			if repeatDelta > 0 {
 				n := uint(repeatDelta)
 				for i := n / 2; i > 0; i /= 2 {
-					compress(l, tree, i)
+					compress(l, a, tree, i)
 					n -= i
 				}
 			}
@@ -65,10 +65,14 @@ func balance(l *Language, root *subtree) {
 }
 
 // own gives s a children array no other subtree shares, so it can be rewritten in place.
-func own(s *subtree) { s.children = append([]*subtree(nil), s.children...) }
+func own(a *arenas, s *subtree) {
+	owned := a.arrays.alloc(len(s.children))
+	copy(owned, s.children)
+	s.children = owned
+}
 
 // compress is ts_subtree_compress.
-func compress(l *Language, self *subtree, count uint) {
+func compress(l *Language, a *arenas, self *subtree, count uint) {
 	var stack []*subtree
 
 	tree := self
@@ -88,9 +92,9 @@ func compress(l *Language, self *subtree, count uint) {
 			break
 		}
 
-		own(tree)
-		own(child)
-		own(grandchild)
+		own(a, tree)
+		own(a, child)
+		own(a, grandchild)
 		tree.children[0] = grandchild
 		child.children[0] = grandchild.children[len(grandchild.children)-1]
 		grandchild.children[len(grandchild.children)-1] = child

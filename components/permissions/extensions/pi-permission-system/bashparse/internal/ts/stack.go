@@ -137,7 +137,7 @@ func subtreeIsEquivalent(left, right *subtree) bool {
 }
 
 // addLink is stack_node_add_link.
-func (n *stackNode) addLink(link stackLink) {
+func (n *stackNode) addLink(a *arenas, link stackLink) {
 	if link.node == n {
 		return
 	}
@@ -160,7 +160,7 @@ func (n *stackNode) addLink(link stackLink) {
 				existing.node.position.bytes == link.node.position.bytes &&
 				existing.node.errorCost == link.node.errorCost {
 				for j := 0; j < len(link.node.links); j++ {
-					existing.node.addLink(link.node.links[j])
+					existing.node.addLink(a, link.node.links[j])
 				}
 				dp := link.node.dynamicPrecedence
 				if link.subtree != nil {
@@ -180,6 +180,12 @@ func (n *stackNode) addLink(link stackLink) {
 
 	nodeCount := link.node.nodeCount
 	dp := link.node.dynamicPrecedence
+	if len(n.links) == cap(n.links) {
+		// The first link lives in the node itself; more come from the link arena.
+		bigger := a.links.alloc(max(4, 2*len(n.links)))
+		copy(bigger, n.links)
+		n.links = bigger[:len(n.links)]
+	}
 	n.links = append(n.links, link)
 
 	if link.subtree != nil {
@@ -551,7 +557,7 @@ func (s *stack) merge(v1, v2 int) bool {
 	}
 	h1, h2 := &s.heads[v1], &s.heads[v2]
 	for i := 0; i < len(h2.node.links); i++ {
-		h1.node.addLink(h2.node.links[i])
+		h1.node.addLink(s.arenas, h2.node.links[i])
 	}
 	if h1.node.state == errorState {
 		h1.nodeCountAtLastError = h1.node.nodeCount

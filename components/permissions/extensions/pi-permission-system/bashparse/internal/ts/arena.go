@@ -67,16 +67,17 @@ func (s *slab[T]) release(max int) {
 	}
 }
 
-// subtreeArray hands out the child arrays of subtrees (and pop results): exact-length slices
-// whose capacity is clipped, so an append by a caller copies instead of overwriting a neighbor.
-type subtreeArray struct {
-	chunks [][]*subtree
+// arrayArena hands out exact-length slices (child arrays of subtrees, pop results, link lists)
+// whose capacity is clipped to what was asked, so an append by a caller copies instead of
+// overwriting a neighbor. The slices are not zeroed: a caller fills what it asks for.
+type arrayArena[T any] struct {
+	chunks [][]T
 	cur    int
 	used   int
 	total  int
 }
 
-func (a *subtreeArray) alloc(n int) []*subtree {
+func (a *arrayArena[T]) alloc(n int) []T {
 	if n == 0 {
 		return nil
 	}
@@ -100,18 +101,18 @@ func (a *subtreeArray) alloc(n int) []*subtree {
 	if size < n {
 		size = n
 	}
-	a.chunks = append(a.chunks, make([]*subtree, size))
+	a.chunks = append(a.chunks, make([]T, size))
 	a.total += size
 	a.cur = len(a.chunks) - 1
 	a.used = n
 	return a.chunks[a.cur][:n:n]
 }
 
-func (a *subtreeArray) reset() { a.cur, a.used = 0, 0 }
+func (a *arrayArena[T]) reset() { a.cur, a.used = 0, 0 }
 
-func (a *subtreeArray) release(max int) {
+func (a *arrayArena[T]) release(max int) {
 	if a.total > max {
-		*a = subtreeArray{}
+		*a = arrayArena[T]{}
 	}
 }
 
@@ -119,7 +120,8 @@ func (a *subtreeArray) release(max int) {
 type arenas struct {
 	subs       slab[subtree]
 	stackNodes slab[stackNode]
-	arrays     subtreeArray
+	arrays     arrayArena[*subtree]
+	links      arrayArena[stackLink]
 }
 
 // Bounds past which a parser lets go of a slab after a parse (elements, not bytes): about 4 MB of
@@ -134,10 +136,12 @@ func (a *arenas) reset() {
 	a.subs.reset()
 	a.stackNodes.reset()
 	a.arrays.reset()
+	a.links.reset()
 }
 
 func (a *arenas) release() {
 	a.subs.release(maxRetainedSubtrees)
 	a.stackNodes.release(maxRetainedStackNodes)
 	a.arrays.release(maxRetainedArrayPtrs)
+	a.links.release(maxRetainedArrayPtrs)
 }
