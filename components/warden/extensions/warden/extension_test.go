@@ -38,6 +38,8 @@ type harness struct {
 	subscribed bool
 	fail       map[string]string
 	answer     func(method string, args map[string]any) (map[string]any, string, bool)
+	// before runs when the host receives a call, ahead of the harness's lock, so it may fire events at the extension.
+	before func(method string)
 	// cwd is the project directory the session runs in.
 	cwd string
 	// w is the extension's state, for the tests that read its trace.
@@ -55,7 +57,8 @@ type harnessOpts struct {
 	fail map[string]string
 	// answer is consulted before the harness's own answers; ok reports that it answered.
 	answer func(method string, args map[string]any) (result map[string]any, errMessage string, ok bool)
-	cwd    string // the session's working directory; default: a fresh directory
+	cwd    string              // the session's working directory; default: a fresh directory
+	before func(method string) // see harness.before
 	now    func() time.Time
 	home   string // the config home; default: a fresh directory (a second harness can share one)
 }
@@ -106,6 +109,7 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 	opts.Now = o.now
 	ext, w := newWarden(opts)
 	h.w = w
+	h.before = o.before
 	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: cwd, OnCall: h.onCall})
 	// Registered after the host's own cleanup, so it runs first: background rules work (the baseline snapshot, the log's
 	// queued writes) must be over before the test's temporary directories are removed.
@@ -114,6 +118,9 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 }
 
 func (h *harness) onCall(method string, args map[string]any) (map[string]any, string) {
+	if h.before != nil {
+		h.before(method)
+	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if msg, ok := h.fail[method]; ok {
