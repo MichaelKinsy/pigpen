@@ -44,8 +44,8 @@ func (s *pcSuite) compare(section string, i int, got any, want any, spec any) {
 	g, w := marshalJSON(got, ""), marshalJSON(want, "")
 	if g != w {
 		s.failed++
-		if s.failed <= 12 {
-			s.t.Errorf("%s #%d differs\n  input:  %s\n  port:   %s\n  oracle: %s", section, i, clip(marshalJSON(spec, ""), 600), clip(g, 900), clip(w, 900))
+		if s.failed <= 80 {
+			s.t.Errorf("%s #%d differs\n  input:  %s\n  port:   %s\n  oracle: %s", section, i, clip(marshalJSON(spec, ""), 300), clip(g, 300), clip(w, 300))
 		}
 	}
 }

@@ -25,7 +25,7 @@ func TruncateInlineText(value string, maxLength float64) string {
 	if float64(n) <= maxLength {
 		return value
 	}
-	return utf16Prefix(value, jsSliceEnd(maxLength, n)) + "\u2026"
+	return toWellFormed(utf16Prefix(value, jsSliceEnd(maxLength, n)) + "\u2026")
 }
 
 // CountTextLines is countTextLines: 0 for an empty string, else the number of lines split on CRLF, CR or LF.

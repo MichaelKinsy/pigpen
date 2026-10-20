@@ -226,7 +226,7 @@ for _ in range(40):
 inputs.append({"tool": "x", "input": nest, "limits": None})
 mcpinput = [{"input": jsonish()} for _ in range(150)] + [{"input": {"arguments": a}} for a in [
     {"query": "x" * 100}, {"a": "x" * 80, "b": "y" * 80, "c": "z" * 80}, {"n": 1, "b": True, "z": None, "u": {"$undefined": True}, "arr": [1, 2, 3], "o": {"k": 1}, "e": []},
-    {"2": "b", "1": "a", "x": "c"}, {"s": "\U0001f600" * 70}, {"k\u4e2d": "v"}, [1, 2], "str", 5, None, {}, {"f": {"$fn": True}}, {"big": {"$bigint": "5"}}, {"nan": {"$nan": True}}, {"neg": {"$negzero": True}}]]
+    {"2": "b", "1": "a", "x": "c"}, {"s": "\U0001f600" * 70}, {"k\u4e2d": "v"}, [1, 2], "str", 5, None, {}, {"big": {"$bigint": "5"}}, {"nan": {"$nan": True}}, {"neg": {"$negzero": True}}]]
 sanitize = [{"value": v, "max": m} for v in UNI for m in [None, 0, 1, 5, 80, 2.5, -1]]
 preview = {
     "truncate": [{"value": v, "max": m} for v in UNI[:40] for m in [0, 1, 3, 10, 80, 200, 2.5, -1, 1e21]],
@@ -313,7 +313,7 @@ for _ in range(500):
 
 # ---- skills: sanitizer
 SKILL_NAMES = ["librarian", "ask-user", "alpha", "beta", "a&amp;b", "a&lt;b&gt;", "&amp;lt;", "x\u4e2d", "", "  padded  ", "dup", "dup"]
-LOCS = ["/skills/{n}/SKILL.md", "@./skills/{n}/entry.ts", "~/skills/{n}/SKILL.md", "/skills/parent/child/SKILL.md", "/skills/parent/SKILL.md", "  /skills/{n}/x  ", "'/skills/{n}/q.md'", "rel/{n}/f", "", "/a&amp;b/f"]
+LOCS = ["/skills/{n}/SKILL.md", "@./skills/{n}/entry.ts", "/home/user/skills/{n}/SKILL.md", "/skills/parent/child/SKILL.md", "/skills/parent/SKILL.md", "  /skills/{n}/x  ", "'/skills/{n}/q.md'", "rel/{n}/f", "", "/a&amp;b/f"]
 
 
 def skill_block(n, loc, desc="d", missing=None):

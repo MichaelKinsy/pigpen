@@ -1,6 +1,9 @@
 package pi_permission_system
 
-import "strings"
+import (
+	"math/big"
+	"strings"
+)
 
 // Port of src/tool-input/builtin-tool-input-formatters.ts: the built-in tool input formatters, registered through the public seam
 // at startup, so each one goes through exactly the path a third-party extension would use.
@@ -27,6 +30,8 @@ func renderArgValue(value any) string {
 		return "false"
 	case []any:
 		return "[" + jsNumber(float64(len(v))) + " items]"
+	case *big.Int:
+		return v.String()
 	case nil:
 		return "null"
 	case undef:
