@@ -4,6 +4,7 @@ package pi_subagents
 // runs (types.ts), wait-completions.ts and api/background-work.ts (the process-local provider registry).
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -87,6 +88,15 @@ type SubagentState struct {
 	CompletionSeen   map[string]int64
 	ForegroundRuns   map[string]*ForegroundRunRecord
 	WidgetsSuspended bool
+	// CompletionOwnerID is the owner of the session's async completions (state.completionOwnerId).
+	CompletionOwnerID string
+	// WorkflowControllers are the live scripted workflows of this process by run id: cancelling one stops the workflow
+	// (state.workflowControllers). WorkflowChildStops hold each live workflow's stop-one-keyed-child function.
+	WorkflowControllers map[string]context.CancelCauseFunc
+	WorkflowChildStops  map[string]func(key, message string) bool
+	// ForegroundControls are the live foreground runs by run id (state.foregroundControls); a workflow child run registers
+	// here with its ParentWorkflowRunID and WorkflowKey.
+	ForegroundControls map[string]*ForegroundControl
 }
 
 func newSubagentState() *SubagentState {
@@ -145,6 +155,9 @@ type AsyncJobState struct {
 	OutputFile        string
 	SessionDir        string
 	TotalTokens       *TokenUsage
+	// ParentWorkflowRunID and WorkflowKey tie a child run to the scripted workflow that launched it.
+	ParentWorkflowRunID string
+	WorkflowKey         string
 }
 
 // ── wait-completions.ts ──
