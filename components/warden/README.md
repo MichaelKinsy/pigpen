@@ -135,8 +135,8 @@ Also ported, and registered as agent tools: **`warden_remember`** (a standing le
 | `port/oracle/` | the unmodified original at the pinned commit, and its license |
 | `extensions/warden/testdata/diff_corpus.json` | 2,552 commands; the original's and the port's offline decisions are compared on every one |
 | `extensions/warden/testdata/prefs_corpus.json` | 5,594 user messages and 2,500 raw clauses; the original's and the port's standing-preference detectors are compared on every one |
-| `extensions/warden/*_test.go` | 164 twins of the original's own test cases, the fake TypeSafe server, the fake model registry and fake-host tests against PiG's event protocol |
-| `port/scenarios/`, `port/golden/` | 26 live scenarios, traces recorded from the original under Pi; the port produces the same trace, event for event (the 19 guard scenarios also as the built Binary) |
+| `extensions/warden/*_test.go` | 546 twins of the original's own test cases, the fake TypeSafe server, the fake model registry and fake-host tests against PiG's event protocol |
+| `port/scenarios/`, `port/golden/` | 55 live scenarios, traces recorded from the original under Pi; the port produces the same trace, event for event (the 19 guard scenarios also as the built Binary) |
 | `port/scenarios-b4/`, `port/golden-b4/` | one more scenario (`warden_remember` across three sessions) that fails on a known PiG host bug (B4: response order of a slash command), kept as the repro |
 | `port/mutations.json`, `port/mutate.py` | deliberate defects that the scenarios or the layer-1 tests must catch |
 | `port/PORT.md` | file map, scope, deviations, equivalence results, **named gaps** |

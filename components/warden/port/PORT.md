@@ -6,7 +6,7 @@
 | Judge seam | `DevMortimer/pi-typesafe` commit `ed439f834665ad6fc652787f5ba7c23852566d49` (`ask`, questions, `errors.ts`), MIT |
 | Oracle | Pi 0.87.1 hosting the original; Node 24.19.0 |
 | Target | PiG 0.3.0+0.87.1, SDK of a 0.3.0 pre-release build (`63c6ba456`) (host getters return `(value, error)`), go1.27.1; shared client `components/typesafe` |
-| Original's tests | 1,264 cases in `port/oracle/tests`; 507 have a Go twin, 757 are named skipped subtests with a reason (see below) |
+| Original's tests | 1,264 cases in `port/oracle/tests`; 546 have a Go twin, 718 are named skipped subtests with a reason (see below) |
 
 ## File-to-file mapping
 
@@ -35,7 +35,7 @@
 | `output.ts` security half: `evaluateOutput`, `buildOutputRequest`, `outputQuestions`, `securityNotice`, `OutputVerdict` | `output_security.go` | the retention and format half (`compressOutput`, `retentionQuestion`, learner) belongs to the context lane (`output_context.go`); `evaluateOutput` reaches it through `retentionQuestions`, `applyRetention`, `learnerSuggest` |
 | `runaway.ts` | `runaway.go` | `RunawayMonitor` is used under one mutex by the message handlers; strings are measured in UTF-16 units |
 | `prose.ts` (prose check, `ProseTrend`, `RestatementWindow`, `proseNudge`) | `prose.go` | the check runs in a goroutine beside the done check (upstream starts both promises, then awaits prose first) |
-| `notify.ts` | `notify.go` | commands run through `os/exec` in the extension process, as upstream's `execFile` does (D12) |
+| `notify.ts` | `notify.go` | commands run through `os/exec` in the extension process, as upstream's `execFile` does (D15) |
 | `extension.ts` `slopSteer`, `SLOP_FIXES`, the slop content note | `slop.go` | the note is a `callNotes` content note of the rules lane's combined steer |
 | `extension.ts` security hooks (`message_start`/`message_update` runaway, `agent_end` slots 3, 5 and the prose check, `notifyDesktop`, the security-write steer) | `security_wiring.go` (one call each from `extension.go`, `results.go`, `toolcall.go`, `commands.go`) | the tool-output masking path (`tool_result`) is the context lane's `tool_output.go`, which calls `MaskSecrets`, `EvaluateOutput` and `SecurityNotice` |
 | `tools.ts` | `tools.go` | |
@@ -362,7 +362,7 @@ rows, the performance section's measurements, and the `go test -race -count=24` 
   start-up allocation at 150 KB and passes).
 - Not run here: `npm run generate/check/test` (an imladris copy has no git history; run from a bundle clone at stacking).
 
-## Security lane (port/warden-security-1)
+## Security lane (port/warden-security-2)
 
 Scope: the runaway guard, the prose check and the restatement record, desktop notifications, the security-write and
 slop steers, and the detection half of `redact.ts` (`findSecrets`, `looksLikeSecretValue`, `syntheticish`,
@@ -382,7 +382,7 @@ holds the three names `EvaluateOutput` takes from the context lane (`OutputForma
   `extension.test.ts` cases about `tool_result` masking (384 to 593, 2788) are the context lane's. Not carried: the
   widget-chip assertion of 1635 (`slop: stub 0.92, hedging 0.75`), because the port draws its action line in
   `steer.go` `traceLine`, which names no slop scores.
-- **Deviation D12:** notifier commands run through `os/exec` in the extension process (see the table above).
+- **Deviation D15:** notifier commands run through `os/exec` in the extension process (see the table above).
 - **Recovery turn:** `runawayRecovery` sends `{deliverAs: followUp, triggerTurn: true}` once per user prompt, then a
   note that starts nothing; `triggerTurn: false` is the Go default, so the second form carries no explicit flag. Under
   the harness's scripted model the whole reply arrives as one chunk, so the guard's abort cannot shorten it and
@@ -400,19 +400,21 @@ holds the three names `EvaluateOutput` takes from the context lane (`OutputForma
 
 ### Results
 
-- Layer 1 (imladris, tern-ci:v2): `go vet` clean for linux, darwin and windows; `go test` ok;
-  `go test -race -count=24` on the security lane's tests ok, `-race -count=1` on the whole package ok.
-  (`go test -race -count=24` on the whole package does not finish in the default 10 minutes; the rules lint tests
-  dominate.) `TestRulesTurnRulesPassJudgesAtMostFiveUnseenFiles`, `TestRulesAgentStartDoesNotWaitForTheSnapshot`
-  and `TestRulesPastTheCapOneNoticePerSession` fail now and then on a loaded box with `TempDir RemoveAll cleanup:
-  directory not empty` (a background write of the rules lane still running when the test ends); reported to the rules
-  lane. They made some mutants look killed for the wrong reason in a first run; every such line was re-run against the
-  security tests alone.
-- Layer-1 mutations (`port/mutate_security.py`, loaded by `mutate.py`; `port/mutation-results.txt`): 88 added, 87
-  killed, 1 documented equivalent (`sec-value-needs-one-class`: a single-class value is all digits, rejected earlier as a
-  plain number, or all lower case, which is neither digits nor mixed case).
-- pigeq (`pigeq` built from `pigeq-harness-gaps` 3a76fb32, with `--accept-gaps port/accepted-gaps.json`): 7 scenarios
-  added, all `pigeq run` identical for the original under Pi, the original under PiG's Node runtime and the Go port, with
+- Layer 1 (imladris, tern-ci:v2), on the tree stacked on `port/warden-guardcore-3`: `go vet` clean for linux, darwin
+  and windows; `go test` ok; `go test -race -count=6` on the whole package ok (747 s). (On the first base,
+  `-race -count=24` on this lane's tests passed.) `TestRulesTurnRulesPassJudgesAtMostFiveUnseenFiles`,
+  `TestRulesAgentStartDoesNotWaitForTheSnapshot` and `TestRulesPastTheCapOneNoticePerSession` failed now and then on a
+  loaded box with `TempDir RemoveAll cleanup: directory not empty` (a background write of the rules lane still running
+  when the test ends); reported to the rules lane. They once made mutants look killed for the wrong reason; every such
+  line was re-run against the security tests alone.
+- Layer-1 mutations, whole `port/mutate.py` on the stacked tree (`port/mutation-results.txt`): 255 rows, 247 killed,
+  7 documented equivalents (six of other lanes and `sec-value-needs-one-class`: a single-class value is all digits,
+  rejected earlier as a plain number, or all lower case, which is neither digits nor mixed case), 1 skipped
+  (`disable-keeps-consent`: its pattern no longer matches `commands.go`; already so on `port/warden-guardcore-3`). This
+  lane's rows are in `port/mutate_security.py` (88: 87 killed, 1 equivalent); `bearer-not-redacted` now targets the
+  rewritten `Redact`.
+- pigeq (`/home/kinsy/pigeq-gaps`, with `--accept-gaps port/accepted-gaps.json`): 7 scenarios
+  added (55 in the package), all `pigeq run` (earlier, on the first base) identical for the original under Pi, the original under PiG's Node runtime and the Go port, with
   goldens recorded from the original under Pi: `prose-trend-nudges-the-next-prompt` (judge fixture: the request bodies
   of both clients are equal, and the nudge reaches the next prompt's model request), `prose-disabled-judges-nothing`,
   `write-judged-security-and-slop-steers`, `write-security-guard-off-asks-no-security-question`,
@@ -420,7 +422,12 @@ holds the three names `EvaluateOutput` takes from the context lane (`OutputForma
   G1 is disproved for the original: pointing `typesafeBackend` at a fixture server in the original's `agentFiles` config
   and `TYPESAFE_BASE_URL` plus `homeFiles` at the port makes both clients ask the same fixture. Judge fixtures must answer
   exactly the asked question ids.
-- pigeq mutations (`port/mutations.json`, 10 rows `sec-*`): 10 of 10 killed by the scenarios.
+- pigeq mutations (`port/mutations.json`, 10 rows `sec-*`, `pigeq mutate` with `pigeq-gaps`): 10 of 10 killed by the
+  scenarios (two first counted as killed by an unrelated scenario's ordering flake and re-run against their own).
+- `pigeq check` over all 55 scenarios on the stacked tree: 51 PASS lines (the pseudo-scenarios included) and six
+  failures (`arming-edit-then-command-blocked`, `changing-failure-not-steered`, `drop-database-command`,
+  `recall-after-a-failure`, `tools-disabled-replies`, `write-judged-security-and-slop-steers`) each passed in at least one of two single
+  reruns (a different one failed each time), the ordering race below.
 - `scenarios-blocked/notify-held-call-runs-the-configured-command.json`: the shim's `exec` event and the held call's
   `tool_execution_end` race (the original under PiG's Node runtime differs from the original under Pi in one of two
   consecutive runs); the behaviour is covered at layer 1, including the real spawn

@@ -21,7 +21,7 @@ SECURITY_M = [
  ("sec-value-allows-placeholders", "redact_secrets.go", "if reNotValueShape.MatchString(text)", "if false && reNotValueShape.MatchString(text)"),
  ("sec-value-minimum-length", "redact_secrets.go", "if n := utf16Len(text); n < 8 || n > 512 {", "if n := utf16Len(text); n < 4 || n > 512 {"),
  ("sec-synthetic-markers-ignored", "redact_secrets.go", "\t\tif strings.Contains(lower, marker) {\n\t\t\treturn true\n\t\t}", "\t\tif false && strings.Contains(lower, marker) {\n\t\t\treturn true\n\t\t}"),
- ("sec-synthetic-segments-ignored", "redact_secrets.go", "\t\tif syntheticSegments[segment] {\n\t\t\treturn true\n\t\t}", "\t\tif false && syntheticSegments[segment] {\n\t\t\treturn true\n\t\t}"),
+ ("sec-synthetic-segments-ignored", "redact_secrets.go", "\t\tif isSyntheticSegment(segment) {\n\t\t\treturn true\n\t\t}", "\t\tif false && isSyntheticSegment(segment) {\n\t\t\treturn true\n\t\t}"),
  ("sec-synthetic-sequence-ignored", "redact_secrets.go", "return hasSequenceRun(text, sequenceRun) || hasSequenceRun(body, sequenceRun) || isRepetitive(body)", "return hasSequenceRun(body, sequenceRun) || isRepetitive(body)"),
  ("sec-synthetic-repeat-ignored", "redact_secrets.go", "return hasSequenceRun(text, sequenceRun) || hasSequenceRun(body, sequenceRun) || isRepetitive(body)", "return hasSequenceRun(text, sequenceRun) || hasSequenceRun(body, sequenceRun)"),
  ("sec-sequence-run-too-long", "redact_secrets.go", "const sequenceRun = 6", "const sequenceRun = 12"),

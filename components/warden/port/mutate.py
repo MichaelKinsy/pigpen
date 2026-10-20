@@ -10,7 +10,7 @@ M = [
  ("guard-when-disabled", "toolcall.go", "if !cfg.Enabled || !cfg.Action.Enabled", "if !cfg.Action.Enabled"),
  ("irreversible-never-confirms", "guard.go", "if j.Irreversible >= config.Irreversible.Confirm {", "if j.Irreversible >= config.Irreversible.Confirm+1 {"),
  ("hold-does-not-block", "toolcall.go", '"block": true', '"block": false'),
- ("bearer-not-redacted", "redact.go", '\tout = reBearer.ReplaceAllString(out, "${1}"+redacted)\n', ''),
+ ("bearer-not-redacted", "redact.go", 'if strings.Contains(lower, "bearer") {', 'if false && strings.Contains(lower, "bearer") {'),
  ("config-world-readable", "configfile.go", "0o600); err != nil", "0o644); err != nil"),
  ("budget-off-by-one", "backend.go", "b.used >= b.Max", "b.used > b.Max"),
  ("steer-budget-off-by-one", "steer_core.go", "w.steersThisRun >= cfg.SteerBudget", "w.steersThisRun > cfg.SteerBudget"),
