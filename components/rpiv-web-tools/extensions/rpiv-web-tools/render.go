@@ -100,18 +100,22 @@ func renderFetchResultText(details map[string]any, content string, hasContent, e
 	return text
 }
 
+// textLines is what pi-tui's `new Text(text, 0, 0).render(width)` returns, which is what the original's renderers
+// return: the lines the host draws.
+func textLines(text string, width int) []string { return wrapText(text, width) }
+
 func renderSearchCall(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContext, width int) ([]string, error) {
-	return wrapText(renderSearchCallText(args, ctx.UITheme()), width), nil
+	return textLines(renderSearchCallText(args, ctx.UITheme()), width), nil
 }
 
 func detailsOf(r sdk.ToolRenderResult) map[string]any { m, _ := r.Details.(map[string]any); return m }
 
 func renderSearchResult(ctx sdk.Context, r sdk.ToolRenderResult, o sdk.ToolRenderResultOptions, _ sdk.ToolRenderContext, width int) ([]string, error) {
-	return wrapText(renderSearchResultText(detailsOf(r), o.Expanded, o.IsPartial, ctx.UITheme()), width), nil
+	return textLines(renderSearchResultText(detailsOf(r), o.Expanded, o.IsPartial, ctx.UITheme()), width), nil
 }
 
 func renderFetchCall(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContext, width int) ([]string, error) {
-	return wrapText(renderFetchCallText(args, ctx.UITheme()), width), nil
+	return textLines(renderFetchCallText(args, ctx.UITheme()), width), nil
 }
 
 func renderFetchResult(ctx sdk.Context, r sdk.ToolRenderResult, o sdk.ToolRenderResultOptions, _ sdk.ToolRenderContext, width int) ([]string, error) {
@@ -119,5 +123,5 @@ func renderFetchResult(ctx sdk.Context, r sdk.ToolRenderResult, o sdk.ToolRender
 	if len(r.Content) > 0 && r.Content[0]["type"] == "text" {
 		content, has = fmt.Sprint(r.Content[0]["text"]), true
 	}
-	return wrapText(renderFetchResultText(detailsOf(r), content, has, o.Expanded, o.IsPartial, ctx.UITheme()), width), nil
+	return textLines(renderFetchResultText(detailsOf(r), content, has, o.Expanded, o.IsPartial, ctx.UITheme()), width), nil
 }
