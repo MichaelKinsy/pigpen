@@ -40,7 +40,7 @@ func defuddleFixtures(t *testing.T) []defuddleFixture {
 
 func TestDefuddleFixturesEqualTheOriginal(t *testing.T) {
 	fixtures := defuddleFixtures(t)
-	if len(fixtures) < 450 {
+	if len(fixtures) < 470 {
 		t.Fatalf("%d recorded fixtures", len(fixtures))
 	}
 	for i, fx := range fixtures {
@@ -76,6 +76,34 @@ func TestDefuddleFixturesEqualTheOriginal(t *testing.T) {
 			}
 			if want.Content != nil && got.Content != *want.Content {
 				t.Errorf("content differs:\n%s", firstDifference(got.Content, *want.Content))
+			}
+		})
+	}
+}
+
+// The Markdown stage on its own (testdata/defuddle-markdown.json, recorded by port/record-defuddle-markdown.mjs from
+// the original's createMarkdownContent): snippets with markup that a page run through the whole pipeline never
+// delivers to it, such as the task list classes that standardization strips.
+func TestDefuddleMarkdownStageEqualsTheOriginal(t *testing.T) {
+	var cases []struct {
+		Name     string  `json:"name"`
+		HTML     string  `json:"html"`
+		Markdown *string `json:"markdown"`
+		Error    *string `json:"error"`
+	}
+	data, err := os.ReadFile("testdata/defuddle-markdown.json")
+	noErr(t, err)
+	noErr(t, json.Unmarshal(data, &cases))
+	if len(cases) < 20 {
+		t.Fatalf("%d recorded snippets", len(cases))
+	}
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			if c.Markdown == nil {
+				t.Fatalf("the original failed on this snippet: %v", c.Error)
+			}
+			if got := dfdCreateMarkdownContent(c.HTML); got != *c.Markdown {
+				t.Errorf("markdown differs:\n%s", firstDifference(got, *c.Markdown))
 			}
 		})
 	}

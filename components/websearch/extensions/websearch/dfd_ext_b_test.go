@@ -20,6 +20,8 @@ func TestExtDecodeAndEncodeURIEqualJavaScript(t *testing.T) {
 		{"https://x.test/p q", "https://x.test/p q", "https://x.test/p%20q"},
 		{"/%41", "/A", "/A"},
 		{"[]{}|", "[]{}|", "%5B%5D%7B%7D%7C"},
+		// encodeURI leaves the reserved characters, # included, alone (the values are what encodeURI(decodeURI(x)) makes in Node)
+		{"/p?a=1&b=2;c=d,e@f$g+h#frag:x", "/p?a=1&b=2;c=d,e@f$g+h#frag:x", "/p?a=1&b=2;c=d,e@f$g+h#frag:x"},
 	}
 	for _, c := range cases {
 		if got := jsDecodeURI(c.in); got != c.decoded {
