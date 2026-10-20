@@ -121,11 +121,11 @@ func registerOpenRouterLockProvider(ext *sdk.Extension, st *store) {
 					return nil
 				}
 				baseID := baseIDOf(state, ctx.Model())
-				message := fmt.Sprintf("OpenRouter provider lock for %s: %s", baseID, trimmed)
-				if persisted := applyLock(ctx, st, baseID, trimmed); persisted != "" {
-					message += "\ndefaultModel -> " + persisted
-				}
-				ctx.Notify(message, "info")
+				applyLock(ctx, st, baseID, trimmed)
+				// The original names the variant whether or not settings.json
+				// could be written.
+				ctx.Notify(fmt.Sprintf("OpenRouter provider lock for %s: %s\ndefaultModel -> %s",
+					baseID, trimmed, makeVariantID(baseID, trimmed)), "info")
 				return nil
 			}
 
@@ -178,9 +178,10 @@ func clearLockFor(ctx sdk.Context, st *store, baseID string) error {
 }
 
 // applyLock records a lock change (an empty provider clears it) and writes the
-// model into settings.json as the default, as the original's applyLock does. It
-// returns the model id written, or "" when settings.json was not updated.
-func applyLock(ctx sdk.Context, st *store, baseID, provider string) string {
+// model into settings.json as the default (as `base:provider` while a lock is
+// active), as the original's applyLock does. A settings.json that cannot be
+// written is logged, never an error: the lock itself is already stored.
+func applyLock(ctx sdk.Context, st *store, baseID, provider string) {
 	st.update(func(draft *settings) {
 		if provider == "" {
 			clearLock(draft, baseID)
@@ -191,9 +192,9 @@ func applyLock(ctx sdk.Context, st *store, baseID, provider string) string {
 	agent, err := st.agent(ctx)
 	if err != nil {
 		logf("agent directory: %v", err)
-		return ""
+		return
 	}
-	return persistDefaultModel(agent, openRouterProvider, baseID)
+	persistDefaultModel(agent, st.load(), openRouterProvider, baseID)
 }
 
 // showLockPicker is pt-openrouter-lock-provider.ts's showLockPicker: a

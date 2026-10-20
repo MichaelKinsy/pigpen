@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // lockHome gives the extension an agent directory with a settings.json, and
@@ -116,17 +117,17 @@ func TestSingleArgumentLocksTheCurrentModel(t *testing.T) {
 	if failure := h.Command(lockProviderName, "deepseek"); failure != "" {
 		t.Fatal(failure)
 	}
-	if message := lastNotification(h); !strings.Contains(message, "vendor/m") || !strings.Contains(message, "deepseek") {
-		t.Fatalf("notification = %q, want the model and provider", message)
+	// The original's message, byte for byte: the lock and the variant written
+	// into settings.json.
+	if message, want := lastNotification(h), "OpenRouter provider lock for vendor/m: deepseek\ndefaultModel -> vendor/m:deepseek"; message != want {
+		t.Fatalf("notification = %q, want %q", message, want)
 	}
 	if order := orderOf(providerRequest(t, h, "vendor/m")); len(order) != 1 || order[0] != "deepseek" {
 		t.Fatalf("provider.order = %v, want [deepseek]", order)
 	}
-	// The lock is persisted next to the default model, as the original's applyLock does.
-	raw, err := os.ReadFile(filepath.Join(home, "agent", "settings.json"))
-	if err != nil || !strings.Contains(string(raw), `"vendor/m"`) || !strings.Contains(string(raw), `"openrouter"`) {
-		t.Fatalf("settings.json = %s, %v; want the locked model as the default", raw, err)
-	}
+	// The lock is persisted next to the default model as `base:provider`, as the
+	// original's applyLock does.
+	wantDefaultModel(t, home, "openrouter", "vendor/m:deepseek")
 }
 
 func TestSingleArgumentRefusesANonOpenRouterModel(t *testing.T) {
@@ -166,20 +167,72 @@ func TestLockAndClearPersistTheDefaultModel(t *testing.T) {
 	if failure := h.Command(lockProviderName, "lock vendor/m deepseek"); failure != "" {
 		t.Fatal(failure)
 	}
-	raw, _ := os.ReadFile(filepath.Join(home, "agent", "settings.json"))
-	if !strings.Contains(string(raw), `"vendor/m"`) {
-		t.Fatalf("settings.json = %s, want vendor/m after lock", raw)
-	}
+	wantDefaultModel(t, home, "openrouter", "vendor/m:deepseek")
 	if failure := os.WriteFile(filepath.Join(home, "agent", "settings.json"), []byte("{}\n"), 0o644); failure != nil {
 		t.Fatal(failure)
 	}
 	if failure := h.Command(lockProviderName, "clear vendor/m"); failure != "" {
 		t.Fatal(failure)
 	}
-	raw, _ = os.ReadFile(filepath.Join(home, "agent", "settings.json"))
-	if !strings.Contains(string(raw), `"vendor/m"`) {
-		t.Fatalf("settings.json = %s, want vendor/m after clear", raw)
+	wantDefaultModel(t, home, "openrouter", "vendor/m")
+}
+
+// wantDefaultModel checks the provider and model PiG's settings.json names.
+func wantDefaultModel(t *testing.T, home, provider, model string) {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(home, "agent", "settings.json"))
+	if err != nil {
+		t.Fatal(err)
 	}
+	var document map[string]any
+	if err := json.Unmarshal(raw, &document); err != nil {
+		t.Fatalf("settings.json = %s: %v", raw, err)
+	}
+	if document["defaultProvider"] != provider || document["defaultModel"] != model {
+		t.Fatalf("settings.json = %s, want defaultProvider %q and defaultModel %q", raw, provider, model)
+	}
+}
+
+// With the lock feature off, nothing is locked, so the default stays the base id
+// (the original's getLock answers nothing while the feature is disabled).
+func TestDisabledLockPersistsTheBaseIDOnly(t *testing.T) {
+	home := lockHome(t)
+	h := startLockHost(t, map[string]any{"id": "vendor/m", "provider": "openrouter"})
+	if failure := h.Command(lockProviderName, "off"); failure != "" {
+		t.Fatal(failure)
+	}
+	if failure := h.Command(lockProviderName, "deepseek"); failure != "" {
+		t.Fatal(failure)
+	}
+	wantDefaultModel(t, home, "openrouter", "vendor/m")
+}
+
+// A remembered selection of a locked OpenRouter model writes `base:provider`
+// into settings.json and says so in its toast, as the original does; a model of
+// another provider with the same id stays plain.
+func TestRememberedSelectionOfALockedModelWritesTheVariant(t *testing.T) {
+	home := lockHome(t)
+	seedSettings(t, home, map[string]any{"version": 1,
+		"rememberModel":               map[string]any{"enabled": true},
+		"openrouterModelProviderPref": map[string]any{"enabled": true, "locks": map[string]string{"vendor/m": "deepseek"}}})
+	h := startLockHost(t, map[string]any{"id": "vendor/m", "provider": "openrouter"})
+	h.FireAll("model_select", map[string]any{"model": map[string]any{"id": "vendor/m", "provider": "openrouter"}})
+	wantDefaultModel(t, home, "openrouter", "vendor/m:deepseek")
+	last := readSettings(filepath.Join(home, "agent", settingsFileName)).RememberModel.Last
+	if last == nil || last.Provider != "openrouter" || last.ModelID != "vendor/m" {
+		t.Fatalf("remembered = %+v, want the base id", last)
+	}
+	want := rememberModelName + ": remembered model: openrouter/vendor/m:deepseek in settings.json"
+	deadline := time.Now().Add(2 * time.Second)
+	for lastNotification(h) != want {
+		if time.Now().After(deadline) {
+			t.Fatalf("notifications = %q, want %q", notifications(h), want)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	h.FireAll("model_select", map[string]any{"model": map[string]any{"id": "vendor/m", "provider": "acme"}})
+	wantDefaultModel(t, home, "acme", "vendor/m")
 }
 
 func TestNoArgumentOutsideTheTUIPrintsUsage(t *testing.T) {

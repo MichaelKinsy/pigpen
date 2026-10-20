@@ -785,3 +785,31 @@ func TestRememberingOffRestoresNothingAtStartup(t *testing.T) {
 		t.Fatalf("a disabled remember-model switched the model: %v", calls)
 	}
 }
+
+// ---- model_select announcements (pt-model-guard.ts model_select) ----
+
+// Outside the TUI nobody can be asked, so the guard announces a selection with
+// the original's texts, byte for byte; a restore announces nothing.
+func TestModelSelectAnnouncesLikeTheOriginal(t *testing.T) {
+	p := startParityHost(t, "rpc", map[string]any{"version": 1,
+		"rememberModel": map[string]any{"enabled": false},
+		"modelGuard": map[string]any{"enabled": true, "allowedModels": []map[string]string{
+			{"provider": "acme", "model": "model-1"}}}}, nil, nil)
+	p.start(t, "resume")
+
+	p.FireAll("model_select", selectModel())
+	wantNotes(t, notes(p.Host), info("✅ acme/model-1 — in preferred models"))
+
+	other := map[string]any{"model": map[string]any{"provider": "acme", "id": "model-2"}, "source": "set"}
+	p.FireAll("model_select", other)
+	got := notes(p.Host)
+	if len(got) != 2 || got[1] != warning("⚠️  acme/model-2 — NOT in preferred models") {
+		t.Fatalf("notifications = %q, want the NOT-in-preferred warning second", got)
+	}
+
+	restore := map[string]any{"model": map[string]any{"provider": "acme", "id": "model-3"}, "source": "restore"}
+	p.FireAll("model_select", restore)
+	if again := notes(p.Host); len(again) != 2 {
+		t.Fatalf("a restore was announced: %q", again)
+	}
+}

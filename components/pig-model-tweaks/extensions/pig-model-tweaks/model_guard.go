@@ -84,7 +84,7 @@ func registerModelGuard(ext *sdk.Extension, st *store) {
 			return nil, nil
 		}
 		if isModelAllowed(state, model) {
-			ctx.Notify("in preferred models: "+model.String(), "info")
+			ctx.Notify("✅ "+model.String()+" — in preferred models", "info")
 			return nil, nil
 		}
 		if sameModel(state, model, st.startupModel()) {
@@ -98,8 +98,8 @@ func registerModelGuard(ext *sdk.Extension, st *store) {
 			return nil, nil
 		}
 		if ctx.Mode() != modeTUI {
-			// RPC and print runs have nobody to ask; announce, as before.
-			ctx.Notify("NOT in preferred models: "+model.String(), "warning")
+			// RPC and print runs have nobody to ask; announce it as the original does.
+			ctx.Notify("⚠️  "+model.String()+" — NOT in preferred models", "warning")
 			return nil, nil
 		}
 		// The host applied the switch before this event and discards the handler's

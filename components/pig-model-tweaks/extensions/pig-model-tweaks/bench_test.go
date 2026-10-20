@@ -44,6 +44,18 @@ func TestPerf(t *testing.T) {
 		})
 		t.Logf("%-16s %8d ns/op %7d B/op %5d allocs/op", c.name, result.NsPerOp(), result.AllocedBytesPerOp(), result.AllocsPerOp())
 	}
+	// A single-argument lock on an OpenRouter model: store update plus the
+	// settings.json rewrite, the heaviest thing either command does.
+	setActiveModel(h, map[string]any{"id": "vendor/m", "provider": "openrouter"})
+	lock := testing.Benchmark(func(b *testing.B) {
+		b.ReportAllocs()
+		for range b.N {
+			if failure := h.Command(lockProviderName, "deepseek"); failure != "" {
+				b.Fatal(failure)
+			}
+		}
+	})
+	t.Logf("%-16s %8d ns/op %7d B/op %5d allocs/op", "lock-set", lock.NsPerOp(), lock.AllocedBytesPerOp(), lock.AllocsPerOp())
 	register := testing.Benchmark(func(b *testing.B) {
 		b.ReportAllocs()
 		for range b.N {

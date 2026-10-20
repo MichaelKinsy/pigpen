@@ -62,7 +62,7 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 			}{Provider: model.Provider, ModelID: baseID}
 		})
 
-		persisted := persistDefaultModel(agent, model.Provider, baseID)
+		persisted := persistDefaultModel(agent, st.load(), model.Provider, baseID)
 		if persisted == "" {
 			return nil, nil
 		}

@@ -242,8 +242,8 @@
  {
   "name": "lock-first-word-only",
   "file": "openrouter_lock.go",
-  "find": "applyLock(ctx, st, baseID, trimmed); persisted",
-  "replace": "applyLock(ctx, st, baseID, strings.Fields(trimmed)[0]); persisted"
+  "find": "applyLock(ctx, st, baseID, trimmed)",
+  "replace": "applyLock(ctx, st, baseID, strings.Fields(trimmed)[0])"
  },
  {
   "name": "lock-clear-wrong-provider-allowed",
@@ -454,5 +454,89 @@
   "file": "store.go",
   "find": "dir, err := sdk.AgentDir()\n\tif err != nil {",
   "replace": "dir, err := \"\", error(nil)\n\t_ = err\n\tif true {"
+ },
+ {
+  "name": "persist-base-id-for-lock",
+  "file": "pigsettings.go",
+  "find": "modelID = makeVariantID(baseID, lock)",
+  "replace": "modelID = baseID"
+ },
+ {
+  "name": "persist-variant-for-any-provider",
+  "file": "pigsettings.go",
+  "find": "if provider == openRouterProvider {\n\t\tif lock := lockFor(state, baseID)",
+  "replace": "if provider != \"\" {\n\t\tif lock := lockFor(state, baseID)"
+ },
+ {
+  "name": "persist-lock-ignores-enabled",
+  "file": "pigsettings.go",
+  "find": "lock := lockFor(state, baseID); lock != \"\"",
+  "replace": "lock := state.OpenRouterModelProviderPref.Locks[baseID]; lock != \"\""
+ },
+ {
+  "name": "persist-writes-model-before-provider",
+  "file": "pigsettings.go",
+  "find": "{\"defaultProvider\", provider},\n\t\t{\"defaultModel\", modelID},",
+  "replace": "{\"defaultModel\", modelID},\n\t\t{\"defaultProvider\", provider},"
+ },
+ {
+  "name": "settings-existing-key-duplicated",
+  "file": "pigsettings.go",
+  "find": "if _, seen := values[update[0]]; !seen {\n\t\t\tkeys = append(keys, update[0])\n\t\t}",
+  "replace": "keys = append(keys, update[0])"
+ },
+ {
+  "name": "settings-no-trailing-newline",
+  "file": "pigsettings.go",
+  "find": "out.WriteString(\"}\\n\")",
+  "replace": "out.WriteString(\"}\")"
+ },
+ {
+  "name": "lock-message-base-id",
+  "file": "openrouter_lock.go",
+  "find": "baseID, trimmed, makeVariantID(baseID, trimmed)), \"info\")",
+  "replace": "baseID, trimmed, baseID), \"info\")"
+ },
+ {
+  "name": "lock-message-no-default-line",
+  "file": "openrouter_lock.go",
+  "find": "OpenRouter provider lock for %s: %s\\ndefaultModel -> %s",
+  "replace": "OpenRouter provider lock for %s: %s%.0s"
+ },
+ {
+  "name": "apply-lock-skips-settings",
+  "file": "openrouter_lock.go",
+  "find": "persistDefaultModel(agent, st.load(), openRouterProvider, baseID)",
+  "replace": "_, _ = agent, baseID"
+ },
+ {
+  "name": "remember-toast-base-id",
+  "file": "remember_model.go",
+  "find": "rememberModelName, model.Provider, persisted)",
+  "replace": "rememberModelName, model.Provider, baseID)"
+ },
+ {
+  "name": "remember-persist-stale-state",
+  "file": "remember_model.go",
+  "find": "persistDefaultModel(agent, st.load(), model.Provider, baseID)",
+  "replace": "persistDefaultModel(agent, defaultSettings(), model.Provider, baseID)"
+ },
+ {
+  "name": "select-allowed-text",
+  "file": "model_guard.go",
+  "find": "\"✅ \"+model.String()+\" — in preferred models\"",
+  "replace": "model.String()+\" — in preferred models\""
+ },
+ {
+  "name": "select-not-allowed-text",
+  "file": "model_guard.go",
+  "find": "\"⚠️  \"+model.String()+\" — NOT in preferred models\", \"warning\")",
+  "replace": "\"⚠️ \"+model.String()+\" — NOT in preferred models\", \"warning\")"
+ },
+ {
+  "name": "select-not-allowed-level",
+  "file": "model_guard.go",
+  "find": "\" — NOT in preferred models\", \"warning\")",
+  "replace": "\" — NOT in preferred models\", \"info\")"
  }
 ]
