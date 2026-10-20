@@ -108,12 +108,10 @@ func (w *warden) showStatus(ctx sdk.Context) {
 }
 
 func (w *warden) showTrace(ctx sdk.Context) {
-	w.mu.Lock()
 	var lines []string
-	for _, t := range w.trace {
+	for _, t := range w.trace.Entries() {
 		lines = append(lines, t.At.Format("15:04:05")+" "+t.Line)
 	}
-	w.mu.Unlock()
 	if len(lines) == 0 {
 		w.show(ctx, "warden has not decided anything yet this session.")
 		return
