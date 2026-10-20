@@ -168,6 +168,23 @@ m("ext-chain-task", "extension.go", "agents, jsTrim(fields[1]), func", "agents, 
 m("ext-chain-answer", "extension.go", "\tctx.Notify(out, \"info\")\n", "\tctx.Notify(out[:0], \"info\")\n")
 m("ext-chain-last-wins", "extension.go", "\t\t\tfound = &chains[i]\n", "\t\t\tif found == nil {\n\t\t\t\tfound = &chains[i]\n\t\t\t}\n")
 
+# policy_acceptance.go, policy_permissions.go, policy_ceiling.go, policy_jsonparse.go (RunPolicy lane)
+m("accept-verified-needs-verify", "policy_acceptance.go", 'if levelStr == "verified" && (!verifyIsArr || len(verifyArr) == 0) {', 'if false {')
+m("accept-duplicate-criterion", "policy_acceptance.go", "if ids[n] {", "if false {")
+m("accept-evidence-kind", "policy_acceptance.go", "return ok && validAcceptanceEvidence[s]", "return ok")
+m("accept-none-reason", "policy_acceptance.go", 'if levelStr == "none" && levelIsStr && !(reasonIsStr && jsTrim(reasonStr) != "") {', "if false {")
+m("accept-false-shorthand", "policy_acceptance.go", 'out.set("reason", "disabled by deprecated false shorthand")', 'out.set("reason", "")')
+m("accept-report-needs-schema", "policy_acceptance.go", "if isUndefined(outputSchema) || outputSchema == false {", "if false {")
+m("perm-bash", "policy_permissions.go", 'if tool == "bash" {', "if false {")
+m("perm-internal", "policy_permissions.go", "if permissionInternalTools[tool] {", "if false {")
+m("perm-allow-dropped", "policy_permissions.go", 'if v == "allow" {\n\t\t\tdelete(merged, k)', 'if false {\n\t\t\tdelete(merged, k)')
+m("perm-preview-cap", "policy_permissions.go", "if len(serialized) <= maxPermissionPreviewBytes {", "if true {")
+m("ceiling-intersect-all", "policy_ceiling.go", "all = all && set[e]", "all = all || set[e]")
+m("ceiling-deny-any", "policy_ceiling.go", "out.DenyExtensions = out.DenyExtensions || c.DenyExtensions", "out.DenyExtensions = out.DenyExtensions && c.DenyExtensions")
+m("ceiling-name-bytes", "policy_ceiling.go", "if len(name) > 128 {", "if len(name) > 1280 {")
+m("ceiling-max-names", "policy_ceiling.go", "if len(arr) > 256 {", "if len(arr) > 2560 {")
+m("jsonparse-specific", "policy_jsonparse.go", "\tif specific != \"\" {\n\t\tp.withPos(specific, pos)\n\t\treturn\n\t}\n\tif pos >= len(p.src) {", "\tif pos >= len(p.src) {")
+
 bad = False
 for x in M:
     text = open(os.path.join(root, x["file"])).read()

@@ -1,0 +1,234 @@
+[
+ {
+  "in": "{\"level\":\"checked\"",
+  "err": "Expected ',' or '}' after property value in JSON at position 18 (line 1 column 19)"
+ },
+ {
+  "in": "{",
+  "err": "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+ },
+ {
+  "in": "{\"a\" 1}",
+  "err": "Expected ':' after property name in JSON at position 5 (line 1 column 6)"
+ },
+ {
+  "in": "{} x",
+  "err": "Unexpected non-whitespace character after JSON at position 3 (line 1 column 4)"
+ },
+ {
+  "in": "{\"a\":1,}",
+  "err": "Expected double-quoted property name in JSON at position 7 (line 1 column 8)"
+ },
+ {
+  "in": "[1,]",
+  "err": "Unexpected token ']', \"[1,]\" is not valid JSON"
+ },
+ {
+  "in": "abc",
+  "err": "Unexpected token 'a', \"abc\" is not valid JSON"
+ },
+ {
+  "in": "\"abc",
+  "err": "Unterminated string in JSON at position 4 (line 1 column 5)"
+ },
+ {
+  "in": "{} 1",
+  "err": "Unexpected non-whitespace character after JSON at position 3 (line 1 column 4)"
+ },
+ {
+  "in": "{\"abcdefghijklmnop\" x",
+  "err": "Expected ':' after property name in JSON at position 20 (line 1 column 21)"
+ },
+ {
+  "in": "[1 2]",
+  "err": "Expected ',' or ']' after array element in JSON at position 3 (line 1 column 4)"
+ },
+ {
+  "in": "{\"a\":1 \"b\"}",
+  "err": "Expected ',' or '}' after property value in JSON at position 7 (line 1 column 8)"
+ },
+ {
+  "in": "-",
+  "err": "No number after minus sign in JSON at position 1 (line 1 column 2)"
+ },
+ {
+  "in": "1.",
+  "err": "Unterminated fractional number in JSON at position 2 (line 1 column 3)"
+ },
+ {
+  "in": "1e",
+  "err": "Exponent part is missing a number in JSON at position 2 (line 1 column 3)"
+ },
+ {
+  "in": "tru",
+  "err": "Unexpected end of JSON input"
+ },
+ {
+  "in": "nul",
+  "err": "Unexpected end of JSON input"
+ },
+ {
+  "in": "{\"a\":tr}",
+  "err": "Unexpected token '}', \"{\"a\":tr}\" is not valid JSON"
+ },
+ {
+  "in": "\"\\q\"",
+  "err": "Bad escaped character in JSON at position 2 (line 1 column 3)"
+ },
+ {
+  "in": "\"\\u12\"",
+  "err": "Bad Unicode escape in JSON at position 5 (line 1 column 6)"
+ },
+ {
+  "in": "\"a\nb\"",
+  "err": "Bad control character in string literal in JSON at position 2 (line 1 column 3)"
+ },
+ {
+  "in": "01",
+  "err": "Unexpected number in JSON at position 1 (line 1 column 2)"
+ },
+ {
+  "in": "[",
+  "err": "Unexpected end of JSON input"
+ },
+ {
+  "in": "{\"a\":",
+  "err": "Unexpected end of JSON input"
+ },
+ {
+  "in": "   ",
+  "err": "Unexpected end of JSON input"
+ },
+ {
+  "in": "{\"a\":1}}",
+  "err": "Unexpected non-whitespace character after JSON at position 7 (line 1 column 8)"
+ },
+ {
+  "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "err": "Unexpected token 'a', \"aaaaaaaaaa\"... is not valid JSON"
+ },
+ {
+  "in": "{\"aaaaaaaaaaaaaaaaaaaaaaaa\": x}",
+  "err": "Unexpected token 'x', ...\"aaaaaaa\": x}\" is not valid JSON"
+ },
+ {
+  "in": "[1,2,3,4,5,6,7,8,9,10,11,x]",
+  "err": "Unexpected token 'x', ...\"8,9,10,11,x]\" is not valid JSON"
+ },
+ {
+  "in": "x1234567890123456789012345",
+  "err": "Unexpected token 'x', \"x123456789\"... is not valid JSON"
+ },
+ {
+  "in": "undefined",
+  "err": "\"undefined\" is not valid JSON"
+ },
+ {
+  "in": "NaN",
+  "err": "\"NaN\" is not valid JSON"
+ },
+ {
+  "in": "Infinity",
+  "err": "\"Infinity\" is not valid JSON"
+ },
+ {
+  "in": "{'a':1}",
+  "err": "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+ },
+ {
+  "in": "{\"a\":1,\"b\"}",
+  "err": "Expected ':' after property name in JSON at position 10 (line 1 column 11)"
+ },
+ {
+  "in": "[1,2",
+  "err": "Expected ',' or ']' after array element in JSON at position 4 (line 1 column 5)"
+ },
+ {
+  "in": "[,]",
+  "err": "Unexpected token ',', \"[,]\" is not valid JSON"
+ },
+ {
+  "in": "{\"a\":[1,}",
+  "err": "Unexpected token '}', \"{\"a\":[1,}\" is not valid JSON"
+ },
+ {
+  "in": "{\"a\":\"b\" \"c\":1}",
+  "err": "Expected ',' or '}' after property value in JSON at position 9 (line 1 column 10)"
+ },
+ {
+  "in": "\"\\u00zz\"",
+  "err": "Bad Unicode escape in JSON at position 5 (line 1 column 6)"
+ },
+ {
+  "in": "-x",
+  "err": "No number after minus sign in JSON at position 1 (line 1 column 2)"
+ },
+ {
+  "in": "1e+",
+  "err": "Exponent part is missing a number in JSON at position 3 (line 1 column 4)"
+ },
+ {
+  "in": "{\"a\":1}\n{\"b\":2}",
+  "err": "Unexpected non-whitespace character after JSON at position 8 (line 2 column 1)"
+ },
+ {
+  "in": "{\n\"a\" 1}",
+  "err": "Expected ':' after property name in JSON at position 6 (line 2 column 5)"
+ },
+ {
+  "in": "[\n1\n2]",
+  "err": "Expected ',' or ']' after array element in JSON at position 4 (line 3 column 1)"
+ },
+ {
+  "in": "é",
+  "err": "Unexpected token 'é', \"é\" is not valid JSON"
+ },
+ {
+  "in": "{\"é\":x}",
+  "err": "Unexpected token 'x', \"{\"é\":x}\" is not valid JSON"
+ },
+ {
+  "in": "nulll",
+  "err": "Unexpected non-whitespace character after JSON at position 4 (line 1 column 5)"
+ },
+ {
+  "in": "truee",
+  "err": "Unexpected non-whitespace character after JSON at position 4 (line 1 column 5)"
+ },
+ {
+  "in": "{\"a\":01}",
+  "err": "Unexpected number in JSON at position 6 (line 1 column 7)"
+ },
+ {
+  "in": "[1.5.2]",
+  "err": "Expected ',' or ']' after array element in JSON at position 4 (line 1 column 5)"
+ },
+ {
+  "in": "+1",
+  "err": "Unexpected token '+', \"+1\" is not valid JSON"
+ },
+ {
+  "in": ".5",
+  "err": "Unexpected token '.', \".5\" is not valid JSON"
+ },
+ {
+  "in": "{\"a\":-}",
+  "err": "No number after minus sign in JSON at position 6 (line 1 column 7)"
+ },
+ {
+  "in": "'a'",
+  "err": "Unexpected token ''', \"'a'\" is not valid JSON"
+ },
+ {
+  "in": "<html>",
+  "err": "Unexpected token '<', \"<html>\" is not valid JSON"
+ },
+ {
+  "in": "{\"level\":\"checked\",\"evidence\":[\"commands-run\",]}",
+  "err": "Unexpected token ']', ...\"ands-run\",]}\" is not valid JSON"
+ },
+ {
+  "in": "[{\"a\":1},{\"b\":2},]",
+  "err": "Unexpected token ']', \"[{\"a\":1},{\"b\":2},]\" is not valid JSON"
+ }
+]

@@ -808,5 +808,95 @@
   "file": "extension.go",
   "find": "\t\t\tfound = &chains[i]\n",
   "replace": "\t\t\tif found == nil {\n\t\t\t\tfound = &chains[i]\n\t\t\t}\n"
+ },
+ {
+  "name": "accept-verified-needs-verify",
+  "file": "policy_acceptance.go",
+  "find": "if levelStr == \"verified\" && (!verifyIsArr || len(verifyArr) == 0) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "accept-duplicate-criterion",
+  "file": "policy_acceptance.go",
+  "find": "if ids[n] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "accept-evidence-kind",
+  "file": "policy_acceptance.go",
+  "find": "return ok && validAcceptanceEvidence[s]",
+  "replace": "return ok"
+ },
+ {
+  "name": "accept-none-reason",
+  "file": "policy_acceptance.go",
+  "find": "if levelStr == \"none\" && levelIsStr && !(reasonIsStr && jsTrim(reasonStr) != \"\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "accept-false-shorthand",
+  "file": "policy_acceptance.go",
+  "find": "out.set(\"reason\", \"disabled by deprecated false shorthand\")",
+  "replace": "out.set(\"reason\", \"\")"
+ },
+ {
+  "name": "accept-report-needs-schema",
+  "file": "policy_acceptance.go",
+  "find": "if isUndefined(outputSchema) || outputSchema == false {",
+  "replace": "if false {"
+ },
+ {
+  "name": "perm-bash",
+  "file": "policy_permissions.go",
+  "find": "if tool == \"bash\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "perm-internal",
+  "file": "policy_permissions.go",
+  "find": "if permissionInternalTools[tool] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "perm-allow-dropped",
+  "file": "policy_permissions.go",
+  "find": "if v == \"allow\" {\n\t\t\tdelete(merged, k)",
+  "replace": "if false {\n\t\t\tdelete(merged, k)"
+ },
+ {
+  "name": "perm-preview-cap",
+  "file": "policy_permissions.go",
+  "find": "if len(serialized) <= maxPermissionPreviewBytes {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ceiling-intersect-all",
+  "file": "policy_ceiling.go",
+  "find": "all = all && set[e]",
+  "replace": "all = all || set[e]"
+ },
+ {
+  "name": "ceiling-deny-any",
+  "file": "policy_ceiling.go",
+  "find": "out.DenyExtensions = out.DenyExtensions || c.DenyExtensions",
+  "replace": "out.DenyExtensions = out.DenyExtensions && c.DenyExtensions"
+ },
+ {
+  "name": "ceiling-name-bytes",
+  "file": "policy_ceiling.go",
+  "find": "if len(name) > 128 {",
+  "replace": "if len(name) > 1280 {"
+ },
+ {
+  "name": "ceiling-max-names",
+  "file": "policy_ceiling.go",
+  "find": "if len(arr) > 256 {",
+  "replace": "if len(arr) > 2560 {"
+ },
+ {
+  "name": "jsonparse-specific",
+  "file": "policy_jsonparse.go",
+  "find": "\tif specific != \"\" {\n\t\tp.withPos(specific, pos)\n\t\treturn\n\t}\n\tif pos >= len(p.src) {",
+  "replace": "\tif pos >= len(p.src) {"
  }
 ]
