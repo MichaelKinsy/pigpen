@@ -23,6 +23,15 @@ import (
 type perfHost struct {
 	*fakeHost
 	keyCB func(string) *goalInputResult
+	// statusDelay stands for the SDK's blocking SetStatus round trip (zero in every benchmark but BenchmarkKeyWaitDuringAudit).
+	statusDelay time.Duration
+}
+
+func (h *perfHost) SetStatus(k, t string) {
+	if h.statusDelay > 0 {
+		time.Sleep(h.statusDelay)
+	}
+	h.fakeHost.SetStatus(k, t)
 }
 
 func (h *perfHost) OnTerminalInput(cb func(string) *goalInputResult) func() {

@@ -1,61 +1,61 @@
 # Raw performance numbers (port/perf)
 
-host: ab244769f391, 8 CPUs, Intel(R) Xeon(R) Platinum 8468
-started: 2026-10-20T18:44:25Z
+host: c78fe6992b94, 8 CPUs, Intel(R) Xeon(R) Platinum 8468
+started: 2026-10-20T21:33:33Z
 go: go version go1.27.2 linux/amd64
 node: v24.19.0
 pig: 0.5.0+1.3.0.1402973a
 kernel: 7.0.0-38-generic
-finished: 2026-10-20T19:01:21Z
-load average at the end: 14.56, 12.49, 13.85
+finished: 2026-10-20T21:47:01Z
+load average after the run (1, 5, 15 min): 44.28, 29.71, 23.63
 CPUs for the measured processes: 64-71 (taskset), in a container limited to those CPUs; other jobs ran on the host meanwhile
 
 ## Binary sizes
 
 ```
 /mycache/final/bin:
-total 50504
--rw-r--r-- 1 160150820 users      897 Oct 20 18:44 deps-new.txt
--rw-r--r-- 1 160150820 users      897 Oct 20 18:44 deps-old.txt
--rwxr-xr-x 1 160150820 users 15544583 Oct 20 18:44 ext-new
--rwxr-xr-x 1 160150820 users 19585338 Oct 20 18:44 ext-new-sym
--rw-r--r-- 1 160150820 users   676914 Oct 20 18:44 ext-new.nm
--rwxr-xr-x 1 160150820 users  6242567 Oct 20 18:44 ext-old
--rwxr-xr-x 1 160150820 users  9153511 Oct 20 18:44 ext-old-sym
--rw-r--r-- 1 160150820 users   472849 Oct 20 18:44 ext-old.nm
--rw-r--r-- 1 160150820 users        7 Oct 20 18:44 orig-ts-bytes
--rw-r--r-- 1 160150820 users      522 Oct 20 18:44 pitui-dictionaries.txt
--rw-r--r-- 1 160150820 users     3909 Oct 20 18:44 sections-new.txt
--rw-r--r-- 1 160150820 users     3903 Oct 20 18:44 sections-old.txt
+total 50532
+-rw-r--r-- 1 160150820 users      897 Oct 20 21:33 deps-new.txt
+-rw-r--r-- 1 160150820 users      897 Oct 20 21:33 deps-old.txt
+-rwxr-xr-x 1 160150820 users 15556871 Oct 20 21:33 ext-new
+-rwxr-xr-x 1 160150820 users 19601478 Oct 20 21:33 ext-new-sym
+-rw-r--r-- 1 160150820 users   677892 Oct 20 21:33 ext-new.nm
+-rwxr-xr-x 1 160150820 users  6242567 Oct 20 21:33 ext-old
+-rwxr-xr-x 1 160150820 users  9153511 Oct 20 21:33 ext-old-sym
+-rw-r--r-- 1 160150820 users   472849 Oct 20 21:33 ext-old.nm
+-rw-r--r-- 1 160150820 users        7 Oct 20 21:33 orig-ts-bytes
+-rw-r--r-- 1 160150820 users      522 Oct 20 21:33 pitui-dictionaries.txt
+-rw-r--r-- 1 160150820 users     3909 Oct 20 21:33 sections-new.txt
+-rw-r--r-- 1 160150820 users     3903 Oct 20 21:33 sections-old.txt
 
 /mycache/final/pl/bin:
-total 210364
--rwxr-xr-x 1 160150820 users 70861063 Oct 20 18:44 control
--rwxr-xr-x 1 160150820 users 73347335 Oct 20 18:44 new
--rwxr-xr-x 1 160150820 users 71192839 Oct 20 18:44 old
+total 210376
+-rwxr-xr-x 1 160150820 users 70861063 Oct 20 21:34 control
+-rwxr-xr-x 1 160150820 users 73359623 Oct 20 21:34 new
+-rwxr-xr-x 1 160150820 users 71192839 Oct 20 21:34 old
 ```
 
 ELF section sizes of the standalone extension (stripped build as PiG makes it is the file size above; these are the unstripped build's sections, bytes):
 
 | section | port | 0.1.1 |
 |---|---|---|
-| `.text` | 4,333,489 | 2,885,713 |
+| `.text` | 4,339,889 | 2,885,713 |
 | `.rodata` | 6,652,281 | 176,185 |
-| `.gopclntab` | 3,027,096 | 2,160,861 |
+| `.gopclntab` | 3,030,713 | 2,160,861 |
 | `.go.buildinfo` | 784 | 464 |
 | `.noptrdata` | 543,649 | 297,729 |
-| `.data` | 115,330 | 58,322 |
-| `.bss` | 144,920 | 139,992 |
+| `.data` | 115,362 | 58,322 |
+| `.bss` | 144,952 | 139,992 |
 | `.noptrbss` | 33,813,888 | 33,682,616 |
 
-Symbol bytes by package (unstripped build, `go tool nm -size`, text, read-only and data symbols; total 39,321,121 port, 37,300,297 0.1.1):
+Symbol bytes by package (unstripped build, `go tool nm -size`, text, read-only and data symbols; total 39,328,229 port, 37,300,297 0.1.1):
 
 | package | port | 0.1.1 |
 |---|---|---|
 | `crypto/internal/fips140/drbg` | 33,558,584 | 33,558,584 |
-| `github.com/MichaelKinsy/pigpen/pi-goal-x` | 1,113,267 | 176,006 |
-| `runtime` | 731,609 | 719,041 |
-| `func` | 565,936 | 387,240 |
+| `github.com/MichaelKinsy/pigpen/pi-goal-x` | 1,118,757 | 176,006 |
+| `runtime` | 731,643 | 719,041 |
+| `func` | 566,680 | 387,240 |
 | `github.com/MichaelKinsy/PiG/extensions/sdk` | 265,015 | 214,995 |
 | `github.com/MichaelKinsy/pigpen/components/pitui/widthx` | 235,286 | 0 |
 | `encoding/json/v2` | 163,629 | 163,629 |
@@ -72,14 +72,14 @@ Symbol bytes by package (unstripped build, `go tool nm -size`, text, read-only a
 pitui's embedded word-segmentation dictionaries (`go:embed`, linked through `pitui.Editor`): 6,320,964 bytes in `.rodata`:
 
 ```
--rw-r--r-- 1 160150820 users  537893 Oct 20 17:12 /w/components/pitui/wordsegmenter/burmese_dictionary.bin
--rw-r--r-- 1 160150820 users 4212243 Oct 20 17:12 /w/components/pitui/wordsegmenter/cjk_dictionary.bin
--rw-r--r-- 1 160150820 users  974071 Oct 20 17:12 /w/components/pitui/wordsegmenter/khmer_dictionary.bin
--rw-r--r-- 1 160150820 users  335860 Oct 20 17:12 /w/components/pitui/wordsegmenter/lao_dictionary.bin
--rw-r--r-- 1 160150820 users  260897 Oct 20 17:12 /w/components/pitui/wordsegmenter/thai_dictionary.bin
+-rw-r--r-- 1 160150820 users  537893 Oct 20 21:08 /w/components/pitui/wordsegmenter/burmese_dictionary.bin
+-rw-r--r-- 1 160150820 users 4212243 Oct 20 21:08 /w/components/pitui/wordsegmenter/cjk_dictionary.bin
+-rw-r--r-- 1 160150820 users  974071 Oct 20 21:08 /w/components/pitui/wordsegmenter/khmer_dictionary.bin
+-rw-r--r-- 1 160150820 users  335860 Oct 20 21:08 /w/components/pitui/wordsegmenter/lao_dictionary.bin
+-rw-r--r-- 1 160150820 users  260897 Oct 20 21:08 /w/components/pitui/wordsegmenter/thai_dictionary.bin
 ```
 
-The extension binary as PiG builds and caches it (`$PIG_HOME/cache/cells/go/<hash>/runner`, bytes): new 15,519,904, old 6,213,792.
+The extension binary as PiG builds and caches it (`$PIG_HOME/cache/cells/go/<hash>/runner`, bytes): new 15,532,192, old 6,213,792.
 
 ## In-process (median of 12 interleaved rounds)
 
@@ -87,57 +87,57 @@ Go: ns, B and allocs per operation (`go test -bench -benchmem`). Original: ns pe
 
 | operation | port | B/op | allocs/op | original | B/op (V8) | port/original | 0.1.1 | port/0.1.1 |
 |---|---|---|---|---|---|---|---|---|
-| SessionStart | 505.8 µs | 155.4 KiB | 2723 | 1.00 ms | 80.3 KiB | -50% | 130.9 µs | +286% |
-| ToolGetGoalSummary | 64.8 µs | 18.6 KiB | 257 | 71.4 µs | 29.8 KiB | -9% | n/a (refuses) | n/a |
-| ToolGetGoalTasks | 150.4 µs | 70.5 KiB | 622 | 40.6 µs | 21.0 KiB | +270% | n/a (refuses) | n/a |
-| ToolCreateGoal | 1.49 ms | 322.5 KiB | 4764 | 1.56 ms | 166.4 KiB | -4% | n/a (refuses) | n/a |
-| ToolUpdateGoalPause | 1.11 ms | 252.9 KiB | 3286 | 1.02 ms | 111.8 KiB | +9% | n/a (refuses) | n/a |
-| ToolSetGoalTasks | 1.22 ms | 316.1 KiB | 4035 | 1.03 ms | 150.9 KiB | +18% | n/a (refuses) | n/a |
-| ToolUpdateGoalTask | 1.16 ms | 249.3 KiB | 3286 | 1.06 ms | 122.6 KiB | +10% | n/a (refuses) | n/a |
-| CmdGoalList | 78.9 µs | 10.3 KiB | 183 | 12.6 µs | 11.2 KiB | +528% | 16.7 µs | +373% |
-| CmdGoalStatus | 137.3 µs | 23.5 KiB | 295 | 77.6 µs | 42.5 KiB | +77% | n/a | n/a |
-| CmdGoalStatusVerbose | 142.3 µs | 28.8 KiB | 412 | 90.4 µs | 55.7 KiB | +58% | n/a | n/a |
-| CmdGoalRefresh | 383.3 µs | 110.9 KiB | 1792 | 111.2 µs | 36.3 KiB | +245% | n/a | n/a |
-| CmdGoalDirect | 1.43 ms | 316.1 KiB | 4705 | 1.39 ms | 153.2 KiB | +3% | 1.14 ms | +25% |
-| RenderDashboardCompact | 73.6 µs | 6.5 KiB | 88 | 67.3 µs | 25.8 KiB | +9% | n/a | n/a |
-| RenderDashboardExpanded | 101.3 µs | 10.8 KiB | 121 | 90.8 µs | 36.6 KiB | +11% | n/a | n/a |
-| KeyPlain | 2.5 µs | 184 B | 4 | 17.6 µs | 8.6 KiB | -86% | n/a | n/a |
-| KeyToggleExpand | 81.0 µs | 10.1 KiB | 130 | 10.5 µs | 4.2 KiB | +673% | n/a | n/a |
-| SchedulerTick | 1.20 ms | 287.5 KiB | 4129 | 1.15 ms | 142.7 KiB | +5% | n/a | n/a |
-| BigLedgerSessionStart | 1.01 ms | 384.9 KiB | 7604 | 1.28 ms | 80.3 KiB | -21% | n/a | n/a |
-| BigLedgerGetGoalSummary | 58.0 µs | 18.4 KiB | 257 | 64.1 µs | 36.1 KiB | -10% | n/a | n/a |
-| BigLedgerGoalStatus | 2.92 ms | 1255.6 KiB | 2321 | 2.09 ms | 657.9 KiB | +39% | n/a | n/a |
-| BigLedgerRender | 65.4 µs | 7.3 KiB | 94 | 91.2 µs | 27.8 KiB | -28% | n/a | n/a |
-| BigLedgerKeyToggleExpand | 78.1 µs | 9.2 KiB | 120 | 11.5 µs | 4.4 KiB | +581% | n/a | n/a |
-| BigLedgerUpdateGoalTask | 1.34 ms | 258.0 KiB | 3292 | 1.06 ms | 125.9 KiB | +27% | n/a | n/a |
+| SessionStart | 341.3 µs | 155.2 KiB | 2723 | 294.6 µs | 80.2 KiB | +16% | 84.8 µs | +302% |
+| ToolGetGoalSummary | 40.0 µs | 18.6 KiB | 257 | 50.4 µs | 29.8 KiB | -21% | n/a (refuses) | n/a |
+| ToolGetGoalTasks | 41.3 µs | 32.7 KiB | 238 | 28.2 µs | 21.0 KiB | +47% | n/a (refuses) | n/a |
+| ToolCreateGoal | 1.11 ms | 322.6 KiB | 4764 | 1.11 ms | 166.3 KiB | +0% | n/a (refuses) | n/a |
+| ToolUpdateGoalPause | 857.5 µs | 252.9 KiB | 3286 | 799.9 µs | 112.2 KiB | +7% | n/a (refuses) | n/a |
+| ToolSetGoalTasks | 922.8 µs | 316.2 KiB | 4035 | 851.5 µs | 150.9 KiB | +8% | n/a (refuses) | n/a |
+| ToolUpdateGoalTask | 866.5 µs | 249.2 KiB | 3286 | 782.7 µs | 122.6 KiB | +11% | n/a (refuses) | n/a |
+| CmdGoalList | 53.4 µs | 10.3 KiB | 183 | 7.6 µs | 11.2 KiB | +607% | 10.9 µs | +391% |
+| CmdGoalStatus | 85.1 µs | 23.5 KiB | 295 | 55.6 µs | 42.5 KiB | +53% | n/a | n/a |
+| CmdGoalStatusVerbose | 83.5 µs | 28.8 KiB | 412 | 61.9 µs | 55.7 KiB | +35% | n/a | n/a |
+| CmdGoalRefresh | 244.7 µs | 110.7 KiB | 1785 | 77.7 µs | 36.3 KiB | +215% | n/a | n/a |
+| CmdGoalDirect | 1.06 ms | 316.1 KiB | 4705 | 1.01 ms | 153.2 KiB | +5% | 839.4 µs | +27% |
+| RenderDashboardCompact | 47.7 µs | 6.6 KiB | 88 | 47.2 µs | 25.8 KiB | +1% | n/a | n/a |
+| RenderDashboardExpanded | 63.6 µs | 10.9 KiB | 121 | 61.0 µs | 36.6 KiB | +4% | n/a | n/a |
+| KeyPlain | 1.7 µs | 184 B | 4 | 12.6 µs | 8.6 KiB | -86% | n/a | n/a |
+| KeyToggleExpand | 54.5 µs | 8.5 KiB | 115 | 7.0 µs | 4.2 KiB | +675% | n/a | n/a |
+| SchedulerTick | 892.6 µs | 287.5 KiB | 4129 | 834.9 µs | 142.7 KiB | +7% | n/a | n/a |
+| BigLedgerSessionStart | 638.9 µs | 385.0 KiB | 7604 | 306.3 µs | 80.2 KiB | +109% | n/a | n/a |
+| BigLedgerGetGoalSummary | 46.9 µs | 18.5 KiB | 257 | 46.6 µs | 36.0 KiB | +1% | n/a | n/a |
+| BigLedgerGoalStatus | 2.17 ms | 1256.0 KiB | 2321 | 1.48 ms | 657.9 KiB | +46% | n/a | n/a |
+| BigLedgerRender | 44.9 µs | 7.3 KiB | 94 | 62.6 µs | 27.8 KiB | -28% | n/a | n/a |
+| BigLedgerKeyToggleExpand | 53.0 µs | 9.2 KiB | 120 | 7.7 µs | 4.4 KiB | +592% | n/a | n/a |
+| BigLedgerUpdateGoalTask | 1.02 ms | 258.3 KiB | 3292 | 830.6 µs | 126.3 KiB | +23% | n/a | n/a |
 
-RenderPush (the port's dashboard layout plus the push of its lines, done on every UI update; the original lays out in the host): 62.8 µs, 6.0 KiB, 88 allocs.
+RenderPush (the port's dashboard layout plus the push of its lines, done on every UI update; the original lays out in the host): 40.7 µs, 6.0 KiB, 88 allocs.
 
 Per-round values (ns/op), port | original | 0.1.1:
 
-- SessionStart: 508508 516092 492483 610748 503160 569009 501234 561669 508728 497698 488306 489544 | 509648 1767005 1225119 418751 1136046 628564 1935564 636272 833799 868031 1747184 1749380 | 137338 155915 137309 119248 187009 113738 120587 127463 145156 134364 125987 124609
-- ToolGetGoalSummary: 84022 67317 67043 60094 64398 61500 65163 65174 63282 62275 58983 72043 | 44303 71270 71448 69217 71394 72855 70995 72005 71492 71654 71235 74037 | -
-- ToolGetGoalTasks: 151343 151116 161944 133281 142032 143549 149585 156931 146821 151851 159538 148782 | 23549 40718 39932 39163 41437 41098 41497 39916 42333 41714 40443 40170 | -
-- ToolCreateGoal: 1424258 1527860 1403522 1874607 1293506 1509167 1434592 1501399 1457173 1634854 1498927 1489410 | 1068878 1622013 1516196 1665586 1402805 1471626 1239005 1477303 1727278 1646352 1601485 1597256 | -
-- ToolUpdateGoalPause: 1136212 1118392 887118 1347148 897241 980095 1101683 1092139 1147851 1127191 1106366 1125469 | 700458 1054835 781597 1076774 853196 983747 659039 1001451 1064494 1149303 1134541 1041898 | -
-- ToolSetGoalTasks: 1252948 1228567 883534 1131125 1110468 987900 1142839 1241630 1215957 1288974 1286222 1245211 | 830080 1172879 885513 840729 945614 811151 849218 1145786 1203899 1219162 1119822 1195112 | -
-- ToolUpdateGoalTask: 1120973 1268192 1179095 868523 1054537 1282977 865104 1136740 1174172 1177431 1153626 1176324 | 847617 1169275 1169247 749981 972656 692122 776061 1028427 1165038 1085599 1082996 1088914 | -
-- CmdGoalList: 75860 81953 76051 78338 74244 80388 78138 87864 76895 79412 86418 83160 | 7302 11859 12601 12507 12815 11492 12890 13382 12713 11860 13277 11480 | 15208 17597 17251 14026 15401 16852 16540 18564 16811 15734 16941 16041
-- CmdGoalStatus: 131502 136175 141951 130173 139209 135061 137718 139259 136890 140720 136281 149158 | 45031 78542 77422 76735 77535 47116 77596 80202 78392 77172 77725 81122 | -
-- CmdGoalStatusVerbose: 159906 146466 147822 143753 135776 135866 145151 152011 140944 129303 138123 140626 | 57102 89574 90932 89369 89674 55156 90450 90292 92157 90703 92508 96451 | -
-- CmdGoalRefresh: 397716 386576 405984 532411 373601 416370 368909 381122 379677 371033 370048 385389 | 67997 110024 110642 118508 115926 70871 110833 115068 114120 111602 109597 111778 | -
-- CmdGoalDirect: 1406706 1461616 1426582 1093935 1457541 1202714 1042751 1412694 1581379 1487352 1424294 1493620 | 1143015 1342822 1483812 1178965 1318271 1195503 962261 1431956 1706623 1489888 1471278 1451712 | 895200 1250696 1069792 1149024 1304714 1138650 985124 1061941 1326083 1151913 1046746 1177525
-- RenderDashboardCompact: 71553 86422 74837 67479 73242 76215 71074 69103 73935 69961 82047 78297 | 39071 66842 73350 55386 68895 38494 68536 65934 67706 71502 66734 69347 | -
-- RenderDashboardExpanded: 104584 101198 104552 90909 113630 96077 101158 105110 95442 97361 101514 101306 | 54136 91004 96087 67865 114655 51024 92555 90470 92139 90656 90696 97976 | -
-- KeyPlain: 2659 2668 2685 2523 2507 2536 2584 2497 2532 2586 2524 2492 | 17635 18184 17415 17581 18717 21208 17486 17350 17608 17590 19114 17497 | -
-- KeyToggleExpand: 81030 87343 84945 75646 79184 82106 81040 85484 77720 80448 80933 83126 | 10760 10820 10848 10497 10376 10485 10345 10347 10468 10457 11155 10427 | -
-- SchedulerTick: 1047493 1207986 1221110 953120 1053344 1247189 973015 1227144 1296972 1189892 1201710 1223688 | 861503 1165092 1153121 1150705 1106405 1120596 769696 1166466 1348940 1186647 1186111 1139577 | -
-- BigLedgerSessionStart: 1008324 974084 1017551 967624 1003585 1000191 1067207 1052069 1067352 966353 1005640 1254153 | 796993 2091247 376835 279497 397682 1235625 1812891 1320269 1045314 1383806 1613911 1651665 | -
-- BigLedgerGetGoalSummary: 70120 60233 52338 58115 55347 56375 61650 57410 51081 59786 80147 57875 | 64800 49249 65320 43981 38073 62358 63161 63486 65847 66177 65128 64721 | -
-- BigLedgerGoalStatus: 3020818 3072457 2868389 2761787 2977922 2759319 2751581 2819967 3195524 2911465 2931023 3006843 | 2140303 1364281 2105075 1375446 1398249 2037640 2045742 2105248 2305002 2151476 2198580 2083127 | -
-- BigLedgerRender: 64898 71980 65917 80348 65215 63611 64560 65507 62876 69910 64391 85138 | 90872 53026 91607 60844 52271 90638 92210 92712 92688 97400 96663 90734 | -
-- BigLedgerKeyToggleExpand: 78354 81281 83776 86676 76674 75041 105806 77048 77863 74342 82135 74445 | 11228 6909 11939 7694 6561 11493 12023 10946 11523 11623 11710 11446 | -
-- BigLedgerUpdateGoalTask: 1400401 1382938 1272202 1231316 1422940 1292228 1283766 1288116 1417385 1343494 1345132 1369798 | 936044 1045708 966691 944795 1037694 1070260 1049566 1079110 1110126 1123530 1130855 1065517 | -
+- SessionStart: 320147 274948 302943 395802 354873 296855 482358 327686 631961 397849 567004 269710 | 300593 347180 304313 387289 285118 272514 346258 346714 271358 277433 264668 288623 | 88354 82007 86665 86432 73042 113753 99820 83219 89899 81011 81795 80856
+- ToolGetGoalSummary: 38794 38172 42122 59825 39202 39873 63584 106381 40048 39940 46739 39607 | 49514 46422 53718 48403 54400 49376 70798 79753 58058 48872 51241 41988 | -
+- ToolGetGoalTasks: 38864 66551 37360 73396 41949 37060 58497 79747 40519 40699 43478 38596 | 30375 24647 27345 28414 27933 30372 39627 45082 29316 27973 23749 23429 | -
+- ToolCreateGoal: 1042287 881259 1028341 1232945 1075346 988943 1340666 1152122 1282704 1219913 1292881 1031482 | 1077765 1019273 1187187 1112389 1154697 990636 1449266 1522532 1293324 1107292 1114980 1061151 | -
+- ToolUpdateGoalPause: 762546 651730 855921 1214488 778721 768888 1048523 1089998 1089661 859161 999765 761724 | 871433 730495 805681 731009 765785 639310 964209 902390 889308 794186 915617 726320 | -
+- ToolSetGoalTasks: 1034125 790215 991028 871210 882597 894748 1027088 1160938 1033181 846157 950809 891976 | 854759 906339 824197 865772 838918 757910 715832 962726 1066484 848305 923551 723177 | -
+- ToolUpdateGoalTask: 862456 760121 845461 954328 890310 754300 1058082 986983 910753 733436 870589 841851 | 807125 717720 795843 792647 758066 640082 637545 1082347 852956 768428 791070 774428 | -
+- CmdGoalList: 60793 51922 46670 58112 57086 53020 67474 94824 51414 49721 53706 50795 | 7718 7386 7732 8260 7035 7345 11105 11789 8993 7073 6586 6698 | 13028 8882 9331 10721 11399 9958 13595 11001 12196 11214 10071 10391
+- CmdGoalStatus: 87267 82516 88169 95272 88738 78243 118947 122909 81981 82825 82886 75649 | 53961 49873 53188 59968 45557 47351 77137 77504 87337 57266 74580 43336 | -
+- CmdGoalStatusVerbose: 83485 82429 111813 83575 107113 81192 142399 103324 85765 81499 81942 70659 | 64361 53638 61720 62039 59659 58419 89519 80899 100896 61681 83315 58728 | -
+- CmdGoalRefresh: 236749 213850 231389 229868 248899 240519 352151 265558 287932 254146 252343 196087 | 82902 77618 75076 78002 77741 74927 111658 76877 143515 66903 79080 67698 | -
+- CmdGoalDirect: 1028331 893028 1122660 1077605 1046606 927405 1275422 1164912 1450289 876671 1037419 1145207 | 997972 942633 1024871 1229877 1062350 891159 923528 1358727 928921 1354451 1093585 894514 | 822737 818315 916871 923872 806766 1002817 1010429 874083 775130 855972 752563 765048
+- RenderDashboardCompact: 48011 41774 45970 46451 42788 47345 56221 50692 49328 71065 61107 40075 | 67200 42161 45854 46132 46843 44864 66366 49079 72104 47664 47522 38316 | -
+- RenderDashboardExpanded: 62398 95468 61651 62433 60979 60702 84875 80630 68944 64826 66459 54702 | 65344 51013 57865 62242 57246 60469 90583 56379 80526 74512 61459 53538 | -
+- KeyPlain: 1541 1534 1705 1807 1844 1703 2724 3013 1521 1646 1688 1611 | 11624 10683 20416 12807 13313 11737 10547 14388 12568 12550 14349 12340 | -
+- KeyToggleExpand: 51536 50498 49325 53601 57143 58871 69558 72446 51383 48030 61782 55412 | 7365 6569 8451 7010 6952 8068 5996 7053 6237 7241 7420 6152 | -
+- SchedulerTick: 877532 879369 1365818 923706 862838 790528 1196484 1381492 905820 828321 877239 1050336 | 837115 731605 919144 758457 859225 748550 866905 1037259 836565 833193 778448 758818 | -
+- BigLedgerSessionStart: 650114 638588 1146526 633908 606338 591053 900454 639196 693895 648641 545996 569405 | 308434 304187 319147 258593 290671 366441 426117 341920 246687 388751 277578 245742 | -
+- BigLedgerGetGoalSummary: 39804 41722 64458 55145 46441 42087 61114 49546 46954 46811 33509 51165 | 45588 43327 47576 36228 42757 64454 63141 54670 38433 67490 58976 35952 | -
+- BigLedgerGoalStatus: 2045468 1994942 2455900 2260302 2157537 2176970 2745337 2255400 2051482 2024388 2124348 2286314 | 1759495 1507832 1525806 1454703 1402364 1297194 2197566 1574273 1297999 1672514 1410879 1279897 | -
+- BigLedgerRender: 43634 41819 44283 45600 68748 67114 67330 39077 70322 49723 37496 37930 | 66223 62200 67467 53983 60327 64292 90173 62586 62710 60965 62885 52481 | -
+- BigLedgerKeyToggleExpand: 50850 76115 47831 55974 52802 89659 79917 47404 75138 53117 40967 44797 | 8475 7993 8303 6597 7740 6527 11652 7724 7580 7304 7567 6484 | -
+- BigLedgerUpdateGoalTask: 1085431 1063270 1023160 992419 1004671 1134408 1228643 1001119 1025781 1106556 887909 943141 | 935825 775116 921680 756438 812292 703963 1109256 1068382 848910 871280 753324 745113 | -
 
 ## Through a real pig (RPC mode, 12 interleaved runs, CPUs 64-71)
 
@@ -145,51 +145,79 @@ Per-round values (ns/op), port | original | 0.1.1:
 
 | subject | median | min | max | extension's share over the control | pig's trace: extension spawn to handshake |
 |---|---|---|---|---|---|
-| control | 29.9 | 19.4 | 36.3 |  | n/a |
-| new | 121.8 | 91.5 | 160.5 | +91.9 ms | 19.0 ms |
-| old | 51.4 | 38.8 | 74.3 | +21.5 ms | 15.0 ms |
-| orig | 683.5 | 520.1 | 752.8 | +653.6 ms | 532.0 ms |
-| control-piglet | 33.9 | 29.2 | 42.5 |  | 2.0 ms |
-| new-piglet | 50.1 | 38.9 | 51.8 | +16.2 ms | 3.0 ms |
-| old-piglet | 40.9 | 39.1 | 50.8 | +7.0 ms | 2.0 ms |
+| control | 18.9 | 16.3 | 24.1 |  | n/a |
+| new | 93.6 | 88.1 | 137.4 | +74.7 ms | 16.0 ms |
+| old | 47.6 | 32.9 | 58.4 | +28.7 ms | 18.0 ms |
+| orig | 521.6 | 435.6 | 728.3 | +502.7 ms | 398.5 ms |
+| control-piglet | 31.3 | 29.2 | 37.6 |  | 1.0 ms |
+| new-piglet | 40.2 | 38.9 | 55.0 | +8.9 ms | 2.5 ms |
+| old-piglet | 40.5 | 38.2 | 45.9 | +9.2 ms | 2.0 ms |
 
-First start of each subject (the warm-up round: PiG builds a Go extension from source, jiti transpiles the TypeScript; a Piglet needs neither), ms: control 19, new 593, old 410, orig 2064, control-piglet 50, new-piglet 49, old-piglet 60
+First start of each subject (the warm-up round: PiG builds a Go extension from source, jiti transpiles the TypeScript; a Piglet needs neither), ms: control 30, new 1898, old 288, orig 1944, control-piglet 47, new-piglet 48, old-piglet 50
 
 
 Every round's cold start (ms): 
 
-- control: 29.3 23.6 29.4 30.4 30.3 36.3 32.4 30.3 29.5 19.4 31.4 28.9
-- new: 128.3 117.7 138.8 122.3 117.7 160.5 129.8 132.4 121.3 91.5 108.6 112.7
-- old: 51.0 49.2 47.8 74.3 51.9 64.7 38.8 68.3 66.5 49.5 49.4 62.3
-- orig: 686.7 667.4 529.1 520.1 680.9 752.8 719.3 723.3 686.1 537.7 564.3 692.0
-- control-piglet: 40.7 41.7 33.3 40.2 34.5 32.3 30.6 29.2 41.1 42.5 31.0 32.1
-- new-piglet: 50.8 42.1 51.7 49.5 50.7 41.1 38.9 49.0 51.4 51.7 44.5 51.8
-- old-piglet: 40.8 39.1 40.8 39.3 49.5 50.8 41.8 39.6 40.9 41.7 39.8 42.0
+- control: 18.7 18.0 17.9 19.2 16.3 19.0 20.8 17.2 19.9 18.5 20.9 24.1
+- new: 95.5 113.4 92.6 90.6 88.1 117.4 88.9 137.4 93.0 90.1 94.2 120.3
+- old: 58.4 47.2 53.6 47.6 49.6 46.8 53.7 36.3 46.3 50.2 32.9 47.6
+- orig: 728.3 538.7 494.3 435.6 500.7 522.9 500.7 520.2 629.7 592.7 540.7 489.6
+- control-piglet: 35.3 32.4 29.2 29.5 29.6 29.2 33.1 30.1 30.2 33.1 36.5 37.6
+- new-piglet: 39.1 42.1 45.6 38.9 39.3 40.0 39.9 40.5 39.6 40.3 42.2 55.0
+- old-piglet: 38.4 38.2 41.0 38.5 41.7 40.0 39.1 45.9 39.4 40.9 45.4 41.1
 
 Pig's own marks, median (ms since process start): 
 
 | subject | extension-discovery-done | extensions-loaded | extension phases |
 |---|---|---|---|
-| control | 4 | 5 |  |
-| new | 48 | 101 | discover-start 52; discover-done 59; build-check-start 60; build-check-done 81; spawn-start 82; spawn-done 82; handshake-start 98; handshake-done 100 |
-| old | 12 | 34 | discover-start 14; discover-done 16; build-check-start 16; build-check-done 20; spawn-start 20; spawn-done 20; handshake-start 31; handshake-done 33 |
-| orig | 4 | 545 | discover-start 7; discover-done 7; build-check-start 7; build-check-done 8; spawn-start 14; spawn-done 14; handshake-start 536; handshake-done 544 |
-| control-piglet | 5 | 12 | spawn-start 8; spawn-done 8; handshake-start 8; handshake-done 10 |
-| new-piglet | 5 | 13 | spawn-start 8; spawn-done 9; handshake-start 9; handshake-done 12 |
-| old-piglet | 6 | 13 | spawn-start 9; spawn-done 9; handshake-start 9; handshake-done 11 |
+| control | 3 | 4 |  |
+| new | 35 | 80 | discover-start 38; discover-done 45; build-check-start 45; build-check-done 60; spawn-start 60; spawn-done 60; handshake-start 77; handshake-done 79 |
+| old | 9 | 34 | discover-start 12; discover-done 12; build-check-start 12; build-check-done 16; spawn-start 16; spawn-done 16; handshake-start 32; handshake-done 33 |
+| orig | 3 | 410 | discover-start 5; discover-done 5; build-check-start 5; build-check-done 6; spawn-start 10; spawn-done 10; handshake-start 406; handshake-done 410 |
+| control-piglet | 4 | 9 | spawn-start 6; spawn-done 6; handshake-start 6; handshake-done 7 |
+| new-piglet | 4 | 10 | spawn-start 7; spawn-done 7; handshake-start 7; handshake-done 9 |
+| old-piglet | 4 | 10 | spawn-start 7; spawn-done 7; handshake-start 7; handshake-done 8 |
 
 ### Tools and commands (ms; each run's median over its calls, then the median over runs; the first call of each tool in a run is dropped, except update_goal, which runs once per run)
 
 | operation | new | orig | new-piglet | new/orig (fused vs orig where both) |
 |---|---|---|---|---|
-| create_goal | 2.79 | 5.01 | 2.48 | -44% |
-| set_goal_tasks | 4.15 | 5.01 | 3.45 | -17% |
-| get_goal | 1.74 | 2.94 | 1.33 | -41% |
-| get_goal tasks | 2.31 | 3.24 | 1.73 | -29% |
-| update_goal_task | 0.52 | 0.84 | 0.34 | -38% |
-| update_goal | 2.20 | 3.79 | 2.29 | -42% |
-| goal-list | 1.69 | 2.62 | 1.65 | -36% |
-| goal-status | 2.70 | 3.72 | 2.34 | -27% |
-| goal-status verbose | 2.43 | 4.06 | 2.35 | -40% |
-| goal-refresh | 1.94 | 2.53 | 2.01 | -23% |
+| create_goal | 2.30 | 4.37 | 1.92 | -47% |
+| set_goal_tasks | 3.33 | 4.23 | 2.92 | -21% |
+| get_goal | 1.45 | 2.17 | 0.98 | -33% |
+| get_goal tasks | 1.79 | 2.48 | 1.26 | -28% |
+| update_goal_task | 0.48 | 0.68 | 0.29 | -30% |
+| update_goal | 2.54 | 4.32 | 1.95 | -41% |
+| goal-list | 1.38 | 2.12 | 1.16 | -35% |
+| goal-status | 2.24 | 2.94 | 1.97 | -24% |
+| goal-status verbose | 2.17 | 3.33 | 1.51 | -35% |
+| goal-refresh | 1.49 | 1.86 | 1.45 | -20% |
 
+
+## Control: the cache against the previous head (same host session, interleaved)
+
+`go test -bench` of goal-pr-7's tests (no detail page cache) and this branch's, 12 interleaved rounds after a warm-up, 3,000 iterations each,
+CPUs 64-71 (medians). Only `get_goal` tasks reads the cache; the others are unchanged code and show the host's noise (load average 44 at the time).
+
+| operation | pr-7 | this branch | change |
+|---|---|---|---|
+| ToolGetGoalTasks | 95.7 µs | 38.3 µs | -60% |
+| ToolGetGoalSummary | 40.0 µs | 39.0 µs | -3% |
+| CmdGoalList | 49.8 µs | 51.7 µs | +4% |
+| CmdGoalStatus | 80.1 µs | 81.7 µs | +2% |
+| CmdGoalRefresh | 222.7 µs | 236.1 µs | +6% |
+| RenderDashboardCompact | 44.6 µs | 49.0 µs | +10% (code not touched: noise) |
+
+## Terminal key wait while a completion audit runs
+
+`BenchmarkKeyWaitDuringAudit` (`perf_keywait_test.go`, `-benchtime 10x`, CPUs 64-95,160-191 under the heavy lock): `update_goal(complete)` runs
+with a scripted auditor that reports progress every `progress` for 600 ms; from the audit's start until `update_goal` returns, a key (plain,
+then the toggle chord, alternating) goes through the listener's `core.locked` every 300 µs. `status` is a sleep inside `SetStatus`, standing
+for the SDK's blocking round trip. Wait = time of the listener call, all keys of the ten audits pooled.
+
+| progress | SetStatus | keys | median | p99 | max |
+|---|---|---|---|---|---|
+| 1 ms | 0 | 5152 | 64.9 µs | 259 µs | 2.98 ms |
+| 1 ms | 200 µs | 5169 | 63.5 µs | 232 µs | 3.19 ms |
+| 1 ms | 1 ms | 5204 | 65.9 µs | 267 µs | 6.63 ms |
+| 50 ms | 200 µs | 5405 | 26.0 µs | 160 µs | 3.34 ms |
