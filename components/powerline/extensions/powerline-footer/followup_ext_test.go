@@ -149,7 +149,7 @@ func TestAutoFollowUpMovesAConfidentMessageToTheFollowUpQueue(t *testing.T) {
 	t.Setenv("TYPESAFE_API_KEY", "test-key")
 	h := startFollowUp(t, followUpSettings)
 	h.branch = []any{map[string]any{"type": "message", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "Reading the code."}}}}}
-	h.FireAll("before_agent_start", map[string]any{"prompt": "Fix the checkout bug"})
+	h.FireAll("before_agent_start", map[string]any{"prompt": "Fix the checkout bug", "systemPromptOptions": map[string]any{}})
 	h.runSignal(false)
 
 	image := map[string]any{"type": "image", "data": "AAAA", "mimeType": "image/png"}
@@ -294,7 +294,7 @@ func TestAutoFollowUpSessionStartClearsTheTask(t *testing.T) {
 	jev := newJevServer(t, "steer", 0.9)
 	t.Setenv("TYPESAFE_API_KEY", "test-key")
 	h := startFollowUp(t, followUpSettings)
-	h.FireAll("before_agent_start", map[string]any{"prompt": "old task"})
+	h.FireAll("before_agent_start", map[string]any{"prompt": "old task", "systemPromptOptions": map[string]any{}})
 	h.FireAll("session_start", map[string]any{"reason": "new"})
 	fireInput(h.Host, "also lint", nil)
 	state, _ := jev.seen()[0]["state"].(map[string]any)

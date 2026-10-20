@@ -92,7 +92,6 @@ func TestEditorCompositionTwins(t *testing.T) {
 
 func TestAutocompleteProviderDetectionTakesAnyValue(t *testing.T) {
 	onlyApply := &sdk.AutocompleteProvider{ApplyCompletion: baseProvider().ApplyCompletion}
-	var nilHolder *wrappingEditor
 	for name, source := range map[string]any{
 		"nil":                       nil,
 		"a string":                  "editor",
@@ -105,7 +104,6 @@ func TestAutocompleteProviderDetectionTakesAnyValue(t *testing.T) {
 			t.Errorf("%s: got %+v, want nil", name, got)
 		}
 	}
-	_ = nilHolder
 	want := baseProvider()
 	if got := getEditorAutocompleteProvider(holderOnly{provider: want}); got != want {
 		t.Errorf("the provider is returned as it is, not copied")
