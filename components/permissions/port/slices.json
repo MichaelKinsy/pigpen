@@ -1,6 +1,4 @@
 {
- "access-intent/bash/program": "not ported: bash command parsing (tree-sitter-bash through WebAssembly), command enumeration, wrapper analysis and path extraction; the port matches only simple commands",
- "access-intent/bash/program-external-accesses": "not ported: bash command parsing (tree-sitter-bash through WebAssembly), command enumeration, wrapper analysis and path extraction; the port matches only simple commands",
  "authority/approval-escalator": "not ported: the approval dialog, session approvals, forwarding between sessions, authorizer chain and escalation; an ask is blocked with a visible reason",
  "authority/ask-dialog-queue": "not ported: the approval dialog, session approvals, forwarding between sessions, authorizer chain and escalation; an ask is blocked with a visible reason",
  "authority/authorizer": "not ported: the approval dialog, session approvals, forwarding between sessions, authorizer chain and escalation; an ask is blocked with a visible reason",

@@ -63,6 +63,24 @@ for (const t of tokens) for (const s of singles) out.push(s.replaceAll("T", t).r
 for (const t of tokens.filter((_, i) => i % 3 === 0)) for (const s of singles.filter((x) => x.includes("U"))) out.push(s.replaceAll("T", "/etc/hosts").replaceAll("U", t));
 for (const c of cdTargets) for (const o of cdOperands) for (const ch of chains) out.push(ch.replaceAll("T", c).replaceAll("U", o));
 for (const t of ["~/x", "/etc", "a", "src"]) for (const ch of ["cd T && cat ../b", "cd T"]) for (const w of ["", "sudo ", "xargs ", "env A=1 "]) out.push(`${w}${ch.replaceAll("T", t)}`);
+// empty and degenerate targets, unicode, spacing, case and normalization shapes, cd operand spellings
+const misc = [
+  'echo hi > ""', "echo hi > ''", 'cat < ""', "cat >''x", "echo > $''", 'cat "" /etc/hosts', "cat '' ''", "cat > ''", 'cat >> ""', "cat 2>''",
+  "cat /tmp/ü", "cat ~/日本語", "cat /tmp/😀", "cat é/../../x", "cat '/tmp/a b'", "cat /tmp/a\\ b", "cat \"/tmp/a b\"", "cat /etc/hosts\n/etc/shadow",
+  "cat\t/etc/hosts", "cat /etc/hosts\r", "cat /etc/hosts\r\ncat /etc/shadow", "cat\u00a0/etc/hosts", "cat /etc/hosts\u2028cat /etc/shadow",
+  'cd "a b" && cat ../x', "cd a\\ b && cat ../x", "cd ./a && cat ../../x", "cd a/ && cat ../../x", "cd '' && cat ../x", 'cd "" && cat ../x', "cd . && cat ../x",
+  "cd C:\\x && cat ../y", "cd C:/x && cat ../y", "cd /c && cat ../y", "cd /c/ && cat ../y", "cd /cc && cat ../y", "cd /c/projects/app && cat ../y", "cd //c/x && cat ../y",
+  "cat /ETC/passwd", "cat C:/PROJECTS/app/x", "cat c:/projects/app/x", "cat /etc//hosts", "cat /etc/./hosts", "cat /etc/../etc/hosts", "cat /projects/my-app/../x",
+  "cat /projects/my-app/./src//x.ts", "cat /projects/my-app/", "cat /projects/my-app", "cat /projects/my-app/..", "cat /projects", "cat ../my-app/x", "cat ../my-app",
+  "cat ~/../x", "cat ~//x", "cat ~/./x", "cat ~/", "cat $HOME/", "cat $HOME//x", "cat ${HOME}/../x", 'cat "$HOME"/x', "cat '$HOME'/x", 'cat "~"/x',
+  "cat a/b/../../../x", "cat ./..", "cat ../..", "cat ..\\x", "cat ..\\..\\x", "cat a\\..\\x", "cat .\\x", "cat C:x", "cat C:", "cat C:\\", "cat \\\\host\\share\\x",
+  "cat //host/share/x", "cat /dev/fd/3", "cat /proc/self/environ", "cat /dev/tty", "cat /dev/zero", "cat /dev/", "cat /dev", "ls /dev/null /dev/null/",
+  "git diff --no-index /etc/hosts /etc/passwd", "cp -r /etc/. .", "rsync -a /etc/ ./x", "tar -xf a.tar -C ../x", "unzip a.zip -d /tmp/x", "ln -sf /etc/hosts hosts",
+  "cat /etc/hosts | cat | cat /etc/passwd", "(cat /etc/hosts; cat /etc/passwd) > /tmp/o", "{ cat /etc/hosts; } 2>&1 | tee /tmp/o", "cat <(cat /etc/hosts) <(cat /etc/passwd)",
+  "exec 3< /etc/hosts", "exec > /tmp/o", "read x < /etc/hosts", "while read l; do echo; done < /etc/hosts", "for f in *; do cat $f; done > /tmp/o", "cat $((1+1))/x",
+];
+for (const c of misc) out.push(c);
+for (const c of misc.slice(0, 20)) for (const w of ["sudo ", "xargs ", "cd src && ", "cd \"$D\" && "]) out.push(w + c);
 // jsonl-safe, deterministic, unique
 const seen = new Set();
 const unique = out.filter((s) => (seen.has(s) ? false : (seen.add(s), true)));
