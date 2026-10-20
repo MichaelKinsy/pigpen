@@ -182,3 +182,7 @@ func textAndImages(content any) (string, []string) {
 	}
 	return strings.Join(text, "\n"), images
 }
+
+// optionDisposition says what the provider does with each key the host puts
+// in ProviderStreamOptions.Values.
+var optionDisposition = map[string]string{}
