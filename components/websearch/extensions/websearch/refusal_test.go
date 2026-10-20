@@ -76,15 +76,15 @@ func TestRefusalSearchProviders(t *testing.T) {
 	t.Run("an explicit unported provider", func(t *testing.T) {
 		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
 		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": "serpbase"})
-		wantRefusal(t, err, "SerpBase search provider")
+		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": "xai"})
+		wantRefusal(t, err, "xAI search provider")
 		wantCalls(t, n)
 	})
 	t.Run("a provider list with an unported provider contacts none", func(t *testing.T) {
 		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
 		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": []any{"tavily", "serper"}})
-		wantRefusal(t, err, "Serper search provider")
+		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": []any{"tavily", "xai"}})
+		wantRefusal(t, err, "xAI search provider")
 		wantCalls(t, n)
 	})
 	t.Run("provider all refuses when an unported provider is configured", func(t *testing.T) {
@@ -103,10 +103,10 @@ func TestRefusalSearchProviders(t *testing.T) {
 		wantCalls(t, n)
 	})
 	t.Run("a configured provider that is unported refuses", func(t *testing.T) {
-		r := providerRuntime(t, `{"provider":"serper"}`, map[string]string{"TAVILY_API_KEY": "k"})
+		r := providerRuntime(t, `{"provider":"xai"}`, map[string]string{"TAVILY_API_KEY": "k"})
 		n := searchProviderNet(t)
 		_, err := execTool(t, r, "web_search", map[string]any{"query": "x"})
-		wantRefusal(t, err, "Serper search provider")
+		wantRefusal(t, err, "xAI search provider")
 		wantCalls(t, n)
 	})
 	t.Run("searchRouting refuses at an available unported provider", func(t *testing.T) {
@@ -120,8 +120,8 @@ func TestRefusalSearchProviders(t *testing.T) {
 	t.Run("source_check refuses too", func(t *testing.T) {
 		r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
 		n := searchProviderNet(t)
-		_, err := execTool(t, r, "source_check", map[string]any{"claim": "x", "provider": "serpbase"})
-		wantRefusal(t, err, "SerpBase search provider")
+		_, err := execTool(t, r, "source_check", map[string]any{"claim": "x", "provider": "xai"})
+		wantRefusal(t, err, "xAI search provider")
 		wantCalls(t, n)
 	})
 	t.Run("a ported provider is not refused", func(t *testing.T) {

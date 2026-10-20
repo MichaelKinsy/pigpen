@@ -91,7 +91,11 @@ type providerDef struct {
 	// available approximates the original's availability check for providers that are not ported
 	// yet (a credential source of the original's names is configured).
 	available func() bool
-	search    func(ctx context.Context, q string, o SearchOptions) (*SearchResponse, error)
+	// availableErr, when set, replaces available for a provider whose availability check can
+	// fail on its own configuration (SearXNG reads the ssrf settings): the failure is the
+	// caller's error, never "unavailable".
+	availableErr func() (bool, error)
+	search       func(ctx context.Context, q string, o SearchOptions) (*SearchResponse, error)
 }
 
 func credAvail(provider, cfgKey, env string) func() bool {
@@ -117,6 +121,19 @@ func init() {
 	def("duckduckgo", "DuckDuckGo", IsDuckDuckGoAvailable, SearchWithDuckDuckGo)
 	def("serpdive", "SERPdive", IsSerpdiveAvailable, SearchWithSerpdive)
 	def("kagi", "Kagi", IsKagiAvailable, SearchWithKagi)
+	def("serper", "Serper", IsSerperAvailable, SearchWithSerper)
+	def("serpapi", "SerpApi", IsSerpAPIAvailable, SearchWithSerpAPI)
+	def("serpbase", "SerpBase", IsSerpBaseAvailable, SearchWithSerpBase)
+	def("serply", "Serply", IsSerplyAvailable, SearchWithSerply)
+	def("valyu", "Valyu", IsValyuAvailable, SearchWithValyu)
+	def("bocha", "Bocha", IsBochaAvailable, SearchWithBocha)
+	def("baizhi", "Baizhi", IsBaizhiAvailable, SearchWithBaizhi)
+	def("you", "You.com", IsYouAvailable, SearchWithYou)
+	def("anysearch", "Anysearch", IsAnySearchAvailable, SearchWithAnySearch)
+	def("xcrawl", "XCrawl", IsXcrawlAvailable, SearchWithXCrawl)
+	def("jina", "Jina", IsJinaSearchAvailable, SearchWithJina)
+	def("searxng", "SearXNG", nil, SearchWithSearXNG)
+	providerTable["searxng"].availableErr = IsSearXNGAvailable
 	// Not ported yet: label and credential names as in the original.
 	for _, p := range []struct{ name, label, cfg, env string }{
 		{"openai", "OpenAI", "openaiApiKey", "OPENAI_API_KEY"},
@@ -126,25 +143,13 @@ func init() {
 		{"search1api", "Search1API", "search1apiApiKey", "SEARCH1API_KEY"},
 		{"searchinfinity", "Searchinfinity", "searchinfinityApiKey", "SEARCHINFINITY_API_KEY"},
 		{"querit", "Querit", "queritApiKey", "QUERIT_API_KEY"},
-		{"you", "You.com", "youApiKey", "YOU_API_KEY"},
 		{"firecrawl", "Firecrawl", "firecrawlApiKey", "FIRECRAWL_API_KEY"},
-		{"jina", "Jina", "jinaApiKey", "JINA_API_KEY"},
-		{"searxng", "SearXNG", "searxngBaseUrl", "SEARXNG_BASE_URL"},
 		{"gemini", "Gemini", "geminiApiKey", "GEMINI_API_KEY"},
 		{"kimi", "Kimi", "kimiApiKey", "KIMI_API_KEY"},
 		{"ollama", "Ollama", "ollamaApiKey", "OLLAMA_API_KEY"},
-		{"anysearch", "Anysearch", "", ""},
 		{"xai", "xAI", "xaiApiKey", "XAI_API_KEY"},
 		{"mistral", "Mistral", "mistralApiKey", "MISTRAL_API_KEY"},
 		{"brightdata", "Bright Data", "brightdataApiKey", "BRIGHTDATA_API_KEY"},
-		{"serpbase", "SerpBase", "serpbaseApiKey", "SERPBASE_API_KEY"},
-		{"serpapi", "SerpApi", "serpapiApiKey", "SERPAPI_API_KEY"},
-		{"serper", "Serper", "serperApiKey", "SERPER_API_KEY"},
-		{"serply", "Serply", "serplyApiKey", "SERPLY_API_KEY"},
-		{"valyu", "Valyu", "valyuApiKey", "VALYU_API_KEY"},
-		{"bocha", "Bocha", "bochaApiKey", "BOCHA_API_KEY"},
-		{"xcrawl", "XCrawl", "", ""},
-		{"baizhi", "Baizhi", "baizhiApiKey", "BAIZHI_API_KEY"},
 	} {
 		avail := func() bool { return false }
 		if p.cfg != "" {
@@ -433,8 +438,21 @@ func ClassifyProviderError(provider string, err error) *SearchProviderError {
 }
 
 func isProviderAvailable(provider string) bool {
+	ok, _ := providerAvailable(provider)
+	return ok
+}
+
+// providerAvailable is the original's availability check; its error is the provider's own
+// configuration failing to load and ends the search.
+func providerAvailable(provider string) (bool, error) {
 	d := providerTable[provider]
-	return d != nil && d.available()
+	if d == nil {
+		return false, nil
+	}
+	if d.availableErr != nil {
+		return d.availableErr()
+	}
+	return d.available(), nil
 }
 
 func searchWithResolvedProvider(ctx context.Context, provider, query string, o FullSearchOptions) (*ProviderSearchResponse, error) {
@@ -457,7 +475,14 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 	providers := selected
 	if providers == nil {
 		for _, p := range AllSearchProviders {
-			if sliceHas(allowed, p) && isProviderAvailable(p) {
+			if !sliceHas(allowed, p) {
+				continue
+			}
+			ok, err := providerAvailable(p)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
 				providers = append(providers, p)
 			}
 		}
@@ -546,7 +571,11 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 func searchWithConfiguredRouting(ctx context.Context, query string, o FullSearchOptions, routing *SearchRouting) (*AttributedSearchResponse, error) {
 	var diagnostics []string
 	for _, provider := range routing.Providers {
-		if !isProviderAvailable(provider) {
+		ok, err := providerAvailable(provider)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
 			diagnostics = append(diagnostics, provider+": unavailable")
 			continue
 		}
@@ -623,7 +652,12 @@ func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *sea
 		allowed = ResolvedProviders
 	}
 	for _, p := range autoOrder {
-		if !sliceHas(allowed, p) || !isProviderAvailable(p) {
+		if !sliceHas(allowed, p) {
+			continue
+		}
+		if ok, err := providerAvailable(p); err != nil {
+			return nil, err
+		} else if !ok {
 			continue
 		}
 		r, err := searchWithResolvedProvider(ctx, p, query, o)

@@ -33,10 +33,27 @@ Piglet Binary (it is part of `pig-with-batteries`). It is a Package:
 ## Providers in this slice
 
 Exa (keyed, and the keyless Exa MCP), Brave, Tavily (numbered key pool), Perplexity,
-DuckDuckGo, SERPdive, Kagi. Selection, `auto` order, `"all"`, provider arrays,
-`searchRouting` fallback and `webSearch.allowedProviders` follow the original. The other
-providers of the original are in the provider table; selecting one (or reaching a configured
-one in `auto`, `"all"` or `searchRouting`) is refused as a whole.
+DuckDuckGo, SERPdive, Kagi, and the keyed REST providers Serper, SerpApi, SerpBase, Serply,
+Valyu, Bocha, Baizhi (MCP over HTTP), You.com, AnySearch (works without a key), XCrawl,
+SearXNG (your own instance, through the SSRF guard) and Jina Search. Selection, `auto` order,
+`"all"`, provider arrays, `searchRouting` fallback and `webSearch.allowedProviders` follow the
+original. The other providers of the original are in the provider table; selecting one (or
+reaching a configured one in `auto`, `"all"` or `searchRouting`) is refused as a whole.
+
+| Provider (`provider` value) | Credential (config key, environment variable) | Notes |
+|---|---|---|
+| `serper` | `serperApiKey`, `SERPER_API_KEY` | explicit or `searchRouting` only |
+| `serpapi` | `serpapiApiKey`, `SERPAPI_KEY` | explicit or `searchRouting` only |
+| `serpbase` | `serpbaseApiKey`, `SERPBASE_API_KEY` | explicit or `searchRouting` only |
+| `serply` | `serplyApiKey`, `SERPLY_API_KEY` | explicit or `searchRouting` only |
+| `valyu` | `valyuApiKey`, `VALYU_API_KEY` | explicit or `searchRouting` only |
+| `bocha` | `bochaApiKey`, `BOCHA_API_KEY` | in `auto` and `"all"` |
+| `baizhi` | `baizhiApiKey`, `BAIZHI_API_KEY` | explicit or `searchRouting` only; returns the MCP payload as the answer |
+| `you` | `youApiKey`, `YDC_API_KEY` | explicit or `searchRouting` only |
+| `anysearch` | `anysearchApiKey`, `ANYSEARCH_API_KEY` (optional) | explicit or `searchRouting` only; available without a key |
+| `xcrawl` | `xcrawlApiKey`, `XCRAWL_API_KEY` | explicit or `searchRouting` only |
+| `searxng` | `searxngBaseUrl`, `SEARXNG_BASE_URL`; optional `searxngHeaders` | first in `auto` when configured; the `ssrf` settings apply |
+| `jina` | `jinaApiKey`, `JINA_API_KEY` | search through `s.jina.ai`; in `auto` and `"all"`; with `includeContent` the pages come back inline |
 
 ## What is refused until it is ported
 
@@ -46,7 +63,7 @@ never falls back or runs part of the call:
 > @pi-in-go/pigpen-websearch (Go port) does not support `<feature>` yet. Install the original
 > extension, npm:pi-web-access@0.33.0, which runs unchanged in PiG.
 
-- the 26 search providers not listed above (a provider that is selected, listed, configured, or
+- the 14 search providers not listed above (a provider that is selected, listed, configured, or
   reached in `auto`, `"all"` or `searchRouting` with a credential set);
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
 - `fetch_content` `mode: "answer"` and `auth` (authenticated fetch);
