@@ -36,7 +36,7 @@ func ollamaCount(v *float64) int {
 
 // SearchWithOllama queries the Ollama web_search endpoint.
 func SearchWithOllama(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
-	key, err := requireProviderKey(ctx, "Ollama", "Ollama", "ollamaApiKey", "OLLAMA_API_KEY", ollamaGetKeyAt)
+	key, err := requireProviderKey(ctx, "Ollama API", "Ollama", "ollamaApiKey", "OLLAMA_API_KEY", ollamaGetKeyAt)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func ExtractWithOllama(ctx context.Context, rawURL string, o ExtractOptions, ssr
 	if err := validateTarget(ctx, rawURL, ssrf, o.Lookup, true); err != nil {
 		return nil, err
 	}
-	key, err := requireProviderKey(ctx, "Ollama", "Ollama", "ollamaApiKey", "OLLAMA_API_KEY", ollamaGetKeyAt)
+	key, err := requireProviderKey(ctx, "Ollama API", "Ollama", "ollamaApiKey", "OLLAMA_API_KEY", ollamaGetKeyAt)
 	if err != nil {
 		return nil, err
 	}

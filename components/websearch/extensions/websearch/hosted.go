@@ -93,7 +93,7 @@ func timeoutMsOr(ms *int64, def time.Duration) time.Duration {
 }
 
 func missingKey(label, cfgKey, env, getKeyAt string) error {
-	return fmt.Errorf("%s API key not found. Either:\n  1. Create %s with { \"%s\": \"your-key\" }\n  2. Set %s environment variable\n%s", label, ConfigPath(), cfgKey, env, getKeyAt)
+	return fmt.Errorf("%s key not found. Either:\n  1. Create %s with { \"%s\": \"your-key\" }\n  2. Set %s environment variable\n%s", label, ConfigPath(), cfgKey, env, getKeyAt)
 }
 
 // requireProviderKey resolves a credential or fails with the provider's "key not found" text.

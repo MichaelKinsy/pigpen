@@ -78,7 +78,7 @@ func parallelKey(ctx context.Context) (string, error) {
 		return "", err
 	}
 	if key == "" {
-		return "", missingKey("Parallel", "parallelApiKey", "PARALLEL_API_KEY", "Get a key at https://platform.parallel.ai")
+		return "", missingKey("Parallel API", "parallelApiKey", "PARALLEL_API_KEY", "Get a key at https://platform.parallel.ai")
 	}
 	return key, nil
 }

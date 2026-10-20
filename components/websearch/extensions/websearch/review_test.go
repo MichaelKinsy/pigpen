@@ -80,17 +80,17 @@ func TestReviewImagePixelBudget(t *testing.T) {
 }
 
 // unportedGuidance matches options the original offers that this port cannot act on.
-const unportedGuidance = `GEMINI_API_KEY|gemini\.google\.com|Chrom|/login|Codex|openaiApiKey|OPENAI_API_KEY|searxng|SEARXNG|bocha|BOCHA|cloudflare|CLOUDFLARE|anysearch|xcrawl|serpapi|serper|serply|valyu|You\.com|Mistral|Grok`
+const unportedGuidance = `Chrom|/login|Codex|openaiApiKey|OPENAI_API_KEY|searxng|SEARXNG|bocha|BOCHA|cloudflare|CLOUDFLARE|anysearch|xcrawl|serpapi|serper|serply|valyu|You\.com|Mistral|Grok`
 
 func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
-	t.Run("the fetch fallback checklist offers what this port can do and not the Gemini options", func(t *testing.T) {
+	t.Run("the fetch fallback checklist is the original's", func(t *testing.T) {
 		extractEnv(t, "")
 		useNet(t, func(netCall) netReply { return reply(500, "oops") })
 		msg := errOf(ExtractContent(bg(), "https://example.com/oops", ExtractOptions{Lookup: pubLookup, ToolNames: RegisteredToolNames{WebSearch: "web_search", FetchContent: "fetch_content"}}))
 		matchRE(t, `Fallback options:`, msg)
 		matchRE(t, `Enable the keyless Jina Reader fallback`, msg)
 		matchRE(t, `Use web_search to find content about this topic`, msg)
-		noMatchRE(t, unportedGuidance, msg)
+		matchRE(t, `(?s)Set firecrawlBaseUrl in .*Set crawl4aiBaseUrl in .*Set tinyfishApiKey in .*Set brightdataApiKey and brightdataUnlockerZone in .*  • Set GEMINI_API_KEY in .*  • Sign into gemini\.google\.com in Chrome\n  • Use web_search to find content about this topic$`, msg)
 	})
 	t.Run("the no-provider error names only ported providers", func(t *testing.T) {
 		providerEnv(t, `{"webSearch":{"allowedProviders":["duckduckgo"]}}`, nil)

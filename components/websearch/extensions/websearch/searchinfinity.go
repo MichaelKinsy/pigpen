@@ -81,7 +81,7 @@ func searchinfinityStatus(codeN *float64, code, message string) int {
 
 // SearchWithSearchinfinity queries Search Infinity.
 func SearchWithSearchinfinity(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
-	key, err := requireProviderKey(ctx, "Searchinfinity", "Searchinfinity", "searchinfinityApiKey", "SEARCHINFINITY_API_KEY", "Create a key at https://console.byteplus.com/search-infinity/api-key")
+	key, err := requireProviderKey(ctx, "Searchinfinity API", "Searchinfinity", "searchinfinityApiKey", "SEARCHINFINITY_API_KEY", "Create a key at https://console.byteplus.com/search-infinity/api-key")
 	if err != nil {
 		return nil, err
 	}
