@@ -1,0 +1,16 @@
+{
+ "name": "queue-picker-rpc",
+ "description": "/queue with items in RPC mode: the overlay does not exist there, so nothing happens.",
+ "agentFiles": {
+  "powerline-footer/inbox.jsonl": "{\"id\":\"a2000001\",\"text\":\"pick me\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"queued\"}\n{\"id\":\"a2000002\",\"text\":\"or me\",\"createdAt\":2,\"updatedAt\":2,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"queued\"}\n"
+ },
+ "steps": [
+  {
+   "name": "picker",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue"
+   }
+  }
+ ]
+}

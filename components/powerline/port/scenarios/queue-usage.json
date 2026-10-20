@@ -1,0 +1,69 @@
+{
+ "name": "queue-usage",
+ "description": "/queue with an unknown action, missing arguments and an empty queue: only usage lines and notices.",
+ "steps": [
+  {
+   "name": "bogus",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue bogus"
+   }
+  },
+  {
+   "name": "alias",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias"
+   }
+  },
+  {
+   "name": "clear",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue clear"
+   }
+  },
+  {
+   "name": "target",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue target"
+   }
+  },
+  {
+   "name": "target-id",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue target a1"
+   }
+  },
+  {
+   "name": "send",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue send"
+   }
+  },
+  {
+   "name": "retry",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue retry"
+   }
+  },
+  {
+   "name": "picker",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue"
+   }
+  },
+  {
+   "name": "clear-all",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue clear all"
+   }
+  }
+ ]
+}

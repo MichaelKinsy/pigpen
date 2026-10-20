@@ -1,0 +1,79 @@
+{
+ "name": "queue-clear-target",
+ "description": "/queue clear (id, prefix, unknown, all) and /queue target (global, current, aliases known and unknown).",
+ "agentFiles": {
+  "powerline-footer/inbox.jsonl": "{\"id\":\"a1000001\",\"text\":\"one\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"queued\"}\n{\"id\":\"b1000001\",\"text\":\"two\",\"createdAt\":2,\"updatedAt\":2,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"queued\"}\n{\"id\":\"c1000001\",\"text\":\"three\",\"createdAt\":3,\"updatedAt\":3,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"queued\"}\n"
+ },
+ "steps": [
+  {
+   "name": "clear-one",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue clear a1000001"
+   }
+  },
+  {
+   "name": "clear-unknown",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue clear zz"
+   }
+  },
+  {
+   "name": "target-global",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue target b1000001 global"
+   }
+  },
+  {
+   "name": "target-current",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue target b1000001 @current"
+   }
+  },
+  {
+   "name": "target-unknown",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue target b1000001 @nowhere"
+   }
+  },
+  {
+   "name": "alias",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias w /tmp/queue-target-w"
+   }
+  },
+  {
+   "name": "target-alias",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue target b1000001 @w"
+   }
+  },
+  {
+   "name": "target-no-item",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue target zz global"
+   }
+  },
+  {
+   "name": "clear-all",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue clear all"
+   }
+  },
+  {
+   "name": "clear-all-again",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue clear all"
+   }
+  }
+ ]
+}

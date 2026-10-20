@@ -1,0 +1,58 @@
+{
+ "name": "queue-alias",
+ "description": "/queue alias: a path, no path (the working directory), a relative path, words in the path, invalid names and a numeric name.",
+ "agentFiles": {
+  "powerline-footer/projects.json": "{\n  \"existing\": \"/tmp/old\"\n}\n"
+ },
+ "steps": [
+  {
+   "name": "set",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias work /tmp/queue-alias-work"
+   }
+  },
+  {
+   "name": "default",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias home"
+   }
+  },
+  {
+   "name": "relative",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias sub ./sub"
+   }
+  },
+  {
+   "name": "words",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias spaced /tmp/a    b  c"
+   }
+  },
+  {
+   "name": "invalid",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias bad! /tmp/x"
+   }
+  },
+  {
+   "name": "numeric",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias 7 /tmp/seven"
+   }
+  },
+  {
+   "name": "overwrite",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue alias work /tmp/other"
+   }
+  }
+ ]
+}

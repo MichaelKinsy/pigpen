@@ -280,3 +280,54 @@ func TestPromptTextOfAMessage(t *testing.T) {
 	eq(t, queuePromptText(nil), "", "nothing")
 	eq(t, queuePromptText(map[string]any{}), "", "object")
 }
+
+func TestPostCompactionDeliveryOfAnEarlierSessionIsDropped(t *testing.T) {
+	r := newQueueRig(t)
+	r.emit("session_start", map[string]any{"reason": "startup"})
+	item := r.item("old session", intentPostCompact, queueTarget{Kind: targetCurrentSession})
+	r.host.idle = true
+	r.q.mu.Lock()
+	r.q.postCompaction = &postCompactionDelivery{generation: r.q.sessionGeneration - 1, context: r.q.context()}
+	r.q.schedulePostCompactionDelivery()
+	r.q.mu.Unlock()
+	r.clock.tick(time.Second)
+	eq(t, r.host.texts(), []string(nil), "nothing sent for a replaced session")
+	eq(t, r.get(item.ID).Status, statusQueued, "still queued")
+	eq(t, r.clock.active(), 0, "no polling")
+}
+
+func TestPostCompactionDeliveryContinuesAfterAnItemFailedToSend(t *testing.T) {
+	r := newQueueRig(t)
+	r.emit("session_start", map[string]any{"reason": "startup"})
+	r.item("one", intentPostCompact, queueTarget{Kind: targetCurrentSession})
+	r.item("two", intentPostCompact, queueTarget{Kind: targetCurrentSession})
+	r.host.idle = true
+	calls := 0
+	r.host.sendHook = func(text, _ string) error {
+		calls++
+		if calls == 1 {
+			return errors.New("refused")
+		}
+		r.emit("before_agent_start", map[string]any{"prompt": text})
+		return nil
+	}
+	r.emit("session_compact", nil)
+	r.clock.tick(time.Second)
+	eq(t, r.host.texts(), []string{"one", "two"}, "a failed item does not stop the next one")
+	eq(t, r.host.notices()[0], "error: Failed to send "+r.host.notices()[0][len("error: Failed to send "):len("error: Failed to send ")+8]+": refused", "failure notice")
+}
+
+func TestSessionStartResetsTheQueueState(t *testing.T) {
+	r := newQueueRig(t)
+	r.p.compacting = true
+	r.item("x", intentPostCompact, queueTarget{Kind: targetCurrentSession})
+	r.emit("session_compact", nil)
+	eq(t, r.clock.active(), 1, "a delivery is scheduled")
+	r.emit("session_start", map[string]any{"reason": "reload"})
+	eq(t, r.clock.active(), 0, "a new session drops it")
+	eq(t, r.p.compacting, false, "and the compaction flag")
+	eq(t, r.q.ctxLive, true, "and has a context")
+	generation := r.q.sessionGeneration
+	r.emit("session_shutdown", nil)
+	eq(t, r.q.sessionGeneration, generation+1, "shutdown retires the session too")
+}

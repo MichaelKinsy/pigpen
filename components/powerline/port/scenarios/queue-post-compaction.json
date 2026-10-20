@@ -1,0 +1,34 @@
+{
+ "name": "queue-post-compaction",
+ "description": "A post-compaction item is delivered by the extension after a manual compaction, without another user action.",
+ "llm": [
+  {
+   "text": "ok"
+  },
+  {
+   "text": "Summary of the conversation."
+  },
+  {
+   "text": "after compaction"
+  }
+ ],
+ "agentFiles": {
+  "powerline-footer/inbox.jsonl": "{\"id\":\"b2000001\",\"text\":\"say something after the compaction\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"post-compact\",\"status\":\"queued\"}\n"
+ },
+ "steps": [
+  {
+   "name": "prompt",
+   "rpc": {
+    "type": "prompt",
+    "message": "hello"
+   }
+  },
+  {
+   "name": "compact",
+   "rpc": {
+    "type": "compact"
+   },
+   "wait": "agent_end"
+  }
+ ]
+}

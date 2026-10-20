@@ -1,0 +1,36 @@
+{
+ "name": "queue-send-idle",
+ "description": "/queue send in an idle session delivers the oldest queued item as a prompt; the host starts it and the item is marked sent; a second send finds nothing.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "agentFiles": {
+  "powerline-footer/inbox.jsonl": "{\"id\":\"d1000001\",\"text\":\"reply with ok\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"queued\"}\n"
+ },
+ "steps": [
+  {
+   "name": "send",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue send"
+   },
+   "wait": "agent_end"
+  },
+  {
+   "name": "send-again",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue send"
+   }
+  },
+  {
+   "name": "picker",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue"
+   }
+  }
+ ]
+}

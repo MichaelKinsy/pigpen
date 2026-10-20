@@ -1,0 +1,22 @@
+{
+ "name": "queue-send-by-id",
+ "description": "/queue send <id> picks that item, not the oldest.",
+ "llm": [
+  {
+   "text": "second"
+  }
+ ],
+ "agentFiles": {
+  "powerline-footer/inbox.jsonl": "{\"id\":\"f1000001\",\"text\":\"first item\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"queued\"}\n{\"id\":\"f2000002\",\"text\":\"second item\",\"createdAt\":2,\"updatedAt\":2,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"queued\"}\n"
+ },
+ "steps": [
+  {
+   "name": "send",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue send f2000002"
+   },
+   "wait": "agent_end"
+  }
+ ]
+}

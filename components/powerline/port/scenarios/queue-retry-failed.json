@@ -1,0 +1,29 @@
+{
+ "name": "queue-retry-failed",
+ "description": "/queue retry by id prefix re-queues a failed item and delivers it.",
+ "llm": [
+  {
+   "text": "done"
+  }
+ ],
+ "agentFiles": {
+  "powerline-footer/inbox.jsonl": "{\"id\":\"e1000001\",\"text\":\"redo this\",\"createdAt\":1,\"updatedAt\":1,\"source\":{\"cwd\":\"/work/proj\"},\"target\":{\"kind\":\"global\"},\"intent\":\"follow-up\",\"status\":\"failed\",\"error\":\"boom\"}\n"
+ },
+ "steps": [
+  {
+   "name": "retry",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue retry e100"
+   },
+   "wait": "agent_end"
+  },
+  {
+   "name": "retry-unknown",
+   "rpc": {
+    "type": "prompt",
+    "message": "/queue retry nosuch"
+   }
+  }
+ ]
+}
