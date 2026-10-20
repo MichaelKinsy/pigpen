@@ -45,7 +45,7 @@ type Server struct {
 	// serveHook, when set (tests), runs on the Serve goroutine before it starts serving, so a test can hold that
 	// goroutine back and observe that Shutdown waits for it.
 	serveHook func()
-	logs   []string
+	logs      []string
 
 	// The Agent Card is the same document for every request, so its handler (which holds the encoded card) is
 	// kept for as long as the advertised URL is the same.
