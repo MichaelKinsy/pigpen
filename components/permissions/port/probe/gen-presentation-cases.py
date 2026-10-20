@@ -352,7 +352,7 @@ for _ in range(120):
 
 cases = {"fit": fit, "dialog": dialog, "notice": notice, "agent": agent, "suggest": suggest, "inputs": inputs, "mcpinput": mcpinput, "sanitize": sanitize, "preview": preview,
          "log": log, "askpayload": askpayload, "registry": registry, "surface": surface, "skills": skills}
-with open(os.path.join(here, "presentation-cases.json"), "w") as f:
+with open(os.path.join(here, "..", "..", "extensions", "pi-permission-system", "testdata", "presentation-cases.json"), "w") as f:
     json.dump(cases, f, indent=None, separators=(",", ":"), ensure_ascii=True)
     f.write("\n")
 print({k: (len(v) if isinstance(v, list) else {kk: len(vv) for kk, vv in v.items()}) for k, v in cases.items()})

@@ -1,4 +1,4 @@
-// Presentation probe: runs port/probe/presentation-cases.json through the original's presentation, tool-input and exposure modules
+// Presentation probe: runs testdata/presentation-cases.json through the original's presentation, tool-input and exposure modules
 // and writes what they answer, for the Go differential (extensions/pi-permission-system/testdata/presentation-oracle.json). Copied
 // into an installed copy of the original by port/record-presentation-probe.sh and never runs from here; the port itself has no Node.
 //

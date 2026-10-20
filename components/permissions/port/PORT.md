@@ -435,7 +435,7 @@ code, then a differential against the original's own functions.
 How it is checked (STATUS at this commit: the differential ran: 9,209 answers compared with the original's own, 0 differences. The mutation run, the race/vet/npm run and the Node-vs-Go benchmarks are queued on imladris and have NOT been run; the counts below are corpus sizes):
 
 - `port/record-presentation-probe.sh <installed oracle>` runs `port/probe/presentation-probe.test.ts` inside the original's package on
-  `port/probe/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
+  `testdata/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
   `presentation_oracle_test.go` replays it and compares each answer as compact JSON. Two kinds of recorded answer are not compared byte for byte, on purpose: one function-valued MCP argument (`String(fn)` is source text; not reachable from a JSON tool input) and the home directory inside `~` skill locations (read on the host running the test). `gen-presentation-cases.py` no longer produces either, so the next recording needs neither exception; the committed oracle was recorded from the previous corpus. Every string is well-formed on both sides
   (the probe applies `toWellFormed()`; see "Differences" for why).
 - Mutations: `port/gen-mutations-presentation.py` writes `port/mutations-presentation.json` (392 mutations, one per behaviour of
