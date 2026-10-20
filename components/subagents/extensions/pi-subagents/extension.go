@@ -88,6 +88,10 @@ func init() {
 	})
 }
 
+// extensionHooks add what a slice registers (tools, commands, events, flags) to the extension. A slice appends its hook from
+// an init() in its own file, so no slice edits Extension() for another.
+var extensionHooks []func(e *sdk.Extension)
+
 // manageOutcome is the tool result of a management action.
 func manageOutcome(r manageResult) (any, error) {
 	if r.isError {
@@ -164,6 +168,9 @@ func Extension() *sdk.Extension {
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})
+	for _, hook := range extensionHooks {
+		hook(e)
+	}
 	return e
 }
 
