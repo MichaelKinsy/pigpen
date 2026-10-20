@@ -1,0 +1,99 @@
+{
+  "name": "tools-tasks",
+  "description": "set_goal_tasks (confirmed through the select dialog), update_goal_task, get_goal tasks.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "create_goal",
+          "arguments": {
+            "objective": "Ship two files"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "set_goal_tasks",
+          "arguments": {
+            "tasks": [
+              {
+                "id": "a",
+                "title": "First file"
+              },
+              {
+                "id": "b",
+                "title": "Second file"
+              }
+            ],
+            "block_completion": false
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "a",
+            "status": "complete",
+            "evidence": "written"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "get_goal",
+          "arguments": {
+            "section": "tasks"
+          }
+        }
+      ]
+    },
+    {
+      "text": "One task left."
+    }
+  ],
+  "steps": [
+    {
+      "name": "plan",
+      "rpc": {
+        "type": "prompt",
+        "message": "Plan it."
+      },
+      "ui": [
+        {
+          "value": "Confirm task list"
+        }
+      ]
+    },
+    {
+      "name": "work",
+      "rpc": {
+        "type": "prompt",
+        "message": "Work the plan."
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  },
+  "normalize": [
+    {
+      "pattern": "[a-z0-9]{8}-[a-z0-9]{6}",
+      "replacement": "<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    }
+  ]
+}

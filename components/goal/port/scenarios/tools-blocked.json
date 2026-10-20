@@ -1,0 +1,60 @@
+{
+  "name": "tools-blocked",
+  "description": "update_goal reports a blocker: the goal is blocked with the reason, attempted actions and suggested action.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "create_goal",
+          "arguments": {
+            "objective": "Deploy to production"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal",
+          "arguments": {
+            "status": "blocked",
+            "reason": "The deploy key is missing",
+            "attempted_actions": [
+              "searched the vault"
+            ],
+            "suggested_action": "Add DEPLOY_KEY"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Blocked."
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "Do it."
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  },
+  "normalize": [
+    {
+      "pattern": "[a-z0-9]{8}-[a-z0-9]{6}",
+      "replacement": "<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    }
+  ]
+}

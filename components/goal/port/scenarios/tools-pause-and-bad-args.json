@@ -1,0 +1,67 @@
+{
+  "name": "tools-pause-and-bad-args",
+  "description": "update_goal pause, then an invalid combination and a missing reason.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "create_goal",
+          "arguments": {
+            "objective": "Migrate the data"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal",
+          "arguments": {
+            "status": "paused"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal",
+          "arguments": {
+            "status": "paused",
+            "reason": "Waiting for the maintenance window",
+            "suggested_action": "Resume after 22:00"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Paused."
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "Go."
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  },
+  "normalize": [
+    {
+      "pattern": "[a-z0-9]{8}-[a-z0-9]{6}",
+      "replacement": "<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    }
+  ]
+}

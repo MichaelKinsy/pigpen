@@ -241,7 +241,17 @@ func TestGoalPool(t *testing.T) {
 		eq(t, pool.get("missing") == nil, true, "missing")
 		eq(t, otherOpenGoalCount(pool, new("g1")), 1, "others")
 	})
-	tskip(t, "goal-pool", "mergeFocusedGoalWithDisk uses disk lifecycle but preserves monotonic usage", "mergeFocusedGoalWithDisk serves reconcileFocused(preserveMemoryUsage) in the original's usage accounting, which this port does not have; the pool and focus reconcile it feeds is checked by the replay cases")
+	tw(t, "goal-pool", "mergeFocusedGoalWithDisk uses disk lifecycle but preserves monotonic usage", func(t *testing.T) {
+		merged := mergeFocusedGoalWithDisk(
+			g("g1", "status", "active", "autoContinue", true, "usage", jo(t, `{"tokensUsed":80,"activeSeconds":10}`)),
+			g("g1", "status", "paused", "autoContinue", false, "usage", jo(t, `{"tokensUsed":50,"activeSeconds":20}`), "pauseReason", "paused elsewhere"),
+		)
+		eq(t, gstr(merged, "status"), "paused", "status")
+		eq(t, gflag(merged, "autoContinue"), false, "autoContinue")
+		eq(t, gstr(merged, "pauseReason"), "paused elsewhere", "pauseReason")
+		eq(t, gnum(merged.obj("usage"), "tokensUsed"), 80.0, "tokensUsed")
+		eq(t, gnum(merged.obj("usage"), "activeSeconds"), 20.0, "activeSeconds")
+	})
 	tw(t, "goal-pool", "resolveSessionFocus prefers valid branch focus, then legacy goal, then single open goal", func(t *testing.T) {
 		entry := func(id *string, reason string) *focusEntry { return &focusEntry{goalID: id, reason: reason} }
 		pool := poolOf(g("g1"), g("g2"))
