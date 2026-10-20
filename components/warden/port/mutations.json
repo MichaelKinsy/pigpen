@@ -94,5 +94,23 @@
   "file": "stuck.go",
   "find": "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {",
   "replace": "if prev.Failed != l.Failed {"
+ },
+ {
+  "name": "learn-regret-candidates-never-offered",
+  "file": "learning_wire.go",
+  "find": "w.gc.previousActions = w.previousActions",
+  "replace": "_ = w.previousActions"
+ },
+ {
+  "name": "learn-judge-cooldown-ignored",
+  "file": "extension.go",
+  "find": "if w.cooldownActive() { // learning lane: judge cooldown; answers as with no judge",
+  "replace": "if false { // learning lane: judge cooldown; answers as with no judge"
+ },
+ {
+  "name": "learn-answer-check-skipped",
+  "file": "backend.go",
+  "find": "if j.CheckAnswers && !validResult(res, r.Questions) {",
+  "replace": "if false {"
  }
 ]
