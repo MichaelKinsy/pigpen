@@ -6,7 +6,7 @@ import (
 )
 
 // Pins found by the ask-user-question frame harness against Pi 1402973a: the markdown cases the PiG v0.5.0 re-sync
-// brought in (marked's GFM autolinks, indented code blocks, images), and the kitty shift+letter decode.
+// brought in (marked's GFM autolinks, indented code blocks, images).
 
 func plainRender(t *testing.T, src string) []string {
 	t.Helper()
