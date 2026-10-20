@@ -40,6 +40,9 @@ type Answer struct {
 	Choice     string
 	Score      float64
 	Confidence float64
+	// Probabilities is the distribution over a choice's labels, or over a score's levels keyed by the level
+	// number ("0", "1"...). Nil for a noul answer.
+	Probabilities map[string]float64
 }
 
 // Evaluation is a successful judgment.
