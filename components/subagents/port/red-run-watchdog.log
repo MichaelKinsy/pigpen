@@ -1,0 +1,78 @@
+# Red run of the watchdog twins (subagents-w2-watchdog): the twins against stubs whose every function panics, one test function per run.
+# go test -count=1 -run '^<Test>$' ./...   (lane wrapper, go1.27.2 linux/amd64)
+=== TestWatchdogRulesTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.013s
+FAIL
+=== TestWatchdogScopeTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.027s
+FAIL
+=== TestWatchdogRenderTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.013s
+FAIL
+=== TestWatchdogEmissionGuardTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.018s
+FAIL
+=== TestWatchdogStableHostLayoutTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.014s
+FAIL
+=== TestWatchdogSettingsTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.016s
+FAIL
+=== TestWatchdogTurnDeltaTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.011s
+FAIL
+=== TestWatchdogChangeSignatureTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.013s
+FAIL
+=== TestWatchdogLspDiagnosticsTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.017s
+FAIL
+=== TestWatchdogDiffToolTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.014s
+FAIL
+=== TestWatchdogModelSelectionTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.012s
+FAIL
+=== TestWatchdogReviewTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.014s
+FAIL
+=== TestWatchdogPermissionArbiterTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.014s
+FAIL
+=== TestWatchdogToolActionsTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.013s
+FAIL
+=== TestWatchdogChildStatusTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.013s
+FAIL
+=== TestWatchdogRuntimeTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.028s
+FAIL
+=== TestWatchdogCompactionScopeTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.015s
+FAIL
+=== TestWatchdogNativeSchedulingTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.017s
+FAIL
+=== TestWatchdogRegisterChildTwins
+panic: not implemented
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents	0.016s
+FAIL

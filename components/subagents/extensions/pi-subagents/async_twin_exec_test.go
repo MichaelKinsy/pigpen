@@ -558,7 +558,26 @@ func TestAsyncExecutionSkips(t *testing.T) {
 	tskip(t, f, "propagates static parallel machine placement before agent pins and rejects group worktrees", "parallel groups, Herdr saved-machine placement and managed worktrees belong to the parallel and workflow slices; the port refuses `chain`, `tasks` and `worktree` launches (refuse.go) so no async runner step is ever built for them")
 	tskip(t, f, "uses supplied discovery context for missing async agents", "buildAsyncRunnerSteps has no Go counterpart: a launch resolves its single agent before the run starts, and the agent-definition directory report this text lists belongs to the discovery slice (agent-refinements, not ported)")
 	tskip(t, f, "uses the resolved cwd override for no-context missing-agent fallback discovery", "the no-context fallback discovery is a branch of buildAsyncRunnerSteps for chain steps; the port resolves the one agent from the launch cwd before starting a run")
-	tskip(t, f, "loads launch rules from the resolved async step cwd", "subagents.watchdog.rules (denied models per role) belong to the watchdog and acceptance slice, not ported")
+	tw(t, f, "loads launch rules from the resolved async step cwd", func(t *testing.T) {
+		// buildAsyncRunnerSteps has no Go counterpart; the launch path applies the rules (watchdogLaunchRuleCheck) to the cwd the
+		// launch resolves, which is what this case asserts: the rules come from the step cwd's settings, not the session's.
+		repo := tmp(t)
+		withTempHome(t)
+		t.Setenv("PI_CODING_AGENT_DIR", filepath.Join(repo, "agent-home"))
+		writeFile(t, filepath.Join(repo, "packages", "app", ".pi", "settings.json"),
+			`{"subagents":{"watchdog":{"rules":{"action":"block","roleModels":{"worker":{"deny":["mock/*"]}}}}}}`)
+		cwd, err := resolveRunCwd(repo, "packages/app")
+		if err != nil {
+			t.Fatal(err)
+		}
+		msg := applyWatchdogLaunchRules(cwd, "worker", "mock/denied", nil)
+		if !regexp.MustCompile(`Launch blocked by subagents\.watchdog\.rules: Agent 'worker' was launched with denied model 'mock/denied'`).MatchString(msg) {
+			t.Errorf("launch refusal %q", msg)
+		}
+		if other := applyWatchdogLaunchRules(repo, "worker", "mock/denied", nil); other != "" {
+			t.Errorf("the session cwd has no rules, got %q", other)
+		}
+	})
 	tskip(t, f, "resolves async step tool budgets with step over run over agent over config precedence", "tool budgets (toolBudget, config toolBudget, waitToolEnabled per step) belong to the tool-budget slice, not ported; the port refuses a toolBudget launch")
 	tskip(t, f, "carries the resolved model context window into async runner steps", "the original's runner step carries contextLimit for its in-process budget accounting; the pig child manages its own context and the port has no usage budget")
 	tskip(t, f, "carries explicit nested fanout authorization into async runner steps", "allowNestedSubagents authorization is part of the capability-ceiling slice, not ported (the agent definition does not read it)")

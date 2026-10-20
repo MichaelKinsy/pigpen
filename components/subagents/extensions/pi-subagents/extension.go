@@ -270,6 +270,9 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError(err.Error())
 	}
 	model, _ := params["model"].(string)
+	if msg := watchdogLaunchRuleCheck(ctx, cwd, a, model, wantsAsync(params, loadAsyncConfig())); msg != "" {
+		return nil, sdk.NewToolError(msg)
+	}
 	if cfg := loadAsyncConfig(); wantsAsync(params, cfg) {
 		if p := asyncUnsupportedPolicyParam(params); p != "" {
 			return nil, sdk.NewToolError(refusal("the `" + p + "` option of a background (async) run; pass async: false to run in the foreground"))
