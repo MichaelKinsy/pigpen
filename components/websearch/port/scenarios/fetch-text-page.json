@@ -51,7 +51,11 @@
  },
  "normalize": [
   {
-   "pattern": "\\b[0-9a-z]{14}\\b",
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
    "replacement": "<response-id>"
   }
  ]
