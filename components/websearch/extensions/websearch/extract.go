@@ -684,30 +684,76 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	articleTitleText, markdown, ok := readableArticle(doc)
 	extractHook("processing")
 
-	// The original tries an RSC payload and then Defuddle before it reports an incomplete page;
-	// this port has neither, so the error says so instead of passing for the original's verdict.
-	incomplete := func(title, content, msg string) httpExtracted {
-		msg += "\n\n" + unsupported("the RSC payload and Defuddle fallback extractors").Error()
-		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: title, Content: AppendDeclaredWebLinks(content, declared), Error: errp(msg)}, declared: declared}
-	}
+	var defuddleRefusal error
 	jsMsg := func(fallback string) string {
+		msg := fallback
 		if isLikelyJSRendered(text) {
-			return "Page appears to be JavaScript-rendered (content loads dynamically)"
+			msg = "Page appears to be JavaScript-rendered (content loads dynamically)"
 		}
-		return fallback
+		if defuddleRefusal != nil {
+			msg += "\n\n" + defuddleRefusal.Error()
+		}
+		return msg
 	}
-	// RSC payloads and Defuddle are not ported (docs/PORT.md): see incomplete.
+	done := func(title, content string) httpExtracted {
+		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: title, Content: AppendDeclaredWebLinks(content, declared)}, declared: declared}
+	}
+	// The fallbacks of extract.ts, in its order: the React Server Components payload, then Defuddle.
+	// They apply when Readability found nothing and when its Markdown is shorter than the usefulness floor.
+	fallback := func(titleOf func(defuddleTitle string) string) (httpExtracted, bool) {
+		if rsc := extractRSCContent(text); rsc != nil && jsLen(rsc.Content) >= minUsefulContent {
+			return done(rsc.Title, rsc.Content), true
+		}
+		if ctx.Err() != nil {
+			return fail(abortedByDeadline), true
+		}
+		def, err := extractWithDefuddle(text, responseURL(resp, rawURL))
+		if err != nil {
+			// A refusal is reported after the original's own verdict (below); a real failure is the URL's error.
+			if asUnsupported(err) == nil {
+				return fail(err.Error()), true
+			}
+			defuddleRefusal = err
+			return httpExtracted{}, false
+		}
+		if ctx.Err() != nil {
+			return fail(abortedByDeadline), true
+		}
+		if def != nil && jsLen(def.Content) >= minUsefulContent {
+			return done(titleOf(def.Title), def.Content), true
+		}
+		return httpExtracted{}, false
+	}
 	if !ok {
-		return incomplete(docTitle, "", jsMsg("Could not extract readable content from HTML structure"))
+		if res, found := fallback(func(t string) string {
+			if docTitle != "" {
+				return docTitle
+			}
+			return t
+		}); found {
+			return res
+		}
+		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: docTitle, Content: AppendDeclaredWebLinks("", declared), Error: errp(jsMsg("Could not extract readable content from HTML structure"))}, declared: declared}
 	}
 	title := articleTitleText
 	if title == "" {
 		title = docTitle
 	}
 	if jsLen(markdown) < minUsefulContent {
-		return incomplete(title, markdown, jsMsg("Extracted content appears incomplete"))
+		if res, found := fallback(func(t string) string {
+			if articleTitleText != "" {
+				return articleTitleText
+			}
+			if docTitle != "" {
+				return docTitle
+			}
+			return t
+		}); found {
+			return res
+		}
+		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: title, Content: AppendDeclaredWebLinks(markdown, declared), Error: errp(jsMsg("Extracted content appears incomplete"))}, declared: declared}
 	}
-	return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: title, Content: AppendDeclaredWebLinks(markdown, declared)}, declared: declared}
+	return done(title, markdown)
 }
 
 func leadingDigits(s string) string {

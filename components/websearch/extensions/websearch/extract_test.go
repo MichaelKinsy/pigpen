@@ -804,12 +804,13 @@ func TestExtractReadableMarkdown(t *testing.T) {
 	if r.Error != nil {
 		t.Fatalf("%+v", r)
 	}
-	for _, want := range []string{"# Guide", "## Steps", "*   First step", "[linked](https://example.com/x)", "**important**", "```\ngo test ./...\n```"} {
+	for _, want := range []string{"## Steps", "*   First step", "[linked](https://example.com/x)", "**important**", "```\ngo test ./...\n```"} {
 		if !strings.Contains(r.Content, want) {
 			t.Errorf("missing %q in\n%s", want, r.Content)
 		}
 	}
-	for _, bad := range []string{"alert(1)", "Copyright", ".x{}"} {
+	// Readability drops the <h1> that repeats the page title, as the original does.
+	for _, bad := range []string{"alert(1)", "Copyright", ".x{}", "# Guide"} {
 		if strings.Contains(r.Content, bad) {
 			t.Errorf("unexpected %q", bad)
 		}

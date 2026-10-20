@@ -70,7 +70,8 @@ func (t u16text) slice(start, end int) string {
 	return string(utf16.Decode(t.u[start:end]))
 }
 
-func isJSSpace(r rune) bool { return unicode.IsSpace(r) || r == 0xFEFF }
+// isJSSpace is a character of JavaScript's `\s`: unicode.IsSpace also takes U+0085, which JavaScript does not.
+func isJSSpace(r rune) bool { return (unicode.IsSpace(r) && r != 0x85) || r == 0xFEFF }
 
 func collapseSpaces(s string) string {
 	var b strings.Builder
