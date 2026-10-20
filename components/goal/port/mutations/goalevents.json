@@ -1,0 +1,1394 @@
+[
+ {
+  "name": "events-compact-display-visible",
+  "file": "goal_events.go",
+  "find": "next.set(\"content\", checkpointTriggerPrompt(id))\n\t\tnext.set(\"display\", false)",
+  "replace": "next.set(\"content\", checkpointTriggerPrompt(id))\n\t\tnext.set(\"display\", true)"
+ },
+ {
+  "name": "events-compact-content-kept",
+  "file": "goal_events.go",
+  "find": "next.set(\"content\", checkpointTriggerPrompt(id))",
+  "replace": "next.set(\"content\", next.vals[\"content\"])"
+ },
+ {
+  "name": "events-compact-version",
+  "file": "goal_events.go",
+  "find": "details.set(\"version\", 2.0)",
+  "replace": "details.set(\"version\", 3.0)"
+ },
+ {
+  "name": "events-compact-kind",
+  "file": "goal_events.go",
+  "find": "details.set(\"kind\", \"checkpoint\")",
+  "replace": "details.set(\"kind\", \"continuation\")"
+ },
+ {
+  "name": "events-compact-goalid",
+  "file": "goal_events.go",
+  "find": "details.set(\"goalId\", id)",
+  "replace": "details.set(\"goalId\", \"\")"
+ },
+ {
+  "name": "events-compact-drops-later-messages",
+  "file": "goal_events.go",
+  "find": "if output != nil {\n\t\t\t\toutput = append(output, m)",
+  "replace": "if false {\n\t\t\t\toutput = append(output, m)"
+ },
+ {
+  "name": "events-compact-drops-prefix",
+  "file": "goal_events.go",
+  "find": "output = append([]any{}, messages[:i]...)",
+  "replace": "output = []any{}"
+ },
+ {
+  "name": "events-compact-original-mutated",
+  "file": "goal_events.go",
+  "find": "next = rec.clone()",
+  "replace": "next = rec"
+ },
+ {
+  "name": "events-sessionkey-unidentified",
+  "file": "goal_events.go",
+  "find": "return \"unidentified\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "events-sessionkey-swapped-model",
+  "file": "goal_events.go",
+  "find": "provider, model = m.provider, m.id",
+  "replace": "provider, model = m.id, m.provider"
+ },
+ {
+  "name": "events-sessionkey-ignores-model",
+  "file": "goal_events.go",
+  "find": "provider, model = m.provider, m.id",
+  "replace": "_, _ = m.provider, m.id"
+ },
+ {
+  "name": "events-provider-request-inverted",
+  "file": "goal_events.go",
+  "find": "out := cacheGoalHistory(eventJS(data[\"payload\"]), contents); out != nil",
+  "replace": "out := cacheGoalHistory(eventJS(data[\"payload\"]), contents); out == nil"
+ },
+ {
+  "name": "events-provider-request-wrong-session",
+  "file": "goal_events.go",
+  "find": "liveRetention.contents(c.eventSessionKey())",
+  "replace": "liveRetention.contents(\"other\")"
+ },
+ {
+  "name": "events-provider-request-no-live",
+  "file": "goal_events.go",
+  "find": "cacheGoalHistory(eventJS(data[\"payload\"]), contents)",
+  "replace": "cacheGoalHistory(eventJS(data[\"payload\"]), nil)"
+ },
+ {
+  "name": "events-stale-checkpoint-inverted",
+  "file": "goal_events.go",
+  "find": "if checkpoint != nil && !c.isActionableContinuationGoal(checkpoint) {\n\t\t\treturn staleContinuationPrompt",
+  "replace": "if checkpoint != nil && c.isActionableContinuationGoal(checkpoint) {\n\t\t\treturn staleContinuationPrompt"
+ },
+ {
+  "name": "events-stale-checkpoint-no-prompt",
+  "file": "goal_events.go",
+  "find": "return staleContinuationPrompt(*checkpoint, c.state()), nil, true",
+  "replace": "return staleContinuationPrompt(*checkpoint, c.state()), nil, false"
+ },
+ {
+  "name": "events-stale-prompt-wrong-goal",
+  "file": "goal_events.go",
+  "find": "staleContinuationPrompt(*checkpoint, c.state())",
+  "replace": "staleContinuationPrompt(*checkpoint, nil)"
+ },
+ {
+  "name": "events-ledger-read-once-broken",
+  "file": "goal_events.go",
+  "find": "if !haveLedger {",
+  "replace": "if true {"
+ },
+ {
+  "name": "events-unfocused-hide-inverted",
+  "file": "goal_events.go",
+  "find": "if loadGoalSettings(c.h.Cwd()).hideUnfocusedPrompt {",
+  "replace": "if !loadGoalSettings(c.h.Cwd()).hideUnfocusedPrompt {"
+ },
+ {
+  "name": "events-unfocused-threshold",
+  "file": "goal_events.go",
+  "find": "if openCount := otherOpenGoalCount(c.goals, nil); openCount > 0 {",
+  "replace": "if openCount := otherOpenGoalCount(c.goals, nil); openCount > 1 {"
+ },
+ {
+  "name": "events-unfocused-count-wrong",
+  "file": "goal_events.go",
+  "find": "return unfocusedOpenGoalsPrompt(openCount), nil, true",
+  "replace": "return unfocusedOpenGoalsPrompt(openCount+1), nil, true"
+ },
+ {
+  "name": "events-complete-injects",
+  "file": "goal_events.go",
+  "find": "case \"complete\":\n\t\t\treturn \"\", nil, false",
+  "replace": "case \"complete\":\n\t\t\treturn \"x\", nil, true"
+ },
+ {
+  "name": "events-paused-reason-source",
+  "file": "goal_events.go",
+  "find": "if gstr(g, \"stopReason\") == \"agent\" {",
+  "replace": "if gstr(g, \"stopReason\") == \"user\" {"
+ },
+ {
+  "name": "events-paused-reason-default",
+  "file": "goal_events.go",
+  "find": "reason := \"(unknown)\"",
+  "replace": "reason := \"unknown\""
+ },
+ {
+  "name": "events-paused-reason-label",
+  "file": "goal_events.go",
+  "find": "\"Pause reason: \"+reason",
+  "replace": "\"Reason: \"+reason"
+ },
+ {
+  "name": "events-paused-suggested-inverted",
+  "file": "goal_events.go",
+  "find": "if a := gstr(g, \"pauseSuggestedAction\"); a != \"\" {",
+  "replace": "if a := gstr(g, \"pauseSuggestedAction\"); a == \"\" {"
+ },
+ {
+  "name": "events-paused-auditor-inverted",
+  "file": "goal_events.go",
+  "find": "r != nil && gstr(r, \"verdict\") == \"disapproved\" {\n\t\t\t\tauditorExtra",
+  "replace": "r != nil && gstr(r, \"verdict\") != \"disapproved\" {\n\t\t\t\tauditorExtra"
+ },
+ {
+  "name": "events-paused-auditor-cap",
+  "file": "goal_events.go",
+  "find": "Reason: \" + utf16Prefix(gstr(r, \"report\"), 300) + \"\\nAddress the auditor's objections before requesting completion again.\"\n\t\t\t}\n\t\t\treturn \"[PI GOAL PAUSED",
+  "replace": "Reason: \" + utf16Prefix(gstr(r, \"report\"), 299) + \"\\nAddress the auditor's objections before requesting completion again.\"\n\t\t\t}\n\t\t\treturn \"[PI GOAL PAUSED"
+ },
+ {
+  "name": "events-paused-tag",
+  "file": "goal_events.go",
+  "find": "return \"[PI GOAL PAUSED goalId=\"",
+  "replace": "return \"[PI GOAL STOPPED goalId=\""
+ },
+ {
+  "name": "events-paused-resume-hint",
+  "file": "goal_events.go",
+  "find": "unless the user resumes it with /goal-resume.",
+  "replace": "unless the user resumes it."
+ },
+ {
+  "name": "events-budget-over-threshold",
+  "file": "goal_events.go",
+  "find": "if remaining < 0 {",
+  "replace": "if remaining <= 0 {"
+ },
+ {
+  "name": "events-budget-over-sign",
+  "file": "goal_events.go",
+  "find": "formatTokenValue(-remaining) + \" over the budget\"",
+  "replace": "formatTokenValue(remaining) + \" over the budget\""
+ },
+ {
+  "name": "events-budget-remaining-text",
+  "file": "goal_events.go",
+  "find": "\" remaining\"",
+  "replace": "\" left\""
+ },
+ {
+  "name": "events-budget-reminder-inverted",
+  "file": "goal_events.go",
+  "find": "if c.runtime.consumePostBudgetReminder() {",
+  "replace": "if !c.runtime.consumePostBudgetReminder() {"
+ },
+ {
+  "name": "events-budget-reminder-tag",
+  "file": "goal_events.go",
+  "find": "\"\\n\\n[TOKEN BUDGET REACHED goalId=\"",
+  "replace": "\"\\n\\n[TOKEN BUDGET GONE goalId=\""
+ },
+ {
+  "name": "events-budget-detail-dropped",
+  "file": "goal_events.go",
+  "find": "if hasBudget && budgetText != \"\" {\n\t\t\t\t\tdetail",
+  "replace": "if false {\n\t\t\t\t\tdetail"
+ },
+ {
+  "name": "events-budget-line-dropped",
+  "file": "goal_events.go",
+  "find": "if hasBudget && budgetText != \"\" {\n\t\t\t\tline",
+  "replace": "if false {\n\t\t\t\tline"
+ },
+ {
+  "name": "events-budget-tag",
+  "file": "goal_events.go",
+  "find": "\"[PI GOAL BUDGET LIMITED goalId=\"",
+  "replace": "\"[PI GOAL BUDGET goalId=\""
+ },
+ {
+  "name": "events-blocked-default",
+  "file": "goal_events.go",
+  "find": "blocker := \"unspecified\"",
+  "replace": "blocker := \"unknown\""
+ },
+ {
+  "name": "events-blocked-tag",
+  "file": "goal_events.go",
+  "find": "\"[PI GOAL BLOCKED goalId=\"",
+  "replace": "\"[PI GOAL STUCK goalId=\""
+ },
+ {
+  "name": "events-blocked-hint",
+  "file": "goal_events.go",
+  "find": "the user must run /goal-resume before goal work continues.",
+  "replace": "goal work continues."
+ },
+ {
+  "name": "events-active-settings-nil",
+  "file": "goal_events.go",
+  "find": "goalPromptParts(g, &settings, c.h.ContextUsage())",
+  "replace": "goalPromptParts(g, &settings, nil)"
+ },
+ {
+  "name": "events-stall-note-dropped",
+  "file": "goal_events.go",
+  "find": "state += c.checkStall()",
+  "replace": "_ = c.checkStall()"
+ },
+ {
+  "name": "events-auditor-requires-completion",
+  "file": "goal_events.go",
+  "find": "\t\t\tif requested {\n",
+  "replace": "\t\t\tif !requested {\n"
+ },
+ {
+  "name": "events-auditor-active-verdict",
+  "file": "goal_events.go",
+  "find": "gstr(r, \"verdict\") == \"disapproved\" {\n\t\t\trequested",
+  "replace": "gstr(r, \"verdict\") != \"disapproved\" {\n\t\t\trequested"
+ },
+ {
+  "name": "events-auditor-active-cap",
+  "file": "goal_events.go",
+  "find": "Reason: \" + utf16Prefix(gstr(r, \"report\"), 300) + \"\\nAddress the auditor's objections before requesting completion again.\"\n\t\t\t}\n\t\t}",
+  "replace": "Reason: \" + utf16Prefix(gstr(r, \"report\"), 299) + \"\\nAddress the auditor's objections before requesting completion again.\"\n\t\t\t}\n\t\t}"
+ },
+ {
+  "name": "events-auditor-active-tag",
+  "file": "goal_events.go",
+  "find": "\"\\n\\n[AUDITOR REJECTION goalId=\"",
+  "replace": "\"\\n\\n[AUDITOR REJECTION \""
+ },
+ {
+  "name": "events-auditor-requested-type",
+  "file": "goal_events.go",
+  "find": "gstr(e, \"type\") == \"completion_requested\"",
+  "replace": "gstr(e, \"type\") == \"audit_started\""
+ },
+ {
+  "name": "events-auditor-requested-goal",
+  "file": "goal_events.go",
+  "find": "gstr(e, \"goalId\") == gstr(g, \"id\") {\n\t\t\t\t\trequested",
+  "replace": "gstr(e, \"goalId\") != gstr(g, \"id\") {\n\t\t\t\t\trequested"
+ },
+ {
+  "name": "events-postcompact-or",
+  "file": "goal_events.go",
+  "find": "c.runtime.isPostCompactReminderPending() && shouldInjectPostCompactReminder(true, g)",
+  "replace": "c.runtime.isPostCompactReminderPending() || shouldInjectPostCompactReminder(true, g)"
+ },
+ {
+  "name": "events-postcompact-not-cleared",
+  "file": "goal_events.go",
+  "find": "c.runtime.clearPostCompactReminder()\n\t\t\t// PR E",
+  "replace": "// PR E"
+ },
+ {
+  "name": "events-postcompact-other-count",
+  "file": "goal_events.go",
+  "find": "if gstr(o, \"id\") != gstr(g, \"id\") {",
+  "replace": "if gstr(o, \"id\") == gstr(g, \"id\") {"
+ },
+ {
+  "name": "events-postcompact-no-ledger",
+  "file": "goal_events.go",
+  "find": "ledgerEvents: events, otherOpenCount",
+  "replace": "ledgerEvents: nil, otherOpenCount"
+ },
+ {
+  "name": "events-counters-dropped",
+  "file": "goal_events.go",
+  "find": "counters = &parts.counters\n",
+  "replace": "\n"
+ },
+ {
+  "name": "events-context-filter-ignored",
+  "file": "goal_events.go",
+  "find": "src = filtered",
+  "replace": "src = msgs"
+ },
+ {
+  "name": "events-context-filter-lost",
+  "file": "goal_events.go",
+  "find": "if messages == nil {\n\t\t\tmessages = filtered",
+  "replace": "if messages == nil {\n\t\t\tmessages = nil"
+ },
+ {
+  "name": "events-context-base-lost",
+  "file": "goal_events.go",
+  "find": "if messages != nil {\n\t\t\tbase = messages",
+  "replace": "if false {\n\t\t\tbase = messages"
+ },
+ {
+  "name": "events-context-unidentified-inverted",
+  "file": "goal_events.go",
+  "find": "if sessionKey == \"unidentified\" {",
+  "replace": "if sessionKey != \"unidentified\" {"
+ },
+ {
+  "name": "events-context-no-clear",
+  "file": "goal_events.go",
+  "find": "liveRetention.clear(&sessionKey)\n\t\tif messages == nil {",
+  "replace": "if messages == nil {"
+ },
+ {
+  "name": "events-context-unchanged-answers",
+  "file": "goal_events.go",
+  "find": "if messages == nil {\n\t\t\treturn nil, nil\n\t\t}\n\t\treturn map[string]any{\"messages\": messages}, nil",
+  "replace": "if messages == nil {\n\t\t\treturn map[string]any{\"messages\": msgs}, nil\n\t\t}\n\t\treturn map[string]any{\"messages\": messages}, nil"
+ },
+ {
+  "name": "events-context-no-retention",
+  "file": "goal_events.go",
+  "find": "retained := liveRetention.apply(sessionKey, base, &freshLiveTails{state: state, counters: counters})",
+  "replace": "retained := liveRetention.apply(sessionKey, base, &freshLiveTails{state: state, counters: counters})\n\t\t\tretained.messages = append(append([]any{}, base...), retained.messages[len(base):]...)\n\t\t\t_ = retained"
+ },
+ {
+  "name": "events-agent-start-no-begin",
+  "file": "goal_events.go",
+  "find": "c.scheduler.begin()",
+  "replace": "_ = c"
+ },
+ {
+  "name": "events-message-start-no-message",
+  "file": "goal_events.go",
+  "find": "c.scheduler.message(eventJS(data[\"message\"]))",
+  "replace": "c.scheduler.message(nil)"
+ },
+ {
+  "name": "events-turn-start-no-turn",
+  "file": "goal_events.go",
+  "find": "c.scheduler.turn()\n\t\t// Per-turn",
+  "replace": "// Per-turn"
+ },
+ {
+  "name": "events-turn-start-no-seq",
+  "file": "goal_events.go",
+  "find": "c.scheduler.turn()\n\t\t// Per-turn flag resets (#4 + C9 fix).\n\t\tc.advanceTurnSeq()",
+  "replace": "c.scheduler.turn()"
+ },
+ {
+  "name": "events-turn-start-no-begin-accounting",
+  "file": "goal_events.go",
+  "find": "c.beginAccounting()\n\t\tid := \"\"",
+  "replace": "id := \"\""
+ },
+ {
+  "name": "events-turn-start-no-buffer",
+  "file": "goal_events.go",
+  "find": "c.goalService.beginTurn(c.st, id) // P1-3 transaction buffer",
+  "replace": "_ = id"
+ },
+ {
+  "name": "events-turn-start-wrong-goal",
+  "file": "goal_events.go",
+  "find": "c.goalService.beginTurn(c.st, id)",
+  "replace": "c.goalService.beginTurn(c.st, \"\")"
+ },
+ {
+  "name": "events-turn-start-no-activity",
+  "file": "goal_events.go",
+  "find": "c.touchGoalActivity()             // F5\n\t\tc.updateUI()",
+  "replace": "c.updateUI()"
+ },
+ {
+  "name": "events-turn-start-no-ui",
+  "file": "goal_events.go",
+  "find": "c.touchGoalActivity()             // F5\n\t\tc.updateUI()",
+  "replace": "c.touchGoalActivity()"
+ },
+ {
+  "name": "events-toolcall-denied-inverted",
+  "file": "goal_events.go",
+  "find": "if c.scheduler.isDenied() {",
+  "replace": "if !c.scheduler.isDenied() {"
+ },
+ {
+  "name": "events-toolcall-denied-reason",
+  "file": "goal_events.go",
+  "find": "\"Stale goal dispatch; use /goal-resume.\"",
+  "replace": "\"Stale goal dispatch.\""
+ },
+ {
+  "name": "events-toolcall-stopped-inverted",
+  "file": "goal_events.go",
+  "find": "if stoppedGoalID != nil && c.runtime.isStaleCheckpointBlocked(toolName) {",
+  "replace": "if stoppedGoalID == nil && c.runtime.isStaleCheckpointBlocked(toolName) {"
+ },
+ {
+  "name": "events-toolcall-stopped-and-or",
+  "file": "goal_events.go",
+  "find": "if stoppedGoalID != nil && c.runtime.isStaleCheckpointBlocked(toolName) {",
+  "replace": "if stoppedGoalID != nil || c.runtime.isStaleCheckpointBlocked(toolName) {"
+ },
+ {
+  "name": "events-toolcall-stopped-reason",
+  "file": "goal_events.go",
+  "find": "\"The goal was already stopped earlier in this turn (goalId=\"",
+  "replace": "\"The goal was stopped (goalId=\""
+ },
+ {
+  "name": "events-toolcall-stale-actionable",
+  "file": "goal_events.go",
+  "find": "checkpoint != nil && !c.isActionableContinuationGoal(checkpoint) && c.isStaleCheckpointBlockedToolCall(toolName)",
+  "replace": "checkpoint != nil && c.isActionableContinuationGoal(checkpoint) && c.isStaleCheckpointBlockedToolCall(toolName)"
+ },
+ {
+  "name": "events-toolcall-stale-allows-all",
+  "file": "goal_events.go",
+  "find": "!c.isActionableContinuationGoal(checkpoint) && c.isStaleCheckpointBlockedToolCall(toolName)",
+  "replace": "!c.isActionableContinuationGoal(checkpoint) && !c.isStaleCheckpointBlockedToolCall(toolName)"
+ },
+ {
+  "name": "events-toolcall-stale-reason",
+  "file": "goal_events.go",
+  "find": "\"Cannot call \" + toolName + \": the goal checkpoint",
+  "replace": "\"Cannot call: the goal checkpoint"
+ },
+ {
+  "name": "events-toolcall-stale-goal",
+  "file": "goal_events.go",
+  "find": "\"Goal \" + *checkpoint + \" has been paused",
+  "replace": "\"Goal \" + toolName + \" has been paused"
+ },
+ {
+  "name": "events-toolcall-meaningful-inverted",
+  "file": "goal_events.go",
+  "find": "if isMeaningfulProgressToolCall(toolName, eventJS(data[\"args\"])) {",
+  "replace": "if !isMeaningfulProgressToolCall(toolName, eventJS(data[\"args\"])) {"
+ },
+ {
+  "name": "events-toolcall-args-dropped",
+  "file": "goal_events.go",
+  "find": "isMeaningfulProgressToolCall(toolName, eventJS(data[\"args\"]))",
+  "replace": "isMeaningfulProgressToolCall(toolName, nil)"
+ },
+ {
+  "name": "events-toolcall-flag-not-set",
+  "file": "goal_events.go",
+  "find": "c.goalWorkToolCalledThisTurn = true",
+  "replace": "c.goalWorkToolCalledThisTurn = false"
+ },
+ {
+  "name": "events-toolcall-oracle-focus",
+  "file": "goal_events.go",
+  "find": "if c.focused != nil && hasPendingOracleAdviceForFocusedGoal(*c.focused) {",
+  "replace": "if c.focused == nil && hasPendingOracleAdviceForFocusedGoal(\"\") {"
+ },
+ {
+  "name": "events-toolcall-oracle-not-consumed",
+  "file": "goal_events.go",
+  "find": "if armed, ok := consumeOracleFollowupMarker(*c.focused); ok {",
+  "replace": "if armed, ok := armedByGoalID[*c.focused]; ok {"
+ },
+ {
+  "name": "events-toolcall-oracle-fingerprint",
+  "file": "goal_events.go",
+  "find": "\"fingerprint\", armed.fingerprint",
+  "replace": "\"fingerprint\", armed.adviceID"
+ },
+ {
+  "name": "events-toolcall-oracle-advice",
+  "file": "goal_events.go",
+  "find": "\"adviceId\", armed.adviceID",
+  "replace": "\"adviceId\", armed.fingerprint"
+ },
+ {
+  "name": "events-toolcall-oracle-tool",
+  "file": "goal_events.go",
+  "find": "\"firstToolName\", toolName",
+  "replace": "\"firstToolName\", \"\""
+ },
+ {
+  "name": "events-toolcall-oracle-type",
+  "file": "goal_events.go",
+  "find": "ledgerEvent(\"oracle_followup_attempted\",",
+  "replace": "ledgerEvent(\"oracle_followup\","
+ },
+ {
+  "name": "events-toolexec-no-activity",
+  "file": "goal_events.go",
+  "find": "c.touchGoalActivity() // F5\n\t\tc.accountProgress(0)\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"turn_end\"",
+  "replace": "c.accountProgress(0)\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"turn_end\""
+ },
+ {
+  "name": "events-toolexec-no-account",
+  "file": "goal_events.go",
+  "find": "c.touchGoalActivity() // F5\n\t\tc.accountProgress(0)\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"turn_end\"",
+  "replace": "c.touchGoalActivity() // F5\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"turn_end\""
+ },
+ {
+  "name": "events-turnend-tokens-dropped",
+  "file": "goal_events.go",
+  "find": "c.accountProgress(tokens)",
+  "replace": "c.accountProgress(0)"
+ },
+ {
+  "name": "events-turnend-abort-no-signal",
+  "file": "goal_events.go",
+  "find": "// recovery via agent_end instead of stranding the goal.\n\t\t\tif c.h.Signal().Err() != nil {",
+  "replace": "// recovery via agent_end instead of stranding the goal.\n\t\t\tif true {"
+ },
+ {
+  "name": "events-turnend-abort-inverted",
+  "file": "goal_events.go",
+  "find": "// recovery via agent_end instead of stranding the goal.\n\t\t\tif c.h.Signal().Err() != nil {",
+  "replace": "// recovery via agent_end instead of stranding the goal.\n\t\t\tif c.h.Signal().Err() == nil {"
+ },
+ {
+  "name": "events-turnend-error-inverted",
+  "file": "goal_events.go",
+  "find": "if isErrorAssistantMessage(message) {\n\t\t\tc.refreshGoalDisplayFromDisk()",
+  "replace": "if !isErrorAssistantMessage(message) {\n\t\t\tc.refreshGoalDisplayFromDisk()"
+ },
+ {
+  "name": "events-turnend-error-continues",
+  "file": "goal_events.go",
+  "find": "c.refreshGoalDisplayFromDisk()\n\t\t\tc.updateUI()\n\t\t\treturn nil, nil",
+  "replace": "c.refreshGoalDisplayFromDisk()\n\t\t\tc.updateUI()"
+ },
+ {
+  "name": "events-turnend-archive-or",
+  "file": "goal_events.go",
+  "find": "gstr(g, \"status\") == \"complete\" && !truthy(g.vals[\"archivedPath\"])",
+  "replace": "gstr(g, \"status\") == \"complete\" || !truthy(g.vals[\"archivedPath\"])"
+ },
+ {
+  "name": "events-turnend-archive-twice",
+  "file": "goal_events.go",
+  "find": "gstr(g, \"status\") == \"complete\" && !truthy(g.vals[\"archivedPath\"])",
+  "replace": "gstr(g, \"status\") == \"complete\""
+ },
+ {
+  "name": "events-turnend-no-endturn",
+  "file": "goal_events.go",
+  "find": "c.goalService.endTurn(c.st) // P1-3",
+  "replace": "_ = c // P1-3"
+ },
+ {
+  "name": "events-archive-flag",
+  "file": "goal_events.go",
+  "find": "archive:       true,",
+  "replace": "archive:       false,"
+ },
+ {
+  "name": "events-archive-reconcile",
+  "file": "goal_events.go",
+  "find": "reconcile:     &noReconcile,",
+  "replace": "reconcile:     nil,"
+ },
+ {
+  "name": "events-archive-commit",
+  "file": "goal_events.go",
+  "find": "commitFocused: &noCommit,",
+  "replace": "commitFocused: nil,"
+ },
+ {
+  "name": "events-archive-completed-event",
+  "file": "goal_events.go",
+  "find": "ledgerEvent(\"goal_completed\", \"goalId\", gstr(completed, \"id\"))",
+  "replace": "ledgerEvent(\"goal_completed_x\", \"goalId\", gstr(completed, \"id\"))"
+ },
+ {
+  "name": "events-archive-completed-path",
+  "file": "goal_events.go",
+  "find": "ev.setOpt(\"archivePath\", written.vals[\"archivedPath\"])",
+  "replace": "ev.setOpt(\"archivePath\", \"\")"
+ },
+ {
+  "name": "events-archive-error-text",
+  "file": "goal_events.go",
+  "find": "outcome = goalMutationFail(err.Error())",
+  "replace": "outcome = goalMutationFail(\"\")"
+ },
+ {
+  "name": "events-archive-goal-kept",
+  "file": "goal_events.go",
+  "find": "c.goals.delete(id)\n\t\tc.assignFocused(nil)",
+  "replace": "c.assignFocused(nil)"
+ },
+ {
+  "name": "events-archive-focus-kept",
+  "file": "goal_events.go",
+  "find": "c.goals.delete(id)\n\t\tc.assignFocused(nil)",
+  "replace": "c.goals.delete(id)"
+ },
+ {
+  "name": "events-archive-focus-reason",
+  "file": "goal_events.go",
+  "find": "c.appendFocusEntry(nil, \"completed\")",
+  "replace": "c.appendFocusEntry(nil, \"cleared\")"
+ },
+ {
+  "name": "events-archive-event-name",
+  "file": "goal_events.go",
+  "find": "ledgerEvent(\"goal_archived\", \"goalId\", id, \"archivePath\", path,",
+  "replace": "ledgerEvent(\"goal_archive\", \"goalId\", id, \"archivePath\", path,"
+ },
+ {
+  "name": "events-archive-event-path",
+  "file": "goal_events.go",
+  "find": "\"archivePath\", path, \"at\", nowIso())})\n\t\tif path",
+  "replace": "\"archivePath\", \"\", \"at\", nowIso())})\n\t\tif path"
+ },
+ {
+  "name": "events-archive-notify-file",
+  "file": "goal_events.go",
+  "find": "c.h.Notify(\"Goal archived.\\nFile: \"+path, \"info\")",
+  "replace": "c.h.Notify(\"Goal archived.\", \"info\")"
+ },
+ {
+  "name": "events-archive-notify-empty",
+  "file": "goal_events.go",
+  "find": "if path != \"\" {\n\t\t\tc.h.Notify(\"Goal archived.\\nFile",
+  "replace": "if path == \"\" {\n\t\t\tc.h.Notify(\"Goal archived.\\nFile"
+ },
+ {
+  "name": "events-archive-fail-level",
+  "file": "goal_events.go",
+  "find": "remains at \"+remaining+\".\", \"warning\")",
+  "replace": "remains at \"+remaining+\".\", \"info\")"
+ },
+ {
+  "name": "events-archive-fail-unknown",
+  "file": "goal_events.go",
+  "find": "remaining := \"(unknown)\"",
+  "replace": "remaining := \"unknown\""
+ },
+ {
+  "name": "events-archive-fail-path",
+  "file": "goal_events.go",
+  "find": "if p, ok := completed.str(\"activePath\"); ok && p != \"\" {",
+  "replace": "if p, ok := completed.str(\"activePath\"); ok && p == \"\" {"
+ },
+ {
+  "name": "events-archive-fail-message",
+  "file": "goal_events.go",
+  "find": "message = \"archive write failed\"",
+  "replace": "message = \"\""
+ },
+ {
+  "name": "events-archive-fail-event",
+  "file": "goal_events.go",
+  "find": "ledgerEvent(\"goal_archive_failed\",",
+  "replace": "ledgerEvent(\"goal_archive_fail\","
+ },
+ {
+  "name": "events-archive-no-ui",
+  "file": "goal_events.go",
+  "find": "\tc.updateUI()\n}\n\n// on registers",
+  "replace": "}\n\n// on registers"
+ },
+ {
+  "name": "events-messageend-abort-and-or",
+  "file": "goal_events.go",
+  "find": "isAbortedAssistantMessage(message) && c.h.Signal().Err() != nil {\n\t\t\tc.pauseActiveGoal()",
+  "replace": "isAbortedAssistantMessage(message) || c.h.Signal().Err() != nil {\n\t\t\tc.pauseActiveGoal()"
+ },
+ {
+  "name": "events-messageend-display-inverted",
+  "file": "goal_events.go",
+  "find": "raw.vals[\"display\"] != any(false)",
+  "replace": "raw.vals[\"display\"] == any(false)"
+ },
+ {
+  "name": "events-messageend-custom-type",
+  "file": "goal_events.go",
+  "find": "custom == goalEventEntry",
+  "replace": "custom != goalEventEntry"
+ },
+ {
+  "name": "events-messageend-role",
+  "file": "goal_events.go",
+  "find": "role == \"custom\"",
+  "replace": "role == \"user\""
+ },
+ {
+  "name": "events-messageend-display-kept",
+  "file": "goal_events.go",
+  "find": "next := raw.clone()\n\t\t\t\t\tnext.set(\"display\", false)",
+  "replace": "next := raw.clone()\n\t\t\t\t\tnext.set(\"display\", true)"
+ },
+ {
+  "name": "events-start-audit-not-cleared",
+  "file": "goal_events.go",
+  "find": "c.auditMessages.clear()\n\t\t// NAF",
+  "replace": "// NAF"
+ },
+ {
+  "name": "events-start-settings-cache",
+  "file": "goal_events.go",
+  "find": "\t\tinvalidateGoalSettingsCache()\n\t\tinvalidateGoalPoolCache()",
+  "replace": "\t\tinvalidateGoalPoolCache()"
+ },
+ {
+  "name": "events-start-pool-cache",
+  "file": "goal_events.go",
+  "find": "\t\tinvalidateGoalPoolCache()\n\t\tinvalidateGoalLedgerCache()",
+  "replace": "\t\tinvalidateGoalLedgerCache()"
+ },
+ {
+  "name": "events-start-ledger-cache",
+  "file": "goal_events.go",
+  "find": "\t\tinvalidateGoalLedgerCache()\n\t\t_, _ = c.goalService.flushTurn(c.st) // P1-3: persist any buffered transaction before reload\n\t\tc.loadState()\n\t\tc.flush() // the",
+  "replace": "\t\t_, _ = c.goalService.flushTurn(c.st) // P1-3: persist any buffered transaction before reload\n\t\tc.loadState()\n\t\tc.flush() // the"
+ },
+ {
+  "name": "events-start-no-load",
+  "file": "goal_events.go",
+  "find": "c.loadState()\n\t\tc.flush() // the original awaits",
+  "replace": "c.flush() // the original awaits"
+ },
+ {
+  "name": "events-start-tasks-flag",
+  "file": "goal_events.go",
+  "find": "c.installGoalToolProfile(!loadGoalSettings(c.h.Cwd()).disableTasks)\n\t\tc.rehydrateDraft()",
+  "replace": "c.installGoalToolProfile(loadGoalSettings(c.h.Cwd()).disableTasks)\n\t\tc.rehydrateDraft()"
+ },
+ {
+  "name": "events-start-no-rehydrate",
+  "file": "goal_events.go",
+  "find": "c.rehydrateDraft()\n\t\tc.syncTerminalInputPause()\n\t\tresume",
+  "replace": "c.syncTerminalInputPause()\n\t\tresume"
+ },
+ {
+  "name": "events-start-no-sync",
+  "file": "goal_events.go",
+  "find": "c.syncTerminalInputPause()\n\t\tresume",
+  "replace": "resume"
+ },
+ {
+  "name": "events-start-resume-inverted",
+  "file": "goal_events.go",
+  "find": "resume := eventStr(data, \"reason\") == \"resume\"",
+  "replace": "resume := eventStr(data, \"reason\") != \"resume\""
+ },
+ {
+  "name": "events-start-select-many",
+  "file": "goal_events.go",
+  "find": "otherOpenGoalCount(c.goals, nil) > 1",
+  "replace": "otherOpenGoalCount(c.goals, nil) > 0"
+ },
+ {
+  "name": "events-start-select-explicit",
+  "file": "goal_events.go",
+  "find": "!c.explicit",
+  "replace": "c.explicit"
+ },
+ {
+  "name": "events-start-select-focused",
+  "file": "goal_events.go",
+  "find": "resume && c.state() == nil &&",
+  "replace": "resume && c.state() != nil &&"
+ },
+ {
+  "name": "events-start-select-ui",
+  "file": "goal_events.go",
+  "find": "otherOpenGoalCount(c.goals, nil) > 1 && c.h.HasUI()",
+  "replace": "otherOpenGoalCount(c.goals, nil) > 1"
+ },
+ {
+  "name": "events-start-select-title",
+  "file": "goal_events.go",
+  "find": "c.h.Select(\"Focus open goal\", labels)",
+  "replace": "c.h.Select(\"Focus goal\", labels)"
+ },
+ {
+  "name": "events-start-select-reason",
+  "file": "goal_events.go",
+  "find": "c.setFocusedGoalId(&id, \"selected\", true)\n\t\t\t\t\tc.armFocusedContinuation()",
+  "replace": "c.setFocusedGoalId(&id, \"resumed\", true)\n\t\t\t\t\tc.armFocusedContinuation()"
+ },
+ {
+  "name": "events-start-select-no-arm",
+  "file": "goal_events.go",
+  "find": "c.setFocusedGoalId(&id, \"selected\", true)\n\t\t\t\t\tc.armFocusedContinuation()",
+  "replace": "c.setFocusedGoalId(&id, \"selected\", true)"
+ },
+ {
+  "name": "events-start-select-not-ok",
+  "file": "goal_events.go",
+  "find": "if ok && selected != \"\" {",
+  "replace": "if !ok && selected != \"\" {"
+ },
+ {
+  "name": "events-start-select-modal",
+  "file": "goal_events.go",
+  "find": "c.enterGoalModal()\n\t\t\tselected",
+  "replace": "selected"
+ },
+ {
+  "name": "events-start-select-modal-exit",
+  "file": "goal_events.go",
+  "find": "\t\t\tc.exitGoalModal()\n\t\t}\n\t\t// Codex",
+  "replace": "\t\t}\n\t\t// Codex"
+ },
+ {
+  "name": "events-start-confirm-status",
+  "file": "goal_events.go",
+  "find": "resume && g != nil && gstr(g, \"status\") == \"paused\"",
+  "replace": "resume && g != nil && gstr(g, \"status\") == \"active\""
+ },
+ {
+  "name": "events-start-confirm-title",
+  "file": "goal_events.go",
+  "find": "c.h.Confirm(\"Resume paused goal?\", \"Goal: \"+gstr(g, \"objective\"))",
+  "replace": "c.h.Confirm(\"Resume goal?\", \"Goal: \"+gstr(g, \"objective\"))"
+ },
+ {
+  "name": "events-start-confirm-message",
+  "file": "goal_events.go",
+  "find": "\"Goal: \"+gstr(g, \"objective\")",
+  "replace": "gstr(g, \"objective\")"
+ },
+ {
+  "name": "events-start-confirm-inverted",
+  "file": "goal_events.go",
+  "find": "if shouldResume {",
+  "replace": "if !shouldResume {"
+ },
+ {
+  "name": "events-start-confirm-ui",
+  "file": "goal_events.go",
+  "find": "gstr(g, \"status\") == \"paused\" && c.h.HasUI() {",
+  "replace": "gstr(g, \"status\") == \"paused\" {"
+ },
+ {
+  "name": "events-start-no-restore",
+  "file": "goal_events.go",
+  "find": "c.beginAccounting()\n\t\tc.scheduler.restore()\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"session_before_compact\"",
+  "replace": "c.beginAccounting()\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"session_before_compact\""
+ },
+ {
+  "name": "events-start-no-accounting",
+  "file": "goal_events.go",
+  "find": "c.beginAccounting()\n\t\tc.scheduler.restore()\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"session_before_compact\"",
+  "replace": "c.scheduler.restore()\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"session_before_compact\""
+ },
+ {
+  "name": "events-beforecompact-no-account",
+  "file": "goal_events.go",
+  "find": "c.pi.on(\"session_before_compact\", func(c *core, _ map[string]any) (any, error) {\n\t\tc.accountProgress(0)",
+  "replace": "c.pi.on(\"session_before_compact\", func(c *core, _ map[string]any) (any, error) {\n\t\t_ = c"
+ },
+ {
+  "name": "events-compact-no-flush",
+  "file": "goal_events.go",
+  "find": "c.pi.on(\"session_compact\", func(c *core, _ map[string]any) (any, error) {\n\t\t_, _ = c.goalService.flushTurn(c.st) // P1-3: persist any buffered transaction before reload\n\t\tif c.state() != nil {",
+  "replace": "c.pi.on(\"session_compact\", func(c *core, _ map[string]any) (any, error) {\n\t\tif c.state() != nil {"
+ },
+ {
+  "name": "events-compact-no-persist",
+  "file": "goal_events.go",
+  "find": "if c.state() != nil {\n\t\t\tc.persist()\n\t\t}\n\t\tc.beginAccounting()\n\t\t// Arm",
+  "replace": "if false {\n\t\t\tc.persist()\n\t\t}\n\t\tc.beginAccounting()\n\t\t// Arm"
+ },
+ {
+  "name": "events-compact-no-accounting",
+  "file": "goal_events.go",
+  "find": "c.beginAccounting()\n\t\t// Arm a deterministic",
+  "replace": "// Arm a deterministic"
+ },
+ {
+  "name": "events-compact-arm-inverted",
+  "file": "goal_events.go",
+  "find": "if shouldArmPostCompactReminder(c.state()) {",
+  "replace": "if !shouldArmPostCompactReminder(c.state()) {"
+ },
+ {
+  "name": "events-compact-no-queue",
+  "file": "goal_events.go",
+  "find": "c.queueContinuation()\n\t\treturn nil, nil",
+  "replace": "return nil, nil"
+ },
+ {
+  "name": "events-compactfail-aborted",
+  "file": "goal_events.go",
+  "find": "aborted, _ := data[\"aborted\"].(bool); aborted || c.state() == nil",
+  "replace": "aborted, _ := data[\"aborted\"].(bool); !aborted || c.state() == nil"
+ },
+ {
+  "name": "events-compactfail-goal",
+  "file": "goal_events.go",
+  "find": "aborted || c.state() == nil",
+  "replace": "aborted && c.state() == nil"
+ },
+ {
+  "name": "events-compactfail-detail",
+  "file": "goal_events.go",
+  "find": "detail = \": \" + msg",
+  "replace": "detail = msg"
+ },
+ {
+  "name": "events-compactfail-text",
+  "file": "goal_events.go",
+  "find": "\". The goal stays active; retry with /compact or keep working.\"",
+  "replace": "\". The goal stays active.\""
+ },
+ {
+  "name": "events-compactfail-reason",
+  "file": "goal_events.go",
+  "find": "\"Goal context compaction failed (\"+eventStr(data, \"reason\")+\")\"",
+  "replace": "\"Goal context compaction failed ()\""
+ },
+ {
+  "name": "events-compactfail-level",
+  "file": "goal_events.go",
+  "find": "keep working.\", \"warning\")",
+  "replace": "keep working.\", \"info\")"
+ },
+ {
+  "name": "events-compactfail-no-persist",
+  "file": "goal_events.go",
+  "find": "_, _ = c.goalService.flushTurn(c.st)\n\t\tif c.state() != nil {\n\t\t\tc.persist()\n\t\t}\n\t\tif aborted",
+  "replace": "_, _ = c.goalService.flushTurn(c.st)\n\t\tif aborted"
+ },
+ {
+  "name": "events-tree-no-clear",
+  "file": "goal_events.go",
+  "find": "c.pi.on(\"session_tree\", func(c *core, _ map[string]any) (any, error) {\n\t\tc.auditMessages.clear()",
+  "replace": "c.pi.on(\"session_tree\", func(c *core, _ map[string]any) (any, error) {\n\t\t_ = c"
+ },
+ {
+  "name": "events-tree-no-load",
+  "file": "goal_events.go",
+  "find": "c.loadState()\n\t\tc.flush()\n\t\tc.rehydrateDraft()",
+  "replace": "c.flush()\n\t\tc.rehydrateDraft()"
+ },
+ {
+  "name": "events-tree-no-restore",
+  "file": "goal_events.go",
+  "find": "c.beginAccounting()\n\t\tc.scheduler.restore()\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"before_agent_start\"",
+  "replace": "c.beginAccounting()\n\t\treturn nil, nil\n\t})\n\n\tc.pi.on(\"before_agent_start\""
+ },
+ {
+  "name": "events-bas-no-seq",
+  "file": "goal_events.go",
+  "find": "c.pi.on(\"before_agent_start\", func(c *core, data map[string]any) (any, error) {\n\t\tc.advanceTurnSeq()",
+  "replace": "c.pi.on(\"before_agent_start\", func(c *core, data map[string]any) (any, error) {\n\t\t_ = c"
+ },
+ {
+  "name": "events-bas-draft-inverted",
+  "file": "goal_events.go",
+  "find": "if !c.hasActiveDraft() {",
+  "replace": "if c.hasActiveDraft() {"
+ },
+ {
+  "name": "events-bas-tasks-flag",
+  "file": "goal_events.go",
+  "find": "if !c.hasActiveDraft() {\n\t\t\tc.installGoalToolProfile(!loadGoalSettings(c.h.Cwd()).disableTasks)",
+  "replace": "if !c.hasActiveDraft() {\n\t\t\tc.installGoalToolProfile(loadGoalSettings(c.h.Cwd()).disableTasks)"
+ },
+ {
+  "name": "events-bas-checkpoint-prompt",
+  "file": "goal_events.go",
+  "find": "extractGoalIdFromInjectedMessage(eventStr(data, \"prompt\"))",
+  "replace": "extractGoalIdFromInjectedMessage(\"\")"
+ },
+ {
+  "name": "events-bas-no-reconcile-checkpoint",
+  "file": "goal_events.go",
+  "find": "c.reconcileFocusedGoalFromDisk(false)\n\t\t\tc.runtime.setCheckpoint(&incoming)",
+  "replace": "c.runtime.setCheckpoint(&incoming)"
+ },
+ {
+  "name": "events-bas-checkpoint-not-set",
+  "file": "goal_events.go",
+  "find": "c.runtime.setCheckpoint(&incoming)\n\t\t\t// This can",
+  "replace": "// This can"
+ },
+ {
+  "name": "events-bas-backoff-reset",
+  "file": "goal_events.go",
+  "find": "c.clearContinuationState(false)\n\t\t\tif !c.isActionableContinuationGoal(&incoming) {",
+  "replace": "c.clearContinuationState(true)\n\t\t\tif !c.isActionableContinuationGoal(&incoming) {"
+ },
+ {
+  "name": "events-bas-no-clear-checkpoint",
+  "file": "goal_events.go",
+  "find": "c.clearContinuationState(false)\n\t\t\tif !c.isActionableContinuationGoal(&incoming) {",
+  "replace": "if !c.isActionableContinuationGoal(&incoming) {"
+ },
+ {
+  "name": "events-bas-actionable-inverted",
+  "file": "goal_events.go",
+  "find": "if !c.isActionableContinuationGoal(&incoming) {\n\t\t\t\tc.h.Abort()",
+  "replace": "if c.isActionableContinuationGoal(&incoming) {\n\t\t\t\tc.h.Abort()"
+ },
+ {
+  "name": "events-bas-no-abort",
+  "file": "goal_events.go",
+  "find": "c.h.Abort()\n\t\t\t\tc.updateUI()\n\t\t\t\treturn nil, nil",
+  "replace": "c.updateUI()\n\t\t\t\treturn nil, nil"
+ },
+ {
+  "name": "events-bas-stale-continues",
+  "file": "goal_events.go",
+  "find": "c.h.Abort()\n\t\t\t\tc.updateUI()\n\t\t\t\treturn nil, nil",
+  "replace": "c.h.Abort()\n\t\t\t\tc.updateUI()"
+ },
+ {
+  "name": "events-bas-checkpoint-kept",
+  "file": "goal_events.go",
+  "find": "c.runtime.setCheckpoint(nil)\n\t\t} else {",
+  "replace": "} else {"
+ },
+ {
+  "name": "events-bas-user-checkpoint",
+  "file": "goal_events.go",
+  "find": "} else {\n\t\t\t// A user-driven turn: clear any queued continuation and reset the autoContinue nudge state.\n\t\t\tc.runtime.setCheckpoint(nil)",
+  "replace": "} else {\n\t\t\t// A user-driven turn: clear any queued continuation and reset the autoContinue nudge state."
+ },
+ {
+  "name": "events-bas-user-no-clear",
+  "file": "goal_events.go",
+  "find": "c.clearContinuationState(true)\n\t\t\tnetworkErrorRecoveryAfterSettleFor = nil\n\t\t}",
+  "replace": "networkErrorRecoveryAfterSettleFor = nil\n\t\t}"
+ },
+ {
+  "name": "events-bas-user-recovery-kept",
+  "file": "goal_events.go",
+  "find": "c.clearContinuationState(true)\n\t\t\tnetworkErrorRecoveryAfterSettleFor = nil\n\t\t}",
+  "replace": "c.clearContinuationState(true)\n\t\t}"
+ },
+ {
+  "name": "events-bas-no-reconcile",
+  "file": "goal_events.go",
+  "find": "\t\tc.reconcileFocusedGoalFromDisk(false)\n\t\tif g := c.state(); g != nil && gstr(g, \"status\") == \"active\" {",
+  "replace": "\t\tif g := c.state(); g != nil && gstr(g, \"status\") == \"active\" {"
+ },
+ {
+  "name": "events-bas-running-status",
+  "file": "goal_events.go",
+  "find": "if g := c.state(); g != nil && gstr(g, \"status\") == \"active\" {\n\t\t\tc.runningGoalID",
+  "replace": "if g := c.state(); g != nil && gstr(g, \"status\") != \"active\" {\n\t\t\tc.runningGoalID"
+ },
+ {
+  "name": "events-end-aborted-sum",
+  "file": "goal_events.go",
+  "find": "abortedTokens += assistantTurnTokens(m)",
+  "replace": "abortedTokens = assistantTurnTokens(m)"
+ },
+ {
+  "name": "events-end-aborted-charge",
+  "file": "goal_events.go",
+  "find": "abortedTokens > 0 && endedGoalID != nil",
+  "replace": "abortedTokens > 1e9 && endedGoalID != nil"
+ },
+ {
+  "name": "events-end-aborted-goal",
+  "file": "goal_events.go",
+  "find": "gstr(g, \"id\") == *endedGoalID {\n\t\t\tc.accountProgress(abortedTokens)",
+  "replace": "gstr(g, \"id\") != *endedGoalID {\n\t\t\tc.accountProgress(abortedTokens)"
+ },
+ {
+  "name": "events-end-backoff-reset",
+  "file": "goal_events.go",
+  "find": "c.runtime.clearContinuationState(false)\n\t\tg := c.state()",
+  "replace": "c.runtime.clearContinuationState(true)\n\t\tg := c.state()"
+ },
+ {
+  "name": "events-end-no-clear",
+  "file": "goal_events.go",
+  "find": "c.runtime.clearContinuationState(false)\n\t\tg := c.state()",
+  "replace": "g := c.state()"
+ },
+ {
+  "name": "events-end-status",
+  "file": "goal_events.go",
+  "find": "gstr(g, \"status\") != \"active\" || !gflag(g, \"autoContinue\") {\n\t\t\treturn nil, nil",
+  "replace": "gstr(g, \"status\") == \"active\" || !gflag(g, \"autoContinue\") {\n\t\t\treturn nil, nil"
+ },
+ {
+  "name": "events-end-autocontinue",
+  "file": "goal_events.go",
+  "find": "gstr(g, \"status\") != \"active\" || !gflag(g, \"autoContinue\") {\n\t\t\treturn nil, nil",
+  "replace": "gstr(g, \"status\") != \"active\" || gflag(g, \"autoContinue\") {\n\t\t\treturn nil, nil"
+ },
+ {
+  "name": "events-end-other-goal",
+  "file": "goal_events.go",
+  "find": "if endedGoalID != nil && gstr(g, \"id\") != *endedGoalID {",
+  "replace": "if endedGoalID != nil && gstr(g, \"id\") == *endedGoalID {"
+ },
+ {
+  "name": "events-end-reconcile",
+  "file": "goal_events.go",
+  "find": "if !c.reconcileFocusedGoalFromDisk(false) {\n\t\t\treturn nil, nil",
+  "replace": "if c.reconcileFocusedGoalFromDisk(false) {\n\t\t\treturn nil, nil"
+ },
+ {
+  "name": "events-end-signal-inverted",
+  "file": "goal_events.go",
+  "find": "if c.h.Signal().Err() != nil {\n\t\t\tc.pauseActiveGoal()\n\t\t\treturn nil, nil",
+  "replace": "if c.h.Signal().Err() == nil {\n\t\t\tc.pauseActiveGoal()\n\t\t\treturn nil, nil"
+ },
+ {
+  "name": "events-end-signal-no-return",
+  "file": "goal_events.go",
+  "find": "c.pauseActiveGoal()\n\t\t\treturn nil, nil\n\t\t}\n\t\t// Provider failures",
+  "replace": "c.pauseActiveGoal()\n\t\t}\n\t\t// Provider failures"
+ },
+ {
+  "name": "events-end-network-and",
+  "file": "goal_events.go",
+  "find": "hasNetworkErrorAssistantMessage(messages) || hasAbortedAssistantMessage(messages)",
+  "replace": "hasNetworkErrorAssistantMessage(messages) && hasAbortedAssistantMessage(messages)"
+ },
+ {
+  "name": "events-end-network-only",
+  "file": "goal_events.go",
+  "find": "hasNetworkErrorAssistantMessage(messages) || hasAbortedAssistantMessage(messages)",
+  "replace": "hasNetworkErrorAssistantMessage(messages)"
+ },
+ {
+  "name": "events-end-network-no-mark",
+  "file": "goal_events.go",
+  "find": "networkErrorRecoveryAfterSettleFor = new(gstr(c.state(), \"id\"))\n\t\t\treturn nil, nil",
+  "replace": "return nil, nil"
+ },
+ {
+  "name": "events-end-network-persist",
+  "file": "goal_events.go",
+  "find": "c.persist()\n\t\t\tc.updateUI()\n\t\t\tnetworkErrorRecoveryAfterSettleFor",
+  "replace": "c.updateUI()\n\t\t\tnetworkErrorRecoveryAfterSettleFor"
+ },
+ {
+  "name": "events-end-error-inverted",
+  "file": "goal_events.go",
+  "find": "if hasErrorAssistantMessage(messages) {",
+  "replace": "if !hasErrorAssistantMessage(messages) {"
+ },
+ {
+  "name": "events-end-error-continues",
+  "file": "goal_events.go",
+  "find": "if hasErrorAssistantMessage(messages) {\n\t\t\tc.persist()\n\t\t\tc.updateUI()\n\t\t\treturn nil, nil\n\t\t}",
+  "replace": "if hasErrorAssistantMessage(messages) {\n\t\t\tc.persist()\n\t\t\tc.updateUI()\n\t\t}"
+ },
+ {
+  "name": "events-end-backoff-kept",
+  "file": "goal_events.go",
+  "find": "c.runtime.clearNetworkErrorBackoff()\n\t\tc.persist()",
+  "replace": "c.persist()"
+ },
+ {
+  "name": "events-end-no-continuation",
+  "file": "goal_events.go",
+  "find": "continuationAfterSettleFor = new(gstr(c.state(), \"id\"))\n\t\treturn nil, nil",
+  "replace": "return nil, nil"
+ },
+ {
+  "name": "events-end-no-persist",
+  "file": "goal_events.go",
+  "find": "c.runtime.clearNetworkErrorBackoff()\n\t\tc.persist()\n\t\tc.updateUI()",
+  "replace": "c.runtime.clearNetworkErrorBackoff()\n\t\tc.updateUI()"
+ },
+ {
+  "name": "events-end-running-kept",
+  "file": "goal_events.go",
+  "find": "endedGoalID := c.runningGoalID\n\t\tc.runningGoalID = nil",
+  "replace": "endedGoalID := c.runningGoalID"
+ },
+ {
+  "name": "events-end-continuation-kept",
+  "file": "goal_events.go",
+  "find": "c.runningGoalID = nil\n\t\tcontinuationAfterSettleFor = nil\n\t\tnetworkErrorRecoveryAfterSettleFor = nil\n\t\tmessages",
+  "replace": "c.runningGoalID = nil\n\t\tnetworkErrorRecoveryAfterSettleFor = nil\n\t\tmessages"
+ },
+ {
+  "name": "events-end-recovery-kept",
+  "file": "goal_events.go",
+  "find": "c.runningGoalID = nil\n\t\tcontinuationAfterSettleFor = nil\n\t\tnetworkErrorRecoveryAfterSettleFor = nil\n\t\tmessages",
+  "replace": "c.runningGoalID = nil\n\t\tcontinuationAfterSettleFor = nil\n\t\tmessages"
+ },
+ {
+  "name": "events-settled-no-flush",
+  "file": "goal_events.go",
+  "find": "c.auditMessages.flush(eventAuditCtx{c.h}, eventAuditSender{c.h})",
+  "replace": "_ = c"
+ },
+ {
+  "name": "events-settled-actionable",
+  "file": "goal_events.go",
+  "find": "actionable := goalID != nil && *goalID != \"\" && c.isActionableContinuationGoal(goalID)",
+  "replace": "actionable := goalID != nil && *goalID != \"\""
+ },
+ {
+  "name": "events-settled-no-settled",
+  "file": "goal_events.go",
+  "find": "c.scheduler.settled(actionable)",
+  "replace": "_ = actionable"
+ },
+ {
+  "name": "events-settled-wrong-flag",
+  "file": "goal_events.go",
+  "find": "c.scheduler.settled(actionable)",
+  "replace": "c.scheduler.settled(!actionable)"
+ },
+ {
+  "name": "events-settled-returns-late",
+  "file": "goal_events.go",
+  "find": "if actionable {\n\t\t\treturn nil, nil\n\t\t}",
+  "replace": "if false {\n\t\t\treturn nil, nil\n\t\t}"
+ },
+ {
+  "name": "events-settled-network-or",
+  "file": "goal_events.go",
+  "find": "networkErrorGoalID == nil || !c.isActionableContinuationGoal(networkErrorGoalID)",
+  "replace": "networkErrorGoalID == nil && !c.isActionableContinuationGoal(networkErrorGoalID)"
+ },
+ {
+  "name": "events-settled-policy-swapped",
+  "file": "goal_events.go",
+  "find": "networkErrorRecoveryPolicy{maxAttempts: recovery.maxAttempts, maxDelayMs: recovery.maxDelayMs}",
+  "replace": "networkErrorRecoveryPolicy{maxAttempts: recovery.maxDelayMs, maxDelayMs: recovery.maxAttempts}"
+ },
+ {
+  "name": "events-settled-policy-nil",
+  "file": "goal_events.go",
+  "find": "c.runtime.scheduleNetworkErrorRetry(hostRuntimeCtx{c.h}, c.state(), policy)",
+  "replace": "c.runtime.scheduleNetworkErrorRetry(hostRuntimeCtx{c.h}, c.state(), nil)"
+ },
+ {
+  "name": "events-settled-cap-inverted",
+  "file": "goal_events.go",
+  "find": "if plan.maxAttempts > 0 {",
+  "replace": "if plan.maxAttempts <= 0 {"
+ },
+ {
+  "name": "events-settled-cap-format",
+  "file": "goal_events.go",
+  "find": "cap = \"/\" + jsNumber(plan.maxAttempts)",
+  "replace": "cap = \":\" + jsNumber(plan.maxAttempts)"
+ },
+ {
+  "name": "events-settled-unbounded-text",
+  "file": "goal_events.go",
+  "find": "cap := \", unbounded\"",
+  "replace": "cap := \"\""
+ },
+ {
+  "name": "events-settled-delay-units",
+  "file": "goal_events.go",
+  "find": "jsRound(plan.delayMs/1000)",
+  "replace": "jsRound(plan.delayMs/100)"
+ },
+ {
+  "name": "events-settled-delay-floor",
+  "file": "goal_events.go",
+  "find": "jsRound(plan.delayMs/1000)",
+  "replace": "plan.delayMs/1000"
+ },
+ {
+  "name": "events-settled-attempt",
+  "file": "goal_events.go",
+  "find": "\"s (recovery \"+jsNumber(plan.attempt)+cap",
+  "replace": "\"s (recovery \"+jsNumber(plan.attempt+1)+cap"
+ },
+ {
+  "name": "events-settled-notice-text",
+  "file": "goal_events.go",
+  "find": "\"Provider network error. Retrying the goal in \"",
+  "replace": "\"Network error. Retrying the goal in \""
+ },
+ {
+  "name": "events-settled-notice-level",
+  "file": "goal_events.go",
+  "find": "+cap+\").\", \"warning\")",
+  "replace": "+cap+\").\", \"info\")"
+ },
+ {
+  "name": "events-settled-exhausted-text",
+  "file": "goal_events.go",
+  "find": "The goal remains active; resume it when the provider is healthy.",
+  "replace": "The goal remains active."
+ },
+ {
+  "name": "events-settled-exhausted-level",
+  "file": "goal_events.go",
+  "find": "resume it when the provider is healthy.\", \"warning\")",
+  "replace": "resume it when the provider is healthy.\", \"info\")"
+ },
+ {
+  "name": "events-shutdown-audit",
+  "file": "goal_events.go",
+  "find": "c.pi.on(\"session_shutdown\", func(c *core, _ map[string]any) (any, error) {\n\t\tc.auditMessages.clear()",
+  "replace": "c.pi.on(\"session_shutdown\", func(c *core, _ map[string]any) (any, error) {\n\t\t_ = c"
+ },
+ {
+  "name": "events-shutdown-scheduler",
+  "file": "goal_events.go",
+  "find": "c.scheduler.shutdown()\n\t\tcontinuationAfterSettleFor = nil",
+  "replace": "continuationAfterSettleFor = nil"
+ },
+ {
+  "name": "events-shutdown-pending",
+  "file": "goal_events.go",
+  "find": "c.scheduler.shutdown()\n\t\tcontinuationAfterSettleFor = nil\n\t\tnetworkErrorRecoveryAfterSettleFor = nil\n\t\tc.accountProgress(0)",
+  "replace": "c.scheduler.shutdown()\n\t\tc.accountProgress(0)"
+ },
+ {
+  "name": "events-shutdown-accounting",
+  "file": "goal_events.go",
+  "find": "networkErrorRecoveryAfterSettleFor = nil\n\t\tc.accountProgress(0)\n\t\tc.clearContinuationState(true)",
+  "replace": "networkErrorRecoveryAfterSettleFor = nil\n\t\tc.clearContinuationState(true)"
+ },
+ {
+  "name": "events-shutdown-continuation",
+  "file": "goal_events.go",
+  "find": "c.accountProgress(0)\n\t\tc.clearContinuationState(true)\n\t\tif c.terminalInputUnsubscribe",
+  "replace": "c.accountProgress(0)\n\t\tif c.terminalInputUnsubscribe"
+ },
+ {
+  "name": "events-shutdown-unsubscribe",
+  "file": "goal_events.go",
+  "find": "c.terminalInputUnsubscribe()\n\t\t}\n\t\tc.terminalInputUnsubscribe = nil",
+  "replace": "}\n\t\tc.terminalInputUnsubscribe = nil"
+ },
+ {
+  "name": "events-shutdown-unsubscribe-kept",
+  "file": "goal_events.go",
+  "find": "\t\tc.terminalInputUnsubscribe = nil\n\t\tif c.state() != nil {",
+  "replace": "\t\tif c.state() != nil {"
+ },
+ {
+  "name": "events-shutdown-persist",
+  "file": "goal_events.go",
+  "find": "c.terminalInputUnsubscribe = nil\n\t\tif c.state() != nil {\n\t\t\tc.persist()\n\t\t}",
+  "replace": "c.terminalInputUnsubscribe = nil"
+ },
+ {
+  "name": "events-shutdown-widget",
+  "file": "goal_events.go",
+  "find": "c.clearGoalWidget() // Cancel",
+  "replace": "_ = c // Cancel"
+ },
+ {
+  "name": "events-shutdown-retention",
+  "file": "goal_events.go",
+  "find": "key := c.eventSessionKey()\n\t\tliveRetention.clear(&key)",
+  "replace": "_ = liveRetention"
+ }
+]
