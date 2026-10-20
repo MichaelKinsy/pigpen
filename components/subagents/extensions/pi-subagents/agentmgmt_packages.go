@@ -48,11 +48,17 @@ type packageSubagentPaths struct {
 	settingsErrors map[string]error
 }
 
+// npmRootLookup caches one `npm root -g` result for the process; the agent discovery and the skill discovery of the original
+// each keep their own.
+type npmRootLookup struct {
+	mu   sync.Mutex
+	set  bool
+	root string
+}
+
 var (
-	globalNpmRootOnce   sync.Once
-	cachedGlobalNpmRoot string
-	globalNpmRootSet    bool
-	globalNpmRootMu     sync.Mutex
+	agentsNpmRoot npmRootLookup
+	skillsNpmRoot npmRootLookup
 )
 
 func readJSONFileBestEffort(p string) any {
@@ -198,27 +204,29 @@ func offlineEnv() bool {
 
 // getGlobalNpmRoot is agents.ts:480: the global node_modules, "" when offline or npm is unavailable. The result is cached
 // for the process.
-func getGlobalNpmRoot() string {
+func getGlobalNpmRoot() string { return agentsNpmRoot.get() }
+
+func (l *npmRootLookup) get() string {
 	if offlineEnv() {
 		return ""
 	}
-	globalNpmRootMu.Lock()
-	defer globalNpmRootMu.Unlock()
-	if globalNpmRootSet {
-		return cachedGlobalNpmRoot
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.set {
+		return l.root
 	}
 	if runtime.GOOS == "windows" {
 		if appData := os.Getenv("APPDATA"); appData != "" {
 			root := filepath.Join(appData, "npm", "node_modules")
 			if isDir(root) {
 				if real, err := filepath.EvalSymlinks(root); err == nil {
-					cachedGlobalNpmRoot, globalNpmRootSet = real, true
+					l.root, l.set = real, true
 					return real
 				}
 			}
 		}
 	}
-	globalNpmRootSet = true
+	l.set = true
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	out, err := exec.CommandContext(ctx, "npm", "root", "-g").Output()
@@ -229,7 +237,7 @@ func getGlobalNpmRoot() string {
 	if err != nil {
 		return ""
 	}
-	cachedGlobalNpmRoot = real
+	l.root = real
 	return real
 }
 

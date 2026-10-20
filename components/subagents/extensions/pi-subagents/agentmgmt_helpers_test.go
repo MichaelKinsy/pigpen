@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -142,3 +143,5 @@ func diffValues(t *testing.T, path string, got, want reflect.Value) {
 }
 
 func strconvItoa(n int) string { return fmt.Sprint(n) }
+
+func regexpMatch(pattern, s string) bool { return regexp.MustCompile(pattern).MatchString(s) }

@@ -177,9 +177,9 @@ func TestAgentDiscoveryCache(t *testing.T) {
 }
 
 func resetGlobalNpmRootCache() {
-	globalNpmRootMu.Lock()
-	cachedGlobalNpmRoot, globalNpmRootSet = "", false
-	globalNpmRootMu.Unlock()
+	agentsNpmRoot.mu.Lock()
+	agentsNpmRoot.root, agentsNpmRoot.set = "", false
+	agentsNpmRoot.mu.Unlock()
 }
 
 func TestAgentGlobalRootOverride(t *testing.T) {
