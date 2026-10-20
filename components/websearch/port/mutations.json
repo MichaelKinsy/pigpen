@@ -462,6 +462,18 @@
   "replace": "_ = end"
  },
  {
+  "name": "openai-snippet-keeps-markdown-links",
+  "file": "openai.go",
+  "find": "if strings.Contains(window, \"](\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "uuid-variant-bits",
+  "file": "model_providers.go",
+  "find": "b[8] = b[8]&0x3f | 0x80",
+  "replace": "b[8] = b[8]&0x3f | 0x40"
+ },
+ {
   "name": "tinyfish-per-url-cap-raised",
   "file": "tinyfish.go",
   "find": "tinyfishMaxPerURLTimeoutMs = 110000",

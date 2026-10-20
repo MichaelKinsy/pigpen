@@ -228,6 +228,10 @@ For the fixed endpoints, `port/record-model-requests.mjs` runs the original modu
 - Provider timeouts take the classification of the first slice (see "Provider timeouts" above), except Kimi, whose own
   `Kimi Code search API timed out` message is ported.
 - The shared "No search provider available" text of `auto` lists every provider present (integration of this slice with the Gemini slice).
+- Responses of these providers are decoded by the direct parser described under "Deliberate differences" (`unmarshalAny`), the request
+  body is encoded into one pre-sized buffer, and OpenAI computes the domain filters once per request. Twins: `fastjson_test.go`
+  (the recorded model fixtures are part of its corpus), `model_fastpaths_test.go`; mutants `openai-snippet-keeps-markdown-links`,
+  `uuid-variant-bits`.
 
 **Named skips kept** (no Go counterpart): `curator page exposes xAI as a manual provider` and `Curator page exposes Mistral as an
 available manual provider` (the curator page is the curator slice). `provider-credential-source` is twinned over the original's
@@ -288,7 +292,7 @@ Each logs `ADAPTED:` when run.
 | Twins | `pigeq twins check`: 620 exact + 255 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
-| Mutation | `mutations.json`: 179 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, and the decoder, body read and domain fast paths), all killed (`pigeq mutate --unit`) |
+| Mutation | `mutations.json`: 181 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, and the decoder, body read and domain fast paths), all killed (`pigeq mutate --unit`) |
 | Binary | a Piglet Binary with only this extension fused (a temporary Piglet, deleted after the run) builds with PiG 0.3.0 and passes the process-global safety check; replaying the 5 scenarios on it (`pigeq record --self --builtin`) gives tool results and events identical to the Pi golden traces. `pig-with-batteries` itself cannot build a Binary yet because of the Node herdr extension (documented in its README) |
 | Go tests | 477 passing subtests, 572 skipped (570 ledger skips + 2 environment skips), coverage 86% |
 
