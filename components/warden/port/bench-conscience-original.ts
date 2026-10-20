@@ -36,9 +36,9 @@ const judge: Judge = {
 };
 const tools = (n: number) => Array.from({ length: n }, (_, i) => ({ name: `tool_${i}`, description: `Tool ${i} lists things in the repository` }));
 const deps = { judge, config, sharedTimeoutMs: 5000 };
-const s40 = mkSkills(40, false);
+const s40 = mkSkills(40, true);
 await time("assess 40 skills", 300, () => assess("design a landing page for the repository", "", s40 as never, [], [], [], deps));
-const s250 = mkSkills(250, false);
+const s250 = mkSkills(250, true);
 const t60 = tools(60);
 await time("assess 250 skills + 60 tools", 100, () => assess("design a landing page for the repository", "", s250 as never, t60, [], [], deps));
 const s100 = mkSkills(100, true);

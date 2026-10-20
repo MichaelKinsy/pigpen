@@ -178,12 +178,12 @@ func ixOverCap() IndexEntry {
 // twin: tests/index.test.ts:192
 func TestEntryOver700CharsIsTruncatedAtBulletBoundary(t *testing.T) {
 	base := ixOverCap()
-	if utf16Len(jsonCompact(base)) <= 700 {
-		t.Fatalf("fixture should exceed 700, got %d", utf16Len(jsonCompact(base)))
+	if entryLength(&base) <= 700 {
+		t.Fatalf("fixture should exceed 700, got %d", entryLength(&base))
 	}
 	e := ixValid(t, validateEntry(ixMap(t, base), 0))
-	if !e.Truncated || utf16Len(jsonCompact(e)) > 700 {
-		t.Errorf("should be marked truncated and fit: %v %d", e.Truncated, utf16Len(jsonCompact(e)))
+	if !e.Truncated || entryLength(&e) > 700 {
+		t.Errorf("should be marked truncated and fit: %v %d", e.Truncated, entryLength(&e))
 	}
 }
 
@@ -741,6 +741,50 @@ func TestReadIndexRawNeedsTheFullShape(t *testing.T) {
 	} {
 		if _, ok := readIndexRaw(write(name, body)); ok {
 			t.Errorf("%s should not read as an index file", name)
+		}
+	}
+}
+
+// Go-only: the build prompt is the original's text byte for byte: testdata/index-prompt-original*.txt are written by
+// the original's buildIndexPrompt (port/gen-index-prompt.ts) for these inputs.
+func TestBuildIndexPromptIsTheOriginalsTextByteForByte(t *testing.T) {
+	skills := []IndexSkill{{"tdd", "TDD", "/skills/tdd/SKILL.md"}, {"impeccable", "UI design", "/skills/impeccable/SKILL.md"}}
+	tools := []CapabilityTool{{"bash", "Run commands"}, {"search_graph", "Search the code graph"}}
+	for _, c := range []struct {
+		file   string
+		skills []IndexSkill
+		tools  []CapabilityTool
+		agent  string
+	}{{"testdata/index-prompt-original.txt", skills, tools, "/home/u/.pi/agent"}, {"testdata/index-prompt-original-empty.txt", nil, nil, "/a"}} {
+		want, err := os.ReadFile(c.file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := buildIndexPrompt("/p", c.skills, c.tools, "/g.json", "/p.json", c.agent); got != string(want) {
+			t.Errorf("%s differs:\n%s", c.file, got)
+		}
+	}
+}
+
+// Go-only: the hand-written JSON of an index equals the generic encoder's (JSON.stringify's shape), for entries with
+// every optional member, empty lists and text that needs escaping.
+func TestIndexJSONEqualsTheGenericEncoder(t *testing.T) {
+	odd := ixSample
+	odd.Name, odd.Lead = "a\"b\\c\n\td\x01<&>\u2028é😀", "lead \u0008\u000c\r"
+	odd.Improve, odd.Location, odd.Truncated, odd.NotWhen = "improve", "/loc", true, []string{}
+	files := []*IndexFile{
+		{FormatVersion: 1, BuiltAt: "t", Model: "m", Entries: []IndexEntry{}},
+		{FormatVersion: 1, BuiltAt: "2026-01-01T00:00:00.000Z", Model: "prov/mod", Entries: []IndexEntry{ixSample, ixSampleTool, odd}},
+	}
+	for _, f := range files {
+		if got, want := string(indexFileJSON(f)), strings.ReplaceAll(jsonIndent(f), `\u2028`, "\u2028"); got != want {
+			t.Errorf("file JSON differs:\n%s\n--- want\n%s", got, want)
+		}
+		for i := range f.Entries {
+			e := &f.Entries[i]
+			if got, want := entryLength(e), utf16Len(strings.ReplaceAll(jsonCompact(*e), `\u2028`, "\u2028")); got != want {
+				t.Errorf("entry %d length %d want %d", i, got, want)
+			}
 		}
 	}
 }
