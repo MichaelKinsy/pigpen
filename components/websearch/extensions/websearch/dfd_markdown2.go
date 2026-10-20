@@ -297,8 +297,8 @@ func tdIsSpace(s string) bool {
 
 // dfdParseHTMLFragment is dom.parseHTML for the Markdown stage: the nodes of the markup under a container.
 func dfdParseHTMLFragment(markup string) *html.Node {
-	doc, err := html.Parse(strings.NewReader(`<x-fragment>` + markup + `</x-fragment>`))
-	if err != nil {
+	doc := dfdParseHTMLDocument(`<x-fragment>` + markup + `</x-fragment>`)
+	if doc == nil {
 		return nil
 	}
 	var root *html.Node
@@ -336,7 +336,7 @@ func dfdCreateMarkdownContent(content string) string {
 	return jsTrim(markdown)
 }
 
-// dfdRemoveEmptyLinks is markdown.replace(/\n*(?<!!)\[]\([^)]+\)\n*/g, '').
+// dfdRemoveEmptyLinks is markdown.replace(/\n*(?<!!)\[]\([^)]+\)\n*/g, ”).
 func dfdRemoveEmptyLinks(s string) string {
 	locs := reEmptyLink.FindAllStringIndex(s, -1)
 	if len(locs) == 0 {
