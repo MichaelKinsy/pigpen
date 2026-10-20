@@ -1,0 +1,6 @@
+{
+ "url": "https://lean-lang.org/theorem_proving_in_lean4/dependent_type_theory.html",
+ "title": "Dependent Type Theory",
+ "content": "This fixture verifies that Verso-style Lean command and output fragments are merged into a single fenced code block. It also checks that hidden hover metadata does not leak into visible code text during extraction. The paragraph is intentionally verbose so content detection remains stable and deterministic across environments.\n\n```lean\n#check Nat\nNat : Type\n#check Bool\nBool : Type\n#check Nat → Bool\nNat → Bool : Type\n```\n\nText after the example ensures that downstream markdown rendering keeps non-code prose separate from the merged block output.",
+ "error": null
+}

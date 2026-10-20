@@ -1,0 +1,6 @@
+{
+ "url": "https://empty-file",
+ "title": null,
+ "content": null,
+ "error": "Cannot destructure property 'firstElementChild' of 'documentElement' as it is null."
+}

@@ -1,0 +1,6 @@
+{
+ "url": "https://hr-sup-numbered",
+ "title": "Loose footnotes: sup-numbered after hr",
+ "content": "The first technique is widely used.[^1]\n\nThe second technique has trade-offs.[^2]\n\nBoth approaches have merit.\n\n[^1]: This is the first footnote with more detail about the technique.\n\n[^2]: This is the second footnote explaining the trade-offs in depth.",
+ "error": null
+}

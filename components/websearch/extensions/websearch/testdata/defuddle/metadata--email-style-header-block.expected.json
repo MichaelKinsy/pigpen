@@ -1,0 +1,6 @@
+{
+ "url": "https://example.com/posts/announcement-reflection/",
+ "title": "Announcement Reflection",
+ "content": "Date: Wed, 08 Apr 2026\n\nFrom: Example Team <hello@example.com>\n\nTo: Readers\n\nSubject: Announcement Reflection\n\nWe are sharing a short reflection on the announcement and the work that led up to it. The project came together through many small decisions about scope, timing, and what readers would need from the first release.\n\nThis note preserves the email-style header because it is part of the article presentation rather than site chrome. Removing one row changes the meaning of the format and makes the extracted document feel incomplete.",
+ "error": null
+}

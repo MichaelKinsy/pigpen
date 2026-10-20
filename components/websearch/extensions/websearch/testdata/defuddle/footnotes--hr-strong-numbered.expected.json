@@ -1,0 +1,6 @@
+{
+ "url": "https://hr-strong-numbered",
+ "title": "Loose footnotes: strong-numbered after hr",
+ "content": "The first concept is well-established. [^1]\n\nThe second concept is more nuanced.[^2]\n\nConcluding thoughts.\n\n[^1]: First footnote explanation.\n\n- Supporting point A.\n- Supporting point B.\n\n[^2]: Second footnote with additional context.",
+ "error": null
+}

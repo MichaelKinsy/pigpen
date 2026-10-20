@@ -1,0 +1,6 @@
+{
+ "url": "https://example.com/engineering/agent-architecture",
+ "title": "Agent Architecture",
+ "content": "Here is the top-level directory layout for the project:\n\n#### Plain Text\n\n```\nAGENTS.md\nARCHITECTURE.md\ndocs/\n├── design-docs/\n│   ├── index.md\n│   └── core-beliefs.md\nsrc/\n└── main.ts\n```\n\nEach agent is defined in its own module under `src/agents/`.",
+ "error": null
+}

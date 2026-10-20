@@ -1,0 +1,6 @@
+{
+ "url": "https://code-languages",
+ "title": "Sample article",
+ "content": "The dog and fox banks a under banks quietly while dog while quietly banks under a banks fox and dog the grind banks near near banks grind the dog and fox banks a under banks quietly while dog while quietly banks under a banks fox. Near grain a and over grind quietly over the under grain under the over quietly grind over and a grain near while over fox fox over while near grain a.\n\n```js\nconst a = 1;\nconsole.log(a < 2);\n```\n```python\ndef f(x):\n    return x * 2\n```\n```rust\nfn main() {}\n```\n```\npackage main\n```\n```sh\n$ echo hi\n```\n```java\nclass A {}\n```\n```json\n{\"a\": [1, 2]}\n```\n\nThe dog and fox banks a under banks quietly while dog while quietly banks under a banks fox and dog the grind banks near near banks grind the dog and fox banks a under banks quietly while dog while quietly banks under a banks fox. Near grain a and over grind quietly over the under grain under the over quietly grind over and a grain near while over fox fox over while near grain a.",
+ "error": null
+}

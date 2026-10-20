@@ -1,0 +1,6 @@
+{
+ "url": "https://p-class-footnote",
+ "title": "Testing Patterns",
+ "content": "This pattern language[^1] describes a new approach. It avoids the common problems with testing and provides better reliability.\n\n## Getting Started\n\nTo begin, you need to understand the basic concepts[^2] behind the approach.\n\nThe rest of the content continues here with more details about the testing patterns.\n\n[^1]: The structure of this article was inspired by a well-known pattern language for information integrity.\n\n[^2]: These concepts were first described in a seminal paper on software architecture.",
+ "error": null
+}

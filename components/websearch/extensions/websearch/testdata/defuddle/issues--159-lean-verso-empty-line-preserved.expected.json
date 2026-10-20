@@ -1,0 +1,6 @@
+{
+ "url": "https://lean-lang.org/theorem_proving_in_lean4/Dependent-Type-Theory/",
+ "title": "Dependent Type Theory",
+ "content": "This fixture ensures empty Verso code blocks are preserved as blank lines when adjacent Lean command and output fragments are merged.\n\n```lean\n#check true\nBool.true : Bool\n\n/- Evaluate -/\n\n#eval 5 * 4\n20\n```\n\nTrailing prose ensures normal extraction continues.",
+ "error": null
+}

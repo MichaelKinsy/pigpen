@@ -1,0 +1,6 @@
+{
+ "url": "https://hidden-section",
+ "title": "Hidden Footnotes Section",
+ "content": "## PC Gamer Recommends RSS Readers\n\nWe're lucky to have so many good RSS readers that cut through this nonsense. [^1]\n\nMore article text here to ensure content is detected.\n\n## Footnotes\n\n[^1]: [NetNewsWire](https://netnewswire.com/), [Unread](https://goldenhillsoftware.com/), [Current](https://currentreader.app/), and [Reeder](https://reederapp.com/classic/), to name a few.",
+ "error": null
+}

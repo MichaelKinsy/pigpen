@@ -1,0 +1,6 @@
+{
+ "url": "https://mathjax-tagged-equation",
+ "title": "Tagged Equation Test",
+ "content": "A tagged single equation produced by `\\tag{}` is wrapped by MathJax in an `mtable` with a single `mlabeledtr`. It should stay on one horizontal line, not collapse into a vertical stack.\n\n$$\na = b + c ( \\star )\n$$\n\nA genuine multi-row aligned system uses several `mtr` rows and must be preserved as an aligned environment.\n\n$$\n\\begin{aligned}x & = & y \\\\ u & = & v\\end{aligned}\n$$",
+ "error": null
+}
