@@ -164,7 +164,7 @@ type app struct {
 	once      sync.Once
 	widthOnce sync.Once
 	welcome   welcomeState // welcome.go, welcome_ext.go
-	cdq       *cdQuote // /cd, /reply and the last-prompt line (cdquote_ext.go)
+	cdq       *cdQuote     // /cd, /reply and the last-prompt line (cdquote_ext.go)
 	keys      *keysExt
 }
 
