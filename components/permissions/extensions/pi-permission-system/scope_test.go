@@ -23,6 +23,8 @@ type scopeRig struct {
 	agent   string
 	trusted bool
 	entries []map[string]any
+	// trustErr makes the host fail the trust query.
+	trustErr bool
 }
 
 func newScopeRig(t *testing.T, config string) *scopeRig {
@@ -38,6 +40,9 @@ func newScopeRig(t *testing.T, config string) *scopeRig {
 	r.h = StartHost(t, pps.Extension(), HostOptions{Cwd: r.cwd, OnCall: func(method string, args map[string]any) (map[string]any, string) {
 		switch method {
 		case "isProjectTrusted":
+			if r.trustErr {
+				return nil, "trust unavailable"
+			}
 			return map[string]any{"trusted": r.trusted}, ""
 		case "watchSessionLog":
 			entries := make([]any, len(r.entries))
@@ -227,4 +232,35 @@ func TestUnportedConfigOptionsAreAnnounced(t *testing.T) {
 	n := r.notices()
 	eq(t, len(n), 1, "one warning")
 	eq(t, n[0], refusalHead+"the config option(s) 'debugLog', 'promptMaxRows', 'authorizerChain' (they are accepted and ignored)"+refusalTail, "text")
+}
+
+// When the host cannot say whether the project is trusted, the project scope counts: the port refuses rather than guesses.
+func TestUnknownTrustCountsAsTrusted(t *testing.T) {
+	r := newScopeRig(t, `{"permission":{`+wideOpen+`,"bash":"allow"}}`)
+	r.trustErr = true
+	write(t, filepath.Join(r.cwd, ".pi", "extensions", "pi-permission-system", "config.json"), `{}`)
+	r.h.Fire("session_start", map[string]any{})
+	blocked, _ := r.call("bash", map[string]any{"command": "ls"})
+	eq(t, blocked, true, "trust unknown: blocked")
+}
+
+// A new session forgets the agent the last one named.
+func TestAgentIsForgottenAtSessionStart(t *testing.T) {
+	r := newScopeRig(t, `{"permission":{`+wideOpen+`,"bash":"allow"}}`)
+	write(t, filepath.Join(r.agent, "agents", "scout.md"), "---\npermission:\n  bash: deny\n---\n")
+	r.h.Fire("session_start", map[string]any{})
+	r.h.Fire("before_agent_start", map[string]any{"systemPrompt": "<active_agent name=\"scout\">", "systemPromptOptions": map[string]any{}})
+	blocked, _ := r.call("bash", map[string]any{"command": "ls"})
+	eq(t, blocked, true, "the agent applies")
+	r.h.Fire("session_start", map[string]any{})
+	blocked, _ = r.call("bash", map[string]any{"command": "ls"})
+	eq(t, blocked, false, "a new session starts with no agent")
+}
+
+func TestSkillInputPrefix(t *testing.T) {
+	r := newScopeRig(t, `{"permission":{"*":"deny"}}`)
+	r.h.Fire("session_start", map[string]any{})
+	eq(t, r.input("/skills list"), "", "/skills is not /skill:")
+	eq(t, r.input("/skill x"), "", "a space after /skill")
+	eq(t, r.input("/skill:x"), "handled", "/skill:x")
 }

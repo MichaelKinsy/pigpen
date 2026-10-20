@@ -226,7 +226,7 @@ m('scope-agent-prompt-tag', 'extension.go', 'agent = agentFromSystemPrompt(promp
 m('scope-agent-reset', 'extension.go', 'st.agentName = ""\n', '\n')
 m('scope-gate-tool-call', 'extension.go', 'v = unsupported(feature)', '_ = feature')
 m('scope-announce', 'extension.go', 'ctx.Notify(refusal(feature)+" Until then every call the port would allow is blocked.", "warning")', '_ = feature')
-m('options-announce', 'extension.go', 'ctx.Notify(refusal("the config option(s) \'"', '_ = ("the config option(s) \'"')
+m('options-announce', 'extension.go', 'ctx.Notify(refusal("the config option(s) \'"+strings.Join(st.config.Unported, "\', \'")+"\' (they are accepted and ignored)"), "warning")', '_ = strings.Join(st.config.Unported, "")')
 m('options-false-quiet', 'unported.go', 'case bool:\n\t\t\tif !x {\n\t\t\t\tcontinue\n\t\t\t}', 'case bool:\n\t\t\tif x {\n\t\t\t\tcontinue\n\t\t\t}')
 m('input-registered', 'extension.go', 'e.OnEvent(sdk.EventInput, st.skillInput)', '_ = st.skillInput')
 m('input-deny-handled', 'unported.go', '\tcase "deny":\n\t\tctx.Notify(formatSkillDenyNotice(skill, agent), "warning")\n\tdefault:', '\tcase "deny":\n\t\tctx.Notify(formatSkillDenyNotice(skill, agent), "warning")\n\t\treturn nil, nil\n\tdefault:')

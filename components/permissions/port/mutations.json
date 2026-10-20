@@ -1118,8 +1118,8 @@
  {
   "name": "options-announce",
   "file": "extension.go",
-  "find": "ctx.Notify(refusal(\"the config option(s) '\"",
-  "replace": "_ = (\"the config option(s) '\""
+  "find": "ctx.Notify(refusal(\"the config option(s) '\"+strings.Join(st.config.Unported, \"', '\")+\"' (they are accepted and ignored)\"), \"warning\")",
+  "replace": "_ = strings.Join(st.config.Unported, \"\")"
  },
  {
   "name": "options-false-quiet",
