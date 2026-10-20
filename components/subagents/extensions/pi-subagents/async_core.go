@@ -5,6 +5,7 @@ package pi_subagents
 // src/shared/atomic-json.ts and the pieces of src/shared/formatters.ts the async status text uses.
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
@@ -194,6 +195,7 @@ type AsyncStep struct {
 	ContextOverflow  *bool                      `json:"contextOverflow,omitempty"`
 	TotalCost        *CostSummary               `json:"totalCost,omitempty"`
 	Error            string                     `json:"error,omitempty"`
+	TimeoutRecovery  map[string]any             `json:"timeoutRecovery,omitempty"`
 	LaunchDigest     string                     `json:"launchContractDigest,omitempty"`
 	ProcessTerminal  *ProcessTerminal           `json:"processTerminal,omitempty"`
 	Extra            map[string]json.RawMessage `json:"-"`
@@ -362,14 +364,14 @@ func asyncWriteJSONMode(filePath string, payload any, mode os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
 		return err
 	}
-	body := marshalJSON(payload, "  ")
-	if body == "" {
-		b, err := json.MarshalIndent(payload, "", "  ")
-		if err != nil {
-			return err
-		}
-		body = string(b)
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false) // JSON.stringify does not escape <, > and &
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(payload); err != nil {
+		return err
 	}
+	body := strings.TrimSuffix(buf.String(), "\n")
 	tmp := filepath.Join(filepath.Dir(filePath), atomicTempName(filePath, nowMs(), randomToken()))
 	if err := os.WriteFile(tmp, []byte(body), mode); err != nil {
 		_ = os.Remove(tmp)
