@@ -1,0 +1,74 @@
+{
+ "name": "fetch-firecrawl-fallback",
+ "description": "fetch_content falls back to a configured Firecrawl instance after the direct fetch is blocked: the scrape request and the mapped result.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"firecrawlBaseUrl\": \"{{server:fc}}\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/blocked"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/blocked",
+     "status": 403,
+     "headers": {
+      "content-type": "text/plain"
+     },
+     "body": "blocked"
+    }
+   ]
+  },
+  "fc": {
+   "recordHeaders": [
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/v2/scrape",
+     "json": {
+      "success": true,
+      "data": {
+       "markdown": "# Rendered\n\nRendered by Firecrawl.",
+       "metadata": {
+        "title": "Rendered"
+       }
+      }
+     }
+    }
+   ]
+  }
+ },
+ "env": {
+  "FIRECRAWL_API_KEY": "fc-test-key"
+ },
+ "normalize": [
+  {
+   "pattern": "\\b[0-9a-z]{14}\\b",
+   "replacement": "<response-id>"
+  }
+ ]
+}

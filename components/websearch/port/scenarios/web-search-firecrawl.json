@@ -1,0 +1,72 @@
+{
+ "name": "web-search-firecrawl",
+ "description": "web_search through a configured Firecrawl instance (API v1): the search request and the rendered answer.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"firecrawl\", \"firecrawlBaseUrl\": \"{{server:fc}}\", \"firecrawlApiVersion\": \"v1\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "firecrawl docs",
+      "provider": "firecrawl",
+      "workflow": "none",
+      "numResults": 2
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "fc": {
+   "recordHeaders": [
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/v1/search",
+     "json": {
+      "success": true,
+      "data": [
+       {
+        "title": "Docs",
+        "description": "Firecrawl docs",
+        "url": "https://docs.firecrawl.dev/search",
+        "markdown": "# Firecrawl Search"
+       },
+       {
+        "title": "Two",
+        "description": "Second",
+        "url": "https://example.com/two"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "env": {
+  "FIRECRAWL_API_KEY": "fc-test-key"
+ },
+ "normalize": [
+  {
+   "pattern": "\\b[0-9a-z]{14}\\b",
+   "replacement": "<response-id>"
+  }
+ ]
+}

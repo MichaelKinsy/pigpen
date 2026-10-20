@@ -1,4 +1,4 @@
-{"kind":"header","scenario":"get-search-content-missing","lane":"pi-ts","host":"pi 1.0.1","extension":"sha256:3811a20372e5570743c75061b0e12c0b4d440693a5dcfc612fed8532e53a2fb1","normalizer":"v3"}
+{"kind":"header","scenario":"get-search-content-missing","lane":"pi-ts","host":"pi 1.3.0.1402973a","extension":"sha256:3811a20372e5570743c75061b0e12c0b4d440693a5dcfc612fed8532e53a2fb1","normalizer":"v3"}
 {"step":"01-ask","ch":"response","data":{"command":"prompt","data":{"disposition":"started"},"success":true}}
 {"step":"01-ask","ch":"host","data":{"type":"agent_start"}}
 {"step":"01-ask","ch":"host","data":{"type":"turn_start"}}
