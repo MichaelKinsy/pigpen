@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { describe, it, after } from 'node:test';
 import { SCOPE, buildPackageTree, libraryDeps, manifestProblems, npmName, packedProblems, publishManifest } from './npm-packages.mjs';
 import { readPackages, root } from './packages.mjs';
@@ -80,19 +80,33 @@ describe('the Packages in this tree', () => {
 describe('buildPackageTree', () => {
   const out = mkdtempSync(join(tmpdir(), 'pigpen-npm-tree-'));
   after(() => rmSync(out, { recursive: true, force: true }));
-  it('carries the shared library inside the Package and points go.work at it', () => {
+  it('depends on the shared library Package and points go.work at its sibling directory', () => {
     const tree = buildPackageTree('pig-runner', out);
-    assert.equal(existsSync(join(tree, 'libs/pig-play/go.mod')), true);
+    assert.equal(existsSync(join(tree, 'libs')), false, 'no private copy of the library');
     const work = readFileSync(join(tree, 'extensions/pigrunner/go.work'), 'utf8');
-    assert.match(work, /^\s*\.\.\/\.\.\/libs\/pig-play\s*$/m);
-    assert.doesNotMatch(work, /\.\.\/\.\.\/\.\.\/pig-play/);
+    assert.match(work, /^\s*\.\.\/\.\.\/\.\.\/pigpen-pig-play\s*$/m);
     const manifest = JSON.parse(readFileSync(join(tree, 'package.json'), 'utf8'));
-    assert.ok(manifest.files.includes('libs'));
+    assert.equal(manifest.dependencies['@pi-in-go/pigpen-pig-play'], `^${JSON.parse(readFileSync(join(root, 'components/pig-play/package.json'), 'utf8')).version}`);
+    assert.equal(manifest.files.includes('libs'), false);
     assert.equal(manifest.name, '@pi-in-go/pigpen-pig-runner');
+  });
+  it('gives two Packages that share a library the same library directory (PiG fuses a Go module from one directory only)', () => {
+    // Installed side by side under node_modules/@pi-in-go, each Package's go.work must name the one directory of the library.
+    const installed = (dir, workFile) => {
+      const tree = buildPackageTree(dir, out);
+      const nodeModules = '/agent/npm/node_modules/@pi-in-go';
+      const use = [...readFileSync(join(tree, workFile), 'utf8').matchAll(/^\s*(\.\.\/\S*pig-play)\s*$/gm)].map((m) => m[1]);
+      assert.equal(use.length, 1, `${dir} go.work names the library once`);
+      return resolve(nodeModules, `pigpen-${dir}`, dirname(workFile), use[0]);
+    };
+    const runner = installed('pig-runner', 'extensions/pigrunner/go.work');
+    assert.equal(runner, '/agent/npm/node_modules/@pi-in-go/pigpen-pig-play');
+    assert.equal(installed('angry-pigs', 'extensions/angrypigs/go.work'), runner);
   });
   it('leaves a Package without shared libraries as it is', () => {
     const tree = buildPackageTree('herdr', out);
     assert.equal(existsSync(join(tree, 'libs')), false);
+    assert.equal(JSON.parse(readFileSync(join(tree, 'package.json'), 'utf8')).dependencies, undefined);
     assert.equal(readFileSync(join(tree, 'extensions/herdr/go.mod'), 'utf8'), readFileSync(join(root, 'components/herdr/extensions/herdr/go.mod'), 'utf8'));
   });
   it('leaves nothing out that npm would need to build the extension', () => {

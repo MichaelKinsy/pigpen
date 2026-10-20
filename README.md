@@ -160,8 +160,10 @@ trust a Binary; a signature alone does not prove who holds the key.
 How the npm form differs from this tree (generated, never hand-edited):
 
 - Each `components/<dir>/package.json` is the published manifest (`npm run check` enforces it). A Go extension that reaches
-  `pig-play`, `typesafe` or `pi-typesafe-api` through a sibling directory carries that library under `libs/` in its tarball,
-  so it builds when installed on its own; `scripts/npm-packages.mjs` generates that into `dist/npm/packages/<dir>`.
+  `pig-play`, `typesafe` or `pi-typesafe-api` through a sibling directory depends on that library's own Package
+  (`dependencies`) and its `go.work` names the installed sibling `node_modules/@pi-in-go/pigpen-<lib>`, so two Packages that
+  share a library share one directory of it (PiG's native builder fuses a Go module from one directory only);
+  `scripts/npm-packages.mjs` generates that into `dist/npm/packages/<dir>`.
 - A Piglet source (`scripts/npm-piglets.mjs`, `dist/npm/piglets/<name>`) names its Packages as
   `npm:@pi-in-go/pigpen-<dir>@^<version>`, flattens `extends` (`pig-porter`) and drops the local `seed-check` build fixture,
   because a remote Piglet source takes no local Resource.

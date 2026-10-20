@@ -4,10 +4,9 @@
 // contract it must meet (npm run check) and the one-time migration (`node scripts/npm-packages.mjs --write`).
 //
 // A Go extension reaches a shared library module (pig-play, typesafe, pi-typesafe-api) through a go.work that says
-// `../../../<lib>`: a sibling of the Package. Installed from npm there is no sibling, so the published tree carries each
-// library under `libs/<lib>` and its go.work points there. `buildPackageTree` generates that tree into dist/npm/packages/<dir>;
-// nothing under components/ is edited for it.
-import { execFileSync } from 'node:child_process';
+// `../../../<lib>`: a sibling of the Package. Installed from npm the sibling is the library's own Package, which the
+// published manifest depends on (`dependencies`), and its go.work says `../../../pigpen-<lib>`. `buildPackageTree` generates
+// that tree into dist/npm/packages/<dir>; nothing under components/ is edited for it.
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -90,11 +89,14 @@ function useEntries(text) {
   return out;
 }
 
-const packList = (cwd) => JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))[0].files.map((f) => f.path);
-
 /**
- * Generate the tree npm packs for one component: the component as it is, the shared libraries under libs/, go.work pointing at
- * them and the published manifest. Returns the directory (outRoot/<dir>).
+ * Generate the tree npm packs for one component: the component as it is, go.work pointing at the shared libraries it reaches and
+ * the published manifest, which depends on each library's own Package. Returns the directory (outRoot/<dir>).
+ *
+ * A library is not copied into the Package. PiG's native builder fuses a Go module from one directory only ("module ... is fused
+ * from both"), and two Packages that each carried their own copy of pig-play put the same module in two directories. Installed
+ * from npm, the library Package is one directory beside every Package that depends on it (node_modules/@pi-in-go/pigpen-<lib>),
+ * and go.work reaches it as `../../../pigpen-<lib>`, the same way the repository's `../../../<lib>` reaches components/<lib>.
  */
 export function buildPackageTree(dir, outRoot, { directory = root, repository = JSON.parse(readFileSync(join(directory, 'catalog.config.json'), 'utf8')).repository } = {}) {
   const source = join(directory, 'components', dir);
@@ -103,31 +105,28 @@ export function buildPackageTree(dir, outRoot, { directory = root, repository = 
   mkdirSync(dirname(target), { recursive: true });
   cpSync(source, target, { recursive: true, filter: (path) => !/(^|[\\/])(node_modules|\.git)([\\/]|$)/.test(path) });
   const libs = libraryDeps(dir, directory);
-  for (const lib of libs) {
-    const libSource = join(directory, 'components', lib);
-    for (const file of packList(libSource)) {
-      if (file.startsWith('port/')) continue;
-      mkdirSync(dirname(join(target, 'libs', lib, file)), { recursive: true });
-      cpSync(join(libSource, file), join(target, 'libs', lib, file));
-    }
-  }
   const rewrite = (path) => {
     for (const entry of readdirSync(path, { withFileTypes: true })) {
       const full = join(path, entry.name);
-      if (entry.isDirectory()) { if (!['node_modules', 'libs', 'port'].includes(entry.name)) rewrite(full); continue; }
+      if (entry.isDirectory()) { if (!['node_modules', 'port'].includes(entry.name)) rewrite(full); continue; }
       if (entry.name !== 'go.work') continue;
       let text = readFileSync(full, 'utf8');
       for (const used of useEntries(text)) {
         const lib = relative(join(directory, 'components'), resolve(dirname(join(source, relative(target, full))), used)).split(sep)[0];
         if (!libs.includes(lib) || used.startsWith('./') || used === '.') continue;
-        text = text.replace(new RegExp(`^(\\s*)${used.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'm'), `$1${relative(dirname(full), join(target, 'libs', lib)).split(sep).join('/')}`);
+        // The Package's own root is `target` here and node_modules/@pi-in-go/pigpen-<dir> once installed; the library is its sibling.
+        const sibling = join(relative(dirname(full), target), '..', `pigpen-${lib}`).split(sep).join('/');
+        text = text.replace(new RegExp(`^(\\s*)${used.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'm'), `$1${sibling}`);
       }
       writeFileSync(full, text);
     }
   };
   rewrite(target);
   const manifest = publishManifest(dir, JSON.parse(readFileSync(join(source, 'package.json'), 'utf8')), { repository, directory });
-  if (libs.length && !manifest.files.includes('libs')) manifest.files.push('libs');
+  if (libs.length) {
+    manifest.dependencies = { ...manifest.dependencies };
+    for (const lib of libs) manifest.dependencies[npmName(lib)] = `^${JSON.parse(readFileSync(join(directory, 'components', lib, 'package.json'), 'utf8')).version}`;
+  }
   writeFileSync(join(target, 'package.json'), JSON.stringify(manifest, null, 2) + '\n');
   return target;
 }
