@@ -45,8 +45,6 @@ type HostOptions struct {
 	Mode  string // "tui" (default), "rpc", "json" or "print"
 	HasUI *bool  // default: true for tui and rpc, false otherwise
 	Cwd   string
-	// Model is the session's active model in the ready state: {"id": ..., "provider": ...}.
-	Model map[string]any
 	// OnCall answers a host call. Return (result, "") for success or
 	// (nil, message) for a host error. Nil means "answer {} to everything".
 	OnCall func(method string, args map[string]any) (result map[string]any, errMessage string)
@@ -168,11 +166,7 @@ func StartHost(t *testing.T, ext *sdk.Extension, opts HostOptions) *Host {
 		h.cmds[c.Name] = true
 	}
 	h.resolvers = first.Register.ToolRenderers
-	readyState := map[string]any{"hasUI": hasUI}
-	if opts.Model != nil {
-		readyState["model"] = opts.Model
-	}
-	state, _ := json.Marshal(readyState)
+	state, _ := json.Marshal(map[string]any{"hasUI": hasUI})
 	h.write(map[string]any{"type": "ready", "ready": map[string]any{
 		"session_name": "", "cwd": opts.Cwd, "mode": opts.Mode, "width": 80, "state": json.RawMessage(state),
 	}})

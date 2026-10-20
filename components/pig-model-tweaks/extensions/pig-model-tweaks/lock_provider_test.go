@@ -23,9 +23,18 @@ func lockHome(t *testing.T) string {
 	return home
 }
 
+// setActiveModel tells the extension which model the session runs, the way the
+// host's state_update does.
+func setActiveModel(h *Host, model map[string]any) {
+	h.write(map[string]any{"type": "notify", "notify": map[string]any{
+		"method": "state_update", "args": map[string]any{"state": map[string]any{"model": model}},
+	}})
+}
+
 func startLockHost(t *testing.T, model map[string]any) *Host {
 	t.Helper()
-	h := StartHost(t, Extension(), HostOptions{Model: model})
+	h := StartHost(t, Extension(), HostOptions{})
+	setActiveModel(h, model)
 	if failure := fire(h, "session_start", map[string]any{"reason": "resume"}); failure != "" {
 		t.Fatalf("session_start: %s", failure)
 	}
@@ -175,7 +184,8 @@ func TestLockAndClearPersistTheDefaultModel(t *testing.T) {
 
 func TestNoArgumentOutsideTheTUIPrintsUsage(t *testing.T) {
 	lockHome(t)
-	h := StartHost(t, Extension(), HostOptions{Mode: "print", Model: map[string]any{"id": "vendor/m", "provider": "openrouter"}})
+	h := StartHost(t, Extension(), HostOptions{Mode: "print"})
+	setActiveModel(h, map[string]any{"id": "vendor/m", "provider": "openrouter"})
 	if failure := h.Command(lockProviderName, ""); failure != "" {
 		t.Fatal(failure)
 	}
