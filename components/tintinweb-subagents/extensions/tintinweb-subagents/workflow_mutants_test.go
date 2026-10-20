@@ -1,10 +1,12 @@
 package tintinweb_subagents
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Twin-style coverage of behaviors of the original that the first mutation run found untested: each case is the
@@ -258,17 +260,19 @@ func TestWorkflowRunBehaviors(t *testing.T) {
 	})
 	t.Run("a long result is previewed at 200 characters", func(t *testing.T) {
 		res := wfRun(t, "await agent(\""+strings.Repeat("a", 300)+"\");\nreturn 1;", stub)
-		prev := wfAgentRows(res.Progress)[0].ResultPreview
+		prev := wfLastRow(res.Progress).ResultPreview
 		eq(t, len([]rune(prev)), workflowPreviewLength)
 		eq(t, strings.HasSuffix(prev, "…"), true)
 	})
 	t.Run("a schema that cannot compile fails the run", func(t *testing.T) {
-		res := wfRun(t, "try { await agent(\"x\", { schema: { type: \"array\" } }); } catch (e) { return \"caught\"; }\nreturn \"went on\";", stub)
+		// fatal is what stops parallel() from swallowing it into a null
+		res := wfRun(t, "return await parallel([async () => agent(\"x\", { schema: { type: \"array\" } })]);", stub)
 		eq(t, res.Status, runFailed)
 	})
-	t.Run("a nested workflow that cannot be loaded can be caught", func(t *testing.T) {
-		res := wfRun(t, "try { await workflow(\"nope\"); } catch (e) { return \"caught\"; }\nreturn \"went on\";", func(o *workflowRunOptions) { o.Host = newNestingHost(nil, nil) })
-		eq(t, res.Value, "caught")
+	t.Run("a nested workflow that cannot be loaded is not fatal", func(t *testing.T) {
+		res := wfRun(t, "return await parallel([async () => workflow(\"nope\")]);", func(o *workflowRunOptions) { o.Host = newNestingHost(nil, nil) })
+		eq(t, res.Status, runCompleted)
+		eq(t, string(res.ValueJSON), "[null]")
 	})
 	t.Run("a run whose context is already cancelled is killed", func(t *testing.T) {
 		res := wfRun(t, "return 1;", func(o *workflowRunOptions) { o.Host = wfStubHost(nil); o.Ctx = wfCancelledCtx() })
@@ -305,5 +309,68 @@ func TestWorkflowNotificationDetails(t *testing.T) {
 		w := startWfRig(t, wfRigOptions{settings: `{"workflowsEnabled":"false"}`})
 		eq(t, w.app.workflows().isEnabled(), true)
 		eq(t, w.app.workflows().isPinned(), false)
+	})
+}
+
+func TestWorkflowHostResults(t *testing.T) {
+	t.Run("a failed record without an error is named by its status, and no tool calls stay unreported", func(t *testing.T) {
+		res := wfToSpawnResult(workflowRecord{ID: "a", Status: statusError})
+		eq(t, res.Error, "Agent "+statusError+".")
+		eq(t, res.ToolCalls == nil, true)
+	})
+	t.Run("a gate's output is trimmed per stream", func(t *testing.T) {
+		m := newStubManager(nil)
+		h := hostWith(m, func(d *workflowHostDeps) {
+			d.Exec = func(context.Context, string, []string, string, time.Duration) (workflowExecResult, error) {
+				return workflowExecResult{Stdout: "  out  \n", Stderr: "\n err \n"}, nil
+			}
+		})
+		g, _ := h.RunGate(context.Background(), "npm test", "", "/x")
+		eq(t, g.Output, "out\nerr")
+	})
+	t.Run("a resume reports the record id and the effective model again", func(t *testing.T) {
+		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+			return record(func(r *workflowRecord) { r.ID = "manager-id-7" }), nil
+		})
+		m.resume = func(id, prompt string) (workflowRecord, bool, error) {
+			return record(func(r *workflowRecord) {
+				r.ID = id
+				r.Invocation = &workflowInvocation{ModelName: "haiku", ModelID: "anthropic/h"}
+			}), true, nil
+		}
+		h := hostWith(m, nil)
+		h.SpawnAgent(wfRequest(nil))
+		var got []workflowResolvedInfo
+		h.ResumeAgent(context.Background(), "wf-agent-0", "go on", func(i workflowResolvedInfo) { got = append(got, i) })
+		eq(t, len(got), 2)
+		eq(t, got[0].RecordID, "manager-id-7")
+		eq(t, got[1].ModelName, "haiku")
+	})
+	t.Run("an effective config needs the model name", func(t *testing.T) {
+		_, ok := wfResolvedInfo(workflowRecord{Invocation: &workflowInvocation{Thinking: "high"}}, true)
+		eq(t, ok, false)
+	})
+	t.Run("a model the script named that cannot be resolved fails that agent", func(t *testing.T) {
+		m := newStubManager(nil)
+		h := hostWith(m, func(d *workflowHostDeps) { d.Registry = fakeRegistry{models: []*workflowModel{{Provider: "p", ID: "x"}}} })
+		res, _ := h.SpawnAgent(wfRequest(func(r *workflowSpawnRequest) { r.Model = "no-such-model-anywhere" }))
+		eq(t, res.OK, false)
+		eq(t, strings.Contains(res.Error, "Model not found"), true)
+		eq(t, m.count(), 0)
+	})
+}
+
+func TestWorkflowRunControl(t *testing.T) {
+	t.Run("a second skip of the same agent is refused", func(t *testing.T) {
+		stub := newControllableHost()
+		var control workflowControl
+		done := make(chan *workflowRunResult, 1)
+		go func() {
+			done <- wfRun(t, "return await agent('one');", func(o *workflowRunOptions) { o.Host = stub; o.OnControl = func(c workflowControl) { control = c } })
+		}()
+		wfUntil(t, func() bool { return len(stub.Started()) == 1 }, "the agent to start")
+		eq(t, control.Skip(0), true)
+		eq(t, control.Skip(0), false)
+		<-done
 	})
 }
