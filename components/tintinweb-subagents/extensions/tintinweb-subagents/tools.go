@@ -110,15 +110,16 @@ func (a *app) registerTools(e *sdk.Extension) {
 	// The workspace is fixed for an extension process, so the custom agents can be read before the tool is registered.
 	if wd, err := os.Getwd(); err == nil {
 		a.reload(wd)
+		a.setSchedulingEnabled(scheduleSettingEnabled(wd))
 	}
 	reg := currentRegistry()
 	var guidelines []string
 	_ = json.Unmarshal(agentGuidelinesJSON, &guidelines)
 	e.RegisterTool(sdk.ToolDefinition{
-		Name: "Agent", Label: "Agent", Description: agentToolDescription(reg),
+		Name: "Agent", Label: "Agent", Description: a.withScheduleGuideline(agentToolDescription(reg)),
 		PromptSnippet:    "Launch autonomous sub-agents for complex multi-step tasks",
 		PromptGuidelines: guidelines,
-		Parameters:       agentToolSchema(reg, specs["Agent"]),
+		Parameters:       a.withScheduleParam(agentToolSchema(reg, specs["Agent"])),
 		Execute:          a.agentTool,
 	})
 	e.RegisterTool(sdk.ToolDefinition{
@@ -178,6 +179,9 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	maxTurns := 0
 	if f, ok := p["max_turns"].(float64); ok {
 		maxTurns = int(f)
+	}
+	if schedule, _ := p["schedule"].(string); schedule != "" {
+		return a.scheduleCall(p, schedule)
 	}
 	if feature := unportedCallParam(p); feature != "" {
 		return nil, refusal(feature)

@@ -46,6 +46,9 @@ type agentRecord struct {
 	cancel  context.CancelFunc
 	stopped bool // stopped by the user or the parent (not a failure)
 	started chan struct{}
+	// bypassQueue: the agent neither waits for a background slot nor holds one (a scheduled fire, so a 5-minute interval
+	// cannot be deferred behind long-running agents). upstream: agent-manager.ts SpawnOptions.bypassQueue.
+	bypassQueue bool
 }
 
 func newAgentID() string {
@@ -136,9 +139,12 @@ func (m *manager) list() []*agentRecord {
 
 // spawn creates an agent: it starts at once, or is queued behind the concurrency limit (background agents only;
 // a foreground agent is not limited, as `maxConcurrentForeground` defaults to unlimited). upstream: agent-manager.ts spawn.
-func (m *manager) spawn(typ, description, name string, spec childSpec, background bool) *agentRecord {
+func (m *manager) spawn(typ, description, name string, spec childSpec, background bool, options ...func(*agentRecord)) *agentRecord {
 	r := &agentRecord{ID: newAgentID(), Type: typ, Description: description, Name: name, Background: background, spec: spec,
 		done: make(chan struct{}), started: make(chan struct{}), Status: statusQueued, StartedAt: time.Now()}
+	for _, option := range options {
+		option(r)
+	}
 	m.mu.Lock()
 	m.records[r.ID] = r
 	m.order = append(m.order, r.ID)
@@ -146,12 +152,12 @@ func (m *manager) spawn(typ, description, name string, spec childSpec, backgroun
 	if name != "" {
 		r.Alias = m.assignHandle(handleBase(name))
 	}
-	if background && m.running >= m.maxConcurrent {
+	if background && !r.bypassQueue && m.running >= m.maxConcurrent {
 		m.queue = append(m.queue, r)
 		m.mu.Unlock()
 		return r
 	}
-	if background {
+	if background && !r.bypassQueue {
 		m.running++
 	}
 	r.Status = statusRunning
@@ -206,7 +212,7 @@ func (m *manager) run(r *agentRecord) {
 	if res != nil {
 		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Tokens, res.Turns, res.WrappedUp
 	}
-	if r.Background {
+	if r.Background && !r.bypassQueue {
 		m.running--
 	}
 	var next *agentRecord

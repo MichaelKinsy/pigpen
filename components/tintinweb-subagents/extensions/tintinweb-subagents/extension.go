@@ -28,12 +28,14 @@ type app struct {
 	latest          *sdk.Context
 	timers          map[string]*time.Timer
 	settingsNotice  string
+	schedule        scheduleState
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
 	a := &app{e: e, timers: map[string]*time.Timer{}}
 	a.mgr = newManager(start, a.onSettle)
+	a.initSchedule()
 	return a
 }
 
@@ -122,6 +124,7 @@ func (a *app) register(e *sdk.Extension) {
 		return nil, nil
 	})
 	a.registerTools(e)
+	a.registerSchedule(e)
 	e.Command("agents", "List the agent types and the running agents", a.agentsCommand)
 }
 

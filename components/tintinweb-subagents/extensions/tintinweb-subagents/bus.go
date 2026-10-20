@@ -81,7 +81,7 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 }
 
 // start builds the child's spec from the agent type and spawns it.
-func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
+func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool, options ...func(*agentRecord)) (*agentRecord, error) {
 	a.mu.Lock()
 	cwd := a.cwd
 	a.mu.Unlock()
@@ -143,5 +143,5 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	if description == "" {
 		description = strings.Join(strings.Fields(prompt)[:min(5, len(strings.Fields(prompt)))], " ")
 	}
-	return a.mgr.spawn(resolved, description, name, spec, background), nil
+	return a.mgr.spawn(resolved, description, name, spec, background, options...), nil
 }
