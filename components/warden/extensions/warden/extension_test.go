@@ -840,7 +840,7 @@ func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testi
 	for args, feature := range cases {
 		h := startHarness(t, harnessOpts{})
 		h.host.Command("warden", args)
-		want := "pi-warden (Go port) does not support " + feature + " yet. Install the original extension, npm:pi-warden@0.80.0, which runs unchanged in PiG."
+		want := "@pi-in-go/pigpen-warden (Go port) does not support " + feature + " yet. Install the original extension, npm:pi-warden@0.80.0, which runs unchanged in PiG."
 		got := h.notices()
 		if len(got) != 1 || got[0] != want {
 			t.Errorf("/warden %s: notices %q, want %q", args, got, want)
@@ -851,13 +851,11 @@ func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testi
 	}
 }
 
-func TestUnportedWardenToolsAreRegisteredAndRefuse(t *testing.T) {
+func TestUnportedWardenToolsAreNotRegistered(t *testing.T) {
 	h := startHarness(t, harnessOpts{})
 	for _, tool := range []string{"warden_remember", "warden_loops", "warden_recall"} {
-		_, failure := h.host.Tool(tool, map[string]any{"lesson": "Never X", "action": "list"})
-		want := "pi-warden (Go port) does not support the " + tool + " tool yet. Install the original extension, npm:pi-warden@0.80.0, which runs unchanged in PiG."
-		if !strings.Contains(failure, want) {
-			t.Errorf("%s: failure %q, want %q", tool, failure, want)
+		if h.host.tools[tool] {
+			t.Errorf("%s is advertised to the model but not ported", tool)
 		}
 	}
 }
