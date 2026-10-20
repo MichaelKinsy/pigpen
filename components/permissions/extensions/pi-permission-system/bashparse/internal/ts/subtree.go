@@ -1,0 +1,333 @@
+package ts
+
+// Port of lib/src/subtree.{h,c}. The C union of an inline and a heap representation is one
+// struct: inlining is a storage optimisation and every accessor returns the same value for both
+// forms. A *subtree is immutable once it has been shared; "make mutable" (ts_subtree_make_mut)
+// is clone, which is what the C does whenever the subtree is shared and is indistinguishable from
+// mutating a subtree nobody else can see.
+
+const (
+	errorCostPerRecovery    = 500
+	errorCostPerMissingTree = 110
+	errorCostPerSkippedTree = 100
+	errorCostPerSkippedLine = 30
+	errorCostPerSkippedChar = 1
+)
+
+type subtree struct {
+	symbol     uint16
+	parseState uint16
+	padding    Length
+	size       Length
+	errorCost  uint32
+	children   []*subtree
+
+	visible, named, extra                bool
+	fragileLeft, fragileRight            bool
+	hasExternalTokens                    bool
+	hasExternalScannerStateChange        bool
+	isMissing, isKeyword                 bool
+	visibleChildCount, namedChildCount   uint32
+	visibleDescendantCount               uint32
+	dynamicPrecedence                    int32
+	repeatDepth                          uint16
+	productionID                         uint16
+	firstLeafSymbol, firstLeafParseState uint16
+	externalScannerState                 []byte // an external leaf's serialized scanner state
+}
+
+func (s *subtree) childCount() uint32 { return uint32(len(s.children)) }
+
+func (s *subtree) totalSize() Length  { return lengthAdd(s.padding, s.size) }
+func (s *subtree) totalBytes() uint32 { return s.totalSize().bytes }
+
+func (s *subtree) isError() bool { return s.symbol == builtinSymError }
+func (s *subtree) isEOF() bool   { return s.symbol == builtinSymEnd }
+
+// errorCostOf is ts_subtree_error_cost.
+func (s *subtree) errorCostOf() uint32 {
+	if s.isMissing {
+		return errorCostPerMissingTree + errorCostPerRecovery
+	}
+	return s.errorCost
+}
+
+func (s *subtree) dynamicPrec() int32 {
+	if len(s.children) == 0 {
+		return 0
+	}
+	return s.dynamicPrecedence
+}
+
+func (s *subtree) leafSymbol() uint16 {
+	if len(s.children) == 0 {
+		return s.symbol
+	}
+	return s.firstLeafSymbol
+}
+
+func (s *subtree) leafParseState() uint16 {
+	if len(s.children) == 0 {
+		return s.parseState
+	}
+	return s.firstLeafParseState
+}
+
+func (s *subtree) visibleDescendants() uint32 {
+	if len(s.children) == 0 {
+		return 0
+	}
+	return s.visibleDescendantCount
+}
+
+func (s *subtree) repeatDepthOf() uint32 {
+	if len(s.children) == 0 {
+		return 0
+	}
+	return uint32(s.repeatDepth)
+}
+
+// clone is ts_subtree_clone: a mutable copy sharing the children.
+func (s *subtree) clone() *subtree {
+	c := *s
+	if len(s.children) > 0 {
+		c.children = append([]*subtree(nil), s.children...)
+	}
+	return &c
+}
+
+// externalState is ts_subtree_external_scanner_state: empty unless the subtree is an external leaf.
+func (s *subtree) externalState() []byte {
+	if s != nil && s.hasExternalTokens && len(s.children) == 0 {
+		return s.externalScannerState
+	}
+	return nil
+}
+
+// externalStateEqual is ts_subtree_external_scanner_state_eq (either side may be nil).
+func externalStateEqual(a, b *subtree) bool {
+	x, y := a.externalState(), b.externalState()
+	if len(x) != len(y) {
+		return false
+	}
+	for i := range x {
+		if x[i] != y[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// lastExternalToken is ts_subtree_last_external_token.
+func (s *subtree) lastExternalToken() *subtree {
+	if !s.hasExternalTokens {
+		return nil
+	}
+	tree := s
+	for len(tree.children) > 0 {
+		for i := len(tree.children) - 1; i >= 0; i-- {
+			if tree.children[i].hasExternalTokens {
+				tree = tree.children[i]
+				break
+			}
+		}
+	}
+	return tree
+}
+
+// newLeaf is ts_subtree_new_leaf.
+func newLeaf(l *Language, symbol uint16, padding, size Length, parseState uint16, hasExternalTokens, isKeyword bool) *subtree {
+	md := l.metadata(symbol)
+	return &subtree{
+		symbol:            symbol,
+		parseState:        parseState,
+		padding:           padding,
+		size:              size,
+		visible:           md.visible,
+		named:             md.named,
+		extra:             symbol == builtinSymEnd,
+		hasExternalTokens: hasExternalTokens,
+		isKeyword:         isKeyword,
+	}
+}
+
+// newErrorLeaf is ts_subtree_new_error.
+func newErrorLeaf(l *Language, padding, size Length, parseState uint16) *subtree {
+	s := newLeaf(l, builtinSymError, padding, size, parseState, false, false)
+	s.fragileLeft = true
+	s.fragileRight = true
+	return s
+}
+
+// newMissingLeaf is ts_subtree_new_missing_leaf.
+func newMissingLeaf(l *Language, symbol uint16, padding Length) *subtree {
+	s := newLeaf(l, symbol, padding, Length{}, 0, false, false)
+	s.isMissing = true
+	return s
+}
+
+// setSymbol is ts_subtree_set_symbol on a mutable (cloned) subtree.
+func (s *subtree) setSymbol(l *Language, symbol uint16) {
+	md := l.metadata(symbol)
+	s.symbol = symbol
+	s.named = md.named
+	s.visible = md.visible
+}
+
+// newNode is ts_subtree_new_node: a parent over children, which it takes ownership of.
+func newNode(l *Language, symbol uint16, children []*subtree, productionID uint16) *subtree {
+	md := l.metadata(symbol)
+	fragile := symbol == builtinSymError || symbol == builtinSymErrorRepeat
+	s := &subtree{
+		symbol:       symbol,
+		children:     children,
+		visible:      md.visible,
+		named:        md.named,
+		fragileLeft:  fragile,
+		fragileRight: fragile,
+		productionID: productionID,
+	}
+	s.summarizeChildren(l)
+	return s
+}
+
+// newErrorNode is ts_subtree_new_error_node.
+func newErrorNode(l *Language, children []*subtree, extra bool) *subtree {
+	s := newNode(l, builtinSymError, children, 0)
+	s.extra = extra
+	return s
+}
+
+// summarizeChildren is ts_subtree_summarize_children: every property that depends on the children.
+func (s *subtree) summarizeChildren(l *Language) {
+	s.namedChildCount = 0
+	s.visibleChildCount = 0
+	s.errorCost = 0
+	s.repeatDepth = 0
+	s.visibleDescendantCount = 0
+	s.hasExternalTokens = false
+	s.hasExternalScannerStateChange = false
+	s.dynamicPrecedence = 0
+
+	structuralIndex := 0
+	aliasSequence := l.aliasSequence(s.productionID)
+	for i, child := range s.children {
+		if child.hasExternalScannerStateChange {
+			s.hasExternalScannerStateChange = true
+		}
+		if i == 0 {
+			s.padding = child.padding
+			s.size = child.size
+		} else {
+			s.size = lengthAdd(s.size, child.totalSize())
+		}
+
+		if child.symbol != builtinSymErrorRepeat {
+			s.errorCost += child.errorCostOf()
+		}
+
+		grandchildCount := child.childCount()
+		if s.symbol == builtinSymError || s.symbol == builtinSymErrorRepeat {
+			if !child.extra && !(child.isError() && grandchildCount == 0) {
+				if child.visible {
+					s.errorCost += errorCostPerSkippedTree
+				} else if grandchildCount > 0 {
+					s.errorCost += errorCostPerSkippedTree * child.visibleChildCount
+				}
+			}
+		}
+
+		s.dynamicPrecedence += child.dynamicPrec()
+		s.visibleDescendantCount += child.visibleDescendants()
+
+		if !child.extra && child.symbol != 0 && aliasSequence != nil && aliasSequence[structuralIndex] != 0 {
+			s.visibleDescendantCount++
+			s.visibleChildCount++
+			if l.metadata(aliasSequence[structuralIndex]).named {
+				s.namedChildCount++
+			}
+		} else if child.visible {
+			s.visibleDescendantCount++
+			s.visibleChildCount++
+			if child.named {
+				s.namedChildCount++
+			}
+		} else if grandchildCount > 0 {
+			s.visibleChildCount += child.visibleChildCount
+			s.namedChildCount += child.namedChildCount
+		}
+
+		if child.hasExternalTokens {
+			s.hasExternalTokens = true
+		}
+		if child.isError() {
+			s.fragileLeft = true
+			s.fragileRight = true
+			s.parseState = treeStateNone
+		}
+
+		if !child.extra {
+			structuralIndex++
+		}
+	}
+
+	if s.symbol == builtinSymError || s.symbol == builtinSymErrorRepeat {
+		s.errorCost += errorCostPerRecovery +
+			errorCostPerSkippedChar*s.size.bytes +
+			errorCostPerSkippedLine*s.size.row
+	}
+
+	if len(s.children) > 0 {
+		first := s.children[0]
+		last := s.children[len(s.children)-1]
+
+		s.firstLeafSymbol = first.leafSymbol()
+		s.firstLeafParseState = first.leafParseState()
+
+		if first.fragileLeft {
+			s.fragileLeft = true
+		}
+		if last.fragileRight {
+			s.fragileRight = true
+		}
+
+		if len(s.children) >= 2 && !s.visible && !s.named && first.symbol == s.symbol {
+			if first.repeatDepthOf() > last.repeatDepthOf() {
+				s.repeatDepth = uint16(first.repeatDepthOf() + 1)
+			} else {
+				s.repeatDepth = uint16(last.repeatDepthOf() + 1)
+			}
+		}
+	}
+}
+
+// compareSubtrees is ts_subtree_compare: -1, 0 or 1 by symbol, then child count, in pre-order.
+func compareSubtrees(left, right *subtree) int {
+	switch {
+	case left.symbol < right.symbol:
+		return -1
+	case right.symbol < left.symbol:
+		return 1
+	case left.childCount() < right.childCount():
+		return -1
+	case right.childCount() < left.childCount():
+		return 1
+	}
+	for i := range left.children {
+		if r := compareSubtrees(left.children[i], right.children[i]); r != 0 {
+			return r
+		}
+	}
+	return 0
+}
+
+// removeTrailingExtras is ts_subtree_array_remove_trailing_extras: it returns the array without
+// its trailing extras, and those extras in order.
+func removeTrailingExtras(trees []*subtree) (rest, extras []*subtree) {
+	n := len(trees)
+	for n > 0 && trees[n-1].extra {
+		n--
+	}
+	extras = append([]*subtree(nil), trees[n:]...)
+	return trees[:n], extras
+}
