@@ -17,6 +17,9 @@ type goalSettings struct {
 	disableContracts        bool
 	autoSelectSingle        bool
 	strictExecutionContract bool
+	// GoalWidgets (temporary, GoalSettings owns the resolved struct): the keys the widgets read.
+	disableTasks bool
+	keybindings  goalKeybindings
 }
 
 var getenv = os.Getenv
