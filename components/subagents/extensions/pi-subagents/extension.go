@@ -280,8 +280,10 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	done, stop := cancellation(ctx)
 	defer stop()
 	defer activeRunStart()()
-	out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})
-	return finishRun(pol, runOutcome{Stdout: out, Err: err})
+	return trackMission(ctx, params, cwd, a.Name, task, func() (any, error) {
+		out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})
+		return finishRun(pol, runOutcome{Stdout: out, Err: err})
+	})
 }
 
 // runChainCommand is `/run-chain <chain> <task>`: the chain files are the original's format; running them this way is an

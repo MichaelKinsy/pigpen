@@ -27,6 +27,14 @@ takes what can be checked against the original by running it, and one execution 
 - the tool the model sees: `subagents_enable` (the `subagent` tool is not offered until it is called), `subagent` and the two
   tools the original registers beside them, with the original's descriptions and JSON Schemas (read from the request the original
   made, `port/gen-tooldefs.py`); `subagent {action: "list"}` and `{action: "get"}` with the original's text;
+- missions (`mission_*.go`, 28 twins of `mission-store`, `mission-lifecycle` and `mission-goal-driver`): the mission store and its
+  global index, retention, the workflow state file and its lock (also offered to a workflow script's `state` global through
+  `WorkflowStateStore`), the seven `mission.*` actions, the `mission` and `missionId` launch parameters of a single-agent run
+  (every task launch records a mission unless `config.missions.enabled` is false or `mission: false`; the result text ends
+  with `Mission: <id> (<status>)`), the completion of a mission from an async result file, and the goal-mission notice after
+  each turn (`agent_end`);
+- `/prompt-workflow` (`workflow_prompt.go`, 4 twins): template discovery (package, user, project), argument substitution and the
+  generated workflow script;
 - the startup behavior the trace shows: the git root probe and the clear of the `subagent-async` widget.
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
@@ -61,7 +69,7 @@ to this program, else `PATH`. A Piglet Binary as the child refuses `--system-pro
 **Not ported:** parallel runs; scripted workflows (they need the original's JavaScript
 workflow runtime, which no Package may carry); council mode; worktree isolation and lanes; the fleet and status views, slash
 commands other than `/run-chain`; steering and the supervisor channel (declared so the model sees the same tools; they
-answer that they are not ported); the watchdog; missions; profiles, settings overrides and model scopes; the agent serializer and
+answer that they are not ported); the watchdog; profiles, settings overrides and model scopes; the agent serializer and
 the management actions create, update, delete, eject and disable; `.chain.json` chains and the acceptance, tool-budget and
 dynamic fan-out validators they need; external CLI and external job runners (their agents are listed, not run); the advertised
 agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
@@ -129,19 +137,38 @@ Helpers this slice carries that the run-policy and agent-management slices also 
 | M5 | `agents/agent-management.ts` (list, get) | `management.go` | 5 Pi scenarios, `builtin_test.go` (the original's recorded text), `extras_test.go` |
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
 | M7 | (addition) child process runs | `run.go`, `child_*.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go` |
-| M9 | `workflows/workflow-receipt.ts`, `workflow-checklist.ts`, `chat-progress.ts`, `runs/background/workflow-terminal-proof.ts`, `chain-append.ts`, `chain-root-attachment.ts` | `workflow_receipt.go`, `workflow_checklist.go`, `workflow_chat_progress.go`, `workflow_terminal_proof.go`, `chain_append.go`, `chain_root_attachment.go` | twins |
-| M10 | `runs/shared/parallel-utils.ts`, `parallel-handoff.ts`, `dynamic-fanout.ts`, `chain-outputs.ts`; executor `prepareWorkflowLaunchParams`, `preflightWorkflowWorktrees` | `parallel_utils.go`, `parallel_handoff.go`, `dynamic_fanout.go`, `jsonschema_validate.go`, `workflow_launch.go`, `workflow_admission.go` | twins |
-| M11 | `extension/tool-description.ts`; `validate` of `extension/public-execution.ts` and the executor | `tool_description.go`, `workflow_validate_action.go` | twins, `validate_action_test.go` |
-| M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
-| M9 | `agents/advertised-agent-prompt.ts`, `extension/index.ts` (advertisement state, `before_agent_start`, `session_start`) | `advertise.go`, `extension.go` | `advertise_test.go`, `advertise_host_test.go` (6 + 2 + 1 twins) |
-| M10 | `runs/shared/agent-contract.ts`, `runtime-acknowledged-extensions.ts`, `fast-mode-extension.ts`, `extension-bindings.ts`, `shared/launch-contract.ts` (digest) | `contract.go`, `runtimeack.go`, `fastmode.go`, `extbindings.go` | `misc_twins_test.go` |
-| M11 | `runs/foreground/prompt-audit.ts`, `shared/opencode-session-headers.ts` | `promptaudit.go` | `misc_twins_test.go`, `promptaudit_host_test.go` |
-| M12 | `agents/agent-refinements.ts` | `agentmgmt_refine.go` | `agentmgmt_refine_test.go` |
-| M13 | `extension/doctor.ts`, `extension/subagent-guide.ts` | `doctor.go`, `guide.go` (the guide topics are embedded from the original: `guide/`) | `doctor_test.go`, `guide_test.go` |
-| M14 | `profiles/profiles.ts` | `profiles.go` | `profiles_test.go` |
-| M15 | `slash/slash-commands.ts` (the administration commands), `slash/subagents-admin.ts` | `slash_commands.go`, `slash_admin.go` | `slash_admin_test.go` |
-| M16 | `runs/shared/subagent-prompt-runtime.ts` (prompt rewriting and fork context cleaning), `child-tool-plan.ts` (extension plan, fast mode, thinking suffix) | `child_prompt.go`, `extension_plan.go` | `child_prompt_test.go`, `default_extensions_test.go` |
-| M17 | `slash/prompt-template-bridge.ts`, `delegation-request.ts`, `delegation-adapters.ts`, `api/delegation.ts` | `delegation.go` | `delegation_test.go` |
+| M8 | `workflows/workflow-receipt.ts`, `workflow-checklist.ts`, `chat-progress.ts`, `runs/background/workflow-terminal-proof.ts`, `chain-append.ts`, `chain-root-attachment.ts` | `workflow_receipt.go`, `workflow_checklist.go`, `workflow_chat_progress.go`, `workflow_terminal_proof.go`, `chain_append.go`, `chain_root_attachment.go` | twins |
+| M9 | `runs/shared/parallel-utils.ts`, `parallel-handoff.ts`, `dynamic-fanout.ts`, `chain-outputs.ts`; executor `prepareWorkflowLaunchParams`, `preflightWorkflowWorktrees` | `parallel_utils.go`, `parallel_handoff.go`, `dynamic_fanout.go`, `jsonschema_validate.go`, `workflow_launch.go`, `workflow_admission.go` | twins |
+| M10 | `extension/tool-description.ts`; `validate` of `extension/public-execution.ts` and the executor | `tool_description.go`, `workflow_validate_action.go` | twins, `validate_action_test.go` |
+| M11 | `missions/store.ts`, `types.ts`, `workflow-state.ts` | `mission_types.go`, `mission_store.go`, `mission_update.go`, `mission_state.go`, `mission_fsutil.go`, `mission_proc_*.go`, `mission_dyn.go` | 16 twins (`mission_store_test.go`, two with a second process) |
+| M12 | `missions/actions.ts` (+ the executor's `mission.*` dispatch) | `mission_actions.go`, `mission_register.go`, `mission_config.go` | `mission_host_test.go` (tool boundary), 3 pigeq scenarios (`mission-validation`, `mission-launch-validation`, `schedule-validation`) |
+| M13 | `missions/lifecycle.ts` (+ the executor's launch binding) | `mission_lifecycle.go`, `mission_run.go` | 7 twins |
+| M14 | `missions/goal-driver.ts`, `extension/index.ts` (`agent_end`) | `mission_goal.go`, `mission_register.go` | 5 twins |
+| M15 | `slash/prompt-workflows.ts` | `workflow_prompt.go`, `prompts/` | 4 twins, `mission_host_test.go` |
+| M16 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
+| M17 | `agents/advertised-agent-prompt.ts`, `extension/index.ts` (advertisement state, `before_agent_start`, `session_start`) | `advertise.go`, `extension.go` | `advertise_test.go`, `advertise_host_test.go` (6 + 2 + 1 twins) |
+| M18 | `runs/shared/agent-contract.ts`, `runtime-acknowledged-extensions.ts`, `fast-mode-extension.ts`, `extension-bindings.ts`, `shared/launch-contract.ts` (digest) | `contract.go`, `runtimeack.go`, `fastmode.go`, `extbindings.go` | `misc_twins_test.go` |
+| M19 | `runs/foreground/prompt-audit.ts`, `shared/opencode-session-headers.ts` | `promptaudit.go` | `misc_twins_test.go`, `promptaudit_host_test.go` |
+| M20 | `agents/agent-refinements.ts` | `agentmgmt_refine.go` | `agentmgmt_refine_test.go` |
+| M21 | `extension/doctor.ts`, `extension/subagent-guide.ts` | `doctor.go`, `guide.go` (the guide topics are embedded from the original: `guide/`) | `doctor_test.go`, `guide_test.go` |
+| M22 | `profiles/profiles.ts` | `profiles.go` | `profiles_test.go` |
+| M23 | `slash/slash-commands.ts` (the administration commands), `slash/subagents-admin.ts` | `slash_commands.go`, `slash_admin.go` | `slash_admin_test.go` |
+| M24 | `runs/shared/subagent-prompt-runtime.ts` (prompt rewriting and fork context cleaning), `child-tool-plan.ts` (extension plan, fast mode, thinking suffix) | `child_prompt.go`, `extension_plan.go` | `child_prompt_test.go`, `default_extensions_test.go` |
+| M25 | `slash/prompt-template-bridge.ts`, `delegation-request.ts`, `delegation-adapters.ts`, `api/delegation.ts` | `delegation.go` | `delegation_test.go` |
+
+## Differences from the original (missions and prompt workflows)
+
+- `config.json` is read for its `missions` key only (`mission_config.go`); the original drops the whole config when any key of it
+  is invalid, the port drops `missions` only. The configuration slice replaces this reader.
+- The `/prompt-workflow list` message is sent with the custom type `prompt-workflow` (the original sets none; the SDK needs
+  one). The package's own prompt templates (`prompts/*.md`, byte for byte) are carried inside the binary and listed under
+  `pigpen-subagents:prompts/<name>.md`, not a file path. Running a template calls the workflow runtime; until a launcher is
+  wired (`promptWorkflowRunner`) it answers with the port's standard refusal of `workflowScript`.
+- The goal notice cannot name retained children until the background-run slice fills `goalRetainedChildren`.
+- The ISO-timestamp check of mission records accepts the ECMAScript format and the common legacy forms of `Date.parse`
+  (`jsDateParses`), not every string V8 would parse.
+- The mission atomic write and retry ladder (`mission_fsutil.go`) cover what the missions call of `atomic-json.ts` and
+  `file-system-retry.ts`; the integration branch replaces them with that slice's port.
 
 ## Process: what was written before its tests
 

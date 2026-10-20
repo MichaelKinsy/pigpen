@@ -37,7 +37,7 @@ func TestRefusalMessage(t *testing.T) {
 func TestEveryUnportedParameterIsRefused(t *testing.T) {
 	// ported by the run policy (policy_run.go): twins and behavior tests are in policy_run_test.go
 	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true,
-		"output": true, "outputMode": true, "artifacts": true, "acceptance": true, "gate": true, "agentContract": true, "timeoutMs": true, "maxRuntimeMs": true, "includeProgress": true}
+		"output": true, "outputMode": true, "artifacts": true, "acceptance": true, "gate": true, "agentContract": true, "timeoutMs": true, "maxRuntimeMs": true, "includeProgress": true, "mission": true, "missionId": true}
 	special := map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true}
 	names := sub.ToolParamNames()
 	sort.Strings(names)
@@ -154,7 +154,7 @@ func TestUnportedToolsRefuse(t *testing.T) {
 // The original's other slash commands are not registered: a command the port lacks is not offered, and the README says so.
 func TestTheOriginalsOtherCommandsAreNotRegistered(t *testing.T) {
 	h, _ := refusedHost(t)
-	for _, name := range []string{"run", "subagent-cost", "subagents-fleet", "subagents-stop", "subagents-steer", "subagents-watchdog", "prompt-workflow"} {
+	for _, name := range []string{"run", "subagent-cost", "subagents-fleet", "subagents-stop", "subagents-steer", "subagents-watchdog"} {
 		if h.cmds[name] {
 			t.Errorf("/%s is registered", name)
 		}

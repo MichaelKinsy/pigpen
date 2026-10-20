@@ -1672,5 +1672,491 @@
   "file": "workflow_validate_action.go",
   "find": "if isSet(\"workflowScript\") && isSet(\"workflowScriptPath\") {",
   "replace": "if false {"
+ },
+ {
+  "name": "mis-id-dotdot",
+  "file": "mission_types.go",
+  "find": "!workflowKeyPattern.MatchString(id) || strings.Contains(id, \"..\")",
+  "replace": "!workflowKeyPattern.MatchString(id)"
+ },
+ {
+  "name": "mis-receipt-url",
+  "file": "mission_types.go",
+  "find": "if !isAbsoluteURL(r.URL) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-goal-budget",
+  "file": "mission_types.go",
+  "find": "if r.Goal != nil && r.Budget == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-array-dedupe",
+  "file": "mission_types.go",
+  "find": "for _, s := range items {\n\t\tif !seen[s] {",
+  "replace": "for _, s := range items {\n\t\tif true {"
+ },
+ {
+  "name": "mis-objective",
+  "file": "mission_types.go",
+  "find": "if objective = jsTrim(objective); objective == \"\" {",
+  "replace": "if objective == \"\" {"
+ },
+ {
+  "name": "mis-run-merge",
+  "file": "mission_types.go",
+  "find": "\tif next.Status != \"\" {\n\t\tmerged.Status = next.Status",
+  "replace": "\tif false {\n\t\tmerged.Status = next.Status"
+ },
+ {
+  "name": "mis-prune-order",
+  "file": "mission_store.go",
+  "find": "terminal[i].UpdatedAt > terminal[j].UpdatedAt",
+  "replace": "terminal[i].UpdatedAt < terminal[j].UpdatedAt"
+ },
+ {
+  "name": "mis-prune-bound",
+  "file": "mission_store.go",
+  "find": "for _, r := range terminal[maxTerminal:] {",
+  "replace": "for _, r := range terminal[maxTerminal+1:] {"
+ },
+ {
+  "name": "mis-list-order",
+  "file": "mission_store.go",
+  "find": "res.Records[i].UpdatedAt > res.Records[j].UpdatedAt",
+  "replace": "res.Records[i].UpdatedAt < res.Records[j].UpdatedAt"
+ },
+ {
+  "name": "mis-global-heal",
+  "file": "mission_store.go",
+  "find": "case errors.Is(rerr, fs.ErrNotExist):",
+  "replace": "case false:"
+ },
+ {
+  "name": "mis-global-idmatch",
+  "file": "mission_store.go",
+  "find": "rerr == nil && record.ID != entry.MissionID",
+  "replace": "false"
+ },
+ {
+  "name": "mis-index-write",
+  "file": "mission_store.go",
+  "find": "if loc.WriteGlobalIndex {\n\t\tentry :=",
+  "replace": "if false {\n\t\tentry :="
+ },
+ {
+  "name": "mis-config-index",
+  "file": "mission_store.go",
+  "find": "WriteGlobalIndex: cfg == nil || cfg.GlobalIndex == nil || *cfg.GlobalIndex}",
+  "replace": "WriteGlobalIndex: true}"
+ },
+ {
+  "name": "mis-default-dir",
+  "file": "mission_store.go",
+  "find": "filepath.Join(dir, \"missions\", \"projects\", sha256Hex(root))",
+  "replace": "filepath.Join(dir, \"missions\", \"projects\")"
+ },
+ {
+  "name": "mis-prune-on-create",
+  "file": "mission_store.go",
+  "find": "\tpruneTerminalMissions(loc, retain)\n\treturn created, nil",
+  "replace": "\treturn created, nil"
+ },
+ {
+  "name": "mis-update-gate",
+  "file": "mission_update.go",
+  "find": "if hasOpenDecisions && (candidateStatus == \"active\" || candidateStatus == \"completed\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-update-auto-decision",
+  "file": "mission_update.go",
+  "find": "len(update.AddDecisions) > 0 && current.Status == \"active\"",
+  "replace": "false"
+ },
+ {
+  "name": "mis-update-reactivate",
+  "file": "mission_update.go",
+  "find": "update.ResolveDecision != nil && current.Status == \"needs_decision\" && !hasOpenDecisions",
+  "replace": "false"
+ },
+ {
+  "name": "mis-update-exhaust",
+  "file": "mission_update.go",
+  "find": "case usage.Tokens >= budget.Tokens:",
+  "replace": "case usage.Tokens > budget.Tokens:"
+ },
+ {
+  "name": "mis-update-unexhaust",
+  "file": "mission_update.go",
+  "find": "case goal.Status == \"budget-exhausted\":",
+  "replace": "case false:"
+ },
+ {
+  "name": "mis-update-usage-sum",
+  "file": "mission_update.go",
+  "find": "total += run.Usage.Tokens",
+  "replace": "total = run.Usage.Tokens"
+ },
+ {
+  "name": "mis-update-run-key",
+  "file": "mission_update.go",
+  "find": "item.RunID == run.RunID && sameChildIndex(item.ChildIndex, run.ChildIndex)",
+  "replace": "item.RunID == run.RunID"
+ },
+ {
+  "name": "mis-update-child-start",
+  "file": "mission_update.go",
+  "find": "merged.set(\"startedAt\", existing.StartedAt)",
+  "replace": "merged.set(\"startedAt\", parsed.StartedAt)"
+ },
+ {
+  "name": "mis-update-child-paths",
+  "file": "mission_update.go",
+  "find": "for _, p := range append(append([]string{}, existing.ArtifactPaths...), parsed.ArtifactPaths...) {\n\t\tif !seen[p] {",
+  "replace": "for _, p := range append(append([]string{}, existing.ArtifactPaths...), parsed.ArtifactPaths...) {\n\t\tif true {"
+ },
+ {
+  "name": "mis-update-receipt-time",
+  "file": "mission_update.go",
+  "find": "receipt.CreatedAt = receipts[found].CreatedAt",
+  "replace": "receipt.CreatedAt = createdAt"
+ },
+ {
+  "name": "mis-update-resolved-twice",
+  "file": "mission_update.go",
+  "find": "if decisions[index].Status == \"resolved\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-update-decision-missing",
+  "file": "mission_update.go",
+  "find": "if index == -1 {\n\t\t\treturn nil, fmt.Errorf(\"Decision",
+  "replace": "if false {\n\t\t\treturn nil, fmt.Errorf(\"Decision"
+ },
+ {
+  "name": "mis-state-stale-age",
+  "file": "mission_state.go",
+  "find": "stateLockStaleMs = 60_000\n",
+  "replace": "stateLockStaleMs = 60_000_000\n"
+ },
+ {
+  "name": "mis-state-pid-reuse",
+  "file": "mission_state.go",
+  "find": "return owner.processKey != observed, nil",
+  "replace": "return false, nil"
+ },
+ {
+  "name": "mis-state-self-reuse",
+  "file": "mission_state.go",
+  "find": "if int(owner.pid) == os.Getpid() {\n\t\t\t\treturn true, nil",
+  "replace": "if int(owner.pid) == os.Getpid() {\n\t\t\t\treturn false, nil"
+ },
+ {
+  "name": "mis-state-dead-owner",
+  "file": "mission_state.go",
+  "find": "if !o.isProcessAlive(int(owner.pid)) {\n\t\t\treturn true, nil",
+  "replace": "if !o.isProcessAlive(int(owner.pid)) {\n\t\t\treturn false, nil"
+ },
+ {
+  "name": "mis-state-size",
+  "file": "mission_state.go",
+  "find": "n > MissionStateMaxBytes {\n\t\t\treturn fmt.Errorf(\"Mission state exceeds",
+  "replace": "n > 100*MissionStateMaxBytes {\n\t\t\treturn fmt.Errorf(\"Mission state exceeds"
+ },
+ {
+  "name": "mis-state-load-once",
+  "file": "mission_state.go",
+  "find": "if !s.loaded {",
+  "replace": "if true {"
+ },
+ {
+  "name": "mis-state-key",
+  "file": "mission_state.go",
+  "find": "if !ok || !workflowKeyPattern.MatchString(s) {\n\t\treturn \"\", errors.New(\"state key",
+  "replace": "if !ok {\n\t\treturn \"\", errors.New(\"state key"
+ },
+ {
+  "name": "mis-state-reread",
+  "file": "mission_state.go",
+  "find": "current, err := s.readStateFile()\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\tnext := current.clone()",
+  "replace": "current, err := s.values, error(nil)\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\tnext := current.clone()"
+ },
+ {
+  "name": "mis-state-owner-token",
+  "file": "mission_state.go",
+  "find": "if current == nil || current.token != owner.token {",
+  "replace": "if current == nil {"
+ },
+ {
+  "name": "mis-state-lock-timeout",
+  "file": "mission_state.go",
+  "find": "if attempt >= len(delays) {",
+  "replace": "if attempt > len(delays) {"
+ },
+ {
+  "name": "mis-act-title-summary",
+  "file": "mission_actions.go",
+  "find": "if hasTitle && hasSummary {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-act-goal-true",
+  "file": "mission_actions.go",
+  "find": "if hasGoal && goalV != true {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-act-scope",
+  "file": "mission_actions.go",
+  "find": "scope != \"project\" && scope != \"global\"",
+  "replace": "scope != \"project\""
+ },
+ {
+  "name": "mis-act-close-status",
+  "file": "mission_actions.go",
+  "find": "if status != \"completed\" && status != \"failed\" && status != \"cancelled\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-act-refresh-complete",
+  "file": "mission_actions.go",
+  "find": "allComplete = allComplete && (s == \"complete\" || s == \"completed\")",
+  "replace": "allComplete = allComplete && s == \"completed\""
+ },
+ {
+  "name": "mis-act-update-empty",
+  "file": "mission_actions.go",
+  "find": "if !set {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-act-receipt-keys",
+  "file": "mission_actions.go",
+  "find": "return r, fmt.Errorf(\"missionUpdate.receipts[%d].%s is unknown\", index, k)",
+  "replace": "continue"
+ },
+ {
+  "name": "mis-act-goal-paused",
+  "file": "mission_actions.go",
+  "find": "if paused {\n\t\t\t\tstatus = \"paused\"",
+  "replace": "if !paused {\n\t\t\t\tstatus = \"paused\""
+ },
+ {
+  "name": "mis-act-decision-count",
+  "file": "mission_actions.go",
+  "find": "open, len(r.Decisions)-open)",
+  "replace": "open, open)"
+ },
+ {
+  "name": "mis-act-attach-active",
+  "file": "mission_actions.go",
+  "find": "MissionUpdateInput{Status: \"active\", AddRuns: []MissionRunLink{link}}",
+  "replace": "MissionUpdateInput{AddRuns: []MissionRunLink{link}}"
+ },
+ {
+  "name": "mis-act-show-state",
+  "file": "mission_actions.go",
+  "find": "lines := []string{formatMission(record), \"State: \" + statePath}",
+  "replace": "lines := []string{formatMission(record)}\n\t\t_ = statePath"
+ },
+ {
+  "name": "mis-act-trim-resolution",
+  "file": "mission_actions.go",
+  "find": "Resolution: jsTrim(summary)}}",
+  "replace": "Resolution: summary}}"
+ },
+ {
+  "name": "mis-life-optout",
+  "file": "mission_lifecycle.go",
+  "find": "if missionV == false {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-life-both",
+  "file": "mission_lifecycle.go",
+  "find": "if hasMissionID && hasMission {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-life-enabled",
+  "file": "mission_lifecycle.go",
+  "find": "missionsEnabled := config == nil || config.Enabled == nil || *config.Enabled",
+  "replace": "missionsEnabled := true"
+ },
+ {
+  "name": "mis-life-json",
+  "file": "mission_lifecycle.go",
+  "find": "isJSON := last >= 0 && workflowJSONError(result.Content[last].Text) == \"\"",
+  "replace": "isJSON := false"
+ },
+ {
+  "name": "mis-life-goal-status",
+  "file": "mission_lifecycle.go",
+  "find": "case record.Goal != nil:\n\t\treturn \"active\"",
+  "replace": "case false:\n\t\treturn \"active\""
+ },
+ {
+  "name": "mis-life-paused",
+  "file": "mission_lifecycle.go",
+  "find": "if c.Interrupted || c.Detached {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-life-error-status",
+  "file": "mission_lifecycle.go",
+  "find": "update := MissionUpdateInput{Status: \"failed\"}",
+  "replace": "update := MissionUpdateInput{Status: \"cancelled\"}"
+ },
+ {
+  "name": "mis-life-marker-once",
+  "file": "mission_lifecycle.go",
+  "find": "os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)",
+  "replace": "os.O_WRONLY|os.O_CREATE, 0o600)"
+ },
+ {
+  "name": "mis-life-mode",
+  "file": "mission_lifecycle.go",
+  "find": "inList(missionRunModes[:4], m)",
+  "replace": "false"
+ },
+ {
+  "name": "mis-life-text-bound",
+  "file": "mission_lifecycle.go",
+  "find": "utf16Units(text) > 2000",
+  "replace": "utf16Units(text) > 20000"
+ },
+ {
+  "name": "mis-life-summary-bound",
+  "file": "mission_lifecycle.go",
+  "find": "summary = utf16Prefix(s, 2000)",
+  "replace": "summary = s"
+ },
+ {
+  "name": "mis-goal-bounded",
+  "file": "mission_goal.go",
+  "find": "utf16Prefix(normalized, maxGoalActionLength-1) + \"…\"",
+  "replace": "utf16Prefix(normalized, maxGoalActionLength) + \"…\""
+ },
+ {
+  "name": "mis-goal-owner",
+  "file": "mission_goal.go",
+  "find": "l.OwnerSessionID != ownerSessionID || l.Goal == nil",
+  "replace": "l.Goal == nil"
+ },
+ {
+  "name": "mis-goal-idle",
+  "file": "mission_goal.go",
+  "find": "if active || seen[record.ID] || record.Budget == nil {",
+  "replace": "if seen[record.ID] || record.Budget == nil {"
+ },
+ {
+  "name": "mis-goal-paused",
+  "file": "mission_goal.go",
+  "find": "record.Goal == nil || record.Goal.Status != \"active\" || record.Budget == nil",
+  "replace": "record.Goal == nil || record.Budget == nil"
+ },
+ {
+  "name": "mis-goal-resumable",
+  "file": "mission_goal.go",
+  "find": "if child.Resumable && (child.RunID",
+  "replace": "if (child.RunID"
+ },
+ {
+  "name": "mis-goal-latest",
+  "file": "mission_goal.go",
+  "find": "child.RunID == latest.RunID || child.ParentRunID == latest.RunID",
+  "replace": "child.RunID == latest.RunID"
+ },
+ {
+  "name": "mis-goal-state-first",
+  "file": "mission_goal.go",
+  "find": "if action == \"\" {\n\t\taction = \"Continue objective: \"",
+  "replace": "if true {\n\t\taction = \"Continue objective: \""
+ },
+ {
+  "name": "pw-precedence",
+  "file": "workflow_prompt.go",
+  "find": "filepath.Join(agentDir(), \"prompts\"), filepath.Join(projectConfigDir(cwd), \"prompts\")}",
+  "replace": "filepath.Join(projectConfigDir(cwd), \"prompts\"), filepath.Join(agentDir(), \"prompts\")}"
+ },
+ {
+  "name": "pw-dangling",
+  "file": "workflow_prompt.go",
+  "find": "case errors.Is(err, fs.ErrNotExist):\n\t\t\t\t\tisFile = false",
+  "replace": "case false:\n\t\t\t\t\tisFile = false"
+ },
+ {
+  "name": "pw-reserved",
+  "file": "workflow_prompt.go",
+  "find": "if name == \"\" || reservedPromptCommandNames[name] {",
+  "replace": "if name == \"\" {"
+ },
+ {
+  "name": "pw-arguments",
+  "file": "workflow_prompt.go",
+  "find": "out := replaceLiteral(template, \"$ARGUMENTS\", all)",
+  "replace": "out := template"
+ },
+ {
+  "name": "pw-at-args",
+  "file": "workflow_prompt.go",
+  "find": "out = replaceLiteral(out, \"$@\", all)",
+  "replace": "_ = all"
+ },
+ {
+  "name": "pw-fallback",
+  "file": "workflow_prompt.go",
+  "find": "if v, ok := argAt(args, sub[1]); ok && v != \"\" {",
+  "replace": "if v, ok := argAt(args, sub[1]); ok {"
+ },
+ {
+  "name": "pw-chain-split",
+  "file": "workflow_prompt.go",
+  "find": "strings.Split(input, \" -> \")",
+  "replace": "strings.Split(input, \" ->\")"
+ },
+ {
+  "name": "pw-skill-false",
+  "file": "workflow_prompt.go",
+  "find": "if value == \"false\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pw-skill-list",
+  "file": "workflow_prompt.go",
+  "find": "case len(parts) > 1:\n\t\treturn parts",
+  "replace": "case len(parts) > 100:\n\t\treturn parts"
+ },
+ {
+  "name": "pw-bg",
+  "file": "workflow_prompt.go",
+  "find": "\"async\": runtime.bg}",
+  "replace": "\"async\": false}"
+ },
+ {
+  "name": "pw-fork-over-fresh",
+  "file": "workflow_prompt.go",
+  "find": "if runtime.fork {\n\t\t\tcontext = \"fork\"\n\t\t} else if runtime.fresh {",
+  "replace": "if runtime.fresh {\n\t\t\tcontext = \"fork\"\n\t\t} else if runtime.fork {"
+ },
+ {
+  "name": "pw-subagent-override",
+  "file": "workflow_prompt.go",
+  "find": "if runtime.agentOverride != \"\" {\n\t\t\tagent = runtime.agentOverride",
+  "replace": "if false {\n\t\t\tagent = runtime.agentOverride"
+ },
+ {
+  "name": "pw-list-default",
+  "file": "workflow_prompt.go",
+  "find": "if name == \"\" || name == \"list\" {",
+  "replace": "if name == \"list\" {"
+ },
+ {
+  "name": "pw-dollar-expand",
+  "file": "workflow_prompt.go",
+  "find": "case '$':\n\t\t\t\tb.WriteByte('$')\n\t\t\t\tj++",
+  "replace": "case 'Z':\n\t\t\t\tb.WriteByte('$')\n\t\t\t\tj++"
  }
 ]
