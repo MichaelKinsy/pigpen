@@ -1,8 +1,12 @@
 package websearch
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
+	"io"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -13,6 +17,12 @@ func readMathCases(t *testing.T, name string, into any) {
 	t.Helper()
 	data, err := os.ReadFile("testdata/defuddle-math/" + name)
 	noErr(t, err)
+	if strings.HasSuffix(name, ".gz") {
+		zr, err := gzip.NewReader(bytes.NewReader(data))
+		noErr(t, err)
+		data, err = io.ReadAll(zr)
+		noErr(t, err)
+	}
 	noErr(t, json.Unmarshal(data, into))
 }
 
@@ -72,7 +82,7 @@ func TestTemmlRenderEqualsTheOriginal(t *testing.T) {
 		Out     *string `json:"out"`
 		Err     string  `json:"err"`
 	}
-	readMathCases(t, "latex-expected.json", &cases)
+	readMathCases(t, "latex-expected.json.gz", &cases)
 	if len(cases) < 1000 {
 		t.Fatalf("%d recorded cases", len(cases))
 	}
