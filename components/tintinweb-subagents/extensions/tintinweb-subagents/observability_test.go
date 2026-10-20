@@ -257,3 +257,13 @@ func TestJSONSchemaKeywords(t *testing.T) {
 		})
 	}
 }
+
+func TestTheSystemPromptMessageOfPigsStreamIsNotATranscriptEntry(t *testing.T) {
+	// A real `pig --mode rpc` emits the system prompt as the first message_end; the prompt entry is the second.
+	s, path := streamFixture(t, 1, map[string]any{"role": "system", "content": ""}, user("do the thing"))
+	s.push(assistant("ok"))
+	s.fire(obj{"type": "turn_end"})
+	entries := readEntries(t, path)
+	eq(t, len(entries), 2)
+	eq(t, entries[1]["type"], "assistant")
+}

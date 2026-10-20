@@ -174,7 +174,8 @@ m("reanchor-on-failed-compaction", "output_file.go", "!aborted && result != nil 
 m("reanchor-on-aborted-compaction", "output_file.go", "!aborted && result != nil {", "result != nil || true {")
 m("stream-writes-after-close", "output_file.go", "if t.closed {\n\t\treturn\n\t}\n\tswitch ev[\"type\"] {", "switch ev[\"type\"] {")
 m("close-does-not-flush", "output_file.go", "t.flushLocked()\n\tt.closed = true", "t.closed = true")
-m("message-end-without-message-appended", "output_file.go", 'if msg, ok := ev["message"].(map[string]any); ok {\n\t\t\tt.messages = append(t.messages, msg)', 'if msg, _ := ev["message"].(map[string]any); true {\n\t\t\tt.messages = append(t.messages, msg)')
+
+m("transcript-includes-system-message", "output_file.go", 'ok && msg["role"] != "system" {', 'ok {')
 
 # structured_output.go and json_schema.go
 m("structured-first-valid-wins", "structured_output.go", "c.JSON = canonical\n", "if c.JSON == \"\" {\n\t\tc.JSON = canonical\n\t}\n")

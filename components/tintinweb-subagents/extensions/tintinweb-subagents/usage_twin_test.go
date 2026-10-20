@@ -270,10 +270,10 @@ func TestCostDisplayTwins(t *testing.T) {
 	tw(t, "cost-display", "omits it for a model with no pricing data", func(t *testing.T) {
 		eq(t, strings.Contains(notification(t, `{"showCost": true, "defaultJoinMode": "async"}`, 0), "estimated_cost_usd"), false)
 	})
-	tskip(t, "cost-display", "totals a group, so nobody adds four figures by hand", "a notification renderer draws it (TUI component): the UI lane's twin")
-	tskip(t, "cost-display", "does not total a single agent — the line above already says it", "a notification renderer draws it (TUI component): the UI lane's twin")
-	tskip(t, "cost-display", "shows no total, and no per-agent cost, when unpriced", "a notification renderer draws it (TUI component): the UI lane's twin")
-	tskip(t, "cost-display", "shows nothing when the setting is off", "a notification renderer draws it (TUI component): the UI lane's twin")
+	tskip(t, "cost-display", "totals a group, so nobody adds four figures by hand", "the group total is drawn by the notification renderer (a TUI component), twinned by the UI lane")
+	tskip(t, "cost-display", "does not total a single agent — the line above already says it", "the single-agent line is drawn by the notification renderer (a TUI component), twinned by the UI lane")
+	tskip(t, "cost-display", "shows no total, and no per-agent cost, when unpriced", "the unpriced rows are drawn by the notification renderer (a TUI component), twinned by the UI lane")
+	tskip(t, "cost-display", "shows nothing when the setting is off", "the showCost gate of the drawn notification belongs to the renderer (a TUI component), twinned by the UI lane")
 }
 
 func TestFormatCost(t *testing.T) {
@@ -283,8 +283,7 @@ func TestFormatCost(t *testing.T) {
 }
 
 func TestUsageReachesSessionStatsTwins(t *testing.T) {
-	why := "the host's own accounting (Pi folds toolResult.usage into getSessionStats): not extension code; the extension's half, the `usage` object on the tool result, is twinned in usage-reporting and compared with Pi in the scenarios"
-	tskip(t, "e2e/usage-reaches-session-stats.e2e", "pi adds our reported tokens and cost to getSessionStats()", why)
+	tskip(t, "e2e/usage-reaches-session-stats.e2e", "pi adds our reported tokens and cost to getSessionStats()", "the host's own accounting (Pi folds toolResult.usage into getSessionStats): not extension code; the extension's half, the `usage` object on the tool result, is twinned in usage-reporting")
 	tskip(t, "e2e/usage-reaches-session-stats.e2e", "leaves the context-window percentage alone", "the host's own context-window projection, not extension code")
 	tskip(t, "e2e/usage-reaches-session-stats.e2e", "counts nothing for a tool result that carries no usage", "the host's own accounting, not extension code; that a result carries no `usage` is twinned in usage-reporting")
 }

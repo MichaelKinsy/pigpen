@@ -852,10 +852,10 @@
   "replace": "t.closed = true"
  },
  {
-  "name": "message-end-without-message-appended",
+  "name": "transcript-includes-system-message",
   "file": "output_file.go",
-  "find": "if msg, ok := ev[\"message\"].(map[string]any); ok {\n\t\t\tt.messages = append(t.messages, msg)",
-  "replace": "if msg, _ := ev[\"message\"].(map[string]any); true {\n\t\t\tt.messages = append(t.messages, msg)"
+  "find": "ok && msg[\"role\"] != \"system\" {",
+  "replace": "ok {"
  },
  {
   "name": "structured-first-valid-wins",

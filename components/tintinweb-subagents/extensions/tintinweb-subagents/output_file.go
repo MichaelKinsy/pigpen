@@ -143,7 +143,9 @@ func (t *transcriptStream) onEvent(ev map[string]any) {
 	}
 	switch ev["type"] {
 	case "message_end":
-		if msg, ok := ev["message"].(map[string]any); ok {
+		// PiG's rpc stream also carries the system prompt as a message (role "system"); Pi's session.messages does
+		// not hold one, and neither does the transcript.
+		if msg, ok := ev["message"].(map[string]any); ok && msg["role"] != "system" {
 			t.messages = append(t.messages, msg)
 		}
 	case "turn_end":

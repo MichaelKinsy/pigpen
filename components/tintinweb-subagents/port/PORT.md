@@ -41,6 +41,9 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M9 | `cross-extension-rpc.ts`: ping, spawn, stop, consume | `bus.go` | `bus_test.go` |
 | M10 | completion events and the held notification (`index.ts` `formatTaskNotification`, `getStatusLabel`; `status-note.ts`; `xml.ts`) | `extension.go` | `tools_test.go`, `extra_test.go`, `turnlimit_test.go` |
 | M11 | the Agent, result and steer tools' behavior and texts | `tools.go` | `agent-not-found`, `agent-unknown-type-strict`; `tools_test.go` |
+| M12 | `output-file.ts`: the `.output` transcript, path rules, compaction handling | `output_file.go`, `observability_app.go` | 20 + 3 + 1 + 5 twins (`output_file_twin_test.go`); `obs-agent-file-output-transcript` |
+| M13 | `structured-output.ts`, `workflow/json-schema.ts`: the StructuredOutput tool and its validator | `structured_output.go`, `json_schema.go`, `runner.go` (retry prompt, capture) | 11 twins (`structured_output_twin_test.go`), `observability_test.go` |
+| M14 | `usage.ts`, `index.ts`: usage accounting, `reportUsage`, `showCost` text, `<context_percent>`, `<compactions>`, cost, `subagents:started`/`compacted`, `get_subagent_result` verbose | `usage.go`, `usage_display.go`, `observability_app.go`, `extension.go`, `tools.go` | twins of `usage` (accumulator, pool), `usage-reporting`, `cost-display`, `status-note-wiring`, `subagent-error-status-e2e`, `agent-startup-error`; `obs-settings-honored` |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
 
@@ -91,8 +94,9 @@ components; this port registers none.
    ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
    port does not honor, are refused the same way.
 6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
-   widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
-   settings menu, usage and cost display, model scope and fuzzy model resolution (the child resolves `--model`).
+   widget, fleet and conversation viewer, agent memory, nested delegation, the settings menu, the widgets that
+   show cost and model, model scope and fuzzy model resolution (the child resolves `--model`). Output transcripts,
+   structured output (`childSpec.Schema`, for the workflow slice), usage reporting and the cost texts are ported (M12-M14).
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
    commit for this port; the substitute proof is the 122 twins (two of them found real defects: an empty frontmatter
    block panicked the parser, and a plain value with `: ` was accepted where the original refuses it), the recorded
@@ -118,5 +122,29 @@ components; this port registers none.
    `PIG_HARNESS_BINARY`, and the extension's own executable with the extension's socket in its environment; (e) had no
    test that a stop reaches the child's process group (a mutant that removed the signals survived). Each is fixed with a
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
-   The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
-   features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+   The remaining difference of the notification: a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+
+## Observability slice (M12-M14): what differs from the original
+
+- **Where the data comes from.** Usage is summed from each assistant `message_end` of the child's rpc stream (input,
+  output, cacheWrite for the display total; cacheRead and cost for the reported `usage`), compactions from
+  `compaction_end` (not aborted, with a result), the transcript from `message_end` flushed at `turn_end` and
+  `compaction_start`. Pi's `session.messages` array has no Go form, so the stream keeps the messages it has seen and a
+  successful compaction re-anchors at their end; `get_subagent_result verbose` reads the child's `get_messages`.
+- **Harness limit.** A scenario that runs a child cannot be compared whole (F2: the child's request carries the host's own
+  system prompt, which differs between Pi and PiG), and the scripted model reports 1 input and 1 output token and no
+  prices, so usage, cost and context numbers are proven by the twins and by `observability_test.go` against a scripted
+  child process, not by a golden. The scenarios `obs-settings-honored`, `obs-agent-file-output-transcript` and
+  `agent-result-verbose-not-found` compare what the parent sees at session start.
+- **JSON key order.** A transcript line is `JSON.stringify` in the original (keys in insertion order); Go marshals a map's
+  keys sorted. The entries are equal as JSON.
+- **StructuredOutput.** The canonical payload is the validated arguments with sorted keys; the SDK's `PrepareArguments`
+  takes an object, so a payload a model sends as one JSON string is recovered by `prepareStructuredArguments` (twinned)
+  but not wired to the tool. A schema-bound child cannot be isolated (its tool is an extension tool). Nothing in the Agent
+  tool passes a schema yet: the workflow slice does.
+- **Transcript path errors.** A temp directory that cannot be created skips the transcript with a message on stderr; the
+  original's call would throw.
+- **Notification details.** The `details` object of the `subagent-notification` message (for the renderer) is the UI
+  slice's; this slice changes its text (`<output-file>`, `<context_percent>`, `<compactions>`, cost, the footer).
+- **Context percent.** The percentage is the child's `get_session_stats` `contextUsage.percent`, read live for a running
+  agent and when the agent settles.

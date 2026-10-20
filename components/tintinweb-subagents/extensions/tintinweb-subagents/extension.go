@@ -189,9 +189,9 @@ func (a *app) scheduleNudge(key string, send func()) {
 }
 
 // escapeXML escapes &, < and >, as the original does. upstream: src/xml.ts.
-func escapeXML(s string) string {
-	return strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;").Replace(s)
-}
+func escapeXML(s string) string { return xmlEscaper.Replace(s) }
+
+var xmlEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
 
 // isErrorStatus: the statuses announced on subagents:failed. upstream: index.ts:576.
 func isErrorStatus(status string) bool {

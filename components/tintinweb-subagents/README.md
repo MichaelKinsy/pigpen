@@ -48,12 +48,28 @@ the original's `custom-agents` tests are twinned). Settings come from `<agent di
 `<workspace>/.pi/subagents.json`: `maxConcurrent` (default 10), `defaultMaxTurns`, `graceTurns`, `fallbackSubagent` (an
 unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused) and `disableDefaultAgents`.
 
+## Transcripts, usage and cost
+
+Each agent started by the `Agent` tool writes a JSON-lines transcript to
+`<temp dir>/pi-subagents-<uid>/<encoded cwd>/<session id>/tasks/<agent id>.output` (directory mode 0700), in the original's
+format: the prompt first, then every message at each turn end, surviving compactions. The path is in the background
+start text (`Output file:`) and the completion notification (`<output-file>`, and a `Full transcript available at:`
+line). `outputTranscript` in `subagents.json` sets the default (on) and an agent file's `output_transcript` overrides it.
+The data comes from the child's `--mode rpc` event stream: a token count is the sum of its assistant messages'
+input, output and cache-write tokens (cache reads are excluded, as in the original), and the cost is pi's own estimate.
+`<context_percent>` and `<compactions>` appear in the notification, `Context:` and `Compactions:` in
+`get_subagent_result` (also `verbose: true`, which appends the conversation) and in `steer_subagent`'s answer;
+`subagents:started` and `subagents:compacted` are emitted, and `subagents:completed` / `subagents:failed` carry `tokens` and
+a pi `usage`. `reportUsage: true` attaches the agents' spend to the next tool result so the parent session counts it.
+`showCost: true` adds `~$0.0042` to the tool results and `<estimated_cost_usd>` to the notification; the widgets that
+show it are another slice, so the setting is still announced as not fully supported.
+
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
 [port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, `@name`
 mentions, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, `inherit_context`,
-resuming a finished agent's session, the settings menu, and output transcripts. The `Agent` tool is advertised with the
+resuming a finished agent's session and the settings menu. The `Agent` tool is advertised with the
 original's text and schema as it is with workflows, scheduling and worktree isolation switched off, and
 `SubagentWorkflow` is not registered.
 
@@ -66,7 +82,7 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 - Agent call parameters `schedule`, `isolation: "worktree"`, `inherit_context: true` and `resume`.
 - Agent file fields that ask for an unported feature: `inherit_context: true`, `isolation: worktree`, `memory`,
   `allowed_subagents`, `ext:` tool selectors, `disallowed_tools`, an `extensions` list, `exclude_extensions`, `skills` as
-  `false` or a list, `persist_session: true`, `output_transcript: true`, `session_dir`.
+  `false` or a list, `persist_session: true`, `session_dir`.
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel` and
   `isBackground: true`.
 - `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,

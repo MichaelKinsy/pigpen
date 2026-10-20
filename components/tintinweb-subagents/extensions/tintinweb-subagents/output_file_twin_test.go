@@ -15,21 +15,16 @@ import (
 // fakeSession feeding the stream the events a child emits (obs_helpers_test.go).
 
 func TestEncodeCwdTwins(t *testing.T) {
-	cases := []struct{ title, in, want string }{
-		{"encodes a POSIX absolute path by stripping the leading slash and replacing separators", "/home/user/project", "home-user-project"},
-		{"handles a POSIX root path", "/", ""},
-		{"encodes a Windows drive-letter path by stripping the drive prefix", `C:\Users\foo\project`, "Users-foo-project"},
-		{"handles lowercase Windows drives", `c:\foo`, "foo"},
-		{"handles a Windows path written with forward slashes", "C:/Users/foo/project", "Users-foo-project"},
-		{"preserves server and share for UNC paths", `\\server\share\project`, "server-share-project"},
-		{"handles mixed separators", `/home\user/project`, "home-user-project"},
-		{"collapses runs of leading dashes after separator replacement", "///foo", "foo"},
-		{"returns an empty string for an empty cwd", "", ""},
-		{"leaves a relative-looking path with no leading separator alone", "foo/bar", "foo-bar"},
-	}
-	for _, c := range cases {
-		tw(t, "output-file", c.title, func(t *testing.T) { eq(t, encodeCwd(c.in), c.want) })
-	}
+	tw(t, "output-file", "encodes a POSIX absolute path by stripping the leading slash and replacing separators", func(t *testing.T) { eq(t, encodeCwd("/home/user/project"), "home-user-project") })
+	tw(t, "output-file", "handles a POSIX root path", func(t *testing.T) { eq(t, encodeCwd("/"), "") })
+	tw(t, "output-file", "encodes a Windows drive-letter path by stripping the drive prefix", func(t *testing.T) { eq(t, encodeCwd(`C:\Users\foo\project`), "Users-foo-project") })
+	tw(t, "output-file", "handles lowercase Windows drives", func(t *testing.T) { eq(t, encodeCwd(`c:\foo`), "foo") })
+	tw(t, "output-file", "handles a Windows path written with forward slashes", func(t *testing.T) { eq(t, encodeCwd("C:/Users/foo/project"), "Users-foo-project") })
+	tw(t, "output-file", "preserves server and share for UNC paths", func(t *testing.T) { eq(t, encodeCwd(`\\server\share\project`), "server-share-project") })
+	tw(t, "output-file", "handles mixed separators", func(t *testing.T) { eq(t, encodeCwd(`/home\user/project`), "home-user-project") })
+	tw(t, "output-file", "collapses runs of leading dashes after separator replacement", func(t *testing.T) { eq(t, encodeCwd("///foo"), "foo") })
+	tw(t, "output-file", "returns an empty string for an empty cwd", func(t *testing.T) { eq(t, encodeCwd(""), "") })
+	tw(t, "output-file", "leaves a relative-looking path with no leading separator alone", func(t *testing.T) { eq(t, encodeCwd("foo/bar"), "foo-bar") })
 }
 
 func assistant(text string) map[string]any {
