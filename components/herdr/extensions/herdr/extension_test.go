@@ -610,6 +610,20 @@ func TestBlocked(t *testing.T) {
 		host.fire("ui_prompt_end", map[string]any{"kind": "confirm"})
 		eq(t, states(h.waitForCalls(4)), []string{"idle", "blocked", "blocked", "idle"})
 	})
+
+	t.Run("session_start keeps the blocked counters (herdr-pig does not reset them)", func(t *testing.T) {
+		host, h := startSession(t)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "waiting on review"})
+		h.waitForCalls(2)
+		host.fire("session_start", map[string]any{"reason": "reload"})
+		all := h.waitForCalls(3)
+		eq(t, states(all), []string{"idle", "blocked", "blocked"})
+		if got := mustFlag(t, all[2], "--message"); got != "waiting on review" {
+			t.Fatalf("message = %q", got)
+		}
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		eq(t, states(h.waitForCalls(4)), []string{"idle", "blocked", "blocked", "idle"})
+	})
 }
 
 func TestSession(t *testing.T) {

@@ -23,7 +23,6 @@ The local install references this checkout; keep it at its installed path and re
 | Source identity | `pig` | `custom:pig` |
 | Retry | 0.5 s, then a 1.5 s retry | one 3 s call |
 | Resume fallback | `pig --session <id>` | `pig --session-id <id>`; none for in-memory sessions |
-| `session_start` | keeps the blocked counters | resets them, so a replaced session cannot stay blocked by a prompt or emitter that never ended |
 | Blocked sources | `herdr:blocked` only | also `ui_prompt_start` / `ui_prompt_end`, counted per source |
 | Plugin install, status, startup refresh | in the original | in `piglets/herdr/herdr-plugin`; startup refresh dropped |
 
