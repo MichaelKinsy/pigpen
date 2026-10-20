@@ -14,7 +14,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; activity widget and shortcut; TUI render hooks |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
-| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | YouTube/video/frames, RSC/Defuddle fallbacks, authenticated fetch, Gemini Web and browser cookies |
+| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | YouTube/video/frames, RSC/Defuddle fallbacks |
 
 ## Refusals (until the slices above are ported)
 
@@ -25,7 +25,6 @@ Every unported option, mode or URL kind is refused with one message and returns 
 | Feature | When | Where |
 |---|---|---|
 | `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
-| `authenticated fetch` | any `auth` value | `tool_fetch.go` |
 | `YouTube video extraction`, `local video file analysis`, `video frame and timestamp extraction` | the URL (or `frames`/`timestamp`) the original sends to that extractor and the matching config section (`youtube`, `video`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
 | `the RSC payload and Defuddle fallback extractors` | readable extraction failed, where the original tries these before giving up (the message follows the original's verdict) | `extract.go` |
 
@@ -354,8 +353,8 @@ seven providers (parallel, tinyfish and the Cloudflare gateway rows joined once 
 - SSRF guard on every remote fetch (private, loopback, link-local, multicast, NAT64, 6to4), with redirect limit 5 and per-hop
   re-validation; `ssrf.allowRanges` exempts explicit CIDRs, and requests through a proxy (`proxy`, or the environment
   proxy with `ssrf.trustEnvProxy`) skip the dial-time check (see below).
-- **No browser-cookie access**: Chrome/Gemini Web cookie extraction and authenticated fetch are not ported; `auth` profiles
-  return an explicit "not available" error.
+- **Browser cookies are opt-in**: nothing reads a browser profile unless `allowBrowserCookies` is true in `web-search.json`
+  (or `PI_ALLOW_BROWSER_COOKIES=1`); see "Slice: browser cookies".
 - **No paid fallback without configuration**: providers with keys are only used when configured; unported providers never run.
 - Two defaults send data to third parties (both as in the original): the keyless Exa MCP (`mcp.exa.ai`), which `auto` uses
   when nothing is configured and `exa` uses without a key, and the Jina Reader fetch fallback (off for remote URLs unless `fetchRouting.allowRemoteHostedProviders`).
@@ -443,16 +442,14 @@ transcription are real. What each file carries:
   options (`providerDef.available`) so the model-backed providers can read the session.
 - **Fetch** (`extract.go`): the `gemini` fetch provider tries URL context, then Gemini Web, as in `extract.ts:1011`.
 - **PDF** (`gemini_pdf_extract.go`): `ExtractPDFViaGemini` for the PDF slice (prompt, fence stripping, page-marker validation).
-- **Gemini Web** (`gemini_web_client.go`): the cookie client is another slice. This port defines the interface the original's
-  `gemini-web.ts` calls (`GeminiWebClient`: `Available`, `Diagnostic`, `Query`) and a default client that reports Gemini Web as
-  unavailable while browser cookie access is off (the original's default) and refuses with the port's refusal message when
-  it is switched on. The cookie slice installs its client with `SetGeminiWebClient`.
+- **Gemini Web** (`gemini_web_client.go`): the interface the original's `gemini-web.ts` callers use (`GeminiWebClient`:
+  `Available`, `Diagnostic`, `Query`); the default client is the cookie client of "Slice: browser cookies".
 
 Deliberate differences:
 
 - Provider timeouts follow the port-wide classification (network, so routing can fall through); the original treats them as aborts.
 - The activity monitor (curator slice) is not ported, so no activity is logged around Gemini calls.
-- The fetch "Fallback options" checklist names the Gemini API (`GEMINI_API_KEY`) now; the Gemini Web bullet comes with the cookie slice.
+- The fetch "Fallback options" checklist names the Gemini API (`GEMINI_API_KEY`) and Gemini Web ("Sign into gemini.google.com in Chrome").
 - `gemini-api-transport` drives video-extract.ts upload, status and delete; those two twins run the generate call and the
   upload base of the same transport (ADAPTED) until the video slice ships the rest.
 - Config is read at each call (the original caches it for the process), so an edit to `web-search.json` is seen without a restart.
@@ -548,3 +545,41 @@ Mutations: 50 mutants for this slice in `port/mutations.json`, all killed by `pi
 equivalent: no cancellation rethrow in the chain (the local extractor checks the context itself, so the result is the same), no
 wide-gap flush (a flush and an inserted space both read as one space after the join), and no baseline-change flush (a new line always
 begins with a gap beyond -0.2 em, which flushes first); one was removed because it did not compile.
+
+## Slice: browser cookies (auth-fetch, chrome-cookies, gemini-web, gemini-web-config)
+
+Authenticated fetch (`fetch_content` with `auth`) and Gemini Web are ported, and their refusals are removed. Both are opt-in, as in
+the original: nothing reads a browser profile unless `allowBrowserCookies` is true in `web-search.json` or
+`PI_ALLOW_BROWSER_COOKIES=1` / `FEYNMAN_ALLOW_BROWSER_COOKIES=1`. The same programs run, through the host (`Context.Exec`, the
+original's `pi.exec` equivalent, `hostexec.go`): `security` (macOS keychain), `secret-tool` and `kwallet-query` (Linux),
+`powershell.exe` (Windows DPAPI), `sqlite3` and `python3` (reading a copy of the cookie database). No secret is printed, logged
+or put in a diagnostic.
+
+- `auth_fetch.go`: the `authFetch` profiles (named, `auth: true` for a single profile, host policy, same-origin redirects), the
+  per-hop cookie header, the direct-only transport (no hosted provider ever receives the cookies), and the session cache
+  (`cache: "off"` stores nothing and the tool text and details say so).
+- `chrome_cookies.go`: macOS (Helium, Chrome, Brave, Arc), Linux (Chromium, Chrome; Secret Service, then KWallet on KDE, then the
+  basic-store password) and Windows (Chrome, Edge; DPAPI key, AES-GCM v10, v20 reported as unsupported); profile discovery and
+  traversal checks, the process password cache (a failed lookup is retried), the diagnostics with their attempts, and the
+  expiry and partition filters of the query.
+- `gemini_web_config.go`, `gemini_web.go`: the opt-in, the `browserCookies` selection, the Gemini Web protocol (access token,
+  `StreamGenerate`, uploads, account email), cookies never sent across origins, generation and upload with redirects refused,
+  and a dedicated HTTP/1.1 transport with a 4 MiB response header budget, a 30 s connect timeout and the proxy environment.
+
+Deliberate differences:
+
+- node:sqlite is not available to a Go extension, so the SQLite CLI is tried first and python3 second (the original tries
+  node:sqlite, then the same two). The scenarios therefore use placeholder database files that node:sqlite rejects, so the
+  original falls back to the same canned programs.
+- The host command runner reports a program that cannot start as exit code 1, like Pi, so "unavailable" (no `sqlite3` or `python3`
+  on PATH) is told from "query failed" by looking the program up on PATH.
+- The DPAPI-protected blob is embedded in the encoded PowerShell script: `Context.Exec` has no environment option for the
+  original's `PIWA_PROTECTED`. The blob is only decryptable by the same Windows user. SDK capability to report: an `env` option on
+  exec options, which Pi's own `pi.exec` lacks too.
+- Cookies are sent to Gemini Web in alphabetical order (the original keeps database row order; the interface hands over a map).
+- Profile names sort like `localeCompare` with numeric collation, approximated by a case-insensitive natural comparison.
+- Twin without a Go counterpart: `resolveGeminiFetch falls back to the ambient global fetch when undici is not resolvable`
+  (the dedicated transport is the standard library, always resolvable).
+- Gemini Web and the fixed Google endpoints cannot be reached by a scenario server, and authenticated fetch requires HTTPS to a
+  host the profile names; the scenarios therefore cover profile errors, the opt-in, and the full cookie-extraction chain up to the
+  point where no request is sent. The request side is covered by the twins.
