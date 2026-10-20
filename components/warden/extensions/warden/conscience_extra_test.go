@@ -210,3 +210,28 @@ func TestConscienceReminderIsAFollowUpSteer(t *testing.T) {
 		t.Errorf("counted against the conscience guard: %v", e.w.stats.SteerGuards)
 	}
 }
+
+// Every eligible candidate reaches exactly one request, 31 to a request (32 questions with the disposition).
+func TestAssessPacksEveryCandidateIntoExactlyOneRequest(t *testing.T) {
+	for _, c := range []struct{ n, requests int }{{31, 1}, {32, 2}, {62, 2}, {63, 3}, {95, 4}} {
+		j, reqs := csRecording()
+		csAssess(t, "test", "", csManySkills(c.n), nil, nil, nil, csDeps(j), nil)
+		seen := map[string]int{}
+		for _, r := range reqs() {
+			if len(r) > 31 {
+				t.Errorf("%d candidates: a request carries %d", c.n, len(r))
+			}
+			for _, name := range r {
+				seen[name]++
+			}
+		}
+		if len(reqs()) != c.requests || len(seen) != c.n {
+			t.Errorf("%d candidates: %d requests, %d distinct candidates", c.n, len(reqs()), len(seen))
+		}
+		for name, n := range seen {
+			if n != 1 {
+				t.Errorf("%s sent %d times", name, n)
+			}
+		}
+	}
+}
