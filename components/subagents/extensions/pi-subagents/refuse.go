@@ -109,6 +109,9 @@ func refuseUnsupported(params map[string]any, name string) string {
 	if name != "" {
 		a := actions[name]
 		if a == nil {
+			if !isKnownSubagentAction(name) {
+				return unknownSubagentActionMessage(name)
+			}
 			return refusal("the `" + name + "` action")
 		}
 		allowed = a.params

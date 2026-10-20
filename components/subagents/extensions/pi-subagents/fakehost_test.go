@@ -92,6 +92,13 @@ type Host struct {
 	// lists the cards whose renderers called context.invalidate().
 	resolvers   int
 	invalidated []string
+	widgets     []WidgetPush
+}
+
+// WidgetPush is a widget the extension drew with a list of lines (ui.setWidget with a string list is a push, not a call).
+type WidgetPush struct {
+	Key   string
+	Lines []string
 }
 
 type frame struct {
@@ -124,6 +131,10 @@ type frame struct {
 		Method string          `json:"method"`
 		Args   json.RawMessage `json:"args"`
 	} `json:"notify,omitempty"`
+	WidgetPush *struct {
+		Key   string   `json:"key"`
+		Lines []string `json:"lines"`
+	} `json:"widget_push,omitempty"`
 }
 
 // StartHost runs ext against a fake host and returns once the extension has registered.
@@ -259,6 +270,12 @@ func (h *Host) serve() {
 			if f.Notify != nil {
 				h.notified(f.Notify.Method, f.Notify.Args)
 			}
+		case "widget_push":
+			if f.WidgetPush != nil {
+				h.mu.Lock()
+				h.widgets = append(h.widgets, WidgetPush{f.WidgetPush.Key, f.WidgetPush.Lines})
+				h.mu.Unlock()
+			}
 		case "response":
 			h.mu.Lock()
 			ch := h.pending[f.ID]
@@ -330,6 +347,19 @@ func (h *Host) answerModelStream(f frame, args map[string]any) {
 		notify(map[string]any{"event": event})
 	}
 	h.write(map[string]any{"type": "call_result", "id": f.ID, "call_result": map[string]any{"result": nil}})
+}
+
+// Widgets returns the widgets drawn so far with lines, oldest first; ClearWidgets forgets them.
+func (h *Host) Widgets() []WidgetPush {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return append([]WidgetPush(nil), h.widgets...)
+}
+
+func (h *Host) ClearWidgets() {
+	h.mu.Lock()
+	h.widgets = nil
+	h.mu.Unlock()
 }
 
 // notified applies a notification from the extension: a tool renderer

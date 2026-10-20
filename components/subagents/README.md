@@ -23,6 +23,7 @@ original); then:
 
 - `subagent {action: "list"}` lists the agents (`agentScope`: user, project or both), `{action: "get", agent: "helper"}` shows one;
 - `subagent {agent: "helper", task: "..."}` runs one agent in a child `pig --print` process and returns its answer;
+- `subagent {agent, task}` without `async` runs in the background (the original's `asyncByDefault`): the call returns at once, the result arrives as a message that wakes the session, `{action: "status"}`, `interrupt`, `resume` and `stop` manage runs, and the `bg_wait` tool waits for them. `async: false` runs in the foreground. A run survives its session and is adopted by the next one;
 - `/run-chain <chain> <task>` runs a `.chain.md` chain (`.pi/chains/` or `~/.pi/agent/chains/`): each step's answer flows into the
   next as `{previous}`, the request as `{task}`.
 

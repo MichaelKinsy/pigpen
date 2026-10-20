@@ -56,9 +56,11 @@ The pig to start is `PIG_SUBAGENT_PIG_BINARY`, else the pig running this extensi
 to this program, else `PATH`. A Piglet Binary as the child refuses `--system-prompt`, so a `replace`-mode agent cannot run in one
 (finding 9).
 
-**Not ported:** parallel, async and background runs and their status; scripted workflows (they need the original's JavaScript
+**Background runs (async_*.go).** An omitted `async` runs in the background (`asyncByDefault`, config key in `~/.pi/agent/extensions/subagent/config.json`); `async: false` or `asyncByDefault: false` blocks the parent. The child stays a detached `pig` process (own process group) supervised by goroutines of the extension; the state lives in the original's layout (`status.json`, `events.jsonl`, `output-N.log`, `process-terminal.json`, `recovery-descriptor.json`, result files) so a later session adopts a run (stale-run reconciliation, `async_state.go`/`async_resume.go`). Ported: the actions `status`, `interrupt`, `resume`, `stop`, the `bg_wait` tool, the completion notification (batched, deduplicated, replayed, delivered with `SendCustomMessage` + triggerTurn), the `subagent-async` widget with suspension during compaction, the active-capacity slots, auto-drain at `agent_end`, retention, and unknown-action recovery. On platforms without detachable children (Windows) the child is started directly and a run ends with its supervisor.
+
+**Not ported:** parallel runs; scripted workflows (they need the original's JavaScript
 workflow runtime, which no Package may carry); council mode; worktree isolation and lanes; the fleet and status views, slash
-commands other than `/run-chain`; steering, the supervisor channel and `bg_wait` (declared so the model sees the same tools; they
+commands other than `/run-chain`; steering and the supervisor channel (declared so the model sees the same tools; they
 answer that they are not ported); the watchdog; missions; profiles, settings overrides and model scopes; the agent serializer and
 the management actions create, update, delete, eject and disable; `.chain.json` chains and the acceptance, tool-budget and
 dynamic fan-out validators they need; external CLI and external job runners (their agents are listed, not run); the advertised
@@ -67,14 +69,12 @@ document features that are not ported); the original's session-resume memory of 
 
 **Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
 accepted and ignored: a call to `subagent` that sets a parameter the port does not honor (anything but `agent`, `task`,
-`agentScope`, `cwd`, `model` and `async: false`; for `list` and `get`, `action`, `agent` and `agentScope`), `async` other than
-`false`, `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
-other than `list` and `get`, a run without `task`, and the tools `bg_wait` and `subagent_supervisor` (declared, as the
-original's request shows them). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
+`agentScope`, `cwd`, `model`, `async` and the parameters of the background actions; for `list` and `get`, `action`, `agent` and `agentScope`), `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
+other than `list`, `get`, `status`, `interrupt`, `resume` and `stop`, a run without `task`, and the tool `subagent_supervisor` (declared, as the
+original's request shows it). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
 <feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.`; a tool refuses with an error. The
 original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
-`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. One difference stays until the async slice:
-the original runs in the background unless `async: false` (`asyncByDefault`); an omitted `async` runs in the foreground here.
+`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. The `asyncByDefault` difference is gone: an omitted `async` runs in the background as in the original.
 
 ## Mapping
 

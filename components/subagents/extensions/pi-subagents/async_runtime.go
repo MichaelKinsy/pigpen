@@ -114,7 +114,10 @@ func installAsyncRuntime(e *sdk.Extension) {
 	e.OnEvent(sdk.EventSessionStart, rt.onSessionStart)
 	e.OnEvent(sdk.EventSessionShutdown, rt.onSessionShutdown)
 	e.OnEvent(sdk.EventAgentEnd, rt.onAgentEnd)
+	e.OnEvent(sdk.EventSessionBeforeCompact, rt.onSessionBeforeCompact)
 	e.OnEvent(sdk.EventSessionCompact, rt.onSessionCompact)
+	e.OnEvent(sdk.EventAgentStart, rt.onAgentStart)
+	e.OnEvent(sdk.EventAgentSettled, rt.onAgentSettled)
 }
 
 // completionOwnerID identifies the parent process: stable across this extension's reloads (the host is its parent), so a run
@@ -169,6 +172,7 @@ func (rt *asyncRuntime) onSessionStart(ctx sdk.Context, _ map[string]any) (any, 
 	rt.state.BaseCwd = ctx.Cwd()
 	rt.state.CurrentSessionID = currentSessionID(ctx)
 	rt.state.AsyncJobs = map[string]*AsyncJobState{}
+	rt.state.WidgetsSuspended = false // resetSessionState (index.ts:1122)
 	rt.mu.Unlock()
 	rt.restoreActiveJobs()
 	rt.startResultScan()
@@ -210,7 +214,52 @@ func (rt *asyncRuntime) onAgentEnd(ctx sdk.Context, _ map[string]any) (any, erro
 	return nil, nil
 }
 
-func (rt *asyncRuntime) onSessionCompact(ctx sdk.Context, ev map[string]any) (any, error) {
+// suspendWidgetsForCompaction and resumeWidgetsAfterCompaction are index.ts:980-992: the widget is cleared while a threshold or
+// overflow compaction runs and drawn again when the agent starts or settles; a manual compaction leaves it alone.
+func (rt *asyncRuntime) onSessionBeforeCompact(ctx sdk.Context, ev map[string]any) (any, error) {
+	if reason, _ := ev["reason"].(string); reason == "manual" {
+		return nil, nil
+	}
+	rt.setCtx(ctx)
+	rt.mu.Lock()
+	if rt.state.WidgetsSuspended {
+		rt.mu.Unlock()
+		return nil, nil
+	}
+	rt.state.WidgetsSuspended = true
+	rt.mu.Unlock()
+	if c, ok := rt.context(); ok && c.HasUI() {
+		_ = c.SetWidget(widgetKeyAsync, nil)
+	}
+	return nil, nil
+}
+
+func (rt *asyncRuntime) resumeWidgetsAfterCompaction() {
+	rt.mu.Lock()
+	if !rt.state.WidgetsSuspended {
+		rt.mu.Unlock()
+		return
+	}
+	rt.state.WidgetsSuspended = false
+	rt.mu.Unlock()
+	rt.refreshWidget()
+}
+
+func (rt *asyncRuntime) onAgentStart(ctx sdk.Context, _ map[string]any) (any, error) {
+	rt.setCtx(ctx)
+	rt.resumeWidgetsAfterCompaction()
+	return nil, nil
+}
+
+func (rt *asyncRuntime) onAgentSettled(ctx sdk.Context, _ map[string]any) (any, error) {
+	rt.setCtx(ctx)
+	rt.resumeWidgetsAfterCompaction()
+	return nil, nil
+}
+
+// onSessionCompact re-drives the parent after a manual compaction while background work is active (index.ts:1183-1196), through
+// the session context this runtime holds: none once the session was shut down or replaced.
+func (rt *asyncRuntime) onSessionCompact(_ sdk.Context, ev map[string]any) (any, error) {
 	if reason, _ := ev["reason"].(string); reason != "manual" {
 		return nil, nil
 	}
@@ -219,8 +268,10 @@ func (rt *asyncRuntime) onSessionCompact(ctx sdk.Context, ev map[string]any) (an
 	for _, j := range rt.state.AsyncJobs {
 		active = active || j.Status == "queued" || j.Status == "running"
 	}
+	hasUI := rt.hasUI
 	rt.mu.Unlock()
-	if !active || !ctx.HasUI() {
+	ctx, ok := rt.context()
+	if !active || !ok || !hasUI {
 		return nil, nil
 	}
 	yes := true
@@ -551,9 +602,6 @@ func wantsAsync(params map[string]any, cfg asyncConfig) bool {
 func (rt *asyncRuntime) launchBackground(ctx sdk.Context, params map[string]any, a *AgentConfig, task, cwd, model string, cfg asyncConfig) (any, error) {
 	if cfg.ConfigErr != nil {
 		return nil, sdk.NewToolError(cfg.ConfigErr.Error())
-	}
-	if !backgroundSupported {
-		return nil, sdk.NewToolError(refusal("background runs on this platform (`async` runs need a detachable child; pass `async: false`)"))
 	}
 	rt.setCtx(ctx)
 	sessionID := currentSessionID(ctx)

@@ -100,12 +100,18 @@ func TestParallelAndChainRunsAreRefused(t *testing.T) {
 
 func TestManagementActionsOtherThanListAndGetAreRefused(t *testing.T) {
 	h, _ := refusedHost(t)
-	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "doctor", "guide", "steer", "debug.run", "validate", "schedule.create", "single", "append-step", "unheard-of"}
+	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "doctor", "guide", "steer", "debug.run", "validate", "schedule.create", "append-step"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
 			wantRefusal(t, failure, "the `"+a+"` action")
 		})
+	}
+	for _, a := range []string{"single", "unheard-of"} { // not actions of the original: its recovery text, not a refusal
+		_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
+		if !strings.HasPrefix(failure, "Unknown action: "+a+".") {
+			t.Errorf("%s: %q", a, failure)
+		}
 	}
 	_, failure := h.Tool("subagent", map[string]any{"action": "list", "capabilities": true})
 	wantRefusal(t, failure, "the `capabilities` option")
