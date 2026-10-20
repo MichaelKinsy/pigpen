@@ -326,7 +326,25 @@ What this slice ports: the conscience (`conscience.ts`: candidates, the two ques
 
 ### Performance (conscience slice, 0.1.5)
 
-PERF_PLACEHOLDER
+Measured on imladris (Intel Xeon 6746E, CPU set shared with other lanes; load average 85 to 125, so not noise-free; Go 1.27, Node 24.19.0). Inputs are the same in both: Go `go test -bench Conscience -benchmem` (`extensions/warden/conscience_bench_test.go`), the original `port/bench-conscience-original.ts` run under Node with tsx (median of 11 runs inside each of 5 processes); the two were run alternately in one container, 5 rounds (Go 2 runs a round, median of 10). Skill files are real files for both; the judge is an instant stub in both.
+
+| Path | Go port (median) | Original (Node) | Go vs Node |
+|---|---|---|---|
+| assess 40 skills (40 file hashes, 2 requests) | 1421 us, 133 KB, 934 allocs | 1172 us | +21% |
+| assess 250 skills + 60 tools (310 candidates, 10 requests) | 8961 us, 970 KB, 6702 allocs | 7693 us | +16% |
+| candidates from 100 skill files + 100 tools | 3129 us, 176 KB, 1909 allocs | 3131 us | -0% |
+| questions + hash for 31 candidates | 30 us, 14 KB, 12 allocs | 30 us | +1% |
+| sanitize a 1.8 KB description | 30 us, 13 KB, 25 allocs | 14 us | +121% |
+| validate a 200-entry index | 1349 us, 293 KB, 1010 allocs | 1225 us | +10% |
+| write + read a 200-entry index (owner-only, atomic) | 2275 us, 645 KB, 1351 allocs | 1269 us | +79% |
+| build the `/warden index` prompt, 100 skills + 60 tools | 33 us, 41 KB, 163 allocs | 24 us | +38% |
+| load an 8 KB skill (all rules) | 311 us, 43 KB, 25 allocs | 317 us | -2% |
+
+Before the fixes below the same paths were 1.3 to 36 times slower than the original (the sanitizer 693 us, loading a skill 11 ms, validating an index 21.6 ms, writing and reading one 9.6 ms), found by profiling (`go tool pprof`): the sanitizer's regular expressions dominated every path that cleans text, and `Redact` over a skill body dominated a load. Fixes, each held to the code it replaces by a test: the sanitizer is a scanner with substring searches (`TestSanitizeDescriptionScannerEqualsTheRegularExpressions`: 30,000 random and the edge inputs, equal to the original's chain of regular expressions), a skill body is scanned for secrets only when it holds a literal one of Redact's rules needs (`TestMayCarrySecretNeverSkipsARedaction`), the question hash is written by hand and computed once per assessment (`TestQuestionHashWriterEqualsTheReference`), the index is written and measured by a fixed-shape writer and read in one typed pass (`TestIndexJSONEqualsTheGenericEncoder`), the word splitter is one pass (`TestWordsOnePassEqualsTheRegularExpressions`), and file hashes use Node's four system calls.
+
+Rows still above the original by more than 10%, with the reason: `assess` (+21% and +16%) spends a quarter of its time in system calls (open, stat, read, close of every skill file, which the original does too) and the rest in goroutines and 934 allocations for 40 candidates; `sanitize` (+121%, 16 us on 1.8 KB of text that contains every trigger, V8's regular expression engine against a scanner) runs once per candidate description, 40 of them cost 0.6 ms of an assessment that waits hundreds of milliseconds for the judge; the index write and read (+79%) is the shared `WriteFileAtomic` (temporary file, chmod, rename) and 20% JSON decoding, once per `/warden index`; the build prompt (+38%, 9 us) runs once per `/warden index`. None is on the TUI input or render path: an assessment runs in `before_agent_start` under the judge's deadline (3 s default), `/warden index` is a command that waits for the model. OWNER DECISION NEEDED to accept these rows or ask for more work (the next step would be a stat-free hash cache keyed by mtime, which changes behavior when a file is replaced within the same tick).
+
+Against the previous slice (`port/warden-rules-2`; a `package main` that only runs `warden.Extension()`, linux/amd64, `-s -w`, 31 interleaved runs pinned to CPUs 100-103): binary 9,253,024 to 9,556,128 bytes (+303,104, +3.3%); `Extension()` 35.0 us to 34.0 us; process start to a built extension 6.63 ms to 6.14 ms (noise: the box is shared). Package init allocates no more than before (`TestPackageInitDoesNotCompileRegexps` green: every expression is a `lazyRE`). The original's module load under Node was not measured for this slice.
 
 ### Conscience gaps
 
