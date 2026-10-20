@@ -164,6 +164,8 @@ type app struct {
 	once      sync.Once
 	widthOnce sync.Once
 	welcome   welcomeState // welcome.go, welcome_ext.go
+	cdq       *cdQuote // /cd, /reply and the last-prompt line (cdquote_ext.go)
+	keys      *keysExt
 }
 
 func (a *app) core(ctx sdk.Context) *powerline {
@@ -171,6 +173,9 @@ func (a *app) core(ctx sdk.Context) *powerline {
 		a.host = &sdkHost{ctx: ctx}
 		a.pl = newPowerline(a.host)
 		a.host.pl = a.pl
+		if a.keys != nil {
+			a.pl.keys = a.keys
+		}
 	})
 	a.host.ctx = ctx
 	return a.pl
@@ -197,6 +202,7 @@ func (a *app) onSessionStart(ctx sdk.Context, data map[string]any) (any, error) 
 	reason, _ := data["reason"].(string)
 	pl.sessionStart(reason)
 	pl.warnUnsupported()
+	a.cdq.sessionStart(ctx, pl.enabled)
 	defer a.welcomeSessionStart(ctx, reason) // after the bar is installed, as in index.ts
 	a.widthOnce.Do(func() {
 		// The bar's widget rows are laid out at a width; lay them out again when the terminal changes size.
@@ -233,6 +239,7 @@ func (a *app) command(ctx sdk.Context, args string) error {
 	if wasEnabled && !pl.enabled {
 		a.welcomeDismiss() // /powerline toggled off
 	}
+	a.cdq.sync(ctx, a.pl.enabled, true) // the core clears and installs the widgets again
 	return nil
 }
 
@@ -248,6 +255,9 @@ func Extension() *sdk.Extension {
 			return nil
 		})
 	}
+	registerKeys(e, a)
+	registerFollowUp(e, a)
+	registerVibes(e, a)
 	e.OnSessionStart(a.onSessionStart)
 	registerWelcome(e, a)
 	for _, ev := range []string{sdk.EventModelSelect, sdk.EventThinkingLevelSelect, sdk.EventSessionTree, sdk.EventSessionInfoChanged,
@@ -255,5 +265,6 @@ func Extension() *sdk.Extension {
 		sdk.EventSessionBeforeCompact, sdk.EventSessionCompact, sdk.EventAgentEnd} {
 		e.OnEvent(ev, a.onEvent(ev))
 	}
+	registerCdQuote(e, a)
 	return e
 }

@@ -5,3 +5,6 @@ var PiThemeTokens = piThemeTokens
 
 // Refusal exposes the refusal message to the external adapter tests.
 var Refusal = refusal
+
+// VisibleWidth exposes the cell width to the external tests.
+var VisibleWidth = visibleWidth

@@ -1,0 +1,92 @@
+{
+ "name": "cdquote-cd",
+ "description": "/cd: the answers that need no session switch (the harness runs hosts with --no-session, so a valid target ends in the persisted-session error; the switch itself is proven by the layer-1 tests and the forked file compared with Pi's).",
+ "files": {
+  "sub/.keep": "",
+  "file.txt": "not a directory"
+ },
+ "steps": [
+  {
+   "name": "show",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd"
+   }
+  },
+  {
+   "name": "blank",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd    "
+   }
+  },
+  {
+   "name": "same",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd ."
+   }
+  },
+  {
+   "name": "same-slash",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd ./"
+   }
+  },
+  {
+   "name": "missing",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd nope"
+   }
+  },
+  {
+   "name": "escaped",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd My\\ Folder"
+   }
+  },
+  {
+   "name": "quoted-missing",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd \"no such\""
+   }
+  },
+  {
+   "name": "file",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd file.txt"
+   }
+  },
+  {
+   "name": "home",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd ~"
+   }
+  },
+  {
+   "name": "sub",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd sub"
+   }
+  },
+  {
+   "name": "quoted-sub",
+   "rpc": {
+    "type": "prompt",
+    "message": "/cd 'sub'"
+   }
+  }
+ ],
+ "commands": {
+  "git": {
+   "mode": "real"
+  }
+ }
+}
