@@ -48,13 +48,11 @@ const (
 	PhraseChars = 60
 	// CheckEvery is the number of characters streamed between two checks.
 	CheckEvery = 256
-
-	jsSpaceClass = `[\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}]`
 )
 
 var (
-	reJSSpaceRun     = lazyRE(jsSpaceClass + `+`)
-	reParagraphBreak = lazyRE(`\n` + jsSpaceClass + `*\n`)
+	reJSSpaceRun     = lazyRE(`[` + jsSpaceClass + `]+`)
+	reParagraphBreak = lazyRE(`\n[` + jsSpaceClass + `]*\n`)
 )
 
 // normaliseRunaway is runaway.ts `normalise`: whitespace runs collapse to one space; trimmed and lower-cased.

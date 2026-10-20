@@ -3,6 +3,7 @@ package warden
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,7 +17,10 @@ const help = `warden — guardrails that steer instead of interrupt
   /warden mode <m>            steer (hold and tell the agent) | confirm (ask you) | advise (warn only)
   /warden backend <b>         change where judgments go: typesafe | own-model | offline
   /warden test                run a few synthetic dangerous calls through it; nothing is executed
-  /warden trace               the last things warden decided`
+  /warden trace               the last things warden decided
+  /warden rules [check|audit|calibrate|tune]   the project rules in force; judge, audit or tune them
+  /warden report [--days N]   how often each rule was judged and fired
+  /warden init [--force]      have the agent write this project's pi-warden.md`
 
 func (w *warden) command(ctx sdk.Context, args string) error {
 	fields := strings.Fields(args)
@@ -54,6 +58,12 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 		w.selfTest(ctx)
 	case "trace":
 		w.showTrace(ctx)
+	case "rules":
+		return w.rulesCommand(ctx, rest)
+	case "report":
+		return w.reportCommand(ctx, rest)
+	case "init":
+		return w.initCommand(ctx, rest)
 	default:
 		w.show(ctx, "unknown subcommand "+sub+".\n\n"+help)
 	}
@@ -103,7 +113,11 @@ func (w *warden) showStatus(ctx sdk.Context) {
 	fmt.Fprintf(&b, "  checked %d calls, judged %d, held %d, warned %d, approved %d; %d steers sent (%d skipped as repeats or over budget), %d stuck, %d done-checks (%d unverified), %d judge errors\n",
 		s.Inspected, s.Judged, s.Held, s.Warned, s.Approved, s.Steers, s.SteersSkipped, s.Stuck, s.DoneChecks, s.Unverified, s.Errors)
 	fmt.Fprintf(&b, "  %d/%d prose nudges, %d runaway stops, %d restatements\n  %s\n", s.ProseNudges, s.ProseChecks, s.Runaway, s.Restatements, w.notificationsStatus(cfg)) // SECURITY
-	fmt.Fprintf(&b, "  judge requests this session: %d of %d\n\n", w.budget.Used(), cfg.MaxRequests)
+	fmt.Fprintf(&b, "  judge requests this session: %d of %d\n", w.budget.Used(), cfg.MaxRequests)
+	if arming := w.gcArmingStatus(cfg); arming != "" {
+		b.WriteString("  " + arming + "\n")
+	}
+	b.WriteString("  " + w.rulesStatusLine(ctx, cfg) + " (" + strconv.Itoa(s.RuleViolations) + "/" + strconv.Itoa(s.RuleChecks) + " rule violations, " + strconv.Itoa(s.PathNotes) + " sensitive-path notes)\n\n")
 	b.WriteString(Disclosure(cfg.Backend, target))
 	w.show(ctx, b.String())
 }

@@ -37,7 +37,9 @@ type harness struct {
 	// subscribed is set once the extension has asked for the session log.
 	subscribed bool
 	fail       map[string]string
-	// w is the extension's state, for asserting on the trace the widget is drawn from.
+	// cwd is the project directory the session runs in.
+	cwd string
+	// w is the extension's state, for the tests that read its trace.
 	w *warden
 }
 
@@ -48,10 +50,14 @@ type harnessOpts struct {
 	env      map[string]string
 	newJudge func(Config, *Budget) (Judge, error)
 	git      GitRunner
+	// scratchPlatform overrides the platform the session-scratch exemption decides for.
+	scratchPlatform string
 	// fail makes host calls of these methods answer with this error message.
 	fail map[string]string
 	// tweak adjusts the extension's Options before it starts (notifier runner, platform).
 	tweak func(*Options)
+	// cwd is the project directory; empty: a fresh temporary one.
+	cwd string
 }
 
 func startHarness(t *testing.T, o harnessOpts) *harness {
@@ -80,7 +86,7 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 		}
 		return ""
 	}
-	opts := Options{Getenv: getenv, Git: o.git}
+	opts := Options{Getenv: getenv, Git: o.git, ScratchPlatform: o.scratchPlatform}
 	if o.tweak != nil {
 		o.tweak(&opts)
 	}
@@ -90,9 +96,13 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 		}
 	}
 	hasUI := !o.noUI
+	h.cwd = o.cwd
+	if h.cwd == "" {
+		h.cwd = t.TempDir()
+	}
 	ext, w := newWarden(opts)
 	h.w = w
-	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: t.TempDir(), OnCall: h.onCall})
+	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: h.cwd, OnCall: h.onCall})
 	return h
 }
 
@@ -112,6 +122,8 @@ func (h *harness) onCall(method string, args map[string]any) (map[string]any, st
 			cursor = min(int(c), len(h.branch))
 		}
 		return map[string]any{"entries": h.branch[cursor:], "entryCount": len(h.branch), "hasMore": false, "leafId": h.leaf()}, ""
+	case "isIdle":
+		return map[string]any{"idle": true}, ""
 	case "ui.confirm":
 		return map[string]any{"confirmed": h.confirm}, ""
 	case "ui.select":
@@ -841,9 +853,7 @@ func TestSkippedSDKToolCallArgumentsAsObject(t *testing.T) {
 
 func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testing.T) {
 	cases := map[string]string{
-		"rules": "/warden rules", "rules check": "/warden rules check", "rules audit src": "/warden rules audit",
-		"rules calibrate --yes": "/warden rules calibrate", "rules tune": "/warden rules tune", "report": "/warden report",
-		"config get x": "/warden config", "init": "/warden init", "audit": "/warden audit", "index": "/warden index",
+		"config get x": "/warden config", "audit": "/warden audit", "index": "/warden index",
 		"prefs": "/warden prefs", "loops": "/warden loops", "recommend": "/warden recommend", "unmute": "/warden unmute", "bench": "/warden bench",
 	}
 	for args, feature := range cases {

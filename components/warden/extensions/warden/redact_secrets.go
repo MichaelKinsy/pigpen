@@ -48,11 +48,11 @@ var (
 	reUpper           = lazyRE(`[A-Z]`)
 	reSymbol          = lazyRE(`[^A-Za-z0-9]`)
 
-	reNonAlnumRun  = lazyRE(`[^a-z0-9]+`)
-	reSynthPrefix  = lazyRE(`^[a-z0-9]{2,6}[^a-z0-9]+`)
-	reHTTPSURL     = lazyRE("https://[^\\s\"'<>`]+")
-	reSignedExpiry = lazyRE(`(?i)[?&](?:X-Amz-Expires|X-Goog-Expires|Expires|se)=`)
-	reSignedParam  = lazyRE(`(?i)[?&](?:X-Amz-Signature|X-Amz-Credential|X-Amz-Security-Token|X-Goog-Signature|X-Goog-Credential|Signature|token)=([^&#]*)`)
+	reNonLowerAlnumRun = lazyRE(`[^a-z0-9]+`)
+	reSynthPrefix      = lazyRE(`^[a-z0-9]{2,6}[^a-z0-9]+`)
+	reHTTPSURL         = lazyRE("https://[^\\s\"'<>`]+")
+	reSignedExpiry     = lazyRE(`(?i)[?&](?:X-Amz-Expires|X-Goog-Expires|Expires|se)=`)
+	reSignedParam      = lazyRE(`(?i)[?&](?:X-Amz-Signature|X-Amz-Credential|X-Amz-Security-Token|X-Goog-Signature|X-Goog-Credential|Signature|token)=([^&#]*)`)
 )
 
 // notValues are words that sit after `secret:` in code and docs (redact.ts NOT_VALUES).
@@ -182,13 +182,13 @@ func Syntheticish(value string) bool {
 			return true
 		}
 	}
-	for _, segment := range reNonAlnumRun.Split(lower, -1) {
+	for _, segment := range reNonLowerAlnumRun.Split(lower, -1) {
 		if syntheticSegments[segment] {
 			return true
 		}
 	}
 	body := reSynthPrefix.get().ReplaceAllString(lower, "")
-	body = reNonAlnumRun.get().ReplaceAllString(body, "")
+	body = reNonLowerAlnumRun.get().ReplaceAllString(body, "")
 	return hasSequenceRun(text, sequenceRun) || hasSequenceRun(body, sequenceRun) || isRepetitive(body)
 }
 

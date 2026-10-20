@@ -34,18 +34,48 @@ MODULES = {
     "subagent": "subagent supervision", "waste": "call-waste guard",
 }
 
-def reason(f, name):
+# Cases of the rules lane that cannot be Go twins, with the per-case reason (file, line).
+RULES_CASES = {
+    ("rules.test.ts", 427): "reads examples/pi-warden.md, examples/pi-warden.json and examples/config.json: they ship in the npm package but are not vendored in port/oracle, and the project and user config overrides are the config loader's, not the rules guard's",
+    ("shell-writes.test.ts", 162): "describeAction and buildRequest are guard.ts (the guard lane); shellWrites and mergeWrites are ported for describeAction's `writes` and `excerpt`",
+    ("extension.test.ts", 286): "wiring case: the first-run notice part is TestRulesABoundRulesFilesEntryKeepsTheFirstRunNoticeAway; the escalation request carrying the rules content is the guard lane's",
+    ("extension.test.ts", 643): "wiring case: TestRulesPastTheCapOneNoticePerSession",
+    ("extension.test.ts", 665): "wiring case: TestRulesPastTheCapOneNoticePerSession (the notices-off half)",
+    ("extension.test.ts", 1771): "wiring case: TestRulesAHeredocWriteInBashIsJudgedAsAWriteAndASkippedFormIsTraced",
+    ("extension.test.ts", 1807): "wiring case: TestRulesAppendsToOneFileAreOneRequestAndPastFiveFilesTheRestAreSkipped",
+    ("extension.test.ts", 1834): "wiring case: TestRulesADeclinedWriteGetsNoSteerAndTheApprovedRetryDoes",
+    ("extension.test.ts", 1860): "wiring case: TestRulesADeclinedWriteGetsNoSteerAndTheApprovedRetryDoes (the confirm dialog half)",
+    ("extension.test.ts", 2421): "wiring case: TestInitRefusesWithoutForceAndAsksTheAgentWithIt",
+    ("extension.test.ts", 2439): "wiring case: TestInitRefusesWithoutForceAndAsksTheAgentWithIt",
+    ("extension.test.ts", 2538): "wiring case: TestRulesCommandListsTheRulesAndCheckNamesWhatNeedsAttention and TestRulesCheckWithoutConsentSendsNothing",
+    ("extension.test.ts", 2586): "wiring case: TestRulesAuditNeedsYesHeadlessAndWritesTheMarkdownCopy",
+    ("extension.test.ts", 4851): "wiring case: TestRulesCalibrateDeclineSendsNothing",
+    ("extension.test.ts", 4870): "wiring case: TestRulesCalibrateYesSendsRespectsTheCapAndRecords",
+    ("extension.test.ts", 4895): "wiring case: TestRulesTuneWithNothingFlaggedAsksNothing",
+    ("extension.test.ts", 4904): "wiring case: TestRulesCommandListsTheRulesAndCheckNamesWhatNeedsAttention (check, then tune sends one prompt)",
+    ("extension.test.ts", 4984): "wiring case: TestRulesTurnRulesSteerOnceAtTheEndOfTheRun",
+    ("extension.test.ts", 5018): "wiring case: TestRulesTurnRulesAskNothingWithoutTurnRulesOrARepository",
+    ("extension.test.ts", 5032): "wiring case: TestRulesTurnRulesAskNothingWithoutTurnRulesOrARepository",
+    ("extension.test.ts", 5047): "wiring case: TestRulesTurnRulesPassJudgesAtMostFiveUnseenFiles",
+    ("extension.test.ts", 5073): "wiring case: TestRulesAgentStartDoesNotWaitForTheSnapshot",
+}
+
+def reason(f, name, line=0):
+    if (f, line) in RULES_CASES:
+        return RULES_CASES[(f, line)]
+    if f == "rules-replay.test.ts":
+        return "scripts/rules-replay.mjs (a repository maintainer script, npm run eval:*) is absent from the published package files (dist, extensions, examples) and not vendored; case: " + name
     base = f[:-len(".test.ts")]
     n = name.lower()
     if f == "guard.test.ts":
-        table = [("findsecrets|syntheticish", "security guard (secret detection) is not part of this port"), ("session scratch", "session scratch (temp-directory rm exemption) is not part of this port"),
-                 ("hostpaths|host path|wardenhostpaths|/warden index|index file", "upstream host paths (its own state directories) are not part of this port"), ("pathrules|path rule", "path rules are not part of this port"),
-                 ("slop", "slop guard is not part of this port"), ("regret", "hold-feedback regret question is not part of this port"), ("rules.enabled", "rules guard is not part of this port"),
-                 ("large output|commandfamily", "large-output steer is not part of this port")]
+        table = [("findsecrets|syntheticish", "security guard (secret detection) is not part of this port"),
+                 ("large output: the score", "the trace-detail half (trace.ts `actionDetails`) belongs to the trace module; the token half is tested in guard_extras_test.go")]
         for pat, why in table:
             if re.search(pat, n):
                 return why
         return "not ported: owner decision needed"
+    if f in ("violation.test.ts", "violation-pipeline.test.ts"):
+        return "rules file resolution, starter rules and the init prompt belong to the rules guard (pi-warden.md)"
     if f == "shape.test.ts":
         return "config schema migration (completeConfig) is not part of this port: the Go config merges defaults over a JSON file"
     if f == "stuck-evidence.test.ts":
@@ -60,7 +90,7 @@ for path in sorted(glob.glob(os.path.join(tests, "*.test.ts"))):
     for i, line in enumerate(open(path).read().split("\n"), 1):
         m = re.match(r"\s*(?:test|it)\((\"|'|`)(.*?)\1", line)
         if m and i not in twinned[f]:
-            rows.append((f, i, m.group(2), reason(f, m.group(2))))
+            rows.append((f, i, m.group(2), reason(f, m.group(2), i)))
 
 out = ['package warden', '', '// Code generated by port/gen-skipped-twins.py; DO NOT EDIT.', '//',
        '// Every upstream test case (pi-warden a12b2703) without a Go twin, as a named skipped subtest with the reason.',

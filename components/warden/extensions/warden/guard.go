@@ -2,6 +2,8 @@ package warden
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"strings"
 	"time"
 )
@@ -36,15 +38,47 @@ type EvaluateOptions struct {
 	Timeout time.Duration
 	// Git runs the git state checks (default: the real git).
 	Git GitRunner
+	// GuardExtras are the optional parts of a judged request and of the pattern pass.
+	GuardExtras
+}
+
+// GuardExtras are the optional inputs of EvaluateAction beyond the action itself.
+type GuardExtras struct {
+	// Slop adds quality questions for write/edit content to the same request.
+	Slop *SlopConfig
+	// LargeOutput adds the large-output question to a bash request.
+	LargeOutput *LargeOutputConfig
+	Security    *SecurityConfig
+	// Rules is the rules guard's switch. The rules the active config resolves ride every judged action request, so
+	// `Enabled: false` is what keeps that content on this machine. nil keeps the earlier behaviour: what the config would
+	// resolve is sent.
+	Rules *RulesConfig
+	// PreviousActions are calls allowed in the previous turn: the regret question about them rides this request.
+	PreviousActions []PreviousAction
+	// Questions are extra questions over the same state, answered in Verdict.Extra and never acted on.
+	Questions Questions
+	// Scratch holds real paths the agent created under the temp directory in this session (PatternOptions.Scratch). The
+	// map is read only while the call is evaluated: pass a snapshot.
+	Scratch ScratchRecords
+	// HostPaths are real paths of host directories (hostPaths()). A write or edit in one is not held by the
+	// outside-project rule; every other check still applies.
+	HostPaths []string
+	// Platform is the platform scratchPlatform decides for; the running one when empty.
+	Platform string
 }
 
 // BuildExtras are the optional parts of a judgment request.
 type BuildExtras struct {
-	Approval  bool
-	Context   []TaskMessage
-	Plan      string
-	FloorHits string
-	Spine     *TaskSpine
+	Slop, Approval, Security, LargeOutput bool
+	Context                               []TaskMessage
+	PreviousActions                       []PreviousAction
+	Plan                                  string
+	Questions                             Questions
+	// Rules and RulesSource are the resolved rules file and the files it came from; "" sends neither.
+	Rules, RulesSource string
+	Violations         []Violation
+	FloorHits          string
+	Spine              *TaskSpine
 }
 
 // describePlan is the agent's words as they leave the machine: redacted and bounded; "" when it said nothing.
@@ -85,9 +119,27 @@ func BuildRequest(summary ActionSummary, task string, extras BuildExtras) Reques
 	if plan != "" {
 		state["plan"] = plan
 	}
+	var previous []PreviousAction
+	if n := len(extras.PreviousActions); n > 0 {
+		start := max(0, n-previousActionsLimit)
+		for _, a := range extras.PreviousActions[start:] {
+			if a.Command != "" {
+				a.Command = truncate(a.Command, previousCommandLimit)
+			}
+			previous = append(previous, a)
+		}
+		state["previous_actions"] = previous
+	}
+	if extras.Rules != "" {
+		state["rules"] = extras.Rules
+		if extras.RulesSource != "" {
+			state["rulesSource"] = extras.RulesSource
+		}
+	}
 	if extras.FloorHits != "" {
 		state["floor_hits"] = extras.FloorHits
 	}
+	writesContent := (summary.Tool == "write" || summary.Tool == "edit" || summary.Writes != nil) && hasContent(summary)
 	sets := []Questions{buildBase(), build(qs.ShouldProceed)}
 	if summary.Command != "" {
 		sets = append(sets, build(qs.Visible))
@@ -95,10 +147,41 @@ func BuildRequest(summary ActionSummary, task string, extras BuildExtras) Reques
 	if plan != "" {
 		sets = append(sets, build(qs.Intent))
 	}
+	if extras.LargeOutput && summary.Tool == "bash" {
+		sets = append(sets, build(gq().LargeOutput))
+	}
+	if extras.Slop && writesContent {
+		sets = append(sets, build(gq().Slop))
+	}
 	if extras.Approval {
 		sets = append(sets, build(qs.Approval))
 	}
+	if extras.Security && writesContent {
+		sets = append(sets, build(gq().Security))
+	}
+	if len(previous) > 0 {
+		sets = append(sets, regretQuestions(previous))
+	}
+	if len(extras.Violations) > 0 {
+		sets = append(sets, violationJudgmentQuestions(extras.Violations))
+	}
+	if extras.Questions != nil {
+		sets = append(sets, extras.Questions)
+	}
 	return Request{State: state, Questions: mergeQuestions(sets...)}
+}
+
+// hasContent: whether the summary carries written content to judge (an excerpt or an edit with new text).
+func hasContent(s ActionSummary) bool {
+	if jsTrim(s.Excerpt) != "" {
+		return true
+	}
+	for _, e := range s.Edits {
+		if jsTrim(e.NewText) != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func buildBase() Questions { return build(qs.Base) }
@@ -141,19 +224,37 @@ func EvaluateAction(ctx context.Context, action ActionInput, opts EvaluateOption
 		}
 		return v
 	}
-	patterns := MatchPatterns(action.Tool, action.Input, action.Cwd, &PatternOptions{CommandRules: config.CommandRules, CommandDenyRules: config.CommandDenyRules, ExemptRules: config.ExemptRules, Git: opts.Git})
-	// A hit leaves the level computation only when the prompt authorizes every deletion it stands for.
-	perHit := hitViolations(patterns, action.Tool, action.Input)
+	patterns := MatchPatterns(action.Tool, action.Input, action.Cwd, &PatternOptions{CommandRules: config.CommandRules, CommandDenyRules: config.CommandDenyRules, ExemptRules: config.ExemptRules, PathRules: config.PathRules, Scratch: opts.Scratch, Platform: opts.Platform, Git: opts.Git})
+	// Violation pipeline: authorize per violation; the authorized ones leave the level computation and the judge's questions.
+	violationsByHit := hitViolations(patterns, action.Tool, action.Input)
+	var allViolations []Violation
+	for _, own := range violationsByHit {
+		allViolations = append(allViolations, own...)
+	}
+	allAuthorizations := make([]Authorization, len(allViolations))
+	var remainingViolations []Violation
+	var remainingAuthorizations []Authorization
+	for i, v := range allViolations {
+		allAuthorizations[i] = authorize(action.Task, v)
+		if !allAuthorizations[i].Authorized {
+			remainingViolations = append(remainingViolations, v)
+			remainingAuthorizations = append(remainingAuthorizations, allAuthorizations[i])
+		}
+	}
+	// A hit leaves the level computation only when every violation it produced is authorized. Violations are per target
+	// and hits per pattern, so the two lists do not share indices.
 	var active []PatternHit
+	offset := 0
 	for i, hit := range patterns {
-		own := perHit[i]
-		all := len(own) > 0
-		for _, v := range own {
-			if !authorize(action.Task, v) {
-				all = false
+		own := violationsByHit[i]
+		allAuthorized := len(own) > 0
+		for j := range own {
+			if !allAuthorizations[offset+j].Authorized {
+				allAuthorized = false
 			}
 		}
-		if !all {
+		offset += len(own)
+		if !allAuthorized {
 			active = append(active, hit)
 		}
 	}
@@ -194,7 +295,11 @@ func EvaluateAction(ctx context.Context, action ActionInput, opts EvaluateOption
 		}
 		reasons = append(reasons, string(hit.Severity)+": "+hit.Label)
 	}
-	if summary.Location == "outside_project" {
+	inHost := false
+	if p, ok := action.Input["path"].(string); ok && summary.Location == "outside_project" {
+		inHost = inHostPath(resolvePath(action.Cwd, p), opts.HostPaths)
+	}
+	if summary.Location == "outside_project" && !inHost {
 		exists := summary.Exists != nil && *summary.Exists
 		if evidenceMode {
 			note := "creates a file outside the project " + summary.Path
@@ -230,11 +335,29 @@ func EvaluateAction(ctx context.Context, action ActionInput, opts EvaluateOption
 	if judge == nil {
 		return withPlan(Verdict{Level: level, Source: "pattern", Summary: summary, Patterns: patterns, Reasons: reasons})
 	}
+	// Resolve the rules file once per call for the request state. With the rules guard off, no rules content leaves the
+	// machine at all: no question names the field, so an absent one costs nothing.
+	var rulesContent, rulesSource string
+	if opts.Rules == nil || opts.Rules.Enabled {
+		var files []string
+		fallback := true
+		if opts.Rules != nil {
+			files, fallback = opts.Rules.Files, opts.Rules.Fallback
+		}
+		if resolved, ok := resolveRulesFile(action.Cwd, files, fallback); ok {
+			rulesContent, rulesSource = resolved.Content, resolved.Source
+		}
+	}
 	floorHits := "none"
 	if len(builtInHits) > 0 {
 		floorHits = strings.Join(builtInHits, "; ")
 	}
-	request := BuildRequest(summary, action.Task, BuildExtras{Approval: opts.RetryAfterHold, Context: action.Context, Plan: action.Plan, FloorHits: floorHits, Spine: action.Spine})
+	request := BuildRequest(summary, action.Task, BuildExtras{
+		Slop: opts.Slop != nil && opts.Slop.Enabled, Approval: opts.RetryAfterHold, Security: opts.Security != nil && opts.Security.Enabled,
+		Context: action.Context, PreviousActions: opts.PreviousActions, Plan: action.Plan, Questions: opts.Questions,
+		Rules: rulesContent, RulesSource: rulesSource, Violations: remainingViolations, FloorHits: floorHits, Spine: action.Spine,
+		LargeOutput: opts.LargeOutput != nil && opts.LargeOutput.Enabled,
+	})
 	timeout := opts.Timeout
 	if timeout == 0 {
 		timeout = time.Duration(config.TimeoutMs) * time.Millisecond
@@ -273,6 +396,17 @@ func EvaluateAction(ctx context.Context, action ActionInput, opts EvaluateOption
 	}
 	if v, ok := answerNoul(answers, "visible"); ok && summary.Command != "" {
 		j.Visible = fptr(v)
+	}
+	if opts.LargeOutput != nil && opts.LargeOutput.Enabled && action.Tool == "bash" {
+		if v, ok := answerNoul(answers, "large_output"); ok {
+			j.LargeOutput = fptr(v)
+		}
+	}
+	if v, ok := answerNoul(answers, "regretted"); ok {
+		j.Regretted = fptr(v)
+		if a, ok := answers["regret_target"]; ok && a.Type == "choice" {
+			j.RegretTarget = a.Choice
+		}
 	}
 	if deferSensitive {
 		for _, hit := range patterns {
@@ -339,6 +473,15 @@ func EvaluateAction(ctx context.Context, action ActionInput, opts EvaluateOption
 			addOffTask("off-task " + percent(j.OffTask) + " (trace-only)")
 		}
 	}
+	if opts.Security != nil && opts.Security.Enabled {
+		if v, ok := answerNoul(answers, "security_risk"); ok {
+			j.SecurityRisk = fptr(v)
+			if v >= opts.Security.Threshold {
+				level = Higher(level, LevelWarn)
+				reasons = append(reasons, "possible security weakness "+percent(v)+" in written content")
+			}
+		}
+	}
 	// A call at odds with the agent's own plan is warned about and the agent told; never held on that alone.
 	// A visible action (commit, push, merge, publish, launch) needs less mismatch to be flagged.
 	visible := 0.0
@@ -397,8 +540,93 @@ func EvaluateAction(ctx context.Context, action ActionInput, opts EvaluateOption
 		verdict.ShouldProceedTraceOnly = true
 		verdict.ShouldProceedTraceOnlyReasonIndex = spIdx
 	}
+	// Large output steers and never changes the level: the saver compresses what prints, this asks the agent to print less.
+	if j.LargeOutput != nil && opts.LargeOutput != nil && *j.LargeOutput >= opts.LargeOutput.Threshold && hasView {
+		if family := commandFamily(view.Command); family != "" {
+			verdict.LargeOutputFamily = family
+		}
+	}
+	// Violation pipeline: parse the per-violation judgments, apply escalation, aggregate. Answers are keyed by violation
+	// index (not id), so two violations with the same id but different scopes each get their own question and result.
+	if len(remainingViolations) > 0 {
+		violationExtra := map[string]any{}
+		for i := range remainingViolations {
+			key := fmt.Sprintf("violation_%d", i)
+			if a, ok := answers[key]; ok {
+				if a.Type == "noul" {
+					violationExtra[key] = a.Noul
+				} else if a.Type == "choice" {
+					violationExtra[key] = a.Choice
+				}
+			}
+		}
+		violationAnswers := parseViolationJudgments(remainingViolations, violationExtra)
+		// Sensitive violations never escalate: they participate in the pattern-loop aggregation (deferred for read-only
+		// commands, warned for writes) but not in the escalation/aggregation pipeline.
+		var escalated []EscalatedViolation
+		for i, v := range remainingViolations {
+			if v.Severity == SeveritySensitive {
+				continue
+			}
+			escalated = append(escalated, EscalatedViolation{Violation: v, EscalatedSeverity: escalateBlastRadius(v, remainingAuthorizations[i], violationAnswers[i], config.EscalationThreshold)})
+		}
+		level = Higher(level, aggregateLevel(escalated))
+		verdict.Level = level
+		// Retain the violation answers in Extra for calibration.
+		if verdict.Extra == nil {
+			verdict.Extra = map[string]any{}
+		}
+		for k, v := range violationExtra {
+			verdict.Extra[k] = v
+		}
+	}
 	if offTaskIdx >= 0 {
 		verdict.OffTaskTraceOnlyReasonIndex = offTaskIdx
+	}
+	if opts.Questions != nil {
+		if verdict.Extra == nil {
+			verdict.Extra = map[string]any{}
+		}
+		for id := range opts.Questions {
+			a, ok := answers[id]
+			if !ok {
+				continue
+			}
+			switch a.Type {
+			case "noul":
+				verdict.Extra[id] = a.Noul
+			case "choice":
+				verdict.Extra[id] = a.Choice
+			case "score":
+				verdict.Extra[id] = a.Score
+			}
+		}
+	}
+	if opts.Slop != nil && opts.Slop.Enabled {
+		var scores [4]float64
+		all := true
+		for i, symptom := range SlopSymptoms {
+			v, ok := answerNoul(answers, "slop_"+symptom)
+			scores[i], all = v, all && ok
+		}
+		if all {
+			slop := SlopJudgment{Stub: scores[0], Comments: scores[1], Dead: scores[2], Hedging: scores[3]}
+			verdict.Slop = &slop
+			var flagged []string
+			for _, symptom := range SlopSymptoms {
+				if slop.Score(symptom) >= opts.Slop.Threshold {
+					flagged = append(flagged, symptom)
+				}
+			}
+			// Strongest first; equal scores keep the upstream symptom order (a stable sort, like Array.sort).
+			sort.SliceStable(flagged, func(a, b int) bool { return slop.Score(flagged[a]) > slop.Score(flagged[b]) })
+			if len(flagged) > 0 {
+				verdict.SlopSymptoms = flagged
+				for _, symptom := range flagged {
+					verdict.SlopReasons = append(verdict.SlopReasons, SlopLabels[symptom]+" ("+percent(slop.Score(symptom))+")")
+				}
+			}
+		}
 	}
 	if level == LevelConfirm && j.Approved != nil && *j.Approved >= approvalThreshold {
 		verdict.Level = LevelAllow

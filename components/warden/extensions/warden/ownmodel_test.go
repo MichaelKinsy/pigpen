@@ -33,7 +33,7 @@ func (r *fakeRegistry) Complete(model, request, options map[string]any) map[stri
 	answers := map[string]any{}
 	prompt, _ := request["systemPrompt"].(string)
 	asked := func(id string) bool { return strings.Contains(prompt, `"`+id+`"`) }
-	for _, id := range []string{"irreversible", "off_task", "mutates", "should_proceed", "visible", "intent_mismatch", "approved"} {
+	for _, id := range []string{"irreversible", "off_task", "mutates", "should_proceed", "visible", "intent_mismatch", "approved", "large_output", "regretted", "security_risk", "slop_stub", "slop_comments", "slop_dead", "slop_hedging"} {
 		if !asked(id) {
 			continue
 		}

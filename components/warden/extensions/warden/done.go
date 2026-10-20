@@ -200,7 +200,9 @@ var globCache struct {
 	m  map[string]*regexp.Regexp
 }
 
-func compileGlob(pattern string) *regexp.Regexp {
+// globBody is the regular expression between the anchors of a glob: `**/` any directories, `**` anything, `*` within a
+// segment, `?` one character, every other character literal.
+func globBody(pattern string) string {
 	var out strings.Builder
 	for i := 0; i < len(pattern); {
 		switch {
@@ -222,7 +224,11 @@ func compileGlob(pattern string) *regexp.Regexp {
 			i += len(string(r))
 		}
 	}
-	re, err := regexp.Compile("^(?:.*/)?" + out.String() + "$")
+	return out.String()
+}
+
+func compileGlob(pattern string) *regexp.Regexp {
+	re, err := regexp.Compile("^(?:.*/)?" + globBody(pattern) + "$")
 	if err != nil {
 		return regexp.MustCompile(`\A\z\A`)
 	}

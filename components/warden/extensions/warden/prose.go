@@ -189,7 +189,7 @@ const (
 	RestateMinSentences = 2
 )
 
-var reSentenceBreak = lazyRE(`(?:[.!?]|\n)+` + jsSpaceClass + `*`)
+var reSentenceBreak = lazyRE(`(?:[.!?]|\n)+[` + jsSpaceClass + `]*`)
 
 // sentenceWords is one sentence's content-word set; order keeps the first sighting, as a JS Set does.
 type sentenceWords struct {

@@ -6,7 +6,7 @@
 | Judge seam | `DevMortimer/pi-typesafe` commit `ed439f834665ad6fc652787f5ba7c23852566d49` (`ask`, questions, `errors.ts`), MIT |
 | Oracle | Pi 0.87.1 hosting the original; Node 24.19.0 |
 | Target | PiG 0.3.0+0.87.1, SDK of a 0.3.0 pre-release build (`63c6ba456`) (host getters return `(value, error)`), go1.27.1; shared client `components/typesafe` |
-| Original's tests | 1,264 cases in `port/oracle/tests`; 90 have a Go twin, 1,174 are named skipped subtests with a reason (see below) |
+| Original's tests | 1,264 cases in `port/oracle/tests`; 434 have a Go twin, 830 are named skipped subtests with a reason (see below; with the guard core lane stacked on the rules lane) |
 
 ## File-to-file mapping
 
@@ -18,6 +18,13 @@
 | `guard.ts` `evaluateAction`, `buildRequest`, `intentSteer`, `offTaskSteer`, `shouldProceedMessage`, `steerReason`, `textApproves`, `steerFingerprint`, `SteerRepeatWindow` | `guard.go` | messages keep the `pi-warden:` prefix |
 | `guard.ts` `authorize`, `scopeMatches`, `hitViolations` (rm family) | `authorize.go` | a prompt that names the deletion and its target releases an `rm`; nothing releases `rm-recursive-dangerous-target` |
 | `guard.ts` `questions`, `visibleQuestion`, `intentQuestion`, `shouldProceedQuestion`, `approvalQuestion`; `stuck.ts` `stuckQuestions`; `done.ts` `doneQuestions` | `questions.json` + `questions.go` | verbatim, dumped from the pinned source |
+| `guard.ts` `authorize`, `scopeMatches`, `isAuthEligible`, `escalateBlastRadius`, `escalateRulesViolation`, `aggregateLevel`, `removeAuthorized`, `parseViolationJudgments`, violation questions | `authorize.go`, `violation.go` | the full verb table; `Violation`/`Authorization` carry upstream's fields |
+| `guard.ts` scratch, `hostPaths`, `wardenHostPaths`, `realTarget`, `tempRoots`, `mktempOnly`, `createdScratch`; `classifyRm` scratch branch | `scratch.go`, `birth_*.go` | birth time: `statx` on Linux (stdlib `syscall`), `Birthtimespec` on macOS, `CreationTime` on Windows |
+| `guard.ts` `sqlTarget`, `applySqlTargets` | `sqltarget.go` | the `ALWAYS_TRUE` backreferences are functions |
+| `guard.ts` `matchPathRules`, `matchPathGlobs`, `writeSinkTargets`, `inertPathRules` | `pathrules.go` | the mention regex's tail lookahead is a consumed boundary (same yes/no answer) |
+| `arming.ts` | `arming.go` | `ArmingTracker`, `unparseableArmingRules` |
+| `guard.ts` `regretQuestions`, `commandFamily`, `largeOutputSteer/Notice`, `SLOP_LABELS`; guard questions | `guard_extras.go` + `questions_guard.json` (dumped by `port/gen-questions.ts`) | |
+| `extension.ts` arming, scratch, host paths, large-output hooks | `guardcore_wire.go` (one call per handler) | |
 | `action-guard.ts` | `action_guard.go` | hold and approval, sibling prejudging; safe for concurrent use; `Wait()` added |
 | `stuck.ts` (attempt window, `evaluateStuck`, nudges, `stuckDiff`) | `stuck.go`, `stuckdiff.go` | attempt keys are SHA-1 of the sorted-key JSON of the input (equality only) |
 | `done.ts` (evidence, `checkSummary`, UI proof, `evaluateDone`, `doneNudge`) | `done.go` | glob matcher from `rules.ts` `globToRegExp` |
@@ -30,24 +37,48 @@
 | `extension.ts` `/warden` command | `commands.go` | new subcommands, see Deviations |
 | pi-typesafe `ask`, `noul`/`choice`/`score`, `safeError` | `judge.go`, `backend.go` | the client is `components/typesafe`; `backend.go` adds the two backends |
 | (none) | `disclosure.go` | data-flow disclosure and consent text |
+| `rules.ts` (parse, globs, `RuleStore`, targets, request, scoring, steers, sensitive paths, `RulesGuard`), `widget.ts` `rulesTokens`, `trace.ts` `rulesDetails` | `rules.go` | `RulesGuard.Inspect` returns a future; sibling requests are started through the action guard's `startNotifier` so a call returns with every request in flight. Question texts are dumped verbatim from the original by `port/gen-rules-questions.ts` into `rules_questions.json` (`rules_questions.go`) |
+| `rules-file.ts` | `rules_file.go` | `resolveRulesFile(cwd, files, fallback)` is for the guard lane's escalation request |
+| `rules-lint.ts` | `rules_lint.go` | chunks run concurrently (upstream `Promise.all`) |
+| `rules-log.ts`, `rules-report.ts` | `rules_log.go`, `rules_report.go` | the log is `<warden data dir>/rules/<sha256(cwd)[:12]>.jsonl`, the data dir being the directory of `pigpen-warden/config.json` (D5) |
+| `rules-audit.ts` (audit and `runBench`) | `rules_audit.go` | `DiscoverSourceFiles` is the audit lane's `discover.go`; `/warden bench` wiring is theirs, `runBench` is ready |
+| `rules-calibrate.ts` | `rules_calibrate.go` | |
+| `turn-rules.ts` | `turn_rules.go` | every git call is its own process under a timeout and a 1 MiB output cap (Node's `execFile` default) |
+| `shell-writes.ts` | `shell_writes.go` | `shellWrites` and `mergeWrites` are ready for `describeAction`'s `writes` (guard lane) |
+| `init.ts` | `rules_init.go` | |
+| `extension.ts` rules hooks (`tool_call`, `agent_start`, `agent_end`, `session_start`, `turn_end`, `/warden rules`, `report`, `init`) | `rules_wire.go`, `rules_commands.go` | one call each from `toolcall.go`, `results.go`, `extension.go`, `commands.go`; `toolcall_notes` logic (`callNotes`) is in `rules_wire.go` |
 
 ## Scope
 
 Ported: the action guard (offline pattern floor, judged irreversible / off-task / off-plan / should-proceed / approval,
 hold and release, sibling prejudging, user command and deny rules, exempt rules), the stuck guard (exact and
 successful repeats, churn, quick repeat, judged loops, stuck diff), the done-check (evidence, UI proof, false claims),
-the task spine, steer delivery with the per-run budget and repeat window, and the trace widget.
+the task spine, steer delivery with the per-run budget and repeat window, the trace widget, and the project rules guard
+(`pi-warden.md`: parsing, scoping, per-rule judged requests, scores, severity and soft tier, sensitive-path notes, the
+rules log, `/warden rules` and its `check`, `audit`, `calibrate` and `tune`, `/warden report`, `/warden init`,
+end-of-run turn rules, literal shell writes judged as writes).
 
 Not ported (each upstream case is a named skipped subtest in `skipped_twins_test.go`, generated by
-`port/gen-skipped-twins.py`; OWNER DECISION NEEDED to add any of them): the rules guard (`pi-warden.md`), slop and prose
+`port/gen-skipped-twins.py`; OWNER DECISION NEEDED to add any of them): slop and prose
 guards, security masking and secret detection, runaway output, context saver and relevance compaction, conscience,
-preferences and loops, subagent supervision, call-waste, adaptive steering, path and arming rules, session scratch,
-host paths, SQL target classification (`sql-delete-local`, `sql-hosted*`; the plain `sql-*` rules still apply),
-shell-write summaries, the large-output steer, jev violation escalation (the `violation_i` questions), the hold
-feedback database and regret question, learning, the config schema migration, and stuck evidence (runs as upstream's
-documented `stuck.evidence: false`).
+preferences and loops, subagent supervision, call-waste, adaptive steering, the hold feedback database and the
+settling of the regret question (the question itself is ported), learning, the config schema migration, and stuck
+evidence (runs as upstream's documented `stuck.evidence: false`).
 
-Refused, not silent: the `/warden` actions `rules` (and `rules check|audit|calibrate|tune`), `report`, `config`, `init`,
+Guard core (the rest of `guard.ts` and `arming.ts`, ported): the violation model with authorization, blast-radius and
+rules escalation and aggregation (`violation_<i>` questions), user path rules (access dimension, file and command
+surface, write sinks), arming rules and their session tracker, session scratch with the birth-time exemption
+(macOS and Windows only, as upstream), host paths (`PIGPEN_WARDEN_HOST_PATHS`, `:`-separated, plus the index
+directory), SQL target classes (`sql-delete-local`, `sql-hosted`, `sql-hosted-write`), the regret, slop, security and
+large-output questions on the action request, the large-output steer (once per command family per session), the bash
+`writes` summary. Deviations: D6 names the host-path variable; the one-time config notices (unknown exempt ids, inert
+path rules, invalid arming regexes) are said on the first guarded call of a process instead of on every config read
+(the port's loader is another module); `Options.ScratchPlatform` exists for tests only; the regret answer is read into
+`Judgment.Regretted` and the allowed calls of the previous turn come from `guardcoreState.previousActions`, which the
+learning module sets (nil asks no regret question). The trace-detail lines (`actionDetails`: large-output, regret,
+slop) are the trace module's.
+
+Refused, not silent: the `/warden` actions `config`,
 `audit`, `index`, `prefs`, `loops`, `recommend`, `unmute` and `bench` answer with a command notification: "@pi-in-go/pigpen-warden
 (Go port) does not support <feature> yet. Install the original extension, npm:pi-warden@0.80.0, which runs unchanged in
 PiG." The tools `warden_remember`, `warden_loops` and `warden_recall` are not registered (not yet ported), so the model is
@@ -157,3 +188,64 @@ The golden traces were recorded again from the original under Pi 1.0.1 (host che
 `0.3.1+1.0.1`) and normalizer v3, because Pi 1.0.x changed the trace format: a `prompt` response now carries
 `data.disposition` (Pi 0.99.0, #9098). The bash tool's results now carry `structuredContent` (15 events), whose `wall_time_seconds` the harness normalizes (N6). The record reads `port/eq-entry.ts` with the modules it re-exports, so `sdk-gaps` checks the vendored original again (it said "not an extension" before). An event-by-event diff against the previous traces shows no other
 difference, and `pigeq check` passes on the Go port. Details: `docs/plan/progress/porter-verify.md`.
+
+
+## Rules lane (port/warden-rules-1)
+
+Ported modules: `rules.ts`, `rules-file.ts`, `rules-lint.ts`, `rules-log.ts`, `rules-report.ts`, `rules-audit.ts`,
+`rules-calibrate.ts`, `turn-rules.ts`, `shell-writes.ts`, `init.ts` and their extension hooks.
+
+Twins: rules 42 of 43 (the shipped-examples case needs `examples/`, which ships in the npm package but is not vendored),
+rules-audit 18, rules-calibrate 16, rules-lint 13, rules-log 13, turn-rules 9, shell-writes 22 of 23 (the
+`describeAction` case is the guard lane's), the rules-file, `checkPiWardenMissing` and init cases of `violation.test.ts`
+and the init case of `violation-pipeline.test.ts`. Not twins, with per-case reasons in the generator: the seven
+`rules-replay.test.ts` cases (`scripts/rules-replay.mjs` is a maintainer script outside the published package `files`,
+verified against `port/oracle/package.json`), and the `extension.test.ts` rules cases, each named with the layer-1 test
+in `rules_wire_test.go` that covers its wiring.
+
+Deviations in this lane:
+
+- `/warden rules check|audit|calibrate` and the judged paths say why no judge is available in the port's own words
+  (no consent: run `/warden enable`, or set `PIGPEN_WARDEN_ENABLED=1` and `PIGPEN_WARDEN_BACKEND` headless; a backend that
+  cannot start; the spent request budget) where the original names its key and `/typesafe login` (D1, D3).
+- The rules log lives under `<PIG_HOME>/pigpen-warden/rules/` (D5), the audit report stays at `<project>/.pi-warden/rules-audit.md`.
+- `/warden bench` stays refused until the audit lane wires it; `runBench` takes an optional usage-counter callback, and
+  the Go judges expose none, so the bench says "unknown (no usage counters)" for tokens and cost.
+- The `rules.*` hook `holds.recordRules` is the func variable `holdsRecordRules` (no-op until the learning lane lands).
+- `/warden` argument completion for `rules check|audit|calibrate|tune` is not registered (the SDK command takes no completion
+  callback in this port).
+- The `input` hook that blocks user messages while `/warden init` or `rules tune` runs belongs to the supervision lane;
+  `warden.InitBusy()` is the flag it reads.
+- `rules.sensitivePaths` notes are read in sorted glob order (a Go map has no insertion order).
+
+Layer-1 findings: the choice `Probabilities` field was missing on judge answers (added in `judge.go`, `backend.go`); the
+existing `jsRound` of the steering core is reused. The baseline snapshot of turn rules runs in a goroutine started at
+`agent_start`; upstream starts its first git process synchronously, so a file written within a few milliseconds of
+`agent_start` can be in the baseline (the tests wait for it, as upstream's do through the git shim).
+
+Not done in this PR (honest list): pigeq scenarios and goldens for the rules behaviours, the layer-1 and pigeq mutation
+rows, the performance section's measurements, and the `go test -race -count=24` run; see the status file.
+
+## Guard core: results and performance
+
+- Layer 1 (imladris, tern-ci:v2): `go vet` clean for windows, darwin and linux; `go test` ok; mutations in `port/mutate.py`
+  (74 added, 70 killed, 4 documented equivalents; `port/mutation-results.txt`).
+- pigeq: 11 config-free scenarios (`sql-*`, `rm-authorized-by-the-prompt-runs`, `rm-unrelated-target-held`,
+  `find-delete-not-authorized-by-the-verb`): `pigeq run` identical for the original under Pi, under PiG's Node runtime
+  and the Go port; `pigeq check` passes against goldens recorded from the original. `run` also prints `exec-coverage`
+  FAIL for `sqlite-adapter.ts:82 PRAGMA` (a command literal of the original's learning store that no scenario can
+  declare; the same message appears for every scenario of the package, and `check`, which reads the port only, passes).
+  Scenario-layer pigeq mutations (`port/mutations.json`, six rows): three killed (`sql-delete-local-held`,
+  `sql-hosted-write-only-warns`, `sql-hosted-select-held`), three survive at the scenario layer
+  (`sql-read-only-wrapper-ignored`, `rm-verb-never-authorizes`, `find-delete-authorized-by-verb`): a warning is a steer
+  hidden in these scenarios, so the scenario trace does not tell the two apart; the layer-1 rows of the same names
+  (`sql-commit-voids-nothing`, `authorize-segments-ignored`, ...) kill them.
+- `scenarios-blocked/`: the real-git scenarios (host event ordering differs between Pi and PiG's Node runtime) and the
+  config-dependent ones (a scenario cannot write `<PIG_HOME>/pigpen-warden/config.json`).
+- Benchmarks (`guardcore_bench_test.go`, imladris container on cores 96-151, load average 63 over 56 cores at the time, so
+  these are upper bounds; repeat when quieter), median of 10 runs: ordinary command 131 us/op, 6.4 KB, 419 allocs;
+  the same call with three path rules 238 us/op, 12.5 KB, 777 allocs; a loopback `psql ... DELETE ... WHERE` 361 us/op,
+  15.7 KB, 645 allocs; `ArmingTracker.CheckArmed` on an armed rule 8.5 us/op, 0.8 KB, 69 allocs. No baseline of the
+  previous head and no binary-size or cold-start measurement yet (those need a built Binary; the package-init test bounds
+  start-up allocation at 150 KB and passes).
+- Not run here: `npm run generate/check/test` (an imladris copy has no git history; run from a bundle clone at stacking).

@@ -51,6 +51,10 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 		input = map[string]any{}
 	}
 	content := contentParts(data["content"])
+	// guardcore: record what a bash/write call created under the temp directory (session scratch).
+	if id, _ := data["toolCallId"].(string); id != "" {
+		w.gcToolResult(id, tool, input, ResultText(content))
+	}
 	isError, _ := data["isError"].(bool)
 	details, _ := data["details"].(map[string]any)
 	failed := ResultFailed(isError, details, content)
@@ -172,7 +176,8 @@ func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 		}
 	}
 	final, ok := FinalAssistantText(messages)
-	w.restatement(ctx, cfg, final) // SECURITY slot 5: restatement, recorded only
+	w.restatement(ctx, cfg, final)                  // SECURITY slot 5: restatement, recorded only
+	w.rulesAgentEnd(ctx, cfg, w.judgeFor(ctx, cfg)) // rules hook (slot 7): the end-of-run pass
 	if !ok || final == "" {
 		return nil, nil
 	}
