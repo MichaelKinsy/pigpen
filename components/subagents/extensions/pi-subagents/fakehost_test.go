@@ -434,6 +434,11 @@ func (h *Host) FireAll(event string, data map[string]any) {
 	}
 	data["type"] = event
 	args, _ := json.Marshal(data)
+	if event == "session_start" {
+		// A session ends with its test: the background result scan the extension starts at session_start would otherwise
+		// outlive the test and read the package's file operation variables while a later test replaces them.
+		h.t.Cleanup(func() { h.fireQuiet("session_shutdown") })
+	}
 	h.mu.Lock()
 	ids := append([]int(nil), h.allHandlers[event]...)
 	h.mu.Unlock()
@@ -441,6 +446,17 @@ func (h *Host) FireAll(event string, data map[string]any) {
 		if _, failure := h.roundTrip(map[string]any{"method": "event", "event": event, "handler_id": id, "args": json.RawMessage(args)}); failure != "" {
 			h.t.Errorf("%s handler %d failed: %s", event, id, failure)
 		}
+	}
+}
+
+// fireQuiet delivers an event to every handler and ignores their failures (a test's cleanup).
+func (h *Host) fireQuiet(event string) {
+	args, _ := json.Marshal(map[string]any{"type": event})
+	h.mu.Lock()
+	ids := append([]int(nil), h.allHandlers[event]...)
+	h.mu.Unlock()
+	for _, id := range ids {
+		h.roundTrip(map[string]any{"method": "event", "event": event, "handler_id": id, "args": json.RawMessage(args)})
 	}
 }
 
