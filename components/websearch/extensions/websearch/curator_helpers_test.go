@@ -348,3 +348,13 @@ func noURL(t *testing.T, ch <-chan string) {
 var errBrowser = errors.New("spawn xdg-open ENOENT")
 
 func detailString(o ToolOutput, key string) string { s, _ := o.Details[key].(string); return s }
+
+// readReadme reads the Package's README; a module copied alone (the mutation runs) has none.
+func readReadme(t *testing.T) string {
+	t.Helper()
+	data, err := os.ReadFile(readmePath)
+	if err != nil {
+		t.Skip("the README is not next to the module")
+	}
+	return string(data)
+}

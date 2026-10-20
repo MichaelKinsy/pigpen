@@ -56,8 +56,8 @@
  {
   "name": "background-fetch-no-trigger",
   "file": "extension.go",
-  "find": "TriggerTurn: &triggerTurn",
-  "replace": "TriggerTurn: nil"
+  "find": "content, true, sdk.SendMessageOptions{TriggerTurn: &triggerTurn}",
+  "replace": "content, true, sdk.SendMessageOptions{TriggerTurn: nil}"
  },
  {
   "name": "restore-ignores-entries",
@@ -2422,5 +2422,143 @@
   "file": "extract.go",
   "find": "msg += \"\\n\\n\" + defuddleRefusal.Error()",
   "replace": "msg += \"\""
+ },
+ {
+  "name": "curator-token-not-checked",
+  "file": "curator_server.go",
+  "find": "if token, _ := body[\"token\"].(string); token != s.opts.SessionToken || body[\"token\"] == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "curator-sse-done-not-replayed",
+  "file": "curator_server.go",
+  "find": "if replayed && s.searchStreamDone {",
+  "replace": "if false {"
+ },
+ {
+  "name": "curator-sse-events-not-replayed",
+  "file": "curator_server.go",
+  "find": "if !client.write(sseFrame(item.event, item.data)) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "curator-no-browser-timeout-too-short",
+  "file": "curator_server.go",
+  "find": "noBrowserTimeoutMs := max(5000, s.effectiveTimeoutMsLocked())",
+  "replace": "noBrowserTimeoutMs := max(100, s.effectiveTimeoutMsLocked())"
+ },
+ {
+  "name": "curator-idle-never-times-out",
+  "file": "curator_server.go",
+  "find": "*s.clientIdleMs >= s.effectiveTimeoutMsLocked()",
+  "replace": "*s.clientIdleMs >= s.effectiveTimeoutMsLocked()+1000000"
+ },
+ {
+  "name": "curator-initial-index-not-reserved",
+  "file": "curator_server.go",
+  "find": "s.nextQueryIndex = max(len(opts.Queries), *opts.InitialResultIndexCapacity)",
+  "replace": "s.nextQueryIndex = len(opts.Queries)"
+ },
+ {
+  "name": "curator-contradictory-meta-accepted",
+  "file": "curator_server.go",
+  "find": "if phase == \"deterministic-fallback\" && !fallbackUsed {",
+  "replace": "if false {"
+ },
+ {
+  "name": "curator-selection-not-deduplicated",
+  "file": "curator_server.go",
+  "find": "if seen[n] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "curator-serpapi-listed",
+  "file": "curator_server.go",
+  "find": "\"brightdata\", \"serpbase\", \"serper\",",
+  "replace": "\"brightdata\", \"serpbase\", \"serpapi\", \"serper\","
+ },
+ {
+  "name": "curator-cancel-reason-ignored",
+  "file": "curator_server.go",
+  "find": "if body[\"reason\"] == \"timeout\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "curator-xdg-open-grace-too-short",
+  "file": "curator.go",
+  "find": "const xdgOpenGrace = 100 * time.Millisecond",
+  "replace": "const xdgOpenGrace = 1 * time.Millisecond"
+ },
+ {
+  "name": "curator-xdg-open-without-url",
+  "file": "curator.go",
+  "find": "cmd := exec.Command(\"xdg-open\", target)",
+  "replace": "cmd := exec.Command(\"xdg-open\")"
+ },
+ {
+  "name": "curator-workflow-summary-review-ignored",
+  "file": "tool_search.go",
+  "find": "if workflow == \"summary-review\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "curator-approval-applies-to-explicit",
+  "file": "curator_run.go",
+  "find": "if inherited && approved && workflow == \"summary-review\" {",
+  "replace": "if approved && workflow == \"summary-review\" {"
+ },
+ {
+  "name": "curator-workflow-without-ui",
+  "file": "curator_run.go",
+  "find": "case !hasUI:",
+  "replace": "case false:"
+ },
+ {
+  "name": "curator-curated-notice-text",
+  "file": "tool_search.go",
+  "find": "manually curated by the user",
+  "replace": "manualy curated by the user"
+ },
+ {
+  "name": "curator-remote-binds-local",
+  "file": "curator_config.go",
+  "find": "Host: osHostname(), Bind: \"0.0.0.0\"}",
+  "replace": "Host: osHostname(), Bind: \"127.0.0.1\"}"
+ },
+ {
+  "name": "curator-auto-open-false-ignored",
+  "file": "curator_config.go",
+  "find": "if root[\"autoOpenBrowser\"] == false {",
+  "replace": "if false {"
+ },
+ {
+  "name": "render-error-cancel-reason-text",
+  "file": "render_search_error.go",
+  "find": "\"cancel reason   : \"+reason",
+  "replace": "\"cancel reason : \"+reason"
+ },
+ {
+  "name": "render-error-hint-count",
+  "file": "render_search_error.go",
+  "find": "hidden := max(0, len(expanded)-(1+len(collapsed)))",
+  "replace": "hidden := max(0, len(expanded)-len(collapsed))"
+ },
+ {
+  "name": "render-summary-rule-width",
+  "file": "render.go",
+  "find": "strings.Repeat(\"─\", 32)",
+  "replace": "strings.Repeat(\"─\", 31)"
+ },
+ {
+  "name": "activity-keeps-nine",
+  "file": "activity.go",
+  "find": "const maxActivityEntries = 10",
+  "replace": "const maxActivityEntries = 9"
+ },
+ {
+  "name": "curator-follow-up-not-delivered-as-follow-up",
+  "file": "extension.go",
+  "find": "DeliverAs: deliverAs}",
+  "replace": "DeliverAs: \"\"}"
  }
 ]

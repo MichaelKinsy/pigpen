@@ -691,5 +691,25 @@ Deliberate differences, for owner veto:
 - `currentModelHostedSearchEligible` (curator default provider) is a seam for the OpenAI slice; without it no
   model is eligible.
 
-Not done in this run (see the lane report): pigeq goldens for the seven new scenarios, mutations, the
-accepted-gaps and Performance sections, and the remaining activity call sites of providers other slices add.
+Evidence (xd670, tern-ci:v3, CPUs 64-95,160-191): `pigeq twins check`: 402 exact twins, 473 skipped (exit 0; the
+curator, summary, search-error-render, parallel-curator-state and allowed-search-providers rows are twins).
+`pigeq run` (Pi 1402973a vs PiG Node vs the port): PASS for all 18 scenarios, `pigeq check` PASS. Four scenarios are
+new: `curator-summary-review-timeout`, `curator-command-workflow`, `curator-browser-missing`,
+`curator-remote-no-browser`. Not scenarios (reasons): `workflow auto-summary` puts a measured `durationMs`
+number in the trace, which a normalize rule (strings only) cannot hide; `/websearch` and `/google-account` start a
+turn from an extension message, and Pi and PiG's Node lane disagree on that turn's system prompt diff (`inserted`
+empty and the baseline prompt `removed` under PiG Node): a host difference to report to the PiG lead, so those
+are proven by Go twins. The browser launch is not in a scenario either: it races the first search request, so
+its trace order is unstable between hosts; the Go twin runs the real `xdg-open` path with a fake program. The
+curator's HTTP side cannot be driven by the harness (no HTTP-client step, random port).
+Performance (Go benchmarks, xd670, -benchmem): GenerateCuratorPage 50 us, 126 KB, 50 allocs; page served over
+loopback HTTP 240-265 us, 7.6 KB, 136 allocs; renderer of a curated web_search result 3.4-4.6 us, 1.6 KB, 38
+allocs; renderCall of fetch_content 1.8-2.9 us, 0.8 KB, 26 allocs. The embedded page adds 115 439 bytes to the
+extension binary (curator_page.html).
+Activity logging call sites added in this slice: brave.go, tavily.go, perplexity.go, exa.go, kagi.go,
+duckduckgo.go, serpdive.go, extract.go (Jina reader and the direct page fetch). Providers other branches add
+(openai, gemini, xai, kimi, mistral, jina-search, firecrawl, ollama, parallel, parallel-mcp, tinyfish,
+search1api, searchinfinity, querit, brightdata, bocha, anysearch, xcrawl, serper, serply, serpapi, serpbase,
+you, valyu, baizhi, searxng, crawl4ai, kagi extract, github, youtube/video) need `logAPIStart`/`logFetchStart`,
+`complete` and `failedErr` at the places their originals call `activityMonitor` (the original line numbers:
+`grep -n activityMonitor port/oracle/<file>.ts`).
