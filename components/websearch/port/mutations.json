@@ -330,12 +330,6 @@
   "replace": "Origin(a.From) != Origin(a.To)"
 },
 {
-  "name": "searxng-base-trailing-slash",
-  "file": "searxng.go",
-  "find": "return strings.TrimRight(u.String(), \"/\")",
-  "replace": "return u.String()"
-},
-{
   "name": "searxng-availability-error-dropped",
   "file": "search.go",
   "find": "return d.availableErr()",

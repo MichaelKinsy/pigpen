@@ -14,7 +14,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"unicode/utf16"
 )
@@ -364,21 +363,17 @@ func (s *mcpSession) run(ctx context.Context, args *baizhiArguments, apiKey stri
 		return "", err
 	}
 	_ = notify.Body.Close()
-	var stream sync.WaitGroup
-	streamCtx, stopStream := context.WithCancel(ctx)
-	defer func() { stopStream(); stream.Wait() }()
 	if notify.StatusCode == http.StatusAccepted {
 		// The SDK opens the optional server-to-client stream after the initialized notification; a
-		// server without one answers 405.
+		// server without one answers 405. Only the response headers matter here, so the request
+		// is made before the tool call (bounded) and its body is dropped.
 		h := s.headers()
 		h.Set("Accept", "text/event-stream")
-		stream.Add(1)
-		go func() {
-			defer stream.Done()
-			if resp, err := s.do(streamCtx, "GET", h, nil); err == nil {
-				_ = resp.Body.Close()
-			}
-		}()
+		gctx, stop := context.WithTimeout(ctx, 2*time.Second)
+		if resp, err := s.do(gctx, "GET", h, nil); err == nil {
+			_ = resp.Body.Close()
+		}
+		stop()
 	}
 	raw, err := s.request(ctx, "tools/call", mcpCallParams{Name: "websearch_search", Arguments: args}, 1)
 	if err != nil {

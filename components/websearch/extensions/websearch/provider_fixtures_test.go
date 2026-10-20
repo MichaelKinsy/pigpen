@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"sync"
 	"strings"
 	"testing"
 	"time"
@@ -109,6 +110,7 @@ type fixtureDoer struct {
 	// is the caller's cancellation, fired by the "abort" Baizhi mode.
 	brave  string
 	cancel context.CancelFunc
+	mu     sync.Mutex
 }
 
 type brokenBody struct{ err error }
@@ -130,15 +132,18 @@ func (d *fixtureDoer) serve(ctx context.Context, method, rawURL string, h http.H
 	if method == "" {
 		method = "GET"
 	}
+	d.mu.Lock()
 	d.requests = append(d.requests, fixtureRequest{Method: method, URL: rawURL, Headers: hdr, Body: parsed})
+	n := d.n
+	d.n++
+	d.mu.Unlock()
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	if d.c.Baizhi != "" {
 		return d.baizhi(method, hdr, body)
 	}
-	spec := d.c.Responses[min(d.n, len(d.c.Responses)-1)]
-	d.n++
+	spec := d.c.Responses[min(n, len(d.c.Responses)-1)]
 	switch spec.Throw {
 	case "timeout":
 		return nil, context.DeadlineExceeded
@@ -171,7 +176,9 @@ func (d *fixtureDoer) serve(ctx context.Context, method, rawURL string, h http.H
 
 func (d *fixtureDoer) Do(r *http.Request) (*http.Response, error) {
 	if d.brave != "" && r.URL.Hostname() == "api.search.brave.com" {
+		d.mu.Lock()
 		d.requests = append(d.requests, fixtureRequest{Method: r.Method, URL: r.URL.String()})
+		d.mu.Unlock()
 		return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(d.brave)), Request: r}, nil
 	}
 	var body []byte
