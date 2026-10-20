@@ -213,6 +213,7 @@ func (c *core) loadState() {
 	if legacy != nil && gstr(legacy, "status") != "complete" {
 		legacy = sanitizeGoalPaths(c.st, c.st.mergeGoalPromptFromDisk(legacy))
 	}
+	invalidateGoalSettingsCache()
 	settings := loadGoalSettings(c.h.Cwd())
 	if entry != nil {
 		entryRoot := root
@@ -225,7 +226,7 @@ func (c *core) loadState() {
 		}
 	}
 	c.explicit = entry != nil
-	c.assignFocused(resolveSessionFocus(c.goals, entry, legacy, settings.autoSelectSingle))
+	c.assignFocused(resolveSessionFocus(c.goals, entry, legacy, settings.autoSelectSingleGoal))
 	if entry == nil && c.focused != nil {
 		reason := "selected"
 		if legacy != nil && gstr(legacy, "id") == *c.focused {

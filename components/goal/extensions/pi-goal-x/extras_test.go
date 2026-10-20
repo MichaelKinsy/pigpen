@@ -210,7 +210,17 @@ func TestSettingsLayers(t *testing.T) {
 		os.WriteFile(p, []byte(text), 0o644)
 		return p
 	}
-	num := func(text string) *float64 { return readLayer(write("s.json", text)).maxRuns }
+	layerOf := func(name, text string) *jsObject {
+		invalidateGoalSettingsCache()
+		return readSettingsLayer(write(name, text), settingsScopeProject).layer
+	}
+	num := func(text string) *float64 {
+		n, ok := layerOf("s.json", text).num("maxAutonomousRuns")
+		if !ok {
+			return nil
+		}
+		return &n
+	}
 	if v := num(`{"maxAutonomousRuns":-1}`); v != nil {
 		t.Error("a negative allowance is ignored")
 	}
@@ -223,9 +233,11 @@ func TestSettingsLayers(t *testing.T) {
 	if v := num(`[1]`); v != nil {
 		t.Error("an array is not a settings object")
 	}
-	l := readLayer(write("b.json", `{"disableContracts":"true","autoSelectSingleGoal":false}`))
-	eq(t, l.disableContracts != nil && *l.disableContracts, true, "string true")
-	eq(t, l.autoSelect != nil && !*l.autoSelect, true, "false")
+	l := layerOf("b.json", `{"disableContracts":"true","autoSelectSingleGoal":false}`)
+	dc, _ := l.flag("disableContracts")
+	as, ok := l.flag("autoSelectSingleGoal")
+	eq(t, dc, true, "string true")
+	eq(t, ok && !as, true, "false")
 	t.Setenv("PI_GOAL_DISABLE_CONTRACTS", "1")
 	eq(t, loadGoalSettings(dir).disableContracts, false, "an environment value other than true/false is ignored")
 }
