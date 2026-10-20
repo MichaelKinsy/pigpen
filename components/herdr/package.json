@@ -27,8 +27,7 @@
     "LICENSE",
     "LICENSE-herdr-pig",
     "NOTICE",
-    "provenance.json",
-    "port"
+    "provenance.json"
   ],
   "pi": {
     "extensions": [
