@@ -154,7 +154,7 @@ func (n *stackNode) addLink(link stackLink) {
 			if existing.node.state == link.node.state &&
 				existing.node.position.bytes == link.node.position.bytes &&
 				existing.node.errorCost == link.node.errorCost {
-				for j := 0; j < link.len(node.links); j++ {
+				for j := 0; j < len(link.node.links); j++ {
 					existing.node.addLink(link.node.links[j])
 				}
 				dp := link.node.dynamicPrecedence
@@ -413,7 +413,7 @@ func (s *stack) popError(version int) []*subtree {
 // popAll is ts_stack_pop_all.
 func (s *stack) popAll(version int) []stackSlice {
 	return s.iterate(version, func(it *stackIterator) int {
-		if it.len(node.links) == 0 {
+		if len(it.node.links) == 0 {
 			return actionPop
 		}
 		return actionNone
@@ -526,7 +526,7 @@ func (s *stack) merge(v1, v2 int) bool {
 		return false
 	}
 	h1, h2 := &s.heads[v1], &s.heads[v2]
-	for i := 0; i < h2.len(node.links); i++ {
+	for i := 0; i < len(h2.node.links); i++ {
 		h1.node.addLink(h2.node.links[i])
 	}
 	if h1.node.state == errorState {
