@@ -41,11 +41,14 @@ import { win32PathFlavor, posixPathFlavor } from "#src/path/path-flavor";
 import { PathNormalizer } from "#src/path/path-normalizer";
 
 /** The fixture tree: the same layout the Go test builds (bashprogram_oracle_test.go). */
-function buildFixture(real: (p: string) => string): { root: string; out: string } {
-  const base = mkdtempSync(join(tmpdir(), "pbp-"));
-  // The temp directory itself may be a symlink (macOS); the fixture is addressed by its canonical path.
-  const root = join(real(base), "r");
-  const out = join(real(base), "o");
+function buildFixture(real: (p: string) => string): { base: string; root: string; out: string } {
+  // The temp directory itself may be a symlink (macOS); the fixture is addressed by its canonical path. The root sits 16 directories
+  // below the base, so no `..` chain of the corpus climbs out of the base (whose own ancestors differ from host to host).
+  const base = real(mkdtempSync(join(tmpdir(), "pbp-")));
+  const deep = join(base, ...Array.from({ length: 16 }, () => "d"));
+  const root = join(deep, "r");
+  const out = join(base, "o");
+  mkdirSync(deep, { recursive: true });
   mkdirSync(root);
   mkdirSync(out);
   for (const f of ["id_rsa", "inside.txt", ".env", ".some.secret"]) writeFileSync(join(root, f), "x");
@@ -62,20 +65,22 @@ function buildFixture(real: (p: string) => string): { root: string; out: string 
   symlinkSync(join(out, "secret"), join(root, "v1..v2"));
   symlinkSync(out, join(root, "link"));
   symlinkSync(join(root, "src"), join(root, "inlink"));
-  return { root, out };
+  return { base, root, out };
 }
 
 const FAKE_CWD = "/projects/my-app";
 const WIN_CWD = "C:\\Projects\\App";
 
+// `placed`: the configurations whose cwd is the fixture root get `@R@` and `@O@` replaced by the fixture paths; the others keep the
+// placeholders as literal text (a win32 flavor lowercases and rewrites separators, so a host path could not be written back).
 function scenarios(root: string) {
   return [
-    { name: "root", normalizer: new PathNormalizer(posixPathFlavor, root), workdir: undefined as string | undefined },
-    { name: "fake", normalizer: new PathNormalizer(posixPathFlavor, FAKE_CWD), workdir: undefined },
-    { name: "win", normalizer: new PathNormalizer(win32PathFlavor, WIN_CWD), workdir: undefined },
-    { name: "rootwd", normalizer: new PathNormalizer(posixPathFlavor, root), workdir: `${root}/nested` },
-    { name: "fakewd", normalizer: new PathNormalizer(posixPathFlavor, FAKE_CWD), workdir: "/etc" },
-    { name: "winwd", normalizer: new PathNormalizer(win32PathFlavor, WIN_CWD), workdir: "/c/work" },
+    { name: "root", placed: true, normalizer: new PathNormalizer(posixPathFlavor, root), workdir: undefined as string | undefined },
+    { name: "fake", placed: false, normalizer: new PathNormalizer(posixPathFlavor, FAKE_CWD), workdir: undefined },
+    { name: "win", placed: false, normalizer: new PathNormalizer(win32PathFlavor, WIN_CWD), workdir: undefined },
+    { name: "rootwd", placed: true, normalizer: new PathNormalizer(posixPathFlavor, root), workdir: `${root}/nested` },
+    { name: "fakewd", placed: false, normalizer: new PathNormalizer(posixPathFlavor, FAKE_CWD), workdir: "/etc" },
+    { name: "winwd", placed: false, normalizer: new PathNormalizer(win32PathFlavor, WIN_CWD), workdir: "/c/work" },
   ];
 }
 
@@ -87,19 +92,19 @@ it("records the original's BashProgram", { timeout: 0 }, async () => {
   process.env.HOME = "/probe-home/user";
   const inputs: string[] = JSON.parse(readFileSync(input, "utf8"));
   const actual = await vi.importActual<typeof import("node:fs")>("node:fs");
-  const { root, out } = buildFixture((p) => actual.realpathSync(p));
+  const { base, root, out } = buildFixture((p) => actual.realpathSync(p));
   fixture.root = root;
   fixture.out = out;
   const place = (s: string) => s.replaceAll("@R@", root).replaceAll("@O@", out);
-  const unplace = (s: string) => s.replaceAll(root, "@R@").replaceAll(out, "@O@");
+  const unplace = (s: string) => s.replaceAll(root, "@R@").replaceAll(out, "@O@").replaceAll(base, "@B@");
   await warmBashParser();
   const configs = scenarios(root);
   const fd = openSync(output, "w");
   let buf: string[] = [];
   for (const s of inputs) {
-    const command = place(s);
     const rec: Record<string, unknown> = { s };
-    for (const { name, normalizer, workdir } of configs) {
+    for (const { name, placed, normalizer, workdir } of configs) {
+      const command = placed ? place(s) : s;
       try {
         const program = await BashProgram.parse(command, normalizer, workdir === undefined ? undefined : { workdir });
         const view: Record<string, unknown> = {

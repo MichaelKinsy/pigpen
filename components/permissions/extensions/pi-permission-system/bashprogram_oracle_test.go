@@ -24,24 +24,31 @@ import (
 // the same tree); outside it the fs answers as a host with no symlinks and no files, so the recording is host independent.
 
 // bashProgramFixture is the tree the probe reads: root is the project cwd of the "root" configurations and out an outside directory.
-func buildBashProgramFixture(t testing.TB) (root, out string) {
+func buildBashProgramFixture(t testing.TB) (base, root, out string) {
 	t.Helper()
 	base, err := os.MkdirTemp("", "pbp-")
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { os.RemoveAll(base) })
-	real, err := filepath.EvalSymlinks(base)
+	base, err = filepath.EvalSymlinks(base)
 	if err != nil {
 		t.Fatal(err)
 	}
-	root, out = filepath.Join(real, "r"), filepath.Join(real, "o")
+	// The root sits 16 directories below the base, so no `..` chain of the corpus climbs out of the base (whose own ancestors
+	// differ from host to host).
+	deep := base
+	for range 16 {
+		deep = filepath.Join(deep, "d")
+	}
+	root, out = filepath.Join(deep, "r"), filepath.Join(base, "o")
 	must := func(err error) {
 		t.Helper()
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
+	must(os.MkdirAll(deep, 0o755))
 	must(os.Mkdir(root, 0o755))
 	must(os.Mkdir(out, 0o755))
 	for _, f := range []string{"id_rsa", "inside.txt", ".env", ".some.secret"} {
@@ -69,7 +76,7 @@ func buildBashProgramFixture(t testing.TB) (root, out string) {
 	link(filepath.Join(out, "secret"), "v1..v2")
 	link(out, "link")
 	link(filepath.Join(root, "src"), "inlink")
-	return root, out
+	return base, root, out
 }
 
 func bashCommandJSON(c BashCommand) map[string]any {
@@ -99,7 +106,10 @@ func bashCommandJSON(c BashCommand) map[string]any {
 }
 
 type programConfig struct {
-	name       string
+	name string
+	// placed: `@R@` and `@O@` in the input are the fixture paths (the configurations whose cwd is the fixture root); the others
+	// read them as literal text.
+	placed     bool
 	normalizer *PathNormalizer
 	workdir    *string
 }
@@ -150,20 +160,20 @@ func TestBashProgramDifferential(t *testing.T) {
 	bashparse.WarmBashParser()
 	// A home that exists on no host, as in the recording.
 	t.Setenv("HOME", "/probe-home/user")
-	root, out := buildBashProgramFixture(t)
+	base, root, out := buildBashProgramFixture(t)
 	withFixtureFS(t, root, out)
 
 	const fakeCwd, winCwd = "/projects/my-app", `C:\Projects\App`
 	configs := []programConfig{
-		{"root", NewPathNormalizer(PosixPathFlavor, root), nil},
-		{"fake", NewPathNormalizer(PosixPathFlavor, fakeCwd), nil},
-		{"win", NewPathNormalizer(Win32PathFlavor, winCwd), nil},
-		{"rootwd", NewPathNormalizer(PosixPathFlavor, root), ptr(root + "/nested")},
-		{"fakewd", NewPathNormalizer(PosixPathFlavor, fakeCwd), ptr("/etc")},
-		{"winwd", NewPathNormalizer(Win32PathFlavor, winCwd), ptr("/c/work")},
+		{"root", true, NewPathNormalizer(PosixPathFlavor, root), nil},
+		{"fake", false, NewPathNormalizer(PosixPathFlavor, fakeCwd), nil},
+		{"win", false, NewPathNormalizer(Win32PathFlavor, winCwd), nil},
+		{"rootwd", true, NewPathNormalizer(PosixPathFlavor, root), ptr(root + "/nested")},
+		{"fakewd", false, NewPathNormalizer(PosixPathFlavor, fakeCwd), ptr("/etc")},
+		{"winwd", false, NewPathNormalizer(Win32PathFlavor, winCwd), ptr("/c/work")},
 	}
 	place := strings.NewReplacer("@R@", root, "@O@", out)
-	unplace := strings.NewReplacer(root, "@R@", out, "@O@")
+	unplace := strings.NewReplacer(root, "@R@", out, "@O@", base, "@B@")
 
 	f, err := os.Open("testdata/bashprogram-oracle.jsonl.gz")
 	if err != nil {
@@ -182,16 +192,16 @@ func TestBashProgramDifferential(t *testing.T) {
 	var mu sync.Mutex
 	total, bad := 0, 0
 	fields := map[string]int{}
-	var examples []string
+	examples := map[string][]string{}
 	record := func(input, field string, want, got any) {
 		mu.Lock()
 		defer mu.Unlock()
 		bad++
 		fields[field]++
-		if len(examples) < 12 {
+		if len(examples[field]) < 4 {
 			wb, _ := json.Marshal(want)
 			gb, _ := json.Marshal(got)
-			examples = append(examples, fmt.Sprintf("%q field %s\n  original: %s\n  go:       %s", input, field, wb, gb))
+			examples[field] = append(examples[field], fmt.Sprintf("%q field %s\n  original: %s\n  go:       %s", input, field, wb, gb))
 		}
 	}
 	var wg sync.WaitGroup
@@ -206,9 +216,12 @@ func TestBashProgramDifferential(t *testing.T) {
 					return
 				}
 				input := want["s"].(string)
-				command := place.Replace(input)
 				got := map[string]any{}
 				for _, c := range configs {
+					command := input
+					if c.placed {
+						command = place.Replace(input)
+					}
 					program, err := ParseBashProgram(command, c.normalizer, &BashProgramOptions{Workdir: c.workdir})
 					if err != nil {
 						got[c.name] = map[string]any{"throw": err.Error()}
@@ -250,7 +263,11 @@ func TestBashProgramDifferential(t *testing.T) {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		t.Fatalf("%d unexplained differences:\n%s", bad, strings.Join(examples, "\n"))
+		var shown []string
+		for _, k := range keys {
+			shown = append(shown, examples[k]...)
+		}
+		t.Fatalf("%d unexplained differences:\n%s", bad, strings.Join(shown, "\n"))
 	}
 }
 
