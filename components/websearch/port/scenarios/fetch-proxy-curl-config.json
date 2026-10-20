@@ -1,0 +1,63 @@
+{
+ "name": "fetch-proxy-curl-config",
+ "description": "fetch_content takes the proxy of web-search.json and runs curl through it.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"proxy\": \"{{server:proxy}}\"}"
+ },
+ "commands": {
+  "curl": {
+   "mode": "real"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "http://93.184.216.34/page"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "proxy": {
+   "routes": [
+    {
+     "path": "/page",
+     "headers": {
+      "content-type": "text/plain"
+     },
+     "body": "Plain page served through the proxy.\n"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "pi-web-access-proxy-[A-Za-z0-9]{6,12}",
+   "replacement": "pi-web-access-proxy-<id>"
+  }
+ ]
+}

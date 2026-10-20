@@ -53,9 +53,15 @@ func isProxyBypassedURL(u *url.URL) bool {
 // lowercased, sorted, equal names joined with ", ", empty values dropped.
 func curlHeaderArgs(h http.Header) []string {
 	combined := map[string][]string{}
-	for name, values := range h {
+	// A Go map has no insertion order: names that differ only in case merge in their sorted order.
+	raw := make([]string, 0, len(h))
+	for name := range h {
+		raw = append(raw, name)
+	}
+	sort.Strings(raw)
+	for _, name := range raw {
 		lower := strings.ToLower(name)
-		combined[lower] = append(combined[lower], values...)
+		combined[lower] = append(combined[lower], h[name]...)
 	}
 	names := make([]string, 0, len(combined))
 	for name := range combined {
