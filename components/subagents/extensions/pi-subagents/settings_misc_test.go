@@ -231,12 +231,57 @@ func TestModelResolution(t *testing.T) {
 
 func TestModelResolutionDiagnostic(t *testing.T) {
 	const f = "model-resolution-diagnostic"
-	tskip(t, f, "matches core's model-resolution failure text and leaves other failures alone", "unit-tests the original's helper that recognizes Pi core's `Model \"x\" not found` text inside its in-process child session factory (src/runs/shared/child-session.ts); a pig child process reports model failures through its own stderr, so no equivalent helper exists in the port")
-	tskip(t, f, "names the foreground provider-inheritance rule, the model, and the remedies", "runs a foreground child through runSync with a stubbed Pi module and checks the text appended to the in-process session's start failure; the port's foreground child is a pig process whose launch errors are produced by the child runtime slice")
-	tskip(t, f, "tells a foreground child that a capability ceiling denies the extension", "needs runSync with an in-process child session factory and a capabilityCeiling option, the original's foreground child launch; ceilings meet the port's child launch in the run pipeline, not in settings")
-	tskip(t, f, "tells a background child that a capability ceiling denies the extension", "needs buildRunnerChildLaunch and runChildSession, the original's background runner child sessions (src/runs/background); the port's background children are not in-process sessions")
-	tskip(t, f, "explains a background child launched without the ambient extensions", "needs buildRunnerChildLaunch and runChildSession with a stubbed Pi module to hit the ambient-extensions branch; the port has no in-process runner session")
-	tskip(t, f, "defaults to the background branch and tolerates a missing model", "unit-tests the diagnostic formatter of the original's child-session module with a missing model; that formatter exists only for its in-process child session factory")
+	const model = "pengepul/commandcode/deepseek/deepseek-v4.1-flash"
+	tw(t, f, "matches core's model-resolution failure text and leaves other failures alone", func(t *testing.T) {
+		core := `Model "pengepul/commandcode/deepseek/deepseek-v4.1-flash:max" not found. Use --list-models to see available models.`
+		provider := `Unknown provider "pengepul/commandcode". Use --list-models to see available providers/models.`
+		eq(t, isChildModelResolutionFailure(core), true, "core")
+		eq(t, isChildModelResolutionFailure("  "+provider+"  "), true, "provider")
+		eq(t, isChildModelResolutionFailure(`Model "openai/gpt-5" is temporarily unavailable (HTTP 503).`), false, "503")
+		eq(t, isChildModelResolutionFailure(`Model "openai/gpt-5" is disabled for this account.`), false, "disabled")
+		eq(t, isChildModelResolutionFailure("Subagent session failed before its first turn."), false, "first turn")
+		eq(t, isChildModelResolutionFailure(""), false, "empty")
+	})
+	tw(t, f, "names the foreground provider-inheritance rule, the model, and the remedies", func(t *testing.T) {
+		text := formatChildModelResolutionDiagnostic(ChildModelResolutionDiagnostic{Agent: "provider-model-worker", Model: model, Host: "parent"})
+		hasRe(t, text, `Agent 'provider-model-worker' ran as a foreground child, which never loads the parent's ambient extensions but inherits the providers they registered`)
+		hasRe(t, text, "If 'pengepul/commandcode/deepseek/deepseek-v4[.]1-flash' is served by a provider extension, check the parent's `/model` list and the child extension diagnostics")
+		noRe(t, text, "`async: true`")
+		hasRe(t, text, "`subagentOnlyExtensions` or `extensions` in the agent frontmatter")
+		noRe(t, text, "background child without the ambient extensions")
+		noRe(t, text, "Capability ceiling")
+	})
+	tw(t, f, "tells a foreground child that a capability ceiling denies the extension", func(t *testing.T) {
+		text := formatChildModelResolutionDiagnostic(ChildModelResolutionDiagnostic{Agent: "provider-model-worker", Model: model, Host: "parent",
+			CapabilityCeiling: &DiagnosticCeiling{DenyExtensions: true, Sources: []string{"policy-fixture"}}})
+		hasRe(t, text, "Capability ceiling from policy-fixture denies extensions")
+		hasRe(t, text, "`async: true` does not help either")
+		hasRe(t, text, "Relax the capability ceiling to allow extensions")
+		noRe(t, text, "must run as background children")
+		noRe(t, text, "load the provider extension explicitly")
+	})
+	tw(t, f, "tells a background child that a capability ceiling denies the extension", func(t *testing.T) {
+		text := formatChildModelResolutionDiagnostic(ChildModelResolutionDiagnostic{Model: model, Host: "runner", CapabilityCeiling: &DiagnosticCeiling{DenyExtensions: true}})
+		hasRe(t, text, "^Subagent ran as a background child without the ambient extensions")
+		hasRe(t, text, "Capability ceiling from an unnamed source denies extensions")
+		hasRe(t, text, "does not enable ambient loading")
+		hasRe(t, text, "Relax the capability ceiling to allow extensions")
+		noRe(t, text, "leave `extensions` unset so the child loads the ambient extensions")
+	})
+	tw(t, f, "explains a background child launched without the ambient extensions", func(t *testing.T) {
+		text := formatChildModelResolutionDiagnostic(ChildModelResolutionDiagnostic{Model: model, Host: "runner"})
+		hasRe(t, text, "^Subagent ran as a background child without the ambient extensions")
+		hasRe(t, text, "that extension is not loaded for this child: list it in `subagentOnlyExtensions` or `extensions` in the agent frontmatter")
+		hasRe(t, text, "leave `extensions` unset")
+		noRe(t, text, "foreground child")
+		noRe(t, text, "Capability ceiling")
+	})
+	tw(t, f, "defaults to the background branch and tolerates a missing model", func(t *testing.T) {
+		text := formatChildModelResolutionDiagnostic(ChildModelResolutionDiagnostic{})
+		hasRe(t, text, "^Subagent ran as a background child without the ambient extensions")
+		hasRe(t, text, "If this model is served by a provider extension")
+		noRe(t, text, "Capability ceiling")
+	})
 }
 
 func TestThinkingCeiling(t *testing.T) {
