@@ -197,13 +197,6 @@ type SkipResult struct {
 	Reason     string
 }
 
-func nonNilStrings(s []string) []string {
-	if s == nil {
-		return []string{}
-	}
-	return s
-}
-
 func jsonStrings(s []string) string {
 	b, err := marshalNoEscape(nonNilStrings(s))
 	if err != nil {

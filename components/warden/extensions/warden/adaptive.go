@@ -467,11 +467,6 @@ func commandText(input map[string]any) string {
 	return string(b)
 }
 
-// endsWithQuestion is /\?\s*$/ with JavaScript's whitespace.
-func endsWithQuestion(text string) bool {
-	return strings.HasSuffix(strings.TrimRightFunc(text, isJSSpace), "?")
-}
-
 // steerOutcome says whether the next assistant messages (at most two) changed course after a steer of this kind,
 // and whether they disputed it. A port of the heuristic the field replays used; it is a proxy and does not prove the
 // note caused the change.
