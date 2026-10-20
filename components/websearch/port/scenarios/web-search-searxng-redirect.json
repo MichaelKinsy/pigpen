@@ -1,0 +1,86 @@
+{
+ "name": "web-search-searxng-redirect",
+ "description": "web_search through SearXNG with a same-origin redirect: the configured headers travel with it.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"searxng\", \"searxngBaseUrl\": \"{{server:searx}}\", \"searxngHeaders\": {\"X-Pi-Test\": \"header-value\"}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "redirect",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ],
+ "servers": {
+  "searx": {
+   "recordHeaders": [
+    "accept",
+    "x-pi-test"
+   ],
+   "routes": [
+    {
+     "method": "GET",
+     "path": "/search",
+     "status": 302,
+     "headers": {
+      "Location": "/moved"
+     },
+     "times": 1
+    },
+    {
+     "method": "GET",
+     "path": "/moved",
+     "json": {
+      "answers": [
+       "SearXNG says hello.",
+       "  "
+      ],
+      "results": [
+       {
+        "title": "Allowed",
+        "url": "https://docs.example.com/a",
+        "content": "allowed result"
+       },
+       {
+        "title": "Blocked",
+        "url": "https://private.example.net/b",
+        "content": "blocked result"
+       },
+       {
+        "url": "https://example.com/c"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

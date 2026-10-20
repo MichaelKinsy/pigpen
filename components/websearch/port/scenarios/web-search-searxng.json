@@ -1,0 +1,84 @@
+{
+ "name": "web-search-searxng",
+ "description": "web_search through a fake SearXNG server: SSRF-guarded GET, site operators, time range, configured headers, answers and sources.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"searxng\", \"searxngBaseUrl\": \"{{server:searx}}/base/\", \"searxngHeaders\": {\"X-Pi-Test\": \"header-value\", \"X-Skipped\": 123, \"Bad Name\": \"nope\"}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "self hosted",
+      "domainFilter": [
+       "example.com",
+       "-private.example.net"
+      ],
+      "recencyFilter": "week",
+      "numResults": 3,
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ],
+ "servers": {
+  "searx": {
+   "recordHeaders": [
+    "accept",
+    "x-pi-test",
+    "x-skipped"
+   ],
+   "routes": [
+    {
+     "method": "GET",
+     "path": "/base/search",
+     "json": {
+      "answers": [
+       "SearXNG says hello.",
+       "  "
+      ],
+      "results": [
+       {
+        "title": "Allowed",
+        "url": "https://docs.example.com/a",
+        "content": "allowed result"
+       },
+       {
+        "title": "Blocked",
+        "url": "https://private.example.net/b",
+        "content": "blocked result"
+       },
+       {
+        "url": "https://example.com/c"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,74 @@
+{
+ "name": "web-search-searxng-auto-first",
+ "description": "With nothing but a SearXNG base URL configured, provider auto asks SearXNG first.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"searxngBaseUrl\": \"{{server:searx}}\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "local first",
+      "provider": "auto",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ],
+ "servers": {
+  "searx": {
+   "routes": [
+    {
+     "method": "GET",
+     "path": "/search",
+     "json": {
+      "answers": [
+       "SearXNG says hello.",
+       "  "
+      ],
+      "results": [
+       {
+        "title": "Allowed",
+        "url": "https://docs.example.com/a",
+        "content": "allowed result"
+       },
+       {
+        "title": "Blocked",
+        "url": "https://private.example.net/b",
+        "content": "blocked result"
+       },
+       {
+        "url": "https://example.com/c"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}
