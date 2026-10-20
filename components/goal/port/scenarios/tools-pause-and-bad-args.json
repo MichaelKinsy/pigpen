@@ -52,8 +52,12 @@
   },
   "normalize": [
     {
-      "pattern": "[a-z0-9]{8}-[a-z0-9]{6}",
-      "replacement": "<goal-id>"
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
     },
     {
       "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
