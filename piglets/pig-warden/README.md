@@ -11,7 +11,7 @@ guardrails that **steer instead of interrupt**. **Nothing happens until you type
 
 Warden holds irreversible calls before they run and tells the agent why (offline: force-push, `rm -rf` of a home or
 absolute path, `DROP`, `git reset --hard`; with a judge, the judge's irreversible score decides, see the Package README); it flags calls unrelated to your request, breaks stuck loops and asks for
-evidence when the agent claims it is done. It registers no tool. The TypeSafe client library Package
+evidence when the agent claims it is done. It registers three tools for the agent: `warden_remember` (a standing lesson for the project), `warden_loops` (open loops: what the agent promised to do later) and `warden_recall` (what was already tried in this session). The TypeSafe client library Package
 [`typesafe`](../../components/typesafe/README.md) is selected as a library, not as a member.
 
 ## Run from a checkout

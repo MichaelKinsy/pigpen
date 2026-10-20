@@ -94,5 +94,65 @@
   "file": "stuck.go",
   "find": "if prev.OutputKey != l.OutputKey || prev.Failed != l.Failed {",
   "replace": "if prev.Failed != l.Failed {"
+ },
+ {
+  "name": "loops-add-reply-text",
+  "file": "loops.go",
+  "find": "reply := \"added #\"",
+  "replace": "reply := \"add #\""
+ },
+ {
+  "name": "loops-list-closed-suffix",
+  "file": "loops.go",
+  "find": "suffix = \"\\n(\" + itoaInt(closed) + \" closed)\"",
+  "replace": "suffix = \"\\n[\" + itoaInt(closed) + \" closed]\""
+ },
+ {
+  "name": "loops-done-reply-verb",
+  "file": "loops.go",
+  "find": "return loopReply{Reply: verb + \" #\"",
+  "replace": "return loopReply{Reply: verb + \" no. #\""
+ },
+ {
+  "name": "loops-reminder-starts-a-turn",
+  "file": "tools_wiring.go",
+  "find": "SteerOptions{DeliverAs: \"nextTurn\"}",
+  "replace": "SteerOptions{DeliverAs: \"followUp\", TriggerTurn: true}"
+ },
+ {
+  "name": "recall-description-clipped",
+  "file": "tools_wiring.go",
+  "find": "Read-only; takes no arguments.",
+  "replace": "Read-only."
+ },
+ {
+  "name": "loops-schema-description",
+  "file": "tools_wiring.go",
+  "find": "\"For add: what you promised to do.\"",
+  "replace": "\"What you promised.\""
+ },
+ {
+  "name": "recall-empty-text",
+  "file": "compact.go",
+  "find": "Nothing recorded yet in this session: no failed attempt, no check, and no saved output.",
+  "replace": "Nothing recorded yet."
+ },
+ {
+  "name": "appendix-failed-heading",
+  "file": "compact.go",
+  "find": "### Tried and failed\\nDo not retry these unchanged.",
+  "replace": "### Failed\\nDo not retry these unchanged."
+ },
+ {
+  "name": "appendix-open-loops-line",
+  "file": "compact.go",
+  "find": "Promised earlier in this session and not done yet; close each with warden_loops done or drop.",
+  "replace": "Open loops."
+ },
+ {
+  "name": "recall-lists-checks",
+  "file": "compact.go",
+  "find": "sec.name == \"failed\" || sec.name == \"verification\" || sec.name == \"saved\"",
+  "replace": "sec.name == \"failed\" || sec.name == \"verification\" || sec.name == \"saved\" || sec.name == \"checks\""
  }
 ]
