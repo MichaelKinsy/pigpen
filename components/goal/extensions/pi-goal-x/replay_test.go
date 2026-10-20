@@ -1,6 +1,7 @@
 package pi_goal_x
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -23,7 +24,6 @@ type fakeHost struct {
 	noUI      bool
 	busy      bool
 	aborted   int
-	rich      bool
 	pick      string
 	onConfirm func()
 }
@@ -31,7 +31,7 @@ type fakeHost struct {
 func (h *fakeHost) Cwd() string       { return h.cwd }
 func (h *fakeHost) SessionID() string { return "drive-session" }
 func (h *fakeHost) HasUI() bool       { return !h.noUI }
-func (h *fakeHost) Rich() bool        { return h.rich }
+func (h *fakeHost) Mode() string      { return "tui" }
 func (h *fakeHost) Notify(m, l string) {
 	h.events = append(h.events, []any{"notify", l, m})
 }
@@ -42,7 +42,34 @@ func (h *fakeHost) SetStatus(k, t string) {
 	}
 	h.events = append(h.events, []any{"status", k, t})
 }
-func (h *fakeHost) ClearWidget(k string) { h.events = append(h.events, []any{"widget", k, "clear"}) }
+
+// SetWidget records a clear; a pushed widget is a component the SDK cannot carry (the golden's "factory"), which the comparison skips.
+func (h *fakeHost) SetWidget(k string, lines []string) {
+	if lines == nil {
+		h.events = append(h.events, []any{"widget", k, "clear"})
+	}
+}
+func (h *fakeHost) SessionFile() string                                             { return "" }
+func (h *fakeHost) HasPendingMessages() bool                                        { return false }
+func (h *fakeHost) Signal() context.Context                                         { return context.Background() }
+func (h *fakeHost) Model() *auditorModel                                            { return nil }
+func (h *fakeHost) ModelRegistry() auditorModelRegistry                             { return nil }
+func (h *fakeHost) ContextUsage() *goalContextUsage                                 { return nil }
+func (h *fakeHost) Width() int                                                      { return 80 }
+func (h *fakeHost) Height() (int, bool)                                             { return 24, true }
+func (h *fakeHost) OnWidthChange(func(int)) func()                                  { return func() {} }
+func (h *fakeHost) Theme() goalHostTheme                                            { return wgTheme{} }
+func (h *fakeHost) Input(string, string) (string, bool)                             { return "", false }
+func (h *fakeHost) Custom(goalCustomFactory, goalCustomOptions) (any, error)        { return nil, nil }
+func (h *fakeHost) OnTerminalInput(func(string) *goalInputResult) func()            { return func() {} }
+func (h *fakeHost) SetWorkingVisible(bool)                                          {}
+func (h *fakeHost) SendMessage(string, string, bool, *jsObject, bool, string) error { return nil }
+func (h *fakeHost) SendUserMessage(string, string) error                            { return nil }
+func (h *fakeHost) GetActiveTools() ([]string, error) {
+	return []string{"read", "bash", "edit", "write"}, nil
+}
+func (h *fakeHost) SetActiveTools([]string)          {}
+func (h *fakeHost) OnEvent(string, func(any)) func() { return func() {} }
 func (h *fakeHost) Confirm(t, m string) bool {
 	if h.onConfirm != nil {
 		h.onConfirm()
@@ -152,7 +179,8 @@ func readTree(t *testing.T, root string) map[string]string {
 		}
 		rel, _ := filepath.Rel(root, p)
 		rel = filepath.ToSlash(rel)
-		if fi.Name() == ".goals-pool-snapshot.json" {
+		// Caches: the pool snapshot, and the ledger checkpoint the dashboard's render reads through (the drive's widget is never rendered).
+		if fi.Name() == ".goals-pool-snapshot.json" || fi.Name() == ".goal-ledger-checkpoint.json" {
 			return nil
 		}
 		if fi.IsDir() {
@@ -245,6 +273,8 @@ func replayCase(t *testing.T, c driveCase, g goldenCase) {
 		h.entries = append(h.entries, o)
 	}
 	co := newCore(h)
+	// The original's timers would fire after the session step; the golden records none of what they do.
+	co.afterBase = func(time.Duration, func()) *time.Timer { return time.NewTimer(time.Hour) }
 	run := func(fn func()) { fn(); co.flush() }
 	start := func() { invalidateGoalPoolCache(); run(co.sessionStart) }
 	for i, s := range c.Steps {

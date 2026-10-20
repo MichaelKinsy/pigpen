@@ -259,7 +259,7 @@ func TestHeadlessAndBusy(t *testing.T) {
 		t.Errorf("headless clear: %v", h.events[0])
 	}
 	// Two open goals and no focus: a headless pause explains instead of asking.
-	co.setFocusedGoalID(nil, "unfocused", false)
+	co.setFocusedGoalId(nil, "unfocused", false)
 	second := baseGoal("Second", false, clockMs()+1000)
 	must(co.st.writeActiveGoalFile(second))
 	invalidateGoalPoolCache()
@@ -269,11 +269,11 @@ func TestHeadlessAndBusy(t *testing.T) {
 	eq(t, strings.HasPrefix(h.events[0][2].(string), "No goal is focused in this session. 2 open goals"), true, "headless pause")
 	// A busy session aborts when the focus is dropped.
 	h.noUI, h.busy = false, true
-	co.setFocusedGoalID(strp(gstr(second, "id")), "selected", true)
+	co.setFocusedGoalId(new(gstr(second, "id")), "selected", true)
 	co.unfocus()
 	eq(t, h.aborted, 1, "abort")
 	h.busy, h.aborted = false, 0
-	co.setFocusedGoalID(strp(gstr(second, "id")), "selected", true)
+	co.setFocusedGoalId(new(gstr(second, "id")), "selected", true)
 	co.unfocus()
 	eq(t, h.aborted, 0, "idle sessions are not aborted")
 }
@@ -304,9 +304,9 @@ func testClearFocusMoves(t *testing.T) {
 	must(co.st.writeActiveGoalFile(second))
 	invalidateGoalPoolCache()
 	co.goals = co.st.readActiveGoalPool()
-	h.onConfirm = func() { co.assignFocused(strp("other")) }
+	h.onConfirm = func() { co.assignFocused(new("other")) }
 	if strings.Contains(t.Name(), "AndBack") {
-		h.onConfirm = func() { co.assignFocused(strp("other")); co.assignFocused(strp(first)) }
+		h.onConfirm = func() { co.assignFocused(new("other")); co.assignFocused(new(first)) }
 	}
 	h.confirm = []bool{true}
 	h.events = nil

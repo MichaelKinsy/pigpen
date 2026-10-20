@@ -695,7 +695,7 @@ func TestGoalQuestionnaire(t *testing.T) {
 	})
 
 	tw(t, f, "a free-text question falls back to input, and a dismissed dialog cancels", func(t *testing.T) {
-		ctx, _ := browserLikeUiContext(nil, strp("my own words"))
+		ctx, _ := browserLikeUiContext(nil, new("my own words"))
 		typed := mustRun(t, ctx, []goalQuestionnaireQuestion{{id: "notes", question: "Notes?", options: []string{}}}, nil)
 		eqDeep(t, typed.answers, []goalQuestionnaireAnswer{{id: "notes", question: "Notes?", answer: "my own words", wasCustom: true}}, "typed")
 		ctx2, _ := browserLikeUiContext([]string{""}, nil) // "" = dismissed via undefined pick

@@ -223,7 +223,7 @@ func TestGoalRpcDialogs(t *testing.T) {
 	})
 
 	tw(t, f, "free text is direct, trims answers, and reprompts whitespace", func(t *testing.T) {
-		h := newScriptedHost(nil, strp("  "), strp("  my answer  "))
+		h := newScriptedHost(nil, new("  "), new("  my answer  "))
 		h.ctx.u.selectFn = nil
 		result := mustRun(t, h.ctx, []goalQuestionnaireQuestion{withOptions(rpcQuestion, []string{})}, nil)
 		eqDeep(t, result.answers[0].answer, "my answer", "trimmed")
@@ -241,7 +241,7 @@ func TestGoalRpcDialogs(t *testing.T) {
 		selected := mustRun(t, newScriptedHost([]int{0}).ctx, []goalQuestionnaireQuestion{q}, nil)
 		eqDeep(t, selected.answers[0].wasCustom, false, "not custom")
 		eqDeep(t, selected.answers[0].answer, q.options[0], "answer")
-		custom := newScriptedHost([]int{3}, strp("new answer"))
+		custom := newScriptedHost([]int{3}, new("new answer"))
 		eqDeep(t, mustRun(t, custom.ctx, []goalQuestionnaireQuestion{q}, nil).answers[0].wasCustom, true, "custom")
 		mustMatch(t, `All the details`, custom.dialogs()[1].title, "input shows the context")
 	})
