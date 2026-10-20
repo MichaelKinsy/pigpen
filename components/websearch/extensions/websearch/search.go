@@ -88,9 +88,10 @@ var validRoutingKinds = []string{"transient", "quota", "network", "invalid-respo
 
 type providerDef struct {
 	name, label string
-	// available approximates the original's availability check for providers that are not ported
-	// yet (a credential source of the original's names is configured).
-	available func() bool
+	// available is the original's availability check. It receives the call's context and options
+	// because some checks read the session's model and login (OpenAI, xAI, Kimi) or the browser
+	// (Gemini Web). Providers that are not ported yet approximate it with their credential names.
+	available func(ctx context.Context, o FullSearchOptions) bool
 	search    func(ctx context.Context, q string, o SearchOptions) (*SearchResponse, error)
 }
 
@@ -98,11 +99,19 @@ func credAvail(provider, cfgKey, env string) func() bool {
 	return func() bool { return hasProviderCredential(provider, cfgKey, env) }
 }
 
+// plainAvail adapts an availability check that needs neither context nor options.
+func plainAvail(f func() bool) func(context.Context, FullSearchOptions) bool {
+	return func(context.Context, FullSearchOptions) bool { return f() }
+}
+
 var providerTable = map[string]*providerDef{}
 
 func init() {
-	def := func(name, label string, avail func() bool, search func(context.Context, string, SearchOptions) (*SearchResponse, error)) {
+	defCtx := func(name, label string, avail func(context.Context, FullSearchOptions) bool, search func(context.Context, string, SearchOptions) (*SearchResponse, error)) {
 		providerTable[name] = &providerDef{name: name, label: label, available: avail, search: search}
+	}
+	def := func(name, label string, avail func() bool, search func(context.Context, string, SearchOptions) (*SearchResponse, error)) {
+		defCtx(name, label, plainAvail(avail), search)
 	}
 	def("brave", "Brave", IsBraveAvailable, SearchWithBrave)
 	def("tavily", "Tavily", IsTavilyAvailable, SearchWithTavily)
@@ -432,9 +441,15 @@ func ClassifyProviderError(provider string, err error) *SearchProviderError {
 	return &SearchProviderError{Provider: provider, Kind: kind, Status: status, Message: message, Cause: err}
 }
 
-func isProviderAvailable(provider string) bool {
+// isProviderAvailableFor is isResolvedProviderAvailable upstream.
+func isProviderAvailableFor(ctx context.Context, provider string, o FullSearchOptions) bool {
 	d := providerTable[provider]
-	return d != nil && d.available()
+	return d != nil && d.available(ctx, o)
+}
+
+// isProviderAvailable is the availability check outside a search call (fetch routing).
+func isProviderAvailable(provider string) bool {
+	return isProviderAvailableFor(context.Background(), provider, FullSearchOptions{})
 }
 
 func searchWithResolvedProvider(ctx context.Context, provider, query string, o FullSearchOptions) (*ProviderSearchResponse, error) {
@@ -457,7 +472,7 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 	providers := selected
 	if providers == nil {
 		for _, p := range AllSearchProviders {
-			if sliceHas(allowed, p) && isProviderAvailable(p) {
+			if sliceHas(allowed, p) && isProviderAvailableFor(ctx, p, o) {
 				providers = append(providers, p)
 			}
 		}
@@ -546,7 +561,7 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 func searchWithConfiguredRouting(ctx context.Context, query string, o FullSearchOptions, routing *SearchRouting) (*AttributedSearchResponse, error) {
 	var diagnostics []string
 	for _, provider := range routing.Providers {
-		if !isProviderAvailable(provider) {
+		if !isProviderAvailableFor(ctx, provider, o) {
 			diagnostics = append(diagnostics, provider+": unavailable")
 			continue
 		}
@@ -623,7 +638,7 @@ func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *sea
 		allowed = ResolvedProviders
 	}
 	for _, p := range autoOrder {
-		if !sliceHas(allowed, p) || !isProviderAvailable(p) {
+		if !sliceHas(allowed, p) || !isProviderAvailableFor(ctx, p, o) {
 			continue
 		}
 		r, err := searchWithResolvedProvider(ctx, p, query, o)
