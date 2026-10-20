@@ -69,7 +69,7 @@
   "name": "notify-in-every-mode",
   "file": "extension.go",
   "find": "\t\t// TUI only: print, JSON and RPC modes have no pane for herdr to show (ts:238-241).\n",
-  "replace": "\t\t_ = ctx.Notify(\"herdr\", \"info\")\n\t\t// TUI only: print, JSON and RPC modes have no pane for herdr to show (ts:238-241).\n"
+  "replace": "\t\tctx.Notify(\"herdr\", \"info\")\n\t\t// TUI only: print, JSON and RPC modes have no pane for herdr to show (ts:238-241).\n"
  },
  {
   "name": "start-idle-inverted",
@@ -81,7 +81,7 @@
   "name": "settled-ignores-idle",
   "file": "extension.go",
   "find": "\t\tif idle {\n\t\t\tr.agentSettled()",
-  "replace": "\t\tif true {\n\t\t\tr.agentSettled()"
+  "replace": "\t\tif idle || !idle {\n\t\t\tr.agentSettled()"
  },
  {
   "name": "settled-swallows-idle-error",
