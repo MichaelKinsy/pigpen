@@ -335,7 +335,7 @@ func parsePathRules(raw any, warnings *[]string) []PathRule {
 // DefaultArmingDuration is ten minutes in milliseconds.
 const DefaultArmingDuration = 600_000
 
-var reDuration = lazyRE(`^(\d+(?:\.\d+)?)\s*(ms|s|m|h)?$`)
+var reArmDuration = lazyRE(`^(\d+(?:\.\d+)?)\s*(ms|s|m|h)?$`)
 
 // ParseDuration reads an arming duration in milliseconds: a number is milliseconds; a string takes ms, s, m or h, and a
 // string without a unit means minutes. Zero, negative and unreadable values give the fallback. The one parser for arms.for.
@@ -350,7 +350,7 @@ func ParseDuration(raw any, fallback float64) float64 {
 	if !ok {
 		return fallback
 	}
-	m := reDuration().FindStringSubmatch(jsTrim(s))
+	m := reArmDuration.FindStringSubmatch(jsTrim(s))
 	if m == nil {
 		return fallback
 	}
@@ -427,7 +427,7 @@ func parseArmingRule(raw any, warnings *[]string) (ArmingRule, bool) {
 	}
 	forMs := ParseDuration(arms["for"], DefaultArmingDuration)
 	// A bare number reads as milliseconds and a bare string as minutes; both surprise someone, so both are named.
-	if s, ok := arms["for"].(string); ok && reBareNumber().MatchString(jsTrim(s)) {
+	if s, ok := arms["for"].(string); ok && reBareNumber.MatchString(jsTrim(s)) {
 		*warnings = append(*warnings, `arming rule "`+id+`": arms.for "`+jsTrim(s)+`" has no unit and is read as minutes; write it with ms, s, m, or h`)
 	}
 	if forMs < 1000 {
@@ -761,7 +761,7 @@ func applyWidget(base WidgetConfig, rawAny any) WidgetConfig {
 	}
 	if f, ok := jsNumber(raw["panelWidth"]); ok && isSafeInteger(f) && f >= 20 {
 		out.PanelWidth = f
-	} else if s, ok := raw["panelWidth"].(string); ok && rePanelPercent().MatchString(jsTrim(s)) {
+	} else if s, ok := raw["panelWidth"].(string); ok && rePanelPercent.MatchString(jsTrim(s)) {
 		out.PanelWidth = jsTrim(s)
 	}
 	out.Action = template(raw["action"], base.Action)
@@ -1126,7 +1126,7 @@ func ParseConfigValue(value string) any {
 	case "null":
 		return nil
 	}
-	if reConfigNumber().MatchString(value) {
+	if reConfigNumber.MatchString(value) {
 		if f, err := strconv.ParseFloat(value, 64); err == nil {
 			return f
 		}
