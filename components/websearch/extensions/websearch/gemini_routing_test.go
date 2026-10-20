@@ -393,3 +393,88 @@ func TestGeminiHostAllowList(t *testing.T) {
 		t.Fatalf("%v", last.Header)
 	}
 }
+
+func TestGeminiADCTokenLifetime(t *testing.T) {
+	// gemini-adc.ts:13,149: a token is reused until 60 seconds before it expires
+	home, _ := geminiEnv(t)
+	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", writeADC(t, home, nil))
+	now := int64(1_000_000_000_000)
+	prev := nowMs
+	nowMs = func() int64 { return now }
+	t.Cleanup(func() { nowMs = prev })
+	n := useNet(t, func(netCall) netReply { return reply(200, `{"access_token":"t","expires_in":3600}`) })
+	for _, step := range []struct {
+		advance int64
+		calls   int
+	}{{0, 1}, {3_539_000, 1}, {2_000, 2}} {
+		now += step.advance
+		_, err := getGeminiADCAccessToken(bg())
+		noErr(t, err)
+		if n.count() != step.calls {
+			t.Fatalf("after %d ms: %d exchanges, want %d", step.advance, n.count(), step.calls)
+		}
+	}
+	// a short lifetime is still kept for a minute
+	clearGeminiADCTokenCache()
+	n = useNet(t, func(netCall) netReply { return reply(200, `{"access_token":"t","expires_in":10}`) })
+	_, _ = getGeminiADCAccessToken(bg())
+	now += 59_000
+	_, _ = getGeminiADCAccessToken(bg())
+	if n.count() != 1 {
+		t.Fatal(n.count())
+	}
+}
+
+func TestGeminiGatewayCredentialFailureEndsTheFetch(t *testing.T) {
+	// gemini-url-context.ts:16-19 shouldRethrow: a credential failure is shown, not swallowed
+	extractEnv(t, `{"geminiBaseUrl":"https://gateway.ai.cloudflare.com/v1/a/g","cloudflareApiKey":"$NO_SUCH_CLOUDFLARE_KEY","fetchRouting":{"providers":["http","gemini"],"allowRemoteHostedProviders":true}}`)
+	useNet(t, func(netCall) netReply { return reply(500, "origin down") })
+	r := ExtractContent(bg(), "https://example.com/p", pageOpts())
+	if errOf(r) != "Cloudflare credential resolution failed: environment-empty" {
+		t.Fatalf("%q", errOf(r))
+	}
+}
+
+func TestGeminiPDFPageCounts(t *testing.T) {
+	geminiEnv(t)
+	t.Setenv("GEMINI_API_KEY", "k")
+	two := 2
+	reply1 := func(text string) {
+		useNet(t, func(netCall) netReply {
+			return jsonReply(map[string]any{"candidates": []any{map[string]any{"finishReason": "STOP", "content": map[string]any{"parts": []any{map[string]any{"text": text}}}}}})
+		})
+	}
+	reply1("<!-- Page 1 -->\nonly one")
+	_, err := ExtractPDFViaGemini(bg(), []byte{0}, GeminiPDFOptions{Pages: &two, MaxPages: 5, Title: "T"})
+	wantErr(t, err, `^Gemini PDF extraction returned 1 page markers; expected 2$`)
+	reply1("<!-- Page 1 -->\na\n<!-- Page 2 -->\nb\n<!-- Page 3 -->\nc")
+	_, err = ExtractPDFViaGemini(bg(), []byte{0}, GeminiPDFOptions{MaxPages: 2, Title: "T"})
+	wantErr(t, err, `^Gemini PDF extraction returned 3 page markers; expected at most 2$`)
+	reply1("no markers here")
+	_, err = ExtractPDFViaGemini(bg(), []byte{0}, GeminiPDFOptions{MaxPages: 2, Title: "T"})
+	wantErr(t, err, `^Gemini PDF extraction returned no page markers$`)
+	reply1("<!-- Page 1 -->\n# Heading, one!\n\nbody")
+	md, err := ExtractPDFViaGemini(bg(), []byte{0}, GeminiPDFOptions{MaxPages: 2, Title: "heading one"})
+	noErr(t, err)
+	if md != "<!-- Page 1 -->\nbody" {
+		t.Fatalf("%q", md)
+	}
+}
+
+func TestGeminiAllIgnoresGeminiWeb(t *testing.T) {
+	// gemini-search.ts:604-606: "all" counts Gemini by its API availability alone
+	geminiEnv(t)
+	web := &fakeGeminiWeb{cookies: GeminiWebCookies{"c": "v"}, answer: "web answer"}
+	t.Cleanup(SetGeminiWebClient(web))
+	useNet(t, func(c netCall) netReply {
+		if strings.HasPrefix(c.URL, "https://mcp.exa.ai/mcp") {
+			return exaMCPText("Title: Exa result\nURL: https://example.com/exa\nText: Exa answer\n---")
+		}
+		return netReply{Err: errors.New("Unexpected fetch " + c.URL)}
+	})
+	r, err := Search(bg(), "q", FullSearchOptions{Provider: ProviderSelection{Name: "all"}})
+	noErr(t, err)
+	if !eqStrings(providerNames(r.ProviderResponses), []string{"exa"}) || len(r.ProviderErrors) != 0 || len(web.prompts) != 0 {
+		t.Fatalf("%+v %v", r, web.prompts)
+	}
+}

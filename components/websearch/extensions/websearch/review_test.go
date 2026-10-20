@@ -92,11 +92,11 @@ func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
 		matchRE(t, `Use web_search to find content about this topic`, msg)
 		noMatchRE(t, unportedGuidance, msg)
 	})
-	t.Run("the checklist says so when no fallback is available", func(t *testing.T) {
+	t.Run("the checklist names the Gemini API as the one hosted fallback of this port besides Jina", func(t *testing.T) {
 		extractEnv(t, `{"fetchRouting":{"providers":["http","jina"],"allowRemoteHostedProviders":true}}`)
 		useNet(t, func(netCall) netReply { return reply(500, "oops") })
 		msg := errOf(ExtractContent(bg(), "https://example.com/oops", pageOpts()))
-		matchRE(t, `Fallback options:\n  • none in this port`, msg)
+		matchRE(t, `Fallback options:\n  • Set GEMINI_API_KEY in .*web-search\.json`, msg)
 		noMatchRE(t, unportedGuidance, msg)
 	})
 	t.Run("the no-provider error names only ported providers", func(t *testing.T) {

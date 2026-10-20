@@ -241,8 +241,20 @@ func geminiTokenExchangeFailure(status int, detail string) error {
 	return fmt.Errorf("Gemini ADC token exchange failed (%d): %s", status, slice300(detail))
 }
 
-func postGeminiTokenForm(ctx context.Context, endpoint string, form url.Values, context string) (*geminiCachedToken, error) {
-	resp, err := FetchWithCredentialRedirects(ctx, endpoint, RequestInit{Method: "POST", Body: []byte(form.Encode()),
+// geminiForm is a URLSearchParams body: the pairs keep their order.
+func geminiForm(pairs ...string) []byte {
+	var b strings.Builder
+	for i := 0; i+1 < len(pairs); i += 2 {
+		if i > 0 {
+			b.WriteByte('&')
+		}
+		b.WriteString(formEscape(pairs[i]) + "=" + formEscape(pairs[i+1]))
+	}
+	return []byte(b.String())
+}
+
+func postGeminiTokenForm(ctx context.Context, endpoint string, form []byte, context string) (*geminiCachedToken, error) {
+	resp, err := FetchWithCredentialRedirects(ctx, endpoint, RequestInit{Method: "POST", Body: form,
 		Header: http.Header{"Content-Type": {"application/x-www-form-urlencoded"}}}, nil)
 	if err != nil {
 		return nil, err
@@ -258,10 +270,9 @@ func postGeminiTokenForm(ctx context.Context, endpoint string, form url.Values, 
 }
 
 func exchangeGeminiRefreshToken(ctx context.Context, cfg *geminiADCFile) (*geminiCachedToken, error) {
-	return postGeminiTokenForm(ctx, geminiTokenEndpoint, url.Values{
-		"client_id": {cfg.clientID}, "client_secret": {cfg.clientSecret},
-		"refresh_token": {cfg.refreshToken}, "grant_type": {"refresh_token"},
-	}, "Gemini ADC token exchange")
+	return postGeminiTokenForm(ctx, geminiTokenEndpoint, geminiForm(
+		"client_id", cfg.clientID, "client_secret", cfg.clientSecret,
+		"refresh_token", cfg.refreshToken, "grant_type", "refresh_token"), "Gemini ADC token exchange")
 }
 
 func parseRSAPrivateKey(pemText string) (*rsa.PrivateKey, error) {
@@ -284,8 +295,18 @@ func exchangeGeminiServiceAccountJWT(ctx context.Context, cfg *geminiADCFile) (*
 	}
 	now := nowMs() / 1000
 	enc := base64.RawURLEncoding
-	header, _ := json.Marshal(map[string]any{"alg": "RS256", "typ": "JWT"})
-	claims, _ := json.Marshal(map[string]any{"iss": cfg.clientEmail, "scope": "https://www.googleapis.com/auth/cloud-platform", "aud": geminiTokenEndpoint, "iat": now, "exp": now + 3600})
+	// JSON.stringify keeps insertion order, and the signature covers these bytes.
+	header, _ := json.Marshal(struct {
+		Alg string `json:"alg"`
+		Typ string `json:"typ"`
+	}{"RS256", "JWT"})
+	claims, _ := json.Marshal(struct {
+		Iss   string `json:"iss"`
+		Scope string `json:"scope"`
+		Aud   string `json:"aud"`
+		Iat   int64  `json:"iat"`
+		Exp   int64  `json:"exp"`
+	}{cfg.clientEmail, "https://www.googleapis.com/auth/cloud-platform", geminiTokenEndpoint, now, now + 3600})
 	assertion := enc.EncodeToString(header) + "." + enc.EncodeToString(claims)
 	key, err := parseRSAPrivateKey(cfg.privateKey)
 	if err != nil {
@@ -300,10 +321,9 @@ func exchangeGeminiServiceAccountJWT(ctx context.Context, cfg *geminiADCFile) (*
 	if endpoint == "" {
 		endpoint = geminiTokenEndpoint
 	}
-	return postGeminiTokenForm(ctx, endpoint, url.Values{
-		"grant_type": {"urn:ietf:params:oauth:grant-type:jwt-bearer"},
-		"assertion":  {assertion + "." + enc.EncodeToString(sig)},
-	}, "Gemini ADC service account token exchange")
+	return postGeminiTokenForm(ctx, endpoint, geminiForm(
+		"grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer",
+		"assertion", assertion+"."+enc.EncodeToString(sig)), "Gemini ADC service account token exchange")
 }
 
 // getGeminiADCAccessToken returns a cached bearer token or exchanges the ADC file for a new one.

@@ -134,7 +134,7 @@
  {
   "name": "fallback-guidance-unported",
   "file": "extract.go",
-  "find": "\"  • none in this port: the other fetch providers of pi-web-access are not ported yet\"",
+  "find": "\"  • Set GEMINI_API_KEY in \"+ConfigPath()",
   "replace": "\"  • Set firecrawlBaseUrl to a self-hosted Firecrawl instance\""
  },
  {
@@ -208,5 +208,148 @@
   "file": "extract.go",
   "find": "msg += \"\\n\\n\" + unsupported(\"the RSC payload and Defuddle fallback extractors\").Error()",
   "replace": "msg += \"\""
-}
+},
+ {
+  "name": "gemini-adc-403-is-a-credential-rejection",
+  "file": "gemini_adc.go",
+  "find": "status == 400 || status == 401 || status == 403",
+  "replace": "status == 400 || status == 401"
+ },
+ {
+  "name": "gemini-adc-skew-removed",
+  "file": "gemini_adc.go",
+  "find": "geminiRefreshSkewMs   = 60_000",
+  "replace": "geminiRefreshSkewMs   = 0"
+ },
+ {
+  "name": "gemini-adc-token-never-expires",
+  "file": "gemini_adc.go",
+  "find": "geminiToken.expiresAt > nowMs()",
+  "replace": "geminiToken.expiresAt > nowMs()+1<<50"
+ },
+ {
+  "name": "gemini-adc-jwt-audience",
+  "file": "gemini_adc.go",
+  "find": "\"aud\": geminiTokenEndpoint",
+  "replace": "\"aud\": geminiVertexHost"
+ },
+ {
+  "name": "gemini-adc-key-beats-adc",
+  "file": "gemini_adc.go",
+  "find": "if geminiHasAPIKeySourceADC(cfg) || geminiHasExplicitAPIBase(cfg) {",
+  "replace": "if geminiHasExplicitAPIBase(cfg) {"
+ },
+ {
+  "name": "gemini-adc-base-url-beats-adc",
+  "file": "gemini_adc.go",
+  "find": "if geminiHasAPIKeySourceADC(cfg) || geminiHasExplicitAPIBase(cfg) {",
+  "replace": "if geminiHasAPIKeySourceADC(cfg) {"
+ },
+ {
+  "name": "gemini-adc-form-order",
+  "file": "gemini_adc.go",
+  "find": "\"refresh_token\", cfg.refreshToken, \"grant_type\", \"refresh_token\"",
+  "replace": "\"grant_type\", \"refresh_token\", \"refresh_token\", cfg.refreshToken"
+ },
+ {
+  "name": "gemini-query-api-key-rejected",
+  "file": "gemini_api.go",
+  "find": "l == \"key\" || l == \"api_key\"",
+  "replace": "l == \"key\""
+ },
+ {
+  "name": "gemini-host-allow-list-open",
+  "file": "gemini_api.go",
+  "find": "&& !allowed {",
+  "replace": "&& !allowed && origin == \"\" {"
+ },
+ {
+  "name": "gemini-default-model",
+  "file": "gemini_api.go",
+  "find": "DefaultGeminiModel     = \"gemini-3.6-flash\"",
+  "replace": "DefaultGeminiModel     = \"gemini-3.5-flash\""
+ },
+ {
+  "name": "gemini-gateway-header",
+  "file": "gemini_api.go",
+  "find": "h.Set(\"cf-aig-authorization\", \"Bearer \"+cloudflareKey)",
+  "replace": "h.Set(\"x-goog-api-key\", cloudflareKey)"
+ },
+ {
+  "name": "gemini-gateway-marker",
+  "file": "gemini_api.go",
+  "find": "geminiCloudflareMarker = \"gateway.ai.cloudflare.com\"",
+  "replace": "geminiCloudflareMarker = \"gateway.ai.cloudflare.org\""
+ },
+ {
+  "name": "gemini-video-availability-counts-adc",
+  "file": "gemini_api.go",
+  "find": "func IsGeminiAPIAvailableWithVideo() bool {\n\thas, err := geminiHasAPIKeySource()",
+  "replace": "func IsGeminiAPIAvailableWithVideo() bool {\n\tif adc, _ := geminiADCAvailable(); adc {\n\t\treturn true\n\t}\n\thas, err := geminiHasAPIKeySource()"
+ },
+ {
+  "name": "gemini-response-redaction-dropped",
+  "file": "gemini_api.go",
+  "find": "return creds.redact(text)\n\t}\n\treturn geminiCredentials",
+  "replace": "return text\n\t}\n\treturn geminiCredentials"
+ },
+ {
+  "name": "gemini-search-strict-errors",
+  "file": "gemini_search.go",
+  "find": "if strict && len(errs) > 0 {",
+  "replace": "if len(errs) > 0 {"
+ },
+ {
+  "name": "gemini-search-web-skipped",
+  "file": "gemini_search.go",
+  "find": "web, err := searchWithGeminiWeb(ctx, query, o)",
+  "replace": "web, err := (*SearchResponse)(nil), error(nil)"
+ },
+ {
+  "name": "gemini-all-counts-web-availability",
+  "file": "search.go",
+  "find": "(p == \"gemini\" && IsGeminiAPIAvailable())",
+  "replace": "(p == \"gemini\" && geminiProviderAvailable(ctx, o))"
+ }, {
+  "name": "gemini-grounding-redirect-kept",
+  "file": "gemini_search.go",
+  "find": "if resolved := resolveGeminiRedirect(ctx, u); resolved != \"\" {",
+  "replace": "if resolved := \"\"; resolved != \"\" {"
+ },
+ {
+  "name": "gemini-pdf-finish-reason",
+  "file": "gemini_pdf_extract.go",
+  "find": "result.FinishReason != \"STOP\"",
+  "replace": "result.FinishReason == \"\""
+ },
+ {
+  "name": "gemini-pdf-sequence",
+  "file": "gemini_pdf_extract.go",
+  "find": "n != float64(i+1)",
+  "replace": "n < 0"
+ },
+ {
+  "name": "gemini-pdf-exact-count",
+  "file": "gemini_pdf_extract.go",
+  "find": "if exact && len(matches) != maxPages {",
+  "replace": "if false {"
+ },
+ {
+  "name": "gemini-url-context-min-length",
+  "file": "gemini_url_context.go",
+  "find": "geminiMinContentLength  = 50",
+  "replace": "geminiMinContentLength  = 1"
+ },
+ {
+  "name": "gemini-url-context-unsafe",
+  "file": "gemini_url_context.go",
+  "find": "case \"URL_RETRIEVAL_STATUS_UNSAFE\", \"URL_RETRIEVAL_STATUS_ERROR\":",
+  "replace": "case \"URL_RETRIEVAL_STATUS_UNSAFE\":"
+ },
+ {
+  "name": "gemini-url-context-rethrow",
+  "file": "gemini_url_context.go",
+  "find": "strings.HasPrefix(err.Error(), \"Failed to parse \")",
+  "replace": "strings.HasPrefix(err.Error(), \"Failed to parse X\")"
+ }
 ]
