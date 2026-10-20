@@ -293,7 +293,11 @@ func TestQueueSendDoesNotWaitForTheHostToAcceptTheMessage(t *testing.T) {
 	release := make(chan struct{})
 	r := startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{inboxLine("a9a9a9a9", "slow host", 1, "")},
 		onSend: func(r *queueSDKRig, text string) { <-release }})
-	defer close(release)
+	defer func() {
+		close(release)
+		r.waitFor(t, "the host call to finish", func() bool { return len(r.sent()) == 1 })
+		r.h.FireAll("session_shutdown", map[string]any{"reason": "quit"}) // settles the inbox before the directory is removed
+	}()
 	done := make(chan string, 1)
 	go func() { done <- r.h.Command("queue", "send") }()
 	select {
