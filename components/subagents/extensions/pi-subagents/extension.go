@@ -267,11 +267,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	model, _ := params["model"].(string)
 	done, stop := cancellation(ctx)
 	defer stop()
-	out, err := runAgent(done, cwd, a, task, model)
-	if err != nil {
-		return nil, sdk.NewToolError(err.Error())
-	}
-	return explicitOK{Content: out, Details: map[string]any{"mode": "single", "agent": a.Name}}, nil
+	return trackMission(ctx, params, cwd, a.Name, task, func() (string, error) { return runAgent(done, cwd, a, task, model) })
 }
 
 // runChainCommand is `/run-chain <chain> <task>`: the chain files are the original's format; running them this way is an
