@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -366,6 +367,66 @@ func TestScenarioValidatesServerReferencesInTheLLMScript(t *testing.T) {
 			t.Errorf("%s: accepted", name)
 		} else if !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: error %q lacks %q", name, err, c.want)
+		}
+	}
+}
+
+// The whole path in one lane: RunLane starts the scenario's fake servers, expands the LLM script with
+// their URLs, and records the model request through the scenario's N7 rules. The host is a script that
+// asks the scripted model once, like a real host would.
+func TestRunLaneExpandsTheScriptAndAppliesNormalizeRules(t *testing.T) {
+	if _, err := exec.LookPath("curl"); err != nil {
+		t.Skip("the fake host needs curl")
+	}
+	sc := &Scenario{Name: "wire", Steps: []Step{{RPC: map[string]any{"type": "prompt", "message": "go"}}},
+		Servers: map[string]ServerSpec{"web": {Routes: []Route{{Path: "/page", Body: "ok"}}}},
+		LLM:     []Turn{{Text: "see {{server:web}}", ToolCalls: []ToolCall{{Name: "fetch_content", Arguments: map[string]any{"url": "{{server:web}}/page"}}}}},
+		TailMs:  -1, SettleMs: 10, Normalize: []NormalizeRule{{Pattern: `r-[0-9a-f]{6}`, Replacement: "<rid>"}}}
+	if err := sc.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	for _, host := range []string{"pi", "pig"} {
+		dir := t.TempDir()
+		bin := filepath.Join(t.TempDir(), host)
+		// A minimal RPC host: it answers get_state, and on a prompt asks the scripted model once and ends the run.
+		script := `#!/bin/sh
+[ "$1" = "--version" ] && exit 0
+base=$(sed -n 's/.*"baseUrl":"\([^"]*\)".*/\1/p' "$PI_CODING_AGENT_DIR/models.json")
+while IFS= read -r line; do
+  id=$(printf '%s' "$line" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+  case "$line" in
+    *'"type":"get_state"'*) printf '{"type":"response","id":"%s","command":"get_state","success":true}\n' "$id" ;;
+    *'"type":"prompt"'*)
+      printf '{"type":"response","id":"%s","command":"prompt","success":true}\n' "$id"
+      curl -s -X POST "$base/chat/completions" -d '{"messages":[{"role":"user","content":"responseId r-1a2b3c"}]}' > '` + dir + `'/answer.$$
+      printf '{"type":"agent_end"}\n' ;;
+  esac
+done
+`
+		if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		tr, err := RunLane(sc, Lane{Name: host + "-lane", Host: host, Bin: bin}, Options{})
+		if err != nil {
+			t.Fatalf("%s: %v", host, err)
+		}
+		var answers string
+		files, _ := filepath.Glob(filepath.Join(dir, "answer.*"))
+		for _, f := range files {
+			b, _ := os.ReadFile(f)
+			answers += string(b)
+		}
+		if !regexp.MustCompile(`see http://127\.0\.0\.1:\d+`).MatchString(answers) || !regexp.MustCompile(`\\"url\\":\\"http://127\.0\.0\.1:\d+/page\\"`).MatchString(answers) {
+			t.Errorf("%s: the model's answer lacks the expanded server URL (%d answers): %s", host, len(files), answers)
+		}
+		var llm []string
+		for _, e := range tr.Events {
+			if e.Ch == ChLLM {
+				llm = append(llm, string(e.Data))
+			}
+		}
+		if len(llm) != 1 || !strings.Contains(llm[0], "responseId <rid>") || strings.Contains(llm[0], "r-1a2b3c") {
+			t.Errorf("%s: the model request was not normalized by the scenario's rule: %q", host, llm)
 		}
 	}
 }
