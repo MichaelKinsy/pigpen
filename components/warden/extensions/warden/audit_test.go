@@ -238,3 +238,24 @@ func TestSnapshotReportMissing(t *testing.T) {
 		t.Fatalf("%+v", s)
 	}
 }
+
+// The prompt is the original's, byte for byte (testdata/audit-prompt.txt comes from port/gen-audit-prompt.ts run on the
+// vendored original over the same fixture).
+func TestBuildAuditPromptMatchesTheOriginal(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "workspace")
+	writeTree(t, root, map[string]string{
+		"package.json": "{}", "index.ts": "x", "README.md": "x", "node_modules/p/skip.js": "x",
+		"a/package.json": "{}", "a/one.ts": "x", "a/two.py": "x", "a/sub/three.go": "x",
+		"b/Cargo.toml": "[package]", "b/main.rs": "x",
+		"c/go.mod": "module c", "c/main.go": "x",
+		"d/pyproject.toml": "[project]",
+	})
+	got := strings.ReplaceAll(BuildAuditPrompt(root, []string{root, filepath.Join(root, "a"), filepath.Join(root, "b"), filepath.Join(root, "c"), filepath.Join(root, "d")}), root, "<cwd>")
+	want, err := os.ReadFile("testdata/audit-prompt.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != string(want) {
+		t.Fatalf("prompt differs from the original's:\n%s", got)
+	}
+}
