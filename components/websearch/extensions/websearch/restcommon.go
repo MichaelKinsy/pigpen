@@ -3,14 +3,18 @@ package websearch
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"net"
 	"net/http"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -94,6 +98,36 @@ func isProviderTimeout(parent, child context.Context, err error) bool {
 	return errors.As(err, &ne) && ne.Timeout()
 }
 
+// transportFailure gives a failure of the connection itself the message Node's fetch gives it:
+// "fetch failed" for a request that could not be made or completed, "terminated" for a body cut
+// short. The routing classifier reads "fetch failed" as a network failure, which is what lets
+// searchRouting fall through; Go's own texts ("EOF", "connection refused") are not recognised.
+// Anything else (a deadline, a cancellation, an error this extension made) is returned as it is.
+func transportFailure(err error, body bool) error {
+	if err == nil || strings.Contains(err.Error(), "Blocked internal address") {
+		return err
+	}
+	var done *redactedError
+	if errors.As(err, &done) && (done.msg == "fetch failed" || done.msg == "terminated") {
+		return err
+	}
+	var ne net.Error
+	var certErr *tls.CertificateVerificationError
+	var unknownAuth x509.UnknownAuthorityError
+	var invalidCert x509.CertificateInvalidError
+	var hostErr x509.HostnameError
+	transport := (errors.As(err, &ne) && !ne.Timeout()) || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) ||
+		errors.Is(err, syscall.ECONNRESET) || errors.As(err, &certErr) || errors.As(err, &unknownAuth) ||
+		errors.As(err, &invalidCert) || errors.As(err, &hostErr)
+	if !transport || errors.Is(err, context.Canceled) {
+		return err
+	}
+	if body {
+		return &redactedError{"terminated", err}
+	}
+	return &redactedError{"fetch failed", err}
+}
+
 // restFailure is the catch block of serpapi.ts, serply.ts, you.ts and xcrawl.ts: a caller that
 // cancelled gets "Aborted", the provider's own deadline becomes "<what> timed out after 60s"
 // (a retriable network failure, never an abort), anything else has the credential removed.
@@ -104,7 +138,7 @@ func restFailure(parent, child context.Context, what, apiKey string, err error) 
 	if isProviderTimeout(parent, child, err) {
 		return fmt.Errorf("%s request timed out after 60s", what)
 	}
-	return redactErr(err, apiKey)
+	return redactErr(transportFailure(err, false), apiKey)
 }
 
 // providerKeyMissing builds the "<Label> API key not found. Either:" message of the providers
@@ -169,11 +203,11 @@ func googleRequestCount(o SearchOptions, numResults int) int {
 func restCallA(ctx, tctx context.Context, api, apiKey, rawURL string, init RequestInit, credentialHeaders []string) (any, error) {
 	resp, err := FetchWithCredentialRedirects(tctx, rawURL, init, credentialHeaders)
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, redactErr(timeoutFix(ctx, tctx, transportFailure(err, false)), apiKey)
 	}
 	text, err := readBody(resp)
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, redactErr(timeoutFix(ctx, tctx, transportFailure(err, true)), apiKey)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, fmt.Errorf("%s error %d: %s", api, resp.StatusCode, slice300(RedactCredential(text, apiKey)))
@@ -196,7 +230,7 @@ func restCallB(ctx, tctx context.Context, name, apiKey, rawURL string, init Requ
 	}
 	text, err := readBody(resp)
 	if err != nil {
-		return fail(err)
+		return fail(transportFailure(err, true))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return fail(fmt.Errorf("%s error %d: %s", name, resp.StatusCode, slice300(RedactCredential(text, apiKey))))

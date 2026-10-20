@@ -208,11 +208,11 @@ func SearchWithSearXNG(ctx context.Context, query string, o SearchOptions) (*Sea
 		},
 	})
 	if err != nil {
-		return nil, timeoutFix(ctx, tctx, err)
+		return nil, timeoutFix(ctx, tctx, transportFailure(err, false))
 	}
 	text, err := readBody(resp)
 	if err != nil {
-		return nil, timeoutFix(ctx, tctx, err)
+		return nil, timeoutFix(ctx, tctx, transportFailure(err, true))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, fmt.Errorf("SearXNG search error %d: %s", resp.StatusCode, slice300(text))
