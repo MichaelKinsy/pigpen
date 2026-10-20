@@ -156,7 +156,11 @@ func (w *warden) latestTask(ctx sdk.Context) string {
 // exercised or a UI change nothing showed, is asked to verify (or to say plainly that nothing was verified).
 func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 	cfg := w.config(ctx)
-	if !cfg.Enabled || !cfg.Done.Enabled {
+	if !cfg.Enabled {
+		return nil, nil
+	}
+	// SECURITY slot 3: a stopped runaway queues its follow-up and ends the hook.
+	if w.runawayRecovery(ctx, cfg) {
 		return nil, nil
 	}
 	var messages []map[string]any
@@ -168,19 +172,27 @@ func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 		}
 	}
 	final, ok := FinalAssistantText(messages)
-	w.mu.Lock()
-	ev := w.evidence
-	needs := ok && NeedsDoneCheck(ev)
-	w.mu.Unlock()
-	if !needs {
+	w.restatement(ctx, cfg, final) // SECURITY slot 5: restatement, recorded only
+	if !ok || final == "" {
 		return nil, nil
 	}
 	judge := w.judgeFor(ctx, cfg)
 	if judge == nil {
 		return nil, nil
 	}
+	// SECURITY slot 8: the prose check starts here and shares the round trip with the done check.
+	settleProse := w.startProse(ctx, cfg, final, judge)
+	w.mu.Lock()
+	ev := w.evidence
+	needs := cfg.Done.Enabled && NeedsDoneCheck(ev)
+	w.mu.Unlock()
+	if !needs {
+		settleProse()
+		return nil, nil
+	}
 	w.bump(func(s *stats) { s.DoneChecks++ })
 	verdict := EvaluateDone(newContext(), w.latestTask(ctx), final, ev, DoneOptions{Config: cfg.Done, Judge: judge, Timeout: w.timeout(cfg)})
+	settleProse() // the prose verdict is recorded and nudged before the done verdict, as upstream awaits it first
 	if verdict.Error != "" {
 		w.noteOnce(ctx, "err:"+verdict.Error, "warden: "+verdict.Error)
 	}

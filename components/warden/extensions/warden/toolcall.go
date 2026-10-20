@@ -155,6 +155,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		if cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · blocked "+tool+": "+reasons, "error")
 		}
+		w.notifyDesktop(ctx, cfg, "Blocked "+tool+": "+reasons+". A deny rule matched; the call never ran.") // SECURITY
 		return blockResult("pi-warden blocked this " + tool + " call (" + deliveredReasons + "). A deny rule matched; this command is not allowed to run. Ask the user if this is genuinely required."), nil
 	case LevelConfirm:
 	default:
@@ -171,6 +172,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		}
 	}
 	askUser := func() (any, error) {
+		w.notifyDesktop(ctx, cfg, "Waiting for you: allow this "+tool+" call? "+reasons) // SECURITY
 		allowed, err := ctx.Confirm("warden: allow this "+tool+" call?", confirmMessage(verdict))
 		if err != nil {
 			return nil, err
@@ -208,6 +210,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	if cfg.Notices && ctx.HasUI() {
 		ctx.Notify("warden · held "+tool+": "+reasons+". The agent was told why and asked to re-plan or ask you.", "warning")
 	}
+	w.notifyDesktop(ctx, cfg, "Held "+tool+": "+reasons+". The agent will re-plan or ask you in chat.") // SECURITY
 	return blockResult(SteerReason(dv, judge != nil)), nil
 }
 

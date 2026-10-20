@@ -32,6 +32,10 @@ type Options struct {
 	// NewJudge builds the judge for the configured backend; nil uses the real backends.
 	NewJudge func(ctx sdk.Context, cfg Config, budget *Budget, getenv func(string) string) (Judge, error)
 	Now      func() time.Time
+	// NotifyRunner runs desktop-notifier commands (probes and sends); nil runs them through os/exec. Tests inject it.
+	NotifyRunner NotifyRunner
+	// NotifierPlatform is Node's process.platform for the notifier probe order; empty uses this build's.
+	NotifierPlatform string
 }
 
 type warden struct {
@@ -63,6 +67,8 @@ type warden struct {
 	budgetExhausted bool
 	// adaptor is the per-model steer adaptation; the default sends everything.
 	adaptor steerAdaptor
+	// sec is the security lane's per-session state: runaway, prose trend, restatement window, desktop notifier.
+	sec *securityState
 }
 
 // Extension returns the guard.
@@ -82,7 +88,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	if o.Now == nil {
 		o.Now = time.Now
 	}
-	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}}
+	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, sec: newSecurityState()}
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
@@ -91,6 +97,9 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) { w.guard.TurnEnd(); return nil, nil })
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
+	// SECURITY: runaway guard (assistant stream). Supervision's message registry takes these two over when it lands.
+	e.OnEvent(sdk.EventMessageStart, w.onRunawayMessageStart)
+	e.OnEvent(sdk.EventMessageUpdate, w.onRunawayMessageUpdate)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); return nil, nil })
 	return e, w
@@ -268,6 +277,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) 
 	loadErr, enabled := w.loadErr, w.cfg.Enabled
 	w.mu.Unlock()
 	w.guard.Reset()
+	w.sec.resetSession() // SECURITY: runaway, prose trend, restatement window, notifier probe
 	if loadErr != "" {
 		w.say(ctx, loadErr, "warning")
 	}
@@ -300,6 +310,7 @@ func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, 
 	}
 	w.repeats.Reset()
 	w.doneNudged = false
+	w.sec.resetPrompt() // SECURITY: restatement window, runaway budget
 	w.steersThisRun = 0
 	return nil, nil
 }

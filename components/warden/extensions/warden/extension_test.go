@@ -37,6 +37,8 @@ type harness struct {
 	// subscribed is set once the extension has asked for the session log.
 	subscribed bool
 	fail       map[string]string
+	// w is the extension's state, for asserting on the trace the widget is drawn from.
+	w *warden
 }
 
 type harnessOpts struct {
@@ -48,6 +50,8 @@ type harnessOpts struct {
 	git      GitRunner
 	// fail makes host calls of these methods answer with this error message.
 	fail map[string]string
+	// tweak adjusts the extension's Options before it starts (notifier runner, platform).
+	tweak func(*Options)
 }
 
 func startHarness(t *testing.T, o harnessOpts) *harness {
@@ -77,13 +81,18 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 		return ""
 	}
 	opts := Options{Getenv: getenv, Git: o.git}
+	if o.tweak != nil {
+		o.tweak(&opts)
+	}
 	if o.newJudge != nil {
 		opts.NewJudge = func(_ sdk.Context, cfg Config, b *Budget, _ func(string) string) (Judge, error) {
 			return o.newJudge(cfg, b)
 		}
 	}
 	hasUI := !o.noUI
-	h.host = StartHost(t, New(opts), HostOptions{HasUI: &hasUI, Cwd: t.TempDir(), OnCall: h.onCall})
+	ext, w := newWarden(opts)
+	h.w = w
+	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: t.TempDir(), OnCall: h.onCall})
 	return h
 }
 
