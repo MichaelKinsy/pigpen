@@ -104,8 +104,11 @@ func (h *fakeHerdr) accept() {
 func (h *fakeHerdr) serve(conn net.Conn, n int) {
 	defer conn.Close()
 	var b behavior
-	if h.behave != nil {
-		b = h.behave(n)
+	h.mu.Lock()
+	behave := h.behave
+	h.mu.Unlock()
+	if behave != nil {
+		b = behave(n)
 	}
 	r := bufio.NewReader(conn)
 	for {
@@ -139,6 +142,13 @@ func (h *fakeHerdr) serve(conn net.Conn, n int) {
 			return
 		}
 	}
+}
+
+// setBehave sets the behavior of the connections that follow.
+func (h *fakeHerdr) setBehave(f func(n int) behavior) {
+	h.mu.Lock()
+	h.behave = f
+	h.mu.Unlock()
 }
 
 func (h *fakeHerdr) requests() []herdrRequest {

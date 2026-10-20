@@ -129,7 +129,7 @@ func TestTransport(t *testing.T) {
 
 	t.Run("a connection that ends without an answer is retried once with the same request", func(t *testing.T) {
 		host, h := startTUI(t)
-		h.behave = func(n int) behavior { return behavior{Close: n == 0} }
+		h.setBehave(func(n int) behavior { return behavior{Close: n == 0} })
 		host.fire("session_start", nil)
 		all := h.waitFor(2)
 		settle()
@@ -144,7 +144,7 @@ func TestTransport(t *testing.T) {
 	t.Run("an attempt that gets no answer in time is retried", func(t *testing.T) {
 		shortAttempts(t, 100*time.Millisecond, 2*time.Second)
 		host, h := startTUI(t)
-		h.behave = func(n int) behavior { return behavior{Silent: n == 0} }
+		h.setBehave(func(n int) behavior { return behavior{Silent: n == 0} })
 		begin := time.Now()
 		host.fire("session_start", nil)
 		h.waitFor(2)
@@ -156,7 +156,7 @@ func TestTransport(t *testing.T) {
 	t.Run("a late answer still counts when it comes within the bound", func(t *testing.T) {
 		shortAttempts(t, 2*time.Second, 2*time.Second)
 		host, h := startTUI(t)
-		h.behave = func(int) behavior { return behavior{Delay: 150 * time.Millisecond} }
+		h.setBehave(func(int) behavior { return behavior{Delay: 150 * time.Millisecond} })
 		host.fire("session_start", nil)
 		h.waitFor(1)
 		time.Sleep(400 * time.Millisecond)
@@ -168,7 +168,7 @@ func TestTransport(t *testing.T) {
 	t.Run("a herdr that never answers gets two attempts and no third, and quit still releases", func(t *testing.T) {
 		shortAttempts(t, 80*time.Millisecond, 120*time.Millisecond)
 		host, h := startTUI(t)
-		h.behave = func(int) behavior { return behavior{Silent: true} }
+		h.setBehave(func(int) behavior { return behavior{Silent: true} })
 		host.fire("session_start", nil)
 		time.Sleep(500 * time.Millisecond)
 		if n := h.connections(); n != 2 {
@@ -229,7 +229,7 @@ func TestDiagnostic(t *testing.T) {
 	t.Run("a request herdr never took is written once to stderr, and not again until one is delivered", func(t *testing.T) {
 		shortAttempts(t, 60*time.Millisecond, 60*time.Millisecond)
 		host, h := startTUI(t)
-		h.behave = func(int) behavior { return behavior{Close: true} }
+		h.setBehave(func(int) behavior { return behavior{Close: true} })
 		read := captureStderr(t)
 		host.fire("session_start", nil)
 		host.fire("agent_start", nil)
@@ -361,7 +361,7 @@ func TestStateReports(t *testing.T) {
 	// queueState and drainStateQueue, herdr-agent-state.ts:145-174: calls never overlap and only the newest state is kept.
 	t.Run("sends only the newest state when requests queue behind a slow herdr, still in order", func(t *testing.T) {
 		host, h := startTUI(t)
-		h.behave = func(int) behavior { return behavior{Delay: 300 * time.Millisecond} }
+		h.setBehave(func(int) behavior { return behavior{Delay: 300 * time.Millisecond} })
 		host.fire("session_start", nil)                                          // in flight
 		host.fire("agent_start", nil)                                            // queued, then replaced
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "A"}) // queued, then replaced
@@ -379,7 +379,7 @@ func TestStateReports(t *testing.T) {
 
 	t.Run("a queued state carries the resume command current when it is sent", func(t *testing.T) {
 		host, h := startTUI(t)
-		h.behave = func(int) behavior { return behavior{Delay: 300 * time.Millisecond} }
+		h.setBehave(func(int) behavior { return behavior{Delay: 300 * time.Millisecond} })
 		host.fire("session_start", nil) // in flight, with one.jsonl
 		host.setState(func(s *hostState) { s.sessionFile = "/home/user/.pig/agent/sessions/two.jsonl" })
 		host.fire("agent_start", nil) // queued; the session identity changes before it is sent
@@ -582,10 +582,10 @@ func TestSession(t *testing.T) {
 		}
 	})
 
-	t.Run("a session replacement reports again from a fresh state", func(t *testing.T) {
+	t.Run("a shutdown that is not a quit changes nothing, and the next session_start starts a fresh state", func(t *testing.T) {
 		// Pi loads a fresh copy of the extension for every session (core/extensions/loader.ts moduleCache: false, after
-		// session_shutdown in core/agent-session-runtime.ts), so the blocked counter and the reporting epoch start
-		// over. A Go host may keep the extension alive: the shutdown silences it and the next session_start resets it.
+		// session_shutdown in core/agent-session-runtime.ts), so the blocked counter and the dedupe state start over. A Go
+		// host may keep the extension alive: session_start resets them. A shutdown alone does nothing (ts:266-269).
 		host, h := startSession(t)
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "stale"})
 		h.waitFor(2)
@@ -661,9 +661,12 @@ func TestRelease(t *testing.T) {
 
 	t.Run("drops a queued report and does not wait for the one in flight", func(t *testing.T) {
 		host, h := startTUI(t)
-		h.behave = func(n int) behavior {
-			return behavior{Delay: time.Duration(map[bool]int{true: 600, false: 0}[n == 0]) * time.Millisecond}
-		}
+		h.setBehave(func(n int) behavior {
+			if n == 0 {
+				return behavior{Delay: 600 * time.Millisecond}
+			}
+			return behavior{}
+		})
 		host.fire("session_start", nil) // in flight, answered after 600 ms
 		host.fire("agent_start", nil)   // queued: must be dropped
 		begin := time.Now()
