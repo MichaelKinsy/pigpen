@@ -10,15 +10,15 @@ import (
 // standardization and the footnote list.
 
 var (
-	reBackrefLead = jsRE(`^[\s\^,.;]*$`, "")
-	reAllSpace    = jsRE(`^\s*$`, "")
-	reNonDigit    = jsRE(`\D`, "")
+	reBackrefLead  = jsRE(`^[\s\^,.;]*$`, "")
+	reAllSpace     = jsRE(`^\s*$`, "")
+	reNonDigit     = jsRE(`\D`, "")
 	reFootnoteWord = jsRE(`footnote`, "i")
-	reCiteNote    = jsRE(`cite_note-(.+)`, "")
-	reBibBib      = jsRE(`bib\.bib(\d+)`, "")
-	reVS          = jsRE(`[\x{FE0E}\x{FE0F}]`, "")
-	reLeadingHash = jsRE(`^[#]`, "")
-	reTrailingDot = jsRE(`\.$`, "")
+	reCiteNote     = jsRE(`cite_note-(.+)`, "")
+	reBibBib       = jsRE(`bib\.bib(\d+)`, "")
+	reVS           = jsRE(`[\x{FE0E}\x{FE0F}]`, "")
+	reLeadingHash  = jsRE(`^[#]`, "")
+	reTrailingDot  = jsRE(`\.$`, "")
 )
 
 func (h *dfdFootnoteHandler) tryLooseFootnotes(element *ldNode, state *dfdFootnoteState) {

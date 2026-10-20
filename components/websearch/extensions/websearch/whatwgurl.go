@@ -43,8 +43,10 @@ func wSpecialPort(scheme string) int {
 }
 
 // percent-encode sets
-func wInC0(c byte) bool       { return c <= 0x1f || c > 0x7e }
-func wInFragment(c byte) bool { return wInC0(c) || c == ' ' || c == '"' || c == '<' || c == '>' || c == '`' }
+func wInC0(c byte) bool { return c <= 0x1f || c > 0x7e }
+func wInFragment(c byte) bool {
+	return wInC0(c) || c == ' ' || c == '"' || c == '<' || c == '>' || c == '`'
+}
 func wInQuery(c byte) bool {
 	return wInC0(c) || c == ' ' || c == '"' || c == '#' || c == '<' || c == '>'
 }

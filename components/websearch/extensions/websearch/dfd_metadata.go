@@ -163,14 +163,14 @@ func firstNonEmpty(vals ...string) string {
 }
 
 var (
-	reByPrefix     = jsRE(`^by\s+`, "i")
-	reAuthorURL    = jsRE(`\(?\s*https?://\S+\s*\)?`, "i")
-	reAndSep       = jsRE(`,?\s+and\s+`, "i")
-	reTrailSep     = jsRE(`\s*[-\x{2013}\x{2014}|]\s*$`, "")
-	reCommaSpace   = jsRE(`(.*),\s(.*)`, "")
-	reTrailComma   = jsRE(`,$`, "")
-	reBylineMatch  = jsRE(`^By\s+([A-Z].+)$`, "i")
-	reSpaceRuns    = jsRE(`\s+`, "")
+	reByPrefix    = jsRE(`^by\s+`, "i")
+	reAuthorURL   = jsRE(`\(?\s*https?://\S+\s*\)?`, "i")
+	reAndSep      = jsRE(`,?\s+and\s+`, "i")
+	reTrailSep    = jsRE(`\s*[-\x{2013}\x{2014}|]\s*$`, "")
+	reCommaSpace  = jsRE(`(.*),\s(.*)`, "")
+	reTrailComma  = jsRE(`,$`, "")
+	reBylineMatch = jsRE(`^By\s+([A-Z].+)$`, "i")
+	reSpaceRuns   = jsRE(`\s+`, "")
 )
 
 func dfdCleanAuthorString(s string) string {

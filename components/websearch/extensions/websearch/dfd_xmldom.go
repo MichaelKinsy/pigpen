@@ -14,15 +14,15 @@ import (
 // names, attributes in order, and the child nodes with their kinds.
 
 const (
-	xmlNS      = "http://www.w3.org/XML/1998/namespace"
-	xmlnsNS    = "http://www.w3.org/2000/xmlns/"
-	xElement   = 1
-	xText      = 3
-	xCDATA     = 4
-	xPI        = 7
-	xComment   = 8
-	xDocument  = 9
-	xDocType   = 10
+	xmlNS     = "http://www.w3.org/XML/1998/namespace"
+	xmlnsNS   = "http://www.w3.org/2000/xmlns/"
+	xElement  = 1
+	xText     = 3
+	xCDATA    = 4
+	xPI       = 7
+	xComment  = 8
+	xDocument = 9
+	xDocType  = 10
 )
 
 type xNode struct {
@@ -510,7 +510,7 @@ func xSaxParse(src []rune, defaultNS *xNSScope, h *xHandler) {
 					h.fatalError("unclosed xml tag(s): " + strings.Join(unclosedTags, ", "))
 				}
 				rest := sub(start, len(src))
-				if !regexp.MustCompile(`^[`+dfdWS+`]*$`).MatchString(rest) {
+				if !regexp.MustCompile(`^[` + dfdWS + `]*$`).MatchString(rest) {
 					text := &xNode{kind: xText, data: rest}
 					if xDocumentElement(h.doc) {
 						h.error("Extra content at the end of the document")

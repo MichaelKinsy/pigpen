@@ -48,12 +48,12 @@ const (
 )
 
 var (
-	seqCdata      = []byte("CDATA[")
-	seqCdataEnd   = []byte("]]>")
-	seqCommentEnd = []byte("-->")
-	seqScriptEnd  = []byte("</script")
-	seqStyleEnd   = []byte("</style")
-	seqTitleEnd   = []byte("</title")
+	seqCdata       = []byte("CDATA[")
+	seqCdataEnd    = []byte("]]>")
+	seqCommentEnd  = []byte("-->")
+	seqScriptEnd   = []byte("</script")
+	seqStyleEnd    = []byte("</style")
+	seqTitleEnd    = []byte("</title")
 	seqTextareaEnd = []byte("</textarea")
 )
 
@@ -79,18 +79,18 @@ type ldParser struct {
 	seqIndex     int
 
 	// parser (htmlparser2 Parser)
-	stack         []string // the open tags, the innermost last
-	foreign       []bool   // foreignContext, the innermost last
-	tagname       string
-	attribname    string
-	attribvalue   strings.Builder
-	attribs       []ldAttr // an object keyed by name, in insertion order
-	haveAttribs   bool
-	document      *ldNode
+	stack       []string // the open tags, the innermost last
+	foreign     []bool   // foreignContext, the innermost last
+	tagname     string
+	attribname  string
+	attribvalue strings.Builder
+	attribs     []ldAttr // an object keyed by name, in insertion order
+	haveAttribs bool
+	document    *ldNode
 
 	// linkedom handlers
-	node          *ldNode
-	ownerSVG      *ldNode
+	node     *ldNode
+	ownerSVG *ldNode
 }
 
 var (
@@ -115,8 +115,8 @@ var (
 		"hr": true, "img": true, "input": true, "isindex": true, "keygen": true, "link": true, "meta": true, "param": true,
 		"source": true, "track": true, "wbr": true,
 	}
-	ldForeignContext   = map[string]bool{"math": true, "svg": true}
-	ldHTMLIntegration  = map[string]bool{"mi": true, "mo": true, "mn": true, "ms": true, "mtext": true, "annotation-xml": true, "foreignobject": true, "desc": true, "title": true}
+	ldForeignContext  = map[string]bool{"math": true, "svg": true}
+	ldHTMLIntegration = map[string]bool{"mi": true, "mo": true, "mn": true, "ms": true, "mtext": true, "annotation-xml": true, "foreignobject": true, "desc": true, "title": true}
 )
 
 // ldParseDocument is DOMParser.parseFromString(markup, "text/html"): a document, with no children for an empty

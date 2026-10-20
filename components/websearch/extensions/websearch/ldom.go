@@ -472,7 +472,7 @@ func (n *ldNode) attrValue(name string) (string, bool) {
 	return "", false
 }
 
-// attr is `getAttribute(name) || ''`.
+// attr is `getAttribute(name) || ”`.
 func (n *ldNode) attr(name string) string {
 	v, _ := n.getAttribute(name)
 	return v
