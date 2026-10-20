@@ -13,8 +13,7 @@ func registerGoalEvents(c *core) {
 	c.scheduler.dispatch = func(*jsObject) { c.h.Notify(refusal(continuationFeature), "error") }
 	c.pi.on("session_start", func(c *core, _ map[string]any) (any, error) {
 		invalidateGoalPoolCache()
-		c.sessionStart()
-		return nil, nil
+		return nil, c.sessionStart()
 	})
 	c.pi.on("session_shutdown", func(c *core, _ map[string]any) (any, error) {
 		c.shutdown()

@@ -276,7 +276,7 @@ func replayCase(t *testing.T, c driveCase, g goldenCase) {
 	// The original's timers would fire after the session step; the golden records none of what they do.
 	co.afterBase = func(time.Duration, func()) *time.Timer { return time.NewTimer(time.Hour) }
 	run := func(fn func()) { fn(); co.flush() }
-	start := func() { invalidateGoalPoolCache(); run(co.sessionStart) }
+	start := func() { invalidateGoalPoolCache(); run(func() { _ = co.sessionStart() }) }
 	for i, s := range c.Steps {
 		if s.At != nil {
 			now = base + *s.At

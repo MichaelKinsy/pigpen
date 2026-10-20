@@ -31,7 +31,7 @@ func (c *core) withCtx(ctx sdk.Context, fn func()) {
 	c.locked(func() {
 		h := sdkHost{ctx: ctx, c: c}
 		c.h = h
-		c.st = storage{cwd: h.Cwd()}
+		c.st.cwd = h.Cwd() // the pinned pool root stays with the session
 		fn()
 	})
 }

@@ -24,9 +24,45 @@ const (
 	snapshotLegacy   = ".goals-pool-snapshot.json"
 )
 
-type storage struct{ cwd string }
+// storage is the context of the goal files: the project directory and, for a pool outside the project (goalsRoot), its root as
+// goalStorageRoot resolved and pinned it for the session (newGoalStorage). The zero root is the default pool under cwd.
+type storage struct {
+	cwd   string
+	root0 string
+}
 
-func (s storage) root() string { return filepath.Join(absClean(s.cwd), ".pi", "goals") }
+func (s storage) root() string {
+	if s.root0 != "" {
+		return s.root0
+	}
+	return filepath.Join(absClean(s.cwd), ".pi", "goals")
+}
+
+// newGoalStorage is the storage of ctx: its pool root resolved (and pinned for the session) the way storage/goal-root.ts does.
+func newGoalStorage(ctx *goalStorageContext) (storage, error) {
+	root, err := goalStorageRoot(ctx)
+	if err != nil {
+		return storage{cwd: ctx.cwd}, err
+	}
+	if root == defaultGoalRoot(ctx.cwd) {
+		return storage{cwd: ctx.cwd}, nil
+	}
+	return storage{cwd: ctx.cwd, root0: root}, nil
+}
+
+// external reports a pool outside the project's .pi/goals.
+func (s storage) external() bool { return s.root0 != "" }
+
+// readActiveGoalPoolChecked is readActiveGoalPool for a caller that must not mistake a pool that vanished for an empty one: an
+// external pool whose root was removed is an error (ENOENT), as in the original; a default pool never is.
+func (s storage) readActiveGoalPoolChecked() (*goalPool, error) {
+	if s.external() {
+		if _, err := os.Lstat(s.root0); err != nil {
+			return nil, err
+		}
+	}
+	return s.readActiveGoalPool(), nil
+}
 
 func absClean(p string) string {
 	if a, err := filepath.Abs(p); err == nil {
@@ -63,10 +99,17 @@ func (s storage) mustPath(logical string) string {
 }
 
 func (s storage) snapshotPath() string {
+	if s.external() {
+		return filepath.Join(s.root(), ".metadata", ".goals-pool-snapshot.json")
+	}
 	return filepath.Join(filepath.Dir(s.root()), ".goals-pool-snapshot.json")
 }
 
 func (s storage) ensureDir(logical string, verifyDefault bool) error {
+	if s.external() {
+		// An external pool removed during a session must not silently reappear; managed ancestors may not be symlinks.
+		return ensureGoalStorageDirectory(&goalStorageContext{cwd: s.cwd, goalStorageRoot: &s.root0}, logical, verifyDefault)
+	}
 	target, err := s.path(logical)
 	if err != nil {
 		return err
