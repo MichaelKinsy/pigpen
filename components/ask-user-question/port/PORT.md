@@ -84,10 +84,12 @@ Host: xd670, CPUs 64-127, Pi built from commit 1402973a (`pi 1.3.0`, the Pi that
 - **RPC scenarios.** The 16 goldens in `port/golden` are re-recorded from the original under Pi 1402973a (only the header
   changed; the traces equal the Pi 1.0.0 ones). `pigeq check`: 15 of 16 pass on both lanes (pig-ts == pi-ts and
   pig-go == pi-ts). **`two-calls` differs between PiG and Pi**: in Pi the first `tool_execution_end` and the first
-  select dialog belong to "First?", under PiG to "Second?" (event 11 of the original under PiG, event 9 of the port).
-  It is the host: PiG core bug B3 (order of concurrent tool calls, their dialog requests and `tool_execution_end`
-  events), fixed on PiG's `fix/parallel-tool-ui-order`. The scenario is kept un-normalized and is excluded from mutation
-  kill counts until the fix lands.
+  select dialog belong to "First?", under PiG, in every run against the Pi recording, to "Second?" (event 11 of the
+  original under PiG, event 9 of the port). It is the host: PiG core bug B3 (order of concurrent tool calls, their dialog
+  requests and `tool_execution_end` events), and it is a race, not a fixed order: the same scenario recorded from the
+  port's own Binary matched Pi's order once and the reverse in the following run. Fix: PiG's
+  `fix/parallel-tool-ui-order`. The scenario is kept un-normalized and is excluded from mutation kill counts until
+  the fix lands.
 - **Mutations.** `pigeq mutate --unit`: 111 mutations, 0 not killed, with `two-calls` excluded (a mutant that only makes
   `two-calls` fail is not a kill). With the earlier runs counting `two-calls`, 6 mutants had survived undetected; each
   now has a unit test: the multi-select dialog title (the mutation now targets `en.json`, where the English text lives;
@@ -99,36 +101,44 @@ Host: xd670, CPUs 64-127, Pi built from commit 1402973a (`pi 1.3.0`, the Pi that
 - **Repo gates** at the branch head: `npm run check` exit 0, `npm run generate` leaves no diff, `npm test` 357 tests with 2
   failures, both in `scripts/perf/perf-harness.test.mjs` (they launch an interactive pig in the container and time out
   after 30 s; they do not touch this Package).
-- **Piglet.** `piglets/pig-popular` selects the port and the `pitui` library Package; the Binary builds, and `pigeq check
-  --builtin` on it passes (see the PR body for the run).
+- **Piglet.** `piglets/pig-popular` selects the port and the `pitui` library Package and builds (73,171,207 bytes at
+  `d9c7643`). The single-extension Binary of the final code (`scripts/perf/build-singles.mjs`, 72,548,615 bytes) records
+  its own traces with `pigeq record --self --builtin`; its 16 traces equal the Pi goldens in every event outside the
+  `llm` channel (the channel differs by the Binary's default tool set), and `pigeq check --builtin` against its own
+  recording passes 15 of 16 (`two-calls` is B3).
 - `pig install ... --validate-only --json` and `pig package validate components/ask-user-question`: valid.
 
-## Performance (xd670, CPUs 64-79; medians of 10 to 20 interleaved runs)
+## Performance (xd670, CPUs 64-79; medians of 12 interleaved runs, 20 for start-up)
 
 Compared with the previous Pigpen release (0.1.0, `main` at bee2966: the dialog walker only) and with the original under
-PiG's Node runtime (`pig -e port/oracle/index.ts`, PiG's TypeScript extension host).
+PiG's Node runtime (`pig -e port/oracle/index.ts`, PiG's TypeScript extension host). Measured at the branch head with
+the questionnaire, the highlighter and the locale gate in.
 
 | Measure | original under PiG (Node) | 0.1.0 | 0.2.0 |
 |---|---|---|---|
-| Binary, single-extension Piglet (bytes) | not a binary; TypeScript sources 617 KB | 70,947,079 (control `seed-check` 70,861,063: +86,016) | 71,987,463 (+1,126,400 over the control; +1,040,384 over 0.1.0, +1.47%) |
-| Start up, `pig -p` with the extension (ms) | 1053.7 | 47.4 | 44.9 (control 45.3, plain pig 23.4) |
-| Scenario `mixed-questions` through `pigeq lane` (ms, includes loading the extension and the scenario's 20 events) | 2909.5 | 2210.5 | 2304.0 (+4.2%) |
-| RPC walker, 1 question, in process (ns, B, allocs per call) | not measured | 420,269 / 41,512 / 682 | 421,146 / 41,547 / 682 (+0.2%) |
-| RPC walker, 3 questions, in process | not measured | 726,236 / 87,981 / 1,369 | 726,289 / 87,985 / 1,369 (0.0%) |
-| Questionnaire render at width 120 | 1,101 µs | not present | 192 µs, 44 KB, 977 allocs |
-| One key (Down) and render, twice | 1,630 µs | not present | 285 µs, 71 KB, 1,629 allocs |
-| Full flow (open, 8 keys, submit, a render after each) | 3,222 µs | not present | 820 µs, 216 KB, 5,046 allocs |
+| Binary, single-extension Piglet (bytes) | not a binary; TypeScript sources 617 KB | 70,947,079 (control `seed-check` 70,861,063: +86,016) | 72,548,615 (+1,687,552 over the control; +1,601,536 over 0.1.0, +2.26%) |
+| Start up, `pig -p` with the extension (ms) | 728.6 | 30.7 | 30.1 (control 29.1, plain pig 16.3) |
+| Scenario `mixed-questions` through `pigeq lane` (ms, loads the extension and plays the scenario's 20 events) | 2506.0 | 2005.5 | 2108.0 (+5.1%) |
+| RPC walker, 1 question, in process (ns, B, allocs per call) | not measured | 280,169 / 41,547 / 683 | 281,617 / 42,469 / 694 (+0.5%, +2.2%, +1.6%) |
+| RPC walker, 3 questions, in process | not measured | 408,755 / 88,094 / 1,370 | 418,985 / 89,008 / 1,382 (+2.5%, +1.0%, +0.9%) |
+| Questionnaire render at width 120 | 798 µs | not present | 167 µs, 58 KB, 1,141 allocs |
+| One key (Down) and render, twice | 1,098 µs | not present | 193 µs, 68 KB, 1,565 allocs |
+| Full flow (open, 8 keys, submit, a render after each) | 2,502 µs | not present | 492 µs, 222 KB, 4,959 allocs |
+| One-time load of every highlight.js language | in the background at Pi's start | not present | 18.8 ms, once per process |
 
 Notes. The start-up row is `scripts/perf/measure.mjs startup --mode print`; the tmux mode cannot run in the container
-(the same limitation as the two failing perf-harness tests). The 0.2.0 row of `mixed-questions` is 94 ms over 0.1.0,
-the larger Go module that `pig` loads for the run; the in-process walker numbers show no per-call change. The Node
-numbers are `port/perf/bench-original.mjs` (the original's `QuestionnaireSession` loaded with Pi's jiti, Pi's real dark
-theme for the preview's markdown, the identity theme elsewhere, V8 allocations not counted) against
-`internal/ui/bench_test.go` on the same three-question input and flow; the Go numbers use the identity theme. Input
-and render run on the TUI path and do bounded work per key: no host call is made from a render or a key (the session
-calls the host only to close the overlay and on the collapse listener). The one-time cost of the 1.04 MB growth in the
-Binary is pitui (the markdown parser with `regexp2`, the width tables and the word dictionaries); it is under the 10%
-rule for total size and has no per-call cost.
+(the same limitation as the two failing perf-harness tests). The 0.2.0 `mixed-questions` row is 103 ms over 0.1.0, the
+larger Go module that `pig` loads for the run; the in-process walker numbers show the per-call change (under 3%; the extra
+allocations are the `rpiv-i18n` settings check at the start of each call). The Node numbers are
+`port/perf/bench-original.mjs` (the original's `QuestionnaireSession` loaded with Pi's jiti, Pi's real dark theme for the
+preview's markdown, the identity theme elsewhere, V8 allocations not counted) against `internal/ui/bench_test.go` on
+the same three-question input and flow (the first option's preview has a TypeScript fence, so both highlight it); the
+Go numbers use the identity theme. Input and render run on the TUI path and do bounded work per key: no host call is made
+from a render or a key (the session calls the host only to close the overlay and on the collapse listener). The first
+fenced preview of a session waits at most for the one-time language load (18.8 ms), which starts when the questionnaire
+opens. The 1.6 MB growth of the Binary is pitui (the markdown parser with `regexp2`, the width tables, the word
+dictionaries) and the highlighter (the language grammars, 0.33 MB compressed); total size grows 2.26%, under the 10%
+rule, and there is no per-call cost.
 
 ## Findings
 
@@ -149,8 +159,8 @@ rule for total size and has no per-call cost.
    handles any dialog answer, so the first dialog and the first `tool_execution_end` belong to the first call. Under
    PiG, for the original TypeScript extension as well as for the port, the second call's dialog and result come first
    (`two-calls`: `pig-ts` differs from `pi-ts` at event 11, `pig-go` from `pi-ts` at event 9). Earlier runs read this as a
-   flake of the port (G11, 5 of 26 runs); with the real Pi build it is deterministic and the same for both
-   extensions, so it is the host. Fix: PiG `fix/parallel-tool-ui-order`. `TestParallelCallsAskEveryDialogBeforeTheFirstEnds`
+   flake of the port (G11, 5 of 26 runs); with the real Pi build it is the same for both
+   extensions and varies between runs of the Binary, so it is the host. Fix: PiG `fix/parallel-tool-ui-order`. `TestParallelCallsAskEveryDialogBeforeTheFirstEnds`
    states Pi's order and stays skipped until the fix is released.
 8. **Twins check at `655be0b`** exited 1: three `ask-user-question.normalize` cases were MISSING and five execute
    skips shared one reason. Review added the two the slice covers (normalized prompt event, normalized RPC dialog
