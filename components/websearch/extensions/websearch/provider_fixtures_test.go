@@ -14,8 +14,8 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"sync"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
