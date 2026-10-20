@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-ask-user-question",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Go port of @juicesharp/rpiv-ask-user-question: a structured questionnaire the model can put to you, with typed options instead of free-form replies (partial: the dialog walker; the interactive questionnaire is not ported yet)",
   "keywords": [
     "pig-package",

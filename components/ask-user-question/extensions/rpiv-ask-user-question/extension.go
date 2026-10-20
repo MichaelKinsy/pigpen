@@ -58,6 +58,9 @@ func (a *app) execute(ctx sdk.Context, args map[string]any) (any, error) {
 	if v := validateQuestionnaire(typed); !v.OK {
 		return toResult(buildToolResult(v.Message, questionnaireResult{Cancelled: true, Error: v.Error}))
 	}
+	if err := refuseUnported(ctx.Mode(), typed); err != nil {
+		return nil, err
+	}
 	emit(ctx, promptEvent, promptEventPayload(typed))
 	return a.runDialogs(ctx, typed)
 }
