@@ -1,0 +1,1277 @@
+[
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mn>42</mn></math>",
+  "out": "42"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>+</mo></math>",
+  "out": "+"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow></math>",
+  "out": "a + b"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>x</mi><mo>=</mo><mn>1</mn></mrow></math>",
+  "out": "x = 1"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>&#x3B1;</mi></math>",
+  "out": "\\alpha"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>α</mi><mo>∑</mo><mo>&#x2211;</mo></math>",
+  "out": "\\alpha \\sum \\sum"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"bold\">x</mi></math>",
+  "out": "\\mathbf{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"italic\">x</mi></math>",
+  "out": "\\mathit{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"bold-italic\">x</mi></math>",
+  "out": "\\mathbf{\\mathit{x}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"double-struck\">R</mi></math>",
+  "out": "\\mathbb{R}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"bold-fraktur\">g</mi></math>",
+  "out": "\\mathbf{\\mathfrak{g}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"script\">L</mi></math>",
+  "out": "\\mathcal{L}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"bold-script\">L</mi></math>",
+  "out": "\\mathbf{\\mathcal{L}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"fraktur\">g</mi></math>",
+  "out": "\\mathfrak{g}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"sans-serif\">s</mi></math>",
+  "out": "\\mathsf{s}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"bold-sans-serif\">s</mi></math>",
+  "out": "\\mathbf{\\mathsf{s}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"sans-serif-italic\">s</mi></math>",
+  "out": "\\mathsf{\\mathit{s}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"sans-serif-bold-italic\">s</mi></math>",
+  "out": "\\mathbf{\\mathsf{\\mathit{s}}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"monospace\">m</mi></math>",
+  "out": "\\mathtt{m}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"normal\">m</mi></math>",
+  "out": "m"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>  x  </mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi> </mi></math>",
+  "out": "\\textrm{ }"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi></mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>𝐀</mi><mi>é</mi><mi>ä</mi><mi>ǻ</mi><mi>ё</mi><mi>Ε</mi></math>",
+  "out": "\\mathbf{A} \\acute{e} \\ddot{a} \\dot{a} \\ddot{e} \\mathbf{E}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac bevelled=\"true\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "1/2"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac bevelled=\"true\"><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow><mn>2</mn></mfrac></math>",
+  "out": "\\left(a + b\\right)/2"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"0\"><mi>n</mi><mi>k</mi></mfrac></math>",
+  "out": "\\genfrac{}{}{0pt}{}{n}{k}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"2pt\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{2pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"2\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{0.8pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"1\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"thin\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{0.2pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"thick\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{0.8pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"medium\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"3px\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{2.25pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"50%\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{0.2pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"0.5em\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{0.5em}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\".25mm\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{0.25mm}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"-1pt\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{-1pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"1.5 PT\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{1.5pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"2foo\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"abc\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"0px\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{0pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"1e3\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"0.123456789\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\genfrac{}{}{0.0494pt}{}{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn></mfrac></math>",
+  "out": null,
+  "err": "mfrac tag must have exactly 2 children. It's actually 1"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn><mn>2</mn><mn>3</mn></mfrac></math>",
+  "out": null,
+  "err": "mfrac tag must have exactly 2 children. It's actually 3"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac/></math>",
+  "out": null,
+  "err": "mfrac tag must have exactly 2 children. It's actually 0"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msqrt><mn>2</mn></msqrt></math>",
+  "out": "\\sqrt{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msqrt><mi>a</mi><mo>+</mo><mi>b</mi></msqrt></math>",
+  "out": "\\sqrt{a + b}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mroot><mn>8</mn><mn>3</mn></mroot></math>",
+  "out": "\\sqrt[3]{8}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mroot><mn>8</mn></mroot></math>",
+  "out": null,
+  "err": "mroot tag must have exactly 2 children. It's actually 1"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msup><mi>x</mi><mn>2</mn></msup></math>",
+  "out": "x^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msub><mi>x</mi><mn>1</mn></msub></math>",
+  "out": "x_{1}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msubsup><mi>x</mi><mn>1</mn><mn>2</mn></msubsup></math>",
+  "out": "x_{1}^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msup><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow><mn>2</mn></msup></math>",
+  "out": "\\left(a + b\\right)^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msup><mrow><mi>a</mi></mrow><mn>2</mn></msup></math>",
+  "out": "a^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msup><mi>x</mi></msup></math>",
+  "out": null,
+  "err": "msup tag must have exactly 2 children. It's actually 1"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msub><mi>x</mi><mn>1</mn><mn>2</mn></msub></math>",
+  "out": null,
+  "err": "msub tag must have exactly 2 children. It's actually 3"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msubsup><mi>x</mi><mn>1</mn></msubsup></math>",
+  "out": null,
+  "err": "msubsup tag must have exactly 3 children. It's actually 2"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msup><mrow><mi>ab</mi><mi>c</mi></mrow><mn>2</mn></msup></math>",
+  "out": "\\left(ab c\\right)^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msup><mrow><mi>ab</mi></mrow><mn>2</mn></msup></math>",
+  "out": "ab^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>0</mn></mrow><mi>n</mi></munderover></math>",
+  "out": "\\sum_{i = 0}^{n}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><munderover><mo>∑</mo><mi>i</mi></munderover></math>",
+  "out": null,
+  "err": "munderover tag must have exactly 3 children. It's actually 2"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mover><mi>x</mi><mo>^</mo></mover></math>",
+  "out": "\\hat{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mover><mi>x</mi><mo>¯</mo></mover></math>",
+  "out": "\\bar{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mover><mi>x</mi><mo>→</mo></mover></math>",
+  "out": "\\overset{\\rightarrow}{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><munder><mi>x</mi><mo>_</mo></munder></math>",
+  "out": "\\underset{\\underline}{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><munder><mi>x</mi><mo>⏟</mo></munder></math>",
+  "out": "\\underbrace{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mover><mi>x</mi><mo>⏞</mo></mover></math>",
+  "out": "\\overbrace{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><munder><mi>lim</mi><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder></math>",
+  "out": "\\underset{x \\rightarrow 0}{lim}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mover><mi>x</mi></mover></math>",
+  "out": null,
+  "err": "mover tag must have exactly 2 children. It's actually 1"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mover><mi>x</mi><mover><mi>y</mi><mi>z</mi></mover></mover></math>",
+  "out": "\\overset{\\overset{z}{y}}{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mmultiscripts><mi>X</mi><mprescripts/><mn>1</mn><mn>2</mn></mmultiscripts></math>",
+  "out": "{}_{1}^{2}X"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mmultiscripts><mi>F</mi><mn>1</mn><mn>2</mn><mn>3</mn><mn>4</mn></mmultiscripts></math>",
+  "out": "F_{1}^{2}{}_{3}^{4}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mmultiscripts><mi>F</mi><none/><mn>2</mn><mprescripts/><mn>3</mn><none/></mmultiscripts></math>",
+  "out": "{}_{3}F^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mmultiscripts><mrow><mi>a</mi><mi>b</mi></mrow><mn>1</mn><mn>2</mn></mmultiscripts></math>",
+  "out": "{a b}_{1}^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mmultiscripts><mrow></mrow><mn>1</mn></mmultiscripts></math>",
+  "out": "{}_{1}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mmultiscripts></mmultiscripts></math>",
+  "out": null,
+  "err": "mmultiscripts tag must have at least 1 children. It's actually 0"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mmultiscripts><mi>X</mi><mn>1</mn></mmultiscripts></math>",
+  "out": "X_{1}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mmultiscripts><mi>X</mi><mprescripts/><mn>1</mn><mn>2</mn><mn>3</mn><mn>4</mn></mmultiscripts></math>",
+  "out": "{}_{1}^{2}{}_{3}^{4}X"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext>hello world</mtext></math>",
+  "out": "\\text{hello world}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext mathvariant=\"bold\">hi</mtext></math>",
+  "out": "\\textbf{hi}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext mathvariant=\"italic\">hi</mtext></math>",
+  "out": "\\textit{hi}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext mathvariant=\"bold-italic\">hi</mtext></math>",
+  "out": "\\textbf{\\textit{hi}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext mathvariant=\"double-struck\">R</mtext></math>",
+  "out": "\\mathbb{R}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext mathvariant=\"monospace\">code</mtext></math>",
+  "out": "\\mathtt{code}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext mathvariant=\"fraktur\">g</mtext></math>",
+  "out": "\\mathfrak{g}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext>a,b; c&#xA0;d</mtext></math>",
+  "out": "\\text{a},\\text{b};\\text{ c}\\textrm{ }\\text{d}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext>é→x1</mtext></math>",
+  "out": "\\acute{e}\\rightarrow\\text{x1}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext>😀 ok</mtext></math>",
+  "out": "😀\\text{ ok}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext></mtext></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></math>",
+  "out": "\\begin{matrix}1 & 2 \\\\ 3 & 4\\end{matrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"(\" close=\")\"><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr></mtable></mfenced></math>",
+  "out": "\\begin{pmatrix} 1 & 2 \\end{pmatrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"[\" close=\"]\"><mtable><mtr><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math>",
+  "out": "\\begin{bmatrix} 1 \\end{bmatrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"{\" close=\"}\"><mtable><mtr><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math>",
+  "out": "\\begin{Bmatrix} 1 \\end{Bmatrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"|\" close=\"|\"><mtable><mtr><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math>",
+  "out": "\\begin{vmatrix} 1 \\end{vmatrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"‖\" close=\"‖\"><mtable><mtr><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math>",
+  "out": "\\begin{Vmatrix} 1 \\end{Vmatrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"⟨\" close=\"⟩\"><mtable><mtr><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math>",
+  "out": "\\left⟨\\begin{matrix} 1 \\end{matrix}\\right⟩"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced><mtable><mtr><mtd><mn>1</mn></mtd></mtr></mtable></mfenced></math>",
+  "out": "\\begin{bmatrix} 1 \\end{bmatrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>(</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr></mtable><mo>)</mo></mrow></math>",
+  "out": "\\begin{pmatrix} 1 & 2 \\end{pmatrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>{</mo><mtable><mtr><mtd><mi>x</mi></mtd><mtd><mtext>if</mtext></mtd></mtr><mtr><mtd><mi>y</mi></mtd><mtd><mtext>else</mtext></mtd></mtr></mtable></mrow></math>",
+  "out": "\\begin{cases} x & \\text{if} \\\\ y & \\text{else} \\end{cases}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>{</mo><mtable><mtr><mtd><mi>x</mi></mtd></mtr></mtable><mo></mo></mrow></math>",
+  "out": "\\begin{cases} x \\end{cases}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtable columnalign=\"right left\"><mtr><mtd><mi>a</mi></mtd><mtd><mo>=</mo><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi></mtd><mtd><mo>=</mo><mi>d</mi></mtd></mtr></mtable></math>",
+  "out": "\\begin{aligned}a & = b \\\\ c & = d\\end{aligned}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtable><mtr columnalign=\"right\"><mtd columnalign=\"left\"><mi>a</mi></mtd></mtr></mtable></math>",
+  "out": "\\begin{aligned}a\\end{aligned}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtable><mtr><mtd><mtable><mtr><mtd><mn>1</mn></mtd></mtr></mtable></mtd></mtr></mtable></math>",
+  "out": "\\begin{matrix}\\begin{matrix}1\\end{matrix}\\end{matrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr></math>",
+  "out": "\\begin{matrix}1 & 2\\end{matrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced><mi>a</mi><mi>b</mi><mi>c</mi></mfenced></math>",
+  "out": "\\left(a,b,c\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"[\" close=\")\"><mi>a</mi><mi>b</mi></mfenced></math>",
+  "out": "\\left[a,b\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"{\" close=\"}\"><mi>a</mi><mi>b</mi></mfenced></math>",
+  "out": "\\left\\{a,b\\right\\}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"||\" close=\"||\"><mi>a</mi></mfenced></math>",
+  "out": "\\left\\|a\\right\\|"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced separators=\";\"><mi>a</mi><mi>b</mi><mi>c</mi></mfenced></math>",
+  "out": "\\left(a;b;c\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced separators=\"\"><mi>a</mi><mi>b</mi></mfenced></math>",
+  "out": "\\left(ab\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced separators=\",;\"><mi>a</mi><mi>b</mi><mi>c</mi><mi>d</mi></mfenced></math>",
+  "out": "\\left(a,b;c;d\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced separators=\" ,\"><mi>a</mi><mi>b</mi><mi>c</mi></mfenced></math>",
+  "out": "\\left(a b,c\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced></mfenced></math>",
+  "out": "\\left(\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"\" close=\"\"><mi>a</mi></mfenced></math>",
+  "out": "\\left(a\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>(</mo><mi>a</mi><mo>+</mo><mi>b</mi><mo>)</mo></mrow></math>",
+  "out": "\\left(a + b\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>(</mo><mi>a</mi></mrow></math>",
+  "out": "\\left(\\right. a"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>a</mi><mo>)</mo></mrow></math>",
+  "out": "a \\left.\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>[</mo><mi>a</mi><mo>)</mo></mrow></math>",
+  "out": "\\left[a\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>|</mo><mi>x</mi><mo>|</mo></mrow></math>",
+  "out": "\\left|x\\right|"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>|</mo><mi>x</mi></mrow></math>",
+  "out": "\\left|\\right. x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>‖</mo><mi>x</mi><mo>‖</mo></mrow></math>",
+  "out": "\\left\\|x\\right\\|"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>∥</mo><mi>x</mi><mo>∥</mo><mo>∥</mo><mi>y</mi><mo>∥</mo></mrow></math>",
+  "out": "\\left\\|x\\right\\| \\left\\|y\\right\\|"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>||</mo><mi>x</mi><mo>||</mo></mrow></math>",
+  "out": "\\left\\|x\\right\\|"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>(</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></mrow></math>",
+  "out": "\\left(\\left(x\\right)\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>(</mo><mo>[</mo><mi>x</mi><mo>)</mo></mrow></math>",
+  "out": "\\left(\\right. \\left[x\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>(</mo><mo>)</mo></mrow></math>",
+  "out": "\\left(\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>(</mo><mi>x</mi><mo>)</mo></math>",
+  "out": "\\left(x\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>∥</mo><mi>P</mi><msubsup><mrow><mo>∥</mo></mrow><mi>F</mi><mn>2</mn></msubsup></math>",
+  "out": "\\left\\|P\\right\\|_{F}^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>|</mo><mi>P</mi><msub><mo>|</mo><mi>F</mi></msub><mo>+</mo><mo>|</mo><mi>Q</mi><mo>|</mo></math>",
+  "out": "\\left|P\\right|_{F} + \\left|Q\\right|"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>|</mo><mi>P</mi><msup><mi>x</mi><mn>2</mn></msup></math>",
+  "out": "\\left|\\right. P x^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>(</mo><mo>(</mo><mi>x</mi><mo>)</mo></mrow></math>",
+  "out": "\\left(\\right. \\left(x\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mo>)</mo><mi>x</mi><mo>(</mo></mrow></math>",
+  "out": "\\left.\\right) x \\left(\\right."
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><maction actiontype=\"toggle\"><mi>a</mi><mi>b</mi></maction></math>",
+  "out": "a \\Longrightarrow b"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><maction><mi>a</mi><mi>b</mi></maction></math>",
+  "out": "a \\Longrightarrow b"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><maction actiontype=\"statusline\"><mi>a</mi><mi>b</mi></maction></math>",
+  "out": "a"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><maction actiontype=\"x\"></maction></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"actuarial\"><mi>x</mi></menclose></math>",
+  "out": "\\overline{\\left.x\\right|}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"radical\"><mi>x</mi></menclose></math>",
+  "out": "\\sqrt{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"box\"><mi>x</mi></menclose></math>",
+  "out": "\\boxed{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"roundedbox\"><mi>x</mi></menclose></math>",
+  "out": "\\boxed{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"circle\"><mi>x</mi></menclose></math>",
+  "out": "\\boxed{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"left\"><mi>x</mi></menclose></math>",
+  "out": "\\left|x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"right\"><mi>x</mi></menclose></math>",
+  "out": "x\\right|"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"top\"><mi>x</mi></menclose></math>",
+  "out": "\\overline{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"bottom\"><mi>x</mi></menclose></math>",
+  "out": "\\underline{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"updiagonalstrike\"><mi>x</mi></menclose></math>",
+  "out": "\\cancel{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"downdiagonalstrike\"><mi>x</mi></menclose></math>",
+  "out": "\\bcancel{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"updiagonalarrow\"><mi>x</mi></menclose></math>",
+  "out": "\\cancelto{}{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"verticalstrike\"><mi>x</mi></menclose></math>",
+  "out": "\\hcancel{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"horizontalstrike\"><mi>x</mi></menclose></math>",
+  "out": "\\hcancel{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"madruwb\"><mi>x</mi></menclose></math>",
+  "out": "\\underline{x\\right|}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"phasorangle\"><mi>x</mi></menclose></math>",
+  "out": "{\\angle \\underline{x}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"longdiv\"><mi>x</mi></menclose></math>",
+  "out": "\\overline{\\left.\\right)x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose notation=\"foo\"><mi>x</mi></menclose></math>",
+  "out": "\\overline{\\left.\\right)x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><menclose><mi>x</mi></menclose></math>",
+  "out": "\\overline{\\left.\\right)x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><merror><mi>x</mi></merror></math>",
+  "out": "\\color{red}{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mphantom><mi>x</mi></mphantom></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mpadded><mi>x</mi><mi>y</mi></mpadded></math>",
+  "out": "x y"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mspace linebreak=\"newline\"/></math>",
+  "out": "\\\\"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mspace width=\"1em\"/></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>a</mi><mspace/><mi>b</mi></math>",
+  "out": "a b"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mstyle displaystyle=\"true\"><mi>x</mi></mstyle></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><mi>x</mi></mrow><annotation encoding=\"application/x-tex\">x</annotation></semantics></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>&#x2061;</mi><mo>&#x2062;</mo><mo>&#x2064;</mo><mo>&#x2063;</mo></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#xA0;</mo></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>±</mo><mo>≤</mo><mo>∞</mo><mi>∞</mi><mo>…</mo><mi>ℏ</mi></math>",
+  "out": "\\pm \\leq \\infty \\infty \\ldots \\hbar"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mn>½</mn><mn>²</mn><mn>₃</mn><mi>ⁿ</mi><mn>①</mn><mn>㊿</mn></math>",
+  "out": "\\dfrac{1}{2} ^{2} _{3} ^{n} \\textcircled{1} \\textcircled{50}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>²</mo></math>",
+  "out": "2"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>²</mi></math>",
+  "out": "^{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>sin</mi><mo>&#x2061;</mo><mi>x</mi></math>",
+  "out": "sin x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>lim</mi></math>",
+  "out": "lim"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>constructor</mi><mo>toString</mo><mn>valueOf</mn></math>",
+  "out": "constructor toString valueOf"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>__proto__</mi></math>",
+  "out": "__proto__"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><constructor><mi>x</mi></constructor></math>",
+  "out": null,
+  "err": "(intermediate value).toLatexConverter(...).convert is not a function"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><toString/></math>",
+  "out": null,
+  "err": "Converter is not a constructor"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><hasOwnProperty><mi>x</mi></hasOwnProperty></math>",
+  "out": null,
+  "err": "Converter is not a constructor"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><__proto__/></math>",
+  "out": null,
+  "err": "Converter is not a constructor"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><foo><mi>x</mi><mi>y</mi></foo></math>",
+  "out": "x y"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><math><mi>x</mi></math></math>",
+  "out": "xx"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>x</mi></mrow><math><mi>y</mi></math></math>",
+  "out": "x yy"
+ },
+ {
+  "in": "",
+  "out": ""
+ },
+ {
+  "in": "x",
+  "out": ""
+ },
+ {
+  "in": "<math/>",
+  "out": ""
+ },
+ {
+  "in": "<math></math>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi>x</mi></math><math><mi>y</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<div><math><mi>x</mi></math></div>",
+  "out": "x"
+ },
+ {
+  "in": "<p>a</p>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi>x</mi></math> trailing",
+  "out": "x"
+ },
+ {
+  "in": "leading <math><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math><mi>x</mi></math></math>",
+  "out": "x"
+ },
+ {
+  "in": "</math>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi>x</mi>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi>x</math>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi>x</mi></mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<?xml version=\"1.0\"?><math><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<math><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<?xml version=\"2.0\"?><math><mi>x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math><?pi data?><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math><!-- c --><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math><!-- c --></math>",
+  "out": ""
+ },
+ {
+  "in": "<math><![CDATA[x < y]]></math>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi><![CDATA[x<y]]></mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi>a<!-- c -->b</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi>a<?x y?>b</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<!DOCTYPE math><math><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<!DOCTYPE math PUBLIC \"-//W3C//DTD MathML 2.0//EN\" \"http://www.w3.org/Math/DTD/mathml2/mathml2.dtd\"><math><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<!DOCTYPE math [<!ENTITY foo \"bar\">]><math><mi>&foo;</mi></math>",
+  "out": "&foo;"
+ },
+ {
+  "in": "<!DOCTYPE html><math><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math><mi>x</mi></math><!DOCTYPE math>",
+  "out": ""
+ },
+ {
+  "in": "<!-- lead --><math><mi>x</mi></math><!-- trail -->",
+  "out": "x"
+ },
+ {
+  "in": "<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\"><mml:mi>x</mml:mi></mml:math>",
+  "out": "x"
+ },
+ {
+  "in": "<m:math xmlns:m=\"http://www.w3.org/1998/Math/MathML\"><m:mi>x</m:mi></m:math>",
+  "out": ""
+ },
+ {
+  "in": "<m:math><m:mi>x</m:mi></m:math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns:foo=\"a\"><mi foo:bar=\"1\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math><mi foo:bar=\"1\">x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math><mi xml:lang=\"en\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><mi xlink:href=\"#a\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"\"><mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns:a=\"u\" xmlns:b=\"u\"><mi a:x=\"1\" b:x=\"2\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>&amp;</mi><mo>&lt;</mo><mo>&gt;</mo><mo>&quot;</mo><mo>&apos;</mo></math>",
+  "out": "\\& < > \" '"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&nbsp;</mo></math>",
+  "out": "&nbsp;"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&unknown;</mo></math>",
+  "out": "&unknown;"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&amp</mo></math>",
+  "out": "&amp"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#x41;&#65;&#X41;</mo></math>",
+  "out": "AA&#X41;"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#xZZ;</mo></math>",
+  "out": "&#xZZ;"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#;</mo></math>",
+  "out": "&#;"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&</mo></math>",
+  "out": "\\&"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>a & b</mo></math>",
+  "out": "a & b"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#x1F600;</mo></math>",
+  "out": "😀"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#xD800;</mo></math>",
+  "out": "\ud800"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#0;</mo></math>",
+  "out": "\u0000"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#x110000;</mo></math>",
+  "out": "\udc00\udc00"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#99999999999;</mo></math>",
+  "out": "\udfff"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>&#xA0;&#160;</mo></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>&#x3b1;&#x3A9;</mi></math>",
+  "out": "αΩ"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>&InvisibleTimes;</mi></math>",
+  "out": "&InvisibleTimes;"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"&amp;&lt;\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"&bad;\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"{\" close=></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open='{' close= ><mi>a</mi></mfenced></math>",
+  "out": "\\left\\{a\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open close=\"}\"><mi>a</mi></mfenced></math>",
+  "out": "\\left(a\\right\\}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"(\" close><mi>a</mi><mi>b</mi></mfenced></math>",
+  "out": "\\left(a,b\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=( close=)><mi>a</mi></mfenced></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=(><mi>a</mi></mfenced></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=bold>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"bold\" mathvariant=\"italic\">x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"bold\"mathvariant2=\"x\">x</mi></math>",
+  "out": "\\mathbf{x}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a = \"b\" c = 'd'>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"1\"\n b=\"2\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"<\">x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"x>y\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a='x\"y'>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"x</math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced open=\"(\" close=\")\" separators></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced separators><mi>a</mi><mi>b</mi></mfenced></math>",
+  "out": "\\left(a,b\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfenced separators=\"\"><mi>a</mi><mi>b</mi></mfenced></math>",
+  "out": "\\left(ab\\right)"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi bevelled>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac bevelled><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac bevelled=\"bevelled\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac bevelled=\"false\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "1/2"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac bevelled=\"\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac linethickness=\"linethickness\"><mn>1</mn><mn>2</mn></mfrac></math>",
+  "out": "\\frac{1}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi 1a=\"x\">x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a b c>x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi =x>x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"1\"b=\"2\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"1\"/></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi/ >x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi / >x</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><1mi>x</1mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x<</mi></math>",
+  "out": "x<"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x< y</mi></math>",
+  "out": "x< y"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>a<b>c</mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><<mi>x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi ></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</ mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi\n></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><MI>x</MI></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><Mi>x</Mi></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi><mi>y</mi></math>",
+  "out": "x y"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><br></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi><br/></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi><br></math>",
+  "out": ""
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>a</mi>\n<mo>+</mo>\r\n<mi>b</mi></math>",
+  "out": "a + b"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow> <mi>a</mi> <mo>+</mo> </mrow></math>",
+  "out": "a +"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext>  a   b  </mtext></math>",
+  "out": "\\text{ a b }"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext>a b c</mtext></math>",
+  "out": "\\text{a}\\textrm{ }\\text{b}\\textrm{ }\\text{c}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>a b</mi></math>",
+  "out": "a b"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>ab</mi></math>",
+  "out": "a b"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>ab</mi></math>",
+  "out": "ab"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mo>\t+\t</mo></math>",
+  "out": "+"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mn> 1 2 </mn></math>",
+  "out": "1 2"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mn> 1 </mn></math>",
+  "out": "1"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mia=\"1\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi a=\"1\"b=\"2\">x</mi></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mi>x</mi></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></mrow></math>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><msup><mi>x</mi><mn>2</mn><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup><mn>2</mn></msup></math>",
+  "out": null,
+  "err": "msup tag must have exactly 2 children. It's actually 3"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi><mi>x</mi></math>",
+  "out": "x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><mfrac><mrow><mo>−</mo><mi>b</mi><mo>±</mo><msqrt><msup><mi>b</mi><mn>2</mn></msup><mo>−</mo><mn>4</mn><mi>a</mi><mi>c</mi></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac></mrow><annotation encoding=\"application/x-tex\">\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}</annotation></semantics></math>",
+  "out": "\\frac{- b \\pm \\sqrt{b^{2} - 4 a c}}{2 a}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" alttext=\"{\\displaystyle E=mc^{2}}\" display=\"inline\"><semantics><mrow class=\"MJX-TeXAtom-ORD\"><mstyle displaystyle=\"true\" scriptlevel=\"0\"><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mrow class=\"MJX-TeXAtom-ORD\"><mn>2</mn></mrow></msup></mstyle></mrow><annotation encoding=\"application/x-tex\">{\\displaystyle E=mc^{2}}</annotation></semantics></math>",
+  "out": "E = m c^{2}"
+ },
+ {
+  "in": "<math display=\"block\"><mrow><msub><mi>∫</mi><mrow><mn>0</mn></mrow></msub><msup><mrow></mrow><mi>∞</mi></msup><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mi>d</mi><mi>x</mi><mo>=</mo><mfrac><msqrt><mi>π</mi></msqrt><mn>2</mn></mfrac></mrow></math>",
+  "out": "\\int_{0} ^{\\infty} e^{- x^{2}} d x = \\frac{\\sqrt{\\pi}}{2}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mtable displaystyle=\"true\" columnalign=\"right left right left right left right left right left right left\" columnspacing=\"0em 2em 0em 2em 0em 2em 0em 2em 0em 2em 0em\" rowspacing=\"3pt\"><mtr><mtd><mi>a</mi></mtd><mtd><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><mi>b</mi></mtd><mtd><mo>=</mo><mn>2</mn></mtd></mtr></mtable></math>",
+  "out": "\\begin{aligned}a & = 1 \\\\ b & = 2\\end{aligned}"
+ },
+ {
+  "in": "<math><mrow><mo>(</mo><mtable><mtr><mtd><mi>a</mi></mtd><mtd><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi></mtd><mtd><mi>d</mi></mtd></mtr></mtable><mo>)</mo></mrow></math>",
+  "out": "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>sin</mi><mo>⁡</mo><mrow><mo>(</mo><mi>θ</mi><mo>)</mo></mrow><mo>=</mo><mfrac><mtext>opposite</mtext><mtext>hypotenuse</mtext></mfrac></mrow></math>",
+  "out": "sin \\left(\\theta\\right) = \\frac{\\text{opposite}}{\\text{hypotenuse}}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><msubsup><mo>∫</mo><mn>0</mn><mn>1</mn></msubsup><mi>f</mi><mo stretchy=\"false\">(</mo><mi>x</mi><mo stretchy=\"false\">)</mo><mi>d</mi><mi>x</mi></math>",
+  "out": "\\int_{0}^{1} f \\left(x\\right) d x"
+ },
+ {
+  "in": "<math><mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msup><mi>k</mi><mn>2</mn></msup><mo>=</mo><mfrac><mrow><mi>n</mi><mo stretchy=\"false\">(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo stretchy=\"false\">)</mo><mo stretchy=\"false\">(</mo><mn>2</mn><mi>n</mi><mo>+</mo><mn>1</mn><mo stretchy=\"false\">)</mo></mrow><mn>6</mn></mfrac></mrow></math>",
+  "out": "\\sum_{k = 1}^{n} k^{2} = \\frac{n \\left(n + 1\\right) \\left(2 n + 1\\right)}{6}"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi mathvariant=\"normal\">&#x394;</mi><mi>G</mi><mo>=</mo><mi mathvariant=\"normal\">&#x394;</mi><mi>H</mi><mo>&#x2212;</mo><mi>T</mi><mi mathvariant=\"normal\">&#x394;</mi><mi>S</mi></math>",
+  "out": "\\Delta G = \\Delta H - T \\Delta S"
+ },
+ {
+  "in": "<math><mi>a</mi><mo>&#x2260;</mo><mi>b</mi><mo>&#x2264;</mo><mi>c</mi><mo>&#x2192;</mo><mi>d</mi><mo>&#x21D2;</mo><mi>e</mi><mo>&#x2208;</mo><mi mathvariant=\"double-struck\">R</mi></math>",
+  "out": "a \\neq b \\leq c \\rightarrow d \\Rightarrow e \\in \\mathbb{R}"
+ },
+ {
+  "in": "<math class=\"ltx_Math\" display=\"inline\" id=\"S1.p1.m1\" alttext=\"x^{2}\"><semantics id=\"S1.p1.m1.1a\"><msup id=\"S1.p1.m1.1.1\"><mi id=\"S1.p1.m1.1.1.2\">x</mi><mn id=\"S1.p1.m1.1.1.3\">2</mn></msup><annotation encoding=\"application/x-tex\">x^{2}</annotation></semantics></math>",
+  "out": "x^{2}"
+ },
+ {
+  "in": "<span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><mi>x</mi></mrow><annotation encoding=\"application/x-tex\">x</annotation></semantics></math></span>",
+  "out": "x"
+ },
+ {
+  "in": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mrow><mo>{</mo><mtable><mtr><mtd><mn>0</mn></mtd><mtd><mtext>if&#xA0;</mtext><mi>x</mi><mo>&lt;</mo><mn>0</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mtext>otherwise</mtext></mtd></mtr></mtable></mrow></mrow></math>",
+  "out": "f \\left(x\\right) = \\begin{cases} 0 & \\text{if}\\textrm{ } x < 0 \\\\ 1 & \\text{otherwise} \\end{cases}"
+ }
+]
