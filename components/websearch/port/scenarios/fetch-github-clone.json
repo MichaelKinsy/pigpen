@@ -1,0 +1,104 @@
+{
+ "name": "fetch-github-clone",
+ "description": "fetch_content clones GitHub repositories with git when gh is not installed: the git command line, the clone cache and the directory, tree and file views of a clone that holds nothing.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"githubClone\": {\"clonePath\": \"$HOME/clones\"}}"
+ },
+ "commands": {
+  "gh": {
+   "mode": "missing"
+  },
+  "git": {
+   "mode": "canned",
+   "exit": 0
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/tree/main/docs"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/blob/main/README.md"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/blob/main/README.md"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/tree/feature%2Fx"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "look at the repository"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "runtime-[A-Za-z0-9]{6}",
+   "replacement": "runtime-<id>"
+  }
+ ]
+}

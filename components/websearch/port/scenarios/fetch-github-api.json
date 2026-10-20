@@ -1,0 +1,76 @@
+{
+ "name": "fetch-github-api",
+ "description": "fetch_content uses the gh API view for a repository over the size threshold and for a commit SHA, and gh repo clone when forceClone is set.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"githubClone\": {\"clonePath\": \"$HOME/clones\"}}"
+ },
+ "commands": {
+  "gh": {
+   "mode": "canned",
+   "stdout": "20000000UkVBRE1FIGhlbGxvCg==",
+   "exit": 0
+  },
+  "git": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/blob/main/README.md"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/blob/0123456789abcdef0123456789abcdef01234567/README.md"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://github.com/o/r/blob/main/README.md",
+      "forceClone": true
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "look at the repository"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "runtime-[A-Za-z0-9]{6}",
+   "replacement": "runtime-<id>"
+  }
+ ]
+}
