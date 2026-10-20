@@ -65,6 +65,20 @@ func NormalizeDomain(value string) string {
 	if input == "" {
 		return ""
 	}
+	if plainDNSName(input) {
+		// What the URL path below returns for such a name is the name itself: it needs no
+		// percent-decoding, IDNA mapping, IPv4 or IPv6 rewriting, and has no port or path.
+		if plainDomainShape(input) {
+			return input
+		}
+		return ""
+	}
+	return normalizeDomainViaURL(input)
+}
+
+// normalizeDomainViaURL is the general case of NormalizeDomain: the filter entry (lower-cased,
+// without its leading "-") is parsed as the host of a URL.
+func normalizeDomainViaURL(input string) string {
 	candidate := input
 	if !strings.Contains(candidate, "://") {
 		candidate = "https://" + candidate
@@ -80,6 +94,52 @@ func NormalizeDomain(value string) string {
 		return input
 	}
 	return ""
+}
+
+// plainDNSName reports a name made of lower-case ASCII letters, digits and hyphens in non-empty
+// labels that neither start nor end with a hyphen, whose last label starts with a letter (so it can
+// never be read as an IPv4 number).
+func plainDNSName(s string) bool {
+	labelStart, prev := true, byte('.')
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case c >= 'a' && c <= 'z', c >= '0' && c <= '9':
+		case c == '-':
+			if labelStart {
+				return false
+			}
+		case c == '.':
+			if labelStart || prev == '-' {
+				return false
+			}
+			labelStart, prev = true, c
+			continue
+		default:
+			return false
+		}
+		labelStart, prev = false, c
+	}
+	if labelStart || prev == '-' {
+		return false
+	}
+	last := s[strings.LastIndexByte(s, '.')+1:]
+	return last[0] >= 'a' && last[0] <= 'z'
+}
+
+// plainDomainShape is domainShape for a plainDNSName: a dot, then a top-level label of at least two
+// letters.
+func plainDomainShape(s string) bool {
+	dot := strings.LastIndexByte(s, '.')
+	if dot < 1 || len(s)-dot-1 < 2 {
+		return false
+	}
+	for i := dot + 1; i < len(s); i++ {
+		if s[i] < 'a' || s[i] > 'z' {
+			return false
+		}
+	}
+	return true
 }
 
 // domainFilters is the normalised, deduplicated include/exclude split of a domainFilter.

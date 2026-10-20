@@ -76,11 +76,11 @@ func JSHostname(u *url.URL) string {
 func Origin(u *url.URL) string { return u.Scheme + "://" + u.Host }
 
 func isNumericLastLabel(host string) bool {
-	labels := strings.Split(host, ".")
-	last := labels[len(labels)-1]
-	if last == "" && len(labels) > 1 {
-		last = labels[len(labels)-2]
+	end := len(host)
+	if end > 0 && host[end-1] == '.' {
+		end-- // the empty label after a final dot does not count; the one before it does
 	}
+	last := host[strings.LastIndexByte(host[:end], '.')+1 : end]
 	if last == "" {
 		return false
 	}
@@ -97,7 +97,7 @@ func isNumericLastLabel(host string) bool {
 }
 
 func parseIPv4Number(s string) (uint64, bool) {
-	if s == "" {
+	if s == "" || s[0] < '0' || s[0] > '9' {
 		return 0, false
 	}
 	base := 10
