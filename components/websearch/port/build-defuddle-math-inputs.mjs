@@ -151,3 +151,75 @@ mathml.push(
   m('<mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mrow><mo>{</mo><mtable><mtr><mtd><mn>0</mn></mtd><mtd><mtext>if&#xA0;</mtext><mi>x</mi><mo>&lt;</mo><mn>0</mn></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mtext>otherwise</mtext></mtd></mtr></mtable></mrow></mrow>'),
 )
 w('mathml-inputs.json', mathml)
+
+// ---- LaTeX ------------------------------------------------------------------------------------------------------
+// 1. the hand-written samples, 2. the LaTeX the Defuddle fixtures carry (data-latex, annotations, math scripts, alt of
+// latex images), 3. systematic coverage generated from Temml's own tables (TEMML_SRC points at temml/src): every
+// symbol, function, environment and macro with arguments.
+const latex = new Set(fs.readFileSync(new URL('./defuddle-math-latex-samples.txt', import.meta.url).pathname, 'utf8').split('\n').filter((l) => l !== ''))
+const fixtureDir = new URL('../extensions/websearch/testdata/defuddle/', import.meta.url).pathname
+const decodeEntities = (t) => t.replace(/&(amp|lt|gt|quot|#39|#x27|apos);/g, (_, e) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", '#x27': "'", apos: "'" })[e])
+for (const f of fs.readdirSync(fixtureDir).filter((n) => n.endsWith('.html')).sort()) {
+  const html = fs.readFileSync(fixtureDir + f, 'utf8')
+  const found = []
+  for (const re of [/data-(?:latex|math|tex)="([^"]+)"/g, /<annotation[^>]*encoding="application\/x-tex"[^>]*>([\s\S]*?)<\/annotation>/g,
+    /<script[^>]*type="math\/tex[^"]*"[^>]*>([\s\S]*?)<\/script>/g, /<img[^>]*class="latex"[^>]*alt="([^"]+)"/g, /\bdata-entry="([^"]+)"/g]) {
+    for (const m of html.matchAll(re)) found.push(decodeEntities(m[1]).trim())
+  }
+  for (const t of found) if (t && t.length < 600) latex.add(t)
+}
+if (process.env.TEMML_SRC) {
+  const { register } = await import('node:module')
+  const path = await import('node:path')
+  const src = path.resolve(process.env.TEMML_SRC)
+  register('data:text/javascript,' + encodeURIComponent(`
+export async function resolve(specifier, context, next) {
+  try { return await next(specifier, context) } catch (e) {
+    if (specifier.startsWith('.') && !specifier.endsWith('.js')) return next(specifier + '.js', context)
+    throw e
+  }
+}`), import.meta.url)
+  const symbols = (await import(path.join(src, 'symbols.js'))).default
+  const { _functions } = await import(path.join(src, 'defineFunction.js'))
+  await import(path.join(src, 'functions.js'))
+  const { _environments } = await import(path.join(src, 'defineEnvironment.js'))
+  const { _macros } = await import(path.join(src, 'defineMacro.js'))
+  for (const sym of Object.keys(symbols.math)) latex.add(`a ${sym} b`)
+  for (const sym of Object.keys(symbols.math)) if (sym.startsWith('\\')) latex.add(`${sym}`)
+  for (const sym of Object.keys(symbols.text)) latex.add(`\\text{a ${sym} b}`)
+  for (const [name, data] of Object.entries(_functions)) {
+    if (!name.startsWith('\\')) continue
+    const n = data.numArgs, o = data.numOptionalArgs
+    const args = (k) => Array.from({ length: k }, (_, i) => '{' + 'abc'[i % 3] + '}').join('')
+    latex.add(name)
+    if (n > 0) {
+      latex.add(name + args(n))
+      latex.add(name + '{x^2}'.repeat(n))
+      latex.add('x ' + name + ' y' + args(Math.max(0, n - 1)))
+    }
+    if (o > 0) latex.add(name + '[opt]' + args(n))
+    if (n === 1) { latex.add(name + '{\\alpha}'); latex.add(name + '{AB}'); latex.add('\\text{' + name + '{a}}'); latex.add(name + '{a}^2_3') }
+    if (n === 2) { latex.add(name + '{12}{34}'); latex.add(name + '{\\frac ab}{c}') }
+  }
+  for (const name of Object.keys(_environments)) {
+    latex.add(`\\begin{${name}} a & b \\\\ c & d \\end{${name}}`)
+    latex.add(`\\begin{${name}}{cc} a & b \\\\ c & d \\end{${name}}`)
+    latex.add(`\\begin{${name}} a \\end{${name}}`)
+  }
+  for (const [name, v] of Object.entries(_macros)) {
+    if (!name.startsWith('\\')) { latex.add(`a ${name} b`); continue }
+    latex.add(name)
+    latex.add(name + '{a}')
+    latex.add(name + '{a}{b}')
+    latex.add(name + '{a}{b}{c}')
+    latex.add('x ' + name + ' y')
+  }
+}
+if (process.env.TEMML_DIST) {
+  const dist = fs.readFileSync(process.env.TEMML_DIST, 'utf8')
+  for (const m of dist.matchAll(/defineMacro\("([^"]+)"/g)) {
+    const name = m[1]
+    latex.add(name); latex.add(name + '{a}'); latex.add(name + '{a}{b}'); latex.add(name + '{a}{b}{c}'); latex.add('x ' + name + ' y')
+  }
+}
+w('latex-inputs.json', [...latex])

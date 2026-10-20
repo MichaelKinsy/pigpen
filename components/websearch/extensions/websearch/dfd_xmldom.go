@@ -347,7 +347,7 @@ func (h *xHandler) insert(parent, n *xNode) {
 		switch n.kind {
 		case xElement:
 			for _, c := range parent.children {
-				if c.kind == xElement || c.kind == xDocType {
+				if c.kind == xElement {
 					panic(&xDOMException{"Only one element can be added and only after doctype"})
 				}
 			}
