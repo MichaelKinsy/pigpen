@@ -1,0 +1,43 @@
+{
+ "name": "web-search-routing-rest-unavailable",
+ "description": "searchRouting over keyed REST providers with no credentials: every one is unavailable and the diagnostics say so.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"searchRouting\": {\"providers\": [\"serper\", \"serpapi\", \"serpbase\", \"serply\", \"valyu\", \"bocha\", \"you\", \"xcrawl\", \"baizhi\", \"jina\"], \"fallbackOn\": [\"network\"]}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "nothing configured",
+      "provider": "auto",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

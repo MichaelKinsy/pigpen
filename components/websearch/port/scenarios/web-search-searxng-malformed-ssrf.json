@@ -1,0 +1,43 @@
+{
+ "name": "web-search-searxng-malformed-ssrf",
+ "description": "A malformed ssrf section fails provider auto before any hosted provider runs.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"searxngBaseUrl\": \"https://search.example.com\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/33\"]}, \"tavilyApiKey\": \"tvly-must-not-run\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "config",
+      "provider": "auto",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

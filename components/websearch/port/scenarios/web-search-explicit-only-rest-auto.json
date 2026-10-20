@@ -1,0 +1,43 @@
+{
+ "name": "web-search-explicit-only-rest-auto",
+ "description": "Explicit-only REST providers with credentials are never chosen by provider all: it reports no provider.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"webSearch\": {\"allowedProviders\": [\"serper\", \"serpapi\", \"serpbase\", \"serply\", \"valyu\", \"you\", \"xcrawl\", \"baizhi\", \"anysearch\"]}, \"serperApiKey\": \"k1\", \"serpapiApiKey\": \"k2\", \"serpbaseApiKey\": \"k3\", \"serplyApiKey\": \"k4\", \"valyuApiKey\": \"k5\", \"youApiKey\": \"k6\", \"xcrawlApiKey\": \"k7\", \"baizhiApiKey\": \"k8\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "all must not spend",
+      "provider": "all",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

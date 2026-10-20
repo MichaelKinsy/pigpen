@@ -1,0 +1,53 @@
+{
+ "name": "web-search-searxng-drop",
+ "description": "web_search through SearXNG when the connection is dropped without an answer.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"searxng\", \"searxngBaseUrl\": \"{{server:searx}}\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "dropped",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ],
+ "servers": {
+  "searx": {
+   "routes": [
+    {
+     "method": "GET",
+     "path": "/search",
+     "drop": true
+    }
+   ]
+  }
+ }
+}

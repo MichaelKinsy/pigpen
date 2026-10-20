@@ -1,0 +1,54 @@
+{
+ "name": "web-search-searxng-http-500",
+ "description": "web_search through SearXNG when the instance answers 500.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"searxng\", \"searxngBaseUrl\": \"{{server:searx}}\"}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "boom",
+      "workflow": "none"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ],
+ "servers": {
+  "searx": {
+   "routes": [
+    {
+     "method": "GET",
+     "path": "/search",
+     "status": 500,
+     "body": "upstream exploded"
+    }
+   ]
+  }
+ }
+}
