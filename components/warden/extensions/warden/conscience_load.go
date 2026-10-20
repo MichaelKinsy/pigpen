@@ -107,7 +107,24 @@ var matchReadPathRules = func(path string, rules []PathRule, exempt map[string]b
 
 // findSecretsInBody reports whether text carries a credential shape (redact.ts findSecrets). The security lane owns
 // the detector; until it lands a body that redaction would change counts as carrying one.
-var findSecretsInBody = func(text string) bool { return Redact(text) != text }
+var findSecretsInBody = func(text string) bool { return mayCarrySecret(text) && Redact(text) != text }
+
+// secretTriggers are the literals one of Redact's rules needs (lower case): a text with none of them cannot change
+// under Redact, which costs about a microsecond a character, so a skill body without any is not scanned.
+var secretTriggers = [...]string{
+	"key", "secret", "passw", "passphrase", "token", "credential", "authorization", "bearer", "-----begin", "://",
+	"sk-", "ghp_", "gho_", "ghu_", "ghs_", "ghr_", "github_pat_", "akia", "xox", "aiza", "eyj",
+}
+
+// mayCarrySecret is false only for a text no redaction rule can match.
+func mayCarrySecret(text string) bool {
+	for _, t := range secretTriggers {
+		if containsFold(text, t) {
+			return true
+		}
+	}
+	return false
+}
 
 // checkPathRules (rule 3): the proposed read goes through the path rules on the advertised and the resolved path.
 func checkPathRules(skill Skill, resolved string, rules []PathRule, exempt []string) bool {
@@ -142,8 +159,6 @@ type LoadOpts struct {
 	ContextWindow *int
 	HasImages     bool
 }
-
-var rePathInBody = lazyRE(`(?:^|` + reJSSpace + `)/[\w.~\-/]+(?:` + reJSSpace + `|$)`)
 
 // checkHeadroom (rule 9): load only when the body fits under 80% of the model window; 4 bytes a token, 20% kept.
 func checkHeadroom(bodyBytes int, window *int, hasImages bool) string {
@@ -253,7 +268,7 @@ func loadSkillBody(skill Skill, cfg ConscienceConfig, opts LoadOpts) LoadResult 
 		return res(LoadChanged)
 	}
 	// Rule 7: credential and path check.
-	if findSecretsInBody(body) || rePathInBody.MatchString(body) {
+	if findSecretsInBody(body) || hasAbsolutePath(body) {
 		return res(LoadMetadataUnsafe)
 	}
 	// Rule 9: headroom.

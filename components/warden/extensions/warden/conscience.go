@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -106,36 +107,410 @@ const (
 // ---------------------------------------------------------------------------
 // The description sanitizer (spec section 6): no absolute paths, URLs or credentials reach the judge.
 
-// reJSSpace is JavaScript's `\s`, which Go's `\s` is not.
-const reJSSpace = `[\s\x{00a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}\v]`
-
-var (
-	reSanitizeCreds = []*lazyRegexp{
-		lazyRE(`\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}`),
-		lazyRE(`\bsk-[A-Za-z0-9_-]{16,}`),
-		lazyRE(`\bAKIA[0-9A-Z]{16}\b`),
-		lazyRE(`\bxox[abprs]-[A-Za-z0-9-]{10,}`),
-		lazyRE(`\bAIza[0-9A-Za-z_-]{30,}`),
-		lazyRE(`\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}`),
-		lazyRE(`(?i)(?:TOKEN|SECRET|KEY|PASSWORD)` + reJSSpace + `*[=:]` + reJSSpace + `*['"]?[\w\-./]{8,}`),
-	}
-	reSanitizeAbs   = lazyRE(`(?:^|` + reJSSpace + `)/[\w.~\-/]+(?:` + reJSSpace + `|$)`)
-	reSanitizeHome  = lazyRE(`~/[\w.~\-/]+`)
-	reSanitizeHomeU = lazyRE(`~\w+/[\w.~\-/]+`)
-	reSanitizeURL   = lazyRE(`https?://[\w.~\-/]+`)
-)
-
-// sanitizeDescription strips credentials, absolute paths and URLs from a description.
+// sanitizeDescription strips credentials, absolute paths and URLs from a description. It is a hand-written scanner
+// with the semantics of the original's chain of regular expressions (kept as the reference in the tests): each step
+// is skipped unless a literal it needs is in the text, so the usual description costs a few substring searches
+// where the regular expressions cost a backtracking pass each.
 func sanitizeDescription(text string) string {
 	result := text
-	for _, re := range reSanitizeCreds {
-		result = re.ReplaceAllLiteralString(result, "[credential]")
-	}
-	result = reSanitizeAbs.ReplaceAllLiteralString(result, " ")
-	result = reSanitizeHome.ReplaceAllLiteralString(result, "[path]")
-	result = reSanitizeHomeU.ReplaceAllLiteralString(result, "[path]")
-	result = reSanitizeURL.ReplaceAllLiteralString(result, "[url]")
+	result = redactPrefixRun(result, []string{"ghp_", "gho_", "ghu_", "ghs_", "ghr_"}, 4, isAlnum, 20)
+	result = redactPrefixRun(result, []string{"sk-"}, 3, isAlnumUnderscoreDash, 16)
+	result = redactAKIA(result)
+	result = redactXox(result)
+	result = redactPrefixRun(result, []string{"AIza"}, 4, isAlnumUnderscoreDash, 30)
+	result = redactJWT(result)
+	result = redactKeywordAssignments(result)
+	result = replaceAbsolutePaths(result)
+	result = replacePrefixedPaths(result)
+	result = replaceURLs(result)
 	return jsTrim(result)
+}
+
+func isAlnum(c byte) bool               { return isWordByte(c) && c != '_' }
+func isAlnumUnderscoreDash(c byte) bool { return isWordByte(c) || c == '-' }
+func isPathByte(c byte) bool            { return isWordByte(c) || c == '.' || c == '~' || c == '-' || c == '/' }
+func isAssignValueByte(c byte) bool     { return isWordByte(c) || c == '-' || c == '.' || c == '/' }
+
+// boundaryBefore is `\b` before a word character at i.
+func boundaryBefore(s string, i int) bool { return i == 0 || !isWordByte(s[i-1]) }
+
+// spliced builds a text from replaced spans: the pieces between them are copied only when there is a span.
+type spliced struct {
+	b    strings.Builder
+	last int
+	any  bool
+}
+
+func (p *spliced) replace(s string, from, to int, with string) {
+	p.b.WriteString(s[p.last:from])
+	p.b.WriteString(with)
+	p.last, p.any = to, true
+}
+
+func (p *spliced) result(s string) string {
+	if !p.any {
+		return s
+	}
+	p.b.WriteString(s[p.last:])
+	return p.b.String()
+}
+
+// redactPrefixRun is `\b(?:prefixes)RUN{min,}` replaced by [credential]: a prefix at a word boundary and a run of at
+// least min bytes of the class after the first skip bytes. A prefix is found by substring search, so a text without
+// one costs a search per prefix.
+func redactPrefixRun(s string, prefixes []string, skip int, class func(byte) bool, min int) string {
+	var p spliced
+	for pos := 0; pos < len(s); {
+		hit := -1
+		for _, pre := range prefixes {
+			if k := strings.Index(s[pos:], pre); k >= 0 && (hit < 0 || pos+k < hit) {
+				hit = pos + k
+			}
+		}
+		if hit < 0 {
+			break
+		}
+		end := hit + skip
+		for end < len(s) && class(s[end]) {
+			end++
+		}
+		if boundaryBefore(s, hit) && end-(hit+skip) >= min {
+			p.replace(s, hit, end, "[credential]")
+			pos = end
+			continue
+		}
+		pos = hit + 1
+	}
+	return p.result(s)
+}
+
+// redactAKIA is `\bAKIA[0-9A-Z]{16}\b`.
+func redactAKIA(s string) string {
+	var p spliced
+	for pos := 0; pos < len(s); {
+		k := strings.Index(s[pos:], "AKIA")
+		if k < 0 {
+			break
+		}
+		i := pos + k
+		pos = i + 1
+		if i+20 > len(s) || !boundaryBefore(s, i) {
+			continue
+		}
+		ok := true
+		for q := i + 4; q < i+20; q++ {
+			if c := s[q]; !(c >= '0' && c <= '9' || c >= 'A' && c <= 'Z') {
+				ok = false
+				break
+			}
+		}
+		if ok && (i+20 == len(s) || !isWordByte(s[i+20])) {
+			p.replace(s, i, i+20, "[credential]")
+			pos = i + 20
+		}
+	}
+	return p.result(s)
+}
+
+// redactXox is `\bxox[abprs]-[A-Za-z0-9-]{10,}`.
+func redactXox(s string) string {
+	var p spliced
+	for pos := 0; pos < len(s); {
+		k := strings.Index(s[pos:], "xox")
+		if k < 0 {
+			break
+		}
+		i := pos + k
+		pos = i + 1
+		if i+5 > len(s) || !boundaryBefore(s, i) || strings.IndexByte("abprs", s[i+3]) < 0 || s[i+4] != '-' {
+			continue
+		}
+		end := i + 5
+		for end < len(s) && (isAlnum(s[end]) || s[end] == '-') {
+			end++
+		}
+		if end-(i+5) >= 10 {
+			p.replace(s, i, end, "[credential]")
+			pos = end
+		}
+	}
+	return p.result(s)
+}
+
+// redactJWT is `\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}`.
+func redactJWT(s string) string {
+	run := func(from int) int {
+		end := from
+		for end < len(s) && isAlnumUnderscoreDash(s[end]) {
+			end++
+		}
+		return end
+	}
+	var p spliced
+	for pos := 0; pos < len(s); {
+		k := strings.Index(s[pos:], "eyJ")
+		if k < 0 {
+			break
+		}
+		i := pos + k
+		pos = i + 1
+		if !boundaryBefore(s, i) {
+			continue
+		}
+		e1 := run(i + 3)
+		if e1-(i+3) < 10 || e1 >= len(s) || s[e1] != '.' {
+			continue
+		}
+		e2 := run(e1 + 1)
+		if e2-(e1+1) < 10 || e2 >= len(s) || s[e2] != '.' {
+			continue
+		}
+		if e3 := run(e2 + 1); e3-(e2+1) >= 10 {
+			p.replace(s, i, e3, "[credential]")
+			pos = e3
+		}
+	}
+	return p.result(s)
+}
+
+// containsFold reports whether s contains the lower-case ASCII word k in any case.
+func containsFold(s, k string) bool {
+	for i := 0; i+len(k) <= len(s); i++ {
+		if (s[i]|0x20) == k[0] && strings.EqualFold(s[i:i+len(k)], k) {
+			return true
+		}
+	}
+	return false
+}
+
+// spaceAt reports whether a JavaScript white space character starts at i, and its width.
+func spaceAt(s string, i int) (bool, int) {
+	c := s[i]
+	if c < utf8.RuneSelf {
+		return c == ' ' || c >= '\t' && c <= '\r', 1
+	}
+	r, w := utf8.DecodeRuneInString(s[i:])
+	return isJSSpace(r), w
+}
+
+func skipSpaces(s string, i int) int {
+	for i < len(s) {
+		ok, w := spaceAt(s, i)
+		if !ok {
+			break
+		}
+		i += w
+	}
+	return i
+}
+
+// spaceBefore reports whether a JavaScript white space character ends at i, and its width.
+func spaceBefore(s string, i int) (bool, int) {
+	if i == 0 {
+		return false, 0
+	}
+	c := s[i-1]
+	if c < utf8.RuneSelf {
+		return c == ' ' || c >= '\t' && c <= '\r', 1
+	}
+	r, w := utf8.DecodeLastRuneInString(s[:i])
+	return isJSSpace(r), w
+}
+
+// keywordEndingAt reports whether TOKEN, SECRET, KEY or PASSWORD (any case, ASCII) ends at i, and where it starts.
+func keywordEndingAt(s string, i int) (int, bool) {
+	for _, k := range [...]string{"token", "secret", "password", "key"} {
+		if i >= len(k) && strings.EqualFold(s[i-len(k):i], k) {
+			return i - len(k), true
+		}
+	}
+	return 0, false
+}
+
+// redactKeywordAssignments is `(?i)(?:TOKEN|SECRET|KEY|PASSWORD)\s*[=:]\s*['"]?[\w\-./]{8,}`. Each match holds one
+// `=` or `:`, so the separators are found first and the keyword looked for before each.
+func redactKeywordAssignments(s string) string {
+	var p spliced
+	for pos := 0; pos < len(s); {
+		k := indexAny2(s[pos:], '=', ':')
+		if k < 0 {
+			break
+		}
+		sep := pos + k
+		pos = sep + 1
+		// The keyword ends before the separator, with white space between.
+		kEnd := sep
+		for {
+			ok, w := spaceBefore(s, kEnd)
+			if !ok || kEnd-w < p.last {
+				break
+			}
+			kEnd -= w
+		}
+		start, ok := keywordEndingAt(s, kEnd)
+		if !ok || start < p.last {
+			continue
+		}
+		j := skipSpaces(s, sep+1)
+		if j < len(s) && (s[j] == '\'' || s[j] == '"') {
+			j++
+		}
+		end := j
+		for end < len(s) && isAssignValueByte(s[end]) {
+			end++
+		}
+		if end-j >= 8 {
+			p.replace(s, start, end, "[credential]")
+			pos = end
+		}
+	}
+	return p.result(s)
+}
+
+// indexAny2 is the index of the first a or b in s, or -1.
+func indexAny2(s string, a, b byte) int {
+	ia, ib := strings.IndexByte(s, a), strings.IndexByte(s, b)
+	switch {
+	case ia < 0:
+		return ib
+	case ib < 0 || ia < ib:
+		return ia
+	}
+	return ib
+}
+
+// absolutePathAt is `(?:^|\s)/[\w.~\-/]+(?:\s|$)` around the slash at j: the start and end of the match, or -1.
+func absolutePathAt(s string, j, notBefore int) (int, int) {
+	start := j
+	if j > 0 {
+		ok, w := spaceBefore(s, j)
+		if !ok {
+			return -1, -1
+		}
+		start = j - w
+	}
+	if start < notBefore {
+		return -1, -1
+	}
+	end := j + 1
+	for end < len(s) && isPathByte(s[end]) {
+		end++
+	}
+	if end == j+1 {
+		return -1, -1
+	}
+	if end == len(s) {
+		return start, end
+	}
+	if ok, w := spaceAt(s, end); ok {
+		return start, end + w
+	}
+	return -1, -1
+}
+
+// hasAbsolutePath reports whether the text contains an absolute path the pattern above finds.
+func hasAbsolutePath(s string) bool {
+	for pos := 0; pos < len(s); {
+		k := strings.IndexByte(s[pos:], '/')
+		if k < 0 {
+			return false
+		}
+		if start, _ := absolutePathAt(s, pos+k, 0); start >= 0 {
+			return true
+		}
+		pos += k + 1
+	}
+	return false
+}
+
+// replaceAbsolutePaths replaces each such path, with the white space either side of it, by one space.
+func replaceAbsolutePaths(s string) string {
+	var p spliced
+	for pos := 0; pos < len(s); {
+		k := strings.IndexByte(s[pos:], '/')
+		if k < 0 {
+			break
+		}
+		j := pos + k
+		if start, end := absolutePathAt(s, j, p.last); start >= 0 {
+			p.replace(s, start, end, " ")
+			pos = end
+			continue
+		}
+		pos = j + 1
+	}
+	return p.result(s)
+}
+
+// replacePrefixedPaths is `~/[\w.~\-/]+` and then `~\w+/[\w.~\-/]+`, each replaced by [path].
+func replacePrefixedPaths(s string) string {
+	if strings.IndexByte(s, '~') < 0 {
+		return s
+	}
+	for pass := 0; pass < 2; pass++ {
+		var p spliced
+		for pos := 0; pos < len(s); {
+			k := strings.IndexByte(s[pos:], '~')
+			if k < 0 {
+				break
+			}
+			i := pos + k
+			j := i + 1
+			if pass == 1 {
+				for j < len(s) && isWordByte(s[j]) {
+					j++
+				}
+				if j == i+1 {
+					pos = i + 1
+					continue
+				}
+			}
+			if j < len(s) && s[j] == '/' {
+				end := j + 1
+				for end < len(s) && isPathByte(s[end]) {
+					end++
+				}
+				if end > j+1 {
+					p.replace(s, i, end, "[path]")
+					pos = end
+					continue
+				}
+			}
+			pos = i + 1
+		}
+		s = p.result(s)
+	}
+	return s
+}
+
+// replaceURLs is `https?://[\w.~\-/]+` replaced by [url].
+func replaceURLs(s string) string {
+	var p spliced
+	for pos := 0; pos < len(s); {
+		k := strings.Index(s[pos:], "://")
+		if k < 0 {
+			break
+		}
+		j := pos + k
+		start := -1
+		switch {
+		case j >= 5 && s[j-5:j] == "https" && j-5 >= p.last:
+			start = j - 5
+		case j >= 4 && s[j-4:j] == "http" && j-4 >= p.last:
+			start = j - 4
+		}
+		end := j + 3
+		for end < len(s) && isPathByte(s[end]) {
+			end++
+		}
+		if start >= 0 && end > j+3 {
+			p.replace(s, start, end, "[url]")
+			pos = end
+			continue
+		}
+		pos = j + 1
+	}
+	return p.result(s)
 }
 
 // ---------------------------------------------------------------------------
@@ -162,20 +537,44 @@ const (
 	scoreInstructionsFmt    = "Judge candidates.%s against what the user is asking the agent to do now in task, not against the subjects the prompt mentions in passing; a candidate that matches words in the prompt but does not serve the actual request belongs at the lowest level. When the request needs information the repository cannot supply, a research-role candidate serves the request; when the request is about the repository's own code or behaviour, an evidence-role candidate does."
 )
 
+var (
+	dispositionOnce     sync.Once
+	dispositionQuestion Question
+	scoreInstructions   sync.Map // opaque id -> instruction text
+)
+
+// dispositionChoice is the shared disposition question; it is read-only, so one value serves every request.
+func dispositionChoice() Question {
+	dispositionOnce.Do(func() {
+		dispositionQuestion = Choice(dispositionInstructions, map[string]string{
+			"advance":       "A useful next step can be taken now.",
+			"awaiting_user": "The assistant has already asked for information and must wait.",
+			"no_gap":        "The request is satisfied with no useful missing step.",
+			"unclear":       "Insufficient evidence to determine the next step.",
+		})
+	})
+	return dispositionQuestion
+}
+
+// scoreInstructionsFor is the score question's text for one opaque id.
+func scoreInstructionsFor(id string) string {
+	if v, ok := scoreInstructions.Load(id); ok {
+		return v.(string)
+	}
+	text := strings.Replace(scoreInstructionsFmt, "%s", id, 1)
+	scoreInstructions.Store(id, text)
+	return text
+}
+
 // buildBatchQuestions builds the questions for one batch: the shared disposition choice and one score per
 // candidate, keyed by opaque id. The task, context and skill lists are state, not question text.
 func buildBatchQuestions(batch []batchItem, _ string, _ string, _ []string, _ []string) (Questions, string, map[string]Candidate) {
-	questions := Questions{}
-	idMap := map[string]Candidate{}
-	questions[conscienceDispositionID] = Choice(dispositionInstructions, map[string]string{
-		"advance":       "A useful next step can be taken now.",
-		"awaiting_user": "The assistant has already asked for information and must wait.",
-		"no_gap":        "The request is satisfied with no useful missing step.",
-		"unclear":       "Insufficient evidence to determine the next step.",
-	})
+	questions := make(Questions, len(batch)+1)
+	idMap := make(map[string]Candidate, len(batch))
+	questions[conscienceDispositionID] = dispositionChoice()
 	for _, it := range batch {
 		idMap[it.opaqueID] = it.candidate
-		questions[it.opaqueID] = Score(strings.Replace(scoreInstructionsFmt, "%s", it.opaqueID, 1), scoreLevels)
+		questions[it.opaqueID] = Score(scoreInstructionsFor(it.opaqueID), scoreLevels)
 	}
 	return questions, conscienceDispositionID, idMap
 }
@@ -235,6 +634,72 @@ func jsonCompact(v any) string {
 // positional, so a conscience question set (recognised by its disposition key) is hashed as the disposition
 // question plus one canonical candidate question keyed c1: the batch a prompt happens to produce never moves it.
 func questionHash(questions Questions) string {
+	var ids []string
+	if _, ok := questions[conscienceDispositionID]; ok {
+		first := ""
+		for id := range questions {
+			if reCandidateID.MatchString(id) && (first == "" || id < first) {
+				first = id
+			}
+		}
+		if first != "" {
+			ids = append(ids, first)
+		}
+		ids = append(ids, conscienceDispositionID)
+	} else {
+		for id := range questions {
+			ids = append(ids, id)
+		}
+		sort.Strings(ids)
+	}
+	// The canonical form: keys in sorted order at every level, compact (JSON.stringify of the sorted tree).
+	w := jsonOut{b: make([]byte, 0, 1536)}
+	w.b = append(w.b, '{')
+	for n, id := range ids {
+		if n > 0 {
+			w.b = append(w.b, ',')
+		}
+		w.str(id)
+		w.b = append(w.b, ':')
+		canonicalQuestion(&w, questions[id])
+	}
+	w.b = append(w.b, '}')
+	sum := sha256.Sum256(w.b)
+	return hex.EncodeToString(sum[:])[:16]
+}
+
+// canonicalQuestion writes {"criteria":...,"instructions":...,"type":...}: the criteria of a score are its levels, those
+// of the other kinds an object by label.
+func canonicalQuestion(w *jsonOut, q Question) {
+	w.b = append(w.b, `{"criteria":`...)
+	if q.Type == "score" {
+		w.strings(orEmpty(q.Levels), 0)
+	} else {
+		labels := make([]string, 0, len(q.Criteria))
+		for k := range q.Criteria {
+			labels = append(labels, k)
+		}
+		sort.Strings(labels)
+		w.b = append(w.b, '{')
+		for n, k := range labels {
+			if n > 0 {
+				w.b = append(w.b, ',')
+			}
+			w.str(k)
+			w.b = append(w.b, ':')
+			w.str(q.Criteria[k])
+		}
+		w.b = append(w.b, '}')
+	}
+	w.b = append(w.b, `,"instructions":`...)
+	w.str(q.Instructions)
+	w.b = append(w.b, `,"type":`...)
+	w.str(q.Type)
+	w.b = append(w.b, '}')
+}
+
+// questionHashReference is questionHash written with maps and the generic encoder: the tests hold the writer to it.
+func questionHashReference(questions Questions) string {
 	canon := map[string]any{}
 	add := func(id string, q Question) {
 		switch q.Type {
@@ -268,6 +733,21 @@ func questionHash(questions Questions) string {
 	return hex.EncodeToString(sum[:])[:16]
 }
 
+var (
+	conscienceHashOnce  sync.Once
+	conscienceHashValue string
+)
+
+// conscienceQuestionHash is the hash of every conscience question set: questionHash is independent of the batch
+// by construction (the disposition question and one canonical candidate question), so it is computed once.
+func conscienceQuestionHash() string {
+	conscienceHashOnce.Do(func() {
+		q, _, _ := buildBatchQuestions([]batchItem{{opaqueID(0), Candidate{}}}, "", "", nil, nil)
+		conscienceHashValue = questionHash(q)
+	})
+	return conscienceHashValue
+}
+
 var reCandidateID = lazyRE(`^c\d+$`)
 
 // ---------------------------------------------------------------------------
@@ -298,8 +778,48 @@ var (
 	reNonAlnum = lazyRE(`[^a-z0-9]+`)
 )
 
-// words splits camelCase before lowercasing, so `deleteIssue` and `mcp__db__truncateTable` show their verb.
+// words splits camelCase before lowercasing, so `deleteIssue` and `mcp__db__truncateTable` show their verb. ASCII text,
+// the usual tool name, is split in one pass; other text takes the regular expressions of the original.
 func words(text string) []string {
+	for i := 0; i < len(text); i++ {
+		if text[i] >= utf8.RuneSelf {
+			return wordsRegexp(text)
+		}
+	}
+	var out []string
+	start := -1
+	flush := func(end int) {
+		if start >= 0 {
+			out = append(out, jsLower(text[start:end]))
+			start = -1
+		}
+	}
+	isLower := func(c byte) bool { return c >= 'a' && c <= 'z' || c >= '0' && c <= '9' }
+	for i := 0; i < len(text); i++ {
+		c := text[i]
+		switch {
+		case c >= 'A' && c <= 'Z':
+			// A capital starts a word after a lower-case letter or digit, and ends a run of capitals before a lower-case letter.
+			if start >= 0 && (isLower(text[i-1]) || text[i-1] >= 'A' && text[i-1] <= 'Z' && i+1 < len(text) && text[i+1] >= 'a' && text[i+1] <= 'z') {
+				flush(i)
+			}
+			if start < 0 {
+				start = i
+			}
+		case isLower(c):
+			if start < 0 {
+				start = i
+			}
+		default:
+			flush(i)
+		}
+	}
+	flush(len(text))
+	return out
+}
+
+// wordsRegexp is words as the original writes it.
+func wordsRegexp(text string) []string {
 	text = reCamel1.ReplaceAllString(text, "$1 $2")
 	text = reCamel2.ReplaceAllString(text, "$1 $2")
 	var out []string
@@ -638,7 +1158,7 @@ func assess(ctx context.Context, prompt, recentContext string, skills []Skill, t
 		}
 		batch := assignOpaqueIDs(work.items)
 		questions, dispositionKey, _ := buildBatchQuestions(batch, prompt, recentContext, active, supplied)
-		qh := questionHash(questions)
+		qh := conscienceQuestionHash()
 		state := buildState(prompt, recentContext, active, supplied, batch, spine)
 		mu.Lock()
 		hash = qh
