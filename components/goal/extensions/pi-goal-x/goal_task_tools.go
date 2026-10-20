@@ -334,13 +334,13 @@ func registerTaskTools(c *core) {
 		PromptSnippet:    "Set the goal task tree with confirmation.",
 		PromptGuidelines: []string{"Use tasks only for useful milestones. Restructure an existing tree only when the user asks or requirements structurally change. Input is a flat parent-linked tree, at most 50 tasks, within configured depth. lightweight_subtasks is valid only on parents."},
 		Parameters: schemaObject(schemaMap{
-			"tasks": schemaMap{"type": "array", "description": "Flat parent-linked task list", "items": schemaObject(schemaMap{
+			"tasks": schemaMap{"type": "array", "description": "Flat parent-linked task list", "items": sdk.Schema{"type": "object", "properties": schemaMap{
 				"id":                    schemaString("Short stable slug e.g. 'task-1'"),
 				"title":                 schemaString("Human-readable task title"),
 				"parent_id":             schemaString("Parent id; omit for roots."),
 				"verification_contract": schemaString("Required completion evidence."),
 				"lightweight_subtasks":  schemaBool("Children do not gate parent completion."),
-			}, []string{"id", "title"})},
+			}, "required": []string{"id", "title"}}},
 			"block_completion": schemaBool("Require all tasks resolved; default false."),
 			"change_summary":   schemaString("Optional summary of the task list change"),
 		}, []string{"tasks"}),
