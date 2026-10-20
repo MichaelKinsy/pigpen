@@ -43,7 +43,11 @@ func TestDefuddleFixturesEqualTheOriginal(t *testing.T) {
 	if len(fixtures) < 450 {
 		t.Fatalf("%d recorded fixtures", len(fixtures))
 	}
-	for _, fx := range fixtures {
+	for i, fx := range fixtures {
+		// Under the race detector (about ten times slower) every fourth fixture; the plain run takes all.
+		if raceEnabled && i%4 != 0 {
+			continue
+		}
 		t.Run(fx.name, func(t *testing.T) {
 			var want defuddleExpected
 			data, err := os.ReadFile(fx.expected)
