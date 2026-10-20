@@ -420,7 +420,7 @@ func TestUpstream_config_path_gemini(t *testing.T) {
 		home, agentDir := geminiEnv(t)
 		counter := filepath.Join(home, "counter")
 		script := writeScript(t, home, "read-key.sh", "count=0\n[ ! -f \"$1\" ] || count=$(cat \"$1\")\ncount=$((count + 1))\nprintf '%s' \"$count\" >\"$1\"\nprintf 'synthetic-gemini-%s\\n' \"$count\"\n")
-		writeConfig(t, agentDir, mustJSON(map[string]any{"geminiApiKey": "!" + script + " " + counter}))
+		writeConfig(t, agentDir, mustJSONString(map[string]any{"geminiApiKey": "!" + script + " " + counter}))
 		t.Setenv("GEMINI_API_KEY", "stale-gemini-environment-value")
 		n := useNet(t, func(netCall) netReply { return geminiText("ok") })
 		available := IsGeminiAPIAvailable()
@@ -494,7 +494,7 @@ func TestUpstream_config_path_gemini(t *testing.T) {
 	})
 }
 
-func mustJSON(v any) string {
+func mustJSONString(v any) string {
 	b, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
@@ -508,13 +508,13 @@ func TestUpstream_provider_credential_source_gemini(t *testing.T) {
 		home, agentDir := geminiEnv(t)
 		counter := filepath.Join(home, "count")
 		script := writeScript(t, home, "cloudflare-key.sh", "count=0\n[ ! -f \"$1\" ] || count=$(cat \"$1\")\ncount=$((count + 1))\nprintf '%s' \"$count\" >\"$1\"\nprintf 'cf-rotating-secret-%s' \"$count\"\n")
-		writeConfig(t, agentDir, mustJSON(map[string]any{"cloudflareApiKey": "!" + script + " " + counter, "geminiBaseUrl": geminiGatewayAI}))
+		writeConfig(t, agentDir, mustJSONString(map[string]any{"cloudflareApiKey": "!" + script + " " + counter, "geminiBaseUrl": geminiGatewayAI}))
 		useNet(t, func(c netCall) netReply {
 			sent := strings.TrimPrefix(c.Header.Get("cf-aig-authorization"), "Bearer ")
 			if sent == "" {
 				sent = "missing"
 			}
-			return reply(400, mustJSON(map[string]any{"error": sent}))
+			return reply(400, mustJSONString(map[string]any{"error": sent}))
 		})
 		_, err := QueryGeminiAPIWithVideo(bg(), "prompt", "files/synthetic", GeminiAPIOptions{})
 		if err == nil || strings.Contains(err.Error(), "cf-rotating-secret-1") || !strings.Contains(err.Error(), "[redacted]") {
@@ -531,7 +531,7 @@ func TestUpstream_search_providers_gemini(t *testing.T) {
 	tw(t, f, "failed Gemini command source is redacted and blocks browser fallback", func(t *testing.T) {
 		home, agentDir := geminiEnv(t)
 		script := writeScript(t, home, "fail-key.sh", "printf 'SYNTHETIC_GEMINI_SECRET_MUST_NOT_ESCAPE\\n' >&2\nexit 9\n")
-		writeConfig(t, agentDir, mustJSON(map[string]any{"geminiApiKey": "!" + script}))
+		writeConfig(t, agentDir, mustJSONString(map[string]any{"geminiApiKey": "!" + script}))
 		t.Setenv("GEMINI_API_KEY", "stale-gemini-environment-value")
 		n := useNet(t, func(netCall) netReply { return netReply{Err: errors.New("unexpected fetch")} })
 		_, err := geminiSearch(bg(), "must fail closed")

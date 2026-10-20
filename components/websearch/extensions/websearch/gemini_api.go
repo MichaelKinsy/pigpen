@@ -399,7 +399,7 @@ func jsonPath(v any, path ...any) any {
 	return v
 }
 
-func strField(v any) string {
+func anyString(v any) string {
 	s, _ := v.(string)
 	return s
 }
@@ -516,8 +516,8 @@ func queryGeminiInline(ctx context.Context, prompt, data, mimeType string, o Gem
 	}
 	return &GeminiGenerateContentResult{
 		Text:         geminiCandidateText(parsed),
-		FinishReason: strField(jsonPath(parsed, "candidates", 0, "finishReason")),
-		BlockReason:  strField(jsonPath(parsed, "promptFeedback", "blockReason")),
+		FinishReason: anyString(jsonPath(parsed, "candidates", 0, "finishReason")),
+		BlockReason:  anyString(jsonPath(parsed, "promptFeedback", "blockReason")),
 	}, nil
 }
 

@@ -21,7 +21,7 @@ import (
 // the port to send the same requests (method, URL, headers, body) in the same order and to return
 // the same result.
 
-type wireCase struct {
+type geminiWireCase struct {
 	Env       map[string]string `json:"env"`
 	Config    map[string]any    `json:"config"`
 	ADC       map[string]any    `json:"adc"`
@@ -93,7 +93,7 @@ func TestGeminiWireFixture(t *testing.T) {
 	raw, err := os.ReadFile("testdata/gemini-wire.json")
 	noErr(t, err)
 	var fx struct {
-		Cases map[string]wireCase `json:"cases"`
+		Cases map[string]geminiWireCase `json:"cases"`
 	}
 	noErr(t, json.Unmarshal(raw, &fx))
 	if len(fx.Cases) == 0 {

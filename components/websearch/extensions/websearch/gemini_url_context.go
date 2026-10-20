@@ -77,7 +77,7 @@ func ExtractWithURLContext(ctx context.Context, url string) (*ExtractedContent, 
 		return nil, nil
 	}
 	if meta, _ := jsonPath(data, "candidates", 0, "url_context_metadata", "url_metadata").([]any); len(meta) > 0 {
-		switch strField(jsonPath(meta[0], "url_retrieval_status")) {
+		switch anyString(jsonPath(meta[0], "url_retrieval_status")) {
 		case "URL_RETRIEVAL_STATUS_UNSAFE", "URL_RETRIEVAL_STATUS_ERROR":
 			return nil, nil
 		}
