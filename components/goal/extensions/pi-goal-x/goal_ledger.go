@@ -196,6 +196,19 @@ func appendLedgerLines(ctx storage, events []*jsObject) goalAppendResult {
 		b.WriteString("\n")
 	}
 	lines := b.String()
+	if ctx.external() {
+		// An external pool is validated on every append: its directory chain, and the ledger itself may not be a symlink.
+		if err := ctx.ensureDir(goalsDir, true); err != nil {
+			return goalAppendResult{err: err}
+		}
+		if fi, err := os.Lstat(filePath); err == nil {
+			if fi.Mode()&os.ModeSymlink != 0 {
+				return goalAppendResult{err: fmt.Errorf("Goal ledger is a symlink: %s", filePath)}
+			}
+		} else if !os.IsNotExist(err) {
+			return goalAppendResult{err: err}
+		}
+	}
 	if err := appendFileString(filePath, lines); err != nil {
 		return goalAppendResult{err: err}
 	}
