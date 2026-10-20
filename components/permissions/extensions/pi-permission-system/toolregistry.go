@@ -1,10 +1,6 @@
 package pi_permission_system
 
-import (
-	"sort"
-
-	"github.com/MichaelKinsy/pigpen/components/pitui/jsstring"
-)
+import "sort"
 
 // Port of src/exposure/tool-registry.ts: reading Pi's tool registry.
 
@@ -170,7 +166,7 @@ func CheckRequestedToolRegistration(requestedToolName *string, registeredTools [
 		return ToolRegistrationCheckResult{Status: "registered", RequestedToolName: requested, NormalizedToolName: normalizedToolName}
 	}
 
-	sort.SliceStable(available, func(i, j int) bool { return jsstring.LocaleCompare(available[i], available[j]) < 0 })
+	sort.SliceStable(available, func(i, j int) bool { return icuCompare(available[i], available[j]) < 0 })
 	return ToolRegistrationCheckResult{
 		Status: "unregistered", RequestedToolName: requested, NormalizedToolName: normalizedToolName, AvailableToolNames: available,
 	}

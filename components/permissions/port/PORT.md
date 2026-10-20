@@ -70,8 +70,8 @@ against the original without a person: the rules and the tool gate for what they
 
 **Not ported at all:** the project and agent scopes of the permission policy itself (the config system reads them, see "The config
 system" below; the policy that consumes `FilePolicyLoader` is the policy lane's), session approvals and rules, the review and debug logs, forwarding and subagent authority,
-the cross-extension service, removing denied skills from the system prompt (`withoutDeniedSkills`: a denied
-skill stays listed, and its files are not gated by the skill-read gate, as in the original). A file that does not parse warns with the original's text, V8's JSON.parse message included. PiG's `powershell` tool is a shell the original does not know: it is decided by its own
+the cross-extension service. (`withoutDeniedSkills` is ported as a function, see "Presentation" below; the root gate does not call it yet: a denied
+skill stays listed, and its files are not gated by the skill-read gate, as in the original.) A file that does not parse warns with the original's text, V8's JSON.parse message included. PiG's `powershell` tool is a shell the original does not know: it is decided by its own
 name (or the `*` fallback), not by the bash rules; deny it, or name it in `shellTools`, which makes the port refuse it.
 
 ## Mapping
@@ -410,3 +410,80 @@ Differences from the original, on purpose:
 - `getPackageDir()` (Pi's install directory) has no counterpart in PiG's Go SDK (`sdk.AgentDir()` is the only host path): the
   caller that builds the infrastructure roots must pass it, and until the SDK has it that root is missing.
 - `ScopeConfig` lives with the config layer; `ShellToolsConfig` here is a map of `ShellToolAlias`.
+
+## Presentation, tool input and exposure (lane `presentation`)
+
+The pure rendering layer the dialog, the forwarded asks and the agent-facing denials are built from: `src/presentation/*`,
+`src/tool-input/*` and `src/exposure/*`. Everything here is a function over strings and values: no host call, no clock, no file.
+The root gate still decides with the old simple code and refuses what it cannot read (`unported.go`); wiring these functions into
+the gate is the gate lane's. Twins first (379 exact twins, 0 skipped, in 20 ledger files; `pigeq twins check` is green), then the
+code, then a differential against the original's own functions.
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| R1 | `presentation/prompt-payload.ts` (the payload family, `asPromptPayload`, `localRequester`, `findEvidence`, `allEvidence`) | `promptpayload.go` (replaces the stand-in in `logging_deps.go` and `fwd_prompt_payload.go`) | twins of the forwarding and logging lanes; every payload of the differential goes through `AsPromptPayload` |
+| R2 | `presentation/line-fitting.ts` (pi-tui `wrapTextWithAnsi`, `truncateToWidth`) | `linefitting.go` over `components/pitui/widthx` | 182 recorded `fitLinesToWidth` answers |
+| R3 | `presentation/dialog-renderer.ts` | `dialogrenderer.go` | 28 twins; 1,332 recorded renders (widths -1 to 200, row budgets -1 to Infinity, field caps -1 to Infinity, 3 paints, unicode width, ANSI, CJK, ZWJ, very long and multi-line fields) |
+| R4 | `presentation/agent-renderer.ts` | `agentrenderer.go` | 48 twins; 800 recorded refusals (7 renderers, 16 decisions, 9 payload kinds, 8 field budgets) |
+| R5 | `presentation/prompt-notification.ts` | `promptnotification.go` | 20 twins; 450 recorded notices with their bytes |
+| R6 | `presentation/pattern-suggest.ts` (and `session/approval-grant.ts` `grantTargets`) | `patternsuggest.go`, `GrantTargets` in `fwd_stub_authority.go` | 46 twins; 1,550 recorded suggestions and labels |
+| R7 | `presentation/{tool,path,skill,forwarded}-ask-payload.ts`, `permission-prompts.ts` | `toolaskpayload.go`, `pathaskpayload.go`, `skillaskpayload.go`, `forwardedaskpayload.go`, `permissionprompts.go` | 37 twins; 830 recorded payloads, each also rendered |
+| R8 | `tool-input/{tool-input-preview,tool-input-prompt-formatters,builtin-tool-input-formatters,tool-preview-formatter}.ts` | `toolinputpreview.go`, `toolinputpromptformatters.go`, `builtintoolinputformatters.go`, `toolpreviewformatter.go` | 85 twins; 561 inputs through the prompt, built-in-registry and log previews, 165 MCP argument sets, 357 sanitized texts, 360 truncations, 350 log previews |
+| R9 | `tool-input/{tool-input-formatter-registry,tool-access-extractor-registry}.ts` | `toolinputformatterregistry.go`, `toolaccessextractorregistry.go` (replace the stand-ins in `fwd_stub_authority.go`) | 14 twins (the forwarding twins stay green) |
+| R10 | `exposure/{tool-registry,tool-surface-prompt,skill-prompt-sanitizer}.ts` (`tool-surface-baseline.ts` was ported with the first slice) | `toolregistry.go`, `toolsurfaceprompt.go`, `skillpromptsanitizer.go` | 73 twins; 1,016 recorded registry checks, 500 surfaces, 720 skill-prompt cases |
+
+How it is checked:
+
+- `port/record-presentation-probe.sh <installed oracle>` runs `port/probe/presentation-probe.test.ts` inside the original's package on
+  `port/probe/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
+  `presentation_oracle_test.go` replays it and compares each answer as compact JSON. Every string is well-formed on both sides
+  (the probe applies `toWellFormed()`; see "Differences" for why).
+- Mutations: `port/gen-mutations-presentation.py` writes `port/mutations-presentation.json` (392 mutations, one per behaviour of
+  the files above); run `pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-presentation.json --jobs 4`.
+- `port/bench-presentation.sh` and `presentation_bench_test.go` time the same operations under Node and in Go (see the PR body for numbers).
+
+Security reading of the slice: the original's dialog shows the approver the command, the flagged paths, the executed unit and the
+evidence, and elides only by a quantity cap (never by content) with a marker; the agent-facing denial never echoes a bash command.
+The port renders through the same two caps (`promptFieldMaxWidth` per field, `promptMaxRows` for the evidence) and marks every cut
+with the same ellipsis, `Elided` is true whenever a field was shortened or an entry dropped, and the complete view
+(`CompleteViewBudget`) elides nothing. The differential covers: field caps of -1, 0, 1, 3, 5, 12, 50, 400, 2.5 and Infinity, a cap
+that splits an astral character, row budgets from -1 to Infinity, widths -1 to 200 (a width of zero or less renders no row, as
+in the original), wrapped and unwrapped, ANSI and OSC 8 sequences inside fields (kept, not interpreted), CJK and ZWJ clusters,
+newlines and carriage returns in a field, tokens a flagged element must not paint inside (`ls` in `lsof`), and 200,000-entry
+evidence lists. A prompt notification never carries the request value (it takes the labels only: the type has no field for it).
+
+Differences from the original, on purpose:
+
+- **Lazy evidence layout.** The original wraps every evidence entry, then drops what does not fit; `RenderPromptDialog` stops wrapping
+  once the rows counted overrun the budget. The answer is the same (the differential has the cases at maxRows 0 to 100 with widths
+  that wrap to zero rows) and a hostile forwarded payload with 200,000 entries renders in about 0.1 s instead of wrapping all of them.
+- **A lone surrogate reads as U+FFFD at the renderers' output.** Slicing at a field cap inside an astral character leaves a lone high
+  surrogate in the original; a terminal (UTF-8) and the host's JSON decoder show it as one U+FFFD. Go strings are UTF-8, so the
+  renderers (`RenderPromptDialog`, `Render*Denial`) hand back well-formed strings (`toWellFormed`). The differential compares the
+  original's output after `toWellFormed()`. A tool_call block reason that goes through JSON.stringify in Pi carries the escape
+  `\ud83d` where the port carries the replacement character: a difference between Pi and PiG's host protocol, not between the
+  extension logic.
+- **Inherited object properties.** The original's `aliases[toolName] || toolName` and `toolSnippets[toolName]` read a plain object, so
+  a tool named `constructor`, `toString`, `__proto__` and the like with no own alias answers a function or the prototype instead of a
+  name. In `checkRequestedToolRegistration` it changes only `normalizedToolName` (not a string there, and no caller reads it: the
+  status and the `requestedToolName` the callers read are equal), and 700 recorded cases include 17 of them (the differential maps the
+  original's value to `<non-string>` and the port's to the same marker for exactly those, counted in the test log). In
+  `renderToolSurfaceSections` such a tool would list `- constructor: function Object() { [native code] }` in the system prompt; the
+  port lists it with no snippet, i.e. not at all. Neither can make a tool registered or exposed that was not.
+- The sort of the available tool names (it orders the list shown in the "unknown tool" block reason) uses the module's own `icuCompare`,
+  the approximation of ICU's root collation that the config lane checked against Node's `localeCompare` (the same function orders
+  MCP server names), not `components/pitui`'s `jsstring.LocaleCompare` (golang.org/x/text collation, whose tables add 1.45 MB to the
+  binary). Tool names are ASCII in practice; the corpus has `-`, `_`, `:`, spaces, digits, mixed case, `\u00e9` and CJK names.
+- A formatter or extractor is a pointer (`NewToolInputFormatter`, `NewToolAccessExtractor`), so two registrations compare by
+  identity as the original's functions do. Registering twice returns the original's message as an error where the original throws.
+- Tool input is an ordered `*jsObject` (keys in `Object.keys` order). The SDK's `tool_call` handler receives the input as a Go map, so
+  the member order the model wrote is lost there and `ToRecord(map)` sorts the keys: previews of a host-supplied input list members in
+  sorted order where Pi lists them in arrival order. That is an SDK gap (a raw or ordered input on the tool_call event, the Pi API
+  `event.input` being a JavaScript object), reported in the PR body; the renderers are exact for any ordered input they are given.
+- The root gate keeps its own gate-local skill code (`skills.go`: `visibleSkillEntries`, `findSkillPathMatch`, `skillRead`) until the
+  gate lane wires `VisibleSkillPromptEntries`, `FindSkillPathMatch` and `WithoutDeniedSkills` in; the twins of
+  `exposure/skill-prompt-sanitizer` are on the real functions.
+- Library: `components/pitui` (the pi-tui subset: `widthx.WrapTextWithAnsi`, `TruncateToWidth`) is a sibling Package the extension
+  now requires (`go.work` and `go.mod`, the way `ask-user-question` does); a Piglet that selects this Package must select `pitui`
+  too. Cost: see the PR body (binary size and cold start).
+

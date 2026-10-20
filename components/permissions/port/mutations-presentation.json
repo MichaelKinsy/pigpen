@@ -2120,14 +2120,14 @@
  {
   "name": "tr-check-sort",
   "file": "toolregistry.go",
-  "find": "return jsstring.LocaleCompare(available[i], available[j]) < 0",
+  "find": "return icuCompare(available[i], available[j]) < 0",
   "replace": "return available[i] < available[j]"
  },
  {
   "name": "tr-check-sort-desc",
   "file": "toolregistry.go",
-  "find": "return jsstring.LocaleCompare(available[i], available[j]) < 0",
-  "replace": "return jsstring.LocaleCompare(available[i], available[j]) > 0"
+  "find": "return icuCompare(available[i], available[j]) < 0",
+  "replace": "return icuCompare(available[i], available[j]) > 0"
  },
  {
   "name": "tr-check-normalized-out",

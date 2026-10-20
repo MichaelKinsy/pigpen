@@ -415,8 +415,8 @@ m("tr-check-missing", TR, "if !ok {\n\t\treturn ToolRegistrationCheckResult{Stat
 m("tr-check-requested", TR, "if registeredLookup[requested] || registeredLookup[normalizedToolName] {", "if registeredLookup[normalizedToolName] {")
 m("tr-check-normalized", TR, "if registeredLookup[requested] || registeredLookup[normalizedToolName] {", "if registeredLookup[requested] {")
 m("tr-check-dedupe", TR, "if !availableSeen[name] {", "if true {")
-m("tr-check-sort", TR, "return jsstring.LocaleCompare(available[i], available[j]) < 0", "return available[i] < available[j]")
-m("tr-check-sort-desc", TR, "return jsstring.LocaleCompare(available[i], available[j]) < 0", "return jsstring.LocaleCompare(available[i], available[j]) > 0")
+m("tr-check-sort", TR, "return icuCompare(available[i], available[j]) < 0", "return available[i] < available[j]")
+m("tr-check-sort-desc", TR, "return icuCompare(available[i], available[j]) < 0", "return icuCompare(available[i], available[j]) > 0")
 m("tr-check-normalized-out", TR, 'Status: "registered", RequestedToolName: requested, NormalizedToolName: normalizedToolName}', 'Status: "registered", RequestedToolName: requested, NormalizedToolName: requested}')
 
 TS = "toolsurfaceprompt.go"
