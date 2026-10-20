@@ -1,6 +1,6 @@
 package pi_goal_x_test
-import "testing"
 
+import "testing"
 
 // tw and tskip for the external test package (the goalRig twins); the same contract as twin_test.go.
 
