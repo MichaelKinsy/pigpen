@@ -154,7 +154,7 @@ func TestUnportedToolsRefuse(t *testing.T) {
 // The original's other slash commands are not registered: a command the port lacks is not offered, and the README says so.
 func TestTheOriginalsOtherCommandsAreNotRegistered(t *testing.T) {
 	h, _ := refusedHost(t)
-	for _, name := range []string{"run", "subagent-cost", "subagents-fleet", "subagents-stop", "subagents-steer", "subagents-watchdog"} {
+	for _, name := range []string{"run", "subagent-cost", "subagents-fleet", "subagents-stop", "subagents-steer"} {
 		if h.cmds[name] {
 			t.Errorf("/%s is registered", name)
 		}

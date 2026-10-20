@@ -17,7 +17,9 @@ func newWdToolEnv(t *testing.T) wdToolEnv {
 	return wdToolEnv{home: home, project: tmp(t)}
 }
 
-func (e wdToolEnv) userSettings() string { return filepath.Join(e.home, ".pi", "agent", "settings.json") }
+func (e wdToolEnv) userSettings() string {
+	return filepath.Join(e.home, ".pi", "agent", "settings.json")
+}
 
 func (e wdToolEnv) ctx(provider, id string) *wdFakeCtx {
 	models := []map[string]any{{"provider": "openai-codex", "id": "gpt-5.5", "reasoning": true}, {"provider": "anthropic", "id": "claude-opus-4-8", "reasoning": true}}
@@ -25,7 +27,9 @@ func (e wdToolEnv) ctx(provider, id string) *wdFakeCtx {
 		reg: &wdFakeRegistry{models: models, available: models}}
 }
 
-func (e wdToolEnv) runtime() *watchdogRuntime { return newWatchdogRuntime(watchdogRuntimeOptions{Cwd: e.project}) }
+func (e wdToolEnv) runtime() *watchdogRuntime {
+	return newWatchdogRuntime(watchdogRuntimeOptions{Cwd: e.project})
+}
 
 func wdExists(path string) bool { _, err := os.Stat(path); return err == nil }
 

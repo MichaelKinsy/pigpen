@@ -170,9 +170,15 @@ func TestWatchdogEmissionGuardTwins(t *testing.T) {
 	})
 	tw(t, f, "allows concern to blocker escalation for the same issue despite per-update budget", func(t *testing.T) {
 		guard := newWatchdogEmissionGuard(nil)
-		first := guard.evaluate(wdGuardWarning(func(w *wdWarning) { w.Severity, w.Summary, w.Evidence = "concern", "Tests missing", "No unit covers the parser." }), "")
-		escalation := guard.evaluate(wdGuardWarning(func(w *wdWarning) { w.Severity, w.Summary, w.Evidence = "blocker", "Tests missing", "No unit covers the parser." }), "")
-		extra := guard.evaluate(wdGuardWarning(func(w *wdWarning) { w.Severity, w.Summary, w.Evidence = "blocker", "Docs missing", "No README section exists." }), "")
+		first := guard.evaluate(wdGuardWarning(func(w *wdWarning) {
+			w.Severity, w.Summary, w.Evidence = "concern", "Tests missing", "No unit covers the parser."
+		}), "")
+		escalation := guard.evaluate(wdGuardWarning(func(w *wdWarning) {
+			w.Severity, w.Summary, w.Evidence = "blocker", "Tests missing", "No unit covers the parser."
+		}), "")
+		extra := guard.evaluate(wdGuardWarning(func(w *wdWarning) {
+			w.Severity, w.Summary, w.Evidence = "blocker", "Docs missing", "No README section exists."
+		}), "")
 		wdEq(t, first.Accepted, true, "first")
 		wdEq(t, escalation.Accepted, true, "escalation accepted")
 		wdEq(t, escalation.Escalation, true, "escalation")
@@ -181,10 +187,16 @@ func TestWatchdogEmissionGuardTwins(t *testing.T) {
 	})
 	tw(t, f, "enforces max warnings while still allowing escalation of an accepted concern", func(t *testing.T) {
 		guard := newWatchdogEmissionGuard(wdPtr(1))
-		wdEq(t, guard.evaluate(wdGuardWarning(func(w *wdWarning) { w.Severity, w.Summary, w.Evidence = "concern", "Parser gap", "Unknown fields are ignored." }), "").Accepted, true, "first")
+		wdEq(t, guard.evaluate(wdGuardWarning(func(w *wdWarning) {
+			w.Severity, w.Summary, w.Evidence = "concern", "Parser gap", "Unknown fields are ignored."
+		}), "").Accepted, true, "first")
 		guard.startModelUpdate()
-		capped := guard.evaluate(wdGuardWarning(func(w *wdWarning) { w.Severity, w.Summary, w.Evidence = "concern", "Renderer gap", "Stale state is hidden." }), "")
-		escalation := guard.evaluate(wdGuardWarning(func(w *wdWarning) { w.Severity, w.Summary, w.Evidence = "blocker", "Parser gap", "Unknown fields are ignored." }), "")
+		capped := guard.evaluate(wdGuardWarning(func(w *wdWarning) {
+			w.Severity, w.Summary, w.Evidence = "concern", "Renderer gap", "Stale state is hidden."
+		}), "")
+		escalation := guard.evaluate(wdGuardWarning(func(w *wdWarning) {
+			w.Severity, w.Summary, w.Evidence = "blocker", "Parser gap", "Unknown fields are ignored."
+		}), "")
 		wdEq(t, capped.Accepted, false, "capped")
 		wdEq(t, capped.Reason, "max-warnings", "capped reason")
 		wdEq(t, escalation.Accepted, true, "escalation accepted")

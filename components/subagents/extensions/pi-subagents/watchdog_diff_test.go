@@ -86,7 +86,7 @@ func TestWatchdogDiffToolTwins(t *testing.T) {
 		wdMatch(t, changed, `\+unstaged after reviewer launch`)
 		wdMatch(t, changed, `Untracked files \(use read to inspect\):\n untracked\.txt`)
 		wdEq(t, wdGit(t, repo, "rev-parse", "HEAD"), baseline.Ref, "inspection does not move HEAD")
-		status := wdGit(t, repo, "status", "--short")
+		status := strings.TrimRight(wdGitRaw(t, repo, "status", "--short"), "\n")
 		wdEq(t, strings.Split(status, "\n"), []string{" M README.md", "M  src/a.ts", "?? untracked.txt"}, "inspection preserves staged, unstaged, and untracked state")
 	})
 	tw(t, f, "fails closed when HEAD advances after reviewer launch", func(t *testing.T) {

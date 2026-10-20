@@ -24,7 +24,9 @@ func wdRtConfig(mod func(*watchdogConfig)) *watchdogConfig {
 	return c
 }
 
-func wdCfgResult(c *watchdogConfig) watchdogSettingsResult { return watchdogSettingsResult{OK: true, Config: c} }
+func wdCfgResult(c *watchdogConfig) watchdogSettingsResult {
+	return watchdogSettingsResult{OK: true, Config: c}
+}
 
 func wdRtWarning() wdWarning {
 	return wdWarning{Severity: "concern", Importance: "high", Summary: "Runtime concern", Evidence: "The runtime test emitted a concern.",
@@ -32,11 +34,15 @@ func wdRtWarning() wdWarning {
 }
 
 // wdConfigBox is a config the test swaps while the runtime reads it.
-type wdConfigBox struct{ p atomic.Pointer[watchdogConfig] }
+type wdConfigBox struct {
+	p atomic.Pointer[watchdogConfig]
+}
 
 func newWdConfigBox(c *watchdogConfig) *wdConfigBox { b := &wdConfigBox{}; b.p.Store(c); return b }
 
-func (b *wdConfigBox) resolve(string, *jsObject) watchdogSettingsResult { return wdCfgResult(b.p.Load()) }
+func (b *wdConfigBox) resolve(string, *jsObject) watchdogSettingsResult {
+	return wdCfgResult(b.p.Load())
+}
 
 func wdRepoForRuntime(t *testing.T) string {
 	t.Helper()
@@ -102,8 +108,16 @@ func (s *wdSink) warning(w wdWarning, o *wdSendOptions) {
 	defer s.mu.Unlock()
 	s.warnings, s.options = append(s.warnings, w), append(s.options, o)
 }
-func (s *wdSink) entry(w wdWarning) { s.mu.Lock(); defer s.mu.Unlock(); s.entries = append(s.entries, w) }
-func (s *wdSink) message(c string) { s.mu.Lock(); defer s.mu.Unlock(); s.messages = append(s.messages, c) }
+func (s *wdSink) entry(w wdWarning) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.entries = append(s.entries, w)
+}
+func (s *wdSink) message(c string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.messages = append(s.messages, c)
+}
 func (s *wdSink) nWarnings() int   { s.mu.Lock(); defer s.mu.Unlock(); return len(s.warnings) }
 func (s *wdSink) nEntries() int    { s.mu.Lock(); defer s.mu.Unlock(); return len(s.entries) }
 func (s *wdSink) nMessages() int   { s.mu.Lock(); defer s.mu.Unlock(); return len(s.messages) }
@@ -169,7 +183,9 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 	tw(t, f, "reviews delivered orchestration outcomes without edits once per prompt and retains evidence through a side ask", func(t *testing.T) {
 		requests := &wdRequests{}
 		rt := newWatchdogRuntime(watchdogRuntimeOptions{Cwd: ctx.Cwd, ResolveConfig: newWdConfigBox(wdRtConfig(func(c *watchdogConfig) { c.Clarification = true })).resolve, ReviewChangesOnly: true,
-			RepoChangeSignature:  func(string) *watchdogRepoChangeSignature { return &watchdogRepoChangeSignature{Root: ctx.Cwd, Key: "unchanged", ChangedPaths: []string{}} },
+			RepoChangeSignature: func(string) *watchdogRepoChangeSignature {
+				return &watchdogRepoChangeSignature{Root: ctx.Cwd, Key: "unchanged", ChangedPaths: []string{}}
+			},
 			DisplayClarification: func(string) {},
 			Review: func(r watchdogReviewRequest) (*watchdogReviewResult, error) {
 				requests.add(r)
@@ -523,7 +539,9 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 
 	tw(t, f, "treats failed review stop reasons as failed", func(t *testing.T) {
 		rt := newWatchdogRuntime(watchdogRuntimeOptions{ResolveConfig: newWdConfigBox(wdRtConfig(nil)).resolve,
-			Review: func(watchdogReviewRequest) (*watchdogReviewResult, error) { return &watchdogReviewResult{StopReason: "length"}, nil }})
+			Review: func(watchdogReviewRequest) (*watchdogReviewResult, error) {
+				return &watchdogReviewResult{StopReason: "length"}, nil
+			}})
 		rt.enqueueDelta("Assistant:\nWorking")
 		rt.handleAgentEnd(wdObj(t, `{"type":"agent_end","messages":[]}`), ctx)
 		s := rt.getSnapshot("")
@@ -594,7 +612,11 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 		emit := make(chan func(wdWarning) bool, 1)
 		release := make(chan struct{})
 		rt := newWatchdogRuntime(watchdogRuntimeOptions{ResolveConfig: newWdConfigBox(wdRtConfig(func(c *watchdogConfig) { c.AgentEndTimeoutMs = 5 })).resolve,
-			Review: func(r watchdogReviewRequest) (*watchdogReviewResult, error) { emit <- r.EmitWarning; <-release; return nil, nil }})
+			Review: func(r watchdogReviewRequest) (*watchdogReviewResult, error) {
+				emit <- r.EmitWarning
+				<-release
+				return nil, nil
+			}})
 		rt.enqueueDelta("Assistant:\nStill working")
 		rt.handleAgentEnd(wdObj(t, `{"type":"agent_end","messages":[]}`), ctx)
 		emitWarning := <-emit
@@ -618,7 +640,11 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 				}
 				return wdCfgResult(defaultWatchdogConfig())
 			},
-			Review: func(r watchdogReviewRequest) (*watchdogReviewResult, error) { emit <- r.EmitWarning; <-release; return nil, nil }})
+			Review: func(r watchdogReviewRequest) (*watchdogReviewResult, error) {
+				emit <- r.EmitWarning
+				<-release
+				return nil, nil
+			}})
 		rt.enqueueDelta("Assistant:\nWorking")
 		end := wdAsync(func() { rt.handleAgentEnd(wdObj(t, `{"type":"agent_end","messages":[]}`), ctx) })
 		emitWarning := <-emit
@@ -635,7 +661,10 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 	tw(t, f, "bounds review input before calling the reviewer", func(t *testing.T) {
 		var reviewed string
 		rt := newWatchdogRuntime(watchdogRuntimeOptions{ResolveConfig: newWdConfigBox(wdRtConfig(nil)).resolve,
-			Review: func(r watchdogReviewRequest) (*watchdogReviewResult, error) { reviewed = r.Delta; return &watchdogReviewResult{StopReason: "stop"}, nil }})
+			Review: func(r watchdogReviewRequest) (*watchdogReviewResult, error) {
+				reviewed = r.Delta
+				return &watchdogReviewResult{StopReason: "stop"}, nil
+			}})
 		rt.enqueueDelta("Assistant:\n" + strings.Repeat("x", 30_000))
 		rt.handleAgentEnd(wdObj(t, `{"type":"agent_end","messages":[]}`), ctx)
 		wdEq(t, wdLen(reviewed), 24_000, "head + marker + tail fill the cap exactly")
@@ -670,7 +699,10 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 	tw(t, f, "skips duplicate bounded review input within the session", func(t *testing.T) {
 		var calls atomic.Int32
 		rt := newWatchdogRuntime(watchdogRuntimeOptions{ResolveConfig: newWdConfigBox(wdRtConfig(nil)).resolve,
-			Review: func(watchdogReviewRequest) (*watchdogReviewResult, error) { calls.Add(1); return &watchdogReviewResult{StopReason: "stop"}, nil }})
+			Review: func(watchdogReviewRequest) (*watchdogReviewResult, error) {
+				calls.Add(1)
+				return &watchdogReviewResult{StopReason: "stop"}, nil
+			}})
 		for i := 0; i < 2; i++ {
 			rt.enqueueDelta("Assistant:\nSame work")
 			rt.handleAgentEnd(wdObj(t, `{"type":"agent_end","messages":[]}`), ctx)
@@ -695,7 +727,10 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 	tw(t, f, "skips edit-gated watchdog reviews when no repo changes occurred", func(t *testing.T) {
 		repo := wdRepoForRuntime(t)
 		var calls atomic.Int32
-		rt := repoRuntime(t, repo, nil, func(watchdogReviewRequest) (*watchdogReviewResult, error) { calls.Add(1); return &watchdogReviewResult{StopReason: "stop"}, nil }, nil)
+		rt := repoRuntime(t, repo, nil, func(watchdogReviewRequest) (*watchdogReviewResult, error) {
+			calls.Add(1)
+			return &watchdogReviewResult{StopReason: "stop"}, nil
+		}, nil)
 		rt.handleBeforeAgentStart(wdPrompt(t, "Explain the file."), wdRunCtx{Cwd: repo})
 		rt.enqueueDelta("Assistant:\nI inspected the repo without editing.")
 		agentEnd(t, rt, repo)
@@ -836,7 +871,10 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 		started := make(chan struct{})
 		var aborted atomic.Bool
 		var reviews atomic.Int32
-		rt := repoRuntime(t, repo, lspConfig, func(watchdogReviewRequest) (*watchdogReviewResult, error) { reviews.Add(1); return &watchdogReviewResult{StopReason: "stop"}, nil },
+		rt := repoRuntime(t, repo, lspConfig, func(watchdogReviewRequest) (*watchdogReviewResult, error) {
+			reviews.Add(1)
+			return &watchdogReviewResult{StopReason: "stop"}, nil
+		},
 			func(o *watchdogRuntimeOptions) {
 				o.DisplayWarning = sink.warning
 				o.LspDiagnostics = func(r watchdogLspRequest) wdLspResult {
@@ -862,7 +900,10 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 	tw(t, f, "clears pending deltas when an edit-gated signature was already reviewed", func(t *testing.T) {
 		repo := wdRepoForRuntime(t)
 		var calls atomic.Int32
-		rt := repoRuntime(t, repo, nil, func(watchdogReviewRequest) (*watchdogReviewResult, error) { calls.Add(1); return &watchdogReviewResult{StopReason: "stop"}, nil }, nil)
+		rt := repoRuntime(t, repo, nil, func(watchdogReviewRequest) (*watchdogReviewResult, error) {
+			calls.Add(1)
+			return &watchdogReviewResult{StopReason: "stop"}, nil
+		}, nil)
 		rt.handleBeforeAgentStart(wdPrompt(t, "Patch the feature."), wdRunCtx{Cwd: repo})
 		editFile(t, repo, "file.ts", "export const value = 2;\n")
 		rt.enqueueDelta("Assistant:\nEdited the file.")
@@ -880,7 +921,9 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 		sink := &wdSink{}
 		var mu sync.Mutex
 		diagnostics := []wdLspDiagnostic{{Path: "src/file.ts", Line: 1, Column: 14, Severity: "warning", Source: "typescript", Code: "TS6133", Message: "'value' is declared but its value is never read."}}
-		rt := repoRuntime(t, repo, lspConfig, func(watchdogReviewRequest) (*watchdogReviewResult, error) { return &watchdogReviewResult{StopReason: "stop"}, nil },
+		rt := repoRuntime(t, repo, lspConfig, func(watchdogReviewRequest) (*watchdogReviewResult, error) {
+			return &watchdogReviewResult{StopReason: "stop"}, nil
+		},
 			func(o *watchdogRuntimeOptions) {
 				o.DisplayWarning = sink.warning
 				o.LspDiagnostics = func(watchdogLspRequest) wdLspResult {
@@ -913,7 +956,9 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 	tw(t, f, "records slow LSP checks as timeout status without emitting a warning", func(t *testing.T) {
 		repo := wdRepoForRuntime(t)
 		sink := &wdSink{}
-		rt := repoRuntime(t, repo, lspConfig, func(watchdogReviewRequest) (*watchdogReviewResult, error) { return &watchdogReviewResult{StopReason: "stop"}, nil },
+		rt := repoRuntime(t, repo, lspConfig, func(watchdogReviewRequest) (*watchdogReviewResult, error) {
+			return &watchdogReviewResult{StopReason: "stop"}, nil
+		},
 			func(o *watchdogRuntimeOptions) {
 				o.DisplayWarning = sink.warning
 				o.LspDiagnostics = func(watchdogLspRequest) wdLspResult {
@@ -933,7 +978,10 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 	tw(t, f, "does not review reverted or ignored tmp-only changes in edit-gated mode", func(t *testing.T) {
 		repo := wdRepoForRuntime(t)
 		var calls atomic.Int32
-		rt := repoRuntime(t, repo, nil, func(watchdogReviewRequest) (*watchdogReviewResult, error) { calls.Add(1); return &watchdogReviewResult{StopReason: "stop"}, nil }, nil)
+		rt := repoRuntime(t, repo, nil, func(watchdogReviewRequest) (*watchdogReviewResult, error) {
+			calls.Add(1)
+			return &watchdogReviewResult{StopReason: "stop"}, nil
+		}, nil)
 		rt.handleBeforeAgentStart(wdPrompt(t, "Try an edit."), wdRunCtx{Cwd: repo})
 		editFile(t, repo, "file.ts", "export const value = 3;\n")
 		editFile(t, repo, "file.ts", "export const value = 1;\n")
@@ -1040,6 +1088,8 @@ func TestWatchdogRuntimeTwins(t *testing.T) {
 		wdAwait(t, "first review", started)
 		rt.enqueueDelta("Assistant:\nFinal edits.")
 		agentEnd := wdAsync(func() { rt.handleAgentEnd(wdObj(t, `{"type":"agent_end"}`), ctx) })
+		// the original's agent_end handler runs up to its first await (the cancel of the cadence review) before the release below
+		wdEventually(t, "the cadence review to be superseded", func() bool { return rt.getSnapshot("").StaleReviews == 1 })
 		close(release)
 		wdAwait(t, "agent end", agentEnd)
 		s := rt.getSnapshot("")

@@ -55,9 +55,11 @@ options a port child cannot honor fail with the refusal text), and the child pro
 fast-mode and prompt-audit helpers. The runtime agent registry (`registerAgent`), the selector overlay and the live slash result
 widget are not ported.
 
+**The watchdog is ported** (`/subagents-watchdog`, the `watchdog.*` actions of `subagent`, `subagents.watchdog.*` settings, launch rules, the child watchdog and the `watchdog_diff` tool; see `port/PORT.md`, "The watchdog").
+
 **Not ported, and refused:** parallel, async and background runs, scripted workflows (`workflow`, `workflowScript`,
 `workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet and status views, steering and
-the supervisor channel, the watchdog, profiles and settings overrides, `.chain.json` chains, the management actions other
+the supervisor channel, profiles and settings overrides, `.chain.json` chains, the management actions other
 than `list`, `get` and the `mission.*` actions. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model`, `mission`, `missionId` and
 `async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope`.
 **Missions** work as in the original: every task launch records a mission (disable with `mission: false` or

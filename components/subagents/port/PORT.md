@@ -69,7 +69,7 @@ to this program, else `PATH`. A Piglet Binary as the child refuses `--system-pro
 **Not ported:** parallel runs; scripted workflows (they need the original's JavaScript
 workflow runtime, which no Package may carry); council mode; worktree isolation and lanes; the fleet and status views, slash
 commands other than `/run-chain`; steering and the supervisor channel (declared so the model sees the same tools; they
-answer that they are not ported); the watchdog; profiles, settings overrides and model scopes; the agent serializer and
+answer that they are not ported); profiles, settings overrides and model scopes; the agent serializer and
 the management actions create, update, delete, eject and disable; `.chain.json` chains and the acceptance, tool-budget and
 dynamic fan-out validators they need; external CLI and external job runners (their agents are listed, not run); the advertised
 agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
@@ -360,3 +360,60 @@ ends the step). **Not done:** the parent side, which has to create the structure
 with `-e <extension path>`, `--tools` including `structured_output` and the instructions of the original appended to the system prompt, read the capture after the
 child exits (`readStructuredOutput`) and report it as the original's result; and registering `outputSchema` as a run parameter. `outputSchema`,
 `structured_output` and `acceptance.report` therefore stay refused. `contact_supervisor` (the supervisor channel) and the watchdog diff tool are other slices.
+
+## The watchdog (subagents-w2-watchdog)
+
+Ported from `src/watchdog/*` (4,769 lines): the main-session watchdog (rules, scope, settings `subagents.watchdog.*`, turn deltas,
+repo change signature, compaction scope, LSP diagnostics evidence, emission guard, model selection and review, scheduling, rendering
+of its notices), the `watchdog.*` actions of the `subagent` tool, `/subagents-watchdog`, the permission arbiter, the `watchdog_diff`
+tool, and the child side (child config and status events, the child's own runtime).
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| W1 | `types.ts`, `warning-format.ts`, `render.ts` | `watchdog_types.go`, `watchdog_format.go` | 3 twins |
+| W2 | `settings.ts`, `rules.ts`, `guidance.ts`, `scope.ts` | `watchdog_settings.go`, `watchdog_rules.go`, `watchdog_guidance.go`, `watchdog_scope.go` | 19 twins; the launch rule check is called from `runOne` (`watchdogLaunchRuleCheck`) |
+| W3 | `turn-delta.ts`, `change-signature.ts`, `emission-guard.ts`, `lsp-diagnostics.ts` | `watchdog_turndelta.go`, `watchdog_changesig.go`, `watchdog_emission.go`, `watchdog_lsp.go` | 33 twins |
+| W4 | `model-selection.ts`, `review.ts`, `permission-arbiter.ts`, `tool-actions.ts`, `diff-tool.ts` | `watchdog_models.go`, `watchdog_review.go`, `watchdog_agent.go`, `watchdog_tools.go`, `watchdog_arbiter.go`, `watchdog_toolactions.go`, `watchdog_diff.go` | 42 twins |
+| W5 | `runtime.ts`, `register-main.ts` | `watchdog_runtime.go`, `watchdog_main.go` | 42 twins |
+| W6 | `child-status.ts`, `register-child.ts` | `watchdog_childstatus.go`, `watchdog_child.go` | 9 twins |
+
+Context seam: the reviewer, the arbiter and the model selection read the session through `wdContext` (`watchdog_context.go`); the extension
+wraps the SDK context, the twins script a registry (`watchdog_fakes_test.go`).
+
+**Differences from the original.**
+
+- *Agent loop.* The original runs the reviewer on pi-agent-core's `Agent` with the host's `createReadOnlyTools`. The SDK offers neither to an
+  event handler (`ExecuteTool` is valid only inside a tool handler), so `watchdog_agent.go` is a small loop (one model request per step through
+  `ctx.ModelRegistry().StreamSimple`, tool calls in order, schema validation of the arguments, the abort of the review) and `watchdog_tools.go`
+  implements `read`, `grep`, `find` and `ls` with the host tools' parameters and limits (2000 lines or 50 KB per read, 100 matches, 1000 files,
+  500 entries; `grep` and `find` use Git's file list when the directory is a repository, so `.gitignore` applies).
+- *Abort.* The SDK has no abort signal for a model stream call: an aborted review (timeout, reset, the user pressing Escape) returns at once
+  with `stopReason: "aborted"` and the host call is left to finish on its own goroutine.
+- *Concurrency.* The runtime is the original's state machine under one mutex; callbacks run after the lock is released, a cadence review and the
+  LSP pre-pass run on their own goroutine while the lock is free.
+- *Event payloads.* The SDK hands an event as a map, so the key order of tool arguments in a turn delta is sorted, where the original's is the
+  insertion order.
+- *Renderers* return text lines without theme colors (the SDK renderer has no theme handle).
+- *Child watchdog.* A pig child is a separate process: its status events are JSON lines in the file the role names (`WatchdogStatusFile`), read
+  by `tailChildWatchdogStatus`; the `structuredOutput` terminal state is whether the capture file is non-empty.
+- *The LSP client* is Go (`watchdog_lsp.go`), a JSON-RPC client over stdio of the project's or PATH's `typescript-language-server`.
+- `go.mod` takes `golang.org/x/text/unicode/norm` (NFKC for the emission guard's text identity) from `golang.org/x/text v0.43.0`, already in
+  the module graph (BSD-3-Clause).
+
+**Twins.** 148 twins and 1 skip. `watchdog-stable-host-layout` (a Node `--loader` that hides newer pi-ai exports) is the only skip; a Go package has no
+module graph that links at run time. `watchdog-native-scheduling` is skipped in the original's own suite without a real Pi SDK
+(`PI_SUBAGENTS_NATIVE_SDK`); its twin runs the same scenario on the runtime, the real review and a scripted model. `watchdog-runtime`'s "disabled
+activity must not correlate results" trap (a throwing getter) is asserted as "no activity collected". `async-execution` "loads launch rules from the
+resolved async step cwd" is twinned on `applyWatchdogLaunchRules` over the cwd the launch resolves.
+
+**Mutations.** 76 (`wd-*` in `gen-mutations.py`, run with `port/mutcheck.py`, each killed by a twin). The stale `run-terminal-event-stale` find was
+re-pointed to `isStaleExtensionContextError`.
+
+**SDK findings.** (1) An event handler cannot run the host's built-in tools (`ExecuteTool` needs a tool handler), so a reviewer needs its own
+read-only tools; Pi API mirrored: `createReadOnlyTools`. (2) `ModelRegistry.StreamSimple` has no abort signal; Pi API mirrored: the `signal` option
+of `streamSimple`. (3) Event handlers receive `map[string]any`, losing key order that Pi's objects keep. (4) A renderer has no theme handle for
+colors; Pi API mirrored: the `theme` argument of `registerMessageRenderer`.
+
+**Still refused.** Nothing of the watchdog. The parts that use other slices' code are wired by them: the parent side of the child watchdog
+(config in the role file, the status tail, progress in results: `resolveChildWatchdogConfig`, `tailChildWatchdogStatus`,
+`acceptChildWatchdogEvent`, `childWatchdogProgressForModel`) and the permission gate that calls `requestWatchdogPermission`.

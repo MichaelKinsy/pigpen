@@ -2234,7 +2234,7 @@
  {
   "name": "run-terminal-event-stale",
   "file": "async_runtime.go",
-  "find": "err != nil && !staleExtensionContext.MatchString(err.Error())",
+  "find": "err != nil && !isStaleExtensionContextError(err)",
   "replace": "err != nil"
  },
  {
@@ -2776,5 +2776,461 @@
   "file": "child_role.go",
   "find": "if ok, msg := validateStructuredOutputValue(rt.Schema, value); !ok {",
   "replace": "if ok, msg := validateStructuredOutputValue(rt.Schema, value); !ok && false {"
+ },
+ {
+  "name": "wd-glob-anchor",
+  "file": "watchdog_rules.go",
+  "find": "b.WriteString(\"^\")",
+  "replace": "b.WriteString(\"\")"
+ },
+ {
+  "name": "wd-glob-star",
+  "file": "watchdog_rules.go",
+  "find": "b.WriteString(`[^\\n\\r\\x{2028}\\x{2029}]*`)",
+  "replace": "b.WriteString(`[^/]*`)"
+ },
+ {
+  "name": "wd-rule-deny",
+  "file": "watchdog_rules.go",
+  "find": "if len(roleRule.Deny) > 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-rule-base-model",
+  "file": "watchdog_rules.go",
+  "find": "if watchdogGlobMatch(p, model) || watchdogGlobMatch(p, base) {",
+  "replace": "if watchdogGlobMatch(p, model) || (watchdogGlobMatch(p, base) && false) {"
+ },
+ {
+  "name": "wd-rule-block",
+  "file": "watchdog_rules.go",
+  "find": "if rules != nil && rules.Action == \"block\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-rule-severity",
+  "file": "watchdog_rules.go",
+  "find": "return wdWarning{Severity: \"concern\", Category: \"missed-constraint\"",
+  "replace": "return wdWarning{Severity: \"blocker\", Category: \"missed-constraint\""
+ },
+ {
+  "name": "wd-scope-entries",
+  "file": "watchdog_scope.go",
+  "find": "for len(s.entries) > wdMaxScopeEntries {",
+  "replace": "for len(s.entries) > wdMaxScopeEntries+1 {"
+ },
+ {
+  "name": "wd-scope-entry-chars",
+  "file": "watchdog_scope.go",
+  "find": "if wdLen(normalized) > wdMaxScopeEntryChars {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-format-escape",
+  "file": "watchdog_format.go",
+  "find": "v = strings.ReplaceAll(v, \"<\", \"&lt;\")",
+  "replace": "_ = v"
+ },
+ {
+  "name": "wd-format-blocker",
+  "file": "watchdog_format.go",
+  "find": "if d.Severity == \"blocker\" {\n\t\tlines = append(lines, \"<blocker_guidance>",
+  "replace": "if false {\n\t\tlines = append(lines, \"<blocker_guidance>"
+ },
+ {
+  "name": "wd-render-stalemate",
+  "file": "watchdog_format.go",
+  "find": "if w.State == \"stalemate\" && w.StalemateRepeats != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-emission-nfkc",
+  "file": "watchdog_emission.go",
+  "find": "v := norm.NFKC.String(value)",
+  "replace": "v := norm.NFC.String(value)"
+ },
+ {
+  "name": "wd-emission-escalation",
+  "file": "watchdog_emission.go",
+  "find": "escalation := seen && prior == \"concern\" && w.Severity == \"blocker\"",
+  "replace": "escalation := seen && prior == \"concern\" && w.Severity == \"blocker\" && false"
+ },
+ {
+  "name": "wd-emission-update-budget",
+  "file": "watchdog_emission.go",
+  "find": "if g.updateStarted {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-emission-max",
+  "file": "watchdog_emission.go",
+  "find": "if g.maxWarnings != nil && g.acceptedCount >= *g.maxWarnings && !escalation && !repeat {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-emission-repeat",
+  "file": "watchdog_emission.go",
+  "find": "repeat := seen && allowRepeatOf == identity",
+  "replace": "repeat := false"
+ },
+ {
+  "name": "wd-settings-cadence",
+  "file": "watchdog_settings.go",
+  "find": "func(c float64) bool { return c >= 5 })",
+  "replace": "func(c float64) bool { return c >= 4 })"
+ },
+ {
+  "name": "wd-settings-main-enabled",
+  "file": "watchdog_settings.go",
+  "find": "\tconfig.Main.Enabled = config.Enabled\n",
+  "replace": "\tconfig.Main.Enabled = false\n"
+ },
+ {
+  "name": "wd-settings-merge",
+  "file": "watchdog_settings.go",
+  "find": "if curIsObj && valIsObj {",
+  "replace": "if curIsObj && valIsObj && false {"
+ },
+ {
+  "name": "wd-settings-thinking",
+  "file": "watchdog_settings.go",
+  "find": "if s, ok := v.(string); ok && wdContains(thinkingLevelList, s) {",
+  "replace": "if s, ok := v.(string); ok {"
+ },
+ {
+  "name": "wd-settings-clear-model",
+  "file": "watchdog_settings.go",
+  "find": "wdDeleteKey(target, \"model\")",
+  "replace": "_ = target"
+ },
+ {
+  "name": "wd-settings-toggle-main",
+  "file": "watchdog_settings.go",
+  "find": "\tmain.set(\"enabled\", enabled)\n",
+  "replace": "\t_ = main\n"
+ },
+ {
+  "name": "wd-delta-diff",
+  "file": "watchdog_turndelta.go",
+  "find": "if diff, ok := wdPropV(details, \"diff\").(string); !failed && ok && wdIsObject(details) {",
+  "replace": "if diff, ok := wdPropV(details, \"diff\").(string); ok && wdIsObject(details) {"
+ },
+ {
+  "name": "wd-delta-structured",
+  "file": "watchdog_turndelta.go",
+  "find": "case structuredTerminal:",
+  "replace": "case false:"
+ },
+ {
+  "name": "wd-delta-stop",
+  "file": "watchdog_turndelta.go",
+  "find": "if wdPropV(in, \"stopReason\") == \"stop\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-delta-user-prompt",
+  "file": "watchdog_turndelta.go",
+  "find": "if in.IncludeUserPrompt && jsTrim(in.UserPrompt) != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-activity-bg-wait",
+  "file": "watchdog_turndelta.go",
+  "find": "eligible := name == \"bg_wait\" ||",
+  "replace": "eligible := false ||"
+ },
+ {
+  "name": "wd-activity-status",
+  "file": "watchdog_turndelta.go",
+  "find": "(name == \"subagent\" && (wdContains([]string{\"status\", \"resume\", \"interrupt\", \"steer\", \"stop\"}, actionStr) ||",
+  "replace": "(name == \"subagent\" && (wdContains([]string{\"resume\"}, actionStr) ||"
+ },
+ {
+  "name": "wd-activity-pairing",
+  "file": "watchdog_turndelta.go",
+  "find": "wdPropV(r, \"toolCallId\") == id && ",
+  "replace": "(wdPropV(r, \"toolCallId\") == id || true) && "
+ },
+ {
+  "name": "wd-sig-node-modules",
+  "file": "watchdog_changesig.go",
+  "find": "if wdContains(wdIgnoredChangeSegments, seg) {",
+  "replace": "if wdContains(wdIgnoredChangeSegments, seg) && false {"
+ },
+ {
+  "name": "wd-sig-untracked",
+  "file": "watchdog_changesig.go",
+  "find": "skipUntracked := wdIsHomeRepoRoot(root) || (probed && !hasTracked)",
+  "replace": "skipUntracked := (wdIsHomeRepoRoot(root) || (probed && !hasTracked)) && false"
+ },
+ {
+  "name": "wd-sig-large",
+  "file": "watchdog_changesig.go",
+  "find": "|| budget.bytes+size > budget.maxBytes {",
+  "replace": "|| false {"
+ },
+ {
+  "name": "wd-sig-entries",
+  "file": "watchdog_changesig.go",
+  "find": "if b.entries >= b.maxEntries {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-sig-quiet",
+  "file": "watchdog_changesig.go",
+  "find": "if !errors.Is(err, errWdFileTooLarge) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "wd-sig-submodule",
+  "file": "watchdog_changesig.go",
+  "find": "if _, err := os.Stat(filepath.Join(fullPath, \".git\")); err == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-lsp-actionable",
+  "file": "watchdog_lsp.go",
+  "find": "if d.Severity == \"error\" || d.Severity == \"warning\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "wd-lsp-blocker",
+  "file": "watchdog_lsp.go",
+  "find": "if len(errs) > 0 {\n\t\tseverity, kind",
+  "replace": "if false {\n\t\tseverity, kind"
+ },
+ {
+  "name": "wd-lsp-ledger",
+  "file": "watchdog_lsp.go",
+  "find": "if !l.seen[d.Path][id] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "wd-lsp-ledger-clear",
+  "file": "watchdog_lsp.go",
+  "find": "if result.Status == \"ok\" {\n\t\tfor _, checked",
+  "replace": "if false {\n\t\tfor _, checked"
+ },
+ {
+  "name": "wd-lsp-protocol",
+  "file": "watchdog_lsp.go",
+  "find": "fmt.Errorf(\"Invalid LSP JSON-RPC response: %s\", err.Error())",
+  "replace": "fmt.Errorf(\"bad frame: %s\", err.Error())"
+ },
+ {
+  "name": "wd-diff-dash",
+  "file": "watchdog_diff.go",
+  "find": "if strings.HasPrefix(trimmed, \"-\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-diff-dotdot",
+  "file": "watchdog_diff.go",
+  "find": "if seg == \"..\" {",
+  "replace": "if seg == \"..\" && false {"
+ },
+ {
+  "name": "wd-diff-untracked-cap",
+  "file": "watchdog_diff.go",
+  "find": "if len(shown) > wdMaxUntrackedFiles {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-diff-head-moved",
+  "file": "watchdog_diff.go",
+  "find": "if !head.ok || jsTrim(head.stdout) != t.baseline.Ref {",
+  "replace": "if (!head.ok || jsTrim(head.stdout) != t.baseline.Ref) && false {"
+ },
+ {
+  "name": "wd-diff-bound",
+  "file": "watchdog_diff.go",
+  "find": "if n <= watchdogDiffMaxChars {",
+  "replace": "if true {"
+ },
+ {
+  "name": "wd-model-family-end",
+  "file": "watchdog_models.go",
+  "find": "`^(claude-opus-4-8|opus-4-8)(-\\d{8}|-\\d{4}-\\d{2}-\\d{2})?$`",
+  "replace": "`^(claude-opus-4-8|opus-4-8)(-\\d{8}|-\\d{4}-\\d{2}-\\d{2})?`"
+ },
+ {
+  "name": "wd-model-auth",
+  "file": "watchdog_models.go",
+  "find": "if !ctx.Registry().HasConfiguredAuth(registryModel) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-model-configured-off",
+  "file": "watchdog_models.go",
+  "find": "\t\t\tthinking = \"off\"\n",
+  "replace": "\t\t\tthinking = \"\"\n"
+ },
+ {
+  "name": "wd-review-prompt",
+  "file": "watchdog_review.go",
+  "find": "\"Review only the supplied parent turn delta.",
+  "replace": "\"Review the supplied parent turn delta."
+ },
+ {
+  "name": "wd-review-cwd",
+  "file": "watchdog_review.go",
+  "find": "if unicode.IsControl(r) || r == '\\u2028' || r == '\\u2029' || r == '<' || r == '>' {",
+  "replace": "if unicode.IsControl(r) || r == '<' || r == '>' {"
+ },
+ {
+  "name": "wd-arbiter-approve",
+  "file": "watchdog_arbiter.go",
+  "find": "done <- outcome{result: finish(kind == \"approve\", wdPropStr(d, \"reason\"), kind)}",
+  "replace": "done <- outcome{result: finish(kind != \"approve\", wdPropStr(d, \"reason\"), kind)}"
+ },
+ {
+  "name": "wd-arbiter-disabled",
+  "file": "watchdog_arbiter.go",
+  "find": "if childConfig == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-runtime-stalemate",
+  "file": "watchdog_runtime.go",
+  "find": "stalemate := r.boundaryRepeats >= r.configResult.Config.StalemateRepeats",
+  "replace": "stalemate := r.boundaryRepeats > r.configResult.Config.StalemateRepeats"
+ },
+ {
+  "name": "wd-runtime-known-evidence",
+  "file": "watchdog_runtime.go",
+  "find": "knownEvidence := changeSignature != nil && changeSignature.Key == r.lastReviewedChangeSig",
+  "replace": "knownEvidence := false"
+ },
+ {
+  "name": "wd-runtime-duplicate-input",
+  "file": "watchdog_runtime.go",
+  "find": "if !r.reviewChangesOnly && signature == r.lastReviewInputSig {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-runtime-route",
+  "file": "watchdog_runtime.go",
+  "find": "if details.Importance == \"high\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "wd-runtime-stale-count",
+  "file": "watchdog_runtime.go",
+  "find": "r.staleReviews++\n\t\tr.invalidateActiveReview()",
+  "replace": "r.invalidateActiveReview()"
+ },
+ {
+  "name": "wd-runtime-asked",
+  "file": "watchdog_runtime.go",
+  "find": "r.askedThisPrompt = true\n",
+  "replace": ""
+ },
+ {
+  "name": "wd-runtime-head",
+  "file": "watchdog_runtime.go",
+  "find": "head := wdReviewInputHeadChars",
+  "replace": "head := wdReviewInputHeadChars - 1"
+ },
+ {
+  "name": "wd-runtime-context",
+  "file": "watchdog_runtime.go",
+  "find": "if len(pieces) == 0 {",
+  "replace": "if true {"
+ },
+ {
+  "name": "wd-runtime-fail",
+  "file": "watchdog_runtime.go",
+  "find": "r.failedReviews++\n",
+  "replace": ""
+ },
+ {
+  "name": "wd-runtime-error-text",
+  "file": "watchdog_runtime.go",
+  "find": "detail = \" \" + boundWatchdogReviewText(t, wdFailureErrorTextChars)",
+  "replace": "detail = \" \" + t"
+ },
+ {
+  "name": "wd-runtime-signature",
+  "file": "watchdog_runtime.go",
+  "find": "r.lastReviewInputSig = signature\n",
+  "replace": ""
+ },
+ {
+  "name": "wd-runtime-bind",
+  "file": "watchdog_runtime.go",
+  "find": "func (r *watchdogRuntime) bindSession(ctx wdRunCtx) {\n\tr.lock()\n\tdefer r.unlock()\n\tr.cwd = ctx.Cwd\n\tr.sessionOverride = nil",
+  "replace": "func (r *watchdogRuntime) bindSession(ctx wdRunCtx) {\n\tr.lock()\n\tdefer r.unlock()\n\tr.cwd = ctx.Cwd"
+ },
+ {
+  "name": "wd-runtime-scope",
+  "file": "watchdog_runtime.go",
+  "find": "r.scope.addPrompt(r.userPrompt, \"\")",
+  "replace": "_ = r.userPrompt"
+ },
+ {
+  "name": "wd-child-seq",
+  "file": "watchdog_childstatus.go",
+  "find": "if in.Current != nil && in.Event.Seq <= in.Current.Seq {",
+  "replace": "if in.Current != nil && in.Event.Seq < in.Current.Seq {"
+ },
+ {
+  "name": "wd-child-run",
+  "file": "watchdog_childstatus.go",
+  "find": "if in.RunID != \"\" && in.Event.RunID != in.RunID {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-child-limit",
+  "file": "watchdog_childstatus.go",
+  "find": "warnings = warnings[len(warnings)-childWatchdogWarningLimit:]",
+  "replace": "_ = warnings"
+ },
+ {
+  "name": "wd-child-high",
+  "file": "watchdog_childstatus.go",
+  "find": "if w.Importance == \"high\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "wd-child-blockers",
+  "file": "watchdog_childstatus.go",
+  "find": "if w.Severity == \"blocker\" && (!w.Addressed || w.Stalemate) {",
+  "replace": "if w.Severity == \"blocker\" && !w.Addressed {"
+ },
+ {
+  "name": "wd-child-cadence-override",
+  "file": "watchdog_childstatus.go",
+  "find": "if override.Cadence != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-child-fallback",
+  "file": "watchdog_childstatus.go",
+  "find": "if wdHasKey(parsed, \"fallbackModels\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-child-disabled",
+  "file": "watchdog_childstatus.go",
+  "find": "if parsed.vals[\"enabled\"] == false {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wd-child-cadence-min",
+  "file": "watchdog_childstatus.go",
+  "find": "wdChildInt(in.vals[\"everyNTools\"], 5)",
+  "replace": "wdChildInt(in.vals[\"everyNTools\"], 3)"
+ },
+ {
+  "name": "wd-child-displayed",
+  "file": "watchdog_childstatus.go",
+  "find": "(hasDisplayed && !displayedOK)",
+  "replace": "(hasDisplayed && !displayedOK && false)"
+ },
+ {
+  "name": "wd-child-settled",
+  "file": "watchdog_child.go",
+  "find": "if settled {\n\t\t\t\tbinding.AppendEntry",
+  "replace": "if settled && false {\n\t\t\t\tbinding.AppendEntry"
  }
 ]

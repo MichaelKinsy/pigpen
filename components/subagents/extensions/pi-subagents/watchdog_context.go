@@ -63,43 +63,124 @@ type wdContext interface {
 	Registry() wdRegistry
 }
 
-func wdModelProvider(model map[string]any) string { panic("not implemented") }
-func wdModelID(model map[string]any) string       { panic("not implemented") }
-func wdFullModelID(model map[string]any) string   { panic("not implemented") }
+func wdModelProvider(model map[string]any) string { p, _ := model["provider"].(string); return p }
+func wdModelID(model map[string]any) string       { p, _ := model["id"].(string); return p }
+func wdFullModelID(model map[string]any) string {
+	return wdModelProvider(model) + "/" + wdModelID(model)
+}
 
 // sdkWatchdogContext adapts an SDK context.
 type sdkWatchdogContext struct{ ctx sdk.Context }
 
-func newSDKWatchdogContext(ctx sdk.Context) wdContext { panic("not implemented") }
+func newSDKWatchdogContext(ctx sdk.Context) wdContext { return sdkWatchdogContext{ctx} }
 
-func (c sdkWatchdogContext) Cwd() string { panic("not implemented") }
+func (c sdkWatchdogContext) Cwd() string { return c.ctx.Cwd() }
 
-func (c sdkWatchdogContext) CurrentModel() map[string]any { panic("not implemented") }
+func (c sdkWatchdogContext) CurrentModel() map[string]any {
+	id := c.ctx.Model()
+	if id == "" {
+		return nil
+	}
+	if m := c.ctx.ModelRegistry().Find(c.ctx.ModelProvider(), id); m != nil {
+		return m
+	}
+	return map[string]any{"provider": c.ctx.ModelProvider(), "id": id}
+}
 
-func (c sdkWatchdogContext) Signal() <-chan struct{} { panic("not implemented") }
+func (c sdkWatchdogContext) Signal() <-chan struct{} {
+	if sig := c.ctx.Signal(); sig != nil {
+		return sig.Done()
+	}
+	return nil
+}
 
-func (c sdkWatchdogContext) SessionID() string { panic("not implemented") }
+func (c sdkWatchdogContext) SessionID() string {
+	id, _ := c.ctx.GetSessionID()
+	return id
+}
 
-func (c sdkWatchdogContext) ThinkingLevel() string { panic("not implemented") }
+func (c sdkWatchdogContext) ThinkingLevel() string {
+	level, _ := c.ctx.GetThinkingLevel()
+	return level
+}
 
-func (c sdkWatchdogContext) Registry() wdRegistry { panic("not implemented") }
+func (c sdkWatchdogContext) Registry() wdRegistry { return sdkWatchdogRegistry{c.ctx} }
 
 type sdkWatchdogRegistry struct{ ctx sdk.Context }
 
-func (r sdkWatchdogRegistry) GetAvailable() []map[string]any { panic("not implemented") }
+func (r sdkWatchdogRegistry) GetAvailable() []map[string]any {
+	models, err := r.ctx.ModelRegistry().GetAvailableOfType(sdk.ModelTypeChat)
+	if err != nil {
+		return nil
+	}
+	return models
+}
 
-func (r sdkWatchdogRegistry) Find(provider, id string) map[string]any { panic("not implemented") }
+func (r sdkWatchdogRegistry) Find(provider, id string) map[string]any {
+	return r.ctx.ModelRegistry().Find(provider, id)
+}
 
-func (r sdkWatchdogRegistry) HasConfiguredAuth(model map[string]any) bool { panic("not implemented") }
+func (r sdkWatchdogRegistry) HasConfiguredAuth(model map[string]any) bool {
+	ok, _ := r.ctx.ModelRegistry().HasConfiguredAuth(model)
+	return ok
+}
 
 func (r sdkWatchdogRegistry) GetAPIKeyAndHeaders(model map[string]any) (wdAuth, error) {
-	panic("not implemented")
+	auth, err := r.ctx.ModelRegistry().GetApiKeyAndHeaders(model)
+	if err != nil {
+		return wdAuth{}, err
+	}
+	out := wdAuth{OK: true}
+	if ok, has := auth["ok"].(bool); has && !ok {
+		out.OK = false
+		out.Error, _ = auth["error"].(string)
+		return out, nil
+	}
+	out.APIKey, _ = auth["apiKey"].(string)
+	out.Headers, _ = auth["headers"].(map[string]any)
+	out.Env, _ = auth["env"].(map[string]any)
+	return out, nil
 }
 
 // StreamSimple asks the host for one completion. The host call itself cannot be cancelled from here, so an abort returns an
 // aborted message at once and the call is left to finish on its own goroutine.
 func (r sdkWatchdogRegistry) StreamSimple(model map[string]any, llm wdLLMContext, opts wdStreamOptions) map[string]any {
-	panic("not implemented")
+	tools := make([]any, len(llm.Tools))
+	for i, t := range llm.Tools {
+		tools[i] = map[string]any{"name": t.Name, "description": t.Description, "parameters": t.Parameters}
+	}
+	messages := make([]any, len(llm.Messages))
+	for i, m := range llm.Messages {
+		messages[i] = m
+	}
+	request := map[string]any{"systemPrompt": llm.SystemPrompt, "messages": messages}
+	if len(tools) > 0 {
+		request["tools"] = tools
+	}
+	options := map[string]any{}
+	if opts.APIKey != "" {
+		options["apiKey"] = opts.APIKey
+	}
+	if opts.Headers != nil {
+		options["headers"] = opts.Headers
+	}
+	if opts.Env != nil {
+		options["env"] = opts.Env
+	}
+	if opts.Reasoning != "" {
+		options["reasoning"] = opts.Reasoning
+	}
+	result := make(chan map[string]any, 1)
+	go func() { result <- r.ctx.ModelRegistry().StreamSimple(model, request, options).Result() }()
+	select {
+	case message := <-result:
+		return message
+	case <-opts.Signal:
+		return wdAbortedMessage(model)
+	}
 }
 
-func wdAbortedMessage(model map[string]any) map[string]any { panic("not implemented") }
+func wdAbortedMessage(model map[string]any) map[string]any {
+	return map[string]any{"role": "assistant", "content": []any{}, "provider": wdModelProvider(model), "model": wdModelID(model),
+		"stopReason": "aborted", "errorMessage": "Request was aborted"}
+}

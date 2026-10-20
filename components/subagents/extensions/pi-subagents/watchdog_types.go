@@ -11,7 +11,14 @@ var (
 	watchdogRuntimeStatuses   = []string{"idle", "queued", "reviewing", "waiting-at-agent-end", "stale", "failed"}
 )
 
-func wdContains(list []string, v string) bool { panic("not implemented") }
+func wdContains(list []string, v string) bool {
+	for _, s := range list {
+		if s == v {
+			return true
+		}
+	}
+	return false
+}
 
 // wdWarning is WatchdogWarning and WatchdogWarningDetails (the details are a warning whose Category and Source are set).
 type wdWarning struct {
@@ -46,9 +53,9 @@ type wdThinking struct {
 	Off   bool
 }
 
-func (t wdThinking) set() bool { panic("not implemented") }
+func (t wdThinking) set() bool { return t.Off || t.Level != "" }
 
-func wdThinkingLevel(level string) wdThinking { panic("not implemented") }
+func wdThinkingLevel(level string) wdThinking { return wdThinking{Level: level} }
 
 var wdThinkingOff = wdThinking{Off: true}
 
@@ -83,7 +90,14 @@ type wdChildren struct {
 	Overrides []wdOverrideEntry
 }
 
-func (c wdChildren) override(agent string) *wdChildOverride { panic("not implemented") }
+func (c wdChildren) override(agent string) *wdChildOverride {
+	for i := range c.Overrides {
+		if c.Overrides[i].Agent == agent {
+			return &c.Overrides[i].Override
+		}
+	}
+	return nil
+}
 
 type wdLsp struct {
 	Enabled        bool
@@ -109,7 +123,17 @@ type wdRules struct {
 	RoleModels []wdRoleModelEntry
 }
 
-func (r *wdRules) roleRule(agent string) *wdRoleModelRule { panic("not implemented") }
+func (r *wdRules) roleRule(agent string) *wdRoleModelRule {
+	if r == nil {
+		return nil
+	}
+	for i := range r.RoleModels {
+		if r.RoleModels[i].Agent == agent {
+			return &r.RoleModels[i].Rule
+		}
+	}
+	return nil
+}
 
 // watchdogConfig is ResolvedWatchdogConfig.
 type watchdogConfig struct {

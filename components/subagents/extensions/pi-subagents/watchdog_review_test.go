@@ -383,4 +383,3 @@ func TestWatchdogReviewTwins(t *testing.T) {
 		wdEq(t, suffixBeatsFalse.ThinkingLevel, "medium", "suffix-over-false thinking")
 	})
 }
-

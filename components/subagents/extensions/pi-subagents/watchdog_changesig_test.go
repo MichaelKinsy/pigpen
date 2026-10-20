@@ -16,7 +16,7 @@ import (
 // Twins of test/unit/watchdog-change-signature.test.ts. The original forces the read and stat failures by patching node:fs;
 // here they come through wdHashFile and wdLstat.
 
-func wdGit(t *testing.T, cwd string, args ...string) string {
+func wdGitRaw(t *testing.T, cwd string, args ...string) string {
 	t.Helper()
 	cmd := exec.Command("git", append([]string{"-C", cwd}, args...)...)
 	var out, errOut bytes.Buffer
@@ -28,7 +28,12 @@ func wdGit(t *testing.T, cwd string, args ...string) string {
 		}
 		t.Fatalf("git %s: %v %s", strings.Join(args, " "), err, msg)
 	}
-	return strings.TrimSpace(out.String())
+	return out.String()
+}
+
+func wdGit(t *testing.T, cwd string, args ...string) string {
+	t.Helper()
+	return strings.TrimSpace(wdGitRaw(t, cwd, args...))
 }
 
 func wdEmptyRepo(t *testing.T) string {
@@ -263,7 +268,9 @@ func TestWatchdogChangeSignatureTwins(t *testing.T) {
 	tw(t, f, "keeps a valid signature when a per-file read races into ENOENT", func(t *testing.T) {
 		repo := wdRepo(t)
 		writeFile(t, filepath.Join(repo, "small.txt"), "hello\n")
-		seam(t, &wdHashFile, func(string) (string, error) { return "", &fs.PathError{Op: "open", Path: "small.txt", Err: fs.ErrNotExist} })
+		seam(t, &wdHashFile, func(string) (string, error) {
+			return "", &fs.PathError{Op: "open", Path: "small.txt", Err: fs.ErrNotExist}
+		})
 		sig := wdSig(t, repo)
 		wdTrue(t, sig != nil && sig.Key != "" && wdHas(sig.ChangedPaths, "small.txt"), "an ENOENT during read degrades to the deleted marker")
 	})
@@ -272,7 +279,9 @@ func TestWatchdogChangeSignatureTwins(t *testing.T) {
 		writeFile(t, filepath.Join(repo, "small.txt"), "hello\n")
 		var warnings []string
 		seam(t, &wdWarn, func(s string) { warnings = append(warnings, s) })
-		seam(t, &wdHashFile, func(string) (string, error) { return "", &fs.PathError{Op: "open", Path: "small.txt", Err: fs.ErrPermission} })
+		seam(t, &wdHashFile, func(string) (string, error) {
+			return "", &fs.PathError{Op: "open", Path: "small.txt", Err: fs.ErrPermission}
+		})
 		sig := wdSig(t, repo)
 		wdTrue(t, sig != nil && sig.Key != "", "a single unreadable file must not discard the whole signature")
 		found := false

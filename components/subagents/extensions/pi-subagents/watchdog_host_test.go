@@ -67,7 +67,7 @@ func TestWatchdogNativeSchedulingTwins(t *testing.T) {
 		inner := createMainWatchdogReview(func() wdContext { return ctx }, wdReviewOptions{})
 		sink := &wdSink{}
 		rt := newWatchdogRuntime(watchdogRuntimeOptions{Cwd: repo, ReviewChangesOnly: true,
-			ResolveConfig: newWdConfigBox(wdRtConfig(func(c *watchdogConfig) { c.Clarification, c.GuidanceWatchdogMd = true, false })).resolve,
+			ResolveConfig:        newWdConfigBox(wdRtConfig(func(c *watchdogConfig) { c.Clarification, c.GuidanceWatchdogMd = true, false })).resolve,
 			DisplayClarification: sink.message, DisplayWarning: sink.warning,
 			Review: func(r watchdogReviewRequest) (*watchdogReviewResult, error) {
 				reviewInputs.Add(1)
@@ -143,7 +143,6 @@ func TestWatchdogRegisterChildTwins(t *testing.T) {
 		close(release)
 		wdAwait(t, "agent end", ending)
 		mu.Lock()
-		defer mu.Unlock()
 		wdEq(t, len(sent), 0, "settled child must not receive a turn-triggering warning")
 		wdEq(t, len(appended), 1, "the real blocker remains visible as a status-only entry")
 		d := appended[0].(wdWarning)
@@ -154,7 +153,7 @@ func TestWatchdogRegisterChildTwins(t *testing.T) {
 			found = found || (s.Phase == "reviewing" && s.Warning != nil && s.Warning.Severity == "blocker" && s.Warning.Summary == "Independent blocker")
 		}
 		wdTrue(t, found, "the status sink must retain the late blocker evidence")
+		mu.Unlock()
 		w.onSessionShutdown()
 	})
 }
-

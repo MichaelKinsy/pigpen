@@ -152,3 +152,11 @@ scenario("run-gate-validation", "Invalid gates of a single run: an empty gate, a
          [ENABLE, fg(gate={}), fg(gate="npm test", acceptance={"level": "checked"}), fg(gate=5)], PROJECT)
 scenario("run-limit-validation", "Invalid run limits and output options: timeouts, an output mode that needs a file, an agent contract version.",
          [ENABLE, fg(timeoutMs=0), fg(timeoutMs=-1), fg(maxRuntimeMs="soon"), fg(outputMode="file-only"), fg(agentContract={"version": 2})], PROJECT)
+
+# the watchdog actions that fail before any model is asked (watchdog lane)
+scenario("watchdog-validation", "watchdog.configure refuses an unknown scope, a child target without an agent, a call without model or thinking, and `true` thinking.",
+         [ENABLE, call("subagent", action="watchdog.configure", scope="everywhere", model="inherit"),
+          call("subagent", action="watchdog.configure", target="child", model="inherit"),
+          call("subagent", action="watchdog.configure"),
+          call("subagent", action="watchdog.configure", thinking=True),
+          call("subagent", action="watchdog.configure", target="somewhere", model="inherit")], PROJECT)

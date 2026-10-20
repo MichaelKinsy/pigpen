@@ -17,13 +17,21 @@ func newWdSettingsEnv(t *testing.T) wdSettingsEnv {
 	return wdSettingsEnv{home: home, project: tmp(t)}
 }
 
-func (e wdSettingsEnv) userPath() string { return filepath.Join(e.home, ".pi", "agent", "settings.json") }
+func (e wdSettingsEnv) userPath() string {
+	return filepath.Join(e.home, ".pi", "agent", "settings.json")
+}
 func (e wdSettingsEnv) projectPath() string {
 	return filepath.Join(e.project, ".pi", "settings.json")
 }
 
-func (e wdSettingsEnv) writeUser(t *testing.T, raw string)    { t.Helper(); writeFile(t, e.userPath(), raw) }
-func (e wdSettingsEnv) writeProject(t *testing.T, raw string) { t.Helper(); writeFile(t, e.projectPath(), raw) }
+func (e wdSettingsEnv) writeUser(t *testing.T, raw string) {
+	t.Helper()
+	writeFile(t, e.userPath(), raw)
+}
+func (e wdSettingsEnv) writeProject(t *testing.T, raw string) {
+	t.Helper()
+	writeFile(t, e.projectPath(), raw)
+}
 
 func (e wdSettingsEnv) resolve(session string) watchdogSettingsResult {
 	var s *jsObject
