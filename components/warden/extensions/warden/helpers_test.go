@@ -35,6 +35,8 @@ func (j *recordingJudge) Evaluate(ctx context.Context, request Request) (Evaluat
 	j.requests = append(j.requests, request)
 	gate := j.gate
 	j.mu.Unlock()
+	// The request is recorded: only now may the guard report that it has started (action_guard.go startSignaler).
+	notifyStarted(ctx)
 	if gate != nil {
 		select {
 		case <-gate:
@@ -44,6 +46,9 @@ func (j *recordingJudge) Evaluate(ctx context.Context, request Request) (Evaluat
 	}
 	return j.handler(request)
 }
+
+// SignalsStart marks the double as a startSignaler.
+func (j *recordingJudge) SignalsStart() {}
 
 func (j *recordingJudge) calls() []Request {
 	j.mu.Lock()

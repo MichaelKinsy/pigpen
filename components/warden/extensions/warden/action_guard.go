@@ -72,8 +72,28 @@ type startNotifier struct {
 }
 
 func (s *startNotifier) Evaluate(ctx context.Context, r Request) (Evaluation, error) {
-	s.once.Do(func() { close(s.started) })
+	signal := func() { s.once.Do(func() { close(s.started) }) }
+	if _, ok := s.Judge.(startSignaler); ok {
+		// The judge says itself when the request has reached it (a test double records first), so the guard cannot
+		// return before the request is counted.
+		ctx = context.WithValue(ctx, startedKey{}, signal)
+	} else {
+		signal()
+	}
 	return s.Judge.Evaluate(ctx, r)
+}
+
+// startSignaler marks a judge that calls notifyStarted once a request has reached it; the guard then waits for that
+// instead of signalling at the call. Real backends do not implement it.
+type startSignaler interface{ SignalsStart() }
+
+type startedKey struct{}
+
+// notifyStarted tells the guard the request has reached the judge (see startSignaler).
+func notifyStarted(ctx context.Context) {
+	if signal, ok := ctx.Value(startedKey{}).(func()); ok {
+		signal()
+	}
 }
 
 func inputKey(input map[string]any) string {
