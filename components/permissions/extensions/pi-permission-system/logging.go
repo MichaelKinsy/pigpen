@@ -91,7 +91,7 @@ func (l *permissionSystemLogger) writeLine(stream, path, event string, details *
 		werr = cerr
 	}
 	if werr != nil {
-		return fmt.Sprintf("Failed to write permission-system %s log '%s': %s", stream, path, nodeFsMessage(werr, "write", path))
+		return fmt.Sprintf("Failed to write permission-system %s log '%s': %s", stream, path, nodeFsMessage(werr, "write", ""))
 	}
 	l.mu.Lock()
 	first := !l.hardened[path]

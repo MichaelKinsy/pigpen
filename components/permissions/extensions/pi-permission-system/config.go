@@ -50,7 +50,7 @@ func configFromUnified(r UnifiedConfigLoadResult) Config {
 	if r.Config.ShellTools != nil {
 		c.ShellTools = r.Config.ShellTools.order()
 	}
-	c.Unported = unportedOptions(root)
+	c.Unported = unportedOptions(r.Config)
 	return c
 }
 

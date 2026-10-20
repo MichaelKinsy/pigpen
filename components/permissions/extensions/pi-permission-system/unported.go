@@ -193,31 +193,26 @@ func (s *state) skillInput(ctx sdk.Context, data map[string]any) (any, error) {
 }
 
 // unportedOptions lists the config options that are set and that nothing in the port reads yet: the dialog, forwarding,
-// logging and infrastructure-read settings of the original.
-func unportedOptions(root *jsObject) []string {
+// logging and infrastructure-read settings of the original. A switch counts as set when it is on, a list or map when it is not
+// empty, a number when it is present.
+func unportedOptions(c UnifiedConfig) []string {
 	var out []string
-	for _, k := range []string{"debugLog", "permissionReviewLog", "doublePressToConfirm", "permissionDialogKeys", "promptNotifications",
-		"forwardingTimeoutMs", "promptMaxRows", "promptFieldMaxWidth", "reviewLogFieldMaxWidth", "piInfrastructureReadPaths",
-		"authorizerChain"} {
-		v, ok := root.vals[k]
-		if !ok {
-			continue
+	flag := func(name string, set bool) {
+		if set {
+			out = append(out, name)
 		}
-		switch x := v.(type) {
-		case bool:
-			if !x {
-				continue
-			}
-		case *jsObject:
-			if len(x.order()) == 0 {
-				continue
-			}
-		case []any:
-			if len(x) == 0 {
-				continue
-			}
-		}
-		out = append(out, k)
 	}
+	on := func(b *bool) bool { return b != nil && *b }
+	flag("debugLog", on(c.DebugLog))
+	flag("permissionReviewLog", on(c.PermissionReviewLog))
+	flag("doublePressToConfirm", on(c.DoublePressToConfirm))
+	flag("permissionDialogKeys", len(c.PermissionDialogKeys) > 0)
+	flag("promptNotifications", len(c.PromptNotifications) > 0)
+	flag("forwardingTimeoutMs", c.ForwardingTimeoutMs != nil)
+	flag("promptMaxRows", c.PromptMaxRows != nil)
+	flag("promptFieldMaxWidth", c.PromptFieldMaxWidth != nil)
+	flag("reviewLogFieldMaxWidth", c.ReviewLogFieldMaxWidth != nil)
+	flag("piInfrastructureReadPaths", len(c.PiInfrastructureReadPaths) > 0)
+	flag("authorizerChain", len(c.AuthorizerChain) > 0)
 	return out
 }
