@@ -273,8 +273,9 @@ pigmusic serve --opener synthetic --output null     # offline test tone through 
 
 Library and liked songs, PO tokens and age-restricted tracks are not supported by the native engine (they report why).
 
-The engine choice is wired into `pigmusic` only. The `/music` player inside PiG, and its quick commands, still drive mpv whatever
-`engine` says (`/music settings` saves it for `pigmusic`), and
+The engine choice is wired into `pigmusic` only. The `/music` player inside PiG, and its quick commands, only drive mpv: with
+`engine` (or `PIG_MUSIC_ENGINE`) set to `native` they are refused with an error, not run on mpv anyway (`/music settings` still saves it
+for `pigmusic`), and
 `/music doctor` does not show the native engine's health yet (`pigmusic check` does); connecting both is a follow-up. The program
 that runs the native player is found through `PIG_MUSIC_SERVE`, then `nativePath`, then a `pigmusic` next to the running program,
 then PATH.
