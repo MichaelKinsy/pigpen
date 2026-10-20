@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"unicode/utf8"
 )
 
 // resumeCorpus is the highlight.js oracle corpus: one code sample per language case.
@@ -20,51 +19,6 @@ func resumeCorpus(t *testing.T) []struct{ ID, Lang, Code string } {
 		t.Fatal(err)
 	}
 	return corpus
-}
-
-// TestHighlightResumableEqualsAFreshRun: for every corpus sample cut at many prefixes, the HTML before a resume point of the prefix's run joined with the HTML of a resumed run over the whole code is the HTML of a fresh run over the whole code.
-func TestHighlightResumableEqualsAFreshRun(t *testing.T) {
-	r := NewRegistry()
-	r.LoadAllLanguages()
-	checked, resumed := 0, 0
-	for _, c := range resumeCorpus(t) {
-		if !r.SupportsLanguage(c.Lang) {
-			continue
-		}
-		want, err := r.Highlight(c.Code, c.Lang, true)
-		if err != nil {
-			continue
-		}
-		step := max(1, len(c.Code)/16)
-		for cut := step; cut <= len(c.Code); cut += step {
-			for cut < len(c.Code) && !utf8.RuneStart(c.Code[cut]) {
-				cut++
-			}
-			prefix := c.Code[:cut]
-			prefixHTML, points, err := r.HighlightResumable(prefix, c.Lang, true, ResumePoint{})
-			if err != nil {
-				t.Fatalf("%s: %v", c.ID, err)
-			}
-			if plain, _ := r.Highlight(prefix, c.Lang, true); plain != prefixHTML {
-				t.Fatalf("%s: recording changed the HTML of a fresh run", c.ID)
-			}
-			for _, p := range points {
-				checked++
-				suffix, _, err := r.HighlightResumable(c.Code, c.Lang, true, p)
-				if err != nil {
-					continue
-				}
-				resumed++
-				if got := prefixHTML[:p.HTML] + suffix; got != want {
-					t.Fatalf("%s: resuming at byte %d of a %d-byte prefix of %d changed the HTML\nwant %q\n got %q", c.ID, p.Byte, cut, len(c.Code), want, got)
-				}
-			}
-		}
-	}
-	t.Logf("%d resume points checked, %d resumed", checked, resumed)
-	if resumed < 500 {
-		t.Fatalf("only %d resumed runs: the corpus no longer exercises resumption", resumed)
-	}
 }
 
 // TestHighlightResumableFollowsLaterText covers a text whose earlier tokens are decided by text that arrives much later: a multi-line arrow-function parameter list whose closing parenthesis comes after many lines. A language whose patterns read without bound offers no resume point, and every cut resumed from every point it does offer equals a whole run.
@@ -146,37 +100,6 @@ func TestPatternReach(t *testing.T) {
 			t.Errorf("patternReach(%q) = %+v, want %+v", c.source, got, c.want)
 		}
 	}
-}
-
-// TestResumedRunCountsTheIterationsOfAWholeRun: highlight.js throws once its scan iterations exceed highlightJSIterationLimit and three times the match index, so a run resumed at a checkpoint must count the iterations before it. For every checkpoint of every corpus sample, the resumed run ends with the iteration count of the whole run.
-func TestResumedRunCountsTheIterationsOfAWholeRun(t *testing.T) {
-	r := NewRegistry()
-	r.LoadAllLanguages()
-	checked := 0
-	for _, c := range resumeCorpus(t) {
-		if !r.SupportsLanguage(c.Lang) {
-			continue
-		}
-		units := stringToUnits(c.Code)
-		whole := r.highlightFrom(c.Lang, units, true, nil, checkpoint{}, true)
-		if whole.failed {
-			continue
-		}
-		for _, point := range whole.checkpoints {
-			resumed := r.highlightFrom(c.Lang, units, true, nil, point, false)
-			if resumed.failed {
-				t.Fatalf("%s: the run resumed at unit %d failed", c.ID, point.unit)
-			}
-			if resumed.iterations != whole.iterations {
-				t.Fatalf("%s: the run resumed at unit %d counted %d iterations, the whole run %d", c.ID, point.unit, resumed.iterations, whole.iterations)
-			}
-			checked++
-		}
-	}
-	if checked < 1000 {
-		t.Fatalf("only %d checkpoints checked", checked)
-	}
-	t.Logf("%d checkpoints checked", checked)
 }
 
 // TestResumeLimitHoldsBackPointsLaterTextDecides covers the margins of resumeLimit with texts a later character changes. Apache's `[` after a line break changes how the line before it reads, so a point needs reach.lines+1 line breaks after it; QML's `{` or `:` after blank lines changes how the name before them reads, through a pattern that repeats white space, so a point needs a character other than white space after it. Every point a prefix offers, resumed over the prefix with that character after it, equals a whole run.

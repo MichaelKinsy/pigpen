@@ -40,6 +40,9 @@ const dispatchProbeText = "é中😀 \u2028\t\r\n# \"'`\\${}()[]<>=+-*/%&|^~!?:;
 
 // TestBranchDispatchEqualsTheJoinedExpression: at every position of every corpus sample (and of a text of punctuation and non-ASCII units), the matcher of every mode of the sample's language finds, with the dispatch, the match the joined regular expression finds: the same index, the same groups, the same branch.
 func TestBranchDispatchEqualsTheJoinedExpression(t *testing.T) {
+	if raceEnabled {
+		t.Skip("a single-threaded sweep of the whole corpus: about 90 s without the race detector, far more with it")
+	}
 	r := NewRegistry()
 	r.LoadAllLanguages()
 	checked, skipped := 0, 0
