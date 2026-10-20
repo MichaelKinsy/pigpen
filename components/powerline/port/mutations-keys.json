@@ -488,7 +488,7 @@
  {
   "name": "ext-disabled-guard",
   "file": "keys_ext.go",
-  "find": "if !enabled || !ctx.HasUI() ||",
+  "find": "if !k.enabled.Load() || !ctx.HasUI() ||",
   "replace": "if !ctx.HasUI() ||"
  },
  {

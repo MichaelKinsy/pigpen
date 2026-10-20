@@ -33,9 +33,13 @@ type keysExt struct {
 	// overlays counts the select overlays this slice has open: the original's listener stands down while `tui.hasOverlay()`,
 	// which the SDK cannot ask, so overlays opened here are tracked and others are not seen.
 	overlays atomic.Int32
-	// overlayGuard, when set, also stands the listener down (for example while the welcome overlay is mounted). Called with a.mu
-	// held.
+	// overlayGuard, when set, also stands the listener down (for example while the welcome overlay is mounted). It runs on the
+	// SDK's input goroutine and must not take a.mu: the host waits for the listener's verdict while a command holding a.mu may
+	// wait for the host.
 	overlayGuard func() bool
+	// enabled mirrors the bar's `enabled` for the listener, which cannot take a.mu (see overlayGuard): true from setup until
+	// disable.
+	enabled atomic.Bool
 	// dismissWelcome is dismissWelcomeForInput: run after a shortcut consumed a key.
 	dismissWelcome func(ctx sdk.Context)
 }
@@ -81,6 +85,7 @@ func (k *keysExt) sessionStart(reason string) {
 
 func (k *keysExt) setup() {
 	ctx := k.a.host.ctx
+	k.enabled.Store(true)
 	k.unsubscribe()
 	state := k.ensure(ctx)
 	unsub, err := ctx.OnTerminalInput(k.onInput(ctx, state))
@@ -94,6 +99,7 @@ func (k *keysExt) setup() {
 
 func (k *keysExt) disable() {
 	ctx := k.a.host.ctx
+	k.enabled.Store(false)
 	k.ensure(ctx).disable(k.host(ctx))
 	k.unsubscribe()
 }
@@ -118,6 +124,7 @@ func (k *keysExt) onShutdown(ctx sdk.Context, data map[string]any) (any, error) 
 		reason, _ := data["reason"].(string)
 		state.sessionShutdown(k.host(ctx), reason)
 	}
+	k.enabled.Store(false)
 	k.unsubscribe()
 	return nil, nil
 }
@@ -126,11 +133,8 @@ func (k *keysExt) onShutdown(ctx sdk.Context, data map[string]any) (any, error) 
 // clipboard run inline, as in the original; the pickers wait for the user, so they run off the input path.
 func (k *keysExt) onInput(ctx sdk.Context, state *keysState) sdk.TerminalInputHandler {
 	return func(data string) sdk.TerminalInputResult {
-		k.a.mu.Lock()
-		enabled := k.a.pl != nil && k.a.pl.enabled
 		guarded := k.overlayGuard != nil && k.overlayGuard()
-		k.a.mu.Unlock()
-		if !enabled || !ctx.HasUI() || guarded || k.overlays.Load() > 0 {
+		if !k.enabled.Load() || !ctx.HasUI() || guarded || k.overlays.Load() > 0 {
 			return sdk.TerminalInputResult{}
 		}
 		h := k.host(ctx)
