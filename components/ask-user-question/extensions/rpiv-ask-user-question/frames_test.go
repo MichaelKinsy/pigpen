@@ -547,6 +547,11 @@ func frDescribe(d frDiff, steps map[int]string) string {
 }
 
 func TestFramesAgainstOriginal(t *testing.T) {
+	// `pigeq mutate` runs the extension directory alone, without the port directory beside it; the committed
+	// goldens are always present in a checkout, where this test runs.
+	if _, err := os.Stat(filepath.Join(framesDir, "theme-tokens.json")); os.IsNotExist(err) {
+		t.Skip("port/frames is not beside the extension directory (a mutation run copies the extension only)")
+	}
 	scenarioFiles, err := filepath.Glob(filepath.Join(framesDir, "scenarios", "*.json"))
 	if err != nil || len(scenarioFiles) == 0 {
 		t.Fatalf("no scenarios under %s (%v)", framesDir, err)

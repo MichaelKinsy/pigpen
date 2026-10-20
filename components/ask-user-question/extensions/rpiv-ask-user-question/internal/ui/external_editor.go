@@ -20,8 +20,13 @@ type ExternalEditorTui interface {
 }
 
 // ExternalEditorBanner receives the "Launching external editor" notice the original writes to process.stdout;
-// a subprocess extension owns no terminal, so it is injectable. nil discards it.
-var ExternalEditorBanner io.Writer = os.Stdout
+// a subprocess extension owns no terminal (its stdout is the protocol pipe, and PiG's fuse check rejects os.Stdout), so
+// it is injectable. nil, the default, discards it.
+var ExternalEditorBanner io.Writer
+
+// ExternalEditorTerminal is the terminal the editor child inherits (the original runs it with stdio "inherit"). nil,
+// the default, gives it none: an extension has no terminal to give until the SDK can suspend the host TUI.
+var ExternalEditorTerminal *os.File
 
 var trailingNewline = regexp.MustCompile(`\r?\n\z`)
 
@@ -33,7 +38,9 @@ func runEditor(command, file string) error {
 		return errors.New("External editor command is empty")
 	}
 	cmd := exec.Command(editor, append(append([]string{}, args...), file)...)
-	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	if t := ExternalEditorTerminal; t != nil {
+		cmd.Stdin, cmd.Stdout, cmd.Stderr = t, t, t
+	}
 	if err := cmd.Start(); err != nil {
 		return err
 	}
