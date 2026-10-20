@@ -69,7 +69,7 @@
 //     need PiG's SDK JSON); wordsegmenter drops the pigstrip dictionary
 //     switch and the dictionary-size budget test.
 //   - DecodeKittyPrintable keeps PiG's Shift+letter fallback ("\x1b[97;2u" decodes to "A"); pi-tui's
-//     decodeKittyPrintable yields the base key "a". This is a numbered PiG divergence (number pending), kept
+//     decodeKittyPrintable yields the base key "a". This is PiG divergence D185 (docs/kitty-shift-letter-divergence), kept
 //     here so pitui behaves as the PiG tui it is copied from.
 //   - Text, Container, Spacer, DynamicBorder, keys.go, hyperlink.go and sgr.go
 //     are pi-tui's, not PiG's.
