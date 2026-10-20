@@ -35,7 +35,7 @@ func TestRefusalMessage(t *testing.T) {
 
 // every parameter of the original's schema that a run does not honor is refused, one test case each
 func TestEveryUnportedParameterIsRefused(t *testing.T) {
-	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true}
+	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true, "timeoutMs": true, "maxRuntimeMs": true}
 	special := map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true}
 	names := sub.ToolParamNames()
 	sort.Strings(names)
@@ -62,18 +62,6 @@ func TestSeveralUnportedParametersAreNamedTogether(t *testing.T) {
 	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "output": true, "acceptance": "checked"})
 	wantRefusal(t, failure, "the `acceptance`, `output` options")
 	eq(t, len(*calls), 0, "no child started")
-}
-
-func TestAsyncRunsAreRefusedAndForegroundStillRuns(t *testing.T) {
-	h, calls := refusedHost(t)
-	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": true})
-	wantRefusal(t, failure, "async (background) runs (`async: true`)")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": "yes"})
-	wantRefusal(t, failure, "async (background) runs (`async: yes`)")
-	eq(t, len(*calls), 0, "no child started")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": false})
-	eq(t, failure, "", "async false is the port's foreground run")
-	eq(t, len(*calls), 1, "it ran")
 }
 
 func TestWorkflowRunsAreRefused(t *testing.T) {
@@ -112,7 +100,7 @@ func TestParallelAndChainRunsAreRefused(t *testing.T) {
 
 func TestManagementActionsOtherThanListAndGetAreRefused(t *testing.T) {
 	h, _ := refusedHost(t)
-	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "status", "doctor", "guide", "interrupt", "stop", "resume", "steer", "debug.run", "validate", "schedule.create", "single", "append-step", "unheard-of"}
+	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "doctor", "guide", "steer", "debug.run", "validate", "schedule.create", "single", "append-step", "unheard-of"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
@@ -151,9 +139,7 @@ func TestTaskAndActionErrorsAreTheOriginals(t *testing.T) {
 
 func TestUnportedToolsRefuse(t *testing.T) {
 	h, _ := refusedHost(t)
-	_, failure := h.Tool("bg_wait", map[string]any{})
-	wantRefusal(t, failure, "waiting for background work (`bg_wait`)")
-	_, failure = h.Tool("subagent_supervisor", map[string]any{"action": "pending"})
+	_, failure := h.Tool("subagent_supervisor", map[string]any{"action": "pending"})
 	wantRefusal(t, failure, "the supervisor channel (`subagent_supervisor`)")
 }
 
