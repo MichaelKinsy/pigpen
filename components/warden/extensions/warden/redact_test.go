@@ -7,8 +7,7 @@ import (
 )
 
 // twin: tests/guard.test.ts:100 "redact removes passwords from database and broker URLs, not just http(s)"
-// (the last assertion, about findSecrets, belongs to the security guard and is skipped: see
-// TestSkippedTwinsRedactFindSecrets).
+// (the findSecrets assertion belongs to the security lane and lives in this twin too).
 func TestRedactRemovesPasswordsFromDatabaseAndBrokerURLs(t *testing.T) {
 	leak := regexp.MustCompile(`hunter2secret|s3cr3t-pw|r3disPass|guestpw`)
 	for _, url := range []string{"postgres://admin:hunter2secret@db.internal:5432/app", "mysql://root:s3cr3t-pw@127.0.0.1/app", "redis://default:r3disPass@cache:6379", "amqp://guest:guestpw@mq:5672"} {
@@ -19,6 +18,9 @@ func TestRedactRemovesPasswordsFromDatabaseAndBrokerURLs(t *testing.T) {
 	}
 	if got := Redact("git clone git@github.com:owner/repo.git"); got != "git clone git@github.com:owner/repo.git" {
 		t.Fatalf("redacted an ssh remote: %q", got)
+	}
+	if len(FindSecrets("postgres://admin:hunter2secret@db.internal:5432/app")) == 0 {
+		t.Fatal("findSecrets must see a URL password")
 	}
 }
 
@@ -48,13 +50,6 @@ func TestRedactRemovesCommonCredentialShapesAndKeepsTheRest(t *testing.T) {
 	if Redact("ls -la") != "ls -la" {
 		t.Fatal("changed a plain command")
 	}
-}
-
-// Skipped twins (security guard, out of this port's scope; see port/PORT.md "Scope"):
-//
-//	guard.test.ts:129 findSecrets, :155 syntheticish
-func TestSkippedTwinsRedactFindSecrets(t *testing.T) {
-	t.Skip("security guard (findSecrets, looksLikeSecretValue, syntheticish) is not part of this port: owner decision needed to add it")
 }
 
 // Redaction edge (guard.ts VALUE_AMPERSAND, redact.ts:12): `&` ends an unquoted value only as a
