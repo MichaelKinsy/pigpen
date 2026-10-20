@@ -89,3 +89,47 @@ func TestPrefsDifferentialAgainstThePinnedOriginal(t *testing.T) {
 		t.Fatalf("%d differences", bad)
 	}
 }
+
+// redactFast skips Redact when no trigger of any rule is present: it must equal Redact on every text, the corpus of
+// the original's own commands and messages included.
+func TestRedactFastEqualsRedact(t *testing.T) {
+	var texts []string
+	for _, f := range []string{"testdata/diff_corpus.json", "testdata/prefs_corpus.json"} {
+		raw, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var items []struct {
+			Command string `json:"command"`
+			Text    string `json:"text"`
+		}
+		if f == "testdata/prefs_corpus.json" {
+			var c prefsCorpus
+			if err := json.Unmarshal(raw, &c); err != nil {
+				t.Fatal(err)
+			}
+			for _, it := range c.Items {
+				texts = append(texts, it.Text)
+				texts = append(texts, it.Clauses...)
+			}
+			continue
+		}
+		if err := json.Unmarshal(raw, &items); err != nil {
+			t.Fatal(err)
+		}
+		for _, it := range items {
+			texts = append(texts, it.Command)
+		}
+	}
+	texts = append(texts,
+		"-----BEGIN RSA PRIVATE KEY-----\nabc\n-----END RSA PRIVATE KEY-----", "Authorization: Bearer abcdef", "curl -H 'authorization=basic abc'",
+		"export API_KEY=sk-abcdefgh12345678", "password=ab&cd1 next", "https://user:pass@example.com/x", "ghp_abcdefghijklmnopqrstuvwxyz0123456789",
+		"github_pat_abcdefghijklmnopqrstuvwxyz", "AKIAABCDEFGHIJKLMNOP", "xoxb-1234567890-abcdef", "AIzaSyA-abcdefghijklmnopqrstuvwxyz012345",
+		"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdefghijklmnop", "client_secret: 'a b c'", "PASSPHRASE=hunter2", "Token: abc", "nothing here")
+	for _, s := range texts {
+		if got, want := redactFast(s), Redact(s); got != want {
+			t.Fatalf("redactFast(%q) = %q, Redact = %q", s, got, want)
+		}
+	}
+	t.Logf("%d texts compared", len(texts))
+}

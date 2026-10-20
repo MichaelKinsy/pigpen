@@ -145,9 +145,9 @@ func isStopWord(w string) bool {
 // token, so "never use X" and "always use X" do not merge. The original splits on everything that is not
 // [a-z0-9] once the apostrophes are gone, so a word is a run of those characters.
 func tokens(clause string) []string {
-	negated := reNegation.MatchString(jsTrim(clause))
+	negated := startsNegation(jsTrim(clause))
 	lower := jsLower(clause)
-	lower = strings.NewReplacer("'", "", "’", "").Replace(lower)
+	lower = apostropheReplacer.Replace(lower)
 	var words []string
 	seen := map[string]bool{}
 	start := -1
@@ -157,7 +157,7 @@ func tokens(clause string) []string {
 		}
 		word := lower[start:end]
 		start = -1
-		if isStopWord(word) || reNegationWord.MatchString(word) {
+		if isStopWord(word) || word == "dont" || word == "not" || word == "never" || word == "stop" || word == "no" {
 			return
 		}
 		if len(word) > 3 && strings.HasSuffix(word, "s") && !strings.HasSuffix(word, "ss") {
@@ -487,7 +487,7 @@ func evaluatePrefs(scan *PrefsScan, store PrefsStore, now int64) []PrefItem {
 		if !c.Permit {
 			spoken = append(spoken, said{c.Clause, tokens(c.Clause)})
 		}
-		lifted = append(lifted, lift{tokens(c.Clause), !c.Permit && reNegation.MatchString(c.Clause), c.At})
+		lifted = append(lifted, lift{tokens(c.Clause), !c.Permit && startsNegation(c.Clause), c.At})
 	}
 	for _, lesson := range store.Lessons {
 		words := tokens(lesson.Text)
@@ -804,16 +804,21 @@ var weakensChecks = struct{ asked, refused []*lazyRegexp }{
 // preference to inject.
 func classifyClause(clause string) PrefClass {
 	text := jsTrim(clause)
-	markers := weakensChecks.asked
-	if reNegation.MatchString(text) {
-		markers = weakensChecks.refused
-	}
-	for _, m := range markers {
-		if m.MatchString(text) {
-			return classWeakens
+	lower := asciiLower(text)
+	if startsNegation(text) {
+		for _, m := range weakensChecks.refused {
+			if m.MatchString(text) {
+				return classWeakens
+			}
+		}
+	} else if hasAny(lower, "skip", "bypass", "disabl", "ignor", "omit", "turn", "silenc", "mut", "--no-verify", "without") {
+		for _, m := range weakensChecks.asked {
+			if m.MatchString(text) {
+				return classWeakens
+			}
 		}
 	}
-	if rePronounObject.MatchString(text) || reSpecificReference.MatchString(text) || hasCommitHash(text) {
+	if hasAny(lower, "it", "th") && rePronounObject.MatchString(text) || hasDigitOrSlash(text) && reSpecificReference.MatchString(text) || hasCommitHash(text) {
 		return classTaskBound
 	}
 	return classStanding

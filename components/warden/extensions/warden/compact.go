@@ -120,8 +120,8 @@ func renderSections(s CompactSnapshot) []section {
 	if len(s.FailedAttempts) > 0 {
 		var items []string
 		for _, attempt := range s.FailedAttempts {
-			call := compactClip(Redact(attempt.Call), failedCallChars)
-			errText := Redact(attempt.Error)
+			call := compactClip(redactFast(attempt.Call), failedCallChars)
+			errText := redactFast(attempt.Error)
 			entry := call
 			if errText != "" {
 				entry = call + " → " + compactClip(errText, failedEntryChars-utf16Len(call)-3)
@@ -137,7 +137,7 @@ func renderSections(s CompactSnapshot) []section {
 			if v.ChangedSince {
 				changed = "yes"
 			}
-			line = "- last passing check: " + Redact(v.Command) + "; code changed since last passing check: " + changed
+			line = "- last passing check: " + redactFast(v.Command) + "; code changed since last passing check: " + changed
 		}
 		sections = append(sections, section{"verification", "### Verification\n" + line})
 	}
@@ -151,7 +151,7 @@ func renderSections(s CompactSnapshot) []section {
 			if c.Passed {
 				mark = "✓"
 			}
-			items = append(items, "- "+mark+" "+c.When+": "+Redact(c.Command))
+			items = append(items, "- "+mark+" "+c.When+": "+redactFast(c.Command))
 		}
 		sections = append(sections, section{"checks", "### Last checks\n" + strings.Join(items, "\n")})
 	}
@@ -161,9 +161,9 @@ func renderSections(s CompactSnapshot) []section {
 	if len(s.Holds) > 0 {
 		var items []string
 		for _, h := range s.Holds {
-			item := "- " + Redact(h.Tool) + ": " + Redact(h.Outcome)
+			item := "- " + redactFast(h.Tool) + ": " + redactFast(h.Outcome)
 			if h.Preview != "" {
-				item += " (" + Redact(h.Preview) + ")"
+				item += " (" + redactFast(h.Preview) + ")"
 			}
 			items = append(items, item)
 		}
@@ -174,9 +174,9 @@ func renderSections(s CompactSnapshot) []section {
 		for _, o := range s.SavedOutputs {
 			item := "- "
 			if o.Tool != "" {
-				item += Redact(o.Tool) + " → "
+				item += redactFast(o.Tool) + " → "
 			}
-			item += Redact(o.Path)
+			item += redactFast(o.Path)
 			if o.HasBytes {
 				item += " (" + itoaInt(o.Bytes) + " bytes)"
 			}
@@ -185,7 +185,7 @@ func renderSections(s CompactSnapshot) []section {
 		sections = append(sections, section{"saved", "### Saved full outputs\n" + strings.Join(items, "\n")})
 	}
 	if s.ActiveTask != "" {
-		sections = append(sections, section{"task", "### Active task\n" + Redact(s.ActiveTask)})
+		sections = append(sections, section{"task", "### Active task\n" + redactFast(s.ActiveTask)})
 	}
 	return sections
 }
@@ -399,7 +399,7 @@ func buildCompactSnapshot(in snapshotInput) CompactSnapshot {
 		snap.Stuck = &StuckState{Failures: failures, Window: len(in.Attempts)}
 	}
 	if in.ActiveTask != "" {
-		snap.ActiveTask = Redact(in.ActiveTask)
+		snap.ActiveTask = redactFast(in.ActiveTask)
 	}
 	snap.FailedAttempts = distinctFailures(in.Attempts)
 	if in.Evidence != nil {

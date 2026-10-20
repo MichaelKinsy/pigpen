@@ -172,7 +172,7 @@ func openLoops(store LoopStore) []Loop {
 }
 
 // oneLine collapses white space and redacts.
-func oneLine(text string) string { return Redact(jsTrim(jsCollapseSpace(text))) }
+func oneLine(text string) string { return redactFast(jsTrim(jsCollapseSpace(text))) }
 
 func loopLine(l Loop) string {
 	line := "- #" + itoaInt(l.ID) + " " + l.Text

@@ -82,20 +82,21 @@ func isHumanTyped(text string) bool {
 	if strings.HasPrefix(trimmed, "<") {
 		return false
 	}
-	if reHeadingLine.MatchString(trimmed) {
+	if strings.Contains(trimmed, "#") && reHeadingLine.MatchString(trimmed) {
 		return false
 	}
 	if hasPairedTag(trimmed) {
 		return false
 	}
 	first, _, _ := strings.Cut(trimmed, "\n")
-	if reUpperLabel.MatchString(first) || reDotSep.MatchString(first) {
+	if strings.Contains(first, ":") && reUpperLabel.MatchString(first) || strings.Contains(first, "·") && reDotSep.MatchString(first) {
 		return false
 	}
-	if reSenderLine.MatchString(first) || reOnBehalf.MatchString(trimmed) {
+	if strings.Contains(first, "rom ") && strings.Contains(first, ":") && reSenderLine.MatchString(first) ||
+		strings.Contains(asciiLower(trimmed), "owner") && reOnBehalf.MatchString(trimmed) {
 		return false
 	}
-	return len(reHeaderField.FindAllStringIndex(trimmed, -1)) < 2
+	return !strings.Contains(trimmed, ":") || len(reHeaderField.FindAllStringIndex(trimmed, -1)) < 2
 }
 
 var (
@@ -105,7 +106,7 @@ var (
 
 // isQuestion: a sentence that ends with `?` or starts with a question word is skipped.
 func isQuestion(sentence string) bool {
-	return reQuestionMark.MatchString(sentence) || reQuestionWord.MatchString(sentence)
+	return endsWithQuestion(sentence) || questionStart(sentence) && reQuestionWord.MatchString(sentence)
 }
 
 const (
@@ -141,12 +142,15 @@ func notAPreference(rest string) bool {
 	if reNotPrefWord.MatchString(rest) {
 		return true
 	}
-	return !reStartsAlways.MatchString(rest) && reNotPrefPast.MatchString(rest)
+	return !reStartsAlways.MatchString(rest) && endsPastForm(rest) && reNotPrefPast.MatchString(rest)
 }
 
 // temporary is TEMPORARY, whose two negative lookaheads are written out: `now` counts unless `\s+on\b` follows it,
 // and `for this` counts unless a project word follows. Every occurrence is tested, as the engine tries each one.
 func temporary(clause string) bool {
+	if !hasAny(asciiLower(clause), "yet", "today", "this", "moment", "until", "now") {
+		return false
+	}
 	if reTemporaryRest.MatchString(clause) {
 		return true
 	}
@@ -242,7 +246,7 @@ func tidy(clause string) string {
 	collapsed = strings.TrimRightFunc(collapsed, func(r rune) bool {
 		return isJSSpace(r) || r == '.' || r == ',' || r == ';' || r == ':' || r == '!'
 	})
-	cleaned := Redact(collapsed)
+	cleaned := redactFast(collapsed)
 	capped := cleaned
 	if utf16Len(cleaned) > clauseChars {
 		capped = jsTrimEnd(utf16Slice(cleaned, 0, clauseChars-1)) + "…"
@@ -338,10 +342,15 @@ func standingClauses(text string) []string {
 	}
 	var found []string
 	for _, sentence := range jsSentences(text) {
+		lower := asciiLower(sentence)
 		if isQuestion(sentence) {
 			continue
 		}
-		if m := reImperative.FindStringSubmatch(sentence); m != nil {
+		var m []string
+		if hasAny(lower, "don", "not", "never", "stop", "always") {
+			m = reImperative.FindStringSubmatch(sentence)
+		}
+		if m != nil {
 			neg, rest := m[1], m[2]
 			switch {
 			case m[3] != "":
@@ -355,12 +364,16 @@ func standingClauses(text string) []string {
 			continue
 		}
 		var clause string
-		if m := reRepeated.FindStringSubmatch(sentence); m != nil {
-			clause = m[1]
+		var repeated []string
+		if hasAny(lower, "said", "told") {
+			repeated = reRepeated.FindStringSubmatch(sentence)
+		}
+		if repeated != nil {
+			clause = repeated[1]
 			if clause == "" {
-				clause = m[2]
+				clause = repeated[2]
 			}
-		} else {
+		} else if hasAny(lower, "next", "from") {
 			clause, _ = standingClause(sentence)
 		}
 		if clause != "" {
