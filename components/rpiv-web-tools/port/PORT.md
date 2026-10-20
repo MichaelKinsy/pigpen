@@ -14,7 +14,7 @@
 |---|---|---|---|
 | M1 | `index.ts`: `web_search` and `web_fetch` with schemas, descriptions, `promptGuidelines`, the config `guidance` override | `webtools.go`, `config.go` | `tool-definitions`, `guidance-override`; `tools_test.go`, `guidance_render_test.go` |
 | M2 | `providers/*.ts`: ten search backends (Brave, Tavily, Serper, Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG, Ollama), their key and base-URL resolution, request bodies, result shaping, error texts, the 20-redirect limit of `fetch` | `providers.go` | `search-without-key`, `search-config-key-errors`, `searxng-search`, `ollama-search`, `unknown-env-provider`, `fetch-redirect-limit`; `tools_test.go`, `extra_test.go`, `index_twin_test.go`, `index_command_twin_test.go`, `redirect_test.go` |
-| M3 | `web_fetch`: URL and private-address guard, provider-native fetch, direct fetch, content-type refusal, HTML to text, truncation and spill file | `fetch.go`, `text.go`, `util.go` | `fetch-url-guard`, `fetch-keyed-provider-without-key`; `differential_test.go` (against the original's `htmlToText` and `truncateHead`, `testdata/differential.json` made by `port/gen-differential.mjs`) |
+| M3 | `web_fetch`: URL and private-address guard, provider-native fetch, direct fetch, content-type refusal, HTML to text, truncation and spill file | `fetch.go`, `htmltext.go`, `text.go`, `util.go` | `fetch-url-guard`, `fetch-keyed-provider-without-key`; `differential_test.go` (against the original's `htmlToText` and `truncateHead`, `testdata/differential.json` made by `port/gen-differential.mjs`), `htmltext_reference_test.go` |
 | M3a | Node's `new URL()` host parsing, which the guard (and the SearXNG and Ollama base URLs) rely on: domain to ASCII, the IPv4 number forms, IPv6 serialization | `util.go` (`parseJSURL`, `whatwgHost`; `golang.org/x/net/idna`) | `hostparse_test.go`: 35 hosts whose expected `hostname` was taken from Node 24.19.0, the guard on every private form, the request going to the parsed URL |
 | M4 | config file read and write (`~/.config/rpiv-web-tools/config.json`, XDG, legacy path, mode 0600), per-field validation | `config.go` | `config_test.go`, `extra_test.go` |
 | M5 | `/web-tools` (picker, per-provider flows, `--show`) | `command.go` | `command-cancelled`, `command-pick-key`, `command-searxng`, `command-show`, `command-show-configured`; `command_test.go` |
@@ -27,7 +27,7 @@
   and `exec-coverage`; the record-host check passes. The scenarios put the API config into the lane HOME with `setup`
   and declare `gh` and `git` as missing.
 - `go test -race ./...`: pass.
-- `pigeq mutate --unit`: 118 mutations (see below).
+- `pigeq mutate --unit`: 125 mutations (see below).
 - `pig package validate components/rpiv-web-tools` and `pig install <extension dir> --validate-only --json`: valid.
 
 ## Mutations
@@ -77,3 +77,10 @@ the scenarios, re-run one at a time).
     `fetch failed`; Go's default client stopped at the tenth. `httpClient` now allows 20 (`maxRedirects`,
     `redirect_test.go`), and the scenario `fetch-redirect-limit` runs an Ollama search through 20 redirects (answered)
     and 21 (`fetch failed`) against the original under Pi.
+11. **HTML to text is a set of linear scans, not regular expressions.** The first port ran the original's expressions
+    (`fetch-helpers.ts:75-82`) with Go's `regexp`, 2.5 ms on a 20 KB page against 0.4 ms in Node, 680 KB allocated. The
+    scans of `htmltext.go` replace exactly what each expression matched, pass for pass (0.4 ms, 190 KB for the whole
+    `web_fetch`). `htmltext_reference_test.go` keeps the expressions and compares both on 20000 generated pages; the
+    differential fixture (now 37 pages) compares with the original. One deliberate change: names match in ASCII case
+    only, as JavaScript's `i` flag does, where Go's `(?i)` also folded U+017F onto `s` and U+212A onto `k`
+    (the original keeps `<\u017fcript>` as a tag; the fixture has both cases).

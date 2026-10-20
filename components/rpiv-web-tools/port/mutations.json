@@ -205,8 +205,8 @@
  },
  {
   "name": "html-script-kept",
-  "file": "fetch.go",
-  "find": "text := scriptBlockRe.ReplaceAllString(html, \"\")",
+  "file": "htmltext.go",
+  "find": "text := removeBlocks(html, \"<script\", \"</script>\")",
   "replace": "text := html"
  },
  {
@@ -217,21 +217,21 @@
  },
  {
   "name": "html-blank-lines",
-  "file": "fetch.go",
-  "find": "blankRunRe      = regexp.MustCompile(`\\n{3,}`)",
-  "replace": "blankRunRe      = regexp.MustCompile(`\\n{4,}`)"
+  "file": "htmltext.go",
+  "find": "b.WriteString(s[i:min(j, i+2)])",
+  "replace": "b.WriteString(s[i:min(j, i+1)])"
  },
  {
   "name": "html-block-closers",
-  "file": "fetch.go",
-  "find": "</(p|div|h[1-6]|li|tr|br|blockquote|pre|section|article|header|footer|nav|details|summary)>",
-  "replace": "</(p|div|h[1-6]|li|tr|br|blockquote|pre|section|article)>"
+  "file": "htmltext.go",
+  "find": "\"footer\", \"nav\", \"details\", \"summary\"}",
+  "replace": "\"footer\", \"nav\", \"details\"}"
  },
  {
   "name": "html-title-trim",
-  "file": "fetch.go",
-  "find": "return jsTrim(anyTagRe.ReplaceAllString(m[1], \"\"))",
-  "replace": "return anyTagRe.ReplaceAllString(m[1], \"\")"
+  "file": "htmltext.go",
+  "find": "return jsTrim(stripTags(html[from:end], \"\"))",
+  "replace": "return stripTags(html[from:end], \"\")"
  },
  {
   "name": "content-type-audio",
@@ -658,6 +658,48 @@
   "file": "providers.go",
   "find": "if len(via) > maxRedirects {",
   "replace": "if len(via) > 1000 {"
+ },
+ {
+  "name": "scan-empty-tag-matches",
+  "file": "htmltext.go",
+  "find": "if j <= 0 {\n\t\treturn 0\n\t}\n\treturn j + 2",
+  "replace": "if j < 0 {\n\t\treturn 0\n\t}\n\treturn j + 2"
+ },
+ {
+  "name": "scan-newline-run-kept-three",
+  "file": "htmltext.go",
+  "find": "b.WriteString(s[i:min(j, i+2)])",
+  "replace": "b.WriteString(s[i:min(j, i+3)])"
+ },
+ {
+  "name": "scan-br-tab-not-space",
+  "file": "htmltext.go",
+  "find": "(s[j] == ' ' || s[j] == '\\t' || s[j] == '\\n' || s[j] == '\\f' || s[j] == '\\r')",
+  "replace": "(s[j] == ' ' || s[j] == '\\n' || s[j] == '\\f' || s[j] == '\\r')"
+ },
+ {
+  "name": "scan-name-case-sensitive",
+  "file": "htmltext.go",
+  "find": "if c >= 'A' && c <= 'Z' {",
+  "replace": "if false {"
+ },
+ {
+  "name": "scan-any-closer-is-block",
+  "file": "htmltext.go",
+  "find": "if j < len(s) && s[j] == '>' && isBlockName(s[i+2:j]) {",
+  "replace": "if j < len(s) && s[j] == '>' {"
+ },
+ {
+  "name": "scan-tags-dropped-not-spaced",
+  "file": "htmltext.go",
+  "find": "text = stripTags(text, \" \")",
+  "replace": "text = stripTags(text, \"\")"
+ },
+ {
+  "name": "scan-title-includes-bracket",
+  "file": "htmltext.go",
+  "find": "return jsTrim(stripTags(html[from:end], \"\"))",
+  "replace": "return jsTrim(stripTags(html[from-1:end], \"\"))"
  },
  {
   "name": "refusal-wording",

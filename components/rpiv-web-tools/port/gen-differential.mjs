@@ -23,6 +23,15 @@ const html = [
   "<TITLE>Upper</TITLE><P>Upper case</P>",
   "<section><article><header>H</header><footer>F</footer><nav>N</nav><details>D</details><summary>S</summary></article></section>",
   "caf\u00e9 \u00fc\u00f1\u00ee \u4e2d\u6587 \ud83d\ude00",
+  // the scans of htmltext.go: unclosed and nested blocks, stray angle brackets, case, whitespace runs
+  "<script>never closed <p>kept?</p>", "<style>a</style><style>b", "<scripts>x</scripts>y", "<script>a</script>b<script>c</script>d",
+  "<script><style>x</style></script>after", "<noscript>a</noscript><NOSCRIPT>b</NoScript>c",
+  "<title>never closed", "<title", "<titles>T</titles>body", "<TITLE lang=en> <b>Bold</b> Title </TITLE>",
+  "a<b", "<>x<<a>y<a <b>z", "<", ">", "x < y > z",
+  "<p>one</P>two</p >three</pre>four</preX>five</h7>six</H3>seven</blockquote>eight",
+  "a<br>b<BR/>c<br />d<br\t/>e<br\n>f<brx>g<br/ >h</br>i",
+  "a  \t b\t\tc \t d\n\n\n\ne\n\n\n\n\n\nf\r\n\r\n\r\ng",
+  "<\u017fcript>a</\u017fcript>b", "</bloc\u212auote>x", "<p>\u017f</p>",
 ];
 const bodies = [
   "", "one", "a\nb\nc", "a\nb\nc\n", "x".repeat(60_000), "line\n".repeat(2500), "l".repeat(51_300) + "\nsecond",

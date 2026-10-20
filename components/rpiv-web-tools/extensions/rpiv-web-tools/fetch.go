@@ -19,18 +19,7 @@ const (
 	fetchAcceptHeader = "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.5"
 )
 
-var (
-	scriptBlockRe   = regexp.MustCompile(`(?is)<script.*?</script>`)
-	styleBlockRe    = regexp.MustCompile(`(?is)<style.*?</style>`)
-	noscriptBlockRe = regexp.MustCompile(`(?is)<noscript.*?</noscript>`)
-	blockCloserRe   = regexp.MustCompile(`(?i)</(p|div|h[1-6]|li|tr|br|blockquote|pre|section|article|header|footer|nav|details|summary)>`)
-	selfClosingBrRe = regexp.MustCompile(`(?i)<br\s*/?>`)
-	anyTagRe        = regexp.MustCompile(`<[^>]+>`)
-	titleTagRe      = regexp.MustCompile(`(?is)<title[^>]*>(.*?)</title>`)
-	numericEntityRe = regexp.MustCompile(`&#(\d+);`)
-	hRunRe          = regexp.MustCompile(`[ \t]+`)
-	blankRunRe      = regexp.MustCompile(`\n{3,}`)
-)
+var numericEntityRe = regexp.MustCompile(`&#(\d+);`)
 
 func decodeHTMLEntities(text string) string {
 	text = strings.ReplaceAll(text, "&amp;", "&")
@@ -39,6 +28,9 @@ func decodeHTMLEntities(text string) string {
 	text = strings.ReplaceAll(text, "&quot;", `"`)
 	text = strings.ReplaceAll(text, "&#39;", "'")
 	text = strings.ReplaceAll(text, "&nbsp;", " ")
+	if !strings.Contains(text, "&#") {
+		return text
+	}
 	return numericEntityRe.ReplaceAllStringFunc(text, func(m string) string {
 		n, err := strconv.ParseFloat(numericEntityRe.FindStringSubmatch(m)[1], 64)
 		if err != nil {
@@ -51,30 +43,6 @@ func decodeHTMLEntities(text string) string {
 		}
 		return string(r)
 	})
-}
-
-// htmlToText strips scripts and styles, turns block closers and <br> into newlines, drops the other tags,
-// decodes the common entities and collapses whitespace. upstream: fetch-helpers.ts:75-82.
-func htmlToText(html string) string {
-	text := scriptBlockRe.ReplaceAllString(html, "")
-	text = styleBlockRe.ReplaceAllString(text, "")
-	text = noscriptBlockRe.ReplaceAllString(text, "")
-	text = blockCloserRe.ReplaceAllString(text, "\n")
-	text = selfClosingBrRe.ReplaceAllString(text, "\n")
-	text = anyTagRe.ReplaceAllString(text, " ")
-	text = decodeHTMLEntities(text)
-	text = hRunRe.ReplaceAllString(text, " ")
-	text = blankRunRe.ReplaceAllString(text, "\n\n")
-	return jsTrim(text)
-}
-
-// extractTitle is the text of the first <title>, "" when there is none or it is empty.
-func extractTitle(html string) string {
-	m := titleTagRe.FindStringSubmatch(html)
-	if m == nil {
-		return ""
-	}
-	return jsTrim(anyTagRe.ReplaceAllString(m[1], ""))
 }
 
 func isHTMLContentType(ct string) bool { return strings.Contains(ct, "text/html") }
@@ -114,10 +82,11 @@ func fetchViaGenericHTML(ctx context.Context, href, rawURL string, raw bool) (*f
 	if err != nil {
 		return nil, err
 	}
-	out := &fetchResponse{Text: string(data), ContentType: contentType}
+	body := string(data)
+	out := &fetchResponse{Text: body, ContentType: contentType}
 	if !raw && isHTMLContentType(contentType) {
-		out.Title = extractTitle(string(data))
-		out.Text = htmlToText(string(data))
+		out.Title = extractTitle(body)
+		out.Text = htmlToText(body)
 	}
 	if cl := res.Header.Get("Content-Length"); cl != "" {
 		if n, err := strconv.ParseFloat(cl, 64); err == nil {

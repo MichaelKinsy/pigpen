@@ -49,11 +49,11 @@ m("unknown-provider-text", "providers.go", 'return nil, fmt.Errorf("Unknown sear
 m("provider-order", "providers.go", '{Name: "tavily", Label: "Tavily", EnvVar: tavilyKeyEnv, Roles: []string{"search", "fetch"}},\n\t{Name: "serper"', '{Name: "serper", Label: "Serper", EnvVar: serperKeyEnv, Roles: []string{"search"}},\n\t{Name: "tavily"') if False else None
 
 # fetch.go and webtools.go
-m("html-script-kept", "fetch.go", 'text := scriptBlockRe.ReplaceAllString(html, "")', "text := html")
+m("html-script-kept", "htmltext.go", 'text := removeBlocks(html, "<script", "</script>")', "text := html")
 m("html-entity-order", "fetch.go", 'text = strings.ReplaceAll(text, "&amp;", "&")\n\ttext = strings.ReplaceAll(text, "&lt;", "<")', 'text = strings.ReplaceAll(text, "&lt;", "<")\n\ttext = strings.ReplaceAll(text, "&amp;", "&")')
-m("html-blank-lines", "fetch.go", 'blankRunRe      = regexp.MustCompile(`\\n{3,}`)', 'blankRunRe      = regexp.MustCompile(`\\n{4,}`)')
-m("html-block-closers", "fetch.go", "</(p|div|h[1-6]|li|tr|br|blockquote|pre|section|article|header|footer|nav|details|summary)>", "</(p|div|h[1-6]|li|tr|br|blockquote|pre|section|article)>")
-m("html-title-trim", "fetch.go", "return jsTrim(anyTagRe.ReplaceAllString(m[1], \"\"))", "return anyTagRe.ReplaceAllString(m[1], \"\")")
+m("html-blank-lines", "htmltext.go", "b.WriteString(s[i:min(j, i+2)])", "b.WriteString(s[i:min(j, i+1)])")
+m("html-block-closers", "htmltext.go", '"footer", "nav", "details", "summary"}', '"footer", "nav", "details"}')
+m("html-title-trim", "htmltext.go", 'return jsTrim(stripTags(html[from:end], ""))', 'return stripTags(html[from:end], "")')
 m("content-type-audio", "fetch.go", '[]string{"image/", "video/", "audio/"}', '[]string{"image/", "video/"}')
 m("fetch-error-text", "fetch.go", 'return nil, fmt.Errorf("HTTP %d %s for %s", res.StatusCode, http.StatusText(res.StatusCode), rawURL)', 'return nil, fmt.Errorf("HTTP %d for %s", res.StatusCode, rawURL)')
 m("fetch-raw-ignored", "fetch.go", "if !raw && isHTMLContentType(contentType) {", "if isHTMLContentType(contentType) {")
@@ -135,6 +135,15 @@ m("fetch-raw-url-requested", "webtools.go", "fetchViaGenericHTML(ctx, target.Hre
 m("redirect-limit-ten", "providers.go", "const maxRedirects = 20", "const maxRedirects = 10")
 m("redirect-limit-off-by-one", "providers.go", "if len(via) > maxRedirects {", "if len(via) >= maxRedirects {")
 m("redirect-limit-unbounded", "providers.go", "if len(via) > maxRedirects {", "if len(via) > 1000 {")
+
+# htmltext.go: the linear scans that stand for the original's expressions
+m("scan-empty-tag-matches", "htmltext.go", "if j <= 0 {\n\t\treturn 0\n\t}\n\treturn j + 2", "if j < 0 {\n\t\treturn 0\n\t}\n\treturn j + 2")
+m("scan-newline-run-kept-three", "htmltext.go", "b.WriteString(s[i:min(j, i+2)])", "b.WriteString(s[i:min(j, i+3)])")
+m("scan-br-tab-not-space", "htmltext.go", r"(s[j] == ' ' || s[j] == '\t' || s[j] == '\n' || s[j] == '\f' || s[j] == '\r')", r"(s[j] == ' ' || s[j] == '\n' || s[j] == '\f' || s[j] == '\r')")
+m("scan-name-case-sensitive", "htmltext.go", "if c >= 'A' && c <= 'Z' {", "if false {")
+m("scan-any-closer-is-block", "htmltext.go", "if j < len(s) && s[j] == '>' && isBlockName(s[i+2:j]) {", "if j < len(s) && s[j] == '>' {")
+m("scan-tags-dropped-not-spaced", "htmltext.go", 'text = stripTags(text, " ")', 'text = stripTags(text, "")')
+m("scan-title-includes-bracket", "htmltext.go", "return jsTrim(stripTags(html[from:end], \"\"))", "return jsTrim(stripTags(html[from-1:end], \"\"))")
 
 # refusal.go, webtools.go, command.go: the refusal of the unported GitHub interceptor
 m("refusal-wording", "refusal.go", '" (Go port) does not support " + feature', '" (Go port) does not handle " + feature')
