@@ -310,3 +310,12 @@ func TestQueueSendDoesNotWaitForTheHostToAcceptTheMessage(t *testing.T) {
 	}
 	r.waitFor(t, "the host call", func() bool { return len(r.sent()) == 1 })
 }
+
+func TestQueueRegistersItsEvents(t *testing.T) {
+	r := startQueueHost(t, queueSDKOptions{})
+	for _, ev := range []string{"session_before_compact", "session_compact", "session_compact_failed", "agent_settled", "agent_end", "before_agent_start", "message_start", "session_shutdown"} {
+		if !r.h.Registered(ev) {
+			t.Errorf("no handler for %s", ev)
+		}
+	}
+}
