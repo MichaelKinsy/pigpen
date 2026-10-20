@@ -291,6 +291,43 @@ type ProcessTerminalCandidate struct {
 	Writers                 map[string][]ProcessInstanceExit `json:"writers"`
 	ExpectedWriters         map[string]int                   `json:"expectedWriters,omitempty"`
 	SessionFile             string                           `json:"sessionFile,omitempty"`
+	// RevivalLeaseToken names the session lease this run took to revive a session; the proof waits for its release.
+	RevivalLeaseToken               string `json:"revivalLeaseToken,omitempty"`
+	RevivalLeaseReleaseAcknowledged *bool  `json:"revivalLeaseReleaseAcknowledged,omitempty"`
+}
+
+// markProcessTerminalCandidateLeaseRelease records that the lease named by token was (or was not) released.
+func markProcessTerminalCandidateLeaseRelease(asyncDir, token string, acknowledged bool) error {
+	c, err := readProcessTerminalCandidate(asyncDir)
+	if err != nil || c == nil || c.RevivalLeaseToken != token {
+		return err
+	}
+	c.RevivalLeaseReleaseAcknowledged = &acknowledged
+	return writeProcessTerminalCandidate(asyncDir, c)
+}
+
+// CanonicalSessionTerminal is the session file's state the proof saw: free, and how its lease ended.
+type CanonicalSessionTerminal struct {
+	CanonicalSessionID            string `json:"canonicalSessionId"`
+	LeaseDisposition              string `json:"leaseDisposition"` // released, not-held
+	FreeAtObservation             bool   `json:"freeAtObservation"`
+	CanonicalSessionLeaseReleased *bool  `json:"canonicalSessionLeaseReleased,omitempty"`
+}
+
+// sessionProjection is process-terminal.ts sessionProjection.
+func sessionProjection(c *ProcessTerminalCandidate, lease sessionLeaseState) *CanonicalSessionTerminal {
+	if c.SessionFile == "" || lease.State != "free" {
+		return nil
+	}
+	if c.RevivalLeaseToken != "" && (c.RevivalLeaseReleaseAcknowledged == nil || !*c.RevivalLeaseReleaseAcknowledged) {
+		return nil
+	}
+	p := &CanonicalSessionTerminal{CanonicalSessionID: lease.CanonicalSessionID, LeaseDisposition: "not-held", FreeAtObservation: true}
+	if c.RevivalLeaseToken != "" {
+		p.LeaseDisposition = "released"
+		p.CanonicalSessionLeaseReleased = new(true)
+	}
+	return p
 }
 
 func readProcessTerminalCandidate(asyncDir string) (*ProcessTerminalCandidate, error) {
@@ -583,7 +620,25 @@ func finalizeProcessTerminal(asyncDir, runID string, rc RunnerClose) *ProcessTer
 		if st != nil {
 			stateName, sessionFromStatus = st.State, st.SessionFile
 		}
+		var session *sessionLeaseState
+		var sessionErr error
+		if cand.SessionFile != "" {
+			var ls sessionLeaseState
+			if ls, sessionErr = inspectSessionLease(cand.SessionFile, ""); sessionErr == nil {
+				session = &ls
+			}
+		}
 		switch {
+		case sessionErr != nil:
+			proof = unknownProof(runID, rc.ProcessInstanceID, "proof-write-failed", sessionErr.Error())
+		case session != nil && session.State != "free":
+			reason := "canonical-session-unavailable"
+			if session.State == "owned" {
+				reason = "canonical-session-lease-active"
+			}
+			proof = unknownProof(runID, rc.ProcessInstanceID, reason, "")
+		case cand.RevivalLeaseToken != "" && (cand.RevivalLeaseReleaseAcknowledged == nil || !*cand.RevivalLeaseReleaseAcknowledged):
+			proof = unknownProof(runID, rc.ProcessInstanceID, "canonical-session-release-unverified", "")
 		case inconsistent || (len(all) == 0 && len(expected) == 0):
 			proof = unknownProof(runID, rc.ProcessInstanceID, "writer-close-unverified", "")
 		case treeUnverified:
@@ -591,6 +646,9 @@ func finalizeProcessTerminal(asyncDir, runID string, rc RunnerClose) *ProcessTer
 		default:
 			proof = &ProcessTerminal{Version: 1, State: "observed", RunID: runID, RunnerProcessInstanceID: rc.ProcessInstanceID, ObservedAt: msPtrOf(rc.CloseObservedAt),
 				Instances: append([]ProcessInstanceExit{runner}, all...), ResumeDisposition: resumeDispositionOf(stateName, firstNonEmpty(cand.SessionFile, sessionFromStatus))}
+			if session != nil {
+				proof.CanonicalSession = sessionProjection(cand, *session)
+			}
 		}
 	}
 	if proof.State == "unknown" {

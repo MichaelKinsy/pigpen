@@ -39,7 +39,7 @@ func wantConflict(t *testing.T, err error, pattern string) *sessionLeaseConflict
 	if !errors.As(err, &ce) {
 		t.Fatalf("want a session lease conflict, got %v", err)
 	}
-	hasMatch(t, err, pattern)
+	hasRe(t, err.Error(), pattern)
 	return ce
 }
 

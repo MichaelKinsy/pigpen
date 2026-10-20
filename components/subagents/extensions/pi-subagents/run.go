@@ -180,25 +180,6 @@ func (w *tailWriter) String() string {
 	return strings.ToValidUTF8(string(w.buf), "")
 }
 
-// pigBinary finds the pig to start: PIG_SUBAGENT_PIG_BINARY, the pig that runs this extension (PIG_HARNESS_BINARY, set by
-// the host for an extension process), the pig next to this program, then PATH.
-func pigBinary() string {
-	for _, k := range []string{"PIG_SUBAGENT_PIG_BINARY", "PIG_HARNESS_BINARY"} {
-		if b := strings.TrimSpace(os.Getenv(k)); b != "" {
-			return b
-		}
-	}
-	if self, err := os.Executable(); err == nil {
-		if c := filepath.Join(filepath.Dir(self), "pig"); fileExists(c) {
-			return c
-		}
-	}
-	if p, err := exec.LookPath("pig"); err == nil {
-		return p
-	}
-	return "pig"
-}
-
 func fileExists(p string) bool { st, err := os.Stat(p); return err == nil && !st.IsDir() }
 
 // thinkingLevels are the suffixes a model may carry (`provider/id:high`).

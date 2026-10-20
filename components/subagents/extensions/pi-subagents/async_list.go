@@ -16,6 +16,8 @@ type AsyncRunStepSummary struct {
 	AsyncStep
 	Index   int
 	ChildID string
+	// Children are the nested runs attached to this step (nested-events.ts attachRootChildrenToSteps).
+	Children []jm
 }
 
 // AsyncRunSummary is a run as the listing sees it.
@@ -53,6 +55,9 @@ type AsyncRunSummary struct {
 	TotalCost       *CostSummary
 	SessionFile     string
 	ProcessTerminal *ProcessTerminal
+	// ParentWorkflowRunID and WorkflowKey say which workflow lane started this run (status.json keys the port does not model).
+	ParentWorkflowRunID string
+	WorkflowKey         string
 }
 
 // asyncStatusChildIdentity is child-identity.ts: the stable caller-facing id of a step.
@@ -128,7 +133,8 @@ func statusToSummary(asyncDir string, st *AsyncStatus) AsyncRunSummary {
 		ActivityState: activity, LastActivityAt: last, CurrentTool: st.CurrentTool, CurrentToolAt: st.CurrentToolStartedAt, CurrentPath: st.CurrentPath, TurnCount: st.TurnCount, ToolCount: st.ToolCount,
 		Mode: st.Mode, Context: st.Context, Cwd: st.Cwd, SessionRoot: st.SessionRoot, StartedAt: int64(st.StartedAt), LastUpdate: st.LastUpdate, EndedAt: st.EndedAt, TimeoutMs: st.TimeoutMs, DeadlineAt: st.DeadlineAt,
 		TimedOut: st.TimedOut, Stopped: st.Stopped, CurrentStep: st.CurrentStep, ChainStepCount: st.ChainStepCount, SessionDir: st.SessionDir, OutputFile: st.OutputFile,
-		TotalTokens: st.TotalTokens, TotalCost: st.TotalCost, SessionFile: st.SessionFile, ProcessTerminal: pt}
+		TotalTokens: st.TotalTokens, TotalCost: st.TotalCost, SessionFile: st.SessionFile, ProcessTerminal: pt,
+		ParentWorkflowRunID: extraString(st.Extra, "parentWorkflowRunId"), WorkflowKey: extraString(st.Extra, "workflowKey")}
 	for i, step := range st.Steps {
 		s.Steps = append(s.Steps, AsyncRunStepSummary{AsyncStep: step, Index: i, ChildID: asyncStatusChildIdentity(step, i)})
 	}

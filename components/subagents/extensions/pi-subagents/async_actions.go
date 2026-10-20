@@ -312,55 +312,61 @@ func (rt *asyncRuntime) statusAction(ctx sdk.Context, p map[string]any) (any, er
 	rt.state.CurrentSessionID = sessionID
 	rt.mu.Unlock()
 	targetID := firstNonEmpty(strParam(p, "id"), strParam(p, "runId"))
-	dir := strParam(p, "dir")
-	wrap := func(text string, isErr bool) (any, error) {
-		full := fmt.Sprintf("%s\n%s\n%s", formatStatusTargetLabel(targetID, dir), rt.spawnBudgetPrefix(sessionID), text)
-		if isErr {
-			return sdk.ToolResult{Content: full, IsError: true, Details: map[string]any{"mode": "single", "results": []any{}}}, nil
-		}
-		return explicitOK{Content: full, Details: map[string]any{"mode": "single", "results": []any{}}}, nil
+	text, isErr := rt.inspectStatus(sessionID, p)
+	full := fmt.Sprintf("%s\n%s\n%s", formatStatusTargetLabel(targetID, strParam(p, "dir")), rt.spawnBudgetPrefix(sessionID), text)
+	if isErr {
+		return sdk.ToolResult{Content: full, IsError: true, Details: map[string]any{"mode": "single", "results": []any{}}}, nil
 	}
+	return explicitOK{Content: full, Details: map[string]any{"mode": "single", "results": []any{}}}, nil
+}
+
+// inspectStatus is the status of the run an id or directory names (run-status.ts inspectSubagentStatus): the text, and whether it is an error.
+func (rt *asyncRuntime) inspectStatus(sessionID string, p map[string]any) (string, bool) {
+	targetID := firstNonEmpty(strParam(p, "id"), strParam(p, "runId"))
+	dir := strParam(p, "dir")
 	if targetID == "" && dir == "" {
 		runs, err := listAsyncRuns(rt.dirs.Async, AsyncRunListOptions{States: activeWaitStates, SessionID: sessionID, ResultsDir: rt.dirs.Results})
 		if err != nil {
-			return wrap(err.Error(), true)
+			return err.Error(), true
 		}
-		return wrap(formatAsyncRunList(runs, ""), false)
+		return formatAsyncRunList(runs, ""), false
 	}
 	var loc AsyncRunLocation
 	var err error
 	if dir == "" {
-		resolved, rerr := resolveSubagentRunID(targetID, rt.state, rt.dirs.Async, rt.dirs.Results)
+		resolved, rerr := resolveSubagentRunID(targetID, rt.state, rt.dirs.Async, rt.dirs.Results, nil)
 		if rerr != nil {
-			return wrap(rerr.Error(), true)
+			return rerr.Error(), true
 		}
 		switch {
 		case resolved != nil && resolved.Kind == "foreground":
-			return wrap(fmt.Sprintf("Run: %s\nState: remembered foreground", resolved.ID), false)
+			return fmt.Sprintf("Run: %s\nState: remembered foreground", resolved.ID), false
+		case resolved != nil && resolved.Kind == "nested":
+			return formatNestedExactStatus(resolved.Match.RootRunID, resolved.Match.Run), false
 		case resolved != nil:
 			loc = resolved.Location
 		default:
 			loc = AsyncRunLocation{ResolvedID: targetID}
 		}
 	} else if loc, err = resolveAsyncRunLocation(RunLocationParams{ID: strParam(p, "id"), RunID: strParam(p, "runId"), Dir: dir}, rt.dirs.Async, rt.dirs.Results); err != nil {
-		return wrap(err.Error(), true)
+		return err.Error(), true
 	}
 	if loc.AsyncDir == "" && loc.ResultPath == "" {
-		return wrap("Async run not found. Provide id or dir.", true)
+		return "Async run not found. Provide id or dir.", true
 	}
 	if loc.AsyncDir != "" {
 		rec, rerr := reconcileAsyncRun(loc.AsyncDir, ReconcileOptions{ResultsDir: rt.dirs.Results})
 		if rerr != nil {
-			return wrap(rerr.Error(), true)
+			return rerr.Error(), true
 		}
 		if rec.Status != nil {
-			return wrap(rt.statusText(loc.AsyncDir, loc.ResolvedID, rec), false)
+			return rt.statusText(loc.AsyncDir, loc.ResolvedID, rec), false
 		}
 	}
 	if loc.ResultPath != "" {
-		return wrap(rt.resultOnlyStatus(loc))
+		return rt.resultOnlyStatus(loc)
 	}
-	return wrap("Status file not found.", true)
+	return "Status file not found.", true
 }
 
 // resultOnlyStatus is the status of a run whose directory is gone but whose result file remains.
@@ -424,7 +430,7 @@ func (rt *asyncRuntime) targetRun(ctx sdk.Context, p map[string]any) (asyncDir, 
 	if targetID == "" {
 		return "", "", ""
 	}
-	resolved, err := resolveSubagentRunID(targetID, rt.state, rt.dirs.Async, rt.dirs.Results)
+	resolved, err := resolveSubagentRunID(targetID, rt.state, rt.dirs.Async, rt.dirs.Results, nil)
 	if err != nil {
 		return "", "", err.Error()
 	}

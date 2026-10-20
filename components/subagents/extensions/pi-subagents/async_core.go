@@ -103,17 +103,17 @@ type ProcessTreeProof struct {
 
 // ProcessTerminal is the proof that a run's processes ended (process-terminal.json, and the overlay in status.json).
 type ProcessTerminal struct {
-	Version                 int                   `json:"version"`
-	State                   string                `json:"state"` // pending, observed, unknown, not-started
-	RunID                   string                `json:"runId"`
-	ChildIndex              *int                  `json:"childIndex,omitempty"`
-	RunnerProcessInstanceID string                `json:"runnerProcessInstanceId"`
-	ObservedAt              *ms                   `json:"observedAt,omitempty"`
-	Reason                  string                `json:"reason,omitempty"`
-	Diagnostic              string                `json:"diagnostic,omitempty"`
-	Instances               []ProcessInstanceExit `json:"instances,omitempty"`
-	ResumeDisposition       string                `json:"resumeDisposition,omitempty"`
-	CanonicalSession        json.RawMessage       `json:"canonicalSession,omitempty"`
+	Version                 int                       `json:"version"`
+	State                   string                    `json:"state"` // pending, observed, unknown, not-started
+	RunID                   string                    `json:"runId"`
+	ChildIndex              *int                      `json:"childIndex,omitempty"`
+	RunnerProcessInstanceID string                    `json:"runnerProcessInstanceId"`
+	ObservedAt              *ms                       `json:"observedAt,omitempty"`
+	Reason                  string                    `json:"reason,omitempty"`
+	Diagnostic              string                    `json:"diagnostic,omitempty"`
+	Instances               []ProcessInstanceExit     `json:"instances,omitempty"`
+	ResumeDisposition       string                    `json:"resumeDisposition,omitempty"`
+	CanonicalSession        *CanonicalSessionTerminal `json:"canonicalSession,omitempty"`
 }
 
 // AsyncStep is one child of a run in status.json.

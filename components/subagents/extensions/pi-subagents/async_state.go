@@ -30,6 +30,12 @@ type ForegroundRunRecord struct {
 	RunID     string
 	SessionID string
 	Children  []ForegroundChildRecord
+	// NestedRoute and NestedChildren are the foreground control's nested route and its projection; SchedulingOwners and
+	// ActiveChildren keep the run live for the session liveness check (pi-web-session-liveness.ts).
+	NestedRoute      *nestedRoute
+	NestedChildren   []jm
+	SchedulingOwners int
+	ActiveChildren   map[string]bool
 }
 
 // completedResult is a terminal payload the result watcher observed, kept until its TTL ends.
@@ -86,11 +92,23 @@ type SubagentState struct {
 	CompletedResults completedStore
 	CompletionSeen   map[string]int64
 	ForegroundRuns   map[string]*ForegroundRunRecord
-	WidgetsSuspended bool
+	// ForegroundControls are the live controls of this session's foreground runs (ForegroundRuns remembers the settled ones).
+	ForegroundControls map[string]*ForegroundRunRecord
+	WidgetsSuspended   bool
+	// RetainedForegroundNestedRoutes are the routes of foreground runs that ended while a nested descendant was still live
+	// (cleared by the retained route tracker); RetainedNestedLookupRoutes are the routes the session may still look runs up in.
+	RetainedForegroundNestedRoutes map[string]*nestedRoute
+	RetainedNestedLookupRoutes     *retainedNestedLookupRoutes
+	LastForegroundControlID        string
+}
+
+type retainedNestedLookupRoutes struct {
+	SessionID string
+	Routes    map[string]*nestedRoute
 }
 
 func newSubagentState() *SubagentState {
-	return &SubagentState{AsyncJobs: map[string]*AsyncJobState{}, FleetJobs: map[string]*AsyncJobState{}, CompletionSeen: map[string]int64{}}
+	return &SubagentState{AsyncJobs: map[string]*AsyncJobState{}, FleetJobs: map[string]*AsyncJobState{}, CompletionSeen: map[string]int64{}, ForegroundControls: map[string]*ForegroundRunRecord{}}
 }
 
 const maxRecentFleetJobs = 20
@@ -145,6 +163,9 @@ type AsyncJobState struct {
 	OutputFile        string
 	SessionDir        string
 	TotalTokens       *TokenUsage
+	// NestedRoute is where this run's nested children report; NestedChildren is their projection (nested-events.ts).
+	NestedRoute    *nestedRoute
+	NestedChildren []jm
 }
 
 // ── wait-completions.ts ──

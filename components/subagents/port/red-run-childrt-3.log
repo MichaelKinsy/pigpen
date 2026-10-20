@@ -1,0 +1,9 @@
+# nested-events, retained-nested-route-tracker, pi-web-session-liveness, result-delivery-ownership, run-id-resolver, retained-children:
+# the twins were written before nested_events.go, retained_tracker, retained_children.go and the resolver's nested kind existed;
+# the first compile of the package with the twins and the first code drafts (go vet) failed, then the code was completed:
+#   nested_events.go:84:6: finiteNum redeclared in this block (async_retention.go:147)
+#   policy_preflight.go:542:6: isSafeNestedID redeclared in this block
+#   policy_delegation_test.go:119:6: waitFor redeclared in this block
+#   nested_status.go:204:7: duplicate case map[string]any in type switch
+# The first test run of the finished code failed these twins (retained-children: the fan-out descriptor JSON of the fixture;
+# run-id-resolver and stale-run-reconciler: the matchers), see the commit history for the fixes.

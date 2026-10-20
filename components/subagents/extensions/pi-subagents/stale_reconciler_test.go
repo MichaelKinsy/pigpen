@@ -39,6 +39,15 @@ func at(n int64) func() int64 { return func() int64 { return n } }
 
 func jsonOf(v any) string { b, _ := json.Marshal(v); return string(b) }
 
+// canon is the JSON of v with object keys sorted: two values are equal as JSON when their canon is equal.
+func canon(v any) string {
+	var back any
+	_ = json.Unmarshal([]byte(jsonOf(v)), &back)
+	return jsonOf(back)
+}
+
+func str(v any) string { s, _ := v.(string); return s }
+
 func TestStaleRunReconcilerTwins(t *testing.T) {
 	const f = "stale-run-reconciler"
 	runStatus := func(runID string, extra map[string]any) map[string]any {
@@ -72,7 +81,7 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 		}
 		eq(t, stale.Repaired, true, "repaired once stale")
 		eq(t, stale.Status.State, "failed", "state")
-		hasMatch(t, errString(stale.Message), `PID 1404 cannot be probed from this process; status has not updated for 6000ms`)
+		hasRe(t, stale.Message, `PID 1404 cannot be probed from this process; status has not updated for 6000ms`)
 	})
 	tw(t, f, "does not repair a recent namespaced run from an observer without a PID namespace", func(t *testing.T) {
 		dir := filepath.Join(tmp(t), "run-dead")
@@ -99,14 +108,14 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 		}
 		eq(t, r.Repaired, true, "repaired")
 		eq(t, r.Status.State, "failed", "state")
-		hasMatch(t, errString(r.Message), `process 12345 exited or disappeared`)
+		hasRe(t, r.Message, `process 12345 exited or disappeared`)
 		status := readJSONMap(t, filepath.Join(dir, "status.json"))
 		eq(t, status["state"], "failed", "file state")
 		eq(t, status["sessionId"], "session-current", "session")
 		eq(t, status["completionOwnerId"], "owner-current", "owner")
 		step := status["steps"].([]any)[0].(map[string]any)
 		eq(t, step["status"], "failed", "step")
-		hasMatch(t, errString(step["error"]), `process 12345 exited or disappeared`)
+		hasRe(t, str(step["error"]), `process 12345 exited or disappeared`)
 		res := readJSONMap(t, filepath.Join(results, "run-dead.json"))
 		eq(t, res["success"], false, "success")
 		eq(t, res["sessionId"], "session-current", "result session")
@@ -114,7 +123,7 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 		eq(t, res["state"], "failed", "result state")
 		eq(t, res["exitCode"], float64(1), "exit code")
 		eq(t, res["results"].([]any)[0].(map[string]any)["contextOverflow"], true, "overflow")
-		hasMatch(t, errString(res["summary"]), `process 12345 exited or disappeared`)
+		hasRe(t, str(res["summary"]), `process 12345 exited or disappeared`)
 		events, _ := os.ReadFile(filepath.Join(dir, "events.jsonl"))
 		if !strings.Contains(string(events), "subagent.run.repaired_stale") {
 			t.Errorf("events: %s", events)
@@ -144,7 +153,7 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 		}
 		res := readJSONMap(t, filepath.Join(results, "run-killed.json"))
 		eq(t, res["state"], "failed", "state")
-		hasMatch(t, errString(res["summary"]), `Async runner process 4242 exited with code none \(signal SIGKILL\) before writing a result`)
+		hasRe(t, str(res["summary"]), `Async runner process 4242 exited with code none \(signal SIGKILL\) before writing a result`)
 	})
 	tw(t, f, "repairs sessionless stale status without writing an unindexed result", func(t *testing.T) {
 		root := tmp(t)
@@ -171,11 +180,11 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 			t.Fatal(err)
 		}
 		eq(t, r.Repaired, true, "repaired")
-		hasMatch(t, errString(r.Message), `Runner stderr tail:`)
-		hasMatch(t, errString(r.Message), `missing peer package`)
+		hasRe(t, r.Message, `Runner stderr tail:`)
+		hasRe(t, r.Message, `missing peer package`)
 		step := readJSONMap(t, filepath.Join(dir, "status.json"))["steps"].([]any)[0].(map[string]any)
-		hasMatch(t, errString(step["error"]), `missing peer package`)
-		hasMatch(t, errString(readJSONMap(t, filepath.Join(results, "run-dead-stderr.json"))["summary"]), `missing peer package`)
+		hasRe(t, str(step["error"]), `missing peer package`)
+		hasRe(t, str(readJSONMap(t, filepath.Join(results, "run-dead-stderr.json"))["summary"]), `missing peer package`)
 	})
 	tw(t, f, "keeps stale repair successful when the event log cannot be appended", func(t *testing.T) {
 		root := tmp(t)
@@ -202,7 +211,7 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 			"steps": []any{map[string]any{"agent": "scout", "status": "running", "startedAt": 1000, "model": "planned-scout"},
 				map[string]any{"agent": "worker", "status": "running", "startedAt": 1100, "model": "planned-worker"}}})
 		scout, worker := filepath.Join(root, "scout.jsonl"), filepath.Join(root, "worker.jsonl")
-		writeFile(t, filepath.Join(results, "run-mixed.json"), jsonOf(map[string]any{"id": "run-mixed", "success": false, "state": "failed", "results": []any{
+		writeFile(t, filepath.Join(results, "run-mixed.json"), canon(map[string]any{"id": "run-mixed", "success": false, "state": "failed", "results": []any{
 			map[string]any{"agent": "scout", "success": true, "sessionFile": scout, "model": "fast"},
 			map[string]any{"agent": "worker", "success": false, "error": "boom", "sessionFile": worker, "model": "careful", "contextOverflow": true}}}))
 		r, err := reconcileAsyncRun(dir, ReconcileOptions{ResultsDir: results, Kill: killESRCH, Now: at(2000)})
@@ -248,7 +257,7 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 			"steps":           staleSteps(pending("runner-stale-step-0", 0, "pending"), pending("runner-stale-step-1", 1, "not-started"))}
 		writeStatusJSON(t, dir, stale)
 		resultPath := filepath.Join(results, runID+".json")
-		writeFile(t, resultPath, jsonOf(map[string]any{"id": runID, "success": false, "state": "failed", "results": []any{
+		writeFile(t, resultPath, canon(map[string]any{"id": runID, "success": false, "state": "failed", "results": []any{
 			map[string]any{"agent": "scout", "success": true}, map[string]any{"agent": "worker", "success": false, "error": "child diagnostic"}}}))
 		runnerInst := func(id string, at int) any {
 			return []any{map[string]any{"kind": "runner", "processInstanceId": id, "closeObservedAt": at, "exitCode": 0, "signal": nil}}
@@ -259,7 +268,7 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 		unknownStep := map[string]any{"version": 1, "state": "unknown", "runId": runID, "childIndex": 1, "runnerProcessInstanceId": "runner-current-step-1",
 			"reason": "process-tree-unverified", "resumeDisposition": "non-resumable"}
 		repaired, err := reconcileAsyncRun(dir, ReconcileOptions{ResultsDir: results, Now: at(2000), Observe: func(*AsyncStatus) {
-			writeFile(t, filepath.Join(dir, "process-terminal.json"), jsonOf(observed))
+			writeFile(t, filepath.Join(dir, "process-terminal.json"), canon(observed))
 			next := map[string]any{}
 			for k, v := range stale {
 				next[k] = v
@@ -278,30 +287,30 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 		eq(t, repaired.Status.Steps[0].Status, "complete", "step 0")
 		eq(t, repaired.Status.Steps[1].Status, "failed", "step 1")
 		eq(t, repaired.Status.Steps[1].Error, "child diagnostic", "step 1 error")
-		eq(t, jsonOf(repaired.Status.ProcessTerminal), jsonOf(observed), "root proof")
-		eq(t, jsonOf(repaired.Status.Steps[0].ProcessTerminal), jsonOf(observedStep), "step 0 proof")
-		eq(t, jsonOf(repaired.Status.Steps[1].ProcessTerminal), jsonOf(unknownStep), "step 1 proof")
+		eq(t, canon(repaired.Status.ProcessTerminal), canon(observed), "root proof")
+		eq(t, canon(repaired.Status.Steps[0].ProcessTerminal), canon(observedStep), "step 0 proof")
+		eq(t, canon(repaired.Status.Steps[1].ProcessTerminal), canon(unknownStep), "step 1 proof")
 		persisted := readJSONMap(t, filepath.Join(dir, "status.json"))
 		eq(t, persisted["error"], "ROOT DIAGNOSTIC", "persisted error")
-		eq(t, jsonOf(persisted["processTerminal"]), jsonOf(observed), "persisted root proof")
+		eq(t, canon(persisted["processTerminal"]), canon(observed), "persisted root proof")
 		steps := persisted["steps"].([]any)
-		eq(t, jsonOf(steps[0].(map[string]any)["processTerminal"]), jsonOf(observedStep), "persisted step 0 proof")
-		eq(t, jsonOf(steps[1].(map[string]any)["processTerminal"]), jsonOf(unknownStep), "persisted step 1 proof")
+		eq(t, canon(steps[0].(map[string]any)["processTerminal"]), canon(observedStep), "persisted step 0 proof")
+		eq(t, canon(steps[1].(map[string]any)["processTerminal"]), canon(unknownStep), "persisted step 1 proof")
 		st, _ := readStatus(dir)
 		public := statusToSummary(dir, st)
-		eq(t, jsonOf(public.ProcessTerminal), jsonOf(observed), "public root proof")
-		eq(t, jsonOf(public.Steps[0].ProcessTerminal), jsonOf(observedStep), "public step 0 proof")
-		eq(t, jsonOf(public.Steps[1].ProcessTerminal), jsonOf(unknownStep), "public step 1 proof")
-		eq(t, jsonOf(readProcessTerminal(dir, runID, finalRunner)), jsonOf(observed), "sidecar read with the final runner")
+		eq(t, canon(public.ProcessTerminal), canon(observed), "public root proof")
+		eq(t, canon(public.Steps[0].ProcessTerminal), canon(observedStep), "public step 0 proof")
+		eq(t, canon(public.Steps[1].ProcessTerminal), canon(unknownStep), "public step 1 proof")
+		eq(t, canon(readProcessTerminal(dir, runID, finalRunner)), canon(observed), "sidecar read with the final runner")
 		staleLookup := readProcessTerminal(dir, runID, staleRunner)
 		eq(t, staleLookup.State, "unknown", "stale lookup state")
 		eq(t, staleLookup.Reason, "proof-write-failed", "stale lookup reason")
 		proof := finalizeProcessTerminal(dir, runID, RunnerClose{ProcessInstanceID: finalRunner, CloseObservedAt: 2100, ExitCode: new(0)})
 		final := readJSONMap(t, filepath.Join(dir, "status.json"))
-		eq(t, jsonOf(proof), jsonOf(observed), "finalized proof")
-		eq(t, jsonOf(final["processTerminal"]), jsonOf(proof), "final status proof")
-		eq(t, jsonOf(final["steps"].([]any)[0].(map[string]any)["processTerminal"]), jsonOf(observedStep), "final step 0 proof")
-		eq(t, jsonOf(final["steps"].([]any)[1].(map[string]any)["processTerminal"]), jsonOf(unknownStep), "final step 1 proof")
+		eq(t, canon(proof), canon(observed), "finalized proof")
+		eq(t, canon(final["processTerminal"]), canon(proof), "final status proof")
+		eq(t, canon(final["steps"].([]any)[0].(map[string]any)["processTerminal"]), canon(observedStep), "final step 0 proof")
+		eq(t, canon(final["steps"].([]any)[1].(map[string]any)["processTerminal"]), canon(unknownStep), "final step 1 proof")
 		eq(t, final["state"], "failed", "final state")
 		eq(t, final["error"], "ROOT DIAGNOSTIC", "final error")
 		eq(t, readJSONMap(t, resultPath)["results"].([]any)[1].(map[string]any)["error"], "child diagnostic", "result error")
@@ -320,7 +329,7 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 				extra["error"] = fx.statusError
 			}
 			writeStatusJSON(t, dir, runStatus(runID, extra))
-			writeFile(t, filepath.Join(results, runID+".json"), jsonOf(map[string]any{"id": runID, "success": false, "state": "failed", "error": fx.resultError,
+			writeFile(t, filepath.Join(results, runID+".json"), canon(map[string]any{"id": runID, "success": false, "state": "failed", "error": fx.resultError,
 				"results": []any{map[string]any{"agent": "worker", "success": false, "error": "child failure"}}}))
 			r, err := reconcileAsyncRun(dir, ReconcileOptions{ResultsDir: results, Now: at(2000)})
 			if err != nil {
@@ -393,14 +402,14 @@ func TestStaleRunReconcilerTwins(t *testing.T) {
 		}
 		eq(t, r.Repaired, true, "repaired")
 		eq(t, r.Status.State, "failed", "state")
-		hasMatch(t, errString(r.Message), `PID .* is still live; status has not updated`)
+		hasRe(t, r.Message, `PID .* is still live; status has not updated`)
 	})
 	tw(t, f, "preserves an existing result instead of overwriting it with stale-run failure", func(t *testing.T) {
 		root := tmp(t)
 		dir, results := filepath.Join(root, "run-result"), filepath.Join(root, "results")
 		writeStatusJSON(t, dir, runStatus("run-result", nil))
 		resultPath := filepath.Join(results, "run-result.json")
-		writeFile(t, resultPath, jsonOf(map[string]any{"id": "run-result", "success": true, "state": "complete", "summary": "already done"}))
+		writeFile(t, resultPath, canon(map[string]any{"id": "run-result", "success": true, "state": "complete", "summary": "already done"}))
 		r, err := reconcileAsyncRun(dir, ReconcileOptions{ResultsDir: results, Kill: killESRCH, Now: at(2000)})
 		if err != nil {
 			t.Fatal(err)

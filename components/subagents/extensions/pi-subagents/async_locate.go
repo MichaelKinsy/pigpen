@@ -176,9 +176,10 @@ func resolveAsyncRunLocation(p RunLocationParams, asyncDirRoot, resultsDir strin
 
 // ResolvedRunID is what an id names: a remembered foreground run or an async run.
 type ResolvedRunID struct {
-	Kind     string // foreground or async
+	Kind     string // foreground, async or nested
 	ID       string
 	Location AsyncRunLocation
+	Match    *nestedRunMatch // nested only
 }
 
 func resultPathFor(resultsDir, runID string) string {
@@ -192,24 +193,76 @@ func resultPathFor(resultsDir, runID string) string {
 	return ""
 }
 
+// foregroundIDs are the live controls of the session and the settled runs it remembers.
 func foregroundIDs(state *SubagentState) []string {
-	var ids []string
-	if state == nil || state.CurrentSessionID == "" {
+	if state == nil {
 		return nil
 	}
-	for _, id := range sortedKeys(state.ForegroundRuns) {
-		if state.ForegroundRuns[id].SessionID == state.CurrentSessionID {
-			ids = append(ids, id)
+	seen := map[string]bool{}
+	var ids []string
+	for _, id := range sortedKeys(state.ForegroundControls) {
+		seen[id] = true
+		ids = append(ids, id)
+	}
+	if state.CurrentSessionID != "" {
+		for _, id := range sortedKeys(state.ForegroundRuns) {
+			if r := state.ForegroundRuns[id]; r.SessionID == state.CurrentSessionID && !seen[r.RunID] {
+				seen[r.RunID] = true
+				ids = append(ids, r.RunID)
+			}
 		}
 	}
 	return ids
 }
 
+func hasExactForegroundID(state *SubagentState, id string) bool {
+	if state == nil {
+		return false
+	}
+	if _, ok := state.ForegroundControls[id]; ok {
+		return true
+	}
+	r := state.ForegroundRuns[id]
+	return r != nil && state.CurrentSessionID != "" && r.SessionID == state.CurrentSessionID
+}
+
+// nestedScopeFromState is the set of routes the session may look nested runs up in: its foreground controls, its async jobs and
+// the routes retained for it after a control was removed.
+func nestedScopeFromState(state *SubagentState) *nestedRunResolutionScope {
+	if state == nil {
+		return nil
+	}
+	scope := &nestedRunResolutionScope{HasRoutes: true}
+	seen := map[string]bool{}
+	add := func(r *nestedRoute) {
+		if r == nil {
+			return
+		}
+		k := r.RootRunID + ":" + r.EventSink + ":" + r.ControlInbox
+		if !seen[k] {
+			seen[k] = true
+			scope.Routes = append(scope.Routes, *r)
+		}
+	}
+	for _, id := range sortedKeys(state.ForegroundControls) {
+		add(state.ForegroundControls[id].NestedRoute)
+	}
+	for _, id := range sortedKeys(state.AsyncJobs) {
+		add(state.AsyncJobs[id].NestedRoute)
+	}
+	if rr := state.RetainedNestedLookupRoutes; rr != nil && rr.SessionID == state.CurrentSessionID {
+		for _, id := range sortedKeys(rr.Routes) {
+			add(rr.Routes[id])
+		}
+	}
+	return scope
+}
+
 // resolveSubagentRunID resolves an id: exact foreground, exact async directory or result, an exact live tool-call id, an
 // indexed tool-call id, then a prefix over all of them.
-func resolveSubagentRunID(id string, state *SubagentState, asyncDirRoot, resultsDir string) (*ResolvedRunID, error) {
-	if id == "" || id == "." || id == ".." || strings.ContainsAny(id, `\/`) || strings.ContainsRune(id, 0) {
-		return nil, fmt.Errorf("id must be a safe run identifier.")
+func resolveSubagentRunID(id string, state *SubagentState, asyncDirRoot, resultsDir string, nested *nestedRunResolutionScope) (*ResolvedRunID, error) {
+	if err := assertSafeNestedID("id", id); err != nil {
+		return nil, err
 	}
 	d := defaultAsyncDirs()
 	if asyncDirRoot == "" {
@@ -218,7 +271,7 @@ func resolveSubagentRunID(id string, state *SubagentState, asyncDirRoot, results
 	if resultsDir == "" {
 		resultsDir = d.Results
 	}
-	if state != nil && state.ForegroundRuns[id] != nil && state.ForegroundRuns[id].SessionID == state.CurrentSessionID && state.CurrentSessionID != "" {
+	if hasExactForegroundID(state, id) {
 		return &ResolvedRunID{Kind: "foreground", ID: id}, nil
 	}
 	dir := filepath.Join(asyncDirRoot, id)
@@ -257,6 +310,19 @@ func resolveSubagentRunID(id string, state *SubagentState, asyncDirRoot, results
 	if len(byTool) == 1 {
 		return &ResolvedRunID{Kind: "async", ID: byTool[0].ID, Location: byTool[0].Location}, nil
 	}
+	if nested == nil {
+		nested = nestedScopeFromState(state)
+	}
+	exactNested, err := findNestedRunMatchesByID(id, false, nested)
+	if err != nil {
+		return nil, err
+	}
+	if len(exactNested) > 1 {
+		return nil, fmt.Errorf("Nested run id '%s' is ambiguous across authorized registries. Provide the full id after stale registries are cleaned up.", id)
+	}
+	if len(exactNested) == 1 {
+		return &ResolvedRunID{Kind: "nested", ID: id, Match: &exactNested[0]}, nil
+	}
 	var matches []ResolvedRunID
 	for _, fid := range foregroundIDs(state) {
 		if strings.HasPrefix(fid, id) {
@@ -271,6 +337,13 @@ func resolveSubagentRunID(id string, state *SubagentState, asyncDirRoot, results
 		if m.Location.ResultPath != "" || (m.Location.AsyncDir != "" && regularFileExists(filepath.Join(m.Location.AsyncDir, "status.json"))) {
 			matches = append(matches, ResolvedRunID{Kind: "async", ID: m.ID, Location: m.Location})
 		}
+	}
+	prefixNested, err := findNestedRunMatchesByID(id, true, nested)
+	if err != nil {
+		return nil, err
+	}
+	for i := range prefixNested {
+		matches = append(matches, ResolvedRunID{Kind: "nested", ID: strOf(prefixNested[i].Run["id"]), Match: &prefixNested[i]})
 	}
 	seen := map[string]bool{}
 	var unique []ResolvedRunID
