@@ -194,6 +194,18 @@ func TestSessionLifecycle(t *testing.T) {
 		}
 	})
 
+	t.Run("refuses more than one working directory with InvalidParams", func(t *testing.T) {
+		l := newLifecycle(t)
+		c := l.initialized()
+		a := wire.PathToFileURI(t.TempDir())
+		b := wire.PathToFileURI(t.TempDir())
+		uri := wire.SessionURI(newID())
+		c.ExpectError("createSession", obj{"channel": uri, "workingDirectories": []string{a, b}}, -32602)
+		if l.h.host.Store().Has(uri) {
+			t.Fatal("session was created despite the refusal")
+		}
+	})
+
 	twin.Run(t, "session-lifecycle", "tracks the active session count in root state", func(t *testing.T) {
 		l := newLifecycle(t)
 		c := l.initialized()

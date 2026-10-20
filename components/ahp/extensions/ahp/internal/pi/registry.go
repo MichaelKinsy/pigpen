@@ -283,10 +283,12 @@ func (r *Registry) Create(_ context.Context, params ahptypes.CreateSessionParams
 	}
 
 	workingDirectory := r.opts.DefaultWorkingDirectory
-	if len(params.WorkingDirectories) > 0 {
-		// A set in the protocol, but this host does not declare multipleWorkingDirectories, which
-		// is what forbids a client from sending more than one. Anything past the first is ignored
-		// rather than refused: the session still runs, in the directory asked for first.
+	if len(params.WorkingDirectories) > 1 {
+		// This host does not declare multipleWorkingDirectories, which is what forbids a client
+		// from sending more than one. Refuse rather than run in the first and drop the rest.
+		return wire.InvalidParams("@pi-in-go/pigpen-ahp does not support more than one working directory per session (multipleWorkingDirectories is not declared)")
+	}
+	if len(params.WorkingDirectories) == 1 {
 		path, err := wire.FileURIToPath(params.WorkingDirectories[0])
 		if err != nil {
 			return wire.InvalidParams(err.Error())
