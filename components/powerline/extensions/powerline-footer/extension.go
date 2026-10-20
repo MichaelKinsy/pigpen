@@ -25,8 +25,27 @@ func (e *unknownTokenError) Error() string { return "Unknown theme color: " + e.
 
 type sdkHost struct {
 	ctx sdk.Context
-	// Rows pushed to the host last, so a repaint at another width can replace them.
-	pl *powerline
+	pl  *powerline
+	// sent is what each widget shows on the host now: a repaint sends only the widgets whose lines or placement changed (a
+	// blocking host call each). A widget the host cleared (ClearWidget) is forgotten.
+	sent map[string]sentWidget
+}
+
+type sentWidget struct {
+	placement string
+	lines     []string
+}
+
+// setWidget sends lines to the host unless it already shows exactly these at this placement.
+func (h *sdkHost) setWidget(key, placement string, lines []string) {
+	if prev, ok := h.sent[key]; ok && prev.placement == placement && slices.Equal(prev.lines, lines) {
+		return
+	}
+	if h.sent == nil {
+		h.sent = map[string]sentWidget{}
+	}
+	h.sent[key] = sentWidget{placement, slices.Clone(lines)}
+	_ = h.ctx.SetWidget(key, lines, sdk.WidgetOptions{"placement": placement})
 }
 
 func (h *sdkHost) Cwd() string  { return h.ctx.Cwd() }
@@ -134,7 +153,10 @@ func (h *sdkHost) SetStatus(key string, text *string) {
 	h.ctx.SetStatus(key, *text)
 }
 
-func (h *sdkHost) ClearWidget(key string) { _ = h.ctx.SetWidget(key, nil) }
+func (h *sdkHost) ClearWidget(key string) {
+	delete(h.sent, key)
+	_ = h.ctx.SetWidget(key, nil)
+}
 
 // SetFooterInstalled and SetWidgetInstalled draw nothing in RPC mode: Pi drops the component factories there, and the traces
 // recorded from Pi (which this port is checked against) show no row from them.
@@ -149,6 +171,7 @@ func (h *sdkHost) SetWidgetInstalled(key, placement string, on bool) {
 	if h.ctx.Mode() == "rpc" || on {
 		return // pushed by Repaint, with content
 	}
+	delete(h.sent, key)
 	_ = h.ctx.SetWidget(key, nil)
 }
 
@@ -159,19 +182,21 @@ func (h *sdkHost) Repaint() {
 		return
 	}
 	h.pl.refresh() // the host is asked here, in the handler, never while a row is rendered
+	h.pl.queue.holdSession(h.pl.base.SessionID)
+	defer h.pl.queue.releaseSession()
 	ui := h.pl.installed()
 	width := h.ctx.Width()
 	if placement, ok := ui.Widgets[widgetTop]; ok {
-		_ = h.ctx.SetWidget(widgetTop, h.pl.renderTop(width), sdk.WidgetOptions{"placement": placement})
+		h.setWidget(widgetTop, placement, h.pl.renderTop(width))
 	}
 	if placement, ok := ui.Widgets[widgetStatus]; ok {
-		_ = h.ctx.SetWidget(widgetStatus, h.pl.renderStatus(width), sdk.WidgetOptions{"placement": placement})
+		h.setWidget(widgetStatus, placement, h.pl.renderStatus(width))
 	}
 	if placement, ok := ui.Widgets[widgetPendingSend]; ok {
-		_ = h.ctx.SetWidget(widgetPendingSend, h.pl.renderPendingSend(width), sdk.WidgetOptions{"placement": placement})
+		h.setWidget(widgetPendingSend, placement, h.pl.renderPendingSend(width))
 	}
 	if placement, ok := ui.Widgets[widgetQueuePreview]; ok {
-		_ = h.ctx.SetWidget(widgetQueuePreview, h.pl.renderQueuePreview(width), sdk.WidgetOptions{"placement": placement})
+		h.setWidget(widgetQueuePreview, placement, h.pl.renderQueuePreview(width))
 	}
 	if ui.Footer {
 		_ = h.ctx.SetFooterRenderer(h.pl.footerRows)

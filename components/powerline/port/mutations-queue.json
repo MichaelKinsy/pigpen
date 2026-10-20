@@ -842,13 +842,25 @@
  {
   "name": "queue-ext-preview-push",
   "file": "extension.go",
-  "find": "_ = h.ctx.SetWidget(widgetQueuePreview, h.pl.renderQueuePreview(width), sdk.WidgetOptions{\"placement\": placement})",
+  "find": "h.setWidget(widgetQueuePreview, placement, h.pl.renderQueuePreview(width))",
   "replace": "_ = placement"
  },
  {
   "name": "queue-ext-pending-push",
   "file": "extension.go",
-  "find": "_ = h.ctx.SetWidget(widgetPendingSend, h.pl.renderPendingSend(width), sdk.WidgetOptions{\"placement\": placement})",
+  "find": "h.setWidget(widgetPendingSend, placement, h.pl.renderPendingSend(width))",
   "replace": "_ = placement"
+ },
+ {
+  "name": "adapter-widget-always-resent",
+  "file": "extension.go",
+  "find": "ok && prev.placement == placement && slices.Equal(prev.lines, lines)",
+  "replace": "ok && prev.placement == \"\" && slices.Equal(prev.lines, lines)"
+ },
+ {
+  "name": "queue-session-hint-ignored",
+  "file": "queue_state.go",
+  "find": "if q.sessionHint != nil {\n\t\treturn *q.sessionHint",
+  "replace": "if false {\n\t\treturn *q.sessionHint"
  }
 ]

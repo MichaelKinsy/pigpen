@@ -484,6 +484,8 @@ func (a adaptedUsage) GetLeafID() (*string, error) {
 func (a adaptedUsage) ReadUsage() map[string]any { return a.h.ContextUsage() }
 
 func (p *powerline) refresh() {
+	p.queue.holdSession(p.h.SessionID()) // one session id read per refresh and repaint, not one per consumer
+	defer p.queue.releaseSession()
 	d := p.preset()
 	l, r, s := mergeSegmentsWithCustomItems(d, p.config.CustomItems, p.config.Layout, p.config.DisabledSegments)
 	p.left, p.right, p.secondary = l, r, s
@@ -555,7 +557,7 @@ func (p *powerline) buildContext(d presetDef, all []string) segmentContext {
 		thinking = p.h.ThinkingLevel()
 	}
 	c := segmentContext{
-		Model: model, ThinkingLevel: thinking, SessionID: p.h.SessionID(), SessionName: p.h.SessionName(), CWD: p.h.Cwd(),
+		Model: model, ThinkingLevel: thinking, SessionID: p.queue.currentSessionID(), SessionName: p.h.SessionName(), CWD: p.h.Cwd(),
 		Usage:         usageStats{stats.Input, stats.Output, stats.CacheRead, stats.CacheWrite, stats.Cost, stats.SubagentCost},
 		ContextTokens: display.Tokens, ContextPercent: display.Percent, ContextWindow: display.Window,
 		ContextApproximate: false,

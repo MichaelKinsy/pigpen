@@ -124,6 +124,9 @@ type queueState struct {
 	summaryCache         *queueSummaryCache
 	sessionGeneration    int
 	compactionGeneration int
+	// sessionHint is the session id read once for the refresh or repaint in progress (nil otherwise). The original reads the id in
+	// process; here each read is a blocking host call.
+	sessionHint *string
 	// ctxLive is `currentCtx !== null`: false before the first session_start and after session_shutdown.
 	ctxLive bool
 
@@ -174,13 +177,24 @@ func queuePromptText(content any) string {
 	return ""
 }
 
+func (q *queueState) holdSession(id string) { q.sessionHint = &id }
+func (q *queueState) releaseSession()       { q.sessionHint = nil }
+
+// currentSessionID is the session id: the one held for the refresh in progress, or the host's.
+func (q *queueState) currentSessionID() string {
+	if q.sessionHint != nil {
+		return *q.sessionHint
+	}
+	return q.p.h.SessionID()
+}
+
 // context is getQueueContext: the working directory and, when the host knows one, the session.
 func (q *queueState) context() queueContext {
 	cwd := q.p.h.Cwd()
 	if cwd == "" {
 		cwd = "."
 	}
-	return currentQueueContext(cwd, q.p.h.SessionID())
+	return currentQueueContext(cwd, q.currentSessionID())
 }
 
 // summary is getQueueSummary: the store's summary, cached for 250 ms per context and compaction state.

@@ -169,3 +169,26 @@ func TestTUIThemeTokensArePi100s(t *testing.T) {
 		t.Errorf("an unknown token falls back to text: %q", top)
 	}
 }
+
+// A repaint is a blocking host call per widget: a widget whose lines and placement did not change since the last repaint is not
+// sent again, and the session id is read once per repaint (the original reads both in process).
+func TestTUIRepaintSendsOnlyWhatChanged(t *testing.T) {
+	h := tuiRig{}.start(t)
+	count := func(method string) int { return len(h.CallsTo(method)) }
+	widgetsBefore, idsBefore := count("ui.setWidget"), count("getSessionID")
+	h.Fire("message_update", map[string]any{"message": map[string]any{"role": "assistant", "content": []any{}}})
+	if n := count("ui.setWidget") - widgetsBefore; n != 0 {
+		t.Errorf("an unchanged repaint sent %d widgets", n)
+	}
+	if n := count("getSessionID") - idsBefore; n != 1 {
+		t.Errorf("a repaint read the session id %d times, want 1", n)
+	}
+	// A changed bar is sent: /powerline placement moves the primary widget.
+	before := count("ui.setWidget")
+	if failure := h.Command("powerline", "placement below"); failure != "" {
+		t.Fatal(failure)
+	}
+	if count("ui.setWidget") == before {
+		t.Error("a placement change sent no widget")
+	}
+}

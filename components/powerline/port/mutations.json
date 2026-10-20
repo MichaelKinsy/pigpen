@@ -866,8 +866,8 @@
  {
   "name": "adapter-top-placement",
   "file": "extension.go",
-  "find": "if placement, ok := ui.Widgets[widgetTop]; ok {\n\t\t_ = h.ctx.SetWidget(widgetTop, h.pl.renderTop(width), sdk.WidgetOptions{\"placement\": placement})",
-  "replace": "if _, ok := ui.Widgets[widgetTop]; ok {\n\t\t_ = h.ctx.SetWidget(widgetTop, h.pl.renderTop(width), sdk.WidgetOptions{\"placement\": \"aboveEditor\"})"
+  "find": "if placement, ok := ui.Widgets[widgetTop]; ok {\n\t\th.setWidget(widgetTop, placement, h.pl.renderTop(width))",
+  "replace": "if _, ok := ui.Widgets[widgetTop]; ok {\n\t\th.setWidget(widgetTop, \"aboveEditor\", h.pl.renderTop(width))"
  },
  {
   "name": "frame-not-published",
