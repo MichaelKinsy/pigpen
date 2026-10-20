@@ -26,6 +26,25 @@ func braveBody(results ...[3]string) string {
 	return string(b)
 }
 
+// xcrawlSERP is an XCrawl SERP answer with one organic result per triple (title, link, snippet).
+func xcrawlSERP(results ...[3]string) string {
+	var items []map[string]string
+	for _, r := range results {
+		items = append(items, map[string]string{"title": r[0], "link": r[1], "snippet": r[2]})
+	}
+	b, _ := json.Marshal(map[string]any{"search_metadata": map[string]any{"status": "completed"}, "organic_results": items})
+	return string(b)
+}
+
+// xcrawlQuery is the query an XCrawl request carries.
+func xcrawlQuery(c netCall) string {
+	var body struct {
+		Q string `json:"q"`
+	}
+	_ = json.Unmarshal([]byte(c.Body), &body)
+	return body.Q
+}
+
 func tavilyBody(answer string, results ...map[string]string) string {
 	b, _ := json.Marshal(map[string]any{"answer": answer, "results": results})
 	return string(b)
@@ -115,19 +134,17 @@ func TestUpstream_web_search_response_id(t *testing.T) {
 
 func TestUpstream_web_search_query_expand(t *testing.T) {
 	const F = "web-search-query-expand"
-	const note = "provider brave instead of xcrawl (not ported); query expansion is provider-independent"
 	search := func(t *testing.T, params map[string]any) (ToolOutput, []string) {
-		r, _ := started(t, `{}`)
-		t.Setenv("BRAVE_API_KEY", "brave-test-key")
+		r, _ := started(t, `{"xcrawlApiKey":"xc-test-key"}`)
 		var mu sync.Mutex
 		var queries []string
 		useNet(t, func(c netCall) netReply {
 			mu.Lock()
-			queries = append(queries, query(c.URL, "q"))
+			queries = append(queries, xcrawlQuery(c))
 			mu.Unlock()
-			return reply(200, braveBody([3]string{"R1", "https://example.com/1", "s1"}, [3]string{"R2", "https://example.com/2", "s2"}))
+			return reply(200, xcrawlSERP([3]string{"R1", "https://example.com/1", "s1"}, [3]string{"R2", "https://example.com/2", "s2"}))
 		})
-		params["provider"], params["workflow"], params["numResults"] = "brave", "none", 2.0
+		params["provider"], params["workflow"], params["numResults"] = "xcrawl", "none", 2.0
 		res := run(t, mustTool(t, r, "web_search"), params)
 		mu.Lock()
 		defer mu.Unlock()
@@ -135,28 +152,24 @@ func TestUpstream_web_search_query_expand(t *testing.T) {
 	}
 	sorted := func(q []string) []string { c := append([]string(nil), q...); sortStrings(c); return c }
 	tw(t, F, "web_search expands a JSON-array string in query into separate searches", func(t *testing.T) {
-		adapted(t, note)
 		_, q := search(t, map[string]any{"query": `["AGP version", "Compose BOM", "CameraX"]`})
 		if !reflect.DeepEqual(sorted(q), sorted([]string{"AGP version", "Compose BOM", "CameraX"})) {
 			t.Fatal(q)
 		}
 	})
 	tw(t, F, "web_search keeps mixed JSON arrays in query as a single literal query", func(t *testing.T) {
-		adapted(t, note)
 		_, q := search(t, map[string]any{"query": `["AGP version", 5]`})
 		if !reflect.DeepEqual(q, []string{`["AGP version", 5]`}) {
 			t.Fatal(q)
 		}
 	})
 	tw(t, F, "web_search does not reinterpret already-structured queries entries", func(t *testing.T) {
-		adapted(t, note)
 		_, q := search(t, map[string]any{"queries": []any{`["AGP version", "Compose BOM"]`}})
 		if !reflect.DeepEqual(q, []string{`["AGP version", "Compose BOM"]`}) {
 			t.Fatal(q)
 		}
 	})
 	tw(t, F, "web_search reports the existing no-query error for empty JSON-array strings", func(t *testing.T) {
-		adapted(t, note)
 		for _, query := range []string{"[]", `["   "]`} {
 			res, q := search(t, map[string]any{"query": query})
 			if len(q) != 0 || dStr(res, "error") != "No query provided" || res.Text() != "Error: No query provided. Use 'query' or 'queries' parameter." {
@@ -176,15 +189,14 @@ func sortStrings(s []string) {
 
 func TestUpstream_web_search_concurrency(t *testing.T) {
 	tw(t, "web-search-concurrency", "web_search bounds batch concurrency and preserves query order", func(t *testing.T) {
-		adapted(t, "provider brave instead of xcrawl (not ported); the summary-review half runs the curator, a named gap")
-		r, _ := started(t, `{}`)
-		t.Setenv("BRAVE_API_KEY", "brave-test-key")
+		adapted(t, "the summary-review half runs the curator, a named gap")
+		r, _ := started(t, `{"xcrawlApiKey":"xc-test-key"}`)
 		delays := map[string]time.Duration{"q1": 90, "q2": 70, "q3": 50, "q4": 30, "q5": 10}
 		var active, maxActive int32
 		var mu sync.Mutex
 		var startedQ, completedQ []string
 		useNet(t, func(c netCall) netReply {
-			q := query(c.URL, "q")
+			q := xcrawlQuery(c)
 			mu.Lock()
 			startedQ = append(startedQ, q)
 			mu.Unlock()
@@ -200,11 +212,11 @@ func TestUpstream_web_search_concurrency(t *testing.T) {
 			mu.Lock()
 			completedQ = append(completedQ, q)
 			mu.Unlock()
-			return reply(200, braveBody([3]string{q, "https://example.com/" + q, q}))
+			return reply(200, xcrawlSERP([3]string{q, "https://example.com/" + q, q}))
 		})
 		var updates []map[string]any
 		var um sync.Mutex
-		res, err := mustTool(t, r, "web_search").Execute(bg(), map[string]any{"queries": []any{"q1", "q2", "q3", "q4", "q5"}, "provider": "brave", "workflow": "none"},
+		res, err := mustTool(t, r, "web_search").Execute(bg(), map[string]any{"queries": []any{"q1", "q2", "q3", "q4", "q5"}, "provider": "xcrawl", "workflow": "none"},
 			func(o ToolOutput) { um.Lock(); updates = append(updates, o.Details); um.Unlock() })
 		noErr(t, err)
 		if atomic.LoadInt32(&maxActive) != 3 {
