@@ -92,15 +92,11 @@ type providerDef struct {
 	// because some checks read the session's model and login (OpenAI, xAI, Kimi) or the browser
 	// (Gemini Web). Providers that are not ported yet approximate it with their credential names.
 	available func(ctx context.Context, o FullSearchOptions) bool
-	// availableErr, when set, replaces available for a provider whose availability check can
-	// fail on its own configuration (SearXNG reads the ssrf settings): the failure is the
-	// caller's error, never "unavailable".
-	availableErr func() (bool, error)
+	// availableErr is set where the original's check can reject (a configuration error: SearXNG
+	// reads the ssrf settings, OpenAI the model registry): the caller's error surfaces, never
+	// "unavailable". It replaces available.
+	availableErr func(ctx context.Context, o FullSearchOptions) (bool, error)
 	search       func(ctx context.Context, q string, o SearchOptions) (*SearchResponse, error)
-}
-
-func credAvail(provider, cfgKey, env string) func() bool {
-	return func() bool { return hasProviderCredential(provider, cfgKey, env) }
 }
 
 // plainAvail adapts an availability check that needs neither context nor options.
@@ -142,7 +138,7 @@ func init() {
 	def("xcrawl", "XCrawl", IsXcrawlAvailable, SearchWithXCrawl)
 	def("jina", "Jina", IsJinaSearchAvailable, SearchWithJina)
 	def("searxng", "SearXNG", nil, SearchWithSearXNG)
-	providerTable["searxng"].availableErr = IsSearXNGAvailable
+	providerTable["searxng"].availableErr = func(context.Context, FullSearchOptions) (bool, error) { return IsSearXNGAvailable() }
 	def("parallel", "Parallel", IsParallelAvailable, SearchWithParallel)
 	def("parallel-mcp", "Parallel MCP", IsParallelMCPAvailable, SearchWithParallelMCP)
 	def("tinyfish", "TinyFish", IsTinyFishAvailable, SearchWithTinyFish)
@@ -153,19 +149,18 @@ func init() {
 	def("ollama", "Ollama", IsOllamaAvailable, SearchWithOllama)
 	def("brightdata", "Bright Data", IsBrightDataAvailable, SearchWithBrightData)
 	defCtx("gemini", "Gemini", geminiProviderAvailable, searchGeminiExplicit)
-	// Not ported yet: label and credential names as in the original.
-	for _, p := range []struct{ name, label, cfg, env string }{
-		{"openai", "OpenAI", "openaiApiKey", "OPENAI_API_KEY"},
-		{"kimi", "Kimi", "kimiApiKey", "KIMI_API_KEY"},
-		{"xai", "xAI", "xaiApiKey", "XAI_API_KEY"},
-		{"mistral", "Mistral", "mistralApiKey", "MISTRAL_API_KEY"},
-	} {
-		avail := func() bool { return false }
-		if p.cfg != "" {
-			avail = credAvail(p.label, p.cfg, p.env)
-		}
-		def(p.name, p.label, avail, nil)
-	}
+	defCtx("openai", "OpenAI", func(ctx context.Context, o FullSearchOptions) bool {
+		ok, _ := openAIAvailable(ctx, o)
+		return ok
+	}, searchOpenAIProvider)
+	providerTable["openai"].availableErr = openAIAvailable
+	defCtx("xai", "xAI", func(ctx context.Context, _ FullSearchOptions) bool {
+		return IsXaiSearchAvailable(ExtensionContextFrom(ctx))
+	}, SearchWithXai)
+	defCtx("kimi", "Kimi", func(ctx context.Context, _ FullSearchOptions) bool {
+		return IsKimiSearchAvailable(ExtensionContextFrom(ctx))
+	}, SearchWithKimi)
+	def("mistral", "Mistral", IsMistralAvailable, SearchWithMistral)
 }
 
 // ProviderLabel is providerLabel().
@@ -410,12 +405,15 @@ func ClassifyProviderError(provider string, err error) *SearchProviderError {
 	}
 	kind := "unknown"
 	var credErr *CredentialResolutionError
+	var alphaUnsupported *OpenAIAlphaSearchUnsupportedError
 	var netErr interface{ Timeout() bool }
 	switch {
 	case errors.As(err, &credErr) || credentialRE.MatchString(lower):
 		kind = "credential"
 	case isAbortError(err):
 		kind = "aborted"
+	case errors.As(err, &alphaUnsupported):
+		kind = "unsupported"
 	case provider == "xai" && status == 403 && xaiQuotaRE.MatchString(lower):
 		kind = "quota"
 	case status == 401 || status == 403:
@@ -454,14 +452,14 @@ func isProviderAvailable(provider string) bool {
 }
 
 // providerAvailable is isResolvedProviderAvailable upstream; its error is the provider's own
-// configuration failing to load and ends the search.
+// configuration failing to load and ends the search (OpenAI's is a fallback note in auto).
 func providerAvailable(ctx context.Context, provider string, o FullSearchOptions) (bool, error) {
 	d := providerTable[provider]
 	if d == nil {
 		return false, nil
 	}
 	if d.availableErr != nil {
-		return d.availableErr()
+		return d.availableErr(ctx, o)
 	}
 	return d.available(ctx, o), nil
 }
@@ -595,7 +593,12 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 func searchWithConfiguredRouting(ctx context.Context, query string, o FullSearchOptions, routing *SearchRouting) (*AttributedSearchResponse, error) {
 	var diagnostics []string
 	for _, provider := range routing.Providers {
-		ok, err := providerAvailable(ctx, provider, o)
+		// searchRouting.useCurrentModel makes the openai entry use the selected model.
+		pctx := ctx
+		if provider == "openai" && routing.UseCurrentModel != nil && *routing.UseCurrentModel {
+			pctx = withCurrentModelSearch(ctx)
+		}
+		ok, err := providerAvailable(pctx, provider, o)
 		if err != nil {
 			return nil, err
 		}
@@ -603,7 +606,7 @@ func searchWithConfiguredRouting(ctx context.Context, query string, o FullSearch
 			diagnostics = append(diagnostics, provider+": unavailable")
 			continue
 		}
-		r, err := searchWithResolvedProvider(ctx, provider, query, o)
+		r, err := searchWithResolvedProvider(pctx, provider, query, o)
 		if err == nil {
 			return &AttributedSearchResponse{SearchResponse: r.SearchResponse, Provider: provider}, nil
 		}
@@ -669,13 +672,33 @@ func Search(ctx context.Context, query string, o FullSearchOptions) (*Attributed
 // autoOrder is the automatic provider order of the original.
 var autoOrder = []string{"searxng", "openai", "exa", "brave", "parallel", "tinyfish", "search1api", "searchinfinity", "querit", "tavily", "firecrawl", "jina", "serpdive", "kagi", "bocha", "ollama", "perplexity", "gemini"}
 
+// autoOrderFor is the automatic order of a call. OpenAI goes right after SearXNG when no
+// session context is attached or the selected model is an OpenAI Codex one, and after Exa
+// otherwise (gemini-search.ts:660-690).
+func autoOrderFor(ctx context.Context) []string {
+	ec := ExtensionContextFrom(ctx)
+	if ec == nil || openAICodexSelected(ec) {
+		return autoOrder
+	}
+	order := make([]string, 0, len(autoOrder))
+	for _, p := range autoOrder {
+		if p != "openai" {
+			order = append(order, p)
+		}
+		if p == "exa" {
+			order = append(order, "openai")
+		}
+	}
+	return order
+}
+
 func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *searchConfig) (*AttributedSearchResponse, error) {
 	var fallbackErrors []string
 	allowed := cfg.allowed
 	if allowed == nil {
 		allowed = ResolvedProviders
 	}
-	for _, p := range autoOrder {
+	for _, p := range autoOrderFor(ctx) {
 		if p == "gemini" && sliceHas(allowed, p) {
 			// Unlike the other providers Gemini has no availability gate in auto: it answers, or
 			// reports nothing, and its own failures (other than credentials and aborts) are dropped
@@ -694,9 +717,16 @@ func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *sea
 		if !sliceHas(allowed, p) {
 			continue
 		}
-		if ok, err := providerAvailable(ctx, p, o); err != nil {
-			return nil, err
-		} else if !ok {
+		ok, availErr := providerAvailable(ctx, p, o)
+		if availErr != nil {
+			if p != "openai" || isAbortError(availErr) {
+				return nil, availErr
+			}
+			// tryOpenAIInAuto: an OpenAI configuration error is one more fallback note.
+			fallbackErrors = append(fallbackErrors, ProviderLabel(p)+": "+availErr.Error())
+			continue
+		}
+		if !ok {
 			continue
 		}
 		r, err := searchWithResolvedProvider(ctx, p, query, o)
