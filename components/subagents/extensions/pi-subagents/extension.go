@@ -83,8 +83,12 @@ func textResult(text string, isError bool) sdk.ToolResult {
 // an init() in its own file, so no slice edits Extension() for another.
 var extensionHooks []func(e *sdk.Extension)
 
-// Extension returns the subagents extension.
+// Extension returns the subagents extension: in a child process started with a role (childRoleEnv) only the tools of that role
+// (child_role.go), otherwise the parent's tools and commands.
 func Extension() *sdk.Extension {
+	if role := childRole(); role != nil {
+		return childExtension(role)
+	}
 	e := sdk.New(extensionID)
 	defs := toolDefs()
 
