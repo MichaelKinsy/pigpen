@@ -858,15 +858,6 @@ func TestExtractGuards(t *testing.T) {
 			t.Fatal("request sent")
 		}
 	})
-	t.Run("frame and timestamp extraction of remote videos is refused", func(t *testing.T) {
-		extractEnv(t, "")
-		useNet(t, func(netCall) netReply { return reply(200, "x") })
-		o := pageOpts()
-		o.Frames = 3
-		if got, want := errOf(ExtractContent(bg(), "https://www.youtube.com/watch?v=dQw4w9WgXcQ", o)), refusal("video frame and timestamp extraction"); got != want {
-			t.Fatalf("error = %q, want %q", got, want)
-		}
-	})
 }
 
 func itoa(i int) string { return strconv.Itoa(i) }

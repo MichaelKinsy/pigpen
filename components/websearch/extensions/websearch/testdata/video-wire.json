@@ -1,0 +1,4656 @@
+{
+ "recorder": "port/record-video-requests.mjs",
+ "cases": {
+  "youtube-gemini-api": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://youtu.be/dQw4w9WgXcQ?t=5",
+   "options": {},
+   "responses": [
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# Rick\n\nThe video."
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "match": "img.youtube.com",
+     "bytesBase64": "dGh1bWItYnl0ZXM=",
+     "headers": {
+      "content-type": "image/jpeg"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}},{\"text\":\"Extract the complete content of this YouTube video. Include:\\n1. Video title, channel name, and duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "GET",
+     "url": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+     "headers": {},
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "https://youtu.be/dQw4w9WgXcQ?t=5",
+    "title": "Rick",
+    "content": "# Rick\n\nThe video.",
+    "error": null,
+    "thumbnail": {
+     "data": "dGh1bWItYnl0ZXM=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "youtube-prompt-model": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "prompt": "What is said?",
+    "model": "gemini-test"
+   },
+   "responses": [
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "no heading here"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "match": "img.youtube.com",
+     "status": 404
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-test:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}},{\"text\":\"What is said?\"}]}]}"
+    },
+    {
+     "method": "GET",
+     "url": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+     "headers": {},
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "YouTube Video",
+    "content": "no heading here",
+    "error": null
+   }
+  },
+  "youtube-model-from-config": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": {
+    "youtube": {
+     "preferredModel": " gemini-config "
+    }
+   },
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# Configured"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "match": "img.youtube.com",
+     "bytesBase64": "dGh1bWItYnl0ZXM=",
+     "headers": {
+      "content-type": "image/jpeg"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-config:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}},{\"text\":\"Extract the complete content of this YouTube video. Include:\\n1. Video title, channel name, and duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "GET",
+     "url": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+     "headers": {},
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Configured",
+    "content": "# Configured",
+    "error": null,
+    "thumbnail": {
+     "data": "dGh1bWItYnl0ZXM=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "youtube-image-disabled": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": {
+    "image": {
+     "enabled": false
+    }
+   },
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# No thumbnail"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}},{\"text\":\"Extract the complete content of this YouTube video. Include:\\n1. Video title, channel name, and duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "No thumbnail",
+    "content": "# No thumbnail",
+    "error": null
+   }
+  },
+  "youtube-perplexity-default-prompt": {
+   "env": {
+    "PERPLEXITY_API_KEY": "synthetic-perplexity-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [
+    {
+     "match": "api.perplexity.ai",
+     "json": {
+      "choices": [
+       {
+        "message": {
+         "content": "It is a song."
+        }
+       }
+      ],
+      "citations": []
+     }
+    },
+    {
+     "match": "img.youtube.com",
+     "bytesBase64": "dGh1bWItYnl0ZXM=",
+     "headers": {
+      "content-type": "image/jpeg"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.perplexity.ai/chat/completions",
+     "headers": {
+      "authorization": "Bearer synthetic-perplexity-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"sonar\",\"messages\":[{\"role\":\"user\",\"content\":\"Summarize this YouTube video in detail: https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}],\"max_tokens\":1024,\"return_related_questions\":false}"
+    },
+    {
+     "method": "GET",
+     "url": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+     "headers": {},
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Video Summary (via Perplexity)",
+    "content": "# Video Summary (via Perplexity)\n\nIt is a song.\n\n*Full video understanding requires Gemini access. Set GEMINI_API_KEY or sign into Google in a supported Chromium browser.*",
+    "error": null,
+    "thumbnail": {
+     "data": "dGh1bWItYnl0ZXM=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "youtube-perplexity-custom-prompt": {
+   "env": {
+    "PERPLEXITY_API_KEY": "synthetic-perplexity-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "prompt": "List the chapters."
+   },
+   "responses": [
+    {
+     "match": "api.perplexity.ai",
+     "json": {
+      "choices": [
+       {
+        "message": {
+         "content": "Chapter one."
+        }
+       }
+      ],
+      "citations": []
+     }
+    },
+    {
+     "match": "img.youtube.com",
+     "bytesBase64": "dGh1bWItYnl0ZXM=",
+     "headers": {
+      "content-type": "image/jpeg"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.perplexity.ai/chat/completions",
+     "headers": {
+      "authorization": "Bearer synthetic-perplexity-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"sonar\",\"messages\":[{\"role\":\"user\",\"content\":\"List the chapters. YouTube video: https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}],\"max_tokens\":1024,\"return_related_questions\":false}"
+    },
+    {
+     "method": "GET",
+     "url": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+     "headers": {},
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Video Summary (via Perplexity)",
+    "content": "# Video Summary (via Perplexity)\n\nChapter one.\n\n*Full video understanding requires Gemini access. Set GEMINI_API_KEY or sign into Google in a supported Chromium browser.*",
+    "error": null,
+    "thumbnail": {
+     "data": "dGh1bWItYnl0ZXM=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "youtube-gemini-error-then-perplexity": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key",
+    "PERPLEXITY_API_KEY": "synthetic-perplexity-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [
+    {
+     "match": ":generateContent",
+     "status": 503,
+     "json": {
+      "error": {
+       "message": "model overloaded"
+      }
+     }
+    },
+    {
+     "match": "api.perplexity.ai",
+     "json": {
+      "choices": [
+       {
+        "message": {
+         "content": "Fallback answer."
+        }
+       }
+      ],
+      "citations": []
+     }
+    },
+    {
+     "match": "img.youtube.com",
+     "bytesBase64": "dGh1bWItYnl0ZXM=",
+     "headers": {
+      "content-type": "image/jpeg"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}},{\"text\":\"Extract the complete content of this YouTube video. Include:\\n1. Video title, channel name, and duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "POST",
+     "url": "https://api.perplexity.ai/chat/completions",
+     "headers": {
+      "authorization": "Bearer synthetic-perplexity-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"sonar\",\"messages\":[{\"role\":\"user\",\"content\":\"Summarize this YouTube video in detail: https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}],\"max_tokens\":1024,\"return_related_questions\":false}"
+    },
+    {
+     "method": "GET",
+     "url": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+     "headers": {},
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Video Summary (via Perplexity)",
+    "content": "# Video Summary (via Perplexity)\n\nFallback answer.\n\n*Full video understanding requires Gemini access. Set GEMINI_API_KEY or sign into Google in a supported Chromium browser.*",
+    "error": null,
+    "thumbnail": {
+     "data": "dGh1bWItYnl0ZXM=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "youtube-all-paths-fail": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key",
+    "PERPLEXITY_API_KEY": "synthetic-perplexity-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [
+    {
+     "match": ":generateContent",
+     "status": 503,
+     "json": {
+      "error": {
+       "message": "model overloaded"
+      }
+     }
+    },
+    {
+     "match": "api.perplexity.ai",
+     "status": 401,
+     "text": "bad key"
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}},{\"text\":\"Extract the complete content of this YouTube video. Include:\\n1. Video title, channel name, and duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "POST",
+     "url": "https://api.perplexity.ai/chat/completions",
+     "headers": {
+      "authorization": "Bearer synthetic-perplexity-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"sonar\",\"messages\":[{\"role\":\"user\",\"content\":\"Summarize this YouTube video in detail: https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}],\"max_tokens\":1024,\"return_related_questions\":false}"
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "",
+    "content": "",
+    "error": "Could not extract YouTube video content.\n\n- Gemini API: Gemini API error 503: {\"error\":{\"message\":\"model overloaded\"}}\n- Perplexity: Perplexity API error 401: bad key"
+   }
+  },
+  "youtube-perplexity-empty-answer": {
+   "env": {
+    "PERPLEXITY_API_KEY": "synthetic-perplexity-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [
+    {
+     "match": "api.perplexity.ai",
+     "json": {
+      "choices": [
+       {
+        "message": {
+         "content": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.perplexity.ai/chat/completions",
+     "headers": {
+      "authorization": "Bearer synthetic-perplexity-key",
+      "content-type": "application/json"
+     },
+     "body": "{\"model\":\"sonar\",\"messages\":[{\"role\":\"user\",\"content\":\"Summarize this YouTube video in detail: https://www.youtube.com/watch?v=dQw4w9WgXcQ\"}],\"max_tokens\":1024,\"return_related_questions\":false}"
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "",
+    "content": "",
+    "error": "Could not extract YouTube video content. Sign into Google in a supported Chromium browser for automatic access, or set GEMINI_API_KEY."
+   }
+  },
+  "youtube-no-access": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "",
+    "content": "",
+    "error": "Could not extract YouTube video content. Sign into Google in a supported Chromium browser for automatic access, or set GEMINI_API_KEY."
+   }
+  },
+  "youtube-playlist-is-a-page": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/playlist?list=PL1234567890abcdefghij",
+   "options": {},
+   "responses": [
+    {
+     "match": "youtube.com",
+     "status": 404,
+     "text": "nope",
+     "headers": {
+      "content-type": "text/html"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://www.youtube.com/playlist?list=PL1234567890abcdefghij",
+     "headers": {
+      "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "accept-language": "en-US,en;q=0.9",
+      "cache-control": "no-cache",
+      "sec-fetch-dest": "document",
+      "sec-fetch-mode": "navigate",
+      "sec-fetch-site": "none",
+      "sec-fetch-user": "?1",
+      "upgrade-insecure-requests": "1",
+      "user-agent": "OpenAI File Downloader, XaiImageApiFetch/1.0"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/playlist?list=PL1234567890abcdefghij",
+    "title": "",
+    "content": "",
+    "error": "HTTP 404: \n\nThe origin server says this page does not exist (HTTP 404), so extraction providers cannot retrieve it.\nThe page may have moved or been renamed. Find the current URL, then retry the fetch with it.",
+    "status": 404
+   }
+  },
+  "youtube-disabled": {
+   "env": {},
+   "config": {
+    "youtube": {
+     "enabled": false
+    }
+   },
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [
+    {
+     "match": "youtube.com",
+     "status": 404,
+     "text": "nope",
+     "headers": {
+      "content-type": "text/html"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+     "headers": {
+      "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "accept-language": "en-US,en;q=0.9",
+      "cache-control": "no-cache",
+      "sec-fetch-dest": "document",
+      "sec-fetch-mode": "navigate",
+      "sec-fetch-site": "none",
+      "sec-fetch-user": "?1",
+      "upgrade-insecure-requests": "1",
+      "user-agent": "OpenAI File Downloader, XaiImageApiFetch/1.0"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "",
+    "content": "",
+    "error": "HTTP 404: \n\nThe origin server says this page does not exist (HTTP 404), so extraction providers cannot retrieve it.\nThe page may have moved or been renamed. Find the current URL, then retry the fetch with it.",
+    "status": 404
+   }
+  },
+  "youtube-bad-config": {
+   "env": {},
+   "config": null,
+   "rawConfig": "{ not json",
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {},
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "",
+    "content": "",
+    "error": "Failed to parse <root>/web-search.json: Expected property name or '}' in JSON at position 2 (line 1 column 3)"
+   }
+  },
+  "youtube-frames": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 3
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "0",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "63",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "125",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:00-2:05 (3/3)",
+    "content": "3 frames extracted from 0:00-2:05",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:00"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "1:03"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "2:05"
+     }
+    ],
+    "duration": 125.5
+   }
+  },
+  "youtube-frames-default-density": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '20\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 6
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "0",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "5",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "10",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "15",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "20",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:00-0:20 (5/5)",
+    "content": "5 frames extracted from 0:00-0:20",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:00"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:05"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:10"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:15"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:20"
+     }
+    ],
+    "duration": 20
+   }
+  },
+  "youtube-frames-unknown-duration": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf 'NA\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames",
+    "content": "Cannot determine video duration. Use a timestamp range instead.",
+    "error": "Cannot determine video duration. Use a timestamp range instead."
+   }
+  },
+  "youtube-frame-single": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "1:23"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "83",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frame at 1:23",
+    "content": "Video frame at 1:23",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "youtube-frame-hours": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '9000\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "1:02:03"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "3723",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frame at 1:02:03",
+    "content": "Video frame at 1:02:03",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "youtube-frame-past-end": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "5:00"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frame at 5:00",
+    "content": "Timestamp 5:00 exceeds video duration (2:05)",
+    "error": "Timestamp 5:00 exceeds video duration (2:05)"
+   }
+  },
+  "youtube-frames-from-timestamp": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "10",
+    "frames": 3
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "10",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "15",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "20",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:10-0:20 (3/3)",
+    "content": "3 frames extracted from 0:10-0:20",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:10"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:15"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:20"
+     }
+    ],
+    "duration": 125.5
+   }
+  },
+  "youtube-frames-from-timestamp-past-end": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "120",
+    "frames": 3
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 2:00-2:10",
+    "content": "Timestamp 2:10 exceeds video duration (2:05)",
+    "error": "Timestamp 2:10 exceeds video duration (2:05)"
+   }
+  },
+  "youtube-range": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "0:10-1:10"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "10",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "22",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "34",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "46",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "58",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "70",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:10-1:10 (6/6)",
+    "content": "6 frames extracted from 0:10-1:10",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:10"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:22"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:34"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:46"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:58"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "1:10"
+     }
+    ],
+    "duration": 125.5
+   }
+  },
+  "youtube-range-dense": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "0:10-0:20",
+    "frames": 5
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "10",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "15",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "20",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:10-0:20 (3/3)",
+    "content": "3 frames extracted from 0:10-0:20",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:10"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:15"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:20"
+     }
+    ],
+    "duration": 125.5
+   }
+  },
+  "youtube-range-past-end": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "1:00-5:00"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 1:00-5:00",
+    "content": "Timestamp 5:00 exceeds video duration (2:05)",
+    "error": "Timestamp 5:00 exceeds video duration (2:05)"
+   }
+  },
+  "youtube-range-unknown-duration": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf 'NA\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "0:10-0:40"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "10",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "16",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "22",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "28",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "34",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "40",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:10-0:40 (6/6)",
+    "content": "6 frames extracted from 0:10-0:40",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:10"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:16"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:22"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:28"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:34"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:40"
+     }
+    ]
+   }
+  },
+  "youtube-frame-ffmpeg-partial": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*'-ss 15 '*) printf ''; printf '%s' 'boom\n' >&2; exit 1;;\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "0:00-0:30",
+    "frames": 3
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "0",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "15",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "30",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:00-0:30 (2/3)",
+    "content": "2 frames extracted from 0:00-0:30",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:00"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:30"
+     }
+    ],
+    "duration": 125.5
+   }
+  },
+  "youtube-frame-ffmpeg-all-fail": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'Server returned 403 Forbidden\n' >&2; exit 1;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "10-30"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "10",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "15",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "20",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "25",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "30",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:10-0:30 (0/5)",
+    "content": "Stream URL returned 403 — may have expired, try again",
+    "error": "Stream URL returned 403 — may have expired, try again"
+   }
+  },
+  "youtube-frame-ffmpeg-empty": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "10"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "10",
+     "-i",
+     "https://stream.example/video.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frame at 10",
+    "content": "ffmpeg failed: empty output",
+    "error": "ffmpeg failed: empty output"
+   }
+  },
+  "youtube-frame-ffmpeg-missing": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "10"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frame at 10",
+    "content": "ffmpeg is not installed. Install with: brew install ffmpeg",
+    "error": "ffmpeg is not installed. Install with: brew install ffmpeg"
+   }
+  },
+  "youtube-ytdlp-missing": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames",
+    "content": "yt-dlp is not installed. Install with: brew install yt-dlp",
+    "error": "yt-dlp is not installed. Install with: brew install yt-dlp"
+   }
+  },
+  "youtube-ytdlp-private": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'ERROR: Private video. Sign in\n' >&2; exit 1;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "5"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frame at 5",
+    "content": "Video is private or unavailable",
+    "error": "Video is private or unavailable"
+   }
+  },
+  "youtube-ytdlp-sign-in": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'ERROR: Please sign in\n' >&2; exit 1;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "5-30"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:05-0:30",
+    "content": "Video is age-restricted and requires authentication",
+    "error": "Video is age-restricted and requires authentication"
+   }
+  },
+  "youtube-ytdlp-unavailable": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'ERROR: Video not available\n' >&2; exit 1;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "5",
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:05-0:10",
+    "content": "Video is unavailable in your region or has been removed",
+    "error": "Video is unavailable in your region or has been removed"
+   }
+  },
+  "youtube-ytdlp-live": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'ERROR: This live event will begin\n' >&2; exit 1;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames",
+    "content": "Cannot extract frames from a live stream",
+    "error": "Cannot extract frames from a live stream"
+   }
+  },
+  "youtube-ytdlp-other": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'ERROR:   something\n  odd happened\n' >&2; exit 1;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames",
+    "content": "yt-dlp failed: ERROR: something odd happened",
+    "error": "yt-dlp failed: ERROR: something odd happened"
+   }
+  },
+  "youtube-ytdlp-silent-failure": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' '' >&2; exit 3;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames",
+    "content": "yt-dlp failed: Command failed: yt-dlp --print duration -g https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "error": "yt-dlp failed: Command failed: yt-dlp --print duration -g https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+   }
+  },
+  "youtube-ytdlp-no-stream": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames",
+    "content": "yt-dlp failed: missing stream URL",
+    "error": "yt-dlp failed: missing stream URL"
+   }
+  },
+  "youtube-ytdlp-crlf": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '30\\r\\nhttps://stream.example/crlf.mp4\\r\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [
+    [
+     "--print",
+     "duration",
+     "-g",
+     "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
+    [
+     "-ss",
+     "0",
+     "-i",
+     "https://stream.example/crlf.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "30",
+     "-i",
+     "https://stream.example/crlf.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "Frames 0:00-0:30 (2/2)",
+    "content": "2 frames extracted from 0:00-0:30",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:00"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:30"
+     }
+    ],
+    "duration": 30
+   }
+  },
+  "frames-need-image-support": {
+   "env": {},
+   "config": {
+    "image": {
+     "enabled": false
+    }
+   },
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "",
+    "content": "",
+    "error": "Image fetching is disabled by image.enabled"
+   }
+  },
+  "timestamp-invalid": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "later"
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "",
+    "content": "",
+    "error": "Invalid timestamp format: \"later\". Use \"H:MM:SS\", \"MM:SS\", \"85\", or \"start-end\"."
+   }
+  },
+  "timestamp-reversed-range-is-invalid": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "yt-dlp": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '125.5\\nhttps://stream.example/video.mp4\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+   "options": {
+    "timestamp": "1:00-0:10"
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "title": "",
+    "content": "",
+    "error": "Invalid timestamp format: \"1:00-0:10\". Use \"H:MM:SS\", \"MM:SS\", \"85\", or \"start-end\"."
+   }
+  },
+  "frames-of-a-page": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://example.com/page",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "https://example.com/page",
+    "title": "",
+    "content": "",
+    "error": "Frame extraction only works with YouTube and local video files"
+   }
+  },
+  "timestamp-of-a-page": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {},
+   "url": "https://example.com/page",
+   "options": {
+    "timestamp": "1:00"
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "https://example.com/page",
+    "title": "",
+    "content": "",
+    "error": "Timestamp extraction only works with YouTube and local video files"
+   }
+  },
+  "local-frames": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "frames": 4
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-v",
+     "quiet",
+     "-show_entries",
+     "format=duration",
+     "-of",
+     "csv=p=0",
+     "<root>/clip.mp4"
+    ],
+    [
+     "-ss",
+     "0",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "25",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "50",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "75",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames 0:00-1:15 (4/4)",
+    "content": "4 frames extracted from 0:00-1:15",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:00"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:25"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:50"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "1:15"
+     }
+    ],
+    "duration": 75.25
+   }
+  },
+  "local-frames-ffprobe-missing": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "frames": 4
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames",
+    "content": "ffprobe is not installed. Install ffmpeg which includes ffprobe",
+    "error": "ffprobe is not installed. Install ffmpeg which includes ffprobe"
+   }
+  },
+  "local-frames-ffprobe-garbage": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf 'N/A\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "frames": 4
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-v",
+     "quiet",
+     "-show_entries",
+     "format=duration",
+     "-of",
+     "csv=p=0",
+     "<root>/clip.mp4"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames",
+    "content": "ffprobe failed: invalid duration output",
+    "error": "ffprobe failed: invalid duration output"
+   }
+  },
+  "local-frames-ffprobe-failure": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'moov atom not found\n' >&2; exit 1;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "frames": 4
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-v",
+     "quiet",
+     "-show_entries",
+     "format=duration",
+     "-of",
+     "csv=p=0",
+     "<root>/clip.mp4"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames",
+    "content": "ffprobe failed: moov atom not found",
+    "error": "ffprobe failed: moov atom not found"
+   }
+  },
+  "local-frames-ffprobe-silent-failure": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' '' >&2; exit 1;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "frames": 4
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-v",
+     "quiet",
+     "-show_entries",
+     "format=duration",
+     "-of",
+     "csv=p=0",
+     "<root>/clip.mp4"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames",
+    "content": "ffprobe failed: Command failed: ffprobe -v quiet -show_entries format=duration -of csv=p=0 <root>/clip.mp4",
+    "error": "ffprobe failed: Command failed: ffprobe -v quiet -show_entries format=duration -of csv=p=0 <root>/clip.mp4"
+   }
+  },
+  "local-frame-single": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "timestamp": "12"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-ss",
+     "12",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frame at 12",
+    "content": "Video frame at 12",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "local-frame-file-url": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "file://<root>/clip.mp4",
+   "options": {
+    "timestamp": "0:05"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-ss",
+     "5",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "file://<root>/clip.mp4",
+    "title": "Frame at 0:05",
+    "content": "Video frame at 0:05",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "local-frame-spaced-name": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "my clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/my clip.mp4",
+   "options": {
+    "timestamp": "7"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-ss",
+     "7",
+     "-i",
+     "<root>/my clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/my clip.mp4",
+    "title": "Frame at 7",
+    "content": "Video frame at 7",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "local-frame-ffmpeg-missing": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {},
+   "url": "<root>/clip.mp4",
+   "options": {
+    "timestamp": "12"
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frame at 12",
+    "content": "ffmpeg is not installed. Install with: brew install ffmpeg",
+    "error": "ffmpeg is not installed. Install with: brew install ffmpeg"
+   }
+  },
+  "local-frame-ffmpeg-failure": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'Invalid data found when processing input\n' >&2; exit 1;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "timestamp": "12"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-ss",
+     "12",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frame at 12",
+    "content": "ffmpeg failed: Invalid data found when processing input",
+    "error": "ffmpeg failed: Invalid data found when processing input"
+   }
+  },
+  "local-frames-from-timestamp": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "timestamp": "20",
+    "frames": 3
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-ss",
+     "20",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "25",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "30",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames 0:20-0:30 (3/3)",
+    "content": "3 frames extracted from 0:20-0:30",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:20"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:25"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:30"
+     }
+    ]
+   }
+  },
+  "local-range": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "timestamp": "0:10-1:00"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-ss",
+     "10",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "20",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "30",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "40",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "50",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "60",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames 0:10-1:00 (6/6)",
+    "content": "6 frames extracted from 0:10-1:00",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:10"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:20"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:30"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:40"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:50"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "1:00"
+     }
+    ]
+   }
+  },
+  "local-range-dense": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "timestamp": "0:10-0:22",
+    "frames": 4
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-ss",
+     "10",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "15",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ],
+    [
+     "-ss",
+     "20",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames 0:10-0:22 (3/3)",
+    "content": "3 frames extracted from 0:10-0:22",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:10"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:15"
+     },
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:20"
+     }
+    ]
+   }
+  },
+  "local-oversize-analysis": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {
+    "clip.mp4": 52428801
+   },
+   "scripts": {},
+   "url": "<root>/clip.mp4",
+   "options": {
+    "prompt": "summarize"
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "clip.mp4",
+    "content": "Local video clip.mp4 is 50.0 MiB, above configured video.maxSizeMB (50.0 MiB) for Gemini analysis. Use timestamp/frames for ffmpeg frame extraction, increase video.maxSizeMB, or compress the file.",
+    "error": "Local video clip.mp4 is 50.0 MiB, above configured video.maxSizeMB (50.0 MiB) for Gemini analysis. Use timestamp/frames for ffmpeg frame extraction, increase video.maxSizeMB, or compress the file."
+   }
+  },
+  "local-oversize-config-limit": {
+   "env": {},
+   "config": {
+    "video": {
+     "maxSizeMB": 0.00001
+    }
+   },
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {},
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "clip.mp4",
+    "content": "Local video clip.mp4 is 0.0 MiB, above configured video.maxSizeMB (0.0 MiB) for Gemini analysis. Use timestamp/frames for ffmpeg frame extraction, increase video.maxSizeMB, or compress the file.",
+    "error": "Local video clip.mp4 is 0.0 MiB, above configured video.maxSizeMB (0.0 MiB) for Gemini analysis. Use timestamp/frames for ffmpeg frame extraction, increase video.maxSizeMB, or compress the file."
+   }
+  },
+  "local-oversize-frames": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {
+    "clip.mp4": 52428801
+   },
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "frames": 1
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-v",
+     "quiet",
+     "-show_entries",
+     "format=duration",
+     "-of",
+     "csv=p=0",
+     "<root>/clip.mp4"
+    ],
+    [
+     "-ss",
+     "0",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frames 0:00-1:15 (1/1)",
+    "content": "1 frames extracted from 0:00-1:15",
+    "error": null,
+    "frames": [
+     {
+      "data": "/9j/4EpGSUY=",
+      "mimeType": "image/jpeg",
+      "timestamp": "0:00"
+     }
+    ],
+    "duration": 75.25
+   }
+  },
+  "local-oversize-timestamp": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {
+    "clip.mp4": 52428801
+   },
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "timestamp": "1"
+   },
+   "responses": [],
+   "commands": [
+    [
+     "-ss",
+     "1",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Frame at 1",
+    "content": "Video frame at 1",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "local-video-disabled": {
+   "env": {},
+   "config": {
+    "video": {
+     "enabled": false
+    }
+   },
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Frame extraction only works with YouTube and local video files"
+   }
+  },
+  "local-video-missing-file": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {},
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/absent.mp4",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/absent.mp4",
+    "title": "",
+    "content": "",
+    "error": "Frame extraction only works with YouTube and local video files"
+   }
+  },
+  "local-not-a-video": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "notes.txt": "x"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/notes.txt",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/notes.txt",
+    "title": "",
+    "content": "",
+    "error": "Frame extraction only works with YouTube and local video files"
+   }
+  },
+  "local-video-bad-config": {
+   "env": {},
+   "config": null,
+   "rawConfig": "{ not json",
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "frames": 2
+   },
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Failed to parse <root>/web-search.json: Expected property name or '}' in JSON at position 2 (line 1 column 3)"
+   }
+  },
+  "local-gemini-api": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "ACTIVE"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    },
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# Local Clip\n\nContent."
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "commands": [
+    [
+     "-ss",
+     "1",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"files/synthetic\",\"mimeType\":\"video/mp4\"}},{\"text\":\"Extract the complete content of this video. Include:\\n1. Video title (infer from content if not explicit), duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "DELETE",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Local Clip",
+    "content": "# Local Clip\n\nContent.",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "local-gemini-api-title-from-name": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {
+    "prompt": "what happens",
+    "model": "gemini-test"
+   },
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "ACTIVE"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    },
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "plain text"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "commands": [
+    [
+     "-ss",
+     "1",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-test:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"files/synthetic\",\"mimeType\":\"video/mp4\"}},{\"text\":\"what happens\"}]}]}"
+    },
+    {
+     "method": "DELETE",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "clip",
+    "content": "plain text",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "local-gemini-api-relay": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": {
+    "geminiBaseUrl": "https://relay.example.com"
+   },
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://relay.example.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "ACTIVE"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    },
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# Relay video"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "commands": [
+    [
+     "-ss",
+     "1",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://relay.example.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://relay.example.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://relay.example.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://relay.example.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"files/synthetic\",\"mimeType\":\"video/mp4\"}},{\"text\":\"Extract the complete content of this video. Include:\\n1. Video title (infer from content if not explicit), duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "DELETE",
+     "url": "https://relay.example.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Relay video",
+    "content": "# Relay video",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "local-gemini-api-processing-then-active": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "PROCESSING"
+     },
+     "times": 1
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "ACTIVE"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    },
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# Slow"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "commands": [
+    [
+     "-ss",
+     "1",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"files/synthetic\",\"mimeType\":\"video/mp4\"}},{\"text\":\"Extract the complete content of this video. Include:\\n1. Video title (infer from content if not explicit), duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "DELETE",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "Slow",
+    "content": "# Slow",
+    "error": null,
+    "thumbnail": {
+     "data": "/9j/4EpGSUY=",
+     "mimeType": "image/jpeg"
+    }
+   }
+  },
+  "local-gemini-api-file-failed": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "FAILED"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "DELETE",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in <root>/web-search.json"
+   }
+  },
+  "local-gemini-api-state-check-error": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "status": 500,
+     "text": "down"
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "DELETE",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in <root>/web-search.json"
+   }
+  },
+  "local-gemini-api-init-error": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "status": 403,
+     "text": "denied for synthetic-gemini-key"
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in <root>/web-search.json"
+   }
+  },
+  "local-gemini-api-no-upload-url": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "status": 200
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in <root>/web-search.json"
+   }
+  },
+  "local-gemini-api-upload-error": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "status": 500,
+     "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in <root>/web-search.json"
+   }
+  },
+  "local-gemini-api-no-file-in-reply": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {}
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in <root>/web-search.json"
+   }
+  },
+  "local-gemini-api-generate-error": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "ACTIVE"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    },
+    {
+     "match": ":generateContent",
+     "status": 400,
+     "text": "bad"
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"files/synthetic\",\"mimeType\":\"video/mp4\"}},{\"text\":\"Extract the complete content of this video. Include:\\n1. Video title (infer from content if not explicit), duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "DELETE",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in <root>/web-search.json"
+   }
+  },
+  "local-gemini-api-thumbnail-fails": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf ''; printf '%s' 'no\n' >&2; exit 1;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "ACTIVE"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    },
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# No thumb"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "commands": [
+    [
+     "-ss",
+     "1",
+     "-i",
+     "<root>/clip.mp4",
+     "-frames:v",
+     "1",
+     "-f",
+     "image2pipe",
+     "-vcodec",
+     "mjpeg",
+     "pipe:1"
+    ]
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"files/synthetic\",\"mimeType\":\"video/mp4\"}},{\"text\":\"Extract the complete content of this video. Include:\\n1. Video title (infer from content if not explicit), duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "DELETE",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "No thumb",
+    "content": "# No thumb",
+    "error": null
+   }
+  },
+  "local-gemini-api-image-disabled": {
+   "env": {
+    "GEMINI_API_KEY": "synthetic-gemini-key"
+   },
+   "config": {
+    "image": {
+     "enabled": false
+    }
+   },
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {},
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [
+    {
+     "match": "/upload/v1beta/files?upload_id",
+     "method": "PUT",
+     "json": {
+      "file": {
+       "name": "files/synthetic",
+       "uri": "files/synthetic"
+      }
+     }
+    },
+    {
+     "match": "/upload/v1beta/files",
+     "method": "POST",
+     "headers": {
+      "x-goog-upload-url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "GET",
+     "json": {
+      "state": "ACTIVE"
+     }
+    },
+    {
+     "match": "/v1beta/files/synthetic",
+     "method": "DELETE",
+     "status": 204
+    },
+    {
+     "match": ":generateContent",
+     "json": {
+      "candidates": [
+       {
+        "content": {
+         "parts": [
+          {
+           "text": "# No thumb"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "commands": [],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "start",
+      "x-goog-upload-header-content-length": "15",
+      "x-goog-upload-header-content-type": "video/mp4",
+      "x-goog-upload-protocol": "resumable"
+     },
+     "body": "{\"file\":{\"display_name\":\"clip.mp4\"}}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=synthetic",
+     "headers": {
+      "content-length": "15",
+      "x-goog-api-key": "synthetic-gemini-key",
+      "x-goog-upload-command": "upload, finalize",
+      "x-goog-upload-offset": "0"
+     },
+     "body": "synthetic media"
+    },
+    {
+     "method": "GET",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+     "headers": {
+      "content-type": "application/json",
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"fileData\":{\"fileUri\":\"files/synthetic\",\"mimeType\":\"video/mp4\"}},{\"text\":\"Extract the complete content of this video. Include:\\n1. Video title (infer from content if not explicit), duration\\n2. A brief summary (2-3 sentences)\\n3. Full transcript with timestamps\\n4. Descriptions of any code, terminal commands, diagrams, slides, or UI shown on screen\\n\\nFormat as markdown.\"}]}]}"
+    },
+    {
+     "method": "DELETE",
+     "url": "https://generativelanguage.googleapis.com/v1beta/files/synthetic",
+     "headers": {
+      "x-goog-api-key": "synthetic-gemini-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "No thumb",
+    "content": "# No thumb",
+    "error": null
+   }
+  },
+  "local-no-gemini": {
+   "env": {},
+   "config": null,
+   "rawConfig": null,
+   "files": {
+    "clip.mp4": "synthetic media"
+   },
+   "sparse": {},
+   "scripts": {
+    "ffprobe": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '75.25\\n'; printf '%s' '' >&2; exit 0;;\nesac\n",
+    "ffmpeg": "#!/bin/sh\n{ printf 'ARGS'; for a in \"$@\"; do printf '\\037%s' \"$a\"; done; printf '\\n'; } >> \"$SHIM_LOG\"\ncase \"$*\" in\n*) printf '\\377\\330\\377\\340JFIF'; printf '%s' '' >&2; exit 0;;\nesac\n"
+   },
+   "url": "<root>/clip.mp4",
+   "options": {},
+   "responses": [],
+   "commands": [],
+   "requests": [],
+   "result": {
+    "url": "<root>/clip.mp4",
+    "title": "",
+    "content": "",
+    "error": "Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in <root>/web-search.json"
+   }
+  }
+ }
+}

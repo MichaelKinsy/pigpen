@@ -19,6 +19,8 @@ type GeminiWebClient interface {
 	Diagnostic() string
 	// Query is queryWithCookies with the default model.
 	Query(ctx context.Context, prompt string, cookies GeminiWebCookies, timeout time.Duration) (string, error)
+	// QueryWithOptions is queryWithCookies with a model, a YouTube URL or files to attach.
+	QueryWithOptions(ctx context.Context, prompt string, cookies GeminiWebCookies, o GeminiWebOptions) (string, error)
 }
 
 var geminiWebClient GeminiWebClient = cookieGeminiWeb{}

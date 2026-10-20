@@ -163,21 +163,11 @@ func TestRefusalFetchAnswerMode(t *testing.T) {
 }
 
 func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
-	video := filepath.Join(t.TempDir(), "clip.mp4")
-	if err := os.WriteFile(video, []byte("not really a video"), 0o600); err != nil {
-		t.Fatal(err)
-	}
 	cases := []struct {
 		name    string
 		params  map[string]any
 		feature string
 	}{
-		{"YouTube", map[string]any{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}, "YouTube video extraction"},
-		{"YouTube with a prompt", map[string]any{"url": "https://youtu.be/dQw4w9WgXcQ", "prompt": "summarise"}, "YouTube video extraction"},
-		{"YouTube frames", map[string]any{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "frames": 3.0}, "video frame and timestamp extraction"},
-		{"YouTube timestamp", map[string]any{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "timestamp": "1:30"}, "video frame and timestamp extraction"},
-		{"local video", map[string]any{"url": video}, "local video file analysis"},
-		{"local video frames", map[string]any{"url": video, "frames": 2.0}, "video frame and timestamp extraction"},
 		{"GitHub repository", map[string]any{"url": "https://github.com/octocat/Hello-World"}, "GitHub repository extraction (clone)"},
 		{"GitHub tree", map[string]any{"url": "https://github.com/octocat/Hello-World/tree/main/docs", "forceClone": true}, "GitHub repository extraction (clone)"},
 		{"GitHub blob", map[string]any{"url": "https://github.com/octocat/Hello-World/blob/main/README"}, "GitHub repository extraction (clone)"},
@@ -197,8 +187,8 @@ func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
 	t.Run("a batch with one such URL is refused whole", func(t *testing.T) {
 		r, _ := newRuntime(t, "")
 		useNet(t, func(netCall) netReply { return reply(200, "x") })
-		_, err := execTool(t, r, "fetch_content", map[string]any{"urls": []any{"https://93.184.216.34/a", "https://youtu.be/dQw4w9WgXcQ"}})
-		wantRefusal(t, err, "YouTube video extraction")
+		_, err := execTool(t, r, "fetch_content", map[string]any{"urls": []any{"https://93.184.216.34/a", "https://github.com/octocat/Hello-World"}})
+		wantRefusal(t, err, "GitHub repository extraction (clone)")
 	})
 	t.Run("raw mode reads the page as is", func(t *testing.T) {
 		r, _ := newRuntime(t, "")
@@ -210,10 +200,10 @@ func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
 		}
 	})
 	t.Run("a disabled extractor leaves its URLs to the plain fetch", func(t *testing.T) {
-		cfg := `{"youtube":{"enabled":false},"githubClone":{"enabled":false},"githubPrIssue":{"enabled":false},"video":{"enabled":false}}`
-		for _, u := range []string{"https://www.youtube.com/watch?v=dQw4w9WgXcQ", "https://github.com/octocat/Hello-World", "https://github.com/octocat/Hello-World/issues/12", video} {
+		cfg := `{"githubClone":{"enabled":false},"githubPrIssue":{"enabled":false}}`
+		for _, u := range []string{"https://github.com/octocat/Hello-World", "https://github.com/octocat/Hello-World/issues/12"} {
 			extractEnv(t, cfg)
-			feature, err := unportedFetchFeature(u, ExtractOptions{})
+			feature, err := unportedFetchFeature(u)
 			if err != nil || feature != "" {
 				t.Fatalf("%s: feature %q, err %v", u, feature, err)
 			}
@@ -221,8 +211,8 @@ func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
 	})
 	t.Run("a page that is not one of them is not refused", func(t *testing.T) {
 		extractEnv(t, "")
-		for _, u := range []string{"https://www.youtube.com/playlist?list=PL1", "https://github.com/octocat", "https://github.com/octocat/Hello-World/issues", "https://github.com/octocat/Hello-World/pulls", "https://example.com/a.mp4", "https://example.com/"} {
-			feature, err := unportedFetchFeature(u, ExtractOptions{})
+		for _, u := range []string{"https://github.com/octocat", "https://github.com/octocat/Hello-World/issues", "https://github.com/octocat/Hello-World/pulls", "https://example.com/a.mp4", "https://example.com/"} {
+			feature, err := unportedFetchFeature(u)
 			if err != nil || feature != "" {
 				t.Fatalf("%s: feature %q, err %v", u, feature, err)
 			}

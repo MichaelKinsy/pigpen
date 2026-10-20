@@ -259,37 +259,53 @@ func TestUpstream_gemini_adc_auth(t *testing.T) {
 
 func TestUpstream_gemini_api_transport(t *testing.T) {
 	const f = "gemini-api-transport"
-	// The upstream cases drive video-extract.ts (upload, status, generate, delete). That file is the
-	// video slice; the Gemini transport it uses is covered here through the generate call.
 	tw(t, f, "Gemini generate, upload, status, and delete use only shared header auth", func(t *testing.T) {
-		adapted(t, "only the generate call of the transport (gemini-api.ts); the upload, status and delete requests are video-extract.ts, a later slice")
 		_, agentDir := geminiEnv(t)
 		writeConfig(t, agentDir, `{"geminiApiKey":"synthetic-gemini-key"}`)
-		n := useNet(t, func(netCall) netReply { return geminiText("# Synthetic video") })
-		text, err := QueryGeminiAPIWithVideo(bg(), "describe", "files/synthetic", GeminiAPIOptions{MimeType: "video/webm"})
+		n := useNet(t, geminiFilesAPI("https://generativelanguage.googleapis.com", "# Synthetic video"))
+		noMediaPrograms(t)
+		info := writeVideo(t, agentDir, "synthetic.webm", "video/webm", "synthetic media")
+		res, err := ExtractVideo(bg(), info, ExtractOptions{})
 		noErr(t, err)
-		if text != "# Synthetic video" || len(n.calls) != 1 {
-			t.Fatal(text, len(n.calls))
+		pendingGeminiDeletes.Wait()
+		if res == nil || res.Content != "# Synthetic video" {
+			t.Fatalf("%+v", res)
 		}
-		c := n.calls[0]
-		if c.URL != geminiPublicAPI+"/models/gemini-3.6-flash:generateContent" || c.Header.Get("x-goog-api-key") != "synthetic-gemini-key" ||
-			strings.Contains(c.URL, "key") || strings.Contains(c.URL, "synthetic-gemini-key") {
-			t.Fatalf("%v %v", c.URL, c.Header)
+		methods := []string{}
+		for _, c := range n.calls {
+			methods = append(methods, c.Method)
+			if c.Header.Get("x-goog-api-key") != "synthetic-gemini-key" || query(c.URL, "key") != "" || query(c.URL, "api_key") != "" || strings.Contains(c.URL, "synthetic-gemini-key") {
+				t.Fatalf("%v %v", c.URL, c.Header)
+			}
+			if strings.Contains(c.URL, ":generateContent") && c.URL != geminiPublicAPI+"/models/gemini-3.6-flash:generateContent" {
+				t.Fatal(c.URL)
+			}
 		}
-		if GetUploadBase() != "https://generativelanguage.googleapis.com/upload/v1beta" {
-			t.Fatal(GetUploadBase())
+		if !eqStrings(methods, []string{"POST", "PUT", "GET", "POST", "DELETE"}) {
+			t.Fatal(methods)
 		}
 	})
 	tw(t, f, "Gemini video upload, status, and delete respect a configured geminiBaseUrl relay", func(t *testing.T) {
-		adapted(t, "only the generate call and the upload base of the transport (gemini-api.ts); the upload, status and delete requests are video-extract.ts, a later slice")
 		_, agentDir := geminiEnv(t)
 		writeConfig(t, agentDir, `{"geminiApiKey":"synthetic-gemini-key","geminiBaseUrl":"https://relay.example.com"}`)
-		n := useNet(t, func(netCall) netReply { return geminiText("# Relay video") })
-		text, err := QueryGeminiAPIWithVideo(bg(), "describe", "files/synthetic", GeminiAPIOptions{})
+		n := useNet(t, geminiFilesAPI("https://relay.example.com", "# Relay video"))
+		noMediaPrograms(t)
+		info := writeVideo(t, agentDir, "synthetic.webm", "video/webm", "synthetic media")
+		res, err := ExtractVideo(bg(), info, ExtractOptions{})
 		noErr(t, err)
-		c := n.calls[0]
-		if text != "# Relay video" || c.URL != "https://relay.example.com/v1beta/models/gemini-3.6-flash:generateContent" || c.Header.Get("x-goog-api-key") != "synthetic-gemini-key" {
-			t.Fatalf("%q %v %v", text, c.URL, c.Header)
+		pendingGeminiDeletes.Wait()
+		if res == nil || res.Content != "# Relay video" {
+			t.Fatalf("%+v", res)
+		}
+		methods := []string{}
+		for _, c := range n.calls {
+			methods = append(methods, c.Method)
+			if !strings.HasPrefix(c.URL, "https://relay.example.com/") || c.Header.Get("x-goog-api-key") != "synthetic-gemini-key" || strings.Contains(c.URL, "generativelanguage.googleapis.com") {
+				t.Fatalf("%v %v", c.URL, c.Header)
+			}
+		}
+		if !eqStrings(methods, []string{"POST", "PUT", "GET", "POST", "DELETE"}) {
+			t.Fatal(methods)
 		}
 		if GetUploadBase() != "https://relay.example.com/upload/v1beta" {
 			t.Fatal(GetUploadBase())
@@ -603,6 +619,10 @@ func (f failingGeminiWeb) Available(context.Context) (GeminiWebCookies, error) {
 }
 func (f failingGeminiWeb) Diagnostic() string { f.t.Error("Gemini Web was consulted"); return "" }
 func (f failingGeminiWeb) Query(context.Context, string, GeminiWebCookies, time.Duration) (string, error) {
+	f.t.Error("Gemini Web was queried")
+	return "", nil
+}
+func (f failingGeminiWeb) QueryWithOptions(context.Context, string, GeminiWebCookies, GeminiWebOptions) (string, error) {
 	f.t.Error("Gemini Web was queried")
 	return "", nil
 }

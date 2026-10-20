@@ -149,13 +149,17 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 			}
 		}
 		var content []ContentBlock
-		if res.Thumbnail != nil {
+		if len(res.Frames) > 0 {
+			for _, f := range res.Frames {
+				content = append(content, ContentBlock{Type: "image", Data: f.Data, MimeType: f.MimeType}, ContentBlock{Type: "text", Text: "Frame at " + f.Timestamp})
+			}
+		} else if res.Thumbnail != nil {
 			content = append(content, ContentBlock{Type: "image", Data: res.Thumbnail.Data, MimeType: res.Thumbnail.MimeType})
 		}
 		content = append(content, ContentBlock{Type: "text", Text: output})
-		imageCount := 0
+		imageCount := len(res.Frames)
 		if res.Thumbnail != nil {
-			imageCount = 1
+			imageCount++
 		}
 		details := optional(map[string]any{"urls": urlList, "urlCount": 1, "successful": 1, "totalChars": full, "title": res.Title,
 			"truncated": truncated, "hasImage": imageCount > 0, "imageCount": imageCount, "mode": mode,

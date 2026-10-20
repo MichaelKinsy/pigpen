@@ -297,13 +297,6 @@ func TestDeferred_lazy_extract_load(t *testing.T) {
 	tskip(t, F, "registers tool definitions and loads content extraction on first use", "Node dynamic-import laziness has no Go equivalent: extraction is compiled in and costs nothing at registration; this case (registers tool definitions and loads content extraction on first use) ships with the feature")
 }
 
-func TestDeferred_local_video_oversize(t *testing.T) {
-	const F = "local-video-oversize"
-	tskip(t, F, "oversized local videos are still recognized for frame extraction", "local video and Gemini/YouTube frame extraction are deferred (docs/PORT.md); this case (oversized local videos are still recognized for frame extraction) ships with the feature")
-	tskip(t, F, "oversized local videos are still recognized for timestamp extraction", "local video and Gemini/YouTube frame extraction are deferred (docs/PORT.md); this case (oversized local videos are still recognized for timestamp extraction) ships with the feature")
-	tskip(t, F, "oversized local video analysis reports the upload size limit", "local video and Gemini/YouTube frame extraction are deferred (docs/PORT.md); this case (oversized local video analysis reports the upload size limit) ships with the feature")
-}
-
 func TestDeferred_mistral_provider(t *testing.T) {
 	const F = "mistral-provider"
 	tskip(t, F, "Mistral sends the Conversations request and maps message text and references", "the Mistral provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (Mistral sends the Conversations request and maps message text and references) ships with the feature")
@@ -700,9 +693,4 @@ func TestDeferred_you_provider(t *testing.T) {
 	tskip(t, F, "You.com sends the documented search request and maps web results", "the You.com provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (You.com sends the documented search request and maps web results) ships with the feature")
 	tskip(t, F, "You.com is explicit-only and routing skips it when no key is configured", "the You.com provider is not ported in the first slice: it is listed in the provider table and fails with an explicit 'unsupported' error when selected, never as a silent fallback (TestUnportedProviderFailsWithoutFallback, docs/PORT.md); this case (You.com is explicit-only and routing skips it when no key is configured) ships with the feature")
 	tskip(t, F, "You.com redacts API errors and appears in the Curator", "the search curator UI is deferred (docs/PORT.md); this case (You.com redacts API errors and appears in the Curator) ships with the feature")
-}
-
-func TestDeferred_youtube_extract_errors(t *testing.T) {
-	const F = "youtube-extract-errors"
-	tskip(t, F, "YouTube extraction surfaces Gemini API errors", "Gemini is a later slice (docs/PORT.md); this case (YouTube extraction surfaces Gemini API errors) ships with the feature")
 }

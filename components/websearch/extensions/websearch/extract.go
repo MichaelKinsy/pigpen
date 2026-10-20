@@ -21,8 +21,8 @@ import (
 // Port of extract.ts: fetch one URL and return readable text. What is ported here is the direct
 // HTTP path (SSRF-checked, redirect-limited, size-capped, raw and readable modes, images,
 // Cloudflare challenge detection), the keyless Jina Reader fallback (opt-in), the fetch routing
-// configuration, and the failure guidance. The hosted extraction providers, PDF text, video,
-// YouTube and GitHub-clone extraction are named gaps (docs/PORT.md): their routing entries exist
+// configuration, and the failure guidance. The hosted extraction providers, PDF text and
+// GitHub-clone extraction are named gaps (docs/PORT.md): their routing entries exist
 // so configuration validates, but they are never called.
 
 const (
@@ -215,15 +215,21 @@ func ExtractContent(ctx context.Context, rawURL string, o ExtractOptions) Extrac
 			return failed(rawURL, msg)
 		}
 	}
-	if feature, err := unportedFetchFeature(rawURL, o); err != nil {
-		return failed(rawURL, err.Error())
-	} else if feature != "" {
-		return failed(rawURL, unsupported(feature).Error())
+	if r, handled := extractVideoRoute(ctx, rawURL, o); handled {
+		return r
 	}
 	if remote == nil {
 		if _, err := ParseURL(rawURL, nil); err != nil {
 			return failed(rawURL, err.Error())
 		}
+	}
+	if feature, err := unportedFetchFeature(rawURL); err != nil {
+		return failed(rawURL, err.Error())
+	} else if feature != "" {
+		return failed(rawURL, unsupported(feature).Error())
+	}
+	if r, handled := extractYouTubeRoute(ctx, rawURL, o); handled {
+		return r
 	}
 	if ctx.Err() != nil {
 		return abortedResult(rawURL)
