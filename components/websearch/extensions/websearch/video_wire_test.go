@@ -1,6 +1,7 @@
 package websearch
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -126,7 +127,9 @@ func TestVideoWireFixture(t *testing.T) {
 					}
 					rep := netReply{Status: status, Body: r.Text}
 					if r.JSON != nil {
-						rep.Body = string(r.JSON)
+						var compact bytes.Buffer
+						noErr(t, json.Compact(&compact, r.JSON))
+						rep.Body = compact.String()
 					}
 					if r.BytesBase64 != nil {
 						b, _ := base64.StdEncoding.DecodeString(*r.BytesBase64)
@@ -150,7 +153,8 @@ func TestVideoWireFixture(t *testing.T) {
 
 			got := toAny(t, res)
 			b, _ := json.Marshal(got)
-			s := strings.ReplaceAll(string(b), agentDir, "<root>")
+			// The recorder's Response has no status text; the fake transport here gives the standard one.
+			s := strings.ReplaceAll(strings.ReplaceAll(string(b), agentDir, "<root>"), "HTTP 404: Not Found", "HTTP 404: ")
 			var normalized, want any
 			noErr(t, json.Unmarshal([]byte(jsonParseFailure.ReplaceAllString(s, "$1")), &normalized))
 			wb, _ := json.Marshal(c.Result)
