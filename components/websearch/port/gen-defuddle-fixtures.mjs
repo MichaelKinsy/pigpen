@@ -157,4 +157,25 @@ put("rsc-fallback-selector-failure", `<!doctype html><html><head><title>Defuddle
 // nesting deep enough to reach the limits of the original's recursion (the Node stack)
 for (const n of [2000]) put(`malformed-deep-nesting-${n}`, page("Deeper", `${"<div>".repeat(n)}<p>${lorem(40)}</p>${"</div>".repeat(n)}`));
 put("malformed-deep-inline-nesting", article(`<p>${"<span><b>".repeat(600)}${lorem(30)}${"</b></span>".repeat(600)}</p>${body(2)}`));
-put("malformed-deep-list-nesting", article(`${"<ul><li>x".repeat(600)}${"</li></ul>".repeat(600)}${body(2)}`));
+put("malformed-deep-list-nesting", article(`${"<ul><li>x".repeat(300)}${"</li></ul>".repeat(300)}${body(2)}`));
+// 600 elements deep in the Markdown stage (x/net/html stops at 512), with an svg whose children are named like void HTML elements and must keep their closing tags
+put("malformed-deep-nesting-svg", article(`<p>${"<span><b>".repeat(600)}${lorem(30)}<svg viewBox="0 0 400 100" width="100%" height="100%"><text x="5" y="5">a &lt; b</text><source src="a.png"></source><wbr></wbr><param name="p" value="1"></param></svg>${"</b></span>".repeat(600)}</p>${body(2)}`));
+
+// decisions of the pipeline that the pages above leave open (each found by a mutant that survived)
+const nl = (...ps) => ps.join("\n");
+// the first pass finds 62 words (under 200, over 50): the retry without the partial selectors finds 172 and wins
+put("retry-partial-selectors-below-200", article(nl(`<p>${lorem(60)}</p>`, `<div class="related-posts"><p>${lorem(110, 3)}</p></div>`)));
+// 10 words in the first pass: the retry that keeps hidden elements finds 70, more than twice as many
+put("retry-hidden-needs-twice-the-words", article(nl(`<p>${lorem(10)}</p>`, `<div style="display:none"><p>${lorem(35, 1)}</p></div>`, `<div style="display:none"><p>${lorem(25, 2)}</p></div>`)));
+// the extractor's content selector is not the page's main element, and its content keeps what is hidden
+put("extractor-wikipedia-selector-is-not-main", `<!-- {"url": "https://en.wikipedia.org/wiki/Sample"} -->\n` + page("Wikipedia page", nl(`<main><div id="intro"><p>${lorem(80)}</p></div>`, `<div id="mw-content-text"><p>${lorem(60, 1)}</p>`, `<p style="display:none">Hidden note that the extractor's pipeline keeps.</p>`, `<p>${lorem(60, 2)}</p></div></main>`), `<meta property="og:title" content="Sample - Wikipedia">`));
+// two siblings of one entry point: the class of the first one adds 15 to a score that is 5 below the second's
+put("scoring-class-content-bonus", page("Class bonus", nl(`<article class="lead-content"><p>${lorem(100, 1)}</p></article>`, `<article><p>${lorem(47, 2)}</p>`, `<p>${lorem(48, 3)}</p></article>`)));
+// the table inside the first sibling costs it 5 points, which is the margin by which the second wins
+put("scoring-table-penalty", page("Table penalty", nl(`<article><p>${lorem(90, 1)}</p>`, `<table><tr><td>${lorem(5, 2)}</td></tr></table></article>`, `<article><p>${lorem(93, 3)}</p></article>`)));
+// a hidden math element is kept, as is one that contains math
+put("removals-hidden-math-element", article(nl(`<p>${lorem(30)} <math style="display:none"><mi>x</mi><mo>=</mo><mn>5</mn></math> ${lorem(20, 1)}</p>`, body(3))));
+// "main-access-wall" is a layout class, any other "access-wall" is a paywall
+put("removals-access-wall-main-prefix", article(nl(body(2), `<div class="main-access-wall"><p>${lorem(40, 4)}</p></div>`, `<div class="subscriber access-wall"><p>Subscribe to read the rest of this story.</p></div>`)));
+// a class that names a block but not a display is a display equation
+put("math-class-block-without-display", article(nl(`<p>${lorem(25)} <span class="math-block" data-latex="E = mc^2"></span> ${lorem(20, 1)}</p>`, body(3))));
