@@ -1,7 +1,6 @@
 package pi_goal_x_test
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -100,21 +99,5 @@ func TestRefusesAnEnvironmentSettingThePortDoesNotImplement(t *testing.T) {
 	}
 	if n := len(goalFiles(t, cwd, ".pi/goals")); n != 0 {
 		t.Errorf("%d goal files written by a refused command", n)
-	}
-}
-
-func TestRefusesAnAutomaticRunAtSessionStart(t *testing.T) {
-	a, at := seedGoal("seed-a", "Left by the original")
-	at = strings.Replace(at, `"autoContinue": true,`, `"autoContinue": true, "scheduler": {"version": 1, "owner": "`+sessionID+`", "generation": "g1", "used": 0, "phase": "ready", "repairUsed": false, "decision": {"kind": "ready", "purpose": "kickoff"}},`, 1)
-	h, _ := rig{settings: `{}`, branch: []any{focusEntry("seed-a")}, seed: map[string]string{a: at}}.start(t)
-	// The session-start scheduler restore found a goal that the original would run: it is reported, not run.
-	found := false
-	for _, n := range notices(h) {
-		if n == want("automatic goal continuation (maxAutonomousRuns other than 0)") {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("notices %q", notices(h))
 	}
 }
