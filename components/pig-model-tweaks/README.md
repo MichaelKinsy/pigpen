@@ -43,8 +43,8 @@ extension rather than a fourth feature of this one.
 | Command | Description |
 | --- | --- |
 | `/pmt-remember-model [status\|on\|off\|clear]` | Remember and restore the last selected model. |
-| `/pmt-openrouter-lock-provider [<provider>\|clear [<model>]\|list\|on\|off\|lock <model> <provider>]` | Manage OpenRouter provider locks. `<provider>` locks the current OpenRouter model and `clear` clears its lock, as in the original; `clear <model>` and `lock <model> <provider>` name a model explicitly. With no arguments in the TUI, picks a model and then asks for a provider. |
-| `/pmt-model-guard-pref [list\|on\|off\|toggle\|ask\|noask\|add <provider/model>\|remove <provider/model>]` | Manage the allowed-model list, and whether a prompt outside it is refused or asked about. |
+| `/pmt-openrouter-lock-provider [<provider>\|clear\|list\|on\|off]` | Manage OpenRouter provider locks, as the original: `<provider>` (the whole argument) locks the current OpenRouter model, `clear` clears its lock. With no arguments in the TUI, a searchable list of the available OpenRouter models and every locked model (with their `provider: x` / `no provider lock` descriptions) opens, then asks for the provider (empty clears). This port also accepts `clear <model>` and `lock <model> <provider>` to name a model. |
+| `/pmt-model-guard-pref [list\|on\|off\|toggle\|add\|remove]` | Manage the allowed-model list, as the original: with no argument a multi-select over the available models sets the whole list; `add` and `remove` open it to add or remove. This port also accepts `ask`, `noask`, `add <provider/model>` and `remove <provider/model>`. |
 
 `status` is the default for `pmt-remember-model`: no argument reports whether it is
 on and what was remembered.
@@ -56,7 +56,11 @@ applied.
 
 ## Settings
 
-One file, under PiG's agent directory:
+One file, under PiG's agent directory (the host's own answer, Pi's `getAgentDir()`;
+`PIG_HOME/agent` when the host does not give one). When it is absent, the
+per-feature files of earlier versions (`last-model.json`,
+`openrouter-provider-prefs.json`, `model-preferences.json`) seed it, as in the
+original:
 
 ```
 ~/.pig/agent/pmt-settings.json
@@ -188,12 +192,14 @@ that one event so the restored model is never questioned again in a loop.
 
 ## Deliberate differences from the pi original
 
-- **Pickers are partly ported.** `pmt-model-guard-pref` with no argument and
-  `pmt-openrouter-lock-provider` with no argument open a picker over the host's
-  model catalog. The pickers are simpler than the original's: no checked-first
-  ordering, no missing-key marker, no per-model lock descriptions, and
-  `add` / `remove` with no model ask for a typed `provider/model` instead of
-  opening the multi-select. The original's exact picker behaviour is not ported.
+- **Pickers are ported.** The multi-select and the lock picker have the original's
+  rows, ordering (checked first, then locale compare), search, keys, scrolling and
+  texts. They are drawn without the host theme's colors: a Go extension has no
+  theme handle (`ctx.ui.theme` is not in the SDK), so accent, success, warning and
+  dim styling is missing.
+- **The model-guard command adds `ask`, `noask`, `add <provider/model>` and
+  `remove <provider/model>`**, which the original does not have, and an allow-list
+  entry naming only a provider trusts that whole provider.
 - **`pt-subagent` is not provided**, as described under provenance. No command or
   tool of that name is registered.
 - **`settings.json` gets the base model id**, not the original's `base:provider`

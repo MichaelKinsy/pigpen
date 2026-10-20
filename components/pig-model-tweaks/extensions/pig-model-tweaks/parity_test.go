@@ -728,3 +728,60 @@ func TestSettingsLiveInTheHostsAgentDirectory(t *testing.T) {
 		t.Fatal("the settings were also written under PIG_HOME")
 	}
 }
+
+// A confirmation with nothing checked is an empty selection, not a cancel: it
+// crosses the wire as [] (a nil slice would encode as null, which reads as Esc).
+func TestPickerEnterWithNothingCheckedEncodesAsAnEmptyList(t *testing.T) {
+	picker := newGuardPicker("T", catalog, nil)
+	done := press(t, picker, "\r")
+	encoded, err := json.Marshal(done.Value)
+	if err != nil || string(encoded) != "[]" {
+		t.Fatalf("value encodes as %s (%v), want []", encoded, err)
+	}
+	cancelled := press(t, newGuardPicker("T", catalog, nil), "\x1b")
+	if encoded, _ := json.Marshal(cancelled.Value); string(encoded) != "null" {
+		t.Fatalf("a cancel encodes as %s, want null", encoded)
+	}
+}
+
+func TestPickerSearchIgnoresCase(t *testing.T) {
+	picker := newGuardPicker("T", catalog, nil)
+	press(t, picker, "Z", "E")
+	if frame := strings.Join(picker.Render(60), "\n"); !strings.Contains(frame, " 🔍 ZE_") || !strings.Contains(frame, "1 shown") {
+		t.Fatalf("an upper-case search did not match zed/m2:\n%s", frame)
+	}
+}
+
+func TestWrapKeepsALineThatExactlyFits(t *testing.T) {
+	// "ab cd" is 5 columns: it fits width 5 and is one line; a third word wraps after it.
+	if got := wrapPlain("ab cd", 5); !reflect.DeepEqual(got, []string{"ab cd"}) {
+		t.Fatalf("wrap = %q", got)
+	}
+	if got := wrapPlain("ab cd ef", 5); !reflect.DeepEqual(got, []string{"ab cd", "ef"}) {
+		t.Fatalf("wrap = %q, want a line filled to the width before wrapping", got)
+	}
+	if got := wrapPlain("ab cde", 5); !reflect.DeepEqual(got, []string{"ab", "cde"}) {
+		t.Fatalf("wrap = %q", got)
+	}
+}
+
+func TestLockPickerSearchTakesTypedSpaces(t *testing.T) {
+	picker := newLockPicker([]lockItem{{"vendor/a", ""}})
+	press(t, picker, "v", " ")
+	if !strings.Contains(strings.Join(picker.Render(80), "\n"), "  search: v ") {
+		t.Fatal("a space typed into the lock picker's search was dropped")
+	}
+}
+
+func TestRememberingOffRestoresNothingAtStartup(t *testing.T) {
+	rememberedHome(t)
+	if err := os.WriteFile(filepath.Join(os.Getenv("PIG_HOME"), "agent", settingsFileName),
+		[]byte(`{"version":1,"rememberModel":{"enabled":false,"last":{"provider":"acme","modelId":"model-1"}}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	h := restoreHost(t, nil)
+	h.FireAll("session_start", map[string]any{"reason": "startup"})
+	if calls := h.CallsTo("setModel"); len(calls) != 0 {
+		t.Fatalf("a disabled remember-model switched the model: %v", calls)
+	}
+}
