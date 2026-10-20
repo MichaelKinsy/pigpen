@@ -15,7 +15,12 @@ func (a *app) tasksCommand(ctx sdk.Context, _ string) error {
 	a.mu.Lock()
 	a.touch(ctx)
 	a.initializeStoreForContext(ctx, false)
+	refused := a.refuseUnported()
 	a.mu.Unlock()
+	if refused != nil {
+		ctx.Notify(refused.Error(), "error")
+		return nil
+	}
 	locked := func(fn func()) { a.mu.Lock(); defer a.mu.Unlock(); fn() }
 
 	var mainMenu, viewTasks, createTask, settingsMenu func() error
@@ -218,7 +223,7 @@ func settingRows() []settingRow {
 				return strconv.Itoa(n)
 			}
 			return "10"
-		}, []string{"5", "10", "15", "20", "30", "50", "100"}, func(c tasksConfig, v string) { n, _ := strconv.Atoi(v); c["maxVisible"] = float64(n) }},
+		}, []string{"5", "10"}, func(c tasksConfig, v string) { n, _ := strconv.Atoi(v); c["maxVisible"] = float64(n) }},
 		{"sortOrder", "Widget sort order", func(c tasksConfig) string {
 			if _, custom := c["sortOrder"].([]any); custom {
 				return "custom" // shown, but deliberately left out of the cycle

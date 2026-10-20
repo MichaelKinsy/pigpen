@@ -43,12 +43,12 @@ behave as in the original; shared lists use a lock file with stale-lock detectio
 
 - **The widget is pre-rendered rows.** The Go SDK cannot register a component the host re-renders, so the rows
   are laid out at the width and theme the host reported and pushed on every change and on the spinner's
-  150 ms tick. The host shows at most ten rows. In RPC mode the rows are not sent at all, as Pi's RPC mode drops
+  150 ms tick. The host shows at most ten rows, so a configured `maxVisible` above 10 is refused (tools and `/tasks` report an error naming the original extension) and the Settings menu offers only 5 and 10. In RPC mode the rows are not sent at all, as Pi's RPC mode drops
   a component widget.
 - **`/tasks` → Settings is a chain of selects**, not a `SettingsList` panel: picking a row cycles its value and
   saves it.
 - **Agent directory.** `<agent dir>` is PiG's (`PIG_CODING_AGENT_DIR`, else `<PIG_HOME or ~/.pig>/agent`;
-  `PIG_USE_PI_DIRS=1` selects Pi's), not Pi's fixed `~/.pi/agent`. Named lists (`PI_TASKS=<name>`) live under `<agent dir>/tasks/`, where the original uses `~/.pi/tasks/`.
+  `PIG_USE_PI_DIRS=1` selects Pi's), not Pi's fixed `~/.pi/agent`. Named lists (`PI_TASKS=<name>`) live under `<agent dir>/tasks/`, where the original uses `~/.pi/tasks/`. If `PI_TASKS` names a list that exists only at the original's location, the tools and `/tasks` refuse with an error that gives both paths instead of starting an empty list.
 - **Pinging pi-subagents.** The original pings while it loads. Here the ping waits for the first `session_start`
   (a ping sent while the extension loads deadlocks the host when pi-subagents is built into the same Binary), and
   is repeated on the `subagents:ready` broadcast and when `TaskExecute` runs without having found it. The protocol (version 2) is unchanged.
