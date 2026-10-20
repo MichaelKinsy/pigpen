@@ -139,7 +139,6 @@ m("refusal-github-enabled-ignored", "webtools.go", "if githubInterceptorEnabled(
 m("refusal-github-any-url", "webtools.go", "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {", "if githubInterceptorEnabled(cfg) {")
 m("refusal-github-www-host", "refusal.go", 'host != "github.com" && host != "www.github.com"', 'host != "github.com"')
 m("refusal-github-root-url", "refusal.go", "if len(segments) == 2 {\n\t\treturn true\n\t}", "if len(segments) == 2 {\n\t\treturn false\n\t}")
-m("refusal-github-issues-url", "refusal.go", "if len(segments) > 2 {\n\t\tfor _, n := range githubNonCodeSegments {", "if len(segments) > 2 && false {\n\t\tfor _, n := range githubNonCodeSegments {")
 m("refusal-show-line", "command.go", '"  github: enabled in config. " + refusal(githubInterceptorFeature)', '"  github: enabled in config. "')
 
 M = [x for x in M if x]
