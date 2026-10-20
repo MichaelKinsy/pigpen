@@ -1,0 +1,620 @@
+[
+  {
+    "name": "path-agent-dir-default",
+    "file": "settings.go",
+    "find": "return filepath.Join(home, \".pi\", \"agent\")",
+    "replace": "return filepath.Join(home, \".pi\", \"agents\")"
+  },
+  {
+    "name": "path-global-file-name",
+    "file": "settings.go",
+    "find": "filepath.Join(resolveAgentDir(env, home), \"pi-goal-x-settings.json\")",
+    "replace": "filepath.Join(resolveAgentDir(env, home), \"pi-goal-settings.json\")"
+  },
+  {
+    "name": "path-project-override-relative",
+    "file": "settings.go",
+    "find": "\t\treturn filepath.Join(cwd, o)\n\t}\n\treturn filepath.Join(cwd, \".pi\", \"pi-goal-x-settings.json\")",
+    "replace": "\t\treturn o\n\t}\n\treturn filepath.Join(cwd, \".pi\", \"pi-goal-x-settings.json\")"
+  },
+  {
+    "name": "path-project-default-dir",
+    "file": "settings.go",
+    "find": "return filepath.Join(cwd, \".pi\", \"pi-goal-x-settings.json\")",
+    "replace": "return filepath.Join(cwd, \"pi-goal-x-settings.json\")"
+  },
+  {
+    "name": "path-global-override-relative-home",
+    "file": "settings.go",
+    "find": "\t\treturn settingsPathResolve(home, o)\n\t}\n\treturn filepath.Join(resolveAgentDir",
+    "replace": "\t\treturn o\n\t}\n\treturn filepath.Join(resolveAgentDir"
+  },
+  {
+    "name": "path-agent-override-relative",
+    "file": "settings.go",
+    "find": "\t\treturn settingsPathResolve(home, o)\n\t}\n\treturn filepath.Join(home, \".pi\", \"agent\")",
+    "replace": "\t\treturn o\n\t}\n\treturn filepath.Join(home, \".pi\", \"agent\")"
+  },
+  {
+    "name": "keybinding-label-ctrl",
+    "file": "settings.go",
+    "find": "\"ctrl\": \"Ctrl\"",
+    "replace": "\"ctrl\": \"Control\""
+  },
+  {
+    "name": "keybinding-label-up",
+    "file": "settings.go",
+    "find": "\"up\": \"↑\"",
+    "replace": "\"up\": \"^\""
+  },
+  {
+    "name": "keybinding-label-pagedown",
+    "file": "settings.go",
+    "find": "\"pagedown\": \"PageDown\"",
+    "replace": "\"pagedown\": \"PgDn\""
+  },
+  {
+    "name": "keybinding-upper-fallback",
+    "file": "settings.go",
+    "find": "parts[i] = strings.ToUpper(p)",
+    "replace": "parts[i] = p"
+  },
+  {
+    "name": "keybinding-lower-lookup",
+    "file": "settings.go",
+    "find": "goalKeybindingLabels[strings.ToLower(p)]",
+    "replace": "goalKeybindingLabels[p]"
+  },
+  {
+    "name": "default-toggle-expand",
+    "file": "settings.go",
+    "find": "toggleExpand: \"ctrl+shift+t\"",
+    "replace": "toggleExpand: \"ctrl+t\""
+  },
+  {
+    "name": "default-scroll-down",
+    "file": "settings.go",
+    "find": "scrollDown:   \"ctrl+shift+down\"",
+    "replace": "scrollDown:   \"ctrl+down\""
+  },
+  {
+    "name": "default-network-delay",
+    "file": "settings.go",
+    "find": "const defaultNetworkRecoveryMaxDelayMs = 80000",
+    "replace": "const defaultNetworkRecoveryMaxDelayMs = 60000"
+  },
+  {
+    "name": "asbool-string-true",
+    "file": "settings.go",
+    "find": "if x == \"true\" {\n\t\t\treturn true, true",
+    "replace": "if x == \"yes\" {\n\t\t\treturn true, true"
+  },
+  {
+    "name": "asbool-string-false-dropped",
+    "file": "settings.go",
+    "find": "\t\tif x == \"false\" {\n\t\t\treturn false, true\n\t\t}\n",
+    "replace": ""
+  },
+  {
+    "name": "parseint-sign",
+    "file": "settings.go",
+    "find": "neg = s[0] == '-'",
+    "replace": "neg = false"
+  },
+  {
+    "name": "parseint-leading-space",
+    "file": "settings.go",
+    "find": "s = strings.TrimLeftFunc(s, isJSSpace)\n\tneg",
+    "replace": "neg"
+  },
+  {
+    "name": "positive-int-min",
+    "file": "settings.go",
+    "find": "settingsIsInteger(x) && x >= 1",
+    "replace": "settingsIsInteger(x) && x >= 0"
+  },
+  {
+    "name": "positive-int-string-min",
+    "file": "settings.go",
+    "find": "ok && n >= 1 {",
+    "replace": "ok && n >= 0 {"
+  },
+  {
+    "name": "nonneg-int-min",
+    "file": "settings.go",
+    "find": "settingsIsInteger(x) && x >= 0 {\n\t\t\treturn x, true\n\t\t}\n\tcase string:\n\t\tif n, ok := settingsParseInt(x); ok && n >= 0",
+    "replace": "settingsIsInteger(x) && x >= 1 {\n\t\t\treturn x, true\n\t\t}\n\tcase string:\n\t\tif n, ok := settingsParseInt(x); ok && n >= 0"
+  },
+  {
+    "name": "nonneg-int-integer-check",
+    "file": "settings.go",
+    "find": "settingsIsInteger(x) && x >= 0 {",
+    "replace": "x >= 0 {"
+  },
+  {
+    "name": "thinking-level-list",
+    "file": "settings.go",
+    "find": "\"medium\", \"high\", \"xhigh\"}",
+    "replace": "\"medium\", \"high\"}"
+  },
+  {
+    "name": "parse-null-raw",
+    "file": "settings.go",
+    "find": "\tif raw == nil {\n\t\treturn layer, diagnostics\n\t}",
+    "replace": "\tif raw == nil {\n\t\tdiagnostic(\"not_object\", \"settings file must contain a JSON object\", \"\")\n\t\treturn layer, diagnostics\n\t}"
+  },
+  {
+    "name": "parse-not-object-diag",
+    "file": "settings.go",
+    "find": "diagnostic(\"not_object\", \"settings file must contain a JSON object\", \"\")\n\t\treturn layer, diagnostics\n\t}\n\n",
+    "replace": "return layer, diagnostics\n\t}\n\n"
+  },
+  {
+    "name": "parse-bool-diag-dropped",
+    "file": "settings.go",
+    "find": "diagnostic(\"invalid_value\", key+\" must be true or false\", key)",
+    "replace": "_ = key"
+  },
+  {
+    "name": "parse-max-runs-negative",
+    "file": "settings.go",
+    "find": "if !isSafeInteger(n) || n < 0 {",
+    "replace": "if !isSafeInteger(n) {"
+  },
+  {
+    "name": "parse-max-runs-string-digits",
+    "file": "settings.go",
+    "find": "strings.Trim(t, \"0123456789\") == \"\"",
+    "replace": "strings.Trim(t, \"123456789\") == \"\""
+  },
+  {
+    "name": "parse-max-delay-min",
+    "file": "settings.go",
+    "find": "} else if !ok || parsed < 1000 {",
+    "replace": "} else if !ok || parsed < 100 {"
+  },
+  {
+    "name": "parse-oracle-max-attempts",
+    "file": "settings.go",
+    "find": "!ok || parsed > 3 {",
+    "replace": "!ok || parsed > 4 {"
+  },
+  {
+    "name": "parse-keybinding-unknown-sibling",
+    "file": "settings.go",
+    "find": "diagnostic(\"unknown_key\", \"unknown dashboard keybinding: \"+dashKey, \"keybindings.dashboard.\"+dashKey)\n\t\t\t\t\t\tcontinue",
+    "replace": "diagnostic(\"unknown_key\", \"unknown dashboard keybinding: \"+dashKey, \"keybindings.dashboard.\"+dashKey)\n\t\t\t\t\t\tbreak"
+  },
+  {
+    "name": "parse-thinking-alias",
+    "file": "settings.go",
+    "find": "case \"thinkingLevel\", \"thinking_level\":\n\t\t\tif parsed, ok := asThinkingLevel(value)",
+    "replace": "case \"thinkingLevel\":\n\t\t\tif parsed, ok := asThinkingLevel(value)"
+  },
+  {
+    "name": "parse-networkrecovery-empty-kept",
+    "file": "settings.go",
+    "find": "if len(nr.keys) > 0 {\n\t\t\t\tlayer.set(\"networkRecovery\", nr)",
+    "replace": "if len(nr.keys) >= 0 {\n\t\t\t\tlayer.set(\"networkRecovery\", nr)"
+  },
+  {
+    "name": "strict-parse-nested-unknown",
+    "file": "settings.go",
+    "find": "!strings.Contains(d.settingPath, \".\")",
+    "replace": "true"
+  },
+  {
+    "name": "strict-parse-message",
+    "file": "settings.go",
+    "find": "\"Unknown pi-goal-x-settings.json key(s): %s\"",
+    "replace": "\"Unknown settings key(s): %s\""
+  },
+  {
+    "name": "strict-parse-join",
+    "file": "settings.go",
+    "find": "strings.Join(unknown, \", \"))\n\t}\n\treturn layer, nil",
+    "replace": "strings.Join(unknown, \",\"))\n\t}\n\treturn layer, nil"
+  },
+  {
+    "name": "fingerprint-length",
+    "file": "settings.go",
+    "find": "len(units), strconv.FormatUint",
+    "replace": "len(units)+1, strconv.FormatUint"
+  },
+  {
+    "name": "fingerprint-seed",
+    "file": "settings.go",
+    "find": "hash := uint32(2166136261)",
+    "replace": "hash := uint32(2166136260)"
+  },
+  {
+    "name": "status-invalid-diag",
+    "file": "settings.go",
+    "find": "\tif len(diagnostics) > 0 {\n\t\treturn \"invalid\"\n\t}\n\treturn \"ok\"",
+    "replace": "\treturn \"ok\""
+  },
+  {
+    "name": "status-missing-empty",
+    "file": "settings.go",
+    "find": "\tif !hadContent {\n\t\treturn \"missing\"\n\t}",
+    "replace": "\t_ = hadContent"
+  },
+  {
+    "name": "read-missing-fingerprint",
+    "file": "settings.go",
+    "find": "fingerprint: \"missing\"",
+    "replace": "fingerprint: \"absent\""
+  },
+  {
+    "name": "read-invalid-json-status",
+    "file": "settings.go",
+    "find": "status: \"invalid\", layer: newObject(),\n\t\t\tdiagnostics: []settingsDiagnostic{{scope: scope, path: target, code: \"invalid_json\"",
+    "replace": "status: \"ok\", layer: newObject(),\n\t\t\tdiagnostics: []settingsDiagnostic{{scope: scope, path: target, code: \"invalid_json\""
+  },
+  {
+    "name": "resolve-env-wins",
+    "file": "settings.go",
+    "find": "\tcase envValue != nil:\n\t\treturn &resolvedSetting{value: envValue",
+    "replace": "\tcase false:\n\t\treturn &resolvedSetting{value: envValue"
+  },
+  {
+    "name": "resolve-project-over-global",
+    "file": "settings.go",
+    "find": "\tcase projectValue != nil:\n\t\treturn &resolvedSetting{value: projectValue, source: \"project\"}\n\tcase globalValue != nil:\n\t\treturn &resolvedSetting{value: globalValue, source: \"global\"}",
+    "replace": "\tcase globalValue != nil:\n\t\treturn &resolvedSetting{value: globalValue, source: \"global\"}\n\tcase projectValue != nil:\n\t\treturn &resolvedSetting{value: projectValue, source: \"project\"}"
+  },
+  {
+    "name": "default-subtask-depth",
+    "file": "settings.go",
+    "find": "simple(\"subtaskDepth\", 1.0)",
+    "replace": "simple(\"subtaskDepth\", 2.0)"
+  },
+  {
+    "name": "default-show-autonomous-runs",
+    "file": "settings.go",
+    "find": "simple(\"showAutonomousRuns\", true)",
+    "replace": "simple(\"showAutonomousRuns\", false)"
+  },
+  {
+    "name": "default-oracle-max-attempts",
+    "file": "settings.go",
+    "find": "\"oracle.maxFailedAttemptsPerBlocker\", 2.0",
+    "replace": "\"oracle.maxFailedAttemptsPerBlocker\", 3.0"
+  },
+  {
+    "name": "env-disable-tasks-var",
+    "file": "settings.go",
+    "find": "envBool(\"PI_GOAL_DISABLE_TASKS\"), \"PI_GOAL_DISABLE_TASKS\"",
+    "replace": "envBool(\"PI_GOAL_DISABLE_CONTRACTS\"), \"PI_GOAL_DISABLE_TASKS\""
+  },
+  {
+    "name": "env-objective-max-chars",
+    "file": "settings.go",
+    "find": "envInt(\"PI_GOAL_OBJECTIVE_MAX_CHARS\"), \"PI_GOAL_OBJECTIVE_MAX_CHARS\", 0.0",
+    "replace": "envInt(\"PI_GOAL_OBJECTIVE_MAX_CHARS\"), \"PI_GOAL_OBJECTIVE_MAX_CHARS\", 1.0"
+  },
+  {
+    "name": "env-network-attempts",
+    "file": "settings.go",
+    "find": "envInt(\"PI_GOAL_NETWORK_RECOVERY_MAX_ATTEMPTS\"), \"PI_GOAL_NETWORK_RECOVERY_MAX_ATTEMPTS\", 0.0",
+    "replace": "envInt(\"PI_GOAL_NETWORK_RECOVERY_MAX_ATTEMPTS\"), \"PI_GOAL_NETWORK_RECOVERY_MAX_ATTEMPTS\", 1.0"
+  },
+  {
+    "name": "goals-root-env-presence",
+    "file": "settings.go",
+    "find": "if s, ok := settingsEnvGet(env, \"PI_GOAL_ROOT\"); ok {\n\t\trootEnv = s\n\t}",
+    "replace": "if s, ok := settingsEnvGet(env, \"PI_GOAL_ROOT\"); ok && s != \"\" {\n\t\trootEnv = s\n\t}"
+  },
+  {
+    "name": "snapshot-diagnostic-order",
+    "file": "settings.go",
+    "find": "append(append([]settingsDiagnostic{}, global.diagnostics...), project.diagnostics...)",
+    "replace": "append(append([]settingsDiagnostic{}, project.diagnostics...), global.diagnostics...)"
+  },
+  {
+    "name": "cache-size",
+    "file": "settings.go",
+    "find": "if len(resolvedSettingsCache) >= 16 {",
+    "replace": "if len(resolvedSettingsCache) >= 0 {"
+  },
+  {
+    "name": "lock-stale-pid",
+    "file": "settings.go",
+    "find": "(pidIsNumber && !settingsPidAlive(pid))",
+    "replace": "(!pidIsNumber && !settingsPidAlive(pid))"
+  },
+  {
+    "name": "lock-stale-ttl",
+    "file": "settings.go",
+    "find": "float64(clockMs())-mtimeMs(fi) > float64(ttlMs)",
+    "replace": "float64(clockMs())-mtimeMs(fi) < float64(ttlMs)"
+  },
+  {
+    "name": "lock-default-attempts",
+    "file": "settings.go",
+    "find": "attempts, retryMs, ttlMs := 200, 5, 30000",
+    "replace": "attempts, retryMs, ttlMs := 1, 5, 30000"
+  },
+  {
+    "name": "lock-pid-integer",
+    "file": "settings.go",
+    "find": "!settingsIsInteger(f) || f <= 0 {",
+    "replace": "f <= 0 {"
+  },
+  {
+    "name": "lock-error-message",
+    "file": "settings.go",
+    "find": "\"Timed out acquiring the settings lock at \"",
+    "replace": "\"Timed out acquiring the lock at \""
+  },
+  {
+    "name": "symlink-refusal",
+    "file": "settings.go",
+    "find": "\"refusing symlink settings target: \"",
+    "replace": "\"refusing target: \""
+  },
+  {
+    "name": "write-trailing-newline",
+    "file": "settings.go",
+    "find": "marshalJSON(value, \"  \") + \"\\n\"",
+    "replace": "marshalJSON(value, \"  \")"
+  },
+  {
+    "name": "write-indent",
+    "file": "settings.go",
+    "find": "marshalJSON(value, \"  \") + \"\\n\"",
+    "replace": "marshalJSON(value, \"\\t\") + \"\\n\""
+  },
+  {
+    "name": "write-default-mode",
+    "file": "settings.go",
+    "find": "atomicWriteJson(target, next, 0o600)",
+    "replace": "atomicWriteJson(target, next, 0o644)"
+  },
+  {
+    "name": "write-preserve-mode",
+    "file": "settings.go",
+    "find": "\t\tmode = fi.Mode().Perm()\n",
+    "replace": "\t\t_ = fi\n"
+  },
+  {
+    "name": "write-save-mode",
+    "file": "settings.go",
+    "find": "atomicWriteJson(target, clean, 0o600)",
+    "replace": "atomicWriteJson(target, clean, 0o644)"
+  },
+  {
+    "name": "mutate-refuse-invalid",
+    "file": "settings.go",
+    "find": "\tif current.status == \"invalid\" {\n\t\treturn nil, &settingsMutationError{message: fmt.Sprintf(\"Refusing to overwrite invalid %s settings",
+    "replace": "\tif current.status == \"never\" {\n\t\treturn nil, &settingsMutationError{message: fmt.Sprintf(\"Refusing to overwrite invalid %s settings"
+  },
+  {
+    "name": "mutate-refuse-message",
+    "file": "settings.go",
+    "find": "\"Refusing to overwrite invalid %s settings at %s\"",
+    "replace": "\"Refusing to overwrite %s settings at %s\""
+  },
+  {
+    "name": "mutate-invalid-result",
+    "file": "settings.go",
+    "find": "if d.code == \"invalid_value\" || d.code == \"invalid_nested_key\" {",
+    "replace": "if d.code == \"invalid_json\" {"
+  },
+  {
+    "name": "mutate-prune",
+    "file": "settings.go",
+    "find": "\tpruneEmptyObjects(next)\n\tcanonicalizeAliases(next)",
+    "replace": "\tcanonicalizeAliases(next)"
+  },
+  {
+    "name": "mutate-canonicalize",
+    "file": "settings.go",
+    "find": "\tpruneEmptyObjects(next)\n\tcanonicalizeAliases(next)",
+    "replace": "\tpruneEmptyObjects(next)"
+  },
+  {
+    "name": "mutate-no-invalidate",
+    "file": "settings.go",
+    "find": "\tinvalidateSettingsCachePath(target)\n\treturn loadSettingsSnapshot(input.cwd, input.env), nil",
+    "replace": "\treturn loadSettingsSnapshot(input.cwd, input.env), nil"
+  },
+  {
+    "name": "mutate-scope-global-path",
+    "file": "settings.go",
+    "find": "if input.scope == settingsScopeGlobal {\n\t\ttarget =",
+    "replace": "if input.scope != settingsScopeGlobal {\n\t\ttarget ="
+  },
+  {
+    "name": "mutate-lock-suffix",
+    "file": "settings.go",
+    "find": "acquirePathLock(target + \".lock\")\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer lock.release()\n\n\tcurrent",
+    "replace": "acquirePathLock(target + \".lck\")\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer lock.release()\n\n\tcurrent"
+  },
+  {
+    "name": "mutate-empty-path",
+    "file": "settings.go",
+    "find": "\"empty settings path\"",
+    "replace": "\"empty path\""
+  },
+  {
+    "name": "mutate-thinking-unset-alias",
+    "file": "settings.go",
+    "find": "\t\t\tsettingsDelete(container, \"thinking_level\")\n",
+    "replace": ""
+  },
+  {
+    "name": "mutate-thinking-set",
+    "file": "settings.go",
+    "find": "container.set(\"thinkingLevel\", m.value)",
+    "replace": "container.set(\"thinking_level\", m.value)"
+  },
+  {
+    "name": "save-invalid-refusal",
+    "file": "settings.go",
+    "find": "\"Refusing to overwrite invalid project settings at \"",
+    "replace": "\"Refusing to overwrite project settings at \""
+  },
+  {
+    "name": "save-return-alias",
+    "file": "settings.go",
+    "find": "\t\treturned.set(\"thinkingLevel\", s)\n",
+    "replace": "\t\t_ = s\n"
+  },
+  {
+    "name": "persist-provider-truthy",
+    "file": "settings.go",
+    "find": "for _, k := range []string{\"provider\", \"model\"} {\n\t\tif settingsTruthy",
+    "replace": "for _, k := range []string{\"provider\", \"model\"} {\n\t\tif defined(k) || settingsTruthy"
+  },
+  {
+    "name": "persist-thinking-alias",
+    "file": "settings.go",
+    "find": "persisted.set(\"thinking_level\", settings.vals[\"thinkingLevel\"])",
+    "replace": "persisted.set(\"thinkingLevel\", settings.vals[\"thinkingLevel\"])"
+  },
+  {
+    "name": "persist-oracle-alias",
+    "file": "settings.go",
+    "find": "o.set(\"thinking_level\", so.vals[\"thinkingLevel\"])",
+    "replace": "o.set(\"thinkingLevel\", so.vals[\"thinkingLevel\"])"
+  },
+  {
+    "name": "persist-keybindings",
+    "file": "settings.go",
+    "find": "wrapper.set(\"dashboard\", dash.clone())",
+    "replace": "wrapper.set(\"dashboard\", newObject())"
+  },
+  {
+    "name": "persist-zero-kept",
+    "file": "settings.go",
+    "find": "func settingsTruthy(v any) bool {\n\tswitch x := v.(type) {",
+    "replace": "func settingsTruthy(v any) bool {\n\tswitch x := v.(type) {\n\tcase float64:\n\t\treturn false"
+  },
+  {
+    "name": "env-override-goals-root",
+    "file": "settings.go",
+    "find": "return \"PI_GOAL_ROOT\"\n\tcase key == \"disableTasks\"",
+    "replace": "return \"PI_GOAL_ROOTS\"\n\tcase key == \"disableTasks\""
+  },
+  {
+    "name": "env-override-settings-file",
+    "file": "settings.go",
+    "find": "case key == \"settingsFile\" && has(piGoalSettingsFileEnv):",
+    "replace": "case key == \"settingsFile\" && has(piGoalGlobalSettingsFileEnv):"
+  },
+  {
+    "name": "report-header",
+    "file": "settings.go",
+    "find": "\"Settings (provenance):\"",
+    "replace": "\"Settings:\""
+  },
+  {
+    "name": "report-env-source",
+    "file": "settings.go",
+    "find": "source = \"env (\" + r.envVar + \")\"",
+    "replace": "source = \"env\""
+  },
+  {
+    "name": "report-allowance-zero",
+    "file": "settings.go",
+    "find": "allowance = \"0 (disabled)\"",
+    "replace": "allowance = \"0\""
+  },
+  {
+    "name": "report-allowance-unlimited",
+    "file": "settings.go",
+    "find": "allowance := \"unlimited (default)\"",
+    "replace": "allowance := \"unlimited\""
+  },
+  {
+    "name": "report-goals-root-default",
+    "file": "settings.go",
+    "find": "goalsRoot := \".pi/goals\"",
+    "replace": "goalsRoot := \"(default)\""
+  },
+  {
+    "name": "report-project-file-line",
+    "file": "settings.go",
+    "find": "\"  project settings file: \"",
+    "replace": "\"  project file: \""
+  },
+  {
+    "name": "report-override-line",
+    "file": "settings.go",
+    "find": "\"  (settings file overridden by \"",
+    "replace": "\"  (overridden by \""
+  },
+  {
+    "name": "auditor-default",
+    "file": "settings.go",
+    "find": "return !settings.disabled }",
+    "replace": "return settings.disabled }"
+  },
+  {
+    "name": "root-metadata-dir",
+    "file": "goal_root.go",
+    "find": "filepath.Join(root, \".metadata\")",
+    "replace": "filepath.Join(root, \".meta\")"
+  },
+  {
+    "name": "root-snapshot-name",
+    "file": "goal_root.go",
+    "find": "\".goals-pool-snapshot.json\"), nil\n\t}\n\treturn filepath.Join(root, \".metadata\"",
+    "replace": "\".pool-snapshot.json\"), nil\n\t}\n\treturn filepath.Join(root, \".metadata\""
+  },
+  {
+    "name": "root-tilde",
+    "file": "goal_root.go",
+    "find": "strings.HasPrefix(expanded, \"~/\"):",
+    "replace": "strings.HasPrefix(expanded, \"~\"):"
+  },
+  {
+    "name": "root-absolute-check",
+    "file": "goal_root.go",
+    "find": "!filepath.IsAbs(expanded) || strings.Contains",
+    "replace": "strings.Contains"
+  },
+  {
+    "name": "root-symlink",
+    "file": "goal_root.go",
+    "find": "return \"\", fmt.Errorf(\"Goal root is a symlink: %s\", root)\n\t\t}\n\t\treal",
+    "replace": "_ = root\n\t\t}\n\t\treal"
+  },
+  {
+    "name": "root-invalid-diag",
+    "file": "goal_root.go",
+    "find": "source != \"environment\" && (d.scope == settingsScopeProject || source != \"project\")",
+    "replace": "false"
+  },
+  {
+    "name": "root-path-prefix",
+    "file": "goal_root.go",
+    "find": "relative != \".pi/goals\" && !strings.HasPrefix(relative, \".pi/goals/\")",
+    "replace": "relative != \".pi/goals\" && !strings.HasPrefix(relative, \".pi/goals\")"
+  },
+  {
+    "name": "root-path-backslash",
+    "file": "goal_root.go",
+    "find": "strings.ReplaceAll(logical, \"\\\\\", \"/\")",
+    "replace": "logical"
+  },
+  {
+    "name": "root-escape-check",
+    "file": "goal_root.go",
+    "find": "inside == \"..\" || strings.HasPrefix(inside, \"..\"+string(filepath.Separator)) || filepath.IsAbs(inside)",
+    "replace": "inside == \"..\""
+  },
+  {
+    "name": "root-pin-cwd",
+    "file": "goal_root.go",
+    "find": "pinned.cwd == ctx.cwd",
+    "replace": "true"
+  },
+  {
+    "name": "root-external",
+    "file": "goal_root.go",
+    "find": "return root != defaultGoalRoot(ctx.cwd), nil",
+    "replace": "return root == defaultGoalRoot(ctx.cwd), nil"
+  }
+]
