@@ -1,8 +1,9 @@
 // Records what the original's Defuddle fallback makes of each HTML fixture of extensions/websearch/testdata/defuddle:
 // the call of oracle/extract.ts extractWithDefuddle (a linkedom document, Defuddle 0.19.3 with
 // { markdown: true, useAsync: false }, the console.error capture that turns "Error processing document" into a
-// thrown error), so the expected title, Markdown and error are the original's own. The Go twin (defuddle_test.go)
-// runs the port on the same files and compares byte for byte.
+// thrown error), so the expected title, Markdown and error are the original's own. The Go twin (defuddle_corpus_test.go)
+// runs the port on the same files and compares byte for byte. The files of testdata/html (the Readability fixtures) are
+// recorded as <name>.defuddle.json.
 //
 // extractWithDefuddle is not exported by extract.ts, so its body is repeated below, unchanged except for the
 // import paths (resolved from the vendored original's node_modules).
@@ -63,23 +64,36 @@ async function extractWithDefuddle(text, url) {
 	return typeof result.content === "string" ? { title: result.title, content: result.content } : null;
 }
 
-const names = (await readdir(root)).filter((f) => f.endsWith(".html")).map((f) => f.slice(0, -5)).sort();
+// The two corpora: the Defuddle fixtures (<name>.expected.json) and the HTML fixtures of the Readability pipeline
+// (testdata/html, <name>.defuddle.json, served from http://fixtures.test/<name>). The text is decoded as
+// readTextResponseWithLimit does for a response without a charset: TextDecoder("utf-8"), which drops a BOM and
+// replaces each maximal invalid subpart with U+FFFD.
+const corpora = [
+	{ root, suffix: ".expected.json", urlOf: (name, html) => {
+		const m = html.match(/<!--\s*(\{"url":.*?\})\s*-->/);
+		return (m ? JSON.parse(m[1]).url : undefined) || `https://${name.replace(/^[a-z]+--/, "")}`;
+	} },
+	{ root: new URL("../extensions/websearch/testdata/html/", import.meta.url), suffix: ".defuddle.json", urlOf: (name) => `http://fixtures.test/${name}` },
+];
 const only = process.argv.slice(2);
 const warn = console.warn;
 console.warn = () => {};
-for (const name of only.length ? only : names) {
-	const html = await readFile(new URL(`${name}.html`, root), "utf8");
-	const m = html.match(/<!--\s*(\{"url":.*?\})\s*-->/);
-	const url = (m ? JSON.parse(m[1]).url : undefined) || `https://${name.replace(/^[a-z]+--/, "")}`;
-	let expected;
-	try {
-		const r = await extractWithDefuddle(html, url);
-		expected = { url, title: r ? r.title : null, content: r ? r.content : null, error: null };
-	} catch (err) {
-		expected = { url, title: null, content: null, error: errorMessage(err) };
+const decoder = new TextDecoder("utf-8");
+for (const corpus of corpora) {
+	const names = (await readdir(corpus.root)).filter((f) => f.endsWith(".html")).map((f) => f.slice(0, -5)).sort();
+	for (const name of only.length ? names.filter((n) => only.includes(n)) : names) {
+		const html = decoder.decode(await readFile(new URL(`${name}.html`, corpus.root)));
+		const url = corpus.urlOf(name, html);
+		let expected;
+		try {
+			const r = await extractWithDefuddle(html, url);
+			expected = { url, title: r ? r.title : null, content: r ? r.content : null, error: null };
+		} catch (err) {
+			expected = { url, title: null, content: null, error: errorMessage(err) };
+		}
+		await writeFile(new URL(`${name}${corpus.suffix}`, corpus.root), JSON.stringify(expected, null, 1) + "\n");
+		console.log(`${name}: ${expected.error ? "ERROR " + expected.error : `title=${JSON.stringify(expected.title)} content=${expected.content.length}`}`);
 	}
-	await writeFile(new URL(`${name}.expected.json`, root), JSON.stringify(expected, null, 1) + "\n");
-	console.log(`${name}: ${expected.error ? "ERROR " + expected.error : `title=${JSON.stringify(expected.title)} content=${expected.content.length}`}`);
 }
 console.warn = warn;
 process.exit(0);

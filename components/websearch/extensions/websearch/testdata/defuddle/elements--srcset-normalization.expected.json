@@ -1,0 +1,6 @@
+{
+ "url": "https://www.example.com/article/srcset-test",
+ "title": "React SSR srcSet Normalization",
+ "content": "## Article with React SSR Images\n\nThis article tests normalization of React SSR camelCase srcSet attributes to standard lowercase srcset.\n\n![Hero image with React SSR attributes.](https://www.example.com/images/hero.webp)\n\nHero image with React SSR attributes. Photo credit.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.\n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.",
+ "error": null
+}

@@ -1,0 +1,6 @@
+{
+ "url": "https://heading-notes",
+ "title": "Loose footnotes: heading delimiter",
+ "content": "The first observation is notable.[^1]\n\nThe second finding contradicts it.[^2]\n\nBoth deserve further study.\n\n[^1]: First note with supporting detail.\n\n[^2]: Second note with additional context.",
+ "error": null
+}

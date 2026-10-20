@@ -1,0 +1,6 @@
+{
+ "url": "https://chroma-inline-linenums",
+ "title": "Sample Python Post",
+ "content": "### RSA example\n\nHere is the key generation code:\n\n```python\np = 61\nq = 97\n\nprint(f\"n={p*q}\")\n# n=5917\n\nphi = (p-1)*(q-1)\n\nprint(f\"phi={phi}\")\n# phi=5760\n```\n\nThis gives us the public and private keys.",
+ "error": null
+}

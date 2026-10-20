@@ -1,0 +1,6 @@
+{
+ "url": "https://example.com/article",
+ "title": "Image sources",
+ "content": "Images should retain their real source even when metadata attributes also contain URLs ending in image extensions.\n\n![Diagram](https://example.com/wiki/File:diagram.png)\n\n![Chart](https://example.com/wiki/File:chart.png)\n\nBoth images have usable sources that should remain intact after extraction. Metadata must not replace either the relative source or the protocol-relative source.",
+ "error": null
+}

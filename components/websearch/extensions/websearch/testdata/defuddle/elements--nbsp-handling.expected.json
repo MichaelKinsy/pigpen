@@ -1,0 +1,6 @@
+{
+ "url": "https://nbsp-handling",
+ "title": "Non-breaking space test",
+ "content": "The brief walk home was pleasant. I passed along a pavement full of discarded sweet wrappers and broken toys.\n\nMultiple nbsps should collapse. Single ones between words should stay.",
+ "error": null
+}

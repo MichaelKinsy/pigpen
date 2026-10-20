@@ -19,31 +19,39 @@ type defuddleExpected struct {
 	Error   *string `json:"error"`
 }
 
-func defuddleFixtureNames(t *testing.T) []string {
+// defuddleFixture is one recorded page: the HTML file and the original's output for it.
+type defuddleFixture struct{ name, html, expected string }
+
+// defuddleFixtures lists both corpora: testdata/defuddle (<name>.expected.json) and the Readability fixtures of
+// testdata/html (<name>.defuddle.json).
+func defuddleFixtures(t *testing.T) []defuddleFixture {
 	t.Helper()
-	files, err := filepath.Glob("testdata/defuddle/*.expected.json")
-	noErr(t, err)
-	var names []string
-	for _, f := range files {
-		names = append(names, strings.TrimSuffix(filepath.Base(f), ".expected.json"))
+	var fixtures []defuddleFixture
+	for _, c := range []struct{ dir, suffix string }{{"testdata/defuddle/", ".expected.json"}, {"testdata/html/", ".defuddle.json"}} {
+		files, err := filepath.Glob(c.dir + "*" + c.suffix)
+		noErr(t, err)
+		for _, f := range files {
+			name := strings.TrimSuffix(filepath.Base(f), c.suffix)
+			fixtures = append(fixtures, defuddleFixture{name: filepath.Base(c.dir) + "/" + name, html: c.dir + name + ".html", expected: f})
+		}
 	}
-	return names
+	return fixtures
 }
 
 func TestDefuddleFixturesEqualTheOriginal(t *testing.T) {
-	names := defuddleFixtureNames(t)
-	if len(names) < 200 {
-		t.Fatalf("%d recorded fixtures", len(names))
+	fixtures := defuddleFixtures(t)
+	if len(fixtures) < 450 {
+		t.Fatalf("%d recorded fixtures", len(fixtures))
 	}
-	for _, name := range names {
-		t.Run(name, func(t *testing.T) {
+	for _, fx := range fixtures {
+		t.Run(fx.name, func(t *testing.T) {
 			var want defuddleExpected
-			data, err := os.ReadFile("testdata/defuddle/" + name + ".expected.json")
+			data, err := os.ReadFile(fx.expected)
 			noErr(t, err)
 			noErr(t, json.Unmarshal(data, &want))
-			src, err := os.ReadFile("testdata/defuddle/" + name + ".html")
+			src, err := os.ReadFile(fx.html)
 			noErr(t, err)
-			got, gotErr := extractWithDefuddle(string(src), want.URL)
+			got, gotErr := extractWithDefuddle(decodeText(src, "text/html"), want.URL)
 			if want.Error != nil {
 				if gotErr == nil || gotErr.Error() != *want.Error {
 					t.Fatalf("error %v, want %q", gotErr, *want.Error)
@@ -52,6 +60,12 @@ func TestDefuddleFixturesEqualTheOriginal(t *testing.T) {
 			}
 			if gotErr != nil {
 				t.Fatalf("error %v, want none", gotErr)
+			}
+			if got == nil {
+				if want.Content != nil {
+					t.Fatalf("no result, want %q", *want.Content)
+				}
+				return
 			}
 			if want.Title != nil && got.Title != *want.Title {
 				t.Errorf("title %q, want %q", got.Title, *want.Title)
