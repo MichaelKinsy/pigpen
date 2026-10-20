@@ -397,8 +397,6 @@ func TestDeferred_valyu_serper_provider(t *testing.T) {
 	tskip(t, F, "Curator page exposes usable Serper and Valyu provider entries", "the search curator UI is deferred (docs/PORT.md); this case (Curator page exposes usable Serper and Valyu provider entries) ships with the feature")
 }
 
-}
-
 func TestDeferred_youtube_extract_errors(t *testing.T) {
 	const F = "youtube-extract-errors"
 	tskip(t, F, "YouTube extraction surfaces Gemini API errors", "Gemini is a later slice (docs/PORT.md); this case (YouTube extraction surfaces Gemini API errors) ships with the feature")
