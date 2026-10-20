@@ -78,6 +78,15 @@ func SearchWithPerplexity(ctx context.Context, query string, o SearchOptions) (*
 	if err := checkPerplexityRateLimit(); err != nil {
 		return nil, err
 	}
+	act := logAPIStart(query)
+	perplexityMu.Lock()
+	rate := RateLimitInfo{Used: len(perplexityTimestamps), Max: perplexityMaxReqs, WindowMs: perplexityWindowMs}
+	if len(perplexityTimestamps) > 0 {
+		oldest := perplexityTimestamps[0]
+		rate.OldestTimestamp = &oldest
+	}
+	perplexityMu.Unlock()
+	Activity.UpdateRateLimit(rate)
 	apiKey, err := resolveProviderCredential(ctx, "Perplexity", "perplexityApiKey", "PERPLEXITY_API_KEY")
 	if err != nil {
 		return nil, err
@@ -112,7 +121,10 @@ func SearchWithPerplexity(ctx context.Context, query string, o SearchOptions) (*
 	resp, err := FetchWithCredentialRedirects(tctx, perplexityAPIURL, RequestInit{Method: "POST", Body: payload,
 		Header: http.Header{"Authorization": {"Bearer " + apiKey}, "Content-Type": {"application/json"}}}, nil)
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		act.complete(resp.StatusCode)
 	}
 	text, err := readBody(resp)
 	if err != nil {
@@ -126,6 +138,7 @@ func SearchWithPerplexity(ctx context.Context, query string, o SearchOptions) (*
 		Citations []any                                        `json:"citations"`
 	}
 	if err := json.Unmarshal([]byte(text), &data); err != nil {
+		act.complete(resp.StatusCode)
 		return nil, fmt.Errorf("Perplexity API returned invalid JSON: %v", err)
 	}
 	answer := ""
@@ -148,6 +161,7 @@ func SearchWithPerplexity(ctx context.Context, query string, o SearchOptions) (*
 			}
 		}
 	}
+	act.complete(resp.StatusCode)
 	return &SearchResponse{Answer: answer, Results: results}, nil
 }
 

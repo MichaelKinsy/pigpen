@@ -99,10 +99,14 @@ func SearchWithKagi(ctx context.Context, query string, o SearchOptions) (*Search
 	payload, _ := json.Marshal(map[string]any{"query": query, "limit": numResults})
 	tctx, cancel := withTimeout(ctx, kagiSearchTimeout)
 	defer cancel()
+	act := logAPIStart(query)
 	resp, err := FetchWithCredentialRedirects(tctx, kagiSearchURL, RequestInit{Method: "POST", Body: payload,
 		Header: http.Header{"Authorization": {"Bearer " + apiKey}, "Content-Type": {"application/json"}, "Accept": {"application/json"}}}, []string{"Authorization"})
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		act.complete(resp.StatusCode)
 	}
 	body, err := readBody(resp)
 	if err != nil {
@@ -113,6 +117,7 @@ func SearchWithKagi(ctx context.Context, query string, o SearchOptions) (*Search
 	}
 	var raw any
 	if err := json.Unmarshal([]byte(body), &raw); err != nil {
+		act.complete(resp.StatusCode)
 		return nil, fmt.Errorf("Kagi API returned invalid JSON: %v", err)
 	}
 	env, ok := raw.(map[string]any)
@@ -129,6 +134,7 @@ func SearchWithKagi(ctx context.Context, query string, o SearchOptions) (*Search
 	var results []SearchResult
 	var inline []ExtractedContent
 	kagiAppend(items, &results, &inline)
+	act.complete(resp.StatusCode)
 	if len(results) > numResults {
 		results = results[:numResults]
 	}

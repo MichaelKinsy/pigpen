@@ -176,8 +176,18 @@ func TestUpstream_allowed_search_providers(t *testing.T) {
 			}
 		}
 	})
-	tskip(t, F, "Kagi-only policy generates Curator choices without disabled providers",
-		"the search curator UI is deferred (docs/PORT.md)")
+	tw(t, F, "Kagi-only policy generates Curator choices without disabled providers", func(t *testing.T) {
+		e := newCuratorEnv(t, `{"webSearch":{"allowedProviders":["kagi"]},"kagiApiKey":"k","autoOpenBrowser":false,"curatorTimeoutSeconds":5}`)
+		t.Setenv("BRAVE_API_KEY", "b")
+		searchProviderNet(t)
+		run := e.runWebSearch("call", map[string]any{"query": "q", "provider": "kagi", "workflow": "summary-review"})
+		html := newCuratorClient(t, run.curatorURL()).page()
+		run.cancel()
+		run.result()
+		if !strings.Contains(html, `data-provider="kagi"`) || strings.Contains(html, `data-provider="brave"`) {
+			t.Fatal("the curator's provider choices ignore the allowlist")
+		}
+	})
 	tw(t, F, "disabled scalar and array selections fail before provider requests", func(t *testing.T) {
 		providerEnv(t, kagiOnly(`,"kagiApiKey":"k"`), map[string]string{"BRAVE_API_KEY": "b"})
 		n := useNet(t, func(netCall) netReply { return netReply{Err: errors.New("must not fetch")} })
@@ -262,7 +272,7 @@ func TestUpstream_allowed_search_providers(t *testing.T) {
 		out, err := searchOnce(t, "kagi")
 		noErr(t, err)
 		if !reflect.DeepEqual(toolNames(r), []string{"web_search", "source_check", "fetch_content", "get_search_content", "web_enable"}) ||
-			!reflect.DeepEqual(r.Commands(), []string{"search"}) || !hasSerply || out.Provider != "kagi" {
+			!reflect.DeepEqual(r.Commands(), []string{"websearch", "curator", "google-account", "search"}) || !hasSerply || out.Provider != "kagi" {
 			t.Fatal(toolNames(r), r.Commands(), hasSerply, out.Provider)
 		}
 	})

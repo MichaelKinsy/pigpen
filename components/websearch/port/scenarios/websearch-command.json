@@ -1,0 +1,82 @@
+{
+ "name": "websearch-command",
+ "description": "/websearch hello world: the curator opens for ad-hoc searches (notification, launcher call); no browser connects, so after the idle minimum the deterministic summary of the streamed results comes back as a follow-up message that starts a turn.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"tavily\", \"tavilyApiKey\": \"tvly-test-key\", \"tavilyBaseUrl\": \"{{server:tavily}}\", \"curatorTimeoutSeconds\": 1}"
+ },
+ "commands": {
+  "xdg-open": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "open": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "cmd": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "npm": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "websearch",
+   "rpc": {
+    "type": "prompt",
+    "message": "/websearch hello world"
+   },
+   "wait": "response"
+  }
+ ],
+ "servers": {
+  "tavily": {
+   "recordHeaders": [
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/search",
+     "json": {
+      "answer": "Tavily says hello.",
+      "results": [
+       {
+        "title": "Source one",
+        "url": "https://example.com/one",
+        "content": "First source."
+       },
+       {
+        "title": "Source two",
+        "url": "https://example.com/two",
+        "content": "Second source."
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "http://localhost:[0-9]+/",
+   "replacement": "http://localhost:<port>/"
+  }
+ ],
+ "tailMs": 9000
+}

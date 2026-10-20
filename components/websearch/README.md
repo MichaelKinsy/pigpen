@@ -10,7 +10,10 @@ A Go extension for PiG that gives the agent web research tools:
 | `source_check` | Checks a claim against searched sources and returns an evidence artifact. |
 | `web_enable` | Dynamic activation: the web tools stay out of the model's tool list until it asks for them. |
 
-Command: `/search` (browse, view and delete stored search results).
+Commands: `/search` (browse, view and delete stored search results), `/websearch` (the search
+curator), `/curator` (toggle the curator workflow) and `/google-account` (the Gemini Web account).
+Shortcuts: `ctrl+shift+s` (open the curator of a search that is still running) and `ctrl+shift+w`
+(the web activity widget); both are configurable under `shortcuts` in `web-search.json`.
 
 This is a port of [pi-web-access](https://github.com/nicobailon/pi-web-access) 0.33.0 by
 Nico Bailon (see [CREDITS.md](CREDITS.md)), made with the
@@ -93,13 +96,49 @@ never falls back or runs part of the call:
 > @pi-in-go/pigpen-websearch (Go port) does not support `<feature>` yet. Install the original
 > extension, npm:pi-web-access@0.33.0, which runs unchanged in PiG.
 
-- `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
 - a page the original would hand to its RSC payload and Defuddle fallbacks after the readable
   extraction fails.
 
-Not registered, and so not advertised: the original's commands `/websearch`, `/curator` and
-`/google-account`, its activity widget and its shortcuts (they belong to the curator and the
-activity monitor, which are not ported).
+## The search curator
+
+`web_search` takes a `workflow`: `none` (the default: raw results, no model call, no browser),
+`summary-review` (open the curator with an auto-generated summary draft) or `auto-summary`
+(generate a summary without opening the curator). `/curator` sets the configured workflow
+(`on`, `off`, `none`, `summary-review`, `auto-summary`, or no argument to toggle); it is read on
+every `web_search` call, and an explicit `workflow` parameter wins.
+
+The curator is a local web page (an HTTP server on `127.0.0.1` with a session token) where the
+results stream in as the searches finish. You select results, add searches, switch the provider,
+let the model rewrite a query, generate and edit the summary, and approve it; the approved summary
+(or the selected raw results) goes back to the agent. **Approve + auto-summary remaining searches
+for this prompt** approves the draft and makes later searches that inherit `summary-review` use
+`auto-summary` until the run settles. When nobody connects or the idle timeout (`curatorTimeoutSeconds`,
+20 seconds, 60 when remote) passes, the curator submits and falls back to a deterministic summary
+if no approved draft is present. `/websearch react hooks, next.js caching` opens the curator
+directly with comma-separated queries; the submission arrives as a follow-up message.
+
+The page is the original's, byte for byte (`curator_page.html`). The port opens it with `open`
+(macOS), `cmd /c start` (Windows) or a detached `xdg-open` (everything else); on macOS the original
+prefers a Glimpse window when the optional `glimpseui` package is installed, which a Go extension
+cannot load, so the port always uses the default browser there.
+
+If the curator cannot open a browser automatically, such as in Docker, WSL, SSH, or headless
+environments, the running curator URL is shown in the tool output. Copy it into a browser that can
+reach the Pi host, or use a tunnel/port-forward when needed.
+
+Remote curator access is opt-in: `curatorRemote: true` binds `0.0.0.0` and names the machine's
+host name in the URL, `{ "host": "h", "bind": "b" }` sets either. Remote curator sessions print the URL
+instead of trying to open a browser by default; set `autoOpenBrowser: true` to launch one anyway,
+or `autoOpenBrowser: false` to print the URL for a local curator too. The only access control is the
+unguessable session token over plain HTTP, so bind to one private interface and treat the URL as a
+secret.
+
+`/google-account` reports the Google account Gemini Web is signed in with. It needs the browser
+cookie reader of the authenticated-fetch slice; until that is installed it answers that cookie
+access is off, or, when it is on, with the port's refusal message.
+
+The activity widget (`ctrl+shift+w`) lists the last ten search API calls and page fetches with
+their status and duration, and the rate limit Perplexity reports.
 
 ## Configuration
 
@@ -150,8 +189,7 @@ and works even when the configured pair is malformed. A page that cannot be answ
 
 Summary generation (the model call behind the curator's summaries) has a hard deadline,
 `summaryGenerationDeadlineMs` (default `30000`, an integer, capped at `600000`); on expiry or when
-no model is usable it falls back to a deterministic summary. The curator workflows that use it are
-not ported yet.
+no model is usable it falls back to a deterministic summary. The curator workflows use it.
 
 ```json
 { "summaryGenerationDeadlineMs": 30000 }

@@ -14,6 +14,12 @@ import (
 type ToolNames struct{ WebSearch, SourceCheck, FetchContent, GetSearchContent string }
 
 // DefaultToolNames are the names pi-web-access registers.
+// The default shortcut keys (DEFAULT_SHORTCUTS).
+const (
+	DefaultCurateShortcut   = "ctrl+shift+s"
+	DefaultActivityShortcut = "ctrl+shift+w"
+)
+
 var DefaultToolNames = ToolNames{"web_search", "source_check", "fetch_content", "get_search_content"}
 
 var toolNamePattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_-]{0,63}$`)
@@ -45,6 +51,9 @@ type ToolConfig struct {
 	ToolActivation   string
 	AllowedProviders []string
 	Commands         map[string]bool
+	// CurateShortcut and ActivityShortcut are the keys of the curate and activity shortcuts.
+	CurateShortcut   string
+	ActivityShortcut string
 	// Warning is set when web-search.json could not be read at registration; the tools then
 	// register with defaults, as the original does.
 	Warning string
@@ -155,6 +164,16 @@ func LoadToolConfig() (*ToolConfig, error) {
 		return nil, err
 	}
 	cfg.Names = names
+
+	cfg.CurateShortcut, cfg.ActivityShortcut = DefaultCurateShortcut, DefaultActivityShortcut
+	if sc := subObject(root, "shortcuts"); sc != nil {
+		if k, ok := sc["curate"].(string); ok && k != "" {
+			cfg.CurateShortcut = k
+		}
+		if k, ok := sc["activity"].(string); ok && k != "" {
+			cfg.ActivityShortcut = k
+		}
+	}
 
 	cfg.Commands = map[string]bool{}
 	for _, c := range []string{"websearch", "curator", "search", "google-account"} {
