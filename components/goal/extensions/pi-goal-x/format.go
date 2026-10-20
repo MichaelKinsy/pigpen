@@ -188,33 +188,6 @@ func oneLineSummary(g *jsObject) string {
 	return statusLabel(g) + tail + " - " + truncateText(gstr(g, "objective"), 120)
 }
 
-type taskCounts struct{ total, complete, skipped int }
-
-func countTaskSubtree(tasks []any) taskCounts {
-	var c taskCounts
-	var walk func([]any)
-	walk = func(list []any) {
-		for _, x := range list {
-			t, _ := x.(*jsObject)
-			if t == nil {
-				continue
-			}
-			c.total++
-			switch gstr(t, "status") {
-			case "complete":
-				c.complete++
-			case "skipped":
-				c.skipped++
-			}
-			if subs, ok := t.vals["subtasks"].([]any); ok && len(subs) > 0 {
-				walk(subs)
-			}
-		}
-	}
-	walk(tasks)
-	return c
-}
-
 func buildTaskSummary(list *jsObject) string {
 	tasks, _ := list.vals["tasks"].([]any)
 	c := countTaskSubtree(tasks)
