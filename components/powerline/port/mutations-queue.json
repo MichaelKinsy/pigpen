@@ -771,13 +771,13 @@
   "name": "intercept-compact-error-guard",
   "file": "queue_editor.go",
   "find": "q.compactionGeneration > operation+1 || !q.p.compacting",
-  "replace": "!q.p.compacting"
+  "replace": "q.compactionGeneration > operation+1000 || !q.p.compacting"
  },
  {
   "name": "intercept-compact-error-session",
   "file": "queue_editor.go",
   "find": "if generation != q.sessionGeneration || q.compactionGeneration",
-  "replace": "if q.compactionGeneration"
+  "replace": "if generation == -1 || q.compactionGeneration"
  },
  {
   "name": "intercept-slash-captured",
@@ -861,12 +861,12 @@
   "name": "queue-ext-preview-push",
   "file": "extension.go",
   "find": "_ = h.ctx.SetWidget(widgetQueuePreview, h.pl.renderQueuePreview(width), sdk.WidgetOptions{\"placement\": placement})",
-  "replace": ""
+  "replace": "_ = placement"
  },
  {
   "name": "queue-ext-pending-push",
   "file": "extension.go",
   "find": "_ = h.ctx.SetWidget(widgetPendingSend, h.pl.renderPendingSend(width), sdk.WidgetOptions{\"placement\": placement})",
-  "replace": ""
+  "replace": "_ = placement"
  }
 ]

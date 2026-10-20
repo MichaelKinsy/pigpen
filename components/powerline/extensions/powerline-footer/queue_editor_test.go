@@ -186,3 +186,40 @@ func TestCompactWithAPromptQueuesIt(t *testing.T) {
 	native.q.mu.Unlock()
 	eq(t, verdict, editorContinue, "native mode leaves /compact <prompt> to Pi")
 }
+
+func TestTeardownReturnsAWaitingPromptToTheEditor(t *testing.T) {
+	r := newDelayRig(t, 4000)
+	r.submit("keep me")
+	r.q.mu.Lock()
+	r.p.teardown()
+	r.q.mu.Unlock()
+	eq(t, r.ed.text, "keep me", "/powerline off hands the waiting prompt back")
+	eq(t, r.q.pendingSend == nil, true, "and stops the countdown")
+}
+
+// A compaction that fails to start reports only for the operation that started it, in the session that started it.
+func TestCompactStartErrorIsIgnoredForALaterOperationOrSession(t *testing.T) {
+	start := func(t *testing.T) *delayRig {
+		r := newDelayRig(t, 0)
+		r.ed.text = "/compact"
+		r.q.mu.Lock()
+		r.q.interceptEditorInput(r.ed, editorInput{Submit: true})
+		r.q.mu.Unlock()
+		eq(t, r.host.compacts, 1, "compaction started")
+		return r
+	}
+	fail := func(r *delayRig) { r.host.compactCB(queueError("late failure")) }
+
+	r := start(t)
+	r.emit("session_before_compact", nil)
+	r.emit("session_before_compact", nil) // a newer operation: two increments after the one that started it
+	fail(r)
+	eq(t, r.p.compacting, true, "an error of an older operation is ignored")
+	eq(t, len(r.host.notices()), 0, "silently")
+
+	r = start(t)
+	r.emit("session_start", map[string]any{"reason": "reload"})
+	r.p.compacting = true
+	fail(r)
+	eq(t, r.p.compacting, true, "an error from before the session was replaced is ignored")
+}
