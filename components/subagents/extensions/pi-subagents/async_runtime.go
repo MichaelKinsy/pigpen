@@ -402,7 +402,8 @@ func (rt *asyncRuntime) refreshWidget() {
 	suspended := rt.state.WidgetsSuspended
 	var jobs []*AsyncJobState
 	for _, id := range sortedKeys(rt.state.AsyncJobs) {
-		jobs = append(jobs, rt.state.AsyncJobs[id])
+		cp := *rt.state.AsyncJobs[id] // the progress hooks rewrite the tracked job under the lock: draw from a copy
+		jobs = append(jobs, &cp)
 	}
 	rt.mu.Unlock()
 	if suspended {

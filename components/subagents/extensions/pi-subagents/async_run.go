@@ -982,9 +982,7 @@ func finalizeRun(cfg *RunConfig, t *progressTracker, out superviseOutcome, hooks
 		}
 	}
 	_ = writeStatus(cfg.AsyncDir, st)
-	if proof := finalizeProcessTerminal(cfg.AsyncDir, cfg.ID, rc); proof != nil && hooks.OnProcessTerminal != nil {
-		hooks.OnProcessTerminal(proof)
-	}
+	proof := finalizeProcessTerminal(cfg.AsyncDir, cfg.ID, rc)
 	_ = updateActiveRunIndex(cfg.AsyncDir, st.State, st.ToolCallID, indexOptions{terminalIndexBeforeRelease: true})
 	appendJSONLine(filepath.Join(cfg.AsyncDir, "events.jsonl"), map[string]any{"type": stepEventType(shape), "ts": endedAt, "runId": cfg.ID, "stepIndex": 0, "agent": cfg.Agent, "exitCode": shape.exitCode, "durationMs": durationMs})
 	appendJSONLine(filepath.Join(cfg.AsyncDir, "events.jsonl"), map[string]any{"type": "subagent.run.completed", "lifecycleArtifactVersion": lifecycleArtifactVersion, "ts": endedAt, "runId": cfg.ID, "status": st.State, "durationMs": durationMs})
@@ -992,6 +990,10 @@ func finalizeRun(cfg *RunConfig, t *progressTracker, out superviseOutcome, hooks
 	if hooks.OnComplete != nil {
 		fresh, _ := readStatusQuiet(cfg.AsyncDir)
 		hooks.OnComplete(cfg, result, fresh)
+	}
+	// The event is a host call: it goes last, so that it never delays the completion the session reads from the job.
+	if proof != nil && hooks.OnProcessTerminal != nil {
+		hooks.OnProcessTerminal(proof)
 	}
 }
 
