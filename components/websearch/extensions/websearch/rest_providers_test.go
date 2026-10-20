@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -664,4 +665,35 @@ func TestRestProviderTransportFailure(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+}
+
+// BenchmarkRestProviders measures one search of the keyed REST providers over a canned
+// transport (no network): the cost of the request build, the response parse and the mapping.
+func BenchmarkRestProviders(b *testing.B) {
+	home := b.TempDir()
+	b.Setenv("PIG_CODING_AGENT_DIR", home)
+	if err := os.WriteFile(home+"/web-search.json", []byte(`{"serperApiKey":"k","serpapiApiKey":"k","valyuApiKey":"k","youApiKey":"k","xcrawlApiKey":"k","jinaApiKey":"k"}`), 0o600); err != nil {
+		b.Fatal(err)
+	}
+	organic := `{"organic":[{"title":"A","link":"https://example.com/a","snippet":"s"},{"title":"B","link":"https://example.com/b","snippet":"s"}]}`
+	cases := map[string]struct {
+		body string
+		call func() error
+	}{
+		"serper":  {organic, func() error { _, err := SearchWithSerper(bg(), "q", SearchOptions{}); return err }},
+		"serpapi": {`{"organic_results":[{"title":"A","link":"https://example.com/a","snippet":"s"}]}`, func() error { _, err := SearchWithSerpAPI(bg(), "q", SearchOptions{}); return err }},
+		"jina":    {`{"code":200,"data":[{"title":"A","url":"https://example.com/a","description":"d"}]}`, func() error { _, err := SearchWithJina(bg(), "q", SearchOptions{}); return err }},
+	}
+	for name, c := range cases {
+		b.Run(name, func(b *testing.B) {
+			body := c.body
+			defer SetHTTP(doerFunc(func(r *http.Request) (*http.Response, error) { return textResponse(r, 200, body), nil }))()
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				if err := c.call(); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
 }
