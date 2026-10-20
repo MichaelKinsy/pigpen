@@ -133,70 +133,76 @@ func TestIndexCommand(t *testing.T) {
 	})
 }
 
-// searxngOllama runs one twin for both self-hosted providers, as the original has a describe block each.
-func searxngOllama(t *testing.T, fn func(t *testing.T, label, name, def, urlEnv string)) {
-	t.Helper()
-	t.Run("searxng", func(t *testing.T) { fn(t, "SearXNG", "searxng", "http://localhost:8080", "SEARXNG_URL") })
-	t.Run("ollama", func(t *testing.T) { fn(t, "Ollama", "ollama", "http://localhost:11434", "OLLAMA_HOST") })
+// selfHosted is one of the two self-hosted providers; the original has a describe block for each, with the same
+// titles, so every such title is twinned twice (SearXNG first, as upstream orders them).
+type selfHosted struct{ label, name string }
+
+var (
+	searxngProvider = selfHosted{"SearXNG", "searxng"}
+	ollamaProvider  = selfHosted{"Ollama", "ollama"}
+)
+
+func promptsURLThenKey(t *testing.T, p selfHosted) {
+	h := home(t)
+	r := startRig(t, HostOptions{})
+	runCommand(r, "", p.label, "http://my-host:1234", "my-bearer")
+	s := saved(t, h)
+	if s["provider"] != p.name || s["baseUrls"].(obj)[p.name] != "http://my-host:1234" || s["apiKeys"].(obj)[p.name] != "my-bearer" {
+		t.Fatalf("%v", s)
+	}
+	if len(r.inputs) != 2 {
+		t.Fatalf("inputs: %v", r.inputs)
+	}
+	title0, _, _ := strings.Cut(r.inputs[0], "|")
+	title1, _, _ := strings.Cut(r.inputs[1], "|")
+	if !regexp.MustCompile(`(?i)URL`).MatchString(title0) || !regexp.MustCompile(`(?i)key`).MatchString(title1) {
+		t.Fatalf("inputs: %v", r.inputs)
+	}
+}
+
+func emptyURLFallsBack(t *testing.T, p selfHosted, def string) {
+	h := home(t)
+	r := startRig(t, HostOptions{})
+	runCommand(r, "", p.label, "", "")
+	s := saved(t, h)
+	keys, _ := s["apiKeys"].(obj)
+	if _, has := keys[p.name]; s["provider"] != p.name || s["baseUrls"].(obj)[p.name] != def || has {
+		t.Fatalf("%v", s)
+	}
+}
+
+func urlCancelLeavesConfig(t *testing.T, p selfHosted) {
+	h := home(t)
+	cfgFile(t, h, `{"provider":"brave","apiKey":"existing"}`)
+	r := startRig(t, HostOptions{})
+	runCommand(r, "", p.label, nil)
+	s := saved(t, h)
+	if s["provider"] != "brave" || s["apiKey"] != "existing" {
+		t.Fatalf("%v", s)
+	}
+}
+
+func keepsExistingURLAndKey(t *testing.T, p selfHosted) {
+	h := home(t)
+	cfgFile(t, h, `{"provider":"`+p.name+`","baseUrls":{"`+p.name+`":"http://existing:8080"},"apiKeys":{"`+p.name+`":"existing-key"}}`)
+	r := startRig(t, HostOptions{})
+	runCommand(r, "", p.label+" ✓ (configured)", "", "")
+	s := saved(t, h)
+	if s["baseUrls"].(obj)[p.name] != "http://existing:8080" || s["apiKeys"].(obj)[p.name] != "existing-key" {
+		t.Fatalf("%v", s)
+	}
 }
 
 func TestIndexCommandSelfHosted(t *testing.T) {
 	const f = "index"
-	tw(t, f, "prompts URL first, then optional key, and persists both", func(t *testing.T) {
-		searxngOllama(t, func(t *testing.T, label, name, _, _ string) {
-			h := home(t)
-			r := startRig(t, HostOptions{})
-			runCommand(r, "", label, "http://my-host:1234", "my-bearer")
-			s := saved(t, h)
-			if s["provider"] != name || s["baseUrls"].(obj)[name] != "http://my-host:1234" || s["apiKeys"].(obj)[name] != "my-bearer" {
-				t.Fatalf("%v", s)
-			}
-			if len(r.inputs) != 2 {
-				t.Fatalf("inputs: %v", r.inputs)
-			}
-			title0, _, _ := strings.Cut(r.inputs[0], "|")
-			title1, _, _ := strings.Cut(r.inputs[1], "|")
-			if !regexp.MustCompile(`(?i)URL`).MatchString(title0) || !regexp.MustCompile(`(?i)key`).MatchString(title1) {
-				t.Fatalf("inputs: %v", r.inputs)
-			}
-		})
-	})
-	tw(t, f, "empty URL input falls back to the default URL and leaves key unset", func(t *testing.T) {
-		searxngOllama(t, func(t *testing.T, label, name, def, _ string) {
-			h := home(t)
-			r := startRig(t, HostOptions{})
-			runCommand(r, "", label, "", "")
-			s := saved(t, h)
-			keys, _ := s["apiKeys"].(obj)
-			if _, has := keys[name]; s["provider"] != name || s["baseUrls"].(obj)[name] != def || has {
-				t.Fatalf("%v", s)
-			}
-		})
-	})
-	tw(t, f, "URL cancel (undefined) leaves config untouched", func(t *testing.T) {
-		searxngOllama(t, func(t *testing.T, label, _, _, _ string) {
-			h := home(t)
-			cfgFile(t, h, `{"provider":"brave","apiKey":"existing"}`)
-			r := startRig(t, HostOptions{})
-			runCommand(r, "", label, nil)
-			s := saved(t, h)
-			if s["provider"] != "brave" || s["apiKey"] != "existing" {
-				t.Fatalf("%v", s)
-			}
-		})
-	})
-	tw(t, f, "keeps existing URL and key when both inputs are empty", func(t *testing.T) {
-		searxngOllama(t, func(t *testing.T, label, name, _, _ string) {
-			h := home(t)
-			cfgFile(t, h, `{"provider":"`+name+`","baseUrls":{"`+name+`":"http://existing:8080"},"apiKeys":{"`+name+`":"existing-key"}}`)
-			r := startRig(t, HostOptions{})
-			runCommand(r, "", label+" ✓ (configured)", "", "")
-			s := saved(t, h)
-			if s["baseUrls"].(obj)[name] != "http://existing:8080" || s["apiKeys"].(obj)[name] != "existing-key" {
-				t.Fatalf("%v", s)
-			}
-		})
-	})
+	tw(t, f, "prompts URL first, then optional key, and persists both", func(t *testing.T) { promptsURLThenKey(t, searxngProvider) })
+	tw(t, f, "empty URL input falls back to the default URL and leaves key unset", func(t *testing.T) { emptyURLFallsBack(t, searxngProvider, "http://localhost:8080") })
+	tw(t, f, "URL cancel (undefined) leaves config untouched", func(t *testing.T) { urlCancelLeavesConfig(t, searxngProvider) })
+	tw(t, f, "keeps existing URL and key when both inputs are empty", func(t *testing.T) { keepsExistingURLAndKey(t, searxngProvider) })
+	tw(t, f, "prompts URL first, then optional key, and persists both", func(t *testing.T) { promptsURLThenKey(t, ollamaProvider) })
+	tw(t, f, "empty URL input falls back to the default URL and leaves key unset", func(t *testing.T) { emptyURLFallsBack(t, ollamaProvider, "http://localhost:11434") })
+	tw(t, f, "URL cancel (undefined) leaves config untouched", func(t *testing.T) { urlCancelLeavesConfig(t, ollamaProvider) })
+	tw(t, f, "keeps existing URL and key when both inputs are empty", func(t *testing.T) { keepsExistingURLAndKey(t, ollamaProvider) })
 	tw(t, f, "marks searxng (configured) when SEARXNG_URL env is set, but not when only the default applies", func(t *testing.T) {
 		// The default URL alone is not "configured": the marker tells the user they set something.
 		home(t)

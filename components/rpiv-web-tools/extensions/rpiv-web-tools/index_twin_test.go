@@ -218,47 +218,42 @@ func TestIndexSearxng(t *testing.T) {
 		eq(t, len(n.Requests), 1)
 		return n.Requests[0]
 	}
+	// A title the original uses in both its SearXNG and its Ollama block is twinned twice, SearXNG first.
+	envURL := func(t *testing.T, name, hostEnv, path string) *fakeNet {
+		t.Helper()
+		n := use(t, obj{"provider": name, "baseUrls": obj{name: "http://config-host:7000"}})
+		t.Setenv(hostEnv, "http://env-host:9000")
+		_, _, err := search(t, "hello", nil, nil)
+		eq(t, err, nil)
+		u := parseURLString(t, one(t, n).URL)
+		eq(t, u.Scheme+"://"+u.Host, "http://env-host:9000")
+		eq(t, u.Path, path)
+		return n
+	}
+	configURL := func(t *testing.T, name string) {
+		t.Helper()
+		n := use(t, obj{"provider": name, "baseUrls": obj{name: "http://config-host:7000"}})
+		_, _, err := search(t, "x", nil, nil)
+		eq(t, err, nil)
+		eq(t, parseURLString(t, one(t, n).URL).Host, "config-host:7000")
+	}
 	tw(t, f, "uses env URL (wins over config and default)", func(t *testing.T) {
-		t.Run("searxng", func(t *testing.T) {
-			clearEnv(t)
-			t.Setenv(searxngURLEnv, "http://env-host:9000")
-			n := use(t, obj{"provider": "searxng", "baseUrls": obj{"searxng": "http://config-host:7000"}})
-			t.Setenv(searxngURLEnv, "http://env-host:9000")
-			_, _, err := search(t, "hello", nil, nil)
-			eq(t, err, nil)
-			u := parseURLString(t, one(t, n).URL)
-			eq(t, u.Scheme+"://"+u.Host, "http://env-host:9000")
-			eq(t, u.Path, "/search")
-			eq(t, u.Query().Get("q"), "hello")
-			eq(t, u.Query().Get("format"), "json")
-			eq(t, u.Query().Get("safesearch"), "0")
-			eq(t, u.Query().Has("count"), false)
-		})
-		t.Run("ollama", func(t *testing.T) {
-			n := use(t, obj{"provider": "ollama", "baseUrls": obj{"ollama": "http://config-host:7000"}})
-			t.Setenv(ollamaHostEnv, "http://env-host:9000")
-			_, _, err := search(t, "hello", nil, nil)
-			eq(t, err, nil)
-			r := one(t, n)
-			u := parseURLString(t, r.URL)
-			eq(t, u.Scheme+"://"+u.Host, "http://env-host:9000")
-			eq(t, u.Path, "/api/web_search")
-			body := bodyJSON(t, r.Body)
-			eq(t, body["query"], "hello")
-			_, has := body["max_results"]
-			eq(t, has, true)
-		})
+		n := envURL(t, "searxng", searxngURLEnv, "/search")
+		u := parseURLString(t, n.Requests[0].URL)
+		eq(t, u.Query().Get("q"), "hello")
+		eq(t, u.Query().Get("format"), "json")
+		eq(t, u.Query().Get("safesearch"), "0")
+		eq(t, u.Query().Has("count"), false)
 	})
-	tw(t, f, "falls back to config URL when env is unset", func(t *testing.T) {
-		for _, c := range []struct{ name, baseKey string }{{"searxng", "searxng"}, {"ollama", "ollama"}} {
-			t.Run(c.name, func(t *testing.T) {
-				n := use(t, obj{"provider": c.name, "baseUrls": obj{c.baseKey: "http://config-host:7000"}})
-				_, _, err := search(t, "x", nil, nil)
-				eq(t, err, nil)
-				eq(t, parseURLString(t, one(t, n).URL).Host, "config-host:7000")
-			})
-		}
+	tw(t, f, "falls back to config URL when env is unset", func(t *testing.T) { configURL(t, "searxng") })
+	tw(t, f, "uses env URL (wins over config and default)", func(t *testing.T) {
+		n := envURL(t, "ollama", ollamaHostEnv, "/api/web_search")
+		body := bodyJSON(t, n.Requests[0].Body)
+		eq(t, body["query"], "hello")
+		_, has := body["max_results"]
+		eq(t, has, true)
 	})
+	tw(t, f, "falls back to config URL when env is unset", func(t *testing.T) { configURL(t, "ollama") })
 	tw(t, f, "falls back to default URL (http://localhost:8080) when neither env nor config is set", func(t *testing.T) {
 		n := use(t, searxng)
 		_, _, err := search(t, "x", nil, nil)
@@ -266,22 +261,20 @@ func TestIndexSearxng(t *testing.T) {
 		eq(t, parseURLString(t, one(t, n).URL).Host, "localhost:8080")
 	})
 	tw(t, f, "trailing slash on baseUrl does not produce a double-slash", func(t *testing.T) {
-		t.Run("searxng", func(t *testing.T) {
-			n := use(t, searxng)
-			t.Setenv(searxngURLEnv, "http://host:8080/")
-			_, _, err := search(t, "x", nil, nil)
-			eq(t, err, nil)
-			r := one(t, n)
-			eq(t, strings.Contains(r.URL, "//search"), false)
-			eq(t, parseURLString(t, r.URL).Path, "/search")
-		})
-		t.Run("ollama", func(t *testing.T) {
-			n := use(t, obj{"provider": "ollama"})
-			t.Setenv(ollamaHostEnv, "http://host:11434/")
-			_, _, err := search(t, "x", nil, nil)
-			eq(t, err, nil)
-			eq(t, strings.Contains(one(t, n).URL, "//api"), false)
-		})
+		n := use(t, searxng)
+		t.Setenv(searxngURLEnv, "http://host:8080/")
+		_, _, err := search(t, "x", nil, nil)
+		eq(t, err, nil)
+		r := one(t, n)
+		eq(t, strings.Contains(r.URL, "//search"), false)
+		eq(t, parseURLString(t, r.URL).Path, "/search")
+	})
+	tw(t, f, "trailing slash on baseUrl does not produce a double-slash", func(t *testing.T) {
+		n := use(t, obj{"provider": "ollama"})
+		t.Setenv(ollamaHostEnv, "http://host:11434/")
+		_, _, err := search(t, "x", nil, nil)
+		eq(t, err, nil)
+		eq(t, strings.Contains(one(t, n).URL, "//api"), false)
 	})
 	tw(t, f, "multiple trailing slashes on baseUrl are all stripped", func(t *testing.T) {
 		n := use(t, searxng)
@@ -299,17 +292,16 @@ func TestIndexSearxng(t *testing.T) {
 		eq(t, err, nil)
 		eq(t, one(t, n).Header.Get("Authorization"), "Bearer env-bearer")
 	})
-	tw(t, f, "omits Authorization when no API key is configured", func(t *testing.T) {
-		for _, name := range []string{"searxng", "ollama"} {
-			t.Run(name, func(t *testing.T) {
-				n := use(t, obj{"provider": name})
-				_, _, err := search(t, "x", nil, nil)
-				eq(t, err, nil)
-				_, has := one(t, n).Header["Authorization"]
-				eq(t, has, false)
-			})
-		}
-	})
+	omitsAuthorization := func(t *testing.T, name string) {
+		t.Helper()
+		n := use(t, obj{"provider": name})
+		_, _, err := search(t, "x", nil, nil)
+		eq(t, err, nil)
+		_, has := one(t, n).Header["Authorization"]
+		eq(t, has, false)
+	}
+	tw(t, f, "omits Authorization when no API key is configured", func(t *testing.T) { omitsAuthorization(t, "searxng") })
+	tw(t, f, "omits Authorization when no API key is configured", func(t *testing.T) { omitsAuthorization(t, "ollama") })
 	tw(t, f, "falls back to config apiKeys.searxng when env is unset", func(t *testing.T) {
 		n := use(t, obj{"provider": "searxng", "apiKeys": obj{"searxng": "config-bearer"}})
 		_, _, err := search(t, "x", nil, nil)
@@ -328,18 +320,17 @@ func TestIndexSearxng(t *testing.T) {
 		eq(t, err, nil)
 		eq(t, len(resultRows(t, details)), 3)
 	})
-	tw(t, f, "returns no-results envelope on empty results array", func(t *testing.T) {
-		for _, name := range []string{"searxng", "ollama"} {
-			t.Run(name, func(t *testing.T) {
-				clearEnv(t)
-				writeConfigFile(t, obj{"provider": name})
-				useNet(t, func(netReq) netResp { return jsonResp(obj{"results": arr{}}) })
-				text, _, err := search(t, "x", nil, nil)
-				eq(t, err, nil)
-				contains(t, text, "No results found")
-			})
-		}
-	})
+	noResults := func(t *testing.T, name string) {
+		t.Helper()
+		clearEnv(t)
+		writeConfigFile(t, obj{"provider": name})
+		useNet(t, func(netReq) netResp { return jsonResp(obj{"results": arr{}}) })
+		text, _, err := search(t, "x", nil, nil)
+		eq(t, err, nil)
+		contains(t, text, "No results found")
+	}
+	tw(t, f, "returns no-results envelope on empty results array", func(t *testing.T) { noResults(t, "searxng") })
+	tw(t, f, "returns no-results envelope on empty results array", func(t *testing.T) { noResults(t, "ollama") })
 	tw(t, f, "wraps non-2xx as 'SearXNG Search API error (status)'", func(t *testing.T) {
 		clearEnv(t)
 		writeConfigFile(t, searxng)
@@ -361,18 +352,17 @@ func TestIndexSearxng(t *testing.T) {
 		_, _, err := search(t, "x", nil, nil)
 		eq(t, matches(t, `rejected the Bearer token.*SEARXNG_API_KEY`, errText(err)), true)
 	})
-	tw(t, f, "normalizes missing fields on result rows to empty strings", func(t *testing.T) {
-		for _, name := range []string{"searxng", "ollama"} {
-			t.Run(name, func(t *testing.T) {
-				clearEnv(t)
-				writeConfigFile(t, obj{"provider": name})
-				useNet(t, func(netReq) netResp { return jsonResp(obj{"results": arr{obj{}}}) })
-				_, details, err := search(t, "x", nil, nil)
-				eq(t, err, nil)
-				eq(t, resultRows(t, details), arr{emptyRow})
-			})
-		}
-	})
+	normalizes := func(t *testing.T, name string) {
+		t.Helper()
+		clearEnv(t)
+		writeConfigFile(t, obj{"provider": name})
+		useNet(t, func(netReq) netResp { return jsonResp(obj{"results": arr{obj{}}}) })
+		_, details, err := search(t, "x", nil, nil)
+		eq(t, err, nil)
+		eq(t, resultRows(t, details), arr{emptyRow})
+	}
+	tw(t, f, "normalizes missing fields on result rows to empty strings", func(t *testing.T) { normalizes(t, "searxng") })
+	tw(t, f, "normalizes missing fields on result rows to empty strings", func(t *testing.T) { normalizes(t, "ollama") })
 }
 
 func TestIndexSearxngProvider(t *testing.T) {
@@ -742,23 +732,23 @@ func TestIndexProviderEnvPrecedence(t *testing.T) {
 		eq(t, err, nil)
 		eq(t, detailsMap(t, details)["backend"], "brave")
 	})
+	unknownEnvProvider := func(t *testing.T) {
+		t.Helper()
+		clearEnv(t)
+		t.Setenv("WEB_SEARCH_PROVIDER", "bogus")
+		t.Setenv(braveKeyEnv, "brave-key")
+		writeConfigFile(t, obj{"provider": "brave"})
+	}
+	// Upstream has one block for web_search and one for web_fetch under the same title.
 	tw(t, f, "unknown WEB_SEARCH_PROVIDER name throws (no silent fallback)", func(t *testing.T) {
-		// Upstream runs it for web_search and, in a second describe block under the same title, for web_fetch.
-		for _, tool := range []string{"web_search", "web_fetch"} {
-			t.Run(tool, func(t *testing.T) {
-				clearEnv(t)
-				t.Setenv("WEB_SEARCH_PROVIDER", "bogus")
-				t.Setenv(braveKeyEnv, "brave-key")
-				writeConfigFile(t, obj{"provider": "brave"})
-				var err error
-				if tool == "web_search" {
-					_, _, err = search(t, "x", nil, nil)
-				} else {
-					_, _, err = fetchURL(t, "https://x.com", false)
-				}
-				contains(t, errText(err), `Unknown web_search provider: "bogus"`)
-			})
-		}
+		unknownEnvProvider(t)
+		_, _, err := search(t, "x", nil, nil)
+		contains(t, errText(err), `Unknown web_search provider: "bogus"`)
+	})
+	tw(t, f, "unknown WEB_SEARCH_PROVIDER name throws (no silent fallback)", func(t *testing.T) {
+		unknownEnvProvider(t)
+		_, _, err := fetchURL(t, "https://x.com", false)
+		contains(t, errText(err), `Unknown web_search provider: "bogus"`)
 	})
 	tw(t, f, "WEB_SEARCH_PROVIDER beats config.provider (env-pinned tavily fetch)", func(t *testing.T) {
 		clearEnv(t)
