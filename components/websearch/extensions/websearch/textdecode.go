@@ -2,7 +2,6 @@ package websearch
 
 import (
 	"bytes"
-	"regexp"
 	"strings"
 	"unicode/utf8"
 
@@ -10,7 +9,7 @@ import (
 	"golang.org/x/text/encoding/htmlindex"
 )
 
-var charsetRE = regexp.MustCompile(`(?i)charset\s*=\s*["']?([^;"'\s]+)`)
+var charsetRE = mustRE(`(?i)charset\s*=\s*["']?([^;"'\s]+)`)
 
 // decodeText is readTextResponseWithLimit of extract.ts: new TextDecoder(charset || "utf-8").decode(buffer), and
 // UTF-8 when the label is not one TextDecoder knows. UTF-8 and UTF-16 follow the Encoding Standard's decoders

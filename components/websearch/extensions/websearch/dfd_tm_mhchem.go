@@ -6,7 +6,7 @@ import (
 
 // Port of the mhchem module that dist/temml.cjs bundles ("Temml mhchem.js", an adaptation of mhchem 3.3.0, MIT / Apache
 // 2.0, see the header of the original): the \ce and \pu macros. The state machine tables and the regular expression
-// sources are generated (dfd_temml_tables.go); the actions, the pattern functions and the texify stage are ported here.
+// sources are generated (tables/tm-mh-*.gz, decoded by dfd_tables.go); the actions, the pattern functions and the texify stage are ported here.
 // Regular expressions run on dfd_jsre.go.
 
 type mhBuf = map[string]any
@@ -91,7 +91,7 @@ func mhPatternMatch(name, input string) *mhMatch {
 	if f, ok := tmMhFuncPatts[name]; ok {
 		return f(input)
 	}
-	src, ok := tmMhRegexPatterns[name]
+	src, ok := tmMhRegexPatterns()[name]
 	if !ok {
 		mhThrow("mhchem bug P. Please report. (" + name + ")")
 	}
@@ -351,7 +351,7 @@ func mhGo(input string, stateMachine string) []any {
 		} else {
 			watchdog--
 		}
-		machine := tmMhTransitions[stateMachine]
+		machine := tmMhTransitions()[stateMachine]
 		t, ok := machine[state]
 		if !ok {
 			t = machine["*"]

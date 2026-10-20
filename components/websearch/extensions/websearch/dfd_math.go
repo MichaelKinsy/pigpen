@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 
 	"golang.org/x/text/unicode/norm"
@@ -27,7 +26,7 @@ var (
 	dfdMjxTokenTags      = map[string]bool{"mi": true, "mo": true, "mn": true, "mtext": true, "ms": true, "mspace": true, "mglyph": true}
 	dfdMjxStructuralTags = map[string]bool{"mrow": true, "mstyle": true, "mpadded": true, "mphantom": true, "menclose": true, "merror": true, "mtable": true, "mtr": true, "mtd": true, "mlabeledtr": true}
 	dfdMjxDropTags       = map[string]bool{"mjx-nstrut": true, "mjx-dstrut": true, "mjx-strut": true, "mjx-line": true, "mjx-spacer": true, "mjx-break": true, "mjx-mark": true}
-	reInvisibleMath      = regexp.MustCompile("[\u2061\u2062\u2063\u2064]")
+	reInvisibleMath      = mustRE("[\u2061\u2062\u2063\u2064]")
 )
 
 func dfdNormalizeMathGlyphs(s string) string {
@@ -251,7 +250,7 @@ func dfdGetMathMLFromElement(el *ldNode) *dfdMathData {
 	return nil
 }
 
-var reLatexPHP = regexp.MustCompile(`latex\.php\?latex=([^&]+)`)
+var reLatexPHP = mustRE(`latex\.php\?latex=([^&]+)`)
 
 func dfdGetBasicLatexFromElement(el *ldNode) (string, bool) {
 	if v := el.attr("data-latex"); v != "" {
@@ -344,8 +343,8 @@ func dfdIsBlockDisplay(el *ldNode) bool {
 	return false
 }
 
-var dfdLatexParamRes = func() []*regexp.Regexp {
-	var out []*regexp.Regexp
+var dfdLatexParamRes = func() []*lazyRE {
+	var out []*lazyRE
 	for _, p := range []string{"latex", "chl", "tex", "eq", "math"} {
 		out = append(out, jsRE(`[?&]`+p+`=([^&#]+)`, "i"))
 	}

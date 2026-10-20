@@ -1,8 +1,8 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
+	"sync"
 )
 
 // Port of defuddle 0.19.3 dist/removals/scoring.js (ContentScorer).
@@ -29,20 +29,18 @@ var (
 	reTocHeading     = jsRE(`^(?:table of )?contents$|^on this page$|^in this (?:article|guide|post)$`, "i")
 	reContentDate    = jsRE(`\b(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*,?\s+\d{4})\b`, "i")
 	reContentAuthor  = jsRE(`\b(?:by|written by|author:)\s+[A-Za-z\s]+\b`, "i")
-	reSentenceEnd    = regexp.MustCompile(`[.?!]`)
-
-	reNavHeading  *regexp.Regexp
-	reNavIndicats []*regexp.Regexp
+	reSentenceEnd    = mustRE(`[.?!]`)
 )
 
-func init() {
+// dfdNavREs are the navigation heading alternation and the indicator expressions, built on first use.
+var dfdNavREs = sync.OnceValues(func() (heading *lazyRE, indicators []*lazyRE) {
 	var alts []string
 	for _, i := range dfdNavigationIndicators {
 		alts = append(alts, strings.ReplaceAll(i, " ", `\s+`))
-		reNavIndicats = append(reNavIndicats, jsRE(`\b`+strings.ReplaceAll(i, " ", `\s+`)+`\b`, ""))
+		indicators = append(indicators, jsRE(`\b`+strings.ReplaceAll(i, " ", `\s+`)+`\b`, ""))
 	}
-	reNavHeading = jsRE(strings.Join(alts, "|"), "i")
-}
+	return jsRE(strings.Join(alts, "|"), "i"), indicators
+})
 
 func dfdIsWordByte(c byte) bool {
 	return c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
@@ -210,15 +208,16 @@ func dfdIsLikelyContent(element *ldNode) bool {
 		headingText := jsTrim(headingChild.textContent())
 		if headingText != "" && headingText == jsTrim(text) {
 			headingLower := strings.ToLower(headingText)
-			if !reNavHeading.MatchString(headingLower) && !reTocHeading.MatchString(headingLower) {
+			if navHeading, _ := dfdNavREs(); !navHeading.MatchString(headingLower) && !reTocHeading.MatchString(headingLower) {
 				return true
 			}
 		}
 	}
 	if words < 1000 {
 		hasNavigationHeading := false
+		navHeading, _ := dfdNavREs()
 		for _, h := range ldQuerySelectorAll(element, "h1, h2, h3, h4, h5, h6") {
-			if reNavHeading.MatchString(jsTrim(strings.ToLower(h.textContent()))) {
+			if navHeading.MatchString(jsTrim(strings.ToLower(h.textContent()))) {
 				hasNavigationHeading = true
 				break
 			}
@@ -287,7 +286,8 @@ func dfdScoreNonContentBlock(element *ldNode) float64 {
 	score += float64(dfdCountCommas(text))
 	textLower := strings.ToLower(text)
 	matches := 0
-	for _, re := range reNavIndicats {
+	_, indicators := dfdNavREs()
+	for _, re := range indicators {
 		if re.MatchString(textLower) {
 			matches++
 		}

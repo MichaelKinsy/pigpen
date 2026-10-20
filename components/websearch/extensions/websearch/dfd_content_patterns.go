@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 )
 
@@ -77,7 +76,7 @@ func dfdCompareDocumentPosition(this, target *ldNode) int {
 var (
 	reBoundaryDate   = jsRE(`(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}|\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*|\d{4}[-/]\d{1,2}[-/]\d{1,2})`, "i")
 	reBoundaryByline = jsRE(`^by\s+\S`, "i")
-	reSentencePunct  = jsRE(`[.!?]`, "")
+	reSentencePunct  = dfdSentencePunct{}
 	reHiddenClass    = jsRE(`\b(?:isHidden(?:-[A-Za-z0-9_]+)?|is-hidden)\b`, "")
 )
 
@@ -98,6 +97,11 @@ func dfdFindTitleElement(mainContent *ldNode, title string) *ldNode {
 	}
 	return nil
 }
+
+// dfdSentencePunct is the expression /[.!?]/, which a search for three bytes answers.
+type dfdSentencePunct struct{}
+
+func (dfdSentencePunct) MatchString(s string) bool { return strings.ContainsAny(s, ".!?") }
 
 func dfdLinkTextLength(el *ldNode) int {
 	n := 0
@@ -140,10 +144,10 @@ func dfdIsProseBlock(el *ldNode) bool {
 	if !reSentencePunct.MatchString(text) {
 		return false
 	}
-	if reBoundaryByline.MatchString(text) && words < 15 {
+	if words < 15 && reBoundaryByline.MatchString(text) {
 		return false
 	}
-	if reBoundaryDate.MatchString(text) && words < 20 {
+	if words < 20 && reBoundaryDate.MatchString(text) {
 		return false
 	}
 	if float64(dfdLinkTextLength(el)) > float64(jsLen(text))*0.7 {
@@ -224,7 +228,7 @@ var (
 	reCPDate         = jsRE(`(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}|\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*|\d{4}[-/]\d{1,2}[-/]\d{1,2})`, "i")
 	reRelativeTime   = jsRE(`\b\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago\b`, "i")
 	reReadTime       = jsRE(`\d+\s*min(?:ute)?s?\s+read\b|(?:read(?:ing)?\s+time)\s*:?\s*\d+\s*min(?:ute)?s?\b`, "i")
-	reBylineUpper    = regexp.MustCompile(`^\p{Lu}`)
+	reBylineUpper    = mustRE(`^\p{Lu}`)
 	reStartsWithBy   = jsRE(`^(?:posted\s+)?by\s+\S`, "i")
 	reMetadataLabel  = jsRE(`^(?:date|published|updated|posted|from|to|subject)\s*:`, "i")
 	reNewsletter     = jsRE(`\bsubscribe\b[\s\S]{0,40}\bnewsletter\b|\bnewsletter\b[\s\S]{0,40}\bsubscribe\b|\bsign[- ]up\b[\s\S]{0,80}\b(?:newsletter|email alert)|\b(?:don[\u2019']?t (?:want to )?miss|never miss)\b[\s\S]{0,80}\b(?:latest|best|exclusive|reports?|updates?|source)`, "i")
@@ -236,7 +240,7 @@ var (
 	reEmail          = jsRE(`[\w.-]+@[\w.-]+\.\w+`, "")
 	rePhone          = jsRE(`\(?\d{3}\)?[\s.\x{2011}\x{2013}-]?\d{3}[\s.\x{2011}\x{2013}-]?\d{4}`, "")
 	reHeadingTag2    = jsRE(`^H[1-6]$`, "")
-	reCamel          = regexp.MustCompile(`([a-z])([A-Z])`)
+	reCamel          = mustRE(`([a-z])([A-Z])`)
 	reCurlyQuotes    = jsRE(`[\u2018\u2019]`, "")
 	reRelatedHeading = jsRE(`^(?:related (?:posts?|articles?|content|stories|reads?|reading)|you (?:might|may|could) (?:also )?(?:like|enjoy|be interested in)|read (?:next|more|also)|further reading|see also|more (?:from .*|from|articles?|posts?|like this)|more to (?:read|explore)|explore more|about (?:the )?author|latest (?:news|events?|posts?|articles?|stories)(?:\s*[&+]\s*(?:news|events?|posts?|articles?|stories))?)$`, "i")
 	reCTAHeading     = jsRE(`^(?:subscribe|sign up|follow us|share this|stay (?:updated|connected)|join (?:us|our)|search (?:the |our )?(?:site|blog|archives?|newsroom|website|catalog|store|shop|database))$`, "i")
@@ -251,7 +255,7 @@ var (
 	reLastPathSeg    = jsRE(`/[^/]*$`, "")
 	reWWW            = jsRE(`^www\.`, "")
 
-	dfdBoilerplatePatterns = []*regexp.Regexp{
+	dfdBoilerplatePatterns = []*lazyRE{
 		jsRE(`^This (?:article|story|piece) (?:appeared|was published|originally appeared) in\b`, "i"),
 		jsRE(`^A version of this (?:article|story) (?:appeared|was published) in\b`, "i"),
 		jsRE(`^Originally (?:published|appeared) (?:in|on|at)\b`, "i"),
@@ -265,16 +269,16 @@ var (
 		jsRE(`^Thank you for (?:being part of|joining) our community\b`, "i"),
 	}
 
-	metaStripBase = []*regexp.Regexp{
+	metaStripBase = []*lazyRE{
 		jsRE(`\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b`, "i"),
 		jsRE(`\b(?:Mon(?:day)?|Tue(?:s(?:day)?)?|Wed(?:nesday)?|Thu(?:rs(?:day)?)?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?)\b`, "i"),
 		jsRE(`\b\d+(?:st|nd|rd|th)?\b`, ""),
 		jsRE(`\d{4}[-/]\d{1,2}[-/]\d{1,2}`, ""),
 	}
-	readTimeStrip = append(append([]*regexp.Regexp{}, metaStripBase...),
+	readTimeStrip = append(append([]*lazyRE{}, metaStripBase...),
 		jsRE(`\bmin(?:ute)?s?\b`, "i"), jsRE(`\bread(?:ing)?\b`, "i"), jsRE(`\btime\b`, "i"), jsRE(`\bestimated\b`, "i"),
 		jsRE(`[/|\x{b7}\x{2022}\x{2014}\x{2013}\-,:.\s]+`, ""))
-	bylineStrip = append(append([]*regexp.Regexp{}, metaStripBase...),
+	bylineStrip = append(append([]*lazyRE{}, metaStripBase...),
 		jsRE(`\bby\b`, "i"), jsRE(`[/|\x{b7}\x{2022}\x{2014}\x{2013}\-,]+`, ""))
 
 	dfdContentElementNoImg = strings.Replace(dfdContentElementSelector, "img, picture, ", "", 1)
@@ -525,7 +529,7 @@ func dfdRemoveEyebrowLabel(mainContent *ldNode) {
 	prev.remove()
 }
 
-func dfdStripAll(res []*regexp.Regexp, s string) string {
+func dfdStripAll(res []*lazyRE, s string) string {
 	for _, re := range res {
 		s = re.ReplaceAllString(s, "")
 	}

@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,16 +12,16 @@ import (
 var (
 	reFootnoteSection = jsRE(`^(foot\s*notes?|end\s*notes?|notes?|references?)$`, "i")
 	reBackrefSymbols  = jsRE(`^[\^\x{21A9}\x{21A5}\x{2191}\x{21B5}\x{2934}\x{2935}\x{23CE}]+$`, "")
-	reCiteRef         = regexp.MustCompile(`^#cite_ref-`)
+	reCiteRef         = mustRE(`^#cite_ref-`)
 	reFootnoteMarker  = jsRE(`^\[?\(?(\d{1,4})\)?\]?$`, "")
-	reFootnoteDefNum  = regexp.MustCompile(`^footnote-(\d+)$`)
+	reFootnoteDefNum  = mustRE(`^footnote-(\d+)$`)
 	reLeadingDot      = jsRE(`^\s*\.\s*`, "")
 	reNumDotTail      = jsRE(`^\d+[.)]*\s*$`, "")
 	reLeadingNumDot   = jsRE(`^\d+\.\s*`, "")
 	reLeadingSpace    = jsRE(`^\s+`, "")
-	reWordFtnRef      = regexp.MustCompile(`^_ftnref(\d+)$`)
-	reGDocID          = regexp.MustCompile(`^ftnt(\d+)$`)
-	reHeadingLower    = regexp.MustCompile(`^h[1-6]$`)
+	reWordFtnRef      = mustRE(`^_ftnref(\d+)$`)
+	reGDocID          = mustRE(`^ftnt(\d+)$`)
+	reHeadingLower    = mustRE(`^h[1-6]$`)
 )
 
 func dfdHrefFragment(anchor *ldNode) string {
@@ -39,7 +38,7 @@ type dfdInlineRefExtractor struct {
 	extract  func(el *ldNode) string
 }
 
-func dfdMatchLast(re *regexp.Regexp, s string) string {
+func dfdMatchLast(re *lazyRE, s string) string {
 	if m := re.FindStringSubmatch(s); m != nil {
 		return m[1]
 	}
@@ -52,7 +51,7 @@ var dfdInlineRefExtractors = []dfdInlineRefExtractor{
 		if link == nil {
 			return ""
 		}
-		return dfdMatchLast(regexp.MustCompile(`^footnoteref-(\d+)$`), link.id())
+		return dfdMatchLast(reFootnoterefID, link.id())
 	}},
 	{`a[id^="ref-link"]`, func(el *ldNode) string { return jsTrim(el.textContent()) }},
 	{`a[role="doc-biblioref"]`, func(el *ldNode) string {
@@ -73,7 +72,7 @@ var dfdInlineRefExtractors = []dfdInlineRefExtractor{
 		for _, link := range ldQuerySelectorAll(el, "a") {
 			href := link.attr("href")
 			segs := strings.Split(href, "/")
-			if m := regexp.MustCompile(`(?:cite_note|cite_ref)-(.+)`).FindStringSubmatch(segs[len(segs)-1]); m != nil {
+			if m := reCiteNoteRef.FindStringSubmatch(segs[len(segs)-1]); m != nil {
 				id = strings.ToLower(m[1])
 			}
 		}
@@ -568,3 +567,8 @@ func (h *dfdFootnoteHandler) tryGoogleDocs(element *ldNode, state *dfdFootnoteSt
 		h.pendingRemovals = append(h.pendingRemovals, prev)
 	}
 }
+
+var (
+	reFootnoterefID = mustRE(`^footnoteref-(\d+)$`)
+	reCiteNoteRef   = mustRE(`(?:cite_note|cite_ref)-(.+)`)
+)

@@ -8,7 +8,7 @@ import (
 )
 
 // Temml 0.13.4 (MIT): the macros of src/macros.js that are defined by a function (the ones defined by a string are
-// in dfd_temml_tables.go).
+// in tables/tm-string-macros.gz and tm-dist-macros.gz, decoded by dfd_tables.go).
 
 var tmDigitToNumber = func() map[byte]float64 {
 	m := map[byte]float64{}
@@ -140,12 +140,12 @@ var tmMacroOnce sync.Once
 
 func tmBuiltinMacros() map[string]any {
 	tmMacroOnce.Do(func() {
-		m := make(map[string]any, len(tmStringMacros)+20)
-		for k, v := range tmStringMacros {
+		m := make(map[string]any, len(tmStringMacros())+20)
+		for k, v := range tmStringMacros() {
 			m[k] = v
 		}
 		// the macros dist/temml.cjs adds after src/macros.js override same-named ones, as defineMacro does
-		for k, v := range tmDistMacros {
+		for k, v := range tmDistMacros() {
 			m[k] = v
 		}
 		fn := func(f func(g *tmGullet) any) tmMacroFunc { return f }
@@ -233,7 +233,7 @@ func tmBuiltinMacros() map[string]any {
 				thedots = v
 			} else if strings.HasPrefix(next, "\\not") {
 				thedots = "\\dotsb"
-			} else if sym := tmSymbolsMath[next]; sym != nil {
+			} else if sym := tmSymbolsMath()[next]; sym != nil {
 				if sym.group == "bin" || sym.group == "rel" {
 					thedots = "\\dotsb"
 				}

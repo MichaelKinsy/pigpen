@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 	"sync"
 )
@@ -15,15 +14,15 @@ const dfdWS = `\t\n\x{0b}\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{
 
 var jsReCache sync.Map
 
-// jsRE compiles a JavaScript pattern with the flags i, m, s (g and y are the caller's business).
-func jsRE(pattern, flags string) *regexp.Regexp {
+// jsRE is a JavaScript pattern with the flags i, m, s (g and y are the caller's business), compiled when it is first
+// used (lazyre.go).
+func jsRE(pattern, flags string) *lazyRE {
 	key := flags + "/" + pattern
 	if v, ok := jsReCache.Load(key); ok {
-		return v.(*regexp.Regexp)
+		return v.(*lazyRE)
 	}
-	re := regexp.MustCompile(jsTranslate(pattern, flags))
-	jsReCache.Store(key, re)
-	return re
+	v, _ := jsReCache.LoadOrStore(key, newLazyRE(pattern, flags, true))
+	return v.(*lazyRE)
 }
 
 func jsTranslate(p, flags string) string {
@@ -94,16 +93,16 @@ func jsTranslate(p, flags string) string {
 }
 
 // jsReplaceAll is s.replace(/re/g, repl) with a function replacement.
-func jsReplaceAll(re *regexp.Regexp, s string, repl func(m []string) string) string {
+func jsReplaceAll(re *lazyRE, s string, repl func(m []string) string) string {
 	return jsReplace(re, s, -1, repl)
 }
 
 // jsReplaceFirst is s.replace(/re/, repl).
-func jsReplaceFirst(re *regexp.Regexp, s string, repl func(m []string) string) string {
+func jsReplaceFirst(re *lazyRE, s string, repl func(m []string) string) string {
 	return jsReplace(re, s, 1, repl)
 }
 
-func jsReplace(re *regexp.Regexp, s string, n int, repl func(m []string) string) string {
+func jsReplace(re *lazyRE, s string, n int, repl func(m []string) string) string {
 	locs := re.FindAllStringSubmatchIndex(s, n)
 	if len(locs) == 0 {
 		return s
@@ -126,7 +125,7 @@ func jsReplace(re *regexp.Regexp, s string, n int, repl func(m []string) string)
 }
 
 // jsReplaceStr is s.replace(/re/g, str) for a replacement with no `$` pattern.
-func jsReplaceStr(re *regexp.Regexp, s, repl string) string {
+func jsReplaceStr(re *lazyRE, s, repl string) string {
 	return re.ReplaceAllLiteralString(s, repl)
 }
 

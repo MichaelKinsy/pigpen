@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/andybalholm/cascadia"
@@ -157,7 +156,7 @@ func tdInnerHTML(n *html.Node) string {
 	return b.String()
 }
 
-var reTagEnd = regexp.MustCompile(`(?i)</`)
+var reTagEnd = mustRE(`(?i)</`)
 
 func tdSerializeOne(b *strings.Builder, n *html.Node, parent *html.Node) {
 	switch n.Type {
@@ -196,7 +195,7 @@ func tdSerializeOne(b *strings.Builder, n *html.Node, parent *html.Node) {
 			b.WriteString(tdEscapeText(n.Data))
 		}
 	case html.CommentNode:
-		b.WriteString("<!--" + regexp.MustCompile(`(--!?)>`).ReplaceAllString(n.Data, "$1&gt;") + "-->")
+		b.WriteString("<!--" + reCommentEnd.ReplaceAllString(n.Data, "$1&gt;") + "-->")
 	}
 }
 
@@ -358,7 +357,7 @@ func (svc *dfdTurndown) forNode(n *html.Node, isBlank bool) dfdTdRule {
 	}}
 }
 
-var reTagLike = regexp.MustCompile(`<`)
+var reTagLike = mustRE(`<`)
 
 // dfdEscape is Defuddle's escape: turndown's, then a backslash before a "<" that opens a tag-like sequence.
 func dfdEscape(s string) string {
@@ -468,3 +467,5 @@ func (svc *dfdTurndown) turndown(input string) string {
 	output = strings.TrimLeft(output, "\t\r\n")
 	return strings.TrimRightFunc(output, jsSpace)
 }
+
+var reCommentEnd = mustRE(`(--!?)>`)

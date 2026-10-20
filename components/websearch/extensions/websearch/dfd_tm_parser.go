@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf16"
@@ -367,7 +366,7 @@ func (p *tmParser) formatUnsupportedCmd(text string) tmObj {
 	return tmObj{"type": "color", "mode": p.mode, "color": p.settings.errorColor, "body": []any{textNode}}
 }
 
-var tmUnicodeSubRe = regexp.MustCompile(`^[₊₋₌₍₎₀₁₂₃₄₅₆₇₈₉ₐₑₕᵢⱼₖₗₘₙₒₚᵣₛₜᵤᵥₓᵦᵧᵨᵩᵪ]`)
+var tmUnicodeSubRe = mustRE(`^[₊₋₌₍₎₀₁₂₃₄₅₆₇₈₉ₐₑₕᵢⱼₖₗₘₙₒₚᵣₛₜᵤᵥₓᵦᵧᵨᵩᵪ]`)
 
 // nilNode keeps a missing node as an untyped nil in an object, like `undefined` in the original.
 func nilNode(n tmObj) any {
@@ -426,19 +425,19 @@ func (p *tmParser) parseAtom(breakOnTokenText string) tmObj {
 				primes = append(primes, p.handleSupSubscript("superscript"))
 			}
 			superscript = tmObj{"type": "ordgroup", "mode": p.mode, "body": primes}
-		} else if _, ok := tmSubsAndSups[lex.text]; ok {
+		} else if _, ok := tmSubsAndSups()[lex.text]; ok {
 			isSub := tmUnicodeSubRe.MatchString(lex.text)
-			subsupTokens := []*tmToken{{text: tmSubsAndSups[lex.text]}}
+			subsupTokens := []*tmToken{{text: tmSubsAndSups()[lex.text]}}
 			p.consume()
 			for {
 				token := p.fetch().text
-				if _, ok := tmSubsAndSups[token]; !ok {
+				if _, ok := tmSubsAndSups()[token]; !ok {
 					break
 				}
 				if tmUnicodeSubRe.MatchString(token) != isSub {
 					break
 				}
-				subsupTokens = append([]*tmToken{{text: tmSubsAndSups[token]}}, subsupTokens...)
+				subsupTokens = append([]*tmToken{{text: tmSubsAndSups()[token]}}, subsupTokens...)
 				p.consume()
 			}
 			body := p.subparse(subsupTokens)
@@ -596,12 +595,12 @@ func (p *tmParser) parseStringGroup(modeName string, optional bool) *tmToken {
 }
 
 var (
-	tmSizeGroupRe = regexp.MustCompile(`^[-+]? *(?:$|\d+|\d+\.\d*|\.\d*) *[a-z]{0,2} *$`)
-	tmSizeRe      = regexp.MustCompile(`([-+]?) *(\d+(?:\.\d*)?|\.\d+) *([a-z]{2})`)
-	tmTextRe      = regexp.MustCompile(`^ *\\text`)
+	tmSizeGroupRe = mustRE(`^[-+]? *(?:$|\d+|\d+\.\d*|\.\d*) *[a-z]{0,2} *$`)
+	tmSizeRe      = mustRE(`([-+]?) *(\d+(?:\.\d*)?|\.\d+) *([a-z]{2})`)
+	tmTextRe      = mustRE(`^ *\\text`)
 )
 
-func (p *tmParser) parseRegexGroup(re *regexp.Regexp, modeName string) *tmToken {
+func (p *tmParser) parseRegexGroup(re *lazyRE, modeName string) *tmToken {
 	firstToken := p.fetch()
 	lastToken := firstToken
 	str := ""
@@ -759,7 +758,7 @@ func (p *tmParser) formLigatures(group []any) []any {
 }
 
 var (
-	tmVerbRe            = regexp.MustCompile(`^\\verb[^a-zA-Z]`)
+	tmVerbRe            = mustRE(`^\\verb[^a-zA-Z]`)
 	tmBinLeftCancellers = map[string]bool{"bin": true, "op": true, "open": true, "punct": true, "rel": true}
 	tmAtoms             = map[string]bool{"bin": true, "close": true, "inner": true, "open": true, "punct": true, "rel": true}
 )
@@ -793,13 +792,13 @@ func (p *tmParser) parseSymbol() tmObj {
 		return tmObj{"type": "verb", "mode": "text", "body": string(utf16.Decode(arg)), "star": star}
 	}
 	units := tmUTF16Units(text)
-	symbolsOf := tmSymbolsMath
+	symbolsOf := tmSymbolsMath()
 	if p.mode == "text" {
-		symbolsOf = tmSymbolsText
+		symbolsOf = tmSymbolsText()
 	}
 	if len(units) > 0 && (units[0] < 0xd800 || units[0] > 0xdfff) {
 		first := tmU16(units[0])
-		if rep, ok := tmUnicodeSymbols[first]; ok && p.mode == "math" && symbolsOf[first] == nil {
+		if rep, ok := tmUnicodeSymbols()[first]; ok && p.mode == "math" && symbolsOf[first] == nil {
 			if p.settings.strict && p.mode == "math" {
 				tmThrow("Accented Unicode text character \""+first+"\" used in math mode", nucleus)
 			}
@@ -838,7 +837,7 @@ func (p *tmParser) parseSymbol() tmObj {
 				}
 			}
 		} else {
-			if ascii, ok := tmAsciiFromScript[text]; ok && ascii != "" {
+			if ascii, ok := tmAsciiFromScript()[text]; ok && ascii != "" {
 				p.consume()
 				nextCode := tmCodePointUnit(p.fetch().text)
 				font := "mathcal"
@@ -864,7 +863,7 @@ func (p *tmParser) parseSymbol() tmObj {
 	p.consume()
 	for _, m := range marks {
 		accent := tmU16(m)
-		cmd, ok := tmUnicodeAccents[accent]
+		cmd, ok := tmUnicodeAccents()[accent]
 		if !ok {
 			tmThrow("Unknown accent ' "+accent+"'", nucleus)
 		}

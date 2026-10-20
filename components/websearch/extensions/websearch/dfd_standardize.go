@@ -1,7 +1,6 @@
 package websearch
 
 import (
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -510,10 +509,10 @@ func dfdUnwrapBareSpans(element *ldNode) {
 var (
 	reLightDark   = jsRE(`light-dark\(\s*([^,]+?)\s*,\s*[^)]+?\)`, "")
 	reCSSVar      = jsRE(`var\(--([^,)]+)(?:,\s*([^)]+))?\)`, "")
-	reTWName      = regexp.MustCompile(`(?:^|-)([a-z]+)-(\d{2,3})$`)
+	reTWName      = mustRE(`(?:^|-)([a-z]+)-(\d{2,3})$`)
 	reCSSVarAll   = jsRE(`var\(--[^,)]+(?:,\s*[^)]+)?\)`, "")
-	reTWColor     = regexp.MustCompile(`^(fill|stroke)-([a-z]+)-(\d{2,3})(?:/(\d+))?$`)
-	reTWSpecial   = regexp.MustCompile(`^(fill|stroke)-(black|white|transparent|current)$`)
+	reTWColor     = mustRE(`^(fill|stroke)-([a-z]+)-(\d{2,3})(?:/(\d+))?$`)
+	reTWSpecial   = mustRE(`^(fill|stroke)-(black|white|transparent|current)$`)
 	reTWArbitrary = jsRE(`^text-\[(.+)\]$`, "")
 	reClosedPath  = jsRE(`Z\s*$`, "i")
 )
