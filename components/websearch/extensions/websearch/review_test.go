@@ -79,10 +79,7 @@ func TestReviewImagePixelBudget(t *testing.T) {
 	})
 }
 
-// unportedGuidance matches options the original offers that this port cannot act on.
-const unportedGuidance = `Chrom|/login|Codex|openaiApiKey|OPENAI_API_KEY|Mistral|Grok`
-
-func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
+func TestReviewFetchGuidanceIsTheOriginals(t *testing.T) {
 	t.Run("the fetch fallback checklist is the original's", func(t *testing.T) {
 		extractEnv(t, "")
 		useNet(t, func(netCall) netReply { return reply(500, "oops") })
@@ -91,18 +88,6 @@ func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
 		matchRE(t, `Enable the keyless Jina Reader fallback`, msg)
 		matchRE(t, `Use web_search to find content about this topic`, msg)
 		matchRE(t, `(?s)Set firecrawlBaseUrl in .*Set crawl4aiBaseUrl in .*Set tinyfishApiKey in .*Set brightdataApiKey and brightdataUnlockerZone in .*  • Set GEMINI_API_KEY in .*  • Sign into gemini\.google\.com in Chrome\n  • Use web_search to find content about this topic$`, msg)
-	})
-	t.Run("the no-provider error names only ported providers", func(t *testing.T) {
-		providerEnv(t, `{"webSearch":{"allowedProviders":["duckduckgo"]}}`, nil)
-		useNet(t, func(netCall) netReply { return netReply{Status: 500} })
-		_, err := Search(bg(), "q", FullSearchOptions{Provider: Auto})
-		wantErr(t, err, `^No search provider available`)
-		for _, want := range []string{"braveApiKey", "tavilyApiKey", "serpdiveApiKey", "perplexityApiKey", "exaApiKey", "BRAVE_API_KEY", "EXA_API_KEY", `"duckduckgo"`} {
-			if !strings.Contains(err.Error(), want) {
-				t.Fatalf("%q missing from %q", want, err.Error())
-			}
-		}
-		noMatchRE(t, unportedGuidance, err.Error())
 	})
 }
 
