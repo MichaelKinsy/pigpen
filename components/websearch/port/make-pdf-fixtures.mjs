@@ -390,3 +390,6 @@ write(
 	builders.push((c) => c.stream("", bf(hebrew.map((ch, i) => [65 + i, ch.codePointAt(0)]))));
 	write("fonts-encodings-rtl.pdf", buildPdf(builders));
 }
+
+// 16. Control codes with no glyph (PDF.js shows nothing for them) between visible characters.
+write("control-codes.pdf", simpleDoc(["BT /F1 12 Tf 72 720 Td (A\x00\x00\x00B \x01C) Tj ET"]));

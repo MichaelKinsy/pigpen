@@ -1,0 +1,856 @@
+{
+ "recorder": "port/record-datalab-requests.mjs",
+ "cases": {
+  "default-flow": {
+   "env": {
+    "DATALAB_API_KEY": "synthetic-datalab-key"
+   },
+   "config": null,
+   "responses": [
+    {
+     "match": "/files/upload",
+     "method": "POST",
+     "json": {
+      "file_id": 7,
+      "upload_url": "https://storage.test/put/abc",
+      "reference": "datalab://file-7",
+      "expires_in": 3600
+     }
+    },
+    {
+     "match": "/put/",
+     "method": "PUT",
+     "text": ""
+    },
+    {
+     "match": "/files/7/confirm",
+     "json": {
+      "file_id": 7,
+      "reference": "datalab://file-7",
+      "message": "confirmed"
+     }
+    },
+    {
+     "match": "/files/7",
+     "method": "DELETE",
+     "text": ""
+    },
+    {
+     "match": "/convert",
+     "method": "POST",
+     "json": {
+      "status": "processing",
+      "request_check_url": "/check/abc123"
+     }
+    },
+    {
+     "match": "/check/abc123",
+     "json": {
+      "status": "complete",
+      "success": true,
+      "markdown": "<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+      "page_count": 2,
+      "parse_quality_score": 4.5
+     }
+    }
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/files/upload",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": "{\"filename\":\"sample-document.pdf\",\"content_type\":\"application/pdf\",\"processing_location\":\"us\"}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://storage.test/put/abc",
+     "headers": {
+      "content-type": "application/pdf"
+     },
+     "body": {
+      "blob": {
+       "type": "application/pdf",
+       "base64": "AQIDBA=="
+      }
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/api/v1/files/7/confirm",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/convert",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": {
+      "form": [
+       [
+        "file_url",
+        "datalab://file-7"
+       ],
+       [
+        "output_format",
+        "markdown"
+       ],
+       [
+        "mode",
+        "balanced"
+       ],
+       [
+        "max_pages",
+        "5"
+       ],
+       [
+        "paginate",
+        "true"
+       ]
+      ]
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/check/abc123",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    },
+    {
+     "method": "DELETE",
+     "url": "https://www.datalab.to/api/v1/files/7",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "markdown": "<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+    "pages": 2,
+    "parseQualityScore": 4.5
+   },
+   "error": null
+  },
+  "eu-accurate-custom-base": {
+   "env": {
+    "DATALAB_API_KEY": "synthetic-datalab-key",
+    "DATALAB_PROCESSING_LOCATION": " EU ",
+    "DATALAB_MODE": "Accurate",
+    "DATALAB_API_BASE": "https://datalab.example.test/api/v1//"
+   },
+   "config": null,
+   "responses": [
+    {
+     "match": "/files/upload",
+     "json": {
+      "file_id": "a/b c",
+      "upload_url": "https://storage.test/put/def",
+      "reference": " datalab://ref "
+     }
+    },
+    {
+     "match": "/put/",
+     "method": "PUT",
+     "text": ""
+    },
+    {
+     "match": "/confirm",
+     "json": {
+      "file_id": 12,
+      "reference": "datalab://confirmed"
+     }
+    },
+    {
+     "match": "/files/12",
+     "method": "DELETE",
+     "text": ""
+    },
+    {
+     "match": "/convert",
+     "json": {
+      "status": "complete",
+      "markdown": " <!-- Page 1 -->\nDone ",
+      "page_count": 0
+     }
+    }
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://datalab.example.test/api/v1/files/upload",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": "{\"filename\":\"mixed-case-title-withsymbols-and-a-very-very-very-very-long-.pdf\",\"content_type\":\"application/pdf\",\"processing_location\":\"eu\"}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://storage.test/put/def",
+     "headers": {
+      "content-type": "application/pdf"
+     },
+     "body": {
+      "blob": {
+       "type": "application/pdf",
+       "base64": "AQIDBA=="
+      }
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://datalab.example.test/api/v1/files/a%2Fb%20c/confirm",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://datalab.example.test/api/v1/convert",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": {
+      "form": [
+       [
+        "file_url",
+        "datalab://confirmed"
+       ],
+       [
+        "output_format",
+        "markdown"
+       ],
+       [
+        "mode",
+        "accurate"
+       ],
+       [
+        "max_pages",
+        "2"
+       ],
+       [
+        "paginate",
+        "true"
+       ]
+      ]
+     }
+    },
+    {
+     "method": "DELETE",
+     "url": "https://datalab.example.test/api/v1/files/12",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "markdown": "<!-- Page 1 -->\nDone",
+    "pages": 1
+   },
+   "error": null
+  },
+  "complete-on-convert": {
+   "env": {
+    "DATALAB_API_KEY": "synthetic-datalab-key"
+   },
+   "config": null,
+   "responses": [
+    {
+     "match": "/files/upload",
+     "method": "POST",
+     "json": {
+      "file_id": 7,
+      "upload_url": "https://storage.test/put/abc",
+      "reference": "datalab://file-7",
+      "expires_in": 3600
+     }
+    },
+    {
+     "match": "/put/",
+     "method": "PUT",
+     "text": ""
+    },
+    {
+     "match": "/files/7/confirm",
+     "json": {
+      "file_id": 7,
+      "reference": "datalab://file-7",
+      "message": "confirmed"
+     }
+    },
+    {
+     "match": "/files/7",
+     "method": "DELETE",
+     "text": ""
+    },
+    {
+     "match": "/check/abc123",
+     "json": {
+      "status": "complete",
+      "success": true,
+      "markdown": "<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+      "page_count": 2,
+      "parse_quality_score": 4.5
+     }
+    },
+    {
+     "match": "/convert",
+     "json": {
+      "status": "complete",
+      "success": true,
+      "markdown": "<!-- Page 1 -->\nFast\n\n<!-- Page 2 -->\nAlso",
+      "parse_quality_score": "x"
+     }
+    }
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/files/upload",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": "{\"filename\":\"doc.pdf\",\"content_type\":\"application/pdf\",\"processing_location\":\"us\"}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://storage.test/put/abc",
+     "headers": {
+      "content-type": "application/pdf"
+     },
+     "body": {
+      "blob": {
+       "type": "application/pdf",
+       "base64": "AQIDBA=="
+      }
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/api/v1/files/7/confirm",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/convert",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": {
+      "form": [
+       [
+        "file_url",
+        "datalab://file-7"
+       ],
+       [
+        "output_format",
+        "markdown"
+       ],
+       [
+        "mode",
+        "balanced"
+       ],
+       [
+        "max_pages",
+        "1"
+       ],
+       [
+        "paginate",
+        "true"
+       ]
+      ]
+     }
+    },
+    {
+     "method": "DELETE",
+     "url": "https://www.datalab.to/api/v1/files/7",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "markdown": "<!-- Page 1 -->\nFast\n\n<!-- Page 2 -->\nAlso",
+    "pages": 2
+   },
+   "error": null
+  },
+  "key-from-config": {
+   "env": {},
+   "config": {
+    "datalabApiKey": "synthetic-config-key"
+   },
+   "responses": [
+    {
+     "match": "/files/upload",
+     "method": "POST",
+     "json": {
+      "file_id": 7,
+      "upload_url": "https://storage.test/put/abc",
+      "reference": "datalab://file-7",
+      "expires_in": 3600
+     }
+    },
+    {
+     "match": "/put/",
+     "method": "PUT",
+     "text": ""
+    },
+    {
+     "match": "/files/7/confirm",
+     "json": {
+      "file_id": 7,
+      "reference": "datalab://file-7",
+      "message": "confirmed"
+     }
+    },
+    {
+     "match": "/files/7",
+     "method": "DELETE",
+     "text": ""
+    },
+    {
+     "match": "/convert",
+     "method": "POST",
+     "json": {
+      "status": "processing",
+      "request_check_url": "/check/abc123"
+     }
+    },
+    {
+     "match": "/check/abc123",
+     "json": {
+      "status": "complete",
+      "success": true,
+      "markdown": "<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+      "page_count": 2,
+      "parse_quality_score": 4.5
+     }
+    }
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/files/upload",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "synthetic-config-key"
+     },
+     "body": "{\"filename\":\"doc.pdf\",\"content_type\":\"application/pdf\",\"processing_location\":\"eu\"}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://storage.test/put/abc",
+     "headers": {
+      "content-type": "application/pdf"
+     },
+     "body": {
+      "blob": {
+       "type": "application/pdf",
+       "base64": "AQIDBA=="
+      }
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/api/v1/files/7/confirm",
+     "headers": {
+      "x-api-key": "synthetic-config-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/convert",
+     "headers": {
+      "x-api-key": "synthetic-config-key"
+     },
+     "body": {
+      "form": [
+       [
+        "file_url",
+        "datalab://file-7"
+       ],
+       [
+        "output_format",
+        "markdown"
+       ],
+       [
+        "mode",
+        "fast"
+       ],
+       [
+        "max_pages",
+        "3"
+       ],
+       [
+        "paginate",
+        "true"
+       ]
+      ]
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/check/abc123",
+     "headers": {
+      "x-api-key": "synthetic-config-key"
+     },
+     "body": null
+    },
+    {
+     "method": "DELETE",
+     "url": "https://www.datalab.to/api/v1/files/7",
+     "headers": {
+      "x-api-key": "synthetic-config-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "markdown": "<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+    "pages": 2,
+    "parseQualityScore": 4.5
+   },
+   "error": null
+  },
+  "http-error-redacted": {
+   "env": {
+    "DATALAB_API_KEY": "synthetic-datalab-key"
+   },
+   "config": null,
+   "responses": [
+    {
+     "match": "/files/upload",
+     "status": 401,
+     "text": "  invalid key synthetic-datalab-key  "
+    }
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/files/upload",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": "{\"filename\":\"doc.pdf\",\"content_type\":\"application/pdf\",\"processing_location\":\"us\"}"
+    }
+   ],
+   "result": null,
+   "error": "Datalab PDF conversion failed: HTTP 401 Unauthorized: invalid key [redacted]"
+  },
+  "failed-conversion": {
+   "env": {
+    "DATALAB_API_KEY": "synthetic-datalab-key"
+   },
+   "config": null,
+   "responses": [
+    {
+     "match": "/files/upload",
+     "method": "POST",
+     "json": {
+      "file_id": 7,
+      "upload_url": "https://storage.test/put/abc",
+      "reference": "datalab://file-7",
+      "expires_in": 3600
+     }
+    },
+    {
+     "match": "/put/",
+     "method": "PUT",
+     "text": ""
+    },
+    {
+     "match": "/files/7/confirm",
+     "json": {
+      "file_id": 7,
+      "reference": "datalab://file-7",
+      "message": "confirmed"
+     }
+    },
+    {
+     "match": "/files/7",
+     "method": "DELETE",
+     "text": ""
+    },
+    {
+     "match": "/convert",
+     "method": "POST",
+     "json": {
+      "status": "processing",
+      "request_check_url": "/check/abc123"
+     }
+    },
+    {
+     "match": "/check/abc123",
+     "json": {
+      "status": "complete",
+      "success": true,
+      "markdown": "<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+      "page_count": 2,
+      "parse_quality_score": 4.5
+     }
+    },
+    {
+     "match": "/check/abc123",
+     "json": {
+      "status": "failed",
+      "error": {
+       "code": 3
+      }
+     }
+    }
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/files/upload",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": "{\"filename\":\"doc.pdf\",\"content_type\":\"application/pdf\",\"processing_location\":\"us\"}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://storage.test/put/abc",
+     "headers": {
+      "content-type": "application/pdf"
+     },
+     "body": {
+      "blob": {
+       "type": "application/pdf",
+       "base64": "AQIDBA=="
+      }
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/api/v1/files/7/confirm",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/convert",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": {
+      "form": [
+       [
+        "file_url",
+        "datalab://file-7"
+       ],
+       [
+        "output_format",
+        "markdown"
+       ],
+       [
+        "mode",
+        "balanced"
+       ],
+       [
+        "max_pages",
+        "1"
+       ],
+       [
+        "paginate",
+        "true"
+       ]
+      ]
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/check/abc123",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    },
+    {
+     "method": "DELETE",
+     "url": "https://www.datalab.to/api/v1/files/7",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "markdown": "<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+    "pages": 2,
+    "parseQualityScore": 4.5
+   },
+   "error": null
+  },
+  "chain-from-pdf-extract": {
+   "env": {
+    "DATALAB_API_KEY": "synthetic-datalab-key"
+   },
+   "config": {
+    "pdf": {
+     "provider": "datalab",
+     "datalabMode": "fast",
+     "maxPages": 7,
+     "datalabTimeoutMs": 60000
+    }
+   },
+   "responses": [
+    {
+     "match": "/files/upload",
+     "method": "POST",
+     "json": {
+      "file_id": 7,
+      "upload_url": "https://storage.test/put/abc",
+      "reference": "datalab://file-7",
+      "expires_in": 3600
+     }
+    },
+    {
+     "match": "/put/",
+     "method": "PUT",
+     "text": ""
+    },
+    {
+     "match": "/files/7/confirm",
+     "json": {
+      "file_id": 7,
+      "reference": "datalab://file-7",
+      "message": "confirmed"
+     }
+    },
+    {
+     "match": "/files/7",
+     "method": "DELETE",
+     "text": ""
+    },
+    {
+     "match": "/convert",
+     "method": "POST",
+     "json": {
+      "status": "processing",
+      "request_check_url": "/check/abc123"
+     }
+    },
+    {
+     "match": "/check/abc123",
+     "json": {
+      "status": "complete",
+      "success": true,
+      "markdown": "<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+      "page_count": 2,
+      "parse_quality_score": 4.5
+     }
+    }
+   ],
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/files/upload",
+     "headers": {
+      "content-type": "application/json",
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": "{\"filename\":\"q3-results.pdf\",\"content_type\":\"application/pdf\",\"processing_location\":\"us\"}"
+    },
+    {
+     "method": "PUT",
+     "url": "https://storage.test/put/abc",
+     "headers": {
+      "content-type": "application/pdf"
+     },
+     "body": {
+      "blob": {
+       "type": "application/pdf",
+       "base64": "AQIDBA=="
+      }
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/api/v1/files/7/confirm",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    },
+    {
+     "method": "POST",
+     "url": "https://www.datalab.to/api/v1/convert",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": {
+      "form": [
+       [
+        "file_url",
+        "datalab://file-7"
+       ],
+       [
+        "output_format",
+        "markdown"
+       ],
+       [
+        "mode",
+        "fast"
+       ],
+       [
+        "max_pages",
+        "7"
+       ],
+       [
+        "paginate",
+        "true"
+       ]
+      ]
+     }
+    },
+    {
+     "method": "GET",
+     "url": "https://www.datalab.to/check/abc123",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    },
+    {
+     "method": "DELETE",
+     "url": "https://www.datalab.to/api/v1/files/7",
+     "headers": {
+      "x-api-key": "synthetic-datalab-key"
+     },
+     "body": null
+    }
+   ],
+   "result": {
+    "title": "Q3 Results",
+    "content": "# Q3 Results\n\n> Source: https://example.test/docs/Q3_Results.pdf\n> Pages: 2\n\n---\n\n<!-- Page 1 -->\n# Sample Document\n\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
+    "pages": 2,
+    "chars": 159,
+    "file": "q3-results.md"
+   },
+   "error": null
+  }
+ }
+}

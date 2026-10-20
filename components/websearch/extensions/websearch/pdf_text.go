@@ -440,6 +440,9 @@ func (f *pdfFont) decode(raw string) []pdfGlyph {
 				w = f.fallback / 1000
 			}
 			g := pdfGlyph{text: f.enc.Decode(raw[i : i+1]), width: w}
+			if code < 32 && !hasGlyphText(g.text) {
+				g.text = "" // a control code with no glyph: PDF.js shows nothing for it
+			}
 			g.space = code == 32
 			out = append(out, g)
 		}
@@ -662,6 +665,17 @@ func (in *pdfInterp) device(tm pdfMatrix) (x, y float64) {
 // advance moves the text matrix right by tx (in unscaled text space, times the horizontal scale).
 func (in *pdfInterp) advance(tx float64) {
 	in.tm = pdfMatrix{1, 0, 0, 1, tx * in.st.th, 0}.mul(in.tm)
+}
+
+// hasGlyphText is false for text made only of replacement characters and C0 controls other than
+// whitespace, which is what the library decodes a code without a glyph to.
+func hasGlyphText(s string) bool {
+	for _, r := range s {
+		if r != utf8.RuneError && (r >= 0x20 || isJSSpace(r)) {
+			return true
+		}
+	}
+	return false
 }
 
 func isPDFWhitespace(s string) bool {

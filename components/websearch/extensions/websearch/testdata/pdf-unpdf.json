@@ -1,5 +1,12 @@
 {
 	"pdfs": {
+		"control-codes.pdf": {
+			"title": "control codes",
+			"pages": 1,
+			"chars": 93,
+			"file": "control-codes.md",
+			"content": "# control codes\n\n> Source: https://example.test/docs/control-codes.pdf\n> Pages: 1\n\n---\n\nA B C"
+		},
 		"corrupt-stream.pdf": {
 			"title": "corrupt stream",
 			"pages": 1,

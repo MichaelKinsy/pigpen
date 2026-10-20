@@ -12,8 +12,6 @@ import (
 // mode answer, which is another slice (docs/PORT.md); what they pin about the PDF side is covered
 // below at the extraction level (TestPDFAnswerModeExtraction*).
 
-const answerModelReason = "fetch_content mode answer is refused until the answer-mode slice ports its model call (tool_fetch.go), so the case's answer-model assertions have no Go counterpart yet; the PDF side of it is asserted by "
-
 func pdfFetchEnv(t *testing.T, body []byte) {
 	t.Helper()
 	t.Setenv("TMPDIR", t.TempDir())
@@ -24,7 +22,7 @@ func pdfFetchEnv(t *testing.T, body []byte) {
 
 func TestUpstream_fetch_pdf_answer(t *testing.T) {
 	const F = "fetch-pdf-answer"
-	tskip(t, F, "PDF answer mode supplies extracted Markdown, saves the file, and retains original content for retrieval", answerModelReason+"TestPDFAnswerModeExtractionSavesAndReturnsMarkdown")
+	tskip(t, F, "PDF answer mode supplies extracted Markdown, saves the file, and retains original content for retrieval", "the case drives fetch_content mode answer, which tool_fetch.go refuses until the answer-mode slice ports its model call; its PDF half (the Markdown returned in answer mode is the saved file) is TestPDFAnswerModeExtractionSavesAndReturnsMarkdown")
 	tw(t, F, "readable PDF mode preserves the file-path presentation without calling an answer model", func(t *testing.T) {
 		r, _ := newRuntime(t, `{"pdf":{"provider":"unpdf"},"fetchRouting":{"providers":["http"]}}`)
 		pdfFetchEnv(t, makePDF("Readable PDF body."))
@@ -53,11 +51,11 @@ func TestUpstream_fetch_pdf_answer(t *testing.T) {
 			t.Fatalf("stored %v", stored)
 		}
 	})
-	tskip(t, F, "batch PDF answers receive each document's own body even when output filenames collide", answerModelReason+"TestPDFAnswerModeExtractionBatchKeepsOwnBody")
-	tskip(t, F, "PDF answers keep the model input bound while retaining the full extracted text", answerModelReason+"TestPDFAnswerModeExtractionSavesAndReturnsMarkdown (the full text is retained); the input bound belongs to the model call")
-	tskip(t, F, "HTML answer mode still supplies the extracted page body", answerModelReason+"TestPDFAnswerModeExtractionHTMLBody")
-	tskip(t, F, "disabled PDF extraction and raw binary fetches do not call an answer model", answerModelReason+"TestPDFAnswerModeExtractionDisabledAndRaw")
-	tskip(t, F, "a cancelled PDF answer does not fetch or invoke an answer model", answerModelReason+"TestPDFAnswerModeExtractionCancelled")
+	tskip(t, F, "batch PDF answers receive each document's own body even when output filenames collide", "the case checks what a model call receives for each URL of a batch, and the model call is the answer-mode slice's; its PDF half (two PDFs with one file name keep their own text) is TestPDFAnswerModeExtractionBatchKeepsOwnBody")
+	tskip(t, F, "PDF answers keep the model input bound while retaining the full extracted text", "the case checks the character bound of the model input, which belongs to the answer-mode slice's model call; the full text being retained is asserted in TestPDFAnswerModeExtractionSavesAndReturnsMarkdown")
+	tskip(t, F, "HTML answer mode still supplies the extracted page body", "the case checks the page body handed to an answer model, which needs the answer-mode slice's model call; the HTML half (answer mode returns the extracted body) is TestPDFAnswerModeExtractionHTMLBody")
+	tskip(t, F, "disabled PDF extraction and raw binary fetches do not call an answer model", "the case asserts that no answer model is called, and there is no answer model call in this port until the answer-mode slice; the disabled and raw outcomes are TestPDFAnswerModeExtractionDisabledAndRaw")
+	tskip(t, F, "a cancelled PDF answer does not fetch or invoke an answer model", "the case asserts that a cancelled answer neither fetches nor calls a model, and the model call is the answer-mode slice's; the cancelled fetch sending no request is TestPDFAnswerModeExtractionCancelled")
 }
 
 func answerOpts() ExtractOptions {

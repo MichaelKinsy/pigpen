@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -99,3 +100,32 @@ type benchDoer string
 func (d benchDoer) Do(r *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(string(d))), Request: r}, nil
 }
+
+// Local PDF text extraction of a representative document (30 pages of compressed text, a few
+// hundred words each) and of the one-page fixture; the original's time under Node is measured by
+// port/bench-pdf-extract.mjs.
+func benchPDF(b *testing.B, name string) {
+	data, err := os.ReadFile("testdata/pdf/" + name)
+	if err != nil {
+		b.Fatal(err)
+	}
+	dir := b.TempDir()
+	b.Setenv("PIG_CODING_AGENT_DIR", dir)
+	b.Setenv("PI_CODING_AGENT_DIR", dir)
+	if err := os.WriteFile(dir+"/web-search.json", []byte(`{"pdf":{"provider":"unpdf"}}`), 0o600); err != nil {
+		b.Fatal(err)
+	}
+	ResetCaches()
+	opts := PDFExtractOptions{OutputDir: dir}
+	b.SetBytes(int64(len(data)))
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if _, err := ExtractPDFToMarkdown(context.Background(), data, "https://example.test/report.pdf", opts); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkPDFExtractReport30Pages(b *testing.B) { benchPDF(b, "report-30p.pdf") }
+func BenchmarkPDFExtractOnePage(b *testing.B)       { benchPDF(b, "text.pdf") }
