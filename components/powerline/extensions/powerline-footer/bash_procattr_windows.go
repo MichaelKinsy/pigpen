@@ -5,17 +5,22 @@ package powerline_footer
 import (
 	"os"
 	"os/exec"
+	"syscall"
 )
 
 // hideConsoleWindow keeps a child process from flashing a console window (Node's windowsHide).
-func hideConsoleWindow(cmd *exec.Cmd) {}
+func hideConsoleWindow(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+}
 
 // configureShellProcess: the shell gets its own hidden console. Windows has no process groups to signal.
-func configureShellProcess(cmd *exec.Cmd) {}
+func configureShellProcess(cmd *exec.Cmd) { hideConsoleWindow(cmd) }
 
 // signalShellGroup interrupts the shell: Windows cannot deliver SIGINT, so the process itself is signalled as upstream's
 // fallback does (process.kill on Windows terminates it).
-func signalShellGroup(p *os.Process, sig os.Signal) error { return *new(error) }
+func signalShellGroup(p *os.Process, sig os.Signal) error {
+	return p.Kill()
+}
 
 // shellSignalInterrupt and shellSignalKill are the signals interrupt() and dispose() send.
 var (
@@ -24,4 +29,9 @@ var (
 )
 
 // closeExitCode is getCloseExitCode for a finished process.
-func closeExitCode(state *os.ProcessState) int { return *new(int) }
+func closeExitCode(state *os.ProcessState) int {
+	if code := state.ExitCode(); code >= 0 {
+		return code
+	}
+	return 1
+}
