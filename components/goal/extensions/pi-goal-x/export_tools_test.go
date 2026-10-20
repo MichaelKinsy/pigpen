@@ -145,16 +145,6 @@ func ToolsNormalize(goalJSON string) map[string]any {
 
 // ---- Probe hooks over the core ----
 
-// AuditResultVerdict is core.auditResult?.verdict ("" when there is none).
-func (p *Probe) AuditResultVerdict() (verdict string) {
-	p.c.locked(func() {
-		if p.c.auditResult != nil {
-			verdict = p.c.auditResult.verdict
-		}
-	})
-	return verdict
-}
-
 // HasAuditResult is core.auditResult != null.
 func (p *Probe) HasAuditResult() (has bool) {
 	p.c.locked(func() { has = p.c.auditResult != nil })

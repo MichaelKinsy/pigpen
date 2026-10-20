@@ -38,8 +38,8 @@ func WriteGoalForRig(cwd, objective string, atMs int64, tokenBudget, tokensUsed 
 	return out
 }
 
-// SchedulerDeclareReady is core.scheduler.declare(ctx, {kind: "ready"}).terminate.
-func (p *Probe) SchedulerDeclareReady() (terminate bool) {
+// SchedulerDeclareReadyTerminate is core.scheduler.declare(ctx, {kind: "ready"}).terminate.
+func (p *Probe) SchedulerDeclareReadyTerminate() (terminate bool) {
 	p.c.locked(func() { terminate = p.c.scheduler.declare(goalContinuation{kind: "ready"}).terminate })
 	return terminate
 }

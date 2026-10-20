@@ -130,7 +130,7 @@ func (e *evRig) markGoalWork(t *testing.T) {
 	e.fire("turn_start", map[string]any{})
 	e.fire("tool_call", map[string]any{"toolName": "bash", "args": map[string]any{"command": "ls"}})
 	e.fire("tool_execution_end", map[string]any{})
-	if !e.Probe.SchedulerDeclareReady() {
+	if !e.Probe.SchedulerDeclareReadyTerminate() {
 		t.Error("declare ready must terminate")
 	}
 }
@@ -509,7 +509,7 @@ func (e *evRig) declareNextRun(t *testing.T) {
 	e.fire("tool_call", map[string]any{"toolName": "bash", "args": map[string]any{"command": "ls"}})
 	e.fire("tool_execution_end", map[string]any{})
 	goal.SaveGoalSettingsForRig(e.Cwd, `{"maxAutonomousRuns": 5}`)
-	if !e.Probe.SchedulerDeclareReady() {
+	if !e.Probe.SchedulerDeclareReadyTerminate() {
 		t.Error("declare ready must terminate")
 	}
 }
