@@ -59,8 +59,13 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 	case mode == "answer" && opts.Auth != nil:
 		return errorOutput("auth cannot be combined with mode answer.", "auth cannot be combined with mode answer", nil), nil
 	}
+	var authProfile *AuthFetchProfile
 	if opts.Auth != nil {
-		return ToolOutput{}, unsupported("authenticated fetch (auth profiles read local browser cookies)")
+		p, err := ResolveAuthFetchProfile(*opts.Auth)
+		if err != nil {
+			return errorOutput(err.Error(), err.Error(), nil), nil
+		}
+		authProfile = &p
 	}
 	if len(urlList) == 0 {
 		return errorOutput("No URL provided.", "No URL provided", nil), nil
@@ -72,7 +77,7 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 		update(textOutput(fmt.Sprintf("Fetching %d URL(s)...", len(urlList)), map[string]any{"phase": "fetch", "progress": 0}))
 	}
 
-	ex := ExtractOptions{Mode: mode, Frames: opts.Frames, Timestamp: opts.Timestamp, ForceClone: opts.ForceClone != nil && *opts.ForceClone, Model: opts.Model, ToolNames: r.registeredNames()}
+	ex := ExtractOptions{Mode: mode, Frames: opts.Frames, Timestamp: opts.Timestamp, ForceClone: opts.ForceClone != nil && *opts.ForceClone, Model: opts.Model, ToolNames: r.registeredNames(), AuthProfile: authProfile}
 	ex.Prompt = opts.Prompt
 	fetched := FetchAllContent(ctx, urlList, ex)
 	if ctx.Err() != nil {
@@ -99,7 +104,17 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 
 	responseID := GenerateID()
 	data := &StoredSearchData{ID: responseID, Type: "fetch", Timestamp: nowMs(), URLs: stripThumbnails(fetched)}
-	r.host.AppendEntry("web-search-results", StoreFetchedContentResult(responseID, data))
+	// An authenticated fetch of a profile with cache "off" is never stored (storeFetchResult).
+	stored := authProfile == nil || authProfile.Cache != "off"
+	if stored {
+		r.host.AppendEntry("web-search-results", StoreFetchedContentResult(responseID, data))
+	}
+	withID := func(d map[string]any) map[string]any {
+		if stored {
+			d["responseId"] = responseID
+		}
+		return d
+	}
 
 	optional := func(d map[string]any) map[string]any {
 		if opts.Prompt != "" {
@@ -117,7 +132,7 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 	if len(urlList) == 1 {
 		res := presented[0]
 		if res.Error != nil {
-			return textOutput("Error: "+*res.Error, optional(map[string]any{"urls": urlList, "urlCount": 1, "successful": 0, "error": *res.Error, "responseId": responseID})), nil
+			return textOutput("Error: "+*res.Error, optional(withID(map[string]any{"urls": urlList, "urlCount": 1, "successful": 0, "error": *res.Error}))), nil
 		}
 		full := jsLen(res.Content)
 		slice, end, totalBytes, totalLines, shownBytes, shownLines := initialContentSlice(res.Content, MaxInlineContentChars(currentRoot()))
@@ -125,7 +140,9 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 		output := slice
 		if truncated {
 			output += fmt.Sprintf("\n\n---\nShowing %d of %d chars, %d of %d bytes, and %d of %d lines. ", end, full, shownBytes, totalBytes, shownLines, totalLines)
-			if r.cfg.GetSearchContent {
+			if !stored {
+				output += "Authenticated fetch cache is off; repeat the fetch to read more."
+			} else if r.cfg.GetSearchContent {
 				output += fmt.Sprintf(`Use %s({ responseId: "%s", urlIndex: 0, offset: %d }) for the next slice.`, r.cfg.Names.GetSearchContent, responseID, end)
 			} else {
 				output += "Content retrieval is not registered."
@@ -140,9 +157,10 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 		if res.Thumbnail != nil {
 			imageCount = 1
 		}
-		details := optional(map[string]any{"urls": urlList, "urlCount": 1, "successful": 1, "totalChars": full, "title": res.Title, "responseId": responseID,
+		details := optional(map[string]any{"urls": urlList, "urlCount": 1, "successful": 1, "totalChars": full, "title": res.Title,
 			"truncated": truncated, "hasImage": imageCount > 0, "imageCount": imageCount, "mode": mode,
 			"totalBytes": totalBytes, "totalLines": totalLines, "shownBytes": shownBytes, "shownLines": shownLines})
+		withID(details)
 		if res.MimeType != "" {
 			details["mimeType"] = res.MimeType
 		}
@@ -168,12 +186,15 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 			fmt.Fprintf(&b, "- %s (%d chars)\n", title, jsLen(p.Content))
 		}
 	}
-	if r.cfg.GetSearchContent {
+	switch {
+	case !stored:
+		b.WriteString("\n---\nAuthenticated fetch cache is off; repeat the fetch to read content.")
+	case r.cfg.GetSearchContent:
 		fmt.Fprintf(&b, "\n---\nUse %s({ responseId: \"%s\", urlIndex: 0 }) to retrieve bounded content slices.", r.cfg.Names.GetSearchContent, responseID)
-	} else {
+	default:
 		b.WriteString("\n---\nContent retrieval is not registered.")
 	}
-	return textOutput(b.String(), map[string]any{"urls": urlList, "urlCount": len(urlList), "successful": successful, "totalChars": totalChars, "responseId": responseID}), nil
+	return textOutput(b.String(), withID(map[string]any{"urls": urlList, "urlCount": len(urlList), "successful": successful, "totalChars": totalChars})), nil
 }
 
 // currentRoot re-reads web-search.json (fetch_content applies maxInlineContentChars at call time,

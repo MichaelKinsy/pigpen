@@ -3,8 +3,10 @@ package websearch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 	"sync"
+	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -17,6 +19,7 @@ import (
 func Extension() *sdk.Extension {
 	e := sdk.New("websearch")
 	h := &sdkHost{}
+	SetExecRunner(h.exec)
 	rt, err := NewRuntime(h)
 	var problem string
 	if err != nil {
@@ -238,4 +241,26 @@ func (h *sdkHost) SetActiveTools(names []string) error {
 func (h *sdkHost) HasUI() bool {
 	ctx, ok := h.get()
 	return !ok || ctx.HasUI()
+}
+
+// exec runs a command through the host (pi.exec), on the most recent session context.
+func (h *sdkHost) exec(_ context.Context, command string, args []string, timeout time.Duration) (ExecResult, error) {
+	ctx, ok := h.get()
+	if !ok {
+		return ExecResult{}, errors.New("no session context to run " + command)
+	}
+	var res *sdk.ExecResult
+	var err error
+	if timeout > 0 {
+		res, err = ctx.ExecWithOptions(command, args, sdk.ExecOptions{Timeout: float64(timeout.Milliseconds())})
+	} else {
+		res, err = ctx.Exec(command, args)
+	}
+	if err != nil {
+		return ExecResult{}, err
+	}
+	if res == nil {
+		return ExecResult{Code: 1}, nil
+	}
+	return ExecResult{Stdout: res.Stdout, Stderr: res.Stderr, Code: res.ExitCode, Killed: res.Killed}, nil
 }

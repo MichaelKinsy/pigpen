@@ -162,16 +162,6 @@ func TestRefusalFetchAnswerMode(t *testing.T) {
 	wantCalls(t, n)
 }
 
-func TestRefusalFetchAuth(t *testing.T) {
-	r, _ := newRuntime(t, "")
-	n := useNet(t, func(netCall) netReply { return reply(200, "x") })
-	for _, auth := range []any{true, "work"} {
-		_, err := execTool(t, r, "fetch_content", map[string]any{"url": "https://93.184.216.34/page", "auth": auth})
-		wantRefusal(t, err, "authenticated fetch (auth profiles read local browser cookies)")
-	}
-	wantCalls(t, n)
-}
-
 func TestRefusalFetchSpecialisedExtractors(t *testing.T) {
 	video := filepath.Join(t.TempDir(), "clip.mp4")
 	if err := os.WriteFile(video, []byte("not really a video"), 0o600); err != nil {
