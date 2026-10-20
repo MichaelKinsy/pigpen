@@ -14,7 +14,7 @@ Search, fetch and source retention are ported and twinned. Everything else is a 
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; fetch `answer` mode and query rewrite (need a model-completion call); activity widget and shortcut; TUI render hooks |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search); routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | The other 26 providers (OpenAI/Codex hosted search, Gemini, xAI, Jina Search, Firecrawl, ...): in the provider table; selecting or reaching one is refused (see "Refusals") |
-| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, hosted fetch providers other than Jina, authenticated fetch, Gemini Web and browser cookies |
+| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | PDF text extraction (config is read), YouTube/video/frames, GitHub clone, RSC/Defuddle fallbacks, the Gemini fetch providers, authenticated fetch, Gemini Web and browser cookies |
 
 ## Refusals (until the slices above are ported)
 
@@ -30,18 +30,55 @@ Every unported option, mode or URL kind is refused with one message and returns 
 | `authenticated fetch` | any `auth` value | `tool_fetch.go` |
 | `YouTube video extraction`, `local video file analysis`, `video frame and timestamp extraction`, `GitHub repository extraction (clone)`, `GitHub issue and pull request extraction` | the URL (or `frames`/`timestamp`) the original sends to that extractor and the matching config section (`youtube`, `video`, `githubClone`, `githubPrIssue`) not disabled; raw mode bypasses them as in the original | `fetch_unported.go`, `extract.go` |
 | `PDF text extraction` | a PDF response | `extract.go` |
-| `<Label> fetch provider` | the original would call a hosted fetch provider at this point of `fetchRouting` (base URL or key present) | `extract.go` |
+| `Gemini fetch provider` | `gemini` is in the `fetchRouting` order and a Gemini credential is set (the other hosted fetch providers are ported, see "Slice: hosted search and fetch providers") | `extract.go` |
 | `the RSC payload and Defuddle fallback extractors` | readable extraction failed, where the original tries these before giving up (the message follows the original's verdict) | `extract.go` |
 
 A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
 `/google-account`, the shortcuts and the activity widget. Known approximation: whether an unported provider is available
 uses its credential names (OAuth, ADC and browser-cookie availability of OpenAI, Gemini, xAI and Kimi is not known here).
 
+## Slice: hosted search and fetch providers
+
+Ports `tinyfish.ts`, `search1api.ts`, `searchinfinity.ts`, `querit.ts`, `parallel.ts`, `parallel-mcp.ts`, `ollama.ts`, the
+Extract half of `kagi.ts`, `firecrawl.ts`, `crawl4ai.ts`, `brightdata.ts` (SERP) and `brightdata-unlocker.ts`, and the hosted
+part of `extract.ts` (`fetchRouting` order, the per-provider `<Label> fallback failed` lines and the "Fallback options" list,
+`extract.ts:830-1065`). Files: one per original (`tinyfish.go`, `search1api.go`, `searchinfinity.go`, `querit.go`, `parallel.go`,
+`parallelmcp.go`, `ollama.go`, `kagi.go`, `firecrawl.go`, `crawl4ai.go`, `brightdata.go`, `brightdata_unlocker.go`), the shared
+request plumbing in `hosted.go` and the routing in `fetch_hosted.go`. The `<Label> search provider` and `<Label> fetch provider`
+refusals of these providers are gone; a configured provider that fails reports its own error exactly as the original does.
+
+Proof:
+- twins for `tinyfish`, `search1api`, `searchinfinity`, `querit-provider`, `parallel`, `parallel-mcp-provider`,
+  `firecrawl-extraction`, `crawl4ai-extraction`, `brightdata-serp`, `brightdata-unlocker` and the Ollama and Kagi cases of
+  `new-search-providers` (`*_test.go` named after the files). Their remaining named skips are the curator pages, the Gemini
+  fallthrough of `parallel`, the activity log of `brightdata-serp`, and the Bocha and SerpBase cases that belong to other slices.
+- the providers with a configurable base URL (Firecrawl, Crawl4AI) are compared by pigeq scenarios with fake servers
+  (`fetch-firecrawl-fallback`, `fetch-crawl4ai-fallback`, `fetch-hosted-failure-guidance`, `web-search-firecrawl`).
+- every other provider calls a fixed endpoint that no scenario server can receive under the unmodified original, so
+  `port/record-provider-requests.mjs` runs the vendored original with a recording `fetch` and checks in the requests and results
+  (`port/provider-wire.json`, 20 cases); `provider_wire_test.go` replays the same inputs against the port and compares every
+  request (method, URL, headers, body) and the result. `web-search-hosted-missing-credentials` compares the pre-network
+  guidance of the fixed-endpoint providers.
+
+Deliberate differences (each pinned by a twin):
+- **No activity log.** The original opens and closes an activity entry around every provider call; this port has none (the
+  activity widget belongs to the curator slice), so the twins assert the request and error behaviour and skip the entry itself
+  (`the activity entry is opened once ...`).
+- **Own timeouts** are "timed out" errors, like the other Go providers (a `fetch` aborted by `AbortSignal.timeout` reads
+  "aborted" upstream); Querit keeps its own wording, `Querit <Search|Contents> API request timed out after N seconds`.
+- **JSON parse messages** are Go's, not V8's, where a provider quotes them (`... returned invalid JSON: <detail>`).
+  Bright Data's config parse error keeps only a position, as upstream; V8 omits the position for a bad token at a value
+  position and Go cannot tell all V8 cases apart, so the port omits it for Go's "looking for beginning of value" and "in literal"
+  messages and prints `at position N (line L column C)` for the structural ones.
+- **Error names** (`TypeError`, `AbortError`) do not exist for Go errors; only messages are compared.
+- **Search options** `TimeoutMs` and `Lookup` exist on `SearchOptions` for the self-hosted Firecrawl search (the original's
+  `FirecrawlSearchOptions`), and `FetchRemoteOptions.OnRedirectErr` carries the Crawl4AI refusal of a cross-origin redirect.
+
 ## Mapping (original file -> Go)
 
 `storage.ts` storage.go - `utils.ts`/`ssrf-protection.ts`/`credential-source.ts` config.go, credential.go, ssrf.go, proxy.go,
 transport.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi.ts`
-same names - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
+same names (and the hosted providers listed in "Slice: hosted search and fetch providers") - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
 find.go, sourcecheck.go, fetchparams.go - `data-uri-sanitize.ts` datauri.go - `index.ts` tools.go, tool_*.go, toolconfig.go,
 schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enable.go.
 
@@ -62,10 +99,10 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
 - **A session that cannot be read** (restore or transcript selection) still starts; the user gets a warning.
 - **SOCKS4/4a proxies** validate like the original but fail closed at connect (Go's `net/http` has no SOCKS4 dialer).
 - **Credential commands** run through the bare `sh` (Go) instead of `/bin/sh`, so the harness can record them and NixOS-style systems work.
-- **Guidance names only what this port can do** (review fix): the fetch "Fallback options" checklist and the
-  "No search provider available" error of the original also suggest Firecrawl, Crawl4AI, TinyFish, Search1API, Querit,
-  Ollama, Parallel, Bright Data, OpenAI/Codex `/login`, the Gemini API and signing into Gemini Web in Chrome. None of
-  them works here, so they are left out; the upstream tests only match the headings and the Jina and search bullets.
+- **Guidance names only what this port can do** (review fix): the "No search provider available" error of the original also
+  suggests OpenAI/Codex `/login`, the Gemini API and signing into Gemini Web in Chrome, which do not work here, so they are
+  left out. The fetch "Fallback options" list is the original's, hosted providers and Gemini lines included (the Gemini lines
+  point at providers that arrive with the Gemini slice).
 - **Image pixel budget** (review fix): images larger than 2000 px are decoded for resizing only up to 64 megapixels
   (8192x8192). Go's decoders allocate the full pixel buffer from the declared size, so a few kilobytes of PNG could
   otherwise demand gigabytes and kill the extension process; larger images fail with "Image too large to process".
