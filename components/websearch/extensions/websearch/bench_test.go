@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	readability "github.com/go-shiori/go-readability"
 	"golang.org/x/net/html"
 )
 
@@ -42,12 +43,18 @@ func BenchmarkReadableArticle(b *testing.B) {
 	}
 }
 
-// The conversion alone, on a parsed document.
-func BenchmarkHTMLToMarkdown(b *testing.B) {
+// The conversion alone, on the article's HTML.
+func BenchmarkTurndown(b *testing.B) {
 	doc, _ := html.Parse(strings.NewReader(benchPage(40)))
+	parser := readability.NewParser()
+	article, err := parser.ParseDocument(doc, nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.SetBytes(int64(len(article.Content)))
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = htmlToMarkdown(doc)
+		_ = turndown(article.Content)
 	}
 }
 

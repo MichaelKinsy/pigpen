@@ -99,18 +99,6 @@ func TestDeferred_querit_provider(t *testing.T) {
 	tskip(t, F, "curator page exposes Querit as a manual provider", "the search curator UI is deferred (docs/PORT.md); this case (curator page exposes Querit as a manual provider) ships with the feature")
 }
 
-func TestDeferred_rsc_fallback(t *testing.T) {
-	const F = "rsc-fallback"
-	tskip(t, F, "weak Readability output falls back to useful RSC content", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (weak Readability output falls back to useful RSC content) ships with the feature")
-	tskip(t, F, "null Readability output falls back to local Defuddle extraction", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (null Readability output falls back to local Defuddle extraction) ships with the feature")
-	tskip(t, F, "Defuddle fallback resolves relative canonical URLs against the fetched URL", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (Defuddle fallback resolves relative canonical URLs against the fetched URL) ships with the feature")
-	tskip(t, F, "short Readability output falls back to useful Defuddle content", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (short Readability output falls back to useful Defuddle content) ships with the feature")
-	tskip(t, F, "Defuddle processing failures stay contained and do not return the fallback body", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (Defuddle processing failures stay contained and do not return the fallback body) ships with the feature")
-	tskip(t, F, "short non-RSC pages remain incomplete", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (short non-RSC pages remain incomplete) ships with the feature")
-	tskip(t, F, "short RSC payloads remain incomplete", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (short RSC payloads remain incomplete) ships with the feature")
-	tskip(t, F, "background fetch notification distinguishes full, partial, and failed content", "React Server Components payload extraction is not ported: the fallback yields nothing (docs/PORT.md); this case (background fetch notification distinguishes full, partial, and failed content) ships with the feature")
-}
-
 func TestDeferred_search_error_render(t *testing.T) {
 	const F = "search-error-render"
 	tskip(t, F, "cancel/error path is NOT a dead-end single line: expanded plan has >1 line", "TUI rendering of search errors is left to the host's default rendering (docs/PORT.md); this case (cancel/error path is NOT a dead-end single line: expanded plan has >1 line) ships with the feature")
