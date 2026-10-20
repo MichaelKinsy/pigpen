@@ -256,25 +256,27 @@ existing `jsRound` of the steering core is reused. The baseline snapshot of turn
 `agent_start`; upstream starts its first git process synchronously, so a file written within a few milliseconds of
 `agent_start` can be in the baseline (the tests wait for it, as upstream's do through the git shim).
 
-pigeq: 4 offline scenarios (`rules-file-offline-write-runs`, `rules-offline-fallback-document-write-runs`,
+pigeq: 5 scenarios (`sensitive-path-note-steered` and `rules-file-offline-write-runs`, `rules-offline-fallback-document-write-runs`,
 `rules-offline-heredoc-write-runs`, `rules-offline-turn-rules-without-git-run-quietly`), goldens recorded from the original;
-Pi original == original under PiG Node == Go port on all four (`pigeq check`: 23 of 23 scenarios PASS, with the 19 earlier ones).
-Mutations: 21 layer-1 rows (`port/mutate.py`, `port/mutation-results.txt`, all killed by the twins) and one pigeq row
-(`rules-sends-an-empty-steer`, killed by `changing-failure-not-steered`). `go test -race -count=24` passes.
+Pi original == original under PiG Node == Go port on all five (`pigeq check`: 24 of 24 scenarios PASS, with the 19 earlier ones).
+Mutations: 21 layer-1 rows (`port/mutate.py`, `port/mutation-results.txt`, all killed by the twins) and two pigeq rows
+(`rules-sends-an-empty-steer`, killed by `changing-failure-not-steered`; `rules-sensitive-note-not-sent`, see the PR body). `go test -race -count=24` passes.
 The hot paths (rule matching, the store cache, shell writes) are benchmarked in `rules_bench_test.go`.
 
 Judged rules behaviour (the rules request to the judge, steers, `rules check|audit|calibrate`) is proven by the twins and the
 fake-server layer-1 tests only: the original cannot be pointed at a fake judge from the hermetic host (G1), so no pigeq
 scenario can script its verdicts.
 
-Two scenarios are written but blocked on pigeq harness gaps, kept in `port/scenarios-blocked/` (not run by pigeq):
-- `sensitive-path-note-steered`: the original reads `<PIG_HOME>/pigpen-warden/config.json` (D5) and pigeq's `agentFiles`
-  may only write inside the agent directory (`<root>/agent`), while `PIG_HOME` is `<root>/pighome`. The scenario cannot
-  set `rules.sensitivePaths` for the original until pigeq can write a file under `PIG_HOME`.
-- `init-prompt-reaches-the-model`: `/warden init` is `sendUserMessage` + `waitForIdle`. Under Pi (and the TS original
-  under PiG's Node) the RPC `prompt` response arrives before `agent_start`; with the Go port under PiG the response is held
-  until the handler returns (after `agent_end`), so `agent_start` precedes it. Pi-ts == pi-ts holds; pig-go differs
-  from pi-ts at event 0/1 (17 vs 2 events). The init prompt text itself is proven by `TestInit*` twins.
+`sensitive-path-note-steered` carries the original's config in `agentFiles` (`pi-warden/config.json`) and the port's in
+`homeFiles` (`pigpen-warden/config.json` under `<PIG_HOME>`, D5), the pigeq `homeFiles` field of branch `pigeq-harness-gaps`:
+pi-ts == pig-ts == pig-go (25 events), golden recorded from the original. One run in five under a loaded host
+(load average ~200) showed the turn-end/next-request order differing at event 10; four reruns and three `check` runs were equal.
+
+One scenario stays blocked in `port/scenarios-blocked/` (not run by pigeq): `init-prompt-reaches-the-model`. `/warden init` is
+`sendUserMessage` + `waitForIdle`; under Pi (and the TS original under PiG's Node) the RPC `prompt` response arrives before
+`agent_start`, with the Go port under PiG the response is held until the handler returns (after `agent_end`), so
+`agent_start` precedes it (pi-ts == pi-ts; pig-go differs at event 0). This is the B4 ordering gap, not a port difference in
+what the model is sent: the init prompt text is covered by the `TestInit*` twins.
 
 Stacking notes: when the supervision lane lands, register `w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...")`
 in `newWarden` (first of init, audit, index), and set `ShellWriteTargets` (waste.go) from `shellWrites(command, ...).Writes`
