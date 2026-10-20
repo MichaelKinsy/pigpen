@@ -1,0 +1,102 @@
+{
+  "name": "draft-active-choices",
+  "description": "A second /goal while a draft is active: replace it, resume it, or cancel the new start; /goal-cancel discards the draft.",
+  "llm": [
+    {
+      "text": "What do you want to build?"
+    },
+    {
+      "text": "Tell me more about it."
+    }
+  ],
+  "steps": [
+    {
+      "name": "draft",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal Build a thing"
+      },
+      "wait": "agent_end"
+    },
+    {
+      "name": "draft",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal Another thing"
+      },
+      "ui": [
+        {
+          "value": "Replace it with a new draft"
+        }
+      ],
+      "wait": "agent_end"
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal Third thing"
+      },
+      "ui": [
+        {
+          "value": "Resume the existing draft"
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal Fourth thing"
+      },
+      "ui": [
+        {
+          "value": "Cancel"
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-cancel"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-cancel"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    },
+    {
+      "pattern": "Context snapshot: \\d+/(\\d+) tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <tokens>/${1} tokens (<pct>)"
+    }
+  ]
+}

@@ -279,6 +279,7 @@ func runGoalCompletionFlow(c *core, completionSummary string) (goalAgentResult, 
 	var auditor goalAuditorResult
 	// The auditor is a model run, not a host dialog: the core lock is released while it runs (the original's await), so Esc, /goal-unfocus
 	// and the progress callbacks reach the core meanwhile.
+	c.flush()
 	c.awaiting(func() { c.await(func() { auditor = runAuditor(args) }) })
 	// Clear abort controller — audit finished on its own
 	if c.auditAbortController != nil && auditCtx.Err() == nil {

@@ -1,0 +1,71 @@
+{
+  "name": "settings-model",
+  "description": "The auditor model selector with a filter that matches no model: the manual entry (bad then good format), then back to the default.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "value": "  model: (default) (default)"
+        },
+        {
+          "value": "zzz-no-such-model"
+        },
+        {
+          "value": "\u270e Enter provider/model manually (advanced)"
+        },
+        {
+          "value": "nonsense"
+        },
+        {
+          "value": "  model: (default) (default)"
+        },
+        {
+          "value": "zzz-no-such-model"
+        },
+        {
+          "value": "\u270e Enter provider/model manually (advanced)"
+        },
+        {
+          "value": "acme/model-x"
+        },
+        {
+          "value": "  provider: acme (project override)"
+        },
+        {
+          "value": "zzz-no-such-model"
+        },
+        {
+          "value": "  Current session / default (eq-llm/eq-1)"
+        },
+        {
+          "value": "Done"
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

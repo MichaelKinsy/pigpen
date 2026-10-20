@@ -1,0 +1,56 @@
+{
+  "name": "settings-boolean",
+  "description": "Boolean rows: set true, set false, set the same value again (no change), inherit the default, cancel.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "value": "  hideUnfocusedBanner: false (default)"
+        },
+        {
+          "value": "Set project override to true"
+        },
+        {
+          "value": "  hideUnfocusedBanner: true (project override)"
+        },
+        {
+          "value": "Set project override to false"
+        },
+        {
+          "value": "  hideUnfocusedBanner: false (project override)"
+        },
+        {
+          "value": "Set project override to false"
+        },
+        {
+          "value": "  hideUnfocusedBanner: false (project override)"
+        },
+        {
+          "value": "Use inherited value"
+        },
+        {
+          "value": "  hideUnfocusedBanner: false (default)"
+        },
+        {
+          "value": "Cancel"
+        },
+        {
+          "value": "Done"
+        }
+      ]
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

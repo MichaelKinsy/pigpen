@@ -1,0 +1,101 @@
+{
+  "name": "settings-integer",
+  "description": "Integer rows: a valid value, then invalid ones (1.5, text, 0 for subtaskDepth), a dismissed input, and the status report with provenance.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-focus"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "value": "  stall timeout (minutes): 0 (default)"
+        },
+        {
+          "value": "Set project override..."
+        },
+        {
+          "value": "15"
+        },
+        {
+          "value": "  stall timeout (minutes): 15 (project override)"
+        },
+        {
+          "value": "Set project override..."
+        },
+        {
+          "value": "1.5"
+        },
+        {
+          "value": "  max objective length (0 = none): 0 (default)"
+        },
+        {
+          "value": "Set project override..."
+        },
+        {
+          "value": "x"
+        },
+        {
+          "value": "  subtaskDepth: 1 (default)"
+        },
+        {
+          "value": "Set project override..."
+        },
+        {
+          "value": "0"
+        },
+        {
+          "value": "  autonomous run allowance: 0 (disabled) (project override)"
+        },
+        {
+          "value": "Set project override..."
+        },
+        {
+          "cancelled": true
+        },
+        {
+          "value": "  subtaskDepth: 1 (default)"
+        },
+        {
+          "value": "Set project override..."
+        },
+        {
+          "value": "3"
+        },
+        {
+          "value": "Done"
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status verbose"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-a.md": "{\n  \"version\": 3,\n  \"id\": \"seed-a\",\n  \"objective\": \"First goal\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 12500,\n    \"activeSeconds\": 3725\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-a.md\"\n}\n\n# Goal Prompt\n\nFirst goal\n\n## Progress\n\n- Status: active\n"
+  },
+  "normalize": [
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    }
+  ]
+}
