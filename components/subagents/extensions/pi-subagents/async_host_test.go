@@ -302,9 +302,9 @@ func TestARunOutlivesItsSessionAndTheNextSessionAdoptsIt(t *testing.T) {
 	t.Setenv("FAKE_PIG_SLEEP", "2")
 	h := e.host(t)
 	id, _ := launch(t, h, map[string]any{})
-	h.Fire("session_shutdown", nil) // the session ends; the detached child keeps going
+	h.FireAll("session_shutdown", nil) // the session ends; the detached child keeps going
 	h2 := e.host(t)
-	h2.Fire("session_start", map[string]any{"reason": "resume"})
+	h2.FireAll("session_start", map[string]any{"reason": "resume"})
 	eventually(t, "the adopted run's notice", func() bool { return len(notices(h2)) > 0 })
 	content := notices(h2)[0]["content"].(string)
 	if !strings.HasPrefix(content, "Background task completed: **helper**") {
