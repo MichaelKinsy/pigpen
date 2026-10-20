@@ -1,0 +1,14 @@
+# github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+./spawn_pig_test.go:13:52: undefined: pigSpawnDeps
+./spawn_pig_test.go:14:9: undefined: pigSpawnDeps
+./spawn_pig_test.go:32:10: undefined: getPigSpawnCommand
+./spawn_pig_test.go:38:10: undefined: getPigSpawnCommand
+./spawn_pig_test.go:40:10: undefined: getPigSpawnCommand
+./spawn_pig_test.go:49:10: undefined: getPigSpawnCommand
+./spawn_pig_test.go:60:9: undefined: getPigSpawnCommand
+./spawn_pig_test.go:60:41: undefined: pigSpawnCommand
+./spawn_pig_test.go:65:9: undefined: getPigSpawnCommand
+./spawn_pig_test.go:65:41: undefined: pigSpawnCommand
+./spawn_pig_test.go:65:41: too many errors
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents [build failed]
+FAIL
