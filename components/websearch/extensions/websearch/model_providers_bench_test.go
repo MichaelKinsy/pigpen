@@ -25,7 +25,7 @@ const (
 func benchModelProvider(b *testing.B, envKey, envValue, body string, search func(context.Context, string, SearchOptions) (*SearchResponse, error), ctx context.Context) {
 	b.Helper()
 	benchEnv(b, envKey, envValue)
-	b.Cleanup(SetHTTP(benchDoer{body}))
+	b.Cleanup(SetHTTP(stubDoer{body}))
 	o := SearchOptions{RecencyFilter: "week", NumResults: nf(3), DomainFilter: []string{"example.com", "-spam.example"}}
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -65,7 +65,7 @@ func BenchmarkSearchOpenAIAlpha(b *testing.B) {
 	if err := writeBenchConfig(dir, `{"openaiUseAlphaSearch":true,"openaiSearchModel":"gpt-5.6-luna"}`); err != nil {
 		b.Fatal(err)
 	}
-	b.Cleanup(SetHTTP(benchDoer{benchAlphaBody}))
+	b.Cleanup(SetHTTP(stubDoer{benchAlphaBody}))
 	o := SearchOptions{RecencyFilter: "day", DomainFilter: []string{"www.example.com"}}
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {

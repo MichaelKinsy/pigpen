@@ -84,10 +84,10 @@ func TestUpstream_openai_origin(t *testing.T) {
 						wantKey = "standalone-test-key"
 					}
 					if avail.err != nil || avail.result != true || len(search.requests) != 1 || search.requests[0].URL != c.expectedURL ||
-						headerOf(search.requests[0], "Authorization") != "Bearer "+wantKey {
+						oaHeaderOf(search.requests[0], "Authorization") != "Bearer "+wantKey {
 						t.Fatalf("%v %v %v", avail.result, search.urls(), search.requests[0].Header)
 					}
-					if !c.standalone && headerOf(search.requests[0], "X-Gateway") != "test" {
+					if !c.standalone && oaHeaderOf(search.requests[0], "X-Gateway") != "test" {
 						t.Fatal("the registry header was not forwarded")
 					}
 				}
@@ -135,7 +135,7 @@ func TestUpstream_openai_search_opencode_headers(t *testing.T) {
 		out.mustOK(t)
 		req := out.requests[0]
 		if out.searchResponse(t).Answer != "Search answer" || req.URL != "https://opencode.ai/zen/go/v1/responses" || req.Body["model"] != "gpt-6-luna" ||
-			headerOf(req, "x-existing") != "kept" || headerOf(req, "x-opencode-session") != "session-1" || headerOf(req, "x-opencode-client") != "pi" {
+			oaHeaderOf(req, "x-existing") != "kept" || oaHeaderOf(req, "x-opencode-session") != "session-1" || oaHeaderOf(req, "x-opencode-client") != "pi" {
 			t.Fatalf("%s %v %v", req.URL, req.Body["model"], req.Header)
 		}
 	})
@@ -152,7 +152,7 @@ func TestUpstream_openai_search_opencode_headers(t *testing.T) {
 		} {
 			out := search(t, c.config, c.models, nil)
 			out.mustOK(t)
-			if out.requests[0].URL != openCodeURL || headerOf(out.requests[0], "x-opencode-session") != "session-1" || headerOf(out.requests[0], "x-opencode-client") != "pi" {
+			if out.requests[0].URL != openCodeURL || oaHeaderOf(out.requests[0], "x-opencode-session") != "session-1" || oaHeaderOf(out.requests[0], "x-opencode-client") != "pi" {
 				t.Fatalf("%s: %s %v", c.name, out.requests[0].URL, out.requests[0].Header)
 			}
 		}
@@ -193,7 +193,7 @@ func TestUpstream_openai_search_opencode_headers(t *testing.T) {
 			sc.redirectURL, sc.redirectStatus = "https://redirect-target.example/v1/responses", 302
 		})
 		out.mustOK(t)
-		if out.searchResponse(t).Answer != "Search answer" || headerOf(out.requests[0], "x-provider-secret") != "registry-secret" || headerOf(out.requests[0], "x-opencode-session") != "session-1" {
+		if out.searchResponse(t).Answer != "Search answer" || oaHeaderOf(out.requests[0], "x-provider-secret") != "registry-secret" || oaHeaderOf(out.requests[0], "x-opencode-session") != "session-1" {
 			t.Fatalf("%v", out.requests[0].Header)
 		}
 		redirected := out.requests[1]

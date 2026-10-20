@@ -537,7 +537,7 @@ func TestOpenAICodexTokenOnAnotherProviderUsesTheCodexEndpoint(t *testing.T) {
 		model: map[string]any{"provider": "openai", "baseUrl": "https://gateway.example/v1"}, config: map[string]any{"openaiUseAlphaSearch": false}, payload: legacyPayload})
 	out.mustOK(t)
 	req := out.requests[0]
-	if req.URL != codexResponsesURL || headerOf(req, "chatgpt-account-id") != "test-account" || headerOf(req, "originator") != "pi" {
+	if req.URL != codexResponsesURL || oaHeaderOf(req, "chatgpt-account-id") != "test-account" || oaHeaderOf(req, "originator") != "pi" {
 		t.Fatalf("%s %v", req.URL, req.Header)
 	}
 }
@@ -547,7 +547,7 @@ func TestOpenAIRequestHeadersKeepTheRegistrysDuplicateNamesAsOneHeader(t *testin
 	// the search's own Authorization travel as one value, as in the original (alpha overwrites it).
 	out := runOpenAI(t, oaScenario{registry: true, headers: map[string]any{"authorization": "stale"}, payload: legacyPayload, config: map[string]any{"openaiUseAlphaSearch": false}})
 	out.mustOK(t)
-	if got := headerOf(out.requests[0], "Authorization"); got != "stale, Bearer registry-test-key" {
+	if got := oaHeaderOf(out.requests[0], "Authorization"); got != "stale, Bearer registry-test-key" {
 		t.Fatal(got)
 	}
 }
@@ -557,7 +557,7 @@ func TestOpenAICurrentModelRoutingIgnoresTheConfiguredEndpointAndModel(t *testin
 		"openaiResponsesUrl": "https://gateway.example/v1/responses", "openaiSearchModel": "not-current", "searchRouting": routeRaw(`,"useCurrentModel":true`)}})
 	out.mustOK(t)
 	req := out.requests[0]
-	if req.URL != "https://api.openai.com/v1/alpha/search" || req.Body["model"] != "gpt-5.6-luna" || headerOf(req, "Authorization") != "Bearer current-key" {
+	if req.URL != "https://api.openai.com/v1/alpha/search" || req.Body["model"] != "gpt-5.6-luna" || oaHeaderOf(req, "Authorization") != "Bearer current-key" {
 		t.Fatalf("%s %v %v", req.URL, req.Body, req.Header)
 	}
 	// Without the switch the configured endpoint and model apply.
@@ -638,7 +638,7 @@ func TestOpenAIPrefersTheCodexLoginOverTheOpenAIOne(t *testing.T) {
 			"openai":       {"ok": true, "apiKey": "openai-login", "headers": map[string]any{}},
 		}, config: map[string]any{"openaiUseAlphaSearch": false}})
 	out.mustOK(t)
-	if out.requests[0].URL != codexResponsesURL || headerOf(out.requests[0], "Authorization") != "Bearer codex-login" || !eqStrings(out.authProviders, []string{"openai-codex"}) {
+	if out.requests[0].URL != codexResponsesURL || oaHeaderOf(out.requests[0], "Authorization") != "Bearer codex-login" || !eqStrings(out.authProviders, []string{"openai-codex"}) {
 		t.Fatalf("%s %v %v", out.requests[0].URL, out.requests[0].Header, out.authProviders)
 	}
 }

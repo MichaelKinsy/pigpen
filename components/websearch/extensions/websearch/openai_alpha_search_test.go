@@ -40,7 +40,7 @@ func TestUpstream_openai_alpha_search_alpha(t *testing.T) {
 			out.mustOK(t)
 			req := out.requests[0]
 			tools, _ := req.Body["tools"].([]any)
-			if req.URL != "https://api.openai.com/v1/responses" || headerOf(req, "OpenAI-Beta") != "responses=experimental" ||
+			if req.URL != "https://api.openai.com/v1/responses" || oaHeaderOf(req, "OpenAI-Beta") != "responses=experimental" ||
 				tools[0].(map[string]any)["type"] != "web_search" || req.Body["stream"] != true || req.Body["commands"] != nil ||
 				out.searchResponse(t).Answer != "Responses answer" {
 				t.Fatalf("flag %v: %+v", flag, req)
@@ -66,8 +66,8 @@ func TestUpstream_openai_alpha_search_alpha(t *testing.T) {
 			!reflect.DeepEqual(req.Body["commands"], map[string]any{"search_query": []any{map[string]any{"q": "test query"}}}) {
 			t.Fatalf("%v", req.Body)
 		}
-		if headerOf(req, "Authorization") != "Bearer alpha-test-key" || headerOf(req, "Accept") != "application/json" ||
-			headerOf(req, "Originator") != "codex_cli_rs" || hasHeader(req, "OpenAI-Beta") {
+		if oaHeaderOf(req, "Authorization") != "Bearer alpha-test-key" || oaHeaderOf(req, "Accept") != "application/json" ||
+			oaHeaderOf(req, "Originator") != "codex_cli_rs" || hasHeader(req, "OpenAI-Beta") {
 			t.Fatalf("%v", req.Header)
 		}
 		want := &SearchResponse{Answer: "Plain search output", Results: []SearchResult{{Title: "Source", URL: "https://example.com/a", Snippet: "Evidence"}}}
@@ -86,7 +86,7 @@ func TestUpstream_openai_alpha_search_alpha(t *testing.T) {
 		out.mustOK(t)
 		req := out.requests[0]
 		if req.URL != "http://localhost:8921/api/v4/alpha/search?version=1" || req.Body["model"] != "custom-search-model" ||
-			headerOf(req, "Authorization") != "Bearer registry-test-key" || headerOf(req, "X-Gateway") != "keep" || headerOf(req, "X-Codex-Turn-Metadata") != "keep" {
+			oaHeaderOf(req, "Authorization") != "Bearer registry-test-key" || oaHeaderOf(req, "X-Gateway") != "keep" || oaHeaderOf(req, "X-Codex-Turn-Metadata") != "keep" {
 			t.Fatalf("%s %v %v", req.URL, req.Body, req.Header)
 		}
 		for _, key := range []string{"openai-beta", "session_id", "conversation_id", "x-codex-beta-features", "x-codex-turn-state", "x-openai-internal-codex-responses-lite"} {
@@ -101,7 +101,7 @@ func TestUpstream_openai_alpha_search_alpha(t *testing.T) {
 			out := runOpenAI(t, oaScenario{current: current, registry: true, key: strp(codexToken()),
 				model: map[string]any{"provider": "openai-codex", "api": "openai-codex-responses", "baseUrl": "https://chatgpt.com/backend-api"}})
 			out.mustOK(t)
-			if out.requests[0].URL != "https://chatgpt.com/backend-api/codex/alpha/search" || headerOf(out.requests[0], "chatgpt-account-id") != "test-account" {
+			if out.requests[0].URL != "https://chatgpt.com/backend-api/codex/alpha/search" || oaHeaderOf(out.requests[0], "chatgpt-account-id") != "test-account" {
 				t.Fatalf("current %v: %s %v", current, out.requests[0].URL, out.requests[0].Header)
 			}
 		}

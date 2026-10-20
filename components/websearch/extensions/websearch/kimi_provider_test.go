@@ -28,7 +28,7 @@ func kimiBody(results ...map[string]any) string {
 	for i, r := range results {
 		items[i] = r
 	}
-	return string(mustJSON(map[string]any{"search_results": items}))
+	return string(mustJSONBody(map[string]any{"search_results": items}))
 }
 
 func TestUpstream_kimi_provider(t *testing.T) {

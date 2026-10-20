@@ -16,7 +16,7 @@ import (
 // replays the same inputs against the port and requires the same requests (method, URL, headers,
 // raw body) and the same result or error.
 
-type wireCase struct {
+type modelWireCase struct {
 	Name     string         `json:"name"`
 	Provider string         `json:"provider"`
 	Config   map[string]any `json:"config"`
@@ -58,7 +58,7 @@ func TestModelProviderWireFixtures(t *testing.T) {
 		t.Fatal(err)
 	}
 	var fixture struct {
-		Cases []wireCase `json:"cases"`
+		Cases []modelWireCase `json:"cases"`
 	}
 	noErr(t, json.Unmarshal(raw, &fixture))
 	if len(fixture.Cases) == 0 {
@@ -67,14 +67,14 @@ func TestModelProviderWireFixtures(t *testing.T) {
 	for _, c := range fixture.Cases {
 		t.Run(c.Name, func(t *testing.T) {
 			_, dir := isolate(t)
-			writeConfig(t, dir, string(mustJSON(c.Config)))
+			writeConfig(t, dir, string(mustJSONBody(c.Config)))
 			status := c.Response.Status
 			if status == 0 {
 				status = 200
 			}
 			body := c.Response.Text
 			if c.Response.JSON != nil {
-				body = string(mustJSON(c.Response.JSON))
+				body = string(mustJSONBody(c.Response.JSON))
 			}
 			fn := useNet(t, func(netCall) netReply { return reply(status, body) })
 

@@ -103,7 +103,7 @@ func oaConfigJSON(sc *oaScenario) string {
 			cfg[k] = v
 		}
 	}
-	return string(mustJSON(cfg))
+	return string(mustJSONBody(cfg))
 }
 
 // blockingBody is a body that never delivers data: a read returns when the request is done.
@@ -239,7 +239,7 @@ func runOpenAI(t *testing.T, sc oaScenario) oaOut {
 		if payload == nil {
 			payload = alphaPayload
 		}
-		body := string(mustJSON(payload))
+		body := string(mustJSONBody(payload))
 		if sc.raw != nil {
 			body = *sc.raw
 		}
@@ -355,7 +355,7 @@ func codexToken() string {
 	return "header." + base64.RawURLEncoding.EncodeToString(payload) + ".signature"
 }
 
-func headerOf(r oaRequest, name string) string { return r.Header.Get(name) }
+func oaHeaderOf(r oaRequest, name string) string { return r.Header.Get(name) }
 
 func hasHeader(r oaRequest, name string) bool {
 	_, ok := r.Header[http.CanonicalHeaderKey(name)]

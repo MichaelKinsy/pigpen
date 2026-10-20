@@ -76,7 +76,7 @@ func TestUpstream_openai_alpha_search_provider_url(t *testing.T) {
 				if alpha {
 					path = strings.TrimSuffix(path, "/responses") + "/alpha/search"
 				}
-				if out.requests[0].URL != "https://gateway.example"+path || headerOf(out.requests[0], "Authorization") != "Bearer registry-test-key" {
+				if out.requests[0].URL != "https://gateway.example"+path || oaHeaderOf(out.requests[0], "Authorization") != "Bearer registry-test-key" {
 					t.Fatalf("%s alpha %v: %s", p[0], alpha, out.requests[0].URL)
 				}
 			}
@@ -108,7 +108,7 @@ func TestUpstream_openai_alpha_search_provider_url(t *testing.T) {
 				req := out.requests[0]
 				if !eqStrings(out.authProviders, []string{"first", "second"}) || len(out.requests) != 1 ||
 					req.URL != "https://second-auth.example/team/v1/"+suffixFor(alpha) ||
-					headerOf(req, "Authorization") != "Bearer second-provider-key" || headerOf(req, "X-Selected") != "second" || req.Body["model"] != "gpt-5.6-terra" {
+					oaHeaderOf(req, "Authorization") != "Bearer second-provider-key" || oaHeaderOf(req, "X-Selected") != "second" || req.Body["model"] != "gpt-5.6-terra" {
 					t.Fatalf("%s alpha %v: %v %v %s", tc.reason, alpha, out.authProviders, out.urls(), req.Body)
 				}
 				sc.availability = true
@@ -160,7 +160,7 @@ func TestUpstream_openai_alpha_search_provider_url(t *testing.T) {
 		out := runOpenAI(t, sc)
 		out.mustOK(t)
 		if !eqStrings(out.authProviders, []string{"first"}) || len(out.requests) != 1 ||
-			out.requests[0].URL != "https://explicit.example/v1/alpha/search" || headerOf(out.requests[0], "Authorization") != "Bearer first-provider-key" {
+			out.requests[0].URL != "https://explicit.example/v1/alpha/search" || oaHeaderOf(out.requests[0], "Authorization") != "Bearer first-provider-key" {
 			t.Fatalf("%v %v", out.authProviders, out.urls())
 		}
 	})
@@ -170,7 +170,7 @@ func TestUpstream_openai_alpha_search_provider_url(t *testing.T) {
 		sc.status = 503
 		out := runOpenAI(t, sc)
 		if !eqStrings(out.authProviders, []string{"first"}) || len(out.requests) != 1 ||
-			out.requests[0].URL != "https://first-model.example/v1/alpha/search" || headerOf(out.requests[0], "Authorization") != "Bearer first-provider-key" {
+			out.requests[0].URL != "https://first-model.example/v1/alpha/search" || oaHeaderOf(out.requests[0], "Authorization") != "Bearer first-provider-key" {
 			t.Fatalf("%v %v", out.authProviders, out.urls())
 		}
 		wantErr(t, out.err, `API error 503`)
@@ -267,7 +267,7 @@ func TestUpstream_openai_alpha_search_provider_url(t *testing.T) {
 					want += "/codex"
 				}
 				want += "/" + suffixFor(alpha)
-				if out.requests[0].URL != want || headerOf(out.requests[0], "chatgpt-account-id") != "test-account" {
+				if out.requests[0].URL != want || oaHeaderOf(out.requests[0], "chatgpt-account-id") != "test-account" {
 					t.Fatalf("%s alpha %v: %s %v", baseURL, alpha, out.requests[0].URL, out.requests[0].Header)
 				}
 			}

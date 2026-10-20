@@ -22,10 +22,6 @@ const mistralConversationBody = `{"outputs":[
   {"type":"text","text":"It returned references."}]}]}`
 
 // doerFunc is an HTTPDoer that sees the request itself (its context).
-type doerFunc func(*http.Request) (*http.Response, error)
-
-func (f doerFunc) Do(r *http.Request) (*http.Response, error) { return f(r) }
-
 func mistralSetup(t *testing.T, config string) {
 	t.Helper()
 	_, dir := isolate(t)

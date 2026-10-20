@@ -13,9 +13,9 @@ import (
 //
 //	go test -run xxx -bench 'BenchmarkSearch' -benchmem -count 1
 
-type benchDoer struct{ body string }
+type stubDoer struct{ body string }
 
-func (d benchDoer) Do(r *http.Request) (*http.Response, error) {
+func (d stubDoer) Do(r *http.Request) (*http.Response, error) {
 	if r.Body != nil {
 		_, _ = io.Copy(io.Discard, r.Body)
 	}
@@ -40,7 +40,7 @@ const benchBraveBody = `{"web":{"results":[{"title":"One","url":"https://example
 // provider that exists in every release: the comparison against the previous release.
 func BenchmarkSearchBrave(b *testing.B) {
 	benchEnv(b, "BRAVE_API_KEY", "bench-key")
-	b.Cleanup(SetHTTP(benchDoer{benchBraveBody}))
+	b.Cleanup(SetHTTP(stubDoer{benchBraveBody}))
 	ctx := context.Background()
 	o := FullSearchOptions{Provider: ProviderSelection{Name: "brave"}}
 	b.ReportAllocs()

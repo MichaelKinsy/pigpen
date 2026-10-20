@@ -42,7 +42,7 @@ func TestUpstream_provider_credential_source(t *testing.T) {
 		dir := t.TempDir()
 		openaiMarker, tavilyMarker := filepath.Join(dir, "openai-ran"), filepath.Join(dir, "tavily-ran")
 		_, agent := isolate(t)
-		writeConfig(t, agent, string(mustJSON(map[string]any{
+		writeConfig(t, agent, string(mustJSONBody(map[string]any{
 			"braveApiKey":  "${BRAVE_SCOPED_KEY}",
 			"openaiApiKey": "!touch " + openaiMarker + " && printf openai-command-key",
 			"tavilyApiKey": "!touch " + tavilyMarker + " && printf tavily-command-key",
@@ -87,7 +87,7 @@ func TestUpstream_provider_credential_source(t *testing.T) {
 		exe, err := os.Executable()
 		noErr(t, err)
 		_, agent := isolate(t)
-		writeConfig(t, agent, string(mustJSON(map[string]any{"braveApiKey": "!'" + exe + "' __fake-op read op://Synthetic/Search/credential"})))
+		writeConfig(t, agent, string(mustJSONBody(map[string]any{"braveApiKey": "!'" + exe + "' __fake-op read op://Synthetic/Search/credential"})))
 		t.Setenv("OP_SERVICE_ACCOUNT_TOKEN", "synthetic-service-account-token")
 		t.Setenv("UNRELATED_SECRET", "must-not-reach-command")
 		fn := useNet(t, func(netCall) netReply { return jsonReply(map[string]any{"web": map[string]any{"results": []any{}}}) })
@@ -104,7 +104,7 @@ func TestUpstream_provider_credential_source(t *testing.T) {
 			t.Skip("the command sources are POSIX shell commands")
 		}
 		_, agent := isolate(t)
-		writeConfig(t, agent, string(mustJSON(map[string]any{
+		writeConfig(t, agent, string(mustJSONBody(map[string]any{
 			"braveApiKey":      "${BRAVE_SCOPED_KEY}",
 			"cloudflareApiKey": "${CLOUDFLARE_SCOPED_KEY}",
 			"geminiBaseUrl":    geminiGatewayAI,
@@ -119,7 +119,7 @@ func TestUpstream_provider_credential_source(t *testing.T) {
 		t.Setenv("CLOUDFLARE_SCOPED_KEY", "cf-redaction-secret")
 		for _, a := range credentialSourceRedactionAttempts {
 			secret := a.secret
-			useNet(t, func(netCall) netReply { return reply(400, string(mustJSON(map[string]any{"error": secret}))) })
+			useNet(t, func(netCall) netReply { return reply(400, string(mustJSONBody(map[string]any{"error": secret}))) })
 			err := a.run()
 			if err == nil {
 				t.Fatalf("%s: no error", a.name)

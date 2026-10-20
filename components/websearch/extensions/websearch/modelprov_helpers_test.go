@@ -85,7 +85,7 @@ func noNet(t *testing.T) *fakeNet {
 	})
 }
 
-func mustJSON(v any) []byte {
+func mustJSONBody(v any) []byte {
 	b, err := encodeJSONBody(v)
 	if err != nil {
 		panic(err)

@@ -120,10 +120,10 @@ func (h providerHeaders) sortedNames() []string {
 
 // ---- Headers ------------------------------------------------------------------------------
 
-type headerPair struct{ name, value string }
+type modelHeaderPair struct{ name, value string }
 
 // headerObject is a plain JS object used as `headers`: exact-key assignment, insertion order.
-type headerObject struct{ pairs []headerPair }
+type headerObject struct{ pairs []modelHeaderPair }
 
 func (o *headerObject) set(name, value string) {
 	for i := range o.pairs {
@@ -132,7 +132,7 @@ func (o *headerObject) set(name, value string) {
 			return
 		}
 	}
-	o.pairs = append(o.pairs, headerPair{name, value})
+	o.pairs = append(o.pairs, modelHeaderPair{name, value})
 }
 
 // requestHeaderObject is `toRequestHeaders(headers)`: every non-null registry header.
