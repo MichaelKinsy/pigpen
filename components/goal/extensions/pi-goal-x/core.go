@@ -91,6 +91,7 @@ type core struct {
 	widgetRegistered bool
 	widgetLines      []string
 	widgetWidthOff   func()
+	widgetTUI        *coreWidgetTUI
 	// widgetPushTap observes the widget lines the SDK host forwards (tests).
 	widgetPushTap func(key string, lines []string)
 }
@@ -734,7 +735,8 @@ func (c *core) ensureWidget() {
 		componentRef: &c.widgetRef,
 	})
 	c.widgetRegistered = true
-	factory(&coreWidgetTUI{c: c}, c.h.Theme())
+	c.widgetTUI = &coreWidgetTUI{c: c}
+	factory(c.widgetTUI, c.h.Theme())
 	c.pushWidget()
 	if c.widgetWidthOff == nil {
 		c.widgetWidthOff = c.h.OnWidthChange(func(int) {
@@ -749,6 +751,9 @@ func (c *core) pushWidget() {
 	if comp == nil {
 		return
 	}
+	// The terminal height the component reads while it renders is the host's now: a render kept past the host's lifetime (a deferred
+	// one) must not reach back into it.
+	c.widgetTUI.rows, c.widgetTUI.hasRows = c.h.Height()
 	lines := comp.Render(c.h.Width())
 	if lines == nil {
 		lines = []string{}
@@ -765,12 +770,16 @@ func (c *core) invalidateWidget() {
 }
 
 // coreWidgetTUI is the TUI object the dashboard factory gets: a render request lays the lines out again and pushes them.
-type coreWidgetTUI struct{ c *core }
+type coreWidgetTUI struct {
+	c       *core
+	rows    int
+	hasRows bool
+}
 
 func (t *coreWidgetTUI) getShowHardwareCursor() bool { return false }
 func (t *coreWidgetTUI) setShowHardwareCursor(bool)  {}
 func (t *coreWidgetTUI) requestRender()              { t.c.pushWidget() }
-func (t *coreWidgetTUI) terminalRows() (int, bool)   { return t.c.h.Height() }
+func (t *coreWidgetTUI) terminalRows() (int, bool)   { return t.rows, t.hasRows }
 func (t *coreWidgetTUI) previousLinesLen() (int, bool) {
 	return len(t.c.widgetLines), t.c.widgetLines != nil
 }
