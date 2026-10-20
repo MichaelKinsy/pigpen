@@ -7,8 +7,13 @@ package pi_subagents
 
 import (
 	"errors"
-
+	"fmt"
+	"math"
+	"os"
+	"strconv"
+	"strings"
 	"sync"
+	"time"
 )
 
 // ── completion-batcher.ts ──
@@ -27,12 +32,46 @@ type CompletionBatchConfig struct {
 var defaultCompletionBatchConfig = CompletionBatchConfig{Enabled: true, DebounceMs: 150, MaxWaitMs: 1000, StragglerDebounceMs: 75, StragglerMaxWaitMs: 400, StragglerWindowMs: 2000}
 
 // parsePositiveInt accepts a finite integer of at least 1 (a JSON number); anything else is ignored.
-func parsePositiveInt(v any) (int, bool) { panic("not ported yet") }
+func parsePositiveInt(v any) (int, bool) {
+	f, ok := v.(float64)
+	if !ok {
+		if i, isInt := v.(int); isInt {
+			f, ok = float64(i), true
+		}
+	}
+	if !ok || math.IsNaN(f) || math.IsInf(f, 0) || f != math.Trunc(f) || f < 1 {
+		return 0, false
+	}
+	return int(f), true
+}
 
 // resolveCompletionBatchConfig is resolveCompletionBatchConfig: the override wins over the global config, an invalid value
 // is ignored (it never masks a valid one below it).
 func resolveCompletionBatchConfig(global, override map[string]any) CompletionBatchConfig {
-	panic("not ported yet")
+	pick := func(key string, def int) int {
+		if n, ok := parsePositiveInt(override[key]); ok {
+			return n
+		}
+		if n, ok := parsePositiveInt(global[key]); ok {
+			return n
+		}
+		return def
+	}
+	d := defaultCompletionBatchConfig
+	enabled := d.Enabled
+	if b, ok := override["enabled"].(bool); ok {
+		enabled = b
+	} else if b, ok := global["enabled"].(bool); ok {
+		enabled = b
+	}
+	return CompletionBatchConfig{
+		Enabled:             enabled,
+		DebounceMs:          pick("debounceMs", d.DebounceMs),
+		MaxWaitMs:           pick("maxWaitMs", d.MaxWaitMs),
+		StragglerDebounceMs: pick("stragglerDebounceMs", d.StragglerDebounceMs),
+		StragglerMaxWaitMs:  pick("stragglerMaxWaitMs", d.StragglerMaxWaitMs),
+		StragglerWindowMs:   pick("stragglerWindowMs", d.StragglerWindowMs),
+	}
 }
 
 // batchTimers is the timer seam of the batcher (the original's TimerApi).
@@ -43,9 +82,15 @@ type batchTimers interface {
 
 type realBatchTimers struct{}
 
-func (realBatchTimers) SetTimeout(handler func(), delayMs int) any { panic("not ported yet") }
+func (realBatchTimers) SetTimeout(handler func(), delayMs int) any {
+	return time.AfterFunc(time.Duration(delayMs)*time.Millisecond, handler)
+}
 
-func (realBatchTimers) ClearTimeout(handle any) { panic("not ported yet") }
+func (realBatchTimers) ClearTimeout(handle any) {
+	if t, ok := handle.(*time.Timer); ok {
+		t.Stop()
+	}
+}
 
 // CompletionBatcher holds successful completions briefly so siblings that finish together arrive as one group.
 type CompletionBatcher[T any] struct {
@@ -64,45 +109,188 @@ type CompletionBatcher[T any] struct {
 
 // newCompletionBatcher is createCompletionBatcher. timers and now may be nil (real ones).
 func newCompletionBatcher[T any](config CompletionBatchConfig, emit func([]T), timers batchTimers, now func() int64) *CompletionBatcher[T] {
-	panic("not ported yet")
+	if timers == nil {
+		timers = realBatchTimers{}
+	}
+	if now == nil {
+		now = nowMs
+	}
+	return &CompletionBatcher[T]{config: config, emit: emit, timers: timers, now: now}
 }
 
-func (b *CompletionBatcher[T]) clearTimersLocked() { panic("not ported yet") }
+func (b *CompletionBatcher[T]) clearTimersLocked() {
+	if b.debounce != nil {
+		b.timers.ClearTimeout(b.debounce)
+		b.debounce = nil
+	}
+	if b.maxWait != nil {
+		b.timers.ClearTimeout(b.maxWait)
+		b.maxWait = nil
+	}
+}
 
-func (b *CompletionBatcher[T]) emitGroup() { panic("not ported yet") }
+func (b *CompletionBatcher[T]) emitGroup() {
+	b.mu.Lock()
+	b.clearTimersLocked()
+	if len(b.pending) == 0 {
+		b.mu.Unlock()
+		return
+	}
+	items := b.pending
+	b.pending = nil
+	t := b.now()
+	b.lastEmitAt = &t
+	b.mu.Unlock()
+	b.emit(items)
+}
 
 // Push adds a batchable item; it emits at once when batching is disabled.
-func (b *CompletionBatcher[T]) Push(item T) { panic("not ported yet") }
+func (b *CompletionBatcher[T]) Push(item T) {
+	if !b.config.Enabled {
+		b.emit([]T{item})
+		return
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if len(b.pending) == 0 {
+		b.straggler = b.lastEmitAt != nil && b.now()-*b.lastEmitAt < int64(b.config.StragglerWindowMs)
+	}
+	b.pending = append(b.pending, item)
+	if b.debounce != nil {
+		b.timers.ClearTimeout(b.debounce)
+	}
+	delay := b.config.DebounceMs
+	if b.straggler {
+		delay = b.config.StragglerDebounceMs
+	}
+	b.debounce = b.timers.SetTimeout(b.emitGroup, delay)
+	if b.maxWait == nil {
+		wait := b.config.MaxWaitMs
+		if b.straggler {
+			wait = b.config.StragglerMaxWaitMs
+		}
+		b.maxWait = b.timers.SetTimeout(b.emitGroup, wait)
+	}
+}
 
 // Flush emits any held items immediately as one group.
-func (b *CompletionBatcher[T]) Flush() { panic("not ported yet") }
+func (b *CompletionBatcher[T]) Flush() {
+	if !b.config.Enabled {
+		return
+	}
+	b.emitGroup()
+}
 
 // Dispose clears the timers and returns the items that were never emitted.
-func (b *CompletionBatcher[T]) Dispose() []T { panic("not ported yet") }
+func (b *CompletionBatcher[T]) Dispose() []T {
+	if !b.config.Enabled {
+		return nil
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.clearTimersLocked()
+	abandoned := b.pending
+	b.pending = nil
+	return abandoned
+}
 
 // ── completion-dedupe.ts ──
 
-func nonEmptyTrimmed(v any) string { panic("not ported yet") }
+func nonEmptyTrimmed(v any) string {
+	s, ok := v.(string)
+	if !ok {
+		return ""
+	}
+	return jsTrim(s)
+}
 
-func finiteNumber(v any) (float64, bool) { panic("not ported yet") }
+func finiteNumber(v any) (float64, bool) {
+	f, ok := v.(float64)
+	if !ok {
+		if i, isInt := v.(int64); isInt {
+			return float64(i), true
+		}
+		if i, isInt := v.(int); isInt {
+			return float64(i), true
+		}
+		return 0, false
+	}
+	return f, !math.IsNaN(f) && !math.IsInf(f, 0)
+}
 
 // buildCompletionKey is buildCompletionKey: one key per session, run and state; without an id, a key from the metadata.
-func buildCompletionKey(data map[string]any, fallback string) string { panic("not ported yet") }
+func buildCompletionKey(data map[string]any, fallback string) string {
+	sessionID := nonEmptyTrimmed(data["sessionId"])
+	if sessionID == "" {
+		sessionID = "no-session"
+	}
+	id := nonEmptyTrimmed(data["id"])
+	state := nonEmptyTrimmed(data["state"])
+	if id != "" {
+		if state != "" {
+			return fmt.Sprintf("session:%s:id:%s:state:%s", sessionID, id, state)
+		}
+		return fmt.Sprintf("session:%s:id:%s", sessionID, id)
+	}
+	agent := nonEmptyTrimmed(data["agent"])
+	if agent == "" {
+		agent = "unknown"
+	}
+	ts, taskIdx, total := "no-ts", "-", "-"
+	if f, ok := finiteNumber(data["timestamp"]); ok {
+		ts = jsNumber(f)
+	}
+	if f, ok := finiteNumber(data["taskIndex"]); ok {
+		taskIdx = jsNumber(f)
+	}
+	if f, ok := finiteNumber(data["totalTasks"]); ok {
+		total = jsNumber(f)
+	}
+	success := "?"
+	if b, ok := data["success"].(bool); ok {
+		success = "0"
+		if b {
+			success = "1"
+		}
+	}
+	return strings.Join([]string{"meta", sessionID, agent, ts, taskIdx, total, success, fallback}, ":")
+}
 
 // markSeenWithTTL records key at now and reports whether it was already seen within ttlMs; older entries are dropped.
 func markSeenWithTTL(seen map[string]int64, key string, now, ttlMs int64) bool {
-	panic("not ported yet")
+	for k, ts := range seen {
+		if now-ts > ttlMs {
+			delete(seen, k)
+		}
+	}
+	if _, ok := seen[key]; ok {
+		return true
+	}
+	seen[key] = now
+	return false
 }
 
 // ── child-cache-retention.ts ──
 
 // childCacheRetention is the tier PI_SUBAGENT_CACHE_RETENTION sets for children ("" when unset: children inherit the parent's).
-func childCacheRetention(env map[string]string) string { panic("not ported yet") }
+func childCacheRetention(env map[string]string) string { return env["PI_SUBAGENT_CACHE_RETENTION"] }
 
 // childCacheRetentionEnv is the launch-environment form: PI_CACHE_RETENTION for a child, nothing when unset.
-func childCacheRetentionEnv(env map[string]string) map[string]string { panic("not ported yet") }
+func childCacheRetentionEnv(env map[string]string) map[string]string {
+	if r := childCacheRetention(env); r != "" {
+		return map[string]string{"PI_CACHE_RETENTION": r}
+	}
+	return map[string]string{}
+}
 
-func processEnvMap() map[string]string { panic("not ported yet") }
+func processEnvMap() map[string]string {
+	m := map[string]string{}
+	for _, kv := range os.Environ() {
+		k, v, _ := strings.Cut(kv, "=")
+		m[k] = v
+	}
+	return m
+}
 
 // ── background-process-options.ts ──
 
@@ -113,7 +301,9 @@ type BackgroundProcessOptions struct {
 	WindowsHide bool
 }
 
-func backgroundProcessOptions(goos string) BackgroundProcessOptions { panic("not ported yet") }
+func backgroundProcessOptions(goos string) BackgroundProcessOptions {
+	return BackgroundProcessOptions{Detached: goos != "windows", WindowsHide: true}
+}
 
 // ── wait-config.ts ──
 
@@ -128,15 +318,83 @@ type ResolvedWaitToolConfig struct {
 	DefaultTimeoutMs *int
 }
 
-func waitEnvBool(env map[string]string) (bool, bool, error) { panic("not ported yet") }
+func waitEnvBool(env map[string]string) (bool, bool, error) {
+	v, ok := env[waitToolEnabledEnv]
+	if !ok {
+		return false, false, nil
+	}
+	switch strings.ToLower(jsTrim(v)) {
+	case "1", "true", "yes", "on", "enabled":
+		return true, true, nil
+	case "0", "false", "no", "off", "disabled":
+		return false, true, nil
+	}
+	return false, false, fmt.Errorf("%s must be one of true/false, 1/0, yes/no, on/off, or enabled/disabled.", waitToolEnabledEnv)
+}
 
-func waitEnvTimeout(env map[string]string) (*int, error) { panic("not ported yet") }
-
-// Number("") is 0, which is not a positive integer
+func waitEnvTimeout(env map[string]string) (*int, error) {
+	v, ok := env[waitToolDefaultTimeoutMsEnv]
+	if !ok {
+		return nil, nil
+	}
+	f, err := strconv.ParseFloat(jsTrim(v), 64)
+	if jsTrim(v) == "" {
+		f, err = 0, nil // Number("") is 0, which is not a positive integer
+	}
+	if err != nil || f != math.Trunc(f) || f < 1 || math.IsInf(f, 0) {
+		return nil, fmt.Errorf("%s must be a positive integer.", waitToolDefaultTimeoutMsEnv)
+	}
+	n := int(f)
+	return &n, nil
+}
 
 // resolveWaitToolConfig is resolveWaitToolConfig: config is a bool, an object or absent (nil); the environment wins.
 func resolveWaitToolConfig(config any, env map[string]string) (ResolvedWaitToolConfig, error) {
-	panic("not ported yet")
+	var cfgEnabled *bool
+	var cfgTimeout *int
+	switch c := config.(type) {
+	case nil:
+	case bool:
+		cfgEnabled = &c
+	case map[string]any:
+		if e, has := c["enabled"]; has && e != nil {
+			b, ok := e.(bool)
+			if !ok {
+				return ResolvedWaitToolConfig{}, fmt.Errorf("config.waitTool.enabled must be a boolean.")
+			}
+			cfgEnabled = &b
+		}
+		if t, has := c["defaultTimeoutMs"]; has && t != nil {
+			n, ok := parsePositiveInt(t)
+			if !ok {
+				return ResolvedWaitToolConfig{}, fmt.Errorf("config.waitTool.defaultTimeoutMs must be a positive integer.")
+			}
+			cfgTimeout = &n
+		}
+	default:
+		return ResolvedWaitToolConfig{}, fmt.Errorf("config.waitTool must be a boolean or an object with optional enabled and defaultTimeoutMs values.")
+	}
+	envTimeout, err := waitEnvTimeout(env)
+	if err != nil {
+		return ResolvedWaitToolConfig{}, err
+	}
+	envEnabled, hasEnv, err := waitEnvBool(env)
+	if err != nil {
+		return ResolvedWaitToolConfig{}, err
+	}
+	out := ResolvedWaitToolConfig{Enabled: true}
+	switch {
+	case hasEnv:
+		out.Enabled = envEnabled
+	case cfgEnabled != nil:
+		out.Enabled = *cfgEnabled
+	}
+	if envTimeout != nil {
+		out.DefaultTimeoutMs = envTimeout
+	} else if cfgTimeout != nil {
+		out.DefaultTimeoutMs = cfgTimeout
+	}
+	return out, nil
 }
 
 // ── top-level-async.ts ──
@@ -144,7 +402,15 @@ func resolveWaitToolConfig(config any, env map[string]string) (ResolvedWaitToolC
 // applyForceTopLevelAsyncOverride returns params with async forced on and clarify off at depth 0 when the config forces
 // top-level async (unless the call is foreground-only).
 func applyForceTopLevelAsyncOverride(params map[string]any, depth int, forceTopLevelAsync bool) map[string]any {
-	panic("not ported yet")
+	if b, _ := params["foregroundOnly"].(bool); b || !(depth == 0 && forceTopLevelAsync) {
+		return params
+	}
+	out := make(map[string]any, len(params)+2)
+	for k, v := range params {
+		out[k] = v
+	}
+	out["async"], out["clarify"] = true, false
+	return out
 }
 
 // ── run-id-query.ts ──
@@ -155,10 +421,24 @@ const (
 )
 
 // canScanAsyncRunPrefix: full generated ids and longer exact identities never fall back to a root scan.
-func canScanAsyncRunPrefix(id string) bool { panic("not ported yet") }
+func canScanAsyncRunPrefix(id string) bool {
+	n := len(jsUTF16(id))
+	return n >= minSafeAsyncRunPrefixLength && n < fullAsyncRunIDLength
+}
 
 // jsUTF16 is the UTF-16 code units of s (JavaScript string length).
-func jsUTF16(s string) []uint16 { panic("not ported yet") }
+func jsUTF16(s string) []uint16 {
+	var out []uint16
+	for _, r := range s {
+		if r >= 0x10000 {
+			r -= 0x10000
+			out = append(out, uint16(0xd800+(r>>10)), uint16(0xdc00+(r&0x3ff)))
+		} else {
+			out = append(out, uint16(r))
+		}
+	}
+	return out
+}
 
 // ── pid-namespace.ts ──
 
@@ -168,7 +448,10 @@ var (
 )
 
 // currentPidNamespaceScope is the Linux PID namespace identity ("" elsewhere), cached: reconciliation polls it.
-func currentPidNamespaceScope() string { panic("not ported yet") }
+func currentPidNamespaceScope() string {
+	pidScopeOnce.Do(func() { pidScope = readPidNamespaceScope() })
+	return pidScope
+}
 
 // ── process probes (stale-run-reconciler.ts checkPidLiveness) ──
 
@@ -191,4 +474,16 @@ const (
 )
 
 // checkPidLiveness probes pid with signal 0: ESRCH is dead, any other failure (EPERM included) cannot tell.
-func checkPidLiveness(pid int, kill killFunc) PidLiveness { panic("not ported yet") }
+func checkPidLiveness(pid int, kill killFunc) PidLiveness {
+	if kill == nil {
+		kill = defaultKill
+	}
+	err := kill(pid, 0)
+	switch {
+	case err == nil:
+		return pidAlive
+	case errors.Is(err, errNoSuchProcess):
+		return pidDead
+	}
+	return pidUnknown
+}
