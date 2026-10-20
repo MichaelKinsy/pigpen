@@ -564,12 +564,6 @@
   "replace": "if true {\n\t\tp.h.Notify(message, \"warning\")"
  },
  {
-  "name": "core-stash-clear",
-  "file": "core.go",
-  "find": "if p.h.HasUI() {\n\t\tp.h.SetStatus(statusStash, nil)\n\t}",
-  "replace": "if false {\n\t\tp.h.SetStatus(statusStash, nil)\n\t}"
- },
- {
   "name": "core-thinking-session-start",
   "file": "core.go",
   "find": "p.currentThinking = p.h.ThinkingLevel()",
