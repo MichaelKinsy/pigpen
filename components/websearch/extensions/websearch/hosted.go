@@ -96,8 +96,8 @@ func missingKey(label, cfgKey, env, getKeyAt string) error {
 	return fmt.Errorf("%s key not found. Either:\n  1. Create %s with { \"%s\": \"your-key\" }\n  2. Set %s environment variable\n%s", label, ConfigPath(), cfgKey, env, getKeyAt)
 }
 
-// requireProviderKey resolves a credential or fails with the provider's "key not found" text.
-func requireProviderKey(ctx context.Context, label, name, cfgKey, env, getKeyAt string) (string, error) {
+// requireHostedKey resolves a credential or fails with the provider's "key not found" text.
+func requireHostedKey(ctx context.Context, label, name, cfgKey, env, getKeyAt string) (string, error) {
 	key, err := resolveProviderCredential(ctx, name, cfgKey, env)
 	if err != nil {
 		return "", err

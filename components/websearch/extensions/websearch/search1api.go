@@ -49,7 +49,7 @@ func search1apiBody(query string, o SearchOptions) map[string]any {
 
 // SearchWithSearch1API queries Search1API.
 func SearchWithSearch1API(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
-	key, err := requireProviderKey(ctx, "Search1API", "Search1API", "search1apiApiKey", "SEARCH1API_KEY", search1apiGetKeyAt)
+	key, err := requireHostedKey(ctx, "Search1API", "Search1API", "search1apiApiKey", "SEARCH1API_KEY", search1apiGetKeyAt)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func SearchWithSearch1API(ctx context.Context, query string, o SearchOptions) (*
 
 // ExtractWithSearch1API fetches one URL through Search1API Crawl.
 func ExtractWithSearch1API(ctx context.Context, rawURL string, o ExtractOptions) (*ExtractedContent, error) {
-	key, err := requireProviderKey(ctx, "Search1API", "Search1API", "search1apiApiKey", "SEARCH1API_KEY", search1apiGetKeyAt)
+	key, err := requireHostedKey(ctx, "Search1API", "Search1API", "search1apiApiKey", "SEARCH1API_KEY", search1apiGetKeyAt)
 	if err != nil {
 		return nil, err
 	}

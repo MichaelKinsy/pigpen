@@ -154,7 +154,7 @@ func SearchWithKagi(ctx context.Context, query string, o SearchOptions) (*Search
 func IsKagiExtractAvailable() bool { return IsKagiAvailable() }
 
 func kagiRequireKey(ctx context.Context) (string, error) {
-	return requireProviderKey(ctx, "Kagi API", "Kagi", "kagiApiKey", "KAGI_API_KEY", "Create a key at https://kagi.com/settings?p=api")
+	return requireHostedKey(ctx, "Kagi API", "Kagi", "kagiApiKey", "KAGI_API_KEY", "Create a key at https://kagi.com/settings?p=api")
 }
 
 // ExtractWithKagi fetches one URL through Kagi Extract, after the SSRF guard (kagi.ts

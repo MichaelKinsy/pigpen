@@ -28,7 +28,7 @@ func IsTinyFishAvailable() bool {
 }
 
 func tinyfishKey(ctx context.Context) (string, error) {
-	return requireProviderKey(ctx, "TinyFish API", "TinyFish", "tinyfishApiKey", "TINYFISH_API_KEY", tinyfishGetKeyAt)
+	return requireHostedKey(ctx, "TinyFish API", "TinyFish", "tinyfishApiKey", "TINYFISH_API_KEY", tinyfishGetKeyAt)
 }
 
 // tinyfishRecencyMinutes is tinyfish.ts recencyMinutes.
