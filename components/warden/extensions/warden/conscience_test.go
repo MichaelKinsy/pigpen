@@ -528,10 +528,13 @@ func TestAssessReturnsBelowThresholdWhenPAdvanceIsBelowRecommendThreshold(t *tes
 
 // twin: tests/conscience.test.ts:524
 func TestAssessSendsStateWithOpaqueIDsNotCandidateNamesInInstructions(t *testing.T) {
+	var mu sync.Mutex
 	var state map[string]any
 	var questions Questions
 	j := csJudge(func(_ context.Context, req Request) (Evaluation, error) {
+		mu.Lock()
 		state, questions = req.State, req.Questions
+		mu.Unlock()
 		return Evaluation{Answers: map[string]Answer{"conscience_disposition": {Type: "choice", Choice: "no_gap", Confidence: 0.9, Probabilities: map[string]float64{"no_gap": 0.9, "unclear": 0.1}}}}, nil
 	})
 	csAssess(t, "design a UI", "user wants a landing page", csDefaultSkills, csDefaultTools, []string{"tdd"}, []string{"impeccable"}, csDeps(j), nil)
@@ -797,9 +800,12 @@ func TestBuildStateCarriesTheSpineBesideTaskAndDoesNotMoveThePolicyHash(t *testi
 
 // twin: tests/conscience.test.ts:867
 func TestAssessForwardsTheSpineIntoTheJudgeRequestState(t *testing.T) {
+	var mu sync.Mutex
 	var captured map[string]any
 	j := csJudge(func(_ context.Context, req Request) (Evaluation, error) {
+		mu.Lock()
 		captured = req.State
+		mu.Unlock()
 		return Evaluation{Answers: map[string]Answer{"conscience_disposition": {Type: "choice", Choice: "no_gap", Confidence: 0.9, Probabilities: map[string]float64{"no_gap": 0.9}}}}, nil
 	})
 	spine := &TaskSpine{Goal: "design a landing page", Task: "design a UI", History: nil}
