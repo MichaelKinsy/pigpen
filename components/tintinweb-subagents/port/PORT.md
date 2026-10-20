@@ -20,7 +20,9 @@ extension cannot host a Pi session, so the shipped slice is the part that has a 
   (`maxConcurrent`, `defaultMaxTurns`, `fallbackSubagent`, `disableDefaultAgents`), the spawn policy (#183);
 - background by default, a concurrency limit and a FIFO queue, handles (`explore`, `explore-2`) and names, a held
   completion notification that a read of the result cancels, the event-bus protocol v2 `pi-tasks` speaks;
-- `/agents`: the types and the agents of the session.
+- `/agents`: the types and the agents of the session;
+- nested delegation: an agent file's `allowed_subagents` gives that agent nested `Agent`, `get_subagent_result` and
+  `steer_subagent` tools, bounded by `maxSubagentDepth` (D6).
 
 Everything else is deferred, by name, in `port/slices.json` (reasons per file). The Agent tool is advertised **as the
 original advertises it with workflows, scheduling and worktree isolation switched off** (`.pi/subagents.json`:
@@ -41,6 +43,7 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M9 | `cross-extension-rpc.ts`: ping, spawn, stop, consume | `bus.go` | `bus_test.go` |
 | M10 | completion events and the held notification (`index.ts` `formatTaskNotification`, `getStatusLabel`; `status-note.ts`; `xml.ts`) | `extension.go` | `tools_test.go`, `extra_test.go`, `turnlimit_test.go` |
 | M11 | the Agent, result and steer tools' behavior and texts | `tools.go` | `agent-not-found`, `agent-unknown-type-strict`; `tools_test.go` |
+| M12 | `nested-tools.ts`, `agent-runner.ts:843-866`, `agent-manager.ts` (ownership, depth, `abortOwnedChildren`), `cross-extension-rpc.ts` stop ownership, `allowed_subagents`, `maxSubagentDepth` | `nested.go`, `manager.go`, `runner.go`, `bus.go`, `settings.go` | 24 + 2 + 4 + 9 twins (`nested_tools_twin_test.go`, `nested_process_test.go`, `nested_manager_twin_test.go`), `nested_extension_test.go`, a fake pig two and three levels deep |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
 
@@ -91,7 +94,7 @@ components; this port registers none.
    ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
    port does not honor, are refused the same way.
 6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
-   widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
+   widget, fleet and conversation viewer, agent memory, output transcripts, structured output, the
    settings menu, usage and cost display, model scope and fuzzy model resolution (the child resolves `--model`).
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
    commit for this port; the substitute proof is the 122 twins (two of them found real defects: an empty frontmatter
@@ -120,3 +123,47 @@ components; this port registers none.
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
    The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
    features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+
+## D6. Nested delegation across processes
+
+The original keeps every agent in one in-process manager, so a nested tool reaches the record of any agent by id and
+checks `record.parentAgentId`. Here every agent is a process, so each level has a manager of its own and the design
+follows from that:
+
+- **Who may delegate.** The runner starts a child with its place in the tree in the environment (`childEnv`):
+  `TINTINWEB_SUBAGENT_DEPTH` (a top-level agent's child is 1), `..._MAX_DEPTH` (the branch's cap: `maxSubagentDepth` read
+  when the first agent of the branch starts, so a later change reaches only new branches, as in the original),
+  `..._ALLOWED` (the file's `allowed_subagents`: `"all"` or the list), `..._ID` (the agent's own id: the owner of its
+  children), `..._CONFIG_CWD`, `..._USAGE_FILE`. The three nested variables are set only when the file allowed it, the
+  agent is not `isolated` and `depth < cap`, the original's test (`agent-runner.ts:847-865`); a variable the parent was
+  itself started with never reaches a grandchild.
+- **What the child loads.** The same extension. `Extension()` sees the depth variable and, with an allowance below the
+  cap, registers the three nested tools in place of the top-level ones, and no RPC, no `/agents`, no
+  `subagents:ready`/`created`/`completed`/`failed` event and no notification: nested agents emit nothing, and the
+  child's own event bus is not the parent's. The child's tool list admits the nested tools by name (`--tools`); for
+  `extensions: false` (no other extensions, but the nested tools) the child is started without `--no-extensions` and the
+  tool list holds only the built-ins and the nested tools, the original's `noExtensions` allowlist. This is the one place
+  the child loads other extensions' hooks: their tools stay out, as in the original.
+- **Ownership.** The nested tools act on the child's own manager. Every record in it has `ParentID` = the agent's id, so
+  `ownsRecord` is the original's check and an id of another agent (another process) is simply not there; the texts are
+  the original's. Owned records have no handle and take no pool slot (`occupiesPoolSlot`), `resolve` and `/agents`
+  skip them (`isTopLevelAgent`), and `subagents:rpc:stop` refuses them. The RPC drops a caller's `parentAgentId`, `depth`,
+  `maxSubagentDepth` and `configCwd` options, as `spawnTopLevel` does.
+- **Foreground by default**, and the agent file's `run_in_background`, `model`, `thinking`, `max_turns` and `isolated`
+  outrank the call's values (`resolveAgentInvocationConfig`), unlike the top-level tool of this port.
+- **Stopping reaches down.** A parent's settle (the child's `agent_settled`) aborts the children it owns
+  (`abortOwnedChildren`); a stop of the agent or the end of the session SIGTERMs the agent's process group, pig runs the
+  extensions' `session_shutdown` on SIGTERM and at the end of its input, and the nested extension aborts everything it
+  started: each of those is a process group the runner signals in turn, so a stop reaches any depth. A child that is
+  SIGKILLed outright cannot do this; the stop path always sends SIGTERM first, five seconds before SIGKILL.
+- **Spend.** The original's `onAssistantUsage` adds a nested child's usage to every ancestor. Here a settled child's
+  tokens go to its owner's usage file; the owner's runner adds the file's total to the owner's own count when it
+  settles, so each level's count includes everything below and the top-level record counts the tree.
+- **The cap.** `maxSubagentDepth` is read from `subagents.json` (0 to 16, default 2) and floored; a branch's cap is passed
+  down unchanged. The `Nested subagent call blocked (depth=N, max=M)` text exists for a tool that is reached at the cap; the
+  runner never gives an agent at the cap the tools.
+- **Not carried over, refused.** `resume` and `inherit_context` of a nested call, and `isolation`, are refused with the
+  port's one message (they follow their own gaps). The `scopeModels` check and output transcripts of nested spawns follow
+  those gaps (scopeModels, `output_transcript` and the setting are refused today).
+- **Faithfulness check.** Every model-facing string of the nested tools is a string literal of `nested-tools.ts`
+  (`TestNestedToolTextIsTheOriginals`).

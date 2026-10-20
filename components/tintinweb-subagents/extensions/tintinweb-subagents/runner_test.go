@@ -39,6 +39,10 @@ func fakePig(mode string) {
 	if p := os.Getenv("FAKE_PIG_ARGS"); p != "" {
 		os.WriteFile(p, []byte(strings.Join(os.Args[1:], "\n")+"\nDEPTH="+os.Getenv(depthEnv)), 0o644)
 	}
+	if mode == "nest" { // a pig that delegates: nested_fakepig_test.go
+		fakeNestingPig()
+		return
+	}
 	if mode == "crash" {
 		os.Stderr.WriteString("no such model")
 		os.Exit(3)

@@ -83,7 +83,6 @@ func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 		{"inherit_context", "inherit_context: true", "inheriting the parent conversation (inherit_context in the agent file)"},
 		{"isolation", "isolation: worktree", "worktree isolation (isolation: worktree in the agent file)"},
 		{"memory", "memory: project", "persistent agent memory (memory: project)"},
-		{"allowed_subagents", "allowed_subagents: all", "nested delegation (allowed_subagents)"},
 		{"ext selectors", "tools: read, ext:web", "extension tool selectors (ext: in tools)"},
 		{"disallowed_tools", "disallowed_tools: bash", "disallowed_tools"},
 		{"extensions list", "extensions: foo, bar", "an extension allow-list (extensions)"},
@@ -196,7 +195,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
 		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
-		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
 		{"reportUsage", `{"reportUsage": true}`, "reportUsage: true"},
 		{"showCost", `{"showCost": true}`, "showCost: true"},
 		{"showModel", `{"showModel": true}`, "showModel: true"},
@@ -230,7 +228,7 @@ func TestSettingsThePortMatchesAreNotRefused(t *testing.T) {
 	r := settingsRig(t, `{"maxConcurrent": 3, "defaultMaxTurns": 5, "graceTurns": 2, "disableDefaultAgents": false, "fallbackSubagent": "none",
 		"maxConcurrentForeground": 0, "defaultJoinMode": "async", "backgroundByDefault": true, "schedulingEnabled": false, "scopeModels": false,
 		"strictAgentFiles": false, "toolDescriptionMode": "full", "fleetView": false, "agentMentions": "off", "rememberAgents": false,
-		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": false, "maxSubagentDepth": 1,
+		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": false, "maxSubagentDepth": 3,
 		"reportUsage": false, "showCost": false, "showModel": false, "showCost2": "x", "fleetView2": 1, "agentMentions2": 1}`)
 	eq(t, len(notices(r)), 0)
 	r = settingsRig(t, `{"widgetMode": "sideways", "maxSubagentDepth": "deep", "scopeModels": "yes"}`) // wrong types and unknown values are ignored, as in the original

@@ -32,8 +32,19 @@ type childSpec struct {
 	Cwd          string
 	MaxTurns     int
 	GraceTurns   int  // turns allowed after the wrap-up steer before the run is aborted (0: the default, 5)
-	Isolated     bool // no extensions (and so no extension tools) in the child
+	Isolated     bool // no extensions (and so no extension tools) in the child, unless it is given nested tools
+	// Nested delegation. upstream: agent-runner.ts nestedRuntime.
+	AgentID   string // the agent this child is: the owner of the children it spawns
+	Depth     int    // this child's depth (a top-level agent's child is 1)
+	MaxDepth  int    // the cap of the branch: a child at or past it gets no nested tools
+	Allowed   any    // the agent file's allowed_subagents: nil, "all" or []string
+	ConfigCwd string // the config root the child's own children are resolved from
 }
+
+// nestedActive says whether the child is given the nested tools: its file opted in and it is below the depth cap. A
+// child at the cap can never spawn, so it gets nothing rather than three tools whose every call is an error.
+// upstream: agent-runner.ts:847-865.
+func (s childSpec) nestedActive() bool { return s.Allowed != nil && max(s.Depth, 1) < s.MaxDepth }
 
 // childResult is what a finished child reports.
 type childResult struct {
@@ -120,7 +131,17 @@ func isPig(path string) bool {
 // childArgs is the command line of a child. upstream: agent-runner.ts (the session options the child is given).
 func childArgs(spec childSpec) []string {
 	args := []string{"--mode", "rpc", "--no-session"}
-	if spec.Isolated {
+	tools := spec.Tools
+	if spec.nestedActive() {
+		// The nested tools live in this extension, so the child must load it: `extensions: false` alone is held by the
+		// tool list (nothing but the built-ins and the nested tools is admitted), not by --no-extensions.
+		switch {
+		case tools != nil:
+			tools = append(slices.Clone(tools), nestedToolNames...)
+		case spec.Isolated:
+			tools = append(slices.Clone(builtinToolNames), nestedToolNames...)
+		}
+	} else if spec.Isolated {
 		args = append(args, "--no-extensions")
 	}
 	if spec.Model != "" {
@@ -129,11 +150,11 @@ func childArgs(spec childSpec) []string {
 	if spec.Thinking != "" {
 		args = append(args, "--thinking", spec.Thinking)
 	}
-	if spec.Tools != nil {
-		if len(spec.Tools) == 0 {
+	if tools != nil {
+		if len(tools) == 0 {
 			args = append(args, "--no-tools")
 		} else {
-			args = append(args, "--tools", strings.Join(spec.Tools, ","))
+			args = append(args, "--tools", strings.Join(tools, ","))
 		}
 	}
 	if strings.TrimSpace(spec.SystemPrompt) != "" {
@@ -146,11 +167,42 @@ func childArgs(spec childSpec) []string {
 	return args
 }
 
-// depthEnv marks a child: it registers no agent tools, so there is no nesting.
-const depthEnv = "TINTINWEB_SUBAGENT_DEPTH"
+// The environment a child is started with. depthEnv marks a child: it registers no top-level tools. The rest is set
+// only for a child that gets the nested tools, and says who it is and how far it may delegate (nested.go).
+const (
+	depthEnv     = "TINTINWEB_SUBAGENT_DEPTH"      // this child's depth, 1 for a top-level agent's child
+	maxDepthEnv  = "TINTINWEB_SUBAGENT_MAX_DEPTH"  // the branch's cap
+	allowedEnv   = "TINTINWEB_SUBAGENT_ALLOWED"    // JSON: "all" or the list of agent types
+	agentIDEnv   = "TINTINWEB_SUBAGENT_ID"         // this child's agent id: the owner of its children
+	configCwdEnv = "TINTINWEB_SUBAGENT_CONFIG_CWD" // the config root its children's agent files are read from
+	usageEnv     = "TINTINWEB_SUBAGENT_USAGE_FILE" // where the child writes the tokens its own children spent
+)
+
+var subagentEnv = []string{depthEnv, maxDepthEnv, allowedEnv, agentIDEnv, configCwdEnv, usageEnv}
+
+// childEnv is the environment of a child: the parent's, with this child's place in the tree. A variable the parent
+// itself was started with (it may be a nested child) never reaches a grandchild.
+func childEnv(spec childSpec, usageFile string) []string {
+	env := slices.DeleteFunc(os.Environ(), func(kv string) bool {
+		for _, name := range subagentEnv {
+			if strings.HasPrefix(kv, name+"=") {
+				return true
+			}
+		}
+		return false
+	})
+	env = append(env, fmt.Sprintf("%s=%d", depthEnv, max(spec.Depth, 1)))
+	if spec.nestedActive() {
+		allowed, _ := json.Marshal(spec.Allowed)
+		env = append(env, fmt.Sprintf("%s=%d", maxDepthEnv, spec.MaxDepth), allowedEnv+"="+string(allowed), agentIDEnv+"="+spec.AgentID,
+			configCwdEnv+"="+spec.ConfigCwd, usageEnv+"="+usageFile)
+	}
+	return env
+}
 
 type rpcChild struct {
 	cmd     *exec.Cmd
+	usage   string // the file the child's own children's spend is written to ("" without nested tools)
 	stdin   io.WriteCloser
 	mu      sync.Mutex
 	nextID  int
@@ -179,22 +231,34 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 	}
 	cmd := exec.CommandContext(ctx, bin, childArgs(spec)...)
 	cmd.Dir = spec.Cwd
-	cmd.Env = append(os.Environ(), depthEnv+"=1")
+	usageFile := ""
+	if spec.nestedActive() {
+		f, err := os.CreateTemp("", "tintinweb-subagent-usage-*")
+		if err != nil {
+			return nil, err
+		}
+		usageFile = f.Name()
+		_ = f.Close()
+	}
+	cmd.Env = childEnv(spec, usageFile)
 	setProcessGroup(cmd)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
+		removeUsage(usageFile)
 		return nil, err
 	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
+		removeUsage(usageFile)
 		return nil, err
 	}
 	var stderr strings.Builder
 	cmd.Stderr = &tailWriter{w: &stderr}
 	if err := cmd.Start(); err != nil {
+		removeUsage(usageFile)
 		return nil, err
 	}
-	c := &rpcChild{cmd: cmd, stdin: stdin, pending: map[string]chan map[string]any{}, settled: make(chan struct{}), errc: make(chan error, 1), maxTurn: spec.MaxTurns, grace: spec.GraceTurns, exited: make(chan struct{})}
+	c := &rpcChild{cmd: cmd, usage: usageFile, stdin: stdin, pending: map[string]chan map[string]any{}, settled: make(chan struct{}), errc: make(chan error, 1), maxTurn: spec.MaxTurns, grace: spec.GraceTurns, exited: make(chan struct{})}
 	if c.grace <= 0 {
 		c.grace = defaultGraceTurns
 	}
@@ -221,6 +285,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		}
 		err := cmd.Wait()
 		close(c.exited)
+		removeUsage(c.usage)
 		c.mu.Lock()
 		killed := c.killed
 		c.mu.Unlock()
@@ -360,6 +425,7 @@ func (c *rpcChild) wait() (*childResult, error) {
 			}
 		}
 	}
+	nestedTokens := readUsage(c.usage) // what the agents this one owns spent; the child's own stats do not carry it
 	c.mu.Lock()
 	res.Turns, res.WrappedUp, res.Aborted = c.turns, c.wrapped, c.aborted
 	switch {
@@ -371,6 +437,7 @@ func (c *rpcChild) wait() (*childResult, error) {
 	case c.lastStop == "length" && strings.TrimSpace(c.lastText) == "":
 		res.Failure = "run hit the output token limit before producing any text"
 	}
+	res.Tokens += nestedTokens
 	if res.ToolUses == 0 {
 		res.ToolUses = c.toolUse
 	}

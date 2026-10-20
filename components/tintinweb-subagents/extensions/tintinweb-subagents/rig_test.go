@@ -272,3 +272,22 @@ func (f *fleet) setFail(err error) {
 	f.failWith = err
 	f.mu.Unlock()
 }
+
+// waitPrompt waits for the child that was given the prompt (children start in no fixed order).
+func (f *fleet) waitPrompt(t *testing.T, prompt string) *fakeChild {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		f.mu.Lock()
+		for _, c := range f.children {
+			if c.spec.Prompt == prompt {
+				f.mu.Unlock()
+				return c
+			}
+		}
+		f.mu.Unlock()
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("no child was given %q", prompt)
+	return nil
+}

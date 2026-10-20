@@ -37,6 +37,11 @@ func (a *app) registerRPC(bus sdk.EventBus) {
 		if r == nil {
 			return nil, errors.New("Agent not found")
 		}
+		// Only the session's own agents are this RPC's to stop; a nested child belongs to the agent waiting on it.
+		// upstream: cross-extension-rpc.ts:178.
+		if !isTopLevelAgent(r) {
+			return nil, errors.New("Agent is owned by another agent or workflow")
+		}
 		if !a.mgr.abort(r) {
 			return nil, errors.New("Agent is not running")
 		}
@@ -80,17 +85,73 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	return map[string]any{"id": r.ID}, nil
 }
 
+// parentView is what a spawn needs from the session that asks for it: its system prompt (an `append` agent extends
+// it), the environment probe, and the model and thinking level a child follows. A tool call of this extension's
+// session reads them off its sdk.Context (viewOf); the nested tools take the calling session's own.
+type parentView struct {
+	SystemPrompt func() string
+	Env          func(cwd string) envInfo
+	Model        func() string
+	Thinking     func() string
+}
+
+// startInput is one spawn. A top-level spawn names the type the caller asked for (the fallback policy resolves it);
+// a nested one carries the owner and the registry of its branch's config root, and an already resolved type.
+type startInput struct {
+	Type, Prompt, Description, Name, Model, Thinking string
+	MaxTurns                                         int
+	Background, Isolated                             bool
+	// Owner is set for a nested spawn: the agent that owns the child.
+	Owner *owner
+	// Registry is the nested spawn's agent registry (never the process-wide one); Type is then already resolved.
+	Registry *agentRegistry
+}
+
+// viewOf is the parent view of a tool call: the call's own context for the prompt and the probe, and the session's
+// latest context for the model and thinking level.
+func (a *app) viewOf(ctx sdk.Context) parentView {
+	return parentView{
+		SystemPrompt: func() string { p, _ := ctx.GetSystemPrompt(); return p },
+		Env:          func(cwd string) envInfo { return detectEnv(ctx, cwd) },
+		Model: func() string {
+			if parent, ok := a.context(); ok {
+				return parent.ModelQualified()
+			}
+			return ""
+		},
+		Thinking: func() string {
+			if parent, ok := a.context(); ok {
+				if level, err := parent.GetThinkingLevel(); err == nil {
+					return level
+				}
+			}
+			return ""
+		},
+	}
+}
+
 // start builds the child's spec from the agent type and spawns it.
 func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
+	return a.startWith(a.viewOf(ctx), startInput{Type: typ, Prompt: prompt, Description: description, Name: name, Model: model, Thinking: thinking, MaxTurns: maxTurns, Background: background, Isolated: isolated})
+}
+
+func (a *app) startWith(view parentView, in startInput) (*agentRecord, error) {
 	a.mu.Lock()
 	cwd := a.cwd
 	a.mu.Unlock()
-	res := resolveSpawnType(typ)
-	if !res.OK {
-		return nil, errors.New(res.Message)
+	typ, prompt, description, name, model, thinking, maxTurns := in.Type, in.Prompt, in.Description, in.Name, in.Model, in.Thinking, in.MaxTurns
+	var resolved string
+	var cfg *agentConfig
+	if in.Registry != nil {
+		resolved, cfg = typ, in.Registry.get(typ)
+	} else {
+		res := resolveSpawnType(typ)
+		if !res.OK {
+			return nil, errors.New(res.Message)
+		}
+		resolved = res.Type
+		cfg = getAgentConfig(resolved)
 	}
-	resolved := res.Type
-	cfg := getAgentConfig(resolved)
 	if cfg == nil {
 		return nil, fmt.Errorf("Unknown agent type: %q", typ)
 	}
@@ -99,10 +160,19 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	}
 	parentPrompt := ""
 	if cfg.PromptMode == "append" {
-		parentPrompt, _ = ctx.GetSystemPrompt()
+		parentPrompt = view.SystemPrompt()
 	}
-	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt)
-	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
+	system := buildAgentPrompt(cfg, cwd, view.Env(cwd), parentPrompt)
+	// `isolated` (the call's or the file's) means no extensions at all, so no nested tools; `extensions: false` alone
+	// still gets the nested tools its file opted into. upstream: agent-runner.ts:855 (`!options.isolated`).
+	explicitIsolation := in.Isolated || (cfg.Isolated != nil && *cfg.Isolated)
+	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: explicitIsolation || cfg.Extensions == false, ConfigCwd: cwd}
+	if !explicitIsolation {
+		spec.Allowed = cfg.AllowedSubagents
+	}
+	if in.Owner == nil {
+		spec.MaxDepth = getMaxSubagentDepth()
+	}
 	if cfg.IsDefault && cfg.Name == "Explore" {
 		spec.Model = "" // the original's haiku default falls back to the parent's model when it is not available; this port never forces it
 	} else {
@@ -115,15 +185,11 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 		spec.Thinking = cfg.Thinking
 	}
 	// Without a model or thinking level of its own the child follows the parent's current ones.
-	if parent, ok := a.context(); ok {
-		if spec.Model == "" {
-			spec.Model = parent.ModelQualified()
-		}
-		if spec.Thinking == "" {
-			if level, err := parent.GetThinkingLevel(); err == nil {
-				spec.Thinking = level
-			}
-		}
+	if spec.Model == "" {
+		spec.Model = view.Model()
+	}
+	if spec.Thinking == "" {
+		spec.Thinking = view.Thinking()
 	}
 	switch {
 	case maxTurns > 0:
@@ -143,5 +209,5 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	if description == "" {
 		description = strings.Join(strings.Fields(prompt)[:min(5, len(strings.Fields(prompt)))], " ")
 	}
-	return a.mgr.spawn(resolved, description, name, spec, background), nil
+	return a.mgr.spawnOwned(resolved, description, name, spec, in.Background, in.Owner), nil
 }

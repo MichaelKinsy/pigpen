@@ -21,6 +21,8 @@ type app struct {
 	e   *sdk.Extension
 	mgr *manager
 	mu  sync.Mutex
+	// nested is set in a child that may delegate: who it is and how deep. nil in the top-level session.
+	nested *nestedConfig
 
 	cwd             string
 	defaultMaxTurns *int
@@ -34,6 +36,7 @@ func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
 	a := &app{e: e, timers: map[string]*time.Timer{}}
 	a.mgr = newManager(start, a.onSettle)
+	a.mgr.account = a.accountNested
 	return a
 }
 
@@ -50,6 +53,9 @@ func (a *app) reload(cwd string) {
 	a.graceTurns = st.GraceTurns
 	a.mu.Unlock()
 	setFallbackSubagent(st.FallbackSubagent)
+	if st.MaxSubagentDepth != nil {
+		setMaxSubagentDepth(float64(*st.MaxSubagentDepth))
+	}
 	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
 	custom, warnings := loadCustomAgents(cwd)
 	for _, w := range warnings {
@@ -93,11 +99,15 @@ func (a *app) context() (sdk.Context, bool) {
 	return *a.latest, true
 }
 
-// Extension returns the subagents extension. A child (TINTINWEB_SUBAGENT_DEPTH set) registers nothing: there is no
-// nesting in this port.
+// Extension returns the subagents extension. A child (TINTINWEB_SUBAGENT_DEPTH set) is not a top-level session: it
+// registers no Agent tool, no RPC, no command and announces nothing. Only a child whose agent file opted into nested
+// delegation (allowed_subagents) and that is below the depth cap gets the nested tools. See nested.go.
 func Extension() *sdk.Extension {
 	e := sdk.New("tintinweb-subagents")
 	if os.Getenv(depthEnv) != "" {
+		if n := nestedConfigFromEnv(); n != nil && n.toolsEnabled() {
+			newApp(e, startRPCChild).registerNested(e, n)
+		}
 		return e
 	}
 	a := newApp(e, startRPCChild)
@@ -127,6 +137,10 @@ func (a *app) register(e *sdk.Extension) {
 
 // onSettle announces a finished agent on the bus and, for a background one, to the model. upstream: index.ts:560-600.
 func (a *app) onSettle(r *agentRecord) {
+	// An owned child reports only through its owner. upstream: index.ts:573.
+	if !isTopLevelAgent(r) {
+		return
+	}
 	ctx, ok := a.context()
 	if !ok {
 		return

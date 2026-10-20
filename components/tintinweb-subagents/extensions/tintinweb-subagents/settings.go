@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// The subagents.json settings this port honors: maxConcurrent, defaultMaxTurns, graceTurns, fallbackSubagent and
-// disableDefaultAgents. The global file (<agent dir>/subagents.json) is read first, the project file
+// The subagents.json settings this port honors: maxConcurrent, defaultMaxTurns, graceTurns, fallbackSubagent,
+// disableDefaultAgents and maxSubagentDepth. The global file (<agent dir>/subagents.json) is read first, the project file
 // (<cwd>/.pi/subagents.json) overrides it. A field of the wrong shape is dropped, silently, as in the original.
 // upstream: src/settings.ts (sanitize, loadSettings).
 type settings struct {
@@ -18,12 +18,14 @@ type settings struct {
 	GraceTurns           int // 0: unset
 	FallbackSubagent     *string
 	DisableDefaultAgents *bool
+	MaxSubagentDepth     *int
 }
 
 const (
 	maxConcurrentCeiling = 1024
 	maxTurnsCeiling      = 10_000
 	graceTurnsCeiling    = 1_000
+	subagentDepthCeiling = 16
 )
 
 func integer(v any) (int, bool) {
@@ -48,6 +50,9 @@ func sanitizeSettings(raw any) settings {
 	}
 	if n, ok := integer(r["graceTurns"]); ok && n >= 1 && n <= graceTurnsCeiling {
 		out.GraceTurns = n
+	}
+	if n, ok := integer(r["maxSubagentDepth"]); ok && n >= 0 && n <= subagentDepthCeiling {
+		out.MaxSubagentDepth = &n
 	}
 	if b, ok := r["disableDefaultAgents"].(bool); ok {
 		out.DisableDefaultAgents = &b
@@ -96,6 +101,9 @@ func loadSettings(cwd string) settings {
 	}
 	if p.DisableDefaultAgents != nil {
 		s.DisableDefaultAgents = p.DisableDefaultAgents
+	}
+	if p.MaxSubagentDepth != nil {
+		s.MaxSubagentDepth = p.MaxSubagentDepth
 	}
 	return s
 }

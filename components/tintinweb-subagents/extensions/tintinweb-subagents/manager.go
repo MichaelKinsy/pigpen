@@ -40,6 +40,13 @@ type agentRecord struct {
 	WrappedUp                   bool
 	Consumed                    bool
 
+	// Nested delegation. ParentID is the agent that owns this one ("" for a top-level agent); Depth is 1 for a top-level
+	// agent's child process, MaxDepth the cap of its branch. upstream: types.ts AgentRecord depth, parentAgentId,
+	// maxSubagentDepth.
+	ParentID        string
+	Depth, MaxDepth int
+	pendingSteers   []string // steers sent before the child was up, sent once it is. upstream: record.pendingSteers
+
 	spec    childSpec
 	child   child
 	done    chan struct{}
@@ -64,7 +71,26 @@ type manager struct {
 	start         childStarter
 	// onSettle runs once a record has settled (completed, stopped or failed).
 	onSettle func(*agentRecord)
+	// account runs for an owned child before it is reported settled: its spend is folded into its owner's.
+	account func(*agentRecord)
 }
+
+// owner is the agent that owns a nested child, and the branch the child belongs to. upstream: agent-manager.ts
+// SpawnOptions parentAgentId, depth, maxSubagentDepth, configCwd.
+type owner struct {
+	ParentID  string
+	Depth     int // the child's depth
+	MaxDepth  int
+	ConfigCwd string
+}
+
+// isTopLevelAgent says whether a record is one of the session's own agents, rather than owned by another agent.
+// upstream: agent-manager.ts isTopLevelAgent.
+func isTopLevelAgent(r *agentRecord) bool { return r.ParentID == "" }
+
+// occupiesPoolSlot says whether a record counts against the background concurrency limit. A nested child does not:
+// its parent holds a slot already, and queueing a child behind its own parent would deadlock. upstream: occupiesPoolSlot.
+func occupiesPoolSlot(r *agentRecord) bool { return r.Background && isTopLevelAgent(r) }
 
 func newManager(start childStarter, onSettle func(*agentRecord)) *manager {
 	return &manager{records: map[string]*agentRecord{}, maxConcurrent: defaultMaxConcurrent, start: start, onSettle: onSettle}
@@ -108,12 +134,15 @@ func (m *manager) assignHandle(base string) string {
 func (m *manager) resolve(idOrName string) *agentRecord {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if r := m.records[idOrName]; r != nil {
+	if r := m.records[idOrName]; r != nil && isTopLevelAgent(r) {
 		return r
 	}
 	var found *agentRecord
 	for _, id := range m.order {
 		r := m.records[id]
+		if !isTopLevelAgent(r) {
+			continue
+		}
 		if idOrName != "" && (strings.HasPrefix(id, idOrName) || r.Handle == idOrName || r.Alias == idOrName || (r.Name != "" && r.Name == idOrName)) {
 			if found != nil {
 				return nil
@@ -122,6 +151,17 @@ func (m *manager) resolve(idOrName string) *agentRecord {
 		}
 	}
 	return found
+}
+
+// listTopLevel is the session's own agents, the ones every surface lists. upstream: listAgents().filter(isTopLevelAgent).
+func (m *manager) listTopLevel() []*agentRecord {
+	var out []*agentRecord
+	for _, r := range m.list() {
+		if isTopLevelAgent(r) {
+			out = append(out, r)
+		}
+	}
+	return out
 }
 
 func (m *manager) list() []*agentRecord {
@@ -137,21 +177,37 @@ func (m *manager) list() []*agentRecord {
 // spawn creates an agent: it starts at once, or is queued behind the concurrency limit (background agents only;
 // a foreground agent is not limited, as `maxConcurrentForeground` defaults to unlimited). upstream: agent-manager.ts spawn.
 func (m *manager) spawn(typ, description, name string, spec childSpec, background bool) *agentRecord {
+	return m.spawnOwned(typ, description, name, spec, background, nil)
+}
+
+// spawnOwned is spawn for an agent that may be owned by another (a nested child; o is nil for a top-level agent).
+// An owned child takes no concurrency slot and no handle: nothing but its owner can address it.
+// upstream: agent-manager.ts spawn.
+func (m *manager) spawnOwned(typ, description, name string, spec childSpec, background bool, o *owner) *agentRecord {
 	r := &agentRecord{ID: newAgentID(), Type: typ, Description: description, Name: name, Background: background, spec: spec,
-		done: make(chan struct{}), started: make(chan struct{}), Status: statusQueued, StartedAt: time.Now()}
+		done: make(chan struct{}), started: make(chan struct{}), Status: statusQueued, StartedAt: time.Now(), Depth: 1, MaxDepth: spec.MaxDepth}
+	if o != nil {
+		r.ParentID, r.Depth, r.MaxDepth = o.ParentID, o.Depth, o.MaxDepth
+		if o.ConfigCwd != "" {
+			r.spec.ConfigCwd = o.ConfigCwd
+		}
+	}
+	r.spec.Depth, r.spec.MaxDepth = r.Depth, r.MaxDepth
 	m.mu.Lock()
 	m.records[r.ID] = r
 	m.order = append(m.order, r.ID)
-	r.Handle = m.assignHandle(handleBase(typ))
-	if name != "" {
-		r.Alias = m.assignHandle(handleBase(name))
+	if isTopLevelAgent(r) {
+		r.Handle = m.assignHandle(handleBase(typ))
+		if name != "" {
+			r.Alias = m.assignHandle(handleBase(name))
+		}
 	}
-	if background && m.running >= m.maxConcurrent {
+	if occupiesPoolSlot(r) && m.running >= m.maxConcurrent {
 		m.queue = append(m.queue, r)
 		m.mu.Unlock()
 		return r
 	}
-	if background {
+	if occupiesPoolSlot(r) {
 		m.running++
 	}
 	r.Status = statusRunning
@@ -167,14 +223,21 @@ func (m *manager) run(r *agentRecord) {
 	r.cancel = cancel // abort reads it under the lock
 	r.StartedAt = time.Now()
 	m.mu.Unlock()
-	c, err := m.start(ctx, r.spec)
+	spec := r.spec
+	spec.AgentID = r.ID
+	c, err := m.start(ctx, spec)
 	close(r.started)
 	var res *childResult
 	if err == nil {
 		m.mu.Lock()
 		r.child = c
 		stop := r.stopped
+		pending := r.pendingSteers
+		r.pendingSteers = nil
 		m.mu.Unlock()
+		for _, message := range pending {
+			_ = c.steer(message)
+		}
 		if stop {
 			c.abort()
 		}
@@ -206,7 +269,7 @@ func (m *manager) run(r *agentRecord) {
 	if res != nil {
 		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Tokens, res.Turns, res.WrappedUp
 	}
-	if r.Background {
+	if occupiesPoolSlot(r) {
 		m.running--
 	}
 	var next *agentRecord
@@ -218,12 +281,27 @@ func (m *manager) run(r *agentRecord) {
 	}
 	m.mu.Unlock()
 	cancel()
+	if m.account != nil && !isTopLevelAgent(r) {
+		m.account(r)
+	}
+	// A settled parent stops the children it owns: they are hidden, only it can read them, and one that outlived it
+	// would run on unseen. Grandchildren follow through each child's own settle. upstream: agent-manager.ts abortOwnedChildren.
+	m.abortOwnedChildren(r.ID)
 	close(r.done)
 	if m.onSettle != nil {
 		m.onSettle(r)
 	}
 	if next != nil {
 		go m.run(next)
+	}
+}
+
+// abortOwnedChildren stops every agent the given one owns.
+func (m *manager) abortOwnedChildren(parentID string) {
+	for _, r := range m.list() {
+		if r.ParentID == parentID {
+			m.abort(r)
+		}
 	}
 }
 

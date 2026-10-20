@@ -55,8 +55,6 @@ func unportedAgentFeature(cfg *agentConfig) string {
 		return "worktree isolation (isolation: worktree in the agent file)"
 	case cfg.Memory != "":
 		return "persistent agent memory (memory: " + cfg.Memory + ")"
-	case cfg.AllowedSubagents != nil:
-		return "nested delegation (allowed_subagents)"
 	case len(cfg.ExtSelectors) > 0:
 		return "extension tool selectors (ext: in tools)"
 	case len(cfg.DisallowedTools) > 0:
@@ -93,7 +91,7 @@ func skillsSupported(v any) bool {
 }
 
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
-// Honored: description, model, maxTurns, name, thinkingLevel, isBackground (true only). upstream: agent-manager.ts SpawnOptions.
+// Honored: description, model, maxTurns, name, thinkingLevel, isBackground (true only); dropped: parentAgentId, depth, maxSubagentDepth, configCwd. upstream: agent-manager.ts SpawnOptions.
 func unportedSpawnOption(opts map[string]any) string {
 	keys := make([]string, 0, len(opts))
 	for k := range opts {
@@ -107,6 +105,9 @@ func unportedSpawnOption(opts map[string]any) string {
 		}
 		switch k {
 		case "description", "model", "maxTurns", "name", "thinkingLevel":
+		case "parentAgentId", "depth", "maxSubagentDepth", "configCwd":
+			// Nested ownership is an internal capability issued only by the nested tools; a process-external caller's
+			// value is dropped, not honored and not refused. upstream: index.ts spawnTopLevel.
 		case "isBackground":
 			if b, _ := v.(bool); !b {
 				return "foreground agents through the spawn RPC (isBackground: false)"
@@ -144,7 +145,6 @@ var settingRules = []settingRule{
 	{key: "outputTranscript", kind: "bool", okBool: false},
 	{key: "worktreeIsolation", kind: "bool", okBool: false},
 	{key: "workflowsEnabled", kind: "bool", okBool: false},
-	{key: "maxSubagentDepth", kind: "int", okInts: []int{0, 1}},
 	{key: "reportUsage", kind: "bool", okBool: false},
 	{key: "showCost", kind: "bool", okBool: false},
 	{key: "showModel", kind: "bool", okBool: false},

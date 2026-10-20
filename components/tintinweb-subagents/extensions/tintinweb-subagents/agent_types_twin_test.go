@@ -35,6 +35,7 @@ func eq(t *testing.T, got, want any) {
 func resetTypes() {
 	setFallbackSubagent(nil)
 	setDefaultsDisabled(false)
+	setMaxSubagentDepth(2)
 	registerAgents(newRegistry())
 }
 
