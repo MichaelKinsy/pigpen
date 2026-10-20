@@ -1,0 +1,6976 @@
+[
+ {
+  "id": "serper-env-credential",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic": [
+      {
+       "title": "Serper result",
+       "link": "https://example.com/serper",
+       "snippet": "Google result",
+       "position": 1
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Google result\nSource: Serper result (https://example.com/serper)",
+    "results": [
+     {
+      "title": "Serper result",
+      "url": "https://example.com/serper",
+      "snippet": "Google result"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serper-filters",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "serper-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "docs",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic": [
+      {
+       "title": "Allowed",
+       "link": "https://docs.example.com/a",
+       "snippet": "result"
+      },
+      {
+       "title": "Excluded",
+       "link": "https://private.docs.example.com/b",
+       "snippet": "private"
+      },
+      {
+       "title": "Outside",
+       "link": "https://example.net/c",
+       "snippet": "outside"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "docs site:example.com -site:private.docs.example.com",
+     "num": 8,
+     "tbs": "qdr:w"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "result\nSource: Allowed (https://docs.example.com/a)",
+    "results": [
+     {
+      "title": "Allowed",
+      "url": "https://docs.example.com/a",
+      "snippet": "result"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serper-multi-include",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "serper-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "docs",
+  "options": {
+   "numResults": 19,
+   "domainFilter": [
+    "a.example.com",
+    "b.example.org",
+    "A.Example.com",
+    "not a domain"
+   ],
+   "recencyFilter": "year"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic": [
+      {
+       "title": "A",
+       "link": "https://a.example.com/1",
+       "snippet": "a"
+      },
+      {
+       "title": "B",
+       "link": "https://x.b.example.org/2",
+       "snippet": "b"
+      },
+      {
+       "title": "C",
+       "link": "https://c.example.net/3",
+       "snippet": "c"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "docs (site:a.example.com OR site:b.example.org)",
+     "num": 20,
+     "tbs": "qdr:y"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "a\nSource: A (https://a.example.com/1)\n\nb\nSource: B (https://x.b.example.org/2)",
+    "results": [
+     {
+      "title": "A",
+      "url": "https://a.example.com/1",
+      "snippet": "a"
+     },
+     {
+      "title": "B",
+      "url": "https://x.b.example.org/2",
+      "snippet": "b"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serper-entries",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "serper-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "entries",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic": [
+      null,
+      5,
+      {
+       "title": "  Trim me  ",
+       "link": "https://example.com/1",
+       "snippet": "s"
+      },
+      {
+       "link": "https://example.com/2"
+      },
+      {
+       "title": "x",
+       "link": 5
+      },
+      {
+       "title": "x",
+       "link": ""
+      },
+      {
+       "title": "Snip",
+       "link": "https://example.com/3",
+       "snippet": 7
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "entries",
+     "num": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "s\nSource: Trim me (https://example.com/1)\n\nSource: Source 2 (https://example.com/2)\n\nSource: Snip (https://example.com/3)",
+    "results": [
+     {
+      "title": "Trim me",
+      "url": "https://example.com/1",
+      "snippet": "s"
+     },
+     {
+      "title": "Source 2",
+      "url": "https://example.com/2",
+      "snippet": ""
+     },
+     {
+      "title": "Snip",
+      "url": "https://example.com/3",
+      "snippet": ""
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serper-401-redacted",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "serper-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "redact",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "body": "secret serper-secret",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-secret"
+    },
+    "body": {
+     "q": "redact",
+     "num": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API error 401: secret [redacted]"
+  }
+ },
+ {
+  "id": "serper-long-error",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "serper-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "long",
+  "options": {},
+  "responses": [
+   {
+    "status": 503,
+    "body": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-secret"
+    },
+    "body": {
+     "q": "long",
+     "num": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API error 503: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  }
+ },
+ {
+  "id": "serper-missing-key",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Serper API key not found. Either:\n  1. Create <CONFIG> with { \"serperApiKey\": \"your-key\" }\n  2. Set SERPER_API_KEY environment variable\nGet a key at https://serper.dev"
+  }
+ },
+ {
+  "id": "serper-bad-envelope",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "q": "q",
+     "num": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API returned invalid response: expected organic array"
+  }
+ },
+ {
+  "id": "serper-array-envelope",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": []
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "q": "q",
+     "num": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API returned invalid response: expected an object envelope"
+  }
+ },
+ {
+  "id": "serper-invalid-json",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": {
+   "serperApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "q": "q",
+     "num": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API returned invalid JSON"
+  }
+ },
+ {
+  "id": "serper-config-root",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": "[]",
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Invalid config in <CONFIG>: expected a JSON object"
+  }
+ },
+ {
+  "id": "serpapi-env-filters",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic_results": [
+      {
+       "title": "Allowed",
+       "link": "https://docs.example.com/a",
+       "snippet": "result"
+      },
+      {
+       "title": "Excluded",
+       "link": "https://private.docs.example.com/b",
+       "snippet": "private"
+      },
+      {
+       "title": "Outside",
+       "link": "https://example.net/c",
+       "snippet": "outside"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "result\nSource: Allowed (https://docs.example.com/a)",
+    "results": [
+     {
+      "title": "Allowed",
+      "url": "https://docs.example.com/a",
+      "snippet": "result"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serpapi-error-envelope-redacted",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": {
+   "serpapiApiKey": "unused-config-key"
+  },
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "resolved-serpapi-secret"
+  },
+  "query": "redact envelope",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "error": "invalid api_key resolved-serpapi-secret"
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=redact+envelope&api_key=resolved-serpapi-secret&num=5",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi returned invalid response: invalid api_key [redacted]"
+  }
+ },
+ {
+  "id": "serpapi-401-redacted",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": {
+   "serpapiApiKey": "serpapi-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "redact",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "body": "invalid serpapi-secret",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=redact&api_key=serpapi-secret&num=5",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi error 401: invalid [redacted]"
+  }
+ },
+ {
+  "id": "serpapi-missing-organic",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": {
+   "serpapiApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=q&api_key=k&num=5",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi returned invalid response: expected organic_results array"
+  }
+ },
+ {
+  "id": "serpapi-invalid-json",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": {
+   "serpapiApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "{",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=q&api_key=k&num=5",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi returned invalid JSON"
+  }
+ },
+ {
+  "id": "serpapi-timeout",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": {
+   "serpapiApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=q&api_key=k&num=5",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi request timed out after 60s"
+  }
+ },
+ {
+  "id": "serpapi-caller-abort",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": {
+   "serpapiApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=q&api_key=k&num=5",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  }
+ },
+ {
+  "id": "serpapi-network",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": {
+   "serpapiApiKey": "serpapi-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed for serpapi-secret"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=q&api_key=serpapi-secret&num=5",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed for [redacted]"
+  }
+ },
+ {
+  "id": "serpbase-map",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic_results": [
+      {
+       "title": "SerpBase result",
+       "link": "https://example.com/result",
+       "snippet": "Google snippet"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Google snippet\nSource: SerpBase result (https://example.com/result)",
+    "results": [
+     {
+      "title": "SerpBase result",
+      "url": "https://example.com/result",
+      "snippet": "Google snippet"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serpbase-default-count-and-fields",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": [
+      {
+       "title": "  Untrimmed  ",
+       "url": "https://example.com/u",
+       "description": "desc"
+      },
+      {
+       "link": "https://example.com/n",
+       "snippet": "s"
+      },
+      {
+       "title": "none"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=q&api_key=k&num=10",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "desc\nSource:   Untrimmed   (https://example.com/u)\n\ns\nSource: Source 2 (https://example.com/n)",
+    "results": [
+     {
+      "title": "  Untrimmed  ",
+      "url": "https://example.com/u",
+      "snippet": "desc"
+     },
+     {
+      "title": "Source 2",
+      "url": "https://example.com/n",
+      "snippet": "s"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serpbase-error-envelope",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "secret-sb"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "error": "bad key secret-sb",
+     "status": 403
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=q&api_key=secret-sb&num=10",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API returned invalid response: bad key secret-sb (status 403)"
+  }
+ },
+ {
+  "id": "serpbase-error-envelope-no-status",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "error": "nope"
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=q&api_key=k&num=10",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API returned invalid response: nope"
+  }
+ },
+ {
+  "id": "serpbase-bad-envelope",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "status": 200
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=q&api_key=k&num=10",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API returned invalid response: expected organic_results array"
+  }
+ },
+ {
+  "id": "serpbase-429",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "numResults": 50
+  },
+  "responses": [
+   {
+    "status": 429,
+    "body": "slow down",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=q&api_key=k&num=20",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API error 429: slow down"
+  }
+ },
+ {
+  "id": "serpbase-missing-key",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "SerpBase API key not found. Either:\n  1. Create <CONFIG> with { \"serpbaseApiKey\": \"your-key\" }\n  2. Set SERPBASE_API_KEY environment variable\nGet a key at https://serpbase.dev"
+  }
+ },
+ {
+  "id": "serply-env-filters",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": [
+      {
+       "title": "Allowed",
+       "link": "https://docs.example.com/a",
+       "description": "result"
+      },
+      {
+       "title": "Excluded",
+       "link": "https://private.docs.example.com/b",
+       "description": "private"
+      },
+      {
+       "title": "Outside",
+       "link": "https://example.net/c",
+       "description": "outside"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "result\nSource: Allowed (https://docs.example.com/a)",
+    "results": [
+     {
+      "title": "Allowed",
+      "url": "https://docs.example.com/a",
+      "snippet": "result"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serply-redirects",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": {
+   "serplyApiKey": "serply-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "redirect",
+  "options": {},
+  "responses": [
+   {
+    "status": 302,
+    "body": null,
+    "headers": {
+     "location": "/v1/redirected"
+    }
+   },
+   {
+    "status": 307,
+    "body": null,
+    "headers": {
+     "location": "https://results.example/search"
+    }
+   },
+   {
+    "status": 200,
+    "json": {
+     "results": [
+      {
+       "title": "Result",
+       "link": "https://example.com/result"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=redirect&num=5",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   },
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/redirected",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   },
+   {
+    "method": "GET",
+    "url": "https://results.example/search",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Source: Result (https://example.com/result)",
+    "results": [
+     {
+      "title": "Result",
+      "url": "https://example.com/result",
+      "snippet": ""
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serply-links",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": {
+   "serplyApiKey": "serply-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "links",
+  "options": {
+   "numResults": 10
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": [
+      {
+       "title": "HTTPS",
+       "link": "https://example.com/secure"
+      },
+      {
+       "title": "HTTP",
+       "link": "http://example.com/plain"
+      },
+      {
+       "title": "Host only",
+       "link": "https://Example.COM"
+      },
+      {
+       "title": "Relative",
+       "link": "/relative"
+      },
+      {
+       "title": "Malformed",
+       "link": "not a url"
+      },
+      {
+       "title": "File",
+       "link": "file:///tmp/result"
+      },
+      {
+       "title": "Data",
+       "link": "data:text/plain,result"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=links&num=10",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Source: HTTPS (https://example.com/secure)\n\nSource: HTTP (http://example.com/plain)\n\nSource: Host only (https://example.com/)",
+    "results": [
+     {
+      "title": "HTTPS",
+      "url": "https://example.com/secure",
+      "snippet": ""
+     },
+     {
+      "title": "HTTP",
+      "url": "http://example.com/plain",
+      "snippet": ""
+     },
+     {
+      "title": "Host only",
+      "url": "https://example.com/",
+      "snippet": ""
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "serply-detail-redacted",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": {
+   "serplyApiKey": "unused-config-key"
+  },
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "resolved-serply-secret"
+  },
+  "query": "redact envelope",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "detail": "Invalid API key resolved-serply-secret"
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=redact+envelope&num=5",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "resolved-serply-secret"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply returned invalid response: Invalid API key [redacted]"
+  }
+ },
+ {
+  "id": "serply-401-redacted",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": {
+   "serplyApiKey": "serply-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "redact",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "body": "invalid serply-secret",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=redact&num=5",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-secret"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply error 401: invalid [redacted]"
+  }
+ },
+ {
+  "id": "serply-timeout",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": {
+   "serplyApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=q&num=5",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "k"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply request timed out after 60s"
+  }
+ },
+ {
+  "id": "serply-caller-abort",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": {
+   "serplyApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=q&num=5",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "k"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  }
+ },
+ {
+  "id": "serply-missing-results",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": {
+   "serplyApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=q&num=5",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "k"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply returned invalid response: expected results array"
+  }
+ },
+ {
+  "id": "valyu-content-bounds",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "success": true,
+     "results": [
+      {
+       "title": "Valyu result",
+       "url": "https://example.com/valyu",
+       "description": "description",
+       "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+       "relevance_score": 1
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nSource: Valyu result (https://example.com/valyu)",
+    "results": [
+     {
+      "title": "Valyu result",
+      "url": "https://example.com/valyu",
+      "snippet": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://example.com/valyu",
+      "title": "Valyu result",
+      "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "error": null
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "valyu-filters-recency",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "domainFilter": [
+    "docs.example.com",
+    "-private.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "success": true,
+     "results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": "2026-03-10T12:00:00.000Z",
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 5,
+     "included_sources": [
+      "docs.example.com"
+     ],
+     "excluded_sources": [
+      "private.example.com"
+     ],
+     "start_date": "2026-03-03"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "valyu-entries",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "numResults": 2,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "success": true,
+     "results": [
+      null,
+      {
+       "title": "  A  \n title ",
+       "url": " https://example.com/a ",
+       "description": "d  d",
+       "content": "c\n\nc"
+      },
+      {
+       "url": ""
+      },
+      {
+       "url": "https://example.com/b",
+       "description": "only description"
+      },
+      {
+       "url": "https://example.com/c"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "query": "q",
+     "max_num_results": 2
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "c c\nSource: A title (https://example.com/a)\n\nonly description\nSource: Source 2 (https://example.com/b)",
+    "results": [
+     {
+      "title": "A title",
+      "url": "https://example.com/a",
+      "snippet": "c c"
+     },
+     {
+      "title": "Source 2",
+      "url": "https://example.com/b",
+      "snippet": "only description"
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://example.com/a",
+      "title": "A title",
+      "content": "c c",
+      "error": null
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "valyu-not-success",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "success": false,
+     "results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "query": "q",
+     "max_num_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Valyu API returned invalid response: expected success true"
+  }
+ },
+ {
+  "id": "valyu-missing-results",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "success": true
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "query": "q",
+     "max_num_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Valyu API returned invalid response: expected results array"
+  }
+ },
+ {
+  "id": "valyu-401-redacted",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "redact",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "body": "secret valyu-secret",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-secret"
+    },
+    "body": {
+     "query": "redact",
+     "max_num_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Valyu API error 401: secret [redacted]"
+  }
+ },
+ {
+  "id": "bocha-filters",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 200,
+     "data": {
+      "webPages": {
+       "value": [
+        {
+         "name": "Bocha result",
+         "url": "https://docs.example.com/bocha",
+         "summary": "Bocha snippet"
+        },
+        {
+         "name": "Blocked result",
+         "url": "https://private.docs.example.com/bocha",
+         "summary": "Blocked snippet"
+        },
+        {
+         "name": "Outside result",
+         "url": "https://outside.example.net/bocha",
+         "summary": "Outside snippet"
+        }
+       ]
+      }
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Bocha snippet\nSource: Bocha result (https://docs.example.com/bocha)",
+    "results": [
+     {
+      "title": "Bocha result",
+      "url": "https://docs.example.com/bocha",
+      "snippet": "Bocha snippet"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "bocha-api-error-redacted",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bad query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 500,
+     "msg": "invalid request bocha-test-key"
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bad query",
+     "count": 8,
+     "freshness": "noLimit",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API returned invalid response: code 500: invalid request [redacted]"
+  }
+ },
+ {
+  "id": "bocha-string-code-and-fields",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": "200",
+     "data": {
+      "webPages": {
+       "value": [
+        {
+         "link": "https://example.com/l",
+         "title": " T ",
+         "snippet": " S "
+        },
+        {
+         "href": "https://example.com/h",
+         "content": "C"
+        },
+        {
+         "name": "no url"
+        },
+        [],
+        null,
+        {
+         "url": "https://example.com/u",
+         "description": "D"
+        }
+       ]
+      }
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 8,
+     "freshness": "noLimit",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "S\nSource: T (https://example.com/l)\n\nC\nSource: https://example.com/h (https://example.com/h)\n\nD\nSource: https://example.com/u (https://example.com/u)",
+    "results": [
+     {
+      "title": "T",
+      "url": "https://example.com/l",
+      "snippet": "S"
+     },
+     {
+      "title": "https://example.com/h",
+      "url": "https://example.com/h",
+      "snippet": "C"
+     },
+     {
+      "title": "https://example.com/u",
+      "url": "https://example.com/u",
+      "snippet": "D"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "bocha-code-without-msg",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 403
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 8,
+     "freshness": "noLimit",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API returned invalid response: code 403: unknown error"
+  }
+ },
+ {
+  "id": "bocha-missing-array",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "data": {
+      "webPages": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 8,
+     "freshness": "noLimit",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API returned invalid response: missing data.webPages.value array"
+  }
+ },
+ {
+  "id": "bocha-no-code",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "data": {
+      "webPages": {
+       "value": [
+        {
+         "url": "https://a.example.com/1"
+        },
+        {
+         "url": "https://a.example.com/2"
+        },
+        {
+         "url": "https://a.example.com/3"
+        }
+       ]
+      }
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 2,
+     "freshness": "oneMonth",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Source: https://a.example.com/1 (https://a.example.com/1)\n\nSource: https://a.example.com/2 (https://a.example.com/2)",
+    "results": [
+     {
+      "title": "https://a.example.com/1",
+      "url": "https://a.example.com/1",
+      "snippet": ""
+     },
+     {
+      "title": "https://a.example.com/2",
+      "url": "https://a.example.com/2",
+      "snippet": ""
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "bocha-401",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "body": "bad bocha-secret",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-secret",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 8,
+     "freshness": "noLimit",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API error 401: bad [redacted]"
+  }
+ },
+ {
+  "id": "you-map",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": {
+      "web": [
+       {
+        "title": "Docs",
+        "url": "https://docs.example.com/a",
+        "description": "described"
+       },
+       {
+        "title": "Snippet only",
+        "url": "https://example.com/b",
+        "snippets": [
+         "first snippet"
+        ]
+       },
+       {
+        "title": "Not a link",
+        "url": "not-a-url"
+       },
+       {
+        "title": "Script",
+        "url": "javascript:alert(1)"
+       },
+       {
+        "url": "https://example.com",
+        "description": "   ",
+        "snippets": [
+         3
+        ]
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "described\nSource: Docs (https://docs.example.com/a)\n\nfirst snippet\nSource: Snippet only (https://example.com/b)\n\nSource: Source 3 (https://example.com/)",
+    "results": [
+     {
+      "title": "Docs",
+      "url": "https://docs.example.com/a",
+      "snippet": "described"
+     },
+     {
+      "title": "Snippet only",
+      "url": "https://example.com/b",
+      "snippet": "first snippet"
+     },
+     {
+      "title": "Source 3",
+      "url": "https://example.com/",
+      "snippet": ""
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "you-401-redacted",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": {
+   "youApiKey": "you-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "redact",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "body": "invalid you-secret",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-secret"
+    },
+    "body": {
+     "query": "redact",
+     "count": 5
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com error 401: invalid [redacted]"
+  }
+ },
+ {
+  "id": "you-invalid-response",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": {
+   "youApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": {}
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "query": "q",
+     "count": 5
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com returned invalid response: expected results.web array"
+  }
+ },
+ {
+  "id": "you-invalid-json",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": {
+   "youApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "nope",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "query": "q",
+     "count": 5
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com returned invalid JSON"
+  }
+ },
+ {
+  "id": "you-timeout",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": {
+   "youApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "query": "q",
+     "count": 5
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com request timed out after 60s"
+  }
+ },
+ {
+  "id": "you-caller-abort",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": {
+   "youApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "query": "q",
+     "count": 5
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  }
+ },
+ {
+  "id": "you-redirect-strips-key",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": {
+   "youApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 307,
+    "body": null,
+    "headers": {
+     "location": "https://other.example/search"
+    }
+   },
+   {
+    "status": 200,
+    "json": {
+     "results": {
+      "web": []
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "k"
+    },
+    "body": {
+     "query": "q",
+     "count": 5
+    },
+    "redirect": "manual"
+   },
+   {
+    "method": "POST",
+    "url": "https://other.example/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "count": 5
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "you-missing-key",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "You.com API key not found. Either:\n  1. Create <CONFIG> with { \"youApiKey\": \"your-key\" }\n  2. Set YDC_API_KEY environment variable\nGet a key at https://you.com/platform/api-keys"
+  }
+ },
+ {
+  "id": "anysearch-anonymous",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 0,
+     "data": {
+      "results": [
+       {
+        "title": "AnySearch result",
+        "url": "https://example.com/result",
+        "snippet": "A useful snippet",
+        "content": "full page"
+       }
+      ],
+      "metadata": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "A useful snippet\nSource: AnySearch result (https://example.com/result)",
+    "results": [
+     {
+      "title": "AnySearch result",
+      "url": "https://example.com/result",
+      "snippet": "A useful snippet"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "anysearch-include-content",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 0,
+     "data": {
+      "results": [
+       {
+        "title": "AnySearch result",
+        "url": "https://example.com/result",
+        "snippet": "A useful snippet",
+        "content": "full page"
+       }
+      ],
+      "metadata": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "A useful snippet\nSource: AnySearch result (https://example.com/result)",
+    "results": [
+     {
+      "title": "AnySearch result",
+      "url": "https://example.com/result",
+      "snippet": "A useful snippet"
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://example.com/result",
+      "title": "AnySearch result",
+      "content": "full page",
+      "error": null
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "anysearch-null-content",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "partial content",
+  "options": {
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 0,
+     "data": {
+      "results": [
+       {
+        "title": "Missing content",
+        "url": "https://example.com/missing",
+        "snippet": "missing"
+       },
+       {
+        "title": "Null content",
+        "url": "https://example.com/null",
+        "snippet": "null",
+        "content": null
+       },
+       {
+        "title": "Full content",
+        "url": "https://example.com/full",
+        "snippet": "full",
+        "content": "page body"
+       }
+      ],
+      "metadata": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "partial content",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "missing\nSource: Missing content (https://example.com/missing)\n\nnull\nSource: Null content (https://example.com/null)\n\nfull\nSource: Full content (https://example.com/full)",
+    "results": [
+     {
+      "title": "Missing content",
+      "url": "https://example.com/missing",
+      "snippet": "missing"
+     },
+     {
+      "title": "Null content",
+      "url": "https://example.com/null",
+      "snippet": "null"
+     },
+     {
+      "title": "Full content",
+      "url": "https://example.com/full",
+      "snippet": "full"
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://example.com/full",
+      "title": "Full content",
+      "content": "page body",
+      "error": null
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "anysearch-invalid-content",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "invalid content",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 0,
+     "data": {
+      "results": [
+       {
+        "title": "Invalid content",
+        "url": "https://example.com/invalid",
+        "snippet": "invalid",
+        "content": 123
+       }
+      ],
+      "metadata": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "invalid content",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid response: expected data.results[0].content string"
+  }
+ },
+ {
+  "id": "anysearch-keyed",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {
+   "anysearchApiKey": "anysearch-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "keyed",
+  "options": {
+   "numResults": 1
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 0,
+     "data": {
+      "results": [
+       {
+        "title": "a",
+        "url": "https://example.com/a",
+        "snippet": "s"
+       },
+       {
+        "title": "b",
+        "url": "https://example.com/b",
+        "snippet": "s"
+       }
+      ],
+      "metadata": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "authorization": "Bearer anysearch-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "keyed",
+     "max_results": 1
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "s\nSource: a (https://example.com/a)",
+    "results": [
+     {
+      "title": "a",
+      "url": "https://example.com/a",
+      "snippet": "s"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "anysearch-no-metadata",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "malformed",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 0,
+     "data": {
+      "results": []
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "malformed",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid response: expected data.metadata object"
+  }
+ },
+ {
+  "id": "anysearch-bad-code",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 1,
+     "data": {
+      "results": [],
+      "metadata": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid response: expected code 0"
+  }
+ },
+ {
+  "id": "anysearch-empty-url",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 0,
+     "data": {
+      "results": [
+       {
+        "title": "t",
+        "url": "",
+        "snippet": "s"
+       }
+      ],
+      "metadata": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid response: expected data.results[0].url to be non-empty"
+  }
+ },
+ {
+  "id": "anysearch-bad-fields",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 0,
+     "data": {
+      "results": [
+       5
+      ],
+      "metadata": {}
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid response: expected data.results[0] object"
+  }
+ },
+ {
+  "id": "anysearch-402",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 402,
+    "body": "quota",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "q",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API error 402: quota"
+  }
+ },
+ {
+  "id": "anysearch-401-redacted",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {
+   "anysearchApiKey": "anysearch-secret"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "redact",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "body": "secret anysearch-secret",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "authorization": "Bearer anysearch-secret",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "redact",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API error 401: secret [redacted]"
+  }
+ },
+ {
+  "id": "anysearch-config-root",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": null,
+  "configRaw": "null",
+  "env": {},
+  "query": "malformed config",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Invalid config in <CONFIG>: expected a JSON object"
+  }
+ },
+ {
+  "id": "xcrawl-map",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "First result",
+       "link": "https://www.example.com/first",
+       "snippet": "First result snippet."
+      },
+      {
+       "position": 2,
+       "title": null,
+       "link": "https://sub.other-domain.org/second",
+       "snippet": "Second result snippet with no title."
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "First result snippet.\nSource: First result (https://www.example.com/first)\n\nSecond result snippet with no title.\nSource: https://sub.other-domain.org/second (https://sub.other-domain.org/second)",
+    "results": [
+     {
+      "title": "First result",
+      "url": "https://www.example.com/first",
+      "snippet": "First result snippet."
+     },
+     {
+      "title": "https://sub.other-domain.org/second",
+      "url": "https://sub.other-domain.org/second",
+      "snippet": "Second result snippet with no title."
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "xcrawl-relative-links",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "links",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "Redirect result",
+       "link": "/goto?url=CAESAAAA",
+       "snippet": "Obfuscated link."
+      },
+      {
+       "position": 2,
+       "title": null,
+       "link": "https://www.example.com/absolute",
+       "snippet": "Absolute link."
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "links"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Obfuscated link.\nSource: Redirect result (https://run.xcrawl.com/goto?url=CAESAAAA)\n\nAbsolute link.\nSource: https://www.example.com/absolute (https://www.example.com/absolute)",
+    "results": [
+     {
+      "title": "Redirect result",
+      "url": "https://run.xcrawl.com/goto?url=CAESAAAA",
+      "snippet": "Obfuscated link."
+     },
+     {
+      "title": "https://www.example.com/absolute",
+      "url": "https://www.example.com/absolute",
+      "snippet": "Absolute link."
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "xcrawl-blank-link",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "blank link",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "Blank link",
+       "link": "   ",
+       "snippet": "Invalid link."
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "blank link"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: expected organic_results[0].link to be a non-empty string"
+  }
+ },
+ {
+  "id": "xcrawl-include-filter",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "First result",
+       "link": "https://www.example.com/first",
+       "snippet": "First result snippet."
+      },
+      {
+       "position": 2,
+       "title": null,
+       "link": "https://sub.other-domain.org/second",
+       "snippet": "Second result snippet with no title."
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "First result snippet.\nSource: First result (https://www.example.com/first)",
+    "results": [
+     {
+      "title": "First result",
+      "url": "https://www.example.com/first",
+      "snippet": "First result snippet."
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "xcrawl-exclude-filter",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "domainFilter": [
+    "-example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "First result",
+       "link": "https://www.example.com/first",
+       "snippet": "First result snippet."
+      },
+      {
+       "position": 2,
+       "title": null,
+       "link": "https://sub.other-domain.org/second",
+       "snippet": "Second result snippet with no title."
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Second result snippet with no title.\nSource: https://sub.other-domain.org/second (https://sub.other-domain.org/second)",
+    "results": [
+     {
+      "title": "https://sub.other-domain.org/second",
+      "url": "https://sub.other-domain.org/second",
+      "snippet": "Second result snippet with no title."
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "xcrawl-fuzzy-filter",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "domainFilter": [
+    " https://www.Example.COM/path "
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "First result",
+       "link": "https://www.example.com/first",
+       "snippet": "First result snippet."
+      },
+      {
+       "position": 2,
+       "title": null,
+       "link": "https://sub.other-domain.org/second",
+       "snippet": "Second result snippet with no title."
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "First result snippet.\nSource: First result (https://www.example.com/first)",
+    "results": [
+     {
+      "title": "First result",
+      "url": "https://www.example.com/first",
+      "snippet": "First result snippet."
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "xcrawl-www-include",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "domainFilter": [
+    "www.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "WWW result",
+       "link": "https://www.example.com/first",
+       "snippet": "WWW result snippet."
+      },
+      {
+       "position": 2,
+       "title": "Blog result",
+       "link": "https://blog.example.com/second",
+       "snippet": "Blog result snippet."
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "WWW result snippet.\nSource: WWW result (https://www.example.com/first)",
+    "results": [
+     {
+      "title": "WWW result",
+      "url": "https://www.example.com/first",
+      "snippet": "WWW result snippet."
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "xcrawl-www-exclude",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "domainFilter": [
+    "-www.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "WWW result",
+       "link": "https://www.example.com/first",
+       "snippet": "WWW result snippet."
+      },
+      {
+       "position": 2,
+       "title": "Blog result",
+       "link": "https://blog.example.com/second",
+       "snippet": "Blog result snippet."
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Blog result snippet.\nSource: Blog result (https://blog.example.com/second)",
+    "results": [
+     {
+      "title": "Blog result",
+      "url": "https://blog.example.com/second",
+      "snippet": "Blog result snippet."
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "xcrawl-cap",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {
+   "numResults": 1
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "id": "01KMMKX1EC62VPCD7FW8YZ8QVS",
+      "status": "completed",
+      "total_time_taken": 2
+     },
+     "search_parameters": {
+      "engine": "google_search",
+      "q": "example query"
+     },
+     "total_credits_used": 1,
+     "organic_results": [
+      {
+       "position": 1,
+       "title": "Result 1",
+       "link": "https://www.example.com/1",
+       "snippet": "Snippet 1"
+      },
+      {
+       "position": 2,
+       "title": "Result 2",
+       "link": "https://www.example.com/2",
+       "snippet": "Snippet 2"
+      },
+      {
+       "position": 3,
+       "title": "Result 3",
+       "link": "https://www.example.com/3",
+       "snippet": "Snippet 3"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Snippet 1\nSource: Result 1 (https://www.example.com/1)",
+    "results": [
+     {
+      "title": "Result 1",
+      "url": "https://www.example.com/1",
+      "snippet": "Snippet 1"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "xcrawl-401-message",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-secret-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "boom",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "json": {
+     "message": "invalid api key"
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-secret-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "boom"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API error (401): invalid api key"
+  }
+ },
+ {
+  "id": "xcrawl-401-error-field",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-secret-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "boom",
+  "options": {},
+  "responses": [
+   {
+    "status": 403,
+    "json": {
+     "error": "denied xc-secret-key"
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-secret-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "boom"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API error (403): denied [redacted]"
+  }
+ },
+ {
+  "id": "xcrawl-500-text",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-secret-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "boom",
+  "options": {},
+  "responses": [
+   {
+    "status": 502,
+    "body": "upstream xc-secret-key down",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-secret-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "boom"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API error (502): upstream [redacted] down"
+  }
+ },
+ {
+  "id": "xcrawl-bad-status",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bad status",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "status": "failed"
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "bad status"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: expected search_metadata.status \"completed\", got \"failed\""
+  }
+ },
+ {
+  "id": "xcrawl-missing-results",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "missing results",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {
+      "status": "completed"
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "missing results"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: expected organic_results array"
+  }
+ },
+ {
+  "id": "xcrawl-bad-entry",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {},
+     "organic_results": [
+      []
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: expected organic_results[0] object"
+  }
+ },
+ {
+  "id": "xcrawl-bad-title",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {},
+     "organic_results": [
+      {
+       "link": "https://a.example.com",
+       "title": 5
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: expected organic_results[0].title to be a string or null"
+  }
+ },
+ {
+  "id": "xcrawl-bad-snippet",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "search_metadata": {},
+     "organic_results": [
+      {
+       "link": "https://a.example.com",
+       "snippet": 5
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: expected organic_results[0].snippet to be a string or null"
+  }
+ },
+ {
+  "id": "xcrawl-bad-metadata",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "organic_results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: expected search_metadata object"
+  }
+ },
+ {
+  "id": "xcrawl-invalid-json",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "k"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "nope",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer k",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: response body is not valid JSON"
+  }
+ },
+ {
+  "id": "xcrawl-timeout",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "slow",
+  "options": {},
+  "responses": [
+   {
+    "throw": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "slow"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl search request timed out after 60s"
+  }
+ },
+ {
+  "id": "xcrawl-caller-abort",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "cancel",
+  "options": {},
+  "responses": [
+   {
+    "throw": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "cancel"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  }
+ },
+ {
+  "id": "xcrawl-network-redacted",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-secret-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "refused xc-secret-key"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-secret-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "q"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "refused [redacted]"
+  }
+ },
+ {
+  "id": "xcrawl-missing-key",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "XCrawl search requires an API key. Set xcrawlApiKey in <CONFIG> or export XCRAWL_API_KEY. Get one at https://dash.xcrawl.com/"
+  }
+ },
+ {
+  "id": "jina-filters-content",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 200,
+     "status": 20000,
+     "data": [
+      {
+       "title": "Jina Docs",
+       "url": "https://docs.jina.ai/search",
+       "description": "  Search   docs. ",
+       "content": "# Full Jina docs"
+      },
+      {
+       "title": "Duplicate",
+       "url": "https://docs.jina.ai/search",
+       "description": "duplicate",
+       "content": "duplicate"
+      },
+      {
+       "title": "Jina Reader",
+       "url": "https://jina.ai/reader",
+       "description": "Reader docs",
+       "content": "# Reader docs"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Search docs.\nSource: Jina Docs (https://docs.jina.ai/search)",
+    "results": [
+     {
+      "title": "Jina Docs",
+      "url": "https://docs.jina.ai/search",
+      "snippet": "Search docs."
+     }
+    ],
+    "inlineContent": [
+     {
+      "url": "https://docs.jina.ai/search",
+      "title": "Jina Docs",
+      "content": "# Full Jina docs",
+      "error": null
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "jina-array-response",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "basic search",
+  "options": {
+   "numResults": 99
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": [
+     {
+      "title": "Result",
+      "url": "https://example.com/result",
+      "description": "Result snippet",
+      "content": "must stay hidden"
+     }
+    ]
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/basic%20search?count=20",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Result snippet\nSource: Result (https://example.com/result)",
+    "results": [
+     {
+      "title": "Result",
+      "url": "https://example.com/result",
+      "snippet": "Result snippet"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "jina-query-encoding",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "k"
+  },
+  "query": "  what's up? ünï/#x  ",
+  "options": {
+   "domainFilter": [
+    "a.example.com",
+    "b.example.org",
+    "-c.example.net"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 200,
+     "data": [
+      {
+       "url": "https://a.example.com/x"
+      },
+      {
+       "title": "  ",
+       "url": " https://b.example.org/y ",
+       "description": 5
+      },
+      {
+       "url": "https://other.example.com/z"
+      },
+      null
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/what's%20up%3F%20%C3%BCn%C3%AF%2F%23x%20-site%3Ac.example.net?count=5&site=a.example.com&site=b.example.org",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Source: Source 1 (https://a.example.com/x)\n\nSource: Source 2 (https://b.example.org/y)",
+    "results": [
+     {
+      "title": "Source 1",
+      "url": "https://a.example.com/x",
+      "snippet": ""
+     },
+     {
+      "title": "Source 2",
+      "url": "https://b.example.org/y",
+      "snippet": ""
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "jina-401-redacted",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-secret"
+  },
+  "query": "redact me",
+  "options": {},
+  "responses": [
+   {
+    "status": 401,
+    "json": {
+     "detail": "rejected synthetic-jina-secret"
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/redact%20me?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-secret",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API error 401: {\"detail\":\"rejected [redacted]\"}"
+  }
+ },
+ {
+  "id": "jina-invalid-json",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-secret"
+  },
+  "query": "invalid json",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "synthetic-jina-secret malformed",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/invalid%20json?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-secret",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API returned invalid JSON"
+  }
+ },
+ {
+  "id": "jina-envelope-429",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "k"
+  },
+  "query": "activity envelope failure",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 429,
+     "message": "quota exhausted",
+     "data": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/activity%20envelope%20failure?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API error 429: response envelope reported failure"
+  }
+ },
+ {
+  "id": "jina-envelope-no-data",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "code": 200
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/q?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API returned invalid response: expected data array"
+  }
+ },
+ {
+  "id": "jina-scalar-response",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": 5
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/q?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API returned invalid response: expected an object or array"
+  }
+ },
+ {
+  "id": "jina-timeout",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/q?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API error 408: request timed out"
+  }
+ },
+ {
+  "id": "jina-body-timeout",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/q?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API error 408: request timed out"
+  }
+ },
+ {
+  "id": "jina-caller-abort",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/q?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer k",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  }
+ },
+ {
+  "id": "jina-network-redacted",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "jina-net-secret"
+  },
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "refused jina-net-secret"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/q?count=5",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer jina-net-secret",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "no-content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "refused [redacted]"
+  }
+ },
+ {
+  "id": "jina-missing-key",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Jina Search API key not found. Either:\n  1. Create <CONFIG> with { \"jinaApiKey\": \"your-key\" }\n  2. Set JINA_API_KEY environment variable\nGet a key at https://jina.ai/api-dashboard"
+  }
+ },
+ {
+  "id": "searxng-direct",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "answers": [
+      "SearXNG answer",
+      "  ",
+      5
+     ],
+     "results": [
+      {
+       "title": "Allowed",
+       "url": "https://docs.example.com/a",
+       "content": "allowed"
+      },
+      {
+       "title": "Blocked",
+       "url": "https://private.example.net/b",
+       "content": "blocked"
+      },
+      {
+       "url": "https://example.com/c"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "SearXNG answer\n\nallowed\nSource: Allowed (https://docs.example.com/a)\n\nSource: https://example.com/c (https://example.com/c)",
+    "results": [
+     {
+      "title": "Allowed",
+      "url": "https://docs.example.com/a",
+      "snippet": "allowed"
+     },
+     {
+      "title": "https://example.com/c",
+      "url": "https://example.com/c",
+      "snippet": ""
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "searxng-headers",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "searxngHeaders": {
+    "CF-Access-Client-Id": "client-id.access",
+    "CF-Access-Client-Secret": "client-secret",
+    "X-Empty-Skip": 123,
+    "X-Bad-Value": "bad\r\nvalue",
+    "Bad Name": "nope"
+   },
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "headers",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": [
+      {
+       "title": "Allowed",
+       "url": "https://docs.example.com/a",
+       "content": "allowed"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=headers&format=json",
+    "headers": {
+     "accept": "application/json",
+     "cf-access-client-id": "client-id.access",
+     "cf-access-client-secret": "client-secret"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "allowed\nSource: Allowed (https://docs.example.com/a)",
+    "results": [
+     {
+      "title": "Allowed",
+      "url": "https://docs.example.com/a",
+      "snippet": "allowed"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "searxng-accept-override",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "searxngHeaders": {
+    "accept": "application/custom-json"
+   },
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "headers",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=headers&format=json",
+    "headers": {
+     "accept": "application/custom-json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "searxng-redirect-strips-headers",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "searxngHeaders": {
+    "CF-Access-Client-Id": "client-id.access",
+    "CF-Access-Client-Secret": "client-secret"
+   },
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "headers redirect",
+  "options": {},
+  "responses": [
+   {
+    "status": 302,
+    "body": null,
+    "headers": {
+     "location": "http://127.0.0.1:8444/search"
+    }
+   },
+   {
+    "status": 200,
+    "json": {
+     "results": [
+      {
+       "title": "Allowed",
+       "url": "https://docs.example.com/a",
+       "content": "allowed"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=headers+redirect&format=json",
+    "headers": {
+     "accept": "application/json",
+     "cf-access-client-id": "client-id.access",
+     "cf-access-client-secret": "client-secret"
+    },
+    "body": null,
+    "redirect": "manual"
+   },
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8444/search",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "allowed\nSource: Allowed (https://docs.example.com/a)",
+    "results": [
+     {
+      "title": "Allowed",
+      "url": "https://docs.example.com/a",
+      "snippet": "allowed"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "searxng-redirect-private",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "redirect",
+  "options": {},
+  "responses": [
+   {
+    "status": 302,
+    "body": null,
+    "headers": {
+     "location": "http://127.0.0.2:8443/search"
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=redirect&format=json",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Blocked internal address for 127.0.0.2: 127.0.0.2"
+  }
+ },
+ {
+  "id": "searxng-error-status",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/base/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "boom",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/base/search?q=boom&format=json",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "SearXNG search error 500: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  }
+ },
+ {
+  "id": "searxng-invalid-json",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "boom",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "<html>",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=boom&format=json",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "SearXNG returned invalid JSON"
+  }
+ },
+ {
+  "id": "searxng-missing-base",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "SearXNG base URL is invalid or missing. Either:\n  1. Create <CONFIG> with { \"searxngBaseUrl\": \"https://search.example.com\" }\n  2. Set SEARXNG_BASE_URL to an HTTP(S) URL"
+  }
+ },
+ {
+  "id": "searxng-base-with-credentials",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://user:pw@127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": [],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "SearXNG base URL is invalid or missing. Either:\n  1. Create <CONFIG> with { \"searxngBaseUrl\": \"https://search.example.com\" }\n  2. Set SEARXNG_BASE_URL to an HTTP(S) URL"
+  }
+ },
+ {
+  "id": "searxng-env-base",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:1/"
+  },
+  "configRaw": null,
+  "env": {
+   "SEARXNG_BASE_URL": "http://93.184.216.34:8080/x/?a=1#h"
+  },
+  "query": "q",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": []
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://93.184.216.34:8080/x/search?q=q&format=json",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "baizhi-json",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "  中文 query  ",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com",
+    "127.0.0.1"
+   ]
+  },
+  "responses": null,
+  "baizhi": "json",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "notifications/initialized",
+     "jsonrpc": "2.0"
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "GET",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "tools/call",
+     "params": {
+      "name": "websearch_search",
+      "arguments": {
+       "query": "中文 query",
+       "count": 3,
+       "need_summary": false,
+       "time_range": "week",
+       "filter": {
+        "domains": [
+         "example.com",
+         "127.0.0.1"
+        ],
+        "exclude_domains": [
+         "private.example.com"
+        ]
+       }
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 1
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "DELETE",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "{\n  \"status\": \"success\",\n  \"results\": [\n    {\n      \"unknown_service_field\": \"opaque search result; https://example.com/reference\"\n    }\n  ]\n}",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "baizhi-text",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "text",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "notifications/initialized",
+     "jsonrpc": "2.0"
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "GET",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "tools/call",
+     "params": {
+      "name": "websearch_search",
+      "arguments": {
+       "query": "q",
+       "count": 5,
+       "need_summary": false,
+       "time_range": "month"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 1
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "DELETE",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "{\"status\":\"success\",\"results\":[{\"unknown_service_field\":\"opaque search result; https://example.com/reference\"}]}",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "baizhi-sse",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "sse",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "notifications/initialized",
+     "jsonrpc": "2.0"
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "GET",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "tools/call",
+     "params": {
+      "name": "websearch_search",
+      "arguments": {
+       "query": "q",
+       "count": 5,
+       "need_summary": false,
+       "time_range": "month"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 1
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "DELETE",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "{\n  \"status\": \"success\",\n  \"results\": [\n    {\n      \"unknown_service_field\": \"opaque search result; https://example.com/reference\"\n    }\n  ]\n}",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "baizhi-redact",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": {
+   "baizhiApiKey": "$SYNTHETIC_BAIZHI_NAMED"
+  },
+  "configRaw": null,
+  "env": {
+   "SYNTHETIC_BAIZHI_NAMED": "synthetic-baizhi-credential",
+   "BAIZHI_API_KEY": "wrong-fallback"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "redact",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "notifications/initialized",
+     "jsonrpc": "2.0"
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "GET",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "tools/call",
+     "params": {
+      "name": "websearch_search",
+      "arguments": {
+       "query": "q",
+       "count": 5,
+       "need_summary": false,
+       "time_range": "month"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 1
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "DELETE",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "{\n  \"echoed\": \"[redacted]\"\n}\n\n[redacted]",
+    "results": []
+   }
+  }
+ },
+ {
+  "id": "baizhi-tool-error",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "tool-error",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "notifications/initialized",
+     "jsonrpc": "2.0"
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "GET",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "tools/call",
+     "params": {
+      "name": "websearch_search",
+      "arguments": {
+       "query": "q",
+       "count": 5,
+       "need_summary": false,
+       "time_range": "month"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 1
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "DELETE",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "error": "Baizhi search tool returned an error"
+  }
+ },
+ {
+  "id": "baizhi-empty",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "empty",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "notifications/initialized",
+     "jsonrpc": "2.0"
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "GET",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   },
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": {
+     "method": "tools/call",
+     "params": {
+      "name": "websearch_search",
+      "arguments": {
+       "query": "q",
+       "count": 5,
+       "need_summary": false,
+       "time_range": "month"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 1
+    },
+    "redirect": "error"
+   },
+   {
+    "method": "DELETE",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "mcp-protocol-version": "2025-11-25",
+     "mcp-session-id": "synthetic-session"
+    },
+    "body": null,
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "error": "Baizhi returned invalid response: no search text or structured content"
+  }
+ },
+ {
+  "id": "baizhi-http401",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "wrong-synthetic"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "http401",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer wrong-synthetic",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "error": "Baizhi HTTP 401 request failed; check your API key, account and service status"
+  }
+ },
+ {
+  "id": "baizhi-http503",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "http503",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "error": "Baizhi HTTP 503 request failed; check your API key, account and service status"
+  }
+ },
+ {
+  "id": "baizhi-redirect",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "redirect",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "error": "Baizhi network request failed"
+  }
+ },
+ {
+  "id": "baizhi-network",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "network",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "error": "Baizhi network request failed"
+  }
+ },
+ {
+  "id": "baizhi-invalid-json",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-baizhi-credential"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "invalid-json",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": true,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "authorization": "Bearer synthetic-baizhi-credential",
+     "content-type": "application/json"
+    },
+    "body": {
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "pi-web-access-baizhi",
+       "version": "1.0.0"
+      }
+     },
+     "jsonrpc": "2.0",
+     "id": 0
+    },
+    "redirect": "error"
+   }
+  ],
+  "outcome": {
+   "error": "Baizhi returned invalid response"
+  }
+ },
+ {
+  "id": "baizhi-missing-key",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "json",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Baizhi API key not found. Set BAIZHI_API_KEY or baizhiApiKey in web-search.json. Get your own key at https://agent-toolkit.app.baizhi.cloud/"
+  }
+ },
+ {
+  "id": "baizhi-empty-query",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "k"
+  },
+  "query": " ",
+  "options": {},
+  "responses": null,
+  "baizhi": "json",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Baizhi search query must not be empty"
+  }
+ },
+ {
+  "id": "baizhi-invalid-filter",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {
+   "domainFilter": [
+    "invalid"
+   ]
+  },
+  "responses": null,
+  "baizhi": "json",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Baizhi domain filter must contain a valid domain"
+  }
+ },
+ {
+  "id": "baizhi-pre-aborted",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "json",
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Aborted"
+  }
+ },
+ {
+  "id": "baizhi-malformed-credential",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "synthetic-invalid-header\nprivate-value"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "json",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Baizhi credential resolution failed: invalid-header-value"
+  }
+ },
+ {
+  "id": "baizhi-env-empty-named",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": {
+   "baizhiApiKey": "$SYNTHETIC_BAIZHI_NAMED"
+  },
+  "configRaw": null,
+  "env": {
+   "BAIZHI_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "json",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Baizhi credential resolution failed: environment-empty"
+  }
+ },
+ {
+  "id": "baizhi-config-root",
+  "provider": "baizhi",
+  "fn": "searchWithBaizhi",
+  "config": null,
+  "configRaw": "[1]",
+  "env": {
+   "BAIZHI_API_KEY": "k"
+  },
+  "query": "q",
+  "options": {},
+  "responses": null,
+  "baizhi": "json",
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [],
+  "outcome": {
+   "error": "Invalid configuration in <CONFIG>: expected a JSON object"
+  }
+ }
+]

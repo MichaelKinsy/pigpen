@@ -13,8 +13,8 @@ import (
 )
 
 // Twins of provider-precedence, allowed-search-providers and the tool-level cases of
-// source-check. The upstream fixtures for OpenAI, SerpBase, Serply and AnySearch become tskip
-// (those providers are not ported) or run with a ported provider where the behaviour under test
+// source-check. The upstream fixtures for OpenAI become tskip
+// (that provider is not ported) or run with a ported provider where the behaviour under test
 // is provider-independent (adapted).
 
 const kagiURL = "https://kagi.com/api/v1/search"
@@ -94,8 +94,16 @@ func TestUpstream_provider_precedence(t *testing.T) {
 	})
 	tskip(t, F, "auto still uses provider fallback when no provider is configured",
 		"the fixture's only credential is OPENAI_API_KEY and OpenAI hosted search is not ported (docs/PORT.md); TestAutoOrderIsFixed in routing_test.go covers the ported order")
-	tskip(t, F, "configured explicit-only SerpBase fails instead of falling back",
-		"SerpBase is not ported; TestUnportedProviderFailsWithoutFallback pins the equivalent behaviour for every unported provider")
+	tw(t, F, "configured explicit-only SerpBase fails instead of falling back", func(t *testing.T) {
+		n, out, err := tool(t, `{"provider":"serpbase"}`, nil)
+		text := out.Text()
+		if err != nil {
+			text += err.Error()
+		}
+		matchRE(t, `SerpBase API key not found`, text)
+		noMatchRE(t, `Unexpected fallback fetch|Unexpected fetch`, text)
+		wantCalls(t, n)
+	})
 	tw(t, F, "legacy Gemini Web profile config does not block unrelated configured providers", func(t *testing.T) {
 		n, _, err := tool(t, `{"provider":"tavily","tavilyApiKey":"tavily-test-key","allowBrowserCookies":true,"chromeProfile":"Profile 1"}`, nil)
 		noErr(t, err)
@@ -107,14 +115,13 @@ func TestUpstream_provider_precedence(t *testing.T) {
 		wantCalls(t, n)
 	})
 	tw(t, F, "non-curated search stops after caller cancellation", func(t *testing.T) {
-		adapted(t, "provider tavily instead of anysearch (not ported)")
-		providerEnv(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
+		providerEnv(t, `{}`, nil)
 		r, err := NewRuntime(&fakeHost{})
 		noErr(t, err)
 		n := searchProviderNet(t)
 		ctx, cancel := context.WithCancel(bg())
 		cancel()
-		_, err = mustTool(t, r, "web_search").Execute(ctx, map[string]any{"queries": []any{"first", "second"}, "provider": "tavily", "workflow": "none"}, nil)
+		_, err = mustTool(t, r, "web_search").Execute(ctx, map[string]any{"queries": []any{"first", "second"}, "provider": "anysearch", "workflow": "none"}, nil)
 		wantErr(t, err, `(?i)abort`)
 		if !errors.Is(err, context.Canceled) {
 			t.Fatal("the cause is lost")
@@ -126,12 +133,12 @@ func TestUpstream_provider_precedence(t *testing.T) {
 }
 
 func TestUnportedProviderFailsWithoutFallback(t *testing.T) {
-	providerEnv(t, `{"provider":"serpbase"}`, map[string]string{"TAVILY_API_KEY": "k"})
+	providerEnv(t, `{"provider":"xai"}`, map[string]string{"TAVILY_API_KEY": "k"})
 	r, err := NewRuntime(&fakeHost{})
 	noErr(t, err)
 	n := searchProviderNet(t)
 	_, err = mustTool(t, r, "web_search").Execute(bg(), map[string]any{"query": "x", "workflow": "none"}, nil)
-	if want := refusal("SerpBase search provider"); err == nil || err.Error() != want {
+	if want := refusal("xAI search provider"); err == nil || err.Error() != want {
 		t.Fatalf("error = %v, want %q", err, want)
 	}
 	wantCalls(t, n)
@@ -210,9 +217,8 @@ func TestUpstream_allowed_search_providers(t *testing.T) {
 		}
 	})
 	tw(t, F, "allowlisting an explicit-only provider does not opt it into auto or all", func(t *testing.T) {
-		adapted(t, "duckduckgo instead of serply (not ported); both are explicit-only")
 		for _, provider := range []string{"auto", "all"} {
-			providerEnv(t, `{"webSearch":{"allowedProviders":["duckduckgo"]}}`, nil)
+			providerEnv(t, `{"webSearch":{"allowedProviders":["serply"]},"serplyApiKey":"s"}`, nil)
 			n := useNet(t, func(netCall) netReply { return netReply{Err: errors.New("must not fetch")} })
 			_, err := searchOnce(t, provider)
 			wantErr(t, err, `No search provider available|No configured search provider available`)
@@ -220,15 +226,14 @@ func TestUpstream_allowed_search_providers(t *testing.T) {
 		}
 	})
 	tw(t, F, "an allowlisted explicit-only provider remains directly selectable with its credential", func(t *testing.T) {
-		adapted(t, "duckduckgo (keyless) instead of serply (not ported); credential header check dropped")
-		providerEnv(t, `{"webSearch":{"allowedProviders":["duckduckgo"]}}`, nil)
+		providerEnv(t, `{"webSearch":{"allowedProviders":["serply"]},"serplyApiKey":"s"}`, nil)
 		n := useNet(t, func(netCall) netReply {
-			return netReply{Status: 200, Header: hdr("content-type", "text/html"), Body: `<div class="result"><a class="result__a" href="https://example.com/ddg">DDG</a><a class="result__snippet">answer</a></div>`}
+			return reply(200, `{"results":[{"title":"Serply","link":"https://example.com/serply","description":"answer"}]}`)
 		})
-		out, err := searchOnce(t, "duckduckgo")
+		out, err := searchOnce(t, "serply")
 		noErr(t, err)
-		if out.Provider != "duckduckgo" || n.count() != 1 {
-			t.Fatalf("%s %d", out.Provider, n.count())
+		if out.Provider != "serply" || n.count() != 1 || n.calls[0].Header.Get("x-api-key") != "s" {
+			t.Fatalf("%s %d %v", out.Provider, n.count(), n.calls[0].Header)
 		}
 	})
 	tw(t, F, "source_check cannot bypass policy", func(t *testing.T) {
