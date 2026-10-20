@@ -89,3 +89,11 @@ func WritePatchedGoalForRig(cwd, objective string, atMs int64, patch map[string]
 func ArmOracleAdviceForRig(goalID, fingerprint, adviceID string) {
 	armedByGoalID[goalID] = armedAdvice{goalID: goalID, fingerprint: fingerprint, adviceID: adviceID}
 }
+
+// CompleteFocused marks the focused goal complete in memory only: the state update_goal leaves for the deferred archival at turn_end.
+func (p *Probe) CompleteFocused() {
+	p.c.locked(func() { p.c.setGoal(goalWith(p.c.state(), "status", "complete"), false, "") })
+}
+
+// InvalidateLedgerForRig drops the ledger read cache (a file the test wrote by hand).
+func InvalidateLedgerForRig() { invalidateGoalLedgerCache() }
