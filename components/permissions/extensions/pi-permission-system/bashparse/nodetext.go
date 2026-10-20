@@ -152,7 +152,7 @@ func maySplitIntoWords(node *Node, quoted bool) bool {
 }
 
 // leadingCharacterMayBeDash reports whether the first character the word produces may be `-`;
-// defined is false while every part read so far produced nothing (`""`, `''`). A part this does
+// defined is false while every part read so far produced nothing (`""`, `”`). A part this does
 // not know is non-literal, and so may lead with anything.
 func leadingCharacterMayBeDash(node *Node) (mayBeDash, defined bool) {
 	switch node.typ {

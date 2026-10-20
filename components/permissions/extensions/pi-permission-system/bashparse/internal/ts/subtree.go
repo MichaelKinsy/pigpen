@@ -21,6 +21,11 @@ type subtree struct {
 	size       Length
 	errorCost  uint32
 	children   []*subtree
+	// lookaheadBytes is how far past the token the lexer read (leaves only). Nothing in a one-shot
+	// parse decides on it, but it is part of an inline subtree's identity (see samePtr).
+	lookaheadBytes uint32
+	// inline is whether the C keeps this leaf in the pointer-sized inline representation.
+	inline bool
 
 	visible, named, extra                bool
 	fragileLeft, fragileRight            bool
@@ -37,6 +42,9 @@ type subtree struct {
 }
 
 func (s *subtree) childCount() uint32 { return uint32(len(s.children)) }
+
+// lookaheadBytesOf is ts_subtree_lookahead_bytes.
+func (s *subtree) lookaheadBytesOf() uint32 { return s.lookaheadBytes }
 
 func (s *subtree) totalSize() Length  { return lengthAdd(s.padding, s.size) }
 func (s *subtree) totalBytes() uint32 { return s.totalSize().bytes }
@@ -135,10 +143,37 @@ func (s *subtree) lastExternalToken() *subtree {
 	return tree
 }
 
+// canInline is ts_subtree_can_inline.
+func canInline(padding, size Length, lookaheadBytes uint32) bool {
+	return padding.bytes < 255 && padding.row < 16 && padding.col < 255 &&
+		size.bytes < 255 && size.row == 0 && size.col < 255 && lookaheadBytes < 16
+}
+
+// samePtr is `left.ptr == right.ptr` on two Subtree unions. A heap subtree is its address. An inline
+// subtree has no address: the union's pointer field is its packed fields, so two inline leaves with
+// the same symbol, parse state, padding, size, lookahead bytes and flags are "the same" subtree.
+// This is what makes two MISSING tokens recovered at one position the same node to
+// ts_subtree_has_trailing_empty_descendant, and so decides a zero-width node's previous sibling.
+func samePtr(a, b *subtree) bool {
+	if a == b {
+		return true
+	}
+	if !a.inline || !b.inline {
+		return false
+	}
+	return a.symbol == b.symbol && a.parseState == b.parseState &&
+		a.padding == b.padding && a.size.bytes == b.size.bytes &&
+		a.lookaheadBytes == b.lookaheadBytes &&
+		a.visible == b.visible && a.named == b.named && a.extra == b.extra &&
+		a.isMissing == b.isMissing && a.isKeyword == b.isKeyword
+}
+
 // newLeaf is ts_subtree_new_leaf.
-func newLeaf(l *Language, symbol uint16, padding, size Length, parseState uint16, hasExternalTokens, isKeyword bool) *subtree {
+func newLeaf(l *Language, symbol uint16, padding, size Length, lookaheadBytes uint32, parseState uint16, hasExternalTokens, isKeyword bool) *subtree {
 	md := l.metadata(symbol)
 	return &subtree{
+		lookaheadBytes:    lookaheadBytes,
+		inline:            symbol <= 255 && !hasExternalTokens && canInline(padding, size, lookaheadBytes),
 		symbol:            symbol,
 		parseState:        parseState,
 		padding:           padding,
@@ -152,16 +187,16 @@ func newLeaf(l *Language, symbol uint16, padding, size Length, parseState uint16
 }
 
 // newErrorLeaf is ts_subtree_new_error.
-func newErrorLeaf(l *Language, padding, size Length, parseState uint16) *subtree {
-	s := newLeaf(l, builtinSymError, padding, size, parseState, false, false)
+func newErrorLeaf(l *Language, padding, size Length, lookaheadBytes uint32, parseState uint16) *subtree {
+	s := newLeaf(l, builtinSymError, padding, size, lookaheadBytes, parseState, false, false)
 	s.fragileLeft = true
 	s.fragileRight = true
 	return s
 }
 
 // newMissingLeaf is ts_subtree_new_missing_leaf.
-func newMissingLeaf(l *Language, symbol uint16, padding Length) *subtree {
-	s := newLeaf(l, symbol, padding, Length{}, 0, false, false)
+func newMissingLeaf(l *Language, symbol uint16, padding Length, lookaheadBytes uint32) *subtree {
+	s := newLeaf(l, symbol, padding, Length{}, lookaheadBytes, 0, false, false)
 	s.isMissing = true
 	return s
 }
@@ -211,6 +246,7 @@ func (s *subtree) summarizeChildren(l *Language) {
 
 	structuralIndex := 0
 	aliasSequence := l.aliasSequence(s.productionID)
+	lookaheadEndByte := uint32(0)
 	for i, child := range s.children {
 		if child.hasExternalScannerStateChange {
 			s.hasExternalScannerStateChange = true
@@ -220,6 +256,10 @@ func (s *subtree) summarizeChildren(l *Language) {
 			s.size = child.size
 		} else {
 			s.size = lengthAdd(s.size, child.totalSize())
+		}
+
+		if end := s.padding.bytes + s.size.bytes + child.lookaheadBytesOf(); end > lookaheadEndByte {
+			lookaheadEndByte = end
 		}
 
 		if child.symbol != builtinSymErrorRepeat {
@@ -270,6 +310,8 @@ func (s *subtree) summarizeChildren(l *Language) {
 			structuralIndex++
 		}
 	}
+
+	s.lookaheadBytes = lookaheadEndByte - s.size.bytes - s.padding.bytes
 
 	if s.symbol == builtinSymError || s.symbol == builtinSymErrorRepeat {
 		s.errorCost += errorCostPerRecovery +

@@ -76,7 +76,7 @@ func TestDiffWork(t *testing.T) {
 	hashes, _ := filepath.Glob(filepath.Join(work, "hash-*.txt"))
 	for _, h := range hashes {
 		kind := strings.TrimSuffix(strings.TrimPrefix(filepath.Base(h), "hash-"), ".txt")
-		inputs := loadStrings(t, filepath.Join(work, "in-"+kind+".json"))
+		inputs := readInputs(t, filepath.Join(work, "in-"+kind+".json"))
 		want, _ := os.ReadFile(h)
 		got := strings.Split(strings.TrimSpace(string(want)), "\n")
 		if len(got) != len(inputs) {
@@ -105,18 +105,6 @@ func TestDiffWork(t *testing.T) {
 			t.Logf("  %s: %s", c, strings.Join(ex, "  "))
 		}
 	}
-}
-
-func loadStrings(t *testing.T, path string) []string {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out []string
-	if err := json.Unmarshal(data, &out); err != nil {
-		t.Fatal(err)
-	}
-	return out
 }
 
 func rootHasError(dump string) bool {
@@ -170,4 +158,43 @@ func firstDiff(wg, gg, wp, gp string) string {
 		return "grammar " + pick(wg, gg)
 	}
 	return "corrected " + pick(wp, gp)
+}
+
+func readInputs(t *testing.T, path string) []string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out []string
+	if err := json.Unmarshal(data, &out); err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// TestDiffDump compares the Go parse with full dumps of the original for specific inputs
+// (run-dump.sh): BP_DUMP=<out.jsonl> go test -run TestDiffDump -v ./bashparse
+func TestDiffDump(t *testing.T) {
+	path := os.Getenv("BP_DUMP")
+	if path == "" {
+		t.Skip("BP_DUMP not set: investigation tool, see port/bashparse-diff")
+	}
+	fh, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fh.Close()
+	sc := bufio.NewScanner(fh)
+	sc.Buffer(make([]byte, 1<<20), 1<<28)
+	for sc.Scan() {
+		var rec struct{ S, G, P string }
+		if err := json.Unmarshal(sc.Bytes(), &rec); err != nil {
+			t.Fatal(err)
+		}
+		g, p := dumpBoth(rec.S)
+		if g == rec.G && p == rec.P {
+			continue
+		}
+		t.Logf("%q\n%s", rec.S, firstDiff(rec.G, g, rec.P, p))
+	}
 }

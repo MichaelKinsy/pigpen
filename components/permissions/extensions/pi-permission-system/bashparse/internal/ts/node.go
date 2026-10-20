@@ -21,6 +21,12 @@ func (t *Tree) Root() Node {
 
 func (n Node) isNull() bool { return n.id == nil }
 
+// NodeID identifies a node of one tree (the slot it occupies), for use as a map key.
+type NodeID struct{ slot **subtree }
+
+// ID is the node's identity within its tree.
+func (n Node) ID() NodeID { return NodeID{n.id} }
+
 // Same reports whether two nodes are the same slot of the same tree.
 func (n Node) Same(o Node) bool { return n.id == o.id }
 
@@ -169,7 +175,7 @@ func subtreeHasTrailingEmptyDescendant(self, other *subtree) bool {
 		if child.totalBytes() > 0 {
 			break
 		}
-		if child == other || subtreeHasTrailingEmptyDescendant(child, other) {
+		if samePtr(child, other) || subtreeHasTrailingEmptyDescendant(child, other) {
 			return true
 		}
 	}

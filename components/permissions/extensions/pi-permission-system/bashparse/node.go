@@ -191,4 +191,3 @@ type Tree struct {
 type Parser interface {
 	Parse(input string) *Tree
 }
-

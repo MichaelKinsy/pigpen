@@ -76,6 +76,11 @@ func fnvDump(g, p string) string {
 func dumpBoth(input string) (g, p string) {
 	gp, _ := GrammarParser()
 	cp, _ := GetParser()
+	return dumpWith(gp, cp, input)
+}
+
+// dumpWith is dumpBoth over the given parsers (a differential worker owns its own).
+func dumpWith(gp, cp Parser, input string) (g, p string) {
 	gt := gp.Parse(input)
 	if gt == nil {
 		g = "NULL"

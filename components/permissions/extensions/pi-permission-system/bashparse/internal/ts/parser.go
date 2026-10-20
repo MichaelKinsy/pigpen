@@ -110,6 +110,7 @@ func (p *Parser) Parse(input []uint16) *Tree {
 	if p.finishedTree == nil {
 		return nil
 	}
+	balance(p.lang, p.finishedTree)
 	return &Tree{lang: p.lang, root: p.finishedTree}
 }
 
@@ -245,6 +246,7 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 	var errorStartPosition, errorEndPosition Length
 	externalScannerStateLen := 0
 	externalScannerStateChanged := false
+	lookaheadEndByte := uint32(0)
 	p.lexer.reset(startPosition)
 
 	for {
@@ -256,7 +258,7 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 			p.lexer.start()
 			p.scanner.deserialize(externalToken.externalState())
 			foundToken = p.externalScannerScan(lexMode.externalLexState)
-			p.lexer.finish()
+			p.lexer.finish(&lookaheadEndByte)
 
 			if foundToken {
 				externalScannerStateLen = int(p.scanner.serialize(p.scannerBuf[:]))
@@ -287,7 +289,7 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 
 		p.lexer.start()
 		foundToken = lexMain(p.lexer, lexMode.lexState)
-		p.lexer.finish()
+		p.lexer.finish(&lookaheadEndByte)
 		if foundToken {
 			break
 		}
@@ -320,12 +322,13 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 	if skippedError {
 		padding := lengthSub(errorStartPosition, startPosition)
 		size := lengthSub(errorEndPosition, errorStartPosition)
-		result = newErrorLeaf(lang, padding, size, parseState)
+		result = newErrorLeaf(lang, padding, size, lookaheadEndByte-errorEndPosition.bytes, parseState)
 	} else {
 		isKeyword := false
 		symbol := p.lexer.data.resultSymbol
 		padding := lengthSub(p.lexer.tokenStartPosition, startPosition)
 		size := lengthSub(p.lexer.tokenEndPosition, p.lexer.tokenStartPosition)
+		lookaheadBytes := lookaheadEndByte - p.lexer.tokenEndPosition.bytes
 
 		if foundExternalToken {
 			symbol = lang.externalSymbols[symbol]
@@ -343,7 +346,7 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 			}
 		}
 
-		result = newLeaf(lang, symbol, padding, size, parseState, foundExternalToken, isKeyword)
+		result = newLeaf(lang, symbol, padding, size, lookaheadBytes, parseState, foundExternalToken, isKeyword)
 
 		if foundExternalToken {
 			result.externalScannerState = append([]byte(nil), p.scannerBuf[:externalScannerStateLen]...)
@@ -881,7 +884,8 @@ func (p *Parser) handleError(version int, lookahead *subtree) {
 					padding := lengthSub(p.lexer.tokenEndPosition, position)
 
 					versionWithMissingTree := p.stack.copyVersion(v)
-					missingTree := newMissingLeaf(p.lang, missingSymbol, padding)
+					lookaheadBytes := lookahead.totalBytes() + lookahead.lookaheadBytesOf()
+					missingTree := newMissingLeaf(p.lang, missingSymbol, padding, lookaheadBytes)
 					p.stack.push(versionWithMissingTree, missingTree, false, stateAfterMissingSymbol)
 
 					if p.doAllPotentialReductions(versionWithMissingTree, lookahead.leafSymbol()) {
