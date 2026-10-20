@@ -49,8 +49,13 @@ type Scenario struct {
 	// paths; {{server:NAME}} is expanded). An extension's user-level configuration lives there
 	// (Pi's <agent dir>/settings.json, an extension's own <agent dir>/<name>.json).
 	AgentFiles map[string]string `json:"agentFiles,omitempty"`
+	// HomeFiles are written under the lane's host home before the host starts (relative paths;
+	// {{server:NAME}} is expanded): <PIG_HOME> on a pig lane, <HOME>/.pi on a pi lane. A port that
+	// keeps its own configuration under PIG_HOME (not the agent directory) and the original that
+	// reads the same file from Pi's home are compared with one entry.
+	HomeFiles map[string]string `json:"homeFiles,omitempty"`
 	// Servers are fake HTTP upstreams (APIs the extension calls). Their base URLs are available
-	// as {{server:NAME}} in Env, Files, AgentFiles, Args and the LLM script (turn text and the string
+	// as {{server:NAME}} in Env, Files, AgentFiles, HomeFiles, Args and the LLM script (turn text and the string
 	// values of tool-call arguments), and every request they receive enters the trace.
 	Servers map[string]ServerSpec `json:"servers,omitempty"`
 	// Env is extra environment for the host process (an API base URL, a fake credential). The

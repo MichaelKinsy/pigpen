@@ -211,10 +211,10 @@ func TestScenarioValidatesAgentFiles(t *testing.T) {
 	}
 }
 
-func TestWriteAgentFilesExpandsServersAndCreatesDirectories(t *testing.T) {
+func TestWriteFilesUnderExpandsServersAndCreatesDirectories(t *testing.T) {
 	u, _ := startUp(t, map[string]ServerSpec{"api": {Routes: []Route{{Path: "/x", Body: "ok"}}}})
 	agent := t.TempDir()
-	if err := writeAgentFiles(agent, map[string]string{"pi-jev.json": `{"endpoint":"{{server:api}}"}`, "extensions/x/config.json": "{}"}, u); err != nil {
+	if err := writeFilesUnder(agent, map[string]string{"pi-jev.json": `{"endpoint":"{{server:api}}"}`, "extensions/x/config.json": "{}"}, u); err != nil {
 		t.Fatal(err)
 	}
 	b, err := os.ReadFile(filepath.Join(agent, "pi-jev.json"))
@@ -450,6 +450,99 @@ done
 		}
 		if len(llm) != 1 || !strings.Contains(llm[0], "responseId <rid>") || strings.Contains(llm[0], "r-1a2b3c") {
 			t.Errorf("%s: the model request was not normalized by the scenario's rule: %q", host, llm)
+		}
+	}
+}
+
+// pigpen-warden: a port keeps its configuration under PIG_HOME, which `agentFiles` cannot reach (the agent
+// directory is <root>/agent, PIG_HOME is <root>/pighome, and `..` is refused). `homeFiles` is the scoped way:
+// the lane's own host home, PIG_HOME for pig and ~/.pi for pi, and nothing outside it.
+func TestScenarioValidatesHomeFiles(t *testing.T) {
+	ok := func(mod func(*Scenario)) error {
+		sc := &Scenario{Name: "a", Steps: []Step{{RPC: map[string]any{"type": "get_state"}}},
+			Servers:   map[string]ServerSpec{"api": {Routes: []Route{{Path: "/x", Body: "ok"}}}},
+			HomeFiles: map[string]string{"warden/config.json": `{"url":"{{server:api}}"}`}}
+		mod(sc)
+		return sc.Validate()
+	}
+	if err := ok(func(*Scenario) {}); err != nil {
+		t.Fatalf("valid homeFiles rejected: %v", err)
+	}
+	for name, mod := range map[string]func(*Scenario){
+		"absolute path":   func(s *Scenario) { s.HomeFiles["/etc/x"] = "x" },
+		"escaping path":   func(s *Scenario) { s.HomeFiles["../agent/x.json"] = "x" },
+		"nested escape":   func(s *Scenario) { s.HomeFiles["a/../../x"] = "x" },
+		"the home itself": func(s *Scenario) { s.HomeFiles["."] = "x" },
+		"empty path":      func(s *Scenario) { s.HomeFiles[""] = "x" },
+		"unknown server":  func(s *Scenario) { s.HomeFiles["c.json"] = "{{server:nope}}" },
+	} {
+		if err := ok(mod); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
+	}
+}
+
+func TestWriteFilesUnderRefusesEscapesEvenWithoutValidation(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "pighome")
+	for _, rel := range []string{"../escaped", "/tmp/eq-abs", "a/../../escaped", "."} {
+		if err := writeFilesUnder(dir, map[string]string{rel: "x"}, &upstreams{}); err == nil {
+			t.Errorf("%q written", rel)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(root, "escaped")); err == nil {
+		t.Error("a file escaped the directory")
+	}
+}
+
+// Each lane's host finds homeFiles in its own home: PIG_HOME on a pig lane, $HOME/.pi on a pi lane. Neither lane
+// sees the other's, and the agent directory stays separate.
+func TestHomeFilesLandInTheLanesOwnHome(t *testing.T) {
+	sc := &Scenario{Name: "homefiles", Steps: []Step{{RPC: map[string]any{"type": "get_state"}}},
+		Servers:    map[string]ServerSpec{"api": {Routes: []Route{{Path: "/x", Body: "ok"}}}},
+		HomeFiles:  map[string]string{"warden/config.json": `{"url":"{{server:api}}/v1"}`},
+		AgentFiles: map[string]string{"settings.json": "{}"},
+		TailMs:     -1, SettleMs: 10}
+	if err := sc.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	for _, host := range []string{"pi", "pig"} {
+		dir := t.TempDir()
+		bin := filepath.Join(t.TempDir(), host)
+		// Record what each home holds when the host starts; skip the `--version` probe.
+		script := `#!/bin/sh
+[ "$1" = "--version" ] && exit 0
+n=$$
+[ -f "$PIG_HOME/warden/config.json" ] && cp "$PIG_HOME/warden/config.json" '` + dir + `'/pighome.$n
+[ -f "$HOME/.pi/warden/config.json" ] && cp "$HOME/.pi/warden/config.json" '` + dir + `'/pihome.$n
+[ -f "$PI_CODING_AGENT_DIR/warden/config.json" ] && cp "$PI_CODING_AGENT_DIR/warden/config.json" '` + dir + `'/agent.$n
+[ -f "$PI_CODING_AGENT_DIR/settings.json" ] && : > '` + dir + `'/settings.$n
+exit 0
+`
+		if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := RunLane(sc, Lane{Name: host + "-lane", Host: host, Bin: bin}, Options{}); err != nil {
+			t.Fatalf("%s: %v", host, err)
+		}
+		glob := func(kind string) []string { m, _ := filepath.Glob(filepath.Join(dir, kind+".*")); return m }
+		own, other := "pighome", "pihome"
+		if host == "pi" {
+			own, other = other, own
+		}
+		files := glob(own)
+		if len(files) == 0 {
+			t.Fatalf("%s: the host did not find homeFiles in its own home", host)
+		}
+		b, _ := os.ReadFile(files[0])
+		if !regexp.MustCompile(`^\{"url":"http://127\.0\.0\.1:\d+/v1"\}$`).Match(b) {
+			t.Errorf("%s: homeFiles content not expanded: %s", host, b)
+		}
+		if len(glob(other)) != 0 || len(glob("agent")) != 0 {
+			t.Errorf("%s: homeFiles leaked into the other lane's home or the agent directory", host)
+		}
+		if len(glob("settings")) == 0 {
+			t.Errorf("%s: agentFiles were lost", host)
 		}
 	}
 }

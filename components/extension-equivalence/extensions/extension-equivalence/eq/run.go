@@ -290,7 +290,10 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 		return nil, err
 	}
 
-	if err := writeAgentFiles(agent, sc.AgentFiles, ups); err != nil {
+	if err := writeFilesUnder(agent, sc.AgentFiles, ups); err != nil {
+		return nil, err
+	}
+	if err := writeFilesUnder(laneHome(lane.Host, root), sc.HomeFiles, ups); err != nil {
 		return nil, err
 	}
 	for rel, content := range sc.Files {
