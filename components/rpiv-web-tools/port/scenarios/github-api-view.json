@@ -1,0 +1,68 @@
+{
+  "name": "github-api-view",
+  "description": "With the interceptor on and gh answering a 20 GB size, a repository root, a blob and a commit URL get the API view.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r/blob/main/README.md"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r/blob/0123456789abcdef0123456789abcdef01234567/src/a.go"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/rpiv-web-tools\" && printf '{\"interceptors\":{\"github\":{\"clonePath\":\"%s/clones\"}}}' \"$HOME\" > \"$HOME/.config/rpiv-web-tools/config.json\""
+    ]
+  ],
+  "env": {
+    "BRAVE_SEARCH_API_KEY": "scenario-key"
+  },
+  "commands": {
+    "gh": {
+      "mode": "canned",
+      "stdout": "20000000UkVBRE1FIGhlbGxvCg==",
+      "exit": 0
+    },
+    "git": {
+      "mode": "missing"
+    }
+  }
+}

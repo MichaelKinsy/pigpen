@@ -1,0 +1,97 @@
+{
+  "name": "github-clone-git",
+  "description": "Without gh, git clones a repository: the command line with and without a ref, the empty views of a clone that holds nothing, and the cache on a repeat.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r/tree/main/docs"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r/blob/main/src/main.go"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r/blob/main/data.bin"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r/tree/feature%2Fx"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "web_fetch",
+          "arguments": {
+            "url": "https://github.com/o/r/tree/main/docs"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "look it up"
+      }
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.config/rpiv-web-tools\" && printf '{\"interceptors\":{\"github\":{\"clonePath\":\"%s/clones\"}}}' \"$HOME\" > \"$HOME/.config/rpiv-web-tools/config.json\""
+    ]
+  ],
+  "env": {
+    "BRAVE_SEARCH_API_KEY": "scenario-key"
+  },
+  "commands": {
+    "gh": {
+      "mode": "missing"
+    },
+    "git": {
+      "mode": "canned",
+      "exit": 0
+    }
+  }
+}
