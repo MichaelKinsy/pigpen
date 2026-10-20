@@ -20,6 +20,13 @@ This is **slice A**: the tool and everything the model sees and the equivalence 
   **In a terminal this port runs the same dialogs**, where the original shows its tabbed questionnaire.
 - Removing the tool from the active set on hosts without a UI (`before_agent_start`).
 
+**Refused, not trimmed.** In a terminal the port cannot show what the original's questionnaire shows, so it
+refuses the two things the dialogs cannot carry, with a tool error that names the working alternative:
+`... (Go port) does not support <feature> yet. Install the original extension,
+npm:@juicesharp/rpiv-ask-user-question@2.11.0, which runs unchanged in PiG.` They are an option preview longer than
+600 characters (the dialogs cut it) and a `collapseKey` setting other than the default or `off` (the collapse key
+belongs to the questionnaire). On RPC hosts the original itself runs the dialogs, cut and all, so nothing is refused there.
+
 **Not ported yet (slice B):** the interactive questionnaire (tabs, per-option notes, submit tab, side-by-side preview
 pane, external editor, collapse key), the locales, and the terminal bell. See [port/PORT.md](port/PORT.md).
 
