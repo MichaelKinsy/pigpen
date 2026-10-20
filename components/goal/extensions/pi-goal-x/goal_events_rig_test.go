@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -33,7 +34,9 @@ type evRig struct {
 }
 
 var evFixtureGoal = func() string {
-	b, err := os.ReadFile("../../port/oracle/tests/fixtures/goals/active_goal_fixture.md")
+	// Absolute: a test child process (fault injection) starts in another directory.
+	_, file, _, _ := runtime.Caller(0)
+	b, err := os.ReadFile(filepath.Join(filepath.Dir(file), "../../port/oracle/tests/fixtures/goals/active_goal_fixture.md"))
 	if err != nil {
 		panic(err)
 	}

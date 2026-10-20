@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	goal "github.com/MichaelKinsy/pigpen/pi-goal-x"
 )
@@ -48,6 +49,8 @@ func draftRig(t *testing.T, o draftOpts) (*goalRig, *dialogDriver) {
 		Cwd: o.cwd, HasUI: boolPtr(o.hasUI), SessionID: o.session, Settings: settings, Env: o.env, Branch: o.branch, Seed: o.seed,
 		ActiveTools: []string{"read", "bash", "edit", "write"}, Select: sel, Input: o.input,
 	})
+	// The original's timers (the kickoff's setTimeout 0) cannot run between two awaited commands; a clock that never advances keeps that order.
+	r.Probe.FakeClock(time.Now().UnixMilli())
 	return r, d
 }
 

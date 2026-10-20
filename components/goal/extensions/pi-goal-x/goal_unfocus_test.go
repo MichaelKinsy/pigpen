@@ -179,7 +179,7 @@ func hasUnfocusedReminder(raw json.RawMessage) bool {
 
 func (r *goalRig) beforeAgentStart(prompt string) {
 	r.t.Helper()
-	r.Fire("before_agent_start", map[string]any{"systemPrompt": "base prompt", "prompt": prompt})
+	r.Fire("before_agent_start", map[string]any{"systemPrompt": "base prompt", "prompt": prompt, "systemPromptOptions": map[string]any{}})
 }
 
 func (r *goalRig) contextRequest() json.RawMessage {
@@ -243,6 +243,7 @@ func TestGoalUnfocusTwins(t *testing.T) {
 			if err := os.WriteFile(settings, []byte(text), 0o644); err != nil {
 				t.Fatal(err)
 			}
+			goal.InvalidateCaches() // the original calls invalidateGoalSettingsCache() after each write
 		}
 		set(`{"autoSelectSingleGoal": false, "disabled": true, "hideUnfocusedPrompt": true}`)
 		same(t, hasUnfocusedReminder(r.contextRequest()), false, "true hides it")
@@ -390,6 +391,7 @@ func TestGoalUnfocusTwins(t *testing.T) {
 
 		rel, text := gufGoalFile("second-goal", "Second shared goal", "active", true, "")
 		f.write(rel, text)
+		goal.InvalidateCaches() // writeActiveGoalFile drops the pool snapshot; a raw write needs the same
 		setBranch(map[string]any{"version": 1, "focusedGoalId": "second-goal", "reason": "selected"})
 		resumed.Fire("session_tree", map[string]any{"newLeafId": "second-goal-branch", "oldLeafId": "unfocused-branch"})
 		resumed.beforeAgentStart("second goal")

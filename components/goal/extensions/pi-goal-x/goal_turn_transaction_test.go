@@ -25,7 +25,8 @@ type gttFixture struct {
 func newGttFixture(t *testing.T, deps goal.RigDeps) *gttFixture {
 	t.Helper()
 	rel, text := seedGoal("turn-txn-goal", "=== Goal ===\\nObjective: Turn transaction test")
-	r := newGoalRig(t, rigOptions{Settings: `{"maxAutonomousRuns": 0}`, Seed: map[string]string{rel: text}, Branch: []any{focusEntry("turn-txn-goal")}, Deps: deps, SessionID: "s"})
+	noUI := false // the original harness has hasUI: false (the task confirmation then confirms by itself)
+	r := newGoalRig(t, rigOptions{HasUI: &noUI, Settings: `{"maxAutonomousRuns": 0}`, Seed: map[string]string{rel: text}, Branch: []any{focusEntry("turn-txn-goal")}, Deps: deps, SessionID: "s"})
 	return &gttFixture{t: t, rig: r, rel: rel}
 }
 

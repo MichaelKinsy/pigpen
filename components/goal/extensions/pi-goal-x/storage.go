@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -277,6 +278,10 @@ func statIfPresent(p string) (os.FileInfo, error) {
 
 var pidForTemp = os.Getpid
 
+// tempSeq keeps two writers of one process (JavaScript has one thread; Go goroutines can write the same file in one millisecond)
+// from sharing a temp file name.
+var tempSeq atomic.Uint64
+
 func (s storage) atomicWrite(rootRel, rel, content string) error {
 	if err := s.ensureDir(rootRel, true); err != nil {
 		return err
@@ -290,7 +295,7 @@ func (s storage) atomicWrite(rootRel, rel, content string) error {
 	} else if fi != nil && fi.Mode()&os.ModeSymlink != 0 {
 		return fmt.Errorf("Refusing to write symlinked goal file: %s", rel)
 	}
-	tmp := fmt.Sprintf("%s.%d.%d.tmp", file, pidForTemp(), clockMs())
+	tmp := fmt.Sprintf("%s.%d.%d.%d.tmp", file, pidForTemp(), clockMs(), tempSeq.Add(1))
 	if err := os.WriteFile(tmp, []byte(content), 0o644); err != nil {
 		return err
 	}
@@ -667,7 +672,7 @@ func (s storage) writeSnapshotFile(sn *snapshot, mt float64) {
 	head.set("dirMtimeMs", mt)
 	head.set("goals", append([]any{}, sn.goals...))
 	target := s.snapshotPath()
-	tmp := fmt.Sprintf("%s.%d.%d.tmp", target, pidForTemp(), clockMs())
+	tmp := fmt.Sprintf("%s.%d.%d.%d.tmp", target, pidForTemp(), clockMs(), tempSeq.Add(1))
 	if os.WriteFile(tmp, []byte(marshalJSON(head, "")), 0o644) != nil {
 		return
 	}

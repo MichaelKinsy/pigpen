@@ -213,9 +213,15 @@ func gschPromptCacheRig(t *testing.T) {
 		h := newRigSched(t, -1, false)
 		history := []map[string]any{{"role": "user", "content": "Work on the goal", "timestamp": 1.0}}
 		original := cloneMsgs(history)
-		preflight := h.Fire("before_agent_start", map[string]any{"prompt": "continue", "systemPrompt": "host policy"})
-		if len(preflight) != 0 && string(preflight) != "null" && string(preflight) != "{}" {
+		preflight := h.Fire("before_agent_start", map[string]any{"prompt": "continue", "systemPrompt": "host policy", "systemPromptOptions": map[string]any{}})
+		// The SDK wire answer carries its own _pig* prompt bookkeeping; what matters is that no systemPrompt/message rewrite is returned.
+		var pre map[string]json.RawMessage
+		_ = json.Unmarshal(preflight, &pre)
+		if _, has := pre["systemPrompt"]; has {
 			t.Errorf("goal state never rewrites the system prefix: %s", preflight)
+		}
+		if _, has := pre["message"]; has {
+			t.Errorf("goal state never adds a message in before_agent_start: %s", preflight)
 		}
 		first := request(t, h, history)
 		same(t, first[:len(first)-2], original, "stable policy and volatile counters ride as two request-only tails")

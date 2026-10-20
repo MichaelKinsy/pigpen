@@ -107,9 +107,9 @@ func (a *rigAgent) Compact() {
 
 func (a *rigAgent) run(first map[string]any) {
 	r := a.r
-	r.Fire("agent_start", map[string]any{})
-	r.Fire("message_start", map[string]any{"message": first})
 	aborts := r.aborts()
+	r.Fire("agent_start", map[string]any{})
+	r.Fire("message_start", map[string]any{"message": first}) // a stale checkpoint aborts here: the run must not reach the provider
 	for turn := 0; aborts == r.aborts(); turn++ {
 		r.Fire("turn_start", map[string]any{"turnIndex": turn})
 		a.Contexts = append(a.Contexts, r.Fire("context", map[string]any{"messages": append([]any{}, a.history...)}))
