@@ -97,5 +97,5 @@ func BenchmarkGeminiPDFPrompt(b *testing.B) {
 type benchDoer string
 
 func (d benchDoer) Do(r *http.Request) (*http.Response, error) {
-	return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(string(d))), Request: r}, nil
+	return &http.Response{StatusCode: 200, Header: http.Header{}, ContentLength: int64(len(d)), Body: io.NopCloser(strings.NewReader(string(d))), Request: r}, nil
 }
