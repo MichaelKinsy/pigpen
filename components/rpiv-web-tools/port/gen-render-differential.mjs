@@ -17,7 +17,7 @@ const theme = {
   bold: (text) => `\x1b[1m${text}\x1b[22m`,
 };
 
-const widths = [1, 2, 3, 5, 8, 10, 16, 20, 33, 40, 60, 80, 120];
+const widths = [1, 2, 3, 5, 8, 16, 33, 60, 120];
 const longWord = "x".repeat(70);
 const results = (n, title = (i) => `Result number ${i}`) => Array.from({ length: n }, (_, i) => ({ title: title(i + 1), url: `https://x/${i}`, snippet: "" }));
 const lines = (n) => Array.from({ length: n }, (_, i) => `line ${i + 1}`).join("\n");
@@ -58,6 +58,20 @@ const cases = [
   { tool: "web_fetch", phase: "result", options: { expanded: true }, result: { content: [{ type: "image", data: "", mimeType: "image/png" }], details: { url: "https://x" } } },
   { tool: "web_fetch", phase: "result", options: { expanded: true }, result: { content: [], details: undefined } },
 ];
+
+// Generated text: a fixed-seed mix of words, space and tab runs, newlines, CJK, emoji sequences, combining marks and
+// escape sequences, as a query (call) and as page content (expanded result).
+let seed = 12345;
+const rand = (n) => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % n; };
+const pieces = ["word", "longer-word-here", "x".repeat(25), " ", "  ", "   ", "\t", "\n", "\n\n", "caf\u00e9", "e\u0301", "\u4e2d\u6587", "\u65e5\u672c\u8a9e",
+  "\ud55c\uad6d\uc5b4", "\ud83d\ude00", "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67", "\ud83c\uddef\ud83c\uddf5", "\u2764\ufe0f", "\ud83d\udc4d\ud83c\udffd", "\u03a9", "\u00a0",
+  "\x1b[31mred\x1b[39m", "\x1b[1mbold\x1b[22m", "\x1b[4munder\x1b[24m", "\x1b[7minv", "\x1b[0m", "https://example.com/a/b/c?d=e", "a-b_c.d", "!?,;"];
+for (let i = 0; i < 40; i++) {
+  let text = "";
+  for (let k = 1 + rand(14); k > 0; k--) text += pieces[rand(pieces.length)];
+  cases.push({ tool: "web_search", phase: "call", args: { query: text } });
+  cases.push({ tool: "web_fetch", phase: "result", options: { expanded: true }, result: { content: [{ type: "text", text }], details: { url: "https://x" } } });
+}
 
 const out = cases.map((c) => {
   const tool = tools.get(c.tool);

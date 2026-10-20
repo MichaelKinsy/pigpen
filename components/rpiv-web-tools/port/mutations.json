@@ -1396,5 +1396,59 @@
   "file": "command.go",
   "find": "token := envTrim(githubTokenEnvVar)",
   "replace": "token := os.Getenv(githubTokenEnvVar)"
+ },
+ {
+  "name": "text-padding-dropped",
+  "file": "text.go",
+  "find": "lines[i] = l + strings.Repeat(\" \", pad)",
+  "replace": "lines[i] = l"
+ },
+ {
+  "name": "text-tab-width",
+  "file": "text.go",
+  "find": "strings.ReplaceAll(text, \"\\t\", \"   \")",
+  "replace": "strings.ReplaceAll(text, \"\\t\", \"  \")"
+ },
+ {
+  "name": "text-blank-has-a-line",
+  "file": "text.go",
+  "find": "if jsTrim(text) == \"\" {\n\t\treturn []string{}",
+  "replace": "if jsTrim(text) == \"\" {\n\t\treturn []string{\"\"}"
+ },
+ {
+  "name": "wrap-line-end-not-trimmed",
+  "file": "text.go",
+  "find": "wrapped[i] = jsTrimEnd(wrapped[i])",
+  "replace": "wrapped[i] = wrapped[i] + \"\""
+ },
+ {
+  "name": "wrap-styling-not-carried",
+  "file": "text.go",
+  "find": "current, currentWidth = t.active()+token, tokenWidth",
+  "replace": "current, currentWidth = token, tokenWidth"
+ },
+ {
+  "name": "wrap-underline-not-closed",
+  "file": "text.go",
+  "find": "return \"\\x1b[24m\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "wrap-cjk-only-han",
+  "file": "text.go",
+  "find": "unicode.In(r, unicode.Han, unicode.Hiragana, unicode.Katakana, unicode.Hangul, unicode.Bopomofo)",
+  "replace": "unicode.In(r, unicode.Han)"
+ },
+ {
+  "name": "width-joined-emoji-narrow",
+  "file": "text.go",
+  "find": "strings.ContainsRune(g, 0xfe0f) || strings.ContainsRune(g, 0x200d) || isRegionalIndicator(first)",
+  "replace": "strings.ContainsRune(g, 0xfe0f)"
+ },
+ {
+  "name": "wrap-fg-color-forgotten",
+  "file": "text.go",
+  "find": "t.fg = color",
+  "replace": "_ = color"
  }
 ]

@@ -63,7 +63,7 @@ option takes effect on the next session.
   programmatic consumer opt-in (`registerWebTools(pi, { interceptors: { github: true } })`) has no counterpart in the Pi
   package manifest, so only the user's config switches the interceptor on; and a URL of a scheme other than http(s)
   never reaches the interceptor (the tool refuses it first). See [port/PORT.md](port/PORT.md).
-- **Renderers return lines** (the Go SDK cannot return a TUI component), laid out at the width the host gives.
+- **Renderers return lines**, not a component (the Go SDK cannot return one): the lines of the original's `Text` component at the width the host gives, wrapped, styled and padded the same way.
 - **Network failures read as in Node.** A transport failure reads `fetch failed`, as Node's fetch reports it.
 
 The proof that it matches the original is in [port/PORT.md](port/PORT.md).
