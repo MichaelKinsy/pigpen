@@ -101,3 +101,35 @@ func jsDecodeURI(s string) string {
 func jsDecodeURIComponent(s string) (string, bool) {
 	return jsURIDecode(s, "")
 }
+
+// jsEncodeURI is encodeURI: everything but letters, digits and ;,/?:@&=+$-_.!~*'()# is percent-encoded as UTF-8.
+func jsEncodeURI(s string) string {
+	const keep = ";,/?:@&=+$-_.!~*'()#"
+	clean := true
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || (c < 0x80 && strings.IndexByte(keep, c) >= 0)) {
+			clean = false
+			break
+		}
+	}
+	if clean {
+		return s
+	}
+	const digits = "0123456789ABCDEF"
+	var b strings.Builder
+	for _, r := range s {
+		if r < 0x80 && (r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || strings.IndexByte(keep, byte(r)) >= 0) {
+			b.WriteByte(byte(r))
+			continue
+		}
+		var buf [4]byte
+		n := utf8.EncodeRune(buf[:], r)
+		for _, c := range buf[:n] {
+			b.WriteByte('%')
+			b.WriteByte(digits[c>>4])
+			b.WriteByte(digits[c&15])
+		}
+	}
+	return b.String()
+}
