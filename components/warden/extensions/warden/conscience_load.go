@@ -100,15 +100,6 @@ func clearFileIdentityCache() {
 	identityMu.Unlock()
 }
 
-// matchReadPathRules matches the path rules for a `read` of path and returns the hits (guard.ts matchPathRules).
-// The guard-core lane owns the matcher and installs it here; until it does there is nothing to match, so a load is
-// never denied by a path rule (see PORT.md).
-var matchReadPathRules = func(path string, rules []PathRule, exempt map[string]bool) []PatternHit { return nil }
-
-// findSecretsInBody reports whether text carries a credential shape (redact.ts findSecrets). The security lane owns
-// the detector; until it lands a body that redaction would change counts as carrying one.
-var findSecretsInBody = func(text string) bool { return Redact(text) != text }
-
 // checkPathRules (rule 3): the proposed read goes through the path rules on the advertised and the resolved path.
 func checkPathRules(skill Skill, resolved string, rules []PathRule, exempt []string) bool {
 	if len(rules) == 0 {
@@ -118,7 +109,7 @@ func checkPathRules(skill Skill, resolved string, rules []PathRule, exempt []str
 	for _, e := range exempt {
 		ex[e] = true
 	}
-	hits := append(matchReadPathRules(skill.FilePath, rules, ex), matchReadPathRules(resolved, rules, ex)...)
+	hits := append(matchPathRules("read", map[string]any{"path": skill.FilePath}, "", rules, ex), matchPathRules("read", map[string]any{"path": resolved}, "", rules, ex)...)
 	for _, h := range hits {
 		if h.Severity == SeverityDeny || h.Severity == SeverityDestructive {
 			return true
@@ -253,7 +244,7 @@ func loadSkillBody(skill Skill, cfg ConscienceConfig, opts LoadOpts) LoadResult 
 		return res(LoadChanged)
 	}
 	// Rule 7: credential and path check.
-	if findSecretsInBody(body) || rePathInBody.MatchString(body) {
+	if len(FindSecrets(body)) > 0 || rePathInBody.MatchString(body) {
 		return res(LoadMetadataUnsafe)
 	}
 	// Rule 9: headroom.

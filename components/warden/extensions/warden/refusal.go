@@ -16,7 +16,7 @@ func refusal(feature string) string {
 // are ported (rules_commands.go).
 func unportedAction(sub string, rest []string) string {
 	switch sub {
-	case "config", "audit", "index", "bench":
+	case "config", "audit", "bench":
 		return "/warden " + sub
 	}
 	return ""

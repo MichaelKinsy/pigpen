@@ -68,6 +68,8 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 		return w.rulesCommand(ctx, rest)
 	case "report":
 		return w.reportCommand(ctx, rest)
+	case "index":
+		return w.indexCommand(ctx) // CONSCIENCE-LANE HOOK (index_command.go)
 	case "init":
 		return w.initCommand(ctx, rest)
 	case "unmute": // learning lane

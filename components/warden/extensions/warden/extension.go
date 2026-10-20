@@ -87,6 +87,8 @@ type warden struct {
 	context contextState
 	// learn is the hold feedback, the learning store and the judge cooldown (learning_wire.go).
 	learn *learningState
+	// conscience is the conscience's state (conscience_state.go).
+	conscience conscienceState
 }
 
 // Extension returns the guard.
@@ -114,10 +116,11 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
 	e.OnEvent(sdk.EventBeforeAgentStart, w.beforeAgentStartWithLearning)
 	e.OnEvent(sdk.EventAgentStart, w.agentStartWithRules)
-	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) {
+	e.OnEvent(sdk.EventTurnEnd, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		w.contextTurnEnd()
 		w.guard.TurnEnd()
 		w.rulesTurnEnd()
+		w.conscienceTurnEnd(ctx) // CONSCIENCE-LANE HOOK: one re-assessment after a failure (conscience_state.go)
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
@@ -136,11 +139,15 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	// Pieces of the message, input and agent_settled events, in upstream's order (supervision.go lists the whole
 	// order). Each lane adds its own line here, above registerSupervisionEvents.
 	w.sup.onMessageStart(w.onRunawayMessageStart)                                 // security: the runaway guard resets per assistant message
+	w.sup.onMessageStart(w.conscienceMessageStart) // conscience: delivery observed, queued-prompt admission
 	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                               // security: the runaway guard feeds on the stream
 	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...") // rules: /warden init and rules tune
+	w.sup.blockInput(w.conscienceIndexBusy, "pi-warden is building the capability index. Please wait...") // conscience: /warden index
+	w.sup.onInputPass(w.conscienceInputPass) // conscience: operator input makes assessments in flight stale
 	w.sup.onMessageEnd(w.learnMessageEnd)                                         // learning: the assistant message settles the watched steers (runs first)
 	w.sup.onMessageEnd(w.contextMessageEnd)                                       // context: the repeated-run cut of a user or custom message (opt-in)
 	w.sup.onSettled(w.checkSubagentReports)                                       // supervision: subagent triage
+	w.sup.onSettled(w.conscienceSettled)                                          // conscience: the prompt's settled trace line
 	if o.setup != nil {
 		o.setup(w)
 	}
@@ -327,6 +334,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, data map[string]any) (any, erro
 	w.sec.resetSession() // SECURITY: runaway, prose trend, restatement window, notifier probe
 	w.gcSessionStart(ctx)
 	w.rulesSessionStart(ctx) // rules guard: reset and open the verdict log
+	w.conscienceSessionStart(ctx) // CONSCIENCE-LANE HOOK: the generation and the capability indexes (conscience_state.go)
 	w.learnSessionStart(ctx) // learning lane: hold feedback, schema, cooldown reset
 	if loadErr != "" {
 		w.say(ctx, loadErr, "warning")
@@ -350,13 +358,19 @@ func (w *warden) disclose(ctx sdk.Context) {
 func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, error) {
 	// ── supervision: the call-waste tip rides every run's system prompt, a continuation included ──
 	w.wasteTip(ctx, w.config(ctx), data)
+	w.beforeAgentStartState(data)
+	return w.conscienceBeforeAgentStart(ctx, data) // CONSCIENCE-LANE HOOK: the first assessment and its delivery (conscience_state.go)
+}
+
+// beforeAgentStartState is the run state a new prompt resets.
+func (w *warden) beforeAgentStartState(data map[string]any) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if p, ok := data["prompt"].(string); ok && strings.TrimSpace(p) != "" {
 		w.lastPrompt = p
 	}
 	if w.continuation {
-		return nil, nil
+		return
 	}
 	// A new user prompt: the loop window, the steer repeats and the done nudge start over.
 	if w.window != nil {
@@ -367,7 +381,6 @@ func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, 
 	w.doneNudged = false
 	w.sec.resetPrompt() // SECURITY: restatement window, runaway budget
 	w.steersThisRun = 0
-	return nil, nil
 }
 
 func (w *warden) onAgentStart(ctx sdk.Context, _ map[string]any) (any, error) {
