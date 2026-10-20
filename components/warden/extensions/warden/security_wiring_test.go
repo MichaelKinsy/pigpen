@@ -1,8 +1,10 @@
 package warden
 
 import (
+	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -657,4 +659,33 @@ type watched struct {
 
 func (r *recordingAdaptor) add(_ string, kinds []SteerKind, subject SteerSubject, _ bool) {
 	r.added = append(r.added, watched{kinds, subject})
+}
+
+// The real spawn path: a configured command gets the placeholders replaced and the text in its environment, as the
+// original's execFile test does (tests/extension.test.ts:2049 runs `node -e` and reads the log).
+func TestNotifierCommandsSpawnInTheCall(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the check command is a POSIX shell")
+	}
+	logFile := filepath.Join(t.TempDir(), "notify.log")
+	c := securityConfig(func(c *Config) {
+		c.Backend, c.Consent = BackendNone, BackendNone
+		c.Notify = NotifyConfig{Enabled: true, CooldownMs: 0, Command: []string{"sh", "-c", `printf '%s | %s | %s\n' "$PI_WARDEN_TITLE" "$PI_WARDEN_BODY" "$0" >> "$1"`, "{body}", logFile}}
+	})
+	h := startHarness(t, harnessOpts{cfg: c})
+	h.start()
+	h.newPrompt("clean up")
+	h.toolCall("bash", "c1", map[string]any{"command": "rm -rf /"})
+	h.settleNotifications()
+	raw, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	row := strings.TrimSpace(string(raw))
+	if !regexp.MustCompile(`^pi-warden \| Held bash: .*recursive rm.*\. The agent will re-plan or ask you in chat\. \| Held bash: `).MatchString(row) {
+		t.Fatalf("row %q", row)
+	}
+	if strings.Contains(row, "rm -rf /") {
+		t.Fatal("the command itself is not sent to the desktop")
+	}
 }

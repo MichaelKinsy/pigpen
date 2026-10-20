@@ -161,11 +161,12 @@ func BuildNotifierCommand(target NotifierTarget, n Notification) NotifierCommand
 // NotifyRunner runs a command detached from the terminal and reports whether it exited cleanly. It never fails.
 type NotifyRunner func(file string, args []string, timeout time.Duration, env map[string]string) bool
 
-// RunNotifierCommand is the real NotifyRunner: output is discarded, the environment is the process's plus env, and
-// the window stays hidden on Windows.
-func RunNotifierCommand(file string, args []string, timeout time.Duration, env map[string]string) bool {
+// StartNotifierCommand spawns the command now and returns the function that waits for it: Node's execFile spawns
+// in the calling tick, so the process is already running when the hook returns. Output is discarded, the
+// environment is the process's plus env, and the window stays hidden on Windows. A command that cannot start
+// reports false from wait.
+func StartNotifierCommand(file string, args []string, timeout time.Duration, env map[string]string) (wait func() bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 	cmd := exec.CommandContext(ctx, file, args...)
 	if len(env) > 0 {
 		cmd.Env = os.Environ()
@@ -174,7 +175,19 @@ func RunNotifierCommand(file string, args []string, timeout time.Duration, env m
 		}
 	}
 	hideWindow(cmd)
-	return cmd.Run() == nil
+	if err := cmd.Start(); err != nil {
+		cancel()
+		return func() bool { return false }
+	}
+	return func() bool {
+		defer cancel()
+		return cmd.Wait() == nil
+	}
+}
+
+// RunNotifierCommand is the real NotifyRunner: spawn and wait.
+func RunNotifierCommand(file string, args []string, timeout time.Duration, env map[string]string) bool {
+	return StartNotifierCommand(file, args, timeout, env)()
 }
 
 // DetectNotifier is the first notifier whose probe answers on this machine, or "" when the desktop cannot be

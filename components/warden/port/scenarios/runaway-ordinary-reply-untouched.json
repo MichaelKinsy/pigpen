@@ -1,0 +1,42 @@
+{
+  "name": "runaway-ordinary-reply-untouched",
+  "description": "A long reply of distinct paragraphs is never stopped.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "text": "Paragraph 0 explains one distinct part of the merge process in its own words.\n\nParagraph 1 explains one distinct part of the merge process in its own words.\n\nParagraph 2 explains one distinct part of the merge process in its own words.\n\nParagraph 3 explains one distinct part of the merge process in its own words.\n\nParagraph 4 explains one distinct part of the merge process in its own words.\n\nParagraph 5 explains one distinct part of the merge process in its own words.\n\nParagraph 6 explains one distinct part of the merge process in its own words.\n\nParagraph 7 explains one distinct part of the merge process in its own words.\n\nParagraph 8 explains one distinct part of the merge process in its own words.\n\nParagraph 9 explains one distinct part of the merge process in its own words.\n\nParagraph 10 explains one distinct part of the merge process in its own words.\n\nParagraph 11 explains one distinct part of the merge process in its own words.\n\nParagraph 12 explains one distinct part of the merge process in its own words.\n\nParagraph 13 explains one distinct part of the merge process in its own words.\n\nParagraph 14 explains one distinct part of the merge process in its own words.\n\nParagraph 15 explains one distinct part of the merge process in its own words.\n\nParagraph 16 explains one distinct part of the merge process in its own words.\n\nParagraph 17 explains one distinct part of the merge process in its own words.\n\nParagraph 18 explains one distinct part of the merge process in its own words.\n\nParagraph 19 explains one distinct part of the merge process in its own words.\n\nParagraph 20 explains one distinct part of the merge process in its own words.\n\nParagraph 21 explains one distinct part of the merge process in its own words.\n\nParagraph 22 explains one distinct part of the merge process in its own words.\n\nParagraph 23 explains one distinct part of the merge process in its own words.\n\nParagraph 24 explains one distinct part of the merge process in its own words.\n\nParagraph 25 explains one distinct part of the merge process in its own words.\n\nParagraph 26 explains one distinct part of the merge process in its own words.\n\nParagraph 27 explains one distinct part of the merge process in its own words.\n\nParagraph 28 explains one distinct part of the merge process in its own words.\n\nParagraph 29 explains one distinct part of the merge process in its own words.\n\nParagraph 30 explains one distinct part of the merge process in its own words.\n\nParagraph 31 explains one distinct part of the merge process in its own words.\n\nParagraph 32 explains one distinct part of the merge process in its own words.\n\nParagraph 33 explains one distinct part of the merge process in its own words.\n\nParagraph 34 explains one distinct part of the merge process in its own words.\n\nParagraph 35 explains one distinct part of the merge process in its own words.\n\nParagraph 36 explains one distinct part of the merge process in its own words.\n\nParagraph 37 explains one distinct part of the merge process in its own words.\n\nParagraph 38 explains one distinct part of the merge process in its own words.\n\nParagraph 39 explains one distinct part of the merge process in its own words."
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "explain the merge"
+      }
+    }
+  ]
+}

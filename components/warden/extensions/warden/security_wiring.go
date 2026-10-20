@@ -303,6 +303,18 @@ func (w *warden) notifyDesktop(ctx sdk.Context, cfg Config, body string) {
 	w.sec.sending.Add(1)
 	w.sec.mu.Unlock()
 	note := Notification{Title: "pi-warden", Body: body}
+	if len(cfg.Notify.Command) > 0 && w.opts.NotifyRunner == nil {
+		// A configured command spawns in this call, as Node's execFile does: the process is running when the hook
+		// returns, and only the wait for its exit is off the handler.
+		command := BuildNotifierCommand(CustomNotifier(cfg.Notify.Command), Notification{Title: note.Title, Body: ClipBody(note.Body, 180)})
+		if command.File == "" {
+			w.sec.sending.Done()
+			return
+		}
+		wait := StartNotifierCommand(command.File, command.Args, 8*time.Second, command.Env)
+		go func() { defer w.sec.sending.Done(); wait() }()
+		return
+	}
 	run := w.notifyRunner()
 	go func() {
 		defer w.sec.sending.Done()
