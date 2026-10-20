@@ -104,7 +104,7 @@ type asyncRuntime struct {
 	retentionTimer  *time.Timer
 	retentionCancel chan struct{}
 	closed          bool
-	hasUI    bool
+	hasUI           bool
 }
 
 func installAsyncRuntime(e *sdk.Extension) {
