@@ -2349,6 +2349,6 @@
   "name": "video-route-yt-disabled",
   "file": "video_route.go",
   "find": "if !isYT || !enabled {",
-  "replace": "if !isYT {"
+  "replace": "if !isYT || !enabled && false {"
  }
 ]

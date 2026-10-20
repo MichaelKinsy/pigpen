@@ -422,7 +422,7 @@ func TestYouTubeRouting(t *testing.T) {
 				t.Errorf("%s: %v %q", u, ok, got)
 			}
 		}
-		for _, u := range []string{"https://www.youtube.com/playlist?list=PL1234567890a", "https://example.com/", "https://www.youtube.com/watch?v=short"} {
+		for _, u := range []string{"https://www.youtube.com/playlist?list=PL1234567890a", "https://example.com/", "https://www.youtube.com/watch?v=short", "https://example.com/playlist?next=youtube.com/watch?v=dQw4w9WgXcQ"} {
 			if ok, _ := IsYouTubeURL(u); ok {
 				t.Errorf("%s is not a video", u)
 			}
