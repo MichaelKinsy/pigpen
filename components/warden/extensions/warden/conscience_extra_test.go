@@ -308,3 +308,47 @@ func TestConscienceDisabledDoesNothing(t *testing.T) {
 		t.Errorf("%d requests, %d conscience trace lines:\n%s", len(e.requests()), lines, e.traceText())
 	}
 }
+
+// Go-only: the one-pass word splitter equals the original's regular expressions on tool names.
+func TestWordsOnePassEqualsTheRegularExpressions(t *testing.T) {
+	fixed := []string{"deleteIssue", "mcp__db__truncateTable", "HTMLParser", "getHTTPResponse", "aBCd", "ABc", "ABCDe", "a1B2", "X", "xY", "wipe disk", "list_projects", "", "__", "dropdown_state", "camelCaseWithNumbers123Here", "ABC", "AbcDEFgh"}
+	for _, f := range fixed {
+		if got, want := words(f), wordsRegexp(f); strings.Join(got, "|") != strings.Join(want, "|") {
+			t.Errorf("%q: %v want %v", f, got, want)
+		}
+	}
+	alphabet := []string{"a", "b", "Z", "Q", "0", "9", "_", "-", " ", "x", "Y"}
+	for n := 0; n < 20000; n++ {
+		var b strings.Builder
+		for k := n%9 + 1; k > 0; k-- {
+			b.WriteString(alphabet[(n*31+k*17+n/7)%len(alphabet)])
+			n++
+		}
+		s := b.String()
+		if got, want := words(s), wordsRegexp(s); strings.Join(got, "|") != strings.Join(want, "|") {
+			t.Fatalf("%q: %v want %v", s, got, want)
+		}
+	}
+}
+
+// Go-only: the hand-written canonical form equals the maps-and-encoder form on conscience sets and on arbitrary ones.
+func TestQuestionHashWriterEqualsTheReference(t *testing.T) {
+	sets := []Questions{
+		{"q1": Choice("", map[string]string{"a": "1"})},
+		{"q1": Choice("", map[string]string{"a": "2"}), "z": Noul("is it?", "yes", "no"), "b": Score("rate \"it\" <now> & é", []string{"low", "high"})},
+		{}, {"c1": Score("x", nil)},
+	}
+	for _, n := range []int{0, 1, 4, 31} {
+		items := make([]string, n)
+		for i := range items {
+			items[i] = "s" + itoaInt(i)
+		}
+		q, _, _ := buildBatchQuestions(csBatch("skill", items...), "t", "", nil, nil)
+		sets = append(sets, q)
+	}
+	for i, q := range sets {
+		if got, want := questionHash(q), questionHashReference(q); got != want {
+			t.Errorf("set %d: %s want %s", i, got, want)
+		}
+	}
+}

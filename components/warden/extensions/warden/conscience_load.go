@@ -134,8 +134,6 @@ type LoadOpts struct {
 	HasImages     bool
 }
 
-var rePathInBody = lazyRE(`(?:^|` + reJSSpace + `)/[\w.~\-/]+(?:` + reJSSpace + `|$)`)
-
 // checkHeadroom (rule 9): load only when the body fits under 80% of the model window; 4 bytes a token, 20% kept.
 func checkHeadroom(bodyBytes int, window *int, hasImages bool) string {
 	if window == nil || *window <= 0 || hasImages {
@@ -244,7 +242,7 @@ func loadSkillBody(skill Skill, cfg ConscienceConfig, opts LoadOpts) LoadResult 
 		return res(LoadChanged)
 	}
 	// Rule 7: credential and path check.
-	if len(FindSecrets(body)) > 0 || rePathInBody.MatchString(body) {
+	if len(FindSecrets(body)) > 0 || hasAbsolutePath(body) {
 		return res(LoadMetadataUnsafe)
 	}
 	// Rule 9: headroom.

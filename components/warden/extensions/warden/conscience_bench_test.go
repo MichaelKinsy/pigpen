@@ -49,7 +49,7 @@ func benchAssess(b *testing.B, skills []Skill, tools []CapabilityTool) {
 }
 
 func BenchmarkConscienceAssess40Skills(b *testing.B) {
-	benchAssess(b, benchSkills(40, ""), nil)
+	benchAssess(b, benchSkills(40, b.TempDir()), nil)
 }
 
 func BenchmarkConscienceAssess250SkillsAnd60Tools(b *testing.B) {
@@ -57,7 +57,7 @@ func BenchmarkConscienceAssess250SkillsAnd60Tools(b *testing.B) {
 	for i := range tools {
 		tools[i] = CapabilityTool{Name: fmt.Sprintf("tool_%d", i), Description: fmt.Sprintf("Tool %d lists things in the repository", i)}
 	}
-	benchAssess(b, benchSkills(250, ""), tools)
+	benchAssess(b, benchSkills(250, b.TempDir()), tools)
 }
 
 func BenchmarkConscienceEligibleCandidates100SkillFiles(b *testing.B) {

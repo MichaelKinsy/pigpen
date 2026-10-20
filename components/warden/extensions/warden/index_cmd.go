@@ -128,6 +128,25 @@ func readIndexRaw(path string) (map[string]any, bool) {
 // readIndex reads an index file; nil when it is missing, unreadable or not an index. An entry that does not fit the
 // entry shape is dropped (it could never match a skill or a tool).
 func readIndex(path string) *IndexFile {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	text := []byte(nodeUTF8(raw))
+	// The usual file decodes in one pass into the typed shape; one that does not (an entry of another type) takes the
+	// generic route, which drops the entries it cannot read.
+	var wire struct {
+		FormatVersion *float64      `json:"formatVersion"`
+		BuiltAt       *string       `json:"builtAt"`
+		Model         *string       `json:"model"`
+		Entries       *[]IndexEntry `json:"entries"`
+	}
+	if json.Unmarshal(text, &wire) == nil {
+		if wire.FormatVersion == nil || *wire.FormatVersion != 1 || wire.BuiltAt == nil || wire.Model == nil || wire.Entries == nil {
+			return nil
+		}
+		return &IndexFile{FormatVersion: 1, BuiltAt: *wire.BuiltAt, Model: *wire.Model, Entries: *wire.Entries}
+	}
 	obj, ok := readIndexRaw(path)
 	if !ok {
 		return nil
@@ -162,7 +181,7 @@ func writeIndex(path string, index *IndexFile) error {
 	if index.Entries == nil {
 		index.Entries = []IndexEntry{}
 	}
-	return WriteFileAtomic(path, []byte(jsonIndent(index)))
+	return WriteFileAtomic(path, indexFileJSON(index))
 }
 
 // jsonIndent is JSON.stringify(value, null, 2).
@@ -333,7 +352,7 @@ func validateEntry(entry any, position int) EntryValidation {
 	if loc, present := e["_location"]; present && jsTruthy(loc) {
 		out.Location = jsString(loc)
 	}
-	if utf16Len(jsonCompact(out)) > maxEntryChars {
+	if entryLength(&out) > maxEntryChars {
 		if t := truncateEntry(out); t != nil {
 			return EntryValidation{Entry: t}
 		}
@@ -348,7 +367,7 @@ func truncateEntry(entry IndexEntry) *IndexEntry {
 	base.NotWhen = []string{}
 	base.UseWhen = append([]string{}, entry.UseWhen[:min(2, len(entry.UseWhen))]...)
 	// The truncated flag the cut adds costs about 17 characters.
-	if utf16Len(jsonCompact(base))+18 <= maxEntryChars {
+	if entryLength(&base)+18 <= maxEntryChars {
 		base.Truncated = true
 		return &base
 	}
@@ -358,7 +377,7 @@ func truncateEntry(entry IndexEntry) *IndexEntry {
 		ex = ex[:len(ex)-1]
 		trial := base
 		trial.Examples, trial.Truncated = ex, true
-		if utf16Len(jsonCompact(trial)) <= maxEntryChars {
+		if entryLength(&trial) <= maxEntryChars {
 			return &trial
 		}
 	}
@@ -448,6 +467,38 @@ func indexStats(index *IndexFile) IndexStats {
 // ---------------------------------------------------------------------------
 // The prompt that asks the session model for the entries.
 
+// indexFormatSpec is the format section of the prompt, from its heading to the end of the code block.
+const indexFormatSpec = "## Format\n\n" +
+	"Write each file as an object with only an `entries` array (the tool adds metadata):\n\n" +
+	"```json\n{\n" +
+	`  "entries": [` + "\n    {\n" +
+	`      "kind": "skill" | "tool",` + "\n" +
+	`      "name": "<skill or tool name>",` + "\n" +
+	`      "scope": "global" | "project",` + "\n" +
+	`      "sourceHash": "<first 16 hex chars of SHA-256 of the skill file content; for tools, SHA-256 of name:description>",` + "\n" +
+	`      "role": "<one of: research, evidence, execution, delegation, review, conversation>",` + "\n" +
+	`      "lead": "<at most 12 words; first word is the trigger>",` + "\n" +
+	`      "useWhen": ["<situation 1>", "<situation 2>"] (2-4 bullets, each starting with the situation),` + "\n" +
+	`      "notWhen": ["<situation> do <alternative>"] (0-2 bullets, each ending with what to do instead),` + "\n" +
+	`      "inputs": "<one line describing what it needs>",` + "\n" +
+	`      "examples": ["<prompt phrasing 1>", "<prompt phrasing 2>"] (2-3 phrasings a user would type),` + "\n" +
+	`      "thin": true when the source description is under 80 characters or the skill body under 300 characters,` + "\n" +
+	`      "sourceQuality": "strong" | "weak" | "thin",` + "\n" +
+	`      "improve": "<one sentence, at most 20 words, saying what the description lacks>" (only for weak or thin entries)` + "\n" +
+	"    }\n  ]\n}\n```\n"
+
+// indexPromptTail1 is the rest of the scope section and the roles and output headings.
+const indexPromptTail1 = "- Skills from the project directory: scope `project`\n" +
+	"- All tools: scope `global`\n\n" +
+	"## Roles\nChoose exactly one role per entry:\n" +
+	"- `research`: finds information outside the repo (web search, docs fetch)\n" +
+	"- `evidence`: inspects the repo or runtime (code graph, traces, reads)\n" +
+	"- `execution`: changes or runs things\n" +
+	"- `delegation`: spawns or manages agents\n" +
+	"- `review`: judges or checks work\n" +
+	"- `conversation`: thinking, planning, clarifying\n\n" +
+	"## Output paths\n\n"
+
 const indexWritingRules = "## Entry writing rules\n" +
 	"- Front-load the leading word so the trigger is the first word of `lead`.\n" +
 	"- One trigger per bullet; synonyms collapsed.\n" +
@@ -463,81 +514,34 @@ type IndexSkill struct {
 // buildIndexPrompt is the user message that asks the session model to write the index entries: the format, the
 // writing rules and both absolute output paths. agentDir names where user-level skills live.
 func buildIndexPrompt(_ string, skills []IndexSkill, tools []CapabilityTool, global, project, agentDir string) string {
-	skillLines := make([]string, len(skills))
+	var b strings.Builder
+	b.Grow(4096 + len(skills)*160 + len(tools)*120)
+	b.WriteString("# Build a capability index\n\nYou are building a local capability index. Write valid JSON only.\n\n## Skills\n")
+	if len(skills) == 0 {
+		b.WriteString("(none)")
+	}
 	for i, s := range skills {
-		skillLines[i] = "- " + s.Name + ": " + s.Description + " (file: " + s.FilePath + ")"
-	}
-	toolLines := make([]string, len(tools))
-	for i, t := range tools {
-		toolLines[i] = "- " + t.Name + ": " + t.Description
-	}
-	or := func(s, fallback string) string {
-		if s == "" {
-			return fallback
+		if i > 0 {
+			b.WriteByte('\n')
 		}
-		return s
+		b.WriteString("- " + s.Name + ": " + s.Description + " (file: " + s.FilePath + ")")
 	}
-	return strings.Join([]string{
-		"# Build a capability index",
-		"",
-		"You are building a local capability index. Write valid JSON only.",
-		"",
-		"## Skills",
-		or(strings.Join(skillLines, "\n"), "(none)"),
-		"",
-		"## Tools",
-		or(strings.Join(toolLines, "\n"), "(none)"),
-		"",
-		indexWritingRules,
-		"",
-		"## Format",
-		"",
-		"Write each file as an object with only an `entries` array (the tool adds metadata):",
-		"",
-		"```json",
-		"{",
-		`  "entries": [`,
-		"    {",
-		`      "kind": "skill" | "tool",`,
-		`      "name": "<skill or tool name>",`,
-		`      "scope": "global" | "project",`,
-		`      "sourceHash": "<first 16 hex chars of SHA-256 of the skill file content; for tools, SHA-256 of name:description>",`,
-		`      "role": "<one of: research, evidence, execution, delegation, review, conversation>",`,
-		`      "lead": "<at most 12 words; first word is the trigger>",`,
-		`      "useWhen": ["<situation 1>", "<situation 2>"] (2-4 bullets, each starting with the situation),`,
-		`      "notWhen": ["<situation> do <alternative>"] (0-2 bullets, each ending with what to do instead),`,
-		`      "inputs": "<one line describing what it needs>",`,
-		`      "examples": ["<prompt phrasing 1>", "<prompt phrasing 2>"] (2-3 phrasings a user would type),`,
-		`      "thin": true when the source description is under 80 characters or the skill body under 300 characters,`,
-		`      "sourceQuality": "strong" | "weak" | "thin",`,
-		`      "improve": "<one sentence, at most 20 words, saying what the description lacks>" (only for weak or thin entries)`,
-		"    }",
-		"  ]",
-		"}",
-		"```",
-		"",
-		"## Scope",
-		"- Skills from " + agentDir + "/skills/ and user-level directories: scope `global`",
-		"- Skills from the project directory: scope `project`",
-		"- All tools: scope `global`",
-		"",
-		"## Roles",
-		"Choose exactly one role per entry:",
-		"- `research`: finds information outside the repo (web search, docs fetch)",
-		"- `evidence`: inspects the repo or runtime (code graph, traces, reads)",
-		"- `execution`: changes or runs things",
-		"- `delegation`: spawns or manages agents",
-		"- `review`: judges or checks work",
-		"- `conversation`: thinking, planning, clarifying",
-		"",
-		"## Output paths",
-		"",
-		"Global index: " + global,
-		"Project index: " + project,
-		"",
-		"Write one file per scope. The tool adds `formatVersion`, `builtAt`, and `model` metadata after validation.",
-		"Write valid JSON only. No markdown, no explanation, no code fences.",
-	}, "\n")
+	b.WriteString("\n\n## Tools\n")
+	if len(tools) == 0 {
+		b.WriteString("(none)")
+	}
+	for i, t := range tools {
+		if i > 0 {
+			b.WriteByte('\n')
+		}
+		b.WriteString("- " + t.Name + ": " + t.Description)
+	}
+	b.WriteString("\n\n" + indexWritingRules + "\n\n" + indexFormatSpec + "\n## Scope\n")
+	b.WriteString("- Skills from " + agentDir + "/skills/ and user-level directories: scope `global`\n")
+	b.WriteString(indexPromptTail1)
+	b.WriteString("Global index: " + global + "\nProject index: " + project + "\n\n")
+	b.WriteString("Write one file per scope. The tool adds `formatVersion`, `builtAt`, and `model` metadata after validation.\nWrite valid JSON only. No markdown, no explanation, no code fences.")
+	return b.String()
 }
 
 // ---------------------------------------------------------------------------
