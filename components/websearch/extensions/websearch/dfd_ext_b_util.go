@@ -71,115 +71,7 @@ func extHasLen(v any) bool { return jsTruthy(extGet(v, "length")) }
 // extAnchorHref is HTMLAnchorElement.href of linkedom: encodeURI(decodeURI(getAttribute('href') || ”)). A malformed
 // percent escape throws the URIError of decodeURI.
 func extAnchorHref(el *ldNode) string {
-	return extEncodeURI(extDecodeURI(extAttr(el, "href")))
-}
-
-const extURIReserved = ";/?:@&=+$,#"
-
-func extURIError() { panic(&jsThrow{name: "URIError", msg: "URI malformed"}) }
-
-// extDecodeURI is decodeURI: percent escapes of UTF-8 are decoded, except those of the reserved characters.
-func extDecodeURI(s string) string {
-	if !strings.Contains(s, "%") {
-		return s
-	}
-	// escape reads the byte of the %XX at i.
-	escape := func(i int) byte {
-		if i+2 >= len(s) || s[i] != '%' {
-			extURIError()
-		}
-		hi, ok1 := extHexVal(s[i+1])
-		lo, ok2 := extHexVal(s[i+2])
-		if !ok1 || !ok2 {
-			extURIError()
-		}
-		return hi<<4 | lo
-	}
-	var b strings.Builder
-	for i := 0; i < len(s); {
-		if s[i] != '%' {
-			b.WriteByte(s[i])
-			i++
-			continue
-		}
-		start := i
-		first := escape(i)
-		i += 3
-		if first < 0x80 {
-			if strings.IndexByte(extURIReserved, first) >= 0 {
-				b.WriteString(s[start:i])
-			} else {
-				b.WriteByte(first)
-			}
-			continue
-		}
-		n := 0
-		for first&(0x80>>n) != 0 {
-			n++
-		}
-		if n == 1 || n > 4 {
-			extURIError()
-		}
-		seq := []byte{first}
-		for k := 1; k < n; k++ {
-			cb := escape(i)
-			if cb&0xC0 != 0x80 {
-				extURIError()
-			}
-			seq = append(seq, cb)
-			i += 3
-		}
-		r, size := utf8.DecodeRune(seq)
-		if r == utf8.RuneError || size != len(seq) {
-			extURIError()
-		}
-		b.WriteRune(r)
-	}
-	return b.String()
-}
-
-func extHexVal(c byte) (byte, bool) {
-	switch {
-	case c >= '0' && c <= '9':
-		return c - '0', true
-	case c >= 'a' && c <= 'f':
-		return c - 'a' + 10, true
-	case c >= 'A' && c <= 'F':
-		return c - 'A' + 10, true
-	}
-	return 0, false
-}
-
-// extEncodeURI is encodeURI: everything but letters, digits and ;,/?:@&=+$-_.!~*'()# is percent-encoded as UTF-8.
-func extEncodeURI(s string) string {
-	const keep = ";,/?:@&=+$-_.!~*'()#"
-	clean := true
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || (c < 0x80 && strings.IndexByte(keep, c) >= 0)) {
-			clean = false
-			break
-		}
-	}
-	if clean {
-		return s
-	}
-	const digits = "0123456789ABCDEF"
-	var b strings.Builder
-	for _, r := range s {
-		if r < 0x80 && (r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || strings.IndexByte(keep, byte(r)) >= 0) {
-			b.WriteByte(byte(r))
-			continue
-		}
-		var buf [4]byte
-		n := utf8.EncodeRune(buf[:], r)
-		for _, c := range buf[:n] {
-			b.WriteByte('%')
-			b.WriteByte(digits[c>>4])
-			b.WriteByte(digits[c&15])
-		}
-	}
-	return b.String()
+	return jsEncodeURI(jsDecodeURI(extAttr(el, "href")))
 }
 
 // extKeys is Object.keys of a parsed object or array.
@@ -221,10 +113,9 @@ func extFormDecode(s string) string {
 	out := make([]byte, 0, len(b))
 	for i := 0; i < len(b); i++ {
 		if b[i] == '%' && i+2 < len(b) {
-			hi, ok1 := extHexVal(b[i+1])
-			lo, ok2 := extHexVal(b[i+2])
-			if ok1 && ok2 {
-				out = append(out, hi<<4|lo)
+			hi, lo := jsURIHex(b[i+1]), jsURIHex(b[i+2])
+			if hi >= 0 && lo >= 0 {
+				out = append(out, byte(hi<<4|lo))
 				i += 2
 				continue
 			}
