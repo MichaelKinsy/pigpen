@@ -1,0 +1,28 @@
+{
+  "name": "tweak-guards",
+  "description": "/goal-tweak with no goal at all (with and without a change).",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-tweak"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-tweak remove the budget"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

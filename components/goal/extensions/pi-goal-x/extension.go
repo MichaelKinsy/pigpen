@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -127,12 +128,46 @@ func (h sdkHost) await(fn func()) {
 	fn()
 }
 
+// dialogRequestSettle is how long a dialog request has to reach the host before the UI update the handler queued runs: the original's
+// microtask runs after ctx.ui.select/confirm/input/custom wrote its request, and the SDK has no hook that says when the frame is out.
+const dialogRequestSettle = 20 * time.Millisecond
+
+// awaitDialog is await for a dialog, and runs the handler's queued UI update (the original's microtask at the `await`) once the
+// request is on its way: when the dialog answers first or after dialogRequestSettle, whichever comes first. The host sees the dialog
+// request, then the update, as Pi's RPC mode does; a dialog that waits for the user still refreshes the UI under it.
+func (h sdkHost) awaitDialog(fn func()) {
+	if h.c == nil {
+		fn()
+		return
+	}
+	done := make(chan struct{})
+	h.c.mu.Unlock()
+	go func() {
+		defer close(done)
+		fn()
+	}()
+	settle := time.NewTimer(dialogRequestSettle)
+	select {
+	case <-done:
+	case <-settle.C:
+	}
+	settle.Stop()
+	h.c.mu.Lock()
+	h.c.flush()
+	h.c.mu.Unlock()
+	<-done
+	h.c.mu.Lock()
+}
+
+// flushesAfterDialogRequest marks the host whose dialogs run the queued UI update themselves (core.awaiting).
+func (sdkHost) flushesAfterDialogRequest() {}
+
 func (h sdkHost) Confirm(t, m string) (ok bool) {
-	h.await(func() { ok, _ = h.ctx.Confirm(t, m) })
+	h.awaitDialog(func() { ok, _ = h.ctx.Confirm(t, m) })
 	return ok
 }
 func (h sdkHost) Select(t string, o []string) (v string, ok bool) {
-	h.await(func() {
+	h.awaitDialog(func() {
 		var err error
 		v, ok, err = h.ctx.Select(t, o)
 		ok = ok && err == nil
@@ -140,7 +175,7 @@ func (h sdkHost) Select(t string, o []string) (v string, ok bool) {
 	return v, ok
 }
 func (h sdkHost) Input(t, placeholder string) (v string, ok bool) {
-	h.await(func() {
+	h.awaitDialog(func() {
 		var err error
 		v, ok, err = h.ctx.Input(t, placeholder)
 		ok = ok && err == nil
@@ -156,7 +191,7 @@ func (h sdkHost) Custom(factory goalCustomFactory, opts goalCustomOptions) (out 
 	if rc.comp == nil {
 		return nil, nil
 	}
-	h.await(func() { out, err = h.ctx.Custom(rc, remoteOverlayOptions(opts)) })
+	h.awaitDialog(func() { out, err = h.ctx.Custom(rc, remoteOverlayOptions(opts)) })
 	return out, err
 }
 func (h sdkHost) OnTerminalInput(cb func(data string) *goalInputResult) func() {
@@ -183,8 +218,12 @@ func (h sdkHost) SendMessage(customType, content string, display bool, details *
 	}
 	return h.ctx.SendCustomMessage(msg, sdk.SendMessageOptions{TriggerTurn: &triggerTurn, DeliverAs: deliverAs})
 }
-func (h sdkHost) SendUserMessage(content, deliverAs string) error {
-	return h.ctx.SendUserMessage(content, deliverAs)
+
+// SendUserMessage releases the core's lock for the call: PiG's host prepares the run it starts inside the call and waits for this
+// extension's own before_agent_start handler, where Pi's pi.sendUserMessage has returned to the command before any handler runs.
+func (h sdkHost) SendUserMessage(content, deliverAs string) (err error) {
+	h.await(func() { err = h.ctx.SendUserMessage(content, deliverAs) })
+	return err
 }
 func (h sdkHost) GetActiveTools() ([]string, error) { return h.ctx.GetActiveTools() }
 func (h sdkHost) SetActiveTools(tools []string)     { h.ctx.SetActiveTools(tools) }

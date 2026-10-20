@@ -1,0 +1,83 @@
+{
+  "name": "settings-disable-tasks",
+  "description": "disableTasks removes the task tools from the next turn (the prompt's tool list shows it).",
+  "llm": [
+    {
+      "text": "Hello."
+    },
+    {
+      "text": "Hello again."
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-focus"
+      }
+    },
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "Before."
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "value": "  disableTasks: false (default)"
+        },
+        {
+          "value": "Set project override to true"
+        },
+        {
+          "value": "Done"
+        }
+      ]
+    },
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "After."
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-a.md": "{\n  \"version\": 3,\n  \"id\": \"seed-a\",\n  \"objective\": \"First goal\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 12500,\n    \"activeSeconds\": 3725\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-a.md\"\n}\n\n# Goal Prompt\n\nFirst goal\n\n## Progress\n\n- Status: active\n"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    },
+    {
+      "pattern": "Context snapshot: \\d+/(\\d+) tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <tokens>/${1} tokens (<pct>)"
+    }
+  ]
+}

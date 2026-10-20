@@ -1,0 +1,29 @@
+{
+  "name": "resume-disabled",
+  "description": "/goal-resume while maxAutonomousRuns=0 refuses with the allowance reason.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-resume"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-p.md": "{\n  \"version\": 3,\n  \"id\": \"seed-p\",\n  \"objective\": \"Paused goal\",\n  \"status\": \"paused\",\n  \"autoContinue\": false,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-p.md\",\n  \"stopReason\": \"user\"\n}\n\n# Goal Prompt\n\nPaused goal\n\n## Progress\n\n- Status: paused\n"
+  }
+}
