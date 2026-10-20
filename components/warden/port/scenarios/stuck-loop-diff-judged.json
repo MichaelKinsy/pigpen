@@ -87,7 +87,7 @@
         {
           "name": "bash",
           "arguments": {
-            "command": "n=$(cat n 2>/dev/null || echo 0); n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
           }
         }
       ]
@@ -97,7 +97,7 @@
         {
           "name": "bash",
           "arguments": {
-            "command": "n=$(cat n 2>/dev/null || echo 0); n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
           }
         }
       ]
@@ -107,7 +107,7 @@
         {
           "name": "bash",
           "arguments": {
-            "command": "n=$(cat n 2>/dev/null || echo 0); n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; i=0; while [ $i -lt 50 ]; do echo \"context-line-$i: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"; i=$((i+1)); done; echo \"outcome-$n\"; exit 1"
           }
         }
       ]

@@ -154,5 +154,35 @@
   "file": "waste.go",
   "find": "\" without a gap. One `read` with offset=\"",
   "replace": "\" without a gap. One `read` with start=\""
+ },
+ {
+  "name": "evidence-same-failure-not-linked",
+  "file": "evidence.go",
+  "find": "if c.failed && c.signature == sig {",
+  "replace": "if c.failed && c.signature == sig && false {"
+ },
+ {
+  "name": "evidence-line-numbers-not-normalised",
+  "file": "evidence.go",
+  "find": "{lazyRE(`:\\d+(?::\\d+)?\\b`), \":#\"},",
+  "replace": ""
+ },
+ {
+  "name": "evidence-off-by-default",
+  "file": "config.go",
+  "find": "RepeatSteer: true, Evidence: true,",
+  "replace": "RepeatSteer: true, Evidence: false,"
+ },
+ {
+  "name": "stuck-diff-context-lines",
+  "file": "stuckdiff.go",
+  "find": "const context = 3",
+  "replace": "const context = 2"
+ },
+ {
+  "name": "stuck-diff-never-replaces",
+  "file": "supervision.go",
+  "find": "if len(note) < len(joinedText(content)) {",
+  "replace": "if len(note) < 0 {"
  }
 ]

@@ -87,7 +87,7 @@
         {
           "name": "bash",
           "arguments": {
-            "command": "n=$(cat n 2>/dev/null || echo 0); n=$((n+1)); echo $n > n; printf 'not ok 1 - alpha\\n  error: boom at src/a.js:%d\\n' $n; exit 1"
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; printf 'not ok 1 - alpha\\n  error: boom at src/a.js:%d\\n' $n; exit 1"
           }
         }
       ]
@@ -97,7 +97,7 @@
         {
           "name": "bash",
           "arguments": {
-            "command": "n=$(cat n 2>/dev/null || echo 0); n=$((n+1)); echo $n > n; printf 'not ok 1 - alpha\\n  error: boom at src/a.js:%d\\n' $n; exit 1"
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; printf 'not ok 1 - alpha\\n  error: boom at src/a.js:%d\\n' $n; exit 1"
           }
         }
       ]
@@ -107,7 +107,7 @@
         {
           "name": "bash",
           "arguments": {
-            "command": "n=$(cat n 2>/dev/null || echo 0); n=$((n+1)); echo $n > n; printf 'not ok 1 - alpha\\n  error: boom at src/a.js:%d\\n' $n; exit 1"
+            "command": "n=0; [ -f n ] && read -r n < n; n=$((n+1)); echo $n > n; printf 'not ok 1 - alpha\\n  error: boom at src/a.js:%d\\n' $n; exit 1"
           }
         }
       ]
