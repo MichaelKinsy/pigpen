@@ -1,0 +1,578 @@
+[
+ {
+  "name": "matches-key-ctrl-alt-legacy",
+  "file": "keymatch.go",
+  "find": "case mod == modCtrl|modAlt:\n\t\t\tif rc := rawCtrlChar(ch); rc != 0 {\n\t\t\t\treturn len(data) == 2 && data[0] == '\\x1b' && data[1] == rc",
+  "replace": "case mod == modCtrl|modAlt:\n\t\t\tif rc := rawCtrlChar(ch); rc != 0 {\n\t\t\t\treturn len(data) == 2 && data[0] == '\\x1b' && data[1] == ch"
+ },
+ {
+  "name": "matches-key-alt-letter",
+  "file": "keymatch.go",
+  "find": "return len(data) == 2 && data[0] == '\\x1b' && data[1] == ch\n\t\tcase mod == modCtrl|modAlt",
+  "replace": "return len(data) == 2 && data[0] == '\\x1b'\n\t\tcase mod == modCtrl|modAlt"
+ },
+ {
+  "name": "matches-key-lock-mask",
+  "file": "keymatch.go",
+  "find": "pk := &parsedKey{codepoint: cp, modifier: (mod - 1) &^ lockMask}\n\tif m[3]",
+  "replace": "pk := &parsedKey{codepoint: cp, modifier: (mod - 1)}\n\tif m[3]"
+ },
+ {
+  "name": "matches-key-shifted-letter",
+  "file": "keymatch.go",
+  "find": "if mod&^lockMask&modShift != 0 && cp >= 'A' && cp <= 'Z' {",
+  "replace": "if mod&^lockMask&modShift != 0 && cp >= 'B' && cp <= 'Z' {"
+ },
+ {
+  "name": "matches-key-modify-other-keys",
+  "file": "keymatch.go",
+  "find": "if pk := parseModifyOtherKeys(data); pk != nil {\n\t\tif pk.modifier&modShift != 0",
+  "replace": "if pk := parseModifyOtherKeys(data); pk != nil {\n\t\tif false && pk.modifier&modShift != 0"
+ },
+ {
+  "name": "key-release-detection",
+  "file": "keymatch.go",
+  "find": "\":3u\", \":3~\"",
+  "replace": "\":3x\", \":3~\""
+ },
+ {
+  "name": "key-release-paste",
+  "file": "keymatch.go",
+  "find": "if strings.Contains(data, \"\\x1b[200~\") {\n\t\treturn false",
+  "replace": "if strings.Contains(data, \"\\x1b[201~\") {\n\t\treturn false"
+ },
+ {
+  "name": "super-pattern-modifier",
+  "file": "shortcuts.go",
+  "find": "\"super+up\":         regexp.MustCompile(`^\\x1b\\[(?:1;9(?::[12])?[AH]",
+  "replace": "\"super+up\":         regexp.MustCompile(`^\\x1b\\[(?:1;10(?::[12])?[AH]"
+ },
+ {
+  "name": "super-conflict-end",
+  "file": "shortcuts.go",
+  "find": "case \"super+end\":\n\t\treturn \"super+down\"",
+  "replace": "case \"super+end\":\n\t\treturn \"super+up\""
+ },
+ {
+  "name": "super-uses-last-part",
+  "file": "shortcuts.go",
+  "find": "for _, p := range parts[:len(parts)-1] {\n\t\tif p == \"super\"",
+  "replace": "for _, p := range parts {\n\t\tif p == \"super\""
+ },
+ {
+  "name": "stash-shortcut-sharp-s",
+  "file": "shortcuts.go",
+  "find": "return includePrintableSharpS && data == \"ß\" ||",
+  "replace": "return data == \"ß\" ||"
+ },
+ {
+  "name": "stash-shortcut-release",
+  "file": "shortcuts.go",
+  "find": "if isKeyRelease(data) {\n\t\treturn false\n\t}\n\treturn includePrintableSharpS",
+  "replace": "if false {\n\t\treturn false\n\t}\n\treturn includePrintableSharpS"
+ },
+ {
+  "name": "stash-shortcut-upper-s",
+  "file": "shortcuts.go",
+  "find": "data == \"\\x1bs\" || data == \"\\x1bS\" ||",
+  "replace": "data == \"\\x1bs\" ||"
+ },
+ {
+  "name": "stash-shortcut-csi-u",
+  "file": "shortcuts.go",
+  "find": "altSKitty.MatchString(data) ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "ctrl-s-matcher",
+  "file": "shortcuts.go",
+  "find": "return !isKeyRelease(data) && matchesKey(data, \"ctrl+s\")",
+  "replace": "return matchesKey(data, \"ctrl+s\")"
+ },
+ {
+  "name": "config-default-copy",
+  "file": "shortcut_config.go",
+  "find": "CopyEditor: new(\"ctrl+alt+c\")",
+  "replace": "CopyEditor: new(\"ctrl+alt+k\")"
+ },
+ {
+  "name": "config-default-reply",
+  "file": "shortcut_config.go",
+  "find": "Reply: nil, EditorStart",
+  "replace": "Reply: new(\"ctrl+alt+r\"), EditorStart"
+ },
+ {
+  "name": "config-cmd-alias",
+  "file": "shortcut_config.go",
+  "find": "if m == \"cmd\" || m == \"command\" {",
+  "replace": "if m == \"command\" {"
+ },
+ {
+  "name": "config-duplicate-modifier",
+  "file": "shortcut_config.go",
+  "find": "if seen[m] || !slices.Contains(shortcutModifierOrder, m) {",
+  "replace": "if !slices.Contains(shortcutModifierOrder, m) {"
+ },
+ {
+  "name": "config-super-unsupported",
+  "file": "shortcut_config.go",
+  "find": "if shortcutUsesSuper(normalized) && !isSupportedSuperShortcut(normalized) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "config-modifier-order",
+  "file": "shortcut_config.go",
+  "find": "return rank(a) - rank(b) })",
+  "replace": "return 0 })"
+ },
+ {
+  "name": "config-reserved-pi-keys",
+  "file": "shortcut_config.go",
+  "find": "for _, list := range [][]string{extraReservedShortcuts, appReservedShortcuts, tuiDefaultKeys} {",
+  "replace": "for _, list := range [][]string{extraReservedShortcuts, appReservedShortcuts} {"
+ },
+ {
+  "name": "config-bash-toggle-reserved",
+  "file": "shortcut_config.go",
+  "find": "if toggle := bashToggleShortcutReservation(settings); toggle != nil {\n\t\tused[shortcutUsageKey(*toggle)] = true\n\t}",
+  "replace": "if toggle := bashToggleShortcutReservation(settings); toggle != nil && false {\n\t\tused[shortcutUsageKey(*toggle)] = true\n\t}"
+ },
+ {
+  "name": "config-other-default",
+  "file": "shortcut_config.go",
+  "find": "if !used[usage] && !shortcutBelongsToOtherDefault(key, *configured) {",
+  "replace": "if !used[usage] {"
+ },
+ {
+  "name": "config-replacement-taken",
+  "file": "shortcut_config.go",
+  "find": "preferred != nil && !used[shortcutUsageKey(*preferred)] {",
+  "replace": "preferred != nil {"
+ },
+ {
+  "name": "config-blank-is-off",
+  "file": "shortcut_config.go",
+  "find": "ok && jsTrim(s) == \"\" {\n\t\treturn nil, true",
+  "replace": "ok && s == \"\" {\n\t\treturn nil, true"
+ },
+ {
+  "name": "config-bash-fallback-off",
+  "file": "shortcut_config.go",
+  "find": "case configuredDefined && configured == nil:\n\t\ttoggle = nil",
+  "replace": "case configuredDefined && configured == nil:\n\t\ttoggle = fallback"
+ },
+ {
+  "name": "config-bash-lines-floor",
+  "file": "shortcut_config.go",
+  "find": "math.Max(100, math.Floor(n))",
+  "replace": "math.Max(100, n)"
+ },
+ {
+  "name": "config-bash-bytes-min",
+  "file": "shortcut_config.go",
+  "find": "math.Max(16*1024, math.Floor(n))",
+  "replace": "math.Max(1024, math.Floor(n))"
+ },
+ {
+  "name": "config-bash-shortcuts-reserved",
+  "file": "shortcut_config.go",
+  "find": "\t\tfor _, s := range shortcuts.values() {\n\t\t\tif s != nil {\n\t\t\t\tused[shortcutUsageKey(*s)] = true\n\t\t\t}\n\t\t}",
+  "replace": "\t\tfor _, s := range shortcuts.values() {\n\t\t\t_ = s\n\t\t}"
+ },
+ {
+  "name": "stash-restore-clears",
+  "file": "keys.go",
+  "find": "text := *k.stashed\n\t\tk.stashed = nil",
+  "replace": "text := *k.stashed"
+ },
+ {
+  "name": "stash-update-note",
+  "file": "keys.go",
+  "find": "if hasStash {\n\t\th.Notify(\"Stash updated\", \"info\")",
+  "replace": "if !hasStash {\n\t\th.Notify(\"Stash updated\", \"info\")"
+ },
+ {
+  "name": "stash-whitespace-editor",
+  "file": "keys.go",
+  "find": "if !hasNonWhitespaceText(raw) {\n\t\tif !hasStash",
+  "replace": "if raw != \"\" && false {\n\t\tif !hasStash"
+ },
+ {
+  "name": "stash-nothing-note",
+  "file": "keys.go",
+  "find": "h.Notify(\"Nothing to stash\", \"info\")",
+  "replace": "h.Notify(\"Nothing to stash\", \"warning\")"
+ },
+ {
+  "name": "stash-status-on-start",
+  "file": "keys.go",
+  "find": "status = new(\"stash\")\n\t\t}\n\t\th.SetStatus(statusStash, status)",
+  "replace": "status = nil\n\t\t}\n\t\th.SetStatus(statusStash, status)"
+ },
+ {
+  "name": "stash-reload-take",
+  "file": "keys.go",
+  "find": "if reason == \"reload\" {\n\t\tk.stashed = takeActiveStashReload",
+  "replace": "if reason != \"reload\" {\n\t\tk.stashed = takeActiveStashReload"
+ },
+ {
+  "name": "stash-shutdown-transfer",
+  "file": "keys.go",
+  "find": "if reason == \"reload\" {\n\t\ttransferActiveStashReload",
+  "replace": "if reason != \"reload\" {\n\t\ttransferActiveStashReload"
+ },
+ {
+  "name": "stash-disable-clears-reload",
+  "file": "keys.go",
+  "find": "k.stashed = nil\n\tclearActiveStashReload(h.SessionID())\n\tk.mu.Unlock()\n\th.SetStatus(statusStash, nil)",
+  "replace": "k.stashed = nil\n\tk.mu.Unlock()\n\th.SetStatus(statusStash, nil)"
+ },
+ {
+  "name": "reload-take-once",
+  "file": "stash_reload.go",
+  "find": "by.remove(sessionID)\n\twriteStashReload(by)\n\treturn &text",
+  "replace": "return &text"
+ },
+ {
+  "name": "reload-session-isolation",
+  "file": "stash_reload.go",
+  "find": "text, ok := by.vals[sessionID].(string)",
+  "replace": "text, ok := by.vals[sessionID+\"x\"].(string)"
+ },
+ {
+  "name": "history-limit",
+  "file": "stash_history.go",
+  "find": "stashHistoryLimit                = 12",
+  "replace": "stashHistoryLimit                = 13"
+ },
+ {
+  "name": "history-dedupe-newest",
+  "file": "stash_history.go",
+  "find": "if len(*history) > 0 && (*history)[0] == text {\n\t\treturn false",
+  "replace": "if false {\n\t\treturn false"
+ },
+ {
+  "name": "history-normalize-adjacent",
+  "file": "stash_history.go",
+  "find": "if len(history) > 0 && history[len(history)-1] == entry {\n\t\t\tcontinue\n\t\t}",
+  "replace": "if false {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "history-blank-entries",
+  "file": "stash_history.go",
+  "find": "if !ok || !hasNonWhitespaceText(entry) {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "history-persist-indent",
+  "file": "stash_history.go",
+  "find": "marshalJSON(payload, \"  \")",
+  "replace": "marshalJSON(payload, \"\")"
+ },
+ {
+  "name": "prompts-seen",
+  "file": "stash_history.go",
+  "find": "if !hasNonWhitespaceText(text) || seen[text] {",
+  "replace": "if !hasNonWhitespaceText(text) {"
+ },
+ {
+  "name": "prompts-newest-first",
+  "file": "stash_history.go",
+  "find": "return files[i].mtimeMs > files[j].mtimeMs",
+  "replace": "return files[i].mtimeMs < files[j].mtimeMs"
+ },
+ {
+  "name": "prompts-file-limit",
+  "file": "stash_history.go",
+  "find": "projectPromptHistoryFileLimit    = 50",
+  "replace": "projectPromptHistoryFileLimit    = 60"
+ },
+ {
+  "name": "prompts-tail-newline",
+  "file": "stash_history.go",
+  "find": "return text[i+1:], nil",
+  "replace": "return text[i:], nil"
+ },
+ {
+  "name": "prompts-project-key",
+  "file": "stash_history.go",
+  "find": "projectKeyRuns.ReplaceAllString(projectKeyEdges.ReplaceAllString(cwd, \"\"), \"-\")",
+  "replace": "projectKeyRuns.ReplaceAllString(cwd, \"-\")"
+ },
+ {
+  "name": "prompts-error-prefix",
+  "file": "stash_history.go",
+  "find": "\"Failed to parse session file %s: %s\"",
+  "replace": "\"Failed to parse %s: %s\""
+ },
+ {
+  "name": "prompts-role-check",
+  "file": "stash_history.go",
+  "find": "if msg == nil || msg.vals[\"role\"] != \"user\" {",
+  "replace": "if msg == nil {"
+ },
+ {
+  "name": "prompts-text-blocks",
+  "file": "stash_history.go",
+  "find": "if o == nil || o.vals[\"type\"] != \"text\" {",
+  "replace": "if o == nil {"
+ },
+ {
+  "name": "source-picker-skip",
+  "file": "keys.go",
+  "find": "if stashCount == 0 {\n\t\treturn \"project\"",
+  "replace": "if stashCount == -1 {\n\t\treturn \"project\""
+ },
+ {
+  "name": "source-description",
+  "file": "keys.go",
+  "find": "Description: strconv.Itoa(stashCount) + \" saved\"",
+  "replace": "Description: \"saved\""
+ },
+ {
+  "name": "insert-append-separator",
+  "file": "keys.go",
+  "find": "separator := \"\\n\"",
+  "replace": "separator := \"\""
+ },
+ {
+  "name": "insert-empty-editor",
+  "file": "keys.go",
+  "find": "if !hasNonWhitespaceText(current) {\n\t\th.SetEditorText(selected)",
+  "replace": "if current == \"\" {\n\t\th.SetEditorText(selected)"
+ },
+ {
+  "name": "history-empty-note",
+  "file": "keys.go",
+  "find": "if len(history) == 0 {\n\t\t\t\th.Notify(\"No prompt history yet\"",
+  "replace": "if len(history) != 0 {\n\t\t\t\th.Notify(\"No prompt history yet\""
+ },
+ {
+  "name": "copy-empty-note",
+  "file": "keys.go",
+  "find": "h.Notify(\"Editor is empty\", \"info\")",
+  "replace": "h.Notify(\"Editor is empty\", \"warning\")"
+ },
+ {
+  "name": "cut-clears",
+  "file": "keys.go",
+  "find": "h.SetEditorText(\"\")\n\t\th.Notify(\"Cut editor text\", \"info\")",
+  "replace": "h.Notify(\"Cut editor text\", \"info\")"
+ },
+ {
+  "name": "copy-note",
+  "file": "keys.go",
+  "find": "if action == actionCopyEditor {\n\t\t\th.Notify(\"Copied editor text\", \"info\")",
+  "replace": "if action == actionCutEditor {\n\t\t\th.Notify(\"Copied editor text\", \"info\")"
+ },
+ {
+  "name": "copy-failure-keeps-text",
+  "file": "keys.go",
+  "find": "if err := h.CopyToClipboard(text); err != nil {\n\t\t\th.Notify(err.Error(), \"error\")\n\t\t\treturn\n\t\t}",
+  "replace": "if err := h.CopyToClipboard(text); err != nil {\n\t\t\th.Notify(err.Error(), \"error\")\n\t\t}"
+ },
+ {
+  "name": "prompt-history-legacy",
+  "file": "keys.go",
+  "find": "*k.shortcuts.StashHistory != \"ctrl+alt+h\" {",
+  "replace": "*k.shortcuts.StashHistory == \"ctrl+alt+h\" {"
+ },
+ {
+  "name": "action-release",
+  "file": "keys.go",
+  "find": "if isKeyRelease(data) {\n\t\treturn \"\"\n\t}\n\tk.mu.Lock()",
+  "replace": "if false {\n\t\treturn \"\"\n\t}\n\tk.mu.Lock()"
+ },
+ {
+  "name": "action-reply-opt-in",
+  "file": "keys.go",
+  "find": "case k.shortcuts.Reply != nil && matchesConfiguredShortcut",
+  "replace": "case matchesConfiguredShortcut"
+ },
+ {
+  "name": "action-hook-required",
+  "file": "keys.go",
+  "find": "if h.Hook(action) == nil {\n\t\treturn \"\"\n\t}",
+  "replace": "if false {\n\t\treturn \"\"\n\t}"
+ },
+ {
+  "name": "clipboard-darwin",
+  "file": "clipboard.go",
+  "find": "commands = append(commands, command{\"pbcopy\", nil})",
+  "replace": "commands = append(commands, command{\"pbpaste\", nil})"
+ },
+ {
+  "name": "clipboard-xclip-args",
+  "file": "clipboard.go",
+  "find": "command{\"xclip\", []string{\"-selection\", \"clipboard\"}}",
+  "replace": "command{\"xclip\", []string{\"-selection\", \"primary\"}}"
+ },
+ {
+  "name": "clipboard-wayland-first",
+  "file": "clipboard.go",
+  "find": "if get(\"WAYLAND_DISPLAY\") != \"\" {\n\t\t\t\tcommands = append(commands, command{\"wl-copy\", nil})",
+  "replace": "if get(\"WAYLAND_DISPLAY\") == \"\" {\n\t\t\t\tcommands = append(commands, command{\"wl-copy\", nil})"
+ },
+ {
+  "name": "clipboard-wsl",
+  "file": "clipboard.go",
+  "find": "p == \"linux\" && env.isWSL() {",
+  "replace": "p == \"darwin\" && env.isWSL() {"
+ },
+ {
+  "name": "clipboard-osc-limit",
+  "file": "clipboard.go",
+  "find": "const maxOSC52EncodedLength = 100_000",
+  "replace": "const maxOSC52EncodedLength = 200_000"
+ },
+ {
+  "name": "clipboard-script-darwin",
+  "file": "clipboard.go",
+  "find": "if goos == \"darwin\" {\n\t\tdecode = \"-D\"",
+  "replace": "if goos == \"linux\" {\n\t\tdecode = \"-D\""
+ },
+ {
+  "name": "clipboard-timeout",
+  "file": "clipboard.go",
+  "find": "run.run(c.name, c.args, text, 5000)",
+  "replace": "run.run(c.name, c.args, text, 500)"
+ },
+ {
+  "name": "scheduler-earlier",
+  "file": "render_scheduler.go",
+  "find": "if !deadline.Before(s.pending.deadline) {",
+  "replace": "if deadline.Before(s.pending.deadline) {"
+ },
+ {
+  "name": "scheduler-stop",
+  "file": "render_scheduler.go",
+  "find": "\t\ts.pending.timer.Stop()\n\t}\n\tp := ",
+  "replace": "\t}\n\tp := "
+ },
+ {
+  "name": "scheduler-cancel",
+  "file": "render_scheduler.go",
+  "find": "\ts.pending.timer.Stop()\n\ts.pending = nil\n}",
+  "replace": "\ts.pending = nil\n}"
+ },
+ {
+  "name": "scheduler-clear-pending",
+  "file": "render_scheduler.go",
+  "find": "if s.pending == p {\n\t\t\ts.pending = nil\n\t\t}",
+  "replace": "_ = p"
+ },
+ {
+  "name": "lifecycle-startup",
+  "file": "lifecycle.go",
+  "find": "return reason == \"startup\" && welcomeEnabled && mode == \"tui\"",
+  "replace": "return welcomeEnabled && mode == \"tui\""
+ },
+ {
+  "name": "lifecycle-mode",
+  "file": "lifecycle.go",
+  "find": "&& mode == \"tui\"",
+  "replace": "&& mode != \"rpc\""
+ },
+ {
+  "name": "lifecycle-stale-ctx",
+  "file": "lifecycle.go",
+  "find": "strings.Contains(err.Error(), \"This extension ctx is stale\")",
+  "replace": "false"
+ },
+ {
+  "name": "ext-sharp-s-setting",
+  "file": "keys_ext.go",
+  "find": "parsePowerlineConfig(settings[\"powerline\"], presetNames).StashSharpSShortcut",
+  "replace": "false"
+ },
+ {
+  "name": "ext-disabled-guard",
+  "file": "keys_ext.go",
+  "find": "if !enabled || !ctx.HasUI() ||",
+  "replace": "if !ctx.HasUI() ||"
+ },
+ {
+  "name": "ext-consume",
+  "file": "keys_ext.go",
+  "find": "state.stashOrRestoreEditorText(h)\n\t\t\tk.dismiss(ctx)\n\t\t\treturn sdk.TerminalInputResult{Consume: true}",
+  "replace": "state.stashOrRestoreEditorText(h)\n\t\t\tk.dismiss(ctx)\n\t\t\treturn sdk.TerminalInputResult{}"
+ },
+ {
+  "name": "ext-overlay-guard",
+  "file": "keys_ext.go",
+  "find": "k.overlays.Load() > 0",
+  "replace": "k.overlays.Load() < 0"
+ },
+ {
+  "name": "ext-picker-async",
+  "file": "keys_ext.go",
+  "find": "} else {\n\t\t\tgo state.run(h, action)",
+  "replace": "} else {\n\t\t\tstate.run(h, action)"
+ },
+ {
+  "name": "ext-unsubscribe",
+  "file": "keys_ext.go",
+  "find": "k.ensure(ctx).disable(k.host(ctx))\n\tk.unsubscribe()",
+  "replace": "k.ensure(ctx).disable(k.host(ctx))"
+ },
+ {
+  "name": "ext-disabled-command",
+  "file": "keys_ext.go",
+  "find": "ctx.Notify(\"Powerline is disabled\", \"info\")",
+  "replace": "ctx.Notify(\"Powerline is off\", \"info\")"
+ },
+ {
+  "name": "ext-no-ui-command",
+  "file": "keys_ext.go",
+  "find": "if !ctx.HasUI() {\n\t\treturn nil\n\t}\n\tk.a.mu.Lock()",
+  "replace": "if false {\n\t\treturn nil\n\t}\n\tk.a.mu.Lock()"
+ },
+ {
+  "name": "ext-shutdown-reason",
+  "file": "keys_ext.go",
+  "find": "reason, _ := data[\"reason\"].(string)\n\t\tstate.sessionShutdown",
+  "replace": "reason := \"\"\n\t\tstate.sessionShutdown"
+ },
+ {
+  "name": "ext-reload-ctx-status",
+  "file": "keys_ext.go",
+  "find": "state.sessionStart(h, reason, ctx.HasUI())",
+  "replace": "state.sessionStart(h, reason, false)"
+ },
+ {
+  "name": "overlay-wrap",
+  "file": "select_overlay.go",
+  "find": "o.selected = (o.selected + 1) % n",
+  "replace": "o.selected = min(o.selected+1, n-1)"
+ },
+ {
+  "name": "overlay-escape",
+  "file": "select_overlay.go",
+  "find": "case matchesKey(data, \"escape\") || matchesKey(data, \"ctrl+c\"):",
+  "replace": "case matchesKey(data, \"ctrl+c\"):"
+ },
+ {
+  "name": "overlay-preview-empty",
+  "file": "select_overlay.go",
+  "find": "return \"(empty)\"",
+  "replace": "return \"\""
+ },
+ {
+  "name": "core-keys-start",
+  "file": "core.go",
+  "find": "p.keys.sessionStart(reason)",
+  "replace": "_ = reason"
+ },
+ {
+  "name": "core-keys-setup",
+  "file": "core.go",
+  "find": "if p.keys != nil {\n\t\tp.keys.setup()\n\t}",
+  "replace": "if p.keys != nil {\n\t}"
+ },
+ {
+  "name": "core-keys-disable",
+  "file": "core.go",
+  "find": "if p.keys != nil {\n\t\tp.keys.disable()\n\t} else {",
+  "replace": "if p.keys != nil {\n\t} else {"
+ }
+]
