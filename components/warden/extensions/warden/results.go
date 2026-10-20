@@ -55,6 +55,7 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	details, _ := data["details"].(map[string]any)
 	failed := ResultFailed(isError, details, content)
 	text := ResultText(content)
+	w.conscienceToolResult(ctx, cfg, tool, failed) // CONSCIENCE-LANE HOOK: the selected capability's outcome
 
 	// Evidence for the done-check.
 	w.mu.Lock()
@@ -160,6 +161,7 @@ func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 		return nil, nil
 	}
 	w.toolsAgentEnd(ctx, cfg)                       // TOOLS-LANE HOOK: the open-loops reminder (tools_wiring.go)
+	w.conscienceAgentEnd(ctx, cfg, data)            // CONSCIENCE-LANE HOOK: the one reminder of an unused recommendation
 	w.rulesAgentEnd(ctx, cfg, w.judgeFor(ctx, cfg)) // rules hook: the end-of-run pass
 	if !cfg.Done.Enabled {
 		return nil, nil

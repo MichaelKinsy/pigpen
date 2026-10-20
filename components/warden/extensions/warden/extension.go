@@ -67,6 +67,8 @@ type warden struct {
 	tools toolsState
 	// rules is the project rules guard's state (rules_wire.go).
 	rules *rulesState
+	// conscience is the conscience's state (conscience_state.go).
+	conscience conscienceState
 }
 
 // Extension returns the guard.
@@ -92,7 +94,12 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
 	e.OnEvent(sdk.EventBeforeAgentStart, w.onBeforeAgentStart)
 	e.OnEvent(sdk.EventAgentStart, w.agentStartWithRules)
-	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) { w.guard.TurnEnd(); w.rulesTurnEnd(); return nil, nil })
+	e.OnEvent(sdk.EventTurnEnd, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		w.guard.TurnEnd()
+		w.rulesTurnEnd()
+		w.conscienceTurnEnd(ctx) // CONSCIENCE-LANE HOOK: one re-assessment after a failure (conscience_state.go)
+		return nil, nil
+	})
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
@@ -100,6 +107,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	// TOOLS-LANE HOOK: the three tools and the compaction evidence appendix (tools_wiring.go).
 	w.registerWardenTools(e)
 	e.OnEvent(sdk.EventSessionCompact, w.onSessionCompact)
+	w.registerConscienceEvents(e) // CONSCIENCE-LANE HOOK: message_start, input and agent_settled (conscience_state.go)
 	return e, w
 }
 
@@ -275,7 +283,8 @@ func (w *warden) onSessionStart(ctx sdk.Context, data map[string]any) (any, erro
 	loadErr, enabled := w.loadErr, w.cfg.Enabled
 	w.mu.Unlock()
 	w.guard.Reset()
-	w.rulesSessionStart(ctx) // rules guard: reset and open the verdict log
+	w.rulesSessionStart(ctx)      // rules guard: reset and open the verdict log
+	w.conscienceSessionStart(ctx) // CONSCIENCE-LANE HOOK: the generation and the capability indexes (conscience_state.go)
 	if loadErr != "" {
 		w.say(ctx, loadErr, "warning")
 	}
@@ -295,13 +304,19 @@ func (w *warden) disclose(ctx sdk.Context) {
 }
 
 func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, error) {
+	w.beforeAgentStartState(data)
+	return w.conscienceBeforeAgentStart(ctx, data) // CONSCIENCE-LANE HOOK: the first assessment and its delivery (conscience_state.go)
+}
+
+// beforeAgentStartState is the run state a new prompt resets.
+func (w *warden) beforeAgentStartState(data map[string]any) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if p, ok := data["prompt"].(string); ok && strings.TrimSpace(p) != "" {
 		w.lastPrompt = p
 	}
 	if w.continuation {
-		return nil, nil
+		return
 	}
 	// A new user prompt: the loop window, the steer repeats and the done nudge start over.
 	if w.window != nil {
@@ -310,7 +325,6 @@ func (w *warden) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, 
 	w.repeats.Reset()
 	w.doneNudged = false
 	w.steersThisRun = 0
-	return nil, nil
 }
 
 func (w *warden) onAgentStart(ctx sdk.Context, _ map[string]any) (any, error) {

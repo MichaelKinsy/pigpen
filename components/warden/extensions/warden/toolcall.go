@@ -84,12 +84,15 @@ func blockResult(reason string) any { return map[string]any{"block": true, "reas
 func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	cfg := w.config(ctx)
 	tool, _ := data["toolName"].(string)
-	if !cfg.Enabled || !cfg.Action.Enabled || !toolGuarded(cfg.Action, tool) {
-		return nil, nil
-	}
 	input, _ := data["input"].(map[string]any)
 	if input == nil {
 		input = map[string]any{}
+	}
+	if cfg.Enabled {
+		w.conscienceToolCall(ctx, cfg, tool, input) // CONSCIENCE-LANE HOOK: the selected capability was reached for
+	}
+	if !cfg.Enabled || !cfg.Action.Enabled || !toolGuarded(cfg.Action, tool) {
+		return nil, nil
 	}
 	id, _ := data["toolCallId"].(string)
 	judge := w.judgeFor(ctx, cfg)
@@ -97,6 +100,9 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	fallback := w.lastPrompt
 	w.stats.Inspected++
 	w.mu.Unlock()
+	if w.conscienceIndexWrite(ctx, cfg, tool, input) { // CONSCIENCE-LANE HOOK: /warden index writes its own files
+		return nil, nil
+	}
 	call := ToolCallRef{ID: id, Tool: tool, Input: input}
 	conv := conversationOf(w.branchOf(ctx), id, fallback, call)
 	w.rulesFirstRunNotice(ctx, cfg)                            // rules hook: the first-run notice
