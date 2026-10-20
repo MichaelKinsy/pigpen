@@ -225,3 +225,27 @@ existing `jsRound` of the steering core is reused. The baseline snapshot of turn
 
 Not done in this PR (honest list): pigeq scenarios and goldens for the rules behaviours, the layer-1 and pigeq mutation
 rows, the performance section's measurements, and the `go test -race -count=24` run; see the status file.
+
+## Guard core: results and performance
+
+- Layer 1 (imladris, tern-ci:v2): `go vet` clean for windows, darwin and linux; `go test` ok; mutations in `port/mutate.py`
+  (74 added, 70 killed, 4 documented equivalents; `port/mutation-results.txt`).
+- pigeq: 11 config-free scenarios (`sql-*`, `rm-authorized-by-the-prompt-runs`, `rm-unrelated-target-held`,
+  `find-delete-not-authorized-by-the-verb`): `pigeq run` identical for the original under Pi, under PiG's Node runtime
+  and the Go port; `pigeq check` passes against goldens recorded from the original. `run` also prints `exec-coverage`
+  FAIL for `sqlite-adapter.ts:82 PRAGMA` (a command literal of the original's learning store that no scenario can
+  declare; the same message appears for every scenario of the package, and `check`, which reads the port only, passes).
+  Scenario-layer pigeq mutations (`port/mutations.json`, six rows): three killed (`sql-delete-local-held`,
+  `sql-hosted-write-only-warns`, `sql-hosted-select-held`), three survive at the scenario layer
+  (`sql-read-only-wrapper-ignored`, `rm-verb-never-authorizes`, `find-delete-authorized-by-verb`): a warning is a steer
+  hidden in these scenarios, so the scenario trace does not tell the two apart; the layer-1 rows of the same names
+  (`sql-commit-voids-nothing`, `authorize-segments-ignored`, ...) kill them.
+- `scenarios-blocked/`: the real-git scenarios (host event ordering differs between Pi and PiG's Node runtime) and the
+  config-dependent ones (a scenario cannot write `<PIG_HOME>/pigpen-warden/config.json`).
+- Benchmarks (`guardcore_bench_test.go`, imladris container on cores 96-151, load average 63 over 56 cores at the time, so
+  these are upper bounds; repeat when quieter), median of 10 runs: ordinary command 131 us/op, 6.4 KB, 419 allocs;
+  the same call with three path rules 238 us/op, 12.5 KB, 777 allocs; a loopback `psql ... DELETE ... WHERE` 361 us/op,
+  15.7 KB, 645 allocs; `ArmingTracker.CheckArmed` on an armed rule 8.5 us/op, 0.8 KB, 69 allocs. No baseline of the
+  previous head and no binary-size or cold-start measurement yet (those need a built Binary; the package-init test bounds
+  start-up allocation at 150 KB and passes).
+- Not run here: `npm run generate/check/test` (an imladris copy has no git history; run from a bundle clone at stacking).
