@@ -392,7 +392,7 @@ func TestBuildStartupInfo(t *testing.T) {
 		write(t, filepath.Join(agent, "prompts", "review.md"), "x")
 		write(t, filepath.Join(agent, "extensions", "mine.ts"), "x")
 		write(t, filepath.Join(agent, "settings.json"), `{"packages":["npm:pkg","/local/pkg"]}`)
-		got := BuildStartupInfo(project, "no-such-pig-binary")
+		got := BuildStartupInfo(project, "no-such-pig-binary", "")
 		for _, want := range []string{
 			"## Context\n- " + filepath.Join(project, "AGENTS.md"),
 			"## Skills", filepath.Join(agent, "skills", "one", "SKILL.md"), filepath.Join(agent, "skills", "flat.md"),
@@ -410,7 +410,7 @@ func TestBuildStartupInfo(t *testing.T) {
 	t.Run("is a single newline when there is nothing to report", func(t *testing.T) {
 		withAgentDir(t, t.TempDir())
 		t.Setenv("HOME", t.TempDir())
-		if got := BuildStartupInfo(t.TempDir(), "no-such-pig-binary"); got != "\n" {
+		if got := BuildStartupInfo(t.TempDir(), "no-such-pig-binary", ""); got != "\n" {
 			t.Errorf("got %q", got)
 		}
 	})
@@ -422,7 +422,7 @@ func TestBuildStartupInfo(t *testing.T) {
 		if err := os.Chmod(script, 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if got := BuildStartupInfo(t.TempDir(), script); !strings.HasPrefix(got, "pig v1.2.3\n---\n") {
+		if got := BuildStartupInfo(t.TempDir(), script, ""); !strings.HasPrefix(got, "pig v1.2.3\n---\n") {
 			t.Errorf("got %q", got)
 		}
 	})

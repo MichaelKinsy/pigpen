@@ -86,9 +86,8 @@ func skillsFromRoot(root string) []string {
 	return items
 }
 
-// BuildStartupInfo builds the markdown "startup info" block (the original's buildStartupInfo,
-// without its npm update notice: see PORT.md, gap A18).
-func BuildStartupInfo(cwd, piCommand string) string {
+// BuildStartupInfo builds the markdown "startup info" block (the original's buildStartupInfo).
+func BuildStartupInfo(cwd, piCommand, updateNotice string) string {
 	var md []string
 	if v := pigVersionHeader(piCommand); v != "" {
 		md = append(md, "pig v"+v, "---", "")

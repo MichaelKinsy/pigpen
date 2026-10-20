@@ -47,6 +47,9 @@ type agentState struct {
 	lastSessionCwd string
 	restoreMu      sync.Mutex
 
+	// updateNotice looks for a newer pig release (a test seam; BuildUpdateNotice by default).
+	updateNotice func() string
+
 	// changelogPath finds the changelog for /changelog (a test seam).
 	changelogPath func() string
 }
@@ -64,6 +67,7 @@ func NewAgent(conn Conn) *Agent {
 	st := &agentState{conn: conn}
 	st.store = NewFileStore("")
 	st.spawn = st.defaultSpawn
+	st.updateNotice = func() string { return BuildUpdateNotice(st.pigCommand(), st.piArgs) }
 	st.sessions = NewSessionManager(st.spawn, st.store)
 	return &Agent{agentState: st}
 }
@@ -466,7 +470,7 @@ func (a *Agent) NewSession(req NewSessionRequest) (NewSessionResponse, error) {
 	// suppresses the startup block: see PORT.md, gap A18.
 	prelude := ""
 	if !GetQuietStartup(req.Cwd) {
-		prelude = BuildStartupInfo(req.Cwd, a.pigCommand())
+		prelude = BuildStartupInfo(req.Cwd, a.pigCommand(), "")
 	}
 	if prelude != "" {
 		sess.SetStartupInfo(prelude)
