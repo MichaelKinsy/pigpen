@@ -264,7 +264,7 @@ func (rt *runtime) createStore(cwd, id string) (pi.SessionStore, error) {
 	if id == rt.live.ID() {
 		return rt.live.NewStore(), nil
 	}
-	return nil, errors.New("this host serves the running PiG session only; a client cannot create sessions")
+	return nil, errors.New(pi.Unsupported("creating a session from a client (only the running PiG session has an agent)"))
 }
 
 func (rt *runtime) wrapStore(sessionID string, opened pi.SessionStore) pi.SessionStore {

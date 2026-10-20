@@ -672,7 +672,7 @@ func TestGitBlobResources(t *testing.T) {
 		f.client.Decode(f.client.Must("resourceRead", obj{"channel": wire.RootChannel, "uri": file.Edit.After.Content.Uri, "encoding": encoding}), &result)
 		return result
 	}
-	if r := read("text.go", "utf-8"); r.Data != "package x\n" || r.Encoding != ahptypes.ContentEncodingUtf8 || r.ContentType == nil || *r.ContentType != "text/x-go" {
+	if r := read("text.go", "utf-8"); r.Data != "package x\n" || r.Encoding != ahptypes.ContentEncodingUtf8 || r.ContentType == nil || *r.ContentType != "text/plain" {
 		t.Fatalf("text.go = %+v", r)
 	}
 	if r := read("text.go", "base64"); r.Encoding != ahptypes.ContentEncodingBase64 || r.Data != base64.StdEncoding.EncodeToString([]byte("package x\n")) {

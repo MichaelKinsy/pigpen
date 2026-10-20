@@ -580,5 +580,53 @@
   "file": "extension.go",
   "find": "if name, ok := strings.CutPrefix(rest, \"--name\"); ok {",
   "replace": "if name, ok := \"\", false; ok {"
+ },
+ {
+  "name": "mime-path-case-sensitive",
+  "file": "internal/svc/mime.go",
+  "find": "\tlast = strings.ToLower(last)\n",
+  "replace": "\t_ = strings.ToLower\n"
+ },
+ {
+  "name": "mime-bare-name-in-directory-typed",
+  "file": "internal/svc/mime.go",
+  "find": "if !hasDot && hasPath {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mime-lookup-skips-first-match",
+  "file": "internal/svc/mime.go",
+  "find": "return mimeTable[i].ext >= ext",
+  "replace": "return mimeTable[i].ext > ext"
+ },
+ {
+  "name": "mime-text-fallback-dropped",
+  "file": "internal/svc/mime.go",
+  "find": "\tif textFallback {\n\t\treturn \"text/plain\"\n\t}",
+  "replace": "\tif false {\n\t\treturn \"text/plain\"\n\t}"
+ },
+ {
+  "name": "refusal-wording-changed",
+  "file": "internal/pi/refusal.go",
+  "find": "\", which runs unchanged in PiG.\"",
+  "replace": "\", which runs in PiG.\""
+ },
+ {
+  "name": "refusal-original-spec-changed",
+  "file": "internal/pi/refusal.go",
+  "find": "pi-ahp@4065e98309b03c1d2d916300856c3c21a9c10674",
+  "replace": "pi-ahp@4065e98309b03c1d2d916300856c3c21a9c10675"
+ },
+ {
+  "name": "refusal-create-session-unnamed",
+  "file": "runtime.go",
+  "find": "pi.Unsupported(\"creating a session from a client (only the running PiG session has an agent)\")",
+  "replace": "\"cannot create sessions\""
+ },
+ {
+  "name": "refusal-foreign-turn-unnamed",
+  "file": "internal/live/live.go",
+  "find": "pi.Unsupported(\"running a turn in a session other than the running PiG session\")",
+  "replace": "\"not running\""
  }
 ]
