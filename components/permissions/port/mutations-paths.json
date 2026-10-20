@@ -144,12 +144,6 @@
   "replace": "if first != \".\" {"
  },
  {
-  "name": "np-win-resolve-device-rootend",
-  "file": "nodepath.go",
-  "find": "device = `\\\\` + first\n\t\t\t\t\t\trootEnd = 4\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t} else {",
-  "replace": "device = `\\\\` + first\n\t\t\t\t\t\trootEnd = 3\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t} else {"
- },
- {
   "name": "np-win-resolve-other-device",
   "file": "nodepath.go",
   "find": "if jsToLowerCase(device) != jsToLowerCase(resolvedDevice) {",
@@ -160,12 +154,6 @@
   "file": "nodepath.go",
   "find": "resolvedTail = path[rootEnd:] + `\\` + resolvedTail\n\t\t\tresolvedAbsolute = isAbsolute",
   "replace": "resolvedTail = path[rootEnd:] + `\\` + resolvedTail\n\t\t\tresolvedAbsolute = false"
- },
- {
-  "name": "np-win-resolve-drive-sep",
-  "file": "nodepath.go",
-  "find": "rootEnd = 3\n\t\t\t}\n\t\t}\n\t\tif len(device) > 0 {",
-  "replace": "rootEnd = 2\n\t\t\t}\n\t\t}\n\t\tif len(device) > 0 {"
  },
  {
   "name": "np-win-resolve-drive-cwd",
@@ -214,12 +202,6 @@
   "file": "nodepath.go",
   "find": "if len(tail) > 0 && isWinSep(path[n-1]) {\n\t\ttail += `\\`",
   "replace": "if len(tail) > 0 && path[n-1] == '/' {\n\t\ttail += `\\`"
- },
- {
-  "name": "np-win-normalize-cve-drive",
-  "file": "nodepath.go",
-  "find": "if len(tail) >= 2 && isWinDeviceRoot(tail[0]) && tail[1] == ':' {",
-  "replace": "if len(tail) >= 3 && isWinDeviceRoot(tail[0]) && tail[1] == ':' {"
  },
  {
   "name": "np-win-normalize-cve-colon",
@@ -312,18 +294,6 @@
   "replace": "\tif i != length {\n\t\tif lastCommonSep == -1 {\n\t\t\treturn fromOrigS"
  },
  {
-  "name": "np-win-relative-device-root",
-  "file": "nodepath.go",
-  "find": "if i == 2 {\n\t\t\t\treturn s16(sliceU16(toOrig, toStart+i, len(toOrig)))",
-  "replace": "if i == 3 {\n\t\t\t\treturn s16(sliceU16(toOrig, toStart+i, len(toOrig)))"
- },
- {
-  "name": "np-win-relative-to-root",
-  "file": "nodepath.go",
-  "find": "} else if i == 2 {\n\t\t\t\tlastCommonSep = 3",
-  "replace": "} else if i == 2 {\n\t\t\t\tlastCommonSep = 2"
- },
- {
   "name": "np-win-relative-up",
   "file": "nodepath.go",
   "find": "out += `\\..`",
@@ -390,12 +360,6 @@
   "replace": "return false"
  },
  {
-  "name": "lower-ascii",
-  "file": "jscase.go",
-  "find": "if ascii {\n\t\treturn strings.ToLower(s)",
-  "replace": "if false {\n\t\treturn strings.ToLower(s)"
- },
- {
   "name": "url-scheme",
   "file": "fileurl.go",
   "find": "if strings.ToLower(input[:colon]) != \"file\" {",
@@ -456,24 +420,6 @@
   "replace": "enc = seg"
  },
  {
-  "name": "url-encode-set-space",
-  "file": "fileurl.go",
-  "find": "case ' ', '\"', '#', '<', '>', '?', '^', '`', '{', '}':",
-  "replace": "case '\"', '#', '<', '>', '?', '^', '`', '{', '}':"
- },
- {
-  "name": "url-encode-caret",
-  "file": "fileurl.go",
-  "find": "case ' ', '\"', '#', '<', '>', '?', '^', '`', '{', '}':",
-  "replace": "case ' ', '\"', '#', '<', '>', '?', '`', '{', '}':"
- },
- {
-  "name": "url-encode-high",
-  "file": "fileurl.go",
-  "find": "if r <= 0x1f || r >= 0x7f {",
-  "replace": "if r <= 0x1f || r >= 0x80 {"
- },
- {
   "name": "url-posix-host",
   "file": "fileurl.go",
   "find": "if host != \"\" {\n\t\treturn \"\", errInvalidFileURL\n\t}\n\tfor n := 0; n < len(pathname); n++ {",
@@ -518,14 +464,14 @@
  {
   "name": "url-decode-overlong",
   "file": "fileurl.go",
-  "find": "if r == utf8.RuneError || size != n {",
-  "replace": "if size != n {"
+  "find": "if _, size := utf8.DecodeRune(seq); size != n {",
+  "replace": "if _, size := utf8.DecodeRune(seq); size < 0 {"
  },
  {
   "name": "url-host-localhost-fold",
   "file": "fileurl.go",
   "find": "mapped := jsToLowerCase(norm.NFKC.String(b.String()))",
-  "replace": "mapped := b.String()"
+  "replace": "mapped := jsToLowerCase(norm.NFC.String(b.String()))"
  },
  {
   "name": "url-host-ignored",
@@ -648,12 +594,6 @@
   "replace": "for _, prefix := range []string{\"mnt/\", \"\"} {"
  },
  {
-  "name": "flavor-drive-unc",
-  "file": "pathflavor.go",
-  "find": "|| strings.HasPrefix(value, \"//\") ||",
-  "replace": "||"
- },
- {
   "name": "flavor-drive-backslash",
   "file": "pathflavor.go",
   "find": "|| strings.Contains(value, `\\`) {",
@@ -720,12 +660,6 @@
   "replace": ""
  },
  {
-  "name": "canon-empty",
-  "file": "canonicalize.go",
-  "find": "if absolutePath == \"\" {\n\t\treturn absolutePath",
-  "replace": "if absolutePath == \"x\" {\n\t\treturn absolutePath"
- },
- {
   "name": "canon-error-class",
   "file": "canonicalize.go",
   "find": "if !isENOENTorENOTDIR(err) {\n\t\t\t\treturn absolutePath",
@@ -774,12 +708,6 @@
   "replace": "abs, err := p, error(nil)"
  },
  {
-  "name": "exists-empty",
-  "file": "canonicalize.go",
-  "find": "var existsSync = func(p string) bool {\n\tif p == \"\" {\n\t\treturn false\n\t}",
-  "replace": "var existsSync = func(p string) bool {"
- },
- {
   "name": "native-spaces",
   "file": "nativetarget.go",
   "find": "spaced := unicodeSpaces.ReplaceAllString(rawPath, \" \")",
@@ -808,12 +736,6 @@
   "file": "nativetarget.go",
   "find": "prefixes = []string{\"~/\", `~\\`}",
   "replace": "prefixes = []string{\"~/\"}"
- },
- {
-  "name": "native-home-join",
-  "file": "nativetarget.go",
-  "find": "return flavor.impl().Join(homeDir(), value[2:]), true",
-  "replace": "return homeDir() + value[1:], true"
  },
  {
   "name": "native-file-url",
@@ -861,7 +783,7 @@
   "name": "native-variant-nfd",
   "file": "nativetarget.go",
   "find": "nfd := norm.NFD.String(resolved)",
-  "replace": "nfd := resolved"
+  "replace": "nfd := norm.NFC.String(resolved)"
  },
  {
   "name": "native-variant-curly",
@@ -874,12 +796,6 @@
   "file": "nativetarget.go",
   "find": "var amPm = regexp.MustCompile(`(?i) (AM|PM)\\.`)",
   "replace": "var amPm = regexp.MustCompile(`(?i) (AM)\\.`)"
- },
- {
-  "name": "native-variant-self",
-  "file": "nativetarget.go",
-  "find": "if v != resolved && exists(v) {",
-  "replace": "if exists(v) {"
  },
  {
   "name": "native-spaces-class",
@@ -945,7 +861,7 @@
   "name": "infra-excluded",
   "file": "infraread.go",
   "find": "if flavor.IsWithin(normalizedPath, expandHomePath(dir)) {\n\t\t\treturn false",
-  "replace": "if false {\n\t\t\treturn false"
+  "replace": "if flavor.IsWithin(normalizedPath, expandHomePath(dir)) && false {\n\t\t\treturn false"
  },
  {
   "name": "infra-excluded-first",
@@ -1017,7 +933,7 @@
   "name": "norm-at",
   "file": "pathnormalization.go",
   "find": "expandHomePath(strings.TrimPrefix(trimmed, \"@\"))",
-  "replace": "expandHomePath(trimmed)"
+  "replace": "expandHomePath(strings.TrimPrefix(trimmed, \"@@\"))"
  },
  {
   "name": "norm-star",
@@ -1050,12 +966,6 @@
   "replace": "if false {\n\t\tout = append(out, CwdRelativePolicyValues"
  },
  {
-  "name": "norm-relative-inside",
-  "file": "pathnormalization.go",
-  "find": "if absolute != normalizedCwd && !flavor.IsWithin(absolute, normalizedCwd) {",
-  "replace": "if !flavor.IsWithin(absolute, normalizedCwd) {"
- },
- {
   "name": "norm-relative-empty",
   "file": "pathnormalization.go",
   "find": "if rel == \"\" {\n\t\treturn []string{}",
@@ -1066,12 +976,6 @@
   "file": "pathnormalization.go",
   "find": "return flavor.Fold(CanonicalizePath(lexical, flavor))",
   "replace": "return CanonicalizePath(lexical, flavor)"
- },
- {
-  "name": "norm-canonical-empty",
-  "file": "pathnormalization.go",
-  "find": "if lexical == \"\" {\n\t\treturn \"\"\n\t}\n\treturn flavor.Fold",
-  "replace": "if lexical == \"x\" {\n\t\treturn \"\"\n\t}\n\treturn flavor.Fold"
  },
  {
   "name": "norm-unique",
@@ -1209,7 +1113,7 @@
   "name": "pn-dir-isdir",
   "file": "pathnormalizer.go",
   "find": "return err == nil && st.IsDir()",
-  "replace": "return err == nil"
+  "replace": "return err == nil && (st.IsDir() || true)"
  },
  {
   "name": "pn-cd-mount",
@@ -1252,12 +1156,6 @@
   "file": "pathnormalizer.go",
   "find": "return IsPiInfrastructureRead(toolName, accessPath.BoundaryValue(),",
   "replace": "return IsPiInfrastructureRead(toolName, accessPath.Value(),"
- },
- {
-  "name": "pn-entry-empty",
-  "file": "pathnormalizer.go",
-  "find": "if absolutePath == \"\" {\n\t\treturn false\n\t}\n\t_, err := os.Lstat",
-  "replace": "if absolutePath == \"x\" {\n\t\treturn false\n\t}\n\t_, err := os.Lstat"
  },
  {
   "name": "pn-entry-lstat",
@@ -1434,24 +1332,6 @@
   "replace": "return l.targets"
  },
  {
-  "name": "mcp-qualified-trim",
-  "file": "mcptargets.go",
-  "find": "trimmed := jsTrim(value)\n\tif trimmed == \"\" {",
-  "replace": "trimmed := value\n\tif trimmed == \"\" {"
- },
- {
-  "name": "mcp-qualified-colon",
-  "file": "mcptargets.go",
-  "find": "if colon <= 0 || colon >= len(trimmed)-1 {",
-  "replace": "if colon < 0 || colon >= len(trimmed)-1 {"
- },
- {
-  "name": "mcp-qualified-last",
-  "file": "mcptargets.go",
-  "find": "if colon <= 0 || colon >= len(trimmed)-1 {",
-  "replace": "if colon <= 0 || colon > len(trimmed)-1 {"
- },
- {
   "name": "mcp-qualified-parts",
   "file": "mcptargets.go",
   "find": "server := jsTrim(trimmed[:colon])\n\ttool := jsTrim(trimmed[colon+1:])",
@@ -1468,12 +1348,6 @@
   "file": "mcptargets.go",
   "find": "if t == \"\" || !strings.HasPrefix(toolName, t+\"_\") {",
   "replace": "if t == \"\" || !strings.HasPrefix(toolName, t) {"
- },
- {
-  "name": "mcp-derived-trim",
-  "file": "mcptargets.go",
-  "find": "tool := jsTrim(toolName)\n\tif tool == \"\" {\n\t\treturn\n\t}\n\tif prefix",
-  "replace": "tool := toolName\n\tif tool == \"\" {\n\t\treturn\n\t}\n\tif prefix"
  },
  {
   "name": "mcp-suffix",
@@ -1527,7 +1401,7 @@
   "name": "mcp-search-server",
   "file": "mcptargets.go",
   "find": "targets.Add(\"mcp_server_\" + server)\n\t\t\ttargets.Add(server)\n\t\t}\n\t\ttargets.Add(search)",
-  "replace": "targets.Add(search)"
+  "replace": "\n\t\t}\n\t\ttargets.Add(search)"
  },
  {
   "name": "mcp-list",
@@ -1546,12 +1420,6 @@
   "file": "mcptargets.go",
   "find": "rest := jsSlice(jsTrim(toolName), len(PiMcpToolPrefix), jsEnd)",
   "replace": "rest := jsSlice(jsTrim(toolName), len(PiMcpToolPrefix)+1, jsEnd)"
- },
- {
-  "name": "mcp-pi-spellings",
-  "file": "mcptargets.go",
-  "find": "return uniqueStrings(append(configuredSpellings, sanitizedServer)), jsSlice",
-  "replace": "return append(configuredSpellings, sanitizedServer), jsSlice"
  },
  {
   "name": "mcp-pi-longest",
@@ -1592,8 +1460,8 @@
  {
   "name": "mcp-pi-units",
   "file": "mcptargets.go",
-  "find": "units := utf16.Encode([]rune(name))",
-  "replace": "units := []uint16(name)"
+  "find": "units := utf16.Encode([]rune(name))\n\tvar b strings.Builder\n\tfor _, u := range units {",
+  "replace": "_ = utf16.Encode\n\tvar b strings.Builder\n\tfor _, r := range []rune(name) {\n\t\tu := uint16(r)"
  },
  {
   "name": "in-comment",
@@ -1737,7 +1605,7 @@
   "name": "tip-mcp-arguments",
   "file": "toolinputpath.go",
   "find": "return byConvention(recordString(ToRecord(args), \"path\"))",
-  "replace": "return byConvention(recordString(record, \"path\"))"
+  "replace": "_ = args\n\t\treturn byConvention(recordString(record, \"path\"))"
  },
  {
   "name": "tip-extractor-origin",

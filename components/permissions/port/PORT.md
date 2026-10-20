@@ -164,7 +164,7 @@ recorded by `port/record-probe.sh`, not with the port.
 
 The shared layer the gates build on: Node's `path` module for both platforms, the path flavors, symlink canonicalization,
 `AccessPath`, `PathNormalizer`, the access-intent types, tool kinds, MCP targets, input normalization and the shared types. Twins
-first (all 473 upstream cases of the files below, one named skip), then the code, then a differential against the original's own
+first (all 472 upstream twins of the files below), then the code, then a differential against the original's own
 functions.
 
 | ID | Original | Go | Checked by |
@@ -185,7 +185,8 @@ How it is checked:
   `testdata/paths-oracle.json` and `testdata/native-target.json`; `paths_oracle_test.go` replays them. Every difference is a
   failure unless listed with its reason in `testdata/paths-differences.json` (one: `/dev/stdin` is a symlink into `/proc` on the
   recording host).
-- Mutations: `port/gen-mutations-paths.py` writes `port/mutations-paths.json`; run
+- Mutations: `port/gen-mutations-paths.py` writes `port/mutations-paths.json` (280 mutations: the first run of 302 left 63 alive; 22 were equivalent and are
+  left out with the reason in the generator, the rest got tests or a corpus row and are killed, the last 6 that did not compile were rebuilt); run
   `pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-paths.json`.
 - The win32 flavor is pure string logic and is tested on every OS; only the real-filesystem tests (`entryExists`, the parity
   layout, symlinks) depend on the host.

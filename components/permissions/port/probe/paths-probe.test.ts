@@ -76,6 +76,9 @@ const PATHS = [
   "C:", "C:\\", "C:\\a", "C:\\a\\", "C:a", "c:\\A\\B", "C:/a/b", "C:\\a\\..\\b", "C:\\..\\..", "\\", "\\\\", "\\\\server\\share",
   "\\\\server\\share\\x", "\\\\server\\share\\", "\\\\?\\C:\\x", "\\\\.\\pipe\\x", "\\a", "a\\b", "a\\..\\b", "a:b", "a:\\b", "a:/b",
   ".\\a", "..\\a", "C:\\a/b\\c", "D:\\", "d:", "1:\\x", "CON", "a:", "a::b", "x:y:z", "\\\\server\\share\\..\\..\\x", "//server/share/../..",
+  "\\\\?\\COM1:\\x", "\\\\?\\COM1:", "\\\\.\\COM1:\\x", "\\\\.\\C:\\x", "\\\\?\\UNC\\server\\share\\x", "COM1:", "com1:\\x",
+  "NUL:foo", "LPT\u00b9:x", "COM\u00b9:", "CONa", "NULa", "AUX:", "a\\CON:\\b", "\\\\.\\", "\\\\?\\", "//?/C:/x", "//./pipe/x", "~//x", "~/../x",
+  "~/./x/", "/c/a\\b", "/mnt/c/a\\b", "/c/a\nb", "/c/\u2028x", "C:CON:", "x/CON:/y", "CON:/..",
   "/İ/ı", "C:\\İSTANBUL\\Σ", "/Σ", "ΑΣ", "ΑΣ.", "Σ", "/é/e\u0301", "/😀/x", "C:\\😀\\İ", "a\nb", "/a\tb", "/a/b/", "/a/b//", "C:\\a\\b\\\\",
 ];
 
@@ -84,7 +87,7 @@ const FILE_URLS = [
   "file:///C:/x", "file:///C:/", "file:///C|/x", "file:///c:/x/../..", "file://C:/x", "file:///C:", "file:///C:x", "file://localhost/x",
   "file://LOCALHOST/C:/x", "file://host/x", "file://host/C:/x", "file://host", "file://HOST.Example.com/Share/x", "file://127.0.0.1/x",
   "file://[::1]/x", "file://a b/x", "file://%61/x", "file:///a%2fb", "file:///a%2Fb", "file:///a%5cb", "file:///a%5Cb", "file:///a%zz",
-  "file:///a%", "file:///a%e2%82%ac", "file:///a%e2%82", "file:///a%c0%80", "file:///a%ed%a0%80", "file:///a%00b", "file:///a b",
+  "file:///a%", "file:///a%e2%82%ac", "file:///a%EF%BF%BDb", "file:///a%ef%bf%be", "file:///a%f4%8f%bf%bf", "file:///a%f4%90%80%80", "file:///a%ed%9f%bf", "file:///a%f0%9f%98%80", "file:///a%e2%82", "file:///a%c0%80", "file:///a%ed%a0%80", "file:///a%00b", "file:///a b",
   "file:///a\\b", "file:\\\\\\a", "file:////a", "file://///a", "file:///a?x", "file:///a#x", "file:///a?x#y/z", "file:///%2e%2e/x",
   "file:///.%2E/x", "file:///%2e/x", "file:///a/%2e%2e/b", "file:///a/%2E%2E", "file:///a/..", "file:///a/.", "file:///a/", "file:///a//b",
   "file:///é", "file:///😀", "file:///\u00A0", "file:///a\tb", "file:///a\nb", "  file:///a  ", "file:///a^b", "file:///a`b", "file:///a{b}",
@@ -96,10 +99,12 @@ const FILE_URLS = [
   "file://_a/x", "file://a_b.com/x", "file://[::ffff:1.2.3.4]/x", "file://[xyz]/x", "file://[::1/x", "file://%6cocalhost/x",
   "file://ＬＯＣＡＬＨＯＳＴ/x", "file://local\u00ADhost/x", "file://localhost./x", "file://localhost:80/x", "file://user@host/x", "file://host:80/x",
   "file://localhost", "file://LocalHost/etc/passwd", "file:///C:/a/b/../c", "file:///C:/a/./b", "file:////server/share/x", "file:///%5C%5Cserver/x",
-  "file:/C:/x", "file:C:/x", "file:///c:", "file:///c:/", "file:///c:x/y", "file:///\\C:/x", "file:\\\\C:\\x",
+  "file:/C:/x", "file:C:/x", "file:///c:", "file:///c:/", "file:///c:x/y", "file:///\\C:/x", "file:\\\\C:\\x", "file://1.2.3.256/x", "file://1.2.65536/x", "file://16777216/x", "file://4294967296/x",
+  "file://4294967295/x", "file://[1:0:0:2:3:4:5:6]/x", "file://[0:0:0:0:0:0:0:1]/x", "file://[1:0:0:0:0:0:0:0]/x", "file://[::]/x", "file://[1::]/x",
+  "file://[2001:db8:0:0:1:0:0:1]/x",
 ];
 
-const SERVER_LISTS: string[][] = [[], ["exa"], ["github", "todoist"], ["foo", "foo_bar"], ["foo_bar", "foo"], ["danger-srv"], ["a", "a--b"], ["a--b", "a"], ["a.b", "a_b"], ["my.srv"], ["github", "  "], [" exa "], ["😀"]];
+const SERVER_LISTS: string[][] = [[], ["exa"], ["github", "todoist"], ["foo", "foo_bar"], ["foo_bar", "foo"], ["danger-srv"], ["a", "a--b"], ["a--b", "a"], ["a.b", "a_b"], ["my.srv"], ["github", "  "], [" exa "], ["😀"], ["git"], ["a_b", "a.b"], ["My_Srv"], ["exa", "github"]];
 
 const MCP_INPUTS: unknown[] = [
   {}, null, "x", [], { tool: "exa_search" }, { tool: "exa:search" }, { tool: "search", server: "exa" }, { tool: "search_code_exa" },
@@ -108,13 +113,13 @@ const MCP_INPUTS: unknown[] = [
   { connect: "exa" }, { connect: " exa " }, { describe: "exa:search" }, { describe: "x", server: "s" }, { search: "weather" },
   { search: "w", server: "exa" }, { server: "exa" }, { server: " " }, { unrelated: "v" }, { tool: 5 }, { tool: "t", connect: "c" },
   { connect: "c", describe: "d" }, { describe: "d", search: "s" }, { search: "s", server: "v" }, { tool: "a:b:c" }, { tool: "a_b", server: "a" },
-  { tool: "😀_x" }, { tool: "x_😀" },
+  { tool: "😀_x" }, { tool: "x_😀" }, { tool: "exa:search", server: "other" },
 ];
 
 const PI_MCP_NAMES = [
   "mcp__a__b", "mcp__danger_srv__wipe", "mcp__a__b__c", "mcp__srv__get_x_1a2b3c4d", "mcp__github__github_x", "mcp__a_b__x", "mcp__a__b__x",
   "mcp__my_srv__x", "mcp__srv__get__x", " mcp__a__b ", "mcp__", "mcp__a", "mcp__a__", "mcp____b", "mcp__😀__x", "mcp____", "mcp__x__y__",
-  "mcp__a__😀", "mcp_a__b", "mcp", "bash",
+  "mcp__a__😀", "mcp__My_Srv__x", "mcp_a__b", "mcp", "bash",
 ];
 
 const TOOL_NAMES = [
@@ -248,7 +253,7 @@ it("records the original's path-layer results", () => {
     "/x/caf\u00e9.txt", "/x/cafe\u0301.txt", "/x/d'x.txt", "/x/d\u2019x.txt", "/x/d'\u00e9.txt", "/x/d'x 1 PM.png", "d'x.txt", "@d'x.txt",
     "@@a", "@~/x", "~/\u00e9", "/mnt/d/a/b.txt", "/c/x/y", "/C", "/c/", "/cygdrive/e/b/c", "//server/share", "/c\\x", "file:///etc/hosts",
     "file:///etc/h%6Fsts", "file://host/x", "file:///C:/x/y%20z", "~user/x", "$HOME/x", "'x.txt'", " x.txt ", "../other/x", "\u00A0", "@",
-    "/x/\u1e9b\u0323.txt", "/x/\ufb01.txt", "/x/\u212b.txt",
+    "/x/caf\u00e9 1 PM.png", "/x/a\u205Fb", "/x/\u1e9b\u0323.txt", "/x/\ufb01.txt", "/x/\u212b.txt",
   ];
   const variantsOf = (resolved: string): string[] => {
     const nfd = resolved.normalize("NFD");

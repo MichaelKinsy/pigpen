@@ -661,8 +661,7 @@ func decodeURIComponent(s string) (string, error) {
 			seq = append(seq, cb)
 			j += 3
 		}
-		r, size := utf8.DecodeRune(seq)
-		if r == utf8.RuneError || size != n {
+		if _, size := utf8.DecodeRune(seq); size != n {
 			return "", errInvalidFileURL
 		}
 		out = append(out, seq...)

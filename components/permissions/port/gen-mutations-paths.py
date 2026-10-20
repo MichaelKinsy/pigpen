@@ -41,10 +41,8 @@ m("np-posix-root", N, "if len(path) > 0 && path[0] == '/' {\n\t\t\treturn \"/\""
 m("np-sep-win", N, "func isWinSep(c byte) bool   { return c == '/' || c == '\\\\' }", "func isWinSep(c byte) bool   { return c == '\\\\' }")
 m("np-win-device-root-lower", N, "return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')\n}", "return (c >= 'A' && c <= 'Z')\n}")
 m("np-win-resolve-device-roots", N, "if first != \".\" && first != \"?\" {", "if first != \".\" {")
-m("np-win-resolve-device-rootend", N, "device = `\\\\` + first\n\t\t\t\t\t\trootEnd = 4\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t} else {", "device = `\\\\` + first\n\t\t\t\t\t\trootEnd = 3\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t} else {")
 m("np-win-resolve-other-device", N, "if jsToLowerCase(device) != jsToLowerCase(resolvedDevice) {", "if device != resolvedDevice {")
 m("np-win-resolve-abs", N, "resolvedTail = path[rootEnd:] + `\\` + resolvedTail\n\t\t\tresolvedAbsolute = isAbsolute", "resolvedTail = path[rootEnd:] + `\\` + resolvedTail\n\t\t\tresolvedAbsolute = false")
-m("np-win-resolve-drive-sep", N, "rootEnd = 3\n\t\t\t}\n\t\t}\n\t\tif len(device) > 0 {", "rootEnd = 2\n\t\t\t}\n\t\t}\n\t\tif len(device) > 0 {")
 m("np-win-resolve-drive-cwd", N, "strings.ToLower(sliceUnits(path, 0, 2)) != strings.ToLower(resolvedDevice) && path[2] == '\\\\'", "strings.ToLower(sliceUnits(path, 0, 2)) == strings.ToLower(resolvedDevice) && path[2] == '\\\\'")
 m("np-win-resolve-relative-dot", N, "\tif s := resolvedDevice + resolvedTail; s != \"\" {\n\t\treturn s\n\t}\n\treturn \".\"", "\treturn resolvedDevice + resolvedTail")
 m("np-win-normalize-single", N, "if isPosixSep(code) {\n\t\t\treturn `\\`", "if isPosixSep(code) {\n\t\t\treturn `/`")
@@ -53,7 +51,6 @@ m("np-win-normalize-device", N, "if first == \".\" || first == \"?\" {\n\t\t\t\t
 m("np-win-normalize-reserved-device", N, "device = `\\\\?\\` + possible", "device = `\\\\.\\` + possible")
 m("np-win-normalize-reserved-colon", N, "} else if isWindowsReservedName(path, colon) {\n\t\t\tdevice = path[:colon+1]", "} else if !isWindowsReservedName(path, colon) {\n\t\t\tdevice = path[:colon+1]")
 m("np-win-normalize-trailing", N, "if len(tail) > 0 && isWinSep(path[n-1]) {\n\t\ttail += `\\`", "if len(tail) > 0 && path[n-1] == '/' {\n\t\ttail += `\\`")
-m("np-win-normalize-cve-drive", N, "if len(tail) >= 2 && isWinDeviceRoot(tail[0]) && tail[1] == ':' {", "if len(tail) >= 3 && isWinDeviceRoot(tail[0]) && tail[1] == ':' {")
 m("np-win-normalize-cve-colon", N, "if index == n-1 || isWinSep(path[index+1]) {", "if index == n-1 {")
 m("np-win-normalize-reserved-last", N, "if isWindowsReservedName(path, strings.IndexByte(path, ':')) {\n\t\treturn `.\\` + device + tail", "if false {\n\t\treturn `.\\` + device + tail")
 m("np-win-reserved-negative", N, "if colonIndex < 0 {\n\t\trs := []rune(path)\n\t\tif len(rs) == 0 {\n\t\t\treturn false\n\t\t}\n\t\tpart = string(rs[:len(rs)-1])", "if colonIndex < 0 {\n\t\treturn false")
@@ -69,8 +66,6 @@ m("np-win-relative-length-branch", N, "if jsLen(fromOrigS) != jsLen(fromS) || js
 m("np-win-relative-length-segments", N, "return strings.Repeat(`..\\`, fromLen-i) + strings.Join(toSplit[i:], `\\`)", "return strings.Join(toSplit[i:], `\\`)")
 m("np-win-relative-zero", N, "\t\tif i == 0 {\n\t\t\treturn toOrigS\n\t\t} else if i == length {", "\t\tif i == 1 {\n\t\t\treturn toOrigS\n\t\t} else if i == length {")
 m("np-win-relative-mismatch", N, "\tif i != length {\n\t\tif lastCommonSep == -1 {\n\t\t\treturn toOrigS", "\tif i != length {\n\t\tif lastCommonSep == -1 {\n\t\t\treturn fromOrigS")
-m("np-win-relative-device-root", N, "if i == 2 {\n\t\t\t\treturn s16(sliceU16(toOrig, toStart+i, len(toOrig)))", "if i == 3 {\n\t\t\t\treturn s16(sliceU16(toOrig, toStart+i, len(toOrig)))")
-m("np-win-relative-to-root", N, "} else if i == 2 {\n\t\t\t\tlastCommonSep = 3", "} else if i == 2 {\n\t\t\t\tlastCommonSep = 2")
 m("np-win-relative-up", N, "out += `\\..`", "out += `..`")
 m("np-win-root-unc", N, "} else if j != shareStart {\n\t\t\t\t\trootEnd = j + 1", "} else if j != shareStart {\n\t\t\t\t\trootEnd = j")
 m("np-win-root-drive", N, "\t\tif n <= 2 {\n\t\t\treturn path\n\t\t}\n\t\trootEnd = 2\n\t\tif isWinSep(path[2]) {\n\t\t\tif n == 3 {", "\t\tif n <= 1 {\n\t\t\treturn path\n\t\t}\n\t\trootEnd = 2\n\t\tif isWinSep(path[2]) {\n\t\t\tif n == 3 {")
@@ -84,7 +79,6 @@ m("lower-dotted-i", "jscase.go", "b.WriteString(\"i\\u0307\")", "b.WriteString(\
 m("lower-sigma-before", "jscase.go", "\t\tbefore = isCased(rs[j])\n\t\tbreak", "\t\tbefore = true\n\t\tbreak")
 m("lower-sigma-after", "jscase.go", "\t\treturn !isCased(rs[j])\n\t}\n\treturn true", "\t\treturn true\n\t}\n\treturn true")
 m("lower-ignorable", "jscase.go", "return unicode.In(r, unicode.Mn, unicode.Me, unicode.Cf, unicode.Lm, unicode.Sk)", "return false")
-m("lower-ascii", "jscase.go", "if ascii {\n\t\treturn strings.ToLower(s)", "if false {\n\t\treturn strings.ToLower(s)")
 
 # fileurl.go
 U = "fileurl.go"
@@ -98,9 +92,6 @@ m("url-dotdot", U, "case \"..\", \".%2e\", \"%2e.\", \"%2e%2e\":", "case \"..\":
 m("url-dot", U, "return l == \".\" || l == \"%2e\"", "return l == \".\"")
 m("url-dotdot-drive", U, "if !(len(path) == 1 && isNormalizedDriveLetter(path[0])) && len(path) > 0 {", "if len(path) > 0 {")
 m("url-drive-normalize", U, "enc = seg[:1] + \":\"", "enc = seg")
-m("url-encode-set-space", U, "case ' ', '\"', '#', '<', '>', '?', '^', '`', '{', '}':", "case '\"', '#', '<', '>', '?', '^', '`', '{', '}':")
-m("url-encode-caret", U, "case ' ', '\"', '#', '<', '>', '?', '^', '`', '{', '}':", "case ' ', '\"', '#', '<', '>', '?', '`', '{', '}':")
-m("url-encode-high", U, "if r <= 0x1f || r >= 0x7f {", "if r <= 0x1f || r >= 0x80 {")
 m("url-posix-host", U, "if host != \"\" {\n\t\treturn \"\", errInvalidFileURL\n\t}\n\tfor n := 0; n < len(pathname); n++ {", "if host == \"x\" {\n\t\treturn \"\", errInvalidFileURL\n\t}\n\tfor n := 0; n < len(pathname); n++ {")
 m("url-posix-slash", U, "pathname[n+1] == '2' && n+2 < len(pathname) && pathname[n+2]|0x20 == 'f'", "pathname[n+1] == '2' && n+2 < len(pathname) && pathname[n+2] == 'f'")
 m("url-win-backslash", U, "(pathname[n+1] == '5' && third == 'c')", "false")
@@ -108,8 +99,8 @@ m("url-win-slash-swap", U, "pathname = strings.ReplaceAll(pathname, \"/\", `\\`)
 m("url-win-unc", U, "return `\\\\` + host + pathname, nil", "return host + pathname, nil")
 m("url-win-drive", U, "if letter < 'a' || letter > 'z' || pathname[2] != ':' {", "if letter < 'a' || letter > 'z' {")
 m("url-decode", U, "func decodeURIComponent(s string) (string, error) {\n\tif !strings.Contains(s, \"%\") {", "func decodeURIComponent(s string) (string, error) {\n\tif true {")
-m("url-decode-overlong", U, "if r == utf8.RuneError || size != n {", "if size != n {")
-m("url-host-localhost-fold", U, "mapped := jsToLowerCase(norm.NFKC.String(b.String()))", "mapped := b.String()")
+m("url-decode-overlong", U, "if _, size := utf8.DecodeRune(seq); size != n {", "if _, size := utf8.DecodeRune(seq); size < 0 {")
+m("url-host-localhost-fold", U, "mapped := jsToLowerCase(norm.NFKC.String(b.String()))", "mapped := jsToLowerCase(norm.NFC.String(b.String()))")
 m("url-host-ignored", U, "if uts46Ignored(r) {\n\t\t\tcontinue", "if false {\n\t\t\tcontinue")
 m("url-host-forbidden", U, "case '#', '/', ':', '<', '>', '?', '@', '[', '\\\\', ']', '^', '|', '%':", "case '#', '/', ':', '<', '>', '?', '[', '\\\\', ']', '^', '|', '%':")
 m("url-host-number", U, "if endsInANumber(domain) {", "if false {")
@@ -133,7 +124,6 @@ m("flavor-bash-shape", F, "if f.windows() {\n\t\treturn ClassifyWin32BashToken(t
 m("flavor-tool-shell", F, "if f.windows() {\n\t\treturn toWindowsDrivePath(value)", "if false {\n\t\treturn toWindowsDrivePath(value)")
 m("flavor-platform", F, "if goos == \"windows\" || goos == \"win32\" {", "if goos == \"windows\" {")
 m("flavor-drive-mnt", F, "for _, prefix := range []string{\"mnt/\", \"cygdrive/\", \"\"} {", "for _, prefix := range []string{\"mnt/\", \"\"} {")
-m("flavor-drive-unc", F, "|| strings.HasPrefix(value, \"//\") ||", "||")
 m("flavor-drive-backslash", F, "|| strings.Contains(value, `\\`) {", "{")
 m("flavor-drive-tail", F, "if tail[0] != '/' || hasLineTerminator(tail[1:]) {", "if tail[0] != '/' {")
 m("flavor-drive-upper", F, "return strings.ToUpper(string(letter)) + `:\\` + strings.ReplaceAll(tail[1:], \"/\", `\\`)", "return string(letter) + `:\\` + strings.ReplaceAll(tail[1:], \"/\", `\\`)")
@@ -150,7 +140,6 @@ m("safe-null", "safepaths.go", "\"/dev/null\":   true,", "")
 
 # canonicalize.go
 C = "canonicalize.go"
-m("canon-empty", C, "if absolutePath == \"\" {\n\t\treturn absolutePath", "if absolutePath == \"x\" {\n\t\treturn absolutePath")
 m("canon-error-class", C, "if !isENOENTorENOTDIR(err) {\n\t\t\t\treturn absolutePath", "if false {\n\t\t\t\treturn absolutePath")
 m("canon-notdir", C, "|| errors.Is(err, syscall.ENOTDIR)", "")
 m("canon-enoent", C, "return errors.Is(err, fs.ErrNotExist) || errors.Is(err, syscall.ENOENT) ||", "return false ||")
@@ -159,7 +148,6 @@ m("canon-walk", C, "for i := len(parts); i >= 0; i-- {", "for i := len(parts); i
 m("canon-root", C, "root := impl.Root(absolutePath)", "root := \"\"")
 m("canon-empty-candidate", C, "if p == \"\" {\n\t\treturn \"\", &fs.PathError", "if p == \"x\" {\n\t\treturn \"\", &fs.PathError")
 m("canon-abs", C, "abs, err := filepath.Abs(p)", "abs, err := p, error(nil)")
-m("exists-empty", C, "var existsSync = func(p string) bool {\n\tif p == \"\" {\n\t\treturn false\n\t}", "var existsSync = func(p string) bool {")
 
 # nativetarget.go
 T = "nativetarget.go"
@@ -168,7 +156,6 @@ m("native-at", T, "unprefixed := strings.TrimPrefix(spaced, \"@\")", "unprefixed
 m("native-rewritten", T, "rewritten = spaced != rawPath || driveMapped != unprefixed", "rewritten = spaced != rawPath")
 m("native-home-bare", T, "if value == \"~\" {\n\t\treturn homeDir(), true", "if value == \"~x\" {\n\t\treturn homeDir(), true")
 m("native-home-backslash", T, "prefixes = []string{\"~/\", `~\\`}", "prefixes = []string{\"~/\"}")
-m("native-home-join", T, "return flavor.impl().Join(homeDir(), value[2:]), true", "return homeDir() + value[1:], true")
 m("native-file-url", T, "if strings.HasPrefix(driveMapped, \"file://\") {", "if strings.HasPrefix(driveMapped, \"file:///\") {")
 m("native-file-rewritten", T, "return p, true\n\t\t}\n\t\t// Pi's tool throws", "return p, false\n\t\t}\n\t\t// Pi's tool throws")
 m("native-fallback-flag", T, "if options.ReadFallbacks {\n\t\tif fallback", "if !options.ReadFallbacks {\n\t\tif fallback")
@@ -176,10 +163,9 @@ m("native-fallback-rewritten", T, "return NativeToolTarget{Target: fallback, Rew
 m("native-relative", T, "if !flavor.impl().IsAbsolute(value) {\n\t\tout.RelativeSpelling = &value", "if flavor.impl().IsAbsolute(value) {\n\t\tout.RelativeSpelling = &value")
 m("native-variant-exists", T, "if exists(resolved) {\n\t\treturn \"\", false", "if false {\n\t\treturn \"\", false")
 m("native-variant-order", T, "\t\tamPm.ReplaceAllString(resolved, narrowNoBreakSpace+\"${1}.\"),\n\t\tnfd,", "\t\tnfd,\n\t\tamPm.ReplaceAllString(resolved, narrowNoBreakSpace+\"${1}.\"),")
-m("native-variant-nfd", T, "nfd := norm.NFD.String(resolved)", "nfd := resolved")
+m("native-variant-nfd", T, "nfd := norm.NFD.String(resolved)", "nfd := norm.NFC.String(resolved)")
 m("native-variant-curly", T, "func toCurlyQuotes(value string) string { return strings.ReplaceAll(value, \"'\", \"\\u2019\") }", "func toCurlyQuotes(value string) string { return value }")
 m("native-variant-ampm", T, "var amPm = regexp.MustCompile(`(?i) (AM|PM)\\.`)", "var amPm = regexp.MustCompile(`(?i) (AM)\\.`)")
-m("native-variant-self", T, "if v != resolved && exists(v) {", "if exists(v) {")
 m("native-spaces-class", T, "[\\u00A0\\u2000-\\u200A\\u202F\\u205F\\u3000]", "[\\u00A0\\u2000-\\u200A\\u202F\\u3000]")
 
 # approvalpattern.go / pathcontainment.go / infraread.go
@@ -194,7 +180,7 @@ m("containment-safe", "pathcontainment.go", "if IsSafeSystemPath(canonicalPath) 
 m("containment-within", "pathcontainment.go", "return !flavor.IsWithin(canonicalPath, canonicalCwd)", "return flavor.IsWithin(canonicalPath, canonicalCwd)")
 I = "infraread.go"
 m("infra-read-only", I, "if !ReadOnlyPathBearingTools[toolName] {", "if false {")
-m("infra-excluded", I, "if flavor.IsWithin(normalizedPath, expandHomePath(dir)) {\n\t\t\treturn false", "if false {\n\t\t\treturn false")
+m("infra-excluded", I, "if flavor.IsWithin(normalizedPath, expandHomePath(dir)) {\n\t\t\treturn false", "if flavor.IsWithin(normalizedPath, expandHomePath(dir)) && false {\n\t\t\treturn false")
 m("infra-excluded-first", I, "\tfor _, dir := range excludedDirs {", "\tfor _, dir := range excludedDirs[:0] {")
 m("infra-glob", I, "if containsGlobChars(dir) {", "if false {")
 m("infra-glob-chars", I, "strings.ContainsAny(value, \"*?\")", "strings.ContainsAny(value, \"*\")")
@@ -209,16 +195,14 @@ m("norm-empty", P, "if cleaned == \"\" {\n\t\treturn \"\"\n\t}\n\treturn flavor.
 m("norm-trim", P, "trimmed := jsTrim(pathValue)", "trimmed := pathValue")
 m("norm-quote-lead", P, "if len(trimmed) > 0 && (trimmed[0] == '\\'' || trimmed[0] == '\"') {\n\t\ttrimmed = trimmed[1:]", "if len(trimmed) > 0 && trimmed[0] == '\"' {\n\t\ttrimmed = trimmed[1:]")
 m("norm-quote-trail", P, "trimmed[len(trimmed)-1] == '\\'' || trimmed[len(trimmed)-1] == '\"')", "trimmed[len(trimmed)-1] == '\"')")
-m("norm-at", P, "expandHomePath(strings.TrimPrefix(trimmed, \"@\"))", "expandHomePath(trimmed)")
+m("norm-at", P, "expandHomePath(strings.TrimPrefix(trimmed, \"@\"))", "expandHomePath(strings.TrimPrefix(trimmed, \"@@\"))")
 m("norm-star", P, "if literal == \"*\" {\n\t\treturn []string{\"*\"}", "if literal == \"**\" {\n\t\treturn []string{\"*\"}")
 m("norm-literal-empty", P, "if literal == \"\" {\n\t\treturn []string{}", "if literal == \"x\" {\n\t\treturn []string{}")
 m("norm-base", P, "if resolveBase == nil {\n\t\tresolveBase = options.Cwd", "if resolveBase == nil {\n\t\tresolveBase = nil")
 m("norm-base-empty", P, "if resolveBase == nil || *resolveBase == \"\" {", "if resolveBase == nil {")
 m("norm-relative-alias", P, "if options.Cwd != nil && *options.Cwd != \"\" {\n\t\tout = append(out, CwdRelativePolicyValues", "if false {\n\t\tout = append(out, CwdRelativePolicyValues")
-m("norm-relative-inside", P, "if absolute != normalizedCwd && !flavor.IsWithin(absolute, normalizedCwd) {", "if !flavor.IsWithin(absolute, normalizedCwd) {")
 m("norm-relative-empty", P, "if rel == \"\" {\n\t\treturn []string{}", "if rel == \"x\" {\n\t\treturn []string{}")
 m("norm-canonical-fold", P, "return flavor.Fold(CanonicalizePath(lexical, flavor))", "return CanonicalizePath(lexical, flavor)")
-m("norm-canonical-empty", P, "if lexical == \"\" {\n\t\treturn \"\"\n\t}\n\treturn flavor.Fold", "if lexical == \"x\" {\n\t\treturn \"\"\n\t}\n\treturn flavor.Fold")
 m("norm-unique", P, "return uniqueStrings(append(getAbsolutePathPolicyValues(pathValue, options, flavor), literal))", "return append(getAbsolutePathPolicyValues(pathValue, options, flavor), literal)")
 
 # accesspath.go
@@ -247,7 +231,7 @@ m("pn-bash-device", PN, "case BashTokenDevice:\n\t\treturn AccessPathForDevice(t
 m("pn-bash-mount", PN, "return n.ForPath(shape.WindowsPath, resolveBase)", "return n.ForPath(token, resolveBase)")
 m("pn-bash-posix", PN, "return n.ForLiteral(NormalizePathPolicyLiteral(token))", "return n.ForPath(token, resolveBase)")
 m("pn-dir-probe", PN, "if accessPath.BoundaryValue() == \"\" {\n\t\treturn false", "if false {\n\t\treturn false")
-m("pn-dir-isdir", PN, "return err == nil && st.IsDir()", "return err == nil")
+m("pn-dir-isdir", PN, "return err == nil && st.IsDir()", "return err == nil && (st.IsDir() || true)")
 m("pn-cd-mount", PN, "case BashTokenDriveMount:\n\t\treturn BashCdTarget{Kind: \"absolute\", Value: shape.WindowsPath}", "case BashTokenDriveMount:\n\t\treturn BashCdTarget{Kind: \"unknown\"}")
 m("pn-cd-unknown", PN, "case BashTokenDevice, BashTokenPosixAbsolute:\n\t\treturn BashCdTarget{Kind: \"unknown\"}", "case BashTokenDevice, BashTokenPosixAbsolute:\n\t\treturn BashCdTarget{Kind: \"relative\"}")
 m("pn-cd-absolute", PN, "if n.Flavor.impl().IsAbsolute(target) {", "if !n.Flavor.impl().IsAbsolute(target) {")
@@ -255,7 +239,6 @@ m("pn-resolve-base", PN, "return n.Flavor.impl().Resolve(n.cwd, offset)", "retur
 m("pn-join-base", PN, "return n.Flavor.impl().Join(offset, target)", "return n.Flavor.impl().Join(target, offset)")
 m("pn-canonical-cwd", PN, "canonicalCwd: CanonicalNormalizePathForComparison(cwd, cwd, flavor)", "canonicalCwd: cwd")
 m("pn-infra-boundary", PN, "return IsPiInfrastructureRead(toolName, accessPath.BoundaryValue(),", "return IsPiInfrastructureRead(toolName, accessPath.Value(),")
-m("pn-entry-empty", PN, "if absolutePath == \"\" {\n\t\treturn false\n\t}\n\t_, err := os.Lstat", "if absolutePath == \"x\" {\n\t\treturn false\n\t}\n\t_, err := os.Lstat")
 m("pn-entry-lstat", PN, "_, err := os.Lstat(absolutePath)", "_, err := os.Stat(absolutePath)")
 m("pn-approval-value", PN, "return DeriveApprovalPatterns(accessPath.Value(), n.Flavor,", "return DeriveApprovalPatterns(accessPath.BoundaryValue(), n.Flavor,")
 
@@ -293,13 +276,9 @@ G = "mcptargets.go"
 m("mcp-add-empty", G, "func (l *McpTargetList) Add(value string) {\n\tif value == \"\" {", "func (l *McpTargetList) Add(value string) {\n\tif value == \"x\" {")
 m("mcp-add-dup", G, "\tfor _, t := range l.targets {\n\t\tif t == value {\n\t\t\treturn\n\t\t}\n\t}", "")
 m("mcp-copy", G, "return append([]string{}, l.targets...)", "return l.targets")
-m("mcp-qualified-trim", G, "trimmed := jsTrim(value)\n\tif trimmed == \"\" {", "trimmed := value\n\tif trimmed == \"\" {")
-m("mcp-qualified-colon", G, "if colon <= 0 || colon >= len(trimmed)-1 {", "if colon < 0 || colon >= len(trimmed)-1 {")
-m("mcp-qualified-last", G, "if colon <= 0 || colon >= len(trimmed)-1 {", "if colon <= 0 || colon > len(trimmed)-1 {")
 m("mcp-qualified-parts", G, "server := jsTrim(trimmed[:colon])\n\ttool := jsTrim(trimmed[colon+1:])", "server := trimmed[:colon]\n\ttool := trimmed[colon+1:]")
 m("mcp-longest", G, "if !found || jsLen(t) > jsLen(longest) {", "if !found || jsLen(t) < jsLen(longest) {")
 m("mcp-prefix-skip", G, "if t == \"\" || !strings.HasPrefix(toolName, t+\"_\") {", "if t == \"\" || !strings.HasPrefix(toolName, t) {")
-m("mcp-derived-trim", G, "tool := jsTrim(toolName)\n\tif tool == \"\" {\n\t\treturn\n\t}\n\tif prefix", "tool := toolName\n\tif tool == \"\" {\n\t\treturn\n\t}\n\tif prefix")
 m("mcp-suffix", G, "if server == \"\" || !strings.HasSuffix(tool, \"_\"+server) {", "if server == \"\" || !strings.HasSuffix(tool, server) {")
 m("mcp-prefix-returns", G, "\t\ttargets.Add(tool)\n\t\ttargets.Add(prefix)\n\t\treturn\n\t}", "\t\ttargets.Add(tool)\n\t\ttargets.Add(prefix)\n\t}")
 m("mcp-hint", G, "if !haveServer && isQualified {", "if isQualified {")
@@ -308,19 +287,18 @@ m("mcp-raw", G, "targets.Add(tool)\n\ttargets.Add(rawReference)\n}", "targets.Ad
 m("mcp-call", G, "pushMcpToolPermissionTargets(tool, server, hasServer, configuredServerNames, targets)\n\t\ttargets.Add(\"mcp_call\")", "pushMcpToolPermissionTargets(tool, server, hasServer, configuredServerNames, targets)")
 m("mcp-connect", G, "targets.Add(\"mcp_connect_\" + connect)", "targets.Add(\"mcp_connect\" + connect)")
 m("mcp-describe", G, "targets.Add(\"mcp_describe\")", "targets.Add(\"mcp_describe_x\")")
-m("mcp-search-server", G, "targets.Add(\"mcp_server_\" + server)\n\t\t\ttargets.Add(server)\n\t\t}\n\t\ttargets.Add(search)", "targets.Add(search)")
+m("mcp-search-server", G, "targets.Add(\"mcp_server_\" + server)\n\t\t\ttargets.Add(server)\n\t\t}\n\t\ttargets.Add(search)", "\n\t\t}\n\t\ttargets.Add(search)")
 m("mcp-list", G, "targets.Add(\"mcp_list\")", "targets.Add(\"mcp_status\")")
 m("mcp-status", G, "targets.Add(\"mcp_status\")\n\t}\n\treturn targets.ToArray()", "}\n\treturn targets.ToArray()")
 m("mcp-priority", G, "case hasTool:", "case hasConnect:") if False else None
 m("mcp-pi-rest", G, "rest := jsSlice(jsTrim(toolName), len(PiMcpToolPrefix), jsEnd)", "rest := jsSlice(jsTrim(toolName), len(PiMcpToolPrefix)+1, jsEnd)")
-m("mcp-pi-spellings", G, "return uniqueStrings(append(configuredSpellings, sanitizedServer)), jsSlice", "return append(configuredSpellings, sanitizedServer), jsSlice")
 m("mcp-pi-longest", G, "if !haveServer || jsLen(sanitized) > jsLen(sanitizedServer) {", "if !haveServer || jsLen(sanitized) >= jsLen(sanitizedServer) {")
 m("mcp-pi-same", G, "} else if sanitized == sanitizedServer {", "} else if false {")
 m("mcp-pi-split", G, "sanitizedServer = jsSlice(rest, 0, jsIndexOf(rest, \"__\"))", "sanitizedServer = jsSlice(rest, 0, jsIndexOf(rest, \"_\"))")
 m("mcp-pi-tool", G, "jsSlice(rest, jsLen(sanitizedServer)+2, jsEnd)", "jsSlice(rest, jsLen(sanitizedServer)+1, jsEnd)")
 m("mcp-pi-order", G, "\t\ttargets.Add(server + \"_\" + tool)\n\t\ttargets.Add(server + \":\" + tool)\n\t\ttargets.Add(server)\n\t}\n\ttargets.Add(tool)\n\ttargets.Add(jsTrim(toolName))", "\t\ttargets.Add(server)\n\t\ttargets.Add(server + \"_\" + tool)\n\t\ttargets.Add(server + \":\" + tool)\n\t}\n\ttargets.Add(tool)\n\ttargets.Add(jsTrim(toolName))")
 m("mcp-pi-sanitize", G, "if u < 0x80 && (u == '_' || (u >= '0' && u <= '9') || (u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z')) {", "if u < 0x80 && (u == '_' || (u >= '0' && u <= '9') || (u >= 'a' && u <= 'z')) {")
-m("mcp-pi-units", G, "units := utf16.Encode([]rune(name))", "units := []uint16(name)")
+m("mcp-pi-units", G, "units := utf16.Encode([]rune(name))\n\tvar b strings.Builder\n\tfor _, u := range units {", "_ = utf16.Encode\n\tvar b strings.Builder\n\tfor _, r := range []rune(name) {\n\t\tu := uint16(r)")
 
 # inputnormalizer.go
 IN = "inputnormalizer.go"
@@ -350,7 +328,7 @@ m("in-default", IN, "return NormalizedInput{Surface: toolName, Values: []string{
 TP = "toolinputpath.go"
 m("tip-kind", TP, "if ClassifyToolKind(toolName) != ToolKindPath {\n\t\treturn \"\", false", "if false {\n\t\treturn \"\", false")
 m("tip-bash", TP, "case ToolKindBash:\n\t\treturn byConvention(\"\", false)", "case ToolKindBash:\n\t\treturn byConvention(recordString(record, \"path\"))")
-m("tip-mcp-arguments", TP, "return byConvention(recordString(ToRecord(args), \"path\"))", "return byConvention(recordString(record, \"path\"))")
+m("tip-mcp-arguments", TP, "return byConvention(recordString(ToRecord(args), \"path\"))", "_ = args\n\t\treturn byConvention(recordString(record, \"path\"))")
 m("tip-extractor-origin", TP, "if custom.Origin == RegistrationInherited {", "if false {")
 m("tip-extractor-trim", TP, "p, ok = GetNonEmptyString(p)", "")
 m("tip-extractor-nil", TP, "if extractors != nil {\n\t\tif custom := extractors.Resolve(toolName); custom != nil {", "if extractors != nil {\n\t\tif custom := extractors.Resolve(toolName); custom == nil {")
@@ -365,6 +343,18 @@ m("types-deny", "types.go", "_, ok := denyWithReason(value)\n\treturn ok", "retu
 m("reqid-prefix", "requestid.go", "return fmt.Sprintf(\"perm-%x-%x", "return fmt.Sprintf(\"req-%x-%x")
 m("reqid-random", "requestid.go", "b[6] = b[6]&0x0f | 0x40", "b[6] = b[6]&0x0f | 0x40\n\tb = [16]byte{}")
 
+# Mutants judged equivalent and left out, each with why the original's behavior cannot differ:
+#   win32 resolve device roots/drive separator (rootEnd 3 vs 4, 2 vs 3): the tail is normalized, so a leading separator vanishes;
+#   win32 normalize CVE guard (tail length 2): a two-character drive-like tail always ends in a colon the loop below also catches;
+#   win32 relative i == 2 branches: unreachable, the device root's trailing separator is trimmed before the comparison;
+#   file URL path percent-encode set: encoding then decoding returns the same characters, so fileURLToPath cannot tell;
+#   toolShellPath UNC guard: a "//x" rest starts with a slash, which is not a drive letter;
+#   canonicalize/exists/entryExists of an empty path: the filesystem call fails on "" anyway;
+#   resolveNativeToolTarget variant equal to the resolved path: exists(resolved) was already false;
+#   cwdRelative inside check and canonical of "": IsWithin(x, x) is true, and CanonicalizePath("") is "";
+#   ParseQualifiedMcpToolName trim/colon/last guards: the trimmed parts are checked for emptiness right after;
+#   the ASCII fast path of toLowerCase (the rune loop gives the same); `~/` joined with Join or by concatenation (resolve normalizes);
+#   derived-target trim: its caller already passes a trimmed name; Pi target spellings: McpTargetList dedupes anyway.
 M = [x for x in M if x]
 bad = 0
 for x in M:
