@@ -375,7 +375,9 @@ func registerGoalEvents(c *core) {
 		invalidateGoalPoolCache()
 		invalidateGoalLedgerCache()
 		_, _ = c.goalService.flushTurn(c.st) // P1-3: persist any buffered transaction before reload
-		c.loadState()
+		if err := c.loadState(); err != nil {
+			return nil, err
+		}
 		c.flush() // the original awaits the load: the queued UI update runs here
 		c.installGoalToolProfile(!loadGoalSettings(c.h.Cwd()).disableTasks)
 		c.rehydrateDraft()
@@ -456,7 +458,9 @@ func registerGoalEvents(c *core) {
 	c.pi.on("session_tree", func(c *core, _ map[string]any) (any, error) {
 		c.auditMessages.clear()
 		_, _ = c.goalService.flushTurn(c.st) // P1-3: persist any buffered transaction before reload
-		c.loadState()
+		if err := c.loadState(); err != nil {
+			return nil, err
+		}
 		c.flush()
 		c.rehydrateDraft()
 		c.syncTerminalInputPause()

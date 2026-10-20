@@ -859,7 +859,11 @@ func (c *core) loadState() error {
 	defaultRoot := defaultGoalRoot(c.h.Cwd())
 	c.focusStorageRoot = root
 	c.externalFocusRoot = root != defaultRoot
-	c.goals = c.st.readActiveGoalPool()
+	pool, err := c.st.readActiveGoalPoolChecked()
+	if err != nil {
+		return err // an external pool whose root went away fails the load, as readActiveGoalPoolAsync rejects
+	}
+	c.goals = pool
 	invalidateGoalSettingsCache()
 	c.tasksEnabled = !loadGoalSettings(c.h.Cwd()).disableTasks
 	c.focusRev++ // Session reload/tree navigation invalidates pending async focus operations.

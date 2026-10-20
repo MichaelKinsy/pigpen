@@ -56,7 +56,8 @@ func (s storage) external() bool { return s.root0 != "" }
 // readActiveGoalPoolChecked is readActiveGoalPool for a caller that must not mistake a pool that vanished for an empty one: an
 // external pool whose root was removed is an error (ENOENT), as in the original; a default pool never is.
 func (s storage) readActiveGoalPoolChecked() (*goalPool, error) {
-	if s.external() {
+	// A cached pool is served without touching the root (readActiveGoalPoolAsync's goalPoolCache hit).
+	if s.external() && poolCache[s.root()] == nil {
 		if _, err := os.Lstat(s.root0); err != nil {
 			return nil, err
 		}
