@@ -478,13 +478,10 @@ func (g *githubInterceptor) fetchViaAPI(ctx context.Context, owner, repo string,
 		lines = truncateInline(lines, content, "\n[File truncated at 100K chars]")
 		return &fetchResponse{Text: strings.Join(lines, "\n"), Title: owner + "/" + repo + " - " + info.Path, ContentType: "text/plain"}
 	}
-	var tree, readme string
-	var treeOK, readmeOK bool
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() { defer wg.Done(); tree, treeOK = g.fetchTreeViaAPI(ctx, owner, repo, ref) }()
-	go func() { defer wg.Done(); readme, readmeOK = g.fetchReadmeViaAPI(ctx, owner, repo, ref) }()
-	wg.Wait()
+	// The original starts both reads at once (Promise.all). They run one after the other here, tree first, so
+	// the host sees the commands in the order the original starts them; a parallel pair would race for it.
+	tree, treeOK := g.fetchTreeViaAPI(ctx, owner, repo, ref)
+	readme, readmeOK := g.fetchReadmeViaAPI(ctx, owner, repo, ref)
 	treeOK = treeOK && tree != ""
 	readmeOK = readmeOK && readme != ""
 	if !treeOK && !readmeOK {
@@ -871,4 +868,3 @@ func generateCloneContent(localPath string, info *githubURLInfo) string {
 	lines = append(lines, "", githubExploreHint)
 	return strings.Join(lines, "\n")
 }
-
