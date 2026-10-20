@@ -64,16 +64,16 @@ const (
 var raisedThresholds = []float64{0.6, 0.7, 0.8, 0.9, 0.95}
 
 var (
-	reCompressed = jsRE(`(?m)^\[pi-warden: (?:[a-z_]+; \d+ original characters|duplicate;)`)
-	reMarker     = jsRE(`^=== (.+) ===$`)
-	reHeading    = jsRE(`^## (.+)$`)
-	reFenceOpen  = jsRE("^(`{3,})(.*)$")
-	reLeftOut    = jsRE(`^left out: \d+ items?$`)
-	reToolTitle  = jsRE(`^tool call: (.+?)(, failed)?$`)
-	reReadTag    = lazyRE(`(?s)<read-files>\n?(.*?)\n?</read-files>`)
-	reModTag     = lazyRE(`(?s)<modified-files>\n?(.*?)\n?</modified-files>`)
-	reReadBlock  = lazyRE(`(?s)<read-files>.*?</read-files>`)
-	reModBlock   = lazyRE(`(?s)<modified-files>.*?</modified-files>`)
+	reCompressed       = jsRE(`(?m)^\[pi-warden: (?:[a-z_]+; \d+ original characters|duplicate;)`)
+	reMarker           = jsRE(`^=== (.+) ===$`)
+	reRelevanceHeading = jsRE(`^## (.+)$`)
+	reFenceOpen        = jsRE("^(`{3,})(.*)$")
+	reLeftOut          = jsRE(`^left out: \d+ items?$`)
+	reToolTitle        = jsRE(`^tool call: (.+?)(, failed)?$`)
+	reReadTag          = lazyRE(`(?s)<read-files>\n?(.*?)\n?</read-files>`)
+	reModTag           = lazyRE(`(?s)<modified-files>\n?(.*?)\n?</modified-files>`)
+	reReadBlock        = lazyRE(`(?s)<read-files>.*?</read-files>`)
+	reModBlock         = lazyRE(`(?s)<modified-files>.*?</modified-files>`)
 )
 
 // SpanMessage is the slice of the host's AgentMessage this module reads: the flat, role-discriminated wire message.
@@ -491,7 +491,7 @@ func piSummaryUnits(summary string, nextID func() string) ([]*Unit, FileLists) {
 	}
 	files := FileLists{ReadFiles: tag(reReadTag), ModifiedFiles: tag(reModTag)}
 	body := jsTrim(reModBlock.ReplaceAllString(reReadBlock.ReplaceAllString(summary, ""), ""))
-	preamble, parts := sections(body, reHeading)
+	preamble, parts := sections(body, reRelevanceHeading)
 	var units []*Unit
 	if intro := jsTrim(strings.Join(preamble, "\n")); intro != "" {
 		units = append(units, &Unit{Kind: UnitSummary, ID: nextID(), Label: "summary", Text: intro})

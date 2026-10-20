@@ -91,8 +91,8 @@ var (
 	gTscFound      = gated(reTscFound, "Found ")
 	gTscSummary    = gated(reTscSummary, "Found ", "error TS")
 	gEslintProblem = gated(reEslintProblem, "error", "warning")
-	gEslintTotal   = gated(reEslintTotal, "problem")
-	gEslintFile    = gated(reEslintFile, ".js", ".ts", ".cjs", ".mjs", ".cts", ".mts", ".vue", ".svelte")
+	gEslintTotal   = gated(reExcerptEslintTotal, "problem")
+	gEslintFile    = gated(reExcerptEslintFile, ".js", ".ts", ".cjs", ".mjs", ".cts", ".mts", ".vue", ".svelte")
 	gEslintPath    = gated(reEslintPath, ".js", ".ts", ".cjs", ".mjs", ".cts", ".mts", ".vue", ".svelte", ".json", ".md")
 	gEslintKeep    = gated(reEslintKeep, "problem", "potentially fixable")
 	gPytestSummary = gated(rePytestSummary, "passed", "failed", "error", "skipped", "no tests ran", "short test summary", "FAILED", "ERROR")
@@ -183,11 +183,11 @@ func tsc(lines []string) ([]string, bool) {
 }
 
 var (
-	reEslintProblem = jsRE(`^\s+\d+:\d+\s+(?:error|warning)\s+`)
-	reEslintTotal   = jsRE(`^✖ \d+ problems?|^\d+ problems? \(`)
-	reEslintFile    = jsRE(`\S+\.[cm]?[jt]sx?$|\.vue$|\.svelte$`)
-	reEslintPath    = jsRE(`^\S.*\.(?:[cm]?[jt]sx?|vue|svelte|json|md)$`)
-	reEslintKeep    = jsRE(`^✖ \d+ problems?|^\d+ problems? \(|potentially fixable`)
+	reEslintProblem      = jsRE(`^\s+\d+:\d+\s+(?:error|warning)\s+`)
+	reExcerptEslintTotal = jsRE(`^✖ \d+ problems?|^\d+ problems? \(`)
+	reExcerptEslintFile  = jsRE(`\S+\.[cm]?[jt]sx?$|\.vue$|\.svelte$`)
+	reEslintPath         = jsRE(`^\S.*\.(?:[cm]?[jt]sx?|vue|svelte|json|md)$`)
+	reEslintKeep         = jsRE(`^✖ \d+ problems?|^\d+ problems? \(|potentially fixable`)
 )
 
 func eslint(lines []string) ([]string, bool) {
@@ -231,16 +231,16 @@ func pytest(lines []string) ([]string, bool) {
 }
 
 var (
-	reDiffHeader = jsRE(`^diff --git a/(.+?) b/(.+)$`)
-	reDiffNote   = jsRE(`^(?:new file mode|deleted file mode|rename (?:from|to)|Binary files)`)
+	reExcerptDiffHeader = jsRE(`^diff --git a/(.+?) b/(.+)$`)
+	reDiffNote          = jsRE(`^(?:new file mode|deleted file mode|rename (?:from|to)|Binary files)`)
 )
 
-// diffHeader is reDiffHeader's submatches of a line, or nil; only lines with `diff --git` reach the pattern.
+// diffHeader is reExcerptDiffHeader's submatches of a line, or nil; only lines with `diff --git` reach the pattern.
 func diffHeader(line string) []string {
 	if !strings.Contains(line, "diff --git") {
 		return nil
 	}
-	return reDiffHeader.FindStringSubmatch(line)
+	return reExcerptDiffHeader.FindStringSubmatch(line)
 }
 
 func gitDiff(lines []string) ([]string, bool) {

@@ -156,15 +156,6 @@ func normaliseRunaway(text string) string {
 	return b.String()
 }
 
-func isASCII(s string) bool {
-	for i := 0; i < len(s); i++ {
-		if s[i] >= utf8.RuneSelf {
-			return false
-		}
-	}
-	return true
-}
-
 // RepeatedBlock is the paragraph (blank-line separated, normalised, at least minChars) that occurs most often.
 func RepeatedBlock(text string, minChars int) RepeatSignal {
 	counts := map[string]int{}
