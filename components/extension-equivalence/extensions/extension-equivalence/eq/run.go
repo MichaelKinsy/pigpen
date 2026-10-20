@@ -264,6 +264,9 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	}
 	defer ups.close()
 	ups.normalize(rec.norm)
+	if err := rec.norm.AddRules(sc.Normalize); err != nil {
+		return nil, err
+	}
 
 	if err := writeAgentFiles(agent, sc.AgentFiles, ups); err != nil {
 		return nil, err
@@ -305,7 +308,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 
 	args := []string{"--mode", "rpc", "--no-session", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-themes", "--no-context-files", "--offline"}
 	if len(sc.LLM) > 0 {
-		llm, err := newFakeLLM(sc.LLM, rec.add)
+		llm, err := newFakeLLM(ups.expandTurns(sc.LLM), rec.add)
 		if err != nil {
 			return nil, err
 		}

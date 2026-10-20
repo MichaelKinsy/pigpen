@@ -204,6 +204,9 @@ func (s *Scenario) Validate() error {
 	if err := s.validateServers(); err != nil {
 		return err
 	}
+	if _, err := compileRules(s.Normalize); err != nil {
+		return err
+	}
 	for i, step := range s.Steps {
 		typ, _ := step.RPC["type"].(string)
 		if typ == "" {

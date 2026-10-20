@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -95,8 +97,43 @@ func (u *upstreams) expand(s string) string {
 	})
 }
 
-// expandTurns returns the LLM script with {{server:NAME}} expanded.
-func (u *upstreams) expandTurns(turns []Turn) []Turn { return turns }
+// expandTurns returns the LLM script with {{server:NAME}} expanded in each turn's text and in every
+// string value of its tool-call arguments (nested objects and arrays included). The scenario is shared
+// by the lanes, each with its own ports, so it is copied, never changed.
+func (u *upstreams) expandTurns(turns []Turn) []Turn {
+	out := make([]Turn, len(turns))
+	for i, t := range turns {
+		out[i] = Turn{Text: u.expand(t.Text)}
+		for _, c := range t.ToolCalls {
+			args, _ := u.expandValue(c.Arguments).(map[string]any)
+			out[i].ToolCalls = append(out[i].ToolCalls, ToolCall{Name: c.Name, Arguments: args})
+		}
+	}
+	return out
+}
+
+func (u *upstreams) expandValue(v any) any {
+	switch x := v.(type) {
+	case string:
+		return u.expand(x)
+	case []any:
+		out := make([]any, len(x))
+		for i, e := range x {
+			out[i] = u.expandValue(e)
+		}
+		return out
+	case map[string]any:
+		if x == nil { // an omitted arguments object stays null on the wire
+			return x
+		}
+		out := make(map[string]any, len(x))
+		for k, e := range x {
+			out[k] = u.expandValue(e)
+		}
+		return out
+	}
+	return v
+}
 
 // normalize teaches the normalizer that a server's host:port is <server:NAME>, so a URL an
 // extension echoes back compares equal across lanes (each lane's ports differ).
@@ -286,6 +323,37 @@ func (s *Scenario) validateServers() error {
 	for i, v := range s.Args {
 		if err := check(fmt.Sprintf("arg %d", i), v); err != nil {
 			return err
+		}
+	}
+	for i, t := range s.LLM {
+		if err := check(fmt.Sprintf("llm turn %d text", i+1), t.Text); err != nil {
+			return err
+		}
+		for j, c := range t.ToolCalls {
+			if err := checkValue(check, fmt.Sprintf("llm turn %d tool call %d (%s) arguments", i+1, j+1, c.Name), c.Arguments); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// checkValue applies check to every string value of a decoded JSON value.
+func checkValue(check func(where, text string) error, where string, v any) error {
+	switch x := v.(type) {
+	case string:
+		return check(where, x)
+	case []any:
+		for _, e := range x {
+			if err := checkValue(check, where, e); err != nil {
+				return err
+			}
+		}
+	case map[string]any:
+		for _, k := range slices.Sorted(maps.Keys(x)) {
+			if err := checkValue(check, where, x[k]); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
