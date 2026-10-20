@@ -80,7 +80,7 @@ func TestReviewImagePixelBudget(t *testing.T) {
 }
 
 // unportedGuidance matches options the original offers that this port cannot act on.
-const unportedGuidance = `firecrawl|crawl4ai|tinyfish|TINYFISH|search1api|SEARCH1API|querit|QUERIT|kagiApiKey|KAGI_API_KEY|ollama|OLLAMA|parallel|PARALLEL|brightdata|BRIGHTDATA|GEMINI_API_KEY|gemini\.google\.com|Chrom|/login|Codex|openaiApiKey|OPENAI_API_KEY|searxng|SEARXNG|bocha|BOCHA|cloudflare|CLOUDFLARE|anysearch|xcrawl|serpapi|serper|serply|valyu|You\.com|Mistral|Grok`
+const unportedGuidance = `firecrawl|crawl4ai|tinyfish|TINYFISH|search1api|SEARCH1API|querit|QUERIT|kagiApiKey|KAGI_API_KEY|ollama|OLLAMA|parallel|PARALLEL|brightdata|BRIGHTDATA|gemini\.google\.com|Chrom|/login|Codex|openaiApiKey|OPENAI_API_KEY|searxng|SEARXNG|bocha|BOCHA|anysearch|xcrawl|serpapi|serper|serply|valyu|You\.com|Mistral|Grok`
 
 func TestReviewGuidanceNamesOnlyPortedOptions(t *testing.T) {
 	t.Run("the fetch fallback checklist offers only what this port can do", func(t *testing.T) {

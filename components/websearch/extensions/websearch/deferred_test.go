@@ -144,11 +144,6 @@ func TestDeferred_chrome_cookie_extraction(t *testing.T) {
 
 func TestDeferred_config_path(t *testing.T) {
 	const F = "config-path"
-	tskip(t, F, "Gemini base URL and Cloudflare auth use env before config", "Gemini is a later slice (docs/PORT.md); this case (Gemini base URL and Cloudflare auth use env before config) ships with the feature")
-	tskip(t, F, "Gemini command source is lazy, overrides stale env, rotates, and uses header auth", "Gemini is a later slice (docs/PORT.md); this case (Gemini command source is lazy, overrides stale env, rotates, and uses header auth) ships with the feature")
-	tskip(t, F, "Gemini API helper rejects credential query parameters before fetch", "Gemini is a later slice (docs/PORT.md); this case (Gemini API helper rejects credential query parameters before fetch) ships with the feature")
-	tskip(t, F, "Gemini provider and transport errors redact the resolved credential", "Gemini is a later slice (docs/PORT.md); this case (Gemini provider and transport errors redact the resolved credential) ships with the feature")
-	tskip(t, F, "Gemini API requests include role and gateway auth headers", "Gemini is a later slice (docs/PORT.md); this case (Gemini API requests include role and gateway auth headers) ships with the feature")
 }
 
 func TestDeferred_crawl4ai_extraction(t *testing.T) {
@@ -254,34 +249,6 @@ func TestDeferred_firecrawl_extraction(t *testing.T) {
 	tskip(t, F, "Firecrawl malformed success envelopes throw visible shape errors", "the Firecrawl fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (Firecrawl malformed success envelopes throw visible shape errors) ships with the feature")
 	tskip(t, F, "fetch_content prefers configured Firecrawl before hosted fallbacks", "the Firecrawl fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (fetch_content prefers configured Firecrawl before hosted fallbacks) ships with the feature")
 	tskip(t, F, "Firecrawl extraction errors remain visible in fetch_content guidance", "the Firecrawl fetch provider is not ported; the fetch fallback list only names it (docs/PORT.md); this case (Firecrawl extraction errors remain visible in fetch_content guidance) ships with the feature")
-}
-
-func TestDeferred_gemini_adc_auth(t *testing.T) {
-	const F = "gemini-adc-auth"
-	tskip(t, F, "Gemini search uses Vertex AI + ADC bearer auth when geminiAuth is adc", "Gemini is a later slice (docs/PORT.md); this case (Gemini search uses Vertex AI + ADC bearer auth when geminiAuth is adc) ships with the feature")
-	tskip(t, F, "Gemini ADC availability requires geminiAuth adc, project, location, and an ADC file", "Gemini is a later slice (docs/PORT.md); this case (Gemini ADC availability requires geminiAuth adc, project, location, and an ADC file) ships with the feature")
-	tskip(t, F, "Gemini ADC config parse errors stay visible", "Gemini is a later slice (docs/PORT.md); this case (Gemini ADC config parse errors stay visible) ships with the feature")
-	tskip(t, F, "Gemini ADC credential parse errors include the file path", "Gemini is a later slice (docs/PORT.md); this case (Gemini ADC credential parse errors include the file path) ships with the feature")
-	tskip(t, F, "Gemini ADC credential shape errors include the file path", "Gemini is a later slice (docs/PORT.md); this case (Gemini ADC credential shape errors include the file path) ships with the feature")
-	tskip(t, F, "Gemini ADC rejects malformed token success responses", "Gemini is a later slice (docs/PORT.md); this case (Gemini ADC rejects malformed token success responses) ships with the feature")
-	tskip(t, F, "Gemini ADC never leaks the access token in errors", "Gemini is a later slice (docs/PORT.md); this case (Gemini ADC never leaks the access token in errors) ships with the feature")
-	tskip(t, F, "Gemini ADC classifies only credential rejections as CredentialResolutionError", "Gemini is a later slice (docs/PORT.md); this case (Gemini ADC classifies only credential rejections as CredentialResolutionError) ships with the feature")
-	tskip(t, F, "Gemini ADC does not advertise the Files-API (YouTube/video) path", "Gemini is a later slice (docs/PORT.md); this case (Gemini ADC does not advertise the Files-API (YouTube/video) path) ships with the feature")
-}
-
-func TestDeferred_gemini_api_transport(t *testing.T) {
-	const F = "gemini-api-transport"
-	tskip(t, F, "Gemini generate, upload, status, and delete use only shared header auth", "Gemini is a later slice (docs/PORT.md); this case (Gemini generate, upload, status, and delete use only shared header auth) ships with the feature")
-	tskip(t, F, "Gemini video upload, status, and delete respect a configured geminiBaseUrl relay", "Gemini is a later slice (docs/PORT.md); this case (Gemini video upload, status, and delete respect a configured geminiBaseUrl relay) ships with the feature")
-}
-
-func TestDeferred_gemini_pdf_extract(t *testing.T) {
-	const F = "gemini-pdf-extract"
-	tskip(t, F, "Gemini PDF conversion sends inline PDF data and normalizes valid Markdown", "Gemini is a later slice (docs/PORT.md); this case (Gemini PDF conversion sends inline PDF data and normalizes valid Markdown) ships with the feature")
-	tskip(t, F, "Gemini PDF conversion supports Cloudflare AI Gateway without a direct Gemini key", "Gemini is a later slice (docs/PORT.md); this case (Gemini PDF conversion supports Cloudflare AI Gateway without a direct Gemini key) ships with the feature")
-	tskip(t, F, "Gemini PDF conversion rejects truncated output", "Gemini is a later slice (docs/PORT.md); this case (Gemini PDF conversion rejects truncated output) ships with the feature")
-	tskip(t, F, "Gemini PDF conversion rejects missing or out-of-sequence page markers", "Gemini is a later slice (docs/PORT.md); this case (Gemini PDF conversion rejects missing or out-of-sequence page markers) ships with the feature")
-	tskip(t, F, "Gemini PDF conversion surfaces safety blocks and empty responses", "Gemini is a later slice (docs/PORT.md); this case (Gemini PDF conversion surfaces safety blocks and empty responses) ships with the feature")
 }
 
 func TestDeferred_gemini_web_cookie_opt_in(t *testing.T) {
@@ -543,7 +510,6 @@ func TestDeferred_provider_credential_source(t *testing.T) {
 	tskip(t, F, "previously unsupported providers resolve explicit env and command sources lazily", "the case exercises providers that are not ported (hosted providers, Gemini/Cloudflare gateway); the shared credential-source rules are twinned in credential_test.go and providers_test.go; this case (previously unsupported providers resolve explicit env and command sources lazily) ships with the feature")
 	tskip(t, F, "provider requests can resolve credentials through an inherited 1Password service-account token", "the case exercises providers that are not ported (hosted providers, Gemini/Cloudflare gateway); the shared credential-source rules are twinned in credential_test.go and providers_test.go; this case (provider requests can resolve credentials through an inherited 1Password service-account t) ships with the feature")
 	tskip(t, F, "provider API errors redact resolved credential-source values", "the case exercises providers that are not ported (hosted providers, Gemini/Cloudflare gateway); the shared credential-source rules are twinned in credential_test.go and providers_test.go; this case (provider API errors redact resolved credential-source values) ships with the feature")
-	tskip(t, F, "Cloudflare gateway response redacts the credential used by the request", "the case exercises providers that are not ported (hosted providers, Gemini/Cloudflare gateway); the shared credential-source rules are twinned in credential_test.go and providers_test.go; this case (Cloudflare gateway response redacts the credential used by the request) ships with the feature")
 }
 
 func TestDeferred_publish_wrapper(t *testing.T) {
@@ -612,7 +578,6 @@ func TestDeferred_search_providers(t *testing.T) {
 	tskip(t, F, "SearXNG search strips configured headers on cross-origin redirects", "SearXNG is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (SearXNG search strips configured headers on cross-origin redirects) ships with the feature")
 	tskip(t, F, "SearXNG redirect validation rejects an unapproved private target", "SearXNG is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (SearXNG redirect validation rejects an unapproved private target) ships with the feature")
 	tskip(t, F, "malformed SearXNG SSRF config fails before hosted auto fallback", "SearXNG is not ported in the first slice: listed in the provider table, fails with an explicit 'unsupported' error; this case (malformed SearXNG SSRF config fails before hosted auto fallback) ships with the feature")
-	tskip(t, F, "failed Gemini command source is redacted and blocks browser fallback", "Gemini is a later slice (docs/PORT.md); this case (failed Gemini command source is redacted and blocks browser fallback) ships with the feature")
 	tskip(t, F, "OpenAI search requires web_search and maps domain filters", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (OpenAI search requires web_search and maps domain filters) ships with the feature")
 	tskip(t, F, "OpenAI search uses configured Responses endpoint", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (OpenAI search uses configured Responses endpoint) ships with the feature")
 	tskip(t, F, "curator auto default follows the active model provider", "the search curator UI is deferred (docs/PORT.md); this case (curator auto default follows the active model provider) ships with the feature")
@@ -624,8 +589,6 @@ func TestDeferred_search_providers(t *testing.T) {
 	tskip(t, F, "OpenAI search uses configured model with selected registry auth", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (OpenAI search uses configured model with selected registry auth) ships with the feature")
 	tskip(t, F, "OpenAI search honors configured provider priority", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (OpenAI search honors configured provider priority) ships with the feature")
 	tskip(t, F, "OpenAI search rejects invalid openaiSearchProviders", "OpenAI/Codex hosted search is deferred (docs/PORT.md); this case (OpenAI search rejects invalid openaiSearchProviders) ships with the feature")
-	tskip(t, F, "Gemini API search uses its search-only default model", "Gemini is a later slice (docs/PORT.md); this case (Gemini API search uses its search-only default model) ships with the feature")
-	tskip(t, F, "Gemini API search preserves the configured searchModel", "Gemini is a later slice (docs/PORT.md); this case (Gemini API search preserves the configured searchModel) ships with the feature")
 }
 
 func TestDeferred_search_routing(t *testing.T) {

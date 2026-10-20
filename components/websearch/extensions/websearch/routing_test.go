@@ -273,8 +273,6 @@ func TestUpstream_all_provider(t *testing.T) {
 		}
 	})
 
-	tskip(t, f, `provider "all" uses Gemini API without falling back to Gemini Web`, "Gemini is slice 2 (and Gemini Web needs browser cookies, off by default); named gap")
-
 	tw(t, f, `provider "all" keeps successful providers when another available provider fails`, func(t *testing.T) {
 		isolate(t)
 		t.Setenv("BRAVE_API_KEY", "brave-test-key")

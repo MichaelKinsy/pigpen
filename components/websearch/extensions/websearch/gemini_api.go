@@ -414,8 +414,34 @@ func geminiCandidateText(data map[string]any) string {
 	return strings.Join(texts, "\n")
 }
 
-func geminiRequestBody(parts ...any) []byte {
-	b, _ := json.Marshal(map[string]any{"contents": []any{map[string]any{"role": "user", "parts": parts}}})
+// geminiContent is one user turn, with the key order of the original's JSON.stringify.
+type geminiContent struct {
+	Role  string `json:"role"`
+	Parts []any  `json:"parts"`
+}
+
+type geminiRequest struct {
+	Contents []geminiContent `json:"contents"`
+	Tools    []any           `json:"tools,omitempty"`
+}
+
+type geminiInlineData struct {
+	MimeType string `json:"mimeType"`
+	Data     string `json:"data"`
+}
+
+type geminiFileData struct {
+	FileURI  string `json:"fileUri"`
+	MimeType string `json:"mimeType,omitempty"`
+}
+
+type geminiTextPart struct {
+	Text string `json:"text"`
+}
+
+// geminiRequestBody is the generateContent body: one user turn with parts, and optional tools.
+func geminiRequestBody(tools []any, parts ...any) []byte {
+	b, _ := json.Marshal(geminiRequest{Contents: []geminiContent{{Role: "user", Parts: parts}}, Tools: tools})
 	return b
 }
 
@@ -473,7 +499,7 @@ func queryGeminiInline(ctx context.Context, prompt, data, mimeType string, o Gem
 	if model == "" {
 		model = DefaultGeminiModel
 	}
-	body := geminiRequestBody(map[string]any{"inlineData": map[string]any{"mimeType": mimeType, "data": data}}, map[string]any{"text": prompt})
+	body := geminiRequestBody(nil, map[string]any{"inlineData": geminiInlineData{MimeType: mimeType, Data: data}}, geminiTextPart{prompt})
 	res, err := geminiGenerate(ctx, model, body, &apiKey)
 	if err != nil {
 		return nil, err
@@ -519,11 +545,7 @@ func queryGeminiVideo(ctx context.Context, prompt, videoURI string, o GeminiAPIO
 	if model == "" {
 		model = DefaultGeminiModel
 	}
-	fileData := map[string]any{"fileUri": videoURI}
-	if o.MimeType != "" {
-		fileData["mimeType"] = o.MimeType
-	}
-	res, err := geminiGenerate(ctx, model, geminiRequestBody(map[string]any{"fileData": fileData}, map[string]any{"text": prompt}), &apiKey)
+	res, err := geminiGenerate(ctx, model, geminiRequestBody(nil, map[string]any{"fileData": geminiFileData{FileURI: videoURI, MimeType: o.MimeType}}, geminiTextPart{prompt}), &apiKey)
 	if err != nil {
 		return "", err
 	}
