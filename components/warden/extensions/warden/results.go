@@ -63,24 +63,19 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	if out.aborted {
 		return nil, nil
 	}
-	if _, err := w.toolResultGuards(ctx, data, out.text); err != nil {
-		return nil, err
-	}
-	return out.patch(), nil
-}
-
-// toolResultGuards keeps the run's memory and runs the loop checks. `text` is the masked text of the result.
-func (w *warden) toolResultGuards(ctx sdk.Context, data map[string]any, text string) (any, error) {
-	cfg := w.config(ctx)
-	if !cfg.Enabled {
-		return nil, nil
-	}
 	tool, _ := data["toolName"].(string)
 	input, _ := data["input"].(map[string]any)
 	if input == nil {
 		input = map[string]any{}
 	}
+	// The content the later steps carry on from: the context pipeline's result (the event's own when it changed nothing).
 	raw := rawContent(data["content"])
+	if out.changed {
+		raw = make([]any, len(out.content))
+		for i, p := range out.content {
+			raw[i] = p
+		}
+	}
 	content := contentParts(data["content"])
 	// guardcore: record what a bash/write call created under the temp directory (session scratch).
 	if id, _ := data["toolCallId"].(string); id != "" {
@@ -89,24 +84,26 @@ func (w *warden) toolResultGuards(ctx sdk.Context, data map[string]any, text str
 	isError, _ := data["isError"].(bool)
 	details, _ := data["details"].(map[string]any)
 	failed := ResultFailed(isError, details, content)
+	text := out.text
 
 	// ── supervision: call waste. Every finished call enters the window; a note, when one fires, is attached to
 	// this result below, and never reaches a hold, the judge, or the steer budget.
 	wasteNudge := w.wasteNote(ctx, cfg, tool, input, failed, text)
 
-	out, changed := w.toolResultRun(ctx, cfg, tool, input, raw, content, failed, text)
+	final, changed := w.toolResultRun(ctx, cfg, tool, input, raw, content, failed, text)
+	changed = changed || out.changed
 
 	// ── supervision: the call-waste note rides the result the model is about to read ──
 	if wasteNudge != nil {
-		if next, ok := withWasteNote(out, wasteNudge.Text); ok {
-			out, changed = next, true
+		if next, ok := withWasteNote(final, wasteNudge.Text); ok {
+			final, changed = next, true
 			w.recordWasteNote(ctx, cfg, tool, input, wasteNudge)
 		}
 	}
 	if !changed {
 		return nil, nil
 	}
-	return map[string]any{"content": out}, nil
+	return map[string]any{"content": final}, nil
 }
 
 // toolResultRun is the run memory and the stuck guard; it returns the content to deliver and whether it changed.
