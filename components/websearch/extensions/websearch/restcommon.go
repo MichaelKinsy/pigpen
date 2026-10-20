@@ -62,13 +62,7 @@ func normalizeCountDefault(v *float64, def int) int {
 }
 
 // decodeJSON parses a response body into a generic value, rejecting trailing data like JSON.parse.
-func decodeJSON(text string) (any, error) {
-	var v any
-	if err := json.Unmarshal([]byte(text), &v); err != nil {
-		return nil, err
-	}
-	return v, nil
-}
+func decodeJSON(text string) (any, error) { return unmarshalAny(text) }
 
 // jsonObject is the `value && typeof value === "object" && !Array.isArray(value)` guard.
 func jsonObject(v any) (map[string]any, bool) {
