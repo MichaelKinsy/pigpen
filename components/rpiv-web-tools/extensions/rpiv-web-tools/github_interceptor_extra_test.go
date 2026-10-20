@@ -17,7 +17,7 @@ import (
 func TestJSCompat(t *testing.T) {
 	t.Run("Buffer base64 decoding", func(t *testing.T) {
 		for in, want := range map[string]string{
-			"QQ": "A", "QUI": "AB", "QUJD\nREVG": "ABCDEF", "QQ==QQ==": "A", "Q": "", "QUJD=REVG": "ABC", "  QU JD  ": "ABC",
+			"QQ": "A", "+/+/": "\xfb\xff\xbf", "QUI": "AB", "QUJD\nREVG": "ABCDEF", "QQ==QQ==": "A", "Q": "", "QUJD=REVG": "ABC", "  QU JD  ": "ABC",
 			"-_-_": "\xfb\xff\xbf",
 		} {
 			eq(t, string(decodeBase64Lenient(in)), want)
@@ -34,7 +34,7 @@ func TestJSCompat(t *testing.T) {
 		}
 	})
 	t.Run("Buffer utf-8 decoding replaces each maximal invalid prefix once", func(t *testing.T) {
-		for in, want := range map[string]string{"\xe2\x82": "\ufffd", "\xf0\x9f\x98": "\ufffd", "\xc0\x80": "\ufffd\ufffd", "a\xffb": "a\ufffdb", "\xed\xa0\x80": "\ufffd\ufffd\ufffd", "ok": "ok", "é": "é"} {
+		for in, want := range map[string]string{"\xe2\x82": "\ufffd", "\xf0\x9f\x98": "\ufffd", "\xc0\x80": "\ufffd\ufffd", "a\xffb": "a\ufffdb", "\xed\xa0\x80": "\ufffd\ufffd\ufffd", "\xe0\x80\x80": "\ufffd\ufffd\ufffd", "\xf0\x80\x80\x80": "\ufffd\ufffd\ufffd\ufffd", "\xf4\x90\x80\x80": "\ufffd\ufffd\ufffd\ufffd", "\xf0\x9f\x98\x80": "😀", "\xe4\xbd\xa0": "你", "ok": "ok", "é": "é"} {
 			eq(t, decodeUTF8Lossy([]byte(in)), want)
 		}
 	})
@@ -172,8 +172,8 @@ func TestGitHubCommandsAndLimits(t *testing.T) {
 		}
 		want := map[call]bool{
 			{"repos/o/r/git/trees/" + sha + "?recursive=1", 15 * time.Second, 5 * 1024 * 1024}: true,
-			{"repos/o/r/readme?ref=" + sha, 10 * time.Second, 0}:                                true,
-			{"repos/o/r/contents/src/a.ts?ref=" + sha, 10 * time.Second, 2 * 1024 * 1024}:       true,
+			{"repos/o/r/readme?ref=" + sha, 10 * time.Second, 0}:                               true,
+			{"repos/o/r/contents/src/a.ts?ref=" + sha, 10 * time.Second, 2 * 1024 * 1024}:      true,
 		}
 		eq(t, len(got), 3)
 		for _, c := range got {
@@ -188,7 +188,9 @@ func TestGitHubCommandsAndLimits(t *testing.T) {
 		r := ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/tree/"+sha+"/lib")
 		eq(t, r.Title, "o/r - lib")
 		eq(t, r.Text, "Note: Commit SHA URLs use the GitHub API instead of cloning.\n\n## Structure\na\nb\n\nThis is an API-only view. Clone the repo or use `read`/`bash` for deeper exploration.")
-		eq(t, fe.count(func(c execCall) bool { return c.Args[0] == "repo" || c.Name == "git" || c.Args[len(c.Args)-1] == ".size" }), 0)
+		eq(t, fe.count(func(c execCall) bool {
+			return c.Args[0] == "repo" || c.Name == "git" || c.Args[len(c.Args)-1] == ".size"
+		}), 0)
 	})
 	t.Run("an oversized repository gets the exact note, rounded to whole MB", func(t *testing.T) {
 		ctx, _ := ghExec(t, ghAPIMock([2]string{".size", "400000"}, [2]string{".default_branch", "main"}, [2]string{".tree[].path", "f"}))
@@ -469,5 +471,171 @@ func TestGitHubCloneRendering(t *testing.T) {
 		os.RemoveAll(g.cache["o/r"].localPath)
 		r := ghIntercept(ctx, g, "https://github.com/o/r")
 		eq(t, strings.HasSuffix(r.Text, "\n\n## Structure\n\n\n"+hint), true)
+	})
+}
+
+func TestGitHubMoreCases(t *testing.T) {
+	t.Run("the size and default branch reads allow 10 seconds and the branch is trimmed", func(t *testing.T) {
+		ctx, fe := ghExec(t, ghAPIMock([2]string{".size", "400000\n"}, [2]string{".default_branch", "main\n"}, [2]string{".tree[].path", "f"}))
+		ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r")
+		got := map[string]time.Duration{}
+		for _, c := range fe.all() {
+			if len(c.Args) > 3 {
+				got[c.Args[1]+"|"+c.Args[3]] = c.Opts.Timeout
+			}
+		}
+		eq(t, got["repos/o/r|.size"], 10*time.Second)
+		eq(t, got["repos/o/r|.default_branch"], 10*time.Second)
+		eq(t, got["repos/o/r/git/trees/main?recursive=1|.tree[].path"], 15*time.Second)
+	})
+	t.Run("a gh that is not available gets no api call", func(t *testing.T) {
+		ctx, fe := ghExec(t, func(name string, args []string) (string, error) {
+			if args[0] == "--version" {
+				return "", errors.New("not found")
+			}
+			return "100", nil
+		})
+		_, ok := ghMake(t, githubUserOptions{}).checkRepoSize(ctx, "o", "r")
+		eq(t, ok, false)
+		eq(t, len(fe.all()), 1)
+	})
+	t.Run("a size with a trailing newline is read", func(t *testing.T) {
+		ctx, _ := ghExec(t, ghAPIMock([2]string{".size", "12345\n"}))
+		size, ok := ghMake(t, githubUserOptions{}).checkRepoSize(ctx, "o", "r")
+		eq(t, [2]any{size, ok}, [2]any{12345.0, true})
+	})
+	t.Run("a tree of exactly 200 paths has no total line", func(t *testing.T) {
+		var paths []string
+		for i := range 200 {
+			paths = append(paths, "p"+pad3(i))
+		}
+		ctx, _ := ghExec(t, ghAPIMock([2]string{".tree[].path", strings.Join(paths, "\n")}))
+		r := ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/tree/main")
+		ghHas(t, r.Text, "p199\n\nThis is an API-only view")
+	})
+	t.Run("a blob URL without a path shows the tree view", func(t *testing.T) {
+		ctx, _ := ghExec(t, ghAPIMock([2]string{".tree[].path", "a"}))
+		r := ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/blob/main")
+		eq(t, r.Title, "o/r")
+		ghHas(t, r.Text, "## Structure\na\n")
+	})
+	t.Run("a README without a tree is shown alone", func(t *testing.T) {
+		ctx, _ := ghExec(t, ghAPIMock([2]string{"readme", ghB64("only")}))
+		r := ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/tree/main")
+		eq(t, r.Text, "## README.md\nonly\n\nThis is an API-only view. Clone the repo or use `read`/`bash` for deeper exploration.")
+	})
+	t.Run("contents arrive as base64 in lines of 60 characters", func(t *testing.T) {
+		body := strings.Repeat("0123456789", 20)
+		enc := ghB64(body)
+		var wrapped []string
+		for len(enc) > 60 {
+			wrapped = append(wrapped, enc[:60])
+			enc = enc[60:]
+		}
+		wrapped = append(wrapped, enc)
+		ctx, _ := ghExec(t, ghAPIMock([2]string{".content", strings.Join(wrapped, "\n") + "\n"}))
+		r := ghIntercept(ctx, ghMake(t, githubUserOptions{}), "https://github.com/o/r/blob/main/f")
+		eq(t, r.Text, "## f\n"+body)
+	})
+	t.Run("git clones a ref with --branch", func(t *testing.T) {
+		dir := t.TempDir()
+		ctx, fe := ghExec(t, func(name string, args []string) (string, error) {
+			if args[0] == "clone" {
+				os.MkdirAll(args[len(args)-1], 0o755)
+				return "", nil
+			}
+			return "", errors.New("no gh")
+		})
+		g := ghMake(t, githubUserOptions{ClonePath: &dir})
+		ghIntercept(ctx, g, "https://github.com/o/r/blob/feat/x.go")
+		eq(t, fe.all()[1].Args, []string{"clone", "--depth", "1", "--single-branch", "--branch", "feat", "https://github.com/o/r.git", filepath.Join(dir, "o", "r@feat")})
+	})
+	t.Run("a stale directory is removed before the clone", func(t *testing.T) {
+		dir := t.TempDir()
+		stale := filepath.Join(dir, "o", "r")
+		os.MkdirAll(stale, 0o755)
+		os.WriteFile(filepath.Join(stale, "old.txt"), nil, 0o644)
+		ctx, _ := ghExec(t, func(name string, args []string) (string, error) {
+			if args[0] == "clone" {
+				if _, err := os.Stat(filepath.Join(stale, "old.txt")); err == nil {
+					return "", errors.New("the stale file was still there")
+				}
+				os.MkdirAll(args[len(args)-1], 0o755)
+				return "", nil
+			}
+			return "", errors.New("no gh")
+		})
+		g := ghMake(t, githubUserOptions{ClonePath: &dir})
+		if ghIntercept(ctx, g, "https://github.com/o/r") == nil {
+			t.Fatal("the clone failed")
+		}
+	})
+	t.Run("the options of the config object reach the interceptor", func(t *testing.T) {
+		clearEnv(t)
+		writeConfigFile(t, obj{"interceptors": obj{"github": obj{"maxRepoSizeMB": 12.0, "cloneTimeoutSeconds": 3.0, "clonePath": "/srv/c"}}})
+		t.Cleanup(resetWebToolsInterceptors)
+		buildInterceptors(nil)
+		eq(t, getActiveGitHubInterceptor().options, resolvedGitHubOptions{Enabled: true, MaxRepoSizeMB: 12, CloneTimeoutSeconds: 3, ClonePath: "/srv/c"})
+	})
+	t.Run("the config reader keeps an unset stanza unset and an enabled object enabled", func(t *testing.T) {
+		eq(t, readUserGitHubConfig(webToolsConfig{}), nil)
+		eq(t, readUserGitHubConfig(webToolsConfig{"interceptors": obj{}}), nil)
+		eq(t, readUserGitHubConfig(webToolsConfig{"interceptors": obj{"github": obj{"enabled": false}}}), githubUserOptions{Enabled: new(false)})
+	})
+}
+
+func TestGitHubCloneListings(t *testing.T) {
+	seed := func(t *testing.T, key string) (context.Context, *githubInterceptor, string) {
+		t.Helper()
+		dir := t.TempDir()
+		ctx, _ := ghExec(t, ghMakeUnavailable)
+		g := ghMake(t, githubUserOptions{})
+		g.seedCache(key, dir, ghResolved(dir))
+		return ctx, g, dir
+	}
+	t.Run("a symlink out of the clone is listed as outside, and a broken one as unreadable", func(t *testing.T) {
+		ctx, g, dir := seed(t, "o/r@main")
+		if err := os.Symlink(os.TempDir(), filepath.Join(dir, "escape")); err != nil {
+			t.Skip("symlinks: " + err.Error())
+		}
+		os.Symlink(filepath.Join(dir, "nowhere"), filepath.Join(dir, "broken"))
+		r := ghIntercept(ctx, g, "https://github.com/o/r/tree/main")
+		ghHas(t, r.Text, "## /\n  broken  (unreadable)\n  escape  (outside repo)")
+	})
+	t.Run("a tree URL naming a file lists nothing readable", func(t *testing.T) {
+		ctx, g, dir := seed(t, "o/r@main")
+		os.WriteFile(filepath.Join(dir, "f.txt"), []byte("x"), 0o644)
+		ghHas(t, ghIntercept(ctx, g, "https://github.com/o/r/tree/main/f.txt").Text, "## f.txt\n(directory not readable)\n")
+	})
+	t.Run("README candidates are tried in the original's order", func(t *testing.T) {
+		for _, name := range []string{"README.txt", "README.rst"} {
+			ctx, g, dir := seed(t, "o/r")
+			os.WriteFile(filepath.Join(dir, name), []byte("from "+name), 0o644)
+			ghHas(t, ghIntercept(ctx, g, "https://github.com/o/r").Text, "## README.md\nfrom "+name+"\n")
+		}
+	})
+	t.Run("a README directory is skipped for the next candidate", func(t *testing.T) {
+		ctx, g, dir := seed(t, "o/r")
+		os.MkdirAll(filepath.Join(dir, "README.md"), 0o755)
+		os.WriteFile(filepath.Join(dir, "README"), []byte("plain"), 0o644)
+		ghHas(t, ghIntercept(ctx, g, "https://github.com/o/r").Text, "## README.md\nplain\n")
+	})
+	t.Run("the other noise directories are skipped", func(t *testing.T) {
+		ctx, g, dir := seed(t, "o/r")
+		for _, n := range []string{"vendor", ".next", "dist", "build", "__pycache__", ".venv", "venv", ".tox", ".mypy_cache", ".pytest_cache", "target", ".gradle", ".idea", ".vscode"} {
+			os.MkdirAll(filepath.Join(dir, n), 0o755)
+			os.WriteFile(filepath.Join(dir, n, "in.txt"), nil, 0o644)
+		}
+		r := ghIntercept(ctx, g, "https://github.com/o/r")
+		ghHasNot(t, r.Text, "in.txt")
+		eq(t, strings.Count(r.Text, "/  [skipped]"), 14)
+	})
+	t.Run("every binary extension of the original is binary", func(t *testing.T) {
+		for ext := range githubBinaryExtensions {
+			ctx, g, dir := seed(t, "o/r@main")
+			os.WriteFile(filepath.Join(dir, "f"+ext), []byte("text"), 0o644)
+			ghHas(t, ghIntercept(ctx, g, "https://github.com/o/r/blob/main/f"+ext).Text, "Binary file ("+ext[1:]+", 4 B)")
+		}
+		eq(t, len(githubBinaryExtensions), 61)
 	})
 }
