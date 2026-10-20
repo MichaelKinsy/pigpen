@@ -13,7 +13,7 @@ import (
 // Layer-1 twins of the upstream extension.test.ts cases for the hold feedback loop, the steer adaptation and the
 // judge cooldown. The Go trace shows each entry's line only; the outcome notes are read from the entries' details.
 
-func (h *harness) newPrompt(text string) {
+func (h *harness) replyPrompt(text string) {
 	h.say("user", text)
 	h.prompt(text)
 }
@@ -148,7 +148,7 @@ func TestExtensionHoldFeedbackOfflineLabelsCallsTraceStatusAndLog(t *testing.T) 
 	if got := h.statusText(); !strings.Contains(got, "Holds: 1 hold; 0 approved by you, 0 declined, 0 re-planned, 1 awaiting your reply; precision not yet measurable; 0 allowed") {
 		t.Fatalf("status:\n%s", got)
 	}
-	h.newPrompt("yes, go ahead")
+	h.replyPrompt("yes, go ahead")
 	if r, held := blocked(h.toolCall("bash", "c2", forcePush())); held {
 		t.Fatalf("the reply releases the hold: %s", r)
 	}
@@ -168,15 +168,15 @@ func TestExtensionHoldFeedbackOfflineLabelsCallsTraceStatusAndLog(t *testing.T) 
 		t.Fatalf("the hold's trace entry carries its outcome:\n%s", h.traceDetails())
 	}
 	// A hold nobody approves: the user redirects, the agent does something else, and the prompt after that lands the label.
-	h.newPrompt("fix the bug")
+	h.replyPrompt("fix the bug")
 	if _, held := blocked(h.toolCall("bash", "c3", map[string]any{"command": "git reset --hard HEAD~3"})); !held {
 		t.Fatal("reset not held")
 	}
-	h.newPrompt("leave it, run the tests instead")
+	h.replyPrompt("leave it, run the tests instead")
 	if r, held := blocked(h.toolCall("bash", "c4", map[string]any{"command": "npm test"})); held {
 		t.Fatalf("npm test held: %s", r)
 	}
-	h.newPrompt("thanks, now update the docs")
+	h.replyPrompt("thanks, now update the docs")
 	if got := h.statusText(); !strings.Contains(got, "Holds: 2 holds; 1 approved by you, 0 declined, 1 re-planned, 0 awaiting your reply; precision 50% over 2 labels; 2 allowed (0 regretted by you, 2 accepted)") {
 		t.Fatalf("status:\n%s", got)
 	}
@@ -184,7 +184,7 @@ func TestExtensionHoldFeedbackOfflineLabelsCallsTraceStatusAndLog(t *testing.T) 
 	if r, held := blocked(h.toolCall("bash", "c5", map[string]any{"command": "rm -rf dist"})); held {
 		t.Fatalf("rm -rf dist held: %s", r)
 	}
-	h.newPrompt("wait, don't delete dist, I still need it")
+	h.replyPrompt("wait, don't delete dist, I still need it")
 	if got := h.statusText(); !strings.Contains(got, "3 allowed (1 regretted by you, 2 accepted)") {
 		t.Fatalf("status:\n%s", got)
 	}
@@ -247,8 +247,8 @@ func TestExtensionHoldFeedbackOfflineLabelsCallsTraceStatusAndLog(t *testing.T) 
 	if !strings.Contains(got, "Holds: 1 hold; 0 approved by you, 0 declined, 0 re-planned, 1 awaiting your reply; precision not yet measurable; 0 allowed (0 regretted by you, 0 accepted).\n") || !strings.Contains(got, "Lifetime here:") || strings.Contains(got, "Log:") {
 		t.Fatalf("status:\n%s", got)
 	}
-	h.newPrompt("hm")
-	h.newPrompt("still thinking") // the hold is re-planned: a label lands, and still no log is written
+	h.replyPrompt("hm")
+	h.replyPrompt("still thinking") // the hold is re-planned: a label lands, and still no log is written
 	h.w.learnFlush()
 	if _, err := os.Stat(logPath); err == nil {
 		t.Fatal("nothing is written with feedbackLog off")
@@ -332,7 +332,7 @@ func TestExtensionHoldFeedbackWithJevTheRegretQuestionRidesTheFirstRequestAfterT
 	if _, ok := last().State["previous_actions"]; ok {
 		t.Fatal("same prompt: nothing to regret yet")
 	}
-	h.newPrompt("wait, stop, I still needed build/")
+	h.replyPrompt("wait, stop, I still needed build/")
 	judge.handler = regretJudge(map[string]float64{"irreversible": 0.1, "off_task": 0.1, "regretted": 0.92}, map[string]string{"regret_target": "a1"}).handler
 	if _, held := blocked(h.toolCall("bash", "c3", map[string]any{"command": "npm test"})); held {
 		t.Fatal("npm test held")
@@ -362,7 +362,7 @@ func TestExtensionHoldFeedbackWithJevTheRegretQuestionRidesTheFirstRequestAfterT
 	}
 	// The agent only replies to the next prompt: no request carries the question, so the heuristic reads the prompt
 	// at the end of the run... here the next prompt arrives with the judge cooled down.
-	h.newPrompt("undo that")
+	h.replyPrompt("undo that")
 	h.host.Fire("agent_end", map[string]any{"messages": []any{}})
 	if got := h.statusText(); !strings.Contains(got, "4 allowed (2 regretted by you, 2 accepted)") {
 		t.Fatalf("status:\n%s", got)
@@ -545,7 +545,7 @@ func TestExtensionJudgeCooldownAFailedProbeReopensTheWindowWithoutASecondNotice(
 // rules guard; slop, security and the context filter are other lanes and read the same cooldown through judgeFor)
 func TestExtensionJudgeCooldownWhileActiveNoGuardSendsAnythingAndStatusCountsSkips(t *testing.T) {
 	h, _ := cooldownHarness(t, JudgeConfig{FailuresBeforeCooldown: 1})
-	h.newPrompt("explain the bug")
+	h.replyPrompt("explain the bug")
 	h.setStatus(503)
 	h.toolCall("bash", "c1", map[string]any{"command": "npm test"})
 	if len(h.pausedNotices()) != 1 {

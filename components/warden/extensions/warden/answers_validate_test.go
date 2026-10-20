@@ -40,10 +40,6 @@ func TestAskSuccessfulEvaluationComesBackWithAnswersModelAndElapsedTime(t *testi
 	}
 }
 
-type judgeFunc func(context.Context, Request) (Evaluation, error)
-
-func (f judgeFunc) Evaluate(ctx context.Context, r Request) (Evaluation, error) { return f(ctx, r) }
-
 // twin: tests/ask.test.ts:30
 func TestAskIntegrationErrorsKeepTheirMessageAndCodeAnythingElseGetsAFixedMessage(t *testing.T) {
 	fail := func(err error) AskAnswer {

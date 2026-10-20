@@ -620,3 +620,16 @@ func TestWiringStatusWaitsForTheQueuedDatabaseWrites(t *testing.T) {
 		t.Fatalf("the status reads the database after the writes queued before it:\n%s", got)
 	}
 }
+
+func TestWiringHeldCallsReachTheCompactionEvidence(t *testing.T) {
+	t.Cleanup(CloseLearningDatabases)
+	h := startHarness(t, harnessOpts{cfg: offlineWarden()})
+	h.say("user", "push")
+	h.start()
+	h.toolCall("bash", "c1", forcePush())
+	h.toolCall("write", "w1", map[string]any{"path": "a.txt", "content": "x"})
+	held := h.w.tools.holds.heldRecords()
+	if len(held) != 1 || held[0].Tool != "bash" || held[0].Preview != "bash" || held[0].Outcome != "pending" {
+		t.Fatalf("only held calls, by tool and excerpt (never the command): %+v", held)
+	}
+}

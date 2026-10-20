@@ -368,6 +368,7 @@ func (w *warden) installLearning() {
 	w.learn = newLearningState(func() time.Time { return w.opts.Now() })
 	w.adaptor = newAdaptiveAdaptor(w.steerStatsPath, w.learn.warn)
 	w.gc.previousActions = w.previousActions
+	w.tools.holds = holdAdapter{w.learn.ledger} // the held calls the compaction appendix and warden_recall list
 }
 
 // steerStatsPath is resolved lazily: the data folder is known once the config has loaded.
@@ -464,4 +465,17 @@ func (w *warden) agentEndWithLearning(ctx sdk.Context, data map[string]any) (any
 		}
 	}
 	return w.onAgentEnd(ctx, data)
+}
+
+// holdAdapter is the tools lane's holdRecords: the held calls of the session with their outcomes (extension.ts
+// evidenceSnapshot: the records with held true, their tool, excerpt and outcome).
+type holdAdapter struct{ ledger *HoldLedger }
+
+func (a holdAdapter) heldRecords() []HeldEntry {
+	calls := a.ledger.HeldCalls()
+	out := make([]HeldEntry, len(calls))
+	for i, c := range calls {
+		out[i] = HeldEntry{Tool: c.Tool, Preview: c.Preview, Outcome: c.Outcome}
+	}
+	return out
 }

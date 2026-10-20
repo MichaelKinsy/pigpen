@@ -25,7 +25,7 @@ func TestPackageInitDoesNotCompileRegexps(t *testing.T) {
 	}
 	bytes, _ := strconv.Atoi(string(m[1]))
 	allocs, _ := strconv.Atoi(string(m[2]))
-	if allocs > 1500 || bytes > 175_000 {
+	if allocs > 1500 || bytes > 150_000 {
 		t.Fatalf("package init allocated %d bytes in %d allocs; package-level expressions must be lazyRE, not compiled at start", bytes, allocs)
 	}
 }
