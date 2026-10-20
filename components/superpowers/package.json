@@ -1,7 +1,7 @@
 {
   "name": "@pi-in-go/pigpen-superpowers",
-  "version": "0.1.0",
-  "description": "The skills of obra/superpowers (Jesse Vincent): brainstorming, writing and executing plans, test-driven development, systematic debugging, code review and verification skills, at a pinned release, with PiG's Skill names",
+  "version": "0.2.0",
+  "description": "The skills of obra/superpowers (Jesse Vincent) at a pinned release, with PiG's Skill names, and a Go port of its Pi extension that injects the using-superpowers bootstrap into the first model request of a session and after each compaction",
   "keywords": [
     "pig-package",
     "skills",
@@ -11,7 +11,8 @@
     "planning",
     "code-review",
     "pigpen",
-    "skill"
+    "skill",
+    "extension"
   ],
   "license": "MIT",
   "author": "Michael Kinsy",
@@ -28,6 +29,7 @@
     "access": "public"
   },
   "files": [
+    "extensions",
     "skills",
     "port",
     "README.md",
@@ -36,6 +38,9 @@
     "provenance.json"
   ],
   "pi": {
+    "extensions": [
+      "extensions/superpowers"
+    ],
     "skills": [
       "skills/pigpen-superpowers-brainstorming",
       "skills/pigpen-superpowers-diagnosing-superpowers",

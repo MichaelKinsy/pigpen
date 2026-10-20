@@ -26,12 +26,16 @@ Two kinds of change, and no others: the Skill `name` and its directory take the 
 
 39 references rewritten in total.
 
+## The extension
+
+`.pi/extensions/superpowers.ts`, the original's Pi extension, is ported to Go in `extensions/superpowers` (see
+[PORT.md](PORT.md)). It reads `skills/using-superpowers/SKILL.md` at run time; the port embeds the shipped Skill
+(`extensions/superpowers/bootstrap_skill.md`, a copy of `skills/pigpen-superpowers-using-superpowers/SKILL.md`) and the text
+of the original's `piToolMapping()` (`extensions/superpowers/pi_tool_mapping.md`), both written by this script, so the
+injected bootstrap names the renamed Skills.
+
 ## Not included
 
-- `.pi/extensions/superpowers.ts`, the original's Node extension for Pi: it injects the `using-superpowers` bootstrap
-  into every first model request. A Package here ships no Node code and no hook, so the Skill is available by its
-  description like any other (`/skill:pigpen-superpowers-using-superpowers` loads it). Nothing else of the original
-  runs at start-up.
 - `hooks/`, `scripts/`, `tests/`, `docs/`, `assets/` and the other harness manifests (Claude Code, Codex, Gemini,
   OpenCode, Cursor): they are not Skills.
 

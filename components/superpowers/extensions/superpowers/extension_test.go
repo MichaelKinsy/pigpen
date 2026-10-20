@@ -2,7 +2,6 @@ package superpowers
 
 import (
 	"encoding/json"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -87,11 +86,7 @@ func TestUpstreamTwins(t *testing.T) {
 	tw(t, "test-pi-extension", "resources_discover contributes the bundled skills directory", func(t *testing.T) {
 		root := t.TempDir()
 		skills := filepath.Join(root, "skills")
-		if err := os.MkdirAll(skills, 0o755); err != nil {
-			t.Fatal(err)
-		}
-		withSourceFile(t, filepath.Join(root, "extensions", "superpowers", "extension.go"))
-		h := startExt(t)
+		h := startWithCommands(t, skillCommands(skills))
 		raw := h.Fire("resources_discover", map[string]any{"cwd": root, "reason": "startup"})
 		var result struct {
 			SkillPaths []string `json:"skillPaths"`
@@ -167,12 +162,31 @@ func TestUpstreamTwins(t *testing.T) {
 		"reads upstream's skills/using-superpowers/references/pi-tools.md, a Skill file outside this module; the shipped copy is checked byte for byte against the original (plus the recorded renames) by port/adapt.py and the Skill gate")
 }
 
-// withSourceFile points the extension at a package laid out in a temporary directory.
-func withSourceFile(t *testing.T, path string) {
+// skillCommands is what the host lists when the package's Skills are loaded from skillsDir: the shipped
+// using-superpowers Skill and another one, as getCommands returns them.
+func skillCommands(skillsDir string) []any {
+	skill := func(name string) map[string]any {
+		return map[string]any{
+			"name": "skill:" + name, "description": "d", "source": "skill",
+			"sourceInfo": map[string]any{"path": filepath.Join(skillsDir, name, "SKILL.md"), "source": "local", "scope": "project", "origin": "package"},
+		}
+	}
+	return []any{
+		map[string]any{"name": "review", "source": "prompt", "sourceInfo": map[string]any{"path": "/p/review.md", "source": "local", "scope": "user", "origin": "top-level"}},
+		skill("pigpen-superpowers-brainstorming"),
+		skill("pigpen-superpowers-using-superpowers"),
+	}
+}
+
+// startWithCommands starts the extension on a host whose getCommands answers commands.
+func startWithCommands(t *testing.T, commands []any) *Host {
 	t.Helper()
-	old := sourceFile
-	sourceFile = path
-	t.Cleanup(func() { sourceFile = old })
+	return StartHost(t, Extension(), HostOptions{OnCall: func(method string, _ map[string]any) (map[string]any, string) {
+		if method == "getCommands" {
+			return map[string]any{"commands": commands}, ""
+		}
+		return map[string]any{}, ""
+	}})
 }
 
 var markerRe = regexp.MustCompile(`superpowers:using-superpowers bootstrap for pi`)
@@ -210,6 +224,8 @@ func TestStripFrontmatter(t *testing.T) {
 		// the characters before it.
 		{"U+FEFF and U+00A0 trim, U+0085 does not", "\ufeff\u00a0body\u00a0\ufeff\u0085", "body\u00a0\ufeff\u0085"},
 		{"U+0085 at the start stays too", "\u0085 body", "\u0085 body"},
+		{"U+2000 through U+200A trim", "\u2000\u2009\u200abody\u200a\u2000", "body"},
+		{"a longer dash line does not close the frontmatter", "---\na: 1\n----\nb\n---\nbody", "body"},
 	}
 	for _, c := range cases {
 		if got := stripFrontmatter(c.in); got != c.want {
@@ -348,40 +364,73 @@ func TestInjectionPlacement(t *testing.T) {
 }
 
 func TestSkillsDir(t *testing.T) {
-	t.Run("the skills directory of the package the extension sits in", func(t *testing.T) {
-		root := t.TempDir()
-		if err := os.MkdirAll(filepath.Join(root, "skills"), 0o755); err != nil {
+	discover := func(t *testing.T, h *Host) []string {
+		t.Helper()
+		raw := h.Fire("resources_discover", map[string]any{"reason": "startup"})
+		var result struct {
+			SkillPaths []string `json:"skillPaths"`
+		}
+		if len(raw) > 0 && string(raw) != "null" {
+			if err := json.Unmarshal(raw, &result); err != nil {
+				t.Fatalf("result %s: %v", raw, err)
+			}
+		}
+		return result.SkillPaths
+	}
+	t.Run("the directory above the shipped using-superpowers Skill", func(t *testing.T) {
+		dir := filepath.Join(t.TempDir(), "pkg", "skills")
+		h := startWithCommands(t, skillCommands(dir))
+		sameJSON(t, discover(t, h), []string{dir})
+		var raw map[string]any
+		if err := json.Unmarshal(h.Fire("resources_discover", map[string]any{"reason": "reload"}), &raw); err != nil {
 			t.Fatal(err)
 		}
-		withSourceFile(t, filepath.Join(root, "extensions", "superpowers", "extension.go"))
-		if got, want := skillsDir(), filepath.Join(root, "skills"); got != want {
-			t.Errorf("skillsDir() = %q, want %q", got, want)
+		if _, ok := raw["skillPaths"]; !ok {
+			t.Errorf("the result's key is skillPaths, got %v", raw)
 		}
 	})
-	t.Run("none when the package has no skills directory", func(t *testing.T) {
-		withSourceFile(t, filepath.Join(t.TempDir(), "extensions", "superpowers", "extension.go"))
-		if got := skillsDir(); got != "" {
-			t.Errorf("skillsDir() = %q, want none", got)
-		}
-		h := startExt(t)
-		if raw := h.Fire("resources_discover", map[string]any{"reason": "startup"}); string(raw) != "null" && len(raw) != 0 {
-			t.Errorf("resources_discover result %s, want none", raw)
+	t.Run("nothing when the host does not list the Skill", func(t *testing.T) {
+		commands := skillCommands(t.TempDir())[:2]
+		if got := discover(t, startWithCommands(t, commands)); got != nil {
+			t.Errorf("skillPaths %v, want none", got)
 		}
 	})
-	t.Run("none when the skills path is a file", func(t *testing.T) {
-		root := t.TempDir()
-		if err := os.WriteFile(filepath.Join(root, "skills"), []byte("x"), 0o644); err != nil {
-			t.Fatal(err)
-		}
-		withSourceFile(t, filepath.Join(root, "extensions", "superpowers", "extension.go"))
-		if got := skillsDir(); got != "" {
-			t.Errorf("skillsDir() = %q, want none", got)
+	t.Run("nothing when the host lists no commands", func(t *testing.T) {
+		if got := discover(t, startWithCommands(t, []any{})); got != nil {
+			t.Errorf("skillPaths %v, want none", got)
 		}
 	})
-	t.Run("none for a source path that is not absolute (a trimmed build)", func(t *testing.T) {
-		withSourceFile(t, "github.com/MichaelKinsy/pigpen/superpowers/extension.go")
-		if got := skillsDir(); got != "" {
-			t.Errorf("skillsDir() = %q, want none", got)
+	t.Run("a command of another source with the Skill's name is not the Skill", func(t *testing.T) {
+		commands := []any{map[string]any{
+			"name": bootstrapSkillName, "source": "prompt",
+			"sourceInfo": map[string]any{"path": "/x/y/z.md", "source": "local", "scope": "user", "origin": "top-level"},
+		}}
+		if got := discover(t, startWithCommands(t, commands)); got != nil {
+			t.Errorf("skillPaths %v, want none", got)
+		}
+	})
+	t.Run("a Skill without a path is not usable", func(t *testing.T) {
+		commands := []any{map[string]any{"name": bootstrapSkillName, "source": "skill", "sourceInfo": map[string]any{"path": "", "source": "local", "scope": "user", "origin": "top-level"}}}
+		if got := discover(t, startWithCommands(t, commands)); got != nil {
+			t.Errorf("skillPaths %v, want none", got)
+		}
+	})
+	t.Run("the host asks for the commands once per discovery", func(t *testing.T) {
+		h := startWithCommands(t, skillCommands(t.TempDir()))
+		discover(t, h)
+		if n := len(h.CallsTo("getCommands")); n != 1 {
+			t.Errorf("getCommands called %d times, want 1", n)
+		}
+	})
+	t.Run("a host error is the handler's error", func(t *testing.T) {
+		h := StartHost(t, Extension(), HostOptions{OnCall: func(method string, _ map[string]any) (map[string]any, string) {
+			if method == "getCommands" {
+				return nil, "no commands yet"
+			}
+			return map[string]any{}, ""
+		}})
+		if _, failure := h.roundTrip(map[string]any{"method": "event", "event": "resources_discover", "handler_id": h.handlers["resources_discover"], "args": json.RawMessage(`{"type":"resources_discover","reason":"startup"}`)}); failure == "" {
+			t.Error("a getCommands error must surface from the handler")
 		}
 	})
 }

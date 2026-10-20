@@ -234,9 +234,9 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 ### `superpowers`: superpowers (obra)
 
-- Kind: port. The fifteen Skills of obra/superpowers v6.4.2 (brainstorming, plans, TDD, debugging, review, verification) as one Skills Package; names carry the pigpen-superpowers- prefix. No Node extension, no hooks.
+- Kind: port. The fifteen Skills of obra/superpowers v6.4.2 (brainstorming, plans, TDD, debugging, review, verification) as one Package; names carry the pigpen-superpowers- prefix. Includes a Go port of the original Pi extension that injects the using-superpowers bootstrap. No hooks.
 - Upstream path: `skills` in superpowers
-- Notes: Part of the pig-essentials Piglet. Only names and Skill references change; the original's Node bootstrap extension and hooks are not included. skills tree vendored byte for byte; 2 kinds of change, recorded in ADAPTATIONS.md.
+- Notes: The pig-essentials Piglet selects the Skills only. Only names and Skill references change in the Skills (skills tree vendored byte for byte; 2 kinds of change, recorded in ADAPTATIONS.md); the original's hooks are not included. The original's Pi extension is ported to Go (extensions/superpowers): the original under Pi equals the port under PiG on 5 scenarios, 4 exact twins and 2 named skips of its 6 tests, mutations all killed. Not yet ported: the Node visual companion of brainstorming and writing-skills' render-graphs.js; the pin is v6.4.2, upstream main is v7.0.0.
 
 ### `pig-model-tweaks`: pig-model-tweaks
 

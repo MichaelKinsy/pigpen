@@ -1,13 +1,35 @@
 {
-  "name": "bootstrap-new-session",
-  "description": "A new session starts injecting again: the first request after /eq-new carries the bootstrap although the previous run ended.",
-  "llm": [
-    {"text": "first answer"},
-    {"text": "second answer"}
-  ],
-  "steps": [
-    {"name": "first", "rpc": {"type": "prompt", "message": "Let us make a react todo list"}},
-    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}},
-    {"name": "second", "rpc": {"type": "prompt", "message": "Start over with a calculator"}}
-  ]
+ "name": "bootstrap-new-session",
+ "description": "A new session starts injecting again: the first request after /eq-new carries the bootstrap although the previous run ended.",
+ "llm": [
+  {
+   "text": "first answer"
+  },
+  {
+   "text": "second answer"
+  }
+ ],
+ "steps": [
+  {
+   "name": "first",
+   "rpc": {
+    "type": "prompt",
+    "message": "Let us make a react todo list"
+   }
+  },
+  {
+   "name": "new-session",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-new"
+   }
+  },
+  {
+   "name": "second",
+   "rpc": {
+    "type": "prompt",
+    "message": "Start over with a calculator"
+   }
+  }
+ ]
 }
