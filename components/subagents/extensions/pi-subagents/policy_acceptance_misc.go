@@ -216,7 +216,7 @@ type aggregateChild struct {
 	Report   *jsObject
 }
 
-func uniqueStrings(items []string) []string {
+func uniqueTrimmedStrings(items []string) []string {
 	seen := map[string]bool{}
 	out := []string{}
 	for _, i := range items {
@@ -277,7 +277,7 @@ func aggregateAcceptanceReport(results []aggregateChild, notes string) *jsObject
 		for _, r := range childReports {
 			all = append(all, stringsOf(r.vals[key])...)
 		}
-		return uniqueStrings(all)
+		return uniqueTrimmedStrings(all)
 	}
 	var commands []any
 	for _, r := range childReports {
@@ -305,7 +305,7 @@ func aggregateAcceptanceReport(results []aggregateChild, notes string) *jsObject
 	}
 	out.set("commandsRun", commands)
 	out.set("validationOutput", anyStrings(collect("validationOutput")))
-	out.set("residualRisks", anyStrings(uniqueStrings(append(append([]string{}, risks...), blockerRisks...))))
+	out.set("residualRisks", anyStrings(uniqueTrimmedStrings(append(append([]string{}, risks...), blockerRisks...))))
 	out.set("noStagedFiles", allStaged)
 	out.set("reviewFindings", anyStrings(collect("reviewFindings")))
 	manual := notes

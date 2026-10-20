@@ -9,7 +9,6 @@ import (
 
 const (
 	toolTimeoutEnv           = "PI_SUBAGENT_TOOL_TIMEOUT_MS"
-	maxTimerDelayMs          = 2147483647 // the longest delay a Node timer accepts; kept as the original's bound
 	defaultFastToolTimeoutMs = 300000
 )
 

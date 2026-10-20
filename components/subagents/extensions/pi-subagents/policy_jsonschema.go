@@ -475,8 +475,6 @@ func (w *schemaWalker) errorType(ctx *schemaContext, sp, ip string, s *jsObject,
 	return w.typeOK(s.vals["type"], value) || ctx.addError(schemaError{Keyword: "type", SchemaPath: sp, InstancePath: ip, Params: params("type", s.vals["type"])})
 }
 
-func hasKey(o *jsObject, k string) bool { _, ok := o.vals[k]; return ok }
-
 func (w *schemaWalker) errorRequired(ctx *schemaContext, sp, ip string, s, obj *jsObject) bool {
 	missing := []any{}
 	for _, k := range anyList(s.vals["required"]) {

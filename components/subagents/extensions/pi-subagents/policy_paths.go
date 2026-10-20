@@ -13,18 +13,6 @@ import (
 // Port of the path helpers of src/shared/settings.ts, src/shared/utils.ts (resolveChildCwd) and
 // src/runs/background/index-segment.ts.
 
-// expandHomePath expands `~` and `~/...` to the home directory; `~user/` and everything else pass through.
-func expandHomePath(p string) string {
-	home, _ := os.UserHomeDir()
-	if p == "~" {
-		return home
-	}
-	if strings.HasPrefix(p, "~/") {
-		return filepath.Join(home, p[2:])
-	}
-	return p
-}
-
 // resolveChainPath expands ~, keeps absolute paths and puts a relative one under chainDir.
 func resolveChainPath(p, chainDir string) string {
 	expanded := expandHomePath(p)

@@ -211,15 +211,15 @@
  },
  {
   "name": "disc-preferred-last",
-  "file": "discovery.go",
-  "find": "[]string{legacy, preferred}",
-  "replace": "[]string{preferred, legacy}"
+  "file": "agentmgmt_discover.go",
+  "find": "candidateDirs = []string{legacy, preferred}",
+  "replace": "candidateDirs = []string{preferred, legacy}"
  },
  {
   "name": "disc-user-new",
-  "file": "discovery.go",
-  "find": "append(extraUserAgentDirs(), userOld, userNew)",
-  "replace": "append(extraUserAgentDirs(), userOld)"
+  "file": "agentmgmt_discover.go",
+  "find": "userScan.dirs...), s.userDirOld, s.userDirNew)",
+  "replace": "userScan.dirs...), s.userDirOld)"
  },
  {
   "name": "disc-git-root",
@@ -229,19 +229,19 @@
  },
  {
   "name": "disc-user-chains",
-  "file": "discovery.go",
-  "find": "chains, cd := loadChains(r.UserChainDir, SourceUser)",
-  "replace": "chains, cd := loadChains(r.UserChainDir+\"x\", SourceUser)"
+  "file": "agentmgmt_discover.go",
+  "find": "uc := loadChainsFromDir(s.userChainDir, SourceUser)",
+  "replace": "uc := loadChainsFromDir(s.userChainDir+\"x\", SourceUser)"
  },
  {
   "name": "agents-needs-description",
-  "file": "agents.go",
+  "file": "agentmgmt_load.go",
   "find": "fm.Get(\"name\") == \"\" || fm.Get(\"description\") == \"\"",
   "replace": "fm.Get(\"name\") == \"\""
  },
  {
   "name": "agents-thinking-false",
-  "file": "agents.go",
+  "file": "agentmgmt_load.go",
   "find": "if fm.Get(\"thinking\") == \"false\" {",
   "replace": "if false {"
  },
@@ -265,55 +265,55 @@
  },
  {
   "name": "agents-runner-type",
-  "file": "agents.go",
-  "find": "case \"external-cli\":\n\t\tif jsTrim",
-  "replace": "case \"external-clx\":\n\t\tif jsTrim"
+  "file": "agentmgmt_load.go",
+  "find": "if r.vals[\"type\"] != \"external-cli\" {",
+  "replace": "if r.vals[\"type\"] != \"external-clx\" {"
  },
  {
   "name": "agents-async",
-  "file": "agents.go",
-  "find": "case \"true\", \"false\":\n\t\t\tb := fm.Get(\"async\") == \"true\"",
-  "replace": "case \"true\":\n\t\t\tb := fm.Get(\"async\") == \"true\""
+  "file": "agentmgmt_load.go",
+  "find": "case \"false\":\n\t\treturn new(false), nil",
+  "replace": "case \"falsx\":\n\t\treturn new(false), nil"
  },
  {
   "name": "list-section-order",
-  "file": "management.go",
+  "file": "agentmgmt_manage.go",
   "find": "{SourceUser, \"User agents\"}, {SourceProject, \"Project agents\"}",
   "replace": "{SourceProject, \"Project agents\"}, {SourceUser, \"User agents\"}"
  },
  {
   "name": "list-sort",
-  "file": "management.go",
-  "find": "sort.SliceStable(agents, func(i, j int) bool { return localeLess(agents[i].Name, agents[j].Name) })",
+  "file": "agentmgmt_manage.go",
+  "find": "sort.SliceStable(scoped, func(i, j int) bool { return localeLess(scoped[i].Name, scoped[j].Name) })",
   "replace": ""
  },
  {
   "name": "list-aliases",
-  "file": "management.go",
+  "file": "agentmgmt_manage.go",
   "find": "parts = append(parts, \"aliases: \"+strings.Join(a.Aliases, \", \"))",
   "replace": "parts = append(parts, \"alias: \"+strings.Join(a.Aliases, \", \"))"
  },
  {
   "name": "list-diagnostics",
-  "file": "management.go",
-  "find": "lines = append(lines, diagnosticLines(d.Diagnostics)...)",
+  "file": "agentmgmt_manage.go",
+  "find": "lines = appendAgentDiagnosticLines(lines, d.Diagnostics)",
   "replace": ""
  },
  {
   "name": "get-blocking",
-  "file": "management.go",
-  "find": "if len(agents) == 0 || (match != nil && sourceRank[match.Source] > best) {",
+  "file": "agentmgmt_manage.go",
+  "find": "if len(agents) == 0 || (match != nil && agentDefinitionPriority(match.Source, match.DiscoveryPriority) > highest) {",
   "replace": "if len(agents) == 0 {"
  },
  {
   "name": "get-detail-prompt",
-  "file": "management.go",
+  "file": "agentmgmt_manage.go",
   "find": "if jsTrim(a.SystemPrompt) != \"\" {",
   "replace": "if false {"
  },
  {
   "name": "get-scope-diagnostics",
-  "file": "management.go",
+  "file": "agentmgmt_manage.go",
   "find": "excluded := SourceProject\n\tif scope == ScopeProject {",
   "replace": "excluded := SourceUser\n\tif scope == ScopeProject {"
  },
@@ -631,13 +631,13 @@
  },
  {
   "name": "ext-details",
-  "file": "extension.go",
-  "find": "\"mode\": \"management\", \"results\": []any{}",
-  "replace": "\"mode\": \"management\""
+  "file": "agentmgmt_actions.go",
+  "find": "obj(\"mode\", \"management\", \"results\", []any{})",
+  "replace": "obj(\"mode\", \"management\")"
  },
  {
   "name": "ext-refuse",
-  "file": "extension.go",
+  "file": "agentmgmt_actions.go",
   "find": "return nil, sdk.NewToolError(r.text)",
   "replace": "return textResult(r.text, true), nil"
  },
@@ -745,15 +745,15 @@
  },
  {
   "name": "ref-list-params",
-  "file": "extension.go",
-  "find": "registerAction(\"list\", []string{\"agentScope\"}",
-  "replace": "registerAction(\"list\", []string{\"agentScope\", \"capabilities\"}"
+  "file": "agentmgmt_actions.go",
+  "find": "{\"list\", []string{\"agentScope\", \"capabilities\"}}",
+  "replace": "{\"list\", []string{\"agentScope\"}}"
  },
  {
   "name": "ref-get-params",
-  "file": "extension.go",
-  "find": "registerAction(\"get\", []string{\"agent\", \"agentScope\"}",
-  "replace": "registerAction(\"get\", []string{\"agent\", \"agentScope\", \"config\"}"
+  "file": "agentmgmt_actions.go",
+  "find": "{\"get\", []string{\"agent\", \"agentScope\"}}",
+  "replace": "{\"get\", []string{\"agent\", \"agentScope\", \"config\"}}"
  },
  {
   "name": "ref-run-params",

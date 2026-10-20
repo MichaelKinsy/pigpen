@@ -35,10 +35,10 @@ func agentDir() string {
 	case configured != "":
 		return configured
 	}
-	return filepath.Join(home, ".pi", "agent")
+	return filepath.Join(home, getConfigDirName(), "agent")
 }
 
-func projectConfigDir(root string) string { return filepath.Join(root, ".pi") }
+func projectConfigDir(root string) string { return getProjectConfigDir(root) }
 
 func realDir(p string) string {
 	if !isDir(p) {
@@ -239,32 +239,6 @@ func readDefinitions(dir string) []definitionFile {
 	return files
 }
 
-func loadChains(dir string, source AgentSource) ([]ChainConfig, []Diagnostic) {
-	var order []string
-	byName := map[string]ChainConfig{}
-	var diags []Diagnostic
-	for _, p := range listFiles(dir, func(n string) bool { return strings.HasSuffix(n, ".chain.md") }) {
-		b, err := os.ReadFile(p)
-		if err != nil {
-			continue
-		}
-		c, err := ParseChain(string(b), source, p)
-		if err != nil {
-			diags = append(diags, Diagnostic{Source: source, FilePath: p, Error: err.Error()})
-			continue
-		}
-		if _, ok := byName[c.Name]; !ok {
-			order = append(order, c.Name)
-		}
-		byName[c.Name] = *c
-	}
-	chains := make([]ChainConfig, 0, len(order))
-	for _, n := range order {
-		chains = append(chains, byName[n])
-	}
-	return chains, diags
-}
-
 func extraUserAgentDirs() []string {
 	var out []string
 	for _, d := range filepath.SplitList(os.Getenv("PI_SUBAGENT_EXTRA_AGENT_DIRS")) {
@@ -273,68 +247,4 @@ func extraUserAgentDirs() []string {
 		}
 	}
 	return out
-}
-
-// DiscoverAgentsAll finds every agent and chain definition: the builtin ones, the user's (the agent directory's
-// agents and ~/.agents) and the project's (.agents and .pi/agents of the project root).
-func DiscoverAgentsAll(cwd string) DiscoveryAll {
-	cwd, _ = filepath.Abs(cwd)
-	r := DiscoveryAll{}
-	var d []Diagnostic
-	r.Builtin, d = builtinAgents()
-	r.Diagnostics = append(r.Diagnostics, d...)
-
-	userOld, userNew := filepath.Join(agentDir(), "agents"), filepath.Join(homeDir(), ".agents")
-	for _, dir := range append(extraUserAgentDirs(), userOld, userNew) {
-		agents, d := loadAgents(readDefinitions(dir), SourceUser, 0)
-		r.User = append(r.User, agents...)
-		r.Diagnostics = append(r.Diagnostics, d...)
-	}
-	r.UserDir = userOld
-	if os.Getenv("PI_CODING_AGENT_DIR") == "" {
-		if _, err := os.Stat(userNew); err == nil {
-			r.UserDir = userNew
-		}
-	}
-	r.UserChainDir = filepath.Join(agentDir(), "chains")
-	chains, cd := loadChains(r.UserChainDir, SourceUser)
-	r.Chains = append(r.Chains, chains...)
-	r.ChainDiagnostics = append(r.ChainDiagnostics, cd...)
-
-	if root := FindConfiguredProjectRoot(cwd); root != "" {
-		legacy, preferred := filepath.Join(root, ".agents"), filepath.Join(projectConfigDir(root), "agents")
-		r.ProjectDir = preferred
-		var order []string
-		byName := map[string]AgentConfig{}
-		for _, dir := range []string{legacy, preferred} {
-			if !isDir(dir) {
-				continue
-			}
-			agents, d := loadAgents(readDefinitions(dir), SourceProject, 0)
-			r.Diagnostics = append(r.Diagnostics, d...)
-			for _, a := range agents {
-				if _, ok := byName[a.Name]; !ok {
-					order = append(order, a.Name)
-				}
-				byName[a.Name] = a
-			}
-		}
-		for _, n := range order {
-			r.Project = append(r.Project, byName[n])
-		}
-		r.ProjectChainDir = filepath.Join(projectConfigDir(root), "chains")
-		if isDir(r.ProjectChainDir) {
-			chains, cd := loadChains(r.ProjectChainDir, SourceProject)
-			r.Chains = append(r.Chains, chains...)
-			r.ChainDiagnostics = append(r.ChainDiagnostics, cd...)
-		}
-	}
-	return r
-}
-
-// DiscoverAgents is the effective set of agents for a scope: project over user over builtin.
-func DiscoverAgents(cwd string, scope AgentScope) Discovery {
-	all := DiscoverAgentsAll(cwd)
-	d := Discovery{Agents: MergeAgentsForScope(scope, all.User, all.Project, all.Builtin, all.Package), Diagnostics: all.Diagnostics, ProjectAgentsDir: all.ProjectDir, UserDir: all.UserDir}
-	return d
 }

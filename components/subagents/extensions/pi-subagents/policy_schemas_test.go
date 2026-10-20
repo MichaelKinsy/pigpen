@@ -32,7 +32,7 @@ func schemaProp(t *testing.T, schema any, path ...string) *jsObject {
 	return o
 }
 
-func descOf(o *jsObject) string {
+func schemaDescOf(o *jsObject) string {
 	if o == nil {
 		return ""
 	}
@@ -102,7 +102,7 @@ func TestSubagentParamsSchema(t *testing.T) {
 		c := schemaProp(t, P(), "context")
 		equal(t, c.vals["type"], "string", "type")
 		equal(t, marshalJSON(c.vals["enum"], ""), `["fresh","fork","profile"]`, "enum")
-		d := descOf(c)
+		d := schemaDescOf(c)
 		for _, re := range []string{`fresh`, `fork`, `profile`, `declared defaultContext`, `defaultSubagentContext wins over each agent defaultContext`, `overrides every child`, `implicit fork`, `else fresh`} {
 			polMatches(t, d, re)
 		}
@@ -110,40 +110,40 @@ func TestSubagentParamsSchema(t *testing.T) {
 	tw(t, "schemas", "exposes named resources plus raw inline and file workflow script modes", func(t *testing.T) {
 		wf := schemaProp(t, P(), "workflow")
 		equal(t, [2]any{wf.vals["type"], wf.vals["minLength"]}, [2]any{"string", 1.0}, "workflow")
-		polMatches(t, descOf(wf), `extension-owned workflow resource`, "i")
+		polMatches(t, schemaDescOf(wf), `extension-owned workflow resource`, "i")
 		args := schemaProp(t, P(), "args")
 		equal(t, [2]any{args.vals["type"], args.vals["maxProperties"]}, [2]any{"object", 16.0}, "args")
-		polMatches(t, descOf(args), `bounded plain-JSON`, "i")
-		polMatches(t, descOf(args), `inline.*file-backed.*deeply frozen.*persisted.*secrets`, "i")
+		polMatches(t, schemaDescOf(args), `bounded plain-JSON`, "i")
+		polMatches(t, schemaDescOf(args), `inline.*file-backed.*deeply frozen.*persisted.*secrets`, "i")
 		ws := schemaProp(t, P(), "workflowScript")
 		equal(t, [2]any{ws.vals["type"], ws.vals["minLength"]}, [2]any{"string", 1.0}, "workflowScript")
 		for _, re := range []string{`Inline JavaScript statement body`, `top-level await`, `no runs.host`, `guide workflows`} {
-			polMatches(t, descOf(ws), re)
+			polMatches(t, schemaDescOf(ws), re)
 		}
 		wp := schemaProp(t, P(), "workflowScriptPath")
 		equal(t, [2]any{wp.vals["type"], wp.vals["minLength"]}, [2]any{"string", 1.0}, "workflowScriptPath")
-		polMatches(t, descOf(wp), `mutually exclusive with workflowScript`, "i")
-		polMatches(t, descOf(wp), `request cwd`, "i")
-		polMatches(t, descOf(wp), `host reads.*before sandbox`, "i")
+		polMatches(t, schemaDescOf(wp), `mutually exclusive with workflowScript`, "i")
+		polMatches(t, schemaDescOf(wp), `request cwd`, "i")
+		polMatches(t, schemaDescOf(wp), `host reads.*before sandbox`, "i")
 		for _, n := range []string{"globalConcurrencyLimit", "maxSubagentSpawnsPerRun"} {
 			c := schemaProp(t, P(), n)
 			equal(t, [2]any{c.vals["type"], c.vals["minimum"]}, [2]any{"integer", 1.0}, n)
 		}
 		pf := schemaProp(t, P(), "preflight")
 		equal(t, [2]any{pf.vals["type"], pf.vals["additionalProperties"]}, [2]any{"object", false}, "preflight")
-		polMatches(t, descOf(pf), `display-only`, "i")
+		polMatches(t, schemaDescOf(pf), `display-only`, "i")
 		equal(t, schemaProp(t, pf, "version").vals["minimum"], 1.0, "version min")
 		equal(t, schemaProp(t, pf, "version").vals["maximum"], 1.0, "version max")
 		equal(t, schemaProp(t, pf, "lanes").vals["maxItems"], 64.0, "lanes")
 		cp := schemaProp(t, P(), "chatProgress")
 		equal(t, cp.vals["type"], "string", "chatProgress")
 		equal(t, marshalJSON(cp.vals["enum"], ""), `["auto","off","live-card"]`, "chatProgress enum")
-		polMatches(t, descOf(cp), `same Git repository`, "i")
-		polMatches(t, descOf(cp), `async:false`)
-		polMatches(t, descOf(cp), `async: omit or auto/off`)
+		polMatches(t, schemaDescOf(cp), `same Git repository`, "i")
+		polMatches(t, schemaDescOf(cp), `async:false`)
+		polMatches(t, schemaDescOf(cp), `async: omit or auto/off`)
 		wt := schemaProp(t, P(), "worktree")
 		equal(t, wt.vals["type"], "boolean", "worktree")
-		polMatches(t, descOf(wt), `each workflow child`, "i")
+		polMatches(t, schemaDescOf(wt), `each workflow child`, "i")
 		iso := schemaProp(t, P(), "isolation")
 		equal(t, iso.vals["type"], "string", "isolation")
 		equal(t, marshalJSON(iso.vals["enum"], ""), `["none","worktree"]`, "isolation enum")
@@ -156,17 +156,17 @@ func TestSubagentParamsSchema(t *testing.T) {
 				equal(t, marshalJSON(schemaProp(t, b, "output").vals["enum"], ""), `["json"]`, "gate output")
 			}
 		}
-		polMatches(t, descOf(gate), `cannot be combined with acceptance`, "i")
+		polMatches(t, schemaDescOf(gate), `cannot be combined with acceptance`, "i")
 		task := schemaProp(t, P(), "task")
 		equal(t, task.vals["type"], "string", "task")
-		polMatches(t, descOf(task), `one-child`, "i")
-		polMatches(t, descOf(schemaProp(t, P(), "agent")), `one-child`, "i")
+		polMatches(t, schemaDescOf(task), `one-child`, "i")
+		polMatches(t, schemaDescOf(schemaProp(t, P(), "agent")), `one-child`, "i")
 		equal(t, schemaProp(t, P(), "clarify") == nil, true, "clarify should not be model-facing")
 		out := schemaProp(t, P(), "output")
 		equal(t, out != nil, true, "output remains a workflow child default")
-		polMatches(t, descOf(out), `relative workflow paths use managed artifact routing`, "i")
-		polMatches(t, descOf(out), `Bind durable output here, not task prose`, "i")
-		polMatches(t, descOf(out), `outputReference.*outputPathMapping.*artifactPaths`, "i")
+		polMatches(t, schemaDescOf(out), `relative workflow paths use managed artifact routing`, "i")
+		polMatches(t, schemaDescOf(out), `Bind durable output here, not task prose`, "i")
+		polMatches(t, schemaDescOf(out), `outputReference.*outputPathMapping.*artifactPaths`, "i")
 	})
 	tw(t, "schemas", "omits removed legacy and workflow-child-only fields", func(t *testing.T) {
 		for _, n := range []string{"tasks", "chain", "concurrency", "chainDir", "step", "schedule", "scheduleName", "resume"} {
@@ -178,7 +178,7 @@ func TestSubagentParamsSchema(t *testing.T) {
 		equal(t, [2]any{a.vals["type"], a.vals["minLength"]}, [2]any{"string", 1.0}, "action")
 		_, hasEnum := a.vals["enum"]
 		equal(t, hasEnum, false, "enum")
-		d := descOf(a)
+		d := schemaDescOf(a)
 		for _, re := range []string{`Management/control only; omit for execution`, `validate accepts either script input`, `guide topic tool-reference`} {
 			polMatches(t, d, re)
 		}
@@ -188,7 +188,7 @@ func TestSubagentParamsSchema(t *testing.T) {
 		c := schemaProp(t, P(), "capabilities")
 		equal(t, c.vals["type"], "boolean", "type")
 		for _, re := range []string{`list:`, `compact`, `system prompt`} {
-			polMatches(t, descOf(c), re, "i")
+			polMatches(t, schemaDescOf(c), re, "i")
 		}
 		equal(t, schemaCheck(P(), js(t, `{"action":"list","capabilities":true}`)), true, "true")
 		equal(t, schemaCheck(P(), js(t, `{"action":"list","capabilities":"true"}`)), false, `"true"`)
@@ -203,11 +203,11 @@ func TestSubagentParamsSchema(t *testing.T) {
 		to, mr := schemaProp(t, P(), "timeoutMs"), schemaProp(t, P(), "maxRuntimeMs")
 		equal(t, [2]any{to.vals["minimum"], mr.vals["minimum"]}, [2]any{1.0, 1.0}, "minimum")
 		for _, re := range []string{`foreground and single async runs`, `use config timeoutMs, else 30m`, `async composites have no default parent deadline`} {
-			polMatches(t, descOf(to), re, "i")
+			polMatches(t, schemaDescOf(to), re, "i")
 		}
-		polNotMatches(t, descOf(to), `(?i)foreground-only`)
-		polMatches(t, descOf(mr), `timeoutMs`, "i")
-		polMatches(t, descOf(mr), `Alias timeoutMs \(same defaults\)`)
+		polNotMatches(t, schemaDescOf(to), `(?i)foreground-only`)
+		polMatches(t, schemaDescOf(mr), `timeoutMs`, "i")
+		polMatches(t, schemaDescOf(mr), `Alias timeoutMs \(same defaults\)`)
 		equal(t, schemaProp(t, P(), "turnBudget") == nil, true, "turnBudget")
 		tb := schemaProp(t, P(), "toolBudget")
 		equal(t, schemaProp(t, tb, "soft").vals["minimum"], 1.0, "soft")
@@ -221,33 +221,33 @@ func TestSubagentParamsSchema(t *testing.T) {
 		for _, path := range [][]string{{"tokens", "soft"}, {"tokens", "hard"}, {"costUsd", "soft"}, {"costUsd", "hard"}} {
 			equal(t, schemaProp(t, ub, path[0], path[1]).vals["exclusiveMinimum"], 0.0, strings.Join(path, "."))
 		}
-		polMatches(t, descOf(ub), `root-only`, "i")
-		polMatches(t, descOf(ub), `running children are not stopped`, "i")
+		polMatches(t, schemaDescOf(ub), `root-only`, "i")
+		polMatches(t, schemaDescOf(ub), `running children are not stopped`, "i")
 	})
 	tw(t, "schemas", "includes subagent control fields", func(t *testing.T) {
 		id := schemaProp(t, P(), "id")
 		equal(t, id.vals["type"], "string", "id")
-		polMatches(t, descOf(id), `status`, "i")
-		polMatches(t, descOf(id), `control`, "i")
+		polMatches(t, schemaDescOf(id), `status`, "i")
+		polMatches(t, schemaDescOf(id), `control`, "i")
 		run := schemaProp(t, P(), "runId")
 		equal(t, run.vals["type"], "string", "runId")
-		polMatches(t, descOf(run), `prefer id`, "i")
+		polMatches(t, schemaDescOf(run), `prefer id`, "i")
 		dir := schemaProp(t, P(), "dir")
 		equal(t, dir.vals["type"], "string", "dir")
-		polMatches(t, descOf(dir), `status`, "i")
-		polMatches(t, descOf(dir), `control`, "i")
+		polMatches(t, schemaDescOf(dir), `status`, "i")
+		polMatches(t, schemaDescOf(dir), `control`, "i")
 		view := schemaProp(t, P(), "view")
 		equal(t, view.vals["type"], "string", "view")
 		equal(t, marshalJSON(view.vals["enum"], ""), `["fleet","transcript"]`, "view enum")
-		polMatches(t, descOf(view), `status view`, "i")
-		polMatches(t, descOf(view), `transcript`, "i")
+		polMatches(t, schemaDescOf(view), `status view`, "i")
+		polMatches(t, schemaDescOf(view), `transcript`, "i")
 		lines := schemaProp(t, P(), "lines")
 		equal(t, [2]any{lines.vals["minimum"], lines.vals["maximum"]}, [2]any{1.0, 500.0}, "lines")
-		polMatches(t, descOf(lines), `transcript`, "i")
+		polMatches(t, schemaDescOf(lines), `transcript`, "i")
 		add := schemaProp(t, P(), "additional")
 		equal(t, add.vals["minimum"], 1.0, "additional")
-		polMatches(t, descOf(add), `grant-spawn-budget`)
-		polMatches(t, descOf(add), `root interactive parent`, "i")
+		polMatches(t, schemaDescOf(add), `grant-spawn-budget`)
+		polMatches(t, schemaDescOf(add), `root interactive parent`, "i")
 		ctl := schemaProp(t, P(), "control")
 		for _, n := range []string{"needsAttentionAfterMs", "activeNoticeAfterMs", "activeNoticeAfterTurns", "activeNoticeAfterTokens", "failedToolAttemptsBeforeAttention"} {
 			equal(t, schemaProp(t, ctl, n).vals["minimum"], 1.0, n)
@@ -260,16 +260,16 @@ func TestSubagentParamsSchema(t *testing.T) {
 	tw(t, "schemas", "exposes tolerant wait mode on bg_wait", func(t *testing.T) {
 		w, _ := asObject(toolDefs()["bg_wait"].Parameters)
 		id, nb, all, stop, to := schemaProp(t, w, "id"), schemaProp(t, w, "nonBlocking"), schemaProp(t, w, "all"), schemaProp(t, w, "stopOnAttention"), schemaProp(t, w, "timeoutMs")
-		polMatches(t, descOf(id), `ordinary async subagent runs already notify this session natively`, "i")
-		polMatches(t, descOf(id), `same-turn blocking results are truly needed`)
-		polMatches(t, descOf(nb), `provider, detached, or other background work without a native completion notification`, "i")
-		polMatches(t, descOf(nb), `do not need a subscription`)
-		polMatches(t, descOf(all), `same-turn result.*truly needed`)
-		polNotMatches(t, descOf(all), `spawn a replacement`)
+		polMatches(t, schemaDescOf(id), `ordinary async subagent runs already notify this session natively`, "i")
+		polMatches(t, schemaDescOf(id), `same-turn blocking results are truly needed`)
+		polMatches(t, schemaDescOf(nb), `provider, detached, or other background work without a native completion notification`, "i")
+		polMatches(t, schemaDescOf(nb), `do not need a subscription`)
+		polMatches(t, schemaDescOf(all), `same-turn result.*truly needed`)
+		polNotMatches(t, schemaDescOf(all), `spawn a replacement`)
 		equal(t, stop.vals["type"], "boolean", "stopOnAttention")
-		polMatches(t, descOf(stop), `idle or long-thinking attention`)
-		polMatches(t, descOf(to), `waitTool\.defaultTimeoutMs`)
-		polMatches(t, descOf(to), `non-error active-work result`)
+		polMatches(t, schemaDescOf(stop), `idle or long-thinking attention`)
+		polMatches(t, schemaDescOf(to), `waitTool\.defaultTimeoutMs`)
+		polMatches(t, schemaDescOf(to), `non-error active-work result`)
 	})
 	tw(t, "schemas", "does not emit description-only schema nodes", func(t *testing.T) {
 		var bad []string
@@ -297,11 +297,11 @@ func TestSubagentParamsSchema(t *testing.T) {
 		equal(t, strings.Contains(serialized, `"$ref"`), false, "$ref")
 		equal(t, strings.Contains(serialized, `"$defs"`), false, "$defs")
 		equal(t, strings.Count(serialized, "Evidence policy;"), 1, "evidence policy once")
-		polMatches(t, descOf(schemaProp(t, P(), "agent")), `management target`)
-		acc := descOf(schemaProp(t, P(), "acceptance"))
+		polMatches(t, schemaDescOf(schemaProp(t, P(), "agent")), `management target`)
+		acc := schemaDescOf(schemaProp(t, P(), "acceptance"))
 		polMatches(t, acc, `Evidence policy`)
 		polMatches(t, acc, `guide tool-reference.*levels, evidence and review.required`)
-		mission := descOf(schemaProp(t, P(), "mission"))
+		mission := schemaDescOf(schemaProp(t, P(), "mission"))
 		polMatches(t, mission, `exactly one non-empty title or summary`)
 		polMatches(t, mission, `goal only true`)
 		polMatches(t, mission, `requires budget\.tokens`)
@@ -405,7 +405,7 @@ func TestSubagentParamsSchema(t *testing.T) {
 		equal(t, reviewed.vals["deprecated"], true, "deprecated")
 		equal(t, objString.vals["pattern"], `^\s*\{`, "object string pattern")
 		for _, re := range []string{`omit for read-only/review`, `prefer object`, `false disables; true invalid`, `review\.required`} {
-			polMatches(t, descOf(acc), re, "i")
+			polMatches(t, schemaDescOf(acc), re, "i")
 		}
 		var obj *jsObject
 		for _, b := range anyOfBranches(acc) {

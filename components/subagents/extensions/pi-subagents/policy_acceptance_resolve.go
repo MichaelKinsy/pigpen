@@ -294,8 +294,8 @@ func acceptanceRequiresChildReport(a *resolvedAcceptance) bool {
 	return len(a.Criteria) > 0 || len(a.Evidence) > 0
 }
 
-// formatReviewGateLabel labels a declared review gate the same way in prompts and capability summaries.
-func formatReviewGateLabel(r *reviewGate) string {
+// formatResolvedReviewGateLabel labels a declared review gate the same way in prompts and capability summaries.
+func formatResolvedReviewGateLabel(r *reviewGate) string {
 	status := "required"
 	if r.Required != nil && !*r.Required {
 		status = "optional"
@@ -339,7 +339,7 @@ func formatAcceptancePrompt(a *resolvedAcceptance, opt acceptancePromptOptions) 
 		}
 	}
 	if a.Review != nil {
-		lines = append(lines, "", "Review gate: "+formatReviewGateLabel(a.Review)+".")
+		lines = append(lines, "", "Review gate: "+formatResolvedReviewGateLabel(a.Review)+".")
 		if a.Review.Focus != "" {
 			lines = append(lines, "Review focus: "+a.Review.Focus)
 		}

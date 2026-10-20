@@ -169,7 +169,7 @@ func TestAgentFields(t *testing.T) {
 		hasDiag = hasDiag || (x.Name == "bad" && strings.Contains(x.Error, "invalid async frontmatter"))
 	}
 	eq(t, hasDiag, true, "and says why")
-	if c, err := parseRunner("type: external-cli\ncommand: ", "x"); err == nil || c != nil {
+	if c, err := parseAgentRunnerFrontmatter("type: external-cli\ncommand: ", "x"); err == nil || c != nil {
 		t.Errorf("an external-cli runner needs a command: %v", err)
 	}
 }
@@ -226,7 +226,7 @@ func TestManagementEdges(t *testing.T) {
 	}
 	w := mk("worker", SourceProject, "p")
 	w.Aliases = []string{"dev", "coder"}
-	eq(t, listLine(w), "- worker (project, aliases: dev, coder): worker agent", "aliases in a list line")
+	eq(t, formatAgentListLine(w, nil, nil), "- worker (project, aliases: dev, coder): worker agent", "aliases in a list line")
 }
 
 func TestToolSelection(t *testing.T) {

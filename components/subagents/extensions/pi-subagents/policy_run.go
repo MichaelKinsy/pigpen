@@ -21,8 +21,6 @@ import (
 // started with --no-extensions cannot host one, needs-CLI/SDK), toolBudget and toolTimeoutMs (they block or time out individual
 // tool calls inside the child), usageBudget, quiet (schedules only).
 
-const defaultForegroundTimeoutMs = 30 * 60 * 1000
-
 func init() {
 	registerRunParams("output", "outputMode", "artifacts", "acceptance", "gate", "agentContract", "timeoutMs", "maxRuntimeMs", "includeProgress")
 	registerAction("grant-spawn-budget", []string{"additional"}, grantSpawnBudgetAction)
@@ -71,54 +69,6 @@ type runPolicy struct {
 	Started         time.Time
 }
 
-// resolveForegroundTimeout is the original's resolveForegroundTimeout: the call's timeoutMs or maxRuntimeMs (aliases, which
-// must agree), else the default.
-func resolveForegroundTimeout(params map[string]any, defaultMs int) (ms int, errMsg string) {
-	raw := func(k string) (any, bool) { v, ok := params[k]; return v, ok && !isUndefined(v) }
-	timeout, hasT := raw("timeoutMs")
-	maxRun, hasM := raw("maxRuntimeMs")
-	if !hasT && !hasM {
-		return defaultMs, ""
-	}
-	for _, p := range []struct {
-		name string
-		v    any
-		has  bool
-	}{{"timeoutMs", timeout, hasT}, {"maxRuntimeMs", maxRun, hasM}} {
-		if !p.has {
-			continue
-		}
-		if f, ok := asNumber(p.v); !ok || !isInteger(p.v) || f <= 0 {
-			return 0, p.name + " must be a positive integer."
-		}
-		if f, _ := asNumber(p.v); f > maxTimerDelayMs {
-			return 0, fmt.Sprintf("%s must be a positive integer no larger than %d.", p.name, maxTimerDelayMs)
-		}
-	}
-	if hasT && hasM {
-		a, _ := asNumber(timeout)
-		b, _ := asNumber(maxRun)
-		if a != b {
-			return 0, "timeoutMs and maxRuntimeMs are aliases; provide only one value or use the same value for both."
-		}
-	}
-	v := timeout
-	if !hasT {
-		v = maxRun
-	}
-	f, _ := asNumber(v)
-	return int(f), ""
-}
-
-// resolveConfigDefaultTimeoutMs is config.timeoutMs when it is a usable deadline (ok false otherwise).
-func resolveConfigDefaultTimeoutMs(raw any) (int, bool) {
-	f, ok := asNumber(raw)
-	if !ok || !isInteger(raw) || f <= 0 || f > maxTimerDelayMs {
-		return 0, false
-	}
-	return int(f), true
-}
-
 // applyRunPolicy validates the policy options of a call and prepares the run; an error is the tool error text.
 func applyRunPolicy(ctx sdk.Context, params map[string]any, a *AgentConfig, task, cwd string) (*runPolicy, error) {
 	pol := &runPolicy{OriginalTask: task, Cwd: cwd, RunID: newUUID(), Started: time.Now()}
@@ -158,18 +108,15 @@ func applyRunPolicy(ctx sdk.Context, params map[string]any, a *AgentConfig, task
 
 	// deadline: the call, then the agent, then the config, then 30 minutes
 	cfg := loadExtensionConfig()
-	def := defaultForegroundTimeoutMs
-	if n, ok := resolveConfigDefaultTimeoutMs(cfg.TimeoutMs); ok {
-		def = n
+	def := resolveConfigDefaultTimeoutMs(cfg.TimeoutMs)
+	if a.DefaultTimeoutMs != nil && *a.DefaultTimeoutMs > 0 {
+		def = *a.DefaultTimeoutMs
 	}
-	if a.DefaultTimeoutMs > 0 && !defined(params, "timeoutMs") && !defined(params, "maxRuntimeMs") {
-		def = a.DefaultTimeoutMs
+	to := resolveSingleAgentLaunchTimeout(params, false, def)
+	if to.err != "" {
+		return nil, errors.New(to.err)
 	}
-	ms, msg := resolveForegroundTimeout(params, def)
-	if msg != "" {
-		return nil, errors.New(msg)
-	}
-	pol.TimeoutMs = ms
+	pol.TimeoutMs = to.timeoutMs
 
 	// output file and mode
 	pol.OutputMode = a.OutputMode
