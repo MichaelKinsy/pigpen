@@ -578,8 +578,8 @@
  {
   "name": "fallback-false-spelling",
   "file": "settings.go",
-  "find": "if !v { // `false` is a spelling of \"none\"",
-  "replace": "if v {"
+  "find": "if !v { // `false` is a spelling of",
+  "replace": "if v { // `false` is a spelling of"
  },
  {
   "name": "fallback-trimmed",
@@ -1047,7 +1047,7 @@
   "name": "error-list-unsorted",
   "file": "models.go",
   "find": "sort.Strings(list)\n\treturn nil, fmt.Sprintf",
-  "replace": "return nil, fmt.Sprintf"
+  "replace": "_ = sort.Strings\n\treturn nil, fmt.Sprintf"
  },
  {
   "name": "claude-prefix-kept",
@@ -1077,7 +1077,7 @@
   "name": "global-enabled-models-first",
   "file": "enabledmodels.go",
   "find": "if p, ok := readEnabledModelsField(project); ok {",
-  "replace": "if p, ok := readEnabledModelsField(global); ok {"
+  "replace": "_ = project\n\tif p, ok := readEnabledModelsField(global); ok {"
  },
  {
   "name": "enabled-models-memo-ignores-files",
@@ -1125,7 +1125,7 @@
   "name": "scope-list-unsorted",
   "file": "modelscope.go",
   "find": "sort.Strings(list)\n\t\treturn modelScopeVerdict{kind: \"error\"",
-  "replace": "return modelScopeVerdict{kind: \"error\""
+  "replace": "_ = sort.Strings\n\t\treturn modelScopeVerdict{kind: \"error\""
  },
  {
   "name": "scope-state-inverted",
@@ -1203,7 +1203,7 @@
   "name": "dispose-keeps-timers",
   "file": "groupjoin.go",
   "find": "if grp.stop != nil {\n\t\t\tgrp.stop()\n\t\t\tgrp.stop = nil\n\t\t}\n\t}\n\tg.groups, g.agentToGroup =",
-  "replace": "}\n\tg.groups, g.agentToGroup ="
+  "replace": "if grp.stop != nil && false {\n\t\t\tgrp.stop()\n\t\t\tgrp.stop = nil\n\t\t}\n\t}\n\tg.groups, g.agentToGroup ="
  },
  {
   "name": "timeout-delivery-complete",
