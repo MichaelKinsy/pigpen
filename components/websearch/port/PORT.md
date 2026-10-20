@@ -223,7 +223,7 @@ reports it; its refusal (`PDF text extraction`) is removed. What each file carri
 
 ### Evidence that the text matches unpdf
 
-`port/make-pdf-fixtures.mjs` writes 24 PDFs by hand (no PDF library: text, several pages, metadata, Unicode through WinAnsi and
+`port/make-pdf-fixtures.mjs` writes 25 PDFs by hand (no PDF library: text, several pages, metadata, Unicode through WinAnsi and
 through a Type0/ToUnicode font, Cyrillic, CJK, Hebrew, ligatures, `/Differences`, run splitting and kerning gaps, flate content,
 RC4-40, AES-128 and AES-256 encryption, a password-protected file, four corrupt files, a scanned page, 120 pages, rotated text,
 a form XObject, a content array, off-page text, an inline image, an object-stream and xref-stream file, control codes, and a
