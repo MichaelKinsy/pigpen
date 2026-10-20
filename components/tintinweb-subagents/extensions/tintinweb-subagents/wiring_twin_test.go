@@ -449,6 +449,9 @@ func TestBackgroundByDefaultTwins(t *testing.T) {
 		}
 		eq(t, len(outs), 6)
 		for _, out := range outs {
+			if contains(out, "queued") {
+				t.Logf("a fan-out call was queued: %s", out)
+			}
 			eq(t, contains(out, "queued"), false)
 		}
 	})
