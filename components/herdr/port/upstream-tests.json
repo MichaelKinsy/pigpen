@@ -1,0 +1,11 @@
+{
+ "herdr-agent-state": [
+  "does nothing outside Herdr",
+  "reports idle with a resume command when a TUI session starts",
+  "reports working then idle across a turn with increasing seq",
+  "stays silent in non-TUI modes",
+  "reports blocked while another extension holds the herdr:blocked signal",
+  "releases the pane only when PiG quits",
+  "builds a resume command Herdr will accept"
+ ]
+}

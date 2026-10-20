@@ -1,13 +1,17 @@
 package herdr_test
 
-// Test harness: a fake herdr binary and a fake PiG host.
+// Test harness: a fake herdr socket server and a fake PiG host.
 //
-// The fake host speaks PiG's documented extension wire protocol (`pig docs show
-// extension-api`) over an in-memory pipe and drives the real SDK through the
-// public `Extension.RunWithConn`. So the tests cross the same boundary a real
-// host does, and use no PiG-internal package.
+// herdr-pig talks to herdr over its socket (newline-delimited JSON, one request
+// per connection, answered by one line), so the fake herdr is a unix socket
+// server that records every request line it receives, as the original's own
+// test does. The fake host speaks PiG's documented extension wire protocol
+// (`pig docs show extension-api`) over an in-memory pipe and drives the real SDK
+// through the public `Extension.RunWithConn`. So the tests cross the same
+// boundary a real host does, and use no PiG-internal package.
 
 import (
+	"bufio"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -15,211 +19,187 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"slices"
-	"strconv"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
-
-	herdr "github.com/MichaelKinsy/pigpen/components/herdr/extensions/herdr"
 )
 
 // ── Fake herdr ───────────────────────────────────────────────────────────────
-//
-// The test binary doubles as the fake `$HERDR_BIN_PATH`: when HERDR_FAKE_LOG is
-// set, it records one line of tab-separated arguments and exits. That works on
-// every platform, with no shell script.
 
-func TestMain(m *testing.M) {
-	if log := os.Getenv("HERDR_FAKE_LOG"); log != "" {
-		os.Exit(runFakeHerdr(log))
-	}
-	// The fake herdr is this test binary, started afresh for every call. On a host under heavy load that start
-	// can take longer than the 3 s production bound and the call would be killed; the tests that are about the
-	// bound restore it.
-	*herdr.CallTimeout = time.Minute
-	os.Exit(m.Run())
+// herdrRequest is one request line a connection delivered.
+type herdrRequest struct {
+	Raw    string
+	ID     string
+	Method string
+	Params map[string]any
 }
 
-func runFakeHerdr(log string) int {
-	args := os.Args[1:]
-	// Only reports are slow, so a release that does not wait for them lands first.
-	if ms, _ := strconv.Atoi(os.Getenv("HERDR_FAKE_DELAY_MS")); ms > 0 && len(args) > 1 && args[1] == "report-agent" {
-		time.Sleep(time.Duration(ms) * time.Millisecond)
-	}
-	// A hung report never returns and never logs; only the call timeout ends it.
-	if os.Getenv("HERDR_FAKE_HANG") == "1" && len(args) > 1 && args[1] == "report-agent" {
-		time.Sleep(time.Hour)
-	}
-	f, err := os.OpenFile(log, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err == nil {
-		_, _ = f.WriteString(strings.Join(args, "\t") + "\t\n")
-		_ = f.Close()
-	}
-	// A resume command is refused the way real herdr refuses it. The refused call
-	// is logged above, so tests see the attempt and the retry.
-	if slices.Contains(args, "--") {
-		switch os.Getenv("HERDR_FAKE_RESUME") {
-		case "old": // herdr < 0.9.2: the CLI does not know the `--` separator
-			fmt.Fprintln(os.Stderr, "unknown option: --")
-			return 2
-		case "invalid": // herdr >= 0.9.2 rejecting the command; the report is not applied
-			fmt.Println(`{"error":{"code":"invalid_resume_argv","message":"resume_argv must not contain apostrophes"},"id":"cli:request"}`)
-			return 1
-		case "message-option": // an old CLI naming another option it does not know
-			fmt.Fprintln(os.Stderr, "unknown option: --message=Apply the plan?")
-			return 2
-		case "broken": // a failure that says nothing about resume support
-			fmt.Fprintln(os.Stderr, "error: failed to connect to herdr socket")
-			return 1
-		}
-	}
-	code, _ := strconv.Atoi(os.Getenv("HERDR_FAKE_EXIT"))
-	if msg := os.Getenv("HERDR_FAKE_STDERR"); msg != "" && code != 0 {
-		fmt.Fprintln(os.Stderr, msg)
-	}
-	return code
+// behavior is what the fake herdr does with one connection.
+type behavior struct {
+	// Silent reads the request and never answers: the client's attempt timeout ends it.
+	Silent bool
+	// Close reads the request and closes the connection without an answer (a half-close, "end" in Node).
+	Close bool
+	// Delay waits before answering.
+	Delay time.Duration
 }
-
-type call struct{ args []string }
 
 type fakeHerdr struct {
-	t   *testing.T
-	log string
+	t    *testing.T
+	ln   net.Listener
+	path string
+
+	mu    sync.Mutex
+	reqs  []herdrRequest
+	conns int
+	// behave picks the behavior of the n-th connection (0-based). Nil answers at once.
+	behave func(n int) behavior
 }
 
-// installFakeHerdr points the process environment at a fresh fake herdr pane.
+// installFakeHerdr points the process environment at a fresh fake herdr pane
+// (the original's own test uses the pane id w1:p1).
 func installFakeHerdr(t *testing.T) *fakeHerdr {
 	t.Helper()
-	exe, err := os.Executable()
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake herdr listens on a unix socket; Windows uses a named pipe")
+	}
+	// A unix socket path is limited to about 104 bytes: keep it short.
+	dir, err := os.MkdirTemp("", "hd")
 	if err != nil {
 		t.Fatal(err)
 	}
-	h := &fakeHerdr{t: t, log: filepath.Join(t.TempDir(), "calls.log")}
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
+	h := &fakeHerdr{t: t, path: filepath.Join(dir, "s")}
+	h.ln, err = net.Listen("unix", h.path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = h.ln.Close() })
+	go h.accept()
 	t.Setenv("HERDR_ENV", "1")
-	t.Setenv("HERDR_PANE_ID", "p_7")
-	t.Setenv("HERDR_BIN_PATH", exe)
-	t.Setenv("HERDR_SOCKET_PATH", filepath.Join(t.TempDir(), "herdr.sock"))
-	t.Setenv("HERDR_FAKE_LOG", h.log)
-	t.Setenv("HERDR_FAKE_DELAY_MS", "")
-	t.Setenv("HERDR_FAKE_EXIT", "")
-	t.Setenv("HERDR_FAKE_STDERR", "")
-	t.Setenv("HERDR_FAKE_HANG", "")
-	t.Setenv("HERDR_FAKE_RESUME", "")
+	t.Setenv("HERDR_SOCKET_PATH", h.path)
+	t.Setenv("HERDR_PANE_ID", "w1:p1")
+	t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "")
 	return h
 }
 
-func (h *fakeHerdr) slow(delay time.Duration) {
-	h.t.Setenv("HERDR_FAKE_DELAY_MS", strconv.Itoa(int(delay/time.Millisecond)))
-}
-
-func (h *fakeHerdr) hang() { h.t.Setenv("HERDR_FAKE_HANG", "1") }
-
-// refuseResume makes herdr refuse any report that carries a resume command: "old"
-// (herdr before 0.9.2), "invalid" (invalid_resume_argv) or "broken" (an unrelated failure).
-func (h *fakeHerdr) refuseResume(kind string) { h.t.Setenv("HERDR_FAKE_RESUME", kind) }
-
-// failWithMessage makes every call exit with code after printing msg, as herdr
-// prints why it refused a request.
-func (h *fakeHerdr) failWithMessage(code int, msg string) {
-	h.failWith(code)
-	h.t.Setenv("HERDR_FAKE_STDERR", msg)
-}
-
-func (h *fakeHerdr) failWith(code int) { h.t.Setenv("HERDR_FAKE_EXIT", strconv.Itoa(code)) }
-
-func (h *fakeHerdr) calls() []call {
-	data, err := os.ReadFile(h.log)
-	if err != nil {
-		return nil
-	}
-	var out []call
-	for _, line := range strings.Split(string(data), "\n") {
-		if line == "" {
-			continue
+func (h *fakeHerdr) accept() {
+	for {
+		conn, err := h.ln.Accept()
+		if err != nil {
+			return
 		}
-		out = append(out, call{args: strings.Split(strings.TrimSuffix(line, "\t"), "\t")})
+		h.mu.Lock()
+		n := h.conns
+		h.conns++
+		h.mu.Unlock()
+		go h.serve(conn, n)
+	}
+}
+
+func (h *fakeHerdr) serve(conn net.Conn, n int) {
+	defer conn.Close()
+	var b behavior
+	if h.behave != nil {
+		b = h.behave(n)
+	}
+	r := bufio.NewReader(conn)
+	for {
+		line, err := r.ReadString('\n')
+		if line = strings.TrimSuffix(line, "\n"); line != "" {
+			req := herdrRequest{Raw: line}
+			var msg struct {
+				ID     string         `json:"id"`
+				Method string         `json:"method"`
+				Params map[string]any `json:"params"`
+			}
+			if json.Unmarshal([]byte(line), &msg) != nil {
+				h.t.Errorf("fake herdr: not JSON: %q", line)
+			}
+			req.ID, req.Method, req.Params = msg.ID, msg.Method, msg.Params
+			h.mu.Lock()
+			h.reqs = append(h.reqs, req)
+			h.mu.Unlock()
+			switch {
+			case b.Close:
+				return
+			case b.Silent:
+				continue
+			}
+			if b.Delay > 0 {
+				time.Sleep(b.Delay)
+			}
+			_, _ = io.WriteString(conn, `{"result":{}}`+"\n")
+		}
+		if err != nil {
+			return
+		}
+	}
+}
+
+func (h *fakeHerdr) requests() []herdrRequest {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return append([]herdrRequest(nil), h.reqs...)
+}
+
+func (h *fakeHerdr) connections() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.conns
+}
+
+// waitFor waits until count requests arrived (the original's waitFor, with a longer bound for a loaded host) and
+// fails when the number is not exactly count.
+func (h *fakeHerdr) waitFor(count int) []herdrRequest {
+	h.t.Helper()
+	deadline := time.Now().Add(10 * time.Second)
+	for len(h.requests()) < count && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	got := h.requests()
+	if len(got) != count {
+		h.t.Fatalf("expected %d herdr requests, saw %d: %v", count, len(got), rawLines(got))
+	}
+	return got
+}
+
+func rawLines(all []herdrRequest) []string {
+	out := make([]string, 0, len(all))
+	for _, r := range all {
+		out = append(out, r.Raw)
 	}
 	return out
 }
 
-func (h *fakeHerdr) waitForCalls(count int) []call {
-	h.t.Helper()
-	deadline := time.Now().Add(3 * time.Second)
-	for {
-		now := h.calls()
-		if len(now) >= count {
-			return now
-		}
-		if time.Now().After(deadline) {
-			h.t.Fatalf("expected %d herdr calls, saw %d: %v", count, len(now), now)
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-}
-
-// settle gives a call that must not happen time to show up in the log.
+// settle gives a request that must not happen time to show up.
 func settle() { time.Sleep(200 * time.Millisecond) }
 
-// flag reads `--name value` or `--name=value`.
-func flag(c call, name string) (string, bool) {
-	for i, arg := range c.args {
-		if arg == name && i+1 < len(c.args) {
-			return c.args[i+1], true
-		}
-		if strings.HasPrefix(arg, name+"=") {
-			return strings.TrimPrefix(arg, name+"="), true
-		}
-	}
-	return "", false
-}
-
-// resume returns the command after `--`, and whether the call has one.
-func (c call) resume() ([]string, bool) {
-	i := slices.Index(c.args, "--")
-	if i < 0 {
-		return nil, false
-	}
-	return c.args[i+1:], true
-}
-
-func (c call) verb() string {
-	if len(c.args) < 2 {
-		return ""
-	}
-	return c.args[1]
-}
-
-func states(all []call) []string {
+func states(all []herdrRequest) []string {
 	out := make([]string, 0, len(all))
-	for _, c := range all {
-		s, _ := flag(c, "--state")
+	for _, r := range all {
+		s, _ := r.Params["state"].(string)
+		if r.Method == "pane.release_agent" {
+			s = "release"
+		}
 		out = append(out, s)
 	}
 	return out
 }
 
-func seqs(t *testing.T, all []call) []int64 {
+func seqs(t *testing.T, all []herdrRequest) []float64 {
 	t.Helper()
-	out := make([]int64, 0, len(all))
-	for _, c := range all {
-		s, _ := flag(c, "--seq")
-		n, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			t.Fatalf("seq %q is not an integer: %v", s, err)
+	out := make([]float64, 0, len(all))
+	for _, r := range all {
+		n, ok := r.Params["seq"].(float64)
+		if !ok {
+			t.Fatalf("seq is not a number in %s", r.Raw)
 		}
 		out = append(out, n)
-	}
-	return out
-}
-
-func verbs(all []call) []string {
-	out := make([]string, 0, len(all))
-	for _, c := range all {
-		out = append(out, c.verb())
 	}
 	return out
 }
@@ -262,11 +242,15 @@ type wireCall struct {
 
 // hostState is what the fake host answers for the session getters.
 type hostState struct {
-	sessionFile    string
-	sessionID      string
-	idle           bool
-	sessionFailure bool
-	idleFailure    bool
+	sessionFile string
+	// noFile answers getSessionFile with no file (an in-memory session: Pi's undefined).
+	noFile      bool
+	fileFailure bool
+	sessionID   string
+	noID        bool
+	idFailure   bool
+	idle        bool
+	idleFailure bool
 }
 
 type fakeHost struct {
@@ -291,15 +275,16 @@ func startHost(t *testing.T, ext *sdk.Extension, mode string) *fakeHost {
 	t.Helper()
 	hostSide, extSide := net.Pipe()
 	h := &fakeHost{
-		t:        t,
-		nc:       hostSide,
-		runDone:  make(chan error, 1),
-		pending:  map[string]chan *wireResponse{},
+		t:         t,
+		nc:        hostSide,
+		runDone:   make(chan error, 1),
+		pending:   map[string]chan *wireResponse{},
 		handlers:  map[string]int{},
 		listeners: map[string]string{},
 		state: hostState{
-			sessionFile: "/home/u/.pig/sessions/s1.jsonl",
-			sessionID:   "s1",
+			// The original's own test ctx().
+			sessionFile: "/home/user/.pig/agent/sessions/one.jsonl",
+			sessionID:   "session-one",
 			idle:        true,
 		},
 	}
@@ -398,14 +383,20 @@ func (h *fakeHost) answer(env wireEnvelope) {
 	h.mu.Unlock()
 	result := map[string]any{}
 	switch env.Call.Method {
-	case "getSessionFile", "getSessionID":
-		if st.sessionFailure {
+	case "getSessionFile":
+		if st.fileFailure {
 			h.write(map[string]any{"type": "call_result", "id": env.ID, "call_result": map[string]any{"error": map[string]any{"message": "no session"}}})
 			return
 		}
-		if env.Call.Method == "getSessionFile" {
+		if !st.noFile {
 			result["sessionFile"] = st.sessionFile
-		} else {
+		}
+	case "getSessionID":
+		if st.idFailure {
+			h.write(map[string]any{"type": "call_result", "id": env.ID, "call_result": map[string]any{"error": map[string]any{"message": "no session"}}})
+			return
+		}
+		if !st.noID {
 			result["sessionId"] = st.sessionID
 		}
 	case "isIdle":
@@ -428,6 +419,14 @@ func (h *fakeHost) setState(update func(*hostState)) {
 // An event the extension did not register for is not delivered.
 func (h *fakeHost) fire(event string, data map[string]any) {
 	h.t.Helper()
+	if msg, failed := h.fireResult(event, data); failed {
+		h.t.Errorf("%s handler failed: %s", event, msg)
+	}
+}
+
+// fireResult delivers one event like fire and returns the handler's error message instead of failing.
+func (h *fakeHost) fireResult(event string, data map[string]any) (string, bool) {
+	h.t.Helper()
 	h.mu.Lock()
 	id, ok := h.handlers[event]
 	h.nextID++
@@ -438,7 +437,7 @@ func (h *fakeHost) fire(event string, data map[string]any) {
 	}
 	h.mu.Unlock()
 	if !ok {
-		return
+		return "", false
 	}
 	if data == nil {
 		data = map[string]any{}
@@ -449,11 +448,12 @@ func (h *fakeHost) fire(event string, data map[string]any) {
 	select {
 	case resp := <-ch:
 		if resp != nil && resp.Error != nil {
-			h.t.Errorf("%s handler failed: %s", event, resp.Error.Message)
+			return resp.Error.Message, true
 		}
 	case <-time.After(10 * time.Second):
 		h.t.Fatalf("no response to %s within 10s", event)
 	}
+	return "", false
 }
 
 // emit dispatches one pi.events payload to the extension's listener on channel
