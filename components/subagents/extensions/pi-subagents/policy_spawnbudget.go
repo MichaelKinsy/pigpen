@@ -38,6 +38,10 @@ type extensionConfig struct {
 	MaxSubagentSpawnsPerRun     any
 	ToolTimeoutMs               any
 	TimeoutMs                   any
+	// DefaultSubagentContext is "fresh" or "fork" ("" unset); IntercomBridge and Permissions are the raw config values.
+	DefaultSubagentContext string
+	IntercomBridge         any
+	Permissions            any
 }
 
 // spawnBudgetSnapshot is the original's SpawnBudgetSnapshot (nil pointers are null).

@@ -55,7 +55,12 @@ func readExtensionConfigFile() extensionConfig {
 	if readJSONFile(asyncConfigPath(), &raw) != nil {
 		return extensionConfig{}
 	}
-	return extensionConfig{MaxSubagentSpawnsPerSession: raw["maxSubagentSpawnsPerSession"], MaxSubagentSpawnsPerRun: raw["maxSubagentSpawnsPerRun"], ToolTimeoutMs: raw["toolTimeoutMs"], TimeoutMs: raw["timeoutMs"]}
+	cfg := extensionConfig{MaxSubagentSpawnsPerSession: raw["maxSubagentSpawnsPerSession"], MaxSubagentSpawnsPerRun: raw["maxSubagentSpawnsPerRun"], ToolTimeoutMs: raw["toolTimeoutMs"], TimeoutMs: raw["timeoutMs"]}
+	if s, ok := raw["defaultSubagentContext"].(string); ok && (s == "fresh" || s == "fork") {
+		cfg.DefaultSubagentContext = s
+	}
+	cfg.IntercomBridge, cfg.Permissions = raw["intercomBridge"], raw["permissions"]
+	return cfg
 }
 
 // sessionIDOf is the logical session id ("" when the host has none).
