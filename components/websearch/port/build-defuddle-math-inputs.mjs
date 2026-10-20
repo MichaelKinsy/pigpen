@@ -222,4 +222,20 @@ if (process.env.TEMML_DIST) {
     latex.add(name); latex.add(name + '{a}'); latex.add(name + '{a}{b}'); latex.add(name + '{a}{b}{c}'); latex.add('x ' + name + ' y')
   }
 }
+// 4. seeded random token soup: malformed and odd combinations that exercise the error paths and the recovery code
+{
+  let seed = 20261020
+  const rnd = (n) => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed % n }
+  const toks = ['x', 'y', 'a', 'b', '1', '2', '0', '.', ',', '+', '-', '=', '<', '>', '(', ')', '[', ']', '|', '{', '}', '{', '}', '^', '_', '&', '\\\\', ' ', '\\frac', '\\sqrt', '\\left', '\\right', '\\sum', '\\int',
+    '\\alpha', '\\mathbf', '\\text', '\\begin{matrix}', '\\end{matrix}', '\\begin{cases}', '\\end{cases}', '\\begin{aligned}', '\\end{aligned}', '\\hat', '\\vec', '\\overline',
+    '\\mathrm', '\\operatorname', '\\limits', '\\not', '\\,', '\\;', '\\ ', '\\color{red}', '\\over', '\\choose', '\\middle', '\\big', '\\langle', '\\rangle', '\\prime', "'", '\\\\', '\\cdot',
+    '\\ldots', '\\mathbb{R}', '\\boxed', '\\cancel', '\\underbrace', '\\overset', '\\binom', '\\dfrac', '\\text{ a b }', '\\mathrm{d}', 'é', '→', '²', '\\sin', '\\lim', '\\xrightarrow', '\\raisebox', '\\phantom', '\\substack',
+    '\\tag{1}', '\\label{a}', '\\hline', '\\displaystyle', '\\scriptstyle', '\\rm', '\\bf', '$', '\\(', '\\)', '%', '\\%', '~', '\\def\\q{x}', '\\q', '\\kern1em', '\\hspace{1em}', '\\rule{1em}{1em}']
+  for (let n = 0; n < 4000; n++) {
+    const len = 2 + rnd(14)
+    let str = ''
+    for (let i = 0; i < len; i++) str += toks[rnd(toks.length)] + (rnd(4) === 0 ? ' ' : '')
+    latex.add(str)
+  }
+}
 w('latex-inputs.json', [...latex])
