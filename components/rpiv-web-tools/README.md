@@ -49,7 +49,7 @@ file whose path is in the result.
   Install the original extension, npm:@juicesharp/rpiv-web-tools@2.12.0, which runs unchanged in PiG.`
   `/web-tools --show` says so too. With the option off (the default) nothing changes. See
   [port/PORT.md](port/PORT.md) (slice 2).
-- **Renderers return lines** (the Go SDK cannot return a TUI component), laid out at the width the host gives.
+- **Renderers return lines**, not a component (the Go SDK cannot return one): the lines of the original's `Text` component at the width the host gives, wrapped, styled and padded the same way.
 - **Network failures read as in Node.** A transport failure reads `fetch failed`, as Node's fetch reports it.
 
 The proof that it matches the original is in [port/PORT.md](port/PORT.md).

@@ -18,7 +18,7 @@
 | M3a | Node's `new URL()` host parsing, which the guard (and the SearXNG and Ollama base URLs) rely on: domain to ASCII, the IPv4 number forms, IPv6 serialization | `util.go` (`parseJSURL`, `whatwgHost`; `golang.org/x/net/idna`) | `hostparse_test.go`: 35 hosts whose expected `hostname` was taken from Node 24.19.0, the guard on every private form, the request going to the parsed URL |
 | M4 | config file read and write (`~/.config/rpiv-web-tools/config.json`, XDG, legacy path, mode 0600), per-field validation | `config.go` | `config_test.go`, `extra_test.go` |
 | M5 | `/web-tools` (picker, per-provider flows, `--show`) | `command.go` | `command-cancelled`, `command-pick-key`, `command-searxng`, `command-show`, `command-show-configured`; `command_test.go` |
-| M6 | tool call and result renderers | `render.go` | layer-1 render tests |
+| M6 | tool call and result renderers (`new Text(text, 0, 0)` components) | `render.go`, `text.go` (`textLines`) | layer-1 render tests; `render_differential_test.go` against `testdata/render-differential.json` (the original's components rendered by Pi's `Text.render(width)`, made by `port/gen-render-differential.mjs`) |
 | M7 | registration, session wiring | `extension.go` | all scenarios |
 
 ## Results (this revision)
@@ -27,7 +27,7 @@
   and `exec-coverage`; the record-host check passes. The scenarios put the API config into the lane HOME with `setup`
   and declare `gh` and `git` as missing.
 - `go test -race ./...`: pass.
-- `pigeq mutate --unit`: 125 mutations (see below).
+- `pigeq mutate --unit`: 134 mutations (see below).
 - `pig package validate components/rpiv-web-tools` and `pig install <extension dir> --validate-only --json`: valid.
 
 ## Mutations
@@ -61,7 +61,20 @@ the scenarios, re-run one at a time).
 4. **PiG and Pi word the host's schema-validation error for an unknown `provider` literal differently**; the scenario
    leaves that case out and the Go side rejects it with the original's own message.
 5. **Node's `fetch failed` text** is reproduced for transport failures (`fetchFailed`).
-6. **Renderers return lines**: the Go SDK cannot return a TUI component.
+6. **Renderers return lines, and the lines are the component's.** The original returns `new Text(text, 0, 0)`; the Go
+   SDK's `ToolDefinition.RenderCall`/`RenderResult` (and `Extension.SetToolRenderers`, which fills the same store)
+   return the lines of such a component at the host's width, and the host draws them through a proxy component
+   (`coding/extension/host/subprocess/tool_render_proxy.go`). The first port laid the text out with a simplified
+   wrapper that differed from pi-tui in two ways: lines were not padded to the width, and the styling was closed and
+   reopened with other sequences at a break (`\x1b[0m` and the whole attribute list, where pi-tui reopens with one
+   combined sequence and closes only underline). `text.go` now ports pi-tui's `wrapTextWithAnsi`, its
+   `AnsiCodeTracker` and `Text.render`; the fixture holds 114 texts (inputs of the kind the 14 twinned render tests
+   use, long words, tabs, CJK, emoji sequences, combining marks, escape sequences, 80 generated) at nine widths from 1
+   to 120, and every line is equal. What stays approximate: grapheme clusters and cell widths come
+   from a small rule set (a base rune with its marks, joined emoji sequences, flags, skin tones), not pi-tui's
+   `Intl.Segmenter` and Unicode tables, and a CJK character is recognized by script, not script extensions. PiG's
+   public `tui` package has the exact code (`tui.Text`, `widthx.WrapTextWithAnsi`) but it lives in the PiG root
+   module, which an extension cannot require: the SDK need is in the PR text.
 7. No network call and no process at startup; keys are read from the environment and the config file only.
 8. **Review fix (rev-pig-essentials): the private-address guard was weaker than the original's.** The first version read
    the host with Go's `url.Parse`, which leaves `127.1`, `2130706433`, `0x7f000001`, `0177.0.0.1`, `[0::1]`,
