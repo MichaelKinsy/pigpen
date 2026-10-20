@@ -38,7 +38,6 @@ func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
 		params  obj
 		feature string
 	}{
-		{"schedule", obj{"schedule": "5m"}, "scheduled agent runs (the schedule parameter)"},
 		{"isolation worktree", obj{"isolation": "worktree"}, `worktree isolation (isolation: "worktree")`},
 		{"inherit_context", obj{"inherit_context": true}, "inheriting the parent conversation (inherit_context)"},
 		{"resume", obj{"resume": "explore"}, "resuming a finished agent's session (resume)"},
@@ -184,7 +183,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"maxConcurrentForeground", `{"maxConcurrentForeground": 2}`, "maxConcurrentForeground: 2"},
 		{"defaultJoinMode", `{"defaultJoinMode": "group"}`, `defaultJoinMode: "group"`},
 		{"backgroundByDefault", `{"backgroundByDefault": false}`, "backgroundByDefault: false"},
-		{"schedulingEnabled", `{"schedulingEnabled": true}`, "schedulingEnabled: true"},
 		{"scopeModels", `{"scopeModels": true}`, "scopeModels: true"},
 		{"strictAgentFiles", `{"strictAgentFiles": true}`, "strictAgentFiles: true"},
 		{"toolDescriptionMode", `{"toolDescriptionMode": "compact"}`, `toolDescriptionMode: "compact"`},
