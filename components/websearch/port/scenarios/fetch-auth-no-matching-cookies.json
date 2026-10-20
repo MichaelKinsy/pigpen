@@ -1,0 +1,82 @@
+{
+ "name": "fetch-auth-no-matching-cookies",
+ "description": "fetch_content with an authFetch profile reads the browser's cookie database through the canned password and SQLite programs; no stored cookie matches the request path, so the fetch fails before any request is sent.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"allowBrowserCookies\": true, \"authFetch\": {\"work\": [\"93.184.216.34\"]}}"
+ },
+ "setup": [
+  [
+   "sh",
+   "-c",
+   "mkdir -p \"$HOME/.config/google-chrome/Default\" && printf placeholder > \"$HOME/.config/google-chrome/Default/Cookies\""
+  ]
+ ],
+ "commands": {
+  "sh": {
+   "mode": "real"
+  },
+  "secret-tool": {
+   "mode": "canned",
+   "stdout": "peanuts"
+  },
+  "sqlite3": {
+   "mode": "canned",
+   "stdout": "[{\"name\": \"sid\", \"value\": \"synthetic\", \"host_key\": \"93.184.216.34\", \"path\": \"/other\", \"expires_utc\": 0, \"encrypted_value_hex\": \"\"}]"
+  },
+  "security": {
+   "mode": "missing"
+  },
+  "kwallet-query": {
+   "mode": "missing"
+  },
+  "python3": {
+   "mode": "missing"
+  },
+  "powershell.exe": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "https://93.184.216.34/private",
+      "auth": "work"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "pi-chrome-cookies-[A-Za-z0-9]+",
+   "replacement": "pi-chrome-cookies-<random>"
+  },
+  {
+   "pattern": "> [0-9]{13}\\)",
+   "replacement": "> <now-ms>)"
+  },
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}
