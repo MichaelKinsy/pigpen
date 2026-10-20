@@ -156,10 +156,12 @@ func (w *warden) latestTask(ctx sdk.Context) string {
 // exercised or a UI change nothing showed, is asked to verify (or to say plainly that nothing was verified).
 func (w *warden) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) {
 	cfg := w.config(ctx)
-	if cfg.Enabled {
-		w.toolsAgentEnd(ctx, cfg) // TOOLS-LANE HOOK: the open-loops reminder (tools_wiring.go)
+	if !cfg.Enabled {
+		return nil, nil
 	}
-	if !cfg.Enabled || !cfg.Done.Enabled {
+	w.toolsAgentEnd(ctx, cfg)                       // TOOLS-LANE HOOK: the open-loops reminder (tools_wiring.go)
+	w.rulesAgentEnd(ctx, cfg, w.judgeFor(ctx, cfg)) // rules hook: the end-of-run pass
+	if !cfg.Done.Enabled {
 		return nil, nil
 	}
 	var messages []map[string]any
