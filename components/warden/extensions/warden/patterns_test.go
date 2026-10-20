@@ -437,10 +437,10 @@ func TestCommandRulesExemptRulesSilencesTheRmClassifiersDerivedIDs(t *testing.T)
 
 // twin: tests/guard.test.ts:1198
 func TestUnknownExemptIdsNamesOnlyIdsThatMatchNothing(t *testing.T) {
-	mustEqual(t, UnknownExemptIds([]string{"infra-destroy", "sudo", "rm-rf", "sensitive-path"}, nil, nil), []string{}, "every real id is known")
-	mustEqual(t, UnknownExemptIds([]string{"infra-destruct", "suddo"}, nil, nil), []string{"infra-destruct", "suddo"}, "typos are named")
+	mustEqual(t, UnknownExemptIds([]string{"infra-destroy", "sudo", "rm-rf", "sensitive-path"}, nil, nil, nil, nil), []string{}, "every real id is known")
+	mustEqual(t, UnknownExemptIds([]string{"infra-destruct", "suddo"}, nil, nil, nil, nil), []string{"infra-destruct", "suddo"}, "typos are named")
 	rules := []CommandRule{{ID: "kubectl-delete", Pattern: ".", Severity: "warn"}}
-	mustEqual(t, UnknownExemptIds([]string{"kubectl-delete", "flux-suspend"}, rules, nil), []string{"flux-suspend"}, "a user's own rule ids are known")
+	mustEqual(t, UnknownExemptIds([]string{"kubectl-delete", "flux-suspend"}, rules, nil, nil, nil), []string{"flux-suspend"}, "a user's own rule ids are known")
 }
 
 // twin: tests/guard.test.ts:1205

@@ -213,12 +213,12 @@ func TestRedactHidesABareBearerTokenLikeTheOriginal(t *testing.T) {
 }
 
 func TestAPromptNeverAuthorizesTheDangerousRmTargetEvenWithAMatchingScope(t *testing.T) {
-	v := violation{id: "rm-recursive-dangerous-target", severity: SeverityDestructive, scope: violationScope{paths: []string{"/home/x/projects"}}}
-	if authorize("please delete /home/x/projects", v) {
+	v := Violation{ID: "rm-recursive-dangerous-target", Severity: SeverityDestructive, Scope: ViolationScope{Paths: []string{"/home/x/projects"}}}
+	if authorize("please delete /home/x/projects", v).Authorized {
 		t.Fatal("rm-recursive-dangerous-target must never be released by a prompt")
 	}
-	ok := violation{id: "rm-recursive", severity: SeverityDestructive, scope: violationScope{paths: []string{"/home/x/projects"}}}
-	if !authorize("please delete /home/x/projects", ok) {
+	ok := Violation{ID: "rm-recursive", Severity: SeverityDestructive, Scope: ViolationScope{Paths: []string{"/home/x/projects"}}}
+	if !authorize("please delete /home/x/projects", ok).Authorized {
 		t.Fatal("the control: an ordinary rm with a matching scope is released")
 	}
 }
