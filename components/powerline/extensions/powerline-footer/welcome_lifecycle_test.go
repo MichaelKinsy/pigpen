@@ -100,6 +100,8 @@ type wlRig struct {
 	model      atomic.Value  // map[string]any: the model the host reports
 	holdHeader chan struct{} // when set, the call that installs the header waits for it
 	release    chan struct{}
+	watching   atomic.Int32 // the welcome's own keyboard watches: starts minus stops
+	watches    atomic.Int32 // starts
 }
 
 var wlCommands = []any{
@@ -139,6 +141,14 @@ func startWelcome(t *testing.T, quiet bool, mode string, extra map[string]any) *
 	r.prompt.Store("")
 	r.model.Store(map[string]any{"id": "test-model", "name": "Test model", "provider": "acme-cloud", "reasoning": false, "contextWindow": 200000})
 	t.Cleanup(powerline.SetWelcomeTimers(r.timers))
+	t.Cleanup(powerline.SetWelcomeWatchHook(func(on bool) {
+		if on {
+			r.watching.Add(1)
+			r.watches.Add(1)
+		} else {
+			r.watching.Add(-1)
+		}
+	}))
 	r.h = StartHost(t, powerline.Extension(), HostOptions{Mode: mode, Cwd: home, OnCallValue: func(method string, args map[string]any) (any, string) {
 		switch method {
 		case "getModelInfo":
@@ -181,7 +191,7 @@ func startWelcome(t *testing.T, quiet bool, mode string, extra map[string]any) *
 
 func (r *wlRig) startSession(reason string) {
 	r.t.Helper()
-	r.h.FireAll("session_start", map[string]any{"reason": reason})
+	r.h.Fire("session_start", map[string]any{"reason": reason})
 }
 
 // key delivers one terminal chunk the way the host does and reports whether an extension listener consumed it.
@@ -226,6 +236,22 @@ func (r *wlRig) headerCalls() (installs, clears int) {
 		}
 	}
 	return
+}
+
+// requireWatchEnded waits for the welcome to stop watching the keyboard (the SDK shares one host subscription between the
+// extension's listeners, so the host's off call is not the signal), and checks a key then changes nothing.
+func (r *wlRig) requireWatchEnded() {
+	r.t.Helper()
+	wlWait(r.t, "the keyboard watch to end", func() bool { return r.watches.Load() > 0 && r.watching.Load() == 0 })
+	i0, c0 := r.headerCalls()
+	h0 := r.hides()
+	if r.key("z") {
+		r.t.Error("a key was consumed after the welcome ended")
+	}
+	r.quiescent()
+	if i, c := r.headerCalls(); i != i0 || c != c0 || r.hides() != h0 {
+		r.t.Errorf("a key after the welcome ended still changed it: header %d/%d -> %d/%d, hides %d -> %d", i0, c0, i, c, h0, r.hides())
+	}
 }
 
 func (r *wlRig) lastHeader() string {
@@ -310,7 +336,7 @@ func TestWelcomeLifecycleTwins(t *testing.T) {
 						}
 					} else {
 						// Shutdown must finish even while the filesystem operation remains blocked.
-						r.h.FireAll("session_shutdown", map[string]any{"reason": "quit"})
+						r.h.Fire("session_shutdown", map[string]any{"reason": "quit"})
 					}
 					releaseOnce()
 					wait()
@@ -384,7 +410,7 @@ func TestWelcomeLifecycleTwins(t *testing.T) {
 				if n := r.installations(); n != 0 {
 					t.Errorf("installations = %d, want 0", n)
 				}
-				if n := len(r.h.CallsTo("ui.onTerminalInput")); n != 0 {
+				if n := r.watches.Load(); n != 0 {
 					t.Errorf("the keyboard was watched %d times in RPC mode", n)
 				}
 			})
@@ -419,13 +445,13 @@ func overlayRig(t *testing.T) (*wlRig, HostCall) {
 
 func TestWelcomeIsDismissedByEveryEventTheOriginalWires(t *testing.T) {
 	dismissals := map[string]func(r *wlRig){
-		"agent_start": func(r *wlRig) { r.h.FireAll("agent_start", nil) },
+		"agent_start": func(r *wlRig) { r.h.Fire("agent_start", nil) },
 		"tool_call": func(r *wlRig) {
-			r.h.FireAll("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
+			r.h.Fire("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
 		},
-		"session_shutdown": func(r *wlRig) { r.h.FireAll("session_shutdown", map[string]any{"reason": "quit"}) },
+		"session_shutdown": func(r *wlRig) { r.h.Fire("session_shutdown", map[string]any{"reason": "quit"}) },
 		"powerline_off":    func(r *wlRig) { r.h.Command("powerline", "") },
-		"new_session":      func(r *wlRig) { r.h.FireAll("session_start", map[string]any{"reason": "resume"}) },
+		"new_session":      func(r *wlRig) { r.h.Fire("session_start", map[string]any{"reason": "resume"}) },
 	}
 	for name, dismiss := range dismissals {
 		t.Run("header/"+name, func(t *testing.T) {
@@ -440,7 +466,7 @@ func TestWelcomeIsDismissedByEveryEventTheOriginalWires(t *testing.T) {
 			r, _ := overlayRig(t)
 			dismiss(r)
 			wlWait(t, "the overlay to be hidden", func() bool { return r.hides() == 1 })
-			wlWait(t, "the keyboard watch to end", func() bool { return len(r.h.CallsTo("ui.offTerminalInput")) > 0 })
+			r.requireWatchEnded()
 		})
 	}
 }
@@ -527,7 +553,7 @@ func TestWelcomeOverlayCountsDownThirtySecondsAndCloses(t *testing.T) {
 	if r.timers.intervals() != 0 {
 		t.Error("the countdown keeps ticking after the dismissal")
 	}
-	wlWait(t, "the keyboard watch to end", func() bool { return len(r.h.CallsTo("ui.offTerminalInput")) > 0 })
+	r.requireWatchEnded()
 }
 
 func TestWelcomeKeyReleases(t *testing.T) {
@@ -594,7 +620,7 @@ func TestWelcomeDismissedBeforeTheHostMountedItIsHiddenWhenItDoes(t *testing.T) 
 	r.startSession("startup")
 	r.timers.runStartupWork()()
 	wlWait(t, "the overlay", func() bool { return len(r.customCalls()) > 0 })
-	r.h.FireAll("agent_start", nil)
+	r.h.Fire("agent_start", nil)
 	r.quiescent()
 	if r.hides() != 0 {
 		t.Fatal("nothing to hide before the host mounted it")
@@ -605,14 +631,12 @@ func TestWelcomeDismissedBeforeTheHostMountedItIsHiddenWhenItDoes(t *testing.T) 
 
 func TestWelcomeWatchesTheKeyboardOnlyWhileItIsPending(t *testing.T) {
 	r := headerRig(t, nil)
-	if n := len(r.h.CallsTo("ui.onTerminalInput")); n != 1 {
-		t.Errorf("onTerminalInput calls = %d, want 1", n)
-	}
-	if n := len(r.h.CallsTo("ui.offTerminalInput")); n != 0 {
-		t.Errorf("offTerminalInput calls = %d before any dismissal", n)
+	if n := r.watching.Load(); n != 1 {
+		t.Errorf("welcome keyboard watches = %d, want 1 while pending", n)
 	}
 	r.key("x")
-	wlWait(t, "the keyboard watch to end", func() bool { return len(r.h.CallsTo("ui.offTerminalInput")) == 1 })
+	wlWait(t, "the header to be removed by the key", func() bool { _, c := r.headerCalls(); return c == 1 })
+	r.requireWatchEnded()
 	r.key("y") // nothing is pending: no effect, nothing consumed
 	r.quiescent()
 	if _, c := r.headerCalls(); c != 1 {
@@ -624,21 +648,19 @@ func TestWelcomeIsDecidedAfterTheBarIsInstalled(t *testing.T) {
 	// upstream: remaining-regressions "startup welcome predicate respects powerline.welcome false" (the source assertion that
 	// setupCustomEditor(ctx) runs before the shouldShowStartupWelcome decision).
 	r := headerRig(t, nil)
-	footer, watch := -1, -1
+	// The welcome's first visible act is installing its header; other slices subscribe to the keyboard or call the host while the
+	// bar is set up, so the order is read from the footer and the header only.
+	footer, header := -1, -1
 	for i, c := range r.h.Calls() {
-		switch c.Method {
-		case "ui.setFooter":
-			if footer < 0 {
-				footer = i
-			}
-		case "ui.onTerminalInput":
-			if watch < 0 {
-				watch = i
-			}
+		switch {
+		case c.Method == "ui.setFooter" && footer < 0:
+			footer = i
+		case c.Method == "ui.setHeader" && c.Args["clear"] != true && header < 0:
+			header = i
 		}
 	}
-	if footer < 0 || watch < 0 || footer > watch {
-		t.Errorf("footer call at %d, welcome request at %d: the bar must be installed first", footer, watch)
+	if footer < 0 || header < 0 || footer > header {
+		t.Errorf("footer call at %d, welcome header at %d: the bar must be installed first", footer, header)
 	}
 }
 
@@ -722,7 +744,7 @@ func TestWelcomeIsNotShownAfterThePowerlineWasToggledOff(t *testing.T) {
 	r := startWelcome(t, true, "tui", nil)
 	r.startSession("startup")
 	r.h.Command("powerline", "") // off
-	r.h.FireAll("session_start", map[string]any{"reason": "startup"})
+	r.h.Fire("session_start", map[string]any{"reason": "startup"})
 	r.timers.runStartupWork()()
 	r.quiescent()
 	if n := r.installations(); n != 0 {
@@ -759,7 +781,7 @@ func TestWelcomeDismissalStopsThePendingTimer(t *testing.T) {
 	if r.timers.pendingAfter() != 1 {
 		t.Fatalf("pending timeouts = %d, want 1", r.timers.pendingAfter())
 	}
-	r.h.FireAll("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
+	r.h.Fire("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
 	if n := r.timers.pendingAfter(); n != 0 {
 		t.Errorf("pending timeouts after the dismissal = %d, want 0 (clearTimeout)", n)
 	}
@@ -788,7 +810,7 @@ func TestWelcomeHeaderDismissedBetweenTheCheckAndTheInstallIsNotInstalled(t *tes
 	r := startWelcome(t, true, "tui", nil)
 	var once sync.Once
 	t.Cleanup(powerline.SetWelcomeAfterHeaderMark(func() {
-		once.Do(func() { r.h.FireAll("agent_start", nil) })
+		once.Do(func() { r.h.Fire("agent_start", nil) })
 	}))
 	r.startSession("startup")
 	r.timers.runStartupWork()()
@@ -817,7 +839,7 @@ func TestWelcomeHeaderRemovalWaitsForAnInstallThatIsAlreadyDecided(t *testing.T)
 	var once sync.Once
 	t.Cleanup(powerline.SetWelcomeBeforeHeaderInstall(func() {
 		once.Do(func() {
-			go r.h.FireAll("agent_start", nil)
+			go r.h.Fire("agent_start", nil)
 			time.Sleep(150 * time.Millisecond) // the dismissal reaches the header lock
 		})
 	}))

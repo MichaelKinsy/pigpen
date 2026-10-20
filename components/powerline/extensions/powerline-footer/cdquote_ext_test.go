@@ -400,7 +400,7 @@ func lastPromptCalls(h *Host) []HostCall {
 }
 
 func beforeAgentStart(h *Host, prompt string) {
-	h.FireAll("before_agent_start", map[string]any{"prompt": prompt, "systemPromptOptions": map[string]any{}})
+	h.Fire("before_agent_start", map[string]any{"prompt": prompt, "systemPromptOptions": map[string]any{}})
 }
 
 func TestLastPromptWidgetBelowTheEditor(t *testing.T) {

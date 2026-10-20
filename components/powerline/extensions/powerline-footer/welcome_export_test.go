@@ -26,3 +26,9 @@ func SetWelcomeBeforeHeaderInstall(f func()) (restore func()) {
 	welcomeBeforeHeaderInstall = f
 	return func() { welcomeBeforeHeaderInstall = nil }
 }
+
+// SetWelcomeWatchHook sets the hook told when the welcome starts and stops watching the keyboard.
+func SetWelcomeWatchHook(f func(on bool)) (restore func()) {
+	welcomeWatchHook = f
+	return func() { welcomeWatchHook = nil }
+}

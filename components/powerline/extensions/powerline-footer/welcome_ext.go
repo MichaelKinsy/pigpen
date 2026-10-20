@@ -57,6 +57,10 @@ var welcomeClock welcomeTimers = realWelcomeTimers{}
 // dismiss the welcome there.
 var welcomeAfterHeaderMark func()
 
+// welcomeWatchHook, when set, is told when the welcome starts (true) and stops (false) watching the keyboard. The SDK shares one
+// host subscription between all listeners of the extension, so the host's on/off calls do not show the welcome's own watch.
+var welcomeWatchHook func(on bool)
+
 // welcomeBeforeHeaderInstall, when set, runs after the install was checked and before it is made, with the header lock held.
 var welcomeBeforeHeaderInstall func()
 
@@ -309,6 +313,11 @@ func (a *app) welcomeBegin(ctx sdk.Context) *welcomeRequest {
 	unsub, err := ctx.OnTerminalInput(a.welcomeInput)
 	if err != nil {
 		return req
+	}
+	if hook := welcomeWatchHook; hook != nil {
+		hook(true)
+		stop := unsub
+		unsub = func() { stop(); hook(false) }
 	}
 	w.mu.Lock()
 	if w.request == req {

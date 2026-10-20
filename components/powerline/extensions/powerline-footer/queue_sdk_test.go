@@ -142,7 +142,7 @@ func TestQueueSendDeliversThroughTheHost(t *testing.T) {
 	if len(sent) != 1 || sent[0]["content"] != "run the tests" || sent[0]["deliverAs"] != nil && sent[0]["deliverAs"] != "" {
 		t.Fatalf("sent = %v, want one plain prompt", sent)
 	}
-	r.h.FireAll("before_agent_start", agentStart("run the tests"))
+	r.h.Fire("before_agent_start", agentStart("run the tests"))
 	got := notifications(r.h)
 	if got[len(got)-1] != "info: Sent queued item aaaa1111" {
 		t.Errorf("notifications = %q", got)
@@ -168,7 +168,7 @@ func TestQueueSendToABusySessionIsAFollowUp(t *testing.T) {
 func TestQueueDeliveryDoesNotDeadlockWhenTheHostStartsTheMessageFirst(t *testing.T) {
 	var r *queueSDKRig
 	r = startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{inboxLine("cccc3333", "start me", 1, "")},
-		onSend: func(r *queueSDKRig, text string) { r.h.FireAll("before_agent_start", agentStart(text)) }})
+		onSend: func(r *queueSDKRig, text string) { r.h.Fire("before_agent_start", agentStart(text)) }})
 	done := make(chan string, 1)
 	go func() { done <- r.h.Command("queue", "send") }()
 	select {
@@ -245,8 +245,8 @@ func TestQueuePreviewWidgetAndSegmentShowTheQueue(t *testing.T) {
 func TestQueueDeliversAfterACompactionThroughTheEvents(t *testing.T) {
 	r := startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{
 		`{"id":"abab7777","text":"after compact","createdAt":1,"updatedAt":1,"source":{"cwd":"/work/proj","sessionId":"sdk-session"},"target":{"kind":"current-session"},"intent":"post-compact","status":"queued"}`}})
-	r.h.FireAll("session_before_compact", nil)
-	r.h.FireAll("session_compact", map[string]any{})
+	r.h.Fire("session_before_compact", nil)
+	r.h.Fire("session_compact", map[string]any{})
 	r.waitFor(t, "the post-compaction message", func() bool { return len(r.sent()) == 1 })
 	if sent := r.sent(); sent[0]["content"] != "after compact" {
 		t.Errorf("sent = %v", sent)
@@ -256,8 +256,8 @@ func TestQueueDeliversAfterACompactionThroughTheEvents(t *testing.T) {
 func TestQueueFailedCompactionBlocksTheQueuedItems(t *testing.T) {
 	r := startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{
 		`{"id":"cdcd8888","text":"after compact","createdAt":1,"updatedAt":1,"source":{"cwd":"/work/proj","sessionId":"sdk-session"},"target":{"kind":"current-session"},"intent":"post-compact","status":"queued"}`}})
-	r.h.FireAll("session_before_compact", nil)
-	r.h.FireAll("session_compact_failed", map[string]any{"errorMessage": "model refused"})
+	r.h.Fire("session_before_compact", nil)
+	r.h.Fire("session_compact_failed", map[string]any{"errorMessage": "model refused"})
 	got := notifications(r.h)
 	if got[len(got)-1] != "warning: Kept 1 post-compaction item blocked" {
 		t.Errorf("notifications = %q", got)
@@ -275,7 +275,7 @@ func TestQueueShutdownQueuesAnUnstartedMessageAgain(t *testing.T) {
 	r := startQueueHost(t, queueSDKOptions{idle: true, inbox: []string{inboxLine("efef9999", "never starts", 1, "")}})
 	r.h.Command("queue", "send")
 	r.waitFor(t, "the host call", func() bool { return len(r.sent()) == 1 })
-	r.h.FireAll("session_shutdown", map[string]any{"reason": "quit"})
+	r.h.Fire("session_shutdown", map[string]any{"reason": "quit"})
 	data, _ := os.ReadFile(filepath.Join(r.agent, "powerline-footer", "inbox.jsonl"))
 	if !strings.Contains(string(data), `"status":"queued"`) || !strings.Contains(string(data), "Session ended before queued message started") {
 		t.Errorf("inbox = %s", data)
@@ -296,7 +296,7 @@ func TestQueueSendDoesNotWaitForTheHostToAcceptTheMessage(t *testing.T) {
 	defer func() {
 		close(release)
 		r.waitFor(t, "the host call to finish", func() bool { return len(r.sent()) == 1 })
-		r.h.FireAll("session_shutdown", map[string]any{"reason": "quit"}) // settles the inbox before the directory is removed
+		r.h.Fire("session_shutdown", map[string]any{"reason": "quit"}) // settles the inbox before the directory is removed
 	}()
 	done := make(chan string, 1)
 	go func() { done <- r.h.Command("queue", "send") }()
