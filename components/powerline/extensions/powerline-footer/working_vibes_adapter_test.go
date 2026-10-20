@@ -23,6 +23,7 @@ type vibeRig struct {
 	branch   []any // the session branch getBranch answers
 	// reply answers each model request (the extension's own part of the turn): the text of the assistant message.
 	reply func(request map[string]any) string
+	state map[string]any // a state_update sent before session_start (the theme)
 }
 
 type vibeHost struct {
@@ -90,6 +91,9 @@ func (r vibeRig) start(t *testing.T) *vibeHost {
 			return ModelText(reply(request))
 		},
 	})
+	if r.state != nil {
+		vh.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "state_update", "args": map[string]any{"state": r.state}}})
+	}
 	vh.FireAll("session_start", map[string]any{"reason": "startup"})
 	return vh
 }
@@ -363,5 +367,38 @@ func TestVibeGenerateReportsAMissingModel(t *testing.T) {
 	got := notifyOf(h.Host)
 	if want := "error: Failed to generate vibes: Model not found: openai-codex/gpt-5.6-luna:low"; got[len(got)-1] != want {
 		t.Errorf("last notification = %q, want %q", got[len(got)-1], want)
+	}
+}
+
+// vibeTheme gives every Pi token a color and "warning" its own, as the host's theme does.
+func vibeTheme() map[string]any {
+	fg := map[string]any{}
+	for _, token := range powerline.PiThemeTokens {
+		fg[token] = "\x1b[38;5;250m"
+	}
+	fg["warning"] = "\x1b[38;5;214m"
+	return map[string]any{"theme": map[string]any{"foregrounds": fg}}
+}
+
+func TestVibeColorUsesThePiThemeOnceTheBarHasDrawn(t *testing.T) {
+	settings := `{"workingVibe":"star trek","workingVibeMode":"file","powerline":{"workingVibes":{"color":"warning"}}}`
+	h := vibeRig{settings: settings, state: vibeTheme()}.start(t)
+	h.FireAll("agent_start", nil)
+	h.FireAll("before_agent_start", beforeStart("go"))
+	got := workingMessages(h.Host)
+	if len(got) == 0 || !strings.HasPrefix(got[0], "\x1b[38;5;214m") || !strings.Contains(got[0], "Channeling star trek...") {
+		t.Errorf("working messages = %q, want the first drawn with the warning color", got)
+	}
+}
+
+func TestVibeColorWaitsForTheBarsFirstRender(t *testing.T) {
+	// In RPC mode the bar never draws, so the original has no theme for the message (setVibeWorkingMessageTheme is called from
+	// the footer's render) and shows it unstyled.
+	settings := `{"workingVibe":"star trek","workingVibeMode":"file","powerline":{"workingVibes":{"color":"warning"}}}`
+	h := vibeRig{settings: settings, state: vibeTheme(), mode: "rpc"}.start(t)
+	h.FireAll("agent_start", nil)
+	h.FireAll("before_agent_start", beforeStart("go"))
+	if got := workingMessages(h.Host); len(got) == 0 || got[0] != "Channeling star trek..." {
+		t.Errorf("working messages = %q, want the first unstyled", got)
 	}
 }

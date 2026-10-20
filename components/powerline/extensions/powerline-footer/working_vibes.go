@@ -113,15 +113,17 @@ type vibeManager struct {
 	vibeIndex      int
 	recentVibes    []string
 
-	now   func() int64
-	debug func(args ...any) // console.debug
-	wg    sync.WaitGroup    // generations in flight (tests wait for them)
+	batchTimeout time.Duration // the batch request's timeout
+	now          func() int64
+	debug        func(args ...any) // console.debug
+	wg           sync.WaitGroup    // generations in flight (tests wait for them)
 }
 
 func newVibeManager() *vibeManager {
 	m := &vibeManager{
-		now:   func() int64 { return time.Now().UnixMilli() },
-		debug: func(...any) {},
+		batchTimeout: 30 * time.Second,
+		now:          func() int64 { return time.Now().UnixMilli() },
+		debug:        func(...any) {},
 	}
 	m.config = m.loadConfig()
 	m.vibeSeed = m.now()
@@ -1054,7 +1056,7 @@ func (m *vibeManager) generateVibesBatch(theme string, count int) (generateVibes
 	}
 
 	m.mu.Lock()
-	registry, modelSpec := m.registry, m.config.ModelSpec
+	registry, modelSpec, batchTimeout := m.registry, m.config.ModelSpec, m.batchTimeout
 	m.mu.Unlock()
 	if registry == nil {
 		return fail("Extension not initialized")
@@ -1087,7 +1089,7 @@ func (m *vibeManager) generateVibesBatch(theme string, count int) (generateVibes
 
 	// A longer timeout for the batch: 30 seconds.
 	timeout := make(chan struct{})
-	timer := time.AfterFunc(30*time.Second, func() { close(timeout) })
+	timer := time.AfterFunc(batchTimeout, func() { close(timeout) })
 	defer timer.Stop()
 	response, err := completeVibe(registry, resolved.provider, resolved.model, request, vibeRequestOptions(auth, resolved.thinkingLevel), timeout)
 	if err != nil {

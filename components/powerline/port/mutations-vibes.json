@@ -482,8 +482,8 @@
  {
   "name": "vibe-batch-timeout",
   "file": "working_vibes.go",
-  "find": "time.AfterFunc(30*time.Second",
-  "replace": "time.AfterFunc(3*time.Second"
+  "find": "batchTimeout: 30 * time.Second,",
+  "replace": "batchTimeout: 3 * time.Second,"
  },
  {
   "name": "vibe-batch-bullets",

@@ -315,8 +315,15 @@ func TestVibeOnlyTheLatestGenerationUpdatesAndAgentEndCancels(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 	m.onAgentEnd(rec2.set)
-	m.wait() // the aborted wait returns without the late reply
+	done := make(chan struct{})
+	go func() { m.wait(); close(done) }()
+	select {
+	case <-done: // the aborted wait returns without the late reply
+	case <-time.After(2 * time.Second):
+		t.Error("agent end did not abort the in-flight generation")
+	}
 	close(release2)
+	m.wait()
 	eq(t, rec2.all(), []string{"Channeling race...", ""}, "agent end cancels")
 }
 
@@ -501,4 +508,81 @@ func TestVibeCommandReportsUnpersistedSettings(t *testing.T) {
 	m.config.Mode = vibeModeFile
 	_ = m.command("pirate2", notify)
 	eq(t, notes, []string{"warning: Vibe set to: pirate2 (file mode, but no file found - run /vibe generate pirate2) (not persisted; check settings.json)"}, "theme in file mode")
+}
+
+func TestVibeUpdatesOnlyWhileTheAgentStreams(t *testing.T) {
+	_, m := vibeHome(t)
+	release := make(chan struct{})
+	m.initVibeManager(scriptedRegistry{
+		find:     testProvider("test-model"),
+		complete: func(_, _, _ map[string]any) map[string]any { <-release; return vibeText("Late...") },
+	})
+	m.setTheme(new("stream"))
+	m.setModel("test-provider/test-model")
+
+	// agent_start never came: the reply is dropped.
+	var rec vibeRecorder
+	m.onBeforeAgentStart("x", rec.set)
+	release <- struct{}{}
+	m.wait()
+	eq(t, rec.all(), []string{"Channeling stream..."}, "not streaming")
+
+	// agent_start came while the call ran (as it does in a turn): the reply is shown.
+	var rec2 vibeRecorder
+	m.onBeforeAgentStart("x", rec2.set)
+	m.onAgentStart()
+	release <- struct{}{}
+	m.wait()
+	eq(t, rec2.all(), []string{"Channeling stream...", "Late..."}, "streaming")
+}
+
+func TestVibeStyleNeedsTheTheme(t *testing.T) {
+	_, m := vibeHome(t)
+	m.initVibeManager(scriptedRegistry{})
+	m.setTheme(new("plain"))
+	m.setMode(vibeModeFile)
+	m.setWorkingMessageColor("warning") // a color with no theme yet: unstyled
+	var rec vibeRecorder
+	m.onBeforeAgentStart("x", rec.set)
+	eq(t, rec.all()[0], "Channeling plain...", "no theme")
+	m.setWorkingMessageColor("rainbow") // the gradient needs no theme token but still the theme being known
+	m.onBeforeAgentStart("x", rec.set)
+	eq(t, rec.all()[2], "Channeling plain...", "rainbow without a theme")
+}
+
+func TestVibeNeedsTheRegistry(t *testing.T) {
+	_, m := vibeHome(t) // no initVibeManager: the original has no extension context yet
+	m.setTheme(new("early"))
+	m.setMode(vibeModeFile)
+	var rec vibeRecorder
+	m.onBeforeAgentStart("x", rec.set)
+	m.onAgentStart()
+	m.onToolCall("read", map[string]any{"path": "/a"}, rec.set, "")
+	eq(t, rec.all(), []string(nil), "no registry")
+}
+
+func TestVibeBatchTimeout(t *testing.T) {
+	_, m := vibeHome(t)
+	eq(t, m.batchTimeout, 30*time.Second, "the batch waits 30 seconds")
+	release := make(chan struct{})
+	defer close(release)
+	m.initVibeManager(scriptedRegistry{
+		find:     testProvider("test-model"),
+		complete: func(_, _, _ map[string]any) map[string]any { <-release; return vibeText("Never...") },
+	})
+	m.setModel("test-provider/test-model")
+	m.batchTimeout = 20 * time.Millisecond
+	res, _ := m.generateVibesBatch("slow", 3)
+	eq(t, res.Success, false, "timed out")
+	eq(t, res.Error, "Empty response from model", "an aborted request has no text")
+}
+
+func TestVibeGenerateArgsOverflowIsNotACount(t *testing.T) {
+	huge := strings.Repeat("9", 400) // parseInt gives Infinity
+	theme, count, ok := parseVibeGenerateArgs([]string{"a", huge})
+	eq(t, []any{theme, count, ok}, []any{"a " + huge, 100, true}, "overflowing count")
+	theme, count, ok = parseVibeGenerateArgs([]string{"a", "007"})
+	eq(t, []any{theme, count, ok}, []any{"a", 7, true}, "leading zeros")
+	theme, count, ok = parseVibeGenerateArgs([]string{"42"})
+	eq(t, []any{theme, count, ok}, []any{"42", 100, true}, "a lone number is the theme")
 }
