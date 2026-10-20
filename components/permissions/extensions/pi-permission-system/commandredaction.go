@@ -32,19 +32,23 @@ const maxPayloadDepth = 4
 
 // RedactCommandSecrets masks every sensitively-named value in a bash command string. Best effort: a cold parser, a parse that
 // panics, and a parse that recovered from a syntax error all yield what the walk did resolve; it never panics.
-func RedactCommandSecrets(command string) (result string) {
+func RedactCommandSecrets(command string) string {
 	if command == "" {
 		return command
 	}
+	parser := bashparse.GetWarmBashParser()
+	if parser == nil {
+		return command
+	}
+	return redactWithParser(parser, command)
+}
+
+func redactWithParser(parser bashparse.Parser, command string) (result string) {
 	defer func() {
 		if recover() != nil {
 			result = command
 		}
 	}()
-	parser := bashparse.GetWarmBashParser()
-	if parser == nil {
-		return command
-	}
 	return applyMaskSpans(command, collectSpansIn(parser, command, 0, 0))
 }
 

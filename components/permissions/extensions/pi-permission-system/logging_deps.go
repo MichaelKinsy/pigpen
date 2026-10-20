@@ -28,7 +28,7 @@ const (
 	reviewLogFilename = extensionID + "-permission-review.jsonl"
 )
 
-// nodeFsMessage is the message Node gives an fs error: "<CODE>: <description>, <syscall> '<path>'".
+// nodeFsMessage is the message Node gives an fs error: "<CODE>: <description>, <syscall> '<path>'" (a failed write names no path).
 func nodeFsMessage(err error, call, path string) string {
 	codes := []struct {
 		errno      syscall.Errno
@@ -45,6 +45,9 @@ func nodeFsMessage(err error, call, path string) string {
 	}
 	for _, c := range codes {
 		if errors.Is(err, c.errno) {
+			if call == "write" {
+				return fmt.Sprintf("%s: %s, %s", c.code, c.text, call) // fs.writeSync names no path
+			}
 			return fmt.Sprintf("%s: %s, %s '%s'", c.code, c.text, call, path)
 		}
 	}

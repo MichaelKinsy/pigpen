@@ -17,7 +17,7 @@ words = ["authorization", "Authorization", "AUTHORIZATION_HEADER", "apiKey", "ap
          "donkeys", "whiskey", "toolName", "command", "path", "target", "origin", "matchedPattern", "resolution", "toolInputPreview", "Content-Type",
          "", "k", "K", "_key", "-key_", "key_", "_keys", "a_key", "A_KEY_B", "aKey", "aKeys", "aKeyb", "aKeyB", "aKey_", "aKey-", "9Key", "9KeyZ",
          "\u212Aey", "to\u212Aen", "\u017Fecret", "pa\u017F\u017Fword", "\u0130key", "\u00e9key", "key\u00e9", "TOKEN\n", "\nkey", "ke y", "key key",
-         "tokens", "mytoken", "TOKEN_", "x.token", "a.key.b", "Key", "aKEY", "KEYS", "Keyring", "apiKeys", "api_keys", "api keys", "apikeyz"]
+         "tokens", "mytoken", "TOKEN_", "x.token", "a.key.b", "Key", "aKEY", "KEYS", "Keyring", "apiKeys", "api_keys", "api keys", "apikeyz", "authoriZation", "SECRETZ", "zToken"]
 sensitive = [{"name": w} for w in words]
 for w in ["Auth", "orization", "api", "private", "key", "secret", "tok", "pass", "cred", "cook"]:
     for sfx in ["", "s", "_", "-", "X", "x", "Key", "KEY"]:
@@ -127,6 +127,15 @@ for i in range(1500):
 for i in range(300):
     redact.append(rnd.choice(["bash -c '", 'sh -c "', "eval '", "sudo bash -c '", "env TOKEN=a bash -c '"]) + " ".join(rnd.choice(frag) for _ in range(rnd.randint(1, 6))) + rnd.choice(["'", '"', "", "' x", " 'y'"]))
 redact += ["", " ", "KEY=", "\n", "git status --short", "bash --help", "bash -c", "eval", "ls | wc -l", "echo $HOME $PWD ~", "TOKEN=\u00e9 x", "\u00e9=1 KEY=x y"]
+# payload layers: the depth bound, quoted by shlex the way a model writes it
+import shlex
+for inner in ["TOKEN=sk-x deploy", 'curl -H "Authorization: Bearer sk-z" https://x', "export API_KEY=sk-y", "echo hi && KEY=k d"]:
+    for wrap in ["bash -c {}", "sh -c {}", "eval {}", "sudo bash -c {}", "env X=1 bash -ec {}"]:
+        cmd = inner
+        for _ in range(7):
+            cmd = wrap.format(shlex.quote(cmd))
+            redact.append(cmd)
+redact += ["env _TOKEN=abc deploy", 'curl -H "9token: abc" x', 'curl -H "-token: abc" x', 'curl -H "_token: abc" x', 'curl -H "Token: abc" x']
 cases_path = os.path.join(here, "cases.json")
 if os.path.exists(cases_path):
     base = json.load(open(cases_path))

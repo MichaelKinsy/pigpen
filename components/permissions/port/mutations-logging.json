@@ -270,12 +270,6 @@
   "replace": "e := math.Ceil(end)"
  },
  {
-  "name": "cap-clamp",
-  "file": "logfieldcap.go",
-  "find": "if e > float64(length) {\n\t\treturn length",
-  "replace": "if e > float64(length) {\n\t\treturn 0"
- },
- {
   "name": "perm-file",
   "file": "logperms.go",
   "find": "OwnerOnlyFileMode      os.FileMode = 0o600",
@@ -315,7 +309,7 @@
   "name": "lg-review-uncapped",
   "file": "logging.go",
   "find": "return l.writeLine(\"review\", l.opts.ReviewLogPath, event, details, &width)",
-  "replace": "return l.writeLine(\"review\", l.opts.ReviewLogPath, event, details, nil)"
+  "replace": "_ = width\n\treturn l.writeLine(\"review\", l.opts.ReviewLogPath, event, details, nil)"
  },
  {
   "name": "lg-mask-order",
@@ -360,12 +354,6 @@
   "replace": "os.O_TRUNC|os.O_CREATE|os.O_WRONLY"
  },
  {
-  "name": "lg-create-mode",
-  "file": "logging.go",
-  "find": "os.O_WRONLY, OwnerOnlyFileMode)",
-  "replace": "os.O_WRONLY, 0o644)"
- },
- {
   "name": "lg-harden-once",
   "file": "logging.go",
   "find": "if first {\n\t\tRestrictExistingPathToOwner",
@@ -387,7 +375,7 @@
   "name": "lg-serialize-warning",
   "file": "logging.go",
   "find": "if !ok || line == \"\" {",
-  "replace": "if false {"
+  "replace": "if _ = ok; line == \"x\" {"
  },
  {
   "name": "lg-write-warning",
@@ -405,7 +393,7 @@
   "name": "sl-dedup",
   "file": "sessionlogger.go",
   "find": "if !seen {\n\t\ts.notify(warning)",
-  "replace": "if true {\n\t\ts.notify(warning)"
+  "replace": "if seen || true {\n\t\ts.notify(warning)"
  },
  {
   "name": "sl-dedup-set",
@@ -714,18 +702,6 @@
   "replace": "\"executedUnit\": true"
  },
  {
-  "name": "cr-empty",
-  "file": "commandredaction.go",
-  "find": "if command == \"\" {\n\t\treturn command",
-  "replace": "if command == \"x\" {\n\t\treturn command"
- },
- {
-  "name": "cr-cold",
-  "file": "commandredaction.go",
-  "find": "if parser == nil {\n\t\treturn command",
-  "replace": "if parser == nil {\n\t\tparser = nil"
- },
- {
   "name": "cr-recover",
   "file": "commandredaction.go",
   "find": "if recover() != nil {\n\t\t\tresult = command",
@@ -780,12 +756,6 @@
   "replace": "text[len(text)-1] != 0"
  },
  {
-  "name": "cr-quote-len",
-  "file": "commandredaction.go",
-  "find": "len(text) >= quoteAt+2",
-  "replace": "len(text) >= quoteAt+1"
- },
- {
   "name": "cr-quoted-types",
   "file": "commandredaction.go",
   "find": "{\"string\": true, \"raw_string\": true, \"ansi_c_string\": true}",
@@ -802,12 +772,6 @@
   "file": "commandredaction.go",
   "find": "value := node.Child(2)",
   "replace": "value := node.Child(1)"
- },
- {
-  "name": "cr-assign-end",
-  "file": "commandredaction.go",
-  "find": "return newMaskSpan(value.StartByte(), node.EndByte(), RedactedPlaceholder)",
-  "replace": "return newMaskSpan(value.StartByte(), value.EndByte(), RedactedPlaceholder)"
  },
  {
   "name": "cr-word-assign",

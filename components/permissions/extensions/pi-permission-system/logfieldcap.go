@@ -24,7 +24,8 @@ func ResolveReviewLogFieldWidth(reviewLogFieldMaxWidth *float64) float64 {
 // (a Go map becomes one with its keys sorted), arrays as []any.
 func CapLogFieldWidths(details any, maxWidth float64) any { return capValue(details, maxWidth, 0) }
 
-// jsSliceEnd is the end index String.prototype.slice(0, end) uses for a string of the given length.
+// jsSliceEnd is the end index String.prototype.slice(0, end) uses for a string of the given length, for an end below that length
+// (the caller has already returned a string that fits).
 func jsSliceEnd(end float64, length int) int {
 	if math.IsNaN(end) {
 		return 0
@@ -35,9 +36,6 @@ func jsSliceEnd(end float64, length int) int {
 		if e < 0 {
 			return 0
 		}
-	}
-	if e > float64(length) {
-		return length
 	}
 	return int(e)
 }
