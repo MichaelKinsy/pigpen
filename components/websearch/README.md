@@ -109,8 +109,7 @@ never falls back or runs part of the call:
 ## The search curator
 
 `web_search` takes a `workflow`: `none` (the default: raw results, no model call, no browser),
-`summary-review` (open the curator with an auto-generated summary draft) or `auto-summary`
-(generate a summary without opening the curator). `/curator` sets the configured workflow
+`summary-review` (open the curator with an auto-generated summary draft) or `auto-summary` (generate a summary without opening the curator), for example `web_search({ queries: ["a", "b"], workflow: "auto-summary" })`. `/curator` sets the configured workflow
 (`on`, `off`, `none`, `summary-review`, `auto-summary`, or no argument to toggle); it is read on
 every `web_search` call, and an explicit `workflow` parameter wins.
 
@@ -129,13 +128,10 @@ The page is the original's, byte for byte (`curator_page.html`). The port opens 
 prefers a Glimpse window when the optional `glimpseui` package is installed, which a Go extension
 cannot load, so the port always uses the default browser there.
 
-If the curator cannot open a browser automatically, such as in Docker, WSL, SSH, or headless
-environments, the running curator URL is shown in the tool output. Copy it into a browser that can
-reach the Pi host, or use a tunnel/port-forward when needed.
+If the curator cannot open a browser automatically, such as in Docker, WSL, SSH, or headless environments, the running curator URL is shown in the tool output. Copy it into a browser that can reach the Pi host, or use a tunnel/port-forward when needed.
 
 Remote curator access is opt-in: `curatorRemote: true` binds `0.0.0.0` and names the machine's
-host name in the URL, `{ "host": "h", "bind": "b" }` sets either. Remote curator sessions print the URL
-instead of trying to open a browser by default; set `autoOpenBrowser: true` to launch one anyway,
+host name in the URL, `{ "host": "h", "bind": "b" }` sets either. Remote curator sessions print the URL instead of trying to open a browser by default; set `autoOpenBrowser: true` to launch one anyway,
 or `autoOpenBrowser: false` to print the URL for a local curator too. The only access control is the
 unguessable session token over plain HTTP, so bind to one private interface and treat the URL as a
 secret.
