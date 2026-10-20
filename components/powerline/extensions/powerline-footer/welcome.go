@@ -437,7 +437,7 @@ func sessionProjectNameFromDirectory(dir string) string {
 	return parentName
 }
 
-type sessionFile struct {
+type welcomeSessionFile struct {
 	filePath string
 	dir      string
 	mtime    float64 // milliseconds, as Node's mtimeMs
@@ -466,7 +466,7 @@ func getRecentSessions(ctx context.Context, maxCount int) ([]recentSession, erro
 	for i := len(dirs) - 1; i >= 0; i-- { // .reverse(): the stack pops the agent directory first
 		pending = append(pending, pendingDir{dir: dirs[i]})
 	}
-	var sessions []sessionFile
+	var sessions []welcomeSessionFile
 
 	for len(pending) > 0 {
 		if ctx.Err() != nil {
@@ -527,7 +527,7 @@ func getRecentSessions(ctx context.Context, maxCount int) ([]recentSession, erro
 			if st.IsDir() {
 				pending = append(pending, pendingDir{dir: entryPath, ancestors: childAncestors})
 			} else if st.Mode().IsRegular() && strings.HasSuffix(entry.Name(), ".jsonl") {
-				sessions = append(sessions, sessionFile{entryPath, cur.dir, float64(st.ModTime().UnixNano()) / 1e6})
+				sessions = append(sessions, welcomeSessionFile{entryPath, cur.dir, float64(st.ModTime().UnixNano()) / 1e6})
 			}
 		}
 	}
