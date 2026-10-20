@@ -94,8 +94,6 @@ never falls back or runs part of the call:
 > extension, npm:pi-web-access@0.33.0, which runs unchanged in PiG.
 
 - `web_search` workflow `summary-review` and `auto-summary` (the curator and generated summaries);
-- `fetch_content` URLs the original hands to an extractor: YouTube, local video files, video
-  `frames` and `timestamp` (while their config sections are not disabled);
 - a page the original would hand to its RSC payload and Defuddle fallbacks after the readable
   extraction fails.
 

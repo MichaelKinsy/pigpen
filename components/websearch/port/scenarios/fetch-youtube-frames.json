@@ -1,0 +1,102 @@
+{
+ "name": "fetch-youtube-frames",
+ "description": "fetch_content takes frames of a YouTube video: yt-dlp prints the duration and a stream URL, ffmpeg fails every frame request (canned programs: a frame result is an image block, and the SDK cannot order image and text blocks like Pi): frames across the video, a single timestamp, a range and a timestamp past the end.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}}"
+ },
+ "commands": {
+  "yt-dlp": {
+   "mode": "canned",
+   "stdout": "125.5\nhttps://stream.example/video.mp4\n",
+   "exit": 0
+  },
+  "ffmpeg": {
+   "mode": "canned",
+   "stdout": "",
+   "stderr": "HTTP error 403 Forbidden\n",
+   "exit": 1
+  },
+  "ffprobe": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/youtube.com/watch?v=dQw4w9WgXcQ",
+      "frames": 3
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/youtube.com/watch?v=dQw4w9WgXcQ",
+      "timestamp": "1:23"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/youtube.com/watch?v=dQw4w9WgXcQ",
+      "timestamp": "0:10-0:40",
+      "frames": 4
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/youtube.com/watch?v=dQw4w9WgXcQ",
+      "timestamp": "5:00"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "look at the video"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/unused",
+     "body": "unused"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

@@ -1,0 +1,67 @@
+{
+ "name": "fetch-local-video-upload-start",
+ "description": "fetch_content on a small local video with a Gemini API key: the Files API upload start request (headers and body) reaches the relay; the relay answers without an upload URL, so no path reads the video and the original's Gemini access message is the result.",
+ "files": {
+  "clip.mp4": "fake media"
+ },
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"geminiApiKey\": \"synthetic-gemini-key\", \"geminiBaseUrl\": \"{{server:gemini}}\"}"
+ },
+ "commands": {
+  "ffmpeg": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "./clip.mp4"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "look at the video"
+   }
+  }
+ ],
+ "servers": {
+  "gemini": {
+   "recordHeaders": [
+    "x-goog-api-key",
+    "x-goog-upload-protocol",
+    "x-goog-upload-command",
+    "x-goog-upload-header-content-length",
+    "x-goog-upload-header-content-type"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/upload/v1beta/files",
+     "status": 200
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}
