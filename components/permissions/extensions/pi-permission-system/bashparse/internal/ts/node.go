@@ -14,12 +14,22 @@ type Node struct {
 	alias uint16
 }
 
+// NodeCount is the number of nodes the node API reaches from the root: the root and its visible
+// descendants.
+func (t *Tree) NodeCount() int { return int(t.root.visibleDescendants()) + 1 }
+
 // Root is the tree's root node (ts_tree_root_node).
 func (t *Tree) Root() Node {
 	return Node{tree: t, id: &t.root, sub: t.root, pos: t.root.padding}
 }
 
 func (n Node) isNull() bool { return n.id == nil }
+
+// NodeID identifies a node of one tree (the slot it occupies), for use as a map key.
+type NodeID struct{ slot **subtree }
+
+// ID is the node's identity within its tree.
+func (n Node) ID() NodeID { return NodeID{n.id} }
 
 // Same reports whether two nodes are the same slot of the same tree.
 func (n Node) Same(o Node) bool { return n.id == o.id }
@@ -127,11 +137,11 @@ type Child struct {
 	Field string
 }
 
-// Children are the node's visible children in order, each with ts_node_field_name_for_child's
-// answer: flattening the hidden nodes between a node and its visible descendants, as ts_node_child
-// does, and carrying the field of the nearest hidden ancestor that has one.
-func (n Node) Children() []Child {
-	var out []Child
+// AppendChildren appends the node's visible children in order, each with
+// ts_node_field_name_for_child's answer: flattening the hidden nodes between a node and its
+// visible descendants, as ts_node_child does, and carrying the field of the nearest hidden
+// ancestor that has one.
+func (n Node) AppendChildren(out []Child) []Child {
 	n.collect("", &out)
 	return out
 }
@@ -169,7 +179,7 @@ func subtreeHasTrailingEmptyDescendant(self, other *subtree) bool {
 		if child.totalBytes() > 0 {
 			break
 		}
-		if child == other || subtreeHasTrailingEmptyDescendant(child, other) {
+		if samePtr(child, other) || subtreeHasTrailingEmptyDescendant(child, other) {
 			return true
 		}
 	}

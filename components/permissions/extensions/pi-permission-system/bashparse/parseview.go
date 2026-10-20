@@ -27,18 +27,28 @@ func rewriteStatements(root *Node, rewrite rewriteFunc) *Node {
 
 // rewriteBeneath is the rewritten node, or nil when nothing beneath node changed.
 func rewriteBeneath(node *Node, rewrite rewriteFunc) *Node {
-	children := make([]*Node, 0, len(node.children))
-	changed := false
-	for _, child := range node.children {
+	// children is the node's children with each rewritten one replaced. Most trees change nowhere
+	// and need no copy: it is made at the first change, or when rewrite is to be handed a list.
+	var children []*Node
+	for i, child := range node.children {
 		rewritten := rewriteBeneath(child, rewrite)
-		if rewritten != nil {
-			changed = true
-			children = append(children, rewritten)
-		} else {
-			children = append(children, child)
+		if rewritten != nil && children == nil {
+			children = make([]*Node, len(node.children))
+			copy(children, node.children[:i])
+		}
+		if children != nil {
+			if rewritten != nil {
+				children[i] = rewritten
+			} else {
+				children[i] = child
+			}
 		}
 	}
+	changed := children != nil
 	if node.typ == "redirected_statement" && !ParseUnresolvedWithin(node) {
+		if children == nil {
+			children = append([]*Node(nil), node.children...)
+		}
 		if rewritten := rewrite(node, children); rewritten != nil {
 			return rewritten
 		}

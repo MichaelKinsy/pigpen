@@ -48,9 +48,17 @@ func TestPureReaderCore(t *testing.T) {
 		eq(t, sortedCore(), want)
 	})
 	tw(t, cef, "matches the roster published in docs/configuration.md", func(t *testing.T) {
-		doc, err := os.ReadFile("../../../port/oracle/packages/pi-permission-system/docs/configuration.md")
+		// The vendored original's docs sit outside the module, so a copy of the module (the mutation
+		// runner's) cannot reach them; testdata/configuration-roster.md is the same block, byte for byte,
+		// and the test checks the two agree whenever the docs are reachable.
+		doc, err := os.ReadFile("testdata/configuration-roster.md")
 		if err != nil {
 			t.Fatal(err)
+		}
+		if vendored, err := os.ReadFile("../../../port/oracle/packages/pi-permission-system/docs/configuration.md"); err == nil {
+			if !strings.Contains(string(vendored), strings.TrimSpace(string(doc))) {
+				t.Fatal("testdata/configuration-roster.md has drifted from the original's docs/configuration.md")
+			}
 		}
 		block := regexp.MustCompile(`(?s)<!-- BEGIN PURE_READER_CORE -->(.*?)<!-- END PURE_READER_CORE -->`).FindSubmatch(doc)
 		if block == nil {

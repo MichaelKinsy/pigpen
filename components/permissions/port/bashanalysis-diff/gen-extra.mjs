@@ -64,5 +64,35 @@ for (const c of ["w", "W", "r", "R", "e", "v", "a", "i", "c", "s", "y", "k", "l5
 for (const d of ["!", ",", "|", "#", "%", ":", ";", "@", "[", "]", "^", "_", "`", "{", "}", "~", ".", "-", "a", "5", " ", "\\", "\t", "/"]) out.push(q("sed", [`s${d}a${d}b${d}`]));
 for (const a of [["{print}", "-F:", "data"], ["{print}", "-v", "x=1"], ["--", "-x", "data"], ["-v", "n=3", "NR>=1", "d"], ["-F", "|", "{print $1}", "d"], ["{print}", "NR>=1"], ["NR>=1", "{print}"], ["-F"], ["-Fx", "p"], ["-vx", "p"]]) out.push(q("awk", a));
 for (const u of ["find ';' -exec rm x", "find . -ok rm {} ;", "find . -okdir rm {} ;", "bash --norc script", "sudo sudo sudo bash -c x", "sudo sudo sudo sudo bash -c x", "find . -exec sh {} ; -c x", "grep -c x f", "bash -c -x", "bash -c '", "xargs -I {} rm {}", "find . -exec rm {} \\;", "env 1A=b ls", "env A1=b ls", "env _A=b ls", "env AB ls", "/usr/bin/sudo ls", "/usr/bin/ ls", "sudo 😀 ls", "env A=😀 B=é grep x", "flock /tmp/l -c ls", "timeout 5 ls", "nice -n 5 ls -l", "sudo -- -l", "sort --random-sort f", "sort o", "sort -", "sort --outputs", "g\u0130t x", "\u00a0# c\nls", "\u2005# c\nls"]) out.push(u);
+
+// Shapes that reach the branches of the Go port a mutation would otherwise leave unobserved.
+// (a) every ARITY key, bare and with arguments
+{
+  const src = fs.readFileSync("port/oracle/packages/pi-permission-system/src/access-intent/bash/bash-arity.ts", "utf8");
+  const body = src.slice(src.indexOf("export const ARITY"), src.indexOf("};", src.indexOf("export const ARITY")));
+  for (const m of body.matchAll(/^\s*(?:"([^"]+)"|([a-z0-9-]+)):\s*\d+,/gm)) {
+    const key = m[1] ?? m[2];
+    out.push(key, `${key} a b c`, `${key.toUpperCase()} x y z`);
+  }
+}
+// (b) every flag of the pattern-first table, in each spelling, under every command that reads it
+{
+  const flags = ["-e", "--regexp", "-f", "--file", "-A", "--after-context", "-B", "--before-context", "-C", "-m", "--max-count", "--context", "-g", "--glob", "-t", "--type", "-T", "--type-not", "-j", "--threads", "-M", "--max-columns", "-r", "--replace", "-E", "--encoding", "--flags", "-n", "--max-replacements", "--expression", "-i", "-F", "-v", "--source", "--field-separator", "--assign", "--eval", "-p", "--print", "-c", "-ie", "-x"];
+  const cmds = ["grep", "egrep", "fgrep", "rg", "sd", "sed", "awk", "gawk", "nawk", "node", "bun", "python", "python3", "perl", "ruby", "/usr/bin/sed", "cat"];
+  for (const c of cmds) for (const f of flags) {
+    out.push(`${c} ${f} val pat /etc/passwd`, `${c} ${f}val pat /etc/passwd`, `${c} ${f} '' pat /etc/passwd`, `${c} ${f} $(cat /etc/x) pat /etc/passwd`);
+    if (f.startsWith("--")) out.push(`${c} ${f}=val pat /etc/passwd`, `${c} ${f}=/tmp/v pat f`);
+    out.push(`${c} \\${f}'q' pat /etc/passwd`, `${c} ${f}'q' pat /etc/passwd`, `${c} -- ${f} pat /etc/passwd`, `${c} ${f} 3 pat /etc/passwd`);
+  }
+}
+// (c) statements a compound hosts, heredocs, redirect gaps, variables rebound in a salvaged region
+for (const c of ["if [[ -f x ]]; then ls; fi", "while [[ $x ]]; do :; done", "{ [[ a ]]; }", "f() { [[ a ]]; }", "if test -f x; then :; fi", "if x=1; then :; fi", "if declare x; then :; fi", "if unset x; then :; fi",
+  "for x in a; do declare y=$(rm z); done", "if [[ $(rm x) ]]; then ls; fi", "until [[ a ]]; do :; done", "case x in a) [[ b ]];; esac", "if a; then b; elif [[ c ]]; then d; else e; fi",
+  "cat <<EOF\nx\nEOF", "cat <<-EOF\n\tx\n\tEOF", "cat <<EOF | grep x\nx\nEOF", "{ cat <<EOF\nx\nEOF\n}", "if x; then cat <<EOF\nx\nEOF\nfi", "while read l; do :; done <<EOF\na\nEOF", "cat <<EOF; rm x\nb\nEOF", "cat <<EOF\n$(rm x)\nEOF",
+  "2>/dev/null git   push", ">/o xargs   grep   foo", "git   push > out", "git   push   2>&1", "git 2>/dev/null  push", "git  push 2>/dev/null  --force", "git \\\n  push", "git   <<< x   push", "git <<< x push --force", "FOO=1 >x", "FOO=1 2>x git  push",
+  "~/bin/x; git commit -F - <<'MSG' 2>&1 | HOME=/tmp/e rm y\nmsg\nMSG", "git commit -F - <<'MSG' 2>&1 | HOME=/tmp/e ~/bin/x\nmsg\nMSG", "HOME=/x; git commit -F - <<'MSG' 2>&1 | ~/bin/x\nmsg\nMSG",
+  "for f in \"$(cat /etc/shadow)\"; do echo; done", "case \"$(cat x)\" in a) :;; esac", "rg \\-g'!docs' pat /etc/passwd", "awk \\-F':' '/k/{print $2}' f", "grep \\-e'x' f", "grep -\\e x f",
+  "cat --a=b\u2028c", "cat \"--a=b\u2029c\"", "cat \"--a b=c\"", "cat \"--a\u00a0b=c\"", "cat \"--a\rb=c\"", "cat --a=b\u00a0c", "cat \"--a=b\nc\"", "cat --a=é", "cat --é=a", "cat ---a=/tmp/x", "cat -=x", "cat --=x", "cat -a=", "cat --a=", "cat -a==/x",
+  "grep --regexp=a\u2028b pat f", "rg --glob=a\u2029b pat f", "sed --expression=p\u2028q f g", "cat C:", "cat 1:/x", "cat :/x", "cat 1:\\x", "cat a-b://x", "cat 1a://x", "cat @/x", "cat @x/y", "cat A=b", "cat a/b=c", "cat ..", "cat a..", "cat ...", "cat ..\\x", "cat C:\\x /etc"]) out.push(c);
 fs.writeFileSync(process.argv[2], JSON.stringify([...new Set(out)]));
 console.log(`extra=${new Set(out).size}`);

@@ -48,7 +48,12 @@ type Tree struct {
 type Parser struct {
 	lang           *Language
 	lexer          *lexer
+	lexerStore     lexer
+	scannerStore   bashScanner
+	tree           Tree
 	stack          *stack
+	stackStore     stack
+	arenas         arenas
 	scanner        *bashScanner
 	scannerBuf     [serializationBufferSize]byte
 	reduceActions  []reduceAction
@@ -58,21 +63,34 @@ type Parser struct {
 	acceptCount    uint32
 }
 
+// Recycle bounds what the parser keeps for its next parse. Call it once the tree is no longer read.
+func (p *Parser) Recycle() { p.arenas.release() }
+
 // NewParser is a parser for lang.
 func NewParser(lang *Language) *Parser { return &Parser{lang: lang} }
 
 // Parse is ts_parser_parse over a whole string given as UTF-16 code units. It returns nil only if
 // no tree was accepted (which the grammar's error recovery does not allow).
+//
+// The tree, its nodes and everything read from them live in memory the parser reuses: they are
+// valid until the next Parse on this parser. [Parser.Recycle] after the last read lets go of
+// memory a one-off huge input grew.
 func (p *Parser) Parse(input []uint16) *Tree {
-	p.lexer = newLexer(input)
-	p.stack = newStack()
-	p.scanner = &bashScanner{}
+	p.arenas.reset()
+	p.lexerStore = lexer{input: input}
+	p.lexerStore.gotoPosition(Length{})
+	p.lexer = &p.lexerStore
+	p.stackStore.init(&p.arenas)
+	p.stack = &p.stackStore
+	p.scannerStore = bashScanner{}
+	p.scanner = &p.scannerStore
 	p.finishedTree = nil
 	p.cache = tokenCache{}
 	p.acceptCount = 0
 	p.trailingExtras = nil
 	defer func() {
 		p.lexer, p.stack, p.scanner, p.finishedTree, p.cache = nil, nil, nil, nil, tokenCache{}
+		p.trailingExtras = nil
 	}()
 
 	position, lastPosition := uint32(0), uint32(0)
@@ -110,7 +128,9 @@ func (p *Parser) Parse(input []uint16) *Tree {
 	if p.finishedTree == nil {
 		return nil
 	}
-	return &Tree{lang: p.lang, root: p.finishedTree}
+	balance(p.lang, &p.arenas, p.finishedTree)
+	p.tree = Tree{lang: p.lang, root: p.finishedTree}
+	return &p.tree
 }
 
 // ---- version comparison
@@ -245,6 +265,7 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 	var errorStartPosition, errorEndPosition Length
 	externalScannerStateLen := 0
 	externalScannerStateChanged := false
+	lookaheadEndByte := uint32(0)
 	p.lexer.reset(startPosition)
 
 	for {
@@ -256,7 +277,7 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 			p.lexer.start()
 			p.scanner.deserialize(externalToken.externalState())
 			foundToken = p.externalScannerScan(lexMode.externalLexState)
-			p.lexer.finish()
+			p.lexer.finish(&lookaheadEndByte)
 
 			if foundToken {
 				externalScannerStateLen = int(p.scanner.serialize(p.scannerBuf[:]))
@@ -287,7 +308,7 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 
 		p.lexer.start()
 		foundToken = lexMain(p.lexer, lexMode.lexState)
-		p.lexer.finish()
+		p.lexer.finish(&lookaheadEndByte)
 		if foundToken {
 			break
 		}
@@ -320,12 +341,13 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 	if skippedError {
 		padding := lengthSub(errorStartPosition, startPosition)
 		size := lengthSub(errorEndPosition, errorStartPosition)
-		result = newErrorLeaf(lang, padding, size, parseState)
+		result = p.arenas.newErrorLeaf(lang, padding, size, lookaheadEndByte-errorEndPosition.bytes, parseState)
 	} else {
 		isKeyword := false
 		symbol := p.lexer.data.resultSymbol
 		padding := lengthSub(p.lexer.tokenStartPosition, startPosition)
 		size := lengthSub(p.lexer.tokenEndPosition, p.lexer.tokenStartPosition)
+		lookaheadBytes := lookaheadEndByte - p.lexer.tokenEndPosition.bytes
 
 		if foundExternalToken {
 			symbol = lang.externalSymbols[symbol]
@@ -343,7 +365,7 @@ func (p *Parser) lex(version int, parseState uint16) *subtree {
 			}
 		}
 
-		result = newLeaf(lang, symbol, padding, size, parseState, foundExternalToken, isKeyword)
+		result = p.arenas.newLeaf(lang, symbol, padding, size, lookaheadBytes, parseState, foundExternalToken, isKeyword)
 
 		if foundExternalToken {
 			result.externalScannerState = append([]byte(nil), p.scannerBuf[:externalScannerStateLen]...)
@@ -418,8 +440,9 @@ func (p *Parser) selectTree(left, right *subtree) bool {
 
 // selectChildren is ts_parser__select_children.
 func (p *Parser) selectChildren(left *subtree, children []*subtree) bool {
-	scratch := newNode(p.lang, left.symbol, children, 0)
-	return p.selectTree(left, scratch)
+	var scratch subtree
+	initNode(&scratch, p.lang, left.symbol, children, 0)
+	return p.selectTree(left, &scratch)
 }
 
 // ---- shift, reduce, accept
@@ -428,7 +451,7 @@ func (p *Parser) shift(version int, state uint16, lookahead *subtree, extra bool
 	isLeaf := lookahead.childCount() == 0
 	toPush := lookahead
 	if extra != lookahead.extra && isLeaf {
-		toPush = lookahead.clone()
+		toPush = p.arenas.clone(lookahead)
 		toPush.extra = extra
 	}
 	p.stack.push(version, toPush, !isLeaf, state)
@@ -472,7 +495,7 @@ func (p *Parser) reduce(version int, symbol uint16, count uint32, dynamicPrecede
 		// will be re-pushed onto the stack after the parent node is created and pushed.
 		children, trailing := removeTrailingExtras(slice.subtrees)
 		p.trailingExtras = trailing
-		parent := newNode(p.lang, symbol, clip(children), productionID)
+		parent := p.arenas.newNode(p.lang, symbol, clip(children), productionID)
 
 		// This pop operation may have caused multiple stack versions to collapse into one,
 		// because they all diverged from a common state. In that case, choose one of the arrays
@@ -487,7 +510,7 @@ func (p *Parser) reduce(version int, symbol uint16, count uint32, dynamicPrecede
 			nextChildren, nextTrailing := removeTrailingExtras(next.subtrees)
 			if p.selectChildren(parent, nextChildren) {
 				p.trailingExtras = nextTrailing
-				parent = newNode(p.lang, symbol, clip(nextChildren), productionID)
+				parent = p.arenas.newNode(p.lang, symbol, clip(nextChildren), productionID)
 			}
 		}
 
@@ -542,11 +565,11 @@ func (p *Parser) accept(version int, lookahead *subtree) {
 		for j := len(trees) - 1; j >= 0; j-- {
 			tree := trees[j]
 			if !tree.extra {
-				spliced := make([]*subtree, 0, len(trees)-1+len(tree.children))
-				spliced = append(spliced, trees[:j]...)
-				spliced = append(spliced, tree.children...)
-				spliced = append(spliced, trees[j+1:]...)
-				root = newNode(p.lang, tree.symbol, spliced, tree.productionID)
+				spliced := p.arenas.arrays.alloc(len(trees) - 1 + len(tree.children))
+				k := copy(spliced, trees[:j])
+				k += copy(spliced[k:], tree.children)
+				copy(spliced[k:], trees[j+1:])
+				root = p.arenas.newNode(p.lang, tree.symbol, spliced, tree.productionID)
 				break
 			}
 		}
@@ -661,7 +684,8 @@ func (p *Parser) addReduceAction(a reduceAction) {
 
 // recoverToState is ts_parser__recover_to_state.
 func (p *Parser) recoverToState(version int, depth uint32, goalState uint16) bool {
-	pop := p.stack.popCount(version, depth)
+	// The pop list is the stack's own scratch and popError iterates again: walk a copy.
+	pop := append([]stackSlice(nil), p.stack.popCount(version, depth)...)
 	previousVersion := stackVersionNone
 
 	for i := 0; i < len(pop); i++ {
@@ -694,7 +718,7 @@ func (p *Parser) recoverToState(version int, depth uint32, goalState uint16) boo
 		slice.subtrees = rest
 
 		if len(slice.subtrees) > 0 {
-			errNode := newErrorNode(p.lang, clip(slice.subtrees), true)
+			errNode := p.arenas.newErrorNode(p.lang, clip(slice.subtrees), true)
 			p.stack.push(slice.version, errNode, false, goalState)
 		}
 
@@ -785,7 +809,7 @@ func (p *Parser) recover(version int, lookahead *subtree) {
 	// If the parser is still in the error state at the end of the file, just wrap everything in an
 	// ERROR node and terminate.
 	if lookahead.isEOF() {
-		parent := newErrorNode(p.lang, nil, false)
+		parent := p.arenas.newErrorNode(p.lang, nil, false)
 		p.stack.push(version, parent, false, 1)
 		p.accept(version, lookahead)
 		return
@@ -819,12 +843,14 @@ func (p *Parser) recover(version int, lookahead *subtree) {
 	// counted in error cost calculations.
 	entry := p.lang.table(1, lookahead.symbol)
 	if n := len(entry.actions); n > 0 && entry.actions[n-1].typ == actionShift && entry.actions[n-1].extra {
-		lookahead = lookahead.clone()
+		lookahead = p.arenas.clone(lookahead)
 		lookahead.extra = true
 	}
 
 	// Wrap the lookahead token in an ERROR.
-	errorRepeat := newNode(p.lang, builtinSymErrorRepeat, []*subtree{lookahead}, 0)
+	one := p.arenas.arrays.alloc(1)
+	one[0] = lookahead
+	errorRepeat := p.arenas.newNode(p.lang, builtinSymErrorRepeat, one, 0)
 
 	// If other tokens have already been skipped, so there is already an ERROR at the top of the
 	// stack, then pop that ERROR off the stack and wrap the two ERRORs together into one larger
@@ -841,8 +867,10 @@ func (p *Parser) recover(version int, lookahead *subtree) {
 		}
 
 		p.stack.renumberVersion(pop[0].version, version)
-		subtrees := append(clip(pop[0].subtrees), errorRepeat)
-		errorRepeat = newNode(p.lang, builtinSymErrorRepeat, subtrees, 0)
+		subtrees := p.arenas.arrays.alloc(len(pop[0].subtrees) + 1)
+		copy(subtrees, pop[0].subtrees)
+		subtrees[len(subtrees)-1] = errorRepeat
+		errorRepeat = p.arenas.newNode(p.lang, builtinSymErrorRepeat, subtrees, 0)
 	}
 
 	// Push the new ERROR onto the stack.
@@ -881,7 +909,8 @@ func (p *Parser) handleError(version int, lookahead *subtree) {
 					padding := lengthSub(p.lexer.tokenEndPosition, position)
 
 					versionWithMissingTree := p.stack.copyVersion(v)
-					missingTree := newMissingLeaf(p.lang, missingSymbol, padding)
+					lookaheadBytes := lookahead.totalBytes() + lookahead.lookaheadBytesOf()
+					missingTree := p.arenas.newMissingLeaf(p.lang, missingSymbol, padding, lookaheadBytes)
 					p.stack.push(versionWithMissingTree, missingTree, false, stateAfterMissingSymbol)
 
 					if p.doAllPotentialReductions(versionWithMissingTree, lookahead.leafSymbol()) {
@@ -1012,7 +1041,7 @@ func (p *Parser) advance(version int) {
 			!p.lang.isReservedWord(state, lookahead.symbol) {
 			tableEnt = p.lang.table(state, p.lang.keywordCaptureToken)
 			if len(tableEnt.actions) > 0 {
-				lookahead = lookahead.clone()
+				lookahead = p.arenas.clone(lookahead)
 				lookahead.setSymbol(p.lang, p.lang.keywordCaptureToken)
 				continue
 			}

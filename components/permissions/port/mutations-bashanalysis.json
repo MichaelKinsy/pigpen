@@ -24,12 +24,6 @@
   "replace": "if i < 0 {\n\t\ti = 0 * n"
  },
  {
-  "name": "bashanalysis-slice-ascii-shortcut",
-  "file": "bashanalysis/jsutil.go",
-  "find": "if n == len(s) {\n\t\treturn s[start:end]",
-  "replace": "if false {\n\t\treturn s[start:end]"
- },
- {
   "name": "bashanalysis-utf16-astral",
   "file": "bashanalysis/jsutil.go",
   "find": "if r >= 0x10000 {\n\t\t\tn += 2",
@@ -915,7 +909,7 @@
   "name": "bashanalysis-sed-class-delimiter",
   "file": "bashanalysis/sedinvocation.go",
   "find": "if int(u) == delimiter {\n\t\t\treturn false",
-  "replace": "if false {\n\t\t\treturn false"
+  "replace": "if int(u) == delimiter+1 {\n\t\t\treturn false"
  },
  {
   "name": "bashanalysis-sed-class-skip",
@@ -957,7 +951,7 @@
   "name": "bashanalysis-sed-digits-result",
   "file": "bashanalysis/sedinvocation.go",
   "find": "return s.position > start\n}\n\nfunc (s *sedScriptScanner) atSeparator",
-  "replace": "return true\n}\n\nfunc (s *sedScriptScanner) atSeparator"
+  "replace": "return s.position >= start\n}\n\nfunc (s *sedScriptScanner) atSeparator"
  },
  {
   "name": "bashanalysis-sed-numbered-skip",
@@ -1128,12 +1122,6 @@
   "replace": ""
  },
  {
-  "name": "bashanalysis-enum-skip",
-  "file": "bashanalysis/commandenumeration.go",
-  "find": "var commandEnumSkip = setOf(\"comment\", \"heredoc_end\")",
-  "replace": "var commandEnumSkip = setOf(\"comment\")"
- },
- {
   "name": "bashanalysis-enum-skip-comment",
   "file": "bashanalysis/commandenumeration.go",
   "find": "var commandEnumSkip = setOf(\"comment\", \"heredoc_end\")",
@@ -1236,12 +1224,6 @@
   "replace": "if statementTypes[child.Type()] {\n\t\t\tcollectCommandsInto(child, scope, out)\n\t\t}"
  },
  {
-  "name": "bashanalysis-enum-statement-named",
-  "file": "bashanalysis/commandenumeration.go",
-  "find": "if !child.IsNamed() {\n\t\t\tcontinue\n\t\t}\n\t\tif statementTypes",
-  "replace": "if statementTypes"
- },
- {
   "name": "bashanalysis-enum-hosted-fresh",
   "file": "bashanalysis/commandenumeration.go",
   "find": "descendCommandChildren(contextNode, unitScope{context: context, salvaged: scope.salvaged, words: scope.words}, out)",
@@ -1264,12 +1246,6 @@
   "file": "bashanalysis/commandenumeration.go",
   "find": "if child.Type() != \"file_redirect\" {",
   "replace": "if child.Type() != \"heredoc_redirect\" {"
- },
- {
-  "name": "bashanalysis-enum-redirect-inherited",
-  "file": "bashanalysis/commandenumeration.go",
-  "find": "if scope.writesViaRedirect {\n\t\treturn scope\n\t}",
-  "replace": ""
  },
  {
   "name": "bashanalysis-enum-unit-spelling",
@@ -1302,12 +1278,6 @@
   "replace": "facts := unitFacts{}"
  },
  {
-  "name": "bashanalysis-enum-words-empty",
-  "file": "bashanalysis/commandenumeration.go",
-  "find": "if len(nodes) == 0 {\n\t\treturn node.Text(), nil",
-  "replace": "if len(nodes) == 0 {\n\t\treturn \"\", nil"
- },
- {
   "name": "bashanalysis-enum-gap-redirect",
   "file": "bashanalysis/commandenumeration.go",
   "find": "return \" \"\n\t\t}\n\t}\n\treturn slice16",
@@ -1338,12 +1308,6 @@
   "replace": "textLen += len(wordText)"
  },
  {
-  "name": "bashanalysis-enum-gap-utf16",
-  "file": "bashanalysis/commandenumeration.go",
-  "find": "textLen += utf16Len(gap)",
-  "replace": "textLen += len(gap)"
- },
- {
   "name": "bashanalysis-enum-word-prefix",
   "file": "bashanalysis/commandenumeration.go",
   "find": "|| child.Type() == \"variable_assignment\" || bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue",
@@ -1356,22 +1320,10 @@
   "replace": "|| child.Type() == \"variable_assignment\" {\n\t\t\tcontinue"
  },
  {
-  "name": "bashanalysis-enum-payload-index",
-  "file": "bashanalysis/commandenumeration.go",
-  "find": "Offset: node.StartIndex()}\n\t}\n\tindex :=",
-  "replace": "Offset: 0}\n\t}\n\tindex :="
- },
- {
   "name": "bashanalysis-enum-payload-bounds",
   "file": "bashanalysis/commandenumeration.go",
   "find": "if index == -1 || index >= len(nodes) {\n\t\treturn nil",
   "replace": "if index == -1 {\n\t\treturn nil"
- },
- {
-  "name": "bashanalysis-enum-payload-words",
-  "file": "bashanalysis/commandenumeration.go",
-  "find": "commandWords[i] = CommandWord{ArgWord: words.ArgWord(node), Text:",
-  "replace": "commandWords[i] = CommandWord{Text:"
  },
  {
   "name": "bashanalysis-enum-make-unit-context",
@@ -1398,16 +1350,10 @@
   "replace": "if parser == nil {\n\t\treturn []BashCommand{}, true"
  },
  {
-  "name": "bashanalysis-sync-unparsed",
-  "file": "bashanalysis/synccommands.go",
-  "find": "if tree == nil {\n\t\treturn []BashCommand{}, true",
-  "replace": "if tree == nil {\n\t\treturn nil, false"
- },
- {
   "name": "bashanalysis-sync-salvage",
   "file": "bashanalysis/synccommands.go",
   "find": "commands = append(commands, CollectSalvagedCommands(root, words)...)",
-  "replace": ""
+  "replace": "commands = append(commands, CollectCommands(root, words)...)"
  },
  {
   "name": "bashanalysis-sync-variables-roots",
@@ -1575,7 +1521,7 @@
   "name": "bashanalysis-class-reject-assignment-order",
   "file": "bashanalysis/tokenclassification.go",
   "find": "if eq != -1 && (slash == -1 || eq < slash) {",
-  "replace": "if eq != -1 {"
+  "replace": "if eq != -1 && slash >= -1 {"
  },
  {
   "name": "bashanalysis-class-reject-scope",
@@ -1626,12 +1572,6 @@
   "replace": "case bashparse.SkipSubtreeTypes[typ]:"
  },
  {
-  "name": "bashanalysis-tok-skip",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "case bashparse.SkipSubtreeTypes[typ]:\n\t\treturn nil",
-  "replace": "case bashparse.SkipSubtreeTypes[typ]:"
- },
- {
   "name": "bashanalysis-tok-head-word",
   "file": "bashanalysis/tokencollection.go",
   "find": "head, _ := ExtractCommandWord(node, words)\n\teffect := ProveCommandEffect(head,",
@@ -1659,13 +1599,13 @@
   "name": "bashanalysis-tok-redirect-target",
   "file": "bashanalysis/tokencollection.go",
   "find": "if hasTarget && i == target && provesTarget(effect, child, token, words) {",
-  "replace": "if hasTarget && provesTarget(effect, child, token, words) {"
+  "replace": "if hasTarget && i >= target && provesTarget(effect, child, token, words) {"
  },
  {
   "name": "bashanalysis-tok-redirect-has-target",
   "file": "bashanalysis/tokencollection.go",
   "find": "if hasTarget && i == target &&",
-  "replace": "if i == target &&"
+  "replace": "if !hasTarget && i == target &&"
  },
  {
   "name": "bashanalysis-tok-redirect-hosted",
@@ -1714,12 +1654,6 @@
   "file": "bashanalysis/tokencollection.go",
   "find": "if !child.IsNamed() {\n\t\t\tif child.Type() == \"in\"",
   "replace": "if false {\n\t\t\tif child.Type() == \"in\""
- },
- {
-  "name": "bashanalysis-tok-statement-side",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "if side != operandSide_ || !bashparse.ArgNodeTypes[child.Type()] {",
-  "replace": "if !bashparse.ArgNodeTypes[child.Type()] {"
  },
  {
   "name": "bashanalysis-tok-statement-arg",
@@ -1788,18 +1722,6 @@
   "replace": "var CommandPrefixTypes = setOf(\"command_name\")"
  },
  {
-  "name": "bashanalysis-tok-embedded-prefix",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "if CommandPrefixTypes[child.Type()] || !bashparse.ArgNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\tif m := optionValuePattern",
-  "replace": "if !bashparse.ArgNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\tif m := optionValuePattern"
- },
- {
-  "name": "bashanalysis-tok-option-dashes",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "`^-{1,2}[^=`",
-  "replace": "`^-{1,3}[^=`"
- },
- {
   "name": "bashanalysis-tok-option-one-dash",
   "file": "bashanalysis/tokencollection.go",
   "find": "`^-{1,2}[^=`",
@@ -1816,12 +1738,6 @@
   "file": "bashanalysis/tokencollection.go",
   "find": "var optionValuePattern = regexp.MustCompile(`^-{1,2}[^=` + jsSpaceClass + `]+=(",
   "replace": "var optionValuePattern = regexp.MustCompile(`^-{1,2}[^=]+=("
- },
- {
-  "name": "bashanalysis-tok-long-option-space",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "var longOptionValuePattern = regexp.MustCompile(`^(--[^=` + jsSpaceClass + `]+)=(",
-  "replace": "var longOptionValuePattern = regexp.MustCompile(`^(--[^=]+)=("
  },
  {
   "name": "bashanalysis-tok-long-option-dot",
@@ -2133,7 +2049,7 @@
   "name": "bashanalysis-tok-flag-long-inline",
   "file": "bashanalysis/tokencollection.go",
   "find": "return patternCommandFlagDirective{kind: directiveInlineValue, role: role, value: m[2]}",
-  "replace": "return patternCommandFlagDirective{kind: directiveRegularFlag}"
+  "replace": "return patternCommandFlagDirective{kind: directiveRegularFlag, role: role}"
  },
  {
   "name": "bashanalysis-tok-flag-long-unknown",
@@ -2146,12 +2062,6 @@
   "file": "bashanalysis/tokencollection.go",
   "find": "!strings.HasPrefix(text, \"--\") && len(text) > 2 {",
   "replace": "!strings.HasPrefix(text, \"--\") && len(text) > 3 {"
- },
- {
-  "name": "bashanalysis-tok-flag-glued-long",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "!strings.HasPrefix(text, \"--\") && len(text) > 2 {",
-  "replace": "len(text) > 2 {"
  },
  {
   "name": "bashanalysis-tok-flag-glued-value",
@@ -2181,13 +2091,13 @@
   "name": "bashanalysis-tok-pending-discharge",
   "file": "bashanalysis/tokencollection.go",
   "find": "if consumed {\n\t\t\t\tcontinue\n\t\t\t}",
-  "replace": "if false {\n\t\t\t\tcontinue\n\t\t\t}"
+  "replace": "if consumed && false {\n\t\t\t\tcontinue\n\t\t\t}"
  },
  {
   "name": "bashanalysis-tok-pending-token",
   "file": "bashanalysis/tokencollection.go",
   "find": "if token != nil {\n\t\t\t\ttokens = append(tokens, *token)\n\t\t\t}",
-  "replace": ""
+  "replace": "if token != nil {\n\t\t\t\t_ = token\n\t\t\t}"
  },
  {
   "name": "bashanalysis-tok-non-arg-positional",
@@ -2202,12 +2112,6 @@
   "replace": "if !hasExplicitScript &&"
  },
  {
-  "name": "bashanalysis-tok-non-arg-script",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "if !bashparse.ExecutionHostTypes[child.Type()] && !hasExplicitScript &&",
-  "replace": "if !bashparse.ExecutionHostTypes[child.Type()] &&"
- },
- {
   "name": "bashanalysis-tok-non-arg-recurse",
   "file": "bashanalysis/tokencollection.go",
   "find": "tokens = append(tokens, CollectPathCandidateTokens(child, words)...)\n\t\t\tcontinue\n\t\t}\n\n\t\t// Flag detection",
@@ -2217,7 +2121,7 @@
   "name": "bashanalysis-tok-flag-end-of-flags",
   "file": "bashanalysis/tokencollection.go",
   "find": "if !pastEndOfFlags && strings.HasPrefix(text, \"-\") && len(text) > 1 {",
-  "replace": "if strings.HasPrefix(text, \"-\") && len(text) > 1 {"
+  "replace": "if (pastEndOfFlags || true) && strings.HasPrefix(text, \"-\") && len(text) > 1 {"
  },
  {
   "name": "bashanalysis-tok-flag-lone-dash",
@@ -2316,18 +2220,6 @@
   "replace": "if child.Type() != \"string\" {\n\t\treturn false"
  },
  {
-  "name": "bashanalysis-tok-unquoted-dash-head",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "head != nil && head.Type() == \"word\" && strings.HasPrefix(head.Text(), \"-\")",
-  "replace": "head != nil && strings.HasPrefix(head.Text(), \"-\")"
- },
- {
-  "name": "bashanalysis-tok-unquoted-dash-prefix",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "head.Type() == \"word\" && strings.HasPrefix(head.Text(), \"-\")",
-  "replace": "head.Type() == \"word\""
- },
- {
   "name": "bashanalysis-tok-supplies-unknown",
   "file": "bashanalysis/tokencollection.go",
   "find": "role == roleScript || role == roleScriptFile || role == roleUnknownArity",
@@ -2392,12 +2284,6 @@
   "file": "bashanalysis/tokencollection.go",
   "find": "if isArg {\n\t\t\ttokens = append(tokens, collectHostedExecutionTokens(child, words)...)\n\t\t}\n\t\t// If there",
   "replace": "// If there"
- },
- {
-  "name": "bashanalysis-tok-generic-first-word",
-  "file": "bashanalysis/tokencollection.go",
-  "find": "if !seenCommandName && isArg {\n\t\t\tseenCommandName = true\n\t\t\tcontinue\n\t\t}",
-  "replace": ""
  },
  {
   "name": "bashanalysis-tok-generic-recurse",

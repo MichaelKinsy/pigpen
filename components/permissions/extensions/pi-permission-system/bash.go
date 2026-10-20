@@ -122,11 +122,11 @@ func (p *Policy) decideBash(command string) Verdict {
 			if c := p.constant("bash"); c.Action != "allow" || p.yolo || cmd == "" {
 				return p.outcome("bash", c)
 			}
-			return unsupported("bash", "bash command analysis is not ported, so a command that is not simple commands joined by "+
-				"&&, ||, ;, | or newlines cannot be checked for a wrapper that the original asks about")
+			return unsupported("analysing this bash command (only simple commands joined by &&, ||, ;, | or newlines can be " +
+				"checked for a wrapper the original asks about)")
 		}
-		return unsupported("bash", "bash command analysis is not ported, so only simple commands (joined by &&, ||, ;, | or "+
-			"newlines) are matched against bash patterns")
+		return unsupported("matching this bash command against bash patterns (only simple commands joined by &&, ||, ;, | or " +
+			"newlines are supported)")
 	}
 	best, rank := Verdict{}, 0
 	for _, u := range units {
@@ -149,8 +149,7 @@ func (p *Policy) decideBash(command string) Verdict {
 				}
 				v, k = asked("bash"), 1
 			case portGuardWords[commandBasename(words[0])]:
-				v, k = unsupported("bash", "'"+commandBasename(words[0])+"' runs another command, and the port does not read "+
-					"what it runs"), 2
+				v, k = unsupported("checking the command that '"+commandBasename(words[0])+"' runs"), 2
 			}
 		}
 		if k > rank {

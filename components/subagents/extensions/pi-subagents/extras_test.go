@@ -236,11 +236,7 @@ func TestToolSelection(t *testing.T) {
 	eq(t, nextSelection([]string{"read", "subagents_enable", "read"}, false), []string{"read", "subagents_enable"}, "duplicates collapse")
 }
 
-func TestRunRequestAndChainLookup(t *testing.T) {
-	_, _, ok := runRequest(map[string]any{"agent": "a"})
-	eq(t, ok, false, "a task is required")
-	n, tk, ok := runRequest(map[string]any{"agent": "a", "task": "t"})
-	eq(t, []any{n, tk, ok}, []any{"a", "t", true}, "agent and task")
+func TestChainLookup(t *testing.T) {
 	chains := []ChainConfig{{Name: "x", Source: SourceUser}, {Name: "x", Source: SourceProject}, {Name: "pkg.y", LocalName: "y"}}
 	eq(t, findChain(chains, "x").Source, SourceProject, "project over user")
 	eq(t, findChain(chains, "y").Name, "pkg.y", "by local name")

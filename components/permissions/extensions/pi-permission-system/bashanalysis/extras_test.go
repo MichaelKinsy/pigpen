@@ -75,7 +75,9 @@ func TestWrapperEdges(t *testing.T) {
 		eq(t, got, "rm {}")
 	})
 	t.Run("a terminator before the exec flag is not the clause's", func(t *testing.T) {
-		got, ok := exec("find ';' -exec rm x")
+		got, ok := exec(`find \; -exec rm x`)
+		eq(t, []any{got, ok}, []any{"rm x", true})
+		got, ok = exec("find ';' -exec rm x")
 		eq(t, []any{got, ok}, []any{"rm x", true})
 	})
 	t.Run("an environment assignment starts with a letter or underscore", func(t *testing.T) {

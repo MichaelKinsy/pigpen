@@ -223,13 +223,23 @@ func (l *lexer) start() {
 	}
 }
 
-// finish is ts_lexer_finish without the lookahead-byte bookkeeping.
-func (l *lexer) finish() {
+// finish is ts_lexer_finish: it also raises *lookaheadEndByte to how far the lexer looked.
+func (l *lexer) finish(lookaheadEndByte *uint32) {
 	if l.tokenEndPosition.isUndefined() {
 		l.markEnd()
 	}
 	if l.tokenEndPosition.bytes < l.tokenStartPosition.bytes {
 		l.tokenStartPosition = l.tokenEndPosition
+	}
+
+	current := l.currentPosition.bytes + 1
+	// In order to determine that a byte sequence is invalid UTF8 or UTF16, the character decoding
+	// algorithm may have looked at the following byte.
+	if l.data.lookahead == -1 {
+		current += 4
+	}
+	if current > *lookaheadEndByte {
+		*lookaheadEndByte = current
 	}
 }
 
