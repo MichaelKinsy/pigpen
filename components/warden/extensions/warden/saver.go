@@ -3,6 +3,7 @@ package warden
 import (
 	"fmt"
 	"strings"
+	"sync"
 )
 
 // Session accounting for the context saver (saver.ts): how often large outputs appear, how many were compressed,
@@ -103,6 +104,8 @@ type seenEntry struct {
 
 // ContextLedger is the saver's session accounting.
 type ContextLedger struct {
+	// mu guards every field: the tool_result, tool_call and message handlers and the recall tool read and write one ledger.
+	mu                                                 sync.Mutex
 	large, compressed, duplicates, repeats, bytesSaved int
 	// bytesAbsent is bytesSaved minus the savings of outputs a whole-file recall put back into context.
 	bytesAbsent            int
@@ -125,7 +128,11 @@ func NewContextLedger() *ContextLedger {
 }
 
 // Candidate counts a large output.
-func (l *ContextLedger) Candidate() { l.large++ }
+func (l *ContextLedger) Candidate() {
+	l.mu.Lock()
+	l.large++
+	l.mu.Unlock()
+}
 
 func (l *ContextLedger) store(path string, state storedState) {
 	if _, ok := l.stored[path]; !ok {
@@ -136,6 +143,8 @@ func (l *ContextLedger) store(path string, state storedState) {
 
 // Record counts a compression. `source` is optional (nil for callers that do not know the tool and size).
 func (l *ContextLedger) Record(path string, bytesSaved int, source *StoredSource) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.compressed++
 	l.bytesSaved += bytesSaved
 	l.bytesAbsent += bytesSaved
@@ -155,6 +164,8 @@ func (l *ContextLedger) Record(path string, bytesSaved int, source *StoredSource
 
 // FilterSpent is what one filter attempt cost, and why it fell back to the excerpt when it did.
 func (l *ContextLedger) FilterSpent(requests, ms int, fallback string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.filter.Requests += requests
 	l.filter.Ms += ms
 	if fallback != "" {
@@ -167,6 +178,8 @@ func (l *ContextLedger) FilterSpent(requests, ms int, fallback string) {
 
 // Remember keeps a result's identity so a later identical result can be dropped. `path` is set when a full copy exists.
 func (l *ContextLedger) Remember(key, tool, path string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if existing, ok := l.seen[key]; ok && existing.path != "" && path == "" {
 		return
 	}
@@ -178,12 +191,16 @@ func (l *ContextLedger) Remember(key, tool, path string) {
 
 // DuplicateOf is the earlier result with this content key.
 func (l *ContextLedger) DuplicateOf(key string) (tool, path string, ok bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	e, ok := l.seen[key]
 	return e.tool, e.path, ok
 }
 
 // Duplicate counts a result replaced by a duplicate note.
 func (l *ContextLedger) Duplicate(bytesSaved int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.duplicates++
 	l.bytesSaved += bytesSaved
 	l.bytesAbsent += bytesSaved
@@ -191,6 +208,8 @@ func (l *ContextLedger) Duplicate(bytesSaved int) {
 
 // Repeat counts repeated runs of one text replaced by pointer lines; `path` holds the full text, so reading it back is a recall.
 func (l *ContextLedger) Repeat(path string, bytesSaved int, tool string, bytes int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.repeats++
 	l.bytesSaved += bytesSaved
 	l.bytesAbsent += bytesSaved
@@ -199,12 +218,16 @@ func (l *ContextLedger) Repeat(path string, bytesSaved int, tool string, bytes i
 
 // TurnEnd: one LLM turn finished; everything removed so far was absent from this turn's prompt.
 func (l *ContextLedger) TurnEnd() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.turns++
 	l.tokenTurnsSaved += jsRound(float64(l.bytesAbsent) / 4)
 }
 
 // StoredPathIn is the stored path that `text` (a path, command, or serialized input) mentions, if any.
 func (l *ContextLedger) StoredPathIn(text string) (string, bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	for _, path := range l.storedOrder {
 		if mentions(text, path) {
 			return path, true
@@ -222,6 +245,8 @@ func (l *ContextLedger) StoredPathIn(text string) (string, bool) {
 // recalls. A whole-file access, first or not, puts the output back into context, so its savings stop counting
 // toward token-turns.
 func (l *ContextLedger) NoteAccess(text string, kind RecallKind) (string, bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	for _, path := range l.storedOrder {
 		if !mentions(text, path) {
 			continue
@@ -258,6 +283,8 @@ func (l *ContextLedger) NoteAccess(text string, kind RecallKind) (string, bool) 
 
 // Snapshot is a copy of the counters.
 func (l *ContextLedger) Snapshot() ContextLedgerSnapshot {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	s := ContextLedgerSnapshot{Large: l.large, Compressed: l.compressed, Duplicates: l.duplicates, Repeats: l.repeats, BytesSaved: l.bytesSaved,
 		Turns: l.turns, TokenTurnsSaved: l.tokenTurnsSaved, Recalls: l.recalls, RecallsFull: l.recallsFull, Excerpt: l.excerpt, Filter: l.filter}
 	s.Filter.Fallbacks = make(map[string]int, len(l.filter.Fallbacks))
@@ -269,11 +296,17 @@ func (l *ContextLedger) Snapshot() ContextLedgerSnapshot {
 }
 
 // StoredPaths are the paths of the stored copies, for cleanup at session start. Local only: paths never leave the machine.
-func (l *ContextLedger) StoredPaths() []string { return append([]string(nil), l.storedOrder...) }
+func (l *ContextLedger) StoredPaths() []string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return append([]string(nil), l.storedOrder...)
+}
 
 // storedOutputs are the stored full outputs, oldest first, with the tool that produced each and its size when
 // recorded (the outputLedger the compaction snapshot and warden_recall read). Local only, like StoredPaths.
 func (l *ContextLedger) storedOutputs() []SavedOutput {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	out := make([]SavedOutput, 0, len(l.storedOrder))
 	for _, path := range l.storedOrder {
 		s := l.stored[path]
@@ -284,6 +317,8 @@ func (l *ContextLedger) storedOutputs() []SavedOutput {
 
 // Reset clears every counter and memory.
 func (l *ContextLedger) Reset() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.large, l.compressed, l.duplicates, l.repeats, l.bytesSaved, l.bytesAbsent = 0, 0, 0, 0, 0, 0
 	l.turns, l.tokenTurnsSaved, l.recalls, l.recallsFull = 0, 0, 0, 0
 	l.excerpt = CompressionCounts{}
