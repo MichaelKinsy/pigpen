@@ -39,6 +39,9 @@ type agentRecord struct {
 	ToolUses, Tokens, Turns     int
 	WrappedUp                   bool
 	Consumed                    bool
+	slot                        bool // holds a background concurrency slot
+
+	SessionFile string // the agent's pi session file when it was persisted: what is left to reopen once the record is gone
 
 	spec    childSpec
 	child   child
@@ -46,6 +49,10 @@ type agentRecord struct {
 	cancel  context.CancelFunc
 	stopped bool // stopped by the user or the parent (not a failure)
 	started chan struct{}
+
+	// resume is set while a resume of this agent is queued or running. foreground: the caller awaits the run and no
+	// notification is sent. upstream: agent-manager.ts resume, startResume.
+	resume *resumeRun
 }
 
 func newAgentID() string {
@@ -61,6 +68,7 @@ type manager struct {
 	maxConcurrent int
 	running       int
 	queue         []*agentRecord
+	tombstones    map[string]*tombstone // evicted agents that can still be reopened, by handle
 	start         childStarter
 	// onSettle runs once a record has settled (completed, stopped or failed).
 	onSettle func(*agentRecord)
@@ -93,10 +101,7 @@ func handleBase(s string) string {
 
 // assignHandle is base, else base-2, base-3, ... the first form no agent holds. The caller holds m.mu.
 func (m *manager) assignHandle(base string) string {
-	taken := map[string]bool{}
-	for _, r := range m.records {
-		taken[r.Handle], taken[r.Alias] = true, true
-	}
+	taken := m.takenHandles()
 	candidate := base
 	for n := 2; taken[candidate]; n++ {
 		candidate = fmt.Sprintf("%s-%d", base, n)
@@ -137,27 +142,7 @@ func (m *manager) list() []*agentRecord {
 // spawn creates an agent: it starts at once, or is queued behind the concurrency limit (background agents only;
 // a foreground agent is not limited, as `maxConcurrentForeground` defaults to unlimited). upstream: agent-manager.ts spawn.
 func (m *manager) spawn(typ, description, name string, spec childSpec, background bool) *agentRecord {
-	r := &agentRecord{ID: newAgentID(), Type: typ, Description: description, Name: name, Background: background, spec: spec,
-		done: make(chan struct{}), started: make(chan struct{}), Status: statusQueued, StartedAt: time.Now()}
-	m.mu.Lock()
-	m.records[r.ID] = r
-	m.order = append(m.order, r.ID)
-	r.Handle = m.assignHandle(handleBase(typ))
-	if name != "" {
-		r.Alias = m.assignHandle(handleBase(name))
-	}
-	if background && m.running >= m.maxConcurrent {
-		m.queue = append(m.queue, r)
-		m.mu.Unlock()
-		return r
-	}
-	if background {
-		m.running++
-	}
-	r.Status = statusRunning
-	m.mu.Unlock()
-	go m.run(r)
-	return r
+	return m.spawnWith(typ, description, name, spec, spawnOptions{Background: background})
 }
 
 // run executes one agent to completion, then releases its slot and starts the next queued agent.
@@ -166,13 +151,27 @@ func (m *manager) run(r *agentRecord) {
 	m.mu.Lock()
 	r.cancel = cancel // abort reads it under the lock
 	r.StartedAt = time.Now()
+	rr := r.resume
+	spec := r.spec
 	m.mu.Unlock()
-	c, err := m.start(ctx, r.spec)
-	close(r.started)
+	var c child
+	var err error
+	if rr != nil {
+		c, err = m.reopen(ctx, r, rr)
+	} else {
+		c, err = m.start(ctx, spec)
+	}
+	m.mu.Lock()
+	started := r.started
+	m.mu.Unlock()
+	close(started)
 	var res *childResult
 	if err == nil {
 		m.mu.Lock()
 		r.child = c
+		if f := c.sessionFile(); f != "" {
+			r.SessionFile = f
+		}
 		stop := r.stopped
 		m.mu.Unlock()
 		if stop {
@@ -204,22 +203,26 @@ func (m *manager) run(r *agentRecord) {
 		r.Status = statusCompleted
 	}
 	if res != nil {
-		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Tokens, res.Turns, res.WrappedUp
+		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses+len(spec.Warnings), res.Tokens, res.Turns, res.WrappedUp
 	}
-	if r.Background {
+	r.resume = nil
+	if r.slot {
 		m.running--
+		r.slot = false
 	}
 	var next *agentRecord
 	if len(m.queue) > 0 && m.running < m.maxConcurrent {
 		next = m.queue[0]
 		m.queue = m.queue[1:]
 		m.running++
+		next.slot = true
 		next.Status = statusRunning
 	}
+	done := r.done
 	m.mu.Unlock()
 	cancel()
-	close(r.done)
-	if m.onSettle != nil {
+	close(done)
+	if m.onSettle != nil && (rr == nil || rr.background) { // a foreground resume is not announced
 		m.onSettle(r)
 	}
 	if next != nil {
@@ -227,12 +230,19 @@ func (m *manager) run(r *agentRecord) {
 	}
 }
 
-// awaitStartup waits until the agent has been started (it may be queued first), or fails.
+// awaitStartup waits until the agent has been started, or fails. An agent that is still queued is not waited for: the
+// original resolves at once for one that is already running, still queued or unknown (agent-manager.ts awaitStartup).
 func (m *manager) awaitStartup(r *agentRecord, timeout time.Duration) error {
-	select {
-	case <-r.started:
+	m.mu.Lock()
+	queued, started, done := r.Status == statusQueued, r.started, r.done
+	m.mu.Unlock()
+	if queued {
 		return nil
-	case <-r.done:
+	}
+	select {
+	case <-started:
+		return nil
+	case <-done:
 		return nil
 	case <-time.After(timeout):
 		return errors.New("the agent did not start in time")
@@ -250,7 +260,7 @@ func (m *manager) abort(r *agentRecord) bool {
 				break
 			}
 		}
-		r.Status, r.stopped, r.CompletedAt = statusStopped, true, time.Now()
+		r.Status, r.stopped, r.CompletedAt, r.resume = statusStopped, true, time.Now(), nil
 		m.mu.Unlock()
 		close(r.started)
 		close(r.done)

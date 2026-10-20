@@ -40,8 +40,6 @@ func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
 	}{
 		{"schedule", obj{"schedule": "5m"}, "scheduled agent runs (the schedule parameter)"},
 		{"isolation worktree", obj{"isolation": "worktree"}, `worktree isolation (isolation: "worktree")`},
-		{"inherit_context", obj{"inherit_context": true}, "inheriting the parent conversation (inherit_context)"},
-		{"resume", obj{"resume": "explore"}, "resuming a finished agent's session (resume)"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -80,19 +78,10 @@ func agentFileRig(t *testing.T, frontmatter string) *rig {
 
 func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 	cases := []struct{ name, frontmatter, feature string }{
-		{"inherit_context", "inherit_context: true", "inheriting the parent conversation (inherit_context in the agent file)"},
 		{"isolation", "isolation: worktree", "worktree isolation (isolation: worktree in the agent file)"},
 		{"memory", "memory: project", "persistent agent memory (memory: project)"},
 		{"allowed_subagents", "allowed_subagents: all", "nested delegation (allowed_subagents)"},
-		{"ext selectors", "tools: read, ext:web", "extension tool selectors (ext: in tools)"},
-		{"disallowed_tools", "disallowed_tools: bash", "disallowed_tools"},
-		{"extensions list", "extensions: foo, bar", "an extension allow-list (extensions)"},
-		{"exclude_extensions", "exclude_extensions: foo", "exclude_extensions"},
-		{"skills false", "skills: false", "skill selection (skills)"},
-		{"skills list", "skills: a, b", "skill selection (skills)"},
-		{"persist_session", "persist_session: true", "persisted agent sessions (persist_session)"},
 		{"output_transcript", "output_transcript: true", "output transcripts (output_transcript)"},
-		{"session_dir", "session_dir: /tmp/x", "a session directory (session_dir)"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -112,7 +101,7 @@ func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 		r := agentFileRig(t, "extensions: false\nskills: true\npersist_session: false\noutput_transcript: false\nisolation: off\ninherit_context: false\nmemory: none\nmax_turns: 4")
 		r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "custom"})
 		c := r.fleet.wait(t, 1)[0]
-		eq(t, c.spec.Isolated, true)
+		eq(t, c.spec.NoExtensions, true)
 		eq(t, c.spec.MaxTurns, 4)
 	})
 }
@@ -123,13 +112,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		options obj
 		feature string
 	}{
-		{"isolated", obj{"isolated": true}, `the spawn RPC option "isolated"`},
 		{"isolation", obj{"isolation": "worktree"}, `the spawn RPC option "isolation"`},
-		{"inheritContext", obj{"inheritContext": true}, `the spawn RPC option "inheritContext"`},
-		{"resumeSessionFile", obj{"resumeSessionFile": "/x"}, `the spawn RPC option "resumeSessionFile"`},
-		{"reclaim", obj{"reclaim": obj{"handle": "a"}}, `the spawn RPC option "reclaim"`},
-		{"bypassQueue", obj{"bypassQueue": true}, `the spawn RPC option "bypassQueue"`},
-		{"blocking", obj{"blocking": true}, `the spawn RPC option "blocking"`},
 		{"workflowId", obj{"workflowId": "w"}, `the spawn RPC option "workflowId"`},
 		{"foreground", obj{"isBackground": false}, "foreground agents through the spawn RPC (isBackground: false)"},
 	}
@@ -191,7 +174,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"fleetView", `{"fleetView": true}`, "fleetView: true"},
 		{"agentMentions", `{"agentMentions": "direct"}`, `agentMentions: "direct"`},
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
-		{"rememberAgents", `{"rememberAgents": true}`, "rememberAgents: true"},
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
 		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},

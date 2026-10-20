@@ -28,11 +28,15 @@ type app struct {
 	latest          *sdk.Context
 	timers          map[string]*time.Timer
 	settingsNotice  string
+
+	rememberAgents bool // persist agent sessions by default. upstream: settings.ts rememberAgents (default true)
+	disc           discoverCache
+	listExtensions func(ctx context.Context, cwd string) ([]string, error)
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
-	a := &app{e: e, timers: map[string]*time.Timer{}}
+	a := &app{e: e, timers: map[string]*time.Timer{}, rememberAgents: true, listExtensions: statusExtensions}
 	a.mgr = newManager(start, a.onSettle)
 	return a
 }
@@ -48,6 +52,7 @@ func (a *app) reload(cwd string) {
 	a.mu.Lock()
 	a.defaultMaxTurns = st.DefaultMaxTurns
 	a.graceTurns = st.GraceTurns
+	a.rememberAgents = st.RememberAgents == nil || *st.RememberAgents
 	a.mu.Unlock()
 	setFallbackSubagent(st.FallbackSubagent)
 	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
@@ -110,6 +115,7 @@ func (a *app) register(e *sdk.Extension) {
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
+		a.disc.reset()
 		a.refuseSettings(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})

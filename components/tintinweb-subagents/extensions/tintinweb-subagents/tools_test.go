@@ -27,7 +27,7 @@ func TestAgentBackgroundLifecycle(t *testing.T) {
 	c := r.fleet.wait(t, 1)[0]
 	eq(t, c.spec.Prompt, "find the bug")
 	eq(t, c.spec.PromptMode, "replace")
-	eq(t, c.spec.Tools, []string{"read", "bash", "grep", "find", "ls"})
+	eq(t, c.spec.ExcludeTools, []string{"Agent", "SubagentWorkflow", "get_subagent_result", "steer_subagent", "edit", "write"})
 	eq(t, c.spec.Model, "") // Explore's haiku default is never forced on the child
 	// While it runs, the result tool says so.
 	out := r.must("get_subagent_result", obj{"agent_id": id})

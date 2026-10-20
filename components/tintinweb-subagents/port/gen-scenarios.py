@@ -25,6 +25,10 @@ scenario("agent-not-found", "get_subagent_result and steer_subagent name an agen
          [[call("get_subagent_result", agent_id="nope")], [call("steer_subagent", agent_id="nope", message="x")]])
 scenario("agent-unknown-type-strict", "With fallbackSubagent none an unknown type is refused, naming the available ones.",
          [[call("Agent", prompt="x", description="d", subagent_type="typoo")]], settings={**SETTINGS, "fallbackSubagent": "none"})
+scenario("agent-resume-not-found", "Agent with resume naming an agent that does not exist: the tool says it was cleaned up.",
+         [[call("Agent", prompt="x", description="d", subagent_type="Plan", resume="nope")]])
+scenario("agent-resume-ignores-type", "resume replays a stored session and ignores subagent_type: an unusable type does not stop it, even with fallbackSubagent none.",
+         [[call("Agent", prompt="x", description="d", subagent_type="typoo", resume="nope")]], settings={**SETTINGS, "fallbackSubagent": "none"})
 
 # Not generated: a foreground agent. The child's model request carries "inserted" text equal to the original's (the
 # agent's header, environment block and prompt) and the same user message; the harness's "removed" part is the host's

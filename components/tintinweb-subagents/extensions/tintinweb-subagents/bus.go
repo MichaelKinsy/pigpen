@@ -51,7 +51,9 @@ func (a *app) registerRPC(bus sdk.EventBus) {
 	})
 }
 
-// rpcSpawn starts a background agent for another extension (pi-tasks' TaskExecute).
+// rpcSpawn starts a background agent for another extension (pi-tasks' TaskExecute). The options a caller cannot be
+// trusted with are dropped, as in the original: they name a file to open and replay, a handle to take over, an owner
+// or a pool to be charged to. upstream: index.ts spawnTopLevel.
 func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	if _, ok := a.context(); !ok {
 		return nil, errors.New("No active session")
@@ -70,7 +72,11 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	if f, ok := opts["maxTurns"].(float64); ok {
 		maxTurns = int(f)
 	}
-	r, err := a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, true, false)
+	isolated, _ := opts["isolated"].(bool)
+	inherit, _ := opts["inheritContext"].(bool)
+	bypass, _ := opts["bypassQueue"].(bool)
+	r, err := a.start(ctx, startRequest{Type: typ, Prompt: prompt, Description: description, Name: name, Model: model, Thinking: thinking,
+		MaxTurns: maxTurns, Background: true, Isolated: isolated, InheritContext: inherit, BypassQueue: bypass})
 	if err != nil {
 		return nil, err
 	}
@@ -80,19 +86,29 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	return map[string]any{"id": r.ID}, nil
 }
 
+// startRequest is one spawn: what the Agent tool or the spawn RPC asked for, already resolved against the agent
+// file where the original resolves it (isolated and inherit_context in the Agent tool; the RPC states them itself).
+type startRequest struct {
+	Type, Prompt, Description, Name, Model, Thinking string
+	MaxTurns                                         int
+	Background                                       bool
+	Isolated, InheritContext                         bool
+	BypassQueue                                      bool
+}
+
 // start builds the child's spec from the agent type and spawns it.
-func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
+func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	a.mu.Lock()
-	cwd := a.cwd
+	cwd, remember := a.cwd, a.rememberAgents
 	a.mu.Unlock()
-	res := resolveSpawnType(typ)
+	res := resolveSpawnType(q.Type)
 	if !res.OK {
 		return nil, errors.New(res.Message)
 	}
 	resolved := res.Type
 	cfg := getAgentConfig(resolved)
 	if cfg == nil {
-		return nil, fmt.Errorf("Unknown agent type: %q", typ)
+		return nil, fmt.Errorf("Unknown agent type: %q", q.Type)
 	}
 	if feature := unportedAgentFeature(cfg); feature != "" {
 		return nil, refusal(feature)
@@ -101,15 +117,52 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	if cfg.PromptMode == "append" {
 		parentPrompt, _ = ctx.GetSystemPrompt()
 	}
-	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt)
-	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
+	// isolated overrides the agent file's extensions and skills.
+	skills := cfg.Skills
+	if q.Isolated {
+		skills = false
+	}
+	var extras promptExtras
+	if names, ok := skills.([]string); ok {
+		extras.SkillBlocks = preloadSkills(names, cwd)
+	}
+	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt, extras)
+	plan, scope, err := a.childScope(ctx, resolved, cfg, q.Isolated, getToolNamesForType(resolved), cwd, nil)
+	if err != nil {
+		return nil, err
+	}
+	prompt := q.Prompt
+	if q.InheritContext {
+		pc, err := parentContext(ctx)
+		if err != nil {
+			return nil, err
+		}
+		prompt = pc + prompt
+	}
+	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: q.Thinking,
+		NoExtensions: scope.NoExtensions, ExtensionPaths: scope.ExtensionPaths, AllowTools: scope.AllowTools, ExcludeTools: scope.ExcludeTools,
+		NoSkills: skills != true, Warnings: plan.Warnings}
+	if trusted, err := ctx.IsProjectTrusted(); err == nil {
+		spec.Trust = "no-approve"
+		if trusted {
+			spec.Trust = "approve"
+		}
+	}
+	if sessionPersisted(cfg, false, remember) {
+		spec.Persist = true
+		spec.SessionDir = resolveConfiguredSessionDir(cfg.SessionDir, cwd)
+		if f, err := ctx.GetSessionFile(); err == nil && f != nil {
+			spec.ParentSession = *f
+		}
+	}
+	spec.SessionName = cfg.Name
 	if cfg.IsDefault && cfg.Name == "Explore" {
 		spec.Model = "" // the original's haiku default falls back to the parent's model when it is not available; this port never forces it
 	} else {
 		spec.Model = cfg.Model
 	}
-	if model != "" {
-		spec.Model = model
+	if q.Model != "" {
+		spec.Model = q.Model
 	}
 	if spec.Thinking == "" {
 		spec.Thinking = cfg.Thinking
@@ -126,8 +179,8 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 		}
 	}
 	switch {
-	case maxTurns > 0:
-		spec.MaxTurns = maxTurns
+	case q.MaxTurns > 0:
+		spec.MaxTurns = q.MaxTurns
 	case cfg.MaxTurns != nil:
 		spec.MaxTurns = *cfg.MaxTurns
 	default:
@@ -140,8 +193,9 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	a.mu.Lock()
 	spec.GraceTurns = a.graceTurns
 	a.mu.Unlock()
+	description := q.Description
 	if description == "" {
-		description = strings.Join(strings.Fields(prompt)[:min(5, len(strings.Fields(prompt)))], " ")
+		description = strings.Join(strings.Fields(q.Prompt)[:min(5, len(strings.Fields(q.Prompt)))], " ")
 	}
-	return a.mgr.spawn(resolved, description, name, spec, background), nil
+	return a.mgr.spawnWith(resolved, description, q.Name, spec, spawnOptions{Background: q.Background, BypassQueue: q.BypassQueue}), nil
 }

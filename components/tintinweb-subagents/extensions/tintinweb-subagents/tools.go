@@ -182,27 +182,32 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if feature := unportedCallParam(p); feature != "" {
 		return nil, refusal(feature)
 	}
-	isolated, _ := p["isolated"].(bool)
+	// `resume` replays a stored session and ignores subagent_type entirely, so only a real spawn is gated on it.
+	// upstream: index.ts:1785.
+	resumeID, _ := p["resume"].(string)
 	res := resolveSpawnType(typ)
-	if !res.OK {
+	if !res.OK && resumeID == "" {
 		return textResult(res.Message), nil
+	}
+	subagentType := res.Type
+	if !res.OK {
+		subagentType = typ
 	}
 	reg := currentRegistry()
 	resolved, fellBack := res.Type, res.FellBackFrom
 	// A fallback happened when the requested type itself is not an enabled type (a blank request included).
 	// upstream: index.ts:1796-1798.
 	fallbackNote := ""
-	if resolveEnabledTypeIn(reg, strings.TrimSpace(typ)) == "" {
+	if res.OK && resolveEnabledTypeIn(reg, strings.TrimSpace(typ)) == "" {
 		fallbackNote = `Note: Unknown agent type "` + fellBack + `" — using ` + resolved + ".\n\n"
 	}
-	background := true
-	if cfg := reg.get(resolved); cfg != nil && cfg.RunInBackground != nil {
-		background = *cfg.RunInBackground
+	inv := resolveInvocation(getAgentConfig(subagentType), p)
+	if resumeID != "" {
+		return a.resumeTool(ctx, resumeID, prompt, inv.Background)
 	}
-	if b, ok := p["run_in_background"].(bool); ok {
-		background = b
-	}
-	r, err := a.start(ctx, resolved, prompt, description, name, model, thinking, maxTurns, background, isolated)
+	background := inv.Background
+	r, err := a.start(ctx, startRequest{Type: resolved, Prompt: prompt, Description: description, Name: name, Model: model, Thinking: thinking,
+		MaxTurns: maxTurns, Background: background, Isolated: inv.Isolated, InheritContext: inv.InheritContext})
 	if err != nil {
 		return nil, err
 	}
@@ -224,11 +229,12 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 			"Use get_subagent_result to retrieve full results, or steer_subagent to send it messages.\nDo not duplicate this agent's work.",
 			fallbackNote, state, r.ID, displayName(a, resolved), description, pos)), nil
 	}
+	done := a.mgr.doneOf(r)
 	select {
-	case <-r.done:
+	case <-done:
 	case <-ctx.Done():
 		a.mgr.abort(r)
-		<-r.done
+		<-done
 	}
 	a.mgr.mu.Lock()
 	status, result, errText, tokens, uses, dur := r.Status, r.Result, r.Error, r.Tokens, r.ToolUses, r.CompletedAt.Sub(r.StartedAt).Milliseconds()
@@ -256,7 +262,7 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 	}
 	if wait, _ := p["wait"].(bool); wait {
 		select {
-		case <-r.done:
+		case <-a.mgr.doneOf(r):
 		case <-ctx.Done():
 			return textResult(fmt.Sprintf("Agent %s is still running (the wait was cancelled).", r.ID)), nil
 		}

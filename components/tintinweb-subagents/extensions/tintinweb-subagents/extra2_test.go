@@ -1,6 +1,7 @@
 package tintinweb_subagents
 
 import (
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -9,18 +10,18 @@ import (
 func TestPromptAssembly(t *testing.T) {
 	plan := defaultAgents().m["Plan"]
 	env := envInfo{Platform: "linux"}
-	got := buildAgentPrompt(plan, "/w", env, "")
+	got := buildAgentPrompt(plan, "/w", env, "", promptExtras{})
 	eq(t, got, "<active_agent name=\"Plan\"/>\n\nYou are a pi coding agent sub-agent.\nYou have been invoked to handle a specific task autonomously.\n\n"+
 		"# Environment\nWorking directory: /w\nNot a git repository\nPlatform: linux\n\n"+plan.SystemPrompt)
-	git := buildAgentPrompt(plan, "/w", envInfo{IsGitRepo: true, Branch: "main", Platform: "darwin"}, "")
+	git := buildAgentPrompt(plan, "/w", envInfo{IsGitRepo: true, Branch: "main", Platform: "darwin"}, "", promptExtras{})
 	eq(t, strings.Contains(git, "# Environment\nWorking directory: /w\nGit repository: yes\nBranch: main\nPlatform: darwin\n"), true)
 	gp := defaultAgents().m["general-purpose"]
-	app := buildAgentPrompt(gp, "/w", env, "PARENT PROMPT")
+	app := buildAgentPrompt(gp, "/w", env, "PARENT PROMPT", promptExtras{})
 	eq(t, strings.HasPrefix(app, "PARENT PROMPT\n\n<sub_agent_context>\nYou are operating as a sub-agent invoked to handle a specific task.\n- Use the read tool"), true)
 	eq(t, strings.Contains(app, "</sub_agent_context>\n\n<active_agent name=\"general-purpose\"/>\n\n# Environment\nWorking directory: /w\nNot a git repository\nPlatform: linux"), true)
-	eq(t, strings.Contains(app, "<agent_instructions>\n"+gp.SystemPrompt+"\n</agent_instructions>"), true)
+	eq(t, strings.Contains(app, "agent_instructions"), false) // general-purpose has no instructions of its own: a pure parent clone
 	// without a parent prompt the generic base is the identity; an agent with no instructions adds no section
-	bare := buildAgentPrompt(&agentConfig{Name: "bare", PromptMode: "append"}, "/w", env, "")
+	bare := buildAgentPrompt(&agentConfig{Name: "bare", PromptMode: "append"}, "/w", env, "", promptExtras{})
 	eq(t, strings.HasPrefix(bare, genericBase+"\n\n<sub_agent_context>"), true)
 	eq(t, strings.Contains(bare, "agent_instructions"), false)
 	eq(t, platformName("windows"), "win32")
@@ -74,13 +75,14 @@ func TestTheChildGetsTheAgentsPromptAndEnvironment(t *testing.T) {
 func TestIsolationFollowsTheAgentFile(t *testing.T) {
 	r := startRig(t)
 	tr := true
-	registerAgents(reg(mk("solo", func(c *agentConfig) { c.Isolated = &tr; c.Extensions = true; c.Skills = true }), mk("noext", func(c *agentConfig) { c.Extensions = false; c.Skills = true }),
-		mk("open", func(c *agentConfig) { c.Extensions = true; c.Skills = true })))
+	registerAgents(reg(mk("solo", func(c *agentConfig) { c.Isolated = &tr; c.Extensions = true; c.Skills = true; c.RunInBackground = nil }),
+		mk("noext", func(c *agentConfig) { c.Extensions = false; c.Skills = true; c.RunInBackground = nil }),
+		mk("open", func(c *agentConfig) { c.Extensions = true; c.Skills = true; c.RunInBackground = nil })))
 	for i, name := range []string{"solo", "noext", "open"} {
 		r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": name, "run_in_background": true})
-		eq(t, r.fleet.wait(t, i+1)[i].spec.Isolated, name != "open")
+		eq(t, r.fleet.wait(t, i+1)[i].spec.NoExtensions, name != "open")
 	}
-	eq(t, childArgs(childSpec{Isolated: true})[3], "--no-extensions")
+	eq(t, slices.Contains(childArgs(childSpec{NoExtensions: true}), "--no-extensions"), true)
 }
 
 func TestQueueIsFirstInFirstOut(t *testing.T) {

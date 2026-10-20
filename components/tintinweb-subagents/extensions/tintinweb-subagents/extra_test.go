@@ -166,8 +166,8 @@ func TestIsolatedReachesTheChild(t *testing.T) {
 	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan"})
 	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "isolated": true})
 	c := r.fleet.wait(t, 2)
-	eq(t, c[0].spec.Isolated, false)
-	eq(t, c[1].spec.Isolated, true)
+	eq(t, c[0].spec.NoExtensions, false)
+	eq(t, c[1].spec.NoExtensions, true)
 }
 
 func TestProcessCrashDuringStartupIsReportedByTheTool(t *testing.T) {

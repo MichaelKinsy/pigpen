@@ -18,6 +18,7 @@ type settings struct {
 	GraceTurns           int // 0: unset
 	FallbackSubagent     *string
 	DisableDefaultAgents *bool
+	RememberAgents       *bool
 }
 
 const (
@@ -51,6 +52,9 @@ func sanitizeSettings(raw any) settings {
 	}
 	if b, ok := r["disableDefaultAgents"].(bool); ok {
 		out.DisableDefaultAgents = &b
+	}
+	if b, ok := r["rememberAgents"].(bool); ok {
+		out.RememberAgents = &b
 	}
 	switch v := r["fallbackSubagent"].(type) {
 	case bool:
@@ -96,6 +100,9 @@ func loadSettings(cwd string) settings {
 	}
 	if p.DisableDefaultAgents != nil {
 		s.DisableDefaultAgents = p.DisableDefaultAgents
+	}
+	if p.RememberAgents != nil {
+		s.RememberAgents = p.RememberAgents
 	}
 	return s
 }

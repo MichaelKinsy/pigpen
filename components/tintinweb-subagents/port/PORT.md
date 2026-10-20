@@ -20,7 +20,10 @@ extension cannot host a Pi session, so the shipped slice is the part that has a 
   (`maxConcurrent`, `defaultMaxTurns`, `fallbackSubagent`, `disableDefaultAgents`), the spawn policy (#183);
 - background by default, a concurrency limit and a FIFO queue, handles (`explore`, `explore-2`) and names, a held
   completion notification that a read of the result cancels, the event-bus protocol v2 `pi-tasks` speaks;
-- `/agents`: the types and the agents of the session.
+- `/agents`: the types and the agents of the session;
+- sessions: an agent's conversation is a pi session file (`rememberAgents`, `persist_session`, `session_dir`), `resume`
+  continues the same conversation, `inherit_context` puts the parent conversation in front of the task, and the agent's
+  skills, extensions, `ext:` tool selectors, `disallowed_tools` and `isolated` choose what its child loads.
 
 Everything else is deferred, by name, in `port/slices.json` (reasons per file). The Agent tool is advertised **as the
 original advertises it with workflows, scheduling and worktree isolation switched off** (`.pi/subagents.json`:
@@ -37,10 +40,13 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M5 | `settings.ts`: `subagents.json`, global then project | `settings.go` (five fields) | `settings_test.go`, `turnlimit_test.go` |
 | M6 | `prompts.ts`, `env.ts`: the agent's system prompt and environment block | `prompts.go` | `extra2_test.go` (exact strings), inserted text equal to Pi's in a recorded child run (see F2) |
 | M7 | `agent-manager.ts`: records, limit, queue, handles, abort, steer, consume | `manager.go` | `manager_test.go`, `extra_test.go`, `extra2_test.go` |
-| M8 | `agent-runner.ts`: an agent's run, the turn limit (steer at `maxTurns`, abort at `maxTurns + graceTurns`), `finalTurnError` | `runner.go`: a child `pig --mode rpc --no-session` | `runner_test.go`, `turnlimit_test.go`, `proc_unix_test.go` (a fake pig, the test binary re-executed) |
+| M8 | `agent-runner.ts`: an agent's run, the turn limit (steer at `maxTurns`, abort at `maxTurns + graceTurns`), `finalTurnError`, `resumeAgent` | `runner.go`: a child `pig --mode rpc` (a session file, or `--no-session`), kept alive after a run only when its conversation is in memory | `runner_test.go`, `runner_twin_test.go`, `turnlimit_test.go`, `proc_unix_test.go` (a fake pig, the test binary re-executed) |
 | M9 | `cross-extension-rpc.ts`: ping, spawn, stop, consume | `bus.go` | `bus_test.go` |
 | M10 | completion events and the held notification (`index.ts` `formatTaskNotification`, `getStatusLabel`; `status-note.ts`; `xml.ts`) | `extension.go` | `tools_test.go`, `extra_test.go`, `turnlimit_test.go` |
 | M11 | the Agent, result and steer tools' behavior and texts | `tools.go` | `agent-not-found`, `agent-unknown-type-strict`; `tools_test.go` |
+| M12 | `agent-manager.ts` resume, startResume, tombstones, cleanup, `resumeSessionFile`, `reclaim`, `bypassQueue`; `index.ts` Agent `resume` branch and `spawnTopLevel` | `sessions.go`, `sessions_tool.go` | `agent_manager_twin_test.go`, `sessions_test.go`; `agent-resume-not-found` |
+| M13 | `agent-runner.ts` extension and tool scope (`extensionCanonicalName(s)`, `parseExtensionsSpec`, `parseExtSelectors`, the loader filter, `inScope`), `persist_session`, session choice | `scope.go`, `discover.go` (the parent's tool registry and `pig status --json` stand for the loader's extension list) | `scope_twin_test.go`, `sessions_test.go`; probe scenarios `port/probes` |
+| M14 | `context.ts` (`inherit_context`), `skill-loader.ts` (`skills:`), `env.ts`, `prompts.ts` extras | `context.go`, `skills.go`, `skillfs.go`, `prompts.go` | `context_twin_test.go`, `skills_twin_test.go`, `env_twin_test.go`, `prompts_twin_test.go` |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
 

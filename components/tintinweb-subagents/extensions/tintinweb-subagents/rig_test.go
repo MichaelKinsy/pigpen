@@ -14,20 +14,27 @@ import (
 
 type obj = map[string]any
 
-// fakeChild is a scripted child: it settles when released, or when aborted.
+// fakeChild is a scripted child: it settles when released, or when aborted. A resumed run is released again.
 type fakeChild struct {
 	spec    childSpec
 	release chan struct{}
 	res     *childResult
 	err     error
+	session string // the session file it reports ("": in memory)
+	dead    bool   // the process has ended: it cannot take a prompt
 
 	mu      sync.Mutex
 	steered []string
 	aborted bool
+	resumed []string
+	closed  bool
 }
 
 func (c *fakeChild) wait() (*childResult, error) {
-	<-c.release
+	c.mu.Lock()
+	release := c.release
+	c.mu.Unlock()
+	<-release
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.aborted {
@@ -45,6 +52,11 @@ func (c *fakeChild) abort() {
 	c.mu.Lock()
 	c.aborted = true
 	c.mu.Unlock()
+	c.releaseNow()
+}
+func (c *fakeChild) releaseNow() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	select {
 	case <-c.release:
 	default:
@@ -52,8 +64,24 @@ func (c *fakeChild) abort() {
 	}
 }
 func (c *fakeChild) finish(text string) {
+	c.mu.Lock()
 	c.res = &childResult{Text: text, ToolUses: 3, Tokens: 1500, Turns: 2}
-	close(c.release)
+	c.mu.Unlock()
+	c.releaseNow()
+}
+func (c *fakeChild) sessionFile() string { return c.session }
+func (c *fakeChild) alive() bool         { c.mu.Lock(); defer c.mu.Unlock(); return !c.dead && !c.closed }
+func (c *fakeChild) close()              { c.mu.Lock(); c.closed = true; c.mu.Unlock() }
+func (c *fakeChild) resume(prompt string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.dead || c.closed {
+		return errors.New("the agent's process has ended")
+	}
+	c.resumed = append(c.resumed, prompt)
+	c.aborted = false
+	c.release = make(chan struct{})
+	return nil
 }
 
 // fleet starts fake children and remembers them.
@@ -61,6 +89,7 @@ type fleet struct {
 	mu       sync.Mutex
 	children []*fakeChild
 	failWith error
+	session  string // the session file every child reports
 }
 
 func (f *fleet) start(_ context.Context, spec childSpec) (child, error) {
@@ -69,7 +98,7 @@ func (f *fleet) start(_ context.Context, spec childSpec) (child, error) {
 	if f.failWith != nil {
 		return nil, f.failWith
 	}
-	c := &fakeChild{spec: spec, release: make(chan struct{})}
+	c := &fakeChild{spec: spec, release: make(chan struct{}), session: f.session}
 	f.children = append(f.children, c)
 	return c, nil
 }
@@ -98,11 +127,16 @@ type rig struct {
 	app   *app
 	fleet *fleet
 
-	exec   func(command string, args []string) (stdout string, code int)
-	mu     sync.Mutex
-	extBus map[string][]string
-	goBus  map[string][]func(any)
-	emits  []string
+	exec func(command string, args []string) (stdout string, code int)
+	// What the host answers about the parent session.
+	sessionFile string // getSessionFile
+	branch      []any  // sessionRead getBranch
+	registry    []any  // getAllTools
+	trusted     bool   // isProjectTrusted
+	mu          sync.Mutex
+	extBus      map[string][]string
+	goBus       map[string][]func(any)
+	emits       []string
 }
 
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
@@ -126,6 +160,16 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	switch method {
+	case "sessionRead":
+		if args["method"] == "getBranch" {
+			return append([]any{}, r.branch...), ""
+		}
+	case "getSessionFile":
+		return obj{"sessionFile": r.sessionFile}, ""
+	case "isProjectTrusted":
+		return obj{"trusted": r.trusted}, ""
+	case "getAllTools":
+		return obj{"tools": append([]any{}, r.registry...)}, ""
 	case "exec":
 		if r.exec != nil {
 			var argv []string
