@@ -117,6 +117,14 @@ func TestMutantsBContextKeepsCompactedBase(t *testing.T) {
 	_ = r
 }
 
+// mbFakeClock starts mock timers and puts the real clock back when the test ends (the clock is package-global).
+func mbFakeClock(t *testing.T, p *goal.Probe, startMs int64) *goal.FakeClock {
+	t.Helper()
+	fc := p.FakeClock(startMs)
+	t.Cleanup(fc.Restore)
+	return fc
+}
+
 func mbUsage(r *goalRig) (tokens, seconds float64) {
 	u, _ := r.Probe.Goal()["usage"].(map[string]any)
 	tokens, _ = u["tokensUsed"].(float64)
@@ -166,7 +174,7 @@ func TestMutantsBTurnEvents(t *testing.T) {
 // events-turn-start-no-begin-accounting, events-toolexec-no-account
 func TestMutantsBTurnAccounting(t *testing.T) {
 	e := newEvRig(t, "", nil)
-	fc := e.Probe.FakeClock(time.Now().UnixMilli())
+	fc := mbFakeClock(t, e.Probe, time.Now().UnixMilli())
 	e.startSession()
 	_, base := mbUsage(e.goalRig)
 	fc.Tick(10_000)
@@ -188,7 +196,7 @@ func TestMutantsBActivityKeepsGoalAlive(t *testing.T) {
 	for _, event := range []string{"turn_start", "tool_execution_end"} {
 		r := focusedRig(t, nil, rigOptions{Settings: `{"stallTimeoutMinutes": 1}`})
 		goal.SaveGoalSettingsForRig(r.Cwd, `{"stallTimeoutMinutes": 1}`) // drops the settings cache earlier tests left behind
-		fc := r.Probe.FakeClock(time.Now().UnixMilli())
+		fc := mbFakeClock(t, r.Probe, time.Now().UnixMilli())
 		fc.Tick(70_000)
 		r.Fire(event, map[string]any{})
 		mustNotContain(t, mbCtxContents(t, r.goalRig, nil), "[GOAL STALLED")
@@ -309,7 +317,7 @@ func TestMutantsBArchiveFailures(t *testing.T) {
 // events-compactfail-no-persist
 func TestMutantsBCompaction(t *testing.T) {
 	e := newEvRig(t, "", nil)
-	fc := e.Probe.FakeClock(time.Now().UnixMilli())
+	fc := mbFakeClock(t, e.Probe, time.Now().UnixMilli())
 	e.startSession()
 	_, base := mbUsage(e.goalRig)
 	fc.Tick(7_000)
@@ -320,7 +328,7 @@ func TestMutantsBCompaction(t *testing.T) {
 
 	// A buffered turn is persisted at the compaction.
 	e = newEvRig(t, "", nil)
-	fc = e.Probe.FakeClock(time.Now().UnixMilli())
+	fc = mbFakeClock(t, e.Probe, time.Now().UnixMilli())
 	e.startSession()
 	_, base = mbDiskUsage(t, e.Cwd)
 	e.fire("turn_start", map[string]any{})
@@ -336,7 +344,7 @@ func TestMutantsBCompaction(t *testing.T) {
 
 	// Accounting starts over after a compaction.
 	e = newEvRig(t, "", nil)
-	fc = e.Probe.FakeClock(time.Now().UnixMilli())
+	fc = mbFakeClock(t, e.Probe, time.Now().UnixMilli())
 	e.startSession()
 	_, base = mbUsage(e.goalRig)
 	fc.Tick(7_000)
@@ -519,7 +527,7 @@ func TestMutantsBShutdownCleanup(t *testing.T) {
 
 	// Progress is charged and persisted at shutdown, and the recovery state is dropped.
 	e = newEvRig(t, settings, nil)
-	fc := e.Probe.FakeClock(time.Now().UnixMilli())
+	fc := mbFakeClock(t, e.Probe, time.Now().UnixMilli())
 	e.startSession()
 	e.beforeAgentStart("user typed: continue")
 	_, base := mbDiskUsage(t, e.Cwd)
@@ -980,3 +988,21 @@ func mbRawContext(r *goalRig, messages []any) []map[string]any {
 var _ = os.Getpid
 var _ = filepath.Join
 var _ = time.Second
+
+// events-turn-start-wrong-goal: a turn buffers per goal; moving the focus mid-turn persists the first goal's buffer before the next one
+// is touched
+func TestMutantsBTurnBufferFollowsFocus(t *testing.T) {
+	f := fixtureWithTasks(t, "Goal A", `[{"id":"a1","title":"A1","status":"pending"}]`, "")
+	other := goal.ToolsGoal(f.cwd, "Goal B", false, mbAt+1000,
+		`{"taskList":{"tasks":[{"id":"b1","title":"B1","status":"pending"}],"blockCompletion":false,"proposedAt":"`+nowZ()+`"}}`)
+	r := startedRig(t, f, rigOptions{})
+	r.Fire("turn_start", map[string]any{})
+	r.callTool("update_goal_task", map[string]any{"task_id": "a1", "status": "complete", "evidence": "a"})
+	r.Probe.RigFocusWithoutFlush(other["id"].(string))
+	r.callTool("update_goal", map[string]any{"status": "paused", "reason": "second goal"})
+	a := goal.ToolsParseGoalFile(filepath.Join(f.cwd, f.goal["activePath"].(string)))
+	equal(t, taskByID(tasksOf(a), "a1")["status"], "complete", "the first goal's buffered change is persisted when the focus moves")
+	r.turnEnd()
+	b := goal.ToolsParseGoalFile(filepath.Join(f.cwd, other["activePath"].(string)))
+	equal(t, b["status"], "paused", "the second goal's change is persisted at the turn's end")
+}

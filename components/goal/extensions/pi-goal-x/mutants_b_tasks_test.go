@@ -265,7 +265,7 @@ func TestMutantsBCompleteAnimation(t *testing.T) {
 		elapsedLate, _, _ = r.Probe.RigAuditProgress()
 		return goal.RigAuditResult{Approved: true, Output: "ok\n<approved/>", Model: "mock"}
 	})
-	fc = r.Probe.FakeClock(mbAt)
+	fc = mbFakeClock(t, r.Probe, mbAt)
 	r.callTool("update_goal", map[string]any{"status": "complete"})
 	equal(t, elapsedEarly, 0, "the elapsed time stays until the first 80 ms tick")
 	equal(t, elapsedLate, 80, "the spinner ticks every 80 ms and moves the elapsed time")
@@ -278,7 +278,7 @@ func TestMutantsBCompleteChargesProgress(t *testing.T) {
 	r.Probe.SetCompletionAuditor(func(goal.RigAuditCall) goal.RigAuditResult {
 		return goal.RigAuditResult{Approved: true, Output: "ok\n<approved/>", Model: "mock"}
 	})
-	fc := r.Probe.FakeClock(mbAt)
+	fc := mbFakeClock(t, r.Probe, mbAt)
 	r.startToolsSession()
 	fc.Tick(30_000)
 	restore := r.Probe.RejectMutations("")

@@ -393,12 +393,30 @@ func TestMutantsBOracleFocusChange(t *testing.T) {
 	f := newToolsFixture(t, "Oracle focus", false, mbAt, "")
 	r := newToolsRig(t, f, rigOptions{Settings: mbSettingsOracle(""), OnCall: mbOracleModels})
 	r.startToolsSession()
+	started, release := make(chan struct{}), make(chan struct{})
+	defer close(release)
 	r.Probe.SetOracleSession(func(_ string, submit func(string)) error {
-		r.Probe.RigUnfocusInsideRun()
+		close(started)
+		<-release
 		submit(mbAdvice("late", "Late", "actionable"))
 		return nil
 	})
-	out := r.callTool("update_goal", map[string]any{"status": "blocked", "reason": "focus moves"})
+	done := r.ToolAsync("update_goal", map[string]any{"status": "blocked", "reason": "focus moves"})
+	select {
+	case <-started:
+	case <-time.After(10 * time.Second):
+		t.Fatal("the consultation did not start")
+	}
+	// The consultation does not hold the core: a command runs while it waits (this hangs on a core that stays locked).
+	if failure := r.Command("goal-unfocus", ""); failure != "" {
+		t.Fatal(failure)
+	}
+	release <- struct{}{}
+	res := <-done
+	if res.Failure != "" {
+		t.Fatal(res.Failure)
+	}
+	out := decodeToolOut(t, res.Raw)
 	textContains(t, out.Content, "Blocker Oracle", "the consultation is cancelled when the focus moved")
 	textNotContains(t, out.Content, "Oracle diagnosis", "the advice of a cancelled consultation is dropped")
 	if len(mbLedger(f.cwd, "oracle_result")) != 0 {

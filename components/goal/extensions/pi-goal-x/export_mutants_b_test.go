@@ -56,10 +56,6 @@ func (p *Probe) RigAuditAborted() bool {
 	return v
 }
 
-// RigUnfocusInsideRun drops the focus without taking the lock: for a fake Oracle session, which runs inside the tool call's handler
-// with the core locked (the Oracle wait does not release it).
-func (p *Probe) RigUnfocusInsideRun() { p.c.assignFocused(nil) }
-
 // RigRuntime is the lifecycle state the original's tests read through `pi._goalCore` (runtime, scheduler, accounting).
 type RigRuntime struct {
 	RunningGoalID                          string
@@ -106,3 +102,8 @@ func (p *Probe) RigRuntime() RigRuntime {
 }
 
 var _ = context.Background
+
+// RigFocusWithoutFlush moves the session focus to another pooled goal and does nothing else (no flush of the turn's buffer).
+func (p *Probe) RigFocusWithoutFlush(goalID string) {
+	p.c.locked(func() { p.c.assignFocused(&goalID) })
+}
