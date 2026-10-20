@@ -647,8 +647,21 @@ func TestVibeEveryThinkingLevelSuffixResolves(t *testing.T) {
 		want = append(want, level)
 	}
 	eq(t, levels, want, "reasoning levels")
-	m.setModel("test-provider/test-model:ultra")
+	// Only the last colon starts the suffix: "colon:id" is the model, "low" the level.
+	m.initVibeManager(scriptedRegistry{
+		find: testProvider("colon:id"),
+		complete: func(_, _, options map[string]any) map[string]any {
+			levels = append(levels, options["reasoning"])
+			return vibeText("Thinking...")
+		},
+	})
+	m.setModel("test-provider/colon:id:low")
 	res, _ := m.generateVibesBatch("t", 1)
+	eq(t, res.Success, true, "colon in the model id")
+	eq(t, levels[len(levels)-1], "low", "level after the last colon")
+	m.initVibeManager(scriptedRegistry{find: testProvider("test-model")})
+	m.setModel("test-provider/test-model:ultra")
+	res, _ = m.generateVibesBatch("t", 1)
 	eq(t, res.Error, "Model not found: test-provider/test-model:ultra", "an unknown suffix stays part of the id")
 }
 
