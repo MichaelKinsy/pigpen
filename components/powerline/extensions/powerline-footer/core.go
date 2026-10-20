@@ -76,6 +76,9 @@ type powerline struct {
 	// frame is what the footer renderer lays out. The SDK runs that renderer on its own goroutine (again after every width
 	// change) while handlers rebuild the snapshot, so it reads only this frame, which refresh publishes whole.
 	frame atomic.Pointer[footerFrame]
+
+	// keys is the stash and shortcut slice (keys_ext.go); nil in tests of the core alone.
+	keys keysHooks
 }
 
 // footerFrame is a published snapshot: the render context with the statuses, the segment order and the separator style.
@@ -217,7 +220,9 @@ func (p *powerline) sessionStart(reason string) {
 	if p.currentThinking == "" {
 		p.currentThinking = "off"
 	}
-	if p.h.HasUI() {
+	if p.keys != nil {
+		p.keys.sessionStart(reason)
+	} else if p.h.HasUI() {
 		p.h.SetStatus(statusStash, nil)
 	}
 	if p.enabled && p.h.HasUI() {
@@ -346,6 +351,9 @@ func (p *powerline) setup() {
 	if !p.enabled {
 		return
 	}
+	if p.keys != nil {
+		p.keys.setup()
+	}
 	for _, key := range widgetKeys {
 		p.h.ClearWidget(key)
 	}
@@ -366,7 +374,11 @@ func (p *powerline) setup() {
 }
 
 func (p *powerline) teardown() {
-	p.h.SetStatus(statusStash, nil)
+	if p.keys != nil {
+		p.keys.disable()
+	} else {
+		p.h.SetStatus(statusStash, nil)
+	}
 	p.h.SetFooterInstalled(false)
 	for _, key := range widgetKeys {
 		p.h.ClearWidget(key)

@@ -1,0 +1,22 @@
+{
+ "name": "keys-stash-history-saved",
+ "description": "/stash-history with saved stashes asks which history to open; RPC hosts show no overlay, so it ends there.",
+ "llm": [
+  {
+   "text": "ok"
+  }
+ ],
+ "steps": [
+  {
+   "name": "saved",
+   "rpc": {
+    "type": "prompt",
+    "message": "/stash-history"
+   }
+  }
+ ],
+ "agentFiles": {
+  "settings.json": "{\"powerline\": {\"welcome\": false}}",
+  "powerline-footer/stash-history.json": "{\"version\": 1, \"history\": [\"saved stash\", \"another stash\"]}"
+ }
+}
