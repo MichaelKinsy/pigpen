@@ -405,12 +405,12 @@ func childFinalText(messages []map[string]any) string {
 		if role, _ := m["role"].(string); role != "assistant" {
 			continue
 		}
-		return assistantText(m)
+		return rpcAssistantText(m)
 	}
 	return ""
 }
 
-func assistantText(m map[string]any) string {
+func rpcAssistantText(m map[string]any) string {
 	var sb strings.Builder
 	switch c := m["content"].(type) {
 	case string:
