@@ -276,9 +276,16 @@ func withTimeout(parent context.Context, d time.Duration) (context.Context, cont
 	return context.WithTimeout(parent, d)
 }
 
+// providerTimeoutMessage is what a fetch cut off by AbortSignal.timeout rejects with
+// (a DOMException TimeoutError). gemini-search.ts isAbortError reads "abort" in the message, so
+// the deadline is classified "aborted" and configured routing does not fall through it.
+const providerTimeoutMessage = "The operation was aborted due to timeout"
+
+// timeoutFix turns the error of a request that hit its own deadline (the caller is still there)
+// into the original's timeout rejection; the context error stays the cause.
 func timeoutFix(parent, child context.Context, err error) error {
 	if err != nil && parent.Err() == nil && child.Err() == context.DeadlineExceeded {
-		return &redactedError{"request timed out (" + err.Error() + ")", err}
+		return &redactedError{providerTimeoutMessage, err}
 	}
 	return err
 }
