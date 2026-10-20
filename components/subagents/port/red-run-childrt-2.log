@@ -1,0 +1,17 @@
+# github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+./stale_reconciler_test.go:25:6: readJSONFile redeclared in this block
+	./async_locate.go:340:6: other declaration of readJSONFile
+./workflow_receipt_test.go:438:6: errString redeclared in this block
+	./stale_reconciler_test.go:415:6: other declaration of errString
+./workflow_receipt_test.go:443:6: stringError redeclared in this block
+	./stale_reconciler_test.go:417:6: other declaration of stringError
+./workflow_receipt_test.go:445:23: method stringError.Error already declared at ./stale_reconciler_test.go:419:22
+./session_lease_test.go:30:46: undefined: sessionLeaseRequest
+./session_lease_test.go:36:61: undefined: sessionLeaseConflictError
+./process_terminal_test.go:123:4: unknown field RevivalLeaseToken in struct literal of type ProcessTerminalCandidate
+./process_terminal_test.go:123:38: unknown field RevivalLeaseReleaseAcknowledged in struct literal of type ProcessTerminalCandidate
+./process_terminal_test.go:130:8: cand.RevivalLeaseReleaseAcknowledged undefined (type *ProcessTerminalCandidate has no field or method RevivalLeaseReleaseAcknowledged)
+./process_terminal_test.go:131:8: cand.RevivalLeaseToken undefined (type *ProcessTerminalCandidate has no field or method RevivalLeaseToken)
+./process_terminal_test.go:131:8: too many errors
+FAIL	github.com/MichaelKinsy/pigpen/pi-subagents [build failed]
+FAIL
