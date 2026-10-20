@@ -45,17 +45,35 @@ and `<workspace>/.pi/agents/` (later ones win), exactly as in the original: `nam
 (`all`, `none`, a list, `ext:` selectors), `model`, `thinking`, `max_turns`, `prompt_mode`, `run_in_background`,
 `enabled`, `disallowed_tools`, `extensions`, `skills`, `isolated` and the rest are parsed the same way (the 76 cases of
 the original's `custom-agents` tests are twinned). Settings come from `<agent dir>/subagents.json` and
-`<workspace>/.pi/subagents.json`: `maxConcurrent` (default 10), `defaultMaxTurns`, `graceTurns`, `fallbackSubagent` (an
-unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused) and `disableDefaultAgents`.
+`<workspace>/.pi/subagents.json` (the project file wins key by key), read once when the extension loads, as in the
+original; all 24 keys are parsed alike, and a value of the wrong shape is dropped silently. Honored:
+
+| Key | Meaning |
+|---|---|
+| `maxConcurrent` (10), `maxConcurrentForeground` (0 = unlimited) | the two independent pools: background agents, and the agents a call blocks on inline; the rest wait in one queue, first in first out within a pool |
+| `defaultMaxTurns` (0 = unlimited), `graceTurns` (5) | the turn limit and the turns allowed after the wrap-up message |
+| `backgroundByDefault` (true) | what an `Agent` call that does not say `run_in_background` means; an agent file's own `run_in_background` and then the call's win over it |
+| `defaultJoinMode` (`smart`) | `async`: one notification per finished background agent; `group` and `smart`: one notification for the agents spawned in the same turn (a 100 ms debounce window), partial after 30 s |
+| `scopeModels` (false) | a model the call names outside `enabledModels` of Pi's settings is an error result listing the allowed ones; a model an agent file pins, or the parent's, only warns |
+| `strictAgentFiles` (false) | an unreadable agent file aborts the load, naming the file (at start-up only; every later reload warns) |
+| `toolDescriptionMode` (`full`) | `compact` is the short Agent description; `custom` renders `.pi/agent-tool-description.md` (else `<agent dir>/agent-tool-description.md`) with `{{typeList}}`, `{{compactTypeList}}`, `{{agentDir}}`, `{{scheduleGuideline}}` and `{{isolationGuideline}}`; read once at registration |
+| `fallbackSubagent`, `disableDefaultAgents` | an unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused; the three default agents can be switched off |
+
+A model named by the call (or by an agent file) is resolved against the models with credentials: `provider/modelId`, else
+a fuzzy match (`haiku`, `sonnet 4.5`, a dot or a dash in a version); one that matches nothing is an error result for the
+call's model and a silent fallback to the parent's for the file's. The other keys are parsed and kept for the slices
+that own them (see below); asking for one of them is refused.
 
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
 [port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, `@name`
 mentions, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, `inherit_context`,
-resuming a finished agent's session, the settings menu, and output transcripts. The `Agent` tool is advertised with the
+resuming a finished agent's session, the settings menu (the store can write `.pi/subagents.json`, nothing calls it yet), and output transcripts. The `Agent` tool is advertised with the
 original's text and schema as it is with workflows, scheduling and worktree isolation switched off, and
-`SubagentWorkflow` is not registered.
+`SubagentWorkflow` is not registered. (The text for every combination of those three features and the three
+`toolDescriptionMode`s is built and proved against what Pi sends, so a slice that ports a feature only switches it on in
+`features.go`.)
 
 Nothing that is not ported is accepted and quietly ignored. Each of these is refused with one message, a tool error
 (for the settings, a notification when a session starts):
@@ -70,9 +88,8 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel` and
   `isBackground: true`.
 - `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
-  `workflowsEnabled: true`, `worktreeIsolation: true`, `scopeModels: true`, `defaultJoinMode: "group"`, `widgetMode`
-  other than `off`, and so on). The settings the port matches are not flagged: `false` for the switches the port does
-  not have, and the five it honors.
+  `workflowsEnabled: true`, `worktreeIsolation: true`, `widgetMode` other than `off`, and so on). The settings the
+  port matches are not flagged: `false` for the switches the port does not have, and the ones it honors.
 
 `isolated: true` starts the child with no extensions. The proof that the shipped slice matches the original is in
 [port/PORT.md](port/PORT.md).

@@ -126,11 +126,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		{"isolated", obj{"isolated": true}, `the spawn RPC option "isolated"`},
 		{"isolation", obj{"isolation": "worktree"}, `the spawn RPC option "isolation"`},
 		{"inheritContext", obj{"inheritContext": true}, `the spawn RPC option "inheritContext"`},
-		{"resumeSessionFile", obj{"resumeSessionFile": "/x"}, `the spawn RPC option "resumeSessionFile"`},
-		{"reclaim", obj{"reclaim": obj{"handle": "a"}}, `the spawn RPC option "reclaim"`},
 		{"bypassQueue", obj{"bypassQueue": true}, `the spawn RPC option "bypassQueue"`},
-		{"blocking", obj{"blocking": true}, `the spawn RPC option "blocking"`},
-		{"workflowId", obj{"workflowId": "w"}, `the spawn RPC option "workflowId"`},
 		{"foreground", obj{"isBackground": false}, "foreground agents through the spawn RPC (isBackground: false)"},
 	}
 	for _, c := range cases {
@@ -181,13 +177,7 @@ func notices(r *rig) []string {
 
 func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	cases := []struct{ name, json, listed string }{
-		{"maxConcurrentForeground", `{"maxConcurrentForeground": 2}`, "maxConcurrentForeground: 2"},
-		{"defaultJoinMode", `{"defaultJoinMode": "group"}`, `defaultJoinMode: "group"`},
-		{"backgroundByDefault", `{"backgroundByDefault": false}`, "backgroundByDefault: false"},
 		{"schedulingEnabled", `{"schedulingEnabled": true}`, "schedulingEnabled: true"},
-		{"scopeModels", `{"scopeModels": true}`, "scopeModels: true"},
-		{"strictAgentFiles", `{"strictAgentFiles": true}`, "strictAgentFiles: true"},
-		{"toolDescriptionMode", `{"toolDescriptionMode": "compact"}`, `toolDescriptionMode: "compact"`},
 		{"fleetView", `{"fleetView": true}`, "fleetView: true"},
 		{"agentMentions", `{"agentMentions": "direct"}`, `agentMentions: "direct"`},
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
@@ -209,8 +199,8 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		})
 	}
 	t.Run("two settings are listed in one notice", func(t *testing.T) {
-		r := settingsRig(t, `{"showCost": true, "scopeModels": true}`)
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (scopeModels: true, showCost: true)")})
+		r := settingsRig(t, `{"showCost": true, "reportUsage": true}`)
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true, showCost: true)")})
 	})
 	t.Run("the global file counts and the project file overrides it", func(t *testing.T) {
 		dir := t.TempDir()

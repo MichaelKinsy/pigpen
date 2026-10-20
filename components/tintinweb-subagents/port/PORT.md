@@ -16,10 +16,20 @@ isolation, `@mention` agents, persistent memory, and a TUI of widgets, a fleet v
 extension cannot host a Pi session, so the shipped slice is the part that has a faithful Go form:
 
 - the three tools `Agent`, `get_subagent_result`, `steer_subagent` with the original's text and schemas;
-- agent types: the three defaults, custom agent files (three directories, strict mode, warn-once), settings
-  (`maxConcurrent`, `defaultMaxTurns`, `fallbackSubagent`, `disableDefaultAgents`), the spawn policy (#183);
-- background by default, a concurrency limit and a FIFO queue, handles (`explore`, `explore-2`) and names, a held
-  completion notification that a read of the result cancels, the event-bus protocol v2 `pi-tasks` speaks;
+- agent types: the three defaults, custom agent files (three directories, strict mode, warn-once), the spawn policy (#183);
+- the settings store: all 24 keys of `subagents.json` parsed like the original's `sanitize`, global then project merged
+  key by key, written back to the project file, applied through setter hooks; the keys of this slice are live
+  (`maxConcurrent`, `maxConcurrentForeground`, `defaultMaxTurns`, `graceTurns`, `defaultJoinMode`, `backgroundByDefault`,
+  `scopeModels`, `strictAgentFiles`, `toolDescriptionMode`, `fallbackSubagent`, `disableDefaultAgents`), the others are
+  stored and refused until their slice lands (`settingsView`);
+- the Agent tool's text and schema as pure functions of `descriptionFlags` (scheduling, worktree isolation, workflows,
+  mode), for all 8 combinations in each of `full`, `compact` and `custom` mode;
+- model resolution (fuzzy match, `scopeModels`, the RPC's model override) and the invocation precedence (an agent
+  file's fields outrank the call's);
+- background by default, two concurrency pools (background and foreground) and a FIFO queue, record GC and tombstones,
+  handles (`explore`, `explore-2`) and names, the join of completion notifications (`async`, `group`, `smart`), a held
+  completion notification that a read of the result cancels, the manager registry, the event-bus protocol v2
+  `pi-tasks` speaks (its listeners registered once the session has started);
 - `/agents`: the types and the agents of the session.
 
 Everything else is deferred, by name, in `port/slices.json` (reasons per file). The Agent tool is advertised **as the
@@ -34,13 +44,17 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M2 | `agent-types.ts`: registry, case-insensitive lookup, defaults, `resolveSpawnType` and `fallbackSubagent` | `agent_types.go` | 46 twins in `agent_types_twin_test.go`; `agent-unknown-type-strict` |
 | M3 | `custom-agents.ts`, `agent-file-toggle.ts` (serializer): agent files, tools field, inherit fields, name rules, warnings | `agents.go`, `frontmatter.go`, `serialize.go` | 76 twins in `custom_agents_twin*_test.go` (the loader reads PiG's agent dir, D2) |
 | M4 | `default-agents.ts`: the three default agents | `defaults_text.go` (extracted byte for byte) | `agent_types_twin_test.go`; `tool-tools` |
-| M5 | `settings.ts`: `subagents.json`, global then project | `settings.go` (five fields) | `settings_test.go`, `turnlimit_test.go` |
+| M5 | `settings.ts`: `subagents.json`, global then project, sanitize, save, apply, the events | `settings.go`, `settings_apply.go`, `features.go` | `settings_twin_test.go` (87 cases), `config_twin_test.go` (documented defaults), `settings_test.go`, `turnlimit_test.go` |
 | M6 | `prompts.ts`, `env.ts`: the agent's system prompt and environment block | `prompts.go` | `extra2_test.go` (exact strings), inserted text equal to Pi's in a recorded child run (see F2) |
-| M7 | `agent-manager.ts`: records, limit, queue, handles, abort, steer, consume | `manager.go` | `manager_test.go`, `extra_test.go`, `extra2_test.go` |
+| M7 | `agent-manager.ts`: records, the two pools, queue, handles, tombstones, GC, abort, steer, consume | `manager.go`, `registry.go` | `manager_twin_test.go` (foreground-concurrency, agent-manager-gc), `wiring_twin_test.go` (manager-registry-guard), `manager_test.go`, `extra_test.go`, `extra2_test.go` |
 | M8 | `agent-runner.ts`: an agent's run, the turn limit (steer at `maxTurns`, abort at `maxTurns + graceTurns`), `finalTurnError` | `runner.go`: a child `pig --mode rpc --no-session` | `runner_test.go`, `turnlimit_test.go`, `proc_unix_test.go` (a fake pig, the test binary re-executed) |
 | M9 | `cross-extension-rpc.ts`: ping, spawn, stop, consume | `bus.go` | `bus_test.go` |
 | M10 | completion events and the held notification (`index.ts` `formatTaskNotification`, `getStatusLabel`; `status-note.ts`; `xml.ts`) | `extension.go` | `tools_test.go`, `extra_test.go`, `turnlimit_test.go` |
 | M11 | the Agent, result and steer tools' behavior and texts | `tools.go` | `agent-not-found`, `agent-unknown-type-strict`; `tools_test.go` |
+| M12 | `index.ts` description builders, `invocation-config.ts` isolationParam, `workflow/tool-description.ts` (what it adds to the tool list) | `description.go`, `agent_text.json` (extracted by `gen-spec.py` from the source, checked against the golden) | `tooldesc_twin_test.go` (28 cases), `description_golden_test.go` (every combination against what Pi sent, `port/description-golden`), `tool-tools*` scenarios |
+| M13 | `model-resolver.ts`, `model-scope.ts`, `enabled-models.ts`, `invocation-config.ts` | `models.go`, `modelscope.go`, `enabledmodels.go`, `invocation.go` | `models_twin_test.go` (70 cases), `config_twin_test.go`, `policy_test.go`, `agent-model-not-found` |
+| M14 | `group-join.ts`, `index.ts` batch tracking and nudges | `groupjoin.go`, `joinmode.go` | `groupjoin_twin_test.go`, `policy_test.go` |
+| M15 | the wiring tests of the original (`*-wiring`, `wait-queued`, `rpc-*`, `background-by-default`, ...) | `extension.go`, `tools.go`, `bus.go` | `wiring_twin_test.go` |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
 
@@ -82,17 +96,21 @@ components; this port registers none.
    `inherit_context` with plain text and emulated `resume` by starting a new agent with the old answer in its prompt, a
    partial run, now removed). `isolated` starts the child with `--no-extensions`. The tool text is the original's, so the
    model is told about these; a call that uses one gets the refusal.
-4. **Agent files are read at start-up for the tool text** (the workspace of an extension process is fixed), and again when
-   the session starts and when the workspace differs. A file added later reaches `/agents` and the `subagent_type`
-   check on the next session event, not the tool description of the running session.
-5. **Settings.** Five of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
-   `fallbackSubagent`, `disableDefaultAgents`). A value of any other field that asks for an unported feature is
-   announced once when a session starts, with the refusal message (`refuse.go`, `settingRules`); a malformed value is
-   ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
-   port does not honor, are refused the same way.
+4. **Agent files** are read at start-up (the workspace of an extension process is fixed; with `strictAgentFiles` an
+   unreadable one aborts the load, as a throw from the factory does: here a panic out of `Extension()`, the way the SDK
+   itself fails a bad registration), and again on every `Agent` call, as the original does, so a file added mid-session is
+   usable at once. The tool *description* is fixed at registration, as in the original.
+5. **Settings.** All 24 keys are parsed and stored (`settings.go`); `subagents.json` is read once at start-up (and again
+   only when the session's workspace differs from it), as the original reads it once. The keys of other slices
+   (`schedulingEnabled`, `worktreeIsolation`, `workflowsEnabled`, `maxSubagentDepth`, `agentMentions`, `rememberAgents`,
+   `widgetMode`, `fleetView`, `showCost`, `showModel`, `viewerMarkdown`, `outputTranscript`, `reportUsage`) keep being
+   refused by `settingRules` until their slice lands; they are read through `settingsView()`. A malformed value is
+   ignored silently, as in the original; a malformed file warns on stderr. `subagents:settings_loaded` is emitted at the
+   first `session_start` (the original emits it from the factory, where the SDK has no connection yet), before
+   `subagents:ready`. `saveSettings` writes the project file for the settings menu (G5), which does not exist yet.
 6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
    widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
-   settings menu, usage and cost display, model scope and fuzzy model resolution (the child resolves `--model`).
+   settings menu, usage and cost display.
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
    commit for this port; the substitute proof is the 122 twins (two of them found real defects: an empty frontmatter
    block panicked the parser, and a plain value with `: ` was accepted where the original refuses it), the recorded
@@ -120,3 +138,44 @@ components; this port registers none.
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
    The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
    features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+
+## Slice: settings store, dispatch policy, tool description modes (G10, G13, G14, G18, G19)
+
+Behavior that changed against the first release, each because the original does it (twin or test in brackets):
+
+- `get_subagent_result` and `steer_subagent` take an id or an agent's handle (its name's slug, else its type, `explore-2`),
+  compared without case; they no longer take a prefix of an id or the raw name (`resolveAgentRef`; `TestResolveByIDAndHandle`).
+- A cancelled `wait: true` fails that tool call and leaves the agent running and unconsumed (`wait-queued`); a queued agent
+  reads as `No output.` until it starts, only a running one as "still running".
+- Stopping an agent marks it `stopped` at once, a queued one leaves without a completion event, a foreground agent is never
+  announced, an unconsumed record survives a session switch, and records are evicted ten minutes after they settle
+  (`agent-manager-gc`, `clear-completed-wiring`, `foreground-result-retrieval`).
+- The agent file's `model`, `thinking`, `max_turns`, `run_in_background` and `isolated` outrank the call's; the default
+  `Explore` model (`anthropic/claude-haiku-4-5`) is used when it is an available model, else the parent's (the first
+  release never forced it).
+- The RPC listeners are registered once, at the first `session_start`, and removed at shutdown; the internal options
+  (`parentAgentId`, `workflowId`, `depth`, `maxSubagentDepth`, `configCwd`, `rootSessionId`, `resumeSessionFile`, `reclaim`,
+  `blocking`) are dropped from an RPC or registry spawn, as the original drops them, instead of being refused. `stop`
+  and `consume` leave an owned child alone.
+- The manager registry (`registry.go`) is the original's `Symbol.for("pi-subagents:manager")` for other packages of the
+  same process (a fused Piglet Binary): the first activation owns it, only the owner's shutdown releases it.
+
+Twins of the original's tests (`pigeq twins check` over the 22 files of this slice): see Results below. Named skips and
+their reasons are in the twin files; the ones that have no Go form:
+
+- `agent-manager-gc`: "closes the evicted session's extension lifecycle before disposing it" (an agent is a child process,
+  there is no in-process session to dispose; the other eviction case asserts the eviction itself).
+- `foreground-concurrency`: "rethrows a drain-time startup failure" (the failure is strict worktree creation, G3).
+- `foreground-concurrency-wiring`: "says it is queued in the live tool result" (partial tool results for the renderer, G5).
+- `fallback-subagent-wiring`: scheduled-job and resume cases (G2, G9: the call is refused before dispatch).
+- `rpc-lifecycle-gating`: the two widget cases (G5).
+- `status-note-wiring`: the three compaction cases (G12, G7); the nested-records case runs without its `resume` probe,
+  which this port refuses before any lookup.
+- `tool-description-mode`: the example template is not in the vendored oracle (it vendors `src` and `test`); the pinned
+  commit's `examples/agent-tool-description.md` is kept byte for byte in `port/upstream-extra/` and the twin runs on it.
+
+What the harness cannot show: a child run is not comparable (F2), so the join modes, the pools and the background default
+are proved by their twins and `policy_test.go`, not by a scenario. Scenarios cover the model-facing text of every mode
+(`tool-tools*`), the model error (`agent-model-not-found`) and, for every combination of the three optional features,
+`port/description-golden` (recorded from the original under Pi, read by `description_golden_test.go`; the port refuses
+those features, so `pigeq check` cannot run them).

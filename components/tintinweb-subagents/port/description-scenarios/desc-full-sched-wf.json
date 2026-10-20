@@ -1,0 +1,33 @@
+{
+  "name": "desc-full-sched-wf",
+  "description": "The Agent tool's request in full mode with scheduling=True, worktreeIsolation=False, workflows=True.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"toolDescriptionMode\": \"full\", \"schedulingEnabled\": true, \"worktreeIsolation\": false, \"workflowsEnabled\": true}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}

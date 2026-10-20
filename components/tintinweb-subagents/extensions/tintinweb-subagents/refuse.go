@@ -130,13 +130,7 @@ type settingRule struct {
 }
 
 var settingRules = []settingRule{
-	{key: "maxConcurrentForeground", kind: "int", okInts: []int{0}},
-	{key: "defaultJoinMode", kind: "enum", enum: []string{"async", "group", "smart"}, okEnum: []string{"async"}},
-	{key: "backgroundByDefault", kind: "bool", okBool: true},
 	{key: "schedulingEnabled", kind: "bool", okBool: false},
-	{key: "scopeModels", kind: "bool", okBool: false},
-	{key: "strictAgentFiles", kind: "bool", okBool: false},
-	{key: "toolDescriptionMode", kind: "enum", enum: []string{"full", "compact", "custom"}, okEnum: []string{"full"}},
 	{key: "fleetView", kind: "bool", okBool: false},
 	{key: "agentMentions", kind: "enum", enum: []string{"model", "direct", "off"}, okEnum: []string{"off"}},
 	{key: "rememberAgents", kind: "bool", okBool: false},
@@ -176,15 +170,6 @@ func (r settingRule) unported(v any) bool {
 			return false
 		}
 		return !inList(r.okEnum, s)
-	}
-	return false
-}
-
-func inList(list []string, s string) bool {
-	for _, e := range list {
-		if e == s {
-			return true
-		}
 	}
 	return false
 }

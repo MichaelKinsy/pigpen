@@ -82,18 +82,18 @@ func TestAFailedFinalTurnIsAFailure(t *testing.T) {
 }
 
 func TestGraceTurnsSetting(t *testing.T) {
-	eq(t, sanitizeSettings(obj{"graceTurns": 3.0}).GraceTurns, 3)
+	eq(t, *sanitizeSettings(obj{"graceTurns": 3.0}).GraceTurns, 3)
 	for _, bad := range []any{0.0, 1001.0, 2.5, "3", -1.0} {
-		eq(t, sanitizeSettings(obj{"graceTurns": bad}).GraceTurns, 0)
+		eq(t, sanitizeSettings(obj{"graceTurns": bad}).GraceTurns == nil, true)
 	}
-	eq(t, sanitizeSettings(obj{"graceTurns": 1000.0}).GraceTurns, 1000)
+	eq(t, *sanitizeSettings(obj{"graceTurns": 1000.0}).GraceTurns, 1000)
 	cwd := t.TempDir()
 	t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
 	os.WriteFile(agentDir()+"/subagents.json", []byte(`{"graceTurns": 4}`), 0o644)
-	eq(t, loadSettings(cwd).GraceTurns, 4)
+	eq(t, *loadSettings(cwd).GraceTurns, 4)
 	os.MkdirAll(cwd+"/.pi", 0o755)
 	os.WriteFile(cwd+"/.pi/subagents.json", []byte(`{"graceTurns": 9}`), 0o644)
-	eq(t, loadSettings(cwd).GraceTurns, 9)
+	eq(t, *loadSettings(cwd).GraceTurns, 9)
 }
 
 func (c *fakeChild) finishWith(res *childResult) {
@@ -166,9 +166,7 @@ func TestNotFoundAndNotRunningTextsQuoteTheReferenceAsGiven(t *testing.T) {
 
 func TestAQueuedAgentHasARunningDuration(t *testing.T) {
 	r := startRig(t)
-	r.app.mgr.mu.Lock()
-	r.app.mgr.maxConcurrent = 1
-	r.app.mgr.mu.Unlock()
+	r.app.mgr.setMaxConcurrent(1)
 	r.must("Agent", obj{"prompt": "p", "description": "first", "subagent_type": "Plan"})
 	id := idFrom(t, r.must("Agent", obj{"prompt": "p", "description": "second", "subagent_type": "Plan"}))
 	out := r.must("get_subagent_result", obj{"agent_id": id})

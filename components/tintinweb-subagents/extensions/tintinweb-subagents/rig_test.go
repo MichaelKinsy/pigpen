@@ -98,11 +98,13 @@ type rig struct {
 	app   *app
 	fleet *fleet
 
-	exec   func(command string, args []string) (stdout string, code int)
-	mu     sync.Mutex
-	extBus map[string][]string
-	goBus  map[string][]func(any)
-	emits  []string
+	exec func(command string, args []string) (stdout string, code int)
+	// modelState answers the host's model registry (`ctx.ModelRegistry()`): {"models": [...], "providers": {...}}.
+	modelState any
+	mu         sync.Mutex
+	extBus     map[string][]string
+	goBus      map[string][]func(any)
+	emits      []string
 }
 
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
@@ -126,6 +128,10 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	switch method {
+	case "getModelRegistryState":
+		if r.modelState != nil {
+			return r.modelState, ""
+		}
 	case "exec":
 		if r.exec != nil {
 			var argv []string

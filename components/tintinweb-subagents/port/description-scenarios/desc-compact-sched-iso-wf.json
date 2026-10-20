@@ -1,0 +1,33 @@
+{
+  "name": "desc-compact-sched-iso-wf",
+  "description": "The Agent tool's request in compact mode with scheduling=True, worktreeIsolation=True, workflows=True.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"toolDescriptionMode\": \"compact\", \"schedulingEnabled\": true, \"worktreeIsolation\": true, \"workflowsEnabled\": true}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "tool-tools-custom-global",
+  "description": "toolDescriptionMode custom reads the global template when the project has none.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false, \"toolDescriptionMode\": \"custom\"}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "agentFiles": {
+    "agent-tool-description.md": "GLOBAL CUSTOM\n{{compactTypeList}}"
+  }
+}
