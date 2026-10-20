@@ -99,22 +99,24 @@ type Config struct {
 	// need no consent). A different Backend without a matching Consent is not used until /warden enable.
 	Consent string `json:"consent"`
 	// Backend names where judgments go: "" (none: offline patterns only), "typesafe" or "own-model".
-	Backend     string         `json:"backend"`
-	Mode        string         `json:"mode"` // steer | confirm | advise
-	TimeoutMs   int            `json:"timeoutMs"`
-	MaxRequests int            `json:"maxRequests"`
-	Action      ActionConfig   `json:"action"`
-	Stuck       StuckConfig    `json:"stuck"`
-	Done        DoneConfig     `json:"done"`
-	Slop        SlopConfig     `json:"slop"`
-	Security    SecurityConfig `json:"security"`
-	Rules       RulesConfig    `json:"rules"`
-	Context     ContextConfig  `json:"context"`
-	Runaway     RunawayConfig  `json:"runaway"`
-	Notify      NotifyConfig   `json:"notify"`
-	Judge       JudgeConfig    `json:"judge"`
-	Subagent    SubagentConfig `json:"subagent"`
-	Widget      WidgetConfig   `json:"widget"`
+	Backend string `json:"backend"`
+	// BackendRefusal is why the configured backend was refused (judgments stay off); never serialized.
+	BackendRefusal string         `json:"-"`
+	Mode           string         `json:"mode"` // steer | confirm | advise
+	TimeoutMs      int            `json:"timeoutMs"`
+	MaxRequests    int            `json:"maxRequests"`
+	Action         ActionConfig   `json:"action"`
+	Stuck          StuckConfig    `json:"stuck"`
+	Done           DoneConfig     `json:"done"`
+	Slop           SlopConfig     `json:"slop"`
+	Security       SecurityConfig `json:"security"`
+	Rules          RulesConfig    `json:"rules"`
+	Context        ContextConfig  `json:"context"`
+	Runaway        RunawayConfig  `json:"runaway"`
+	Notify         NotifyConfig   `json:"notify"`
+	Judge          JudgeConfig    `json:"judge"`
+	Subagent       SubagentConfig `json:"subagent"`
+	Widget         WidgetConfig   `json:"widget"`
 	// SteerVisible shows steers in the transcript; Notices notify the user of each finding.
 	SteerVisible bool             `json:"steerVisible"`
 	Notices      bool             `json:"notices"`

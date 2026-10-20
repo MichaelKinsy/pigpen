@@ -60,6 +60,14 @@ type warden struct {
 	budget   *Budget
 	repeats  *SteerRepeatWindow
 
+	// Config sources (config_runtime.go): the project file, the trust decision for trustCwd, a signature of the
+	// files the configuration was built from, and the sections a config lacked.
+	projectPath    string
+	projectTrusted bool
+	trustCwd       string
+	cfgSig         string
+	shapeMissing   []string
+
 	steersThisRun int
 	doneNudged    bool
 	continuation  bool
@@ -110,19 +118,19 @@ func truthy(s string) bool {
 func (w *warden) load(ctx sdk.Context) {
 	home, homeErr := ctx.ConfigHome()
 	path := ""
-	cfg := DefaultConfig()
-	var err error
+	file, cfg := DefaultConfig(), DefaultConfig()
+	problem := ""
 	if homeErr == nil {
 		path = ConfigPath(home)
-		cfg, err = LoadConfig(path)
+		file, cfg, problem = w.readConfigFiles(ctx, path)
 	}
 	w.cfgPath, w.loadErr = path, ""
 	if homeErr != nil {
 		w.loadErr = "warden: could not find the PiG config directory: " + homeErr.Error() + ". Defaults are in use."
-	} else if err != nil {
-		w.loadErr = "warden: could not read " + path + ": " + err.Error() + ". Defaults are in use."
+	} else if problem != "" {
+		w.loadErr = problem
 	}
-	w.fileCfg = cfg
+	w.fileCfg = file
 	if truthy(w.opts.Getenv("PIGPEN_WARDEN_ENABLED")) {
 		cfg.Enabled = true
 		if b := strings.ToLower(strings.TrimSpace(w.opts.Getenv("PIGPEN_WARDEN_BACKEND"))); b == BackendTypeSafe || b == BackendOwnModel {
@@ -136,16 +144,21 @@ func (w *warden) load(ctx sdk.Context) {
 		cfg.SteerVisible = truthy(v)
 	}
 	w.cfg, w.loaded = cfg, true
+	w.cfgSig = w.configSig()
 	w.budget.Max = cfg.MaxRequests
 }
 
 func (w *warden) config(ctx sdk.Context) Config {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	if !w.loaded {
 		w.load(ctx)
+	} else {
+		w.reloadIfChanged(ctx)
 	}
-	return w.cfg
+	cfg := w.cfg
+	w.mu.Unlock()
+	w.flushConfigNotices(ctx, cfg)
+	return cfg
 }
 
 // update applies a command's change to the running configuration and to the file, and saves the file. The
@@ -157,13 +170,14 @@ func (w *warden) update(ctx sdk.Context, change func(*Config)) (Config, error) {
 	if !w.loaded {
 		w.load(ctx)
 	}
-	file := w.fileCfg
+	before, file := w.fileCfg, w.fileCfg
 	change(&file)
-	if err := SaveConfig(w.cfgPath, file); err != nil {
+	if err := SaveConfigChange(w.cfgPath, before, file); err != nil {
 		return w.cfg, err
 	}
 	w.fileCfg = file
 	change(&w.cfg)
+	w.cfgSig = w.configSig()
 	w.budget.Max = w.cfg.MaxRequests
 	return w.cfg, nil
 }
@@ -271,6 +285,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) 
 	if enabled && !ctx.HasUI() {
 		w.disclose(ctx)
 	}
+	w.config(ctx) // says once what the configuration could not apply (config_runtime.go)
 	w.refresh(ctx)
 	return nil, nil
 }
