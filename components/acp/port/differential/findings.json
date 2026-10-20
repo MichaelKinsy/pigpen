@@ -1,0 +1,503 @@
+{
+ "findings": [
+  {
+   "id": "F01.1",
+   "scenario": "*",
+   "note": "identity: agent title, version and the login label say pi-acp/pi or pig-acp/PiG (D8, D11)",
+   "at": "a>c response initialize",
+   "path": "result.agentInfo.title",
+   "oracle": "pi ACP adapter",
+   "port": "PiG ACP adapter"
+  },
+  {
+   "id": "F01.2",
+   "scenario": "*",
+   "note": "identity: agent title, version and the login label say pi-acp/pi or pig-acp/PiG (D8, D11)",
+   "at": "a>c response initialize",
+   "path": "result.agentInfo.version",
+   "oracle": "0.0.34",
+   "port": "0.2.0"
+  },
+  {
+   "id": "F01.3",
+   "scenario": "*",
+   "note": "identity: agent title, version and the login label say pi-acp/pi or pig-acp/PiG (D8, D11)",
+   "at": "a>c response initialize",
+   "path": "result.authMethods.0.description",
+   "oracle": "Start pi in an interactive terminal to configure API keys or login",
+   "port": "Start pig in an interactive terminal to configure API keys or login"
+  },
+  {
+   "id": "F02.4",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response initialize",
+   "path": "result.authMethods.0.args.0",
+   "oracle": "--terminal-login",
+   "port": "--pig"
+  },
+  {
+   "id": "F02.5",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response initialize",
+   "path": "result.authMethods.0.args.1",
+   "oracle": "<absent>",
+   "port": "/opt/askuser/bin/pig"
+  },
+  {
+   "id": "F02.6",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response initialize",
+   "path": "result.authMethods.0.args.2",
+   "oracle": "<absent>",
+   "port": "--terminal-login"
+  },
+  {
+   "id": "F02.7",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response initialize",
+   "path": "result.authMethods.0._meta.terminal-auth.command",
+   "oracle": "<ACP>",
+   "port": "/s/bin/<ACP>"
+  },
+  {
+   "id": "F02.8",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response initialize",
+   "path": "result.authMethods.0._meta.terminal-auth.args.0",
+   "oracle": "--terminal-login",
+   "port": "--pig"
+  },
+  {
+   "id": "F02.9",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response initialize",
+   "path": "result.authMethods.0._meta.terminal-auth.args.1",
+   "oracle": "<absent>",
+   "port": "/opt/askuser/bin/pig"
+  },
+  {
+   "id": "F02.10",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response initialize",
+   "path": "result.authMethods.0._meta.terminal-auth.args.2",
+   "oracle": "<absent>",
+   "port": "--terminal-login"
+  },
+  {
+   "id": "F03.11",
+   "scenario": "*",
+   "note": "built-in command descriptions say pig instead of pi (D8)",
+   "at": "a>c notification session/update available_commands_update",
+   "path": "params.update.availableCommands.5.description",
+   "oracle": "Get/set pi steering message delivery mode (how queued steering messages are delivered)",
+   "port": "Get/set pig steering message delivery mode (how queued steering messages are delivered)"
+  },
+  {
+   "id": "F03.12",
+   "scenario": "*",
+   "note": "built-in command descriptions say pig instead of pi (D8)",
+   "at": "a>c notification session/update available_commands_update",
+   "path": "params.update.availableCommands.6.description",
+   "oracle": "Get/set pi follow-up message delivery mode (how queued follow-up messages are delivered)",
+   "port": "Get/set pig follow-up message delivery mode (how queued follow-up messages are delivered)"
+  },
+  {
+   "id": "F03.13",
+   "scenario": "*",
+   "note": "built-in command descriptions say pig instead of pi (D8)",
+   "at": "a>c notification session/update available_commands_update",
+   "path": "params.update.availableCommands.7.description",
+   "oracle": "Show pi changelog",
+   "port": "Show pig changelog"
+  },
+  {
+   "id": "F07.14",
+   "scenario": "*",
+   "note": "the project directory is .pig for PiG, .pi for Pi (D7)",
+   "at": "a>c response session/new",
+   "path": "result._meta.piAcp.startupInfo",
+   "oracle": "<AGENT> v<VERSION>\n---\n\n## Context\n- <CWD>/AGENTS.md\n\n## Skills\n- <CWD>/.pi/skills/demo/SKILL.md\n\n## Prompts\n- /review\n",
+   "port": "<AGENT> v<VERSION>\n---\n\n## Context\n- <CWD>/AGENTS.md\n\n## Skills\n- <CWD>/.pig/skills/demo/SKILL.md\n\n## Prompts\n- /review\n"
+  },
+  {
+   "id": "F07.15",
+   "scenario": "*",
+   "note": "the project directory is .pig for PiG, .pi for Pi (D7)",
+   "at": "a>c notification session/update agent_message_chunk",
+   "path": "params.update.content.text",
+   "oracle": "<AGENT> v<VERSION>\n---\n\n## Context\n- <CWD>/AGENTS.md\n\n## Skills\n- <CWD>/.pi/skills/demo/SKILL.md\n\n## Prompts\n- /review\n",
+   "port": "<AGENT> v<VERSION>\n---\n\n## Context\n- <CWD>/AGENTS.md\n\n## Skills\n- <CWD>/.pig/skills/demo/SKILL.md\n\n## Prompts\n- /review\n"
+  },
+  {
+   "id": "F03.16",
+   "scenario": "*",
+   "note": "built-in command descriptions say pig instead of pi (D8)",
+   "at": "a>c notification session/update available_commands_update",
+   "path": "params.update.availableCommands.6.description",
+   "oracle": "Get/set pi steering message delivery mode (how queued steering messages are delivered)",
+   "port": "Get/set pig steering message delivery mode (how queued steering messages are delivered)"
+  },
+  {
+   "id": "F03.17",
+   "scenario": "*",
+   "note": "built-in command descriptions say pig instead of pi (D8)",
+   "at": "a>c notification session/update available_commands_update",
+   "path": "params.update.availableCommands.7.description",
+   "oracle": "Get/set pi follow-up message delivery mode (how queued follow-up messages are delivered)",
+   "port": "Get/set pig follow-up message delivery mode (how queued follow-up messages are delivered)"
+  },
+  {
+   "id": "F03.18",
+   "scenario": "*",
+   "note": "built-in command descriptions say pig instead of pi (D8)",
+   "at": "a>c notification session/update available_commands_update",
+   "path": "params.update.availableCommands.8.description",
+   "oracle": "Show pi changelog",
+   "port": "Show pig changelog"
+  },
+  {
+   "id": "F04.19",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/new",
+   "path": "error.message",
+   "oracle": "Invalid params",
+   "port": "Invalid params: cwd must be an absolute path: relative/dir"
+  },
+  {
+   "id": "F04.20",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/new",
+   "path": "error.data",
+   "oracle": "cwd must be an absolute path: relative/dir",
+   "port": "<absent>"
+  },
+  {
+   "id": "F04.21",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/new",
+   "path": "error.message",
+   "oracle": "Invalid params",
+   "port": "Invalid params: cwd is required"
+  },
+  {
+   "id": "F04.22",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/new",
+   "path": "error.data",
+   "oracle": {
+    "_errors": [],
+    "cwd": {
+     "_errors": [
+      "Invalid input: expected string, received undefined"
+     ]
+    }
+   },
+   "port": "<absent>"
+  },
+  {
+   "id": "F05.23",
+   "scenario": "*",
+   "note": "/changelog: PiG has no changelog accessor, so the port refuses by name (D13, F3)",
+   "at": "a>c notification session/update agent_message_chunk",
+   "path": "params.update.content.text",
+   "oracle": "Changelog not found (couldn't locate pi installation).",
+   "port": "@pi-in-go/pigpen-acp (Go port) does not support /changelog without a CHANGELOG.md beside the pig binary yet. Install the original extension, git:github.com/svkozak/<ACP>@b0581c9c1d675e634234674484247008b03d69b4, which runs unchanged in PiG."
+  },
+  {
+   "id": "F04.24",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/set_config_option",
+   "path": "error.message",
+   "oracle": "Invalid params",
+   "port": "Invalid params: Unknown config option: nonsense"
+  },
+  {
+   "id": "F04.25",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/set_config_option",
+   "path": "error.data",
+   "oracle": "Unknown config option: nonsense",
+   "port": "<absent>"
+  },
+  {
+   "id": "F06.26",
+   "scenario": "*",
+   "note": "session/set_model: the original (SDK 0.26.0) answers Method not found; the port serves it (extra capability, F6)",
+   "at": "a>c response session/set_model",
+   "path": "error",
+   "oracle": {
+    "code": -32601,
+    "message": "\"Method not found\": session/set_model",
+    "data": {
+     "method": "session/set_model"
+    }
+   },
+   "port": "<absent>"
+  },
+  {
+   "id": "F06.27",
+   "scenario": "*",
+   "note": "session/set_model: the original (SDK 0.26.0) answers Method not found; the port serves it (extra capability, F6)",
+   "at": "a>c response session/set_model",
+   "path": "result",
+   "oracle": "<absent>",
+   "port": {}
+  },
+  {
+   "id": "F06.28",
+   "scenario": "*",
+   "note": "session/set_model: the original (SDK 0.26.0) answers Method not found; the port serves it (extra capability, F6)",
+   "side": "port",
+   "entry": {
+    "dir": "a>c",
+    "kind": "notification",
+    "method": "session/update",
+    "params": {
+     "sessionId": "<UUID1>",
+     "update": {
+      "currentModeId": "high",
+      "sessionUpdate": "current_mode_update"
+     }
+    }
+   }
+  },
+  {
+   "id": "F06.29",
+   "scenario": "*",
+   "note": "session/set_model: the original (SDK 0.26.0) answers Method not found; the port serves it (extra capability, F6)",
+   "side": "port",
+   "entry": {
+    "dir": "a>c",
+    "kind": "notification",
+    "method": "session/update",
+    "params": {
+     "sessionId": "<UUID1>",
+     "update": {
+      "configOptions": [
+       {
+        "type": "select",
+        "id": "model",
+        "category": "model",
+        "name": "Model",
+        "description": "Select the model for this session",
+        "currentValue": "acp-llm/acp-1",
+        "options": [
+         {
+          "value": "acp-llm/acp-1",
+          "name": "acp-llm/ACP One",
+          "description": null
+         }
+        ]
+       },
+       {
+        "type": "select",
+        "id": "thought_level",
+        "category": "thought_level",
+        "name": "Thinking",
+        "description": "Set the reasoning effort for this session",
+        "currentValue": "high",
+        "options": [
+         {
+          "value": "off",
+          "name": "Thinking: off",
+          "description": null
+         },
+         {
+          "value": "minimal",
+          "name": "Thinking: minimal",
+          "description": null
+         },
+         {
+          "value": "low",
+          "name": "Thinking: low",
+          "description": null
+         },
+         {
+          "value": "medium",
+          "name": "Thinking: medium",
+          "description": null
+         },
+         {
+          "value": "high",
+          "name": "Thinking: high",
+          "description": null
+         }
+        ]
+       }
+      ],
+      "sessionUpdate": "config_option_update"
+     }
+    }
+   }
+  },
+  {
+   "id": "F06.30",
+   "scenario": "*",
+   "note": "session/set_model: the original (SDK 0.26.0) answers Method not found; the port serves it (extra capability, F6)",
+   "side": "port",
+   "entry": {
+    "dir": "a>c",
+    "kind": "notification",
+    "method": "session/update",
+    "params": {
+     "sessionId": "<UUID1>",
+     "update": {
+      "sessionUpdate": "usage_update",
+      "size": 100000,
+      "used": 0
+     }
+    }
+   }
+  },
+  {
+   "id": "F06.31",
+   "scenario": "*",
+   "note": "session/set_model: the original (SDK 0.26.0) answers Method not found; the port serves it (extra capability, F6)",
+   "at": "a>c response session/set_model",
+   "path": "error.code",
+   "oracle": -32601,
+   "port": -32602
+  },
+  {
+   "id": "F04.32",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/set_model",
+   "path": "error.message",
+   "oracle": "\"Method not found\": session/set_model",
+   "port": "Invalid params: Unknown modelId: nope"
+  },
+  {
+   "id": "F04.33",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/set_model",
+   "path": "error.data",
+   "oracle": {
+    "method": "session/set_model"
+   },
+   "port": "<absent>"
+  },
+  {
+   "id": "F04.34",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/load",
+   "path": "error.message",
+   "oracle": "Invalid params",
+   "port": "Invalid params: Unknown sessionId: no-such-session"
+  },
+  {
+   "id": "F04.35",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/load",
+   "path": "error.data",
+   "oracle": "Unknown sessionId: no-such-session",
+   "port": "<absent>"
+  },
+  {
+   "id": "F04.36",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/prompt",
+   "path": "error.message",
+   "oracle": "Invalid params",
+   "port": "Invalid params: Unknown sessionId: no-such-session"
+  },
+  {
+   "id": "F04.37",
+   "scenario": "*",
+   "note": "invalid-params errors carry their text in message, not in data (D1)",
+   "at": "a>c response session/prompt",
+   "path": "error.data",
+   "oracle": "Unknown sessionId: no-such-session",
+   "port": "<absent>"
+  },
+  {
+   "id": "F01.38",
+   "scenario": "*",
+   "note": "identity: agent title, version and the login label say pi-acp/pi or pig-acp/PiG (D8, D11)",
+   "at": "a>c response session/new",
+   "path": "error.data.authMethods.0.description",
+   "oracle": "Start pi in an interactive terminal to configure API keys or login",
+   "port": "Start pig in an interactive terminal to configure API keys or login"
+  },
+  {
+   "id": "F02.39",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response session/new",
+   "path": "error.data.authMethods.0.args.0",
+   "oracle": "--terminal-login",
+   "port": "--pig"
+  },
+  {
+   "id": "F02.40",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response session/new",
+   "path": "error.data.authMethods.0.args.1",
+   "oracle": "<absent>",
+   "port": "/opt/askuser/bin/pig"
+  },
+  {
+   "id": "F02.41",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response session/new",
+   "path": "error.data.authMethods.0.args.2",
+   "oracle": "<absent>",
+   "port": "--terminal-login"
+  },
+  {
+   "id": "F02.42",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response session/new",
+   "path": "error.data.authMethods.0._meta.terminal-auth.command",
+   "oracle": "<ACP>",
+   "port": "/s/bin/<ACP>"
+  },
+  {
+   "id": "F02.43",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response session/new",
+   "path": "error.data.authMethods.0._meta.terminal-auth.args.0",
+   "oracle": "--terminal-login",
+   "port": "--pig"
+  },
+  {
+   "id": "F02.44",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response session/new",
+   "path": "error.data.authMethods.0._meta.terminal-auth.args.1",
+   "oracle": "<absent>",
+   "port": "/opt/askuser/bin/pig"
+  },
+  {
+   "id": "F02.45",
+   "scenario": "*",
+   "note": "the terminal login repeats --pig <pig> and the Piglet/pig arguments so a login starts the agent the sessions use (D10)",
+   "at": "a>c response session/new",
+   "path": "error.data.authMethods.0._meta.terminal-auth.args.2",
+   "oracle": "<absent>",
+   "port": "--terminal-login"
+  }
+ ]
+}
