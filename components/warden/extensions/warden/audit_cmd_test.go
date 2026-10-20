@@ -34,14 +34,11 @@ func auditHarness(t *testing.T, o harnessOpts) (*harness, *hookSet, string) {
 	t.Helper()
 	o.cwd = t.TempDir()
 	hs := &hookSet{m: map[string]func(){}}
-	o.answer = func(method string, _ map[string]any) (map[string]any, string, bool) {
-		hs.run(method)
-		return nil, "", false
-	}
+	o.before = hs.run
 	return startHarness(t, o), hs, o.cwd
 }
 
-func lastNotice(h *harness) string {
+func auditLastNotice(h *harness) string {
 	n := h.notices()
 	if len(n) == 0 {
 		return ""
@@ -110,14 +107,14 @@ func TestAuditPromptAndWrittenReport(t *testing.T) {
 func TestAuditStaleReport(t *testing.T) {
 	old := time.Now().Add(-time.Hour)
 	h, _ := runAudit(t, func(r string) { os.WriteFile(r, []byte("x"), 0o644); os.Chtimes(r, old, old) }, nil)
-	if got := lastNotice(h); got != "Audit finished but the report file was not updated — the agent may have reported findings in chat instead." {
+	if got := auditLastNotice(h); got != "Audit finished but the report file was not updated — the agent may have reported findings in chat instead." {
 		t.Fatal(got)
 	}
 }
 
 func TestAuditMissingReport(t *testing.T) {
 	h, _ := runAudit(t, nil, nil)
-	if got := lastNotice(h); got != "Agent did not write an audit report. The model may have reported findings in chat instead." {
+	if got := auditLastNotice(h); got != "Agent did not write an audit report. The model may have reported findings in chat instead." {
 		t.Fatal(got)
 	}
 }
