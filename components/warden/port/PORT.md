@@ -6,7 +6,7 @@
 | Judge seam | `DevMortimer/pi-typesafe` commit `ed439f834665ad6fc652787f5ba7c23852566d49` (`ask`, questions, `errors.ts`), MIT |
 | Oracle | Pi 0.87.1 hosting the original; Node 24.19.0 |
 | Target | PiG 0.3.0+0.87.1, SDK of a 0.3.0 pre-release build (`63c6ba456`) (host getters return `(value, error)`), go1.27.1; shared client `components/typesafe` |
-| Original's tests | 1,264 cases in `port/oracle/tests`; 434 have a Go twin, 830 are named skipped subtests with a reason (see below; with the guard core lane stacked on the rules lane) |
+| Original's tests | 1,264 cases in `port/oracle/tests`; 473 have a Go twin, 791 are named skipped subtests with a reason (see below; with the guard core and security lanes stacked on the rules lane) |
 
 ## File-to-file mapping
 
@@ -107,7 +107,7 @@ input, compaction, agent_settled).
 | D9 | user rules are JavaScript regexps | Go (RE2) regexps; a pattern that does not compile is skipped | language |
 | D10 | request state keys in insertion order | sorted | Go maps |
 | D11 | the stuck and done requests send the user's request as typed (`stuck.ts` `buildStuckRequest`, `done.ts` `buildDoneRequest`) | redacted, like the action request's task | the disclosure promises a redacted request; a secret pasted into a prompt must not leave on a stuck or done check (review) |
-| D12 | desktop notifier commands run with Node's `execFile` (title and body in `PI_WARDEN_TITLE` / `PI_WARDEN_BODY` for PowerShell and configured commands) | the same, through `os/exec` in the extension process; a configured command is spawned inside the hook and only the wait for its exit is off the handler, the probe chain and built-in notifiers run in a goroutine | the host's `Context.Exec` takes no environment (an SDK need: `ExecOptions.Env`), and `execFile` is what the original does |
+| D12 | desktop notifier commands run with Node's `execFile` (title and body in `PI_WARDEN_TITLE` / `PI_WARDEN_BODY` for PowerShell and configured commands) | the same, through `os/exec` in the extension process; a configured command is spawned inside the hook and only the wait for its exit is off the handler, the probe chain and built-in notifiers run in a goroutine | `Context.Exec` mirrors `pi.exec`, which takes no environment option, and `execFile` (not `pi.exec`) is what the original does |
 
 ## Results
 
@@ -257,3 +257,105 @@ rows, the performance section's measurements, and the `go test -race -count=24` 
   previous head and no binary-size or cold-start measurement yet (those need a built Binary; the package-init test bounds
   start-up allocation at 150 KB and passes).
 - Not run here: `npm run generate/check/test` (an imladris copy has no git history; run from a bundle clone at stacking).
+
+## Security lane (port/warden-security-1)
+
+Scope: the runaway guard, the prose check and the restatement record, desktop notifications, the security-write and
+slop steers, and the detection half of `redact.ts` (`findSecrets`, `looksLikeSecretValue`, `syntheticish`,
+`partitionSecrets`, `maskSecrets`, `secretFingerprint`, `secretIds`) with the security half of `output.ts`
+(`evaluateOutput`, `buildOutputRequest`, `securityNotice`). The tool-output masking path in `tool_result` (masking,
+notice, trace, duplicate note, compression) is the context lane's `tool_output.go`: it calls `MaskSecrets`,
+`EvaluateOutput` and `SecurityNotice`, so masking is not observable from this lane alone. `output_context_standins.go`
+holds the three names `EvaluateOutput` takes from the context lane (`OutputFormat`, `CompressionLearner`,
+`retentionQuestions` / `applyRetention` / `learnerSuggest`); the lane that lands second deletes it.
+
+- **Twins (39 added):** `credential-shapes.test.ts` 8 of 8, `runaway.test.ts` 9 of 9, `prose.test.ts` 5 of 5,
+  `notify.test.ts` 5 of 5, `output.test.ts` 5 of 15 (32, 53, 71, 133, 183), `guard.test.ts` 129 and 155 (and the
+  `findSecrets` assertion of 100), `extension.test.ts` 757 (security-write), 1635 (slop), 1880 (prose), 1974 (runaway),
+  2049 (notify). Left skipped: `output.test.ts` 22 (the config loader: configui lane) and 86 to 218 (compression,
+  excerpts, the stored-output ledger: context lane; 86 also asks the retention and format questions, so the security
+  half is covered by `TestBoundedOutputRequestsRedactBeforeSamplingAndBatchTheSecurityQuestions`); the
+  `extension.test.ts` cases about `tool_result` masking (384 to 593, 2788) are the context lane's. Not carried: the
+  widget-chip assertion of 1635 (`slop: stub 0.92, hedging 0.75`), because the port draws its action line in
+  `steer.go` `traceLine`, which names no slop scores.
+- **Deviation D12:** notifier commands run through `os/exec` in the extension process (see the table above).
+- **Recovery turn:** `runawayRecovery` sends `{deliverAs: followUp, triggerTurn: true}` once per user prompt, then a
+  note that starts nothing; `triggerTurn: false` is the Go default, so the second form carries no explicit flag. Under
+  the harness's scripted model the whole reply arrives as one chunk, so the guard's abort cannot shorten it and
+  neither the original nor the port starts a recovery turn there (`runaway-single-chunk-reply-not-aborted`): the abort,
+  the follow-up and the once-per-prompt rule are proved by `TestRunawayGuardAbortsRecoversOnceAndNeedsNoTypeSafe`.
+- **Per-token cost:** registering `message_update` makes the host send every streamed event to the extension. The handler
+  itself costs 160 ns and no allocation per event (`BenchmarkRunawayMessageUpdateHandler`); the round trip is the SDK's.
+- **Detection by candidates:** Go's `regexp` cannot skip ahead through a case-insensitive pattern or one that opens with
+  `\b`, so the first port of the credential scan cost 45 ms on a 64 KB output (58 times the original) and `Redact` cost
+  2 ms on a 2 KB reply. `redact_fast.go` finds the candidate offsets with `strings.Index`, matches the credential-key head
+  by hand and runs the remaining patterns only there; the token shapes drop their leading `\b` (a literal prefix Go can
+  skip to) and check the boundary by hand. `redact_reference_test.go` keeps the plain regexp implementations and compares
+  both on the 2,552-command corpus and on 12,000 generated texts; the runaway and prose text splitting, and the
+  restatement measure, have the same kind of reference test.
+
+### Results
+
+- Layer 1 (imladris, tern-ci:v2): `go vet` clean for linux, darwin and windows; `go test` ok;
+  `go test -race -count=24` on the security lane's tests ok, `-race -count=1` on the whole package ok.
+  (`go test -race -count=24` on the whole package does not finish in the default 10 minutes; the rules lint tests
+  dominate.) `TestRulesTurnRulesPassJudgesAtMostFiveUnseenFiles`, `TestRulesAgentStartDoesNotWaitForTheSnapshot`
+  and `TestRulesPastTheCapOneNoticePerSession` fail now and then on a loaded box with `TempDir RemoveAll cleanup:
+  directory not empty` (a background write of the rules lane still running when the test ends); reported to the rules
+  lane. They made some mutants look killed for the wrong reason in a first run; every such line was re-run against the
+  security tests alone.
+- Layer-1 mutations (`port/mutate_security.py`, loaded by `mutate.py`; `port/mutation-results.txt`): 88 added, 87
+  killed, 1 documented equivalent (`sec-value-needs-one-class`: a single-class value is all digits, rejected earlier as a
+  plain number, or all lower case, which is neither digits nor mixed case).
+- pigeq (`pigeq` built from `pigeq-harness-gaps` 3a76fb32, with `--accept-gaps port/accepted-gaps.json`): 7 scenarios
+  added, all `pigeq run` identical for the original under Pi, the original under PiG's Node runtime and the Go port, with
+  goldens recorded from the original under Pi: `prose-trend-nudges-the-next-prompt` (judge fixture: the request bodies
+  of both clients are equal, and the nudge reaches the next prompt's model request), `prose-disabled-judges-nothing`,
+  `write-judged-security-and-slop-steers`, `write-security-guard-off-asks-no-security-question`,
+  `notify-disabled-stays-silent`, `runaway-single-chunk-reply-not-aborted`, `runaway-ordinary-reply-untouched`.
+  G1 is disproved for the original: pointing `typesafeBackend` at a fixture server in the original's `agentFiles` config
+  and `TYPESAFE_BASE_URL` plus `homeFiles` at the port makes both clients ask the same fixture. Judge fixtures must answer
+  exactly the asked question ids.
+- pigeq mutations (`port/mutations.json`, 10 rows `sec-*`): 10 of 10 killed by the scenarios.
+- `scenarios-blocked/notify-held-call-runs-the-configured-command.json`: the shim's `exec` event and the held call's
+  `tool_execution_end` race (the original under PiG's Node runtime differs from the original under Pi in one of two
+  consecutive runs); the behaviour is covered at layer 1, including the real spawn
+  (`TestNotifierCommandsSpawnInTheCall`).
+- **Host ordering races found (PiG vs Pi; reported, not normalised):** on a loaded box, in roughly one run of four a
+  scenario with a steer or a held call differs from its golden at the first event where the host's `message_end` of
+  a user or steer message and the model request swap places (`held-call-released-by-approval`,
+  `repeated-failing-call-steered`, `drop-database-command`, `rm-authorized-by-the-prompt-runs`,
+  `prose-disabled-judges-nothing`, `write-security-guard-off-asks-no-security-question`). It is not caused by this lane:
+  with this lane's `message_start` and `message_update` handlers unregistered, 5 of 24 runs of four such scenarios
+  failed the same way. Each passes on a rerun.
+
+### Performance
+
+Imladris container on cores 96-151, load average about 60 over 56 cores, so these are upper bounds. Median of 10
+interleaved runs (`port/bench/run.sh`: the Go benchmark binary and the original under Node 24 with
+`--experimental-transform-types`, alternating), same inputs (`port/bench/security-bench.ts` and
+`security_bench_test.go`; a 64 KB tool output with one key line, a 3.5 KB streamed reply, a 2 KB prose reply):
+
+| Case | Go port ns/op | B/op | allocs/op | original under Node ns/op | port / original |
+|---|---|---|---|---|---|
+| `maskSecrets` 64 KB | 747,358 | 231,468 | 54 | 767,996 | 0.97 |
+| `findSecrets` 64 KB | 599,411 | 161,954 | 22 | 701,882 | 0.85 |
+| runaway: 3.5 KB streamed in 7-character deltas, checks included | 422,184 | 86,854 | 402 | 482,328 | 0.88 |
+| `restatedShare` of a 5-sentence reply against four finals | 21,573 | 5,640 | 88 | 33,134 | 0.65 |
+| `buildProseRequest` (2 KB reply) | 29,198 | 7,766 | 11 | 29,796 | 0.98 |
+| `message_update` handler, one delta | 165 | 39 | 0 | (none) | |
+
+Against the previous release (`redactRef`, the plain regexp `Redact`, in the same binary): `Redact` of a 64 KB output
+72.7 ms to 0.97 ms, of a 2 KB reply 2.10 ms to 31 us. Before the candidate scanning the first measurements of this
+lane were 45 ms (`maskSecrets`, 58 times the original), 38 ms (`findSecrets`), 3.0 ms (runaway stream, 6.2 times) and
+97 us (`restatedShare`, 2.9 times); each was profiled (regexp scanning of case-insensitive and `\b` patterns,
+regexp whitespace splitting, map-based word sets) and fixed.
+
+- Extension Binary (`npm run build:piglet -- pig-warden`, imladris): 72,429,728 bytes against 71,540,896 for the previous
+  release (0.1.2): +888,832 bytes (+1.2%), for all lanes stacked below and including this one.
+- Registration time (`port/bench/startup.sh`, the fake host, median of 10 medians of 30 starts): 156.5 us against
+  145.0 us for the previous release (+8%, all stacked lanes).
+- Cold start of the Binary and of the original under Pi were not measured: the original is loaded by Pi's TypeScript
+  loader and has no comparable in-process registration point.
+- No new Go dependency. `/warden status` probes the desktop notifier once per session when `notify.enabled` is on
+  (up to six executables, 3 s each, as upstream does); nothing else of this lane blocks a host call.

@@ -103,3 +103,37 @@ func BenchmarkRunawayMessageUpdateHandler(b *testing.B) {
 }
 
 func sdkZeroContext() sdk.Context { return sdk.Context{} }
+
+// Redact runs on every judged request; the reference is the plain regexp implementation of the previous release
+// (redact_reference_test.go).
+func BenchmarkRedact64KB(b *testing.B) {
+	text := benchOutput()
+	b.ReportAllocs()
+	for b.Loop() {
+		benchSink = Redact(text)
+	}
+}
+
+func BenchmarkRedact64KBPreviousRelease(b *testing.B) {
+	text := benchOutput()
+	b.ReportAllocs()
+	for b.Loop() {
+		benchSink = redactRef(text)
+	}
+}
+
+func BenchmarkRedactReply2KB(b *testing.B) {
+	text := strings.Repeat("Great question! Let me walk you through it. ", 48)
+	b.ReportAllocs()
+	for b.Loop() {
+		benchSink = Redact(text)
+	}
+}
+
+func BenchmarkRedactReply2KBPreviousRelease(b *testing.B) {
+	text := strings.Repeat("Great question! Let me walk you through it. ", 48)
+	b.ReportAllocs()
+	for b.Loop() {
+		benchSink = redactRef(text)
+	}
+}
