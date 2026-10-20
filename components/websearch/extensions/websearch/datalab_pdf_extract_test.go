@@ -479,3 +479,46 @@ func TestDatalabRedirectAndFilename(t *testing.T) {
 		}
 	}
 }
+
+// Failure paths the upstream file leaves out: the error body is cut at 300 characters, a rejected
+// PUT, and a missing reference after the confirm step.
+func TestDatalabFailurePaths(t *testing.T) {
+	datalabEnv(t, func(c netCall) *netReply {
+		if strings.HasSuffix(c.URL, "/files/upload") {
+			return rp(netReply{Status: 500, Body: "  " + strings.Repeat("x", 400) + "  "})
+		}
+		return nil
+	})
+	_, err := ExtractPDFViaDatalab(bg(), []byte{0}, datalabOpts("Doc", 1))
+	if want := "Datalab PDF conversion failed: HTTP 500 Internal Server Error: " + strings.Repeat("x", 300); err == nil || err.Error() != want {
+		t.Fatalf("error %v", err)
+	}
+
+	n := datalabEnv(t, func(c netCall) *netReply {
+		if strings.Contains(c.URL, "/put/") {
+			return rp(netReply{Status: 403})
+		}
+		return nil
+	})
+	_, err = ExtractPDFViaDatalab(bg(), []byte{0}, datalabOpts("Doc", 1))
+	if err == nil || err.Error() != "Datalab PDF upload failed: HTTP 403 Forbidden" {
+		t.Fatalf("error %v", err)
+	}
+	waitDeleted(t, n)
+	if n.countURL("/convert") != 0 {
+		t.Fatal("no conversion after a rejected upload")
+	}
+
+	n = datalabEnv(t, func(c netCall) *netReply {
+		switch {
+		case strings.HasSuffix(c.URL, "/files/upload"):
+			return rp(jsonReply(map[string]any{"file_id": 7, "upload_url": "https://storage.test/put/abc"}))
+		case strings.HasSuffix(c.URL, "/confirm"):
+			return rp(jsonReply(map[string]any{"file_id": 7}))
+		}
+		return nil
+	})
+	_, err = ExtractPDFViaDatalab(bg(), []byte{0}, datalabOpts("Doc", 1))
+	wantErr(t, err, `missing file reference`)
+	waitDeleted(t, n)
+}

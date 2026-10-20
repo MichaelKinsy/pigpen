@@ -5,7 +5,7 @@
 //
 // Run it from components/websearch. The output is deterministic (fixed IVs, no timestamps). The
 // original's extraction of every fixture is recorded by port/record-pdf-extract.mjs.
-import { createHash, createCipheriv } from "node:crypto";
+import { createCipheriv, createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,6 +56,7 @@ function makeEncryption(kind, userPassword = "") {
 			},
 		};
 	}
+	if (kind === "aes-256") return makeAES256(userPassword);
 	let h = md5(ownerPad);
 	for (let i = 0; i < 50; i++) h = md5(h);
 	const ownerKey = h.subarray(0, 16);
@@ -73,6 +74,58 @@ function makeEncryption(kind, userPassword = "") {
 			const k = md5(key, [n & 255, (n >> 8) & 255, (n >> 16) & 255, g & 255, (g >> 8) & 255], "sAlT");
 			const iv = Buffer.alloc(16, n & 255);
 			const c = createCipheriv("aes-128-cbc", k, iv);
+			return Buffer.concat([iv, c.update(data), c.final()]);
+		},
+	};
+}
+
+
+// PDF 2.0 key derivation (ISO 32000-2, algorithm 2.B).
+function hash2B(password, salt, udata) {
+	const sha = (alg, data) => createHash(alg).update(data).digest();
+	let k = sha("sha256", Buffer.concat([password, salt, udata]));
+	for (let i = 0; ; i++) {
+		const k1 = Buffer.concat(Array(64).fill(Buffer.concat([password, k, udata])));
+		const c = createCipheriv("aes-128-cbc", k.subarray(0, 16), k.subarray(16, 32));
+		c.setAutoPadding(false);
+		const e = Buffer.concat([c.update(k1), c.final()]);
+		let mod = 0;
+		for (let j = 0; j < 16; j++) mod += e[j];
+		k = sha(["sha256", "sha384", "sha512"][mod % 3], e);
+		if (i >= 63 && e[e.length - 1] <= i - 32) break;
+	}
+	return k.subarray(0, 32);
+}
+
+// Standard security handler V5/R6 (AES-256), user password only; the owner entries use a fixed
+// owner password.
+function makeAES256(userPassword) {
+	const fileKey = Buffer.from("00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff", "hex");
+	const pw = Buffer.from(userPassword, "utf8");
+	const owner = Buffer.from("owner-secret");
+	const salts = (b) => Buffer.alloc(8, b);
+	const cbcNoPad = (key, data) => {
+		const c = createCipheriv("aes-256-cbc", key, Buffer.alloc(16));
+		c.setAutoPadding(false);
+		return Buffer.concat([c.update(data), c.final()]);
+	};
+	const U = Buffer.concat([hash2B(pw, salts(1), Buffer.alloc(0)), salts(1), salts(2)]);
+	const UE = cbcNoPad(hash2B(pw, salts(2), Buffer.alloc(0)), fileKey);
+	const O = Buffer.concat([hash2B(owner, salts(3), U), salts(3), salts(4)]);
+	const OE = cbcNoPad(hash2B(owner, salts(4), U), fileKey);
+	const P = -4;
+	const permsPlain = Buffer.alloc(16, 0x55);
+	permsPlain.writeInt32LE(P, 0);
+	permsPlain.writeUInt32LE(0xffffffff, 4);
+	permsPlain.write("Tadb", 8, "latin1");
+	const ecb = createCipheriv("aes-256-ecb", fileKey, null);
+	ecb.setAutoPadding(false);
+	const perms = Buffer.concat([ecb.update(permsPlain), ecb.final()]);
+	return {
+		dict: `<< /Filter /Standard /V 5 /R 6 /Length 256 /CF << /StdCF << /CFM /AESV3 /AuthEvent /DocOpen /Length 32 >> >> /StmF /StdCF /StrF /StdCF /O ${hexOf(O)} /U ${hexOf(U)} /OE ${hexOf(OE)} /UE ${hexOf(UE)} /Perms ${hexOf(perms)} /P ${P} >>`,
+		encrypt(n, g, data) {
+			const iv = Buffer.alloc(16, n & 255);
+			const c = createCipheriv("aes-256-cbc", fileKey, iv);
 			return Buffer.concat([iv, c.update(data), c.final()]);
 		},
 	};
@@ -239,4 +292,101 @@ write("many-pages.pdf", simpleDoc(Array.from({ length: 120 }, (_, i) => textPage
 	const words = "the quarterly results show steady growth across all regions while operating costs remained flat and customer retention improved because support response times fell below target".split(" ");
 	const para = (seed) => Array.from({ length: 12 }, (_, line) => Array.from({ length: 11 }, (_, w) => words[(seed * 7 + line * 5 + w * 3) % words.length]).join(" "));
 	write("report-30p.pdf", simpleDoc(Array.from({ length: 30 }, (_, i) => textPage([`Section ${i + 1}: Results`, "", ...para(i), "", ...para(i + 3)], { lead: 14 })), { flate: true, title: "Annual Report", author: "Finance Team" }));
+}
+
+// 12. AES-256 (PDF 2.0) with the empty user password.
+write("encrypted-aes256-empty.pdf", simpleDoc([textPage(["Encrypted with AES-256"])], { title: "AES-256 doc", encrypt: ["aes-256", ""], flate: true }));
+
+// 13. A PDF 1.5 file: the page tree and catalog live in an object stream, found through a
+// cross-reference stream (what current writers produce).
+{
+	const plain = [
+		"<< /Type /Catalog /Pages 2 0 R >>",
+		"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+		"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+		null, // 4: content stream
+		helvetica,
+		"<< /Title (Object stream doc) /Author (Packer) >>",
+	];
+	const content = deflateSync(Buffer.from(textPage(["Text from an object stream document"])), { level: 9 });
+	const inStream = [1, 2, 3, 5, 6];
+	let header = "";
+	let body = "";
+	for (const n of inStream) {
+		header += `${n} ${body.length} `;
+		body += plain[n - 1] + "\n";
+	}
+	const objStm = deflateSync(Buffer.from(header + body, "latin1"), { level: 9 });
+	const parts = [Buffer.from("%PDF-1.5\n")];
+	const offsets = {};
+	let size = parts[0].length;
+	const add = (n, buf) => {
+		offsets[n] = size;
+		const chunk = Buffer.concat([Buffer.from(`${n} 0 obj\n`), buf, Buffer.from("\nendobj\n")]);
+		parts.push(chunk);
+		size += chunk.length;
+	};
+	add(4, Buffer.concat([Buffer.from(`<< /Filter /FlateDecode /Length ${content.length} >>\nstream\n`), content, Buffer.from("\nendstream")]));
+	add(7, Buffer.concat([Buffer.from(`<< /Type /ObjStm /N ${inStream.length} /First ${header.length} /Filter /FlateDecode /Length ${objStm.length} >>\nstream\n`), objStm, Buffer.from("\nendstream")]));
+	const xrefPos = size;
+	const entry = (type, a, b) => Buffer.from([type, (a >> 24) & 255, (a >> 16) & 255, (a >> 8) & 255, a & 255, (b >> 8) & 255, b & 255]);
+	const rows = [entry(0, 0, 65535)];
+	for (let n = 1; n <= 7; n++) rows.push(inStream.includes(n) ? entry(2, 7, inStream.indexOf(n)) : n === 8 ? entry(1, xrefPos, 0) : entry(1, offsets[n], 0));
+	rows.push(entry(1, xrefPos, 0));
+	const xref = deflateSync(Buffer.concat(rows), { level: 9 });
+	add(8, Buffer.concat([Buffer.from(`<< /Type /XRef /Size 9 /W [1 4 2] /Root 1 0 R /Info 6 0 R /Filter /FlateDecode /Length ${xref.length} >>\nstream\n`), xref, Buffer.from("\nendstream")]));
+	parts.push(Buffer.from(`startxref\n${xrefPos}\n%%EOF\n`));
+	write("objstm-xrefstream.pdf", Buffer.concat(parts));
+}
+
+// 14. Layout that PDF.js treats specially: text rotated by 90 degrees, a form XObject between
+// two text runs, text outside the crop box, text drawn through an inline image, and resources,
+// the media box and a content array inherited through the page tree.
+write("rotated.pdf", simpleDoc(["BT /F1 12 Tf 0 1 -1 0 300 100 Tm (Rotated upward text) Tj ET BT /F1 12 Tf 72 720 Td (Upright after rotated) Tj ET"]));
+{
+	const builders = [
+		() => "<< /Type /Catalog /Pages 2 0 R >>",
+		() => "<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> /XObject << /Fm1 6 0 R >> >> >>",
+		() => "<< /Type /Page /Parent 2 0 R /Contents [4 0 R 5 0 R] >>",
+		(c) => c.stream("", "BT /F1 12 Tf 72 720 Td (Before form) Tj ET /Fm1 Do"),
+		(c) => c.stream("", "BT /F1 12 Tf 72 680 Td (After form) Tj ET BT /F1 12 Tf -600 50 Td (Hidden left) Tj ET BT /F1 12 Tf 72 2000 Td (Hidden above) Tj ET"),
+		(c) => c.stream("/Type /XObject /Subtype /Form /BBox [0 0 612 792] /Matrix [1 0 0 1 0 0]", "BT /F1 12 Tf 72 700 Td (Inside form) Tj ET"),
+		() => helvetica,
+	];
+	write("form-inherited-offpage.pdf", buildPdf(builders));
+}
+write(
+	"inline-image.pdf",
+	simpleDoc([
+		"BT /F1 12 Tf 72 720 Td (Before image) Tj ET\nq 10 0 0 10 100 600 cm\nBI /W 2 /H 2 /CS /G /BPC 8 ID \x00\x7f\x80\xff\nEI Q\nBT /F1 12 Tf 72 680 Td (After image) Tj ET",
+	]),
+);
+
+// 15. Fonts: a /Differences encoding with ligature glyph names, simple fonts whose ToUnicode
+// CMap maps ordinary character codes to ligature code points, and Hebrew in visual order (PDF.js
+// reorders right-to-left runs into logical order).
+{
+	const hex2 = (n) => n.toString(16).padStart(2, "0");
+	const bf = (pairs) => `/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CMapName /Adobe-Identity-UCS def /CMapType 2 def 1 begincodespacerange <00> <FF> endcodespacerange ${pairs.length} beginbfchar ${pairs.map(([c, u]) => `<${hex2(c)}> <${u.toString(16).toUpperCase().padStart(4, "0")}>`).join(" ")} endbfchar endcmap CMapName currentdict /CMap defineresource pop end end`;
+	const logical = [..."\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd"];
+	const hebrew = [...new Set(logical.filter((c) => c !== " "))];
+	const code = (ch) => (ch === " " ? " " : String.fromCharCode(65 + hebrew.indexOf(ch)));
+	const visual = [...logical].reverse().map(code).join("");
+	const widths = (n) => `/FirstChar 65 /LastChar ${64 + n} /Widths [${Array(n).fill(500).join(" ")}]`;
+	const content = `BT /F1 12 Tf 14 TL 72 720 Td (\x01nd \x02ow o\x03ce \x04 \x05) Tj T* /F2 12 Tf (AB) Tj T* /F3 12 Tf (abc) Tj ET BT /F4 12 Tf 72 640 Td (${visual}) Tj ET`;
+	const builders = [
+		() => "<< /Type /Catalog /Pages 2 0 R >>",
+		() => "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+		() => "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R /F2 6 0 R /F3 7 0 R /F4 8 0 R >> >> /Contents 4 0 R >>",
+		(c) => c.stream("", content),
+		() => "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding << /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [1 /fi /fl /ffi /Euro /eacute] >> >>",
+		() => `<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman ${widths(2)} /ToUnicode 20 0 R >>`,
+		() => "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /FirstChar 97 /LastChar 99 /Widths [500 500 500] /ToUnicode 21 0 R >>",
+		() => `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica ${widths(hebrew.length)} /ToUnicode 22 0 R >>`,
+	];
+	while (builders.length < 19) builders.push(() => "null");
+	builders.push((c) => c.stream("", bf([[65, 0xfb01], [66, 0xfb02]])));
+	builders.push((c) => c.stream("", bf([[97, 0x66], [98, 0x69], [99, 0xfb00]])));
+	builders.push((c) => c.stream("", bf(hebrew.map((ch, i) => [65 + i, ch.codePointAt(0)]))));
+	write("fonts-encodings-rtl.pdf", buildPdf(builders));
 }

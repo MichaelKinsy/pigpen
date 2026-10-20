@@ -679,10 +679,26 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	}
 
 	if pdf != nil {
-		if _, err := readLimited(resp.Body, maxBytes, sizeErr); err != nil {
-			return fail(err.Error())
+		// extract.ts:1298-1322
+		data, err := readLimited(resp.Body, maxBytes, sizeErr)
+		if err != nil {
+			return fail(pdfFailureMessage(err))
 		}
-		return fail(unsupported("PDF text extraction").Error())
+		if ctx.Err() != nil {
+			return httpExtracted{ExtractedContent: abortedResult(rawURL)}
+		}
+		result, err := ExtractPDFToMarkdown(ctx, data, rawURL, PDFExtractOptions{})
+		if err != nil {
+			if ctx.Err() != nil {
+				return httpExtracted{ExtractedContent: abortedResult(rawURL)}
+			}
+			return fail(pdfFailureMessage(err))
+		}
+		content := fmt.Sprintf("PDF extracted and saved to: %s\n\nPages: %d\nCharacters: %d", result.OutputPath, result.Pages, result.Chars)
+		if o.Mode == "answer" {
+			content = result.Content
+		}
+		return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: result.Title, Content: content}}
 	}
 
 	if strings.Contains(contentType, "application/octet-stream") || strings.Contains(contentType, "image/") ||
@@ -745,6 +761,17 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		return incomplete(title, markdown, jsMsg("Extracted content appears incomplete"))
 	}
 	return httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Title: title, Content: AppendDeclaredWebLinks(markdown, declared)}, declared: declared}
+}
+
+// pdfFailureMessage is the error text of a failed PDF fetch: size and configuration errors and
+// credential failures keep their own text, anything else is a failed extraction.
+func pdfFailureMessage(err error) string {
+	msg := err.Error()
+	var credErr *CredentialResolutionError
+	if strings.HasPrefix(msg, "PDF exceeds configured pdf.maxSizeMB limit") || errors.As(err, &credErr) || isConfigParseError(msg) {
+		return msg
+	}
+	return "PDF extraction failed: " + msg
 }
 
 func leadingDigits(s string) string {

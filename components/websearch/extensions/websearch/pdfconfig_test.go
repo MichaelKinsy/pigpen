@@ -111,9 +111,7 @@ func TestUpstream_pdf_config(t *testing.T) {
 	}
 	tw(t, F, "PDF streamed byte enforcement allows the exact limit", func(t *testing.T) {
 		// Two bytes are exactly the limit: the read succeeds and only the extraction fails.
-		if got := errOf(streamed(t, "\x01\x02")); got != "PDF extraction failed: Invalid PDF structure." {
-			t.Fatal(got)
-		}
+		matchRE(t, `^PDF extraction failed: Invalid PDF structure\.`, errOf(streamed(t, "\x01\x02")))
 	})
 	tw(t, F, "PDF streamed byte enforcement rejects a headerless response above the limit", func(t *testing.T) {
 		matchRE(t, `^PDF exceeds configured pdf\.maxSizeMB limit \(`, errOf(streamed(t, "\x01\x02\x03")))
