@@ -982,5 +982,17 @@
   "file": "opencode_headers.go",
   "find": "provider == \"opencode\" || provider == \"opencode-go\"",
   "replace": "provider == \"opencode\""
+ },
+ {
+  "name": "auto-guidance-codex-login-dropped",
+  "file": "search.go",
+  "find": "\"  1. Use /login to sign in with a Codex subscription for OpenAI web search\\n\" +\n",
+  "replace": ""
+ },
+ {
+  "name": "auto-guidance-renumbered",
+  "file": "search.go",
+  "find": "\"  5. Explicitly select provider:",
+  "replace": "\"  6. Explicitly select provider:"
  }
 ]
