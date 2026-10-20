@@ -1400,7 +1400,7 @@
  {
   "name": "text-padding-dropped",
   "file": "text.go",
-  "find": "lines[i] = l + strings.Repeat(\" \", pad)",
+  "find": "lines[i] = l + blanks[:pad]",
   "replace": "lines[i] = l"
  },
  {
@@ -1424,8 +1424,8 @@
  {
   "name": "wrap-styling-not-carried",
   "file": "text.go",
-  "find": "current, currentWidth = t.active()+token, tokenWidth",
-  "replace": "current, currentWidth = token, tokenWidth"
+  "find": "current.WriteString(t.active())",
+  "replace": "current.WriteString(\"\")"
  },
  {
   "name": "wrap-underline-not-closed",
