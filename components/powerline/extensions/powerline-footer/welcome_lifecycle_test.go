@@ -181,7 +181,7 @@ func startWelcome(t *testing.T, quiet bool, mode string, extra map[string]any) *
 
 func (r *wlRig) startSession(reason string) {
 	r.t.Helper()
-	r.h.Fire("session_start", map[string]any{"reason": reason})
+	r.h.FireAll("session_start", map[string]any{"reason": reason})
 }
 
 // key delivers one terminal chunk the way the host does and reports whether an extension listener consumed it.
@@ -310,7 +310,7 @@ func TestWelcomeLifecycleTwins(t *testing.T) {
 						}
 					} else {
 						// Shutdown must finish even while the filesystem operation remains blocked.
-						r.h.Fire("session_shutdown", map[string]any{"reason": "quit"})
+						r.h.FireAll("session_shutdown", map[string]any{"reason": "quit"})
 					}
 					releaseOnce()
 					wait()
@@ -419,13 +419,13 @@ func overlayRig(t *testing.T) (*wlRig, HostCall) {
 
 func TestWelcomeIsDismissedByEveryEventTheOriginalWires(t *testing.T) {
 	dismissals := map[string]func(r *wlRig){
-		"agent_start": func(r *wlRig) { r.h.Fire("agent_start", nil) },
+		"agent_start": func(r *wlRig) { r.h.FireAll("agent_start", nil) },
 		"tool_call": func(r *wlRig) {
-			r.h.Fire("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
+			r.h.FireAll("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
 		},
-		"session_shutdown": func(r *wlRig) { r.h.Fire("session_shutdown", map[string]any{"reason": "quit"}) },
+		"session_shutdown": func(r *wlRig) { r.h.FireAll("session_shutdown", map[string]any{"reason": "quit"}) },
 		"powerline_off":    func(r *wlRig) { r.h.Command("powerline", "") },
-		"new_session":      func(r *wlRig) { r.h.Fire("session_start", map[string]any{"reason": "resume"}) },
+		"new_session":      func(r *wlRig) { r.h.FireAll("session_start", map[string]any{"reason": "resume"}) },
 	}
 	for name, dismiss := range dismissals {
 		t.Run("header/"+name, func(t *testing.T) {
@@ -594,7 +594,7 @@ func TestWelcomeDismissedBeforeTheHostMountedItIsHiddenWhenItDoes(t *testing.T) 
 	r.startSession("startup")
 	r.timers.runStartupWork()()
 	wlWait(t, "the overlay", func() bool { return len(r.customCalls()) > 0 })
-	r.h.Fire("agent_start", nil)
+	r.h.FireAll("agent_start", nil)
 	r.quiescent()
 	if r.hides() != 0 {
 		t.Fatal("nothing to hide before the host mounted it")
@@ -722,7 +722,7 @@ func TestWelcomeIsNotShownAfterThePowerlineWasToggledOff(t *testing.T) {
 	r := startWelcome(t, true, "tui", nil)
 	r.startSession("startup")
 	r.h.Command("powerline", "") // off
-	r.h.Fire("session_start", map[string]any{"reason": "startup"})
+	r.h.FireAll("session_start", map[string]any{"reason": "startup"})
 	r.timers.runStartupWork()()
 	r.quiescent()
 	if n := r.installations(); n != 0 {
@@ -759,7 +759,7 @@ func TestWelcomeDismissalStopsThePendingTimer(t *testing.T) {
 	if r.timers.pendingAfter() != 1 {
 		t.Fatalf("pending timeouts = %d, want 1", r.timers.pendingAfter())
 	}
-	r.h.Fire("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
+	r.h.FireAll("tool_call", map[string]any{"toolName": "read", "toolCallId": "c1", "input": map[string]any{}})
 	if n := r.timers.pendingAfter(); n != 0 {
 		t.Errorf("pending timeouts after the dismissal = %d, want 0 (clearTimeout)", n)
 	}
@@ -788,7 +788,7 @@ func TestWelcomeHeaderDismissedBetweenTheCheckAndTheInstallIsNotInstalled(t *tes
 	r := startWelcome(t, true, "tui", nil)
 	var once sync.Once
 	t.Cleanup(powerline.SetWelcomeAfterHeaderMark(func() {
-		once.Do(func() { r.h.Fire("agent_start", nil) })
+		once.Do(func() { r.h.FireAll("agent_start", nil) })
 	}))
 	r.startSession("startup")
 	r.timers.runStartupWork()()
@@ -817,7 +817,7 @@ func TestWelcomeHeaderRemovalWaitsForAnInstallThatIsAlreadyDecided(t *testing.T)
 	var once sync.Once
 	t.Cleanup(powerline.SetWelcomeBeforeHeaderInstall(func() {
 		once.Do(func() {
-			go r.h.Fire("agent_start", nil)
+			go r.h.FireAll("agent_start", nil)
 			time.Sleep(150 * time.Millisecond) // the dismissal reaches the header lock
 		})
 	}))
