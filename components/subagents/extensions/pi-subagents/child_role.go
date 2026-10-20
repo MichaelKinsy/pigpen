@@ -34,6 +34,12 @@ type structuredRoleConfig struct {
 // childRoleConfig is the content of the file PIG_SUBAGENT_CHILD_ROLE names.
 type childRoleConfig struct {
 	Structured *structuredRoleConfig `json:"structuredOutput,omitempty"`
+	// Watchdog is the child watchdog's config (the original's ChildWatchdogConfig, JSON), WatchdogStatusFile the file the child
+	// appends its status events to, one JSON line each; the watchdog slice reads both (watchdog_child.go).
+	Watchdog           json.RawMessage `json:"watchdog,omitempty"`
+	WatchdogStatusFile string          `json:"watchdogStatusFile,omitempty"`
+	// RequiredTools are the tool names the child's runtime must register besides structured_output (`watchdog_diff`, ...).
+	RequiredTools []string `json:"requiredTools,omitempty"`
 	// Err is why the role file could not be read (the child then registers nothing it cannot honor).
 	Err error `json:"-"`
 }
@@ -59,13 +65,22 @@ func childRole() *childRoleConfig {
 func writeChildRoleConfig(rt *structuredOutputRuntime) (string, error) {
 	cfg := childRoleConfig{Structured: &structuredRoleConfig{SchemaPath: rt.SchemaPath, OutputPath: rt.OutputPath,
 		AcceptanceReportPath: rt.AcceptanceReportPath, AcceptanceReportRequired: rt.AcceptanceReportRequired}}
+	return writeChildRole(filepath.Dir(rt.SchemaPath), &cfg)
+}
+
+// writeChildRole stores cfg as role.json in dir and returns its path (what PIG_SUBAGENT_CHILD_ROLE names).
+func writeChildRole(dir string, cfg *childRoleConfig) (string, error) {
 	b, err := json.Marshal(cfg)
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(filepath.Dir(rt.SchemaPath), "role.json")
+	path := filepath.Join(dir, "role.json")
 	return path, os.WriteFile(path, b, 0o600)
 }
+
+// childRoleExtras are the registrations other slices add to a child (the child-side watchdog, its diff tool); each is called
+// with the child's extension and role, in order, after the structured output tool. A returned error is reported on stderr.
+var childRoleExtras []func(e *sdk.Extension, cfg *childRoleConfig) error
 
 // childExtension is the extension of a child process: the tools of its role.
 func childExtension(cfg *childRoleConfig) *sdk.Extension {
@@ -76,6 +91,11 @@ func childExtension(cfg *childRoleConfig) *sdk.Extension {
 	}
 	if cfg.Structured != nil {
 		if err := registerStructuredOutputTool(e, cfg.Structured); err != nil {
+			fmt.Fprintln(os.Stderr, "pi-subagents child role:", err)
+		}
+	}
+	for _, extra := range childRoleExtras {
+		if err := extra(e, cfg); err != nil {
 			fmt.Fprintln(os.Stderr, "pi-subagents child role:", err)
 		}
 	}
