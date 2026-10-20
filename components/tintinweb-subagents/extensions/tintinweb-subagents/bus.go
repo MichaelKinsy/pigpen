@@ -82,6 +82,11 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 
 // start builds the child's spec from the agent type and spawns it.
 func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
+	return a.startOwned(ctx, "", typ, prompt, description, name, model, thinking, maxTurns, background, isolated)
+}
+
+// startOwned is start for an agent a workflow run owns (owner is the run id).
+func (a *app) startOwned(ctx sdk.Context, owner, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
 	a.mu.Lock()
 	cwd := a.cwd
 	a.mu.Unlock()
@@ -143,5 +148,5 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	if description == "" {
 		description = strings.Join(strings.Fields(prompt)[:min(5, len(strings.Fields(prompt)))], " ")
 	}
-	return a.mgr.spawn(resolved, description, name, spec, background), nil
+	return a.mgr.spawnOwned(owner, resolved, description, name, spec, background), nil
 }

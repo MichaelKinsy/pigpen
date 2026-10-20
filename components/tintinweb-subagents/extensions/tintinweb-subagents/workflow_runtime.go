@@ -989,6 +989,7 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 		rt.inflight[agentID] = true
 
 		var result workflowSpawnResult
+		var refusal error
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
@@ -1027,6 +1028,9 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 			}
 			if err != nil {
 				result = workflowSpawnResult{Error: err.Error()}
+				if wfIsRefusal(err) {
+					refusal = err
+				}
 				return
 			}
 			if result.OK {
@@ -1059,6 +1063,17 @@ func (rt *workflowRunState) handleAgent(c *wfCoroutine, callID int, payload work
 				e.Attempt, e.LastAttemptReason = attempt, "user-retry"
 			}))
 			continue
+		}
+
+		// A feature this port does not do (workflow_host.go workflowRefusalError) fails the run, not just this agent.
+		if refusal != nil {
+			rt.recordJournal(workflowJournalEntry{Index: index, Key: key, OK: false, Resumed: resumeMark})
+			rt.emit(with(func(e *workflowAgentEntry) {
+				e.QueuedAt, e.StartedAt = &queuedAt, &startedAt
+				e.State, e.Error = entryError, refusal.Error()
+			}))
+			rt.respond(callID, false, nil, refusal.Error(), true)
+			return
 		}
 
 		// Counted before the response is sent, so the very call that spent them already sees them in budget.spent().

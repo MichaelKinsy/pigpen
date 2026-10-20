@@ -37,13 +37,15 @@ type childSpec struct {
 
 // childResult is what a finished child reports.
 type childResult struct {
-	Text      string
-	ToolUses  int
-	Tokens    int
-	Turns     int
-	WrappedUp bool   // steered to wrap up at the turn limit. upstream: agent-runner.ts `steered`
-	Aborted   bool   // aborted after the grace turns past the limit. upstream: agent-runner.ts `aborted`
-	Failure   string // the final turn failed (a provider error, or the output limit with no text). upstream: finalTurnError
+	Text     string
+	ToolUses int
+	Tokens   int
+	// OutputTokens are the output tokens alone (Tokens is the total).
+	OutputTokens int
+	Turns        int
+	WrappedUp    bool   // steered to wrap up at the turn limit. upstream: agent-runner.ts `steered`
+	Aborted      bool   // aborted after the grace turns past the limit. upstream: agent-runner.ts `aborted`
+	Failure      string // the final turn failed (a provider error, or the output limit with no text). upstream: finalTurnError
 }
 
 // defaultGraceTurns is how many turns past the limit an agent that was told to wrap up may take before it is
@@ -354,6 +356,8 @@ func (c *rpcChild) wait() (*childResult, error) {
 			if t, ok := d["tokens"].(map[string]any); ok {
 				f, _ := t["total"].(float64)
 				res.Tokens = int(f)
+				out, _ := t["output"].(float64)
+				res.OutputTokens = int(out)
 			}
 			if f, ok := d["toolCalls"].(float64); ok {
 				res.ToolUses = int(f)

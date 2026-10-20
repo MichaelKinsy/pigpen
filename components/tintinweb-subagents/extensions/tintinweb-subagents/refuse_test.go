@@ -130,7 +130,6 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		{"reclaim", obj{"reclaim": obj{"handle": "a"}}, `the spawn RPC option "reclaim"`},
 		{"bypassQueue", obj{"bypassQueue": true}, `the spawn RPC option "bypassQueue"`},
 		{"blocking", obj{"blocking": true}, `the spawn RPC option "blocking"`},
-		{"workflowId", obj{"workflowId": "w"}, `the spawn RPC option "workflowId"`},
 		{"foreground", obj{"isBackground": false}, "foreground agents through the spawn RPC (isBackground: false)"},
 	}
 	for _, c := range cases {
@@ -195,7 +194,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
 		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
-		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
 		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
 		{"reportUsage", `{"reportUsage": true}`, "reportUsage: true"},
 		{"showCost", `{"showCost": true}`, "showCost: true"},
@@ -230,7 +228,7 @@ func TestSettingsThePortMatchesAreNotRefused(t *testing.T) {
 	r := settingsRig(t, `{"maxConcurrent": 3, "defaultMaxTurns": 5, "graceTurns": 2, "disableDefaultAgents": false, "fallbackSubagent": "none",
 		"maxConcurrentForeground": 0, "defaultJoinMode": "async", "backgroundByDefault": true, "schedulingEnabled": false, "scopeModels": false,
 		"strictAgentFiles": false, "toolDescriptionMode": "full", "fleetView": false, "agentMentions": "off", "rememberAgents": false,
-		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": false, "maxSubagentDepth": 1,
+		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": true, "maxSubagentDepth": 1,
 		"reportUsage": false, "showCost": false, "showModel": false, "showCost2": "x", "fleetView2": 1, "agentMentions2": 1}`)
 	eq(t, len(notices(r)), 0)
 	r = settingsRig(t, `{"widgetMode": "sideways", "maxSubagentDepth": "deep", "scopeModels": "yes"}`) // wrong types and unknown values are ignored, as in the original

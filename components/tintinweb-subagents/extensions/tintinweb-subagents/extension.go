@@ -28,6 +28,9 @@ type app struct {
 	latest          *sdk.Context
 	timers          map[string]*time.Timer
 	settingsNotice  string
+
+	wf     *workflowFeature // the SubagentWorkflow tool's state (workflow_tool.go)
+	wfOnce sync.Once
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
@@ -111,6 +114,7 @@ func (a *app) register(e *sdk.Extension) {
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
 		a.refuseSettings(ctx)
+		a.workflowSessionStart(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
 		return nil, nil
@@ -118,15 +122,20 @@ func (a *app) register(e *sdk.Extension) {
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		a.shutdownWorkflows()
 		a.mgr.abortAll()
 		return nil, nil
 	})
 	a.registerTools(e)
+	a.registerWorkflow(e)
 	e.Command("agents", "List the agent types and the running agents", a.agentsCommand)
 }
 
 // onSettle announces a finished agent on the bus and, for a background one, to the model. upstream: index.ts:560-600.
 func (a *app) onSettle(r *agentRecord) {
+	if r.Owner != "" {
+		return // an owned agent reports through its owner (a workflow's card, notification and dialog), not top-level
+	}
 	ctx, ok := a.context()
 	if !ok {
 		return
