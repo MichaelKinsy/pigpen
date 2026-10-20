@@ -83,6 +83,9 @@ func blockResult(reason string) any { return map[string]any{"block": true, "reas
 
 func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	cfg := w.config(ctx)
+	if cfg.Enabled {
+		w.contextToolCall(ctx, cfg, data) // CONTEXT-LANE HOOK: a read of a stored full output is a recall
+	}
 	tool, _ := data["toolName"].(string)
 	input, _ := data["input"].(map[string]any)
 	if input == nil {

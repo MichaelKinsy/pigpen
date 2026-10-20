@@ -83,6 +83,8 @@ type warden struct {
 	// sup is the supervision module: subagent triage, call waste, the stuck-loop diff memory, and the piece
 	// registries of the message, input and agent_settled events (supervision.go).
 	sup *supervision
+	// context is the state of the context saver (context_wiring.go).
+	context contextState
 }
 
 // Extension returns the guard.
@@ -102,15 +104,17 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	if o.Now == nil {
 		o.Now = time.Now
 	}
-	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, rules: newRulesState(), gc: newGuardcoreState(), sec: newSecurityState(), sup: newSupervision()}
+	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, rules: newRulesState(), gc: newGuardcoreState(), sec: newSecurityState(), sup: newSupervision(), context: newContextState()}
+	w.tools.ledger = w.context.ledger // CONTEXT-LANE HOOK: the stored outputs the compaction snapshot and warden_recall read
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
 	e.OnEvent(sdk.EventBeforeAgentStart, w.onBeforeAgentStart)
 	e.OnEvent(sdk.EventAgentStart, w.agentStartWithRules)
-	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) { w.guard.TurnEnd(); w.rulesTurnEnd(); return nil, nil })
+	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) { w.contextTurnEnd(); w.guard.TurnEnd(); w.rulesTurnEnd(); return nil, nil })
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
+	e.OnEvent(sdk.EventSessionBeforeCompact, w.onSessionBeforeCompact) // CONTEXT-LANE HOOK (context_compaction.go)
 	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
 	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); w.rulesShutdown(); return nil, nil })
 	// TOOLS-LANE HOOK: the three tools and the compaction evidence appendix (tools_wiring.go).
@@ -121,6 +125,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	w.sup.onMessageStart(w.onRunawayMessageStart)                                 // security: the runaway guard resets per assistant message
 	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                               // security: the runaway guard feeds on the stream
 	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...") // rules: /warden init and rules tune
+	w.sup.onMessageEnd(w.contextMessageEnd)                                       // context: the repeated-run cut of a user or custom message (opt-in)
 	w.sup.onSettled(w.checkSubagentReports)                                       // supervision: subagent triage
 	if o.setup != nil {
 		o.setup(w)
@@ -312,6 +317,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, data map[string]any) (any, erro
 		w.disclose(ctx)
 	}
 	w.refresh(ctx)
+	w.contextSessionStart()        // CONTEXT-LANE HOOK: the stored outputs and the ledger start over
 	w.toolsSessionStart(ctx, data) // TOOLS-LANE HOOK: prefs injection, resume announcement, search probe
 	return nil, nil
 }

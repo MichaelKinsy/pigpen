@@ -59,6 +59,22 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	if !cfg.Enabled {
 		return nil, nil
 	}
+	out := w.toolOutput(ctx, cfg, data) // CONTEXT-LANE HOOK: masking, output verdicts, notices, duplicate note, compression, repeated runs (tool_output.go)
+	if out.aborted {
+		return nil, nil
+	}
+	if _, err := w.toolResultGuards(ctx, data, out.text); err != nil {
+		return nil, err
+	}
+	return out.patch(), nil
+}
+
+// toolResultGuards keeps the run's memory and runs the loop checks. `text` is the masked text of the result.
+func (w *warden) toolResultGuards(ctx sdk.Context, data map[string]any, text string) (any, error) {
+	cfg := w.config(ctx)
+	if !cfg.Enabled {
+		return nil, nil
+	}
 	tool, _ := data["toolName"].(string)
 	input, _ := data["input"].(map[string]any)
 	if input == nil {
@@ -73,7 +89,6 @@ func (w *warden) onToolResult(ctx sdk.Context, data map[string]any) (any, error)
 	isError, _ := data["isError"].(bool)
 	details, _ := data["details"].(map[string]any)
 	failed := ResultFailed(isError, details, content)
-	text := ResultText(content)
 
 	// ── supervision: call waste. Every finished call enters the window; a note, when one fires, is attached to
 	// this result below, and never reaches a hold, the judge, or the steer budget.

@@ -119,6 +119,7 @@ func (w *warden) showStatus(ctx sdk.Context) {
 	fmt.Fprintf(&b, "  %d/%d prose nudges, %d runaway stops, %d restatements\n  %s\n", s.ProseNudges, s.ProseChecks, s.Runaway, s.Restatements, w.notificationsStatus(cfg)) // SECURITY
 	fmt.Fprintf(&b, "  %d/%d subagent reports woken\n", s.SubagentWoken, s.SubagentReports)                                                                                 // SUPERVISION
 	fmt.Fprintf(&b, "  judge requests this session: %d of %d\n", w.budget.Used(), cfg.MaxRequests)
+	b.WriteString(w.contextStatus(cfg)) // CONTEXT-LANE HOOK: the saver, relevance compaction and filter lines
 	if arming := w.gcArmingStatus(cfg); arming != "" {
 		b.WriteString("  " + arming + "\n")
 	}
