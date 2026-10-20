@@ -175,31 +175,31 @@ func filterCandidates(candidates []quoteCandidate, query string) []quoteCandidat
 // that state): "\n" is Enter, as in a terminal without the protocol.
 
 var (
-	kittyCSIU      = regexp.MustCompile(`^\x1b\[(\d+)(?::(\d*))?(?::(\d+))?(?:;(\d+))?(?::(\d+))?u$`)
-	kittyArrow     = regexp.MustCompile(`^\x1b\[1;(\d+)(?::(\d+))?([ABCD])$`)
-	modifyOtherKey = regexp.MustCompile(`^\x1b\[27;(\d+);(\d+)~$`)
+	qpKittyCSIU      = regexp.MustCompile(`^\x1b\[(\d+)(?::(\d*))?(?::(\d+))?(?:;(\d+))?(?::(\d+))?u$`)
+	qpKittyArrow     = regexp.MustCompile(`^\x1b\[1;(\d+)(?::(\d+))?([ABCD])$`)
+	qpModifyOtherKey = regexp.MustCompile(`^\x1b\[27;(\d+);(\d+)~$`)
 )
 
 const (
-	lockMask       = 64 + 128
-	modShift       = 1
-	modAlt         = 2
-	modCtrl        = 4
-	cpEscape       = 27
-	cpEnter        = 13
-	cpKpEnter      = 57414
-	cpBackspace    = 127
-	cpArrowUp      = -1
-	cpArrowDown    = -2
-	kittyAllowMods = modShift | lockMask
+	qpLockMask       = 64 + 128
+	qpModShift       = 1
+	qpModAlt         = 2
+	qpModCtrl        = 4
+	qpCpEscape       = 27
+	qpCpEnter        = 13
+	qpCpKpEnter      = 57414
+	qpCpBackspace    = 127
+	qpCpArrowUp      = -1
+	qpCpArrowDown    = -2
+	qpKittyAllowMods = qpModShift | qpLockMask
 )
 
-type kittyKey struct {
+type qpKittyKey struct {
 	codepoint, modifier int
 	shifted, base       *int
 }
 
-func atoiPtr(s string) *int {
+func qpAtoiPtr(s string) *int {
 	if s == "" {
 		return nil
 	}
@@ -210,33 +210,33 @@ func atoiPtr(s string) *int {
 	return &n
 }
 
-func parseKitty(data string) (kittyKey, bool) {
-	if m := kittyCSIU.FindStringSubmatch(data); m != nil {
+func qpParseKitty(data string) (qpKittyKey, bool) {
+	if m := qpKittyCSIU.FindStringSubmatch(data); m != nil {
 		cp, err := strconv.Atoi(m[1])
 		if err != nil {
-			return kittyKey{}, false
+			return qpKittyKey{}, false
 		}
 		mod := 1
 		if m[4] != "" {
 			mod, _ = strconv.Atoi(m[4])
 		}
-		return kittyKey{codepoint: cp, modifier: mod - 1, shifted: atoiPtr(m[2]), base: atoiPtr(m[3])}, true
+		return qpKittyKey{codepoint: cp, modifier: mod - 1, shifted: qpAtoiPtr(m[2]), base: qpAtoiPtr(m[3])}, true
 	}
-	if m := kittyArrow.FindStringSubmatch(data); m != nil {
+	if m := qpKittyArrow.FindStringSubmatch(data); m != nil {
 		mod, _ := strconv.Atoi(m[1])
 		codes := map[string]int{"A": -1, "B": -2, "C": -3, "D": -4}
-		return kittyKey{codepoint: codes[m[3]], modifier: mod - 1}, true
+		return qpKittyKey{codepoint: codes[m[3]], modifier: mod - 1}, true
 	}
-	return kittyKey{}, false
+	return qpKittyKey{}, false
 }
 
-// kittyFunctionalKey maps the keypad codepoints the picker's keys have an equivalent for (KITTY_FUNCTIONAL_KEY_EQUIVALENTS).
-func kittyFunctionalKey(cp int) int {
+// qpKittyFunctionalKey maps the keypad codepoints the picker's keys have an equivalent for (KITTY_FUNCTIONAL_KEY_EQUIVALENTS).
+func qpKittyFunctionalKey(cp int) int {
 	switch cp {
 	case 57419:
-		return cpArrowUp
+		return qpCpArrowUp
 	case 57420:
-		return cpArrowDown
+		return qpCpArrowDown
 	}
 	if cp >= 57399 && cp <= 57408 {
 		return cp - 57399 + 48
@@ -244,15 +244,15 @@ func kittyFunctionalKey(cp int) int {
 	return cp
 }
 
-func matchesKitty(data string, expectedCodepoint, expectedModifier int) bool {
-	parsed, ok := parseKitty(data)
+func qpMatchesKitty(data string, expectedCodepoint, expectedModifier int) bool {
+	parsed, ok := qpParseKitty(data)
 	if !ok {
 		return false
 	}
-	actual := parsed.modifier &^ lockMask
-	expected := expectedModifier &^ lockMask
-	normalized := kittyFunctionalKey(parsed.codepoint)
-	if actual == expected && normalized == kittyFunctionalKey(expectedCodepoint) {
+	actual := parsed.modifier &^ qpLockMask
+	expected := expectedModifier &^ qpLockMask
+	normalized := qpKittyFunctionalKey(parsed.codepoint)
+	if actual == expected && normalized == qpKittyFunctionalKey(expectedCodepoint) {
 		return true
 	}
 	if actual != expected {
@@ -267,8 +267,8 @@ func matchesKitty(data string, expectedCodepoint, expectedModifier int) bool {
 	return false
 }
 
-func matchesModifyOther(data string, codepoint, modifier int) bool {
-	m := modifyOtherKey.FindStringSubmatch(data)
+func qpMatchesModifyOther(data string, codepoint, modifier int) bool {
+	m := qpModifyOtherKey.FindStringSubmatch(data)
 	if m == nil {
 		return false
 	}
@@ -281,26 +281,26 @@ func matchesModifyOther(data string, codepoint, modifier int) bool {
 func matchesPickerKey(data, id string) bool {
 	switch id {
 	case "up":
-		return data == "\x1b[A" || data == "\x1bOA" || matchesKitty(data, cpArrowUp, 0)
+		return data == "\x1b[A" || data == "\x1bOA" || qpMatchesKitty(data, qpCpArrowUp, 0)
 	case "down":
-		return data == "\x1b[B" || data == "\x1bOB" || matchesKitty(data, cpArrowDown, 0)
+		return data == "\x1b[B" || data == "\x1bOB" || qpMatchesKitty(data, qpCpArrowDown, 0)
 	case "enter":
-		return data == "\r" || data == "\n" || data == "\x1bOM" || matchesKitty(data, cpEnter, 0) || matchesKitty(data, cpKpEnter, 0)
+		return data == "\r" || data == "\n" || data == "\x1bOM" || qpMatchesKitty(data, qpCpEnter, 0) || qpMatchesKitty(data, qpCpKpEnter, 0)
 	case "escape":
-		return data == "\x1b" || matchesKitty(data, cpEscape, 0) || matchesModifyOther(data, cpEscape, 0)
+		return data == "\x1b" || qpMatchesKitty(data, qpCpEscape, 0) || qpMatchesModifyOther(data, qpCpEscape, 0)
 	case "backspace":
-		return data == "\x7f" || data == "\x08" || matchesKitty(data, cpBackspace, 0) || matchesModifyOther(data, cpBackspace, 0)
+		return data == "\x7f" || data == "\x08" || qpMatchesKitty(data, qpCpBackspace, 0) || qpMatchesModifyOther(data, qpCpBackspace, 0)
 	case "ctrl+c":
-		return data == "\x03" || matchesKitty(data, 'c', modCtrl) || matchesModifyOther(data, 'c', modCtrl)
+		return data == "\x03" || qpMatchesKitty(data, 'c', qpModCtrl) || qpMatchesModifyOther(data, 'c', qpModCtrl)
 	case "ctrl+u":
-		return data == "\x15" || matchesKitty(data, 'u', modCtrl) || matchesModifyOther(data, 'u', modCtrl)
+		return data == "\x15" || qpMatchesKitty(data, 'u', qpModCtrl) || qpMatchesModifyOther(data, 'u', qpModCtrl)
 	}
 	return false
 }
 
 // printableInput is the text a key chunk types: a printable Kitty sequence, or the chunk itself when it has no control character.
 func printableInput(data string) (string, bool) {
-	if m := kittyCSIU.FindStringSubmatch(data); m != nil {
+	if m := qpKittyCSIU.FindStringSubmatch(data); m != nil {
 		if r, ok := decodeKittyPrintable(m); ok {
 			return r, true
 		}
@@ -321,20 +321,20 @@ func decodeKittyPrintable(m []string) (string, bool) {
 	if err != nil {
 		return "", false
 	}
-	shifted := atoiPtr(m[2])
+	shifted := qpAtoiPtr(m[2])
 	modValue := 1
 	if m[4] != "" {
 		modValue, _ = strconv.Atoi(m[4])
 	}
 	modifier := modValue - 1
-	if modifier&^kittyAllowMods != 0 || modifier&(modAlt|modCtrl) != 0 {
+	if modifier&^qpKittyAllowMods != 0 || modifier&(qpModAlt|qpModCtrl) != 0 {
 		return "", false
 	}
 	effective := codepoint
-	if modifier&modShift != 0 && shifted != nil {
+	if modifier&qpModShift != 0 && shifted != nil {
 		effective = *shifted
 	}
-	effective = kittyFunctionalKey(effective)
+	effective = qpKittyFunctionalKey(effective)
 	if effective < 32 || effective > 0x10ffff || (effective >= 0xd800 && effective <= 0xdfff) {
 		return "", false
 	}
