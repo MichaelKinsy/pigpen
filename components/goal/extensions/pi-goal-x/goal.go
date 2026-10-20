@@ -50,13 +50,7 @@ func buildGoalExtension(deps goalDeps) (*sdk.Extension, *core) {
 	e := sdk.New("pi-goal-x")
 	if isDelegatedGoalSession(nil) {
 		// Inherit conversation without inheriting ownership of the parent's goal.
-		e.OnEvent("context", func(_ sdk.Context, data map[string]any) (any, error) {
-			messages, _ := data["messages"].([]any)
-			if filtered := filterGoalSessionContext(messages, true); filtered != nil {
-				return map[string]any{"messages": filtered}, nil
-			}
-			return nil, nil
-		})
+		e.OnEvent("context", func(_ sdk.Context, data map[string]any) (any, error) { return goalDelegatedContext(data) })
 		return e, nil
 	}
 	e.MessageRenderer(goalEventEntry, goalMessageRenderer(func() goalMessageRenderFunc { return goalEventRenderer }))
@@ -67,6 +61,15 @@ func buildGoalExtension(deps goalDeps) (*sdk.Extension, *core) {
 	registerGoalTools(c)
 	registerGoalEvents(c)
 	return e, c
+}
+
+// goalDelegatedContext is the delegated session's only handler: the conversation without the parent's goal messages.
+func goalDelegatedContext(data map[string]any) (any, error) {
+	messages, _ := data["messages"].([]any)
+	if filtered := filterGoalSessionContext(messages, true); filtered != nil {
+		return map[string]any{"messages": filtered}, nil
+	}
+	return nil, nil
 }
 
 // goalMessageRenderFunc draws one goal message (details as decoded JSON) at width; expanded is the host's expand state.
