@@ -3,7 +3,7 @@
 src/authority modules, recorded to extensions/pi-permission-system/testdata/authority_oracle.json for auth_oracle_test.go.
 Run from this directory; the output is deterministic."""
 import itertools
-import json
+import json, os
 import random
 
 rnd = random.Random(1402973)
@@ -258,5 +258,5 @@ for pname, p in payloads_c.items():
                 fallback.append({"payloadJson": p, "options": opts, "budget": budget, "selects": [first, second], "input": "why"})
 cases["fallback"] = fallback
 
-json.dump(cases, open("authority-cases.json", "w"), separators=(",", ":"), ensure_ascii=False)
+json.dump(cases, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "extensions", "pi-permission-system", "testdata", "authority-cases.json"), "w"), separators=(",", ":"), ensure_ascii=False)
 print({k: len(v) for k, v in cases.items()})

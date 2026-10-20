@@ -34,7 +34,7 @@ func authOracle(t *testing.T) *jsObject {
 
 func authCases(t *testing.T) *jsObject {
 	t.Helper()
-	data, err := os.ReadFile("../../port/probe/authority-cases.json")
+	data, err := os.ReadFile("testdata/authority-cases.json")
 	if err != nil {
 		t.Fatal(err)
 	}

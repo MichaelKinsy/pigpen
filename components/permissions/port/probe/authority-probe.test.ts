@@ -1,4 +1,4 @@
-// Authority probe: runs port/probe/authority-cases.json through the original's own src/authority modules and writes what they do, for
+// Authority probe: runs testdata/authority-cases.json through the original's own src/authority modules and writes what they do, for
 // the Go oracle test (extensions/pi-permission-system/auth_oracle_test.go reads testdata/authority_oracle.json). It is copied into an
 // installed copy of the original by port/record-authority-probe.sh and never runs from here; the port itself has no Node.
 import { readFileSync, writeFileSync } from "node:fs";
