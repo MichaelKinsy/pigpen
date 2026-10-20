@@ -656,7 +656,8 @@ func (d *dfdDefuddle) parseInternal(options dfdOptions, _ any) (result dfdResult
 			if extracted.contentSelector != "" {
 				d.inExtractorPipelineRun = true
 				defer func() { d.inExtractorPipelineRun = false }()
-				o := options
+				// The nested run takes the defaults, not the options of the retry that found the extractor.
+				o := dfdDefaultOptions()
 				o.contentSelector = extracted.contentSelector
 				o.removeLowScoring = false
 				o.removeHiddenElements = false
