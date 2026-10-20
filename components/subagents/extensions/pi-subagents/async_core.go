@@ -603,3 +603,13 @@ func sortedKeys[V any](m map[string]V) []string {
 }
 
 func queryEscape(s string) string { return url.QueryEscape(s) }
+
+// randomUUID is a version 4 UUID (crypto.randomUUID).
+func randomUUID() string {
+	var b [16]byte
+	_, _ = rand.Read(b[:])
+	b[6] = b[6]&0x0f | 0x40
+	b[8] = b[8]&0x3f | 0x80
+	h := hex.EncodeToString(b[:])
+	return h[0:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:]
+}

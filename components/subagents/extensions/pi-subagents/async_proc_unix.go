@@ -44,7 +44,12 @@ func detachBackground(cmd *exec.Cmd) {
 }
 
 // signalGroup sends signal to the process group led by pgid.
-func signalGroup(pgid, signal int) error { return defaultKill(-pgid, signal) }
+func signalGroup(pgid, signal int) error {
+	if pgid <= 1 { // kill(-0) and kill(-1) would reach this process's own group, or every process
+		return errNoSuchProcess
+	}
+	return defaultKill(-pgid, signal)
+}
 
 // signalTerm and signalInt are the numbers of SIGTERM and SIGINT.
 const (
@@ -54,6 +59,9 @@ const (
 
 // groupHasMembers reports whether the process group still has a live (not zombie) member.
 func groupHasMembers(pgid int) bool {
+	if pgid <= 1 {
+		return false
+	}
 	err := defaultKill(-pgid, 0)
 	return err == nil || errors.Is(err, errNotPermitted)
 }
