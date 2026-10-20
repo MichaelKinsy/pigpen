@@ -11,8 +11,7 @@ import (
 )
 
 // Twins of tests/goal-optimization.test.ts. The cases that drive the whole extension through the original's harness
-// (createHarness/startHarness and the get_goal, update_goal_task and update_goal tool executors) are tskip'd below; they
-// belong to the wave 2/3 integration.
+// (createHarness/startHarness and the get_goal, update_goal_task and update_goal tool executors) are in goal_optimization_rig_test.go.
 
 const optTasksJSON = `[{"id":"parent","title":"Parent","status":"pending","subtasks":[{"id":"child","title":"Child","status":"pending","verificationContract":"Prove the child"}]},{"id":"next","title":"Next","status":"pending"}]`
 
@@ -75,21 +74,6 @@ func TestGoalOptimization(t *testing.T) {
 		assertEq(t, goalDetailPage(goal, goalDetailQuery{section: "tasks", cursor: firstCursor}, nil).ok, false, "another section")
 		assertEq(t, goalDetailPage(goal, goalDetailQuery{section: "objective", cursor: "bad"}, nil).ok, false, "bad cursor")
 	})
-
-	tskip(t, f, "get_goal exposes full task evidence through bounded sections and keeps legacy forms",
-		"drives the get_goal tool through the original's extension harness (createHarness/startHarness); wave 2/3 integration")
-
-	tskip(t, f, "ordered batch completes child then parent and starts the next task in one mutation",
-		"drives the update_goal_task batch executor through the original's extension harness; wave 2/3 integration")
-
-	tskip(t, f, "invalid batches reject all changes, including mixed forms and missing evidence",
-		"drives the update_goal_task batch executor through the original's extension harness; wave 2/3 integration")
-
-	tskip(t, f, "batch validates a fresh disk tree under the mutation lock",
-		"drives the update_goal_task batch executor through the original's extension harness; wave 2/3 integration")
-
-	tskip(t, f, "buffered batch detects a competing writer at flush and cannot overwrite its objective",
-		"drives update_goal flush after a buffered update_goal_task batch through the original's extension harness; wave 2/3 integration")
 
 	tw(t, f, "indexed activity matches append-order deduplication with out-of-order and equal timestamps", func(t *testing.T) {
 		fx := optFocusedFixture(t)
