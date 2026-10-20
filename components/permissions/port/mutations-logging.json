@@ -792,30 +792,6 @@
   "replace": "{\"string\": true, \"raw_string\": true}"
  },
  {
-  "name": "cr-redirect-skip",
-  "file": "commandredaction.go",
-  "find": "|| bashparse.RedirectNodeTypes[child.Type()] {",
-  "replace": "{"
- },
- {
-  "name": "cr-assign-skip",
-  "file": "commandredaction.go",
-  "find": "child.Type() == \"variable_assignment\" ||",
-  "replace": ""
- },
- {
-  "name": "cr-named",
-  "file": "commandredaction.go",
-  "find": "!child.IsNamed() ||",
-  "replace": ""
- },
- {
-  "name": "cr-index-range",
-  "file": "commandredaction.go",
-  "find": "if index < 0 || index >= len(nodes) {",
-  "replace": "if index < 0 {"
- },
- {
   "name": "cr-assign-name",
   "file": "commandredaction.go",
   "find": "if name == nil || !IsSensitiveName(name.Text()) {",

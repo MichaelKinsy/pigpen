@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/MichaelKinsy/pigpen/pi-permission-system/bashanalysis"
 	"github.com/MichaelKinsy/pigpen/pi-permission-system/bashparse"
 )
 
@@ -94,7 +95,7 @@ func inlineShellPayloads(root *bashparse.Node) []payloadSource {
 	var walk func(n *bashparse.Node)
 	walk = func(n *bashparse.Node) {
 		if n.Type() == "command" {
-			if p := inlineShellPayloadNode(n); p != nil {
+			if p := bashanalysis.InlineShellPayloadNode(n, words); p != nil {
 				out = append(out, payloadSourceOf(p))
 			}
 		}
@@ -106,27 +107,6 @@ func inlineShellPayloads(root *bashparse.Node) []payloadSource {
 	}
 	walk(root)
 	return out
-}
-
-// inlineShellPayloadNode is the node of the inline-shell payload of a command node, or nil (command-enumeration.ts).
-func inlineShellPayloadNode(command *bashparse.Node) *bashparse.Node {
-	var nodes []*bashparse.Node
-	for i := 0; i < command.ChildCount(); i++ {
-		child := command.Child(i)
-		if child == nil || !child.IsNamed() || child.Type() == "variable_assignment" || bashparse.RedirectNodeTypes[child.Type()] {
-			continue
-		}
-		nodes = append(nodes, child)
-	}
-	texts := make([]string, len(nodes))
-	for i, n := range nodes {
-		texts[i] = n.Text()
-	}
-	index := inlineShellPayloadIndex(texts)
-	if index < 0 || index >= len(nodes) {
-		return nil
-	}
-	return nodes[index]
 }
 
 var singlyQuotedPayloadTypes = map[string]bool{"string": true, "raw_string": true, "ansi_c_string": true}
