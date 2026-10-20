@@ -66,7 +66,7 @@ func TestWebSearchProgressPanicDoesNotWedgeSiblings(t *testing.T) {
 	r, _ := newRuntime(t, "")
 	saved := providerTable["exa"]
 	t.Cleanup(func() { providerTable["exa"] = saved })
-	providerTable["exa"] = &providerDef{name: "exa", label: "Exa", available: func() bool { return true },
+	providerTable["exa"] = &providerDef{name: "exa", label: "Exa", available: func(context.Context, FullSearchOptions) bool { return true },
 		search: func(_ context.Context, q string, _ SearchOptions) (*SearchResponse, error) {
 			return &SearchResponse{Answer: "answer for " + q}, nil
 		}}
