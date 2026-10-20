@@ -187,6 +187,7 @@ func TestMutantsBTurnAccounting(t *testing.T) {
 func TestMutantsBActivityKeepsGoalAlive(t *testing.T) {
 	for _, event := range []string{"turn_start", "tool_execution_end"} {
 		r := focusedRig(t, nil, rigOptions{Settings: `{"stallTimeoutMinutes": 1}`})
+		goal.SaveGoalSettingsForRig(r.Cwd, `{"stallTimeoutMinutes": 1}`) // drops the settings cache earlier tests left behind
 		fc := r.Probe.FakeClock(time.Now().UnixMilli())
 		fc.Tick(70_000)
 		r.Fire(event, map[string]any{})
