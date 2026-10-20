@@ -85,6 +85,8 @@ type warden struct {
 	sup *supervision
 	// context is the state of the context saver (context_wiring.go).
 	context contextState
+	// learn is the hold feedback, the learning store and the judge cooldown (learning_wire.go).
+	learn *learningState
 }
 
 // Extension returns the guard.
@@ -106,10 +108,11 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	}
 	w := &warden{opts: o, guard: NewActionGuard(), evidence: EmptyEvidence(), budget: &Budget{}, repeats: NewSteerRepeatWindow(), noted: map[string]bool{}, stats: newStats(), trace: newTrace(traceLimit), adaptor: sendAllAdaptor{}, rules: newRulesState(), gc: newGuardcoreState(), sec: newSecurityState(), sup: newSupervision(), context: newContextState()}
 	w.tools.ledger = w.context.ledger // CONTEXT-LANE HOOK: the stored outputs the compaction snapshot and warden_recall read
+	w.installLearning()               // learning lane: hold feedback, learning store, steer adaptation
 	e := sdk.New("warden")
 	e.Command("warden", "Guardrails that steer: /warden [status|enable|disable|mode|backend|test|trace]", w.command)
 	e.OnEvent(sdk.EventSessionStart, w.onSessionStart)
-	e.OnEvent(sdk.EventBeforeAgentStart, w.onBeforeAgentStart)
+	e.OnEvent(sdk.EventBeforeAgentStart, w.beforeAgentStartWithLearning)
 	e.OnEvent(sdk.EventAgentStart, w.agentStartWithRules)
 	e.OnEvent(sdk.EventTurnEnd, func(sdk.Context, map[string]any) (any, error) {
 		w.contextTurnEnd()
@@ -120,8 +123,13 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventToolCall, w.onToolCall)
 	e.OnEvent(sdk.EventToolResult, w.onToolResult)
 	e.OnEvent(sdk.EventSessionBeforeCompact, w.onSessionBeforeCompact) // CONTEXT-LANE HOOK (context_compaction.go)
-	e.OnEvent(sdk.EventAgentEnd, w.onAgentEnd)
-	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) { w.guard.Wait(); w.rulesShutdown(); return nil, nil })
+	e.OnEvent(sdk.EventAgentEnd, w.agentEndWithLearning)               // learning lane: the offline regret reading at the end of a run
+	e.OnEvent(sdk.EventSessionShutdown, func(sdk.Context, map[string]any) (any, error) {
+		w.guard.Wait()
+		w.rulesShutdown()
+		w.learnShutdown()
+		return nil, nil
+	})
 	// TOOLS-LANE HOOK: the three tools and the compaction evidence appendix (tools_wiring.go).
 	w.registerWardenTools(e)
 	e.OnEvent(sdk.EventSessionCompact, w.onSessionCompact)
@@ -130,6 +138,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	w.sup.onMessageStart(w.onRunawayMessageStart)                                 // security: the runaway guard resets per assistant message
 	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                               // security: the runaway guard feeds on the stream
 	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...") // rules: /warden init and rules tune
+	w.sup.onMessageEnd(w.learnMessageEnd)                                         // learning: the assistant message settles the watched steers (runs first)
 	w.sup.onMessageEnd(w.contextMessageEnd)                                       // context: the repeated-run cut of a user or custom message (opt-in)
 	w.sup.onSettled(w.checkSubagentReports)                                       // supervision: subagent triage
 	if o.setup != nil {
@@ -227,12 +236,15 @@ func (w *warden) judgeFor(ctx sdk.Context, cfg Config) Judge {
 	if build == nil {
 		build = defaultJudge
 	}
+	if w.cooldownActive() { // learning lane: judge cooldown; answers as with no judge
+		return nil
+	}
 	j, err := build(ctx, cfg, w.budget, w.opts.Getenv)
 	if err != nil {
 		w.noteOnce(ctx, "judge:"+err.Error(), "warden: "+err.Error()+" Running offline patterns only.")
 		return nil
 	}
-	return j
+	return w.watchJudge(ctx, cfg, j) // learning lane: sees each judge failure and success
 }
 
 func defaultJudge(ctx sdk.Context, cfg Config, budget *Budget, getenv func(string) string) (Judge, error) {
@@ -315,6 +327,7 @@ func (w *warden) onSessionStart(ctx sdk.Context, data map[string]any) (any, erro
 	w.sec.resetSession() // SECURITY: runaway, prose trend, restatement window, notifier probe
 	w.gcSessionStart(ctx)
 	w.rulesSessionStart(ctx) // rules guard: reset and open the verdict log
+	w.learnSessionStart(ctx) // learning lane: hold feedback, schema, cooldown reset
 	if loadErr != "" {
 		w.say(ctx, loadErr, "warning")
 	}

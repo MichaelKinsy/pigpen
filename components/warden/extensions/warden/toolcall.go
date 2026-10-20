@@ -119,6 +119,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	}
 
 	dv := deliveryVerdict(verdict)
+	w.settleRegretFromVerdict(cfg, verdict) // learning lane: the regret answer that rode this judgment labels last turn's allowed calls
 	mode := w.mode(cfg, ctx)
 	w.mu.Lock()
 	if verdict.Judgment != nil {
@@ -131,23 +132,42 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		w.stats.Approved++
 	}
 	w.mu.Unlock()
+	if verdict.ApprovedByUser {
+		w.holdApproved(cfg, tool) // learning lane: the reply released a pending hold
+	}
 	if verdict.Source == "error" {
 		w.noteOnce(ctx, "err:"+verdict.Error, "warden: "+verdict.Error+" Judged checks are skipped for this call (offline patterns still apply).")
 	}
 
 	// What the agent is told about a call that runs (or that will not): the plan gap, the off-task drift.
 	var notes []string
-	if verdict.IntentMismatch && !verdict.IntentTraceOnly {
-		notes = append(notes, IntentSteer(verdict))
+	var noteKinds []SteerKind
+	// learning lane: each action note is gated by the steer adaptation (a kind the model ignores stays in the trace)
+	// and counted; the delivery watches what the agent does next (extension.ts adaptiveSend/watchSteer).
+	if verdict.IntentMismatch {
+		w.bump(func(s *stats) {
+			s.OffPlan++
+			if verdict.IntentTraceOnly {
+				s.OffPlanTraceOnly++
+			}
+		})
+		if !verdict.IntentTraceOnly && w.adaptiveSend(ctx, cfg, SteerKindIntentMismatch) {
+			notes = append(notes, IntentSteer(verdict))
+			noteKinds = append(noteKinds, SteerKindIntentMismatch)
+		}
 	}
-	if verdict.OffTaskSteer && !verdict.OffTaskTraceOnly {
-		notes = append(notes, OffTaskSteer(verdict))
+	if verdict.OffTaskSteer {
+		w.bump(func(s *stats) { s.OffTask++ })
+		if !verdict.OffTaskTraceOnly && w.adaptiveSend(ctx, cfg, SteerKindOffTask) {
+			notes = append(notes, OffTaskSteer(verdict))
+			noteKinds = append(noteKinds, SteerKindOffTask)
+		}
 	}
-	if verdict.ShouldProceedSteer && !verdict.ShouldProceedTraceOnly {
+	if verdict.ShouldProceedSteer && !verdict.ShouldProceedTraceOnly && w.adaptiveSend(ctx, cfg, SteerKindShouldProceed) {
 		notes = append(notes, ShouldProceedMessage(verdict))
+		noteKinds = append(noteKinds, SteerKindShouldProceed)
 	}
 	// guardcore: the large-output steer, once per command family per session (never holds).
-	var noteKinds []SteerKind
 	if note := w.gcLargeOutput(verdict); note != "" && w.adaptiveSend(ctx, cfg, SteerKindLargeOutput) {
 		notes = append(notes, note)
 		noteKinds = append(noteKinds, SteerKindLargeOutput)
@@ -162,12 +182,22 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	deliverNotes := func(proceeds bool) { w.deliverCallNotes(ctx, cfg, cn, proceeds, notePathOf(verdict.Summary, plan)) }
 	reasons := strings.Join(verdict.Reasons, "; ")
 	deliveredReasons := strings.Join(dv.Reasons, "; ")
+	// learning lane (extension.ts `track`): what happens to this call is the label for its scores; a decision made in
+	// the dialog lands at once, a steer-mode hold waits for the user.
+	track := func(label string, held bool, outcome CallOutcome, via OutcomeVia) {
+		entry := w.recordVerdict(ctx, cfg, verdict, label)
+		agentReason := ""
+		if held {
+			agentReason = SteerReason(dv, judge != nil)
+		}
+		w.trackHold(ctx, cfg, holdTrack{verdict: verdict, entry: entry, mode: mode, held: held, outcome: outcome, via: via, conv: conv, agentReason: agentReason})
+	}
 
 	switch verdict.Level {
 	case LevelWarn:
 		deliverNotes(true)
 		w.bump(func(s *stats) { s.Warned++ })
-		w.recordVerdict(ctx, cfg, verdict, "warned")
+		track("warned", false, "", "")
 		if cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · "+tool+": "+reasons, "warning")
 		} else if !ctx.HasUI() && len(dv.Reasons) > 0 {
@@ -177,7 +207,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	case LevelDeny:
 		deliverNotes(false)
 		w.bump(func(s *stats) { s.Held++ })
-		w.recordVerdict(ctx, cfg, verdict, "blocked")
+		track("blocked", true, OutcomeDeclined, ViaDeny)
 		if cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · blocked "+tool+": "+reasons, "error")
 		}
@@ -186,7 +216,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	case LevelConfirm:
 	default:
 		deliverNotes(true)
-		w.recordVerdict(ctx, cfg, verdict, "allowed")
+		track("allowed", false, "", "")
 		return nil, nil
 	}
 
@@ -205,11 +235,11 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		}
 		deliverNotes(allowed)
 		if allowed {
-			w.recordVerdict(ctx, cfg, verdict, "allowed by you")
+			track("allowed by you", true, OutcomeApproved, ViaDialog)
 			return nil, nil
 		}
 		w.bump(func(s *stats) { s.Held++ })
-		w.recordVerdict(ctx, cfg, verdict, "declined by you")
+		track("declined by you", true, OutcomeDeclined, ViaDialog)
 		return blockResult("pi-warden: the user declined this " + tool + " call (" + deliveredReasons + "). Do not retry it unchanged; ask the user how to proceed."), nil
 	}
 	if dialogRule && ctx.HasUI() {
@@ -219,7 +249,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	case "advise":
 		deliverNotes(true)
 		w.bump(func(s *stats) { s.Warned++ })
-		w.recordVerdict(ctx, cfg, verdict, "advised")
+		track("advised", false, "", "")
 		if cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · "+tool+" (advise mode, not held): "+reasons, "warning")
 		} else if !ctx.HasUI() {
@@ -232,7 +262,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	deliverNotes(false)
 	w.bump(func(s *stats) { s.Held++ })
 	w.guard.Hold(conv.Task)
-	w.recordVerdict(ctx, cfg, verdict, "held")
+	track("held", true, "", "")
 	if cfg.Notices && ctx.HasUI() {
 		ctx.Notify("warden · held "+tool+": "+reasons+". The agent was told why and asked to re-plan or ask you.", "warning")
 	}
