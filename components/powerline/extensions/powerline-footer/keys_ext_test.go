@@ -201,7 +201,7 @@ func TestReloadCarriesTheStashAcrossProcesses(t *testing.T) {
 	first := newKeysRig(t, agent, "reload-session", "draft across reload")
 	first.h.Fire("session_start", map[string]any{"reason": "startup"})
 	first.input(t, "\x1bs")
-	first.h.FireAll("session_shutdown", map[string]any{"reason": "reload"})
+	first.h.Fire("session_shutdown", map[string]any{"reason": "reload"})
 
 	second := newKeysRig(t, agent, "reload-session", "")
 	second.h.Fire("session_start", map[string]any{"reason": "reload"})
