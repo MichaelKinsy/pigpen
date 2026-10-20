@@ -512,14 +512,14 @@
  {
   "name": "overlay-wrap",
   "file": "select_overlay.go",
-  "find": "o.selected = (o.selected + 1) % n",
-  "replace": "o.selected = min(o.selected+1, n-1)"
+  "find": "if l.selectedIndex == len(l.items)-1 {\n\t\t\tl.selectedIndex = 0",
+  "replace": "if l.selectedIndex == len(l.items)-1 {\n\t\t\tl.selectedIndex = len(l.items) - 1"
  },
  {
   "name": "overlay-escape",
   "file": "select_overlay.go",
-  "find": "case matchesKey(data, \"escape\") || matchesKey(data, \"ctrl+c\"):",
-  "replace": "case matchesKey(data, \"ctrl+c\"):"
+  "find": "case selectKeyCancel(data):",
+  "replace": "case data == \"\\x03\":"
  },
  {
   "name": "overlay-preview-empty",
