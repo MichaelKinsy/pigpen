@@ -1,6 +1,4 @@
 {
- "access-intent/bash/program": "not ported: bash command parsing (tree-sitter-bash through WebAssembly), command enumeration, wrapper analysis and path extraction; the port matches only simple commands",
- "access-intent/bash/program-external-accesses": "not ported: bash command parsing (tree-sitter-bash through WebAssembly), command enumeration, wrapper analysis and path extraction; the port matches only simple commands",
  "composition-root": "not ported: root-level pieces of the original (composition root, service, request ids, type guards) that belong to unported subsystems",
  "handlers/before-agent-start": "not ported: lifecycle, project trust, review log and turn preparation handlers beyond the status, exposure and tool_call handlers",
  "handlers/external-directory-integration": "not ported: lifecycle, project trust, review log and turn preparation handlers beyond the status, exposure and tool_call handlers",

@@ -92,6 +92,7 @@ name (or the `*` fallback), not by the bash rules; deny it, or name it in `shell
 | M10 | `access-intent/bash/{command-enumeration,wrapper-analysis,command-effects,bash-arity,sed-invocation,awk-invocation,sync-commands,token-classification,token-collection}.ts` | `bashanalysis/` (subpackage; reads trees through `bashparse/`; `wrapper-analysis.ts` moves here from M7's `bash.go` once the lead swaps callers; `path/path-flavor.ts`'s `hasPathSeparator` is a minimal copy for the classifiers) | 298 twins in 9 ledger files; 42,038 recorded inputs compared field by field with the original (`bashanalysis/differential_test.go`, `port/bashanalysis-diff/`); `bashanalysis/extras_test.go`; 383 mutations (`port/gen-mutations-bashanalysis.py`) |
 | M11 | `logging/*` (debug and review JSONL writers, redaction, field cap, JSON-safe stringify, file modes, session logger, decision audit and reporter, command masking), `presentation/review-log-renderer.ts`, `presentation/fact-vocabulary.ts`, `handlers/tool-call-boundary.ts` | `logjsonsafe.go`, `logredaction.go`, `logfieldcap.go`, `logperms.go`, `logging.go`, `sessionlogger.go`, `decisionaudit.go`, `decisionreporter.go`, `permissionevents.go`, `commandredaction.go`, `reviewlogrenderer.go`, `factvocabulary.go`, `toolcallboundary.go` (lane-local stand-ins in `logging_deps.go`) | 135 twins (`logging/*`, the two presentation files, `handlers/tool-call-boundary`); the differential `testdata/logging-oracle.json` |
 | M12 | `policy/{permission-manager,permission-resolver,permission-gate,synthesize}.ts`, `session/{active-agent,approval-grant,session-approval,session-approval-recorder,session-identity,session-rules,permission-session}.ts` | `permissionmanager.go`, `permissionresolver.go`, `permissiongate.go`, `synthesize.go`, `sessionactiveagent.go`, `sessionapprovalgrant.go`, `sessionapproval.go`, `sessionrules.go`, `sessionpermission.go` (the rest of `policy/*` is M2) | 411 twins in 12 ledger files; `manager_oracle_test.go` (191 worlds, 10,934 recorded comparisons; 4,003 prompts and 602 entry lists for the active agent); `mutations-policy.json` |
+| M12 | `access-intent/bash/{program,bash-path-resolver}.ts` (`BashProgram`, `BashPathResolver`: command units, external accesses and path-rule candidates from one parse), the wrapper tables of M7 | `bashprogram.go`, `bashpathresolver.go` (root package: they need `PathNormalizer` and `AccessPath`); `bash.go`'s `classifyWrapperWords` now calls `bashanalysis.ClassifyWrapperWords` | 275 twins in 2 ledger files (`bashprogram_test.go`, `bashprogram_external_test.go`); 83,300 recorded inputs under 7 path configurations compared field by field (`bashprogram_oracle_test.go`, `port/bashprogram-diff/`); 123 mutations (`port/gen-mutations-bashprogram.py`) |
 
 ## Process: what was written before its tests
 
@@ -662,3 +663,46 @@ Differences from the original, on purpose:
 - Mutations: `port/mutations-authority.json` now has 290 (two for the repaint count, one for the silent link). The run (`~/pp-auth-mut.log`, clone `~/pp-perm2-authority-mut`) was still executing when this was written; no result is claimed.
 - Security review: approving paths are (1) hotkeys approve/session/both (bound key, second press under double-press, decision step only), (2) Enter on the highlight, (3) a chain link's `allow` through the delegation envelope, (4) the select fallback's exact option strings, (5) the parent's response in `ParentAuthorizer` (validated: approved flag, state, responder). Failures (closed dialog, released ask, panicking presentation, failing or silent link, unreadable response) deny or error. The dialog opens with approve highlighted exactly as the original: all 368 recorded scenarios show `Yes` highlighted first and the 9 whose first key is Enter approve in both (4 with double-press on).
 
+
+## BashProgram and the path resolver (lane `bashprogram`)
+
+`BashProgram.parse` parses a command once and hands the gates three slices that always agree: the command units (the bash rules
+match them), the external accesses (what resolves outside the cwd) and the path-rule candidates (what the `path` rules match).
+`BashPathResolver` folds `cd` through the command stream (current-shell sequences, brace groups, the first stage of a pipeline,
+subshells and backgrounding), applies the strict and the broad token classifiers, probes the filesystem for a bare token that
+names a real entry (a symlink out of the tree), and merges two proofs for one path. Both live in the root package because they
+need `PathNormalizer` and `AccessPath`; the walk reads trees through `bashparse/` and tokens through `bashanalysis/`.
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| B1 | `access-intent/bash/program.ts` | `bashprogram.go`: `ParseBashProgram(command, normalizer, *BashProgramOptions) (*BashProgram, error)`, `Commands()`, `ExternalAccesses()`, `PathRuleCandidates()`, `CommandText()` | 151 twins |
+| B2 | `access-intent/bash/bash-path-resolver.ts` | `bashpathresolver.go`: `BashPathResolver.Resolve`, `BashExternalPath`, `BashPathRuleCandidate`, `ResolvedBashPaths` | 124 twins (`program-external-accesses`) and the differential |
+| B3 | `access-intent/effect.ts` types | `effect.go`: `TokenEffect`, `AttributedEffect`, `EffectSource` are now aliases of `bashparse`'s (one type, no conversion at the seam) | the paths lane's effect twins |
+| B4 | `access-intent/bash/wrapper-analysis.ts` | already in `bashanalysis/wrapper.go` (16 twins, in the differential of M10); `bash.go`'s duplicated tables are gone, `classifyWrapperWords` is a call | `oracle_test.go` (646 recorded decisions) still pass |
+
+How it is checked:
+
+- `port/bashprogram-diff/run.sh` runs `probe.test.ts` inside the original's package. Inputs: every input of the bash analysis
+  differential (42,038: the strings of the original's tests, `port/probe/cases.json`, generated wrapper, command, redirect, sed,
+  awk and option shapes, error-recovery variants) plus 41,262 path-bearing commands of `gen-paths.mjs` (redirects of every
+  operator, cd chains of every fold shape, wrappers, heredocs and their tails, env assignments, globs, `HOME` and `PWD`
+  spellings, drive paths, symlinks). Each is parsed under seven configurations (the fixture root as cwd, a fake POSIX cwd, a win32
+  cwd, the same three with a `workdir`, and the fake cwd with an empty `workdir`), and the units, the external accesses (value, boundary, effect, source) and the rule
+  candidates (token, value, boundary, match values, effect, source) are written to
+  `testdata/bashprogram-oracle.jsonl.gz`. `bashprogram_oracle_test.go` replays it; any difference fails the test.
+- The probe's filesystem is a fixture (files, directories, symlinks to an outside directory, a dangling link, a link whose name
+  holds `..`) 16 directories below its temporary base, so no `..` chain of the corpus leaves the base. Outside the fixture the
+  probe answers as a host with no symlinks and no files (realpath is the identity, lstat finds nothing), and the Go test installs
+  the same two hooks (`realpathSync`, `lstatSync`, the latter case exact because macOS answers for `A` when `a` exists), so the
+  recording is the same on every host. `HOME` is `/probe-home/user`.
+- Mutations: `port/gen-mutations-bashprogram.py` writes `port/mutations-bashprogram.json`.
+
+Differences from the original, on purpose:
+
+- `ParseBashProgram` returns an error where `parse()` rejects (the parser failing to initialize), and takes a `*BashProgramOptions`
+  where the original takes `{ workdir?: string }` (`nil` is no options; a `nil` `Workdir` is `undefined`, an empty one is the empty
+  string the original would also seed).
+- The accessors return fresh slices, as the original's spread copies do; the elements share their `AccessPath`s, which are
+  immutable.
+- A command `parser.parse` cannot produce a tree for yields the empty program with its command text, as the original.
+- `tree.delete()` has no counterpart: nodes are garbage collected.

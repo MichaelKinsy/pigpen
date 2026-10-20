@@ -583,7 +583,7 @@ func TestPathsOracleSurfacesAndKinds(t *testing.T) {
 	k = 0
 	for _, a := range effects.List {
 		for _, b := range effects.List {
-			got := MergeTokenEffects(TokenEffect{AttributedEffect(a[0]), EffectSource(a[1])}, TokenEffect{AttributedEffect(b[0]), EffectSource(b[1])})
+			got := MergeTokenEffects(TokenEffect{Effect: AttributedEffect(a[0]), Source: EffectSource(a[1])}, TokenEffect{Effect: AttributedEffect(b[0]), Source: EffectSource(b[1])})
 			d.eq(fmt.Sprintf("merge %v %v", a, b), [2]string{string(got.Effect), string(got.Source)}, [2]string{effects.Merged[k].Effect, effects.Merged[k].Source})
 			k++
 		}

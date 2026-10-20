@@ -142,6 +142,5 @@ func (n *PathNormalizer) EntryExists(absolutePath string) bool {
 	if absolutePath == "" {
 		return false
 	}
-	_, err := os.Lstat(absolutePath)
-	return err == nil
+	return lstatSync(absolutePath)
 }
