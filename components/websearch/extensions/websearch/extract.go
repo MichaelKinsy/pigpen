@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"golang.org/x/net/html"
-	"golang.org/x/text/encoding/htmlindex"
 )
 
 // Port of extract.ts: fetch one URL and return readable text. What is ported here is the direct
@@ -484,23 +483,6 @@ func readLimited(r io.Reader, max int64, tooBig func() error) ([]byte, error) {
 	}
 	return data, nil
 }
-
-func decodeText(data []byte, contentType string) string {
-	charset := ""
-	if m := charsetRE.FindStringSubmatch(contentType); m != nil {
-		charset = m[1]
-	}
-	if charset != "" {
-		if enc, err := htmlindex.Get(charset); err == nil {
-			if out, err := enc.NewDecoder().Bytes(data); err == nil {
-				return string(out)
-			}
-		}
-	}
-	return string([]rune(string(data)))
-}
-
-var charsetRE = regexp.MustCompile(`(?i)charset\s*=\s*["']?([^;"'\s]+)`)
 
 func isTextContentType(contentType string) bool {
 	mime := strings.ToLower(jsTrim(strings.SplitN(contentType, ";", 2)[0]))
