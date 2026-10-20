@@ -110,6 +110,10 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	verdict := w.guard.Inspect(newContext(), call, conv, InspectOptions{Config: cfg.Action, Cwd: ctx.Cwd(), Judge: judge, Timeout: w.timeout(cfg), Git: w.opts.Git, GuardExtras: w.gcExtras(cfg)})
 	// guardcore: armed rules fire as deterministic hits on top of the verdict.
 	verdict = w.gcArmed(cfg, tool, input, verdict)
+	// SECURITY: the proposed write may introduce a security weakness (a steer of its own, before the call's notes).
+	if verdict.Judgment != nil {
+		w.securityWrite(ctx, cfg, verdict.Judgment.SecurityRisk, verdict.Summary.Path)
+	}
 
 	dv := deliveryVerdict(verdict)
 	mode := w.mode(cfg, ctx)
@@ -150,6 +154,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	if len(notes) > 0 {
 		cn.addGuard(SteerGuardAction)
 	}
+	w.slopNote(ctx, cfg, tool, input, verdict, cn)             // SECURITY: slop findings wait with the call's content notes
 	w.rulesVerdicts(ctx, cfg, plan, tool, verdict.Summary, cn) // rules hook: await the rules requests, log, trace, path notes
 	deliverNotes := func(proceeds bool) { w.deliverCallNotes(ctx, cfg, cn, proceeds, notePathOf(verdict.Summary, plan)) }
 	reasons := strings.Join(verdict.Reasons, "; ")
@@ -173,6 +178,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		if cfg.Notices && ctx.HasUI() {
 			ctx.Notify("warden · blocked "+tool+": "+reasons, "error")
 		}
+		w.notifyDesktop(ctx, cfg, "Blocked "+tool+": "+reasons+". A deny rule matched; the call never ran.") // SECURITY
 		return blockResult("pi-warden blocked this " + tool + " call (" + deliveredReasons + "). A deny rule matched; this command is not allowed to run. Ask the user if this is genuinely required."), nil
 	case LevelConfirm:
 	default:
@@ -189,6 +195,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		}
 	}
 	askUser := func() (any, error) {
+		w.notifyDesktop(ctx, cfg, "Waiting for you: allow this "+tool+" call? "+reasons) // SECURITY
 		allowed, err := ctx.Confirm("warden: allow this "+tool+" call?", confirmMessage(verdict))
 		if err != nil {
 			return nil, err
@@ -226,6 +233,7 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 	if cfg.Notices && ctx.HasUI() {
 		ctx.Notify("warden · held "+tool+": "+reasons+". The agent was told why and asked to re-plan or ask you.", "warning")
 	}
+	w.notifyDesktop(ctx, cfg, "Held "+tool+": "+reasons+". The agent will re-plan or ask you in chat.") // SECURITY
 	return blockResult(SteerReason(dv, judge != nil)), nil
 }
 

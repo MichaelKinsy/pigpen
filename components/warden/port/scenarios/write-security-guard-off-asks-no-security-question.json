@@ -1,0 +1,131 @@
+{
+  "name": "write-security-guard-off-asks-no-security-question",
+  "description": "With security.enabled false the write request carries no security question and no security steer follows; the slop steer is unaffected.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0",
+    "FIXTURE_JUDGE_KEY": "x",
+    "TYPESAFE_API_KEY": "x",
+    "TYPESAFE_BASE_URL": "{{server:judge}}"
+  },
+  "agentFiles": {
+    "pi-warden/config.json": "{\"typesafe\": true, \"typesafeBackend\": {\"label\": \"Fixture judge\", \"host\": \"{{server:judge}}\", \"keyEnv\": \"FIXTURE_JUDGE_KEY\", \"defaultModel\": \"jev-latest\"}, \"notices\": false, \"rules\": {\"enabled\": false}, \"security\": {\"enabled\": false}}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\"enabled\": true, \"backend\": \"typesafe\", \"consent\": \"typesafe\", \"notices\": false, \"rules\": {\"enabled\": false}, \"security\": {\"enabled\": false}}"
+  },
+  "servers": {
+    "judge": {
+      "recordHeaders": [
+        "authorization"
+      ],
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "json": {
+            "model": "jev-fixture",
+            "answers": {
+              "irreversible": {
+                "type": "noul",
+                "noul": 0.05
+              },
+              "mutates": {
+                "type": "noul",
+                "noul": 0.9
+              },
+              "off_task": {
+                "type": "noul",
+                "noul": 0.05
+              },
+              "scope": {
+                "type": "choice",
+                "choice": "expected_step",
+                "confidence": 0.9,
+                "probabilities": {
+                  "expected_step": 0.9,
+                  "plausible_side_step": 0.05,
+                  "unrelated": 0.03,
+                  "unclear": 0.02
+                }
+              },
+              "should_proceed": {
+                "type": "noul",
+                "noul": 0.95
+              },
+              "slop_stub": {
+                "type": "noul",
+                "noul": 0.92
+              },
+              "slop_comments": {
+                "type": "noul",
+                "noul": 0.1
+              },
+              "slop_dead": {
+                "type": "noul",
+                "noul": 0.1
+              },
+              "slop_hedging": {
+                "type": "noul",
+                "noul": 0.75
+              }
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          },
+          "times": 1
+        }
+      ]
+    }
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": "src/a.ts",
+            "content": "// TODO: implement\nexport const a = () => null;"
+          }
+        }
+      ]
+    },
+    {
+      "text": "written"
+    },
+    {
+      "text": "acknowledged"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "write the module"
+      }
+    }
+  ]
+}

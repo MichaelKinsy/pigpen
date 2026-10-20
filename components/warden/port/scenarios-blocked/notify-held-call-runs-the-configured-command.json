@@ -1,0 +1,63 @@
+{
+  "name": "notify-held-call-runs-the-configured-command",
+  "description": "With notify.enabled and a configured command, a held call runs the command once with the title and the clipped reason (never the command line); the call is held as usual.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0"
+  },
+  "agentFiles": {
+    "pi-warden/config.json": "{\"notify\": {\"enabled\": true, \"command\": [\"notify-shim\", \"{title}\", \"{body}\"], \"cooldownMs\": 0}, \"rules\": {\"enabled\": false}}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\"enabled\": true, \"notify\": {\"enabled\": true, \"command\": [\"notify-shim\", \"{title}\", \"{body}\"], \"cooldownMs\": 0}, \"rules\": {\"enabled\": false}}"
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "notify-shim": {
+      "mode": "canned",
+      "stdout": "",
+      "exit": 0
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "rm -rf /"
+          }
+        }
+      ]
+    },
+    {
+      "text": "held"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "clean up everything"
+      }
+    }
+  ]
+}

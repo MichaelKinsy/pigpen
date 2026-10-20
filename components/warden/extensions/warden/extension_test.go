@@ -60,6 +60,8 @@ type harnessOpts struct {
 	cwd    string // the session's working directory; default: a fresh directory
 	now    func() time.Time
 	home   string // the config home; default: a fresh directory (a second harness can share one)
+	// tweak adjusts the extension's Options before it starts (notifier runner, platform).
+	tweak func(*Options)
 }
 
 func startHarness(t *testing.T, o harnessOpts) *harness {
@@ -93,6 +95,9 @@ func startHarness(t *testing.T, o harnessOpts) *harness {
 		return ""
 	}
 	opts := Options{Getenv: getenv, Git: o.git, ScratchPlatform: o.scratchPlatform}
+	if o.tweak != nil {
+		o.tweak(&opts)
+	}
 	if o.newJudge != nil {
 		opts.NewJudge = func(_ sdk.Context, cfg Config, b *Budget, _ func(string) string) (Judge, error) {
 			return o.newJudge(cfg, b)

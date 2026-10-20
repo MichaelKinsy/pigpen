@@ -1,0 +1,109 @@
+{
+  "name": "prose-disabled-judges-nothing",
+  "description": "With slop.prose.enabled false the long replies are not judged and nobody is nudged: the judge fixture sees no request.",
+  "env": {
+    "PIGPEN_WARDEN_ENABLED": "1",
+    "PIGPEN_WARDEN_STEER_VISIBLE": "0",
+    "FIXTURE_JUDGE_KEY": "x",
+    "TYPESAFE_API_KEY": "x",
+    "TYPESAFE_BASE_URL": "{{server:judge}}"
+  },
+  "agentFiles": {
+    "pi-warden/config.json": "{\"typesafe\": true, \"typesafeBackend\": {\"label\": \"Fixture judge\", \"host\": \"{{server:judge}}\", \"keyEnv\": \"FIXTURE_JUDGE_KEY\", \"defaultModel\": \"jev-latest\"}, \"notices\": false, \"rules\": {\"enabled\": false}, \"slop\": {\"prose\": {\"enabled\": false}}}"
+  },
+  "homeFiles": {
+    "pigpen-warden/config.json": "{\"enabled\": true, \"backend\": \"typesafe\", \"consent\": \"typesafe\", \"notices\": false, \"rules\": {\"enabled\": false}, \"slop\": {\"prose\": {\"enabled\": false}}}"
+  },
+  "servers": {
+    "judge": {
+      "recordHeaders": [
+        "authorization"
+      ],
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/systemone",
+          "json": {
+            "model": "jev-fixture",
+            "answers": {
+              "wordy": {
+                "type": "noul",
+                "noul": 0.9
+              },
+              "cliches": {
+                "type": "noul",
+                "noul": 0.95
+              },
+              "jargon": {
+                "type": "noul",
+                "noul": 0.1
+              }
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          },
+          "times": 2
+        }
+      ]
+    }
+  },
+  "commands": {
+    "git": {
+      "mode": "missing"
+    }
+  },
+  "args": [
+    "--tools",
+    "read,bash,edit,write"
+  ],
+  "capture": [
+    "response",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end",
+    "message_end"
+  ],
+  "llm": [
+    {
+      "text": "Great question! Let me walk you through it. Great question! Let me walk you through it. Great question! Let me walk you through it. Great question! Let me walk you through it. Great question! Let me walk you through it. Great question! Let me walk you through it. "
+    },
+    {
+      "text": "Great question! Let me walk you through it. Great question! Let me walk you through it. Great question! Let me walk you through it. Great question! Let me walk you through it. Great question! Let me walk you through it. Great question! Let me walk you through it. "
+    },
+    {
+      "text": "ok"
+    },
+    {
+      "text": "Short."
+    }
+  ],
+  "steps": [
+    {
+      "name": "first",
+      "rpc": {
+        "type": "prompt",
+        "message": "explain the bug"
+      }
+    },
+    {
+      "name": "second",
+      "rpc": {
+        "type": "prompt",
+        "message": "and the fix?"
+      }
+    },
+    {
+      "name": "third",
+      "rpc": {
+        "type": "prompt",
+        "message": "ok"
+      }
+    }
+  ]
+}
