@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-rpiv-web-tools",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Go port of @juicesharp/rpiv-web-tools: web_search over ten backends (Brave, Tavily, Serper, Exa, You.com, Jina, Firecrawl, Perplexity, SearXNG, Ollama), web_fetch and /web-tools; nothing starts until a tool runs",
   "keywords": [
     "pig-package",

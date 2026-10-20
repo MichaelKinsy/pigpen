@@ -55,10 +55,20 @@ func marshalJS(v any) ([]byte, error) {
 const jsWhitespace = " \t\n\v\f\r\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
 
 // jsTrim is String.prototype.trim.
-func jsTrim(s string) string { return strings.Trim(s, jsWhitespace) }
+func jsTrim(s string) string {
+	if n := len(s); n > 0 && s[0] > ' ' && s[0] < 0x80 && s[n-1] > ' ' && s[n-1] < 0x80 {
+		return s // ASCII on both ends and not white space
+	}
+	return strings.Trim(s, jsWhitespace)
+}
 
 // jsTrimEnd is String.prototype.trimEnd.
-func jsTrimEnd(s string) string { return strings.TrimRight(s, jsWhitespace) }
+func jsTrimEnd(s string) string {
+	if n := len(s); n > 0 && s[n-1] > ' ' && s[n-1] < 0x80 {
+		return s
+	}
+	return strings.TrimRight(s, jsWhitespace)
+}
 
 // encodeURIComponent is the JavaScript function: everything but A-Z a-z 0-9 - _ . ! ~ * ' ( ) is escaped.
 func encodeURIComponent(s string) string {

@@ -267,7 +267,7 @@ m("gh-show-token-mask", "command.go", "maskAPIKey(token, token != \"\")", "token
 m("gh-show-token-untrimmed", "command.go", "token := envTrim(githubTokenEnvVar)", "token := os.Getenv(githubTokenEnvVar)")
 
 # text.go: the layout of pi-tui's Text component
-m("text-padding-dropped", "text.go", "lines[i] = l + blanks[:pad]", "lines[i] = l")
+m("text-padding-dropped", "text.go", "sb.WriteString(blanks[:k])", 'sb.WriteString("")')
 m("text-tab-width", "text.go", r'strings.ReplaceAll(text, "\t", "   ")', r'strings.ReplaceAll(text, "\t", "  ")')
 m("text-blank-has-a-line", "text.go", "if jsTrim(text) == \"\" {\n\t\treturn []string{}", "if jsTrim(text) == \"\" {\n\t\treturn []string{\"\"}")
 m("wrap-line-end-not-trimmed", "text.go", "wrapped[i] = jsTrimEnd(wrapped[i])", 'wrapped[i] = wrapped[i] + ""')
@@ -276,6 +276,9 @@ m("wrap-underline-not-closed", "text.go", r'return "\x1b[24m"', 'return ""')
 m("wrap-cjk-only-han", "text.go", "unicode.In(r, unicode.Han, unicode.Hiragana, unicode.Katakana, unicode.Hangul, unicode.Bopomofo)", "unicode.In(r, unicode.Han)")
 m("width-joined-emoji-narrow", "text.go", "strings.ContainsRune(g, 0xfe0f) || strings.ContainsRune(g, 0x200d) || isRegionalIndicator(first)", "strings.ContainsRune(g, 0xfe0f)")
 m("wrap-fg-color-forgotten", "text.go", "t.fg = color", "_ = color")
+m("wrap-color-span-short", "text.go", "color, used = params[starts[i]:starts[i+3]-1], 3", "color, used = params[starts[i]:starts[i+2]-1], 3")
+m("wrap-ascii-width-fast-path-counts-escape", "text.go", "if c < utf8.RuneSelf && c != 0x1b && (i+1 == len(s)", "if c < utf8.RuneSelf && (i+1 == len(s)")
+m("wrap-trim-end-fast-path-keeps-space", "util.go", "s[n-1] > ' ' && s[n-1] < 0x80 {\n\t\treturn s\n\t}\n\treturn strings.TrimRight", "s[n-1] >= ' ' && s[n-1] < 0x80 {\n\t\treturn s\n\t}\n\treturn strings.TrimRight")
 
 M = [x for x in M if x]
 for x in M:

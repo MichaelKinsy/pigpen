@@ -1400,8 +1400,8 @@
  {
   "name": "text-padding-dropped",
   "file": "text.go",
-  "find": "lines[i] = l + blanks[:pad]",
-  "replace": "lines[i] = l"
+  "find": "sb.WriteString(blanks[:k])",
+  "replace": "sb.WriteString(\"\")"
  },
  {
   "name": "text-tab-width",
@@ -1450,5 +1450,23 @@
   "file": "text.go",
   "find": "t.fg = color",
   "replace": "_ = color"
+ },
+ {
+  "name": "wrap-color-span-short",
+  "file": "text.go",
+  "find": "color, used = params[starts[i]:starts[i+3]-1], 3",
+  "replace": "color, used = params[starts[i]:starts[i+2]-1], 3"
+ },
+ {
+  "name": "wrap-ascii-width-fast-path-counts-escape",
+  "file": "text.go",
+  "find": "if c < utf8.RuneSelf && c != 0x1b && (i+1 == len(s)",
+  "replace": "if c < utf8.RuneSelf && (i+1 == len(s)"
+ },
+ {
+  "name": "wrap-trim-end-fast-path-keeps-space",
+  "file": "util.go",
+  "find": "s[n-1] > ' ' && s[n-1] < 0x80 {\n\t\treturn s\n\t}\n\treturn strings.TrimRight",
+  "replace": "s[n-1] >= ' ' && s[n-1] < 0x80 {\n\t\treturn s\n\t}\n\treturn strings.TrimRight"
  }
 ]

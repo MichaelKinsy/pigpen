@@ -116,7 +116,13 @@ func graphemeWidth(g string) int {
 func visibleWidth(s string) int {
 	w := 0
 	for i := 0; i < len(s); {
-		if s[i] == 0x1b {
+		c := s[i]
+		if c < utf8.RuneSelf && c != 0x1b && (i+1 == len(s) || s[i+1] < utf8.RuneSelf) {
+			w++ // one ASCII character with nothing after it that could attach to it
+			i++
+			continue
+		}
+		if c == 0x1b {
 			if n := ansiAt(s, i); n > 0 {
 				i += n
 				continue
@@ -165,19 +171,29 @@ func (t *ansiTracker) process(code string) {
 		t.reset()
 		return
 	}
-	parts := strings.Split(params, ";")
-	for i := 0; i < len(parts); {
-		c, err := strconv.Atoi(parts[i])
+	// The parameters are read in place: a color made of several fields is the span of params they cover.
+	var buf [16]int
+	starts := append(buf[:0], 0)
+	for i := range len(params) {
+		if params[i] == ';' {
+			starts = append(starts, i+1)
+		}
+	}
+	starts = append(starts, len(params)+1)
+	nf := len(starts) - 1
+	field := func(k int) string { return params[starts[k] : starts[k+1]-1] }
+	for i := 0; i < nf; {
+		c, err := strconv.Atoi(field(i))
 		if err != nil {
 			i++
 			continue
 		}
-		if (c == 38 || c == 48) && i+1 < len(parts) {
+		if (c == 38 || c == 48) && i+1 < nf {
 			color, used := "", 0
-			if parts[i+1] == "5" && i+2 < len(parts) {
-				color, used = strings.Join(parts[i:i+3], ";"), 3
-			} else if parts[i+1] == "2" && i+4 < len(parts) {
-				color, used = strings.Join(parts[i:i+5], ";"), 5
+			if field(i+1) == "5" && i+2 < nf {
+				color, used = params[starts[i]:starts[i+3]-1], 3
+			} else if field(i+1) == "2" && i+4 < nf {
+				color, used = params[starts[i]:starts[i+5]-1], 5
 			}
 			if used > 0 {
 				if c == 38 {
@@ -239,13 +255,18 @@ func (t *ansiTracker) process(code string) {
 
 // update processes every escape sequence in text.
 func (t *ansiTracker) update(text string) {
-	for i := 0; i < len(text); {
+	for i := strings.IndexByte(text, 0x1b); i >= 0 && i < len(text); {
 		if n := ansiAt(text, i); n > 0 {
 			t.process(text[i : i+n])
 			i += n
-			continue
+		} else {
+			i++
 		}
-		i++
+		j := strings.IndexByte(text[i:], 0x1b)
+		if j < 0 {
+			return
+		}
+		i += j
 	}
 }
 
@@ -331,7 +352,7 @@ func splitTokens(text string) []string {
 			from = pending
 			pending = -1
 		}
-		if !isSpace && isCJKBreak(seg) {
+		if !isSpace && seg[0] >= utf8.RuneSelf && isCJKBreak(seg) {
 			flush()
 			tokens = append(tokens, text[from:e])
 			lastStart = from
@@ -403,14 +424,16 @@ func breakLongWord(word string, width int, t *ansiTracker) []string {
 	return lines
 }
 
-func wrapSingleLine(line string, width int) []string {
+// appendWrapped appends the wrapped rows of one line to out.
+func appendWrapped(out []string, line string, width int) []string {
 	if line == "" {
-		return []string{""}
+		return append(out, "")
 	}
 	if visibleWidth(line) <= width {
-		return []string{line}
+		return append(out, line)
 	}
-	var wrapped []string
+	base := len(out)
+	wrapped := out
 	t := &ansiTracker{}
 	var current strings.Builder
 	current.Grow(width + 32)
@@ -449,10 +472,10 @@ func wrapSingleLine(line string, width int) []string {
 	if current.Len() > 0 {
 		wrapped = append(wrapped, current.String())
 	}
-	if len(wrapped) == 0 {
-		return []string{""}
+	if len(wrapped) == base {
+		return append(wrapped, "")
 	}
-	for i := range wrapped {
+	for i := base; i < len(wrapped); i++ {
 		wrapped[i] = jsTrimEnd(wrapped[i])
 	}
 	return wrapped
@@ -465,14 +488,20 @@ func wrapTextWithAnsi(text string, width int) []string {
 		return []string{""}
 	}
 	text = strings.ReplaceAll(strings.ReplaceAll(text, "\r\n", "\n"), "\r", "\n")
-	var out []string
+	out := make([]string, 0, strings.Count(text, "\n")+1)
 	t := &ansiTracker{}
-	for _, line := range strings.Split(text, "\n") {
+	for rest, more := text, true; more; {
+		var line string
+		line, rest, more = strings.Cut(rest, "\n")
 		prefix := ""
 		if len(out) > 0 {
 			prefix = t.active()
 		}
-		out = append(out, wrapSingleLine(prefix+line, width)...)
+		if prefix == "" {
+			out = appendWrapped(out, line, width)
+		} else {
+			out = appendWrapped(out, prefix+line, width)
+		}
 		t.update(line)
 	}
 	return out
@@ -486,14 +515,29 @@ func textLines(text string, width int) []string {
 		return []string{}
 	}
 	lines := wrapTextWithAnsi(strings.ReplaceAll(text, "\t", "   "), max(1, width))
+	// Every padded line is cut from one string, not built one by one.
+	pads := make([]int, len(lines))
+	size := 0
 	for i, l := range lines {
-		if pad := width - visibleWidth(l); pad > 0 {
-			if pad <= len(blanks) {
-				lines[i] = l + blanks[:pad]
-			} else {
-				lines[i] = l + strings.Repeat(" ", pad)
-			}
+		pads[i] = max(0, width-visibleWidth(l))
+		size += len(l) + pads[i]
+	}
+	var sb strings.Builder
+	sb.Grow(size)
+	for i, l := range lines {
+		sb.WriteString(l)
+		for n := pads[i]; n > 0; {
+			k := min(n, len(blanks))
+			sb.WriteString(blanks[:k])
+			n -= k
 		}
+		pads[i] = sb.Len() // from here the end of the line in all
+	}
+	all := sb.String()
+	start := 0
+	for i := range lines {
+		lines[i] = all[start:pads[i]]
+		start = pads[i]
 	}
 	return lines
 }

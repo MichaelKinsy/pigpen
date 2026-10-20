@@ -29,7 +29,7 @@
   and `exec-coverage`; the record-host check passes. The scenarios put the API config into the lane HOME with `setup`.
   The GitHub scenarios declare `gh` and `git` as canned; the others declare both missing.
 - `go test -race ./...`: pass.
-- `pigeq mutate --unit`: 240 mutations (see below).
+- `pigeq mutate --unit`: 245 mutations (see below).
 - `pig package validate components/rpiv-web-tools` and `pig install <extension dir> --validate-only --json`: valid.
 
 ## Mutations
@@ -52,6 +52,11 @@ compile were rewritten, and two were removed as equivalent: `gh-size-parse-untri
 space itself) and `gh-path-escape` (the symlink check that follows it rejects an existing file outside the clone, and a
 missing one reads as missing either way); the case-folding mutant of the non-code segment list (`gh-noncode-case`) is
 equivalent too, because the action check rejects every segment the list names. Final run of the slice: **214 mutations, all killed**; the stack at this PR (slices 1 to 3) holds **233** (the API view got a table-driven base64 decoder and a tree cut that does not split the listing: two more mutants for the cut), all killed.
+
+Slice 4 (the card layout, `text.go`) added nine layout mutants (`text-*`, `wrap-*`, `width-*`) and three for the fast
+paths that cut its allocations (`wrap-color-span-short`, `wrap-ascii-width-fast-path-counts-escape`,
+`wrap-trim-end-fast-path-keeps-space`); two layout mutants were retargeted after the allocation cuts. The stack at
+this PR holds **245** mutations, all killed.
 
 ## Deliberate differences and findings
 
