@@ -143,17 +143,40 @@ func TestAuditBlocksUserInputWhileRunning(t *testing.T) {
 	if !strings.Contains(during, `"handled"`) {
 		t.Fatalf("during: %q", during)
 	}
-	if !strings.Contains(ext, `"handled"`) {
-		t.Fatalf("an extension-sent message is blocked too, as in the original: %q", ext)
+	if strings.Contains(ext, "handled") {
+		t.Fatalf("D16: the audit's own prompt (source extension) must pass; the original swallows it: %q", ext)
 	}
 	if strings.Contains(after, "handled") {
 		t.Fatalf("after: %q", after)
 	}
-	found := false
+	var told []string
 	for _, n := range h.notices() {
-		found = found || n == "pi-warden is running an audit. Please wait..."
+		if n == "pi-warden is running an audit. Please wait..." {
+			told = append(told, n)
+		}
 	}
-	if !found {
-		t.Fatalf("%q", h.notices())
+	if len(told) != 1 {
+		t.Fatalf("the user is told once, the extension's own message is not answered: %q", h.notices())
+	}
+}
+
+// D16 for every lane that registers a busy flag (init, audit, index): a message with source "extension" passes, a typed
+// one is handled and answered. The original answers both.
+func TestInputFromTheExtensionPassesWhileAnyRegisteredLaneIsBusy(t *testing.T) {
+	ext, w := newWarden(Options{})
+	w.sup.blockInput(func() bool { return true }, "pi-warden is generating rules. Please wait...")
+	h := &harness{t: t, ts: newFakeTypeSafe(t), home: t.TempDir()}
+	t.Setenv("PIG_HOME", h.home)
+	hasUI := true
+	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: t.TempDir(), OnCall: h.onCall})
+	h.start()
+	if raw := string(h.host.Fire("input", map[string]any{"text": "the prompt", "source": "extension"})); strings.Contains(raw, "handled") {
+		t.Fatalf("an extension message was handled: %s", raw)
+	}
+	if raw := string(h.host.Fire("input", map[string]any{"text": "typed", "source": "interactive"})); !strings.Contains(raw, `"handled"`) {
+		t.Fatalf("a typed message was not handled: %s", raw)
+	}
+	if raw := string(h.host.Fire("input", map[string]any{"text": "rpc", "source": "rpc"})); !strings.Contains(raw, `"handled"`) {
+		t.Fatalf("an rpc message was not handled: %s", raw)
 	}
 }

@@ -1,6 +1,6 @@
 {
-  "name": "audit-prompt-blocked-by-its-own-input-handler",
-  "description": "/warden audit on Pi 1.3.0: the audit's own sendUserMessage raises the input event, the running-audit handler answers it as handled (original behavior, PORT.md A1), so the model receives no prompt and the outcome is `missing`.",
+  "name": "audit-prompt-reaches-the-model-report-written",
+  "description": "D16 deviation scenario. /warden audit: the audit prompt (workspace inventory, instructions, report path) is the user message the model receives and the agent writes the report; the original swallows its own prompt (golden-deviations/original: no model request).",
   "env": {
     "PIGPEN_WARDEN_ENABLED": "1",
     "PIGPEN_WARDEN_STEER_VISIBLE": "0"
@@ -45,7 +45,18 @@
   ],
   "llm": [
     {
-      "text": "the audit prompt reached the model"
+      "toolCalls": [
+        {
+          "name": "write",
+          "arguments": {
+            "path": ".pi-warden/audit-report.html",
+            "content": "<html>report</html>"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Audit report written: 1 finding."
     }
   ]
 }
