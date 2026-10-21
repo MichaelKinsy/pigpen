@@ -51,7 +51,7 @@
   "name": "perf-observe-draft",
   "file": "editor_ext.go",
   "find": "\t\te.perf.observeDraft(lines)\n",
-  "replace": ""
+  "replace": "\t\t_ = lines\n"
  },
  {
   "name": "perf-render-total",

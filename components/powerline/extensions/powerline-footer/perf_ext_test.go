@@ -3,6 +3,7 @@ package powerline_footer_test
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 // The editor profiler through the wire: opt-in, a report that names what was measured, and the A/B switches.
@@ -50,6 +51,8 @@ func TestProfilerReportsTheEditorAndTheWidgets(t *testing.T) {
 		"input.total: n=2",
 		"input.base-editor: n=2",
 		"editor.render.total: n=",
+		"editor.render.base: n=",
+		"editor.render.fast-probe: n=",
 		"layout.segment-context: n=",
 		"widget.primary: n=",
 		"widget.status: n=",
@@ -82,6 +85,26 @@ func TestProfilerSwitchesTurnFeaturesOff(t *testing.T) {
 	}
 	h.Command("powerline-perf", "")
 	if got := lastNotification(h); !strings.Contains(got, "A/B: fast-render=off, editor-chrome=off, widgets=off, bash-widgets=on, last-prompt=on") {
+		t.Errorf("report:\n%s", got)
+	}
+}
+
+func TestProfilerBashWidgetSwitchKeepsTheTranscriptWidgetOff(t *testing.T) {
+	t.Setenv("POWERLINE_DEBUG_PERF", "1")
+	t.Setenv("POWERLINE_PERF_BASH_WIDGETS", "0")
+	b := startBashHost(t, `{"powerline":{"welcome":false}}`)
+	b.h.Command("bash-mode", "on")
+	b.setText("echo hidden")
+	editorInput(b.h, "\r")
+	waitUntil(t, "the command to be taken", func() bool { return b.draft() == "" })
+	time.Sleep(300 * time.Millisecond)
+	for _, c := range b.h.CallsTo("ui.setWidget") {
+		if c.Args["key"] == "powerline-bash-transcript" && c.Args["content"] != nil {
+			t.Errorf("the transcript widget was drawn with its switch off: %v", c.Args["content"])
+		}
+	}
+	b.h.Command("powerline-perf", "")
+	if got := lastNotification(b.h); !strings.Contains(got, "bash-widgets=off") {
 		t.Errorf("report:\n%s", got)
 	}
 }
