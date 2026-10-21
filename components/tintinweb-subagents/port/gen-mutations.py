@@ -326,7 +326,7 @@ m("run-panic-unrecovered", "manager.go", "if guard(\"agent run\", func() { m.run
 m("panicked-run-keeps-its-slot", "manager.go", "m.releasePoolLocked(r)\n\tc, cancel := r.child, r.cancel\n\tr.child, r.cancel = nil, nil\n\tr.closeDone()", "c, cancel := r.child, r.cancel\n\tr.child, r.cancel = nil, nil\n\tr.closeDone()")
 m("cleanup-timer-not-started", "extension.go", "\t\ta.mgr.startGC(a.cleanupEvery) // once: a session start while the sweep runs keeps it. upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000))\n", "")
 m("cleanup-every-hour", "extension.go", "cleanupEvery    = time.Minute ", "cleanupEvery    = time.Hour ")
-m("cleanup-ignores-age", "manager.go", "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {\n\t\t\tcontinue", "if !r.CompletedAt.IsZero() && false {\n\t\t\tcontinue")
+m("cleanup-ignores-age", "manager.go", "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {\n\t\t\tcontinue", "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) && false {\n\t\t\tcontinue")
 m("cleanup-removes-running", "manager.go", "if r.Status == statusRunning || r.Status == statusQueued {\n\t\t\tcontinue\n\t\t}\n\t\tif !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {", "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {")
 m("shutdown-keeps-children", "manager.go", "if h.c != nil {\n\t\t\th.c.close()\n\t\t}", "if h.c != nil {\n\t\t}")
 m("shutdown-keeps-ticker", "manager.go", "func (m *manager) dispose() {\n\tm.stopGCLoop()", "func (m *manager) dispose() {")
