@@ -449,3 +449,22 @@ func TestBashEditorOneOffContextReadsTheFirstLine(t *testing.T) {
 		t.Errorf("Tab was taken although only the second line is a one-off command: %q", r.base.input)
 	}
 }
+
+func TestBashEditorCtrlJIsANewLineNotASubmit(t *testing.T) {
+	r := newBashRig(true)
+	r.base.text = "echo a"
+	r.key(t, "\n") // ctrl+j: Enter's byte in a terminal without the kitty protocol, but a newline binding
+	if len(r.submitted) != 0 || len(r.base.input) != 1 {
+		t.Errorf("submitted %q, default editor input %q", r.submitted, r.base.input)
+	}
+}
+
+func TestBashEditorDoesNotDrawAGhostOutsideAShellContext(t *testing.T) {
+	r := newBashRig(false)
+	r.base.text = "gi"
+	r.setGhost("git status")
+	rows := []string{"top", "gi", "bottom"}
+	if got := r.editor.renderLines(rows, 30); got[1] != "gi" {
+		t.Errorf("a stale ghost was drawn in a normal prompt: %q", got[1])
+	}
+}
