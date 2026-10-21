@@ -90,7 +90,7 @@ func TestShellToolAliasesOracleDifferential(t *testing.T) {
 		rec := &sessionRecorder{configs: []sessionConfigCase{{}}}
 		store := NewConfigStore(ConfigStoreDeps{AgentDir: agentDir, PolicyPaths: noPolicyPaths{}, Logger: quietConfigLogger{}})
 		session := NewPermissionSession(ExtensionPaths{}, rec, rec, &SessionRules{}, store, rec, PosixPathFlavor)
-		ctx := SessionContext{ForwarderContext: ForwarderContext{Cwd: cwd, SessionManager: sessionManagerFake{entries: json.RawMessage(`[]`)}}}
+		ctx := SessionContext{AuthorityContext: AuthorityContext{ForwarderContext: ForwarderContext{Cwd: cwd, SessionManager: sessionManagerFake{entries: json.RawMessage(`[]`)}}}}
 		session.RefreshConfig(&ctx, c.Trusted)
 		aliases := session.GetShellToolAliases()
 
@@ -107,7 +107,7 @@ func TestShellToolAliasesOracleDifferential(t *testing.T) {
 			gotAliases = m
 			nonNil++
 		}
-		if !reflect.DeepEqual(roundTrip(t, gotAliases), want.Aliases) {
+		if !reflect.DeepEqual(jsonRoundTrip(t, gotAliases), want.Aliases) {
 			t.Errorf("%s: aliases\n  port     %v\n  original %v", c.ID, gotAliases, want.Aliases)
 		}
 		checks++
@@ -124,7 +124,7 @@ func TestShellToolAliasesOracleDifferential(t *testing.T) {
 				}
 				got = map[string]any{"command": inv.Command, "workdir": workdir}
 			}
-			if !reflect.DeepEqual(roundTrip(t, got), want.Invocations[j]) {
+			if !reflect.DeepEqual(jsonRoundTrip(t, got), want.Invocations[j]) {
 				t.Errorf("%s: tool %q input %s\n  port     %v\n  original %v", c.ID, tc.Name, tc.Input, got, want.Invocations[j])
 			}
 			checks++
@@ -136,8 +136,8 @@ func TestShellToolAliasesOracleDifferential(t *testing.T) {
 	t.Logf("%d cases, %d comparisons, %d with aliases, 0 differences", len(cases), checks, nonNil)
 }
 
-// roundTrip maps a value through JSON so it compares with a decoded record (numbers, nil, nested maps).
-func roundTrip(t *testing.T, v any) any {
+// jsonRoundTrip maps a value through JSON so it compares with a decoded record (numbers, nil, nested maps).
+func jsonRoundTrip(t *testing.T, v any) any {
 	data, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)

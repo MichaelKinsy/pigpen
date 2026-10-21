@@ -65,8 +65,9 @@ func (r *sessionRecorder) Start(ctx ForwarderContext) {
 	r.log = append(r.log, []any{"forward.start", ctx.Cwd})
 }
 func (r *sessionRecorder) Stop() { r.log = append(r.log, []any{"forward.stop"}) }
-func (r *sessionRecorder) Activate(ctx SessionContext) {
+func (r *sessionRecorder) Activate(ctx AuthorityContext) error {
 	r.log = append(r.log, []any{"auth.activate", ctx.Cwd})
+	return nil
 }
 func (r *sessionRecorder) Deactivate() { r.log = append(r.log, []any{"auth.deactivate"}) }
 func (r *sessionRecorder) Notify(message, level string) {
@@ -175,7 +176,7 @@ func TestPermissionSessionOracleDifferential(t *testing.T) {
 			rec, rec, rules, rec, rec, flavor)
 		ctxs := make([]SessionContext, len(c.Ctxs))
 		for j, x := range c.Ctxs {
-			ctxs[j] = SessionContext{ForwarderContext: ForwarderContext{HasUI: x.HasUI, Cwd: x.Cwd, SessionManager: sessionManagerFake{entries: x.Entries}}, Notifier: rec}
+			ctxs[j] = SessionContext{AuthorityContext: AuthorityContext{ForwarderContext: ForwarderContext{HasUI: x.HasUI, Cwd: x.Cwd, SessionManager: sessionManagerFake{entries: x.Entries}}}, Notifier: rec}
 		}
 		for j, o := range c.Ops {
 			rec.log = nil
