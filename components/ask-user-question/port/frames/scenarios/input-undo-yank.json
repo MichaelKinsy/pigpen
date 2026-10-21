@@ -1,0 +1,126 @@
+{
+	"name": "input-undo-yank",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "n",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "e",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "t",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "t",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "h",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "e",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "e",
+			"label": "type"
+		},
+		{
+			"input": "\u0017",
+			"label": "ctrl-w"
+		},
+		{
+			"input": "\u0017",
+			"label": "ctrl-w"
+		},
+		{
+			"input": "\u0019",
+			"label": "ctrl-y"
+		},
+		{
+			"input": "\u001f",
+			"label": "ctrl-_"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -1,0 +1,125 @@
+{
+	"name": "input-cjk-wrap-w20",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 20,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "日",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "本",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "語",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "の",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "長",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "い",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "文",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "章",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "が",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "こ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "こ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "に",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "入",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "り",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ま",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "す",
+			"label": "type"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -1,0 +1,37 @@
+{
+	"name": "preview-markdown-w30",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which template?",
+				"header": "Template",
+				"options": [
+					{
+						"label": "Rich",
+						"description": "Markdown showcase",
+						"preview": "# Heading one\n\nSome **bold**, *italic*, `inline code` and a [link](https://example.com).\n\n- first item\n- second item\n  - nested item\n\n1. one\n2. two\n\n> a quoted line\n\n```\nplain fence\n  indented\n```\n\n---\n\n| a | b |\n|---|---|\n| 1 | 2 |"
+					},
+					{
+						"label": "Plain",
+						"description": "Just text",
+						"preview": "no markup here, only a sentence that is long enough to wrap in a narrow pane."
+					},
+					{
+						"label": "Code",
+						"description": "Fenced code",
+						"preview": "```\nfunc main() {\n\tprintln(\"hi\")\n}\n```"
+					}
+				]
+			}
+		]
+	},
+	"width": 30,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

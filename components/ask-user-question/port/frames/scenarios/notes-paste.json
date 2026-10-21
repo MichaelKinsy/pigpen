@@ -1,0 +1,46 @@
+{
+	"name": "notes-paste",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "n",
+			"label": "n"
+		},
+		{
+			"input": "\u001b[200~pasted note\nsecond line\u001b[201~",
+			"label": "paste"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

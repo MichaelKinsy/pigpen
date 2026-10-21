@@ -1,0 +1,80 @@
+{
+	"name": "edge-input-zero-width",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "a",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "​",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "b",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "‍",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "c",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "­",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

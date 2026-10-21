@@ -1,0 +1,96 @@
+{
+	"name": "preview-multi-with-multiselect",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which database fits the workload?",
+				"header": "Database",
+				"options": [
+					{
+						"label": "SQLite",
+						"description": "Embedded, zero setup",
+						"preview": "file.db\n  └─ one file"
+					},
+					{
+						"label": "Postgres",
+						"description": "Server, concurrent writers",
+						"preview": "app ──▶ pg\n       └─ WAL"
+					},
+					{
+						"label": "DuckDB",
+						"description": "Columnar analytics",
+						"preview": "scan ▒▒▒▒▒▒▒▒"
+					}
+				]
+			},
+			{
+				"question": "Which features do you want to enable?",
+				"header": "Features",
+				"options": [
+					{
+						"label": "Auth",
+						"description": "Sign-in and sessions"
+					},
+					{
+						"label": "Billing",
+						"description": "Plans and invoices"
+					},
+					{
+						"label": "Search",
+						"description": "Full-text search over records"
+					},
+					{
+						"label": "Export",
+						"description": "CSV and JSON download"
+					}
+				],
+				"multiSelect": true
+			}
+		]
+	},
+	"width": 100,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": " ",
+			"label": "space"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

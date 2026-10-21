@@ -1,0 +1,55 @@
+{
+	"name": "multi-cjk",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "功能？",
+				"header": "功能",
+				"options": [
+					{
+						"label": "认证",
+						"description": "登录和会话"
+					},
+					{
+						"label": "账单 💰",
+						"description": "计划和发票"
+					},
+					{
+						"label": "搜索",
+						"description": "全文检索"
+					}
+				],
+				"multiSelect": true
+			}
+		]
+	},
+	"width": 30,
+	"rows": 24,
+	"steps": [
+		{
+			"input": " ",
+			"label": "space"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": " ",
+			"label": "space"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

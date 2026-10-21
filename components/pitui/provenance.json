@@ -30,5 +30,18 @@
       "licenseFile": "licenses/PiG-LICENSE",
       "attributionFile": "CREDITS.md"
     }
+  ],
+  "dependencies": [
+    {
+      "name": "highlight.js",
+      "authors": [
+        "Ivan Sagalaev"
+      ],
+      "url": "https://github.com/highlightjs/highlight.js",
+      "revision": "0c4cc8a1c3aa373aee06796433c1389e4d2a3a45",
+      "license": "BSD-3-Clause",
+      "licenseFile": "licenses/highlight.js-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
   ]
 }

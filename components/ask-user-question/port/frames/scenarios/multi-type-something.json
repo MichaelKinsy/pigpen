@@ -1,0 +1,88 @@
+{
+	"name": "multi-type-something",
+	"description": "the Type something row inside a multi-select question",
+	"params": {
+		"questions": [
+			{
+				"question": "Which features do you want to enable?",
+				"header": "Features",
+				"options": [
+					{
+						"label": "Auth",
+						"description": "Sign-in and sessions"
+					},
+					{
+						"label": "Billing",
+						"description": "Plans and invoices"
+					},
+					{
+						"label": "Search",
+						"description": "Full-text search over records"
+					},
+					{
+						"label": "Export",
+						"description": "CSV and JSON download"
+					}
+				],
+				"multiSelect": true
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": " ",
+			"label": "space"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "m",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "y",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "n",
+			"label": "type"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

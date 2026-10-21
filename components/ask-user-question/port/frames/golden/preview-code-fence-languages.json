@@ -1,0 +1,233 @@
+{
+	"scenario": "preview-code-fence-languages",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Snippet </bg>                                                                                          ",
+				"",
+				" <b>Which snippet?</b>                                                                                     ",
+				"",
+				"<fg:accent><b>❯ 1. TypeScript</b></fg>                                      <fg:accent>┌─────────────────────────────────────────────┐</fg>",
+				"     <fg:muted>ts fence</fg>                                        <fg:accent>│</fg>   <fg:syntaxKeyword>const</fg> x: <fg:syntaxType>number</fg> = <fg:syntaxNumber>1</fg>;                      <fg:accent>│</fg>",
+				"  2. Go                                              <fg:accent>│</fg>   <fg:syntaxComment>// comment</fg>                                <fg:accent>│</fg>",
+				"     <fg:muted>go fence</fg>                                        <fg:accent>│</fg>   <fg:syntaxKeyword>function</fg><fg:syntaxFunction> </fg><fg:syntaxFunction>f</fg><fg:syntaxFunction>(</fg><fg:syntaxVariable>a: </fg><fg:syntaxType>string</fg><fg:syntaxFunction>) </fg>{ <fg:syntaxKeyword>return</fg> <fg:syntaxString>`</fg><fg:text>${a}</fg><fg:syntaxString>!`</fg>; } <fg:accent>│</fg>",
+				"  3. JSON                                            <fg:accent>└─────────────────────────────────────────────┘</fg>",
+				"     <fg:muted>json fence</fg>                                     ",
+				"  4. Text                                            <fg:muted>Notes: press n to add notes</fg>",
+				"     <fg:muted>text fence</fg>                                     ",
+				"  5. Type something.                                ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Snippet </bg>                                                                                          ",
+				"",
+				" <b>Which snippet?</b>                                                                                     ",
+				"",
+				"  1. TypeScript                                         <fg:accent>┌──────────────────────────────────────────┐</fg>",
+				"     <fg:muted>ts fence</fg>                                           <fg:accent>│</fg>   <fg:syntaxKeyword>func</fg><fg:syntaxFunction> </fg><fg:syntaxFunction>main</fg><fg:syntaxVariable>()</fg> {                         <reset> <fg:accent>│</fg>",
+				"<fg:accent><b>❯ 2. Go</b></fg>                                                 <fg:accent>│</fg>      fmt.Println(<fg:syntaxString>\"hi\"</fg>, <fg:syntaxNumber>42</fg>)              <reset> <fg:accent>│</fg>",
+				"     <fg:muted>go fence</fg>                                           <fg:accent>│</fg>   }                                     <reset> <fg:accent>│</fg>",
+				"  3. JSON                                               <fg:accent>└──────────────────────────────────────────┘</fg>",
+				"     <fg:muted>json fence</fg>                                     ",
+				"  4. Text                                               <fg:muted>Notes: press n to add notes</fg>",
+				"     <fg:muted>text fence</fg>                                     ",
+				"  5. Type something.                                ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Snippet </bg>                                                                                          ",
+				"",
+				" <b>Which snippet?</b>                                                                                     ",
+				"",
+				"  1. TypeScript                                         <fg:accent>┌──────────────────────────────────────────┐</fg>",
+				"     <fg:muted>ts fence</fg>                                           <fg:accent>│</fg>   {<fg:syntaxVariable>\"a\"</fg>: [<fg:syntaxNumber>1</fg>, <fg:syntaxNumber>true</fg>, <fg:syntaxNumber>null</fg>], <fg:syntaxVariable>\"b\"</fg>: <fg:syntaxString>\"x\"</fg>}      <reset> <fg:accent>│</fg>",
+				"  2. Go                                                 <fg:accent>└──────────────────────────────────────────┘</fg>",
+				"     <fg:muted>go fence</fg>                                       ",
+				"<fg:accent><b>❯ 3. JSON</b></fg>                                               <fg:muted>Notes: press n to add notes</fg>",
+				"     <fg:muted>json fence</fg>                                     ",
+				"  4. Text                                           ",
+				"     <fg:muted>text fence</fg>                                     ",
+				"  5. Type something.                                ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 3
+		},
+		{
+			"step": 3,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Snippet </bg>                                                                                          ",
+				"",
+				" <b>Which snippet?</b>                                                                                     ",
+				"",
+				"  1. TypeScript                                         <fg:accent>┌──────────────────────────────────────────┐</fg>",
+				"     <fg:muted>ts fence</fg>                                           <fg:accent>│</fg>   <fg:mdCodeBlock>not highlighted</fg>                       <reset> <fg:accent>│</fg>",
+				"  2. Go                                                 <fg:accent>└──────────────────────────────────────────┘</fg>",
+				"     <fg:muted>go fence</fg>                                       ",
+				"  3. JSON                                               <fg:muted>Notes: press n to add notes</fg>",
+				"     <fg:muted>json fence</fg>                                     ",
+				"<fg:accent><b>❯ 4. Text</b></fg>                                           ",
+				"     <fg:muted>text fence</fg>                                     ",
+				"  5. Type something.                                ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 4
+		},
+		{
+			"step": 4,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Snippet </bg>                                                                                          ",
+				"",
+				" <b>Which snippet?</b>                                                                                     ",
+				"",
+				"  1. TypeScript                                         <fg:accent>┌──────────────────────────────────────────┐</fg>",
+				"     <fg:muted>ts fence</fg>                                           <fg:accent>│</fg>   <fg:mdCodeBlock>not highlighted</fg>                       <reset> <fg:accent>│</fg>",
+				"  2. Go                                                 <fg:accent>└──────────────────────────────────────────┘</fg>",
+				"     <fg:muted>go fence</fg>                                       ",
+				"  3. JSON                                               <fg:muted>Notes: press n to add notes</fg>",
+				"     <fg:muted>json fence</fg>                                     ",
+				"<fg:accent><b>❯ 4. Text ✔</b></fg>                                         ",
+				"     <fg:muted>text fence</fg>                                     ",
+				"  5. Type something.                                ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to collapse</fg>"
+			],
+			"hidden": false,
+			"renders": 5
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "Which snippet?",
+				"kind": "option",
+				"answer": "Text",
+				"preview": "```text\nnot highlighted\n```"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"Which snippet?\"=\"Text\". selected preview: ```text\nnot highlighted\n```. You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "Which snippet?",
+					"kind": "option",
+					"answer": "Text",
+					"preview": "```text\nnot highlighted\n```"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "Which snippet?",
+						"header": "Snippet",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "TypeScript",
+								"description": "ts fence",
+								"hasPreview": true
+							},
+							{
+								"label": "Go",
+								"description": "go fence",
+								"hasPreview": true
+							},
+							{
+								"label": "JSON",
+								"description": "json fence",
+								"hasPreview": true
+							},
+							{
+								"label": "Text",
+								"description": "text fence",
+								"hasPreview": true
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

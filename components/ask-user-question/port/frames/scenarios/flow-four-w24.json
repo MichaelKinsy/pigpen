@@ -1,0 +1,90 @@
+{
+	"name": "flow-four-w24",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "First question?",
+				"header": "Alpha header",
+				"options": [
+					{
+						"label": "A1",
+						"description": "a"
+					},
+					{
+						"label": "A2",
+						"description": "b"
+					}
+				]
+			},
+			{
+				"question": "Second question?",
+				"header": "Beta header ok",
+				"options": [
+					{
+						"label": "B1",
+						"description": "a"
+					},
+					{
+						"label": "B2",
+						"description": "b"
+					}
+				],
+				"multiSelect": true
+			},
+			{
+				"question": "Third question?",
+				"header": "Gamma",
+				"options": [
+					{
+						"label": "C1",
+						"description": "a"
+					},
+					{
+						"label": "C2",
+						"description": "b",
+						"preview": "preview c2"
+					}
+				]
+			},
+			{
+				"question": "Fourth question?",
+				"header": "Delta header 16",
+				"options": [
+					{
+						"label": "D1",
+						"description": "a"
+					},
+					{
+						"label": "D2",
+						"description": "b"
+					}
+				]
+			}
+		]
+	},
+	"width": 24,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[C",
+			"label": "right"
+		},
+		{
+			"input": "\u001b[C",
+			"label": "right"
+		},
+		{
+			"input": "\u001b[C",
+			"label": "right"
+		},
+		{
+			"input": "\u001b[C",
+			"label": "right"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

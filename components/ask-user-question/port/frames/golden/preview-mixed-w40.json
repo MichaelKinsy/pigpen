@@ -1,0 +1,185 @@
+{
+	"scenario": "preview-mixed-w40",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Mixed </bg>                                ",
+				"",
+				" <b>Which option has a preview?</b>            ",
+				"",
+				"<fg:accent><b>❯ 1. Has preview</b></fg>",
+				"     <fg:muted>Shows a preview</fg>",
+				"  2. No preview",
+				"     <fg:muted>Has none</fg>",
+				"  3. Also preview",
+				"     <fg:muted>Another one</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>┌──────────────────────────────────────┐</fg>",
+				"<fg:accent>│</fg> this option has a preview            <fg:accent>│</fg>",
+				"<fg:accent>└──────────────────────────────────────┘</fg>",
+				"",
+				"<fg:muted>Notes: press n to add notes</fg>",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n <reset>…<reset>",
+				""
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Mixed </bg>                                ",
+				"",
+				" <b>Which option has a preview?</b>            ",
+				"",
+				"  1. Has preview",
+				"     <fg:muted>Shows a preview</fg>",
+				"<fg:accent><b>❯ 2. No preview</b></fg>",
+				"     <fg:muted>Has none</fg>",
+				"  3. Also preview",
+				"     <fg:muted>Another one</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>┌──────────────────────────────────────┐</fg>",
+				"<fg:accent>│</fg> <fg:dim>No preview available</fg>                 <fg:accent>│</fg>",
+				"<fg:accent>└──────────────────────────────────────┘</fg>",
+				"",
+				"",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n <reset>…<reset>",
+				""
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Mixed </bg>                                ",
+				"",
+				" <b>Which option has a preview?</b>            ",
+				"",
+				"  1. Has preview",
+				"     <fg:muted>Shows a preview</fg>",
+				"<fg:accent><b>❯ 2. No preview ✔</b></fg>",
+				"     <fg:muted>Has none</fg>",
+				"  3. Also preview",
+				"     <fg:muted>Another one</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>┌──────────────────────────────────────┐</fg>",
+				"<fg:accent>│</fg> <fg:dim>No preview available</fg>                 <fg:accent>│</fg>",
+				"<fg:accent>└──────────────────────────────────────┘</fg>",
+				"",
+				"",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n <reset>…<reset>",
+				""
+			],
+			"hidden": false,
+			"renders": 3
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "Which option has a preview?",
+				"kind": "option",
+				"answer": "No preview"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"Which option has a preview?\"=\"No preview\". You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "Which option has a preview?",
+					"kind": "option",
+					"answer": "No preview"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "Which option has a preview?",
+						"header": "Mixed",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "Has preview",
+								"description": "Shows a preview",
+								"hasPreview": true
+							},
+							{
+								"label": "No preview",
+								"description": "Has none",
+								"hasPreview": false
+							},
+							{
+								"label": "Also preview",
+								"description": "Another one",
+								"hasPreview": true
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

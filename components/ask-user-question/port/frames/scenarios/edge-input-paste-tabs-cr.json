@@ -1,0 +1,50 @@
+{
+	"name": "edge-input-paste-tabs-cr",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[200~a\tb\r\nc\rd\u001b[201~",
+			"label": "paste"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

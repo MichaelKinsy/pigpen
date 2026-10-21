@@ -1,0 +1,38 @@
+{
+	"name": "overflow-rows-12-long-text",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "This is a deliberately long question text that has to wrap across several lines at narrow terminal widths, and it keeps going so that wrapping is exercised properly?",
+				"header": "A long header text",
+				"options": [
+					{
+						"label": "An option label that is very long and goes up to sixty characters wide",
+						"description": "A description that is also long enough to wrap onto a second and a third line when the terminal is narrow"
+					},
+					{
+						"label": "Short",
+						"description": "short"
+					},
+					{
+						"label": "Third",
+						"description": ""
+					}
+				]
+			}
+		]
+	},
+	"width": 30,
+	"rows": 12,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

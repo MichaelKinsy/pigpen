@@ -1,0 +1,128 @@
+{
+	"name": "notes-edit-keys",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "n",
+			"label": "n"
+		},
+		{
+			"input": "h",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "e",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "l",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "l",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "l",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type"
+		},
+		{
+			"input": "\u001b[D",
+			"label": "left"
+		},
+		{
+			"input": "\u001b[D",
+			"label": "left"
+		},
+		{
+			"input": "",
+			"label": "bs"
+		},
+		{
+			"input": "\u001b[H",
+			"label": "home"
+		},
+		{
+			"input": "\u001bf",
+			"label": "alt-f"
+		},
+		{
+			"input": "\u000b",
+			"label": "ctrl-k"
+		},
+		{
+			"input": "\u0019",
+			"label": "ctrl-y"
+		},
+		{
+			"input": "\u001b[F",
+			"label": "end"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

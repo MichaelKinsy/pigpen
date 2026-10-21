@@ -1,0 +1,282 @@
+{
+	"scenario": "collapse-submit-tab",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <bg:selectedBg><fg:text> □ Library </fg></bg> <fg:muted> □ Runtime </fg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"<fg:accent><b>❯ 1. date-fns (Recommended)</b></fg>",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Tab to switch questions ·<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> □ Runtime </fg></bg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Pick the runtime</b>                                                               ",
+				"",
+				"<fg:accent><b>❯ 1. Node</b></fg>",
+				"     <fg:muted>JavaScript</fg>",
+				"  2. Bun",
+				"     <fg:muted>Fast</fg>",
+				"  3. Deno",
+				"     <fg:muted>Secure</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Tab to switch questions ·<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <fg:success> ■ Runtime </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> →",
+				"",
+				"",
+				" <b><fg:accent>Review your answers</fg></b>                                                            ",
+				"",
+				" <fg:muted> ● Library</fg>                                                                     ",
+				"    <fg:muted>→</fg> <fg:text>date-fns (Recommended)</fg>                                                    ",
+				" <fg:muted> ● Runtime</fg>                                                                     ",
+				"    <fg:muted>→</fg> <fg:text>Node</fg>                                                                      ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                                                  ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a note · Esc to cancel</fg>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 3
+		},
+		{
+			"step": 3,
+			"label": "ctrl-]",
+			"input": "\u001d",
+			"consumed": true,
+			"lines": [
+				"<fg:dim> Ctrl+] to expand · Esc to cancel </fg>"
+			],
+			"hidden": true,
+			"renders": 4
+		},
+		{
+			"step": 4,
+			"label": "ctrl-]",
+			"input": "\u001d",
+			"consumed": true,
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <fg:success> ■ Runtime </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> →",
+				"",
+				"",
+				" <b><fg:accent>Review your answers</fg></b>                                                            ",
+				"",
+				" <fg:muted> ● Library</fg>                                                                     ",
+				"    <fg:muted>→</fg> <fg:text>date-fns (Recommended)</fg>                                                    ",
+				" <fg:muted> ● Runtime</fg>                                                                     ",
+				"    <fg:muted>→</fg> <fg:text>Node</fg>                                                                      ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                                                  ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a note · Esc to cancel</fg>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 5
+		},
+		{
+			"step": 5,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <fg:success> ■ Runtime </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> →",
+				"",
+				"",
+				" <b><fg:accent>Review your answers</fg></b>                                                            ",
+				"",
+				" <fg:muted> ● Library</fg>                                                                     ",
+				"    <fg:muted>→</fg> <fg:text>date-fns (Recommended)</fg>                                                    ",
+				" <fg:muted> ● Runtime</fg>                                                                     ",
+				"    <fg:muted>→</fg> <fg:text>Node</fg>                                                                      ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                                                  ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a note · Esc to cancel</fg>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 6
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "Which library should we use for date formatting?",
+				"kind": "option",
+				"answer": "date-fns (Recommended)"
+			},
+			{
+				"questionIndex": 1,
+				"question": "Pick the runtime",
+				"kind": "option",
+				"answer": "Node"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"Which library should we use for date formatting?\"=\"date-fns (Recommended)\". \"Pick the runtime\"=\"Node\". You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "Which library should we use for date formatting?",
+					"kind": "option",
+					"answer": "date-fns (Recommended)"
+				},
+				{
+					"questionIndex": 1,
+					"question": "Pick the runtime",
+					"kind": "option",
+					"answer": "Node"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "Which library should we use for date formatting?",
+						"header": "Library",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "date-fns (Recommended)",
+								"description": "Modular, tree-shakeable functions",
+								"hasPreview": false
+							},
+							{
+								"label": "Luxon",
+								"description": "Immutable wrapper with time zone support",
+								"hasPreview": false
+							},
+							{
+								"label": "Day.js",
+								"description": "Tiny Moment-compatible API",
+								"hasPreview": false
+							}
+						]
+					},
+					{
+						"question": "Pick the runtime",
+						"header": "Runtime",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "Node",
+								"description": "JavaScript",
+								"hasPreview": false
+							},
+							{
+								"label": "Bun",
+								"description": "Fast",
+								"hasPreview": false
+							},
+							{
+								"label": "Deno",
+								"description": "Secure",
+								"hasPreview": false
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [
+		{
+			"message": "ask_user_question hidden — press Ctrl+] to reopen",
+			"level": "info"
+		}
+	],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

@@ -113,9 +113,6 @@ func TestRPCDialogWalker(t *testing.T) {
 		r.ask(askArgs(questionArg("Q1?", "One", false, optArg("A", "a"), optArg("B", "b")), questionArg("Q2?", "Two", false, optArg("x", "x"), optArg("y", "y"))))
 		eq(t, r.dialogAt(1).Title, "[Two] Q2?", "second title")
 	})
-	tskip(t, fRPC, "falls back to the dialog walker when ctx.mode is unset and custom() resolves undefined",
-		"the Go SDK always reports a mode ('print' when the host sends none), so the host-predates-ctx.mode path cannot occur; the undefined-custom backstop belongs to the custom() path, slice B, not ported in this revision")
-	tskip(t, fRPC, "stays on the custom() path when ctx.mode is unset and custom() renders (TUI)", "same: no unset mode in Go; the TUI path is slice B")
 }
 
 func TestRPCHeaderlessQuestionHasNoPrefix(t *testing.T) {
@@ -207,4 +204,14 @@ func TestRPCPreviewCutNeverSplitsAnAstralCharacter(t *testing.T) {
 	r := startRig(t, rpcOpts(), pick("1. A — a"))
 	r.ask(askArgs(questionArg("Which?", "H", false, map[string]any{"label": "A", "description": "a", "preview": preview}, optArg("B", "b"))))
 	eq(t, r.dialogAt(0).Title, "[H] Which?\n\n--- 1. A preview ---\n"+strings.Repeat("x", 599), "title")
+}
+
+// The multi-select dialog states the answer format in its title (rpc-fallback.ts): the exact English fallback
+// text, because it is what the model's user reads and types against.
+func TestRPCMultiSelectDialogTitleStatesTheAnswerFormat(t *testing.T) {
+	r := startRig(t, rpcOpts(), pick("1"))
+	r.ask(multiArgs())
+	eq(t, r.dialogAt(0).Title,
+		"[Colors] Pick colors?\n\n1. red — r\n2. green — g\n3. blue — b\n\n"+
+			`Enter the numbers of all that apply, comma-separated (e.g. "1,3"), or type a custom answer as plain text.`, "title")
 }

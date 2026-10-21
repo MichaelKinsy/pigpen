@@ -1,7 +1,7 @@
 # Pigpen composition input. Run npm run stage before selecting it in PiG.
 # PiG with popular Pi extensions, ported to Go. Each member is a Package under components/ and a row in ports/ports.json.
 name: pig-popular
-description: "PiG with Go ports of popular Pi extensions: the rpiv-todo task list (tool, /todos, live overlay), the ask_user_question tool (dialog walker; the tabbed questionnaire is not ported), the powerline status bar (no custom editor), pi-goal-x's durable goals (scheduler, goal and task tools, guided drafting, dashboard, auditor, oracle and the sixteen commands), a permission gate (rules for tool calls: no approval dialog, full bash parsing or path rules) and subagents (agent and chain definitions, list and get, single-agent and chain runs through a child pig; no parallel, async or workflow runs)."
+description: "PiG with Go ports of popular Pi extensions: the rpiv-todo task list (tool, /todos, live overlay), the ask_user_question tool (the tabbed questionnaire with notes, previews and locales; the collapse key shows a one-line row and the external editor key reports a refusal), the powerline status bar (no custom editor), pi-goal-x's durable goals (scheduler, goal and task tools, guided drafting, dashboard, auditor, oracle and the sixteen commands), a permission gate (rules for tool calls: no approval dialog, full bash parsing or path rules) and subagents (agent and chain definitions, list and get, single-agent and chain runs through a child pig; no parallel, async or workflow runs)."
 release:
   version: 0.1.0
 build:
@@ -10,6 +10,8 @@ build:
 packages:
   todo: local:../../components/todo
   ask-user-question: local:../../components/ask-user-question
+  # pitui is a Go library Package, not a member: ask-user-question imports it through a go.work that resolves to packages/pitui in the staged Piglet.
+  pitui: local:../../components/pitui
   powerline: local:../../components/powerline
   goal: local:../../components/goal
   permissions: local:../../components/permissions
@@ -19,7 +21,7 @@ extensions:
   - name: rpiv-todo
     origins: [package:todo]
     tools: [todo]
-  # The ask_user_question tool (juicesharp, @juicesharp/rpiv-ask-user-question 2.11.0, MIT); slice A: the dialog walker.
+  # The ask_user_question tool (juicesharp, @juicesharp/rpiv-ask-user-question 2.11.0, MIT); the interactive questionnaire (slice B) on terminal hosts, the dialog walker on RPC hosts.
   - name: rpiv-ask-user-question
     origins: [package:ask-user-question]
     tools: [ask_user_question]

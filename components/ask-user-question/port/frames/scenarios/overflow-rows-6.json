@@ -1,0 +1,41 @@
+{
+	"name": "overflow-rows-6",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which layout?",
+				"header": "Layout",
+				"options": [
+					{
+						"label": "Wide",
+						"description": "Many columns",
+						"preview": "line 01: the quick brown fox jumps over the lazy dog\nline 02: the quick brown fox jumps over the lazy dog\nline 03: the quick brown fox jumps over the lazy dog\nline 04: the quick brown fox jumps over the lazy dog\nline 05: the quick brown fox jumps over the lazy dog\nline 06: the quick brown fox jumps over the lazy dog\nline 07: the quick brown fox jumps over the lazy dog\nline 08: the quick brown fox jumps over the lazy dog\nline 09: the quick brown fox jumps over the lazy dog\nline 10: the quick brown fox jumps over the lazy dog\nline 11: the quick brown fox jumps over the lazy dog\nline 12: the quick brown fox jumps over the lazy dog\nline 13: the quick brown fox jumps over the lazy dog\nline 14: the quick brown fox jumps over the lazy dog\nline 15: the quick brown fox jumps over the lazy dog\nline 16: the quick brown fox jumps over the lazy dog\nline 17: the quick brown fox jumps over the lazy dog\nline 18: the quick brown fox jumps over the lazy dog\nline 19: the quick brown fox jumps over the lazy dog\nline 20: the quick brown fox jumps over the lazy dog\nline 21: the quick brown fox jumps over the lazy dog\nline 22: the quick brown fox jumps over the lazy dog\nline 23: the quick brown fox jumps over the lazy dog\nline 24: the quick brown fox jumps over the lazy dog\nline 25: the quick brown fox jumps over the lazy dog\nline 26: the quick brown fox jumps over the lazy dog\nline 27: the quick brown fox jumps over the lazy dog\nline 28: the quick brown fox jumps over the lazy dog\nline 29: the quick brown fox jumps over the lazy dog\nline 30: the quick brown fox jumps over the lazy dog"
+					},
+					{
+						"label": "Tall",
+						"description": "Many rows",
+						"preview": "row 01\nrow 02\nrow 03\nrow 04\nrow 05\nrow 06\nrow 07\nrow 08\nrow 09\nrow 10\nrow 11\nrow 12\nrow 13\nrow 14\nrow 15\nrow 16\nrow 17\nrow 18\nrow 19\nrow 20\nrow 21\nrow 22\nrow 23\nrow 24\nrow 25\nrow 26\nrow 27\nrow 28\nrow 29\nrow 30\nrow 31\nrow 32\nrow 33\nrow 34\nrow 35\nrow 36\nrow 37\nrow 38\nrow 39\nrow 40"
+					},
+					{
+						"label": "Compact",
+						"description": "Dense",
+						"preview": "tiny"
+					}
+				]
+			}
+		]
+	},
+	"width": 60,
+	"rows": 6,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

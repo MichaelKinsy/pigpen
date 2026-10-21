@@ -15,6 +15,8 @@
 // SetKittyProtocolActive, IsKittyProtocolActive, FindWordForward and
 // FindWordBackward with WordNavigationOptions, SGR* resets, FgClose, KillRing.
 // Editor extras: SetRowsProvider, SetRequestRender, SetMaxVisibleLines.
+// Syntax highlighting (highlight.js through internal/hljs): Highlight, HighlightMarkdownCode, HighlightOptions,
+// HighlightTheme, HighlightFormatter, RenderHighlightedHtml, SupportsLanguage, LoadAllHighlightLanguages.
 //
 // # What PiG's public tui lacks or shapes differently
 //
@@ -38,6 +40,9 @@
 //     PiG's KeyHelper/KeyID (replaced by the Key* constants in keys.go),
 //     Editor.Clear and the Editor's host-visible BorderColor/ThinkingLevel
 //     fields.
+//   - Syntax highlighting is PiG's highlight.js port (highlight.go, internal/hljs, jsarray) without PiG's memo, resume
+//     state, active theme and Piglet strip switch: HighlightMarkdownCode takes the theme's cli-highlight theme and
+//     code block style as arguments and a caller sets MarkdownTheme.HighlightCode from it.
 //   - NewEditor takes an EditorTheme; PiG's tui argument is replaced by
 //     SetRowsProvider (visible-line cap max(5, floor(rows*0.3))) and
 //     SetRequestRender (called by SetPaddingX).

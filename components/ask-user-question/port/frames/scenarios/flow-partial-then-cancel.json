@@ -1,0 +1,102 @@
+{
+	"name": "flow-partial-then-cancel",
+	"description": "one answer, Submit tab shows the missing warning; Cancel row",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			},
+			{
+				"question": "Which features do you want to enable?",
+				"header": "Features",
+				"options": [
+					{
+						"label": "Auth",
+						"description": "Sign-in and sessions"
+					},
+					{
+						"label": "Billing",
+						"description": "Plans and invoices"
+					},
+					{
+						"label": "Search",
+						"description": "Full-text search over records"
+					},
+					{
+						"label": "Export",
+						"description": "CSV and JSON download"
+					}
+				],
+				"multiSelect": true
+			},
+			{
+				"question": "Which database fits the workload?",
+				"header": "Database",
+				"options": [
+					{
+						"label": "SQLite",
+						"description": "Embedded, zero setup",
+						"preview": "file.db\n  └─ one file"
+					},
+					{
+						"label": "Postgres",
+						"description": "Server, concurrent writers",
+						"preview": "app ──▶ pg\n       └─ WAL"
+					},
+					{
+						"label": "DuckDB",
+						"description": "Columnar analytics",
+						"preview": "scan ▒▒▒▒▒▒▒▒"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\t",
+			"label": "tab"
+		},
+		{
+			"input": "\t",
+			"label": "tab"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[A",
+			"label": "up"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -1,0 +1,122 @@
+{
+	"name": "edge-input-arabic-rtl",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 30,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "م",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ر",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ح",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ب",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ا",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ب",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ا",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ل",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ع",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ا",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "ل",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "م",
+			"label": "type"
+		},
+		{
+			"input": "\u001b[D",
+			"label": "left"
+		},
+		{
+			"input": "\u001b[D",
+			"label": "left"
+		},
+		{
+			"input": "",
+			"label": "bs"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

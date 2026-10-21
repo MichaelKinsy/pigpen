@@ -1,0 +1,41 @@
+{
+	"name": "edge-preview-w16",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which database fits the workload?",
+				"header": "Database",
+				"options": [
+					{
+						"label": "SQLite",
+						"description": "Embedded, zero setup",
+						"preview": "file.db\n  └─ one file"
+					},
+					{
+						"label": "Postgres",
+						"description": "Server, concurrent writers",
+						"preview": "app ──▶ pg\n       └─ WAL"
+					},
+					{
+						"label": "DuckDB",
+						"description": "Columnar analytics",
+						"preview": "scan ▒▒▒▒▒▒▒▒"
+					}
+				]
+			}
+		]
+	},
+	"width": 16,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

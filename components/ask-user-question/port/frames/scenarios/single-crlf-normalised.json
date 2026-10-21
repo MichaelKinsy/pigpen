@@ -1,0 +1,30 @@
+{
+	"name": "single-crlf-normalised",
+	"description": "line terminators are normalised before display",
+	"params": {
+		"questions": [
+			{
+				"question": "Line one\r\nline two\rline three?",
+				"header": "CRLF",
+				"options": [
+					{
+						"label": "A\r\nB",
+						"description": "desc\r\nmore"
+					},
+					{
+						"label": "C",
+						"description": "c"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

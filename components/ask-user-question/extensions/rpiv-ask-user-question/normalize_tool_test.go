@@ -15,8 +15,6 @@ func crParams() map[string]any {
 }
 
 func TestNormalizedTextReachesEveryConsumer(t *testing.T) {
-	tskip(t, fNormalizeTool, "renders the TUI overlay with normalized question, header, labels, and descriptions",
-		"slice B: renders the interactive questionnaire component, which this revision does not port; the dialog walker's normalized titles are the RPC case below")
 	tw(t, fNormalizeTool, "emits the prompt event with normalized text", func(t *testing.T) {
 		// The original drives the custom() path; slice A emits the same event ahead of the dialog walker.
 		r := startRig(t, rpcOpts(), pick("1. OptionA (Recommended) — choice with stray CR"))

@@ -1,0 +1,102 @@
+{
+	"name": "flow-global-note",
+	"description": "n on the Submit tab opens the global note",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			},
+			{
+				"question": "Pick the runtime",
+				"header": "Runtime",
+				"options": [
+					{
+						"label": "Node",
+						"description": "JavaScript"
+					},
+					{
+						"label": "Bun",
+						"description": "Fast"
+					},
+					{
+						"label": "Deno",
+						"description": "Secure"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "n",
+			"label": "n"
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "v",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "e",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "a",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "l",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "l",
+			"label": "type"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}
