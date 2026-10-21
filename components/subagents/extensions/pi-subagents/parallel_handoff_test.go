@@ -266,7 +266,7 @@ func TestParallelHandoffTwins(t *testing.T) {
 			rcFails(t, err, "active child owner")
 		}
 	})
-	tw(t, f, "refuses a supersession by the lane itself", func(t *testing.T) {
+	t.Run("refuses a supersession by the lane itself (not an upstream case)", func(t *testing.T) {
 		dir := tmp(t)
 		manifestPath := filepath.Join(dir, "handoff.json")
 		laneWrite(t, dir, "lane-self", "foreground", "base-1", "completed", "partial")
