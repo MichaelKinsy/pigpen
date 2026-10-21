@@ -73,7 +73,7 @@ scenario("manage-disable-enable", "Disable a builtin agent, see it hidden from t
           call("subagent", action="enable", agent="scout", agentScope="project"), call("subagent", action="list", agentScope="both")], {".pi/keep": ""})
 scenario("manage-reset", "Change a builtin agent's model through an override, then reset it.",
          [ENABLE, call("subagent", action="update", agent="scout", config={"model": "claude-x"}, agentScope="project"), call("subagent", action="get", agent="scout"),
-          call("subagent", action="reset", agent="scout", agentScope="project"), call("subagent", action="get", agent="scout")], {".pi/keep": ""})
+          call("subagent", action="reset", agent="scout", agentScope="project"), call("subagent", action="get", agent="scout")], {".pi/keep": ""}, to="host-bound/scenarios")
 scenario("advertise-catalog", "An agent that opts in with advertise: true is listed in the system prompt once the subagent tool is active.",
          [ENABLE, call("subagent", action="list", capabilities=True)], {".pi/agents/specialist.md": ADVERTISED, ".pi/agents/helper.md": HELPER})
 # the validate action: a script checked without a child (the original runs these without a child model)

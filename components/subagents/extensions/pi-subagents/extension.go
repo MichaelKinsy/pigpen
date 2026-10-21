@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -16,7 +17,6 @@ const (
 	extensionID  = "pi-subagents"
 	loaderName   = "subagents_enable"
 	subagentName = "subagent"
-	asyncWidget  = "subagent-async"
 )
 
 //go:embed tooldefs.json
@@ -82,10 +82,16 @@ func textResult(text string, isError bool) sdk.ToolResult {
 // an init() in its own file, so no slice edits Extension() for another.
 var extensionHooks []func(e *sdk.Extension)
 
+// toolHooks register the tools the original registers before subagents_enable (bg_wait); the model sees tools in registration order.
+var toolHooks []func(e *sdk.Extension)
+
 // Extension returns the subagents extension.
 func Extension() *sdk.Extension {
 	e := sdk.New(extensionID)
 	defs := toolDefs()
+	for _, hook := range toolHooks {
+		hook(e)
+	}
 
 	// The supervisor channel is declared so the model sees the same tools, and refuses (refuse.go); bg_wait is the
 	// background runs' (async_actions.go).
@@ -138,7 +144,6 @@ func Extension() *sdk.Extension {
 		// The original asks git for the repository root while it starts (recovery of its worktrees); the port probes the
 		// same way and has no worktrees to recover.
 		_, _ = ctx.Exec("git", []string{"-C", ctx.Cwd(), "rev-parse", "--show-toplevel"})
-		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -152,10 +157,6 @@ func Extension() *sdk.Extension {
 			}
 		}
 		ctx.SetActiveTools(append(active, loaderName))
-		return nil, nil
-	})
-	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
-		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})
 	for _, hook := range extensionHooks {
@@ -177,6 +178,14 @@ func executeSubagent(ctx sdk.Context, params map[string]any) (any, error) {
 			return nil, sdk.NewToolError("action must be a non-empty management/control action, or omit action and use workflowScript.")
 		}
 		action = jsTrim(s)
+	}
+	if strings.HasPrefix(action, "schedule.") {
+		// the original validates a schedule call's arguments (after the public boundary) before it stores or runs anything
+		if norm := normalizePublicSubagentExecution(params); !norm.OK {
+			return nil, sdk.NewToolError(norm.Error)
+		} else if msg := scheduleArgumentError(action, norm.Params, time.Now()); msg != "" {
+			return nil, sdk.NewToolError(msg)
+		}
 	}
 	if msg := refuseUnsupported(params, action); msg != "" {
 		return nil, sdk.NewToolError(msg)
@@ -246,6 +255,9 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	if msg := nestedBlocked(os.Getenv); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
+	if err := validateMissionParams(params, ctx.Cwd()); err != nil {
+		return nil, sdk.NewToolError(err.Error())
+	}
 	scope := ResolveExecutionAgentScope(params["agentScope"])
 	d, derr := discoverAgents(ctx.Cwd(), scope, ctx.ModelProvider(), adv.options())
 	if derr != nil {
@@ -265,15 +277,40 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
-	model, _ := params["model"].(string)
 	if cfg := loadAsyncConfig(); wantsAsync(params, cfg) {
 		if p := asyncUnsupportedPolicyParam(params); p != "" {
 			return nil, sdk.NewToolError(refusal("the `" + p + "` option of a background (async) run; pass async: false to run in the foreground"))
 		}
-		return bgRT.launchBackground(ctx, params, a, task, cwd, model, cfg)
+		fan, err := claimRunFanout(newUUID())
+		if err != nil {
+			return nil, sdk.NewToolError(err.Error())
+		}
+		model, err := resolveRunModel(ctx, d, a, params)
+		if err != nil {
+			return fan.annotate(nil, err)
+		}
+		res, err := bgRT.launchBackground(ctx, params, a, task, cwd, model, cfg)
+		if err != nil && strings.HasPrefix(err.Error(), capacityRefusalPrefix) {
+			return nil, err // the original checks the active-run capacity before it claims the budget: that refusal carries no budget line
+		}
+		return fan.annotate(res, err)
 	}
-	pol, err := applyRunPolicy(ctx, params, a, task, cwd)
+	var fan *runFanout
+	var model string
+	modelFailed := false
+	pol, err := applyRunPolicy(ctx, params, a, task, cwd, func(runID string) (err error) {
+		fan, err = claimRunFanout(runID)
+		return err
+	}, func() (err error) {
+		if model, err = resolveRunModel(ctx, d, a, params); err != nil {
+			modelFailed = true
+		}
+		return err
+	})
 	if err != nil {
+		if fan != nil && !modelFailed { // a check of the run's own after its budget slot was claimed: the original's failed result carries the budget line
+			return fan.annotate(nil, err)
+		}
 		return nil, sdk.NewToolError(err.Error())
 	}
 	pol.writeInputArtifact()
@@ -282,7 +319,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	defer activeRunStart()()
 	return trackMission(ctx, params, cwd, a.Name, task, func() (any, error) {
 		out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})
-		return finishRun(pol, runOutcome{Stdout: out, Err: err})
+		return fan.annotate(finishRun(pol, runOutcome{Stdout: out, Err: err}))
 	})
 }
 

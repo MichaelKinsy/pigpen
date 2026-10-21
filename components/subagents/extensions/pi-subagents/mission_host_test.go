@@ -93,7 +93,7 @@ func TestSingleRunRecordsItsMission(t *testing.T) {
 	h, cwd := missionHost(t)
 	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false})
 	eq(t, failure, "", "run")
-	if !regexp.MustCompile(`^built it\nMission: [0-9a-f-]{36} \(completed\)$`).MatchString(resultText(t, raw)) {
+	if !regexp.MustCompile(`^Run fan-out: 1/64 used, 63 remaining\nbuilt it\nMission: [0-9a-f-]{36} \(completed\)$`).MatchString(resultText(t, raw)) {
 		t.Errorf("text: %q", resultText(t, raw))
 	}
 	raw, failure = h.Tool("subagent", map[string]any{"action": "mission.list"})
@@ -103,7 +103,7 @@ func TestSingleRunRecordsItsMission(t *testing.T) {
 	}
 	raw, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false, "mission": false})
 	eq(t, failure, "", "opt-out")
-	eq(t, resultText(t, raw), "built it", "no mission line")
+	eq(t, resultText(t, raw), "Run fan-out: 1/64 used, 63 remaining\nbuilt it", "no mission line")
 	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false, "missionId": "nope"})
 	if !strings.HasPrefix(failure, "Mission 'nope' was not found in mission directory ") {
 		t.Errorf("unknown mission: %q", failure)
@@ -119,7 +119,7 @@ func TestMissionConfigDisablesAutomaticMissions(t *testing.T) {
 	writeFile(t, filepath.Join(home, ".pi", "agent", "extensions", "subagent", "config.json"), `{"missions":{"enabled":false}}`)
 	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "async": false})
 	eq(t, failure, "", "run")
-	eq(t, resultText(t, raw), "built it", "no mission")
+	eq(t, resultText(t, raw), "Run fan-out: 1/64 used, 63 remaining\nbuilt it", "no mission")
 }
 
 func TestPromptWorkflowCommand(t *testing.T) {

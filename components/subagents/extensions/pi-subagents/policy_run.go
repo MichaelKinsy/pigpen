@@ -91,7 +91,10 @@ type runPolicy struct {
 }
 
 // applyRunPolicy validates the policy options of a call and prepares the run; an error is the tool error text.
-func applyRunPolicy(ctx sdk.Context, params map[string]any, a *AgentConfig, task, cwd string) (*runPolicy, error) {
+// applyRunPolicy validates a foreground single run and prepares it. afterAdmission runs once the call's own arguments and the
+// spawn budget have passed and before anything about the run itself is checked (the run fan-out claim); beforeRun runs after the
+// output options were checked (the model, which the original resolves when the run starts). An error either returns is final.
+func applyRunPolicy(ctx sdk.Context, params map[string]any, a *AgentConfig, task, cwd string, afterAdmission func(runID string) error, beforeRun func() error) (*runPolicy, error) {
 	pol := &runPolicy{OriginalTask: task, Cwd: cwd, RunID: newUUID(), Started: time.Now()}
 	agent := *a
 	pol.Agent = &agent
@@ -139,6 +142,35 @@ func applyRunPolicy(ctx sdk.Context, params map[string]any, a *AgentConfig, task
 	}
 	pol.TimeoutMs = to.timeoutMs
 
+	// agentContract: { version: 1 } is the original's compatibility behavior: no inferred acceptance, a report that is optional
+	if v, ok := params["agentContract"]; ok && !isUndefined(v) {
+		o, isObj := asObject(v)
+		if ver, _ := asNumber(func() any {
+			if isObj {
+				return o.vals["version"]
+			}
+			return nil
+		}()); !isObj || ver != 1 {
+			return nil, errors.New("agentContract must be { version: 1 }.")
+		}
+		pol.AgentContract = true
+	}
+
+	// spawn budget of the session
+	getenv := osEnv
+	runPolicyMu.Lock()
+	_, spawnErr := reserveSpawnBudget(runState, cfg, sessionID, 1, getenv)
+	runPolicyMu.Unlock()
+	if spawnErr != "" {
+		return nil, errors.New(spawnErr)
+	}
+
+	if afterAdmission != nil {
+		if err := afterAdmission(pol.RunID); err != nil {
+			return nil, err
+		}
+	}
+
 	// output file and mode
 	pol.OutputMode = a.OutputMode
 	if m, ok := params["outputMode"].(string); ok && m != "" {
@@ -159,28 +191,10 @@ func applyRunPolicy(ctx sdk.Context, params map[string]any, a *AgentConfig, task
 	if msg := validateFileOnlyOutputMode(pol.OutputMode, pol.OutputPath, "Single run ("+a.Name+")"); msg != "" {
 		return nil, errors.New(msg)
 	}
-
-	// spawn budget of the session
-	getenv := osEnv
-	runPolicyMu.Lock()
-	_, spawnErr := reserveSpawnBudget(runState, cfg, sessionID, 1, getenv)
-	runPolicyMu.Unlock()
-	if spawnErr != "" {
-		return nil, errors.New(spawnErr)
-	}
-
-	// agentContract: { version: 1 } is the original's compatibility behavior: no inferred acceptance, a report that is optional
-	if v, ok := params["agentContract"]; ok && !isUndefined(v) {
-		o, isObj := asObject(v)
-		if ver, _ := asNumber(func() any {
-			if isObj {
-				return o.vals["version"]
-			}
-			return nil
-		}()); !isObj || ver != 1 {
-			return nil, errors.New("agentContract must be { version: 1 }.")
+	if beforeRun != nil {
+		if err := beforeRun(); err != nil {
+			return nil, err
 		}
-		pol.AgentContract = true
 	}
 
 	// acceptance contract

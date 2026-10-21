@@ -18,9 +18,11 @@ import (
 // Port of src/slash/prompt-workflows.ts: `/prompt-workflow <name> [args]` runs a prompt template (a .md file with frontmatter)
 // as one child, or a declared sequence of them, through a generated workflow script.
 
-// packagePrompts are the prompt templates the original ships in its package (its `prompts/` directory).
+// packagePrompts are the prompt templates the original ships in its package (its `prompts/` directory). The copy the binary
+// embeds lives in `promptdata/`: PiG takes an extension directory that holds a `prompts/` directory for a resource package and
+// then does not start the Go module in it (see PORT.md, PiG core findings).
 //
-//go:embed prompts/*.md
+//go:embed promptdata/*.md
 var packagePrompts embed.FS
 
 // packagePromptDir names the shipped templates in listings: the Go extension carries them inside its binary.
@@ -53,7 +55,7 @@ func readPromptFiles(cwd string) ([]string, error) {
 	var files []string
 	for _, dir := range promptDirectories(cwd) {
 		if dir == packagePromptDir {
-			entries, _ := packagePrompts.ReadDir("prompts")
+			entries, _ := packagePrompts.ReadDir("promptdata")
 			for _, e := range entries {
 				if strings.HasSuffix(e.Name(), ".md") {
 					files = append(files, dir+"/"+e.Name())
@@ -138,7 +140,7 @@ func loadPromptWorkflow(filePath string) (*PromptWorkflow, error) {
 	var content []byte
 	var err error
 	if strings.HasPrefix(filePath, packagePromptDir+"/") {
-		content, err = packagePrompts.ReadFile("prompts/" + strings.TrimPrefix(filePath, packagePromptDir+"/"))
+		content, err = packagePrompts.ReadFile("promptdata/" + strings.TrimPrefix(filePath, packagePromptDir+"/"))
 	} else {
 		content, err = os.ReadFile(filePath)
 	}

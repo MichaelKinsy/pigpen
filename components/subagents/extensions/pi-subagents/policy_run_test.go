@@ -125,11 +125,11 @@ func TestOutputFileIsInstructedAndReadBack(t *testing.T) {
 func TestOutputOptionsAreValidated(t *testing.T) {
 	p := policyHostWith(t, echo("x"), HostOptions{})
 	_, failure := p.run(map[string]any{"outputMode": "file-only"})
-	if !strings.HasPrefix(failure, `Single run (helper) sets outputMode: "file-only" but does not configure an output file.`) {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\n"+`Single run (helper) sets outputMode: "file-only" but does not configure an output file.`) {
 		t.Errorf("file-only without output: %q", failure)
 	}
 	_, failure = p.run(map[string]any{"output": false, "outputMode": "file-only"})
-	if !strings.HasPrefix(failure, `Single run (helper) sets outputMode: "file-only"`) {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\n"+`Single run (helper) sets outputMode: "file-only"`) {
 		t.Errorf("output false: %q", failure)
 	}
 	eq(t, len(*p.calls), 0, "no child started")
@@ -184,7 +184,7 @@ func TestAcceptanceContractAndVerdict(t *testing.T) {
 	// an explicit acceptance whose report is missing rejects the run
 	p2 := policyHostWith(t, echo("no report here"), HostOptions{})
 	_, failure = p2.run(map[string]any{"acceptance": "checked"})
-	if !strings.HasPrefix(failure, "Acceptance rejected: Structured acceptance report not found.") || !strings.Contains(failure, "Output:\nno report here") {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\nAcceptance rejected: Structured acceptance report not found.") || !strings.Contains(failure, "Output:\nno report here") {
 		t.Errorf("explicit acceptance: %q", failure)
 	}
 	// the same output without an acceptance option is not rejected (inferred acceptance is not explicit)
@@ -213,7 +213,7 @@ func TestGateRunsAfterTheChild(t *testing.T) {
 	}
 	// a gate alone is a verified acceptance: the child must report, as in the original, unless the call opts into the contract
 	_, failure = p.run(map[string]any{"gate": "true"})
-	if !strings.HasPrefix(failure, "Acceptance rejected: Structured acceptance report not found.") {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\nAcceptance rejected: Structured acceptance report not found.") {
 		t.Errorf("a gate without agentContract needs a report: %q", failure)
 	}
 	_, failure = p.run(map[string]any{"agentContract": map[string]any{"version": 1}, "gate": "true"})
@@ -239,14 +239,14 @@ func TestDeadlines(t *testing.T) {
 	p := policyHostWith(t, func(sub.ChildRequest, <-chan struct{}) (string, bool) { return "partial work", true }, HostOptions{})
 	start := time.Now()
 	_, failure := p.run(map[string]any{"timeoutMs": 60})
-	if !strings.HasPrefix(failure, "Subagent timed out after 60ms.\n\nRecovery summary:\n- termination: timed-out") || !strings.Contains(failure, "Partial output before timeout:\npartial work") {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\nSubagent timed out after 60ms.\n\nRecovery summary:\n- termination: timed-out") || !strings.Contains(failure, "Partial output before timeout:\npartial work") {
 		t.Errorf("timeout: %q", failure)
 	}
 	if time.Since(start) > 5*time.Second {
 		t.Errorf("took %v", time.Since(start))
 	}
 	_, failure = p.run(map[string]any{"maxRuntimeMs": 60})
-	if !strings.HasPrefix(failure, "Subagent timed out after 60ms.") {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\nSubagent timed out after 60ms.") {
 		t.Errorf("maxRuntimeMs alias: %q", failure)
 	}
 	_, failure = p.run(map[string]any{"timeoutMs": 60, "maxRuntimeMs": 70})
@@ -260,13 +260,13 @@ func TestDeadlines(t *testing.T) {
 	// an agent's frontmatter deadline applies when the call sets none
 	writeFile(t, filepath.Join(p.cwd, ".pi", "agents", "quick.md"), "---\nname: quick\ndescription: Q\ntimeoutMs: 40\n---\n\nQ.\n")
 	_, failure = p.h.Tool("subagent", map[string]any{"agent": "quick", "task": "t"})
-	if !strings.HasPrefix(failure, "Subagent timed out after 40ms.") {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\nSubagent timed out after 40ms.") {
 		t.Errorf("frontmatter deadline: %q", failure)
 	}
 	// the config default
 	sub.SetExtensionConfigForTest(t, 50.0, nil)
 	_, failure = p.run(nil)
-	if !strings.HasPrefix(failure, "Subagent timed out after 50ms.") {
+	if !strings.HasPrefix(failure, "Run fan-out: 1/64 used, 63 remaining\nSubagent timed out after 50ms.") {
 		t.Errorf("config deadline: %q", failure)
 	}
 }
