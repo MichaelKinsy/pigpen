@@ -351,6 +351,8 @@ func (h *sdkHost) exec(_ context.Context, command string, args []string, timeout
 		return ExecResult{Code: 1}, nil
 	}
 	return ExecResult{Stdout: res.Stdout, Stderr: res.Stderr, Code: res.ExitCode, Killed: res.Killed}, nil
+}
+
 // Notify, SendCustomMessage and Exec make sdkHost a CuratorHost.
 func (h *sdkHost) Notify(message, level string) {
 	if ctx, ok := h.get(); ok {

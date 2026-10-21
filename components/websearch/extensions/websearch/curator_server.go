@@ -575,8 +575,31 @@ func bodyOrFail(w http.ResponseWriter, r *http.Request) (map[string]any, bool) {
 	case []any:
 		// An array is an object to typeof: it has no token, so the session check refuses it.
 		return map[string]any{}, true
+	case nil:
+		return curatorHang(r)
+	case bool:
+		if !body {
+			return curatorHang(r)
+		}
+	case float64:
+		if body == 0 {
+			return curatorHang(r)
+		}
+	case string:
+		if body == "" {
+			return curatorHang(r)
+		}
 	}
 	curatorFail(w, http.StatusBadRequest, "Invalid body")
+	return nil, false
+}
+
+// curatorHang leaves a request unanswered until the client goes away or the server closes the connection.
+// The original's handlers return on a falsy body (`if (!body) return`) without answering, so Node keeps the
+// request open; Go would answer 200 with an empty body when the handler returns, so the handler waits.
+// A 400 for these bodies is a proposed fix (PORT.md, Slice 11), not behavior.
+func curatorHang(r *http.Request) (map[string]any, bool) {
+	<-r.Context().Done()
 	return nil, false
 }
 

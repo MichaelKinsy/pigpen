@@ -30,10 +30,11 @@ func SearchWithSerply(ctx context.Context, query string, o SearchOptions) (*Sear
 	if o.RecencyFilter != "" {
 		params = append(params, "tbs="+formEscape(googleRecencyTBS[o.RecencyFilter]))
 	}
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(restSearchTimeout))
 	defer cancel()
 	var entries []any
-	_, err = restCallB(ctx, tctx, "Serply", apiKey, serplySearchURL+"?"+strings.Join(params, "&"),
+	_, err = restCallB(ctx, tctx, act, "Serply", apiKey, serplySearchURL+"?"+strings.Join(params, "&"),
 		RequestInit{Method: "GET", Header: http.Header{"Accept": {"application/json"}, "X-Api-Key": {apiKey}}}, []string{"X-Api-Key"}, func(data any) error {
 			envelope, ok := jsonObject(data)
 			if !ok {

@@ -719,6 +719,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		// extract.ts:1298-1322
 		data, err := readLimited(resp.Body, maxBytes, sizeErr)
 		if err != nil {
+			act.logError(err.Error())
 			return fail(pdfFailureMessage(err))
 		}
 		if ctx.Err() != nil {
@@ -729,8 +730,10 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 			if ctx.Err() != nil {
 				return httpExtracted{ExtractedContent: abortedResult(rawURL)}
 			}
+			act.logError(err.Error())
 			return fail(pdfFailureMessage(err))
 		}
+		act.complete(status)
 		content := fmt.Sprintf("PDF extracted and saved to: %s\n\nPages: %d\nCharacters: %d", result.OutputPath, result.Pages, result.Chars)
 		if o.Mode == "answer" {
 			content = result.Content

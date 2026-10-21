@@ -47,4 +47,3 @@ func TestDeferred_search_routing(t *testing.T) {
 	tskip(t, F, "a Hosted response without web_search_call is invalid and can fall back", "current-model hosted search routing (OpenAI, xAI) is deferred (docs/PORT.md); this case (a Hosted response without web_search_call is invalid and can fall back) ships with the feature")
 	tskip(t, F, "useCurrentModel is strictly validated", "current-model hosted search routing (OpenAI, xAI) is deferred (docs/PORT.md); this case (useCurrentModel is strictly validated) ships with the feature")
 }
-

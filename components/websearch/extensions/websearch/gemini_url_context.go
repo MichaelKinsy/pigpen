@@ -57,25 +57,31 @@ func ExtractWithURLContext(ctx context.Context, url string) (*ExtractedContent, 
 	if apiKey == "" && !gw && !adc {
 		return nil, nil
 	}
-	body := geminiRequestBody([]any{map[string]any{"url_context": map[string]any{}}}, geminiTextPart{geminiExtractionPrompt + url})
-	res, err := geminiGenerate(tctx, c, DefaultGeminiModel, body, &apiKey)
-	if err != nil {
+	act := logAPIStart("url_context: " + url)
+	// The catch block of gemini-url-context.ts:69-80: a credential or config failure is rethrown without a log,
+	// anything else is logged and means "nothing found".
+	fail := func(err error) (*ExtractedContent, error) {
 		if geminiShouldRethrow(err) {
 			return nil, err
 		}
+		act.failedErr(timeoutFix(ctx, tctx, err))
 		return nil, nil
+	}
+	body := geminiRequestBody([]any{map[string]any{"url_context": map[string]any{}}}, geminiTextPart{geminiExtractionPrompt + url})
+	res, err := geminiGenerate(tctx, c, DefaultGeminiModel, body, &apiKey)
+	if err != nil {
+		return fail(err)
 	}
 	if !isHTTPOK(res) {
 		_ = res.Body.Close()
+		act.complete(res.StatusCode)
 		return nil, nil
 	}
 	data, err := geminiJSON(res)
 	if err != nil {
-		if geminiShouldRethrow(err) {
-			return nil, err
-		}
-		return nil, nil
+		return fail(err)
 	}
+	act.complete(res.StatusCode)
 	if meta, _ := jsonPath(data, "candidates", 0, "url_context_metadata", "url_metadata").([]any); len(meta) > 0 {
 		switch anyString(jsonPath(meta[0], "url_retrieval_status")) {
 		case "URL_RETRIEVAL_STATUS_UNSAFE", "URL_RETRIEVAL_STATUS_ERROR":
@@ -95,13 +101,16 @@ func ExtractWithGeminiWeb(ctx context.Context, url string) (*ExtractedContent, e
 	if err != nil || cookies == nil {
 		return nil, err
 	}
+	act := logAPIStart("gemini_web: " + url)
 	text, err := geminiWebClient.Query(ctx, geminiExtractionPrompt+url, cookies, geminiURLContextTimeout)
 	if err != nil {
 		if geminiShouldRethrow(err) {
 			return nil, err
 		}
+		act.failedErr(err)
 		return nil, nil
 	}
+	act.complete(200)
 	if text == "" || jsLen(text) < geminiMinContentLength {
 		return nil, nil
 	}

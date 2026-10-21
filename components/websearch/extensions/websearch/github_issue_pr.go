@@ -210,14 +210,6 @@ func authorLogin(v any) string {
 	return "unknown"
 }
 
-// firstNonNil is `a ?? b`.
-func firstNonNil(a, b any) any {
-	if a != nil {
-		return a
-	}
-	return b
-}
-
 func listNames(v any) string {
 	list, ok := v.([]any)
 	if !ok || len(list) == 0 {

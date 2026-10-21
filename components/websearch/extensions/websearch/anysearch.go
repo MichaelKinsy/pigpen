@@ -39,13 +39,16 @@ func SearchWithAnySearch(ctx context.Context, query string, o SearchOptions) (*S
 	if apiKey != "" {
 		header.Set("Authorization", "Bearer "+apiKey)
 	}
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(anysearchTimeout))
 	defer cancel()
-	data, err := restCallA(ctx, tctx, "AnySearch API", apiKey, anysearchAPIURL, RequestInit{Method: "POST",
+	data, status, err := restCallA(ctx, tctx, act, "AnySearch API", apiKey, anysearchAPIURL, RequestInit{Method: "POST",
 		Body: marshalJS(anysearchBody{Query: query, MaxResults: numResults}), Header: header}, []string{"Authorization"})
 	if err != nil {
 		return nil, err
 	}
+	// Every outcome after a readable body completes the entry with the status, whatever the envelope check says.
+	act.complete(status)
 	parsed, err := parseAnySearch(data)
 	if err != nil {
 		return nil, err

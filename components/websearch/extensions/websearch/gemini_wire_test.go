@@ -29,6 +29,7 @@ type geminiWireCase struct {
 	Requests  []wireRequest     `json:"requests"`
 	Result    any               `json:"result"`
 	Error     *string           `json:"error"`
+	Activity  []oracleActivity  `json:"activity"`
 }
 
 type wireResponse struct {
@@ -155,6 +156,7 @@ func TestGeminiWireFixture(t *testing.T) {
 
 			var result any
 			var callErr error
+			Activity.Clear()
 			gen := c.Requests[0]
 			for _, r := range c.Requests {
 				if strings.Contains(r.URL, ":generateContent") {
@@ -190,6 +192,7 @@ func TestGeminiWireFixture(t *testing.T) {
 				t.Fatalf("no call mapped for %s", name)
 			}
 
+			requireActivity(t, name, c.Activity)
 			if c.Error != nil {
 				if callErr == nil || callErr.Error() != *c.Error {
 					t.Fatalf("error %v, want %q", callErr, *c.Error)

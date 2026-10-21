@@ -29,21 +29,6 @@ var (
 		"template": true, "button": true, "input": true, "nav": true, "footer": true, "aside": true}
 )
 
-// jsTruthy is JavaScript's truthiness of a value decoded from JSON.
-func jsTruthy(v any) bool {
-	switch x := v.(type) {
-	case nil:
-		return false
-	case bool:
-		return x
-	case float64:
-		return x != 0 && x == x
-	case string:
-		return x != ""
-	}
-	return true
-}
-
 // rscString is String(v) for a value decoded from JSON.
 func rscString(v any) string {
 	switch x := v.(type) {

@@ -63,6 +63,7 @@ type fixtureCase struct {
 	Now        string            `json:"now"`
 	Unordered  bool              `json:"unordered"`
 	Requests   []fixtureRequest  `json:"requests"`
+	Activity   []oracleActivity  `json:"activity"`
 	Outcome    struct {
 		Result any    `json:"result"`
 		Error  string `json:"error"`
@@ -358,6 +359,7 @@ func runFixture(t *testing.T, c *fixtureCase) (*fixtureDoer, *SearchResponse, er
 		ctx, cancel = context.WithCancel(ctx)
 		cancel()
 	}
+	Activity.Clear()
 	res, err := fixtureFns[c.Fn](ctx, c.Query, fixtureSearchOptions(t, c.Options))
 	return d, res, err
 }
@@ -386,6 +388,7 @@ func checkFixture(t *testing.T, c *fixtureCase) {
 	if !reflect.DeepEqual(want, have) {
 		t.Fatalf("%s: requests differ\noriginal:\n  %s\nport:\n  %s", c.ID, strings.Join(want, "\n  "), strings.Join(have, "\n  "))
 	}
+	requireActivity(t, c.ID, c.Activity)
 	if c.hasError {
 		if err == nil {
 			t.Fatalf("%s: the original failed with %q, the port returned a result", c.ID, c.Outcome.Error)

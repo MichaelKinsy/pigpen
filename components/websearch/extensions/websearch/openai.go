@@ -316,7 +316,11 @@ func IsCurrentModelHostedSearchEligible(ec ExtensionContext) bool {
 	if ec == nil {
 		return false
 	}
-	model := ec.Model()
+	return modelHostedSearchEligible(ec.Model())
+}
+
+// modelHostedSearchEligible is isCurrentModelHostedSearchEligible for the model itself (openai-search.ts:94-102).
+func modelHostedSearchEligible(model map[string]any) bool {
 	if model == nil {
 		return false
 	}
@@ -1094,12 +1098,18 @@ func runOpenAISearch(ctx context.Context, query string, o SearchOptions, auth *o
 	credentialHeaders := []string{"Authorization", "x-opencode-session", "x-opencode-client", "chatgpt-account-id"}
 	credentialHeaders = append(credentialHeaders, auth.headers.sortedNames()...)
 
+	act := logAPIStart(query)
+	status := 0
 	tctx, cancel := withTimeout(ctx, openAISearchTimeout)
 	defer cancel()
 	result, err := func() (*SearchResponse, error) {
 		resp, err := FetchWithCredentialRedirects(tctx, requestURL, RequestInit{Method: "POST", Header: requestHeaders.http(), Body: payload}, credentialHeaders)
 		if err != nil {
 			return nil, timeoutFix(ctx, tctx, err)
+		}
+		status = resp.StatusCode
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			act.logError(fmt.Sprintf("HTTP %d", resp.StatusCode))
 		}
 		text, err := readBody(resp)
 		if err != nil {
@@ -1130,8 +1140,9 @@ func runOpenAISearch(ctx context.Context, query string, o SearchOptions, auth *o
 		return &SearchResponse{Answer: answer, Results: results}, nil
 	}()
 	if err != nil {
-		return nil, redactErr(err, auth.apiKey)
+		return nil, act.failedErr(redactErr(err, auth.apiKey))
 	}
+	act.complete(status)
 	return result, nil
 }
 

@@ -1062,9 +1062,12 @@ func (s *githubState) extractGitHub(ctx context.Context, rawURL string, forceClo
 	if info.RefIsFullSHA {
 		return s.fetchViaAPI(ctx, rawURL, owner, repo, info, "Note: Commit SHA URLs use the GitHub API instead of cloning."), nil
 	}
+	// github-extract.ts:931: the entry of the clone path; the SHA and cache hits above log nothing.
+	act := logFetchStart("github.com/" + owner + "/" + repo)
 	if !forceClone {
 		sizeKB, known := s.checkRepoSize(ctx, owner, repo)
 		if ctx.Err() != nil {
+			act.complete(0)
 			return nil, nil
 		}
 		if known {
@@ -1072,23 +1075,44 @@ func (s *githubState) extractGitHub(ctx context.Context, rawURL string, forceClo
 				note := fmt.Sprintf("Note: Repository is %sMB (threshold: %sMB). ", formatNumber(math.Floor(sizeMB+0.5)), formatNumber(cfg.MaxRepoSizeMB)) +
 					"Showing API-fetched content instead of full clone. Ask the user if they'd like to clone the full repo -- " +
 					"if yes, call fetch_content again with the same URL and add forceClone: true to the params."
-				return s.fetchViaAPI(ctx, rawURL, owner, repo, info, note), nil
+				if apiView := s.fetchViaAPI(ctx, rawURL, owner, repo, info, note); apiView != nil {
+					act.complete(200)
+					return apiView, nil
+				}
+				act.logError("api fallback unavailable for oversized repository")
+				return nil, nil
 			}
 		}
 	}
 	if ctx.Err() != nil {
+		act.complete(0)
 		return nil, nil
 	}
 	// Another call may have started this clone while the size check ran.
 	s.mu.Lock()
 	if cached := s.cache[key]; cached != nil {
 		s.mu.Unlock()
-		return s.awaitCachedClone(ctx, cached, rawURL, info), nil
+		result := s.awaitCachedClone(ctx, cached, rawURL, info)
+		switch {
+		case ctx.Err() != nil:
+			act.complete(0)
+		case result != nil:
+			act.complete(200)
+		default:
+			act.logError("clone failed")
+		}
+		return result, nil
 	}
 	dest, ok := s.cloneDestinationFor(cfg, owner, repo, info.Ref)
 	if !ok {
 		s.mu.Unlock()
-		return s.fetchViaAPI(ctx, rawURL, owner, repo, info, ""), nil
+		apiFallback := s.fetchViaAPI(ctx, rawURL, owner, repo, info, "")
+		if apiFallback != nil {
+			act.complete(200)
+		} else {
+			act.logError("invalid clone destination")
+		}
+		return apiFallback, nil
 	}
 	entry := &cachedClone{dest: dest, done: make(chan struct{})}
 	s.cache[key] = entry
@@ -1100,11 +1124,18 @@ func (s *githubState) extractGitHub(ctx context.Context, rawURL string, forceClo
 		s.dropClone(key, entry)
 	}
 	if ctx.Err() != nil {
+		act.complete(0)
 		return nil, nil
 	}
 	if entry.path == "" {
-		return s.fetchViaAPI(ctx, rawURL, owner, repo, info, ""), nil
+		if apiFallback := s.fetchViaAPI(ctx, rawURL, owner, repo, info, ""); apiFallback != nil {
+			act.complete(200)
+			return apiFallback, nil
+		}
+		act.logError("clone and API fallback failed")
+		return nil, nil
 	}
+	act.complete(200)
 	return cloneResult(rawURL, entry.path, info), nil
 }
 

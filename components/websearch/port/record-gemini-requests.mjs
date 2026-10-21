@@ -140,7 +140,7 @@ for (const c of cases) {
 		writeFileSync(join(root, "adc.json"), JSON.stringify(c.adc));
 		env.GOOGLE_APPLICATION_CREDENTIALS = join(root, "adc.json");
 	}
-	const script = `${childPrelude}\nlet result = null, error = null;\ntry { result = await (async () => { ${c.call} })(); } catch (e) { error = e instanceof Error ? e.message : String(e); }\nprocess.stdout.write(JSON.stringify({ requests, result, error }));\n`;
+	const script = `${childPrelude}\nlet result = null, error = null;\ntry { result = await (async () => { ${c.call} })(); } catch (e) { error = e instanceof Error ? e.message : String(e); }\nconst { activityMonitor } = await import(${JSON.stringify(url("activity.ts"))});\nconst activity = activityMonitor.getEntries().map(({ type, query, url, status, error }) => ({ type, query, url, status, error }));\nprocess.stdout.write(JSON.stringify({ requests, result, error, activity }));\n`;
 	const child = spawnSync(process.execPath, ["--input-type=module"], { input: script, encoding: "utf8", env, maxBuffer: 8 * 1024 * 1024 });
 	if (child.status !== 0) throw new Error(`${c.name}: ${child.stderr}`);
 	const rec = JSON.parse(child.stdout);

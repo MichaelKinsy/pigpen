@@ -137,21 +137,59 @@ func parallelTitle(item map[string]any, i int) string {
 	return fmt.Sprintf("Source %d", i+1)
 }
 
+// parallelActivity is activityContext (parallel.ts:149-168): what the activity entry of a call names.
+func parallelActivity(rawURL string, body map[string]any) activityRef {
+	if objective, ok := body["objective"].(string); ok && jsTrim(objective) != "" {
+		return logAPIStart(objective)
+	}
+	switch queries := body["search_queries"].(type) {
+	case []string:
+		if len(queries) > 0 {
+			return logAPIStart(queries[0])
+		}
+	case []any:
+		if len(queries) > 0 {
+			if q, ok := queries[0].(string); ok {
+				return logAPIStart(q)
+			}
+		}
+	}
+	switch urls := body["urls"].(type) {
+	case []string:
+		if len(urls) > 0 {
+			return logFetchStart(urls[0])
+		}
+	case []any:
+		if len(urls) > 0 {
+			if u, ok := urls[0].(string); ok {
+				return logFetchStart(u)
+			}
+		}
+	}
+	if strings.Contains(rawURL, "/search") {
+		return logAPIStart("Parallel search")
+	}
+	return logFetchStart(rawURL)
+}
+
 // parallelCall is parallelFetch: one POST with x-api-key.
 func parallelCall(ctx context.Context, rawURL string, body map[string]any) (map[string]any, error) {
 	key, err := parallelKey(ctx)
 	if err != nil {
 		return nil, err
 	}
+	act := parallelActivity(rawURL, body)
 	status, text, err := hostedSend(ctx, hostedCall{URL: rawURL, Body: jsonBytes(body), Key: key, Timeout: parallelSearchTimeout,
-		Header: http.Header{"X-Api-Key": {key}, "Content-Type": {"application/json"}}, Credentials: []string{"X-Api-Key"}})
+		Header: http.Header{"X-Api-Key": {key}, "Content-Type": {"application/json"}}, Credentials: []string{"X-Api-Key"}, Act: act})
 	if err != nil {
 		return nil, err
 	}
 	if status < 200 || status > 299 {
+		act.complete(status)
 		return nil, fmt.Errorf("Parallel API error %d: %s", status, jsSlice(RedactCredential(text, key), 0, 300))
 	}
 	data, err := parseJSONObjectLoose(text)
+	act.complete(status)
 	if err != nil {
 		return nil, fmt.Errorf("Parallel API returned invalid JSON: %v", err)
 	}

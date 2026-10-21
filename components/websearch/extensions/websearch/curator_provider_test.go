@@ -95,12 +95,8 @@ func TestUpstream_curator_providers(t *testing.T) {
 		}
 	})
 	tw(t, "search-routing", "Curator auto default follows the same current-model Hosted Search eligibility", func(t *testing.T) {
-		adapted(t, "OpenAI hosted search belongs to the model provider slice: its eligibility check is replaced by a stand-in that accepts the official OpenAI base URL, which is the case's distinction")
 		_, dir := isolate(t)
 		writeConfig(t, dir, `{"searchRouting":{"providers":["openai","tavily"],"useCurrentModel":true,"fallbackOn":["unsupported","network"]}}`)
-		old := currentModelHostedSearchEligible
-		currentModelHostedSearchEligible = func(model map[string]any) bool { return model["baseUrl"] == "https://api.openai.com/v1" }
-		t.Cleanup(func() { currentModelHostedSearchEligible = old })
 		available := NewProviderAvailability("all", true, "openai", true, "tavily", true)
 		official := map[string]any{"provider": "openai", "api": "openai-responses", "id": "gpt-5.6", "baseUrl": "https://api.openai.com/v1"}
 		proxy := map[string]any{"provider": "openai", "api": "openai-responses", "id": "gpt-5.6-sol", "baseUrl": "https://ai.feei.cn/v1"}
@@ -109,6 +105,18 @@ func TestUpstream_curator_providers(t *testing.T) {
 		}
 		if got := ResolveCuratorDefaultProvider(Auto, available, proxy, nil, ""); got != "tavily" {
 			t.Errorf("proxy: %s", got)
+		}
+		// A Codex login on the ChatGPT backend is eligible too; a model that is not a gpt model, or has no model, is not.
+		codexModel := map[string]any{"provider": "openai-codex", "api": "openai-codex-responses", "id": "gpt-5.6", "baseUrl": "https://chatgpt.com/backend-api"}
+		if got := ResolveCuratorDefaultProvider(Auto, available, codexModel, nil, ""); got != "openai" {
+			t.Errorf("codex: %s", got)
+		}
+		other := map[string]any{"provider": "openai", "api": "openai-responses", "id": "o3", "baseUrl": "https://api.openai.com/v1"}
+		if got := ResolveCuratorDefaultProvider(Auto, available, other, nil, ""); got != "tavily" {
+			t.Errorf("not a gpt model: %s", got)
+		}
+		if got := ResolveCuratorDefaultProvider(Auto, available, nil, nil, ""); got != "tavily" {
+			t.Errorf("no model: %s", got)
 		}
 		// Nothing available: the first eligible candidate.
 		none := NewProviderAvailability("all", false)
@@ -148,16 +156,11 @@ func (u *fakeWidgetUI) count() int {
 
 func TestUpstream_websearch_command_proxy_scope(t *testing.T) {
 	tw(t, "proxy-transport", "websearch command scopes searches but not model callbacks to configured proxy", func(t *testing.T) {
-		adapted(t, "provider brave (faked) instead of xcrawl through curl: what is checked is the proxy a search and a model callback run under")
-		e := newCuratorEnv(t, `{"provider":"brave","proxy":"http://configured-proxy.example:8080","autoOpenBrowser":false,"curatorTimeoutSeconds":5}`)
+		e := newCuratorEnv(t, `{"provider":"xcrawl","xcrawlApiKey":"xc-test-key","proxy":"http://configured-proxy.example:8080","autoOpenBrowser":false,"curatorTimeoutSeconds":5}`)
+		curl := useCurl(t, map[string]curlRoute{"https://run.xcrawl.com/v1/serp": {Status: 200, StatusText: "OK",
+			Body: `{"search_metadata":{"status":"completed"},"organic_results":[{"title":"Result","link":"https://example.com/result","snippet":"Answer"}]}`}})
 		var mu sync.Mutex
-		var searchProxies, modelProxies []string
-		useFakeProvider(t, "brave", func(ctx context.Context, q string, _ SearchOptions) (*SearchResponse, error) {
-			mu.Lock()
-			searchProxies = append(searchProxies, activeProxy(ctx))
-			mu.Unlock()
-			return &SearchResponse{Answer: "Answer", Results: []SearchResult{{Title: "Result", URL: "https://example.com/result"}}}, nil
-		})
+		var modelProxies []string
 		e.reg.completeFn = func(ctx context.Context, _, request map[string]any, _ CompleteOptions) (map[string]any, error) {
 			mu.Lock()
 			modelProxies = append(modelProxies, activeProxy(ctx))
@@ -185,9 +188,17 @@ func TestUpstream_websearch_command_proxy_scope(t *testing.T) {
 		}
 		mu.Lock()
 		defer mu.Unlock()
-		want := "http://configured-proxy.example:8080"
-		if len(searchProxies) != 2 || searchProxies[0] != want || searchProxies[1] != want {
-			t.Errorf("searches ran under %q", searchProxies)
+		calls := curl.snapshot()
+		if len(calls) != 2 {
+			t.Fatalf("%d curl calls: %+v", len(calls), calls)
+		}
+		for _, c := range calls {
+			if got := valueAfter(c.Args, "-x"); got != "http://configured-proxy.example:8080" && got != "http://configured-proxy.example:8080/" {
+				t.Errorf("a search ran under %q", got)
+			}
+			if c.Args[len(c.Args)-1] != "https://run.xcrawl.com/v1/serp" {
+				t.Errorf("curl asked for %q", c.Args[len(c.Args)-1])
+			}
 		}
 		if len(modelProxies) != 2 || modelProxies[0] != "" || modelProxies[1] != "" {
 			t.Errorf("model callbacks ran under %q", modelProxies)
