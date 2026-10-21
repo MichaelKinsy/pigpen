@@ -32,12 +32,15 @@ const cronYearLimit = 3000
 
 // cronStackLimit is how many nested `recurse` calls croner's search can make before V8 throws "Maximum call stack size
 // exceeded" (the search recurses once per field it settles or carries, and nothing unwinds until it is done). A search
-// for a run that never comes, whose failure is decided at the day level, makes about a dozen calls per year to the year
-// 3000 and overflows: croner's constructor throws, so the original refuses such a pattern ("Invalid schedule"), where a
-// search with fewer calls ends quietly with no next run. The value sits between the most calls a completed search made
-// and the fewest at which one overflowed, both measured by port/record-croner.mjs under Node 24.19.0 and kept in
-// testdata/croner-stack.json, which cron_test.go replays call for call.
-const cronStackLimit = 7000
+// for a run that never comes, whose failure is decided at the day level, makes a dozen calls per year to the year 3000
+// and overflows: croner's constructor throws, so the original refuses such a pattern ("Invalid schedule"), where a
+// search with fewer calls ends quietly with no next run. V8's depth is not one number: port/record-croner.mjs, run in a
+// fresh process per probe under Node 24.19.0 (testdata/croner-stack.json), saw 75 overflows at depths from 6066 to 6810
+// (median 6227, a quarter of them within 6223 to 6502), completed searches of up to 4867 calls and one of 6750. The
+// limit is the median depth, so a pattern is refused as often as croner refused it; one whose search lands in the band
+// could go either way in the original, and cron_test.go allows exactly that. A var only so a test can measure a search
+// without the limit.
+var cronStackLimit = 6227
 
 // jsSpace reports whether r is a JavaScript whitespace character (what `\s`, `\S` and String.prototype.trim use).
 // Go's unicode.IsSpace differs (it has U+0085 and lacks U+FEFF).

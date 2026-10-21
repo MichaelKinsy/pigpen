@@ -431,3 +431,15 @@ func TestAPatternThatNeverRunsAndOverflowsCronersStackIsRefused(t *testing.T) {
 	}), true)
 	eq(t, len(r.sched.crons), 0)
 }
+
+// Twin of fallback-subagent-wiring.test.ts "never persists a blank type into a scheduled job" (that file is deferred as
+// a whole): the request for a blank type falls back, and the job stores the type that ran, not "".
+func TestABlankTypeIsNeverPersistedIntoAScheduledJob(t *testing.T) {
+	t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
+	r := startRigIn(t, t.TempDir())
+	reply := r.must("Agent", obj{"prompt": "later", "description": "blank type", "subagent_type": "   ", "schedule": "+1h"})
+	eq(t, strings.Contains(reply, "Scheduled"), true)
+	jobs := r.app.scheduler().list()
+	eq(t, len(jobs), 1)
+	eq(t, jobs[0].SubagentType, "general-purpose")
+}
