@@ -666,6 +666,25 @@
       "lane": "pig-model-tweaks",
       "status": "porting",
       "credit": "Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292."
+    },
+    {
+      "id": "pi-schedule-prompt",
+      "name": "pi-schedule-prompt",
+      "kind": "port",
+      "summary": "Pi's Heartbeat: the agent schedules future prompts, reminders and recurring jobs for itself (cron, intervals, one-shots) with a schedule_prompt tool, a live widget and a /schedule-prompt manager.",
+      "upstream": {
+        "name": "pi-schedule-prompt",
+        "url": "https://github.com/tintinweb/pi-schedule-prompt",
+        "commit": "5556775276202c26654ff9323541fe6983f6ee38",
+        "license": "MIT",
+        "author": "tintinweb",
+        "path": "src"
+      },
+      "targetPackage": "components/schedule-prompt",
+      "lane": "pigpen-schedule-prompt",
+      "status": "porting",
+      "credit": "Go port of pi-schedule-prompt 0.4.1, https://github.com/tintinweb/pi-schedule-prompt, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 5556775276202c26654ff9323541fe6983f6ee38.",
+      "notes": "Slice 1: the honest-refusal skeleton (the tool and the command are registered and refuse with the program's message). Slices 2 to 4 port the tool, the scheduler and croner-compatible next-run times, the widget and overlay, and the per-task model mode (which needs an in-process agent session)."
     }
   ]
 }

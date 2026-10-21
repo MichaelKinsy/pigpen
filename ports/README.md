@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 2 · porting: 1 · review: 11 · done: 19
+Status: queued: 2 · porting: 2 · review: 11 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -43,6 +43,7 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 | `tintinweb-subagents` | [pi-subagents](https://github.com/tintinweb/pi-subagents) | [`4f572eaa04c0`](https://github.com/tintinweb/pi-subagents/commit/4f572eaa04c09d3dbc16e4a5f13a16b295e84e14) | MIT | tintinweb | `components/tintinweb-subagents` | `pig-essentials` | review | Go port of @tintinweb/pi-subagents 0.19.0, https://github.com/tintinweb/pi-subagents, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 4f572eaa04c09d3dbc16e4a5f13a16b295e84e14. |
 | `superpowers` | [superpowers](https://github.com/obra/superpowers) | [`8ca22dba9a94`](https://github.com/obra/superpowers/commit/8ca22dba9a94f28898bbce59f2537ff4d87c747d) | MIT | Jesse Vincent | `components/superpowers` | `pig-essentials` | review | Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v6.4.2, commit 8ca22dba9a94f28898bbce59f2537ff4d87c747d. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT). |
 | `pig-model-tweaks` | [pi-tweaks](https://github.com/liyu1981/pi-tweaks) | [`65e6ccfbb779`](https://github.com/liyu1981/pi-tweaks/commit/65e6ccfbb77956aa15ce34e7ca9735e1d476c292) | MIT | Yu Li | `components/pig-model-tweaks` | `pig-model-tweaks` | porting | Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292. |
+| `pi-schedule-prompt` | [pi-schedule-prompt](https://github.com/tintinweb/pi-schedule-prompt) | [`555677527620`](https://github.com/tintinweb/pi-schedule-prompt/commit/5556775276202c26654ff9323541fe6983f6ee38) | MIT | tintinweb | `components/schedule-prompt` | `pigpen-schedule-prompt` | porting | Go port of pi-schedule-prompt 0.4.1, https://github.com/tintinweb/pi-schedule-prompt, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 5556775276202c26654ff9323541fe6983f6ee38. |
 
 ## How to read it
 
@@ -242,3 +243,9 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 - Kind: port. Model-selection tweaks: remember the picked model across sessions, pin an OpenRouter model to one upstream provider, and guard prompts against a model outside the allow-list.
 - Upstream path: `extensions` in pi-tweaks
+
+### `pi-schedule-prompt`: pi-schedule-prompt
+
+- Kind: port. Pi's Heartbeat: the agent schedules future prompts, reminders and recurring jobs for itself (cron, intervals, one-shots) with a schedule_prompt tool, a live widget and a /schedule-prompt manager.
+- Upstream path: `src` in pi-schedule-prompt
+- Notes: Slice 1: the honest-refusal skeleton (the tool and the command are registered and refuse with the program's message). Slices 2 to 4 port the tool, the scheduler and croner-compatible next-run times, the widget and overlay, and the per-task model mode (which needs an in-process agent session).

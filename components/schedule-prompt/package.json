@@ -1,0 +1,41 @@
+{
+  "name": "@pi-in-go/pigpen-schedule-prompt",
+  "version": "0.1.0",
+  "description": "Go port of pi-schedule-prompt (Pi's Heartbeat): the agent schedules future prompts, reminders and recurring jobs with a schedule_prompt tool, a live widget and a /schedule-prompt manager",
+  "keywords": [
+    "pig-package",
+    "scheduler",
+    "cron",
+    "heartbeat",
+    "reminder",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/schedule-prompt"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/schedule-prompt#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/schedule-prompt"
+    ]
+  }
+}

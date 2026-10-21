@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-schedule-prompt",
+      "authors": [
+        "tintinweb"
+      ],
+      "url": "https://github.com/tintinweb/pi-schedule-prompt",
+      "revision": "5556775276202c26654ff9323541fe6983f6ee38",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}
